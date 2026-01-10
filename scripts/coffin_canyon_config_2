@@ -12,11 +12,11 @@
 
   CCFB.define("config/docTokens", function () {
     var rawFactions = [
-      { key: "monster_rangers", label: "Monster Rangers", url: "/documents/content/eUPoz_11Q3eXqesdo_4Jhwo130" },
-      { key: "shine_riders",    label: "Shine Riders",    url: "/documents/content/Bza9bKCkTRmugzxyj4B1LQodd" },
-      { key: "monsterology",    label: "Monsterology",    url: "/documents/content/l4SNFUOsR6ChO-10LwGI3go8b" },
-      { key: "monsters",        label: "Monsters",        url: "/documents/content/z7F2OPV9RW6xDHCJkjaWdgo8a" },
-      { key: "liberty_corps",   label: "Liberty Corps",   url: "/documents/content/ZAJaa6yCRNmqAwe8kcqI8wo8d" }
+      { key: "monster_rangers", label: "Monster Rangers", url: "faction_monster_rangers-v5.json" },
+      { key: "shine_riders",    label: "Shine Riders",    url: "faction_shine_riders-v2.json" },
+      { key: "monsterology",    label: "Monsterology",    url: "faction_monsterology-v2.json" },
+      { key: "monsters",        label: "Monsters",        url: "faction_monsters-v2.json" },
+      { key: "liberty_corps",   label: "Liberty Corps",   url: "faction_liberty_corps.json" }
     ];
 
     // Auto-sort factions alphabetically by label for the UI
