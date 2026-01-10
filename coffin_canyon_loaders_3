@@ -1,0 +1,112 @@
+<div id="ccfb-3-loaders"></div>
+<script>
+/* =========================================================
+   CCFB 3 — Data Loaders (Optimized & Robust)
+   ========================================================= */
+(function () {
+  var CCFB = window.CCFB;
+  if (!CCFB || !CCFB.define || !CCFB.require) return;
+
+  CCFB.define("data/loaders", function (CCFB) {
+    
+    // Optimized string cleaner for error reporting
+    function squash(s) {
+      return (s || "").replace(/\uFEFF/g, "").replace(/\s+/g, " ").slice(0, 100).trim();
+    }
+
+    // Diagnoses common Odoo fetch issues (like getting HTML instead of JSON)
+    function fetchJsonDiagnose(url) {
+      return fetch(url, { method: "GET", credentials: "include" })
+        .then(function (res) {
+          var ct = "";
+          try { ct = res.headers.get("content-type") || ""; } catch (e) {}
+
+          return res.text().then(function (txt) {
+            // Remove Byte Order Mark if present
+            txt = (txt || "").replace(/^\uFEFF/, "");
+
+            if (!res.ok) {
+              throw new Error("HTTP " + res.status + " | CT: " + ct + " | Start: " + squash(txt));
+            }
+
+            try {
+              return JSON.parse(txt);
+            } catch (e) {
+              // This usually triggers if Odoo returns a Login/Error page instead of JSON
+              throw new Error("DATA ERROR: Not valid JSON. Type: " + ct + " | Preview: " + squash(txt) + "...");
+            }
+          });
+        });
+    }
+
+    // State Initialization
+    CCFB.state = CCFB.state || {};
+    CCFB.state.rules = CCFB.state.rules || null;
+    CCFB.state.factions = CCFB.state.factions || {};
+
+    function loadRules() {
+      // Return early if already loaded
+      if (CCFB.state.rules) return Promise.resolve(CCFB.state.rules);
+
+      return new Promise(function(resolve, reject) {
+        CCFB.require(["config/docTokens"], function (cfg) {
+          CCFB.Toast.show("Loading Core Rules...");
+          
+          // Note: Step 2 updated rulesUrl to a string, but we support both for safety
+          var url = (typeof cfg.rulesUrl === "function") ? cfg.rulesUrl() : cfg.rulesUrl;
+
+          fetchJsonDiagnose(url)
+            .then(function (data) {
+              CCFB.state.rules = data;
+              CCFB.Toast.show("Core Rules loaded ✓");
+              resolve(data);
+            })
+            .catch(function (e) {
+              CCFB.Toast.error("Rules Error: " + e.message);
+              reject(e);
+            });
+        });
+      });
+    }
+
+    function loadFaction(factionKey) {
+      // Return early if faction is already in state
+      if (CCFB.state.factions[factionKey]) {
+        return Promise.resolve(CCFB.state.factions[factionKey]);
+      }
+
+      return new Promise(function(resolve, reject) {
+        CCFB.require(["config/docTokens"], function (cfg) {
+          // Use the helper from Step 2 if available, otherwise manual find
+          var f = (cfg.getFaction) ? cfg.getFaction(factionKey) : null;
+          if (!f) {
+            for (var i = 0; i < cfg.factions.length; i++) {
+              if (cfg.factions[i].key === factionKey) { f = cfg.factions[i]; break; }
+            }
+          }
+
+          if (!f) {
+            var err = "Unknown faction: " + factionKey;
+            CCFB.Toast.error(err);
+            return reject(new Error(err));
+          }
+
+          CCFB.Toast.show("Loading " + f.label + "...");
+          fetchJsonDiagnose(f.url)
+            .then(function (data) {
+              CCFB.state.factions[f.key] = data;
+              CCFB.Toast.show(f.label + " loaded ✓");
+              resolve(data);
+            })
+            .catch(function (e) {
+              CCFB.Toast.error(f.label + " failed: " + e.message);
+              reject(e);
+            });
+        });
+      });
+    }
+
+    return { loadRules: loadRules, loadFaction: loadFaction };
+  });
+})();
+</script>
