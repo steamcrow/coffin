@@ -1,0 +1,290 @@
+{
+  "faction": "Shine Riders",
+  "description": "Canyon bandits and silver thieves who infest Coffin Canyon, stripping buildings, salting claims, and stealing whatever isn’t nailed down. Shine Riders don’t hold ground or fight fair—they grab fast, leave traps behind, and vanish into the choking dust before consequences arrive.",
+  "units": [
+    {
+      "faction": "Shine Riders",
+      "name": "Glowhands",
+      "type": "Frail",
+      "quality": 5,
+      "defense": 0,
+      "move": 5,
+      "range": 12,
+      "cost": 86,
+      "abilities": [
+        "Interact",
+        "Quick Draw"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "Expendable workers who rush in to harvest Thyr crystals and turn buildings into Silver mines."
+      ],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask"
+    },
+    {
+      "faction": "Shine Riders",
+      "name": "Shard Runners",
+      "type": "Frail",
+      "quality": 5,
+      "defense": 0,
+      "move": 8,
+      "range": 6,
+      "cost": 110,
+      "abilities": [
+        "Fast",
+        "Runner",
+        "Boardwalk Blitzer"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "Lightning-fast couriers who race across the battlefield to grab objectives and relay signals."
+      ],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask"
+    },
+    {
+      "faction": "Shine Riders",
+      "name": "Wagon Gat Gunner",
+      "type": "Tank",
+      "quality": 4,
+      "defense": 2,
+      "move": 4,
+      "range": 18,
+      "cost": 103,
+      "abilities": [
+        "Anchor",
+        "Suppression",
+        "Immobile"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "Heavy wagon-mounted gatling gun that provides covering fire during extractions. Deadly when deployed but vulnerable when moving."
+      ],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "faction": "Shine Riders",
+      "name": "Blast Jack",
+      "type": "Specialist",
+      "quality": 4,
+      "defense": 1,
+      "move": 6,
+      "range": 12,
+      "cost": 102,
+      "abilities": [
+        "Demolition",
+        "Fearless"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "Scare Tactics: When Blast Jack successfully hits with dynamite, all Monster units within 6\" of the blast must test Morale at -1 die. Failed tests cause Monsters to move away.",
+        "Volatile Cargo: If Blast Jack is destroyed, roll 1d6. On 5-6, units within 3\" take 1 damage from exploding dynamite."
+      ],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask"
+    },
+    {
+      "faction": "Shine Riders",
+      "name": "Crystal Whisperer",
+      "type": "Mystic",
+      "subtype": "Unique",
+      "quality": 4,
+      "defense": 1,
+      "move": 6,
+      "range": 12,
+      "cost": 106,
+      "abilities": [
+        "Hex",
+        "Stealth"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "Wild Magic Table: Roll 2d6 when using Channel ability. Results range from Catastrophic Backfire (2) to Thyr Overcharge (12).",
+        "Limit 0-1 per army.",
+        "Can consume extracted Thyr to enhance magic."
+      ],
+      "unique": true,
+      "max_count": 1,
+      "upgrades_note": "May purchase universal upgrades: Gas Mask"
+    },
+    {
+      "faction": "Shine Riders",
+      "name": "Shine Boss",
+      "type": "Leader",
+      "quality": 5,
+      "defense": 1,
+      "move": 6,
+      "range": 12,
+      "cost": 142,
+      "abilities": [
+        "Authority",
+        "Inspire",
+        "Fearless"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "Shine Boss Aura (6\"): Allies within range receive the following benefits:",
+        "• No VP penalty for abandoning objectives",
+        "• Re-roll failed Disengage attempts",
+        "• +2\" Movement when retreating toward table edge"
+      ],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask"
+    },
+    {
+      "faction": "Shine Riders",
+      "name": "Scrapjack Looters",
+      "type": "Specialist",
+      "quality": 5,
+      "defense": 0,
+      "move": 6,
+      "range": 6,
+      "cost": 101,
+      "abilities": [
+        "Steal",
+        "Interact"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "Hookblades on poles, magnet hooks, and crowbars—built to rip value off living targets and run.",
+        "STEAL: This unit has the Steal ability (see core rules). When successful, stolen upgrades are destroyed, not captured."
+      ],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask"
+    },
+    {
+      "faction": "Shine Riders",
+      "name": "Bootboomers",
+      "type": "Frail",
+      "quality": 5,
+      "defense": 0,
+      "move": 6,
+      "range": 6,
+      "cost": 96,
+      "abilities": [
+        "Interact",
+        "Demolition"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "A walking joke with a deadly punchline: they 'mine' claims by salting them with hidden charges.",
+        "Salted Claim (Interact Variant): When this unit successfully Interacts with a Thyr Crystal or Building, it may place a Claim Marker on it instead of extracting/turning it.",
+        "Trigger: The first non–Shine Rider unit to move into base contact with or Interact with that marked feature immediately suffers 1 automatic hit (treat as Demolition) and becomes Suppressed until end of its next activation. Then remove the marker.",
+        "Limit: Each Bootboomer may have only 1 Claim Marker in play at a time."
+      ],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask"
+    },
+    {
+      "faction": "Shine Riders",
+      "name": "Ash Slingers",
+      "type": "Cavalry",
+      "quality": 4,
+      "defense": 1,
+      "move": 8,
+      "range": 12,
+      "cost": 117,
+      "abilities": [
+        "Scout",
+        "Suppression"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "Mounted dust-throwers who turn the canyon itself into a weapon—blinding, choking, and wasting the enemy’s time.",
+        "CHOKING DUST: If this unit successfully hits but causes no damage, the target is Suppressed until the end of its next activation. On a natural 6, Suppressed lasts one additional activation.",
+        "GAS MASKS: This unit ignores CHOKING DUST effects."
+      ],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask"
+    },
+    {
+      "faction": "Shine Riders",
+      "name": "Rattle Cart",
+      "type": "Titan",
+      "quality": 4,
+      "defense": 3,
+      "move": 5,
+      "range": 18,
+      "cost": 146,
+      "abilities": [
+        "Brace",
+        "Anchor",
+        "Suppression"
+      ],
+      "upgrades": [],
+      "special_rules": [
+        "A roaming Trojan wagon—windmill-driven, loud as sin, dressed up like a monster to bait the canyon's horrors and draw fire away from real loot teams.",
+        "Windmill Drive: At the start of each Shine Rider turn, if the Rattle Cart is not Anchored, it must move 3\" in a straight line. The controlling player chooses the direction. If this movement would take it off the table edge, it exits the battlefield (counts as destroyed for VP purposes but doesn't explode per 'Not a Bomb' rule).",
+        "Trojan Tower: As an action, the Rattle Cart may Anchor. While Anchored, it becomes a sniper tower: it gains +6\" Range (total 24\") and counts as in Cover, but cannot move until it spends an action to un-Anchor.",
+        "Monster Bait: Monsters within 12\" of the Rattle Cart suffer -1 die on Morale tests to target units other than the Rattle Cart. If a Monster fails a Morale test while within 12\", it must move toward the Rattle Cart if able (minimum 3\").",
+        "Not a Bomb (By Design): The Rattle Cart does not explode when destroyed—Shine Riders build them to be reused and feared. It grants normal VP when destroyed."
+      ],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    }
+  ],
+  "version": "1.9",
+  "status": "Complete",
+  "faction_features": [
+    {
+      "name": "Extraction Specialists",
+      "cost": 0,
+      "required": true,
+      "effect": "Shine Riders units gain +1 die when performing Interact actions to extract Thyr or turn buildings."
+    },
+    {
+      "name": "Quick Exit",
+      "cost": 0,
+      "required": true,
+      "effect": "Shine Riders units within 6\" of a table edge gain +1 to Disengage rolls."
+    },
+    {
+      "name": "Silver Rush",
+      "cost": 0,
+      "required": false,
+      "effect": "Earn bonus Silver for each building successfully turned and held until end of game."
+    }
+  ],
+  "victory_objectives": [
+    {
+      "type": "Thyr Extracted",
+      "vp": "2 VP per crystal",
+      "description": "Score VP for successfully extracting Thyr crystals from the battlefield and getting them off the table edge."
+    },
+    {
+      "type": "Buildings Turned",
+      "vp": "3 VP per building",
+      "description": "Score VP for turning buildings into Silver mines and holding them until end of game. Represents successful resource extraction."
+    },
+    {
+      "type": "Successful Extraction",
+      "vp": "4 VP",
+      "description": "Score VP if your Shine Boss successfully exits the table via a table edge with extracted resources."
+    },
+    {
+      "type": "Hit and Run",
+      "vp": "1 VP per objective",
+      "description": "Score VP for grabbing objectives quickly and escaping before heavy resistance arrives. Speed over combat."
+    }
+  ],
+  "composition_requirements": {
+    "deployment_order": "Normal",
+    "note": "Shine Riders armies emphasize speed and extraction over sustained combat. Consider including multiple Glowhands for Interact actions and fast units like Shard Runners for objective grabs."
+  },
+  "tactics": {
+    "overview": "Shine Riders win by speed, denial, and leaving early. They avoid fair fights, focus on Interact actions over damage, and treat retreat as a core tactic rather than a failure.",
+    "doctrine": [
+      "Prioritize Interact actions over attacks; every turn spent extracting or stealing is a winning turn.",
+      "Use Rabble units aggressively—Glowhands and Bootboomers are tools, not investments.",
+      "Salt claims and objectives early to slow or punish enemy advances.",
+      "Engage only long enough to Suppress or delay; prolonged combat favors your opponents.",
+      "Always maintain an exit route toward a table edge."
+    ],
+    "common_plays": [
+      "Send Shard Runners or Glowhands forward early to force enemy responses.",
+      "Use Ash Slingers to Suppress key enemy units and waste their activations.",
+      "Deploy the Wagon Gat or Rattle Cart to draw attention while other units extract elsewhere.",
+      "Abandon objectives once value is secured—VP is scored by leaving, not holding."
+    ],
+    "weaknesses": [
+      "Low durability and poor performance in sustained fights.",
+      "Loss of mobility quickly leads to collapse.",
+      "Key units become vulnerable if cut off from table edges."
+    ]
+  },
+  "universal_upgrades_available": true,
+  "universal_upgrades_note": "Shine Riders may purchase universal upgrades from core rules (Gas Mask, Spare Parts, vehicle upgrades) where appropriate."
+}

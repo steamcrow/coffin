@@ -1,0 +1,385 @@
+{
+  "faction": "Liberty Corps",
+  "version": "1.9",
+  "description": "The Liberty Corps enforces order in Obscuria through authority, arrest, and judgment. Steam-powered law enforcement backed by federal mandate—efficient, relentless, and incorruptible.",
+  "faction_features": [
+    {
+      "name": "Arrest Mechanics",
+      "cost": 0,
+      "required": true,
+      "effect": "Liberty Corps units can Arrest targets instead of killing them. Arrested units are removed from play and may score VP. Units with Grapple can initiate arrests more easily."
+    },
+    {
+      "name": "Warrant System",
+      "cost": 0,
+      "required": false,
+      "effect": "Certain units (Warrant Officers, Detectives) can issue Warrants, marking targets for arrest. Units gain bonuses when engaging Warranted targets."
+    },
+    {
+      "name": "Steam Technology",
+      "cost": 0,
+      "required": true,
+      "effect": "Many Liberty Corps units are powered by steam engines (Steam Constables, Black Mariah). They are reliable, heavily armored, and mechanically precise."
+    }
+  ],
+  "victory_objectives": [
+    {
+      "type": "Arrests",
+      "vp": "2-5 VP per arrest",
+      "description": "Score VP for successfully arresting targets. High-value targets (Leaders, Mystics, Monsters) score more VP when arrested alive rather than killed."
+    },
+    {
+      "type": "Extraction",
+      "vp": "3 VP per unit extracted",
+      "description": "Score VP for extracting arrested units from the battlefield via the Black Mariah or designated extraction points."
+    },
+    {
+      "type": "Judgment",
+      "vp": "4 VP per judgment",
+      "description": "The Judge scores VP for passing judgment on arrested targets. Represents upholding the law through due process."
+    },
+    {
+      "type": "Area Control",
+      "vp": "2 VP per objective held",
+      "description": "Score VP for controlling key locations (towns, crossroads, settlements). Liberty Corps establishes order through occupation."
+    },
+    {
+      "type": "Target Elimination",
+      "vp": "Varies",
+      "description": "Some scenarios designate specific targets (outlaws, rogue Monsters, insurgents). Score bonus VP for eliminating these threats."
+    }
+  ],
+  "composition_requirements": {
+    "minimum_constables": 1,
+    "note": "Liberty Corps forces must include at least 1 Steam Constable unit to represent frontline enforcement. Warrant Officers and Judges are limited to 1 each per army."
+  },
+  "units": [
+    {
+      "name": "Steam Constable",
+      "faction": "Liberty Corps",
+      "type": "Tank",
+      "cost": 114,
+      "quality": 4,
+      "defense": 3,
+      "move": 5,
+      "range": null,
+      "weapon": "Steam Fists & Iron Baton",
+      "weapon_properties": [],
+      "abilities": [
+        "Grapple",
+        "Shield Wall"
+      ],
+      "lore": "Uniformed enforcers in slab wool coats and iron helmets. Their steam backpacks drive piston-fists and batons built for arrests, not duels.",
+      "tactics": "Frontline control. Grapple and Pinning keep targets in place for arrests and for loading into the Black Mariah. Shield Wall rewards constables operating in pairs.",
+      "upgrades": [
+        {
+          "name": "Reinforced Slabcoat",
+          "cost": 2,
+          "effect": "Gain HEAVY ARMOR keyword."
+        },
+        {
+          "name": "Steam Overpressure",
+          "cost": 2,
+          "effect": "Once per game: add +2\" Push to a successful Grapple."
+        }
+      ],
+      "composition_limit": "0-4 per army",
+      "max_count": 4,
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "name": "Field Technician",
+      "faction": "Liberty Corps",
+      "type": "Frail",
+      "cost": 87,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": null,
+      "weapon": "Tool Roll & Shock Stick",
+      "weapon_properties": [],
+      "abilities": [
+        "Assistant",
+        "Repair"
+      ],
+      "lore": "Cable-haulers and wrench-hands who keep Liberty Corps machinery operational in places it was never meant to operate.",
+      "tactics": "Support backbone. Keep vehicles, devices, and assets operational. Remove debuffs and keep the plan from collapsing.",
+      "upgrades": [
+        {
+          "name": "Spare Valves",
+          "cost": 2,
+          "effect": "+1 use of Repair per game."
+        }
+      ],
+      "composition_limit": "0-2 per army",
+      "max_count": 2,
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "name": "Patriot Asset",
+      "faction": "Liberty Corps",
+      "type": "Frail",
+      "cost": 42,
+      "quality": 2,
+      "defense": 1,
+      "move": 6,
+      "range": null,
+      "weapon": "Truncheon, Net, Restraints",
+      "weapon_properties": [
+        "Grapple"
+      ],
+      "abilities": [
+        "Runner"
+      ],
+      "lore": "Cheap bodies in cheap uniforms---pressed into service, promised glory, issued a whistle and a pair of cuffs.",
+      "tactics": "Flood lanes, contest objectives, and enable arrests. Trade lives for time and position.",
+      "composition_limit": "unlimited",
+      "upgrades": [],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "name": "Liberty Corps Detective",
+      "faction": "Liberty Corps",
+      "type": "Shooter",
+      "cost": 121,
+      "quality": 4,
+      "defense": 2,
+      "move": 6,
+      "range": 12,
+      "weapon": "Liberty Revolver",
+      "weapon_properties": [
+        "Pinning Shot"
+      ],
+      "abilities": [
+        "Scout",
+        "Mark Target",
+        "Runner"
+      ],
+      "lore": "Plain clothes, keen eyes, documented everything. The arrest warrant is already in their coat pocket---signed, stamped, and inevitable.",
+      "tactics": "Deploy forward to reveal hidden threats. Mark priority targets for arrest or elimination. Use Runner to maintain positioning and escape engagement.",
+      "upgrades": [
+        {
+          "name": "Wire Tap Kit",
+          "cost": 3,
+          "effect": "Once per game, place a 3\" radius marker on the battlefield. Enemies starting activation within this area are revealed as if by Scout."
+        },
+        {
+          "name": "Warrant Badge",
+          "cost": 2,
+          "effect": "When this unit uses Mark Target, if the marked target is later Arrested, your controller gains +1 VP."
+        }
+      ],
+      "composition_limit": "0-2 per army",
+      "max_count": 2,
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "name": "Warrant Officer",
+      "faction": "Liberty Corps",
+      "type": "Tank",
+      "cost": 153,
+      "quality": 5,
+      "defense": 3,
+      "move": 7,
+      "range": null,
+      "weapon": "Shock Baton & Restraint Rig",
+      "weapon_properties": [
+        "Grapple"
+      ],
+      "abilities": [
+        "Tough(1)",
+        "Fast",
+        "Binding Rig"
+      ],
+      "lore": "The best at what they do. Steam-assisted reflexes, reinforced armor, and a perfect arrest record. They don't bring you in. They bring you down.",
+      "tactics": "Elite arrest specialist. Use Fast to position for Grapple. Binding Rig works on Brutes and Monsters. More mobile than Constables but equally durable.",
+      "upgrades": [
+        {
+          "name": "Pursuit Boots",
+          "cost": 2,
+          "effect": "Gain +2\" Move when activating to move toward an enemy unit marked for arrest."
+        },
+        {
+          "name": "Reinforced Cuffs",
+          "cost": 3,
+          "effect": "Units arrested by this model cannot be rescued by allies (they must destroy the Black Mariah to free prisoners)."
+        }
+      ],
+      "composition_limit": "0-2 per army",
+      "max_count": 2,
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "name": "Pinkerton Marksman",
+      "faction": "Liberty Corps",
+      "type": "Shooter",
+      "cost": 162,
+      "quality": 5,
+      "defense": 2,
+      "move": 6,
+      "range": 20,
+      "weapon": "Precision Rifle",
+      "weapon_properties": [
+        "AP(2)",
+        "Deadly Shot"
+      ],
+      "abilities": [
+        "Deadeye",
+        "Mark Target"
+      ],
+      "lore": "Private detective turned contractor. Their job isn't justice---it's results, documented and delivered.",
+      "tactics": "Lane control and surgical removals. Mark priority targets for arrest or elimination.",
+      "composition_limit": "0-2 per army",
+      "max_count": 2,
+      "upgrades": [],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "name": "Riot Harmonist",
+      "faction": "Liberty Corps",
+      "type": "Mystic",
+      "cost": 136,
+      "quality": 4,
+      "defense": 2,
+      "move": 5,
+      "range": 10,
+      "weapon": "Bombardion (Steam Sonic Tuba)",
+      "weapon_properties": [
+        "Sonic",
+        "Blast(2)"
+      ],
+      "abilities": [
+        "Audio Suppression",
+        "Signal Orders"
+      ],
+      "lore": "A brass-backed crowd-control officer carrying a steam-powered bombardion. Used for signaling and for breaking resolve with weaponized sound.",
+      "tactics": "Area denial and morale pressure. Sonic ignores Heavy Armor and cover bonuses. Keep spacing---friendly resonance is dangerous.",
+      "composition_limit": "0-2 per army",
+      "max_count": 2,
+      "upgrades": [],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "name": "Liberty Corps Judge",
+      "faction": "Liberty Corps",
+      "type": "Leader",
+      "cost": 188,
+      "quality": 5,
+      "defense": 3,
+      "move": 5,
+      "range": 10,
+      "weapon": "Liberty Revolver",
+      "weapon_properties": [
+        "AP(1)",
+        "Pinning Shot"
+      ],
+      "abilities": [
+        "Authority",
+        "Inspire",
+        "Pass Judgment"
+      ],
+      "lore": "In Liberty Corps jurisdiction, Judges hold executive power in the field. They prosecute, sentence, and execute all in one. Their presence turns mob into firing squad.",
+      "tactics": "Command hub. Authority negates enemy Suppression. Inspire boosts morale. Pass Judgment marks targets for harsh penalties. Position centrally to maximize aura effects.",
+      "upgrades": [
+        {
+          "name": "Law Books",
+          "cost": 2,
+          "effect": "Gain +1 use of Pass Judgment (twice per game instead of once)."
+        },
+        {
+          "name": "Judicial Robes",
+          "cost": 3,
+          "effect": "Friendly Liberty Corps units within 6\" gain +1 to Quality checks when attempting to Arrest enemy units."
+        }
+      ],
+      "composition_limit": "0-1 per army",
+      "unique": true,
+      "max_count": 1
+    },
+    {
+      "name": "Black Mariah",
+      "faction": "Liberty Corps",
+      "type": "Cavalry",
+      "cost": 156,
+      "quality": 5,
+      "defense": 3,
+      "move": 8,
+      "range": null,
+      "weapon": "Armored Ram & Restraint Winch",
+      "weapon_properties": [
+        "Grapple"
+      ],
+      "abilities": [
+        "Cargo Hold",
+        "Mobile Cell Block",
+        "High-Value Target"
+      ],
+      "lore": "A steam-powered armored prison wagon. It doesn't bring help. It brings jurisdiction.",
+      "tactics": "Primary scoring engine. Load restrained units and extract. If destroyed, all prisoners are released.",
+      "composition_limit": "0-1 per army",
+      "unique": true,
+      "max_count": 1,
+      "upgrades": [],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "name": "Classified Asset: Troll-Howitzer",
+      "faction": "Liberty Corps",
+      "type": "Titan",
+      "cost": 201,
+      "quality": 6,
+      "defense": 4,
+      "move": 2,
+      "range": 26,
+      "weapon": "Howitzer Cannon (Fused)",
+      "weapon_properties": [
+        "Blast(3)",
+        "AP(3)"
+      ],
+      "abilities": [
+        "Monster+Device",
+        "Fear(2)",
+        "Mismanaged Asset"
+      ],
+      "lore": "A restrained monster fused to artillery hardware. It fires because it hurts. It exists because paperwork said it could.",
+      "tactics": "Deterrence through escalation. Every shot risks morale collapse on both sides.",
+      "composition_limit": "0-1 per army (centerpiece)",
+      "unique": true,
+      "max_count": 1,
+      "upgrades": [],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    },
+    {
+      "name": "Uncle Liberty",
+      "faction": "Liberty Corps",
+      "type": "Hero",
+      "cost": 186,
+      "quality": 6,
+      "defense": 4,
+      "move": 6,
+      "range": null,
+      "weapon": "Steam-Powered Fists",
+      "weapon_properties": [
+        "Impact(3)"
+      ],
+      "abilities": [
+        "Inspire",
+        "Fear(2)",
+        "Regeneration"
+      ],
+      "lore": "The first President of the United States of Liberty. Half man, half machine, sustained by steam, myth, and unfinished business. He fights for Liberty---until Liberty demands more.",
+      "tactics": "Devastating charge unit with Impact(3) delivering automatic hits. If killed, rises once as UNCONTROLLED---control alternates between players each round. High-risk centerpiece that becomes everyone's problem.",
+      "special_rules": {
+        "Been Killed Seven Times": "If Uncle Liberty is reduced to 0 Quality for the FIRST TIME: Remove all damage, place within 6\" of death location, becomes UNCONTROLLED permanently. Control alternates each round (Round 1: opponent, Round 2: owner, etc.). Controlling player activates him, MUST move toward and attack nearest enemy. Cannot use choice abilities or score objectives. Regeneration works automatically. If reduced to 0 Quality while UNCONTROLLED: destroyed permanently, no VP awarded. ONE RESURRECTION ONLY.",
+        "Guardian of the Land": "Cannot be Arrested, Charmed, Transported, or Embarked. If destroyed after resurrection is exhausted, neither player scores VP."
+      },
+      "composition_limit": "0-1 per army (Hero)",
+      "unique": true,
+      "max_count": 1,
+      "upgrades": [],
+      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+    }
+  ],
+  "universal_upgrades_available": true,
+  "universal_upgrades_note": "Liberty Corps units may purchase universal upgrades from core rules (Gas Mask, Spare Parts, vehicle upgrades) where appropriate."
+}

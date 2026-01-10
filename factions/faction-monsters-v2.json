@@ -1,0 +1,2315 @@
+{
+  "faction": "Monsters",
+  "version": "1.9",
+  "description": "The canyon was here first. Monsters are not an army—they are the reason Coffin Canyon exists. Native inhabitants who react to intruders with instinct, territory, and survival.",
+  "universal_upgrades_available": false,
+  "universal_upgrades_note": "Monsters typically do not use equipment upgrades. They are wild creatures, not soldiers. Scenario-specific upgrades may be available.",
+  "faction_features": [
+    {
+      "name": "Native Deployment",
+      "cost": 0,
+      "required": true,
+      "effect": "Monsters deploy after all terrain is placed, but before other factions. They may deploy anywhere on the table, including inside ruins, near Thyr crystals, or in ambush positions."
+    },
+    {
+      "name": "Monster Exits",
+      "cost": 0,
+      "required": false,
+      "effect": "Scenarios may designate Monster Exits (mines, caves, ruins, sewers, hidden paths). A Monster may leave the table via an Exit instead of activating normally. Exited Monsters are removed from play and may score Survival or Escape VP (scenario dependent)."
+    },
+    {
+      "name": "Temperament System",
+      "cost": 0,
+      "required": true,
+      "effect": "Every Monster has a Temperament (Friendly, Vengeful, Cunning, Territorial, Skittish, Stalwart) that affects how it reacts to danger and morale. See individual unit cards for specific behaviors."
+    },
+    {
+      "name": "Befriending",
+      "cost": 0,
+      "required": false,
+      "effect": "Certain Monsters (marked CanBeBefriended) may be befriended, escorted, or temporarily allied with Monster Rangers. Others (marked CannotBeBefriended) react violently to such attempts."
+    }
+  ],
+  "victory_objectives": [
+    {
+      "type": "Survival",
+      "vp": "Varies",
+      "description": "Monsters score VP for remaining alive at game end. Specific VP values are scenario-dependent."
+    },
+    {
+      "type": "Territorial Control",
+      "vp": "Varies",
+      "description": "Monsters score VP for remaining near nests, ruins, lairs, or designated territories. Territorial Monsters often defend specific areas."
+    },
+    {
+      "type": "Thyr Control",
+      "vp": "Varies",
+      "description": "Monsters score VP for holding or consuming Thyr crystals. Some Monsters are drawn to Thyr and gain bonuses when near it."
+    },
+    {
+      "type": "Escape",
+      "vp": "Varies",
+      "description": "Monsters score VP for successfully exiting the table via Monster Exits. Represents survival and retreat rather than conquest."
+    },
+    {
+      "type": "Kills (Specific Monsters)",
+      "vp": "Varies",
+      "description": "Only certain predatory Monsters (like Feratu Stalker) score VP for kills. Most Monsters do not score for combat."
+    },
+    {
+      "type": "Special Objectives",
+      "vp": "Varies",
+      "description": "Some Monsters lose points if killed, grant points to killers, or cause global VP shifts when destroyed (especially Titans like Klowna)."
+    }
+  ],
+  "composition_requirements": {
+    "note": "Monsters are scenario-driven and do not follow standard army composition rules. Scenarios determine which Monsters appear, how many, and their victory conditions.",
+    "deployment_order": "Monsters deploy after terrain placement but before other factions",
+    "titan_rule": "Titans (like Klowna) are scenario events, not standard units. When a Titan enters play, all factions must reassess priorities."
+  },
+  "units": [
+    {
+      "name": "Bête Herdbeast",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 177,
+      "quality": 6,
+      "defense": 3,
+      "move": 6,
+      "range": null,
+      "weapon": "Horns, Bulk & Trample",
+      "weapon_properties": [],
+      "abilities": [
+        "Tough(2)",
+        "Impact(2)",
+        "Fear(1)"
+      ],
+      "lore": "Huge, shaggy horned beasts that smell faintly of candy. Bêtes are dream-made giants—often gentle—yet terrifying when startled.",
+      "tactics": "Anchor the center. Use its footprint to block lanes and protect Thyr. Avoid unnecessary fights; win by surviving, holding ground, or being Escorted.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Friendly",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Large"
+      ],
+      "special_mechanics": {
+        "gentle": "Will not declare attacks against Monster Rangers unless attacked first (scenario rule).",
+        "stampede": "If it fails a Morale test, it immediately moves up to its Move in a straight line; it may pass through smaller models (apply Impact as normal)."
+      }
+    },
+    {
+      "name": "Dust King",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 162,
+      "quality": 5,
+      "defense": 4,
+      "move": 4,
+      "range": null,
+      "weapon": "Black-Tarnished Silver Sword",
+      "weapon_properties": [
+        "AP(1)"
+      ],
+      "abilities": [
+        "Fear(1)",
+        "Relentless",
+        "Tough(2)"
+      ],
+      "lore": "Ancient bandaged dead-men, risen from forbidden chemical ruins. Dust Kings wander out of collapsed tombs and sunken chambers, chewing fresh flesh when they find it.",
+      "tactics": "Slow, durable melee pressure. Park them in ruins or choke points and force enemies to deal with Fear and grinding attacks.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "Bloodless",
+        "SkullRangerBefriendOnly"
+      ],
+      "special_mechanics": {
+        "ruinbound": "If this model begins its activation within 6\" of a Ruin/Ancient Structure terrain, it gains +1 Defense until end of activation."
+      }
+    },
+    {
+      "name": "Halloween Golem",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 155,
+      "quality": 5,
+      "defense": 4,
+      "move": 4,
+      "range": null,
+      "weapon": "Woodcutter Axe",
+      "weapon_properties": [
+        "AP(1)"
+      ],
+      "abilities": [
+        "Tough(3)"
+      ],
+      "lore": "Obsolete mechanical men built to bring order to the wilderness—cutting trees and tending farms. Now they do odd jobs to pay the bills, still carrying their great axes.",
+      "tactics": "A reliable blocker and protector. Pair with fragile monsters or vendors; Bodyguard keeps key pieces alive while you claim Thyr.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Stalwart",
+      "flags": [
+        "Mechan",
+        "HeavyArmor"
+      ],
+      "special_mechanics": {
+        "mechanical": "Suffers -1 die on any action that uses a magical relic (if relic rules are in play)."
+      }
+    },
+    {
+      "name": "Vendomat",
+      "faction": "Monsters",
+      "type": "Frail",
+      "cost": 64,
+      "quality": 2,
+      "defense": 4,
+      "move": 3,
+      "range": 2,
+      "weapon": "Clanking Hinges & Steel Bulk",
+      "weapon_properties": [],
+      "abilities": [
+        "Assistant"
+      ],
+      "lore": "Walking vending machines—converted from old golems centuries ago. Some are friendly merchants. Most will try to sell you Muzz (a refreshing brew).",
+      "tactics": "Scenario utility and nuisance. Use them to support nearby monsters and soak attention. Do not rely on them to fight.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Friendly",
+      "flags": [
+        "Device",
+        "Mechan",
+        "NonCombatant"
+      ],
+      "special_mechanics": {
+        "vend": "Once per Round, if adjacent to a friendly model, you may spend 1 Thyr that model is carrying to heal 1 damage OR remove 1 negative status (GM chooses if multiple).",
+        "muzz": "Once per game, an adjacent friendly model gains +1 Quality for its next roll."
+      }
+    },
+    {
+      "name": "Patchwork Wonder",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 144,
+      "quality": 5,
+      "defense": 3,
+      "move": 5,
+      "range": 2,
+      "weapon": "Stitched Limbs & Aethyr Surge",
+      "weapon_properties": [
+        "Thrown 6\""
+      ],
+      "abilities": [
+        "Relentless",
+        "Fear(1)",
+        "Brutal Blow"
+      ],
+      "lore": "A creature of many parts, sewn together with string and wire and sparked to life by aethyr. Sometimes cloth. Sometimes muscle and gristle. Always strange.",
+      "tactics": "Close in fast, hit hard, and keep pressure. Patchwork thrives in messy fights and punishes anyone who tries to bully monsters off objectives.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CannotBeBefriended"
+      ],
+      "special_mechanics": {
+        "unstable_form": "When this model is damaged, it gains +1 die on its next attack (stacks once; refreshes each time it is damaged)."
+      }
+    },
+    {
+      "name": "Owlkin Poison Vendor",
+      "faction": "Monsters",
+      "type": "Mystic",
+      "cost": 117,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": 6,
+      "weapon": "Poisons, Tonics & Tiny Crossbow",
+      "weapon_properties": [
+        "Thrown 6\"",
+        "Poison"
+      ],
+      "abilities": [
+        "Hex",
+        "Inspire",
+        "Stealth"
+      ],
+      "lore": "Owlfolk merchants who sell potions, remedies, and poisons. Fairly peaceful—until their stock is threatened.",
+      "tactics": "Support piece. Debuff tough targets with Hex/Poison, then vanish into cover. Great for enabling a big monster to finish the job.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "Trader",
+        "CanBeBefriended"
+      ],
+      "special_mechanics": {
+        "field_mix": "Instead of attacking, choose a friendly model within 2\": on 4+, heal 1 damage OR remove Poison."
+      }
+    },
+    {
+      "name": "Lionvulture",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 122,
+      "quality": 4,
+      "defense": 3,
+      "move": 10,
+      "range": null,
+      "weapon": "Raking Talons & Pounce",
+      "weapon_properties": [],
+      "abilities": [
+        "Fast"
+      ],
+      "lore": "A four-legged wild beast—more animal than intellect—nesting near Thyr outcroppings where it can guard and feed.",
+      "tactics": "Flank, pounce, and retreat. Use speed to contest Thyr and punish isolated models. Avoid prolonged brawls.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "Beast"
+      ],
+      "special_mechanics": {
+        "nest_guardian": "While within 6\" of any Thyr crystal, gain +1 die on melee attacks."
+      }
+    },
+    {
+      "name": "Kelpie",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 121,
+      "quality": 4,
+      "defense": 3,
+      "move": 9,
+      "range": null,
+      "weapon": "Drowning Drag",
+      "weapon_properties": [
+        "Grapple"
+      ],
+      "abilities": [
+        "Fear(1)"
+      ],
+      "lore": "A damp horse-beast out of place in the dry canyon. Desperate, thirsty, and dangerous—pulling prey into shade, mud, or deeper trouble.",
+      "tactics": "Hit-and-run controller. Grapple key targets off objectives or into danger zones. Works best near water terrain (if present).",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "Beast"
+      ],
+      "special_mechanics": {
+        "damp": "If within 3\" of Water terrain, gain +1 Defense.",
+        "dry_desperation": "If starting an activation on Sand, may take 1 damage to gain +2 Move this activation."
+      }
+    },
+    {
+      "name": "Feratu Stalker",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 117,
+      "quality": 4,
+      "defense": 3,
+      "move": 7,
+      "range": null,
+      "weapon": "Fangs & Gentleman’s Blade",
+      "weapon_properties": [],
+      "abilities": [
+        "Stealth",
+        "Fear(1)"
+      ],
+      "lore": "Tall, pale bloodsuckers with a knack for wheeling and dealing. In Coffin Canyon they hunt selectively, feeding on the living and growing bolder with every kill.",
+      "tactics": "A scaling predator. Early game: pick off Rabble and wounded targets. Late game: snowball into a nightmare if unchecked.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "Bloodless",
+        "CannotBeBefriended",
+        "SkullRangerBefriendOnly"
+      ],
+      "special_mechanics": {
+        "feeding": "Each time this model destroys a Human model, it gains +1 Feeding die. At the start of its activation, add all Feeding dice to one chosen pool for that activation (attack/defense/interaction). Feeding dice persist."
+      }
+    },
+    {
+      "name": "Klowna",
+      "faction": "Monsters",
+      "type": "Titan",
+      "cost": 257,
+      "quality": 7,
+      "defense": 5,
+      "move": 7,
+      "range": null,
+      "weapon": "Titan Talons, Twin Maw & Triple-Leg Lunge",
+      "weapon_properties": [
+        "AP(2)"
+      ],
+      "abilities": [
+        "Fear(2)",
+        "Tough(5)"
+      ],
+      "lore": "A towering chitinous horror—nearly 14 feet tall—with two heads, three legs, and enormous talons. It crawls out of an old wreck like a bad joke that refuses to end.",
+      "tactics": "A shared catastrophe. Spawn it mid-game to spike tension. Force everyone to decide: keep scoring, or deal with the Titan before it eats the canyon.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "Titan",
+        "CannotBeBefriended"
+      ],
+      "special_mechanics": {
+        "clown_car_spawn": "Does not deploy normally. At the start of Round 2 (or scenario-defined), place in base contact with the Clown Car/Wagon Wreck marker.",
+        "reach": "Melee attacks may be split between up to two targets in base contact.",
+        "two_heads": "At the start of each activation, roll 1d6: 1-2 Frenzy (must Charge nearest unit), 3-4 Normal, 5-6 Mockery (all enemies within 6\" test Morale)."
+      },
+      "unique": true,
+      "max_count": 1
+    },
+    {
+      "name": "Canyon Goblin",
+      "faction": "Monsters",
+      "type": "Frail",
+      "cost": 29,
+      "quality": 2,
+      "defense": 1,
+      "move": 5,
+      "range": null,
+      "weapon": "Rust Blade & Rock Tossing",
+      "weapon_properties": [
+        "Thrown 6\""
+      ],
+      "abilities": [
+        "Skittish"
+      ],
+      "lore": "Canyon goblins scavenge old rails, broken wagons, and ruined camps. They know every crack in the stone, every shade line at noon, and every hiding place worth having.",
+      "tactics": "Objective nuisance. Use them to screen, contest, and flee. They are not fighters.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Small"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Red Goblin",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 96,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": 2,
+      "weapon": "Poisoned Knife & Iron-Shoe Kicks",
+      "weapon_properties": [
+        "Poison"
+      ],
+      "abilities": [
+        "Stealth",
+        "Backstab"
+      ],
+      "lore": "Circus goblins aren’t from the canyon—they wash in with broken caravans and bad shows. A Red Goblin wears a red hat like a brand, iron shoes like a sentence, and carries a knife that never looks bloody for long. They don’t steal; they *collect*.",
+      "tactics": "Assassin-predator. Pick off Frail and wounded targets, then disappear into ruins. Avoid Tanks.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended",
+        "Small"
+      ],
+      "special_mechanics": {
+        "iron_shoes": "When this model destroys an enemy in melee, it may immediately move 2\" (in addition to any other effects)."
+      }
+    },
+    {
+      "name": "Doom Eye",
+      "faction": "Monsters",
+      "type": "Mystic",
+      "cost": 188,
+      "quality": 6,
+      "defense": 4,
+      "move": 5,
+      "range": 10,
+      "weapon": "Eye Rays",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(2)",
+        "Brain Bloom",
+        "Hex"
+      ],
+      "lore": "A floating tyrant grown from forbidden experiments and canyon hunger. It watches everything—and forgets nothing. The ruins around it feel… supervised.",
+      "tactics": "Area control and morale pressure. Use Psychic Bloom and Hex to break key pieces, then drift away behind cover.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended",
+        "Incorporeal?"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Sand Shark",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 161,
+      "quality": 6,
+      "defense": 4,
+      "move": 7,
+      "range": null,
+      "weapon": "Burrow-Burst Bite",
+      "weapon_properties": [],
+      "abilities": [
+        "Impact(2)",
+        "Unstoppable"
+      ],
+      "lore": "It swims through sand and broken stone like water, bursting upward in a storm of grit and teeth. You only hear it when it’s already too late.",
+      "tactics": "Ambush striker. Threaten objectives and punish clustered models.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Sand Worm",
+      "faction": "Monsters",
+      "type": "Titan",
+      "cost": 256,
+      "quality": 8,
+      "defense": 5,
+      "move": 5,
+      "range": null,
+      "weapon": "Grinding Maw",
+      "weapon_properties": [
+        "AP(2)"
+      ],
+      "abilities": [
+        "Fear(2)",
+        "Tough(4)"
+      ],
+      "lore": "Entire camps vanish when it passes beneath them. The ground breathes, the boards buckle, and the canyon eats.",
+      "tactics": "Scenario catastrophe. It forces everyone to move and rethink priorities.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "Titan",
+        "CannotBeBefriended",
+        "Beast"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Ruster",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 77,
+      "quality": 3,
+      "defense": 2,
+      "move": 5,
+      "range": null,
+      "weapon": "Rust Mandibles",
+      "weapon_properties": [
+        "Pierce"
+      ],
+      "abilities": [
+        "Corrode",
+        "Skittish"
+      ],
+      "lore": "Metal-eating scavengers drawn to rails, armor, and guns. Their mandibles secrete a potent rust agent that corrodes iron and steel on contact. In Coffin Canyon they follow the taste of industry like a trail.",
+      "tactics": "Flank armored targets to corrode their equipment. Skittish means they avoid direct combat - use hit-and-run tactics. Corrode heavily armored units (Steam Constables, Iron Diplomat) or units with powerful weapon properties.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast",
+        "Small"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Owlbear",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 141,
+      "quality": 5,
+      "defense": 3,
+      "move": 6,
+      "range": null,
+      "weapon": "Beak, Claws & Canyon Rage",
+      "weapon_properties": [],
+      "abilities": [
+        "Brutal Blow",
+        "Fear(1)",
+        "Furious"
+      ],
+      "lore": "Owlbears nest in collapsed watchtowers and cliff hollows where old boards creak in the wind. They’re territorial and frightening, but not cruel—more parent than predator. In Coffin Canyon, some will accept food, calm voices, and steady hands… if you don’t smell like fear.",
+      "tactics": "A hard-hitting brawler that can be turned Friendly. Use it to break a flank, then escort it out instead of trading it away.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {
+        "nest_guardian": "While within 6\" of a Ruin/Watchtower terrain feature, gain +1 die on melee attacks."
+      }
+    },
+    {
+      "name": "Skeleton",
+      "faction": "Monsters",
+      "type": "Frail",
+      "cost": 41,
+      "quality": 2,
+      "defense": 2,
+      "move": 4,
+      "range": null,
+      "weapon": "Dry Bone Claws",
+      "weapon_properties": [],
+      "abilities": [
+        "Bloodless"
+      ],
+      "lore": "Bone-picked remains animated by Thyr dust. They rise out of shallow graves and collapsed barracks, still standing where the sun forgot them.",
+      "tactics": "Cheap blocker and objective contester. They die fast but don’t cost you morale.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Stalwart",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Skeleton Archer",
+      "faction": "Monsters",
+      "type": "Shooter",
+      "cost": 86,
+      "quality": 3,
+      "defense": 2,
+      "move": 4,
+      "range": 8,
+      "weapon": "Canyon Bow",
+      "weapon_properties": [],
+      "abilities": [
+        "Deadeye",
+        "Bloodless"
+      ],
+      "lore": "Old tower-sentries with stringless patience, loosing arrows from shattered walls and high ruins.",
+      "tactics": "Chip damage and pin lanes. Keep them in cover and let others do the brawling.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Stalwart",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Skeleton Warrior",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 86,
+      "quality": 3,
+      "defense": 3,
+      "move": 4,
+      "range": null,
+      "weapon": "Rust Blade & Shield",
+      "weapon_properties": [],
+      "abilities": [
+        "Brutal Blow",
+        "Bloodless"
+      ],
+      "lore": "Thyr residue threads through bone like green lightning, waking old drills and doorway stubbornness.",
+      "tactics": "Mid-board bully. Trades well into Frail and Rogues; avoid Tanks.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Stalwart",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Zombie Brute",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 111,
+      "quality": 4,
+      "defense": 3,
+      "move": 3,
+      "range": null,
+      "weapon": "Ore-Caked Fists",
+      "weapon_properties": [],
+      "abilities": [
+        "Relentless",
+        "Tough(1)",
+        "Bloodless"
+      ],
+      "lore": "A mine dead that kept its shoulders. Pick scars, ore dust, and the dull refusal to fall down.",
+      "tactics": "Slow pressure. Park it on a lane and make enemies waste activations.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Stalwart",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Ghoul",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 94,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": null,
+      "weapon": "Grave Teeth",
+      "weapon_properties": [],
+      "abilities": [
+        "Disengage",
+        "Poison",
+        "Bloodless"
+      ],
+      "lore": "Carrion-eaters turned wrong. They live in the cool shade under ruins and come running when the canyon smells fresh blood.",
+      "tactics": "Hit wounded targets, disengage, repeat. Great cleanup unit.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Shadow",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 104,
+      "quality": 3,
+      "defense": 3,
+      "move": 6,
+      "range": null,
+      "weapon": "Cold Touch",
+      "weapon_properties": [],
+      "abilities": [
+        "Stealth",
+        "Fear(1)",
+        "Bloodless"
+      ],
+      "lore": "Living absence that leaks out of sealed rooms and burned-out chapels. It clings to your feet like bad luck.",
+      "tactics": "Harass and force morale tests. Avoid concentrated fire.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless",
+        "Incorporeal"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Specter",
+      "faction": "Monsters",
+      "type": "Mystic",
+      "cost": 137,
+      "quality": 4,
+      "defense": 3,
+      "move": 6,
+      "range": 8,
+      "weapon": "Haunt Pulse",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(1)",
+        "Brain Bloom",
+        "Bloodless"
+      ],
+      "lore": "A violent death that never cooled. It lashes out from nowhere, then vanishes into cracked plaster and canyon wind.",
+      "tactics": "Control piece. Use Psychic Bloom to break plans, not bodies.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless",
+        "Incorporeal"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Wraith",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 148,
+      "quality": 5,
+      "defense": 4,
+      "move": 6,
+      "range": null,
+      "weapon": "Grave Scythe",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(2)",
+        "Brutal Blow",
+        "Bloodless"
+      ],
+      "lore": "A hunter-spirit wrapped in old burial cloth, dragging a shadow-blade across stone like it’s sharpening time.",
+      "tactics": "Close-range terror. Use Fear to crack lines, then finish what breaks.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless",
+        "Incorporeal"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Ghost",
+      "faction": "Monsters",
+      "type": "Mystic",
+      "cost": 123,
+      "quality": 4,
+      "defense": 4,
+      "move": 6,
+      "range": 6,
+      "weapon": "Polter Lash",
+      "weapon_properties": [],
+      "abilities": [
+        "Hex",
+        "Bloodless"
+      ],
+      "lore": "Some ghosts linger to warn. Others linger to accuse. In Coffin Canyon, accusation tends to come first.",
+      "tactics": "Debuff a key target and force awkward activations.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless",
+        "Incorporeal"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Banshee",
+      "faction": "Monsters",
+      "type": "Mystic",
+      "cost": 118,
+      "quality": 4,
+      "defense": 3,
+      "move": 6,
+      "range": 8,
+      "weapon": "Wail",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(2)",
+        "Sonic",
+        "Bloodless"
+      ],
+      "lore": "The cries of the witches that were once burned—still trapped in the canyon walls, still looking for someone to blame.",
+      "tactics": "Morale breaker. Pair with fast threats to punish panicked retreats.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless",
+        "Incorporeal"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Will-o’-Wisp",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 95,
+      "quality": 3,
+      "defense": 3,
+      "move": 7,
+      "range": 6,
+      "weapon": "False Light",
+      "weapon_properties": [],
+      "abilities": [
+        "Stealth",
+        "Skittish",
+        "Bloodless"
+      ],
+      "lore": "A floating lantern-light that never warms you. It leads the lost into sinkholes, mines, and worse decisions.",
+      "tactics": "Bait, distract, and contest. Don’t stand and fight.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "SkullRangerBefriendOnly",
+        "Bloodless",
+        "Incorporeal"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Hobgoblin",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 86,
+      "quality": 3,
+      "defense": 2,
+      "move": 5,
+      "range": null,
+      "weapon": "Drill Blade",
+      "weapon_properties": [],
+      "abilities": [
+        "Disengage",
+        "Backstab"
+      ],
+      "lore": "Hard-eyed raiders who keep old rules in their pockets. They demand tolls on roads that don’t exist anymore.",
+      "tactics": "Flank and finish. Works best when allies are already engaged.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended",
+        "Small"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Bugbear",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 109,
+      "quality": 4,
+      "defense": 2,
+      "move": 6,
+      "range": null,
+      "weapon": "Ambush Maul",
+      "weapon_properties": [],
+      "abilities": [
+        "First Strike",
+        "Brutal Blow"
+      ],
+      "lore": "A heavy shape in deep shade. Bugbears wait where the canyon turns sharp and the sun can’t help you.",
+      "tactics": "Open with a brutal first hit then keep moving; don’t trade into Tanks.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Orc",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 114,
+      "quality": 4,
+      "defense": 3,
+      "move": 5,
+      "range": null,
+      "weapon": "Choppa & Spite",
+      "weapon_properties": [],
+      "abilities": [
+        "Furious",
+        "Berserk"
+      ],
+      "lore": "Descendants of failed settlements and old frontier armies. They think the canyon owes them blood for promises it never made.",
+      "tactics": "Aggressive linebreaker. Berserk can be exploited—use terrain to manage it.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CannotBeBefriended"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Kobold",
+      "faction": "Monsters",
+      "type": "Frail",
+      "cost": 39,
+      "quality": 2,
+      "defense": 1,
+      "move": 5,
+      "range": 6,
+      "weapon": "Shard Sling",
+      "weapon_properties": [],
+      "abilities": [
+        "Runner",
+        "Skittish"
+      ],
+      "lore": "Tunnel-dwellers who worship heat and Thyr glow. They strike, scatter, and laugh from places you can’t reach.",
+      "tactics": "Objective runners and annoyers. Don’t let them get trapped.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Small"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Gnoll",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 104,
+      "quality": 4,
+      "defense": 2,
+      "move": 6,
+      "range": null,
+      "weapon": "Hyena Blades",
+      "weapon_properties": [],
+      "abilities": [
+        "Blood in the Air",
+        "Brutal Blow"
+      ],
+      "lore": "Laughing hunters that follow the smell of death. They arrive after the first body hits the dust.",
+      "tactics": "Snowballs when things start dying nearby—feed it fights.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CannotBeBefriended"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Gnome",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 91,
+      "quality": 3,
+      "defense": 2,
+      "move": 5,
+      "range": 6,
+      "weapon": "Tinker Pistol & Tricks",
+      "weapon_properties": [],
+      "abilities": [
+        "Stealth",
+        "Assistant"
+      ],
+      "lore": "Desert tinker-nomads who survive on salvage and secrets. They always know a back way out—sometimes literally.",
+      "tactics": "Support rogue. Use Assistant to boost an ally’s key action, then fade.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Small"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Wolf",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 103,
+      "quality": 3,
+      "defense": 2,
+      "move": 8,
+      "range": null,
+      "weapon": "Pack Bite",
+      "weapon_properties": [],
+      "abilities": [
+        "Fast",
+        "Blood in the Air"
+      ],
+      "lore": "Lean canyon wolves hunt in silence, shaped by drought and ruin. A calm hand and meat can turn them—briefly.",
+      "tactics": "Fast harasser. Threaten objectives and wounded models.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Dire Wolf",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 116,
+      "quality": 4,
+      "defense": 3,
+      "move": 8,
+      "range": null,
+      "weapon": "Gatekeeper Jaws",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(1)",
+        "Impact(1)"
+      ],
+      "lore": "Massive beasts that guard canyon passes like living gates. They don’t chase—you come to them.",
+      "tactics": "Charge, hit hard, and hold a lane. Don’t get surrounded.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Bear",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 114,
+      "quality": 4,
+      "defense": 3,
+      "move": 6,
+      "range": null,
+      "weapon": "Maul",
+      "weapon_properties": [],
+      "abilities": [
+        "Brutal Blow",
+        "Furious"
+      ],
+      "lore": "Old bears wander into the valley driven by heat and hunger. They’re not evil—just done being moved.",
+      "tactics": "Brawl and trade. Best into Frail/Brutes; avoid AP-heavy shooters.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Giant Bear",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 170,
+      "quality": 6,
+      "defense": 4,
+      "move": 6,
+      "range": null,
+      "weapon": "Thyr-Swollen Maul",
+      "weapon_properties": [],
+      "abilities": [
+        "Tough(2)",
+        "Fear(1)"
+      ],
+      "lore": "A bear swollen by Thyr exposure—too big for the ruins it sleeps in. Stone cracks under its weight.",
+      "tactics": "Anchor a zone. Win by surviving and denying space.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Boar",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 95,
+      "quality": 3,
+      "defense": 3,
+      "move": 6,
+      "range": null,
+      "weapon": "Tusk Charge",
+      "weapon_properties": [],
+      "abilities": [
+        "Impact(1)",
+        "Furious"
+      ],
+      "lore": "Hard-skulled scavengers that charge anything threatening their feeding ground.",
+      "tactics": "Hit-and-stick brawler. Great for disrupting shooters.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Giant Boar",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 148,
+      "quality": 5,
+      "defense": 4,
+      "move": 6,
+      "range": null,
+      "weapon": "Gore & Trample",
+      "weapon_properties": [],
+      "abilities": [
+        "Impact(2)",
+        "Tough(1)"
+      ],
+      "lore": "A scarred boar the size of a wagon, angry at ropes, bullets, and the memory of fences.",
+      "tactics": "Shock Tank. Crash into the mid-board and hold.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Crocodile",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 109,
+      "quality": 4,
+      "defense": 3,
+      "move": 5,
+      "range": null,
+      "weapon": "Death Roll",
+      "weapon_properties": [],
+      "abilities": [
+        "Grapple",
+        "Brutal Blow"
+      ],
+      "lore": "A wrong-water survivor in a dry land. It waits in shade, mud pockets, and busted cisterns.",
+      "tactics": "Drag targets off objectives; punish anyone who plays too close.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Giant Rat",
+      "faction": "Monsters",
+      "type": "Frail",
+      "cost": 29,
+      "quality": 2,
+      "defense": 1,
+      "move": 6,
+      "range": null,
+      "weapon": "Gnaw",
+      "weapon_properties": [],
+      "abilities": [
+        "Skittish"
+      ],
+      "lore": "Found in food caches and building ruins, giant rats chew through canvas, leather, and rope for scraps.",
+      "tactics": "Cheap contester. Swarm bonuses make them dangerous in pairs.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast",
+        "Small"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Giant Spider",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 101,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": null,
+      "weapon": "Venom Bite",
+      "weapon_properties": [],
+      "abilities": [
+        "Poison",
+        "Climber",
+        "Stealth"
+      ],
+      "lore": "They web across ruined beams and canyon shelves, waiting for the tremor that means something’s stuck.",
+      "tactics": "Threaten vertical lanes and punish isolated units.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Bat Swarm",
+      "faction": "Monsters",
+      "type": "Frail",
+      "cost": 57,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": null,
+      "weapon": "Biting Cloud",
+      "weapon_properties": [],
+      "abilities": [],
+      "lore": "A living blanket of wings, boiling out of mine mouths and chapel rafters at dusk.",
+      "tactics": "Screen and contest. Win by being everywhere and dying cheaply.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Swarm"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Rat Swarm",
+      "faction": "Monsters",
+      "type": "Frail",
+      "cost": 54,
+      "quality": 3,
+      "defense": 2,
+      "move": 5,
+      "range": null,
+      "weapon": "Scrap Hunger",
+      "weapon_properties": [],
+      "abilities": [],
+      "lore": "A tide of teeth from caches, pantries, and wagon beds—always where you least want them.",
+      "tactics": "Drown objectives and punish lone models with Swarm bonuses.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Swarm"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Spider Swarm",
+      "faction": "Monsters",
+      "type": "Frail",
+      "cost": 66,
+      "quality": 3,
+      "defense": 2,
+      "move": 5,
+      "range": null,
+      "weapon": "Crawling Panic",
+      "weapon_properties": [],
+      "abilities": [
+        "Poison"
+      ],
+      "lore": "A carpet of small spiders spilling from cracks in adobe and old timber.",
+      "tactics": "Area denial by disgust. Don’t be brave—be annoying.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Swarm"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Centipede Swarm",
+      "faction": "Monsters",
+      "type": "Frail",
+      "cost": 66,
+      "quality": 3,
+      "defense": 2,
+      "move": 5,
+      "range": null,
+      "weapon": "Venom Tide",
+      "weapon_properties": [],
+      "abilities": [
+        "Poison"
+      ],
+      "lore": "Under stones, in boots, inside bedrolls. Coffin Canyon remembers every trespass.",
+      "tactics": "Poison pressure. Force enemies to spend actions stabilizing.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Swarm"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Gray Ooze",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 109,
+      "quality": 4,
+      "defense": 4,
+      "move": 3,
+      "range": null,
+      "weapon": "Corrosive Smear",
+      "weapon_properties": [],
+      "abilities": [
+        "Pierce",
+        "Bloodless"
+      ],
+      "lore": "Chemical runoff given hunger. It eats metal first, then whatever the metal was protecting.",
+      "tactics": "Armor-pressurer. Walk it into heavy units and dare them to waste shots.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Ochre Jelly",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 129,
+      "quality": 5,
+      "defense": 4,
+      "move": 3,
+      "range": null,
+      "weapon": "Splitting Slam",
+      "weapon_properties": [],
+      "abilities": [
+        "Tough(1)",
+        "Bloodless"
+      ],
+      "lore": "A slow, bright hunger leaking from abandoned processing vats and canyon seep-caves.",
+      "tactics": "Soak attention while faster monsters score.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Black Pudding",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 164,
+      "quality": 6,
+      "defense": 4,
+      "move": 3,
+      "range": null,
+      "weapon": "Dissolve",
+      "weapon_properties": [],
+      "abilities": [
+        "Pierce",
+        "Tough(2)",
+        "Bloodless"
+      ],
+      "lore": "A moving pit of ruin that dissolves armor, bone, and hope.",
+      "tactics": "Hard counter into armored targets. Keep it protected from kiting.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Gelatinous Cube",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 124,
+      "quality": 6,
+      "defense": 5,
+      "move": 2,
+      "range": null,
+      "weapon": "Clear the Hallway",
+      "weapon_properties": [],
+      "abilities": [
+        "Immobile",
+        "Bloodless"
+      ],
+      "lore": "A cleaning construct left behind in ancient underground complexes—still doing its job, still making the floors *perfect*.",
+      "tactics": "Scenario wall. Use to deny corridors and exits.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Stalwart",
+      "flags": [
+        "CannotBeBefriended",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Mimic",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 99,
+      "quality": 4,
+      "defense": 3,
+      "move": 5,
+      "range": null,
+      "weapon": "False Treasure Bite",
+      "weapon_properties": [],
+      "abilities": [
+        "Ambush"
+      ],
+      "lore": "In the canyon, a crate is a promise. Mimics are what happens when the promise lies.",
+      "tactics": "Set ambushes near objectives and punish greedy interactions.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Imp",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 106,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": 6,
+      "weapon": "Sting & Mockery",
+      "weapon_properties": [],
+      "abilities": [
+        "Stealth",
+        "Disengage",
+        "Poison"
+      ],
+      "lore": "A little wrongness with wings, laughing at your plans and biting when you look away.",
+      "tactics": "Harass and poison. Don’t stay in base contact.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended",
+        "Small"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Devil",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 147,
+      "quality": 5,
+      "defense": 4,
+      "move": 5,
+      "range": 6,
+      "weapon": "Barbed Shot & Chain",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(1)",
+        "Tough(1)"
+      ],
+      "lore": "Contract-bound horrors enforcing bargains no one remembers signing. They prefer rules—because rules hurt.",
+      "tactics": "Hold center and punish approaches. Great anchor.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Hell Hound",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 128,
+      "quality": 4,
+      "defense": 3,
+      "move": 8,
+      "range": null,
+      "weapon": "Ash Bite",
+      "weapon_properties": [],
+      "abilities": [
+        "Fast",
+        "Fear(1)"
+      ],
+      "lore": "Ash-scarred beasts that hunt alongside summoned things, drawn to fear and heat.",
+      "tactics": "Flank terror. Force morale checks and chase stragglers.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Animated Armor",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 114,
+      "quality": 4,
+      "defense": 4,
+      "move": 4,
+      "range": null,
+      "weapon": "Hollow Blade",
+      "weapon_properties": [],
+      "abilities": [
+        "Bloodless",
+        "Shield Wall"
+      ],
+      "lore": "Ceremonial suits animated by lingering force and duty. They move like someone’s wearing them—just no one is.",
+      "tactics": "Reliable mid-board guard. Great Bodyguard partner if you later add it.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Stalwart",
+      "flags": [
+        "CannotBeBefriended",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Flesh Golem",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 165,
+      "quality": 6,
+      "defense": 4,
+      "move": 4,
+      "range": null,
+      "weapon": "Stitched Hammerfists",
+      "weapon_properties": [],
+      "abilities": [
+        "Tough(2)",
+        "Fearless",
+        "Bloodless"
+      ],
+      "lore": "Surely built by Monsterologist Scientists—an expensive thesis given legs and stitched shut—sent into the canyon as a grand experiment.",
+      "tactics": "Soak and shove. It’s a slow disaster for anyone who can’t punch through Tough.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Stalwart",
+      "flags": [
+        "CannotBeBefriended",
+        "Bloodless"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Iron Golem",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 198,
+      "quality": 7,
+      "defense": 5,
+      "move": 4,
+      "range": null,
+      "weapon": "Forged Fists",
+      "weapon_properties": [],
+      "abilities": [
+        "Tough(3)",
+        "Fearless",
+        "Bloodless"
+      ],
+      "lore": "A heavy industrial enforcer left behind when its masters fled. It continues the last order it was given.",
+      "tactics": "Anchor a scoring zone. Demands concentrated answers.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Stalwart",
+      "flags": [
+        "CannotBeBefriended",
+        "Bloodless",
+        "Mechan"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Gargoyle",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 102,
+      "quality": 4,
+      "defense": 3,
+      "move": 6,
+      "range": null,
+      "weapon": "Stone Talons",
+      "weapon_properties": [],
+      "abilities": [
+        "Stealth"
+      ],
+      "lore": "Looks like a ruin ornament until it isn’t. Gargoyles love ledges, arches, and surprise.",
+      "tactics": "Ambush and punish exposed shooters.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Harpy",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 85,
+      "quality": 3,
+      "defense": 2,
+      "move": 7,
+      "range": 6,
+      "weapon": "Screech & Claws",
+      "weapon_properties": [],
+      "abilities": [
+        "Sonic",
+        "Disengage"
+      ],
+      "lore": "They nest on cliff faces and steal anything shiny. Their screech makes your stomach forget it has courage.",
+      "tactics": "Hit-and-run disruptor; use Sonic to bypass armor stacks.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Skittish",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Hippogriff",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 127,
+      "quality": 4,
+      "defense": 3,
+      "move": 9,
+      "range": null,
+      "weapon": "Talons & Dive",
+      "weapon_properties": [],
+      "abilities": [
+        "Fast",
+        "Impact(1)"
+      ],
+      "lore": "A cliff-rider beast that treats the canyon like open sky. It dislikes cages and loves sudden violence.",
+      "tactics": "Charge, strike, and peel away with Ride-by benefits.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Griffon",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 161,
+      "quality": 5,
+      "defense": 3,
+      "move": 9,
+      "range": null,
+      "weapon": "Raking Pounce",
+      "weapon_properties": [],
+      "abilities": [
+        "Fast",
+        "Impact(2)",
+        "Fear(1)"
+      ],
+      "lore": "Half lion, half raptor, all bad manners. Griffons make nests out of wagon parts and bones.",
+      "tactics": "Elite harasser. Use speed to decide where the fight happens.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Manticore",
+      "faction": "Monsters",
+      "type": "Shooter",
+      "cost": 115,
+      "quality": 4,
+      "defense": 3,
+      "move": 7,
+      "range": 8,
+      "weapon": "Tail Spines",
+      "weapon_properties": [],
+      "abilities": [
+        "Aim",
+        "Pinning Shot",
+        "Fear(1)"
+      ],
+      "lore": "A thorn-tailed cat horror that hunts from ledges, firing spines like a living gatling.",
+      "tactics": "Pin key models and force bad activations. Protect it from melee.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Chimera",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 173,
+      "quality": 6,
+      "defense": 4,
+      "move": 7,
+      "range": null,
+      "weapon": "Triple Maw",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(2)",
+        "Brutal Blow",
+        "Furious"
+      ],
+      "lore": "A stitched-together legend that shouldn’t live in a dry valley—yet here it is, breathing dust and eating regrets.",
+      "tactics": "Centerpiece brute. It wants messy fights where Furious triggers.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Minotaur",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 140,
+      "quality": 5,
+      "defense": 4,
+      "move": 6,
+      "range": null,
+      "weapon": "Labyrinth Charge",
+      "weapon_properties": [],
+      "abilities": [
+        "Impact(2)",
+        "Brutal Blow"
+      ],
+      "lore": "A bull-headed ruin-dweller that knows every corridor in the old stoneworks. If it charges, it’s because you’re already lost.",
+      "tactics": "Charge specialist. Use terrain density to set up Impact lines.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Centaur",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 136,
+      "quality": 4,
+      "defense": 3,
+      "move": 9,
+      "range": 6,
+      "weapon": "Bow & Hooves",
+      "weapon_properties": [],
+      "abilities": [
+        "Fast",
+        "Suppression"
+      ],
+      "lore": "Nomads of the high mesas, half-horse and fully fed up with strangers. Some will bargain—most will run you off.",
+      "tactics": "Mobile skirmisher. Suppress a target then reposition.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Satyr",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 97,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": 6,
+      "weapon": "Pan Pipes & Knife",
+      "weapon_properties": [],
+      "abilities": [
+        "Hex",
+        "Disengage"
+      ],
+      "lore": "A troublemaker from the dry groves and hidden springs, charming you into mistakes and laughing when you make them.",
+      "tactics": "Control rogue. Hex the big threat; don’t duel it.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Medusa",
+      "faction": "Monsters",
+      "type": "Mystic",
+      "cost": 134,
+      "quality": 5,
+      "defense": 3,
+      "move": 5,
+      "range": 8,
+      "weapon": "Cursed Gaze",
+      "weapon_properties": [],
+      "abilities": [
+        "Hex",
+        "Fear(1)"
+      ],
+      "lore": "A ruin-queen whose stare turns bravery into hesitation. Statues in Coffin Canyon aren’t always stonework.",
+      "tactics": "Debuff and morale pressure. Keep sightlines.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Lamia",
+      "faction": "Monsters",
+      "type": "Mystic",
+      "cost": 135,
+      "quality": 4,
+      "defense": 3,
+      "move": 6,
+      "range": 8,
+      "weapon": "Desert Enchantment",
+      "weapon_properties": [],
+      "abilities": [
+        "Hex",
+        "Brain Bloom"
+      ],
+      "lore": "A mirage given teeth. Lamias live where roads disappear and water rumors start.",
+      "tactics": "Control and attrition. Break morale and pick off the shaken.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Ogre",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 157,
+      "quality": 6,
+      "defense": 4,
+      "move": 5,
+      "range": null,
+      "weapon": "Club",
+      "weapon_properties": [],
+      "abilities": [
+        "Tough(1)",
+        "Fear(1)"
+      ],
+      "lore": "A big hungry problem that lives under bridges that barely exist. Ogres love easy meals and hate being laughed at.",
+      "tactics": "Durable bully. Hold mid-board and deny lanes.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Giant",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 199,
+      "quality": 7,
+      "defense": 5,
+      "move": 6,
+      "range": null,
+      "weapon": "Boulder Hands",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(2)",
+        "Tough(2)"
+      ],
+      "lore": "A canyon titan’s little cousin—big enough to step over walls and make ruins feel temporary.",
+      "tactics": "High-pressure centerpiece without being a Titan. Force answers.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Troll",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 157,
+      "quality": 6,
+      "defense": 4,
+      "move": 5,
+      "range": null,
+      "weapon": "Regenerating Smash",
+      "weapon_properties": [],
+      "abilities": [
+        "Regeneration",
+        "Brutal Blow"
+      ],
+      "lore": "A damp thing living wrong in a dry valley, regenerating in the shade and smiling like it knows a secret.",
+      "tactics": "Attrition monster. If they can’t finish it, it keeps coming back.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Ettin",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 154,
+      "quality": 6,
+      "defense": 4,
+      "move": 5,
+      "range": null,
+      "weapon": "Two Clubs",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(1)",
+        "Furious"
+      ],
+      "lore": "Two heads arguing about which of you looks tastier. Ettins camp in ruined courtyards like they own the past.",
+      "tactics": "Reliable brute tank. Furious helps once it takes a hit.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Hill Giant",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 204,
+      "quality": 7,
+      "defense": 5,
+      "move": 6,
+      "range": 8,
+      "weapon": "Rock Throw & Stomp",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(2)",
+        "Tough(2)"
+      ],
+      "lore": "A hill giant treats canyon walls like suggestions, throwing stones the size of coffins when it gets annoyed.",
+      "tactics": "Ranged pressure plus zone hold. Don’t let Rogues tie it up.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Werewolf",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 142,
+      "quality": 5,
+      "defense": 3,
+      "move": 7,
+      "range": null,
+      "weapon": "Ripping Claws",
+      "weapon_properties": [],
+      "abilities": [
+        "Furious",
+        "Fear(1)",
+        "Relentless"
+      ],
+      "lore": "When the canyon moon hits right, some folks become a problem with teeth. They don’t remember. The canyon does.",
+      "tactics": "Fast melee threat. Use Relentless to keep pressure after a kill.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Wererat",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 116,
+      "quality": 4,
+      "defense": 2,
+      "move": 6,
+      "range": null,
+      "weapon": "Filth Bite",
+      "weapon_properties": [],
+      "abilities": [
+        "Stealth",
+        "Poison",
+        "Disengage"
+      ],
+      "lore": "A sneaking plague wrapped in fur and spite, living in food caches and under floorboards.",
+      "tactics": "Objective thief and poison harasser. Avoid fair fights.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Cunning",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Small"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Werebear",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 182,
+      "quality": 6,
+      "defense": 4,
+      "move": 6,
+      "range": null,
+      "weapon": "Crushing Hug",
+      "weapon_properties": [],
+      "abilities": [
+        "Tough(2)",
+        "Fear(1)",
+        "Furious"
+      ],
+      "lore": "A protector spirit turned violent, wearing a human life like a coat. When it breaks, it breaks *big*.",
+      "tactics": "Tanky brawler. Once wounded, Furious spikes damage output.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Dragon Wyrmling",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 133,
+      "quality": 5,
+      "defense": 3,
+      "move": 7,
+      "range": 6,
+      "weapon": "Cinder Bite",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(1)",
+        "Impact(1)"
+      ],
+      "lore": "Young canyon dragons test their strength on wagons, watchtowers, and anyone who yells at them.",
+      "tactics": "Fast bruiser. Use Impact to spike early damage.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Young Dragon",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 184,
+      "quality": 6,
+      "defense": 4,
+      "move": 7,
+      "range": 8,
+      "weapon": "Breath & Claws",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(2)",
+        "Tough(2)"
+      ],
+      "lore": "It claims ruins and Thyr veins as hoards. The air around it tastes like hot metal and bad choices.",
+      "tactics": "Boss monster. Anchor a zone and punish clustering with breath.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Dragon (Adult)",
+      "faction": "Monsters",
+      "type": "Titan",
+      "cost": 242,
+      "quality": 8,
+      "defense": 5,
+      "move": 7,
+      "range": 10,
+      "weapon": "Breath of the Valley",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(3)",
+        "Tough(3)"
+      ],
+      "lore": "A living disaster. The canyon bends around it, and the ruins look newer when it decides they’re kindling.",
+      "tactics": "Scenario catastrophe. Everyone’s plan changes when it arrives.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "Titan",
+        "CannotBeBefriended",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Wyvern",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 158,
+      "quality": 5,
+      "defense": 3,
+      "move": 9,
+      "range": null,
+      "weapon": "Sting Tail",
+      "weapon_properties": [],
+      "abilities": [
+        "Fast",
+        "Poison",
+        "Fear(1)"
+      ],
+      "lore": "Lean cliff-hunters nesting high above the road. Their sting leaves green pain and slow panic.",
+      "tactics": "Hit-and-run poison pressure. Don’t get bogged down.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Territorial",
+      "flags": [
+        "CannotBeBefriended",
+        "Beast",
+        "Large"
+      ],
+      "special_mechanics": {}
+    },
+    {
+      "name": "Dracolich",
+      "faction": "Monsters",
+      "type": "Titan",
+      "cost": 229,
+      "quality": 7,
+      "defense": 5,
+      "move": 6,
+      "range": 10,
+      "weapon": "Grave Breath",
+      "weapon_properties": [],
+      "abilities": [
+        "Fear(3)",
+        "Tough(3)",
+        "Bloodless"
+      ],
+      "lore": "Dragon remains bound by Dust King rites. Bone and scale held together by Thyr-lit hatred.",
+      "tactics": "Titan-level undead catastrophe. Treat as an event, not a unit.",
+      "upgrades": [],
+      "composition_limit": "",
+      "temperament": "Vengeful",
+      "flags": [
+        "Titan",
+        "CannotBeBefriended",
+        "Bloodless",
+        "SkullRangerBefriendOnly",
+        "Large"
+      ],
+      "special_mechanics": {}
+    }
+  ],
+  "notes": [
+    "Befriending Restriction (Optional Rule): Undead and Incorporeal monsters marked 'SkullRangerBefriendOnly' may only be Befriended by the Monster Rangers' Skull Ranger (if present)."
+  ]
+}
