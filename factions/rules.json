@@ -785,7 +785,7 @@
       "name": "Monsterology",
       "version": "1.1",
       "status": "complete",
-      "data_file": "faction-monsterology.json",
+      "data_file": "faction-monsterology-v2.json",
       "composition_requirements": {
         "minimum_squabs": 2,
         "maximum_elders": 1,
@@ -813,7 +813,7 @@
       "name": "Monster Rangers",
       "version": "0.1",
       "status": "draft",
-      "data_file": "faction-monsterrangers.json",
+      "data_file": "faction-monster-rangers_v5.json",
       "composition_requirements": {
         "minimum_core_rangers": 2,
         "maximum_vehicles": 1,
@@ -842,7 +842,7 @@
       "name": "Agency M",
       "version": "0.1",
       "status": "draft",
-      "data_file": "faction-agencym.json",
+      "data_file": "faction-liberty-corps-v2.json",
       "composition_requirements": {
         "minimum_units": 3,
         "maximum_titans": 2,
@@ -853,7 +853,7 @@
           "name": "Arrest and Extract",
           "cost": 0,
           "required": false,
-          "effect": "Agency M scores VP by arresting (via Binding Rig) and extracting units via Black Mariah"
+          "effect": "Liberty Corps scores VP by arresting (via Binding Rig) and extracting trespassers via Black Mariah"
         }
       ],
       "victory_objectives": [
@@ -871,9 +871,9 @@
       "name": "Shine Riders",
       "version": "1.0",
       "status": "playtesting",
-      "data_file": "faction-shine-riders.json",
+      "data_file": "faction-shine-riders-v2.json",
       "composition_requirements": {
-        "note": "Extraction-focused faction. Build for speed and survivability, not prolonged combat."
+        "note": "Steal everything shiny. Build for speed and survivability, not prolonged combat."
       },
       "faction_features": [
         {
