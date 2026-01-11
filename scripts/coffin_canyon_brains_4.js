@@ -1,23 +1,29 @@
-CCFB.define("data/loaders", function (C) {
-  return {
-    loadRules: async function() {
-      const url = C.state.dataBaseUrl + "rules.json";
-      try {
-        const res = await fetch(url);
-        if(res.ok) C.state.rules = await res.json();
-      } catch(e) { console.warn("Rules not found."); }
-    },
-    loadFaction: async function (fKey) {
-      const url = C.state.dataBaseUrl + fKey + ".json";
-      try {
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Faction not found");
-        const data = await response.json();
-        C.state.currentFaction = data;
+CCFB.define("core/brain", function (C) {
+  // We pull in the loaders we defined in File 3
+  CCFB.require(["ui", "data/loaders"], function (ui, loaders) {
+    
+    // This is the main "Start" command
+    CCFB.boot = function (containerId, factionFolder) {
+      // 1. Set the global URL prefix (from your Odoo script)
+      C.state.dataBaseUrl = factionFolder;
+
+      // 2. Build the visual "Skeleton" (File 5)
+      ui.init(containerId);
+
+      // 3. Load the Rules (The "Fuel")
+      loaders.loadRules().then(function() {
+        console.log("Rules acquired. Removing spinner...");
+        
+        // 4. KILL THE SPINNER
+        C.state.loading = false;
+        
+        // 5. Redraw the screen with the actual builder
         if (window.CCFB.refreshUI) window.CCFB.refreshUI();
-      } catch (err) {
-        console.error("Fetch Error:", err);
-      }
-    }
+      });
+    };
+  });
+
+  return {
+    // You can put extra logic here if needed
   };
 });
