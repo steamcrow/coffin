@@ -1,5 +1,3 @@
-<div id="ccfb-1-bootstrap"></div>
-<script>
 /* =========================================================
    CCFB 1 — Bootstrap + Toast Loader (ROBUST VERSION)
    ========================================================= */
@@ -80,4 +78,3 @@
   // Proof of Life
   CCFB.Toast.show("System Initialized ✓");
 })();
-	</script>
