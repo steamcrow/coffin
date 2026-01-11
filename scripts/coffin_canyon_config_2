@@ -25,7 +25,7 @@
     });
 
     return {
-      rulesUrl: "/documents/content/5SFqLQXnRHWVFaVjYiNmpAo12d",
+      rulesUrl: "rules.json",
       factions: rawFactions,
       // Helper to quickly find faction data by key
       getFaction: function(key) {
