@@ -1,4 +1,3 @@
-<script>
   document.addEventListener("DOMContentLoaded", function () {
     console.log("CCFB Diagnostic: DOM ready, starting boot sequence...");
 
@@ -41,4 +40,3 @@
     // Start boot retry loop
     tryBoot();
   });
-</script>
