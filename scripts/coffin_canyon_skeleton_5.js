@@ -2,7 +2,6 @@
   <div id="ccfb-app-canvas"></div>
 </div>
 
-<script>
 (function() {
   const draw = () => {
     const root = document.getElementById("ccfb-app-canvas");
@@ -65,4 +64,3 @@
   };
   draw();
 })();
-</script>
