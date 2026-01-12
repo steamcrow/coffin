@@ -1,5 +1,4 @@
 <div id="ccfb-6-PAINTER"></div>
-<script>
 (function() {
   // Attached to CCFB object to prevent "Not Found" errors
   window.CCFB.refreshUI = () => {
@@ -81,4 +80,3 @@
   // Self-start painter if data is already there
   setInterval(() => { if(window.CCFB?.ui?.fKey && !document.getElementById("lib-target")?.children.length && window.CCFB.refreshUI) window.CCFB.refreshUI(); }, 800);
 })();
-</script>
