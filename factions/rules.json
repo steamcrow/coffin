@@ -1,11 +1,7 @@
 {
-  "version": "1.0",
-  "game": "Coffin Canyon",
-  "rules": [
-{
-  "version": "6.1",
-  "last_updated": "01-10-26",
-  "changelog": "Cleaned for faction builder consistency. Standardized formatting, removed duplicates, clarified ability structure.",
+  "version": "6.3",
+  "last_updated": "01-12-26",
+  "changelog": "Expanded weapons system with costs and mechanical effects. Removed duplicate Poison ability (use Venom). Removed duplicate Explosive weapon property (use Blast). Updated Boardwalk Blitzer ability.",
   "abilities": [
     {
       "name": "Aim",
@@ -83,9 +79,19 @@
       "effect": "On successful Grapple vs Brute or Monster type: target becomes Restrained (cannot move or attack until adjacent ally breaks restraints or this unit dies)"
     },
     {
+      "name": "Bite the Bullet",
+      "cost": null,
+      "effect": "Once per game, after this unit resolves an Attack or Interact action, it may immediately take one additional action. After the second action resolves, this unit loses 1 Quality."
+    },
+    {
       "name": "Blast",
       "cost": 0,
       "effect": "Area of effect attack. Roll separately for each model in blast radius. See weapon for specific radius."
+    },
+    {
+      "name": "Blinkshift",
+      "cost": 0,
+      "effect": "Twice per game, this unit may teleport instead of moving normally. Roll 3d6\" and place the unit anywhere within that distance, ignoring terrain and units. The unit must have line of sight to the destination. On a roll of three 1s, the unit suffers 1 Strain and loses the Blinkshift ability for the rest of the game."
     },
     {
       "name": "Blood in the Air",
@@ -100,7 +106,7 @@
     {
       "name": "Boardwalk Blitzer",
       "cost": 0,
-      "effect": "Moves at double speed on boardwalks. Ignores movement penalties from sand when on boardwalk"
+      "effect": "Moves at double speed on boardwalks. After moving on a boardwalk, may immediately take one additional action (attack or interact)."
     },
     {
       "name": "Brace",
@@ -110,7 +116,7 @@
     {
       "name": "Brain Bloom",
       "cost": 0,
-      "effect": "Ranged mind attack that ignores cover bonuses. Apply Morale pressure first where applicable"
+      "effect": "Ranged mind attack that ignores cover bonuses. Apply Morale pressure first where applicable."
     },
     {
       "name": "Brutal Blow",
@@ -120,7 +126,7 @@
     {
       "name": "Cargo Hold",
       "cost": 5,
-      "effect": "May transport up to 4 Rangers OR 1 medium Monster OR 2 objectives. Load/unload requires base contact and one activation"
+      "effect": "May transport up to 4 Rangers OR 1 medium Monster OR 2 objectives. Load/unload requires base contact and one activation."
     },
     {
       "name": "Choking Dust",
@@ -130,7 +136,7 @@
     {
       "name": "Climber",
       "cost": 0,
-      "effect": "May climb vertical surfaces. Ignores height penalties for movement"
+      "effect": "May climb vertical surfaces, 1 floor per round. Ignores height penalties for movement"
     },
     {
       "name": "Corrode",
@@ -155,12 +161,12 @@
     {
       "name": "Deadeye",
       "cost": 0,
-      "effect": "Once per game, this unit may reroll all missed dice on a single ranged attack."
+      "effect": "Once per game, this unit may reroll all missed dice on a single ranged attack. Record that this ability was used.."
     },
     {
       "name": "Demolition",
       "cost": 0,
-      "effect": "Deals double damage to structures and terrain features"
+      "effect": "Deals double damage to structures and terrain features."
     },
     {
       "name": "Desperate Push",
@@ -171,6 +177,11 @@
       "name": "Dread",
       "cost": 0,
       "effect": "Enemies within 6\" suffer -1 to Morale checks"
+    },
+    {
+      "name": "Down the Hatch",
+      "cost": 0,
+      "effect": "Titan. This unit can swallow another unit whole if it exceeds the target's Defense by 4 or more during a melee attack. The swallowed unit must be reasonably sized (no vehicles or other Titans). The swallowed unit is immediately killed and removed from play."
     },
     {
       "name": "Extraction Priority",
@@ -205,7 +216,7 @@
     {
       "name": "Field Patch Job",
       "cost": 2,
-      "effect": "Adjacent DEVICE or VEHICLE regains 2 Quality (once per activation)"
+      "effect": "Adjacent DEVICE or VEHICLE regains 2 Quality (once per activation). Requires Spare Parts, which are consumed."
     },
     {
       "name": "Flechette Drop",
@@ -215,7 +226,7 @@
     {
       "name": "Flying",
       "cost": 0,
-      "effect": "This unit ignores terrain while moving and may move over units and obstacles. Cannot be targeted by melee attacks unless the attacker also has Flying or a rule that allows it."
+      "effect": "This unit ignores terrain while moving and may move over units and obstacles. Cannot be targeted by melee attacks unless the attacker also has Flying or a rule that allows it. Unit's Move is considered Flying."
     },
     {
       "name": "Furious",
@@ -223,19 +234,19 @@
       "effect": "If this model has lost any Quality, it gains +1 die on its next melee attack. This bonus is cleared after the attack is resolved."
     },
     {
-      "name": "Gas Masks",
+      "name": "Gas Mask",
       "cost": 0,
-      "effect": "This unit ignores Choking Dust effects and other environmental gas/smoke/toxic effects as determined by scenario rules."
+      "effect": "This unit ignores Coffin Cough, Choking Dust effects and other environmental gas/smoke/toxic effects to lungs and eyes as determined by scenario rules."
     },
     {
       "name": "Grapple",
       "cost": 0,
-      "effect": "On hit, pull target 3-6\" toward this unit. Target may not move next activation"
+      "effect": "On hit, pull target 3-6\" toward this unit. Target may not move next activation."
     },
     {
       "name": "Grunt",
       "cost": 0,
-      "effect": "Expendable unit type. See Expendable Fodder in Type Rules for full effects"
+      "effect": "Expendable unit type. See Expendable Fodder in Type Rules for full effects."
     },
     {
       "name": "Hero",
@@ -246,6 +257,11 @@
       "name": "Heroic Grit",
       "cost": 0,
       "effect": "Once per game: ignore first wound suffered"
+    },
+    {
+      "name": "Hell Spray",
+      "cost": 0,
+      "effect": "Attack. Three times per game, this unit may unleash a cone attack instead of a normal attack. Place a 12\" long, 12\" wide cone template from this unit's facing. All units whose bases are partially or fully within the cone are targeted. Roll this unit's Quality as a ranged attack against each target separately. The attack type (fire, ice, acid, poison gas, etc.) must be specified in the unit's profile."
     },
     {
       "name": "Hex",
@@ -293,6 +309,11 @@
       "effect": "Adjacent friendly unit: Remove one debuff (Hex, Stagger, Suppression, Pinned)"
     },
     {
+      "name": "Leaper",
+      "cost": 0,
+      "effect": "Instead of normal movement, this unit may leap 2d6\" in any direction, ignoring terrain and units. It can leap over or onto 1-story buildings or similar obstacles. On a roll of double 1s (snake eyes), the unit pulls a muscle: it loses the Leaper ability for the rest of the game and immediately suffers 1 Quality damage."
+    },
+    {
       "name": "Load and Carry",
       "cost": 0,
       "effect": "May pick up and carry objectives, Thyr crystals, or Spare Parts without penalty. Move speed unaffected."
@@ -333,9 +354,19 @@
       "effect": "Unit type with access to mystical abilities and Unleashed Power power"
     },
     {
+      "name": "Not Yet.",
+      "cost": null,
+      "effect": "The first time per round this unit would be reduced to 0 Quality, it remains at 1 Quality instead. At the end of its next activation, this unit is destroyed."
+    },
+    {
       "name": "Overextend",
       "cost": 0,
       "effect": "When this model's attack rolls more successes than required to hit, it may convert one excess success into +1 damage OR +2\" movement after the action. If it does, this model suffers -1 die on its next action."
+    },
+    {
+      "name": "Out of Nowhere",
+      "cost": 0,
+      "effect": "Instead of activating normally, this unit may spawn from sand, ruins, or rubble terrain. Place the model touching the terrain feature. This counts as the unit's activation for the turn."
     },
     {
       "name": "Panic Fire",
@@ -358,14 +389,9 @@
       "effect": "On a hit, the target cannot Move during its next activation. This effect does not stack or extend if applied multiple times."
     },
     {
-      "name": "Poison",
-      "cost": 0,
-      "effect": "After dealing damage, target suffers 1 additional damage at end of its next activation"
-    },
-    {
       "name": "Quick Draw",
       "cost": 0,
-      "effect": "May attack first in melee if charged"
+      "effect": "May attack first in melee if charged."
     },
     {
       "name": "Random Movement",
@@ -375,7 +401,7 @@
     {
       "name": "Regeneration",
       "cost": 0,
-      "effect": "At start of activation, heal 1 wound on a 5+"
+      "effect": "At start of activation, heal 1 wound on a 5+."
     },
     {
       "name": "Relentless",
@@ -505,12 +531,12 @@
     {
       "name": "Under Fire",
       "cost": 3,
-      "effect": "On successful ranged hit: target is Pinned AND suffers -1 Quality until end of its next activation"
+      "effect": "On successful ranged hit: target is Pinned AND suffers -1 Quality until end of its next activation."
     },
     {
       "name": "Universal Terror",
       "cost": 10,
-      "effect": "When this unit fires its weapon: ALL units (friendly AND enemy) within 12\" must test Morale"
+      "effect": "When this unit fires its weapon: ALL units (friendly AND enemy) within 12\" must test Morale."
     },
     {
       "name": "Unleashed Power",
@@ -520,7 +546,7 @@
     {
       "name": "Unshakable",
       "cost": 0,
-      "effect": "Auto-passes all Morale checks. Ignores Dread effects"
+      "effect": "Auto-passes all Morale checks. Ignores Dread effects."
     },
     {
       "name": "Vengeful",
@@ -535,7 +561,7 @@
     {
       "name": "Vitagood Brew",
       "cost": 0,
-      "effect": "Once per game. Action. This unit or an adjacent ally immediately restores 1 lost Quality and removes Suppression or Stagger."
+      "effect": "Once per game. Action. This unit or an adjacent ally immediately restores 1 lost Quality and removes Suppression or Stagger or Venom."
     },
     {
       "name": "Witch Stitching",
@@ -576,10 +602,6 @@
     {
       "name": "Blinding",
       "effect": "On hit: target is Blinded until end of its next activation. While Blinded: cannot make ranged attacks, -2 dice on melee attacks, cannot use abilities requiring line of sight, move at half speed. An adjacent ally may use an action to clean ink/flash from a Blinded unit (removes Blinded status). Rain or water terrain immediately removes Blinded."
-    },
-    {
-      "name": "Explosive",
-      "effect": "On hit, all models within 3\" take 1 automatic hit"
     },
     {
       "name": "Grapple",
@@ -674,6 +696,11 @@
       "type": "Leader",
       "name": "High-Value Target",
       "effect": "If this unit is destroyed, enemy gains +2 VP."
+    },
+    {
+      "type": "Hero",
+      "name": "High-Value Target",
+      "effect": "If this unit is destroyed, enemy gains +3 VP."
     }
   ],
   "universal_upgrades": {
@@ -707,7 +734,7 @@
       {
         "name": "Spare Parts",
         "cost": 5,
-        "effect": "Carry field supplies. +1 use of Repair ability per game."
+        "effect": "Carry field supplies. Permission to repair mechanical vehicles, devices, or beings."
       }
     ],
     "consumables": [
@@ -785,7 +812,7 @@
       "name": "Monsterology",
       "version": "1.1",
       "status": "complete",
-      "data_file": "faction-monsterology-v2.json",
+      "data_file": "faction-monsterology.json",
       "composition_requirements": {
         "minimum_squabs": 2,
         "maximum_elders": 1,
@@ -813,7 +840,7 @@
       "name": "Monster Rangers",
       "version": "0.1",
       "status": "draft",
-      "data_file": "faction-monster-rangers_v5.json",
+      "data_file": "faction-monsterrangers.json",
       "composition_requirements": {
         "minimum_core_rangers": 2,
         "maximum_vehicles": 1,
@@ -839,10 +866,10 @@
       ]
     },
     {
-      "name": "Agency M",
+      "name": "Liberty Corps",
       "version": "0.1",
       "status": "draft",
-      "data_file": "faction-liberty-corps-v2.json",
+      "data_file": "faction-liberty-corps.json",
       "composition_requirements": {
         "minimum_units": 3,
         "maximum_titans": 2,
@@ -853,7 +880,7 @@
           "name": "Arrest and Extract",
           "cost": 0,
           "required": false,
-          "effect": "Liberty Corps scores VP by arresting (via Binding Rig) and extracting trespassers via Black Mariah"
+          "effect": "Agency M scores VP by arresting (via Binding Rig) and extracting units via Black Mariah"
         }
       ],
       "victory_objectives": [
@@ -871,9 +898,9 @@
       "name": "Shine Riders",
       "version": "1.0",
       "status": "playtesting",
-      "data_file": "faction-shine-riders-v2.json",
+      "data_file": "faction-shine-riders.json",
       "composition_requirements": {
-        "note": "Steal everything shiny. Build for speed and survivability, not prolonged combat."
+        "note": "Extraction-focused faction. Build for speed and survivability, not prolonged combat."
       },
       "faction_features": [
         {
@@ -914,27 +941,168 @@
       ]
     }
   ],
-  "universal_weapons": {
-    "melee_and_thrown": [
+  "weapons": {
+    "description": "Weapons can be equipped by units and provide mechanical effects. Weapons may grant abilities from the abilities list, have special properties, or provide bonuses to stats. Cost is added to the unit's total point cost.",
+    "melee": [
       {
         "name": "Hatchet",
-        "range": null,
+        "type": "Melee/Thrown",
+        "cost": 0,
+        "range": 8,
         "properties": [
           "Thrown 8 inches"
         ],
-        "description": "Versatile tool and weapon. Can be thrown or used in melee. Used extensively by Monster Rangers, lumberjacks, and frontier fighters."
+        "granted_abilities": [],
+        "description": "Versatile tool and weapon. Can be thrown or used in melee. Standard Monster Ranger equipment."
       },
       {
         "name": "Heavy Hatchet",
-        "range": null,
+        "type": "Melee/Thrown",
+        "cost": 3,
+        "range": 6,
         "properties": [
           "Thrown 6 inches",
           "AP 1"
         ],
+        "granted_abilities": [],
         "description": "Heavier throwing axe with armor-piercing capability but shorter range."
+      },
+      {
+        "name": "Heavy Wrench",
+        "type": "Melee",
+        "cost": 0,
+        "range": null,
+        "properties": [],
+        "granted_abilities": [
+          "Impact 1"
+        ],
+        "description": "Large tool used by Clocktalker Mechanics. Doubles as improvised weapon with stunning force."
+      },
+      {
+        "name": "Thrice-Blessed Shovel",
+        "type": "Melee",
+        "cost": 0,
+        "range": null,
+        "properties": [],
+        "granted_abilities": [
+          "Brutal Blow"
+        ],
+        "description": "Consecrated digging tool of Skull Rangers. Each successful hit deals extra damage."
+      },
+      {
+        "name": "Electro-Trident",
+        "type": "Melee",
+        "cost": 5,
+        "range": null,
+        "properties": [
+          "AP 1"
+        ],
+        "granted_abilities": [],
+        "description": "Crackling undersea weapon. Ignores 1 point of armor."
+      }
+    ],
+    "ranged": [
+      {
+        "name": "Service Revolver",
+        "type": "Ranged",
+        "cost": 5,
+        "range": 12,
+        "properties": [],
+        "granted_abilities": [],
+        "description": "Standard issue firearm, common for police and soldiers in the United States of Liberty."
+      },
+      {
+        "name": "Stub Gun",
+        "type": "Ranged",
+        "cost": 8,
+        "range": 18,
+        "properties": [],
+        "granted_abilities": [],
+        "description": "Oversized pistol scaled to massive PlugUgly hands. Capacity: 2 fat stub rounds before reloading."
+      },
+      {
+        "name": "Untergang Revolver",
+        "type": "Ranged",
+        "cost": 15,
+        "range": 24,
+        "properties": [
+          "AP 1"
+        ],
+        "granted_abilities": [],
+        "description": "Deluxe Stub Gun with superior machining and armor-piercing rounds. Capacity: 2 rounds."
+      },
+      {
+        "name": "Slingshot",
+        "type": "Ranged",
+        "cost": 0,
+        "range": 12,
+        "properties": [],
+        "granted_abilities": [],
+        "description": "Simple but effective ranged weapon. Cargo Tiger Porters are deadly accurate despite low Quality."
+      },
+      {
+        "name": "Harpoons",
+        "type": "Ranged",
+        "cost": 10,
+        "range": 10,
+        "properties": [],
+        "granted_abilities": [],
+        "description": "Heavy projectiles for sea hunting. Used by Brine Divers. Optional upgrade."
+      }
+    ],
+    "special": [
+      {
+        "name": "Hex Bolts",
+        "type": "Mystic",
+        "cost": 0,
+        "range": 12,
+        "properties": [],
+        "granted_abilities": [
+          "Hex"
+        ],
+        "description": "Mystical energy projectiles that weaken targets (-1 Quality until end of next activation)."
+      },
+      {
+        "name": "Ritual Implements",
+        "type": "Mystic",
+        "cost": 0,
+        "range": null,
+        "properties": [],
+        "granted_abilities": [],
+        "description": "Tools for conducting mystical rites and ceremonies. Used in melee when necessary."
+      },
+      {
+        "name": "Arcane Staff",
+        "type": "Mystic",
+        "cost": 0,
+        "range": null,
+        "properties": [],
+        "granted_abilities": [],
+        "description": "Focus for mystical power. Required to channel relic abilities."
+      },
+      {
+        "name": "Calamity Flag",
+        "type": "Special",
+        "cost": 0,
+        "range": 24,
+        "properties": [],
+        "granted_abilities": [
+          "Inspire",
+          "Rally"
+        ],
+        "description": "Massive banner on 19ft pole. Projects morale-boosting aura and enables Radiomancer abilities."
+      },
+      {
+        "name": "Ramming Bumper",
+        "type": "Vehicle",
+        "cost": 0,
+        "range": null,
+        "properties": [],
+        "granted_abilities": [
+          "Grapple"
+        ],
+        "description": "Heavy frontal armor on Cargo Tiger Trucks. Can pull enemies toward the vehicle."
       }
     ]
   }
-}    
-  ]
 }
