@@ -1,6 +1,5 @@
-(function() {
+CCFB.define("components/painter", function(C) {
 
-  // ---- SAFE DIAGNOSTIC LOGGER (non-fatal) ----
   const paintLog = (msg, color = "#6cf") => {
     try {
       console.log("PAINTER:", msg);
@@ -15,7 +14,6 @@
 
   paintLog("painter_6.js loaded");
 
-  // Attach refreshUI to CCFB object if available
   window.CCFB = window.CCFB || {};
 
   window.CCFB.refreshUI = () => {
@@ -28,7 +26,6 @@
 
     paintLog("refreshUI() called — faction: " + (UI.fKey || "none"));
 
-    // ---- TOTAL ----
     if (typeof C.calculateTotal === "function") {
       const total = C.calculateTotal();
       const totalEl = document.getElementById("display-total");
@@ -44,7 +41,6 @@
       paintLog("calculateTotal() missing", "#f66");
     }
 
-    // ---- DESCRIPTION ----
     const desc = document.getElementById("f-description");
     if (desc) {
       desc.textContent = faction?.description || "";
@@ -52,7 +48,6 @@
       paintLog("f-description not found", "#fc6");
     }
 
-    // ---- GRID MODE ----
     const gridEl = document.getElementById("cc-main-grid");
     if (gridEl) {
       gridEl.className =
@@ -61,7 +56,6 @@
       paintLog("cc-main-grid not found", "#fc6");
     }
 
-    // ---- STAT RENDERER ----
     const renderStats = (u) => {
       const config = [
         { k: "quality", l: "Q", c: "stat-q" },
@@ -79,7 +73,6 @@
       ).join("");
     };
 
-    // ---- LIBRARY ----
     const lib = document.getElementById("lib-target");
     if (!lib) {
       paintLog("lib-target not found", "#fc6");
@@ -121,7 +114,6 @@
       paintLog("library rendered (" + (faction?.units?.length || 0) + " units)");
     }
 
-    // ---- ROSTER ----
     const rost = document.getElementById("rost-target");
     if (!rost) {
       paintLog("rost-target not found", "#fc6");
@@ -152,7 +144,6 @@
       });
     }
 
-    // ---- DETAILS ----
     const det = document.getElementById("det-target");
     if (!det) {
       paintLog("det-target not found", "#fc6");
@@ -184,7 +175,6 @@
     }
   };
 
-  // ---- AUTO-REFRESH SAFETY NET ----
   const tryRefresh = () => {
     if (
       window.CCFB?.ui?.fKey &&
@@ -197,5 +187,7 @@
   };
 
   setInterval(tryRefresh, 800);
+  
+  return { refreshUI: window.CCFB.refreshUI };
 
-})();
+});
