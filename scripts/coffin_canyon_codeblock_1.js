@@ -1,81 +1,44 @@
-/* =========================================================
-   CCFB 1 — Bootstrap + Toast Loader (ROBUST VERSION)
-   ========================================================= */
-(function () {
-  // Guard for Odoo backend
-  if (window.location.href.includes("/web")) return;
-  var BOOT_KEY = "__CCFB_BOOTED__v4";
-  if (window[BOOT_KEY]) return;
-  window[BOOT_KEY] = true;
-  var CCFB = (window.CCFB = window.CCFB || {});
-  CCFB.version = "rebuild-v4";
-  var registry = (CCFB._registry = {});
-  var cache = (CCFB._cache = {});
-  
-  // --- Module System ---
-  CCFB.define = function (name, factory) {
-    registry[name] = factory;
-  };
-  
-  CCFB.require = function (names, onReady) {
-    var exportsList = names.map(function (n) {
-      if (cache[n]) return cache[n];
-      if (!registry[n]) {
-        var err = "Missing module: " + n;
-        if (CCFB.Toast) CCFB.Toast.error(err);
-        throw new Error(err);
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    console.log("CCFB Diagnostic: DOM ready, starting boot sequence...");
+
+    let attempts = 0;
+    const maxAttempts = 20; // Try for 10 seconds total
+
+    function tryBoot() {
+      attempts++;
+
+      // Check for the CCFB module system
+      if (window.CCFB && typeof window.CCFB.require === "function") {
+        console.log("✅ CCFB Module System Detected. Attempting to require 'main'...");
+
+        const factionFolder = "https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/factions/";
+
+        // Attempt to require the main module
+        window.CCFB.require(["main"], function (main) {
+          if (main && typeof main.boot === "function") {
+            console.log("✅ CCFB Main Boot Function Found. Booting app...");
+            main.boot("#ccfb-app-root", factionFolder);
+          } else {
+            console.error("❌ CCFB Main Module Loaded but 'boot' not found.");
+            if (window.CCFB.Toast && typeof window.CCFB.Toast.error === "function") {
+              window.CCFB.Toast.error("Main module loaded, but no boot() found!");
+            } else {
+              alert("Main module loaded, but no boot() function was defined.");
+            }
+          }
+        });
+
+      } else if (attempts < maxAttempts) {
+        console.log("🔄 CCFB not ready yet... retrying (" + attempts + "/" + maxAttempts + ")");
+        setTimeout(tryBoot, 500);
+      } else {
+        console.error("❌ CCFB Module System never became available.");
+        alert("CRITICAL ERROR: The scripts are on GitHub, but they aren't activating inside Odoo. Check File 1 for syntax or CSP issues.");
       }
-      var out = registry[n](CCFB) || {};
-      cache[n] = out;
-      return out;
-    });
-    return onReady.apply(null, exportsList);
-  };
-  
-  // --- Optimized Toast (Cached Reference) ---
-  var toastEl = null;
-  var toastBox = null;
-  var toastTimer = null;
-  
-  function initToast() {
-    if (toastEl) return;
-    toastEl = document.createElement("div");
-    toastEl.id = "ccfb-toast";
-    // Non-blocking, fixed position container
-    toastEl.style.cssText = "position:fixed; left:0; right:0; top:20px; z-index:99999; display:none; pointer-events:none; text-align:center;";
-    toastBox = document.createElement("div");
-    toastBox.style.cssText = "display:inline-block; max-width:90%; padding:10px 16px; border-radius:8px; background:rgba(20,20,20,.95); border:1px solid rgba(255,255,255,.15); color:#fff; font-weight:700; font-size:13px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);";
-    toastEl.appendChild(toastBox);
-    document.body.appendChild(toastEl);
-  }
-  
-  function show(msg, duration) {
-    initToast();
-    var time = duration || 1600;
-    toastBox.textContent = msg || "Working...";
-    toastEl.style.display = "block";
-    
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(hide, time);
-  }
-  
-  function hide() {
-    if (toastEl) toastEl.style.display = "none";
-  }
-  
-  function error(msg) {
-    show("❌ " + (msg || "Error"), 3000);
-  }
-  
-  CCFB.Toast = { show: show, hide: hide, error: error };
-  
-  // --- Proof of Life (WAIT FOR DOM) ---
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function() {
-      CCFB.Toast.show("System Initialized ✓");
-    });
-  } else {
-    // DOM already loaded
-    CCFB.Toast.show("System Initialized ✓");
-  }
-})();
+    }
+
+    // Start boot retry loop
+    tryBoot();
+  });
+</script>
