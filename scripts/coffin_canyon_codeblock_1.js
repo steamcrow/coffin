@@ -1,4 +1,13 @@
-  document.addEventListener("DOMContentLoaded", function () {
+// DIAGNOSTIC: Check what's actually loading
+console.log("=== SCRIPT LOAD CHECK ===");
+console.log("Current page:", window.location.href);
+console.log("CCFB exists?", typeof window.CCFB);
+console.log("All scripts on page:", document.querySelectorAll('script').length);
+document.querySelectorAll('script').forEach((script, i) => {
+  console.log(`Script ${i}: ${script.src || 'inline'}`);
+});
+console.log("=== END CHECK ===");
+      document.addEventListener("DOMContentLoaded", function () {
     console.log("CCFB Diagnostic: DOM ready, starting boot sequence...");
 
     let attempts = 0;
