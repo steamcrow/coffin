@@ -1,193 +1,88 @@
-CCFB.define("components/painter", function(C) {
-
-  const paintLog = (msg, color = "#6cf") => {
-    try {
-      console.log("PAINTER:", msg);
-      const el = document.createElement("div");
-      el.style.cssText =
-        "font-family:monospace;font-size:11px;padding:2px 6px;" +
-        "background:#0b1220;color:" + color + ";border-bottom:1px solid #223;";
-      el.textContent = "PAINTER: " + msg;
-      document.body.appendChild(el);
-    } catch(e) {}
-  };
-
-  paintLog("painter_6.js loaded");
-
-  window.CCFB = window.CCFB || {};
-
-  window.CCFB.refreshUI = () => {
-    const C = window.CCFB;
-    if (!C) return paintLog("CCFB missing", "#f66");
-    if (!C.ui) return paintLog("CCFB.ui missing", "#f66");
-
-    const UI = C.ui;
-    const faction = C.state?.factions?.[UI.fKey];
-
-    paintLog("refreshUI() called — faction: " + (UI.fKey || "none"));
-
-    if (typeof C.calculateTotal === "function") {
-      const total = C.calculateTotal();
-      const totalEl = document.getElementById("display-total");
-      if (totalEl) {
-        totalEl.textContent =
-          total + (UI.limit > 0 ? " / " + UI.limit : "") + "pts";
-        totalEl.style.color =
-          (UI.limit > 0 && total > UI.limit) ? "#ff4444" : "#ff7518";
-      } else {
-        paintLog("display-total not found", "#fc6");
-      }
-    } else {
-      paintLog("calculateTotal() missing", "#f66");
-    }
-
-    const desc = document.getElementById("f-description");
-    if (desc) {
-      desc.textContent = faction?.description || "";
-    } else {
-      paintLog("f-description not found", "#fc6");
-    }
-
-    const gridEl = document.getElementById("cc-main-grid");
-    if (gridEl) {
-      gridEl.className =
-        "cc-grid " + (UI.mode === "list" ? "list-view" : "");
-    } else {
-      paintLog("cc-main-grid not found", "#fc6");
-    }
-
-    const renderStats = (u) => {
-      const config = [
-        { k: "quality", l: "Q", c: "stat-q" },
-        { k: "defense", l: "D", c: "stat-d" },
-        { k: "move", l: "M", c: "stat-m" },
-        { k: "range", l: "R", c: "stat-r" }
-      ];
-      return config.map(s =>
-        u[s.k] != null
-          ? `<span class="cc-stat-badge">
-               <span class="cc-stat-label ${s.c}">${s.l}</span>
-               <span class="cc-stat-value">${u[s.k]}</span>
-             </span>`
-          : ""
-      ).join("");
-    };
-
-    const lib = document.getElementById("lib-target");
-    if (!lib) {
-      paintLog("lib-target not found", "#fc6");
-    } else {
-      lib.innerHTML = "";
-      (faction?.units || []).forEach(u => {
-        const card = document.createElement("div");
-        card.className = "cc-roster-item";
-        card.onclick = () => {
-          UI.roster.push({
-            id: Date.now(),
-            fKey: UI.fKey,
-            uN: u.name,
-            upg: {}
-          });
-          window.CCFB.refreshUI();
-        };
-
-        const abTags = (u.abilities || []).map(a =>
-          `<span style="font-size:0.65rem;background:#333;padding:1px 4px;
-                 border-radius:3px;margin-right:3px;color:#bbb;
-                 border:1px solid #444;">${a}</span>`
-        ).join("");
-
-        card.innerHTML = `
-          <div class="u-type">${u.type}</div>
-          <div class="u-name">${u.name}</div>
-          <div class="mt-1">${abTags}</div>
-          <div class="d-flex flex-wrap mt-2">
-            ${renderStats(u)}
-            <span class="cc-stat-badge">
-              <span class="cc-stat-label stat-quality">PTS</span>
-              <span class="cc-stat-value">${u.cost}</span>
-            </span>
-          </div>`;
-        lib.appendChild(card);
-      });
-
-      paintLog("library rendered (" + (faction?.units?.length || 0) + " units)");
-    }
-
-    const rost = document.getElementById("rost-target");
-    if (!rost) {
-      paintLog("rost-target not found", "#fc6");
-    } else {
-      rost.innerHTML = "";
-      UI.roster.forEach(item => {
-        const u = C.getUnit?.(item.fKey, item.uN);
-        const row = document.createElement("div");
-        row.className =
-          "cc-roster-item " + (UI.sId === item.id ? "is-selected" : "");
-        row.onclick = () => {
-          UI.sId = item.id;
-          window.CCFB.refreshUI();
-        };
-        row.innerHTML = `
-          <div class="d-flex justify-content-between">
-            <div>
-              <div class="u-type">${u?.type || ""}</div>
-              <div class="u-name">${item.uN}</div>
-            </div>
-            <button class="btn-minus"
-              onclick="event.stopPropagation();
-                       CCFB.ui.roster =
-                       CCFB.ui.roster.filter(x => x.id !== ${item.id});
-                       window.CCFB.refreshUI();">−</button>
-          </div>`;
-        rost.appendChild(row);
-      });
-    }
-
-    const det = document.getElementById("det-target");
-    if (!det) {
-      paintLog("det-target not found", "#fc6");
-    } else {
-      det.innerHTML = "";
-      const selectedItem = UI.roster.find(i => i.id === UI.sId);
-      const unit =
-        selectedItem ? C.getUnit?.(selectedItem.fKey, selectedItem.uN) : null;
-
-      if (unit) {
-        det.innerHTML = `
-          <div class="u-name fs-4">${unit.name}</div>
-          <div class="u-lore mb-3">${unit.lore || ""}</div>
-          <div class="detail-section-title">Abilities</div>`;
-
-        (unit.abilities || []).forEach(aName => {
-          const rule =
-            (C.state?.rules?.abilities || []).find(r => r.name === aName);
-          const aCard = document.createElement("div");
-          aCard.className = "ability-card";
-          aCard.innerHTML =
-            `<div class="ability-name">${aName}</div>
-             <div class="ability-effect">
-               ${rule?.effect || "Rule text loading..."}
-             </div>`;
-          det.appendChild(aCard);
-        });
-      }
-    }
-  };
-
-  const tryRefresh = () => {
-    if (
-      window.CCFB?.ui?.fKey &&
-      document.getElementById("lib-target") &&
-      window.CCFB.refreshUI
-    ) {
-      paintLog("auto refresh trigger");
-      window.CCFB.refreshUI();
-    }
-  };
-
-  setInterval(tryRefresh, 800);
+CCFB.define("components/skeleton", function(C) {
   
-  return { refreshUI: window.CCFB.refreshUI };
-
+  const draw = () => {
+    const root = document.querySelector("#ccfb-app-root") || document.getElementById("ccfb-app-canvas");
+    
+    if (!root) return setTimeout(draw, 100);
+    window.CCFB.ui = window.CCFB.ui || { roster: [], fKey: "", mode: "grid", limit: 0 };
+    const tryRefresh = () => {
+      if (typeof window.CCFB.refreshUI === "function") window.CCFB.refreshUI();
+    };
+    root.innerHTML = `
+      <div id="ccfb-app-canvas"> <div id="ccfb-frame-5-skeleton" style="min-height: 800px; position: relative; z-index: 10;">
+          <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+            <select id="f-selector" class="form-select w-auto" style="background:#222; color:#fff; border-color:#444;">
+                <option value="">Select Faction...</option>
+            </select>
+            
+            <select id="limit-selector" class="form-select w-auto" style="background:#222; color:#ff7518; border-color:#444;">
+                <option value="0">No Limit</option>
+                <option value="500">500 pts (Skirmish)</option>
+                <option value="1000">1000 pts (Standard)</option>
+                <option value="1500">1500 pts (Grand)</option>
+                <option value="2000">2000 pts (Epic)</option>
+            </select>
+            <div class="ms-auto d-flex gap-3 align-items-center">
+              <div class="view-toggle">
+                <button id="btn-grid-toggle" class="btn btn-sm btn-outline-secondary">Grid</button>
+                <button id="btn-list-toggle" class="btn btn-sm btn-outline-secondary">List</button>
+              </div>
+              <div id="display-total" class="fw-bold" style="font-size:1.2rem; color:#ff7518;">0pts</div>
+            </div>
+          </div>
+          <div id="f-description" class="u-lore mb-3" style="border:none; padding-left:0; color:#bbb;"></div>
+          <div id="cc-main-grid" class="cc-grid">
+            <div class="cc-panel">
+              <div class="cc-panel-title">Unit Library</div>
+              <div id="lib-target"></div>
+            </div>
+            <div class="cc-panel">
+              <div class="cc-panel-title">Your Roster</div>
+              <div id="rost-target"></div>
+            </div>
+            <div class="cc-panel">
+              <div class="cc-panel-title">Rules & Upgrades</div>
+              <div id="det-target"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    const sel = document.getElementById("f-selector");
+    const lim = document.getElementById("limit-selector");
+    window.CCFB.require(["config/docTokens"], cfg => {
+      sel.innerHTML = '<option value="">Select Faction...</option>';
+      cfg.factions.forEach(f => {
+        const opt = document.createElement("option");
+        opt.value = f.key;
+        opt.textContent = f.label;
+        sel.appendChild(opt);
+      });
+      sel.value = window.CCFB.ui.fKey || "";
+      lim.value = window.CCFB.ui.limit || 0;
+    });
+    lim.onchange = (e) => {
+      window.CCFB.ui.limit = parseInt(e.target.value);
+      tryRefresh();
+    };
+    document.getElementById("btn-grid-toggle").onclick = () => {
+      window.CCFB.ui.mode = 'grid';
+      tryRefresh();
+    };
+    document.getElementById("btn-list-toggle").onclick = () => {
+      window.CCFB.ui.mode = 'list';
+      tryRefresh();
+    };
+    sel.onchange = (e) => {
+      if (window.CCFB.handleFactionChange) {
+        window.CCFB.handleFactionChange(e.target.value);
+      }
+    };
+    ccfbLog("🎨 Skeleton Rendered and Wired.");
+    tryRefresh();
+  };
+  
+  draw();
+  return { draw: draw };
+  
 });
