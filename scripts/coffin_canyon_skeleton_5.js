@@ -94,7 +94,7 @@ CCFB.define("components/skeleton", function(C) {
     };
 
     sel.onchange = (e) => {
-      if (window.CCFB.handleFactionChange) {
+      if (window.CCFB && window.CCFB.handleFactionChange) {
         window.CCFB.handleFactionChange(e.target.value);
       }
     };
