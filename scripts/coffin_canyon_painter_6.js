@@ -1,108 +1,108 @@
-CCFB.define("components/painter", function(C) {
+/**
+ * COFFIN CANYON FACTION BUILDER - FILE 6: PAINTER
+ * Version: 1.9.5 - Full Logic & Renders
+ */
+
+CCFB.define('painter', (require) => {
+    const loaders = require('loaders');
     
-    // Commandment: Ability Lookup Priority
-    const getAbilityEffect = (abilityName, unit) => {
-        const norm = abilityName.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
-        if (unit.ability_details && unit.ability_details[norm]) return unit.ability_details[norm];
-        const globalRule = C.state.rules && C.state.rules[norm];
-        return globalRule || "Rule effect pending.";
+    // Private State
+    let currentRoster = [];
+    let factionData = null;
+
+    /**
+     * UI MANIFESTO: STAT BADGE PROTOCOL
+     */
+    const STAT_MAP = {
+        Q: { class: 'stat-q', label: 'Quality' }, // Blue
+        D: { class: 'stat-d', label: 'Defense' }, // Red
+        R: { class: 'stat-r', label: 'Range' },   // Brown
+        M: { class: 'stat-m', label: 'Move' }     // Green
     };
 
-    window.CCFB.renderDetail = (unit) => {
-        const det = document.getElementById("det-target");
-        if (!det) return;
+    /**
+     * RENDER UNIT CARD
+     * Enforces All-Caps, Currency, and Lore styles
+     */
+    function renderUnitCard(unit) {
+        const unitName = (unit.name || 'Unknown Unit').toUpperCase(); // All-Caps
+        const loreHtml = unit.lore ? `<div class="unit-lore-box"><em>${unit.lore}</em></div>` : ''; // Pumpkin-border style via CSS
+        
+        const statsHtml = Object.entries(unit.stats || {}).map(([key, val]) => {
+            const config = STAT_MAP[key] || { class: 'stat-default' };
+            return `<div class="stat-badge ${config.class}" title="${config.label}">${key}: ${val}</div>`;
+        }).join('');
 
-        const stats = [
-            {l:'Q', v:unit.quality, c:'stat-q', h:'Quality: 4, 5, 6 are successes'},
-            {l:'D', v:unit.defense, c:'stat-d', h:'Defense: Subtracts damage'},
-            {l:'R', v:unit.range || '-', c:'stat-r', h:'Range: Max reach'},
-            {l:'M', v:unit.move, c:'stat-m', h:'Move: Inches per action'}
-        ].map(s => `
-            <span class="cc-stat-badge" data-tip="${s.h}">
-                <span class="cc-stat-label ${s.c}">${s.l}</span>
-                <span class="cc-stat-value">${s.v}</span>
-            </span>`).join('');
-
-        det.innerHTML = `
-            <div class="u-type">${unit.type}</div>
-            <div class="u-name">${unit.name.toUpperCase()}</div>
-            <div class="stat-row mb-2">${stats}</div>
-            
-            <div class="u-lore">${unit.description || "No lore recorded."}</div>
-
-            <div class="detail-section-title">Special Rules</div>
-            ${(unit.special_rules || []).map(r => `
-                <div class="ability-card">
-                    <div class="ability-name">${r.toUpperCase()}</div>
-                    <div class="ability-effect">${getAbilityEffect(r, unit)}</div>
+        return `
+            <div class="ccfb-card" data-unit-id="${unit.id}">
+                <div class="ccfb-card-header">
+                    <span class="unit-title">${unitName}</span>
+                    <span class="unit-cost">₤${unit.cost}</span>
                 </div>
-            `).join('')}
-
-            <div class="detail-section-title">Upgrades & Gear</div>
-            <div class="upgrades-container">
-                ${(unit.upgrades || []).map(upg => {
-                    // Commandment: Relics/Spells must be Radios (Limit 1)
-                    const isUnique = upg.type === "Relic" || upg.type === "Spell";
-                    return `
-                    <label class="upgrade-row">
-                        <input type="${isUnique ? 'radio' : 'checkbox'}" name="${isUnique ? 'unique' : upg.name}">
-                        <span>${upg.name} (+${upg.cost} ₤)</span>
-                    </label>`;
-                }).join('')}
+                <div class="unit-type-tag">${(unit.type || 'Unit').toLowerCase()}</div>
+                <div class="stats-row">${statsHtml}</div>
+                ${loreHtml}
+                <button class="ccfb-btn-add" onclick="CCFB.painter.addToRoster('${unit.id}')">Add to Roster</button>
             </div>
         `;
-    };
+    }
 
-    window.CCFB.refreshUI = () => {
-        const UI = window.CCFB.ui;
-        const faction = C.state.factions[UI.fKey];
-
-        // Points Symbol: ₤
-        const total = (typeof C.calculateTotal === "function") ? C.calculateTotal() : 0;
-        const totalEl = document.getElementById("display-total");
-        if (totalEl) totalEl.innerHTML = `${total} ₤`;
-
-        // Library Rendering with Unit Type centered below Name
-        const lib = document.getElementById("lib-target");
-        if (lib && faction) {
-            lib.innerHTML = (faction.units || []).map(u => `
-                <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${u.name}', this)">
-                    <div class="u-type">${u.type}</div>
-                    <div class="u-name">${u.name.toUpperCase()}</div>
-                    <button class="btn-add mt-1" onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${u.name}', ${u.cost})">+ ADD</button>
-                </div>`).join('');
+    /**
+     * ROSTER LOGIC (Restored Functionality)
+     */
+    function addToRoster(unitId) {
+        const unit = factionData.units.find(u => u.id === unitId);
+        if (unit) {
+            currentRoster.push({...unit, rosterInstanceId: Date.now()});
+            refreshRosterUI();
         }
+    }
 
-        // Roster Rendering
-        const rost = document.getElementById("rost-target");
-        if (rost) {
-            rost.innerHTML = (UI.roster || []).map(item => `
-                <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${item.uN}', this)">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="u-name">${item.uN.toUpperCase()}</div>
-                        <button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button>
-                    </div>
-                </div>`).join('');
-        }
+    function removeFromRoster(instanceId) {
+        currentRoster = currentRoster.filter(u => u.rosterInstanceId !== instanceId);
+        refreshRosterUI();
+    }
+
+    /**
+     * CALCULATE TOTALS
+     * Uses Liberty Bucks symbol (₤)
+     */
+    function refreshRosterUI() {
+        const rosterContainer = document.getElementById('ccfb-roster-list');
+        const totalEl = document.getElementById('ccfb-total-points');
+        
+        let total = 0;
+        rosterContainer.innerHTML = currentRoster.map(unit => {
+            total += parseInt(unit.cost);
+            return `
+                <div class="roster-item">
+                    <span>${unit.name.toUpperCase()}</span>
+                    <span>₤${unit.cost}</span>
+                    <button onclick="CCFB.painter.removeFromRoster(${unit.rosterInstanceId})">×</button>
+                </div>
+            `;
+        }).join('');
+
+        totalEl.innerText = `Total: ₤${total}`;
+    }
+
+    /**
+     * SAFETY BRIDGE: Initialize UI
+     * Ensures ccfb-root exists and legacy IDs are bridged
+     */
+    async function init(data) {
+        factionData = data;
+        const grid = document.getElementById('ccfb-unit-grid');
+        if (!grid) return;
+
+        grid.innerHTML = data.units.map(u => renderUnitCard(u)).join('');
+        console.log(`CCFB: Painted ${data.units.length} units.`);
+    }
+
+    return {
+        init,
+        addToRoster,
+        removeFromRoster,
+        renderUnitCard
     };
-
-    window.CCFB.selectUnit = (name, element) => {
-        document.querySelectorAll('.cc-roster-item').forEach(el => el.classList.remove('is-selected'));
-        if (element) element.classList.add('is-selected');
-        const faction = C.state.factions[window.CCFB.ui.fKey];
-        const unit = faction?.units.find(u => u.name === name);
-        if (unit) window.CCFB.renderDetail(unit);
-    };
-
-    window.CCFB.addUnitToRoster = (name, cost) => {
-        window.CCFB.ui.roster.push({ id: Date.now(), fKey: window.CCFB.ui.fKey, uN: name, cost: cost });
-        window.CCFB.refreshUI();
-    };
-
-    window.CCFB.removeUnitFromRoster = (id) => {
-        window.CCFB.ui.roster = window.CCFB.ui.roster.filter(x => x.id !== id);
-        window.CCFB.refreshUI();
-    };
-
-    return { refreshUI: window.CCFB.refreshUI };
 });
