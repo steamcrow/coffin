@@ -1,110 +1,62 @@
 CCFB.define("components/skeleton", function(C) {
-  
-  const draw = () => {
-    // Look for the Odoo container
-    const root = document.getElementById("ccfb-app-root");
-    
-    if (!root) {
-      console.warn("Skeleton: Root not found, retrying...");
-      return setTimeout(draw, 200);
-    }
+    return {
+        draw: function() {
+            // DOMAIN SAFETY: Protect the Odoo editor [cite: 44, 45]
+            if (window.location.href.includes("/web")) return;
 
-    // Setup initial UI state if missing
-    C.ui = C.ui || { roster: [], fKey: "", mode: "grid", limit: 0 };
+            const root = document.getElementById("ccfb-root");
+            if (!root) return;
 
-    const tryRefresh = () => {
-      if (typeof C.refreshUI === "function") C.refreshUI();
+            root.innerHTML = `
+                <div class="cc-container" style="display: flex; flex-direction: column; height: 100vh; overflow: hidden;">
+                    <div class="cc-header-area p-3" style="flex-shrink: 0; background: #1a1a1a; border-bottom: 2px solid #333;">
+                        <h1 style="color: #ff7518; margin: 0;">COFFIN CANYON FACTION BUILDER</h1>
+                        
+                        <div class="cc-sub-header d-flex align-items-center justify-content-between mt-2">
+                            <div class="d-flex align-items-center">
+                                <select id="f-selector" class="form-control mr-2" style="width:220px;" onchange="window.CCFB.handleFactionChange(this.value)">
+                                    <option value="">SELECT FACTION...</option>
+                                </select>
+                                <input type="text" id="roster-name" class="form-control" placeholder="ROSTER NAME" style="width:220px;">
+                            </div>
+                            
+                            <div class="cc-top-tools d-flex align-items-center">
+                                <span id="display-total" class="mr-3" style="font-weight:bold; font-size:1.4rem; color: #ff7518;">0 ₤</span>
+                                <button class="btn btn-outline-light mr-1" onclick="window.CCFB.shareRoster()" title="Share Link"><i class="fa fa-share-alt"></i></button>
+                                <button class="btn btn-outline-light" onclick="window.printRoster()" title="Print List"><i class="fa fa-print"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cc-main-grid" style="display: flex; flex: 1; overflow: hidden;">
+                        <div class="cc-col p-3" id="lib-col" style="flex: 1; overflow-y: auto; border-right: 1px solid #333;">
+                            <h2>UNIT LIBRARY</h2>
+                            <div id="lib-target"></div>
+                        </div>
+                        <div class="cc-col p-3" id="rost-col" style="flex: 1; overflow-y: auto; border-right: 1px solid #333;">
+                            <h2>ROSTER</h2>
+                            <div id="rost-target"></div>
+                        </div>
+                        <div class="cc-col p-3" id="det-col" style="flex: 1; overflow-y: auto;">
+                            <h2>UNIT DETAIL</h2>
+                            <div id="det-target"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            this.populateDropdown();
+        },
+        populateDropdown: function() {
+            CCFB.require(["config/docTokens"], (cfg) => {
+                const sel = document.getElementById("f-selector");
+                if (!sel) return;
+                cfg.factions.forEach(f => {
+                    const opt = document.createElement("option");
+                    opt.value = f.key;
+                    opt.textContent = f.label.toUpperCase();
+                    sel.appendChild(opt);
+                });
+            });
+        }
     };
-
-    // Inject the HTML
-    root.innerHTML = `
-      <div id="ccfb-frame-5-skeleton" style="min-height: 800px; position: relative; z-index: 10;">
-          <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
-            <select id="f-selector" class="form-select w-auto" style="background:#222; color:#fff; border-color:#444; padding:8px; border-radius:4px;">
-                <option value="">Select Faction...</option>
-            </select>
-            
-            <select id="limit-selector" class="form-select w-auto" style="background:#222; color:#ff7518; border-color:#444; padding:8px; border-radius:4px;">
-                <option value="0">No Limit</option>
-                <option value="500">500 pts (Skirmish)</option>
-                <option value="1000">1000 pts (Standard)</option>
-                <option value="1500">1500 pts (Grand)</option>
-                <option value="2000">2000 pts (Epic)</option>
-            </select>
-
-            <div class="ms-auto d-flex gap-3 align-items-center">
-              <div class="view-toggle">
-                <button id="btn-grid-toggle" style="background:#333;color:#fff;border:1px solid #555;padding:5px 10px;cursor:pointer;">Grid</button>
-                <button id="btn-list-toggle" style="background:#333;color:#fff;border:1px solid #555;padding:5px 10px;cursor:pointer;">List</button>
-              </div>
-              <div id="display-total" class="fw-bold" style="font-size:1.2rem; color:#ff7518;">0pts</div>
-            </div>
-          </div>
-
-          <div id="f-description" class="u-lore mb-3" style="color:#bbb; min-height:20px;"></div>
-
-          <div id="cc-main-grid" class="cc-grid" style="display: flex; gap: 20px; flex-wrap: wrap;">
-            <div class="cc-panel" style="flex: 1; min-width: 300px;">
-              <div class="cc-panel-title" style="color:gold; border-bottom:1px solid #444; margin-bottom:10px;">Unit Library</div>
-              <div id="lib-target"></div>
-            </div>
-            <div class="cc-panel" style="flex: 1; min-width: 300px;">
-              <div class="cc-panel-title" style="color:gold; border-bottom:1px solid #444; margin-bottom:10px;">Your Roster</div>
-              <div id="rost-target"></div>
-            </div>
-            <div class="cc-panel" style="flex: 1; min-width: 300px;">
-              <div class="cc-panel-title" style="color:gold; border-bottom:1px solid #444; margin-bottom:10px;">Rules & Upgrades</div>
-              <div id="det-target"></div>
-            </div>
-          </div>
-      </div>
-    `;
-
-    const sel = document.getElementById("f-selector");
-    const lim = document.getElementById("limit-selector");
-
-    // Populate Faction Dropdown
-    C.require(["config/docTokens"], function(cfg) {
-      if(!sel) return;
-      sel.innerHTML = '<option value="">Select Faction...</option>';
-      cfg.factions.forEach(f => {
-        const opt = document.createElement("option");
-        opt.value = f.key;
-        opt.textContent = f.label;
-        sel.appendChild(opt);
-      });
-      sel.value = C.ui.fKey || "";
-      lim.value = C.ui.limit || 0;
-    });
-
-    // Wire up events
-    lim.onchange = (e) => {
-      C.ui.limit = parseInt(e.target.value);
-      tryRefresh();
-    };
-
-    document.getElementById("btn-grid-toggle").onclick = () => {
-      C.ui.mode = 'grid';
-      tryRefresh();
-    };
-
-    document.getElementById("btn-list-toggle").onclick = () => {
-      C.ui.mode = 'list';
-      tryRefresh();
-    };
-
-    sel.onchange = (e) => {
-      if (window.CCFB && window.CCFB.handleFactionChange) {
-        window.CCFB.handleFactionChange(e.target.value);
-      }
-    };
-
-    console.log("🎨 Skeleton Rendered and Wired.");
-    tryRefresh();
-  };
-  
-  // Start drawing
-  draw();
-
-  return { draw: draw };
 });
