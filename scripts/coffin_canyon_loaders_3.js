@@ -4,40 +4,42 @@ CCFB.define("data/loaders", function (C) {
       const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now();
       try {
         const res = await fetch(url);
-        if(res.ok) { C.state.rules = await res.json(); }
+        if(res.ok) { 
+            C.state.rules = await res.json(); 
+            console.log("📜 Rules loaded.");
+        }
       } catch(e) { console.warn("Rules load failed."); }
       return true;
     },
     
     loadFaction: async function (fKey) {
-      console.log("Attempting to load:", fKey);
+      console.log("📡 Requesting Faction:", fKey);
       
       CCFB.require(["config/docTokens"], async function(cfg) {
         const entry = cfg.getFaction(fKey);
         if (!entry) {
-            console.error("No config entry found for:", fKey);
+            console.error("❌ No config entry for:", fKey);
             return;
         }
 
-        // DIRECT PATH TO FACTIONS FOLDER
         const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/" + entry.url + "?t=" + Date.now();
         
         try {
           const res = await fetch(url);
-          if (!res.ok) throw new Error("File not found on GitHub");
+          if (!res.ok) throw new Error(`HTTP ${res.status} - Not Found`);
           
           const data = await res.json();
           C.state.factions[fKey] = data;
-          C.ui.fKey = fKey; // Set the active faction
+          C.ui.fKey = fKey; 
           
-          console.log("Successfully loaded JSON for:", fKey);
+          console.log("✅ Successfully loaded JSON for:", fKey);
 
-          // Tell the Painter to draw the new data
-          if (window.CCFB.refreshUI) {
+          // Force the UI to refresh with the new data
+          if (typeof window.CCFB.refreshUI === "function") {
             window.CCFB.refreshUI();
           }
         } catch (err) { 
-          console.error("JSON Fetch Failed:", err); 
+          console.error("❌ JSON Fetch Failed:", err); 
         }
       });
     }
