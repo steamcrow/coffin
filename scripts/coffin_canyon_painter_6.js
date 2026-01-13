@@ -1,6 +1,6 @@
 CCFB.define("components/painter", function(C) {
     
-    // --- Logic Helpers ---
+    // --- Global Helpers (Restored Logic) ---
     window.CCFB.addUnitToRoster = (name, cost) => {
         window.CCFB.ui.roster.push({ id: Date.now(), fKey: window.CCFB.ui.fKey, uN: name, cost: cost });
         window.CCFB.refreshUI();
@@ -24,7 +24,7 @@ CCFB.define("components/painter", function(C) {
         if (!UI) return;
         const faction = C.state?.factions?.[UI.fKey];
 
-        // 1. Update Totals (Top Bar)
+        // 1. Update Totals
         const total = (typeof C.calculateTotal === "function") ? C.calculateTotal() : 0;
         const totalEl = document.getElementById("display-total");
         if (totalEl) {
