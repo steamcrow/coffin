@@ -89,18 +89,21 @@ CCFB.define("components/painter", function(C) {
             lib.innerHTML = (faction.units || []).map(u => {
                 const escapedName = u.name.replace(/'/g, "\\'");
                 const tags = (u.abilities || []).map(a => `<span class="ability-tag">${getName(a)}</span>`).join('');
-                return `
-                    <div class="cc-roster-item">
-                        <div class="cc-unit-info" onclick="window.CCFB.selectUnit('${escapedName}')">
-                            <div class="u-name">${u.name.toUpperCase()}</div>
-                            <div class="u-type">${u.type.toUpperCase()}</div>
-                            <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
-                            <div class="abilities-overview">${tags}</div>
-                        </div>
-                        <button class="btn btn-sm btn-block btn-outline-warning mt-2" onclick="window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
-                            <i class="fa fa-plus"></i> ADD TO ROSTER
-                        </button>
-                    </div>`;
+                return `<div class="cc-roster-item d-flex flex-column" style="position: relative;">
+    <div class="cc-unit-info" onclick="window.CCFB.selectUnit('${escapedName}')" style="cursor: pointer;">
+        <div class="u-name">${u.name.toUpperCase()}</div>
+        <div class="u-type">${u.type.toUpperCase()}</div>
+        <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
+        <div class="abilities-overview">${tags}</div>
+    </div>
+    
+    <button 
+        class="btn btn-sm btn-block btn-outline-warning mt-2" 
+        style="position: relative; z-index: 10; pointer-events: auto;"
+        onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
+        <i class="fa fa-plus"></i> ADD TO ROSTER
+    </button>
+</div>`;
             }).join('');
         }
 
