@@ -124,25 +124,26 @@ CCFB.define("components/painter", function(C) {
             }
         }
 
-        // Render Library (Column 1) - NAME, TYPE, BADGES (CENTERED), ABILITIES
+        // Render Library (Column 1) - FIXED: Separate clickable area from button
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => {
-                // Escape single quotes in unit name for onclick
                 const escapedName = u.name.replace(/'/g, "\\'");
                 return `
-                    <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${escapedName}')">
-                        <div class="u-name">${u.name.toUpperCase()}</div>
-                        <div class="u-type">${u.type.toUpperCase()}</div>
-                        <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
-                        <div class="abilities-overview">
-                            ${(u.abilities || []).map(a => {
-                                const abilityName = typeof a === 'object' ? a.name : a;
-                                return `<span class="ability-tag">${abilityName}</span>`;
-                            }).join('')}
+                    <div class="cc-roster-item">
+                        <div class="cc-unit-info" onclick="window.CCFB.selectUnit('${escapedName}')">
+                            <div class="u-name">${u.name.toUpperCase()}</div>
+                            <div class="u-type">${u.type.toUpperCase()}</div>
+                            <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
+                            <div class="abilities-overview">
+                                ${(u.abilities || []).map(a => {
+                                    const abilityName = typeof a === 'object' ? a.name : a;
+                                    return `<span class="ability-tag">${abilityName}</span>`;
+                                }).join('')}
+                            </div>
                         </div>
                         <button class="btn btn-sm btn-block btn-outline-warning mt-2" 
-                                onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
+                                onclick="window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
                             <i class="fa fa-plus"></i> ADD TO ROSTER
                         </button>
                     </div>`;
@@ -155,7 +156,6 @@ CCFB.define("components/painter", function(C) {
             rost.innerHTML = (UI.roster || []).map(item => {
                 const u = C.getUnit?.(item.fKey, item.uN);
                 if (!u) return '';
-                // Escape single quotes in unit name for onclick
                 const escapedName = item.uN.replace(/'/g, "\\'");
                 return `
                     <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${escapedName}')">
