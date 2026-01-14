@@ -1,48 +1,29 @@
 CCFB.define("components/painter", function(C) {
     
+    // Helper to extract name regardless of whether it's a string or object
+    const getName = (val) => (typeof val === 'object' ? val.name : val);
+
     // --- 1. ABILITY LOOKUP HIERARCHY ---
     const getAbilityEffect = (abilityName, unit) => {
-        // Handle ability objects (like in Monster Rangers JSON)
-        if (typeof abilityName === 'object' && abilityName.name) {
-            return abilityName.effect || "No description available.";
-        }
+        if (typeof abilityName === 'object' && abilityName.effect) return abilityName.effect;
         
         const searchName = abilityName.toLowerCase().trim();
+        const rules = C.state.rules || {};
+
+        // 1. Check Unit-specific details first
+        if (unit.ability_details?.[searchName]) return unit.ability_details[searchName];
         
-        // 1. Unit-specific details
-        if (unit.ability_details && unit.ability_details[searchName]) {
-            return unit.ability_details[searchName];
+        // 2. Search rule categories in order of priority
+        const categories = ['abilities', 'weapon_properties', 'type_rules'];
+        for (const cat of categories) {
+            const match = rules[cat]?.find(a => a.name.toLowerCase() === searchName);
+            if (match) return match.effect;
         }
         
-        // 2. Search abilities array in rules
-        if (C.state.rules && C.state.rules.abilities) {
-            const ability = C.state.rules.abilities.find(a => 
-                a.name.toLowerCase() === searchName
-            );
-            if (ability) return ability.effect;
-        }
-        
-        // 3. Search weapon_properties array in rules
-        if (C.state.rules && C.state.rules.weapon_properties) {
-            const prop = C.state.rules.weapon_properties.find(p => 
-                p.name.toLowerCase() === searchName
-            );
-            if (prop) return prop.effect;
-        }
-        
-        // 4. Search type_rules array in rules
-        if (C.state.rules && C.state.rules.type_rules) {
-            const typeRule = C.state.rules.type_rules.find(t => 
-                t.name.toLowerCase() === searchName
-            );
-            if (typeRule) return typeRule.effect;
-        }
-        
-        // 5. Fallback
         return "Rule effect pending.";
     };
 
-    // --- 1.5. BUILD STAT BADGES (REUSABLE) ---
+    // --- 1.5. BUILD STAT BADGES ---
     const buildStatBadges = (unit) => {
         const stats = [
             {l:'Q', v:unit.quality, c:'stat-q', h:'Quality: 4, 5, 6 are successes.'},
@@ -62,47 +43,31 @@ CCFB.define("components/painter", function(C) {
         const det = document.getElementById("det-target");
         if (!det) return;
 
+        const abilitiesHtml = (unit.abilities || []).map(r => `
+            <div class="ability-card">
+                <div class="ability-name">${getName(r)}</div>
+                <div class="ability-effect">${getAbilityEffect(r, unit)}</div>
+            </div>
+        `).join('');
+
+        const upgradesHtml = (unit.optional_upgrades || []).map(upg => {
+            const isUnique = upg.type === "Relic" || upg.type === "Spell";
+            return `
+                <label class="upgrade-row">
+                    <input type="${isUnique ? "radio" : "checkbox"}" name="${isUnique ? "unique-choice" : upg.name}">
+                    <span>${upg.name} (+${upg.cost} ₤)</span>
+                </label>`;
+        }).join('');
+
         det.innerHTML = `
             <div class="cc-detail-view">
                 <div class="u-name">${unit.name.toUpperCase()}</div>
                 <div class="u-type">${unit.type.toUpperCase()}</div>
-                
                 <div class="d-flex flex-wrap justify-content-center mb-3">${buildStatBadges(unit)}</div>
-
-                <div class="u-lore">
-                    ${unit.lore || unit.description || "No lore recorded."}
-                </div>
-
-                ${(unit.abilities || []).length > 0 ? `
-                    <div class="detail-section-title">SPECIAL RULES</div>
-                    ${unit.abilities.map(r => {
-                        const abilityName = typeof r === 'object' ? r.name : r;
-                        return `
-                            <div class="ability-card">
-                                <div class="ability-name">${abilityName}</div>
-                                <div class="ability-effect">${getAbilityEffect(r, unit)}</div>
-                            </div>
-                        `;
-                    }).join('')}
-                ` : ''}
-
-                ${(unit.optional_upgrades || []).length > 0 ? `
-                    <div class="detail-section-title">UPGRADES & GEAR</div>
-                    <div id="upgrades-list">
-                        ${unit.optional_upgrades.map(upg => {
-                            const isUnique = upg.type === "Relic" || upg.type === "Spell";
-                            const inputType = isUnique ? "radio" : "checkbox";
-                            const groupName = isUnique ? "unique-choice" : upg.name;
-                            return `
-                                <label class="upgrade-row">
-                                    <input type="${inputType}" name="${groupName}">
-                                    <span>${upg.name} (+${upg.cost} ₤)</span>
-                                </label>`;
-                        }).join('')}
-                    </div>
-                ` : ''}
-            </div>
-        `;
+                <div class="u-lore">${unit.lore || unit.description || "No lore recorded."}</div>
+                ${abilitiesHtml ? `<div class="detail-section-title">SPECIAL RULES</div>${abilitiesHtml}` : ''}
+                ${upgradesHtml ? `<div class="detail-section-title">UPGRADES & GEAR</div><div id="upgrades-list">${upgradesHtml}</div>` : ''}
+            </div>`;
     };
 
     // --- 3. REFRESH UI ---
@@ -110,47 +75,36 @@ CCFB.define("components/painter", function(C) {
         const UI = window.CCFB.ui;
         const faction = C.state.factions[UI.fKey];
 
-        // Update Points in Top Bar
+        // Update Points
         const total = (typeof C.calculateTotal === "function") ? C.calculateTotal() : 0;
         const totalEl = document.getElementById("display-total");
         if (totalEl) {
-            const budgetText = UI.budget > 0 ? ` / ${UI.budget}` : '';
-            totalEl.innerHTML = `${total}${budgetText} ₤`;
-            // Turn red if over budget
-            if (UI.budget > 0 && total > UI.budget) {
-                totalEl.style.color = '#ff4444';
-            } else {
-                totalEl.style.color = '#ff7518';
-            }
+            totalEl.innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
+            totalEl.style.color = (UI.budget > 0 && total > UI.budget) ? '#ff4444' : '#ff7518';
         }
 
-        // Render Library (Column 1) - FIXED: Separate clickable area from button
+        // Column 1: Library
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => {
                 const escapedName = u.name.replace(/'/g, "\\'");
+                const tags = (u.abilities || []).map(a => `<span class="ability-tag">${getName(a)}</span>`).join('');
                 return `
                     <div class="cc-roster-item">
                         <div class="cc-unit-info" onclick="window.CCFB.selectUnit('${escapedName}')">
                             <div class="u-name">${u.name.toUpperCase()}</div>
                             <div class="u-type">${u.type.toUpperCase()}</div>
                             <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
-                            <div class="abilities-overview">
-                                ${(u.abilities || []).map(a => {
-                                    const abilityName = typeof a === 'object' ? a.name : a;
-                                    return `<span class="ability-tag">${abilityName}</span>`;
-                                }).join('')}
-                            </div>
+                            <div class="abilities-overview">${tags}</div>
                         </div>
-                        <button class="btn btn-sm btn-block btn-outline-warning mt-2" 
-                                onclick="window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
+                        <button class="btn btn-sm btn-block btn-outline-warning mt-2" onclick="window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
                             <i class="fa fa-plus"></i> ADD TO ROSTER
                         </button>
                     </div>`;
             }).join('');
         }
 
-        // Render Roster (Column 2) - NAME, TYPE, BADGES (CENTERED)
+        // Column 2: Roster
         const rost = document.getElementById("rost-target");
         if (rost) {
             rost.innerHTML = (UI.roster || []).map(item => {
@@ -174,13 +128,12 @@ CCFB.define("components/painter", function(C) {
 
     // --- 4. GLOBAL HELPERS ---
     window.CCFB.selectUnit = (name) => {
-        const faction = C.state.factions[window.CCFB.ui.fKey];
-        const unit = faction?.units.find(u => u.name === name);
+        const unit = C.state.factions[window.CCFB.ui.fKey]?.units.find(u => u.name === name);
         if (unit) window.CCFB.renderDetail(unit);
     };
 
     window.CCFB.addUnitToRoster = (name, cost) => {
-        window.CCFB.ui.roster.push({ id: Date.now(), fKey: window.CCFB.ui.fKey, uN: name, cost: cost });
+        window.CCFB.ui.roster.push({ id: Date.now(), fKey: window.CCFB.ui.fKey, uN: name, cost });
         window.CCFB.refreshUI();
     };
 
