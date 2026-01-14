@@ -1,17 +1,10 @@
-/**
- * COFFIN CANYON FACTION BUILDER - FILE 5: SKELETON
- * Version: 1.9.5 - 3-Column Grid + Header Tools
- */
 CCFB.define("components/skeleton", function() {
     return {
         draw: function() {
-            // DOMAIN SAFETY: Commandment v1.9
             if (window.location.href.includes("/web")) return;
-
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
-            // Strict 3-Column Design with independent scrolling
             root.innerHTML = `
                 <div id="ccfb-app">
                     <div class="cc-header-area">
@@ -50,16 +43,14 @@ CCFB.define("components/skeleton", function() {
             this.populateDropdown();
         },
         populateDropdown: function() {
-            // Integrates with Loader-fetched config
             CCFB.require(["loaders"], (loader) => {
                 loader.getMasterConfig().then(config => {
                     const sel = document.getElementById("f-selector");
                     if (!sel || !config.factions) return;
-                    
                     Object.entries(config.factions).forEach(([key, f]) => {
                         const opt = document.createElement("option");
                         opt.value = key;
-                        opt.textContent = f.name.toUpperCase(); // All-caps
+                        opt.textContent = f.name.toUpperCase();
                         sel.appendChild(opt);
                     });
                 });
