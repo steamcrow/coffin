@@ -86,16 +86,6 @@ CCFB.define("components/painter", function(C) {
                     }).join('')}
                 ` : ''}
 
-                ${(unit.type_abilities || []).length > 0 ? `
-                    <div class="detail-section-title">TYPE ABILITIES</div>
-                    ${unit.type_abilities.map(r => `
-                        <div class="ability-card">
-                            <div class="ability-name">${r}</div>
-                            <div class="ability-effect">${getAbilityEffect(r, unit)}</div>
-                        </div>
-                    `).join('')}
-                ` : ''}
-
                 ${(unit.optional_upgrades || []).length > 0 ? `
                     <div class="detail-section-title">UPGRADES & GEAR</div>
                     <div id="upgrades-list">
@@ -123,15 +113,25 @@ CCFB.define("components/painter", function(C) {
         // Update Points in Top Bar
         const total = (typeof C.calculateTotal === "function") ? C.calculateTotal() : 0;
         const totalEl = document.getElementById("display-total");
-        if (totalEl) totalEl.innerHTML = `${total} ₤`;
+        if (totalEl) {
+            const budgetText = UI.budget > 0 ? ` / ${UI.budget}` : '';
+            totalEl.innerHTML = `${total}${budgetText} ₤`;
+            // Turn red if over budget
+            if (UI.budget > 0 && total > UI.budget) {
+                totalEl.style.color = '#ff4444';
+            } else {
+                totalEl.style.color = '#ff7518';
+            }
+        }
 
         // Render Library (Column 1) - NAME, TYPE, BADGES (CENTERED), ABILITIES
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
-            lib.innerHTML = (faction.units || []).map((u, idx) => {
-                const unitIndex = `lib-${idx}`;
+            lib.innerHTML = (faction.units || []).map(u => {
+                // Escape single quotes in unit name for onclick
+                const escapedName = u.name.replace(/'/g, "\\'");
                 return `
-                    <div class="cc-roster-item" data-unit-index="${unitIndex}">
+                    <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${escapedName}')">
                         <div class="u-name">${u.name.toUpperCase()}</div>
                         <div class="u-type">${u.type.toUpperCase()}</div>
                         <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
@@ -141,31 +141,12 @@ CCFB.define("components/painter", function(C) {
                                 return `<span class="ability-tag">${abilityName}</span>`;
                             }).join('')}
                         </div>
-                        <button class="btn btn-sm btn-block btn-outline-warning mt-2" data-unit-name="${u.name}" data-unit-cost="${u.cost}" data-action="add">
+                        <button class="btn btn-sm btn-block btn-outline-warning mt-2" 
+                                onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
                             <i class="fa fa-plus"></i> ADD TO ROSTER
                         </button>
                     </div>`;
             }).join('');
-
-            // Add event listeners
-            lib.querySelectorAll('.cc-roster-item').forEach(item => {
-                const idx = item.getAttribute('data-unit-index');
-                const unit = faction.units[parseInt(idx.split('-')[1])];
-                item.onclick = (e) => {
-                    if (!e.target.closest('button')) {
-                        window.CCFB.selectUnit(unit.name);
-                    }
-                };
-            });
-
-            lib.querySelectorAll('button[data-action="add"]').forEach(btn => {
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    const name = btn.getAttribute('data-unit-name');
-                    const cost = parseInt(btn.getAttribute('data-unit-cost'));
-                    window.CCFB.addUnitToRoster(name, cost);
-                };
-            });
         }
 
         // Render Roster (Column 2) - NAME, TYPE, BADGES (CENTERED)
@@ -174,36 +155,20 @@ CCFB.define("components/painter", function(C) {
             rost.innerHTML = (UI.roster || []).map(item => {
                 const u = C.getUnit?.(item.fKey, item.uN);
                 if (!u) return '';
+                // Escape single quotes in unit name for onclick
+                const escapedName = item.uN.replace(/'/g, "\\'");
                 return `
-                    <div class="cc-roster-item" data-unit-name="${item.uN}">
+                    <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${escapedName}')">
                         <div class="d-flex justify-content-between align-items-start">
                             <div style="flex: 1;">
                                 <div class="u-name">${item.uN.toUpperCase()}</div>
                                 <div class="u-type">${u.type.toUpperCase()}</div>
                                 <div class="d-flex flex-wrap justify-content-center">${buildStatBadges(u)}</div>
                             </div>
-                            <button class="btn-minus" data-item-id="${item.id}" data-action="remove">−</button>
+                            <button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button>
                         </div>
                     </div>`;
             }).join('');
-
-            // Add event listeners
-            rost.querySelectorAll('.cc-roster-item').forEach(item => {
-                item.onclick = (e) => {
-                    if (!e.target.closest('button')) {
-                        const name = item.getAttribute('data-unit-name');
-                        window.CCFB.selectUnit(name);
-                    }
-                };
-            });
-
-            rost.querySelectorAll('button[data-action="remove"]').forEach(btn => {
-                btn.onclick = (e) => {
-                    e.stopPropagation();
-                    const id = parseInt(btn.getAttribute('data-item-id'));
-                    window.CCFB.removeUnitFromRoster(id);
-                };
-            });
         }
     };
 
