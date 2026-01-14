@@ -1,93 +1,103 @@
 CCFB.define("main", function (C) {
-    // 1. Initialize Global UI State
-    // We define this on 'C' for internal logic and 'window.CCFB' for the Painter
-    C.ui = {
-        fKey: "monster-rangers",
-        budget: 500,
-        mode: "grid",
-        roster: [],
-        sId: null
-    };
-    
-    // Create the global bridge
-    window.CCFB.ui = C.ui;
-
-    // 2. Helper: Find unit data across factions
-    C.getUnit = function(fKey, unitName) {
-        if (!C.state || !C.state.factions) return null;
-        const faction = C.state.factions[fKey];
-        if (!faction || !faction.units) return null;
-        return faction.units.find(u => u.name === unitName);
-    };
-
-    // 3. Helper: Calculate total cost of the current roster
-    C.calculateTotal = function() {
-        if (!C.ui || !C.ui.roster) return 0;
-        return C.ui.roster.reduce((sum, item) => {
-            // We use the cost stored in the roster item for speed
-            return sum + (item.cost || 0);
-        }, 0);
-    };
-
-    // 4. Global Action: Handle Faction Change (Dropdown)
-    window.CCFB.handleFactionChange = function(newKey) {
-        console.log("🚀 Faction Change Triggered:", newKey);
-        C.ui.fKey = newKey;
-        CCFB.require(["data/loaders"], function(loaders) {
-            loaders.loadFaction(newKey).then(function() {
-                if (window.CCFB.refreshUI) window.CCFB.refreshUI();
-            });
+  // 1. Initialize Global UI State
+  // We define it on C and window.CCFB to ensure both "Brain" and "Painter" see the same data
+  C.ui = {
+    fKey: "monster-rangers",
+    budget: 500,
+    mode: "grid",
+    roster: [],
+    sId: null
+  };
+  
+  // CRITICAL BRIDGE: Ensures the Painter sees the exact same Roster as the Brain
+  window.CCFB.ui = C.ui;
+  
+  // 2. Helper for Painter: Find unit data
+  // This looks up the stats for a specific unit in the current faction
+  C.getUnit = function(fKey, unitName) {
+    const faction = C.state?.factions?.[fKey];
+    return faction?.units?.find(u => u.name === unitName);
+  };
+  
+  // 3. Helper for Painter: Calculate Roster Points
+  // This sums up the cost of every unit currently in the list
+  C.calculateTotal = function() {
+    return (C.ui.roster || []).reduce((sum, item) => {
+      // We use the cost stored in the item for reliability
+      return sum + (item.cost || 0);
+    }, 0);
+  };
+  
+  // 4. Handle Faction Selection
+  // This is called when the user chooses a new faction from the dropdown
+  window.CCFB.handleFactionChange = function(newKey) {
+    ccfbLog("📂 Main: Faction Change Request -> " + newKey);
+    C.ui.fKey = newKey;
+    CCFB.require(["data/loaders"], function(loaders) {
+      loaders.loadFaction(newKey).then(function() {
+         ccfbLog("✅ Main: Faction " + newKey + " loaded successfully.");
+         if (window.CCFB.refreshUI) window.CCFB.refreshUI();
+      });
+    });
+  };
+  
+  // 5. Handle Budget Selection
+  window.CCFB.handleBudgetChange = function(newBudget) {
+    ccfbLog("💰 Main: Budget Change Request -> " + newBudget);
+    C.ui.budget = parseInt(newBudget);
+    if (window.CCFB.refreshUI) window.CCFB.refreshUI();
+  };
+  
+  // 6. Share Roster (stub for now)
+  window.CCFB.shareRoster = function() {
+    alert("Share feature coming soon! Your current roster has " + C.ui.roster.length + " units.");
+  };
+  
+  // 7. Print Roster (stub for now)
+  window.printRoster = function() {
+    ccfbLog("🖨️ Main: Printing Roster...");
+    window.print();
+  };
+  
+  // 8. Create the module object to return
+  const mainModule = {
+    boot: function (containerId, factionFolder) {
+      ccfbLog("🚀 Brain: Booting...");
+      
+      // Store the base URL for data
+      C.state.dataBaseUrl = factionFolder;
+      
+      CCFB.require(["data/loaders"], function (loaders) {
+        // Step 1: Load Global Rules
+        loaders.loadRules().then(function() {
+          ccfbLog("✅ Rules Loaded. Initializing UI...");
+          
+          // Step 2: Load Default Faction
+          return loaders.loadFaction(C.ui.fKey);
+        }).then(function() {
+          ccfbLog("✅ Default Faction Loaded.");
+          
+          C.state.loading = false;
+          
+          // Initial UI Draw
+          if (window.CCFB.refreshUI) window.CCFB.refreshUI();
+        }).catch(function(err) {
+          console.error("❌ Boot Sequence Failed:", err);
         });
-    };
+      });
 
-    // 5. Global Action: Handle Budget Change (Dropdown)
-    window.CCFB.handleBudgetChange = function(newBudget) {
-        console.log("💰 Budget Change Triggered:", newBudget);
-        C.ui.budget = parseInt(newBudget);
-        if (window.CCFB.refreshUI) window.CCFB.refreshUI();
-    };
-
-    // 6. Global Action: Share Roster
-    window.CCFB.shareRoster = function() {
-        alert("Share feature coming soon! Your roster has " + C.ui.roster.length + " units.");
-    };
-
-    // 7. Global Action: Print Roster
-    window.printRoster = function() {
-        window.print();
-    };
-
-    // 8. The Boot Sequence
-    // This runs when the app first starts
-    const mainModule = {
-        boot: function (containerId, factionFolder) {
-            ccfbLog("🚀 Brain: Booting System...");
-            
-            // Set the data path
-            C.state.dataBaseUrl = factionFolder;
-
-            CCFB.require(["data/loaders"], function (loaders) {
-                // First, load the core game rules
-                loaders.loadRules().then(function() {
-                    ccfbLog("✅ Rules Loaded. Loading Default Faction...");
-                    
-                    // Load the default faction (Monster Rangers)
-                    return loaders.loadFaction(C.ui.fKey);
-                }).then(function() {
-                    ccfbLog("✅ Faction Loaded. Initializing UI...");
-                    
-                    C.state.loading = false;
-                    
-                    // Final refresh to draw the screen
-                    if (window.CCFB.refreshUI) {
-                        window.CCFB.refreshUI();
-                    }
-                }).catch(function(err) {
-                    console.error("❌ Boot Error:", err);
-                });
-            });
-        }
-    };
-
-    return mainModule;
+      // CRITICAL FIX FOR DROPDOWNS:
+      // This listener catches changes to f-selector even if Odoo blocks the "onchange" attribute
+      document.addEventListener('change', function (e) {
+          if (e.target && e.target.id === 'f-selector') {
+              window.CCFB.handleFactionChange(e.target.value);
+          }
+          if (e.target && e.target.id === 'budget-selector') {
+              window.CCFB.handleBudgetChange(e.target.value);
+          }
+      });
+    }
+  };
+  
+  return mainModule;
 });
