@@ -1,7 +1,13 @@
+/**
+ * COFFIN CANYON FACTION BUILDER - FILE 5: SKELETON
+ * Version: 1.9.5 - 3-Column Design
+ */
+
 CCFB.define("components/skeleton", function() {
     return {
         draw: function() {
             if (window.location.href.includes("/web")) return;
+
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
@@ -46,11 +52,12 @@ CCFB.define("components/skeleton", function() {
             CCFB.require(["loaders"], (loader) => {
                 loader.getMasterConfig().then(config => {
                     const sel = document.getElementById("f-selector");
-                    if (!sel || !config.factions) return;
+                    if (!sel) return;
+                    // Assuming config structure matches your factions object
                     Object.entries(config.factions).forEach(([key, f]) => {
                         const opt = document.createElement("option");
                         opt.value = key;
-                        opt.textContent = f.name.toUpperCase();
+                        opt.textContent = (f.name || key).toUpperCase();
                         sel.appendChild(opt);
                     });
                 });
