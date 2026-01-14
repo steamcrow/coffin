@@ -10,11 +10,10 @@ CCFB.define('loaders', (require) => {
         return;
     }
 
-    const CONFIG_ID = 'atBNrncJQTOL-dmzsRMZAwo92'; // From your provided config loader
+    const CONFIG_ID = 'atBNrncJQTOL-dmzsRMZAwo92'; // Master Config
 
     /**
      * CORE ODOO RPC CALLER
-     * Leverages the session to read/write documents
      */
     async function odooRPC(model, method, args, kwargs = {}) {
         const response = await fetch('/web/dataset/call_kw', {
@@ -34,7 +33,6 @@ CCFB.define('loaders', (require) => {
 
     /**
      * FETCH ROSTER FROM ODOO
-     * Triggered if URL contains ?id=X
      */
     async function fetchRoster(documentId) {
         try {
@@ -43,7 +41,6 @@ CCFB.define('loaders', (require) => {
             });
             
             if (result && result[0]?.datas) {
-                // Decode Base64 from Odoo storage
                 const jsonString = decodeURIComponent(escape(atob(result[0].datas)));
                 return JSON.parse(jsonString);
             }
@@ -55,29 +52,21 @@ CCFB.define('loaders', (require) => {
 
     /**
      * SAVE ROSTER TO ODOO
-     * Converts current state to JSON and uploads as document
      */
     async function saveRoster(rosterData, rosterName = "MY FACTION") {
         const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(rosterData))));
-        
         try {
             const result = await odooRPC('documents.document', 'create', [{
                 name: `${rosterName}.ccfb`,
                 datas: base64Data,
-                mimetype: 'application/json',
-                // folder_id logic can be added here if a specific folder is required
+                mimetype: 'application/json'
             }]);
-            return result; // Returns the new document ID
+            return result; 
         } catch (e) {
             console.error("CCFB: Save failed", e);
             alert("Failed to save to Odoo. Check login status.");
         }
     }
 
-    return {
-        fetchRoster,
-        saveRoster,
-        odooRPC,
-        configId: CONFIG_ID
-    };
+    return { fetchRoster, saveRoster, odooRPC, configId: CONFIG_ID };
 });
