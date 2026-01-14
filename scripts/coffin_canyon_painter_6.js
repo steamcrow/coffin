@@ -1,11 +1,12 @@
 CCFB.define("components/painter", function(C) {
     
+    // Helper to get name
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
+    // Look up what abilities do
     const getAbilityEffect = (abilityName, unit) => {
         if (typeof abilityName === 'object' && abilityName.effect) return abilityName.effect;
-        
-        const searchName = abilityName.toLowerCase().trim();
+        const searchName = (typeof abilityName === 'string' ? abilityName : abilityName.name || "").toLowerCase().trim();
         const rules = C.state.rules || {};
 
         if (unit.ability_details?.[searchName]) return unit.ability_details[searchName];
@@ -15,17 +16,16 @@ CCFB.define("components/painter", function(C) {
             const match = rules[cat]?.find(a => a.name.toLowerCase() === searchName);
             if (match) return match.effect;
         }
-        
         return "Rule effect pending.";
     };
 
+    // Draw the small Stat Boxes (Q, D, R, M)
     const buildStatBadges = (unit) => {
         const stats = [
-            {l:'Q', v:unit.quality, c:'stat-q', h:'Quality: 4+ is success.'},
-            {l:'D', v:unit.defense, c:'stat-d', h:'Defense: Reduces damage.'},
-            // Fix: Check if range exists specifically so '0' shows as '0'
-            {l:'R', v: (unit.range !== undefined) ? unit.range : '-', c:'stat-r', h:'Range: Max reach.'},
-            {l:'M', v:unit.move, c:'stat-m', h:'Move: Inches per action.'}
+            {l:'Q', v:unit.quality, c:'stat-q', h:'Quality'},
+            {l:'D', v:unit.defense, c:'stat-d', h:'Defense'},
+            {l:'R', v:(unit.range !== undefined) ? unit.range : '-', c:'stat-r', h:'Range'},
+            {l:'M', v:unit.move, c:'stat-m', h:'Move'}
         ];
         return stats.map(s => `
             <span class="cc-stat-badge" title="${s.h}">
@@ -34,6 +34,7 @@ CCFB.define("components/painter", function(C) {
             </span>`).join('');
     };
 
+    // Draw the Unit Detail (Right Column)
     window.CCFB.renderDetail = (unit) => {
         const det = document.getElementById("det-target");
         if (!det) return;
@@ -65,19 +66,22 @@ CCFB.define("components/painter", function(C) {
             </div>`;
     };
 
+    // Refresh the whole screen
     window.CCFB.refreshUI = () => {
         const UI = window.CCFB.ui;
+        if (!UI) return;
+        
         const faction = C.state.factions[UI.fKey];
 
-        // 1. Points Display
-        const total = (typeof C.calculateTotal === "function") ? C.calculateTotal() : 0;
+        // 1. Update Points Display
+        const total = C.calculateTotal();
         const totalEl = document.getElementById("display-total");
         if (totalEl) {
             totalEl.innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
             totalEl.style.color = (UI.budget > 0 && total > UI.budget) ? '#ff4444' : '#ff7518';
         }
 
-        // 2. Library
+        // 2. Draw Library (Left Column)
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => {
@@ -92,6 +96,7 @@ CCFB.define("components/painter", function(C) {
                         <div class="abilities-overview">${tags}</div>
                     </div>
                     <button class="btn btn-sm btn-block btn-outline-warning mt-2" 
+                            style="position: relative; z-index: 50;"
                             onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
                         <i class="fa fa-plus"></i> ADD TO ROSTER
                     </button>
@@ -99,11 +104,11 @@ CCFB.define("components/painter", function(C) {
             }).join('');
         }
 
-        // 3. Roster (Added StopPropagation here!)
+        // 3. Draw Roster (Middle Column)
         const rost = document.getElementById("rost-target");
         if (rost) {
             rost.innerHTML = (UI.roster || []).map(item => {
-                const u = C.getUnit?.(item.fKey, item.uN);
+                const u = C.getUnit(item.fKey, item.uN);
                 if (!u) return '';
                 const escapedName = item.uN.replace(/'/g, "\\'");
                 return `
@@ -121,19 +126,15 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- GLOBAL HELPERS ---
+    // Helpers
     window.CCFB.selectUnit = (name) => {
         const unit = C.state.factions[window.CCFB.ui.fKey]?.units.find(u => u.name === name);
         if (unit) window.CCFB.renderDetail(unit);
     };
 
     window.CCFB.addUnitToRoster = (name, cost) => {
-        // Better ID generation
-        const newId = Date.now() + Math.floor(Math.random() * 1000);
-        window.CCFB.ui.roster.push({ id: newId, fKey: window.CCFB.ui.fKey, uN: name, cost });
-        
-        // Auto-select the unit you just added to show details immediately
-        window.CCFB.selectUnit(name); 
+        const newId = Date.now() + Math.floor(Math.random() * 100);
+        window.CCFB.ui.roster.push({ id: newId, fKey: window.CCFB.ui.fKey, uN: name, cost: cost });
         window.CCFB.refreshUI();
     };
 
