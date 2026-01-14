@@ -3,10 +3,8 @@ CCFB.define("components/skeleton", function(C) {
         draw: function() {
             // DOMAIN_SAFETY: Commandment v1.9 - Protect Odoo Editor
             if (window.location.href.includes("/web")) return;
-
             const root = document.getElementById("ccfb-root");
             if (!root) return;
-
             // Strict 3-Column Design with independent scrolling
             root.innerHTML = `
                 <div id="ccfb-app">
@@ -16,6 +14,12 @@ CCFB.define("components/skeleton", function(C) {
                             <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)">
                                 <option value="">SELECT FACTION...</option>
                             </select>
+                            <select id="budget-selector" onchange="window.CCFB.handleBudgetChange(this.value)">
+                                <option value="500">500 ₤</option>
+                                <option value="1000">1000 ₤</option>
+                                <option value="1500">1500 ₤</option>
+                                <option value="2000">2000 ₤</option>
+                            </select>
                             <input type="text" id="roster-name" placeholder="ROSTER NAME">
                             <div class="top-tools ml-auto">
                                 <span id="display-total" title="Liberty Bucks">0 ₤</span>
@@ -24,7 +28,6 @@ CCFB.define("components/skeleton", function(C) {
                             </div>
                         </div>
                     </div>
-
                     <div class="cc-grid">
                         <div class="cc-panel" id="ccfb-lib" style="overflow-y: auto;">
                             <div class="cc-panel-title"><h4>Unit Library</h4></div>
@@ -55,6 +58,8 @@ CCFB.define("components/skeleton", function(C) {
                     opt.textContent = f.label.toUpperCase();
                     sel.appendChild(opt);
                 });
+                // Default to Monster Rangers
+                sel.value = "monster-rangers";
             });
         }
     };
