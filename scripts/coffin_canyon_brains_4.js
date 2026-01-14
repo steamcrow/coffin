@@ -36,7 +36,17 @@ CCFB.define("main", function (C) {
     if (window.CCFB.refreshUI) window.CCFB.refreshUI();
   };
   
-  // 6. Create the module object to return
+  // 6. Share Roster (stub for now)
+  window.CCFB.shareRoster = function() {
+    alert("Share feature coming soon!");
+  };
+  
+  // 7. Print Roster (stub for now)
+  window.printRoster = function() {
+    window.print();
+  };
+  
+  // 8. Create the module object to return
   const mainModule = {
     boot: function (containerId, factionFolder) {
       ccfbLog("🚀 Brain: Booting...");
