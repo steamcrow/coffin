@@ -1,7 +1,17 @@
 {
-  "version": "6.3",
+  "version": "8",
   "last_updated": "01-12-26",
-  "changelog": "Expanded weapons system with costs and mechanical effects. Removed duplicate Poison ability (use Venom). Removed duplicate Explosive weapon property (use Blast). Updated Boardwalk Blitzer ability.",
+  "changelog": "Aligned Befriend abilities with Monster Rangers faction. Renamed Triage Transfusion to Blood Transfusion. Added Befriend Spirits. Added Supplemental Abilities system. No rules removed.",
+  "supplemental_abilities": {
+    "description": "Supplemental Abilities are optional, hand-selected abilities tied to specific units, relics, variants, or narrative loadouts. They are not upgrades, do not compete with gear, and are not universally available unless explicitly granted by a unit or scenario.",
+    "rules": [
+      "Supplemental Abilities are listed on a unit profile under `supplemental_abilities`, not under optional upgrades.",
+      "A unit may only use Supplemental Abilities explicitly listed on its profile.",
+      "Supplemental Abilities are typically once per game unless otherwise stated.",
+      "Supplemental Abilities do not count as Gear, Armor, Weapons, or Upgrades.",
+      "Supplemental Abilities may be reused across factions, variants, or scenarios."
+    ]
+  },
   "abilities": [
     {
       "name": "Aim",
@@ -54,9 +64,9 @@
       "effect": "May attempt Befriend actions against Automat constructs. Success enables control or neutrality per scenario rules."
     },
     {
-      "name": "Befriend Beasts",
+      "name": "Befriend Beast",
       "cost": 0,
-      "effect": "May attempt Befriend actions against Beasts. Successful Befriend prevents hostility per scenario rules."
+      "effect": "May attempt Befriend actions against living monsters of flesh, tooth, and claw. Successful Befriend prevents hostility per scenario rules."
     },
     {
       "name": "Befriend Bloodless",
@@ -64,9 +74,14 @@
       "effect": "May attempt Befriend actions against Bloodless (undead). Successful Befriend alters hostility per scenario rules."
     },
     {
+      "name": "Befriend Spirits",
+      "cost": 0,
+      "effect": "May attempt Befriend actions against incorporeal undead such as Ghosts, Haunts, Wraiths, and similar Spirit-class Bloodless. Does not apply to physical undead bodies."
+    },
+    {
       "name": "Befriend Kaiju",
       "cost": 0,
-      "effect": "May attempt Befriend actions against Kaiju-class monsters. Success calms or redirects per scenario rules."
+      "effect": "May attempt Befriend actions against Titan-class Kaiju monsters. Success calms, redirects, or suppresses rampage behavior per scenario rules."
     },
     {
       "name": "Berserk",
@@ -524,7 +539,7 @@
       "effect": "Reduce incoming damage by 5 (minimum 1)"
     },
     {
-      "name": "Triage Transfusion",
+      "name": "Blood Transfusion",
       "cost": 0,
       "effect": "Action. An adjacent friendly unit gains +1 Quality (to a maximum of its starting Quality). This unit immediately loses 1 Quality."
     },
@@ -703,49 +718,6 @@
       "effect": "If this unit is destroyed, enemy gains +3 VP."
     }
   ],
-  "universal_upgrades": {
-    "protective_gear": [
-      {
-        "name": "Gas Mask",
-        "cost": 3,
-        "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."
-      }
-    ],
-    "armor": [
-      {
-        "name": "Witch-Stitched",
-        "cost": 2,
-        "effect": "Magical armor woven into clothing. Grants Heavy Armor (+2 Defense dice) with no movement penalty. Available to those trained by or allied with Conjure Guard mystics."
-      }
-    ],
-    "vehicle_upgrades": [
-      {
-        "name": "Reinforced Cab",
-        "cost": 3,
-        "effect": "Armored plating. +1 Defense, -1\" Move."
-      },
-      {
-        "name": "Extra Storage",
-        "cost": 5,
-        "effect": "Additional cargo rigging. Increase capacity by +2 small monsters OR +1 objective."
-      }
-    ],
-    "mechanic_tools": [
-      {
-        "name": "Spare Parts",
-        "cost": 5,
-        "effect": "Carry field supplies. Permission to repair mechanical vehicles, devices, or beings."
-      }
-    ],
-    "consumables": [
-      {
-        "name": "Pocket Snacks",
-        "cost": 5,
-        "type": "Gear",
-        "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."
-      }
-    ]
-  },
   "wild_magic_table": {
     "name": "Wild Magic Table",
     "description": "Roll 2d6 when using Unleashed Power. Used by Mystics and magic-wielding units.",
@@ -813,11 +785,6 @@
       "version": "1.1",
       "status": "complete",
       "data_file": "faction-monsterology.json",
-      "composition_requirements": {
-        "minimum_squabs": 2,
-        "maximum_elders": 1,
-        "suggested_max_velocipedes": 3
-      },
       "faction_features": [
         {
           "name": "Dynamo Generator",
@@ -841,11 +808,6 @@
       "version": "0.1",
       "status": "draft",
       "data_file": "faction-monsterrangers.json",
-      "composition_requirements": {
-        "minimum_core_rangers": 2,
-        "maximum_vehicles": 1,
-        "no_guns": true
-      },
       "faction_features": [
         {
           "name": "Monster Escort",
@@ -870,11 +832,6 @@
       "version": "0.1",
       "status": "draft",
       "data_file": "faction-liberty-corps.json",
-      "composition_requirements": {
-        "minimum_units": 3,
-        "maximum_titans": 2,
-        "maximum_black_mariah": 1
-      },
       "faction_features": [
         {
           "name": "Arrest and Extract",
@@ -899,9 +856,6 @@
       "version": "1.0",
       "status": "playtesting",
       "data_file": "faction-shine-riders.json",
-      "composition_requirements": {
-        "note": "Extraction-focused faction. Build for speed and survivability, not prolonged combat."
-      },
       "faction_features": [
         {
           "name": "Extraction Specialists",
@@ -1090,7 +1044,7 @@
           "Inspire",
           "Rally"
         ],
-        "description": "Massive banner on 19ft pole. Projects morale-boosting aura and enables Radiomancer abilities."
+        "description": "Inspiring orange fighting banner on a sharp spear."
       },
       {
         "name": "Ramming Bumper",
