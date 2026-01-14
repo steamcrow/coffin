@@ -1,16 +1,13 @@
-/**
- * COFFIN CANYON FACTION BUILDER - FILE 5: SKELETON
- * Version: 1.9.5 - 3-Column Design
- */
-
-CCFB.define("components/skeleton", function() {
+CCFB.define("components/skeleton", function(C) {
     return {
         draw: function() {
+            // DOMAIN_SAFETY: Commandment v1.9 - Protect Odoo Editor
             if (window.location.href.includes("/web")) return;
 
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
+            // Strict 3-Column Design with independent scrolling
             root.innerHTML = `
                 <div id="ccfb-app">
                     <div class="cc-header-area">
@@ -49,17 +46,14 @@ CCFB.define("components/skeleton", function() {
             this.populateDropdown();
         },
         populateDropdown: function() {
-            CCFB.require(["loaders"], (loader) => {
-                loader.getMasterConfig().then(config => {
-                    const sel = document.getElementById("f-selector");
-                    if (!sel) return;
-                    // Assuming config structure matches your factions object
-                    Object.entries(config.factions).forEach(([key, f]) => {
-                        const opt = document.createElement("option");
-                        opt.value = key;
-                        opt.textContent = (f.name || key).toUpperCase();
-                        sel.appendChild(opt);
-                    });
+            CCFB.require(["config/docTokens"], (cfg) => {
+                const sel = document.getElementById("f-selector");
+                if (!sel) return;
+                cfg.factions.forEach(f => {
+                    const opt = document.createElement("option");
+                    opt.value = f.key;
+                    opt.textContent = f.label.toUpperCase();
+                    sel.appendChild(opt);
                 });
             });
         }
