@@ -2,13 +2,43 @@ CCFB.define("components/painter", function(C) {
     
     // --- 1. ABILITY LOOKUP HIERARCHY ---
     const getAbilityEffect = (abilityName, unit) => {
-        const norm = abilityName.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+        // Handle ability objects (like in Monster Rangers JSON)
+        if (typeof abilityName === 'object' && abilityName.name) {
+            return abilityName.effect || "No description available.";
+        }
+        
+        const searchName = abilityName.toLowerCase().trim();
+        
         // 1. Unit-specific details
-        if (unit.ability_details && unit.ability_details[norm]) return unit.ability_details[norm];
-        // 2. Global state rules
-        const globalRule = C.state.rules && C.state.rules[norm];
-        if (globalRule) return globalRule;
-        // 3. Fallback
+        if (unit.ability_details && unit.ability_details[searchName]) {
+            return unit.ability_details[searchName];
+        }
+        
+        // 2. Search abilities array in rules
+        if (C.state.rules && C.state.rules.abilities) {
+            const ability = C.state.rules.abilities.find(a => 
+                a.name.toLowerCase() === searchName
+            );
+            if (ability) return ability.effect;
+        }
+        
+        // 3. Search weapon_properties array in rules
+        if (C.state.rules && C.state.rules.weapon_properties) {
+            const prop = C.state.rules.weapon_properties.find(p => 
+                p.name.toLowerCase() === searchName
+            );
+            if (prop) return prop.effect;
+        }
+        
+        // 4. Search type_rules array in rules
+        if (C.state.rules && C.state.rules.type_rules) {
+            const typeRule = C.state.rules.type_rules.find(t => 
+                t.name.toLowerCase() === searchName
+            );
+            if (typeRule) return typeRule.effect;
+        }
+        
+        // 5. Fallback
         return "Rule effect pending.";
     };
 
@@ -43,13 +73,18 @@ CCFB.define("components/painter", function(C) {
                     ${unit.lore || unit.description || "No lore recorded."}
                 </div>
 
-                <div class="detail-section-title">SPECIAL RULES</div>
-                ${(unit.abilities || []).map(r => `
-                    <div class="ability-card">
-                        <div class="ability-name">${r}</div>
-                        <div class="ability-effect">${getAbilityEffect(r, unit)}</div>
-                    </div>
-                `).join('')}
+                ${(unit.abilities || []).length > 0 ? `
+                    <div class="detail-section-title">SPECIAL RULES</div>
+                    ${unit.abilities.map(r => {
+                        const abilityName = typeof r === 'object' ? r.name : r;
+                        return `
+                            <div class="ability-card">
+                                <div class="ability-name">${abilityName}</div>
+                                <div class="ability-effect">${getAbilityEffect(r, unit)}</div>
+                            </div>
+                        `;
+                    }).join('')}
+                ` : ''}
 
                 ${(unit.type_abilities || []).length > 0 ? `
                     <div class="detail-section-title">TYPE ABILITIES</div>
@@ -61,19 +96,21 @@ CCFB.define("components/painter", function(C) {
                     `).join('')}
                 ` : ''}
 
-                <div class="detail-section-title">UPGRADES & GEAR</div>
-                <div id="upgrades-list">
-                    ${(unit.optional_upgrades || []).map(upg => {
-                        const isUnique = upg.type === "Relic" || upg.type === "Spell";
-                        const inputType = isUnique ? "radio" : "checkbox";
-                        const groupName = isUnique ? "unique-choice" : upg.name;
-                        return `
-                            <label class="upgrade-row">
-                                <input type="${inputType}" name="${groupName}">
-                                <span>${upg.name} (+${upg.cost} ₤)</span>
-                            </label>`;
-                    }).join('')}
-                </div>
+                ${(unit.optional_upgrades || []).length > 0 ? `
+                    <div class="detail-section-title">UPGRADES & GEAR</div>
+                    <div id="upgrades-list">
+                        ${unit.optional_upgrades.map(upg => {
+                            const isUnique = upg.type === "Relic" || upg.type === "Spell";
+                            const inputType = isUnique ? "radio" : "checkbox";
+                            const groupName = isUnique ? "unique-choice" : upg.name;
+                            return `
+                                <label class="upgrade-row">
+                                    <input type="${inputType}" name="${groupName}">
+                                    <span>${upg.name} (+${upg.cost} ₤)</span>
+                                </label>`;
+                        }).join('')}
+                    </div>
+                ` : ''}
             </div>
         `;
     };
@@ -99,7 +136,10 @@ CCFB.define("components/painter", function(C) {
                         <div class="u-type">${u.type.toUpperCase()}</div>
                         <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
                         <div class="abilities-overview">
-                            ${(u.abilities || []).map(a => `<span class="ability-tag">${a}</span>`).join('')}
+                            ${(u.abilities || []).map(a => {
+                                const abilityName = typeof a === 'object' ? a.name : a;
+                                return `<span class="ability-tag">${abilityName}</span>`;
+                            }).join('')}
                         </div>
                         <button class="btn btn-sm btn-block btn-outline-warning mt-2" data-unit-name="${u.name}" data-unit-cost="${u.cost}" data-action="add">
                             <i class="fa fa-plus"></i> ADD TO ROSTER
