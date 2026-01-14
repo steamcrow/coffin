@@ -4,21 +4,17 @@ CCFB.define("components/painter", function(C) {
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
     // --- 1. ABILITY LOOKUP HIERARCHY ---
-    // This is the full version that checks unit-specific rules, weapon props, and general rules
     const getAbilityEffect = (abilityName, unit) => {
         if (typeof abilityName === 'object' && abilityName.effect) return abilityName.effect;
         
         const searchName = (typeof abilityName === 'string' ? abilityName : abilityName.name || "").toLowerCase().trim();
         const rules = C.state.rules || {};
 
-        // 1. Check Unit-specific details first
         if (unit.ability_details?.[searchName]) return unit.ability_details[searchName];
         
-        // 2. Search rule categories in order of priority
         const categories = ['abilities', 'weapon_properties', 'type_rules'];
         for (const cat of categories) {
-            if (!rules[cat]) continue;
-            const match = rules[cat].find(a => a.name.toLowerCase() === searchName);
+            const match = rules[cat]?.find(a => a.name.toLowerCase() === searchName);
             if (match) return match.effect;
         }
         
@@ -30,7 +26,7 @@ CCFB.define("components/painter", function(C) {
         const stats = [
             {l:'Q', v:unit.quality, c:'stat-q', h:'Quality: 4, 5, 6 are successes.'},
             {l:'D', v:unit.defense, c:'stat-d', h:'Defense: Subtracts damage.'},
-            {l:'R', v:(unit.range !== undefined && unit.range !== null) ? unit.range : '-', c:'stat-r', h:'Range: Max reach.'},
+            {l:'R', v:unit.range || '-', c:'stat-r', h:'Range: Max reach.'},
             {l:'M', v:unit.move, c:'stat-m', h:'Move: Inches per action.'}
         ];
         return stats.map(s => `
@@ -74,13 +70,11 @@ CCFB.define("components/painter", function(C) {
 
     // --- 3. REFRESH UI ---
     window.CCFB.refreshUI = () => {
-        const UI = window.CCFB.ui;
-        if (!UI) return;
-        
+        const UI = C.ui; // Pointed back to C.ui as per your original
         const faction = C.state.factions[UI.fKey];
 
         // Update Points
-        const total = C.calculateTotal();
+        const total = (typeof C.calculateTotal === "function") ? C.calculateTotal() : 0;
         const totalEl = document.getElementById("display-total");
         if (totalEl) {
             totalEl.innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
@@ -102,7 +96,7 @@ CCFB.define("components/painter", function(C) {
                         <div class="abilities-overview">${tags}</div>
                     </div>
                     <button class="btn btn-sm btn-block btn-outline-warning mt-2" 
-                            style="position: relative; z-index: 999 !important; pointer-events: auto;"
+                            style="position: relative; z-index: 10;" 
                             onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
                         <i class="fa fa-plus"></i> ADD TO ROSTER
                     </button>
@@ -114,7 +108,7 @@ CCFB.define("components/painter", function(C) {
         const rost = document.getElementById("rost-target");
         if (rost) {
             rost.innerHTML = (UI.roster || []).map(item => {
-                const u = C.getUnit(item.fKey, item.uN);
+                const u = C.getUnit?.(item.fKey, item.uN);
                 if (!u) return '';
                 const escapedName = item.uN.replace(/'/g, "\\'");
                 return `
@@ -125,7 +119,7 @@ CCFB.define("components/painter", function(C) {
                                 <div class="u-type">${u.type.toUpperCase()}</div>
                                 <div class="d-flex flex-wrap justify-content-center">${buildStatBadges(u)}</div>
                             </div>
-                            <button class="btn-minus" style="position: relative; z-index: 999;" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button>
+                            <button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button>
                         </div>
                     </div>`;
             }).join('');
@@ -134,22 +128,17 @@ CCFB.define("components/painter", function(C) {
 
     // --- 4. GLOBAL HELPERS ---
     window.CCFB.selectUnit = (name) => {
-        const faction = C.state.factions[window.CCFB.ui.fKey];
-        if (!faction) return;
-        const unit = faction.units.find(u => u.name === name);
+        const unit = C.state.factions[C.ui.fKey]?.units.find(u => u.name === name);
         if (unit) window.CCFB.renderDetail(unit);
     };
 
     window.CCFB.addUnitToRoster = (name, cost) => {
-        const newId = Date.now() + Math.floor(Math.random() * 1000);
-        window.CCFB.ui.roster.push({ id: newId, fKey: window.CCFB.ui.fKey, uN: name, cost: cost });
-        
-        window.CCFB.selectUnit(name);
+        C.ui.roster.push({ id: Date.now(), fKey: C.ui.fKey, uN: name, cost });
         window.CCFB.refreshUI();
     };
 
     window.CCFB.removeUnitFromRoster = (id) => {
-        window.CCFB.ui.roster = window.CCFB.ui.roster.filter(x => x.id !== id);
+        C.ui.roster = C.ui.roster.filter(x => x.id !== id);
         window.CCFB.refreshUI();
     };
 
