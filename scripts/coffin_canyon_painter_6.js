@@ -44,7 +44,7 @@ CCFB.define("components/painter", function(C) {
                 </div>
 
                 <div class="detail-section-title">SPECIAL RULES</div>
-                ${(unit.special_rules || []).map(r => `
+                ${(unit.abilities || []).map(r => `
                     <div class="ability-card">
                         <div class="ability-name">${r}</div>
                         <div class="ability-effect">${getAbilityEffect(r, unit)}</div>
@@ -78,7 +78,7 @@ CCFB.define("components/painter", function(C) {
         const totalEl = document.getElementById("display-total");
         if (totalEl) totalEl.innerHTML = `${total} ₤`;
 
-        // Render Library (Column 1)
+        // Render Library (Column 1) - NAME, TYPE, BADGES, ABILITIES
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => `
@@ -87,7 +87,7 @@ CCFB.define("components/painter", function(C) {
                     <div class="u-type">${u.type.toUpperCase()}</div>
                     <div class="d-flex flex-wrap mb-2">${buildStatBadges(u)}</div>
                     <div class="abilities-overview">
-                        ${(u.special_rules || []).map(a => `<span class="ability-tag">${a}</span>`).join('')}
+                        ${(u.abilities || []).map(a => `<span class="ability-tag">${a}</span>`).join('')}
                     </div>
                     <button class="btn btn-sm btn-block btn-outline-warning mt-2" 
                             onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${u.name}', ${u.cost})">
@@ -96,18 +96,19 @@ CCFB.define("components/painter", function(C) {
                 </div>`).join('');
         }
 
-        // Render Roster (Column 2)
+        // Render Roster (Column 2) - NAME, TYPE, BADGES
         const rost = document.getElementById("rost-target");
         if (rost) {
             rost.innerHTML = (UI.roster || []).map(item => {
                 const u = C.getUnit?.(item.fKey, item.uN);
+                if (!u) return ''; // Skip if unit not found
                 return `
                     <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${item.uN}')">
                         <div class="d-flex justify-content-between align-items-start">
                             <div style="flex: 1;">
                                 <div class="u-name">${item.uN.toUpperCase()}</div>
-                                <div class="u-type">${u?.type?.toUpperCase() || ''}</div>
-                                <div class="d-flex flex-wrap">${u ? buildStatBadges(u) : ''}</div>
+                                <div class="u-type">${u.type.toUpperCase()}</div>
+                                <div class="d-flex flex-wrap">${buildStatBadges(u)}</div>
                             </div>
                             <button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button>
                         </div>
