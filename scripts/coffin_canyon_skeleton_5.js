@@ -1,7 +1,11 @@
-CCFB.define("components/skeleton", function(C) {
+/**
+ * COFFIN CANYON FACTION BUILDER - FILE 5: SKELETON
+ * Version: 1.9.5 - 3-Column Grid + Header Tools
+ */
+CCFB.define("components/skeleton", function() {
     return {
         draw: function() {
-            // DOMAIN_SAFETY: Commandment v1.9 - Protect Odoo Editor
+            // DOMAIN SAFETY: Commandment v1.9
             if (window.location.href.includes("/web")) return;
 
             const root = document.getElementById("ccfb-root");
@@ -46,14 +50,18 @@ CCFB.define("components/skeleton", function(C) {
             this.populateDropdown();
         },
         populateDropdown: function() {
-            CCFB.require(["config/docTokens"], (cfg) => {
-                const sel = document.getElementById("f-selector");
-                if (!sel) return;
-                cfg.factions.forEach(f => {
-                    const opt = document.createElement("option");
-                    opt.value = f.key;
-                    opt.textContent = f.label.toUpperCase();
-                    sel.appendChild(opt);
+            // Integrates with Loader-fetched config
+            CCFB.require(["loaders"], (loader) => {
+                loader.getMasterConfig().then(config => {
+                    const sel = document.getElementById("f-selector");
+                    if (!sel || !config.factions) return;
+                    
+                    Object.entries(config.factions).forEach(([key, f]) => {
+                        const opt = document.createElement("option");
+                        opt.value = key;
+                        opt.textContent = f.name.toUpperCase(); // All-caps
+                        sel.appendChild(opt);
+                    });
                 });
             });
         }
