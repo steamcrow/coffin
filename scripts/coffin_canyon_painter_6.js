@@ -17,6 +17,7 @@ CCFB.define("components/painter", function(C) {
         const det = document.getElementById("det-target");
         if (!det) return;
 
+        // Build stat badges with proper tooltips
         const stats = [
             {l:'Q', v:unit.quality, c:'stat-q', h:'Quality: 4, 5, 6 are successes.'},
             {l:'D', v:unit.defense, c:'stat-d', h:'Defense: Subtracts damage.'},
@@ -30,36 +31,35 @@ CCFB.define("components/painter", function(C) {
 
         det.innerHTML = `
             <div class="cc-detail-view">
-                <div class="u-name" style="font-size: 1rem; font-weight: bold; border-bottom: 1px solid #444;">${unit.name.toUpperCase()}</div>
-                <div class="u-type text-center mb-2" style="font-size: 0.75rem; opacity: 0.7;">${unit.type.toUpperCase()}</div>
+                <div class="u-name">${unit.name.toUpperCase()}</div>
+                <div class="u-type">${unit.type.toUpperCase()}</div>
                 
                 <div class="d-flex justify-content-center mb-3">${stats}</div>
 
-                <div class="cc-lore" style="font-style: italic; border-left: 3px solid #ff7518; padding-left: 10px; margin-bottom: 15px; color: #ccc;">
+                <div class="u-lore">
                     ${unit.description || "No lore recorded."}
                 </div>
 
-                <div class="cc-rules-section">
-                    <h4 style="font-size: 0.85rem; color: #ff7518; border-bottom: 1px solid #333;">SPECIAL RULES</h4>
-                    ${(unit.special_rules || []).map(r => `
-                        <div class="mb-2"><strong>${r}:</strong> <span style="font-size: 0.85rem;">${getAbilityEffect(r, unit)}</span></div>
-                    `).join('')}
-                </div>
-
-                <div class="cc-upgrades-section mt-3">
-                    <h4 style="font-size: 0.85rem; color: #ff7518; border-bottom: 1px solid #333;">UPGRADES & GEAR</h4>
-                    <div id="upgrades-list">
-                        ${(unit.upgrades || []).map(upg => {
-                            const isUnique = upg.type === "Relic" || upg.type === "Spell";
-                            const inputType = isUnique ? "radio" : "checkbox";
-                            const groupName = isUnique ? "unique-choice" : upg.name;
-                            return `
-                                <label class="d-flex align-items-center mb-1" style="width: 100%; cursor: pointer;">
-                                    <input type="${inputType}" name="${groupName}" class="mr-2">
-                                    <span style="font-size: 0.85rem;">${upg.name} (+${upg.cost} ₤)</span>
-                                </label>`;
-                        }).join('')}
+                <div class="detail-section-title">SPECIAL RULES</div>
+                ${(unit.special_rules || []).map(r => `
+                    <div class="ability-card">
+                        <div class="ability-name">${r}</div>
+                        <div class="ability-effect">${getAbilityEffect(r, unit)}</div>
                     </div>
+                `).join('')}
+
+                <div class="detail-section-title">UPGRADES & GEAR</div>
+                <div id="upgrades-list">
+                    ${(unit.upgrades || []).map(upg => {
+                        const isUnique = upg.type === "Relic" || upg.type === "Spell";
+                        const inputType = isUnique ? "radio" : "checkbox";
+                        const groupName = isUnique ? "unique-choice" : upg.name;
+                        return `
+                            <label class="upgrade-row">
+                                <input type="${inputType}" name="${groupName}">
+                                <span>${upg.name} (+${upg.cost} ₤)</span>
+                            </label>`;
+                    }).join('')}
                 </div>
             </div>
         `;
@@ -73,15 +73,15 @@ CCFB.define("components/painter", function(C) {
         // Update Points in Top Bar
         const total = (typeof C.calculateTotal === "function") ? C.calculateTotal() : 0;
         const totalEl = document.getElementById("display-total");
-        if (totalEl) totalEl.innerHTML = `<span title="Liberty Bucks">${total} ₤</span>`;
+        if (totalEl) totalEl.innerHTML = `${total} ₤`;
 
         // Render Library
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => `
                 <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${u.name}')">
-                    <div class="u-type text-center" style="font-size:0.7rem; opacity:0.6;">${u.type}</div>
-                    <div class="u-name" style="font-weight:bold;">${u.name.toUpperCase()}</div>
+                    <div class="u-type">${u.type}</div>
+                    <div class="u-name">${u.name.toUpperCase()}</div>
                     <button class="btn btn-sm btn-block btn-outline-warning mt-1" 
                             onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${u.name}', ${u.cost})">
                         + ADD TO ROSTER
