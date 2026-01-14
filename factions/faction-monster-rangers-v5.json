@@ -1,7 +1,7 @@
 {
   "faction": "Monster Rangers",
-  "version": "7.3",
-  "core_rules_version": "6.3",
+  "version": "8",
+  "core_rules_version": "8",
   "description": "Protectors of Obscuria who live in harmony with the canyon's mysteries. Monster Rangers scout, survive, and defend using wit, wilderness skills, and mystical bonds with the creatures they befriend.",
   "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons (like Harpoons) have additional point costs listed in optional_upgrades.",
   "faction_features": [
@@ -9,7 +9,7 @@
       "name": "Befriend Monsters",
       "cost": 0,
       "required": true,
-      "effect": "Monster Rangers can befriend monsters using Pocket Snacks (contested Quality rolls) or specialized befriending abilities. Befriended monsters activate with Rangers."
+      "effect": "Monster Rangers can befriend monsters using Pocket Snacks (contested Quality rolls) or specialized befriending abilities (Befriend Beast, Befriend Bloodless, Befriend Spirits, Befriend Automat, Befriend Kaiju). Befriended monsters activate with Rangers."
     },
     {
       "name": "Branch System",
@@ -36,16 +36,17 @@
       "range": 8,
       "weapon": "Hatchet",
       "weapon_properties": ["Thrown 8\"", "Melee"],
-      "composition": {"per_points": 0},
+      "composition": { "per_points": 0 },
       "abilities": [],
       "lore": "Field-trained Monster Ranger infantry from the land branches. Signature tool: hatchet, equal parts weapon and working tool.",
-      "tactics": "Baseline skirmisher. Thrown hatchets for short-range pressure, finish in melee. Pairs with Conjure Guard (Shield Aura) and Monster Medics (healing).",
+      "tactics": "Baseline skirmisher. Thrown hatchets for short-range pressure, finish in melee.",
       "optional_upgrades": [
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
-        {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."},
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        { "name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Light Armor." },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
+
     {
       "name": "Cargo Tiger Porter",
       "faction": "Monster Rangers",
@@ -57,16 +58,17 @@
       "range": 12,
       "weapon": "Slingshot + Crowbar",
       "weapon_properties": ["Ranged 12\"", "Melee", "Prybar"],
-      "composition": {"per_points": 0},
-      "abilities": ["Load & Carry", "Cut and Run", "Extraction Priority"],
-      "lore": "Hard-working Rangers who run Cargo Tiger shipping company. Months on road made them deadly accurate with slingshots - out-range most Rangers despite Q1.",
-      "tactics": "Backline harassment with 12\" slingshots (longest range!). Grab objectives with Load & Carry, escape with Cut and Run, extract for VP.",
+      "composition": { "per_points": 0 },
+      "abilities": ["Load and Carry", "Cut and Run", "Extraction Priority"],
+      "lore": "Hard-working Rangers running Cargo Tiger routes.",
+      "tactics": "Backline harassment and objective play.",
       "optional_upgrades": [
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
-        {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."},
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        { "name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Light Armor." },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
+
     {
       "name": "Crow Ranger",
       "faction": "Monster Rangers",
@@ -78,16 +80,17 @@
       "range": 8,
       "weapon": "Hatchet",
       "weapon_properties": ["Thrown 8\"", "Melee"],
-      "composition": {"per_points": 150},
+      "composition": { "per_points": 150 },
       "abilities": ["Fast", "Stealth", "Climber"],
-      "lore": "First Ranger Branch, masters of stealth and trickery. Scouts of the Monster Rangers. Realm is stealth.",
-      "tactics": "Fast scout (8\" move from Rogue Fast). Stealth keeps safe at range. Climber for high ground. Fastest manling unit.",
+      "lore": "First Ranger Branch. Masters of stealth.",
+      "tactics": "Fast scout and infiltrator.",
       "optional_upgrades": [
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
-        {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."},
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        { "name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Light Armor." },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
+
     {
       "name": "Clocktalker Mechanic",
       "faction": "Monster Rangers",
@@ -99,16 +102,52 @@
       "range": 0,
       "weapon": "Heavy Wrench",
       "weapon_properties": ["Impact(1)", "Melee"],
-      "composition": {"per_points": 300},
-      "abilities": ["Repair", "Befriend Mechanical", "Tough(1)"],
-      "lore": "Monster Ranger mechanics who maintain equipment and befriend mechanical monsters. Heavy wrenches can repair or crush.",
-      "tactics": "Support specialist. Repair Cargo Tiger Trucks and constructs. Befriend mechanical monsters. Tough(1) for survivability.",
+      "composition": { "per_points": 300 },
+      "abilities": ["Repair", "Befriend Automat", "Tough(1)"],
+      "lore": "Monster Ranger mechanics and construct tamers.",
+      "tactics": "Support and construct control.",
       "optional_upgrades": [
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
-        {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."},
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        { "name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Light Armor." },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
+
+    {
+      "name": "Relic Guardian",
+      "faction": "Monster Rangers",
+      "type": "Hero",
+      "cost": 160,
+      "quality": 4,
+      "defense": 3,
+      "move": 6,
+      "range": 0,
+      "weapon": "Arcane Staff",
+      "weapon_properties": ["Melee"],
+      "composition": { "per_points": 400 },
+      "abilities": ["Fearless", "Relic Bearer"],
+      "lore": "Field officers entrusted with sacred Conjure Guard relics.",
+      "tactics": "Hero unit. Relic timing defines battlefield impact.",
+
+      "supplemental_abilities": [
+        { "name": "Groom's Grail", "effect": "Once per game: 12\" cone freeze for 2 rounds." },
+        { "name": "Alune's Shovel", "effect": "Once per game: Create 10\" Hazardous thorn wall." },
+        { "name": "Blink Crown", "effect": "Once per game: Swap positions with any creature." },
+        { "name": "Gravewarden Bell", "effect": "Once per game: 8\" morale shock (Shaken → Panicked)." },
+        { "name": "Saltbound Reliquary", "effect": "Once per game: 6\" anti-undead damage aura." },
+        { "name": "Widow's Lantern", "effect": "Once per game: Remove Stealth and cover in 10\" aura." },
+        { "name": "Iron Psalm Nails", "effect": "Once per game: Anchor enemy for 2 rounds." },
+        { "name": "Roluun's Mask", "effect": "Once per game: Enemy morale fail = Broken." },
+        { "name": "Thurible of Crawling Smoke", "effect": "Once per game: Create 5\" smoke cloud." },
+        { "name": "Pact Mirror", "effect": "Once per game: Redirect all damage to ally." }
+      ],
+
+      "optional_upgrades": [
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        { "name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Light Armor." },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+      ]
+    },   
     {
       "name": "Conjure Guard",
       "faction": "Monster Rangers",
