@@ -1,19 +1,20 @@
 CCFB.define("components/painter", function(C) {
     
-    // --- 1. ABILITY & LORE HELPERS ---
-    
+    // Helper to extract name regardless of whether it's a string or object
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
+    // --- 1. ABILITY LOOKUP HIERARCHY ---
+    // This is the full version that checks unit-specific rules, weapon props, and general rules
     const getAbilityEffect = (abilityName, unit) => {
         if (typeof abilityName === 'object' && abilityName.effect) return abilityName.effect;
         
         const searchName = (typeof abilityName === 'string' ? abilityName : abilityName.name || "").toLowerCase().trim();
         const rules = C.state.rules || {};
 
-        // Check unit-specific rules first
+        // 1. Check Unit-specific details first
         if (unit.ability_details?.[searchName]) return unit.ability_details[searchName];
         
-        // Search global rule categories
+        // 2. Search rule categories in order of priority
         const categories = ['abilities', 'weapon_properties', 'type_rules'];
         for (const cat of categories) {
             if (!rules[cat]) continue;
@@ -24,12 +25,11 @@ CCFB.define("components/painter", function(C) {
         return "Rule effect pending.";
     };
 
-    // --- 2. STAT BADGE BUILDER ---
-
+    // --- 1.5. BUILD STAT BADGES ---
     const buildStatBadges = (unit) => {
         const stats = [
-            {l:'Q', v:unit.quality, c:'stat-q', h:'Quality: 4+ is success.'},
-            {l:'D', v:unit.defense, c:'stat-d', h:'Defense: Reduces damage.'},
+            {l:'Q', v:unit.quality, c:'stat-q', h:'Quality: 4, 5, 6 are successes.'},
+            {l:'D', v:unit.defense, c:'stat-d', h:'Defense: Subtracts damage.'},
             {l:'R', v:(unit.range !== undefined && unit.range !== null) ? unit.range : '-', c:'stat-r', h:'Range: Max reach.'},
             {l:'M', v:unit.move, c:'stat-m', h:'Move: Inches per action.'}
         ];
@@ -40,8 +40,7 @@ CCFB.define("components/painter", function(C) {
             </span>`).join('');
     };
 
-    // --- 3. RENDER UNIT DETAIL (COLUMN 3) ---
-
+    // --- 2. RENDER UNIT DETAIL (COLUMN 3) ---
     window.CCFB.renderDetail = (unit) => {
         const det = document.getElementById("det-target");
         if (!det) return;
@@ -73,15 +72,14 @@ CCFB.define("components/painter", function(C) {
             </div>`;
     };
 
-    // --- 4. REFRESH UI (COLUMNS 1 & 2) ---
-
+    // --- 3. REFRESH UI ---
     window.CCFB.refreshUI = () => {
         const UI = window.CCFB.ui;
         if (!UI) return;
-
+        
         const faction = C.state.factions[UI.fKey];
 
-        // Update Points Display
+        // Update Points
         const total = C.calculateTotal();
         const totalEl = document.getElementById("display-total");
         if (totalEl) {
@@ -134,8 +132,7 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- 5. GLOBAL UNIT ACTIONS ---
-
+    // --- 4. GLOBAL HELPERS ---
     window.CCFB.selectUnit = (name) => {
         const faction = C.state.factions[window.CCFB.ui.fKey];
         if (!faction) return;
@@ -144,16 +141,9 @@ CCFB.define("components/painter", function(C) {
     };
 
     window.CCFB.addUnitToRoster = (name, cost) => {
-        // Create a truly unique ID
         const newId = Date.now() + Math.floor(Math.random() * 1000);
-        window.CCFB.ui.roster.push({ 
-            id: newId, 
-            fKey: window.CCFB.ui.fKey, 
-            uN: name, 
-            cost: cost 
-        });
+        window.CCFB.ui.roster.push({ id: newId, fKey: window.CCFB.ui.fKey, uN: name, cost: cost });
         
-        // Auto-select the unit so the details panel updates
         window.CCFB.selectUnit(name);
         window.CCFB.refreshUI();
     };
