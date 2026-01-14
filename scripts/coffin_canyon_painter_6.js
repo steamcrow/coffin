@@ -12,29 +12,32 @@ CCFB.define("components/painter", function(C) {
         return "Rule effect pending.";
     };
 
-    // --- 2. RENDER UNIT DETAIL (COLUMN 3) ---
-    window.CCFB.renderDetail = (unit) => {
-        const det = document.getElementById("det-target");
-        if (!det) return;
-
-        // Build stat badges with proper tooltips
+    // --- 1.5. BUILD STAT BADGES (REUSABLE) ---
+    const buildStatBadges = (unit) => {
         const stats = [
             {l:'Q', v:unit.quality, c:'stat-q', h:'Quality: 4, 5, 6 are successes.'},
             {l:'D', v:unit.defense, c:'stat-d', h:'Defense: Subtracts damage.'},
             {l:'R', v:unit.range || '-', c:'stat-r', h:'Range: Max reach.'},
             {l:'M', v:unit.move, c:'stat-m', h:'Move: Inches per action.'}
-        ].map(s => `
+        ];
+        return stats.map(s => `
             <span class="cc-stat-badge" title="${s.h}">
                 <span class="cc-stat-label ${s.c}">${s.l}</span>
                 <span class="cc-stat-value">${s.v}</span>
             </span>`).join('');
+    };
+
+    // --- 2. RENDER UNIT DETAIL (COLUMN 3) ---
+    window.CCFB.renderDetail = (unit) => {
+        const det = document.getElementById("det-target");
+        if (!det) return;
 
         det.innerHTML = `
             <div class="cc-detail-view">
                 <div class="u-name">${unit.name.toUpperCase()}</div>
                 <div class="u-type">${unit.type.toUpperCase()}</div>
                 
-                <div class="d-flex justify-content-center mb-3">${stats}</div>
+                <div class="d-flex flex-wrap mb-3">${buildStatBadges(unit)}</div>
 
                 <div class="u-lore">
                     ${unit.description || "No lore recorded."}
@@ -75,30 +78,41 @@ CCFB.define("components/painter", function(C) {
         const totalEl = document.getElementById("display-total");
         if (totalEl) totalEl.innerHTML = `${total} ₤`;
 
-        // Render Library
+        // Render Library (Column 1)
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => `
                 <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${u.name}')">
-                    <div class="u-type">${u.type}</div>
                     <div class="u-name">${u.name.toUpperCase()}</div>
-                    <button class="btn btn-sm btn-block btn-outline-warning mt-1" 
+                    <div class="u-type">${u.type.toUpperCase()}</div>
+                    <div class="d-flex flex-wrap mb-2">${buildStatBadges(u)}</div>
+                    <div class="abilities-overview">
+                        ${(u.special_rules || []).map(a => `<span class="ability-tag">${a}</span>`).join('')}
+                    </div>
+                    <button class="btn btn-sm btn-block btn-outline-warning mt-2" 
                             onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${u.name}', ${u.cost})">
-                        + ADD TO ROSTER
+                        <i class="fa fa-plus"></i> ADD TO ROSTER
                     </button>
                 </div>`).join('');
         }
 
-        // Render Roster
+        // Render Roster (Column 2)
         const rost = document.getElementById("rost-target");
         if (rost) {
-            rost.innerHTML = (UI.roster || []).map(item => `
-                <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${item.uN}')">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="u-name">${item.uN.toUpperCase()}</div>
-                        <button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button>
-                    </div>
-                </div>`).join('');
+            rost.innerHTML = (UI.roster || []).map(item => {
+                const u = C.getUnit?.(item.fKey, item.uN);
+                return `
+                    <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${item.uN}')">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div style="flex: 1;">
+                                <div class="u-name">${item.uN.toUpperCase()}</div>
+                                <div class="u-type">${u?.type?.toUpperCase() || ''}</div>
+                                <div class="d-flex flex-wrap">${u ? buildStatBadges(u) : ''}</div>
+                            </div>
+                            <button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button>
+                        </div>
+                    </div>`;
+            }).join('');
         }
     };
 
