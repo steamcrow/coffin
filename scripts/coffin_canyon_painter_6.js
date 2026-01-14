@@ -12,12 +12,13 @@ CCFB.define('painter', (require) => {
 
     /**
      * UI MANIFESTO: STAT BADGE PROTOCOL
+     * Blue (stat-q), Red (stat-d), Brown (stat-r), Green (stat-m)
      */
     const STAT_MAP = {
-        Q: { class: 'stat-q', label: 'Quality' }, // Blue
-        D: { class: 'stat-d', label: 'Defense' }, // Red
-        R: { class: 'stat-r', label: 'Range' },   // Brown
-        M: { class: 'stat-m', label: 'Move' }     // Green
+        Q: { class: 'stat-q', label: 'Quality' }, 
+        D: { class: 'stat-d', label: 'Defense' }, 
+        R: { class: 'stat-r', label: 'Range' },   
+        M: { class: 'stat-m', label: 'Move' }     
     };
 
     /**
@@ -25,8 +26,8 @@ CCFB.define('painter', (require) => {
      * Enforces All-Caps, Currency, and Lore styles
      */
     function renderUnitCard(unit) {
-        const unitName = (unit.name || 'Unknown Unit').toUpperCase(); // All-Caps
-        const loreHtml = unit.lore ? `<div class="unit-lore-box"><em>${unit.lore}</em></div>` : ''; // Pumpkin-border style via CSS
+        const unitName = (unit.name || 'Unknown Unit').toUpperCase(); 
+        const loreHtml = unit.lore ? `<div class="unit-lore-box"><em>${unit.lore}</em></div>` : ''; 
         
         const statsHtml = Object.entries(unit.stats || {}).map(([key, val]) => {
             const config = STAT_MAP[key] || { class: 'stat-default' };
@@ -48,12 +49,13 @@ CCFB.define('painter', (require) => {
     }
 
     /**
-     * ROSTER LOGIC (Restored Functionality)
+     * ROSTER LOGIC
      */
     function addToRoster(unitId) {
         const unit = factionData.units.find(u => u.id === unitId);
         if (unit) {
-            currentRoster.push({...unit, rosterInstanceId: Date.now()});
+            // Instance ID allows multiple of same unit to be deleted individually
+            currentRoster.push({...unit, rosterInstanceId: Date.now() + Math.random()});
             refreshRosterUI();
         }
     }
@@ -64,13 +66,15 @@ CCFB.define('painter', (require) => {
     }
 
     /**
-     * CALCULATE TOTALS
-     * Uses Liberty Bucks symbol (₤)
+     * CALCULATE TOTALS & REFRESH PANELS
+     * Maps to Skeleton IDs: rost-target and display-total
      */
     function refreshRosterUI() {
-        const rosterContainer = document.getElementById('ccfb-roster-list');
-        const totalEl = document.getElementById('ccfb-total-points');
+        const rosterContainer = document.getElementById('rost-target');
+        const totalEl = document.getElementById('display-total');
         
+        if (!rosterContainer || !totalEl) return;
+
         let total = 0;
         rosterContainer.innerHTML = currentRoster.map(unit => {
             total += parseInt(unit.cost);
@@ -78,31 +82,33 @@ CCFB.define('painter', (require) => {
                 <div class="roster-item">
                     <span>${unit.name.toUpperCase()}</span>
                     <span>₤${unit.cost}</span>
-                    <button onclick="CCFB.painter.removeFromRoster(${unit.rosterInstanceId})">×</button>
+                    <button class="remove-btn" onclick="CCFB.painter.removeFromRoster(${unit.rosterInstanceId})">×</button>
                 </div>
             `;
         }).join('');
 
-        totalEl.innerText = `Total: ₤${total}`;
+        totalEl.innerText = `${total} ₤`;
     }
 
     /**
-     * SAFETY BRIDGE: Initialize UI
-     * Ensures ccfb-root exists and legacy IDs are bridged
+     * INITIALIZE UI
+     * Maps to Skeleton ID: lib-target
      */
     async function init(data) {
         factionData = data;
-        const grid = document.getElementById('ccfb-unit-grid');
+        const grid = document.getElementById('lib-target');
         if (!grid) return;
 
         grid.innerHTML = data.units.map(u => renderUnitCard(u)).join('');
         console.log(`CCFB: Painted ${data.units.length} units.`);
+        refreshRosterUI(); // Reset roster view
     }
 
     return {
         init,
         addToRoster,
         removeFromRoster,
-        renderUnitCard
+        renderUnitCard,
+        refreshRosterUI
     };
 });
