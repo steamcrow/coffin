@@ -1,12 +1,16 @@
 CCFB.define("main", function (C) {
   // 1. Initialize Global UI State
-  C.ui = C.ui || {
+  // This is the single source of truth for your app
+  C.ui = {
     fKey: "monster-rangers",
     budget: 500,
     mode: "grid",
     roster: [],
     sId: null
   };
+  
+  // CRITICAL FIX: Link the internal state to the window so the Painter can see it
+  window.CCFB.ui = C.ui;
   
   // 2. Helper for Painter: Find unit data
   C.getUnit = function(fKey, unitName) {
@@ -17,8 +21,7 @@ CCFB.define("main", function (C) {
   // 3. Helper for Painter: Calculate Roster Points
   C.calculateTotal = function() {
     return (C.ui.roster || []).reduce((sum, item) => {
-      const unit = C.getUnit(item.fKey, item.uN);
-      return sum + (unit ? (unit.cost || 0) : 0);
+      return sum + (item.cost || 0);
     }, 0);
   };
   
@@ -36,12 +39,12 @@ CCFB.define("main", function (C) {
     if (window.CCFB.refreshUI) window.CCFB.refreshUI();
   };
   
-  // 6. Share Roster (stub for now)
+  // 6. Share Roster (stub)
   window.CCFB.shareRoster = function() {
     alert("Share feature coming soon!");
   };
   
-  // 7. Print Roster (stub for now)
+  // 7. Print Roster
   window.printRoster = function() {
     window.print();
   };
@@ -49,17 +52,17 @@ CCFB.define("main", function (C) {
   // 8. Create the module object to return
   const mainModule = {
     boot: function (containerId, factionFolder) {
-      ccfbLog("🚀 Brain: Booting...");
       C.state.dataBaseUrl = factionFolder;
       CCFB.require(["data/loaders"], function (loaders) {
         loaders.loadRules().then(function() {
-          ccfbLog("✅ Rules Loaded. Initializing UI...");
-          
-          // Load Monster Rangers by default
-          loaders.loadFaction("monster-rangers");
-          
+          // Load default faction
+          loaders.loadFaction(C.ui.fKey);
           C.state.loading = false;
-          if (window.CCFB.refreshUI) window.CCFB.refreshUI();
+          
+          // Wait a tiny bit for components to mount, then refresh
+          setTimeout(() => {
+            if (window.CCFB.refreshUI) window.CCFB.refreshUI();
+          }, 200);
         });
       });
     }
