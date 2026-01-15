@@ -130,11 +130,11 @@ CCFB.define("components/painter", function(C) {
         if (unit) window.CCFB.renderDetail(unit);
     };
 
-    window.CCFB.addUnitToRoster = (name, cost) => {
-        C.ui.roster.push({ id: Date.now(), fKey: C.ui.fKey, uN: name, cost });
-        window.CCFB.refreshUI();
-    };
-
+window.CCFB.addUnitToRoster = (name, cost) => {
+    alert("Adding: " + name); // TEST ALERT
+    C.ui.roster.push({ id: Date.now(), fKey: C.ui.fKey, uN: name, cost });
+    window.CCFB.refreshUI();
+};
     window.CCFB.removeUnitFromRoster = (id) => {
         C.ui.roster = C.ui.roster.filter(x => x.id !== id);
         window.CCFB.refreshUI();
