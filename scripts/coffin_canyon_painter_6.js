@@ -70,7 +70,7 @@ CCFB.define("components/painter", function(C) {
 
     // --- 3. REFRESH UI ---
     window.CCFB.refreshUI = () => {
-        const UI = window.CCFB.ui;
+        const UI = C.ui;
         const faction = C.state.factions[UI.fKey];
 
         // Update Points
@@ -126,17 +126,17 @@ CCFB.define("components/painter", function(C) {
 
     // --- 4. GLOBAL HELPERS ---
     window.CCFB.selectUnit = (name) => {
-        const unit = C.state.factions[window.CCFB.ui.fKey]?.units.find(u => u.name === name);
+        const unit = C.state.factions[C.ui.fKey]?.units.find(u => u.name === name);
         if (unit) window.CCFB.renderDetail(unit);
     };
 
     window.CCFB.addUnitToRoster = (name, cost) => {
-        window.CCFB.ui.roster.push({ id: Date.now(), fKey: window.CCFB.ui.fKey, uN: name, cost });
+        C.ui.roster.push({ id: Date.now(), fKey: C.ui.fKey, uN: name, cost });
         window.CCFB.refreshUI();
     };
 
     window.CCFB.removeUnitFromRoster = (id) => {
-        window.CCFB.ui.roster = window.CCFB.ui.roster.filter(x => x.id !== id);
+        C.ui.roster = C.ui.roster.filter(x => x.id !== id);
         window.CCFB.refreshUI();
     };
 
