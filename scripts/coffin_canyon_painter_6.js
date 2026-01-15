@@ -71,14 +71,19 @@ CCFB.define("components/painter", function(C) {
     // --- 3. REFRESH UI ---
     window.CCFB.refreshUI = () => {
         const UI = C.ui;
-        const faction = C.state.factions[UI.fKey];
+        if (!UI) {
+            console.error("C.ui doesn't exist!");
+            return;
+        }
+        
+        const faction = C.state?.factions?.[UI.fKey];
 
         // Update Points
         const total = (typeof C.calculateTotal === "function") ? C.calculateTotal() : 0;
         const totalEl = document.getElementById("display-total");
         if (totalEl) {
-            totalEl.innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
-            totalEl.style.color = (UI.budget > 0 && total > UI.budget) ? '#ff4444' : '#ff7518';
+            totalEl.innerHTML = `${total}${UI.limit > 0 ? ` / ${UI.limit}` : ''} ₤`;
+            totalEl.style.color = (UI.limit > 0 && total > UI.limit) ? '#ff4444' : '#ff7518';
         }
 
         // Column 1: Library
@@ -102,44 +107,66 @@ CCFB.define("components/painter", function(C) {
             }).join('');
         }
 
-        // Column 2: Roster
+        // Column 2: Roster - FIXED VERSION
         const rost = document.getElementById("rost-target");
         if (rost) {
-            rost.innerHTML = (UI.roster || []).map(item => {
-                const u = C.getUnit?.(item.fKey, item.uN);
-                if (!u) return '';
-                const escapedName = item.uN.replace(/'/g, "\\'");
-                return `
-                    <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${escapedName}')">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <div style="flex: 1;">
-                                <div class="u-name">${item.uN.toUpperCase()}</div>
-                                <div class="u-type">${u.type.toUpperCase()}</div>
-                                <div class="d-flex flex-wrap justify-content-center">${buildStatBadges(u)}</div>
+            if (!UI.roster || UI.roster.length === 0) {
+                rost.innerHTML = '<div class="cc-empty-state">No units in roster yet. Click "Add to Roster" to begin!</div>';
+            } else {
+                rost.innerHTML = UI.roster.map(item => {
+                    // Try to find the unit
+                    const faction = C.state?.factions?.[item.fKey];
+                    const u = faction?.units?.find(unit => unit.name === item.uN);
+                    
+                    if (!u) {
+                        return `<div class="cc-roster-item">⚠️ ${item.uN} (data not found)</div>`;
+                    }
+                    
+                    const escapedName = item.uN.replace(/'/g, "\\'");
+                    return `
+                        <div class="cc-roster-item" onclick="window.CCFB.selectUnit('${escapedName}')">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div style="flex: 1;">
+                                    <div class="u-name">${item.uN.toUpperCase()}</div>
+                                    <div class="u-type">${u.type.toUpperCase()}</div>
+                                    <div class="d-flex flex-wrap justify-content-center">${buildStatBadges(u)}</div>
+                                </div>
+                                <button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button>
                             </div>
-                            <button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button>
-                        </div>
-                    </div>`;
-            }).join('');
+                        </div>`;
+                }).join('');
+            }
         }
     };
 
     // --- 4. GLOBAL HELPERS ---
     window.CCFB.selectUnit = (name) => {
-        const unit = C.state.factions[C.ui.fKey]?.units.find(u => u.name === name);
+        const unit = C.state?.factions?.[C.ui?.fKey]?.units?.find(u => u.name === name);
         if (unit) window.CCFB.renderDetail(unit);
     };
 
-window.CCFB.addUnitToRoster = (name, cost) => {
-    if (!C.ui) C.ui = { roster: [], fKey: "", mode: "grid", budget: 0 };
-    if (!C.ui.roster) C.ui.roster = [];
-    C.ui.roster.push({ id: Date.now(), fKey: C.ui.fKey, uN: name, cost });
-    console.log("Roster now has:", C.ui.roster.length, "units");
-    console.log("Roster:", C.ui.roster);
-    window.CCFB.refreshUI();
-};
+    window.CCFB.addUnitToRoster = (name, cost) => {
+        // Make sure everything exists
+        if (!C.ui) C.ui = { roster: [], fKey: "", mode: "grid", limit: 0 };
+        if (!C.ui.roster) C.ui.roster = [];
+        
+        // Add the unit
+        C.ui.roster.push({ 
+            id: Date.now(), 
+            fKey: C.ui.fKey, 
+            uN: name, 
+            cost: cost 
+        });
+        
+        console.log("✅ Added to roster:", name, "Total units:", C.ui.roster.length);
+        
+        // Refresh the display
+        window.CCFB.refreshUI();
+    };
+
     window.CCFB.removeUnitFromRoster = (id) => {
         C.ui.roster = C.ui.roster.filter(x => x.id !== id);
+        console.log("🗑️ Removed from roster. Remaining units:", C.ui.roster.length);
         window.CCFB.refreshUI();
     };
 
