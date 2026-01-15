@@ -2,7 +2,7 @@ CCFB.define("main", function (C) {
   // 1. Initialize Global UI State
   C.ui = C.ui || {
     fKey: "monster-rangers",
-    budget: 500,
+    limit: 500, // Changed from budget to limit to match Painter logic
     mode: "grid",
     roster: [],
     sId: null
@@ -14,11 +14,18 @@ CCFB.define("main", function (C) {
     return faction?.units?.find(u => u.name === unitName);
   };
   
-  // 3. Helper for Painter: Calculate Roster Points
+  // 3. Helper for Painter: Calculate Roster Points (REVISED FOR UPGRADES)
   C.calculateTotal = function() {
     return (C.ui.roster || []).reduce((sum, item) => {
-      const unit = C.getUnit(item.fKey, item.uN);
-      return sum + (unit ? (unit.cost || 0) : 0);
+      // Get the base cost stored in the roster item
+      const baseCost = item.cost || 0;
+      
+      // Calculate total of all selected upgrades for this specific unit instance
+      const upgradeTotal = (item.selectedUpgrades || []).reduce((uSum, upg) => {
+        return uSum + (upg.cost || 0);
+      }, 0);
+      
+      return sum + baseCost + upgradeTotal;
     }, 0);
   };
   
@@ -32,7 +39,8 @@ CCFB.define("main", function (C) {
   
   // 5. Handle Budget Selection
   window.CCFB.handleBudgetChange = function(newBudget) {
-    C.ui.budget = parseInt(newBudget);
+    // Keep internal state 'limit' synced with the dropdown
+    C.ui.limit = parseInt(newBudget); 
     if (window.CCFB.refreshUI) window.CCFB.refreshUI();
   };
   
@@ -55,8 +63,8 @@ CCFB.define("main", function (C) {
         loaders.loadRules().then(function() {
           ccfbLog("✅ Rules Loaded. Initializing UI...");
           
-          // Load Monster Rangers by default
-          loaders.loadFaction("monster-rangers");
+          // Load default faction
+          loaders.loadFaction(C.ui.fKey || "monster-rangers");
           
           C.state.loading = false;
           if (window.CCFB.refreshUI) window.CCFB.refreshUI();
