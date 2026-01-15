@@ -95,9 +95,7 @@ CCFB.define("components/painter", function(C) {
                         <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
                         <div class="abilities-overview">${tags}</div>
                     </div>
-                    <button class="btn btn-sm btn-block btn-outline-warning mt-2" 
-                            style="position: relative; z-index: 10;" 
-                            onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
+                    <button class="btn btn-sm btn-block btn-outline-warning mt-2" onclick="event.stopPropagation(); window.CCFB.addUnitToRoster('${escapedName}', ${u.cost})">
                         <i class="fa fa-plus"></i> ADD TO ROSTER
                     </button>
                 </div>`;
