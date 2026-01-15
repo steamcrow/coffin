@@ -15,13 +15,10 @@ CCFB.define("components/skeleton", function(C) {
                             <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)">
                                 <option value="">SELECT FACTION...</option>
                             </select>
-                            
                             <select id="budget-selector" onchange="window.CCFB.handleBudgetChange(this.value)">
                                 ${budgets.map(b => `<option value="${b}">${b} ₤</option>`).join('')}
                             </select>
-
                             <input type="text" id="roster-name" placeholder="ROSTER NAME">
-
                             <div class="top-tools ml-auto">
                                 <span id="display-total" title="Liberty Bucks">0 ₤</span>
                                 <button onclick="window.CCFB.shareRoster()" title="Share"><i class="fa fa-share-alt"></i></button>
@@ -29,7 +26,6 @@ CCFB.define("components/skeleton", function(C) {
                             </div>
                         </div>
                     </div>
-
                     <div class="cc-grid">
                         ${['lib', 'roster', 'details'].map(id => `
                             <div class="cc-panel" id="ccfb-${id}" style="overflow-y: auto;">
@@ -42,23 +38,16 @@ CCFB.define("components/skeleton", function(C) {
                             </div>
                         `).join('')}
                     </div>
-                </div>
-            `;
-            
+                </div>`;
             this.populateDropdown();
-
-            // SENSORY CHECK: Tell the Brain what the starting budget is immediately
-            const startLimit = document.getElementById("budget-selector").value;
-            window.CCFB.handleBudgetChange(startLimit);
+            // Connect budget on boot
+            window.CCFB.handleBudgetChange(document.getElementById("budget-selector").value);
         },
-
         populateDropdown: function() {
             CCFB.require(["config/docTokens"], (cfg) => {
                 const sel = document.getElementById("f-selector");
                 if (!sel || !cfg.factions) return;
-                sel.innerHTML += cfg.factions.map(f => 
-                    `<option value="${f.key}">${f.label.toUpperCase()}</option>`
-                ).join('');
+                sel.innerHTML += cfg.factions.map(f => `<option value="${f.key}">${f.label.toUpperCase()}</option>`).join('');
                 sel.value = "monster-rangers";
             });
         }
