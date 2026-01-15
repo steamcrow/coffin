@@ -1,18 +1,12 @@
 CCFB.define("components/skeleton", function(C) {
     return {
         draw: function() {
-            // 1. DOMAIN_SAFETY: Commandment v1.9 - Protect Odoo Editor
-            // This preserves your original check to ensure the builder doesn't break the editor
             if (window.location.href.includes("/web")) return;
-            
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
-            // 2. Configuration for dynamic elements
             const budgets = [500, 1000, 1500, 2000];
 
-            // 3. Strict 3-Column Design with independent scrolling
-            // All original IDs and styles are preserved here
             root.innerHTML = `
                 <div id="ccfb-app">
                     <div class="cc-header-area">
@@ -50,31 +44,16 @@ CCFB.define("components/skeleton", function(C) {
                     </div>
                 </div>
             `;
-            
             this.populateDropdown();
-
-            // 4. TIMING FIX: Ensures "The Brain" is ready before setting the budget
-            setTimeout(() => {
-                if (window.CCFB && typeof window.CCFB.handleBudgetChange === "function") {
-                    const budgetEl = document.getElementById("budget-selector");
-                    if (budgetEl) {
-                        window.CCFB.handleBudgetChange(budgetEl.value);
-                    }
-                }
-            }, 100);
         },
 
         populateDropdown: function() {
             CCFB.require(["config/docTokens"], (cfg) => {
                 const sel = document.getElementById("f-selector");
                 if (!sel || !cfg.factions) return;
-
-                // Restores your cleaner map/join insertion
                 sel.innerHTML += cfg.factions.map(f => 
                     `<option value="${f.key}">${f.label.toUpperCase()}</option>`
                 ).join('');
-
-                // Sets default selection as per original design
                 sel.value = "monster-rangers";
             });
         }
