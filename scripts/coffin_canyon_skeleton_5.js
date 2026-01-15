@@ -1,12 +1,16 @@
 CCFB.define("components/skeleton", function(C) {
     return {
         draw: function() {
+            // DOMAIN_SAFETY: Commandment v1.9 - Protect Odoo Editor
             if (window.location.href.includes("/web")) return;
+            
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
+            // Configuration for dynamic elements
             const budgets = [500, 1000, 1500, 2000];
 
+            // Strict 3-Column Design with independent scrolling
             root.innerHTML = `
                 <div id="ccfb-app">
                     <div class="cc-header-area">
@@ -52,9 +56,13 @@ CCFB.define("components/skeleton", function(C) {
             CCFB.require(["config/docTokens"], (cfg) => {
                 const sel = document.getElementById("f-selector");
                 if (!sel || !cfg.factions) return;
+
+                // Use map/join for cleaner DOM insertion than repetitive appendChild
                 sel.innerHTML += cfg.factions.map(f => 
                     `<option value="${f.key}">${f.label.toUpperCase()}</option>`
                 ).join('');
+
+                // Default selection
                 sel.value = "monster-rangers";
             });
         }
