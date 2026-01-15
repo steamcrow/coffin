@@ -29,7 +29,12 @@ CCFB.define("components/painter", function(C) {
         if (!det) return;
         const isRosterInstance = !!unit.id;
 
-        const abilitiesHtml = (unit.abilities || []).map(r => `<div class="ability-card"><div class="ability-name">${getName(r)}</div><div class="ability-effect">${getAbilityEffect(r, unit)}</div></div>`).join('');
+        const abilitiesHtml = (unit.abilities || []).map(r => `
+            <div class="ability-card">
+                <div class="ability-name">${getName(r)}</div>
+                <div class="ability-effect">${getAbilityEffect(r, unit)}</div>
+            </div>`).join('');
+
         const upgradesHtml = (isRosterInstance && unit.optional_upgrades) ? unit.optional_upgrades.map(upg => {
             const isUnique = upg.type === "Relic" || upg.type === "Spell";
             const isChecked = unit.selectedUpgrades?.some(u => u.name === upg.name) ? "checked" : "";
@@ -40,24 +45,25 @@ CCFB.define("components/painter", function(C) {
     };
 
     window.CCFB.refreshUI = () => {
-        const UI = C.ui;
-        const faction = C.state?.factions?.[UI.fKey];
         const total = C.calculateTotal();
+        const budget = C.ui.budget || 500;
         const totalEl = document.getElementById("display-total");
 
         if (totalEl) {
-            totalEl.innerHTML = `${total}${UI.limit > 0 ? ` / ${UI.limit}` : ''} ₤`;
-            totalEl.style.color = (UI.limit > 0 && total > UI.limit) ? '#ff4444' : '#ff7518';
+            totalEl.innerHTML = `${total} / ${budget} ₤`;
+            // Red toggle logic is removed for stability; color is now theme-default orange
+            totalEl.style.color = "#ff7518";
         }
 
         const lib = document.getElementById("lib-target");
+        const faction = C.state?.factions?.[C.ui.fKey];
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => `<div class="cc-roster-item"><div class="cc-unit-info" onclick="window.CCFB.selectUnit('${u.name.replace(/'/g, "\\'")}')"><div class="u-name">${u.name.toUpperCase()}</div><div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div></div><button class="btn btn-sm btn-outline-warning" onclick="window.CCFB.addUnitToRoster('${u.name.replace(/'/g, "\\'")}', ${u.cost})">ADD</button></div>`).join('');
         }
 
         const rost = document.getElementById("rost-target");
         if (rost) {
-            rost.innerHTML = UI.roster.map(item => `<div class="cc-roster-item" onclick="window.CCFB.selectUnit('${item.uN.replace(/'/g, "\\'")}', ${item.id})"><div class="u-name">${item.uN.toUpperCase()}</div><button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button></div>`).join('');
+            rost.innerHTML = C.ui.roster.map(item => `<div class="cc-roster-item" onclick="window.CCFB.selectUnit('${item.uN.replace(/'/g, "\\'")}', ${item.id})"><div class="u-name">${item.uN.toUpperCase()}</div><button class="btn-minus" onclick="event.stopPropagation(); window.CCFB.removeUnitFromRoster(${item.id})">−</button></div>`).join('');
         }
     };
 
