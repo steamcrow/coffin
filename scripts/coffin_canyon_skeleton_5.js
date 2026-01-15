@@ -1,7 +1,9 @@
 CCFB.define("components/skeleton", function(C) {
     return {
         draw: function() {
+            // DOMAIN_SAFETY: Protect Odoo Editor
             if (window.location.href.includes("/web")) return;
+            
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
