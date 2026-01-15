@@ -1,8 +1,8 @@
 CCFB.define("main", function (C) {
-  // 1. Initialize Global UI State
+  // 1. Initialize Global UI State (Restored to stable 'budget' variable)
   C.ui = C.ui || {
     fKey: "monster-rangers",
-    limit: 500, // Synchronized with Painter
+    budget: 500,
     mode: "grid",
     roster: [],
     sId: null
@@ -14,7 +14,7 @@ CCFB.define("main", function (C) {
     return faction?.units?.find(u => u.name === unitName);
   };
   
-  // 3. Helper: Calculate Total (Units + Upgrades)
+  // 3. Helper: Calculate Total (Restored stable calculation)
   C.calculateTotal = function() {
     return (C.ui.roster || []).reduce((sum, item) => {
       const baseCost = item.cost || 0;
@@ -35,7 +35,7 @@ CCFB.define("main", function (C) {
   
   // 5. Handle Budget Selection
   window.CCFB.handleBudgetChange = function(newBudget) {
-    C.ui.limit = parseInt(newBudget) || 0;
+    C.ui.budget = parseInt(newBudget) || 500;
     if (window.CCFB.refreshUI) window.CCFB.refreshUI();
   };
   
@@ -43,18 +43,13 @@ CCFB.define("main", function (C) {
   window.CCFB.shareRoster = function() { alert("Share feature coming soon!"); };
   window.printRoster = function() { window.print(); };
   
-  // 7. Boot Module
+  // 7. Boot Module (Restored original sequence)
   return {
     boot: function (containerId, factionFolder) {
       C.state.dataBaseUrl = factionFolder;
       CCFB.require(["data/loaders"], function (loaders) {
         loaders.loadRules().then(function() {
           loaders.loadFaction(C.ui.fKey || "monster-rangers").then(function() {
-            
-            // Set initial limit from the dropdown
-            const bSel = document.getElementById("budget-selector");
-            if (bSel) C.ui.limit = parseInt(bSel.value);
-
             C.state.loading = false;
             if (window.CCFB.refreshUI) window.CCFB.refreshUI();
           });
