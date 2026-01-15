@@ -131,9 +131,12 @@ CCFB.define("components/painter", function(C) {
     };
 
 window.CCFB.addUnitToRoster = (name, cost) => {
-    alert("Adding: " + name); // TEST ALERT
+    alert("Adding: " + name);
+    if (!C.ui) C.ui = { roster: [], fKey: "", mode: "grid", budget: 0 };
+    if (!C.ui.roster) C.ui.roster = [];
     C.ui.roster.push({ id: Date.now(), fKey: C.ui.fKey, uN: name, cost });
     window.CCFB.refreshUI();
+
 };
     window.CCFB.removeUnitFromRoster = (id) => {
         C.ui.roster = C.ui.roster.filter(x => x.id !== id);
