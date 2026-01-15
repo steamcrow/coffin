@@ -1,19 +1,24 @@
 CCFB.define("components/skeleton", function(C) {
     return {
         draw: function() {
-            // DOMAIN_SAFETY: Protect Odoo Editor
+            // 1. DOMAIN_SAFETY: Commandment v1.9 - Protect Odoo Editor
+            // This ensures the builder doesn't interfere with the Odoo backend
             if (window.location.href.includes("/web")) return;
             
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
+            // 2. Budget Options
             const budgets = [500, 1000, 1500, 2000];
 
+            // 3. The Full Layout (Strict 3-Column Design)
+            // Preserves all original IDs, Classes, and dynamic map functions
             root.innerHTML = `
                 <div id="ccfb-app">
                     <div class="cc-header-area">
                         <h1>COFFIN CANYON FACTION BUILDER</h1>
                         <div class="sub-header-row d-flex align-items-center">
+                            
                             <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)">
                                 <option value="">SELECT FACTION...</option>
                             </select>
@@ -26,8 +31,12 @@ CCFB.define("components/skeleton", function(C) {
 
                             <div class="top-tools ml-auto">
                                 <span id="display-total" title="Liberty Bucks">0 ₤</span>
-                                <button onclick="window.CCFB.shareRoster()" title="Share"><i class="fa fa-share-alt"></i></button>
-                                <button onclick="window.printRoster()" title="Print"><i class="fa fa-print"></i></button>
+                                <button onclick="window.CCFB.shareRoster()" title="Share">
+                                    <i class="fa fa-share-alt"></i>
+                                </button>
+                                <button onclick="window.printRoster()" title="Print">
+                                    <i class="fa fa-print"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -46,6 +55,8 @@ CCFB.define("components/skeleton", function(C) {
                     </div>
                 </div>
             `;
+            
+            // 4. Populate Faction List
             this.populateDropdown();
         },
 
@@ -53,9 +64,13 @@ CCFB.define("components/skeleton", function(C) {
             CCFB.require(["config/docTokens"], (cfg) => {
                 const sel = document.getElementById("f-selector");
                 if (!sel || !cfg.factions) return;
+
+                // Restores your original cleaner map/join logic
                 sel.innerHTML += cfg.factions.map(f => 
                     `<option value="${f.key}">${f.label.toUpperCase()}</option>`
                 ).join('');
+
+                // Default starting faction
                 sel.value = "monster-rangers";
             });
         }
