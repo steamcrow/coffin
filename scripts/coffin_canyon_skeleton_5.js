@@ -3,7 +3,7 @@ CCFB.define("components/skeleton", function(C) {
         draw: function() {
             // DOMAIN_SAFETY: Commandment v1.9 - Protect Odoo Editor
             if (window.location.href.includes("/web")) return;
-            
+
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
@@ -19,7 +19,7 @@ CCFB.define("components/skeleton", function(C) {
                             <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)">
                                 <option value="">SELECT FACTION...</option>
                             </select>
-                            
+
                             <select id="budget-selector" onchange="window.CCFB.handleBudgetChange(this.value)">
                                 ${budgets.map(b => `<option value="${b}">${b} ₤</option>`).join('')}
                             </select>
@@ -48,7 +48,7 @@ CCFB.define("components/skeleton", function(C) {
                     </div>
                 </div>
             `;
-            
+
             this.populateDropdown();
         },
 
@@ -58,19 +58,18 @@ CCFB.define("components/skeleton", function(C) {
                 if (!sel || !cfg.factions) return;
 
                 // Use map/join for cleaner DOM insertion than repetitive appendChild
-                sel.innerHTML += cfg.factions.map(f => 
+                sel.innerHTML = `<option value="">SELECT FACTION...</option>` + cfg.factions.map(f =>
                     `<option value="${f.key}">${f.label.toUpperCase()}</option>`
                 ).join('');
 
-                // Default selection
-                sel.value = "monster-rangers";
+                // Default selection MUST match your docTokens keys (underscores)
+                // Your docTokens uses: "monster_rangers"
+                sel.value = "monster_rangers";
 
-                // IMPORTANT: Ensure the same initialization path runs as if the user changed the dropdown.
-                // This prevents UI state from being uninitialized (which can make "Add to Roster" appear broken).
+                // Trigger the same initialization path as a user selection
                 if (window.CCFB && typeof window.CCFB.handleFactionChange === "function") {
                     window.CCFB.handleFactionChange(sel.value);
                 } else {
-                    // Fallback: trigger onchange if handler isn't attached yet
                     sel.dispatchEvent(new Event("change", { bubbles: true }));
                 }
             });
