@@ -3,13 +3,17 @@ CCFB.define("components/painter", function(C) {
     // Helper to extract name regardless of whether it's a string or object
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
-    // Escape for HTML attribute values
-    const escAttr = (s) => String(s ?? "")
+    // Safe HTML escape for text injection
+    const esc = (s) => String(s ?? "")
         .replace(/&/g, "&amp;")
-        .replace(/"/g, "&quot;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
+
+    // Encode values for data attributes where we want round-trip without breaking HTML
+    const enc = (s) => encodeURIComponent(String(s ?? ""));
+    const dec = (s) => decodeURIComponent(String(s ?? ""));
 
     // --- 1. ABILITY LOOKUP HIERARCHY ---
     const getAbilityEffect = (abilityName, unit) => {
@@ -32,15 +36,15 @@ CCFB.define("components/painter", function(C) {
     // --- 1.5. BUILD STAT BADGES ---
     const buildStatBadges = (unit) => {
         const stats = [
-            { l: 'Q', v: unit.quality, c: 'stat-q', h: 'Quality: 4, 5, 6 are successes.' },
-            { l: 'D', v: unit.defense, c: 'stat-d', h: 'Defense: Subtracts damage.' },
-            { l: 'R', v: unit.range || '-', c: 'stat-r', h: 'Range: Max reach.' },
-            { l: 'M', v: unit.move, c: 'stat-m', h: 'Move: Inches per action.' }
+            {l:'Q', v:unit.quality, c:'stat-q', h:'Quality: 4, 5, 6 are successes.'},
+            {l:'D', v:unit.defense, c:'stat-d', h:'Defense: Subtracts damage.'},
+            {l:'R', v:unit.range || '-', c:'stat-r', h:'Range: Max reach.'},
+            {l:'M', v:unit.move, c:'stat-m', h:'Move: Inches per action.'}
         ];
         return stats.map(s => `
-            <span class="cc-stat-badge" title="${escAttr(s.h)}">
-                <span class="cc-stat-label ${s.c}">${s.l}</span>
-                <span class="cc-stat-value">${escAttr(s.v)}</span>
+            <span class="cc-stat-badge" title="${esc(s.h)}">
+                <span class="cc-stat-label ${s.c}">${esc(s.l)}</span>
+                <span class="cc-stat-value">${esc(s.v)}</span>
             </span>`).join('');
     };
 
@@ -55,8 +59,8 @@ CCFB.define("components/painter", function(C) {
 
         const abilitiesHtml = (unit.abilities || []).map(r => `
             <div class="ability-card">
-                <div class="ability-name">${escAttr(getName(r))}</div>
-                <div class="ability-effect">${escAttr(getAbilityEffect(r, unit))}</div>
+                <div class="ability-name">${esc(getName(r))}</div>
+                <div class="ability-effect">${esc(getAbilityEffect(r, unit))}</div>
             </div>
         `).join('');
 
@@ -64,17 +68,17 @@ CCFB.define("components/painter", function(C) {
             const isUnique = upg.type === "Relic" || upg.type === "Spell";
             return `
                 <label class="upgrade-row">
-                    <input type="${isUnique ? "radio" : "checkbox"}" name="${escAttr(isUnique ? "unique-choice" : upg.name)}">
-                    <span>${escAttr(upg.name)} (+${escAttr(upg.cost)} ₤)</span>
+                    <input type="${isUnique ? "radio" : "checkbox"}" name="${esc(isUnique ? "unique-choice" : upg.name)}">
+                    <span>${esc(upg.name)} (+${esc(upg.cost)} ₤)</span>
                 </label>`;
         }).join('');
 
         det.innerHTML = `
             <div class="cc-detail-view">
-                <div class="u-name">${escAttr(unit.name).toUpperCase()}</div>
-                <div class="u-type">${escAttr(unit.type).toUpperCase()}</div>
+                <div class="u-name">${esc(unit.name).toUpperCase()}</div>
+                <div class="u-type">${esc(unit.type).toUpperCase()}</div>
                 <div class="d-flex flex-wrap justify-content-center mb-3">${buildStatBadges(unit)}</div>
-                <div class="u-lore">${escAttr(unit.lore || unit.description || "No lore recorded.")}</div>
+                <div class="u-lore">${esc(unit.lore || unit.description || "No lore recorded.")}</div>
                 ${abilitiesHtml ? `<div class="detail-section-title">SPECIAL RULES</div>${abilitiesHtml}` : ''}
                 ${upgradesHtml ? `<div class="detail-section-title">UPGRADES & GEAR</div><div id="upgrades-list">${upgradesHtml}</div>` : ''}
             </div>`;
@@ -99,20 +103,24 @@ CCFB.define("components/painter", function(C) {
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => {
-                const unitName = escAttr(u.name);
-                const tags = (u.abilities || []).map(a => `<span class="ability-tag">${escAttr(getName(a))}</span>`).join('');
+                const unitNameEnc = enc(u.name);
+                const tags = (u.abilities || []).map(a => `<span class="ability-tag">${esc(getName(a))}</span>`).join('');
+
+                // IMPORTANT: store cost safely in data-cost; DO NOT embed in onclick JS
+                const costEnc = enc(u.cost);
+
                 return `
                 <div class="cc-roster-item d-flex flex-column" style="position: relative;">
-                    <div class="cc-unit-info" data-action="select" data-unit="${unitName}" style="cursor: pointer;">
-                        <div class="u-name">${unitName.toUpperCase()}</div>
-                        <div class="u-type">${escAttr(u.type).toUpperCase()}</div>
+                    <div class="cc-unit-info" data-action="select" data-unit="${unitNameEnc}" style="cursor: pointer;">
+                        <div class="u-name">${esc(u.name).toUpperCase()}</div>
+                        <div class="u-type">${esc(u.type).toUpperCase()}</div>
                         <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
                         <div class="abilities-overview">${tags}</div>
                     </div>
                     <button class="btn btn-sm btn-block btn-outline-warning mt-2"
                             data-action="add"
-                            data-unit="${unitName}"
-                            data-cost="${escAttr(u.cost)}">
+                            data-unit="${unitNameEnc}"
+                            data-cost="${costEnc}">
                         <i class="fa fa-plus"></i> ADD TO ROSTER
                     </button>
                 </div>`;
@@ -125,25 +133,27 @@ CCFB.define("components/painter", function(C) {
             rost.innerHTML = (UI.roster || []).map(item => {
                 const u = C.getUnit?.(item.fKey, item.uN);
                 if (!u) return '';
-                const unitName = escAttr(item.uN);
+
+                const unitNameEnc = enc(item.uN);
+
                 return `
-                    <div class="cc-roster-item" data-action="select" data-unit="${unitName}">
+                    <div class="cc-roster-item" data-action="select" data-unit="${unitNameEnc}">
                         <div class="d-flex justify-content-between align-items-start">
                             <div style="flex: 1;">
-                                <div class="u-name">${unitName.toUpperCase()}</div>
-                                <div class="u-type">${escAttr(u.type).toUpperCase()}</div>
+                                <div class="u-name">${esc(item.uN).toUpperCase()}</div>
+                                <div class="u-type">${esc(u.type).toUpperCase()}</div>
                                 <div class="d-flex flex-wrap justify-content-center">${buildStatBadges(u)}</div>
                             </div>
                             <button class="btn-minus"
                                     data-action="remove"
-                                    data-id="${escAttr(item.id)}">−</button>
+                                    data-id="${esc(item.id)}">−</button>
                         </div>
                     </div>`;
             }).join('');
         }
 
-        // Ensure listeners exist (idempotent)
-        bindDelegatedHandlers();
+        // Ensure handlers are bound (idempotent)
+        bindHandlers();
     };
 
     // --- 4. GLOBAL HELPERS ---
@@ -166,52 +176,55 @@ CCFB.define("components/painter", function(C) {
         window.CCFB.refreshUI();
     };
 
-    // --- 5. CSP-SAFE EVENT BINDING (NO INLINE onclick) ---
-    const bindDelegatedHandlers = () => {
-        if (window.CCFB._painterDelegatesBound) return;
-        window.CCFB._painterDelegatesBound = true;
+    // --- 5. EVENT HANDLERS (DELEGATED; SAFE; NO INLINE onclick REQUIRED) ---
+    const bindHandlers = () => {
+        if (window.CCFB._painterHandlersBound) return;
+        window.CCFB._painterHandlersBound = true;
 
         const lib = document.getElementById("lib-target");
         const rost = document.getElementById("rost-target");
 
-        const handler = (evt) => {
+        const onClick = (evt) => {
             const el = evt.target.closest("[data-action]");
             if (!el) return;
 
             const action = el.getAttribute("data-action");
             if (!action) return;
 
-            // Stop click from bubbling into parent selects, etc.
             evt.stopPropagation();
 
             if (action === "select") {
-                const unitName = el.getAttribute("data-unit");
+                const unitName = dec(el.getAttribute("data-unit"));
                 if (unitName) window.CCFB.selectUnit(unitName);
                 return;
             }
 
             if (action === "add") {
-                const unitName = el.getAttribute("data-unit");
-                const costRaw = el.getAttribute("data-cost");
-                const cost = (costRaw === null || costRaw === undefined) ? 0 : Number(costRaw);
-                if (unitName) window.CCFB.addUnitToRoster(unitName, isNaN(cost) ? costRaw : cost);
+                const unitName = dec(el.getAttribute("data-unit"));
+                const costRaw = dec(el.getAttribute("data-cost"));
+
+                // Cost may be numeric or formatted text. Preserve original if not a clean number.
+                const num = Number(costRaw);
+                const cost = Number.isFinite(num) && String(num) === String(num) ? num : costRaw;
+
+                if (unitName) window.CCFB.addUnitToRoster(unitName, cost);
                 return;
             }
 
             if (action === "remove") {
                 const idRaw = el.getAttribute("data-id");
-                const id = Number(idRaw);
-                window.CCFB.removeUnitFromRoster(isNaN(id) ? idRaw : id);
+                const idNum = Number(idRaw);
+                window.CCFB.removeUnitFromRoster(Number.isFinite(idNum) ? idNum : idRaw);
                 return;
             }
         };
 
-        if (lib) lib.addEventListener("click", handler);
-        if (rost) rost.addEventListener("click", handler);
+        if (lib) lib.addEventListener("click", onClick);
+        if (rost) rost.addEventListener("click", onClick);
     };
 
-    // Bind once even before first refresh, in case refreshUI isn't called yet.
-    bindDelegatedHandlers();
+    // Bind now as well (safe if refreshUI hasn't run yet)
+    bindHandlers();
 
     return { refreshUI: window.CCFB.refreshUI };
 });
