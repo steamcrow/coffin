@@ -11,7 +11,7 @@ CCFB.define("components/painter", function(C) {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
 
-    // Encode values for data attributes where we want round-trip without breaking HTML
+    // Encode/decode values for data attributes (round-trip safe)
     const enc = (s) => encodeURIComponent(String(s ?? ""));
     const dec = (s) => decodeURIComponent(String(s ?? ""));
 
@@ -105,8 +105,6 @@ CCFB.define("components/painter", function(C) {
             lib.innerHTML = (faction.units || []).map(u => {
                 const unitNameEnc = enc(u.name);
                 const tags = (u.abilities || []).map(a => `<span class="ability-tag">${esc(getName(a))}</span>`).join('');
-
-                // IMPORTANT: store cost safely in data-cost; DO NOT embed in onclick JS
                 const costEnc = enc(u.cost);
 
                 return `
@@ -118,6 +116,7 @@ CCFB.define("components/painter", function(C) {
                         <div class="abilities-overview">${tags}</div>
                     </div>
                     <button class="btn btn-sm btn-block btn-outline-warning mt-2"
+                            type="button"
                             data-action="add"
                             data-unit="${unitNameEnc}"
                             data-cost="${costEnc}">
@@ -145,6 +144,7 @@ CCFB.define("components/painter", function(C) {
                                 <div class="d-flex flex-wrap justify-content-center">${buildStatBadges(u)}</div>
                             </div>
                             <button class="btn-minus"
+                                    type="button"
                                     data-action="remove"
                                     data-id="${esc(item.id)}">−</button>
                         </div>
@@ -152,8 +152,8 @@ CCFB.define("components/painter", function(C) {
             }).join('');
         }
 
-        // Ensure handlers are bound (idempotent)
-        bindHandlers();
+        // Ensure document handler exists (safe no-op if already bound)
+        bindDocumentHandler();
     };
 
     // --- 4. GLOBAL HELPERS ---
@@ -176,22 +176,27 @@ CCFB.define("components/painter", function(C) {
         window.CCFB.refreshUI();
     };
 
-    // --- 5. EVENT HANDLERS (DELEGATED; SAFE; NO INLINE onclick REQUIRED) ---
-    const bindHandlers = () => {
-        if (window.CCFB._painterHandlersBound) return;
-        window.CCFB._painterHandlersBound = true;
+    // --- 5. EVENT HANDLING (DOCUMENT-DELEGATED; NEVER BINDS TOO EARLY) ---
+    const bindDocumentHandler = () => {
+        if (window.CCFB._painterDocHandlerBound) return;
+        window.CCFB._painterDocHandlerBound = true;
 
-        const lib = document.getElementById("lib-target");
-        const rost = document.getElementById("rost-target");
+        document.addEventListener("click", (evt) => {
+            // Only handle clicks inside the app (prevents collisions with rest of page)
+            const app = document.getElementById("ccfb-app");
+            if (!app || !app.contains(evt.target)) return;
 
-        const onClick = (evt) => {
             const el = evt.target.closest("[data-action]");
             if (!el) return;
 
             const action = el.getAttribute("data-action");
             if (!action) return;
 
-            evt.stopPropagation();
+            // IMPORTANT: only stop propagation for add/remove buttons (so card click behavior stays natural)
+            if (action === "add" || action === "remove") {
+                evt.preventDefault();
+                evt.stopPropagation();
+            }
 
             if (action === "select") {
                 const unitName = dec(el.getAttribute("data-unit"));
@@ -203,9 +208,9 @@ CCFB.define("components/painter", function(C) {
                 const unitName = dec(el.getAttribute("data-unit"));
                 const costRaw = dec(el.getAttribute("data-cost"));
 
-                // Cost may be numeric or formatted text. Preserve original if not a clean number.
+                // Preserve original formatting if cost isn't a clean number
                 const num = Number(costRaw);
-                const cost = Number.isFinite(num) && String(num) === String(num) ? num : costRaw;
+                const cost = Number.isFinite(num) ? num : costRaw;
 
                 if (unitName) window.CCFB.addUnitToRoster(unitName, cost);
                 return;
@@ -214,17 +219,14 @@ CCFB.define("components/painter", function(C) {
             if (action === "remove") {
                 const idRaw = el.getAttribute("data-id");
                 const idNum = Number(idRaw);
-                window.CCFB.removeUnitFromRoster(Number.isFinite(idNum) ? idNum : idRaw);
+                window.CCFB.removeUnitToRoster ? window.CCFB.removeUnitToRoster(idRaw) : window.CCFB.removeUnitFromRoster(Number.isFinite(idNum) ? idNum : idRaw);
                 return;
             }
-        };
-
-        if (lib) lib.addEventListener("click", onClick);
-        if (rost) rost.addEventListener("click", onClick);
+        }, false);
     };
 
-    // Bind now as well (safe if refreshUI hasn't run yet)
-    bindHandlers();
+    // Bind now too (safe)
+    bindDocumentHandler();
 
     return { refreshUI: window.CCFB.refreshUI };
 });
