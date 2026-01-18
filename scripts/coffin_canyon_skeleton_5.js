@@ -64,6 +64,15 @@ CCFB.define("components/skeleton", function(C) {
 
                 // Default selection
                 sel.value = "monster-rangers";
+
+                // IMPORTANT: Ensure the same initialization path runs as if the user changed the dropdown.
+                // This prevents UI state from being uninitialized (which can make "Add to Roster" appear broken).
+                if (window.CCFB && typeof window.CCFB.handleFactionChange === "function") {
+                    window.CCFB.handleFactionChange(sel.value);
+                } else {
+                    // Fallback: trigger onchange if handler isn't attached yet
+                    sel.dispatchEvent(new Event("change", { bubbles: true }));
+                }
             });
         }
     };
