@@ -36,6 +36,11 @@ CCFB.define("components/painter", function(C) {
             </span>`).join('');
     };
 
+    // --- 0.5. ENSURE UI STATE EXISTS (SAFE INIT) ---
+    // This prevents runtime errors after rollbacks or fresh loads where roster/fKey may not be set yet.
+    C.ui = C.ui || {};
+    C.ui.roster = Array.isArray(C.ui.roster) ? C.ui.roster : [];
+
     // --- 2. RENDER UNIT DETAIL (COLUMN 3) ---
     window.CCFB.renderDetail = (unit) => {
         const det = document.getElementById("det-target");
@@ -72,6 +77,9 @@ CCFB.define("components/painter", function(C) {
     window.CCFB.refreshUI = () => {
         const UI = C.ui; // Pointed back to C.ui as per your original
         const faction = C.state.factions[UI.fKey];
+
+        // Keep roster always defined (defensive)
+        UI.roster = Array.isArray(UI.roster) ? UI.roster : [];
 
         // Update Points
         const total = (typeof C.calculateTotal === "function") ? C.calculateTotal() : 0;
@@ -131,11 +139,15 @@ CCFB.define("components/painter", function(C) {
     };
 
     window.CCFB.addUnitToRoster = (name, cost) => {
+        C.ui = C.ui || {};
+        C.ui.roster = Array.isArray(C.ui.roster) ? C.ui.roster : [];
         C.ui.roster.push({ id: Date.now(), fKey: C.ui.fKey, uN: name, cost });
         window.CCFB.refreshUI();
     };
 
     window.CCFB.removeUnitFromRoster = (id) => {
+        C.ui = C.ui || {};
+        C.ui.roster = Array.isArray(C.ui.roster) ? C.ui.roster : [];
         C.ui.roster = C.ui.roster.filter(x => x.id !== id);
         window.CCFB.refreshUI();
     };
