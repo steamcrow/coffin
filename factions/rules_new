@@ -345,3 +345,157 @@
     }
   }
 }
+
+{
+  "ability_engine": {
+    "philosophy": {
+      "text": "Abilities are levers, not safety nets. They bend the core rules but do not replace them. If an ability contradicts a core rule, the ability takes precedence.",
+      "design_intent": "Abilities make units interesting, not safe. Pulling a lever should change the battlefield for better or worse."
+    },
+    "ability_types": {
+      "passive": {
+        "definition": "Always in effect. Requires no Actions or rolls unless stated.",
+        "logic": "Always 'on' unless suppressed by another rule."
+      },
+      "main_action": {
+        "definition": "Uses one of the model's two Actions.",
+        "logic": "Cannot be used if the model is unable to take actions. Counts toward Action Economy."
+      },
+      "reactive": {
+        "definition": "Triggered outside the model's activation. Rare and powerful.",
+        "logic": "Triggers only on specific conditions. Does not consume actions unless stated. Can trigger even if unit has already activated."
+      }
+    },
+    "timing_windows": {
+      "refresh_logic": {
+        "once_per_activation": "Refreshes when model is chosen to act.",
+        "once_per_round": "Refreshes at start of new round.",
+        "once_per_game": "Single use. Mark as spent."
+      },
+      "default": "If timing is not listed, usage is during the unit's activation."
+    },
+    "notation_and_math": {
+      "x_notation": {
+        "definition": "(X) defines strength, radius, or distance. It does NOT represent dice/successes unless explicitly stated.",
+        "examples": ["Fear(2) = 2 inch radius", "Impact(1) = 1 auto-hit", "Blast(3\") = 3 inch radius"]
+      },
+      "dice_modifiers": {
+        "logic": "Modify the dice pool BEFORE rolling. Bonuses/penalties stack.",
+        "success_range": "Success is always 4, 5, or 6. Abilities do not change this."
+      },
+      "stacking_rules": {
+        "self_stacking": "Abilities do not stack with themselves.",
+        "cross_stacking": "Effects from different abilities may stack.",
+        "conflict_resolution": "Unit card > Rules Vault > Simplest Interpretation."
+      }
+    },
+    "critical_and_excess": {
+      "critical_success": {
+        "definition": "A natural roll of 6.",
+        "logic": "Only triggers extra effects if the model has a specific Critical-triggered ability.",
+        "limits": {
+          "standard": "One Critical-damage ability per attack.",
+          "hero_exception": "Heroes may benefit from two (must be paid for/listed)."
+        }
+      },
+      "excess_successes": "Ignored unless the ability allows conversion. Conversion is optional and may carry risk."
+    },
+    "spatial_definitions": {
+      "within_x": "Measured base-to-base from the edge of the model's base.",
+      "adjacent": "Bases are physically touching.",
+      "momentum_rule": "If terrain makes contact unclear, use intent and move on."
+    }
+  }
+}
+
+{
+  "ability_dictionary": {
+    "A_deployment_timing": {
+      "ambush": "Passive. May deploy Hidden. Reveal at any time to gain First Strike in melee against the first target.",
+      "first_strike": "Passive. +1 die to the first melee attack made this round (or when revealing from Hidden).",
+      "spawn": "Passive/Scenario. Enters play from a defined point/trigger. Activates normally upon entry.",
+      "delayed_entry": "Passive. May be held in reserve; enters from a defined edge at the start of any round.",
+      "redeploy": "Passive. Reposition up to X inches after deployment but before the first activation.",
+      "scout": "Passive. Make a free Move after all forces deploy but before the first activation."
+    },
+    "B_movement_positioning": {
+      "climber": "Passive. Ignores vertical movement penalties. Cannot move through Impassable terrain.",
+      "berserk": "Passive. Must move toward nearest visible enemy. Gain +1 die on melee; cannot Interact.",
+      "disengage": "Main Action. Leave base contact without penalty or triggering enemy reactions.",
+      "fast": "Passive. Once per activation, either Move +2\" or Disengage without penalty.",
+      "grapple": "Main Action. Melee attack: On hit, pull target 3\" toward self; target cannot move next activation.",
+      "runner": "Passive. If no attacks are made during activation, make an additional Move at the end.",
+      "mobile_cover": "Passive. Adjacent friendly models gain +1 Defense vs ranged (does not stack with terrain).",
+      "mobile_dynamo": "Main Action. Reposition a Dynamo/Device within range defined on card.",
+      "mobile_cell_block": "Passive. Transports Captured models. If destroyed, prisoners are released.",
+      "stampede": "Passive. May pass through smaller models. Those models must test Morale or be pushed 1\" aside.",
+      "immobile": "Passive. Cannot move. May still attack/defend. Only repositioned by scenario/special rules."
+    },
+    "C_offense_damage": {
+      "aim": "Main Action. Cannot Move this activation; gain +1 die on next ranged attack.",
+      "backstab": "Passive. +1 damage if target is already engaged with another friendly model.",
+      "brutal_blow": "Passive. +1 damage on successful melee hit.",
+      "blood_in_the_air": "Passive. Gain +1 die on next attack when any model within 4\" is reduced to 0 Quality.",
+      "corrode": "Passive. Successful melee vs Mechan = 1 auto-damage. Vs Metal = Remove 1 property OR -1 Defense.",
+      "deadeye": "Once Per Game. Re-roll all failed dice on a single ranged attack.",
+      "furious": "Passive. If Quality is lost, gain +1 die on next melee attack.",
+      "impact": "Passive. Moving 3\"+ into contact deals X automatic hits before rolling attack dice.",
+      "press_the_advantage": "Passive. On hit, convert 1 excess Success into +1 damage or +2\" Move. Penalty: -1 die on next Action. Q3+ only.",
+      "pierce": "Passive. Ignores 1 point of Defense. Does not stack.",
+      "panic_fire": "Reactive. Once per round. When targeted by melee, make ranged attack at -1 die, then test Morale.",
+      "pinning_shot": "Passive. On hit, target cannot move during its next activation.",
+      "poison": "Passive. On hit, deal 1 damage (ignoring Defense) at the end of the target's next activation.",
+      "blast": "Passive. Affects radius of X. Roll separately for each model; Cover applies normally.",
+      "relentless": "Reactive. If enemy is destroyed in melee, immediately move 2\".",
+      "sonic": "Passive. Ignores Cover. Affects physical-immune targets. May cause Deafening/Disorientation.",
+      "vengeful": "Passive. Each time Quality is lost, +1 die on next attack. Stacks until the attack is resolved."
+    },
+    "D_defense_survival": {
+      "armored": "Passive. Reduce damage taken by X (min 0). Does not affect terrain/env damage.",
+      "dodge": "Passive. Once per activation, cancel 1 Success from an incoming attack. Disabled while Shaken.",
+      "shield_wall": "Passive. +1 Defense while adjacent to another Shield Wall model. No bonus vs Blast.",
+      "hardened": "Passive. Ignore the first Shaken result each round.",
+      "steadfast": "Passive. Failed Morale results in normal failure, never Panic.",
+      "take_cover": "Reactive. Once per round. When targeted by ranged, move 2\" toward cover and gain it for this attack.",
+      "suppress": "Main Action. Ranged attack: On hit, target suffers -1 die on its next Action.",
+      "grit": "Once Per Game. When reduced to 0 Quality, reduce to 1 instead.",
+      "unyielding": "Passive. Cannot be pushed/pulled/repositioned by enemy abilities.",
+      "guard": "Passive. May intercept a melee attack targeting an adjacent friendly model.",
+      "lockdown": "Passive. Engaged enemies cannot Disengage or use free moves. Ends if model is Shaken/Moved."
+    },
+    "E_morale_fear": {
+      "fear": "Passive. Enemies within X suffer -1 die on Morale tests. Highest value only.",
+      "terror": "Passive. When enemy first engages, they must test Morale or become Shaken. Once per round/enemy.",
+      "dread_aura": "Passive. Enemies within X suffer -1 die on Morale and cannot ignore Shaken.",
+      "intimidate": "Main Action. Force Morale test on enemy within X and LoS. No effect on Titans.",
+      "rally": "Main Action. Remove Shaken from friendly within X; they gain +1 die on next Morale test.",
+      "terrifying_presence": "Passive. When reducing enemy to 0 Quality, all enemies within 4\" must test Morale.",
+      "unnerving": "Passive. Engaged enemies suffer -1 die on all attacks.",
+      "panic_wave": "Reactive. When enemy within X Panics/Dies, choose another enemy within X to test Morale.",
+      "fearless": "Passive. Ignores Fear/Terror/Dread Aura. Still tests Morale for Damage/Terrain.",
+      "cowardice": "Passive. Enemies failing Morale within X suffer -1 die on their next Action."
+    },
+    "F_terrain_environment": {
+      "create_hazard": "Main Action. Targeted area within X becomes Hazardous.",
+      "ignite": "Main Action. Flammable terrain within X becomes Burning.",
+      "smoke_screen": "Main Action. Area within X becomes Choking. Blocks clarity, not LoS. Lasts 1 round.",
+      "collapse": "Main Action. Target Unstable terrain within X immediately collapses.",
+      "taint_ground": "Passive. When destroying enemy/ritualizing, terrain within X becomes Tainted.",
+      "haunted_wake": "Passive. Terrain passed through becomes Haunted until end of round.",
+      "purify": "Main Action. Remove 1 trait; Haunted becomes Tainted.",
+      "sacrilege": "Passive. While in Sacred terrain, enemies within X suffer -1 die on Morale.",
+      "terrain_adaptation": "Passive. Choose 1 trait on deployment; ignore its penalties (not damage/escalation).",
+      "unstable_footing": "Passive. Enemies ending movement adjacent must test Quality or become Shaken."
+    },
+    "G_thyr_ritual": {
+      "thyrburn": "Main Action. Spend 1 Crystal to gain +2 dice, +3\" Move, OR +2 Quality for the round.",
+      "fallout": "Resolution. Roll 2d6 at end of round after Thyrburn. Affects device/models/terrain.",
+      "ritual": "Main Action. Mystic only. Must be in Sacred/Tainted/Haunted ground. Resolves listed effect.",
+      "backlash": "Passive. 0 Successes on Thyr ability = 1 damage or Taint surrounding terrain.",
+      "haunted_engine": "Passive. Using Thyrburn/Ritual places a Haunt adjacent. Haunt acts at end of round.",
+      "crystal_feed": "Passive. May carry +1 Thyr Crystal. Dropped on death.",
+      "sacrificial_overload": "Once Per Game. Ignore Fallout; Device is Destroyed and area becomes Hazardous.",
+      "purge_thyr": "Main Action. Remove all crystals and 1 Thyr-based trait within X."
+    }
+  }
+}
