@@ -1,5 +1,6 @@
 CCFB.define("components/painter", function(C) {
 
+    // --- 1. CORE HELPERS ---
     const getName = (val) => (typeof val === 'object' ? val.name : val);
     const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const enc = (s) => encodeURIComponent(String(s ?? ""));
@@ -32,7 +33,19 @@ CCFB.define("components/painter", function(C) {
             </span>`).join('');
     };
 
-    window.CCFB.renderDetail = (unit) => {
+    // --- 2. THE BRAINS (MATH) ---
+    C.calculateTotal = function() {
+        return (C.ui.roster || []).reduce((sum, item) => {
+            let unitTotal = parseInt(item.cost) || 0;
+            if (item.upgrades) {
+                item.upgrades.forEach(upg => { unitTotal += (parseInt(upg.cost) || 0); });
+            }
+            return sum + unitTotal;
+        }, 0);
+    };
+
+    // --- 3. RENDERING ---
+    window.CCFB.renderDetail = (unit, isLibraryView = false) => {
         const det = document.getElementById("det-target");
         if (!det) return;
 
@@ -44,8 +57,17 @@ CCFB.define("components/painter", function(C) {
         `).join('');
 
         const upgradesHtml = (unit.optional_upgrades || []).map(upg => {
-            const isUnique = upg.type === "Relic" || upg.type === "Spell";
-            return `<label class="upgrade-row"><input type="${isUnique ? "radio" : "checkbox"}" name="${esc(isUnique ? "unique-choice" : upg.name)}"> <span>${esc(upg.name)} (+${esc(upg.cost)} ₤)</span></label>`;
+            // Only show interactive checkboxes if we are viewing a unit already in the roster
+            if (isLibraryView) {
+                return `<div class="upgrade-row disabled"><span>${esc(upg.name)} (+${esc(upg.cost)} ₤)</span></div>`;
+            }
+            const isChecked = (unit.upgrades || []).some(u => u.name === upg.name);
+            return `
+                <label class="upgrade-row">
+                    <input type="checkbox" ${isChecked ? 'checked' : ''} 
+                        onchange="window.CCFB.toggleUpgrade('${unit.id}', '${esc(upg.name)}', '${upg.cost}')">
+                    <span>${esc(upg.name)} (+${esc(upg.cost)} ₤)</span>
+                </label>`;
         }).join('');
 
         det.innerHTML = `
@@ -55,22 +77,29 @@ CCFB.define("components/painter", function(C) {
                 <div class="d-flex flex-wrap justify-content-center mb-3">${buildStatBadges(unit)}</div>
                 <div class="u-lore">${esc(unit.lore || unit.description || "No lore recorded.")}</div>
                 ${abilitiesHtml ? `<div class="detail-section-title">SPECIAL RULES</div>${abilitiesHtml}` : ''}
-                ${upgradesHtml ? `<div class="detail-section-title">UPGRADES & GEAR</div><div id="upgrades-list">${upgradesHtml}</div>` : ''}
+                ${upgradesHtml ? `<div class="detail-section-title">UPGRADES & GEAR ${isLibraryView ? '(Add to Roster to Select)' : ''}</div><div id="upgrades-list">${upgradesHtml}</div>` : ''}
             </div>`;
     };
 
     window.CCFB.refreshUI = () => {
         const UI = C.ui || {};
         const faction = C.state.factions?.[UI.fKey];
+        
+        // Update Budget Header
+        const total = C.calculateTotal();
+        const totalEl = document.getElementById("display-total");
+        if (totalEl) {
+            totalEl.innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
+            totalEl.style.color = (UI.budget > 0 && total > UI.budget) ? '#ff4444' : '#ff7518';
+        }
 
         // Column 1: Library
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => `
                 <div class="cc-roster-item d-flex flex-column">
-                    <div class="cc-unit-info" data-action="select" data-unit="${enc(u.name)}" style="cursor: pointer;">
+                    <div class="cc-unit-info" data-action="select-lib" data-unit="${enc(u.name)}" style="cursor: pointer;">
                         <div class="u-name">${esc(u.name).toUpperCase()}</div>
-                        <div class="u-type">${esc(u.type).toUpperCase()}</div>
                         <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
                     </div>
                     <button class="btn btn-sm btn-block btn-outline-warning mt-2" type="button" data-action="add" data-unit="${enc(u.name)}" data-cost="${enc(u.cost)}">
@@ -85,38 +114,56 @@ CCFB.define("components/painter", function(C) {
             rost.innerHTML = (UI.roster || []).map(item => {
                 const u = faction?.units.find(un => un.name === item.uN);
                 if (!u) return '';
+                const upgCount = (item.upgrades || []).length;
                 return `
-                    <div class="cc-roster-item" data-action="select" data-unit="${enc(item.uN)}">
+                    <div class="cc-roster-item" data-action="select-roster" data-id="${item.id}" style="cursor: pointer;">
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="flex: 1;">
                                 <div class="u-name">${esc(item.uN).toUpperCase()}</div>
-                                <div class="d-flex flex-wrap justify-content-center">${buildStatBadges(u)}</div>
+                                <div style="font-size: 9px; color: #888;">${upgCount > 0 ? `+${upgCount} UPGRADES` : 'NO UPGRADES'}</div>
                             </div>
-                            <button class="btn-minus" type="button" data-action="remove" data-id="${esc(item.id)}">−</button>
+                            <button class="btn-minus" type="button" data-action="remove" data-id="${item.id}">−</button>
                         </div>
                     </div>`;
             }).join('');
         }
-        
         bindDocumentHandler();
     };
 
+    // --- 4. ACTION HELPERS ---
     window.CCFB.addUnitToRoster = (name, cost) => {
         C.ui.roster = C.ui.roster || [];
-        C.ui.roster.push({ id: Date.now(), fKey: C.ui.fKey, uN: name, cost });
+        const newUnit = { id: Date.now(), fKey: C.ui.fKey, uN: name, cost: cost, upgrades: [] };
+        C.ui.roster.push(newUnit);
         window.CCFB.refreshUI();
+        // Automatically show detail for the newly added unit
+        const faction = C.state.factions?.[C.ui.fKey];
+        const base = faction?.units.find(u => u.name === name);
+        if (base) window.CCFB.renderDetail({...base, ...newUnit}, false);
     };
 
     window.CCFB.removeUnitFromRoster = (id) => {
         C.ui.roster = (C.ui.roster || []).filter(x => String(x.id) !== String(id));
+        document.getElementById("det-target").innerHTML = '<div class="cc-empty-state">Select a unit to view details</div>';
         window.CCFB.refreshUI();
     };
 
-    window.CCFB.selectUnit = (name) => {
-        const unit = C.state.factions[C.ui.fKey]?.units.find(u => u.name === name);
-        if (unit) window.CCFB.renderDetail(unit);
+    window.CCFB.toggleUpgrade = (unitId, upgName, upgCost) => {
+        const item = C.ui.roster.find(u => String(u.id) === String(unitId));
+        if (!item) return;
+        item.upgrades = item.upgrades || [];
+        const idx = item.upgrades.findIndex(upg => upg.name === upgName);
+        if (idx > -1) item.upgrades.splice(idx, 1);
+        else item.upgrades.push({ name: upgName, cost: parseInt(upgCost) });
+        
+        window.CCFB.refreshUI();
+        // Refresh detail view
+        const faction = C.state.factions?.[C.ui.fKey];
+        const base = faction?.units.find(u => u.name === item.uN);
+        if (base) window.CCFB.renderDetail({...base, ...item}, false);
     };
 
+    // --- 5. EVENT DELEGATION ---
     const bindDocumentHandler = () => {
         if (window.CCFB._painterDocHandlerBound) return;
         window.CCFB._painterDocHandlerBound = true;
@@ -129,17 +176,21 @@ CCFB.define("components/painter", function(C) {
             if (!el) return;
 
             const action = el.getAttribute("data-action");
-            
-            if (action === "add" || action === "remove") {
-                evt.preventDefault();
-                evt.stopPropagation();
-            }
+            const faction = C.state.factions?.[C.ui.fKey];
 
-            if (action === "select") {
-                window.CCFB.selectUnit(dec(el.getAttribute("data-unit")));
-            } else if (action === "add") {
+            if (action === "select-lib") {
+                const base = faction?.units.find(u => u.name === dec(el.getAttribute("data-unit")));
+                if (base) window.CCFB.renderDetail(base, true);
+            } 
+            else if (action === "select-roster") {
+                const item = C.ui.roster.find(i => String(i.id) === String(el.getAttribute("data-id")));
+                const base = faction?.units.find(u => u.name === item.uN);
+                if (base) window.CCFB.renderDetail({...base, ...item}, false);
+            }
+            else if (action === "add") {
                 window.CCFB.addUnitToRoster(dec(el.getAttribute("data-unit")), dec(el.getAttribute("data-cost")));
-            } else if (action === "remove") {
+            } 
+            else if (action === "remove") {
                 window.CCFB.removeUnitFromRoster(el.getAttribute("data-id"));
             }
         });
