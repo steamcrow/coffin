@@ -24,11 +24,12 @@ CCFB.define("components/skeleton", function(C) {
                             <input type="text" id="roster-name" placeholder="ROSTER NAME">
 
                             <div class="top-tools ml-auto">
-                                <button onclick="window.CCFB.toggleViewMode('card')" title="Card View"><i class="fa fa-th-large"></i></button>
-                                <button onclick="window.CCFB.toggleViewMode('list')" title="List View"><i class="fa fa-list"></i></button>
-                                <span id="display-total">0 ₤</span>
-                                <button onclick="window.CCFB.shareRoster()"><i class="fa fa-share-alt"></i></button>
-                                <button onclick="window.printRoster()"><i class="fa fa-print"></i></button>
+                                <span id="display-total" style="margin-right: 10px;">0 ₤</span>
+                                <button id="view-toggle-btn" onclick="window.CCFB.toggleViewMode()" title="Switch to List View">
+                                <i class="fa fa-list"></i>
+                                </button>
+                                <button onclick="window.CCFB.shareRoster()" title="Share Roster"><i class="fa fa-share-alt"></i></button>
+                                <button onclick="window.printRoster()" title="Print Roster"><i class="fa fa-print"></i></button>
                             </div>      
                     </div>
 
