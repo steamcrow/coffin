@@ -1,4 +1,53 @@
 CCFB.define("data/loaders", function (C) {
+  
+  // ============================================================
+  // NEW: RULES TRANSFORMER (same one from Painter)
+  // ============================================================
+  C.transformRules = function(rawRules) {
+    const transformed = {
+      abilities: [],
+      weapon_properties: [],
+      type_rules: []
+    };
+    
+    const abilityDict = rawRules?.rules_master?.ability_dictionary;
+    
+    if (!abilityDict) {
+      console.warn("⚠️ No ability_dictionary found in rules");
+      return transformed;
+    }
+    
+    // Loop through each category (A_deployment_timing, B_movement_positioning, etc)
+    for (let categoryKey in abilityDict) {
+      const category = abilityDict[categoryKey];
+      
+      // Loop through each ability in this category
+      for (let abilityKey in category) {
+        const abilityText = category[abilityKey];
+        
+        transformed.abilities.push({
+          id: abilityKey,
+          name: makeReadable(abilityKey),
+          effect: abilityText,
+          category: categoryKey
+        });
+      }
+    }
+    
+    console.log(`✅ Transformed ${transformed.abilities.length} abilities from rules`);
+    return transformed;
+  };
+  
+  // Helper: Turn "first_strike" into "First Strike"
+  function makeReadable(id) {
+    return id.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+  }
+  
+  // ============================================================
+  // EXISTING: LOAD FUNCTIONS
+  // ============================================================
   return {
     loadRules: async function() {
       // Add cache busting to ensure we always get the latest rules
@@ -7,13 +56,16 @@ CCFB.define("data/loaders", function (C) {
       try {
         const res = await fetch(url);
         if(res.ok) { 
-            C.state.rules = await res.json(); 
+            // CHANGED: Transform the raw rules into flat arrays
+            const rawRules = await res.json();
+            C.state.rules = C.transformRules(rawRules);
+            
             if (window.diagLog) diagLog("📜 Rules loaded successfully.", "#0f0");
-            console.log("📜 Rules loaded.");
+            console.log("📜 Rules loaded and transformed.");
         }
       } catch(e) { 
         if (window.diagLog) diagLog("⚠️ Rules load failed. Using defaults.", "#f33");
-        console.warn("Rules load failed."); 
+        console.warn("Rules load failed:", e); 
       }
       return true;
     },
@@ -25,7 +77,7 @@ CCFB.define("data/loaders", function (C) {
       C.ui = C.ui || {};
       C.ui.roster = C.ui.roster || [];
       C.ui.budget = C.ui.budget || 500;
-
+      
       CCFB.require(["config/docTokens"], async function(cfg) {
         const entry = cfg.getFaction(fKey);
         if (!entry) {
@@ -33,7 +85,6 @@ CCFB.define("data/loaders", function (C) {
             if (window.diagLog) diagLog(`❌ Faction Key "${fKey}" not found in config.`, "#f33");
             return;
         }
-
         const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/" + entry.url + "?t=" + Date.now();
         
         try {
@@ -47,7 +98,7 @@ CCFB.define("data/loaders", function (C) {
           C.ui.fKey = fKey; 
           
           if (window.diagLog) diagLog(`✅ Loaded ${data.name || fKey}`, "#0f0");
-
+          
           // Force the UI to refresh with the new data
           if (typeof window.CCFB.refreshUI === "function") {
             window.CCFB.refreshUI();
