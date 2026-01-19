@@ -554,3 +554,44 @@
   }
 }
 
+{
+  "objective_vault": {
+    "philosophy": {
+      "text": "Coffin Canyon is not won by killing alone. Objectives force movement and create conflict. Interactables turn terrain into opportunity — or disaster.",
+      "design_intent": "Objectives should force movement, create risk, and punish passive play. If players can ignore objectives and win, the scenario needs work."
+    },
+    "interact_action": {
+      "cost": "1 Main Action",
+      "requirements": [
+        "Model must be adjacent to the Objective",
+        "Model must not be Shaken",
+        "Some interactions may require a roll or specific Unit Type"
+      ],
+      "common_uses": ["Claiming", "Activating/Disabling", "Thyr transport", "Freeing/Capturing", "Sabotage"]
+    },
+    "control_mechanics": {
+      "definition": "Controlled by the last player to successfully Interact.",
+      "persistence": "Control is maintained until another model Interacts with it.",
+      "contested": "If multiple models are adjacent, no control changes until a successful Interaction occurs."
+    },
+    "transport_rules": {
+      "carrying": "Marked models move with the objective. Dropped at location if carrier is destroyed.",
+      "thyr_extraction": "Thyr is always physical and visible. Can be extracted, transported, or fed into devices."
+    },
+    "devices_and_dynamos": {
+      "definition": "Functional objectives that power systems or enable Overburn.",
+      "risks": "May escalate if damaged or misused. Have their own rules and failure conditions."
+    },
+    "archetype_bonuses": {
+      "specialists": "Interaction bonuses.",
+      "mystics": "Altering or Corrupting objectives.",
+      "leaders": "More effective control.",
+      "brutes": "May destroy objectives instead of claiming.",
+      "cavalry": "Excel at extraction and transport."
+    },
+    "escalation": {
+      "logic": "Objectives become more volatile over time (Overheating, Haunting, Instability).",
+      "game_warden": "Optional role to trigger complications or control neutral hazards."
+    }
+  }
+}
