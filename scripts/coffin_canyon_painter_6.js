@@ -1,6 +1,65 @@
 CCFB.define("components/painter", function(C) {
 
-    // --- 1. CORE HELPERS ---
+    // ============================================================
+    // NEW: RULES TRANSFORMER
+    // Converts nested rules.json into flat arrays
+    // ============================================================
+    C.transformRules = function(rawRules) {
+        const transformed = {
+            abilities: [],
+            weapon_properties: [],
+            type_rules: []
+        };
+        
+        const abilityDict = rawRules?.rules_master?.ability_dictionary;
+        
+        if (!abilityDict) {
+            console.warn("No ability_dictionary found in rules");
+            return transformed;
+        }
+        
+        // Loop through each category (A_deployment_timing, B_movement_positioning, etc)
+        for (let categoryKey in abilityDict) {
+            const category = abilityDict[categoryKey];
+            
+            // Loop through each ability in this category
+            for (let abilityKey in category) {
+                const abilityText = category[abilityKey];
+                
+                transformed.abilities.push({
+                    id: abilityKey,
+                    name: makeReadable(abilityKey),
+                    effect: abilityText,
+                    category: categoryKey
+                });
+            }
+        }
+        
+        return transformed;
+    };
+    
+    // Helper: Turn "first_strike" into "First Strike"
+    function makeReadable(id) {
+        return id.split('_').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+    }
+
+    // ============================================================
+    // NEW: RULE ID NORMALIZER
+    // Converts ability names to IDs for linking
+    // ============================================================
+    C.getRuleId = function(name) {
+        return String(name || "")
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, '_')
+            .replace(/^_+|_+$/g, '');
+    };
+
+    // ============================================================
+    // EXISTING: CORE HELPERS (unchanged)
+    // ============================================================
     const getName = (val) => (typeof val === 'object' ? val.name : val);
     const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const enc = (s) => encodeURIComponent(String(s ?? ""));
@@ -10,12 +69,17 @@ CCFB.define("components/painter", function(C) {
         if (typeof abilityName === 'object' && abilityName.effect) return abilityName.effect;
         const searchName = (typeof abilityName === 'string' ? abilityName : abilityName.name || "").toLowerCase().trim();
         const rules = C.state.rules || {};
+        
+        // Check unit's custom details first
         if (unit.ability_details?.[searchName]) return unit.ability_details[searchName];
+        
+        // Search in transformed rules
         const categories = ['abilities', 'weapon_properties', 'type_rules'];
         for (const cat of categories) {
             const match = rules[cat]?.find(a => a.name.toLowerCase() === searchName);
             if (match) return match.effect;
         }
+        
         return "Rule effect pending.";
     };
 
@@ -34,7 +98,9 @@ CCFB.define("components/painter", function(C) {
             </span>`).join('');
     };
 
-    // --- 2. THE BRAINS (MATH) ---
+    // ============================================================
+    // EXISTING: THE BRAINS (MATH) (unchanged)
+    // ============================================================
     C.calculateTotal = function() {
         return (C.ui.roster || []).reduce((sum, item) => {
             let unitTotal = parseInt(item.cost) || 0;
@@ -45,18 +111,21 @@ CCFB.define("components/painter", function(C) {
         }, 0);
     };
 
-    // --- 3. RENDERING ---
+    // ============================================================
+    // EXISTING: RENDERING (unchanged)
+    // ============================================================
     window.CCFB.renderDetail = (unit, isLibraryView = false) => {
         const det = document.getElementById("det-target");
         if (!det) return;
 
         const abilitiesHtml = (unit.abilities || []).map(r => {
             const name = getName(r);
-            const id = C.getRuleId(name); // Uses the normalizer from Odoo script
+            const id = C.getRuleId(name);
+            const rulesBaseUrl = C.rulesBaseUrl || '/rules';
             return `
             <div class="ability-card">
                 <div class="ability-name">
-                    <a href="${C.rulesBaseUrl}#ability-${id}" target="_blank" class="rule-link">${esc(name)}</a>
+                    <a href="${rulesBaseUrl}#ability-${id}" target="_blank" class="rule-link">${esc(name)}</a>
                 </div>
                 <div class="ability-effect">${esc(getAbilityEffect(r, unit))}</div>
             </div>
@@ -121,7 +190,6 @@ CCFB.define("components/painter", function(C) {
                 if (!u) return '';
                 const upgCount = (item.upgrades || []).length;
                 
-                // Show condensed info in Roster column
                 return `
                     <div class="cc-roster-item" data-action="select-roster" data-id="${item.id}" style="cursor: pointer;">
                         <div class="d-flex justify-content-between align-items-center">
@@ -138,7 +206,9 @@ CCFB.define("components/painter", function(C) {
         bindDocumentHandler();
     };
 
-    // --- 4. ACTION HELPERS ---
+    // ============================================================
+    // EXISTING: ACTION HELPERS (unchanged)
+    // ============================================================
     window.CCFB.addUnitToRoster = (name, cost) => {
         C.ui.roster = C.ui.roster || [];
         const newUnit = { id: Date.now(), fKey: C.ui.fKey, uN: name, cost: parseInt(cost), upgrades: [] };
@@ -169,7 +239,9 @@ CCFB.define("components/painter", function(C) {
         if (base) window.CCFB.renderDetail({...base, ...item}, false);
     };
 
-    // --- 5. EVENT DELEGATION ---
+    // ============================================================
+    // EXISTING: EVENT DELEGATION (unchanged)
+    // ============================================================
     const bindDocumentHandler = () => {
         if (window.CCFB._painterDocHandlerBound) return;
         window.CCFB._painterDocHandlerBound = true;
