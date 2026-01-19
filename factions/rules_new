@@ -212,3 +212,136 @@
     }
   }
 }
+
+{
+  "combat_vault": {
+    "philosophy": {
+      "text": "Combat is fast, brutal, and unforgiving. Most fights are decided by position, pressure, and timing — not endurance.",
+      "design_intent": "Combat should resolve quickly; damage should matter immediately. Prolonged fights are a warning sign."
+    },
+    "attack_fundamentals": {
+      "action_cost": 1,
+      "process": ["Choose valid target", "Check LoS (if required)", "Roll Quality dice"],
+      "melee_rules": {
+        "range": "Base contact / Melee range",
+        "los": "Not required",
+        "threshold": "1+ Success (4+) hits unless stated otherwise."
+      },
+      "ranged_rules": {
+        "range": "Must be within weapon range",
+        "los": "Required",
+        "modifiers": "Apply Cover (+1 Defense) if applicable."
+      }
+    },
+    "damage_resolution": {
+      "definition": "Damage reduces Quality by 1 per point. There is no separate health stat.",
+      "the_death_spiral": "As Quality drops, attacks become less reliable, movement grows riskier, and morale becomes fragile.",
+      "thresholds": "Quality-based thresholds (Wounded, Broken) may trigger effects based on the unit card.",
+      "removal": "At Quality 0, remove model immediately. Resolve terrain/death effects (Tainted, Hazardous)."
+    },
+    "automatic_damage": {
+      "definition": "Automatic damage is NOT an attack. It represents environmental or internal harm.",
+      "sources": ["Burning terrain", "Poison", "Impact", "Traps", "Thyr fallout", "Abilities"],
+      "logic": "Reduces Quality normally. Ignores Defense, Armored, and Cover. Only preventable if explicitly stated.",
+      "terrain_rule": "All terrain damage is considered automatic."
+    },
+    "collateral_damage": {
+      "logic": "Explosions and terrain escalation do not discriminate. Friendly models can be harmed if they are in the area of effect."
+    }
+  }
+}
+{
+  "morale_vault": {
+    "philosophy": {
+      "text": "Morale represents fear, hesitation, and survival overriding orders. Coffin Canyon is not a game of fearless soldiers; it is a game of beings pushed too far.",
+      "design_intent": "Morale creates momentum; fear punishes overextension. Retreat is a valid tactic. Standing firm is not always the goal."
+    },
+    "the_morale_test": {
+      "trigger": "Tested when triggered by destruction, Tainted terrain, sudden losses, fear-based abilities, or isolation.",
+      "resolution": "Roll d6s equal to current Quality. 4+ is a Success.",
+      "outcomes": {
+        "success": "1+ Successes: The model holds.",
+        "failure": "0 Successes: The model fails. Resolve Shaken or Panicked as dictated by the rule."
+      }
+    },
+    "status_conditions": {
+      "shaken": {
+        "definition": "Hesitation, fear, or loss of footing.",
+        "penalties": [
+          "-1 die on all rolls",
+          "Cannot take specific actions listed on unit card"
+        ],
+        "recovery": "Automatically removed at end of next activation, or via rally abilities."
+      },
+      "panicked": {
+        "definition": "Full loss of control.",
+        "immediate_effect": "Move away from source of fear immediately. If movement is impossible, become Shaken instead.",
+        "activation_penalty": "Lose 1 Action on next activation and -1 die on all rolls.",
+        "recovery": "Requires distance, time, or specific abilities."
+      }
+    },
+    "fear_mechanics": {
+      "cascading_fear": "When a model is destroyed or panics, nearby Grunts or low-Quality models must test Morale. Violence leaves ripples.",
+      "monster_logic": "Monsters may ignore Morale, gain bonuses from enemy fear, or grow more dangerous as fear spreads. See Unit Card.",
+      "environmental_fear": {
+        "tainted": "Force test on entry.",
+        "haunted": "Force test on trigger.",
+        "burning": "Witnessing 'Overburn' fallout forces test."
+      }
+    }
+  }
+}
+{
+  "unit_identities": {
+    "philosophy": {
+      "text": "Unit Types explain what kind of threat a model represents and how it behaves under pressure. Roles matter more than raw stats.",
+      "design_intent": "Asymmetry over symmetry. Balance is found in consequence, not equal numbers."
+    },
+    "archetype_vault": {
+      "grunt": {
+        "identity": "Fragile/Standard. Represented by standard troops or small monsters.",
+        "logic_triggers": ["High Critical Failure risk", "Vulnerable to Tainted/Haunted terrain", "Escalated Panic results"]
+      },
+      "brute": {
+        "identity": "Hard to stop. Heavily armored or large shock units.",
+        "logic_triggers": ["Morale resistance", "Ignore specific terrain penalties", "Slower/Less flexible"]
+      },
+      "mystic": {
+        "identity": "High-risk/High-reward power. Witches and Thyr-channelers.",
+        "logic_triggers": ["Unique Tainted/Sacred/Haunted interactions", "Morale-triggered power spikes", "Backlash/Escalation risk"]
+      },
+      "shooter": {
+        "identity": "Ranged control. Marksmen and gunners.",
+        "logic_triggers": ["Cover bonuses", "Melee engagement penalties", "LoS-dependent effects"]
+      },
+      "cavalry": {
+        "identity": "Momentum-based. Riders and vehicles.",
+        "logic_triggers": ["Movement-into-Attack bonuses", "Cluttered/Tight terrain penalties", "Difficult/Unstable terrain interaction"]
+      },
+      "specialist": {
+        "identity": "Technical experts. Medics and engineers.",
+        "logic_triggers": ["Objective-specific bonuses", "Fragile outside of role", "Terrain/Device manipulation"]
+      },
+      "leader": {
+        "identity": "Command and Cohesion. Officers and bosses.",
+        "logic_triggers": ["Aura: Morale re-roll (1 die)", "Aura: Ignore Shaken (once per round)", "Death Penalty: Friendly Morale cascade"]
+      },
+      "hero": {
+        "identity": "Exceptional/Named. Problems, not solutions.",
+        "logic_triggers": ["One-time resource (Re-roll/Ignore Damage/Auto-pass Morale)", "Non-balanced impact"]
+      },
+      "titan": {
+        "identity": "Battlefield Shapers. Massive war machines or Kaiju.",
+        "rules": {
+          "terrain_interaction": "Re-roll 1 terrain Quality test/round. Causes terrain damage through movement.",
+          "demolition_test": "Attacking buildings requires a Q-test. Failure = 1 Damage; Crit Fail = 1 Damage + Escalation.",
+          "morale": "Rarely affected."
+        }
+      }
+    },
+    "logic_notes": {
+      "hybrid_units": "Units may have multiple types. All effects apply simultaneously.",
+      "conflict_resolution": "The Unit Card always takes precedence over the General Archetype rules."
+    }
+  }
+}
