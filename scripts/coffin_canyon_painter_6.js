@@ -2,7 +2,6 @@ CCFB.define("components/painter", function(C) {
 
     // ============================================================
     // NEW: RULES TRANSFORMER
-    // Converts nested rules.json into flat arrays
     // ============================================================
     C.transformRules = function(rawRules) {
         const transformed = {
@@ -18,11 +17,9 @@ CCFB.define("components/painter", function(C) {
             return transformed;
         }
         
-        // Loop through each category (A_deployment_timing, B_movement_positioning, etc)
         for (let categoryKey in abilityDict) {
             const category = abilityDict[categoryKey];
             
-            // Loop through each ability in this category
             for (let abilityKey in category) {
                 const abilityText = category[abilityKey];
                 
@@ -38,7 +35,6 @@ CCFB.define("components/painter", function(C) {
         return transformed;
     };
     
-    // Helper: Turn "first_strike" into "First Strike"
     function makeReadable(id) {
         return id.split('_').map(word => 
             word.charAt(0).toUpperCase() + word.slice(1)
@@ -47,7 +43,6 @@ CCFB.define("components/painter", function(C) {
 
     // ============================================================
     // NEW: RULE ID NORMALIZER
-    // Converts ability names to IDs for linking
     // ============================================================
     C.getRuleId = function(name) {
         return String(name || "")
@@ -58,7 +53,64 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // EXISTING: CORE HELPERS (unchanged)
+    // NEW: RENDER RULE DETAIL CARD
+    // ============================================================
+    window.CCFB.renderRuleDetail = (ruleName) => {
+        const det = document.getElementById("det-target");
+        if (!det) return;
+        
+        const rules = C.state.rules || {};
+        const searchName = ruleName.toLowerCase().trim();
+        
+        // Search for the rule
+        let rule = null;
+        const categories = ['abilities', 'weapon_properties', 'type_rules'];
+        for (const cat of categories) {
+            rule = rules[cat]?.find(r => 
+                r.name.toLowerCase() === searchName || 
+                r.id === searchName
+            );
+            if (rule) break;
+        }
+        
+        if (!rule) {
+            det.innerHTML = `
+                <div class="cc-detail-view">
+                    <div class="u-name">RULE NOT FOUND</div>
+                    <div class="u-lore">"${esc(ruleName)}" is not in the rules database yet.</div>
+                    <button class="btn btn-sm btn-outline-warning mt-3" onclick="window.CCFB.closeRuleDetail()">
+                        ← BACK
+                    </button>
+                </div>`;
+            return;
+        }
+        
+        det.innerHTML = `
+            <div class="cc-detail-view">
+                <div class="u-name">${esc(rule.name).toUpperCase()}</div>
+                <div class="u-type">SPECIAL RULE</div>
+                <div class="detail-section-title">EFFECT</div>
+                <div class="ability-effect" style="margin-bottom: 20px;">${esc(rule.effect)}</div>
+                ${rule.category ? `<div style="font-size: 10px; color: #888; margin-bottom: 10px;">Category: ${esc(rule.category)}</div>` : ''}
+                <button class="btn btn-sm btn-outline-warning" onclick="window.CCFB.closeRuleDetail()">
+                    ← BACK TO UNIT
+                </button>
+            </div>`;
+        
+        // Store what we were looking at before
+        C.ui._lastDetailView = C.ui._currentDetailView;
+    };
+    
+    window.CCFB.closeRuleDetail = () => {
+        // Go back to the last unit we were viewing
+        if (C.ui._lastDetailView) {
+            const { unit, isLibrary } = C.ui._lastDetailView;
+            window.CCFB.renderDetail(unit, isLibrary);
+        }
+    };
+
+    // ============================================================
+    // EXISTING: CORE HELPERS
     // ============================================================
     const getName = (val) => (typeof val === 'object' ? val.name : val);
     const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -70,10 +122,8 @@ CCFB.define("components/painter", function(C) {
         const searchName = (typeof abilityName === 'string' ? abilityName : abilityName.name || "").toLowerCase().trim();
         const rules = C.state.rules || {};
         
-        // Check unit's custom details first
         if (unit.ability_details?.[searchName]) return unit.ability_details[searchName];
         
-        // Search in transformed rules
         const categories = ['abilities', 'weapon_properties', 'type_rules'];
         for (const cat of categories) {
             const match = rules[cat]?.find(a => a.name.toLowerCase() === searchName);
@@ -83,7 +133,6 @@ CCFB.define("components/painter", function(C) {
         return "Rule effect pending.";
     };
 
-    // Color-Coded Badges with Titles
     const buildStatBadges = (unit) => {
         const stats = [
             {l:'Q', v:unit.quality, c:'stat-q', h:'Quality'},
@@ -99,7 +148,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // EXISTING: THE BRAINS (MATH) (unchanged)
+    // EXISTING: THE BRAINS (MATH)
     // ============================================================
     C.calculateTotal = function() {
         return (C.ui.roster || []).reduce((sum, item) => {
@@ -112,22 +161,24 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // EXISTING: RENDERING (unchanged)
+    // UPDATED: RENDERING WITH CLICKABLE ABILITIES
     // ============================================================
     window.CCFB.renderDetail = (unit, isLibraryView = false) => {
         const det = document.getElementById("det-target");
         if (!det) return;
+        
+        // Store current view for "back" functionality
+        C.ui._currentDetailView = { unit, isLibrary: isLibraryView };
 
         const abilitiesHtml = (unit.abilities || []).map(r => {
             const name = getName(r);
-            const id = C.getRuleId(name);
-            const rulesBaseUrl = C.rulesBaseUrl || '/rules';
+            const effect = getAbilityEffect(r, unit);
             return `
             <div class="ability-card">
                 <div class="ability-name">
-                    <a href="${rulesBaseUrl}#ability-${id}" target="_blank" class="rule-link">${esc(name)}</a>
+                    <a href="#" class="rule-link" data-action="view-rule" data-rule="${esc(name)}">${esc(name)}</a>
                 </div>
-                <div class="ability-effect">${esc(getAbilityEffect(r, unit))}</div>
+                <div class="ability-effect">${esc(effect)}</div>
             </div>
         `}).join('');
 
@@ -159,7 +210,6 @@ CCFB.define("components/painter", function(C) {
         const UI = C.ui || {};
         const faction = C.state.factions?.[UI.fKey];
         
-        // Update Budget Header
         const total = C.calculateTotal();
         const totalEl = document.getElementById("display-total");
         if (totalEl) {
@@ -167,7 +217,6 @@ CCFB.define("components/painter", function(C) {
             totalEl.style.color = (UI.budget > 0 && total > UI.budget) ? '#ff4444' : '#ff7518';
         }
 
-        // Column 1: Library
         const lib = document.getElementById("lib-target");
         if (lib && faction) {
             lib.innerHTML = (faction.units || []).map(u => `
@@ -182,7 +231,6 @@ CCFB.define("components/painter", function(C) {
                 </div>`).join('');
         }
 
-        // Column 2: Roster
         const rost = document.getElementById("rost-target");
         if (rost) {
             rost.innerHTML = (UI.roster || []).map(item => {
@@ -207,7 +255,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // EXISTING: ACTION HELPERS (unchanged)
+    // EXISTING: ACTION HELPERS
     // ============================================================
     window.CCFB.addUnitToRoster = (name, cost) => {
         C.ui.roster = C.ui.roster || [];
@@ -240,7 +288,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // EXISTING: EVENT DELEGATION (unchanged)
+    // UPDATED: EVENT DELEGATION (NOW HANDLES view-rule)
     // ============================================================
     const bindDocumentHandler = () => {
         if (window.CCFB._painterDocHandlerBound) return;
@@ -256,7 +304,12 @@ CCFB.define("components/painter", function(C) {
             const action = el.getAttribute("data-action");
             const faction = C.state.factions?.[C.ui.fKey];
 
-            if (action === "select-lib") {
+            if (action === "view-rule") {
+                evt.preventDefault();
+                const ruleName = el.getAttribute("data-rule");
+                window.CCFB.renderRuleDetail(ruleName);
+            }
+            else if (action === "select-lib") {
                 const base = faction?.units.find(u => u.name === dec(el.getAttribute("data-unit")));
                 if (base) window.CCFB.renderDetail(base, true);
             } 
