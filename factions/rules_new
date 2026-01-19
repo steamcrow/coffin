@@ -1,0 +1,125 @@
+{
+  "version": "8.1",
+  "last_updated": "2026-01-19",
+  "sections": {
+    "philosophy": "The 'Flavor Vault'. High-level tenets and the 'Fast Resolution' handshake.",
+    "core_mechanics": "The math: Quality rolls, Successes, Defense calculations, and the Death Spiral.",
+    "dice_manipulation": "Lucky Breaks, Natural Sixes, and Critical Failures.",
+    "turn_structure": "Initiative, Activation cycles, and Action types (Simple vs. Complex).",
+    "locomotion_and_visibility": "Movement speeds, Terrain types, Line of Sight, and Cover logic.",
+    "combat_and_damage": "Melee vs. Ranged, Automatic Damage sources, and Weapon Tags.",
+    "morale_and_status": "Shaken, Panicked, Fear Cascades, and Condition removal.",
+    "unit_identities": "The 8 Core Archetypes (Grunt, Titan, etc.) and their passive logic.",
+    "ability_dictionary": "The Universal Library of keywords (Stealth, Tough, Repair, etc.).",
+    "timing_and_engine": "Once per Activation/Round/Game and Ability Priority.",
+    "unit_variant_logic": "How the app handles 'Chassis' modifications (Baby vs. Mama)."
+  }
+}
+
+{
+  "core_mechanics": {
+    "philosophy": "Everything in Coffin Canyon flows from a single value: Quality. It represents training, toughness, nerve, and luck. When Quality drops, everything becomes harder.",
+    "quality_definition": {
+      "usage": ["Attacks", "Morale", "Special abilities", "Environmental tests"],
+      "guidelines": [
+        { "value": 1, "description": "Basic trained human / small monster / civilian" },
+        { "value": 2, "description": "Veteran military unit / human sized monster" },
+        { "value": 3, "description": "Elite unit / large monster / hard to kill beast" },
+        { "value": 4, "description": "Leader unit / low hero / big or powerful monster" },
+        { "value": 5, "description": "High hero / very large or mystically powerful monster" },
+        { "value": 6, "description": "Epic supernatural kaiju, titan, or super heavy mechanical unit" }
+      ]
+    },
+    "the_roll": {
+      "pool": "Roll d6s equal to current Quality.",
+      "success_threshold": 4,
+      "logic": "Each 4, 5, or 6 is 1 Success. 1+ successes usually mean the action succeeds. Some rules scale with total successes."
+    },
+    "defense_and_damage": {
+      "definition": "Passive value representing positioning, cover, armor, or skill.",
+      "resolution": "If Successes > Defense, the attack hits. Each success beyond Defense deals 1 damage.",
+      "modifiers": [
+        { "name": "Cover", "effect": "+1 Defense vs ranged" },
+        { "name": "Pierce", "effect": "Reduces Defense for that attack" },
+        { "name": "Dodge", "effect": "Cancels a Success after rolling" }
+      ],
+      "exceptions": "Defense never applies to: Terrain damage, Automatic damage, or Environmental effects."
+    },
+    "six_based_effects": {
+      "golden_rule": "A single roll may only resolve ONE six-based bonus. Never more than one.",
+      "options": {
+        "natural_six": {
+          "name": "Natural Six",
+          "effect": "If the attack hits, it deals at least 1 damage, even if Successes <= Defense.",
+          "restriction": "Never applies if the attack does not hit."
+        },
+        "lucky_break": {
+          "name": "Lucky Break",
+          "trigger": "All dice in a Quality roll result in 6s.",
+          "restrictions": ["Must use immediately", "Does not stack", "Once per activation", "No damage/attack actions"],
+          "choices": [
+            { "id": "quick_step", "name": "Quick Step", "effect": "Free Half Move" },
+            { "id": "shake_it_off", "name": "Shake It Off", "effect": "Remove 1 Pin or Condition" },
+            { "id": "deadeye", "name": "Deadeye", "effect": "Gain +1 die to the next roll this activation" },
+            { "id": "get_it_done", "name": "Get It Done", "effect": "Perform a free Interact action" }
+          ]
+        }
+      },
+      "example_case": "Attacker Q2 rolls 6, 6 vs Defense 4. Player chooses: Option 1 (Natural Six) for 1 Damage, OR Option 2 (Lucky Break) for 0 damage + tempo/setup."
+    },
+    "critical_failure": {
+      "trigger": "All 1s on a Quality roll.",
+      "effects": "Action fails normally, model becomes Shaken. Check terrain/scenario for specific consequences."
+    },
+    "quality_tracking": {
+      "on_table": "Place one d6 (tracker only) behind the model's base. Never roll this die.",
+      "reduction": "Rotate the die immediately upon taking damage, morale loss, or hazards.",
+      "quality_zero": "Remove model from play immediately. Resolve death/escalation effects.",
+      "quality_cap": 6,
+      "design_intent": "You should be able to tell how close a model is to collapse at a glance."
+    }
+  }
+}
+{
+  "turn_structure": {
+    "philosophy": {
+      "text": "Rounds organize time, but momentum comes from who acts and who reacts. The battlefield evolves even if players hesitate.",
+      "design_intent": "Monsters press the attack; Humans react, reposition, and survive. Coffin Canyon does not reward waiting."
+    },
+    "initiative_logic": {
+      "first_activation": "Monster Factions always activate first. If both sides are Monsters, 1d6 high roll chooses. Initiative remains fixed for the game unless scenario-dictated.",
+      "thematic_reason": "The Canyon favors monsters and the unnatural pressure they bring."
+    },
+    "activation_cycle": {
+      "format": "Alternating Activations (1 model at a time).",
+      "rules": [
+        "One player activates, then the opponent activates.",
+        "Continue until all models have acted once.",
+        "Models cannot activate twice in a round unless explicitly allowed."
+      ]
+    },
+    "the_activation": {
+      "action_economy": "Each model receives 2 Actions per activation.",
+      "flexibility": "May be two different actions or the same action twice, in any order.",
+      "common_actions_list": ["Move", "Attack", "Interact", "Befriend", "Repair", "Special Ability"],
+      "reactions": {
+        "definition": "Rare abilities triggered outside a model's activation.",
+        "logic": "Must be explicitly listed as a Reaction; otherwise, it is not one."
+      }
+    },
+    "round_definition": {
+      "completion": "Occurs when all models on both sides have activated once.",
+      "maintenance_steps": [
+        "Track ongoing effects",
+        "Resolve terrain escalation (Burning, Unstable collapse, etc.)",
+        "Advance scenario timing",
+        "Resolve ongoing conditions"
+      ],
+      "reset": "Begin next round immediately. No new initiative roll is made."
+    },
+    "action_summaries": {
+      "move": "Measure from base. Speed capped by Move value. Terrain affects speed. Movement can be split by other actions.",
+      "attack": "Requires Action. Uses Quality system. Usually requires Line of Sight."
+    }
+  }
+}
