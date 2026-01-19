@@ -595,3 +595,30 @@
     }
   }
 }
+{
+  "scenario_vault": {
+    "philosophy": {
+      "text": "Survival, extraction, corruption, and collapse matter more than body count. Winning clean is rare.",
+      "design_intent": "Force movement, reward risk, and punish hesitation. If a scenario feels safe, it is unfinished."
+    },
+    "victory_logic": {
+      "standard_conditions": ["Extracting Objectives", "Controlling Terrain", "Thyr Delivery/Destruction", "Survival (Round Count)", "Preventing Escalation"],
+      "withdrawal_rule": "Players may voluntarily withdraw for narrative or scoring reasons. Knowing when to leave is a skill."
+    },
+    "pacing_and_escalation": {
+      "game_length": "4–6 rounds (Standard).",
+      "escalation_trigger": "If no major changes by Round 3, escalation MUST begin.",
+      "tools": ["Terrain Spreading", "Reinforcements/Spawns", "Morale Pressure", "Objective Instability"]
+    },
+    "game_modes": {
+      "skirmish": "Small forces, tight objectives, fast escalation.",
+      "extraction": "Cavalry/Specialist focus. Objectives must leave the table edge.",
+      "holdout": "Defensive focus. Survival-based victory. Aggressive terrain collapse.",
+      "hunt": "Pursuit focus. Monster advantage. Fear-driven outcomes.",
+      "ritual_corruption": "Mystic/Thyr focus. Sacred and Haunted terrain importance. Inevitable escalation."
+    },
+    "multi_faction_logic": {
+      "structure": "Alternating model activation remains. Temporary, unenforced alliances. The Canyon is indifferent to all parties."
+    }
+  }
+}
