@@ -1,16 +1,13 @@
 CCFB.define("components/skeleton", function(C) {
     return {
         draw: function() {
-            // DOMAIN_SAFETY: Commandment v1.9 - Protect Odoo Editor
             if (window.location.href.includes("/web")) return;
 
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
-            // Configuration for dynamic elements
             const budgets = [500, 1000, 1500, 2000];
 
-            // Strict 3-Column Design with independent scrolling
             root.innerHTML = `
                 <div id="ccfb-app">
                     <div class="cc-header-area">
@@ -35,16 +32,22 @@ CCFB.define("components/skeleton", function(C) {
                     </div>
 
                     <div class="cc-grid">
-                        ${['lib', 'roster', 'details'].map(id => `
-                            <div class="cc-panel" id="ccfb-${id}" style="overflow-y: auto;">
-                                <div class="cc-panel-title">
-                                    <h4>${id === 'lib' ? 'Unit Library' : id.charAt(0).toUpperCase() + id.slice(1)}</h4>
-                                </div>
-                                <div id="${id === 'details' ? 'det' : id.slice(0,4)}-target">
-                                    ${id === 'details' ? '<div class="cc-empty-state">Select a unit to view details</div>' : ''}
-                                </div>
+                        <div class="cc-panel" id="ccfb-lib">
+                            <div class="cc-panel-title"><h4>Unit Library</h4></div>
+                            <div id="lib-target"></div>
+                        </div>
+
+                        <div class="cc-panel" id="ccfb-roster">
+                            <div class="cc-panel-title"><h4>Roster</h4></div>
+                            <div id="rost-target"></div>
+                        </div>
+
+                        <div class="cc-panel" id="ccfb-details">
+                            <div class="cc-panel-title"><h4>Details</h4></div>
+                            <div id="det-target">
+                                <div class="cc-empty-state">Select a unit to view details</div>
                             </div>
-                        `).join('')}
+                        </div>
                     </div>
                 </div>
             `;
@@ -57,16 +60,12 @@ CCFB.define("components/skeleton", function(C) {
                 const sel = document.getElementById("f-selector");
                 if (!sel || !cfg.factions) return;
 
-                // Use map/join for cleaner DOM insertion than repetitive appendChild
                 sel.innerHTML = `<option value="">SELECT FACTION...</option>` + cfg.factions.map(f =>
                     `<option value="${f.key}">${f.label.toUpperCase()}</option>`
                 ).join('');
 
-                // Default selection MUST match your docTokens keys (underscores)
-                // Your docTokens uses: "monster_rangers"
                 sel.value = "monster_rangers";
 
-                // Trigger the same initialization path as a user selection
                 if (window.CCFB && typeof window.CCFB.handleFactionChange === "function") {
                     window.CCFB.handleFactionChange(sel.value);
                 } else {
