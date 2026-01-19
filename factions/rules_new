@@ -123,3 +123,92 @@
     }
   }
 }
+{
+  "visibility_vault": {
+    "philosophy": {
+      "text": "Simple, intent-based Line of Sight. Precision geometry is not required; clarity and momentum matter more.",
+      "fast_resolution": "If players cannot quickly agree: The shot does not happen OR the target gains Cover. Choose the option that keeps the game moving."
+    },
+    "line_of_sight": {
+      "definition": "A clear, believable line between attacker and target. If there is doubt, LoS is blocked.",
+      "blockers": {
+        "absolute": ["Solid walls", "Cliff faces", "Large rock formations", "Buildings with intact walls", "Scenario-defined blockers"],
+        "non_blockers": ["Fences", "Railings", "Windows", "Rubble piles", "Boardwalks", "Light vegetation"],
+        "elevation_rule": "Elevation does not override solid blockers. Being higher does not allow models to see 'over' walls or cliffs."
+      }
+    },
+    "cover_mechanics": {
+      "definition": "Partial obstruction providing a defensive bonus. It represents being harder to hit, not total protection.",
+      "effects": {
+        "ranged_bonus": "+1 Defense",
+        "stacking": "Does not stack.",
+        "melee_restriction": "Never applies to melee attacks."
+      },
+      "negation_triggers": [
+        "Attacker is within the same terrain piece as the target.",
+        "Model is in Burning terrain.",
+        "Model is 'Exposed' by an ability/effect."
+      ],
+      "terrain_trait_interactions": [
+        { "trait": "Burning", "result": "No Cover" },
+        { "trait": "Hazardous", "result": "Cover applies normally" },
+        { "trait": "Choking", "result": "Cover applies normally" },
+        { "trait": "Unstable", "result": "Cover may be lost if terrain collapses" }
+      ]
+    },
+    "design_intent": "LoS should be obvious, Cover should be simple, and disputes should be rare and brief. The Canyon is dangerous enough without arguments."
+  }
+}
+
+{
+  "locomotion_vault": {
+    "philosophy": {
+      "text": "Movement decides fights. Where you stand matters more than how hard you hit. Standing still should feel dangerous.",
+      "design_intent": "Movement should be fluid; terrain should force choices. If a model survives long enough, it was probably moving."
+    },
+    "movement_basics": {
+      "value_usage": "Measure in inches from the model’s base. Up to full Move value per action.",
+      "flexibility": "Movement may be split by other actions unless explicitly forbidden (e.g., Move-Attack-Move)."
+    },
+    "terrain_penalties": {
+      "open": "No effect. Free movement.",
+      "difficult": {
+        "examples": ["Rubble", "Steep slopes", "Deep mud", "Thick debris"],
+        "effect": "Movement is halved (round down). Does not stack with other move penalties."
+      },
+      "impassable": {
+        "examples": ["Solid cliff faces", "Intact walls", "Deep chasms", "Sealed structures"],
+        "effect": "Cannot enter, pass through, or end movement inside. Blocks LoS if solid."
+      }
+    },
+    "model_interaction": {
+      "enemy_models": "May not move through.",
+      "friendly_models": "May move through if space allows and bases do not overlap at the end."
+    },
+    "engagement_and_pressure": {
+      "definition": "Engaged when within melee range of an enemy model.",
+      "lock_in": "No universal lock-in; engaged models may move freely unless an ability says otherwise.",
+      "melee_pressure_penalty": {
+        "condition": "While engaged with 1+ enemies",
+        "effects": [
+          "-1 die on Ranged attacks",
+          "Cannot gain Cover from terrain"
+        ],
+        "restriction": "Does not apply to melee attacks."
+      }
+    },
+    "verticality": {
+      "climbing": "Measure vertical distance normally. Terrain may be impassable vertically or require specific actions.",
+      "risk": "Unstable terrain may cause falls."
+    },
+    "trait_priority": {
+      "logic": "Resolve movement first, then resolve terrain effects.",
+      "interactions": [
+        { "trait": "Hazardous", "trigger": "Quality test when entering/passing through" },
+        { "trait": "Unstable", "trigger": "Risk when ending movement" },
+        { "trait": "Choking", "trigger": "Fog condition while activating" },
+        { "trait": "Burning", "trigger": "Automatic damage" }
+      ]
+    }
+  }
+}
