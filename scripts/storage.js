@@ -1,7 +1,7 @@
 CCFB.define("components/storage", function(C) {
     
     const CONFIG = {
-        FOLDER_ID: 92  // Create a new folder in Documents called "Coffin Canyon Rosters"
+        FOLDER_ID: 90  // Same folder as Scenario Builder - Coffin Canyon Factions
     };
 
     // Check if user is logged in
