@@ -46,6 +46,9 @@ CCFB.define("components/painter", function(C) {
         const faction = C.state.factions[C.ui.fKey];
         const base = faction.units.find(u => u.name === (unit.uN || unit.name));
 
+        // Get current supplemental selection (if any)
+        const selectedSupplemental = unit.supplemental ? unit.supplemental.name : '';
+
         det.innerHTML = `
             <div class="cc-detail-wrapper">
                 <div class="u-name" style="font-size: 1.4rem;">${esc(unit.uN || unit.name)}</div>
@@ -61,13 +64,39 @@ CCFB.define("components/painter", function(C) {
                     <div class="small opacity-75">${esc(getAbilityEffect(a))}</div>
                 </div>`).join('')}
 
+                ${base.supplemental_abilities && base.supplemental_abilities.length > 0 ? `
+                    <div class="u-type mt-4"><i class="fa fa-magic"></i> CHOOSE RELIC</div>
+                    <select class="supplemental-select" 
+                            ${isLib ? 'disabled' : ''} 
+                            data-unit-id="${unit.id}" 
+                            data-action="change-supplemental"
+                            style="width: 100%; padding: 8px; margin-bottom: 8px; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid #666; border-radius: 4px;">
+                        <option value="">-- Select One --</option>
+                        ${base.supplemental_abilities.map(sup => `
+                            <option value="${esc(sup.name)}" ${selectedSupplemental === sup.name ? 'selected' : ''}>
+                                ${esc(sup.name)}
+                            </option>
+                        `).join('')}
+                    </select>
+                    ${selectedSupplemental ? `
+                        <div class="ability-boxed-callout">
+                            <b class="u-name">${esc(selectedSupplemental)}</b>
+                            <div class="small opacity-75">${esc(base.supplemental_abilities.find(s => s.name === selectedSupplemental)?.effect || '')}</div>
+                        </div>
+                    ` : ''}
+                ` : ''}
+
                 <div class="u-type mt-4"><i class="fa fa-cog"></i> UPGRADES</div>
                 ${(base.optional_upgrades || []).map(upg => {
                     const isChecked = (unit.upgrades || []).some(u => u.name === upg.name);
                     return `
                         <label class="upgrade-row">
-                            <input type="checkbox" ${isLib ? 'disabled' : (isChecked ? 'checked' : '')} 
-                                onclick="window.CCFB.toggleUpgrade('${unit.id}', '${esc(upg.name)}', ${upg.cost})">
+                            <input type="checkbox" 
+                                   ${isLib ? 'disabled' : (isChecked ? 'checked' : '')} 
+                                   data-action="toggle-upgrade"
+                                   data-unit-id="${unit.id}"
+                                   data-upgrade-name="${esc(upg.name)}"
+                                   data-upgrade-cost="${upg.cost}">
                             <div style="flex:1">
                                 <span class="u-name" style="font-size:12px">${esc(upg.name)}</span>
                                 <div style="font-size:10px; opacity:0.6">${esc(upg.effect || "Upgrade")}</div>
@@ -125,7 +154,30 @@ CCFB.define("components/painter", function(C) {
                     const itm = UI.roster.find(i => String(i.id) === String(el.getAttribute("data-id")));
                     window.CCFB.renderDetail({...faction.units.find(u => u.name === itm.uN), ...itm}, false);
                 }
+                
+                // Handle upgrade checkbox toggle
+                if (act === "toggle-upgrade") {
+                    e.stopPropagation();
+                    const unitId = el.getAttribute("data-unit-id");
+                    const upgName = el.getAttribute("data-upgrade-name");
+                    const upgCost = el.getAttribute("data-upgrade-cost");
+                    window.CCFB.toggleUpgrade(unitId, upgName, upgCost);
+                }
             });
+            
+            // Handle supplemental dropdown changes
+            document.addEventListener("change", (e) => {
+                const el = e.target.closest("[data-action]");
+                if (!el) return;
+                if (el.getAttribute("data-action") === "change-supplemental") {
+                    const unitId = el.getAttribute("data-unit-id");
+                    const selectedName = el.value;
+                    if (selectedName) {
+                        window.CCFB.toggleSupplemental(unitId, selectedName);
+                    }
+                }
+            });
+            
             window.CCFB._bound = true;
         }
     };
@@ -137,6 +189,22 @@ CCFB.define("components/painter", function(C) {
         const idx = itm.upgrades.findIndex(u => u.name === name);
         if (idx > -1) itm.upgrades.splice(idx, 1);
         else itm.upgrades.push({ name, cost: parseInt(cost) });
+        window.CCFB.refreshUI();
+        const base = C.state.factions[C.ui.fKey].units.find(u => u.name === itm.uN);
+        window.CCFB.renderDetail({...base, ...itm}, false);
+    };
+
+    window.CCFB.toggleSupplemental = (id, name) => {
+        const itm = C.ui.roster.find(u => String(u.id) === String(id));
+        if (!itm) return;
+        
+        // If same name selected, deselect it. Otherwise set new selection
+        if (itm.supplemental && itm.supplemental.name === name) {
+            itm.supplemental = null;
+        } else {
+            itm.supplemental = { name: name };
+        }
+        
         window.CCFB.refreshUI();
         const base = C.state.factions[C.ui.fKey].units.find(u => u.name === itm.uN);
         window.CCFB.renderDetail({...base, ...itm}, false);
