@@ -4,6 +4,9 @@ CCFB.define("components/painter", function(C) {
     const dec = (s) => decodeURIComponent(String(s ?? ""));
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
+    // Store previous view for "back" button
+    let previousView = null;
+
     const getAbilityEffect = (abilityName) => {
         const name = getName(abilityName);
         const rules = C.state.rules || {};
@@ -13,6 +16,17 @@ CCFB.define("components/painter", function(C) {
             if (match) return match.effect;
         }
         return "Tactical data pending.";
+    };
+
+    const getAbilityFull = (abilityName) => {
+        const name = getName(abilityName);
+        const rules = C.state.rules || {};
+        const cats = ['abilities', 'weapon_properties', 'type_rules'];
+        for (const cat of cats) {
+            const match = rules[cat]?.find(a => a.name.toLowerCase() === name.toLowerCase().trim());
+            if (match) return match;
+        }
+        return null;
     };
 
     const buildStatBadges = (unit, rosterItem = null) => {
@@ -40,14 +54,56 @@ CCFB.define("components/painter", function(C) {
         </div>`;
     };
 
+    window.CCFB.showRuleDetail = (ruleName) => {
+        const det = document.getElementById("det-target");
+        if (!det) return;
+        
+        const rule = getAbilityFull(ruleName);
+        if (!rule) return;
+
+        det.innerHTML = `
+            <div class="cc-detail-wrapper">
+                <button onclick="window.CCFB.restorePreviousView()" class="btn-outline-warning mb-3" style="width: 100%;">
+                    <i class="fa fa-arrow-left"></i> BACK
+                </button>
+                <div class="u-name" style="font-size: 1.4rem;">${esc(rule.name)}</div>
+                <div class="u-type mb-2">Game Mechanic</div>
+                <div class="ability-boxed-callout">
+                    <div>${esc(rule.effect)}</div>
+                </div>
+            </div>`;
+    };
+
+    window.CCFB.restorePreviousView = () => {
+        if (previousView) {
+            window.CCFB.renderDetail(previousView.unit, previousView.isLib);
+            previousView = null;
+        }
+    };
+
     window.CCFB.renderDetail = (unit, isLib = false) => {
         const det = document.getElementById("det-target");
         if (!det) return;
         const faction = C.state.factions[C.ui.fKey];
         const base = faction.units.find(u => u.name === (unit.uN || unit.name));
 
-        // Get current supplemental selection (if any)
-        const selectedSupplemental = unit.supplemental ? unit.supplemental.name : '';
+        // Store this view in case we need to return to it
+        previousView = { unit, isLib };
+
+        // For library units, check if we have a temp config
+        let tempConfig = null;
+        if (isLib) {
+            if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
+            if (!C.ui.libraryConfigs[base.name]) {
+                C.ui.libraryConfigs[base.name] = { upgrades: [], supplemental: null };
+            }
+            tempConfig = C.ui.libraryConfigs[base.name];
+        }
+
+        // Get current supplemental selection
+        const selectedSupplemental = isLib ? 
+            (tempConfig.supplemental ? tempConfig.supplemental.name : '') : 
+            (unit.supplemental ? unit.supplemental.name : '');
 
         det.innerHTML = `
             <div class="cc-detail-wrapper">
@@ -66,7 +122,7 @@ CCFB.define("components/painter", function(C) {
                             <div class="small opacity-75">
                                 ${base.weapon_properties.map(prop => {
                                     const propName = getName(prop);
-                                    return `<span class="rule-link" title="${esc(getAbilityEffect(prop))}">${esc(propName)}</span>`;
+                                    return `<span class="rule-link clickable-rule" data-rule="${esc(propName)}" title="${esc(getAbilityEffect(prop))}">${esc(propName)}</span>`;
                                 }).join(', ')}
                             </div>
                         ` : ''}
@@ -75,7 +131,7 @@ CCFB.define("components/painter", function(C) {
                 
                 <div class="u-type mt-4"><i class="fa fa-flash"></i> ABILITIES</div>
                 ${(base.abilities || []).map(a => `<div class="ability-boxed-callout">
-                    <b class="u-name">${esc(getName(a))}</b>
+                    <b class="u-name clickable-rule" data-rule="${esc(getName(a))}" style="cursor: pointer;">${esc(getName(a))}</b>
                     <div class="small opacity-75">${esc(getAbilityEffect(a))}</div>
                 </div>`).join('')}
 
@@ -83,8 +139,8 @@ CCFB.define("components/painter", function(C) {
                     <div class="u-type mt-4"><i class="fa fa-magic"></i> CHOOSE RELIC</div>
                     <div onclick="event.stopPropagation()">
                         <select class="supplemental-select" 
-                                ${isLib ? 'disabled' : ''} 
-                                data-unit-id="${unit.id}" 
+                                data-unit-id="${unit.id || base.name}" 
+                                data-is-lib="${isLib}"
                                 data-action="change-supplemental"
                                 style="width: 100%; padding: 8px; margin-bottom: 8px; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid #666; border-radius: 4px;">
                             <option value="">-- Select One --</option>
@@ -105,18 +161,21 @@ CCFB.define("components/painter", function(C) {
 
                 <div class="u-type mt-4"><i class="fa fa-cog"></i> UPGRADES</div>
                 ${(base.optional_upgrades || []).map(upg => {
-                    const isChecked = (unit.upgrades || []).some(u => u.name === upg.name);
-                    const checkId = `upg-${unit.id}-${upg.name.replace(/\s/g, '-')}`;
+                    const isChecked = isLib ? 
+                        tempConfig.upgrades.some(u => u.name === upg.name) :
+                        (unit.upgrades || []).some(u => u.name === upg.name);
+                    const checkId = `upg-${unit.id || base.name}-${upg.name.replace(/\s/g, '-')}`;
                     return `
                         <div class="upgrade-row" onclick="event.stopPropagation()">
                             <label for="${checkId}" style="display: flex; align-items: center; cursor: pointer; width: 100%;">
                                 <input type="checkbox" 
                                        id="${checkId}"
-                                       ${isLib ? 'disabled' : (isChecked ? 'checked' : '')} 
-                                       data-unit-id="${unit.id}"
+                                       ${isChecked ? 'checked' : ''} 
+                                       data-unit-id="${unit.id || base.name}"
+                                       data-is-lib="${isLib}"
                                        data-upgrade-name="${esc(upg.name)}"
                                        data-upgrade-cost="${upg.cost}"
-                                       onchange="window.CCFB.toggleUpgrade('${unit.id}', '${esc(upg.name)}', ${upg.cost})">
+                                       onchange="window.CCFB.toggleUpgrade('${unit.id || base.name}', '${esc(upg.name)}', ${upg.cost}, ${isLib})">
                                 <div style="flex:1; margin-left: 8px;">
                                     <span class="u-name" style="font-size:12px">${esc(upg.name)}</span>
                                     <div style="font-size:10px; opacity:0.6">${esc(upg.effect || "Upgrade")}</div>
@@ -165,10 +224,24 @@ CCFB.define("components/painter", function(C) {
 
         if (!window.CCFB._bound) {
             document.addEventListener("click", (e) => {
+                // Handle clickable rules
+                if (e.target.classList.contains('clickable-rule')) {
+                    const ruleName = e.target.getAttribute('data-rule');
+                    if (ruleName) {
+                        window.CCFB.showRuleDetail(ruleName);
+                    }
+                    return;
+                }
+
                 const el = e.target.closest("[data-action]");
                 if (!el) return;
                 const act = el.getAttribute("data-action");
-                if (act === "add") { e.stopPropagation(); window.CCFB.addUnitToRoster(dec(el.getAttribute("data-unit")), el.getAttribute("data-cost")); }
+                if (act === "add") { 
+                    e.stopPropagation(); 
+                    const unitName = dec(el.getAttribute("data-unit"));
+                    const cost = el.getAttribute("data-cost");
+                    window.CCFB.addUnitToRoster(unitName, cost); 
+                }
                 if (act === "remove") { e.stopPropagation(); window.CCFB.removeUnitFromRoster(el.getAttribute("data-id")); }
                 if (act === "select-lib") window.CCFB.renderDetail(faction.units.find(u => u.name === dec(el.getAttribute("data-unit"))), true);
                 if (act === "select-roster") {
@@ -181,9 +254,10 @@ CCFB.define("components/painter", function(C) {
             document.addEventListener("change", (e) => {
                 if (e.target.classList.contains('supplemental-select')) {
                     const unitId = e.target.getAttribute("data-unit-id");
+                    const isLib = e.target.getAttribute("data-is-lib") === "true";
                     const selectedName = e.target.value;
                     if (selectedName) {
-                        window.CCFB.toggleSupplemental(unitId, selectedName);
+                        window.CCFB.toggleSupplemental(unitId, selectedName, isLib);
                     }
                 }
             });
@@ -192,35 +266,80 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    window.CCFB.toggleUpgrade = (id, name, cost) => {
-        const itm = C.ui.roster.find(u => String(u.id) === String(id));
-        if (!itm) return;
-        itm.upgrades = itm.upgrades || [];
-        const idx = itm.upgrades.findIndex(u => u.name === name);
-        if (idx > -1) itm.upgrades.splice(idx, 1);
-        else itm.upgrades.push({ name, cost: parseInt(cost) });
-        window.CCFB.refreshUI();
-        const base = C.state.factions[C.ui.fKey].units.find(u => u.name === itm.uN);
-        window.CCFB.renderDetail({...base, ...itm}, false);
-    };
-
-    window.CCFB.toggleSupplemental = (id, name) => {
-        const itm = C.ui.roster.find(u => String(u.id) === String(id));
-        if (!itm) return;
-        
-        // If same name selected, deselect it. Otherwise set new selection
-        if (itm.supplemental && itm.supplemental.name === name) {
-            itm.supplemental = null;
+    window.CCFB.toggleUpgrade = (id, name, cost, isLib = false) => {
+        if (isLib) {
+            // Library mode - update temp config
+            if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
+            if (!C.ui.libraryConfigs[id]) C.ui.libraryConfigs[id] = { upgrades: [], supplemental: null };
+            const config = C.ui.libraryConfigs[id];
+            const idx = config.upgrades.findIndex(u => u.name === name);
+            if (idx > -1) config.upgrades.splice(idx, 1);
+            else config.upgrades.push({ name, cost: parseInt(cost) });
+            
+            const faction = C.state.factions[C.ui.fKey];
+            const base = faction.units.find(u => u.name === id);
+            window.CCFB.renderDetail(base, true);
         } else {
-            itm.supplemental = { name: name };
+            // Roster mode - update actual unit
+            const itm = C.ui.roster.find(u => String(u.id) === String(id));
+            if (!itm) return;
+            itm.upgrades = itm.upgrades || [];
+            const idx = itm.upgrades.findIndex(u => u.name === name);
+            if (idx > -1) itm.upgrades.splice(idx, 1);
+            else itm.upgrades.push({ name, cost: parseInt(cost) });
+            window.CCFB.refreshUI();
+            const base = C.state.factions[C.ui.fKey].units.find(u => u.name === itm.uN);
+            window.CCFB.renderDetail({...base, ...itm}, false);
         }
-        
-        window.CCFB.refreshUI();
-        const base = C.state.factions[C.ui.fKey].units.find(u => u.name === itm.uN);
-        window.CCFB.renderDetail({...base, ...itm}, false);
     };
 
-    window.CCFB.addUnitToRoster = (n, c) => { C.ui.roster.push({ id: Date.now(), uN: n, cost: parseInt(c), upgrades: [] }); window.CCFB.refreshUI(); };
+    window.CCFB.toggleSupplemental = (id, name, isLib = false) => {
+        if (isLib) {
+            // Library mode
+            if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
+            if (!C.ui.libraryConfigs[id]) C.ui.libraryConfigs[id] = { upgrades: [], supplemental: null };
+            const config = C.ui.libraryConfigs[id];
+            
+            if (config.supplemental && config.supplemental.name === name) {
+                config.supplemental = null;
+            } else {
+                config.supplemental = { name: name };
+            }
+            
+            const faction = C.state.factions[C.ui.fKey];
+            const base = faction.units.find(u => u.name === id);
+            window.CCFB.renderDetail(base, true);
+        } else {
+            // Roster mode
+            const itm = C.ui.roster.find(u => String(u.id) === String(id));
+            if (!itm) return;
+            
+            if (itm.supplemental && itm.supplemental.name === name) {
+                itm.supplemental = null;
+            } else {
+                itm.supplemental = { name: name };
+            }
+            
+            window.CCFB.refreshUI();
+            const base = C.state.factions[C.ui.fKey].units.find(u => u.name === itm.uN);
+            window.CCFB.renderDetail({...base, ...itm}, false);
+        }
+    };
+
+    window.CCFB.addUnitToRoster = (n, c) => { 
+        // Check if we have a library config for this unit
+        const config = C.ui.libraryConfigs?.[n] || { upgrades: [], supplemental: null };
+        
+        C.ui.roster.push({ 
+            id: Date.now(), 
+            uN: n, 
+            cost: parseInt(c), 
+            upgrades: [...config.upgrades],  // Copy configured upgrades
+            supplemental: config.supplemental ? {...config.supplemental} : null  // Copy supplemental
+        }); 
+        window.CCFB.refreshUI(); 
+    };
+    
     window.CCFB.removeUnitFromRoster = (id) => { C.ui.roster = C.ui.roster.filter(x => String(x.id) !== String(id)); window.CCFB.refreshUI(); };
 
     return { refreshUI: window.CCFB.refreshUI };
