@@ -62,7 +62,6 @@ CCFB.define("components/painter", function(C) {
         const rules = C.state.rules || {};
         const searchName = ruleName.toLowerCase().trim();
         
-        // Search for the rule
         let rule = null;
         const categories = ['abilities', 'weapon_properties', 'type_rules'];
         for (const cat of categories) {
@@ -97,12 +96,10 @@ CCFB.define("components/painter", function(C) {
                 </button>
             </div>`;
         
-        // Store what we were looking at before
         C.ui._lastDetailView = C.ui._currentDetailView;
     };
     
     window.CCFB.closeRuleDetail = () => {
-        // Go back to the last unit we were viewing
         if (C.ui._lastDetailView) {
             const { unit, isLibrary } = C.ui._lastDetailView;
             window.CCFB.renderDetail(unit, isLibrary);
@@ -133,18 +130,77 @@ CCFB.define("components/painter", function(C) {
         return "Rule effect pending.";
     };
 
-    const buildStatBadges = (unit) => {
-        const stats = [
-            {l:'Q', v:unit.quality, c:'stat-q', h:'Quality'},
-            {l:'D', v:unit.defense, c:'stat-d', h:'Defense'},
-            {l:'R', v:unit.range || '-', c:'stat-r', h:'Range'},
-            {l:'M', v:unit.move, c:'stat-m', h:'Move'}
+    // ============================================================
+    // NEW: CALCULATE MODIFIED STATS
+    // ============================================================
+    const calculateModifiedStats = (baseUnit, rosterUnit) => {
+        // Start with base stats
+        const modified = {
+            quality: baseUnit.quality,
+            defense: baseUnit.defense,
+            range: baseUnit.range || 0,
+            move: baseUnit.move
+        };
+        
+        // Apply modifiers from each selected upgrade
+        if (rosterUnit?.upgrades) {
+            rosterUnit.upgrades.forEach(upgrade => {
+                // Find the full upgrade definition
+                const upgradeDef = baseUnit.optional_upgrades?.find(u => u.name === upgrade.name);
+                if (upgradeDef?.stat_modifiers) {
+                    // Apply each stat modifier
+                    Object.keys(upgradeDef.stat_modifiers).forEach(stat => {
+                        const modifier = upgradeDef.stat_modifiers[stat];
+                        if (stat === 'range' && modified.range === 0) {
+                            // If range was 0 (melee only), set it to the value
+                            modified.range = modifier;
+                        } else {
+                            // Otherwise add the modifier
+                            modified[stat] = (modified[stat] || 0) + modifier;
+                        }
+                    });
+                }
+            });
+        }
+        
+        return modified;
+    };
+
+    // ============================================================
+    // UPDATED: BUILD STAT BADGES WITH MODIFICATIONS
+    // ============================================================
+    const buildStatBadges = (baseUnit, rosterUnit = null) => {
+        // Calculate modified stats if this is a roster unit
+        const stats = rosterUnit ? calculateModifiedStats(baseUnit, rosterUnit) : {
+            quality: baseUnit.quality,
+            defense: baseUnit.defense,
+            range: baseUnit.range || '-',
+            move: baseUnit.move
+        };
+        
+        // Determine if each stat was modified
+        const isModified = (stat, value) => {
+            if (!rosterUnit) return false;
+            const base = stat === 'range' ? (baseUnit.range || 0) : baseUnit[stat];
+            return base !== value;
+        };
+        
+        const statArray = [
+            {l:'Q', v:stats.quality, c:'stat-q', h:'Quality', stat:'quality'},
+            {l:'D', v:stats.defense, c:'stat-d', h:'Defense', stat:'defense'},
+            {l:'R', v:stats.range || '-', c:'stat-r', h:'Range', stat:'range'},
+            {l:'M', v:stats.move, c:'stat-m', h:'Move', stat:'move'}
         ];
-        return stats.map(s => `
-            <span class="cc-stat-badge" title="${esc(s.h)}">
-                <span class="cc-stat-label ${s.c}">${esc(s.l)}</span>
-                <span class="cc-stat-value">${esc(s.v)}</span>
-            </span>`).join('');
+        
+        return statArray.map(s => {
+            const modified = isModified(s.stat, s.v);
+            const valueClass = modified ? 'cc-stat-modified' : '';
+            return `
+                <span class="cc-stat-badge" title="${esc(s.h)}${modified ? ' (modified)' : ''}">
+                    <span class="cc-stat-label ${s.c}">${esc(s.l)}</span>
+                    <span class="cc-stat-value ${valueClass}">${esc(s.v)}</span>
+                </span>`;
+        }).join('');
     };
 
     // ============================================================
@@ -161,14 +217,17 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // UPDATED: RENDERING WITH CLICKABLE ABILITIES
+    // UPDATED: RENDERING WITH DYNAMIC STAT BADGES
     // ============================================================
     window.CCFB.renderDetail = (unit, isLibraryView = false) => {
         const det = document.getElementById("det-target");
         if (!det) return;
         
-        // Store current view for "back" functionality
         C.ui._currentDetailView = { unit, isLibrary: isLibraryView };
+
+        // Get base unit for stat calculations
+        const faction = C.state.factions?.[C.ui.fKey];
+        const baseUnit = faction?.units.find(u => u.name === unit.name) || unit;
 
         const abilitiesHtml = (unit.abilities || []).map(r => {
             const name = getName(r);
@@ -199,7 +258,7 @@ CCFB.define("components/painter", function(C) {
             <div class="cc-detail-view">
                 <div class="u-name">${esc(unit.name).toUpperCase()}</div>
                 <div class="u-type">${esc(unit.type).toUpperCase()}</div>
-                <div class="d-flex flex-wrap justify-content-center mb-3">${buildStatBadges(unit)}</div>
+                <div class="d-flex flex-wrap justify-content-center mb-3">${buildStatBadges(baseUnit, isLibraryView ? null : unit)}</div>
                 <div class="u-lore">${esc(unit.lore || unit.description || "No lore recorded.")}</div>
                 ${abilitiesHtml ? `<div class="detail-section-title">SPECIAL RULES</div>${abilitiesHtml}` : ''}
                 ${upgradesHtml ? `<div class="detail-section-title">UPGRADES & GEAR ${isLibraryView ? '(Add to Roster)' : ''}</div><div id="upgrades-list">${upgradesHtml}</div>` : ''}
@@ -243,7 +302,7 @@ CCFB.define("components/painter", function(C) {
                         <div class="d-flex justify-content-between align-items-center">
                             <div style="flex: 1;">
                                 <div class="u-name">${esc(item.uN).toUpperCase()}</div>
-                                <div class="stats-row-mini" style="margin: 4px 0;">${buildStatBadges(u)}</div>
+                                <div class="stats-row-mini" style="margin: 4px 0;">${buildStatBadges(u, item)}</div>
                                 <div style="font-size: 9px; color: #888;">${upgCount > 0 ? `+${upgCount} UPGRADES` : 'NO UPGRADES'}</div>
                             </div>
                             <button class="btn-minus" type="button" data-action="remove" data-id="${item.id}">−</button>
@@ -288,7 +347,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // UPDATED: EVENT DELEGATION (NOW HANDLES view-rule)
+    // EXISTING: EVENT DELEGATION
     // ============================================================
     const bindDocumentHandler = () => {
         if (window.CCFB._painterDocHandlerBound) return;
