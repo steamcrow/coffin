@@ -1,7 +1,7 @@
 {
   "faction": "Monster Rangers",
-  "version": "8",
-  "core_rules_version": "8",
+  "version": "8.2",
+  "core_rules_version": "8.2",
   "description": "Protectors of Obscuria who live in harmony with the canyon's mysteries. Monster Rangers scout, survive, and defend using wit, wilderness skills, and mystical bonds with the creatures they befriend.",
   "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons (like Harpoons) have additional point costs listed in optional_upgrades.",
   "faction_features": [
@@ -35,7 +35,7 @@
       "move": 6,
       "range": 8,
       "weapon": "Hatchet",
-      "weapon_properties": ["Thrown 8\"", "Melee"],
+      "weapon_properties": ["Melee"],
       "composition": { "per_points": 0 },
       "abilities": [],
       "lore": "Field-trained Monster Ranger infantry from the land branches. Signature tool: hatchet, equal parts weapon and working tool.",
@@ -46,7 +46,6 @@
         { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
-
     {
       "name": "Cargo Tiger Porter",
       "faction": "Monster Rangers",
@@ -57,7 +56,7 @@
       "move": 6,
       "range": 12,
       "weapon": "Slingshot + Crowbar",
-      "weapon_properties": ["Ranged 12\"", "Melee", "Prybar"],
+      "weapon_properties": ["Melee", "Prybar"],
       "composition": { "per_points": 0 },
       "abilities": ["Load and Carry", "Cut and Run", "Extraction Priority"],
       "lore": "Hard-working Rangers running Cargo Tiger routes.",
@@ -68,7 +67,6 @@
         { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
-
     {
       "name": "Crow Ranger",
       "faction": "Monster Rangers",
@@ -79,7 +77,7 @@
       "move": 6,
       "range": 8,
       "weapon": "Hatchet",
-      "weapon_properties": ["Thrown 8\"", "Melee"],
+      "weapon_properties": ["Melee"],
       "composition": { "per_points": 150 },
       "abilities": ["Fast", "Stealth", "Climber"],
       "lore": "First Ranger Branch. Masters of stealth.",
@@ -90,7 +88,6 @@
         { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
-
     {
       "name": "Clocktalker Mechanic",
       "faction": "Monster Rangers",
@@ -101,9 +98,9 @@
       "move": 6,
       "range": 0,
       "weapon": "Heavy Wrench",
-      "weapon_properties": ["Impact(1)", "Melee"],
+      "weapon_properties": ["Impact", "Melee"],
       "composition": { "per_points": 300 },
-      "abilities": ["Repair", "Befriend Automat", "Tough(1)"],
+      "abilities": ["Repair", "Befriend Automat", "Tough"],
       "lore": "Monster Ranger mechanics and construct tamers.",
       "tactics": "Support and construct control.",
       "optional_upgrades": [
@@ -112,7 +109,6 @@
         { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
-
     {
       "name": "Relic Guardian",
       "faction": "Monster Rangers",
@@ -128,7 +124,6 @@
       "abilities": ["Fearless", "Relic Bearer"],
       "lore": "Field officers entrusted with sacred Conjure Guard relics.",
       "tactics": "Hero unit. Relic timing defines battlefield impact.",
-
       "supplemental_abilities": [
         { "name": "Groom's Grail", "effect": "Once per game: 12\" cone freeze for 2 rounds." },
         { "name": "Alune's Shovel", "effect": "Once per game: Create 10\" Hazardous thorn wall." },
@@ -141,7 +136,6 @@
         { "name": "Thurible of Crawling Smoke", "effect": "Once per game: Create 5\" smoke cloud." },
         { "name": "Pact Mirror", "effect": "Once per game: Redirect all damage to ally." }
       ],
-
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         { "name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Light Armor." },
@@ -164,7 +158,7 @@
       "lore": "Mystic protectors who focus on Witch Stitches - systematic warding using thread and needle. Understand we are deeply linked like thread.",
       "tactics": "Position centrally for Shield Aura (+1 Defense to allies within 6\"). Hex debuffs enemies (-1 Quality). Witch Stitching ward (5+ ignore first damage per activation).",
       "optional_upgrades": [
-        {"name": "Fire Hat", "cost": 5, "type": "Upgrade", "effect": "Replace Shield Aura and Hex with Blast(2) and Fear(1). Become offensive fire caster."},
+        {"name": "Fire Hat", "cost": 5, "type": "Upgrade", "effect": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster."},
         {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
         {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."},
         {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
@@ -184,7 +178,7 @@
       "composition": {"per_points": 300},
       "abilities": ["Purification Ritual", "Forbidden Knowledge", "Formulae Master"],
       "lore": "Study, catalog, and protect Monster Ranger knowledge. Arcane repositories of legends, stories, Formulae. Motto: 'You are what you know.'",
-      "tactics": "Backline support. (1) Purify hazardous terrain (8\" radius, once per game), (2) Boost befriend vs chosen monster type (+1 die within 12\"), (3) Amplify Conjure Guards (extend range/area +6\"/+3\").",
+      "tactics": "Backline support. (1) Purify hazardous terrain (12\" radius, once per game), (2) Boost befriend vs chosen monster type (+1 die within 12\"), (3) Amplify Conjure Guards (extend range/area +6\"/+3\").",
       "optional_upgrades": [
         {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
         {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."},
@@ -243,9 +237,9 @@
       "weapon": "Ritual Staff",
       "weapon_properties": ["Melee"],
       "composition": {"per_points": 300},
-      "abilities": ["Befriend Titans", "Kaiju Calming Ritual", "Yokai Knowledge"],
+      "abilities": ["Befriend Kaiju", "Kaiju Calming Ritual", "Yokai Knowledge"],
       "lore": "Specialize in Yokai and Kaiju. Started 1909 when Baron Davis visited Osaka. 5000+ Yokai Rangers in Japan. Regimented scholarly approach. 'Kaiju Corps' - ultimate Titan specialists.",
-      "tactics": "Titan specialist. Befriend Titans with +2 dice (Q3+2 = 5 dice vs Q6!). Kaiju Calming Ritual: 2-turn ritual to shrink rampaging Kaiju for +3 VP. Yokai Knowledge: +1 die aura vs Titans.",
+      "tactics": "Titan specialist. Befriend Kaiju with +2 dice (Q3+2 = 5 dice vs Q6!). Kaiju Calming Ritual: 2-turn ritual to shrink rampaging Kaiju for +3 VP. Yokai Knowledge: +1 die aura vs Titans.",
       "optional_upgrades": [
         {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
         {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."},
@@ -269,7 +263,7 @@
       "tactics": "High-speed bomber. Fly over enemies dropping flechettes (automatic hits!). MUST move 6\"+ or risk crash. When destroyed, crashes spectacularly (AoE damage).",
       "optional_upgrades": [
         {"name": "Witch-Stitched Wings", "cost": 15, "type": "Upgrade", "effect": "+1 Defense (D3→D4), Barely Controlled test succeeds on 3+ instead of 4+. More stable bomber."},
-        {"name": "Firework Bombs", "cost": 10, "type": "Upgrade", "effect": "Once per game: Drop firework bomb. Blast(3), Fear(1). Spectacular explosive!"},
+        {"name": "Firework Bombs", "cost": 10, "type": "Upgrade", "effect": "Once per game: Drop firework bomb with Blast and Fear. Spectacular explosive!"},
         {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
       ]
     },
@@ -285,9 +279,9 @@
       "weapon": "Steel Baton",
       "weapon_properties": [],
       "composition": {"per_points": 400},
-      "abilities": ["Stealth", "Fear(2)", "Fearless", "Brutal Blow", "Silent", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "abilities": ["Stealth", "Fear", "Fearless", "Brutal Blow", "Silent", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
       "lore": "Secret police of Monster Rangers. Masked enforcers. Fixers, advisors who 'deal with' problems. Invite-only. Know 100 ways to make you cry with steel batons. Metal Mask built-in.",
-      "tactics": "Pressure engine (Brute role). Stealth + Fear(2) creates board denial. Commits to combat, grinds enemies down. Makes bad decisions unavoidable.",
+      "tactics": "Pressure engine (Brute role). Stealth + Fear creates board denial. Commits to combat, grinds enemies down. Makes bad decisions unavoidable.",
       "optional_upgrades": [
         {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."}
       ]
@@ -302,44 +296,13 @@
       "move": 4,
       "range": 0,
       "weapon": "Electro-Trident",
-      "weapon_properties": ["AP(1)", "Melee"],
+      "weapon_properties": ["Pierce", "Melee"],
       "composition": {"per_points": 400},
-      "abilities": ["Tough(2)", "Fearless", "Pressure Sealed", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
-      "lore": "Deep sea divers in heavy pressure suits. The suit is their temple - rarely removed. Sea Rangers adapted to deep pressure. Electro-tridents crackle with AP energy.",
-      "tactics": "Front-line tank. D5 + Tough(2) = 6 effective wounds (9-12 attacks to kill!). AP(1) cuts armor. Slow (4\") but unstoppable. Park on objectives.",
+      "abilities": ["Tougher", "Fearless", "Pressure Sealed", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "lore": "Deep sea divers in heavy pressure suits. The suit is their temple - rarely removed. Sea Rangers adapted to deep pressure. Electro-tridents crackle with Pierce energy.",
+      "tactics": "Front-line tank. D5 + Tougher = roll 2 dice per damage (5+ ignores). Pierce cuts armor. Slow (4\") but unstoppable. Park on objectives.",
       "optional_upgrades": [
         {"name": "Harpoons", "cost": 10, "type": "Weapon", "effect": "Gain Ranged 10\" attack. 14\" total threat range (4\" move + 10\" range). Trained hunters."}
-      ]
-    },
-    {
-      "name": "Relic Guardian",
-      "faction": "Monster Rangers",
-      "type": "Hero",
-      "cost": 160,
-      "quality": 4,
-      "defense": 3,
-      "move": 6,
-      "range": 0,
-      "weapon": "Arcane Staff",
-      "weapon_properties": ["Melee"],
-      "composition": {"per_points": 400},
-      "abilities": ["Fearless", "Relic Bearer"],
-      "lore": "Field officers of Dark Librarians. Proven worthy to carry sacred Conjure Guard relics. Bonded to relic, sworn to protect it. Bring artifacts to critical moments.",
-      "tactics": "Hero game-changer. Choose ONE relic (included in cost). Save for perfect moment. 10 relic options: control, utility, terrain, anti-monster, survival, morale break.",
-      "optional_upgrades": [
-        {"name": "Groom's Grail", "cost": 0, "type": "Relic", "effect": "Once per game: 12\" cone freeze all units hit (no Move/Attack) for 2 rounds. Mass disable."},
-        {"name": "Alune's Shovel", "cost": 0, "type": "Relic", "effect": "Once per game: Create 10\" thorn wall (Hazardous, blocks LOS). Battlefield control."},
-        {"name": "Blink Crown", "cost": 0, "type": "Relic", "effect": "Once per game: Swap positions with any creature on table. Ultimate repositioning."},
-        {"name": "Gravewarden Bell", "cost": 0, "type": "Relic", "effect": "Once per game: 8\" aura Shaken, already Shaken become Panicked. Mass morale break."},
-        {"name": "Saltbound Reliquary", "cost": 0, "type": "Relic", "effect": "Once per game: 6\" radius, Monsters/Undead suffer 1 damage, no morale recovery 2 rounds. Anti-supernatural."},
-        {"name": "Widow's Lantern", "cost": 0, "type": "Relic", "effect": "Once per game: 10\" aura for 2 rounds - enemies lose Stealth/cover. Counter-stealth."},
-        {"name": "Iron Psalm Nails", "cost": 0, "type": "Relic", "effect": "Once per game: Anchor single enemy at 12\" (no Move/reposition) for 2 rounds. Lock down."},
-        {"name": "Roluun's Mask", "cost": 0, "type": "Relic", "effect": "Once per game: 8\" enemy morale test - fail = Broken (instant rout)."},
-        {"name": "Thurible of Crawling Smoke", "cost": 0, "type": "Relic", "effect": "Once per game: Place 5\" smoke cloud at 12\" (blocks LOS, Hazardous) for 2 rounds. Terrain creation."},
-        {"name": "Pact Mirror", "cost": 0, "type": "Relic", "effect": "Once per game: Redirect all damage from Guardian to unit within 6\". Ultimate survival."},
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
-        {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."},
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
       ]
     },
     {
@@ -375,9 +338,9 @@
       "weapon": "Thrice-Blessed Shovel",
       "weapon_properties": ["Melee", "Brutal Blow"],
       "composition": {"per_points": 400},
-      "abilities": ["Befriend Bloodless", "Haunt Candy", "Tough(2)", "Fearless", "Brutal Blow", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "abilities": ["Befriend Bloodless", "Haunt Candy", "Tougher", "Fearless", "Brutal Blow", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
       "lore": "Ancient sect (500+ years). Care for Bloodless: Haunts, Vampires, Embalma, Rotters. Founded by Joh Woefix. Cemetery caretakers. Only wear black, smell like earth, see beauty in death.",
-      "tactics": "Durable undead specialist (D3 + Tough(2) + Fearless = 6 wounds!). Befriend Bloodless (contested vs undead). Haunt Candy tokens (3): buff, heal, or reroll befriend. Thrice-Blessed Shovel with Brutal Blow.",
+      "tactics": "Durable undead specialist (D3 + Tougher + Fearless). Befriend Bloodless (contested vs undead). Haunt Candy tokens (3): buff, heal, or reroll befriend. Thrice-Blessed Shovel with Brutal Blow.",
       "optional_upgrades": [
         {"name": "Witch-Stitched Armor", "cost": 10, "type": "Gear", "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."},
         {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
@@ -397,7 +360,7 @@
       "composition": {"per_points": 400},
       "abilities": ["Fast", "Disengage", "Mobile Cover", "Cargo Hold", "Thyr Boiler"],
       "lore": "Cargo Tiger shipping company - nation's first motorized freight (1903). 27 trucks, 88 wagons, 1 steam engine. Can burn Thyr crystals for boosts. Hard-working Rangers drive into battle.",
-      "tactics": "Fast platform (10\" Move!). Load Rangers/objectives for transport. Park for Mobile Cover (+1 Defense aura). Grapple enemies (pull 3\"). Thyr Boiler (once per game): +4\" Move OR +2 Quality OR ignore terrain.",
+      "tactics": "Fast platform (12\" Move with Fast!). Load Rangers/objectives for transport. Park for Mobile Cover (+1 Defense aura). Grapple enemies (pull 3\"). Thyr Boiler (once per game): +4\" Move OR +2 Quality OR ignore terrain.",
       "optional_upgrades": [
         {"name": "Reinforced Cab", "cost": 3, "type": "Upgrade", "effect": "+1 Defense (D4→D5), -1\" Move (10\"→9\"). Armored plating."},
         {"name": "Extra Storage", "cost": 2, "type": "Upgrade", "effect": "Additional cargo rigging. Increase capacity: +2 Rangers OR +1 objective. Total: 6 Rangers OR 3 objectives."}
