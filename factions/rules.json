@@ -1,7 +1,8 @@
 {
   "rules_master": {
-    "version": "8.1",
+    "version": "8.2",
     "last_updated": "2026-01-19",
+    "changelog": "Removed variable (X) notation. Implemented consistent Brutal/Savage progression for offensive abilities. Standardized ranges to 3\"/6\"/12\". Simplified Blast, Fear, Pierce, Impact, and Tough naming.",
     "sections": {
       "philosophy": "The 'Flavor Vault'. High-level tenets and the 'Fast Resolution' handshake.",
       "core_mechanics": "The math: Quality rolls, Successes, Defense calculations, and the Death Spiral.",
@@ -424,10 +425,6 @@
         "default": "If timing is not listed, usage is during the unit's activation."
       },
       "notation_and_math": {
-        "x_notation": {
-          "definition": "(X) defines strength, radius, or distance. It does NOT represent dice/successes unless explicitly stated.",
-          "examples": ["Fear(2) = 2 inch radius", "Impact(1) = 1 auto-hit", "Blast(3\") = 3 inch radius"]
-        },
         "dice_modifiers": {
           "logic": "Modify the dice pool BEFORE rolling. Bonuses/penalties stack.",
           "success_range": "Success is always 4, 5, or 6. Abilities do not change this."
@@ -461,7 +458,7 @@
         "first_strike": "Passive. +1 die to the first melee attack made this round (or when revealing from Hidden).",
         "spawn": "Passive/Scenario. Enters play from a defined point/trigger. Activates normally upon entry.",
         "delayed_entry": "Passive. May be held in reserve; enters from a defined edge at the start of any round.",
-        "redeploy": "Passive. Reposition up to X inches after deployment but before the first activation.",
+        "redeploy": "Passive. Reposition up to 6\" after deployment but before the first activation.",
         "scout": "Passive. Make a free Move after all forces deploy but before the first activation.",
         "out_of_nowhere": "Instead of activating normally, this unit may spawn from sand, ruins, or rubble terrain. Place the model touching the terrain feature. This counts as the unit's activation for the turn."
       },
@@ -469,11 +466,11 @@
         "climber": "Passive. Ignores vertical movement penalties. Cannot move through Impassable terrain.",
         "berserk": "Passive. Must move toward nearest visible enemy. Gain +1 die on melee; cannot Interact.",
         "disengage": "Main Action. Leave base contact without penalty or triggering enemy reactions.",
-        "fast": "Passive. Once per activation, either Move +2\" or Disengage without penalty.",
+        "fast": "Passive. +2\" to base movement.",
         "grapple": "Main Action. Melee attack: On hit, pull target 3\" toward self; target cannot move next activation.",
         "runner": "Passive. If no attacks are made during activation, make an additional Move at the end.",
         "mobile_cover": "Passive. Adjacent friendly models gain +1 Defense vs ranged (does not stack with terrain).",
-        "mobile_dynamo": "Main Action. Reposition a Dynamo/Device within range defined on card.",
+        "mobile_dynamo": "Main Action. Projects 12\" Electromagik field. Hexan and Jäger within field may use abilities. Moving reduces this turn's field to 6\". Counts as Dynamo Generator for Electromagik dependency.",
         "mobile_cell_block": "Passive. Transports Captured models. If destroyed, prisoners are released.",
         "stampede": "Passive. May pass through smaller models. Those models must test Morale or be pushed 1\" aside.",
         "immobile": "Passive. Cannot move. May still attack/defend. Only repositioned by scenario/special rules.",
@@ -494,17 +491,22 @@
         "aim": "Main Action. Cannot Move this activation; gain +1 die on next ranged attack.",
         "backstab": "Passive. +1 damage if target is already engaged with another friendly model.",
         "brutal_blow": "Passive. +1 damage on successful melee hit.",
-        "blood_in_the_air": "Passive. Gain +1 die on next attack when any model within 4\" is reduced to 0 Quality.",
+        "blood_in_the_air": "Passive. Gain +1 die on next attack when any model within 6\" is reduced to 0 Quality.",
         "corrode": "Passive. Successful melee vs Mechan = 1 auto-damage. Vs Metal = Remove 1 property OR -1 Defense.",
         "deadeye": "Once Per Game. Re-roll all failed dice on a single ranged attack.",
         "furious": "Passive. If Quality is lost, gain +1 die on next melee attack.",
-        "impact": "Passive. Moving 3\"+ into contact deals X automatic hits before rolling attack dice.",
+        "impact": "Passive. Moving 3\"+ into contact deals 1 automatic hit before rolling attack dice.",
+        "brutal_impact": "Passive. Moving 3\"+ into contact deals 2 automatic hits before rolling attack dice.",
+        "savage_impact": "Passive. Moving 3\"+ into contact deals 3 automatic hits before rolling attack dice.",
         "press_the_advantage": "Passive. On hit, convert 1 excess Success into +1 damage or +2\" Move. Penalty: -1 die on next Action. Q3+ only.",
-        "pierce": "Passive. Ignores 1 point of Defense. Does not stack.",
+        "pierce": "Passive. Ignores 1 point of Defense.",
+        "brutal_pierce": "Passive. Ignores 2 points of Defense.",
+        "savage_pierce": "Passive. Ignores 3 points of Defense.",
         "panic_fire": "Reactive. Once per round. When targeted by melee, make ranged attack at -1 die, then test Morale.",
         "pinning_shot": "Passive. On hit, target cannot move during its next activation.",
         "poison": "Passive. On hit, deal 1 damage (ignoring Defense) at the end of the target's next activation.",
-        "blast": "Passive. Affects radius of X. Roll separately for each model; Cover applies normally.",
+        "blast": "Passive. 3\" radius area of effect. Roll separately for each model; Cover applies normally.",
+        "massive_blast": "Passive. 6\" radius area of effect. Roll separately for each model; Cover applies normally.",
         "relentless": "Reactive. If enemy is destroyed in melee, immediately move 2\".",
         "sonic": "Passive. Ignores Cover. Affects physical-immune targets. May cause Deafening/Disorientation.",
         "vengeful": "Passive. Each time Quality is lost, +1 die on next attack. Stacks until the attack is resolved.",
@@ -524,7 +526,7 @@
         "choking_dust": "Passive. If this unit's attack hits but deals no damage, target becomes Suppressed until end of its next activation. On natural 6 to hit, Suppressed extends by one additional activation."
       },
       "D_defense_survival": {
-        "armored": "Passive. Reduce damage taken by X (min 0). Does not affect terrain/env damage.",
+        "armored": "Passive. Reduce damage taken by 1 (minimum 0). Does not affect terrain/environmental damage.",
         "dodge": "Passive. Once per activation, cancel 1 Success from an incoming attack. Disabled while Shaken.",
         "shield_wall": "Passive. +1 Defense while adjacent to another Shield Wall model. No bonus vs Blast.",
         "hardened": "Passive. Ignore the first Shaken result each round.",
@@ -537,11 +539,13 @@
         "lockdown": "Passive. Engaged enemies cannot Disengage or use free moves. Ends if model is Shaken/Moved.",
         "shield_aura": "Passive. Friendly units within 6\" gain +1 Defense.",
         "witch_stitching": "Passive. First time per activation this unit would lose Quality: 5+ ignore 1 damage.",
-        "tough": "Passive. Reduce incoming damage by X (minimum 1). See specific Tough(X) value on unit card.",
+        "tough": "Passive. When taking damage, roll 1 die per point of damage. Each 5+ ignores 1 damage.",
+        "tougher": "Passive. When taking damage, roll 2 dice per point of damage. Each 5+ ignores 1 damage.",
+        "toughest": "Passive. When taking damage, roll 3 dice per point of damage. Each 5+ ignores 1 damage.",
         "regeneration": "Passive. At start of activation, heal 1 wound on a 5+.",
         "not_yet": "Passive. The first time per round this unit would be reduced to 0 Quality, it remains at 1 Quality instead. At the end of its next activation, this unit is destroyed.",
         "heroic_grit": "Once Per Game. Ignore first wound suffered.",
-        "hold_it_together": "Passive. When this model would test Morale, it may skip the test. If it does, it loses 1 Quality after the current activation. May not reduce Quality below 3+.",
+        "hold_it_together": "Passive. When this model would test Morale, it may skip the test. If it does, it loses 1 Quality after the current activation. May not reduce Quality below 3.",
         "bite_the_bullet": "Once Per Game. After this unit resolves an Attack or Interact action, it may immediately take one additional action. After the second action resolves, this unit loses 1 Quality.",
         "brace": "Main Action. May sacrifice movement to gain +1 Defense until next activation.",
         "bloodless": "Passive. Immune to Poison and Blood in the Air effects. Cannot be targeted by abilities that specifically affect living creatures.",
@@ -554,34 +558,33 @@
         "witch_stitched_clothing": "Passive. +1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."
       },
       "E_morale_fear": {
-        "fear": "Passive. Enemies within X suffer -1 die on Morale tests. Highest value only.",
-        "terror": "Passive. When enemy first engages, they must test Morale or become Shaken. Once per round/enemy.",
-        "dread_aura": "Passive. Enemies within X suffer -1 die on Morale and cannot ignore Shaken.",
-        "intimidate": "Main Action. Force Morale test on enemy within X and LoS. No effect on Titans.",
-        "rally": "Main Action. Remove Shaken from friendly within X; they gain +1 die on next Morale test.",
-        "terrifying_presence": "Passive. When reducing enemy to 0 Quality, all enemies within 4\" must test Morale.",
+        "fear": "Passive. Enemies within 6\" suffer -1 die on Morale tests.",
+        "terror": "Passive. When enemy first engages, they must test Morale or become Shaken. Once per round per enemy.",
+        "dread": "Passive. Enemies within 6\" suffer -1 die on Morale and cannot ignore Shaken.",
+        "intimidate": "Main Action. Force Morale test on enemy within 6\" and LoS. No effect on Titans.",
+        "rally": "Main Action. Remove Shaken from friendly within 6\"; they gain +1 die on next Morale test.",
+        "terrifying_presence": "Passive. When reducing enemy to 0 Quality, all enemies within 6\" must test Morale.",
         "unnerving": "Passive. Engaged enemies suffer -1 die on all attacks.",
-        "panic_wave": "Reactive. When enemy within X Panics/Dies, choose another enemy within X to test Morale.",
-        "fearless": "Passive. Ignores Fear/Terror/Dread Aura. Still tests Morale for Damage/Terrain.",
-        "cowardice": "Passive. Enemies failing Morale within X suffer -1 die on their next Action.",
-        "dread": "Passive. Enemies within 6\" suffer -1 to Morale checks.",
+        "panic_wave": "Reactive. When enemy within 6\" Panics or Dies, choose another enemy within 6\" to test Morale.",
+        "fearless": "Passive. Ignores Fear, Terror, and Dread. Still tests Morale for Damage and Terrain.",
+        "cowardice": "Passive. Enemies failing Morale within 6\" suffer -1 die on their next Action.",
         "inspire": "Passive. Friendly units within 6\" gain +1 to Morale checks.",
         "unshakable": "Passive. Auto-passes all Morale checks. Ignores Dread effects.",
-        "skittish": "Passive. This model must test Morale the first time each round an enemy model enters within 4\".",
+        "skittish": "Passive. This model must test Morale the first time each round an enemy model enters within 6\".",
         "audio_suppression": "Passive. Enemies within 6\" suffer -1 to Morale checks.",
         "authority": "Passive. Friendly units within 6\" ignore Suppression effects."
       },
       "F_terrain_environment": {
-        "create_hazard": "Main Action. Targeted area within X becomes Hazardous.",
-        "ignite": "Main Action. Flammable terrain within X becomes Burning.",
-        "smoke_screen": "Main Action. Area within X becomes Choking. Blocks clarity, not LoS. Lasts 1 round.",
-        "collapse": "Main Action. Target Unstable terrain within X immediately collapses.",
-        "taint_ground": "Passive. When destroying enemy/ritualizing, terrain within X becomes Tainted.",
+        "create_hazard": "Main Action. Targeted area within 6\" becomes Hazardous.",
+        "ignite": "Main Action. Flammable terrain within 6\" becomes Burning.",
+        "smoke_screen": "Main Action. Area within 3\" becomes Choking. Blocks clarity, not LoS. Lasts 1 round.",
+        "collapse": "Main Action. Target Unstable terrain within 6\" immediately collapses.",
+        "taint_ground": "Passive. When destroying enemy or ritualizing, terrain within 3\" becomes Tainted.",
         "haunted_wake": "Passive. Terrain passed through becomes Haunted until end of round.",
-        "purify": "Main Action. Remove 1 trait; Haunted becomes Tainted.",
-        "sacrilege": "Passive. While in Sacred terrain, enemies within X suffer -1 die on Morale.",
-        "terrain_adaptation": "Passive. Choose 1 trait on deployment; ignore its penalties (not damage/escalation).",
-        "unstable_footing": "Passive. Enemies ending movement adjacent must test Quality or become Shaken.",
+        "purify": "Main Action. Remove 1 trait from terrain within 6\"; Haunted becomes Tainted.",
+        "sacrilege": "Passive. While in Sacred terrain, enemies within 6\" suffer -1 die on Morale.",
+        "terrain_adaptation": "Passive. Choose 1 terrain trait on deployment; ignore its penalties (not damage or escalation).",
+        "unstable_footing": "Passive. Enemies ending movement within 3\" must test Quality or become Shaken.",
         "rolling_fog": "Main Action. Once per game: Place a Fog marker (3\" radius) within 12\". Fog blocks line of sight and prevents special actions (Hex, Charm, Inspire) from being used through it. Lasts until end of next round.",
         "silence": "Main Action. Range 12\". Duration 2 rounds. Create a 12\" radius zone of absolute silence centered on a point within range. While in Silent Zone: No sound can be made or heard, Radios do not function, Audio-based abilities (Inspire, Signal Orders, Rally, Command) cannot be used, Morale tests from Fear at -1 die, Monsters with hearing-based detection cannot sense units.",
         "silent": "Passive. This unit makes no sound and cannot be detected by audio-based abilities or sound-based monster detection."
@@ -590,11 +593,11 @@
         "thyrburn": "Main Action. Spend 1 Crystal to gain +2 dice, +3\" Move, OR +2 Quality for the round.",
         "fallout": "Resolution. Roll 2d6 at end of round after Thyrburn. Affects device/models/terrain.",
         "ritual": "Main Action. Mystic only. Must be in Sacred/Tainted/Haunted ground. Resolves listed effect.",
-        "backlash": "Passive. 0 Successes on Thyr ability = 1 damage or Taint surrounding terrain.",
-        "haunted_engine": "Passive. Using Thyrburn/Ritual places a Haunt adjacent. Haunt acts at end of round.",
+        "backlash": "Passive. 0 Successes on Thyr ability = 1 damage or Taint surrounding terrain within 3\".",
+        "haunted_engine": "Passive. Using Thyrburn or Ritual places a Haunt within 3\". Haunt acts at end of round.",
         "crystal_feed": "Passive. May carry +1 Thyr Crystal. Dropped on death.",
-        "sacrificial_overload": "Once Per Game. Ignore Fallout; Device is Destroyed and area becomes Hazardous.",
-        "purge_thyr": "Main Action. Remove all crystals and 1 Thyr-based trait within X.",
+        "sacrificial_overload": "Once Per Game. Ignore Fallout; Device is Destroyed and area within 3\" becomes Hazardous.",
+        "purge_thyr": "Main Action. Remove all crystals and 1 Thyr-based trait within 6\".",
         "unleashed_power": "Main Action. Ranged magical attack using Wild Magic. Roll on Wild Magic Table (2d6) to determine effect. May cause Strain.",
         "strain": "Passive. Using Unleashed Power causes 1 Strain. At 3 Strain, this unit may not use Unleashed Power until Strain is cleared (end of round or special ability).",
         "thyr_boiler": "Main Action. Once per game: Spend 1 Thyr crystal to gain +4\" Move OR +2 Quality OR ignore terrain penalties this activation."
@@ -610,9 +613,9 @@
         "blood_transfusion": "Main Action. An adjacent friendly unit gains +1 Quality (to a maximum of its starting Quality). This unit immediately loses 1 Quality.",
         "vitagood_brew": "Main Action. Once per game. This unit or an adjacent ally immediately restores 1 lost Quality and removes Suppression or Stagger or Venom.",
         "cargo_hold": "Passive. May transport up to 4 Rangers OR 1 medium Monster OR 2 objectives. Load/unload requires base contact and one activation.",
-        "purification_ritual": "Main Action. Once per game. Remove all negative terrain traits (Hazardous, Tainted, Haunted, Burning, Choking) from 8\" radius.",
+        "purification_ritual": "Main Action. Once per game. Remove all negative terrain traits (Hazardous, Tainted, Haunted, Burning, Choking) from 12\" radius.",
         "forbidden_knowledge": "Passive. Friendly units within 12\" gain +1 die when attempting Befriend actions against chosen monster type (declared at start of game).",
-        "formulae_master": "Passive. Friendly Conjure Guard units within 12\" extend range/area of their abilities by +6\"/+3\".",
+        "formulae_master": "Passive. Friendly Conjure Guard units within 12\" extend range/area of their abilities by +6\" or +3\" radius.",
         "kaiju_calming_ritual": "Main Action. Two-turn ritual. Round 1: Position within 6\" of rampaging Kaiju and begin ritual. Round 2: Complete ritual with Quality test. Success: Kaiju is calmed and may be Befriended or redirected. Grant +3 VP for successful calming.",
         "yokai_knowledge": "Passive. Friendly units within 6\" gain +1 die when attacking or defending against Titan-type units.",
         "fortuna_charms": "Passive. At start of game, create 3 Fortuna Charm tokens. Any friendly unit within 12\" may spend 1 token to reroll any single die roll. Tokens are consumed when used.",
@@ -636,13 +639,25 @@
       }
     },
     "weapon_properties": {
-      "ap": {
-        "name": "AP(X)",
-        "effect": "Armor Piercing. Ignore X points of Defense. Common values: AP(1), AP(2), AP(3)."
+      "pierce": {
+        "name": "Pierce",
+        "effect": "Ignore 1 point of Defense."
+      },
+      "brutal_pierce": {
+        "name": "Brutal Pierce",
+        "effect": "Ignore 2 points of Defense."
+      },
+      "savage_pierce": {
+        "name": "Savage Pierce",
+        "effect": "Ignore 3 points of Defense."
       },
       "blast": {
-        "name": "Blast(X)",
-        "effect": "X\" radius area of effect. Roll separately for each model in area. Cover applies normally. Common values: Blast(1), Blast(2), Blast(3)."
+        "name": "Blast",
+        "effect": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+      },
+      "massive_blast": {
+        "name": "Massive Blast",
+        "effect": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally."
       },
       "blinding": {
         "name": "Blinding",
@@ -650,7 +665,7 @@
       },
       "grapple": {
         "name": "Grapple",
-        "effect": "On hit, pull target 3-6\" toward this unit. Target may not move next activation."
+        "effect": "On hit, pull target 3\" toward this unit. Target may not move next activation."
       },
       "ignores_cover": {
         "name": "Ignores Cover",
@@ -671,6 +686,14 @@
       "sonic": {
         "name": "Sonic",
         "effect": "Ignores Heavy Armor bonus. Ignores cover bonuses to Defense. If at least 1 damage dealt, target tests Morale."
+      },
+      "melee": {
+        "name": "Melee",
+        "effect": "Can be used in close combat. Does not require Line of Sight."
+      },
+      "prybar": {
+        "name": "Prybar",
+        "effect": "Gain +1 die when attempting Interact actions on locked or sealed objectives."
       }
     },
     "wild_magic_table": {
@@ -725,7 +748,7 @@
         {
           "roll": 11,
           "name": "Crystal Resonance",
-          "effect": "Target takes 3 damage. Caster may immediately Channel again at -1d6."
+          "effect": "Target takes 3 damage. Caster may immediately Channel again at -1 die."
         },
         {
           "roll": 12,
