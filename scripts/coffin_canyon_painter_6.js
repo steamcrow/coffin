@@ -4,8 +4,8 @@ CCFB.define("components/painter", function(C) {
     const dec = (s) => decodeURIComponent(String(s ?? ""));
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
-    // Store previous view for "back" button
-    let previousView = null;
+    // Store previous view for "back" button - use a more stable reference
+    window.CCFB._previousView = null;
 
     const getAbilityEffect = (abilityName) => {
         const name = getName(abilityName);
@@ -29,21 +29,24 @@ CCFB.define("components/painter", function(C) {
         return null;
     };
 
-    const buildStatBadges = (unit, rosterItem = null) => {
+    const buildStatBadges = (unit, rosterItem = null, tempConfig = null) => {
         const mod = { quality: unit.quality, defense: unit.defense, range: unit.range || 0, move: unit.move };
-        if (rosterItem?.upgrades) {
-            rosterItem.upgrades.forEach(u => {
-                const def = unit.optional_upgrades?.find(upg => upg.name === u.name);
-                if (def?.stat_modifiers) {
-                    Object.keys(def.stat_modifiers).forEach(s => {
-                        if (s === 'range' && mod.range === 0) mod.range = def.stat_modifiers[s];
-                        else mod[s] = (mod[s] || 0) + def.stat_modifiers[s];
-                    });
-                }
-            });
-        }
+        
+        // Apply upgrades from either roster item or temp config
+        const upgrades = rosterItem?.upgrades || tempConfig?.upgrades || [];
+        
+        upgrades.forEach(u => {
+            const def = unit.optional_upgrades?.find(upg => upg.name === u.name);
+            if (def?.stat_modifiers) {
+                Object.keys(def.stat_modifiers).forEach(s => {
+                    if (s === 'range' && mod.range === 0) mod.range = def.stat_modifiers[s];
+                    else mod[s] = (mod[s] || 0) + def.stat_modifiers[s];
+                });
+            }
+        });
+        
         const badge = (l, v, c, k) => {
-            const isMod = rosterItem && unit[k] !== v;
+            const isMod = (upgrades.length > 0 || tempConfig) && unit[k] !== v;
             return `<div class="cc-stat-badge ${c}-border"><span class="cc-stat-label ${c}">${l}</span><span class="cc-stat-value ${isMod ? 'cc-stat-modified' : ''}">${v === 0 ? '-' : v}</span></div>`;
         };
         return `<div class="stat-badge-flex">
@@ -63,7 +66,7 @@ CCFB.define("components/painter", function(C) {
 
         det.innerHTML = `
             <div class="cc-detail-wrapper">
-                <button onclick="window.CCFB.restorePreviousView()" class="btn-outline-warning mb-3" style="width: 100%;">
+                <button onclick="window.CCFB.restorePreviousView(); event.stopPropagation();" class="btn-outline-warning mb-3" style="width: 100%;">
                     <i class="fa fa-arrow-left"></i> BACK
                 </button>
                 <div class="u-name" style="font-size: 1.4rem;">${esc(rule.name)}</div>
@@ -75,9 +78,10 @@ CCFB.define("components/painter", function(C) {
     };
 
     window.CCFB.restorePreviousView = () => {
-        if (previousView) {
-            window.CCFB.renderDetail(previousView.unit, previousView.isLib);
-            previousView = null;
+        if (window.CCFB._previousView) {
+            const prev = window.CCFB._previousView;
+            window.CCFB._previousView = null; // Clear before rendering to avoid loops
+            window.CCFB.renderDetail(prev.unit, prev.isLib);
         }
     };
 
@@ -87,8 +91,8 @@ CCFB.define("components/painter", function(C) {
         const faction = C.state.factions[C.ui.fKey];
         const base = faction.units.find(u => u.name === (unit.uN || unit.name));
 
-        // Store this view in case we need to return to it
-        previousView = { unit, isLib };
+        // Store this view ONLY if we're not showing a rule detail
+        window.CCFB._previousView = { unit, isLib };
 
         // For library units, check if we have a temp config
         let tempConfig = null;
@@ -110,7 +114,7 @@ CCFB.define("components/painter", function(C) {
                 <div class="u-name" style="font-size: 1.4rem;">${esc(unit.uN || unit.name)}</div>
                 <div class="u-type mb-2">${esc(base.type)} — <span style="color:#fff">${unit.cost} ₤</span></div>
                 <div style="display:flex; justify-content:center; padding:10px; background:rgba(0,0,0,0.2); border-radius:4px; margin-bottom:12px;">
-                    ${buildStatBadges(base, isLib ? null : unit)}
+                    ${buildStatBadges(base, isLib ? null : unit, isLib ? tempConfig : null)}
                 </div>
                 <div class="u-lore">"${esc(base.lore || "Classified.")}"</div>
                 
@@ -122,7 +126,7 @@ CCFB.define("components/painter", function(C) {
                             <div class="small opacity-75">
                                 ${base.weapon_properties.map(prop => {
                                     const propName = getName(prop);
-                                    return `<span class="rule-link clickable-rule" data-rule="${esc(propName)}" title="${esc(getAbilityEffect(prop))}">${esc(propName)}</span>`;
+                                    return `<span class="rule-link clickable-rule" onclick="window.CCFB.showRuleDetail('${esc(propName)}'); event.stopPropagation();" style="cursor: pointer; text-decoration: underline;" title="${esc(getAbilityEffect(prop))}">${esc(propName)}</span>`;
                                 }).join(', ')}
                             </div>
                         ` : ''}
@@ -131,7 +135,7 @@ CCFB.define("components/painter", function(C) {
                 
                 <div class="u-type mt-4"><i class="fa fa-flash"></i> ABILITIES</div>
                 ${(base.abilities || []).map(a => `<div class="ability-boxed-callout">
-                    <b class="u-name clickable-rule" data-rule="${esc(getName(a))}" style="cursor: pointer;">${esc(getName(a))}</b>
+                    <b class="u-name clickable-rule" onclick="window.CCFB.showRuleDetail('${esc(getName(a))}'); event.stopPropagation();" style="cursor: pointer; text-decoration: underline;">${esc(getName(a))}</b>
                     <div class="small opacity-75">${esc(getAbilityEffect(a))}</div>
                 </div>`).join('')}
 
@@ -213,8 +217,8 @@ CCFB.define("components/painter", function(C) {
                     ${buildStatBadges(u, isRost ? item : null)}
                     <div class="u-abilities-summary">${abs || 'Basic'}</div>
                     <div class="cc-item-controls">
-                        ${isRost ? `<button class="btn-minus" data-action="remove" data-id="${item.id}"><i class="fa fa-trash-o"></i></button>` : 
-                        `<button class="btn-plus-lib" data-action="add" data-unit="${enc(u.name)}" data-cost="${u.cost}"><i class="fa fa-plus-circle"></i></button>`}
+                        ${isRost ? `<button class="btn-minus" data-action="remove" data-id="${item.id}" onclick="event.stopPropagation();"><i class="fa fa-trash-o"></i></button>` : 
+                        `<button class="btn-plus-lib" data-action="add" data-unit="${enc(u.name)}" data-cost="${u.cost}" onclick="event.stopPropagation();"><i class="fa fa-plus-circle"></i></button>`}
                     </div>
                 </div>`;
         };
@@ -224,15 +228,6 @@ CCFB.define("components/painter", function(C) {
 
         if (!window.CCFB._bound) {
             document.addEventListener("click", (e) => {
-                // Handle clickable rules
-                if (e.target.classList.contains('clickable-rule')) {
-                    const ruleName = e.target.getAttribute('data-rule');
-                    if (ruleName) {
-                        window.CCFB.showRuleDetail(ruleName);
-                    }
-                    return;
-                }
-
                 const el = e.target.closest("[data-action]");
                 if (!el) return;
                 const act = el.getAttribute("data-action");
