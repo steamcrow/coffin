@@ -66,7 +66,7 @@ CCFB.define("components/painter", function(C) {
 
         det.innerHTML = `
             <div class="cc-detail-wrapper">
-                <button onclick="window.CCFB.restorePreviousView(); event.stopPropagation();" class="btn-outline-warning mb-3" style="width: 100%;">
+                <button onclick="window.CCFB.restorePreviousView();" class="btn-outline-warning mb-3" style="width: 100%;">
                     <i class="fa fa-arrow-left"></i> BACK
                 </button>
                 <div class="u-name" style="font-size: 1.4rem;">${esc(rule.name)}</div>
@@ -126,7 +126,7 @@ CCFB.define("components/painter", function(C) {
                             <div class="small opacity-75">
                                 ${base.weapon_properties.map(prop => {
                                     const propName = getName(prop);
-                                    return `<span class="rule-link clickable-rule" onclick="window.CCFB.showRuleDetail('${esc(propName)}'); event.stopPropagation();" style="cursor: pointer; text-decoration: underline;" title="${esc(getAbilityEffect(prop))}">${esc(propName)}</span>`;
+                                    return `<span class="rule-link clickable-rule" data-rule="${esc(propName)}" style="cursor: pointer; text-decoration: underline;" title="${esc(getAbilityEffect(prop))}">${esc(propName)}</span>`;
                                 }).join(', ')}
                             </div>
                         ` : ''}
@@ -137,7 +137,7 @@ CCFB.define("components/painter", function(C) {
                 <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
                     ${(base.abilities || []).map(a => {
                         const aName = getName(a);
-                        return `<span class="clickable-rule" onclick="window.CCFB.showRuleDetail('${esc(aName)}'); event.stopPropagation();" style="cursor: pointer; text-decoration: underline; color: var(--pumpkin); font-weight: 600;" title="${esc(getAbilityEffect(a))}">${esc(aName)}</span>`;
+                        return `<span class="clickable-rule" data-rule="${esc(aName)}" style="cursor: pointer; text-decoration: underline; color: var(--pumpkin); font-weight: 600;" title="${esc(getAbilityEffect(a))}">${esc(aName)}</span>`;
                     }).join(', ')}
                 </div>
 
@@ -212,7 +212,7 @@ CCFB.define("components/painter", function(C) {
             const price = isRost ? (item.cost + (item.upgrades?.reduce((a, b) => a + b.cost, 0) || 0)) : item.cost;
             const abs = (u.abilities || []).map(a => {
                 const aName = getName(a);
-                return `<span class="rule-link clickable-rule" onclick="window.CCFB.showRuleDetail('${esc(aName)}'); event.stopPropagation();" style="cursor: pointer;" title="${esc(getAbilityEffect(a))}">${esc(aName)}</span>`;
+                return `<span class="rule-link clickable-rule" data-rule="${esc(aName)}" style="cursor: pointer;" title="${esc(getAbilityEffect(a))}">${esc(aName)}</span>`;
             }).join(", ");
 
             return `
@@ -222,8 +222,8 @@ CCFB.define("components/painter", function(C) {
                     ${buildStatBadges(u, isRost ? item : null)}
                     <div class="u-abilities-summary">${abs || 'Basic'}</div>
                     <div class="cc-item-controls">
-                        ${isRost ? `<button class="btn-minus" data-action="remove" data-id="${item.id}" onclick="event.stopPropagation();"><i class="fa fa-trash-o"></i></button>` : 
-                        `<button class="btn-plus-lib" data-action="add" data-unit="${enc(u.name)}" data-cost="${u.cost}" onclick="event.stopPropagation();"><i class="fa fa-plus-circle"></i></button>`}
+                        ${isRost ? `<button class="btn-minus" data-action="remove" data-id="${item.id}"><i class="fa fa-trash-o"></i></button>` : 
+                        `<button class="btn-plus-lib" data-action="add" data-unit="${enc(u.name)}" data-cost="${u.cost}"><i class="fa fa-plus-circle"></i></button>`}
                     </div>
                 </div>`;
         };
@@ -233,6 +233,16 @@ CCFB.define("components/painter", function(C) {
 
         if (!window.CCFB._bound) {
             document.addEventListener("click", (e) => {
+                // Handle clickable rules FIRST - before other handlers
+                if (e.target.classList.contains('clickable-rule')) {
+                    e.stopPropagation();
+                    const ruleName = e.target.getAttribute('data-rule');
+                    if (ruleName) {
+                        window.CCFB.showRuleDetail(ruleName);
+                    }
+                    return;
+                }
+
                 const el = e.target.closest("[data-action]");
                 if (!el) return;
                 const act = el.getAttribute("data-action");
@@ -242,8 +252,13 @@ CCFB.define("components/painter", function(C) {
                     const cost = el.getAttribute("data-cost");
                     window.CCFB.addUnitToRoster(unitName, cost); 
                 }
-                if (act === "remove") { e.stopPropagation(); window.CCFB.removeUnitFromRoster(el.getAttribute("data-id")); }
-                if (act === "select-lib") window.CCFB.renderDetail(faction.units.find(u => u.name === dec(el.getAttribute("data-unit"))), true);
+                if (act === "remove") { 
+                    e.stopPropagation(); 
+                    window.CCFB.removeUnitFromRoster(el.getAttribute("data-id")); 
+                }
+                if (act === "select-lib") {
+                    window.CCFB.renderDetail(faction.units.find(u => u.name === dec(el.getAttribute("data-unit"))), true);
+                }
                 if (act === "select-roster") {
                     const itm = UI.roster.find(i => String(i.id) === String(el.getAttribute("data-id")));
                     window.CCFB.renderDetail({...faction.units.find(u => u.name === itm.uN), ...itm}, false);
@@ -340,7 +355,10 @@ CCFB.define("components/painter", function(C) {
         window.CCFB.refreshUI(); 
     };
     
-    window.CCFB.removeUnitFromRoster = (id) => { C.ui.roster = C.ui.roster.filter(x => String(x.id) !== String(id)); window.CCFB.refreshUI(); };
+    window.CCFB.removeUnitFromRoster = (id) => { 
+        C.ui.roster = C.ui.roster.filter(x => String(x.id) !== String(id)); 
+        window.CCFB.refreshUI(); 
+    };
 
     return { refreshUI: window.CCFB.refreshUI };
 });
