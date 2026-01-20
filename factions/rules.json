@@ -254,7 +254,7 @@
       },
       "automatic_damage": {
         "definition": "Automatic damage is NOT an attack. It represents environmental or internal harm.",
-        "sources": ["Burning terrain", "Poison", "Impact", "Traps", "Thyr fallout", "Abilities"],
+        "sources": ["Burning terrain", "Venom", "Impact", "Traps", "Thyr fallout", "Abilities"],
         "logic": "Reduces Quality normally. Ignores Defense, Armored, and Cover. Only preventable if explicitly stated.",
         "terrain_rule": "All terrain damage is considered automatic."
       },
@@ -504,7 +504,6 @@
         "savage_pierce": "Passive. Ignores 3 points of Defense.",
         "panic_fire": "Reactive. Once per round. When targeted by melee, make ranged attack at -1 die, then test Morale.",
         "pinning_shot": "Passive. On hit, target cannot move during its next activation.",
-        "poison": "Passive. On hit, deal 1 damage (ignoring Defense) at the end of the target's next activation.",
         "blast": "Passive. 3\" radius area of effect. Roll separately for each model; Cover applies normally.",
         "massive_blast": "Passive. 6\" radius area of effect. Roll separately for each model; Cover applies normally.",
         "relentless": "Reactive. If enemy is destroyed in melee, immediately move 2\".",
@@ -548,11 +547,11 @@
         "hold_it_together": "Passive. When this model would test Morale, it may skip the test. If it does, it loses 1 Quality after the current activation. May not reduce Quality below 3.",
         "bite_the_bullet": "Once Per Game. After this unit resolves an Attack or Interact action, it may immediately take one additional action. After the second action resolves, this unit loses 1 Quality.",
         "brace": "Main Action. May sacrifice movement to gain +1 Defense until next activation.",
-        "bloodless": "Passive. Immune to Poison and Blood in the Air effects. Cannot be targeted by abilities that specifically affect living creatures.",
+        "bloodless": "Passive. Immune to Venom and Blood in the Air effects. Cannot be targeted by abilities that specifically affect living creatures.",
         "desperate_push": "Main Action. This model may attempt an action even if it would normally be forbidden (Pinned, Suppressed, or at 0 Move). Roll as normal. If the roll produces no successes, this model loses 1 additional Quality.",
         "blinkshift": "Main Action. Twice per game, this unit may teleport instead of moving normally. Roll 3d6\" and place the unit anywhere within that distance, ignoring terrain and units. The unit must have line of sight to the destination. On a roll of three 1s, the unit suffers 1 Strain and loses the Blinkshift ability for the rest of the game.",
         "pressure_sealed": "Passive. Immune to pressure, water, and depth-related environmental hazards.",
-        "built_in_respirator": "Passive. Immune to gas, smoke, poison, and airborne hazard effects.",
+        "built_in_respirator": "Passive. Immune to gas, smoke, poison storms, and airborne hazard effects.",
         "built_in_goggles": "Passive. Immune to Blinding effects and visual-based environmental hazards.",
         "gas_mask": "Passive. This unit ignores Coffin Cough, Choking Dust effects and other environmental gas/smoke/toxic effects to lungs and eyes as determined by scenario rules.",
         "witch_stitched_clothing": "Passive. +1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."
