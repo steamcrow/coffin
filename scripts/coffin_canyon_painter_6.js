@@ -1,372 +1,249 @@
 CCFB.define("components/painter", function(C) {
 
     // ============================================================
-    // RULES TRANSFORMER
+    // CORE UTILITIES
     // ============================================================
-    C.transformRules = function(rawRules) {
-        const transformed = {
-            abilities: [],
-            weapon_properties: [],
-            type_rules: []
-        };
-        
-        const abilityDict = rawRules?.rules_master?.ability_dictionary;
-        
-        if (!abilityDict) {
-            console.warn("No ability_dictionary found in rules");
-            return transformed;
-        }
-        
-        for (let categoryKey in abilityDict) {
-            const category = abilityDict[categoryKey];
-            for (let abilityKey in category) {
-                const abilityText = category[abilityKey];
-                transformed.abilities.push({
-                    id: abilityKey,
-                    name: makeReadable(abilityKey),
-                    effect: abilityText,
-                    category: categoryKey
-                });
-            }
-        }
-        return transformed;
-    };
-    
-    function makeReadable(id) {
-        return id.split('_').map(word => 
-            word.charAt(0).toUpperCase() + word.slice(1)
-        ).join(' ');
-    }
-
-    C.getRuleId = function(name) {
-        return String(name || "")
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9]+/g, '_')
-            .replace(/^_+|_+$/g, '');
-    };
-
-    // ============================================================
-    // RENDER RULE DETAIL CARD
-    // ============================================================
-    window.CCFB.renderRuleDetail = (ruleName) => {
-        const det = document.getElementById("det-target");
-        if (!det) return;
-        
-        const rules = C.state.rules || {};
-        const searchName = ruleName.toLowerCase().trim();
-        
-        let rule = null;
-        const categories = ['abilities', 'weapon_properties', 'type_rules'];
-        for (const cat of categories) {
-            rule = rules[cat]?.find(r => 
-                r.name.toLowerCase() === searchName || 
-                r.id === searchName
-            );
-            if (rule) break;
-        }
-        
-        if (!rule) {
-            det.innerHTML = `
-                <div class="cc-detail-view">
-                    <div class="u-name">RULE NOT FOUND</div>
-                    <div class="u-lore">"${esc(ruleName)}" is not in the rules database yet.</div>
-                    <button class="btn btn-sm btn-outline-warning mt-3" onclick="window.CCFB.closeRuleDetail()">
-                        ← BACK
-                    </button>
-                </div>`;
-            return;
-        }
-        
-        det.innerHTML = `
-            <div class="cc-detail-view">
-                <div class="u-name">${esc(rule.name).toUpperCase()}</div>
-                <div class="u-type">SPECIAL RULE</div>
-                <div class="detail-section-title">EFFECT</div>
-                <div class="ability-effect" style="margin-bottom: 20px;">${esc(rule.effect)}</div>
-                ${rule.category ? `<div style="font-size: 10px; color: #888; margin-bottom: 10px;">Category: ${esc(rule.category)}</div>` : ''}
-                <button class="btn btn-sm btn-outline-warning" onclick="window.CCFB.closeRuleDetail()">
-                    ← BACK TO UNIT
-                </button>
-            </div>`;
-        
-        C.ui._lastDetailView = C.ui._currentDetailView;
-    };
-    
-    window.CCFB.closeRuleDetail = () => {
-        if (C.ui._lastDetailView) {
-            const { unit, isLibrary } = C.ui._lastDetailView;
-            window.CCFB.renderDetail(unit, isLibrary);
-        }
-    };
-
-    // ============================================================
-    // CORE HELPERS
-    // ============================================================
-    const getName = (val) => (typeof val === 'object' ? val.name : val);
     const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     const enc = (s) => encodeURIComponent(String(s ?? ""));
     const dec = (s) => decodeURIComponent(String(s ?? ""));
+    const getName = (val) => (typeof val === 'object' ? val.name : val);
 
     const getAbilityEffect = (abilityName, unit) => {
-        if (typeof abilityName === 'object' && abilityName.effect) return abilityName.effect;
-        const searchName = (typeof abilityName === 'string' ? abilityName : abilityName.name || "").toLowerCase().trim();
+        const name = getName(abilityName);
+        const searchName = name.toLowerCase().trim();
         const rules = C.state.rules || {};
         
         if (unit.ability_details?.[searchName]) return unit.ability_details[searchName];
+        if (typeof abilityName === 'object' && abilityName.effect) return abilityName.effect;
         
         const categories = ['abilities', 'weapon_properties', 'type_rules'];
         for (const cat of categories) {
             const match = rules[cat]?.find(a => a.name.toLowerCase() === searchName);
             if (match) return match.effect;
         }
-        return "Rule effect pending.";
+        return "Tactical data pending in central database.";
     };
 
     // ============================================================
-    // CALCULATE MODIFIED STATS
+    // STAT MODIFIER ENGINE
     // ============================================================
     const calculateModifiedStats = (baseUnit, rosterUnit) => {
-        const modified = {
-            quality: baseUnit.quality,
-            defense: baseUnit.defense,
-            range: baseUnit.range || 0,
-            move: baseUnit.move
-        };
+        const mod = { quality: baseUnit.quality, defense: baseUnit.defense, range: baseUnit.range || 0, move: baseUnit.move };
         
         if (rosterUnit?.upgrades) {
-            rosterUnit.upgrades.forEach(upgrade => {
-                const upgradeDef = baseUnit.optional_upgrades?.find(u => u.name === upgrade.name);
-                if (upgradeDef?.stat_modifiers) {
-                    Object.keys(upgradeDef.stat_modifiers).forEach(stat => {
-                        const modifier = upgradeDef.stat_modifiers[stat];
-                        if (stat === 'range' && modified.range === 0) {
-                            modified.range = modifier;
-                        } else {
-                            modified[stat] = (modified[stat] || 0) + modifier;
-                        }
+            rosterUnit.upgrades.forEach(u => {
+                const def = baseUnit.optional_upgrades?.find(upg => upg.name === u.name);
+                if (def?.stat_modifiers) {
+                    Object.keys(def.stat_modifiers).forEach(s => {
+                        if (s === 'range' && mod.range === 0) mod.range = def.stat_modifiers[s];
+                        else mod[s] = (mod[s] || 0) + def.stat_modifiers[s];
                     });
                 }
             });
         }
-        return modified;
+        return mod;
     };
 
     const buildStatBadges = (baseUnit, rosterUnit = null) => {
-        const stats = rosterUnit ? calculateModifiedStats(baseUnit, rosterUnit) : {
-            quality: baseUnit.quality,
-            defense: baseUnit.defense,
-            range: baseUnit.range || '-',
-            move: baseUnit.move
+        const stats = rosterUnit ? calculateModifiedStats(baseUnit, rosterUnit) : { 
+            quality: baseUnit.quality, defense: baseUnit.defense, range: baseUnit.range || '-', move: baseUnit.move 
         };
         
-        const isModified = (stat, value) => {
+        const isMod = (stat, val) => {
             if (!rosterUnit) return false;
-            const base = stat === 'range' ? (baseUnit.range || 0) : baseUnit[stat];
-            return base !== value;
+            const bVal = stat === 'range' ? (baseUnit.range || 0) : baseUnit[stat];
+            return bVal !== val;
         };
-        
-        const statArray = [
-            {l:'Q', v:stats.quality, c:'stat-q', h:'Quality', stat:'quality'},
-            {l:'D', v:stats.defense, c:'stat-d', h:'Defense', stat:'defense'},
-            {l:'R', v:stats.range || '-', c:'stat-r', h:'Range', stat:'range'},
-            {l:'M', v:stats.move, c:'stat-m', h:'Move', stat:'move'}
-        ];
-        
-        return statArray.map(s => {
-            const modified = isModified(s.stat, s.v);
-            const valueClass = modified ? 'cc-stat-modified' : '';
-            return `
-                <span class="cc-stat-badge" title="${esc(s.h)}${modified ? ' (modified)' : ''}">
-                    <span class="cc-stat-label ${s.c}">${esc(s.l)}</span>
-                    <span class="cc-stat-value ${valueClass}">${esc(s.v)}</span>
-                </span>`;
-        }).join('');
-    };
 
-    C.calculateTotal = function() {
-        return (C.ui.roster || []).reduce((sum, item) => {
-            let unitTotal = parseInt(item.cost) || 0;
-            if (item.upgrades) {
-                item.upgrades.forEach(upg => { unitTotal += (parseInt(upg.cost) || 0); });
-            }
-            return sum + unitTotal;
-        }, 0);
+        const badge = (label, val, css, statKey) => `
+            <div class="cc-stat-badge d-flex align-items-center" style="margin-right: 12px; gap: 2px;">
+                <span class="cc-stat-label ${css}">${label}</span>
+                <span class="cc-stat-value ${isMod(statKey, val) ? 'cc-stat-modified' : ''}">${val}</span>
+            </div>`;
+
+        return `
+            <div class="d-flex flex-wrap" style="gap: 6px;">
+                ${badge('Q', stats.quality, 'stat-q', 'quality')}
+                ${badge('D', stats.defense, 'stat-d', 'defense')}
+                ${badge('R', stats.range, 'stat-r', 'range')}
+                ${badge('M', stats.move, 'stat-m', 'move')}
+            </div>`;
     };
 
     // ============================================================
-    // RENDERING WITH LORE & TACTICS
+    // UNIT DETAIL VIEW
     // ============================================================
     window.CCFB.renderDetail = (unit, isLibraryView = false) => {
         const det = document.getElementById("det-target");
         if (!det) return;
         
         C.ui._currentDetailView = { unit, isLibrary: isLibraryView };
-
         const faction = C.state.factions?.[C.ui.fKey];
-        const baseUnit = faction?.units.find(u => u.name === unit.name) || unit;
+        const base = faction?.units.find(u => u.name === unit.name) || unit;
 
         const abilitiesHtml = (unit.abilities || []).map(r => {
             const name = getName(r);
-            const effect = getAbilityEffect(r, unit);
             return `
-            <div class="ability-card">
-                <div class="ability-name">
-                    <a href="#" class="rule-link" data-action="view-rule" data-rule="${esc(name)}">${esc(name)}</a>
-                </div>
-                <div class="ability-effect">${esc(effect)}</div>
-            </div>`;
+                <div class="ability-card mb-3 p-2" style="background: rgba(255,255,255,0.03); border-radius: 4px;">
+                    <h5 class="u-name mb-1" style="font-size: 1.1rem; color: #ff7518;">
+                        <a href="#" class="rule-link" data-action="view-rule" data-rule="${esc(name)}">${esc(name).toUpperCase()}</a>
+                    </h5>
+                    <div class="ability-effect" style="color: #ddd; font-size: 0.9rem; line-height: 1.4;">${esc(getAbilityEffect(r, unit))}</div>
+                </div>`;
         }).join('');
 
         const upgradesHtml = (unit.optional_upgrades || []).map(upg => {
-            if (isLibraryView) {
-                return `<div class="upgrade-row disabled"><span>${esc(upg.name)} (+${esc(upg.cost)} ₤)</span></div>`;
-            }
             const isChecked = (unit.upgrades || []).some(u => u.name === upg.name);
             return `
-                <label class="upgrade-row">
-                    <input type="checkbox" ${isChecked ? 'checked' : ''} 
+                <label class="upgrade-row d-flex align-items-center p-2 mb-1" style="background: rgba(0,0,0,0.2); border-radius: 4px; cursor: pointer;">
+                    <input type="checkbox" class="mr-2" ${isLibraryView ? 'disabled' : (isChecked ? 'checked' : '')} 
                         onchange="window.CCFB.toggleUpgrade('${unit.id}', '${esc(upg.name)}', '${upg.cost}')">
-                    <span>${esc(upg.name)} (+${esc(upg.cost)} ₤)</span>
+                    <span style="font-size: 0.9rem;">${esc(upg.name)} <b style="color: #ff7518; margin-left: 5px;">(+${esc(upg.cost)} ₤)</b></span>
                 </label>`;
         }).join('');
 
         det.innerHTML = `
-            <div class="cc-detail-view">
-                <div class="u-name">${esc(unit.name).toUpperCase()}</div>
-                <div class="u-type">${esc(unit.type).toUpperCase()}</div>
-                <div class="d-flex flex-wrap justify-content-center mb-3">${buildStatBadges(baseUnit, isLibraryView ? null : unit)}</div>
+            <div class="cc-detail-view p-3">
+                <div class="u-name" style="font-size: 2.2rem; line-height: 1;">${esc(unit.name).toUpperCase()}</div>
+                <div class="u-type mb-3" style="letter-spacing: 2px; color: #888;">${esc(unit.type).toUpperCase()}</div>
                 
-                ${abilitiesHtml ? `<div class="detail-section-title">SPECIAL RULES</div>${abilitiesHtml}` : ''}
-                ${upgradesHtml ? `<div class="detail-section-title">UPGRADES & GEAR ${isLibraryView ? '(Add to Roster)' : ''}</div><div id="upgrades-list">${upgradesHtml}</div>` : ''}
-                
-                <hr style="border-top: 1px solid #444; margin: 20px 0;">
-                
-                <div class="detail-section-title">LORE</div>
-                <div class="u-lore" style="font-style: italic; color: #aaa; margin-bottom: 15px;">
-                    ${esc(unit.lore || "No lore recorded.")}
+                <div class="mb-4" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;">
+                    ${buildStatBadges(base, isLibraryView ? null : unit)}
                 </div>
                 
-                <div class="detail-section-title">TACTICS</div>
-                <div class="u-tactics" style="font-size: 13px; color: #ddd; margin-bottom: 20px;">
-                    ${esc(unit.tactics || "No tactical data available.")}
+                <div class="detail-section-title">SPECIAL ABILITIES</div>
+                <div class="mb-4">${abilitiesHtml || '<p class="text-muted italic">No special abilities.</p>'}</div>
+                
+                <div class="detail-section-title">UPGRADES & GEAR</div>
+                <div class="mb-4">${upgradesHtml || '<p class="text-muted italic">No upgrades available.</p>'}</div>
+
+                <div style="background: rgba(255,117,24,0.08); border: 1px solid rgba(255,117,24,0.2); border-left: 4px solid #ff7518; padding: 20px; margin-top: 40px; border-radius: 0 8px 8px 0;">
+                    <div class="detail-section-title" style="margin-top:0; color: #ff7518;">FIELD LORE</div>
+                    <div class="u-lore mb-4" style="font-style: italic; color: #bbb; font-size: 0.95rem;">"${esc(base.lore || "No historical record available.")}"</div>
+                    
+                    <div class="detail-section-title" style="color: #ff7518;">TACTICAL DOCTRINE</div>
+                    <div class="u-tactics" style="color: #fff; font-size: 0.95rem; line-height: 1.5;">${esc(base.tactics || "Standard combat engagement protocols.")}</div>
                 </div>
             </div>`;
     };
 
+    // ============================================================
+    // DYNAMIC UI REFRESH (OPR STYLE)
+    // ============================================================
     window.CCFB.refreshUI = () => {
         const UI = C.ui || {};
         const faction = C.state.factions?.[UI.fKey];
-        const total = C.calculateTotal();
+        if (!faction) return;
+
+        // Points Total
+        const total = (UI.roster || []).reduce((s, i) => s + (i.cost + (i.upgrades?.reduce((a, b) => a + b.cost, 0) || 0)), 0);
         const totalEl = document.getElementById("display-total");
         if (totalEl) {
             totalEl.innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
             totalEl.style.color = (UI.budget > 0 && total > UI.budget) ? '#ff4444' : '#ff7518';
         }
 
-        const lib = document.getElementById("lib-target");
-        if (lib && faction) {
-            lib.innerHTML = (faction.units || []).map(u => `
-                <div class="cc-roster-item d-flex flex-column">
-                    <div class="cc-unit-info" data-action="select-lib" data-unit="${enc(u.name)}" style="cursor: pointer;">
-                        <div class="u-name">${esc(u.name).toUpperCase()}</div>
-                        <div class="d-flex flex-wrap justify-content-center mb-2">${buildStatBadges(u)}</div>
-                    </div>
-                    <button class="btn btn-sm btn-block btn-outline-warning mt-2" type="button" data-action="add" data-unit="${enc(u.name)}" data-cost="${enc(u.cost)}">
-                        <i class="fa fa-plus"></i> ADD TO ROSTER
-                    </button>
-                </div>`).join('');
-        }
-
+        // Army Roster View (Wide/Scannable)
         const rost = document.getElementById("rost-target");
         if (rost) {
             rost.innerHTML = (UI.roster || []).map(item => {
-                const u = faction?.units.find(un => un.name === item.uN);
-                if (!u) return '';
-                const upgCount = (item.upgrades || []).length;
+                const u = faction.units.find(un => un.name === item.uN);
+                const abs = (u?.abilities || []).map(a => getName(a)).join(", ");
+                const finalCost = item.cost + (item.upgrades?.reduce((a, b) => a + b.cost, 0) || 0);
                 return `
-                    <div class="cc-roster-item" data-action="select-roster" data-id="${item.id}" style="cursor: pointer;">
-                        <div class="d-flex justify-content-between align-items-center">
+                    <div class="cc-roster-item mb-2 p-2" data-action="select-roster" data-id="${item.id}" style="cursor: pointer; border-left: 4px solid #ff7518; background: rgba(255,255,255,0.02);">
+                        <div class="d-flex justify-content-between align-items-start">
                             <div style="flex: 1;">
-                                <div class="u-name">${esc(item.uN).toUpperCase()}</div>
-                                <div class="stats-row-mini" style="margin: 4px 0;">${buildStatBadges(u, item)}</div>
-                                <div style="font-size: 9px; color: #888;">${upgCount > 0 ? `+${upgCount} UPGRADES` : 'NO UPGRADES'}</div>
+                                <div class="d-flex flex-wrap align-items-center mb-1">
+                                    <span class="u-name mr-3" style="font-size: 1.1rem; color: #eee;">${esc(item.uN).toUpperCase()}</span>
+                                    ${buildStatBadges(u, item)}
+                                </div>
+                                <div class="text-muted" style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
+                                    ${esc(abs || "No Special Rules")}
+                                </div>
                             </div>
-                            <button class="btn-minus" type="button" data-action="remove" data-id="${item.id}">−</button>
+                            <div class="d-flex align-items-center">
+                                <b style="color: #ff7518; margin-right: 15px; font-family: monospace;">${finalCost}₤</b>
+                                <button class="btn-minus" data-action="remove" data-id="${item.id}">−</button>
+                            </div>
                         </div>
                     </div>`;
             }).join('');
         }
+
+        // Unit Library
+        const lib = document.getElementById("lib-target");
+        if (lib) {
+            lib.innerHTML = (faction.units || []).map(u => `
+                <div class="cc-roster-item p-2 mb-2" data-action="select-lib" data-unit="${enc(u.name)}" style="cursor: pointer;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div style="flex: 1;">
+                            <div class="u-name" style="font-size: 0.9rem;">${esc(u.name).toUpperCase()}</div>
+                            <div class="mt-1" style="transform: scale(0.9); transform-origin: left;">${buildStatBadges(u)}</div>
+                        </div>
+                        <button class="btn btn-sm btn-outline-warning" data-action="add" data-unit="${enc(u.name)}" data-cost="${u.cost}">
+                            + ${u.cost} ₤
+                        </button>
+                    </div>
+                </div>`).join('');
+        }
         bindDocumentHandler();
     };
 
+    // ============================================================
+    // EVENT DELEGATION & ACTION HANDLERS
+    // ============================================================
     window.CCFB.addUnitToRoster = (name, cost) => {
         C.ui.roster = C.ui.roster || [];
-        const newUnit = { id: Date.now(), fKey: C.ui.fKey, uN: name, cost: parseInt(cost), upgrades: [] };
-        C.ui.roster.push(newUnit);
+        C.ui.roster.push({ id: Date.now(), uN: name, cost: parseInt(cost), upgrades: [] });
         window.CCFB.refreshUI();
-        const faction = C.state.factions?.[C.ui.fKey];
-        const base = faction?.units.find(u => u.name === name);
-        if (base) window.CCFB.renderDetail({...base, ...newUnit}, false);
     };
 
     window.CCFB.removeUnitFromRoster = (id) => {
         C.ui.roster = (C.ui.roster || []).filter(x => String(x.id) !== String(id));
-        document.getElementById("det-target").innerHTML = '<div class="cc-empty-state">Select a unit to view details</div>';
+        document.getElementById("det-target").innerHTML = '<div class="cc-empty-state">Select a unit to begin.</div>';
         window.CCFB.refreshUI();
     };
 
     window.CCFB.toggleUpgrade = (unitId, upgName, upgCost) => {
         const item = C.ui.roster.find(u => String(u.id) === String(unitId));
         if (!item) return;
-        item.upgrades = item.upgrades || [];
-        const idx = item.upgrades.findIndex(upg => upg.name === upgName);
+        const idx = (item.upgrades || []).findIndex(u => u.name === upgName);
         if (idx > -1) item.upgrades.splice(idx, 1);
         else item.upgrades.push({ name: upgName, cost: parseInt(upgCost) });
         
         window.CCFB.refreshUI();
-        const faction = C.state.factions?.[C.ui.fKey];
-        const base = faction?.units.find(u => u.name === item.uN);
-        if (base) window.CCFB.renderDetail({...base, ...item}, false);
+        const base = C.state.factions[C.ui.fKey].units.find(u => u.name === item.uN);
+        window.CCFB.renderDetail({...base, ...item}, false);
     };
 
     const bindDocumentHandler = () => {
         if (window.CCFB._painterDocHandlerBound) return;
         window.CCFB._painterDocHandlerBound = true;
 
-        document.addEventListener("click", (evt) => {
-            const app = document.getElementById("ccfb-app");
-            if (!app || !app.contains(evt.target)) return;
-            const el = evt.target.closest("[data-action]");
+        document.addEventListener("click", (e) => {
+            const el = e.target.closest("[data-action]");
             if (!el) return;
-
             const action = el.getAttribute("data-action");
             const faction = C.state.factions?.[C.ui.fKey];
 
             if (action === "view-rule") {
-                evt.preventDefault();
-                const ruleName = el.getAttribute("data-rule");
-                window.CCFB.renderRuleDetail(ruleName);
+                e.preventDefault();
+                if (window.CCFB.renderRuleDetail) window.CCFB.renderRuleDetail(el.getAttribute("data-rule"));
             }
-            else if (action === "select-lib") {
-                const base = faction?.units.find(u => u.name === dec(el.getAttribute("data-unit")));
-                if (base) window.CCFB.renderDetail(base, true);
-            } 
-            else if (action === "select-roster") {
+            if (action === "add") window.CCFB.addUnitToRoster(dec(el.getAttribute("data-unit")), el.getAttribute("data-cost"));
+            if (action === "remove") { e.stopPropagation(); window.CCFB.removeUnitFromRoster(el.getAttribute("data-id")); }
+            if (action === "select-lib") {
+                const unit = faction.units.find(u => u.name === dec(el.getAttribute("data-unit")));
+                window.CCFB.renderDetail(unit, true);
+            }
+            if (action === "select-roster") {
                 const item = C.ui.roster.find(i => String(i.id) === String(el.getAttribute("data-id")));
-                const base = faction?.units.find(u => u.name === item.uN);
-                if (base) window.CCFB.renderDetail({...base, ...item}, false);
-            }
-            else if (action === "add") {
-                window.CCFB.addUnitToRoster(dec(el.getAttribute("data-unit")), dec(el.getAttribute("data-cost")));
-            } 
-            else if (action === "remove") {
-                evt.stopPropagation();
-                window.CCFB.removeUnitFromRoster(el.getAttribute("data-id"));
+                const base = faction.units.find(u => u.name === item.uN);
+                window.CCFB.renderDetail({...base, ...item}, false);
             }
         });
     };
 
-    bindDocumentHandler();
     return { refreshUI: window.CCFB.refreshUI };
 });
