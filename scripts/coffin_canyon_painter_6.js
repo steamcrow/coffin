@@ -10,20 +10,16 @@ CCFB.define("components/painter", function(C) {
         const name = getName(abilityName);
         const searchName = name.toLowerCase().trim();
         const rules = C.state.rules || {};
-        // 1. Check unit-specific overrides
         if (unit.ability_details?.[searchName]) return unit.ability_details[searchName];
-        // 2. Check object-level data
         if (typeof abilityName === 'object' && abilityName.effect) return abilityName.effect;
-        // 3. Search Global Rules Database
         const cats = ['abilities', 'weapon_properties', 'type_rules'];
         for (const cat of cats) {
             const match = rules[cat]?.find(a => a.name.toLowerCase() === searchName);
             if (match) return match.effect;
         }
-        return "Tactical data pending in central archives.";
+        return "Tactical data pending.";
     };
 
-    // --- STAT CALCULATOR ---
     const calculateModifiedStats = (baseUnit, rosterUnit) => {
         const mod = { quality: baseUnit.quality, defense: baseUnit.defense, range: baseUnit.range || 0, move: baseUnit.move };
         if (rosterUnit?.upgrades) {
@@ -77,7 +73,7 @@ CCFB.define("components/painter", function(C) {
 
         const abilitiesHtml = (unit.abilities || []).map(r => `
             <div class="ability-boxed-callout">
-                <h5 class="u-name mb-2">
+                <h5 class="u-name mb-1">
                     <a href="#" class="rule-link" data-action="view-rule" data-rule="${esc(getName(r))}">${esc(getName(r))}</a>
                 </h5>
                 <div class="ability-effect-text">${esc(getAbilityEffect(r, unit))}</div>
@@ -91,7 +87,7 @@ CCFB.define("components/painter", function(C) {
                         onchange="window.CCFB.toggleUpgrade('${unit.id}', '${esc(upg.name)}', '${upg.cost}')">
                     <div style="flex:1">
                         <span class="u-name" style="font-size:12px">${esc(upg.name)}</span>
-                        <div style="font-size:10px; opacity:0.6">${esc(upg.effect || "Equipment Upgrade")}</div>
+                        <div style="font-size:10px; opacity:0.6">${esc(upg.effect || "Unit Upgrade")}</div>
                     </div>
                     <b style="color:var(--pumpkin)">+${esc(upg.cost)} ₤</b>
                 </label>`;
@@ -99,26 +95,31 @@ CCFB.define("components/painter", function(C) {
 
         det.innerHTML = `
             <div class="cc-detail-wrapper">
-                <div class="u-name" style="font-size: 2rem; margin-bottom:0;">${esc(unit.name)}</div>
-                <div class="u-type mb-3">${esc(unit.type)}</div>
+                <div class="u-name" style="font-size: 1.2rem; margin-bottom:0;">${esc(unit.name)}</div>
+                <div class="u-type mb-2">${esc(unit.type)}</div>
                 
-                <div class="detail-stat-bar mb-4">
+                <div class="detail-stat-bar mb-2">
                     ${buildStatBadges(base, isLibraryView ? null : unit)}
                 </div>
-                
-                <div class="u-type" style="font-size:12px; margin-bottom:10px;">SPECIAL ABILITIES</div>
-                <div class="mb-4">${abilitiesHtml || '<div class="u-lore">No special abilities.</div>'}</div>
-                
-                <div class="u-type" style="font-size:12px; margin-bottom:10px;">AVAILABLE UPGRADES</div>
-                <div class="mb-4">${upgradesHtml || '<div class="u-lore">No upgrades available.</div>'}</div>
 
-                <div class="field-notes-box">
-                    <div class="u-type" style="color:#fff"><i class="fa fa-pencil-square-o"></i> FIELD LORE</div>
-                    <div class="u-lore" style="border:none; padding:0; margin:5px 0 15px 0;">"${esc(base.lore || "Classified.")}"</div>
-                    
-                    <div class="u-type" style="color:#fff"><i class="fa fa-crosshairs"></i> TACTICAL DOCTRINE</div>
-                    <div style="font-size:12px; line-height:1.4; color:rgba(255,255,255,0.9)">${esc(base.tactics || "Engage at discretion.")}</div>
+                <div class="u-lore mb-4">"${esc(base.lore || "No flavor text found.")}"</div>
+                
+                <div class="u-type" style="font-size:11px; margin-bottom:8px;">SPECIAL ABILITIES</div>
+                <div class="mb-4">${abilitiesHtml || '<p class="text-muted small">None.</p>'}</div>
+                
+                <div class="u-type" style="font-size:11px; margin-bottom:8px;">UPGRADES</div>
+                <div class="mb-4">${upgradesHtml || '<p class="text-muted small">Standard kit only.</p>'}</div>
+
+                <div class="field-notes-box mb-4">
+                    <div class="u-type" style="color:#fff">TACTICAL DOCTRINE</div>
+                    <div style="font-size:12px; line-height:1.4; color:rgba(255,255,255,0.9)">${esc(base.tactics || "Deploy as needed.")}</div>
                 </div>
+
+                ${isLibraryView ? `
+                    <button class="btn btn-warning w-100 mt-2 p-2" data-action="add" data-unit="${enc(unit.name)}" data-cost="${unit.cost}">
+                        ADD TO ROSTER (+${unit.cost} ₤)
+                    </button>
+                ` : ''}
             </div>`;
     };
 
@@ -128,8 +129,7 @@ CCFB.define("components/painter", function(C) {
         if (!faction) return;
 
         const total = (UI.roster || []).reduce((s, i) => s + (i.cost + (i.upgrades?.reduce((a, b) => a + b.cost, 0) || 0)), 0);
-        const totalEl = document.getElementById("display-total");
-        if (totalEl) totalEl.innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
+        document.getElementById("display-total").innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
 
         const rost = document.getElementById("rost-target");
         if (rost) {
@@ -141,12 +141,12 @@ CCFB.define("components/painter", function(C) {
                     <div class="cc-roster-item scannable-item" data-action="select-roster" data-id="${item.id}">
                         <div style="flex:1">
                             <div class="d-flex align-items-center mb-1">
-                                <span class="u-name" style="margin-right:15px">${esc(item.uN)}</span>
+                                <span class="u-name" style="margin-right:10px">${esc(item.uN)}</span>
                                 ${buildStatBadges(u, item)}
                             </div>
-                            <div class="u-type" style="margin:0; opacity:0.7">${esc(abs || "Basic")}</div>
+                            <div class="u-type" style="margin:0; opacity:0.7">${esc(abs || "Standard")}</div>
                         </div>
-                        <div class="d-flex align-items-center" style="gap:15px">
+                        <div class="d-flex align-items-center" style="gap:10px">
                             <span class="u-name" style="color:var(--pumpkin)">${finalCost}₤</span>
                             <button class="btn-minus" data-action="remove" data-id="${item.id}">−</button>
                         </div>
@@ -157,13 +157,13 @@ CCFB.define("components/painter", function(C) {
         const lib = document.getElementById("lib-target");
         if (lib) {
             lib.innerHTML = (faction.units || []).map(u => `
-                <div class="cc-roster-item" data-action="select-lib" data-unit="${enc(u.name)}" style="cursor:pointer; padding:10px; margin-bottom:5px; border: 1px solid var(--border-light);">
+                <div class="cc-roster-item lib-item" data-action="select-lib" data-unit="${enc(u.name)}">
                     <div class="d-flex justify-content-between align-items-center">
-                        <div>
+                        <div style="flex:1">
                             <div class="u-name">${esc(u.name)}</div>
-                            <div style="transform: scale(0.8); transform-origin: left; margin-top:5px;">${buildStatBadges(u)}</div>
+                            <div style="transform: scale(0.8); transform-origin: left; margin-top:4px;">${buildStatBadges(u)}</div>
                         </div>
-                        <button class="btn btn-sm btn-outline-warning" data-action="add" data-unit="${enc(u.name)}" data-cost="${u.cost}">+ ${u.cost}</button>
+                        <span class="u-name" style="color:var(--pumpkin)">${u.cost} ₤</span>
                     </div>
                 </div>`).join('');
         }
@@ -178,16 +178,21 @@ CCFB.define("components/painter", function(C) {
             if (!el) return;
             const action = el.getAttribute("data-action");
             const faction = C.state.factions?.[C.ui.fKey];
-            if (action === "view-rule") {
-                e.preventDefault();
-                if (window.CCFB.renderRuleDetail) window.CCFB.renderRuleDetail(el.getAttribute("data-rule"));
+            if (action === "add") {
+                window.CCFB.addUnitToRoster(dec(el.getAttribute("data-unit")), el.getAttribute("data-cost"));
+                // Immediately show roster detail for the new item
+                const newItem = C.ui.roster[C.ui.roster.length - 1];
+                window.CCFB.renderDetail({...faction.units.find(u => u.name === newItem.uN), ...newItem}, false);
             }
-            if (action === "add") window.CCFB.addUnitToRoster(dec(el.getAttribute("data-unit")), el.getAttribute("data-cost"));
             if (action === "remove") { e.stopPropagation(); window.CCFB.removeUnitFromRoster(el.getAttribute("data-id")); }
             if (action === "select-lib") window.CCFB.renderDetail(faction.units.find(u => u.name === dec(el.getAttribute("data-unit"))), true);
             if (action === "select-roster") {
                 const item = C.ui.roster.find(i => String(i.id) === String(el.getAttribute("data-id")));
                 window.CCFB.renderDetail({...faction.units.find(u => u.name === item.uN), ...item}, false);
+            }
+            if (action === "view-rule") {
+                e.preventDefault();
+                if (window.CCFB.renderRuleDetail) window.CCFB.renderRuleDetail(el.getAttribute("data-rule"));
             }
         });
     };
@@ -200,7 +205,7 @@ CCFB.define("components/painter", function(C) {
 
     window.CCFB.removeUnitFromRoster = (id) => {
         C.ui.roster = (C.ui.roster || []).filter(x => String(x.id) !== String(id));
-        document.getElementById("det-target").innerHTML = '<div class="u-lore">Selection required.</div>';
+        document.getElementById("det-target").innerHTML = '<div class="u-lore">Unit removed. Select another.</div>';
         window.CCFB.refreshUI();
     };
 
