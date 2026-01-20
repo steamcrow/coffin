@@ -225,37 +225,44 @@ CCFB.define("components/storage", function(C) {
     };
 
     // Delete a roster
-    window.CCFB.deleteRoster = async (rosterId) => {
-        if (!confirm("Are you sure you want to delete this roster?")) {
-            return;
-        }
+window.CCFB.deleteRoster = async (rosterId) => {
+    if (!confirm("Are you sure you want to delete this roster?")) {
+        return;
+    }
 
-        try {
-            const response = await fetch('/web/dataset/call_kw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                    jsonrpc: '2.0',
-                    method: 'call',
-                    params: {
-                        model: 'documents.document',
-                        method: 'unlink',
-                        args: [[rosterId]]
-                    }
-                })
-            });
+    try {
+        const response = await fetch('/web/dataset/call_kw', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'call',
+                params: {
+                    model: 'documents.document',
+                    method: 'unlink',
+                    args: [[rosterId]]
+                }
+            })
+        });
 
-            if (!response.ok) throw new Error('Delete failed');
-            
-            alert("✓ Roster deleted!");
-            window.CCFB.loadRosterList(); // Refresh the panel
-        } catch (error) {
-            console.error("Delete error:", error);
-            alert("Error deleting roster.");
-        }
-    };
-
+        if (!response.ok) throw new Error('Delete failed');
+        
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
+        
+        alert("✓ Roster deleted!");
+        
+        // Close panel, then reopen with fresh data
+        closeRosterListPanel();
+        setTimeout(() => {
+            window.CCFB.loadRosterList();
+        }, 300);
+    } catch (error) {
+        console.error("Delete error:", error);
+        alert("Error deleting roster: " + error.message);
+    }
+};
     // Load a specific roster
     window.CCFB.loadRoster = async (rosterId) => {
         try {
