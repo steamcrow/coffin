@@ -58,24 +58,44 @@ CCFB.define("components/painter", function(C) {
     };
 
     window.CCFB.showRuleDetail = (ruleName) => {
-        const det = document.getElementById("det-target");
-        if (!det) return;
-        
         const rule = getAbilityFull(ruleName);
         if (!rule) return;
 
-        det.innerHTML = `
-            <div class="cc-detail-wrapper">
-                <button onclick="window.CCFB.restorePreviousView();" class="btn-outline-warning mb-3" style="width: 100%;">
-                    <i class="fa fa-arrow-left"></i> BACK
+        // Close existing panel if any
+        closeRulePanel();
+        
+        const panel = document.createElement('div');
+        panel.id = 'rule-detail-panel';
+        panel.className = 'cc-slide-panel';
+
+        panel.innerHTML = `
+            <div class="cc-slide-panel-header">
+                <h2>${esc(rule.name)}</h2>
+                <button onclick="window.CCFB.closeRulePanel()" class="cc-panel-close-btn">
+                    <i class="fa fa-times"></i>
                 </button>
-                <div class="u-name" style="font-size: 1.4rem;">${esc(rule.name)}</div>
-                <div class="u-type mb-2">Game Mechanic</div>
+            </div>
+            <div class="cc-roster-list">
                 <div class="ability-boxed-callout">
+                    <div class="u-type mb-2">Game Mechanic</div>
                     <div>${esc(rule.effect)}</div>
                 </div>
-            </div>`;
+            </div>
+        `;
+
+        document.body.appendChild(panel);
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
     };
+
+    const closeRulePanel = () => {
+        const panel = document.getElementById('rule-detail-panel');
+        if (panel) {
+            panel.classList.remove('cc-slide-panel-open');
+            setTimeout(() => panel.remove(), 300);
+        }
+    };
+
+    window.CCFB.closeRulePanel = closeRulePanel;
 
     window.CCFB.restorePreviousView = () => {
         if (window.CCFB._previousView) {
@@ -204,11 +224,19 @@ CCFB.define("components/painter", function(C) {
         const faction = C.state.factions[UI.fKey];
         if (!faction) return;
 
+        // Filter out any invalid roster items (safety check for faction changes)
+        UI.roster = (UI.roster || []).filter(item => {
+            if (!item || !item.uN) return false;
+            return faction.units.some(u => u.name === item.uN);
+        });
+
         const total = (UI.roster || []).reduce((s, i) => s + (i.cost + (i.upgrades?.reduce((a, b) => a + b.cost, 0) || 0)), 0);
         document.getElementById("display-total").innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
 
         const renderItem = (item, isRost = false) => {
             const u = faction.units.find(un => un.name === (isRost ? item.uN : item.name));
+            if (!u) return ''; // Safety check - skip if unit not found
+            
             const price = isRost ? (item.cost + (item.upgrades?.reduce((a, b) => a + b.cost, 0) || 0)) : item.cost;
             const abs = (u.abilities || []).map(a => {
                 const aName = getName(a);
