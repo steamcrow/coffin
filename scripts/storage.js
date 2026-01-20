@@ -1,7 +1,7 @@
 CCFB.define("components/storage", function(C) {
     
     const CONFIG = {
-        FOLDER_ID: 90  // Same folder as Scenario Builder - Coffin Canyon Factions
+        FOLDER_ID: 90  // Coffin Canyon Factions folder
     };
 
     // Check if user is logged in
@@ -105,12 +105,16 @@ CCFB.define("components/storage", function(C) {
                             args: [[existing.id], {
                                 datas: base64Data,
                                 name: `${name}.json`
-                            }]
+                            }],
+                            kwargs: {}
                         }
                     })
                 });
 
                 if (!response.ok) throw new Error('Update failed');
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.data?.message || 'Update failed');
+                
                 alert(`✓ Roster "${name}" updated!`);
             } else {
                 // Create new
@@ -129,17 +133,21 @@ CCFB.define("components/storage", function(C) {
                                 folder_id: CONFIG.FOLDER_ID,
                                 datas: base64Data,
                                 mimetype: 'application/json'
-                            }]
+                            }],
+                            kwargs: {}
                         }
                     })
                 });
 
                 if (!response.ok) throw new Error('Save failed');
+                const data = await response.json();
+                if (data.error) throw new Error(data.error.data?.message || 'Save failed');
+                
                 alert(`✓ Roster "${name}" saved!`);
             }
         } catch (error) {
             console.error("Save error:", error);
-            alert("Error saving roster. Please try again.");
+            alert("Error saving roster: " + error.message);
         }
     };
 
@@ -170,6 +178,7 @@ CCFB.define("components/storage", function(C) {
 
             if (!response.ok) return null;
             const data = await response.json();
+            if (data.error) return null;
             if (data.result && data.result.length > 0) {
                 return data.result[0];
             }
@@ -211,6 +220,7 @@ CCFB.define("components/storage", function(C) {
 
             if (!response.ok) throw new Error('Load failed');
             const data = await response.json();
+            if (data.error) throw new Error(data.error.data?.message || 'Load failed');
             
             if (!data.result || data.result.length === 0) {
                 alert("You don't have any saved rosters yet!");
@@ -220,86 +230,83 @@ CCFB.define("components/storage", function(C) {
             showRosterListPanel(data.result);
         } catch (error) {
             console.error("Load error:", error);
-            alert("Error loading rosters. Please try again.");
+            alert("Error loading rosters: " + error.message);
         }
     };
 
-// Delete a roster
-window.CCFB.deleteRoster = async (rosterId) => {
-    if (!confirm("Are you sure you want to delete this roster?")) {
-        return;
-    }
-
-    try {
-        const response = await fetch('/web/dataset/call_kw', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-                jsonrpc: '2.0',
-                method: 'call',
-                params: {
-                    model: 'documents.document',
-                    method: 'unlink',
-                    args: [[rosterId]]
-                }
-            })
-        });
-
-        if (!response.ok) throw new Error('Delete failed');
-        
-        const data = await response.json();
-        if (data.error) {
-            throw new Error(data.error.data?.message || 'Delete failed');
+    // Delete a roster
+    window.CCFB.deleteRoster = async (rosterId) => {
+        if (!confirm("Are you sure you want to delete this roster?")) {
+            return;
         }
-        
-        // Wait a moment for Odoo to process, then refresh the list
-        setTimeout(async () => {
-            try {
-                // Fetch fresh roster list with cache busting
-                const listResponse = await fetch('/web/dataset/call_kw', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        jsonrpc: '2.0',
-                        method: 'call',
-                        params: {
-                            model: 'documents.document',
-                            method: 'search_read',
-                            args: [[
-                                ['folder_id', '=', CONFIG.FOLDER_ID]
-                            ]],
-                            kwargs: {
-                                fields: ['id', 'name', 'create_date', 'write_date'],
-                                order: 'write_date desc'
-                            }
-                        }
-                    })
-                });
 
-                const listData = await listResponse.json();
-                
-                if (listData.result && listData.result.length > 0) {
-                    // Update the panel with fresh data
-                    showRosterListPanel(listData.result);
-                    alert("✓ Roster deleted!");
-                } else {
-                    // No rosters left
-                    closeRosterListPanel();
-                    alert("✓ Roster deleted! (No more saved rosters)");
+        try {
+            const response = await fetch('/web/dataset/call_kw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'call',
+                    params: {
+                        model: 'documents.document',
+                        method: 'unlink',
+                        args: [[rosterId]],
+                        kwargs: {}
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error('Delete failed');
+            
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
+            
+            // Wait then refresh the list
+            setTimeout(async () => {
+                try {
+                    const listResponse = await fetch('/web/dataset/call_kw', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            jsonrpc: '2.0',
+                            method: 'call',
+                            params: {
+                                model: 'documents.document',
+                                method: 'search_read',
+                                args: [[
+                                    ['folder_id', '=', CONFIG.FOLDER_ID]
+                                ]],
+                                kwargs: {
+                                    fields: ['id', 'name', 'create_date', 'write_date'],
+                                    order: 'write_date desc'
+                                }
+                            }
+                        })
+                    });
+
+                    const listData = await listResponse.json();
+                    
+                    if (listData.result && listData.result.length > 0) {
+                        showRosterListPanel(listData.result);
+                        alert("✓ Roster deleted!");
+                    } else {
+                        closeRosterListPanel();
+                        alert("✓ Roster deleted! (No more saved rosters)");
+                    }
+                } catch (e) {
+                    console.error("Refresh error:", e);
+                    alert("✓ Deleted, but couldn't refresh list. Please close and reopen.");
                 }
-            } catch (e) {
-                console.error("Refresh error:", e);
-                alert("✓ Deleted, but couldn't refresh list. Please close and reopen.");
-            }
-        }, 500); // Give Odoo time to process the delete
-        
-    } catch (error) {
-        console.error("Delete error:", error);
-        alert("Error deleting roster: " + error.message);
-    }
-};
+            }, 500);
+            
+        } catch (error) {
+            console.error("Delete error:", error);
+            alert("Error deleting roster: " + error.message);
+        }
+    };
+
     // Load a specific roster
     window.CCFB.loadRoster = async (rosterId) => {
         try {
@@ -314,13 +321,16 @@ window.CCFB.deleteRoster = async (rosterId) => {
                         model: 'documents.document',
                         method: 'read',
                         args: [[rosterId]],
-                        kwargs: { fields: ['datas', 'name'] }
+                        kwargs: { 
+                            fields: ['datas', 'name'] 
+                        }
                     }
                 })
             });
 
             if (!response.ok) throw new Error('Load failed');
             const data = await response.json();
+            if (data.error) throw new Error(data.error.data?.message || 'Load failed');
             
             const doc = data.result[0];
             if (!doc || !doc.datas) throw new Error('No data in document');
@@ -337,7 +347,7 @@ window.CCFB.deleteRoster = async (rosterId) => {
             }
         } catch (error) {
             console.error("Load error:", error);
-            alert("Error loading roster.");
+            alert("Error loading roster: " + error.message);
         }
     };
 
