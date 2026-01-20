@@ -224,7 +224,7 @@ CCFB.define("components/storage", function(C) {
         }
     };
 
-    // Delete a roster
+// Delete a roster
 window.CCFB.deleteRoster = async (rosterId) => {
     if (!confirm("Are you sure you want to delete this roster?")) {
         return;
@@ -249,15 +249,52 @@ window.CCFB.deleteRoster = async (rosterId) => {
         if (!response.ok) throw new Error('Delete failed');
         
         const data = await response.json();
-        if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
+        if (data.error) {
+            throw new Error(data.error.data?.message || 'Delete failed');
+        }
         
-        alert("✓ Roster deleted!");
+        // Wait a moment for Odoo to process, then refresh the list
+        setTimeout(async () => {
+            try {
+                // Fetch fresh roster list with cache busting
+                const listResponse = await fetch('/web/dataset/call_kw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'call',
+                        params: {
+                            model: 'documents.document',
+                            method: 'search_read',
+                            args: [[
+                                ['folder_id', '=', CONFIG.FOLDER_ID]
+                            ]],
+                            kwargs: {
+                                fields: ['id', 'name', 'create_date', 'write_date'],
+                                order: 'write_date desc'
+                            }
+                        }
+                    })
+                });
+
+                const listData = await listResponse.json();
+                
+                if (listData.result && listData.result.length > 0) {
+                    // Update the panel with fresh data
+                    showRosterListPanel(listData.result);
+                    alert("✓ Roster deleted!");
+                } else {
+                    // No rosters left
+                    closeRosterListPanel();
+                    alert("✓ Roster deleted! (No more saved rosters)");
+                }
+            } catch (e) {
+                console.error("Refresh error:", e);
+                alert("✓ Deleted, but couldn't refresh list. Please close and reopen.");
+            }
+        }, 500); // Give Odoo time to process the delete
         
-        // Close panel, then reopen with fresh data
-        closeRosterListPanel();
-        setTimeout(() => {
-            window.CCFB.loadRosterList();
-        }, 300);
     } catch (error) {
         console.error("Delete error:", error);
         alert("Error deleting roster: " + error.message);
