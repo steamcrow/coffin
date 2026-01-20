@@ -1,7 +1,7 @@
 CCFB.define("components/painter", function(C) {
 
     // ============================================================
-    // NEW: RULES TRANSFORMER
+    // RULES TRANSFORMER
     // ============================================================
     C.transformRules = function(rawRules) {
         const transformed = {
@@ -19,10 +19,8 @@ CCFB.define("components/painter", function(C) {
         
         for (let categoryKey in abilityDict) {
             const category = abilityDict[categoryKey];
-            
             for (let abilityKey in category) {
                 const abilityText = category[abilityKey];
-                
                 transformed.abilities.push({
                     id: abilityKey,
                     name: makeReadable(abilityKey),
@@ -31,7 +29,6 @@ CCFB.define("components/painter", function(C) {
                 });
             }
         }
-        
         return transformed;
     };
     
@@ -41,9 +38,6 @@ CCFB.define("components/painter", function(C) {
         ).join(' ');
     }
 
-    // ============================================================
-    // NEW: RULE ID NORMALIZER
-    // ============================================================
     C.getRuleId = function(name) {
         return String(name || "")
             .toLowerCase()
@@ -53,7 +47,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // NEW: RENDER RULE DETAIL CARD
+    // RENDER RULE DETAIL CARD
     // ============================================================
     window.CCFB.renderRuleDetail = (ruleName) => {
         const det = document.getElementById("det-target");
@@ -107,7 +101,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // EXISTING: CORE HELPERS
+    // CORE HELPERS
     // ============================================================
     const getName = (val) => (typeof val === 'object' ? val.name : val);
     const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
@@ -126,15 +120,13 @@ CCFB.define("components/painter", function(C) {
             const match = rules[cat]?.find(a => a.name.toLowerCase() === searchName);
             if (match) return match.effect;
         }
-        
         return "Rule effect pending.";
     };
 
     // ============================================================
-    // NEW: CALCULATE MODIFIED STATS
+    // CALCULATE MODIFIED STATS
     // ============================================================
     const calculateModifiedStats = (baseUnit, rosterUnit) => {
-        // Start with base stats
         const modified = {
             quality: baseUnit.quality,
             defense: baseUnit.defense,
@@ -142,35 +134,25 @@ CCFB.define("components/painter", function(C) {
             move: baseUnit.move
         };
         
-        // Apply modifiers from each selected upgrade
         if (rosterUnit?.upgrades) {
             rosterUnit.upgrades.forEach(upgrade => {
-                // Find the full upgrade definition
                 const upgradeDef = baseUnit.optional_upgrades?.find(u => u.name === upgrade.name);
                 if (upgradeDef?.stat_modifiers) {
-                    // Apply each stat modifier
                     Object.keys(upgradeDef.stat_modifiers).forEach(stat => {
                         const modifier = upgradeDef.stat_modifiers[stat];
                         if (stat === 'range' && modified.range === 0) {
-                            // If range was 0 (melee only), set it to the value
                             modified.range = modifier;
                         } else {
-                            // Otherwise add the modifier
                             modified[stat] = (modified[stat] || 0) + modifier;
                         }
                     });
                 }
             });
         }
-        
         return modified;
     };
 
-    // ============================================================
-    // UPDATED: BUILD STAT BADGES WITH MODIFICATIONS
-    // ============================================================
     const buildStatBadges = (baseUnit, rosterUnit = null) => {
-        // Calculate modified stats if this is a roster unit
         const stats = rosterUnit ? calculateModifiedStats(baseUnit, rosterUnit) : {
             quality: baseUnit.quality,
             defense: baseUnit.defense,
@@ -178,7 +160,6 @@ CCFB.define("components/painter", function(C) {
             move: baseUnit.move
         };
         
-        // Determine if each stat was modified
         const isModified = (stat, value) => {
             if (!rosterUnit) return false;
             const base = stat === 'range' ? (baseUnit.range || 0) : baseUnit[stat];
@@ -203,9 +184,6 @@ CCFB.define("components/painter", function(C) {
         }).join('');
     };
 
-    // ============================================================
-    // EXISTING: THE BRAINS (MATH)
-    // ============================================================
     C.calculateTotal = function() {
         return (C.ui.roster || []).reduce((sum, item) => {
             let unitTotal = parseInt(item.cost) || 0;
@@ -217,7 +195,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================================
-    // UPDATED: RENDERING WITH DYNAMIC STAT BADGES
+    // RENDERING WITH LORE & TACTICS
     // ============================================================
     window.CCFB.renderDetail = (unit, isLibraryView = false) => {
         const det = document.getElementById("det-target");
@@ -225,7 +203,6 @@ CCFB.define("components/painter", function(C) {
         
         C.ui._currentDetailView = { unit, isLibrary: isLibraryView };
 
-        // Get base unit for stat calculations
         const faction = C.state.factions?.[C.ui.fKey];
         const baseUnit = faction?.units.find(u => u.name === unit.name) || unit;
 
@@ -238,8 +215,8 @@ CCFB.define("components/painter", function(C) {
                     <a href="#" class="rule-link" data-action="view-rule" data-rule="${esc(name)}">${esc(name)}</a>
                 </div>
                 <div class="ability-effect">${esc(effect)}</div>
-            </div>
-        `}).join('');
+            </div>`;
+        }).join('');
 
         const upgradesHtml = (unit.optional_upgrades || []).map(upg => {
             if (isLibraryView) {
@@ -259,16 +236,27 @@ CCFB.define("components/painter", function(C) {
                 <div class="u-name">${esc(unit.name).toUpperCase()}</div>
                 <div class="u-type">${esc(unit.type).toUpperCase()}</div>
                 <div class="d-flex flex-wrap justify-content-center mb-3">${buildStatBadges(baseUnit, isLibraryView ? null : unit)}</div>
-                <div class="u-lore">${esc(unit.lore || unit.description || "No lore recorded.")}</div>
+                
                 ${abilitiesHtml ? `<div class="detail-section-title">SPECIAL RULES</div>${abilitiesHtml}` : ''}
                 ${upgradesHtml ? `<div class="detail-section-title">UPGRADES & GEAR ${isLibraryView ? '(Add to Roster)' : ''}</div><div id="upgrades-list">${upgradesHtml}</div>` : ''}
+                
+                <hr style="border-top: 1px solid #444; margin: 20px 0;">
+                
+                <div class="detail-section-title">LORE</div>
+                <div class="u-lore" style="font-style: italic; color: #aaa; margin-bottom: 15px;">
+                    ${esc(unit.lore || "No lore recorded.")}
+                </div>
+                
+                <div class="detail-section-title">TACTICS</div>
+                <div class="u-tactics" style="font-size: 13px; color: #ddd; margin-bottom: 20px;">
+                    ${esc(unit.tactics || "No tactical data available.")}
+                </div>
             </div>`;
     };
 
     window.CCFB.refreshUI = () => {
         const UI = C.ui || {};
         const faction = C.state.factions?.[UI.fKey];
-        
         const total = C.calculateTotal();
         const totalEl = document.getElementById("display-total");
         if (totalEl) {
@@ -296,7 +284,6 @@ CCFB.define("components/painter", function(C) {
                 const u = faction?.units.find(un => un.name === item.uN);
                 if (!u) return '';
                 const upgCount = (item.upgrades || []).length;
-                
                 return `
                     <div class="cc-roster-item" data-action="select-roster" data-id="${item.id}" style="cursor: pointer;">
                         <div class="d-flex justify-content-between align-items-center">
@@ -313,9 +300,6 @@ CCFB.define("components/painter", function(C) {
         bindDocumentHandler();
     };
 
-    // ============================================================
-    // EXISTING: ACTION HELPERS
-    // ============================================================
     window.CCFB.addUnitToRoster = (name, cost) => {
         C.ui.roster = C.ui.roster || [];
         const newUnit = { id: Date.now(), fKey: C.ui.fKey, uN: name, cost: parseInt(cost), upgrades: [] };
@@ -346,9 +330,6 @@ CCFB.define("components/painter", function(C) {
         if (base) window.CCFB.renderDetail({...base, ...item}, false);
     };
 
-    // ============================================================
-    // EXISTING: EVENT DELEGATION
-    // ============================================================
     const bindDocumentHandler = () => {
         if (window.CCFB._painterDocHandlerBound) return;
         window.CCFB._painterDocHandlerBound = true;
@@ -356,7 +337,6 @@ CCFB.define("components/painter", function(C) {
         document.addEventListener("click", (evt) => {
             const app = document.getElementById("ccfb-app");
             if (!app || !app.contains(evt.target)) return;
-
             const el = evt.target.closest("[data-action]");
             if (!el) return;
 
