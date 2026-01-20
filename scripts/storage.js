@@ -235,78 +235,43 @@ CCFB.define("components/storage", function(C) {
     };
 
     // Delete a roster
-    window.CCFB.deleteRoster = async (rosterId) => {
-        if (!confirm("Are you sure you want to delete this roster?")) {
-            return;
-        }
+// Delete a roster (actually archives it)
+window.CCFB.deleteRoster = async (rosterId) => {
+    if (!confirm("Are you sure you want to delete this roster?")) {
+        return;
+    }
 
-        try {
-            const response = await fetch('/web/dataset/call_kw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                    jsonrpc: '2.0',
-                    method: 'call',
-                    params: {
-                        model: 'documents.document',
-                        method: 'unlink',
-                        args: [[rosterId]],
-                        kwargs: {}
-                    }
-                })
-            });
-
-            if (!response.ok) throw new Error('Delete failed');
-            
-            const data = await response.json();
-            if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
-            
-            // Wait then refresh the list
-            setTimeout(async () => {
-                try {
-                    const listResponse = await fetch('/web/dataset/call_kw', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        credentials: 'include',
-                        body: JSON.stringify({
-                            jsonrpc: '2.0',
-                            method: 'call',
-                            params: {
-                                model: 'documents.document',
-                                method: 'search_read',
-                                args: [[
-                                    ['folder_id', '=', CONFIG.FOLDER_ID]
-                                ]],
-                                kwargs: {
-                                    fields: ['id', 'name', 'create_date', 'write_date'],
-                                    order: 'write_date desc'
-                                }
-                            }
-                        })
-                    });
-
-                    const listData = await listResponse.json();
-                    
-                    if (listData.result && listData.result.length > 0) {
-                        showRosterListPanel(listData.result);
-                        alert("✓ Roster deleted!");
-                    } else {
-                        closeRosterListPanel();
-                        alert("✓ Roster deleted! (No more saved rosters)");
-                    }
-                } catch (e) {
-                    console.error("Refresh error:", e);
-                    alert("✓ Deleted, but couldn't refresh list. Please close and reopen.");
+    try {
+        // Try to archive instead of delete
+        const response = await fetch('/web/dataset/call_kw', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                jsonrpc: '2.0',
+                method: 'call',
+                params: {
+                    model: 'documents.document',
+                    method: 'write',
+                    args: [[rosterId], { active: false }],
+                    kwargs: {}
                 }
-            }, 500);
-            
-        } catch (error) {
-            console.error("Delete error:", error);
-            alert("Error deleting roster: " + error.message);
-        }
-    };
+            })
+        });
 
+        if (!response.ok) throw new Error('Delete failed');
+        
+        const data = await response.json();
+        if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
+        
+        // Refresh list
+        setTimeout(() => { window.CCFB.loadRosterList(); }, 300);
+        
+    } catch (error) {
+        console.error("Delete error:", error);
+        alert("Error deleting roster: " + error.message);
+    }
+};
     // Load a specific roster
     window.CCFB.loadRoster = async (rosterId) => {
         try {
