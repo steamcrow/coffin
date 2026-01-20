@@ -4,7 +4,7 @@ CCFB.define("components/painter", function(C) {
     const dec = (s) => decodeURIComponent(String(s ?? ""));
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
-    // Store previous view for "back" button - use a more stable reference
+    // Store previous view for "back" button
     window.CCFB._previousView = null;
 
     const getAbilityEffect = (abilityName) => {
@@ -80,7 +80,7 @@ CCFB.define("components/painter", function(C) {
     window.CCFB.restorePreviousView = () => {
         if (window.CCFB._previousView) {
             const prev = window.CCFB._previousView;
-            window.CCFB._previousView = null; // Clear before rendering to avoid loops
+            window.CCFB._previousView = null;
             window.CCFB.renderDetail(prev.unit, prev.isLib);
         }
     };
@@ -91,7 +91,7 @@ CCFB.define("components/painter", function(C) {
         const faction = C.state.factions[C.ui.fKey];
         const base = faction.units.find(u => u.name === (unit.uN || unit.name));
 
-        // Store this view ONLY if we're not showing a rule detail
+        // Store this view for back button
         window.CCFB._previousView = { unit, isLib };
 
         // For library units, check if we have a temp config
@@ -134,10 +134,12 @@ CCFB.define("components/painter", function(C) {
                 ` : ''}
                 
                 <div class="u-type mt-4"><i class="fa fa-flash"></i> ABILITIES</div>
-                ${(base.abilities || []).map(a => `<div class="ability-boxed-callout">
-                    <b class="u-name clickable-rule" onclick="window.CCFB.showRuleDetail('${esc(getName(a))}'); event.stopPropagation();" style="cursor: pointer; text-decoration: underline;">${esc(getName(a))}</b>
-                    <div class="small opacity-75">${esc(getAbilityEffect(a))}</div>
-                </div>`).join('')}
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                    ${(base.abilities || []).map(a => {
+                        const aName = getName(a);
+                        return `<span class="clickable-rule" onclick="window.CCFB.showRuleDetail('${esc(aName)}'); event.stopPropagation();" style="cursor: pointer; text-decoration: underline; color: var(--pumpkin); font-weight: 600;" title="${esc(getAbilityEffect(a))}">${esc(aName)}</span>`;
+                    }).join(', ')}
+                </div>
 
                 ${base.supplemental_abilities && base.supplemental_abilities.length > 0 ? `
                     <div class="u-type mt-4"><i class="fa fa-magic"></i> CHOOSE RELIC</div>
@@ -208,7 +210,10 @@ CCFB.define("components/painter", function(C) {
         const renderItem = (item, isRost = false) => {
             const u = faction.units.find(un => un.name === (isRost ? item.uN : item.name));
             const price = isRost ? (item.cost + (item.upgrades?.reduce((a, b) => a + b.cost, 0) || 0)) : item.cost;
-            const abs = (u.abilities || []).map(a => `<span class="rule-link" title="${esc(getAbilityEffect(a))}">${esc(getName(a))}</span>`).join(", ");
+            const abs = (u.abilities || []).map(a => {
+                const aName = getName(a);
+                return `<span class="rule-link clickable-rule" onclick="window.CCFB.showRuleDetail('${esc(aName)}'); event.stopPropagation();" style="cursor: pointer;" title="${esc(getAbilityEffect(a))}">${esc(aName)}</span>`;
+            }).join(", ");
 
             return `
                 <div class="cc-roster-item" data-action="${isRost ? 'select-roster' : 'select-lib'}" data-id="${item.id}" data-unit="${enc(u.name)}">
@@ -329,8 +334,8 @@ CCFB.define("components/painter", function(C) {
             id: Date.now(), 
             uN: n, 
             cost: parseInt(c), 
-            upgrades: [...config.upgrades],  // Copy configured upgrades
-            supplemental: config.supplemental ? {...config.supplemental} : null  // Copy supplemental
+            upgrades: [...config.upgrades],
+            supplemental: config.supplemental ? {...config.supplemental} : null
         }); 
         window.CCFB.refreshUI(); 
     };
