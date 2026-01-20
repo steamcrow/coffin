@@ -46,22 +46,38 @@ CCFB.define("components/storage", function(C) {
     };
 
     // Deserialize JSON string and load into builder
-    const deserializeRoster = (jsonString) => {
+    const deserializeRoster = async (jsonString) => {
         try {
             const data = JSON.parse(jsonString);
-            C.ui.fKey = data.faction;
-            C.ui.budget = data.budget;
-            C.ui.roster = data.roster || [];
             
-            // Update UI elements
+            // Update UI elements first
             document.getElementById("f-selector").value = data.faction;
             document.getElementById("budget-selector").value = data.budget;
             document.getElementById("roster-name").value = data.name;
             
-            // Trigger faction change to reload everything
-            window.CCFB.handleFactionChange(data.faction);
+            C.ui.fKey = data.faction;
+            C.ui.budget = data.budget;
             
-            return true;
+            // Load the faction data WITHOUT clearing the roster
+            return new Promise((resolve) => {
+                CCFB.require(["data/loaders"], async (L) => {
+                    // Load faction data
+                    await L.loadFaction(data.faction);
+                    
+                    // Wait a moment for faction to be ready
+                    setTimeout(() => {
+                        // NOW set the roster after faction is loaded
+                        C.ui.roster = data.roster || [];
+                        
+                        // Refresh UI
+                        if (window.CCFB.refreshUI) {
+                            window.CCFB.refreshUI();
+                        }
+                        
+                        resolve(true);
+                    }, 300);
+                });
+            });
         } catch (e) {
             console.error("Failed to deserialize roster:", e);
             return false;
@@ -166,7 +182,8 @@ CCFB.define("components/storage", function(C) {
                         method: 'search_read',
                         args: [[
                             ['folder_id', '=', CONFIG.FOLDER_ID],
-                            ['name', '=', `${name}.json`]
+                            ['name', '=', `${name}.json`],
+                            ['active', '=', true]
                         ]],
                         kwargs: {
                             fields: ['id', 'name'],
@@ -208,7 +225,8 @@ CCFB.define("components/storage", function(C) {
                         model: 'documents.document',
                         method: 'search_read',
                         args: [[
-                            ['folder_id', '=', CONFIG.FOLDER_ID]
+                            ['folder_id', '=', CONFIG.FOLDER_ID],
+                            ['active', '=', true]
                         ]],
                         kwargs: {
                             fields: ['id', 'name', 'create_date', 'write_date'],
@@ -234,44 +252,45 @@ CCFB.define("components/storage", function(C) {
         }
     };
 
-    // Delete a roster
-// Delete a roster (actually archives it)
-window.CCFB.deleteRoster = async (rosterId) => {
-    if (!confirm("Are you sure you want to delete this roster?")) {
-        return;
-    }
+    // Delete a roster (archives it)
+    window.CCFB.deleteRoster = async (rosterId) => {
+        if (!confirm("Are you sure you want to delete this roster?")) {
+            return;
+        }
 
-    try {
-        // Try to archive instead of delete
-        const response = await fetch('/web/dataset/call_kw', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-                jsonrpc: '2.0',
-                method: 'call',
-                params: {
-                    model: 'documents.document',
-                    method: 'write',
-                    args: [[rosterId], { active: false }],
-                    kwargs: {}
-                }
-            })
-        });
+        try {
+            const response = await fetch('/web/dataset/call_kw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'call',
+                    params: {
+                        model: 'documents.document',
+                        method: 'write',
+                        args: [[rosterId], { active: false }],
+                        kwargs: {}
+                    }
+                })
+            });
 
-        if (!response.ok) throw new Error('Delete failed');
-        
-        const data = await response.json();
-        if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
-        
-        // Refresh list
-        setTimeout(() => { window.CCFB.loadRosterList(); }, 300);
-        
-    } catch (error) {
-        console.error("Delete error:", error);
-        alert("Error deleting roster: " + error.message);
-    }
-};
+            if (!response.ok) throw new Error('Delete failed');
+            
+            const data = await response.json();
+            if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
+            
+            alert("✓ Roster deleted!");
+            
+            // Refresh list
+            setTimeout(() => { window.CCFB.loadRosterList(); }, 300);
+            
+        } catch (error) {
+            console.error("Delete error:", error);
+            alert("Error deleting roster: " + error.message);
+        }
+    };
+
     // Load a specific roster
     window.CCFB.loadRoster = async (rosterId) => {
         try {
@@ -301,7 +320,7 @@ window.CCFB.deleteRoster = async (rosterId) => {
             if (!doc || !doc.datas) throw new Error('No data in document');
             
             const jsonString = decodeURIComponent(escape(atob(doc.datas)));
-            const success = deserializeRoster(jsonString);
+            const success = await deserializeRoster(jsonString);  // Now awaits the async function
             
             if (success) {
                 closeRosterListPanel();
