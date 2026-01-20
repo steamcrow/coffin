@@ -58,6 +58,21 @@ CCFB.define("components/painter", function(C) {
                 </div>
                 <div class="u-lore">"${esc(base.lore || "Classified.")}"</div>
                 
+                ${base.weapon ? `
+                    <div class="u-type mt-4"><i class="fa fa-crosshairs"></i> WEAPON</div>
+                    <div class="ability-boxed-callout">
+                        <b class="u-name">${esc(base.weapon)}</b>
+                        ${base.weapon_properties && base.weapon_properties.length > 0 ? `
+                            <div class="small opacity-75">
+                                ${base.weapon_properties.map(prop => {
+                                    const propName = getName(prop);
+                                    return `<span class="rule-link" title="${esc(getAbilityEffect(prop))}">${esc(propName)}</span>`;
+                                }).join(', ')}
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
+                
                 <div class="u-type mt-4"><i class="fa fa-flash"></i> ABILITIES</div>
                 ${(base.abilities || []).map(a => `<div class="ability-boxed-callout">
                     <b class="u-name">${esc(getName(a))}</b>
@@ -66,18 +81,20 @@ CCFB.define("components/painter", function(C) {
 
                 ${base.supplemental_abilities && base.supplemental_abilities.length > 0 ? `
                     <div class="u-type mt-4"><i class="fa fa-magic"></i> CHOOSE RELIC</div>
-                    <select class="supplemental-select" 
-                            ${isLib ? 'disabled' : ''} 
-                            data-unit-id="${unit.id}" 
-                            data-action="change-supplemental"
-                            style="width: 100%; padding: 8px; margin-bottom: 8px; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid #666; border-radius: 4px;">
-                        <option value="">-- Select One --</option>
-                        ${base.supplemental_abilities.map(sup => `
-                            <option value="${esc(sup.name)}" ${selectedSupplemental === sup.name ? 'selected' : ''}>
-                                ${esc(sup.name)}
-                            </option>
-                        `).join('')}
-                    </select>
+                    <div onclick="event.stopPropagation()">
+                        <select class="supplemental-select" 
+                                ${isLib ? 'disabled' : ''} 
+                                data-unit-id="${unit.id}" 
+                                data-action="change-supplemental"
+                                style="width: 100%; padding: 8px; margin-bottom: 8px; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid #666; border-radius: 4px;">
+                            <option value="">-- Select One --</option>
+                            ${base.supplemental_abilities.map(sup => `
+                                <option value="${esc(sup.name)}" ${selectedSupplemental === sup.name ? 'selected' : ''}>
+                                    ${esc(sup.name)}
+                                </option>
+                            `).join('')}
+                        </select>
+                    </div>
                     ${selectedSupplemental ? `
                         <div class="ability-boxed-callout">
                             <b class="u-name">${esc(selectedSupplemental)}</b>
@@ -89,20 +106,24 @@ CCFB.define("components/painter", function(C) {
                 <div class="u-type mt-4"><i class="fa fa-cog"></i> UPGRADES</div>
                 ${(base.optional_upgrades || []).map(upg => {
                     const isChecked = (unit.upgrades || []).some(u => u.name === upg.name);
+                    const checkId = `upg-${unit.id}-${upg.name.replace(/\s/g, '-')}`;
                     return `
-                        <label class="upgrade-row">
-                            <input type="checkbox" 
-                                   ${isLib ? 'disabled' : (isChecked ? 'checked' : '')} 
-                                   data-action="toggle-upgrade"
-                                   data-unit-id="${unit.id}"
-                                   data-upgrade-name="${esc(upg.name)}"
-                                   data-upgrade-cost="${upg.cost}">
-                            <div style="flex:1">
-                                <span class="u-name" style="font-size:12px">${esc(upg.name)}</span>
-                                <div style="font-size:10px; opacity:0.6">${esc(upg.effect || "Upgrade")}</div>
-                            </div>
-                            <b style="color:var(--pumpkin)">+${upg.cost} ₤</b>
-                        </label>`;
+                        <div class="upgrade-row" onclick="event.stopPropagation()">
+                            <label for="${checkId}" style="display: flex; align-items: center; cursor: pointer; width: 100%;">
+                                <input type="checkbox" 
+                                       id="${checkId}"
+                                       ${isLib ? 'disabled' : (isChecked ? 'checked' : '')} 
+                                       data-unit-id="${unit.id}"
+                                       data-upgrade-name="${esc(upg.name)}"
+                                       data-upgrade-cost="${upg.cost}"
+                                       onchange="window.CCFB.toggleUpgrade('${unit.id}', '${esc(upg.name)}', ${upg.cost})">
+                                <div style="flex:1; margin-left: 8px;">
+                                    <span class="u-name" style="font-size:12px">${esc(upg.name)}</span>
+                                    <div style="font-size:10px; opacity:0.6">${esc(upg.effect || "Upgrade")}</div>
+                                </div>
+                                <b style="color:var(--pumpkin)">+${upg.cost} ₤</b>
+                            </label>
+                        </div>`;
                 }).join('') || '<div class="small opacity-50">None.</div>'}
 
                 <div class="field-notes-box">
@@ -154,24 +175,13 @@ CCFB.define("components/painter", function(C) {
                     const itm = UI.roster.find(i => String(i.id) === String(el.getAttribute("data-id")));
                     window.CCFB.renderDetail({...faction.units.find(u => u.name === itm.uN), ...itm}, false);
                 }
-                
-                // Handle upgrade checkbox toggle
-                if (act === "toggle-upgrade") {
-                    e.stopPropagation();
-                    const unitId = el.getAttribute("data-unit-id");
-                    const upgName = el.getAttribute("data-upgrade-name");
-                    const upgCost = el.getAttribute("data-upgrade-cost");
-                    window.CCFB.toggleUpgrade(unitId, upgName, upgCost);
-                }
             });
             
             // Handle supplemental dropdown changes
             document.addEventListener("change", (e) => {
-                const el = e.target.closest("[data-action]");
-                if (!el) return;
-                if (el.getAttribute("data-action") === "change-supplemental") {
-                    const unitId = el.getAttribute("data-unit-id");
-                    const selectedName = el.value;
+                if (e.target.classList.contains('supplemental-select')) {
+                    const unitId = e.target.getAttribute("data-unit-id");
+                    const selectedName = e.target.value;
                     if (selectedName) {
                         window.CCFB.toggleSupplemental(unitId, selectedName);
                     }
