@@ -375,7 +375,27 @@
   padding-bottom: 15px;
   border-bottom: 2px solid var(--cc-primary);
 }
+/* === FIX SLIDER TEXT COLOR === */
+.cc-slide-panel,
+.cc-slide-panel * {
+    color: #fff;
+}
 
+.cc-saved-roster-header {
+    color: var(--cc-primary) !important;
+}
+
+/* === FIX UPGRADE CHECKBOX LAYOUT === */
+.upgrade-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.upgrade-row input[type="checkbox"] {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
 .cc-slide-panel-header h2 {
   color: var(--cc-primary);
   margin: 0;
