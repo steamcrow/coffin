@@ -167,30 +167,29 @@ CCFB.define("components/painter", function(C) {
         window.CCFB.refreshUI();
         window.CCFB.renderDetail(isLib ? C.state.factions[C.ui.fKey].units.find(u => u.name === id) : unit, isLib);
     };
-    
-// === MISSING UTILITY FUNCTIONS ===
+    // === MISSING UTILITY FUNCTIONS ===
+    window.CCFB.clearRoster = () => {
+        if (!confirm("Clear entire roster?")) return;
+        C.ui.roster = [];
+        window.CCFB.refreshUI();
+    };
 
-window.CCFB.clearRoster = () => {
-    if (!confirm("Clear entire roster?")) return;
-    C.ui.roster = [];
-    window.CCFB.refreshUI();
-};
-
-window.CCFB.toggleViewMode = () => {
-    const app = document.getElementById('ccfb-app');
-    if (!app) return;
-    
-    app.classList.toggle('list-focused');
-    
-    const btn = document.getElementById('view-toggle-btn');
-    if (btn) {
-        const icon = btn.querySelector('i');
-        if (app.classList.contains('list-focused')) {
-            icon.className = 'fa fa-th-large'; // Grid icon
-        } else {
-            icon.className = 'fa fa-list'; // List icon
+    window.CCFB.toggleViewMode = () => {
+        const app = document.getElementById('ccfb-app');
+        if (!app) return;
+        
+        app.classList.toggle('list-focused');
+        
+        const btn = document.getElementById('view-toggle-btn');
+        if (btn) {
+            const icon = btn.querySelector('i');
+            if (app.classList.contains('list-focused')) {
+                icon.className = 'fa fa-th-large';
+            } else {
+                icon.className = 'fa fa-list';
+            }
         }
-    }
-};
+    };
+
     return { refreshUI: window.CCFB.refreshUI };
 });
