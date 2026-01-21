@@ -442,10 +442,10 @@ showRosterListPanel(enriched);
 
                         <div class="cc-saved-roster-actions">
                             <button onclick="window.CCFB.loadRoster(${r.id})" class="btn-outline-warning">
-                                <i class="fa fa-upload"></i> LOAD
+                                <i class="fa fa-folder-open"></i> LOAD
                             </button>
                             <button onclick="window.CCFB.deleteRoster(${r.id})" class="btn-outline-danger">
-                                <i class="fa fa-trash"></i>
+                                <i class="fa fa-trash-o"></i>
                             </button>
                         </div>
 
