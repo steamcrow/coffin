@@ -1,13 +1,18 @@
 CCFB.define("components/painter", function(C) {
-    // --- 1. CORE UTILITIES ---
+    
+    // --- 0. BOOT SEQUENCE (Crucial for Odoo Timing) ---
+    // This runs the millisecond the Painter is defined to prevent "undefined" errors.
+    if (!C.ui) C.ui = {};
+    if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
+    if (!C.ui.roster) C.ui.roster = [];
+
     const utils = {
         esc: (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"),
         enc: (s) => encodeURIComponent(String(s ?? "")),
         dec: (s) => decodeURIComponent(String(s ?? "")),
         getContext: () => {
-            // FIX: Ensure libraryConfigs exists globally to prevent the 'undefined' error
+            // Secondary safety check
             if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
-            
             return {
                 faction: C.state.factions[C.ui.fKey],
                 units: C.state.factions[C.ui.fKey]?.units || [],
@@ -18,7 +23,7 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- 2. GAME ASSISTANT / TEACHER ---
+    // --- 1. GAME ASSISTANT / TEACHER ---
     window.CCFB.showRuleDetail = (ruleName) => {
         const name = ruleName.toLowerCase().trim();
         const { rules } = utils.getContext();
@@ -52,18 +57,19 @@ CCFB.define("components/painter", function(C) {
                 <button onclick="document.getElementById('rule-detail-panel').classList.remove('cc-slide-panel-open')" class="btn-plus-lib" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fa fa-times"></i></button>
             </div>
             <div class="u-type mb-2">Tactical Briefing</div>
-            <div class="rule-content-box">${utils.esc(match.effect)}</div>
+            <div class="rule-content-box" style="color:#fff; background:#000; padding:15px; border:1px solid var(--cc-primary);">${utils.esc(match.effect)}</div>
             <div class="mt-4 small text-muted italic">Click background to dismiss briefing.</div>
         `;
         setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
     };
 
-    // --- 3. MATHEMATICAL ENGINE ---
+    // --- 2. MATHEMATICAL ENGINE ---
     const logic = {
         getUnitCost: (item) => {
             const base = parseInt(item.cost || 0);
             const upgs = item.upgrades?.reduce((a, b) => a + (parseInt(b.cost) || 0), 0) || 0;
-            return base + upgs;
+            const supp = (item.supplemental && item.supplemental.cost) ? parseInt(item.supplemental.cost) : 0;
+            return base + upgs + supp;
         },
         getModifiedStats: (unit, upgrades = []) => {
             const mod = { quality: unit.quality, defense: unit.defense, range: unit.range || 0, move: unit.move };
@@ -80,21 +86,20 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- 4. HTML TEMPLATES ---
+    // --- 3. HTML TEMPLATES ---
     const templates = {
         statBadge: (label, val, colorClass, isMod) => `
             <div class="cc-stat-badge clickable-rule" data-rule="${label.toLowerCase()}">
                 <span class="cc-stat-label ${colorClass}">${label}</span>
                 <span class="cc-stat-value ${isMod ? 'cc-stat-modified' : ''}">${val === 0 ? '-' : val}</span>
             </div>`,
-        
         abilityLink: (a) => {
             const n = typeof a === 'object' ? a.name : a;
             return `<span class="clickable-rule rule-link" data-rule="${utils.esc(n)}">${utils.esc(n)}</span>`;
         }
     };
 
-    // --- 5. THE RENDERERS ---
+    // --- 4. THE RENDERERS ---
     window.CCFB.renderDetail = (unit, isLib = false) => {
         const target = document.getElementById("det-target");
         const { faction, units } = utils.getContext();
@@ -105,7 +110,7 @@ CCFB.define("components/painter", function(C) {
 
         window.CCFB._currentView = { unit, isLib };
 
-        // FIX: Ensure specific unit config exists
+        // Ensure this specific unit key exists in libraryConfigs
         if (isLib && !C.ui.libraryConfigs[base.name]) {
             C.ui.libraryConfigs[base.name] = { upgrades: [], supplemental: null };
         }
@@ -215,7 +220,6 @@ CCFB.define("components/painter", function(C) {
                 if (action === "add") {
                     const uN = utils.dec(el.dataset.unit);
                     const base = units.find(u => u.name === uN);
-                    // CLONE CONFIG: ensure we have a clean copy of the library-configured unit
                     const cfg = C.ui.libraryConfigs[uN] || { upgrades: [], supplemental: null };
                     C.ui.roster.push({ 
                         id: Date.now(), 
@@ -264,7 +268,7 @@ CCFB.define("components/painter", function(C) {
         const base = units.find(u => u.name === (isLib ? id : target.uN));
         const rule = base.supplemental_abilities?.find(s => s.name === name);
         
-        target.supplemental = rule ? { name: rule.name, effect: rule.effect } : null;
+        target.supplemental = rule ? { name: rule.name, effect: rule.effect, cost: rule.cost || 0 } : null;
         
         if (rule) window.CCFB.showRuleDetail(name);
         window.CCFB.refreshUI();
