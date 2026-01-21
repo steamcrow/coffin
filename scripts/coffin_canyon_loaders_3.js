@@ -1,12 +1,10 @@
 CCFB.define("data/loaders", function (C) {
   
   // ============================================================
-  // 1. UI LOADER OVERLAY LOGIC (The "Nice Loading Bar")
+  // 1. UI LOADER OVERLAY LOGIC
   // ============================================================
   C.showLoader = function(message, progress) {
     let loader = document.getElementById('ccfb-boot-loader');
-    
-    // Create the loader if it doesn't exist in the DOM yet
     if (!loader) {
       loader = document.createElement('div');
       loader.id = 'ccfb-boot-loader';
@@ -22,15 +20,11 @@ CCFB.define("data/loaders", function (C) {
       `;
       document.body.appendChild(loader);
     }
-    
     const msgEl = document.getElementById('loader-msg');
     const barEl = document.getElementById('loader-bar');
-    
     if (msgEl) msgEl.innerText = message.toUpperCase();
     if (barEl) barEl.style.width = progress + '%';
-    
     loader.style.display = 'flex';
-    // Small timeout to allow the display:flex to register before adding the opacity class
     setTimeout(() => loader.classList.add('active'), 10);
   };
 
@@ -38,31 +32,19 @@ CCFB.define("data/loaders", function (C) {
     const loader = document.getElementById('ccfb-boot-loader');
     if (loader) {
       loader.classList.remove('active');
-      // Wait for the fade-out transition before hiding the display
-      setTimeout(() => {
-        loader.style.display = 'none';
-      }, 400);
+      setTimeout(() => { loader.style.display = 'none'; }, 400);
     }
   };
 
   // ============================================================
-  // 2. RULES TRANSFORMER (The Logic for GitHub Rules)
+  // 2. RULES TRANSFORMER
   // ============================================================
   C.transformRules = function(rawRules) {
     console.log("🛠️ Starting Rule Transformation...");
-    const transformed = {
-      abilities: [],
-      weapon_properties: [],
-      type_rules: []
-    };
-    
+    const transformed = { abilities: [], weapon_properties: [], type_rules: [] };
     const abilityDict = rawRules?.rules_master?.ability_dictionary;
-    if (!abilityDict) {
-      console.error("❌ CRITICAL: No ability_dictionary found in rules.json");
-      return transformed;
-    }
+    if (!abilityDict) return transformed;
     
-    // Process Categories (Universal, Monster, etc)
     for (let categoryKey in abilityDict) {
       const category = abilityDict[categoryKey];
       for (let abilityKey in category) {
@@ -74,8 +56,7 @@ CCFB.define("data/loaders", function (C) {
         });
       }
     }
-    
-    // Process Weapon Properties
+
     const weaponProps = rawRules?.rules_master?.weapon_properties;
     if (weaponProps) {
       for (let propKey in weaponProps) {
@@ -83,66 +64,48 @@ CCFB.define("data/loaders", function (C) {
         transformed.weapon_properties.push({
           id: propKey,
           name: prop.name || this.makeReadable(propKey),
-          effect: prop.effect || "No description available in master rules.",
+          effect: prop.effect || "No description available.",
           category: "weapon_properties"
         });
       }
     }
-    
-    console.log(`✅ Transformation Complete: ${transformed.abilities.length} Abilities, ${transformed.weapon_properties.length} Properties.`);
+    console.log(`✅ Transformation Complete: ${transformed.abilities.length} Abilities.`);
     return transformed;
   };
 
-  // Internal Helper for naming
   C.makeReadable = function(id) {
     if (!id) return "";
-    return id.split('_').map(word => 
-      word.charAt(0).toUpperCase() + word.slice(1)
-    ).join(' ');
+    return id.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   // ============================================================
-  // 3. MASTER BOOT SEQUENCE (The "Old Parts that Worked")
+  // 3. MASTER BOOT SEQUENCE & DATA FETCHING
   // ============================================================
   return {
-    /**
-     * The Orchestrator: Ensures Rules exist before Factions, and Factions exist before UI.
-     */
     bootSequence: async function(fKey) {
       console.log(`🚀 Boot Sequence Initiated for: ${fKey}`);
       try {
-        // Step 1: Rules
         C.showLoader("Downloading Master Rules...", 15);
         await this.loadRules();
         
-        // Step 2: Faction Data
         C.showLoader(`Loading Tactical Data: ${fKey}...`, 50);
         const success = await this.loadFaction(fKey);
         
-        if (!success) {
-            throw new Error(`Failed to load faction: ${fKey}`);
-        }
+        if (!success) throw new Error(`Failed to load faction: ${fKey}`);
 
-        // Step 3: UI Prep
         C.showLoader("Synchronizing Interface...", 85);
         
-        // Finalize
         setTimeout(() => {
           C.showLoader("Link Established", 100);
           setTimeout(() => {
             C.hideLoader();
-            // Trigger the Painter's refresh
-            if (window.CCFB.refreshUI) {
-                window.CCFB.refreshUI();
-            }
-            if (window.diagLog) window.diagLog(`✅ ${fKey} Engine Ready`, "#0f0");
+            if (window.CCFB.refreshUI) window.CCFB.refreshUI();
           }, 400);
         }, 600);
 
       } catch (err) {
         console.error("❌ BOOT FAILURE:", err);
         C.showLoader("CONNECTION TERMINATED", 100);
-        if (window.diagLog) window.diagLog(`❌ Error: ${err.message}`, "#f00");
       }
     },
 
@@ -150,54 +113,50 @@ CCFB.define("data/loaders", function (C) {
       const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now();
       try {
         const res = await fetch(url);
-        if (!res.ok) throw new Error("Rules fetch failed");
-        
         const rawRules = await res.json();
         C.state.rules = C.transformRules(rawRules);
         return true;
       } catch(e) { 
-        console.warn("Rules load failed, using empty set.", e); 
         C.state.rules = { abilities: [], weapon_properties: [] };
         return false;
       }
     },
     
     loadFaction: async function (fKey) {
-      // THE "UNDEFINED" INSURANCE POLICY
-      // We ensure all nested UI objects exist before the Painter touches them
       C.ui = C.ui || {};
       C.ui.libraryConfigs = C.ui.libraryConfigs || {};
       C.ui.roster = C.ui.roster || [];
       C.ui.budget = C.ui.budget || 500;
-      
-      return new Promise((resolve) => {
-        CCFB.require(["config/docTokens"], async function(cfg) {
-          const entry = cfg.getFaction(fKey);
-          if (!entry) {
-            console.error("❌ No config entry found for faction key:", fKey);
-            return resolve(false);
-          }
 
-          const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/" + entry.url + "?t=" + Date.now();
-          
-          try {
-            const res = await fetch(url);
-            if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-            
-            const data = await res.json();
-            
-            // Inject into global state
-            C.state.factions[fKey] = data;
-            C.ui.fKey = fKey; 
-            
-            console.log(`✅ Faction ${fKey} data injected into state.`);
-            resolve(true);
-          } catch (err) { 
-            console.error("❌ Faction JSON Fetch Failed:", err); 
-            resolve(false);
-          }
-        });
-      });
+      /**
+       * MAPPING LOGIC based on your provided screenshot:
+       * We use a simple map to translate the UI key to your specific filenames.
+       */
+      const fileMap = {
+        "monster_rangers": "faction-monster-rangers-v5.json",
+        "liberty_corps": "faction-liberty-corps-v2.json",
+        "monsterology": "faction-monsterology-v2.json",
+        "monsters": "faction-monsters-v2.json",
+        "shine_riders": "faction-shine-riders-v2.json"
+      };
+
+      const fileName = fileMap[fKey] || `${fKey}.json`;
+      const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/" + fileName + "?t=" + Date.now();
+      
+      try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        const data = await res.json();
+        
+        C.state.factions[fKey] = data;
+        C.ui.fKey = fKey; 
+        
+        console.log(`✅ Faction ${fKey} data injected via ${fileName}`);
+        return true;
+      } catch (err) { 
+        console.error("❌ Faction Fetch Failed:", err); 
+        return false;
+      }
     }
   };
 });
