@@ -54,7 +54,7 @@ const rules = await rulesRes.json();
 
     html += `
       <hr>
-      <h2 id="${sec.id}" style="color:#ff7518;">
+      <h2 id="${sec.id}" class="cc-rule-h2">
         ${sec.label}
       </h2>
       ${renderObject(data)}
