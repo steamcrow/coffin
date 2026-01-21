@@ -31,6 +31,54 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
+    // SHOW RULE PANEL
+    // ============================================
+    window.CCFB.showRulePanel = (abilityName) => {
+        const abilityData = getAbilityFull(abilityName);
+        if (!abilityData) {
+            alert('Rule definition not found for: ' + abilityName);
+            return;
+        }
+
+        // Remove existing panel
+        const existing = document.getElementById('rule-panel');
+        if (existing) existing.remove();
+
+        const panel = document.createElement('div');
+        panel.id = 'rule-panel';
+        panel.className = 'cc-slide-panel cc-slide-panel-open';
+        
+        panel.innerHTML = `
+            <div class="cc-slide-panel-header">
+                <h2><i class="fa fa-book"></i> ${esc(abilityData.name)}</h2>
+                <button onclick="window.CCFB.closeRulePanel()" class="cc-panel-close-btn">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="rule-content-box">
+                <div style="font-size: 14px; line-height: 1.6;">
+                    ${esc(abilityData.effect)}
+                </div>
+                ${abilityData.category ? `
+                    <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid var(--cc-border); font-size: 11px; opacity: 0.7;">
+                        <b>Category:</b> ${esc(abilityData.category)}
+                    </div>
+                ` : ''}
+            </div>
+        `;
+
+        document.body.appendChild(panel);
+    };
+
+    window.CCFB.closeRulePanel = () => {
+        const panel = document.getElementById('rule-panel');
+        if (panel) {
+            panel.classList.remove('cc-slide-panel-open');
+            setTimeout(() => panel.remove(), 300);
+        }
+    };
+
+    // ============================================
     // STAT BADGES
     // ============================================
     const buildStatBadges = (unit, rosterItem = null) => {
@@ -80,13 +128,67 @@ CCFB.define("components/painter", function(C) {
         return `
             <div class="u-abilities-summary">
                 ${abilities.map(a => {
-                    const abilityData = getAbilityFull(a);
                     const name = getName(a);
-                    return abilityData 
-                        ? `<span class="rule-link" title="${esc(abilityData.effect)}">${esc(name)}</span>`
-                        : `<span>${esc(name)}</span>`;
+                    return `<span class="rule-link" onclick="event.stopPropagation(); window.CCFB.showRulePanel('${esc(name)}')">${esc(name)}</span>`;
                 }).join(', ')}
             </div>`;
+    };
+
+    // ============================================
+    // RENDER SUPPLEMENTAL DROPDOWN
+    // ============================================
+    const renderSupplementalDropdown = (supplementals, unitId, isLib) => {
+        if (!supplementals || supplementals.length === 0) return '';
+
+        const config = isLib ? (C.ui.libraryConfigs[unitId] || {}) : C.ui.roster.find(u => String(u.id) === String(unitId)) || {};
+        const selected = config.selectedSupplemental || null;
+        const selectedData = selected ? supplementals.find(s => s.name === selected) : null;
+
+        return `
+            <div class="supplemental-section">
+                <div class="supplemental-header">
+                    <i class="fa fa-magic"></i> SUPPLEMENTAL ABILITIES (CHOOSE ONE)
+                </div>
+                <select class="cc-select w-100" onchange="window.CCFB.selectSupplemental('${unitId}', this.value, ${isLib})">
+                    <option value="">-- Select One --</option>
+                    ${supplementals.map(supp => `
+                        <option value="${esc(supp.name)}" ${selected === supp.name ? 'selected' : ''}>
+                            ${esc(supp.name)}
+                        </option>
+                    `).join('')}
+                </select>
+                ${selectedData ? `
+                    <div class="supplemental-item mt-3">
+                        <div class="supplemental-item-name">${esc(selectedData.name)}</div>
+                        <div class="supplemental-item-effect">${esc(selectedData.effect)}</div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+    };
+
+    window.CCFB.selectSupplemental = (unitId, supplementalName, isLib) => {
+        let unit;
+        
+        if (isLib) {
+            C.ui.libraryConfigs[unitId] = C.ui.libraryConfigs[unitId] || {upgrades: []};
+            unit = C.ui.libraryConfigs[unitId];
+        } else {
+            unit = C.ui.roster.find(u => String(u.id) === String(unitId));
+        }
+        
+        if (!unit) return;
+
+        unit.selectedSupplemental = supplementalName || null;
+
+        // Re-render detail panel
+        if (isLib) {
+            const faction = C.state.factions[C.ui.fKey];
+            const baseUnit = faction.units.find(u => u.name === unitId);
+            window.CCFB.renderDetail(baseUnit, true);
+        } else {
+            window.CCFB.renderDetail(unit, false);
+        }
     };
 
     // ============================================
@@ -130,10 +232,8 @@ CCFB.define("components/painter", function(C) {
                         ${base.weapon_properties?.length ? `
                             <div class="small mt-1">
                                 ${base.weapon_properties.map(prop => {
-                                    const propData = getAbilityFull(prop);
-                                    return propData 
-                                        ? `<span class="rule-link" title="${esc(propData.effect)}">${esc(getName(prop))}</span>`
-                                        : esc(getName(prop));
+                                    const name = getName(prop);
+                                    return `<span class="rule-link" onclick="window.CCFB.showRulePanel('${esc(name)}')">${esc(name)}</span>`;
                                 }).join(', ')}
                             </div>
                         ` : ''}
@@ -144,9 +244,10 @@ CCFB.define("components/painter", function(C) {
                 <div class="u-type mt-4">ABILITIES</div>
                 ${(base.abilities || []).map(ability => {
                     const abilityData = getAbilityFull(ability);
+                    const name = getName(ability);
                     return `
                         <div class="ability-boxed-callout">
-                            <b>${esc(getName(ability))}</b>
+                            <b class="rule-link" onclick="window.CCFB.showRulePanel('${esc(name)}')">${esc(name)}</b>
                             <div class="small opacity-75">
                                 ${esc(abilityData?.effect || 'Rule data pending.')}
                             </div>
@@ -155,19 +256,9 @@ CCFB.define("components/painter", function(C) {
                 }).join('')}
 
                 <!-- SUPPLEMENTAL ABILITIES (if present) -->
-                ${base.supplemental_abilities?.length ? `
-                    <div class="supplemental-section">
-                        <div class="supplemental-header">
-                            <i class="fa fa-book"></i> SUPPLEMENTAL ABILITIES
-                        </div>
-                        ${base.supplemental_abilities.map(supp => `
-                            <div class="supplemental-item">
-                                <div class="supplemental-item-name">${esc(supp.name)}</div>
-                                <div class="supplemental-item-effect">${esc(supp.effect)}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                ` : ''}
+                ${base.supplemental_abilities?.length ? 
+                    renderSupplementalDropdown(base.supplemental_abilities, isLib ? base.name : unit.id, isLib)
+                : ''}
 
                 <!-- TACTICS (if present) -->
                 ${base.tactics ? `
@@ -285,14 +376,14 @@ CCFB.define("components/painter", function(C) {
             return `
                 <div class="cc-roster-item" 
                      onclick="window.CCFB.selectRoster('${item.id}')">
-                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                        <div>
-                            <div class="u-type">${esc(unit.type)}</div>
+                    <div style="width: 100%;">
+                        <div class="u-type">${esc(unit.type)}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                             <div class="u-name">${esc(unit.name)}</div>
+                            <div style="color: var(--cc-primary); font-weight: bold;">${finalPrice} ₤</div>
                         </div>
-                        <div style="color: var(--cc-primary); font-weight: bold;">${finalPrice} ₤</div>
+                        ${buildStatBadges(unit, item)}
                     </div>
-                    ${buildStatBadges(unit, item)}
                     <div class="cc-item-controls">
                         <button class="btn-minus" 
                                 onclick="event.stopPropagation(); window.CCFB.removeFromRoster('${item.id}')">
@@ -308,20 +399,20 @@ CCFB.define("components/painter", function(C) {
             return `
                 <div class="cc-roster-item" 
                      onclick="window.CCFB.selectLib('${enc(unit.name)}')">
-                    <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                        <div>
-                            <div class="u-type">${esc(unit.type)}</div>
-                            <div class="u-name">${esc(unit.name)}</div>
-                        </div>
-                        <div style="color: var(--cc-primary); font-weight: bold;">${unit.cost} ₤</div>
-                    </div>
-                    ${buildStatBadges(unit)}
-                    ${renderAbilityLinks(unit.abilities)}
-                    <div class="cc-item-controls">
+                    <div class="cc-item-controls" style="left: 10px; right: auto;">
                         <button class="btn-plus-lib" 
                                 onclick="event.stopPropagation(); window.CCFB.addToRoster('${enc(unit.name)}', ${unit.cost})">
                             <i class="fa fa-plus"></i>
                         </button>
+                    </div>
+                    <div style="width: 100%; padding-left: 40px;">
+                        <div class="u-type">${esc(unit.type)}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div class="u-name">${esc(unit.name)}</div>
+                            <div style="color: var(--cc-primary); font-weight: bold;">${unit.cost} ₤</div>
+                        </div>
+                        ${buildStatBadges(unit)}
+                        ${renderAbilityLinks(unit.abilities)}
                     </div>
                 </div>
             `;
