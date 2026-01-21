@@ -1,208 +1,105 @@
 /* =========================================================
    COFFIN CANYON FACTION BUILDER — MASTER CSS
-   Unified Icon System + Cleaned Styles
    ========================================================= */
 
-/* --- 1. CORE BRANDING & VARIABLES --- */
 :root { 
   --cc-primary: #ff7518;
-  --cc-primary-dim: rgba(255, 117, 24, 0.1);
+  --cc-primary-dim: rgba(255, 117, 24, 0.15);
   --cc-bg-darker: #121212;
   --cc-bg-soft: rgba(255, 255, 255, 0.03);
-  --cc-border: rgba(255, 255, 255, 0.08);
-  --cc-text-muted: #a0a0a0;
+  --cc-border: rgba(255, 255, 255, 0.1);
+  --cc-text-muted: #999;
 }
 
-/* =========================================================
-   GLOBAL ICON SYSTEM (THIS IS THE MAGIC)
-   ========================================================= */
-.cc-icon {
-  color: var(--cc-primary);
-  filter: drop-shadow(0 0 6px rgba(255,117,24,0.4));
-  transition: transform 0.15s, filter 0.15s;
-}
-
-.cc-icon:hover {
-  transform: scale(1.1);
-  filter: drop-shadow(0 0 10px rgba(255,117,24,0.7));
-}
-
-/* --- 2. LAYOUT & STICKY DETAILS --- */
+/* === GLOBAL STYLES === */
 #ccfb-app { 
   padding: 20px; 
   color: #e0e0e0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: system-ui, -apple-system, sans-serif;
+  background: #1a1a1a;
 }
 
+/* === LAYOUT GRID === */
 .cc-grid { 
   display: grid; 
-  grid-template-columns: 320px 1fr 350px; 
+  grid-template-columns: 1fr 1.2fr 1fr; 
   gap: 20px; 
   align-items: start;
 }
 
+/* === STICKY DETAIL PANEL === */
 #ccfb-details {
   position: sticky;
-  top: 80px; 
-  height: calc(100vh - 120px);
+  top: 20px;
+  max-height: calc(100vh - 40px);
   overflow-y: auto;
-  background: #1a1a1a;
+  background: rgba(0,0,0,0.4);
   border: 1px solid var(--cc-primary);
-  border-radius: 4px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  border-radius: 6px;
+  padding: 15px;
 }
 
+/* === PANELS === */
 .cc-panel { 
   background: var(--cc-bg-darker);
   border: 1px solid var(--cc-border);
-  border-radius: 4px;
+  border-radius: 6px;
+  overflow: hidden;
 }
 
 .cc-panel-header {
-  background: var(--cc-bg-soft);
-  padding: 10px 15px;
+  background: rgba(255,255,255,0.05);
+  padding: 12px 15px;
   border-bottom: 1px solid var(--cc-border);
   font-weight: 900;
-  letter-spacing: 1px;
   text-transform: uppercase;
-  font-size: 0.85rem;
+  font-size: 11px;
+  letter-spacing: 1px;
 }
 
-/* --- 3. UNIT CARDS & ROSTER ITEMS --- */
+/* === ROSTER ITEMS (LEFT JUSTIFIED) === */
 .cc-roster-item { 
   display: flex; 
-  flex-direction: column; 
-  padding: 12px 15px; 
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  padding: 15px; 
   cursor: pointer; 
+  transition: 0.2s;
   border-bottom: 1px solid var(--cc-border);
+  position: relative;
 }
 
 .cc-roster-item:hover { 
   background: var(--cc-primary-dim);
-  border-left: 4px solid var(--cc-primary);
+  border-left: 3px solid var(--cc-primary);
 }
 
-/* --- 4. TYPOGRAPHY --- */
-.u-name { 
-  font-weight: 800; 
-  text-transform: uppercase; 
-  font-size: 1.05rem;
+.cc-roster-item:nth-child(even) {
+  background: rgba(255,255,255,0.02);
 }
 
-.u-type { 
-  font-size: 10px; 
-  color: var(--cc-primary);
-  font-weight: 700;
-  text-transform: uppercase;
+.cc-item-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
 }
 
-/* --- 5. BUTTONS --- */
-.cc-tool-btn {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--cc-border);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.cc-tool-btn:hover {
-  background: var(--cc-primary-dim);
-  border-color: var(--cc-primary);
-}
-
-/* --- 6. SAVED ROSTERS SLIDE PANEL --- */
-#roster-list-panel.cc-slide-panel {
-  background: #0e0e0e;
-  color: #fff;
-  border-left: 2px solid var(--cc-primary);
-}
-
-#roster-list-panel .cc-slide-panel-header {
-  display: flex;
-  justify-content: space-between;
-  padding: 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.12);
-}
-
-#roster-list-panel .cc-slide-panel-header h2 {
-  margin: 0;
-  font-size: 14px;
-  letter-spacing: 1px;
-  color: var(--cc-primary);
-}
-
-#roster-list-panel .cc-saved-roster-item {
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 10px;
-}
-
-#roster-list-panel .cc-saved-roster-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11px;
-  color: var(--cc-primary);
-}
-
-#roster-list-panel .cc-saved-roster-name {
-  font-size: 15px;
-  font-weight: 800;
-  color: #fff;
-}
-
-#roster-list-panel .cc-saved-roster-date {
-  font-size: 11px;
-  color: rgba(255,255,255,0.75);
-}
-/* ===============================
-   RESTORE CORE PANELS & BOXES
-   =============================== */
-
-.cc-slide-panel {
-  position: fixed;
-  top: 0;
-  right: -450px;
-  width: 400px;
-  height: 100vh;
-  background: #111;
-  border-left: 2px solid var(--cc-primary);
-  box-shadow: -10px 0 40px rgba(0,0,0,0.9);
-  z-index: 15000;
-  transition: right 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  padding: 30px;
-  overflow-y: auto;
-}
-
-.cc-slide-panel-open {
-  right: 0 !important;
-}
-
-.rule-content-box {
-  background: #000;
-  border: 1px solid var(--cc-primary);
-  padding: 20px;
-  border-radius: 4px;
-  color: #ffffff;
-  box-shadow: inset 0 0 15px rgba(255,117,24,0.1);
-}
-
+/* === STAT BADGES === */
 .stat-badge-flex { 
   display: flex; 
+  justify-content: flex-start;
   gap: 4px; 
   margin: 8px 0;
-  justify-content: center;
+  flex-wrap: wrap;
 }
 
 .cc-stat-badge { 
   display: inline-flex;
   border-radius: 3px;
   overflow: hidden;
-  border: 1px solid #333;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  border: 2px solid #000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
 }
 
 .stat-q-border { border-color: #2c5282 !important; }
@@ -215,7 +112,7 @@
   font-size: 10px; 
   font-weight: 900; 
   color: #fff; 
-  text-transform: uppercase; 
+  text-transform: uppercase;
 }
 
 .cc-stat-value { 
@@ -225,32 +122,356 @@
   font-size: 11px; 
   font-weight: bold; 
   min-width: 22px; 
-  text-align: center; 
+  text-align: center;
 }
 
 .stat-q { background-color: #2c5282; }
 .stat-d { background-color: #9b2c2c; }
 .stat-m { background-color: #276749; }
 .stat-r { background-color: #744210; }
-}
-/* ===============================
-   GLOBAL ICON SYSTEM (FOR REAL)
-   =============================== */
-.cc-icon {
-  color: var(--cc-primary) !important;
-  filter: drop-shadow(0 0 6px rgba(255,117,24,0.5)) !important;
-  transition: transform 0.15s, filter 0.15s;
+
+/* === TYPOGRAPHY === */
+.u-name { 
+  font-weight: 800; 
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #fff;
+  margin: 5px 0;
 }
 
-.cc-icon:hover {
-  transform: scale(1.1);
-  filter: drop-shadow(0 0 10px rgba(255,117,24,0.8));
+.u-type { 
+  font-size: 10px; 
+  color: var(--cc-primary);
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 5px;
 }
-/* ===============================
-   ZEBRA STRIPING (RESTORED)
-   =============================== */
-#lib-target .cc-roster-item:nth-child(even),
-#rost-target .cc-roster-item:nth-child(even),
-#roster-list-panel .cc-saved-roster-item:nth-child(even) {
-  background: rgba(255, 255, 255, 0.04);
+
+.u-lore {
+  font-style: italic;
+  font-size: 12px;
+  opacity: 0.8;
+  border-left: 3px solid var(--cc-primary);
+  padding-left: 12px;
+  margin: 15px 0;
+  line-height: 1.5;
+  text-align: left;
+}
+
+/* === DETAIL BOXES === */
+.ability-boxed-callout {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--cc-border);
+  border-radius: 4px;
+  padding: 10px;
+  margin-bottom: 8px;
+  text-align: left;
+}
+
+.field-notes-box {
+  background: rgba(255,117,24,0.05);
+  border: 1px solid rgba(255,117,24,0.2);
+  border-left: 4px solid var(--cc-primary);
+  padding: 12px;
+  margin: 15px 0;
+  border-radius: 0 4px 4px 0;
+  text-align: left;
+}
+
+.rule-link {
+  color: var(--cc-primary);
+  text-decoration: none;
+  border-bottom: 1px dotted var(--cc-primary);
+  cursor: help;
+  position: relative;
+  transition: 0.2s;
+}
+
+.rule-link:hover {
+  color: #fff;
+  background: var(--cc-primary-dim);
+  text-shadow: 0 0 8px rgba(255,117,24,0.8);
+}
+
+/* === SUPPLEMENTAL ABILITIES === */
+.supplemental-section {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,117,24,0.3);
+  border-radius: 4px;
+  padding: 12px;
+  margin: 15px 0;
+}
+
+.supplemental-header {
+  color: var(--cc-primary);
+  font-weight: 800;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+.supplemental-item {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--cc-border);
+  border-radius: 3px;
+  padding: 8px;
+  margin-bottom: 6px;
+}
+
+.supplemental-item-name {
+  color: var(--cc-primary);
+  font-weight: 700;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.supplemental-item-effect {
+  font-size: 11px;
+  opacity: 0.8;
+  line-height: 1.4;
+}
+
+/* === BUTTONS === */
+.cc-tool-btn {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--cc-border);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cc-tool-btn:hover {
+  background: var(--cc-primary-dim);
+  border-color: var(--cc-primary);
+  color: var(--cc-primary);
+}
+
+.btn-minus {
+  background: transparent;
+  border: 1px solid var(--cc-primary);
+  color: var(--cc-primary);
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: 0.2s;
+}
+
+.btn-minus:hover {
+  background: var(--cc-primary);
+  color: #000;
+}
+
+.btn-plus-lib {
+  background: transparent;
+  border: none;
+  color: var(--cc-primary);
+  font-size: 24px;
+  cursor: pointer;
+  opacity: 0.4;
+  transition: 0.2s;
+  filter: drop-shadow(0 0 4px rgba(255,117,24,0.3));
+}
+
+.cc-roster-item:hover .btn-plus-lib {
+  opacity: 1;
+  transform: scale(1.15);
+  filter: drop-shadow(0 0 10px rgba(255,117,24,0.9));
+}
+
+.btn-outline-warning {
+  background: transparent;
+  border: 2px solid var(--cc-primary);
+  color: var(--cc-primary);
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  text-transform: uppercase;
+  transition: 0.2s;
+  width: 100%;
+}
+
+.btn-outline-warning:hover {
+  background: var(--cc-primary);
+  color: #000;
+  box-shadow: 0 0 15px rgba(255,117,24,0.6);
+}
+
+/* === INPUTS === */
+.cc-select, .cc-input {
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--cc-border);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+#budget-selector {
+  color: var(--cc-primary);
+  font-weight: 700;
+}
+
+#display-total {
+  color: var(--cc-primary);
+  font-weight: 800;
+  font-size: 20px;
+}
+
+/* === UPGRADES === */
+.upgrade-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--cc-border);
+  border-radius: 4px;
+  margin-bottom: 5px;
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.upgrade-row:hover {
+  background: var(--cc-primary-dim);
+  border-color: var(--cc-primary);
+}
+
+.upgrade-row input[type="checkbox"] {
+  accent-color: var(--cc-primary);
+  width: 18px;
+  height: 18px;
+}
+
+/* === SLIDE PANEL === */
+.cc-slide-panel {
+  position: fixed;
+  top: 0;
+  right: -450px;
+  width: 400px;
+  height: 100vh;
+  background: #111;
+  border-left: 3px solid var(--cc-primary);
+  box-shadow: -10px 0 50px rgba(0,0,0,0.8);
+  z-index: 9999;
+  transition: right 0.3s ease-in-out;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.cc-slide-panel-open {
+  right: 0 !important;
+}
+
+.cc-slide-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--cc-primary);
+}
+
+.cc-slide-panel-header h2 {
+  color: var(--cc-primary);
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.cc-panel-close-btn {
+  background: transparent;
+  border: 1px solid var(--cc-primary);
+  color: var(--cc-primary);
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.cc-panel-close-btn:hover {
+  background: var(--cc-primary);
+  color: #000;
+}
+
+/* === SAVED ROSTERS === */
+.cc-saved-roster-item {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid #555;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 10px;
+  transition: 0.2s;
+}
+
+.cc-saved-roster-item:hover {
+  background: var(--cc-primary-dim);
+  border-color: var(--cc-primary);
+}
+
+.cc-saved-roster-name {
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.cc-saved-roster-meta {
+  color: #999;
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+.cc-saved-roster-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border: 1px solid #c00;
+  color: #c00;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+}
+
+.btn-outline-danger:hover {
+  background: #c00;
+  color: #fff;
+}
+
+/* === GLOWING ORANGE ICONS === */
+.fa, i[class*="fa-"] {
+  color: var(--cc-primary);
+  filter: drop-shadow(0 0 6px rgba(255,117,24,0.5));
+  transition: all 0.2s ease;
+}
+
+button:hover .fa,
+button:hover i[class*="fa-"],
+.cc-tool-btn:hover .fa,
+.cc-tool-btn:hover i[class*="fa-"] {
+  filter: drop-shadow(0 0 12px rgba(255,117,24,1));
+  transform: scale(1.1);
+}
+
+.cc-panel-header .fa,
+.cc-panel-header i[class*="fa-"] {
+  margin-right: 6px;
+  filter: drop-shadow(0 0 8px rgba(255,117,24,0.6));
+}
+
+/* === PRINT STYLES === */
+@media print {
+  #ccfb-details, .cc-tool-btn, .btn-minus { display: none !important; }
+  .cc-roster-item { border-bottom: 1px solid #000 !important; }
 }
