@@ -123,8 +123,10 @@ CCFB.define("components/painter", function(C) {
     };
 
     // --- RENDER DETAIL PANEL ---
-    window.CCFB.renderDetail = (unit, isLib = false) => {
+        window.CCFB.renderDetail = (unit, isLib = false) => {
         console.log("🎨 Rendering detail:", unit?.name || unit?.uN, "isLib:", isLib);
+    
+        try {
         
         const target = document.getElementById("det-target");
         const { units } = utils.getContext();
@@ -198,5 +200,16 @@ ${(base.optional_upgrades || []).map(upg => {
             <div class="fw-bold" style="color:var(--cc-primary)">+${upg.cost} ₤</div>
         </label>
     </div>`;
-}).join('') || '<div class="text-muted small">No upgrades available.</div>'}
+}).join('') || '<div class="text-muted small">No upgrades available.</div>'
+console.log("✅ Detail rendered");
+    } catch (error) {
+        console.error("❌ renderDetail error:", error);
+        console.error("Error details:", error.message, error.stack);
+        const target = document.getElementById("det-target");
+        if (target) {
+            target.innerHTML = `<div class="p-3" style="color:#ff3b3b;">Error rendering detail: ${error.message}</div>`;
+        }
+    }
+};
+}
 
