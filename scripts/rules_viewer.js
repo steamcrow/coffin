@@ -24,8 +24,12 @@ const VIEW_URL  = "https://raw.githubusercontent.com/steamcrow/coffin/main/scrip
     fetch(RULES_URL)
   ]);
 
-  const view = await viewRes.json();
-  const rules = await rulesRes.json();
+  const viewText = await viewRes.text();
+console.log("VIEW RAW:", viewText.slice(0, 300));
+
+const rulesText = await rulesRes.text();
+console.log("RULES RAW:", rulesText.slice(0, 300));
+
 
   let html = `
     <div class="cc-rulebook" style="padding:40px; max-width:1100px; margin:0 auto;">
