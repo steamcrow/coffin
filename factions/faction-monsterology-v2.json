@@ -1,6 +1,6 @@
 {
   "faction": "Monsterology",
-  "version": "1.9",
+  "version": "2.0",
   "core_rules_version": "8.2",
   "description": "Scientists, industrialists, and researchers who study Obscuria's mysteries for profit and progress. Monsterology captures specimens, harvests Thyr, and experiments with forbidden technologies.",
   "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons and devices have additional point costs listed in optional_upgrades.",
@@ -15,26 +15,14 @@
       "name": "Thyr Exploitation",
       "cost": 0,
       "required": true,
-      "effect": "Monsterology prioritizes harvesting Thyr crystals for industrial use. Units can extract, transport, and refine Thyr."
-    },
-    {
-      "name": "Laboratory Support",
-      "cost": 0,
-      "required": false,
-      "effect": "Field laboratories and support units provide healing, equipment upgrades, and tactical bonuses."
-    },
-    {
-      "name": "Experimental Technology",
-      "cost": 0,
-      "required": false,
-      "effect": "Monsterology employs unstable technology: chemical weapons, mechanical constructs, and bio-engineered specimens."
+      "effect": "Monsterology prioritizes harvesting Thyr crystals for industrial use."
     }
   ],
   "units": [
     {
       "name": "Squab",
       "faction": "Monsterology",
-      "type": "Frail",
+      "type": "Grunt",
       "cost": 21,
       "quality": 1,
       "defense": 1,
@@ -42,10 +30,10 @@
       "range": 3,
       "weapon": "Thrown Bottles, Rusty Razor",
       "weapon_properties": [],
-      "composition": { "per_points": 0 },
+      "composition": { "per_points": 100 },
       "abilities": [],
       "lore": "The lowest rung of Monsterologist society. Desperate souls armed with trash and bottles.",
-      "tactics": "Ultra-cheap swarm unit. Trade bodies for positioning.",
+      "tactics": "Ultra-cheap swarm unit.",
       "optional_upgrades": [
         { "name": "Molotov Cocktail", "cost": 2, "type": "Weapon", "effect": "On hit, 4+ causes fire damage." },
         { "name": "Rotgut Drunk", "cost": 2, "type": "Upgrade", "effect": "Immune to Fear, -2 Move." }
@@ -54,7 +42,7 @@
     {
       "name": "Chemist Lackey",
       "faction": "Monsterology",
-      "type": "Frail",
+      "type": "Specialist",
       "cost": 56,
       "quality": 2,
       "defense": 1,
@@ -62,10 +50,10 @@
       "range": 6,
       "weapon": "Chemical Sprayer",
       "weapon_properties": ["Cone 6\"", "Blinding"],
-      "composition": { "per_points": 0 },
-      "abilities": ["Assistant"],
+      "composition": { "per_points": 200 },
+      "abilities": ["assistant"],
       "lore": "Lab assistants operating chemical sprayers and compounds.",
-      "tactics": "Support unit. Blind clusters and assist Scientists.",
+      "tactics": "Blind clusters and assist Scientists.",
       "optional_upgrades": [
         {
           "name": "Monster Lures",
@@ -84,7 +72,7 @@
     {
       "name": "Devourer Adept",
       "faction": "Monsterology",
-      "type": "Frail",
+      "type": "Specialist",
       "cost": 41,
       "quality": 2,
       "defense": 1,
@@ -92,8 +80,8 @@
       "range": 0,
       "weapon": "Ritual Tools",
       "weapon_properties": [],
-      "composition": { "per_points": 0 },
-      "abilities": ["Ritual Attendant", "Non-Combatant"],
+      "composition": { "per_points": 100 },
+      "abilities": ["immobile"],
       "lore": "Ritual assistants trained to prepare monster Mort.",
       "tactics": "Keep alive to enable Great Workings.",
       "optional_upgrades": []
@@ -110,7 +98,7 @@
       "weapon": "Steel Baton / Axe / Knuckles",
       "weapon_properties": [],
       "composition": { "per_points": 300 },
-      "abilities": ["Brutal Blow", "Tough(2)", "Sonderbar Injection"],
+      "abilities": ["brutal_blow", "tough", "sonderbar_injection"],
       "lore": "Chemically enhanced shock troops addicted to Sonderbar.",
       "tactics": "Frontline melee bruiser.",
       "optional_upgrades": [
@@ -133,8 +121,8 @@
       "range": 0,
       "weapon": "Mechanical Hand, Syringe",
       "weapon_properties": ["Brutal Blow"],
-      "composition": { "per_points": 300 },
-      "abilities": ["Sonderbar Injection", "Hex", "Dynamo Operator"],
+      "composition": { "per_points": 200 },
+      "abilities": ["sonderbar_injection", "hex"],
       "lore": "Academy scholars and mad inventors.",
       "tactics": "Support unit enabling injections and Electromagik.",
       "optional_upgrades": [
@@ -159,11 +147,11 @@
       "weapon": "Electromagic Wand",
       "weapon_properties": ["Pinning Shot"],
       "composition": { "per_points": 300 },
-      "abilities": ["Hexan Gorget", "Fear(1)", "Requires Dynamo Field"],
+      "abilities": ["fear", "mobile_dynamo"],
       "lore": "Electromagik ritual acolytes.",
       "tactics": "Mid-range caster tied to Dynamo.",
       "optional_upgrades": [
-        { "name": "Chain Lightning", "cost": 3, "type": "Upgrade", "effect": "Adds Explosive." },
+        { "name": "Chain Lightning", "cost": 3, "type": "Upgrade", "effect": "Adds Blast." },
         { "name": "Levitation", "cost": 2, "type": "Upgrade", "effect": "Gain Flying." }
       ]
     },
@@ -179,8 +167,8 @@
       "weapon": "Electro-Musket",
       "weapon_properties": ["AP(2)", "Pinning Shot"],
       "composition": { "per_points": 300 },
-      "abilities": ["Pierce", "Hero", "Requires Dynamo Field"],
-      "lore": "Field commanders and elite hunters.",
+      "abilities": ["pierce", "mobile_dynamo"],
+      "lore": "Elite field commanders and hunters.",
       "tactics": "Sniper-leader with aura support.",
       "optional_upgrades": [
         {
@@ -202,8 +190,8 @@
       "range": 12,
       "weapon": "Harpoon Launcher",
       "weapon_properties": ["Pinning Shot", "Grapple"],
-      "composition": { "per_points": 400 },
-      "abilities": ["Fast", "Impact(2)", "Boardwalk Blitzer", "Ground Only"],
+      "composition": { "per_points": 300 },
+      "abilities": ["fast", "brutal_impact", "boardwalk_blitzer"],
       "lore": "Steam-powered harpoon bikes.",
       "tactics": "High-speed monster capture.",
       "optional_upgrades": [
@@ -213,12 +201,6 @@
           "type": "Upgrade",
           "effect": "+1 Defense, -1 Move.",
           "stat_modifiers": { "defense": 1, "move": -1 }
-        },
-        {
-          "name": "Double Harpoons",
-          "cost": 4,
-          "type": "Weapon",
-          "effect": "Gain Rapid Fire."
         }
       ]
     },
@@ -234,7 +216,7 @@
       "weapon": "Ceremonial Scepter",
       "weapon_properties": [],
       "composition": { "per_points": 400 },
-      "abilities": ["Elder's Authority", "Fearless", "Rally", "Command Presence"],
+      "abilities": ["rally", "command_presence", "fearless"],
       "lore": "Patriarch of a Monsterology House.",
       "tactics": "Faction-wide buff engine.",
       "optional_upgrades": [
@@ -259,7 +241,7 @@
       "weapon": "Ceremonial Implements",
       "weapon_properties": [],
       "composition": { "per_points": 400 },
-      "abilities": ["Great Working", "Fearless", "Command Presence", "Throne of Ingestion"],
+      "abilities": ["great_working", "fearless", "command_presence", "immobile"],
       "lore": "Sanctioned ingestive ritual authority.",
       "tactics": "Ritual VP engine.",
       "optional_upgrades": []
