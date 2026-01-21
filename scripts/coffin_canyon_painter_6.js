@@ -1,7 +1,6 @@
-console.log("🎨 Painter Module Loading...");
+console.log("🎨 Centered Painter Module Loading...");
 
 CCFB.define("components/painter", function(C) {
-    console.log("🎨 Painter Factory Executing...");
     
     // --- INITIALIZE STATE ---
     if (!C.ui) C.ui = {};
@@ -10,12 +9,7 @@ CCFB.define("components/painter", function(C) {
 
     // --- UTILITIES ---
     const utils = {
-        esc: (s) => String(s ?? "")
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;")
-            .replace(/"/g, "&quot;")
-            .replace(/'/g, "&#39;"),
+        esc: (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"),
         enc: (s) => encodeURIComponent(String(s ?? "")),
         dec: (s) => decodeURIComponent(String(s ?? "")),
         getContext: () => ({
@@ -27,7 +21,17 @@ CCFB.define("components/painter", function(C) {
         })
     };
 
-    // --- LOGIC HELPER: Define these before they are called in HTML ---
+    // --- ACTIONS: EXPOSED TO WINDOW ---
+    
+    window.CCFB.clearRoster = () => {
+        if(confirm("Are you sure you want to wipe the current roster?")) {
+            C.ui.roster = [];
+            window.CCFB.refreshUI();
+            const det = document.getElementById("det-target");
+            if(det) det.innerHTML = '<div class="p-3 text-muted text-center">Unit details will appear here.</div>';
+        }
+    };
+
     window.CCFB.toggleUpgrade = (unitId, name, cost, isLib) => {
         const { roster, units } = utils.getContext();
         if (isLib) {
@@ -64,7 +68,7 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- CALCULATORS ---
+    // --- CORE LOGIC ---
     const getUnitCost = (item) => {
         const base = parseInt(item.cost || 0);
         const upgs = item.upgrades?.reduce((a, b) => a + (parseInt(b.cost) || 0), 0) || 0;
@@ -86,11 +90,11 @@ CCFB.define("components/painter", function(C) {
         return mod;
     };
 
-    // --- TEMPLATES ---
+    // --- HTML GENERATORS ---
     const templates = {
-        statBadge: (label, val, colorClass, isMod) => `
-            <div class="cc-stat-badge clickable-rule" data-rule="${label.toLowerCase()}">
-                <div class="cc-stat-label ${colorClass}">${label}</div>
+        statBadge: (label, val, key, isMod) => `
+            <div class="cc-stat-badge stat-${key}-border">
+                <div class="cc-stat-label stat-${key}">${label}</div>
                 <div class="cc-stat-value ${isMod ? 'cc-stat-modified' : ''}">${val === 0 ? '-' : val}</div>
             </div>`,
         
@@ -100,37 +104,7 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- RULE PANEL ---
-    window.CCFB.showRuleDetail = (ruleName) => {
-        const name = String(ruleName || "").toLowerCase().trim();
-        const { rules } = utils.getContext();
-        const statKey = {
-            'q': { name: 'Quality (Q)', effect: 'The target number needed on a D6 to succeed on tests.' },
-            'd': { name: 'Defense (D)', effect: 'The target number needed on a D6 to avoid damage.' },
-            'r': { name: 'Range (R)', effect: 'Maximum distance in inches. "-" is Melee.' },
-            'm': { name: 'Move (M)', effect: 'Distance in inches per move action.' }
-        };
-        let match = statKey[name];
-        if (!match) {
-            const all = [...(rules.abilities || []), ...(rules.weapon_properties || []), ...(rules.type_rules || [])];
-            match = all.find(a => (a?.name || "").toLowerCase() === name);
-        }
-        if (!match) return;
-
-        let panel = document.getElementById('rule-detail-panel') || document.createElement('div');
-        if (!panel.id) { panel.id = 'rule-detail-panel'; panel.className = 'cc-slide-panel'; document.body.appendChild(panel); }
-
-        panel.innerHTML = `
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3 class="u-name m-0" style="color:var(--cc-primary)">${utils.esc(match.name)}</h3>
-                <button onclick="document.getElementById('rule-detail-panel').classList.remove('cc-slide-panel-open')" class="cc-tool-btn"><i class="fa fa-times"></i></button>
-            </div>
-            <div class="rule-content-box">${utils.esc(match.effect)}</div>
-        `;
-        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
-    };
-
-    // --- RENDERING DETAIL ---
+    // --- RENDERING DETAIL PANEL ---
     window.CCFB.renderDetail = (unit, isLib = false) => {
         const { units } = utils.getContext();
         const base = units.find(u => u.name === (unit.uN || unit.name));
@@ -142,105 +116,116 @@ CCFB.define("components/painter", function(C) {
         const stats = getModifiedStats(base, upgrades);
 
         target.innerHTML = `
-            <div class="p-3">
+            <div class="text-center">
                 <div class="u-type">${utils.esc(base.type)}</div>
-                <div class="u-name" style="font-size:1.8rem;">${utils.esc(base.name)}</div>
-                <div class="fw-bold mb-3" style="color:var(--cc-primary); font-size:1.2rem;">
+                <div class="u-name" style="font-size:1.4rem; margin-bottom:5px;">${utils.esc(base.name)}</div>
+                <div class="fw-bold mb-3" style="color:var(--pumpkin)">
                     ${getUnitCost({cost: base.cost, upgrades, supplemental: supp})} ₤
                 </div>
 
-                <div class="stat-badge-flex mb-4">
-                    ${templates.statBadge('Q', stats.q, 'stat-q', stats.q !== base.quality)}
-                    ${templates.statBadge('D', stats.d, 'stat-d', stats.d !== base.defense)}
-                    ${templates.statBadge('R', stats.r, 'stat-r', stats.r !== base.range)}
-                    ${templates.statBadge('M', stats.m, 'stat-m', stats.m !== base.move)}
+                <div class="stat-badge-flex">
+                    ${templates.statBadge('Q', stats.q, 'q', stats.q !== base.quality)}
+                    ${templates.statBadge('D', stats.d, 'd', stats.d !== base.defense)}
+                    ${templates.statBadge('R', stats.r, 'r', stats.r !== base.range)}
+                    ${templates.statBadge('M', stats.m, 'm', stats.m !== base.move)}
                 </div>
 
-                <div class="u-lore mb-4"><em>"${utils.esc(base.lore || "Classified.")}"</em></div>
+                <div class="u-lore">"${utils.esc(base.lore || "Classified.")}"</div>
 
-                <div class="u-type mb-2"><i class="fa fa-crosshairs cc-icon"></i> Weaponry</div>
-                <div class="cc-box mb-3" style="background:var(--cc-bg-soft); padding:10px; border:1px solid var(--cc-border);">
-                    <div class="u-name small">${utils.esc(base.weapon || "Standard Melee")}</div>
-                    <div class="small text-muted">${(base.weapon_properties || []).map(p => templates.abilityLink(p)).join(', ') || 'Standard'}</div>
+                <div class="u-type text-start mt-3">Abilities</div>
+                <div class="d-flex flex-wrap justify-content-start gap-2 mb-3">
+                    ${(base.abilities || []).map(a => templates.abilityLink(a)).join(' ')}
                 </div>
-
-                <div class="u-type mb-2"><i class="fa fa-bolt cc-icon"></i> Abilities</div>
-                <div class="d-flex flex-wrap gap-2 mb-4">${(base.abilities || []).map(a => templates.abilityLink(a)).join(' ') || 'None'}</div>
 
                 ${base.supplemental_abilities?.length ? `
-                    <div class="u-type mb-2">Supplemental</div>
-                    <select class="cc-tool-btn w-100 mb-3" onchange="window.CCFB.toggleSupplemental('${isLib ? 'lib-' + utils.enc(base.name) : unit.id}', this.value, ${isLib})">
-                        <option value="">-- Select --</option>
+                    <div class="u-type text-start">Supplemental</div>
+                    <select class="w-100 mb-2" id="f-selector" onchange="window.CCFB.toggleSupplemental('${isLib ? 'lib-' + utils.enc(base.name) : unit.id}', this.value, ${isLib})">
+                        <option value="">-- Choose Option --</option>
                         ${base.supplemental_abilities.map(s => `<option value="${utils.esc(s.name)}" ${supp?.name === s.name ? 'selected' : ''}>${utils.esc(s.name)} (+${s.cost} ₤)</option>`).join('')}
                     </select>
+                    ${supp ? `<div class="ability-boxed-callout small"><strong>${utils.esc(supp.name)}:</strong> ${utils.esc(supp.effect)}</div>` : ''}
                 ` : ''}
 
-                <div class="u-type mb-2">Optional Upgrades</div>
+                <div class="u-type text-start mt-2">Upgrades</div>
                 ${(base.optional_upgrades || []).map(upg => {
                     const active = upgrades.some(u => u.name === upg.name);
                     return `
-                    <div class="cc-roster-item" style="flex-direction:row; align-items:center; gap:10px; border:1px solid var(--cc-border); margin-bottom:5px;">
+                    <div class="upgrade-row" onclick="this.querySelector('input').click()">
                         <input type="checkbox" ${active ? 'checked' : ''} onchange="window.CCFB.toggleUpgrade('${isLib ? 'lib-' + utils.enc(base.name) : unit.id}', '${utils.esc(upg.name)}', ${upg.cost}, ${isLib})">
-                        <div class="flex-grow-1"><div class="small fw-bold">${utils.esc(upg.name)}</div><div style="font-size:10px; opacity:0.7">${utils.esc(upg.effect)}</div></div>
-                        <div class="fw-bold" style="color:var(--cc-primary)">+${upg.cost}₤</div>
+                        <div class="flex-grow-1">
+                            <div class="fw-bold">${utils.esc(upg.name)} <span style="color:var(--pumpkin)">+${upg.cost}₤</span></div>
+                            <div style="font-size:10px; opacity:0.7">${utils.esc(upg.effect)}</div>
+                        </div>
                     </div>`;
-                }).join('') || 'None'}
+                }).join('') || '<div class="small opacity-50">No upgrades available</div>'}
+
+                ${base.tactics ? `<div class="field-notes-box"><div class="u-type">Field Notes</div><div class="small">${utils.esc(base.tactics)}</div></div>` : ''}
             </div>`;
     };
 
-    // --- MAIN UI REFRESH ---
+    // --- REFRESH UI ---
     window.CCFB.refreshUI = () => {
         const { units, roster, budget } = utils.getContext();
         const total = roster.reduce((s, i) => s + getUnitCost(i), 0);
+        
         const displayTotal = document.getElementById("display-total");
-        if (displayTotal) displayTotal.innerHTML = `${total} / ${budget} ₤`;
+        if (displayTotal) {
+            displayTotal.innerHTML = `${total} / ${budget} ₤`;
+            displayTotal.style.color = (budget > 0 && total > budget) ? '#ff4444' : 'var(--pumpkin)';
+        }
 
-        const renderRow = (item, isRost) => {
+        const renderItem = (item, isRost) => {
             const base = units.find(u => u.name === (isRost ? item.uN : item.name));
             if (!base) return '';
             const upgrades = isRost ? (item.upgrades || []) : [];
             const stats = getModifiedStats(base, upgrades);
-            const abilityText = (base.abilities || []).slice(0,3).map(a => typeof a === 'object' ? a.name : a).join(', ');
+            
+            // Cleanly handle ability objects for the summary
+            const abNames = (base.abilities || []).map(a => typeof a === 'object' ? a.name : a);
+            const summary = abNames.slice(0,3).join(', ') + (abNames.length > 3 ? '...' : '');
 
             return `
                 <div class="cc-roster-item" data-action="${isRost ? 'select-roster' : 'select-lib'}" data-id="${item.id || ''}" data-unit="${utils.enc(base.name)}">
+                    <div class="cc-item-controls">
+                        ${isRost ? `<button class="btn-minus" data-action="remove" data-id="${item.id}"><i class="fa fa-times"></i></button>` 
+                                 : `<button class="btn-plus-lib" data-action="add" data-unit="${utils.enc(base.name)}"><i class="fa fa-plus-circle"></i></button>`}
+                    </div>
                     <div class="u-type">${utils.esc(base.type)}</div>
                     <div class="u-name">${utils.esc(base.name)}</div>
                     <div class="stat-badge-flex">
-                        ${templates.statBadge('Q', stats.q, 'stat-q', false)}
-                        ${templates.statBadge('D', stats.d, 'stat-d', false)}
-                        ${templates.statBadge('R', stats.r, 'stat-r', false)}
-                        ${templates.statBadge('M', stats.m, 'stat-m', false)}
+                        ${templates.statBadge('Q', stats.q, 'q', false)}
+                        ${templates.statBadge('D', stats.d, 'd', false)}
+                        ${templates.statBadge('R', stats.r, 'r', false)}
+                        ${templates.statBadge('M', stats.m, 'm', false)}
                     </div>
-                    <div style="font-size:10px; color:var(--cc-text-muted); margin-top:5px;">${abilityText}${base.abilities?.length > 3 ? '...' : ''}</div>
-                    <div class="d-flex justify-content-end mt-2">
-                        ${isRost ? `<button class="cc-tool-btn" data-action="remove" data-id="${item.id}"><i class="fa fa-trash"></i></button>` 
-                                 : `<button class="cc-tool-btn" data-action="add" data-unit="${utils.enc(base.name)}"><i class="fa fa-plus cc-icon"></i></button>`}
-                    </div>
+                    <div class="u-abilities-summary">${utils.esc(summary)}</div>
+                    <div class="fw-bold mt-2" style="color:var(--pumpkin); font-size:12px;">${getUnitCost(isRost ? item : {cost: base.cost})} ₤</div>
                 </div>`;
         };
 
         const rT = document.getElementById("rost-target");
         const lT = document.getElementById("lib-target");
-        if (rT) rT.innerHTML = roster.map(i => renderRow(i, true)).join('') || '<div class="p-3 text-muted">Empty</div>';
-        if (lT) lT.innerHTML = units.map(u => renderRow(u, false)).join('');
+        if (rT) rT.innerHTML = roster.map(i => renderItem(i, true)).join('') || '<div class="p-3 text-muted text-center">Roster is empty</div>';
+        if (lT) lT.innerHTML = units.map(u => renderItem(u, false)).join('');
 
         if (!window.CCFB._bound) {
             document.addEventListener("click", (e) => {
-                const el = e.target.closest("[data-action], .clickable-rule");
+                const el = e.target.closest("[data-action]");
                 if (!el) return;
-                const { units, roster } = utils.getContext();
-                if (el.dataset.action === "add") {
+                const action = el.dataset.action;
+                if (action === "add") {
                     const uN = utils.dec(el.dataset.unit);
                     const b = units.find(u => u.name === uN);
-                    C.ui.roster.push({ id: Date.now(), uN, cost: b.cost, upgrades: [] });
+                    C.ui.roster.push({ id: Date.now(), uN, cost: b.cost, upgrades: [], supplemental: null });
                     window.CCFB.refreshUI();
-                } else if (el.dataset.action === "remove") {
+                } else if (action === "remove") {
                     C.ui.roster = C.ui.roster.filter(i => String(i.id) !== String(el.dataset.id));
                     window.CCFB.refreshUI();
-                } else if (el.dataset.action === "select-lib") window.CCFB.renderDetail(units.find(u => u.name === utils.dec(el.dataset.unit)), true);
-                else if (el.dataset.action === "select-roster") window.CCFB.renderDetail(roster.find(i => String(i.id) === String(el.dataset.id)), false);
-                else if (el.classList.contains('clickable-rule')) window.CCFB.showRuleDetail(el.dataset.rule);
+                } else if (action === "select-lib") {
+                    window.CCFB.renderDetail(units.find(u => u.name === utils.dec(el.dataset.unit)), true);
+                } else if (action === "select-roster") {
+                    window.CCFB.renderDetail(roster.find(i => String(i.id) === String(el.dataset.id)), false);
+                }
             });
             window.CCFB._bound = true;
         }
