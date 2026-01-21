@@ -4,7 +4,11 @@ CCFB.define("components/storage", function(C) {
         FOLDER_ID: 90  // Coffin Canyon Factions folder
     };
 
-    // Check if user is logged in
+    /**
+     * INTERNAL UTILITIES
+     */
+
+    // Check if user is logged in to Odoo
     async function checkAuth() {
         try {
             const response = await fetch('/web/session/get_session_info', {
@@ -50,32 +54,35 @@ CCFB.define("components/storage", function(C) {
         try {
             const data = JSON.parse(jsonString);
             
-            // Update UI elements first
-            document.getElementById("f-selector").value = data.faction;
-            document.getElementById("budget-selector").value = data.budget;
-            document.getElementById("roster-name").value = data.name;
-            
+            // 1. Update UI state
             C.ui.fKey = data.faction;
             C.ui.budget = data.budget;
+            C.ui.rosterName = data.name; // Keep internal state in sync
+
+            // 2. Update DOM elements if they exist
+            const fSel = document.getElementById("f-selector");
+            const bSel = document.getElementById("budget-selector");
+            const nInp = document.getElementById("roster-name");
+
+            if (fSel) fSel.value = data.faction;
+            if (bSel) bSel.value = data.budget;
+            if (nInp) nInp.value = data.name;
             
-            // Load the faction data WITHOUT clearing the roster
+            // 3. Load the faction data via the Loader
             return new Promise((resolve) => {
-                CCFB.require(["data/loaders"], async (L) => {
-                    // Load faction data
-                    await L.loadFaction(data.faction);
+                C.require(["data/loaders"], async (L) => {
+                    // Trigger the full boot sequence for this faction
+                    await L.bootSequence(data.faction);
                     
-                    // Wait a moment for faction to be ready
-                    setTimeout(() => {
-                        // NOW set the roster after faction is loaded
-                        C.ui.roster = data.roster || [];
-                        
-                        // Refresh UI
-                        if (window.CCFB.refreshUI) {
-                            window.CCFB.refreshUI();
-                        }
-                        
-                        resolve(true);
-                    }, 300);
+                    // Inject the roster into the UI state
+                    C.ui.roster = data.roster || [];
+                    
+                    // Trigger UI Refresh
+                    if (window.CCFB.refreshUI) {
+                        window.CCFB.refreshUI();
+                    }
+                    
+                    resolve(true);
                 });
             });
         } catch (e) {
@@ -83,6 +90,48 @@ CCFB.define("components/storage", function(C) {
             return false;
         }
     };
+
+    // Find roster by name in Odoo Documents
+    async function findRosterByName(name) {
+        try {
+            const response = await fetch('/web/dataset/call_kw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    jsonrpc: '2.0',
+                    method: 'call',
+                    params: {
+                        model: 'documents.document',
+                        method: 'search_read',
+                        args: [[
+                            ['folder_id', '=', CONFIG.FOLDER_ID],
+                            ['name', '=', `${name}.json`],
+                            ['active', '=', true]
+                        ]],
+                        kwargs: {
+                            fields: ['id', 'name'],
+                            limit: 1
+                        }
+                    }
+                })
+            });
+
+            if (!response.ok) return null;
+            const data = await response.json();
+            if (data.error) return null;
+            if (data.result && data.result.length > 0) {
+                return data.result[0];
+            }
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    /**
+     * PUBLIC API FUNCTIONS (Attached to window.CCFB for Skeleton access)
+     */
 
     // Save roster to Odoo Documents
     window.CCFB.saveRoster = async () => {
@@ -103,7 +152,6 @@ CCFB.define("components/storage", function(C) {
         const base64Data = btoa(unescape(encodeURIComponent(rosterData)));
 
         try {
-            // Check if roster with this name already exists
             const existing = await findRosterByName(name);
             
             if (existing) {
@@ -167,45 +215,7 @@ CCFB.define("components/storage", function(C) {
         }
     };
 
-    // Find roster by name
-    async function findRosterByName(name) {
-        try {
-            const response = await fetch('/web/dataset/call_kw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                    jsonrpc: '2.0',
-                    method: 'call',
-                    params: {
-                        model: 'documents.document',
-                        method: 'search_read',
-                        args: [[
-                            ['folder_id', '=', CONFIG.FOLDER_ID],
-                            ['name', '=', `${name}.json`],
-                            ['active', '=', true]
-                        ]],
-                        kwargs: {
-                            fields: ['id', 'name'],
-                            limit: 1
-                        }
-                    }
-                })
-            });
-
-            if (!response.ok) return null;
-            const data = await response.json();
-            if (data.error) return null;
-            if (data.result && data.result.length > 0) {
-                return data.result[0];
-            }
-            return null;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    // Load list of saved rosters
+    // Load list of saved rosters from Odoo
     window.CCFB.loadRosterList = async () => {
         const auth = await checkAuth();
         if (!auth.loggedIn) {
@@ -254,9 +264,7 @@ CCFB.define("components/storage", function(C) {
 
     // Delete a roster (archives it)
     window.CCFB.deleteRoster = async (rosterId) => {
-        if (!confirm("Are you sure you want to delete this roster?")) {
-            return;
-        }
+        if (!confirm("Are you sure you want to delete this roster?")) return;
 
         try {
             const response = await fetch('/web/dataset/call_kw', {
@@ -276,13 +284,10 @@ CCFB.define("components/storage", function(C) {
             });
 
             if (!response.ok) throw new Error('Delete failed');
-            
             const data = await response.json();
             if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
             
             alert("✓ Roster deleted!");
-            
-            // Refresh list
             setTimeout(() => { window.CCFB.loadRosterList(); }, 300);
             
         } catch (error) {
@@ -291,7 +296,7 @@ CCFB.define("components/storage", function(C) {
         }
     };
 
-    // Load a specific roster
+    // Load a specific roster by ID
     window.CCFB.loadRoster = async (rosterId) => {
         try {
             const response = await fetch('/web/dataset/call_kw', {
@@ -305,9 +310,7 @@ CCFB.define("components/storage", function(C) {
                         model: 'documents.document',
                         method: 'read',
                         args: [[rosterId]],
-                        kwargs: { 
-                            fields: ['datas', 'name'] 
-                        }
+                        kwargs: { fields: ['datas', 'name'] }
                     }
                 })
             });
@@ -320,7 +323,7 @@ CCFB.define("components/storage", function(C) {
             if (!doc || !doc.datas) throw new Error('No data in document');
             
             const jsonString = decodeURIComponent(escape(atob(doc.datas)));
-            const success = await deserializeRoster(jsonString);  // Now awaits the async function
+            const success = await deserializeRoster(jsonString);
             
             if (success) {
                 closeRosterListPanel();
@@ -335,13 +338,12 @@ CCFB.define("components/storage", function(C) {
         }
     };
 
-    // Share roster (generate URL)
+    // Share roster via URL
     window.CCFB.shareRoster = () => {
         const rosterData = serializeRoster();
         const encoded = encodeURIComponent(btoa(rosterData));
         const shareUrl = `${window.location.origin}${window.location.pathname}?roster=${encoded}`;
         
-        // Copy to clipboard
         navigator.clipboard.writeText(shareUrl).then(() => {
             alert("✓ Share link copied to clipboard!");
         }).catch(() => {
@@ -349,22 +351,10 @@ CCFB.define("components/storage", function(C) {
         });
     };
 
-    // Load roster from URL parameter
-    const loadFromUrl = () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const rosterParam = urlParams.get('roster');
-        
-        if (rosterParam) {
-            try {
-                const decoded = atob(decodeURIComponent(rosterParam));
-                deserializeRoster(decoded);
-            } catch (e) {
-                console.error("Failed to load roster from URL:", e);
-            }
-        }
-    };
+    /**
+     * UI PANELS
+     */
 
-    // Show slide-in panel with roster list
     const showRosterListPanel = (rosters) => {
         closeRosterListPanel();
         
@@ -418,12 +408,28 @@ CCFB.define("components/storage", function(C) {
 
     window.CCFB.closeRosterListPanel = closeRosterListPanel;
 
-    // Try to load from URL on init
-    loadFromUrl();
+    // The logic to check URL parameters
+    const checkUrlParams = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const rosterParam = urlParams.get('roster');
+        
+        if (rosterParam) {
+            try {
+                const decoded = atob(decodeURIComponent(rosterParam));
+                deserializeRoster(decoded);
+            } catch (e) {
+                console.error("Failed to load roster from URL:", e);
+            }
+        }
+    };
 
+    // Return the module API
     return {
         saveRoster: window.CCFB.saveRoster,
         loadRosterList: window.CCFB.loadRosterList,
-        shareRoster: window.CCFB.shareRoster
+        shareRoster: window.CCFB.shareRoster,
+        init: () => {
+            checkUrlParams();
+        }
     };
 });
