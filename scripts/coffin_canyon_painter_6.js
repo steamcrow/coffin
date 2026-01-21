@@ -4,13 +4,18 @@ CCFB.define("components/painter", function(C) {
         esc: (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"),
         enc: (s) => encodeURIComponent(String(s ?? "")),
         dec: (s) => decodeURIComponent(String(s ?? "")),
-        getContext: () => ({
-            faction: C.state.factions[C.ui.fKey],
-            units: C.state.factions[C.ui.fKey]?.units || [],
-            roster: C.ui.roster || [],
-            budget: parseInt(C.ui.budget || 0),
-            rules: C.state.rules || {}
-        })
+        getContext: () => {
+            // FIX: Ensure libraryConfigs exists globally to prevent the 'undefined' error
+            if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
+            
+            return {
+                faction: C.state.factions[C.ui.fKey],
+                units: C.state.factions[C.ui.fKey]?.units || [],
+                roster: C.ui.roster || [],
+                budget: parseInt(C.ui.budget || 0),
+                rules: C.state.rules || {}
+            };
+        }
     };
 
     // --- 2. GAME ASSISTANT / TEACHER ---
@@ -19,9 +24,9 @@ CCFB.define("components/painter", function(C) {
         const { rules } = utils.getContext();
         
         const statKey = {
-            'q': { name: 'Quality (Q)', effect: '4, 5, or 6 is a "success".' },
-            'd': { name: 'Defense (D)', effect: 'Defence reduces hits. A Defence of 2 versus a Quality roll of 3 equals 1 "hit." ' },
-            'r': { name: 'Range (R)', effect: 'The maximum distance in inches this unit can engage targets, usually with a missile weapon. "-" indicates Melee only.' },
+            'q': { name: 'Quality (Q)', effect: 'The target number needed on a D6 to succeed on tests (Attacking, Morale, etc). Lower is better.' },
+            'd': { name: 'Defense (D)', effect: 'The target number needed on a D6 to avoid taking damage when hit. Lower is better.' },
+            'r': { name: 'Range (R)', effect: 'The maximum distance in inches this unit can engage targets. "-" indicates Melee only.' },
             'm': { name: 'Move (M)', effect: 'The distance in inches this unit can move during a standard move action.' }
         };
 
@@ -44,11 +49,11 @@ CCFB.define("components/painter", function(C) {
         panel.innerHTML = `
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3 class="u-name m-0" style="color:var(--cc-primary)">${utils.esc(match.name)}</h3>
-                <button onclick="document.getElementById('rule-detail-panel').classList.remove('cc-slide-panel-open')" class="btn-plus-lib"><i class="fa fa-times"></i></button>
+                <button onclick="document.getElementById('rule-detail-panel').classList.remove('cc-slide-panel-open')" class="btn-plus-lib" style="background:none; border:none; color:inherit; cursor:pointer;"><i class="fa fa-times"></i></button>
             </div>
             <div class="u-type mb-2">Tactical Briefing</div>
             <div class="rule-content-box">${utils.esc(match.effect)}</div>
-            <div class="mt-4 small text-muted italic">Click background to dismiss.</div>
+            <div class="mt-4 small text-muted italic">Click background to dismiss briefing.</div>
         `;
         setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
     };
@@ -100,9 +105,11 @@ CCFB.define("components/painter", function(C) {
 
         window.CCFB._currentView = { unit, isLib };
 
+        // FIX: Ensure specific unit config exists
         if (isLib && !C.ui.libraryConfigs[base.name]) {
             C.ui.libraryConfigs[base.name] = { upgrades: [], supplemental: null };
         }
+        
         const config = isLib ? C.ui.libraryConfigs[base.name] : unit;
         const stats = logic.getModifiedStats(base, config.upgrades);
 
@@ -208,8 +215,15 @@ CCFB.define("components/painter", function(C) {
                 if (action === "add") {
                     const uN = utils.dec(el.dataset.unit);
                     const base = units.find(u => u.name === uN);
+                    // CLONE CONFIG: ensure we have a clean copy of the library-configured unit
                     const cfg = C.ui.libraryConfigs[uN] || { upgrades: [], supplemental: null };
-                    C.ui.roster.push({ id: Date.now(), uN, cost: base.cost, upgrades: JSON.parse(JSON.stringify(cfg.upgrades)), supplemental: cfg.supplemental ? {...cfg.supplemental} : null });
+                    C.ui.roster.push({ 
+                        id: Date.now(), 
+                        uN, 
+                        cost: base.cost, 
+                        upgrades: JSON.parse(JSON.stringify(cfg.upgrades)), 
+                        supplemental: cfg.supplemental ? {...cfg.supplemental} : null 
+                    });
                     window.CCFB.refreshUI();
                 }
                 if (action === "remove") {
@@ -217,28 +231,41 @@ CCFB.define("components/painter", function(C) {
                     window.CCFB.refreshUI();
                 }
                 if (action === "select-lib") window.CCFB.renderDetail(units.find(u => u.name === utils.dec(el.dataset.unit)), true);
-                if (action === "select-roster") window.CCFB.renderDetail(roster.find(i => String(i.id) === String(el.dataset.id)), false);
+                if (action === "select-roster") {
+                    const id = el.dataset.id;
+                    const item = roster.find(i => String(i.id) === String(id));
+                    if (item) window.CCFB.renderDetail(item, false);
+                }
             });
             window.CCFB._bound = true;
         }
     };
 
     window.CCFB.toggleUpgrade = (id, name, cost, isLib) => {
-        let target = isLib ? C.ui.libraryConfigs[id] : utils.getContext().roster.find(u => String(u.id) === String(id));
+        const { roster, units } = utils.getContext();
+        let target = isLib ? C.ui.libraryConfigs[id] : roster.find(u => String(u.id) === String(id));
         if (!target) return;
+        
         target.upgrades = target.upgrades || [];
         const idx = target.upgrades.findIndex(u => u.name === name);
         if (idx > -1) target.upgrades.splice(idx, 1);
         else target.upgrades.push({ name, cost });
+        
         window.CCFB.refreshUI();
-        window.CCFB.renderDetail(isLib ? utils.getContext().units.find(u => u.name === id) : target, isLib);
+        const base = units.find(u => u.name === (isLib ? id : target.uN));
+        window.CCFB.renderDetail(isLib ? base : target, isLib);
     };
 
     window.CCFB.toggleSupplemental = (id, name, isLib) => {
-        let target = isLib ? C.ui.libraryConfigs[id] : utils.getContext().roster.find(u => String(u.id) === String(id));
-        const base = utils.getContext().units.find(u => u.name === (isLib ? id : target.uN));
-        const rule = base.supplemental_abilities.find(s => s.name === name);
+        const { roster, units } = utils.getContext();
+        let target = isLib ? C.ui.libraryConfigs[id] : roster.find(u => String(u.id) === String(id));
+        if (!target) return;
+
+        const base = units.find(u => u.name === (isLib ? id : target.uN));
+        const rule = base.supplemental_abilities?.find(s => s.name === name);
+        
         target.supplemental = rule ? { name: rule.name, effect: rule.effect } : null;
+        
         if (rule) window.CCFB.showRuleDetail(name);
         window.CCFB.refreshUI();
         window.CCFB.renderDetail(isLib ? base : target, isLib);
