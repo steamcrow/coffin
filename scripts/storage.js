@@ -437,7 +437,7 @@ showRosterListPanel(enriched);
                         </div>
 
                         <div class="cc-saved-roster-meta">
-                            💰 ${budgetLabel} · 📅 ${new Date(r.write_date).toLocaleDateString()}
+                            💰 ${budgetLabel}  ·  ${new Date(r.write_date).toLocaleDateString()}
                         </div>
 
                         <div class="cc-saved-roster-actions">
