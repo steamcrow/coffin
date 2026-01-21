@@ -130,6 +130,33 @@
 .stat-m { background-color: #276749; }
 .stat-r { background-color: #744210; }
 
+/* === RULEBOOK TYPOGRAPHY === */
+
+.cc-rulebook {
+  text-align: left;
+  line-height: 1.6;
+}
+.cc-rulebook h1,
+.cc-rulebook h2:first-of-type {
+  text-align: center;
+}
+.cc-rule-h3 {
+  color: #e0e0e0;
+  margin-top: 28px;
+  font-weight: 800;
+}
+
+.cc-rule-h4 {
+  color: #bcbcbc;
+  margin-top: 18px;
+  font-weight: 700;
+}
+
+.cc-rule-h5 {
+  color: #999;
+  margin-top: 14px;
+  font-weight: 600;
+}
 /* === TYPOGRAPHY === */
 .u-name { 
   font-weight: 800; 
