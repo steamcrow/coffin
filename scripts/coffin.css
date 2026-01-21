@@ -470,6 +470,34 @@ button:hover i[class*="fa-"],
   filter: drop-shadow(0 0 8px rgba(255,117,24,0.6));
 }
 
+/* === LIST FOCUS MODE === */
+.list-focused #ccfb-details,
+.list-focused #panel-library {
+    display: none !important;
+}
+
+.list-focused .cc-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.list-focused #panel-roster {
+    order: -1;
+    width: 100%;
+}
+
+.list-focused .cc-roster-item {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+}
+
+.list-focused .stat-badge-flex {
+    margin: 0;
+}
+
 /* === PRINT STYLES === */
 @media print {
   #ccfb-details, .cc-tool-btn, .btn-minus { display: none !important; }
