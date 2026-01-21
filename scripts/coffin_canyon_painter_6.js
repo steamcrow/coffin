@@ -1,24 +1,36 @@
+console.log("🎨 Painter Module Loading...");
+
 CCFB.define("components/painter", function(C) {
+    console.log("🎨 Painter Factory Executing...");
     
-    // --- BOOT SEQUENCE (Keep this) ---
+    // --- INITIALIZE STATE ---
     if (!C.ui) C.ui = {};
     if (!C.ui.roster) C.ui.roster = [];
+    if (!C.state) C.state = { factions: {}, rules: {} };
 
     // --- UTILITIES ---
     const utils = {
         esc: (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"),
         enc: (s) => encodeURIComponent(String(s ?? "")),
         dec: (s) => decodeURIComponent(String(s ?? "")),
-        getContext: () => ({
-            faction: C.state.factions[C.ui.fKey],
-            units: C.state.factions[C.ui.fKey]?.units || [],
-            roster: C.ui.roster || [],
-            budget: parseInt(C.ui.budget || 0),
-            rules: C.state.rules || {}
-        })
+        getContext: () => {
+            const ctx = {
+                faction: C.state.factions[C.ui.fKey],
+                units: C.state.factions[C.ui.fKey]?.units || [],
+                roster: C.ui.roster || [],
+                budget: parseInt(C.ui.budget || 0),
+                rules: C.state.rules || {}
+            };
+            console.log("📊 Context:", { 
+                faction: !!ctx.faction, 
+                unitCount: ctx.units.length, 
+                rosterCount: ctx.roster.length 
+            });
+            return ctx;
+        }
     };
 
-    // --- COST CALCULATOR (Keep this) ---
+    // --- COST CALCULATOR ---
     const getUnitCost = (item) => {
         const base = parseInt(item.cost || 0);
         const upgs = item.upgrades?.reduce((a, b) => a + (parseInt(b.cost) || 0), 0) || 0;
@@ -26,7 +38,7 @@ CCFB.define("components/painter", function(C) {
         return base + upgs + supp;
     };
 
-    // --- STAT CALCULATOR (Keep this) ---
+    // --- STAT CALCULATOR ---
     const getModifiedStats = (unit, upgrades = []) => {
         const mod = { 
             quality: unit.quality, 
@@ -51,7 +63,7 @@ CCFB.define("components/painter", function(C) {
         return mod;
     };
 
-    // --- HTML TEMPLATES (Keep all of these) ---
+    // --- HTML TEMPLATES ---
     const templates = {
         statBadge: (label, val, colorClass, isMod) => `
             <div class="cc-stat-badge clickable-rule" data-rule="${label.toLowerCase()}">
@@ -65,16 +77,16 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- RULE DETAIL PANEL (Keep this) ---
+    // --- RULE DETAIL PANEL ---
     window.CCFB.showRuleDetail = (ruleName) => {
         const name = ruleName.toLowerCase().trim();
         const { rules } = utils.getContext();
         
         const statKey = {
-            'q': { name: 'Quality (Q)', effect: 'The target number needed on a D6 to succeed on tests (Attacking, Morale, etc). Lower is better.' },
-            'd': { name: 'Defense (D)', effect: 'The target number needed on a D6 to avoid taking damage when hit. Lower is better.' },
-            'r': { name: 'Range (R)', effect: 'The maximum distance in inches this unit can engage targets. "-" indicates Melee only.' },
-            'm': { name: 'Move (M)', effect: 'The distance in inches this unit can move during a standard move action.' }
+            'q': { name: 'Quality (Q)', effect: 'The target number needed on a D6 to succeed on tests. Lower is better.' },
+            'd': { name: 'Defense (D)', effect: 'The target number needed on a D6 to avoid taking damage. Lower is better.' },
+            'r': { name: 'Range (R)', effect: 'The maximum distance in inches. "-" indicates Melee only.' },
+            'm': { name: 'Move (M)', effect: 'The distance in inches per move action.' }
         };
 
         let match = statKey[name];
@@ -105,25 +117,31 @@ CCFB.define("components/painter", function(C) {
             <div class="rule-content-box" style="color:#fff; background:#000; padding:15px; border:1px solid var(--cc-primary);">
                 ${utils.esc(match.effect)}
             </div>
-            <div class="mt-4 small text-muted italic">Click background to dismiss briefing.</div>
         `;
         
         setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
     };
 
-    // --- RENDER DETAIL PANEL (COMPLETE VERSION) ---
+    // --- RENDER DETAIL PANEL ---
     window.CCFB.renderDetail = (unit, isLib = false) => {
+        console.log("🎨 Rendering detail:", unit?.name || unit?.uN, "isLib:", isLib);
+        
         const target = document.getElementById("det-target");
         const { units } = utils.getContext();
-        if (!target) return;
+        
+        if (!target) {
+            console.error("❌ det-target not found!");
+            return;
+        }
 
         const base = units.find(u => u.name === (unit.uN || unit.name));
-        if (!base) return;
+        if (!base) {
+            console.error("❌ Base unit not found:", unit.uN || unit.name);
+            return;
+        }
 
-        // Store current view for refresh
         window.CCFB._currentView = { unit, isLib };
 
-        // Get upgrades and supplemental
         const upgrades = isLib ? [] : (unit.upgrades || []);
         const supplemental = isLib ? null : (unit.supplemental || null);
         const stats = getModifiedStats(base, upgrades);
@@ -146,7 +164,7 @@ CCFB.define("components/painter", function(C) {
                 <div class="u-lore mb-4">"${utils.esc(base.lore || "Classified data.")}"</div>
 
                 <div class="u-type mb-2"><i class="fa fa-crosshairs"></i> Weaponry</div>
-                <div class="cc-box mb-3">
+                <div class="cc-box mb-3" style="background:rgba(255,255,255,0.03); padding:10px; border-radius:4px;">
                     <div class="u-name small">${utils.esc(base.weapon || "Melee")}</div>
                     <div class="small text-muted">
                         ${(base.weapon_properties || []).map(p => templates.abilityLink(p)).join(', ') || 'Standard'}
@@ -160,7 +178,8 @@ CCFB.define("components/painter", function(C) {
 
                 ${base.supplemental_abilities?.length ? `
                     <div class="u-type mb-2"><i class="fa fa-shield"></i> Supplemental (Choose One)</div>
-                    <select class="cc-select w-100 mb-3" onchange="window.CCFB.toggleSupplemental('${isLib ? 'lib-' + utils.enc(base.name) : unit.id}', this.value, ${isLib})">
+                    <select class="cc-select w-100 mb-3" style="background:rgba(0,0,0,0.4); border:1px solid #555; color:#fff; padding:8px; border-radius:4px;" 
+                            onchange="window.CCFB.toggleSupplemental('${isLib ? 'lib-' + utils.enc(base.name) : unit.id}', this.value, ${isLib})">
                         <option value="">-- None Selected --</option>
                         ${base.supplemental_abilities.map(s => `
                             <option value="${utils.esc(s.name)}" 
@@ -207,19 +226,22 @@ CCFB.define("components/painter", function(C) {
                 ${isLib ? `
                     <button class="btn btn-cc-primary w-100 mt-3" 
                             data-action="add" 
-                            data-unit="${utils.enc(base.name)}">
+                            data-unit="${utils.enc(base.name)}"
+                            style="background:var(--cc-primary); color:#000; border:none; padding:10px; font-weight:bold; cursor:pointer;">
                         ADD TO ROSTER
                     </button>
                 ` : ''}
             </div>`;
+        
+        console.log("✅ Detail rendered");
     };
 
-    // --- TOGGLE UPGRADE (SIMPLIFIED BUT COMPLETE) ---
+    // --- TOGGLE UPGRADE ---
     window.CCFB.toggleUpgrade = (unitId, name, cost, isLib) => {
+        console.log("🔧 Toggle upgrade:", name, "for", unitId);
         const { roster, units } = utils.getContext();
         
         if (isLib) {
-            // Library preview: collect current checkbox states
             const unitName = utils.dec(unitId.replace('lib-', ''));
             const base = units.find(u => u.name === unitName);
             if (!base) return;
@@ -231,7 +253,6 @@ CCFB.define("components/painter", function(C) {
                 supplemental: null
             };
             
-            // Gather all checked upgrades
             document.querySelectorAll('#det-target input[type="checkbox"]:checked').forEach(cb => {
                 const onChange = cb.getAttribute('onchange');
                 const match = onChange.match(/'([^']+)',\s*(\d+)/);
@@ -240,7 +261,6 @@ CCFB.define("components/painter", function(C) {
                 }
             });
             
-            // Get supplemental if selected
             const suppSelect = document.querySelector('#det-target select');
             if (suppSelect && suppSelect.value) {
                 const suppDef = base.supplemental_abilities?.find(s => s.name === suppSelect.value);
@@ -256,7 +276,6 @@ CCFB.define("components/painter", function(C) {
             window.CCFB.renderDetail(preview, true);
             
         } else {
-            // Roster: actually save the change
             const item = roster.find(u => String(u.id) === String(unitId));
             if (!item) return;
             
@@ -274,12 +293,12 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- TOGGLE SUPPLEMENTAL (COMPLETE VERSION) ---
+    // --- TOGGLE SUPPLEMENTAL ---
     window.CCFB.toggleSupplemental = (unitId, name, isLib) => {
+        console.log("🛡️ Toggle supplemental:", name, "for", unitId);
         const { roster, units } = utils.getContext();
         
         if (isLib) {
-            // Library preview
             const unitName = utils.dec(unitId.replace('lib-', ''));
             const base = units.find(u => u.name === unitName);
             if (!base) return;
@@ -291,7 +310,6 @@ CCFB.define("components/painter", function(C) {
                 supplemental: null
             };
             
-            // Gather upgrades
             document.querySelectorAll('#det-target input[type="checkbox"]:checked').forEach(cb => {
                 const onChange = cb.getAttribute('onchange');
                 const match = onChange.match(/'([^']+)',\s*(\d+)/);
@@ -300,7 +318,6 @@ CCFB.define("components/painter", function(C) {
                 }
             });
             
-            // Set supplemental
             if (name) {
                 const suppDef = base.supplemental_abilities?.find(s => s.name === name);
                 if (suppDef) {
@@ -315,7 +332,6 @@ CCFB.define("components/painter", function(C) {
             window.CCFB.renderDetail(preview, true);
             
         } else {
-            // Roster: save the change
             const item = roster.find(u => String(u.id) === String(unitId));
             if (!item) return;
             
@@ -340,123 +356,139 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- REFRESH UI (COMPLETE VERSION) ---
+    // --- REFRESH UI ---
     window.CCFB.refreshUI = () => {
-        const { units, roster, budget } = utils.getContext();
-        const total = roster.reduce((s, i) => s + getUnitCost(i), 0);
+        console.log("🔄 Refreshing UI...");
         
-        const displayTotal = document.getElementById("display-total");
-        if (displayTotal) {
-            displayTotal.innerHTML = `${total} / ${budget} ₤`;
-            displayTotal.className = (budget > 0 && total > budget) ? 'cc-over-budget' : '';
-        }
+        try {
+            const { units, roster, budget } = utils.getContext();
+            const total = roster.reduce((s, i) => s + getUnitCost(i), 0);
+            
+            const displayTotal = document.getElementById("display-total");
+            if (displayTotal) {
+                displayTotal.innerHTML = `${total} / ${budget} ₤`;
+                displayTotal.className = (budget > 0 && total > budget) ? 'cc-over-budget' : '';
+            }
 
-        const renderItem = (item, isRost) => {
-            const base = units.find(u => u.name === (isRost ? item.uN : item.name));
-            if (!base) return '';
+            const renderItem = (item, isRost) => {
+                const base = units.find(u => u.name === (isRost ? item.uN : item.name));
+                if (!base) return '';
+                
+                const upgrades = isRost ? (item.upgrades || []) : [];
+                const stats = getModifiedStats(base, upgrades);
+                
+                const upgradeCount = upgrades.length + (isRost && item.supplemental ? 1 : 0);
+                const upgradeIndicator = upgradeCount > 0 ? `<span class="small" style="color:var(--cc-primary);margin-left:4px;">(+${upgradeCount})</span>` : '';
+                
+                return `
+                    <div class="cc-roster-item" 
+                         data-action="${isRost ? 'select-roster' : 'select-lib'}" 
+                         data-id="${item.id || ''}" 
+                         data-unit="${utils.enc(base.name)}">
+                        <div class="u-type">${utils.esc(base.type)}</div>
+                        <div class="u-name">${utils.esc(base.name)}${upgradeIndicator}</div>
+                        <div class="stat-badge-flex">
+                            ${templates.statBadge('Q', stats.quality, 'stat-q', stats.quality !== base.quality)}
+                            ${templates.statBadge('D', stats.defense, 'stat-d', stats.defense !== base.defense)}
+                            ${templates.statBadge('R', stats.range, 'stat-r', stats.range !== base.range)}
+                            ${templates.statBadge('M', stats.move, 'stat-m', stats.move !== base.move)}
+                        </div>
+                        <div class="u-abilities-summary">${(base.abilities || []).slice(0, 3).join(', ')}${base.abilities?.length > 3 ? '...' : ''}</div>
+                        <div class="cc-item-controls">
+                            ${isRost ? 
+                                `<button class="btn-minus" data-action="remove" data-id="${item.id}">
+                                    <i class="fa fa-trash"></i>
+                                </button>` : 
+                                `<button class="btn-plus-lib" data-action="add" data-unit="${utils.enc(base.name)}">
+                                    <i class="fa fa-plus-circle"></i>
+                                </button>`
+                            }
+                        </div>
+                    </div>`;
+            };
+
+            const rosterTarget = document.getElementById("rost-target");
+            const libraryTarget = document.getElementById("lib-target");
             
-            const upgrades = isRost ? (item.upgrades || []) : [];
-            const stats = getModifiedStats(base, upgrades);
-            const cost = isRost ? getUnitCost(item) : base.cost;
+            if (rosterTarget) {
+                rosterTarget.innerHTML = roster.map(i => renderItem(i, true)).join('') || 
+                    '<div class="cc-empty-state p-3">No units in roster. Add units from the library.</div>';
+            }
             
-            // Show upgrade indicator
-            const upgradeCount = upgrades.length + (isRost && item.supplemental ? 1 : 0);
-            const upgradeIndicator = upgradeCount > 0 ? `<span class="small" style="color:var(--cc-primary);margin-left:4px;">(+${upgradeCount})</span>` : '';
+            if (libraryTarget) {
+                libraryTarget.innerHTML = units.map(u => renderItem(u, false)).join('');
+            }
             
-            return `
-                <div class="cc-roster-item" 
-                     data-action="${isRost ? 'select-roster' : 'select-lib'}" 
-                     data-id="${item.id || ''}" 
-                     data-unit="${utils.enc(base.name)}">
-                    <div class="u-type">${utils.esc(base.type)}</div>
-                    <div class="u-name">${utils.esc(base.name)}${upgradeIndicator}</div>
-                    <div class="stat-badge-flex">
-                        ${templates.statBadge('Q', stats.quality, 'stat-q', stats.quality !== base.quality)}
-                        ${templates.statBadge('D', stats.defense, 'stat-d', stats.defense !== base.defense)}
-                        ${templates.statBadge('R', stats.range, 'stat-r', stats.range !== base.range)}
-                        ${templates.statBadge('M', stats.move, 'stat-m', stats.move !== base.move)}
-                    </div>
-                    <div class="u-abilities-summary">${(base.abilities || []).slice(0, 3).join(', ')}${base.abilities?.length > 3 ? '...' : ''}</div>
-                    <div class="cc-item-controls">
-                        ${isRost ? 
-                            `<button class="btn-minus" data-action="remove" data-id="${item.id}">
-                                <i class="fa fa-trash"></i>
-                            </button>` : 
-                            `<button class="btn-plus-lib" data-action="add" data-unit="${utils.enc(base.name)}">
-                                <i class="fa fa-plus-circle"></i>
-                            </button>`
+            console.log("✅ UI refreshed:", roster.length, "roster items,", units.length, "library items");
+
+            // Bind click events ONCE
+            if (!window.CCFB._bound) {
+                console.log("🔗 Binding click events...");
+                document.addEventListener("click", (e) => {
+                    const el = e.target.closest("[data-action], .clickable-rule");
+                    if (!el) {
+                        const panel = document.getElementById('rule-detail-panel');
+                        if (panel && !e.target.closest('#rule-detail-panel')) {
+                            panel.classList.remove('cc-slide-panel-open');
                         }
-                    </div>
-                </div>`;
-        };
-
-        document.getElementById("rost-target").innerHTML = roster.map(i => renderItem(i, true)).join('') || 
-            '<div class="cc-empty-state p-3">No units in roster. Add units from the library.</div>';
-        document.getElementById("lib-target").innerHTML = units.map(u => renderItem(u, false)).join('');
-
-        // Bind click events ONCE
-        if (!window.CCFB._bound) {
-            document.addEventListener("click", (e) => {
-                const el = e.target.closest("[data-action], .clickable-rule");
-                if (!el) {
-                    const panel = document.getElementById('rule-detail-panel');
-                    if (panel && !e.target.closest('#rule-detail-panel')) {
-                        panel.classList.remove('cc-slide-panel-open');
-                    }
-                    return;
-                }
-                
-                if (el.classList.contains('clickable-rule')) {
-                    return window.CCFB.showRuleDetail(el.dataset.rule);
-                }
-                
-                const action = el.dataset.action;
-                const { units, roster } = utils.getContext();
-                
-                if (action === "add") {
-                    const uN = utils.dec(el.dataset.unit);
-                    const base = units.find(u => u.name === uN);
-                    if (!base) return;
-                    
-                    C.ui.roster.push({ 
-                        id: Date.now(), 
-                        uN, 
-                        cost: base.cost, 
-                        upgrades: [],
-                        supplemental: null
-                    });
-                    window.CCFB.refreshUI();
-                }
-                
-                if (action === "remove") {
-                    C.ui.roster = C.ui.roster.filter(i => String(i.id) !== String(el.dataset.id));
-                    
-                    // Clear detail panel if we just deleted what was being viewed
-                    const target = document.getElementById("det-target");
-                    if (target && window.CCFB._currentView && !window.CCFB._currentView.isLib) {
-                        if (String(window.CCFB._currentView.unit.id) === String(el.dataset.id)) {
-                            target.innerHTML = '<div class="cc-empty-state p-3">Unit removed. Select another unit to view.</div>';
-                        }
+                        return;
                     }
                     
-                    window.CCFB.refreshUI();
-                }
-                
-                if (action === "select-lib") {
-                    const base = units.find(u => u.name === utils.dec(el.dataset.unit));
-                    if (base) window.CCFB.renderDetail(base, true);
-                }
-                
-                if (action === "select-roster") {
-                    const item = roster.find(i => String(i.id) === String(el.dataset.id));
-                    if (item) window.CCFB.renderDetail(item, false);
-                }
-            });
-            window.CCFB._bound = true;
+                    if (el.classList.contains('clickable-rule')) {
+                        return window.CCFB.showRuleDetail(el.dataset.rule);
+                    }
+                    
+                    const action = el.dataset.action;
+                    const { units, roster } = utils.getContext();
+                    
+                    if (action === "add") {
+                        const uN = utils.dec(el.dataset.unit);
+                        const base = units.find(u => u.name === uN);
+                        if (!base) return;
+                        
+                        C.ui.roster.push({ 
+                            id: Date.now(), 
+                            uN, 
+                            cost: base.cost, 
+                            upgrades: [],
+                            supplemental: null
+                        });
+                        window.CCFB.refreshUI();
+                    }
+                    
+                    if (action === "remove") {
+                        C.ui.roster = C.ui.roster.filter(i => String(i.id) !== String(el.dataset.id));
+                        
+                        const target = document.getElementById("det-target");
+                        if (target && window.CCFB._currentView && !window.CCFB._currentView.isLib) {
+                            if (String(window.CCFB._currentView.unit.id) === String(el.dataset.id)) {
+                                target.innerHTML = '<div class="cc-empty-state p-3">Unit removed. Select another unit to view.</div>';
+                            }
+                        }
+                        
+                        window.CCFB.refreshUI();
+                    }
+                    
+                    if (action === "select-lib") {
+                        const base = units.find(u => u.name === utils.dec(el.dataset.unit));
+                        if (base) window.CCFB.renderDetail(base, true);
+                    }
+                    
+                    if (action === "select-roster") {
+                        const item = roster.find(i => String(i.id) === String(el.dataset.id));
+                        if (item) window.CCFB.renderDetail(item, false);
+                    }
+                });
+                window.CCFB._bound = true;
+                console.log("✅ Events bound");
+            }
+            
+        } catch (error) {
+            console.error("❌ refreshUI error:", error);
         }
     };
 
-    // --- UI HANDLERS (KEEP ALL OF THESE) ---
+    // --- UI HANDLERS ---
     window.CCFB.handleFactionChange = function(fKey) {
         if (!fKey) return;
         C.ui.fKey = fKey;
@@ -481,7 +513,6 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
-    // --- VIEW MODE TOGGLE (KEEP THIS) ---
     window.CCFB.toggleViewMode = function() {
         const app = document.getElementById("ccfb-app");
         const btn = document.getElementById("view-toggle-btn");
@@ -496,5 +527,8 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
+    console.log("✅ Painter module ready");
     return { refreshUI: window.CCFB.refreshUI };
 });
+
+console.log("✅ Painter module defined");
