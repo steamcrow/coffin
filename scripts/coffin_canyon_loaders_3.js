@@ -1,7 +1,44 @@
 CCFB.define("data/loaders", function (C) {
   
   // ============================================================
-  // NEW: RULES TRANSFORMER (Enhanced to handle weapon_properties)
+  // 1. UI LOADER OVERLAY LOGIC
+  // ============================================================
+  C.showLoader = function(message, progress) {
+    let loader = document.getElementById('ccfb-boot-loader');
+    if (!loader) {
+      loader = document.createElement('div');
+      loader.id = 'ccfb-boot-loader';
+      loader.innerHTML = `
+        <div class="loader-content" style="text-align: center; width: 300px;">
+          <div class="loader-spinner"></div>
+          <div id="loader-msg" style="color:var(--cc-primary); font-family: 'Oswald', sans-serif; font-size:1.2rem; margin-top:15px; text-transform:uppercase;">INITIALIZING...</div>
+          <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); margin-top: 15px; border-radius: 2px; overflow: hidden;">
+            <div id="loader-bar" style="height: 100%; background: var(--cc-primary); width: 0%; transition: width 0.3s ease; box-shadow: 0 0 10px var(--cc-primary);"></div>
+          </div>
+          <div style="color:#666; font-size:10px; margin-top:10px; letter-spacing:2px; text-transform:uppercase;">Tactical Data Link Active</div>
+        </div>
+      `;
+      // Ensure specific CSS for the spinner is in your stylesheet
+      document.body.appendChild(loader);
+    }
+    const msgEl = document.getElementById('loader-msg');
+    const barEl = document.getElementById('loader-bar');
+    if (msgEl) msgEl.innerText = message;
+    if (barEl) barEl.style.width = progress + '%';
+    loader.style.display = 'flex';
+    loader.classList.add('active');
+  };
+
+  C.hideLoader = function() {
+    const loader = document.getElementById('ccfb-boot-loader');
+    if (loader) {
+      loader.classList.remove('active');
+      loader.style.display = 'none';
+    }
+  };
+
+  // ============================================================
+  // 2. RULES TRANSFORMER
   // ============================================================
   C.transformRules = function(rawRules) {
     const transformed = {
@@ -11,23 +48,19 @@ CCFB.define("data/loaders", function (C) {
     };
     
     const abilityDict = rawRules?.rules_master?.ability_dictionary;
-    
     if (!abilityDict) {
       console.warn("⚠️ No ability_dictionary found in rules");
       return transformed;
     }
     
-    // Transform abilities
+    // Transform abilities from category-based structure
     for (let categoryKey in abilityDict) {
       const category = abilityDict[categoryKey];
-      
       for (let abilityKey in category) {
-        const abilityText = category[abilityKey];
-        
         transformed.abilities.push({
           id: abilityKey,
           name: makeReadable(abilityKey),
-          effect: abilityText,
+          effect: category[abilityKey],
           category: categoryKey
         });
       }
@@ -47,77 +80,93 @@ CCFB.define("data/loaders", function (C) {
       }
     }
     
-    console.log(`✅ Transformed ${transformed.abilities.length} abilities and ${transformed.weapon_properties.length} weapon properties from rules`);
+    console.log(`✅ Transformed ${transformed.abilities.length} abilities and ${transformed.weapon_properties.length} weapon properties`);
     return transformed;
   };
-  
-  // Helper: Turn "first_strike" into "First Strike"
+
+  // Helper: Turn "relic_guardian" into "Relic Guardian"
   function makeReadable(id) {
     return id.split('_').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
   }
-  
+
   // ============================================================
-  // EXISTING: LOAD FUNCTIONS
+  // 3. MASTER LOAD FUNCTIONS
   // ============================================================
   return {
+    /**
+     * Orchestrates the entire loading process to prevent race conditions.
+     */
+    bootSequence: async function(fKey) {
+      try {
+        C.showLoader("Downloading Rules...", 20);
+        await this.loadRules();
+        
+        C.showLoader(`Loading ${fKey}...`, 60);
+        await this.loadFaction(fKey);
+        
+        C.showLoader("Synchronizing UI...", 90);
+        
+        // Brief delay to allow DOM to catch up
+        setTimeout(() => {
+          C.hideLoader();
+          if (window.CCFB.refreshUI) window.CCFB.refreshUI();
+          if (window.diagLog) window.diagLog(`✅ ${fKey} Engine Ready`, "#0f0");
+        }, 600);
+      } catch (err) {
+        console.error("Boot sequence failed:", err);
+        C.showLoader("Error: Link Terminated", 100);
+      }
+    },
+
     loadRules: async function() {
       const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now();
-      
       try {
         const res = await fetch(url);
-        if(res.ok) { 
+        if (res.ok) { 
             const rawRules = await res.json();
             C.state.rules = C.transformRules(rawRules);
-            
-            if (window.diagLog) diagLog("📜 Rules loaded successfully.", "#0f0");
             console.log("📜 Rules loaded and transformed.");
         }
       } catch(e) { 
-        if (window.diagLog) diagLog("⚠️ Rules load failed. Using defaults.", "#f33");
         console.warn("Rules load failed:", e); 
       }
       return true;
     },
     
     loadFaction: async function (fKey) {
-      if (window.diagLog) diagLog(`📡 Requesting Faction: ${fKey}...`, "#ff7518");
-      
-      // Ensure UI state is initialized
+      // MANDATORY INITIALIZATION: Prevents the "undefined libraryConfigs" error
       C.ui = C.ui || {};
+      C.ui.libraryConfigs = C.ui.libraryConfigs || {};
       C.ui.roster = C.ui.roster || [];
       C.ui.budget = C.ui.budget || 500;
       
-      CCFB.require(["config/docTokens"], async function(cfg) {
-        const entry = cfg.getFaction(fKey);
-        if (!entry) {
+      return new Promise((resolve) => {
+        CCFB.require(["config/docTokens"], async function(cfg) {
+          const entry = cfg.getFaction(fKey);
+          if (!entry) {
             console.error("❌ No config entry for:", fKey);
-            if (window.diagLog) diagLog(`❌ Faction Key "${fKey}" not found in config.`, "#f33");
-            return;
-        }
-        const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/" + entry.url + "?t=" + Date.now();
-        
-        try {
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status} - Not Found`);
-          
-          const data = await res.json();
-          
-          // Save the data to our state
-          C.state.factions[fKey] = data;
-          C.ui.fKey = fKey; 
-          
-          if (window.diagLog) diagLog(`✅ Loaded ${data.name || fKey}`, "#0f0");
-          
-          // Force the UI to refresh
-          if (typeof window.CCFB.refreshUI === "function") {
-            window.CCFB.refreshUI();
+            return resolve(false);
           }
-        } catch (err) { 
-          console.error("❌ JSON Fetch Failed:", err); 
-          if (window.diagLog) diagLog(`❌ Fetch Failed: ${err.message}`, "#f33");
-        }
+
+          const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/" + entry.url + "?t=" + Date.now();
+          
+          try {
+            const res = await fetch(url);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            
+            const data = await res.json();
+            C.state.factions[fKey] = data;
+            C.ui.fKey = fKey; 
+            
+            console.log(`✅ Faction ${fKey} loaded into state.`);
+            resolve(true);
+          } catch (err) { 
+            console.error("❌ JSON Fetch Failed:", err); 
+            resolve(false);
+          }
+        });
       });
     }
   };
