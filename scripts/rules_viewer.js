@@ -72,32 +72,41 @@ const rules = await rulesRes.json();
     return path.split(".").reduce((o, k) => o && o[k], obj);
   }
 
-  function renderObject(obj) {
-    if (!obj) return `<p><em>Missing section data.</em></p>`;
+function renderObject(obj, level = 3) {
+  if (!obj) return `<p><em>Missing section data.</em></p>`;
 
-    if (typeof obj === "string") {
-      return `<p>${obj}</p>`;
-    }
-
-    if (Array.isArray(obj)) {
-      return `<ul>${obj.map(i => `<li>${renderObject(i)}</li>`).join("")}</ul>`;
-    }
-
-    if (typeof obj === "object") {
-      let out = "";
-      for (const k in obj) {
-        out += `
-          <div class="ability-boxed-callout">
-            <strong>${prettify(k)}</strong>
-            ${renderObject(obj[k])}
-          </div>
-        `;
-      }
-      return out;
-    }
-
-    return "";
+  // Strings → paragraphs
+  if (typeof obj === "string") {
+    return `<p>${obj}</p>`;
   }
+
+  // Arrays → bullet lists
+  if (Array.isArray(obj)) {
+    return `<ul>${obj.map(i => `<li>${renderObject(i, level)}</li>`).join("")}</ul>`;
+  }
+
+  // Objects → hierarchical sections
+  if (typeof obj === "object") {
+    let out = "";
+
+    for (const k in obj) {
+      const title = prettify(k);
+      const headingTag = `h${Math.min(level, 6)}`;
+
+      out += `
+        <${headingTag} class="cc-rule-h${level}">
+          ${title}
+        </${headingTag}>
+        ${renderObject(obj[k], level + 1)}
+      `;
+    }
+
+    return out;
+  }
+
+  return "";
+}
+
 
   function prettify(str) {
     return str.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase());
