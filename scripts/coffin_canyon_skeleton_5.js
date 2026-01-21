@@ -39,12 +39,12 @@ window.CCFB.renderFactionIcon = function(factionKey) {
                 fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
                 document.head.appendChild(fa);
         }
-        // Load Coffin Canyon CSS from GitHub
+        // Load Coffin Canyon CSS via jsDelivr (works properly!)
             if (!document.getElementById('cc-coffin-styles')) {
                 const ccStyles = document.createElement('link');
                 ccStyles.id = 'cc-coffin-styles';
                 ccStyles.rel = 'stylesheet';
-                ccStyles.href = 'https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/coffin.css?t=' + Date.now();
+                ccStyles.href = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/scripts/coffin.css';
                 document.head.appendChild(ccStyles);
         }
 
