@@ -51,29 +51,20 @@ window.CCFB.renderFactionIcon = function(factionKey) {
         }
 
 // Load Coffin Canyon CSS (fetch method - most reliable)
+// Load Coffin Canyon CSS
 if (!document.getElementById('cc-coffin-styles')) {
     console.log('🎃 Loading Coffin Canyon CSS...');
-    
-    fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/coffin.css?cachebust=' + Date.now())
-        .then(response => {
-            console.log('📥 CSS fetch response:', response.status);
-            return response.text();
-        })
+    fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/coffin.css?t=' + Date.now())
+        .then(res => res.text())
         .then(css => {
-            console.log('✅ CSS loaded, injecting...');
             const style = document.createElement('style');
             style.id = 'cc-coffin-styles';
             style.textContent = css;
             document.head.appendChild(style);
-            console.log('🎨 Coffin Canyon CSS applied!');
+            console.log('✅ Coffin Canyon CSS applied!');
         })
-        .catch(error => {
-            console.error('❌ Failed to load Coffin Canyon CSS:', error);
-        });
-} else {
-    console.log('⚠️ Coffin Canyon CSS already loaded');
+        .catch(err => console.error('❌ CSS load failed:', err));
 }
-
 
             const budgets = [500, 1000, 1500, 2000, 2500, 3000];
             
