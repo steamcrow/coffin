@@ -518,6 +518,29 @@ button:hover i[class*="fa-"],
     margin: 0;
 }
 
+/* === DETAIL HEADER SPACING === */
+.detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--cc-border);
+}
+
+.cc-panel-header {
+    margin-bottom: 10px;
+}
+
+/* === MORE AIR IN DETAIL PANEL === */
+.mt-4 {
+    margin-top: 20px;
+}
+
+.mb-2 {
+    margin-bottom: 10px;
+}
+
 /* === PRINT STYLES === */
 @media print {
   #ccfb-details, .cc-tool-btn, .btn-minus { display: none !important; }
