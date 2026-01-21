@@ -200,8 +200,11 @@ ${(base.optional_upgrades || []).map(upg => {
             <div class="fw-bold" style="color:var(--cc-primary)">+${upg.cost} ₤</div>
         </label>
     </div>`;
-}).join('') || '<div class="text-muted small">No upgrades available.</div>'
-console.log("✅ Detail rendered");
+}).join('') || '<div class="text-muted small">No upgrades available.</div>'}
+            </div>`;
+        
+        console.log("✅ Detail rendered");
+        
     } catch (error) {
         console.error("❌ renderDetail error:", error);
         console.error("Error details:", error.message, error.stack);
@@ -211,5 +214,9 @@ console.log("✅ Detail rendered");
         }
     }
 };
-}
+    console.log("✅ Painter module ready");
+    return { refreshUI: window.CCFB.refreshUI };
+});
+
+console.log("✅ Painter module defined");
 
