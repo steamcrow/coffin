@@ -1,66 +1,35 @@
 {
   "faction": "Monsterology",
   "version": "1.9",
+  "core_rules_version": "8.2",
   "description": "Scientists, industrialists, and researchers who study Obscuria's mysteries for profit and progress. Monsterology captures specimens, harvests Thyr, and experiments with forbidden technologies.",
-  "universal_upgrades_available": true,
-  "universal_upgrades_note": "All Monsterology units may purchase universal upgrades from core rules (Gas Mask, Spare Parts, vehicle upgrades) unless their special mechanics indicate the upgrade is built-in or incompatible.",
+  "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons and devices have additional point costs listed in optional_upgrades.",
   "faction_features": [
     {
       "name": "Specimen Capture",
       "cost": 0,
       "required": true,
-      "effect": "Monsterology units can capture Monsters and other creatures for research. Captured specimens are removed from play and score VP. Units with nets, cages, or tranquilizers excel at capture."
+      "effect": "Monsterology units can capture Monsters and other creatures for research. Captured specimens are removed from play and score VP."
     },
     {
       "name": "Thyr Exploitation",
       "cost": 0,
       "required": true,
-      "effect": "Monsterology prioritizes harvesting Thyr crystals for industrial use. Units can extract, transport, and refine Thyr. Thyr-powered devices and weapons are common."
+      "effect": "Monsterology prioritizes harvesting Thyr crystals for industrial use. Units can extract, transport, and refine Thyr."
     },
     {
       "name": "Laboratory Support",
       "cost": 0,
       "required": false,
-      "effect": "Field laboratories and support units (Medics, Technicians, Alchemists) provide healing, equipment upgrades, and tactical bonuses to nearby units."
+      "effect": "Field laboratories and support units provide healing, equipment upgrades, and tactical bonuses."
     },
     {
       "name": "Experimental Technology",
       "cost": 0,
       "required": false,
-      "effect": "Monsterology employs cutting-edge (and sometimes unstable) technology: aethyr devices, chemical weapons, mechanical constructs, and bio-engineered specimens."
+      "effect": "Monsterology employs unstable technology: chemical weapons, mechanical constructs, and bio-engineered specimens."
     }
   ],
-  "victory_objectives": [
-    {
-      "type": "Specimens Captured",
-      "vp": "3-8 VP per specimen",
-      "description": "Score VP for capturing Monsters, rare creatures, or enemy units alive. Larger/rarer specimens score more VP. Living research subjects are more valuable than corpses."
-    },
-    {
-      "type": "Thyr Harvested",
-      "vp": "2 VP per crystal",
-      "description": "Score VP for extracting Thyr crystals from the battlefield. Represents successful resource exploitation for industrial use."
-    },
-    {
-      "type": "Research Data",
-      "vp": "3 VP per objective",
-      "description": "Score VP for gathering research data: documenting Monster behavior, analyzing ruins, testing experimental weapons. Represents scientific progress."
-    },
-    {
-      "type": "Extraction",
-      "vp": "4 VP per unit extracted",
-      "description": "Score VP for successfully extracting specimens, Thyr, or personnel from the battlefield. Monsterology values successful expeditions that return with data."
-    },
-    {
-      "type": "Technological Superiority",
-      "vp": "Varies",
-      "description": "Score bonus VP for demonstrating technological advantage: defeating enemies with experimental weapons, deploying advanced devices, achieving scientific breakthroughs."
-    }
-  ],
-  "composition_requirements": {
-    "note": "Monsterology forces represent research expeditions. Include a mix of security (guards, hunters), support (medics, technicians), and specialists (alchemists, trappers) for balanced gameplay.",
-    "laboratory_presence": "At least one support unit (Medic, Alchemist, or Technician) is recommended to represent the scientific nature of the expedition."
-  },
   "units": [
     {
       "name": "Squab",
@@ -73,24 +42,14 @@
       "range": 3,
       "weapon": "Thrown Bottles, Rusty Razor",
       "weapon_properties": [],
+      "composition": { "per_points": 0 },
       "abilities": [],
-      "lore": "The lowest rung of Monsterologist society. Desperate souls who hang around hoping to become Pluguglies. Armed with trash and bottles, they hurl junk from 3\" away, too weak for real melee. Most don't survive their first expedition.",
-      "tactics": "Ultra-cheap swarm unit. Send 4-6 to tie up enemies. Trade them for positioning. Frail type means death doesn't hurt morale. Minimum 2 required per army.",
-      "upgrades": [
-        {
-          "name": "Molotov Cocktail",
-          "cost": 2,
-          "effect": "On hit, 4+ causes fire damage"
-        },
-        {
-          "name": "Rotgut Drunk",
-          "cost": 2,
-          "effect": "Immune to Fear effects, -2 Move (staggering drunk)"
-        }
-      ],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "minimum 2 per army",
-      "min_count": 2
+      "lore": "The lowest rung of Monsterologist society. Desperate souls armed with trash and bottles.",
+      "tactics": "Ultra-cheap swarm unit. Trade bodies for positioning.",
+      "optional_upgrades": [
+        { "name": "Molotov Cocktail", "cost": 2, "type": "Weapon", "effect": "On hit, 4+ causes fire damage." },
+        { "name": "Rotgut Drunk", "cost": 2, "type": "Upgrade", "effect": "Immune to Fear, -2 Move." }
+      ]
     },
     {
       "name": "Chemist Lackey",
@@ -102,29 +61,25 @@
       "move": 5,
       "range": 6,
       "weapon": "Chemical Sprayer",
-      "weapon_properties": [
-        "Cone 6\"",
-        "Blinding"
-      ],
-      "abilities": [
-        "Assistant"
-      ],
-      "lore": "Lab assistants and alchemical technicians. They operate chemical sprayers, mix compounds, and assist Scientists with injections. Their sprayers can blind, corrode, or panic targets at short range. Cheap support units that enable the faction's experimental capabilities.",
-      "tactics": "Support unit. Use Chemical Sprayer to blind key targets or disrupt clusters. Stay near Scientists to assist with Sonderbar Injections. Monster Lures can manipulate monster behavior for captures.",
-      "upgrades": [
+      "weapon_properties": ["Cone 6\"", "Blinding"],
+      "composition": { "per_points": 0 },
+      "abilities": ["Assistant"],
+      "lore": "Lab assistants operating chemical sprayers and compounds.",
+      "tactics": "Support unit. Blind clusters and assist Scientists.",
+      "optional_upgrades": [
         {
           "name": "Monster Lures",
           "cost": 3,
-          "effect": "Pheromone canister bombs. Once per game, throw within 12\". Monsters within 6\" of canister must test Morale or move toward it (ignoring allies for 1 round)."
+          "type": "Upgrade",
+          "effect": "Once per game, throw 12\". Monsters within 6\" must test Morale or move toward it."
         },
         {
           "name": "Binding Salts",
           "cost": 2,
-          "effect": "Alchemical compounds. Once per game, create a 3\" line or circle. Monsters cannot cross the line for 2 rounds (non-damaging)."
+          "type": "Upgrade",
+          "effect": "Once per game, create 3\" barrier monsters cannot cross for 2 rounds."
         }
-      ],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "unlimited"
+      ]
     },
     {
       "name": "Devourer Adept",
@@ -134,21 +89,14 @@
       "quality": 2,
       "defense": 1,
       "move": 5,
-      "range": null,
+      "range": 0,
       "weapon": "Ritual Tools",
       "weapon_properties": [],
-      "abilities": [
-        "Ritual Attendant"
-      ],
-      "lore": "Frail ritual assistants trained to harvest, prepare, and present monster Mort for sanctioned ingestion. Devourer Adepts accompany Feast Bishops into the field, managing purity, portioning, and doctrine under extreme conditions.",
-      "tactics": "Non-combatant support unit. Keep Devourer Adepts alive to enable Great Workings. They are prime assassination targets and create natural counterplay for opponents.",
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "At least 1 required if a Feast Bishop is included.",
-      "special_mechanics": {
-        "non_combatant": "Devourer Adepts cannot make attacks and may not contest objectives.",
-        "ritual_attendant": "If within 3\" of the Feast Bishop, the Bishop may perform a Great Working even if the Mort token is up to 6\" away instead of 3\"."
-      }
+      "composition": { "per_points": 0 },
+      "abilities": ["Ritual Attendant", "Non-Combatant"],
+      "lore": "Ritual assistants trained to prepare monster Mort.",
+      "tactics": "Keep alive to enable Great Workings.",
+      "optional_upgrades": []
     },
     {
       "name": "Plugugly",
@@ -158,29 +106,21 @@
       "quality": 5,
       "defense": 2,
       "move": 6,
-      "range": null,
-      "weapon": "Steel Baton, Double-bit Axe, or Brass Knuckles",
+      "range": 0,
+      "weapon": "Steel Baton / Axe / Knuckles",
       "weapon_properties": [],
-      "abilities": [
-        "Brutal Blow",
-        "Tough(2)"
-      ],
-      "lore": "Hulking soldiers enhanced by Sonderbar Program. Monthly chemical injections bulk them to incredible size. They wear dirty corduroy pants, striped tank tops, and armored top hats stamped with rank numbers. All addicted to Sonderbar, fiercely loyal in hopes of earning Knighthood.",
-      "tactics": "Frontline melee bruiser. Can be injected to become Q7, D3 (permanent boost). 33% risk creates enemy Ghoul. Brutal Blow adds +1 damage per hit. Workhorse unit of the faction.",
-      "upgrades": [
+      "composition": { "per_points": 300 },
+      "abilities": ["Brutal Blow", "Tough(2)", "Sonderbar Injection"],
+      "lore": "Chemically enhanced shock troops addicted to Sonderbar.",
+      "tactics": "Frontline melee bruiser.",
+      "optional_upgrades": [
         {
           "name": "Untergang Revolver",
           "cost": 6,
-          "effect": "Range: 12\", adds Rapid Fire"
+          "type": "Weapon",
+          "effect": "Range 12\", Rapid Fire."
         }
-      ],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "unlimited",
-      "special_mechanics": {
-        "injectable": true,
-        "injection_success": "+2 Quality, +1 Defense",
-        "injection_failure": "Becomes Sonderbar Ghoul (Monster faction)"
-      }
+      ]
     },
     {
       "name": "Scientist",
@@ -190,31 +130,22 @@
       "quality": 3,
       "defense": 2,
       "move": 5,
-      "range": null,
+      "range": 0,
       "weapon": "Mechanical Hand, Syringe",
-      "weapon_properties": [
-        "Brutal Blow"
-      ],
-      "abilities": [
-        "Sonderbar Injection",
-        "Hex"
-      ],
-      "lore": "Scholars from Monsterology Academy. Led by Professor Lukas Steinlock, they create mad inventions including Spirit Traps, Regulator Collars, Soul Distillers, Electro-muskets, and the infamous Sonderbar Elixir. Their brass mechanical prosthetic hands are capable of crushing bones in combat.",
-      "tactics": "Support unit with weak combat stats but surprising melee potential with Mechanical Hand (Brutal Blow = +1 damage per hit). Operates Dynamo Generator (crucial for Electromagik). Can inject Plugugly once per game. Must have adjacent Chemist Lackey for injection. Hex ability debuffs targets. Protect at all costs.",
-      "upgrades": [
+      "weapon_properties": ["Brutal Blow"],
+      "composition": { "per_points": 300 },
+      "abilities": ["Sonderbar Injection", "Hex", "Dynamo Operator"],
+      "lore": "Academy scholars and mad inventors.",
+      "tactics": "Support unit enabling injections and Electromagik.",
+      "optional_upgrades": [
         {
           "name": "Reinforced Prosthetic",
           "cost": 4,
-          "effect": "+1 Defense (reinforced prosthetic armor)"
+          "type": "Gear",
+          "effect": "+1 Defense.",
+          "stat_modifiers": { "defense": 1 }
         }
-      ],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "0-3 per army",
-      "special_mechanics": {
-        "dynamo_operator": true,
-        "dynamo_requirement": "within 5\""
-      },
-      "max_count": 3
+      ]
     },
     {
       "name": "Hexan",
@@ -225,34 +156,16 @@
       "defense": 3,
       "move": 4,
       "range": 18,
-      "weapon": "Electromagic Wand & Dynamo Backpack",
-      "weapon_properties": [
-        "Pinning Shot"
-      ],
-      "abilities": [
-        "Hexan Gorget",
-        "Fear(1)"
-      ],
-      "lore": "Ordained acolytes of Monsterology’s ingestive faith. Hexan wear tailored suits, red pointed hats, and ceremonial gorgets etched with teeth, Thyr veins, and House sigils. They do not merely wield Electromagik—they stabilize ritual fields, chant during sanctioned ingestion, and bear witness to the Feast Bishop’s Great Workings. Their lightning is not spellcraft, but liturgy made visible.",
-      "tactics": "Mid-range spellcaster (18\" range). Wand connected to backpack by cord. Must stay within Dynamo field. Pinning Shot locks targets in place. Fear(1) intimidates enemies. Hexan Gorget grants +1 Defense vs magic (included in D3 stat). Move 4\" due to heavy backpack.",
-      "upgrades": [
-        {
-          "name": "Chain Lightning",
-          "cost": 3,
-          "effect": "Adds Explosive ability to attacks. Lightning arcs to nearby enemies."
-        },
-        {
-          "name": "Verve/Levitation",
-          "cost": 2,
-          "effect": "Adds Flying ability. Hexan can levitate over terrain obstacles."
-        }
-      ],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "0-3 per army",
-      "special_mechanics": {
-        "requires_dynamo_field": true
-      },
-      "max_count": 3
+      "weapon": "Electromagic Wand",
+      "weapon_properties": ["Pinning Shot"],
+      "composition": { "per_points": 300 },
+      "abilities": ["Hexan Gorget", "Fear(1)", "Requires Dynamo Field"],
+      "lore": "Electromagik ritual acolytes.",
+      "tactics": "Mid-range caster tied to Dynamo.",
+      "optional_upgrades": [
+        { "name": "Chain Lightning", "cost": 3, "type": "Upgrade", "effect": "Adds Explosive." },
+        { "name": "Levitation", "cost": 2, "type": "Upgrade", "effect": "Gain Flying." }
+      ]
     },
     {
       "name": "Jäger",
@@ -263,30 +176,20 @@
       "defense": 2,
       "move": 5,
       "range": 24,
-      "weapon": "Electro-Musket & Dynamo Backpack",
-      "weapon_properties": [
-        "AP(2)",
-        "Pinning Shot"
-      ],
-      "abilities": [
-        "Pierce",
-        "Hero"
-      ],
-      "lore": "Field commanders of Monsterology. If Elders are planners, Jägers are leaders of field operations. They lead hunts, assassinate Rangers, run Field Stations, and oversee Plugugly towns. Identified by luxurious suits made from monstrous furs and exotic leathers. Hunt with exquisite hand-made Electro-muskets firing bolts of electricity. Dynamo backpacks power their weapons but reduce mobility.",
-      "tactics": "Elite sniper-leader (24\" range). Electro-Musket has AP(2) + Pinning Shot + Pierce critical. Pierce bypasses Defense on natural 6. Hero ability lets allies within 6\" reroll 1s. Must stay within Dynamo field. Leadership aura plus sniping. Move 5\" due to dynamo backpack weight.",
-      "upgrades": [
+      "weapon": "Electro-Musket",
+      "weapon_properties": ["AP(2)", "Pinning Shot"],
+      "composition": { "per_points": 300 },
+      "abilities": ["Pierce", "Hero", "Requires Dynamo Field"],
+      "lore": "Field commanders and elite hunters.",
+      "tactics": "Sniper-leader with aura support.",
+      "optional_upgrades": [
         {
           "name": "Powder Monkey",
           "cost": 4,
-          "effect": "Young assistant who carries ammunition and equipment. Jäger gains +1 to reload actions and can reroll one failed shot per turn. Powder Monkey does not fight and does not count toward unit count (non-combatant)."
+          "type": "Upgrade",
+          "effect": "Reroll one failed shot per turn."
         }
-      ],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "0-2 per army",
-      "special_mechanics": {
-        "requires_dynamo_field": true
-      },
-      "max_count": 2
+      ]
     },
     {
       "name": "Plugugly Velocipede",
@@ -298,34 +201,26 @@
       "move": 10,
       "range": 12,
       "weapon": "Harpoon Launcher",
-      "weapon_properties": [
-        "Pinning Shot",
-        "Grapple"
-      ],
-      "abilities": [
-        "Fast",
-        "Impact(2)",
-        "Boardwalk Blitzer",
-        "Ground Only"
-      ],
-      "lore": "Steam-powered two-wheeled cycles with massive boilers. Plugugly riders in goggles and striped tank tops. Front-mounted harpoon launchers. Chains and grappling hooks hanging from sides. Belches black smoke, hisses steam, extremely loud and intimidating.",
-      "tactics": "Fastest Monsterology unit (10\" move, 11\" on boardwalks). Harpoon pins targets and grapples them 3-6\" toward you. Impact(2) on charge deals automatic hits before regular attack. Ground level only - cannot shoot elevated targets. Hit-and-run harassment. Monster capture specialist.",
-      "upgrades": [
+      "weapon_properties": ["Pinning Shot", "Grapple"],
+      "composition": { "per_points": 400 },
+      "abilities": ["Fast", "Impact(2)", "Boardwalk Blitzer", "Ground Only"],
+      "lore": "Steam-powered harpoon bikes.",
+      "tactics": "High-speed monster capture.",
+      "optional_upgrades": [
         {
           "name": "Armored Plating",
           "cost": 3,
-          "effect": "+1 Defense, -1\" Move"
+          "type": "Upgrade",
+          "effect": "+1 Defense, -1 Move.",
+          "stat_modifiers": { "defense": 1, "move": -1 }
         },
         {
           "name": "Double Harpoons",
           "cost": 4,
-          "effect": "Adds Rapid Fire"
+          "type": "Weapon",
+          "effect": "Gain Rapid Fire."
         }
-      ],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "suggested max 3 per army",
-      "max_count": 3,
-      "suggested_limit": true
+      ]
     },
     {
       "name": "House Elder",
@@ -335,65 +230,20 @@
       "quality": 3,
       "defense": 2,
       "move": 3,
-      "range": null,
+      "range": 0,
       "weapon": "Ceremonial Scepter",
       "weapon_properties": [],
-      "abilities": [
-        "Elder's Authority",
-        "Fearless",
-        "Rally",
-        "Command Presence"
-      ],
-      "lore": "Patriarch or matriarch of Monsterology. Ancient, wrinkled, craggy. Hold all seats of power in Houses, Chapters, and Lyceum Centralis. Rarely seen on battlefield but when present, their authority is absolute. Choose one of seven family doctrines. Slow and aged, but their command presence rallies the entire expedition.",
-      "tactics": "Fragile but powerful faction-wide buff. Choose doctrine at army creation. High-value target (worth +10 VP if killed). Must be protected. Living artifact - mobile buff aura. Leader abilities Rally and Command Presence improve morale. Maximum 1 per army.",
-      "upgrades": [
+      "composition": { "per_points": 400 },
+      "abilities": ["Elder's Authority", "Fearless", "Rally", "Command Presence"],
+      "lore": "Patriarch of a Monsterology House.",
+      "tactics": "Faction-wide buff engine.",
+      "optional_upgrades": [
         {
           "name": "Armored Shawl",
           "cost": 4,
-          "effect": "Ornate protective cloak. +1 Defense."
-        }
-      ],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "0-1 per army",
-      "special_mechanics": {
-        "choose_one_doctrine": true,
-        "high_value_target": "+10 VP if killed"
-      },
-      "doctrines": [
-        {
-          "house": "Steinlock",
-          "name": "Electromagik Supremacy",
-          "effect": "All units within 12\" count as within Scientist aura. Hexan/Scientists reroll one miss per turn."
-        },
-        {
-          "house": "Wrathgilde",
-          "name": "Surgical Precision",
-          "effect": "+1 to hit vs Heroes, Mystics, or wounded models within 12\""
-        },
-        {
-          "house": "Lasteyrie",
-          "name": "The Hunt",
-          "effect": "Brutes/Shooters within 12\" gain Hatred(Monsters): +1 hit, +1 damage vs Monsters"
-        },
-        {
-          "house": "Visconti",
-          "name": "Arcane Mastery",
-          "effect": "Hexan within 12\" gain +1 Quality. Can cast hex without damage."
-        },
-        {
-          "house": "Hastfer",
-          "name": "Resource Efficiency",
-          "effect": "+15 points at army creation. If Elder killed: +20 VP to enemy (instead of +10)"
-        },
-        {
-          "house": "Carilo",
-          "name": "Brutal Harvest",
-          "effect": "Pluguglies within 12\" gain Furious. On kill, move 3\" toward nearest enemy."
-        },
-        {
-          "house": "Orlov",
-          "name": "Relentless Pursuit",
-          "effect": "+1 Move within 12\". Enemies can't retreat within 12\"."
+          "type": "Gear",
+          "effect": "+1 Defense.",
+          "stat_modifiers": { "defense": 1 }
         }
       ]
     },
@@ -405,192 +255,14 @@
       "quality": 3,
       "defense": 4,
       "move": 0,
-      "range": null,
+      "range": 0,
       "weapon": "Ceremonial Implements",
       "weapon_properties": [],
-      "abilities": [
-        "Great Working",
-        "Fearless",
-        "Command Presence"
-      ],
-      "lore": "The highest spiritual authority ever sanctioned for field deployment by the Synod Seven. The Feast Bishop is enthroned behind a mobile metal feasting dais, wearing an idealized human mascot head of polished steel crowned with a red bishop’s mitre. Through sanctioned ingestion of monster Mort and Thyr crystals, he performs Great Workings that prove Monsterology’s doctrine correct.",
-      "tactics": "A slow but heavily protected ritual centerpiece. The Feast Bishop cannot reposition without Devourer Adepts, but becomes more mobile as his attendants survive. Protect the Bishop long enough to complete a Great Working and score Victory Points; eliminate his attendants to strand him in place.",
-      "upgrades": [],
-      "upgrades_note": "The Feast Bishop’s mask functions as a built-in Gas Mask and cannot be upgraded.",
-      "composition_limit": "0-1 per army",
-      "special_mechanics": {
-        "throne_of_ingestion": "The Feast Bishop’s Move is equal to the number of friendly Devourer Adepts currently on the battlefield (minimum 0, maximum 6). If no Devourer Adepts remain, the Feast Bishop cannot move.",
-        "great_working": "Once per game, if a Monster was killed this round and its Mort token is within 3\", and the Feast Bishop possesses at least 1 Thyr crystal, he may consume both as a full action to trigger a Great Working.",
-        "great_working_effects": [
-          "Doctrine of Supremacy: Friendly Monsterology units within 8\" gain +1 Quality and Fearless until end of round.",
-          "Doctrine of Excess: Heal 2 total damage across friendly units within 8\" or remove Pinned and Fear effects from them. Then roll 1d6; on a 1, a nearby friendly unit suffers 1 damage."
-        ],
-        "victory_points": "+4 VP each time a Great Working is completed.",
-        "requirement": "Requires at least one Devourer Adept in the army."
-      }
-    },
-    {
-      "name": "Jäger Rovlnkluesse",
-      "faction": "Monsterology",
-      "type": "Hero",
-      "cost": 216,
-      "quality": 6,
-      "defense": 3,
-      "move": 7,
-      "range": 36,
-      "weapon": "Thunderstrike Custom Electro-Musket",
-      "weapon_properties": [
-        "AP(3)",
-        "Pinning Shot"
-      ],
-      "abilities": [
-        "Pierce",
-        "Deadeye",
-        "Quick Draw"
-      ],
-      "lore": "Legendary sniper and hotshot duelist. Known across Obscuria for never missing a shot. Custom Electro-Musket 'Thunderstrike' has the longest infantry range in Monsterology. Cocky, flashy, devastatingly effective. Named hero of the faction.",
-      "tactics": "Elite sniper with 36\" range (longest in faction). Pierce on 6 bypasses Defense. Deadeye (once/game) rerolls all misses. Quick Draw interrupts enemy to shoot first. Hero type provides inherent bonuses. Position at extreme range and delete targets. Most expensive non-Elder unit.",
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "0-1 per army (named character)",
-      "special_mechanics": {
-        "quick_draw": "Interrupt enemy activation to shoot first (once/game)"
-      }
-    },
-    {
-      "name": "Ms. Siver Whiteglove",
-      "faction": "Monsterology",
-      "type": "Hero",
-      "cost": 178,
-      "quality": 5,
-      "defense": 2,
-      "move": 9,
-      "range": null,
-      "weapon": "Paired Poison Daggers",
-      "weapon_properties": [
-        "Poison",
-        "Deadly Shot"
-      ],
-      "abilities": [
-        "Fast",
-        "Stealth",
-        "Assassinate",
-        "Fearless"
-      ],
-      "lore": "Elite assassin from Whiteglove Services (Britannia). Silent, professional, lethal. Specializes in eliminating high-value targets - Heroes, Mystics, and leaders. Never seen until it's too late. Named hero of the faction.",
-      "tactics": "Fastest unit (9\" move). Stealth makes enemies at 9\"+ suffer -1 to hit. Assassinate gives +2 Quality vs Heroes/Mystics with 6s dealing 3 damage. Poison daggers bypass Regeneration. Flanker and hit-and-run specialist. Glass cannon (Defense 2).",
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "0-1 per army (named character)",
-      "special_mechanics": {
-        "assassinate": "Vs Heroes/Mystics: +2 Quality, 6s deal 3 damage"
-      }
-    },
-    {
-      "name": "Mister Klugg",
-      "faction": "Monsterology",
-      "type": "Hero",
-      "cost": 205,
-      "quality": 7,
-      "defense": 3,
-      "move": 6,
-      "range": 12,
-      "weapon": "Untergang Revolver + Metal Baton",
-      "weapon_properties": [
-        "Rapid Fire",
-        "Brutal Blow"
-      ],
-      "abilities": [
-        "Tough(3)",
-        "Regeneration",
-        "Ghoul Immunity"
-      ],
-      "lore": "The most heavily-dosed Plugugly in history. Hundreds of Sonderbar injections over decades. By all science, he should be a drooling Ghoul. Instead, he's a towering, nigh-unkillable legend. Nobody knows why he's immune to mutation. Some whisper he made a dark pact. Named hero of the faction.",
-      "tactics": "Frontline tank (Q7, D3, Tough(3)). Regeneration rolls 1d6 per wound, 5+ ignores it. Can shoot (12\" Rapid Fire) or melee. Hero type provides inherent bonuses. Unkillable anchor. Living legend who survived the impossible.",
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "0-1 per army (named character)",
-      "special_mechanics": {
-        "ghoul_immunity": "Cannot transform, immune to mutation effects"
-      }
-    },
-    {
-      "name": "Rhik Skrikim",
-      "faction": "Monsterology",
-      "type": "Hero",
-      "cost": 150,
-      "quality": 3,
-      "defense": 4,
-      "move": 5,
-      "range": 6,
-      "weapon": "Fire-Breathing Act",
-      "weapon_properties": [
-        "Cone 6\"",
-        "Explosive"
-      ],
-      "abilities": [
-        "Improbable Luck",
-        "Fire Spit",
-        "Scrappy"
-      ],
-      "lore": "A carnie Squab who survived 17 expeditions through sheer dumb luck. Rhik performs a fire-breathing act using stolen Sonderbar vapors mixed with grain alcohol. Somehow never dies despite being in the thick of every battle. Other Squabs follow him thinking his luck will rub off. Named hero of the faction.",
-      "tactics": "Cheapest hero (only 14 points). Fire Spit creates cone attack that clears clusters. Improbable Luck rerolls any die plus survives on 4+ when reduced to 0 Quality. Scrappy buffs friendly Squabs within 6\" to gain +1 Defense (D1→D2). Turns Squab swarm from trash to viable. Weirdly tough for a Squab (Defense 4).",
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask",
-      "composition_limit": "0-1 per army (named character)",
-      "special_mechanics": {
-        "improbable_luck": "Reroll any die. On 0Q, roll 1d6, 4+ survive with 1Q.",
-        "scrappy": "Squabs within 6\" gain +1 Defense"
-      }
-    },
-    {
-      "name": "Iron Diplomat",
-      "faction": "Monsterology",
-      "type": "Titan",
-      "cost": 325,
-      "quality": 7,
-      "defense": 5,
-      "move": 4,
-      "range": 18,
-      "weapon": "Chest Cannon / Crushing Stomp",
-      "weapon_properties": [
-        "AP(2)",
-        "Explosive"
-      ],
-      "abilities": [
-        "Fear(2)",
-        "Tough(5)",
-        "Impact(3)",
-        "Mobile Dynamo",
-        "Relentless"
-      ],
-      "lore": "18 tons of iron stomping steamgolem from the Germanian Empire. Thunders across the battlefield on massive pneumatic legs, shaking the earth with each step. Armored in riveted iron plates three inches thick, powered by an enormous coal-fired boiler core. Can blast superheated steam from its chest-mounted cannon or simply crush enemies beneath its feet. The boiler core generates a powerful Electromagik field, making it a mobile Dynamo Generator. Terrifying psychological weapon that breaks enemy morale before it even engages.",
-      "tactics": "Ultimate centerpiece and force multiplier. Extremely durable (Q7, D5, Tough(5)). Fear(2) causes widespread morale collapse. Mobile Dynamo creates 12\" Electromagik field - Hexan and Jäger can operate anywhere near it! Impact(3) deals 3 automatic hits when charging into melee. Can shoot Chest Cannon (18\" range, AP(2), Explosive) BUT reduces next turn's movement to 2\" due to steam pressure loss. Tactical choice each turn: shoot and slow down, or advance at full speed and stomp. Relentless means it never stops. Worth 25VP if killed - protect at all costs! 0-1 per 300 points.",
-      "upgrades": [
-        {
-          "name": "Reinforced Boiler Core",
-          "cost": 12,
-          "effect": "+1 Defense, immune to fire, Dynamo field extends to 18\""
-        },
-        {
-          "name": "Grappling Harpoons",
-          "cost": 8,
-          "effect": "Adds Grapple and Pinning Shot to ranged attack"
-        },
-        {
-          "name": "Overcharged Pistons",
-          "cost": 6,
-          "effect": "+1 Move, but takes 1 damage when moving 5\"+"
-        }
-      ],
-      "composition_limit": "0-1 per 300 points",
-      "special_mechanics": {
-        "titan": true,
-        "mobile_dynamo": "Creates 12\" Electromagik field. Hexan and Jäger within range can use Electromagik abilities.",
-        "steam_pressure_trade": "If Chest Cannon is fired, next turn's Move is reduced to 2\"",
-        "crushing_stomp": "Impact(3) deals 3 automatic hits before normal attack when charging",
-        "high_value_target": "+25 VP if destroyed"
-      }
+      "composition": { "per_points": 400 },
+      "abilities": ["Great Working", "Fearless", "Command Presence", "Throne of Ingestion"],
+      "lore": "Sanctioned ingestive ritual authority.",
+      "tactics": "Ritual VP engine.",
+      "optional_upgrades": []
     }
   ]
 }
