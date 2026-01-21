@@ -255,7 +255,50 @@ CCFB.define("components/storage", function(C) {
                 return;
             }
 
-            showRosterListPanel(data.result);
+            // Enrich each roster with faction info
+        const enriched = await Promise.all(
+        data.result.map(async (r) => {
+            try {
+                const res = await fetch('/web/dataset/call_kw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'call',
+                        params: {
+                            model: 'documents.document',
+                            method: 'read',
+                            args: [[r.id]],
+                            kwargs: { fields: ['datas'] }
+                    }
+                })
+            });
+
+            const docData = await res.json();
+            const jsonString = decodeURIComponent(escape(atob(docData.result[0].datas)));
+            const parsed = JSON.parse(jsonString);
+
+            return {
+                ...r,
+                faction: parsed.faction || "monster_rangers",
+                rosterName: parsed.name || r.name.replace('.json', ''),
+                budget: parsed.budget || 0
+            };
+
+        } catch (e) {
+            return {
+                ...r,
+                faction: "monster_rangers",
+                rosterName: r.name.replace('.json', ''),
+                budget: 0
+            };
+        }
+    })
+);
+
+showRosterListPanel(enriched);
+
         } catch (error) {
             console.error("Load error:", error);
             alert("Error loading rosters: " + error.message);
