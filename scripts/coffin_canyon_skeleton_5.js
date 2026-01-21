@@ -39,7 +39,14 @@ window.CCFB.renderFactionIcon = function(factionKey) {
                 fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
                 document.head.appendChild(fa);
         }
-
+        // Load Coffin Canyon CSS from GitHub
+            if (!document.getElementById('cc-coffin-styles')) {
+                const ccStyles = document.createElement('link');
+                ccStyles.id = 'cc-coffin-styles';
+                ccStyles.rel = 'stylesheet';
+                ccStyles.href = 'https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/coffin.css?t=' + Date.now();
+                document.head.appendChild(ccStyles);
+        }
 
 
             const budgets = [500, 1000, 1500, 2000, 2500, 3000];
