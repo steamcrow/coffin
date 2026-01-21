@@ -1,29 +1,24 @@
 CCFB.define("data/loaders", function (C) {
   
   // ============================================================
-  // 1. UI LOADER OVERLAY LOGIC
+  // 1. SIMPLE LOADER UI (Keep the nice look, fix the timing)
   // ============================================================
-  C.showLoader = function(message, progress) {
+  C.showLoader = function(message) {
     let loader = document.getElementById('ccfb-boot-loader');
     if (!loader) {
       loader = document.createElement('div');
       loader.id = 'ccfb-boot-loader';
       loader.innerHTML = `
-        <div class="loader-content" style="text-align: center; width: 300px; display: flex; flex-direction: column; align-items: center;">
+        <div class="loader-content" style="text-align: center; width: 300px;">
           <div class="loader-spinner"></div>
-          <div id="loader-msg" style="color:var(--cc-primary); font-family: 'Oswald', sans-serif; font-size:1.2rem; margin-top:20px; text-transform:uppercase; letter-spacing: 2px;">INITIALIZING...</div>
-          <div style="width: 100%; height: 6px; background: rgba(255,255,255,0.1); margin-top: 20px; border-radius: 3px; overflow: hidden; border: 1px solid rgba(255,255,255,0.05);">
-            <div id="loader-bar" style="height: 100%; background: var(--cc-primary); width: 0%; transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 15px var(--cc-primary);"></div>
-          </div>
-          <div style="color:#555; font-size:10px; margin-top:15px; letter-spacing:3px; text-transform:uppercase; font-weight: bold;">Tactical Data Link Active</div>
+          <div id="loader-msg" style="color:var(--cc-primary); font-family: 'Oswald', sans-serif; font-size:1.2rem; margin-top:20px; text-transform:uppercase; letter-spacing: 2px;">LOADING...</div>
+          <div style="color:#555; font-size:10px; margin-top:15px; letter-spacing:3px; text-transform:uppercase;">Tactical Data Link</div>
         </div>
       `;
       document.body.appendChild(loader);
     }
     const msgEl = document.getElementById('loader-msg');
-    const barEl = document.getElementById('loader-bar');
     if (msgEl) msgEl.innerText = message.toUpperCase();
-    if (barEl) barEl.style.width = progress + '%';
     loader.style.display = 'flex';
     setTimeout(() => loader.classList.add('active'), 10);
   };
@@ -32,15 +27,16 @@ CCFB.define("data/loaders", function (C) {
     const loader = document.getElementById('ccfb-boot-loader');
     if (loader) {
       loader.classList.remove('active');
-      setTimeout(() => { loader.style.display = 'none'; }, 400);
+      setTimeout(() => { 
+        loader.style.display = 'none'; 
+      }, 400);
     }
   };
 
   // ============================================================
-  // 2. RULES TRANSFORMER
+  // 2. SIMPLE RULES TRANSFORMER
   // ============================================================
   C.transformRules = function(rawRules) {
-    console.log("🛠️ Starting Rule Transformation...");
     const transformed = { abilities: [], weapon_properties: [], type_rules: [] };
     const abilityDict = rawRules?.rules_master?.ability_dictionary;
     if (!abilityDict) return transformed;
@@ -69,7 +65,7 @@ CCFB.define("data/loaders", function (C) {
         });
       }
     }
-    console.log(`✅ Transformation Complete: ${transformed.abilities.length} Abilities.`);
+    
     return transformed;
   };
 
@@ -79,33 +75,43 @@ CCFB.define("data/loaders", function (C) {
   };
 
   // ============================================================
-  // 3. MASTER BOOT SEQUENCE & DATA FETCHING
+  // 3. SIMPLE BOOT SEQUENCE
   // ============================================================
   return {
     bootSequence: async function(fKey) {
-      console.log(`🚀 Boot Sequence Initiated for: ${fKey}`);
+      console.log(`🚀 Loading: ${fKey}`);
+      
       try {
-        C.showLoader("Downloading Master Rules...", 15);
+        // Step 1: Show loader
+        C.showLoader("Loading Rules...");
+        
+        // Step 2: Load rules
         await this.loadRules();
         
-        C.showLoader(`Loading Tactical Data: ${fKey}...`, 50);
+        // Step 3: Load faction
+        C.showLoader(`Loading ${fKey}...`);
         const success = await this.loadFaction(fKey);
         
-        if (!success) throw new Error(`Failed to load faction: ${fKey}`);
+        if (!success) {
+          C.hideLoader();
+          alert(`Failed to load ${fKey}`);
+          return;
+        }
 
-        C.showLoader("Synchronizing Interface...", 85);
+        // Step 4: Hide loader and refresh UI
+        C.hideLoader();
         
+        // Wait a moment for loader to fade, then refresh
         setTimeout(() => {
-          C.showLoader("Link Established", 100);
-          setTimeout(() => {
-            C.hideLoader();
-            if (window.CCFB.refreshUI) window.CCFB.refreshUI();
-          }, 400);
-        }, 600);
+          if (window.CCFB.refreshUI) {
+            window.CCFB.refreshUI();
+          }
+        }, 500);
 
       } catch (err) {
         console.error("❌ BOOT FAILURE:", err);
-        C.showLoader("CONNECTION TERMINATED", 100);
+        C.hideLoader();
+        alert("Failed to load faction data");
       }
     },
 
@@ -117,6 +123,7 @@ CCFB.define("data/loaders", function (C) {
         C.state.rules = C.transformRules(rawRules);
         return true;
       } catch(e) { 
+        console.error("Rules load failed:", e);
         C.state.rules = { abilities: [], weapon_properties: [] };
         return false;
       }
@@ -124,14 +131,9 @@ CCFB.define("data/loaders", function (C) {
     
     loadFaction: async function (fKey) {
       C.ui = C.ui || {};
-      C.ui.libraryConfigs = C.ui.libraryConfigs || {};
       C.ui.roster = C.ui.roster || [];
       C.ui.budget = C.ui.budget || 500;
 
-      /**
-       * MAPPING LOGIC based on your provided screenshot:
-       * We use a simple map to translate the UI key to your specific filenames.
-       */
       const fileMap = {
         "monster_rangers": "faction-monster-rangers-v5.json",
         "liberty_corps": "faction-liberty-corps-v2.json",
@@ -151,10 +153,10 @@ CCFB.define("data/loaders", function (C) {
         C.state.factions[fKey] = data;
         C.ui.fKey = fKey; 
         
-        console.log(`✅ Faction ${fKey} data injected via ${fileName}`);
+        console.log(`✅ Faction ${fKey} loaded`);
         return true;
       } catch (err) { 
-        console.error("❌ Faction Fetch Failed:", err); 
+        console.error("❌ Faction load failed:", err); 
         return false;
       }
     }
