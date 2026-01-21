@@ -165,9 +165,29 @@
   color: #fff;
   margin: 5px 0;
 }
-.cc-rule-h3 { color: #ff7518; margin-top: 24px; }
-.cc-rule-h4 { color: #ccc; margin-top: 16px; }
-.cc-rule-h5 { color: #aaa; margin-top: 12px; }
+.cc-rule-h2 {
+  color: #ff7518;
+  text-align: center;
+  margin-top: 40px;
+}
+
+.cc-rule-h3 {
+  color: #e0e0e0;
+  margin-top: 28px;
+  font-weight: 800;
+}
+
+.cc-rule-h4 {
+  color: #bcbcbc;
+  margin-top: 18px;
+  font-weight: 700;
+}
+
+.cc-rule-h5 {
+  color: #999;
+  margin-top: 14px;
+  font-weight: 600;
+}
 
 .u-type { 
   font-size: 10px; 
