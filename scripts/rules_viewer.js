@@ -3,8 +3,9 @@ console.log("📖 Loading Coffin Canyon Rulebook (view schema)");
 (async function () {
 
   const ROOT_ID = "cc-rules-root";
-  const VIEW_URL = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules_view.json";
-  const RULES_URL = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json";
+ const RULES_URL = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json";
+const VIEW_URL  = "https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/rules_view.json";
+
 
   const root = document.getElementById(ROOT_ID);
   if (!root) {
