@@ -1,0 +1,18 @@
+{
+  "title": "Coffin Canyon Core Rules",
+  "version": "8.2",
+  "source": "rules.json",
+  "sections": [
+    { "id": "core_mechanics", "label": "Core Mechanics", "path": "rules_master.core_mechanics" },
+    { "id": "turn_structure", "label": "Turn Structure", "path": "rules_master.turn_structure" },
+    { "id": "visibility_vault", "label": "Visibility & Cover", "path": "rules_master.visibility_vault" },
+    { "id": "locomotion_vault", "label": "Movement & Terrain", "path": "rules_master.locomotion_vault" },
+    { "id": "combat_vault", "label": "Combat & Damage", "path": "rules_master.combat_vault" },
+    { "id": "morale_vault", "label": "Morale & Fear", "path": "rules_master.morale_vault" },
+    { "id": "unit_identities", "label": "Unit Identities", "path": "rules_master.unit_identities" },
+    { "id": "ability_dictionary", "label": "Ability Dictionary", "path": "rules_master.ability_dictionary", "render": "dictionary" },
+    { "id": "terrain_vault", "label": "Terrain Vault", "path": "rules_master.terrain_vault" },
+    { "id": "objective_vault", "label": "Objectives", "path": "rules_master.objective_vault" },
+    { "id": "scenario_vault", "label": "Scenarios", "path": "rules_master.scenario_vault" }
+  ]
+}
