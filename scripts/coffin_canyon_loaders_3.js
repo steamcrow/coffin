@@ -1,40 +1,60 @@
 CCFB.define("data/loaders", function (C) {
   
   // ============================================================
-  // 1. SIMPLE LOADER UI (Keep the nice look, fix the timing)
+  // 1. SIMPLE LOADER UI
   // ============================================================
   C.showLoader = function(message) {
     let loader = document.getElementById('ccfb-boot-loader');
     if (!loader) {
       loader = document.createElement('div');
       loader.id = 'ccfb-boot-loader';
+      loader.className = 'active';
+      loader.style.cssText = `
+        position: absolute; 
+        top: 0; left: 0; 
+        width: 100%; height: 100%; 
+        background: #1a1a1a; 
+        z-index: 9999; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+        opacity: 1;
+        transition: opacity 0.4s;
+      `;
       loader.innerHTML = `
-        <div class="loader-content" style="text-align: center; width: 300px;">
+        <div style="text-align: center;">
           <div class="loader-spinner"></div>
-          <div id="loader-msg" style="color:var(--cc-primary); font-family: 'Oswald', sans-serif; font-size:1.2rem; margin-top:20px; text-transform:uppercase; letter-spacing: 2px;">LOADING...</div>
+          <div id="loader-msg" style="color:#ff7518; margin-top:20px; font-family:'Oswald',sans-serif; font-size:1.2rem; text-transform:uppercase; letter-spacing:2px;">LOADING...</div>
           <div style="color:#555; font-size:10px; margin-top:15px; letter-spacing:3px; text-transform:uppercase;">Tactical Data Link</div>
         </div>
       `;
-      document.body.appendChild(loader);
+      const root = document.getElementById('ccfb-root');
+      if (root) root.appendChild(loader);
     }
+    
     const msgEl = document.getElementById('loader-msg');
     if (msgEl) msgEl.innerText = message.toUpperCase();
+    
     loader.style.display = 'flex';
-    setTimeout(() => loader.classList.add('active'), 10);
+    loader.style.opacity = '1';
+    loader.classList.add('active');
   };
 
   C.hideLoader = function() {
+    console.log("🧹 Hiding loader...");
     const loader = document.getElementById('ccfb-boot-loader');
     if (loader) {
+      loader.style.opacity = '0';
       loader.classList.remove('active');
       setTimeout(() => { 
-        loader.style.display = 'none'; 
+        loader.style.display = 'none';
+        console.log("✅ Loader hidden");
       }, 400);
     }
   };
 
   // ============================================================
-  // 2. SIMPLE RULES TRANSFORMER
+  // 2. RULES TRANSFORMER
   // ============================================================
   C.transformRules = function(rawRules) {
     const transformed = { abilities: [], weapon_properties: [], type_rules: [] };
@@ -75,7 +95,7 @@ CCFB.define("data/loaders", function (C) {
   };
 
   // ============================================================
-  // 3. SIMPLE BOOT SEQUENCE
+  // 3. BOOT SEQUENCE
   // ============================================================
   return {
     bootSequence: async function(fKey) {
@@ -98,15 +118,20 @@ CCFB.define("data/loaders", function (C) {
           return;
         }
 
-        // Step 4: Hide loader and refresh UI
-        C.hideLoader();
+        // Step 4: Wait a moment, then hide loader and refresh UI
+        C.showLoader("Synchronizing...");
         
-        // Wait a moment for loader to fade, then refresh
         setTimeout(() => {
-          if (window.CCFB.refreshUI) {
-            window.CCFB.refreshUI();
-          }
-        }, 500);
+          C.hideLoader();
+          
+          // Wait for loader fade, then refresh
+          setTimeout(() => {
+            console.log("🎨 Refreshing UI after load...");
+            if (window.CCFB.refreshUI) {
+              window.CCFB.refreshUI();
+            }
+          }, 500);
+        }, 300);
 
       } catch (err) {
         console.error("❌ BOOT FAILURE:", err);
