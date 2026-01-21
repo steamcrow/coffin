@@ -399,47 +399,66 @@ showRosterListPanel(enriched);
      */
 
     const showRosterListPanel = (rosters) => {
-        closeRosterListPanel();
-        
-        const panel = document.createElement('div');
-        panel.id = 'roster-list-panel';
-        panel.className = 'cc-slide-panel';
+    closeRosterListPanel();
+    
+    const panel = document.createElement('div');
+    panel.id = 'roster-list-panel';
+    panel.className = 'cc-slide-panel';
 
-        panel.innerHTML = `
-            <div class="cc-slide-panel-header">
-                <h2>SAVED ROSTERS</h2>
-                <button onclick="window.CCFB.closeRosterListPanel()" class="cc-panel-close-btn">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-            <div class="cc-roster-list">
-                ${rosters.map(r => {
-                    const displayName = r.name.replace('.json', '');
-                    return `
-                        <div class="cc-saved-roster-item">
-                            <div class="cc-saved-roster-info">
-                                <div class="cc-saved-roster-name">${displayName}</div>
-                                <div class="cc-saved-roster-date">
-                                    Saved: ${new Date(r.write_date).toLocaleDateString()}
-                                </div>
-                            </div>
-                            <div class="cc-saved-roster-actions">
-                                <button onclick="window.CCFB.loadRoster(${r.id})" class="btn-outline-warning">
-                                    <i class="fa fa-upload"></i> LOAD
-                                </button>
-                                <button onclick="window.CCFB.deleteRoster(${r.id})" class="btn-outline-danger">
-                                    <i class="fa fa-trash"></i>
-                                </button>
-                            </div>
+    panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+            <h2>SAVED ROSTERS</h2>
+            <button onclick="window.CCFB.closeRosterListPanel()" class="cc-panel-close-btn">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+
+        <div class="cc-roster-list">
+            ${rosters.map(r => {
+                const displayName = r.rosterName || r.name.replace('.json', '');
+                const factionKey = r.faction || "monster_rangers";
+                const iconHtml = window.CCFB.renderFactionIcon
+                    ? window.CCFB.renderFactionIcon(factionKey)
+                    : "";
+
+                const factionLabel = factionKey.replace('_', ' ').toUpperCase();
+                const budgetLabel = r.budget ? `${r.budget} ₤` : "UNLIMITED";
+
+                return `
+                    <div class="cc-saved-roster-item">
+
+                        <div class="cc-saved-roster-header">
+                            ${iconHtml}
+                            <span class="cc-faction-type">${factionLabel}</span>
                         </div>
-                    `;
-                }).join('')}
-            </div>
-        `;
 
-        document.body.appendChild(panel);
-        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
-    };
+                        <div class="cc-saved-roster-name">
+                            ${displayName}
+                        </div>
+
+                        <div class="cc-saved-roster-meta">
+                            💰 ${budgetLabel} · 📅 ${new Date(r.write_date).toLocaleDateString()}
+                        </div>
+
+                        <div class="cc-saved-roster-actions">
+                            <button onclick="window.CCFB.loadRoster(${r.id})" class="btn-outline-warning">
+                                <i class="fa fa-upload"></i> LOAD
+                            </button>
+                            <button onclick="window.CCFB.deleteRoster(${r.id})" class="btn-outline-danger">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+
+                    </div>
+                `;
+            }).join('')}
+        </div>
+    `;
+
+    document.body.appendChild(panel);
+    setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+};
+
 
     const closeRosterListPanel = () => {
         const panel = document.getElementById('roster-list-panel');
