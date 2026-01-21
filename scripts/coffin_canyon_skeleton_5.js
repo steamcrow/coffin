@@ -11,18 +11,17 @@ window.CCFB.define("components/skeleton", function(CCFB) {
         liberty_corps: "fa-flag-usa"
     };
 
-    // =========================================================
-    // STEP 2 — Faction icon renderer (future-proof wrapper)
-    // =========================================================
-    window.CCFB.renderFactionIcon = function(factionKey) {
-        const faClass = window.CCFB.FACTION_ICONS[factionKey] || "fa-question-circle";
-        return `
-            <span class="cc-faction-icon" data-faction="${factionKey}">
-                <i class="fa ${faClass}"></i>
-            </span>
-        `;
-    };
-
+  // =========================================================
+// STEP 2 — Faction icon renderer (FA6-correct)
+// =========================================================
+window.CCFB.renderFactionIcon = function(factionKey) {
+    const faClass = window.CCFB.FACTION_ICONS[factionKey] || "fa-circle-question";
+    return `
+        <span class="cc-faction-icon" data-faction="${factionKey}">
+            <i class="fa-solid ${faClass}"></i>
+        </span>
+    `;
+};
     return {
         /**
          * The Main Draw Function
