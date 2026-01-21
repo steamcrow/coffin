@@ -32,25 +32,18 @@ window.CCFB.renderFactionIcon = function(factionKey) {
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
-           if (!document.getElementById('cc-fa-icons')) {
-                const fa = document.createElement('link');
-                fa.id = 'cc-fa-icons';
-                fa.rel = 'stylesheet';
-                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
-                document.head.appendChild(fa);
-        }
         // Load Coffin Canyon CSS via jsDelivr (works properly!)
         // Load Font Awesome
-            if (!document.getElementById('cc-fa-icons')) {
-                console.log('🎨 Loading Font Awesome...');
-                const fa = document.createElement('link');
-                fa.id = 'cc-fa-icons';
-                fa.rel = 'stylesheet';
-                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
-                document.head.appendChild(fa);
-        }
+ // Load Font Awesome
+if (!document.getElementById('cc-fa-icons')) {
+    console.log('🎨 Loading Font Awesome...');
+    const fa = document.createElement('link');
+    fa.id = 'cc-fa-icons';
+    fa.rel = 'stylesheet';
+    fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+    document.head.appendChild(fa);
+}
 
-// Load Coffin Canyon CSS (fetch method - most reliable)
 // Load Coffin Canyon CSS
 if (!document.getElementById('cc-coffin-styles')) {
     console.log('🎃 Loading Coffin Canyon CSS...');
