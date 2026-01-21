@@ -31,7 +31,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // SHOW RULE PANEL
+    // SHOW RULE PANEL (with slide animation)
     // ============================================
     window.CCFB.showRulePanel = (abilityName) => {
         const abilityData = getAbilityFull(abilityName);
@@ -46,7 +46,7 @@ CCFB.define("components/painter", function(C) {
 
         const panel = document.createElement('div');
         panel.id = 'rule-panel';
-        panel.className = 'cc-slide-panel cc-slide-panel-open';
+        panel.className = 'cc-slide-panel';
         
         panel.innerHTML = `
             <div class="cc-slide-panel-header">
@@ -68,6 +68,20 @@ CCFB.define("components/painter", function(C) {
         `;
 
         document.body.appendChild(panel);
+        
+        // Slide in after a brief delay
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+
+        // Click outside to close
+        setTimeout(() => {
+            const closeOnClickOutside = (e) => {
+                if (!panel.contains(e.target)) {
+                    window.CCFB.closeRulePanel();
+                    document.removeEventListener('click', closeOnClickOutside);
+                }
+            };
+            document.addEventListener('click', closeOnClickOutside);
+        }, 100);
     };
 
     window.CCFB.closeRulePanel = () => {
@@ -135,22 +149,25 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // RENDER SUPPLEMENTAL DROPDOWN
+    // RENDER SUPPLEMENTAL DROPDOWN (Generic Label)
     // ============================================
-    const renderSupplementalDropdown = (supplementals, unitId, isLib) => {
+    const renderSupplementalDropdown = (supplementals, unitId, isLib, unitName = "") => {
         if (!supplementals || supplementals.length === 0) return '';
 
         const config = isLib ? (C.ui.libraryConfigs[unitId] || {}) : C.ui.roster.find(u => String(u.id) === String(unitId)) || {};
         const selected = config.selectedSupplemental || null;
         const selectedData = selected ? supplementals.find(s => s.name === selected) : null;
 
+        // Generic label - can be customized per unit
+        const label = `${unitName ? unitName + ': ' : ''}CHOOSE VERSION`;
+
         return `
             <div class="supplemental-section">
                 <div class="supplemental-header">
-                    <i class="fa fa-magic"></i> SUPPLEMENTAL ABILITIES (CHOOSE ONE)
+                    <i class="fa fa-magic"></i> ${label}
                 </div>
                 <select class="cc-select w-100" onchange="window.CCFB.selectSupplemental('${unitId}', this.value, ${isLib})">
-                    <option value="">-- Select One --</option>
+                    <option value="">-- Select Version --</option>
                     ${supplementals.map(supp => `
                         <option value="${esc(supp.name)}" ${selected === supp.name ? 'selected' : ''}>
                             ${esc(supp.name)}
@@ -210,13 +227,13 @@ CCFB.define("components/painter", function(C) {
         target.innerHTML = `
             <div class="cc-detail-wrapper">
                 <!-- NAME & COST -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div class="detail-header">
                     <div class="u-name">${esc(base.name)}</div>
                     <div style="color: var(--cc-primary); font-weight: 800; font-size: 18px;">${totalCost} ₤</div>
                 </div>
                 
                 <!-- TYPE -->
-                <div class="u-type mb-2">${esc(base.type)}</div>
+                <div class="u-type">${esc(base.type)}</div>
 
                 <!-- STATS -->
                 ${buildStatBadges(base, isLib ? null : unit)}
@@ -257,7 +274,7 @@ CCFB.define("components/painter", function(C) {
 
                 <!-- SUPPLEMENTAL ABILITIES (if present) -->
                 ${base.supplemental_abilities?.length ? 
-                    renderSupplementalDropdown(base.supplemental_abilities, isLib ? base.name : unit.id, isLib)
+                    renderSupplementalDropdown(base.supplemental_abilities, isLib ? base.name : unit.id, isLib, base.name)
                 : ''}
 
                 <!-- TACTICS (if present) -->
@@ -459,6 +476,9 @@ CCFB.define("components/painter", function(C) {
     window.CCFB.clearRoster = () => {
         if (!confirm("Clear entire roster?")) return;
         C.ui.roster = [];
+        C.ui.rosterName = "";
+        const nameInput = document.getElementById("roster-name");
+        if (nameInput) nameInput.value = "";
         window.CCFB.refreshUI();
     };
 
