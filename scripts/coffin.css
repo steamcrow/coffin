@@ -138,6 +138,9 @@
   color: #fff;
   margin: 5px 0;
 }
+.cc-rule-h3 { color: #ff7518; margin-top: 24px; }
+.cc-rule-h4 { color: #ccc; margin-top: 16px; }
+.cc-rule-h5 { color: #aaa; margin-top: 12px; }
 
 .u-type { 
   font-size: 10px; 
