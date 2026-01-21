@@ -19,9 +19,9 @@ CCFB.define("components/painter", function(C) {
         const { rules } = utils.getContext();
         
         const statKey = {
-            'q': { name: 'Quality (Q)', effect: 'The target number needed on a D6 to succeed on tests (Attacking, Morale, etc). Lower is better.' },
-            'd': { name: 'Defense (D)', effect: 'The target number needed on a D6 to avoid taking damage when hit. Lower is better.' },
-            'r': { name: 'Range (R)', effect: 'The maximum distance in inches this unit can engage targets. "-" indicates Melee only.' },
+            'q': { name: 'Quality (Q)', effect: '4, 5, or 6 is a "success".' },
+            'd': { name: 'Defense (D)', effect: 'Defence reduces hits. A Defence of 2 versus a Quality roll of 3 equals 1 "hit." ' },
+            'r': { name: 'Range (R)', effect: 'The maximum distance in inches this unit can engage targets, usually with a missile weapon. "-" indicates Melee only.' },
             'm': { name: 'Move (M)', effect: 'The distance in inches this unit can move during a standard move action.' }
         };
 
