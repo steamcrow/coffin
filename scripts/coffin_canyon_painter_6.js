@@ -4,7 +4,6 @@ CCFB.define("components/painter", function(C) {
     const dec = (s) => decodeURIComponent(String(s ?? ""));
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
-    // Store previous view for "back" button
     window.CCFB._previousView = null;
 
     const getAbilityEffect = (abilityName) => {
@@ -32,7 +31,6 @@ CCFB.define("components/painter", function(C) {
     const buildStatBadges = (unit, rosterItem = null, tempConfig = null) => {
         const mod = { quality: unit.quality, defense: unit.defense, range: unit.range || 0, move: unit.move };
         
-        // Apply upgrades from either roster item or temp config
         const upgrades = rosterItem?.upgrades || tempConfig?.upgrades || [];
         
         upgrades.forEach(u => {
@@ -61,7 +59,6 @@ CCFB.define("components/painter", function(C) {
         const rule = getAbilityFull(ruleName);
         if (!rule) return;
 
-        // Close existing panel if any
         closeRulePanel();
         
         const panel = document.createElement('div');
@@ -105,16 +102,29 @@ CCFB.define("components/painter", function(C) {
         }
     };
 
+    // Calculate composition limits
+    const getCompositionLimit = (unit, budget) => {
+        if (!unit.composition || !unit.composition.per_points) {
+            return Infinity; // No limit
+        }
+        return Math.floor(budget / unit.composition.per_points);
+    };
+
+    const getUnitCount = (unitName, roster) => {
+        return roster.filter(item => item && item.uN === unitName).length;
+    };
+
     window.CCFB.renderDetail = (unit, isLib = false) => {
         const det = document.getElementById("det-target");
         if (!det) return;
         const faction = C.state.factions[C.ui.fKey];
+        if (!faction || !faction.units) return;
+        
         const base = faction.units.find(u => u.name === (unit.uN || unit.name));
+        if (!base) return;
 
-        // Store this view for back button
         window.CCFB._previousView = { unit, isLib };
 
-        // For library units, check if we have a temp config
         let tempConfig = null;
         if (isLib) {
             if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
@@ -124,7 +134,6 @@ CCFB.define("components/painter", function(C) {
             tempConfig = C.ui.libraryConfigs[base.name];
         }
 
-        // Get current supplemental selection
         const selectedSupplemental = isLib ? 
             (tempConfig.supplemental ? tempConfig.supplemental.name : '') : 
             (unit.supplemental ? unit.supplemental.name : '');
@@ -218,50 +227,82 @@ CCFB.define("components/painter", function(C) {
                 ${isLib ? `<button class="btn-outline-warning w-100 mt-4 p-2" data-action="add" data-unit="${enc(unit.name)}" data-cost="${unit.cost}"><i class="fa fa-plus"></i> ADD TO ROSTER</button>` : ''}
             </div>`;
     };
-
     window.CCFB.refreshUI = () => {
         const UI = C.ui;
         const faction = C.state.factions[UI.fKey];
-        if (!faction) return;
+        if (!faction || !faction.units) return;
 
-        // Filter out any invalid roster items (safety check for faction changes)
+        // Filter out invalid roster items - ENHANCED SAFETY
         UI.roster = (UI.roster || []).filter(item => {
             if (!item || !item.uN) return false;
-            return faction.units.some(u => u.name === item.uN);
+            const exists = faction.units.some(u => u && u.name === item.uN);
+            return exists;
         });
 
-        const total = (UI.roster || []).reduce((s, i) => s + (i.cost + (i.upgrades?.reduce((a, b) => a + b.cost, 0) || 0)), 0);
-        document.getElementById("display-total").innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
+        // Calculate total with BUDGET WARNING
+        const total = UI.roster.reduce((s, i) => {
+            if (!i) return s;
+            return s + (i.cost + (i.upgrades?.reduce((a, b) => a + (b.cost || 0), 0) || 0));
+        }, 0);
+        
+        const displayTotal = document.getElementById("display-total");
+        if (displayTotal) {
+            const overBudget = total > UI.budget;
+            displayTotal.innerHTML = `${total}${UI.budget > 0 ? ` / ${UI.budget}` : ''} ₤`;
+            displayTotal.style.color = overBudget ? '#ff3333' : 'var(--pumpkin)';
+            
+            // Show warning if over budget
+            if (overBudget && !window.CCFB._budgetWarningShown) {
+                window.CCFB._budgetWarningShown = true;
+                setTimeout(() => {
+                    alert(`⚠️ WARNING: Your roster (${total} ₤) exceeds your budget (${UI.budget} ₤)!`);
+                    window.CCFB._budgetWarningShown = false;
+                }, 100);
+            }
+        }
 
         const renderItem = (item, isRost = false) => {
-            const u = faction.units.find(un => un.name === (isRost ? item.uN : item.name));
-            if (!u) return ''; // Safety check - skip if unit not found
+            if (!item) return '';
+            const u = faction.units.find(un => un && un.name === (isRost ? item.uN : item.name));
+            if (!u) return '';
             
-            const price = isRost ? (item.cost + (item.upgrades?.reduce((a, b) => a + b.cost, 0) || 0)) : item.cost;
+            const price = isRost ? (item.cost + (item.upgrades?.reduce((a, b) => a + (b.cost || 0), 0) || 0)) : item.cost;
             const abs = (u.abilities || []).map(a => {
                 const aName = getName(a);
                 return `<span class="rule-link clickable-rule" data-rule="${esc(aName)}" style="cursor: pointer;" title="${esc(getAbilityEffect(a))}">${esc(aName)}</span>`;
             }).join(", ");
 
+            // Check composition limits for library items
+            let disabledClass = '';
+            let disabledTitle = '';
+            if (!isRost) {
+                const limit = getCompositionLimit(u, UI.budget);
+                const currentCount = getUnitCount(u.name, UI.roster);
+                if (currentCount >= limit) {
+                    disabledClass = ' cc-unit-disabled';
+                    disabledTitle = ` title="Limit reached: ${currentCount}/${limit}"`;
+                }
+            }
+
             return `
-                <div class="cc-roster-item" data-action="${isRost ? 'select-roster' : 'select-lib'}" data-id="${item.id}" data-unit="${enc(u.name)}">
+                <div class="cc-roster-item${disabledClass}" data-action="${isRost ? 'select-roster' : 'select-lib'}" data-id="${item.id || ''}" data-unit="${enc(u.name)}"${disabledTitle}>
                     <div class="u-name">${esc(isRost ? item.uN : item.name)}</div>
                     <div class="u-type">${esc(u.type)} — <span style="color:#fff">${price} ₤</span></div>
                     ${buildStatBadges(u, isRost ? item : null)}
                     <div class="u-abilities-summary">${abs || 'Basic'}</div>
                     <div class="cc-item-controls">
                         ${isRost ? `<button class="btn-minus" data-action="remove" data-id="${item.id}"><i class="fa fa-trash-o"></i></button>` : 
-                        `<button class="btn-plus-lib" data-action="add" data-unit="${enc(u.name)}" data-cost="${u.cost}"><i class="fa fa-plus-circle"></i></button>`}
+                        `<button class="btn-plus-lib${disabledClass}" data-action="add" data-unit="${enc(u.name)}" data-cost="${u.cost}" ${currentCount >= getCompositionLimit(u, UI.budget) ? 'disabled' : ''}><i class="fa fa-plus-circle"></i></button>`}
                     </div>
                 </div>`;
         };
 
-        document.getElementById("rost-target").innerHTML = (UI.roster || []).map(i => renderItem(i, true)).join('');
-        document.getElementById("lib-target").innerHTML = (faction.units || []).map(u => renderItem(u, false)).join('');
+        document.getElementById("rost-target").innerHTML = UI.roster.map(i => renderItem(i, true)).join('');
+        document.getElementById("lib-target").innerHTML = faction.units.map(u => renderItem(u, false)).join('');
 
         if (!window.CCFB._bound) {
             document.addEventListener("click", (e) => {
-                // Handle clickable rules FIRST - before other handlers
+                // Handle clickable rules FIRST
                 if (e.target.classList.contains('clickable-rule')) {
                     e.stopPropagation();
                     const ruleName = e.target.getAttribute('data-rule');
@@ -271,12 +312,32 @@ CCFB.define("components/painter", function(C) {
                     return;
                 }
 
+                // Check if clicking on disabled unit
+                const disabledUnit = e.target.closest('.cc-unit-disabled');
+                if (disabledUnit) {
+                    e.stopPropagation();
+                    return; // Prevent interaction
+                }
+
                 const el = e.target.closest("[data-action]");
                 if (!el) return;
+                
                 const act = el.getAttribute("data-action");
                 if (act === "add") { 
-                    e.stopPropagation(); 
+                    e.stopPropagation();
+                    
+                    // Check composition limit
                     const unitName = dec(el.getAttribute("data-unit"));
+                    const unit = faction.units.find(u => u.name === unitName);
+                    if (unit) {
+                        const limit = getCompositionLimit(unit, UI.budget);
+                        const currentCount = getUnitCount(unit.name, UI.roster);
+                        if (currentCount >= limit) {
+                            alert(`⚠️ Composition limit reached!\n\nYou can only have ${limit} ${unit.name}(s) at ${UI.budget} ₤ budget.`);
+                            return;
+                        }
+                    }
+                    
                     const cost = el.getAttribute("data-cost");
                     window.CCFB.addUnitToRoster(unitName, cost); 
                 }
@@ -285,15 +346,18 @@ CCFB.define("components/painter", function(C) {
                     window.CCFB.removeUnitFromRoster(el.getAttribute("data-id")); 
                 }
                 if (act === "select-lib") {
-                    window.CCFB.renderDetail(faction.units.find(u => u.name === dec(el.getAttribute("data-unit"))), true);
+                    const unit = faction.units.find(u => u.name === dec(el.getAttribute("data-unit")));
+                    if (unit) window.CCFB.renderDetail(unit, true);
                 }
                 if (act === "select-roster") {
-                    const itm = UI.roster.find(i => String(i.id) === String(el.getAttribute("data-id")));
-                    window.CCFB.renderDetail({...faction.units.find(u => u.name === itm.uN), ...itm}, false);
+                    const itm = UI.roster.find(i => i && String(i.id) === String(el.getAttribute("data-id")));
+                    if (itm) {
+                        const unit = faction.units.find(u => u.name === itm.uN);
+                        if (unit) window.CCFB.renderDetail({...unit, ...itm}, false);
+                    }
                 }
             });
             
-            // Handle supplemental dropdown changes
             document.addEventListener("change", (e) => {
                 if (e.target.classList.contains('supplemental-select')) {
                     const unitId = e.target.getAttribute("data-unit-id");
@@ -311,7 +375,6 @@ CCFB.define("components/painter", function(C) {
 
     window.CCFB.toggleUpgrade = (id, name, cost, isLib = false) => {
         if (isLib) {
-            // Library mode - update temp config
             if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
             if (!C.ui.libraryConfigs[id]) C.ui.libraryConfigs[id] = { upgrades: [], supplemental: null };
             const config = C.ui.libraryConfigs[id];
@@ -321,10 +384,9 @@ CCFB.define("components/painter", function(C) {
             
             const faction = C.state.factions[C.ui.fKey];
             const base = faction.units.find(u => u.name === id);
-            window.CCFB.renderDetail(base, true);
+            if (base) window.CCFB.renderDetail(base, true);
         } else {
-            // Roster mode - update actual unit
-            const itm = C.ui.roster.find(u => String(u.id) === String(id));
+            const itm = C.ui.roster.find(u => u && String(u.id) === String(id));
             if (!itm) return;
             itm.upgrades = itm.upgrades || [];
             const idx = itm.upgrades.findIndex(u => u.name === name);
@@ -332,13 +394,12 @@ CCFB.define("components/painter", function(C) {
             else itm.upgrades.push({ name, cost: parseInt(cost) });
             window.CCFB.refreshUI();
             const base = C.state.factions[C.ui.fKey].units.find(u => u.name === itm.uN);
-            window.CCFB.renderDetail({...base, ...itm}, false);
+            if (base) window.CCFB.renderDetail({...base, ...itm}, false);
         }
     };
 
     window.CCFB.toggleSupplemental = (id, name, isLib = false) => {
         if (isLib) {
-            // Library mode
             if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
             if (!C.ui.libraryConfigs[id]) C.ui.libraryConfigs[id] = { upgrades: [], supplemental: null };
             const config = C.ui.libraryConfigs[id];
@@ -351,10 +412,9 @@ CCFB.define("components/painter", function(C) {
             
             const faction = C.state.factions[C.ui.fKey];
             const base = faction.units.find(u => u.name === id);
-            window.CCFB.renderDetail(base, true);
+            if (base) window.CCFB.renderDetail(base, true);
         } else {
-            // Roster mode
-            const itm = C.ui.roster.find(u => String(u.id) === String(id));
+            const itm = C.ui.roster.find(u => u && String(u.id) === String(id));
             if (!itm) return;
             
             if (itm.supplemental && itm.supplemental.name === name) {
@@ -365,12 +425,11 @@ CCFB.define("components/painter", function(C) {
             
             window.CCFB.refreshUI();
             const base = C.state.factions[C.ui.fKey].units.find(u => u.name === itm.uN);
-            window.CCFB.renderDetail({...base, ...itm}, false);
+            if (base) window.CCFB.renderDetail({...base, ...itm}, false);
         }
     };
 
     window.CCFB.addUnitToRoster = (n, c) => { 
-        // Check if we have a library config for this unit
         const config = C.ui.libraryConfigs?.[n] || { upgrades: [], supplemental: null };
         
         C.ui.roster.push({ 
@@ -384,7 +443,7 @@ CCFB.define("components/painter", function(C) {
     };
     
     window.CCFB.removeUnitFromRoster = (id) => { 
-        C.ui.roster = C.ui.roster.filter(x => String(x.id) !== String(id)); 
+        C.ui.roster = C.ui.roster.filter(x => x && String(x.id) !== String(id)); 
         window.CCFB.refreshUI(); 
     };
 
