@@ -33,13 +33,14 @@ window.CCFB.define("components/skeleton", function(CCFB) {
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
-            if (!document.getElementById('cc-fa-icons')) {
+           if (!document.getElementById('cc-fa-icons')) {
                 const fa = document.createElement('link');
                 fa.id = 'cc-fa-icons';
                 fa.rel = 'stylesheet';
-                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
+                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
                 document.head.appendChild(fa);
-            }
+        }
+
 
             const budgets = [500, 1000, 1500, 2000, 2500, 3000];
             
