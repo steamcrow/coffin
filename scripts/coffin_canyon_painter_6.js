@@ -10,7 +10,12 @@ CCFB.define("components/painter", function(C) {
 
     // --- UTILITIES ---
     const utils = {
-        esc: (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"),
+        esc: (s) => String(s ?? "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#39;"),
         enc: (s) => encodeURIComponent(String(s ?? "")),
         dec: (s) => decodeURIComponent(String(s ?? "")),
         getContext: () => {
@@ -79,7 +84,7 @@ CCFB.define("components/painter", function(C) {
 
     // --- RULE DETAIL PANEL ---
     window.CCFB.showRuleDetail = (ruleName) => {
-        const name = ruleName.toLowerCase().trim();
+        const name = String(ruleName || "").toLowerCase().trim();
         const { rules } = utils.getContext();
         
         const statKey = {
@@ -91,8 +96,12 @@ CCFB.define("components/painter", function(C) {
 
         let match = statKey[name];
         if (!match) {
-            const allRules = [...(rules.abilities || []), ...(rules.weapon_properties || []), ...(rules.type_rules || [])];
-            match = allRules.find(a => a.name.toLowerCase() === name);
+            const allRules = [
+                ...(rules.abilities || []),
+                ...(rules.weapon_properties || []),
+                ...(rules.type_rules || [])
+            ];
+            match = allRules.find(a => (a?.name || "").toLowerCase() === name);
         }
         
         if (!match) return;
@@ -123,100 +132,428 @@ CCFB.define("components/painter", function(C) {
     };
 
     // --- RENDER DETAIL PANEL ---
-        window.CCFB.renderDetail = (unit, isLib = false) => {
+    window.CCFB.renderDetail = (unit, isLib = false) => {
         console.log("🎨 Rendering detail:", unit?.name || unit?.uN, "isLib:", isLib);
-    
+
         try {
-        
-        const target = document.getElementById("det-target");
-        const { units } = utils.getContext();
-        
-        if (!target) {
-            console.error("❌ det-target not found!");
-            return;
-        }
+            const target = document.getElementById("det-target");
+            const { units } = utils.getContext();
+            
+            if (!target) {
+                console.error("❌ det-target not found!");
+                return;
+            }
 
-        const base = units.find(u => u.name === (unit.uN || unit.name));
-        if (!base) {
-            console.error("❌ Base unit not found:", unit.uN || unit.name);
-            return;
-        }
+            const base = units.find(u => u.name === (unit.uN || unit.name));
+            if (!base) {
+                console.error("❌ Base unit not found:", unit.uN || unit.name);
+                return;
+            }
 
-        window.CCFB._currentView = { unit, isLib };
+            window.CCFB._currentView = { unit, isLib };
 
-        const upgrades = isLib ? [] : (unit.upgrades || []);
-        const supplemental = isLib ? null : (unit.supplemental || null);
-        const stats = getModifiedStats(base, upgrades);
+            const upgrades = isLib ? [] : (unit.upgrades || []);
+            const supplemental = isLib ? null : (unit.supplemental || null);
+            const stats = getModifiedStats(base, upgrades);
 
-        target.innerHTML = `
-            <div class="p-3">
-                <div class="u-type">${utils.esc(base.type)}</div>
-                <div class="u-name" style="font-size:1.5rem">${utils.esc(base.name)}</div>
-                <div class="fw-bold mb-3" style="color:var(--cc-primary)">
-                    ${getUnitCost({cost: base.cost, upgrades, supplemental})} ₤
-                </div>
-
-                <div class="stat-badge-flex mb-4">
-                    ${templates.statBadge('Q', stats.quality, 'stat-q', stats.quality !== base.quality)}
-                    ${templates.statBadge('D', stats.defense, 'stat-d', stats.defense !== base.defense)}
-                    ${templates.statBadge('R', stats.range, 'stat-r', stats.range !== base.range)}
-                    ${templates.statBadge('M', stats.move, 'stat-m', stats.move !== base.move)}
-                </div>
-
-                <div class="u-lore mb-4">"${utils.esc(base.lore || "Classified data.")}"</div>
-
-                <div class="u-type mb-2"><i class="fa fa-crosshairs"></i> Weaponry</div>
-                <div class="cc-box mb-3">
-                    <div class="u-name small">${utils.esc(base.weapon || "Melee")}</div>
-                    <div class="small text-muted">
-                        ${(base.weapon_properties || []).map(p => templates.abilityLink(p)).join(', ') || 'Standard'}
+            target.innerHTML = `
+                <div class="p-3">
+                    <div class="u-type">${utils.esc(base.type)}</div>
+                    <div class="u-name" style="font-size:1.5rem">${utils.esc(base.name)}</div>
+                    <div class="fw-bold mb-3" style="color:var(--cc-primary)">
+                        ${getUnitCost({cost: base.cost, upgrades, supplemental})} ₤
                     </div>
-                </div>
 
-                <div class="u-type mb-2"><i class="fa fa-bolt"></i> Abilities</div>
-                <div class="d-flex flex-wrap gap-2 mb-4">
-                    ${(base.abilities || []).map(a => templates.abilityLink(a)).join(' ') || '<span class="text-muted">None</span>'}
-                </div>
+                    <div class="stat-badge-flex mb-4">
+                        ${templates.statBadge('Q', stats.quality, 'stat-q', stats.quality !== base.quality)}
+                        ${templates.statBadge('D', stats.defense, 'stat-d', stats.defense !== base.defense)}
+                        ${templates.statBadge('R', stats.range, 'stat-r', stats.range !== base.range)}
+                        ${templates.statBadge('M', stats.move, 'stat-m', stats.move !== base.move)}
+                    </div>
 
-     <div class="u-type mb-2"><i class="fa fa-cog"></i> Optional Upgrades</div>
-${(base.optional_upgrades || []).map(upg => {
-    const active = upgrades.some(u => u.name === upg.name);
-    const unitId = isLib ? 'lib-' + utils.enc(base.name) : unit.id;
-    
-    return `
-    <div class="upgrade-row">
-        <label class="d-flex align-items-center m-0 w-100" style="cursor:pointer">
-            <input type="checkbox" 
-                   ${active ? 'checked' : ''} 
-                   onchange="window.CCFB.toggleUpgrade('${unitId}', '${utils.esc(upg.name)}', ${upg.cost}, ${isLib})">
-            <div class="ms-2 flex-grow-1">
-                <div class="small fw-bold clickable-rule" 
-                     data-rule="${utils.esc(upg.name)}" 
-                     onclick="event.stopPropagation(); window.CCFB.showRuleDetail('${utils.esc(upg.name)}');">
-                    ${utils.esc(upg.name)}
-                </div>
-                <div style="font-size:10px; opacity:0.7">${utils.esc(upg.effect)}</div>
-            </div>
-            <div class="fw-bold" style="color:var(--cc-primary)">+${upg.cost} ₤</div>
-        </label>
-    </div>`;
-}).join('') || '<div class="text-muted small">No upgrades available.</div>'}
-            </div>`;
-        
-        console.log("✅ Detail rendered");
-        
-    } catch (error) {
-        console.error("❌ renderDetail error:", error);
-        console.error("Error details:", error.message, error.stack);
-        const target = document.getElementById("det-target");
-        if (target) {
-            target.innerHTML = `<div class="p-3" style="color:#ff3b3b;">Error rendering detail: ${error.message}</div>`;
+                    <div class="u-lore mb-4">"${utils.esc(base.lore || "Classified data.")}"</div>
+
+                    <div class="u-type mb-2"><i class="fa fa-crosshairs"></i> Weaponry</div>
+                    <div class="cc-box mb-3">
+                        <div class="u-name small">${utils.esc(base.weapon || "Melee")}</div>
+                        <div class="small text-muted">
+                            ${(base.weapon_properties || []).map(p => templates.abilityLink(p)).join(', ') || 'Standard'}
+                        </div>
+                    </div>
+
+                    <div class="u-type mb-2"><i class="fa fa-bolt"></i> Abilities</div>
+                    <div class="d-flex flex-wrap gap-2 mb-4">
+                        ${(base.abilities || []).map(a => templates.abilityLink(a)).join(' ') || '<span class="text-muted">None</span>'}
+                    </div>
+
+                    ${base.supplemental_abilities?.length ? `
+                        <div class="u-type mb-2"><i class="fa fa-shield"></i> Supplemental (Choose One)</div>
+                        <select class="cc-select w-100 mb-3" style="background:rgba(0,0,0,0.4); border:1px solid #555; color:#fff; padding:8px; border-radius:4px;" 
+                                onchange="window.CCFB.toggleSupplemental('${isLib ? 'lib-' + utils.enc(base.name) : unit.id}', this.value, ${isLib})">
+                            <option value="">-- None Selected --</option>
+                            ${base.supplemental_abilities.map(s => `
+                                <option value="${utils.esc(s.name)}" 
+                                        ${supplemental?.name === s.name ? 'selected' : ''}>
+                                    ${utils.esc(s.name)} ${s.cost ? `(+${s.cost} ₤)` : ''}
+                                </option>
+                            `).join('')}
+                        </select>
+                        ${supplemental ? `
+                            <div class="ability-boxed-callout">
+                                <div class="small fw-bold mb-1">${utils.esc(supplemental.name)}</div>
+                                <div style="font-size:11px; opacity:0.8">${utils.esc(supplemental.effect)}</div>
+                            </div>
+                        ` : ''}
+                    ` : ''}
+
+                    <div class="u-type mb-2"><i class="fa fa-cog"></i> Optional Upgrades</div>
+                    ${(base.optional_upgrades || []).map(upg => {
+                        const active = upgrades.some(u => u.name === upg.name);
+                        const unitId = isLib ? 'lib-' + utils.enc(base.name) : unit.id;
+                        
+                        return `
+                        <div class="upgrade-row">
+                            <label class="d-flex align-items-center m-0 w-100" style="cursor:pointer">
+                                <input type="checkbox" 
+                                       ${active ? 'checked' : ''} 
+                                       onchange="window.CCFB.toggleUpgrade('${unitId}', '${utils.esc(upg.name)}', ${upg.cost}, ${isLib})">
+                                <div class="ms-2 flex-grow-1">
+                                    <div class="small fw-bold clickable-rule" 
+                                         data-rule="${utils.esc(upg.name)}" 
+                                         onclick="event.stopPropagation(); window.CCFB.showRuleDetail('${utils.esc(upg.name)}');">
+                                        ${utils.esc(upg.name)}
+                                    </div>
+                                    <div style="font-size:10px; opacity:0.7">${utils.esc(upg.effect)}</div>
+                                </div>
+                                <div class="fw-bold" style="color:var(--cc-primary)">+${upg.cost} ₤</div>
+                            </label>
+                        </div>`;
+                    }).join('') || '<div class="text-muted small">No upgrades available.</div>'}
+
+                    ${base.tactics ? `
+                        <div class="field-notes-box mt-3">
+                            <div class="u-type mb-2"><i class="fa fa-book"></i> Field Notes</div>
+                            <div style="font-size:12px; line-height:1.4">${utils.esc(base.tactics)}</div>
+                        </div>
+                    ` : ''}
+
+                    ${isLib ? `
+                        <button class="btn btn-cc-primary w-100 mt-3" 
+                                data-action="add" 
+                                data-unit="${utils.enc(base.name)}"
+                                style="background:var(--cc-primary); color:#000; border:none; padding:10px; font-weight:bold; cursor:pointer;">
+                            ADD TO ROSTER
+                        </button>
+                    ` : ''}
+                </div>`;
+            
+            console.log("✅ Detail rendered");
+
+        } catch (error) {
+            console.error("❌ renderDetail error:", error);
+            console.error("Error details:", error.message, error.stack);
+            const target = document.getElementById("det-target");
+            if (target) {
+                target.innerHTML = `<div class="p-3" style="color:#ff3b3b;">Error rendering detail: ${error.message}</div>`;
+            }
         }
-    }
-};
+    };
+
+    // --- TOGGLE UPGRADE ---
+    window.CCFB.toggleUpgrade = (unitId, name, cost, isLib) => {
+        console.log("🔧 Toggle upgrade:", name, "for", unitId);
+        const { roster, units } = utils.getContext();
+        
+        if (isLib) {
+            const unitName = utils.dec(String(unitId).replace('lib-', ''));
+            const base = units.find(u => u.name === unitName);
+            if (!base) return;
+            
+            const preview = {
+                uN: unitName,
+                cost: base.cost,
+                upgrades: [],
+                supplemental: null
+            };
+            
+            document.querySelectorAll('#det-target input[type="checkbox"]:checked').forEach(cb => {
+                const onChange = cb.getAttribute('onchange');
+                const match = onChange && onChange.match(/'([^']+)',\s*(\d+)/);
+                if (match) {
+                    preview.upgrades.push({ name: match[1], cost: parseInt(match[2]) });
+                }
+            });
+            
+            const suppSelect = document.querySelector('#det-target select');
+            if (suppSelect && suppSelect.value) {
+                const suppDef = base.supplemental_abilities?.find(s => s.name === suppSelect.value);
+                if (suppDef) {
+                    preview.supplemental = { 
+                        name: suppDef.name, 
+                        effect: suppDef.effect, 
+                        cost: suppDef.cost || 0 
+                    };
+                }
+            }
+            
+            window.CCFB.renderDetail(preview, true);
+            
+        } else {
+            const item = roster.find(u => String(u.id) === String(unitId));
+            if (!item) return;
+            
+            item.upgrades = item.upgrades || [];
+            const idx = item.upgrades.findIndex(u => u.name === name);
+            
+            if (idx > -1) {
+                item.upgrades.splice(idx, 1);
+            } else {
+                item.upgrades.push({ name, cost });
+            }
+            
+            window.CCFB.refreshUI();
+            window.CCFB.renderDetail(item, false);
+        }
+    };
+
+    // --- TOGGLE SUPPLEMENTAL ---
+    window.CCFB.toggleSupplemental = (unitId, name, isLib) => {
+        console.log("🛡️ Toggle supplemental:", name, "for", unitId);
+        const { roster, units } = utils.getContext();
+        
+        if (isLib) {
+            const unitName = utils.dec(String(unitId).replace('lib-', ''));
+            const base = units.find(u => u.name === unitName);
+            if (!base) return;
+            
+            const preview = {
+                uN: unitName,
+                cost: base.cost,
+                upgrades: [],
+                supplemental: null
+            };
+            
+            document.querySelectorAll('#det-target input[type="checkbox"]:checked').forEach(cb => {
+                const onChange = cb.getAttribute('onchange');
+                const match = onChange && onChange.match(/'([^']+)',\s*(\d+)/);
+                if (match) {
+                    preview.upgrades.push({ name: match[1], cost: parseInt(match[2]) });
+                }
+            });
+            
+            if (name) {
+                const suppDef = base.supplemental_abilities?.find(s => s.name === name);
+                if (suppDef) {
+                    preview.supplemental = { 
+                        name: suppDef.name, 
+                        effect: suppDef.effect, 
+                        cost: suppDef.cost || 0 
+                    };
+                }
+            }
+            
+            window.CCFB.renderDetail(preview, true);
+            
+        } else {
+            const item = roster.find(u => String(u.id) === String(unitId));
+            if (!item) return;
+            
+            const base = units.find(u => u.name === item.uN);
+            if (!base) return;
+            
+            if (name) {
+                const suppDef = base.supplemental_abilities?.find(s => s.name === name);
+                if (suppDef) {
+                    item.supplemental = { 
+                        name: suppDef.name, 
+                        effect: suppDef.effect, 
+                        cost: suppDef.cost || 0 
+                    };
+                }
+            } else {
+                item.supplemental = null;
+            }
+            
+            window.CCFB.refreshUI();
+            window.CCFB.renderDetail(item, false);
+        }
+    };
+
+    // --- REFRESH UI (RESTORED) ---
+    window.CCFB.refreshUI = () => {
+        console.log("🔄 Refreshing UI...");
+        
+        try {
+            const { units, roster, budget } = utils.getContext();
+            const total = roster.reduce((s, i) => s + getUnitCost(i), 0);
+            
+            const displayTotal = document.getElementById("display-total");
+            if (displayTotal) {
+                displayTotal.innerHTML = `${total} / ${budget} ₤`;
+                displayTotal.className = (budget > 0 && total > budget) ? 'cc-over-budget' : '';
+            }
+
+            const renderItem = (item, isRost) => {
+                const base = units.find(u => u.name === (isRost ? item.uN : item.name));
+                if (!base) return '';
+                
+                const upgrades = isRost ? (item.upgrades || []) : [];
+                const stats = getModifiedStats(base, upgrades);
+                
+                const upgradeCount = upgrades.length + (isRost && item.supplemental ? 1 : 0);
+                const upgradeIndicator = upgradeCount > 0
+                    ? `<span class="small" style="color:var(--cc-primary);margin-left:4px;">(+${upgradeCount})</span>`
+                    : '';
+                
+                return `
+                    <div class="cc-roster-item" 
+                         data-action="${isRost ? 'select-roster' : 'select-lib'}" 
+                         data-id="${item.id || ''}" 
+                         data-unit="${utils.enc(base.name)}">
+                        <div class="u-type">${utils.esc(base.type)}</div>
+                        <div class="u-name">${utils.esc(base.name)}${upgradeIndicator}</div>
+                        <div class="stat-badge-flex">
+                            ${templates.statBadge('Q', stats.quality, 'stat-q', stats.quality !== base.quality)}
+                            ${templates.statBadge('D', stats.defense, 'stat-d', stats.defense !== base.defense)}
+                            ${templates.statBadge('R', stats.range, 'stat-r', stats.range !== base.range)}
+                            ${templates.statBadge('M', stats.move, 'stat-m', stats.move !== base.move)}
+                        </div>
+                        <div class="u-abilities-summary">${(base.abilities || []).slice(0, 3).join(', ')}${base.abilities?.length > 3 ? '...' : ''}</div>
+                        <div class="cc-item-controls">
+                            ${isRost ? 
+                                `<button class="btn-minus" data-action="remove" data-id="${item.id}">
+                                    <i class="fa fa-trash"></i>
+                                </button>` : 
+                                `<button class="btn-plus-lib" data-action="add" data-unit="${utils.enc(base.name)}">
+                                    <i class="fa fa-plus-circle"></i>
+                                </button>`
+                            }
+                        </div>
+                    </div>`;
+            };
+
+            const rosterTarget = document.getElementById("rost-target");
+            const libraryTarget = document.getElementById("lib-target");
+            
+            if (rosterTarget) {
+                rosterTarget.innerHTML = roster.map(i => renderItem(i, true)).join('') || 
+                    '<div class="cc-empty-state p-3">No units in roster. Add units from the library.</div>';
+            }
+            
+            if (libraryTarget) {
+                libraryTarget.innerHTML = units.map(u => renderItem(u, false)).join('');
+            }
+            
+            console.log("✅ UI refreshed:", roster.length, "roster items,", units.length, "library items");
+
+            // Bind click events ONCE
+            if (!window.CCFB._bound) {
+                console.log("🔗 Binding click events...");
+                document.addEventListener("click", (e) => {
+                    const el = e.target.closest("[data-action], .clickable-rule");
+                    if (!el) {
+                        const panel = document.getElementById('rule-detail-panel');
+                        if (panel && !e.target.closest('#rule-detail-panel')) {
+                            panel.classList.remove('cc-slide-panel-open');
+                        }
+                        return;
+                    }
+                    
+                    if (el.classList.contains('clickable-rule')) {
+                        return window.CCFB.showRuleDetail(el.dataset.rule);
+                    }
+                    
+                    const action = el.dataset.action;
+                    const { units, roster } = utils.getContext();
+                    
+                    if (action === "add") {
+                        const uN = utils.dec(el.dataset.unit);
+                        const base = units.find(u => u.name === uN);
+                        if (!base) return;
+                        
+                        C.ui.roster.push({ 
+                            id: Date.now(), 
+                            uN, 
+                            cost: base.cost, 
+                            upgrades: [],
+                            supplemental: null
+                        });
+                        window.CCFB.refreshUI();
+                    }
+                    
+                    if (action === "remove") {
+                        C.ui.roster = C.ui.roster.filter(i => String(i.id) !== String(el.dataset.id));
+                        
+                        const target = document.getElementById("det-target");
+                        if (target && window.CCFB._currentView && !window.CCFB._currentView.isLib) {
+                            if (String(window.CCFB._currentView.unit.id) === String(el.dataset.id)) {
+                                target.innerHTML = '<div class="cc-empty-state p-3">Unit removed. Select another unit to view.</div>';
+                            }
+                        }
+                        
+                        window.CCFB.refreshUI();
+                    }
+                    
+                    if (action === "select-lib") {
+                        const base = units.find(u => u.name === utils.dec(el.dataset.unit));
+                        if (base) window.CCFB.renderDetail(base, true);
+                    }
+                    
+                    if (action === "select-roster") {
+                        const item = roster.find(i => String(i.id) === String(el.dataset.id));
+                        if (item) window.CCFB.renderDetail(item, false);
+                    }
+                });
+                window.CCFB._bound = true;
+                console.log("✅ Events bound");
+            }
+            
+        } catch (error) {
+            console.error("❌ refreshUI error:", error);
+        }
+    };
+
+    // --- UI HANDLERS ---
+    window.CCFB.handleFactionChange = function(fKey) {
+        if (!fKey) return;
+        C.ui.fKey = fKey;
+        C.require(["data/loaders"], (L) => {
+            L.bootSequence(fKey);
+        });
+    };
+
+    window.CCFB.handleBudgetChange = function(val) {
+        C.ui.budget = parseInt(val || 0);
+        window.CCFB.refreshUI();
+    };
+
+    window.CCFB.clearRoster = function() {
+        if (confirm("Clear current roster?")) {
+            C.ui.roster = [];
+            const target = document.getElementById("det-target");
+            if (target) {
+                target.innerHTML = '<div class="cc-empty-state p-3"><i class="fa fa-crosshairs mb-3" style="font-size: 2rem; display: block;"></i>Roster cleared. Select a unit to begin.</div>';
+            }
+            window.CCFB.refreshUI();
+        }
+    };
+
+    window.CCFB.toggleViewMode = function() {
+        const app = document.getElementById("ccfb-app");
+        const btn = document.getElementById("view-toggle-btn");
+        if (!app) return;
+        
+        app.classList.toggle("list-focused");
+        
+        if (app.classList.contains("list-focused")) {
+            if (btn) btn.innerHTML = '<i class="fa fa-th"></i>';
+        } else {
+            if (btn) btn.innerHTML = '<i class="fa fa-list"></i>';
+        }
+    };
+
     console.log("✅ Painter module ready");
     return { refreshUI: window.CCFB.refreshUI };
 });
 
 console.log("✅ Painter module defined");
-
