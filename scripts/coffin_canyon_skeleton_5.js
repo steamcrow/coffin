@@ -40,13 +40,39 @@ window.CCFB.renderFactionIcon = function(factionKey) {
                 document.head.appendChild(fa);
         }
         // Load Coffin Canyon CSS via jsDelivr (works properly!)
-            if (!document.getElementById('cc-coffin-styles')) {
-                const ccStyles = document.createElement('link');
-                ccStyles.id = 'cc-coffin-styles';
-                ccStyles.rel = 'stylesheet';
-                ccStyles.href = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/scripts/coffin.css';
-                document.head.appendChild(ccStyles);
+        // Load Font Awesome
+            if (!document.getElementById('cc-fa-icons')) {
+                console.log('🎨 Loading Font Awesome...');
+                const fa = document.createElement('link');
+                fa.id = 'cc-fa-icons';
+                fa.rel = 'stylesheet';
+                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+                document.head.appendChild(fa);
         }
+
+// Load Coffin Canyon CSS (fetch method - most reliable)
+if (!document.getElementById('cc-coffin-styles')) {
+    console.log('🎃 Loading Coffin Canyon CSS...');
+    
+    fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/coffin.css?cachebust=' + Date.now())
+        .then(response => {
+            console.log('📥 CSS fetch response:', response.status);
+            return response.text();
+        })
+        .then(css => {
+            console.log('✅ CSS loaded, injecting...');
+            const style = document.createElement('style');
+            style.id = 'cc-coffin-styles';
+            style.textContent = css;
+            document.head.appendChild(style);
+            console.log('🎨 Coffin Canyon CSS applied!');
+        })
+        .catch(error => {
+            console.error('❌ Failed to load Coffin Canyon CSS:', error);
+        });
+} else {
+    console.log('⚠️ Coffin Canyon CSS already loaded');
+}
 
 
             const budgets = [500, 1000, 1500, 2000, 2500, 3000];
