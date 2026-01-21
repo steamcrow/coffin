@@ -7,6 +7,7 @@ console.log("📖 Loading Coffin Canyon Rulebook (view schema)");
 const VIEW_URL  = "https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/rules_view.json";
 
 
+
   const root = document.getElementById(ROOT_ID);
   if (!root) {
     console.error("❌ cc-rules-root not found");
