@@ -1,7 +1,7 @@
 CCFB.define("data/loaders", function (C) {
   
   // ============================================================
-  // NEW: RULES TRANSFORMER (same one from Painter)
+  // NEW: RULES TRANSFORMER (Enhanced to handle weapon_properties)
   // ============================================================
   C.transformRules = function(rawRules) {
     const transformed = {
@@ -17,11 +17,10 @@ CCFB.define("data/loaders", function (C) {
       return transformed;
     }
     
-    // Loop through each category (A_deployment_timing, B_movement_positioning, etc)
+    // Transform abilities
     for (let categoryKey in abilityDict) {
       const category = abilityDict[categoryKey];
       
-      // Loop through each ability in this category
       for (let abilityKey in category) {
         const abilityText = category[abilityKey];
         
@@ -34,7 +33,21 @@ CCFB.define("data/loaders", function (C) {
       }
     }
     
-    console.log(`✅ Transformed ${transformed.abilities.length} abilities from rules`);
+    // Transform weapon_properties
+    const weaponProps = rawRules?.rules_master?.weapon_properties;
+    if (weaponProps) {
+      for (let propKey in weaponProps) {
+        const prop = weaponProps[propKey];
+        transformed.weapon_properties.push({
+          id: propKey,
+          name: prop.name || makeReadable(propKey),
+          effect: prop.effect || "No description available.",
+          category: "weapon_properties"
+        });
+      }
+    }
+    
+    console.log(`✅ Transformed ${transformed.abilities.length} abilities and ${transformed.weapon_properties.length} weapon properties from rules`);
     return transformed;
   };
   
@@ -50,13 +63,11 @@ CCFB.define("data/loaders", function (C) {
   // ============================================================
   return {
     loadRules: async function() {
-      // Add cache busting to ensure we always get the latest rules
       const url = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now();
       
       try {
         const res = await fetch(url);
         if(res.ok) { 
-            // CHANGED: Transform the raw rules into flat arrays
             const rawRules = await res.json();
             C.state.rules = C.transformRules(rawRules);
             
@@ -73,7 +84,7 @@ CCFB.define("data/loaders", function (C) {
     loadFaction: async function (fKey) {
       if (window.diagLog) diagLog(`📡 Requesting Faction: ${fKey}...`, "#ff7518");
       
-      // Ensure UI state is initialized so we don't crash on first load
+      // Ensure UI state is initialized
       C.ui = C.ui || {};
       C.ui.roster = C.ui.roster || [];
       C.ui.budget = C.ui.budget || 500;
@@ -99,7 +110,7 @@ CCFB.define("data/loaders", function (C) {
           
           if (window.diagLog) diagLog(`✅ Loaded ${data.name || fKey}`, "#0f0");
           
-          // Force the UI to refresh with the new data
+          // Force the UI to refresh
           if (typeof window.CCFB.refreshUI === "function") {
             window.CCFB.refreshUI();
           }
