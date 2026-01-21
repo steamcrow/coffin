@@ -492,17 +492,20 @@
   color: #fff;
 }
 
-/* === RULEBOOK TYPOGRAPHY (FINAL) === */
+/* === RULEBOOK TYPOGRAPHY (AUTHORITATIVE) === */
 
 .cc-rulebook {
   text-align: left;
   line-height: 1.7;
   color: #e0e0e0;
+  max-width: 1100px;
 }
 
-/* Only the big title centered */
+/* Book title */
 .cc-rulebook h1 {
   text-align: center;
+  color: #ff7518;
+  margin-bottom: 20px;
 }
 
 /* Main sections */
@@ -515,7 +518,7 @@
 
 /* Subsections */
 .cc-rulebook h3 {
-  color: #d0d0d0;
+  color: #e0e0e0;
   margin-top: 28px;
   font-weight: 800;
 }
@@ -531,6 +534,7 @@
   margin-top: 14px;
   font-weight: 600;
 }
+
 
 
 /* === GLOWING ORANGE ICONS === */
