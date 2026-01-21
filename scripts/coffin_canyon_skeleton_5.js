@@ -1,80 +1,138 @@
 window.CCFB.define("components/skeleton", function(CCFB) {
     return {
+        /**
+         * The Main Draw Function
+         * Renders the base HTML structure and ensures the app is ready for the Painter.
+         */
         draw: function() {
-            if (window.location.href.includes("/web")) return;
+            // Guard against Odoo backend conflict
+            if (window.location.href.includes("/web") && !window.location.href.includes("ccfb")) return;
+
             const root = document.getElementById("ccfb-root");
             if (!root) return;
-            const budgets = [500, 1000, 1500, 2000];
+
+            // --- 1. ENSURE ICONS ARE LOADED ---
+            if (!document.getElementById('cc-fa-icons')) {
+                const fa = document.createElement('link');
+                fa.id = 'cc-fa-icons';
+                fa.rel = 'stylesheet';
+                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css';
+                document.head.appendChild(fa);
+            }
+
+            // --- 2. RENDER MASTER STRUCTURE ---
+            const budgets = [500, 1000, 1500, 2000, 2500, 3000];
+            
             root.innerHTML = `
                 <div id="ccfb-app">
                     <div class="cc-header-area">
-                        <h1>COFFIN CANYON FACTION BUILDER</h1>
-                        <div id="auth-status-bar" style="text-align: center; padding: 8px; margin-bottom: 10px; background: rgba(0,0,0,0.3); border-radius: 4px; font-size: 12px; color: #999;">
-                            Checking login status...
+                        <div class="d-flex justify-content-between align-items-end mb-2">
+                            <h1 class="m-0" style="font-weight: 900; letter-spacing: -1px;">COFFIN CANYON <span style="color:var(--cc-primary)">FACTION BUILDER</span></h1>
+                            <div id="display-total">0 / 0 ₤</div>
                         </div>
+
+                        <div id="auth-status-bar" style="text-align: center; padding: 6px; margin-bottom: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px;">
+                            <i class="fa fa-spinner fa-spin"></i> Synchronizing with Odoo Session...
+                        </div>
+
                         <div class="sub-header-row d-flex align-items-center" style="gap: 10px; flex-wrap: wrap;">
                             
-                            <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)">
-                                <option value="">SELECT FACTION...</option>
-                            </select>
-                            <select id="budget-selector" onchange="window.CCFB.handleBudgetChange(this.value)">
-                                ${budgets.map(b => `<option value="${b}">${b} ₤</option>`).join('')}
-                            </select>
-                            <input type="text" id="roster-name" placeholder="ROSTER NAME">
-                            <div class="top-tools ml-auto" style="display: flex; align-items: center; gap: 8px;">
-                                <span id="display-total" style="color: #ff7518; font-weight: 800; font-size: 18px; margin-right: 5px;">0 ₤</span>
-                                
-                                <button onclick="window.CCFB.clearRoster()" title="Clear Roster">
-                                    <i class="fa fa-times-circle"></i>
+                            <div class="d-flex align-items-center" style="flex-grow: 1; gap: 8px;">
+                                <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)" class="cc-select">
+                                    <option value="">SELECT FACTION...</option>
+                                </select>
+
+                                <select id="budget-selector" onchange="window.CCFB.handleBudgetChange(this.value)" class="cc-select">
+                                    <option value="0">UNLIMITED ₤</option>
+                                    ${budgets.map(b => `<option value="${b}" ${CCFB.ui.budget == b ? 'selected' : ''}>${b} ₤</option>`).join('')}
+                                </select>
+
+                                <input type="text" id="roster-name" class="cc-input" placeholder="ROSTER NAME..." 
+                                       oninput="CCFB.ui.rosterName = this.value" value="${CCFB.ui.rosterName || ''}">
+                            </div>
+
+                            <div class="top-tools ml-auto d-flex" style="gap: 6px;">
+                                <button class="cc-tool-btn" onclick="window.CCFB.clearRoster()" title="Clear Roster">
+                                    <i class="fa fa-refresh"></i>
                                 </button>
-                                <button onclick="window.CCFB.saveRoster()" title="Save Roster">
+                                <button class="cc-tool-btn" onclick="window.CCFB.saveRoster()" title="Save Roster (To Odoo)">
                                     <i class="fa fa-save"></i>
                                 </button>
-                                <button onclick="window.CCFB.loadRosterList()" title="Load Roster">
+                                <button class="cc-tool-btn" onclick="window.CCFB.loadRosterList()" title="Load Saved Rosters">
                                     <i class="fa fa-folder-open"></i>
                                 </button>
-                                <button id="view-toggle-btn" onclick="window.CCFB.toggleViewMode()" title="Switch View">
+                                <button id="view-toggle-btn" class="cc-tool-btn" onclick="window.CCFB.toggleViewMode()" title="Toggle List View">
                                     <i class="fa fa-list"></i>
                                 </button>
-                                <button onclick="window.CCFB.shareRoster()" title="Share"><i class="fa fa-share-alt"></i></button>
-                                <button onclick="window.printRoster()" title="Print"><i class="fa fa-print"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.shareRoster()" title="Copy Share Link">
+                                    <i class="fa fa-share-alt"></i>
+                                </button>
+                                <button class="cc-tool-btn" onclick="window.print()" title="Print Roster">
+                                    <i class="fa fa-print"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
+
                     <div class="cc-grid">
                         <div class="cc-panel" id="panel-library">
-                            <div class="cc-panel-title"><h4>Unit Library</h4></div>
+                            <div class="cc-panel-header">
+                                <span><i class="fa fa-book"></i> UNIT LIBRARY</span>
+                            </div>
                             <div id="lib-target"></div>
                         </div>
+
                         <div class="cc-panel" id="panel-roster">
-                            <div class="cc-panel-title"><h4>Roster</h4></div>
+                            <div class="cc-panel-header">
+                                <span><i class="fa fa-users"></i> ACTIVE ROSTER</span>
+                            </div>
                             <div id="rost-target"></div>
                         </div>
+
                         <div class="cc-panel" id="ccfb-details">
-                            <div class="cc-panel-title"><h4>Details</h4></div>
+                            <div class="cc-panel-header" style="border-bottom: 1px solid var(--cc-primary);">
+                                <span><i class="fa fa-search"></i> TACTICAL DATA</span>
+                            </div>
                             <div id="det-target">
-                                <div class="cc-empty-state" style="text-align: center; padding-top: 50px; opacity: 0.5;">
-                                    Select a unit to view details
+                                <div class="cc-empty-state">
+                                    <i class="fa fa-crosshairs mb-3" style="font-size: 2rem; display: block;"></i>
+                                    SELECT A UNIT TO VIEW DATA
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             `;
+
             this.populateDropdown();
             this.checkLoginStatus();
         },
+
+        /**
+         * Populates the faction dropdown from the config
+         */
         populateDropdown: function() {
             CCFB.require(["config/docTokens"], (cfg) => {
                 const sel = document.getElementById("f-selector");
                 if (!sel || !cfg.factions) return;
-                sel.innerHTML = `<option value="">SELECT FACTION...</option>` + cfg.factions.map(f =>
-                    `<option value="${f.key}">${f.label.toUpperCase()}</option>`
+
+                // Build options from config
+                const options = cfg.factions.map(f => 
+                    `<option value="${f.key}" ${CCFB.ui.fKey === f.key ? 'selected' : ''}>${f.label.toUpperCase()}</option>`
                 ).join('');
-                sel.value = CCFB.ui.fKey || "monster_rangers";
+
+                sel.innerHTML = `<option value="">SELECT FACTION...</option>` + options;
             });
         },
+
+        /**
+         * Checks the Odoo session to see if the user is authenticated.
+         * Updates the status bar color and message.
+         */
         checkLoginStatus: async function() {
+            const statusBar = document.getElementById("auth-status-bar");
+            if (!statusBar) return;
+
             try {
                 const response = await fetch('/web/session/get_session_info', {
                     method: 'POST',
@@ -83,31 +141,23 @@ window.CCFB.define("components/skeleton", function(CCFB) {
                     body: JSON.stringify({})
                 });
                 
-                const statusBar = document.getElementById("auth-status-bar");
-                if (!statusBar) return;
+                if (!response.ok) throw new Error('Session check failed');
                 
-                if (!response.ok) {
-                    statusBar.innerHTML = '⚠️ Not logged in - <a href="/web/login" style="color: var(--pumpkin);">Sign in</a> to save rosters';
-                    statusBar.style.background = 'rgba(200, 50, 50, 0.2)';
-                    return;
-                }
-                
-                const userData = await response.json();
-                if (userData.result && userData.result.uid) {
-                    const userName = userData.result.name || userData.result.username || 'User';
-                    statusBar.innerHTML = `✓ Logged in as <strong>${userName}</strong>`;
-                    statusBar.style.background = 'rgba(50, 200, 100, 0.2)';
-                    statusBar.style.color = '#8f8';
+                const data = await response.json();
+                const user = data.result;
+
+                if (user && user.uid) {
+                    const name = user.name || user.username || 'Tactical Officer';
+                    statusBar.innerHTML = `<i class="fa fa-check-circle" style="color: #8f8"></i> AUTHENTICATED: <strong>${name}</strong>`;
+                    statusBar.style.background = 'rgba(50, 200, 100, 0.1)';
+                    statusBar.style.borderColor = 'rgba(50, 200, 100, 0.3)';
                 } else {
-                    statusBar.innerHTML = '⚠️ Not logged in - <a href="/web/login" style="color: var(--pumpkin);">Sign in</a> to save rosters';
-                    statusBar.style.background = 'rgba(200, 50, 50, 0.2)';
+                    statusBar.innerHTML = `<i class="fa fa-exclamation-triangle" style="color: var(--cc-primary)"></i> NOT LOGGED IN — <a href="/web/login" style="color: #fff; text-decoration: underline;">SIGN IN</a> TO SAVE ROSTERS`;
+                    statusBar.style.background = 'rgba(255, 117, 24, 0.1)';
                 }
             } catch (e) {
-                const statusBar = document.getElementById("auth-status-bar");
-                if (statusBar) {
-                    statusBar.innerHTML = '⚠️ Not logged in - <a href="/web/login" style="color: var(--pumpkin);">Sign in</a> to save rosters';
-                    statusBar.style.background = 'rgba(200, 50, 50, 0.2)';
-                }
+                statusBar.innerHTML = `<i class="fa fa-info-circle"></i> LOCAL MODE — ROSTERS WILL BE SAVED TO BROWSER CACHE`;
+                statusBar.style.background = 'rgba(255, 255, 255, 0.05)';
             }
         }
     };
