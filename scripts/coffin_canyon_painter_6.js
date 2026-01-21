@@ -1,7 +1,6 @@
 CCFB.define("components/painter", function(C) {
     
     // --- 0. BOOT SEQUENCE (Crucial for Odoo Timing) ---
-    // This runs the millisecond the Painter is defined to prevent "undefined" errors.
     if (!C.ui) C.ui = {};
     if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
     if (!C.ui.roster) C.ui.roster = [];
@@ -11,7 +10,6 @@ CCFB.define("components/painter", function(C) {
         enc: (s) => encodeURIComponent(String(s ?? "")),
         dec: (s) => decodeURIComponent(String(s ?? "")),
         getContext: () => {
-            // Secondary safety check
             if (!C.ui.libraryConfigs) C.ui.libraryConfigs = {};
             return {
                 faction: C.state.factions[C.ui.fKey],
@@ -110,7 +108,6 @@ CCFB.define("components/painter", function(C) {
 
         window.CCFB._currentView = { unit, isLib };
 
-        // Ensure this specific unit key exists in libraryConfigs
         if (isLib && !C.ui.libraryConfigs[base.name]) {
             C.ui.libraryConfigs[base.name] = { upgrades: [], supplemental: null };
         }
@@ -273,6 +270,29 @@ CCFB.define("components/painter", function(C) {
         if (rule) window.CCFB.showRuleDetail(name);
         window.CCFB.refreshUI();
         window.CCFB.renderDetail(isLib ? base : target, isLib);
+    };
+
+    // --- 5. UI EVENT HANDLERS ---
+    window.CCFB.handleFactionChange = function(fKey) {
+        if (!fKey) return;
+        C.ui.fKey = fKey;
+        C.require(["data/loaders"], (L) => {
+            L.bootSequence(fKey);
+        });
+    };
+
+    window.CCFB.handleBudgetChange = function(val) {
+        C.ui.budget = parseInt(val || 0);
+        window.CCFB.refreshUI();
+    };
+
+    window.CCFB.clearRoster = function() {
+        if (confirm("Clear current roster?")) {
+            C.ui.roster = [];
+            const target = document.getElementById("det-target");
+            if (target) target.innerHTML = '<div class="p-3 text-muted">Roster cleared. Select a unit to begin.</div>';
+            window.CCFB.refreshUI();
+        }
     };
 
     return { refreshUI: window.CCFB.refreshUI };
