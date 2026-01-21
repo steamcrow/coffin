@@ -176,24 +176,27 @@ CCFB.define("components/painter", function(C) {
                     ${(base.abilities || []).map(a => templates.abilityLink(a)).join(' ') || '<span class="text-muted">None</span>'}
                 </div>
 
-                <div class="u-type mb-2"><i class="fa fa-cog"></i> Optional Upgrades</div>
-                ${(base.optional_upgrades || []).map(upg => {
-                    const active = upgrades.some(u => u.name === upg.name);
-                    const unitId = isLib ? 'lib-' + utils.enc(base.name) : unit.id;
-                    
-                    return `
-                    <div class="upgrade-row">
-                        <label class="d-flex align-items-center m-0 w-100" style="cursor:pointer">
-                            <input type="checkbox" 
-                                   ${active ? 'checked' : ''} 
-                                   onchange="window.CCFB.toggleUpgrade('${unitId}', '${utils.esc(upg.name)}', ${upg.cost}, ${isLib})">
-                            <div class="ms-2 flex-grow-1">
-                                <div class="small fw-bold clickable-rule" data-rule="${utils.esc(upg.name)}" onclick="event.stopPropagation(); window.CCFB.showRuleDetail('${utils.esc(upg.name)}');">
-                                    ${utils.esc(upg.name)}
-                                </div>
-                                <div style="font-size:10px; opacity:0.7">${utils.esc(upg.effect)}</div>
-                            </div>
-                            <div class="fw-bold" style="color:var(--cc-primary)">+${upg.cost} ₤</div>
-                        </label>
-                    </div>`;
-                }).join('') || '<div class="text-muted small">No upgrades available.</div>'}
+     <div class="u-type mb-2"><i class="fa fa-cog"></i> Optional Upgrades</div>
+${(base.optional_upgrades || []).map(upg => {
+    const active = upgrades.some(u => u.name === upg.name);
+    const unitId = isLib ? 'lib-' + utils.enc(base.name) : unit.id;
+    
+    return `
+    <div class="upgrade-row">
+        <label class="d-flex align-items-center m-0 w-100" style="cursor:pointer">
+            <input type="checkbox" 
+                   ${active ? 'checked' : ''} 
+                   onchange="window.CCFB.toggleUpgrade('${unitId}', '${utils.esc(upg.name)}', ${upg.cost}, ${isLib})">
+            <div class="ms-2 flex-grow-1">
+                <div class="small fw-bold clickable-rule" 
+                     data-rule="${utils.esc(upg.name)}" 
+                     onclick="event.stopPropagation(); window.CCFB.showRuleDetail('${utils.esc(upg.name)}');">
+                    ${utils.esc(upg.name)}
+                </div>
+                <div style="font-size:10px; opacity:0.7">${utils.esc(upg.effect)}</div>
+            </div>
+            <div class="fw-bold" style="color:var(--cc-primary)">+${upg.cost} ₤</div>
+        </label>
+    </div>`;
+}).join('') || '<div class="text-muted small">No upgrades available.</div>'}
+
