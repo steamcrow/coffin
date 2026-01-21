@@ -1,4 +1,28 @@
 window.CCFB.define("components/skeleton", function(CCFB) {
+
+    // =========================================================
+    // STEP 1 — Canonical faction icon map (single source of truth)
+    // =========================================================
+    window.CCFB.FACTION_ICONS = {
+        monster_rangers: "fa-compass",
+        monsterology: "fa-skull-crossbones",
+        monsters: "fa-ghost",
+        shine_riders: "fa-hat-cowboy-side",
+        liberty_corps: "fa-flag-usa"
+    };
+
+    // =========================================================
+    // STEP 2 — Faction icon renderer (future-proof wrapper)
+    // =========================================================
+    window.CCFB.renderFactionIcon = function(factionKey) {
+        const faClass = window.CCFB.FACTION_ICONS[factionKey] || "fa-question-circle";
+        return `
+            <span class="cc-faction-icon" data-faction="${factionKey}">
+                <i class="fa ${faClass}"></i>
+            </span>
+        `;
+    };
+
     return {
         /**
          * The Main Draw Function
@@ -59,7 +83,12 @@ window.CCFB.define("components/skeleton", function(CCFB) {
 
                     <div class="cc-grid">
                         <div class="cc-panel" id="panel-library">
-                            <div class="cc-panel-header"><span><i class="fa fa-book"></i> UNIT LIBRARY</span></div>
+                            <div class="cc-panel-header">
+                                <span>
+                                    ${window.CCFB.renderFactionIcon(CCFB.ui.fKey || "monster_rangers")}
+                                    UNIT LIBRARY
+                                </span>
+                            </div>
                             <div id="lib-target"></div>
                         </div>
                         <div class="cc-panel" id="panel-roster">
