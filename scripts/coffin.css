@@ -1,0 +1,346 @@
+<style>
+  /* --- 1. CORE BRANDING & VARIABLES --- */
+  :root { 
+    --pumpkin: #ff7518; 
+    --pumpkin-dim: rgba(255, 117, 24, 0.15); 
+    --bg-dark: rgba(0,0,0,0.18);
+    --border-light: rgba(255,255,255,0.1);
+  }
+
+  /* --- 2. LAYOUT GRID & STICKY PANEL --- */
+  #ccfb-app { padding: 15px; color: #fff; font-family: 'Segoe UI', sans-serif; }
+  
+  .cc-grid { 
+    display: grid; 
+    grid-template-columns: 1fr 1.2fr 1fr; 
+    gap: 15px; 
+    align-items: flex-start !important; 
+  }
+
+  .cc-panel { 
+    background: var(--bg-dark); 
+    border: 1px solid var(--border-light); 
+    border-radius: 6px; 
+    padding: 12px; 
+    min-height: 500px; 
+  }
+
+  #ccfb-details {
+    position: sticky;
+    top: 20px; 
+    max-height: calc(100vh - 40px);
+    overflow-y: auto;
+    padding: 15px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-light);
+    border-radius: 6px;
+    align-self: flex-start;
+  }
+
+  /* --- 3. STACKED & CENTERED ITEM LAYOUT --- */
+  .cc-roster-item { 
+    display: flex; 
+    flex-direction: column; 
+    align-items: center; 
+    text-align: center;
+    padding: 15px; 
+    cursor: pointer; 
+    transition: 0.2s; 
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
+  }
+
+  .cc-item-controls { 
+    position: absolute; 
+    top: 10px; 
+    right: 10px; 
+  }
+
+  /* --- 4. STAT BADGES (OUTLINED & TIGHT) --- */
+  .stat-badge-flex { 
+    display: flex; 
+    justify-content: center; 
+    flex-wrap: wrap; 
+    gap: 4px; 
+    margin: 8px 0; 
+  }
+  
+  .cc-stat-badge { 
+    display: inline-flex; 
+    border-radius: 4px; 
+    overflow: hidden; 
+    border: 1px solid #000; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+
+  .stat-q-border { border-color: #2c5282 !important; }
+  .stat-d-border { border-color: #9b2c2c !important; }
+  .stat-m-border { border-color: #276749 !important; }
+  .stat-r-border { border-color: #744210 !important; }
+
+  .cc-stat-label { padding: 2px 6px; font-size: 10px; font-weight: 900; color: #fff; text-transform: uppercase; }
+  .cc-stat-value { background: #000; color: #fff; padding: 2px 8px; font-size: 11px; font-weight: bold; min-width: 20px; text-align: center; }
+
+  .stat-q { background-color: #2c5282; }
+  .stat-d { background-color: #9b2c2c; }
+  .stat-m { background-color: #276749; }
+  .stat-r { background-color: #744210; }
+
+  .cc-stat-modified { font-weight: bold; color: var(--pumpkin); }
+
+  /* --- 5. ZEBRA STRIPING & HOVERS --- */
+  #lib-target .cc-roster-item:nth-child(even),
+  #rost-target .cc-roster-item:nth-child(even) {
+    background: rgba(255, 255, 255, 0.04) !important;
+  }
+  .cc-roster-item:hover { background: var(--pumpkin-dim) !important; outline: 1px solid var(--pumpkin); }
+
+  /* --- 6. HEADER AREA & INPUTS --- */
+  .cc-header-area { margin-bottom: 20px; }
+  .cc-header-area h1 { font-size: 24px; font-weight: 900; color: var(--pumpkin); letter-spacing: 2px; text-transform: uppercase; margin: 0 0 15px 0; }
+  
+  #f-selector, #budget-selector, #roster-name {
+    background: rgba(0,0,0,0.4) !important;
+    border: 1px solid var(--border-light) !important;
+    color: #fff !important;
+    padding: 8px 12px !important;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+  #budget-selector { color: var(--pumpkin) !important; font-weight: 700; }
+  #display-total { color: var(--pumpkin); font-weight: 800; font-size: 18px; margin-right: 10px; }
+
+  .top-tools { display: flex; align-items: center; gap: 8px; }
+  .top-tools button {
+    background: rgba(0,0,0,0.4);
+    border: 1px solid var(--border-light);
+    color: var(--pumpkin);
+    padding: 8px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .top-tools button:hover { background: var(--pumpkin-dim); border-color: var(--pumpkin); }
+
+  /* --- 7. UNIT DETAIL & TYPOGRAPHY --- */
+  .u-name { font-weight: 900; font-size: 14px; color: #fff; text-transform: uppercase; }
+  .u-type { font-size: 10px; color: var(--pumpkin); font-weight: 700; margin-bottom: 4px; text-transform: uppercase; }
+  .u-abilities-summary { font-size: 11px; opacity: 0.7; margin-top: 5px; line-height: 1.4; max-width: 90%; }
+  
+  .u-lore { 
+    font-style: italic; font-size: 12px; opacity: 0.8; 
+    border-left: 2px solid var(--pumpkin); padding-left: 10px; 
+    margin: 10px 0; line-height: 1.4; text-align: left;
+  }
+  
+  .rule-link { color: inherit; text-decoration: none; border-bottom: 1px dotted var(--pumpkin); cursor: help; }
+  .rule-link:hover { color: var(--pumpkin); background: var(--pumpkin-dim); }
+
+  .ability-boxed-callout {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-light);
+    border-radius: 4px;
+    padding: 10px;
+    margin-bottom: 8px;
+    text-align: left;
+  }
+
+  .field-notes-box {
+    background: rgba(255, 117, 24, 0.05);
+    border: 1px solid rgba(255, 117, 24, 0.2);
+    border-left: 4px solid var(--pumpkin);
+    padding: 12px;
+    margin-top: 15px;
+    border-radius: 0 4px 4px 0;
+    text-align: left;
+  }
+
+  /* --- 8. BUTTONS & UPGRADES --- */
+  .btn-minus, .btn-outline-warning { 
+    border: 1px solid var(--pumpkin) !important; 
+    color: var(--pumpkin) !important; 
+    background: transparent !important;
+    font-weight: bold; border-radius: 4px; cursor: pointer;
+    padding: 4px 10px;
+  }
+  .btn-minus:hover { background: var(--pumpkin) !important; color: #000 !important; }
+
+  .btn-plus-lib { background: transparent; border: none; color: var(--pumpkin); font-size: 20px; cursor: pointer; opacity: 0.4; transition: 0.2s; }
+  .cc-roster-item:hover .btn-plus-lib { opacity: 1; transform: scale(1.1); }
+
+  .upgrade-row { 
+    display: flex; align-items: center; gap: 10px; padding: 10px; 
+    border: 1px solid var(--border-light); border-radius: 4px; margin-bottom: 5px; 
+    background: rgba(255,255,255,0.05); cursor: pointer; font-size: 12px;
+    text-align: left;
+  }
+  .upgrade-row input[type="checkbox"] { accent-color: var(--pumpkin); width: 18px; height: 18px; }
+
+  /* --- 9. LIST FOCUS MODE --- */
+  .list-focused #ccfb-details, .list-focused #panel-library { display: none !important; }
+  .list-focused .cc-grid { grid-template-columns: 1fr !important; max-width: 900px; margin: 0 auto; }
+  .list-focused #panel-roster { order: -1; width: 100%; }
+  .list-focused .cc-roster-item { 
+    flex-direction: row; 
+    justify-content: space-between; 
+    align-items: center; 
+    padding: 12px 20px; 
+    text-align: left;
+  }
+  .list-focused .stat-badge-flex { margin: 0; }
+
+  /* --- 10. PRINT STYLES --- */
+  @media print {
+    @page { margin: 1cm; size: portrait; }
+    body * { visibility: hidden; }
+    #ccfb-app, #ccfb-roster, #ccfb-roster * { visibility: visible; }
+    .cc-panel-title, button, .btn-minus, #ccfb-lib, #ccfb-details, .cc-header-area { display: none !important; }
+    #ccfb-app { position: absolute; left: 0; top: 0; width: 100%; padding: 0; background: white !important; }
+    #ccfb-roster { width: 100% !important; background: white !important; color: black !important; border: none !important; }
+    .cc-roster-item { border-bottom: 1px dashed #000 !important; color: black !important; margin-bottom: 5px !important; padding: 5px 0 !important; text-align: left; align-items: flex-start; }
+    .u-name { color: black !important; font-size: 14pt; }
+    .cc-stat-label { color: black !important; background: transparent !important; }
+    .cc-stat-label::after { content: ": "; }
+    .cc-stat-value { color: black !important; background: transparent !important; font-weight: bold; }
+  }
+  
+  /* --- SLIDE-IN PANEL (NO MODAL BLOCKING) --- */
+.cc-slide-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    width: 400px;
+    height: 100vh;
+    background: #1a1a1a;
+    border-left: 3px solid var(--pumpkin);
+    box-shadow: -5px 0 15px rgba(0,0,0,0.5);
+    z-index: 9999;
+    transition: right 0.3s ease-in-out;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.cc-slide-panel-open {
+    right: 0 !important;
+}
+
+.cc-slide-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid var(--pumpkin);
+}
+
+.cc-slide-panel-header h2 {
+    color: var(--pumpkin);
+    margin: 0;
+    font-size: 18px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.cc-panel-close-btn {
+    background: transparent;
+    border: 1px solid var(--pumpkin);
+    color: var(--pumpkin);
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: 0.2s;
+}
+
+.cc-panel-close-btn:hover {
+    background: var(--pumpkin);
+    color: #000;
+}
+
+/* --- SAVED ROSTER LIST ITEMS (REUSE FROM BEFORE) --- */
+.cc-roster-list {
+    margin-bottom: 15px;
+}
+
+.cc-saved-roster-item {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 12px;
+    margin-bottom: 10px;
+    transition: 0.2s;
+}
+
+.cc-saved-roster-item:hover {
+    background: var(--pumpkin-dim);
+    border-color: var(--pumpkin);
+}
+
+.cc-saved-roster-info {
+    margin-bottom: 10px;
+}
+
+.cc-saved-roster-name {
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.cc-saved-roster-meta {
+    color: #999;
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.cc-saved-roster-date {
+    color: #666;
+    font-size: 11px;
+}
+
+.cc-saved-roster-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.cc-saved-roster-actions button {
+    flex: 1;
+    padding: 8px;
+    font-size: 12px;
+}
+
+/* --- DANGER BUTTON --- */
+.btn-outline-danger {
+    background: transparent;
+    border: 1px solid #c00;
+    color: #c00;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.btn-outline-danger:hover {
+    background: #c00;
+    color: #fff;
+}
+
+/* --- DISABLED UNITS (At composition limit) --- */
+.cc-unit-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+    filter: grayscale(0.7);
+}
+
+.cc-unit-disabled .btn-plus-lib {
+    cursor: not-allowed;
+    opacity: 0.3;
+}
+
+.cc-unit-disabled:hover {
+    background: rgba(255, 255, 255, 0.04) !important;
+    outline: none !important;
+}
+</style>
