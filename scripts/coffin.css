@@ -192,29 +192,46 @@
 
 .stat-badge-flex { 
   display: flex; 
-  gap: 3px; 
-  margin-top: 8px;
+  gap: 4px; 
+  margin: 8px 0;
+  justify-content: center;
 }
 
 .cc-stat-badge { 
-  display: flex;
-  background: #000;
+  display: inline-flex;
+  border-radius: 3px;
+  overflow: hidden;
   border: 1px solid #333;
-  border-radius: 2px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
-.cc-panel {
-  background: var(--cc-bg-darker);
-  border: 1px solid var(--cc-border);
-  border-radius: 4px;
+.stat-q-border { border-color: #2c5282 !important; }
+.stat-d-border { border-color: #9b2c2c !important; }
+.stat-m-border { border-color: #276749 !important; }
+.stat-r-border { border-color: #744210 !important; }
+
+.cc-stat-label { 
+  padding: 3px 6px; 
+  font-size: 10px; 
+  font-weight: 900; 
+  color: #fff; 
+  text-transform: uppercase; 
 }
 
-.cc-panel-header {
-  background: var(--cc-bg-soft);
-  padding: 10px 15px;
-  border-bottom: 1px solid var(--cc-border);
-  font-weight: 900;
-  text-transform: uppercase;
+.cc-stat-value { 
+  background: #000; 
+  color: #fff; 
+  padding: 3px 8px; 
+  font-size: 11px; 
+  font-weight: bold; 
+  min-width: 22px; 
+  text-align: center; 
+}
+
+.stat-q { background-color: #2c5282; }
+.stat-d { background-color: #9b2c2c; }
+.stat-m { background-color: #276749; }
+.stat-r { background-color: #744210; }
 }
 /* ===============================
    GLOBAL ICON SYSTEM (FOR REAL)
