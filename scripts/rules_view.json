@@ -1,105 +1,18 @@
-console.log("📖 Loading Coffin Canyon Rulebook...");
-
-(async function () {
-
-  const ROOT_ID = "cc-rules-root";
-  const JSON_URL = "https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json";
-
-  const root = document.getElementById(ROOT_ID);
-  if (!root) {
-    console.error("❌ cc-rules-root not found");
-    return;
-  }
-
-  root.innerHTML = `
-    <div style="padding:40px; max-width:1100px; margin:0 auto;">
-      <h1 style="color:#ff7518; font-weight:900;">COFFIN CANYON RULEBOOK</h1>
-      <p>Loading rules...</p>
-    </div>
-  `;
-
-  const res = await fetch(JSON_URL);
-  const data = await res.json();
-  const rules = data.rules_master;
-
-  // --- Header ---
-  let html = `
-    <div class="cc-rulebook" style="padding:40px; max-width:1100px; margin:0 auto;">
-      <h1 style="color:#ff7518; font-weight:900;">
-        COFFIN CANYON RULEBOOK
-      </h1>
-      <div style="opacity:0.7; margin-bottom:20px;">
-        Version ${rules.version} · Last Updated ${rules.last_updated}
-      </div>
-      <div class="field-notes-box">
-        <strong>Changelog:</strong><br>
-        ${rules.changelog}
-      </div>
-  `;
-
-  // --- Table of Contents ---
-  html += `<h2>Contents</h2><ul>`;
-  for (const key in rules.sections) {
-    const title = prettify(key);
-    html += `<li><a href="#${key}" class="rule-link">${title}</a></li>`;
-  }
-  html += `</ul>`;
-
-  // --- Render Each Section ---
-  for (const key in rules.sections) {
-    const sectionTitle = prettify(key);
-    const sectionData = rules[key];
-
-    html += `
-      <hr>
-      <h2 id="${key}" style="color:#ff7518;">${sectionTitle}</h2>
-    `;
-
-    html += renderObject(sectionData);
-  }
-
-  html += `</div>`;
-  root.innerHTML = html;
-
-  console.log("✅ Rulebook Rendered");
-
-  // ---------- Helpers ----------
-
-  function prettify(str) {
-    return str
-      .replace(/_/g, " ")
-      .replace(/\b\w/g, l => l.toUpperCase());
-  }
-
-  function renderObject(obj) {
-    let out = "";
-
-    if (typeof obj === "string") {
-      return `<p>${obj}</p>`;
-    }
-
-    if (Array.isArray(obj)) {
-      out += `<ul>`;
-      obj.forEach(item => {
-        out += `<li>${renderObject(item)}</li>`;
-      });
-      out += `</ul>`;
-      return out;
-    }
-
-    if (typeof obj === "object") {
-      for (const k in obj) {
-        const title = prettify(k);
-        out += `
-          <div class="ability-boxed-callout">
-            <strong>${title}</strong>
-            ${renderObject(obj[k])}
-          </div>
-        `;
-      }
-    }
-
-    return out;
-  }
-
-})();
+{
+  "title": "Coffin Canyon Core Rules",
+  "version": "8.2",
+  "source": "rules.json",
+  "sections": [
+    { "id": "core_mechanics", "label": "Core Mechanics", "path": "rules_master.core_mechanics" },
+    { "id": "turn_structure", "label": "Turn Structure", "path": "rules_master.turn_structure" },
+    { "id": "visibility_vault", "label": "Visibility & Cover", "path": "rules_master.visibility_vault" },
+    { "id": "locomotion_vault", "label": "Movement & Terrain", "path": "rules_master.locomotion_vault" },
+    { "id": "combat_vault", "label": "Combat & Damage", "path": "rules_master.combat_vault" },
+    { "id": "morale_vault", "label": "Morale & Fear", "path": "rules_master.morale_vault" },
+    { "id": "unit_identities", "label": "Unit Identities", "path": "rules_master.unit_identities" },
+    { "id": "ability_dictionary", "label": "Ability Dictionary", "path": "rules_master.ability_dictionary", "render": "dictionary" },
+    { "id": "terrain_vault", "label": "Terrain Vault", "path": "rules_master.terrain_vault" },
+    { "id": "objective_vault", "label": "Objectives", "path": "rules_master.objective_vault" },
+    { "id": "scenario_vault", "label": "Scenarios", "path": "rules_master.scenario_vault" }
+  ]
+}
