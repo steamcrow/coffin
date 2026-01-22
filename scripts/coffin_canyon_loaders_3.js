@@ -1,7 +1,7 @@
 CCFB.define("data/loaders", function (C) {
   
   // ============================================================
-  // 1. SIMPLE LOADER UI
+  // 1. SIMPLE LOADER UI (CENTERED SPINNER)
   // ============================================================
   C.showLoader = function(message) {
     let loader = document.getElementById('ccfb-boot-loader');
@@ -10,10 +10,12 @@ CCFB.define("data/loaders", function (C) {
       loader.id = 'ccfb-boot-loader';
       loader.className = 'active';
       loader.style.cssText = `
-        position: absolute; 
-        top: 0; left: 0; 
-        width: 100%; height: 100%; 
-        background: #1a1a1a; 
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 100vh; 
+        background: rgba(26, 26, 26, 0.95); 
         z-index: 9999; 
         display: flex; 
         align-items: center; 
@@ -22,10 +24,37 @@ CCFB.define("data/loaders", function (C) {
         transition: opacity 0.4s;
       `;
       loader.innerHTML = `
-        <div style="text-align: center;">
-          <div class="loader-spinner"></div>
-          <div id="loader-msg" style="color:#ff7518; margin-top:20px; font-family:'Oswald',sans-serif; font-size:1.2rem; text-transform:uppercase; letter-spacing:2px;">LOADING...</div>
-          <div style="color:#555; font-size:10px; margin-top:15px; letter-spacing:3px; text-transform:uppercase;">Tactical Data Link</div>
+        <div style="
+          text-align: center; 
+          display: flex; 
+          flex-direction: column; 
+          align-items: center; 
+          justify-content: center;
+        ">
+          <div class="loader-spinner" style="
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 117, 24, 0.2);
+            border-top: 4px solid #ff7518;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+          "></div>
+          <div id="loader-msg" style="
+            color:#ff7518; 
+            margin-top:20px; 
+            font-family:'Oswald',sans-serif; 
+            font-size:1.2rem; 
+            text-transform:uppercase; 
+            letter-spacing:2px;
+          ">LOADING...</div>
+          <div style="
+            color:#555; 
+            font-size:10px; 
+            margin-top:15px; 
+            letter-spacing:3px; 
+            text-transform:uppercase;
+          ">Tactical Data Link</div>
         </div>
       `;
       const root = document.getElementById('ccfb-root');
