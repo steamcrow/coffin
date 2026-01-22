@@ -11,17 +11,18 @@ window.CCFB.define("components/skeleton", function(CCFB) {
         liberty_corps: "fa-flag-usa"
     };
 
-  // =========================================================
-// STEP 2 — Faction icon renderer (FA6-correct)
-// =========================================================
-window.CCFB.renderFactionIcon = function(factionKey) {
-    const faClass = window.CCFB.FACTION_ICONS[factionKey] || "fa-circle-question";
-    return `
-        <span class="cc-faction-icon" data-faction="${factionKey}">
-            <i class="fa-solid ${faClass}"></i>
-        </span>
-    `;
-};
+    // =========================================================
+    // STEP 2 — Faction icon renderer (FA6-correct)
+    // =========================================================
+    window.CCFB.renderFactionIcon = function(factionKey) {
+        const faClass = window.CCFB.FACTION_ICONS[factionKey] || "fa-circle-question";
+        return `
+            <span class="cc-faction-icon" data-faction="${factionKey}">
+                <i class="fa-solid ${faClass}"></i>
+            </span>
+        `;
+    };
+
     return {
         /**
          * The Main Draw Function
@@ -32,32 +33,30 @@ window.CCFB.renderFactionIcon = function(factionKey) {
             const root = document.getElementById("ccfb-root");
             if (!root) return;
 
-        // Load Coffin Canyon CSS via jsDelivr (works properly!)
-        // Load Font Awesome
- // Load Font Awesome
-if (!document.getElementById('cc-fa-icons')) {
-    console.log('🎨 Loading Font Awesome...');
-    const fa = document.createElement('link');
-    fa.id = 'cc-fa-icons';
-    fa.rel = 'stylesheet';
-    fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
-    document.head.appendChild(fa);
-}
+            // Load Font Awesome
+            if (!document.getElementById('cc-fa-icons')) {
+                console.log('🎨 Loading Font Awesome...');
+                const fa = document.createElement('link');
+                fa.id = 'cc-fa-icons';
+                fa.rel = 'stylesheet';
+                fa.href = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css';
+                document.head.appendChild(fa);
+            }
 
-// Load Coffin Canyon CSS
-if (!document.getElementById('cc-coffin-styles')) {
-    console.log('🎃 Loading Coffin Canyon CSS...');
-    fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/coffin.css?t=' + Date.now())
-        .then(res => res.text())
-        .then(css => {
-            const style = document.createElement('style');
-            style.id = 'cc-coffin-styles';
-            style.textContent = css;
-            document.head.appendChild(style);
-            console.log('✅ Coffin Canyon CSS applied!');
-        })
-        .catch(err => console.error('❌ CSS load failed:', err));
-}
+            // Load Coffin Canyon CSS
+            if (!document.getElementById('cc-coffin-styles')) {
+                console.log('🎃 Loading Coffin Canyon CSS...');
+                fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/coffin.css?t=' + Date.now())
+                    .then(res => res.text())
+                    .then(css => {
+                        const style = document.createElement('style');
+                        style.id = 'cc-coffin-styles';
+                        style.textContent = css;
+                        document.head.appendChild(style);
+                        console.log('✅ Coffin Canyon CSS applied!');
+                    })
+                    .catch(err => console.error('❌ CSS load failed:', err));
+            }
 
             const budgets = [500, 1000, 1500, 2000, 2500, 3000];
             
@@ -66,7 +65,7 @@ if (!document.getElementById('cc-coffin-styles')) {
                     <div class="cc-header-area">
                         <div class="d-flex justify-content-between align-items-end mb-2">
                             <h1 class="m-0" style="font-weight: 900; letter-spacing: -1px;">COFFIN CANYON <span style="color:var(--cc-primary)">FACTION BUILDER</span></h1>
-                            <div id="display-total">0 / 0 ₤</div>
+                            <div id="display-total" title="Total cost in Liberty Bucks (₤), backed by Coffin Canyon silver">0 / 0 ₤</div>
                         </div>
 
                         <div id="auth-status-bar" style="text-align: center; padding: 6px; margin-bottom: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px;">
@@ -75,26 +74,27 @@ if (!document.getElementById('cc-coffin-styles')) {
 
                         <div class="sub-header-row d-flex align-items-center" style="gap: 10px; flex-wrap: wrap;">
                             <div class="d-flex align-items-center" style="flex-grow: 1; gap: 8px;">
-                                <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)" class="cc-select">
+                                <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)" class="cc-select" title="Select your faction">
                                     <option value="">SELECT FACTION...</option>
                                 </select>
 
-                                <select id="budget-selector" onchange="window.CCFB.handleBudgetChange(this.value)" class="cc-select">
+                                <select id="budget-selector" onchange="window.CCFB.handleBudgetChange(this.value)" class="cc-select" title="Set your army point budget">
                                     <option value="0">UNLIMITED ₤</option>
                                     ${budgets.map(b => `<option value="${b}" ${CCFB.ui.budget == b ? 'selected' : ''}>${b} ₤</option>`).join('')}
                                 </select>
 
                                 <input type="text" id="roster-name" class="cc-input" placeholder="ROSTER NAME..." 
-                                       oninput="CCFB.ui.rosterName = this.value" value="${CCFB.ui.rosterName || ''}">
+                                       oninput="CCFB.ui.rosterName = this.value" value="${CCFB.ui.rosterName || ''}"
+                                       title="Give your army roster a name">
                             </div>
 
                             <div class="top-tools ml-auto d-flex" style="gap: 6px;">
-                                <button class="cc-tool-btn" onclick="window.CCFB.clearRoster()" title="Clear Roster"><i class="fa fa-refresh"></i></button>
-                                <button class="cc-tool-btn" onclick="window.CCFB.saveRoster()" title="Save Roster (To Odoo)"><i class="fa fa-save"></i></button>
-                                <button class="cc-tool-btn" onclick="window.CCFB.loadRosterList()" title="Load Saved Rosters"><i class="fa fa-folder-open"></i></button>
-                                <button id="view-toggle-btn" class="cc-tool-btn" onclick="window.CCFB.toggleViewMode()" title="Toggle List View"><i class="fa fa-list"></i></button>
-                                <button class="cc-tool-btn" onclick="window.CCFB.shareRoster()" title="Copy Share Link"><i class="fa fa-share-alt"></i></button>
-                                <button class="cc-tool-btn" onclick="window.print()" title="Print Roster"><i class="fa fa-print"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.clearRoster()" title="Clear entire roster"><i class="fa fa-refresh"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.saveRoster()" title="Save roster to Odoo Documents"><i class="fa fa-save"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.loadRosterList()" title="Load a saved roster"><i class="fa fa-folder-open"></i></button>
+                                <button id="view-toggle-btn" class="cc-tool-btn" onclick="window.CCFB.toggleViewMode()" title="Toggle list view mode"><i class="fa fa-list"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.shareRoster()" title="Copy shareable link to clipboard"><i class="fa fa-share-alt"></i></button>
+                                <button class="cc-tool-btn" onclick="window.print()" title="Print roster"><i class="fa fa-print"></i></button>
                             </div>
                         </div>
                     </div>
