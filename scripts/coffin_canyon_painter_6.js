@@ -1,10 +1,12 @@
-// COFFIN CANYON PAINTER - COMPREHENSIVE FIX
-// All functionality preserved + new enhancements
+// COFFIN CANYON PAINTER - 3-COLUMN REDESIGN
+// Library → Builder → Roster workflow
 window.CCFB = window.CCFB || {};
 
 CCFB.define("components/painter", function(C) {
-    // Initialize libraryConfigs
+    // Initialize state
     C.ui.libraryConfigs = C.ui.libraryConfigs || {};
+    C.ui.builderMode = null; // "library" or "roster"
+    C.ui.builderTarget = null; // unitName (library) or rosterId (roster)
     
     // ============================================
     // UTILITY FUNCTIONS
@@ -14,12 +16,9 @@ CCFB.define("components/painter", function(C) {
     const dec = (s) => decodeURIComponent(String(s ?? ""));
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
-    // Format category names: "D_defense_survival" → "Defense Survival"
     const formatCategory = (cat) => {
         if (!cat) return "";
-        // Remove leading letter + underscore if present
         let cleaned = cat.replace(/^[A-Z]_/, '');
-        // Split on underscores and capitalize
         return cleaned.split('_').map(word => 
             word.charAt(0).toUpperCase() + word.slice(1)
         ).join(' ');
@@ -43,7 +42,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // SHOW RULE PANEL (with formatted categories)
+    // SHOW RULE PANEL
     // ============================================
     window.CCFB.showRulePanel = (abilityName) => {
         const abilityData = getAbilityFull(abilityName);
@@ -52,7 +51,6 @@ CCFB.define("components/painter", function(C) {
             return;
         }
 
-        // Remove existing panel
         const existing = document.getElementById('rule-panel');
         if (existing) existing.remove();
 
@@ -80,14 +78,10 @@ CCFB.define("components/painter", function(C) {
         `;
 
         document.body.appendChild(panel);
-        
-        // Slide in after a brief delay
         setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
 
-        // Click outside to close - INCREASED DELAY to prevent immediate close
         setTimeout(() => {
             const closeOnClickOutside = (e) => {
-                // Don't close if clicking a rule-link
                 if (e.target.closest('.rule-link')) return;
                 if (!panel.contains(e.target)) {
                     window.CCFB.closeRulePanel();
@@ -95,7 +89,7 @@ CCFB.define("components/painter", function(C) {
                 }
             };
             document.addEventListener('click', closeOnClickOutside);
-        }, 300); // Increased from 100ms to 300ms
+        }, 300);
     };
 
     window.CCFB.closeRulePanel = () => {
@@ -168,8 +162,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // STAT BADGES (Clickable with live updates)
-    // FIXED: Now properly applies upgrades everywhere
+    // STAT BADGES
     // ============================================
     const buildStatBadges = (unit, rosterItem = null) => {
         const base = { 
@@ -181,10 +174,8 @@ CCFB.define("components/painter", function(C) {
 
         const mod = { ...base };
 
-        // Apply upgrade modifiers from roster item
         if (rosterItem?.upgrades) {
             rosterItem.upgrades.forEach(u => {
-                // Need to find the upgrade definition from the BASE unit
                 const def = unit.optional_upgrades?.find(upg => upg.name === u.name);
                 if (def?.stat_modifiers) {
                     Object.entries(def.stat_modifiers).forEach(([stat, value]) => {
@@ -227,7 +218,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // RENDER ABILITY LINKS (for library cards)
+    // RENDER ABILITY LINKS
     // ============================================
     const renderAbilityLinks = (abilities) => {
         if (!abilities || abilities.length === 0) return '';
@@ -244,10 +235,9 @@ CCFB.define("components/painter", function(C) {
     // ============================================
     // RENDER SUPPLEMENTAL DROPDOWN
     // ============================================
-    const renderSupplementalDropdown = (supplementals, unitId, isLib, unitName = "") => {
+    const renderSupplementalDropdown = (supplementals, config, unitName = "") => {
         if (!supplementals || supplementals.length === 0) return '';
 
-        const config = isLib ? (C.ui.libraryConfigs[unitId] || {}) : C.ui.roster.find(u => String(u.id) === String(unitId)) || {};
         const selected = config.selectedSupplemental || null;
         const selectedData = selected ? supplementals.find(s => s.name === selected) : null;
 
@@ -258,7 +248,7 @@ CCFB.define("components/painter", function(C) {
                 <div class="supplemental-header">
                     <i class="fa fa-magic"></i> ${label}
                 </div>
-                <select class="cc-select w-100" onchange="window.CCFB.selectSupplemental('${unitId}', this.value, ${isLib})">
+                <select class="cc-select w-100" onchange="window.CCFB.selectSupplemental(this.value)">
                     <option value="">-- Select Version --</option>
                     ${supplementals.map(supp => `
                         <option value="${esc(supp.name)}" ${selected === supp.name ? 'selected' : ''}>
@@ -276,48 +266,93 @@ CCFB.define("components/painter", function(C) {
         `;
     };
 
-    window.CCFB.selectSupplemental = (unitId, supplementalName, isLib) => {
-        let unit;
-        
-        if (isLib) {
-            C.ui.libraryConfigs[unitId] = C.ui.libraryConfigs[unitId] || {upgrades: []};
-            unit = C.ui.libraryConfigs[unitId];
-        } else {
-            unit = C.ui.roster.find(u => String(u.id) === String(unitId));
-        }
-        
-        if (!unit) return;
+    window.CCFB.selectSupplemental = (supplementalName) => {
+        const config = window.CCFB.getBuilderConfig();
+        if (!config) return;
 
-        unit.selectedSupplemental = supplementalName || null;
-
-        // Re-render detail panel
-        if (isLib) {
-            const faction = C.state.factions[C.ui.fKey];
-            const baseUnit = faction.units.find(u => u.name === unitId);
-            window.CCFB.renderDetail(baseUnit, true);
-        } else {
-            window.CCFB.renderDetail(unit, false);
-        }
+        config.selectedSupplemental = supplementalName || null;
+        window.CCFB.renderBuilder();
     };
 
     // ============================================
-    // RENDER DETAIL PANEL
+    // GET BUILDER CONFIG (unified interface)
     // ============================================
-    window.CCFB.renderDetail = (unit, isLib = false) => {
-        const target = document.getElementById("det-target");
+    window.CCFB.getBuilderConfig = () => {
+        if (C.ui.builderMode === 'library') {
+            const unitName = C.ui.builderTarget;
+            if (!unitName) return null;
+            C.ui.libraryConfigs[unitName] = C.ui.libraryConfigs[unitName] || { upgrades: [] };
+            return C.ui.libraryConfigs[unitName];
+        } else if (C.ui.builderMode === 'roster') {
+            const rosterId = C.ui.builderTarget;
+            const item = C.ui.roster.find(r => String(r.id) === String(rosterId));
+            if (!item) return null;
+            item.upgrades = item.upgrades || [];
+            return item;
+        }
+        return null;
+    };
+
+    // ============================================
+    // RENDER BUILDER PANEL (Middle Column)
+    // ============================================
+    window.CCFB.renderBuilder = () => {
+        const target = document.getElementById("builder-target");
         if (!target) return;
+
+        // No selection
+        if (!C.ui.builderMode || !C.ui.builderTarget) {
+            target.innerHTML = `
+                <div class="cc-empty-state">
+                    <i class="fa fa-crosshairs mb-3" style="font-size: 2rem; display: block;"></i>
+                    SELECT A UNIT TO CUSTOMIZE
+                </div>
+            `;
+            return;
+        }
 
         const faction = C.state.factions[C.ui.fKey];
         if (!faction) return;
 
-        const base = faction.units.find(u => u.name === (unit.uN || unit.name));
+        const config = window.CCFB.getBuilderConfig();
+        if (!config) return;
+
+        let base, modeLabel;
+
+        if (C.ui.builderMode === 'library') {
+            // Building new unit from library
+            base = faction.units.find(u => u.name === C.ui.builderTarget);
+            modeLabel = `<i class="fa fa-plus-circle" style="color: var(--cc-primary);"></i> NEW UNIT`;
+        } else {
+            // Editing existing roster unit
+            const rosterItem = C.ui.roster.find(r => String(r.id) === String(C.ui.builderTarget));
+            if (!rosterItem) return;
+            base = faction.units.find(u => u.name === rosterItem.uN);
+            modeLabel = `<i class="fa fa-edit" style="color: #4CAF50;"></i> EDITING ROSTER UNIT`;
+        }
+
         if (!base) return;
 
-        const config = isLib ? (C.ui.libraryConfigs[base.name] || {upgrades:[]}) : unit;
-        const totalCost = (unit.cost || base.cost) + (config.upgrades?.reduce((sum, u) => sum + (u.cost || 0), 0) || 0);
+        const totalCost = base.cost + (config.upgrades?.reduce((sum, u) => sum + (u.cost || 0), 0) || 0);
 
         target.innerHTML = `
             <div class="cc-detail-wrapper">
+                <!-- MODE INDICATOR -->
+                <div style="
+                    text-align: center; 
+                    padding: 8px; 
+                    background: rgba(0,0,0,0.3); 
+                    border: 1px solid var(--cc-border); 
+                    border-radius: 4px; 
+                    margin-bottom: 15px;
+                    font-size: 11px;
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    font-weight: 700;
+                ">
+                    ${modeLabel}
+                </div>
+
                 <!-- NAME & COST -->
                 <div class="detail-header">
                     <div class="u-name">${esc(base.name)}</div>
@@ -327,7 +362,7 @@ CCFB.define("components/painter", function(C) {
                 <!-- TYPE -->
                 <div class="u-type">${esc(base.type)}</div>
 
-                <!-- STATS (with upgrade modifiers applied) -->
+                <!-- STATS -->
                 ${buildStatBadges(base, config)}
 
                 <!-- LORE -->
@@ -372,9 +407,9 @@ CCFB.define("components/painter", function(C) {
                     }).join('')}
                 </div>
 
-                <!-- SUPPLEMENTAL ABILITIES (if present) -->
+                <!-- SUPPLEMENTAL ABILITIES -->
                 ${base.supplemental_abilities?.length ? 
-                    renderSupplementalDropdown(base.supplemental_abilities, isLib ? base.name : unit.id, isLib, base.name)
+                    renderSupplementalDropdown(base.supplemental_abilities, config, base.name)
                 : ''}
 
                 <!-- UPGRADES -->
@@ -383,7 +418,7 @@ CCFB.define("components/painter", function(C) {
                     const has = config.upgrades?.some(u => u.name === upg.name);
                     return `
                         <div class="upgrade-row" 
-                             onclick="window.CCFB.toggleUpgrade('${isLib ? base.name : unit.id}', '${esc(upg.name)}', ${upg.cost}, ${isLib})">
+                             onclick="window.CCFB.toggleUpgrade('${esc(upg.name)}', ${upg.cost})">
                             <input type="checkbox" ${has ? 'checked' : ''} onclick="event.stopPropagation()">
                             <div style="flex: 1">
                                 <b>${esc(upg.name)}</b>
@@ -394,7 +429,7 @@ CCFB.define("components/painter", function(C) {
                     `;
                 }).join('') || '<div class="opacity-50 small">No upgrades available.</div>'}
 
-                <!-- FIELD NOTES / TACTICS (if present) -->
+                <!-- FIELD NOTES -->
                 ${base.tactics ? `
                     <div class="field-notes-box" style="margin-top: 20px;">
                         <div class="u-type mb-2"><i class="fa fa-flag"></i> FIELD NOTES</div>
@@ -402,13 +437,29 @@ CCFB.define("components/painter", function(C) {
                     </div>
                 ` : ''}
 
-                <!-- ADD TO ROSTER BUTTON (Library only) -->
-                ${isLib ? `
+                <!-- ADD TO ROSTER BUTTON (Library mode only) -->
+                ${C.ui.builderMode === 'library' ? `
                     <button class="btn-outline-warning mt-4" 
-                            onclick="window.CCFB.addToRoster('${enc(base.name)}', ${base.cost})">
+                            onclick="window.CCFB.addToRosterFromBuilder()">
                         <i class="fa fa-plus"></i> ADD TO ROSTER
                     </button>
-                ` : ''}
+                ` : `
+                    <div style="
+                        text-align: center; 
+                        padding: 12px; 
+                        margin-top: 20px;
+                        background: rgba(76, 175, 80, 0.1); 
+                        border: 1px solid rgba(76, 175, 80, 0.3); 
+                        border-radius: 4px;
+                        font-size: 11px;
+                        color: #4CAF50;
+                        font-weight: 700;
+                        text-transform: uppercase;
+                        letter-spacing: 1px;
+                    ">
+                        <i class="fa fa-check-circle"></i> Changes Saved Automatically
+                    </div>
+                `}
             </div>
         `;
     };
@@ -427,7 +478,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // UNIT LIMIT CHECKING (budget-based)
+    // UNIT LIMIT CHECKING
     // ============================================
     const canAddUnit = (unitName) => {
         const budget = C.ui.budget;
@@ -456,17 +507,27 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // ADD TO ROSTER (with limit checking)
+    // ADD TO ROSTER FROM BUILDER
     // ============================================
-    window.CCFB.addToRoster = (name, cost) => {
-        const decoded = dec(name);
-        
+    window.CCFB.addToRosterFromBuilder = () => {
+        if (C.ui.builderMode !== 'library') return;
+
+        const unitName = C.ui.builderTarget;
+        const faction = C.state.factions[C.ui.fKey];
+        const base = faction.units.find(u => u.name === unitName);
+        if (!base) return;
+
         // Check unit limits
-        const limitCheck = canAddUnit(decoded);
+        const limitCheck = canAddUnit(unitName);
         if (!limitCheck.canAdd) {
             alert(`Cannot add unit: ${limitCheck.reason}`);
             return;
         }
+
+        // Get config with upgrades
+        const config = C.ui.libraryConfigs[unitName] || { upgrades: [] };
+        const upgradeCost = config.upgrades?.reduce((sum, u) => sum + (u.cost || 0), 0) || 0;
+        const totalCost = base.cost + upgradeCost;
 
         // Check budget
         if (C.ui.budget && C.ui.budget > 0) {
@@ -475,44 +536,46 @@ CCFB.define("components/painter", function(C) {
                 return sum + (item.cost || 0) + upgCost;
             }, 0);
 
-            if (currentTotal + cost > C.ui.budget) {
-                alert(`Cannot add unit: Would exceed budget (${currentTotal + cost} / ${C.ui.budget} ₤)`);
+            if (currentTotal + totalCost > C.ui.budget) {
+                alert(`Cannot add unit: Would exceed budget (${currentTotal + totalCost} / ${C.ui.budget} ₤)`);
                 return;
             }
         }
 
+        // Create roster item WITH the upgrades from library config
         C.ui.roster.push({
             id: Date.now(),
-            uN: decoded,
-            cost: cost,
-            upgrades: []
+            uN: unitName,
+            cost: base.cost,
+            upgrades: [...(config.upgrades || [])], // Copy upgrades
+            selectedSupplemental: config.selectedSupplemental || null
         });
+
+        // Clear library config
+        delete C.ui.libraryConfigs[unitName];
+
+        // Clear builder
+        C.ui.builderMode = null;
+        C.ui.builderTarget = null;
+
         window.CCFB.refreshUI();
     };
 
     // ============================================
-    // TOGGLE UPGRADE (with budget checking)
+    // TOGGLE UPGRADE
     // ============================================
-    window.CCFB.toggleUpgrade = (id, name, cost, isLib) => {
-        let unit;
-        
-        if (isLib) {
-            C.ui.libraryConfigs[id] = C.ui.libraryConfigs[id] || {upgrades: []};
-            unit = C.ui.libraryConfigs[id];
-        } else {
-            unit = C.ui.roster.find(u => String(u.id) === String(id));
-        }
-        
-        if (!unit) return;
+    window.CCFB.toggleUpgrade = (name, cost) => {
+        const config = window.CCFB.getBuilderConfig();
+        if (!config) return;
 
-        const idx = unit.upgrades.findIndex(u => u.name === name);
+        const idx = config.upgrades.findIndex(u => u.name === name);
         
         if (idx > -1) {
             // Removing upgrade - always allowed
-            unit.upgrades.splice(idx, 1);
+            config.upgrades.splice(idx, 1);
         } else {
-            // Adding upgrade - check budget
-            if (!isLib && C.ui.budget && C.ui.budget > 0) {
+            // Adding upgrade - check budget if in roster mode
+            if (C.ui.builderMode === 'roster' && C.ui.budget && C.ui.budget > 0) {
                 const currentTotal = (C.ui.roster || []).reduce((sum, item) => {
                     const upgCost = item.upgrades?.reduce((a, b) => a + (b.cost || 0), 0) || 0;
                     return sum + (item.cost || 0) + upgCost;
@@ -524,39 +587,31 @@ CCFB.define("components/painter", function(C) {
                 }
             }
             
-            unit.upgrades.push({name, cost});
+            config.upgrades.push({name, cost});
         }
 
+        window.CCFB.renderBuilder();
         window.CCFB.refreshUI();
-        
-        // Re-render detail panel
-        if (isLib) {
-            const faction = C.state.factions[C.ui.fKey];
-            const baseUnit = faction.units.find(u => u.name === id);
-            window.CCFB.renderDetail(baseUnit, true);
-        } else {
-            window.CCFB.renderDetail(unit, false);
-        }
     };
 
     // ============================================
-    // REFRESH UI
+    // REFRESH UI (All panels)
     // ============================================
     window.CCFB.refreshUI = () => {
         const faction = C.state.factions[C.ui.fKey];
-        const rosterTarget = document.getElementById("rost-target");
         const libTarget = document.getElementById("lib-target");
+        const rosterTarget = document.getElementById("rost-target");
         const totalDisplay = document.getElementById("display-total");
 
-        if (!faction || !rosterTarget || !libTarget) return;
+        if (!faction || !libTarget || !rosterTarget) return;
 
-        // Calculate total cost
+        // Calculate total
         const total = (C.ui.roster || []).reduce((sum, item) => {
             const upgCost = item.upgrades?.reduce((a, b) => a + (b.cost || 0), 0) || 0;
             return sum + (item.cost || 0) + upgCost;
         }, 0);
 
-        // Update display with color coding
+        // Update display
         if (totalDisplay) {
             const budget = C.ui.budget || 0;
             const overBudget = budget > 0 && total > budget;
@@ -569,21 +624,44 @@ CCFB.define("components/painter", function(C) {
             `;
         }
 
-        // Check if in list view mode
+        // Check list view mode
         const isListView = document.getElementById('ccfb-app')?.classList.contains('list-focused');
 
-        // Render roster cards (enhanced for list view)
+        // Render library cards (simple, just to select)
+        const renderLibCard = (unit) => {
+            const limitCheck = canAddUnit(unit.name);
+            const atLimit = !limitCheck.canAdd;
+            const limitClass = atLimit ? 'cc-unit-at-limit' : '';
+            const isSelected = C.ui.builderMode === 'library' && C.ui.builderTarget === unit.name;
+
+            return `
+                <div class="cc-roster-item ${limitClass} ${isSelected ? 'cc-item-selected' : ''}" 
+                     onclick="window.CCFB.selectLib('${enc(unit.name)}')"
+                     style="cursor: pointer;">
+                    <div style="width: 100%;">
+                        <div class="u-type">${esc(unit.type)}</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <div class="u-name">${esc(unit.name)}</div>
+                            <div style="color: var(--cc-primary); font-weight: bold;">${unit.cost} ₤</div>
+                        </div>
+                        ${buildStatBadges(unit)}
+                    </div>
+                </div>
+            `;
+        };
+
+        // Render roster cards
         const renderRosterCard = (item) => {
             const unit = faction.units.find(u => u.name === item.uN);
             if (!unit) return '';
 
             const upgCost = item.upgrades?.reduce((a, b) => a + b.cost, 0) || 0;
             const finalPrice = item.cost + upgCost;
+            const isSelected = C.ui.builderMode === 'roster' && String(C.ui.builderTarget) === String(item.id);
 
-            // ENHANCED LIST VIEW: Show cost next to name, show abilities
             if (isListView) {
                 return `
-                    <div class="cc-roster-item" 
+                    <div class="cc-roster-item ${isSelected ? 'cc-item-selected' : ''}" 
                          onclick="window.CCFB.selectRoster('${item.id}')">
                         <div style="flex: 1;">
                             <div class="u-type">${esc(unit.type)}</div>
@@ -609,9 +687,8 @@ CCFB.define("components/painter", function(C) {
                 `;
             }
 
-            // Normal view
             return `
-                <div class="cc-roster-item" 
+                <div class="cc-roster-item ${isSelected ? 'cc-item-selected' : ''}" 
                      onclick="window.CCFB.selectRoster('${item.id}')">
                     <div style="width: 100%;">
                         <div class="u-type">${esc(unit.type)}</div>
@@ -631,67 +708,41 @@ CCFB.define("components/painter", function(C) {
             `;
         };
 
-        // Render library cards (with limit checking)
-        const renderLibCard = (unit) => {
-            const limitCheck = canAddUnit(unit.name);
-            const atLimit = !limitCheck.canAdd;
-            const limitClass = atLimit ? 'cc-unit-at-limit' : '';
-
-            return `
-                <div class="cc-roster-item ${limitClass}" 
-                     onclick="window.CCFB.selectLib('${enc(unit.name)}')">
-                    <div class="cc-item-controls" style="left: 10px; right: auto;">
-                        <button class="btn-plus-lib" 
-                                ${atLimit ? 'disabled title="' + esc(limitCheck.reason) + '"' : ''}
-                                onclick="event.stopPropagation(); window.CCFB.addToRoster('${enc(unit.name)}', ${unit.cost})">
-                            <i class="fa fa-plus"></i>
-                        </button>
-                    </div>
-                    <div style="width: 100%; padding-left: 40px;">
-                        <div class="u-type">${esc(unit.type)}</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <div class="u-name">${esc(unit.name)}</div>
-                            <div style="color: var(--cc-primary); font-weight: bold;">${unit.cost} ₤</div>
-                        </div>
-                        ${buildStatBadges(unit)}
-                        ${renderAbilityLinks(unit.abilities)}
-                    </div>
-                </div>
-            `;
-        };
-
+        libTarget.innerHTML = (faction.units || []).map(renderLibCard).join('');
+        
         rosterTarget.innerHTML = (C.ui.roster || []).length 
             ? (C.ui.roster || []).map(renderRosterCard).join('') 
             : '<div class="p-4 text-center opacity-50">ROSTER EMPTY</div>';
 
-        libTarget.innerHTML = (faction.units || []).map(renderLibCard).join('');
+        // Also update builder panel
+        window.CCFB.renderBuilder();
     };
 
     // ============================================
     // SELECT HANDLERS
     // ============================================
-    window.CCFB.selectRoster = (id) => {
-        const item = C.ui.roster.find(i => String(i.id) === String(id));
-        if (!item) return;
-
-        const faction = C.state.factions[C.ui.fKey];
-        const unit = faction.units.find(u => u.name === item.uN);
-        
-        // Pass the full roster item (with upgrades) to renderDetail
-        window.CCFB.renderDetail({...unit, ...item}, false);
-    };
-
     window.CCFB.selectLib = (name) => {
         const decoded = dec(name);
-        const faction = C.state.factions[C.ui.fKey];
-        const unit = faction.units.find(u => u.name === decoded);
-        
-        if (unit) {
-            window.CCFB.renderDetail(unit, true);
-        }
+        C.ui.builderMode = 'library';
+        C.ui.builderTarget = decoded;
+        window.CCFB.renderBuilder();
+        window.CCFB.refreshUI();
+    };
+
+    window.CCFB.selectRoster = (id) => {
+        C.ui.builderMode = 'roster';
+        C.ui.builderTarget = id;
+        window.CCFB.renderBuilder();
+        window.CCFB.refreshUI();
     };
 
     window.CCFB.removeFromRoster = (id) => {
+        // If we're editing this unit, clear builder
+        if (C.ui.builderMode === 'roster' && String(C.ui.builderTarget) === String(id)) {
+            C.ui.builderMode = null;
+            C.ui.builderTarget = null;
+        }
+        
         C.ui.roster = C.ui.roster.filter(i => String(i.id) !== String(id));
         window.CCFB.refreshUI();
     };
@@ -702,28 +753,15 @@ CCFB.define("components/painter", function(C) {
     window.CCFB.clearRoster = () => {
         if (!confirm("Clear entire roster?")) return;
         
-        console.log("🧹 Clearing roster...");
-        
         C.ui.roster = [];
         C.ui.rosterName = "";
+        C.ui.builderMode = null;
+        C.ui.builderTarget = null;
         
         const nameInput = document.getElementById("roster-name");
         if (nameInput) nameInput.value = "";
         
         window.CCFB.refreshUI();
-        
-        // Clear detail panel
-        const detTarget = document.getElementById("det-target");
-        if (detTarget) {
-            detTarget.innerHTML = `
-                <div class="cc-empty-state">
-                    <i class="fa fa-crosshairs mb-3" style="font-size: 2rem; display: block;"></i>
-                    SELECT A UNIT TO VIEW DATA
-                </div>
-            `;
-        }
-        
-        console.log("✅ Roster cleared");
     };
 
     window.CCFB.toggleViewMode = () => {
@@ -742,7 +780,6 @@ CCFB.define("components/painter", function(C) {
             }
         }
         
-        // Refresh to update roster rendering
         window.CCFB.refreshUI();
     };
 
@@ -753,6 +790,8 @@ CCFB.define("components/painter", function(C) {
         C.ui.fKey = key;
         C.ui.roster = [];
         C.ui.rosterName = "";
+        C.ui.builderMode = null;
+        C.ui.builderTarget = null;
         
         const nameInput = document.getElementById("roster-name");
         if (nameInput) nameInput.value = "";
