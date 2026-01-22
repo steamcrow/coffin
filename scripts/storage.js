@@ -256,48 +256,48 @@ CCFB.define("components/storage", function(C) {
             }
 
             // Enrich each roster with faction info
-        const enriched = await Promise.all(
-        data.result.map(async (r) => {
-            try {
-                const res = await fetch('/web/dataset/call_kw', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        jsonrpc: '2.0',
-                        method: 'call',
-                        params: {
-                            model: 'documents.document',
-                            method: 'read',
-                            args: [[r.id]],
-                            kwargs: { fields: ['datas'] }
+            const enriched = await Promise.all(
+                data.result.map(async (r) => {
+                    try {
+                        const res = await fetch('/web/dataset/call_kw', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            credentials: 'include',
+                            body: JSON.stringify({
+                                jsonrpc: '2.0',
+                                method: 'call',
+                                params: {
+                                    model: 'documents.document',
+                                    method: 'read',
+                                    args: [[r.id]],
+                                    kwargs: { fields: ['datas'] }
+                                }
+                            })
+                        });
+
+                        const docData = await res.json();
+                        const jsonString = decodeURIComponent(escape(atob(docData.result[0].datas)));
+                        const parsed = JSON.parse(jsonString);
+
+                        return {
+                            ...r,
+                            faction: parsed.faction || "monster_rangers",
+                            rosterName: parsed.name || r.name.replace('.json', ''),
+                            budget: parsed.budget || 0
+                        };
+
+                    } catch (e) {
+                        return {
+                            ...r,
+                            faction: "monster_rangers",
+                            rosterName: r.name.replace('.json', ''),
+                            budget: 0
+                        };
                     }
                 })
-            });
+            );
 
-            const docData = await res.json();
-            const jsonString = decodeURIComponent(escape(atob(docData.result[0].datas)));
-            const parsed = JSON.parse(jsonString);
-
-            return {
-                ...r,
-                faction: parsed.faction || "monster_rangers",
-                rosterName: parsed.name || r.name.replace('.json', ''),
-                budget: parsed.budget || 0
-            };
-
-        } catch (e) {
-            return {
-                ...r,
-                faction: "monster_rangers",
-                rosterName: r.name.replace('.json', ''),
-                budget: 0
-            };
-        }
-    })
-);
-
-showRosterListPanel(enriched);
+            showRosterListPanel(enriched);
 
         } catch (error) {
             console.error("Load error:", error);
@@ -305,7 +305,7 @@ showRosterListPanel(enriched);
         }
     };
 
-    // Delete a roster (archives it)
+    // Delete a roster (archives it) - FIXED TO REFRESH PROPERLY
     window.CCFB.deleteRoster = async (rosterId) => {
         if (!confirm("Are you sure you want to delete this roster?")) return;
 
@@ -330,8 +330,89 @@ showRosterListPanel(enriched);
             const data = await response.json();
             if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
             
-            alert("✓ Roster deleted!");
-            setTimeout(() => { window.CCFB.loadRosterList(); }, 300);
+            console.log("✅ Roster deleted");
+            
+            // Close current panel
+            closeRosterListPanel();
+            
+            // Wait a moment, then reload the list
+            setTimeout(async () => {
+                // Fetch updated list
+                const listResponse = await fetch('/web/dataset/call_kw', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        jsonrpc: '2.0',
+                        method: 'call',
+                        params: {
+                            model: 'documents.document',
+                            method: 'search_read',
+                            args: [[
+                                ['folder_id', '=', CONFIG.FOLDER_ID],
+                                ['active', '=', true]
+                            ]],
+                            kwargs: {
+                                fields: ['id', 'name', 'create_date', 'write_date'],
+                                order: 'write_date desc'
+                            }
+                        }
+                    })
+                });
+
+                const listData = await listResponse.json();
+                
+                // If no rosters left, show message and keep panel closed
+                if (!listData.result || listData.result.length === 0) {
+                    alert("✓ Roster deleted! (No rosters remaining)");
+                    return;
+                }
+                
+                // Otherwise, re-enrich and show updated list
+                const enriched = await Promise.all(
+                    listData.result.map(async (r) => {
+                        try {
+                            const res = await fetch('/web/dataset/call_kw', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({
+                                    jsonrpc: '2.0',
+                                    method: 'call',
+                                    params: {
+                                        model: 'documents.document',
+                                        method: 'read',
+                                        args: [[r.id]],
+                                        kwargs: { fields: ['datas'] }
+                                    }
+                                })
+                            });
+
+                            const docData = await res.json();
+                            const jsonString = decodeURIComponent(escape(atob(docData.result[0].datas)));
+                            const parsed = JSON.parse(jsonString);
+
+                            return {
+                                ...r,
+                                faction: parsed.faction || "monster_rangers",
+                                rosterName: parsed.name || r.name.replace('.json', ''),
+                                budget: parsed.budget || 0
+                            };
+
+                        } catch (e) {
+                            return {
+                                ...r,
+                                faction: "monster_rangers",
+                                rosterName: r.name.replace('.json', ''),
+                                budget: 0
+                            };
+                        }
+                    })
+                );
+
+                showRosterListPanel(enriched);
+                
+            }, 300);
             
         } catch (error) {
             console.error("Delete error:", error);
@@ -399,66 +480,65 @@ showRosterListPanel(enriched);
      */
 
     const showRosterListPanel = (rosters) => {
-    closeRosterListPanel();
-    
-    const panel = document.createElement('div');
-    panel.id = 'roster-list-panel';
-    panel.className = 'cc-slide-panel';
+        closeRosterListPanel();
+        
+        const panel = document.createElement('div');
+        panel.id = 'roster-list-panel';
+        panel.className = 'cc-slide-panel';
 
-    panel.innerHTML = `
-        <div class="cc-slide-panel-header">
-            <h2>SAVED ROSTERS</h2>
-            <button onclick="window.CCFB.closeRosterListPanel()" class="cc-panel-close-btn">
-                <i class="fa fa-times"></i>
-            </button>
-        </div>
+        panel.innerHTML = `
+            <div class="cc-slide-panel-header">
+                <h2>SAVED ROSTERS</h2>
+                <button onclick="window.CCFB.closeRosterListPanel()" class="cc-panel-close-btn">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
 
-        <div class="cc-roster-list">
-            ${rosters.map(r => {
-                const displayName = r.rosterName || r.name.replace('.json', '');
-                const factionKey = r.faction || "monster_rangers";
-                const iconHtml = window.CCFB.renderFactionIcon
-                    ? window.CCFB.renderFactionIcon(factionKey)
-                    : "";
+            <div class="cc-roster-list">
+                ${rosters.map(r => {
+                    const displayName = r.rosterName || r.name.replace('.json', '');
+                    const factionKey = r.faction || "monster_rangers";
+                    const iconHtml = window.CCFB.renderFactionIcon
+                        ? window.CCFB.renderFactionIcon(factionKey)
+                        : "";
 
-                const factionLabel = factionKey.replace('_', ' ').toUpperCase();
-                const budgetLabel = r.budget ? `${r.budget} ₤` : "UNLIMITED";
+                    const factionLabel = factionKey.replace('_', ' ').toUpperCase();
+                    const budgetLabel = r.budget ? `${r.budget} ₤` : "UNLIMITED";
 
-                return `
-                    <div class="cc-saved-roster-item">
+                    return `
+                        <div class="cc-saved-roster-item">
 
-                        <div class="cc-saved-roster-header">
-                            ${iconHtml}
-                            <span class="cc-faction-type">${factionLabel}</span>
+                            <div class="cc-saved-roster-header">
+                                ${iconHtml}
+                                <span class="cc-faction-type">${factionLabel}</span>
+                            </div>
+
+                            <div class="cc-saved-roster-name">
+                                ${displayName}
+                            </div>
+
+                            <div class="cc-saved-roster-meta">
+                                💰 ${budgetLabel}  ·  ${new Date(r.write_date).toLocaleDateString()}
+                            </div>
+
+                            <div class="cc-saved-roster-actions">
+                                <button onclick="window.CCFB.loadRoster(${r.id})" class="btn-outline-warning">
+                                    <i class="fa fa-folder-open"></i> LOAD
+                                </button>
+                                <button onclick="window.CCFB.deleteRoster(${r.id})" class="btn-outline-danger">
+                                    <i class="fa fa-trash-o"></i>
+                                </button>
+                            </div>
+
                         </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
 
-                        <div class="cc-saved-roster-name">
-                            ${displayName}
-                        </div>
-
-                        <div class="cc-saved-roster-meta">
-                            💰 ${budgetLabel}  ·  ${new Date(r.write_date).toLocaleDateString()}
-                        </div>
-
-                        <div class="cc-saved-roster-actions">
-                            <button onclick="window.CCFB.loadRoster(${r.id})" class="btn-outline-warning">
-                                <i class="fa fa-folder-open"></i> LOAD
-                            </button>
-                            <button onclick="window.CCFB.deleteRoster(${r.id})" class="btn-outline-danger">
-                                <i class="fa fa-trash-o"></i>
-                            </button>
-                        </div>
-
-                    </div>
-                `;
-            }).join('')}
-        </div>
-    `;
-
-    document.body.appendChild(panel);
-    setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
-};
-
+        document.body.appendChild(panel);
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    };
 
     const closeRosterListPanel = () => {
         const panel = document.getElementById('roster-list-panel');
