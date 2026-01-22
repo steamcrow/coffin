@@ -14,7 +14,7 @@ CCFB.define("components/painter", function(C) {
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
     // ============================================
-    // UNIT LIMIT CHECKING
+    // UNIT LIMIT CHECKING (Budget-based only)
     // ============================================
     const canAddUnit = (unitName) => {
         const faction = C.state.factions[C.ui.fKey];
@@ -23,17 +23,19 @@ CCFB.define("components/painter", function(C) {
         const unit = faction.units.find(u => u.name === unitName);
         if (!unit) return { canAdd: false, reason: "Unit not found" };
 
-        // Count how many of this unit are already in roster
-        const count = (C.ui.roster || []).filter(r => r.uN === unitName).length;
-
-        // Check max_count (absolute limit)
-        if (unit.max_count !== undefined && count >= unit.max_count) {
-            return { canAdd: false, reason: `Maximum ${unit.max_count} allowed` };
-        }
-
-        // Check composition per_points
+        // Only check composition per_points (budget-based scaling limits)
         if (unit.composition?.per_points) {
             const budget = C.ui.budget || Infinity;
+            
+            // If unlimited budget, no limit
+            if (budget === Infinity || budget === 0) {
+                return { canAdd: true };
+            }
+            
+            // Count how many of this unit are already in roster
+            const count = (C.ui.roster || []).filter(r => r.uN === unitName).length;
+            
+            // Calculate max allowed based on budget
             const maxAllowed = Math.floor(budget / unit.composition.per_points);
             
             if (count >= maxAllowed) {
@@ -44,6 +46,7 @@ CCFB.define("components/painter", function(C) {
             }
         }
 
+        // No limits apply - can add
         return { canAdd: true };
     };
 
