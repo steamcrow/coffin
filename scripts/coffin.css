@@ -2,6 +2,9 @@
    COFFIN CANYON FACTION BUILDER — MASTER CSS
    ========================================================= */
 
+/* === IMPORT PRINT STYLES === */
+@import url('coffin_print.css') print;
+
 :root { 
   --cc-primary: #ff7518;
   --cc-primary-dim: rgba(255, 117, 24, 0.15);
@@ -685,8 +688,350 @@ button:hover i[class*="fa-"],
 
 /* === PRINT STYLES === */
 @media print {
-  #ccfb-details, .cc-tool-btn, .btn-minus { display: none !important; }
-  .cc-roster-item { border-bottom: 1px solid #000 !important; }
+  /* ========================================
+     HIDE ALL WEB UI ELEMENTS
+     ======================================== */
+  .cc-header-area,
+  #auth-status-bar,
+  .sub-header-row,
+  .top-tools,
+  .cc-tool-btn,
+  .btn-minus,
+  .cc-item-controls,
+  #panel-library,
+  #ccfb-builder,
+  .cc-panel-header,
+  .btn-outline-warning,
+  .cc-slide-panel,
+  #rule-panel,
+  .cc-accordion-header,
+  .upgrade-row,
+  .field-notes-box,
+  .u-lore,
+  .ability-boxed-callout,
+  .supplemental-section {
+    display: none !important;
+  }
+
+  /* ========================================
+     PAGE SETUP
+     ======================================== */
+  @page {
+    size: letter;
+    margin: 0.5in 0.5in 0.5in 0.5in;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 9pt !important;
+    line-height: 1.2 !important;
+    font-family: 'Arial', 'Helvetica', sans-serif !important;
+  }
+
+  #ccfb-app {
+    background: white !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .cc-grid {
+    display: block !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #panel-roster {
+    border: none !important;
+    background: white !important;
+    page-break-inside: avoid;
+  }
+
+  /* ========================================
+     ROSTER HEADER
+     ======================================== */
+  #panel-roster::before {
+    content: "COFFIN CANYON FACTION ROSTER";
+    display: block;
+    font-size: 18pt;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 8pt;
+    padding-bottom: 4pt;
+    border-bottom: 2px solid black;
+    page-break-after: avoid;
+  }
+
+  /* Add roster info (name, faction, budget) */
+  #rost-target::before {
+    content: attr(data-roster-info);
+    display: block;
+    font-size: 10pt;
+    margin-bottom: 12pt;
+    padding: 6pt;
+    background: #f0f0f0;
+    border: 1px solid #ccc;
+    page-break-after: avoid;
+  }
+
+  /* ========================================
+     ROSTER TABLE LAYOUT
+     ======================================== */
+  .cc-roster-item {
+    display: table-row !important;
+    page-break-inside: avoid !important;
+    border: none !important;
+    background: white !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    position: relative !important;
+  }
+
+  /* Zebra striping */
+  .cc-roster-item:nth-child(even) {
+    background: #f8f8f8 !important;
+  }
+
+  .cc-roster-item:nth-child(odd) {
+    background: white !important;
+  }
+
+  /* Table container */
+  #rost-target {
+    display: table !important;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    margin-bottom: 16pt !important;
+    border: 1px solid black !important;
+  }
+
+  /* Table header */
+  #rost-target::after {
+    content: "";
+    display: table-header-group;
+  }
+
+  /* ========================================
+     UNIT CARD PRINT LAYOUT
+     ======================================== */
+  .cc-roster-item > div {
+    display: table-cell !important;
+    padding: 4pt 6pt !important;
+    vertical-align: top !important;
+    border-bottom: 1px solid #ddd !important;
+    font-size: 8pt !important;
+  }
+
+  /* Unit name and type */
+  .u-name {
+    font-size: 10pt !important;
+    font-weight: bold !important;
+    color: black !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .u-type {
+    font-size: 7pt !important;
+    color: #666 !important;
+    text-transform: uppercase !important;
+    margin: 0 0 2pt 0 !important;
+  }
+
+  /* ========================================
+     STAT BADGES - COMPACT TABLE FORMAT
+     ======================================== */
+  .stat-badge-flex {
+    display: inline-block !important;
+    margin: 2pt 0 !important;
+  }
+
+  .cc-stat-badge {
+    display: inline-block !important;
+    border: 1px solid #333 !important;
+    margin-right: 3pt !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .cc-stat-label {
+    background: #333 !important;
+    color: white !important;
+    padding: 1pt 3pt !important;
+    font-size: 7pt !important;
+    font-weight: bold !important;
+    display: inline-block !important;
+  }
+
+  .cc-stat-value {
+    background: white !important;
+    color: black !important;
+    padding: 1pt 4pt !important;
+    font-size: 8pt !important;
+    font-weight: normal !important;
+    display: inline-block !important;
+    border-left: 1px solid #333 !important;
+  }
+
+  /* Remove all color backgrounds */
+  .stat-q, .stat-d, .stat-r, .stat-m,
+  .stat-q-border, .stat-d-border, .stat-r-border, .stat-m-border {
+    background: #333 !important;
+    border-color: #333 !important;
+  }
+
+  /* ========================================
+     ABILITIES - COMPACT LIST
+     ======================================== */
+  .u-abilities-summary {
+    font-size: 8pt !important;
+    line-height: 1.3 !important;
+    margin: 2pt 0 !important;
+  }
+
+  .rule-link {
+    color: black !important;
+    text-decoration: none !important;
+    border-bottom: none !important;
+    background: none !important;
+    font-weight: normal !important;
+  }
+
+  .rule-link::after {
+    content: ", ";
+  }
+
+  .rule-link:last-child::after {
+    content: "";
+  }
+
+  /* ========================================
+     UPGRADES - SHOW INLINE
+     ======================================== */
+  .print-upgrades {
+    display: block !important;
+    font-size: 7pt !important;
+    color: #666 !important;
+    margin-top: 2pt !important;
+    font-style: italic !important;
+  }
+
+  .print-upgrades::before {
+    content: "↑ ";
+    font-weight: bold;
+  }
+
+  /* ========================================
+     RULES REFERENCE SECTION
+     ======================================== */
+  .print-rules-section {
+    page-break-before: auto !important;
+    margin-top: 16pt !important;
+    padding-top: 12pt !important;
+    border-top: 2px solid black !important;
+  }
+
+  .print-rules-section h3 {
+    font-size: 12pt !important;
+    font-weight: bold !important;
+    margin: 8pt 0 4pt 0 !important;
+    padding: 0 !important;
+    color: black !important;
+  }
+
+  .print-rule-entry {
+    margin: 4pt 0 !important;
+    padding-left: 8pt !important;
+    font-size: 8pt !important;
+    line-height: 1.3 !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-rule-entry strong {
+    font-weight: bold !important;
+    color: black !important;
+  }
+
+  /* ========================================
+     FACTION RULES SUMMARY
+     ======================================== */
+  .print-faction-rules {
+    background: #f0f0f0 !important;
+    border: 1px solid #ccc !important;
+    padding: 8pt !important;
+    margin: 12pt 0 !important;
+    page-break-inside: avoid !important;
+  }
+
+  .print-faction-rules h4 {
+    font-size: 10pt !important;
+    font-weight: bold !important;
+    margin: 0 0 4pt 0 !important;
+    color: black !important;
+  }
+
+  .print-faction-rules p {
+    font-size: 8pt !important;
+    margin: 2pt 0 !important;
+    line-height: 1.3 !important;
+  }
+
+  /* ========================================
+     CORE RULES QUICK REFERENCE
+     ======================================== */
+  .print-quick-ref {
+    page-break-before: auto !important;
+    margin-top: 16pt !important;
+    padding: 8pt !important;
+    background: #f8f8f8 !important;
+    border: 1px solid #ccc !important;
+    font-size: 7pt !important;
+  }
+
+  .print-quick-ref h4 {
+    font-size: 10pt !important;
+    font-weight: bold !important;
+    margin: 0 0 4pt 0 !important;
+    text-align: center !important;
+  }
+
+  .print-quick-ref ul {
+    margin: 0 !important;
+    padding-left: 12pt !important;
+    list-style-type: disc !important;
+  }
+
+  .print-quick-ref li {
+    margin: 1pt 0 !important;
+    line-height: 1.2 !important;
+  }
+
+  /* ========================================
+     FINAL OPTIMIZATIONS
+     ======================================== */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Remove any shadows, glows, transitions */
+  *, *::before, *::after {
+    box-shadow: none !important;
+    text-shadow: none !important;
+    filter: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* Ensure proper page breaks */
+  h3, h4 {
+    page-break-after: avoid !important;
+  }
+
+  /* Compact spacing */
+  p {
+    margin: 2pt 0 !important;
+  }
 }
 
 /* === ACCORDION STYLES === */
