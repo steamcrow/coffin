@@ -605,6 +605,13 @@ CCFB.define("components/painter", function(C) {
 
         if (!faction || !libTarget || !rosterTarget) return;
 
+        // Clean up any lingering print sections (from previous print operations)
+        const rosterPanel = document.getElementById('panel-roster');
+        if (rosterPanel) {
+            const printSections = rosterPanel.querySelectorAll('.print-rules-section, .print-faction-rules, .print-quick-ref');
+            printSections.forEach(section => section.remove());
+        }
+
         // Calculate total
         const total = (C.ui.roster || []).reduce((sum, item) => {
             const upgCost = item.upgrades?.reduce((a, b) => a + (b.cost || 0), 0) || 0;
@@ -930,6 +937,10 @@ CCFB.define("components/painter", function(C) {
     // ============================================
     // PRINT PREPARATION - BATTLEFIELD REFERENCE
     // ============================================
+    
+    // CRITICAL: Save original print function FIRST
+    const nativePrint = window.print.bind(window);
+    
     window.CCFB.preparePrint = () => {
         const roster = C.ui.roster || [];
         const faction = C.state.factions[C.ui.fKey];
@@ -1102,17 +1113,28 @@ CCFB.define("components/painter", function(C) {
             rosterPanel.insertAdjacentHTML('beforeend', rulesHTML);
         }
 
-        // Trigger print
-        setTimeout(() => window.print(), 200);
+        // Trigger NATIVE print (not our override!)
+        setTimeout(() => {
+            nativePrint();
+            
+            // Clean up print sections after print dialog closes
+            // (User may have cancelled, so sections would linger)
+            setTimeout(() => {
+                const panel = document.getElementById('panel-roster');
+                if (panel) {
+                    const sections = panel.querySelectorAll('.print-rules-section, .print-faction-rules, .print-quick-ref, .print-upgrades');
+                    sections.forEach(s => s.remove());
+                }
+            }, 500);
+        }, 200);
     };
 
-    // Override native print
-    const originalPrint = window.print;
+    // Override window.print to prepare roster first
     window.print = function() {
         if (document.getElementById('ccfb-app')) {
             window.CCFB.preparePrint();
         } else {
-            originalPrint();
+            nativePrint();
         }
     };
 
