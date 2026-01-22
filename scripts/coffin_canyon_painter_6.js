@@ -368,33 +368,33 @@ CCFB.define("components/painter", function(C) {
                     </div>
                 ` : ''}
 
-                <!-- ABILITIES -->
-                <div class="u-type mt-4">ABILITIES</div>
-                ${(base.abilities || []).map(ability => {
-                    const abilityData = getAbilityFull(ability);
-                    const name = getName(ability);
-                    return `
-                        <div class="ability-boxed-callout">
-                            <b class="rule-link" onclick="window.CCFB.showRulePanel('${esc(name)}')">${esc(name)}</b>
-                            <div class="small opacity-75">
-                                ${esc(abilityData?.effect || 'Rule data pending.')}
+                <!-- ABILITIES (Accordion) -->
+                <div class="cc-accordion-header" data-accordion="abilities-content" onclick="window.CCFB.toggleAccordion('abilities-content')">
+                    <div>
+                        <span class="u-type" style="margin: 0;">ABILITIES</span>
+                        <span class="cc-accordion-badge">${(base.abilities || []).length}</span>
+                    </div>
+                    <i class="fa fa-chevron-down"></i>
+                </div>
+                <div class="cc-accordion-content" id="abilities-content">
+                    ${(base.abilities || []).map(ability => {
+                        const abilityData = getAbilityFull(ability);
+                        const name = getName(ability);
+                        return `
+                            <div class="ability-boxed-callout">
+                                <b class="rule-link" onclick="window.CCFB.showRulePanel('${esc(name)}')">${esc(name)}</b>
+                                <div class="small opacity-75">
+                                    ${esc(abilityData?.effect || 'Rule data pending.')}
+                                </div>
                             </div>
-                        </div>
-                    `;
-                }).join('')}
+                        `;
+                    }).join('')}
+                </div>
 
                 <!-- SUPPLEMENTAL ABILITIES (if present) -->
                 ${base.supplemental_abilities?.length ? 
                     renderSupplementalDropdown(base.supplemental_abilities, isLib ? base.name : unit.id, isLib, base.name)
                 : ''}
-
-                <!-- TACTICS (if present) -->
-                ${base.tactics ? `
-                    <div class="field-notes-box">
-                        <div class="u-type mb-2"><i class="fa fa-flag"></i> FIELD NOTES</div>
-                        <div class="small">${esc(base.tactics)}</div>
-                    </div>
-                ` : ''}
 
                 <!-- UPGRADES -->
                 <div class="u-type mt-4">UPGRADES</div>
@@ -413,6 +413,14 @@ CCFB.define("components/painter", function(C) {
                     `;
                 }).join('') || '<div class="opacity-50 small">No upgrades available.</div>'}
 
+                <!-- FIELD NOTES / TACTICS (if present) -->
+                ${base.tactics ? `
+                    <div class="field-notes-box" style="margin-top: 20px;">
+                        <div class="u-type mb-2"><i class="fa fa-flag"></i> FIELD NOTES</div>
+                        <div class="small">${esc(base.tactics)}</div>
+                    </div>
+                ` : ''}
+
                 <!-- ADD TO ROSTER BUTTON (Library only) -->
                 ${isLib ? `
                     <button class="btn-outline-warning mt-4" 
@@ -422,6 +430,19 @@ CCFB.define("components/painter", function(C) {
                 ` : ''}
             </div>
         `;
+    };
+
+    // ============================================
+    // TOGGLE ACCORDION
+    // ============================================
+    window.CCFB.toggleAccordion = (sectionId) => {
+        const header = document.querySelector(`[data-accordion="${sectionId}"]`);
+        const content = document.getElementById(sectionId);
+        
+        if (header && content) {
+            header.classList.toggle('collapsed');
+            content.classList.toggle('collapsed');
+        }
     };
 
     // ============================================
