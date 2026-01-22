@@ -23,9 +23,45 @@ window.CCFB.define("components/skeleton", function(CCFB) {
         `;
     };
 
+    // =========================================================
+    // STEP 3 — Smart View Management (Toggle & Print)
+    // =========================================================
+    window.CCFB.toggleViewMode = function() {
+        const app = document.getElementById('ccfb-app');
+        const btn = document.getElementById('view-toggle-btn');
+        const isList = app.classList.toggle('list-focused');
+        
+        // Update icon for feedback
+        if (btn) {
+            const icon = btn.querySelector('i');
+            icon.className = isList ? 'fa fa-th-large' : 'fa fa-list';
+            btn.title = isList ? 'Switch to Card View' : 'Switch to List View';
+        }
+    };
+
+    window.CCFB.smartPrint = function() {
+        const app = document.getElementById('ccfb-app');
+        if (!app) return;
+        
+        const wasInCardView = !app.classList.contains('list-focused');
+
+        // 1. Force compact list mode for the printer
+        app.classList.add('list-focused');
+
+        // 2. Small delay to let the CSS Grid reflow before the dialog opens
+        setTimeout(() => {
+            window.print();
+            
+            // 3. Cleanup: Return to previous state after dialog closes
+            if (wasInCardView) {
+                app.classList.remove('list-focused');
+            }
+        }, 100);
+    };
+
     return {
         /**
-         * The Main Draw Function - NEW 3-COLUMN LAYOUT
+         * The Main Draw Function - MAINTAINING 3-COLUMN + SMART TOOLS
          */
         draw: function() {
             if (window.location.href.includes("/web") && !window.location.href.includes("ccfb")) return;
@@ -43,7 +79,7 @@ window.CCFB.define("components/skeleton", function(CCFB) {
                 document.head.appendChild(fa);
             }
 
-            // Load Coffin Canyon CSS
+            // Load Coffin Canyon CSS (Using your existing GitHub path)
             if (!document.getElementById('cc-coffin-styles')) {
                 console.log('🎃 Loading Coffin Canyon CSS...');
                 fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/scripts/coffin.css?t=' + Date.now())
@@ -93,14 +129,12 @@ window.CCFB.define("components/skeleton", function(CCFB) {
                                 <button class="cc-tool-btn" onclick="window.CCFB.loadRosterList()" title="Load Saved Rosters"><i class="fa fa-folder-open"></i></button>
                                 <button id="view-toggle-btn" class="cc-tool-btn" onclick="window.CCFB.toggleViewMode()" title="Toggle List View"><i class="fa fa-list"></i></button>
                                 <button class="cc-tool-btn" onclick="window.CCFB.shareRoster()" title="Copy Share Link"><i class="fa fa-share-alt"></i></button>
-                                <button class="cc-tool-btn" onclick="window.print()" title="Print Roster"><i class="fa fa-print"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.smartPrint()" title="Print Roster"><i class="fa fa-print"></i></button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- NEW 3-COLUMN LAYOUT -->
                     <div class="cc-grid">
-                        <!-- LEFT: UNIT LIBRARY -->
                         <div class="cc-panel" id="panel-library">
                             <div class="cc-panel-header">
                                 <span>
@@ -111,7 +145,6 @@ window.CCFB.define("components/skeleton", function(CCFB) {
                             <div id="lib-target"></div>
                         </div>
 
-                        <!-- MIDDLE: UNIT BUILDER -->
                         <div class="cc-panel" id="ccfb-builder">
                             <div class="cc-panel-header">
                                 <span><i class="fa fa-wrench"></i> UNIT BUILDER</span>
@@ -124,7 +157,6 @@ window.CCFB.define("components/skeleton", function(CCFB) {
                             </div>
                         </div>
 
-                        <!-- RIGHT: ACTIVE ROSTER -->
                         <div class="cc-panel" id="panel-roster">
                             <div class="cc-panel-header">
                                 <span><i class="fa fa-users"></i> ACTIVE ROSTER</span>
@@ -139,9 +171,6 @@ window.CCFB.define("components/skeleton", function(CCFB) {
             this.checkLoginStatus();
         },
 
-        /**
-         * Hardcoded list to match your actual GitHub filenames
-         */
         populateDropdown: function() {
             const sel = document.getElementById("f-selector");
             if (!sel) return;
