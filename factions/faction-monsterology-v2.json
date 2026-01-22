@@ -6,10 +6,10 @@
   "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons and devices have additional point costs listed in optional_upgrades.",
   "faction_features": [
     {
-      "name": "Specimen Capture",
+      "name": "Monster Hunters",
       "cost": 0,
       "required": true,
-      "effect": "Monsterology units can capture Monsters and other creatures for research. Captured specimens are removed from play and score VP."
+      "effect": "Monsterology units can kill Monsters to research their mort (flesh, blood, and bone). Mort removed from the table scores VP."
     },
     {
       "name": "Thyr Exploitation",
