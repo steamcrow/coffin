@@ -31,12 +31,11 @@
 #ccfb-details {
   position: sticky;
   top: 20px;
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
   background: rgba(0,0,0,0.4);
   border: 1px solid var(--cc-primary);
   border-radius: 6px;
   padding: 15px;
+  min-height: 400px;
 }
 
 /* === PANELS === */
@@ -658,4 +657,63 @@ button:hover i[class*="fa-"],
 @media print {
   #ccfb-details, .cc-tool-btn, .btn-minus { display: none !important; }
   .cc-roster-item { border-bottom: 1px solid #000 !important; }
+}
+
+/* === ACCORDION STYLES === */
+.cc-accordion-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: rgba(255, 117, 24, 0.1);
+  border: 1px solid rgba(255, 117, 24, 0.3);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+
+.cc-accordion-header:hover {
+  background: rgba(255, 117, 24, 0.2);
+  border-color: var(--cc-primary);
+}
+
+.cc-accordion-header .fa {
+  transition: transform 0.3s;
+}
+
+.cc-accordion-header.collapsed .fa-chevron-down {
+  transform: rotate(-90deg);
+}
+
+.cc-accordion-content {
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.3s ease, opacity 0.3s ease;
+  opacity: 1;
+}
+
+.cc-accordion-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+
+.cc-accordion-badge {
+  background: rgba(255, 117, 24, 0.3);
+  color: var(--cc-primary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+/* === LOADER SPINNER === */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loader-spinner {
+  display: inline-block;
 }
