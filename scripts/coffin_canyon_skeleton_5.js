@@ -25,7 +25,7 @@ window.CCFB.define("components/skeleton", function(CCFB) {
 
     return {
         /**
-         * The Main Draw Function
+         * The Main Draw Function - NEW 3-COLUMN LAYOUT
          */
         draw: function() {
             if (window.location.href.includes("/web") && !window.location.href.includes("ccfb")) return;
@@ -65,7 +65,7 @@ window.CCFB.define("components/skeleton", function(CCFB) {
                     <div class="cc-header-area">
                         <div class="d-flex justify-content-between align-items-end mb-2">
                             <h1 class="m-0" style="font-weight: 900; letter-spacing: -1px;">COFFIN CANYON <span style="color:var(--cc-primary)">FACTION BUILDER</span></h1>
-                            <div id="display-total" title="Total cost in Liberty Bucks (₤), backed by Coffin Canyon silver">0 / 0 ₤</div>
+                            <div id="display-total">0 / 0 ₤</div>
                         </div>
 
                         <div id="auth-status-bar" style="text-align: center; padding: 6px; margin-bottom: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px; font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px;">
@@ -74,32 +74,33 @@ window.CCFB.define("components/skeleton", function(CCFB) {
 
                         <div class="sub-header-row d-flex align-items-center" style="gap: 10px; flex-wrap: wrap;">
                             <div class="d-flex align-items-center" style="flex-grow: 1; gap: 8px;">
-                                <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)" class="cc-select" title="Select your faction">
+                                <select id="f-selector" onchange="window.CCFB.handleFactionChange(this.value)" class="cc-select">
                                     <option value="">SELECT FACTION...</option>
                                 </select>
 
-                                <select id="budget-selector" onchange="window.CCFB.handleBudgetChange(this.value)" class="cc-select" title="Set your army point budget">
+                                <select id="budget-selector" onchange="window.CCFB.handleBudgetChange(this.value)" class="cc-select">
                                     <option value="0">UNLIMITED ₤</option>
                                     ${budgets.map(b => `<option value="${b}" ${CCFB.ui.budget == b ? 'selected' : ''}>${b} ₤</option>`).join('')}
                                 </select>
 
                                 <input type="text" id="roster-name" class="cc-input" placeholder="ROSTER NAME..." 
-                                       oninput="CCFB.ui.rosterName = this.value" value="${CCFB.ui.rosterName || ''}"
-                                       title="Give your army roster a name">
+                                       oninput="CCFB.ui.rosterName = this.value" value="${CCFB.ui.rosterName || ''}">
                             </div>
 
                             <div class="top-tools ml-auto d-flex" style="gap: 6px;">
-                                <button class="cc-tool-btn" onclick="window.CCFB.clearRoster()" title="Clear entire roster"><i class="fa fa-refresh"></i></button>
-                                <button class="cc-tool-btn" onclick="window.CCFB.saveRoster()" title="Save roster to Odoo Documents"><i class="fa fa-save"></i></button>
-                                <button class="cc-tool-btn" onclick="window.CCFB.loadRosterList()" title="Load a saved roster"><i class="fa fa-folder-open"></i></button>
-                                <button id="view-toggle-btn" class="cc-tool-btn" onclick="window.CCFB.toggleViewMode()" title="Toggle list view mode"><i class="fa fa-list"></i></button>
-                                <button class="cc-tool-btn" onclick="window.CCFB.shareRoster()" title="Copy shareable link to clipboard"><i class="fa fa-share-alt"></i></button>
-                                <button class="cc-tool-btn" onclick="window.print()" title="Print roster"><i class="fa fa-print"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.clearRoster()" title="Clear Roster"><i class="fa fa-refresh"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.saveRoster()" title="Save Roster (To Odoo)"><i class="fa fa-save"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.loadRosterList()" title="Load Saved Rosters"><i class="fa fa-folder-open"></i></button>
+                                <button id="view-toggle-btn" class="cc-tool-btn" onclick="window.CCFB.toggleViewMode()" title="Toggle List View"><i class="fa fa-list"></i></button>
+                                <button class="cc-tool-btn" onclick="window.CCFB.shareRoster()" title="Copy Share Link"><i class="fa fa-share-alt"></i></button>
+                                <button class="cc-tool-btn" onclick="window.print()" title="Print Roster"><i class="fa fa-print"></i></button>
                             </div>
                         </div>
                     </div>
 
+                    <!-- NEW 3-COLUMN LAYOUT -->
                     <div class="cc-grid">
+                        <!-- LEFT: UNIT LIBRARY -->
                         <div class="cc-panel" id="panel-library">
                             <div class="cc-panel-header">
                                 <span>
@@ -109,20 +110,26 @@ window.CCFB.define("components/skeleton", function(CCFB) {
                             </div>
                             <div id="lib-target"></div>
                         </div>
-                        <div class="cc-panel" id="panel-roster">
-                            <div class="cc-panel-header"><span><i class="fa fa-users"></i> ACTIVE ROSTER</span></div>
-                            <div id="rost-target"></div>
-                        </div>
-                        <div class="cc-panel" id="ccfb-details">
-                            <div class="cc-panel-header" style="border-bottom: 1px solid var(--cc-primary);">
-                                <span><i class="fa fa-search"></i> TACTICAL DATA</span>
+
+                        <!-- MIDDLE: UNIT BUILDER -->
+                        <div class="cc-panel" id="ccfb-builder">
+                            <div class="cc-panel-header">
+                                <span><i class="fa fa-wrench"></i> UNIT BUILDER</span>
                             </div>
-                            <div id="det-target">
+                            <div id="builder-target">
                                 <div class="cc-empty-state">
-                                    <i class="fa fa-crosshairs mb-3" style="font-size: 2rem; display: block;"></i>
-                                    SELECT A UNIT TO VIEW DATA
+                                    <i class="fa fa-mouse-pointer mb-3" style="font-size: 2rem; display: block;"></i>
+                                    SELECT A UNIT TO CUSTOMIZE
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- RIGHT: ACTIVE ROSTER -->
+                        <div class="cc-panel" id="panel-roster">
+                            <div class="cc-panel-header">
+                                <span><i class="fa fa-users"></i> ACTIVE ROSTER</span>
+                            </div>
+                            <div id="rost-target"></div>
                         </div>
                     </div>
                 </div>
