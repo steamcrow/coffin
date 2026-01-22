@@ -101,9 +101,9 @@
   "defense": 1,
   "move": 6,
   "range": 0,
-  "weapon": "Ritual Tools",
+  "weapon": "Ritual Eating Utensils",
   "weapon_properties": [],
-  "composition": { "per_points": 100 },
+  "composition": { "per_points": 200 },
   "abilities": [
     "load_and_carry",
     "ritual",
@@ -115,7 +115,8 @@
   "supplemental_abilities": [
     {
       "name": "Wheelbarrow Cultist",
-      "effect": "Reduce cost to 29. Lose abilities: ritual and taint_ground. Reduce Move by -1. Gain: Unholy Wheelbarrow (may carry up to 3 Mort/Thyr tokens), Bone Rosary (once per round, when this model would lose 1 Quality, roll 1d6; on a 5+ ignore the damage), and Gas Mask (immune to Choking and gas effects)."
+      "cost": -20,
+      "effect": "Lose abilities: ritual and taint_ground. Reduce Move by -1. Gain: Unholy Wheelbarrow (may carry up to 3 Mort/Thyr tokens), Bone Rosary (once per round, when this model would lose 1 Quality, roll 1d6; on a 5+ ignore the damage), and Gas Mask (immune to Choking and gas effects)."
     }
   ],
 
