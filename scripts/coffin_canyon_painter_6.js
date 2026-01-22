@@ -8,10 +8,11 @@ CCFB.define("components/painter", function(C) {
     C.ui.builderTarget = null; 
     
     // ============================================
-    // UTILITY FUNCTIONS
+    // UTILITY FUNCTIONS (RESTORED)
     // ============================================
     const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const enc = (s) => encodeURIComponent(String(s ?? ""));
+    const dec = (s) => decodeURIComponent(String(s ?? ""));
     const getName = (val) => (typeof val === 'object' ? val.name : val);
 
     const formatCategory = (cat) => {
@@ -32,7 +33,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // RULE PANELS (STAT & ABILITY)
+    // RULE PANELS
     // ============================================
     window.CCFB.showRulePanel = (abilityName) => {
         const abilityData = getAbilityFull(abilityName);
@@ -120,8 +121,11 @@ CCFB.define("components/painter", function(C) {
             base = faction.units.find(u => u.name === C.ui.builderTarget);
         } else {
             const rosterItem = C.ui.roster.find(r => String(r.id) === String(C.ui.builderTarget));
+            if(!rosterItem) return;
             base = faction.units.find(u => u.name === rosterItem.uN);
         }
+
+        if (!base) return;
 
         const totalCost = base.cost + (config.upgrades?.reduce((sum, u) => sum + (u.cost || 0), 0) || 0);
 
@@ -136,7 +140,7 @@ CCFB.define("components/painter", function(C) {
 
                 <div class="u-type mt-4">ABILITIES</div>
                 <div class="ability-list-compact">
-                    ${(base.abilities || []).map(a => `<div class="ability-boxed-callout"><b>${esc(getName(a))}</b>: ${esc(getAbilityFull(a)?.effect || '')}</div>`).join('')}
+                    ${(base.abilities || []).map(a => `<div class="ability-boxed-callout"><b>${esc(getName(a))}</b>: ${esc(getAbilityFull(a)?.effect || 'No data.')}</div>`).join('')}
                 </div>
 
                 <div class="u-type mt-4">UPGRADES</div>
@@ -156,15 +160,54 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // REFRESH UI & ZEBRA CARDS
+    // CORE LOGIC & REFRESH
     // ============================================
+    window.CCFB.toggleUpgrade = (name, cost) => {
+        const config = window.CCFB.getBuilderConfig();
+        if (!config) return;
+        const idx = config.upgrades.findIndex(u => u.name === name);
+        if (idx > -1) config.upgrades.splice(idx, 1);
+        else config.upgrades.push({name, cost});
+        window.CCFB.renderBuilder();
+        window.CCFB.refreshUI();
+    };
+
+    window.CCFB.addToRosterFromBuilder = () => {
+        const unitName = C.ui.builderTarget;
+        const faction = C.state.factions[C.ui.fKey];
+        const base = faction.units.find(u => u.name === unitName);
+        const config = C.ui.libraryConfigs[unitName] || { upgrades: [] };
+        
+        C.ui.roster.push({
+            id: Date.now(),
+            uN: unitName,
+            cost: base.cost,
+            upgrades: [...config.upgrades]
+        });
+
+        delete C.ui.libraryConfigs[unitName];
+        C.ui.builderMode = null;
+        C.ui.builderTarget = null;
+        window.CCFB.refreshUI();
+        window.CCFB.renderBuilder();
+    };
+
+    window.CCFB.removeFromRoster = (id) => {
+        C.ui.roster = C.ui.roster.filter(r => String(r.id) !== String(id));
+        if (C.ui.builderTarget === id) {
+            C.ui.builderMode = null;
+            C.ui.builderTarget = null;
+        }
+        window.CCFB.refreshUI();
+        window.CCFB.renderBuilder();
+    };
+
     window.CCFB.refreshUI = () => {
         const faction = C.state.factions[C.ui.fKey];
         const libTarget = document.getElementById("lib-target");
         const rosterTarget = document.getElementById("rost-target");
         if (!faction || !libTarget || !rosterTarget) return;
 
-        // LIBRARY RENDERING
         libTarget.innerHTML = faction.units.map((unit, index) => {
             const isSelected = C.ui.builderMode === 'library' && C.ui.builderTarget === unit.name;
             return `
@@ -179,7 +222,6 @@ CCFB.define("components/painter", function(C) {
                 </div>`;
         }).join('');
 
-        // ROSTER RENDERING
         rosterTarget.innerHTML = (C.ui.roster || []).map((item, index) => {
             const unit = faction.units.find(u => u.name === item.uN);
             const isSelected = C.ui.builderMode === 'roster' && String(C.ui.builderTarget) === String(item.id);
@@ -192,17 +234,15 @@ CCFB.define("components/painter", function(C) {
                         <div class="u-name">${esc(unit.name)}</div>
                         <div class="u-cost">${total} ₤</div>
                     </div>
-                    <div class="small opacity-50">${(item.upgrades || []).map(u => u.name).join(', ')}</div>
                     <button class="cc-item-remove" onclick="event.stopPropagation(); window.CCFB.removeFromRoster('${item.id}')">&times;</button>
                 </div>`;
         }).join('');
 
-        // Update Total
         const total = C.ui.roster.reduce((sum, item) => sum + item.cost + (item.upgrades?.reduce((a, b) => a + b.cost, 0) || 0), 0);
-        document.getElementById("display-total").innerText = `${total} / ${C.ui.budget || '∞'} ₤`;
+        const totalDisplay = document.getElementById("display-total");
+        if(totalDisplay) totalDisplay.innerText = `${total} / ${C.ui.budget || '∞'} ₤`;
     };
 
-    // Standard control hooks
     window.CCFB.selectLib = (name) => { C.ui.builderMode = 'library'; C.ui.builderTarget = dec(name); window.CCFB.refreshUI(); window.CCFB.renderBuilder(); };
     window.CCFB.selectRoster = (id) => { C.ui.builderMode = 'roster'; C.ui.builderTarget = id; window.CCFB.refreshUI(); window.CCFB.renderBuilder(); };
     window.CCFB.getBuilderConfig = () => {
