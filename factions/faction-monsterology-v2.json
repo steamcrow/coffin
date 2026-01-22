@@ -107,34 +107,52 @@
   "abilities": [
     "load_and_carry",
     "ritual",
-    "feast_tithe",
-    "funeral_wake",
-    "grief_magnet",
-    "sacrificial_overload"
+    "taint_ground"
   ],
-  "lore": "High priest cultists trained to harvest Mort from fallen monsters and deliver it to the Feast Bishop. Devourer Adepts serve as ritual couriers, bridging death, corruption, and divine ingestion.",
-  "tactics": "Ritual objective runners. Collect Mort and Thyr from the battlefield and deliver them to the Feast Bishop to generate Victory Points, summon Haunts, radiate fear, and trigger catastrophic sacrificial rituals.",
+  "lore": "High priest cultists who harvest Mort and Thyr for the Feast Bishop. They oversee sacrificial logistics, seed Haunts, and conduct the Great Workings.",
+  "tactics": "Ritual engine and VP generator. Use Devourer Adepts to collect Mort, deliver it to the Feast Bishop, and corrupt terrain through sustained sacrifice.",
+
+  "supplemental_abilities": [
+    {
+      "name": "Wheelbarrow Cultist",
+      "effect": "Reduce cost to 29. Lose abilities: ritual and taint_ground. Reduce Move by -1. Gain: Unholy Wheelbarrow (may carry up to 3 Mort/Thyr tokens), Bone Rosary (once per round, when this model would lose 1 Quality, roll 1d6; on a 5+ ignore the damage), and Gas Mask (immune to Choking and gas effects)."
+    }
+  ],
+
   "optional_upgrades": [
     {
-      "name": "Unholy Wheelbarrow",
-      "cost": 10,
-      "type": "Gear",
-      "effect": "This model may carry up to 3 total tokens of Mort and/or Thyr. Reduce Move by -1."
+      "name": "Doom Turnip",
+      "cost": 4,
+      "type": "Upgrade",
+      "effect": "Once per game. Plant a cursed ritual turnip in Tainted or Haunted terrain within 3\". At the end of the round, a Haunt is spawned adjacent and all units within 3\" suffer 1 automatic damage."
     },
     {
-      "name": "Ritual Satchel",
+      "name": "Chalice of Bile",
+      "cost": 3,
+      "type": "Upgrade",
+      "effect": "Once per game. Spend 1 Mort token. All friendly Monsterology units within 6\" gain Regeneration until the end of the round."
+    },
+    {
+      "name": "Sacrificial Overload",
       "cost": 5,
-      "type": "Gear",
-      "effect": "Once per round, this model may pick up or drop a carried token as a free action."
+      "type": "Upgrade",
+      "effect": "Once per game. Spend 1 Mort and 1 Thyr crystal. Ignore all Fallout and Backlash this round. The terrain within 3\" becomes Hazardous and Haunted."
+    },
+    {
+      "name": "Bone Rosary",
+      "cost": 2,
+      "type": "Upgrade",
+      "effect": "Passive. Once per round, when this model would lose 1 Quality, roll 1d6. On a 5+, ignore the damage."
     },
     {
       "name": "Gas Mask",
-      "cost": 5,
-      "type": "Gear",
-      "effect": "This unit ignores Coffin Cough, Choking Dust, and other environmental gas or smoke effects."
+      "cost": 1,
+      "type": "Upgrade",
+      "effect": "Passive. This unit ignores Coffin Cough, Choking Dust, and other environmental gas or smoke effects."
     }
   ]
 }
+
     
     {
       "name": "Plugugly",
