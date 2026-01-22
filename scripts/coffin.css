@@ -25,6 +25,7 @@
   grid-template-columns: 0.9fr 1.3fr 1fr; 
   gap: 20px; 
   align-items: start;
+  margin-top: 20px;
 }
 
 /* === STICKY BUILDER PANEL === */
