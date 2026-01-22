@@ -1,209 +1,79 @@
 /* =========================================================
-   COFFIN CANYON MASTER STYLES - REFACTORED
+   COFFIN CANYON - RESTORED MASTER STYLES
    ========================================================= */
 
 :root {
-    /* Brand Palette */
     --cc-primary: #ff7518;
-    --cc-primary-dim: rgba(255, 117, 24, 0.15);
     --cc-bg-main: #1a1a1a;
     --cc-bg-panel: #121212;
     --cc-border: rgba(255, 255, 255, 0.1);
     --cc-text: #e0e0e0;
-    --cc-text-muted: #999;
-    
-    /* Layout */
-    --panel-radius: 6px;
-    --transition: 0.2s ease-in-out;
 }
 
-/* === GLOBAL BASE === */
-#ccfb-app { 
-    padding: 20px; 
-    color: var(--cc-text);
-    font-family: system-ui, -apple-system, sans-serif;
-    background: var(--cc-bg-main);
-    min-height: 100vh;
-}
+/* === RESTORED ACCORDION & HYPERLINKS === */
+.rule-link { color: var(--cc-primary); text-decoration: none; border-bottom: 1px dashed; }
+.rule-link:hover { color: #fff; border-bottom-style: solid; }
 
-/* === GRID SYSTEM (The "App" View) === */
-.cc-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1.4fr 1.1fr; 
-    gap: 20px; 
-    align-items: start;
-    margin-top: 20px;
-}
+/* The Accordion hooks your JS uses */
+.cc-accordion-content { display: none; padding: 10px; background: rgba(0,0,0,0.2); }
+.cc-accordion-content.active { display: block; }
 
-/* === PANELS & COMPONENTS === */
-.cc-panel { 
-    background: var(--cc-bg-panel);
-    border: 1px solid var(--cc-border);
-    border-radius: var(--panel-radius);
-    overflow: hidden;
-}
-
-.cc-panel-header {
-    background: rgba(255,255,255,0.05);
-    padding: 12px 15px;
-    border-bottom: 1px solid var(--cc-border);
-    font-weight: 900;
-    text-transform: uppercase;
-    font-size: 11px;
-    letter-spacing: 1px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-/* === THE UNIT LIST (CARD VIEW) === */
-.cc-roster-item { 
-    display: flex; 
-    flex-direction: column;
-    padding: 15px; 
-    cursor: pointer; 
-    transition: var(--transition);
-    border-bottom: 1px solid var(--cc-border);
-    position: relative;
-    background: transparent;
-}
-
-.cc-roster-item:hover { 
-    background: var(--cc-primary-dim);
-    border-left: 4px solid var(--cc-primary);
-}
-
-.cc-item-selected {
-    background: var(--cc-primary-dim) !important;
-    border-left: 4px solid var(--cc-primary) !important;
-}
-/* === THE GLOW & JUICE LAYER === */
-
-/* 1. Glowing Icons */
-.fa, i[class*="fa-"] {
-  color: var(--cc-primary);
-  filter: drop-shadow(0 0 5px rgba(255, 117, 24, 0.4));
-  transition: all 0.3s ease;
-}
-
-/* 2. Interactive Button Glows */
-.cc-tool-btn:hover, .btn-outline-warning:hover {
-  box-shadow: 0 0 15px var(--cc-primary-dim);
-  border-color: var(--cc-primary);
-  transform: translateY(-1px);
-}
-
-.cc-tool-btn:hover .fa {
-  filter: drop-shadow(0 0 8px var(--cc-primary));
-  transform: scale(1.1);
-}
-
-/* 3. The "Stat Pulse" for modified values */
-.stat-modified {
-  animation: cc-stat-pulse 2s infinite;
-  border-color: var(--cc-primary) !important;
-}
-
-@keyframes cc-stat-pulse {
-  0%, 100% { box-shadow: 0 0 5px rgba(255, 117, 24, 0.4); }
-  50% { box-shadow: 0 0 12px rgba(255, 117, 24, 0.8); }
-}
-
-/* 4. Roster Item Slide-In Effect */
-.cc-roster-item {
-  border-left: 0 solid var(--cc-primary);
-  transition: all 0.2s ease-out;
-}
-
-.cc-roster-item:hover {
-  background: linear-gradient(90deg, var(--cc-primary-dim) 0%, transparent 100%);
-  border-left: 4px solid var(--cc-primary);
-  padding-left: 19px; /* Shifting text slightly on hover for "active" feel */
-}
-
-/* 5. Library Add Button (+) Glow */
-.btn-plus-lib {
-  transition: all 0.3s ease;
-  opacity: 0.3;
-}
-
-.cc-roster-item:hover .btn-plus-lib {
-  opacity: 1;
-  filter: drop-shadow(0 0 10px var(--cc-primary));
-  transform: scale(1.2) rotate(90deg); /* Subtle spin on the plus icon */
-}
-/* === COMPACT LIST MODE (The "Scannable" View) === */
-.list-focused .cc-grid {
-    grid-template-columns: 1fr !important;
-    max-width: 1100px;
-    margin: 0 auto;
-}
-
-.list-focused #panel-library, 
-.list-focused #ccfb-builder { display: none !important; }
-
-.list-focused .cc-roster-item {
-    flex-direction: row !important;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 20px;
-    gap: 20px;
-}
-
-.list-focused .stat-badge-flex { margin: 0; }
-.list-focused .u-name { margin: 0; width: 200px; }
-
-/* === RULEBOOK STYLES (The "Rules App") === */
-.cc-rulebook {
-    line-height: 1.8;
-    color: var(--cc-text);
-}
-
-.cc-rule-h2 {
-    background: linear-gradient(90deg, rgba(255,117,24,0.1) 0%, transparent 100%);
-    padding-left: 10px;
-    border-left: 4px solid var(--cc-primary);
-}
-
-.cc-rule-h3 { color: #fff; margin-top: 30px; font-weight: 800; }
-.cc-rule-h4 { color: var(--cc-text-muted); margin-top: 20px; font-weight: 700; font-style: italic; }
-
-.cc-rulebook ul { padding-left: 20px; margin: 15px 0; }
-.cc-rulebook li { margin-bottom: 8px; }
-
-/* === STAT BADGES (STAY DARK FOR CONTRAST) === */
+/* === STAT BADGES (COLOR-CODED OUTLINES) === */
 .cc-stat-badge { 
     display: inline-flex; 
-    border-radius: 3px; 
+    border-radius: 4px; 
     overflow: hidden; 
-    border: 2px solid #000;
+    margin-right: 5px;
+    background: #000;
+    border: 2px solid transparent; /* Logic below */
 }
-.cc-stat-label { padding: 3px 6px; font-size: 10px; font-weight: 900; color: #fff; text-transform: uppercase; }
-.cc-stat-value { background: #000; color: #fff; padding: 3px 8px; font-size: 11px; font-weight: bold; min-width: 22px; text-align: center; }
+.cc-stat-label { padding: 2px 6px; font-size: 10px; font-weight: 900; color: #fff; }
+.cc-stat-value { padding: 2px 8px; font-size: 11px; font-weight: bold; background: #000; color: #fff; }
 
-.stat-q { background: #2c5282; }
-.stat-d { background: #9b2c2c; }
-.stat-m { background: #276749; }
-.stat-r { background: #744210; }
+/* Specific Outlines/Labels */
+.stat-q { border-color: #2c5282 !important; background: #2c5282 !important; }
+.stat-d { border-color: #9b2c2c !important; background: #9b2c2c !important; }
+.stat-m { border-color: #276749 !important; background: #276749 !important; }
+.stat-r { border-color: #744210 !important; background: #744210 !important; }
 
-/* === PRINT LOGIC (INK SAVER) === */
-@media print {
-    :root {
-        --cc-bg-main: #fff;
-        --cc-bg-panel: #fff;
-        --cc-text: #000;
-        --cc-border: #eee;
-    }
-    
-    #ccfb-app { padding: 0; }
-    .cc-header-area, .top-tools, .cc-item-controls, .btn-minus { display: none !important; }
-    
-    .cc-roster-item {
-        color: #000 !important;
-        border-bottom: 1px solid #000 !important;
-        background: #fff !important;
-        page-break-inside: avoid;
-    }
-    
-    .cc-stat-value { background: #fff !important; color: #000 !important; border-left: 1px solid #000 !important; }
+/* === ZEBRA FORMATTING & HOVERS === */
+.cc-roster-item { border-bottom: 1px solid var(--cc-border); transition: 0.2s; }
+.cc-roster-item:nth-child(even) { background: rgba(255,255,255,0.02); }
+.cc-roster-item:hover { background: rgba(255, 117, 24, 0.1) !important; }
+
+/* === UNIT LIMITS (DIMMING) === */
+.unit-maxed {
+    opacity: 0.4;
+    filter: grayscale(1);
+    pointer-events: none; /* Prevents adding more if maxed */
+    position: relative;
+}
+.unit-maxed::after {
+    content: "MAX REACHED";
+    position: absolute;
+    top: 5px; right: 5px;
+    font-size: 9px; color: var(--cc-primary);
+}
+
+/* === 3-COLUMN SIDEBAR LAYOUT (FIXED) === */
+.cc-grid {
+    display: grid;
+    grid-template-columns: 320px 1fr 350px; /* Library | Builder | Roster */
+    gap: 20px;
+    align-items: start;
+}
+
+/* Ensure the library stays in its column */
+#panel-library { grid-column: 1; }
+#ccfb-builder { grid-column: 2; }
+#panel-roster  { grid-column: 3; }
+
+/* === COMPACT LIST VIEW OVERRIDE === */
+.list-focused .cc-grid {
+    display: block !important;
+}
+.list-focused .cc-roster-item {
+    display: flex !important;
+    justify-content: space-between;
+    padding: 5px 15px;
 }
