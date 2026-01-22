@@ -67,7 +67,7 @@
       "weapon": "Chemical Sprayer",
       "weapon_properties": ["Blinding"],
       "composition": { "per_points": 200 },
-      "abilities": ["assistant", "smoke_screen", "gas_mask"],
+      "abilities": ["assistant", "smoke screen", "gas mask"],
       "lore": "Lab assistants equipped with unstable chemical sprayers, monster pheromones, and sealed breathing rigs. Chemist Lackeys reshape the battlefield through gas, toxins, and behavioral manipulation.",
       "tactics": "Board control specialists. Use smoke to block clarity, split formations, and enable monster traps. Supports Scientists and ritual units while denying space to the enemy.",
       "optional_upgrades": [
@@ -104,9 +104,9 @@
       "weapon_properties": [],
       "composition": { "per_points": 200 },
       "abilities": [
-        "load_and_carry",
+        "load and carry",
         "ritual",
-        "taint_ground"
+        "taint ground"
       ],
       "lore": "High priest cultists who harvest Mort and Thyr for the Feast Bishop. They oversee sacrificial logistics, seed Haunts, and conduct the Great Workings.",
       "tactics": "Ritual engine and VP generator. Use Devourer Adepts to collect Mort, deliver it to the Feast Bishop, and corrupt terrain through sustained sacrifice.",
