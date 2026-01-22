@@ -130,16 +130,80 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // STAT BADGES
+    // STAT BADGE RULE DEFINITIONS
+    // ============================================
+    const STAT_RULES = {
+        q: {
+            name: "Quality (Q)",
+            effect: "Roll this many d6 dice when making attacks, tests, or special actions. Each 4+ is a success. Quality represents training, toughness, nerve, and luck. When Quality drops due to damage, everything becomes harder - this is the Death Spiral."
+        },
+        d: {
+            name: "Defense (D)",
+            effect: "Passive defensive value. When attacked, enemy successes must exceed your Defense to deal damage. Each success beyond Defense deals 1 damage. Defense represents positioning, cover, armor, or skill. Modified by Cover (+1 vs ranged) and weapon properties like Pierce."
+        },
+        r: {
+            name: "Range (R)",
+            effect: "Maximum attack distance in inches. Ranged attacks require Line of Sight and cannot be used if engaged in melee. A dash (-) means melee only. Some weapons have properties that modify effective range."
+        },
+        m: {
+            name: "Move (M)",
+            effect: "Movement distance in inches per Move action. Can be split between other actions (Move-Attack-Move). Terrain may reduce movement: Difficult terrain halves movement, Impassable terrain blocks it entirely."
+        }
+    };
+
+    window.CCFB.showStatRule = (statKey) => {
+        const rule = STAT_RULES[statKey];
+        if (!rule) return;
+
+        const existing = document.getElementById('rule-panel');
+        if (existing) existing.remove();
+
+        const panel = document.createElement('div');
+        panel.id = 'rule-panel';
+        panel.className = 'cc-slide-panel';
+        
+        panel.innerHTML = `
+            <div class="cc-slide-panel-header">
+                <h2><i class="fa fa-book"></i> ${esc(rule.name)}</h2>
+                <button onclick="window.CCFB.closeRulePanel()" class="cc-panel-close-btn">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div class="rule-content-box">
+                <div style="font-size: 14px; line-height: 1.6;">
+                    ${esc(rule.effect)}
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(panel);
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+
+        setTimeout(() => {
+            const closeOnClickOutside = (e) => {
+                if (!panel.contains(e.target)) {
+                    window.CCFB.closeRulePanel();
+                    document.removeEventListener('click', closeOnClickOutside);
+                }
+            };
+            document.addEventListener('click', closeOnClickOutside);
+        }, 100);
+    };
+
+    // ============================================
+    // STAT BADGES (Clickable with live updates)
     // ============================================
     const buildStatBadges = (unit, rosterItem = null) => {
-        const mod = { 
+        const base = { 
             q: unit.quality, 
             d: unit.defense, 
             r: unit.range || 0, 
             m: unit.move 
         };
 
+        const mod = { ...base };
+
+        // Apply upgrade modifiers
         if (rosterItem?.upgrades) {
             rosterItem.upgrades.forEach(u => {
                 const def = unit.optional_upgrades?.find(upg => upg.name === u.name);
@@ -155,18 +219,25 @@ CCFB.define("components/painter", function(C) {
             });
         }
 
-        const badge = (label, val, cls, tooltip) => `
-            <div class="cc-stat-badge stat-${cls}-border" title="${tooltip}">
-                <span class="cc-stat-label stat-${cls}">${label}</span>
-                <span class="cc-stat-value">${val === 0 ? '-' : val}</span>
-            </div>`;
+        const badge = (label, val, baseval, cls, tooltip, statKey) => {
+            const modified = val !== baseval;
+            const modClass = modified ? 'stat-modified' : '';
+            return `
+                <div class="cc-stat-badge stat-${cls}-border ${modClass}" 
+                     title="${tooltip}${modified ? ' (Modified by upgrades)' : ''}"
+                     onclick="event.stopPropagation(); window.CCFB.showStatRule('${statKey}')"
+                     style="cursor: pointer;">
+                    <span class="cc-stat-label stat-${cls}">${label}</span>
+                    <span class="cc-stat-value">${val === 0 ? '-' : val}</span>
+                </div>`;
+        };
         
         return `
             <div class="stat-badge-flex">
-                ${badge('Q', mod.q, 'q', 'Quality - Roll this many dice for actions')}
-                ${badge('D', mod.d, 'd', 'Defense - Enemy successes must exceed this')}
-                ${badge('R', mod.r, 'r', 'Range - Attack distance in inches')}
-                ${badge('M', mod.m, 'm', 'Move - Movement distance in inches')}
+                ${badge('Q', mod.q, base.q, 'q', 'Quality - Roll this many dice for actions', 'q')}
+                ${badge('D', mod.d, base.d, 'd', 'Defense - Enemy successes must exceed this', 'd')}
+                ${badge('R', mod.r, base.r, 'r', 'Range - Attack distance in inches', 'r')}
+                ${badge('M', mod.m, base.m, 'm', 'Move - Movement distance in inches', 'm')}
             </div>`;
     };
 
@@ -261,6 +332,9 @@ CCFB.define("components/painter", function(C) {
         const config = isLib ? (C.ui.libraryConfigs[base.name] || {upgrades:[]}) : unit;
         const totalCost = (unit.cost || base.cost) + (config.upgrades?.reduce((sum, u) => sum + (u.cost || 0), 0) || 0);
 
+        // For stat badges, create a temporary roster item object with upgrades
+        const statBadgeUnit = isLib ? { ...config } : unit;
+
         target.innerHTML = `
             <div class="cc-detail-wrapper">
                 <!-- NAME & COST -->
@@ -272,8 +346,8 @@ CCFB.define("components/painter", function(C) {
                 <!-- TYPE -->
                 <div class="u-type">${esc(base.type)}</div>
 
-                <!-- STATS -->
-                ${buildStatBadges(base, isLib ? null : unit)}
+                <!-- STATS (with upgrade modifiers applied) -->
+                ${buildStatBadges(base, statBadgeUnit)}
 
                 <!-- LORE -->
                 <div class="u-lore">"${esc(base.lore || 'Classified intel.')}"</div>
@@ -523,14 +597,20 @@ CCFB.define("components/painter", function(C) {
             `;
         };
 
-        // Render library cards
+        // Render library cards (with limit checking)
         const renderLibCard = (unit) => {
+            const limitCheck = canAddUnit(unit.name);
+            const atLimit = !limitCheck.canAdd;
+            const dimClass = atLimit ? 'cc-unit-at-limit' : '';
+            
             return `
-                <div class="cc-roster-item" 
-                     onclick="window.CCFB.selectLib('${enc(unit.name)}')">
+                <div class="cc-roster-item ${dimClass}" 
+                     onclick="window.CCFB.selectLib('${enc(unit.name)}')"
+                     ${atLimit ? `title="Cannot add: ${limitCheck.reason}"` : ''}>
                     <div class="cc-item-controls" style="left: 10px; right: auto;">
                         <button class="btn-plus-lib" 
-                                onclick="event.stopPropagation(); window.CCFB.addToRoster('${enc(unit.name)}', ${unit.cost})">
+                                onclick="event.stopPropagation(); window.CCFB.addToRoster('${enc(unit.name)}', ${unit.cost})"
+                                ${atLimit ? 'disabled style="opacity: 0.3; cursor: not-allowed;"' : ''}>
                             <i class="fa fa-plus"></i>
                         </button>
                     </div>
@@ -542,6 +622,11 @@ CCFB.define("components/painter", function(C) {
                         </div>
                         ${buildStatBadges(unit)}
                         ${renderAbilityLinks(unit.abilities)}
+                        ${atLimit ? `
+                            <div class="small mt-2" style="color: #ff5555; opacity: 0.8;">
+                                <i class="fa fa-ban"></i> ${limitCheck.reason}
+                            </div>
+                        ` : ''}
                     </div>
                 </div>
             `;
