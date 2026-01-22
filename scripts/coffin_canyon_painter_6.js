@@ -659,22 +659,79 @@ CCFB.define("components/painter", function(C) {
             const finalPrice = item.cost + upgCost;
             const isSelected = C.ui.builderMode === 'roster' && String(C.ui.builderTarget) === String(item.id);
 
+            // Get supplemental if selected
+            const selectedSupp = item.selectedSupplemental ? 
+                unit.supplemental_abilities?.find(s => s.name === item.selectedSupplemental) : null;
+
             if (isListView) {
                 return `
                     <div class="cc-roster-item ${isSelected ? 'cc-item-selected' : ''}" 
                          onclick="window.CCFB.selectRoster('${item.id}')">
                         <div style="flex: 1;">
-                            <div class="u-type">${esc(unit.type)}</div>
-                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                                <div class="u-name">${esc(unit.name)}</div>
-                                <div style="color: var(--cc-primary); font-weight: bold; font-size: 14px;">${finalPrice} ₤</div>
-                            </div>
-                            ${buildStatBadges(unit, item)}
-                            ${renderAbilityLinks(unit.abilities)}
-                            ${item.upgrades?.length ? `
-                                <div class="small mt-2" style="opacity: 0.7;">
-                                    <i class="fa fa-wrench"></i> ${item.upgrades.map(u => u.name).join(', ')}
+                            <!-- PRINT HEADER -->
+                            <div class="cc-print-unit-header">
+                                <div>
+                                    <div class="u-type">${esc(unit.type)}</div>
+                                    <div class="u-name">${esc(unit.name)}</div>
                                 </div>
+                                <div class="cc-print-cost">${finalPrice} ₤</div>
+                            </div>
+
+                            <!-- STATS -->
+                            ${buildStatBadges(unit, item)}
+
+                            <!-- WEAPON -->
+                            ${unit.weapon ? `
+                                <div class="cc-print-weapon">
+                                    <span class="cc-print-weapon-name">${esc(unit.weapon)}</span>
+                                    ${unit.weapon_properties?.length ? `
+                                        <span class="cc-print-weapon-props">
+                                            (${unit.weapon_properties.map(p => getName(p)).join(', ')})
+                                        </span>
+                                    ` : ''}
+                                </div>
+                            ` : ''}
+
+                            <!-- ABILITIES -->
+                            <div class="cc-print-abilities">
+                                <div class="cc-print-section-header">Abilities</div>
+                                <div class="cc-print-ability-list">
+                                    ${(unit.abilities || []).map(a => {
+                                        const name = getName(a);
+                                        const abilityData = getAbilityFull(a);
+                                        return `
+                                            <div class="cc-print-ability">
+                                                <span class="cc-print-ability-name">${esc(name)}</span>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+
+                            <!-- SUPPLEMENTAL -->
+                            ${selectedSupp ? `
+                                <div class="cc-print-supplemental">
+                                    <div class="cc-print-supplemental-name">${esc(selectedSupp.name)}</div>
+                                    <div class="cc-print-supplemental-effect">${esc(selectedSupp.effect)}</div>
+                                </div>
+                            ` : ''}
+
+                            <!-- UPGRADES -->
+                            ${item.upgrades?.length ? `
+                                <div class="cc-print-upgrades">
+                                    <div class="cc-print-section-header">Upgrades</div>
+                                    ${item.upgrades.map(u => `
+                                        <div class="cc-print-upgrade">
+                                            <span class="cc-print-upgrade-name">${esc(u.name)}</span>
+                                            <span class="cc-print-upgrade-cost">+${u.cost} ₤</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+
+                            <!-- LORE -->
+                            ${unit.lore ? `
+                                <div class="u-lore">"${esc(unit.lore)}"</div>
                             ` : ''}
                         </div>
                         <div class="cc-item-controls">
@@ -691,12 +748,76 @@ CCFB.define("components/painter", function(C) {
                 <div class="cc-roster-item ${isSelected ? 'cc-item-selected' : ''}" 
                      onclick="window.CCFB.selectRoster('${item.id}')">
                     <div style="width: 100%;">
-                        <div class="u-type">${esc(unit.type)}</div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <div class="u-name">${esc(unit.name)}</div>
-                            <div style="color: var(--cc-primary); font-weight: bold;">${finalPrice} ₤</div>
+                        <!-- PRINT HEADER -->
+                        <div class="cc-print-unit-header">
+                            <div>
+                                <div class="u-type">${esc(unit.type)}</div>
+                                <div class="u-name">${esc(unit.name)}</div>
+                            </div>
+                            <div class="cc-print-cost">${finalPrice} ₤</div>
                         </div>
+
+                        <!-- STATS -->
                         ${buildStatBadges(unit, item)}
+
+                        <!-- WEAPON -->
+                        ${unit.weapon ? `
+                            <div class="cc-print-weapon">
+                                <span class="cc-print-weapon-name">${esc(unit.weapon)}</span>
+                                ${unit.weapon_properties?.length ? `
+                                    <span class="cc-print-weapon-props">
+                                        (${unit.weapon_properties.map(p => getName(p)).join(', ')})
+                                    </span>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+
+                        <!-- ABILITIES (abbreviated for screen) -->
+                        ${renderAbilityLinks(unit.abilities)}
+
+                        <!-- PRINT-ONLY: Full abilities -->
+                        <div class="cc-print-abilities" style="display: none;">
+                            <div class="cc-print-section-header">Abilities</div>
+                            <div class="cc-print-ability-list">
+                                ${(unit.abilities || []).map(a => {
+                                    const name = getName(a);
+                                    return `
+                                        <div class="cc-print-ability">
+                                            <span class="cc-print-ability-name">${esc(name)}</span>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+
+                        <!-- SUPPLEMENTAL -->
+                        ${selectedSupp ? `
+                            <div class="cc-print-supplemental" style="margin-top: 8px; padding: 6px; background: rgba(255,117,24,0.1); border-left: 3px solid var(--cc-primary); display: none;">
+                                <div style="font-size: 10px; font-weight: 700; color: var(--cc-primary); margin-bottom: 3px;">${esc(selectedSupp.name)}</div>
+                                <div style="font-size: 9px; opacity: 0.8;">${esc(selectedSupp.effect)}</div>
+                            </div>
+                        ` : ''}
+
+                        <!-- UPGRADES -->
+                        ${item.upgrades?.length ? `
+                            <div class="small mt-2" style="opacity: 0.7;">
+                                <i class="fa fa-wrench"></i> ${item.upgrades.map(u => u.name).join(', ')}
+                            </div>
+                            <div class="cc-print-upgrades" style="display: none;">
+                                <div class="cc-print-section-header">Upgrades</div>
+                                ${item.upgrades.map(u => `
+                                    <div class="cc-print-upgrade">
+                                        <span class="cc-print-upgrade-name">${esc(u.name)}</span>
+                                        <span class="cc-print-upgrade-cost">+${u.cost} ₤</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+
+                        <!-- LORE (print only) -->
+                        ${unit.lore ? `
+                            <div class="u-lore" style="display: none;">"${esc(unit.lore)}"</div>
+                        ` : ''}
                     </div>
                     <div class="cc-item-controls">
                         <button class="btn-minus" 
@@ -804,6 +925,195 @@ CCFB.define("components/painter", function(C) {
     window.CCFB.handleBudgetChange = (val) => { 
         C.ui.budget = parseInt(val) || 0;
         window.CCFB.refreshUI(); 
+    };
+
+    // ============================================
+    // PRINT PREPARATION - BATTLEFIELD REFERENCE
+    // ============================================
+    window.CCFB.preparePrint = () => {
+        const roster = C.ui.roster || [];
+        const faction = C.state.factions[C.ui.fKey];
+        
+        if (!faction || roster.length === 0) {
+            alert("Add units to your roster before printing!");
+            return;
+        }
+
+        // Calculate total cost
+        const totalCost = roster.reduce((sum, item) => {
+            const upgCost = item.upgrades?.reduce((a, b) => a + (b.cost || 0), 0) || 0;
+            return sum + (item.cost || 0) + upgCost;
+        }, 0);
+
+        const rosterName = C.ui.rosterName || "Unnamed Roster";
+        const factionName = C.ui.fKey.split('_').map(w => 
+            w.charAt(0).toUpperCase() + w.slice(1)
+        ).join(' ');
+
+        // Collect all unique abilities, weapons, and supplementals
+        const usedAbilities = new Set();
+        const usedWeaponProps = new Set();
+        const supplementalRules = [];
+
+        roster.forEach(item => {
+            const unit = faction.units.find(u => u.name === item.uN);
+            if (!unit) return;
+
+            // Collect abilities
+            (unit.abilities || []).forEach(a => {
+                usedAbilities.add(getName(a));
+            });
+
+            // Collect weapon properties
+            (unit.weapon_properties || []).forEach(p => {
+                usedWeaponProps.add(getName(p));
+            });
+
+            // Collect selected supplemental
+            if (item.selectedSupplemental) {
+                const supp = unit.supplemental_abilities?.find(s => s.name === item.selectedSupplemental);
+                if (supp) {
+                    supplementalRules.push({
+                        unit: unit.name,
+                        name: supp.name,
+                        effect: supp.effect
+                    });
+                }
+            }
+        });
+
+        // Inject roster metadata
+        const rostTarget = document.getElementById('rost-target');
+        if (rostTarget) {
+            const info = `${esc(rosterName)} • ${esc(factionName)} • ${totalCost} ₤${C.ui.budget > 0 ? ` / ${C.ui.budget} ₤` : ''} • ${roster.length} Units`;
+            rostTarget.setAttribute('data-roster-info', info);
+        }
+
+        // Add upgrade indicators to roster items
+        roster.forEach(item => {
+            if (item.upgrades && item.upgrades.length > 0) {
+                const upgradeText = item.upgrades.map(u => `${u.name} (+${u.cost}₤)`).join(', ');
+                const itemEl = Array.from(document.querySelectorAll('.cc-roster-item')).find(el => 
+                    el.onclick && el.onclick.toString().includes(item.id)
+                );
+                
+                if (itemEl) {
+                    let upgradeDiv = itemEl.querySelector('.print-upgrades');
+                    if (!upgradeDiv) {
+                        upgradeDiv = document.createElement('div');
+                        upgradeDiv.className = 'print-upgrades';
+                        itemEl.querySelector('div').appendChild(upgradeDiv);
+                    }
+                    upgradeDiv.textContent = upgradeText;
+                }
+            }
+        });
+
+        // Build rules reference section
+        let rulesHTML = '<div class="print-rules-section">';
+        rulesHTML += '<h3>RULES REFERENCE</h3>';
+
+        // Abilities
+        if (usedAbilities.size > 0) {
+            rulesHTML += '<h4 style="font-size: 10pt; margin: 8pt 0 4pt 0; font-weight: bold;">Abilities</h4>';
+            Array.from(usedAbilities).sort().forEach(abilityName => {
+                const abilityData = getAbilityFull(abilityName);
+                if (abilityData) {
+                    rulesHTML += `
+                        <div class="print-rule-entry">
+                            <strong>${esc(abilityName)}:</strong> ${esc(abilityData.effect)}
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Weapon Properties
+        if (usedWeaponProps.size > 0) {
+            rulesHTML += '<h4 style="font-size: 10pt; margin: 8pt 0 4pt 0; font-weight: bold;">Weapon Properties</h4>';
+            Array.from(usedWeaponProps).sort().forEach(propName => {
+                const propData = getAbilityFull(propName);
+                if (propData) {
+                    rulesHTML += `
+                        <div class="print-rule-entry">
+                            <strong>${esc(propName)}:</strong> ${esc(propData.effect)}
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // Supplemental Abilities
+        if (supplementalRules.length > 0) {
+            rulesHTML += '<h4 style="font-size: 10pt; margin: 8pt 0 4pt 0; font-weight: bold;">Special Unit Variants</h4>';
+            supplementalRules.forEach(rule => {
+                rulesHTML += `
+                    <div class="print-rule-entry">
+                        <strong>${esc(rule.unit)} - ${esc(rule.name)}:</strong> ${esc(rule.effect)}
+                    </div>
+                `;
+            });
+        }
+
+        rulesHTML += '</div>';
+
+        // Add faction features
+        if (faction.faction_features && faction.faction_features.length > 0) {
+            rulesHTML += '<div class="print-faction-rules">';
+            rulesHTML += '<h4>' + esc(factionName) + ' Faction Rules</h4>';
+            faction.faction_features.forEach(feature => {
+                if (feature.required || feature.cost === 0) {
+                    rulesHTML += `<p><strong>${esc(feature.name)}:</strong> ${esc(feature.effect)}</p>`;
+                }
+            });
+            rulesHTML += '</div>';
+        }
+
+        // Add core game rules
+        rulesHTML += `
+            <div class="print-quick-ref">
+                <h4>CORE GAME RULES - QUICK REFERENCE</h4>
+                <ul>
+                    <li><strong>Quality Roll:</strong> Roll d6s equal to Quality. Each 4+ = 1 Success.</li>
+                    <li><strong>Attack Resolution:</strong> If Successes > Defense → Hit. Each success beyond Defense = 1 damage.</li>
+                    <li><strong>Death Spiral:</strong> When damaged, Quality drops, making all actions harder.</li>
+                    <li><strong>Morale Test:</strong> Roll Quality dice. 0 Successes = Shaken (or worse).</li>
+                    <li><strong>Cover:</strong> Grants +1 Defense vs ranged attacks.</li>
+                    <li><strong>Natural Six:</strong> Guarantees at least 1 damage if attack hits.</li>
+                    <li><strong>Critical Failure:</strong> All 1s = Action fails + Shaken.</li>
+                    <li><strong>Turn Order:</strong> Monsters activate first. Alternating activations (1 model at a time).</li>
+                    <li><strong>Actions:</strong> 2 Actions per activation. May repeat the same action.</li>
+                </ul>
+            </div>
+        `;
+
+        // Inject rules section
+        const rosterPanel = document.getElementById('panel-roster');
+        if (rosterPanel) {
+            let existingRules = rosterPanel.querySelector('.print-rules-section');
+            if (existingRules) existingRules.remove();
+            
+            existingRules = rosterPanel.querySelector('.print-faction-rules');
+            if (existingRules) existingRules.remove();
+            
+            existingRules = rosterPanel.querySelector('.print-quick-ref');
+            if (existingRules) existingRules.remove();
+            
+            rosterPanel.insertAdjacentHTML('beforeend', rulesHTML);
+        }
+
+        // Trigger print
+        setTimeout(() => window.print(), 200);
+    };
+
+    // Override native print
+    const originalPrint = window.print;
+    window.print = function() {
+        if (document.getElementById('ccfb-app')) {
+            window.CCFB.preparePrint();
+        } else {
+            originalPrint();
+        }
     };
 
     return { refreshUI: window.CCFB.refreshUI };
