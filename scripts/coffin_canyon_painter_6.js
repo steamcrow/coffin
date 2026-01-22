@@ -1,4 +1,4 @@
-// COFFIN CANYON PAINTER - COMPLETE VERSION
+// COFFIN CANYON PAINTER - COMPLETE VERSION WITH FIXES
 window.CCFB = window.CCFB || {};
 
 CCFB.define("components/painter", function(C) {
@@ -12,6 +12,40 @@ CCFB.define("components/painter", function(C) {
     const enc = (s) => encodeURIComponent(String(s ?? ""));
     const dec = (s) => decodeURIComponent(String(s ?? ""));
     const getName = (val) => (typeof val === 'object' ? val.name : val);
+
+    // ============================================
+    // UNIT LIMIT CHECKING
+    // ============================================
+    const canAddUnit = (unitName) => {
+        const faction = C.state.factions[C.ui.fKey];
+        if (!faction) return { canAdd: false, reason: "No faction loaded" };
+
+        const unit = faction.units.find(u => u.name === unitName);
+        if (!unit) return { canAdd: false, reason: "Unit not found" };
+
+        // Count how many of this unit are already in roster
+        const count = (C.ui.roster || []).filter(r => r.uN === unitName).length;
+
+        // Check max_count (absolute limit)
+        if (unit.max_count !== undefined && count >= unit.max_count) {
+            return { canAdd: false, reason: `Maximum ${unit.max_count} allowed` };
+        }
+
+        // Check composition per_points
+        if (unit.composition?.per_points) {
+            const budget = C.ui.budget || Infinity;
+            const maxAllowed = Math.floor(budget / unit.composition.per_points);
+            
+            if (count >= maxAllowed) {
+                return { 
+                    canAdd: false, 
+                    reason: `Budget allows ${maxAllowed} max (1 per ${unit.composition.per_points}₤)` 
+                };
+            }
+        }
+
+        return { canAdd: true };
+    };
 
     // ============================================
     // ABILITY LOOKUP
@@ -118,18 +152,18 @@ CCFB.define("components/painter", function(C) {
             });
         }
 
-        const badge = (label, val, cls) => `
-            <div class="cc-stat-badge stat-${cls}-border">
+        const badge = (label, val, cls, tooltip) => `
+            <div class="cc-stat-badge stat-${cls}-border" title="${tooltip}">
                 <span class="cc-stat-label stat-${cls}">${label}</span>
                 <span class="cc-stat-value">${val === 0 ? '-' : val}</span>
             </div>`;
         
         return `
             <div class="stat-badge-flex">
-                ${badge('Q', mod.q, 'q')}
-                ${badge('D', mod.d, 'd')}
-                ${badge('R', mod.r, 'r')}
-                ${badge('M', mod.m, 'm')}
+                ${badge('Q', mod.q, 'q', 'Quality - Roll this many dice for actions')}
+                ${badge('D', mod.d, 'd', 'Defense - Enemy successes must exceed this')}
+                ${badge('R', mod.r, 'r', 'Range - Attack distance in inches')}
+                ${badge('M', mod.m, 'm', 'Move - Movement distance in inches')}
             </div>`;
     };
 
@@ -314,10 +348,30 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // ADD TO ROSTER
+    // ADD TO ROSTER (with limit checking)
     // ============================================
     window.CCFB.addToRoster = (name, cost) => {
         const decoded = dec(name);
+        
+        // Check unit limits
+        const limitCheck = canAddUnit(decoded);
+        if (!limitCheck.canAdd) {
+            alert(`Cannot add ${decoded}: ${limitCheck.reason}`);
+            return;
+        }
+
+        // Check budget
+        const budget = C.ui.budget || Infinity;
+        const currentTotal = (C.ui.roster || []).reduce((sum, item) => {
+            const upgCost = item.upgrades?.reduce((a, b) => a + (b.cost || 0), 0) || 0;
+            return sum + (item.cost || 0) + upgCost;
+        }, 0);
+
+        if (currentTotal + cost > budget) {
+            alert(`Cannot add ${decoded}: Would exceed budget (${currentTotal + cost}₤ > ${budget}₤)`);
+            return;
+        }
+
         C.ui.roster.push({
             id: Date.now(),
             uN: decoded,
@@ -328,7 +382,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // TOGGLE UPGRADE
+    // TOGGLE UPGRADE (with budget checking)
     // ============================================
     window.CCFB.toggleUpgrade = (id, name, cost, isLib) => {
         let unit;
@@ -343,6 +397,21 @@ CCFB.define("components/painter", function(C) {
         if (!unit) return;
 
         const idx = unit.upgrades.findIndex(u => u.name === name);
+        
+        // If adding upgrade, check budget
+        if (idx === -1 && !isLib) {
+            const budget = C.ui.budget || Infinity;
+            const currentTotal = (C.ui.roster || []).reduce((sum, item) => {
+                const upgCost = item.upgrades?.reduce((a, b) => a + (b.cost || 0), 0) || 0;
+                return sum + (item.cost || 0) + upgCost;
+            }, 0);
+
+            if (currentTotal + cost > budget) {
+                alert(`Cannot add upgrade: Would exceed budget (${currentTotal + cost}₤ > ${budget}₤)`);
+                return;
+            }
+        }
+
         if (idx > -1) {
             unit.upgrades.splice(idx, 1);
         } else {
@@ -362,7 +431,7 @@ CCFB.define("components/painter", function(C) {
     };
 
     // ============================================
-    // REFRESH UI
+    // REFRESH UI (with budget color)
     // ============================================
     window.CCFB.refreshUI = () => {
         const faction = C.state.factions[C.ui.fKey];
@@ -378,11 +447,19 @@ CCFB.define("components/painter", function(C) {
             return sum + (item.cost || 0) + upgCost;
         }, 0);
 
+        const budget = C.ui.budget || Infinity;
+        const overBudget = total > budget;
+
         if (totalDisplay) {
-            totalDisplay.innerHTML = `${total} / ${C.ui.budget || '∞'} ₤`;
+            totalDisplay.innerHTML = `${total} / ${budget === Infinity ? '∞' : budget} ₤`;
+            totalDisplay.style.color = overBudget ? '#ff3333' : 'var(--cc-primary)';
+            totalDisplay.style.textShadow = overBudget ? '0 0 10px rgba(255, 51, 51, 0.8)' : 'none';
         }
 
-        // Render roster cards
+        // Check if in list view mode
+        const isListView = document.getElementById('ccfb-app')?.classList.contains('list-focused');
+
+        // Render roster cards (enhanced for list view)
         const renderRosterCard = (item) => {
             const unit = faction.units.find(u => u.name === item.uN);
             if (!unit) return '';
@@ -390,6 +467,38 @@ CCFB.define("components/painter", function(C) {
             const upgCost = item.upgrades?.reduce((a, b) => a + b.cost, 0) || 0;
             const finalPrice = item.cost + upgCost;
 
+            // In list view, show more detail
+            if (isListView) {
+                return `
+                    <div class="cc-roster-item" 
+                         onclick="window.CCFB.selectRoster('${item.id}')">
+                        <div style="flex: 1;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <div>
+                                    <div class="u-type">${esc(unit.type)}</div>
+                                    <div class="u-name">${esc(unit.name)}</div>
+                                </div>
+                                <div style="color: var(--cc-primary); font-weight: bold;">${finalPrice} ₤</div>
+                            </div>
+                            ${buildStatBadges(unit, item)}
+                            ${renderAbilityLinks(unit.abilities)}
+                            ${item.upgrades?.length ? `
+                                <div class="small mt-2" style="opacity: 0.7;">
+                                    <i class="fa fa-wrench"></i> ${item.upgrades.map(u => u.name).join(', ')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="cc-item-controls">
+                            <button class="btn-minus" 
+                                    onclick="event.stopPropagation(); window.CCFB.removeFromRoster('${item.id}')">
+                                <i class="fa fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Normal view
             return `
                 <div class="cc-roster-item" 
                      onclick="window.CCFB.selectRoster('${item.id}')">
@@ -474,12 +583,29 @@ CCFB.define("components/painter", function(C) {
     // UTILITY FUNCTIONS
     // ============================================
     window.CCFB.clearRoster = () => {
-        if (!confirm("Clear entire roster?")) return;
+        if (!confirm("Clear entire roster? This cannot be undone.")) return;
+        
+        console.log("🧹 Clearing roster...");
         C.ui.roster = [];
         C.ui.rosterName = "";
+        
         const nameInput = document.getElementById("roster-name");
         if (nameInput) nameInput.value = "";
+        
         window.CCFB.refreshUI();
+        
+        // Clear detail panel
+        const detTarget = document.getElementById("det-target");
+        if (detTarget) {
+            detTarget.innerHTML = `
+                <div class="cc-empty-state">
+                    <i class="fa fa-crosshairs mb-3" style="font-size: 2rem; display: block;"></i>
+                    SELECT A UNIT TO VIEW DATA
+                </div>
+            `;
+        }
+        
+        console.log("✅ Roster cleared");
     };
 
     window.CCFB.toggleViewMode = () => {
@@ -497,18 +623,35 @@ CCFB.define("components/painter", function(C) {
                 icon.className = 'fa fa-list';
             }
         }
+        
+        // Re-render to apply list view styling
+        window.CCFB.refreshUI();
     };
 
     // ============================================
-    // HANDLERS FOR SKELETON
+    // HANDLERS FOR SKELETON (FIXED)
     // ============================================
     window.CCFB.handleFactionChange = (key) => { 
-        C.ui.fKey = key; 
-        window.CCFB.refreshUI(); 
+        if (!key) return;
+        
+        console.log("🔄 Changing faction to:", key);
+        
+        // Clear roster when changing factions
+        C.ui.roster = [];
+        C.ui.rosterName = "";
+        
+        const nameInput = document.getElementById("roster-name");
+        if (nameInput) nameInput.value = "";
+        
+        // Call bootSequence to properly load faction
+        C.require(["data/loaders"], async (L) => {
+            await L.bootSequence(key);
+            console.log("✅ Faction loaded and UI refreshed");
+        });
     };
     
     window.CCFB.handleBudgetChange = (val) => { 
-        C.ui.budget = val; 
+        C.ui.budget = parseInt(val) || 0;
         window.CCFB.refreshUI(); 
     };
 
