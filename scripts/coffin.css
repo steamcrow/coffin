@@ -1,1057 +1,158 @@
 /* =========================================================
-   COFFIN CANYON FACTION BUILDER — MASTER CSS
+   COFFIN CANYON MASTER STYLES - REFACTORED
    ========================================================= */
 
-/* === IMPORT PRINT STYLES === */
-@import url('coffin_print.css') print;
-
-:root { 
-  --cc-primary: #ff7518;
-  --cc-primary-dim: rgba(255, 117, 24, 0.15);
-  --cc-bg-darker: #121212;
-  --cc-bg-soft: rgba(255, 255, 255, 0.03);
-  --cc-border: rgba(255, 255, 255, 0.1);
-  --cc-text-muted: #999;
+:root {
+    /* Brand Palette */
+    --cc-primary: #ff7518;
+    --cc-primary-dim: rgba(255, 117, 24, 0.15);
+    --cc-bg-main: #1a1a1a;
+    --cc-bg-panel: #121212;
+    --cc-border: rgba(255, 255, 255, 0.1);
+    --cc-text: #e0e0e0;
+    --cc-text-muted: #999;
+    
+    /* Layout */
+    --panel-radius: 6px;
+    --transition: 0.2s ease-in-out;
 }
 
-/* === GLOBAL STYLES === */
+/* === GLOBAL BASE === */
 #ccfb-app { 
-  padding: 20px; 
-  color: #e0e0e0;
-  font-family: system-ui, -apple-system, sans-serif;
-  background: #1a1a1a;
+    padding: 20px; 
+    color: var(--cc-text);
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--cc-bg-main);
+    min-height: 100vh;
 }
 
-/* === LAYOUT GRID === */
+/* === GRID SYSTEM (The "App" View) === */
 .cc-grid { 
-  display: grid; 
-  grid-template-columns: 0.9fr 1.3fr 1fr; 
-  gap: 20px; 
-  align-items: start;
-  margin-top: 20px;
-}
-
-/* === STICKY BUILDER PANEL === */
-#ccfb-builder {
-  position: sticky;
-  top: 20px;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--cc-primary);
-  border-radius: 6px;
-  padding: 15px;
-  min-height: 400px;
-}
-
-/* Legacy selector for backwards compatibility */
-#ccfb-details {
-  position: sticky;
-  top: 20px;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--cc-primary);
-  border-radius: 6px;
-  padding: 15px;
-  min-height: 400px;
-}
-
-/* === PANELS === */
-.cc-panel { 
-  background: var(--cc-bg-darker);
-  border: 1px solid var(--cc-border);
-  border-radius: 6px;
-  overflow: hidden;
-}
-
-.cc-panel-header {
-  background: rgba(255,255,255,0.05);
-  padding: 12px 15px;
-  border-bottom: 1px solid var(--cc-border);
-  font-weight: 900;
-  text-transform: uppercase;
-  font-size: 11px;
-  letter-spacing: 1px;
-}
-
-/* === ROSTER ITEMS (LEFT JUSTIFIED) === */
-.cc-roster-item { 
-  display: flex; 
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  padding: 15px; 
-  cursor: pointer; 
-  transition: 0.2s;
-  border-bottom: 1px solid var(--cc-border);
-  position: relative;
-}
-
-.cc-roster-item:hover { 
-  background: var(--cc-primary-dim);
-  border-left: 3px solid var(--cc-primary);
-}
-
-.cc-roster-item:nth-child(even) {
-  background: rgba(255,255,255,0.02);
-}
-
-.cc-item-controls {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-}
-
-/* === SELECTED ITEM HIGHLIGHTING === */
-.cc-item-selected {
-  background: rgba(255, 117, 24, 0.2) !important;
-  border-left: 4px solid var(--cc-primary) !important;
-  box-shadow: 0 0 15px rgba(255, 117, 24, 0.3);
-}
-
-/* === EMPTY STATE === */
-.cc-empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  opacity: 0.5;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-/* === STAT BADGES === */
-.stat-badge-flex { 
-  display: flex; 
-  justify-content: flex-start;
-  gap: 4px; 
-  margin: 8px 0;
-  flex-wrap: wrap;
-}
-
-.cc-stat-badge { 
-  display: inline-flex;
-  border-radius: 3px;
-  overflow: hidden;
-  border: 2px solid #000;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-  transition: all 0.2s ease;
-}
-
-.cc-stat-badge:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0,0,0,0.6);
-}
-
-.stat-modified {
-  box-shadow: 0 0 8px rgba(255, 117, 24, 0.6);
-  animation: stat-pulse 2s infinite;
-}
-
-@keyframes stat-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(255, 117, 24, 0.6); }
-  50% { box-shadow: 0 0 15px rgba(255, 117, 24, 0.9); }
-}
-
-.stat-q-border { border-color: #2c5282 !important; }
-.stat-d-border { border-color: #9b2c2c !important; }
-.stat-m-border { border-color: #276749 !important; }
-.stat-r-border { border-color: #744210 !important; }
-
-.cc-stat-label { 
-  padding: 3px 6px; 
-  font-size: 10px; 
-  font-weight: 900; 
-  color: #fff; 
-  text-transform: uppercase;
-}
-
-.cc-stat-value { 
-  background: #000; 
-  color: #fff; 
-  padding: 3px 8px; 
-  font-size: 11px; 
-  font-weight: bold; 
-  min-width: 22px; 
-  text-align: center;
-}
-
-.stat-q { background-color: #2c5282; }
-.stat-d { background-color: #9b2c2c; }
-.stat-m { background-color: #276749; }
-.stat-r { background-color: #744210; }
-
-/* === UNIT AT LIMIT === */
-.cc-unit-at-limit {
-  opacity: 0.4;
-  pointer-events: auto;
-  position: relative;
-}
-
-.cc-unit-at-limit::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 10px,
-    rgba(0,0,0,0.1) 10px,
-    rgba(0,0,0,0.1) 20px
-  );
-  pointer-events: none;
-}
-
-.cc-unit-at-limit .btn-plus-lib {
-  cursor: not-allowed !important;
-  opacity: 0.2 !important;
-}
-
-/* === TYPOGRAPHY === */
-.u-name { 
-  font-weight: 800; 
-  font-size: 14px;
-  text-transform: uppercase;
-  color: #fff;
-  margin: 5px 0;
-}
-.cc-rule-h2 {
-  color: #ff7518;
-  text-align: center;
-  margin-top: 40px;
-}
-
-.cc-rule-h3 {
-  color: #e0e0e0;
-  margin-top: 28px;
-  font-weight: 800;
-}
-
-.cc-rule-h4 {
-  color: #bcbcbc;
-  margin-top: 18px;
-  font-weight: 700;
-}
-
-.cc-rule-h5 {
-  color: #999;
-  margin-top: 14px;
-  font-weight: 600;
-}
-
-.u-type { 
-  font-size: 10px; 
-  color: var(--cc-primary);
-  font-weight: 700;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-
-.u-lore {
-  font-style: italic;
-  font-size: 12px;
-  opacity: 0.8;
-  border-left: 3px solid var(--cc-primary);
-  padding-left: 12px;
-  margin: 15px 0;
-  line-height: 1.5;
-  text-align: left;
-}
-
-/* === DETAIL BOXES === */
-.ability-boxed-callout {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid var(--cc-border);
-  border-radius: 4px;
-  padding: 10px;
-  margin-bottom: 8px;
-  text-align: left;
-}
-
-.field-notes-box {
-  background: rgba(255,117,24,0.05);
-  border: 1px solid rgba(255,117,24,0.2);
-  border-left: 4px solid var(--cc-primary);
-  padding: 12px;
-  margin: 15px 0;
-  border-radius: 0 4px 4px 0;
-  text-align: left;
-}
-
-.rule-link {
-  color: var(--cc-primary);
-  text-decoration: none;
-  border-bottom: 1px dotted var(--cc-primary);
-  cursor: help;
-  position: relative;
-  transition: 0.2s;
-}
-
-.rule-link:hover {
-  color: #fff;
-  background: var(--cc-primary-dim);
-  text-shadow: 0 0 8px rgba(255,117,24,0.8);
-}
-
-/* === SUPPLEMENTAL ABILITIES === */
-.supplemental-section {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,117,24,0.3);
-  border-radius: 4px;
-  padding: 12px;
-  margin: 15px 0;
-}
-
-.supplemental-header {
-  color: var(--cc-primary);
-  font-weight: 800;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
-}
-
-.supplemental-item {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--cc-border);
-  border-radius: 3px;
-  padding: 8px;
-  margin-bottom: 6px;
-}
-
-.supplemental-item-name {
-  color: var(--cc-primary);
-  font-weight: 700;
-  font-size: 12px;
-  margin-bottom: 3px;
-}
-
-.supplemental-item-effect {
-  font-size: 11px;
-  opacity: 0.8;
-  line-height: 1.4;
-}
-
-/* === BUTTONS === */
-.cc-tool-btn {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--cc-border);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.cc-tool-btn:hover {
-  background: var(--cc-primary-dim);
-  border-color: var(--cc-primary);
-  color: var(--cc-primary);
-}
-
-.btn-minus {
-  background: transparent;
-  border: 1px solid var(--cc-primary);
-  color: var(--cc-primary);
-  padding: 4px 8px;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
-  transition: 0.2s;
-}
-
-.btn-minus:hover {
-  background: var(--cc-primary);
-  color: #000;
-}
-
-.btn-plus-lib {
-  background: transparent;
-  border: none;
-  color: var(--cc-primary);
-  font-size: 24px;
-  cursor: pointer;
-  opacity: 0.4;
-  transition: 0.2s;
-  filter: drop-shadow(0 0 4px rgba(255,117,24,0.3));
-}
-
-.cc-roster-item:hover .btn-plus-lib {
-  opacity: 1;
-  transform: scale(1.15);
-  filter: drop-shadow(0 0 10px rgba(255,117,24,0.9));
-}
-
-.btn-outline-warning {
-  background: transparent;
-  border: 2px solid var(--cc-primary);
-  color: var(--cc-primary);
-  padding: 10px 20px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  text-transform: uppercase;
-  transition: 0.2s;
-  width: 100%;
-}
-
-.btn-outline-warning:hover {
-  background: var(--cc-primary);
-  color: #000;
-  box-shadow: 0 0 15px rgba(255,117,24,0.6);
-}
-
-/* === INPUTS === */
-.cc-select, .cc-input {
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--cc-border);
-  color: #fff;
-  padding: 8px 12px;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-#budget-selector {
-  color: var(--cc-primary);
-  font-weight: 700;
-}
-
-#display-total {
-  color: var(--cc-primary);
-  font-weight: 800;
-  font-size: 20px;
-}
-
-/* === UPGRADES === */
-.upgrade-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border: 1px solid var(--cc-border);
-  border-radius: 4px;
-  margin-bottom: 5px;
-  background: rgba(255,255,255,0.03);
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.upgrade-row:hover {
-  background: var(--cc-primary-dim);
-  border-color: var(--cc-primary);
-}
-
-.upgrade-row input[type="checkbox"] {
-  accent-color: var(--cc-primary);
-  width: 18px;
-  height: 18px;
-}
-
-/* === SLIDE PANEL === */
-.cc-slide-panel {
-  position: fixed;
-  top: 0;
-  right: -450px;
-  width: 400px;
-  height: 100vh;
-  background: #111;
-  border-left: 3px solid var(--cc-primary);
-  box-shadow: -10px 0 50px rgba(0,0,0,0.8);
-  z-index: 9999;
-  transition: right 0.3s ease-in-out;
-  overflow-y: auto;
-  padding: 20px;
-}
-
-.cc-slide-panel-open {
-  right: 0 !important;
-}
-
-.cc-slide-panel-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid var(--cc-primary);
-}
-/* === FIX SLIDER TEXT COLOR === */
-.cc-slide-panel,
-.cc-slide-panel * {
-    color: #fff;
-}
-
-.cc-saved-roster-header {
-    color: var(--cc-primary) !important;
-}
-
-/* === FIX UPGRADE CHECKBOX LAYOUT === */
-.upgrade-row {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-}
-
-.upgrade-row input[type="checkbox"] {
-    margin-top: 2px;
-    flex-shrink: 0;
-}
-.cc-slide-panel-header h2 {
-  color: var(--cc-primary);
-  margin: 0;
-  font-size: 18px;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.cc-panel-close-btn {
-  background: transparent;
-  border: 1px solid var(--cc-primary);
-  color: var(--cc-primary);
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.cc-panel-close-btn:hover {
-  background: var(--cc-primary);
-  color: #000;
-}
-
-/* === SAVED ROSTERS === */
-.cc-saved-roster-item {
-  background: rgba(0,0,0,0.3);
-  border: 1px solid #555;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 10px;
-  transition: 0.2s;
-}
-
-.cc-saved-roster-item:hover {
-  background: var(--cc-primary-dim);
-  border-color: var(--cc-primary);
-}
-
-.cc-saved-roster-name {
-  color: #fff;
-  font-weight: bold;
-  font-size: 14px;
-  margin-bottom: 5px;
-}
-
-.cc-saved-roster-meta {
-  color: #999;
-  font-size: 12px;
-  margin-bottom: 3px;
-}
-
-.cc-saved-roster-actions {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.btn-outline-danger {
-  background: transparent;
-  border: 1px solid #c00;
-  color: #c00;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: 0.2s;
-}
-
-.btn-outline-danger:hover {
-  background: #c00;
-  color: #fff;
-}
-
-/* === RULEBOOK TYPOGRAPHY (AUTHORITATIVE) === */
-
-.cc-rulebook {
-  text-align: left;
-  line-height: 1.7;
-  color: #e0e0e0;
-  max-width: 1100px;
-}
-
-/* Book title */
-.cc-rulebook h1 {
-  text-align: center;
-  color: #ff7518;
-  margin-bottom: 20px;
-}
-
-/* Main sections */
-.cc-rulebook h2 {
-  color: #ff7518;
-  text-align: left;
-  margin-top: 48px;
-  font-weight: 900;
-}
-
-/* Subsections */
-.cc-rulebook h3 {
-  color: #e0e0e0;
-  margin-top: 28px;
-  font-weight: 800;
-}
-
-.cc-rulebook h4 {
-  color: #bcbcbc;
-  margin-top: 18px;
-  font-weight: 700;
-}
-
-.cc-rulebook h5 {
-  color: #999;
-  margin-top: 14px;
-  font-weight: 600;
-}
-
-
-
-/* === GLOWING ORANGE ICONS === */
-.fa, i[class*="fa-"] {
-  color: var(--cc-primary);
-  filter: drop-shadow(0 0 6px rgba(255,117,24,0.5));
-  transition: all 0.2s ease;
-}
-
-button:hover .fa,
-button:hover i[class*="fa-"],
-.cc-tool-btn:hover .fa,
-.cc-tool-btn:hover i[class*="fa-"] {
-  filter: drop-shadow(0 0 12px rgba(255,117,24,1));
-  transform: scale(1.1);
-}
-
-.cc-panel-header .fa,
-.cc-panel-header i[class*="fa-"] {
-  margin-right: 6px;
-  filter: drop-shadow(0 0 8px rgba(255,117,24,0.6));
-}
-
-/* === LIST FOCUS MODE === */
-.list-focused #ccfb-builder,
-.list-focused #ccfb-details,
-.list-focused #panel-library {
-    display: none !important;
-}
-
-.list-focused .cc-grid {
-    grid-template-columns: 1fr !important;
-    max-width: 900px;
-    margin: 0 auto;
-}
-
-.list-focused #panel-roster {
-    order: -1;
-    width: 100%;
-}
-
-.list-focused .cc-roster-item {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 20px;
-}
-
-.list-focused .stat-badge-flex {
-    margin: 0;
-}
-
-/* === DETAIL HEADER SPACING === */
-.detail-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--cc-border);
-}
-
-.cc-panel-header {
-    margin-bottom: 10px;
-}
-
-/* === MORE AIR IN DETAIL PANEL === */
-.mt-4 {
+    display: grid; 
+    grid-template-columns: 1fr 1.4fr 1.1fr; 
+    gap: 20px; 
+    align-items: start;
     margin-top: 20px;
 }
 
-.mb-2 {
-    margin-bottom: 10px;
+/* === PANELS & COMPONENTS === */
+.cc-panel { 
+    background: var(--cc-bg-panel);
+    border: 1px solid var(--cc-border);
+    border-radius: var(--panel-radius);
+    overflow: hidden;
 }
 
-/* === HIDE PRINT-ONLY SECTIONS FROM SCREEN === */
-.print-rules-section,
-.print-faction-rules,
-.print-quick-ref,
-.print-upgrades {
-    display: none !important;
+.cc-panel-header {
+    background: rgba(255,255,255,0.05);
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--cc-border);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-/* === PRINT STYLES === */
-/* === REFINED PRINT STYLES === */
+/* === THE UNIT LIST (CARD VIEW) === */
+.cc-roster-item { 
+    display: flex; 
+    flex-direction: column;
+    padding: 15px; 
+    cursor: pointer; 
+    transition: var(--transition);
+    border-bottom: 1px solid var(--cc-border);
+    position: relative;
+    background: transparent;
+}
+
+.cc-roster-item:hover { 
+    background: var(--cc-primary-dim);
+    border-left: 4px solid var(--cc-primary);
+}
+
+.cc-item-selected {
+    background: var(--cc-primary-dim) !important;
+    border-left: 4px solid var(--cc-primary) !important;
+}
+
+/* === COMPACT LIST MODE (The "Scannable" View) === */
+.list-focused .cc-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.list-focused #panel-library, 
+.list-focused #ccfb-builder { display: none !important; }
+
+.list-focused .cc-roster-item {
+    flex-direction: row !important;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px;
+    gap: 20px;
+}
+
+.list-focused .stat-badge-flex { margin: 0; }
+.list-focused .u-name { margin: 0; width: 200px; }
+
+/* === RULEBOOK STYLES (The "Rules App") === */
+.cc-rulebook {
+    line-height: 1.8;
+    color: var(--cc-text);
+}
+
+.cc-rule-h2 {
+    color: var(--cc-primary);
+    border-bottom: 2px solid var(--cc-primary);
+    padding-bottom: 10px;
+    margin-top: 50px;
+    font-weight: 900;
+    text-transform: uppercase;
+}
+
+.cc-rule-h3 { color: #fff; margin-top: 30px; font-weight: 800; }
+.cc-rule-h4 { color: var(--cc-text-muted); margin-top: 20px; font-weight: 700; font-style: italic; }
+
+.cc-rulebook ul { padding-left: 20px; margin: 15px 0; }
+.cc-rulebook li { margin-bottom: 8px; }
+
+/* === STAT BADGES (STAY DARK FOR CONTRAST) === */
+.cc-stat-badge { 
+    display: inline-flex; 
+    border-radius: 3px; 
+    overflow: hidden; 
+    border: 2px solid #000;
+}
+.cc-stat-label { padding: 3px 6px; font-size: 10px; font-weight: 900; color: #fff; text-transform: uppercase; }
+.cc-stat-value { background: #000; color: #fff; padding: 3px 8px; font-size: 11px; font-weight: bold; min-width: 22px; text-align: center; }
+
+.stat-q { background: #2c5282; }
+.stat-d { background: #9b2c2c; }
+.stat-m { background: #276749; }
+.stat-r { background: #744210; }
+
+/* === PRINT LOGIC (INK SAVER) === */
 @media print {
-  /* 1. Nuke Dark Mode & Backgrounds */
-  :root {
-    --cc-bg-darker: #fff;
-    --cc-primary: #000;
-  }
-
-  body, #ccfb-app {
-    background: #fff !important;
-    color: #000 !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-
-  /* 2. Hide Web UI / Interactive Elements */
-  .cc-header-area, #auth-status-bar, .sub-header-row, .top-tools,
-  .cc-tool-btn, .btn-minus, .cc-item-controls, #panel-library,
-  #ccfb-builder, .cc-panel-header, .btn-outline-warning, .cc-slide-panel,
-  #rule-panel, .cc-accordion-header, .upgrade-row, .field-notes-box,
-  .u-lore, .ability-boxed-callout, .supplemental-section, .btn-plus-lib {
-    display: none !important;
-  }
-
-  /* 3. Layout: Force Table Structure */
-  .cc-grid {
-    display: block !important;
-  }
-
-  #panel-roster {
-    width: 100% !important;
-    border: none !important;
-  }
-
-  #rost-target {
-    display: table !important;
-    width: 100% !important;
-    border-collapse: collapse !important;
-    border: 2px solid #000 !important;
-  }
-
-  /* 4. Unit Row Styling */
-  .cc-roster-item {
-    display: table-row !important;
-    page-break-inside: avoid !important;
-    background: #fff !important;
-  }
-
-  .cc-roster-item:nth-child(even) {
-    background: #f2f2f2 !important; /* Very light grey for readability */
-  }
-
-  .cc-roster-item > div {
-    display: table-cell !important;
-    padding: 8px !important;
-    border-bottom: 1px solid #000 !important;
-    vertical-align: top !important;
-    color: #000 !important;
-  }
-
-  /* 5. Clean Stats (No Glows) */
-  .stat-badge-flex {
-    display: flex !important;
-    gap: 5px !important;
-  }
-
-  .cc-stat-badge {
-    border: 1px solid #000 !important;
-    box-shadow: none !important;
-    transform: none !important;
-  }
-
-  .cc-stat-label {
-    background: #000 !important;
-    color: #fff !important;
-    -webkit-print-color-adjust: exact;
-  }
-
-  .cc-stat-value {
-    background: #fff !important;
-    color: #000 !important;
-    border-left: 1px solid #000 !important;
-  }
-
-  /* 6. Text Cleanup */
-  .u-name {
-    color: #000 !important;
-    font-size: 12pt !important;
-    margin: 0 !important;
-  }
-
-  .u-type {
-    color: #444 !important;
-    font-size: 8pt !important;
-  }
-
-  /* Show the hidden print-only summaries */
-  .print-upgrades, .print-rules-section {
-    display: block !important;
-    color: #000 !important;
-  }
-}
-
-  /* ========================================
-     STAT BADGES - COMPACT TABLE FORMAT
-     ======================================== */
-  .stat-badge-flex {
-    display: inline-block !important;
-    margin: 2pt 0 !important;
-  }
-
-  .cc-stat-badge {
-    display: inline-block !important;
-    border: 1px solid #333 !important;
-    margin-right: 3pt !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-  }
-
-  .cc-stat-label {
-    background: #333 !important;
-    color: white !important;
-    padding: 1pt 3pt !important;
-    font-size: 7pt !important;
-    font-weight: bold !important;
-    display: inline-block !important;
-  }
-
-  .cc-stat-value {
-    background: white !important;
-    color: black !important;
-    padding: 1pt 4pt !important;
-    font-size: 8pt !important;
-    font-weight: normal !important;
-    display: inline-block !important;
-    border-left: 1px solid #333 !important;
-  }
-
-  /* Remove all color backgrounds */
-  .stat-q, .stat-d, .stat-r, .stat-m,
-  .stat-q-border, .stat-d-border, .stat-r-border, .stat-m-border {
-    background: #333 !important;
-    border-color: #333 !important;
-  }
-
-  /* ========================================
-     ABILITIES - COMPACT LIST
-     ======================================== */
-  .u-abilities-summary {
-    font-size: 8pt !important;
-    line-height: 1.3 !important;
-    margin: 2pt 0 !important;
-  }
-
-  .rule-link {
-    color: black !important;
-    text-decoration: none !important;
-    border-bottom: none !important;
-    background: none !important;
-    font-weight: normal !important;
-  }
-
-  .rule-link::after {
-    content: ", ";
-  }
-
-  .rule-link:last-child::after {
-    content: "";
-  }
-
-  /* ========================================
-     UPGRADES - SHOW INLINE
-     ======================================== */
-  .print-upgrades {
-    display: block !important;
-    font-size: 7pt !important;
-    color: #666 !important;
-    margin-top: 2pt !important;
-    font-style: italic !important;
-  }
-
-  .print-upgrades::before {
-    content: "↑ ";
-    font-weight: bold;
-  }
-
-  /* ========================================
-     RULES REFERENCE SECTION
-     ======================================== */
-  .print-rules-section {
-    display: block !important;
-    page-break-before: auto !important;
-    margin-top: 16pt !important;
-    padding-top: 12pt !important;
-    border-top: 2px solid black !important;
-  }
-
-  .print-rules-section h3 {
-    font-size: 12pt !important;
-    font-weight: bold !important;
-    margin: 8pt 0 4pt 0 !important;
-    padding: 0 !important;
-    color: black !important;
-  }
-
-  .print-rule-entry {
-    margin: 4pt 0 !important;
-    padding-left: 8pt !important;
-    font-size: 8pt !important;
-    line-height: 1.3 !important;
-    page-break-inside: avoid !important;
-  }
-
-  .print-rule-entry strong {
-    font-weight: bold !important;
-    color: black !important;
-  }
-
-  /* ========================================
-     FACTION RULES SUMMARY
-     ======================================== */
-  .print-faction-rules {
-    display: block !important;
-    background: #f0f0f0 !important;
-    border: 1px solid #ccc !important;
-    padding: 8pt !important;
-    margin: 12pt 0 !important;
-    page-break-inside: avoid !important;
-  }
-
-  .print-faction-rules h4 {
-    font-size: 10pt !important;
-    font-weight: bold !important;
-    margin: 0 0 4pt 0 !important;
-    color: black !important;
-  }
-
-  .print-faction-rules p {
-    font-size: 8pt !important;
-    margin: 2pt 0 !important;
-    line-height: 1.3 !important;
-  }
-
-  /* ========================================
-     CORE RULES QUICK REFERENCE
-     ======================================== */
-  .print-quick-ref {
-    display: block !important;
-    page-break-before: auto !important;
-    margin-top: 16pt !important;
-    padding: 8pt !important;
-    background: #f8f8f8 !important;
-    border: 1px solid #ccc !important;
-    font-size: 7pt !important;
-  }
-
-  .print-quick-ref h4 {
-    font-size: 10pt !important;
-    font-weight: bold !important;
-    margin: 0 0 4pt 0 !important;
-    text-align: center !important;
-  }
-
-  .print-quick-ref ul {
-    margin: 0 !important;
-    padding-left: 12pt !important;
-    list-style-type: disc !important;
-  }
-
-  .print-quick-ref li {
-    margin: 1pt 0 !important;
-    line-height: 1.2 !important;
-  }
-
-  /* ========================================
-     FINAL OPTIMIZATIONS
-     ======================================== */
-  * {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  /* Remove any shadows, glows, transitions */
-  *, *::before, *::after {
-    box-shadow: none !important;
-    text-shadow: none !important;
-    filter: none !important;
-    transition: none !important;
-    animation: none !important;
-  }
-
-  /* Ensure proper page breaks */
-  h3, h4 {
-    page-break-after: avoid !important;
-  }
-
-  /* Compact spacing */
-  p {
-    margin: 2pt 0 !important;
-  }
-}
-
-/* === ACCORDION STYLES === */
-.cc-accordion-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  background: rgba(255, 117, 24, 0.1);
-  border: 1px solid rgba(255, 117, 24, 0.3);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-bottom: 8px;
-}
-
-.cc-accordion-header:hover {
-  background: rgba(255, 117, 24, 0.2);
-  border-color: var(--cc-primary);
-}
-
-.cc-accordion-header .fa {
-  transition: transform 0.3s;
-}
-
-.cc-accordion-header.collapsed .fa-chevron-down {
-  transform: rotate(-90deg);
-}
-
-.cc-accordion-content {
-  max-height: 1000px;
-  overflow: hidden;
-  transition: max-height 0.3s ease, opacity 0.3s ease;
-  opacity: 1;
-}
-
-.cc-accordion-content.collapsed {
-  max-height: 0;
-  opacity: 0;
-}
-
-.cc-accordion-badge {
-  background: rgba(255, 117, 24, 0.3);
-  color: var(--cc-primary);
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 10px;
-  font-weight: 700;
-  margin-left: 8px;
-}
-
-/* === LOADER SPINNER === */
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.loader-spinner {
-  display: inline-block;
+    :root {
+        --cc-bg-main: #fff;
+        --cc-bg-panel: #fff;
+        --cc-text: #000;
+        --cc-border: #eee;
+    }
+    
+    #ccfb-app { padding: 0; }
+    .cc-header-area, .top-tools, .cc-item-controls, .btn-minus { display: none !important; }
+    
+    .cc-roster-item {
+        color: #000 !important;
+        border-bottom: 1px solid #000 !important;
+        background: #fff !important;
+        page-break-inside: avoid;
+    }
+    
+    .cc-stat-value { background: #fff !important; color: #000 !important; border-left: 1px solid #000 !important; }
 }
