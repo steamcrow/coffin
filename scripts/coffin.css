@@ -695,156 +695,108 @@ button:hover i[class*="fa-"],
 }
 
 /* === PRINT STYLES === */
+/* === REFINED PRINT STYLES === */
 @media print {
-  /* ========================================
-     HIDE ALL WEB UI ELEMENTS
-     ======================================== */
-  .cc-header-area,
-  #auth-status-bar,
-  .sub-header-row,
-  .top-tools,
-  .cc-tool-btn,
-  .btn-minus,
-  .cc-item-controls,
-  #panel-library,
-  #ccfb-builder,
-  .cc-panel-header,
-  .btn-outline-warning,
-  .cc-slide-panel,
-  #rule-panel,
-  .cc-accordion-header,
-  .upgrade-row,
-  .field-notes-box,
-  .u-lore,
-  .ability-boxed-callout,
-  .supplemental-section {
+  /* 1. Nuke Dark Mode & Backgrounds */
+  :root {
+    --cc-bg-darker: #fff;
+    --cc-primary: #000;
+  }
+
+  body, #ccfb-app {
+    background: #fff !important;
+    color: #000 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* 2. Hide Web UI / Interactive Elements */
+  .cc-header-area, #auth-status-bar, .sub-header-row, .top-tools,
+  .cc-tool-btn, .btn-minus, .cc-item-controls, #panel-library,
+  #ccfb-builder, .cc-panel-header, .btn-outline-warning, .cc-slide-panel,
+  #rule-panel, .cc-accordion-header, .upgrade-row, .field-notes-box,
+  .u-lore, .ability-boxed-callout, .supplemental-section, .btn-plus-lib {
     display: none !important;
   }
 
-  /* ========================================
-     PAGE SETUP
-     ======================================== */
-  @page {
-    size: letter;
-    margin: 0.5in 0.5in 0.5in 0.5in;
-  }
-
-  body {
-    background: white !important;
-    color: black !important;
-    font-size: 9pt !important;
-    line-height: 1.2 !important;
-    font-family: 'Arial', 'Helvetica', sans-serif !important;
-  }
-
-  #ccfb-app {
-    background: white !important;
-    padding: 0 !important;
-    max-width: 100% !important;
-  }
-
+  /* 3. Layout: Force Table Structure */
   .cc-grid {
     display: block !important;
-    margin: 0 !important;
-    padding: 0 !important;
   }
 
   #panel-roster {
+    width: 100% !important;
     border: none !important;
-    background: white !important;
-    page-break-inside: avoid;
   }
 
-  /* ========================================
-     ROSTER HEADER
-     ======================================== */
-  #panel-roster::before {
-    content: "COFFIN CANYON FACTION ROSTER";
-    display: block;
-    font-size: 18pt;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 8pt;
-    padding-bottom: 4pt;
-    border-bottom: 2px solid black;
-    page-break-after: avoid;
-  }
-
-  /* Add roster info (name, faction, budget) */
-  #rost-target::before {
-    content: attr(data-roster-info);
-    display: block;
-    font-size: 10pt;
-    margin-bottom: 12pt;
-    padding: 6pt;
-    background: #f0f0f0;
-    border: 1px solid #ccc;
-    page-break-after: avoid;
-  }
-
-  /* ========================================
-     ROSTER TABLE LAYOUT
-     ======================================== */
-  .cc-roster-item {
-    display: table-row !important;
-    page-break-inside: avoid !important;
-    border: none !important;
-    background: white !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    position: relative !important;
-  }
-
-  /* Zebra striping */
-  .cc-roster-item:nth-child(even) {
-    background: #f8f8f8 !important;
-  }
-
-  .cc-roster-item:nth-child(odd) {
-    background: white !important;
-  }
-
-  /* Table container */
   #rost-target {
     display: table !important;
     width: 100% !important;
     border-collapse: collapse !important;
-    margin-bottom: 16pt !important;
-    border: 1px solid black !important;
+    border: 2px solid #000 !important;
   }
 
-  /* Table header */
-  #rost-target::after {
-    content: "";
-    display: table-header-group;
+  /* 4. Unit Row Styling */
+  .cc-roster-item {
+    display: table-row !important;
+    page-break-inside: avoid !important;
+    background: #fff !important;
   }
 
-  /* ========================================
-     UNIT CARD PRINT LAYOUT
-     ======================================== */
+  .cc-roster-item:nth-child(even) {
+    background: #f2f2f2 !important; /* Very light grey for readability */
+  }
+
   .cc-roster-item > div {
     display: table-cell !important;
-    padding: 4pt 6pt !important;
+    padding: 8px !important;
+    border-bottom: 1px solid #000 !important;
     vertical-align: top !important;
-    border-bottom: 1px solid #ddd !important;
-    font-size: 8pt !important;
+    color: #000 !important;
   }
 
-  /* Unit name and type */
+  /* 5. Clean Stats (No Glows) */
+  .stat-badge-flex {
+    display: flex !important;
+    gap: 5px !important;
+  }
+
+  .cc-stat-badge {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .cc-stat-label {
+    background: #000 !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .cc-stat-value {
+    background: #fff !important;
+    color: #000 !important;
+    border-left: 1px solid #000 !important;
+  }
+
+  /* 6. Text Cleanup */
   .u-name {
-    font-size: 10pt !important;
-    font-weight: bold !important;
-    color: black !important;
+    color: #000 !important;
+    font-size: 12pt !important;
     margin: 0 !important;
-    padding: 0 !important;
   }
 
   .u-type {
-    font-size: 7pt !important;
-    color: #666 !important;
-    text-transform: uppercase !important;
-    margin: 0 0 2pt 0 !important;
+    color: #444 !important;
+    font-size: 8pt !important;
   }
+
+  /* Show the hidden print-only summaries */
+  .print-upgrades, .print-rules-section {
+    display: block !important;
+    color: #000 !important;
+  }
+}
 
   /* ========================================
      STAT BADGES - COMPACT TABLE FORMAT
