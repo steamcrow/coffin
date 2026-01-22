@@ -686,6 +686,14 @@ button:hover i[class*="fa-"],
     margin-bottom: 10px;
 }
 
+/* === HIDE PRINT-ONLY SECTIONS FROM SCREEN === */
+.print-rules-section,
+.print-faction-rules,
+.print-quick-ref,
+.print-upgrades {
+    display: none !important;
+}
+
 /* === PRINT STYLES === */
 @media print {
   /* ========================================
@@ -925,6 +933,7 @@ button:hover i[class*="fa-"],
      RULES REFERENCE SECTION
      ======================================== */
   .print-rules-section {
+    display: block !important;
     page-break-before: auto !important;
     margin-top: 16pt !important;
     padding-top: 12pt !important;
@@ -956,6 +965,7 @@ button:hover i[class*="fa-"],
      FACTION RULES SUMMARY
      ======================================== */
   .print-faction-rules {
+    display: block !important;
     background: #f0f0f0 !important;
     border: 1px solid #ccc !important;
     padding: 8pt !important;
@@ -980,6 +990,7 @@ button:hover i[class*="fa-"],
      CORE RULES QUICK REFERENCE
      ======================================== */
   .print-quick-ref {
+    display: block !important;
     page-break-before: auto !important;
     margin-top: 16pt !important;
     padding: 8pt !important;
