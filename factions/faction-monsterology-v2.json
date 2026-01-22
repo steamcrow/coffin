@@ -20,26 +20,42 @@
   ],
   "units": [
     {
-      "name": "Squab",
-      "faction": "Monsterology",
-      "type": "Grunt",
-      "cost": 21,
-      "quality": 1,
-      "defense": 1,
-      "move": 5,
-      "range": 3,
-      "weapon": "Thrown Bottles, Rusty Razor",
-      "weapon_properties": [],
-      "composition": { "per_points": 100 },
-      "abilities": [],
-      "lore": "The lowest rung of Monsterologist society. Desperate souls armed with trash and bottles.",
-      "tactics": "Ultra-cheap swarm unit.",
-      "optional_upgrades": [
-        { "name": "Molotov Cocktail", "cost": 2, "type": "Weapon", "effect": "On hit, 4+ causes fire damage." },
-        { "name": "Rotgut Drunk", "cost": 2, "type": "Upgrade", "effect": "Immune to Fear, -2 Move." }
-      ]
+  "name": "Squab",
+  "faction": "Monsterology",
+  "type": "Grunt",
+  "cost": 21,
+  "quality": 1,
+  "defense": 1,
+  "move": 5,
+  "range": 3,
+  "weapon": "Thrown Bottles, Rusty Razor",
+  "weapon_properties": [],
+  "composition": { "per_points": 100 },
+  "abilities": ["skittish"],
+  "lore": "Disposable wannabe Plugs, shifty booze cultists, and debt prisoners armed with trash and desperation. Squab are chemically compromised and barely coherent.",
+  "tactics": "Objective cloggers, panic spreaders, and mobile hazards. Squab die easily, but can disrupt morale, terrain, and positioning.",
+  "optional_upgrades": [
+    {
+      "name": "Rotgut Drunk",
+      "cost": 2,
+      "type": "Upgrade",
+      "effect": "Gain fearless. This model ignores Fear, Terror, and Dread. However, if this model rolls a Critical Failure (all 1s) on any Quality roll, it gains random_movement for the rest of the game."
     },
     {
+      "name": "Improvised Bomb",
+      "cost": 4,
+      "type": "Upgrade",
+      "effect": "Gain blast. When this model is destroyed, resolve a 3\" Blast attack centered on it. This attack ignores Cover."
+    },
+    {
+      "name": "Fake Hat",
+      "cost": 3,
+      "type": "Upgrade",
+      "effect": "Deploy this model using a Plugugly miniature instead of a Squab. While undiscovered, enemies must treat it as a Plugugly for targeting and threat evaluation. The disguise is revealed when: (1) this model takes damage, (2) this model performs an Attack, or (3) this model fails a Morale test. Once revealed, replace with a Squab model immediately."
+    }
+  ]
+}
+ {
       "name": "Chemist Lackey",
       "faction": "Monsterology",
       "type": "Specialist",
