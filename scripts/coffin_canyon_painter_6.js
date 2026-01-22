@@ -419,7 +419,7 @@ CCFB.define("components/painter", function(C) {
                     return `
                         <div class="upgrade-row" 
                              onclick="window.CCFB.toggleUpgrade('${esc(upg.name)}', ${upg.cost})">
-                            <input type="checkbox" ${has ? 'checked' : ''} onclick="event.stopPropagation()">
+                            <input type="checkbox" ${has ? 'checked' : ''} style="pointer-events: none;">
                             <div style="flex: 1">
                                 <b>${esc(upg.name)}</b>
                                 <div class="small opacity-75">${esc(upg.effect || '')}</div>
