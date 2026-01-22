@@ -56,52 +56,86 @@
   ]
 }
  {
-      "name": "Chemist Lackey",
-      "faction": "Monsterology",
-      "type": "Specialist",
-      "cost": 56,
-      "quality": 2,
-      "defense": 1,
-      "move": 5,
-      "range": 6,
-      "weapon": "Chemical Sprayer",
-      "weapon_properties": ["Cone 6\"", "Blinding"],
-      "composition": { "per_points": 200 },
-      "abilities": ["assistant"],
-      "lore": "Lab assistants operating chemical sprayers and compounds.",
-      "tactics": "Blind clusters and assist Scientists.",
-      "optional_upgrades": [
-        {
-          "name": "Monster Lures",
-          "cost": 3,
-          "type": "Upgrade",
-          "effect": "Once per game, throw 12\". Monsters within 6\" must test Morale or move toward it."
-        },
-        {
-          "name": "Binding Salts",
-          "cost": 2,
-          "type": "Upgrade",
-          "effect": "Once per game, create 3\" barrier monsters cannot cross for 2 rounds."
-        }
-      ]
+  "name": "Chemist Lackey",
+  "faction": "Monsterology",
+  "type": "Specialist",
+  "cost": 56,
+  "quality": 2,
+  "defense": 1,
+  "move": 5,
+  "range": 6,
+  "weapon": "Chemical Sprayer",
+  "weapon_properties": ["Blinding"],
+  "composition": { "per_points": 200 },
+  "abilities": ["assistant", "smoke_screen", "gas_mask"],
+  "lore": "Lab assistants equipped with unstable chemical sprayers, monster pheromones, and sealed breathing rigs. Chemist Lackeys reshape the battlefield through gas, toxins, and behavioral manipulation.",
+  "tactics": "Board control specialists. Use smoke to block clarity, split formations, and enable monster traps. Supports Scientists and ritual units while denying space to the enemy.",
+  "optional_upgrades": [
+    {
+      "name": "Monster Lures",
+      "cost": 3,
+      "type": "Upgrade",
+      "effect": "Once per game, throw 12\". Monsters within 6\" must test Morale or move toward it."
     },
     {
-      "name": "Devourer Adept",
-      "faction": "Monsterology",
-      "type": "Specialist",
-      "cost": 41,
-      "quality": 2,
-      "defense": 1,
-      "move": 5,
-      "range": 0,
-      "weapon": "Ritual Tools",
-      "weapon_properties": [],
-      "composition": { "per_points": 100 },
-      "abilities": ["immobile"],
-      "lore": "Ritual assistants trained to prepare monster Mort.",
-      "tactics": "Keep alive to enable Great Workings.",
-      "optional_upgrades": []
+      "name": "Mustard Gas",
+      "cost": 4,
+      "type": "Upgrade",
+      "effect": "When this model uses smoke_screen, the terrain created is also Hazardous. In addition, enemies activating within this Choking terrain roll -1 die on Morale tests."
     },
+    {
+      "name": "Binding Salts",
+      "cost": 2,
+      "type": "Upgrade",
+      "effect": "Once per game, create a 3\" barrier monsters cannot cross for 2 rounds."
+    }
+  ]
+},
+
+{
+  "name": "Devourer Adept",
+  "faction": "Monsterology",
+  "type": "Specialist",
+  "cost": 41,
+  "quality": 2,
+  "defense": 1,
+  "move": 6,
+  "range": 0,
+  "weapon": "Ritual Tools",
+  "weapon_properties": [],
+  "composition": { "per_points": 100 },
+  "abilities": [
+    "load_and_carry",
+    "ritual",
+    "feast_tithe",
+    "funeral_wake",
+    "grief_magnet",
+    "sacrificial_overload"
+  ],
+  "lore": "High priest cultists trained to harvest Mort from fallen monsters and deliver it to the Feast Bishop. Devourer Adepts serve as ritual couriers, bridging death, corruption, and divine ingestion.",
+  "tactics": "Ritual objective runners. Collect Mort and Thyr from the battlefield and deliver them to the Feast Bishop to generate Victory Points, summon Haunts, radiate fear, and trigger catastrophic sacrificial rituals.",
+  "optional_upgrades": [
+    {
+      "name": "Unholy Wheelbarrow",
+      "cost": 10,
+      "type": "Gear",
+      "effect": "This model may carry up to 3 total tokens of Mort and/or Thyr. Reduce Move by -1."
+    },
+    {
+      "name": "Ritual Satchel",
+      "cost": 5,
+      "type": "Gear",
+      "effect": "Once per round, this model may pick up or drop a carried token as a free action."
+    },
+    {
+      "name": "Gas Mask",
+      "cost": 5,
+      "type": "Gear",
+      "effect": "This unit ignores Coffin Cough, Choking Dust, and other environmental gas or smoke effects."
+    }
+  ]
+}
+    
     {
       "name": "Plugugly",
       "faction": "Monsterology",
