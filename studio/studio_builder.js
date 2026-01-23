@@ -1,9 +1,12 @@
 // COFFIN CANYON FACTION STUDIO
 // Tool for creating and editing faction JSON files
 
-document.addEventListener("DOMContentLoaded", () => {
+function mountFactionStudioRoot() {
     const root = document.getElementById("faction-studio-root");
-    if (!root) return;
+    if (!root) {
+        console.error("❌ faction-studio-root not found");
+        return;
+    }
 
     root.innerHTML = `
         <div id="fs-app" style="
@@ -17,7 +20,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div id="json-preview"></div>
         </div>
     `;
-});
+}
 
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
