@@ -10,6 +10,10 @@ function mountFactionStudioRoot() {
         return;
     }
 
+    if (root.dataset.mounted) return;
+    root.dataset.mounted = "true";
+
+
     console.log("✅ faction-studio-root found, mounting UI");
 
     root.innerHTML = `
