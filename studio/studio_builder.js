@@ -3,20 +3,22 @@
 
 document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("faction-studio-root");
-    console.log("ROOT:", root);
+    if (!root) return;
 
-    if (root) {
-        root.innerHTML = `
-            <div id="fs-app">
-                <div id="faction-overview"></div>
-                <div id="unit-builder"></div>
-                <div id="json-preview"></div>
-            </div>
-        `;
-    } else {
-        console.error("❌ faction-studio-root not found");
-    }
+    root.innerHTML = `
+        <div id="fs-app" style="
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            padding: 16px;
+        ">
+            <div id="faction-overview"></div>
+            <div id="unit-builder"></div>
+            <div id="json-preview"></div>
+        </div>
+    `;
 });
+
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
