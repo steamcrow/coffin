@@ -25,11 +25,12 @@ function mountFactionStudioRoot() {
         ">
             <div id="faction-overview"></div>
             <div id="unit-builder"></div>
-            <div id="json-preview"></div>
+            <div id="inspector-panel"></div>
         </div>
     `;
 }
 
+const getInspector = () => document.getElementById("inspector-panel");
 
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
@@ -538,7 +539,10 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
             </div>
         `;
         
-        document.body.appendChild(modal);
+        const inspector = getInspector();
+        inspector.innerHTML = "";
+        inspector.appendChild(modal);
+
         setTimeout(() => modal.classList.add('cc-slide-panel-open'), 10);
     };
 
@@ -613,7 +617,10 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
             </div>
         `;
 
-        document.body.appendChild(modal);
+        const inspector = getInspector();
+        inspector.innerHTML = "";
+        inspector.appendChild(modal);
+
         setTimeout(() => modal.classList.add('cc-slide-panel-open'), 10);
     };
 
