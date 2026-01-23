@@ -4,11 +4,14 @@
 const root = document.getElementById("faction-studio-root");
 if (root) {
     root.innerHTML = `
-        <div id="faction-overview"></div>
-        <div id="unit-builder"></div>
-        <div id="json-preview"></div>
+        <div id="fs-app">
+            <div id="faction-overview"></div>
+            <div id="unit-builder"></div>
+            <div id="json-preview"></div>
+        </div>
     `;
 }
+
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
