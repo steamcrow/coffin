@@ -1,4 +1,4 @@
-// COFFIN CANYON FACTION BUILDER
+// COFFIN CANYON FACTION STUDIO
 // Tool for creating and editing faction JSON files
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
