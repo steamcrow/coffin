@@ -1,6 +1,6 @@
 /**
- * COFFIN CANYON FACTION STUDIO - ODOO COMPATIBLE
- * Strictly passive: waits for manual initialization.
+ * COFFIN CANYON FACTION STUDIO - STABLE ODOO BUILD
+ * Passive Engine: Lore-ready, Data-Repairing, and File-Syncing.
  */
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
@@ -13,14 +13,14 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         activeModal: null 
     };
 
-    // --- 1. MOUNTING LOGIC (Creates the skeleton Odoo needs) ---
+    // --- 1. MOUNTING LOGIC ---
     const mountStudio = () => {
         const root = document.getElementById('faction-studio-root');
         if (!root) return;
         
-        // We preserve your root and just inject the internal layout
+        // Injecting the layout columns into your root
         root.innerHTML = `
-            <div class="fb-grid" style="display: grid; grid-template-columns: 300px 1fr 400px; gap: 20px; padding: 20px;">
+            <div class="fb-grid" style="display: grid; grid-template-columns: 320px 1fr 400px; gap: 20px; padding: 20px;">
                 <div id="faction-overview"></div>
                 <div id="unit-builder"></div>
                 <div id="unit-card"></div>
@@ -29,7 +29,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         `;
     };
 
-    // --- 2. DATA SANITIZATION (Fixes old files) ---
+    // --- 2. DATA REPAIR LAYER ---
     const sanitizeUnit = (u) => ({
         name: u.name || "New Recruit",
         type: u.type || "",
@@ -40,7 +40,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         weapon: u.weapon || "",
         weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
         abilities: Array.isArray(u.abilities) ? u.abilities : [],
-        lore: u.lore || u.description || "" 
+        lore: u.lore || u.description || "" // Salvages 'description' from old formats
     });
 
     const getRules = () => ({
@@ -66,7 +66,6 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         let total = 0;
         const q = u.quality || 4;
         
-        // Base Stat Calculation
         total += (7 - q) * 15;
         total += (7 - (u.defense || 4)) * 10;
         total += ((u.move || 6) - 6) * 5;
@@ -75,8 +74,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         const parseAddon = (costVal) => {
             if (typeof costVal === 'number') return costVal;
             if (typeof costVal === 'string' && costVal.includes('quality')) {
-                const mult = parseInt(costVal.match(/\d+/) || [0]);
-                return (7 - q) * mult;
+                return (7 - q) * parseInt(costVal.match(/\d+/) || [0]);
             }
             return 0;
         };
@@ -97,18 +95,18 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         if (!target) return;
         target.innerHTML = `
             <div class="cc-panel">
-                <div class="cc-panel-header">FACTION</div>
+                <div class="cc-panel-header">FACTION ROSTER</div>
                 <div style="padding:15px">
                     <div class="form-group">
-                        <label>Name</label>
+                        <label>Faction Name</label>
                         <input type="text" class="cc-input w-100 mb-3" value="${esc(state.currentFaction.faction)}" onchange="CCFB_FACTORY.updateFaction(this.value)">
                     </div>
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:10px;">
-                        <button class="btn-add-small" onclick="CCFB_FACTORY.download()"><i class="fa fa-save"></i> SAVE</button>
-                        <button class="btn-add-small" onclick="document.getElementById('cc-up').click()"><i class="fa fa-upload"></i> LOAD</button>
+                        <button class="btn-add-small" onclick="CCFB_FACTORY.download()"><i class="fa fa-save"></i> EXPORT</button>
+                        <button class="btn-add-small" onclick="document.getElementById('cc-up').click()"><i class="fa fa-upload"></i> IMPORT</button>
                         <input type="file" id="cc-up" style="display:none" onchange="CCFB_FACTORY.upload(event)">
                     </div>
-                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.addUnit()">+ NEW UNIT</button>
+                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.addUnit()">+ ADD UNIT</button>
                     <div class="unit-list mt-3">
                         ${state.currentFaction.units.map((u, i) => `
                             <div class="cc-roster-item ${state.selectedUnit === i ? 'cc-item-selected' : ''}" onclick="CCFB_FACTORY.selectUnit(${i})">
@@ -135,17 +133,13 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                 <div class="builder-step step-active">
                     <div class="step-header"><div class="step-number">1</div><div class="step-title">Identity</div></div>
                     <div class="step-content">
-                        <div class="form-group">
-                            <label>Unit Name</label>
-                            <input type="text" class="cc-input w-100 mb-2" value="${esc(u.name)}" onchange="CCFB_FACTORY.updateUnit('name', this.value)">
-                        </div>
-                        <div class="form-group">
-                            <label>Archetype</label>
-                            <select class="cc-select w-100" onchange="CCFB_FACTORY.setArch(this.value)">
-                                <option value="">-- Choose --</option>
-                                ${Object.keys(archetypes).map(k => `<option value="${k}" ${u.type === k ? 'selected' : ''}>${k.toUpperCase()}</option>`).join('')}
-                            </select>
-                        </div>
+                        <label class="cc-label">UNIT NAME</label>
+                        <input type="text" class="cc-input w-100 mb-3" value="${esc(u.name)}" onchange="CCFB_FACTORY.updateUnit('name', this.value)">
+                        <label class="cc-label">ARCHETYPE</label>
+                        <select class="cc-select w-100" onchange="CCFB_FACTORY.setArch(this.value)">
+                            <option value="">-- Choose Role --</option>
+                            ${Object.keys(archetypes).map(k => `<option value="${k}" ${u.type === k ? 'selected' : ''}>${k.toUpperCase()}</option>`).join('')}
+                        </select>
                     </div>
                 </div>
 
@@ -153,18 +147,18 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                     <div class="step-header"><div class="step-number">2</div><div class="step-title">Combat Stats</div></div>
                     <div class="step-content">
                         <div class="stats-grid">
-                            <div class="form-group"><label small>QUA</label><input type="number" class="cc-input" value="${u.quality}" onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))"></div>
-                            <div class="form-group"><label small>DEF</label><input type="number" class="cc-input" value="${u.defense}" onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))"></div>
-                            <div class="form-group"><label small>MOV</label><input type="number" class="cc-input" value="${u.move}" onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))"></div>
-                            <div class="form-group"><label small>RNG</label><input type="number" class="cc-input" value="${u.range}" onchange="CCFB_FACTORY.updateUnit('range', parseInt(this.value))"></div>
+                            <div class="form-group"><label>QUA</label><input type="number" class="cc-input" value="${u.quality}" onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))"></div>
+                            <div class="form-group"><label>DEF</label><input type="number" class="cc-input" value="${u.defense}" onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))"></div>
+                            <div class="form-group"><label>MOV</label><input type="number" class="cc-input" value="${u.move}" onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))"></div>
+                            <div class="form-group"><label>RNG</label><input type="number" class="cc-input" value="${u.range}" onchange="CCFB_FACTORY.updateUnit('range', parseInt(this.value))"></div>
                         </div>
                     </div>
                 </div>
 
                 <div class="builder-step step-active">
-                    <div class="step-header"><div class="step-number">3</div><div class="step-title">Lore & History</div></div>
+                    <div class="step-header"><div class="step-number">3</div><div class="step-title">Lore & Backstory</div></div>
                     <div class="step-content">
-                        <textarea class="cc-input w-100" rows="4" onchange="CCFB_FACTORY.updateUnit('lore', this.value)">${esc(u.lore)}</textarea>
+                        <textarea class="cc-input w-100" rows="5" onchange="CCFB_FACTORY.updateUnit('lore', this.value)">${esc(u.lore)}</textarea>
                     </div>
                 </div>
 
@@ -186,7 +180,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
             <div class="unit-card-preview">
                 <div class="unit-card-header">
                     <div class="unit-card-name">${esc(u.name)}</div>
-                    <div class="unit-card-type">${esc(u.type || 'Infantry')}</div>
+                    <div class="unit-card-type">${esc(u.type || 'Standard')}</div>
                 </div>
                 <div class="unit-card-cost"><div class="cost-value">${calculateUnitCost(u)}₤</div></div>
                 <div class="unit-card-stats">
@@ -195,7 +189,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                     <div class="stat-item"><div class="stat-label">MOV</div><div class="stat-value">${u.move}"</div></div>
                 </div>
                 <div class="unit-card-section">
-                    <div class="section-label">WEAPON: ${esc(u.weapon || 'Hand-to-Hand')}</div>
+                    <div class="section-label">WEAPONRY</div>
                     <div class="weapon-properties">
                         ${u.weapon_properties.map((p, i) => `<span class="property-badge" onclick="CCFB_FACTORY.removeItem('weapon_properties', ${i})">${esc(weaponProps[p]?.name || p)} ✕</span>`).join('')}
                     </div>
@@ -206,7 +200,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                         const d = findAbilityData(a);
                         return `<div class="ability-item" onclick="CCFB_FACTORY.removeItem('abilities', ${i})">
                             <div class="ability-name">${esc(a)}</div>
-                            <div class="ability-effect">${esc(d?.effect || d)}</div>
+                            <div class="ability-effect">${esc(d?.effect || 'Description missing.')}</div>
                         </div>`;
                     }).join('')}
                 </div>
@@ -243,7 +237,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         target.innerHTML = `
             <div class="cc-modal-overlay cc-modal-open">
                 <div class="cc-modal-panel">
-                    <div class="cc-modal-header"><h2>SELECT ${state.activeModal.toUpperCase()}</h2><button class="cc-modal-close" onclick="CCFB_FACTORY.closeModal()">×</button></div>
+                    <div class="cc-modal-header"><h2>CHOOSE ${state.activeModal.toUpperCase()}</h2><button class="cc-modal-close" onclick="CCFB_FACTORY.closeModal()">×</button></div>
                     <div class="cc-modal-content">${content}</div>
                 </div>
             </div>`;
@@ -251,7 +245,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
     const refresh = () => { renderRoster(); renderBuilder(); renderCard(); renderModal(); };
 
-    // --- 4. THE ONLY PUBLIC INTERFACE ---
+    // --- 4. PUBLIC API ---
     Object.assign(window.CCFB_FACTORY, {
         init: (json) => { 
             state.rules = json; 
