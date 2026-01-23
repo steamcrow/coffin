@@ -90,37 +90,53 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         `).join('');
     };
 
-    const calculateUnitCost = (unit) => {
-        let cost = 0;
-        cost += (unit.quality || 1) * 20;
-        cost += (unit.defense || 0) * 10;
+ const calculateUnitCost = (unit) => {
+    let cost = 0;
+    cost += (unit.quality || 1) * 20;
+    cost += (unit.defense || 0) * 10;
 
-        const moveDiff = (unit.move || 6) - 6;
-        cost += moveDiff * 5;
+    const moveDiff = (unit.move || 6) - 6;
+    cost += moveDiff * 5;
 
-        if (unit.range && unit.range > 0) cost += 5;
+    if (unit.range && unit.range > 0) cost += 5;
 
-        if (unit.abilities && state.rules) {
-            unit.abilities.forEach(abilityName => {
-                const ability = findAbility(abilityName);
-                if (!ability) return;
+    // ABILITIES COST
+    if (unit.abilities && state.rules) {
+        unit.abilities.forEach(abilityName => {
+            const ability = findAbility(abilityName);
+            if (!ability) return;
 
-                if (typeof ability.cost === "number") cost += ability.cost;
-                if (typeof ability.cost === "string" && ability.cost.includes("quality")) {
-                    const m = ability.cost.match(/\d+/);
-                    cost += (unit.quality || 1) * (m ? parseInt(m[0]) : 0);
-                }
-                if (ability.cost_multiplier) cost *= ability.cost_multiplier;
-            });
-        }
+            if (typeof ability.cost === "number") cost += ability.cost;
+            if (typeof ability.cost === "string" && ability.cost.includes("quality")) {
+                const m = ability.cost.match(/\d+/);
+                cost += (unit.quality || 1) * (m ? parseInt(m[0]) : 0);
+            }
+            if (ability.cost_multiplier) cost *= ability.cost_multiplier;
+        });
+    }
 
-        const archetype = getArchetypeVault()[unit.type?.toLowerCase()];
-        if (archetype?.cost_multiplier) cost *= archetype.cost_multiplier;
-        if (archetype?.cost_flat) cost += archetype.cost_flat;
+    // WEAPON PROPERTIES COST (THIS WAS MISSING!)
+    if (unit.weapon_properties && unit.weapon_properties.length > 0) {
+        const weaponProps = getWeaponProps();
+        unit.weapon_properties.forEach(propKey => {
+            const prop = weaponProps[propKey];
+            if (!prop) return;
+            
+            if (typeof prop.cost === "number") cost += prop.cost;
+            if (typeof prop.cost === "string" && prop.cost.includes("quality")) {
+                const m = prop.cost.match(/\d+/);
+                cost += (unit.quality || 1) * (m ? parseInt(m[0]) : 0);
+            }
+            if (prop.cost_multiplier) cost *= prop.cost_multiplier;
+        });
+    }
 
-        return Math.ceil(cost / 5) * 5;
-    };
+    const archetype = getArchetypeVault()[unit.type?.toLowerCase()];
+    if (archetype?.cost_multiplier) cost *= archetype.cost_multiplier;
+    if (archetype?.cost_flat) cost += archetype.cost_flat;
 
+    return Math.ceil(cost / 5) * 5;
+};
     const findAbility = (name) => {
         if (!state.rules) return null;
 
@@ -448,8 +464,8 @@ const renderUnitCard = () => {
 
     if (state.selectedUnit === null) {
         container.innerHTML = `
-            <div style="background: rgba(0,0,0,0.3); border: 2px solid var(--cc-border); border-radius: 8px;">
-                <div style="padding: 15px; background: rgba(0,0,0,0.4); border-bottom: 2px solid var(--cc-border); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+            <div class="cc-panel">
+                <div class="cc-panel-header">
                     <i class="fa fa-id-card"></i> UNIT CARD
                 </div>
                 <div style="display: flex; align-items: center; justify-content: center; height: 400px; opacity: 0.3;">
@@ -467,9 +483,8 @@ const renderUnitCard = () => {
     const weaponProps = getWeaponProps();
 
     container.innerHTML = `
-        <div style="background: rgba(0,0,0,0.3); border: 2px solid var(--cc-border); border-radius: 8px; overflow: hidden;">
-            <!-- Header -->
-            <div style="padding: 15px; background: rgba(0,0,0,0.4); border-bottom: 2px solid var(--cc-border); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+        <div class="cc-panel">
+            <div class="cc-panel-header">
                 <i class="fa fa-id-card"></i> UNIT CARD
             </div>
 
@@ -525,14 +540,21 @@ const renderUnitCard = () => {
                         <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${esc(unit.weapon)}</div>
                         
                         ${(unit.weapon_properties && unit.weapon_properties.length > 0) ? `
-                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
-                                ${unit.weapon_properties.map(propKey => {
+                            <div style="margin-top: 8px;">
+                                ${unit.weapon_properties.map((propKey, idx) => {
                                     const p = weaponProps[propKey];
                                     const pName = p?.name || propKey;
+                                    const pEffect = p?.effect || '';
                                     return `
-                                        <span style="display: inline-block; background: rgba(255,117,24,0.2); border: 1px solid var(--cc-primary); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600;">
-                                            ${esc(pName)}
-                                        </span>
+                                        <div class="upgrade-row">
+                                            <div style="flex: 1;">
+                                                <b style="color: var(--cc-primary);">${esc(pName)}</b>
+                                                ${pEffect ? `<div class="small opacity-75">${esc(pEffect)}</div>` : ''}
+                                            </div>
+                                            <button class="btn-minus" onclick="CCFB_FACTORY.removeWeaponProperty(${idx})">
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </div>
                                     `;
                                 }).join('')}
                             </div>
@@ -550,15 +572,14 @@ const renderUnitCard = () => {
                             const ability = findAbility(abilityName);
                             const effectText = ability?.effect || '';
                             return `
-                                <div style="margin-bottom: ${idx < unit.abilities.length - 1 ? '12px' : '0'};">
-                                    <div style="font-size: 14px; font-weight: 700; color: var(--cc-primary); margin-bottom: 4px;">
-                                        ${esc(abilityName)}
+                                <div class="upgrade-row">
+                                    <div style="flex: 1;">
+                                        <b style="color: var(--cc-primary);">${esc(abilityName)}</b>
+                                        ${effectText ? `<div class="small opacity-75">${esc(effectText)}</div>` : ''}
                                     </div>
-                                    ${effectText ? `
-                                        <div style="font-size: 12px; opacity: 0.8; line-height: 1.4;">
-                                            ${esc(effectText)}
-                                        </div>
-                                    ` : ''}
+                                    <button class="btn-minus" onclick="CCFB_FACTORY.removeAbility(${idx})">
+                                        <i class="fa fa-times"></i>
+                                    </button>
                                 </div>
                             `;
                         }).join('')}
@@ -681,48 +702,51 @@ window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
     
     const modal = document.createElement('div');
     modal.id = 'weapon-prop-picker-modal';
-    modal.className = 'cc-modal-overlay';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;';
 
     const props = getWeaponProps();
     const keys = Object.keys(props);
 
     modal.innerHTML = `
-        <div class="cc-modal-panel">
-            <div class="cc-modal-header">
-                <h2><i class="fa fa-crosshairs"></i> ADD WEAPON PROPERTY</h2>
-                <button onclick="CCFB_FACTORY.closeWeaponPropertyPicker()" class="cc-modal-close">
+        <div style="background: #1a1a1a; border: 3px solid var(--cc-primary); border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
+            <div style="padding: 20px; border-bottom: 2px solid var(--cc-border); display: flex; align-items: center; justify-content: space-between;">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--cc-primary);">
+                    <i class="fa fa-crosshairs"></i> ADD WEAPON PROPERTY
+                </h2>
+                <button onclick="CCFB_FACTORY.closeWeaponPropertyPicker()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 5px 10px;">
                     <i class="fa fa-times"></i>
                 </button>
             </div>
-
-            <div class="cc-modal-content">
-                <div class="ability-grid">
+            <div style="padding: 20px; overflow-y: auto; flex: 1;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
                     ${keys.length ? keys.map(k => {
                         const p = props[k] || {};
                         const pName = p.name || k;
                         const pEffect = p.effect || '';
                         return `
-                            <div class="ability-card" onclick="CCFB_FACTORY.toggleWeaponProperty('${k}')">
-                                <div class="ability-card-name">${esc(pName)}</div>
-                                <div class="ability-card-effect">${esc(pEffect)}</div>
+                            <div onclick="CCFB_FACTORY.toggleWeaponProperty('${k}')" style="padding: 15px; background: rgba(0,0,0,0.3); border: 2px solid var(--cc-border); border-radius: 6px; cursor: pointer; transition: all 0.2s;" 
+                                onmouseover="this.style.borderColor='var(--cc-primary)'; this.style.background='rgba(255,117,24,0.1)'"
+                                onmouseout="this.style.borderColor='var(--cc-border)'; this.style.background='rgba(0,0,0,0.3)'">
+                                <div style="font-size: 14px; font-weight: 700; color: var(--cc-primary); margin-bottom: 6px;">
+                                    ${esc(pName)}
+                                </div>
+                                <div style="font-size: 12px; color: #fff; line-height: 1.4;">
+                                    ${esc(pEffect)}
+                                </div>
                             </div>
                         `;
-                    }).join('') : '<div class="cc-empty-state">No weapon properties found</div>'}
+                    }).join('') : '<div>No weapon properties found</div>'}
                 </div>
             </div>
         </div>
     `;
 
     document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('cc-modal-open'), 10);
 };
 
 window.CCFB_FACTORY.closeWeaponPropertyPicker = () => {
     const modal = document.getElementById('weapon-prop-picker-modal');
-    if (modal) {
-        modal.classList.remove('cc-modal-open');
-        setTimeout(() => modal.remove(), 300);
-    }
+    if (modal) modal.remove();
 };
 
 window.CCFB_FACTORY.showAbilityPicker = () => {
@@ -731,26 +755,29 @@ window.CCFB_FACTORY.showAbilityPicker = () => {
     
     const modal = document.createElement('div');
     modal.id = 'ability-picker-modal';
-    modal.className = 'cc-modal-overlay';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;';
     
     const categories = Object.keys(getAbilityDict());
     
     modal.innerHTML = `
-        <div class="cc-modal-panel">
-            <div class="cc-modal-header">
-                <h2><i class="fa fa-bolt"></i> ADD ABILITY</h2>
-                <button onclick="CCFB_FACTORY.closeAbilityPicker()" class="cc-modal-close">
+        <div style="background: #1a1a1a; border: 3px solid var(--cc-primary); border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
+            <div style="padding: 20px; border-bottom: 2px solid var(--cc-border); display: flex; align-items: center; justify-content: space-between;">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--cc-primary);">
+                    <i class="fa fa-bolt"></i> ADD ABILITY
+                </h2>
+                <button onclick="CCFB_FACTORY.closeAbilityPicker()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 5px 10px;">
                     <i class="fa fa-times"></i>
                 </button>
             </div>
-            
-            <div class="cc-modal-content">
+            <div style="padding: 20px; overflow-y: auto; flex: 1;">
                 ${categories.map(category => {
                     const abilities = getAbilityDict()[category] || {};
                     return `
-                        <div class="ability-category">
-                            <h3 class="category-header">${esc(category.replace(/_/g, ' ').toUpperCase())}</h3>
-                            <div class="ability-grid">
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="font-size: 14px; font-weight: 700; color: var(--cc-primary); margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--cc-border);">
+                                ${esc(category.replace(/_/g, ' ').toUpperCase())}
+                            </h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
                                 ${Object.keys(abilities).map(abilityKey => {
                                     const raw = abilities[abilityKey];
                                     const abilityObj = (typeof raw === 'string')
@@ -762,12 +789,22 @@ window.CCFB_FACTORY.showAbilityPicker = () => {
                                           };
 
                                     return `
-                                        <div class="ability-card" onclick="CCFB_FACTORY.addAbility('${String(abilityObj.name).replace(/'/g, "\\'")}')">
-                                            <div class="ability-card-name">${esc(abilityObj.name)}</div>
-                                            <div class="ability-card-effect">${esc(abilityObj.effect || '')}</div>
-                                            ${abilityObj.cost ? `
-                                                <div class="ability-card-cost">Cost: ${esc(abilityObj.cost)}</div>
-                                            ` : ''}
+                                        <div onclick="CCFB_FACTORY.addAbility('${String(abilityObj.name).replace(/'/g, "\\'")}')">
+                                            <div style="padding: 15px; background: rgba(0,0,0,0.3); border: 2px solid var(--cc-border); border-radius: 6px; cursor: pointer; transition: all 0.2s;" 
+                                                onmouseover="this.style.borderColor='var(--cc-primary)'; this.style.background='rgba(255,117,24,0.1)'"
+                                                onmouseout="this.style.borderColor='var(--cc-border)'; this.style.background='rgba(0,0,0,0.3)'">
+                                                <div style="font-size: 14px; font-weight: 700; color: var(--cc-primary); margin-bottom: 6px;">
+                                                    ${esc(abilityObj.name)}
+                                                </div>
+                                                <div style="font-size: 12px; color: #fff; line-height: 1.4;">
+                                                    ${esc(abilityObj.effect || '')}
+                                                </div>
+                                                ${abilityObj.cost ? `
+                                                    <div style="margin-top: 8px; font-size: 11px; color: #4CAF50; font-weight: 600;">
+                                                        Cost: ${esc(abilityObj.cost)}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
                                         </div>
                                     `;
                                 }).join('')}
@@ -780,15 +817,11 @@ window.CCFB_FACTORY.showAbilityPicker = () => {
     `;
     
     document.body.appendChild(modal);
-    setTimeout(() => modal.classList.add('cc-modal-open'), 10);
 };
 
 window.CCFB_FACTORY.closeAbilityPicker = () => {
     const modal = document.getElementById('ability-picker-modal');
-    if (modal) {
-        modal.classList.remove('cc-modal-open');
-        setTimeout(() => modal.remove(), 300);
-    }
+    if (modal) modal.remove();
 };
 
     window.CCFB_FACTORY.toggleWeaponProperty = (propKey) => {
