@@ -1,0 +1,157 @@
+Coffin Canyon: Rules Master V9 (The Complete Source)
+1. Engine Metadata & Core Philosophy
+
+Philosophy: The 'Flavor Vault'. High-level tenets and the 'Fast Resolution' handshake. Everything in Coffin Canyon flows from a single value: Quality. It represents training, toughness, nerve, and luck. When Quality drops, everything becomes harder.
+
+Balance Engine: Active.
+
+Base Weights: Quality (Q) = 20 pts/die | Defense (D) = 10 pts | Move (M) = 6" Baseline (±5 pts per 1").
+
+Rounding Rule: Final unit costs always round UP to the nearest 5 points.
+
+2. Core Mechanics
+
+Quality Definition
+
+Value	Description	Internal Math (Base)
+1	Basic trained human / small monster / civilian	20 pts
+2	Veteran military unit / human sized monster	40 pts
+3	Elite unit / large monster / hard to kill beast	60 pts
+4	Leader unit / low hero / big or powerful monster	80 pts
+5	High hero / very large or mystically powerful monster	100 pts
+6	Epic supernatural kaiju, titan, or mechanical unit	120 pts
+The Roll & Defense
+
+The Roll: Roll d6s equal to current Quality. Success on 4+.
+
+Defense & Damage: Passive value for positioning/armor. If Successes > Defense, the attack hits. Each success beyond Defense deals 1 damage.
+
+Exceptions: Defense never applies to Terrain damage, Automatic damage, or Environmental effects.
+
+Six-Based Effects
+
+The Golden Rule: A single roll may only resolve ONE six-based bonus.
+
+Natural Six: If the attack hits, deal at least 1 damage, even if Successes ≤ Defense.
+
+Lucky Break: Triggered when all dice are 6s. Options: Quick Step (Free Half Move), Shake It Off (Remove 1 Pin/Condition), Deadeye (+1 die to next roll), Get It Done (Free Interact action).
+
+3. Locomotion & Visibility
+
+Visibility Vault
+
+Line of Sight (LoS): A clear, believable line between attacker and target. If in doubt, LoS is blocked.
+
+Blockers: Solid walls, Cliff faces, Large rocks, Intact buildings.
+
+Non-Blockers: Fences, Railings, Windows, Rubble, Boardwalks, Light vegetation.
+
+Cover: Partial obstruction. Grants +1 Defense vs ranged. Negated if attacker is in the same terrain piece or target is in Burning terrain.
+
+Locomotion Vault
+
+Movement: Measure in inches from base. Movement may be split by other actions.
+
+Difficult Terrain: Rubble, Steep slopes, Deep mud. Movement is halved (round down).
+
+Impassable: Solid cliffs, Deep chasms. Cannot enter.
+
+Engagement: Engaged when in melee range. Melee Pressure: While engaged, suffer -1 die on Ranged attacks and cannot gain Cover.
+
+4. Unit Identities (Archetypes)
+
+Archetype	Rule & Effect	Balance Logic
+Grunt	Expendable Fodder: No VP granted. No Morale loss generated. Cannot control objectives.	Multiplier: 0.8x
+Brute	Momentum: After dealing melee damage, move 2" (no reactions triggered).	Flat +15 pts
+Mystic	Lingering Harm: Debuffs persist until end of target's next activation.	Flat +15 pts
+Shooter	Fire Superiority: Split dice between 2 targets if stationary.	Flat +10 pts
+Cavalry	Disengage: Leave melee without penalty after attacking.	Flat +20 pts
+Rogue	First Strike: Attack first when charging or charged.	Scaled: Q×5
+Tank	Bodyguard: Intercept attacks for adjacent friendly units.	Multiplier: 1.1x
+Leader	Rally/Command Presence: Auras for Morale and Quality sharing.	Flat +30 / VP Risk: -10
+Titan	Unstoppable: Ignore difficult terrain. Cannot be Grappled by smaller units.	Multiplier: 1.5x
+5. Ability Dictionary
+
+A. Deployment & Timing
+
+Ambush: Deploy Hidden. Reveal for First Strike. (+10 pts)
+
+Scout: Free Move after deployment. (+10 pts)
+
+Out of Nowhere: Spawn from terrain feature as an activation. (+15 pts)
+
+B. Movement & Positioning
+
+Climber: No vertical penalties. (+5 pts)
+
+Fast: +2" to Move. (+10 pts)
+
+Stealth: -1 to hit from 9"+. (Scaled: Q×5)
+
+Flying: Ignore terrain/units. Melee immunity vs non-flyers. (Multiplier: 1.25x)
+
+Leaper: Leap 2d6". Risk damage on double 1s. (+15 pts / Risk: -5)
+
+Boardwalk Blitzer: Double speed on boardwalks + bonus action. (+15 pts)
+
+Barely Controlled: Must move 6" or pass Q-test to avoid Crash Landing. (Discount: -15 pts)
+
+C. Offense & Damage
+
+Impact (Standard/Brutal/Savage): 1, 2, or 3 auto-hits on charge. (+10 / +25 / +45 pts)
+
+Pierce (Standard/Brutal/Savage): Ignore 1, 2, or 3 Defense. (+15 / +30 / +60 pts)
+
+Hell Spray: 12"x12" cone attack (3 uses). (Scaled: Q×15 / Limited Use: -10)
+
+Blast: 3" radius AOE. (Scaled: Q×10)
+
+Venom: 1 delayed damage. (+10 pts)
+
+Sonic: Ignore cover, bypass physical immunity. (+20 pts)
+
+D. Defense & Utility
+
+Tough / Brutal Tough: 5+ or 4+ ignore damage roll. (Multiplier: 1.2x / 1.4x)
+
+Repair: Main Action. Heal Automat/Vehicle. (Scaled: Q×5 / Action: -5)
+
+Shield Aura: Adjacent units gain +1 Defense. (+30 pts)
+
+E. Befriend & Capture
+
+Befriend Beast: Quality vs Quality test. (Scaled: Q×10 / Action: -5)
+
+Befriend Kaiju: Attempt to tame Titan. (Scaled: Q×25 / Action: -10)
+
+6. Thyr Magic, Weapons & Variants
+
+Wild Magic: Access to the 2d6 Thyr Table. (+20 pts)
+
+Demolition: Double damage to structures, bypass Titan Unstoppable. (+15 pts)
+
+Overcharge: +2 dice, but become Shaken. (+10 pts / Penalty: -5)
+
+Unreliable: Self-damage on all 1s. (Discount: -10 pts)
+
+Unit Variants (Chassis Logic)
+
+Baby Chassis: -1 Q, -1 D, +2" Move. (Multiplier: 0.6x)
+
+Mama Chassis: +1 Q, +1 D, -2" Move, gain Furious. (Multiplier: 1.4x)
+
+Alpha Prime: +2 Q, +1 D, gain Leader rules. (Multiplier: 1.8x)
+
+7. Turn Structure & Engine Logic
+
+Initiative: Monster Factions always activate first. Fixed for the game.
+
+Action Economy: 2 Actions per activation.
+
+Refresh Logic: Once per Activation (Refreshes on turn), Once per Round (Refreshes on Round Start), Once per Game (Multiplier: 0.5x to ability cost).
+
+The Handshake: If a dispute lasts 60 seconds, d6 high roll decides. Record for later.
+
+This file is now ready to be saved as your V9 Rules Master. It is a perfect blend of your flavor-text and a robust, scalable math engine.
+
+Would you like me to create a "Stress Test" calculation for a specific unit (like a Yokai Ranger or a Brine Diver) to show you exactly how the app will pull from this file?
