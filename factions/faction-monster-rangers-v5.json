@@ -34,11 +34,11 @@
       "defense": 1,
       "move": 6,
       "range": 8,
-      "weapon": "Hatchet",
+      "weapon": "Standard-issue Ranger Hatchet, now balanced for throwing!",
       "weapon_properties": ["Melee"],
       "composition": { "per_points": 0 },
       "abilities": [],
-      "lore": "Field-trained Monster Ranger infantry from the land branches. Signature tool: hatchet, equal parts weapon and working tool.",
+      "lore": "Field-trained Monster Ranger infantry straight from Boot Camp. Signature tool: hatchet, equal parts weapon and working tool.",
       "tactics": "Baseline skirmisher. Thrown hatchets for short-range pressure, finish in melee.",
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
@@ -61,11 +61,11 @@
       "defense": 1,
       "move": 6,
       "range": 12,
-      "weapon": "Slingshot + Crowbar",
+      "weapon": "Slingshot + Prybar",
       "weapon_properties": ["Melee", "Prybar"],
       "composition": { "per_points": 0 },
       "abilities": ["Load and Carry", "Cut and Run", "Extraction Priority"],
-      "lore": "Hard-working Rangers running Cargo Tiger routes.",
+      "lore": "Hard-working employees running Cargo Tiger routes and delivering packages.",
       "tactics": "Backline harassment and objective play.",
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
@@ -76,7 +76,7 @@
           "effect": "+1 Defense. Light Armor.",
           "stat_modifiers": { "defense": 1 }
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
       ]
     },
     {
@@ -92,7 +92,7 @@
       "weapon_properties": ["Melee"],
       "composition": { "per_points": 150 },
       "abilities": ["Stealth", "Climber"],
-      "lore": "First Ranger Branch. Masters of stealth and speed.",
+      "lore": "First Ranger Branch. Masters of stealth and speed. Sneaky!",
       "tactics": "Fast scout and infiltrator.",
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
@@ -103,7 +103,7 @@
           "effect": "+1 Defense. Light Armor.",
           "stat_modifiers": { "defense": 1 }
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
       ]
     },
     {
@@ -119,18 +119,18 @@
       "weapon_properties": ["Impact", "Melee"],
       "composition": { "per_points": 300 },
       "abilities": ["Repair", "Befriend Automat", "Tough"],
-      "lore": "Monster Ranger mechanics and construct tamers.",
+      "lore": "Monster Ranger mechanics and Mechan tamers.",
       "tactics": "Support and construct control.",
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
-        { 
+      {
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Light Armor.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Automat attempt." }
       ]
     },
     {
@@ -162,14 +162,14 @@
       ],
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
-        { 
+         {
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Light Armor.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
       ]
     },
     {
@@ -188,16 +188,16 @@
       "lore": "Mystic protectors who focus on Witch Stitches - systematic warding using thread and needle. Understand we are deeply linked like thread.",
       "tactics": "Position centrally for Shield Aura (+1 Defense to allies within 6\"). Hex debuffs enemies (-1 Quality). Witch Stitching ward (5+ ignore first damage per activation).",
       "optional_upgrades": [
-        {"name": "Fire Hat", "cost": 5, "type": "Upgrade", "effect": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster."},
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
+        { "name": "Fire Hat", "cost": 5, "type": "Upgrade", "effect": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster." },
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         {
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+         { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
     {
@@ -216,15 +216,15 @@
       "lore": "Study, catalog, and protect Monster Ranger knowledge. Arcane repositories of legends, stories, Formulae. Motto: 'You are what you know.'",
       "tactics": "Backline support. (1) Purify hazardous terrain (12\" radius, once per game), (2) Boost befriend vs chosen monster type (+1 die within 12\"), (3) Amplify Conjure Guards (extend range/area +6\"/+3\").",
       "optional_upgrades": [
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         {
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
     {
@@ -240,14 +240,14 @@
       "weapon_properties": ["Melee"],
       "composition": {"per_points": 300},
       "abilities": ["Blood Transfusion", "Venom", "VitaGood Brew", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
-      "lore": "Treat Monster and Manling alike. Med Kits contain as many poisons as medicines. Brew VitaGood, perform blood transfusions. Some wear crow masks.",
+      "lore": "Treat Monster and Manling alike. Med Kits contain as many poisons as medicines. Brew VitaGood, perform blood transfusions. Wear field Plague Doctor masks.",
       "tactics": "Each turn: Blood Transfusion (base contact, sacrifice 1Q to heal 1Q, or 2Q for monsters - RISKY!) OR Venom (6\" poison). VitaGood tokens (2) for recovery or emergency heal.",
       "optional_upgrades": [
         {
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         }
       ]
@@ -261,10 +261,10 @@
       "defense": 2,
       "move": 6,
       "range": 12,
-      "weapon": "Psychic Projection",
+      "weapon": "Psychic Mind Ray",
       "weapon_properties": [],
       "composition": {"per_points": 300},
-      "abilities": ["Fortuna Charms", "Third Eye Vision", "Mind Control", {"name": "Befriend Spirits", "effect": "May attempt Befriend against Bloodless with the Ghost or Haunt keyword. Does not apply to physical undead."}],
+      "abilities": ["Fortuna Charms", "Third Eye Vision", "Mind Control", {"name": "Befriend Spirits", "effect": "May attempt Befriend against Ghost or Haunt Bloodless. Does not apply to physical undead."}],
       "lore": "Pierce the BEYOND with Third Eye. Create Fortuna Charms (luck), project consciousness to control minds. Rare and vital. Motto: 'Seeing is Believing.'",
       "tactics": "Support specialist. (1) Fortuna Charms: 3 tokens for rerolls, (2) Third Eye: see Stealth/reveal hidden, (3) Mind Control: attack to control enemy's next activation.",
       "optional_upgrades": [
@@ -273,10 +273,10 @@
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Haunt attempt." }
       ]
     },
     {
@@ -292,7 +292,7 @@
       "weapon_properties": ["Melee"],
       "composition": {"per_points": 300},
       "abilities": ["Befriend Kaiju", "Kaiju Calming Ritual", "Yokai Knowledge"],
-      "lore": "Specialize in Yokai and Kaiju. Started 1909 when Baron Davis visited Osaka. 5000+ Yokai Rangers in Japan. Regimented scholarly approach. 'Kaiju Corps' - ultimate Titan specialists.",
+      "lore": "Specialize in Yokai and Kaiju. Started 1909 when Baron Davis visited Osaka. 5000+ Yokai Rangers in Japan. Regimented scholarly approach. 'Kaiju Corps' - ultimate Kaiju specialists.",
       "tactics": "Titan specialist. Befriend Kaiju with +2 dice (Q3+2 = 5 dice vs Q6!). Kaiju Calming Ritual: 2-turn ritual to shrink rampaging Kaiju for +3 VP. Yokai Knowledge: +1 die aura vs Titans.",
       "optional_upgrades": [
         {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
@@ -300,10 +300,10 @@
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
     {
@@ -326,11 +326,11 @@
           "name": "Witch-Stitched Wings", 
           "cost": 15, 
           "type": "Upgrade", 
-          "effect": "+1 Defense (D3→D4), Barely Controlled test succeeds on 3+ instead of 4+. More stable bomber.",
+          "effect": "+1 Defense, Barely Controlled test succeeds on 3+ instead of 4+. More stable bomber.",
           "stat_modifiers": { "defense": 1 }
         },
         {"name": "Firework Bombs", "cost": 10, "type": "Upgrade", "effect": "Once per game: Drop firework bomb with Blast and Fear. Spectacular explosive!"},
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt with flying monsters." }
       ]
     },
     {
@@ -353,7 +353,7 @@
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         }
       ]
@@ -396,7 +396,7 @@
       "weapon_properties": ["Melee"],
       "composition": {"per_points": 400},
       "abilities": ["Inspire", "Rally", "Calamity Parade", "Radiomancer Jam"],
-      "lore": "Messengers and flag-bearers. Lead Calamity Parades, use Radio technology. Some jam Monsterology Dynamo equipment. First: Ivan Kularak, Trolla with 19ft banner pole!",
+      "lore": "Leaders, communicators and flag-bearers. Lead Calamity Parades, use Radio technology. Some jam Monsterology Dynamo equipment.",
       "tactics": "Standard leader (Inspire +1 die, Rally morale). Save Calamity Parade for decisive moment (+3\" Move, +1 Quality, Fearless for 1 round, 6\" aura). Radiomancer Jam disrupts tech heroes (24\", jam Jagers/Haxans/Iron Diplomats).",
       "optional_upgrades": [
         {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
@@ -404,10 +404,10 @@
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
       ]
     },
     {
@@ -422,18 +422,18 @@
       "weapon": "Thrice-Blessed Shovel",
       "weapon_properties": ["Melee", "Brutal Blow"],
       "composition": {"per_points": 400},
-      "abilities": ["Befriend Bloodless", "Haunt Candy", "Tougher", "Fearless", "Brutal Blow", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "abilities": ["Befriend Bloodless", "Tougher", "Fearless", "Brutal Blow", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
       "lore": "Ancient sect (500+ years). Care for Bloodless: Haunts, Vampires, Embalma, Rotters. Founded by Joh Woefix. Cemetery caretakers. Only wear black, smell like earth, see beauty in death.",
-      "tactics": "Durable undead specialist (D3 + Tougher + Fearless). Befriend Bloodless (contested vs undead). Haunt Candy tokens (3): buff, heal, or reroll befriend. Thrice-Blessed Shovel with Brutal Blow.",
+      "tactics": "Durable undead specialist (D3 + Tougher + Fearless). Befriend Bloodless (contested vs undead). Thrice-Blessed Shovel with Brutal Blow.",
       "optional_upgrades": [
         {
           "name": "Witch-Stitched Armor", 
           "cost": 10, 
           "type": "Gear", 
-          "effect": "+1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying.",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
-        {"name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, when this unit attempts a Befriend action against a creature of a Monster Type it is trained to Befriend, it may use Pocket Snacks. Using Pocket Snacks consumes the item immediately. The Befriend attempt is delayed: Round 1 is spent feeding, placating, or preparing the creature. In Round 2, resolve the Befriend roll normally. If the result is a tie, treat it as a win for the Ranger. Pocket Snacks have no effect on Peerless creatures."}
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
       ]
     },
     {
@@ -443,18 +443,18 @@
       "cost": 220,
       "quality": 5,
       "defense": 4,
-      "move": 10,
+      "move": 12,
       "range": 0,
       "weapon": "Ramming Bumper",
       "weapon_properties": ["Melee", "Grapple"],
       "composition": {"per_points": 400},
-      "abilities": ["Fast", "Disengage", "Mobile Cover", "Cargo Hold", "Thyr Boiler"],
-      "lore": "Cargo Tiger shipping company - nation's first motorized freight (1903). 27 trucks, 88 wagons, 1 steam engine. Can burn Thyr crystals for boosts. Hard-working Rangers drive into battle.",
-      "tactics": "Fast platform (12\" Move with Fast!). Load Rangers/objectives for transport. Park for Mobile Cover (+1 Defense aura). Grapple enemies (pull 3\"). Thyr Boiler (once per game): +4\" Move OR +2 Quality OR ignore terrain.",
+      "abilities": ["Fast", "Disengage", "Mobile Cover", "Cargo Hold"],
+      "lore": "Cargo Tiger shipping company coal-fired truck. Hard-working employees drive supplies and troops into battle. Held together with rust and paint.",
+      "tactics": "Fast platform (12\" Move. Load Rangers/objectives for transport. Park for Mobile Cover (+1 Defense aura). Grapple enemies (pull 3\").,
       "optional_upgrades": [
         {
           "name": "Reinforced Cab", 
-          "cost": 3, 
+          "cost": 10, 
           "type": "Upgrade", 
           "effect": "+1 Defense (D4→D5), -1\" Move (10\"→9\"). Armored plating.",
           "stat_modifiers": { 
