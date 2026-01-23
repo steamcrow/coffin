@@ -80,18 +80,19 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
             });
         }
         
-        // Unit type modifier
-        if (unit.type && state.rules) {
-            const archetype = state.rules.unit_archetypes[unit.type.toLowerCase()];
-            if (archetype) {
-                if (archetype.cost_multiplier) {
-                    cost *= archetype.cost_multiplier;
-                }
-                if (archetype.cost_flat) {
-                    cost += archetype.cost_flat;
-                }
-            }
+  // Unit type modifier (SAFE)
+if (unit.type && state.rules && state.rules.unit_archetypes) {
+    const archetype = state.rules.unit_archetypes[unit.type.toLowerCase()];
+    if (archetype) {
+        if (archetype.cost_multiplier) {
+            cost *= archetype.cost_multiplier;
         }
+        if (archetype.cost_flat) {
+            cost += archetype.cost_flat;
+        }
+    }
+}
+
         
         // Round up to nearest 5
         return Math.ceil(cost / 5) * 5;
