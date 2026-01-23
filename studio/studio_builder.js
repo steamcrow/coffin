@@ -3,10 +3,14 @@
 
 function mountFactionStudioRoot() {
     const root = document.getElementById("faction-studio-root");
+    
     if (!root) {
-        console.error("❌ faction-studio-root not found");
+        console.log("⏳ Waiting for faction-studio-root...");
+        setTimeout(mountFactionStudioRoot, 50);
         return;
     }
+
+    console.log("✅ faction-studio-root found, mounting UI");
 
     root.innerHTML = `
         <div id="fs-app" style="
@@ -21,6 +25,7 @@ function mountFactionStudioRoot() {
         </div>
     `;
 }
+
 
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
