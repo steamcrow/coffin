@@ -55,6 +55,19 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
     // ============================================
     // UTILITY FUNCTIONS
     // ============================================
+
+    // --- SAFE ACCESSORS (added, non-destructive) ---
+    const getArchetypeVault = () => state.rules?.unit_identities?.archetype_vault || {};
+    const getWeaponProps = () => state.rules?.weapon_properties || {};
+    const getAbilityDict = () => state.rules?.ability_dictionary || {};
+
+    // --- Small helper for dropdown options (added) ---
+    const renderSelectOptions = (values, selectedValue) => {
+        return values.map(v => `
+            <option value="${v}" ${String(selectedValue) === String(v) ? 'selected' : ''}>${v}</option>
+        `).join('');
+    };
+
     const calculateUnitCost = (unit) => {
         let cost = 0;
         
@@ -79,10 +92,11 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                 if (ability) {
                     if (ability.cost && typeof ability.cost === 'number') {
                         cost += ability.cost;
-                    } else if (ability.cost && ability.cost.includes('quality')) {
+                    } else if (ability.cost && typeof ability.cost === 'string' && ability.cost.includes('quality')) {
                         // Handle formulas like "quality * 5"
-                        const multiplier = parseInt(ability.cost.match(/\d+/)[0]);
-                        cost += unit.quality * multiplier;
+                        const m = ability.cost.match(/\d+/);
+                        const multiplier = m ? parseInt(m[0]) : 0;
+                        cost += (unit.quality || 1) * multiplier;
                     }
                     
                     if (ability.cost_multiplier) {
@@ -92,41 +106,88 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
             });
         }
         
-// Unit type modifier (SAFE)
-if (
-    unit.type && 
-    state.rules && 
-    state.rules.unit_identities?.archetype_vault
-) {
-    const archetype = state.rules.unit_identities.archetype_vault[unit.type.toLowerCase()];
-    if (archetype) {
-        if (archetype.cost_multiplier) {
-            cost *= archetype.cost_multiplier;
+        // Unit type modifier (SAFE)
+        if (
+            unit.type && 
+            state.rules && 
+            state.rules.unit_identities?.archetype_vault
+        ) {
+            const archetype = state.rules.unit_identities.archetype_vault[unit.type.toLowerCase()];
+            if (archetype) {
+                if (archetype.cost_multiplier) {
+                    cost *= archetype.cost_multiplier;
+                }
+                if (archetype.cost_flat) {
+                    cost += archetype.cost_flat;
+                }
+            }
         }
-        if (archetype.cost_flat) {
-            cost += archetype.cost_flat;
-        }
-    }
-}
 
-
-        
         // Round up to nearest 5
         return Math.ceil(cost / 5) * 5;
     };
 
+    // IMPORTANT FIX:
+    // Your rules.json ability_dictionary is KEY -> STRING (effect text),
+    // not objects with {name, effect}. This returns a normalized object.
     const findAbility = (name) => {
         if (!state.rules) return null;
-        
-        for (let category in state.rules.ability_dictionary) {
-            const abilities = state.rules.ability_dictionary[category];
+
+        const dict = getAbilityDict();
+        for (let category in dict) {
+            const abilities = dict[category];
+            if (!abilities) continue;
+
+            // If name matches key, normalize
+            if (Object.prototype.hasOwnProperty.call(abilities, name)) {
+                const val = abilities[name];
+                if (typeof val === 'string') {
+                    return { name, effect: val, cost: null };
+                }
+                if (val && typeof val === 'object') {
+                    // support both styles
+                    return {
+                        name: val.name || name,
+                        effect: val.effect || val.text || val.description || '',
+                        cost: val.cost ?? null,
+                        cost_multiplier: val.cost_multiplier
+                    };
+                }
+            }
+
+            // If the dict uses objects with .name fields, scan for it
             for (let key in abilities) {
-                if (abilities[key].name === name || key === name) {
-                    return abilities[key];
+                const val = abilities[key];
+                if (val && typeof val === 'object') {
+                    if (val.name === name || key === name) return val;
+                }
+                if (typeof val === 'string') {
+                    // if someone stored the "name" as display text, we can still match key === name (handled above)
                 }
             }
         }
+
         return null;
+    };
+
+    // Weapon properties normalization helpers (added)
+    const ensureWeaponPropsArray = (unit) => {
+        if (!unit.weapon_properties) unit.weapon_properties = [];
+        if (!Array.isArray(unit.weapon_properties)) unit.weapon_properties = [];
+    };
+
+    window.CCFB_FACTORY.toggleWeaponProperty = (propKey) => {
+        if (state.selectedUnit === null) return;
+        const unit = state.currentFaction.units[state.selectedUnit];
+        ensureWeaponPropsArray(unit);
+
+        if (unit.weapon_properties.includes(propKey)) {
+            unit.weapon_properties = unit.weapon_properties.filter(x => x !== propKey);
+        } else {
+            unit.weapon_properties.push(propKey);
+        }
+        renderUnitBuilder();
+        renderJSONPreview();
     };
 
     // ============================================
@@ -216,7 +277,11 @@ if (
         
         const unit = state.currentFaction.units[state.selectedUnit];
         const calculatedCost = calculateUnitCost(unit);
-        
+        ensureWeaponPropsArray(unit);
+
+        const archetypeVault = getArchetypeVault();
+        const weaponProps = getWeaponProps();
+
         container.innerHTML = `
             <div class="cc-panel-header">
                 <i class="fa fa-wrench"></i> ${state.editMode === 'new' ? 'NEW UNIT' : 'EDIT UNIT'}
@@ -238,7 +303,7 @@ if (
                     <select class="cc-select w-100" 
                             onchange="CCFB_FACTORY.updateUnit('type', this.value)">
                         <option value="">-- Select Type --</option>
-                        ${Object.keys(state.rules.unit_identities.archetype_vault || {}).map(type => `
+                        ${Object.keys(archetypeVault || {}).map(type => `
                             <option value="${type}" ${unit.type === type ? 'selected' : ''}>
                                 ${type.toUpperCase()}
                             </option>
@@ -246,7 +311,7 @@ if (
                     </select>
                     ${unit.type ? `
                         <div class="small mt-2" style="opacity: 0.7;">
-                            ${state.rules.unit_identities.archetype_vault[unit.type]?.type_rule || ''}
+                            ${(archetypeVault[unit.type]?.type_rule || archetypeVault[unit.type]?.type_rules?.[0] || '')}
                         </div>
                     ` : ''}
                 </div>
@@ -258,35 +323,31 @@ if (
                         <div class="stats-grid">
                             <div>
                                 <label class="small">Quality</label>
-                                <input type="number" 
-                                       class="cc-input" 
-                                       value="${unit.quality || 1}"
-                                       min="1" max="6"
-                                       onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))">
+                                <select class="cc-select w-100"
+                                        onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))">
+                                    ${renderSelectOptions([1,2,3,4,5,6], unit.quality || 1)}
+                                </select>
                             </div>
                             <div>
                                 <label class="small">Defense</label>
-                                <input type="number" 
-                                       class="cc-input" 
-                                       value="${unit.defense || 0}"
-                                       min="0"
-                                       onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))">
+                                <select class="cc-select w-100"
+                                        onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))">
+                                    ${renderSelectOptions([0,1,2,3,4,5,6], unit.defense || 0)}
+                                </select>
                             </div>
                             <div>
                                 <label class="small">Move</label>
-                                <input type="number" 
-                                       class="cc-input" 
-                                       value="${unit.move || 6}"
-                                       min="1"
-                                       onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))">
+                                <select class="cc-select w-100"
+                                        onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))">
+                                    ${renderSelectOptions([1,2,3,4,5,6,7,8,9,10,11,12], unit.move || 6)}
+                                </select>
                             </div>
                             <div>
                                 <label class="small">Range</label>
-                                <input type="number" 
-                                       class="cc-input" 
-                                       value="${unit.range || 0}"
-                                       min="0"
-                                       onchange="CCFB_FACTORY.updateUnit('range', parseInt(this.value))">
+                                <select class="cc-select w-100"
+                                        onchange="CCFB_FACTORY.updateUnit('range', parseInt(this.value))">
+                                    ${renderSelectOptions([0,3,6,9,12,18,24], unit.range || 0)}
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -298,6 +359,35 @@ if (
                                class="cc-input w-100" 
                                value="${unit.weapon || ''}"
                                onchange="CCFB_FACTORY.updateUnit('weapon', this.value)">
+                    </div>
+
+                    <!-- Weapon Properties (ADDED) -->
+                    <div class="form-group">
+                        <label>WEAPON PROPERTIES</label>
+                        <button class="cc-tool-btn w-100" onclick="CCFB_FACTORY.showWeaponPropertyPicker()">
+                            <i class="fa fa-plus"></i> ADD WEAPON PROPERTY
+                        </button>
+
+                        ${(unit.weapon_properties && unit.weapon_properties.length > 0) ? `
+                            <div class="mt-2">
+                                ${unit.weapon_properties.map((propKey, idx) => {
+                                    const p = weaponProps[propKey];
+                                    const pName = p?.name || propKey;
+                                    const pEffect = p?.effect || '';
+                                    return `
+                                        <div class="upgrade-row">
+                                            <div style="flex: 1;">
+                                                <b>${pName}</b>
+                                                ${pEffect ? `<div class="small opacity-75">${pEffect}</div>` : ''}
+                                            </div>
+                                            <button class="btn-minus" onclick="CCFB_FACTORY.removeWeaponProperty(${idx})">
+                                                <i class="fa fa-times"></i>
+                                            </button>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                     
                     <!-- Abilities (THIRD CHOICE) -->
@@ -311,11 +401,12 @@ if (
                             <div class="mt-2">
                                 ${unit.abilities.map((abilityName, idx) => {
                                     const ability = findAbility(abilityName);
+                                    const effectText = ability?.effect || (typeof ability === 'string' ? ability : '');
                                     return `
                                         <div class="upgrade-row">
                                             <div style="flex: 1;">
                                                 <b>${abilityName}</b>
-                                                ${ability ? `<div class="small opacity-75">${ability.effect}</div>` : ''}
+                                                ${effectText ? `<div class="small opacity-75">${effectText}</div>` : ''}
                                             </div>
                                             <button class="btn-minus" onclick="CCFB_FACTORY.removeAbility(${idx})">
                                                 <i class="fa fa-times"></i>
@@ -396,7 +487,7 @@ if (
         modal.id = 'ability-picker-modal';
         modal.className = 'cc-slide-panel';
         
-        const categories = Object.keys(state.rules.ability_dictionary);
+        const categories = Object.keys(getAbilityDict());
         
         modal.innerHTML = `
             <div class="cc-slide-panel-header">
@@ -408,22 +499,32 @@ if (
             
             <div style="padding: 15px;">
                 ${categories.map(category => {
-                    const abilities = state.rules.ability_dictionary[category];
+                    const abilities = getAbilityDict()[category] || {};
                     return `
                         <div class="mb-3">
                             <h4 style="color: var(--cc-primary); font-size: 14px; margin-bottom: 10px;">
                                 ${category.replace(/_/g, ' ').toUpperCase()}
                             </h4>
                             ${Object.keys(abilities).map(abilityKey => {
-                                const ability = abilities[abilityKey];
+                                const raw = abilities[abilityKey];
+
+                                // normalize
+                                const abilityObj = (typeof raw === 'string')
+                                    ? { name: abilityKey, effect: raw, cost: null }
+                                    : {
+                                        name: raw?.name || abilityKey,
+                                        effect: raw?.effect || raw?.text || raw?.description || '',
+                                        cost: raw?.cost ?? null
+                                      };
+
                                 return `
-                                    <div class="upgrade-row" onclick="CCFB_FACTORY.addAbility('${ability.name}')">
+                                    <div class="upgrade-row" onclick="CCFB_FACTORY.addAbility('${abilityObj.name.replace(/'/g, "\\'")}')">
                                         <div style="flex: 1;">
-                                            <b>${ability.name}</b>
-                                            <div class="small opacity-75">${ability.effect}</div>
-                                            ${ability.cost ? `
+                                            <b>${abilityObj.name}</b>
+                                            <div class="small opacity-75">${abilityObj.effect || ''}</div>
+                                            ${abilityObj.cost ? `
                                                 <div class="small" style="color: var(--cc-primary); margin-top: 3px;">
-                                                    Cost: ${ability.cost}
+                                                    Cost: ${abilityObj.cost}
                                                 </div>
                                             ` : ''}
                                         </div>
@@ -476,14 +577,73 @@ if (
     };
 
     // ============================================
+    // WEAPON PROPERTY PICKER MODAL (ADDED)
+    // ============================================
+    window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
+        const modal = document.createElement('div');
+        modal.id = 'weapon-prop-picker-modal';
+        modal.className = 'cc-slide-panel';
+
+        const props = getWeaponProps();
+        const keys = Object.keys(props);
+
+        modal.innerHTML = `
+            <div class="cc-slide-panel-header">
+                <h2>ADD WEAPON PROPERTY</h2>
+                <button onclick="CCFB_FACTORY.closeWeaponPropertyPicker()" class="cc-panel-close-btn">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+
+            <div style="padding: 15px;">
+                ${keys.length ? keys.map(k => {
+                    const p = props[k] || {};
+                    const pName = p.name || k;
+                    const pEffect = p.effect || '';
+                    return `
+                        <div class="upgrade-row" onclick="CCFB_FACTORY.toggleWeaponProperty('${k}')">
+                            <div style="flex: 1;">
+                                <b>${pName}</b>
+                                <div class="small opacity-75">${pEffect}</div>
+                            </div>
+                            <i class="fa fa-plus" style="color: var(--cc-primary);"></i>
+                        </div>
+                    `;
+                }).join('') : '<div class="cc-empty-state">No weapon properties found in rules.json</div>'}
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('cc-slide-panel-open'), 10);
+    };
+
+    window.CCFB_FACTORY.closeWeaponPropertyPicker = () => {
+        const modal = document.getElementById('weapon-prop-picker-modal');
+        if (modal) {
+            modal.classList.remove('cc-slide-panel-open');
+            setTimeout(() => modal.remove(), 300);
+        }
+    };
+
+    window.CCFB_FACTORY.removeWeaponProperty = (index) => {
+        if (state.selectedUnit === null) return;
+        const unit = state.currentFaction.units[state.selectedUnit];
+        ensureWeaponPropsArray(unit);
+
+        unit.weapon_properties.splice(index, 1);
+        renderUnitBuilder();
+        renderJSONPreview();
+    };
+
+    // ============================================
     // PUBLIC API
     // ============================================
-  window.CCFB_FACTORY.init = async () => {
-    console.log("🏭 Initializing Faction Builder...");
-    
-    mountFactionStudioRoot();   
-    
-    // Load rules...
+    window.CCFB_FACTORY.init = async () => {
+        console.log("🏭 Initializing Faction Builder...");
+        
+        mountFactionStudioRoot();   
+        
+        // Load rules...
 
         try {
             const response = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=' + Date.now());
@@ -521,6 +681,7 @@ if (
             move: 6,
             range: 0,
             weapon: "",
+            weapon_properties: [], // ADDED (non-breaking)
             abilities: [],
             lore: ""
         };
