@@ -587,29 +587,44 @@ const renderUnitCard = () => {
                     </div>
                 ` : ''}
 
-                <!-- Abilities -->
-                ${unit.abilities && unit.abilities.length > 0 ? `
-                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
-                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
-                            <i class="fa fa-bolt"></i> ABILITIES
-                        </div>
-                        ${unit.abilities.map((abilityName, idx) => {
-                            const ability = findAbility(abilityName);
-                            const effectText = ability?.effect || '';
-                            return `
-                                <div class="upgrade-row">
-                                    <div style="flex: 1;">
-                                        <b style="color: var(--cc-primary);">${esc(abilityName)}</b>
-                                        ${effectText ? `<div class="small opacity-75">${esc(effectText)}</div>` : ''}
-                                    </div>
-                                    <button class="btn-minus" onclick="CCFB_FACTORY.removeAbility(${idx})">
-                                        <i class="fa fa-times"></i>
-                                    </button>
-                                </div>
-                            `;
-                        }).join('')}
+               <!-- Abilities -->
+${unit.abilities && unit.abilities.length > 0 ? `
+    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
+            <i class="fa fa-bolt"></i> ABILITIES
+        </div>
+        ${unit.abilities.map((abilityName, idx) => {
+            const ability = findAbility(abilityName);
+            const effectText = ability?.effect || '';
+            return `
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 4px;">
+                    <div style="flex: 1;">
+                        <b style="color: var(--cc-primary);">${esc(abilityName)}</b>
+                        ${effectText ? `<div style="font-size: 11px; opacity: 0.75; margin-top: 4px;">${esc(effectText)}</div>` : ''}
                     </div>
-                ` : ''}
+                    <button class="btn-minus" onclick="CCFB_FACTORY.removeAbility(${idx})">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+            `;
+        }).join('')}
+    </div>
+` : ''}
+
+<!-- Supplemental Abilities -->
+${unit.supplemental_abilities && unit.supplemental_abilities.length > 0 ? `
+    <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,117,24,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
+            <i class="fa fa-star"></i> SUPPLEMENTAL (Choose ONE)
+        </div>
+        ${unit.supplemental_abilities.map(supp => `
+            <div style="margin-bottom: 8px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 4px;">
+                <b style="color: var(--cc-primary);">${esc(supp.name)}</b>
+                <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">${esc(supp.effect)}</div>
+            </div>
+        `).join('')}
+    </div>
+` : ''}
 
                 <!-- Lore -->
                 ${unit.lore ? `
@@ -693,6 +708,90 @@ const renderUnitCard = () => {
         }
     };
 
+    window.CCFB_FACTORY.showSupplementalAbilityEditor = () => {
+    if (state.selectedUnit === null) return;
+    const unit = state.currentFaction.units[state.selectedUnit];
+    if (!unit.supplemental_abilities) unit.supplemental_abilities = [];
+
+    const modal = document.createElement('div');
+    modal.id = 'supplemental-modal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;';
+
+    modal.innerHTML = `
+        <div style="background: #1a1a1a; border: 3px solid #ff7518; border-radius: 8px; max-width: 700px; width: 90%; max-height: 80vh; display: flex; flex-direction: column;">
+            <div style="padding: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #ff7518;">
+                    <i class="fa fa-star" style="margin-right: 8px;"></i>SUPPLEMENTAL ABILITIES
+                </h2>
+                <button onclick="CCFB_FACTORY.closeSupplementalEditor()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div style="padding: 20px; overflow-y: auto; flex: 1;">
+                <p style="margin-bottom: 20px; opacity: 0.8; font-size: 13px;">Player chooses ONE of these at army building:</p>
+                
+                ${unit.supplemental_abilities.map((supp, idx) => `
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 4px;">
+                        <div style="flex: 1;">
+                            <b style="color: #ff7518;">${esc(supp.name)}</b>
+                            <div style="font-size: 12px; margin-top: 4px;">${esc(supp.effect)}</div>
+                        </div>
+                        <button class="btn-minus" onclick="CCFB_FACTORY.removeSupplemental(${idx})">
+                            <i class="fa fa-times"></i>
+                        </button>
+                    </div>
+                `).join('')}
+                
+                <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 4px;">
+                    <label style="color: #ff7518; font-weight: 700; margin-bottom: 5px; display: block; font-size: 11px; text-transform: uppercase;">NAME</label>
+                    <input type="text" id="supp-name" class="cc-input w-100" placeholder="e.g., Groom's Grail" style="margin-bottom: 10px;">
+                    
+                    <label style="color: #ff7518; font-weight: 700; margin-bottom: 5px; display: block; font-size: 11px; text-transform: uppercase;">EFFECT</label>
+                    <textarea id="supp-effect" class="cc-input w-100" rows="2" placeholder="e.g., Once per game: 12\" cone freeze for 2 rounds."></textarea>
+                    
+                    <button class="cc-tool-btn w-100 mt-2" onclick="CCFB_FACTORY.addSupplemental()">
+                        <i class="fa fa-plus"></i> ADD
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+};
+
+window.CCFB_FACTORY.closeSupplementalEditor = () => {
+    const modal = document.getElementById('supplemental-modal');
+    if (modal) modal.remove();
+    renderUnitBuilder();
+    renderUnitCard();
+};
+
+window.CCFB_FACTORY.addSupplemental = () => {
+    if (state.selectedUnit === null) return;
+    
+    const name = document.getElementById('supp-name').value.trim();
+    const effect = document.getElementById('supp-effect').value.trim();
+    
+    if (!name || !effect) {
+        alert('Please enter both name and effect');
+        return;
+    }
+    
+    const unit = state.currentFaction.units[state.selectedUnit];
+    if (!unit.supplemental_abilities) unit.supplemental_abilities = [];
+    
+    unit.supplemental_abilities.push({ name, effect });
+    
+    CCFB_FACTORY.showSupplementalAbilityEditor(); // Refresh modal
+};
+window.CCFB_FACTORY.removeSupplemental = (index) => {
+    if (state.selectedUnit === null) return;
+    const unit = state.currentFaction.units[state.selectedUnit];
+    unit.supplemental_abilities.splice(index, 1);
+    CCFB_FACTORY.showSupplementalAbilityEditor(); // Refresh modal
+};
+    
     window.CCFB_FACTORY.addAbility = (abilityName) => {
         if (state.selectedUnit === null) return;
 
