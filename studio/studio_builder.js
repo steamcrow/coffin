@@ -135,48 +135,31 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         const container = document.getElementById('faction-overview');
         if (!container) return;
         
-        container.innerHTML = `
-            <div class="cc-panel-header">
-                <i class="fa fa-folder"></i> FACTION
-            </div>
-            
-            <div style="padding: 15px;">
-                <div class="form-group">
-                    <label>NAME</label>
-                    <input type="text" 
-                           class="cc-input w-100" 
-                           value="${state.currentFaction.faction}"
-                           onchange="CCFB_FACTORY.updateFactionName(this.value)">
-                </div>
-                
-                <div class="form-group">
-                    <label>UNITS (${state.currentFaction.units.length})</label>
-                    <button class="cc-tool-btn w-100 mb-2" onclick="CCFB_FACTORY.startNewUnit()">
-                        <i class="fa fa-plus"></i> NEW UNIT
-                    </button>
-                    
-                    <div class="unit-list">
-                        ${state.currentFaction.units.map((unit, index) => `
-                            <div class="cc-roster-item ${state.selectedUnit === index ? 'cc-item-selected' : ''}"
-                                 onclick="CCFB_FACTORY.selectUnit(${index})"
-                                 style="cursor: pointer;">
-                                <div style="flex: 1;">
-                                    <div class="u-name">${unit.name}</div>
-                                    <div class="u-type">${unit.type || 'No Type'}</div>
-                                </div>
-                                <div style="color: var(--cc-primary); font-weight: bold;">
-                                    ${calculateUnitCost(unit)}₤
-                                </div>
-                            </div>
-                        `).join('') || '<div class="cc-empty-state" style="padding: 20px;">No units yet</div>'}
-                    </div>
-                </div>
-                
-                <button class="btn-outline-warning w-100" onclick="CCFB_FACTORY.exportFaction()">
-                    <i class="fa fa-download"></i> EXPORT JSON
-                </button>
-            </div>
-        `;
+        container.innerHTML += `
+  <div class="cc-roster-item">
+
+    <div class="u-type">${unit.type}</div>
+    <div class="u-name">${unit.name}</div>
+
+    <div class="stat-badge-flex">
+      ${statBadges}
+    </div>
+
+    <div class="u-weapon">
+      ${weaponLine}
+    </div>
+
+    <div class="ability-boxed-callout">
+      ${weaponHTML}
+    </div>
+
+    <div class="ability-boxed-callout">
+      ${abilitiesHTML}
+    </div>
+
+  </div>
+`;
+
     };
 
     const renderUnitBuilder = () => {
