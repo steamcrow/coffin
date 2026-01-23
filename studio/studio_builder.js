@@ -464,10 +464,13 @@ if (unit.type && state.rules && state.rules.unit_archetypes) {
     // ============================================
     // PUBLIC API
     // ============================================
-    window.CCFB_FACTORY.init = async () => {
-        console.log("🏭 Initializing Faction Builder...");
-        
-        // Load rules
+  window.CCFB_FACTORY.init = async () => {
+    console.log("🏭 Initializing Faction Builder...");
+    
+    mountFactionStudioRoot();   
+    
+    // Load rules...
+
         try {
             const response = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=' + Date.now());
             const data = await response.json();
