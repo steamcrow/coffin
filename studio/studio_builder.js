@@ -741,7 +741,8 @@ window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
                                 ">${esc(pName)}</div>
                                 <div style="
                                     font-size: 12px;
-                                    opacity: 0.8;
+                                    opacity: 1;
+                                    color: #ffa500;
                                     line-height: 1.4;
                                 ">${esc(pEffect)}</div>
                             </div>
