@@ -18,23 +18,20 @@ function mountFactionStudioRoot() {
     root.innerHTML = `
         <div id="fs-app" style="
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 16px;
-            padding: 16px;
+            grid-template-columns: 300px 1fr 350px;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
         ">
             <div id="faction-overview"></div>
             <div id="unit-builder"></div>
-            <div id="inspector-panel"></div>
+            <div id="unit-card"></div>
         </div>
     `;
 }
 
-// SAFE INSPECTOR ACCESSOR
-const getInspector = () => {
-    const el = document.getElementById("inspector-panel");
-    if (!el) console.warn("⚠️ Inspector panel not found");
-    return el;
-};
+const getUnitCard = () => document.getElementById("unit-card");
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
@@ -140,12 +137,12 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         
         container.innerHTML = `
             <div class="cc-panel-header">
-                <i class="fa fa-folder"></i> FACTION OVERVIEW
+                <i class="fa fa-folder"></i> FACTION
             </div>
             
             <div style="padding: 15px;">
                 <div class="form-group">
-                    <label>FACTION NAME</label>
+                    <label>NAME</label>
                     <input type="text" 
                            class="cc-input w-100" 
                            value="${state.currentFaction.faction}"
@@ -153,19 +150,10 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                 </div>
                 
                 <div class="form-group">
-                    <label>DESCRIPTION</label>
-                    <textarea class="cc-input w-100" 
-                              rows="3"
-                              onchange="CCFB_FACTORY.updateFactionDescription(this.value)">${state.currentFaction.description || ''}</textarea>
-                </div>
-                
-                <div class="form-group">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                        <label>UNITS (${state.currentFaction.units.length})</label>
-                        <button class="cc-tool-btn" onclick="CCFB_FACTORY.startNewUnit()">
-                            <i class="fa fa-plus"></i> NEW
-                        </button>
-                    </div>
+                    <label>UNITS (${state.currentFaction.units.length})</label>
+                    <button class="cc-tool-btn w-100 mb-2" onclick="CCFB_FACTORY.startNewUnit()">
+                        <i class="fa fa-plus"></i> NEW UNIT
+                    </button>
                     
                     <div class="unit-list">
                         ${state.currentFaction.units.map((unit, index) => `
@@ -177,14 +165,10 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                                     <div class="u-type">${unit.type || 'No Type'}</div>
                                 </div>
                                 <div style="color: var(--cc-primary); font-weight: bold;">
-                                    ${calculateUnitCost(unit)} ₤
+                                    ${calculateUnitCost(unit)}₤
                                 </div>
-                                <button class="btn-minus" 
-                                        onclick="event.stopPropagation(); CCFB_FACTORY.deleteUnit(${index})">
-                                    <i class="fa fa-trash"></i>
-                                </button>
                             </div>
-                        `).join('') || '<div class="cc-empty-state">No units yet</div>'}
+                        `).join('') || '<div class="cc-empty-state" style="padding: 20px;">No units yet</div>'}
                     </div>
                 </div>
                 
@@ -202,11 +186,13 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         if (state.selectedUnit === null) {
             container.innerHTML = `
                 <div class="cc-panel-header">
-                    <i class="fa fa-wrench"></i> UNIT BUILDER
+                    <i class="fa fa-hammer"></i> UNIT BUILDER
                 </div>
-                <div class="cc-empty-state">
-                    <i class="fa fa-plus-circle mb-3" style="font-size: 2rem; display: block;"></i>
-                    SELECT A UNIT OR CREATE NEW
+                <div style="display: flex; align-items: center; justify-content: center; height: 400px; flex-direction: column; opacity: 0.5;">
+                    <i class="fa fa-arrow-left" style="font-size: 3rem; margin-bottom: 20px;"></i>
+                    <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">
+                        Select or create a unit
+                    </div>
                 </div>
             `;
             return;
@@ -214,105 +200,200 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         
         const unit = state.currentFaction.units[state.selectedUnit];
         const archetypeVault = getArchetypeVault();
+        
+        // Determine which steps are complete
+        const hasName = unit.name && unit.name !== "New Unit";
+        const hasType = unit.type && unit.type !== "";
+        const hasStats = hasType; // Stats are set by default once type is chosen
+        const hasWeapon = unit.weapon && unit.weapon !== "";
 
         container.innerHTML = `
             <div class="cc-panel-header">
-                <i class="fa fa-wrench"></i> UNIT BUILDER
+                <i class="fa fa-hammer"></i> UNIT BUILDER
             </div>
             
-            <div style="padding: 15px;">
-                <div class="form-group">
-                    <label>UNIT NAME</label>
-                    <input type="text" 
-                           class="cc-input w-100" 
-                           value="${unit.name || ''}"
-                           onchange="CCFB_FACTORY.updateUnit('name', this.value)">
-                </div>
-                
-                <div class="form-group">
-                    <label>UNIT TYPE</label>
-                    <select class="cc-select w-100" 
-                            onchange="CCFB_FACTORY.updateUnit('type', this.value)">
-                        <option value="">-- Select Type --</option>
-                        ${Object.keys(archetypeVault || {}).map(type => `
-                            <option value="${type}" ${unit.type === type ? 'selected' : ''}>
-                                ${type.toUpperCase()}
-                            </option>
-                        `).join('')}
-                    </select>
-                    ${unit.type ? `
-                        <div class="small mt-2" style="opacity: 0.7;">
-                            ${(archetypeVault[unit.type]?.type_rule || archetypeVault[unit.type]?.type_rules?.[0] || '')}
-                        </div>
-                    ` : ''}
-                </div>
-                
-                ${unit.type ? `
-                    <div class="form-group">
-                        <label>STATS</label>
-                        <div class="stats-grid">
-                            <div>
-                                <label class="small">Quality</label>
-                                <select class="cc-select w-100"
-                                        onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))">
-                                    ${renderSelectOptions([1,2,3,4,5,6], unit.quality || 1)}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="small">Defense</label>
-                                <select class="cc-select w-100"
-                                        onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))">
-                                    ${renderSelectOptions([0,1,2,3,4,5,6], unit.defense || 0)}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="small">Move</label>
-                                <select class="cc-select w-100"
-                                        onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))">
-                                    ${renderSelectOptions([1,2,3,4,5,6,7,8,9,10,11,12], unit.move || 6)}
-                                </select>
-                            </div>
-                            <div>
-                                <label class="small">Range</label>
-                                <select class="cc-select w-100"
-                                        onchange="CCFB_FACTORY.updateUnit('range', parseInt(this.value))">
-                                    ${renderSelectOptions([0,3,6,9,12,18,24], unit.range || 0)}
-                                </select>
-                            </div>
-                        </div>
+            <div style="padding: 20px;">
+                <!-- STEP 1: NAME -->
+                <div class="builder-step ${hasName ? 'step-complete' : 'step-active'}">
+                    <div class="step-header">
+                        <div class="step-number">${hasName ? '✓' : '1'}</div>
+                        <div class="step-title">NAME YOUR UNIT</div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>WEAPON</label>
+                    <div class="step-content">
                         <input type="text" 
                                class="cc-input w-100" 
-                               value="${unit.weapon || ''}"
-                               onchange="CCFB_FACTORY.updateUnit('weapon', this.value)">
+                               placeholder="Enter unit name..."
+                               value="${unit.name || ''}"
+                               onchange="CCFB_FACTORY.updateUnit('name', this.value)"
+                               style="font-size: 16px; font-weight: 600;">
                     </div>
-                    
-                    <div class="form-group">
-                        <label>LORE</label>
+                </div>
+
+                <!-- STEP 2: TYPE -->
+                <div class="builder-step ${!hasName ? 'step-locked' : hasType ? 'step-complete' : 'step-active'}">
+                    <div class="step-header">
+                        <div class="step-number">${hasType ? '✓' : '2'}</div>
+                        <div class="step-title">CHOOSE TYPE</div>
+                    </div>
+                    <div class="step-content">
+                        ${!hasName ? '<div class="step-hint">Complete previous step first</div>' : `
+                            <select class="cc-select w-100" 
+                                    onchange="CCFB_FACTORY.updateUnit('type', this.value)"
+                                    style="font-size: 14px;">
+                                <option value="">-- Select Type --</option>
+                                ${Object.keys(archetypeVault || {}).map(type => `
+                                    <option value="${type}" ${unit.type === type ? 'selected' : ''}>
+                                        ${type.toUpperCase()}
+                                    </option>
+                                `).join('')}
+                            </select>
+                            ${unit.type ? `
+                                <div class="type-rule-display">
+                                    <i class="fa fa-info-circle"></i>
+                                    ${(archetypeVault[unit.type]?.type_rule || archetypeVault[unit.type]?.type_rules?.[0] || '')}
+                                </div>
+                            ` : ''}
+                        `}
+                    </div>
+                </div>
+
+                <!-- STEP 3: STATS -->
+                <div class="builder-step ${!hasType ? 'step-locked' : 'step-active'}">
+                    <div class="step-header">
+                        <div class="step-number">3</div>
+                        <div class="step-title">SET STATS</div>
+                    </div>
+                    <div class="step-content">
+                        ${!hasType ? '<div class="step-hint">Complete previous step first</div>' : `
+                            <div class="stats-grid" style="gap: 12px;">
+                                <div>
+                                    <label class="small">QUALITY</label>
+                                    <select class="cc-select w-100"
+                                            onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))">
+                                        ${renderSelectOptions([1,2,3,4,5,6], unit.quality || 1)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="small">DEFENSE</label>
+                                    <select class="cc-select w-100"
+                                            onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))">
+                                        ${renderSelectOptions([0,1,2,3,4,5,6], unit.defense || 0)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="small">MOVE</label>
+                                    <select class="cc-select w-100"
+                                            onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))">
+                                        ${renderSelectOptions([1,2,3,4,5,6,7,8,9,10,11,12], unit.move || 6)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="small">RANGE</label>
+                                    <select class="cc-select w-100"
+                                            onchange="CCFB_FACTORY.updateUnit('range', parseInt(this.value))">
+                                        ${renderSelectOptions([0,3,6,9,12,18,24], unit.range || 0)}
+                                    </select>
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+
+                <!-- STEP 4: WEAPON -->
+                <div class="builder-step ${!hasType ? 'step-locked' : hasWeapon ? 'step-complete' : 'step-active'}">
+                    <div class="step-header">
+                        <div class="step-number">${hasWeapon ? '✓' : '4'}</div>
+                        <div class="step-title">NAME WEAPON</div>
+                    </div>
+                    <div class="step-content">
+                        ${!hasType ? '<div class="step-hint">Complete previous steps first</div>' : `
+                            <input type="text" 
+                                   class="cc-input w-100" 
+                                   placeholder="e.g., Rusty Sword, Crossbow..."
+                                   value="${unit.weapon || ''}"
+                                   onchange="CCFB_FACTORY.updateUnit('weapon', this.value)">
+                        `}
+                    </div>
+                </div>
+
+                <!-- STEP 5: WEAPON PROPERTIES -->
+                <div class="builder-step ${!hasWeapon ? 'step-locked' : 'step-active'}">
+                    <div class="step-header">
+                        <div class="step-number">5</div>
+                        <div class="step-title">WEAPON PROPERTIES</div>
+                        <div style="flex: 1;"></div>
+                        ${hasWeapon ? `
+                            <button class="btn-add-small" onclick="CCFB_FACTORY.showWeaponPropertyPicker()">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="step-content">
+                        ${!hasWeapon ? '<div class="step-hint">Complete previous steps first</div>' : 
+                            (unit.weapon_properties && unit.weapon_properties.length > 0) ? 
+                                '<div class="step-hint">See unit card for properties →</div>' :
+                                '<div class="step-hint">No properties yet (optional)</div>'
+                        }
+                    </div>
+                </div>
+
+                <!-- STEP 6: ABILITIES -->
+                <div class="builder-step ${!hasType ? 'step-locked' : 'step-active'}">
+                    <div class="step-header">
+                        <div class="step-number">6</div>
+                        <div class="step-title">ABILITIES</div>
+                        <div style="flex: 1;"></div>
+                        ${hasType ? `
+                            <button class="btn-add-small" onclick="CCFB_FACTORY.showAbilityPicker()">
+                                <i class="fa fa-plus"></i>
+                            </button>
+                        ` : ''}
+                    </div>
+                    <div class="step-content">
+                        ${!hasType ? '<div class="step-hint">Complete previous steps first</div>' : 
+                            (unit.abilities && unit.abilities.length > 0) ? 
+                                '<div class="step-hint">See unit card for abilities →</div>' :
+                                '<div class="step-hint">No abilities yet (optional)</div>'
+                        }
+                    </div>
+                </div>
+
+                <!-- STEP 7: LORE (OPTIONAL) -->
+                <div class="builder-step step-active">
+                    <div class="step-header">
+                        <div class="step-number">7</div>
+                        <div class="step-title">LORE (OPTIONAL)</div>
+                    </div>
+                    <div class="step-content">
                         <textarea class="cc-input w-100" 
                                   rows="3"
+                                  placeholder="Add backstory, flavor text..."
                                   onchange="CCFB_FACTORY.updateUnit('lore', this.value)">${unit.lore || ''}</textarea>
                     </div>
-                ` : '<div class="cc-empty-state">Select a unit type to continue</div>'}
+                </div>
+
+                <!-- DELETE BUTTON -->
+                ${state.selectedUnit !== null ? `
+                    <button class="btn-danger w-100 mt-3" onclick="CCFB_FACTORY.deleteUnit(${state.selectedUnit})">
+                        <i class="fa fa-trash"></i> DELETE UNIT
+                    </button>
+                ` : ''}
             </div>
         `;
     };
 
-    // NEW: Inspector Panel - Detailed Unit Editing
-    const renderInspectorPanel = () => {
-        const inspector = getInspector();
-        if (!inspector) return;
+    // NEW: Live Unit Card Preview
+    const renderUnitCard = () => {
+        const container = getUnitCard();
+        if (!container) return;
         
         if (state.selectedUnit === null) {
-            inspector.innerHTML = `
+            container.innerHTML = `
                 <div class="cc-panel-header">
-                    <i class="fa fa-search"></i> INSPECTOR
+                    <i class="fa fa-id-card"></i> UNIT CARD
                 </div>
-                <div class="cc-empty-state">
-                    Select a unit to inspect and edit details
+                <div style="display: flex; align-items: center; justify-content: center; height: 400px; opacity: 0.3;">
+                    <i class="fa fa-id-card" style="font-size: 4rem;"></i>
                 </div>
             `;
             return;
@@ -321,100 +402,94 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         const unit = state.currentFaction.units[state.selectedUnit];
         ensureWeaponPropsArray(unit);
         
-        const calculatedCost = calculateUnitCost(unit);
+        const cost = calculateUnitCost(unit);
         const weaponProps = getWeaponProps();
         const archetype = getArchetypeVault()[unit.type?.toLowerCase()];
 
-        inspector.innerHTML = `
+        container.innerHTML = `
             <div class="cc-panel-header">
-                <i class="fa fa-search"></i> INSPECTOR
+                <i class="fa fa-id-card"></i> UNIT CARD
             </div>
             
-            <div style="padding: 15px;">
-                <!-- Cost Display -->
-                <div style="
-                    text-align: center; 
-                    padding: 15px; 
-                    background: rgba(255,117,24,0.1); 
-                    border: 2px solid var(--cc-primary); 
-                    border-radius: 4px;
-                    margin-bottom: 20px;
-                ">
-                    <div style="font-size: 12px; opacity: 0.7; margin-bottom: 5px;">CALCULATED COST</div>
-                    <div style="font-size: 28px; font-weight: 900; color: var(--cc-primary);">
-                        ${calculatedCost} ₤
-                    </div>
+            <div class="unit-card-preview">
+                <!-- Unit Header -->
+                <div class="unit-card-header">
+                    <div class="unit-card-name">${unit.name || 'Unnamed Unit'}</div>
+                    ${unit.type ? `
+                        <div class="unit-card-type">${unit.type.toUpperCase()}</div>
+                    ` : ''}
                 </div>
 
-                <!-- Archetype Info -->
+                <!-- Cost Badge -->
+                <div class="unit-card-cost">
+                    <div class="cost-label">COST</div>
+                    <div class="cost-value">${cost}₤</div>
+                </div>
+
+                <!-- Stats Block -->
                 ${unit.type ? `
-                    <div class="form-group">
-                        <label>ARCHETYPE INFO</label>
-                        <div style="padding: 10px; background: rgba(0,0,0,0.2); border-radius: 4px; font-size: 12px;">
-                            <div><b>Type:</b> ${unit.type.toUpperCase()}</div>
-                            ${archetype?.cost_multiplier ? `<div><b>Cost Mult:</b> ${archetype.cost_multiplier}x</div>` : ''}
-                            ${archetype?.cost_flat ? `<div><b>Cost Flat:</b> +${archetype.cost_flat}</div>` : ''}
+                    <div class="unit-card-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">Q</div>
+                            <div class="stat-value">${unit.quality || 1}+</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">D</div>
+                            <div class="stat-value">${unit.defense || 0}+</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">M</div>
+                            <div class="stat-value">${unit.move || 6}"</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">R</div>
+                            <div class="stat-value">${unit.range || 0}"</div>
                         </div>
                     </div>
+                ` : '<div class="unit-card-empty">Choose a type to see stats</div>'}
+
+                <!-- Weapon Section -->
+                ${unit.weapon ? `
+                    <div class="unit-card-section">
+                        <div class="section-label"><i class="fa fa-crosshairs"></i> WEAPON</div>
+                        <div class="weapon-name">${unit.weapon}</div>
+                        
+                        ${(unit.weapon_properties && unit.weapon_properties.length > 0) ? `
+                            <div class="weapon-properties">
+                                ${unit.weapon_properties.map(propKey => {
+                                    const p = weaponProps[propKey];
+                                    const pName = p?.name || propKey;
+                                    return `<span class="property-badge">${pName}</span>`;
+                                }).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
                 ` : ''}
-                
-                <!-- Weapon Properties -->
-                <div class="form-group">
-                    <label>WEAPON PROPERTIES</label>
-                    <button class="cc-tool-btn w-100" onclick="CCFB_FACTORY.showWeaponPropertyPicker()">
-                        <i class="fa fa-plus"></i> ADD PROPERTY
-                    </button>
-                    
-                    ${(unit.weapon_properties && unit.weapon_properties.length > 0) ? `
-                        <div class="mt-2">
-                            ${unit.weapon_properties.map((propKey, idx) => {
-                                const p = weaponProps[propKey];
-                                const pName = p?.name || propKey;
-                                const pEffect = p?.effect || '';
-                                return `
-                                    <div class="upgrade-row">
-                                        <div style="flex: 1;">
-                                            <b>${pName}</b>
-                                            ${pEffect ? `<div class="small opacity-75">${pEffect}</div>` : ''}
-                                        </div>
-                                        <button class="btn-minus" onclick="CCFB_FACTORY.removeWeaponProperty(${idx})">
-                                            <i class="fa fa-times"></i>
-                                        </button>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    ` : '<div class="small opacity-75 mt-2">No weapon properties</div>'}
-                </div>
-                
-                <!-- Abilities -->
-                <div class="form-group">
-                    <label>ABILITIES</label>
-                    <button class="cc-tool-btn w-100" onclick="CCFB_FACTORY.showAbilityPicker()">
-                        <i class="fa fa-plus"></i> ADD ABILITY
-                    </button>
-                    
-                    ${unit.abilities && unit.abilities.length > 0 ? `
-                        <div class="mt-2">
-                            ${unit.abilities.map((abilityName, idx) => {
-                                const ability = findAbility(abilityName);
-                                const effectText = ability?.effect || '';
-                                return `
-                                    <div class="upgrade-row">
-                                        <div style="flex: 1;">
-                                            <b>${abilityName}</b>
-                                            ${effectText ? `<div class="small opacity-75">${effectText}</div>` : ''}
-                                            ${ability?.cost ? `<div class="small" style="color: var(--cc-primary);">Cost: ${ability.cost}</div>` : ''}
-                                        </div>
-                                        <button class="btn-minus" onclick="CCFB_FACTORY.removeAbility(${idx})">
-                                            <i class="fa fa-times"></i>
-                                        </button>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    ` : '<div class="small opacity-75 mt-2">No abilities</div>'}
-                </div>
+
+                <!-- Abilities Section -->
+                ${unit.abilities && unit.abilities.length > 0 ? `
+                    <div class="unit-card-section">
+                        <div class="section-label"><i class="fa fa-bolt"></i> ABILITIES</div>
+                        ${unit.abilities.map(abilityName => {
+                            const ability = findAbility(abilityName);
+                            const effectText = ability?.effect || '';
+                            return `
+                                <div class="ability-item">
+                                    <div class="ability-name">${abilityName}</div>
+                                    ${effectText ? `<div class="ability-effect">${effectText}</div>` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                ` : ''}
+
+                <!-- Lore Section -->
+                ${unit.lore ? `
+                    <div class="unit-card-section">
+                        <div class="section-label"><i class="fa fa-book"></i> LORE</div>
+                        <div class="lore-text">${unit.lore}</div>
+                    </div>
+                ` : ''}
             </div>
         `;
     };
@@ -425,70 +500,64 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
     window.CCFB_FACTORY.showAbilityPicker = () => {
         const modal = document.createElement('div');
         modal.id = 'ability-picker-modal';
-        modal.className = 'cc-slide-panel';
+        modal.className = 'cc-modal-overlay';
         
         const categories = Object.keys(getAbilityDict());
         
         modal.innerHTML = `
-            <div class="cc-slide-panel-header">
-                <h2>ADD ABILITY</h2>
-                <button onclick="CCFB_FACTORY.closeAbilityPicker()" class="cc-panel-close-btn">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-            
-            <div style="padding: 15px;">
-                ${categories.map(category => {
-                    const abilities = getAbilityDict()[category] || {};
-                    return `
-                        <div class="mb-3">
-                            <h4 style="color: var(--cc-primary); font-size: 14px; margin-bottom: 10px;">
-                                ${category.replace(/_/g, ' ').toUpperCase()}
-                            </h4>
-                            ${Object.keys(abilities).map(abilityKey => {
-                                const raw = abilities[abilityKey];
-                                const abilityObj = (typeof raw === 'string')
-                                    ? { name: abilityKey, effect: raw, cost: null }
-                                    : {
-                                        name: raw?.name || abilityKey,
-                                        effect: raw?.effect || raw?.text || raw?.description || '',
-                                        cost: raw?.cost ?? null
-                                      };
+            <div class="cc-modal-panel">
+                <div class="cc-modal-header">
+                    <h2><i class="fa fa-bolt"></i> ADD ABILITY</h2>
+                    <button onclick="CCFB_FACTORY.closeAbilityPicker()" class="cc-modal-close">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
+                
+                <div class="cc-modal-content">
+                    ${categories.map(category => {
+                        const abilities = getAbilityDict()[category] || {};
+                        return `
+                            <div class="ability-category">
+                                <h3 class="category-header">${category.replace(/_/g, ' ').toUpperCase()}</h3>
+                                <div class="ability-grid">
+                                    ${Object.keys(abilities).map(abilityKey => {
+                                        const raw = abilities[abilityKey];
+                                        const abilityObj = (typeof raw === 'string')
+                                            ? { name: abilityKey, effect: raw, cost: null }
+                                            : {
+                                                name: raw?.name || abilityKey,
+                                                effect: raw?.effect || raw?.text || raw?.description || '',
+                                                cost: raw?.cost ?? null
+                                              };
 
-                                return `
-                                    <div class="upgrade-row" onclick="CCFB_FACTORY.addAbility('${abilityObj.name.replace(/'/g, "\\'")}')">
-                                        <div style="flex: 1;">
-                                            <b>${abilityObj.name}</b>
-                                            <div class="small opacity-75">${abilityObj.effect || ''}</div>
-                                            ${abilityObj.cost ? `
-                                                <div class="small" style="color: var(--cc-primary); margin-top: 3px;">
-                                                    Cost: ${abilityObj.cost}
-                                                </div>
-                                            ` : ''}
-                                        </div>
-                                        <i class="fa fa-plus" style="color: var(--cc-primary);"></i>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    `;
-                }).join('')}
+                                        return `
+                                            <div class="ability-card" onclick="CCFB_FACTORY.addAbility('${abilityObj.name.replace(/'/g, "\\'")}')">
+                                                <div class="ability-card-name">${abilityObj.name}</div>
+                                                <div class="ability-card-effect">${abilityObj.effect || ''}</div>
+                                                ${abilityObj.cost ? `
+                                                    <div class="ability-card-cost">Cost: ${abilityObj.cost}</div>
+                                                ` : ''}
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
             </div>
         `;
         
-        const inspector = getInspector();
-        inspector.innerHTML = "";
-        inspector.appendChild(modal);
-        setTimeout(() => modal.classList.add('cc-slide-panel-open'), 10);
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('cc-modal-open'), 10);
     };
 
     window.CCFB_FACTORY.closeAbilityPicker = () => {
         const modal = document.getElementById('ability-picker-modal');
         if (modal) {
-            modal.classList.remove('cc-slide-panel-open');
+            modal.classList.remove('cc-modal-open');
             setTimeout(() => {
                 modal.remove();
-                renderInspectorPanel();
             }, 300);
         }
     };
@@ -502,7 +571,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         if (!unit.abilities.includes(abilityName)) {
             unit.abilities.push(abilityName);
             renderFactionOverview();
-            renderInspectorPanel();
+            renderUnitCard();
         }
         
         CCFB_FACTORY.closeAbilityPicker();
@@ -515,57 +584,55 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         if (unit.abilities) {
             unit.abilities.splice(index, 1);
             renderFactionOverview();
-            renderInspectorPanel();
+            renderUnitCard();
         }
     };
 
     window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
         const modal = document.createElement('div');
         modal.id = 'weapon-prop-picker-modal';
-        modal.className = 'cc-slide-panel';
+        modal.className = 'cc-modal-overlay';
 
         const props = getWeaponProps();
         const keys = Object.keys(props);
 
         modal.innerHTML = `
-            <div class="cc-slide-panel-header">
-                <h2>ADD WEAPON PROPERTY</h2>
-                <button onclick="CCFB_FACTORY.closeWeaponPropertyPicker()" class="cc-panel-close-btn">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
+            <div class="cc-modal-panel">
+                <div class="cc-modal-header">
+                    <h2><i class="fa fa-crosshairs"></i> ADD WEAPON PROPERTY</h2>
+                    <button onclick="CCFB_FACTORY.closeWeaponPropertyPicker()" class="cc-modal-close">
+                        <i class="fa fa-times"></i>
+                    </button>
+                </div>
 
-            <div style="padding: 15px;">
-                ${keys.length ? keys.map(k => {
-                    const p = props[k] || {};
-                    const pName = p.name || k;
-                    const pEffect = p.effect || '';
-                    return `
-                        <div class="upgrade-row" onclick="CCFB_FACTORY.toggleWeaponProperty('${k}')">
-                            <div style="flex: 1;">
-                                <b>${pName}</b>
-                                <div class="small opacity-75">${pEffect}</div>
-                            </div>
-                            <i class="fa fa-plus" style="color: var(--cc-primary);"></i>
-                        </div>
-                    `;
-                }).join('') : '<div class="cc-empty-state">No weapon properties found</div>'}
+                <div class="cc-modal-content">
+                    <div class="ability-grid">
+                        ${keys.length ? keys.map(k => {
+                            const p = props[k] || {};
+                            const pName = p.name || k;
+                            const pEffect = p.effect || '';
+                            return `
+                                <div class="ability-card" onclick="CCFB_FACTORY.toggleWeaponProperty('${k}')">
+                                    <div class="ability-card-name">${pName}</div>
+                                    <div class="ability-card-effect">${pEffect}</div>
+                                </div>
+                            `;
+                        }).join('') : '<div class="cc-empty-state">No weapon properties found</div>'}
+                    </div>
+                </div>
             </div>
         `;
 
-        const inspector = getInspector();
-        inspector.innerHTML = "";
-        inspector.appendChild(modal);
-        setTimeout(() => modal.classList.add('cc-slide-panel-open'), 10);
+        document.body.appendChild(modal);
+        setTimeout(() => modal.classList.add('cc-modal-open'), 10);
     };
 
     window.CCFB_FACTORY.closeWeaponPropertyPicker = () => {
         const modal = document.getElementById('weapon-prop-picker-modal');
         if (modal) {
-            modal.classList.remove('cc-slide-panel-open');
+            modal.classList.remove('cc-modal-open');
             setTimeout(() => {
                 modal.remove();
-                renderInspectorPanel();
             }, 300);
         }
     };
@@ -581,7 +648,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
             unit.weapon_properties.push(propKey);
         }
         renderFactionOverview();
-        renderInspectorPanel();
+        renderUnitCard();
         CCFB_FACTORY.closeWeaponPropertyPicker();
     };
 
@@ -592,7 +659,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
         unit.weapon_properties.splice(index, 1);
         renderFactionOverview();
-        renderInspectorPanel();
+        renderUnitCard();
     };
 
     // ============================================
@@ -616,7 +683,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         
         renderFactionOverview();
         renderUnitBuilder();
-        renderInspectorPanel();
+        renderUnitCard();
     };
 
     window.CCFB_FACTORY.updateFactionName = (value) => {
@@ -647,7 +714,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         
         renderFactionOverview();
         renderUnitBuilder();
-        renderInspectorPanel();
+        renderUnitCard();
     };
 
     window.CCFB_FACTORY.selectUnit = (index) => {
@@ -655,7 +722,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         state.editMode = 'edit';
         renderFactionOverview();
         renderUnitBuilder();
-        renderInspectorPanel();
+        renderUnitCard();
     };
 
     window.CCFB_FACTORY.deleteUnit = (index) => {
@@ -668,7 +735,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         
         renderFactionOverview();
         renderUnitBuilder();
-        renderInspectorPanel();
+        renderUnitCard();
     };
 
     window.CCFB_FACTORY.updateUnit = (field, value) => {
@@ -677,7 +744,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         state.currentFaction.units[state.selectedUnit][field] = value;
         renderFactionOverview();
         renderUnitBuilder();
-        renderInspectorPanel();
+        renderUnitCard();
     };
 
     window.CCFB_FACTORY.exportFaction = () => {
