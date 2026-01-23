@@ -243,6 +243,10 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                     <button class="btn-outline-warning w-100" onclick="CCFB_FACTORY.exportFaction()">
                         <i class="fa fa-download"></i> EXPORT FACTION JSON
                     </button>
+                    <button class="btn-outline-warning w-100 mt-2" onclick="CCFB_FACTORY.importFaction()">
+                    <i class="fa fa-upload"></i> IMPORT FACTION JSON
+                    </button>
+                    <input type="file" id="faction-file-input" accept=".json" style="display: none;" onchange="CCFB_FACTORY.handleFileUpload(event)">
                 </div>
             </div>
         `;
@@ -716,7 +720,60 @@ const renderUnitCard = () => {
             renderUnitCard();
         }
     };
+window.CCFB_FACTORY.importFaction = () => {
+    document.getElementById('faction-file-input').click();
+};
 
+window.CCFB_FACTORY.handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const imported = JSON.parse(e.target.result);
+            
+            // Clean up: ensure all units have required fields
+            if (imported.units) {
+                imported.units = imported.units.map(u => ({
+                    name: u.name || "Imported Unit",
+                    type: u.type || "",
+                    quality: u.quality || 1,
+                    defense: u.defense || 0,
+                    move: u.move || 6,
+                    range: u.range || 0,
+                    weapon: u.weapon || "",
+                    weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
+                    abilities: Array.isArray(u.abilities) ? u.abilities : [],
+                    supplemental_abilities: Array.isArray(u.supplemental_abilities) ? u.supplemental_abilities : [],
+                    lore: u.lore || ""
+                }));
+            }
+            
+            state.currentFaction = {
+                faction: imported.faction || "Imported Faction",
+                version: imported.version || "1.0",
+                description: imported.description || "",
+                faction_features: imported.faction_features || [],
+                units: imported.units || []
+            };
+            
+            state.selectedUnit = null;
+            
+            renderFactionOverview();
+            renderUnitBuilder();
+            renderUnitCard();
+            
+            alert('✓ Faction imported successfully!');
+        } catch (err) {
+            alert('Error importing faction: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+    
+    // Reset input
+    event.target.value = '';
+};
 window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
     const existing = document.getElementById('weapon-prop-picker-modal');
     if (existing) existing.remove();
