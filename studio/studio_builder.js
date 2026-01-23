@@ -92,9 +92,13 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
             });
         }
         
-  // Unit type modifier (SAFE)
-if (unit.type && state.rules && state.rules.unit_archetypes) {
-    const archetype = state.rules.unit_archetypes[unit.type.toLowerCase()];
+// Unit type modifier (SAFE)
+if (
+    unit.type && 
+    state.rules && 
+    state.rules.unit_identities?.archetype_vault
+) {
+    const archetype = state.rules.unit_identities.archetype_vault[unit.type.toLowerCase()];
     if (archetype) {
         if (archetype.cost_multiplier) {
             cost *= archetype.cost_multiplier;
@@ -104,6 +108,7 @@ if (unit.type && state.rules && state.rules.unit_archetypes) {
         }
     }
 }
+
 
         
         // Round up to nearest 5
@@ -233,7 +238,7 @@ if (unit.type && state.rules && state.rules.unit_archetypes) {
                     <select class="cc-select w-100" 
                             onchange="CCFB_FACTORY.updateUnit('type', this.value)">
                         <option value="">-- Select Type --</option>
-                        ${Object.keys(state.rules.unit_archetypes || {}).map(type => `
+                        ${Object.keys(state.rules.unit_identities.archetype_vault || {}).map(type => `
                             <option value="${type}" ${unit.type === type ? 'selected' : ''}>
                                 ${type.toUpperCase()}
                             </option>
@@ -241,7 +246,7 @@ if (unit.type && state.rules && state.rules.unit_archetypes) {
                     </select>
                     ${unit.type ? `
                         <div class="small mt-2" style="opacity: 0.7;">
-                            ${state.rules.unit_archetypes[unit.type]?.type_rule || ''}
+                            ${state.rules.unit_identities.archetype_vault[unit.type]?.type_rule || ''}
                         </div>
                     ` : ''}
                 </div>
