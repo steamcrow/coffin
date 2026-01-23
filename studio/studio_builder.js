@@ -425,117 +425,144 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
     };
 
     // NEW: Live Unit Card Preview
-    const renderUnitCard = () => {
-        const container = getUnitCard();
-        if (!container) return;
+const renderUnitCard = () => {
+    const container = getUnitCard();
+    if (!container) return;
 
-        if (state.selectedUnit === null) {
-            container.innerHTML = `
-                <div class="cc-panel">
-                    <div class="cc-panel-header">
-                        <i class="fa fa-id-card"></i> UNIT CARD
-                    </div>
-                    <div style="display: flex; align-items: center; justify-content: center; height: 400px; opacity: 0.3;">
-                        <i class="fa fa-id-card" style="font-size: 4rem;"></i>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        const unit = state.currentFaction.units[state.selectedUnit];
-        ensureWeaponPropsArray(unit);
-
-        const cost = calculateUnitCost(unit);
-        const weaponProps = getWeaponProps();
-
+    if (state.selectedUnit === null) {
         container.innerHTML = `
-            <div class="cc-panel">
-                <div class="cc-panel-header">
+            <div style="background: rgba(0,0,0,0.3); border: 2px solid var(--cc-border); border-radius: 8px;">
+                <div style="padding: 15px; background: rgba(0,0,0,0.4); border-bottom: 2px solid var(--cc-border); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
                     <i class="fa fa-id-card"></i> UNIT CARD
                 </div>
-
-                <div class="unit-card-preview">
-                    <!-- Unit Header -->
-                    <div class="unit-card-header">
-                        <div class="unit-card-name">${esc(unit.name || 'Unnamed Unit')}</div>
-                        ${unit.type ? `<div class="unit-card-type">${esc(unit.type.toUpperCase())}</div>` : ''}
-                    </div>
-
-                    <!-- Cost Badge -->
-                    <div class="unit-card-cost">
-                        <div class="cost-label">COST</div>
-                        <div class="cost-value">${cost}₤</div>
-                    </div>
-
-                    <!-- Stats Block -->
-                    ${unit.type ? `
-                        <div class="unit-card-stats">
-                            <div class="stat-item">
-                                <div class="stat-label">Q</div>
-                                <div class="stat-value">${unit.quality || 1}+</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-label">D</div>
-                                <div class="stat-value">${unit.defense || 0}+</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-label">M</div>
-                                <div class="stat-value">${unit.move || 6}"</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-label">R</div>
-                                <div class="stat-value">${unit.range || 0}"</div>
-                            </div>
-                        </div>
-                    ` : '<div class="unit-card-empty">Choose a type to see stats</div>'}
-
-                    <!-- Weapon Section -->
-                    ${unit.weapon ? `
-                        <div class="unit-card-section">
-                            <div class="section-label"><i class="fa fa-crosshairs"></i> WEAPON</div>
-                            <div class="weapon-name">${esc(unit.weapon)}</div>
-
-                            ${(unit.weapon_properties && unit.weapon_properties.length > 0) ? `
-                                <div class="weapon-properties">
-                                    ${unit.weapon_properties.map(propKey => {
-                                        const p = weaponProps[propKey];
-                                        const pName = p?.name || propKey;
-                                        return `<span class="property-badge">${esc(pName)}</span>`;
-                                    }).join('')}
-                                </div>
-                            ` : ''}
-                        </div>
-                    ` : ''}
-
-                    <!-- Abilities Section -->
-                    ${unit.abilities && unit.abilities.length > 0 ? `
-                        <div class="unit-card-section">
-                            <div class="section-label"><i class="fa fa-bolt"></i> ABILITIES</div>
-                            ${unit.abilities.map(abilityName => {
-                                const ability = findAbility(abilityName);
-                                const effectText = ability?.effect || '';
-                                return `
-                                    <div class="ability-item">
-                                        <div class="ability-name">${esc(abilityName)}</div>
-                                        ${effectText ? `<div class="ability-effect">${esc(effectText)}</div>` : ''}
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    ` : ''}
-
-                    <!-- Lore Section -->
-                    ${unit.lore ? `
-                        <div class="unit-card-section">
-                            <div class="section-label"><i class="fa fa-book"></i> LORE</div>
-                            <div class="lore-text">${esc(unit.lore)}</div>
-                        </div>
-                    ` : ''}
+                <div style="display: flex; align-items: center; justify-content: center; height: 400px; opacity: 0.3;">
+                    <i class="fa fa-id-card" style="font-size: 4rem;"></i>
                 </div>
             </div>
         `;
-    };
+        return;
+    }
+
+    const unit = state.currentFaction.units[state.selectedUnit];
+    ensureWeaponPropsArray(unit);
+
+    const cost = calculateUnitCost(unit);
+    const weaponProps = getWeaponProps();
+
+    container.innerHTML = `
+        <div style="background: rgba(0,0,0,0.3); border: 2px solid var(--cc-border); border-radius: 8px; overflow: hidden;">
+            <!-- Header -->
+            <div style="padding: 15px; background: rgba(0,0,0,0.4); border-bottom: 2px solid var(--cc-border); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                <i class="fa fa-id-card"></i> UNIT CARD
+            </div>
+
+            <div style="padding: 20px;">
+                <!-- Unit Name & Type -->
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 24px; font-weight: 900; text-transform: uppercase; color: var(--cc-primary); margin-bottom: 8px; letter-spacing: 2px;">
+                        ${esc(unit.name || 'Unnamed Unit')}
+                    </div>
+                    ${unit.type ? `
+                        <div style="display: inline-block; background: var(--cc-primary); color: #000; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 1px;">
+                            ${esc(unit.type.toUpperCase())}
+                        </div>
+                    ` : ''}
+                </div>
+
+                <!-- Cost -->
+                <div style="text-align: center; padding: 20px; background: rgba(255,117,24,0.15); border: 3px solid var(--cc-primary); border-radius: 8px; margin-bottom: 20px;">
+                    <div style="font-size: 11px; opacity: 0.7; font-weight: 700; letter-spacing: 2px;">COST</div>
+                    <div style="font-size: 36px; font-weight: 900; color: var(--cc-primary); line-height: 1; margin-top: 5px;">
+                        ${cost}₤
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                ${unit.type ? `
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;">
+                        <div style="text-align: center; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px;">
+                            <div style="font-size: 10px; font-weight: 700; opacity: 0.6; margin-bottom: 4px;">Q</div>
+                            <div style="font-size: 18px; font-weight: 900; color: var(--cc-primary);">${unit.quality || 1}+</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px;">
+                            <div style="font-size: 10px; font-weight: 700; opacity: 0.6; margin-bottom: 4px;">D</div>
+                            <div style="font-size: 18px; font-weight: 900; color: var(--cc-primary);">${unit.defense || 0}+</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px;">
+                            <div style="font-size: 10px; font-weight: 700; opacity: 0.6; margin-bottom: 4px;">M</div>
+                            <div style="font-size: 18px; font-weight: 900; color: var(--cc-primary);">${unit.move || 6}"</div>
+                        </div>
+                        <div style="text-align: center; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px;">
+                            <div style="font-size: 10px; font-weight: 700; opacity: 0.6; margin-bottom: 4px;">R</div>
+                            <div style="font-size: 18px; font-weight: 900; color: var(--cc-primary);">${unit.range || 0}"</div>
+                        </div>
+                    </div>
+                ` : '<div style="text-align: center; padding: 40px 20px; opacity: 0.4; font-size: 13px;">Choose a type to see stats</div>'}
+
+                <!-- Weapon -->
+                ${unit.weapon ? `
+                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
+                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
+                            <i class="fa fa-crosshairs"></i> WEAPON
+                        </div>
+                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${esc(unit.weapon)}</div>
+                        
+                        ${(unit.weapon_properties && unit.weapon_properties.length > 0) ? `
+                            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+                                ${unit.weapon_properties.map(propKey => {
+                                    const p = weaponProps[propKey];
+                                    const pName = p?.name || propKey;
+                                    return `
+                                        <span style="display: inline-block; background: rgba(255,117,24,0.2); border: 1px solid var(--cc-primary); padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                            ${esc(pName)}
+                                        </span>
+                                    `;
+                                }).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                ` : ''}
+
+                <!-- Abilities -->
+                ${unit.abilities && unit.abilities.length > 0 ? `
+                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
+                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
+                            <i class="fa fa-bolt"></i> ABILITIES
+                        </div>
+                        ${unit.abilities.map((abilityName, idx) => {
+                            const ability = findAbility(abilityName);
+                            const effectText = ability?.effect || '';
+                            return `
+                                <div style="margin-bottom: ${idx < unit.abilities.length - 1 ? '12px' : '0'};">
+                                    <div style="font-size: 14px; font-weight: 700; color: var(--cc-primary); margin-bottom: 4px;">
+                                        ${esc(abilityName)}
+                                    </div>
+                                    ${effectText ? `
+                                        <div style="font-size: 12px; opacity: 0.8; line-height: 1.4;">
+                                            ${esc(effectText)}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                ` : ''}
+
+                <!-- Lore -->
+                ${unit.lore ? `
+                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
+                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
+                            <i class="fa fa-book"></i> LORE
+                        </div>
+                        <div style="font-size: 13px; line-height: 1.6; opacity: 0.9; font-style: italic;">
+                            ${esc(unit.lore)}
+                        </div>
+                    </div>
+                ` : ''}
+            </div>
+        </div>
+    `;
+};
 
     // ============================================
     // MODALS
