@@ -432,6 +432,27 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                         </div>
                     </div>
 
+                    <!-- STEP 6.5: SUPPLEMENTAL ABILITIES (NEW!) -->
+                    <div class="builder-step ${!hasType ? 'step-locked' : 'step-active'}">
+                        <div class="step-header">
+                            <div class="step-number"><i class="fa fa-star"></i></div>
+                            <div class="step-title">SUPPLEMENTAL ABILITIES (OPTIONAL)</div>
+                            <div style="flex: 1;"></div>
+                            ${hasType ? `
+                                <button class="btn-add-small" onclick="CCFB_FACTORY.showSupplementalAbilityEditor()">
+                                    <i class="fa fa-plus"></i>
+                                </button>
+                        ` : ''}
+    </div>
+    <div class="step-content">
+        ${!hasType ? '<div class="step-hint">Complete previous steps first</div>' :
+            (unit.supplemental_abilities && unit.supplemental_abilities.length > 0) ?
+                '<div class="step-hint">Player chooses ONE at army building →</div>' :
+                '<div class="step-hint">Special choose-one options (optional)</div>'
+        }
+    </div>
+</div>
+                    
                     <!-- STEP 7: LORE (OPTIONAL) -->
                     <div class="builder-step step-active">
                         <div class="step-header">
@@ -708,10 +729,10 @@ window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
     const keys = Object.keys(props);
 
     modal.innerHTML = `
-        <div style="background: #1a1a1a; border: 3px solid var(--cc-primary); border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
-            <div style="padding: 20px; border-bottom: 2px solid var(--cc-border); display: flex; align-items: center; justify-content: space-between;">
-                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--cc-primary);">
-                    <i class="fa fa-crosshairs"></i> ADD WEAPON PROPERTY
+        <div style="background: #1a1a1a; border: 3px solid #ff7518; border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
+            <div style="padding: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #ff7518;">
+                    <i class="fa fa-crosshairs" style="margin-right: 8px;"></i>ADD WEAPON PROPERTY
                 </h2>
                 <button onclick="CCFB_FACTORY.closeWeaponPropertyPicker()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 5px 10px;">
                     <i class="fa fa-times"></i>
@@ -724,10 +745,10 @@ window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
                         const pName = p.name || k;
                         const pEffect = p.effect || '';
                         return `
-                            <div onclick="CCFB_FACTORY.toggleWeaponProperty('${k}')" style="padding: 15px; background: rgba(0,0,0,0.3); border: 2px solid var(--cc-border); border-radius: 6px; cursor: pointer; transition: all 0.2s;" 
-                                onmouseover="this.style.borderColor='var(--cc-primary)'; this.style.background='rgba(255,117,24,0.1)'"
-                                onmouseout="this.style.borderColor='var(--cc-border)'; this.style.background='rgba(0,0,0,0.3)'">
-                                <div style="font-size: 14px; font-weight: 700; color: var(--cc-primary); margin-bottom: 6px;">
+                            <div onclick="CCFB_FACTORY.toggleWeaponProperty('${k}')" style="padding: 15px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; transition: all 0.2s;" 
+                                onmouseover="this.style.borderColor='#ff7518'; this.style.background='rgba(255,117,24,0.1)'"
+                                onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.3)'">
+                                <div style="font-size: 14px; font-weight: 700; color: #ff7518; margin-bottom: 6px;">
                                     ${esc(pName)}
                                 </div>
                                 <div style="font-size: 12px; color: #fff; line-height: 1.4;">
@@ -741,6 +762,76 @@ window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
         </div>
     `;
 
+    document.body.appendChild(modal);
+};
+
+window.CCFB_FACTORY.showAbilityPicker = () => {
+    const existing = document.getElementById('ability-picker-modal');
+    if (existing) existing.remove();
+    
+    const modal = document.createElement('div');
+    modal.id = 'ability-picker-modal';
+    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;';
+    
+    const categories = Object.keys(getAbilityDict());
+    
+    modal.innerHTML = `
+        <div style="background: #1a1a1a; border: 3px solid #ff7518; border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
+            <div style="padding: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
+                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #ff7518;">
+                    <i class="fa fa-bolt" style="margin-right: 8px;"></i>ADD ABILITY
+                </h2>
+                <button onclick="CCFB_FACTORY.closeAbilityPicker()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 5px 10px;">
+                    <i class="fa fa-times"></i>
+                </button>
+            </div>
+            <div style="padding: 20px; overflow-y: auto; flex: 1;">
+                ${categories.map(category => {
+                    const abilities = getAbilityDict()[category] || {};
+                    return `
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="font-size: 14px; font-weight: 700; color: #ff7518; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(255,255,255,0.1);">
+                                ${esc(category.replace(/_/g, ' ').toUpperCase())}
+                            </h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
+                                ${Object.keys(abilities).map(abilityKey => {
+                                    const raw = abilities[abilityKey];
+                                    const abilityObj = (typeof raw === 'string')
+                                        ? { name: abilityKey, effect: raw, cost: null }
+                                        : {
+                                            name: raw?.name || abilityKey,
+                                            effect: raw?.effect || raw?.text || raw?.description || '',
+                                            cost: raw?.cost ?? null
+                                          };
+
+                                    return `
+                                        <div onclick="CCFB_FACTORY.addAbility('${String(abilityObj.name).replace(/'/g, "\\'")}')">
+                                            <div style="padding: 15px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; transition: all 0.2s;" 
+                                                onmouseover="this.style.borderColor='#ff7518'; this.style.background='rgba(255,117,24,0.1)'"
+                                                onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.3)'">
+                                                <div style="font-size: 14px; font-weight: 700; color: #ff7518; margin-bottom: 6px;">
+                                                    ${esc(abilityObj.name)}
+                                                </div>
+                                                <div style="font-size: 12px; color: #fff; line-height: 1.4;">
+                                                    ${esc(abilityObj.effect || '')}
+                                                </div>
+                                                ${abilityObj.cost ? `
+                                                    <div style="margin-top: 8px; font-size: 11px; color: #4CAF50; font-weight: 600;">
+                                                        Cost: ${esc(abilityObj.cost)}
+                                                    </div>
+                                                ` : ''}
+                                            </div>
+                                        </div>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        </div>
+    `;
+    
     document.body.appendChild(modal);
 };
 
@@ -886,28 +977,29 @@ window.CCFB_FACTORY.closeAbilityPicker = () => {
         renderFactionOverview();
     };
 
-    window.CCFB_FACTORY.startNewUnit = () => {
-        const newUnit = {
-            name: "New Unit",
-            type: "",
-            quality: 1,
-            defense: 0,
-            move: 6,
-            range: 0,
-            weapon: "",
-            weapon_properties: [],
-            abilities: [],
-            lore: ""
-        };
-
-        state.currentFaction.units.push(newUnit);
-        state.selectedUnit = state.currentFaction.units.length - 1;
-        state.editMode = 'new';
-
-        renderFactionOverview();
-        renderUnitBuilder();
-        renderUnitCard();
+ window.CCFB_FACTORY.startNewUnit = () => {
+    const newUnit = {
+        name: "New Unit",
+        type: "",
+        quality: 1,
+        defense: 0,
+        move: 6,
+        range: 0,
+        weapon: "",
+        weapon_properties: [],
+        abilities: [],
+        supplemental_abilities: [],  // NEW!
+        lore: ""
     };
+
+    state.currentFaction.units.push(newUnit);
+    state.selectedUnit = state.currentFaction.units.length - 1;
+    state.editMode = 'new';
+
+    renderFactionOverview();
+    renderUnitBuilder();
+    renderUnitCard();
+};
 
     window.CCFB_FACTORY.selectUnit = (index) => {
         state.selectedUnit = index;
