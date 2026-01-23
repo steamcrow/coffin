@@ -445,7 +445,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         
         // Load rules
         try {
-            const response = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules_with_costs.json?t=' + Date.now());
+            const response = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=' + Date.now());
             const data = await response.json();
             state.rules = data.rules_master;
             console.log("✅ Rules loaded");
