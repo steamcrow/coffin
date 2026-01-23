@@ -1,1222 +1,304 @@
-// COFFIN CANYON FACTION STUDIO
-// Tool for creating and editing faction JSON files
-
-function mountFactionStudioRoot() {
-    const root = document.getElementById("faction-studio-root");
-
-    if (!root) {
-        console.log("⏳ Waiting for faction-studio-root...");
-        setTimeout(mountFactionStudioRoot, 50);
-        return;
-    }
-
-    if (root.dataset.mounted) return;
-    root.dataset.mounted = "true";
-
-    console.log("✅ faction-studio-root found, mounting UI");
-
-    root.innerHTML = `
-        <div id="fs-app" style="
-            display: grid;
-            grid-template-columns: 300px 1fr 350px;
-            gap: 20px;
-            padding: 20px;
-            max-width: 1800px;
-            margin: 0 auto;
-        ">
-            <div id="faction-overview"></div>
-            <div id="unit-builder"></div>
-            <div id="unit-card"></div>
-        </div>
-        
-        <style>
-            @media (max-width: 1200px) {
-                #fs-app {
-                    grid-template-columns: 250px 1fr 300px !important;
-                    gap: 15px !important;
-                    padding: 15px !important;
-                }
-            }
-            
-            @media (max-width: 900px) {
-                #fs-app {
-                    grid-template-columns: 1fr !important;
-                    gap: 15px !important;
-                }
-            }
-        </style>
-    `;
-}
-
-const getUnitCard = () => document.getElementById("unit-card");
+/**
+ * COFFIN CANYON FACTION STUDIO - MASTER VERSION
+ * Features: Step-Builder, Costing, Lore, Modals, & Data Repair.
+ */
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
 (function() {
-
-    // ============================================
-    // STATE MANAGEMENT
-    // ============================================
     const state = {
         rules: null,
         currentFaction: {
             faction: "New Faction",
             version: "1.0",
             description: "",
-            faction_features: [],
             units: []
         },
         selectedUnit: null,
-        editMode: null
+        activeModal: null 
     };
 
-    // ============================================
-    // UTILITY FUNCTIONS
-    // ============================================
-    const getArchetypeVault = () => state.rules?.unit_identities?.archetype_vault || {};
-    const getWeaponProps = () => state.rules?.weapon_properties || {};
-    const getAbilityDict = () => state.rules?.ability_dictionary || {};
-
-    const esc = (s) => String(s ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-
-    const renderSelectOptions = (values, selectedValue) => {
-        return values.map(v => `
-            <option value="${v}" ${String(selectedValue) === String(v) ? 'selected' : ''}>${v}</option>
-        `).join('');
+    // --- DATA REPAIR & IMPORT ---
+    const sanitizeUnit = (u) => {
+        // This fixes old or broken unit data upon import
+        return {
+            name: u.name || "Unknown Unit",
+            type: u.type || "",
+            quality: parseInt(u.quality) || 4,
+            defense: parseInt(u.defense) || 4,
+            move: parseInt(u.move) || 6,
+            range: parseInt(u.range) || 0,
+            weapon: u.weapon || "",
+            weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
+            abilities: Array.isArray(u.abilities) ? u.abilities : [],
+            lore: u.lore || u.description || "" // Salvage 'description' if 'lore' is missing
+        };
     };
 
- const calculateUnitCost = (unit) => {
-    let cost = 0;
-    cost += (unit.quality || 1) * 20;
-    cost += (unit.defense || 0) * 10;
+    const getRules = () => ({
+        archetypes: state.rules?.unit_identities?.archetype_vault || {},
+        weaponProps: state.rules?.weapon_properties || {},
+        abilities: state.rules?.ability_dictionary || {}
+    });
 
-    const moveDiff = (unit.move || 6) - 6;
-    cost += moveDiff * 5;
+    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[m]);
 
-    if (unit.range && unit.range > 0) cost += 5;
-
-    // ABILITIES COST
-    if (unit.abilities && state.rules) {
-        unit.abilities.forEach(abilityName => {
-            const ability = findAbility(abilityName);
-            if (!ability) return;
-
-            if (typeof ability.cost === "number") cost += ability.cost;
-            if (typeof ability.cost === "string" && ability.cost.includes("quality")) {
-                const m = ability.cost.match(/\d+/);
-                cost += (unit.quality || 1) * (m ? parseInt(m[0]) : 0);
-            }
-            if (ability.cost_multiplier) cost *= ability.cost_multiplier;
-        });
-    }
-
-    // WEAPON PROPERTIES COST (THIS WAS MISSING!)
-    if (unit.weapon_properties && unit.weapon_properties.length > 0) {
-        const weaponProps = getWeaponProps();
-        unit.weapon_properties.forEach(propKey => {
-            const prop = weaponProps[propKey];
-            if (!prop) return;
-            
-            if (typeof prop.cost === "number") cost += prop.cost;
-            if (typeof prop.cost === "string" && prop.cost.includes("quality")) {
-                const m = prop.cost.match(/\d+/);
-                cost += (unit.quality || 1) * (m ? parseInt(m[0]) : 0);
-            }
-            if (prop.cost_multiplier) cost *= prop.cost_multiplier;
-        });
-    }
-
-    const archetype = getArchetypeVault()[unit.type?.toLowerCase()];
-    if (archetype?.cost_multiplier) cost *= archetype.cost_multiplier;
-    if (archetype?.cost_flat) cost += archetype.cost_flat;
-
-    return Math.ceil(cost / 5) * 5;
-};
-    const findAbility = (name) => {
-        if (!state.rules) return null;
-
-        const dict = getAbilityDict();
-        for (let category in dict) {
-            const abilities = dict[category];
-            if (!abilities) continue;
-
-            if (Object.prototype.hasOwnProperty.call(abilities, name)) {
-                const val = abilities[name];
-                if (typeof val === 'string') {
-                    return { name, effect: val, cost: null };
-                }
-                if (val && typeof val === 'object') {
-                    return {
-                        name: val.name || name,
-                        effect: val.effect || val.text || val.description || '',
-                        cost: val.cost ?? null,
-                        cost_multiplier: val.cost_multiplier
-                    };
-                }
-            }
+    const findAbilityData = (name) => {
+        const { abilities } = getRules();
+        for (let category in abilities) {
+            if (abilities[category][name]) return { ...abilities[category][name], category, name };
         }
         return null;
     };
 
-    const ensureWeaponPropsArray = (unit) => {
-        if (!unit.weapon_properties) unit.weapon_properties = [];
-        if (!Array.isArray(unit.weapon_properties)) unit.weapon_properties = [];
-    };
+    // --- COST ENGINE ---
+    const calculateUnitCost = (unit) => {
+        if (!unit) return 0;
+        let total = 0;
+        const q = unit.quality || 4;
+        const d = unit.defense || 4;
 
-    // ============================================
-    // RENDERERS
-    // ============================================
+        total += (7 - q) * 15; 
+        total += (7 - d) * 10;
+        total += ((unit.move || 6) - 6) * 5;
+        if (unit.range > 0) total += 10;
 
-    // ✅ FIXED: renderFactionOverview no longer references `unit` out of scope.
-    // It renders faction controls + a clickable unit list (no omissions of behavior).
-    const renderFactionOverview = () => {
-        const container = document.getElementById('faction-overview');
-        if (!container) return;
-
-        const units = state.currentFaction.units || [];
-        const factionName = state.currentFaction.faction || "New Faction";
-        const factionDesc = state.currentFaction.description || "";
-
-        container.innerHTML = `
-            <div class="cc-panel">
-                <div class="cc-panel-header">
-                    <i class="fa fa-folder"></i> FACTION OVERVIEW
-                </div>
-
-                <div style="padding: 15px;">
-                    <div class="form-group">
-                        <label>FACTION NAME</label>
-                        <input type="text"
-                               class="cc-input w-100"
-                               value="${esc(factionName)}"
-                               onchange="CCFB_FACTORY.updateFactionName(this.value)">
-                    </div>
-
-                    <div class="form-group">
-                        <label>DESCRIPTION</label>
-                        <textarea class="cc-input w-100"
-                                  rows="3"
-                                  onchange="CCFB_FACTORY.updateFactionDescription(this.value)">${esc(factionDesc)}</textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                            <label>UNITS (${units.length})</label>
-                            <button class="cc-tool-btn" onclick="CCFB_FACTORY.startNewUnit()">
-                                <i class="fa fa-plus"></i> NEW
-                            </button>
-                        </div>
-
-                        <div class="unit-list">
-                            ${units.length ? units.map((u, index) => {
-                                const cost = calculateUnitCost(u);
-                                const selected = (state.selectedUnit === index) ? 'cc-item-selected' : '';
-                                return `
-                                    <div class="cc-roster-item ${selected}"
-                                         style="cursor:pointer;"
-                                         onclick="CCFB_FACTORY.selectUnit(${index})">
-                                        <div class="cc-item-controls">
-                                            <button class="btn-minus"
-                                                    title="Delete"
-                                                    onclick="event.stopPropagation(); CCFB_FACTORY.deleteUnit(${index})">
-                                                <i class="fa fa-trash"></i>
-                                            </button>
-                                        </div>
-
-                                        <div class="u-type">${esc(u.type || 'No Type')}</div>
-                                        <div class="u-name">${esc(u.name || 'Unnamed Unit')}</div>
-
-                                        <div style="margin-top:6px; color:var(--cc-primary); font-weight:900;">
-                                            ${cost} ₤
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('') : `<div class="cc-empty-state">No units yet</div>`}
-                        </div>
-                    </div>
-
-                    <button class="btn-outline-warning w-100" onclick="CCFB_FACTORY.exportFaction()">
-                        <i class="fa fa-download"></i> EXPORT FACTION JSON
-                    </button>
-                    <button class="btn-outline-warning w-100 mt-2" onclick="CCFB_FACTORY.importFaction()">
-                    <i class="fa fa-upload"></i> IMPORT FACTION JSON
-                    </button>
-                    <input type="file" id="faction-file-input" accept=".json" style="display: none;" onchange="CCFB_FACTORY.handleFileUpload(event)">
-                </div>
-            </div>
-        `;
-    };
-
-    const renderUnitBuilder = () => {
-        const container = document.getElementById('unit-builder');
-        if (!container) return;
-
-        if (state.selectedUnit === null) {
-            container.innerHTML = `
-                <div class="cc-panel">
-                    <div class="cc-panel-header">
-                        <i class="fa fa-hammer"></i> UNIT BUILDER
-                    </div>
-                    <div style="display: flex; align-items: center; justify-content: center; height: 400px; flex-direction: column; opacity: 0.5;">
-                        <i class="fa fa-arrow-left" style="font-size: 3rem; margin-bottom: 20px;"></i>
-                        <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px;">
-                            Select or create a unit
-                        </div>
-                    </div>
-                </div>
-            `;
-            return;
-        }
-
-        const unit = state.currentFaction.units[state.selectedUnit];
-        ensureWeaponPropsArray(unit);
-
-        const archetypeVault = getArchetypeVault();
-
-        // Determine which steps are complete
-        const hasName = unit.name && unit.name !== "New Unit";
-        const hasType = unit.type && unit.type !== "";
-        const hasStats = hasType; // Stats are set by default once type is chosen
-        const hasWeapon = unit.weapon && unit.weapon !== "";
-
-        container.innerHTML = `
-            <div class="cc-panel">
-                <div class="cc-panel-header">
-                    <i class="fa fa-hammer"></i> UNIT BUILDER
-                </div>
-
-                <div style="padding: 20px;">
-                    <!-- STEP 1: NAME -->
-                    <div class="builder-step ${hasName ? 'step-complete' : 'step-active'}">
-                        <div class="step-header">
-                            <div class="step-number">${hasName ? '✓' : '1'}</div>
-                            <div class="step-title">NAME YOUR UNIT</div>
-                        </div>
-                        <div class="step-content">
-                            <input type="text"
-                                   class="cc-input w-100"
-                                   placeholder="Enter unit name..."
-                                   value="${esc(unit.name || '')}"
-                                   onchange="CCFB_FACTORY.updateUnit('name', this.value)"
-                                   style="font-size: 16px; font-weight: 600;">
-                        </div>
-                    </div>
-
-                    <!-- STEP 2: TYPE -->
-                    <div class="builder-step ${!hasName ? 'step-locked' : hasType ? 'step-complete' : 'step-active'}">
-                        <div class="step-header">
-                            <div class="step-number">${hasType ? '✓' : '2'}</div>
-                            <div class="step-title">CHOOSE TYPE</div>
-                        </div>
-                        <div class="step-content">
-                            ${!hasName ? '<div class="step-hint">Complete previous step first</div>' : `
-                                <select class="cc-select w-100"
-                                        onchange="CCFB_FACTORY.updateUnit('type', this.value)"
-                                        style="font-size: 14px;">
-                                    <option value="">-- Select Type --</option>
-                                    ${Object.keys(archetypeVault || {}).map(type => `
-                                        <option value="${esc(type)}" ${unit.type === type ? 'selected' : ''}>
-                                            ${esc(type.toUpperCase())}
-                                        </option>
-                                    `).join('')}
-                                </select>
-                                ${unit.type ? `
-                                    <div class="type-rule-display">
-                                        <i class="fa fa-info-circle"></i>
-                                        ${esc((archetypeVault[unit.type]?.type_rule || archetypeVault[unit.type]?.type_rules?.[0] || ''))}
-                                    </div>
-                                ` : ''}
-                            `}
-                        </div>
-                    </div>
-
-                    <!-- STEP 3: STATS -->
-                    <div class="builder-step ${!hasType ? 'step-locked' : 'step-active'}">
-                        <div class="step-header">
-                            <div class="step-number">3</div>
-                            <div class="step-title">SET STATS</div>
-                        </div>
-                        <div class="step-content">
-                            ${!hasType ? '<div class="step-hint">Complete previous step first</div>' : `
-                                <div class="stats-grid" style="gap: 12px;">
-                                    <div>
-                                        <label class="small">QUALITY</label>
-                                        <select class="cc-select w-100"
-                                                onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))">
-                                            ${renderSelectOptions([1,2,3,4,5,6], unit.quality || 1)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="small">DEFENSE</label>
-                                        <select class="cc-select w-100"
-                                                onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))">
-                                            ${renderSelectOptions([0,1,2,3,4,5,6], unit.defense || 0)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="small">MOVE</label>
-                                        <select class="cc-select w-100"
-                                                onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))">
-                                            ${renderSelectOptions([1,2,3,4,5,6,7,8,9,10,11,12], unit.move || 6)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label class="small">RANGE</label>
-                                        <select class="cc-select w-100"
-                                                onchange="CCFB_FACTORY.updateUnit('range', parseInt(this.value))">
-                                            ${renderSelectOptions([0,3,6,9,12,18,24], unit.range || 0)}
-                                        </select>
-                                    </div>
-                                </div>
-                            `}
-                        </div>
-                    </div>
-
-                    <!-- STEP 4: WEAPON -->
-                    <div class="builder-step ${!hasType ? 'step-locked' : hasWeapon ? 'step-complete' : 'step-active'}">
-                        <div class="step-header">
-                            <div class="step-number">${hasWeapon ? '✓' : '4'}</div>
-                            <div class="step-title">NAME WEAPON</div>
-                        </div>
-                        <div class="step-content">
-                            ${!hasType ? '<div class="step-hint">Complete previous steps first</div>' : `
-                                <input type="text"
-                                       class="cc-input w-100"
-                                       placeholder="e.g., Rusty Sword, Crossbow..."
-                                       value="${esc(unit.weapon || '')}"
-                                       onchange="CCFB_FACTORY.updateUnit('weapon', this.value)">
-                            `}
-                        </div>
-                    </div>
-
-                    <!-- STEP 5: WEAPON PROPERTIES -->
-                    <div class="builder-step ${!hasWeapon ? 'step-locked' : 'step-active'}">
-                        <div class="step-header">
-                            <div class="step-number">5</div>
-                            <div class="step-title">WEAPON PROPERTIES</div>
-                            <div style="flex: 1;"></div>
-                            ${hasWeapon ? `
-                                <button class="btn-add-small" onclick="CCFB_FACTORY.showWeaponPropertyPicker()">
-                                    <i class="fa fa-plus"></i>
-                                </button>
-                            ` : ''}
-                        </div>
-                        <div class="step-content">
-                            ${!hasWeapon ? '<div class="step-hint">Complete previous steps first</div>' :
-                                (unit.weapon_properties && unit.weapon_properties.length > 0) ?
-                                    '<div class="step-hint">See unit card for properties →</div>' :
-                                    '<div class="step-hint">No properties yet (optional)</div>'
-                            }
-                        </div>
-                    </div>
-
-                    <!-- STEP 6: ABILITIES -->
-                    <div class="builder-step ${!hasType ? 'step-locked' : 'step-active'}">
-                        <div class="step-header">
-                            <div class="step-number">6</div>
-                            <div class="step-title">ABILITIES</div>
-                            <div style="flex: 1;"></div>
-                            ${hasType ? `
-                                <button class="btn-add-small" onclick="CCFB_FACTORY.showAbilityPicker()">
-                                    <i class="fa fa-plus"></i>
-                                </button>
-                            ` : ''}
-                        </div>
-                        <div class="step-content">
-                            ${!hasType ? '<div class="step-hint">Complete previous steps first</div>' :
-                                (unit.abilities && unit.abilities.length > 0) ?
-                                    '<div class="step-hint">See unit card for abilities →</div>' :
-                                    '<div class="step-hint">No abilities yet (optional)</div>'
-                            }
-                        </div>
-                    </div>
-
-                    <!-- STEP 6.5: SUPPLEMENTAL ABILITIES (NEW!) -->
-                    <div class="builder-step ${!hasType ? 'step-locked' : 'step-active'}">
-                        <div class="step-header">
-                            <div class="step-number"><i class="fa fa-star"></i></div>
-                            <div class="step-title">SUPPLEMENTAL ABILITIES (OPTIONAL)</div>
-                            <div style="flex: 1;"></div>
-                            ${hasType ? `
-                                <button class="btn-add-small" onclick="CCFB_FACTORY.showSupplementalAbilityEditor()">
-                                    <i class="fa fa-plus"></i>
-                                </button>
-                        ` : ''}
-    </div>
-    <div class="step-content">
-        ${!hasType ? '<div class="step-hint">Complete previous steps first</div>' :
-            (unit.supplemental_abilities && unit.supplemental_abilities.length > 0) ?
-                '<div class="step-hint">Player chooses ONE at army building →</div>' :
-                '<div class="step-hint">Special choose-one options (optional)</div>'
-        }
-    </div>
-</div>
-                    
-                    <!-- STEP 7: LORE (OPTIONAL) -->
-                    <div class="builder-step step-active">
-                        <div class="step-header">
-                            <div class="step-number">7</div>
-                            <div class="step-title">LORE (OPTIONAL)</div>
-                        </div>
-                        <div class="step-content">
-                            <textarea class="cc-input w-100"
-                                      rows="3"
-                                      placeholder="Add backstory, flavor text..."
-                                      onchange="CCFB_FACTORY.updateUnit('lore', this.value)">${esc(unit.lore || '')}</textarea>
-                        </div>
-                    </div>
-
-                    <!-- DELETE BUTTON -->
-                    ${state.selectedUnit !== null ? `
-                        <button class="btn-danger w-100 mt-3" onclick="CCFB_FACTORY.deleteUnit(${state.selectedUnit})">
-                            <i class="fa fa-trash"></i> DELETE UNIT
-                        </button>
-                    ` : ''}
-                </div>
-            </div>
-        `;
-    };
-
-    // NEW: Live Unit Card Preview
-const renderUnitCard = () => {
-    const container = getUnitCard();
-    if (!container) return;
-
-    if (state.selectedUnit === null) {
-        container.innerHTML = `
-            <div class="cc-panel">
-                <div class="cc-panel-header">
-                    <i class="fa fa-id-card"></i> UNIT CARD
-                </div>
-                <div style="display: flex; align-items: center; justify-content: center; height: 400px; opacity: 0.3;">
-                    <i class="fa fa-id-card" style="font-size: 4rem;"></i>
-                </div>
-            </div>
-        `;
-        return;
-    }
-
-    const unit = state.currentFaction.units[state.selectedUnit];
-    ensureWeaponPropsArray(unit);
-
-    const cost = calculateUnitCost(unit);
-    const weaponProps = getWeaponProps();
-
-    container.innerHTML = `
-        <div class="cc-panel">
-            <div class="cc-panel-header">
-                <i class="fa fa-id-card"></i> UNIT CARD
-            </div>
-
-            <div style="padding: 20px;">
-                <!-- Unit Name & Type -->
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <div style="font-size: 24px; font-weight: 900; text-transform: uppercase; color: var(--cc-primary); margin-bottom: 8px; letter-spacing: 2px;">
-                        ${esc(unit.name || 'Unnamed Unit')}
-                    </div>
-                    ${unit.type ? `
-                        <div style="display: inline-block; background: var(--cc-primary); color: #000; padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; letter-spacing: 1px;">
-                            ${esc(unit.type.toUpperCase())}
-                        </div>
-                    ` : ''}
-                </div>
-
-                <!-- Cost -->
-                <div style="text-align: center; padding: 20px; background: rgba(255,117,24,0.15); border: 3px solid var(--cc-primary); border-radius: 8px; margin-bottom: 20px;">
-                    <div style="font-size: 11px; opacity: 0.7; font-weight: 700; letter-spacing: 2px;">COST</div>
-                    <div style="font-size: 36px; font-weight: 900; color: var(--cc-primary); line-height: 1; margin-top: 5px;">
-                        ${cost}₤
-                    </div>
-                </div>
-
-                <!-- Stats -->
-                ${unit.type ? `
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px;">
-                        <div style="text-align: center; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px;">
-                            <div style="font-size: 10px; font-weight: 700; opacity: 0.6; margin-bottom: 4px;">Q</div>
-                            <div style="font-size: 18px; font-weight: 900; color: var(--cc-primary);">${unit.quality || 1}+</div>
-                        </div>
-                        <div style="text-align: center; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px;">
-                            <div style="font-size: 10px; font-weight: 700; opacity: 0.6; margin-bottom: 4px;">D</div>
-                            <div style="font-size: 18px; font-weight: 900; color: var(--cc-primary);">${unit.defense || 0}+</div>
-                        </div>
-                        <div style="text-align: center; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px;">
-                            <div style="font-size: 10px; font-weight: 700; opacity: 0.6; margin-bottom: 4px;">M</div>
-                            <div style="font-size: 18px; font-weight: 900; color: var(--cc-primary);">${unit.move || 6}"</div>
-                        </div>
-                        <div style="text-align: center; padding: 12px; background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border); border-radius: 4px;">
-                            <div style="font-size: 10px; font-weight: 700; opacity: 0.6; margin-bottom: 4px;">R</div>
-                            <div style="font-size: 18px; font-weight: 900; color: var(--cc-primary);">${unit.range || 0}"</div>
-                        </div>
-                    </div>
-                ` : '<div style="text-align: center; padding: 40px 20px; opacity: 0.4; font-size: 13px;">Choose a type to see stats</div>'}
-
-                <!-- Weapon -->
-                ${unit.weapon ? `
-                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
-                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
-                            <i class="fa fa-crosshairs"></i> WEAPON
-                        </div>
-                        <div style="font-size: 16px; font-weight: 700; margin-bottom: 8px;">${esc(unit.weapon)}</div>
-                        
-                        ${(unit.weapon_properties && unit.weapon_properties.length > 0) ? `
-                            <div style="margin-top: 8px;">
-                                ${unit.weapon_properties.map((propKey, idx) => {
-                                    const p = weaponProps[propKey];
-                                    const pName = p?.name || propKey;
-                                    const pEffect = p?.effect || '';
-                                    return `
-                                        <div class="upgrade-row">
-                                            <div style="flex: 1;">
-                                                <b style="color: var(--cc-primary);">${esc(pName)}</b>
-                                                ${pEffect ? `<div class="small opacity-75">${esc(pEffect)}</div>` : ''}
-                                            </div>
-                                            <button class="btn-minus" onclick="CCFB_FACTORY.removeWeaponProperty(${idx})">
-                                                <i class="fa fa-times"></i>
-                                            </button>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        ` : ''}
-                    </div>
-                ` : ''}
-
-               <!-- Abilities -->
-${unit.abilities && unit.abilities.length > 0 ? `
-    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
-        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
-            <i class="fa fa-bolt"></i> ABILITIES
-        </div>
-        ${unit.abilities.map((abilityName, idx) => {
-            const ability = findAbility(abilityName);
-            const effectText = ability?.effect || '';
-            return `
-                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 4px;">
-                    <div style="flex: 1;">
-                        <b style="color: var(--cc-primary);">${esc(abilityName)}</b>
-                        ${effectText ? `<div style="font-size: 11px; opacity: 0.75; margin-top: 4px;">${esc(effectText)}</div>` : ''}
-                    </div>
-                    <button class="btn-minus" onclick="CCFB_FACTORY.removeAbility(${idx})">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-            `;
-        }).join('')}
-    </div>
-` : ''}
-
-<!-- Supplemental Abilities -->
-${unit.supplemental_abilities && unit.supplemental_abilities.length > 0 ? `
-    <div style="margin-bottom: 20px; padding: 15px; background: rgba(255,117,24,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
-        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
-            <i class="fa fa-star"></i> SUPPLEMENTAL (Choose ONE)
-        </div>
-        ${unit.supplemental_abilities.map(supp => `
-            <div style="margin-bottom: 8px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 4px;">
-                <b style="color: var(--cc-primary);">${esc(supp.name)}</b>
-                <div style="font-size: 12px; opacity: 0.9; margin-top: 4px;">${esc(supp.effect)}</div>
-            </div>
-        `).join('')}
-    </div>
-` : ''}
-
-                <!-- Lore -->
-                ${unit.lore ? `
-                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 4px; border-left: 3px solid var(--cc-primary);">
-                        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cc-primary); margin-bottom: 10px;">
-                            <i class="fa fa-book"></i> LORE
-                        </div>
-                        <div style="font-size: 13px; line-height: 1.6; opacity: 0.9; font-style: italic;">
-                            ${esc(unit.lore)}
-                        </div>
-                    </div>
-                ` : ''}
-            </div>
-        </div>
-    `;
-};
-
-    // ============================================
-    // MODALS
-    // ============================================
-    window.CCFB_FACTORY.showAbilityPicker = () => {
-        const modal = document.createElement('div');
-        modal.id = 'ability-picker-modal';
-        modal.className = 'cc-modal-overlay';
-
-        const categories = Object.keys(getAbilityDict());
-
-        modal.innerHTML = `
-            <div class="cc-modal-panel">
-                <div class="cc-modal-header">
-                    <h2><i class="fa fa-bolt"></i> ADD ABILITY</h2>
-                    <button onclick="CCFB_FACTORY.closeAbilityPicker()" class="cc-modal-close">
-                        <i class="fa fa-times"></i>
-                    </button>
-                </div>
-
-                <div class="cc-modal-content">
-                    ${categories.map(category => {
-                        const abilities = getAbilityDict()[category] || {};
-                        return `
-                            <div class="ability-category">
-                                <h3 class="category-header">${esc(category.replace(/_/g, ' ').toUpperCase())}</h3>
-                                <div class="ability-grid">
-                                    ${Object.keys(abilities).map(abilityKey => {
-                                        const raw = abilities[abilityKey];
-                                        const abilityObj = (typeof raw === 'string')
-                                            ? { name: abilityKey, effect: raw, cost: null }
-                                            : {
-                                                name: raw?.name || abilityKey,
-                                                effect: raw?.effect || raw?.text || raw?.description || '',
-                                                cost: raw?.cost ?? null
-                                              };
-
-                                        return `
-                                            <div class="ability-card" onclick="CCFB_FACTORY.addAbility('${String(abilityObj.name).replace(/'/g, "\\'")}')">
-                                                <div class="ability-card-name">${esc(abilityObj.name)}</div>
-                                                <div class="ability-card-effect">${esc(abilityObj.effect || '')}</div>
-                                                ${abilityObj.cost ? `<div class="ability-card-cost">Cost: ${esc(abilityObj.cost)}</div>` : ''}
-                                            </div>
-                                        `;
-                                    }).join('')}
-                                </div>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            </div>
-        `;
-
-        document.body.appendChild(modal);
-        setTimeout(() => modal.classList.add('cc-modal-open'), 10);
-    };
-
-    window.CCFB_FACTORY.closeAbilityPicker = () => {
-        const modal = document.getElementById('ability-picker-modal');
-        if (modal) {
-            modal.classList.remove('cc-modal-open');
-            setTimeout(() => {
-                modal.remove();
-            }, 300);
-        }
-    };
-
-    window.CCFB_FACTORY.showSupplementalAbilityEditor = () => {
-    if (state.selectedUnit === null) return;
-    const unit = state.currentFaction.units[state.selectedUnit];
-    if (!unit.supplemental_abilities) unit.supplemental_abilities = [];
-
-    const modal = document.createElement('div');
-    modal.id = 'supplemental-modal';
-    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;';
-
-    modal.innerHTML = `
-        <div style="background: #1a1a1a; border: 3px solid #ff7518; border-radius: 8px; max-width: 700px; width: 90%; max-height: 80vh; display: flex; flex-direction: column;">
-            <div style="padding: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
-                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #ff7518;">
-                    <i class="fa fa-star" style="margin-right: 8px;"></i>SUPPLEMENTAL ABILITIES
-                </h2>
-                <button onclick="CCFB_FACTORY.closeSupplementalEditor()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer;">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-            <div style="padding: 20px; overflow-y: auto; flex: 1;">
-                <p style="margin-bottom: 20px; opacity: 0.8; font-size: 13px;">Player chooses ONE of these at army building:</p>
-                
-                ${unit.supplemental_abilities.map((supp, idx) => `
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 4px;">
-                        <div style="flex: 1;">
-                            <b style="color: #ff7518;">${esc(supp.name)}</b>
-                            <div style="font-size: 12px; margin-top: 4px;">${esc(supp.effect)}</div>
-                        </div>
-                        <button class="btn-minus" onclick="CCFB_FACTORY.removeSupplemental(${idx})">
-                            <i class="fa fa-times"></i>
-                        </button>
-                    </div>
-                `).join('')}
-                
-                <div style="margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.3); border-radius: 4px;">
-                    <label style="color: #ff7518; font-weight: 700; margin-bottom: 5px; display: block; font-size: 11px; text-transform: uppercase;">NAME</label>
-                    <input type="text" id="supp-name" class="cc-input w-100" placeholder="e.g., Groom's Grail" style="margin-bottom: 10px;">
-                    
-                    <label style="color: #ff7518; font-weight: 700; margin-bottom: 5px; display: block; font-size: 11px; text-transform: uppercase;">EFFECT</label>
-                    <textarea id="supp-effect" class="cc-input w-100" rows="2" placeholder="e.g., Once per game: 12\" cone freeze for 2 rounds."></textarea>
-                    
-                    <button class="cc-tool-btn w-100 mt-2" onclick="CCFB_FACTORY.addSupplemental()">
-                        <i class="fa fa-plus"></i> ADD
-                    </button>
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-};
-
-window.CCFB_FACTORY.closeSupplementalEditor = () => {
-    const modal = document.getElementById('supplemental-modal');
-    if (modal) modal.remove();
-    renderUnitBuilder();
-    renderUnitCard();
-};
-
-window.CCFB_FACTORY.addSupplemental = () => {
-    if (state.selectedUnit === null) return;
-    
-    const name = document.getElementById('supp-name').value.trim();
-    const effect = document.getElementById('supp-effect').value.trim();
-    
-    if (!name || !effect) {
-        alert('Please enter both name and effect');
-        return;
-    }
-    
-    const unit = state.currentFaction.units[state.selectedUnit];
-    if (!unit.supplemental_abilities) unit.supplemental_abilities = [];
-    
-    unit.supplemental_abilities.push({ name, effect });
-    
-    CCFB_FACTORY.showSupplementalAbilityEditor(); // Refresh modal
-};
-window.CCFB_FACTORY.removeSupplemental = (index) => {
-    if (state.selectedUnit === null) return;
-    const unit = state.currentFaction.units[state.selectedUnit];
-    unit.supplemental_abilities.splice(index, 1);
-    CCFB_FACTORY.showSupplementalAbilityEditor(); // Refresh modal
-};
-    
-    window.CCFB_FACTORY.addAbility = (abilityName) => {
-        if (state.selectedUnit === null) return;
-
-        const unit = state.currentFaction.units[state.selectedUnit];
-        if (!unit.abilities) unit.abilities = [];
-
-        if (!unit.abilities.includes(abilityName)) {
-            unit.abilities.push(abilityName);
-            renderFactionOverview();
-            renderUnitBuilder();
-            renderUnitCard();
-        }
-
-        CCFB_FACTORY.closeAbilityPicker();
-    };
-
-    window.CCFB_FACTORY.removeAbility = (index) => {
-        if (state.selectedUnit === null) return;
-
-        const unit = state.currentFaction.units[state.selectedUnit];
-        if (unit.abilities) {
-            unit.abilities.splice(index, 1);
-            renderFactionOverview();
-            renderUnitBuilder();
-            renderUnitCard();
-        }
-    };
-window.CCFB_FACTORY.importFaction = () => {
-    document.getElementById('faction-file-input').click();
-};
-
-window.CCFB_FACTORY.handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-        try {
-            const imported = JSON.parse(e.target.result);
-            
-            // Clean up: ensure all units have required fields
-            if (imported.units) {
-                imported.units = imported.units.map(u => ({
-                    name: u.name || "Imported Unit",
-                    type: u.type || "",
-                    quality: u.quality || 1,
-                    defense: u.defense || 0,
-                    move: u.move || 6,
-                    range: u.range || 0,
-                    weapon: u.weapon || "",
-                    weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
-                    abilities: Array.isArray(u.abilities) ? u.abilities : [],
-                    supplemental_abilities: Array.isArray(u.supplemental_abilities) ? u.supplemental_abilities : [],
-                    lore: u.lore || ""
-                }));
+        const parseAddon = (costVal) => {
+            if (typeof costVal === 'number') return costVal;
+            if (typeof costVal === 'string' && costVal.includes('quality')) {
+                const mult = parseInt(costVal.match(/\d+/) || [0]);
+                return (7 - q) * mult;
             }
-            
-            state.currentFaction = {
-                faction: imported.faction || "Imported Faction",
-                version: imported.version || "1.0",
-                description: imported.description || "",
-                faction_features: imported.faction_features || [],
-                units: imported.units || []
-            };
-            
-            state.selectedUnit = null;
-            
-            renderFactionOverview();
-            renderUnitBuilder();
-            renderUnitCard();
-            
-            alert('✓ Faction imported successfully!');
-        } catch (err) {
-            alert('Error importing faction: ' + err.message);
-        }
-    };
-    reader.readAsText(file);
-    
-    // Reset input
-    event.target.value = '';
-};
-window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
-    const existing = document.getElementById('weapon-prop-picker-modal');
-    if (existing) existing.remove();
-    
-    const modal = document.createElement('div');
-    modal.id = 'weapon-prop-picker-modal';
-    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;';
+            return 0;
+        };
 
-    const props = getWeaponProps();
-    const keys = Object.keys(props);
-
-    modal.innerHTML = `
-        <div style="background: #1a1a1a; border: 3px solid #ff7518; border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
-            <div style="padding: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
-                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #ff7518;">
-                    <i class="fa fa-crosshairs" style="margin-right: 8px;"></i>ADD WEAPON PROPERTY
-                </h2>
-                <button onclick="CCFB_FACTORY.closeWeaponPropertyPicker()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 5px 10px;">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-            <div style="padding: 20px; overflow-y: auto; flex: 1;">
-                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
-                    ${keys.length ? keys.map(k => {
-                        const p = props[k] || {};
-                        const pName = p.name || k;
-                        const pEffect = p.effect || '';
-                        return `
-                            <div onclick="CCFB_FACTORY.toggleWeaponProperty('${k}')" style="padding: 15px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; transition: all 0.2s;" 
-                                onmouseover="this.style.borderColor='#ff7518'; this.style.background='rgba(255,117,24,0.1)'"
-                                onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.3)'">
-                                <div style="font-size: 14px; font-weight: 700; color: #ff7518; margin-bottom: 6px;">
-                                    ${esc(pName)}
-                                </div>
-                                <div style="font-size: 12px; color: #fff; line-height: 1.4;">
-                                    ${esc(pEffect)}
-                                </div>
-                            </div>
-                        `;
-                    }).join('') : '<div>No weapon properties found</div>'}
-                </div>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-};
-
-window.CCFB_FACTORY.showAbilityPicker = () => {
-    const existing = document.getElementById('ability-picker-modal');
-    if (existing) existing.remove();
-    
-    const modal = document.createElement('div');
-    modal.id = 'ability-picker-modal';
-    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;';
-    
-    const categories = Object.keys(getAbilityDict());
-    
-    modal.innerHTML = `
-        <div style="background: #1a1a1a; border: 3px solid #ff7518; border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
-            <div style="padding: 20px; border-bottom: 2px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: space-between;">
-                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: #ff7518;">
-                    <i class="fa fa-bolt" style="margin-right: 8px;"></i>ADD ABILITY
-                </h2>
-                <button onclick="CCFB_FACTORY.closeAbilityPicker()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 5px 10px;">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-            <div style="padding: 20px; overflow-y: auto; flex: 1;">
-                ${categories.map(category => {
-                    const abilities = getAbilityDict()[category] || {};
-                    return `
-                        <div style="margin-bottom: 30px;">
-                            <h3 style="font-size: 14px; font-weight: 700; color: #ff7518; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid rgba(255,255,255,0.1);">
-                                ${esc(category.replace(/_/g, ' ').toUpperCase())}
-                            </h3>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
-                                ${Object.keys(abilities).map(abilityKey => {
-                                    const raw = abilities[abilityKey];
-                                    const abilityObj = (typeof raw === 'string')
-                                        ? { name: abilityKey, effect: raw, cost: null }
-                                        : {
-                                            name: raw?.name || abilityKey,
-                                            effect: raw?.effect || raw?.text || raw?.description || '',
-                                            cost: raw?.cost ?? null
-                                          };
-
-                                    return `
-                                        <div onclick="CCFB_FACTORY.addAbility('${String(abilityObj.name).replace(/'/g, "\\'")}')">
-                                            <div style="padding: 15px; background: rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer; transition: all 0.2s;" 
-                                                onmouseover="this.style.borderColor='#ff7518'; this.style.background='rgba(255,117,24,0.1)'"
-                                                onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'; this.style.background='rgba(0,0,0,0.3)'">
-                                                <div style="font-size: 14px; font-weight: 700; color: #ff7518; margin-bottom: 6px;">
-                                                    ${esc(abilityObj.name)}
-                                                </div>
-                                                <div style="font-size: 12px; color: #fff; line-height: 1.4;">
-                                                    ${esc(abilityObj.effect || '')}
-                                                </div>
-                                                ${abilityObj.cost ? `
-                                                    <div style="margin-top: 8px; font-size: 11px; color: #4CAF50; font-weight: 600;">
-                                                        Cost: ${esc(abilityObj.cost)}
-                                                    </div>
-                                                ` : ''}
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-};
-
-window.CCFB_FACTORY.closeWeaponPropertyPicker = () => {
-    const modal = document.getElementById('weapon-prop-picker-modal');
-    if (modal) modal.remove();
-};
-
-window.CCFB_FACTORY.showAbilityPicker = () => {
-    const existing = document.getElementById('ability-picker-modal');
-    if (existing) existing.remove();
-    
-    const modal = document.createElement('div');
-    modal.id = 'ability-picker-modal';
-    modal.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.95); z-index: 99999; display: flex; align-items: center; justify-content: center;';
-    
-    const categories = Object.keys(getAbilityDict());
-    
-    modal.innerHTML = `
-        <div style="background: #1a1a1a; border: 3px solid var(--cc-primary); border-radius: 8px; max-width: 800px; width: 90%; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 10px 50px rgba(0,0,0,0.5);">
-            <div style="padding: 20px; border-bottom: 2px solid var(--cc-border); display: flex; align-items: center; justify-content: space-between;">
-                <h2 style="margin: 0; font-size: 20px; font-weight: 900; text-transform: uppercase; letter-spacing: 2px; color: var(--cc-primary);">
-                    <i class="fa fa-bolt"></i> ADD ABILITY
-                </h2>
-                <button onclick="CCFB_FACTORY.closeAbilityPicker()" style="background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 5px 10px;">
-                    <i class="fa fa-times"></i>
-                </button>
-            </div>
-            <div style="padding: 20px; overflow-y: auto; flex: 1;">
-                ${categories.map(category => {
-                    const abilities = getAbilityDict()[category] || {};
-                    return `
-                        <div style="margin-bottom: 30px;">
-                            <h3 style="font-size: 14px; font-weight: 700; color: var(--cc-primary); margin-bottom: 15px; padding-bottom: 8px; border-bottom: 2px solid var(--cc-border);">
-                                ${esc(category.replace(/_/g, ' ').toUpperCase())}
-                            </h3>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px;">
-                                ${Object.keys(abilities).map(abilityKey => {
-                                    const raw = abilities[abilityKey];
-                                    const abilityObj = (typeof raw === 'string')
-                                        ? { name: abilityKey, effect: raw, cost: null }
-                                        : {
-                                            name: raw?.name || abilityKey,
-                                            effect: raw?.effect || raw?.text || raw?.description || '',
-                                            cost: raw?.cost ?? null
-                                          };
-
-                                    return `
-                                        <div onclick="CCFB_FACTORY.addAbility('${String(abilityObj.name).replace(/'/g, "\\'")}')">
-                                            <div style="padding: 15px; background: rgba(0,0,0,0.3); border: 2px solid var(--cc-border); border-radius: 6px; cursor: pointer; transition: all 0.2s;" 
-                                                onmouseover="this.style.borderColor='var(--cc-primary)'; this.style.background='rgba(255,117,24,0.1)'"
-                                                onmouseout="this.style.borderColor='var(--cc-border)'; this.style.background='rgba(0,0,0,0.3)'">
-                                                <div style="font-size: 14px; font-weight: 700; color: var(--cc-primary); margin-bottom: 6px;">
-                                                    ${esc(abilityObj.name)}
-                                                </div>
-                                                <div style="font-size: 12px; color: #fff; line-height: 1.4;">
-                                                    ${esc(abilityObj.effect || '')}
-                                                </div>
-                                                ${abilityObj.cost ? `
-                                                    <div style="margin-top: 8px; font-size: 11px; color: #4CAF50; font-weight: 600;">
-                                                        Cost: ${esc(abilityObj.cost)}
-                                                    </div>
-                                                ` : ''}
-                                            </div>
-                                        </div>
-                                    `;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-            </div>
-        </div>
-    `;
-    
-    document.body.appendChild(modal);
-};
-
-window.CCFB_FACTORY.closeAbilityPicker = () => {
-    const modal = document.getElementById('ability-picker-modal');
-    if (modal) modal.remove();
-};
-
-    window.CCFB_FACTORY.toggleWeaponProperty = (propKey) => {
-        if (state.selectedUnit === null) return;
-        const unit = state.currentFaction.units[state.selectedUnit];
-        ensureWeaponPropsArray(unit);
-
-        if (unit.weapon_properties.includes(propKey)) {
-            unit.weapon_properties = unit.weapon_properties.filter(x => x !== propKey);
-        } else {
-            unit.weapon_properties.push(propKey);
-        }
-
-        renderFactionOverview();
-        renderUnitBuilder();
-        renderUnitCard();
-        CCFB_FACTORY.closeWeaponPropertyPicker();
-    };
-
-    window.CCFB_FACTORY.removeWeaponProperty = (index) => {
-        if (state.selectedUnit === null) return;
-        const unit = state.currentFaction.units[state.selectedUnit];
-        ensureWeaponPropsArray(unit);
-
-        unit.weapon_properties.splice(index, 1);
-        renderFactionOverview();
-        renderUnitBuilder();
-        renderUnitCard();
-    };
-
-    // ============================================
-    // PUBLIC API
-    // ============================================
-    window.CCFB_FACTORY.init = async () => {
-        console.log("🏭 Initializing Faction Builder...");
-
-        mountFactionStudioRoot();
-
-        try {
-            const response = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=' + Date.now());
-            const data = await response.json();
-            state.rules = data.rules_master;
-            console.log("✅ Rules loaded");
-        } catch (e) {
-            console.error("❌ Failed to load rules:", e);
-            alert("Failed to load rules data");
-            return;
-        }
-
-        renderFactionOverview();
-        renderUnitBuilder();
-        renderUnitCard();
-    };
-
-    window.CCFB_FACTORY.updateFactionName = (value) => {
-        state.currentFaction.faction = value;
-        renderFactionOverview();
-    };
-
-    window.CCFB_FACTORY.updateFactionDescription = (value) => {
-        state.currentFaction.description = value;
-        renderFactionOverview();
-    };
-
- window.CCFB_FACTORY.startNewUnit = () => {
-    const newUnit = {
-        name: "New Unit",
-        type: "",
-        quality: 1,
-        defense: 0,
-        move: 6,
-        range: 0,
-        weapon: "",
-        weapon_properties: [],
-        abilities: [],
-        supplemental_abilities: [],  // NEW!
-        lore: ""
-    };
-
-    state.currentFaction.units.push(newUnit);
-    state.selectedUnit = state.currentFaction.units.length - 1;
-    state.editMode = 'new';
-
-    renderFactionOverview();
-    renderUnitBuilder();
-    renderUnitCard();
-};
-
-    window.CCFB_FACTORY.selectUnit = (index) => {
-        state.selectedUnit = index;
-        state.editMode = 'edit';
-        renderFactionOverview();
-        renderUnitBuilder();
-        renderUnitCard();
-    };
-
-    window.CCFB_FACTORY.deleteUnit = (index) => {
-        if (!confirm("Delete this unit?")) return;
-
-        state.currentFaction.units.splice(index, 1);
-
-        if (state.selectedUnit === index) {
-            state.selectedUnit = null;
-        } else if (state.selectedUnit !== null && state.selectedUnit > index) {
-            // keep selection stable if you delete above it
-            state.selectedUnit -= 1;
-        }
-
-        renderFactionOverview();
-        renderUnitBuilder();
-        renderUnitCard();
-    };
-
-    window.CCFB_FACTORY.updateUnit = (field, value) => {
-        if (state.selectedUnit === null) return;
-
-        const unit = state.currentFaction.units[state.selectedUnit];
-        unit[field] = value;
-
-        // keep this safe + consistent
-        if (field === "type") {
-            ensureWeaponPropsArray(unit);
-        }
-
-        renderFactionOverview();
-        renderUnitBuilder();
-        renderUnitCard();
-    };
-
-    window.CCFB_FACTORY.exportFaction = () => {
-        state.currentFaction.units.forEach(unit => {
-            unit.cost = calculateUnitCost(unit);
+        const { weaponProps } = getRules();
+        unit.weapon_properties?.forEach(key => { if(weaponProps[key]) total += parseAddon(weaponProps[key].cost); });
+        unit.abilities?.forEach(name => { 
+            const abi = findAbilityData(name);
+            if (abi) total += parseAddon(abi.cost); 
         });
 
-        const json = JSON.stringify(state.currentFaction, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `faction-${state.currentFaction.faction.toLowerCase().replace(/\s+/g, '-')}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        const arch = getRules().archetypes[unit.type?.toLowerCase()];
+        if (arch?.cost_multiplier) total *= arch.cost_multiplier;
+
+        return Math.ceil(total / 5) * 5; 
     };
 
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', window.CCFB_FACTORY.init);
-    } else {
-        window.CCFB_FACTORY.init();
-    }
+    // --- UI RENDERERS ---
+    const renderRoster = () => {
+        const target = document.getElementById('faction-overview');
+        if (!target) return;
+        target.innerHTML = `
+            <div class="cc-panel">
+                <div class="cc-panel-header"><i class="fa fa-users"></i> ROSTER</div>
+                <div style="padding:15px">
+                    <div class="form-group">
+                        <label>Faction Name</label>
+                        <input type="text" class="cc-input w-100" value="${esc(state.currentFaction.faction)}" onchange="CCFB_FACTORY.updateFaction('faction', this.value)">
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:10px;">
+                        <button class="btn-add-small" onclick="CCFB_FACTORY.downloadFaction()"><i class="fa fa-download"></i> SAVE</button>
+                        <button class="btn-add-small" onclick="document.getElementById('cc-upload').click()"><i class="fa fa-upload"></i> LOAD</button>
+                        <input type="file" id="cc-upload" style="display:none" onchange="CCFB_FACTORY.uploadFaction(event)">
+                    </div>
+                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.addUnit()">+ NEW UNIT</button>
+                    <div class="unit-list mt-3">
+                        ${state.currentFaction.units.map((u, i) => `
+                            <div class="cc-roster-item ${state.selectedUnit === i ? 'cc-item-selected' : ''}" onclick="CCFB_FACTORY.selectUnit(${i})">
+                                <b>${esc(u.name)}</b>
+                                <span style="float:right">${calculateUnitCost(u)}₤</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>`;
+    };
 
+    const renderBuilder = () => {
+        const target = document.getElementById('unit-builder');
+        if (!target || state.selectedUnit === null) {
+            target.innerHTML = `<div class="cc-empty-state"><i class="fa fa-skull"></i>SELECT A UNIT</div>`;
+            return;
+        }
+        const u = state.currentFaction.units[state.selectedUnit];
+        const { archetypes } = getRules();
+
+        target.innerHTML = `
+            <div class="cc-panel" style="padding:20px">
+                <div class="builder-step step-active">
+                    <div class="step-header"><div class="step-number">1</div><div class="step-title">Identity</div></div>
+                    <div class="step-content">
+                        <label class="cc-label">NAME</label>
+                        <input type="text" class="cc-input w-100 mb-2" value="${esc(u.name)}" onchange="CCFB_FACTORY.updateUnit('name', this.value)">
+                        <label class="cc-label">ARCHETYPE</label>
+                        <select class="cc-select w-100" onchange="CCFB_FACTORY.setArchetype(this.value)">
+                            <option value="">-- Select --</option>
+                            ${Object.keys(archetypes).map(k => `<option value="${k}" ${u.type === k ? 'selected' : ''}>${k.toUpperCase()}</option>`).join('')}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="builder-step step-active">
+                    <div class="step-header"><div class="step-number">2</div><div class="step-title">Stats</div></div>
+                    <div class="step-content">
+                        <div class="stats-grid">
+                            <div class="form-group"><label>QUA</label><input type="number" class="cc-input" value="${u.quality}" onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))"></div>
+                            <div class="form-group"><label>DEF</label><input type="number" class="cc-input" value="${u.defense}" onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))"></div>
+                            <div class="form-group"><label>MOV</label><input type="number" class="cc-input" value="${u.move}" onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))"></div>
+                            <div class="form-group"><label>RNG</label><input type="number" class="cc-input" value="${u.range}" onchange="CCFB_FACTORY.updateUnit('range', parseInt(this.value))"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="builder-step step-active">
+                    <div class="step-header"><div class="step-number">3</div><div class="step-title">Gear & Skills</div></div>
+                    <div class="step-content">
+                        <input type="text" class="cc-input w-100 mb-2" placeholder="Weapon Name..." value="${esc(u.weapon)}" onchange="CCFB_FACTORY.updateUnit('weapon', this.value)">
+                        <button class="btn-add-small w-100 mb-2" onclick="CCFB_FACTORY.openModal('property')">+ WEAPON PROP</button>
+                        <button class="btn-add-small w-100" onclick="CCFB_FACTORY.openModal('ability')">+ ABILITY</button>
+                    </div>
+                </div>
+
+                <div class="builder-step step-active">
+                    <div class="step-header"><div class="step-number">4</div><div class="step-title">Lore</div></div>
+                    <div class="step-content">
+                        <textarea class="cc-input w-100" rows="4" onchange="CCFB_FACTORY.updateUnit('lore', this.value)">${esc(u.lore)}</textarea>
+                    </div>
+                </div>
+                
+                <button class="btn-danger w-100 mt-2" onclick="CCFB_FACTORY.removeUnit()">DELETE UNIT</button>
+            </div>`;
+    };
+
+    const renderCard = () => {
+        const target = document.getElementById('unit-card');
+        if (!target || state.selectedUnit === null) return;
+        const u = state.currentFaction.units[state.selectedUnit];
+        const { weaponProps } = getRules();
+
+        target.innerHTML = `
+            <div class="unit-card-preview">
+                <div class="unit-card-header">
+                    <div class="unit-card-name">${esc(u.name)}</div>
+                    <div class="unit-card-type">${esc(u.type || 'Unit')}</div>
+                </div>
+                <div class="unit-card-cost"><div class="cost-value">${calculateUnitCost(u)}₤</div></div>
+                <div class="unit-card-stats">
+                    <div class="stat-item"><div class="stat-label">QUA</div><div class="stat-value">${u.quality}+</div></div>
+                    <div class="stat-item"><div class="stat-label">DEF</div><div class="stat-value">${u.defense}+</div></div>
+                    <div class="stat-item"><div class="stat-label">MOV</div><div class="stat-value">${u.move}"</div></div>
+                </div>
+                <div class="unit-card-section">
+                    <div class="section-label">WEAPON: ${esc(u.weapon || 'None')}</div>
+                    <div class="weapon-properties">
+                        ${u.weapon_properties.map((p, i) => `<span class="property-badge" onclick="CCFB_FACTORY.removeItem('weapon_properties', ${i})">${esc(weaponProps[p]?.name || p)} ✕</span>`).join('')}
+                    </div>
+                </div>
+                <div class="unit-card-section">
+                    <div class="section-label">ABILITIES</div>
+                    ${u.abilities.map((a, i) => {
+                        const d = findAbilityData(a);
+                        return `<div class="ability-item" onclick="CCFB_FACTORY.removeItem('abilities', ${i})">
+                            <div class="ability-name">${esc(a)}</div>
+                            <div class="ability-effect">${esc(d?.effect || d)}</div>
+                        </div>`;
+                    }).join('')}
+                </div>
+                ${u.lore ? `<div class="unit-card-section"><div class="section-label">LORE</div><div class="lore-text">${esc(u.lore)}</div></div>` : ''}
+            </div>`;
+    };
+
+    const renderModal = () => {
+        const container = document.getElementById('modal-container');
+        if (!container || !state.activeModal) { if(container) container.innerHTML = ""; return; }
+        const { abilities, weaponProps } = getRules();
+        
+        let content = "";
+        if (state.activeModal === 'ability') {
+            for (let cat in abilities) {
+                content += `<div class="category-header">${cat.toUpperCase()}</div><div class="ability-grid">`;
+                for (let aName in abilities[cat]) {
+                    const a = abilities[cat][aName];
+                    content += `<div class="ability-card" onclick="CCFB_FACTORY.addItem('abilities', '${aName}')">
+                        <div class="ability-card-name">${esc(aName)}</div>
+                        <div class="ability-card-effect">${esc(a.effect || a)}</div>
+                    </div>`;
+                }
+                content += `</div>`;
+            }
+        } else {
+            content += `<div class="ability-grid">`;
+            for (let p in weaponProps) {
+                content += `<div class="ability-card" onclick="CCFB_FACTORY.addItem('weapon_properties', '${p}')">
+                    <div class="ability-card-name">${esc(weaponProps[p].name)}</div>
+                </div>`;
+            }
+            content += `</div>`;
+        }
+
+        container.innerHTML = `
+            <div class="cc-modal-overlay cc-modal-open">
+                <div class="cc-modal-panel">
+                    <div class="cc-modal-header"><h2>SELECT ${state.activeModal.toUpperCase()}</h2><button class="cc-modal-close" onclick="CCFB_FACTORY.closeModal()">×</button></div>
+                    <div class="cc-modal-content">${content}</div>
+                </div>
+            </div>`;
+    };
+
+    const refresh = () => { renderRoster(); renderBuilder(); renderCard(); renderModal(); };
+
+    // --- PUBLIC ACTIONS ---
+    Object.assign(window.CCFB_FACTORY, {
+        init: (json) => { state.rules = json; refresh(); },
+        updateFaction: (f, v) => { state.currentFaction[f] = v; refresh(); },
+        selectUnit: (i) => { state.selectedUnit = i; refresh(); },
+        addUnit: () => {
+            state.currentFaction.units.push(sanitizeUnit({}));
+            state.selectedUnit = state.currentFaction.units.length - 1;
+            refresh();
+        },
+        removeUnit: () => { state.currentFaction.units.splice(state.selectedUnit, 1); state.selectedUnit = null; refresh(); },
+        updateUnit: (f, v) => { state.currentFaction.units[state.selectedUnit][f] = v; refresh(); },
+        setArchetype: (t) => {
+            const arch = getRules().archetypes[t];
+            const u = state.currentFaction.units[state.selectedUnit];
+            u.type = t;
+            if (arch) { u.quality = arch.quality || u.quality; u.defense = arch.defense || u.defense; }
+            refresh();
+        },
+        openModal: (m) => { state.activeModal = m; refresh(); },
+        closeModal: () => { state.activeModal = null; refresh(); },
+        addItem: (c, i) => { state.currentFaction.units[state.selectedUnit][c].push(i); state.activeModal = null; refresh(); },
+        removeItem: (c, idx) => { state.currentFaction.units[state.selectedUnit][c].splice(idx, 1); refresh(); },
+        
+        // FILE SYSTEM
+        downloadFaction: () => {
+            const data = JSON.stringify(state.currentFaction, null, 2);
+            const blob = new Blob([data], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${state.currentFaction.faction.replace(/\s+/g, '_')}.json`;
+            a.click();
+        },
+        uploadFaction: (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const json = JSON.parse(e.target.result);
+                    state.currentFaction.faction = json.faction || "Imported Faction";
+                    state.currentFaction.units = (json.units || []).map(sanitizeUnit);
+                    state.selectedUnit = null;
+                    refresh();
+                    alert("Faction Loaded and Repaired!");
+                } catch (err) { alert("Error parsing file."); }
+            };
+            reader.readAsText(file);
+        }
+    });
 })();
