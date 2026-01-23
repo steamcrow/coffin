@@ -159,15 +159,15 @@
       "defense": 2,
       "move": 6,
       "range": 0,
-      "weapon": "Steel Baton / Axe / Knuckles",
+      "weapon": "Iron Baton / Axe / Knuckles",
       "weapon_properties": [],
       "composition": { "per_points": 300 },
       "abilities": ["brutal_blow", "tough", "sonderbar_injection"],
-      "lore": "Chemically enhanced shock troops addicted to Sonderbar.",
+      "lore": "Hulking enhanced shock troops addicted to Sonderbar injections.",
       "tactics": "Frontline melee bruiser.",
       "optional_upgrades": [
         {
-          "name": "Untergang Revolver",
+          "name": "Untergang 2-shot Revolver",
           "cost": 6,
           "type": "Weapon",
           "effect": "Range 12\", Rapid Fire."
@@ -208,12 +208,12 @@
       "defense": 3,
       "move": 4,
       "range": 18,
-      "weapon": "Electromagic Wand",
+      "weapon": "Electromajik Wand",
       "weapon_properties": ["Pinning Shot"],
       "composition": { "per_points": 300 },
       "abilities": ["fear", "mobile_dynamo"],
-      "lore": "Electromagik ritual acolytes.",
-      "tactics": "Mid-range caster tied to Dynamo.",
+      "lore": "Electromajik Magician cultist.",
+      "tactics": "Mid-range caster tied to Dynamo equipment.",
       "optional_upgrades": [
         { "name": "Chain Lightning", "cost": 3, "type": "Upgrade", "effect": "Adds Blast." },
         { "name": "Levitation", "cost": 2, "type": "Upgrade", "effect": "Gain Flying." }
@@ -228,7 +228,7 @@
       "defense": 2,
       "move": 5,
       "range": 24,
-      "weapon": "Electro-Musket",
+      "weapon": "Engraved Electro-Musket",
       "weapon_properties": ["AP(2)", "Pinning Shot"],
       "composition": { "per_points": 300 },
       "abilities": ["pierce", "mobile_dynamo"],
