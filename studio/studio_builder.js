@@ -25,7 +25,8 @@ function mountFactionStudioRoot() {
         ">
             <div id="faction-overview"></div>
             <div id="unit-builder"></div>
-            <div id="inspector-panel"></div>
+            const getInspector = () => document.getElementById("inspector-panel");
+
         </div>
     `;
 }
