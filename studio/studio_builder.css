@@ -650,7 +650,7 @@ pre::-webkit-scrollbar-thumb {
 
 .ability-card-effect {
     font-size: 12px;
-    opacity: 0.8;
+    color: #fff;  /* Changed from opacity: 0.8 */
     line-height: 1.4;
 }
 
