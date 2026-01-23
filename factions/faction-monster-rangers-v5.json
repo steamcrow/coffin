@@ -450,7 +450,7 @@
       "composition": {"per_points": 400},
       "abilities": ["Fast", "Disengage", "Mobile Cover", "Cargo Hold"],
       "lore": "Cargo Tiger shipping company coal-fired truck. Hard-working employees drive supplies and troops into battle. Held together with rust and paint.",
-      "tactics": "Fast platform (12\" Move. Load Rangers/objectives for transport. Park for Mobile Cover (+1 Defense aura). Grapple enemies (pull 3\"),
+      "tactics": "Fast platform (12\" Move. Load Rangers/objectives for transport. Park for Mobile Cover (+1 Defense aura). Grapple enemies (pull 3\")",
       "optional_upgrades": [
         {
           "name": "Reinforced Cab", 
