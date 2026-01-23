@@ -658,23 +658,16 @@ const renderUnitCard = () => {
         }
     };
 
-   window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
+window.CCFB_FACTORY.showWeaponPropertyPicker = () => {
+    // FORCE remove any existing modals first
+    const existing = document.getElementById('weapon-prop-picker-modal');
+    if (existing) existing.remove();
+    
     const modal = document.createElement('div');
     modal.id = 'weapon-prop-picker-modal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.9);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.3s;
-    `;
+    
+    // CRITICAL: Use setAttribute to bypass any CSS
+    modal.setAttribute('style', 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; background: rgba(0,0,0,0.9) !important; z-index: 99999 !important; display: flex !important; align-items: center !important; justify-content: center !important; opacity: 0; transition: opacity 0.3s;');
 
     const props = getWeaponProps();
     const keys = Object.keys(props);
@@ -745,12 +738,12 @@ const renderUnitCard = () => {
                                     font-weight: 700;
                                     color: var(--cc-primary);
                                     margin-bottom: 6px;
-                                ">${pName}</div>
+                                ">${esc(pName)}</div>
                                 <div style="
                                     font-size: 12px;
                                     opacity: 0.8;
                                     line-height: 1.4;
-                                ">${pEffect}</div>
+                                ">${esc(pEffect)}</div>
                             </div>
                         `;
                     }).join('') : '<div class="cc-empty-state">No weapon properties found</div>'}
@@ -774,22 +767,15 @@ window.CCFB_FACTORY.closeWeaponPropertyPicker = () => {
 };
 
 window.CCFB_FACTORY.showAbilityPicker = () => {
+    // FORCE remove any existing modals first
+    const existing = document.getElementById('ability-picker-modal');
+    if (existing) existing.remove();
+    
     const modal = document.createElement('div');
     modal.id = 'ability-picker-modal';
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.9);
-        z-index: 9999;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        opacity: 0;
-        transition: opacity 0.3s;
-    `;
+    
+    // CRITICAL: Use setAttribute to bypass any CSS
+    modal.setAttribute('style', 'position: fixed !important; top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important; background: rgba(0,0,0,0.9) !important; z-index: 99999 !important; display: flex !important; align-items: center !important; justify-content: center !important; opacity: 0; transition: opacity 0.3s;');
     
     const categories = Object.keys(getAbilityDict());
     
@@ -846,7 +832,7 @@ window.CCFB_FACTORY.showAbilityPicker = () => {
                                 margin-bottom: 15px;
                                 padding-bottom: 8px;
                                 border-bottom: 2px solid var(--cc-border);
-                            ">${category.replace(/_/g, ' ').toUpperCase()}</h3>
+                            ">${esc(category.replace(/_/g, ' ').toUpperCase())}</h3>
                             <div style="
                                 display: grid;
                                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -863,7 +849,7 @@ window.CCFB_FACTORY.showAbilityPicker = () => {
                                           };
 
                                     return `
-                                        <div onclick="CCFB_FACTORY.addAbility('${abilityObj.name.replace(/'/g, "\\'")}')">
+                                        <div onclick="CCFB_FACTORY.addAbility('${String(abilityObj.name).replace(/'/g, "\\'")}')">
                                             <div style="
                                                 padding: 15px;
                                                 background: rgba(0,0,0,0.3);
@@ -878,19 +864,19 @@ window.CCFB_FACTORY.showAbilityPicker = () => {
                                                     font-weight: 700;
                                                     color: var(--cc-primary);
                                                     margin-bottom: 6px;
-                                                ">${abilityObj.name}</div>
+                                                ">${esc(abilityObj.name)}</div>
                                                 <div style="
                                                     font-size: 12px;
                                                     opacity: 0.8;
                                                     line-height: 1.4;
-                                                ">${abilityObj.effect || ''}</div>
+                                                ">${esc(abilityObj.effect || '')}</div>
                                                 ${abilityObj.cost ? `
                                                     <div style="
                                                         margin-top: 8px;
                                                         font-size: 11px;
                                                         color: #4CAF50;
                                                         font-weight: 600;
-                                                    ">Cost: ${abilityObj.cost}</div>
+                                                    ">Cost: ${esc(abilityObj.cost)}</div>
                                                 ` : ''}
                                             </div>
                                         </div>
