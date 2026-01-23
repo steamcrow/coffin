@@ -28,6 +28,23 @@ function mountFactionStudioRoot() {
             <div id="unit-builder"></div>
             <div id="unit-card"></div>
         </div>
+        
+        <style>
+            @media (max-width: 1200px) {
+                #fs-app {
+                    grid-template-columns: 250px 1fr 300px !important;
+                    gap: 15px !important;
+                    padding: 15px !important;
+                }
+            }
+            
+            @media (max-width: 900px) {
+                #fs-app {
+                    grid-template-columns: 1fr !important;
+                    gap: 15px !important;
+                }
+            }
+        </style>
     `;
 }
 
