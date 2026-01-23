@@ -1,0 +1,468 @@
+{
+  "rules_master": {
+    "version": "9.0",
+    "last_updated": "2026-01-24",
+    "changelog": "Added point costs and balance metadata for Faction Builder tool",
+    
+    "balance_engine": {
+      "active": true,
+      "base_weights": {
+        "quality": 20,
+        "defense": 10,
+        "move_baseline": 6,
+        "move_modifier": 5
+      },
+      "rounding_rule": "Always round UP to nearest 5 points"
+    },
+
+    "ability_dictionary": {
+      "A_deployment_timing": {
+        "ambush": {
+          "name": "Ambush",
+          "effect": "Deploy Hidden. Reveal at any time to gain First Strike in melee against the first target.",
+          "cost": 10,
+          "type": "passive",
+          "category": "deployment"
+        },
+        "first_strike": {
+          "name": "First Strike",
+          "effect": "+1 die to the first melee attack made this round (or when revealing from Hidden).",
+          "cost": "quality * 5",
+          "type": "passive",
+          "category": "deployment"
+        },
+        "scout": {
+          "name": "Scout",
+          "effect": "Make a free Move after all forces deploy but before the first activation.",
+          "cost": 10,
+          "type": "passive",
+          "category": "deployment"
+        },
+        "out_of_nowhere": {
+          "name": "Out of Nowhere",
+          "effect": "Instead of activating normally, this unit may spawn from sand, ruins, or rubble terrain.",
+          "cost": 15,
+          "type": "passive",
+          "category": "deployment"
+        }
+      },
+
+      "B_movement_positioning": {
+        "climber": {
+          "name": "Climber",
+          "effect": "Ignores vertical movement penalties. Cannot move through Impassable terrain.",
+          "cost": 5,
+          "type": "passive",
+          "category": "movement"
+        },
+        "fast": {
+          "name": "Fast",
+          "effect": "+2\" to base movement.",
+          "cost": 10,
+          "type": "passive",
+          "category": "movement"
+        },
+        "runner": {
+          "name": "Runner",
+          "effect": "If no attacks are made during activation, make an additional Move at the end.",
+          "cost": 8,
+          "type": "passive",
+          "category": "movement"
+        },
+        "stealth": {
+          "name": "Stealth",
+          "effect": "Enemies shooting from 9\"+ suffer -1 to hit.",
+          "cost": "quality * 5",
+          "type": "passive",
+          "category": "movement"
+        },
+        "flying": {
+          "name": "Flying",
+          "effect": "Ignores terrain while moving. Cannot be targeted by melee unless attacker also has Flying.",
+          "cost_multiplier": 1.25,
+          "type": "passive",
+          "category": "movement"
+        },
+        "leaper": {
+          "name": "Leaper",
+          "effect": "May leap 2d6\" ignoring terrain. On double 1s, lose this ability and take 1 damage.",
+          "cost": 15,
+          "risk_discount": -5,
+          "type": "passive",
+          "category": "movement"
+        },
+        "boardwalk_blitzer": {
+          "name": "Boardwalk Blitzer",
+          "effect": "Moves at double speed on boardwalks. After moving on boardwalk, may take one additional action.",
+          "cost": 15,
+          "type": "passive",
+          "category": "movement"
+        },
+        "barely_controlled": {
+          "name": "Barely Controlled",
+          "effect": "Must move 6\" at start of activation or pass Quality test to avoid Crash Landing.",
+          "cost_discount": -15,
+          "type": "passive",
+          "category": "movement"
+        }
+      },
+
+      "C_offense_damage": {
+        "impact": {
+          "name": "Impact",
+          "effect": "Moving 3\"+ into contact deals 1 automatic hit before rolling attack dice.",
+          "cost": 10,
+          "type": "passive",
+          "category": "offense"
+        },
+        "brutal_impact": {
+          "name": "Brutal Impact",
+          "effect": "Moving 3\"+ into contact deals 2 automatic hits before rolling attack dice.",
+          "cost": 25,
+          "type": "passive",
+          "category": "offense"
+        },
+        "savage_impact": {
+          "name": "Savage Impact",
+          "effect": "Moving 3\"+ into contact deals 3 automatic hits before rolling attack dice.",
+          "cost": 45,
+          "type": "passive",
+          "category": "offense"
+        },
+        "pierce": {
+          "name": "Pierce",
+          "effect": "Ignores 1 point of Defense.",
+          "cost": 15,
+          "type": "passive",
+          "category": "offense"
+        },
+        "brutal_pierce": {
+          "name": "Brutal Pierce",
+          "effect": "Ignores 2 points of Defense.",
+          "cost": 30,
+          "type": "passive",
+          "category": "offense"
+        },
+        "savage_pierce": {
+          "name": "Savage Pierce",
+          "effect": "Ignores 3 points of Defense.",
+          "cost": 60,
+          "type": "passive",
+          "category": "offense"
+        },
+        "brutal_blow": {
+          "name": "Brutal Blow",
+          "effect": "+1 damage on successful melee hit.",
+          "cost": 12,
+          "type": "passive",
+          "category": "offense"
+        },
+        "blast": {
+          "name": "Blast",
+          "effect": "3\" radius area of effect. Roll separately for each model.",
+          "cost": "quality * 10",
+          "type": "passive",
+          "category": "offense"
+        },
+        "massive_blast": {
+          "name": "Massive Blast",
+          "effect": "6\" radius area of effect. Roll separately for each model.",
+          "cost": "quality * 20",
+          "type": "passive",
+          "category": "offense"
+        },
+        "venom": {
+          "name": "Venom",
+          "effect": "After dealing damage in melee, target suffers 1 additional damage at end of its next activation.",
+          "cost": 10,
+          "type": "passive",
+          "category": "offense"
+        },
+        "sonic": {
+          "name": "Sonic",
+          "effect": "Ignores Cover. Affects physical-immune targets.",
+          "cost": 20,
+          "type": "passive",
+          "category": "offense"
+        },
+        "pinning_shot": {
+          "name": "Pinning Shot",
+          "effect": "On hit, target cannot move during its next activation.",
+          "cost": 8,
+          "type": "passive",
+          "category": "offense"
+        },
+        "hex": {
+          "name": "Hex",
+          "effect": "On successful hit, target suffers -1 Quality until end of its next activation.",
+          "cost": 15,
+          "type": "passive",
+          "category": "offense"
+        },
+        "grapple": {
+          "name": "Grapple",
+          "effect": "On hit, pull target 3\" toward this unit. Target cannot move next activation.",
+          "cost": 12,
+          "type": "main_action",
+          "category": "offense"
+        },
+        "hell_spray": {
+          "name": "Hell Spray",
+          "effect": "Three times per game, unleash 12\"x12\" cone attack. All units in cone are targeted.",
+          "cost": "quality * 15",
+          "limited_use_discount": -10,
+          "type": "main_action",
+          "category": "offense"
+        },
+        "demolition": {
+          "name": "Demolition",
+          "effect": "Deals double damage to structures and terrain features.",
+          "cost": 15,
+          "type": "passive",
+          "category": "offense"
+        }
+      },
+
+      "D_defense_survival": {
+        "tough": {
+          "name": "Tough",
+          "effect": "When taking damage, roll 1 die per point. Each 5+ ignores 1 damage.",
+          "cost_multiplier": 1.2,
+          "type": "passive",
+          "category": "defense"
+        },
+        "tougher": {
+          "name": "Tougher",
+          "effect": "When taking damage, roll 2 dice per point. Each 5+ ignores 1 damage.",
+          "cost_multiplier": 1.4,
+          "type": "passive",
+          "category": "defense"
+        },
+        "toughest": {
+          "name": "Toughest",
+          "effect": "When taking damage, roll 3 dice per point. Each 5+ ignores 1 damage.",
+          "cost_multiplier": 1.6,
+          "type": "passive",
+          "category": "defense"
+        },
+        "armored": {
+          "name": "Armored",
+          "effect": "Reduce damage taken by 1 (minimum 0). Does not affect terrain/environmental damage.",
+          "cost": 15,
+          "type": "passive",
+          "category": "defense"
+        },
+        "dodge": {
+          "name": "Dodge",
+          "effect": "Once per activation, cancel 1 Success from an incoming attack.",
+          "cost": 10,
+          "type": "passive",
+          "category": "defense"
+        },
+        "shield_wall": {
+          "name": "Shield Wall",
+          "effect": "+1 Defense while adjacent to another Shield Wall model.",
+          "cost": 8,
+          "type": "passive",
+          "category": "defense"
+        },
+        "regeneration": {
+          "name": "Regeneration",
+          "effect": "At start of activation, heal 1 wound on a 5+.",
+          "cost": 20,
+          "type": "passive",
+          "category": "defense"
+        },
+        "grit": {
+          "name": "Grit",
+          "effect": "Once per game: When reduced to 0 Quality, reduce to 1 instead.",
+          "cost": 15,
+          "type": "once_per_game",
+          "category": "defense"
+        },
+        "shield_aura": {
+          "name": "Shield Aura",
+          "effect": "Friendly units within 6\" gain +1 Defense.",
+          "cost": 30,
+          "type": "passive",
+          "category": "defense"
+        }
+      },
+
+      "E_morale_fear": {
+        "fear": {
+          "name": "Fear",
+          "effect": "Enemies within 6\" suffer -1 die on Morale tests.",
+          "cost": 15,
+          "type": "passive",
+          "category": "morale"
+        },
+        "terror": {
+          "name": "Terror",
+          "effect": "When enemy first engages, they must test Morale or become Shaken.",
+          "cost": 25,
+          "type": "passive",
+          "category": "morale"
+        },
+        "fearless": {
+          "name": "Fearless",
+          "effect": "Ignores Fear, Terror, and Dread. Still tests Morale for Damage and Terrain.",
+          "cost": 10,
+          "type": "passive",
+          "category": "morale"
+        },
+        "inspire": {
+          "name": "Inspire",
+          "effect": "Friendly units within 6\" gain +1 to Morale checks.",
+          "cost": 20,
+          "type": "passive",
+          "category": "morale"
+        },
+        "rally": {
+          "name": "Rally",
+          "effect": "Once per round, remove Shaken from friendly within 6\"; they gain +1 die on next Morale test.",
+          "cost": 15,
+          "type": "main_action",
+          "category": "morale"
+        }
+      },
+
+      "F_support_utility": {
+        "repair": {
+          "name": "Repair",
+          "effect": "If this unit has Spare Parts, restore 1 damage to adjacent friendly vehicle/device/mechanical unit.",
+          "cost": "quality * 5",
+          "action_discount": -5,
+          "type": "main_action",
+          "category": "support"
+        },
+        "befriend_beast": {
+          "name": "Befriend Beast",
+          "effect": "May attempt Befriend against living monsters. Make opposed Quality check.",
+          "cost": "quality * 10",
+          "action_discount": -5,
+          "type": "main_action",
+          "category": "support"
+        },
+        "befriend_kaiju": {
+          "name": "Befriend Kaiju",
+          "effect": "May attempt Befriend against Titan-class Kaiju. Success calms or redirects rampage.",
+          "cost": "quality * 25",
+          "action_discount": -10,
+          "type": "main_action",
+          "category": "support"
+        },
+        "assistant": {
+          "name": "Assistant",
+          "effect": "May assist adjacent Mystic or Scientist with special activations.",
+          "cost": 8,
+          "type": "passive",
+          "category": "support"
+        }
+      }
+    },
+
+    "weapon_properties": {
+      "melee": {
+        "name": "Melee",
+        "effect": "Can be used in close combat. Does not require Line of Sight.",
+        "cost": 0,
+        "category": "weapon_property"
+      },
+      "pierce": {
+        "name": "Pierce",
+        "effect": "Ignore 1 point of Defense.",
+        "cost": 15,
+        "category": "weapon_property"
+      },
+      "brutal_pierce": {
+        "name": "Brutal Pierce",
+        "effect": "Ignore 2 points of Defense.",
+        "cost": 30,
+        "category": "weapon_property"
+      },
+      "savage_pierce": {
+        "name": "Savage Pierce",
+        "effect": "Ignore 3 points of Defense.",
+        "cost": 60,
+        "category": "weapon_property"
+      },
+      "blast": {
+        "name": "Blast",
+        "effect": "3\" radius area of effect.",
+        "cost": "quality * 10",
+        "category": "weapon_property"
+      },
+      "grapple": {
+        "name": "Grapple",
+        "effect": "On hit, pull target 3\" toward this unit.",
+        "cost": 12,
+        "category": "weapon_property"
+      },
+      "pinning_shot": {
+        "name": "Pinning Shot",
+        "effect": "Target hit may not move next activation.",
+        "cost": 8,
+        "category": "weapon_property"
+      }
+    },
+
+    "unit_archetypes": {
+      "grunt": {
+        "name": "Grunt",
+        "type_rule": "Expendable Fodder: No VP granted. Cannot control objectives.",
+        "cost_multiplier": 0.8,
+        "category": "archetype"
+      },
+      "brute": {
+        "name": "Brute",
+        "type_rule": "Momentum: After dealing melee damage, move 2\" (no reactions).",
+        "cost_flat": 15,
+        "category": "archetype"
+      },
+      "mystic": {
+        "name": "Mystic",
+        "type_rule": "Lingering Harm: Debuffs persist until end of target's next activation.",
+        "cost_flat": 15,
+        "category": "archetype"
+      },
+      "shooter": {
+        "name": "Shooter",
+        "type_rule": "Fire Superiority: Split dice between 2 targets if stationary.",
+        "cost_flat": 10,
+        "category": "archetype"
+      },
+      "cavalry": {
+        "name": "Cavalry",
+        "type_rule": "Disengage: Leave melee without penalty after attacking.",
+        "cost_flat": 20,
+        "category": "archetype"
+      },
+      "rogue": {
+        "name": "Rogue",
+        "type_rule": "First Strike: Attack first when charging or charged.",
+        "cost": "quality * 5",
+        "category": "archetype"
+      },
+      "tank": {
+        "name": "Tank",
+        "type_rule": "Bodyguard: Intercept attacks for adjacent friendly units.",
+        "cost_multiplier": 1.1,
+        "category": "archetype"
+      },
+      "leader": {
+        "name": "Leader",
+        "type_rule": "Rally + Command Presence: Morale auras and Quality sharing.",
+        "cost_flat": 30,
+        "vp_risk": -10,
+        "category": "archetype"
+      },
+      "titan": {
+        "name": "Titan",
+        "type_rule": "Unstoppable: Ignore difficult terrain. Cannot be Grappled by smaller units.",
+        "cost_multiplier": 1.5,
+        "category": "archetype"
+      }
+    }
+  }
+}
