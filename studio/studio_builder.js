@@ -59,7 +59,7 @@ window.CCFB_FACTORY = {
             });
     },
 
-    refresh: function() {
+ refresh: function() {
         var root = document.getElementById('faction-studio-root');
         if (!root) {
             console.error("❌ faction-studio-root not found");
@@ -72,18 +72,21 @@ window.CCFB_FACTORY = {
             return;
         }
 
+        // Re-render the structural skeleton if it's missing
         if (!document.getElementById('unit-builder')) {
             root.innerHTML = 
-                '<div class="studio-header">' +
-                    '<h1 class="studio-title">FACTION STUDIO</h1>' +
-                    '<p class="studio-subtitle">A Faction Creation Tool for Coffin Canyon</p>' +
-                '</div>' +
-                '<div class="fb-grid">' +
-                    '<div id="faction-overview" class="fb-panel"></div>' +
-                    '<div id="unit-builder" class="fb-panel fb-panel-center"></div>' +
-                    '<div id="unit-card" class="fb-panel"></div>' +
-                '</div>' +
-                '<div id="slide-panel-container"></div>';
+                '<div class="studio-wrapper">' + 
+                    '<div class="studio-header">' +
+                        '<h1 class="studio-title">FACTION STUDIO</h1>' +
+                        '<p class="studio-subtitle">A Faction Creation Tool for Coffin Canyon</p>' +
+                    '</div>' +
+                    '<div class="fb-grid">' + // This is your 3-column container
+                        '<div id="faction-overview" class="fb-panel"></div>' +
+                        '<div id="unit-builder" class="fb-panel fb-panel-center"></div>' +
+                        '<div id="unit-card" class="fb-panel"></div>' +
+                    '</div>' +
+                    '<div id="slide-panel-container"></div>' +
+                '</div>';
         }
         
         this.renderRoster();
