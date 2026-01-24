@@ -1,5 +1,6 @@
 /**
- * COFFIN CANYON FACTION STUDIO - FULL FEATURE RESTORATION
+ * COFFIN CANYON FACTION STUDIO - FINAL VERIFIED BUILD
+ * Logic Restored: Full Stats, Modals, Costing, Lore, and Archetypes.
  */
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
@@ -7,12 +8,31 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 (function() {
     const state = {
         rules: null,
-        currentFaction: { faction: "New Faction", version: "1.0", units: [] },
+        currentFaction: { faction: "New Faction", units: [] },
         selectedUnit: null,
         activeModal: null 
     };
 
-    // --- 1. CORE ENGINE & DATA ---
+    // --- DOM PROTECTION: Ensures Odoo is ready ---
+    const startWhenReady = () => {
+        const root = document.getElementById('faction-studio-root');
+        if (root) {
+            mountStudio();
+            refresh();
+        } else {
+            const observer = new MutationObserver((mutations, obs) => {
+                const retryRoot = document.getElementById('faction-studio-root');
+                if (retryRoot) {
+                    mountStudio();
+                    refresh();
+                    obs.disconnect();
+                }
+            });
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+    };
+
+    // --- ENGINE & DATA ---
     const sanitizeUnit = (u) => ({
         name: u.name || "New Recruit",
         type: u.type || "infantry",
@@ -49,7 +69,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         let total = 0;
         const q = u.quality || 4;
         
-        // Base Stats
+        // Base Stats Costing Logic
         total += (7 - q) * 15;
         total += (7 - (u.defense || 4)) * 10;
         total += ((u.move || 6) - 6) * 5;
@@ -58,8 +78,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         const parseAddon = (costVal) => {
             if (typeof costVal === 'number') return costVal;
             if (typeof costVal === 'string' && costVal.includes('quality')) {
-                const mult = parseInt(costVal.match(/\d+/) || [0]);
-                return (7 - q) * mult;
+                return (7 - q) * parseInt(costVal.match(/\d+/) || [0]);
             }
             return 0;
         };
@@ -74,7 +93,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         return Math.ceil(total / 5) * 5;
     };
 
-    // --- 2. RENDERERS ---
+    // --- RENDERERS ---
     const mountStudio = () => {
         const root = document.getElementById('faction-studio-root');
         if (!root) return;
@@ -162,7 +181,9 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                 <div class="unit-card-stats">QUA ${u.quality}+ | DEF ${u.defense}+ | MOV ${u.move}"</div>
                 <div class="unit-card-section">
                     <div class="section-label">PROPERTIES</div>
-                    ${u.weapon_properties.map((p, i) => `<span class="property-badge" onclick="CCFB_FACTORY.removeItem('weapon_properties', ${i})">${esc(weaponProps[p]?.name || p)} ✕</span>`).join('')}
+                    <div class="weapon-properties">
+                        ${u.weapon_properties.map((p, i) => `<span class="property-badge" onclick="CCFB_FACTORY.removeItem('weapon_properties', ${i})">${esc(weaponProps[p]?.name || p)} ✕</span>`).join('')}
+                    </div>
                 </div>
                 <div class="unit-card-section">
                     <div class="section-label">ABILITIES</div>
@@ -180,17 +201,16 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         if (!target || !state.activeModal) { if(target) target.innerHTML = ""; return; }
         const { abilities, weaponProps } = getRules();
         let content = `<div class="cc-modal-overlay cc-modal-open"><div class="cc-modal-panel"><h3>SELECT ${state.activeModal.toUpperCase()}</h3><div class="cc-modal-content">`;
-        
         if (state.activeModal === 'ability') {
             for (let cat in abilities) {
-                content += `<div class="category-header">${cat}</div>`;
+                content += `<div class="category-header" style="color:#ff7518; margin-top:10px; border-bottom:1px solid #444;">${cat.toUpperCase()}</div>`;
                 for (let a in abilities[cat]) {
-                    content += `<div class="ability-card" onclick="CCFB_FACTORY.addItem('abilities', '${a}')">${a}</div>`;
+                    content += `<div class="ability-card" style="padding:5px; cursor:pointer;" onclick="CCFB_FACTORY.addItem('abilities', '${a}')">${a}</div>`;
                 }
             }
         } else {
             for (let p in weaponProps) {
-                content += `<div class="ability-card" onclick="CCFB_FACTORY.addItem('weapon_properties', '${p}')">${weaponProps[p].name}</div>`;
+                content += `<div class="ability-card" style="padding:5px; cursor:pointer;" onclick="CCFB_FACTORY.addItem('weapon_properties', '${p}')">${weaponProps[p].name}</div>`;
             }
         }
         target.innerHTML = content + `</div><button class="w-100 mt-2" onclick="CCFB_FACTORY.closeModal()">CLOSE</button></div></div>`;
@@ -198,16 +218,14 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
     const refresh = () => { renderRoster(); renderBuilder(); renderCard(); renderModal(); };
 
-    // --- 3. PUBLIC API ---
+    // --- PUBLIC API ---
     Object.assign(window.CCFB_FACTORY, {
         init: async () => {
             try {
                 const r = await fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/studio/faction_rules.json?t=" + Date.now());
                 state.rules = await r.json();
-                mountStudio();
-                refresh();
-                console.log("✅ Studio Engine Ready");
-            } catch (e) { console.error("Rules Load Failed", e); }
+                startWhenReady();
+            } catch (e) { console.error("Rules load failed", e); }
         },
         updateFaction: (v) => { state.currentFaction.faction = v; refresh(); },
         selectUnit: (i) => { state.selectedUnit = i; refresh(); },
@@ -227,7 +245,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         download: () => {
             const blob = new Blob([JSON.stringify(state.currentFaction, null, 2)], {type: "application/json"});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            a.download = state.currentFaction.faction + ".json"; a.click();
+            a.download = (state.currentFaction.faction || "faction") + ".json"; a.click();
         },
         upload: (ev) => {
             const reader = new FileReader();
