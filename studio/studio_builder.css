@@ -40,26 +40,27 @@
 }
 
 /* =========================================================
-   GRID LAYOUT (NEW)
+   GRID LAYOUT - 3 COLUMNS
+   Left: Faction Roster (0.9fr)
+   Middle: Builder Steps (1.3fr - widest)
+   Right: Unit Preview Card (1fr)
    ========================================================= */
 .fb-grid {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: 0.9fr 1.3fr 1fr;
     gap: 20px;
+    align-items: start;
+    margin-top: 20px;
     padding: 10px;
-    justify-content: center;
-    align-items: flex-start;
 }
 
 .fb-panel {
-    flex: 1;
-    min-width: 320px;
+    /* Grid children - no need for flex properties */
+    min-width: 0; /* Prevents grid blowout */
 }
 
 .fb-panel-center {
-    flex: 2;
-    min-width: 350px;
-    max-width: 600px;
+    /* Automatically wider due to 1.3fr in grid */
 }
 
 /* =========================================================
@@ -750,7 +751,7 @@ textarea.cc-input {
    ========================================================= */
 @media (max-width: 1400px) {
     .fb-grid {
-        flex-direction: column;
+        grid-template-columns: 1fr; /* Stack on smaller screens */
     }
     
     .cc-slide-panel {
@@ -760,16 +761,6 @@ textarea.cc-input {
     
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-@media (max-width: 768px) {
-    .studio-title {
-        font-size: 32px;
-    }
-    
-    .ability-grid {
-        grid-template-columns: 1fr;
     }
 }
 
