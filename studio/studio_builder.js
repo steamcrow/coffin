@@ -65,7 +65,16 @@ init: function() {
 
  refresh: function() {
         var root = document.getElementById('faction-studio-root');
-        if (!root) {
+        if (this.state.selectedUnit === null) {
+            root.classList.add("no-unit");
+            root.classList.remove("has-unit");
+        } else {
+            root.classList.add("has-unit");
+            root.classList.remove("no-unit");
+}
+
+     
+     if (!root) {
             console.error("❌ faction-studio-root not found");
             return;
         }
