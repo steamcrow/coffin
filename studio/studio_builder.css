@@ -1,98 +1,60 @@
 /* =========================================================
-   COFFIN CANYON FACTION STUDIO - MASTER CSS (ODOO SAFE)
-   Container-based grid, no viewport lies
+   COFFIN CANYON FACTION STUDIO - FULL RESTORED MASTER
    ========================================================= */
 
-*, *::before, *::after {
-    box-sizing: border-box;
-}
+*, *::before, *::after { box-sizing: border-box; }
 
 :root { 
   --cc-primary: #ff7518;
   --cc-primary-dim: rgba(255, 117, 24, 0.15);
   --cc-bg-darker: #121212;
-  --cc-bg-soft: rgba(255, 255, 255, 0.03);
   --cc-border: rgba(255, 255, 255, 0.1);
   --cc-text-muted: #999;
+  --stat-q: #00d4ff;
+  --stat-d: #ff3e3e;
+  --stat-m: #44ff44;
+  --stat-r: #ffbb00;
 }
 
-/* 1. Ensure the root can actually expand */
-#faction-studio-root {
-    width: 100%;
-    overflow-x: hidden;
-}
-/* =========================================================
-   WRAPPER AS CONTAINER
-   ========================================================= */
+#faction-studio-root { width: 100%; overflow-x: hidden; font-family: 'Oswald', sans-serif; }
 
 .studio-wrapper {
     width: 100%;
-    max-width: 1800px;
+    max-width: 1600px;
     margin: 0 auto;
-    padding: 0 20px;
-
-    /* THIS IS THE KEY */
-    container-type: inline-size;
+    padding: 20px;
 }
 
 /* =========================================================
-   GRID (DEFAULT = 3 COLUMNS)
+   THE GRID
    ========================================================= */
-
 .fb-grid {
     display: grid;
-    width: 100%;
-    /* 1. We removed the high minmax values so it fits in Odoo's "Standard" width */
-    grid-template-columns: 
-        minmax(200px, 0.9fr) 
-        minmax(300px, 1.3fr) 
-        minmax(250px, 1fr);
-    gap: 15px;
+    grid-template-columns: 1fr 1.4fr 1.1fr;
+    gap: 20px;
     align-items: start;
 }
 
-/* =========================================================
-   RESPONSIVE (PICK ONE: MEDIA QUERIES ARE SAFER IN ODOO)
-   ========================================================= */
-
-/* Tablet: Drop to 2 columns when space is tight */
-@media (max-width: 1100px) {
-    .fb-grid {
-        grid-template-columns: 1fr 1.2fr;
-    }
-    /* Make the 3rd panel (unit card) span full width at the bottom */
-    #unit-card {
-        grid-column: 1 / -1;
-    }
+@media (max-width: 1280px) {
+    .fb-grid { grid-template-columns: 1fr 1.5fr; }
+    #unit-card { grid-column: span 2; }
 }
 
-/* Mobile: Single column stack */
-@media (max-width: 768px) {
-    .fb-grid {
-        grid-template-columns: 1fr;
-    }
-    #unit-card {
-        grid-column: auto;
-    }
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
+@media (max-width: 900px) {
+    .fb-grid { grid-template-columns: 1fr; }
+    #unit-card { grid-column: span 1; }
 }
 
 /* =========================================================
-   PANEL BASE
+   PANELS & HEADERS
    ========================================================= */
-
 .fb-panel {
-    min-width: 0;
     background: var(--cc-bg-darker);
-    border-radius: 8px;
     border: 1px solid var(--cc-border);
+    border-radius: 8px;
+    overflow: hidden;
+    min-width: 0;
 }
-
-/* =========================================================
-   EVERYTHING ELSE (UNCHANGED VISUAL STYLES)
-   ========================================================= */
 
 .cc-panel-header {
     background: rgba(255,255,255,0.05);
@@ -102,162 +64,126 @@
     text-transform: uppercase;
     font-size: 11px;
     letter-spacing: 1px;
+    color: var(--cc-primary);
 }
 
-.panel-content {
-    padding: 15px;
-}
+.panel-content { padding: 15px; }
 
 /* =========================================================
-   FORM CONTROLS
+   STAT BADGES (THE "VIBE")
    ========================================================= */
+.stat-badge-flex {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+    justify-content: center;
+}
 
-.cc-input {
-    background: rgba(0,0,0,0.4);
+.cc-stat-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(0,0,0,0.5);
+    border: 2px solid #444;
+    border-radius: 6px;
+    padding: 5px;
+    min-width: 55px;
+}
+
+.cc-stat-label { font-size: 10px; font-weight: 900; }
+.cc-stat-value { font-size: 18px; font-weight: 900; color: #fff; }
+
+.stat-q-border { border-color: var(--stat-q); }
+.stat-d-border { border-color: var(--stat-d); }
+.stat-m-border { border-color: var(--stat-m); }
+.stat-r-border { border-color: var(--stat-r); }
+
+.stat-q { color: var(--stat-q); }
+.stat-d { color: var(--stat-d); }
+.stat-m { color: var(--stat-m); }
+.stat-r { color: var(--stat-r); }
+
+/* =========================================================
+   BUILDER STEPS
+   ========================================================= */
+.builder-step {
     border: 1px solid var(--cc-border);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    font-family: 'Oswald', sans-serif;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    background: rgba(255,255,255,0.02);
 }
 
-.cc-input:focus {
-    outline: none;
-    border-color: var(--cc-primary);
-    box-shadow: 0 0 8px rgba(255,117,24,0.3);
-}
-
-textarea.cc-input {
-    resize: vertical;
-    font-family: system-ui, -apple-system, sans-serif;
-}
-
-.cc-select {
-    background: rgba(0,0,0,0.4);
-    border: 1px solid var(--cc-border);
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 13px;
-    font-family: 'Oswald', sans-serif;
+.step-header {
+    padding: 12px;
     cursor: pointer;
-}
-
-.cc-select:focus {
-    outline: none;
-    border-color: var(--cc-primary);
-    box-shadow: 0 0 8px rgba(255,117,24,0.3);
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    color: var(--cc-primary);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 5px;
-}
-
-.form-group label.small {
-    font-size: 9px;
-    color: #999;
-}
-
-.stats-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    display: flex;
+    align-items: center;
     gap: 10px;
 }
 
+.step-number {
+    width: 24px;
+    height: 24px;
+    background: #333;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+.step-active { border-left: 4px solid var(--cc-primary); background: rgba(255,117,24,0.05); }
+.step-active .step-number { background: var(--cc-primary); color: #000; }
+
+.step-content { padding: 15px; border-top: 1px solid var(--cc-border); }
+
 /* =========================================================
-   ROSTER PANEL
+   ABILITIES & PROPERTY BADGES
    ========================================================= */
-
-.cc-roster-item { 
-    display: flex; 
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 15px; 
-    cursor: pointer; 
-    transition: 0.2s;
-    border-bottom: 1px solid var(--cc-border);
-}
-
-.cc-roster-item:hover { 
+.property-badge {
+    display: inline-block;
     background: var(--cc-primary-dim);
-    border-left: 3px solid var(--cc-primary);
-}
-
-.cc-item-selected {
-    background: rgba(255, 117, 24, 0.2);
-    border-left: 4px solid var(--cc-primary);
-    box-shadow: 0 0 15px rgba(255, 117, 24, 0.3);
-}
-
-.u-name { 
-    font-weight: 800; 
-    font-size: 14px;
-    text-transform: uppercase;
-}
-
-.unit-cost {
     color: var(--cc-primary);
+    border: 1px solid var(--cc-primary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    margin: 2px;
+    text-transform: uppercase;
     font-weight: 700;
 }
 
-.unit-list {
-    max-height: 400px;
-    overflow-y: auto;
+.ability-item {
+    background: rgba(255,255,255,0.05);
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 5px;
+    font-size: 12px;
+    border-left: 2px solid var(--cc-primary);
 }
 
 /* =========================================================
-   BUILDER STEPS / BUTTONS / BADGES
-   (unchanged visually)
+   FORM ELEMENTS (FORCED DARK)
    ========================================================= */
-
-/* ... all your step, button, badge, card styles remain ... */
-/* I left these untouched because they weren’t broken. */
-
-/* =========================================================
-   RESPONSIVE (CLEAN + PREDICTABLE)
-   ========================================================= */
-
-/* Tablet */
-@media (max-width: 1280px) {
-    .fb-grid {
-        grid-template-columns: 1fr 1.5fr; /* Drop to 2 columns */
-    }
-    #unit-card {
-        grid-column: span 2; /* Card moves to bottom of the first two */
-    }
+.cc-input, .cc-select {
+    width: 100%;
+    background: #000 !important;
+    border: 1px solid #333 !important;
+    color: #fff !important;
+    padding: 10px;
+    border-radius: 4px;
 }
 
-@media (max-width: 900px) {
-    .fb-grid {
-        grid-template-columns: 1fr; /* Single column stack */
-    }
-    #unit-card {
-        grid-column: span 1;
-    }
+.btn-add-small {
+    background: var(--cc-primary);
+    color: #000;
+    border: none;
+    padding: 10px;
+    font-weight: 900;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-    .fb-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .studio-title {
-        font-size: 32px;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
+.btn-add-small:hover { background: #ff9d5c; }
