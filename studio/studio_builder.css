@@ -16,7 +16,22 @@
   --stat-r: #ffbb00;
 }
 
-#faction-studio-root { width: 100%; overflow-x: hidden; font-family: 'Oswald', sans-serif; }
+/* =========================================================
+   LAYOUT OVERRIDE – ODOO BREAKOUT (REPLACE OLD GRID)
+   ========================================================= */
+
+#faction-studio-root {
+    width: 100vw;
+    max-width: 100vw;
+}
+
+.o_container,
+.o_container_small,
+.o_wrap,
+.o_we_snippet {
+    width: 100% !important;
+    max-width: 100% !important;
+}
 
 .studio-wrapper {
     width: 100%;
@@ -25,25 +40,14 @@
     padding: 20px;
 }
 
-/* =========================================================
-   THE GRID
-   ========================================================= */
 .fb-grid {
     display: grid;
+    width: 100%;
     grid-template-columns: 1fr 1.4fr 1.1fr;
     gap: 20px;
     align-items: start;
 }
 
-@media (max-width: 1280px) {
-    .fb-grid { grid-template-columns: 1fr 1.5fr; }
-    #unit-card { grid-column: span 2; }
-}
-
-@media (max-width: 900px) {
-    .fb-grid { grid-template-columns: 1fr; }
-    #unit-card { grid-column: span 1; }
-}
 
 /* =========================================================
    PANELS & HEADERS
