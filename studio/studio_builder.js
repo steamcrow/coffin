@@ -1,7 +1,6 @@
 /**
- * COFFIN CANYON FACTION STUDIO - GUIDED BUILDER V2
- * Logic: Accordion Steps, Full Stats, Modals, Costing, and Actual Path.
- * Path: factions/rules.json
+ * COFFIN CANYON FACTION STUDIO - MOBILE OPTIMIZED
+ * Logic: Accordion, Modal Selection Fix, Weapon Powers rename.
  */
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
@@ -12,7 +11,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         currentFaction: { faction: "New Faction", units: [] },
         selectedUnit: null,
         activeModal: null,
-        activeStep: 1 // Tracks the accordion focus
+        activeStep: 1 
     };
 
     const startWhenReady = () => {
@@ -27,7 +26,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         }
     };
 
-    // --- DATA ENGINE ---
+    // --- DATA HANDLING ---
     const sanitizeUnit = (u) => ({
         name: u.name || "New Recruit",
         type: u.type || "infantry",
@@ -35,10 +34,9 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         defense: parseInt(u.defense) || 4,
         move: parseInt(u.move) || 6,
         range: parseInt(u.range) || 0,
-        weapon: u.weapon || "Hand-to-Hand",
         weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
         abilities: Array.isArray(u.abilities) ? u.abilities : [],
-        lore: u.lore || u.description || ""
+        lore: u.lore || ""
     });
 
     const getRules = () => ({
@@ -49,45 +47,32 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
     const calculateUnitCost = (u) => {
         if (!u || !state.rules) return 0;
-        let total = 0;
-        const q = u.quality || 4;
-        total += (7 - q) * 15;
-        total += (7 - (u.defense || 4)) * 10;
-        total += ((u.move || 6) - 6) * 5;
+        let total = (7 - u.quality) * 15 + (7 - u.defense) * 10 + (u.move - 6) * 5;
         if (u.range > 0) total += 10;
-
-        const parseAddon = (costVal) => {
-            if (typeof costVal === 'number') return costVal;
-            if (typeof costVal === 'string' && costVal.includes('quality')) {
-                return (7 - q) * parseInt(costVal.match(/\d+/) || [0]);
-            }
-            return 0;
-        };
-
+        
         const { weaponProps, abilities } = getRules();
+        const parseAddon = (v) => typeof v === 'number' ? v : (v?.includes('quality') ? (7-u.quality)*parseInt(v.match(/\d+/)) : 0);
+        
         u.weapon_properties.forEach(p => { if(weaponProps[p]) total += parseAddon(weaponProps[p].cost); });
         u.abilities.forEach(a => { 
-            for (let cat in abilities) {
-                if (abilities[cat][a]) total += parseAddon(abilities[cat][a].cost);
-            }
+            for(let c in abilities) { if(abilities[c][a]) total += parseAddon(abilities[c][a].cost); }
         });
-        
+
         const arch = getRules().archetypes[u.type?.toLowerCase()];
         if (arch?.cost_multiplier) total *= arch.cost_multiplier;
         return Math.ceil(total / 5) * 5;
     };
 
-    const esc = (s) => String(s ?? "").replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]);
-
-    // --- RENDERERS ---
+    // --- UI RENDERERS ---
     const mountStudio = () => {
         const root = document.getElementById('faction-studio-root');
         if (!root) return;
+        // Updated to use a responsive grid that stacks on mobile
         root.innerHTML = `
-            <div class="fb-grid" style="display: grid; grid-template-columns: 320px 1fr 400px; gap: 20px; padding: 20px;">
-                <div id="faction-overview"></div>
-                <div id="unit-builder"></div>
-                <div id="unit-card"></div>
+            <div class="fb-grid" style="display: flex; flex-wrap: wrap; gap: 20px; padding: 10px; justify-content: center;">
+                <div id="faction-overview" style="flex: 1; min-width: 300px; max-width: 350px;"></div>
+                <div id="unit-builder" style="flex: 2; min-width: 320px; max-width: 600px;"></div>
+                <div id="unit-card" style="flex: 1; min-width: 320px; max-width: 400px;"></div>
             </div>
             <div id="modal-container"></div>
         `;
@@ -98,19 +83,19 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         if (!target) return;
         target.innerHTML = `
             <div class="cc-panel">
-                <div class="cc-panel-header">FACTION ROSTER</div>
+                <div class="cc-panel-header">THE POSSE</div>
                 <div style="padding:15px">
-                    <input type="text" class="cc-input w-100 mb-2" value="${esc(state.currentFaction.faction)}" onchange="CCFB_FACTORY.updateFaction(this.value)">
+                    <input type="text" class="cc-input w-100 mb-2" value="${state.currentFaction.faction}" oninput="CCFB_FACTORY.updateFaction(this.value)">
                     <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-bottom:10px;">
-                        <button class="btn-add-small" onclick="CCFB_FACTORY.download()">SAVE JSON</button>
+                        <button class="btn-add-small" onclick="CCFB_FACTORY.download()">SAVE</button>
                         <button class="btn-add-small" onclick="document.getElementById('cc-up').click()">LOAD</button>
                         <input type="file" id="cc-up" style="display:none" onchange="CCFB_FACTORY.upload(event)">
                     </div>
-                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.addUnit()">+ ADD NEW UNIT</button>
+                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.addUnit()">+ NEW CHARACTER</button>
                     <div class="unit-list mt-3">
                         ${state.currentFaction.units.map((u, i) => `
                             <div class="cc-roster-item ${state.selectedUnit === i ? 'cc-item-selected' : ''}" onclick="CCFB_FACTORY.selectUnit(${i})">
-                                <b>${esc(u.name)}</b> <span style="float:right">${calculateUnitCost(u)}₤</span>
+                                <b>${u.name}</b> <span style="float:right">${calculateUnitCost(u)}₤</span>
                             </div>
                         `).join('')}
                     </div>
@@ -120,111 +105,93 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
     const renderBuilder = () => {
         const target = document.getElementById('unit-builder');
-        if (!target) return;
-        if (state.selectedUnit === null) { 
-            target.innerHTML = '<div class="cc-empty-state"><i class="fas fa-users"></i>SELECT OR CREATE A UNIT TO BEGIN</div>'; 
-            return; 
+        if (!target || state.selectedUnit === null) {
+            if(target) target.innerHTML = '<div class="cc-empty-state"><i class="fas fa-ghost"></i><br>SELECT A CHARACTER TO BEGIN</div>';
+            return;
         }
         const u = state.currentFaction.units[state.selectedUnit];
         const { archetypes } = getRules();
 
         const step = (num, title, content) => `
-            <div class="builder-step ${state.activeStep === num ? 'step-active' : 'step-locked'}">
-                <div class="step-header" onclick="CCFB_FACTORY.setStep(${num})" style="cursor:pointer">
+            <div class="builder-step ${state.activeStep === num ? 'step-active' : ''}">
+                <div class="step-header" onclick="CCFB_FACTORY.setStep(${num})">
                     <div class="step-number">${num}</div>
                     <div class="step-title">${title}</div>
+                    <i class="fas fa-chevron-${state.activeStep === num ? 'down' : 'right'}" style="margin-left:auto; opacity:0.5"></i>
                 </div>
                 ${state.activeStep === num ? `<div class="step-content">${content}</div>` : ''}
             </div>`;
 
         target.innerHTML = `
-            <div class="cc-panel" style="padding:20px">
-                ${step(1, "Identity & Archetype", `
+            <div class="cc-panel" style="padding:15px">
+                ${step(1, "IDENTITY", `
                     <div class="form-group">
-                        <label>Unit Name</label>
-                        <input type="text" class="cc-input w-100" value="${esc(u.name)}" onchange="CCFB_FACTORY.updateUnit('name', this.value)">
+                        <label>CHARACTER NAME</label>
+                        <input type="text" class="cc-input w-100" value="${u.name}" oninput="CCFB_FACTORY.updateUnit('name', this.value)">
                     </div>
                     <div class="form-group">
-                        <label>Unit Archetype</label>
+                        <label>ARCHETYPE</label>
                         <select class="cc-select w-100" onchange="CCFB_FACTORY.setArch(this.value)">
                             ${Object.keys(archetypes).map(k => `<option value="${k}" ${u.type === k ? 'selected' : ''}>${k.toUpperCase()}</option>`).join('')}
                         </select>
-                        <div class="type-rule-display">${archetypes[u.type]?.description || "Select a type to see bonuses."}</div>
+                        <div class="type-rule-display">${archetypes[u.type]?.description || ""}</div>
                     </div>
-                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.setStep(2)">NEXT: CONFIGURE STATS</button>
+                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.setStep(2)">NEXT STEP</button>
                 `)}
 
-                ${step(2, "Combat Attributes", `
+                ${step(2, "ATTRIBUTES", `
                     <div class="stats-grid">
-                        <div class="form-group"><label>Quality</label><input type="number" class="cc-input" value="${u.quality}" onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))"></div>
-                        <div class="form-group"><label>Defense</label><input type="number" class="cc-input" value="${u.defense}" onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))"></div>
-                        <div class="form-group"><label>Move</label><input type="number" class="cc-input" value="${u.move}" onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))"></div>
-                        <div class="form-group"><label>Range</label><input type="number" class="cc-input" value="${u.range}" onchange="CCFB_FACTORY.updateUnit('range', parseInt(this.value))"></div>
+                        <div class="form-group"><label>QUA</label><input type="number" class="cc-input" value="${u.quality}" onchange="CCFB_FACTORY.updateUnit('quality', this.value)"></div>
+                        <div class="form-group"><label>DEF</label><input type="number" class="cc-input" value="${u.defense}" onchange="CCFB_FACTORY.updateUnit('defense', this.value)"></div>
+                        <div class="form-group"><label>MOV</label><input type="number" class="cc-input" value="${u.move}" onchange="CCFB_FACTORY.updateUnit('move', this.value)"></div>
+                        <div class="form-group"><label>RNG</label><input type="number" class="cc-input" value="${u.range}" onchange="CCFB_FACTORY.updateUnit('range', this.value)"></div>
                     </div>
-                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.setStep(3)">NEXT: ABILITIES & GEAR</button>
+                    <button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.setStep(3)">NEXT STEP</button>
                 `)}
 
-                ${step(3, "Abilities & Weaponry", `
-                    <button class="btn-add-small w-100 mb-2" onclick="CCFB_FACTORY.openModal('property')">+ ADD WEAPON PROPERTY</button>
-                    <button class="btn-add-small w-100 mb-2" onclick="CCFB_FACTORY.openModal('ability')">+ ADD SPECIAL ABILITY</button>
-                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.setStep(4)">NEXT: LORE</button>
+                ${step(3, "POWERS & ABILITIES", `
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:15px;">
+                        <button class="btn-add-small" onclick="CCFB_FACTORY.openModal('property')">+ WEAPON POWER</button>
+                        <button class="btn-add-small" onclick="CCFB_FACTORY.openModal('ability')">+ UNIT ABILITY</button>
+                    </div>
+                    <button class="btn-add-small w-100" onclick="CCFB_FACTORY.setStep(4)">NEXT STEP</button>
                 `)}
 
-                ${step(4, "Lore & Description", `
-                    <textarea class="cc-input w-100" rows="6" onchange="CCFB_FACTORY.updateUnit('lore', this.value)">${esc(u.lore)}</textarea>
+                ${step(4, "LORE", `
+                    <textarea class="cc-input w-100" rows="5" oninput="CCFB_FACTORY.updateUnit('lore', this.value)">${u.lore}</textarea>
                 `)}
                 
-                <div style="margin-top:30px; border-top:1px solid #444; padding-top:20px;">
-                    <button class="btn-danger w-100" onclick="CCFB_FACTORY.delUnit()">DELETE UNIT</button>
-                </div>
+                <button class="btn-danger w-100 mt-4" onclick="CCFB_FACTORY.delUnit()">DELETE CHARACTER</button>
             </div>`;
     };
 
     const renderCard = () => {
         const target = document.getElementById('unit-card');
-        if (!target) return;
-        if (state.selectedUnit === null) { target.innerHTML = ''; return; }
+        if (!target || state.selectedUnit === null) return;
         const u = state.currentFaction.units[state.selectedUnit];
         const { weaponProps, abilities } = getRules();
 
         target.innerHTML = `
-            <div class="unit-card-preview">
-                <div class="unit-card-name">${esc(u.name)}</div>
-                <div class="unit-card-type">${esc(u.type).toUpperCase()}</div>
-                
+            <div class="unit-card-preview cc-panel">
+                <div class="unit-card-name">${u.name}</div>
                 <div class="unit-card-cost">
-                    <div class="cost-label">RECRUITMENT COST</div>
+                    <div class="cost-label">RECRUITMENT</div>
                     <div class="cost-value">${calculateUnitCost(u)}₤</div>
                 </div>
-
                 <div class="unit-card-stats">
                     <div class="stat-item"><div class="stat-label">QUA</div><div class="stat-value">${u.quality}+</div></div>
                     <div class="stat-item"><div class="stat-label">DEF</div><div class="stat-value">${u.defense}+</div></div>
                     <div class="stat-item"><div class="stat-label">MOV</div><div class="stat-value">${u.move}"</div></div>
-                    <div class="stat-item"><div class="stat-label">RNG</div><div class="stat-value">${u.range}"</div></div>
                 </div>
-
                 <div class="unit-card-section">
-                    <div class="section-label"><i class="fas fa-crosshairs"></i> PROPERTIES</div>
+                    <div class="section-label">WEAPON POWERS</div>
                     <div class="weapon-properties">
-                        ${u.weapon_properties.map((p, i) => `<span class="property-badge" onclick="CCFB_FACTORY.removeItem('weapon_properties', ${i})">${esc(weaponProps[p]?.name || p)} ✕</span>`).join('')}
+                        ${u.weapon_properties.map((p, i) => `<span class="property-badge" onclick="CCFB_FACTORY.removeItem('weapon_properties', ${i})">${weaponProps[p]?.name || p} ✕</span>`).join('')}
                     </div>
                 </div>
-
                 <div class="unit-card-section">
-                    <div class="section-label"><i class="fas fa-bolt"></i> SPECIAL ABILITIES</div>
-                    ${u.abilities.map((a, i) => {
-                        let data = null;
-                        for(let c in abilities) { if(abilities[c][a]) data = abilities[c][a]; }
-                        return `<div class="ability-item" onclick="CCFB_FACTORY.removeItem('abilities', ${i})">
-                            <div class="ability-name">${esc(a)}</div>
-                            <div class="ability-effect">${esc(data?.effect || 'No data')}</div>
-                        </div>`;
-                    }).join('')}
-                </div>
-
-                <div class="unit-card-section">
-                    <div class="lore-text">${esc(u.lore)}</div>
+                    <div class="section-label">ABILITIES</div>
+                    ${u.abilities.map((a, i) => `<div class="ability-item" onclick="CCFB_FACTORY.removeItem('abilities', ${i})"><b>${a}</b></div>`).join('')}
                 </div>
             </div>`;
     };
@@ -234,41 +201,28 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         if (!target || !state.activeModal) { if(target) target.innerHTML = ""; return; }
         const { abilities, weaponProps } = getRules();
 
-        let modalHTML = `
-            <div class="cc-modal-overlay cc-modal-open">
-                <div class="cc-modal-panel">
-                    <div class="cc-modal-header">
-                        <h2>SELECT ${state.activeModal.toUpperCase()}</h2>
-                        <button class="cc-modal-close" onclick="CCFB_FACTORY.closeModal()">✕</button>
-                    </div>
-                    <div class="cc-modal-content">`;
+        let content = `<div class="cc-modal-overlay cc-modal-open"><div class="cc-modal-panel">
+            <div class="cc-modal-header"><h2>SELECT ${state.activeModal === 'property' ? 'WEAPON POWER' : 'ABILITY'}</h2><button class="cc-modal-close" onclick="CCFB_FACTORY.closeModal()">✕</button></div>
+            <div class="cc-modal-content"><div class="ability-grid">`;
 
         if (state.activeModal === 'ability') {
             for (let cat in abilities) {
-                modalHTML += `<div class="ability-category"><div class="category-header">${cat.toUpperCase()}</div><div class="ability-grid">`;
                 for (let a in abilities[cat]) {
-                    modalHTML += `
-                        <div class="ability-card" onclick="CCFB_FACTORY.addItem('abilities', '${a}')">
-                            <div class="ability-card-name">${a}</div>
-                            <div class="ability-card-effect">${abilities[cat][a].effect}</div>
-                            <div class="ability-card-cost">Cost: ${abilities[cat][a].cost}</div>
-                        </div>`;
+                    content += `<div class="ability-card" onclick="CCFB_FACTORY.addItem('abilities', '${a}')">
+                        <div class="ability-card-name">${a}</div>
+                        <div class="ability-card-effect">${abilities[cat][a].effect}</div>
+                    </div>`;
                 }
-                modalHTML += `</div></div>`;
             }
         } else {
-            modalHTML += `<div class="ability-grid">`;
             for (let p in weaponProps) {
-                modalHTML += `
-                    <div class="ability-card" onclick="CCFB_FACTORY.addItem('weapon_properties', '${p}')">
-                        <div class="ability-card-name">${weaponProps[p].name}</div>
-                        <div class="ability-card-effect">${weaponProps[p].description || ''}</div>
-                        <div class="ability-card-cost">Cost: ${weaponProps[p].cost}</div>
-                    </div>`;
+                content += `<div class="ability-card" onclick="CCFB_FACTORY.addItem('weapon_properties', '${p}')">
+                    <div class="ability-card-name">${weaponProps[p].name}</div>
+                    <div class="ability-card-effect">${weaponProps[p].description || ''}</div>
+                </div>`;
             }
-            modalHTML += `</div>`;
         }
-        target.innerHTML = modalHTML + `</div></div></div>`;
+        target.innerHTML = content + `</div></div></div></div>`;
     };
 
     const refresh = () => { renderRoster(); renderBuilder(); renderCard(); renderModal(); };
@@ -276,20 +230,17 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
     // --- API ---
     Object.assign(window.CCFB_FACTORY, {
         init: async () => {
-            try {
-                const r = await fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now());
-                state.rules = await r.json();
-                startWhenReady();
-            } catch (e) { console.error("Rules fetch failed", e); }
+            const r = await fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now());
+            state.rules = await r.json();
+            startWhenReady();
         },
         setStep: (n) => { state.activeStep = n; refresh(); },
-        updateFaction: (v) => { state.currentFaction.faction = v; refresh(); },
+        updateFaction: (v) => { state.currentFaction.faction = v; },
         selectUnit: (i) => { state.selectedUnit = i; state.activeStep = 1; refresh(); },
         addUnit: () => { 
             state.currentFaction.units.push(sanitizeUnit({})); 
             state.selectedUnit = state.currentFaction.units.length - 1; 
-            state.activeStep = 1;
-            refresh(); 
+            state.activeStep = 1; refresh(); 
         },
         delUnit: () => { state.currentFaction.units.splice(state.selectedUnit, 1); state.selectedUnit = null; refresh(); },
         updateUnit: (f, v) => { state.currentFaction.units[state.selectedUnit][f] = v; refresh(); },
@@ -301,12 +252,19 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         },
         openModal: (m) => { state.activeModal = m; refresh(); },
         closeModal: () => { state.activeModal = null; refresh(); },
-        addItem: (c, i) => { state.currentFaction.units[state.selectedUnit][c].push(i); state.activeModal = null; refresh(); },
-        removeItem: (c, idx) => { state.currentFaction.units[state.selectedUnit][c].splice(idx, 1); refresh(); },
+        addItem: (type, key) => { 
+            state.currentFaction.units[state.selectedUnit][type].push(key); 
+            state.activeModal = null; 
+            refresh(); 
+        },
+        removeItem: (type, index) => { 
+            state.currentFaction.units[state.selectedUnit][type].splice(index, 1); 
+            refresh(); 
+        },
         download: () => {
             const blob = new Blob([JSON.stringify(state.currentFaction, null, 2)], {type: "application/json"});
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
-            a.download = (state.currentFaction.faction || "faction") + ".json"; a.click();
+            a.download = (state.currentFaction.faction || "posse") + ".json"; a.click();
         },
         upload: (ev) => {
             const reader = new FileReader();
