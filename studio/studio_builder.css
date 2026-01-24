@@ -20,17 +20,25 @@
    LAYOUT OVERRIDE – ODOO BREAKOUT (REPLACE OLD GRID)
    ========================================================= */
 
+/* ODOO LAYOUT BREAKOUT */
 #faction-studio-root {
     width: 100%;
     max-width: 100%;
 }
 
+#faction-studio-root,
+#faction-studio-root * {
+    box-sizing: border-box;
+}
+
+/* Kill Odoo centering containers */
 .o_container,
 .o_container_small,
 .o_wrap,
-.o_we_snippet {
-    width: 100% !important;
+.wrap,
+.container {
     max-width: 100% !important;
+    width: 100% !important;
 }
 
 .studio-wrapper {
