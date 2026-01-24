@@ -3,6 +3,10 @@
    Combined & cleaned - no duplicates, no unused styles
    ========================================================= */
 
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 :root { 
   --cc-primary: #ff7518;
   --cc-primary-dim: rgba(255, 117, 24, 0.15);
