@@ -1,6 +1,6 @@
 /**
- * COFFIN CANYON FACTION STUDIO - V12 SYNTAX FIXED
- * Removed auto-init that was causing syntax errors
+ * COFFIN CANYON FACTION STUDIO - V13 FINAL
+ * Fixed: Slide panel, separate weapon/ability flows, visible unit card, proper data access
  */
 
 window.CCFB_FACTORY = {
@@ -29,7 +29,7 @@ window.CCFB_FACTORY = {
 
     calculateUnitCost: function(u) {
         if (!u || !this.state.rules) return 0;
-        let total = (7 - u.quality) * 15 + (7 - u.defense) * 10 + (u.move - 6) * 5;
+        var total = (7 - u.quality) * 15 + (7 - u.defense) * 10 + (u.move - 6) * 5;
         if (u.range > 0) total += (u.range / 6) * 10;
         total += (u.weapon_properties.length * 10) + (u.abilities.length * 15);
         return Math.max(10, Math.ceil(total / 5) * 5);
@@ -41,7 +41,7 @@ window.CCFB_FACTORY = {
         var self = this;
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = 'https://raw.githubusercontent.com/steamcrow/coffin/main/studio/studio_builder.css';
+        link.href = 'https://raw.githubusercontent.com/steamcrow/coffin/main/studio/studio_builder.css?t=' + Date.now();
         document.head.appendChild(link);
         console.log("✅ CSS loaded");
 
@@ -77,13 +77,13 @@ window.CCFB_FACTORY = {
                 '<div id="unit-builder" style="flex: 2; min-width: 350px; max-width: 600px;"></div>' +
                 '<div id="unit-card" style="flex: 1; min-width: 320px; max-width: 400px;"></div>' +
                 '</div>' +
-                '<div id="modal-container"></div>';
+                '<div id="slide-panel-container"></div>';
         }
         
         this.renderRoster();
         this.renderBuilder();
         this.renderCard();
-        this.renderModal();
+        this.renderSlidePanel();
     },
 
     renderRoster: function() {
@@ -176,7 +176,7 @@ window.CCFB_FACTORY = {
         var weaponPropsHtml = u.weapon_properties.length > 0 ? 
             u.weapon_properties.map(function(p, i) {
                 return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')" ' +
-                    'style="cursor:pointer; margin:2px; padding:4px 8px; background:var(--cc-primary); border-radius:3px; font-size:10px; display:inline-block;">' +
+                    'style="cursor:pointer; margin:2px; padding:4px 8px; background:var(--cc-primary); color:#000; border-radius:3px; font-size:10px; display:inline-block; font-weight:700;">' +
                     p + ' ✕' +
                 '</span>';
             }).join('') : '<span style="font-size:10px; opacity:0.5;">None added</span>';
@@ -184,7 +184,7 @@ window.CCFB_FACTORY = {
         var abilitiesHtml = u.abilities.length > 0 ?
             u.abilities.map(function(a, i) {
                 return '<div onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')" ' +
-                    'style="cursor:pointer; margin:2px 0; padding:5px; background:#111; border-left:3px solid var(--cc-primary); font-size:11px;">' +
+                    'style="cursor:pointer; margin:4px 0; padding:8px; background:#111; border-left:3px solid var(--cc-primary); font-size:11px;">' +
                     a + ' ✕' +
                 '</div>';
             }).join('') : '<span style="font-size:10px; opacity:0.5;">None added</span>';
@@ -199,7 +199,7 @@ window.CCFB_FACTORY = {
                 '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'type\', this.value)">' +
                     typeOptions +
                 '</select>' +
-                '<div style="font-size:11px; margin-top:10px; opacity:0.7; font-style:italic;">' +
+                '<div style="font-size:11px; margin-top:10px; padding:10px; background:rgba(255,117,24,0.1); border-left:3px solid var(--cc-primary); line-height:1.5;">' +
                     (archVault[u.type] ? archVault[u.type].identity : 'Select a type') +
                 '</div>' +
                 '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.setStep(2)">CONFIRM TYPE →</button>'
@@ -214,16 +214,16 @@ window.CCFB_FACTORY = {
                 '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(3)">CONFIRM STATS →</button>'
             ) +
             step(3, "POWERS & ABILITIES",
-                '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">' +
-                    '<button class="btn-add-small" onclick="CCFB_FACTORY.openModal(\'property\')">+ WEAPON POWER</button>' +
-                    '<button class="btn-add-small" onclick="CCFB_FACTORY.openModal(\'ability\')">+ UNIT ABILITY</button>' +
+                '<div style="display:grid; grid-template-columns: 1fr; gap:10px;">' +
+                    '<button class="btn-add-small" onclick="CCFB_FACTORY.openSlidePanel(\'weapon\')">+ WEAPON POWER</button>' +
+                    '<button class="btn-add-small" onclick="CCFB_FACTORY.openSlidePanel(\'ability\')">+ UNIT ABILITY</button>' +
                 '</div>' +
                 '<div style="margin-top:15px; padding:10px; background:rgba(0,0,0,0.3); border-radius:4px;">' +
-                    '<div style="font-size:10px; opacity:0.7; margin-bottom:5px;">CURRENT POWERS:</div>' +
+                    '<div style="font-size:10px; font-weight:700; color:var(--cc-primary); margin-bottom:5px;">WEAPON POWERS:</div>' +
                     weaponPropsHtml +
                 '</div>' +
                 '<div style="margin-top:10px; padding:10px; background:rgba(0,0,0,0.3); border-radius:4px;">' +
-                    '<div style="font-size:10px; opacity:0.7; margin-bottom:5px;">CURRENT ABILITIES:</div>' +
+                    '<div style="font-size:10px; font-weight:700; color:var(--cc-primary); margin-bottom:5px;">UNIT ABILITIES:</div>' +
                     abilitiesHtml +
                 '</div>' +
                 '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(4)">CONTINUE →</button>'
@@ -252,7 +252,7 @@ window.CCFB_FACTORY = {
         var arch = this.state.rules.rules_master.unit_identities.archetype_vault[u.type] || {};
 
         var weaponPropsHtml = u.weapon_properties.length > 0 ? 
-            '<div style="font-size:10px; font-weight:bold; color:var(--cc-primary); margin-top:10px;">WEAPON POWERS</div>' +
+            '<div style="font-size:10px; font-weight:bold; color:var(--cc-primary); margin-top:15px; margin-bottom:5px;">WEAPON POWERS</div>' +
             '<div class="weapon-properties mb-2">' +
                 u.weapon_properties.map(function(p, i) {
                     return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')" ' +
@@ -263,7 +263,7 @@ window.CCFB_FACTORY = {
             '</div>' : '';
 
         var abilitiesHtml = u.abilities.length > 0 ?
-            '<div style="font-size:10px; font-weight:bold; color:var(--cc-primary); margin-top:10px;">ABILITIES</div>' +
+            '<div style="font-size:10px; font-weight:bold; color:var(--cc-primary); margin-top:15px; margin-bottom:5px;">ABILITIES</div>' +
             u.abilities.map(function(a, i) {
                 return '<div class="ability-item" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')" ' +
                     'style="cursor:pointer; background:#111; padding:5px; border-left:3px solid var(--cc-primary); margin-bottom:2px; font-size:11px;">' +
@@ -276,20 +276,20 @@ window.CCFB_FACTORY = {
                 '"' + u.lore + '"' +
             '</div>' : '';
 
-        target.innerHTML = '<div class="unit-card-preview" style="border: 2px solid var(--cc-primary); background: #000; border-radius:6px; overflow:hidden;">' +
-            '<div style="background: var(--cc-primary); color: #000; padding: 15px; text-align:center;">' +
-                '<div style="font-size: 26px; font-weight: 900; text-transform: uppercase;">' + u.name + '</div>' +
-                '<div style="font-size: 10px; font-weight: bold;">' + u.type.toUpperCase() + ' // ' + this.calculateUnitCost(u) + '₤</div>' +
+        target.innerHTML = '<div class="unit-card-preview" style="border: 2px solid var(--cc-primary); background: #0a0a0a; border-radius:6px; overflow:hidden;">' +
+            '<div style="background: var(--cc-primary); color: #000; padding: 20px; text-align:center;">' +
+                '<div style="font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing:1px;">' + u.name + '</div>' +
+                '<div style="font-size: 11px; font-weight: bold; margin-top:5px;">' + u.type.toUpperCase() + ' • ' + this.calculateUnitCost(u) + '₤</div>' +
             '</div>' +
-            '<div style="display: flex; background: #222; border-bottom: 1px solid #444;">' +
-                '<div style="flex:1; text-align:center; padding:10px; border-right:1px solid #444;"><small style="display:block; font-size:9px; opacity:0.5;">QUA</small><b style="font-size:18px; color:var(--cc-primary)">' + u.quality + '+</b></div>' +
-                '<div style="flex:1; text-align:center; padding:10px; border-right:1px solid #444;"><small style="display:block; font-size:9px; opacity:0.5;">DEF</small><b style="font-size:18px; color:var(--cc-primary)">' + u.defense + '+</b></div>' +
-                '<div style="flex:1; text-align:center; padding:10px; border-right:1px solid #444;"><small style="display:block; font-size:9px; opacity:0.5;">MOV</small><b style="font-size:18px; color:var(--cc-primary)">' + u.move + '"</b></div>' +
-                '<div style="flex:1; text-align:center; padding:10px;"><small style="display:block; font-size:9px; opacity:0.5;">RNG</small><b style="font-size:18px; color:var(--cc-primary)">' + (u.range == 0 ? 'M' : u.range + '"') + '</b></div>' +
+            '<div style="display: flex; background: #1a1a1a; border-bottom: 1px solid #333;">' +
+                '<div style="flex:1; text-align:center; padding:12px; border-right:1px solid #333;"><small style="display:block; font-size:9px; opacity:0.6;">QUA</small><b style="font-size:18px; color:var(--cc-primary)">' + u.quality + '+</b></div>' +
+                '<div style="flex:1; text-align:center; padding:12px; border-right:1px solid #333;"><small style="display:block; font-size:9px; opacity:0.6;">DEF</small><b style="font-size:18px; color:var(--cc-primary)">' + u.defense + '+</b></div>' +
+                '<div style="flex:1; text-align:center; padding:12px; border-right:1px solid #333;"><small style="display:block; font-size:9px; opacity:0.6;">MOV</small><b style="font-size:18px; color:var(--cc-primary)">' + u.move + '"</b></div>' +
+                '<div style="flex:1; text-align:center; padding:12px;"><small style="display:block; font-size:9px; opacity:0.6;">RNG</small><b style="font-size:18px; color:var(--cc-primary)">' + (u.range == 0 ? 'M' : u.range + '"') + '</b></div>' +
             '</div>' +
-            '<div style="padding: 15px;">' +
-                '<div style="color:var(--cc-primary); font-weight:bold; font-size:10px; margin-bottom:5px;">TYPE RULE: ' + (arch.type_rule || 'Innate') + '</div>' +
-                '<div style="font-size:11px; margin-bottom:15px; opacity:0.8;">' + (arch.effect || 'No special type effect') + '</div>' +
+            '<div style="padding: 15px; color:#fff;">' +
+                '<div style="color:var(--cc-primary); font-weight:bold; font-size:10px; margin-bottom:5px; text-transform:uppercase;">TYPE RULE: ' + (arch.type_rule || 'Innate') + '</div>' +
+                '<div style="font-size:11px; margin-bottom:15px; opacity:0.8; line-height:1.4;">' + (arch.effect || 'No special type effect') + '</div>' +
                 weaponPropsHtml +
                 abilitiesHtml +
                 loreHtml +
@@ -297,8 +297,8 @@ window.CCFB_FACTORY = {
         '</div>';
     },
 
-    renderModal: function() {
-        var target = document.getElementById('modal-container');
+    renderSlidePanel: function() {
+        var target = document.getElementById('slide-panel-container');
         if (!target) return;
         
         if (!this.state.activeModal) { 
@@ -306,38 +306,60 @@ window.CCFB_FACTORY = {
             return; 
         }
         
-        var isAbility = this.state.activeModal === 'ability';
-        var abilityDict = this.state.rules.rules_master.ability_dictionary;
-        var weaponProps = this.state.rules.rules_master.weapon_properties;
-        var source = isAbility ? abilityDict : weaponProps;
-
+        var isWeapon = this.state.activeModal === 'weapon';
+        var weaponProps = this.state.rules.rules_master.weapon_properties || {};
+        var abilityDict = this.state.rules.rules_master.ability_dictionary || {};
+        
         var cardsHtml = '';
-        for (var cat in source) {
-            for (var key in source[cat]) {
-                var item = source[cat][key];
+        
+        if (isWeapon) {
+            // Render weapon properties
+            for (var key in weaponProps) {
+                var item = weaponProps[key];
                 var displayName = item.name || key.replace(/_/g, ' ').toUpperCase();
-                var displayEffect = item.effect || item.description || 'No description available';
+                var displayEffect = item.effect || 'No description available';
                 
                 cardsHtml += '<div class="ability-card" ' +
-                    'style="background:#111; border:1px solid #444; padding:10px; cursor:pointer; border-radius:4px; transition:0.2s;" ' +
-                    'onclick="CCFB_FACTORY.addItem(\'' + (isAbility ? 'abilities' : 'weapon_properties') + '\', \'' + key + '\')" ' +
-                    'onmouseover="this.style.borderColor=\'var(--cc-primary)\'" ' +
-                    'onmouseout="this.style.borderColor=\'#444\'">' +
-                        '<b style="color:var(--cc-primary); display:block; margin-bottom:5px;">' + displayName + '</b>' +
-                        '<small style="font-size:10px; opacity:0.8;">' + displayEffect + '</small>' +
+                    'onclick="CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')" ' +
+                    'style="background:#111; border:2px solid #333; padding:15px; cursor:pointer; border-radius:6px; transition:0.2s; margin-bottom:10px;" ' +
+                    'onmouseover="this.style.borderColor=\'var(--cc-primary)\'; this.style.background=\'rgba(255,117,24,0.1)\';" ' +
+                    'onmouseout="this.style.borderColor=\'#333\'; this.style.background=\'#111\';">' +
+                        '<div style="color:var(--cc-primary); font-weight:700; font-size:13px; margin-bottom:6px;">' + displayName + '</div>' +
+                        '<div style="font-size:11px; opacity:0.8; line-height:1.4;">' + displayEffect + '</div>' +
                 '</div>';
+            }
+        } else {
+            // Render abilities by category
+            for (var cat in abilityDict) {
+                var categoryName = cat.replace(/^[A-Z]_/, '').replace(/_/g, ' ').toUpperCase();
+                cardsHtml += '<div style="font-size:12px; font-weight:700; color:var(--cc-primary); margin:20px 0 10px 0; padding-bottom:5px; border-bottom:1px solid #444;">' + categoryName + '</div>';
+                
+                for (var key in abilityDict[cat]) {
+                    var item = abilityDict[cat][key];
+                    var displayName = item.name || item;
+                    var displayEffect = typeof item === 'object' ? (item.effect || 'No description') : item;
+                    
+                    cardsHtml += '<div class="ability-card" ' +
+                        'onclick="CCFB_FACTORY.addItem(\'abilities\', \'' + key + '\')" ' +
+                        'style="background:#111; border:2px solid #333; padding:15px; cursor:pointer; border-radius:6px; transition:0.2s; margin-bottom:10px;" ' +
+                        'onmouseover="this.style.borderColor=\'var(--cc-primary)\'; this.style.background=\'rgba(255,117,24,0.1)\';" ' +
+                        'onmouseout="this.style.borderColor=\'#333\'; this.style.background=\'#111\';">' +
+                            '<div style="color:var(--cc-primary); font-weight:700; font-size:13px; margin-bottom:6px;">' + displayName + '</div>' +
+                            '<div style="font-size:11px; opacity:0.8; line-height:1.4;">' + displayEffect + '</div>' +
+                    '</div>';
+                }
             }
         }
         
-        target.innerHTML = '<div class="cc-modal-overlay" onclick="CCFB_FACTORY.closeModal()">' +
-            '<div class="cc-modal-panel" onclick="event.stopPropagation()" style="max-width:800px; max-height:80vh; overflow-y:auto; background:#1a1a1a; border:2px solid var(--cc-primary); border-radius:6px;">' +
-                '<div class="cc-panel-header">SELECT ' + this.state.activeModal.toUpperCase() + '</div>' +
-                '<div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; padding:20px;">' +
-                    cardsHtml +
-                '</div>' +
-                '<div style="padding:15px; text-align:center;">' +
-                    '<button class="btn-add-small" onclick="CCFB_FACTORY.closeModal()">CLOSE</button>' +
-                '</div>' +
+        target.innerHTML = '<div class="cc-slide-panel cc-slide-panel-open">' +
+            '<div class="cc-slide-panel-header">' +
+                '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
+                '<button onclick="CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn" style="background:none; border:none; color:#fff; font-size:24px; cursor:pointer; padding:5px 10px;">' +
+                    '✕' +
+                '</button>' +
+            '</div>' +
+            '<div style="padding:20px; max-height:calc(100vh - 100px); overflow-y:auto;">' +
+                cardsHtml +
             '</div>' +
         '</div>';
     },
@@ -369,12 +391,12 @@ window.CCFB_FACTORY = {
         this.refresh(); 
     },
     
-    openModal: function(modalType) { 
-        this.state.activeModal = modalType; 
+    openSlidePanel: function(panelType) { 
+        this.state.activeModal = panelType; 
         this.refresh(); 
     },
     
-    closeModal: function() { 
+    closeSlidePanel: function() { 
         this.state.activeModal = null; 
         this.refresh(); 
     },
