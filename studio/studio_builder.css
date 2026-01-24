@@ -16,16 +16,11 @@
   --cc-text-muted: #999;
 }
 
-/* =========================================================
-   ROOT BREAKOUT (ESCAPE ODOO)
-   ========================================================= */
-
+/* 1. Ensure the root can actually expand */
 #faction-studio-root {
     width: 100%;
-    max-width: 100%;
-    display: block;
+    overflow-x: hidden;
 }
-
 /* =========================================================
    WRAPPER AS CONTAINER
    ========================================================= */
@@ -44,13 +39,12 @@
    GRID (DEFAULT = 3 COLUMNS)
    ========================================================= */
 
+/* 2. Simplified Grid */
 .fb-grid {
     display: grid;
     width: 100%;
-    grid-template-columns:
-        minmax(260px, 0.9fr)
-        minmax(420px, 1.3fr)
-        minmax(320px, 1fr);
+    /* Use fractions instead of hard minmax to allow shrinking */
+    grid-template-columns: 1fr 1.5fr 1.2fr; 
     gap: 20px;
     align-items: start;
 }
@@ -227,13 +221,21 @@ textarea.cc-input {
    ========================================================= */
 
 /* Tablet */
-@media (max-width: 1024px) {
+@media (max-width: 1280px) {
     .fb-grid {
-        grid-template-columns: 1fr 1.4fr;
+        grid-template-columns: 1fr 1.5fr; /* Drop to 2 columns */
     }
-
     #unit-card {
-        grid-column: 1 / -1;
+        grid-column: span 2; /* Card moves to bottom of the first two */
+    }
+}
+
+@media (max-width: 900px) {
+    .fb-grid {
+        grid-template-columns: 1fr; /* Single column stack */
+    }
+    #unit-card {
+        grid-column: span 1;
     }
 }
 
