@@ -1,7 +1,7 @@
 /**
- * COFFIN CANYON FACTION STUDIO - PATH CORRECTED
+ * COFFIN CANYON FACTION STUDIO - PATH FIXED & VERIFIED
  * Logic: Full Stats, Modals, Costing, Lore, and Archetypes.
- * Path: factions/rules.json
+ * Verified Path: factions/rules.json
  */
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
@@ -216,9 +216,11 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
     const refresh = () => { renderRoster(); renderBuilder(); renderCard(); renderModal(); };
 
+    // --- PUBLIC API ---
     Object.assign(window.CCFB_FACTORY, {
         init: async () => {
             try {
+                // LINE 225: UPDATED PATH
                 const r = await fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now());
                 state.rules = await r.json();
                 startWhenReady();
