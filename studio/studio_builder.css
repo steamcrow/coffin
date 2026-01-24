@@ -749,18 +749,45 @@ textarea.cc-input {
 /* =========================================================
    RESPONSIVE
    ========================================================= */
-@media (max-width: 1400px) {
+@media (max-width: 1024px) {
+    /* 2 columns on tablets - stack preview card below */
     .fb-grid {
-        grid-template-columns: 1fr; /* Stack on smaller screens */
+        grid-template-columns: 1fr 1.5fr;
     }
     
-    .cc-slide-panel {
-        width: 90vw;
-        right: -90vw;
+    #unit-card {
+        grid-column: 1 / -1; /* Span full width */
+    }
+}
+
+@media (max-width: 768px) {
+    /* 1 column on mobile */
+    .fb-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .studio-title {
+        font-size: 32px;
+    }
+    
+    .ability-grid {
+        grid-template-columns: 1fr;
     }
     
     .stats-grid {
         grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 1025px) {
+    /* Force 3 columns on desktop */
+    .fb-grid {
+        grid-template-columns: 0.9fr 1.3fr 1fr !important;
+    }
+    
+    .cc-slide-panel {
+        width: 600px;
+        right: -600px;
     }
 }
 
