@@ -1,6 +1,7 @@
 /**
- * COFFIN CANYON FACTION STUDIO - FINAL VERIFIED BUILD
- * Logic Restored: Full Stats, Modals, Costing, Lore, and Archetypes.
+ * COFFIN CANYON FACTION STUDIO - PATH CORRECTED
+ * Logic: Full Stats, Modals, Costing, Lore, and Archetypes.
+ * Path: factions/rules.json
  */
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
@@ -13,7 +14,7 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         activeModal: null 
     };
 
-    // --- DOM PROTECTION: Ensures Odoo is ready ---
+    // --- DOM PROTECTION ---
     const startWhenReady = () => {
         const root = document.getElementById('faction-studio-root');
         if (root) {
@@ -68,8 +69,6 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         if (!u || !state.rules) return 0;
         let total = 0;
         const q = u.quality || 4;
-        
-        // Base Stats Costing Logic
         total += (7 - q) * 15;
         total += (7 - (u.defense || 4)) * 10;
         total += ((u.move || 6) - 6) * 5;
@@ -89,7 +88,6 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         
         const arch = getRules().archetypes[u.type?.toLowerCase()];
         if (arch?.cost_multiplier) total *= arch.cost_multiplier;
-
         return Math.ceil(total / 5) * 5;
     };
 
@@ -218,11 +216,10 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
     const refresh = () => { renderRoster(); renderBuilder(); renderCard(); renderModal(); };
 
-    // --- PUBLIC API ---
     Object.assign(window.CCFB_FACTORY, {
         init: async () => {
             try {
-                const r = await fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/studio/faction_rules.json?t=" + Date.now());
+                const r = await fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now());
                 state.rules = await r.json();
                 startWhenReady();
             } catch (e) { console.error("Rules load failed", e); }
