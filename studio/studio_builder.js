@@ -42,7 +42,7 @@ window.CCFB_FACTORY = {
         var self = this;
         var link = document.createElement('link');
         link.rel = 'stylesheet';
-        link.href = 'https://raw.githubusercontent.com/steamcrow/coffin/main/studio/studio_builder.css?t=' + Date.now();
+        link.href = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin/main/studio/studio_builder.css?t=' + Date.now();
         document.head.appendChild(link);
         console.log("✅ CSS loaded");
 
