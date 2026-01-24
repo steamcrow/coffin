@@ -1,6 +1,6 @@
 /**
- * COFFIN CANYON FACTION STUDIO - V5
- * Odoo-style Accordions, Archetype Rule Injection, and Guided Skip.
+ * COFFIN CANYON FACTION STUDIO - V6
+ * Fixes: Archetype mapping, Grayed-out Accordions, Bold Orange Card, Save Workflow.
  */
 
 window.CCFB_FACTORY = window.CCFB_FACTORY || {};
@@ -18,20 +18,10 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         selectedUnit: null,
         activeModal: null,
         activeStep: 1,
-        isPasted: false // If true, skip guided "lockdown"
+        isPasted: false 
     };
 
-    const sanitizeUnit = (u) => ({
-        name: u.name || "New Unit",
-        type: u.type || "grunt",
-        quality: u.quality || 4,
-        defense: u.defense || 4,
-        move: u.move || 6,
-        range: u.range || 0,
-        weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
-        abilities: Array.isArray(u.abilities) ? u.abilities : [],
-        lore: u.lore || ""
-    });
+    const getArchetypes = () => state.rules?.unit_identities?.archetype_vault || {};
 
     const calculateUnitCost = (u) => {
         if (!u || !state.rules) return 0;
@@ -75,10 +65,9 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                     </div>
                     <button class="btn-add-small w-100 mb-4" onclick="CCFB_FACTORY.addUnit()">+ CREATE NEW UNIT</button>
                     
-                    <div class="paste-zone" style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 4px; border: 1px dashed #444;">
-                        <label style="font-size:9px; color: var(--cc-primary); letter-spacing:1px;">PASTE GITHUB JSON</label>
-                        <textarea class="cc-input w-100" style="height:50px; font-size:10px; margin-top:5px;" 
-                            placeholder='Paste here...' onchange="CCFB_FACTORY.pasteLoad(this.value)"></textarea>
+                    <div class="paste-zone" style="background: #1a1a1a; padding: 10px; border: 1px solid #333;">
+                        <textarea class="cc-input w-100" style="height:40px; font-size:10px;" 
+                            placeholder='Paste JSON here...' onchange="CCFB_FACTORY.pasteLoad(this.value)"></textarea>
                         <button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.download()">SAVE TO FILE</button>
                     </div>
                 </div>
@@ -89,22 +78,22 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         const target = document.getElementById('unit-builder');
         if (!target) return;
         if (state.selectedUnit === null) {
-            target.innerHTML = '<div class="cc-empty-state">SELECT A UNIT OR PASTE DATA</div>';
+            target.innerHTML = '<div class="cc-empty-state">SELECT A UNIT TO BEGIN</div>';
             return;
         }
         
         const u = state.currentFaction.units[state.selectedUnit];
-        const archs = state.rules?.unit_identities?.archetype_vault || {};
+        const archs = getArchetypes();
 
         const step = (num, title, content) => {
             const isFocused = state.activeStep === num || state.isPasted;
             return `
-            <div class="builder-step ${isFocused ? 'step-active' : 'step-locked'}" style="${!isFocused ? 'opacity: 0.4;' : ''}">
-                <div class="step-header" onclick="CCFB_FACTORY.setStep(${num})" style="cursor:pointer; display:flex; justify-content:space-between; padding: 12px;">
-                    <span style="font-weight:bold;"><span class="step-number">${num}</span> ${title}</span>
-                    <i class="fas fa-chevron-${isFocused ? 'down' : 'right'}"></i>
+            <div class="builder-step ${isFocused ? 'step-active' : 'step-locked'}" 
+                 style="${!isFocused ? 'filter: grayscale(1); opacity: 0.3; pointer-events: none;' : 'border-left: 4px solid var(--cc-primary);'}">
+                <div class="step-header" onclick="CCFB_FACTORY.setStep(${num})" style="cursor:pointer; padding: 15px; background: #222;">
+                    <span style="font-weight:bold; letter-spacing: 1px;"><span class="step-number">${num}</span> ${title}</span>
                 </div>
-                <div class="step-content" style="display: ${isFocused ? 'block' : 'none'}; padding: 15px; border-top: 1px solid rgba(255,117,24,0.3);">
+                <div class="step-content" style="display: ${isFocused ? 'block' : 'none'}; padding: 20px; background: #111;">
                     ${content}
                 </div>
             </div>`;
@@ -112,9 +101,9 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
 
         target.innerHTML = `
             <div class="cc-panel">
-                <div class="cc-panel-header">UNIT DESIGNER ${state.isPasted ? '(PREVIEW MODE)' : ''}</div>
-                <div style="padding:10px">
-                    ${step(1, "IDENTITY & TYPE", `
+                <div class="cc-panel-header">UNIT DESIGNER</div>
+                <div style="padding:5px">
+                    ${step(1, "IDENTITY", `
                         <div class="form-group">
                             <label>UNIT NAME</label>
                             <input type="text" class="cc-input w-100" value="${u.name}" 
@@ -122,32 +111,30 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                                 onblur="CCFB_FACTORY.updateUnit('name', this.value)">
                         </div>
                         <div class="form-group">
-                            <label>UNIT TYPE</label>
+                            <label>TYPE (ARCHETYPE)</label>
                             <select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit('type', this.value)">
+                                <option value="">-- Select --</option>
                                 ${Object.keys(archs).map(k => `<option value="${k}" ${u.type === k ? 'selected' : ''}>${k.toUpperCase()}</option>`).join('')}
                             </select>
                         </div>
-                        <div class="type-rule-display">
-                            <strong>${archs[u.type]?.type_rule || 'Identity'}:</strong> ${archs[u.type]?.effect || archs[u.type]?.identity || ''}
-                        </div>
-                        ${!state.isPasted ? `<button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.setStep(2)">NEXT: STATS</button>` : ''}
+                        <button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.setStep(2)">CONFIRM IDENTITY</button>
                     `)}
 
                     ${step(2, "ATTRIBUTES", `
-                        <div class="stats-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div class="stats-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
                             <div class="form-group"><label>QUALITY</label>
                                 <select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit('quality', parseInt(this.value))">
-                                    ${[2,3,4,5,6].map(n => `<option value="${n}" ${u.quality == n ? 'selected' : ''}>${n}+</option>`).join('')}
+                                    ${[1,2,3,4,5,6].map(n => `<option value="${n}" ${u.quality == n ? 'selected' : ''}>${n}+</option>`).join('')}
                                 </select>
                             </div>
                             <div class="form-group"><label>DEFENSE</label>
                                 <select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit('defense', parseInt(this.value))">
-                                    ${[2,3,4,5,6].map(n => `<option value="${n}" ${u.defense == n ? 'selected' : ''}>${n}+</option>`).join('')}
+                                    ${[1,2,3,4,5,6].map(n => `<option value="${n}" ${u.defense == n ? 'selected' : ''}>${n}+</option>`).join('')}
                                 </select>
                             </div>
                             <div class="form-group"><label>MOVE</label>
                                 <select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit('move', parseInt(this.value))">
-                                    ${[4,5,6,7,8].map(n => `<option value="${n}" ${u.move == n ? 'selected' : ''}>${n}"</option>`).join('')}
+                                    ${Array.from({length: 24}, (_, i) => i + 1).map(n => `<option value="${n}" ${u.move == n ? 'selected' : ''}>${n}"</option>`).join('')}
                                 </select>
                             </div>
                             <div class="form-group"><label>RANGE</label>
@@ -156,21 +143,24 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
                                 </select>
                             </div>
                         </div>
-                        ${!state.isPasted ? `<button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.setStep(3)">NEXT: POWERS</button>` : ''}
+                        <button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.setStep(3)">CONFIRM STATS</button>
                     `)}
 
-                    ${step(3, "WEAPON POWERS & ABILITIES", `
+                    ${step(3, "POWERS & ABILITIES", `
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:10px;">
                             <button class="btn-add-small" onclick="CCFB_FACTORY.openModal('property')">+ WEAPON POWER</button>
                             <button class="btn-add-small" onclick="CCFB_FACTORY.openModal('ability')">+ ABILITY</button>
                         </div>
-                        <div class="lore-text" style="font-size:11px; opacity:0.6;">Click items on the card to remove them.</div>
-                        ${!state.isPasted ? `<button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.setStep(4)">NEXT: LORE</button>` : ''}
+                        <button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.setStep(4)">CONTINUE</button>
                     `)}
 
-                    ${step(4, "LORE", `
-                        <textarea class="cc-input w-100" rows="4" onblur="CCFB_FACTORY.updateUnit('lore', this.value)">${u.lore}</textarea>
-                        <button class="btn-danger w-100 mt-4" onclick="CCFB_FACTORY.delUnit()">DELETE UNIT</button>
+                    ${step(4, "FINALIZE", `
+                        <label>LORE / NOTES</label>
+                        <textarea class="cc-input w-100" rows="3" onblur="CCFB_FACTORY.updateUnit('lore', this.value)">${u.lore}</textarea>
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:20px;">
+                            <button class="btn-add-small" style="background:#28a745" onclick="CCFB_FACTORY.saveAndNew()">SAVE & NEW UNIT</button>
+                            <button class="btn-danger" onclick="CCFB_FACTORY.delUnit()">DELETE</button>
+                        </div>
                     `)}
                 </div>
             </div>`;
@@ -180,36 +170,39 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         const target = document.getElementById('unit-card');
         if (!target || state.selectedUnit === null) return;
         const u = state.currentFaction.units[state.selectedUnit];
-        const archs = state.rules?.unit_identities?.archetype_vault || {};
+        const archs = getArchetypes();
+        const arch = archs[u.type] || {};
 
         target.innerHTML = `
-            <div class="unit-card-preview" style="position: sticky; top: 10px;">
-                <div class="unit-card-name">${u.name}</div>
-                <div class="unit-card-type" style="font-size:10px; color: var(--cc-primary); text-transform:uppercase; margin-bottom:10px; border-bottom:1px solid #333;">${u.type}</div>
+            <div class="unit-card-preview" style="border: 2px solid var(--cc-primary); padding:0; background:#000;">
+                <div style="background: var(--cc-primary); color: #000; padding: 15px; text-align:center;">
+                    <div style="font-size: 24px; font-weight: 900; text-transform: uppercase; line-height:1;">${u.name}</div>
+                    <div style="font-size: 10px; font-weight: bold; margin-top: 5px; opacity: 0.8;">${u.type.toUpperCase()} // RECRUIT: ${calculateUnitCost(u)}₤</div>
+                </div>
                 
-                <div class="unit-card-cost">${calculateUnitCost(u)}₤</div>
-                
-                <div class="unit-card-stats">
-                    <div class="stat-item"><div class="stat-label">QUA</div><div class="stat-value">${u.quality}+</div></div>
-                    <div class="stat-item"><div class="stat-label">DEF</div><div class="stat-value">${u.defense}+</div></div>
-                    <div class="stat-item"><div class="stat-label">MOV</div><div class="stat-value">${u.move}"</div></div>
+                <div style="display: flex; background: #222; border-bottom: 1px solid #444;">
+                    <div style="flex:1; text-align:center; padding:10px; border-right:1px solid #444;"><small style="display:block; font-size:9px; opacity:0.5;">QUA</small><b style="font-size:18px; color:var(--cc-primary)">${u.quality}+</b></div>
+                    <div style="flex:1; text-align:center; padding:10px; border-right:1px solid #444;"><small style="display:block; font-size:9px; opacity:0.5;">DEF</small><b style="font-size:18px; color:var(--cc-primary)">${u.defense}+</b></div>
+                    <div style="flex:1; text-align:center; padding:10px;"><small style="display:block; font-size:9px; opacity:0.5;">MOV</small><b style="font-size:18px; color:var(--cc-primary)">${u.move}"</b></div>
                 </div>
 
-                <div class="unit-card-section">
-                    <div class="section-label">TYPE RULE: ${archs[u.type]?.type_rule || 'Innate'}</div>
-                    <div class="ability-effect" style="font-size:11px;">${archs[u.type]?.effect || ''}</div>
-                </div>
-
-                <div class="unit-card-section">
-                    <div class="section-label">WEAPON POWERS</div>
-                    <div class="weapon-properties">
-                        ${u.weapon_properties.map((p, i) => `<span class="property-badge" onclick="CCFB_FACTORY.removeItem('weapon_properties', ${i})">${p} ✕</span>`).join('')}
+                <div style="padding: 15px;">
+                    <div style="margin-bottom:15px;">
+                        <div style="font-size:10px; font-weight:bold; color:var(--cc-primary); margin-bottom:4px; text-transform:uppercase;">TYPE RULE: ${arch.type_rule || 'Innate'}</div>
+                        <div style="font-size:11px; line-height:1.4; opacity:0.9;">${arch.effect || arch.identity || 'Standard deployment rules apply.'}</div>
                     </div>
-                </div>
 
-                <div class="unit-card-section">
-                    <div class="section-label">ABILITIES</div>
-                    ${u.abilities.map((a, i) => `<div class="ability-item" onclick="CCFB_FACTORY.removeItem('abilities', ${i})"><b>${a}</b> ✕</div>`).join('')}
+                    <div style="margin-bottom:15px;">
+                        <div style="font-size:10px; font-weight:bold; color:var(--cc-primary); margin-bottom:4px; text-transform:uppercase;">WEAPON POWERS</div>
+                        <div class="weapon-properties">
+                            ${u.weapon_properties.map((p, i) => `<span class="property-badge" onclick="CCFB_FACTORY.removeItem('weapon_properties', ${i})">${p} ✕</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div style="font-size:10px; font-weight:bold; color:var(--cc-primary); margin-bottom:4px; text-transform:uppercase;">UNIT ABILITIES</div>
+                        ${u.abilities.map((a, i) => `<div class="ability-item" onclick="CCFB_FACTORY.removeItem('abilities', ${i})"><b>${a}</b> ✕</div>`).join('')}
+                    </div>
                 </div>
             </div>`;
     };
@@ -220,14 +213,14 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
         const isAbility = state.activeModal === 'ability';
         const source = isAbility ? state.rules.ability_dictionary : { "Weapon Powers": state.rules.weapon_properties };
 
-        let content = `<div class="cc-modal-overlay" onclick="CCFB_FACTORY.closeModal()"><div class="cc-modal-panel" onclick="event.stopPropagation()">
+        let content = `<div class="cc-modal-overlay" onclick="CCFB_FACTORY.closeModal()"><div class="cc-modal-panel" onclick="event.stopPropagation()" style="max-width:800px;">
             <div class="cc-modal-header"><h2>SELECT ${isAbility ? 'ABILITY' : 'WEAPON POWER'}</h2><button onclick="CCFB_FACTORY.closeModal()">✕</button></div>
-            <div class="cc-modal-content"><div class="ability-grid" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:10px;">`;
+            <div class="cc-modal-content"><div class="ability-grid" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">`;
 
         for (let cat in source) {
             for (let key in source[cat]) {
                 const item = source[cat][key];
-                content += `<div class="ability-card" style="border:1px solid #444; padding:10px; cursor:pointer;" onclick="CCFB_FACTORY.addItem('${isAbility ? 'abilities' : 'weapon_properties'}', '${key}')">
+                content += `<div class="ability-card" onclick="CCFB_FACTORY.addItem('${isAbility ? 'abilities' : 'weapon_properties'}', '${key}')">
                     <div style="color:var(--cc-primary); font-weight:bold; font-size:13px;">${item.name || key}</div>
                     <div style="font-size:11px; margin-top:5px; opacity:0.8;">${item.effect || item.description || ''}</div>
                 </div>`;
@@ -252,16 +245,19 @@ window.CCFB_FACTORY = window.CCFB_FACTORY || {};
             state.selectedUnit = state.currentFaction.units.length - 1;
             state.activeStep = 1; state.isPasted = false; refresh();
         },
+        saveAndNew: () => {
+            state.activeStep = 1;
+            state.selectedUnit = null;
+            refresh();
+        },
         updateUnit: (f, v) => { if(v !== undefined) state.currentFaction.units[state.selectedUnit][f] = v; refresh(); },
         pasteLoad: (str) => {
             try {
                 const j = JSON.parse(str);
                 state.currentFaction.faction = j.faction || "Imported";
                 state.currentFaction.units = (j.units || []).map(sanitizeUnit);
-                state.selectedUnit = 0; 
-                state.isPasted = true; // Set flag to unfold builder
-                refresh();
-            } catch(e) { alert("JSON format error."); }
+                state.selectedUnit = 0; state.isPasted = true; refresh();
+            } catch(e) { alert("JSON error."); }
         },
         openModal: (m) => { state.activeModal = m; refresh(); },
         closeModal: () => { state.activeModal = null; refresh(); },
