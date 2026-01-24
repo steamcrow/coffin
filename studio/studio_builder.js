@@ -36,28 +36,32 @@ window.CCFB_FACTORY = {
         return Math.max(10, Math.ceil(total / 5) * 5);
     },
 
-    init: function() {
-        console.log("🎬 Faction Studio initializing...");
-        
-        var self = this;
-        var link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin/main/studio/studio_builder.css?t=' + Date.now();
-        document.head.appendChild(link);
-        console.log("✅ CSS loaded");
+  /* =========================================================
+   JS FIX: CALLING CSS VIA JSDELIVR (MIME-SAFE)
+   ========================================================= */
+init: function() {
+    console.log("🎬 Faction Studio initializing...");
+    
+    var self = this;
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    // Using jsDelivr to ensure correct MIME type (text/css)
+    link.href = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/studio/studio_builder.css';
+    document.head.appendChild(link);
+    console.log("✅ CSS loaded via CDN");
 
-        fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now())
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                self.state.rules = data;
-                console.log("✅ Rules loaded:", self.state.rules);
-                self.refresh();
-            })
-            .catch(function(e) { 
-                console.error("❌ Rules failed to load:", e);
-                alert("Failed to load game rules. Please refresh the page.");
-            });
-    },
+    fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now())
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            self.state.rules = data;
+            console.log("✅ Rules loaded:", self.state.rules);
+            self.refresh();
+        })
+        .catch(function(e) { 
+            console.error("❌ Rules failed to load:", e);
+            alert("Failed to load game rules. Please refresh the page.");
+        });
+},
 
  refresh: function() {
         var root = document.getElementById('faction-studio-root');
