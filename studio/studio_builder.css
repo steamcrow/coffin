@@ -77,6 +77,16 @@
 
 .panel-content { padding: 15px; }
 
+/* NO UNIT SELECTED = COLLAPSE GRID */
+.no-unit .fb-grid {
+    grid-template-columns: 1fr;
+}
+
+/* UNIT SELECTED = FULL LAYOUT */
+.has-unit .fb-grid {
+    grid-template-columns: 1fr 1.4fr 1.1fr;
+}
+
 /* =========================================================
    STAT BADGES (THE "VIBE")
    ========================================================= */
