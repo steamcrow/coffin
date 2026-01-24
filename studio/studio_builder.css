@@ -611,31 +611,27 @@ textarea.cc-input {
 }
 
 /* Ensure the root container allows the grid to expand */
+/* Update the main root to ensure it has enough room */
+
 #faction-studio-root {
-    width: 100%;
-    max-width: 1400px;
-    margin: 0 auto;
-    color: #fff;
-    font-family: 'Oswald', sans-serif;
+    width: 100% !important;
+    max-width: 100% !important; /* Allow it to use full screen width */
+    display: block !important;
 }
 
 .fb-grid {
     display: grid !important;
-    /* Adjusted ratios for better visibility */
-    grid-template-columns: 280px 1.2fr 350px; 
-    gap: 20px;
-    align-items: start;
-    padding: 20px;
+    /* We use minmax(0, 1fr) to prevent content from stretching the columns */
+    grid-template-columns: minmax(250px, 0.8fr) minmax(300px, 1.4fr) minmax(300px, 1fr) !important;
+    gap: 20px !important;
+    width: 100% !important;
+    align-items: start !important;
 }
 
-/* Responsive: Collapse to 1 column on tablets/phones */
-@media (max-width: 1100px) {
+/* Force horizontal layout even on smaller screens for testing */
+@media (min-width: 900px) {
     .fb-grid {
-        grid-template-columns: 1fr;
-    }
-    
-    #unit-card {
-        grid-row: 2; /* Move preview card under the roster but above builder */
+        display: grid !important;
     }
 }
 
