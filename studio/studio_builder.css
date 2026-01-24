@@ -39,35 +39,43 @@
    GRID (DEFAULT = 3 COLUMNS)
    ========================================================= */
 
-/* 2. Simplified Grid */
 .fb-grid {
     display: grid;
     width: 100%;
-    /* Use fractions instead of hard minmax to allow shrinking */
-    grid-template-columns: 1fr 1.5fr 1.2fr; 
-    gap: 20px;
+    /* 1. We removed the high minmax values so it fits in Odoo's "Standard" width */
+    grid-template-columns: 
+        minmax(200px, 0.9fr) 
+        minmax(300px, 1.3fr) 
+        minmax(250px, 1fr);
+    gap: 15px;
     align-items: start;
 }
 
 /* =========================================================
-   CONTAINER RESPONSIVE (NOT VIEWPORT)
+   RESPONSIVE (PICK ONE: MEDIA QUERIES ARE SAFER IN ODOO)
    ========================================================= */
 
-/* Tablet */
-@container (max-width: 1200px) {
+/* Tablet: Drop to 2 columns when space is tight */
+@media (max-width: 1100px) {
     .fb-grid {
-        grid-template-columns: 1fr 1.4fr;
+        grid-template-columns: 1fr 1.2fr;
     }
-
+    /* Make the 3rd panel (unit card) span full width at the bottom */
     #unit-card {
         grid-column: 1 / -1;
     }
 }
 
-/* Mobile */
-@container (max-width: 800px) {
+/* Mobile: Single column stack */
+@media (max-width: 768px) {
     .fb-grid {
         grid-template-columns: 1fr;
+    }
+    #unit-card {
+        grid-column: auto;
+    }
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
