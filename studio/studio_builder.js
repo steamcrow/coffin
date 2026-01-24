@@ -1,6 +1,6 @@
 /**
- * COFFIN CANYON FACTION STUDIO - V13 FINAL
- * Fixed: Slide panel, separate weapon/ability flows, visible unit card, proper data access
+ * COFFIN CANYON FACTION STUDIO - V14 CLEAN CSS
+ * Separated design from function, clickable steps, stat badges
  */
 
 window.CCFB_FACTORY = {
@@ -23,6 +23,7 @@ window.CCFB_FACTORY = {
             range: parseInt(u.range) || 0,
             weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
             abilities: Array.isArray(u.abilities) ? u.abilities : [],
+            supplemental: u.supplemental || null,
             lore: u.lore || ""
         };
     },
@@ -67,15 +68,20 @@ window.CCFB_FACTORY = {
         
         if (!this.state.rules) {
             console.warn("⚠️ Rules not loaded yet");
-            root.innerHTML = '<div style="padding:60px; text-align:center; color:#ff7518;">Loading rules...</div>';
+            root.innerHTML = '<div class="cc-empty-state">Loading rules...</div>';
             return;
         }
 
         if (!document.getElementById('unit-builder')) {
-            root.innerHTML = '<div class="fb-grid" style="display: flex; flex-wrap: wrap; gap: 20px; padding: 10px; justify-content: center; align-items: flex-start;">' +
-                '<div id="faction-overview" style="flex: 1; min-width: 320px; max-width: 350px;"></div>' +
-                '<div id="unit-builder" style="flex: 2; min-width: 350px; max-width: 600px;"></div>' +
-                '<div id="unit-card" style="flex: 1; min-width: 320px; max-width: 400px;"></div>' +
+            root.innerHTML = 
+                '<div class="studio-header">' +
+                    '<h1 class="studio-title">FACTION STUDIO</h1>' +
+                    '<p class="studio-subtitle">A Faction Creation Tool for Coffin Canyon</p>' +
+                '</div>' +
+                '<div class="fb-grid">' +
+                    '<div id="faction-overview" class="fb-panel"></div>' +
+                    '<div id="unit-builder" class="fb-panel fb-panel-center"></div>' +
+                    '<div id="unit-card" class="fb-panel"></div>' +
                 '</div>' +
                 '<div id="slide-panel-container"></div>';
         }
@@ -93,28 +99,31 @@ window.CCFB_FACTORY = {
         var self = this;
         var unitsHtml = this.state.currentFaction.units.map(function(u, i) {
             var selected = self.state.selectedUnit === i ? 'cc-item-selected' : '';
-            return '<div class="cc-roster-item ' + selected + '" onclick="CCFB_FACTORY.selectUnit(' + i + ')" style="cursor:pointer; padding:10px; border-bottom:1px solid #333;">' +
-                '<b>' + u.name + '</b> ' +
-                '<span style="float:right; color:var(--cc-primary)">' + self.calculateUnitCost(u) + '₤</span>' +
+            return '<div class="cc-roster-item ' + selected + '" onclick="CCFB_FACTORY.selectUnit(' + i + ')">' +
+                '<div class="u-name">' + u.name + '</div>' +
+                '<div class="unit-cost">' + self.calculateUnitCost(u) + '₤</div>' +
                 '</div>';
         }).join('');
         
-        target.innerHTML = '<div class="cc-panel">' +
-            '<div class="cc-panel-header">THE POSSE</div>' +
-            '<div style="padding:15px">' +
-                '<label class="small">FACTION NAME</label>' +
-                '<input type="text" class="cc-input w-100 mb-3" value="' + this.state.currentFaction.faction + '" ' +
-                    'onfocus="if(this.value===\'New Faction\')this.value=\'\'" ' +
-                    'onchange="CCFB_FACTORY.updateFaction(this.value)">' +
-                '<div class="unit-list">' + unitsHtml + '</div>' +
-                '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
-                '<div style="margin-top:20px; border-top:1px solid #444; padding-top:15px;">' +
-                    '<label class="small">IMPORT FROM JSON</label>' +
-                    '<textarea class="cc-input w-100" style="height:60px; font-size:10px;" onchange="CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
-                    '<button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
+        target.innerHTML = 
+            '<div class="cc-panel">' +
+                '<div class="cc-panel-header">FACTION ROSTER</div>' +
+                '<div class="panel-content">' +
+                    '<div class="form-group">' +
+                        '<label class="small">FACTION NAME</label>' +
+                        '<input type="text" class="cc-input w-100" value="' + this.state.currentFaction.faction + '" ' +
+                            'onfocus="if(this.value===\'New Faction\')this.value=\'\'" ' +
+                            'onchange="CCFB_FACTORY.updateFaction(this.value)">' +
+                    '</div>' +
+                    '<div class="unit-list">' + unitsHtml + '</div>' +
+                    '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
+                    '<div class="import-section">' +
+                        '<label class="small">IMPORT FROM JSON</label>' +
+                        '<textarea class="cc-input w-100 import-textarea" onchange="CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
+                        '<button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
+                    '</div>' +
                 '</div>' +
-            '</div>' +
-        '</div>';
+            '</div>';
     },
 
     renderBuilder: function() {
@@ -122,10 +131,7 @@ window.CCFB_FACTORY = {
         if (!target) return;
         
         if (this.state.selectedUnit === null) {
-            target.innerHTML = '<div class="cc-panel" style="padding:60px; text-align:center; opacity:0.3;">' +
-                '<i class="fa fa-crosshairs" style="font-size:3rem; display:block; margin-bottom:20px;"></i>' +
-                'CHOOSE A UNIT TO BEGIN' +
-                '</div>';
+            target.innerHTML = '<div class="cc-panel"><div class="cc-empty-state"><i class="fa fa-crosshairs"></i>CHOOSE A UNIT TO BEGIN</div></div>';
             return;
         }
         
@@ -135,12 +141,17 @@ window.CCFB_FACTORY = {
 
         var step = function(num, title, content) {
             var isFocused = self.state.activeStep === num || self.state.isPasted;
-            var grayStyle = !isFocused ? 'opacity: 0.15; filter:grayscale(1); pointer-events:none;' : '';
-            var displayStyle = isFocused ? 'block' : 'none';
+            var stepClass = 'builder-step';
+            if (isFocused) stepClass += ' step-active';
+            if (!isFocused && num < self.state.activeStep) stepClass += ' step-complete';
+            if (!isFocused && num > self.state.activeStep) stepClass += ' step-locked';
             
-            return '<div class="builder-step ' + (isFocused ? 'step-active' : '') + '" style="' + grayStyle + '">' +
-                '<div class="cc-panel-header">' + num + '. ' + title + '</div>' +
-                '<div style="padding:20px; display:' + displayStyle + '; background: rgba(0,0,0,0.15);">' +
+            return '<div class="' + stepClass + '">' +
+                '<div class="step-header" onclick="CCFB_FACTORY.setStep(' + num + ')">' +
+                    '<div class="step-number">' + num + '</div>' +
+                    '<div class="step-title">' + title + '</div>' +
+                '</div>' +
+                '<div class="step-content" style="display:' + (isFocused ? 'block' : 'none') + '">' +
                     content +
                 '</div>' +
             '</div>';
@@ -175,65 +186,89 @@ window.CCFB_FACTORY = {
 
         var weaponPropsHtml = u.weapon_properties.length > 0 ? 
             u.weapon_properties.map(function(p, i) {
-                return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')" ' +
-                    'style="cursor:pointer; margin:2px; padding:4px 8px; background:var(--cc-primary); color:#000; border-radius:3px; font-size:10px; display:inline-block; font-weight:700;">' +
-                    p + ' ✕' +
-                '</span>';
-            }).join('') : '<span style="font-size:10px; opacity:0.5;">None added</span>';
+                return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + p + ' ✕</span>';
+            }).join('') : '<span class="no-items">None added</span>';
 
         var abilitiesHtml = u.abilities.length > 0 ?
             u.abilities.map(function(a, i) {
-                return '<div onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')" ' +
-                    'style="cursor:pointer; margin:4px 0; padding:8px; background:#111; border-left:3px solid var(--cc-primary); font-size:11px;">' +
-                    a + ' ✕' +
-                '</div>';
-            }).join('') : '<span style="font-size:10px; opacity:0.5;">None added</span>';
+                return '<div class="ability-item" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + a + ' ✕</div>';
+            }).join('') : '<span class="no-items">None added</span>';
 
         target.innerHTML = '<div class="cc-panel">' +
             step(1, "IDENTITY & TYPE", 
-                '<label class="small">UNIT NAME</label>' +
-                '<input type="text" class="cc-input w-100 mb-3" value="' + u.name + '" ' +
-                    'onfocus="if(this.value===\'New Unit\')this.value=\'\'" ' +
-                    'onchange="CCFB_FACTORY.updateUnit(\'name\', this.value)">' +
-                '<label class="small">UNIT TYPE (ARCHETYPE)</label>' +
-                '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'type\', this.value)">' +
-                    typeOptions +
-                '</select>' +
-                '<div style="font-size:11px; margin-top:10px; padding:10px; background:rgba(255,117,24,0.1); border-left:3px solid var(--cc-primary); line-height:1.5;">' +
+                '<div class="form-group">' +
+                    '<label class="small">UNIT NAME</label>' +
+                    '<input type="text" class="cc-input w-100" value="' + u.name + '" ' +
+                        'onfocus="if(this.value===\'New Unit\')this.value=\'\'" ' +
+                        'onchange="CCFB_FACTORY.updateUnit(\'name\', this.value)">' +
+                '</div>' +
+                '<div class="form-group">' +
+                    '<label class="small">UNIT TYPE (ARCHETYPE)</label>' +
+                    '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'type\', this.value)">' +
+                        typeOptions +
+                    '</select>' +
+                '</div>' +
+                '<div class="type-rule-display">' +
+                    '<i class="fa fa-info-circle"></i>' +
                     (archVault[u.type] ? archVault[u.type].identity : 'Select a type') +
                 '</div>' +
                 '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.setStep(2)">CONFIRM TYPE →</button>'
             ) +
             step(2, "ATTRIBUTES",
-                '<div style="display:grid; grid-template-columns:1fr 1fr; gap:15px;">' +
-                    '<div><label class="small">QUALITY</label><select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'quality\', this.value)">' + qualityOptions + '</select></div>' +
-                    '<div><label class="small">DEFENSE</label><select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'defense\', this.value)">' + defenseOptions + '</select></div>' +
-                    '<div><label class="small">MOVE</label><select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'move\', this.value)">' + moveOptions + '</select></div>' +
-                    '<div><label class="small">RANGE</label><select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'range\', this.value)">' + rangeOptions + '</select></div>' +
+                '<div class="stats-grid">' +
+                    '<div class="form-group">' +
+                        '<label class="small">QUALITY</label>' +
+                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'quality\', this.value)">' + qualityOptions + '</select>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">DEFENSE</label>' +
+                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'defense\', this.value)">' + defenseOptions + '</select>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">MOVE</label>' +
+                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'move\', this.value)">' + moveOptions + '</select>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">RANGE</label>' +
+                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'range\', this.value)">' + rangeOptions + '</select>' +
+                    '</div>' +
                 '</div>' +
                 '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(3)">CONFIRM STATS →</button>'
             ) +
-            step(3, "POWERS & ABILITIES",
-                '<div style="display:grid; grid-template-columns: 1fr; gap:10px;">' +
-                    '<button class="btn-add-small" onclick="CCFB_FACTORY.openSlidePanel(\'weapon\')">+ WEAPON POWER</button>' +
-                    '<button class="btn-add-small" onclick="CCFB_FACTORY.openSlidePanel(\'ability\')">+ UNIT ABILITY</button>' +
-                '</div>' +
-                '<div style="margin-top:15px; padding:10px; background:rgba(0,0,0,0.3); border-radius:4px;">' +
-                    '<div style="font-size:10px; font-weight:700; color:var(--cc-primary); margin-bottom:5px;">WEAPON POWERS:</div>' +
-                    weaponPropsHtml +
-                '</div>' +
-                '<div style="margin-top:10px; padding:10px; background:rgba(0,0,0,0.3); border-radius:4px;">' +
-                    '<div style="font-size:10px; font-weight:700; color:var(--cc-primary); margin-bottom:5px;">UNIT ABILITIES:</div>' +
-                    abilitiesHtml +
+            step(3, "WEAPON POWERS",
+                '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.openSlidePanel(\'weapon\')">+ ADD WEAPON POWER</button>' +
+                '<div class="abilities-display">' +
+                    '<div class="abilities-label">CURRENT POWERS:</div>' +
+                    '<div class="abilities-list">' + weaponPropsHtml + '</div>' +
                 '</div>' +
                 '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(4)">CONTINUE →</button>'
             ) +
-            step(4, "FINALIZE UNIT",
-                '<label class="small">UNIT LORE (OPTIONAL)</label>' +
-                '<textarea class="cc-input w-100" rows="3" placeholder="A brief description of this unit..." onchange="CCFB_FACTORY.updateUnit(\'lore\', this.value)">' + u.lore + '</textarea>' +
-                '<div style="display:flex; gap:10px; margin-top:20px;">' +
-                    '<button class="btn-add-small" style="flex:2; background:#28a745" onclick="CCFB_FACTORY.saveAndNew()">✓ SAVE UNIT</button>' +
-                    '<button class="btn-add-small" style="flex:1; background:#dc3545" onclick="CCFB_FACTORY.delUnit()">DELETE</button>' +
+            step(4, "UNIT ABILITIES",
+                '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.openSlidePanel(\'ability\')">+ ADD UNIT ABILITY</button>' +
+                '<div class="abilities-display">' +
+                    '<div class="abilities-label">CURRENT ABILITIES:</div>' +
+                    '<div class="abilities-list">' + abilitiesHtml + '</div>' +
+                '</div>' +
+                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(5)">CONTINUE →</button>'
+            ) +
+            step(5, "SUPPLEMENTAL VERSIONS (OPTIONAL)",
+                '<p class="step-hint">Supplemental versions are rare special variants. Most units don\'t need them.</p>' +
+                '<div class="form-group">' +
+                    '<label class="small">VARIANT NAME (OPTIONAL)</label>' +
+                    '<input type="text" class="cc-input w-100" value="' + (u.supplemental || '') + '" ' +
+                        'placeholder="e.g. Alpha, Mama, Baby..." ' +
+                        'onchange="CCFB_FACTORY.updateUnit(\'supplemental\', this.value)">' +
+                '</div>' +
+                '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.setStep(6)">SKIP / CONTINUE →</button>'
+            ) +
+            step(6, "LORE & FINALIZE",
+                '<div class="form-group">' +
+                    '<label class="small">UNIT LORE (OPTIONAL)</label>' +
+                    '<textarea class="cc-input w-100" rows="4" placeholder="A brief description of this unit..." onchange="CCFB_FACTORY.updateUnit(\'lore\', this.value)">' + u.lore + '</textarea>' +
+                '</div>' +
+                '<div class="button-group">' +
+                    '<button class="btn-add-small btn-success" onclick="CCFB_FACTORY.saveAndNew()">✓ SAVE UNIT</button>' +
+                    '<button class="btn-add-small btn-danger" onclick="CCFB_FACTORY.delUnit()">DELETE</button>' +
                 '</div>'
             ) +
         '</div>';
@@ -252,49 +287,67 @@ window.CCFB_FACTORY = {
         var arch = this.state.rules.rules_master.unit_identities.archetype_vault[u.type] || {};
 
         var weaponPropsHtml = u.weapon_properties.length > 0 ? 
-            '<div style="font-size:10px; font-weight:bold; color:var(--cc-primary); margin-top:15px; margin-bottom:5px;">WEAPON POWERS</div>' +
-            '<div class="weapon-properties mb-2">' +
-                u.weapon_properties.map(function(p, i) {
-                    return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')" ' +
-                        'style="cursor:pointer; background:rgba(255,117,24,0.2); border:1px solid var(--cc-primary); padding:4px 8px; border-radius:3px; margin:2px; display:inline-block; font-size:10px;">' +
-                        p + ' ✕' +
-                    '</span>';
-                }).join('') +
+            '<div class="unit-card-section">' +
+                '<div class="section-label"><i class="fa fa-crosshairs"></i> WEAPON POWERS</div>' +
+                '<div class="weapon-properties">' +
+                    u.weapon_properties.map(function(p, i) {
+                        return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + p + ' ✕</span>';
+                    }).join('') +
+                '</div>' +
             '</div>' : '';
 
         var abilitiesHtml = u.abilities.length > 0 ?
-            '<div style="font-size:10px; font-weight:bold; color:var(--cc-primary); margin-top:15px; margin-bottom:5px;">ABILITIES</div>' +
-            u.abilities.map(function(a, i) {
-                return '<div class="ability-item" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')" ' +
-                    'style="cursor:pointer; background:#111; padding:5px; border-left:3px solid var(--cc-primary); margin-bottom:2px; font-size:11px;">' +
-                    a + ' ✕' +
-                '</div>';
-            }).join('') : '';
-
-        var loreHtml = u.lore ? 
-            '<div style="margin-top:15px; padding:10px; background:rgba(0,0,0,0.3); border-left:3px solid var(--cc-primary); font-size:11px; font-style:italic; opacity:0.8;">' +
-                '"' + u.lore + '"' +
+            '<div class="unit-card-section">' +
+                '<div class="section-label"><i class="fa fa-bolt"></i> ABILITIES</div>' +
+                u.abilities.map(function(a, i) {
+                    return '<div class="ability-item" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' +
+                        '<div class="ability-name">' + a + '</div>' +
+                    '</div>';
+                }).join('') +
             '</div>' : '';
 
-        target.innerHTML = '<div class="unit-card-preview" style="border: 2px solid var(--cc-primary); background: #0a0a0a; border-radius:6px; overflow:hidden;">' +
-            '<div style="background: var(--cc-primary); color: #000; padding: 20px; text-align:center;">' +
-                '<div style="font-size: 22px; font-weight: 900; text-transform: uppercase; letter-spacing:1px;">' + u.name + '</div>' +
-                '<div style="font-size: 11px; font-weight: bold; margin-top:5px;">' + u.type.toUpperCase() + ' • ' + this.calculateUnitCost(u) + '₤</div>' +
-            '</div>' +
-            '<div style="display: flex; background: #1a1a1a; border-bottom: 1px solid #333;">' +
-                '<div style="flex:1; text-align:center; padding:12px; border-right:1px solid #333;"><small style="display:block; font-size:9px; opacity:0.6;">QUA</small><b style="font-size:18px; color:var(--cc-primary)">' + u.quality + '+</b></div>' +
-                '<div style="flex:1; text-align:center; padding:12px; border-right:1px solid #333;"><small style="display:block; font-size:9px; opacity:0.6;">DEF</small><b style="font-size:18px; color:var(--cc-primary)">' + u.defense + '+</b></div>' +
-                '<div style="flex:1; text-align:center; padding:12px; border-right:1px solid #333;"><small style="display:block; font-size:9px; opacity:0.6;">MOV</small><b style="font-size:18px; color:var(--cc-primary)">' + u.move + '"</b></div>' +
-                '<div style="flex:1; text-align:center; padding:12px;"><small style="display:block; font-size:9px; opacity:0.6;">RNG</small><b style="font-size:18px; color:var(--cc-primary)">' + (u.range == 0 ? 'M' : u.range + '"') + '</b></div>' +
-            '</div>' +
-            '<div style="padding: 15px; color:#fff;">' +
-                '<div style="color:var(--cc-primary); font-weight:bold; font-size:10px; margin-bottom:5px; text-transform:uppercase;">TYPE RULE: ' + (arch.type_rule || 'Innate') + '</div>' +
-                '<div style="font-size:11px; margin-bottom:15px; opacity:0.8; line-height:1.4;">' + (arch.effect || 'No special type effect') + '</div>' +
+        var loreHtml = u.lore ? 
+            '<div class="unit-card-section">' +
+                '<div class="lore-text">"' + u.lore + '"</div>' +
+            '</div>' : '';
+
+        target.innerHTML = 
+            '<div class="unit-card-preview">' +
+                '<div class="unit-card-header">' +
+                    '<div class="unit-card-name">' + u.name + '</div>' +
+                    '<div class="unit-card-type">' + u.type.toUpperCase() + '</div>' +
+                '</div>' +
+                '<div class="unit-card-cost">' +
+                    '<div class="cost-label">ESTIMATED COST</div>' +
+                    '<div class="cost-value">' + this.calculateUnitCost(u) + '₤</div>' +
+                '</div>' +
+                '<div class="stat-badge-flex">' +
+                    '<div class="cc-stat-badge stat-q-border">' +
+                        '<span class="cc-stat-label stat-q">Q</span>' +
+                        '<span class="cc-stat-value">' + u.quality + '+</span>' +
+                    '</div>' +
+                    '<div class="cc-stat-badge stat-d-border">' +
+                        '<span class="cc-stat-label stat-d">D</span>' +
+                        '<span class="cc-stat-value">' + u.defense + '+</span>' +
+                    '</div>' +
+                    '<div class="cc-stat-badge stat-m-border">' +
+                        '<span class="cc-stat-label stat-m">M</span>' +
+                        '<span class="cc-stat-value">' + u.move + '"</span>' +
+                    '</div>' +
+                    '<div class="cc-stat-badge stat-r-border">' +
+                        '<span class="cc-stat-label stat-r">R</span>' +
+                        '<span class="cc-stat-value">' + (u.range == 0 ? 'M' : u.range + '"') + '</span>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="unit-card-section">' +
+                    '<div class="section-label"><i class="fa fa-shield"></i> TYPE RULE</div>' +
+                    '<strong>' + (arch.type_rule || 'Innate') + '</strong>' +
+                    '<div class="ability-effect">' + (arch.effect || 'No special type effect') + '</div>' +
+                '</div>' +
                 weaponPropsHtml +
                 abilitiesHtml +
                 loreHtml +
-            '</div>' +
-        '</div>';
+            '</div>';
     },
 
     renderSlidePanel: function() {
@@ -313,55 +366,44 @@ window.CCFB_FACTORY = {
         var cardsHtml = '';
         
         if (isWeapon) {
-            // Render weapon properties
             for (var key in weaponProps) {
                 var item = weaponProps[key];
                 var displayName = item.name || key.replace(/_/g, ' ').toUpperCase();
                 var displayEffect = item.effect || 'No description available';
                 
-                cardsHtml += '<div class="ability-card" ' +
-                    'onclick="CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')" ' +
-                    'style="background:#111; border:2px solid #333; padding:15px; cursor:pointer; border-radius:6px; transition:0.2s; margin-bottom:10px;" ' +
-                    'onmouseover="this.style.borderColor=\'var(--cc-primary)\'; this.style.background=\'rgba(255,117,24,0.1)\';" ' +
-                    'onmouseout="this.style.borderColor=\'#333\'; this.style.background=\'#111\';">' +
-                        '<div style="color:var(--cc-primary); font-weight:700; font-size:13px; margin-bottom:6px;">' + displayName + '</div>' +
-                        '<div style="font-size:11px; opacity:0.8; line-height:1.4;">' + displayEffect + '</div>' +
+                cardsHtml += '<div class="ability-card" onclick="CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')">' +
+                    '<div class="ability-card-name">' + displayName + '</div>' +
+                    '<div class="ability-card-effect">' + displayEffect + '</div>' +
                 '</div>';
             }
         } else {
-            // Render abilities by category
             for (var cat in abilityDict) {
                 var categoryName = cat.replace(/^[A-Z]_/, '').replace(/_/g, ' ').toUpperCase();
-                cardsHtml += '<div style="font-size:12px; font-weight:700; color:var(--cc-primary); margin:20px 0 10px 0; padding-bottom:5px; border-bottom:1px solid #444;">' + categoryName + '</div>';
+                cardsHtml += '<div class="category-header">' + categoryName + '</div>';
                 
                 for (var key in abilityDict[cat]) {
                     var item = abilityDict[cat][key];
                     var displayName = item.name || item;
                     var displayEffect = typeof item === 'object' ? (item.effect || 'No description') : item;
                     
-                    cardsHtml += '<div class="ability-card" ' +
-                        'onclick="CCFB_FACTORY.addItem(\'abilities\', \'' + key + '\')" ' +
-                        'style="background:#111; border:2px solid #333; padding:15px; cursor:pointer; border-radius:6px; transition:0.2s; margin-bottom:10px;" ' +
-                        'onmouseover="this.style.borderColor=\'var(--cc-primary)\'; this.style.background=\'rgba(255,117,24,0.1)\';" ' +
-                        'onmouseout="this.style.borderColor=\'#333\'; this.style.background=\'#111\';">' +
-                            '<div style="color:var(--cc-primary); font-weight:700; font-size:13px; margin-bottom:6px;">' + displayName + '</div>' +
-                            '<div style="font-size:11px; opacity:0.8; line-height:1.4;">' + displayEffect + '</div>' +
+                    cardsHtml += '<div class="ability-card" onclick="CCFB_FACTORY.addItem(\'abilities\', \'' + key + '\')">' +
+                        '<div class="ability-card-name">' + displayName + '</div>' +
+                        '<div class="ability-card-effect">' + displayEffect + '</div>' +
                     '</div>';
                 }
             }
         }
         
-        target.innerHTML = '<div class="cc-slide-panel cc-slide-panel-open">' +
-            '<div class="cc-slide-panel-header">' +
-                '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
-                '<button onclick="CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn" style="background:none; border:none; color:#fff; font-size:24px; cursor:pointer; padding:5px 10px;">' +
-                    '✕' +
-                '</button>' +
-            '</div>' +
-            '<div style="padding:20px; max-height:calc(100vh - 100px); overflow-y:auto;">' +
-                cardsHtml +
-            '</div>' +
-        '</div>';
+        target.innerHTML = 
+            '<div class="cc-slide-panel cc-slide-panel-open">' +
+                '<div class="cc-slide-panel-header">' +
+                    '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
+                    '<button onclick="CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
+                '</div>' +
+                '<div class="cc-modal-content">' +
+                    '<div class="ability-grid">' + cardsHtml + '</div>' +
+                '</div>' +
+            '</div>';
     },
 
     addUnit: function() {
