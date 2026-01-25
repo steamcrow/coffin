@@ -1,89 +1,882 @@
-<div id="faction-studio-root" style="min-height: 800px; background: #1a1a1a; color: #eee; position: relative; border: 1px solid #333;">
-    <div id="fs-boot-loader" class="active" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 50; display: flex; align-items: center; justify-content: center; opacity: 1; transition: opacity 0.4s;">
-        <div style="text-align: center;">
-            <div class="loader-spinner"></div>
-            <div style="color: #ff7518; margin-top: 20px; font-family: 'Oswald', sans-serif; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px;">INITIALIZING FACTION STUDIO...</div>
-        </div>
-    </div>
-</div>
-
-<style>
-@keyframes cc-spin { 
-    0% { transform: rotate(0deg); } 
-    100% { transform: rotate(360deg); } 
-}
-.loader-spinner { 
-    width: 50px; 
-    height: 50px; 
-    border: 5px solid #333; 
-    border-top: 5px solid #ff7518; 
-    border-radius: 50%; 
-    animation: cc-spin 1s linear infinite; 
-    margin: 0 auto;
-}
-</style>
-
-<script>
-async function loadScript(url) {
-    console.log("Loading script:", url);
-    const response = await fetch(url + "?t=" + Date.now());
-    const text = await response.text();
-    const blob = new Blob([text], { type: "text/javascript" });
-    const blobUrl = URL.createObjectURL(blob);
-    return new Promise((resolve, reject) => {
-        const script = document.createElement("script");
-        script.src = blobUrl;
-        script.onload = () => { 
-            URL.revokeObjectURL(blobUrl); 
-            resolve(); 
-        };
-        script.onerror = () => { 
-            URL.revokeObjectURL(blobUrl); 
-            reject(new Error("Failed to load: " + url)); // FIXED: Was missing opening parenthesis
-        };
-        document.head.appendChild(script);
-    });
-}
-
-async function bootFactionStudio() {
-    console.log("🚀 Faction Studio Boot Starting...");
-    
-    try {
-        // Load the script
-        await loadScript("https://raw.githubusercontent.com/steamcrow/coffin/main/studio/studio_builder.js");
-        console.log("✅ Faction Studio scripts loaded");
-        
-        // IMPORTANT: Initialize the factory after script loads
-        if (window.CCFB_FACTORY) {
-            console.log("🎬 Initializing CCFB_FACTORY...");
-            CCFB_FACTORY.init();
-        } else {
-            console.error("❌ CCFB_FACTORY not found!");
+{
+  "rules_master": {
+    "version": "8.2",
+    "last_updated": "2026-01-19",
+    "changelog": "Removed variable (X) notation. Implemented consistent Brutal/Savage progression for offensive abilities. Standardized ranges to 3\"/6\"/12\". Simplified Blast, Fear, Pierce, Impact, and Tough naming.",
+    "sections": {
+      "philosophy": "The 'Flavor Vault'. High-level tenets and the 'Fast Resolution' handshake.",
+      "core_mechanics": "The math: Quality rolls, Successes, Defense calculations, and the Death Spiral.",
+      "dice_manipulation": "Lucky Breaks, Natural Sixes, and Critical Failures.",
+      "turn_structure": "Initiative, Activation cycles, and Action types (Simple vs. Complex).",
+      "locomotion_and_visibility": "Movement speeds, Terrain types, Line of Sight, and Cover logic.",
+      "combat_and_damage": "Melee vs. Ranged, Automatic Damage sources, and Weapon Tags.",
+      "morale_and_status": "Shaken, Panicked, Fear Cascades, and Condition removal.",
+      "unit_identities": "The 8 Core Archetypes (Grunt, Titan, etc.) and their passive logic.",
+      "ability_dictionary": "The Universal Library of keywords (Stealth, Tough, Repair, etc.).",
+      "weapon_properties": "Weapon tags and special effects that modify attacks.",
+      "wild_magic_table": "Thyr-powered mystical effects and consequences.",
+      "timing_and_engine": "Once per Activation/Round/Game and Ability Priority.",
+      "unit_variant_logic": "How the app handles 'Chassis' modifications (Baby vs. Mama)."
+    },
+    "core_mechanics": {
+      "philosophy": "Everything in Coffin Canyon flows from a single value: Quality. It represents training, toughness, nerve, and luck. When Quality drops, everything becomes harder.",
+      "quality_definition": {
+        "usage": ["Attacks", "Morale", "Special abilities", "Environmental tests"],
+        "guidelines": [
+          { "value": 1, "description": "Basic trained human / small monster / civilian" },
+          { "value": 2, "description": "Veteran military unit / human sized monster" },
+          { "value": 3, "description": "Elite unit / large monster / hard to kill beast" },
+          { "value": 4, "description": "Leader unit / low hero / big or powerful monster" },
+          { "value": 5, "description": "High hero / very large or mystically powerful monster" },
+          { "value": 6, "description": "Epic supernatural kaiju, titan, or super heavy mechanical unit" }
+        ]
+      },
+      "the_roll": {
+        "pool": "Roll d6s equal to current Quality.",
+        "success_threshold": 4,
+        "logic": "Each 4, 5, or 6 is 1 Success. 1+ successes usually mean the action succeeds. Some rules scale with total successes."
+      },
+      "defense_and_damage": {
+        "definition": "Passive value representing positioning, cover, armor, or skill.",
+        "resolution": "If Successes > Defense, the attack hits. Each success beyond Defense deals 1 damage.",
+        "modifiers": [
+          { "name": "Cover", "effect": "+1 Defense vs ranged" },
+          { "name": "Pierce", "effect": "Reduces Defense for that attack" },
+          { "name": "Dodge", "effect": "Cancels a Success after rolling" }
+        ],
+        "exceptions": "Defense never applies to: Terrain damage, Automatic damage, or Environmental effects."
+      },
+      "six_based_effects": {
+        "golden_rule": "A single roll may only resolve ONE six-based bonus. Never more than one.",
+        "options": {
+          "natural_six": {
+            "name": "Natural Six",
+            "effect": "If the attack hits, it deals at least 1 damage, even if Successes <= Defense.",
+            "restriction": "Never applies if the attack does not hit."
+          },
+          "lucky_break": {
+            "name": "Lucky Break",
+            "trigger": "All dice in a Quality roll result in 6s.",
+            "restrictions": [
+              "Must use immediately",
+              "Does not stack",
+              "Once per activation",
+              "No damage/attack actions"
+            ],
+            "choices": [
+              { "id": "quick_step", "name": "Quick Step", "effect": "Free Half Move" },
+              { "id": "shake_it_off", "name": "Shake It Off", "effect": "Remove 1 Pin or Condition" },
+              { "id": "deadeye", "name": "Deadeye", "effect": "Gain +1 die to the next roll this activation" },
+              { "id": "get_it_done", "name": "Get It Done", "effect": "Perform a free Interact action" }
+            ]
+          }
+        },
+        "example_case": "Attacker Q2 rolls 6, 6 vs Defense 4. Player chooses: Option 1 (Natural Six) for 1 Damage, OR Option 2 (Lucky Break) for 0 damage + tempo/setup."
+      },
+      "critical_failure": {
+        "trigger": "All 1s on a Quality roll.",
+        "effects": "Action fails normally, model becomes Shaken. Check terrain/scenario for specific consequences."
+      },
+      "quality_tracking": {
+        "on_table": "Place one d6 (tracker only) behind the model's base. Never roll this die.",
+        "reduction": "Rotate the die immediately upon taking damage, morale loss, or hazards.",
+        "quality_zero": "Remove model from play immediately. Resolve death/escalation effects.",
+        "quality_cap": 6,
+        "design_intent": "You should be able to tell how close a model is to collapse at a glance."
+      }
+    },
+    "turn_structure": {
+      "philosophy": {
+        "text": "Rounds organize time, but momentum comes from who acts and who reacts. The battlefield evolves even if players hesitate.",
+        "design_intent": "Monsters press the attack; Humans react, reposition, and survive. Coffin Canyon does not reward waiting."
+      },
+      "initiative_logic": {
+        "first_activation": "Monster Factions always activate first. If both sides are Monsters, 1d6 high roll chooses. Initiative remains fixed for the game unless scenario-dictated.",
+        "thematic_reason": "The Canyon favors monsters and the unnatural pressure they bring."
+      },
+      "activation_cycle": {
+        "format": "Alternating Activations (1 model at a time).",
+        "rules": [
+          "One player activates, then the opponent activates.",
+          "Continue until all models have acted once.",
+          "Models cannot activate twice in a round unless explicitly allowed."
+        ]
+      },
+      "the_activation": {
+        "action_economy": "Each model receives 2 Actions per activation.",
+        "flexibility": "May be two different actions or the same action twice, in any order.",
+        "common_actions_list": [
+          "Move",
+          "Attack",
+          "Interact",
+          "Befriend",
+          "Repair",
+          "Special Ability"
+        ],
+        "reactions": {
+          "definition": "Rare abilities triggered outside a model's activation.",
+          "logic": "Must be explicitly listed as a Reaction; otherwise, it is not one."
         }
-        
-        // Hide the loader after a short delay to allow init to complete
-        setTimeout(function() {
-            const loader = document.getElementById("fs-boot-loader");
-            if (loader) {
-                loader.style.opacity = "0";
-                setTimeout(function() {
-                    loader.style.display = "none";
-                }, 400);
-            }
-        }, 500);
-        
-    } catch (error) {
-        console.error("❌ Boot failed:", error);
-        const loader = document.getElementById("fs-boot-loader");
-        if (loader) {
-            loader.innerHTML = '<div style="text-align: center; color: #ff4444;">' +
-                '<i class="fa fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 20px;"></i><br>' +
-                'FAILED TO LOAD FACTION STUDIO<br>' +
-                '<small>Check console for details</small>' +
-                '</div>';
+      },
+      "round_definition": {
+        "completion": "Occurs when all models on both sides have activated once.",
+        "maintenance_steps": [
+          "Track ongoing effects",
+          "Resolve terrain escalation (Burning, Unstable collapse, etc.)",
+          "Advance scenario timing",
+          "Resolve ongoing conditions"
+        ],
+        "reset": "Begin next round immediately. No new initiative roll is made."
+      },
+      "action_summaries": {
+        "move": "Measure from base. Speed capped by Move value. Terrain affects speed. Movement can be split by other actions.",
+        "attack": "Requires Action. Uses Quality system. Usually requires Line of Sight."
+      }
+    },
+    "visibility_vault": {
+      "philosophy": {
+        "text": "Simple, intent-based Line of Sight. Precision geometry is not required; clarity and momentum matter more.",
+        "fast_resolution": "If players cannot quickly agree: The shot does not happen OR the target gains Cover. Choose the option that keeps the game moving."
+      },
+      "line_of_sight": {
+        "definition": "A clear, believable line between attacker and target. If there is doubt, LoS is blocked.",
+        "blockers": {
+          "absolute": [
+            "Solid walls",
+            "Cliff faces",
+            "Large rock formations",
+            "Buildings with intact walls",
+            "Scenario-defined blockers"
+          ],
+          "non_blockers": [
+            "Fences",
+            "Railings",
+            "Windows",
+            "Rubble piles",
+            "Boardwalks",
+            "Light vegetation"
+          ],
+          "elevation_rule": "Elevation does not override solid blockers. Being higher does not allow models to see 'over' walls or cliffs."
         }
+      },
+      "cover_mechanics": {
+        "definition": "Partial obstruction providing a defensive bonus. It represents being harder to hit, not total protection.",
+        "effects": {
+          "ranged_bonus": "+1 Defense",
+          "stacking": "Does not stack.",
+          "melee_restriction": "Never applies to melee attacks."
+        },
+        "negation_triggers": [
+          "Attacker is within the same terrain piece as the target.",
+          "Model is in Burning terrain.",
+          "Model is 'Exposed' by an ability/effect."
+        ],
+        "terrain_trait_interactions": [
+          { "trait": "Burning", "result": "No Cover" },
+          { "trait": "Hazardous", "result": "Cover applies normally" },
+          { "trait": "Choking", "result": "Cover applies normally" },
+          { "trait": "Unstable", "result": "Cover may be lost if terrain collapses" }
+        ]
+      },
+      "design_intent": "LoS should be obvious, Cover should be simple, and disputes should be rare and brief. The Canyon is dangerous enough without arguments."
+    },
+    "locomotion_vault": {
+      "philosophy": {
+        "text": "Movement decides fights. Where you stand matters more than how hard you hit. Standing still should feel dangerous.",
+        "design_intent": "Movement should be fluid; terrain should force choices. If a model survives long enough, it was probably moving."
+      },
+      "movement_basics": {
+        "value_usage": "Measure in inches from the model's base. Up to full Move value per action.",
+        "flexibility": "Movement may be split by other actions unless explicitly forbidden (e.g., Move-Attack-Move)."
+      },
+      "terrain_penalties": {
+        "open": "No effect. Free movement.",
+        "difficult": {
+          "examples": ["Rubble", "Steep slopes", "Deep mud", "Thick debris"],
+          "effect": "Movement is halved (round down). Does not stack with other move penalties."
+        },
+        "impassable": {
+          "examples": ["Solid cliff faces", "Intact walls", "Deep chasms", "Sealed structures"],
+          "effect": "Cannot enter, pass through, or end movement inside. Blocks LoS if solid."
+        }
+      },
+      "model_interaction": {
+        "enemy_models": "May not move through.",
+        "friendly_models": "May move through if space allows and bases do not overlap at the end."
+      },
+      "engagement_and_pressure": {
+        "definition": "Engaged when within melee range of an enemy model.",
+        "lock_in": "No universal lock-in; engaged models may move freely unless an ability says otherwise.",
+        "melee_pressure_penalty": {
+          "condition": "While engaged with 1+ enemies",
+          "effects": ["-1 die on Ranged attacks", "Cannot gain Cover from terrain"],
+          "restriction": "Does not apply to melee attacks."
+        }
+      },
+      "verticality": {
+        "climbing": "Measure vertical distance normally. Terrain may be impassable vertically or require specific actions.",
+        "risk": "Unstable terrain may cause falls."
+      },
+      "trait_priority": {
+        "logic": "Resolve movement first, then resolve terrain effects.",
+        "interactions": [
+          { "trait": "Hazardous", "trigger": "Quality test when entering/passing through" },
+          { "trait": "Unstable", "trigger": "Risk when ending movement" },
+          { "trait": "Choking", "trigger": "Fog condition while activating" },
+          { "trait": "Burning", "trigger": "Automatic damage" }
+        ]
+      }
+    },
+    "combat_vault": {
+      "philosophy": {
+        "text": "Combat is fast, brutal, and unforgiving. Most fights are decided by position, pressure, and timing — not endurance.",
+        "design_intent": "Combat should resolve quickly; damage should matter immediately. Prolonged fights are a warning sign."
+      },
+      "attack_fundamentals": {
+        "action_cost": 1,
+        "process": ["Choose valid target", "Check LoS (if required)", "Roll Quality dice"],
+        "melee_rules": {
+          "range": "Base contact / Melee range",
+          "los": "Not required",
+          "threshold": "1+ Success (4+) hits unless stated otherwise."
+        },
+        "ranged_rules": {
+          "range": "Must be within weapon range",
+          "los": "Required",
+          "modifiers": "Apply Cover (+1 Defense) if applicable."
+        }
+      },
+      "damage_resolution": {
+        "definition": "Damage reduces Quality by 1 per point. There is no separate health stat.",
+        "the_death_spiral": "As Quality drops, attacks become less reliable, movement grows riskier, and morale becomes fragile.",
+        "thresholds": "Quality-based thresholds (Wounded, Broken) may trigger effects based on the unit card.",
+        "removal": "At Quality 0, remove model immediately. Resolve terrain/death effects (Tainted, Hazardous)."
+      },
+      "automatic_damage": {
+        "definition": "Automatic damage is NOT an attack. It represents environmental or internal harm.",
+        "sources": ["Burning terrain", "Venom", "Impact", "Traps", "Thyr fallout", "Abilities"],
+        "logic": "Reduces Quality normally. Ignores Defense, Armored, and Cover. Only preventable if explicitly stated.",
+        "terrain_rule": "All terrain damage is considered automatic."
+      },
+      "collateral_damage": {
+        "logic": "Explosions and terrain escalation do not discriminate. Friendly models can be harmed if they are in the area of effect."
+      }
+    },
+    "morale_vault": {
+      "philosophy": {
+        "text": "Morale represents fear, hesitation, and survival overriding orders. Coffin Canyon is not a game of fearless soldiers; it is a game of beings pushed too far.",
+        "design_intent": "Morale creates momentum; fear punishes overextension. Retreat is a valid tactic. Standing firm is not always the goal."
+      },
+      "the_morale_test": {
+        "trigger": "Tested when triggered by destruction, Tainted terrain, sudden losses, fear-based abilities, or isolation.",
+        "resolution": "Roll d6s equal to current Quality. 4+ is a Success.",
+        "outcomes": {
+          "success": "1+ Successes: The model holds.",
+          "failure": "0 Successes: The model fails. Resolve Shaken or Panicked as dictated by the rule."
+        }
+      },
+      "status_conditions": {
+        "shaken": {
+          "definition": "Hesitation, fear, or loss of footing.",
+          "penalties": ["-1 die on all rolls", "Cannot take specific actions listed on unit card"],
+          "recovery": "Automatically removed at end of next activation, or via rally abilities."
+        },
+        "panicked": {
+          "definition": "Full loss of control.",
+          "immediate_effect": "Move away from source of fear immediately. If movement is impossible, become Shaken instead.",
+          "activation_penalty": "Lose 1 Action on next activation and -1 die on all rolls.",
+          "recovery": "Requires distance, time, or specific abilities."
+        }
+      },
+      "fear_mechanics": {
+        "cascading_fear": "When a model is destroyed or panics, nearby Grunts or low-Quality models must test Morale. Violence leaves ripples.",
+        "monster_logic": "Monsters may ignore Morale, gain bonuses from enemy fear, or grow more dangerous as fear spreads. See Unit Card.",
+        "environmental_fear": {
+          "tainted": "Force test on entry.",
+          "haunted": "Force test on trigger.",
+          "burning": "Witnessing 'Overburn' fallout forces test."
+        }
+      }
+    },
+    "unit_identities": {
+      "philosophy": {
+        "text": "Unit Types explain what kind of threat a model represents and how it behaves under pressure. Roles matter more than raw stats.",
+        "design_intent": "Asymmetry over symmetry. Balance is found in consequence, not equal numbers."
+      },
+      "archetype_vault": {
+        "grunt": {
+          "identity": "Fragile/Standard. Represented by standard troops or small monsters.",
+          "type_rule": "Expendable Fodder",
+          "effect": "Do not grant Victory Points when destroyed. Do not generate Morale Loss when destroyed. May contest objectives even if outnumbered, but never control them. Destroyed Grunts do not count toward activation advantage.",
+          "logic_triggers": [
+            "High Critical Failure risk",
+            "Vulnerable to Tainted/Haunted terrain",
+            "Escalated Panic results"
+          ]
+        },
+        "brute": {
+          "identity": "Hard to stop. Heavily armored or large shock units.",
+          "type_rule": "Momentum",
+          "effect": "After inflicting at least 1 damage in melee, this unit may immediately move up to 2\". This movement does not trigger reactions. This movement may not end in base contact with an enemy.",
+          "logic_triggers": ["Morale resistance", "Ignore specific terrain penalties", "Slower/Less flexible"]
+        },
+        "mystic": {
+          "identity": "High-risk/High-reward power. Witches and Thyr-channelers.",
+          "type_rule": "Lingering Harm",
+          "effect": "Debuffs applied by this unit persist until the end of the target's next activation.",
+          "logic_triggers": [
+            "Unique Tainted/Sacred/Haunted interactions",
+            "Morale-triggered power spikes",
+            "Backlash/Escalation risk"
+          ]
+        },
+        "shooter": {
+          "identity": "Ranged control. Marksmen and gunners.",
+          "type_rules": ["Fire Superiority", "Suppression Fragility"],
+          "fire_superiority": "If this unit did not move this activation, it may split its attack dice between up to two valid targets.",
+          "suppression_fragility": "If this unit is Pinned or Grappled, it may not use Critical Damage abilities this activation.",
+          "logic_triggers": ["Cover bonuses", "Melee engagement penalties", "LoS-dependent effects"]
+        },
+        "cavalry": {
+          "identity": "Momentum-based. Riders and vehicles.",
+          "type_rule": "Disengage",
+          "effect": "After resolving an attack, this unit may disengage from melee without suffering penalties or free strikes.",
+          "logic_triggers": [
+            "Movement-into-Attack bonuses",
+            "Cluttered/Tight terrain penalties",
+            "Difficult/Unstable terrain interaction"
+          ]
+        },
+        "rogue": {
+          "identity": "Fast scouts and infiltrators.",
+          "type_rule": "First Strike",
+          "effect": "When charged or charging, this unit attacks first. If both units have First Strike, resolve simultaneously.",
+          "logic_triggers": ["Stealth bonuses", "Flanking advantages", "Fragile in direct combat"]
+        },
+        "specialist": {
+          "identity": "Technical experts. Medics and engineers.",
+          "logic_triggers": ["Objective-specific bonuses", "Fragile outside of role", "Terrain/Device manipulation"]
+        },
+        "tank": {
+          "identity": "Durable front-line units.",
+          "type_rule": "Bodyguard",
+          "effect": "May intercept attacks targeting adjacent friendly units. Roll Defense for intercepted attack.",
+          "logic_triggers": ["High durability", "Protect others", "Slow movement"]
+        },
+        "leader": {
+          "identity": "Command and Cohesion. Officers and bosses.",
+          "type_rules": ["Rally", "Command Presence", "High-Value Target"],
+          "rally": "Once per round, may grant an ally within 12\" +1 die on their next Morale test.",
+          "command_presence": "Friendly units within 6\" may use this unit's Quality for Morale tests instead of their own (if higher).",
+          "high_value_target": "If this unit is destroyed, enemy gains +2 VP.",
+          "logic_triggers": [
+            "Aura: Morale re-roll (1 die)",
+            "Aura: Ignore Shaken (once per round)",
+            "Death Penalty: Friendly Morale cascade"
+          ]
+        },
+        "hero": {
+          "identity": "Exceptional/Named. Problems, not solutions.",
+          "type_rule": "High-Value Target",
+          "effect": "If this unit is destroyed, enemy gains +3 VP.",
+          "logic_triggers": ["One-time resource (Re-roll/Ignore Damage/Auto-pass Morale)", "Non-balanced impact"]
+        },
+        "titan": {
+          "identity": "Battlefield Shapers. Massive war machines or Kaiju.",
+          "type_rule": "Unstoppable",
+          "effect": "Ignores difficult terrain. Cannot be Grappled or Pinned by units smaller than Brute.",
+          "rules": {
+            "terrain_interaction": "Re-roll 1 terrain Quality test/round. Causes terrain damage through movement.",
+            "demolition_test": "Attacking buildings requires a Q-test. Failure = 1 Damage; Crit Fail = 1 Damage + Escalation.",
+            "morale": "Rarely affected."
+          }
+        }
+      },
+      "logic_notes": {
+        "hybrid_units": "Units may have multiple types. All effects apply simultaneously.",
+        "conflict_resolution": "The Unit Card always takes precedence over the General Archetype rules."
+      }
+    },
+    "ability_engine": {
+      "philosophy": {
+        "text": "Abilities are levers, not safety nets. They bend the core rules but do not replace them. If an ability contradicts a core rule, the ability takes precedence.",
+        "design_intent": "Abilities make units interesting, not safe. Pulling a lever should change the battlefield for better or worse."
+      },
+      "ability_types": {
+        "passive": {
+          "definition": "Always in effect. Requires no Actions or rolls unless stated.",
+          "logic": "Always 'on' unless suppressed by another rule."
+        },
+        "main_action": {
+          "definition": "Uses one of the model's two Actions.",
+          "logic": "Cannot be used if the model is unable to take actions. Counts toward Action Economy."
+        },
+        "reactive": {
+          "definition": "Triggered outside the model's activation. Rare and powerful.",
+          "logic": "Triggers only on specific conditions. Does not consume actions unless stated. Can trigger even if unit has already activated."
+        }
+      },
+      "timing_windows": {
+        "refresh_logic": {
+          "once_per_activation": "Refreshes when model is chosen to act.",
+          "once_per_round": "Refreshes at start of new round.",
+          "once_per_game": "Single use. Mark as spent."
+        },
+        "default": "If timing is not listed, usage is during the unit's activation."
+      },
+      "notation_and_math": {
+        "dice_modifiers": {
+          "logic": "Modify the dice pool BEFORE rolling. Bonuses/penalties stack.",
+          "success_range": "Success is always 4, 5, or 6. Abilities do not change this."
+        },
+        "stacking_rules": {
+          "self_stacking": "Abilities do not stack with themselves.",
+          "cross_stacking": "Effects from different abilities may stack.",
+          "conflict_resolution": "Unit card > Rules Vault > Simplest Interpretation."
+        }
+      },
+      "critical_and_excess": {
+        "critical_success": {
+          "definition": "A natural roll of 6.",
+          "logic": "Only triggers extra effects if the model has a specific Critical-triggered ability.",
+          "limits": {
+            "standard": "One Critical-damage ability per attack.",
+            "hero_exception": "Heroes may benefit from two (must be paid for/listed)."
+          }
+        },
+        "excess_successes": "Ignored unless the ability allows conversion. Conversion is optional and may carry risk."
+      },
+      "spatial_definitions": {
+        "within_x": "Measured base-to-base from the edge of the model's base.",
+        "adjacent": "Bases are physically touching.",
+        "momentum_rule": "If terrain makes contact unclear, use intent and move on."
+      }
+    },
+    "ability_dictionary": {
+      "A_deployment_timing": {
+        "ambush": "Passive. May deploy Hidden. Reveal at any time to gain First Strike in melee against the first target.",
+        "first_strike": "Passive. +1 die to the first melee attack made this round (or when revealing from Hidden).",
+        "spawn": "Passive/Scenario. Enters play from a defined point/trigger. Activates normally upon entry.",
+        "delayed_entry": "Passive. May be held in reserve; enters from a defined edge at the start of any round.",
+        "redeploy": "Passive. Reposition up to 6\" after deployment but before the first activation.",
+        "scout": "Passive. Make a free Move after all forces deploy but before the first activation.",
+        "out_of_nowhere": "Instead of activating normally, this unit may spawn from sand, ruins, or rubble terrain. Place the model touching the terrain feature. This counts as the unit's activation for the turn."
+      },
+      "B_movement_positioning": {
+        "climber": "Passive. Ignores vertical movement penalties. Cannot move through Impassable terrain.",
+        "berserk": "Passive. Must move toward nearest visible enemy. Gain +1 die on melee; cannot Interact.",
+        "disengage": "Main Action. Leave base contact without penalty or triggering enemy reactions.",
+        "fast": "Passive. +2\" to base movement.",
+        "grapple": "Main Action. Melee attack: On hit, pull target 3\" toward self; target cannot move next activation.",
+        "runner": "Passive. If no attacks are made during activation, make an additional Move at the end.",
+        "mobile_cover": "Passive. Adjacent friendly models gain +1 Defense vs ranged (does not stack with terrain).",
+        "mobile_dynamo": "Main Action. Projects 12\" Electromagik field. Hexan and Jäger within field may use abilities. Moving reduces this turn's field to 6\". Counts as Dynamo Generator for Electromagik dependency.",
+        "mobile_cell_block": "Passive. Transports Captured models. If destroyed, prisoners are released.",
+        "stampede": "Passive. May pass through smaller models. Those models must test Morale or be pushed 1\" aside.",
+        "immobile": "Passive. Cannot move. May still attack/defend. Only repositioned by scenario/special rules.",
+        "stealth": "Passive. Enemies shooting from 9\"+ suffer -1 to hit.",
+        "load_and_carry": "Passive. May pick up and carry objectives, Thyr crystals, or Spare Parts without penalty. Move speed unaffected.",
+        "cut_and_run": "Reactive. When targeted by an attack (before dice are rolled), this model may immediately move up to 3\". If it does, it drops any carried item at its original location.",
+        "extraction_priority": "Passive. If this unit exits the table while carrying an objective or Thyr crystal, gain +2 VP (in addition to objective value).",
+        "slip_away": "Passive. May leave melee combat without penalty or free strikes.",
+        "darting_attack": "Passive. After shooting, may move up to 3\" even if already moved this activation.",
+        "leaper": "Passive. Instead of normal movement, this unit may leap 2d6\" in any direction, ignoring terrain and units. It can leap over or onto 1-story buildings or similar obstacles. On a roll of double 1s (snake eyes), the unit pulls a muscle: it loses the Leaper ability for the rest of the game and immediately suffers 1 Quality damage.",
+        "random_movement": "Passive. At the start of this unit's activation, roll 1d8 or use scatter die to determine direction (1=NE, 2=E, 3=SE, 4=S, 5=SW, 6=W, 7=NW, 8=N), then move up to its Move stat in that direction. Stop if it contacts terrain/units or would move off the board. If forced off board, remove from play (counts as exited/fled).",
+        "boardwalk_blitzer": "Passive. Moves at double speed on boardwalks. After moving on a boardwalk, may immediately take one additional action (attack or interact).",
+        "flying": "Passive. This unit ignores terrain while moving and may move over units and obstacles. Cannot be targeted by melee attacks unless the attacker also has Flying or a rule that allows it. Unit's Move is considered Flying.",
+        "barely_controlled": "Passive. At the start of its activation, this unit must move at least 6\". If it cannot, or chooses not to, it must pass a Quality test or immediately Crash Land.",
+        "crash_landing": "Passive. When this unit fails Barely Controlled or is destroyed while Flying, place the model on the table. All units within 3\" suffer 1 automatic hit and are Pinned."
+      },
+      "C_offense_damage": {
+        "aim": "Main Action. Cannot Move this activation; gain +1 die on next ranged attack.",
+        "backstab": "Passive. +1 damage if target is already engaged with another friendly model.",
+        "brutal_blow": "Passive. +1 damage on successful melee hit.",
+        "blood_in_the_air": "Passive. Gain +1 die on next attack when any model within 6\" is reduced to 0 Quality.",
+        "corrode": "Passive. Successful melee vs Mechan = 1 auto-damage. Vs Metal = Remove 1 property OR -1 Defense.",
+        "deadeye": "Once Per Game. Re-roll all failed dice on a single ranged attack.",
+        "furious": "Passive. If Quality is lost, gain +1 die on next melee attack.",
+        "impact": "Passive. Moving 3\"+ into contact deals 1 automatic hit before rolling attack dice.",
+        "brutal_impact": "Passive. Moving 3\"+ into contact deals 2 automatic hits before rolling attack dice.",
+        "savage_impact": "Passive. Moving 3\"+ into contact deals 3 automatic hits before rolling attack dice.",
+        "press_the_advantage": "Passive. On hit, convert 1 excess Success into +1 damage or +2\" Move. Penalty: -1 die on next Action. Q3+ only.",
+        "pierce": "Passive. Ignores 1 point of Defense.",
+        "brutal_pierce": "Passive. Ignores 2 points of Defense.",
+        "savage_pierce": "Passive. Ignores 3 points of Defense.",
+        "panic_fire": "Reactive. Once per round. When targeted by melee, make ranged attack at -1 die, then test Morale.",
+        "pinning_shot": "Passive. On hit, target cannot move during its next activation.",
+        "blast": "Passive. 3\" radius area of effect. Roll separately for each model; Cover applies normally.",
+        "massive_blast": "Passive. 6\" radius area of effect. Roll separately for each model; Cover applies normally.",
+        "relentless": "Reactive. If enemy is destroyed in melee, immediately move 2\".",
+        "sonic": "Passive. Ignores Cover. Affects physical-immune targets. May cause Deafening/Disorientation.",
+        "vengeful": "Passive. Each time Quality is lost, +1 die on next attack. Stacks until the attack is resolved.",
+        "hex": "Passive. On successful hit, target suffers -1 Quality until end of its next activation.",
+        "venom": "Passive. After this unit deals damage in melee, the target suffers 1 additional damage at the end of its next activation unless it is Bloodless or Automat.",
+        "flechette_drop": "Main Action. Once per activation while Flying, place a 6\" diameter circle anywhere this unit moved over this activation. All units inside suffer a ranged attack roll. Cover does not apply.",
+        "hell_spray": "Main Action. Three times per game, this unit may unleash a cone attack instead of a normal attack. Place a 12\" long, 12\" wide cone template from this unit's facing. All units whose bases are partially or fully within the cone are targeted. Roll this unit's Quality as a ranged attack against each target separately.",
+        "demolition": "Passive. Deals double damage to structures and terrain features.",
+        "down_the_hatch": "Passive. Titan. This unit can swallow another unit whole if it exceeds the target's Defense by 4 or more during a melee attack. The swallowed unit must be reasonably sized (no vehicles or other Titans). The swallowed unit is immediately killed and removed from play.",
+        "mark_target": "Main Action. Once per game: Choose one enemy within LoS. That target takes +1 damage from all sources until end of round.",
+        "pass_judgment": "Main Action. Once per game, target one enemy unit within 12\". Until end of game, that unit suffers -1 to all Defense rolls and Liberty Corps units may reroll 1s when attacking it.",
+        "quick_draw": "Passive. May attack first in melee if charged.",
+        "stagger": "Passive. On a successful hit, the target loses 1\" of movement and rolls -1 die on its next action. If the target is reduced to 0 Move, it may not Disengage this activation.",
+        "suppression": "Passive. On a hit, the target rolls -1 die on its next action (attack, ability, or Morale test).",
+        "under_fire": "Passive. On successful ranged hit: target is Pinned AND suffers -1 Quality until end of its next activation.",
+        "universal_terror": "Passive. When this unit fires its weapon: ALL units (friendly AND enemy) within 12\" must test Morale.",
+        "choking_dust": "Passive. If this unit's attack hits but deals no damage, target becomes Suppressed until end of its next activation. On natural 6 to hit, Suppressed extends by one additional activation."
+      },
+      "D_defense_survival": {
+        "armored": "Passive. Reduce damage taken by 1 (minimum 0). Does not affect terrain/environmental damage.",
+        "dodge": "Passive. Once per activation, cancel 1 Success from an incoming attack. Disabled while Shaken.",
+        "shield_wall": "Passive. +1 Defense while adjacent to another Shield Wall model. No bonus vs Blast.",
+        "hardened": "Passive. Ignore the first Shaken result each round.",
+        "steadfast": "Passive. Failed Morale results in normal failure, never Panic.",
+        "take_cover": "Reactive. Once per round. When targeted by ranged, move 2\" toward cover and gain it for this attack.",
+        "suppress": "Main Action. Ranged attack: On hit, target suffers -1 die on its next Action.",
+        "grit": "Once Per Game. When reduced to 0 Quality, reduce to 1 instead.",
+        "unyielding": "Passive. Cannot be pushed/pulled/repositioned by enemy abilities.",
+        "guard": "Passive. May intercept a melee attack targeting an adjacent friendly model.",
+        "lockdown": "Passive. Engaged enemies cannot Disengage or use free moves. Ends if model is Shaken/Moved.",
+        "shield_aura": "Passive. Friendly units within 6\" gain +1 Defense.",
+        "witch_stitching": "Passive. First time per activation this unit would lose Quality: 5+ ignore 1 damage.",
+        "tough": "Passive. When taking damage, roll 1 die per point of damage. Each 5+ ignores 1 damage.",
+        "tougher": "Passive. When taking damage, roll 2 dice per point of damage. Each 5+ ignores 1 damage.",
+        "toughest": "Passive. When taking damage, roll 3 dice per point of damage. Each 5+ ignores 1 damage.",
+        "regeneration": "Passive. At start of activation, heal 1 wound on a 5+.",
+        "not_yet": "Passive. The first time per round this unit would be reduced to 0 Quality, it remains at 1 Quality instead. At the end of its next activation, this unit is destroyed.",
+        "heroic_grit": "Once Per Game. Ignore first wound suffered.",
+        "hold_it_together": "Passive. When this model would test Morale, it may skip the test. If it does, it loses 1 Quality after the current activation. May not reduce Quality below 3.",
+        "bite_the_bullet": "Once Per Game. After this unit resolves an Attack or Interact action, it may immediately take one additional action. After the second action resolves, this unit loses 1 Quality.",
+        "brace": "Main Action. May sacrifice movement to gain +1 Defense until next activation.",
+        "bloodless": "Passive. Immune to Venom and Blood in the Air effects. Cannot be targeted by abilities that specifically affect living creatures.",
+        "desperate_push": "Main Action. This model may attempt an action even if it would normally be forbidden (Pinned, Suppressed, or at 0 Move). Roll as normal. If the roll produces no successes, this model loses 1 additional Quality.",
+        "blinkshift": "Main Action. Twice per game, this unit may teleport instead of moving normally. Roll 3d6\" and place the unit anywhere within that distance, ignoring terrain and units. The unit must have line of sight to the destination. On a roll of three 1s, the unit suffers 1 Strain and loses the Blinkshift ability for the rest of the game.",
+        "pressure_sealed": "Passive. Immune to pressure, water, and depth-related environmental hazards.",
+        "built_in_respirator": "Passive. Immune to gas, smoke, poison storms, and airborne hazard effects.",
+        "built_in_goggles": "Passive. Immune to Blinding effects and visual-based environmental hazards.",
+        "gas_mask": "Passive. This unit ignores Coffin Cough, Choking Dust effects and other environmental gas/smoke/toxic effects to lungs and eyes as determined by scenario rules.",
+        "witch_stitched_clothing": "Passive. +1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."
+      },
+      "E_morale_fear": {
+        "fear": "Passive. Enemies within 6\" suffer -1 die on Morale tests.",
+        "terror": "Passive. When enemy first engages, they must test Morale or become Shaken. Once per round per enemy.",
+        "dread": "Passive. Enemies within 6\" suffer -1 die on Morale and cannot ignore Shaken.",
+        "intimidate": "Main Action. Force Morale test on enemy within 6\" and LoS. No effect on Titans.",
+        "rally": "Main Action. Remove Shaken from friendly within 6\"; they gain +1 die on next Morale test.",
+        "terrifying_presence": "Passive. When reducing enemy to 0 Quality, all enemies within 6\" must test Morale.",
+        "unnerving": "Passive. Engaged enemies suffer -1 die on all attacks.",
+        "panic_wave": "Reactive. When enemy within 6\" Panics or Dies, choose another enemy within 6\" to test Morale.",
+        "fearless": "Passive. Ignores Fear, Terror, and Dread. Still tests Morale for Damage and Terrain.",
+        "cowardice": "Passive. Enemies failing Morale within 6\" suffer -1 die on their next Action.",
+        "inspire": "Passive. Friendly units within 6\" gain +1 to Morale checks.",
+        "unshakable": "Passive. Auto-passes all Morale checks. Ignores Dread effects.",
+        "skittish": "Passive. This model must test Morale the first time each round an enemy model enters within 6\".",
+        "audio_suppression": "Passive. Enemies within 6\" suffer -1 to Morale checks.",
+        "authority": "Passive. Friendly units within 6\" ignore Suppression effects."
+      },
+      "F_terrain_environment": {
+        "create_hazard": "Main Action. Targeted area within 6\" becomes Hazardous.",
+        "ignite": "Main Action. Flammable terrain within 6\" becomes Burning.",
+        "smoke_screen": "Main Action. Area within 3\" becomes Choking. Blocks clarity, not LoS. Lasts 1 round.",
+        "collapse": "Main Action. Target Unstable terrain within 6\" immediately collapses.",
+        "taint_ground": "Passive. When destroying enemy or ritualizing, terrain within 3\" becomes Tainted.",
+        "haunted_wake": "Passive. Terrain passed through becomes Haunted until end of round.",
+        "purify": "Main Action. Remove 1 trait from terrain within 6\"; Haunted becomes Tainted.",
+        "sacrilege": "Passive. While in Sacred terrain, enemies within 6\" suffer -1 die on Morale.",
+        "terrain_adaptation": "Passive. Choose 1 terrain trait on deployment; ignore its penalties (not damage or escalation).",
+        "unstable_footing": "Passive. Enemies ending movement within 3\" must test Quality or become Shaken.",
+        "rolling_fog": "Main Action. Once per game: Place a Fog marker (3\" radius) within 12\". Fog blocks line of sight and prevents special actions (Hex, Charm, Inspire) from being used through it. Lasts until end of next round.",
+        "silence": "Main Action. Range 12\". Duration 2 rounds. Create a 12\" radius zone of absolute silence centered on a point within range. While in Silent Zone: No sound can be made or heard, Radios do not function, Audio-based abilities (Inspire, Signal Orders, Rally, Command) cannot be used, Morale tests from Fear at -1 die, Monsters with hearing-based detection cannot sense units.",
+        "silent": "Passive. This unit makes no sound and cannot be detected by audio-based abilities or sound-based monster detection."
+      },
+      "G_thyr_ritual": {
+        "thyrburn": "Main Action. Spend 1 Crystal to gain +2 dice, +3\" Move, OR +2 Quality for the round.",
+        "fallout": "Resolution. Roll 2d6 at end of round after Thyrburn. Affects device/models/terrain.",
+        "ritual": "Main Action. Mystic only. Must be in Sacred/Tainted/Haunted ground. Resolves listed effect.",
+        "backlash": "Passive. 0 Successes on Thyr ability = 1 damage or Taint surrounding terrain within 3\".",
+        "haunted_engine": "Passive. Using Thyrburn or Ritual places a Haunt within 3\". Haunt acts at end of round.",
+        "crystal_feed": "Passive. May carry +1 Thyr Crystal. Dropped on death.",
+        "sacrificial_overload": "Once Per Game. Ignore Fallout; Device is Destroyed and area within 3\" becomes Hazardous.",
+        "purge_thyr": "Main Action. Remove all crystals and 1 Thyr-based trait within 6\".",
+        "unleashed_power": "Main Action. Ranged magical attack using Wild Magic. Roll on Wild Magic Table (2d6) to determine effect. May cause Strain.",
+        "strain": "Passive. Using Unleashed Power causes 1 Strain. At 3 Strain, this unit may not use Unleashed Power until Strain is cleared (end of round or special ability).",
+        "thyr_boiler": "Main Action. Once per game: Spend 1 Thyr crystal to gain +4\" Move OR +2 Quality OR ignore terrain penalties this activation."
+      },
+      "H_interaction_support": {
+        "befriend": "Main Action. A Ranger may attempt to Befriend a neutral or uncontrolled creature they are trained to interact with (based on Monster Type). Target must be in base contact. Make an opposed Quality check: both Ranger and creature roll a number of dice equal to their current Quality; each 4+ is a success. If the Ranger scores more successes, the creature becomes Befriended. If the creature scores more successes, the attempt fails with no effect. On a tie, the creature becomes Wary. Befriended creatures will not attack Rangers and may be escorted within 6\". Befriended creatures never fight for Rangers unless explicitly stated.",
+        "befriend_automat": "Passive. May attempt Befriend actions against Automat constructs. Success enables control or neutrality per scenario rules.",
+        "befriend_beast": "Passive. May attempt Befriend actions against living monsters of flesh, tooth, and claw. Successful Befriend prevents hostility per scenario rules.",
+        "befriend_bloodless": "Passive. May attempt Befriend actions against Bloodless (undead). Successful Befriend alters hostility per scenario rules.",
+        "befriend_spirits": "Passive. May attempt Befriend actions against incorporeal undead such as Ghosts, Haunts, Wraiths, and similar Spirit-class Bloodless. Does not apply to physical undead bodies.",
+        "befriend_kaiju": "Passive. May attempt Befriend actions against Titan-class Kaiju monsters. Success calms, redirects, or suppresses rampage behavior per scenario rules.",
+        "repair": "Main Action. If this unit has Spare Parts available, it may restore 1 damage to an adjacent friendly vehicle, device, or mechanical unit. This consumes 1 use of Spare Parts. Can also change state from Broken to Functional if applicable.",
+        "blood_transfusion": "Main Action. An adjacent friendly unit gains +1 Quality (to a maximum of its starting Quality). This unit immediately loses 1 Quality.",
+        "vitagood_brew": "Main Action. Once per game. This unit or an adjacent ally immediately restores 1 lost Quality and removes Suppression or Stagger or Venom.",
+        "cargo_hold": "Passive. May transport up to 4 Rangers OR 1 medium Monster OR 2 objectives. Load/unload requires base contact and one activation.",
+        "purification_ritual": "Main Action. Once per game. Remove all negative terrain traits (Hazardous, Tainted, Haunted, Burning, Choking) from 12\" radius.",
+        "forbidden_knowledge": "Passive. Friendly units within 12\" gain +1 die when attempting Befriend actions against chosen monster type (declared at start of game).",
+        "formulae_master": "Passive. Friendly Conjure Guard units within 12\" extend range/area of their abilities by +6\" or +3\" radius.",
+        "kaiju_calming_ritual": "Main Action. Two-turn ritual. Round 1: Position within 6\" of rampaging Kaiju and begin ritual. Round 2: Complete ritual with Quality test. Success: Kaiju is calmed and may be Befriended or redirected. Grant +3 VP for successful calming.",
+        "yokai_knowledge": "Passive. Friendly units within 6\" gain +1 die when attacking or defending against Titan-type units.",
+        "fortuna_charms": "Passive. At start of game, create 3 Fortuna Charm tokens. Any friendly unit within 12\" may spend 1 token to reroll any single die roll. Tokens are consumed when used.",
+        "third_eye_vision": "Passive. This unit can see Stealth units and reveal Hidden units within 12\". Ignores Fog and Smoke for targeting purposes.",
+        "mind_control": "Main Action. Ranged attack at 12\". If attack succeeds with 2+ successes over Defense, control target's next activation (choose their actions).",
+        "haunt_candy": "Passive. At start of game, create 3 Haunt Candy tokens. May spend tokens for: (1) +1 die to Befriend Bloodless, (2) Restore 1 Quality to Bloodless ally, or (3) Reroll failed Befriend attempt.",
+        "relic_bearer": "Passive. This unit carries one sacred Conjure Guard relic. Choose relic at army creation. Each relic has a once-per-game powerful effect.",
+        "calamity_parade": "Main Action. Once per game. All friendly units within 6\" gain: +3\" Move, +1 Quality, and Fearless until end of round. Inspiring battlefield moment.",
+        "radiomancer_jam": "Main Action. Range 24\". Target enemy tech-based hero (Jager, Hexan, Iron Diplomat, etc.) cannot use special abilities next activation. Radio disruption effect.",
+        "assistant": "Passive. May assist adjacent Mystic or Scientist with special activations.",
+        "field_patch_job": "Main Action. Adjacent DEVICE or VEHICLE regains 2 Quality (once per activation). Requires Spare Parts, which are consumed.",
+        "kick_the_machine": "Main Action. Adjacent friendly unit: Remove one debuff (Hex, Stagger, Suppression, Pinned).",
+        "signal_orders": "Main Action. Once per activation: One friendly unit within 12\" may immediately move 3\".",
+        "sonic_nullifier": "Passive. Enemy units within 6\" cannot use Hex, Charm, or other Mystic special abilities.",
+        "steal": "Main Action. May use Interact action in base contact with enemy unit to attempt theft. On success, choose one: remove one non-Titan upgrade from target (upgrade is destroyed), steal 1 carried resource/token, or apply -1 Defense to target until end of round.",
+        "brain_bloom": "Main Action. Ranged mind attack that ignores cover bonuses. Apply Morale pressure first where applicable.",
+        "binding_rig": "Passive. On successful Grapple vs Brute or Monster type: target becomes Restrained (cannot move or attack until adjacent ally breaks restraints or this unit dies).",
+        "sonderbar_injection": "Main Action. Once per game, with adjacent Chemist Lackey, inject a Plugugly. Roll 1d6: 3-6 grants +2 Quality +1 Defense permanently, 1-2 transforms into enemy Sonderbar Ghoul.",
+        "mismanaged_asset": "Passive. If this unit is destroyed before Round 4, your faction loses 5 Victory Points.",
+        "anchor": "Passive. Cannot be moved by enemy abilities or effects. Ignores knockback and displacement."
+      }
+    },
+    "weapon_properties": {
+      "pierce": {
+        "name": "Pierce",
+        "effect": "Ignore 1 point of Defense."
+      },
+      "brutal_pierce": {
+        "name": "Brutal Pierce",
+        "effect": "Ignore 2 points of Defense."
+      },
+      "savage_pierce": {
+        "name": "Savage Pierce",
+        "effect": "Ignore 3 points of Defense."
+      },
+      "blast": {
+        "name": "Blast",
+        "effect": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+      },
+      "massive_blast": {
+        "name": "Massive Blast",
+        "effect": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+      },
+      "blinding": {
+        "name": "Blinding",
+        "effect": "On hit: target is Blinded until end of its next activation. While Blinded: cannot make ranged attacks, -2 dice on melee attacks, cannot use abilities requiring line of sight, move at half speed. An adjacent ally may use an action to clean ink/flash from a Blinded unit (removes Blinded status). Rain or water terrain immediately removes Blinded."
+      },
+      "grapple": {
+        "name": "Grapple",
+        "effect": "On hit, pull target 3\" toward this unit. Target may not move next activation."
+      },
+      "ignores_cover": {
+        "name": "Ignores Cover",
+        "effect": "Attacks from this weapon ignore cover bonuses to Defense."
+      },
+      "pinning_shot": {
+        "name": "Pinning Shot",
+        "effect": "Target hit may not move next activation."
+      },
+      "quake": {
+        "name": "Quake",
+        "effect": "All models within 6\" must pass Quality test or become Pinned."
+      },
+      "rapid_fire": {
+        "name": "Rapid Fire",
+        "effect": "May split attack dice between multiple targets within range. Used by Jager marksmen."
+      },
+      "sonic": {
+        "name": "Sonic",
+        "effect": "Ignores Heavy Armor bonus. Ignores cover bonuses to Defense. If at least 1 damage dealt, target tests Morale."
+      },
+      "melee": {
+        "name": "Melee",
+        "effect": "Can be used in close combat. Does not require Line of Sight."
+      },
+      "prybar": {
+        "name": "Prybar",
+        "effect": "Gain +1 die when attempting Interact actions on locked or sealed objectives."
+      }
+    },
+    "wild_magic_table": {
+      "name": "Wild Magic Table",
+      "description": "Roll 2d6 when using Unleashed Power. Used by Mystics and magic-wielding units.",
+      "results": [
+        {
+          "roll": 2,
+          "name": "Catastrophic Backfire",
+          "effect": "Caster takes 2 damage and is Stunned. All allies within 3\" take 1 damage."
+        },
+        {
+          "roll": 3,
+          "name": "Wild Surge",
+          "effect": "Target takes +1 damage. Roll again on this table (ignore further 3s)."
+        },
+        {
+          "roll": 4,
+          "name": "Unstable Discharge",
+          "effect": "Target takes 1 damage. Caster takes 1 Strain."
+        },
+        {
+          "roll": 5,
+          "name": "Flickering Power",
+          "effect": "Target takes 1 damage. Effect is delayed until next activation."
+        },
+        {
+          "roll": 6,
+          "name": "Controlled Release",
+          "effect": "Target takes 2 damage normally."
+        },
+        {
+          "roll": 7,
+          "name": "Perfect Channeling",
+          "effect": "Target takes 2 damage. No Strain on caster."
+        },
+        {
+          "roll": 8,
+          "name": "Empowered Strike",
+          "effect": "Target takes 2 damage. Ignore armor/Defense bonuses."
+        },
+        {
+          "roll": 9,
+          "name": "Chain Lightning",
+          "effect": "Target takes 2 damage. One adjacent enemy takes 1 damage."
+        },
+        {
+          "roll": 10,
+          "name": "Focused Blast",
+          "effect": "Target takes 3 damage."
+        },
+        {
+          "roll": 11,
+          "name": "Crystal Resonance",
+          "effect": "Target takes 3 damage. Caster may immediately Channel again at -1 die."
+        },
+        {
+          "roll": 12,
+          "name": "Thyr Overcharge",
+          "effect": "Target takes 4 damage. All allies within 6\" gain +1 die on next action."
+        }
+      ]
+    },
+    "terrain_vault": {
+      "philosophy": {
+        "text": "Terrain is not decoration. It blocks, harms, corrupts, burns, collapses, and remembers. Ignoring it is the fastest way to lose models.",
+        "intent": "Terrain should force movement, break formations, and evolve. If the battlefield looks the same at the end of the game, something went wrong."
+      },
+      "categories": {
+        "open": "No movement penalty or tests required.",
+        "difficult": {
+          "effect": "Movement is halved (round down). Penalties do not stack.",
+          "examples": ["Rubble", "Steep slopes", "Deep mud", "Wreckage"]
+        },
+        "impassable": {
+          "effect": "Cannot enter, move through, or end movement inside. Blocks LoS if solid.",
+          "examples": ["Solid walls", "Cliff faces", "Chasms", "Sealed structures"]
+        }
+      },
+      "traits": {
+        "hazardous": {
+          "trigger": "Move into or through. Once per activation.",
+          "test": "Quality Test. Fail = -1 Quality. Crit Fail = -1 Quality and Shaken."
+        },
+        "unstable": {
+          "trigger": "End movement within.",
+          "test": "Quality Test. Fail = 1 damage and shift/fall. Crit Fail = Terrain Collapses.",
+          "collapse": "All affected models suffer 1–2 damage. Terrain may become Impassable."
+        },
+        "choking": {
+          "trigger": "Activation within.",
+          "effect": "-1 die on all actions. Ignored by gas masks/sealed systems. Does not block LoS."
+        },
+        "burning": {
+          "trigger": "Start or end activation within.",
+          "effect": "1 automatic damage. Provides no Cover. May escalate to Hazardous or Unstable."
+        },
+        "tainted": {
+          "trigger": "Grunt model enters.",
+          "effect": "Test Morale. May escalate to Haunted if rituals or overburn occur."
+        },
+        "haunted": {
+          "trigger": "Enter or Activate within.",
+          "effect": "Roll 1d6. On 1–2, a Haunt appears adjacent. Haunts act at end of round."
+        },
+        "sacred": {
+          "effect": "Bonus (+1 die) to specific monsters. Corruption triggers escalated consequences."
+        }
+      },
+      "escalation_logic": {
+        "taint_to_haunt": "Occurs if ground is Overburned, used for Rituals repeatedly, or persists for multiple rounds.",
+        "logic": "Violence ignored becomes memory. Memory becomes agency."
+      },
+      "dispute_resolution": "Choose the interpretation that creates RISK. Resolve quickly and move on."
+    },
+    "objective_vault": {
+      "philosophy": {
+        "text": "Coffin Canyon is not won by killing alone. Objectives force movement and create conflict. Interactables turn terrain into opportunity — or disaster.",
+        "design_intent": "Objectives should force movement, create risk, and punish passive play. If players can ignore objectives and win, the scenario needs work."
+      },
+      "interact_action": {
+        "cost": "1 Main Action",
+        "requirements": [
+          "Model must be adjacent to the Objective",
+          "Model must not be Shaken",
+          "Some interactions may require a roll or specific Unit Type"
+        ],
+        "common_uses": ["Claiming", "Activating/Disabling", "Thyr transport", "Freeing/Capturing", "Sabotage"]
+      },
+      "control_mechanics": {
+        "definition": "Controlled by the last player to successfully Interact.",
+        "persistence": "Control is maintained until another model Interacts with it.",
+        "contested": "If multiple models are adjacent, no control changes until a successful Interaction occurs."
+      },
+      "transport_rules": {
+        "carrying": "Marked models move with the objective. Dropped at location if carrier is destroyed.",
+        "thyr_extraction": "Thyr is always physical and visible. Can be extracted, transported, or fed into devices."
+      },
+      "devices_and_dynamos": {
+        "definition": "Functional objectives that power systems or enable Overburn.",
+        "risks": "May escalate if damaged or misused. Have their own rules and failure conditions."
+      },
+      "archetype_bonuses": {
+        "specialists": "Interaction bonuses.",
+        "mystics": "Altering or Corrupting objectives.",
+        "leaders": "More effective control.",
+        "brutes": "May destroy objectives instead of claiming.",
+        "cavalry": "Excel at extraction and transport."
+      },
+      "escalation": {
+        "logic": "Objectives become more volatile over time (Overheating, Haunting, Instability).",
+        "game_warden": "Optional role to trigger complications or control neutral hazards."
+      }
+    },
+    "scenario_vault": {
+      "philosophy": {
+        "text": "Survival, extraction, corruption, and collapse matter more than body count. Winning clean is rare.",
+        "design_intent": "Force movement, reward risk, and punish hesitation. If a scenario feels safe, it is unfinished."
+      },
+      "victory_logic": {
+        "standard_conditions": [
+          "Extracting Objectives",
+          "Controlling Terrain",
+          "Thyr Delivery/Destruction",
+          "Survival (Round Count)",
+          "Preventing Escalation"
+        ],
+        "withdrawal_rule": "Players may voluntarily withdraw for narrative or scoring reasons. Knowing when to leave is a skill."
+      },
+      "pacing_and_escalation": {
+        "game_length": "4–6 rounds (Standard).",
+        "escalation_trigger": "If no major changes by Round 3, escalation MUST begin.",
+        "tools": ["Terrain Spreading", "Reinforcements/Spawns", "Morale Pressure", "Objective Instability"]
+      },
+      "game_modes": {
+        "skirmish": "Small forces, tight objectives, fast escalation.",
+        "extraction": "Cavalry/Specialist focus. Objectives must leave the table edge.",
+        "holdout": "Defensive focus. Survival-based victory. Aggressive terrain collapse.",
+        "hunt": "Pursuit focus. Monster advantage. Fear-driven outcomes.",
+        "ritual_corruption": "Mystic/Thyr focus. Sacred and Haunted terrain importance. Inevitable escalation."
+      },
+      "multi_faction_logic": {
+        "structure": "Alternating model activation remains. Temporary, unenforced alliances. The Canyon is indifferent to all parties."
+      }
     }
+  }
 }
-
-bootFactionStudio();
-</script>
