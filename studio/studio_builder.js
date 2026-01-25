@@ -125,10 +125,18 @@ window.CCFB_FACTORY = {
         var unitsHtml = this.state.currentFaction.units.map(function(u, i) {
             var selected = self.state.selectedUnit === i ? 'cc-item-selected' : '';
             return '<div class="cc-roster-item ' + selected + '" onclick="CCFB_FACTORY.selectUnit(' + i + ')">' +
-                '<div class="u-name">' + u.name + '</div>' +
-                '<div class="unit-cost">' + self.calculateUnitCost(u) + '₤</div>' +
+                '<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">' +
+                    '<div>' +
+                        '<div class="u-name">' + u.name + '</div>' +
+                        '<div class="u-type">' + u.type.toUpperCase() + '</div>' +
+                    '</div>' +
+                    '<div class="unit-cost">' + self.calculateUnitCost(u) + '₤</div>' +
+                '</div>' +
                 '</div>';
         }).join('');
+        
+        var unitsListHtml = this.state.currentFaction.units.length > 0 ? unitsHtml : 
+            '<div class="cc-empty-state" style="padding: 20px;">No units yet. Click "+ NEW UNIT" to start.</div>';
         
         target.innerHTML = 
             '<div class="cc-panel">' +
@@ -140,7 +148,7 @@ window.CCFB_FACTORY = {
                             'onfocus="if(this.value===\'New Faction\')this.value=\'\'" ' +
                             'onchange="CCFB_FACTORY.updateFaction(this.value)">' +
                     '</div>' +
-                    '<div class="unit-list">' + unitsHtml + '</div>' +
+                    '<div class="unit-list">' + unitsListHtml + '</div>' +
                     '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
                     '<div class="import-section">' +
                         '<label class="small">IMPORT FROM JSON</label>' +
@@ -295,20 +303,36 @@ window.CCFB_FACTORY = {
                         '</select>' +
                     '</div>' +
                     '<div class="form-group">' +
-                        '<label class="small">COST (leave 0 if no cost)</label>' +
-                        '<input type="number" id="supp-cost" class="cc-input w-100" value="0" min="0">' +
-                    '</div>' +
-                    '<div class="form-group">' +
                         '<label class="small">EFFECT</label>' +
                         '<textarea id="supp-effect" class="cc-input w-100" rows="2" placeholder="Describe what this does..."></textarea>' +
                     '</div>' +
                     '<div class="form-group">' +
                         '<label class="small">STAT MODIFIERS (optional)</label>' +
                         '<div class="stat-modifier-grid">' +
-                            '<label><input type="checkbox" id="mod-quality"> Quality <input type="number" id="mod-quality-val" class="cc-input-tiny" value="1" min="-2" max="2"></label>' +
-                            '<label><input type="checkbox" id="mod-defense"> Defense <input type="number" id="mod-defense-val" class="cc-input-tiny" value="1" min="-2" max="2"></label>' +
-                            '<label><input type="checkbox" id="mod-move"> Move <input type="number" id="mod-move-val" class="cc-input-tiny" value="2" min="-6" max="6"></label>' +
-                            '<label><input type="checkbox" id="mod-range"> Range <input type="number" id="mod-range-val" class="cc-input-tiny" value="6" min="-12" max="12"></label>' +
+                            '<label><input type="checkbox" id="mod-quality"> Quality ' +
+                                '<select id="mod-quality-val" class="cc-select-tiny">' +
+                                    '<option value="2">+2</option><option value="1" selected>+1</option>' +
+                                    '<option value="-1">-1</option><option value="-2">-2</option>' +
+                                '</select>' +
+                            '</label>' +
+                            '<label><input type="checkbox" id="mod-defense"> Defense ' +
+                                '<select id="mod-defense-val" class="cc-select-tiny">' +
+                                    '<option value="2">+2</option><option value="1" selected>+1</option>' +
+                                    '<option value="-1">-1</option><option value="-2">-2</option>' +
+                                '</select>' +
+                            '</label>' +
+                            '<label><input type="checkbox" id="mod-move"> Move ' +
+                                '<select id="mod-move-val" class="cc-select-tiny">' +
+                                    '<option value="6">+6</option><option value="4">+4</option><option value="2" selected>+2</option>' +
+                                    '<option value="-2">-2</option><option value="-4">-4</option><option value="-6">-6</option>' +
+                                '</select>' +
+                            '</label>' +
+                            '<label><input type="checkbox" id="mod-range"> Range ' +
+                                '<select id="mod-range-val" class="cc-select-tiny">' +
+                                    '<option value="12">+12</option><option value="6" selected>+6</option>' +
+                                    '<option value="-6">-6</option><option value="-12">-12</option>' +
+                                '</select>' +
+                            '</label>' +
                         '</div>' +
                     '</div>' +
                     '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.addSupplemental()">+ ADD SUPPLEMENTAL ABILITY</button>' +
@@ -369,11 +393,12 @@ window.CCFB_FACTORY = {
         var abilitiesHtml = u.abilities.length > 0 ?
             '<div class="unit-card-section">' +
                 '<div class="section-label"><i class="fa fa-bolt"></i> ABILITIES</div>' +
-                u.abilities.map(function(a, i) {
-                    return '<div class="ability-item" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' +
-                        '<div class="ability-name">' + a + '</div>' +
-                    '</div>';
-                }).join('') +
+                '<div class="weapon-properties">' +
+                    u.abilities.map(function(a, i) {
+                        var displayName = a.replace(/_/g, ' ').toUpperCase();
+                        return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + displayName + ' ✕</span>';
+                    }).join('') +
+                '</div>' +
             '</div>' : '';
 
         var loreHtml = u.lore ? 
@@ -385,18 +410,37 @@ window.CCFB_FACTORY = {
             '<div class="unit-card-section">' +
                 '<div class="section-label"><i class="fa fa-star"></i> SUPPLEMENTAL ABILITIES</div>' +
                 u.supplemental_abilities.map(function(s) {
+                    var modsDisplay = '';
+                    if (s.stat_modifiers) {
+                        modsDisplay = '<div class="supplemental-card-mods"><i class="fa fa-chart-line"></i> ';
+                        var modParts = [];
+                        if (s.stat_modifiers.quality) {
+                            var newQ = u.quality + s.stat_modifiers.quality;
+                            modParts.push('Q: ' + u.quality + '+ → ' + newQ + '+');
+                        }
+                        if (s.stat_modifiers.defense) {
+                            var newD = u.defense + s.stat_modifiers.defense;
+                            modParts.push('D: ' + u.defense + '+ → ' + newD + '+');
+                        }
+                        if (s.stat_modifiers.move) {
+                            var newM = u.move + s.stat_modifiers.move;
+                            modParts.push('M: ' + u.move + '" → ' + newM + '"');
+                        }
+                        if (s.stat_modifiers.range) {
+                            var newR = u.range + s.stat_modifiers.range;
+                            modParts.push('R: ' + (u.range === 0 ? 'M' : u.range + '"') + ' → ' + (newR === 0 ? 'M' : newR + '"'));
+                        }
+                        modsDisplay += modParts.join(' | ') + '</div>';
+                    }
+                    
                     return '<div class="supplemental-card">' +
                         '<div class="supplemental-card-header">' +
                             '<strong>' + s.name + '</strong>' +
-                            (s.cost > 0 ? ' <span class="supp-cost">(' + s.cost + '₤)</span>' : '') +
+                            (s.cost > 0 ? ' <span class="supp-cost">(+' + s.cost + '₤)</span>' : '') +
                             ' <span class="supp-type-badge">' + s.type + '</span>' +
                         '</div>' +
                         '<div class="supplemental-card-effect">' + s.effect + '</div>' +
-                        (s.stat_modifiers ? '<div class="supplemental-card-mods"><i class="fa fa-chart-line"></i> ' + 
-                            Object.keys(s.stat_modifiers).map(function(key) {
-                                return key + ' ' + (s.stat_modifiers[key] > 0 ? '+' : '') + s.stat_modifiers[key];
-                            }).join(', ') + 
-                        '</div>' : '') +
+                        modsDisplay +
                     '</div>';
                 }).join('') +
             '</div>' : '';
@@ -587,7 +631,6 @@ window.CCFB_FACTORY = {
         
         var name = document.getElementById('supp-name').value.trim();
         var type = document.getElementById('supp-type').value;
-        var cost = parseInt(document.getElementById('supp-cost').value) || 0;
         var effect = document.getElementById('supp-effect').value.trim();
         
         if (!name || !effect) {
@@ -595,29 +638,41 @@ window.CCFB_FACTORY = {
             return;
         }
         
+        // Calculate stat modifiers and cost
+        var statMods = {};
+        var calculatedCost = 0;
+        
+        if (document.getElementById('mod-quality').checked) {
+            var qVal = parseInt(document.getElementById('mod-quality-val').value) || 0;
+            statMods.quality = qVal;
+            calculatedCost += (qVal * -15); // Lower quality = higher cost, so negative multiplier
+        }
+        if (document.getElementById('mod-defense').checked) {
+            var dVal = parseInt(document.getElementById('mod-defense-val').value) || 0;
+            statMods.defense = dVal;
+            calculatedCost += (dVal * 10);
+        }
+        if (document.getElementById('mod-move').checked) {
+            var mVal = parseInt(document.getElementById('mod-move-val').value) || 0;
+            statMods.move = mVal;
+            calculatedCost += (mVal * 2.5);
+        }
+        if (document.getElementById('mod-range').checked) {
+            var rVal = parseInt(document.getElementById('mod-range-val').value) || 0;
+            statMods.range = rVal;
+            calculatedCost += (rVal * 1.67);
+        }
+        
+        calculatedCost = Math.max(0, Math.round(calculatedCost / 5) * 5); // Round to nearest 5
+        
         var supplemental = {
             name: name,
             type: type,
             effect: effect
         };
         
-        if (cost > 0) {
-            supplemental.cost = cost;
-        }
-        
-        // Check for stat modifiers
-        var statMods = {};
-        if (document.getElementById('mod-quality').checked) {
-            statMods.quality = parseInt(document.getElementById('mod-quality-val').value) || 1;
-        }
-        if (document.getElementById('mod-defense').checked) {
-            statMods.defense = parseInt(document.getElementById('mod-defense-val').value) || 1;
-        }
-        if (document.getElementById('mod-move').checked) {
-            statMods.move = parseInt(document.getElementById('mod-move-val').value) || 2;
-        }
-        if (document.getElementById('mod-range').checked) {
-            statMods.range = parseInt(document.getElementById('mod-range-val').value) || 6;
+        if (calculatedCost > 0) {
+            supplemental.cost = calculatedCost;
         }
         
         if (Object.keys(statMods).length > 0) {
@@ -629,7 +684,6 @@ window.CCFB_FACTORY = {
         // Clear form
         document.getElementById('supp-name').value = '';
         document.getElementById('supp-effect').value = '';
-        document.getElementById('supp-cost').value = '0';
         document.getElementById('mod-quality').checked = false;
         document.getElementById('mod-defense').checked = false;
         document.getElementById('mod-move').checked = false;
