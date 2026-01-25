@@ -1,98 +1,103 @@
 {
-  "_id": "R-CORE",
-  "title": "Core Mechanics",
-  "philosophy": {
-    "_id": "R-CORE-00",
-    "long": "Everything in Coffin Canyon flows from a single value: Quality. It represents training, toughness, nerve, and luck. When Quality drops, everything becomes harder."
-  },
+  "rules_master": {
+    "core_mechanics": {
+      "_id": "R-CORE",
+      "title": "Core Mechanics",
 
-  "quality_definition": {
-    "_id": "R-CORE-01",
-    "short": "Quality defines how many dice you roll for most actions.",
-    "long": "Quality represents training, toughness, nerve, and luck. It is used for attacks, morale, special abilities, and environmental tests.",
-    "usage": ["Attacks", "Morale", "Special abilities", "Environmental tests"],
-    "guidelines": [
-      { "value": 1, "description": "Basic trained human / small monster / civilian" },
-      { "value": 2, "description": "Veteran military unit / human sized monster" },
-      { "value": 3, "description": "Elite unit / large monster / hard to kill beast" },
-      { "value": 4, "description": "Leader unit / low hero / big or powerful monster" },
-      { "value": 5, "description": "High hero / very large or mystically powerful monster" },
-      { "value": 6, "description": "Epic supernatural kaiju, titan, or super heavy mechanical unit" }
-    ]
-  },
-
-  "the_roll": {
-    "_id": "R-CORE-02",
-    "short": "Roll a number of d6 equal to current Quality. 4+ = success.",
-    "long": "Roll d6s equal to current Quality. Each 4, 5, or 6 is 1 Success. One or more successes usually mean the action succeeds. Some rules scale with total successes.",
-    "pool": "Roll d6s equal to current Quality.",
-    "success_threshold": 4,
-    "logic": "Each 4, 5, or 6 is 1 Success. 1+ successes usually mean the action succeeds. Some rules scale with total successes."
-  },
-
-  "defense_and_damage": {
-    "_id": "R-CORE-03",
-    "short": "If successes exceed Defense, damage is dealt.",
-    "long": "Defense is a passive value representing positioning, cover, armor, or skill. If Successes exceed Defense, the attack hits. Each success beyond Defense deals 1 damage.",
-    "definition": "Passive value representing positioning, cover, armor, or skill.",
-    "resolution": "If Successes > Defense, the attack hits. Each success beyond Defense deals 1 damage.",
-    "modifiers": [
-      { "name": "Cover", "effect": "+1 Defense vs ranged" },
-      { "name": "Pierce", "effect": "Reduces Defense for that attack" },
-      { "name": "Dodge", "effect": "Cancels a Success after rolling" }
-    ],
-    "exceptions": "Defense never applies to: Terrain damage, Automatic damage, or Environmental effects."
-  },
-
-  "six_based_effects": {
-    "_id": "R-CORE-04",
-    "short": "A roll may only resolve one six-based bonus.",
-    "long": "A single roll may only resolve one six-based bonus. Never more than one.",
-    "golden_rule": "A single roll may only resolve ONE six-based bonus. Never more than one.",
-    "options": {
-      "natural_six": {
-        "_id": "R-CORE-04A",
-        "name": "Natural Six",
-        "effect": "If the attack hits, it deals at least 1 damage, even if Successes <= Defense.",
-        "restriction": "Never applies if the attack does not hit."
+      "philosophy": {
+        "_id": "R-CORE-00",
+        "long": "Everything in Coffin Canyon flows from a single value: Quality. It represents training, toughness, nerve, and luck. When Quality drops, everything becomes harder."
       },
-      "lucky_break": {
-        "_id": "R-CORE-04B",
-        "name": "Lucky Break",
-        "trigger": "All dice in a Quality roll result in 6s.",
-        "restrictions": [
-          "Must use immediately",
-          "Does not stack",
-          "Once per activation",
-          "No damage/attack actions"
-        ],
-        "choices": [
-          { "id": "quick_step", "name": "Quick Step", "effect": "Free Half Move" },
-          { "id": "shake_it_off", "name": "Shake It Off", "effect": "Remove 1 Pin or Condition" },
-          { "id": "deadeye", "name": "Deadeye", "effect": "Gain +1 die to the next roll this activation" },
-          { "id": "get_it_done", "name": "Get It Done", "effect": "Perform a free Interact action" }
+
+      "quality_definition": {
+        "_id": "R-CORE-01",
+        "short": "Quality defines how many dice you roll for most actions.",
+        "long": "Quality represents training, toughness, nerve, and luck. It is used for attacks, morale, special abilities, and environmental tests.",
+        "usage": ["Attacks", "Morale", "Special abilities", "Environmental tests"],
+        "guidelines": [
+          { "value": 1, "description": "Basic trained human / small monster / civilian" },
+          { "value": 2, "description": "Veteran military unit / human sized monster" },
+          { "value": 3, "description": "Elite unit / large monster / hard to kill beast" },
+          { "value": 4, "description": "Leader unit / low hero / big or powerful monster" },
+          { "value": 5, "description": "High hero / very large or mystically powerful monster" },
+          { "value": 6, "description": "Epic supernatural kaiju, titan, or super heavy mechanical unit" }
         ]
+      },
+
+      "the_roll": {
+        "_id": "R-CORE-02",
+        "short": "Roll a number of d6 equal to current Quality. 4+ = success.",
+        "long": "Roll d6s equal to current Quality. Each 4, 5, or 6 is 1 Success. One or more successes usually mean the action succeeds. Some rules scale with total successes.",
+        "pool": "Roll d6s equal to current Quality.",
+        "success_threshold": 4,
+        "logic": "Each 4, 5, or 6 is 1 Success. 1+ successes usually mean the action succeeds. Some rules scale with total successes."
+      },
+
+      "defense_and_damage": {
+        "_id": "R-CORE-03",
+        "short": "If successes exceed Defense, damage is dealt.",
+        "long": "Defense is a passive value representing positioning, cover, armor, or skill. If Successes exceed Defense, the attack hits. Each success beyond Defense deals 1 damage.",
+        "definition": "Passive value representing positioning, cover, armor, or skill.",
+        "resolution": "If Successes > Defense, the attack hits. Each success beyond Defense deals 1 damage.",
+        "modifiers": [
+          { "name": "Cover", "effect": "+1 Defense vs ranged" },
+          { "name": "Pierce", "effect": "Reduces Defense for that attack" },
+          { "name": "Dodge", "effect": "Cancels a Success after rolling" }
+        ],
+        "exceptions": "Defense never applies to: Terrain damage, Automatic damage, or Environmental effects."
+      },
+
+      "six_based_effects": {
+        "_id": "R-CORE-04",
+        "short": "A roll may only resolve one six-based bonus.",
+        "long": "A single roll may only resolve one six-based bonus. Never more than one.",
+        "golden_rule": "A single roll may only resolve ONE six-based bonus. Never more than one.",
+        "options": {
+          "natural_six": {
+            "_id": "R-CORE-04A",
+            "name": "Natural Six",
+            "effect": "If the attack hits, it deals at least 1 damage, even if Successes <= Defense.",
+            "restriction": "Never applies if the attack does not hit."
+          },
+          "lucky_break": {
+            "_id": "R-CORE-04B",
+            "name": "Lucky Break",
+            "trigger": "All dice in a Quality roll result in 6s.",
+            "restrictions": [
+              "Must use immediately",
+              "Does not stack",
+              "Once per activation",
+              "No damage/attack actions"
+            ],
+            "choices": [
+              { "id": "quick_step", "name": "Quick Step", "effect": "Free Half Move" },
+              { "id": "shake_it_off", "name": "Shake It Off", "effect": "Remove 1 Pin or Condition" },
+              { "id": "deadeye", "name": "Deadeye", "effect": "Gain +1 die to the next roll this activation" },
+              { "id": "get_it_done", "name": "Get It Done", "effect": "Perform a free Interact action" }
+            ]
+          }
+        },
+        "example_case": "Attacker Q2 rolls 6, 6 vs Defense 4. Choose: Natural Six (1 damage) OR Lucky Break (tempo, no damage)."
+      },
+
+      "critical_failure": {
+        "_id": "R-CORE-05",
+        "short": "All 1s = fail and become Shaken.",
+        "long": "If all dice in a Quality roll show 1s, the action fails and the model becomes Shaken. Terrain or scenario rules may apply additional consequences.",
+        "trigger": "All 1s on a Quality roll.",
+        "effects": "Action fails normally, model becomes Shaken. Check terrain/scenario for specific consequences."
+      },
+
+      "quality_tracking": {
+        "_id": "R-CORE-06",
+        "short": "Track Quality openly; at 0 the model is removed.",
+        "long": "Quality is tracked openly using a die behind the model. It is never rolled. When Quality reaches 0, the model is removed from play immediately.",
+        "on_table": "Place one d6 (tracker only) behind the model's base. Never roll this die.",
+        "reduction": "Rotate the die immediately upon taking damage, morale loss, or hazards.",
+        "quality_zero": "Remove model from play immediately. Resolve death/escalation effects.",
+        "quality_cap": 6,
+        "design_intent": "You should be able to tell how close a model is to collapse at a glance."
       }
-    },
-    "example_case": "Attacker Q2 rolls 6, 6 vs Defense 4. Choose: Natural Six (1 damage) OR Lucky Break (tempo, no damage)."
-  },
-
-  "critical_failure": {
-    "_id": "R-CORE-05",
-    "short": "All 1s = fail and become Shaken.",
-    "long": "If all dice in a Quality roll show 1s, the action fails and the model becomes Shaken. Terrain or scenario rules may apply additional consequences.",
-    "trigger": "All 1s on a Quality roll.",
-    "effects": "Action fails normally, model becomes Shaken. Check terrain/scenario for specific consequences."
-  },
-
-  "quality_tracking": {
-    "_id": "R-CORE-06",
-    "short": "Track Quality openly; at 0 the model is removed.",
-    "long": "Quality is tracked openly using a die behind the model. It is never rolled. When Quality reaches 0, the model is removed from play immediately.",
-    "on_table": "Place one d6 (tracker only) behind the model's base. Never roll this die.",
-    "reduction": "Rotate the die immediately upon taking damage, morale loss, or hazards.",
-    "quality_zero": "Remove model from play immediately. Resolve death/escalation effects.",
-    "quality_cap": 6,
-    "design_intent": "You should be able to tell how close a model is to collapse at a glance."
+    }
   }
 }
