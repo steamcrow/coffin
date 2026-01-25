@@ -52,7 +52,6 @@
       "long": "Defense is a passive value representing positioning, cover, armor, or skill. If Successes exceed Defense, the attack hits. Each success beyond Defense deals 1 damage.",
 
       "definition": "Passive value representing positioning, cover, armor, or skill.",
-
       "resolution": "If Successes > Defense, the attack hits. Each success beyond Defense deals 1 damage.",
 
       "modifiers": [
