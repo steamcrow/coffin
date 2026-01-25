@@ -1,0 +1,253 @@
+{
+  "_id": "R-ABIL-C",
+  "title": "Ability Dictionary — C (Offense & Damage)",
+
+  "abilities": {
+
+    "aim": {
+      "_id": "R-ABIL-C-AIM",
+      "timing": "main_action",
+      "short": "Stand still for +1 die on next ranged attack.",
+      "long": "Main Action. Cannot Move this activation; gain +1 die on next ranged attack."
+    },
+
+    "backstab": {
+      "_id": "R-ABIL-C-BACKSTAB",
+      "timing": "passive",
+      "short": "+1 damage vs engaged targets.",
+      "long": "Passive. +1 damage if target is already engaged with another friendly model."
+    },
+
+    "brutal_blow": {
+      "_id": "R-ABIL-C-BRUTAL-BLOW",
+      "timing": "passive",
+      "short": "+1 melee damage.",
+      "long": "Passive. +1 damage on successful melee hit."
+    },
+
+    "blood_in_the_air": {
+      "_id": "R-ABIL-C-BLOOD-IN-THE-AIR",
+      "timing": "passive",
+      "short": "Nearby death fuels attacks.",
+      "long": "Passive. Gain +1 die on next attack when any model within 6\" is reduced to 0 Quality."
+    },
+
+    "corrode": {
+      "_id": "R-ABIL-C-CORRODE",
+      "timing": "passive",
+      "short": "Extra effects vs Mechan or Metal.",
+      "long": "Passive. Successful melee vs Mechan = 1 auto-damage. Vs Metal = Remove 1 property OR -1 Defense."
+    },
+
+    "deadeye": {
+      "_id": "R-ABIL-C-DEADEYE",
+      "timing": "once_per_game",
+      "short": "Reroll all failed dice on a ranged attack.",
+      "long": "Once Per Game. Re-roll all failed dice on a single ranged attack."
+    },
+
+    "furious": {
+      "_id": "R-ABIL-C-FURIOUS",
+      "timing": "passive",
+      "short": "Taking damage fuels melee.",
+      "long": "Passive. If Quality is lost, gain +1 die on next melee attack."
+    },
+
+    "impact": {
+      "_id": "R-ABIL-C-IMPACT",
+      "timing": "passive",
+      "short": "Charge for 1 auto-hit.",
+      "long": "Passive. Moving 3\"+ into contact deals 1 automatic hit before rolling attack dice."
+    },
+
+    "brutal_impact": {
+      "_id": "R-ABIL-C-BRUTAL-IMPACT",
+      "timing": "passive",
+      "short": "Charge for 2 auto-hits.",
+      "long": "Passive. Moving 3\"+ into contact deals 2 automatic hits before rolling attack dice."
+    },
+
+    "savage_impact": {
+      "_id": "R-ABIL-C-SAVAGE-IMPACT",
+      "timing": "passive",
+      "short": "Charge for 3 auto-hits.",
+      "long": "Passive. Moving 3\"+ into contact deals 3 automatic hits before rolling attack dice."
+    },
+
+    "press_the_advantage": {
+      "_id": "R-ABIL-C-PRESS-THE-ADVANTAGE",
+      "timing": "passive",
+      "short": "Convert excess Successes.",
+      "long": "Passive. On hit, convert 1 excess Success into +1 damage or +2\" Move. Penalty: -1 die on next Action. Q3+ only."
+    },
+
+    "pierce": {
+      "_id": "R-ABIL-C-PIERCE",
+      "timing": "passive",
+      "short": "Ignore 1 Defense.",
+      "long": "Passive. Ignores 1 point of Defense."
+    },
+
+    "brutal_pierce": {
+      "_id": "R-ABIL-C-BRUTAL-PIERCE",
+      "timing": "passive",
+      "short": "Ignore 2 Defense.",
+      "long": "Passive. Ignores 2 points of Defense."
+    },
+
+    "savage_pierce": {
+      "_id": "R-ABIL-C-SAVAGE-PIERCE",
+      "timing": "passive",
+      "short": "Ignore 3 Defense.",
+      "long": "Passive. Ignores 3 points of Defense."
+    },
+
+    "panic_fire": {
+      "_id": "R-ABIL-C-PANIC-FIRE",
+      "timing": "reaction",
+      "short": "Desperate ranged shot when charged.",
+      "long": "Reactive. Once per round. When targeted by melee, make ranged attack at -1 die, then test Morale."
+    },
+
+    "pinning_shot": {
+      "_id": "R-ABIL-C-PINNING-SHOT",
+      "timing": "passive",
+      "short": "Root target on hit.",
+      "long": "Passive. On hit, target cannot move during its next activation."
+    },
+
+    "blast": {
+      "_id": "R-ABIL-C-BLAST",
+      "timing": "passive",
+      "short": "3\" area attack.",
+      "long": "Passive. 3\" radius area of effect. Roll separately for each model; Cover applies normally."
+    },
+
+    "massive_blast": {
+      "_id": "R-ABIL-C-MASSIVE-BLAST",
+      "timing": "passive",
+      "short": "6\" area attack.",
+      "long": "Passive. 6\" radius area of effect. Roll separately for each model; Cover applies normally."
+    },
+
+    "relentless": {
+      "_id": "R-ABIL-C-RELENTLESS",
+      "timing": "reaction",
+      "short": "Surge forward after a kill.",
+      "long": "Reactive. If enemy is destroyed in melee, immediately move 2\"."
+    },
+
+    "sonic": {
+      "_id": "R-ABIL-C-SONIC",
+      "timing": "passive",
+      "short": "Ignore Cover; special effects.",
+      "long": "Passive. Ignores Cover. Affects physical-immune targets. May cause Deafening/Disorientation."
+    },
+
+    "vengeful": {
+      "_id": "R-ABIL-C-VENGEFUL",
+      "timing": "passive",
+      "short": "Damage fuels attacks.",
+      "long": "Passive. Each time Quality is lost, +1 die on next attack. Stacks until the attack is resolved."
+    },
+
+    "hex": {
+      "_id": "R-ABIL-C-HEX",
+      "timing": "passive",
+      "short": "Temporary Quality reduction.",
+      "long": "Passive. On successful hit, target suffers -1 Quality until end of its next activation."
+    },
+
+    "venom": {
+      "_id": "R-ABIL-C-VENOM",
+      "timing": "passive",
+      "short": "Delayed damage.",
+      "long": "Passive. After this unit deals damage in melee, the target suffers 1 additional damage at the end of its next activation unless it is Bloodless or Automat."
+    },
+
+    "flechette_drop": {
+      "_id": "R-ABIL-C-FLECHETTE-DROP",
+      "timing": "main_action",
+      "short": "Area attack while Flying.",
+      "long": "Main Action. Once per activation while Flying, place a 6\" diameter circle anywhere this unit moved over this activation. All units inside suffer a ranged attack roll. Cover does not apply."
+    },
+
+    "hell_spray": {
+      "_id": "R-ABIL-C-HELL-SPRAY",
+      "timing": "main_action",
+      "short": "Cone attack (limited uses).",
+      "long": "Main Action. Three times per game, this unit may unleash a cone attack instead of a normal attack. Place a 12\" long, 12\" wide cone template from this unit's facing. All units whose bases are partially or fully within the cone are targeted. Roll this unit's Quality as a ranged attack against each target separately."
+    },
+
+    "demolition": {
+      "_id": "R-ABIL-C-DEMOLITION",
+      "timing": "passive",
+      "short": "Extra damage vs structures.",
+      "long": "Passive. Deals double damage to structures and terrain features."
+    },
+
+    "down_the_hatch": {
+      "_id": "R-ABIL-C-DOWN-THE-HATCH",
+      "timing": "passive",
+      "short": "Titan devours enemies.",
+      "long": "Passive. Titan. This unit can swallow another unit whole if it exceeds the target's Defense by 4 or more during a melee attack. The swallowed unit must be reasonably sized (no vehicles or other Titans). The swallowed unit is immediately killed and removed from play."
+    },
+
+    "mark_target": {
+      "_id": "R-ABIL-C-MARK-TARGET",
+      "timing": "main_action",
+      "short": "Designate priority target.",
+      "long": "Main Action. Once per game: Choose one enemy within LoS. That target takes +1 damage from all sources until end of round."
+    },
+
+    "pass_judgment": {
+      "_id": "R-ABIL-C-PASS-JUDGMENT",
+      "timing": "main_action",
+      "short": "Condemn an enemy permanently.",
+      "long": "Main Action. Once per game, target one enemy unit within 12\". Until end of game, that unit suffers -1 to all Defense rolls and Liberty Corps units may reroll 1s when attacking it."
+    },
+
+    "quick_draw": {
+      "_id": "R-ABIL-C-QUICK-DRAW",
+      "timing": "passive",
+      "short": "Strike first when charged.",
+      "long": "Passive. May attack first in melee if charged."
+    },
+
+    "stagger": {
+      "_id": "R-ABIL-C-STAGGER",
+      "timing": "passive",
+      "short": "Slow and weaken target.",
+      "long": "Passive. On a successful hit, the target loses 1\" of movement and rolls -1 die on its next action. If the target is reduced to 0 Move, it may not Disengage this activation."
+    },
+
+    "suppression": {
+      "_id": "R-ABIL-C-SUPPRESSION",
+      "timing": "passive",
+      "short": "Penalize next action.",
+      "long": "Passive. On a hit, the target rolls -1 die on its next action (attack, ability, or Morale test)."
+    },
+
+    "under_fire": {
+      "_id": "R-ABIL-C-UNDER-FIRE",
+      "timing": "passive",
+      "short": "Pin and weaken target.",
+      "long": "Passive. On successful ranged hit: target is Pinned AND suffers -1 Quality until end of its next activation."
+    },
+
+    "universal_terror": {
+      "_id": "R-ABIL-C-UNIVERSAL-TERROR",
+      "timing": "passive",
+      "short": "Morale shockwave on firing.",
+      "long": "Passive. When this unit fires its weapon: ALL units (friendly AND enemy) within 12\" must test Morale."
+    },
+
+    "choking_dust": {
+      "_id": "R-ABIL-C-CHOKING-DUST",
+      "timing": "passive",
+      "short": "Suppress on near-miss.",
+      "long": "Passive. If this unit's attack hits but deals no damage, target becomes Suppressed until end of its next activation. On natural 6 to hit, Suppressed extends by one additional activation."
+    }
+
+  }
+}
