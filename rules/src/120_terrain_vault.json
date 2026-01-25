@@ -1,0 +1,58 @@
+{
+  "_id": "R-TERRAIN-VAULT",
+
+  "philosophy": {
+    "text": "Terrain is not decoration. It blocks, harms, corrupts, burns, collapses, and remembers. Ignoring it is the fastest way to lose models.",
+    "intent": "Terrain should force movement, break formations, and evolve. If the battlefield looks the same at the end of the game, something went wrong."
+  },
+
+  "categories": {
+    "open": "No movement penalty or tests required.",
+    "difficult": {
+      "effect": "Movement is halved (round down). Penalties do not stack.",
+      "examples": ["Rubble", "Steep slopes", "Deep mud", "Wreckage"]
+    },
+    "impassable": {
+      "effect": "Cannot enter, move through, or end movement inside. Blocks LoS if solid.",
+      "examples": ["Solid walls", "Cliff faces", "Chasms", "Sealed structures"]
+    }
+  },
+
+  "traits": {
+    "hazardous": {
+      "trigger": "Move into or through. Once per activation.",
+      "test": "Quality Test. Fail = -1 Quality. Crit Fail = -1 Quality and Shaken."
+    },
+    "unstable": {
+      "trigger": "End movement within.",
+      "test": "Quality Test. Fail = 1 damage and shift/fall. Crit Fail = Terrain Collapses.",
+      "collapse": "All affected models suffer 1–2 damage. Terrain may become Impassable."
+    },
+    "choking": {
+      "trigger": "Activation within.",
+      "effect": "-1 die on all actions. Ignored by gas masks/sealed systems. Does not block LoS."
+    },
+    "burning": {
+      "trigger": "Start or end activation within.",
+      "effect": "1 automatic damage. Provides no Cover. May escalate to Hazardous or Unstable."
+    },
+    "tainted": {
+      "trigger": "Grunt model enters.",
+      "effect": "Test Morale. May escalate to Haunted if rituals or overburn occur."
+    },
+    "haunted": {
+      "trigger": "Enter or Activate within.",
+      "effect": "Roll 1d6. On 1–2, a Haunt appears adjacent. Haunts act at end of round."
+    },
+    "sacred": {
+      "effect": "Bonus (+1 die) to specific monsters. Corruption triggers escalated consequences."
+    }
+  },
+
+  "escalation_logic": {
+    "taint_to_haunt": "Occurs if ground is Overburned, used for Rituals repeatedly, or persists for multiple rounds.",
+    "logic": "Violence ignored becomes memory. Memory becomes agency."
+  },
+
+  "dispute_resolution": "Choose the interpretation that creates RISK. Resolve quickly and move on."
+}
