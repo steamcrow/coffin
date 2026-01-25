@@ -6,6 +6,10 @@ console.log("🔥 cc_loader_core.js EXECUTING");
   // File: steamcrow/rules/ui/cc_loader_core.js
   // ================================
 
+  async function boot() {
+  console.log("🚀 cc_loader_core boot()");
+  const root = document.getElementById("cc-app-root");
+
   const BOOTSTRAP_CSS =
     "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
 
@@ -187,5 +191,13 @@ console.log("🔥 cc_loader_core.js EXECUTING");
     }
   }
 
+console.log("🧠 cc_loader_core readyState:", document.readyState);
+
+if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", boot);
+} else {
+  // DOM already loaded (Odoo case)
+  boot();
+}
+
 })();
