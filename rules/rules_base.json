@@ -51,6 +51,22 @@
   "rules_master": {
     "version": "8.2",
     "last_updated": "2026-01-19",
-    "changelog": "Removed variable (X) notation. Implemented consistent Brutal/Savage progression for offensive abilities. Standardized ranges to 3\"/6\"/12\". Simplified Blast, Fear, Pierce, Impact, and Tough naming."
+    "changelog": "Removed variable (X) notation. Implemented consistent Brutal/Savage progression for offensive abilities. Standardized ranges to 3\"/6\"/12\". Simplified Blast, Fear, Pierce, Impact, and Tough naming.",
+
+    "sections": {
+      "philosophy": "The 'Flavor Vault'. High-level tenets and the 'Fast Resolution' handshake.",
+      "core_mechanics": "The math: Quality rolls, Successes, Defense calculations, and the Death Spiral.",
+      "dice_manipulation": "Lucky Breaks, Natural Sixes, and Critical Failures.",
+      "turn_structure": "Initiative, Activation cycles, and Action types (Simple vs. Complex).",
+      "locomotion_and_visibility": "Movement speeds, Terrain types, Line of Sight, and Cover logic.",
+      "combat_and_damage": "Melee vs. Ranged, Automatic Damage sources, and Weapon Tags.",
+      "morale_and_status": "Shaken, Panicked, Fear Cascades, and Condition removal.",
+      "unit_identities": "The 8 Core Archetypes (Grunt, Titan, etc.) and their passive logic.",
+      "ability_dictionary": "The Universal Library of keywords (Stealth, Tough, Repair, etc.).",
+      "weapon_properties": "Weapon tags and special effects that modify attacks.",
+      "wild_magic_table": "Thyr-powered mystical effects and consequences.",
+      "timing_and_engine": "Once per Activation/Round/Game and Ability Priority.",
+      "unit_variant_logic": "How the app handles 'Chassis' modifications (Baby vs. Mama)."
+    }
   }
 }
