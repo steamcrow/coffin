@@ -1,0 +1,106 @@
+{
+  "_id": "R-WEAPONS",
+  "title": "Weapon Properties",
+
+  "properties": {
+
+    "pierce": {
+      "_id": "R-WPN-PIERCE",
+      "name": "Pierce",
+      "short": "Ignore 1 Defense.",
+      "effect": "Ignore 1 point of Defense."
+    },
+
+    "brutal_pierce": {
+      "_id": "R-WPN-BRUTAL-PIERCE",
+      "name": "Brutal Pierce",
+      "short": "Ignore 2 Defense.",
+      "effect": "Ignore 2 points of Defense."
+    },
+
+    "savage_pierce": {
+      "_id": "R-WPN-SAVAGE-PIERCE",
+      "name": "Savage Pierce",
+      "short": "Ignore 3 Defense.",
+      "effect": "Ignore 3 points of Defense."
+    },
+
+    "blast": {
+      "_id": "R-WPN-BLAST",
+      "name": "Blast",
+      "short": "3\" area attack.",
+      "effect": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+    },
+
+    "massive_blast": {
+      "_id": "R-WPN-MASSIVE-BLAST",
+      "name": "Massive Blast",
+      "short": "6\" area attack.",
+      "effect": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+    },
+
+    "blinding": {
+      "_id": "R-WPN-BLINDING",
+      "name": "Blinding",
+      "short": "Inflicts Blinded.",
+      "effect": "On hit: target is Blinded until end of its next activation. While Blinded: cannot make ranged attacks, -2 dice on melee attacks, cannot use abilities requiring line of sight, move at half speed. An adjacent ally may use an action to clean ink/flash from a Blinded unit (removes Blinded status). Rain or water terrain immediately removes Blinded."
+    },
+
+    "grapple": {
+      "_id": "R-WPN-GRAPPLE",
+      "name": "Grapple",
+      "short": "Pull target; root next turn.",
+      "effect": "On hit, pull target 3\" toward this unit. Target may not move next activation."
+    },
+
+    "ignores_cover": {
+      "_id": "R-WPN-IGNORES-COVER",
+      "name": "Ignores Cover",
+      "short": "Cover does not apply.",
+      "effect": "Attacks from this weapon ignore cover bonuses to Defense."
+    },
+
+    "pinning_shot": {
+      "_id": "R-WPN-PINNING-SHOT",
+      "name": "Pinning Shot",
+      "short": "Prevents movement.",
+      "effect": "Target hit may not move next activation."
+    },
+
+    "quake": {
+      "_id": "R-WPN-QUAKE",
+      "name": "Quake",
+      "short": "Area pin effect.",
+      "effect": "All models within 6\" must pass Quality test or become Pinned."
+    },
+
+    "rapid_fire": {
+      "_id": "R-WPN-RAPID-FIRE",
+      "name": "Rapid Fire",
+      "short": "Split attacks.",
+      "effect": "May split attack dice between multiple targets within range. Used by Jager marksmen."
+    },
+
+    "sonic": {
+      "_id": "R-WPN-SONIC",
+      "name": "Sonic",
+      "short": "Ignores armor and cover.",
+      "effect": "Ignores Heavy Armor bonus. Ignores cover bonuses to Defense. If at least 1 damage dealt, target tests Morale."
+    },
+
+    "melee": {
+      "_id": "R-WPN-MELEE",
+      "name": "Melee",
+      "short": "Close combat weapon.",
+      "effect": "Can be used in close combat. Does not require Line of Sight."
+    },
+
+    "prybar": {
+      "_id": "R-WPN-PRYBAR",
+      "name": "Prybar",
+      "short": "Bonus to Interact.",
+      "effect": "Gain +1 die when attempting Interact actions on locked or sealed objectives."
+    }
+
+  }
+}
