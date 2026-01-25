@@ -9,69 +9,75 @@ window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Rules Explorer init", ctx);
 
-    const helpers = ctx.helpers;
-    const index = Array.isArray(ctx.rulesBase?.index)
+    const helpers = ctx?.helpers;
+    const index = Array.isArray(ctx?.rulesBase?.index)
       ? ctx.rulesBase.index
       : [];
 
+    // ---- SAFETY CHECK ----
     if (!helpers) {
       root.innerHTML = `
-        <div class="container py-5 text-danger">
-          <h4>Rules helpers not available</h4>
-          <p>Check loader injection.</p>
+        <div class="cc-app-shell h-100">
+          <div class="container py-5 text-danger">
+            <h4>Rules helpers not available</h4>
+            <p>Check loader injection.</p>
+          </div>
         </div>
       `;
       return;
     }
 
-    // --- UI scaffold ---
+    // ---- APP SHELL ----
     root.innerHTML = `
-      <div class="container-fluid py-3">
-        <div class="row g-3">
+      <div class="cc-app-shell h-100">
+        <div class="container-fluid py-3" style="min-height:100%;">
+          <div class="row g-3">
 
-          <!-- LEFT: Main Sections -->
-          <div class="col-12 col-lg-3">
-            <div class="cc-panel">
-              <div class="cc-panel-head">
-                <div class="cc-panel-title">Rules</div>
-                <input
-                  id="cc-rule-search"
-                  class="form-control form-control-sm cc-input"
-                  placeholder="Search rules..."
-                />
-              </div>
-              <div id="cc-rule-list" class="cc-list"></div>
-            </div>
-          </div>
-
-          <!-- MIDDLE: Content -->
-          <div class="col-12 col-lg-6">
-            <div class="cc-panel">
-              <div class="cc-panel-head">
-                <div class="cc-panel-title">Rule Text</div>
-              </div>
-              <div id="cc-rule-detail" class="cc-body">
-                <div class="cc-muted">Select a rule on the left.</div>
+            <!-- LEFT: Rules Library -->
+            <div class="col-12 col-lg-3">
+              <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                  <div class="cc-panel-title">Rules</div>
+                  <input
+                    id="cc-rule-search"
+                    class="form-control form-control-sm cc-input mt-2"
+                    placeholder="Search rules..."
+                  />
+                </div>
+                <div id="cc-rule-list" class="cc-list"></div>
               </div>
             </div>
-          </div>
 
-          <!-- RIGHT: Context / Definitions -->
-          <div class="col-12 col-lg-3">
-            <div class="cc-panel">
-              <div class="cc-panel-head">
-                <div class="cc-panel-title">Context</div>
-              </div>
-              <div id="cc-rule-context" class="cc-body">
-                <div class="cc-muted">Nothing selected.</div>
+            <!-- MIDDLE: Rule Text -->
+            <div class="col-12 col-lg-6">
+              <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                  <div class="cc-panel-title">Rule Text</div>
+                </div>
+                <div id="cc-rule-detail" class="cc-body">
+                  <div class="cc-muted">Select a rule on the left.</div>
+                </div>
               </div>
             </div>
-          </div>
 
+            <!-- RIGHT: Context -->
+            <div class="col-12 col-lg-3">
+              <div class="cc-panel h-100">
+                <div class="cc-panel-head">
+                  <div class="cc-panel-title">Context</div>
+                </div>
+                <div id="cc-rule-context" class="cc-body">
+                  <div class="cc-muted">Nothing selected.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
     `;
 
+    // ---- DOM HOOKS ----
     const listEl = root.querySelector("#cc-rule-list");
     const detailEl = root.querySelector("#cc-rule-detail");
     const ctxEl = root.querySelector("#cc-rule-context");
@@ -79,7 +85,7 @@ window.CC_APP = {
 
     let selectedId = null;
 
-    // --- Render list ---
+    // ---- LIST RENDER ----
     function renderList(filter = "") {
       const f = filter.trim().toLowerCase();
 
@@ -106,7 +112,7 @@ window.CC_APP = {
         .join("");
     }
 
-    // --- Select rule ---
+    // ---- SELECT RULE ----
     function selectRule(id) {
       selectedId = id;
 
@@ -116,9 +122,9 @@ window.CC_APP = {
       const { meta, content } = section;
       const children = helpers.getChildren(id);
 
-      // MAIN TEXT
+      // MAIN CONTENT
       detailEl.innerHTML = `
-        <h4>${meta.title}</h4>
+        <h4 class="mb-1">${meta.title}</h4>
         <div class="cc-muted mb-2">
           <code>${meta.id}</code> • ${meta.type}
         </div>
@@ -151,7 +157,11 @@ window.CC_APP = {
                 ${children
                   .map(
                     (c) =>
-                      `<li><button class="cc-link" data-id="${c.id}">${c.title}</button></li>`
+                      `<li>
+                        <button class="cc-link" data-id="${c.id}">
+                          ${c.title}
+                        </button>
+                      </li>`
                   )
                   .join("")}
               </ul>
@@ -163,7 +173,7 @@ window.CC_APP = {
       renderList(searchEl.value);
     }
 
-    // --- Events ---
+    // ---- EVENTS ----
     listEl.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-id]");
       if (!btn) return;
@@ -180,7 +190,7 @@ window.CC_APP = {
       renderList(searchEl.value);
     });
 
-    // Initial render
+    // ---- INIT ----
     renderList();
   },
 };
