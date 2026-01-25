@@ -1,0 +1,68 @@
+{
+  "_id": "R-MORALE",
+  "title": "Morale Vault",
+
+  "philosophy": {
+    "_id": "R-MORALE-00",
+    "short": "Fear creates momentum; hesitation kills.",
+    "long": "Morale represents fear, hesitation, and survival overriding orders. Coffin Canyon is not a game of fearless soldiers; it is a game of beings pushed too far.",
+    "design_intent": "Morale creates momentum; fear punishes overextension. Retreat is a valid tactic. Standing firm is not always the goal."
+  },
+
+  "the_morale_test": {
+    "_id": "R-MORALE-01",
+    "short": "Roll Quality dice; 4+ holds, 0 successes fails.",
+    "trigger": "Tested when triggered by destruction, Tainted terrain, sudden losses, fear-based abilities, or isolation.",
+    "resolution": "Roll d6s equal to current Quality. Each 4+ is a Success.",
+    "outcomes": {
+      "success": "1+ Successes: The model holds.",
+      "failure": "0 Successes: The model fails. Resolve Shaken or Panicked as dictated by the rule."
+    }
+  },
+
+  "status_conditions": {
+    "_id": "R-MORALE-02",
+
+    "shaken": {
+      "_id": "R-MORALE-02A",
+      "short": "Hesitation and fear.",
+      "definition": "Hesitation, fear, or loss of footing.",
+      "penalties": [
+        "-1 die on all rolls",
+        "Cannot take specific actions listed on unit card"
+      ],
+      "recovery": "Automatically removed at end of next activation, or via rally abilities."
+    },
+
+    "panicked": {
+      "_id": "R-MORALE-02B",
+      "short": "Loss of control; forced movement.",
+      "definition": "Full loss of control.",
+      "immediate_effect": "Move away from source of fear immediately. If movement is impossible, become Shaken instead.",
+      "activation_penalty": "Lose 1 Action on next activation and -1 die on all rolls.",
+      "recovery": "Requires distance, time, or specific abilities."
+    }
+  },
+
+  "fear_mechanics": {
+    "_id": "R-MORALE-03",
+
+    "cascading_fear": {
+      "_id": "R-MORALE-03A",
+      "short": "Fear spreads from destruction.",
+      "logic": "When a model is destroyed or panics, nearby Grunts or low-Quality models must test Morale."
+    },
+
+    "monster_logic": {
+      "_id": "R-MORALE-03B",
+      "logic": "Monsters may ignore Morale, gain bonuses from enemy fear, or grow more dangerous as fear spreads. See Unit Card."
+    },
+
+    "environmental_fear": {
+      "_id": "R-MORALE-03C",
+      "tainted": "Force test on entry.",
+      "haunted": "Force test on trigger.",
+      "burning": "Witnessing Overburn fallout forces test."
+    }
+  }
+}
