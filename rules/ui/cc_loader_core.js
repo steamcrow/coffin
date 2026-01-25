@@ -146,12 +146,15 @@
     renderPreloader(root);
 
     try {
+      // --- helpers (OPTIONAL but SAFE)
       setLoaderMsg("Loading helpers…");
       await loadScriptViaBlob(RULES_HELPERS_URL);
 
+      // --- app
       setLoaderMsg("Loading app…");
       await loadScriptViaBlob(`${APP_BASE}cc_app_${app}.js`);
 
+      // --- rules
       setLoaderMsg("Loading rules…");
       const rulesBase = await fetchJSON(RULES_BASE_URL);
 
@@ -159,12 +162,13 @@
         throw new Error(`CC_APP.init missing in cc_app_${app}.js`);
       }
 
+      // ✅ STABLE CONTEXT (THIS FIXES YOUR ERROR)
       const ctx = {
         app,
         rulesBase,
         helpers: window.CC_RULES_HELPERS
           ? window.CC_RULES_HELPERS.createRulesHelpers(rulesBase)
-          : null,
+          : {},           // ← NEVER undefined
         urls: {
           rulesBase: RULES_BASE_URL,
           appBase: APP_BASE,
