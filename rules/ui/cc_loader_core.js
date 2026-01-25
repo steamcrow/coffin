@@ -38,33 +38,36 @@
     });
   }
 
-  async function boot() {
-    const root = document.getElementById("cc-app-root");
-    if (!root) {
-      console.error("❌ cc-app-root not found");
-      return;
-    }
+async function boot() {
+  const root = document.getElementById("cc-app-root");
+  if (!root) return;
 
-    const appName = root.dataset.ccApp;
-    if (!appName) {
-      console.error("❌ data-cc-app missing");
-      return;
-    }
+  const appName = root.dataset.ccApp;
+  if (!appName) return;
 
-    await injectCSS(BOOTSTRAP_CSS);
-    await injectCSS(CC_UI_CSS);
+  console.log("🚀 Booting app:", appName);
 
-    document.body.classList.add("cc-app");
+  await injectCSS(BOOTSTRAP_CSS);
+  await injectCSS(CC_UI_CSS);
 
-    await loadScript(`${APP_BASE}${appName}.js`);
+  document.body.classList.add("cc-app");
 
-    if (!window.CC_APP || !window.CC_APP.init) {
-      console.error("❌ CC_APP.init not found");
-      return;
-    }
+  console.log("⏳ Loading app JS:", APP_BASE + appName + ".js");
+  await loadScript(APP_BASE + appName + ".js");
 
-    window.CC_APP.init({ root });
+  console.log("🔍 CC_APP:", window.CC_APP);
+
+  if (!window.CC_APP || typeof window.CC_APP.init !== "function") {
+    console.error("❌ CC_APP.init missing");
+    return;
   }
+
+  window.CC_APP.init({ root, app: appName });
+
+  const loader = document.getElementById("cc-preloader");
+  if (loader) loader.remove();
+}
+
 
   document.addEventListener("DOMContentLoaded", boot);
 
