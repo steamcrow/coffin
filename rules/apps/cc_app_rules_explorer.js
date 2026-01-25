@@ -33,7 +33,6 @@ window.CC_APP = {
         <div class="container-fluid py-3" style="min-height:100%;">
           <div class="row g-3">
 
-            <!-- LEFT: Rules Library -->
             <div class="col-12 col-lg-3">
               <div class="cc-panel h-100">
                 <div class="cc-panel-head">
@@ -48,7 +47,6 @@ window.CC_APP = {
               </div>
             </div>
 
-            <!-- MIDDLE: Rule Text -->
             <div class="col-12 col-lg-6">
               <div class="cc-panel h-100">
                 <div class="cc-panel-head">
@@ -60,7 +58,6 @@ window.CC_APP = {
               </div>
             </div>
 
-            <!-- RIGHT: Context -->
             <div class="col-12 col-lg-3">
               <div class="cc-panel h-100">
                 <div class="cc-panel-head">
@@ -132,65 +129,65 @@ window.CC_APP = {
 
       let formattedContent = "";
 
-// ---- Ability Dictionary ----
-if (content && content.abilities) {
-  formattedContent = Object.entries(content.abilities)
-    .map(
-      ([key, ability]) => `
-        <div class="cc-ability-card p-3 mb-3">
-          <div class="d-flex justify-content-between align-items-baseline mb-1">
-            <div class="fw-bold">${key}</div>
-            <div class="cc-muted small text-uppercase">${ability.timing || "—"}</div>
-          </div>
-          ${ability.short ? `<div class="fw-semibold mb-1">${ability.short}</div>` : ""}
-          ${ability.long ? `<div>${ability.long}</div>` : ""}
-        </div>
-      `
-    )
-    .join("");
-}
+      // ---- Ability Dictionary ----
+      if (content && content.abilities) {
+        formattedContent = Object.entries(content.abilities)
+          .map(
+            ([key, ability]) => `
+              <div class="cc-ability-card p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                  <div class="fw-bold">${key}</div>
+                  <div class="cc-muted small text-uppercase">${ability.timing || "—"}</div>
+                </div>
+                ${ability.short ? `<div class="fw-semibold mb-1">${ability.short}</div>` : ""}
+                ${ability.long ? `<div>${ability.long}</div>` : ""}
+              </div>
+            `
+          )
+          .join("");
+      }
 
-// ---- Plain prose (Philosophy, design notes, etc.) ----
-else if (content && typeof content === "object" && content.long && !content.short) {
-  formattedContent = `<p>${content.long}</p>`;
-}
+      // ---- Plain prose (Philosophy) ----
+      else if (content && typeof content === "object" && content.long && !content.short) {
+        formattedContent = `<p>${content.long}</p>`;
+      }
 
-// ---- Leaf rule (single mechanic) ----
-else if (
-  content &&
-  typeof content === "object" &&
-  (content.short || content.long) &&
-  !Object.values(content).some(v => typeof v === "object" && v?._id)
-) {
-  formattedContent = `
-    ${content.short ? `<p class="fw-semibold mb-2">${content.short}</p>` : ""}
-    ${content.long ? `<p>${content.long}</p>` : ""}
-  `;
-}
+      // ---- Leaf rule ----
+      else if (
+        content &&
+        typeof content === "object" &&
+        (content.short || content.long) &&
+        !Object.values(content).some(v => typeof v === "object" && v?._id)
+      ) {
+        formattedContent = `
+          ${content.short ? `<p class="fw-semibold mb-2">${content.short}</p>` : ""}
+          ${content.long ? `<p>${content.long}</p>` : ""}
+        `;
+      }
 
-// ---- Section container (Core Mechanics, Turn Structure, Vaults) ----
-else if (content && typeof content === "object") {
-  formattedContent = Object.entries(content)
-    .filter(([k, v]) => !k.startsWith("_") && typeof v === "object")
-    .map(([key, val]) => `
-      <div class="cc-panel mb-3">
-        <div class="cc-panel-head">
-          <div class="cc-panel-title">
-            ${val.title || key.replace(/_/g, " ")}
-          </div>
-        </div>
-        <div class="cc-body">
-          ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
-          ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
-        </div>
-      </div>
-    `)
-    .join("");
-}
+      // ---- Section container ----
+      else if (content && typeof content === "object") {
+        formattedContent = Object.entries(content)
+          .filter(([k, v]) => !k.startsWith("_") && typeof v === "object")
+          .map(([key, val]) => `
+            <div class="cc-panel mb-3">
+              <div class="cc-panel-head">
+                <div class="cc-panel-title">
+                  ${val.title || key.replace(/_/g, " ")}
+                </div>
+              </div>
+              <div class="cc-body">
+                ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
+                ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
+              </div>
+            </div>
+          `)
+          .join("");
+      }
 
-else {
-  formattedContent = `<div class="cc-muted">No content available.</div>`;
-}
+      else {
+        formattedContent = `<div class="cc-muted">No content available.</div>`;
+      }
 
       // ---- MAIN CONTENT ----
       detailEl.innerHTML = `
@@ -208,7 +205,7 @@ else {
         </div>
       `;
 
-      // ---- CONTEXT / CHILDREN ----
+      // ---- CONTEXT ----
       ctxEl.innerHTML = `
         <div class="cc-kv mb-3">
           <div class="cc-k">Type</div><div class="cc-v">${meta.type}</div>
@@ -220,16 +217,14 @@ else {
             ? `
               <div class="fw-bold small text-uppercase mb-1">Subsections</div>
               <ul class="list-unstyled">
-                ${children
-                  .map(
-                    (c) => `
-                      <li>
-                        <button class="btn btn-link p-0" data-id="${c.id}">
-                          ${c.title}
-                        </button>
-                      </li>`
-                  )
-                  .join("")}
+                ${children.map(
+                  (c) => `
+                    <li>
+                      <button class="btn btn-link p-0" data-id="${c.id}">
+                        ${c.title}
+                      </button>
+                    </li>`
+                ).join("")}
               </ul>
             `
             : `<div class="cc-muted">No subsections.</div>`
