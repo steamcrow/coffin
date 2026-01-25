@@ -1,0 +1,64 @@
+{
+  "_id": "R-VIS",
+  "title": "Visibility Vault",
+
+  "philosophy": {
+    "_id": "R-VIS-00",
+    "short": "Clarity over precision. If it’s unclear, don’t argue.",
+    "long": "Simple, intent-based Line of Sight. Precision geometry is not required; clarity and momentum matter more.",
+    "fast_resolution": "If players cannot quickly agree: the shot does not happen OR the target gains Cover. Choose the option that keeps the game moving."
+  },
+
+  "line_of_sight": {
+    "_id": "R-VIS-01",
+    "short": "If there’s doubt, LoS is blocked.",
+    "long": "A clear, believable line between attacker and target. If there is doubt, Line of Sight is blocked.",
+    "definition": "A clear, believable line between attacker and target.",
+    "blockers": {
+      "absolute": [
+        "Solid walls",
+        "Cliff faces",
+        "Large rock formations",
+        "Buildings with intact walls",
+        "Scenario-defined blockers"
+      ],
+      "non_blockers": [
+        "Fences",
+        "Railings",
+        "Windows",
+        "Rubble piles",
+        "Boardwalks",
+        "Light vegetation"
+      ],
+      "elevation_rule": "Elevation does not override solid blockers. Being higher does not allow models to see over walls or cliffs."
+    }
+  },
+
+  "cover_mechanics": {
+    "_id": "R-VIS-02",
+    "short": "Cover gives +1 Defense vs ranged attacks.",
+    "long": "Cover represents partial obstruction that makes a model harder to hit. It is not total protection.",
+    "definition": "Partial obstruction providing a defensive bonus.",
+    "effects": {
+      "ranged_bonus": "+1 Defense",
+      "stacking": "Does not stack.",
+      "melee_restriction": "Never applies to melee attacks."
+    },
+    "negation_triggers": [
+      "Attacker is within the same terrain piece as the target.",
+      "Model is in Burning terrain.",
+      "Model is Exposed by an ability or effect."
+    ],
+    "terrain_trait_interactions": [
+      { "trait": "Burning", "result": "No Cover" },
+      { "trait": "Hazardous", "result": "Cover applies normally" },
+      { "trait": "Choking", "result": "Cover applies normally" },
+      { "trait": "Unstable", "result": "Cover may be lost if terrain collapses" }
+    ]
+  },
+
+  "design_intent": {
+    "_id": "R-VIS-99",
+    "text": "Line of Sight should be obvious, Cover should be simple, and disputes should be rare and brief. The Canyon is dangerous enough without arguments."
+  }
+}
