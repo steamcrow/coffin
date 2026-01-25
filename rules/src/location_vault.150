@@ -1,0 +1,865 @@
+{
+  "file": "150_location_types.json",
+  "version": "1.0",
+  "scale": "d6",
+  "notes": [
+    "All ratings are 1–6 unless otherwise stated.",
+    "Resource ratings use 0–6 where 0 = absent.",
+    "Danger 6 implies catastrophic zones (Titans possible/active, or dominant-immune threat such as Klowna).",
+    "Population is 'human population presence' (settled humans, not counting monsters)."
+  ],
+  "rating_legend": {
+    "danger": {
+      "1": "Controlled / comparatively safe",
+      "2": "Frontier risk",
+      "3": "Hostile / regular monster presence",
+      "4": "Dangerous / lethal terrain or elite monsters",
+      "5": "Extreme / escalation guaranteed, titan possible",
+      "6": "Catastrophic / titan-active or immune-dominant zone"
+    },
+    "population": {
+      "1": "None / occasional passerby",
+      "2": "A few (camp, shack, outpost)",
+      "3": "Small (dozens)",
+      "4": "Town (hundreds)",
+      "5": "Big town (thousands)",
+      "6": "Major hub / city-density for the canyon"
+    },
+    "resources": {
+      "0": "Absent",
+      "1": "Trace",
+      "2": "Scarce",
+      "3": "Present",
+      "4": "Abundant",
+      "5": "Strategic",
+      "6": "Legendary / warps behavior"
+    }
+  },
+  "state_effects": {
+    "ruins": {
+      "danger_mod": 1,
+      "population_mod": -2,
+      "resource_mods": { "supplies": -1, "food_good": -1, "water_clean": -1, "mechanical_parts": 1 },
+      "tags_add": ["UndeadPressure", "CollapsedInfrastructure"],
+      "monster_bias_add": ["Bloodless", "Incorporeal"]
+    },
+    "barely_alive": {
+      "danger_mod": 0,
+      "population_mod": -1,
+      "resource_mods": { "supplies": -1, "food_good": -1 },
+      "tags_add": ["Desperate"],
+      "monster_bias_add": []
+    },
+    "alive": {
+      "danger_mod": 0,
+      "population_mod": 0,
+      "resource_mods": {},
+      "tags_add": [],
+      "monster_bias_add": []
+    },
+    "prospering": {
+      "danger_mod": -1,
+      "population_mod": 1,
+      "resource_mods": { "supplies": 1, "food_good": 1, "water_clean": 1 },
+      "tags_add": ["Trade"],
+      "monster_bias_add": ["Cunning"]
+    },
+    "booming": {
+      "danger_mod": -1,
+      "population_mod": 2,
+      "resource_mods": { "supplies": 2, "mechanical_parts": 1, "food_good": 1, "water_clean": 1 },
+      "tags_add": ["Trade", "Volatile", "EscalationRisk"],
+      "monster_bias_add": ["Cunning", "Territorial"]
+    }
+  },
+  "resources_catalog": [
+    "silver",
+    "tzul_silver",
+    "lead",
+    "mechanical_parts",
+    "livestock",
+    "supplies",
+    "gildren",
+    "food",
+    "food_good",
+    "food_foul",
+    "water",
+    "water_clean",
+    "water_foul",
+    "thyr"
+  ],
+  "location_types": [
+    {
+      "id": "boomtown_riverside",
+      "name": "Boomtown (Riverside)",
+      "kind": "Boomtown",
+      "state_default": "alive",
+      "danger_base": 3,
+      "population_base": 4,
+      "resources": {
+        "silver": 3,
+        "tzul_silver": 0,
+        "lead": 2,
+        "mechanical_parts": 3,
+        "livestock": 3,
+        "supplies": 4,
+        "gildren": 2,
+        "food": 4,
+        "food_good": 3,
+        "food_foul": 1,
+        "water": 5,
+        "water_clean": 3,
+        "water_foul": 2,
+        "thyr": 1
+      },
+      "features": ["Docks", "RiverShore", "FerryLine", "MarketRow", "Canteen"],
+      "monster_seeds": [
+        { "name": "Kelpie", "weight": 3 },
+        { "name": "Crocodile", "weight": 3 },
+        { "name": "Will-o’-Wisp", "weight": 2 },
+        { "name": "Rat Swarm", "weight": 2 },
+        { "name": "Ruster", "weight": 1 }
+      ],
+      "notes": ["Boomtowns attract predators and opportunists. River brings trade and trouble."]
+    },
+    {
+      "id": "boomtown_mesa",
+      "name": "Boomtown (Mesa Top)",
+      "kind": "Boomtown",
+      "state_default": "barely_alive",
+      "danger_base": 4,
+      "population_base": 3,
+      "resources": {
+        "silver": 4,
+        "tzul_silver": 1,
+        "lead": 3,
+        "mechanical_parts": 2,
+        "livestock": 2,
+        "supplies": 2,
+        "gildren": 2,
+        "food": 2,
+        "food_good": 1,
+        "food_foul": 2,
+        "water": 2,
+        "water_clean": 1,
+        "water_foul": 2,
+        "thyr": 2
+      },
+      "features": ["Windmill", "CliffRoad", "SignalTower", "RopeLift"],
+      "monster_seeds": [
+        { "name": "Harpy", "weight": 3 },
+        { "name": "Hippogriff", "weight": 2 },
+        { "name": "Gargoyle", "weight": 2 },
+        { "name": "Dire Wolf", "weight": 1 }
+      ],
+      "notes": ["Mesa towns are hard to supply and easy to besiege."]
+    },
+    {
+      "id": "boomtown_spire_stilts",
+      "name": "Boomtown (Spire Stilts)",
+      "kind": "Boomtown",
+      "state_default": "ruins",
+      "danger_base": 4,
+      "population_base": 2,
+      "resources": {
+        "silver": 2,
+        "tzul_silver": 0,
+        "lead": 1,
+        "mechanical_parts": 4,
+        "livestock": 1,
+        "supplies": 1,
+        "gildren": 1,
+        "food": 1,
+        "food_good": 0,
+        "food_foul": 2,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 1
+      },
+      "features": ["StiltWalkways", "RopeBridges", "CreakingPlatforms", "DropZones"],
+      "monster_seeds": [
+        { "name": "Gargoyle", "weight": 3 },
+        { "name": "Giant Spider", "weight": 3 },
+        { "name": "Spider Swarm", "weight": 2 },
+        { "name": "Shadow", "weight": 2 }
+      ],
+      "notes": ["Perfect for ambush and vertical horrors."]
+    },
+    {
+      "id": "boomtown_riverbase",
+      "name": "Boomtown (River Base / Canyon Floor)",
+      "kind": "Boomtown",
+      "state_default": "alive",
+      "danger_base": 3,
+      "population_base": 4,
+      "resources": {
+        "silver": 2,
+        "tzul_silver": 0,
+        "lead": 2,
+        "mechanical_parts": 3,
+        "livestock": 2,
+        "supplies": 4,
+        "gildren": 2,
+        "food": 4,
+        "food_good": 2,
+        "food_foul": 2,
+        "water": 5,
+        "water_clean": 2,
+        "water_foul": 3,
+        "thyr": 1
+      },
+      "features": ["Switchbacks", "CargoWinches", "TinShacks", "FloodMarkers"],
+      "monster_seeds": [
+        { "name": "Crocodile", "weight": 3 },
+        { "name": "Kelpie", "weight": 2 },
+        { "name": "Ghoul", "weight": 2 },
+        { "name": "Rat Swarm", "weight": 2 }
+      ],
+      "notes": ["Trade comes through; so does rot."]
+    },
+    {
+      "id": "boomtown_dryriver",
+      "name": "Boomtown (Dry Riverbed)",
+      "kind": "Boomtown",
+      "state_default": "ruins",
+      "danger_base": 4,
+      "population_base": 2,
+      "resources": {
+        "silver": 2,
+        "tzul_silver": 0,
+        "lead": 1,
+        "mechanical_parts": 3,
+        "livestock": 1,
+        "supplies": 1,
+        "gildren": 1,
+        "food": 1,
+        "food_good": 0,
+        "food_foul": 2,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 1
+      },
+      "features": ["CrackedMud", "CollapsedBridge", "DustAlleys", "BonePiles"],
+      "monster_seeds": [
+        { "name": "Sand Shark", "weight": 3 },
+        { "name": "Sand Worm", "weight": 1 },
+        { "name": "Skeleton", "weight": 2 },
+        { "name": "Will-o’-Wisp", "weight": 2 }
+      ],
+      "notes": ["Dry rivers become roads. Roads become hunting lanes."]
+    },
+    {
+      "id": "diablo_booming_hub",
+      "name": "Diablo (Always Booming)",
+      "kind": "Major Boom Hub",
+      "state_default": "booming",
+      "danger_base": 3,
+      "population_base": 6,
+      "resources": {
+        "silver": 3,
+        "tzul_silver": 1,
+        "lead": 2,
+        "mechanical_parts": 5,
+        "livestock": 4,
+        "supplies": 6,
+        "gildren": 3,
+        "food": 6,
+        "food_good": 5,
+        "food_foul": 1,
+        "water": 4,
+        "water_clean": 3,
+        "water_foul": 1,
+        "thyr": 2
+      },
+      "features": ["RailSpur", "AuctionYard", "GunsmithRow", "CompanyOffice", "TinChurch", "Jailhouse", "Hotel"],
+      "monster_seeds": [
+        { "name": "Red Goblin", "weight": 2 },
+        { "name": "Feratu Stalker", "weight": 2 },
+        { "name": "Ruster", "weight": 1 },
+        { "name": "Will-o’-Wisp", "weight": 1 },
+        { "name": "Klowna", "weight": 1 }
+      ],
+      "notes": [
+        "Diablo is booming by decree, greed, and violence.",
+        "Klowna may appear near civilization if the dominant threat is immune/inevitable."
+      ]
+    },
+    {
+      "id": "camp_coffin_hq",
+      "name": "Camp Coffin (Headquarters)",
+      "kind": "Headquarters",
+      "state_default": "alive",
+      "danger_base": 2,
+      "population_base": 4,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 1,
+        "mechanical_parts": 3,
+        "livestock": 2,
+        "supplies": 5,
+        "gildren": 1,
+        "food": 4,
+        "food_good": 3,
+        "food_foul": 1,
+        "water": 3,
+        "water_clean": 2,
+        "water_foul": 1,
+        "thyr": 1
+      },
+      "features": ["CommandTent", "WatchLine", "SupplyCrates", "Workshop", "Stables"],
+      "monster_seeds": [
+        { "name": "Canyon Goblin", "weight": 2 },
+        { "name": "Wolf", "weight": 2 },
+        { "name": "Will-o’-Wisp", "weight": 1 }
+      ],
+      "notes": ["The canyon is never fully safe, but HQ is defended and supplied."]
+    },
+    {
+      "id": "mine_abandoned",
+      "name": "Mine (Abandoned)",
+      "kind": "Mine",
+      "state_default": "ruins",
+      "danger_base": 4,
+      "population_base": 1,
+      "resources": {
+        "silver": 3,
+        "tzul_silver": 1,
+        "lead": 4,
+        "mechanical_parts": 3,
+        "livestock": 0,
+        "supplies": 1,
+        "gildren": 2,
+        "food": 0,
+        "food_good": 0,
+        "food_foul": 2,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 2
+      },
+      "features": ["ShaftMouth", "TimberProps", "CartTracks", "DeepDark", "MonsterExit"],
+      "monster_seeds": [
+        { "name": "Bat Swarm", "weight": 3 },
+        { "name": "Ghoul", "weight": 2 },
+        { "name": "Skeleton", "weight": 2 },
+        { "name": "Specter", "weight": 2 },
+        { "name": "Gelatinous Cube", "weight": 1 }
+      ],
+      "notes": ["Abandoned mines are perfect Monster Exits."]
+    },
+    {
+      "id": "mine_active_shineriders",
+      "name": "Mine (Active / Shine Riders Territory)",
+      "kind": "Mine",
+      "state_default": "alive",
+      "danger_base": 3,
+      "population_base": 3,
+      "resources": {
+        "silver": 4,
+        "tzul_silver": 2,
+        "lead": 3,
+        "mechanical_parts": 2,
+        "livestock": 1,
+        "supplies": 3,
+        "gildren": 2,
+        "food": 2,
+        "food_good": 1,
+        "food_foul": 2,
+        "water": 2,
+        "water_clean": 1,
+        "water_foul": 2,
+        "thyr": 2
+      },
+      "features": ["GuardPost", "OreSheds", "WinchRig", "ShaftMouth", "ExplosivesLocker"],
+      "monster_seeds": [
+        { "name": "Ruster", "weight": 2 },
+        { "name": "Gray Ooze", "weight": 1 },
+        { "name": "Will-o’-Wisp", "weight": 1 }
+      ],
+      "notes": ["Humans are present; monsters still slip in."]
+    },
+    {
+      "id": "tzul_ruins_embalma",
+      "name": "Tzul Ruins (Embalma Quarter)",
+      "kind": "Tzul Ruins",
+      "state_default": "ruins",
+      "danger_base": 5,
+      "population_base": 1,
+      "resources": {
+        "silver": 1,
+        "tzul_silver": 4,
+        "lead": 0,
+        "mechanical_parts": 1,
+        "livestock": 0,
+        "supplies": 0,
+        "gildren": 0,
+        "food": 0,
+        "food_good": 0,
+        "food_foul": 3,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 3,
+        "thyr": 3
+      },
+      "features": ["SealedDoors", "GlyphStone", "BurialRooms", "WhisperCorridors", "MonsterExit"],
+      "monster_seeds": [
+        { "name": "Dust King", "weight": 3 },
+        { "name": "Wraith", "weight": 2 },
+        { "name": "Banshee", "weight": 2 },
+        { "name": "Shadow", "weight": 2 },
+        { "name": "Dracolich", "weight": 1 }
+      ],
+      "notes": ["Heavy Bloodless/Haunt pressure. Skull Ranger interactions likely."]
+    },
+    {
+      "id": "river_active",
+      "name": "River (Active Flow)",
+      "kind": "River",
+      "state_default": "alive",
+      "danger_base": 3,
+      "population_base": 2,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 1,
+        "livestock": 1,
+        "supplies": 1,
+        "gildren": 0,
+        "food": 2,
+        "food_good": 2,
+        "food_foul": 2,
+        "water": 6,
+        "water_clean": 2,
+        "water_foul": 3,
+        "thyr": 1
+      },
+      "features": ["Current", "Crossing", "Reeds", "MudPockets"],
+      "monster_seeds": [
+        { "name": "Kelpie", "weight": 3 },
+        { "name": "Crocodile", "weight": 3 },
+        { "name": "Will-o’-Wisp", "weight": 2 }
+      ],
+      "notes": ["The river is a resource and a trap."]
+    },
+    {
+      "id": "river_dried",
+      "name": "River (Dried Up)",
+      "kind": "River",
+      "state_default": "ruins",
+      "danger_base": 4,
+      "population_base": 1,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 2,
+        "livestock": 0,
+        "supplies": 0,
+        "gildren": 0,
+        "food": 0,
+        "food_good": 0,
+        "food_foul": 2,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 1
+      },
+      "features": ["CrackedChannel", "BoneDrifts", "DustRoad"],
+      "monster_seeds": [
+        { "name": "Sand Shark", "weight": 3 },
+        { "name": "Will-o’-Wisp", "weight": 2 },
+        { "name": "Skeleton", "weight": 2 }
+      ],
+      "notes": ["Dry riverbeds become fast lanes for predators."]
+    },
+    {
+      "id": "sand_wasteland",
+      "name": "Sand Wasteland",
+      "kind": "Wasteland",
+      "state_default": "ruins",
+      "danger_base": 5,
+      "population_base": 1,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 1,
+        "livestock": 0,
+        "supplies": 0,
+        "gildren": 1,
+        "food": 0,
+        "food_good": 0,
+        "food_foul": 1,
+        "water": 0,
+        "water_clean": 0,
+        "water_foul": 1,
+        "thyr": 1
+      },
+      "features": ["Dunes", "HeatShimmer", "SinkLines"],
+      "monster_seeds": [
+        { "name": "Sand Shark", "weight": 4 },
+        { "name": "Sand Worm", "weight": 2 },
+        { "name": "Wyvern", "weight": 1 }
+      ],
+      "notes": ["You don’t cross this unless you have to."]
+    },
+    {
+      "id": "rock_outcroppings",
+      "name": "Rock Outcroppings",
+      "kind": "Terrain",
+      "state_default": "alive",
+      "danger_base": 3,
+      "population_base": 1,
+      "resources": {
+        "silver": 1,
+        "tzul_silver": 0,
+        "lead": 1,
+        "mechanical_parts": 0,
+        "livestock": 1,
+        "supplies": 0,
+        "gildren": 1,
+        "food": 1,
+        "food_good": 0,
+        "food_foul": 1,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 1,
+        "thyr": 2
+      },
+      "features": ["Cover", "HighGround", "CrackCaves"],
+      "monster_seeds": [
+        { "name": "Gargoyle", "weight": 2 },
+        { "name": "Giant Spider", "weight": 2 },
+        { "name": "Harpy", "weight": 2 },
+        { "name": "Dire Wolf", "weight": 1 }
+      ],
+      "notes": ["The canyon provides ambush structure for everything."]
+    },
+    {
+      "id": "mesa",
+      "name": "Mesa",
+      "kind": "Terrain",
+      "state_default": "alive",
+      "danger_base": 3,
+      "population_base": 1,
+      "resources": {
+        "silver": 1,
+        "tzul_silver": 0,
+        "lead": 1,
+        "mechanical_parts": 0,
+        "livestock": 1,
+        "supplies": 0,
+        "gildren": 0,
+        "food": 1,
+        "food_good": 0,
+        "food_foul": 1,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 1,
+        "thyr": 2
+      },
+      "features": ["CliffEdges", "Wind", "LongSightlines"],
+      "monster_seeds": [
+        { "name": "Harpy", "weight": 3 },
+        { "name": "Hippogriff", "weight": 2 },
+        { "name": "Gargoyle", "weight": 2 }
+      ],
+      "notes": ["Anything with wings loves a mesa."]
+    },
+    {
+      "id": "cave",
+      "name": "Cave",
+      "kind": "Terrain",
+      "state_default": "ruins",
+      "danger_base": 4,
+      "population_base": 1,
+      "resources": {
+        "silver": 1,
+        "tzul_silver": 1,
+        "lead": 1,
+        "mechanical_parts": 0,
+        "livestock": 0,
+        "supplies": 0,
+        "gildren": 1,
+        "food": 0,
+        "food_good": 0,
+        "food_foul": 2,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 2
+      },
+      "features": ["Dark", "Echoes", "NarrowChokes", "MonsterExit"],
+      "monster_seeds": [
+        { "name": "Bat Swarm", "weight": 3 },
+        { "name": "Giant Spider", "weight": 2 },
+        { "name": "Owlbear", "weight": 1 },
+        { "name": "Mimic", "weight": 1 }
+      ],
+      "notes": ["Caves are where plans go to die."]
+    },
+    {
+      "id": "sinkhole",
+      "name": "Sinkhole",
+      "kind": "Hazard",
+      "state_default": "ruins",
+      "danger_base": 5,
+      "population_base": 1,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 1,
+        "livestock": 0,
+        "supplies": 0,
+        "gildren": 0,
+        "food": 0,
+        "food_good": 0,
+        "food_foul": 2,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 2
+      },
+      "features": ["HiddenDrop", "CrackedRim", "MonsterExit"],
+      "monster_seeds": [
+        { "name": "Will-o’-Wisp", "weight": 3 },
+        { "name": "Ghoul", "weight": 2 },
+        { "name": "Sand Shark", "weight": 1 }
+      ],
+      "notes": ["A sinkhole is a place the canyon steals from you."]
+    },
+    {
+      "id": "debris_field",
+      "name": "Debris Field (Wagon Rot / Junkyard / Dead Camp / Ruined Fort / Ancient Adobe)",
+      "kind": "Detritus",
+      "state_default": "ruins",
+      "danger_base": 4,
+      "population_base": 1,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 1,
+        "mechanical_parts": 4,
+        "livestock": 0,
+        "supplies": 2,
+        "gildren": 1,
+        "food": 1,
+        "food_good": 0,
+        "food_foul": 2,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 1
+      },
+      "features": ["ScrapPiles", "BrokenWagons", "RottenCanvas", "RustNails", "OldFences"],
+      "monster_seeds": [
+        { "name": "Ruster", "weight": 3 },
+        { "name": "Wererat", "weight": 2 },
+        { "name": "Rat Swarm", "weight": 2 },
+        { "name": "Mimic", "weight": 1 }
+      ],
+      "notes": ["Greed draws you in. Something else keeps you there."]
+    },
+    {
+      "id": "thyr_outcroppings",
+      "name": "Thyr Outcroppings",
+      "kind": "Thyr",
+      "state_default": "alive",
+      "danger_base": 4,
+      "population_base": 1,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 0,
+        "livestock": 0,
+        "supplies": 0,
+        "gildren": 0,
+        "food": 0,
+        "food_good": 0,
+        "food_foul": 1,
+        "water": 0,
+        "water_clean": 0,
+        "water_foul": 1,
+        "thyr": 5
+      },
+      "features": ["GlowingVeins", "ShardFields", "HummingStone"],
+      "monster_seeds": [
+        { "name": "Lionvulture", "weight": 3 },
+        { "name": "Owlbear", "weight": 2 },
+        { "name": "Giant Bear", "weight": 1 },
+        { "name": "Doom Eye", "weight": 1 }
+      ],
+      "notes": ["Thyr changes behavior. Territorial monsters gather."]
+    },
+    {
+      "id": "thyr_field",
+      "name": "Thyr Field (Heavy Veins)",
+      "kind": "Thyr",
+      "state_default": "ruins",
+      "danger_base": 5,
+      "population_base": 1,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 0,
+        "livestock": 0,
+        "supplies": 0,
+        "gildren": 0,
+        "food": 0,
+        "food_good": 0,
+        "food_foul": 2,
+        "water": 0,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 6
+      },
+      "features": ["ShardStormRisk", "ResonanceHum", "GlassDust"],
+      "monster_seeds": [
+        { "name": "Doom Eye", "weight": 2 },
+        { "name": "Chimera", "weight": 2 },
+        { "name": "Young Dragon", "weight": 1 },
+        { "name": "Sand Worm", "weight": 1 }
+      ],
+      "notes": ["This is where the canyon feels awake."]
+    },
+    {
+      "id": "graveyard",
+      "name": "Graveyard",
+      "kind": "Grave",
+      "state_default": "ruins",
+      "danger_base": 4,
+      "population_base": 1,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 0,
+        "livestock": 0,
+        "supplies": 0,
+        "gildren": 0,
+        "food": 0,
+        "food_good": 0,
+        "food_foul": 2,
+        "water": 0,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 2
+      },
+      "features": ["Headstones", "SunkenPlots", "IronFence", "ColdWind"],
+      "monster_seeds": [
+        { "name": "Skeleton", "weight": 3 },
+        { "name": "Ghost", "weight": 2 },
+        { "name": "Specter", "weight": 2 },
+        { "name": "Wraith", "weight": 1 }
+      ],
+      "notes": ["Not all graves are for people."]
+    },
+    {
+      "id": "bone_graveyard",
+      "name": "Bone Graveyard (Herdbeasts / Owlbears / Big Dying Ground)",
+      "kind": "Bone",
+      "state_default": "alive",
+      "danger_base": 4,
+      "population_base": 1,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 0,
+        "livestock": 0,
+        "supplies": 0,
+        "gildren": 0,
+        "food": 1,
+        "food_good": 0,
+        "food_foul": 3,
+        "water": 0,
+        "water_clean": 0,
+        "water_foul": 2,
+        "thyr": 2
+      },
+      "features": ["BoneDrifts", "CarrionWind", "HollowPits"],
+      "monster_seeds": [
+        { "name": "Gnoll", "weight": 3 },
+        { "name": "Ghoul", "weight": 3 },
+        { "name": "Lionvulture", "weight": 2 },
+        { "name": "Feratu Stalker", "weight": 1 }
+      ],
+      "notes": ["Predators arrive when the canyon serves dinner."]
+    },
+    {
+      "id": "monsterologist_town_active",
+      "name": "Active Monsterologist Town",
+      "kind": "Faction Town",
+      "state_default": "prospering",
+      "danger_base": 3,
+      "population_base": 4,
+      "resources": {
+        "silver": 1,
+        "tzul_silver": 1,
+        "lead": 2,
+        "mechanical_parts": 4,
+        "livestock": 1,
+        "supplies": 4,
+        "gildren": 2,
+        "food": 3,
+        "food_good": 2,
+        "food_foul": 2,
+        "water": 2,
+        "water_clean": 1,
+        "water_foul": 2,
+        "thyr": 3
+      },
+      "features": ["LabRow", "SpecimenPens", "CageWagons", "DissectionHall", "GuardPatrols"],
+      "monster_seeds": [
+        { "name": "Flesh Golem", "weight": 2 },
+        { "name": "Patchwork Wonder", "weight": 2 },
+        { "name": "Mimic", "weight": 1 },
+        { "name": "Imp", "weight": 1 }
+      ],
+      "notes": ["A town that studies monsters tends to create them."]
+    },
+    {
+      "id": "cultist_revival_tents",
+      "name": "Cultist Revival Tents (Roadside / Between Places)",
+      "kind": "Cult Site",
+      "state_default": "ruins",
+      "danger_base": 5,
+      "population_base": 2,
+      "resources": {
+        "silver": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 0,
+        "livestock": 0,
+        "supplies": 1,
+        "gildren": 1,
+        "food": 1,
+        "food_good": 0,
+        "food_foul": 3,
+        "water": 1,
+        "water_clean": 0,
+        "water_foul": 3,
+        "thyr": 2
+      },
+      "features": ["BlackTents", "BonfirePit", "ChantCircle", "ImprovisedAltar", "MonsterExit"],
+      "monster_seeds": [
+        { "name": "Skeleton", "weight": 2 },
+        { "name": "Ghoul", "weight": 2 },
+        { "name": "Banshee", "weight": 1 },
+        { "name": "Devil", "weight": 1 },
+        { "name": "Doom Eye", "weight": 1 }
+      ],
+      "notes": [
+        "Intended as randomized 'between locations' content.",
+        "If ignored, escalation can push this to Danger 6 quickly."
+      ]
+    }
+  ]
+}
