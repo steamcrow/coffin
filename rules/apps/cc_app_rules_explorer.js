@@ -112,75 +112,107 @@ window.CC_APP = {
         .join("");
     }
 
-    // ---- SELECT RULE (NOW ASYNC) ----
-    async function selectRule(id) {
-      selectedId = id;
+ // ---- SELECT RULE (NOW WITH BETTER FORMATTING) ----
+async function selectRule(id) {
+  selectedId = id;
 
-      // Show loading state
-      detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
-      ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+  // Show loading state
+  detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+  ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
 
-      const section = await helpers.getRuleSection(id);
-      
-      if (!section || !section.meta) {
-        detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
-        ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
-        return;
-      }
+  console.log("🔍 Selecting rule:", id);
+  
+  const section = await helpers.getRuleSection(id);
+  
+  console.log("📦 Got section:", section);
+  
+  if (!section || !section.meta) {
+    console.error("❌ Section or meta is missing", section);
+    detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
+    ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
+    return;
+  }
 
-      const { meta, content } = section;
-      const children = helpers.getChildren(id);
+  const { meta, content } = section;
+  
+  console.log("✅ Meta:", meta);
+  console.log("✅ Content:", content);
 
-      // MAIN CONTENT
-      detailEl.innerHTML = `
-        <h4 class="mb-1">${meta.title}</h4>
-        <div class="cc-muted mb-2">
-          <code>${meta.id}</code> • ${meta.type}
-        </div>
+  const children = helpers.getChildren(id);
 
-        <div class="cc-callout mb-3">
-          <strong>Path:</strong> <code>${meta.path}</code>
-        </div>
+  // ---- FORMAT CONTENT NICELY ----
+  let formattedContent = "";
 
-        <div class="cc-rule-text">
-          ${
-            typeof content === "string"
-              ? `<p>${content}</p>`
-              : `<pre>${JSON.stringify(content, null, 2)}</pre>`
-          }
-        </div>
-      `;
+  if (content && content.abilities) {
+    // This is an abilities dictionary - format each ability
+    formattedContent = Object.entries(content.abilities)
+      .map(([key, ability]) => {
+        return `
+          <div class="cc-ability-card mb-3">
+            <h5 class="mb-1">${ability.short || key}</h5>
+            <div class="cc-muted mb-2">
+              <strong>${key}</strong> • ${ability.timing || "—"}
+            </div>
+            <p class="mb-0">${ability.long || "No description."}</p>
+          </div>
+        `;
+      })
+      .join("");
+  } else if (typeof content === "string") {
+    formattedContent = `<p>${content}</p>`;
+  } else if (content) {
+    // Generic JSON display for other content types
+    formattedContent = `<pre class="cc-json">${JSON.stringify(content, null, 2)}</pre>`;
+  } else {
+    formattedContent = `<div class="cc-muted">No content available.</div>`;
+  }
 
-      // CONTEXT / CHILDREN
-      ctxEl.innerHTML = `
-        <div class="cc-kv mb-3">
-          <div class="cc-k">Type</div><div class="cc-v">${meta.type}</div>
-          <div class="cc-k">Parent</div><div class="cc-v">${meta.parent || "—"}</div>
-        </div>
+  // MAIN CONTENT
+  detailEl.innerHTML = `
+    <h4 class="mb-1">${meta.title}</h4>
+    <div class="cc-muted mb-2">
+      <code>${meta.id}</code> • ${meta.type}
+    </div>
 
-        ${
-          children.length
-            ? `
-              <div class="cc-subhead mb-1">Subsections</div>
-              <ul class="cc-mini-list">
-                ${children
-                  .map(
-                    (c) =>
-                      `<li>
-                        <button class="cc-link" data-id="${c.id}">
-                          ${c.title}
-                        </button>
-                      </li>`
-                  )
-                  .join("")}
-              </ul>
-            `
-            : `<div class="cc-muted">No subsections.</div>`
-        }
-      `;
+    <div class="cc-callout mb-3">
+      <strong>Path:</strong> <code>${meta.path}</code>
+    </div>
 
-      renderList(searchEl.value);
+    <div class="cc-rule-content">
+      ${formattedContent}
+    </div>
+  `;
+
+  // CONTEXT / CHILDREN
+  ctxEl.innerHTML = `
+    <div class="cc-kv mb-3">
+      <div class="cc-k">Type</div><div class="cc-v">${meta.type}</div>
+      <div class="cc-k">Parent</div><div class="cc-v">${meta.parent || "—"}</div>
+    </div>
+
+    ${
+      children.length
+        ? `
+          <div class="cc-subhead mb-1">Subsections</div>
+          <ul class="cc-mini-list">
+            ${children
+              .map(
+                (c) =>
+                  `<li>
+                    <button class="cc-link" data-id="${c.id}">
+                      ${c.title}
+                    </button>
+                  </li>`
+              )
+              .join("")}
+          </ul>
+        `
+        : `<div class="cc-muted">No subsections.</div>`
     }
+  `;
+
+  renderList(searchEl.value);
+}
 
     // ---- EVENTS (NOW HANDLE ASYNC) ----
     listEl.addEventListener("click", (e) => {
