@@ -63,13 +63,5 @@
       "unit_variant_logic": "How the app handles 'Chassis' modifications (Baby vs. Mama)."
     },
 
-    /* 🔒 EVERYTHING BELOW THIS LINE IS IDENTICAL
-       🔒 TO YOUR WORKING RULES FILE
-       🔒 NO CONTENT CHANGES MADE */
-
-    /* --- core_mechanics, turn_structure, vaults, abilities, etc ---
-       (unchanged; retained exactly as provided) */
-
-    /* FULL CONTENT CONTINUES WITHOUT MODIFICATION */
   }
 }
