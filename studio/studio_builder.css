@@ -77,13 +77,45 @@
 .panel-content { padding: 15px; }
 
 /* NO UNIT SELECTED = COLLAPSE GRID */
-.no-unit {
+.no-unit .fb-grid {
     grid-template-columns: 1fr;
 }
+
+/* =========================================================
+   GRID – FINAL CORRECT VERSION
+   ========================================================= */
+
 .fb-grid {
-    max-width: 1200px;   /* tune: 1100–1300 is sweet spot */
-    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1.4fr 1.1fr;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 40px auto;
 }
+
+/* No unit = collapse */
+.no-unit .fb-grid {
+    grid-template-columns: 1fr;
+}
+
+/* Tablet */
+@media (max-width: 1200px) {
+    .has-unit .fb-grid {
+        grid-template-columns: 1fr 1.4fr;
+    }
+
+    #unit-card {
+        grid-column: span 2;
+    }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    .fb-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 
 /* UNIT SELECTED = FULL LAYOUT */
 .has-unit .fb-grid {
@@ -158,27 +190,6 @@
 .step-active .step-number { background: var(--cc-primary); color: #000; }
 
 .step-content { padding: 15px; border-top: 1px solid var(--cc-border); }
-
-.fb-grid {
-    display: grid;
-    grid-template-columns: 1fr 1.4fr 1.1fr;
-    gap: 20px;
-}
-
-@media (max-width: 1200px) {
-    .fb-grid {
-        grid-template-columns: 1fr 1.4fr;
-    }
-    #unit-card {
-        grid-column: span 2;
-    }
-}
-
-@media (max-width: 768px) {
-    .fb-grid {
-        grid-template-columns: 1fr;
-    }
-}
 
 /* =========================================================
    ABILITIES & PROPERTY BADGES
