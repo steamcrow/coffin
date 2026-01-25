@@ -1,6 +1,6 @@
 /* =========================================================
-   COFFIN CANYON FACTION STUDIO — FINAL MASTER CSS
-   Clean, state-aware, Odoo-safe, mobile-correct
+   COFFIN CANYON FACTION STUDIO — FINAL RESTORED MASTER
+   Fixed Centering + Full Style Preservation
    ========================================================= */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -18,39 +18,32 @@
 }
 
 /* =========================================================
-   ODOO LAYOUT BREAKOUT
+   ODOO LAYOUT BREAKOUT — THE FIX
    ========================================================= */
 
-/* Ensure the root and all Odoo parents allow full width */
 #faction-studio-root {
-    width: 100%;
-    max-width: 100%;
-    display: block; /* Override flex if Odoo uses it */
-    text-align: left; 
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important; /* Centers the studio wrapper */
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
-#faction-studio-root * {
-    box-sizing: border-box;
-}
-
-/* Kill Odoo centering containers and force alignment */
-.o_container,
-.o_container_small,
-.o_wrap,
-.wrap,
-#wrap,
-.container {
+/* Kill Odoo container constraints that force left-alignment or weird offsets */
+.o_container, .o_container_small, .o_wrap, .wrap, .container, #wrap {
     max-width: 100% !important;
     width: 100% !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
 }
 
-/* Main app wrapper */
+/* Main app wrapper - Restored */
 .studio-wrapper {
-    max-width: 1400px; /* Reduced to match grid intent */
+    width: 100%;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
+    box-sizing: border-box;
 }
 
 /* =========================================================
@@ -60,21 +53,20 @@
 .fb-grid {
     display: grid;
     gap: 20px;
-    width: 100%;
-    max-width: 1400px; /* Matched to wrapper */
+    max-width: 1200px;
     margin: 40px auto;
-    align-items: start;
+    width: 100%;
 }
 
 /* No unit selected → always 1 column */
 .no-unit .fb-grid {
     grid-template-columns: 1fr;
-    max-width: 600px; /* Keeps the login/import box from being too wide */
+    max-width: 600px; /* Kept focused for selection screen */
 }
 
 /* Unit selected → full desktop layout */
 .has-unit .fb-grid {
-    grid-template-columns: 1fr 1.5fr 1.1fr; /* Slightly adjusted ratios */
+    grid-template-columns: 1fr 1.4fr 1.1fr;
 }
 
 /* Tablet */
@@ -82,9 +74,7 @@
     .has-unit .fb-grid {
         grid-template-columns: 1fr 1.4fr;
     }
-
-    /* Unit card (3rd column) drops to bottom */
-    #unit-card, .fb-panel:last-child {
+    #unit-card {
         grid-column: span 2;
     }
 }
@@ -94,14 +84,13 @@
     .fb-grid, .has-unit .fb-grid {
         grid-template-columns: 1fr;
     }
-    
-    #unit-card, .fb-panel:last-child {
+    #unit-card {
         grid-column: span 1;
     }
 }
 
 /* =========================================================
-   PANELS & HEADERS
+   PANELS & HEADERS - RESTORED
    ========================================================= */
 
 .fb-panel {
@@ -110,7 +99,6 @@
     border-radius: 8px;
     overflow: hidden;
     min-width: 0;
-    height: fit-content; /* Prevents panels stretching weirdly */
 }
 
 .cc-panel-header {
@@ -129,7 +117,7 @@
 }
 
 /* =========================================================
-   STAT BADGES
+   STAT BADGES - RESTORED
    ========================================================= */
 
 .stat-badge-flex {
@@ -172,7 +160,7 @@
 .stat-r { color: var(--stat-r); }
 
 /* =========================================================
-   BUILDER STEPS
+   BUILDER STEPS - FULLY RESTORED
    ========================================================= */
 
 .builder-step {
@@ -218,7 +206,7 @@
 }
 
 /* =========================================================
-   ABILITIES & PROPERTY BADGES
+   ABILITIES & PROPERTY BADGES - RESTORED
    ========================================================= */
 
 .property-badge {
@@ -244,7 +232,7 @@
 }
 
 /* =========================================================
-   FORM ELEMENTS
+   FORM ELEMENTS - RESTORED
    ========================================================= */
 
 .cc-input, 
@@ -257,17 +245,15 @@
     border-radius: 4px;
 }
 
-.btn-add-small, .btn-confirm {
-    width: 100%;
+.btn-add-small {
     background: var(--cc-primary);
     color: #000;
     border: none;
-    padding: 12px;
+    padding: 10px;
     font-weight: 900;
     text-transform: uppercase;
     cursor: pointer;
     border-radius: 4px;
-    margin-top: 10px;
 }
 
 .btn-add-small:hover { 
