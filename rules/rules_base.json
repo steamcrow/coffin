@@ -1,0 +1,11 @@
+{
+  "schema_version": "1.0",
+  "build": {
+    "generated_at": "2026-01-24",
+    "source_version": "8.2",
+    "warnings": []
+  },
+  "rules_master": {
+    ...
+  }
+}
