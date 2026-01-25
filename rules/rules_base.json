@@ -8,44 +8,44 @@
   "index": [
     { "id": "philosophy", "title": "Philosophy & Design", "path": "rules_master.sections.philosophy", "type": "meta" },
 
-    { "id": "core_mechanics", "title": "Core Mechanics", "path": "rules_master.core_mechanics", "type": "core" },
-    { "id": "core_quality", "title": "Quality System", "path": "rules_master.core_mechanics.quality_definition", "parent": "core_mechanics" },
-    { "id": "core_rolls", "title": "The Roll", "path": "rules_master.core_mechanics.the_roll", "parent": "core_mechanics" },
-    { "id": "core_defense", "title": "Defense & Damage", "path": "rules_master.core_mechanics.defense_and_damage", "parent": "core_mechanics" },
+    { "id": "core_mechanics", "title": "Core Mechanics", "path": "rules_master.core_mechanics", "type": "core", "file": "10_core_mechanics.json" },
+    { "id": "core_quality", "title": "Quality System", "path": "rules_master.core_mechanics.quality_definition", "parent": "core_mechanics", "file": "10_core_mechanics.json" },
+    { "id": "core_rolls", "title": "The Roll", "path": "rules_master.core_mechanics.the_roll", "parent": "core_mechanics", "file": "10_core_mechanics.json" },
+    { "id": "core_defense", "title": "Defense & Damage", "path": "rules_master.core_mechanics.defense_and_damage", "parent": "core_mechanics", "file": "10_core_mechanics.json" },
 
-    { "id": "turn_structure", "title": "Turn Structure", "path": "rules_master.turn_structure", "type": "core" },
-    { "id": "activation", "title": "Activation Cycle", "path": "rules_master.turn_structure.activation_cycle", "parent": "turn_structure" },
+    { "id": "turn_structure", "title": "Turn Structure", "path": "rules_master.turn_structure", "type": "core", "file": "20_turn_structure.json" },
+    { "id": "activation", "title": "Activation Cycle", "path": "rules_master.turn_structure.activation_cycle", "parent": "turn_structure", "file": "20_turn_structure.json" },
 
-    { "id": "visibility_vault", "title": "Visibility Vault", "path": "rules_master.visibility_vault", "type": "vault" },
-    { "id": "locomotion_vault", "title": "Locomotion Vault", "path": "rules_master.locomotion_vault", "type": "vault" },
-    { "id": "combat_vault", "title": "Combat Vault", "path": "rules_master.combat_vault", "type": "vault" },
-    { "id": "morale_vault", "title": "Morale Vault", "path": "rules_master.morale_vault", "type": "vault" },
+    { "id": "visibility_vault", "title": "Visibility Vault", "path": "rules_master.visibility_vault", "type": "vault", "file": "30_visibility_vault.json" },
+    { "id": "locomotion_vault", "title": "Locomotion Vault", "path": "rules_master.locomotion_vault", "type": "vault", "file": "40_locomotion_vault.json" },
+    { "id": "combat_vault", "title": "Combat Vault", "path": "rules_master.combat_vault", "type": "vault", "file": "50_combat_vault.json" },
+    { "id": "morale_vault", "title": "Morale Vault", "path": "rules_master.morale_vault", "type": "vault", "file": "60_morale_vault.json" },
 
-    { "id": "unit_identities", "title": "Unit Identities", "path": "rules_master.unit_identities", "type": "system" },
+    { "id": "unit_identities", "title": "Unit Identities", "path": "rules_master.unit_identities", "type": "system", "file": "70_unit_identities.json" },
 
-    { "id": "ability_engine", "title": "Ability Engine", "path": "rules_master.ability_engine", "type": "system" },
+    { "id": "ability_engine", "title": "Ability Engine", "path": "rules_master.ability_engine", "type": "system", "file": "80_ability_engine.json" },
 
-    { "id": "ability_dict_A", "title": "Ability Dictionary – A", "path": "rules_master.ability_dictionary.A_deployment_timing", "type": "abilities" },
-    { "id": "ability_dict_B", "title": "Ability Dictionary – B", "path": "rules_master.ability_dictionary.B_movement_positioning", "type": "abilities" },
-    { "id": "ability_dict_C", "title": "Ability Dictionary – C", "path": "rules_master.ability_dictionary.C_offense_damage", "type": "abilities" },
-    { "id": "ability_dict_D", "title": "Ability Dictionary – D", "path": "rules_master.ability_dictionary.D_defense_survival", "type": "abilities" },
-    { "id": "ability_dict_E", "title": "Ability Dictionary – E", "path": "rules_master.ability_dictionary.E_morale_fear", "type": "abilities" },
-    { "id": "ability_dict_F", "title": "Ability Dictionary – F", "path": "rules_master.ability_dictionary.F_terrain_environment", "type": "abilities" },
-    { "id": "ability_dict_G", "title": "Ability Dictionary – G", "path": "rules_master.ability_dictionary.G_thyr_ritual", "type": "abilities" },
-    { "id": "ability_dict_H", "title": "Ability Dictionary – H", "path": "rules_master.ability_dictionary.H_interaction_support", "type": "abilities" },
+    { "id": "ability_dict_A", "title": "Ability Dictionary – A", "path": "rules_master.ability_dictionary.A_deployment_timing", "type": "abilities", "file": "90_ability_dictionary_A.json" },
+    { "id": "ability_dict_B", "title": "Ability Dictionary – B", "path": "rules_master.ability_dictionary.B_movement_positioning", "type": "abilities", "file": "91_ability_dictionary_B.json" },
+    { "id": "ability_dict_C", "title": "Ability Dictionary – C", "path": "rules_master.ability_dictionary.C_offense_damage", "type": "abilities", "file": "92_ability_dictionary_C.json" },
+    { "id": "ability_dict_D", "title": "Ability Dictionary – D", "path": "rules_master.ability_dictionary.D_defense_survival", "type": "abilities", "file": "93_ability_dictionary_D.json" },
+    { "id": "ability_dict_E", "title": "Ability Dictionary – E", "path": "rules_master.ability_dictionary.E_morale_fear", "type": "abilities", "file": "94_ability_dictionary_E.json" },
+    { "id": "ability_dict_F", "title": "Ability Dictionary – F", "path": "rules_master.ability_dictionary.F_terrain_environment", "type": "abilities", "file": "95_ability_dictionary_F.json" },
+    { "id": "ability_dict_G", "title": "Ability Dictionary – G", "path": "rules_master.ability_dictionary.G_thyr_ritual", "type": "abilities", "file": "96_ability_dictionary_G.json" },
+    { "id": "ability_dict_H", "title": "Ability Dictionary – H", "path": "rules_master.ability_dictionary.H_interaction_support", "type": "abilities", "file": "97_ability_dictionary_H.json" },
 
-    { "id": "location_vault_97", "title": "Location Vault (97)", "path": "rules_master.location_vault_97", "type": "vault" },
+    { "id": "location_vault_97", "title": "Location Vault (97)", "path": "rules_master.location_vault_97", "type": "vault", "file": "97_location_vault.json" },
 
-    { "id": "weapon_properties", "title": "Weapon Properties", "path": "rules_master.weapon_properties", "type": "system" },
-    { "id": "wild_magic", "title": "Wild Magic Table", "path": "rules_master.wild_magic_table", "type": "system" },
+    { "id": "weapon_properties", "title": "Weapon Properties", "path": "rules_master.weapon_properties", "type": "system", "file": "100_weapon_properties.json" },
+    { "id": "wild_magic", "title": "Wild Magic Table", "path": "rules_master.wild_magic_table", "type": "system", "file": "100_wild_magic_table.json" },
 
-    { "id": "terrain_vault", "title": "Terrain Vault", "path": "rules_master.terrain_vault", "type": "vault" },
-    { "id": "objective_vault", "title": "Objective Vault", "path": "rules_master.objective_vault", "type": "vault" },
-    { "id": "scenario_vault", "title": "Scenario Vault", "path": "rules_master.scenario_vault", "type": "vault" },
+    { "id": "terrain_vault", "title": "Terrain Vault", "path": "rules_master.terrain_vault", "type": "vault", "file": "120_terrain_vault.json" },
+    { "id": "objective_vault", "title": "Objective Vault", "path": "rules_master.objective_vault", "type": "vault", "file": "130_objective_vault.json" },
+    { "id": "scenario_vault", "title": "Scenario Vault", "path": "rules_master.scenario_vault", "type": "vault", "file": "140_scenario_vault.json" },
 
-    { "id": "location_types", "title": "Location Types", "path": "rules_master.location_types", "type": "system" },
-    { "id": "location_vault", "title": "Location Vault", "path": "rules_master.location_vault", "type": "vault" },
-    { "id": "named_locations", "title": "Named Locations", "path": "rules_master.named_locations", "type": "vault" }
+    { "id": "location_types", "title": "Location Types", "path": "rules_master.location_types", "type": "system", "file": "150_location_types.json" },
+    { "id": "location_vault", "title": "Location Vault", "path": "rules_master.location_vault", "type": "vault", "file": "150_location_vault.json" },
+    { "id": "named_locations", "title": "Named Locations", "path": "rules_master.named_locations", "type": "vault", "file": "170_named_locations.json" }
   ],
 
   "rules_master": {
