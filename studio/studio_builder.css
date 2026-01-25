@@ -298,6 +298,17 @@
   display: inline-block;
 }
 
+.cc-select-tiny {
+  width: 70px !important;
+  padding: 4px 2px !important;
+  font-size: 11px !important;
+  display: inline-block;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--cc-border);
+  color: #fff;
+  border-radius: 3px;
+}
+
 .supplemental-item {
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--cc-border);
@@ -800,6 +811,14 @@ label,
 .u-name {
   font-weight: 700;
   margin-bottom: 5px;
+}
+
+.u-type {
+  font-size: 10px;
+  color: var(--cc-primary);
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .unit-cost {
