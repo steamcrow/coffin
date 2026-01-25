@@ -1,0 +1,234 @@
+{
+  "file": "170_named_locations.json",
+  "version": "1.0",
+  "notes": [
+    "Canonical named locations of Coffin Canyon.",
+    "Some locations are fixed; others allow controlled randomization.",
+    "All locations reference 150_location_types.json and 97_location_vault.json."
+  ],
+
+  "locations": [
+
+    {
+      "id": "fort-plunder",
+      "name": "Fort Plunder",
+      "emoji": "⚖️",
+      "type_ref": "fort_plunder_hq",
+      "archetype": "outpost",
+      "variance": { "layout": "fixed", "resources": "fixed", "threats": "weighted" },
+      "description": "Liberty Corps stronghold at the northern mouth of Coffin Canyon. Rail-controlled, procedural, and lethal by design.",
+      "terrain_flavor": [
+        "Fortified walls",
+        "Rail checkpoint",
+        "Barracks",
+        "Sealed tunnels"
+      ],
+      "atmosphere": "Order enforced at gunpoint",
+      "rumors": [
+        "A sealed rail tunnel beneath the fort leads to something the Corps refuses to map.",
+        "Officers stationed here are rotated early because of recurring nightmares.",
+        "Uncle Liberty has been sighted here exactly once."
+      ]
+    },
+
+    {
+      "id": "diablo",
+      "name": "Diablo",
+      "emoji": "🏴‍☠️",
+      "type_ref": "diablo_booming_hub",
+      "archetype": "boomtown",
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
+      "description": "A vast, lawless sprawl at the canyon’s southern end. Smoke-choked streets, rotbuck deals, pit brothels, and monsters sold on stage.",
+      "terrain_flavor": [
+        "Saloons",
+        "Pit brothels",
+        "Thyrdust markets",
+        "Monster auction stages",
+        "Hidden caches",
+        "Escape tunnels"
+      ],
+      "atmosphere": "Lawless, ruthless, thriving",
+      "rumors": [
+        "The city is built atop a buried Dust King temple that still feeds it power.",
+        "Monsters refuse to enter Diablo unless driven or wounded.",
+        "Every Shine Rider gang has betrayed someone here."
+      ]
+    },
+
+    {
+      "id": "camp-coffin",
+      "name": "Camp Coffin",
+      "emoji": "🦅",
+      "type_ref": "camp_coffin_hq",
+      "archetype": "hq",
+      "variance": { "layout": "fixed", "resources": "fixed", "threats": "weighted" },
+      "description": "Monster Rangers headquarters built atop a forgotten Tejas town. A hard sanctuary where monsters are neighbors, not resources.",
+      "terrain_flavor": [
+        "Canvas tents",
+        "Corrals",
+        "Watch posts",
+        "Medical station"
+      ],
+      "atmosphere": "Uneasy peace held by tired veterans",
+      "rumors": [
+        "Thyr behaves differently inside the camp walls.",
+        "A monster elder advises the Rangers in secret.",
+        "Monsterology has tried and failed to destroy Camp Coffin three times."
+      ]
+    },
+
+    {
+      "id": "the-laboratorium",
+      "name": "The Laboratorium",
+      "emoji": "🧪",
+      "type_ref": "monsterologist_town_active",
+      "archetype": "outpost",
+      "variance": { "layout": "fixed", "resources": "weighted", "threats": "weighted" },
+      "description": "Monsterology’s primary research complex. Cages, vats, engines, and things that should not be alive.",
+      "terrain_flavor": [
+        "Dissection halls",
+        "Specimen cages",
+        "Mort vats",
+        "Experimental engines"
+      ],
+      "atmosphere": "Science without conscience",
+      "rumors": [
+        "Something intelligent is kept alive in the lowest level.",
+        "Mort from this site tastes different.",
+        "The complex is built on pre-human ruins."
+      ]
+    },
+
+    {
+      "id": "silverpit",
+      "name": "Silverpit",
+      "emoji": "⛏️",
+      "type_ref": "mine_active_shineriders",
+      "archetype": "mine",
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
+      "description": "An active mining wound carved into the canyon wall. Ownership changes violently and often.",
+      "terrain_flavor": [
+        "Mine shafts",
+        "Ore processors",
+        "Rail carts",
+        "Barracks"
+      ],
+      "atmosphere": "Industrial greed",
+      "rumors": [
+        "The deepest shaft opens into something that breathes.",
+        "A monster nests inside the ore itself.",
+        "Silver from Silverpit curses hoarders."
+      ]
+    },
+
+    {
+      "id": "fortune",
+      "name": "Fortune",
+      "emoji": "🌵",
+      "type_ref": "boomtown_riverside",
+      "archetype": "boomtown",
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
+      "description": "A crossroads settlement that survives by staying useful and pretending neutrality.",
+      "terrain_flavor": [
+        "Trading post",
+        "Rail spur",
+        "Wagon routes",
+        "Supply yards"
+      ],
+      "atmosphere": "Desperation meets opportunity",
+      "rumors": [
+        "The town council sells information to every faction.",
+        "A buried rail line runs under the main street.",
+        "Nobody in Fortune sleeps well."
+      ]
+    },
+
+    {
+      "id": "river-city",
+      "name": "River City",
+      "emoji": "🌊",
+      "type_ref": "river_active",
+      "archetype": "river",
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
+      "description": "A settlement clinging to the Widowflow. Life is cheap. Water is not.",
+      "terrain_flavor": [
+        "Docks",
+        "Ferries",
+        "Fish markets",
+        "Flood markers"
+      ],
+      "atmosphere": "Life clings to water’s edge",
+      "rumors": [
+        "The river changes depth overnight.",
+        "Something answers if you speak to the water.",
+        "Entire crews vanish mid-crossing."
+      ]
+    },
+
+    {
+      "id": "plata",
+      "name": "Plata",
+      "emoji": "🏔️",
+      "type_ref": "boomtown_mesa",
+      "archetype": "boomtown",
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
+      "description": "High-altitude silver camp balanced on narrow ridges and bad luck.",
+      "terrain_flavor": [
+        "Mountain mines",
+        "Ore chutes",
+        "Unstable shafts",
+        "Processing sheds"
+      ],
+      "atmosphere": "Greed carved in stone",
+      "rumors": [
+        "A hidden vein of pure Thyr lies above the camp.",
+        "Miners hear singing from sealed tunnels.",
+        "No one buried here stays buried."
+      ]
+    },
+
+    {
+      "id": "cowtown",
+      "name": "Cowtown",
+      "emoji": "🐄",
+      "type_ref": "bone_graveyard",
+      "archetype": "outpost",
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
+      "description": "Ranch land built atop ancient monster grazing grounds. Livestock thrives unnaturally well.",
+      "terrain_flavor": [
+        "Corrals",
+        "Feed barns",
+        "Watering holes",
+        "Ranch houses"
+      ],
+      "atmosphere": "Stolen land, borrowed time",
+      "rumors": [
+        "The cattle are not entirely mundane.",
+        "Monsters mark the land but do not attack openly.",
+        "Every herd has a favored animal."
+      ]
+    },
+
+    {
+      "id": "ratsville",
+      "name": "Ratsville",
+      "emoji": "🐀",
+      "type_ref": "debris_field",
+      "archetype": "ruins",
+      "variance": { "layout": "random", "resources": "random", "threats": "weighted" },
+      "description": "A shantytown built from scrap, desperation, and bad luck. No law holds.",
+      "terrain_flavor": [
+        "Tin shacks",
+        "Mud streets",
+        "Hidden tunnels",
+        "Black markets"
+      ],
+      "atmosphere": "Where desperate disappear",
+      "rumors": [
+        "Ratsville sits atop a collapsed mine full of bones.",
+        "The town moves slightly each year.",
+        "Something protects it for unknown reasons."
+      ]
+    }
+
+    /* — Remaining locations contin*
