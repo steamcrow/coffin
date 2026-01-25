@@ -1,0 +1,176 @@
+{
+  "_id": "R-UNIT",
+  "title": "Unit Identities",
+
+  "philosophy": {
+    "_id": "R-UNIT-00",
+    "short": "Roles define behavior under pressure, not balance.",
+    "long": "Unit Types explain what kind of threat a model represents and how it behaves under pressure. Roles matter more than raw stats.",
+    "design_intent": "Asymmetry over symmetry. Balance is found in consequence, not equal numbers."
+  },
+
+  "archetype_vault": {
+    "_id": "R-UNIT-01",
+
+    "grunt": {
+      "_id": "R-UNIT-GRUNT",
+      "identity": "Fragile / Standard.",
+      "type_rule": "Expendable Fodder",
+      "effect": "Do not grant Victory Points when destroyed. Do not generate Morale Loss when destroyed. May contest objectives even if outnumbered, but never control them. Destroyed Grunts do not count toward activation advantage.",
+      "logic_triggers": [
+        "High Critical Failure risk",
+        "Vulnerable to Tainted/Haunted terrain",
+        "Escalated Panic results"
+      ]
+    },
+
+    "brute": {
+      "_id": "R-UNIT-BRUTE",
+      "identity": "Hard to stop shock unit.",
+      "type_rule": "Momentum",
+      "effect": "After inflicting at least 1 damage in melee, this unit may immediately move up to 2\". This movement does not trigger reactions and may not end in base contact.",
+      "logic_triggers": [
+        "Morale resistance",
+        "Ignore specific terrain penalties",
+        "Reduced flexibility"
+      ]
+    },
+
+    "mystic": {
+      "_id": "R-UNIT-MYSTIC",
+      "identity": "High-risk power source.",
+      "type_rule": "Lingering Harm",
+      "effect": "Debuffs applied by this unit persist until the end of the target's next activation.",
+      "logic_triggers": [
+        "Unique Tainted / Sacred / Haunted interactions",
+        "Morale-triggered power spikes",
+        "Backlash and escalation risk"
+      ]
+    },
+
+    "shooter": {
+      "_id": "R-UNIT-SHOOTER",
+      "identity": "Ranged control unit.",
+      "type_rules": ["Fire Superiority", "Suppression Fragility"],
+
+      "fire_superiority": {
+        "_id": "R-UNIT-SHOOTER-FIRE",
+        "effect": "If this unit did not move this activation, it may split its attack dice between up to two valid targets."
+      },
+
+      "suppression_fragility": {
+        "_id": "R-UNIT-SHOOTER-SUPPRESS",
+        "effect": "If this unit is Pinned or Grappled, it may not use Critical Damage abilities this activation."
+      },
+
+      "logic_triggers": [
+        "Cover bonuses",
+        "Melee engagement penalties",
+        "Line-of-sight dependency"
+      ]
+    },
+
+    "cavalry": {
+      "_id": "R-UNIT-CAVALRY",
+      "identity": "Momentum-based mobile unit.",
+      "type_rule": "Disengage",
+      "effect": "After resolving an attack, this unit may disengage from melee without penalties or free strikes.",
+      "logic_triggers": [
+        "Movement-into-attack bonuses",
+        "Tight terrain penalties",
+        "Unstable terrain interaction"
+      ]
+    },
+
+    "rogue": {
+      "_id": "R-UNIT-ROGUE",
+      "identity": "Fast infiltrator.",
+      "type_rule": "First Strike",
+      "effect": "When charging or charged, this unit attacks first. If both units have First Strike, resolve simultaneously.",
+      "logic_triggers": [
+        "Stealth bonuses",
+        "Flanking advantages",
+        "Fragility in direct combat"
+      ]
+    },
+
+    "specialist": {
+      "_id": "R-UNIT-SPECIALIST",
+      "identity": "Technical expert.",
+      "logic_triggers": [
+        "Objective interaction bonuses",
+        "Fragile outside role",
+        "Device and terrain manipulation"
+      ]
+    },
+
+    "tank": {
+      "_id": "R-UNIT-TANK",
+      "identity": "Durable front-line unit.",
+      "type_rule": "Bodyguard",
+      "effect": "May intercept attacks targeting adjacent friendly units. Roll Defense for intercepted attack.",
+      "logic_triggers": [
+        "High durability",
+        "Protect others",
+        "Slow movement"
+      ]
+    },
+
+    "leader": {
+      "_id": "R-UNIT-LEADER",
+      "identity": "Command and cohesion unit.",
+      "type_rules": ["Rally", "Command Presence", "High-Value Target"],
+
+      "rally": {
+        "_id": "R-UNIT-LEADER-RALLY",
+        "effect": "Once per round, grant an ally within 12\" +1 die on their next Morale test."
+      },
+
+      "command_presence": {
+        "_id": "R-UNIT-LEADER-COMMAND",
+        "effect": "Friendly units within 6\" may use this unit's Quality for Morale tests instead of their own, if higher."
+      },
+
+      "high_value_target": {
+        "_id": "R-UNIT-LEADER-HVT",
+        "effect": "If this unit is destroyed, the enemy gains +2 VP."
+      },
+
+      "logic_triggers": [
+        "Morale auras",
+        "Ignore Shaken (limited)",
+        "Death-triggered Morale cascades"
+      ]
+    },
+
+    "hero": {
+      "_id": "R-UNIT-HERO",
+      "identity": "Exceptional named unit.",
+      "type_rule": "High-Value Target",
+      "effect": "If this unit is destroyed, the enemy gains +3 VP.",
+      "logic_triggers": [
+        "One-time resources",
+        "High impact, low balance expectation"
+      ]
+    },
+
+    "titan": {
+      "_id": "R-UNIT-TITAN",
+      "identity": "Battlefield-shaping entity.",
+      "type_rule": "Unstoppable",
+      "effect": "Ignores difficult terrain. Cannot be Grappled or Pinned by units smaller than Brute.",
+      "rules": {
+        "_id": "R-UNIT-TITAN-RULES",
+        "terrain_interaction": "Re-roll 1 terrain Quality test per round. Causes terrain damage through movement.",
+        "demolition_test": "Attacking buildings requires a Quality test. Failure = 1 damage; Critical Failure = 1 damage + escalation.",
+        "morale": "Rarely affected by Morale."
+      }
+    }
+  },
+
+  "logic_notes": {
+    "_id": "R-UNIT-99",
+    "hybrid_units": "Units may have multiple types. All effects apply simultaneously.",
+    "conflict_resolution": "The Unit Card always takes precedence over the General Archetype rules."
+  }
+}
