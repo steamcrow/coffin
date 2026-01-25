@@ -1,15 +1,32 @@
 // ================================
 // Rules Explorer App
-// File: steamcrow/rules/apps/cc_app_rules_explorer.js
+// File: steamcrow/coffin/rules/apps/cc_app_rules_explorer.js
 // ================================
 
 console.log("📦 cc_app_rules_explorer.js executing");
 
 window.CC_APP = {
   init({ root, ctx }) {
-    const index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
 
+    const index = Array.isArray(ctx?.rulesBase?.index)
+      ? ctx.rulesBase.index
+      : [];
+
+    // ----------------------------
+    // Render App Shell
+    // ----------------------------
     root.innerHTML = `
+      <!-- APP HEADER -->
+      <div class="cc-app-header">
+        <div>
+          <div class="cc-app-title">Rules Explorer</div>
+          <div class="cc-app-subtitle">
+            Coffin Canyon Core Rules & Vaults
+          </div>
+        </div>
+      </div>
+
+      <!-- APP BODY -->
       <div class="container-fluid py-3">
         <div class="row g-3">
 
@@ -18,7 +35,11 @@ window.CC_APP = {
             <div class="cc-panel">
               <div class="cc-panel-head">
                 <div class="cc-panel-title">Rules Library</div>
-                <input id="cc-rule-search" class="form-control form-control-sm cc-input" placeholder="Search rules..." />
+                <input
+                  id="cc-rule-search"
+                  class="form-control form-control-sm cc-input"
+                  placeholder="Search rules..."
+                />
               </div>
               <div id="cc-rule-list" class="cc-list"></div>
             </div>
@@ -52,13 +73,19 @@ window.CC_APP = {
       </div>
     `;
 
-    const listEl = root.querySelector("#cc-rule-list");
+    // ----------------------------
+    // DOM Handles
+    // ----------------------------
+    const listEl   = root.querySelector("#cc-rule-list");
     const detailEl = root.querySelector("#cc-rule-detail");
-    const synEl = root.querySelector("#cc-rule-synopsis");
+    const synEl    = root.querySelector("#cc-rule-synopsis");
     const searchEl = root.querySelector("#cc-rule-search");
 
     let selectedId = null;
 
+    // ----------------------------
+    // Render List
+    // ----------------------------
     function renderList(filter = "") {
       const f = (filter || "").trim().toLowerCase();
 
@@ -74,18 +101,29 @@ window.CC_APP = {
 
       listEl.innerHTML = filtered
         .map((it) => {
-          const active = it.id === selectedId ? "cc-list-item active" : "cc-list-item";
-          const badge = it.type ? `<span class="cc-badge">${it.type}</span>` : "";
+          const active = it.id === selectedId
+            ? "cc-list-item active"
+            : "cc-list-item";
+
+          const badge = it.type
+            ? `<span class="cc-badge">${it.type}</span>`
+            : "";
+
           return `
             <button class="${active}" data-id="${it.id}">
               <div class="cc-list-title">${it.title || it.id}</div>
-              <div class="cc-list-sub">${it.id}${badge ? " • " + badge : ""}</div>
+              <div class="cc-list-sub">
+                ${it.id}${badge ? " • " + badge : ""}
+              </div>
             </button>
           `;
         })
         .join("");
     }
 
+    // ----------------------------
+    // Selection Logic
+    // ----------------------------
     function setSelected(id) {
       selectedId = id;
 
@@ -99,11 +137,15 @@ window.CC_APP = {
 
         <div class="cc-callout">
           <div><strong>Path:</strong> <code>${it.path || ""}</code></div>
-          ${it.parent ? `<div><strong>Parent:</strong> <code>${it.parent}</code></div>` : ""}
+          ${it.parent
+            ? `<div><strong>Parent:</strong> <code>${it.parent}</code></div>`
+            : ""
+          }
         </div>
 
         <div class="mt-3 cc-muted">
-          Next step: we’ll render the actual text by resolving <code>path</code> inside <code>rules_base.json</code>.
+          Next step: resolve <code>path</code> into <code>rules_base.json</code>
+          and render real content.
         </div>
       `;
 
@@ -118,15 +160,20 @@ window.CC_APP = {
       renderList(searchEl.value);
     }
 
+    // ----------------------------
     // Events
+    // ----------------------------
     listEl.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-id]");
       if (!btn) return;
       setSelected(btn.dataset.id);
     });
 
-    searchEl.addEventListener("input", () => renderList(searchEl.value));
+    searchEl.addEventListener("input", () => {
+      renderList(searchEl.value);
+    });
 
+    // Initial render
     renderList();
   }
 };
