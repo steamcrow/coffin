@@ -1,3 +1,5 @@
+console.log("🔥 cc_loader_core.js EXECUTING");
+
 (function () {
   // ================================
   // Coffin Canyon Universal App Loader (Odoo-safe)
