@@ -1,0 +1,77 @@
+/* =========================================================
+   COFFIN CANYON UI CORE
+   Bootstrap-first theme layer
+   ========================================================= */
+
+:root {
+  --cc-bg: #0e0e0e;
+  --cc-panel: #181818;
+  --cc-border: rgba(255,255,255,0.08);
+  --cc-accent: #ff7518;
+  --cc-accent-dim: rgba(255,117,24,0.25);
+  --cc-text: #e6e6e6;
+  --cc-text-muted: #9a9a9a;
+}
+
+/* === GLOBAL === */
+
+.cc-app {
+  background: var(--cc-bg);
+  color: var(--cc-text);
+  min-height: 100vh;
+}
+
+.cc-title {
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cc-subtitle {
+  color: var(--cc-text-muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+/* === PRELOADER === */
+
+.cc-preloader {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at center, #151515, #050505);
+  z-index: 9999;
+}
+
+.cc-preloader-card {
+  background: var(--cc-panel);
+  border: 1px solid var(--cc-border);
+  max-width: 420px;
+}
+
+.cc-preloader .progress {
+  background-color: #222;
+}
+
+.cc-preloader .progress-bar {
+  background-color: var(--cc-accent);
+}
+
+#cc-load-steps li {
+  opacity: 0.5;
+}
+
+#cc-load-steps li.active {
+  opacity: 1;
+  color: var(--cc-accent);
+}
+
+/* === UTILITIES === */
+
+.cc-muted {
+  color: var(--cc-text-muted);
+}
+
+.cc-accent {
+  color: var(--cc-accent);
+}
