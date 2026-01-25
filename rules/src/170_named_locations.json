@@ -4,11 +4,10 @@
   "notes": [
     "Canonical named locations of Coffin Canyon.",
     "Some locations are fixed; others allow controlled randomization.",
-    "All locations reference 150_location_types.json and 97_location_vault.json."
+    "All locations reference 150_location_types.json and 97_location_vault.json.",
+    "All locations include coffinCoughChance for scenario and environmental systems."
   ],
-
   "locations": [
-
     {
       "id": "fort-plunder",
       "name": "Fort Plunder",
@@ -17,12 +16,8 @@
       "archetype": "outpost",
       "variance": { "layout": "fixed", "resources": "fixed", "threats": "weighted" },
       "description": "Liberty Corps stronghold at the northern mouth of Coffin Canyon. Rail-controlled, procedural, and lethal by design.",
-      "terrain_flavor": [
-        "Fortified walls",
-        "Rail checkpoint",
-        "Barracks",
-        "Sealed tunnels"
-      ],
+      "terrain_flavor": ["Fortified walls", "Rail checkpoint", "Barracks", "Sealed tunnels"],
+      "coffinCoughChance": 0.15,
       "atmosphere": "Order enforced at gunpoint",
       "rumors": [
         "A sealed rail tunnel beneath the fort leads to something the Corps refuses to map.",
@@ -47,6 +42,7 @@
         "Hidden caches",
         "Escape tunnels"
       ],
+      "coffinCoughChance": 0.25,
       "atmosphere": "Lawless, ruthless, thriving",
       "rumors": [
         "The city is built atop a buried Dust King temple that still feeds it power.",
@@ -63,12 +59,8 @@
       "archetype": "hq",
       "variance": { "layout": "fixed", "resources": "fixed", "threats": "weighted" },
       "description": "Monster Rangers headquarters built atop a forgotten Tejas town. A hard sanctuary where monsters are neighbors, not resources.",
-      "terrain_flavor": [
-        "Canvas tents",
-        "Corrals",
-        "Watch posts",
-        "Medical station"
-      ],
+      "terrain_flavor": ["Canvas tents", "Corrals", "Watch posts", "Medical station"],
+      "coffinCoughChance": 0.10,
       "atmosphere": "Uneasy peace held by tired veterans",
       "rumors": [
         "Thyr behaves differently inside the camp walls.",
@@ -85,12 +77,8 @@
       "archetype": "outpost",
       "variance": { "layout": "fixed", "resources": "weighted", "threats": "weighted" },
       "description": "Monsterology’s primary research complex. Cages, vats, engines, and things that should not be alive.",
-      "terrain_flavor": [
-        "Dissection halls",
-        "Specimen cages",
-        "Mort vats",
-        "Experimental engines"
-      ],
+      "terrain_flavor": ["Dissection halls", "Specimen cages", "Mort vats", "Experimental engines"],
+      "coffinCoughChance": 0.15,
       "atmosphere": "Science without conscience",
       "rumors": [
         "Something intelligent is kept alive in the lowest level.",
@@ -107,12 +95,8 @@
       "archetype": "mine",
       "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
       "description": "An active mining wound carved into the canyon wall. Ownership changes violently and often.",
-      "terrain_flavor": [
-        "Mine shafts",
-        "Ore processors",
-        "Rail carts",
-        "Barracks"
-      ],
+      "terrain_flavor": ["Mine shafts", "Ore processors", "Rail carts", "Barracks"],
+      "coffinCoughChance": 0.20,
       "atmosphere": "Industrial greed",
       "rumors": [
         "The deepest shaft opens into something that breathes.",
@@ -129,12 +113,8 @@
       "archetype": "boomtown",
       "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
       "description": "A crossroads settlement that survives by staying useful and pretending neutrality.",
-      "terrain_flavor": [
-        "Trading post",
-        "Rail spur",
-        "Wagon routes",
-        "Supply yards"
-      ],
+      "terrain_flavor": ["Trading post", "Rail spur", "Wagon routes", "Supply yards"],
+      "coffinCoughChance": 0.20,
       "atmosphere": "Desperation meets opportunity",
       "rumors": [
         "The town council sells information to every faction.",
@@ -151,12 +131,8 @@
       "archetype": "river",
       "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
       "description": "A settlement clinging to the Widowflow. Life is cheap. Water is not.",
-      "terrain_flavor": [
-        "Docks",
-        "Ferries",
-        "Fish markets",
-        "Flood markers"
-      ],
+      "terrain_flavor": ["Docks", "Ferries", "Fish markets", "Flood markers"],
+      "coffinCoughChance": 0.15,
       "atmosphere": "Life clings to water’s edge",
       "rumors": [
         "The river changes depth overnight.",
@@ -173,12 +149,8 @@
       "archetype": "boomtown",
       "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
       "description": "High-altitude silver camp balanced on narrow ridges and bad luck.",
-      "terrain_flavor": [
-        "Mountain mines",
-        "Ore chutes",
-        "Unstable shafts",
-        "Processing sheds"
-      ],
+      "terrain_flavor": ["Mountain mines", "Ore chutes", "Unstable shafts", "Processing sheds"],
+      "coffinCoughChance": 0.25,
       "atmosphere": "Greed carved in stone",
       "rumors": [
         "A hidden vein of pure Thyr lies above the camp.",
@@ -195,12 +167,8 @@
       "archetype": "outpost",
       "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
       "description": "Ranch land built atop ancient monster grazing grounds. Livestock thrives unnaturally well.",
-      "terrain_flavor": [
-        "Corrals",
-        "Feed barns",
-        "Watering holes",
-        "Ranch houses"
-      ],
+      "terrain_flavor": ["Corrals", "Feed barns", "Watering holes", "Ranch houses"],
+      "coffinCoughChance": 0.15,
       "atmosphere": "Stolen land, borrowed time",
       "rumors": [
         "The cattle are not entirely mundane.",
@@ -217,18 +185,104 @@
       "archetype": "ruins",
       "variance": { "layout": "random", "resources": "random", "threats": "weighted" },
       "description": "A shantytown built from scrap, desperation, and bad luck. No law holds.",
-      "terrain_flavor": [
-        "Tin shacks",
-        "Mud streets",
-        "Hidden tunnels",
-        "Black markets"
-      ],
+      "terrain_flavor": ["Tin shacks", "Mud streets", "Hidden tunnels", "Black markets"],
+      "coffinCoughChance": 0.35,
       "atmosphere": "Where desperate disappear",
       "rumors": [
         "Ratsville sits atop a collapsed mine full of bones.",
         "The town moves slightly each year.",
         "Something protects it for unknown reasons."
       ]
-    }
+    },
 
-    /* — Remaining locations contin*
+    {
+      "id": "ghost-mountain",
+      "name": "Ghost Mountain",
+      "emoji": "⛰️",
+      "type_ref": "mesa",
+      "archetype": "landmark",
+      "variance": { "layout": "fixed", "resources": "scarce", "threats": "weighted" },
+      "description": "A wind-scoured massif riddled with old tunnels and signal fires.",
+      "terrain_flavor": ["Signal cairns", "Collapsed tunnels", "Wind-blasted ridges", "Ancient watch points"],
+      "coffinCoughChance": 0.20,
+      "atmosphere": "Signals without senders",
+      "rumors": [
+        "Lights answer each other across impossible distances.",
+        "A hidden observatory crowns the peak.",
+        "Climbers age faster on the ascent."
+      ]
+    },
+
+    {
+      "id": "deerhoof",
+      "name": "Deerhoof",
+      "emoji": "🦌",
+      "type_ref": "rock_outcroppings",
+      "archetype": "refuge",
+      "variance": { "layout": "semi", "resources": "scarce", "threats": "weighted" },
+      "description": "A quiet highland settlement and monster refuge beyond the canyon rim.",
+      "terrain_flavor": ["Antler shrines", "Stone lodges", "Game trails", "Fog-draped clearings"],
+      "coffinCoughChance": 0.15,
+      "atmosphere": "The land watches how you walk",
+      "rumors": [
+        "The spirits guide the respectful and ruin the careless.",
+        "Monsters shelter here without fear.",
+        "No blood spilled here ever dries."
+      ]
+    },
+
+    {
+      "id": "huck",
+      "name": "Huck",
+      "emoji": "🧭",
+      "type_ref": "boomtown_mesa",
+      "archetype": "outpost",
+      "variance": { "layout": "semi", "resources": "scarce", "threats": "weighted" },
+      "description": "A remote frontier stop used by scouts, smugglers, and canyon runners.",
+      "terrain_flavor": ["Survey tents", "Signal poles", "Windmills", "Supply caches"],
+      "coffinCoughChance": 0.10,
+      "atmosphere": "Last stop before bad decisions",
+      "rumors": [
+        "Maps bought here are never fully accurate.",
+        "Someone in Huck tracks every traveler.",
+        "The outpost has been rebuilt in the exact same spot four times."
+      ]
+    },
+
+    {
+      "id": "dustbuck",
+      "name": "Dustbuck",
+      "emoji": "🐂",
+      "type_ref": "boomtown_dryriver",
+      "archetype": "boomtown",
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
+      "description": "A trade town grown fat on livestock drives and canyon spillover.",
+      "terrain_flavor": ["Livestock yards", "Auction pens", "Slaughter sheds", "Dust-choked streets"],
+      "coffinCoughChance": 0.25,
+      "atmosphere": "Everything is for sale eventually",
+      "rumors": [
+        "Some cattle walk themselves to market.",
+        "Dustbuck brands appear burned into bones miles away.",
+        "The town prospers when Coffin Canyon worsens."
+      ]
+    },
+
+    {
+      "id": "bayou-city",
+      "name": "Bayou City",
+      "emoji": "🌊",
+      "type_ref": "river_active",
+      "archetype": "river_city",
+      "variance": { "layout": "semi", "resources": "abundant", "threats": "weighted" },
+      "description": "A swollen river-mouth city where canyon runoff meets the coast.",
+      "terrain_flavor": ["Stilted docks", "Flooded alleys", "Fish markets", "Rotten boardwalks"],
+      "coffinCoughChance": 0.20,
+      "atmosphere": "Where the canyon leaks into the world",
+      "rumors": [
+        "Bodies travel upstream at night.",
+        "The water listens if spoken to softly.",
+        "Some ships refuse to leave once docked."
+      ]
+    }
+  ]
+}
