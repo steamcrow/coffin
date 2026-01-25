@@ -1,1 +1,85 @@
+{
+  "_id": "R-ABIL-G",
+  "title": "Ability Dictionary — G (Thyr & Ritual)",
 
+  "abilities": {
+
+    "thyrburn": {
+      "_id": "R-ABIL-G-THYRBURN",
+      "timing": "main_action",
+      "short": "Spend Thyr for a temporary boost.",
+      "long": "Main Action. Spend 1 Crystal to gain +2 dice, +3\" Move, OR +2 Quality for the round."
+    },
+
+    "fallout": {
+      "_id": "R-ABIL-G-FALLOUT",
+      "timing": "resolution",
+      "short": "Post-Thyr consequences.",
+      "long": "Resolution. Roll 2d6 at end of round after Thyrburn. Affects device/models/terrain."
+    },
+
+    "ritual": {
+      "_id": "R-ABIL-G-RITUAL",
+      "timing": "main_action",
+      "short": "Mystic terrain-based effect.",
+      "long": "Main Action. Mystic only. Must be in Sacred/Tainted/Haunted ground. Resolves listed effect."
+    },
+
+    "backlash": {
+      "_id": "R-ABIL-G-BACKLASH",
+      "timing": "passive",
+      "short": "Failure causes harm or taint.",
+      "long": "Passive. 0 Successes on Thyr ability = 1 damage or Taint surrounding terrain within 3\"."
+    },
+
+    "haunted_engine": {
+      "_id": "R-ABIL-G-HAUNTED-ENGINE",
+      "timing": "passive",
+      "short": "Thyr use spawns Haunts.",
+      "long": "Passive. Using Thyrburn or Ritual places a Haunt within 3\". Haunt acts at end of round."
+    },
+
+    "crystal_feed": {
+      "_id": "R-ABIL-G-CRYSTAL-FEED",
+      "timing": "passive",
+      "short": "Carry extra Thyr crystal.",
+      "long": "Passive. May carry +1 Thyr Crystal. Dropped on death."
+    },
+
+    "sacrificial_overload": {
+      "_id": "R-ABIL-G-SACRIFICIAL-OVERLOAD",
+      "timing": "once_per_game",
+      "short": "Burn the device to avoid Fallout.",
+      "long": "Once Per Game. Ignore Fallout; Device is Destroyed and area within 3\" becomes Hazardous."
+    },
+
+    "purge_thyr": {
+      "_id": "R-ABIL-G-PURGE-THYR",
+      "timing": "main_action",
+      "short": "Cleanse Thyr effects.",
+      "long": "Main Action. Remove all crystals and 1 Thyr-based trait within 6\"."
+    },
+
+    "unleashed_power": {
+      "_id": "R-ABIL-G-UNLEASHED-POWER",
+      "timing": "main_action",
+      "short": "Wild magical attack.",
+      "long": "Main Action. Ranged magical attack using Wild Magic. Roll on Wild Magic Table (2d6) to determine effect. May cause Strain."
+    },
+
+    "strain": {
+      "_id": "R-ABIL-G-STRAIN",
+      "timing": "passive",
+      "short": "Limits Unleashed Power.",
+      "long": "Passive. Using Unleashed Power causes 1 Strain. At 3 Strain, this unit may not use Unleashed Power until Strain is cleared (end of round or special ability)."
+    },
+
+    "thyr_boiler": {
+      "_id": "R-ABIL-G-THYR-BOILER",
+      "timing": "main_action",
+      "short": "Overcharge with Thyr.",
+      "long": "Main Action. Once per game: Spend 1 Thyr crystal to gain +4\" Move OR +2 Quality OR ignore terrain penalties this activation."
+    }
+
+  }
+}
