@@ -109,130 +109,148 @@ window.CC_APP = {
         .join("");
     }
 
-    // ---- SELECT RULE ----
-    async function selectRule(id) {
-      selectedId = id;
+  // ---- SELECT RULE ----
+async function selectRule(id) {
+  selectedId = id;
 
-      detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
-      ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+  detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+  ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
 
-      const section = await helpers.getRuleSection(id);
+  const section = await helpers.getRuleSection(id);
 
-      if (!section || !section.meta) {
-        detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
-        ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
-        return;
-      }
+  if (!section || !section.meta) {
+    detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
+    ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
+    return;
+  }
 
-      const { meta, content } = section;
-      const children = helpers.getChildren(id);
+  const { meta, content } = section;
+  const children = helpers.getChildren(id);
 
-      let formattedContent = "";
+  let formattedContent = "";
 
-      // ---- Ability Dictionary ----
-      if (content && content.abilities) {
-        formattedContent = Object.entries(content.abilities)
-          .map(
-            ([key, ability]) => `
-              <div class="cc-ability-card p-3 mb-3">
-                <div class="d-flex justify-content-between align-items-baseline mb-1">
-                  <div class="fw-bold">${key}</div>
-                  <div class="cc-muted small text-uppercase">${ability.timing || "—"}</div>
-                </div>
-                ${ability.short ? `<div class="fw-semibold mb-1">${ability.short}</div>` : ""}
-                ${ability.long ? `<div>${ability.long}</div>` : ""}
-              </div>
-            `
-          )
-          .join("");
-      }
+  // 1️⃣ Plain STRING content (Philosophy & Design)
+  if (typeof content === "string") {
+    formattedContent = `<p>${content}</p>`;
+  }
 
-      // ---- Plain prose (Philosophy) ----
-      else if (content && typeof content === "object" && content.long && !content.short) {
-        formattedContent = `<p>${content.long}</p>`;
-      }
+  // 2️⃣ Ability Dictionary
+  else if (content && content.abilities) {
+    formattedContent = Object.entries(content.abilities)
+      .map(
+        ([key, ability]) => `
+          <div class="cc-ability-card p-3 mb-3">
+            <div class="d-flex justify-content-between align-items-baseline mb-1">
+              <div class="fw-bold">${key}</div>
+              <div class="cc-muted small text-uppercase">${ability.timing || "—"}</div>
+            </div>
+            ${ability.short ? `<div class="fw-semibold mb-1">${ability.short}</div>` : ""}
+            ${ability.long ? `<div>${ability.long}</div>` : ""}
+          </div>
+        `
+      )
+      .join("");
+  }
 
-      // ---- Leaf rule ----
-      else if (
-        content &&
-        typeof content === "object" &&
-        (content.short || content.long) &&
-        !Object.values(content).some(v => typeof v === "object" && v?._id)
-      ) {
-        formattedContent = `
-          ${content.short ? `<p class="fw-semibold mb-2">${content.short}</p>` : ""}
-          ${content.long ? `<p>${content.long}</p>` : ""}
-        `;
-      }
+  // 3️⃣ Plain prose object (object with only `long`)
+  else if (content && typeof content === "object" && content.long && !content.short) {
+    formattedContent = `<p>${content.long}</p>`;
+  }
 
-      // ---- Section container ----
-      else if (content && typeof content === "object") {
-        formattedContent = Object.entries(content)
-          .filter(([k, v]) => !k.startsWith("_") && typeof v === "object")
-          .map(([key, val]) => `
-            <div class="cc-panel mb-3">
-              <div class="cc-panel-head">
-                <div class="cc-panel-title">
-                  ${val.title || key.replace(/_/g, " ")}
-                </div>
-              </div>
-              <div class="cc-body">
-                ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
-                ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
+  // 4️⃣ Leaf rule (single mechanic)
+  else if (
+    content &&
+    typeof content === "object" &&
+    (content.short || content.long) &&
+    !Object.values(content).some(
+      (v) => typeof v === "object" && v && v._id
+    )
+  ) {
+    formattedContent = `
+      ${content.short ? `<p class="fw-semibold mb-2">${content.short}</p>` : ""}
+      ${content.long ? `<p>${content.long}</p>` : ""}
+    `;
+  }
+
+  // 5️⃣ Section container (Core Mechanics, Turn Structure, Vaults)
+  else if (
+    content &&
+    typeof content === "object" &&
+    !content.version &&
+    !content.last_updated
+  ) {
+    formattedContent = Object.entries(content)
+      .filter(([k, v]) => !k.startsWith("_") && typeof v === "object")
+      .map(
+        ([key, val]) => `
+          <div class="cc-panel mb-3">
+            <div class="cc-panel-head">
+              <div class="cc-panel-title">
+                ${val.title || key.replace(/_/g, " ")}
               </div>
             </div>
-          `)
-          .join("");
-      }
+            <div class="cc-body">
+              ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
+              ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
+            </div>
+          </div>
+        `
+      )
+      .join("");
+  }
 
-      else {
-        formattedContent = `<div class="cc-muted">No content available.</div>`;
-      }
+  // 6️⃣ Fallback
+  else {
+    formattedContent = `<div class="cc-muted">No content available.</div>`;
+  }
 
-      // ---- MAIN CONTENT ----
-      detailEl.innerHTML = `
-        <h4 class="mb-1">${meta.title}</h4>
-        <div class="cc-muted mb-2">
-          <code>${meta.id}</code> • ${meta.type}
-        </div>
+  // ---- MAIN CONTENT ----
+  detailEl.innerHTML = `
+    <h4 class="mb-1">${meta.title}</h4>
+    <div class="cc-muted mb-2">
+      <code>${meta.id}</code> • ${meta.type}
+    </div>
 
-        <div class="cc-callout mb-3">
-          <strong>Path:</strong> <code>${meta.path}</code>
-        </div>
+    <div class="cc-callout mb-3">
+      <strong>Path:</strong> <code>${meta.path}</code>
+    </div>
 
-        <div class="cc-rule-content">
-          ${formattedContent}
-        </div>
-      `;
+    <div class="cc-rule-content">
+      ${formattedContent}
+    </div>
+  `;
 
-      // ---- CONTEXT ----
-      ctxEl.innerHTML = `
-        <div class="cc-kv mb-3">
-          <div class="cc-k">Type</div><div class="cc-v">${meta.type}</div>
-          <div class="cc-k">Parent</div><div class="cc-v">${meta.parent || "—"}</div>
-        </div>
+  // ---- CONTEXT ----
+  ctxEl.innerHTML = `
+    <div class="cc-kv mb-3">
+      <div class="cc-k">Type</div><div class="cc-v">${meta.type}</div>
+      <div class="cc-k">Parent</div><div class="cc-v">${meta.parent || "—"}</div>
+    </div>
 
-        ${
-          children.length
-            ? `
-              <div class="fw-bold small text-uppercase mb-1">Subsections</div>
-              <ul class="list-unstyled">
-                ${children.map(
-                  (c) => `
-                    <li>
-                      <button class="btn btn-link p-0" data-id="${c.id}">
-                        ${c.title}
-                      </button>
-                    </li>`
-                ).join("")}
-              </ul>
-            `
-            : `<div class="cc-muted">No subsections.</div>`
-        }
-      `;
-
-      renderList(searchEl.value);
+    ${
+      children.length
+        ? `
+          <div class="fw-bold small text-uppercase mb-1">Subsections</div>
+          <ul class="list-unstyled">
+            ${children
+              .map(
+                (c) => `
+                  <li>
+                    <button class="btn btn-link p-0" data-id="${c.id}">
+                      ${c.title}
+                    </button>
+                  </li>`
+              )
+              .join("")}
+          </ul>
+        `
+        : `<div class="cc-muted">No subsections.</div>`
     }
+  `;
+
+  renderList(searchEl.value);
+}
+
 
     // ---- EVENTS ----
     listEl.addEventListener("click", (e) => {
