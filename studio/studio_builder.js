@@ -416,8 +416,17 @@ window.CCFB_FACTORY = {
                 
                 for (var key in abilityDict[cat]) {
                     var item = abilityDict[cat][key];
-                    var displayName = item.name || item;
-                    var displayEffect = typeof item === 'object' ? (item.effect || 'No description') : item;
+                    var displayName, displayEffect;
+                    
+                    if (typeof item === 'object') {
+                        // Item is an object with name and effect properties
+                        displayName = item.name || key.replace(/_/g, ' ').toUpperCase();
+                        displayEffect = item.effect || 'No description available';
+                    } else {
+                        // Item is a string - use key as name, string as effect
+                        displayName = key.replace(/_/g, ' ').toUpperCase();
+                        displayEffect = item;
+                    }
                     
                     cardsHtml += '<div class="ability-card" onclick="CCFB_FACTORY.addItem(\'abilities\', \'' + key + '\')">' +
                         '<div class="ability-card-name">' + displayName + '</div>' +
