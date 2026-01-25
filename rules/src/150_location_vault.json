@@ -1,0 +1,33 @@
+{
+  "_id": "R-LOCATION-VAULT",
+  "description": "Canonical locations of Coffin Canyon. Locations influence terrain, hazards, scenario weighting, monster behavior, and escalation rules.",
+
+  "locations": {
+    "camp-coffin": {
+      "name": "Camp Coffin",
+      "emoji": "🦅",
+      "faction_affinity": ["Monster Rangers"],
+      "tags": ["sanctuary", "medical", "ranger", "safe_zone"],
+      "danger_rating": 2,
+      "coffin_cough_chance": 0.10,
+
+      "lore": "Monster Rangers HQ. Canvas tents, campfires, corrals. A sanctuary.",
+      "atmosphere": "Where Monsters and humans find uneasy peace",
+
+      "terrain_features": [
+        "Ranger tents",
+        "Monster pens",
+        "Medical station",
+        "Watchtower"
+      ],
+
+      "rules_hooks": {
+        "default_terrain_traits": ["sacred"],
+        "monster_behavior": "Non-hostile unless attacked",
+        "special": [
+          "Once per game, one Ranger unit may remove Shaken automatically."
+        ]
+      }
+    }
+  }
+}
