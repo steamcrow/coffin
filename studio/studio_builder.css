@@ -1,5 +1,6 @@
 /* =========================================================
-   COFFIN CANYON FACTION STUDIO - FULL RESTORED MASTER
+   COFFIN CANYON FACTION STUDIO — FINAL MASTER CSS
+   Clean, state-aware, Odoo-safe, mobile-correct
    ========================================================= */
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -17,10 +18,9 @@
 }
 
 /* =========================================================
-   LAYOUT OVERRIDE – ODOO BREAKOUT (REPLACE OLD GRID)
+   ODOO LAYOUT BREAKOUT
    ========================================================= */
 
-/* ODOO LAYOUT BREAKOUT */
 #faction-studio-root {
     width: 100%;
     max-width: 100%;
@@ -41,61 +41,32 @@
     width: 100% !important;
 }
 
+/* Main app wrapper */
 .studio-wrapper {
     max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
 }
 
-.studio-wrapper {
-    max-width: 1600px;
-    margin: 0 auto;
-}
-
 /* =========================================================
-   PANELS & HEADERS
-   ========================================================= */
-.fb-panel {
-    background: var(--cc-bg-darker);
-    border: 1px solid var(--cc-border);
-    border-radius: 8px;
-    overflow: hidden;
-    min-width: 0;
-}
-
-.cc-panel-header {
-    background: rgba(255,255,255,0.05);
-    padding: 12px 15px;
-    border-bottom: 1px solid var(--cc-border);
-    font-weight: 900;
-    text-transform: uppercase;
-    font-size: 11px;
-    letter-spacing: 1px;
-    color: var(--cc-primary);
-}
-
-.panel-content { padding: 15px; }
-
-/* NO UNIT SELECTED = COLLAPSE GRID */
-.no-unit .fb-grid {
-    grid-template-columns: 1fr;
-}
-
-/* =========================================================
-   GRID – FINAL CORRECT VERSION
+   GRID — SINGLE SOURCE OF TRUTH
    ========================================================= */
 
 .fb-grid {
     display: grid;
-    grid-template-columns: 1fr 1.4fr 1.1fr;
     gap: 20px;
     max-width: 1200px;
     margin: 40px auto;
 }
 
-/* No unit = collapse */
+/* No unit selected → always 1 column */
 .no-unit .fb-grid {
     grid-template-columns: 1fr;
+}
+
+/* Unit selected → full desktop layout */
+.has-unit .fb-grid {
+    grid-template-columns: 1fr 1.4fr 1.1fr;
 }
 
 /* Tablet */
@@ -116,15 +87,37 @@
     }
 }
 
+/* =========================================================
+   PANELS & HEADERS
+   ========================================================= */
 
-/* UNIT SELECTED = FULL LAYOUT */
-.has-unit .fb-grid {
-    grid-template-columns: 1fr 1.4fr 1.1fr;
+.fb-panel {
+    background: var(--cc-bg-darker);
+    border: 1px solid var(--cc-border);
+    border-radius: 8px;
+    overflow: hidden;
+    min-width: 0;
+}
+
+.cc-panel-header {
+    background: rgba(255,255,255,0.05);
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--cc-border);
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--cc-primary);
+}
+
+.panel-content { 
+    padding: 15px; 
 }
 
 /* =========================================================
-   STAT BADGES (THE "VIBE")
+   STAT BADGES
    ========================================================= */
+
 .stat-badge-flex {
     display: flex;
     gap: 10px;
@@ -143,8 +136,16 @@
     min-width: 55px;
 }
 
-.cc-stat-label { font-size: 10px; font-weight: 900; }
-.cc-stat-value { font-size: 18px; font-weight: 900; color: #fff; }
+.cc-stat-label { 
+    font-size: 10px; 
+    font-weight: 900; 
+}
+
+.cc-stat-value { 
+    font-size: 18px; 
+    font-weight: 900; 
+    color: #fff; 
+}
 
 .stat-q-border { border-color: var(--stat-q); }
 .stat-d-border { border-color: var(--stat-d); }
@@ -159,6 +160,7 @@
 /* =========================================================
    BUILDER STEPS
    ========================================================= */
+
 .builder-step {
     border: 1px solid var(--cc-border);
     border-radius: 6px;
@@ -186,14 +188,25 @@
     font-weight: 900;
 }
 
-.step-active { border-left: 4px solid var(--cc-primary); background: rgba(255,117,24,0.05); }
-.step-active .step-number { background: var(--cc-primary); color: #000; }
+.step-active { 
+    border-left: 4px solid var(--cc-primary); 
+    background: rgba(255,117,24,0.05); 
+}
 
-.step-content { padding: 15px; border-top: 1px solid var(--cc-border); }
+.step-active .step-number { 
+    background: var(--cc-primary); 
+    color: #000; 
+}
+
+.step-content { 
+    padding: 15px; 
+    border-top: 1px solid var(--cc-border); 
+}
 
 /* =========================================================
    ABILITIES & PROPERTY BADGES
    ========================================================= */
+
 .property-badge {
     display: inline-block;
     background: var(--cc-primary-dim);
@@ -217,9 +230,11 @@
 }
 
 /* =========================================================
-   FORM ELEMENTS (FORCED DARK)
+   FORM ELEMENTS
    ========================================================= */
-.cc-input, .cc-select {
+
+.cc-input, 
+.cc-select {
     width: 100%;
     background: #000 !important;
     border: 1px solid #333 !important;
@@ -239,4 +254,6 @@
     border-radius: 4px;
 }
 
-.btn-add-small:hover { background: #ff9d5c; }
+.btn-add-small:hover { 
+    background: #ff9d5c; 
+}
