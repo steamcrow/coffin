@@ -3,10 +3,12 @@
 // File: steamcrow/rules/src/rules_helpers.js
 // ===================================
 
-console.log("📚 rules_helpers loaded");
+console.log("📚 rules_helpers.js EXECUTED");
 
 window.CC_RULES_HELPERS = {
   createRulesHelpers(rulesBase) {
+    console.log("🧠 createRulesHelpers called");
+
     const index = Array.isArray(rulesBase?.index)
       ? rulesBase.index
       : [];
@@ -17,21 +19,24 @@ window.CC_RULES_HELPERS = {
       indexById[it.id] = it;
     });
 
+    function resolvePath(path) {
+      try {
+        return path
+          .split(".")
+          .reduce((obj, key) => (obj ? obj[key] : null), rulesBase);
+      } catch {
+        return null;
+      }
+    }
+
     function getRuleSection(id) {
       const meta = indexById[id];
       if (!meta) return null;
 
-      // Resolve content via path
-      let content = null;
-      try {
-        content = meta.path
-          .split(".")
-          .reduce((o, k) => (o ? o[k] : null), rulesBase);
-      } catch {
-        content = null;
-      }
-
-      return { meta, content };
+      return {
+        meta,
+        content: meta.path ? resolvePath(meta.path) : null,
+      };
     }
 
     function getChildren(parentId) {
@@ -41,6 +46,7 @@ window.CC_RULES_HELPERS = {
     return {
       getRuleSection,
       getChildren,
+      index,
     };
   },
 };
