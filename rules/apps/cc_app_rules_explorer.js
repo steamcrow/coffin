@@ -112,12 +112,21 @@ window.CC_APP = {
         .join("");
     }
 
-    // ---- SELECT RULE ----
-    function selectRule(id) {
+    // ---- SELECT RULE (NOW ASYNC) ----
+    async function selectRule(id) {
       selectedId = id;
 
-      const section = helpers.getRuleSection(id);
-      if (!section) return;
+      // Show loading state
+      detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+      ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+
+      const section = await helpers.getRuleSection(id);
+      
+      if (!section || !section.meta) {
+        detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
+        ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
+        return;
+      }
 
       const { meta, content } = section;
       const children = helpers.getChildren(id);
@@ -173,17 +182,17 @@ window.CC_APP = {
       renderList(searchEl.value);
     }
 
-    // ---- EVENTS ----
+    // ---- EVENTS (NOW HANDLE ASYNC) ----
     listEl.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-id]");
       if (!btn) return;
-      selectRule(btn.dataset.id);
+      selectRule(btn.dataset.id); // This is now async but we don't need to await here
     });
 
     ctxEl.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-id]");
       if (!btn) return;
-      selectRule(btn.dataset.id);
+      selectRule(btn.dataset.id); // This is now async but we don't need to await here
     });
 
     searchEl.addEventListener("input", () => {
