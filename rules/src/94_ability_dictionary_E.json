@@ -1,0 +1,113 @@
+{
+  "_id": "R-ABIL-E",
+  "title": "Ability Dictionary — E (Morale & Fear)",
+
+  "abilities": {
+
+    "fear": {
+      "_id": "R-ABIL-E-FEAR",
+      "timing": "passive",
+      "short": "-1 die to enemy Morale nearby.",
+      "long": "Passive. Enemies within 6\" suffer -1 die on Morale tests."
+    },
+
+    "terror": {
+      "_id": "R-ABIL-E-TERROR",
+      "timing": "passive",
+      "short": "Morale test on first engagement.",
+      "long": "Passive. When enemy first engages, they must test Morale or become Shaken. Once per round per enemy."
+    },
+
+    "dread": {
+      "_id": "R-ABIL-E-DREAD",
+      "timing": "passive",
+      "short": "Crippling Morale aura.",
+      "long": "Passive. Enemies within 6\" suffer -1 die on Morale and cannot ignore Shaken."
+    },
+
+    "intimidate": {
+      "_id": "R-ABIL-E-INTIMIDATE",
+      "timing": "main_action",
+      "short": "Force Morale test.",
+      "long": "Main Action. Force Morale test on enemy within 6\" and LoS. No effect on Titans."
+    },
+
+    "rally": {
+      "_id": "R-ABIL-E-RALLY",
+      "timing": "main_action",
+      "short": "Remove Shaken from ally.",
+      "long": "Main Action. Remove Shaken from friendly within 6\"; they gain +1 die on next Morale test."
+    },
+
+    "terrifying_presence": {
+      "_id": "R-ABIL-E-TERRIFYING-PRESENCE",
+      "timing": "passive",
+      "short": "Nearby enemies test Morale on kills.",
+      "long": "Passive. When reducing enemy to 0 Quality, all enemies within 6\" must test Morale."
+    },
+
+    "unnerving": {
+      "_id": "R-ABIL-E-UNNERVING",
+      "timing": "passive",
+      "short": "-1 die to engaged enemies' attacks.",
+      "long": "Passive. Engaged enemies suffer -1 die on all attacks."
+    },
+
+    "panic_wave": {
+      "_id": "R-ABIL-E-PANIC-WAVE",
+      "timing": "reaction",
+      "short": "Chain Morale tests.",
+      "long": "Reactive. When enemy within 6\" Panics or Dies, choose another enemy within 6\" to test Morale."
+    },
+
+    "fearless": {
+      "_id": "R-ABIL-E-FEARLESS",
+      "timing": "passive",
+      "short": "Immune to fear effects.",
+      "long": "Passive. Ignores Fear, Terror, and Dread. Still tests Morale for Damage and Terrain."
+    },
+
+    "cowardice": {
+      "_id": "R-ABIL-E-COWARDICE",
+      "timing": "passive",
+      "short": "Punish failed Morale.",
+      "long": "Passive. Enemies failing Morale within 6\" suffer -1 die on their next Action."
+    },
+
+    "inspire": {
+      "_id": "R-ABIL-E-INSPIRE",
+      "timing": "passive",
+      "short": "+1 Morale aura.",
+      "long": "Passive. Friendly units within 6\" gain +1 to Morale checks."
+    },
+
+    "unshakable": {
+      "_id": "R-ABIL-E-UNSHAKABLE",
+      "timing": "passive",
+      "short": "Auto-pass Morale.",
+      "long": "Passive. Auto-passes all Morale checks. Ignores Dread effects."
+    },
+
+    "skittish": {
+      "_id": "R-ABIL-E-SKITTISH",
+      "timing": "passive",
+      "short": "Morale test when enemies approach.",
+      "long": "Passive. This model must test Morale the first time each round an enemy model enters within 6\"."
+    },
+
+    "audio_suppression": {
+      "_id": "R-ABIL-E-AUDIO-SUPPRESSION",
+      "timing": "passive",
+      "short": "-1 Morale via sound.",
+      "long": "Passive. Enemies within 6\" suffer -1 to Morale checks."
+    },
+
+    "authority": {
+      "_id": "R-ABIL-E-AUTHORITY",
+      "timing": "passive",
+      "short": "Ignore Suppression nearby.",
+      "long": "Passive. Friendly units within 6\" ignore Suppression effects."
+    }
+
+  }
+}
