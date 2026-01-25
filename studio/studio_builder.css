@@ -50,7 +50,6 @@
 .studio-wrapper {
     max-width: 1600px;
     margin: 0 auto;
-    padding: 20px;
 }
 
 /* =========================================================
@@ -77,10 +76,13 @@
 
 .panel-content { padding: 15px; }
 
-
+/* NO UNIT SELECTED = COLLAPSE GRID */
+.no-unit {
+    grid-template-columns: 1fr;
+}
 .fb-grid {
-    max-width: 1300px;
-    margin: 40px auto;
+    max-width: 1200px;   /* tune: 1100–1300 is sweet spot */
+    margin: 0 auto;
 }
 
 /* UNIT SELECTED = FULL LAYOUT */
