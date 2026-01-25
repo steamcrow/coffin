@@ -12,11 +12,11 @@
     },
 
     "befriend_any": {
-  "_id": "R-ABIL-H-BEFRIEND-ANY",
-  "timing": "passive",
-  "short": "May Befriend any monster type.",
-  "long": "Passive. This unit may attempt Befriend actions against any monster type unless restricted by scenario rules."
-},
+      "_id": "R-ABIL-H-BEFRIEND-ANY",
+      "timing": "passive",
+      "short": "May Befriend any monster type.",
+      "long": "Passive. This unit may attempt Befriend actions against any monster type unless restricted by scenario rules."
+    },
 
     "befriend_automat": {
       "_id": "R-ABIL-H-BEFRIEND-AUTOMAT",
