@@ -1,12 +1,7 @@
-// =====================================================
-// CC APP: Rules Explorer (Test Stub)
-// =====================================================
-
 window.CC_APP = {
-  init({ root }) {
+  init({ root, app }) {
     root.innerHTML = `
       <div class="cc-grid cols-3">
-
         <div class="cc-panel">
           <div class="cc-panel-header">Library</div>
           <div class="cc-panel-body">
@@ -22,8 +17,8 @@ window.CC_APP = {
         <div class="cc-panel">
           <div class="cc-panel-header">Details</div>
           <div class="cc-panel-body">
-            <p>This is where rule text will go.</p>
-            <p>For now, we are just proving layout.</p>
+            <p>App loaded: <b>${app}</b></p>
+            <p>This is the proof-of-platform stub.</p>
           </div>
         </div>
 
@@ -32,15 +27,10 @@ window.CC_APP = {
           <div class="cc-panel-body">
             <div class="cc-card">
               <div class="cc-card-title">Status</div>
-              <div class="cc-card-meta">
-                Loader ✓<br>
-                CSS ✓<br>
-                Grid ✓
-              </div>
+              <div class="cc-card-meta">Loader ✓ CSS ✓ Grid ✓</div>
             </div>
           </div>
         </div>
-
       </div>
     `;
   }
