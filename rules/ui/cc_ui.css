@@ -169,3 +169,29 @@
 
 .cc-k{ color:#9a9a9a; font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
 .cc-v{ font-weight:700; font-size:13px; }
+
+/* ===============================
+   Ability Dictionary (Bootstrap-aligned)
+   =============================== */
+
+.cc-ability-card{
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:10px;
+  background:#101010;
+}
+
+.cc-ability-meta{
+  color:#9a9a9a;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+
+.cc-ability-short{
+  font-size:.9rem;
+}
+
+.cc-ability-long{
+  font-size:.85rem;
+  opacity:.85;
+}
