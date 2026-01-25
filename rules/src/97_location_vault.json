@@ -1,0 +1,172 @@
+{
+  "file": "97_location_vault.json",
+  "version": "1.0",
+  "scale": "d6",
+  "notes": [
+    "This vault defines abstract, rules-facing location archetypes.",
+    "It does not define specific towns, names, monsters, or resources.",
+    "World-facing location data lives in 150_location_types.json."
+  ],
+
+  "location_archetypes": {
+    "boomtown": {
+      "terrain_profile": {
+        "default_traits": ["Difficult"],
+        "common_traits": ["Hazardous"],
+        "rare_traits": ["Burning", "Unstable"]
+      },
+      "objective_patterns": {
+        "primary": ["Control", "Extraction"],
+        "secondary": ["Supply Cache", "Sabotage"]
+      },
+      "escalation_logic": [
+        "Extended combat risks Fire or Structural Collapse",
+        "Population pressure increases Morale tests"
+      ]
+    },
+
+    "mine": {
+      "terrain_profile": {
+        "default_traits": ["Difficult"],
+        "common_traits": ["Unstable"],
+        "rare_traits": ["Hazardous", "Haunted"]
+      },
+      "objective_patterns": {
+        "primary": ["Extraction", "Destroy Structure"],
+        "secondary": ["Salvage"]
+      },
+      "escalation_logic": [
+        "Unstable terrain may collapse by Round 3",
+        "Monster exits may activate if ignored"
+      ]
+    },
+
+    "river": {
+      "terrain_profile": {
+        "default_traits": [],
+        "common_traits": ["Hazardous"],
+        "rare_traits": ["Choking"]
+      },
+      "objective_patterns": {
+        "primary": ["Crossing", "Control"],
+        "secondary": ["Extraction"]
+      },
+      "escalation_logic": [
+        "Flooding or shifting terrain alters movement lanes",
+        "Foul water increases environmental pressure"
+      ]
+    },
+
+    "cult_site": {
+      "terrain_profile": {
+        "default_traits": ["Tainted"],
+        "common_traits": ["Choking"],
+        "rare_traits": ["Haunted"]
+      },
+      "objective_patterns": {
+        "primary": ["Ritual Site"],
+        "secondary": ["Destroy Structure"]
+      },
+      "escalation_logic": [
+        "If unresolved, terrain escalates toward Haunted",
+        "Repeated violence increases Fear pressure"
+      ]
+    },
+
+    "thyr_field": {
+      "terrain_profile": {
+        "default_traits": ["Hazardous"],
+        "common_traits": ["Unstable"],
+        "rare_traits": ["Haunted"]
+      },
+      "objective_patterns": {
+        "primary": ["Extraction"],
+        "secondary": ["Control"]
+      },
+      "escalation_logic": [
+        "Thyr use risks Wild Magic or terrain corruption",
+        "Escalation is guaranteed if contested"
+      ]
+    },
+
+    "grave_site": {
+      "terrain_profile": {
+        "default_traits": ["Haunted"],
+        "common_traits": ["Tainted"],
+        "rare_traits": ["Choking"]
+      },
+      "objective_patterns": {
+        "primary": ["Purge", "Ritual"],
+        "secondary": ["Control"]
+      },
+      "escalation_logic": [
+        "Haunts may spawn at end of round",
+        "Morale pressure increases rapidly"
+      ]
+    },
+
+    "wasteland": {
+      "terrain_profile": {
+        "default_traits": [],
+        "common_traits": ["Hazardous"],
+        "rare_traits": ["Choking"]
+      },
+      "objective_patterns": {
+        "primary": ["Survival"],
+        "secondary": ["Extraction"]
+      },
+      "escalation_logic": [
+        "Environmental damage accumulates over time",
+        "Poor positioning is punished quickly"
+      ]
+    },
+
+    "ruins": {
+      "terrain_profile": {
+        "default_traits": ["Difficult"],
+        "common_traits": ["Unstable"],
+        "rare_traits": ["Haunted"]
+      },
+      "objective_patterns": {
+        "primary": ["Salvage"],
+        "secondary": ["Control"]
+      },
+      "escalation_logic": [
+        "Collapsed structures change lanes mid-game",
+        "Undead or memory-based threats may emerge"
+      ]
+    },
+
+    "outpost": {
+      "terrain_profile": {
+        "default_traits": [],
+        "common_traits": ["Difficult"],
+        "rare_traits": ["Hazardous"]
+      },
+      "objective_patterns": {
+        "primary": ["Control"],
+        "secondary": ["Supply Cache"]
+      },
+      "escalation_logic": [
+        "Defensive positions degrade under pressure",
+        "Once breached, morale collapses fast"
+      ]
+    },
+
+    "hq": {
+      "terrain_profile": {
+        "default_traits": [],
+        "common_traits": [],
+        "rare_traits": ["Hazardous"]
+      },
+      "objective_patterns": {
+        "primary": ["Defend"],
+        "secondary": ["Extraction"]
+      },
+      "escalation_logic": [
+        "Enemy success triggers reinforcement pressure",
+        "Loss of HQ carries narrative consequences"
+      ]
+    }
+  }
+}
