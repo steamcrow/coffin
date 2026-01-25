@@ -7,21 +7,16 @@
   const BOOTSTRAP_CSS =
     "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
 
-  // If your Odoo serves /rules/ui/cc_ui.css, keep this.
-  // If not, change it to your real published path.
   const CC_UI_CSS = "/rules/ui/cc_ui.css";
 
-  // GitHub raw base for apps
   const APP_BASE =
     "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/";
 
-  // Optional: shared JSON base (rules)
   const RULES_BASE_URL =
     "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/rules_base.json";
 
-  function qs(sel, root = document) {
-    return root.querySelector(sel);
-  }
+  const RULES_HELPERS_URL =
+    "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/rules_helpers.js";
 
   function ensureOnce(id) {
     if (document.getElementById(id)) return false;
@@ -31,7 +26,6 @@
   function injectCSS(href, id) {
     return new Promise((resolve) => {
       if (id && document.getElementById(id)) return resolve();
-      // Avoid dup by href
       const exists = [...document.querySelectorAll('link[rel="stylesheet"]')]
         .some((l) => l.href === href);
       if (exists) return resolve();
@@ -41,7 +35,7 @@
       link.href = href;
       if (id) link.id = id;
       link.onload = resolve;
-      link.onerror = resolve; // don't hard-fail
+      link.onerror = resolve;
       document.head.appendChild(link);
     });
   }
@@ -80,7 +74,6 @@
       </div>
     `;
 
-    // ensure keyframes once
     if (ensureOnce("cc-preloader-style")) {
       const style = document.createElement("style");
       style.id = "cc-preloader-style";
@@ -90,7 +83,6 @@
       document.head.appendChild(style);
     }
 
-    // Root must be position:relative for overlay
     const cs = window.getComputedStyle(root);
     if (cs.position === "static") root.style.position = "relative";
 
@@ -110,7 +102,6 @@
   }
 
   async function loadScriptViaBlob(url) {
-    // This is the key: the only method you’ve proven works in Odoo consistently.
     const res = await fetch(`${url}?t=${Date.now()}`);
     if (!res.ok) throw new Error(`Fetch failed (${res.status}) ${url}`);
 
@@ -127,7 +118,7 @@
       };
       script.onerror = () => {
         URL.revokeObjectURL(blobUrl);
-        reject(new Error(`Script failed to execute: ${url}`));
+        reject(new Error(`Script failed: ${url}`));
       };
       document.head.appendChild(script);
     });
@@ -146,34 +137,34 @@
     const app = root.dataset.ccApp;
     if (!app) return;
 
-    // Prevent double-mount
     if (root.dataset.ccMounted === "true") return;
     root.dataset.ccMounted = "true";
 
-    // CSS
     await injectCSS(BOOTSTRAP_CSS, "cc-bootstrap");
     await injectCSS(CC_UI_CSS, "cc-ui");
 
-    // Preloader
     renderPreloader(root);
 
     try {
+      setLoaderMsg("Loading helpers…");
+      await loadScriptViaBlob(RULES_HELPERS_URL);
+
       setLoaderMsg("Loading app…");
       await loadScriptViaBlob(`${APP_BASE}cc_app_${app}.js`);
 
-      // Optional: preload rules_base
       setLoaderMsg("Loading rules…");
       const rulesBase = await fetchJSON(RULES_BASE_URL);
 
-      // Contract check
       if (!window.CC_APP || typeof window.CC_APP.init !== "function") {
         throw new Error(`CC_APP.init missing in cc_app_${app}.js`);
       }
 
-      // App context (future-proof)
       const ctx = {
         app,
         rulesBase,
+        helpers: window.CC_RULES_HELPERS
+          ? window.CC_RULES_HELPERS.createRulesHelpers(rulesBase)
+          : null,
         urls: {
           rulesBase: RULES_BASE_URL,
           appBase: APP_BASE,
@@ -187,7 +178,6 @@
     } catch (err) {
       console.error("❌ CC Loader boot failed:", err);
       setLoaderMsg("Boot failed. Check console.");
-      // Keep overlay visible so user sees something.
     }
   }
 
