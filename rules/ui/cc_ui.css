@@ -1,77 +1,291 @@
-/* =========================================================
-   COFFIN CANYON UI CORE
-   Bootstrap-first theme layer
-   ========================================================= */
+/* =====================================================
+   COFFIN CANYON — CANONICAL UI SYSTEM
+   One CSS to rule them all.
+   ===================================================== */
+
+/* -----------------------------
+   ROOT TOKENS
+   ----------------------------- */
 
 :root {
-  --cc-bg: #0e0e0e;
-  --cc-panel: #181818;
-  --cc-border: rgba(255,255,255,0.08);
-  --cc-accent: #ff7518;
-  --cc-accent-dim: rgba(255,117,24,0.25);
+  /* Color */
+  --cc-bg: #1a1a1a;
+  --cc-bg-soft: #222;
+  --cc-bg-panel: #262626;
+  --cc-border: #333;
+  --cc-border-soft: #2f2f2f;
+
   --cc-text: #e6e6e6;
-  --cc-text-muted: #9a9a9a;
+  --cc-text-dim: #aaa;
+  --cc-text-muted: #777;
+
+  --cc-accent: #ff7518;
+  --cc-accent-dim: rgba(255, 117, 24, 0.15);
+
+  --cc-danger: #ff3e3e;
+  --cc-good: #44ff44;
+
+  /* Typography */
+  --cc-font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --cc-font-display: "Oswald", system-ui, sans-serif;
+
+  /* Spacing */
+  --cc-xs: 4px;
+  --cc-sm: 8px;
+  --cc-md: 16px;
+  --cc-lg: 24px;
+  --cc-xl: 32px;
+
+  /* Radius */
+  --cc-radius: 6px;
+  --cc-radius-lg: 10px;
 }
 
-/* === GLOBAL === */
+/* -----------------------------
+   GLOBAL RESET / BASE
+   ----------------------------- */
 
-.cc-app {
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
   background: var(--cc-bg);
   color: var(--cc-text);
-  min-height: 100vh;
+  font-family: var(--cc-font);
 }
 
-.cc-title {
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+h1, h2, h3, h4 {
+  font-family: var(--cc-font-display);
+  letter-spacing: 1px;
+  margin: 0 0 var(--cc-sm);
 }
 
-.cc-subtitle {
-  color: var(--cc-text-muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  font-size: 0.8rem;
+p {
+  margin: 0 0 var(--cc-sm);
+  color: var(--cc-text-dim);
 }
 
-/* === PRELOADER === */
+/* -----------------------------
+   LOADER
+   ----------------------------- */
 
-.cc-preloader {
-  position: fixed;
+.cc-loader {
+  position: absolute;
   inset: 0;
-  background: radial-gradient(circle at center, #151515, #050505);
-  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--cc-bg);
+  z-index: 10;
 }
 
-.cc-preloader-card {
-  background: var(--cc-panel);
+.cc-loader-inner {
+  text-align: center;
+}
+
+.cc-spinner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 5px solid var(--cc-border);
+  border-top-color: var(--cc-accent);
+  animation: cc-spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+.cc-loader-text {
+  margin-top: var(--cc-md);
+  color: var(--cc-accent);
+  font-family: var(--cc-font-display);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+@keyframes cc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* -----------------------------
+   APP SHELL
+   ----------------------------- */
+
+.cc-app-shell {
+  padding: var(--cc-md);
+  min-height: 600px;
+}
+
+/* -----------------------------
+   FLEXIBLE GRID SYSTEM
+   ----------------------------- */
+
+/*
+  One container.
+  App toggles column count via class.
+*/
+
+.cc-grid {
+  display: grid;
+  gap: var(--cc-md);
+}
+
+/* Default: single column (mobile-first) */
+.cc-grid {
+  grid-template-columns: 1fr;
+}
+
+/* Two columns */
+.cc-grid.cols-2 {
+  grid-template-columns: 1fr 1.5fr;
+}
+
+/* Three columns */
+.cc-grid.cols-3 {
+  grid-template-columns: 280px 1fr 320px;
+}
+
+/* Responsive fallbacks */
+@media (max-width: 900px) {
+  .cc-grid.cols-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  .cc-grid.cols-3 {
+    grid-template-columns: 320px 1fr;
+  }
+}
+
+/* -----------------------------
+   PANELS
+   ----------------------------- */
+
+.cc-panel {
+  background: var(--cc-bg-panel);
   border: 1px solid var(--cc-border);
-  max-width: 420px;
+  border-radius: var(--cc-radius);
+  padding: var(--cc-md);
+  display: flex;
+  flex-direction: column;
+  min-height: 100px;
 }
 
-.cc-preloader .progress {
-  background-color: #222;
-}
-
-.cc-preloader .progress-bar {
-  background-color: var(--cc-accent);
-}
-
-#cc-load-steps li {
-  opacity: 0.5;
-}
-
-#cc-load-steps li.active {
-  opacity: 1;
+.cc-panel-header {
+  font-family: var(--cc-font-display);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-size: 0.9rem;
+  margin-bottom: var(--cc-sm);
   color: var(--cc-accent);
 }
 
-/* === UTILITIES === */
+.cc-panel-body {
+  flex: 1;
+  overflow-y: auto;
+}
 
-.cc-muted {
+.cc-panel-footer {
+  margin-top: var(--cc-sm);
+  border-top: 1px solid var(--cc-border-soft);
+  padding-top: var(--cc-sm);
+}
+
+/* -----------------------------
+   LISTS / LIBRARIES
+   ----------------------------- */
+
+.cc-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--cc-xs);
+}
+
+.cc-list-item {
+  padding: var(--cc-sm);
+  border-radius: var(--cc-radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+
+.cc-list-item:hover {
+  background: var(--cc-bg-soft);
+  border-color: var(--cc-border);
+}
+
+.cc-list-item.active {
+  background: var(--cc-accent-dim);
+  border-color: var(--cc-accent);
+}
+
+/* -----------------------------
+   CARDS (Vault / Entries)
+   ----------------------------- */
+
+.cc-card {
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius);
+  padding: var(--cc-sm);
+  background: #202020;
+}
+
+.cc-card-title {
+  font-family: var(--cc-font-display);
+  font-size: 0.95rem;
+  margin-bottom: var(--cc-xs);
+}
+
+.cc-card-meta {
+  font-size: 0.8rem;
   color: var(--cc-text-muted);
 }
 
-.cc-accent {
+/* -----------------------------
+   BUTTONS
+   ----------------------------- */
+
+.cc-btn {
+  background: transparent;
+  color: var(--cc-text);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius);
+  padding: var(--cc-xs) var(--cc-sm);
+  cursor: pointer;
+  font-family: var(--cc-font-display);
+  letter-spacing: 1px;
+}
+
+.cc-btn:hover {
+  border-color: var(--cc-accent);
   color: var(--cc-accent);
+}
+
+.cc-btn.primary {
+  background: var(--cc-accent);
+  border-color: var(--cc-accent);
+  color: #000;
+}
+
+/* -----------------------------
+   STATES
+   ----------------------------- */
+
+.cc-empty {
+  color: var(--cc-text-muted);
+  font-style: italic;
+  text-align: center;
+  padding: var(--cc-lg);
+}
+
+.cc-error {
+  color: var(--cc-danger);
+  border: 1px solid var(--cc-danger);
+  padding: var(--cc-md);
+  border-radius: var(--cc-radius);
+  background: rgba(255, 62, 62, 0.08);
 }
