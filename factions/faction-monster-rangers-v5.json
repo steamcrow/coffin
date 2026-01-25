@@ -1,682 +1,469 @@
-/**
- * COFFIN CANYON FACTION STUDIO - COMPLETE VERSION
- * Following skeleton.js pattern + ALL original functionality
- * ZERO OMISSIONS
- */
-
-window.CCFB_FACTORY = {
-    state: {
-        rules: null,
-        currentFaction: { faction: "New Faction", units: [] },
-        selectedUnit: null,
-        activeModal: null,
-        activeStep: 1,
-        isPasted: false 
+{
+  "faction": "Monster Rangers",
+  "version": "8.2",
+  "core_rules_version": "8.2",
+  "description": "Protectors of Obscuria who live in harmony with the canyon's mysteries. Monster Rangers scout, survive, and defend using wit, wilderness skills, and mystical bonds with the creatures they befriend.",
+  "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons (like Harpoons) have additional point costs listed in optional_upgrades.",
+  "faction_features": [
+    {
+      "name": "Befriend Monsters",
+      "cost": 0,
+      "required": true,
+      "effect": "Monster Rangers can befriend monsters using Pocket Snacks (contested Quality rolls) or specialized befriending abilities (Befriend Beast, Befriend Bloodless, Befriend Spirits, Befriend Automat, Befriend Kaiju). Befriended monsters activate with Rangers."
     },
-
-    sanitizeUnit: function(u) {
-        return {
-            name: u.name || "New Unit",
-            type: u.type || "grunt",
-            quality: parseInt(u.quality) || 4,
-            defense: parseInt(u.defense) || 4,
-            move: parseInt(u.move) || 6,
-            range: parseInt(u.range) || 0,
-            weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
-            abilities: Array.isArray(u.abilities) ? u.abilities : [],
-            supplemental_abilities: Array.isArray(u.supplemental_abilities) ? u.supplemental_abilities : [],
-            lore: u.lore || ""
-        };
+    {
+      "name": "Branch System",
+      "cost": 0,
+      "required": true,
+      "effect": "Rangers belong to different Branches (Crow, Conjure Guard, Doom Mime, Signal, Skull, Yokai, etc.) which grant thematic abilities and playstyles."
     },
-
-    calculateUnitCost: function(u) {
-        if (!u || !this.state.rules) return 0;
-        var total = (7 - u.quality) * 15 + (7 - u.defense) * 10 + (u.move - 6) * 5;
-        if (u.range > 0) total += (u.range / 6) * 10;
-        total += (u.weapon_properties.length * 10) + (u.abilities.length * 15);
-        return Math.max(10, Math.ceil(total / 5) * 5);
-    },
-
-    init: function() {
-        console.log("🎬 Faction Studio initializing...");
-        
-        var self = this;
-        
-        // Load CSS (following skeleton.js pattern)
-        if (!document.getElementById('faction-studio-styles')) {
-            console.log('🎨 Loading Faction Studio CSS...');
-            fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/studio/studio_builder.css?t=' + Date.now())
-                .then(function(res) { return res.text(); })
-                .then(function(css) {
-                    var style = document.createElement('style');
-                    style.id = 'faction-studio-styles';
-                    style.textContent = css;
-                    document.head.appendChild(style);
-                    console.log('✅ Faction Studio CSS applied!');
-                })
-                .catch(function(err) { console.error('❌ CSS load failed:', err); });
-        }
-
-        // Load rules
-        fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now())
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                self.state.rules = data;
-                console.log("✅ Rules loaded");
-                self.refresh();
-            })
-            .catch(function(e) { 
-                console.error("❌ Rules failed to load:", e);
-                alert("Failed to load game rules. Please refresh the page.");
-            });
-    },
-
-    refresh: function() {
-        var root = document.getElementById('faction-studio-root');
-        if (!root) {
-            console.error("❌ faction-studio-root not found");
-            return;
-        }
-        
-        if (!this.state.rules) {
-            console.warn("⚠️ Rules not loaded yet");
-            root.innerHTML = '<div id="faction-studio-app"><div class="cc-empty-state">Loading rules...</div></div>';
-            return;
-        }
-
-        // Inject #faction-studio-app inside root (following skeleton.js pattern)
-        if (!document.getElementById('faction-studio-app')) {
-            root.innerHTML = 
-                '<div id="faction-studio-app">' + 
-                    '<div class="studio-header">' +
-                        '<h1 class="studio-title">FACTION STUDIO</h1>' +
-                        '<p class="studio-subtitle">A Faction Creation Tool for Coffin Canyon</p>' +
-                    '</div>' +
-                    '<div id="studio-container" class="fb-grid">' +
-                        '<div id="faction-overview"></div>' +
-                        '<div id="unit-builder"></div>' +
-                        '<div id="unit-card"></div>' +
-                    '</div>' +
-                    '<div id="slide-panel-container"></div>' +
-                '</div>';
-        }
-        
-        // Apply state classes
-        var app = document.getElementById('faction-studio-app');
-        if (this.state.selectedUnit === null) {
-            app.classList.add("no-unit");
-            app.classList.remove("has-unit");
-        } else {
-            app.classList.add("has-unit");
-            app.classList.remove("no-unit");
-        }
-        
-        this.renderRoster();
-        this.renderBuilder();
-        this.renderCard();
-        this.renderSlidePanel();
-    },
-
-    renderRoster: function() {
-        var target = document.getElementById('faction-overview');
-        if (!target) return;
-        
-        var self = this;
-        var unitsHtml = this.state.currentFaction.units.map(function(u, i) {
-            var selected = self.state.selectedUnit === i ? 'cc-item-selected' : '';
-            return '<div class="cc-roster-item ' + selected + '" onclick="CCFB_FACTORY.selectUnit(' + i + ')">' +
-                '<div class="u-name">' + u.name + '</div>' +
-                '<div class="unit-cost">' + self.calculateUnitCost(u) + '₤</div>' +
-                '</div>';
-        }).join('');
-        
-        target.innerHTML = 
-            '<div class="cc-panel">' +
-                '<div class="cc-panel-header">FACTION ROSTER</div>' +
-                '<div class="panel-content">' +
-                    '<div class="form-group">' +
-                        '<label class="small">FACTION NAME</label>' +
-                        '<input type="text" class="cc-input w-100" value="' + this.state.currentFaction.faction + '" ' +
-                            'onfocus="if(this.value===\'New Faction\')this.value=\'\'" ' +
-                            'onchange="CCFB_FACTORY.updateFaction(this.value)">' +
-                    '</div>' +
-                    '<div class="unit-list">' + unitsHtml + '</div>' +
-                    '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
-                    '<div class="import-section">' +
-                        '<label class="small">IMPORT FROM JSON</label>' +
-                        '<textarea class="cc-input w-100 import-textarea" onchange="CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
-                        '<button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-    },
-
-    renderBuilder: function() {
-        var target = document.getElementById('unit-builder');
-        if (!target) return;
-        
-        if (this.state.selectedUnit === null) {
-            target.innerHTML = '<div class="cc-panel"><div class="cc-empty-state"><i class="fa fa-crosshairs"></i> CHOOSE A UNIT TO BEGIN</div></div>';
-            return;
-        }
-        
-        var u = this.state.currentFaction.units[this.state.selectedUnit];
-        var archVault = this.state.rules.rules_master.unit_identities.archetype_vault;
-        var self = this;
-
-        var step = function(num, title, content) {
-            var isFocused = self.state.activeStep === num || self.state.isPasted;
-            var stepClass = 'builder-step';
-            if (isFocused) stepClass += ' step-active';
-            if (!isFocused && num < self.state.activeStep) stepClass += ' step-complete';
-            if (!isFocused && num > self.state.activeStep) stepClass += ' step-locked';
-            
-            return '<div class="' + stepClass + '">' +
-                '<div class="step-header" onclick="CCFB_FACTORY.setStep(' + num + ')">' +
-                    '<div class="step-number">' + num + '</div>' +
-                    '<div class="step-title">' + title + '</div>' +
-                '</div>' +
-                '<div class="step-content" style="display:' + (isFocused ? 'block' : 'none') + '">' +
-                    content +
-                '</div>' +
-            '</div>';
-        };
-
-        var typeOptions = Object.keys(archVault).map(function(k) {
-            var selected = u.type === k ? 'selected' : '';
-            return '<option value="' + k + '" ' + selected + '>' + k.toUpperCase() + '</option>';
-        }).join('');
-
-        var qualityOptions = [1,2,3,4,5,6].map(function(n) {
-            var selected = u.quality == n ? 'selected' : '';
-            return '<option value="' + n + '" ' + selected + '>' + n + '+</option>';
-        }).join('');
-
-        var defenseOptions = [1,2,3,4,5,6].map(function(n) {
-            var selected = u.defense == n ? 'selected' : '';
-            return '<option value="' + n + '" ' + selected + '>' + n + '+</option>';
-        }).join('');
-
-        var moveOptions = '';
-        for (var i = 1; i <= 24; i++) {
-            var selected = u.move == i ? 'selected' : '';
-            moveOptions += '<option value="' + i + '" ' + selected + '>' + i + '"</option>';
-        }
-
-        var rangeOptions = [0,3,6,12,18,24].map(function(n) {
-            var selected = u.range == n ? 'selected' : '';
-            var label = n == 0 ? 'Melee' : n + '"';
-            return '<option value="' + n + '" ' + selected + '>' + label + '</option>';
-        }).join('');
-
-        var weaponPropsHtml = u.weapon_properties.length > 0 ? 
-            u.weapon_properties.map(function(p, i) {
-                return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + p + ' ✕</span>';
-            }).join('') : '<span class="no-items">None added</span>';
-
-        var abilitiesHtml = u.abilities.length > 0 ?
-            u.abilities.map(function(a, i) {
-                return '<div class="ability-item" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + a + ' ✕</div>';
-            }).join('') : '<span class="no-items">None added</span>';
-
-        target.innerHTML = '<div class="cc-panel">' +
-            '<div class="cc-panel-header">UNIT BUILDER</div>' +
-            '<div class="panel-content">' +
-            step(1, "IDENTITY & TYPE", 
-                '<div class="form-group">' +
-                    '<label class="small">UNIT NAME</label>' +
-                    '<input type="text" class="cc-input w-100" value="' + u.name + '" ' +
-                        'onfocus="if(this.value===\'New Unit\')this.value=\'\'" ' +
-                        'onchange="CCFB_FACTORY.updateUnit(\'name\', this.value)">' +
-                '</div>' +
-                '<div class="form-group">' +
-                    '<label class="small">UNIT TYPE (ARCHETYPE)</label>' +
-                    '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'type\', this.value)">' +
-                        typeOptions +
-                    '</select>' +
-                '</div>' +
-                '<div class="type-rule-display">' +
-                    '<i class="fa fa-info-circle"></i> ' +
-                    (archVault[u.type] ? archVault[u.type].identity : 'Select a type') +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.setStep(2)">CONFIRM TYPE →</button>'
-            ) +
-            step(2, "ATTRIBUTES",
-                '<div class="stats-grid">' +
-                    '<div class="form-group">' +
-                        '<label class="small">QUALITY</label>' +
-                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'quality\', this.value)">' + qualityOptions + '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">DEFENSE</label>' +
-                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'defense\', this.value)">' + defenseOptions + '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">MOVE</label>' +
-                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'move\', this.value)">' + moveOptions + '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">RANGE</label>' +
-                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'range\', this.value)">' + rangeOptions + '</select>' +
-                    '</div>' +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(3)">CONFIRM STATS →</button>'
-            ) +
-            step(3, "WEAPON POWERS",
-                '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.openSlidePanel(\'weapon\')">+ ADD WEAPON POWER</button>' +
-                '<div class="abilities-display">' +
-                    '<div class="abilities-label">CURRENT POWERS:</div>' +
-                    '<div class="abilities-list">' + weaponPropsHtml + '</div>' +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(4)">CONTINUE →</button>'
-            ) +
-            step(4, "UNIT ABILITIES",
-                '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.openSlidePanel(\'ability\')">+ ADD UNIT ABILITY</button>' +
-                '<div class="abilities-display">' +
-                    '<div class="abilities-label">CURRENT ABILITIES:</div>' +
-                    '<div class="abilities-list">' + abilitiesHtml + '</div>' +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(5)">CONTINUE →</button>'
-            ) +
-            step(5, "SUPPLEMENTAL ABILITIES (OPTIONAL)",
-                '<p class="step-hint">Add gear, alternate versions, or special upgrades. Examples: Witch-Stitched Armor, Baby variant, Relic options.</p>' +
-                '<div class="supplemental-form">' +
-                    '<div class="form-group">' +
-                        '<label class="small">NAME</label>' +
-                        '<input type="text" id="supp-name" class="cc-input w-100" placeholder="e.g. Witch-Stitched Armor">' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">TYPE</label>' +
-                        '<select id="supp-type" class="cc-select w-100">' +
-                            '<option value="Gear">Gear</option>' +
-                            '<option value="Type">Type</option>' +
-                            '<option value="Relic">Relic</option>' +
-                            '<option value="Upgrade">Upgrade</option>' +
-                        '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">COST (leave 0 if no cost)</label>' +
-                        '<input type="number" id="supp-cost" class="cc-input w-100" value="0" min="0">' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">EFFECT</label>' +
-                        '<textarea id="supp-effect" class="cc-input w-100" rows="2" placeholder="Describe what this does..."></textarea>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">STAT MODIFIERS (optional)</label>' +
-                        '<div class="stat-modifier-grid">' +
-                            '<label><input type="checkbox" id="mod-quality"> Quality <input type="number" id="mod-quality-val" class="cc-input-tiny" value="1" min="-2" max="2"></label>' +
-                            '<label><input type="checkbox" id="mod-defense"> Defense <input type="number" id="mod-defense-val" class="cc-input-tiny" value="1" min="-2" max="2"></label>' +
-                            '<label><input type="checkbox" id="mod-move"> Move <input type="number" id="mod-move-val" class="cc-input-tiny" value="2" min="-6" max="6"></label>' +
-                            '<label><input type="checkbox" id="mod-range"> Range <input type="number" id="mod-range-val" class="cc-input-tiny" value="6" min="-12" max="12"></label>' +
-                        '</div>' +
-                    '</div>' +
-                    '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.addSupplemental()">+ ADD SUPPLEMENTAL ABILITY</button>' +
-                '</div>' +
-                '<div class="abilities-display mt-3">' +
-                    '<div class="abilities-label">CURRENT SUPPLEMENTAL ABILITIES:</div>' +
-                    '<div class="abilities-list">' + 
-                        (u.supplemental_abilities.length > 0 ? 
-                            u.supplemental_abilities.map(function(s, i) {
-                                return '<div class="supplemental-item" onclick="CCFB_FACTORY.removeSupplemental(' + i + ')">' +
-                                    '<strong>' + s.name + '</strong>' + (s.cost > 0 ? ' (' + s.cost + '₤)' : '') + ' <span class="supp-type-badge">' + s.type + '</span>' +
-                                    '<div class="supp-effect">' + s.effect + '</div>' +
-                                    (s.stat_modifiers ? '<div class="supp-mods">Modifiers: ' + JSON.stringify(s.stat_modifiers) + '</div>' : '') +
-                                    '<span class="remove-badge">✕ Remove</span>' +
-                                '</div>';
-                            }).join('') 
-                        : '<span class="no-items">None added</span>') +
-                    '</div>' +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(6)">CONTINUE →</button>'
-            ) +
-            step(6, "LORE & FINALIZE",
-                '<div class="form-group">' +
-                    '<label class="small">UNIT LORE (OPTIONAL)</label>' +
-                    '<textarea class="cc-input w-100" rows="4" placeholder="A brief description of this unit..." onchange="CCFB_FACTORY.updateUnit(\'lore\', this.value)">' + u.lore + '</textarea>' +
-                '</div>' +
-                '<div class="button-group">' +
-                    '<button class="btn-add-small btn-success" onclick="CCFB_FACTORY.saveAndNew()">✓ SAVE UNIT</button>' +
-                    '<button class="btn-add-small btn-danger" onclick="CCFB_FACTORY.delUnit()">DELETE</button>' +
-                '</div>'
-            ) +
-            '</div>' +
-        '</div>';
-    },
-
-    renderCard: function() {
-        var target = document.getElementById('unit-card');
-        if (!target) return;
-        
-        if (this.state.selectedUnit === null) { 
-            target.innerHTML = ""; 
-            return; 
-        }
-        
-        var u = this.state.currentFaction.units[this.state.selectedUnit];
-        var arch = this.state.rules.rules_master.unit_identities.archetype_vault[u.type] || {};
-
-        var weaponPropsHtml = u.weapon_properties.length > 0 ? 
-            '<div class="unit-card-section">' +
-                '<div class="section-label"><i class="fa fa-crosshairs"></i> WEAPON POWERS</div>' +
-                '<div class="weapon-properties">' +
-                    u.weapon_properties.map(function(p, i) {
-                        return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + p + ' ✕</span>';
-                    }).join('') +
-                '</div>' +
-            '</div>' : '';
-
-        var abilitiesHtml = u.abilities.length > 0 ?
-            '<div class="unit-card-section">' +
-                '<div class="section-label"><i class="fa fa-bolt"></i> ABILITIES</div>' +
-                u.abilities.map(function(a, i) {
-                    return '<div class="ability-item" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' +
-                        '<div class="ability-name">' + a + '</div>' +
-                    '</div>';
-                }).join('') +
-            '</div>' : '';
-
-        var loreHtml = u.lore ? 
-            '<div class="unit-card-section">' +
-                '<div class="lore-text">"' + u.lore + '"</div>' +
-            '</div>' : '';
-
-        var supplementalHtml = u.supplemental_abilities.length > 0 ?
-            '<div class="unit-card-section">' +
-                '<div class="section-label"><i class="fa fa-star"></i> SUPPLEMENTAL ABILITIES</div>' +
-                u.supplemental_abilities.map(function(s) {
-                    return '<div class="supplemental-card">' +
-                        '<div class="supplemental-card-header">' +
-                            '<strong>' + s.name + '</strong>' +
-                            (s.cost > 0 ? ' <span class="supp-cost">(' + s.cost + '₤)</span>' : '') +
-                            ' <span class="supp-type-badge">' + s.type + '</span>' +
-                        '</div>' +
-                        '<div class="supplemental-card-effect">' + s.effect + '</div>' +
-                        (s.stat_modifiers ? '<div class="supplemental-card-mods"><i class="fa fa-chart-line"></i> ' + 
-                            Object.keys(s.stat_modifiers).map(function(key) {
-                                return key + ' ' + (s.stat_modifiers[key] > 0 ? '+' : '') + s.stat_modifiers[key];
-                            }).join(', ') + 
-                        '</div>' : '') +
-                    '</div>';
-                }).join('') +
-            '</div>' : '';
-
-        target.innerHTML = 
-            '<div class="cc-panel">' +
-                '<div class="cc-panel-header">UNIT PREVIEW</div>' +
-                '<div class="panel-content">' +
-                    '<div class="unit-card-preview">' +
-                        '<div class="unit-card-header">' +
-                            '<div class="unit-card-name">' + u.name + '</div>' +
-                            '<div class="unit-card-type">' + u.type.toUpperCase() + '</div>' +
-                        '</div>' +
-                        '<div class="unit-card-cost">' +
-                            '<div class="cost-label">ESTIMATED COST</div>' +
-                            '<div class="cost-value">' + this.calculateUnitCost(u) + '₤</div>' +
-                        '</div>' +
-                        '<div class="stat-badge-flex">' +
-                            '<div class="cc-stat-badge stat-q-border">' +
-                                '<span class="cc-stat-label stat-q">Q</span>' +
-                                '<span class="cc-stat-value">' + u.quality + '+</span>' +
-                            '</div>' +
-                            '<div class="cc-stat-badge stat-d-border">' +
-                                '<span class="cc-stat-label stat-d">D</span>' +
-                                '<span class="cc-stat-value">' + u.defense + '+</span>' +
-                            '</div>' +
-                            '<div class="cc-stat-badge stat-m-border">' +
-                                '<span class="cc-stat-label stat-m">M</span>' +
-                                '<span class="cc-stat-value">' + u.move + '"</span>' +
-                            '</div>' +
-                            '<div class="cc-stat-badge stat-r-border">' +
-                                '<span class="cc-stat-label stat-r">R</span>' +
-                                '<span class="cc-stat-value">' + (u.range == 0 ? 'M' : u.range + '"') + '</span>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="unit-card-section">' +
-                            '<div class="section-label"><i class="fa fa-shield"></i> TYPE RULE</div>' +
-                            '<strong>' + (arch.type_rule || 'Innate') + '</strong>' +
-                            '<div class="ability-effect">' + (arch.effect || 'No special type effect') + '</div>' +
-                        '</div>' +
-                        weaponPropsHtml +
-                        abilitiesHtml +
-                        supplementalHtml +
-                        loreHtml +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-    },
-
-    renderSlidePanel: function() {
-        var target = document.getElementById('slide-panel-container');
-        if (!target) return;
-        
-        if (!this.state.activeModal) { 
-            target.innerHTML = ""; 
-            return; 
-        }
-        
-        var isWeapon = this.state.activeModal === 'weapon';
-        var weaponProps = this.state.rules.rules_master.weapon_properties || {};
-        var abilityDict = this.state.rules.rules_master.ability_dictionary || {};
-        
-        var cardsHtml = '';
-        
-        if (isWeapon) {
-            for (var key in weaponProps) {
-                var item = weaponProps[key];
-                var displayName = item.name || key.replace(/_/g, ' ').toUpperCase();
-                var displayEffect = item.effect || 'No description available';
-                
-                cardsHtml += '<div class="ability-card" onclick="CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')">' +
-                    '<div class="ability-card-name">' + displayName + '</div>' +
-                    '<div class="ability-card-effect">' + displayEffect + '</div>' +
-                '</div>';
-            }
-        } else {
-            for (var cat in abilityDict) {
-                var categoryName = cat.replace(/^[A-Z]_/, '').replace(/_/g, ' ').toUpperCase();
-                cardsHtml += '<div class="category-header">' + categoryName + '</div>';
-                
-                for (var key in abilityDict[cat]) {
-                    var item = abilityDict[cat][key];
-                    var displayName, displayEffect;
-                    
-                    if (typeof item === 'object') {
-                        // Item is an object with name and effect properties
-                        displayName = item.name || key.replace(/_/g, ' ').toUpperCase();
-                        displayEffect = item.effect || 'No description available';
-                    } else {
-                        // Item is a string - use key as name, string as effect
-                        displayName = key.replace(/_/g, ' ').toUpperCase();
-                        displayEffect = item;
-                    }
-                    
-                    cardsHtml += '<div class="ability-card" onclick="CCFB_FACTORY.addItem(\'abilities\', \'' + key + '\')">' +
-                        '<div class="ability-card-name">' + displayName + '</div>' +
-                        '<div class="ability-card-effect">' + displayEffect + '</div>' +
-                    '</div>';
-                }
-            }
-        }
-        
-        target.innerHTML = 
-            '<div class="cc-slide-panel cc-slide-panel-open">' +
-                '<div class="cc-slide-panel-header">' +
-                    '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
-                    '<button onclick="CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
-                '</div>' +
-                '<div class="cc-modal-content">' +
-                    '<div class="ability-grid">' + cardsHtml + '</div>' +
-                '</div>' +
-            '</div>';
-    },
-
-    // === STATE MANAGEMENT FUNCTIONS ===
-
-    setStep: function(n) {
-        this.state.activeStep = n;
-        this.renderBuilder();
-    },
-
-    selectUnit: function(i) { 
-        this.state.selectedUnit = i; 
-        this.state.activeStep = 1; 
-        this.state.isPasted = false; 
-        this.refresh(); 
-    },
-
-    addUnit: function() {
-        var u = this.sanitizeUnit({});
-        this.state.currentFaction.units.push(u);
-        this.state.selectedUnit = this.state.currentFaction.units.length - 1;
-        this.state.activeStep = 1;
-        this.state.isPasted = false;
-        this.refresh();
-    },
-
-    updateUnit: function(field, value) { 
-        if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit][field] = value; 
-        this.refresh(); 
-    },
-
-    updateFaction: function(v) { 
-        this.state.currentFaction.faction = v; 
-        this.renderRoster(); 
-    },
-
-    saveAndNew: function() { 
-        this.state.selectedUnit = null; 
-        this.state.activeStep = 1;
-        this.refresh(); 
-    },
-
-    delUnit: function() { 
-        if (!confirm("Delete this unit?")) return;
-        this.state.currentFaction.units.splice(this.state.selectedUnit, 1); 
-        this.state.selectedUnit = null; 
-        this.state.activeStep = 1;
-        this.refresh(); 
-    },
-
-    openSlidePanel: function(panelType) { 
-        this.state.activeModal = panelType; 
-        this.renderSlidePanel(); 
-    },
-
-    closeSlidePanel: function() { 
-        this.state.activeModal = null; 
-        this.renderSlidePanel(); 
-    },
-
-    addItem: function(type, key) { 
-        if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit][type].push(key); 
-        this.state.activeModal = null; 
-        this.refresh(); 
-    },
-
-    removeItem: function(type, index) { 
-        if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit][type].splice(index, 1); 
-        this.refresh(); 
-    },
-
-    addSupplemental: function() {
-        if (this.state.selectedUnit === null) return;
-        
-        var name = document.getElementById('supp-name').value.trim();
-        var type = document.getElementById('supp-type').value;
-        var cost = parseInt(document.getElementById('supp-cost').value) || 0;
-        var effect = document.getElementById('supp-effect').value.trim();
-        
-        if (!name || !effect) {
-            alert('Please enter a name and effect.');
-            return;
-        }
-        
-        var supplemental = {
-            name: name,
-            type: type,
-            effect: effect
-        };
-        
-        if (cost > 0) {
-            supplemental.cost = cost;
-        }
-        
-        // Check for stat modifiers
-        var statMods = {};
-        if (document.getElementById('mod-quality').checked) {
-            statMods.quality = parseInt(document.getElementById('mod-quality-val').value) || 1;
-        }
-        if (document.getElementById('mod-defense').checked) {
-            statMods.defense = parseInt(document.getElementById('mod-defense-val').value) || 1;
-        }
-        if (document.getElementById('mod-move').checked) {
-            statMods.move = parseInt(document.getElementById('mod-move-val').value) || 2;
-        }
-        if (document.getElementById('mod-range').checked) {
-            statMods.range = parseInt(document.getElementById('mod-range-val').value) || 6;
-        }
-        
-        if (Object.keys(statMods).length > 0) {
-            supplemental.stat_modifiers = statMods;
-        }
-        
-        this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.push(supplemental);
-        
-        // Clear form
-        document.getElementById('supp-name').value = '';
-        document.getElementById('supp-effect').value = '';
-        document.getElementById('supp-cost').value = '0';
-        document.getElementById('mod-quality').checked = false;
-        document.getElementById('mod-defense').checked = false;
-        document.getElementById('mod-move').checked = false;
-        document.getElementById('mod-range').checked = false;
-        
-        this.refresh();
-    },
-
-    removeSupplemental: function(index) {
-        if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
-        this.refresh();
-    },
-
-    pasteLoad: function(str) {
-        if (!str || str.trim() === '') return;
-        
-        try {
-            var j = JSON.parse(str);
-            this.state.currentFaction.faction = j.faction || "Imported Faction";
-            this.state.currentFaction.units = (j.units || []).map(function(u) {
-                return CCFB_FACTORY.sanitizeUnit(u);
-            });
-            this.state.selectedUnit = 0; 
-            this.state.isPasted = true; 
-            this.refresh();
-            alert("✓ Faction loaded successfully!");
-        } catch(e) { 
-            console.error("JSON parse error:", e);
-            alert("Invalid JSON format. Please check your input."); 
-        }
-    },
-
-    download: function() {
-        var blob = new Blob([JSON.stringify(this.state.currentFaction, null, 2)], {type: "application/json"});
-        var a = document.createElement('a'); 
-        a.href = URL.createObjectURL(blob);
-        a.download = this.state.currentFaction.faction.replace(/\s+/g, '-').toLowerCase() + ".json"; 
-        a.click();
+    {
+      "name": "Diverse Specialists",
+      "cost": 0,
+      "required": false,
+      "effect": "Monster Rangers field incredible variety: stealth scouts, mystic casters, medics, mechanics, psychics, undead caretakers, titan specialists, flying daredevils, and more."
     }
-};
-
-// Auto-initialize when loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-        CCFB_FACTORY.init();
-    });
-} else {
-    CCFB_FACTORY.init();
+  ],
+  "units": [
+    {
+      "name": "Core Ranger",
+      "faction": "Monster Rangers",
+      "type": "Grunt",
+      "cost": 30,
+      "quality": 1,
+      "defense": 1,
+      "move": 6,
+      "range": 8,
+      "weapon": "Standard-issue Ranger Hatchet, now balanced for throwing!",
+      "weapon_properties": ["Melee"],
+      "composition": { "per_points": 0 },
+      "abilities": [],
+      "lore": "Field-trained Monster Ranger infantry straight from Boot Camp. Signature tool: hatchet, equal parts weapon and working tool.",
+      "tactics": "Baseline skirmisher. Thrown hatchets for short-range pressure, finish in melee.",
+      "optional_upgrades": [
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        { 
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense. Light Armor.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+      ]
+    },
+    {
+      "name": "Cargo Tiger Porter",
+      "faction": "Monster Rangers",
+      "type": "Grunt",
+      "cost": 60,
+      "quality": 1,
+      "defense": 1,
+      "move": 6,
+      "range": 12,
+      "weapon": "Slingshot + Prybar",
+      "weapon_properties": ["Melee", "Prybar"],
+      "composition": { "per_points": 0 },
+      "abilities": ["Load and Carry", "Cut and Run", "Extraction Priority"],
+      "lore": "Hard-working employees running Cargo Tiger routes and delivering packages.",
+      "tactics": "Backline harassment and objective play.",
+      "optional_upgrades": [
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        { 
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense. Light Armor.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
+      ]
+    },
+    {
+      "name": "Crow Ranger",
+      "faction": "Monster Rangers",
+      "type": "Rogue",
+      "cost": 95,
+      "quality": 2,
+      "defense": 2,
+      "move": 8,
+      "range": 8,
+      "weapon": "Hatchet",
+      "weapon_properties": ["Melee"],
+      "composition": { "per_points": 150 },
+      "abilities": ["Stealth", "Climber"],
+      "lore": "First Ranger Branch. Masters of stealth and speed. Sneaky!",
+      "tactics": "Fast scout and infiltrator.",
+      "optional_upgrades": [
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        { 
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense. Light Armor.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
+      ]
+    },
+    {
+      "name": "Clocktalker Mechanic",
+      "faction": "Monster Rangers",
+      "type": "Specialist",
+      "cost": 105,
+      "quality": 2,
+      "defense": 2,
+      "move": 6,
+      "range": 0,
+      "weapon": "Heavy Wrench",
+      "weapon_properties": ["Impact", "Melee"],
+      "composition": { "per_points": 300 },
+      "abilities": ["Repair", "Befriend Automat", "Tough"],
+      "lore": "Monster Ranger mechanics and Mechan tamers.",
+      "tactics": "Support and construct control.",
+      "optional_upgrades": [
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+      {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Automat attempt." }
+      ]
+    },
+    {
+      "name": "Relic Guardian",
+      "faction": "Monster Rangers",
+      "type": "Hero",
+      "cost": 160,
+      "quality": 4,
+      "defense": 3,
+      "move": 6,
+      "range": 0,
+      "weapon": "Arcane Staff",
+      "weapon_properties": ["Melee"],
+      "composition": { "per_points": 400 },
+      "abilities": ["Fearless", "Relic Bearer"],
+      "lore": "Field officers entrusted with sacred Conjure Guard relics.",
+      "tactics": "Hero unit. Relic timing defines battlefield impact.",
+      "supplemental_abilities": [
+        { "name": "Groom's Grail", "effect": "Once per game: 12\" cone freeze for 2 rounds." },
+        { "name": "Alune's Shovel", "effect": "Once per game: Create 10\" Hazardous thorn wall." },
+        { "name": "Blink Crown", "effect": "Once per game: Swap positions with any creature." },
+        { "name": "Gravewarden Bell", "effect": "Once per game: 8\" morale shock (Shaken → Panicked)." },
+        { "name": "Saltbound Reliquary", "effect": "Once per game: 6\" anti-undead damage aura." },
+        { "name": "Widow's Lantern", "effect": "Once per game: Remove Stealth and cover in 10\" aura." },
+        { "name": "Iron Psalm Nails", "effect": "Once per game: Anchor enemy for 2 rounds." },
+        { "name": "Roluun's Mask", "effect": "Once per game: Enemy morale fail = Broken." },
+        { "name": "Thurible of Crawling Smoke", "effect": "Once per game: Create 5\" smoke cloud." },
+        { "name": "Pact Mirror", "effect": "Once per game: Redirect all damage to ally." }
+      ],
+      "optional_upgrades": [
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+         {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
+      ]
+    },
+    {
+      "name": "Conjure Guard",
+      "faction": "Monster Rangers",
+      "type": "Mystic",
+      "cost": 130,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": 12,
+      "weapon": "Hex Bolts",
+      "weapon_properties": [],
+      "composition": {"per_points": 300},
+      "abilities": ["Shield Aura", "Hex", "Witch Stitching"],
+      "lore": "Mystic protectors who focus on Witch Stitches - systematic warding using thread and needle. Understand we are deeply linked like thread.",
+      "tactics": "Position centrally for Shield Aura (+1 Defense to allies within 6\"). Hex debuffs enemies (-1 Quality). Witch Stitching ward (5+ ignore first damage per activation).",
+      "optional_upgrades": [
+        { "name": "Fire Hat", "cost": 5, "type": "Upgrade", "effect": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster." },
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        },
+         { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+      ]
+    },
+    {
+      "name": "Dark Librarian",
+      "faction": "Monster Rangers",
+      "type": "Mystic",
+      "cost": 130,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": 0,
+      "weapon": "Ritual Implements",
+      "weapon_properties": ["Melee"],
+      "composition": {"per_points": 300},
+      "abilities": ["Purification Ritual", "Forbidden Knowledge", "Formulae Master"],
+      "lore": "Study, catalog, and protect Monster Ranger knowledge. Arcane repositories of legends, stories, Formulae. Motto: 'You are what you know.'",
+      "tactics": "Backline support. (1) Purify hazardous terrain (12\" radius, once per game), (2) Boost befriend vs chosen monster type (+1 die within 12\"), (3) Amplify Conjure Guards (extend range/area +6\"/+3\").",
+      "optional_upgrades": [
+        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+        {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+      ]
+    },
+    {
+      "name": "Monster Medic",
+      "faction": "Monster Rangers",
+      "type": "Mystic",
+      "cost": 120,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": 6,
+      "weapon": "Surgical Implements",
+      "weapon_properties": ["Melee"],
+      "composition": {"per_points": 300},
+      "abilities": ["Blood Transfusion", "Venom", "VitaGood Brew", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "lore": "Treat Monster and Manling alike. Med Kits contain as many poisons as medicines. Brew VitaGood, perform blood transfusions. Wear field Plague Doctor masks.",
+      "tactics": "Each turn: Blood Transfusion (base contact, sacrifice 1Q to heal 1Q, or 2Q for monsters - RISKY!) OR Venom (6\" poison). VitaGood tokens (2) for recovery or emergency heal.",
+      "optional_upgrades": [
+        {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        }
+      ]
+    },
+    {
+      "name": "Psychic Ranger",
+      "faction": "Monster Rangers",
+      "type": "Mystic",
+      "cost": 150,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": 12,
+      "weapon": "Psychic Mind Ray",
+      "weapon_properties": [],
+      "composition": {"per_points": 300},
+      "abilities": ["Fortuna Charms", "Third Eye Vision", "Mind Control", {"name": "Befriend Spirits", "effect": "May attempt Befriend against Ghost or Haunt Bloodless. Does not apply to physical undead."}],
+      "lore": "Pierce the BEYOND with Third Eye. Create Fortuna Charms (luck), project consciousness to control minds. Rare and vital. Motto: 'Seeing is Believing.'",
+      "tactics": "Support specialist. (1) Fortuna Charms: 3 tokens for rerolls, (2) Third Eye: see Stealth/reveal hidden, (3) Mind Control: attack to control enemy's next activation.",
+      "optional_upgrades": [
+        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
+        {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Haunt attempt." }
+      ]
+    },
+    {
+      "name": "Yokai Ranger",
+      "faction": "Monster Rangers",
+      "type": "Specialist",
+      "cost": 140,
+      "quality": 3,
+      "defense": 2,
+      "move": 6,
+      "range": 0,
+      "weapon": "Ritual Staff",
+      "weapon_properties": ["Melee"],
+      "composition": {"per_points": 300},
+      "abilities": ["Befriend Kaiju", "Kaiju Calming Ritual", "Yokai Knowledge"],
+      "lore": "Specialize in Yokai and Kaiju. Started 1909 when Baron Davis visited Osaka. 5000+ Yokai Rangers in Japan. Regimented scholarly approach. 'Kaiju Corps' - ultimate Kaiju specialists.",
+      "tactics": "Titan specialist. Befriend Kaiju with +2 dice (Q3+2 = 5 dice vs Q6!). Kaiju Calming Ritual: 2-turn ritual to shrink rampaging Kaiju for +3 VP. Yokai Knowledge: +1 die aura vs Titans.",
+      "optional_upgrades": [
+        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
+        {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+      ]
+    },
+    {
+      "name": "Scareforce Rattlekite",
+      "faction": "Monster Rangers",
+      "type": "Cavalry",
+      "cost": 155,
+      "quality": 3,
+      "defense": 3,
+      "move": 12,
+      "range": 0,
+      "weapon": "Dropped Flechettes",
+      "weapon_properties": [],
+      "composition": {"per_points": 400},
+      "abilities": ["Flying", "Barely Controlled", "Flechette Drop", "Crash Landing", {"name": "Built-In Goggles", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "lore": "Blappo invention - canvas wings, firework propulsion, daredevil pilots. They only land... or crash. Erratic flight makes hard to hit (D3 from speed). Glorious death trap!",
+      "tactics": "High-speed bomber. Fly over enemies dropping flechettes (automatic hits!). MUST move 6\"+ or risk crash. When destroyed, crashes spectacularly (AoE damage).",
+      "optional_upgrades": [
+        {
+          "name": "Witch-Stitched Wings", 
+          "cost": 15, 
+          "type": "Upgrade", 
+          "effect": "+1 Defense, Barely Controlled test succeeds on 3+ instead of 4+. More stable bomber.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        {"name": "Firework Bombs", "cost": 10, "type": "Upgrade", "effect": "Once per game: Drop firework bomb with Blast and Fear. Spectacular explosive!"},
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt with flying monsters." }
+      ]
+    },
+    {
+      "name": "Doom Mime",
+      "faction": "Monster Rangers",
+      "type": "Brute",
+      "cost": 170,
+      "quality": 4,
+      "defense": 3,
+      "move": 6,
+      "range": 0,
+      "weapon": "Steel Baton",
+      "weapon_properties": [],
+      "composition": {"per_points": 400},
+      "abilities": ["Stealth", "Fear", "Fearless", "Brutal Blow", "Silent", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "lore": "Secret police of Monster Rangers. Masked enforcers. Fixers, advisors who 'deal with' problems. Invite-only. Know 100 ways to make you cry with steel batons. Metal Mask built-in.",
+      "tactics": "Pressure engine (Brute role). Stealth + Fear creates board denial. Commits to combat, grinds enemies down. Makes bad decisions unavoidable.",
+      "optional_upgrades": [
+        {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        }
+      ]
+    },
+    {
+      "name": "Brine Diver",
+      "faction": "Monster Rangers",
+      "type": "Tank",
+      "cost": 170,
+      "quality": 4,
+      "defense": 5,
+      "move": 4,
+      "range": 0,
+      "weapon": "Electro-Trident",
+      "weapon_properties": ["Pierce", "Melee"],
+      "composition": {"per_points": 400},
+      "abilities": ["Tougher", "Fearless", "Pressure Sealed", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "lore": "Deep sea divers in heavy pressure suits. The suit is their temple - rarely removed. Sea Rangers adapted to deep pressure. Electro-tridents crackle with Pierce energy.",
+      "tactics": "Front-line tank. D5 + Tougher = roll 2 dice per damage (5+ ignores). Pierce cuts armor. Slow (4\") but unstoppable. Park on objectives.",
+      "optional_upgrades": [
+        {
+          "name": "Harpoons", 
+          "cost": 10, 
+          "type": "Weapon", 
+          "effect": "Gain Ranged 10\" attack. 14\" total threat range (4\" move + 10\" range). Trained hunters.",
+          "stat_modifiers": { "range": 10 }
+        }
+      ]
+    },
+    {
+      "name": "Signal Ranger",
+      "faction": "Monster Rangers",
+      "type": "Leader",
+      "cost": 190,
+      "quality": 4,
+      "defense": 2,
+      "move": 6,
+      "range": 24,
+      "weapon": "Calamity Flag",
+      "weapon_properties": ["Melee"],
+      "composition": {"per_points": 400},
+      "abilities": ["Inspire", "Rally", "Calamity Parade", "Radiomancer Jam"],
+      "lore": "Leaders, communicators and flag-bearers. Lead Calamity Parades, use Radio technology. Some jam Monsterology Dynamo equipment.",
+      "tactics": "Standard leader (Inspire +1 die, Rally morale). Save Calamity Parade for decisive moment (+3\" Move, +1 Quality, Fearless for 1 round, 6\" aura). Radiomancer Jam disrupts tech heroes (24\", jam Jagers/Haxans/Iron Diplomats).",
+      "optional_upgrades": [
+        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
+        {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
+      ]
+    },
+    {
+      "name": "Skull Ranger",
+      "faction": "Monster Rangers",
+      "type": "Tank",
+      "cost": 170,
+      "quality": 4,
+      "defense": 3,
+      "move": 6,
+      "range": 0,
+      "weapon": "Thrice-Blessed Shovel",
+      "weapon_properties": ["Melee", "Brutal Blow"],
+      "composition": {"per_points": 400},
+      "abilities": ["Befriend Bloodless", "Tougher", "Fearless", "Brutal Blow", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "lore": "Ancient sect (500+ years). Care for Bloodless: Haunts, Vampires, Embalma, Rotters. Founded by Joh Woefix. Cemetery caretakers. Only wear black, smell like earth, see beauty in death.",
+      "tactics": "Durable undead specialist (D3 + Tougher + Fearless). Befriend Bloodless (contested vs undead). Thrice-Blessed Shovel with Brutal Blow.",
+      "optional_upgrades": [
+        {
+          "name": "Witch-Stitched Armor", 
+          "cost": 10, 
+          "type": "Gear", 
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": { "defense": 1 }
+        },
+        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+      ]
+    },
+    {
+      "name": "Cargo Tiger Truck",
+      "faction": "Monster Rangers",
+      "type": "Vehicle",
+      "cost": 220,
+      "quality": 5,
+      "defense": 4,
+      "move": 12,
+      "range": 0,
+      "weapon": "Ramming Bumper",
+      "weapon_properties": ["Melee", "Grapple"],
+      "composition": {"per_points": 400},
+      "abilities": ["Fast", "Disengage", "Mobile Cover", "Cargo Hold"],
+      "lore": "Cargo Tiger shipping company coal-fired truck. Hard-working employees drive supplies and troops into battle. Held together with rust and paint.",
+      "tactics": "Fast platform (12\" Move. Load Rangers/objectives for transport. Park for Mobile Cover (+1 Defense aura). Grapple enemies (pull 3\")",
+      "optional_upgrades": [
+        {
+          "name": "Reinforced Cab", 
+          "cost": 10, 
+          "type": "Upgrade", 
+          "effect": "+1 Defense (D4→D5), -1\" Move (10\"→9\"). Armored plating.",
+          "stat_modifiers": { 
+            "defense": 1,
+            "move": -1
+          }
+        },
+        {"name": "Extra Storage", "cost": 2, "type": "Upgrade", "effect": "Additional cargo rigging. Increase capacity: +2 Rangers OR +1 objective. Total: 6 Rangers OR 3 objectives."}
+      ]
+    }
+  ]
 }
