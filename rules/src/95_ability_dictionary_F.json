@@ -1,0 +1,99 @@
+{
+  "_id": "R-ABIL-F",
+  "title": "Ability Dictionary — F (Terrain & Environment)",
+
+  "abilities": {
+
+    "create_hazard": {
+      "_id": "R-ABIL-F-CREATE-HAZARD",
+      "timing": "main_action",
+      "short": "Create Hazardous terrain.",
+      "long": "Main Action. Targeted area within 6\" becomes Hazardous."
+    },
+
+    "ignite": {
+      "_id": "R-ABIL-F-IGNITE",
+      "timing": "main_action",
+      "short": "Set terrain on fire.",
+      "long": "Main Action. Flammable terrain within 6\" becomes Burning."
+    },
+
+    "smoke_screen": {
+      "_id": "R-ABIL-F-SMOKE-SCREEN",
+      "timing": "main_action",
+      "short": "Create choking smoke.",
+      "long": "Main Action. Area within 3\" becomes Choking. Blocks clarity, not LoS. Lasts 1 round."
+    },
+
+    "collapse": {
+      "_id": "R-ABIL-F-COLLAPSE",
+      "timing": "main_action",
+      "short": "Collapse unstable terrain.",
+      "long": "Main Action. Target Unstable terrain within 6\" immediately collapses."
+    },
+
+    "taint_ground": {
+      "_id": "R-ABIL-F-TAINT-GROUND",
+      "timing": "passive",
+      "short": "Spread tainted terrain.",
+      "long": "Passive. When destroying enemy or ritualizing, terrain within 3\" becomes Tainted."
+    },
+
+    "haunted_wake": {
+      "_id": "R-ABIL-F-HAUNTED-WAKE",
+      "timing": "passive",
+      "short": "Leave haunted terrain behind.",
+      "long": "Passive. Terrain passed through becomes Haunted until end of round."
+    },
+
+    "purify": {
+      "_id": "R-ABIL-F-PURIFY",
+      "timing": "main_action",
+      "short": "Cleanse terrain traits.",
+      "long": "Main Action. Remove 1 trait from terrain within 6\"; Haunted becomes Tainted."
+    },
+
+    "sacrilege": {
+      "_id": "R-ABIL-F-SACRILEGE",
+      "timing": "passive",
+      "short": "Desecrate sacred ground.",
+      "long": "Passive. While in Sacred terrain, enemies within 6\" suffer -1 die on Morale."
+    },
+
+    "terrain_adaptation": {
+      "_id": "R-ABIL-F-TERRAIN-ADAPTATION",
+      "timing": "passive",
+      "short": "Ignore one terrain penalty.",
+      "long": "Passive. Choose 1 terrain trait on deployment; ignore its penalties (not damage or escalation)."
+    },
+
+    "unstable_footing": {
+      "_id": "R-ABIL-F-UNSTABLE-FOOTING",
+      "timing": "passive",
+      "short": "Shaken enemies near you.",
+      "long": "Passive. Enemies ending movement within 3\" must test Quality or become Shaken."
+    },
+
+    "rolling_fog": {
+      "_id": "R-ABIL-F-ROLLING-FOG",
+      "timing": "main_action",
+      "short": "Create lingering fog.",
+      "long": "Main Action. Once per game: Place a Fog marker (3\" radius) within 12\". Fog blocks line of sight and prevents special actions (Hex, Charm, Inspire) from being used through it. Lasts until end of next round."
+    },
+
+    "silence": {
+      "_id": "R-ABIL-F-SILENCE",
+      "timing": "main_action",
+      "short": "Create a silent zone.",
+      "long": "Main Action. Range 12\". Duration 2 rounds. Create a 12\" radius zone of absolute silence centered on a point within range. While in Silent Zone: No sound can be made or heard, Radios do not function, Audio-based abilities (Inspire, Signal Orders, Rally, Command) cannot be used, Morale tests from Fear at -1 die, Monsters with hearing-based detection cannot sense units."
+    },
+
+    "silent": {
+      "_id": "R-ABIL-F-SILENT",
+      "timing": "passive",
+      "short": "No sound; undetectable by audio.",
+      "long": "Passive. This unit makes no sound and cannot be detected by audio-based abilities or sound-based monster detection."
+    }
+
+  }
+}
