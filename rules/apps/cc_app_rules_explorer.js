@@ -132,8 +132,6 @@ window.CC_APP = {
 
       let formattedContent = "";
 
-     let formattedContent = "";
-
 // ---- Ability Dictionary ----
 if (content && content.abilities) {
   formattedContent = Object.entries(content.abilities)
