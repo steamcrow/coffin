@@ -1,6 +1,7 @@
 /**
- * COFFIN CANYON FACTION STUDIO - V14 CLEAN CSS
- * Separated design from function, clickable steps, stat badges
+ * COFFIN CANYON FACTION STUDIO - COMPLETE VERSION
+ * Following skeleton.js pattern + ALL original functionality
+ * ZERO OMISSIONS
  */
 
 window.CCFB_FACTORY = {
@@ -36,70 +37,78 @@ window.CCFB_FACTORY = {
         return Math.max(10, Math.ceil(total / 5) * 5);
     },
 
-  /* =========================================================
-   JS FIX: CALLING CSS VIA JSDELIVR (MIME-SAFE)
-   ========================================================= */
-init: function() {
-    console.log("🎬 Faction Studio initializing...");
-    
-    var self = this;
-    var link = document.createElement('link');
-    link.rel = 'stylesheet';
-    // Using jsDelivr to ensure correct MIME type (text/css)
-    link.href = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/studio/studio_builder.css';
-    document.head.appendChild(link);
-    console.log("✅ CSS loaded via CDN");
+    init: function() {
+        console.log("🎬 Faction Studio initializing...");
+        
+        var self = this;
+        
+        // Load CSS (following skeleton.js pattern)
+        if (!document.getElementById('faction-studio-styles')) {
+            console.log('🎨 Loading Faction Studio CSS...');
+            fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/studio/studio_builder.css?t=' + Date.now())
+                .then(function(res) { return res.text(); })
+                .then(function(css) {
+                    var style = document.createElement('style');
+                    style.id = 'faction-studio-styles';
+                    style.textContent = css;
+                    document.head.appendChild(style);
+                    console.log('✅ Faction Studio CSS applied!');
+                })
+                .catch(function(err) { console.error('❌ CSS load failed:', err); });
+        }
 
-    fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now())
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
-            self.state.rules = data;
-            console.log("✅ Rules loaded:", self.state.rules);
-            self.refresh();
-        })
-        .catch(function(e) { 
-            console.error("❌ Rules failed to load:", e);
-            alert("Failed to load game rules. Please refresh the page.");
-        });
-},
+        // Load rules
+        fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now())
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                self.state.rules = data;
+                console.log("✅ Rules loaded");
+                self.refresh();
+            })
+            .catch(function(e) { 
+                console.error("❌ Rules failed to load:", e);
+                alert("Failed to load game rules. Please refresh the page.");
+            });
+    },
 
- refresh: function() {
+    refresh: function() {
         var root = document.getElementById('faction-studio-root');
-        if (this.state.selectedUnit === null) {
-            root.classList.add("no-unit");
-            root.classList.remove("has-unit");
-        } else {
-            root.classList.add("has-unit");
-            root.classList.remove("no-unit");
-}
-
-     
-     if (!root) {
+        if (!root) {
             console.error("❌ faction-studio-root not found");
             return;
         }
         
         if (!this.state.rules) {
             console.warn("⚠️ Rules not loaded yet");
-            root.innerHTML = '<div class="cc-empty-state">Loading rules...</div>';
+            root.innerHTML = '<div id="faction-studio-app"><div class="cc-empty-state">Loading rules...</div></div>';
             return;
         }
 
-        // Re-render the structural skeleton if it's missing
-        if (!document.getElementById('unit-builder')) {
+        // Inject #faction-studio-app inside root (following skeleton.js pattern)
+        if (!document.getElementById('faction-studio-app')) {
             root.innerHTML = 
-                '<div class="studio-wrapper">' + 
+                '<div id="faction-studio-app">' + 
                     '<div class="studio-header">' +
                         '<h1 class="studio-title">FACTION STUDIO</h1>' +
                         '<p class="studio-subtitle">A Faction Creation Tool for Coffin Canyon</p>' +
                     '</div>' +
-                    '<div class="fb-grid">' + // This is your 3-column container
-                        '<div id="faction-overview" class="fb-panel"></div>' +
-                        '<div id="unit-builder" class="fb-panel fb-panel-center"></div>' +
-                        '<div id="unit-card" class="fb-panel"></div>' +
+                    '<div id="studio-container" class="fb-grid">' +
+                        '<div id="faction-overview"></div>' +
+                        '<div id="unit-builder"></div>' +
+                        '<div id="unit-card"></div>' +
                     '</div>' +
                     '<div id="slide-panel-container"></div>' +
                 '</div>';
+        }
+        
+        // Apply state classes
+        var app = document.getElementById('faction-studio-app');
+        if (this.state.selectedUnit === null) {
+            app.classList.add("no-unit");
+            app.classList.remove("has-unit");
+        } else {
+            app.classList.add("has-unit");
+            app.classList.remove("no-unit");
         }
         
         this.renderRoster();
@@ -147,7 +156,7 @@ init: function() {
         if (!target) return;
         
         if (this.state.selectedUnit === null) {
-            target.innerHTML = '<div class="cc-panel"><div class="cc-empty-state"><i class="fa fa-crosshairs"></i>CHOOSE A UNIT TO BEGIN</div></div>';
+            target.innerHTML = '<div class="cc-panel"><div class="cc-empty-state"><i class="fa fa-crosshairs"></i> CHOOSE A UNIT TO BEGIN</div></div>';
             return;
         }
         
@@ -211,6 +220,8 @@ init: function() {
             }).join('') : '<span class="no-items">None added</span>';
 
         target.innerHTML = '<div class="cc-panel">' +
+            '<div class="cc-panel-header">UNIT BUILDER</div>' +
+            '<div class="panel-content">' +
             step(1, "IDENTITY & TYPE", 
                 '<div class="form-group">' +
                     '<label class="small">UNIT NAME</label>' +
@@ -225,7 +236,7 @@ init: function() {
                     '</select>' +
                 '</div>' +
                 '<div class="type-rule-display">' +
-                    '<i class="fa fa-info-circle"></i>' +
+                    '<i class="fa fa-info-circle"></i> ' +
                     (archVault[u.type] ? archVault[u.type].identity : 'Select a type') +
                 '</div>' +
                 '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.setStep(2)">CONFIRM TYPE →</button>'
@@ -287,6 +298,7 @@ init: function() {
                     '<button class="btn-add-small btn-danger" onclick="CCFB_FACTORY.delUnit()">DELETE</button>' +
                 '</div>'
             ) +
+            '</div>' +
         '</div>';
     },
 
@@ -328,41 +340,46 @@ init: function() {
             '</div>' : '';
 
         target.innerHTML = 
-            '<div class="unit-card-preview">' +
-                '<div class="unit-card-header">' +
-                    '<div class="unit-card-name">' + u.name + '</div>' +
-                    '<div class="unit-card-type">' + u.type.toUpperCase() + '</div>' +
-                '</div>' +
-                '<div class="unit-card-cost">' +
-                    '<div class="cost-label">ESTIMATED COST</div>' +
-                    '<div class="cost-value">' + this.calculateUnitCost(u) + '₤</div>' +
-                '</div>' +
-                '<div class="stat-badge-flex">' +
-                    '<div class="cc-stat-badge stat-q-border">' +
-                        '<span class="cc-stat-label stat-q">Q</span>' +
-                        '<span class="cc-stat-value">' + u.quality + '+</span>' +
+            '<div class="cc-panel">' +
+                '<div class="cc-panel-header">UNIT PREVIEW</div>' +
+                '<div class="panel-content">' +
+                    '<div class="unit-card-preview">' +
+                        '<div class="unit-card-header">' +
+                            '<div class="unit-card-name">' + u.name + '</div>' +
+                            '<div class="unit-card-type">' + u.type.toUpperCase() + '</div>' +
+                        '</div>' +
+                        '<div class="unit-card-cost">' +
+                            '<div class="cost-label">ESTIMATED COST</div>' +
+                            '<div class="cost-value">' + this.calculateUnitCost(u) + '₤</div>' +
+                        '</div>' +
+                        '<div class="stat-badge-flex">' +
+                            '<div class="cc-stat-badge stat-q-border">' +
+                                '<span class="cc-stat-label stat-q">Q</span>' +
+                                '<span class="cc-stat-value">' + u.quality + '+</span>' +
+                            '</div>' +
+                            '<div class="cc-stat-badge stat-d-border">' +
+                                '<span class="cc-stat-label stat-d">D</span>' +
+                                '<span class="cc-stat-value">' + u.defense + '+</span>' +
+                            '</div>' +
+                            '<div class="cc-stat-badge stat-m-border">' +
+                                '<span class="cc-stat-label stat-m">M</span>' +
+                                '<span class="cc-stat-value">' + u.move + '"</span>' +
+                            '</div>' +
+                            '<div class="cc-stat-badge stat-r-border">' +
+                                '<span class="cc-stat-label stat-r">R</span>' +
+                                '<span class="cc-stat-value">' + (u.range == 0 ? 'M' : u.range + '"') + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="unit-card-section">' +
+                            '<div class="section-label"><i class="fa fa-shield"></i> TYPE RULE</div>' +
+                            '<strong>' + (arch.type_rule || 'Innate') + '</strong>' +
+                            '<div class="ability-effect">' + (arch.effect || 'No special type effect') + '</div>' +
+                        '</div>' +
+                        weaponPropsHtml +
+                        abilitiesHtml +
+                        loreHtml +
                     '</div>' +
-                    '<div class="cc-stat-badge stat-d-border">' +
-                        '<span class="cc-stat-label stat-d">D</span>' +
-                        '<span class="cc-stat-value">' + u.defense + '+</span>' +
-                    '</div>' +
-                    '<div class="cc-stat-badge stat-m-border">' +
-                        '<span class="cc-stat-label stat-m">M</span>' +
-                        '<span class="cc-stat-value">' + u.move + '"</span>' +
-                    '</div>' +
-                    '<div class="cc-stat-badge stat-r-border">' +
-                        '<span class="cc-stat-label stat-r">R</span>' +
-                        '<span class="cc-stat-value">' + (u.range == 0 ? 'M' : u.range + '"') + '</span>' +
-                    '</div>' +
                 '</div>' +
-                '<div class="unit-card-section">' +
-                    '<div class="section-label"><i class="fa fa-shield"></i> TYPE RULE</div>' +
-                    '<strong>' + (arch.type_rule || 'Innate') + '</strong>' +
-                    '<div class="ability-effect">' + (arch.effect || 'No special type effect') + '</div>' +
-                '</div>' +
-                weaponPropsHtml +
-                abilitiesHtml +
-                loreHtml +
             '</div>';
     },
 
@@ -422,6 +439,20 @@ init: function() {
             '</div>';
     },
 
+    // === STATE MANAGEMENT FUNCTIONS ===
+
+    setStep: function(n) {
+        this.state.activeStep = n;
+        this.renderBuilder();
+    },
+
+    selectUnit: function(i) { 
+        this.state.selectedUnit = i; 
+        this.state.activeStep = 1; 
+        this.state.isPasted = false; 
+        this.refresh(); 
+    },
+
     addUnit: function() {
         var u = this.sanitizeUnit({});
         this.state.currentFaction.units.push(u);
@@ -430,54 +461,24 @@ init: function() {
         this.state.isPasted = false;
         this.refresh();
     },
-    
-    selectUnit: function(i) { 
-        this.state.selectedUnit = i; 
-        this.state.activeStep = 1; 
-        this.state.isPasted = false; 
-        this.refresh(); 
-    },
-    
+
     updateUnit: function(field, value) { 
         if (this.state.selectedUnit === null) return;
         this.state.currentFaction.units[this.state.selectedUnit][field] = value; 
         this.refresh(); 
     },
-    
-    setStep: function(n) { 
-        this.state.activeStep = n; 
-        this.refresh(); 
+
+    updateFaction: function(v) { 
+        this.state.currentFaction.faction = v; 
+        this.renderRoster(); 
     },
-    
-    openSlidePanel: function(panelType) { 
-        this.state.activeModal = panelType; 
-        this.refresh(); 
-    },
-    
-    closeSlidePanel: function() { 
-        this.state.activeModal = null; 
-        this.refresh(); 
-    },
-    
-    addItem: function(type, key) { 
-        if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit][type].push(key); 
-        this.state.activeModal = null; 
-        this.refresh(); 
-    },
-    
-    removeItem: function(type, index) { 
-        if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit][type].splice(index, 1); 
-        this.refresh(); 
-    },
-    
+
     saveAndNew: function() { 
         this.state.selectedUnit = null; 
         this.state.activeStep = 1;
         this.refresh(); 
     },
-    
+
     delUnit: function() { 
         if (!confirm("Delete this unit?")) return;
         this.state.currentFaction.units.splice(this.state.selectedUnit, 1); 
@@ -485,12 +486,30 @@ init: function() {
         this.state.activeStep = 1;
         this.refresh(); 
     },
-    
-    updateFaction: function(v) { 
-        this.state.currentFaction.faction = v; 
+
+    openSlidePanel: function(panelType) { 
+        this.state.activeModal = panelType; 
+        this.renderSlidePanel(); 
+    },
+
+    closeSlidePanel: function() { 
+        this.state.activeModal = null; 
+        this.renderSlidePanel(); 
+    },
+
+    addItem: function(type, key) { 
+        if (this.state.selectedUnit === null) return;
+        this.state.currentFaction.units[this.state.selectedUnit][type].push(key); 
+        this.state.activeModal = null; 
         this.refresh(); 
     },
-    
+
+    removeItem: function(type, index) { 
+        if (this.state.selectedUnit === null) return;
+        this.state.currentFaction.units[this.state.selectedUnit][type].splice(index, 1); 
+        this.refresh(); 
+    },
+
     pasteLoad: function(str) {
         if (!str || str.trim() === '') return;
         
@@ -509,7 +528,7 @@ init: function() {
             alert("Invalid JSON format. Please check your input."); 
         }
     },
-    
+
     download: function() {
         var blob = new Blob([JSON.stringify(this.state.currentFaction, null, 2)], {type: "application/json"});
         var a = document.createElement('a'); 
@@ -518,3 +537,12 @@ init: function() {
         a.click();
     }
 };
+
+// Auto-initialize when loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function() {
+        CCFB_FACTORY.init();
+    });
+} else {
+    CCFB_FACTORY.init();
+}
