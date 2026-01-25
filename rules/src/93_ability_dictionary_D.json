@@ -1,1 +1,219 @@
+{
+  "_id": "R-ABIL-D",
+  "title": "Ability Dictionary — D (Defense & Survival)",
+
+  "abilities": {
+
+    "armored": {
+      "_id": "R-ABIL-D-ARMORED",
+      "timing": "passive",
+      "short": "Reduce damage by 1.",
+      "long": "Passive. Reduce damage taken by 1 (minimum 0). Does not affect terrain/environmental damage."
+    },
+
+    "dodge": {
+      "_id": "R-ABIL-D-DODGE",
+      "timing": "passive",
+      "short": "Cancel 1 Success per activation.",
+      "long": "Passive. Once per activation, cancel 1 Success from an incoming attack. Disabled while Shaken."
+    },
+
+    "shield_wall": {
+      "_id": "R-ABIL-D-SHIELD-WALL",
+      "timing": "passive",
+      "short": "+1 Defense when adjacent to allies.",
+      "long": "Passive. +1 Defense while adjacent to another Shield Wall model. No bonus vs Blast."
+    },
+
+    "hardened": {
+      "_id": "R-ABIL-D-HARDENED",
+      "timing": "passive",
+      "short": "Ignore first Shaken each round.",
+      "long": "Passive. Ignore the first Shaken result each round."
+    },
+
+    "steadfast": {
+      "_id": "R-ABIL-D-STEADFAST",
+      "timing": "passive",
+      "short": "Never Panic.",
+      "long": "Passive. Failed Morale results in normal failure, never Panic."
+    },
+
+    "take_cover": {
+      "_id": "R-ABIL-D-TAKE-COVER",
+      "timing": "reaction",
+      "short": "Dash to cover when shot.",
+      "long": "Reactive. Once per round. When targeted by ranged, move 2\" toward cover and gain it for this attack."
+    },
+
+    "suppress": {
+      "_id": "R-ABIL-D-SUPPRESS",
+      "timing": "main_action",
+      "short": "Ranged suppression attack.",
+      "long": "Main Action. Ranged attack: On hit, target suffers -1 die on its next Action."
+    },
+
+    "grit": {
+      "_id": "R-ABIL-D-GRIT",
+      "timing": "once_per_game",
+      "short": "Refuse to die.",
+      "long": "Once Per Game. When reduced to 0 Quality, reduce to 1 instead."
+    },
+
+    "unyielding": {
+      "_id": "R-ABIL-D-UNYIELDING",
+      "timing": "passive",
+      "short": "Cannot be forcibly moved.",
+      "long": "Passive. Cannot be pushed/pulled/repositioned by enemy abilities."
+    },
+
+    "guard": {
+      "_id": "R-ABIL-D-GUARD",
+      "timing": "passive",
+      "short": "Intercept melee attacks.",
+      "long": "Passive. May intercept a melee attack targeting an adjacent friendly model."
+    },
+
+    "lockdown": {
+      "_id": "R-ABIL-D-LOCKDOWN",
+      "timing": "passive",
+      "short": "Prevent enemy disengage.",
+      "long": "Passive. Engaged enemies cannot Disengage or use free moves. Ends if model is Shaken/Moved."
+    },
+
+    "shield_aura": {
+      "_id": "R-ABIL-D-SHIELD-AURA",
+      "timing": "passive",
+      "short": "+1 Defense aura.",
+      "long": "Passive. Friendly units within 6\" gain +1 Defense."
+    },
+
+    "witch_stitching": {
+      "_id": "R-ABIL-D-WITCH-STITCHING",
+      "timing": "passive",
+      "short": "Chance to ignore damage.",
+      "long": "Passive. First time per activation this unit would lose Quality: 5+ ignore 1 damage."
+    },
+
+    "tough": {
+      "_id": "R-ABIL-D-TOUGH",
+      "timing": "passive",
+      "short": "Roll to ignore damage.",
+      "long": "Passive. When taking damage, roll 1 die per point of damage. Each 5+ ignores 1 damage."
+    },
+
+    "tougher": {
+      "_id": "R-ABIL-D-TOUGHER",
+      "timing": "passive",
+      "short": "Improved Tough.",
+      "long": "Passive. When taking damage, roll 2 dice per point of damage. Each 5+ ignores 1 damage."
+    },
+
+    "toughest": {
+      "_id": "R-ABIL-D-TOUGHEST",
+      "timing": "passive",
+      "short": "Maximum Tough.",
+      "long": "Passive. When taking damage, roll 3 dice per point of damage. Each 5+ ignores 1 damage."
+    },
+
+    "regeneration": {
+      "_id": "R-ABIL-D-REGENERATION",
+      "timing": "passive",
+      "short": "Heal over time.",
+      "long": "Passive. At start of activation, heal 1 wound on a 5+."
+    },
+
+    "not_yet": {
+      "_id": "R-ABIL-D-NOT-YET",
+      "timing": "passive",
+      "short": "Delayed death.",
+      "long": "Passive. The first time per round this unit would be reduced to 0 Quality, it remains at 1 Quality instead. At the end of its next activation, this unit is destroyed."
+    },
+
+    "heroic_grit": {
+      "_id": "R-ABIL-D-HEROIC-GRIT",
+      "timing": "once_per_game",
+      "short": "Ignore first wound.",
+      "long": "Once Per Game. Ignore first wound suffered."
+    },
+
+    "hold_it_together": {
+      "_id": "R-ABIL-D-HOLD-IT-TOGETHER",
+      "timing": "passive",
+      "short": "Skip Morale at a cost.",
+      "long": "Passive. When this model would test Morale, it may skip the test. If it does, it loses 1 Quality after the current activation. May not reduce Quality below 3."
+    },
+
+    "bite_the_bullet": {
+      "_id": "R-ABIL-D-BITE-THE-BULLET",
+      "timing": "once_per_game",
+      "short": "Act again at a cost.",
+      "long": "Once Per Game. After this unit resolves an Attack or Interact action, it may immediately take one additional action. After the second action resolves, this unit loses 1 Quality."
+    },
+
+    "brace": {
+      "_id": "R-ABIL-D-BRACE",
+      "timing": "main_action",
+      "short": "Gain temporary Defense.",
+      "long": "Main Action. May sacrifice movement to gain +1 Defense until next activation."
+    },
+
+    "bloodless": {
+      "_id": "R-ABIL-D-BLOODLESS",
+      "timing": "passive",
+      "short": "Immune to blood effects.",
+      "long": "Passive. Immune to Venom and Blood in the Air effects. Cannot be targeted by abilities that specifically affect living creatures."
+    },
+
+    "desperate_push": {
+      "_id": "R-ABIL-D-DESPERATE-PUSH",
+      "timing": "main_action",
+      "short": "Act despite restrictions.",
+      "long": "Main Action. This model may attempt an action even if it would normally be forbidden (Pinned, Suppressed, or at 0 Move). Roll as normal. If the roll produces no successes, this model loses 1 additional Quality."
+    },
+
+    "blinkshift": {
+      "_id": "R-ABIL-D-BLINKSHIFT",
+      "timing": "main_action",
+      "short": "Short-range teleport.",
+      "long": "Main Action. Twice per game, this unit may teleport instead of moving normally. Roll 3d6\" and place the unit anywhere within that distance, ignoring terrain and units. The unit must have line of sight to the destination. On a roll of three 1s, the unit suffers 1 Strain and loses the Blinkshift ability for the rest of the game."
+    },
+
+    "pressure_sealed": {
+      "_id": "R-ABIL-D-PRESSURE-SEALED",
+      "timing": "passive",
+      "short": "Immune to pressure hazards.",
+      "long": "Passive. Immune to pressure, water, and depth-related environmental hazards."
+    },
+
+    "built_in_respirator": {
+      "_id": "R-ABIL-D-BUILT-IN-RESPIRATOR",
+      "timing": "passive",
+      "short": "Immune to airborne hazards.",
+      "long": "Passive. Immune to gas, smoke, poison storms, and airborne hazard effects."
+    },
+
+    "built_in_goggles": {
+      "_id": "R-ABIL-D-BUILT-IN-GOGGLES",
+      "timing": "passive",
+      "short": "Immune to blinding effects.",
+      "long": "Passive. Immune to Blinding effects and visual-based environmental hazards."
+    },
+
+    "gas_mask": {
+      "_id": "R-ABIL-D-GAS-MASK",
+      "timing": "passive",
+      "short": "Protection from gas and smoke.",
+      "long": "Passive. This unit ignores Coffin Cough, Choking Dust effects and other environmental gas/smoke/toxic effects to lungs and eyes as determined by scenario rules."
+    },
+
+    "witch_stitched_clothing": {
+      "_id": "R-ABIL-D-WITCH-STITCHED-CLOTHING",
+      "timing": "passive",
+      "short": "+1 Defense light armor.",
+      "long": "Passive. +1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."
+    }
+
+  }
+}
 
