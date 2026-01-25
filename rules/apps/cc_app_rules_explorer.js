@@ -132,84 +132,67 @@ window.CC_APP = {
 
       let formattedContent = "";
 
-      // ---- Ability Dictionary ----
-      if (content && content.abilities) {
-        formattedContent = Object.entries(content.abilities)
-          .map(
-            ([key, ability]) => `
-              <div class="cc-ability-card p-3 mb-3">
-                <div class="d-flex justify-content-between align-items-baseline mb-1">
-                  <div class="fw-bold">${key}</div>
-                  <div class="cc-muted small text-uppercase">${ability.timing || "—"}</div>
-                </div>
-                ${ability.short ? `<div class="fw-semibold mb-1">${ability.short}</div>` : ""}
-                ${ability.long ? `<div>${ability.long}</div>` : ""}
-              </div>
-            `
-          )
-          .join("");
-      }
+     let formattedContent = "";
 
-      // ---- Simple string (meta / philosophy) ----
-      else if (typeof content === "string") {
-        formattedContent = `<p>${content}</p>`;
-      }
-
-// ---- LEAF RULE (single rule with short/long) ----
-else if (
-  content &&
-  typeof content === "object" &&
-  (content.short || content.long)
-) {
-  formattedContent = `
-    <div class="cc-panel">
-      <div class="cc-panel-head">
-        <div class="cc-panel-title">${meta.title}</div>
-      </div>
-      <div class="cc-body">
-        ${content.short ? `<p class="fw-semibold mb-2">${content.short}</p>` : ""}
-        ${content.long ? `<p>${content.long}</p>` : ""}
-      </div>
-    </div>
-  `;
-}
-
-// ---- STRUCTURED SECTION (multiple child rules) ----
-else if (content && typeof content === "object") {
-  formattedContent = Object.entries(content)
-    .filter(([k]) => !k.startsWith("_") && k !== "title")
-    .map(([key, val]) => {
-      if (typeof val === "string") {
-        return `
-          <div class="mb-3">
-            <div class="fw-bold text-uppercase small text-muted mb-1">
-              ${key.replace(/_/g, " ")}
-            </div>
-            <p class="mb-0">${val}</p>
+// ---- Ability Dictionary ----
+if (content && content.abilities) {
+  formattedContent = Object.entries(content.abilities)
+    .map(
+      ([key, ability]) => `
+        <div class="cc-ability-card p-3 mb-3">
+          <div class="d-flex justify-content-between align-items-baseline mb-1">
+            <div class="fw-bold">${key}</div>
+            <div class="cc-muted small text-uppercase">${ability.timing || "—"}</div>
           </div>
-        `;
-      }
-
-      return `
-        <div class="cc-panel mb-3">
-          <div class="cc-panel-head">
-            <div class="cc-panel-title">
-              ${val.title || key.replace(/_/g, " ")}
-            </div>
-          </div>
-          <div class="cc-body">
-            ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
-            ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
-          </div>
+          ${ability.short ? `<div class="fw-semibold mb-1">${ability.short}</div>` : ""}
+          ${ability.long ? `<div>${ability.long}</div>` : ""}
         </div>
-      `;
-    })
+      `
+    )
     .join("");
 }
 
-      else {
-        formattedContent = `<div class="cc-muted">No content available.</div>`;
-      }
+// ---- Plain prose (Philosophy, design notes, etc.) ----
+else if (content && typeof content === "object" && content.long && !content.short) {
+  formattedContent = `<p>${content.long}</p>`;
+}
+
+// ---- Leaf rule (single mechanic) ----
+else if (
+  content &&
+  typeof content === "object" &&
+  (content.short || content.long) &&
+  !Object.values(content).some(v => typeof v === "object" && v?._id)
+) {
+  formattedContent = `
+    ${content.short ? `<p class="fw-semibold mb-2">${content.short}</p>` : ""}
+    ${content.long ? `<p>${content.long}</p>` : ""}
+  `;
+}
+
+// ---- Section container (Core Mechanics, Turn Structure, Vaults) ----
+else if (content && typeof content === "object") {
+  formattedContent = Object.entries(content)
+    .filter(([k, v]) => !k.startsWith("_") && typeof v === "object")
+    .map(([key, val]) => `
+      <div class="cc-panel mb-3">
+        <div class="cc-panel-head">
+          <div class="cc-panel-title">
+            ${val.title || key.replace(/_/g, " ")}
+          </div>
+        </div>
+        <div class="cc-body">
+          ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
+          ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
+        </div>
+      </div>
+    `)
+    .join("");
+}
+
+else {
+  formattedContent = `<div class="cc-muted">No content available.</div>`;
+}
 
       // ---- MAIN CONTENT ----
       detailEl.innerHTML = `
