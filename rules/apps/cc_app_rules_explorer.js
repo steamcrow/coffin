@@ -155,38 +155,57 @@ window.CC_APP = {
         formattedContent = `<p>${content}</p>`;
       }
 
-      // ---- Structured rule sections (CORE FIX) ----
-      else if (content && typeof content === "object") {
-        formattedContent = Object.entries(content)
-          .filter(([k]) => !k.startsWith("_") && k !== "title")
-          .map(([key, val]) => {
-            if (typeof val === "string") {
-              return `
-                <div class="mb-3">
-                  <div class="fw-bold text-uppercase small text-muted mb-1">
-                    ${key.replace(/_/g, " ")}
-                  </div>
-                  <p class="mb-0">${val}</p>
-                </div>
-              `;
-            }
+// ---- LEAF RULE (single rule with short/long) ----
+else if (
+  content &&
+  typeof content === "object" &&
+  (content.short || content.long)
+) {
+  formattedContent = `
+    <div class="cc-panel">
+      <div class="cc-panel-head">
+        <div class="cc-panel-title">${meta.title}</div>
+      </div>
+      <div class="cc-body">
+        ${content.short ? `<p class="fw-semibold mb-2">${content.short}</p>` : ""}
+        ${content.long ? `<p>${content.long}</p>` : ""}
+      </div>
+    </div>
+  `;
+}
 
-            return `
-              <div class="cc-panel mb-3">
-                <div class="cc-panel-head">
-                  <div class="cc-panel-title">
-                    ${val.title || key.replace(/_/g, " ")}
-                  </div>
-                </div>
-                <div class="cc-body">
-                  ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
-                  ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
-                </div>
-              </div>
-            `;
-          })
-          .join("");
+// ---- STRUCTURED SECTION (multiple child rules) ----
+else if (content && typeof content === "object") {
+  formattedContent = Object.entries(content)
+    .filter(([k]) => !k.startsWith("_") && k !== "title")
+    .map(([key, val]) => {
+      if (typeof val === "string") {
+        return `
+          <div class="mb-3">
+            <div class="fw-bold text-uppercase small text-muted mb-1">
+              ${key.replace(/_/g, " ")}
+            </div>
+            <p class="mb-0">${val}</p>
+          </div>
+        `;
       }
+
+      return `
+        <div class="cc-panel mb-3">
+          <div class="cc-panel-head">
+            <div class="cc-panel-title">
+              ${val.title || key.replace(/_/g, " ")}
+            </div>
+          </div>
+          <div class="cc-body">
+            ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
+            ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
+          </div>
+        </div>
+      `;
+    })
+    .join("");
+}
 
       else {
         formattedContent = `<div class="cc-muted">No content available.</div>`;
