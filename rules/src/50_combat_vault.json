@@ -1,0 +1,65 @@
+{
+  "_id": "R-COMB",
+  "title": "Combat Vault",
+
+  "philosophy": {
+    "_id": "R-COMB-00",
+    "short": "Combat is fast, brutal, and decided by position.",
+    "long": "Combat is fast, brutal, and unforgiving. Most fights are decided by position, pressure, and timing — not endurance.",
+    "design_intent": "Combat should resolve quickly; damage should matter immediately. Prolonged fights are a warning sign."
+  },
+
+  "attack_fundamentals": {
+    "_id": "R-COMB-01",
+    "short": "Spend an action, choose a target, roll Quality.",
+    "action_cost": 1,
+    "process": [
+      "Choose valid target",
+      "Check Line of Sight (if required)",
+      "Roll Quality dice"
+    ],
+    "melee_rules": {
+      "_id": "R-COMB-01A",
+      "range": "Base contact / Melee range",
+      "los": "Not required",
+      "threshold": "1+ Success (4+) hits unless stated otherwise."
+    },
+    "ranged_rules": {
+      "_id": "R-COMB-01B",
+      "range": "Must be within weapon range",
+      "los": "Required",
+      "modifiers": "Apply Cover (+1 Defense) if applicable."
+    }
+  },
+
+  "damage_resolution": {
+    "_id": "R-COMB-02",
+    "short": "Each damage reduces Quality by 1.",
+    "definition": "Damage reduces Quality by 1 per point. There is no separate health stat.",
+    "the_death_spiral": "As Quality drops, attacks become less reliable, movement grows riskier, and morale becomes fragile.",
+    "thresholds": "Quality-based thresholds (Wounded, Broken) may trigger effects based on the unit card.",
+    "removal": "At Quality 0, remove model immediately. Resolve terrain/death effects (Tainted, Hazardous)."
+  },
+
+  "automatic_damage": {
+    "_id": "R-COMB-03",
+    "short": "Automatic damage is not an attack and ignores Defense.",
+    "definition": "Automatic damage is NOT an attack. It represents environmental or internal harm.",
+    "sources": [
+      "Burning terrain",
+      "Venom",
+      "Impact",
+      "Traps",
+      "Thyr fallout",
+      "Abilities"
+    ],
+    "logic": "Reduces Quality normally. Ignores Defense, Armored, and Cover. Only preventable if explicitly stated.",
+    "terrain_rule": "All terrain damage is considered automatic."
+  },
+
+  "collateral_damage": {
+    "_id": "R-COMB-04",
+    "short": "Explosions and terrain effects harm everyone.",
+    "logic": "Explosions and terrain escalation do not discriminate. Friendly models can be harmed if they are in the area of effect."
+  }
+}
