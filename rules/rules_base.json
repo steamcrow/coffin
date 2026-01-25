@@ -34,12 +34,18 @@
     { "id": "ability_dict_G", "title": "Ability Dictionary – G", "path": "rules_master.ability_dictionary.G_thyr_ritual", "type": "abilities" },
     { "id": "ability_dict_H", "title": "Ability Dictionary – H", "path": "rules_master.ability_dictionary.H_interaction_support", "type": "abilities" },
 
+    { "id": "location_vault_97", "title": "Location Vault (97)", "path": "rules_master.location_vault_97", "type": "vault" },
+
     { "id": "weapon_properties", "title": "Weapon Properties", "path": "rules_master.weapon_properties", "type": "system" },
     { "id": "wild_magic", "title": "Wild Magic Table", "path": "rules_master.wild_magic_table", "type": "system" },
 
     { "id": "terrain_vault", "title": "Terrain Vault", "path": "rules_master.terrain_vault", "type": "vault" },
     { "id": "objective_vault", "title": "Objective Vault", "path": "rules_master.objective_vault", "type": "vault" },
-    { "id": "scenario_vault", "title": "Scenario Vault", "path": "rules_master.scenario_vault", "type": "vault" }
+    { "id": "scenario_vault", "title": "Scenario Vault", "path": "rules_master.scenario_vault", "type": "vault" },
+
+    { "id": "location_types", "title": "Location Types", "path": "rules_master.location_types", "type": "system" },
+    { "id": "location_vault", "title": "Location Vault", "path": "rules_master.location_vault", "type": "vault" },
+    { "id": "named_locations", "title": "Named Locations", "path": "rules_master.named_locations", "type": "vault" }
   ],
 
   "rules_master": {
