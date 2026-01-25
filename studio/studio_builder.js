@@ -24,7 +24,7 @@ window.CCFB_FACTORY = {
             range: parseInt(u.range) || 0,
             weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
             abilities: Array.isArray(u.abilities) ? u.abilities : [],
-            supplemental: u.supplemental || null,
+            supplemental_abilities: Array.isArray(u.supplemental_abilities) ? u.supplemental_abilities : [],
             lore: u.lore || ""
         };
     },
@@ -278,15 +278,57 @@ window.CCFB_FACTORY = {
                 '</div>' +
                 '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(5)">CONTINUE →</button>'
             ) +
-            step(5, "SUPPLEMENTAL VERSIONS (OPTIONAL)",
-                '<p class="step-hint">Supplemental versions are rare special variants. Most units don\'t need them.</p>' +
-                '<div class="form-group">' +
-                    '<label class="small">VARIANT NAME (OPTIONAL)</label>' +
-                    '<input type="text" class="cc-input w-100" value="' + (u.supplemental || '') + '" ' +
-                        'placeholder="e.g. Alpha, Mama, Baby..." ' +
-                        'onchange="CCFB_FACTORY.updateUnit(\'supplemental\', this.value)">' +
+            step(5, "SUPPLEMENTAL ABILITIES (OPTIONAL)",
+                '<p class="step-hint">Add gear, alternate versions, or special upgrades. Examples: Witch-Stitched Armor, Baby variant, Relic options.</p>' +
+                '<div class="supplemental-form">' +
+                    '<div class="form-group">' +
+                        '<label class="small">NAME</label>' +
+                        '<input type="text" id="supp-name" class="cc-input w-100" placeholder="e.g. Witch-Stitched Armor">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">TYPE</label>' +
+                        '<select id="supp-type" class="cc-select w-100">' +
+                            '<option value="Gear">Gear</option>' +
+                            '<option value="Type">Type</option>' +
+                            '<option value="Relic">Relic</option>' +
+                            '<option value="Upgrade">Upgrade</option>' +
+                        '</select>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">COST (leave 0 if no cost)</label>' +
+                        '<input type="number" id="supp-cost" class="cc-input w-100" value="0" min="0">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">EFFECT</label>' +
+                        '<textarea id="supp-effect" class="cc-input w-100" rows="2" placeholder="Describe what this does..."></textarea>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">STAT MODIFIERS (optional)</label>' +
+                        '<div class="stat-modifier-grid">' +
+                            '<label><input type="checkbox" id="mod-quality"> Quality <input type="number" id="mod-quality-val" class="cc-input-tiny" value="1" min="-2" max="2"></label>' +
+                            '<label><input type="checkbox" id="mod-defense"> Defense <input type="number" id="mod-defense-val" class="cc-input-tiny" value="1" min="-2" max="2"></label>' +
+                            '<label><input type="checkbox" id="mod-move"> Move <input type="number" id="mod-move-val" class="cc-input-tiny" value="2" min="-6" max="6"></label>' +
+                            '<label><input type="checkbox" id="mod-range"> Range <input type="number" id="mod-range-val" class="cc-input-tiny" value="6" min="-12" max="12"></label>' +
+                        '</div>' +
+                    '</div>' +
+                    '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.addSupplemental()">+ ADD SUPPLEMENTAL ABILITY</button>' +
                 '</div>' +
-                '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.setStep(6)">SKIP / CONTINUE →</button>'
+                '<div class="abilities-display mt-3">' +
+                    '<div class="abilities-label">CURRENT SUPPLEMENTAL ABILITIES:</div>' +
+                    '<div class="abilities-list">' + 
+                        (u.supplemental_abilities.length > 0 ? 
+                            u.supplemental_abilities.map(function(s, i) {
+                                return '<div class="supplemental-item" onclick="CCFB_FACTORY.removeSupplemental(' + i + ')">' +
+                                    '<strong>' + s.name + '</strong>' + (s.cost > 0 ? ' (' + s.cost + '₤)' : '') + ' <span class="supp-type-badge">' + s.type + '</span>' +
+                                    '<div class="supp-effect">' + s.effect + '</div>' +
+                                    (s.stat_modifiers ? '<div class="supp-mods">Modifiers: ' + JSON.stringify(s.stat_modifiers) + '</div>' : '') +
+                                    '<span class="remove-badge">✕ Remove</span>' +
+                                '</div>';
+                            }).join('') 
+                        : '<span class="no-items">None added</span>') +
+                    '</div>' +
+                '</div>' +
+                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(6)">CONTINUE →</button>'
             ) +
             step(6, "LORE & FINALIZE",
                 '<div class="form-group">' +
@@ -339,6 +381,26 @@ window.CCFB_FACTORY = {
                 '<div class="lore-text">"' + u.lore + '"</div>' +
             '</div>' : '';
 
+        var supplementalHtml = u.supplemental_abilities.length > 0 ?
+            '<div class="unit-card-section">' +
+                '<div class="section-label"><i class="fa fa-star"></i> SUPPLEMENTAL ABILITIES</div>' +
+                u.supplemental_abilities.map(function(s) {
+                    return '<div class="supplemental-card">' +
+                        '<div class="supplemental-card-header">' +
+                            '<strong>' + s.name + '</strong>' +
+                            (s.cost > 0 ? ' <span class="supp-cost">(' + s.cost + '₤)</span>' : '') +
+                            ' <span class="supp-type-badge">' + s.type + '</span>' +
+                        '</div>' +
+                        '<div class="supplemental-card-effect">' + s.effect + '</div>' +
+                        (s.stat_modifiers ? '<div class="supplemental-card-mods"><i class="fa fa-chart-line"></i> ' + 
+                            Object.keys(s.stat_modifiers).map(function(key) {
+                                return key + ' ' + (s.stat_modifiers[key] > 0 ? '+' : '') + s.stat_modifiers[key];
+                            }).join(', ') + 
+                        '</div>' : '') +
+                    '</div>';
+                }).join('') +
+            '</div>' : '';
+
         target.innerHTML = 
             '<div class="cc-panel">' +
                 '<div class="cc-panel-header">UNIT PREVIEW</div>' +
@@ -377,6 +439,7 @@ window.CCFB_FACTORY = {
                         '</div>' +
                         weaponPropsHtml +
                         abilitiesHtml +
+                        supplementalHtml +
                         loreHtml +
                     '</div>' +
                 '</div>' +
@@ -517,6 +580,68 @@ window.CCFB_FACTORY = {
         if (this.state.selectedUnit === null) return;
         this.state.currentFaction.units[this.state.selectedUnit][type].splice(index, 1); 
         this.refresh(); 
+    },
+
+    addSupplemental: function() {
+        if (this.state.selectedUnit === null) return;
+        
+        var name = document.getElementById('supp-name').value.trim();
+        var type = document.getElementById('supp-type').value;
+        var cost = parseInt(document.getElementById('supp-cost').value) || 0;
+        var effect = document.getElementById('supp-effect').value.trim();
+        
+        if (!name || !effect) {
+            alert('Please enter a name and effect.');
+            return;
+        }
+        
+        var supplemental = {
+            name: name,
+            type: type,
+            effect: effect
+        };
+        
+        if (cost > 0) {
+            supplemental.cost = cost;
+        }
+        
+        // Check for stat modifiers
+        var statMods = {};
+        if (document.getElementById('mod-quality').checked) {
+            statMods.quality = parseInt(document.getElementById('mod-quality-val').value) || 1;
+        }
+        if (document.getElementById('mod-defense').checked) {
+            statMods.defense = parseInt(document.getElementById('mod-defense-val').value) || 1;
+        }
+        if (document.getElementById('mod-move').checked) {
+            statMods.move = parseInt(document.getElementById('mod-move-val').value) || 2;
+        }
+        if (document.getElementById('mod-range').checked) {
+            statMods.range = parseInt(document.getElementById('mod-range-val').value) || 6;
+        }
+        
+        if (Object.keys(statMods).length > 0) {
+            supplemental.stat_modifiers = statMods;
+        }
+        
+        this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.push(supplemental);
+        
+        // Clear form
+        document.getElementById('supp-name').value = '';
+        document.getElementById('supp-effect').value = '';
+        document.getElementById('supp-cost').value = '0';
+        document.getElementById('mod-quality').checked = false;
+        document.getElementById('mod-defense').checked = false;
+        document.getElementById('mod-move').checked = false;
+        document.getElementById('mod-range').checked = false;
+        
+        this.refresh();
+    },
+
+    removeSupplemental: function(index) {
+        if (this.state.selectedUnit === null) return;
+        this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
+        this.refresh();
     },
 
     pasteLoad: function(str) {
