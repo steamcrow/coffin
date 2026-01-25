@@ -1,1 +1,169 @@
+{
+  "_id": "R-ABIL-B",
+  "title": "Ability Dictionary — B (Movement & Positioning)",
 
+  "abilities": {
+
+    "climber": {
+      "_id": "R-ABIL-B-CLIMBER",
+      "timing": "passive",
+      "short": "Ignores vertical movement penalties.",
+      "long": "Passive. Ignores vertical movement penalties. Cannot move through Impassable terrain."
+    },
+
+    "berserk": {
+      "_id": "R-ABIL-B-BERSERK",
+      "timing": "passive",
+      "short": "Must charge nearest enemy; +1 die in melee.",
+      "long": "Passive. Must move toward nearest visible enemy. Gain +1 die on melee; cannot Interact."
+    },
+
+    "disengage": {
+      "_id": "R-ABIL-B-DISENGAGE",
+      "timing": "main_action",
+      "short": "Leave melee without penalty.",
+      "long": "Main Action. Leave base contact without penalty or triggering enemy reactions."
+    },
+
+    "fast": {
+      "_id": "R-ABIL-B-FAST",
+      "timing": "passive",
+      "short": "+2\" to base movement.",
+      "long": "Passive. +2\" to base movement."
+    },
+
+    "grapple": {
+      "_id": "R-ABIL-B-GRAPPLE",
+      "timing": "main_action",
+      "short": "Hit to pull enemy 3\" and root them.",
+      "long": "Main Action. Melee attack: On hit, pull target 3\" toward self; target cannot move next activation."
+    },
+
+    "runner": {
+      "_id": "R-ABIL-B-RUNNER",
+      "timing": "passive",
+      "short": "Extra Move if no attacks are made.",
+      "long": "Passive. If no attacks are made during activation, make an additional Move at the end."
+    },
+
+    "mobile_cover": {
+      "_id": "R-ABIL-B-MOBILE-COVER",
+      "timing": "passive",
+      "short": "Adjacent allies gain +1 Defense vs ranged.",
+      "long": "Passive. Adjacent friendly models gain +1 Defense vs ranged (does not stack with terrain)."
+    },
+
+    "mobile_dynamo": {
+      "_id": "R-ABIL-B-MOBILE-DYNAMO",
+      "timing": "main_action",
+      "short": "Project an Electromagik field.",
+      "long": "Main Action. Projects 12\" Electromagik field. Hexan and Jäger within field may use abilities. Moving reduces this turn's field to 6\". Counts as Dynamo Generator for Electromagik dependency."
+    },
+
+    "mobile_cell_block": {
+      "_id": "R-ABIL-B-MOBILE-CELL-BLOCK",
+      "timing": "passive",
+      "short": "Transport captured models.",
+      "long": "Passive. Transports Captured models. If destroyed, prisoners are released."
+    },
+
+    "stampede": {
+      "_id": "R-ABIL-B-STAMPEDE",
+      "timing": "passive",
+      "short": "Push through smaller models.",
+      "long": "Passive. May pass through smaller models. Those models must test Morale or be pushed 1\" aside."
+    },
+
+    "immobile": {
+      "_id": "R-ABIL-B-IMMOBILE",
+      "timing": "passive",
+      "short": "Cannot move.",
+      "long": "Passive. Cannot move. May still attack/defend. Only repositioned by scenario/special rules."
+    },
+
+    "stealth": {
+      "_id": "R-ABIL-B-STEALTH",
+      "timing": "passive",
+      "short": "Ranged attacks from 9\"+ suffer -1 die.",
+      "long": "Passive. Enemies shooting from 9\"+ suffer -1 to hit."
+    },
+
+    "load_and_carry": {
+      "_id": "R-ABIL-B-LOAD-AND-CARRY",
+      "timing": "passive",
+      "short": "Carry objectives without slowing.",
+      "long": "Passive. May pick up and carry objectives, Thyr crystals, or Spare Parts without penalty. Move speed unaffected."
+    },
+
+    "cut_and_run": {
+      "_id": "R-ABIL-B-CUT-AND-RUN",
+      "timing": "reaction",
+      "short": "Move 3\" when targeted.",
+      "long": "Reactive. When targeted by an attack (before dice are rolled), this model may immediately move up to 3\". If it does, it drops any carried item at its original location."
+    },
+
+    "extraction_priority": {
+      "_id": "R-ABIL-B-EXTRACTION-PRIORITY",
+      "timing": "passive",
+      "short": "Bonus VP for exiting with objectives.",
+      "long": "Passive. If this unit exits the table while carrying an objective or Thyr crystal, gain +2 VP (in addition to objective value)."
+    },
+
+    "slip_away": {
+      "_id": "R-ABIL-B-SLIP-AWAY",
+      "timing": "passive",
+      "short": "Leave melee without penalties.",
+      "long": "Passive. May leave melee combat without penalty or free strikes."
+    },
+
+    "darting_attack": {
+      "_id": "R-ABIL-B-DARTING-ATTACK",
+      "timing": "passive",
+      "short": "Shoot then move 3\".",
+      "long": "Passive. After shooting, may move up to 3\" even if already moved this activation."
+    },
+
+    "leaper": {
+      "_id": "R-ABIL-B-LEAPER",
+      "timing": "passive",
+      "short": "Leap 2d6\" ignoring terrain.",
+      "long": "Passive. Instead of normal movement, this unit may leap 2d6\" in any direction, ignoring terrain and units. It can leap over or onto 1-story buildings or similar obstacles. On a roll of double 1s (snake eyes), the unit pulls a muscle: it loses the Leaper ability for the rest of the game and immediately suffers 1 Quality damage."
+    },
+
+    "random_movement": {
+      "_id": "R-ABIL-B-RANDOM-MOVEMENT",
+      "timing": "passive",
+      "short": "Randomized movement each activation.",
+      "long": "Passive. At the start of this unit's activation, roll 1d8 or use scatter die to determine direction (1=NE, 2=E, 3=SE, 4=S, 5=SW, 6=W, 7=NW, 8=N), then move up to its Move stat in that direction. Stop if it contacts terrain/units or would move off the board. If forced off board, remove from play (counts as exited/fled)."
+    },
+
+    "boardwalk_blitzer": {
+      "_id": "R-ABIL-B-BOARDWALK-BLITZER",
+      "timing": "passive",
+      "short": "Double speed on boardwalks; bonus action.",
+      "long": "Passive. Moves at double speed on boardwalks. After moving on a boardwalk, may immediately take one additional action (attack or interact)."
+    },
+
+    "flying": {
+      "_id": "R-ABIL-B-FLYING",
+      "timing": "passive",
+      "short": "Ignore terrain; melee restricted.",
+      "long": "Passive. This unit ignores terrain while moving and may move over units and obstacles. Cannot be targeted by melee attacks unless the attacker also has Flying or a rule that allows it. Unit's Move is considered Flying."
+    },
+
+    "barely_controlled": {
+      "_id": "R-ABIL-B-BARELY-CONTROLLED",
+      "timing": "passive",
+      "short": "Must move or risk crashing.",
+      "long": "Passive. At the start of its activation, this unit must move at least 6\". If it cannot, or chooses not to, it must pass a Quality test or immediately Crash Land."
+    },
+
+    "crash_landing": {
+      "_id": "R-ABIL-B-CRASH-LANDING",
+      "timing": "passive",
+      "short": "Area damage on crash.",
+      "long": "Passive. When this unit fails Barely Controlled or is destroyed while Flying, place the model on the table. All units within 3\" suffer 1 automatic hit and are Pinned."
+    }
+
+  }
+}
