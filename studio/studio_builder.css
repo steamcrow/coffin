@@ -77,10 +77,7 @@
 
 .panel-content { padding: 15px; }
 
-/* NO UNIT SELECTED = COLLAPSE GRID */
-.no-unit {
-    grid-template-columns: 1fr;
-}
+
 .fb-grid {
     max-width: 1300px;
     margin: 40px auto;
