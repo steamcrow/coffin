@@ -261,6 +261,155 @@
 }
 
 /* =========================================================
+   SUPPLEMENTAL ABILITIES FORM (Step 5)
+   ========================================================= */
+.supplemental-form {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--cc-border);
+  border-radius: 4px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+.stat-modifier-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.stat-modifier-grid label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: none;
+  font-weight: normal;
+}
+
+.stat-modifier-grid input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+}
+
+.cc-input-tiny {
+  width: 50px !important;
+  padding: 4px !important;
+  font-size: 11px !important;
+  display: inline-block;
+}
+
+.supplemental-item {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--cc-border);
+  border-left: 3px solid var(--cc-primary);
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+  position: relative;
+}
+
+.supplemental-item:hover {
+  background: rgba(255,255,255,0.1);
+  border-left-color: var(--stat-d);
+}
+
+.supp-type-badge {
+  display: inline-block;
+  background: rgba(255, 117, 24, 0.2);
+  color: var(--cc-primary);
+  border: 1px solid var(--cc-primary);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 9px;
+  text-transform: uppercase;
+  font-weight: 700;
+  margin-left: 5px;
+}
+
+.supp-effect {
+  font-size: 11px;
+  color: #bbb;
+  margin-top: 5px;
+  line-height: 1.4;
+}
+
+.supp-mods {
+  font-size: 10px;
+  color: var(--cc-primary);
+  margin-top: 5px;
+  font-family: monospace;
+}
+
+.remove-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: var(--stat-d);
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 0;
+  transition: 0.2s;
+}
+
+.supplemental-item:hover .remove-badge {
+  opacity: 1;
+}
+
+/* =========================================================
+   SUPPLEMENTAL ABILITIES DISPLAY (Unit Card)
+   ========================================================= */
+.supplemental-card {
+  background: rgba(255, 117, 24, 0.05);
+  border: 1px solid rgba(255, 117, 24, 0.3);
+  border-left: 3px solid var(--cc-primary);
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+
+.supplemental-card-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 5px;
+}
+
+.supplemental-card-header strong {
+  color: var(--cc-primary);
+  font-size: 12px;
+}
+
+.supp-cost {
+  color: var(--cc-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.supplemental-card-effect {
+  font-size: 11px;
+  color: #bbb;
+  line-height: 1.4;
+  margin-top: 5px;
+}
+
+.supplemental-card-mods {
+  font-size: 10px;
+  color: var(--cc-primary);
+  margin-top: 5px;
+  font-weight: 700;
+}
+
+.supplemental-card-mods i {
+  margin-right: 3px;
+}
+
+/* =========================================================
    STAT BADGES - Your good-looking design
    ========================================================= */
 .stat-badge-flex { 
