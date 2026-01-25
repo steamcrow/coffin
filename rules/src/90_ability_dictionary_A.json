@@ -1,0 +1,49 @@
+{
+  "_id": "R-ABIL-A",
+  "title": "Ability Dictionary — A",
+
+  "abilities": {
+
+    "aim": {
+      "_id": "R-ABIL-A-AIM",
+      "timing": "once_per_activation",
+      "short": "Sacrifice movement for +1 die on a ranged attack.",
+      "long": "This unit may sacrifice movement to gain +1 die on its next ranged attack. Declare before rolling."
+    },
+
+    "ambush": {
+      "_id": "R-ABIL-A-AMBUSH",
+      "timing": "deployment",
+      "short": "Deploy hidden; gain first strike when revealed.",
+      "long": "May deploy hidden. Reveal at any time to gain first strike in melee."
+    },
+
+    "anchor": {
+      "_id": "R-ABIL-A-ANCHOR",
+      "timing": "passive",
+      "short": "Cannot be moved by enemy effects.",
+      "long": "This unit cannot be moved by enemy abilities or effects. Ignores knockback and displacement."
+    },
+
+    "assistant": {
+      "_id": "R-ABIL-A-ASSISTANT",
+      "timing": "passive",
+      "short": "Assist adjacent Mystic or Scientist.",
+      "long": "May assist an adjacent Mystic or Scientist with special activations or effects, as defined on the unit card."
+    },
+
+    "audio_suppression": {
+      "_id": "R-ABIL-A-AUDIO-SUPPRESSION",
+      "timing": "passive",
+      "short": "Immune to sound-based effects.",
+      "long": "This unit is immune to sound-based abilities, fear effects, and sonic attacks unless explicitly stated otherwise."
+    },
+
+    "armored": {
+      "_id": "R-ABIL-A-ARMORED",
+      "timing": "passive",
+      "short": "Ignore the first point of damage from attacks.",
+      "long": "The first point of damage this unit would take from an attack is ignored. Does not apply to automatic damage unless stated."
+    }
+  }
+}
