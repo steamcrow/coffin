@@ -1,0 +1,42 @@
+{
+  "_id": "R-SCENARIO-VAULT",
+
+  "philosophy": {
+    "text": "Survival, extraction, corruption, and collapse matter more than body count.",
+    "design_intent": "Force movement, reward risk, and punish hesitation."
+  },
+
+  "victory_logic": {
+    "standard_conditions": [
+      "Extracting Objectives",
+      "Controlling Terrain",
+      "Thyr Delivery/Destruction",
+      "Survival (Round Count)",
+      "Preventing Escalation"
+    ],
+    "withdrawal_rule": "Players may voluntarily withdraw for narrative or scoring reasons."
+  },
+
+  "pacing_and_escalation": {
+    "game_length": "4–6 rounds (Standard).",
+    "escalation_trigger": "If no major changes by Round 3, escalation MUST begin.",
+    "tools": [
+      "Terrain Spreading",
+      "Reinforcements/Spawns",
+      "Morale Pressure",
+      "Objective Instability"
+    ]
+  },
+
+  "game_modes": {
+    "skirmish": "Small forces, tight objectives, fast escalation.",
+    "extraction": "Cavalry/Specialist focus.",
+    "holdout": "Defensive focus. Survival-based victory.",
+    "hunt": "Pursuit focus. Monster advantage.",
+    "ritual_corruption": "Mystic/Thyr focus. Sacred and Haunted terrain importance."
+  },
+
+  "multi_faction_logic": {
+    "structure": "Alternating model activation remains. Temporary alliances are allowed."
+  }
+}
