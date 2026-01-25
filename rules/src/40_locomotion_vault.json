@@ -1,0 +1,68 @@
+{
+  "_id": "R-MOVE",
+  "title": "Locomotion Vault",
+
+  "philosophy": {
+    "_id": "R-MOVE-00",
+    "short": "Movement decides fights. Standing still is dangerous.",
+    "long": "Movement decides fights. Where you stand matters more than how hard you hit. Standing still should feel dangerous.",
+    "design_intent": "Movement should be fluid; terrain should force choices. If a model survives long enough, it was probably moving."
+  },
+
+  "movement_basics": {
+    "_id": "R-MOVE-01",
+    "short": "Move in inches from base; up to Move per action.",
+    "value_usage": "Measure in inches from the model's base. Up to full Move value per action.",
+    "flexibility": "Movement may be split by other actions unless explicitly forbidden (e.g., Move-Attack-Move)."
+  },
+
+  "terrain_penalties": {
+    "_id": "R-MOVE-02",
+    "open": "No effect. Free movement.",
+    "difficult": {
+      "_id": "R-MOVE-02A",
+      "examples": ["Rubble", "Steep slopes", "Deep mud", "Thick debris"],
+      "effect": "Movement is halved (round down). Does not stack with other move penalties."
+    },
+    "impassable": {
+      "_id": "R-MOVE-02B",
+      "examples": ["Solid cliff faces", "Intact walls", "Deep chasms", "Sealed structures"],
+      "effect": "Cannot enter, pass through, or end movement inside. Blocks LoS if solid."
+    }
+  },
+
+  "model_interaction": {
+    "_id": "R-MOVE-03",
+    "enemy_models": "May not move through.",
+    "friendly_models": "May move through if space allows and bases do not overlap at the end."
+  },
+
+  "engagement_and_pressure": {
+    "_id": "R-MOVE-04",
+    "definition": "Engaged when within melee range of an enemy model.",
+    "lock_in": "No universal lock-in; engaged models may move freely unless an ability says otherwise.",
+    "melee_pressure_penalty": {
+      "_id": "R-MOVE-04A",
+      "condition": "While engaged with 1+ enemies",
+      "effects": ["-1 die on Ranged attacks", "Cannot gain Cover from terrain"],
+      "restriction": "Does not apply to melee attacks."
+    }
+  },
+
+  "verticality": {
+    "_id": "R-MOVE-05",
+    "climbing": "Measure vertical distance normally. Terrain may be impassable vertically or require specific actions.",
+    "risk": "Unstable terrain may cause falls."
+  },
+
+  "trait_priority": {
+    "_id": "R-MOVE-06",
+    "logic": "Resolve movement first, then resolve terrain effects.",
+    "interactions": [
+      { "trait": "Hazardous", "trigger": "Quality test when entering/passing through" },
+      { "trait": "Unstable", "trigger": "Risk when ending movement" },
+      { "trait": "Choking", "trigger": "Fog condition while activating" },
+      { "trait": "Burning", "trigger": "Automatic damage" }
+    ]
+  }
+}
