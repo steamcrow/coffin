@@ -1,0 +1,19 @@
+{
+  "_id": "R-TABLE-WILD-MAGIC",
+  "name": "Wild Magic Table",
+  "description": "Roll 2d6 when using Unleashed Power. Used by Mystics and magic-wielding units.",
+
+  "results": [
+    { "roll": 2,  "name": "Catastrophic Backfire", "effect": "Caster takes 2 damage and is Stunned. All allies within 3\" take 1 damage." },
+    { "roll": 3,  "name": "Wild Surge", "effect": "Target takes +1 damage. Roll again on this table (ignore further 3s)." },
+    { "roll": 4,  "name": "Unstable Discharge", "effect": "Target takes 1 damage. Caster takes 1 Strain." },
+    { "roll": 5,  "name": "Flickering Power", "effect": "Target takes 1 damage. Effect is delayed until next activation." },
+    { "roll": 6,  "name": "Controlled Release", "effect": "Target takes 2 damage normally." },
+    { "roll": 7,  "name": "Perfect Channeling", "effect": "Target takes 2 damage. No Strain on caster." },
+    { "roll": 8,  "name": "Empowered Strike", "effect": "Target takes 2 damage. Ignore armor/Defense bonuses." },
+    { "roll": 9,  "name": "Chain Lightning", "effect": "Target takes 2 damage. One adjacent enemy takes 1 damage." },
+    { "roll": 10, "name": "Focused Blast", "effect": "Target takes 3 damage." },
+    { "roll": 11, "name": "Crystal Resonance", "effect": "Target takes 3 damage. Caster may immediately Channel again at -1 die." },
+    { "roll": 12, "name": "Thyr Overcharge", "effect": "Target takes 4 damage. All allies within 6\" gain +1 die on next action." }
+  ]
+}
