@@ -112,119 +112,144 @@ window.CC_APP = {
         .join("");
     }
 
- // ---- SELECT RULE (NOW WITH BETTER FORMATTING) ----
-async function selectRule(id) {
-  selectedId = id;
+    // ---- SELECT RULE ----
+    async function selectRule(id) {
+      selectedId = id;
 
-  // Show loading state
-  detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
-  ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+      detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+      ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
 
-  console.log("🔍 Selecting rule:", id);
-  
-  const section = await helpers.getRuleSection(id);
-  
-  console.log("📦 Got section:", section);
-  
-  if (!section || !section.meta) {
-    console.error("❌ Section or meta is missing", section);
-    detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
-    ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
-    return;
-  }
+      const section = await helpers.getRuleSection(id);
 
-  const { meta, content } = section;
-  
-  console.log("✅ Meta:", meta);
-  console.log("✅ Content:", content);
+      if (!section || !section.meta) {
+        detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
+        ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
+        return;
+      }
 
-  const children = helpers.getChildren(id);
+      const { meta, content } = section;
+      const children = helpers.getChildren(id);
 
-  // ---- FORMAT CONTENT NICELY ----
-  let formattedContent = "";
+      let formattedContent = "";
 
-  if (content && content.abilities) {
-    // This is an abilities dictionary - format each ability
-    formattedContent = Object.entries(content.abilities)
-      .map(([key, ability]) => {
-        return `
-          <div class="cc-ability-card mb-3">
-            <h5 class="mb-1">${ability.short || key}</h5>
-            <div class="cc-muted mb-2">
-              <strong>${key}</strong> • ${ability.timing || "—"}
-            </div>
-            <p class="mb-0">${ability.long || "No description."}</p>
-          </div>
-        `;
-      })
-      .join("");
-  } else if (typeof content === "string") {
-    formattedContent = `<p>${content}</p>`;
-  } else if (content) {
-    // Generic JSON display for other content types
-    formattedContent = `<pre class="cc-json">${JSON.stringify(content, null, 2)}</pre>`;
-  } else {
-    formattedContent = `<div class="cc-muted">No content available.</div>`;
-  }
+      // ---- Ability Dictionary ----
+      if (content && content.abilities) {
+        formattedContent = Object.entries(content.abilities)
+          .map(
+            ([key, ability]) => `
+              <div class="cc-ability-card p-3 mb-3">
+                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                  <div class="fw-bold">${key}</div>
+                  <div class="cc-muted small text-uppercase">${ability.timing || "—"}</div>
+                </div>
+                ${ability.short ? `<div class="fw-semibold mb-1">${ability.short}</div>` : ""}
+                ${ability.long ? `<div>${ability.long}</div>` : ""}
+              </div>
+            `
+          )
+          .join("");
+      }
 
-  // MAIN CONTENT
-  detailEl.innerHTML = `
-    <h4 class="mb-1">${meta.title}</h4>
-    <div class="cc-muted mb-2">
-      <code>${meta.id}</code> • ${meta.type}
-    </div>
+      // ---- Simple string (meta / philosophy) ----
+      else if (typeof content === "string") {
+        formattedContent = `<p>${content}</p>`;
+      }
 
-    <div class="cc-callout mb-3">
-      <strong>Path:</strong> <code>${meta.path}</code>
-    </div>
+      // ---- Structured rule sections (CORE FIX) ----
+      else if (content && typeof content === "object") {
+        formattedContent = Object.entries(content)
+          .filter(([k]) => !k.startsWith("_") && k !== "title")
+          .map(([key, val]) => {
+            if (typeof val === "string") {
+              return `
+                <div class="mb-3">
+                  <div class="fw-bold text-uppercase small text-muted mb-1">
+                    ${key.replace(/_/g, " ")}
+                  </div>
+                  <p class="mb-0">${val}</p>
+                </div>
+              `;
+            }
 
-    <div class="cc-rule-content">
-      ${formattedContent}
-    </div>
-  `;
+            return `
+              <div class="cc-panel mb-3">
+                <div class="cc-panel-head">
+                  <div class="cc-panel-title">
+                    ${val.title || key.replace(/_/g, " ")}
+                  </div>
+                </div>
+                <div class="cc-body">
+                  ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
+                  ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
 
-  // CONTEXT / CHILDREN
-  ctxEl.innerHTML = `
-    <div class="cc-kv mb-3">
-      <div class="cc-k">Type</div><div class="cc-v">${meta.type}</div>
-      <div class="cc-k">Parent</div><div class="cc-v">${meta.parent || "—"}</div>
-    </div>
+      else {
+        formattedContent = `<div class="cc-muted">No content available.</div>`;
+      }
 
-    ${
-      children.length
-        ? `
-          <div class="cc-subhead mb-1">Subsections</div>
-          <ul class="cc-mini-list">
-            ${children
-              .map(
-                (c) =>
-                  `<li>
-                    <button class="cc-link" data-id="${c.id}">
-                      ${c.title}
-                    </button>
-                  </li>`
-              )
-              .join("")}
-          </ul>
-        `
-        : `<div class="cc-muted">No subsections.</div>`
+      // ---- MAIN CONTENT ----
+      detailEl.innerHTML = `
+        <h4 class="mb-1">${meta.title}</h4>
+        <div class="cc-muted mb-2">
+          <code>${meta.id}</code> • ${meta.type}
+        </div>
+
+        <div class="cc-callout mb-3">
+          <strong>Path:</strong> <code>${meta.path}</code>
+        </div>
+
+        <div class="cc-rule-content">
+          ${formattedContent}
+        </div>
+      `;
+
+      // ---- CONTEXT / CHILDREN ----
+      ctxEl.innerHTML = `
+        <div class="cc-kv mb-3">
+          <div class="cc-k">Type</div><div class="cc-v">${meta.type}</div>
+          <div class="cc-k">Parent</div><div class="cc-v">${meta.parent || "—"}</div>
+        </div>
+
+        ${
+          children.length
+            ? `
+              <div class="fw-bold small text-uppercase mb-1">Subsections</div>
+              <ul class="list-unstyled">
+                ${children
+                  .map(
+                    (c) => `
+                      <li>
+                        <button class="btn btn-link p-0" data-id="${c.id}">
+                          ${c.title}
+                        </button>
+                      </li>`
+                  )
+                  .join("")}
+              </ul>
+            `
+            : `<div class="cc-muted">No subsections.</div>`
+        }
+      `;
+
+      renderList(searchEl.value);
     }
-  `;
 
-  renderList(searchEl.value);
-}
-
-    // ---- EVENTS (NOW HANDLE ASYNC) ----
+    // ---- EVENTS ----
     listEl.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-id]");
       if (!btn) return;
-      selectRule(btn.dataset.id); // This is now async but we don't need to await here
+      selectRule(btn.dataset.id);
     });
 
     ctxEl.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-id]");
       if (!btn) return;
-      selectRule(btn.dataset.id); // This is now async but we don't need to await here
+      selectRule(btn.dataset.id);
     });
 
     searchEl.addEventListener("input", () => {
