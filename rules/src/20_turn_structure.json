@@ -1,0 +1,73 @@
+{
+  "_id": "R-TURN",
+  "title": "Turn Structure",
+
+  "philosophy": {
+    "_id": "R-TURN-00",
+    "short": "Momentum comes from alternating activations, not waiting.",
+    "long": "Rounds organize time, but momentum comes from who acts and who reacts. The battlefield evolves even if players hesitate.",
+    "design_intent": "Monsters press the attack; Humans react, reposition, and survive. Coffin Canyon does not reward waiting."
+  },
+
+  "initiative_logic": {
+    "_id": "R-TURN-01",
+    "short": "Monsters activate first unless the scenario says otherwise.",
+    "long": "Monster Factions always activate first. If both sides are Monsters, roll 1d6; high roll chooses. Initiative remains fixed for the game unless scenario-dictated.",
+    "first_activation": "Monster Factions always activate first. If both sides are Monsters, 1d6 high roll chooses.",
+    "thematic_reason": "The Canyon favors monsters and the unnatural pressure they bring."
+  },
+
+  "activation_cycle": {
+    "_id": "R-TURN-02",
+    "short": "Players alternate activating one model at a time.",
+    "long": "Activations alternate between players, one model at a time, until all models have activated once.",
+    "format": "Alternating Activations (1 model at a time).",
+    "rules": [
+      "One player activates, then the opponent activates.",
+      "Continue until all models have acted once.",
+      "Models cannot activate twice in a round unless explicitly allowed."
+    ]
+  },
+
+  "the_activation": {
+    "_id": "R-TURN-03",
+    "short": "Each model gets two actions per activation.",
+    "long": "Each model receives two actions per activation. Actions may be repeated or mixed unless restricted.",
+    "action_economy": "Each model receives 2 Actions per activation.",
+    "flexibility": "May be two different actions or the same action twice, in any order.",
+    "common_actions_list": [
+      "Move",
+      "Attack",
+      "Interact",
+      "Befriend",
+      "Repair",
+      "Special Ability"
+    ],
+    "reactions": {
+      "_id": "R-TURN-03A",
+      "definition": "Abilities triggered outside a model's activation.",
+      "logic": "Must be explicitly listed as a Reaction; otherwise, it is not one."
+    }
+  },
+
+  "round_definition": {
+    "_id": "R-TURN-04",
+    "short": "A round ends once all models have activated.",
+    "long": "A round is complete once all models on both sides have activated once.",
+    "completion": "Occurs when all models on both sides have activated once.",
+    "maintenance_steps": [
+      "Track ongoing effects",
+      "Resolve terrain escalation (Burning, Unstable collapse, etc.)",
+      "Advance scenario timing",
+      "Resolve ongoing conditions"
+    ],
+    "reset": "Begin next round immediately. No new initiative roll is made."
+  },
+
+  "action_summaries": {
+    "_id": "R-TURN-05",
+    "short": "Quick references for common actions.",
+    "move": "Measure from base. Speed capped by Move value. Terrain affects speed. Movement can be split by other actions.",
+    "attack": "Requires an Action. Uses the Quality system. Usually requires Line of Sight."
+  }
+}
