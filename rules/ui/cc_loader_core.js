@@ -1,74 +1,31 @@
-(function () {
+async function loadScript(url) {
+  console.log("🌐 FETCHING:", url);
 
-  const BOOTSTRAP_CSS =
-    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
+  const res = await fetch(`${url}?t=${Date.now()}`);
+  console.log("📡 FETCH STATUS:", res.status, res.ok);
 
-  const CC_UI_CSS =
-    "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css";
-
-  const APP_BASE =
-    "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/";
-
-  function injectCSS(href) {
-    return new Promise(resolve => {
-      if ([...document.styleSheets].some(s => s.href === href)) return resolve();
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = href;
-      link.onload = resolve;
-      document.head.appendChild(link);
-    });
+  if (!res.ok) {
+    throw new Error("Fetch failed for " + url);
   }
 
-  async function loadScript(url) {
-    const res = await fetch(`${url}?t=${Date.now()}`);
-    const code = await res.text();
-    const blob = new Blob([code], { type: "text/javascript" });
-    const blobUrl = URL.createObjectURL(blob);
+  const code = await res.text();
+  console.log("📄 SCRIPT SIZE:", code.length);
 
-    return new Promise((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = blobUrl;
-      s.onload = () => {
-        URL.revokeObjectURL(blobUrl);
-        resolve();
-      };
-      s.onerror = reject;
-      document.head.appendChild(s);
-    });
-  }
+  const blob = new Blob([code], { type: "text/javascript" });
+  const blobUrl = URL.createObjectURL(blob);
 
-async function boot() {
-  const root = document.getElementById("cc-app-root");
-  if (!root) return;
-
-  const appName = root.dataset.ccApp;
-  if (!appName) return;
-
-  console.log("🚀 Booting app:", appName);
-
-  await injectCSS(BOOTSTRAP_CSS);
-  await injectCSS(CC_UI_CSS);
-
-  document.body.classList.add("cc-app");
-
-  console.log("⏳ Loading app JS:", APP_BASE + appName + ".js");
-  await loadScript(APP_BASE + appName + ".js");
-
-  console.log("🔍 CC_APP:", window.CC_APP);
-
-  if (!window.CC_APP || typeof window.CC_APP.init !== "function") {
-    console.error("❌ CC_APP.init missing");
-    return;
-  }
-
-  window.CC_APP.init({ root, app: appName });
-
-  const loader = document.getElementById("cc-preloader");
-  if (loader) loader.remove();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = blobUrl;
+    s.onload = () => {
+      console.log("✅ SCRIPT EXECUTED:", url);
+      URL.revokeObjectURL(blobUrl);
+      resolve();
+    };
+    s.onerror = (e) => {
+      console.error("❌ SCRIPT ERROR:", url, e);
+      reject(e);
+    };
+    document.head.appendChild(s);
+  });
 }
-
-
-  document.addEventListener("DOMContentLoaded", boot);
-
-})();
