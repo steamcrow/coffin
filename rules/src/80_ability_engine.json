@@ -1,0 +1,117 @@
+{
+  "_id": "R-ABIL-ENGINE",
+  "title": "Ability Engine",
+
+  "philosophy": {
+    "_id": "R-ABIL-ENGINE-00",
+    "short": "Abilities break rules, but only in specific ways.",
+    "long": "Abilities are explicit exceptions to core rules. If an ability does not say it breaks a rule, it does not.",
+    "golden_rule": "Specific overrides general. Unit Cards override the Ability Dictionary. Scenarios override everything."
+  },
+
+  "ability_definition": {
+    "_id": "R-ABIL-ENGINE-01",
+    "short": "Abilities modify actions, rolls, or states.",
+    "definition": "An Ability is a named rule that modifies how a model acts, reacts, or exists on the battlefield.",
+    "scope": [
+      "Modify dice pools",
+      "Change action economy",
+      "Create or remove conditions",
+      "Alter terrain interaction",
+      "Trigger automatic effects"
+    ]
+  },
+
+  "timing_keywords": {
+    "_id": "R-ABIL-ENGINE-02",
+    "short": "Timing defines when an ability may be used.",
+    "timings": {
+      "passive": {
+        "_id": "R-ABIL-TIME-PASSIVE",
+        "definition": "Always on. Requires no declaration.",
+        "stacking": "Passive abilities do not stack unless explicitly stated."
+      },
+      "once_per_activation": {
+        "_id": "R-ABIL-TIME-OPA",
+        "definition": "May be used once during the model’s activation."
+      },
+      "once_per_round": {
+        "_id": "R-ABIL-TIME-OPR",
+        "definition": "May be used once per round, regardless of activations."
+      },
+      "once_per_game": {
+        "_id": "R-ABIL-TIME-OPG",
+        "definition": "May be used once per game."
+      },
+      "reaction": {
+        "_id": "R-ABIL-TIME-REACT",
+        "definition": "Triggered outside the model’s activation when conditions are met.",
+        "restriction": "If not explicitly labeled Reaction, it is not one."
+      }
+    }
+  },
+
+  "ability_resolution_order": {
+    "_id": "R-ABIL-ENGINE-03",
+    "short": "Resolve timing, then modifiers, then results.",
+    "steps": [
+      "Check if timing condition is met",
+      "Declare ability (if required)",
+      "Apply dice and rule modifiers",
+      "Resolve roll or effect",
+      "Apply consequences"
+    ],
+    "conflicts": "If multiple abilities trigger simultaneously, the active player resolves theirs first."
+  },
+
+  "stacking_rules": {
+    "_id": "R-ABIL-ENGINE-04",
+    "short": "Most bonuses do not stack.",
+    "general": "Bonuses of the same type do not stack unless explicitly stated.",
+    "dice_modifiers": "Only one +die and one -die modifier may apply to a single roll, unless stated otherwise.",
+    "rerolls": "Rerolls never stack. Only one reroll source may be used per roll."
+  },
+
+  "range_and_targeting": {
+    "_id": "R-ABIL-ENGINE-05",
+    "short": "Abilities follow normal range and LoS unless stated.",
+    "defaults": {
+      "range": "Same as weapon or action used",
+      "los": "Required if it would normally be required",
+      "targeting": "Must be a valid target under core rules"
+    },
+    "exceptions": "Abilities that ignore range or LoS must explicitly say so."
+  },
+
+  "state_changes": {
+    "_id": "R-ABIL-ENGINE-06",
+    "short": "Conditions persist until removed.",
+    "definition": "Conditions applied by abilities persist until removed by time, recovery, or another ability.",
+    "priority": "Condition removal always happens before new conditions are applied at the same timing step."
+  },
+
+  "ability_failure": {
+    "_id": "R-ABIL-ENGINE-07",
+    "short": "If an ability fails, it still counts as used.",
+    "logic": "If an ability requires a roll and fails, it is still considered used for its timing limit unless explicitly stated otherwise.",
+    "risk_design": "Powerful abilities carry risk; failure is part of balance."
+  },
+
+  "ability_precedence": {
+    "_id": "R-ABIL-ENGINE-08",
+    "short": "Precedence resolves conflicts.",
+    "order": [
+      "Scenario rules",
+      "Unit Card",
+      "Ability text",
+      "Core rules"
+    ],
+    "note": "If a Unit Card contradicts the Ability Dictionary, the Unit Card always wins."
+  },
+
+  "design_notes": {
+    "_id": "R-ABIL-ENGINE-99",
+    "clarity_rule": "If an ability is unclear, resolve it in the least powerful way that still makes sense.",
+    "anti_rules_lawyer": "If resolving an ability takes more than a few seconds of debate, it is being used incorrectly."
+  }
+}
