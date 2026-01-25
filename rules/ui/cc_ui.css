@@ -17,6 +17,51 @@
   justify-content:space-between;
 }
 
+/* ================================
+   CC APP HEADER (GLOBAL)
+   ================================ */
+
+.cc-app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  padding: 1rem 1.25rem;
+  margin-bottom: 1rem;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255,117,24,0.18),
+    rgba(0,0,0,0)
+  );
+
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+
+.cc-app-title {
+  font-family: "Oswald", system-ui, sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ff7518;
+}
+
+.cc-app-subtitle {
+  font-size: 0.85rem;
+  color: #aaa;
+  margin-top: 0.15rem;
+}
+
+/* Mobile tightening */
+@media (max-width: 768px) {
+  .cc-app-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
 .cc-panel-title{
   font-weight:800;
   text-transform:uppercase;
