@@ -1,47 +1,30 @@
 (function () {
-  console.log("🔥 cc_loader_core.js EXECUTING — LAYER 2");
+  console.log("🔥 cc_loader_core.js EXECUTING — LAYER 3");
 
-  const BOOTSTRAP_CSS =
-    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
+  const APP_BASE =
+    "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/";
 
-  const CC_UI_CSS =
-    "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css";
+  async function loadScriptViaBlob(url) {
+    const res = await fetch(url + "?t=" + Date.now());
+    if (!res.ok) throw new Error("Fetch failed: " + url);
 
-  function injectCSS(url, id) {
-    return new Promise((resolve) => {
-      if (id && document.getElementById(id)) return resolve();
-      const link = document.createElement("link");
-      link.rel = "stylesheet";
-      link.href = url + "?t=" + Date.now();
-      if (id) link.id = id;
-      link.onload = resolve;
-      link.onerror = resolve;
-      document.head.appendChild(link);
+    const code = await res.text();
+    const blob = new Blob([code], { type: "text/javascript" });
+    const blobUrl = URL.createObjectURL(blob);
+
+    return new Promise((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = blobUrl;
+      s.onload = () => {
+        URL.revokeObjectURL(blobUrl);
+        resolve();
+      };
+      s.onerror = () => {
+        URL.revokeObjectURL(blobUrl);
+        reject(new Error("Script failed: " + url));
+      };
+      document.head.appendChild(s);
     });
-  }
-
-  function renderPreloader(root) {
-    const loader = document.createElement("div");
-    loader.id = "cc-preloader";
-    loader.style.cssText = `
-      position:absolute;
-      inset:0;
-      background:#121212;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      z-index:9999;
-      color:#ff7518;
-      font-weight:bold;
-      letter-spacing:.15em;
-    `;
-    loader.innerHTML = `<div>INITIALIZING…</div>`;
-    root.appendChild(loader);
-  }
-
-  function removePreloader() {
-    const el = document.getElementById("cc-preloader");
-    if (el) el.remove();
   }
 
   async function boot() {
@@ -53,24 +36,29 @@
       return;
     }
 
-    if (getComputedStyle(root).position === "static") {
-      root.style.position = "relative";
+    const appName = root.dataset.ccApp;
+    if (!appName) {
+      root.innerHTML = "<p style='color:red'>No data-cc-app set</p>";
+      return;
     }
 
-    renderPreloader(root);
+    console.log("📦 Loading app:", appName);
 
-    await injectCSS(BOOTSTRAP_CSS, "cc-bootstrap");
-    await injectCSS(CC_UI_CSS, "cc-ui");
+    const appUrl = `${APP_BASE}cc_app_${appName}.js`;
+    await loadScriptViaBlob(appUrl);
 
-    setTimeout(() => {
-      removePreloader();
-      root.innerHTML = `
-        <div style="padding:40px;color:white;">
-          <h2>CC Loader OK</h2>
-          <p>CSS + preloader loaded successfully.</p>
-        </div>
-      `;
-    }, 600);
+    if (!window.CC_APP || typeof window.CC_APP.init !== "function") {
+      root.innerHTML = "<p style='color:red'>CC_APP.init missing</p>";
+      return;
+    }
+
+    root.innerHTML = `<div class="cc-app-shell"></div>`;
+    window.CC_APP.init({
+      root: root.querySelector(".cc-app-shell"),
+      app: appName
+    });
+
+    console.log("✅ App mounted:", appName);
   }
 
   if (document.readyState === "loading") {
