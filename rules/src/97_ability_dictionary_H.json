@@ -1,0 +1,246 @@
+{
+  "_id": "R-ABIL-H",
+  "title": "Ability Dictionary — H (Interaction & Support)",
+
+  "abilities": {
+
+    "befriend": {
+      "_id": "R-ABIL-H-BEFRIEND",
+      "timing": "main_action",
+      "short": "Attempt to befriend a creature.",
+      "long": "Main Action. A Ranger may attempt to Befriend a neutral or uncontrolled creature they are trained to interact with (based on Monster Type). Target must be in base contact. Make an opposed Quality check: both Ranger and creature roll a number of dice equal to their current Quality; each 4+ is a success. If the Ranger scores more successes, the creature becomes Befriended. If the creature scores more successes, the attempt fails with no effect. On a tie, the creature becomes Wary. Befriended creatures will not attack Rangers and may be escorted within 6\". Befriended creatures never fight for Rangers unless explicitly stated."
+    },
+
+    "befriend_any": {
+  "_id": "R-ABIL-H-BEFRIEND-ANY",
+  "timing": "passive",
+  "short": "May Befriend any monster type.",
+  "long": "Passive. This unit may attempt Befriend actions against any monster type unless restricted by scenario rules."
+}
+
+    "befriend_automat": {
+      "_id": "R-ABIL-H-BEFRIEND-AUTOMAT",
+      "timing": "passive",
+      "short": "Befriend Automat constructs.",
+      "long": "Passive. May attempt Befriend actions against Automat constructs. Success enables control or neutrality per scenario rules."
+    },
+
+    "befriend_beast": {
+      "_id": "R-ABIL-H-BEFRIEND-BEAST",
+      "timing": "passive",
+      "short": "Befriend living beasts.",
+      "long": "Passive. May attempt Befriend actions against living monsters of flesh, tooth, and claw. Successful Befriend prevents hostility per scenario rules."
+    },
+
+    "befriend_bloodless": {
+      "_id": "R-ABIL-H-BEFRIEND-BLOODLESS",
+      "timing": "passive",
+      "short": "Befriend undead.",
+      "long": "Passive. May attempt Befriend actions against Bloodless (undead). Successful Befriend alters hostility per scenario rules."
+    },
+
+    "befriend_spirits": {
+      "_id": "R-ABIL-H-BEFRIEND-SPIRITS",
+      "timing": "passive",
+      "short": "Befriend incorporeal undead.",
+      "long": "Passive. May attempt Befriend actions against incorporeal undead such as Ghosts, Haunts, Wraiths, and similar Spirit-class Bloodless. Does not apply to physical undead bodies."
+    },
+
+    "befriend_kaiju": {
+      "_id": "R-ABIL-H-BEFRIEND-KAIJU",
+      "timing": "passive",
+      "short": "Befriend Titan-class Kaiju.",
+      "long": "Passive. May attempt Befriend actions against Titan-class Kaiju monsters. Success calms, redirects, or suppresses rampage behavior per scenario rules."
+    },
+
+    "repair": {
+      "_id": "R-ABIL-H-REPAIR",
+      "timing": "main_action",
+      "short": "Repair mechanical units.",
+      "long": "Main Action. If this unit has Spare Parts available, it may restore 1 damage to an adjacent friendly vehicle, device, or mechanical unit. This consumes 1 use of Spare Parts. Can also change state from Broken to Functional if applicable."
+    },
+
+    "blood_transfusion": {
+      "_id": "R-ABIL-H-BLOOD-TRANSFUSION",
+      "timing": "main_action",
+      "short": "Transfer Quality to ally.",
+      "long": "Main Action. An adjacent friendly unit gains +1 Quality (to a maximum of its starting Quality). This unit immediately loses 1 Quality."
+    },
+
+    "vitagood_brew": {
+      "_id": "R-ABIL-H-VITAGOOD-BREW",
+      "timing": "main_action",
+      "short": "Emergency healing brew.",
+      "long": "Main Action. Once per game. This unit or an adjacent ally immediately restores 1 lost Quality and removes Suppression or Stagger or Venom."
+    },
+
+    "cargo_hold": {
+      "_id": "R-ABIL-H-CARGO-HOLD",
+      "timing": "passive",
+      "short": "Transport units or objectives.",
+      "long": "Passive. May transport up to 4 Rangers OR 1 medium Monster OR 2 objectives. Load/unload requires base contact and one activation."
+    },
+
+    "purification_ritual": {
+      "_id": "R-ABIL-H-PURIFICATION-RITUAL",
+      "timing": "main_action",
+      "short": "Cleanse terrain.",
+      "long": "Main Action. Once per game. Remove all negative terrain traits (Hazardous, Tainted, Haunted, Burning, Choking) from 12\" radius."
+    },
+
+    "forbidden_knowledge": {
+      "_id": "R-ABIL-H-FORBIDDEN-KNOWLEDGE",
+      "timing": "passive",
+      "short": "Improve Befriend attempts.",
+      "long": "Passive. Friendly units within 12\" gain +1 die when attempting Befriend actions against chosen monster type (declared at start of game)."
+    },
+
+    "formulae_master": {
+      "_id": "R-ABIL-H-FORMULAE-MASTER",
+      "timing": "passive",
+      "short": "Extend Conjure Guard abilities.",
+      "long": "Passive. Friendly Conjure Guard units within 12\" extend range/area of their abilities by +6\" or +3\" radius."
+    },
+
+    "kaiju_calming_ritual": {
+      "_id": "R-ABIL-H-KAIJU-CALMING-RITUAL",
+      "timing": "main_action",
+      "short": "Two-turn Kaiju calming ritual.",
+      "long": "Main Action. Two-turn ritual. Round 1: Position within 6\" of rampaging Kaiju and begin ritual. Round 2: Complete ritual with Quality test. Success: Kaiju is calmed and may be Befriended or redirected. Grant +3 VP for successful calming."
+    },
+
+    "yokai_knowledge": {
+      "_id": "R-ABIL-H-YOKAI-KNOWLEDGE",
+      "timing": "passive",
+      "short": "Bonus vs Titans.",
+      "long": "Passive. Friendly units within 6\" gain +1 die when attacking or defending against Titan-type units."
+    },
+
+    "fortuna_charms": {
+      "_id": "R-ABIL-H-FORTUNA-CHARMS",
+      "timing": "passive",
+      "short": "Create reroll tokens.",
+      "long": "Passive. At start of game, create 3 Fortuna Charm tokens. Any friendly unit within 12\" may spend 1 token to reroll any single die roll. Tokens are consumed when used."
+    },
+
+    "third_eye_vision": {
+      "_id": "R-ABIL-H-THIRD-EYE-VISION",
+      "timing": "passive",
+      "short": "Reveal hidden units.",
+      "long": "Passive. This unit can see Stealth units and reveal Hidden units within 12\". Ignores Fog and Smoke for targeting purposes."
+    },
+
+    "mind_control": {
+      "_id": "R-ABIL-H-MIND-CONTROL",
+      "timing": "main_action",
+      "short": "Control enemy activation.",
+      "long": "Main Action. Ranged attack at 12\". If attack succeeds with 2+ successes over Defense, control target's next activation (choose their actions)."
+    },
+
+    "haunt_candy": {
+      "_id": "R-ABIL-H-HAUNT-CANDY",
+      "timing": "passive",
+      "short": "Bloodless support tokens.",
+      "long": "Passive. At start of game, create 3 Haunt Candy tokens. May spend tokens for: (1) +1 die to Befriend Bloodless, (2) Restore 1 Quality to Bloodless ally, or (3) Reroll failed Befriend attempt."
+    },
+
+    "relic_bearer": {
+      "_id": "R-ABIL-H-RELIC-BEARER",
+      "timing": "passive",
+      "short": "Carry a sacred relic.",
+      "long": "Passive. This unit carries one sacred Conjure Guard relic. Choose relic at army creation. Each relic has a once-per-game powerful effect."
+    },
+
+    "calamity_parade": {
+      "_id": "R-ABIL-H-CALAMITY-PARADE",
+      "timing": "main_action",
+      "short": "Inspire the whole force.",
+      "long": "Main Action. Once per game. All friendly units within 6\" gain: +3\" Move, +1 Quality, and Fearless until end of round. Inspiring battlefield moment."
+    },
+
+    "radiomancer_jam": {
+      "_id": "R-ABIL-H-RADIOMANCER-JAM",
+      "timing": "main_action",
+      "short": "Jam enemy tech abilities.",
+      "long": "Main Action. Range 24\". Target enemy tech-based hero (Jager, Hexan, Iron Diplomat, etc.) cannot use special abilities next activation. Radio disruption effect."
+    },
+
+    "assistant": {
+      "_id": "R-ABIL-H-ASSISTANT",
+      "timing": "passive",
+      "short": "Assist Mystic or Scientist.",
+      "long": "Passive. May assist adjacent Mystic or Scientist with special activations."
+    },
+
+    "field_patch_job": {
+      "_id": "R-ABIL-H-FIELD-PATCH-JOB",
+      "timing": "main_action",
+      "short": "Repair devices or vehicles.",
+      "long": "Main Action. Adjacent DEVICE or VEHICLE regains 2 Quality (once per activation). Requires Spare Parts, which are consumed."
+    },
+
+    "kick_the_machine": {
+      "_id": "R-ABIL-H-KICK-THE-MACHINE",
+      "timing": "main_action",
+      "short": "Remove a debuff.",
+      "long": "Main Action. Adjacent friendly unit: Remove one debuff (Hex, Stagger, Suppression, Pinned)."
+    },
+
+    "signal_orders": {
+      "_id": "R-ABIL-H-SIGNAL-ORDERS",
+      "timing": "main_action",
+      "short": "Order a quick move.",
+      "long": "Main Action. Once per activation: One friendly unit within 12\" may immediately move 3\"."
+    },
+
+    "sonic_nullifier": {
+      "_id": "R-ABIL-H-SONIC-NULLIFIER",
+      "timing": "passive",
+      "short": "Block Mystic abilities.",
+      "long": "Passive. Enemy units within 6\" cannot use Hex, Charm, or other Mystic special abilities."
+    },
+
+    "steal": {
+      "_id": "R-ABIL-H-STEAL",
+      "timing": "main_action",
+      "short": "Steal resources or upgrades.",
+      "long": "Main Action. May use Interact action in base contact with enemy unit to attempt theft. On success, choose one: remove one non-Titan upgrade from target (upgrade is destroyed), steal 1 carried resource/token, or apply -1 Defense to target until end of round."
+    },
+
+    "brain_bloom": {
+      "_id": "R-ABIL-H-BRAIN-BLOOM",
+      "timing": "main_action",
+      "short": "Mind attack ignoring cover.",
+      "long": "Main Action. Ranged mind attack that ignores cover bonuses. Apply Morale pressure first where applicable."
+    },
+
+    "binding_rig": {
+      "_id": "R-ABIL-H-BINDING-RIG",
+      "timing": "passive",
+      "short": "Restrain grappled targets.",
+      "long": "Passive. On successful Grapple vs Brute or Monster type: target becomes Restrained (cannot move or attack until adjacent ally breaks restraints or this unit dies)."
+    },
+
+    "sonderbar_injection": {
+      "_id": "R-ABIL-H-SONDERBAR-INJECTION",
+      "timing": "main_action",
+      "short": "Risky chemical enhancement.",
+      "long": "Main Action. Once per game, with adjacent Chemist Lackey, inject a Plugugly. Roll 1d6: 3-6 grants +2 Quality +1 Defense permanently, 1-2 transforms into enemy Sonderbar Ghoul."
+    },
+
+    "mismanaged_asset": {
+      "_id": "R-ABIL-H-MISMANAGED-ASSET",
+      "timing": "passive",
+      "short": "High-value liability.",
+      "long": "Passive. If this unit is destroyed before Round 4, your faction loses 5 Victory Points."
+    },
+
+    "anchor": {
+      "_id": "R-ABIL-H-ANCHOR",
+      "timing": "passive",
+      "short": "Cannot be moved.",
+      "long": "Passive. Cannot be moved by enemy abilities or effects. Ignores knockback and displacement."
+    }
+
+  }
+}
