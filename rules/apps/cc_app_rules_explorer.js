@@ -95,8 +95,6 @@ window.CC_APP = {
         .replace(/\b\w/g, (m) => m.toUpperCase());
 
     function getRulesRoot() {
-      // Try a few likely shapes without breaking anything.
-      // If your loader changes structure later, add new candidates here.
       return (
         ctx?.rulesBase?.data ||
         ctx?.rulesBase?.root ||
@@ -119,8 +117,6 @@ window.CC_APP = {
       return cur;
     }
 
-    // If your JSON was refactored but the index/paths are still older,
-    // try a few intelligent fallbacks so content still shows.
     function candidatePaths(metaPath) {
       const p = String(metaPath || "");
       const out = [p];
@@ -132,20 +128,14 @@ window.CC_APP = {
       out.push(p.replace(".six_based_effects", ".sections.six_based_effects"));
       out.push(p.replace(".critical_failure", ".sections.critical_failure"));
       out.push(p.replace(".quality_tracking", ".sections.quality_tracking"));
-
-      // In some files Philosophy might live directly or under sections
-      // (index uses rules_master.sections.philosophy in your screenshot)
       out.push(p.replace("rules_master.philosophy", "rules_master.sections.philosophy"));
 
-      // De-dupe
       return Array.from(new Set(out)).filter(Boolean);
     }
 
     function pickBestResolvedContent(meta, sectionContent) {
-      // 1) If helper already returned something non-empty, use it
       if (sectionContent !== undefined && sectionContent !== null) return sectionContent;
 
-      // 2) Try resolving via meta.path (and fallbacks) from the full rules root
       const rootObj = getRulesRoot();
       const paths = candidatePaths(meta?.path);
 
@@ -154,7 +144,7 @@ window.CC_APP = {
         if (val !== undefined) return val;
       }
 
-      return sectionContent; // undefined
+      return sectionContent;
     }
 
     // ---- LIST RENDER ----
@@ -184,331 +174,291 @@ window.CC_APP = {
         .join("");
     }
 
-    // ---- RENDER HELPERS ----
-    function renderKVPairs(obj, keys) {
-      const rows = keys
-        .filter((k) => obj && obj[k] !== undefined && obj[k] !== null)
-        .map(
-          (k) => `
-            <div class="cc-kv mb-1">
-              <div class="cc-k">${esc(titleize(k))}</div>
-              <div class="cc-v">${esc(obj[k])}</div>
-            </div>
-          `
-        )
-        .join("");
-      return rows ? `<div class="mb-3">${rows}</div>` : "";
-    }
+    // ============================================
+    // IMPROVED RENDERING SYSTEM
+    // ============================================
 
-    function renderStringList(arr) {
-      if (!Array.isArray(arr) || !arr.length) return "";
-      const li = arr.map((x) => `<li>${esc(x)}</li>`).join("");
-      return `<ul class="mb-3">${li}</ul>`;
-    }
+    // This is a list of "known prose fields" that contain text content
+    const PROSE_FIELDS = [
+      'philosophy', 'text', 'long', 'short', 'effect', 'description',
+      'design_intent', 'definition', 'pool', 'logic', 'resolution',
+      'trigger', 'thematic_reason', 'golden_rule', 'fast_resolution',
+      'action_cost', 'completion', 'format'
+    ];
 
-    function renderObjectList(arr, labelA = "Name", labelB = "Effect") {
-      if (!Array.isArray(arr) || !arr.length) return "";
-      const li = arr
-        .map((x) => {
-          if (x && typeof x === "object") {
-            const a = x.name ?? x.id ?? x.value ?? "";
-            const b = x.effect ?? x.description ?? x.long ?? x.short ?? "";
-            return `<li><strong>${esc(a)}:</strong> ${esc(b)}</li>`;
-          }
-          return `<li>${esc(x)}</li>`;
-        })
-        .join("");
-      return `<ul class="mb-3">${li}</ul>`;
-    }
+    // These are "list fields" that typically contain arrays
+    const LIST_FIELDS = [
+      'usage', 'guidelines', 'modifiers', 'restrictions', 'choices',
+      'process', 'sources', 'examples', 'effects', 'penalties',
+      'recovery', 'blockers', 'non_blockers', 'absolute',
+      'negation_triggers', 'terrain_trait_interactions',
+      'flexibility', 'common_actions_list', 'maintenance_steps',
+      'rules', 'logic_triggers', 'type_rules'
+    ];
 
-    function renderAbilityDictionary(dict) {
-      return Object.entries(dict || {})
-        .map(([key, ability]) => {
-          const a = ability || {};
-          return `
-            <div class="cc-ability-card p-3 mb-3">
-              <div class="d-flex justify-content-between align-items-baseline mb-1">
-                <div class="fw-bold">${esc(a.name || key)}</div>
-                <div class="cc-muted small text-uppercase">${esc(a.timing || "—")}</div>
-              </div>
-              ${a.short ? `<div class="fw-semibold mb-1">${esc(a.short)}</div>` : ""}
-              ${a.long ? `<div>${esc(a.long)}</div>` : ""}
-            </div>
-          `;
-        })
-        .join("");
-    }
+    // These fields contain nested objects we should explore
+    const NESTED_FIELDS = [
+      'sections', 'mechanics', 'options', 'melee_rules', 'ranged_rules',
+      'rules_hooks', 'outcomes', 'status_conditions', 'attack_fundamentals',
+      'damage_resolution', 'the_morale_test', 'six_based_effects',
+      'cover_mechanics', 'movement_basics', 'terrain_penalties',
+      'model_interaction', 'engagement_and_pressure', 'verticality',
+      'trait_priority', 'activation_cycle', 'the_activation',
+      'round_definition', 'action_summaries', 'line_of_sight',
+      'initiative_logic'
+    ];
 
-    function renderPropertyDictionary(dict) {
-      return Object.entries(dict || {})
-        .map(([key, prop]) => {
-          const p = prop || {};
-          return `
-            <div class="cc-ability-card p-3 mb-3">
-              <div class="d-flex justify-content-between align-items-baseline mb-1">
-                <div class="fw-bold">${esc(p.name || titleize(key))}</div>
-                ${p._id ? `<div class="cc-muted small">${esc(p._id)}</div>` : ""}
-              </div>
-              ${p.short ? `<div class="fw-semibold mb-1">${esc(p.short)}</div>` : ""}
-              ${p.effect ? `<div>${esc(p.effect)}</div>` : (p.long ? `<div>${esc(p.long)}</div>` : "")}
-            </div>
-          `;
-        })
-        .join("");
-    }
-
-    function renderSectionBlock(sec) {
-      if (!sec || typeof sec !== "object") return "";
-
-      // Common arrays & nested structures we know you use
-      const usage = renderStringList(sec.usage);
-      const guidelines = Array.isArray(sec.guidelines)
-        ? `
-          <ul class="mb-3">
-            ${sec.guidelines
-              .map((g) => `<li><strong>${esc(g.value)}:</strong> ${esc(g.description)}</li>`)
-              .join("")}
-          </ul>`
-        : "";
-
-      const modifiers = renderObjectList(sec.modifiers);
-      const restrictions = renderStringList(sec.restrictions);
-      const choices = Array.isArray(sec.choices)
-        ? `
-          <ul class="mb-3">
-            ${sec.choices
-              .map((c) => `<li><strong>${esc(c.name || c.id)}:</strong> ${esc(c.effect || "")}</li>`)
-              .join("")}
-          </ul>`
-        : "";
-
-      const process = renderStringList(sec.process);
-      const sources = renderStringList(sec.sources);
-
-      // Nested blocks (mechanics/options/melee_rules/ranged_rules/etc.)
-      let nested = "";
-
-      const nestedKeys = [
-        "mechanics",
-        "options",
-        "melee_rules",
-        "ranged_rules",
-        "rules_hooks"
-      ].filter((k) => sec[k] && typeof sec[k] === "object" && !Array.isArray(sec[k]));
-
-      if (nestedKeys.length) {
-        nested = nestedKeys
-          .map((k) => {
-            const o = sec[k];
-            if (k === "options") {
-              // options is often a dict of named option objects (Natural Six, Lucky Break)
-              return `
-                <div class="mb-2">
-                  <div class="fw-bold small text-uppercase mb-1">${esc(titleize(k))}</div>
-                  ${Object.entries(o)
-                    .map(([kk, vv]) => {
-                      const v = vv || {};
-                      return `
-                        <div class="cc-ability-card p-3 mb-2">
-                          <div class="fw-bold mb-1">${esc(v.name || titleize(kk))}</div>
-                          ${v.short ? `<div class="fw-semibold mb-1">${esc(v.short)}</div>` : ""}
-                          ${v.trigger ? `<div class="mb-1"><strong>Trigger:</strong> ${esc(v.trigger)}</div>` : ""}
-                          ${v.effect ? `<div class="mb-1">${esc(v.effect)}</div>` : ""}
-                          ${v.restriction ? `<div class="cc-muted small mb-1">${esc(v.restriction)}</div>` : ""}
-                          ${v.restrictions ? `<div class="cc-muted small mb-2">${esc(v.restrictions.join(" • "))}</div>` : ""}
-                          ${v.choices ? renderObjectList(v.choices) : ""}
-                        </div>
-                      `;
-                    })
-                    .join("")}
-                </div>
-              `;
-            }
-
-            // Generic object render as kv pairs
-            return `
-              <div class="mb-2">
-                <div class="fw-bold small text-uppercase mb-1">${esc(titleize(k))}</div>
-                ${renderKVPairs(o, Object.keys(o).filter((x) => typeof o[x] !== "object"))}
-              </div>
-            `;
-          })
-          .join("");
+    /**
+     * Render a single prose field (text content)
+     */
+    function renderProseField(label, value) {
+      if (!value) return '';
+      
+      // Handle both string values and objects with nested text
+      let text = '';
+      if (typeof value === 'string') {
+        text = value;
+      } else if (value && typeof value === 'object') {
+        // If it's an object, try to extract text from known fields
+        text = value.text || value.long || value.short || value.description || '';
       }
 
-      // Some sections are “leaf-ish” and have lots of scalar keys:
-      // include scalar kvs (excluding the keys we already rendered)
-      const consumed = new Set([
-        "_id",
-        "title",
-        "name",
-        "short",
-        "long",
-        "design_intent",
-        "usage",
-        "guidelines",
-        "modifiers",
-        "restrictions",
-        "choices",
-        "process",
-        "sources",
-        "mechanics",
-        "options",
-        "melee_rules",
-        "ranged_rules",
-        "rules_hooks",
-      ]);
+      if (!text) return '';
 
-      const scalarExtras = Object.keys(sec)
-        .filter((k) => !consumed.has(k) && typeof sec[k] !== "object")
-        .map((k) => ({ k, v: sec[k] }));
-
-      const extras =
-        scalarExtras.length
-          ? `
-            <div class="cc-muted small mb-2">
-              ${scalarExtras.map(({ k, v }) => `<div><strong>${esc(titleize(k))}:</strong> ${esc(v)}</div>`).join("")}
-            </div>
-          `
-          : "";
-
+      const className = label.toLowerCase().includes('philosophy') ? 'fw-semibold' : '';
       return `
-        <div class="cc-section mb-4">
-          <h5 class="mb-1">${esc(sec.title || sec.name || "Section")}</h5>
-          ${sec.short ? `<p class="fw-semibold mb-1">${esc(sec.short)}</p>` : ""}
-          ${sec.long ? `<p class="mb-2">${esc(sec.long)}</p>` : ""}
-          ${sec.design_intent ? `<div class="cc-muted small mb-2"><strong>Design intent:</strong> ${esc(sec.design_intent)}</div>` : ""}
-
-          ${process}
-          ${usage}
-          ${sources}
-          ${guidelines}
-          ${modifiers}
-          ${restrictions}
-          ${choices}
-          ${nested}
-          ${extras}
+        <div class="mb-2">
+          <div class="cc-muted small text-uppercase mb-1">${esc(titleize(label))}</div>
+          <p class="${className} mb-0">${esc(text)}</p>
         </div>
       `;
     }
 
+    /**
+     * Render a list (array of strings or objects)
+     */
+    function renderList_Content(label, arr) {
+      if (!Array.isArray(arr) || !arr.length) return '';
+
+      const items = arr.map(item => {
+        if (typeof item === 'string') {
+          return `<li>${esc(item)}</li>`;
+        } else if (item && typeof item === 'object') {
+          // Handle various object formats
+          if (item.name && (item.effect || item.description)) {
+            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.effect || item.description)}</li>`;
+          } else if (item.value && item.description) {
+            return `<li><strong>${esc(item.value)}:</strong> ${esc(item.description)}</li>`;
+          } else if (item.trait && item.result) {
+            return `<li><strong>${esc(item.trait)}:</strong> ${esc(item.result)}</li>`;
+          } else if (item.id && (item.name || item.effect)) {
+            return `<li><strong>${esc(item.name || item.id)}:</strong> ${esc(item.effect || '')}</li>`;
+          } else {
+            // Generic object - show all non-underscore fields
+            const parts = Object.entries(item)
+              .filter(([k]) => !k.startsWith('_'))
+              .map(([k, v]) => `<strong>${esc(titleize(k))}:</strong> ${esc(v)}`)
+              .join(' • ');
+            return `<li>${parts}</li>`;
+          }
+        }
+        return '';
+      }).filter(Boolean).join('');
+
+      if (!items) return '';
+
+      return `
+        <div class="mb-3">
+          <div class="fw-bold small text-uppercase mb-1">${esc(titleize(label))}</div>
+          <ul>${items}</ul>
+        </div>
+      `;
+    }
+
+    /**
+     * Render a nested section/object
+     */
+    function renderNestedSection(label, obj, depth = 0) {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return '';
+
+      const MAX_DEPTH = 5;
+      if (depth >= MAX_DEPTH) return '';
+
+      let html = '';
+
+      // Check if this is an ability dictionary pattern (flat key-value with abilities)
+      const isAbilityDict = Object.values(obj).every(v => 
+        typeof v === 'string' || (v && typeof v === 'object' && (v.effect || v.short || v.long))
+      );
+
+      if (isAbilityDict) {
+        // Render as ability cards
+        html += `
+          <div class="mb-3">
+            <div class="fw-bold small text-uppercase mb-2">${esc(titleize(label))}</div>
+            ${renderAbilityDictionary(obj)}
+          </div>
+        `;
+        return html;
+      }
+
+      // Check if this looks like a titled section
+      const hasTitle = obj.title || obj.name;
+      const headerTag = depth === 0 ? 'h5' : depth === 1 ? 'h6' : 'div';
+      const headerClass = depth <= 1 ? '' : 'fw-bold small text-uppercase';
+
+      if (hasTitle || depth === 0) {
+        const displayTitle = obj.title || obj.name || titleize(label);
+        html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
+      }
+
+      // Render all prose fields first
+      for (const field of PROSE_FIELDS) {
+        if (obj[field]) {
+          html += renderProseField(field, obj[field]);
+        }
+      }
+
+      // Then render all list fields
+      for (const field of LIST_FIELDS) {
+        if (obj[field]) {
+          html += renderList_Content(field, obj[field]);
+        }
+      }
+
+      // Then recursively render nested structures
+      for (const field of NESTED_FIELDS) {
+        if (obj[field] && typeof obj[field] === 'object') {
+          if (Array.isArray(obj[field])) {
+            html += renderList_Content(field, obj[field]);
+          } else {
+            // Recurse into nested objects
+            const nestedKeys = Object.keys(obj[field]).filter(k => !k.startsWith('_'));
+            for (const nestedKey of nestedKeys) {
+              html += renderNestedSection(nestedKey, obj[field][nestedKey], depth + 1);
+            }
+          }
+        }
+      }
+
+      // Finally, catch any remaining fields that aren't in our known lists
+      const processedFields = new Set([
+        ...PROSE_FIELDS,
+        ...LIST_FIELDS,
+        ...NESTED_FIELDS,
+        'title', 'name', '_id', 'id', 'type'
+      ]);
+
+      const remainingFields = Object.entries(obj)
+        .filter(([k, v]) => 
+          !processedFields.has(k) && 
+          !k.startsWith('_') &&
+          v !== undefined &&
+          v !== null
+        );
+
+      if (remainingFields.length > 0) {
+        html += '<div class="mb-2">';
+        for (const [key, value] of remainingFields) {
+          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            html += `
+              <div class="cc-kv mb-1">
+                <div class="cc-k">${esc(titleize(key))}</div>
+                <div class="cc-v">${esc(value)}</div>
+              </div>
+            `;
+          } else if (Array.isArray(value)) {
+            html += renderList_Content(key, value);
+          } else if (value && typeof value === 'object') {
+            html += renderNestedSection(key, value, depth + 1);
+          }
+        }
+        html += '</div>';
+      }
+
+      if (html) {
+        return `<div class="cc-section mb-3">${html}</div>`;
+      }
+
+      return '';
+    }
+
+    /**
+     * Render ability dictionary (flat key-value pairs)
+     */
+    function renderAbilityDictionary(dict) {
+      return Object.entries(dict || {})
+        .map(([key, ability]) => {
+          if (typeof ability === 'string') {
+            return `
+              <div class="cc-ability-card p-3 mb-2">
+                <div class="fw-bold mb-1">${esc(titleize(key))}</div>
+                <div>${esc(ability)}</div>
+              </div>
+            `;
+          }
+
+          const a = ability || {};
+          return `
+            <div class="cc-ability-card p-3 mb-2">
+              <div class="d-flex justify-content-between align-items-baseline mb-1">
+                <div class="fw-bold">${esc(a.name || titleize(key))}</div>
+                ${a.timing ? `<div class="cc-muted small text-uppercase">${esc(a.timing)}</div>` : ''}
+              </div>
+              ${a.short ? `<div class="fw-semibold mb-1">${esc(a.short)}</div>` : ''}
+              ${a.long ? `<div>${esc(a.long)}</div>` : ''}
+              ${a.effect ? `<div>${esc(a.effect)}</div>` : ''}
+              ${a.trigger ? `<div class="mt-1"><strong>Trigger:</strong> ${esc(a.trigger)}</div>` : ''}
+              ${a.restriction ? `<div class="cc-muted small mt-1">${esc(a.restriction)}</div>` : ''}
+              ${a.restrictions ? `<div class="cc-muted small mt-1">${esc(Array.isArray(a.restrictions) ? a.restrictions.join(' • ') : a.restrictions)}</div>` : ''}
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    /**
+     * Main smart content renderer
+     */
     function renderContentSmart(meta, content) {
-      // 0) Empty
+      // Empty check
       if (content === undefined || content === null) {
         return `<div class="cc-muted">No content available.</div>`;
       }
 
-      // 1) Strings
-      if (typeof content === "string") {
+      // Plain string
+      if (typeof content === 'string') {
         return `<p>${esc(content)}</p>`;
       }
 
-      // 2) Abilities dictionary
-      if (content && typeof content === "object" && content.abilities && typeof content.abilities === "object") {
+      // Not an object? Show it raw
+      if (typeof content !== 'object') {
+        return `<p>${esc(String(content))}</p>`;
+      }
+
+      // Ability dictionary pattern (object with .abilities containing abilities)
+      if (content.abilities && typeof content.abilities === 'object') {
         return renderAbilityDictionary(content.abilities);
       }
 
-      // 3) Weapon properties dictionary
-      if (content && typeof content === "object" && content.properties && typeof content.properties === "object") {
-        return renderPropertyDictionary(content.properties);
+      // Weapon properties pattern
+      if (content.properties && typeof content.properties === 'object') {
+        return renderAbilityDictionary(content.properties);
       }
 
-      // 4) Your refactored chapter pattern: { type:"rules_master", text:{long}, sections:{...} }
-      if (content && typeof content === "object" && (content.sections || content.text) && meta?.type === "rules_master") {
-        const intro = content.text?.long ? `<p class="mb-4">${esc(content.text.long)}</p>` : "";
-        const secs = content.sections && typeof content.sections === "object"
-          ? Object.values(content.sections).map(renderSectionBlock).join("")
-          : "";
-        return `${intro}${secs || `<div class="cc-muted">No sections.</div>`}`;
+      // Check if this is a flat ability dictionary itself
+      // (all values are strings or ability-like objects)
+      const isFlatAbilityDict = Object.values(content).every(v =>
+        typeof v === 'string' || 
+        (v && typeof v === 'object' && !Array.isArray(v) && (v.effect || v.short || v.long || v.description))
+      );
+
+      if (isFlatAbilityDict && !content.sections && !content.text) {
+        return renderAbilityDictionary(content);
       }
 
-      // 5) “Vault-like” pattern (philosophy + many subsections as keys)
-      // e.g. visibility_vault works like this.
-      if (content && typeof content === "object" && content.philosophy && typeof content.philosophy === "object") {
-        const intro = content.philosophy.short || content.philosophy.long
-          ? `
-            <div class="mb-4">
-              ${content.philosophy.short ? `<p class="fw-semibold mb-1">${esc(content.philosophy.short)}</p>` : ""}
-              ${content.philosophy.long ? `<p class="mb-0">${esc(content.philosophy.long)}</p>` : ""}
-              ${content.philosophy.design_intent ? `<div class="cc-muted small mt-2"><strong>Design intent:</strong> ${esc(content.philosophy.design_intent)}</div>` : ""}
-            </div>
-          `
-          : "";
-
-        const body = Object.entries(content)
-          .filter(([k, v]) => k !== "philosophy" && !k.startsWith("_") && v && typeof v === "object")
-          .map(([k, v]) => {
-            // Vault sub-sections often have: title/name/short/long
-            // Render them as blocks
-            const title = v.title || v.name || titleize(k);
-            const short = v.short ? `<p class="fw-semibold mb-1">${esc(v.short)}</p>` : "";
-            const long = v.long ? `<p class="mb-2">${esc(v.long)}</p>` : "";
-            return `
-              <div class="cc-section mb-4">
-                <div class="cc-muted small text-uppercase mb-1">${esc(title)}</div>
-                ${short}${long}
-                ${renderStringList(v.examples)}
-                ${renderStringList(v.process)}
-                ${renderStringList(v.restrictions)}
-                ${renderObjectList(v.modifiers)}
-                ${renderObjectList(v.choices)}
-              </div>
-            `;
-          })
-          .join("");
-
-        return `${intro}${body || ""}` || `<div class="cc-muted">No content available.</div>`;
-      }
-
-      // 6) Plain prose object: { long, short?, design_intent? }
-      if (content && typeof content === "object" && (content.long || content.short) && !content.sections && !content.text) {
-        // If it’s basically a prose blob, show it cleanly.
-        const hasNested = Object.values(content).some((v) => v && typeof v === "object");
-        if (!hasNested) {
-          return `
-            ${content.short ? `<p class="fw-semibold mb-1">${esc(content.short)}</p>` : ""}
-            ${content.long ? `<p class="mb-0">${esc(content.long)}</p>` : ""}
-            ${content.design_intent ? `<div class="cc-muted small mt-2"><strong>Design intent:</strong> ${esc(content.design_intent)}</div>` : ""}
-          `;
-        }
-      }
-
-      // 7) Generic object container: render children blocks if they look like rules
-      if (content && typeof content === "object") {
-        const entries = Object.entries(content).filter(([k]) => !k.startsWith("_"));
-
-        // If the object contains titled children, render each child as a block.
-        const childBlocks = entries
-          .filter(([k, v]) => v && typeof v === "object" && !Array.isArray(v))
-          .map(([k, v]) => {
-            const title = v.title || v.name || titleize(k);
-            return `
-              <div class="cc-panel mb-3">
-                <div class="cc-panel-head">
-                  <div class="cc-panel-title">${esc(title)}</div>
-                </div>
-                <div class="cc-body">
-                  ${v.short ? `<p class="fw-semibold mb-1">${esc(v.short)}</p>` : ""}
-                  ${v.long ? `<p class="mb-2">${esc(v.long)}</p>` : ""}
-                  ${Array.isArray(v.usage) ? renderStringList(v.usage) : ""}
-                  ${Array.isArray(v.guidelines) ? renderObjectList(v.guidelines, "Value", "Description") : ""}
-                  ${Array.isArray(v.modifiers) ? renderObjectList(v.modifiers) : ""}
-                  ${Array.isArray(v.process) ? renderStringList(v.process) : ""}
-                  ${Array.isArray(v.sources) ? renderStringList(v.sources) : ""}
-                  ${v.mechanics && typeof v.mechanics === "object" ? renderKVPairs(v.mechanics, Object.keys(v.mechanics)) : ""}
-                </div>
-              </div>
-            `;
-          })
-          .join("");
-
-        if (childBlocks) return childBlocks;
-
-        // Last-resort JSON (but still readable)
-        return `<pre class="cc-json">${esc(JSON.stringify(content, null, 2))}</pre>`;
-      }
-
-      return `<div class="cc-muted">No content available.</div>`;
+      // Otherwise, use our recursive nested renderer
+      return renderNestedSection('', content, 0) || `<div class="cc-muted">No renderable content found.</div>`;
     }
 
     // ---- SELECT RULE ----
@@ -529,10 +479,7 @@ window.CC_APP = {
       const meta = section.meta;
       const children = helpers.getChildren(id);
 
-      // 🔧 CRITICAL FIX: if helper didn’t return content (or returned the wrong parent),
-      // resolve the content again by meta.path (plus fallbacks).
       const resolvedContent = pickBestResolvedContent(meta, section.content);
-
       const formattedContent = renderContentSmart(meta, resolvedContent);
 
       // ---- MAIN CONTENT ----
