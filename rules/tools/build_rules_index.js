@@ -1,62 +1,52 @@
+// =======================================
+// build_rules_index.js
+// Schema-agnostic rule indexer
+// =======================================
+
 function titleize(key) {
   return key
     .replace(/_/g, " ")
     .replace(/\b\w/g, (m) => m.toUpperCase());
 }
 
-function walk(node, path, parentId = null, out = []) {
-  if (!node || typeof node !== "object") return out;
+function walk(node, path = "", parent = null, out = []) {
+  if (!node || typeof node !== "object") return;
 
-  // RULE MASTER
-  if (node.sections && path === "rules_master") {
-    Object.entries(node.sections).forEach(([key, sec]) => {
-      const id = key;
-      out.push({
-        id,
-        title: sec.title || titleize(key),
-        type: sec.type || "core",
-        parent: null,
-        path: `${path}.sections.${key}`,
-      });
-
-      // recurse
-      walk(
-        sec,
-        `${path}.sections.${key}`,
-        id,
-        out
-      );
+  // Index any object with an _id
+  if (node._id) {
+    out.push({
+      id: node._id,
+      title: node.title || titleize(path.split(".").pop() || node._id),
+      type: node.type || "rule",
+      parent,
+      path,
     });
-    return out;
+
+    parent = node._id;
   }
 
-  // CORE / VAULT / SYSTEM SECTIONS
-  if (node.sections && parentId) {
-    Object.entries(node.sections).forEach(([key, sec]) => {
-      const id = `${parentId}_${key}`;
-      out.push({
-        id,
-        title: sec.title || titleize(key),
-        type: sec.type || "rule",
-        parent: parentId,
-        path: `${path}.sections.${key}`,
-      });
+  // Walk children
+  Object.entries(node).forEach(([key, value]) => {
+    if (
+      key.startsWith("_") ||
+      typeof value !== "object" ||
+      Array.isArray(value)
+    )
+      return;
 
-      walk(
-        sec,
-        `${path}.sections.${key}`,
-        id,
-        out
-      );
-    });
-  }
-
-  return out;
+    walk(
+      value,
+      path ? `${path}.${key}` : key,
+      parent,
+      out
+    );
+  });
 }
 
-// ENTRY POINT
 function buildIndex(rulesRoot) {
-  return walk(rulesRoot.rules_master, "rules_master");
+  const out = [];
+  walk(rulesRoot, "", null, out);
+  return out;
 }
 
 module.exports = { buildIndex };
