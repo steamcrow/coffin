@@ -1,0 +1,433 @@
+/* ================================
+   Rules Explorer Styles
+   File: steamcrow/rules/apps/cc_app_rules_explorer.css
+   ================================ */
+
+/* ===== Layout Grid ===== */
+.cc-rules-explorer {
+  display: grid;
+  grid-template-columns: 280px 1fr 240px;
+  gap: 1rem;
+  height: 100%;
+  padding: 1rem;
+}
+
+/* Sidebar */
+.cc-rules-sidebar {
+  min-width: 0;
+  transition: transform 0.3s ease;
+}
+
+.cc-rules-sidebar.collapsed {
+  transform: translateX(-100%);
+  position: absolute;
+  z-index: 10;
+}
+
+/* Main content */
+.cc-rules-main {
+  min-width: 0;
+  overflow: auto;
+}
+
+/* Context sidebar */
+.cc-rules-context {
+  min-width: 0;
+}
+
+/* ===== Book-like Typography ===== */
+.cc-rule-reader {
+  max-width: 800px;
+  margin: 0;
+  padding: 2rem;
+  text-align: left;
+  line-height: 1.7;
+  font-size: 16px;
+}
+
+.cc-rule-article {
+  text-align: left;
+}
+
+.cc-rule-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #ff7518;
+  text-align: left;
+}
+
+.cc-section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  color: #2c3e50;
+  text-align: left;
+}
+
+.cc-field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #7f8c8d;
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+.cc-rule-content {
+  text-align: left;
+}
+
+.cc-rule-content p {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.cc-rule-content ul {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.cc-rule-content li {
+  margin-bottom: 0.5rem;
+  text-align: left;
+}
+
+/* ===== Breadcrumb Navigation ===== */
+.cc-breadcrumb {
+  padding: 0.75rem 2rem;
+  font-size: 0.875rem;
+  color: #7f8c8d;
+  border-bottom: 1px solid #ecf0f1;
+  background: #fafbfc;
+}
+
+.cc-breadcrumb-link {
+  background: none;
+  border: none;
+  color: #3498db;
+  padding: 0;
+  margin: 0 0.25rem;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.cc-breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.cc-breadcrumb-current {
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+/* ===== Previous/Next Navigation ===== */
+.cc-rule-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 2rem;
+  border-top: 1px solid #ecf0f1;
+  margin-top: 2rem;
+}
+
+.cc-rule-nav button {
+  min-width: 120px;
+}
+
+/* ===== Sidebar List Items ===== */
+.cc-list-item {
+  width: 100%;
+  padding: 0.75rem;
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-left: 3px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.cc-list-item:hover {
+  background: #f8f9fa;
+  border-left-color: #ff7518;
+}
+
+.cc-list-item.active {
+  background: #fff5ed;
+  border-left-color: #ff7518;
+  font-weight: 600;
+}
+
+.cc-list-title {
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  text-align: left;
+}
+
+.cc-list-sub {
+  font-size: 0.75rem;
+  color: #7f8c8d;
+  text-align: left;
+}
+
+.cc-star-badge {
+  color: #f39c12;
+  font-size: 1.2rem;
+  margin-left: 0.5rem;
+}
+
+/* ===== Action Buttons ===== */
+.cc-rules-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.cc-star {
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.btn-link:hover .cc-star {
+  transform: scale(1.2);
+}
+
+/* ===== Ability Cards ===== */
+.cc-ability-card {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.cc-ability-card .fw-bold {
+  color: #2c3e50;
+}
+
+.cc-ability-card .fw-semibold {
+  color: #34495e;
+}
+
+/* ===== Responsive Design ===== */
+@media (max-width: 992px) {
+  .cc-rules-explorer {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+
+  .cc-rules-sidebar {
+    grid-row: 1;
+  }
+
+  .cc-rules-main {
+    grid-row: 2;
+  }
+
+  .cc-rules-context {
+    display: none;
+  }
+
+  .cc-rule-reader {
+    padding: 1rem;
+  }
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  /* Hide UI elements */
+  .cc-rules-sidebar,
+  .cc-rules-context,
+  .cc-panel-head,
+  .cc-breadcrumb,
+  .cc-rule-nav,
+  .cc-rules-actions,
+  .btn,
+  button {
+    display: none !important;
+  }
+
+  /* Full width for content */
+  .cc-rules-explorer {
+    display: block;
+    padding: 0;
+  }
+
+  .cc-rules-main {
+    max-width: 100%;
+  }
+
+  .cc-rule-reader {
+    max-width: 100%;
+    padding: 0;
+  }
+
+  /* Better typography for print */
+  body {
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+
+  .cc-rule-title {
+    font-size: 18pt;
+    margin-top: 0;
+    page-break-after: avoid;
+  }
+
+  .cc-section-title {
+    font-size: 14pt;
+    margin-top: 12pt;
+    page-break-after: avoid;
+  }
+
+  .cc-field-label {
+    font-size: 9pt;
+    page-break-after: avoid;
+  }
+
+  /* Prevent orphans and widows */
+  p, li {
+    orphans: 3;
+    widows: 3;
+  }
+
+  /* Keep content together */
+  .cc-section {
+    page-break-inside: avoid;
+  }
+
+  .cc-ability-card {
+    page-break-inside: avoid;
+    border: 1px solid #000;
+    padding: 8pt;
+    margin-bottom: 8pt;
+  }
+
+  /* Lists */
+  ul {
+    margin-left: 20pt;
+  }
+
+  li {
+    margin-bottom: 4pt;
+  }
+
+  /* Remove backgrounds for print */
+  .cc-ability-card {
+    background: white;
+  }
+
+  /* Add page numbers */
+  @page {
+    margin: 0.75in;
+    
+    @bottom-right {
+      content: "Page " counter(page);
+      font-size: 9pt;
+    }
+  }
+
+  /* First page special formatting */
+  @page :first {
+    @bottom-right {
+      content: "";
+    }
+  }
+
+  /* Headers and footers */
+  h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  /* Links */
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  /* Table formatting if needed */
+  table {
+    page-break-inside: avoid;
+  }
+}
+
+/* ===== Dark mode support (optional) ===== */
+@media (prefers-color-scheme: dark) {
+  .cc-rule-title {
+    color: #ff8c42;
+  }
+
+  .cc-section-title {
+    color: #ecf0f1;
+  }
+
+  .cc-field-label {
+    color: #95a5a6;
+  }
+
+  .cc-ability-card {
+    background: #2c3e50;
+    border-color: #34495e;
+  }
+
+  .cc-breadcrumb {
+    background: #2c3e50;
+    border-color: #34495e;
+  }
+
+  .cc-list-item:hover {
+    background: #34495e;
+  }
+
+  .cc-list-item.active {
+    background: #3d2917;
+  }
+}
+
+/* ===== Sidebar Toggle ===== */
+.cc-sidebar-toggle-icon {
+  font-size: 1.5rem;
+  font-weight: bold;
+  line-height: 1;
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+
+/* ===== Filter Buttons ===== */
+.btn-group .btn {
+  font-size: 0.875rem;
+}
+
+.btn-outline-secondary.active {
+  background-color: #ff7518;
+  border-color: #ff7518;
+  color: white;
+}
+
+/* ===== Smooth Scrolling ===== */
+html {
+  scroll-behavior: smooth;
+}
+
+.cc-rules-main {
+  scroll-behavior: smooth;
+}
+
+/* ===== Improve readability ===== */
+.cc-rule-content {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  hyphens: auto;
+}
+
+strong {
+  font-weight: 600;
+}
+
+code {
+  font-family: "Courier New", Courier, monospace;
+  background: #f8f9fa;
+  padding: 0.125rem 0.25rem;
+  border-radius: 3px;
+  font-size: 0.9em;
+}
