@@ -129,56 +129,61 @@ async function selectRule(id) {
 
   let formattedContent = "";
 
-  // ---- RULES MASTER (container chapters like Core Mechanics) ----
+ // ---- RULES MASTER (chapter-style rendering) ----
 if (meta.type === "rules_master" && content) {
   formattedContent = `
-    ${content.text?.long ? `<p>${content.text.long}</p>` : ""}
+    ${content.text?.long ? `<p class="mb-4">${content.text.long}</p>` : ""}
 
     ${
       content.sections
-        ? `
-          <div class="fw-bold small text-uppercase mt-4 mb-2">Sections</div>
-          <ul class="list-unstyled">
-            ${Object.values(content.sections)
-              .map(
-                (sec) => `
-                  <li class="mb-1">
-                    <button class="btn btn-link p-0" data-id="${sec._id}">
-                      ${sec.title}
-                    </button>
-                  </li>
-                `
-              )
-              .join("")}
-          </ul>
-        `
+        ? Object.values(content.sections)
+            .map(
+              (sec) => `
+                <div class="cc-section mb-4">
+                  <h5 class="mb-1">${sec.title}</h5>
+
+                  ${sec.short ? `<p class="fw-semibold mb-1">${sec.short}</p>` : ""}
+                  ${sec.long ? `<p>${sec.long}</p>` : ""}
+
+                  ${
+                    sec.usage
+                      ? `<ul>${sec.usage.map(u => `<li>${u}</li>`).join("")}</ul>`
+                      : ""
+                  }
+
+                  ${
+                    sec.guidelines
+                      ? `
+                        <ul class="cc-guidelines">
+                          ${sec.guidelines
+                            .map(
+                              g =>
+                                `<li><strong>${g.value}:</strong> ${g.description}</li>`
+                            )
+                            .join("")}
+                        </ul>
+                      `
+                      : ""
+                  }
+
+                  ${
+                    sec.mechanics
+                      ? `
+                        <div class="cc-muted small">
+                          ${Object.values(sec.mechanics).join("<br>")}
+                        </div>
+                      `
+                      : ""
+                  }
+                </div>
+              `
+            )
+            .join("")
         : ""
     }
   `;
 }
 
-  // 1️⃣ Plain STRING content (Philosophy & Design)
-  else if (typeof content === "string") {
-    formattedContent = `<p>${content}</p>`;
-  }
-
-  // 2️⃣ Ability Dictionary
-  else if (content && content.abilities) {
-    formattedContent = Object.entries(content.abilities)
-      .map(
-        ([key, ability]) => `
-          <div class="cc-ability-card p-3 mb-3">
-            <div class="d-flex justify-content-between align-items-baseline mb-1">
-              <div class="fw-bold">${key}</div>
-              <div class="cc-muted small text-uppercase">${ability.timing || "—"}</div>
-            </div>
-            ${ability.short ? `<div class="fw-semibold mb-1">${ability.short}</div>` : ""}
-            ${ability.long ? `<div>${ability.long}</div>` : ""}
-          </div>
-        `
-      )
-      .join("");
-  }
 
   // 3️⃣ Plain prose object (object with only `long`)
   else if (content && typeof content === "object" && content.long && !content.short) {
