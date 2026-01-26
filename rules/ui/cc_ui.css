@@ -60,13 +60,13 @@ body {
 }
 
 .cc-app-title {
-  font-family: var(--cc-font-title);
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  font-weight: 400; /* Bungee is naturally bold */
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: #ff7518;
-  margin: 0;
+  font-family: var(--cc-font-title) !important;
+  font-size: clamp(1.4rem, 3vw, 2rem) !important;
+  font-weight: 400 !important; /* Bungee is naturally bold */
+  letter-spacing: 0.05em !important;
+  text-transform: uppercase !important;
+  color: #ff7518 !important;
+  margin: 0 !important;
 }
 
 .cc-app-subtitle {
