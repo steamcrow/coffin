@@ -109,181 +109,177 @@ window.CC_APP = {
         .join("");
     }
 
-  // ---- SELECT RULE ----
-async function selectRule(id) {
-  selectedId = id;
+    // ---- SELECT RULE ----
+    async function selectRule(id) {
+      selectedId = id;
 
-  detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
-  ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+      detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+      ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
 
-  const section = await helpers.getRuleSection(id);
+      const section = await helpers.getRuleSection(id);
 
-  if (!section || !section.meta) {
-    detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
-    ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
-    return;
-  }
+      if (!section || !section.meta) {
+        detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
+        ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
+        return;
+      }
 
-  const { meta, content } = section;
-  const children = helpers.getChildren(id);
+      const { meta, content } = section;
+      const children = helpers.getChildren(id);
 
-  let formattedContent = "";
+      let formattedContent = "";
 
- // ---- RULES MASTER (chapter-style rendering) ----
-if (meta.type === "rules_master" && content) {
-  formattedContent = `
-    ${content.text?.long ? `<p class="mb-4">${content.text.long}</p>` : ""}
+      // ---- RULES MASTER (chapter-style rendering) ----
+      if (meta.type === "rules_master" && content) {
+        formattedContent = `
+          ${content.text?.long ? `<p class="mb-4">${content.text.long}</p>` : ""}
 
-    ${
-      content.sections
-        ? Object.values(content.sections)
-            .map(
-              (sec) => `
-                <div class="cc-section mb-4">
-                  <h5 class="mb-1">${sec.title}</h5>
+          ${
+            content.sections
+              ? Object.values(content.sections)
+                  .map(
+                    (sec) => `
+                      <div class="cc-section mb-4">
+                        <h5 class="mb-1">${sec.title}</h5>
 
-                  ${sec.short ? `<p class="fw-semibold mb-1">${sec.short}</p>` : ""}
-                  ${sec.long ? `<p>${sec.long}</p>` : ""}
+                        ${sec.short ? `<p class="fw-semibold mb-1">${sec.short}</p>` : ""}
+                        ${sec.long ? `<p>${sec.long}</p>` : ""}
 
-                  ${
-                    sec.usage
-                      ? `<ul>${sec.usage.map(u => `<li>${u}</li>`).join("")}</ul>`
-                      : ""
-                  }
+                        ${
+                          sec.usage
+                            ? `<ul>${sec.usage.map(u => `<li>${u}</li>`).join("")}</ul>`
+                            : ""
+                        }
 
-                  ${
-                    sec.guidelines
-                      ? `
-                        <ul class="cc-guidelines">
-                          ${sec.guidelines
-                            .map(
-                              g =>
-                                `<li><strong>${g.value}:</strong> ${g.description}</li>`
-                            )
-                            .join("")}
-                        </ul>
-                      `
-                      : ""
-                  }
+                        ${
+                          sec.guidelines
+                            ? `
+                              <ul class="cc-guidelines">
+                                ${sec.guidelines
+                                  .map(
+                                    g =>
+                                      `<li><strong>${g.value}:</strong> ${g.description}</li>`
+                                  )
+                                  .join("")}
+                              </ul>
+                            `
+                            : ""
+                        }
 
-                  ${
-                    sec.mechanics
-                      ? `
-                        <div class="cc-muted small">
-                          ${Object.values(sec.mechanics).join("<br>")}
-                        </div>
-                      `
-                      : ""
-                  }
+                        ${
+                          sec.mechanics
+                            ? `
+                              <div class="cc-muted small">
+                                ${Object.values(sec.mechanics).join("<br>")}
+                              </div>
+                            `
+                            : ""
+                        }
+                      </div>
+                    `
+                  )
+                  .join("")
+              : ""
+          }
+        `;
+      }
+
+      // ---- Plain prose ----
+      else if (content && typeof content === "object" && content.long && !content.short) {
+        formattedContent = `<p>${content.long}</p>`;
+      }
+
+      // ---- Leaf rule ----
+      else if (
+        content &&
+        typeof content === "object" &&
+        (content.short || content.long) &&
+        !Object.values(content).some(v => typeof v === "object" && v && v._id)
+      ) {
+        formattedContent = `
+          ${content.short ? `<p class="fw-semibold mb-2">${content.short}</p>` : ""}
+          ${content.long ? `<p>${content.long}</p>` : ""}
+        `;
+      }
+
+      // ---- Generic container (NOT rules_master) ----
+      else if (
+        meta.type !== "rules_master" &&
+        content &&
+        typeof content === "object" &&
+        !content.version &&
+        !content.last_updated
+      ) {
+        formattedContent = Object.entries(content)
+          .filter(([k, v]) => !k.startsWith("_") && typeof v === "object")
+          .map(
+            ([key, val]) => `
+              <div class="cc-panel mb-3">
+                <div class="cc-panel-head">
+                  <div class="cc-panel-title">
+                    ${val.title || key.replace(/_/g, " ")}
+                  </div>
                 </div>
-              `
-            )
-            .join("")
-        : ""
-    }
-  `;
-}
-
-
-  // 3️⃣ Plain prose object (object with only `long`)
-  else if (content && typeof content === "object" && content.long && !content.short) {
-    formattedContent = `<p>${content.long}</p>`;
-  }
-
-  // 4️⃣ Leaf rule (single mechanic)
-  else if (
-    content &&
-    typeof content === "object" &&
-    (content.short || content.long) &&
-    !Object.values(content).some(
-      (v) => typeof v === "object" && v && v._id
-    )
-  ) {
-    formattedContent = `
-      ${content.short ? `<p class="fw-semibold mb-2">${content.short}</p>` : ""}
-      ${content.long ? `<p>${content.long}</p>` : ""}
-    `;
-  }
-
-  // 5️⃣ Section container (Core Mechanics, Turn Structure, Vaults)
-  else if (
-    content &&
-    typeof content === "object" &&
-    !content.version &&
-    !content.last_updated
-  ) {
-    formattedContent = Object.entries(content)
-      .filter(([k, v]) => !k.startsWith("_") && typeof v === "object")
-      .map(
-        ([key, val]) => `
-          <div class="cc-panel mb-3">
-            <div class="cc-panel-head">
-              <div class="cc-panel-title">
-                ${val.title || key.replace(/_/g, " ")}
+                <div class="cc-body">
+                  ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
+                  ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
+                </div>
               </div>
-            </div>
-            <div class="cc-body">
-              ${val.short ? `<p class="fw-semibold mb-1">${val.short}</p>` : ""}
-              ${val.long ? `<p class="mb-0">${val.long}</p>` : ""}
-            </div>
-          </div>
-        `
-      )
-      .join("");
-  }
+            `
+          )
+          .join("");
+      }
 
-  // 6️⃣ Fallback
-  else {
-    formattedContent = `<div class="cc-muted">No content available.</div>`;
-  }
+      else {
+        formattedContent = `<div class="cc-muted">No content available.</div>`;
+      }
 
-  // ---- MAIN CONTENT ----
-  detailEl.innerHTML = `
-    <h4 class="mb-1">${meta.title}</h4>
-    <div class="cc-muted mb-2">
-      <code>${meta.id}</code> • ${meta.type}
-    </div>
+      // ---- MAIN CONTENT ----
+      detailEl.innerHTML = `
+        <h4 class="mb-1">${meta.title}</h4>
+        <div class="cc-muted mb-2">
+          <code>${meta.id}</code> • ${meta.type}
+        </div>
 
-    <div class="cc-callout mb-3">
-      <strong>Path:</strong> <code>${meta.path}</code>
-    </div>
+        <div class="cc-callout mb-3">
+          <strong>Path:</strong> <code>${meta.path}</code>
+        </div>
 
-    <div class="cc-rule-content">
-      ${formattedContent}
-    </div>
-  `;
+        <div class="cc-rule-content">
+          ${formattedContent}
+        </div>
+      `;
 
-  // ---- CONTEXT ----
-  ctxEl.innerHTML = `
-    <div class="cc-kv mb-3">
-      <div class="cc-k">Type</div><div class="cc-v">${meta.type}</div>
-      <div class="cc-k">Parent</div><div class="cc-v">${meta.parent || "—"}</div>
-    </div>
+      // ---- CONTEXT ----
+      ctxEl.innerHTML = `
+        <div class="cc-kv mb-3">
+          <div class="cc-k">Type</div><div class="cc-v">${meta.type}</div>
+          <div class="cc-k">Parent</div><div class="cc-v">${meta.parent || "—"}</div>
+        </div>
 
-    ${
-      children.length
-        ? `
-          <div class="fw-bold small text-uppercase mb-1">Subsections</div>
-          <ul class="list-unstyled">
-            ${children
-              .map(
-                (c) => `
-                  <li>
-                    <button class="btn btn-link p-0" data-id="${c.id}">
-                      ${c.title}
-                    </button>
-                  </li>`
-              )
-              .join("")}
-          </ul>
-        `
-        : `<div class="cc-muted">No subsections.</div>`
+        ${
+          children.length
+            ? `
+              <div class="fw-bold small text-uppercase mb-1">Subsections</div>
+              <ul class="list-unstyled">
+                ${children
+                  .map(
+                    (c) => `
+                      <li>
+                        <button class="btn btn-link p-0" data-id="${c.id}">
+                          ${c.title}
+                        </button>
+                      </li>`
+                  )
+                  .join("")}
+              </ul>
+            `
+            : `<div class="cc-muted">No subsections.</div>`
+        }
+      `;
+
+      renderList(searchEl.value);
     }
-  `;
-
-  renderList(searchEl.value);
-}
-
 
     // ---- EVENTS ----
     listEl.addEventListener("click", (e) => {
