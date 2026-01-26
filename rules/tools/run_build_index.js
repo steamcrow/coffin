@@ -1,19 +1,27 @@
-const fs = require("fs");
-const path = require("path");
-const { buildIndex } = require("./build_rules_index");
+// =======================================
+// Rules Index Builder
+// File: coffin/rules/tools/build_rules_index.js
+// =======================================
 
-// INPUT: rules_base.json (source of truth)
-const rulesPath = path.join(__dirname, "..", "rules_base.json");
-const rulesBase = JSON.parse(fs.readFileSync(rulesPath, "utf8"));
+function buildIndex(rulesBase) {
+  if (!rulesBase || !Array.isArray(rulesBase.index)) {
+    throw new Error("Invalid rules_base.json: missing index array");
+  }
 
-// OUTPUT: rules_index.json
-const outPath = path.join(__dirname, "..", "rules_index.json");
+  const index = [];
 
-// Build index
-const index = buildIndex(rulesBase);
+  for (const entry of rulesBase.index) {
+    index.push({
+      id: entry.id,
+      title: entry.title || entry.id,
+      type: entry.type || "rule",
+      path: entry.path || null,
+      parent: entry.parent || null,
+      file: entry.file || null
+    });
+  }
 
-// Write index
-fs.writeFileSync(outPath, JSON.stringify(index, null, 2));
+  return index;
+}
 
-console.log("✅ Rules index rebuilt");
-console.log("Entries:", index.length);
+module.exports = { buildIndex };
