@@ -100,34 +100,6 @@
   text-align: left;
 }
 
-/* ===== Breadcrumb Navigation ===== */
-.cc-breadcrumb {
-  padding: 0.75rem 2rem;
-  font-size: 0.875rem;
-  color: #9a9a9a;
-  border-bottom: 1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.03);
-}
-
-.cc-breadcrumb-link {
-  background: none;
-  border: none;
-  color: #ff7518;
-  padding: 0;
-  margin: 0 0.25rem;
-  cursor: pointer;
-  text-decoration: none;
-}
-
-.cc-breadcrumb-link:hover {
-  text-decoration: underline;
-}
-
-.cc-breadcrumb-current {
-  color: #e8e8e8;
-  font-weight: 600;
-}
-
 /* ===== Previous/Next Navigation ===== */
 .cc-rule-nav {
   display: flex;
@@ -203,7 +175,6 @@
   .cc-rules-sidebar,
   .cc-rules-context,
   .cc-panel-head,
-  .cc-breadcrumb,
   .cc-rule-nav,
   .cc-rules-actions,
   .btn,
