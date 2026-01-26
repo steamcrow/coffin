@@ -635,6 +635,25 @@ window.CC_APP = {
       const children = helpers.getChildren(id);
 
       const resolvedContent = pickBestResolvedContent(meta, section.content);
+      
+      // Check if content is actually empty or just meta
+      const hasRealContent = resolvedContent && (
+        typeof resolvedContent === 'string' ||
+        (typeof resolvedContent === 'object' && Object.keys(resolvedContent).some(k => 
+          !k.startsWith('_') && k !== 'id' && k !== 'title' && resolvedContent[k]
+        ))
+      );
+      
+      if (!hasRealContent) {
+        detailEl.innerHTML = `<div class="cc-muted">This section has no content yet.</div>`;
+        breadcrumbEl.innerHTML = '';
+        navEl.classList.add('d-none');
+        favoriteBtn.classList.add('d-none');
+        contextPanelEl.style.display = 'none';
+        renderList(searchEl.value);
+        return;
+      }
+      
       const formattedContent = renderContentSmart(meta, resolvedContent);
 
       // ---- BREADCRUMB ----
@@ -645,7 +664,7 @@ window.CC_APP = {
       const star = favoriteBtn.querySelector('.cc-star');
       star.textContent = isFavorite(id) ? '★' : '☆';
 
-      // ---- MAIN CONTENT ----
+      // ---- MAIN CONTENT (without displaying ID) ----
       const titleHtml = `
         <article class="cc-rule-article">
           <h2 class="cc-rule-title">${esc(meta.title || "")}</h2>
@@ -657,16 +676,29 @@ window.CC_APP = {
       `;
       detailEl.innerHTML = titleHtml + formattedContent + closingHtml;
 
-      // ---- CONTEXT (hide if no children) ----
+      // ---- CONTEXT (show design_intent and children) ----
+      let contextHtml = '';
+      
+      // Add design_intent if it exists
+      if (resolvedContent && typeof resolvedContent === 'object' && resolvedContent.design_intent) {
+        contextHtml += `
+          <div class="cc-callout mb-3">
+            <div class="fw-bold small text-uppercase mb-2" style="color: #ff7518;">Designer Notes</div>
+            <div class="small">${esc(resolvedContent.design_intent)}</div>
+          </div>
+        `;
+      }
+      
+      // Add children/subsections
       if (children.length > 0) {
-        contextPanelEl.style.display = 'block';
-        ctxEl.innerHTML = `
+        contextHtml += `
+          <div class="fw-bold small text-uppercase mb-2" style="color: #ff7518;">Subsections</div>
           <ul class="list-unstyled">
             ${children
               .map(
                 (c) => `
                   <li class="mb-2">
-                    <button class="btn btn-link p-0 text-start" data-id="${esc(c.id)}">
+                    <button class="btn btn-link p-0 text-start w-100" data-id="${esc(c.id)}">
                       ${esc(c.title)}
                     </button>
                   </li>`
@@ -674,6 +706,11 @@ window.CC_APP = {
               .join("")}
           </ul>
         `;
+      }
+      
+      if (contextHtml) {
+        contextPanelEl.style.display = 'block';
+        ctxEl.innerHTML = contextHtml;
       } else {
         contextPanelEl.style.display = 'none';
       }
