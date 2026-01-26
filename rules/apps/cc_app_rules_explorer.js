@@ -9,7 +9,23 @@ window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Rules Explorer init", ctx);
 
-    // ---- LOAD CSS (Following skeleton.js pattern) ----
+    // ---- LOAD CSS (Core + App-specific) ----
+    // Load core UI CSS first
+    if (!document.getElementById('cc-core-ui-styles')) {
+      console.log('🎨 Loading Core UI CSS...');
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
+        .then(res => res.text())
+        .then(css => {
+          const style = document.createElement('style');
+          style.id = 'cc-core-ui-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Core UI CSS applied!');
+        })
+        .catch(err => console.error('❌ Core CSS load failed:', err));
+    }
+    
+    // Then load app-specific CSS
     if (!document.getElementById('cc-rules-explorer-styles')) {
       console.log('🎨 Loading Rules Explorer CSS...');
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_rules_explorer.css?t=' + Date.now())
@@ -21,7 +37,7 @@ window.CC_APP = {
           document.head.appendChild(style);
           console.log('✅ Rules Explorer CSS applied!');
         })
-        .catch(err => console.error('❌ CSS load failed:', err));
+        .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
     const helpers = ctx?.helpers;
