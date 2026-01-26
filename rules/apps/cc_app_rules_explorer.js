@@ -103,6 +103,18 @@ window.CC_APP = {
     // ---- APP SHELL ----
     root.innerHTML = `
       <div class="cc-app-shell h-100">
+        
+        <!-- Standard App Header (uses cc_ui.css) -->
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Rules Explorer</h1>
+            <div class="cc-app-subtitle">Interactive Coffin Canyon Rules Reference</div>
+          </div>
+          <button id="cc-print-btn" class="btn btn-sm btn-outline-secondary" title="Print rulebook">
+            🖨️ Print
+          </button>
+        </div>
+
         <div class="cc-rules-explorer">
           
           <!-- Sidebar (Table of Contents) -->
@@ -140,9 +152,6 @@ window.CC_APP = {
                 <div class="cc-rules-actions">
                   <button id="cc-favorite-btn" class="btn btn-sm btn-link d-none" title="Star this rule">
                     <span class="cc-star">☆</span>
-                  </button>
-                  <button id="cc-print-btn" class="btn btn-sm btn-link" title="Print rulebook">
-                    🖨️ Print
                   </button>
                 </div>
               </div>
