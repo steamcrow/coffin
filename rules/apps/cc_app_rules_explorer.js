@@ -296,6 +296,17 @@ window.CC_APP = {
 
       // Filter out excluded IDs
       let items = index.filter((it) => !EXCLUDED_IDS.includes(it.id));
+      
+      // Filter out items that have no real content (just meta/empty shells)
+      items = items.filter(it => {
+        // Keep it if it has children (parent sections)
+        const children = helpers.getChildren(it.id);
+        if (children && children.length > 0) return true;
+        
+        // Otherwise, it should have actual content to display
+        // This requires checking if the content is meaningful
+        return true; // For now, keep all leaf nodes - we'll handle empty content in selectRule
+      });
 
       // Apply search filter
       if (f) {
@@ -485,15 +496,17 @@ window.CC_APP = {
         ...PROSE_FIELDS,
         ...LIST_FIELDS,
         ...NESTED_FIELDS,
-        'title', 'name', '_id', 'id', 'type'
+        'title', 'name', '_id', 'id', 'Id', 'ID', 'type', 'design_intent'
       ]);
 
       const remainingFields = Object.entries(obj)
         .filter(([k, v]) => 
           !processedFields.has(k) && 
           !k.startsWith('_') &&
+          !k.toLowerCase().includes('id') &&  // Exclude any field with 'id' in the name
           v !== undefined &&
-          v !== null
+          v !== null &&
+          !(typeof v === 'string' && v.match(/^R-[A-Z]/))  // Exclude values that look like IDs (R-TURN, R-COMB, etc)
         );
 
       if (remainingFields.length > 0) {
@@ -525,10 +538,19 @@ window.CC_APP = {
     function renderAbilityDictionary(dict) {
       return Object.entries(dict || {})
         .map(([key, ability]) => {
+          // Create a unique ID for this ability
+          const abilityId = `ability-${key}`;
+          const starred = isFavorite(abilityId);
+          
           if (typeof ability === 'string') {
             return `
               <div class="cc-ability-card p-3 mb-2">
-                <div class="fw-bold mb-1">${esc(titleize(key))}</div>
+                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                  <div class="fw-bold flex-grow-1">${esc(titleize(key))}</div>
+                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
+                    <span class="cc-star">${starred ? '★' : '☆'}</span>
+                  </button>
+                </div>
                 <div>${esc(ability)}</div>
               </div>
             `;
@@ -538,8 +560,13 @@ window.CC_APP = {
           return `
             <div class="cc-ability-card p-3 mb-2">
               <div class="d-flex justify-content-between align-items-baseline mb-1">
-                <div class="fw-bold">${esc(a.name || titleize(key))}</div>
-                ${a.timing ? `<div class="cc-muted small text-uppercase">${esc(a.timing)}</div>` : ''}
+                <div class="fw-bold flex-grow-1">${esc(a.name || titleize(key))}</div>
+                <div class="d-flex align-items-center gap-2">
+                  ${a.timing ? `<div class="cc-muted small text-uppercase">${esc(a.timing)}</div>` : ''}
+                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
+                    <span class="cc-star">${starred ? '★' : '☆'}</span>
+                  </button>
+                </div>
               </div>
               ${a.short ? `<div class="fw-semibold mb-1">${esc(a.short)}</div>` : ''}
               ${a.long ? `<div>${esc(a.long)}</div>` : ''}
@@ -681,10 +708,21 @@ window.CC_APP = {
       
       // Add design_intent if it exists
       if (resolvedContent && typeof resolvedContent === 'object' && resolvedContent.design_intent) {
+        let designIntentText = resolvedContent.design_intent;
+        
+        // Handle if design_intent is an object
+        if (typeof designIntentText === 'object') {
+          // Extract text from common properties
+          designIntentText = designIntentText.text || 
+                            designIntentText.description || 
+                            designIntentText.note ||
+                            JSON.stringify(designIntentText, null, 2);
+        }
+        
         contextHtml += `
           <div class="cc-callout mb-3">
             <div class="fw-bold small text-uppercase mb-2" style="color: #ff7518;">Designer Notes</div>
-            <div class="small">${esc(resolvedContent.design_intent)}</div>
+            <div class="small">${esc(String(designIntentText))}</div>
           </div>
         `;
       }
@@ -697,9 +735,12 @@ window.CC_APP = {
             ${children
               .map(
                 (c) => `
-                  <li class="mb-2">
-                    <button class="btn btn-link p-0 text-start w-100" data-id="${esc(c.id)}">
+                  <li class="mb-2 d-flex justify-content-between align-items-center">
+                    <button class="btn btn-link p-0 text-start flex-grow-1" data-id="${esc(c.id)}">
                       ${esc(c.title)}
+                    </button>
+                    <button class="btn btn-link p-0 cc-context-star" data-star-id="${esc(c.id)}" title="Star this rule">
+                      <span class="cc-star">${isFavorite(c.id) ? '★' : '☆'}</span>
                     </button>
                   </li>`
               )
@@ -760,9 +801,23 @@ window.CC_APP = {
     });
 
     ctxEl.addEventListener("click", (e) => {
-      const btn = e.target.closest("button[data-id]");
-      if (!btn) return;
-      selectRule(btn.dataset.id);
+      // Handle subsection navigation
+      const navBtn = e.target.closest("button[data-id]");
+      if (navBtn) {
+        selectRule(navBtn.dataset.id);
+        return;
+      }
+      
+      // Handle star toggles in context panel
+      const starBtn = e.target.closest("button[data-star-id]");
+      if (starBtn) {
+        const starId = starBtn.dataset.starId;
+        toggleFavorite(starId);
+        const star = starBtn.querySelector('.cc-star');
+        star.textContent = isFavorite(starId) ? '★' : '☆';
+        renderList(searchEl.value);
+        e.stopPropagation();
+      }
     });
 
     breadcrumbEl.addEventListener('click', (e) => {
@@ -781,6 +836,19 @@ window.CC_APP = {
       const star = favoriteBtn.querySelector('.cc-star');
       star.textContent = isFavorite(selectedId) ? '★' : '☆';
       renderList(searchEl.value);
+    });
+
+    // Handle ability star clicks in main content
+    detailEl.addEventListener('click', (e) => {
+      const starBtn = e.target.closest("button.cc-ability-star");
+      if (starBtn) {
+        const starId = starBtn.dataset.starId;
+        toggleFavorite(starId);
+        const star = starBtn.querySelector('.cc-star');
+        star.textContent = isFavorite(starId) ? '★' : '☆';
+        renderList(searchEl.value);
+        e.stopPropagation();
+      }
     });
 
     // ---- INIT ----
