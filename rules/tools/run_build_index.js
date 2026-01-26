@@ -8,27 +8,20 @@ const path = require("path");
 const { buildIndex } = require("./build_rules_index");
 
 // ---- PATHS ----
-const rulesPath = path.join(__dirname, "..", "rules_base.json");
-const outPath   = path.join(__dirname, "..", "rules_index.json");
+const rulesPath = path.resolve(__dirname, "../rules_base.json");
+const outPath   = path.resolve(__dirname, "../rules_index.json");
 
-// ---- SANITY CHECK ----
+// ---- LOAD RULES BASE ----
 if (!fs.existsSync(rulesPath)) {
-  console.error("❌ rules_base.json not found at:");
-  console.error(rulesPath);
+  console.error("❌ rules_base.json not found at:", rulesPath);
   process.exit(1);
 }
 
-// ---- LOAD RULES BASE ----
 const rulesBase = JSON.parse(
   fs.readFileSync(rulesPath, "utf8")
 );
 
 // ---- BUILD INDEX ----
-if (!rulesBase.rules_master) {
-  console.error("❌ rules_base.json is missing `rules_master` root");
-  process.exit(1);
-}
-
 const index = buildIndex(rulesBase);
 
 // ---- WRITE OUTPUT ----
@@ -38,6 +31,6 @@ fs.writeFileSync(
   "utf8"
 );
 
-console.log("✅ Rules index rebuilt successfully");
+console.log("✅ Rules index rebuilt");
 console.log("📄 Output:", outPath);
 console.log("📊 Entries:", index.length);
