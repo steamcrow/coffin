@@ -1,57 +1,80 @@
-/* File: steamcrow/rules/ui/cc_ui.css */
+/* =========================================================
+   COFFIN CANYON - CORE UI SYSTEM
+   File: coffin/rules/ui/cc_ui.css
+   
+   Generic styles for all Coffin Canyon apps
+   Works alongside Bootstrap (Odoo default)
+   ========================================================= */
 
-.cc-panel{
-  background:#151515;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:12px;
-  overflow:hidden;
-  color:#e8e8e8;
+/* ===== GOOGLE FONTS IMPORT ===== */
+@import url('https://fonts.googleapis.com/css2?family=Bungee&family=Source+Sans+3:wght@400;600;700&family=Roboto+Mono:wght@400;700&display=swap');
+
+/* ===== CSS VARIABLES ===== */
+:root { 
+  --cc-primary: #ff7518;
+  --cc-primary-hover: #ff8c42;
+  --cc-primary-dim: rgba(255, 117, 24, 0.15);
+  --cc-bg-darker: #121212;
+  --cc-bg-dark: #1a1a1a;
+  --cc-bg-soft: rgba(255, 255, 255, 0.03);
+  --cc-border: rgba(255, 255, 255, 0.1);
+  --cc-border-bright: rgba(255, 255, 255, 0.2);
+  --cc-text: #e8e8e8;
+  --cc-text-muted: #999;
+  --cc-text-dim: #666;
+  
+  /* Typography */
+  --cc-font-title: 'Bungee', system-ui, sans-serif;
+  --cc-font-body: 'Source Sans 3', system-ui, sans-serif;
+  --cc-font-mono: 'Roboto Mono', monospace;
 }
 
-.cc-panel-head{
-  padding:10px 12px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-  display:flex;
-  gap:10px;
-  align-items:center;
-  justify-content:space-between;
+/* ===== BASE TYPOGRAPHY ===== */
+body {
+  font-family: var(--cc-font-body);
+}
+
+/* ===== APP SHELL ===== */
+.cc-app-shell {
+  color: var(--cc-text);
+  font-family: var(--cc-font-body);
+  background: var(--cc-bg-dark);
 }
 
 /* ================================
    CC APP HEADER (GLOBAL)
    ================================ */
-
 .cc-app-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-
   padding: 1rem 1.25rem;
   margin-bottom: 1rem;
-
   background: linear-gradient(
     180deg,
     rgba(255,117,24,0.18),
     rgba(0,0,0,0)
   );
-
   border-bottom: 1px solid rgba(255,255,255,0.12);
 }
 
 .cc-app-title {
-  font-family: "Oswald", system-ui, sans-serif;
+  font-family: var(--cc-font-title);
   font-size: clamp(1.4rem, 3vw, 2rem);
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-weight: 400; /* Bungee is naturally bold */
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   color: #ff7518;
+  margin: 0;
 }
 
 .cc-app-subtitle {
+  font-family: var(--cc-font-body);
   font-size: 0.85rem;
   color: #aaa;
   margin-top: 0.15rem;
+  font-weight: 400;
 }
 
 /* Mobile tightening */
@@ -62,14 +85,13 @@
   }
 }
 
-/* ===============================
-   Coffin Canyon Base Panels
-   =============================== */
-
-.cc-panel {
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 6px;
+/* ===== PANELS ===== */
+.cc-panel { 
+  background: #151515;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 12px;
+  overflow: hidden;
+  color: #e8e8e8;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -77,16 +99,22 @@
 
 .cc-panel-head {
   padding: 10px 12px;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
   background: #161616;
 }
 
 .cc-panel-title {
-  font-weight: 700;
-  letter-spacing: 0.08em;
+  font-family: var(--cc-font-title);
+  font-weight: 400;
   text-transform: uppercase;
-  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  font-size: 12px;
   color: #ff7518;
+  margin: 0;
 }
 
 .cc-body {
@@ -95,103 +123,162 @@
   overflow: auto;
 }
 
+.cc-muted {
+  color: #9a9a9a;
+}
+
+/* ===== INPUTS ===== */
+.cc-input {
+  background: #101010;
+  border: 1px solid rgba(255,255,255,.12);
+  color: #e8e8e8;
+  font-family: var(--cc-font-body);
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+.cc-input:focus {
+  outline: none;
+  border-color: #ff7518;
+  box-shadow: 0 0 0 1px rgba(255,117,24,.35);
+}
+
+/* ===== LISTS ===== */
 .cc-list {
   padding: 8px;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.cc-muted {
-  color: #999;
+.cc-list-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid rgba(255,255,255,.10);
+  background: #101010;
+  color: #e8e8e8;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--cc-font-body);
 }
 
-
-.cc-panel-title{
-  font-weight:800;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  font-size:12px;
-  color:#ff7518;
+.cc-list-item:hover {
+  border-color: #ff7518;
+  background: #151515;
 }
 
-.cc-body{ padding:12px; }
-
-.cc-muted{ color:#9a9a9a; }
-
-.cc-input{
-  background:#101010;
-  border:1px solid rgba(255,255,255,.12);
-  color:#e8e8e8;
+.cc-list-item.active {
+  border-color: #ff7518;
+  box-shadow: 0 0 0 1px rgba(255,117,24,.35) inset;
+  background: #1a1510;
 }
 
-.cc-list{ padding:8px; display:flex; flex-direction:column; gap:8px; }
-
-.cc-list-item{
-  width:100%;
-  text-align:left;
-  border:1px solid rgba(255,255,255,.10);
-  background:#101010;
-  color:#e8e8e8;
-  border-radius:10px;
-  padding:10px;
-  cursor:pointer;
+.cc-list-title {
+  font-weight: 800;
+  font-size: 14px;
+  font-family: var(--cc-font-body);
 }
 
-.cc-list-item.active{
-  border-color:#ff7518;
-  box-shadow:0 0 0 1px rgba(255,117,24,.35) inset;
+.cc-list-sub {
+  color: #9a9a9a;
+  font-size: 12px;
+  margin-top: 2px;
+  font-family: var(--cc-font-body);
 }
 
-.cc-list-title{ font-weight:800; font-size:14px; }
-.cc-list-sub{ color:#9a9a9a; font-size:12px; margin-top:2px; }
-
-.cc-badge{
-  display:inline-block;
-  padding:2px 8px;
-  border-radius:999px;
-  border:1px solid rgba(255,117,24,.35);
-  color:#ff7518;
-  font-size:11px;
-  margin-left:6px;
+/* ===== BADGES ===== */
+.cc-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,117,24,.35);
+  color: #ff7518;
+  font-size: 11px;
+  margin-left: 6px;
+  font-family: var(--cc-font-mono);
 }
 
-.cc-callout{
-  border-left:3px solid #ff7518;
-  padding:10px 12px;
-  background:rgba(255,117,24,.08);
-  border-radius:10px;
+/* ===== CALLOUTS ===== */
+.cc-callout {
+  border-left: 3px solid #ff7518;
+  padding: 10px 12px;
+  background: rgba(255,117,24,.08);
+  border-radius: 10px;
+  font-family: var(--cc-font-body);
 }
 
-.cc-kv{
-  display:grid;
+/* ===== KEY-VALUE PAIRS ===== */
+.cc-kv {
+  display: grid;
   grid-template-columns: 90px 1fr;
-  gap:8px 10px;
+  gap: 8px 10px;
 }
 
-.cc-k{ color:#9a9a9a; font-size:12px; text-transform:uppercase; letter-spacing:.06em; }
-.cc-v{ font-weight:700; font-size:13px; }
-
-/* ===============================
-   Ability Dictionary (Bootstrap-aligned)
-   =============================== */
-
-.cc-ability-card{
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:10px;
-  background:#101010;
+.cc-k {
+  color: #9a9a9a;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-family: var(--cc-font-mono);
 }
 
-.cc-ability-meta{
-  color:#9a9a9a;
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.06em;
+.cc-v {
+  font-weight: 700;
+  font-size: 13px;
+  font-family: var(--cc-font-body);
 }
 
-.cc-ability-short{
-  font-size:.9rem;
+/* ===== ABILITY DICTIONARY ===== */
+.cc-ability-card {
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 10px;
+  background: #101010;
+  font-family: var(--cc-font-body);
 }
 
-.cc-ability-long{
-  font-size:.85rem;
-  opacity:.85;
+.cc-ability-meta {
+  color: #9a9a9a;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-family: var(--cc-font-mono);
+}
+
+.cc-ability-short {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.cc-ability-long {
+  font-size: 0.85rem;
+  opacity: 0.85;
+}
+
+/* ===== BUTTONS ===== */
+button, .btn {
+  font-family: var(--cc-font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn-outline-secondary {
+  font-family: var(--cc-font-mono);
+}
+
+/* ===== SECTION TITLES ===== */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--cc-font-title);
+  font-weight: 400;
+}
+
+/* Body text gets Source Sans Pro */
+p, li, span, div {
+  font-family: var(--cc-font-body);
+}
+
+/* Code and technical elements get Roboto Mono */
+code, pre, kbd, samp {
+  font-family: var(--cc-font-mono);
 }
