@@ -156,9 +156,6 @@ window.CC_APP = {
                 </div>
               </div>
               
-              <!-- Navigation breadcrumb -->
-              <div id="cc-breadcrumb" class="cc-breadcrumb"></div>
-              
               <!-- Main rule content -->
               <div id="cc-rule-detail" class="cc-body cc-rule-reader">
                 <div class="cc-muted">Select a rule from the table of contents.</div>
@@ -195,7 +192,6 @@ window.CC_APP = {
     const ctxEl = root.querySelector("#cc-rule-context");
     const contextPanelEl = root.querySelector("#cc-rules-context");
     const searchEl = root.querySelector("#cc-rule-search");
-    const breadcrumbEl = root.querySelector("#cc-breadcrumb");
     const navEl = root.querySelector("#cc-rule-nav");
     const prevBtnEl = root.querySelector("#cc-prev-btn");
     const nextBtnEl = root.querySelector("#cc-next-btn");
@@ -652,7 +648,6 @@ window.CC_APP = {
       if (!section || !section.meta) {
         detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
         ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
-        breadcrumbEl.innerHTML = '';
         navEl.classList.add('d-none');
         favoriteBtn.classList.add('d-none');
         return;
@@ -673,7 +668,6 @@ window.CC_APP = {
       
       if (!hasRealContent) {
         detailEl.innerHTML = `<div class="cc-muted">This section has no content yet.</div>`;
-        breadcrumbEl.innerHTML = '';
         navEl.classList.add('d-none');
         favoriteBtn.classList.add('d-none');
         contextPanelEl.style.display = 'none';
@@ -682,9 +676,6 @@ window.CC_APP = {
       }
       
       const formattedContent = renderContentSmart(meta, resolvedContent);
-
-      // ---- BREADCRUMB ----
-      breadcrumbEl.innerHTML = renderBreadcrumb(meta);
 
       // ---- FAVORITE BUTTON ----
       favoriteBtn.classList.remove('d-none');
@@ -706,16 +697,36 @@ window.CC_APP = {
       // ---- CONTEXT (show design_intent and children) ----
       let contextHtml = '';
       
-      // Add design_intent if it exists
-      if (resolvedContent && typeof resolvedContent === 'object' && resolvedContent.design_intent) {
-        let designIntentText = resolvedContent.design_intent;
-        
+      // Add design_intent if it exists - check multiple locations
+      let designIntentText = null;
+      
+      if (resolvedContent && typeof resolvedContent === 'object') {
+        // Check direct property
+        if (resolvedContent.design_intent) {
+          designIntentText = resolvedContent.design_intent;
+        }
+        // Check nested in meta
+        else if (resolvedContent.meta && resolvedContent.meta.design_intent) {
+          designIntentText = resolvedContent.meta.design_intent;
+        }
+        // Check in notes
+        else if (resolvedContent.designer_notes) {
+          designIntentText = resolvedContent.designer_notes;
+        }
+        // Check in description object
+        else if (resolvedContent.description && typeof resolvedContent.description === 'object' && resolvedContent.description.design_intent) {
+          designIntentText = resolvedContent.description.design_intent;
+        }
+      }
+      
+      if (designIntentText) {
         // Handle if design_intent is an object
         if (typeof designIntentText === 'object') {
           // Extract text from common properties
           designIntentText = designIntentText.text || 
                             designIntentText.description || 
                             designIntentText.note ||
+                            designIntentText.content ||
                             JSON.stringify(designIntentText, null, 2);
         }
         
@@ -820,12 +831,6 @@ window.CC_APP = {
       }
     });
 
-    breadcrumbEl.addEventListener('click', (e) => {
-      const btn = e.target.closest("button[data-id]");
-      if (!btn) return;
-      selectRule(btn.dataset.id);
-    });
-
     searchEl.addEventListener("input", () => {
       renderList(searchEl.value);
     });
@@ -835,7 +840,21 @@ window.CC_APP = {
       toggleFavorite(selectedId);
       const star = favoriteBtn.querySelector('.cc-star');
       star.textContent = isFavorite(selectedId) ? '★' : '☆';
+      
+      // Refresh the list to show/hide from favorites
       renderList(searchEl.value);
+      
+      // If we're on the favorites filter and just unstarred, this item should disappear from list
+      if (currentFilter === 'favorites' && !isFavorite(selectedId)) {
+        // The item was unstarred while viewing favorites - list will auto-update
+        // If the list is now empty, show a message
+        if (filteredIndex.length === 0) {
+          detailEl.innerHTML = `<div class="cc-muted">No starred rules yet. Click the ☆ icon on any rule to star it!</div>`;
+          contextPanelEl.style.display = 'none';
+          navEl.classList.add('d-none');
+          favoriteBtn.classList.add('d-none');
+        }
+      }
     });
 
     // Handle ability star clicks in main content
