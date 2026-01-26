@@ -129,8 +129,36 @@ async function selectRule(id) {
 
   let formattedContent = "";
 
+  // ---- RULES MASTER (container chapters like Core Mechanics) ----
+if (meta.type === "rules_master" && content) {
+  formattedContent = `
+    ${content.text?.long ? `<p>${content.text.long}</p>` : ""}
+
+    ${
+      content.sections
+        ? `
+          <div class="fw-bold small text-uppercase mt-4 mb-2">Sections</div>
+          <ul class="list-unstyled">
+            ${Object.values(content.sections)
+              .map(
+                (sec) => `
+                  <li class="mb-1">
+                    <button class="btn btn-link p-0" data-id="${sec._id}">
+                      ${sec.title}
+                    </button>
+                  </li>
+                `
+              )
+              .join("")}
+          </ul>
+        `
+        : ""
+    }
+  `;
+}
+
   // 1️⃣ Plain STRING content (Philosophy & Design)
-  if (typeof content === "string") {
+  else if (typeof content === "string") {
     formattedContent = `<p>${content}</p>`;
   }
 
