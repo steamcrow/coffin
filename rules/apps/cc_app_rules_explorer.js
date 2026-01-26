@@ -212,10 +212,30 @@ window.CC_APP = {
         .replace(/"/g, "&quot;")
         .replace(/'/g, "&#39;");
 
-    const titleize = (k) =>
-      String(k || "")
+    const titleize = (k) => {
+      const str = String(k || "");
+      
+      // Handle ability dictionary keys (e.g., "movement_abilities" -> "Movement Abilities")
+      if (str.includes('_abilities') || str.includes('_ability')) {
+        return str
+          .replace(/_abilities?/, '')
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (m) => m.toUpperCase()) + ' Abilities';
+      }
+      
+      // Handle dictionary keys
+      if (str.includes('_dictionary')) {
+        return str
+          .replace(/_dictionary/, '')
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (m) => m.toUpperCase()) + ' Dictionary';
+      }
+      
+      // Default titleize
+      return str
         .replace(/_/g, " ")
         .replace(/\b\w/g, (m) => m.toUpperCase());
+    };
 
     function getRulesRoot() {
       return (
@@ -290,18 +310,38 @@ window.CC_APP = {
     function renderList(filter = "") {
       const f = filter.trim().toLowerCase();
 
-      // Filter out excluded IDs
+      // Get all items from index
       let items = index.filter((it) => !EXCLUDED_IDS.includes(it.id));
+      
+      // Apply favorites filter FIRST (before other filters)
+      if (currentFilter === 'favorites') {
+        const favorites = getFavorites();
+        // Include items from index that are favorited
+        const indexFavorites = items.filter(it => favorites.includes(it.id));
+        
+        // Also create pseudo-items for favorited abilities that aren't in the main index
+        const abilityFavorites = favorites
+          .filter(fav => fav.startsWith('ability-'))
+          .map(fav => ({
+            id: fav,
+            title: titleize(fav.replace('ability-', '').replace(/-/g, ' ')),
+            type: 'ability'
+          }));
+        
+        items = [...indexFavorites, ...abilityFavorites];
+      }
       
       // Filter out items that have no real content (just meta/empty shells)
       items = items.filter(it => {
+        // Keep favorites always
+        if (currentFilter === 'favorites') return true;
+        
         // Keep it if it has children (parent sections)
         const children = helpers.getChildren(it.id);
         if (children && children.length > 0) return true;
         
         // Otherwise, it should have actual content to display
-        // This requires checking if the content is meaningful
-        return true; // For now, keep all leaf nodes - we'll handle empty content in selectRule
+        return true;
       });
 
       // Apply search filter
@@ -310,12 +350,6 @@ window.CC_APP = {
           const hay = `${it.title || ""} ${it.id || ""} ${it.type || ""}`.toLowerCase();
           return hay.includes(f);
         });
-      }
-
-      // Apply favorites filter
-      if (currentFilter === 'favorites') {
-        const favorites = getFavorites();
-        items = items.filter(it => favorites.includes(it.id));
       }
 
       filteredIndex = items;
@@ -458,9 +492,13 @@ window.CC_APP = {
       const headerTag = depth === 0 ? 'h5' : depth === 1 ? 'h6' : 'div';
       const headerClass = depth <= 1 ? 'cc-section-title' : 'cc-field-label';
 
-      if (hasTitle || depth === 0) {
+      // Only show title if it's not empty and not just repeating the label
+      if (hasTitle && (obj.title !== label || depth > 0)) {
         const displayTitle = obj.title || obj.name || titleize(label);
-        html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
+        // Don't show if the title is the same as what we're already rendering
+        if (displayTitle !== titleize(label) || depth > 0) {
+          html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
+        }
       }
 
       for (const field of PROSE_FIELDS) {
@@ -496,14 +534,24 @@ window.CC_APP = {
       ]);
 
       const remainingFields = Object.entries(obj)
-        .filter(([k, v]) => 
-          !processedFields.has(k) && 
-          !k.startsWith('_') &&
-          !k.toLowerCase().includes('id') &&  // Exclude any field with 'id' in the name
-          v !== undefined &&
-          v !== null &&
-          !(typeof v === 'string' && v.match(/^R-[A-Z]/))  // Exclude values that look like IDs (R-TURN, R-COMB, etc)
-        );
+        .filter(([k, v]) => {
+          // Exclude processed fields
+          if (processedFields.has(k)) return false;
+          
+          // Exclude fields starting with underscore
+          if (k.startsWith('_')) return false;
+          
+          // Exclude any field with 'id' in the name (case insensitive)
+          if (k.toLowerCase().includes('id')) return false;
+          
+          // Exclude undefined/null
+          if (v === undefined || v === null) return false;
+          
+          // Exclude string values that look like IDs (R-ANYTHING)
+          if (typeof v === 'string' && v.match(/^R-[A-Z]/)) return false;
+          
+          return true;
+        });
 
       if (remainingFields.length > 0) {
         html += '<div class="mb-3">';
@@ -638,6 +686,26 @@ window.CC_APP = {
 
     // ---- SELECT RULE ----
     async function selectRule(id) {
+      // Check if this is a subsection of the currently loaded rule
+      if (selectedId) {
+        const children = helpers.getChildren(selectedId);
+        const isChildOfCurrent = children.some(c => c.id === id);
+        
+        if (isChildOfCurrent) {
+          // Scroll to this subsection within the current content
+          const targetSection = detailEl.querySelector(`#section-${id}`);
+          if (targetSection) {
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Highlight briefly
+            targetSection.style.color = '#ff7518';
+            setTimeout(() => {
+              targetSection.style.color = '';
+            }, 2000);
+            return;
+          }
+        }
+      }
+      
       selectedId = id;
 
       detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
@@ -682,7 +750,7 @@ window.CC_APP = {
       const star = favoriteBtn.querySelector('.cc-star');
       star.textContent = isFavorite(id) ? '★' : '☆';
 
-      // ---- MAIN CONTENT (without displaying ID) ----
+      // ---- MAIN CONTENT (with anchor IDs for subsection navigation) ----
       const titleHtml = `
         <article class="cc-rule-article">
           <h2 class="cc-rule-title">${esc(meta.title || "")}</h2>
@@ -693,6 +761,16 @@ window.CC_APP = {
         </article>
       `;
       detailEl.innerHTML = titleHtml + formattedContent + closingHtml;
+      
+      // Add anchor IDs to all subsection headers for smooth scrolling
+      if (children.length > 0) {
+        children.forEach(child => {
+          const childElement = detailEl.querySelector(`h2, h3, h4, h5, h6`);
+          if (childElement && childElement.textContent.trim() === child.title) {
+            childElement.id = `section-${child.id}`;
+          }
+        });
+      }
 
       // ---- CONTEXT (show design_intent and children) ----
       let contextHtml = '';
