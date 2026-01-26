@@ -621,15 +621,16 @@ window.CC_APP = {
       star.textContent = isFavorite(id) ? '★' : '☆';
 
       // ---- MAIN CONTENT ----
-      detailEl.innerHTML = `
+      const titleHtml = `
         <article class="cc-rule-article">
           <h2 class="cc-rule-title">${esc(meta.title || "")}</h2>
-          
           <div class="cc-rule-content">
-            ${formattedContent}
+      `;
+      const closingHtml = `
           </div>
         </article>
       `;
+      detailEl.innerHTML = titleHtml + formattedContent + closingHtml;
 
       // ---- CONTEXT (hide if no children) ----
       if (children.length > 0) {
