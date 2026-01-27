@@ -154,21 +154,26 @@ window.CC_APP = {
               <!-- Main rule content -->
               <div id="cc-rule-detail" class="cc-body cc-rule-reader">
                 <div class="mb-4">
-                  <h2 class="cc-rule-title">👋 Welcome to the Rules Explorer</h2>
+                  <h2 class="cc-rule-title" style="font-size: 2.5rem; margin-bottom: 1rem;">COFFIN CANYON</h2>
                   
-                  <div class="cc-callout mb-4">
-                    <h4 style="color: #ff7518; margin-top: 0;">How to Use This Tool</h4>
-                    <p><strong>Navigate:</strong> Click any rule in the sidebar to view it in the center panel.</p>
-                    <p><strong>Star Favorites:</strong> Click the ☆ icon to save rules, subsections, or abilities you reference often. Find them all in the "★ Starred" filter.</p>
-                    <p><strong>Search:</strong> Use the search box to quickly find any rule by name or keyword.</p>
-                    <p><strong>Subsections:</strong> When viewing a rule with subsections, click them in the right panel to scroll directly to that part.</p>
-                    <p><strong>Print:</strong> Click the Print button in the header to generate a clean, formatted rulebook.</p>
+                  <div style="background: rgba(255,117,24,0.1); border-left: 4px solid #ff7518; padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
+                    <h3 style="color: #ff7518; margin-top: 0;">What This Game Is</h3>
+                    <p style="font-size: 1.1rem; line-height: 1.8;">
+                      Coffin Canyon is a skirmish game about bad ground, bad choices, and things that do not stay dead. 
+                      It is set in a poisoned canyon where industry, monsters, and desperate people collide. 
+                      Victory comes from pressure, positioning, and knowing when to run — not from perfect plans.
+                    </p>
+                    <p style="font-size: 1.1rem; font-style: italic; color: #ff7518; margin-bottom: 0;">This is a game of escalation.</p>
                   </div>
                   
-                  <h4 style="color: #ff7518;">About Coffin Canyon</h4>
-                  <p>Coffin Canyon is a tactical tabletop game where players command factions of monsters, rangers, and more in strategic battles.</p>
-                  <p>This Rules Explorer provides interactive access to all game mechanics, abilities, and reference material.</p>
-                  <p><strong>Ready to start?</strong> Click "Core Mechanics" in the sidebar to begin!</p>
+                  <h3 style="color: #ff7518; margin-top: 2rem;">How to Use This Tool</h3>
+                  <p><strong>Navigate:</strong> Click any rule in the sidebar to view it in the center panel.</p>
+                  <p><strong>Star Favorites:</strong> Click the ☆ icon to save rules, subsections, or abilities you reference often. Find them all in the "★ Starred" filter.</p>
+                  <p><strong>Search:</strong> Use the search box to quickly find any rule by name or keyword.</p>
+                  <p><strong>Subsections:</strong> When viewing a rule with subsections, click them in the right panel to scroll directly to that part.</p>
+                  <p style="margin-bottom: 2rem;"><strong>Print:</strong> Click the Print button in the header to generate a clean, formatted rulebook.</p>
+                  
+                  <p style="font-size: 1.1rem;"><strong>Ready to start?</strong> Click "Core Mechanics" in the sidebar to begin!</p>
                 </div>
               </div>
               
@@ -415,14 +420,23 @@ window.CC_APP = {
     function renderProseField(label, value) {
       if (!value) return '';
       
+      // Skip 'short' entirely - we prefer 'long'
+      if (label === 'short') return '';
+      
       let text = '';
       if (typeof value === 'string') {
         text = value;
       } else if (value && typeof value === 'object') {
-        text = value.text || value.long || value.short || value.description || '';
+        // Prefer long over short
+        text = value.text || value.long || value.description || value.short || '';
       }
 
       if (!text) return '';
+
+      // Don't show labels for 'long' - just render the content
+      if (label === 'long') {
+        return `<p class="mb-3">${esc(text)}</p>`;
+      }
 
       const className = label.toLowerCase().includes('philosophy') ? 'fw-semibold' : '';
       return `
@@ -553,10 +567,13 @@ window.CC_APP = {
           
           // Exclude string values that look like IDs (R- pattern or long alphanumeric)
           if (typeof v === 'string') {
-            // R-ANYTHING pattern
-            if (v.match(/^R-[A-Z]/)) return false;
+            const trimmedValue = v.trim();
+            // R- pattern with letters, numbers, hyphens (R-Core-04A, R-MORALE-02B, R-ABIL-TIME-OPA)
+            if (trimmedValue.match(/^R-[A-Za-z0-9-]+$/)) return false;
             // UUID-like patterns
-            if (v.match(/^[A-Z0-9]{8,}-/)) return false;
+            if (trimmedValue.match(/^[A-Z0-9]{8,}-/)) return false;
+            // Very short values (often codes)
+            if (trimmedValue.length < 3) return false;
           }
           
           return true;
@@ -892,46 +909,60 @@ window.CC_APP = {
     });
 
     // ---- EVENTS ----
-    listEl.addEventListener("click", (e) => {
+    listEl.addEventListener("click", async (e) => {
       const btn = e.target.closest("button[data-id]");
       if (!btn) return;
       
       const clickedId = btn.dataset.id;
       
-      // Handle ability clicks - find parent section
+      // Handle ability clicks - find and load parent section, then scroll to ability
       if (clickedId.startsWith('ability-')) {
-        // Extract ability name
-        const abilityName = clickedId.replace('ability-', '');
+        const abilityName = clickedId.replace('ability-', '').replace(/-/g, ' ');
         
-        // Find the section that contains this ability
-        // Look through all sections for ability dictionaries
-        const abilitySection = index.find(it => 
-          it.type === 'ability_dictionary' || 
-          it.id.includes('ability') ||
-          it.title?.toLowerCase().includes('ability')
+        // Search through all rules to find ability dictionaries
+        const abilityDictId = index.find(it => 
+          it.title && (
+            it.title.toLowerCase().includes('ability dictionary') ||
+            it.title.toLowerCase().includes('abilities') ||
+            it.type === 'ability_dictionary'
+          )
         );
         
-        if (abilitySection) {
-          selectRule(abilitySection.id);
-          // After loading, scroll to the ability
+        if (abilityDictId) {
+          // Load the ability dictionary section
+          await selectRule(abilityDictId.id);
+          
+          // Wait a moment for rendering, then scroll to the specific ability
           setTimeout(() => {
-            const abilityCard = Array.from(detailEl.querySelectorAll('.cc-ability-card'))
-              .find(card => card.textContent.toLowerCase().includes(abilityName.replace(/-/g, ' ')));
-            if (abilityCard) {
-              abilityCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              abilityCard.style.borderColor = '#ff7518';
+            const abilityCards = detailEl.querySelectorAll('.cc-ability-card');
+            const targetCard = Array.from(abilityCards).find(card => 
+              card.textContent.toLowerCase().includes(abilityName.toLowerCase())
+            );
+            
+            if (targetCard) {
+              targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              // Highlight it
+              targetCard.style.borderColor = '#ff7518';
+              targetCard.style.boxShadow = '0 0 0 2px rgba(255,117,24,0.3)';
               setTimeout(() => {
-                abilityCard.style.borderColor = '';
+                targetCard.style.borderColor = '';
+                targetCard.style.boxShadow = '';
               }, 2000);
             }
           }, 500);
         } else {
-          detailEl.innerHTML = `<div class="cc-muted">Could not find the section containing "${titleize(abilityName)}". Try searching for it!</div>`;
+          detailEl.innerHTML = `
+            <div class="cc-muted p-4">
+              <p>Could not find the section containing the ability "${titleize(abilityName)}".</p>
+              <p>Try using the search box to find it!</p>
+            </div>
+          `;
         }
         return;
       }
       
-      selectRule(clickedId);
+      // Handle normal rule clicks
+      await selectRule(clickedId);
     });
 
     ctxEl.addEventListener("click", (e) => {
