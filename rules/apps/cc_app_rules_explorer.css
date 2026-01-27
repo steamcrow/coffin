@@ -19,13 +19,6 @@
 /* Sidebar (TOC) */
 .cc-rules-sidebar {
   min-width: 0;
-  transition: transform 0.3s ease;
-}
-
-.cc-rules-sidebar.collapsed {
-  transform: translateX(-280px);
-  position: absolute;
-  z-index: 10;
 }
 
 /* Main content area */
@@ -134,15 +127,6 @@
 
 .btn-link:hover .cc-star {
   transform: scale(1.2);
-}
-
-/* ===== Sidebar Toggle ===== */
-.cc-sidebar-toggle-icon {
-  font-size: 1.5rem;
-  font-weight: bold;
-  line-height: 1;
-  display: inline-block;
-  transition: transform 0.3s ease;
 }
 
 /* ===== Responsive Design ===== */
