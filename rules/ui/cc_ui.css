@@ -177,15 +177,24 @@ body {
   font-family: var(--cc-font-body);
 }
 
+/* Zebra striping */
+.cc-list-item:nth-child(even) {
+  background: #0d0d0d;
+}
+
+.cc-list-item:nth-child(odd) {
+  background: #121212;
+}
+
 .cc-list-item:hover {
   border-color: #ff7518;
-  background: #151515;
+  background: #1a1510 !important;
 }
 
 .cc-list-item.active {
   border-color: #ff7518;
   box-shadow: 0 0 0 1px rgba(255,117,24,.35) inset;
-  background: #1a1510;
+  background: #1f1810 !important;
 }
 
 .cc-list-title {
