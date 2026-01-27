@@ -124,14 +124,15 @@ window.CC_APP = {
                 <div class="cc-panel-title mb-2">Rules</div>
                 
                 <!-- Filter tabs -->
-                <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                <div class="btn-group btn-group-sm w-100 mb-3" role="group">
                   <button type="button" class="btn btn-outline-secondary active" data-filter="all">All</button>
                   <button type="button" class="btn btn-outline-secondary" data-filter="favorites">★ Starred</button>
                 </div>
                 
+                <!-- Search on its own row -->
                 <input
                   id="cc-rule-search"
-                  class="form-control form-control-sm cc-input"
+                  class="form-control form-control-sm cc-input w-100"
                   placeholder="Search rules..."
                 />
               </div>
@@ -166,11 +167,69 @@ window.CC_APP = {
                     <p style="font-size: 1.1rem; font-style: italic; color: #ff7518; margin-bottom: 0;">This is a game of escalation.</p>
                   </div>
                   
+                  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
+                    <h3 style="color: #ff7518; margin-top: 0;">Player Agency Over Optimization</h3>
+                    <p>Coffin Canyon rewards:</p>
+                    <ul>
+                      <li>Positioning</li>
+                      <li>Timing</li>
+                      <li>Risk assessment</li>
+                      <li>Knowing when to retreat</li>
+                    </ul>
+                    <p>It does not reward:</p>
+                    <ul>
+                      <li>Perfect list building</li>
+                      <li>Static gunlines</li>
+                      <li>Passive play</li>
+                    </ul>
+                    <p style="font-style: italic; color: #ff7518;">If you stand still too long, the Canyon will notice.</p>
+                  </div>
+                  
+                  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
+                    <h3 style="color: #ff7518; margin-top: 0;">The Role of the Game Warden (Optional)</h3>
+                    <p>Coffin Canyon does not require a Game Warden. Some games will include one. Some will not.</p>
+                    <p>When present, the Game Warden's role is:</p>
+                    <ul>
+                      <li>Escalation</li>
+                      <li>Consequence</li>
+                      <li>Rules judgements</li>
+                      <li>Atmosphere</li>
+                      <li>Running NPC units</li>
+                    </ul>
+                    <p>They do not override rules. They do not "balance" the game.</p>
+                    <p style="font-style: italic;">They reveal what the Canyon has been waiting to do.</p>
+                  </div>
+                  
+                  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
+                    <h3 style="color: #ff7518; margin-top: 0;">What the Rules Assume</h3>
+                    <p>The rules assume:</p>
+                    <ul>
+                      <li>Players agree on terrain intent during setup</li>
+                      <li>Scenarios define objectives and pressure</li>
+                      <li>Ambiguity is resolved quickly and fairly</li>
+                    </ul>
+                    <p>If a situation is unclear:</p>
+                    <ul>
+                      <li>Follow the scenario</li>
+                      <li>Then follow the terrain</li>
+                      <li>Then roll a die and move on</li>
+                    </ul>
+                    <p style="font-style: italic;">Momentum matters more than precision.</p>
+                  </div>
+                  
+                  <div style="background: rgba(255,117,24,0.1); border-left: 4px solid #ff7518; padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
+                    <h3 style="color: #ff7518; margin-top: 0;">One Final Truth</h3>
+                    <p style="font-size: 1.1rem; line-height: 1.8;">
+                      Coffin Canyon is not about winning clean. It is about getting out alive, stealing everything not nailed down, 
+                      or hunting for monster mort.
+                    </p>
+                    <p style="font-size: 1.1rem; font-style: italic;">(Depending on your Faction, of course.)</p>
+                  </div>
+                  
                   <h3 style="color: #ff7518; margin-top: 2rem;">How to Use This Tool</h3>
                   <p><strong>Navigate:</strong> Click any rule in the sidebar to view it in the center panel.</p>
                   <p><strong>Star Favorites:</strong> Click the ☆ icon to save rules, subsections, or abilities you reference often. Find them all in the "★ Starred" filter.</p>
                   <p><strong>Search:</strong> Use the search box to quickly find any rule by name or keyword.</p>
-                  <p><strong>Subsections:</strong> When viewing a rule with subsections, click them in the right panel to scroll directly to that part.</p>
                   <p style="margin-bottom: 2rem;"><strong>Print:</strong> Click the Print button in the header to generate a clean, formatted rulebook.</p>
                   
                   <p style="font-size: 1.1rem;"><strong>Ready to start?</strong> Click "Core Mechanics" in the sidebar to begin!</p>
@@ -420,8 +479,8 @@ window.CC_APP = {
     function renderProseField(label, value) {
       if (!value) return '';
       
-      // Skip 'short' entirely - we prefer 'long'
-      if (label === 'short') return '';
+      // Skip 'short' and 'text' entirely - we prefer 'long' and 'text' is generic
+      if (label === 'short' || label === 'text') return '';
       
       let text = '';
       if (typeof value === 'string') {
@@ -433,8 +492,8 @@ window.CC_APP = {
 
       if (!text) return '';
 
-      // Don't show labels for 'long' - just render the content
-      if (label === 'long') {
+      // Don't show labels for 'long' or 'text' - just render the content
+      if (label === 'long' || label === 'text') {
         return `<p class="mb-3">${esc(text)}</p>`;
       }
 
@@ -509,11 +568,16 @@ window.CC_APP = {
       const headerTag = depth === 0 ? 'h5' : depth === 1 ? 'h6' : 'div';
       const headerClass = depth <= 1 ? 'cc-section-title' : 'cc-field-label';
 
-      // Only show title if it's not empty and not just repeating the label
-      if (hasTitle && (obj.title !== label || depth > 0)) {
+      // Only show title if it's meaningful and not redundant
+      if (hasTitle) {
         const displayTitle = obj.title || obj.name || titleize(label);
-        // Don't show if the title is the same as what we're already rendering
-        if (displayTitle !== titleize(label) || depth > 0) {
+        const labelTitle = titleize(label);
+        
+        // Skip if title is the same as the label (duplicate)
+        if (displayTitle.toLowerCase() === labelTitle.toLowerCase()) {
+          // Don't show duplicate title
+        } else if (depth > 0) {
+          // Show sub-section titles
           html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
         }
       }
@@ -547,7 +611,7 @@ window.CC_APP = {
         ...PROSE_FIELDS,
         ...LIST_FIELDS,
         ...NESTED_FIELDS,
-        'title', 'name', '_id', 'id', 'Id', 'ID', 'type', 'design_intent', 'designer_notes'
+        'title', 'Title', 'name', '_id', 'id', 'Id', 'ID', 'type', 'design_intent', 'designer_notes'
       ]);
 
       const remainingFields = Object.entries(obj)
@@ -917,26 +981,36 @@ window.CC_APP = {
       
       // Handle ability clicks - find and load parent section, then scroll to ability
       if (clickedId.startsWith('ability-')) {
-        const abilityName = clickedId.replace('ability-', '').replace(/-/g, ' ');
+        const abilityName = clickedId.replace('ability-', '').replace(/-/g, ' ').toLowerCase();
         
-        // Search through all rules to find ability dictionaries
-        const abilityDictId = index.find(it => 
-          it.title && (
-            it.title.toLowerCase().includes('ability dictionary') ||
-            it.title.toLowerCase().includes('abilities') ||
-            it.type === 'ability_dictionary'
-          )
-        );
+        // Search through ALL sections to find which one contains this ability
+        let foundSection = null;
         
-        if (abilityDictId) {
-          // Load the ability dictionary section
-          await selectRule(abilityDictId.id);
+        for (const item of index) {
+          try {
+            const section = await helpers.getRuleSection(item.id);
+            if (section && section.content) {
+              const contentStr = JSON.stringify(section.content).toLowerCase();
+              if (contentStr.includes(abilityName)) {
+                foundSection = item.id;
+                break;
+              }
+            }
+          } catch (e) {
+            // Skip sections that error
+            continue;
+          }
+        }
+        
+        if (foundSection) {
+          // Load the section that contains this ability
+          await selectRule(foundSection);
           
-          // Wait a moment for rendering, then scroll to the specific ability
+          // Wait for rendering, then scroll to the specific ability
           setTimeout(() => {
             const abilityCards = detailEl.querySelectorAll('.cc-ability-card');
             const targetCard = Array.from(abilityCards).find(card => 
-              card.textContent.toLowerCase().includes(abilityName.toLowerCase())
+              card.textContent.toLowerCase().includes(abilityName)
             );
             
             if (targetCard) {
