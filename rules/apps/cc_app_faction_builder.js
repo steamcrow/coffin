@@ -38,6 +38,20 @@ window.CC_APP = {
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
+    // ---- LOAD STORAGE HELPERS ----
+    if (!window.CC_STORAGE) {
+      console.log('💾 Loading Storage Helpers...');
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
+        .then(res => res.text())
+        .then(code => {
+          const script = document.createElement('script');
+          script.textContent = code;
+          document.head.appendChild(script);
+          console.log('✅ Storage Helpers loaded!');
+        })
+        .catch(err => console.error('❌ Storage Helpers load failed:', err));
+    }
+
     const helpers = ctx?.helpers;
 
     if (!helpers) {
@@ -73,6 +87,14 @@ window.CC_APP = {
       { id: 'monsters', title: 'Monsters', file: 'faction-monsters-v2.json' },
       { id: 'shine_riders', title: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
     ];
+
+    const FACTION_TITLES = {
+      monster_rangers: 'Monster Rangers',
+      liberty_corps: 'Liberty Corps',
+      monsterology: 'Monsterology',
+      monsters: 'Monsters',
+      shine_riders: 'Shine Riders'
+    };
 
     async function loadFaction(factionId) {
       const factionInfo = FACTION_FILES.find(f => f.id === factionId);
@@ -577,6 +599,9 @@ window.CC_APP = {
       state.rosterName = name;
     };
 
+    // ================================
+    // LOCAL FILE IMPORT/EXPORT
+    // ================================
     window.exportRoster = function() {
       const exportData = {
         name: state.rosterName,
@@ -635,6 +660,273 @@ window.CC_APP = {
     };
 
     // ================================
+    // CLOUD STORAGE
+    // ================================
+    window.saveToCloud = async function() {
+      try {
+        if (!window.CC_STORAGE) {
+          alert("Cloud storage not available. Please refresh the page.");
+          return;
+        }
+
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (!auth.loggedIn) {
+          alert("Please sign in to save rosters to the cloud!");
+          return;
+        }
+
+        if (!state.rosterName || state.rosterName.trim() === "") {
+          alert("Please give your roster a name first!");
+          return;
+        }
+
+        const exportData = {
+          name: state.rosterName,
+          faction: state.currentFaction,
+          budget: state.budget,
+          roster: state.roster,
+          totalCost: calculateTotalCost(),
+          savedAt: new Date().toISOString()
+        };
+
+        const jsonString = JSON.stringify(exportData, null, 2);
+        const result = await window.CC_STORAGE.saveDocument(state.rosterName, jsonString);
+        
+        if (result.success) {
+          const action = result.action === 'created' ? 'saved' : 'updated';
+          alert(`✓ Roster "${state.rosterName}" ${action} to cloud!`);
+        }
+      } catch (error) {
+        console.error('Save error:', error);
+        if (error.message === 'Not logged in') {
+          alert('Please sign in to save rosters!');
+        } else {
+          alert('Error saving roster: ' + error.message);
+        }
+      }
+    };
+
+    window.loadFromCloud = async function() {
+      try {
+        if (!window.CC_STORAGE) {
+          alert("Cloud storage not available. Please refresh the page.");
+          return;
+        }
+
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (!auth.loggedIn) {
+          alert("Please sign in to load rosters from the cloud!");
+          return;
+        }
+
+        const docs = await window.CC_STORAGE.loadDocumentList();
+        
+        if (!docs || docs.length === 0) {
+          alert("You don't have any saved rosters yet!");
+          return;
+        }
+
+        const enriched = await Promise.all(
+          docs.map(async (doc) => {
+            try {
+              const loaded = await window.CC_STORAGE.loadDocument(doc.id);
+              const parsed = JSON.parse(loaded.json);
+              return {
+                id: doc.id,
+                name: parsed.name || doc.name.replace('.json', ''),
+                faction: parsed.faction || 'monster_rangers',
+                budget: parsed.budget || 0,
+                totalCost: parsed.totalCost || 0,
+                write_date: doc.write_date
+              };
+            } catch (e) {
+              return {
+                id: doc.id,
+                name: doc.name.replace('.json', ''),
+                faction: 'monster_rangers',
+                budget: 0,
+                totalCost: 0,
+                write_date: doc.write_date
+              };
+            }
+          })
+        );
+
+        showCloudRosterList(enriched);
+      } catch (error) {
+        console.error('Load error:', error);
+        if (error.message === 'Not logged in') {
+          alert('Please sign in to load rosters!');
+        } else {
+          alert('Error loading rosters: ' + error.message);
+        }
+      }
+    };
+
+    window.loadCloudRoster = async function(docId) {
+      try {
+        if (!window.CC_STORAGE) {
+          alert("Cloud storage not available. Please refresh the page.");
+          return;
+        }
+
+        const loaded = await window.CC_STORAGE.loadDocument(docId);
+        const parsed = JSON.parse(loaded.json);
+        
+        await switchFaction(parsed.faction);
+        
+        state.rosterName = parsed.name || 'Imported Roster';
+        state.budget = parsed.budget || 500;
+        state.roster = parsed.roster || [];
+        
+        const nameInput = document.getElementById('cc-roster-name');
+        if (nameInput) nameInput.value = state.rosterName;
+        
+        const budgetSelect = document.getElementById('cc-budget-selector');
+        if (budgetSelect) budgetSelect.value = state.budget;
+        
+        closeCloudRosterList();
+        render();
+        
+        alert(`✓ Loaded roster: ${state.rosterName}`);
+      } catch (error) {
+        console.error('Load error:', error);
+        alert('Error loading roster: ' + error.message);
+      }
+    };
+
+    window.deleteCloudRoster = async function(docId) {
+      if (!confirm('Are you sure you want to delete this roster?')) return;
+      
+      try {
+        if (!window.CC_STORAGE) {
+          alert("Cloud storage not available. Please refresh the page.");
+          return;
+        }
+
+        await window.CC_STORAGE.deleteDocument(docId);
+        closeCloudRosterList();
+        
+        setTimeout(() => {
+          loadFromCloud();
+        }, 300);
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Error deleting roster: ' + error.message);
+      }
+    };
+
+    window.shareRoster = function() {
+      if (!window.CC_STORAGE) {
+        alert("Sharing not available. Please refresh the page.");
+        return;
+      }
+
+      const exportData = {
+        name: state.rosterName,
+        faction: state.currentFaction,
+        budget: state.budget,
+        roster: state.roster,
+        totalCost: calculateTotalCost(),
+        sharedAt: new Date().toISOString()
+      };
+
+      const jsonString = JSON.stringify(exportData);
+      const shareUrl = window.CC_STORAGE.createShareUrl(jsonString);
+      
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        alert("✓ Share link copied to clipboard!");
+      }).catch(() => {
+        prompt("Copy this link to share your roster:", shareUrl);
+      });
+    };
+
+    function showCloudRosterList(rosters) {
+      closeCloudRosterList();
+
+      const panel = document.createElement('div');
+      panel.id = 'cloud-roster-panel';
+      panel.className = 'cc-slide-panel';
+
+      panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+          <h2><i class="fa fa-cloud"></i> SAVED ROSTERS</h2>
+          <button onclick="closeCloudRosterList()" class="cc-panel-close-btn">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+
+        <div class="cc-roster-list" style="padding: 1rem; max-height: calc(100vh - 100px); overflow-y: auto;">
+          ${rosters.map(r => `
+            <div class="cc-saved-roster-item" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+              <div class="cc-saved-roster-header" style="margin-bottom: 0.5rem;">
+                <span class="cc-faction-type" style="color: var(--cc-primary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+                  ${FACTION_TITLES[r.faction] || r.faction}
+                </span>
+              </div>
+
+              <div class="cc-saved-roster-name" style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">
+                ${esc(r.name)}
+              </div>
+
+              <div class="cc-saved-roster-meta" style="font-size: 0.85rem; color: #999; margin-bottom: 1rem;">
+                💰 ${r.totalCost} / ${r.budget > 0 ? r.budget + ' ₤' : 'UNLIMITED'} · 
+                ${new Date(r.write_date).toLocaleDateString()}
+              </div>
+
+              <div class="cc-saved-roster-actions" style="display: flex; gap: 0.5rem;">
+                <button onclick="loadCloudRoster(${r.id})" class="btn btn-sm btn-warning">
+                  <i class="fa fa-folder-open"></i> LOAD
+                </button>
+                <button onclick="deleteCloudRoster(${r.id})" class="btn btn-sm btn-danger">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      document.body.appendChild(panel);
+      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    }
+
+    window.closeCloudRosterList = function() {
+      const panel = document.getElementById('cloud-roster-panel');
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(() => panel.remove(), 300);
+      }
+    };
+
+    function checkSharedRoster() {
+      if (!window.CC_STORAGE) return;
+      
+      const sharedData = window.CC_STORAGE.getSharedData();
+      if (sharedData) {
+        try {
+          const parsed = JSON.parse(sharedData);
+          switchFaction(parsed.faction).then(() => {
+            state.rosterName = parsed.name || 'Shared Roster';
+            state.budget = parsed.budget || 500;
+            state.roster = parsed.roster || [];
+            
+            const nameInput = document.getElementById('cc-roster-name');
+            if (nameInput) nameInput.value = state.rosterName;
+            
+            const budgetSelect = document.getElementById('cc-budget-selector');
+            if (budgetSelect) budgetSelect.value = state.budget;
+            
+            render();
+            alert('✓ Loaded shared roster!');
+          });
+        } catch (e) {
+          console.error('Failed to load shared roster:', e);
+        }
+      }
+    }
+
+    // ================================
     // APP SHELL
     // ================================
     root.innerHTML = `
@@ -645,13 +937,22 @@ window.CC_APP = {
             <h1 class="cc-app-title">Faction Builder</h1>
             <div class="cc-app-subtitle">Build Your Coffin Canyon Roster</div>
           </div>
-          <div class="d-flex align-items-center gap-3">
+          <div class="d-flex align-items-center gap-2">
             <div id="cc-budget-display" style="font-size: 1.5rem; font-weight: 700;">0 ₤</div>
-            <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('roster-import').click()">
-              <i class="fa fa-upload"></i> Import
+            <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()" title="Load from Cloud">
+              <i class="fa fa-cloud-download"></i>
             </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="exportRoster()">
-              <i class="fa fa-download"></i> Export
+            <button class="btn btn-sm btn-outline-secondary" onclick="saveToCloud()" title="Save to Cloud">
+              <i class="fa fa-cloud-upload"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="shareRoster()" title="Share Roster">
+              <i class="fa fa-share"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('roster-import').click()" title="Import File">
+              <i class="fa fa-upload"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportRoster()" title="Export File">
+              <i class="fa fa-download"></i>
             </button>
           </div>
         </div>
@@ -716,6 +1017,10 @@ window.CC_APP = {
       </div>
     `;
 
+    // ================================
+    // INITIALIZE
+    // ================================
+    checkSharedRoster();
     render();
     console.log("✅ Faction Builder mounted");
   }
