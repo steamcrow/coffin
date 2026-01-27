@@ -62,8 +62,12 @@ window.CC_APP = {
       roster: [],
       budget: 500,
       selectedUnitId: null,
-      builderMode: null, // 'library' or 'roster'
-      builderTarget: null // unit name or roster id
+      builderMode: null,
+      builderTarget: null,
+      builderConfig: {
+        upgrades: [],
+        weaponProperties: []
+      }
     };
 
     // ================================
@@ -105,6 +109,7 @@ window.CC_APP = {
         state.selectedUnitId = null;
         state.builderMode = null;
         state.builderTarget = null;
+        state.builderConfig = { upgrades: [], weaponProperties: [] };
         render();
       }
     }
@@ -126,8 +131,53 @@ window.CC_APP = {
       return state.roster.reduce((sum, item) => sum + (item.totalCost || 0), 0);
     }
 
+    function calculateUnitCost(baseUnit, config) {
+      let cost = baseUnit.cost || 0;
+      
+      if (config.upgrades) {
+        config.upgrades.forEach(u => {
+          cost += u.cost || 0;
+        });
+      }
+      
+      if (config.weaponProperties) {
+        config.weaponProperties.forEach(wp => {
+          cost += wp.cost || 0;
+        });
+      }
+      
+      return cost;
+    }
+
     function generateId() {
       return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function buildStatBadges(unit) {
+      return `
+        <div class="stat-badge-flex">
+          <div class="cc-stat-badge stat-q-border">
+            <span class="cc-stat-label stat-q">Q</span>
+            <span class="cc-stat-value">${unit.quality}+</span>
+          </div>
+          <div class="cc-stat-badge stat-d-border">
+            <span class="cc-stat-label stat-d">D</span>
+            <span class="cc-stat-value">${unit.defense}+</span>
+          </div>
+          ${unit.courage ? `
+            <div class="cc-stat-badge stat-m-border">
+              <span class="cc-stat-label stat-m">C</span>
+              <span class="cc-stat-value">${unit.courage}+</span>
+            </div>
+          ` : ''}
+          ${unit.speed ? `
+            <div class="cc-stat-badge stat-r-border">
+              <span class="cc-stat-label stat-r">SPD</span>
+              <span class="cc-stat-value">${unit.speed}"</span>
+            </div>
+          ` : ''}
+        </div>
+      `;
     }
 
     // ================================
@@ -148,8 +198,8 @@ window.CC_APP = {
           <div class="cc-list-item" onclick="selectLibraryUnit('${esc(unit.name)}')">
             <div class="d-flex justify-content-between align-items-start">
               <div>
-                <div class="fw-bold">${esc(unit.name)}</div>
-                <div class="small cc-muted">${esc(unit.type)}</div>
+                <div class="cc-list-title">${esc(unit.name)}</div>
+                <div class="cc-list-sub">${esc(unit.type)}</div>
               </div>
               <div class="fw-bold" style="color: var(--cc-primary)">${unit.cost} ₤</div>
             </div>
@@ -166,11 +216,11 @@ window.CC_APP = {
       return state.roster.map(item => {
         const isSelected = state.selectedUnitId === item.id;
         return `
-          <div class="cc-list-item ${isSelected ? 'cc-item-active' : ''}" onclick="selectRosterUnit('${item.id}')">
+          <div class="cc-list-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
             <div class="d-flex justify-content-between align-items-start">
               <div style="flex: 1">
-                <div class="fw-bold">${esc(item.name)}</div>
-                <div class="small cc-muted">${esc(item.type)}</div>
+                <div class="cc-list-title">${esc(item.name)}</div>
+                <div class="cc-list-sub">${esc(item.type)}</div>
               </div>
               <div class="d-flex align-items-center gap-2">
                 <div class="fw-bold" style="color: var(--cc-primary)">${item.totalCost} ₤</div>
@@ -197,18 +247,22 @@ window.CC_APP = {
       const faction = state.factionData[state.currentFaction];
       if (!faction) return '';
 
-      let unit;
+      let unit, config;
+      
       if (state.builderMode === 'library') {
         unit = faction.units.find(u => u.name === state.builderTarget);
+        config = state.builderConfig;
       } else {
         const rosterItem = state.roster.find(r => r.id === state.builderTarget);
         if (rosterItem) {
           unit = faction.units.find(u => u.name === rosterItem.unitName);
+          config = rosterItem.config || { upgrades: [], weaponProperties: [] };
         }
       }
 
       if (!unit) return '';
 
+      const totalCost = calculateUnitCost(unit, config);
       const modeLabel = state.builderMode === 'library' 
         ? '<i class="fa fa-plus-circle"></i> NEW UNIT'
         : '<i class="fa fa-edit"></i> EDITING ROSTER UNIT';
@@ -219,24 +273,24 @@ window.CC_APP = {
           
           <div class="detail-header">
             <div class="u-name">${esc(unit.name)}</div>
-            <div style="color: var(--cc-primary); font-weight: 800; font-size: 18px;">${unit.cost} ₤</div>
+            <div style="color: var(--cc-primary); font-weight: 800; font-size: 18px;">${totalCost} ₤</div>
           </div>
           
           <div class="u-type">${esc(unit.type)}</div>
           
-          <div class="stat-badge-flex">
-            <div class="stat-badge">Q${unit.quality}+</div>
-            <div class="stat-badge">D${unit.defense}+</div>
-            ${unit.courage ? `<div class="stat-badge">C${unit.courage}+</div>` : ''}
-            ${unit.speed ? `<div class="stat-badge">${unit.speed}"</div>` : ''}
-          </div>
+          ${buildStatBadges(unit)}
 
           ${unit.lore ? `<div class="u-lore">"${esc(unit.lore)}"</div>` : ''}
 
           ${unit.weapon ? `
             <div class="mt-3">
               <div class="cc-field-label">Weapon</div>
-              <div><strong>${esc(unit.weapon.name)}</strong> - ${unit.weapon.attacks}A • ${unit.weapon.range}" • ${unit.weapon.damage}D</div>
+              <div>
+                <strong>${esc(unit.weapon.name || 'Weapon')}</strong> - 
+                ${unit.weapon.A || unit.weapon.attacks || 0}A • 
+                ${unit.weapon.R || unit.weapon.range || 0}" • 
+                ${unit.weapon.D || unit.weapon.damage || 0}D
+              </div>
             </div>
           ` : ''}
 
@@ -247,11 +301,74 @@ window.CC_APP = {
             </div>
           ` : ''}
 
+          ${renderUpgrades(unit, config)}
+          ${renderWeaponProperties(unit, config)}
+
           ${state.builderMode === 'library' ? `
             <button class="btn btn-primary w-100 mt-4" onclick="addUnitToRoster()">
               <i class="fa fa-plus"></i> ADD TO ROSTER
             </button>
-          ` : ''}
+          ` : `
+            <button class="btn btn-success w-100 mt-4" onclick="saveRosterUnit()">
+              <i class="fa fa-save"></i> SAVE CHANGES
+            </button>
+          `}
+        </div>
+      `;
+    }
+
+    function renderUpgrades(unit, config) {
+      if (!unit.upgrades || unit.upgrades.length === 0) return '';
+
+      const selectedUpgrades = config.upgrades || [];
+
+      return `
+        <div class="mt-3">
+          <div class="cc-field-label">Upgrades</div>
+          ${unit.upgrades.map(upgrade => {
+            const isSelected = selectedUpgrades.some(u => u.name === upgrade.name);
+            return `
+              <div class="upgrade-item ${isSelected ? 'selected' : ''}" onclick="toggleUpgrade('${esc(upgrade.name)}', ${upgrade.cost || 0})">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="fa ${isSelected ? 'fa-check-square' : 'fa-square'}" style="color: var(--cc-primary); margin-right: 8px;"></i>
+                    <strong>${esc(upgrade.name)}</strong>
+                  </div>
+                  <div style="color: var(--cc-primary); font-weight: 700;">${upgrade.cost || 0} ₤</div>
+                </div>
+                ${upgrade.effect ? `<div class="small cc-muted mt-1 ms-4">${esc(upgrade.effect)}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderWeaponProperties(unit, config) {
+      if (!unit.weapon || !unit.weapon.available_properties || unit.weapon.available_properties.length === 0) {
+        return '';
+      }
+
+      const selectedProps = config.weaponProperties || [];
+
+      return `
+        <div class="mt-3">
+          <div class="cc-field-label">Weapon Properties</div>
+          ${unit.weapon.available_properties.map(prop => {
+            const isSelected = selectedProps.some(p => p.name === prop.name);
+            return `
+              <div class="upgrade-item ${isSelected ? 'selected' : ''}" onclick="toggleWeaponProperty('${esc(prop.name)}', ${prop.cost || 0})">
+                <div class="d-flex justify-content-between align-items-center">
+                  <div>
+                    <i class="fa ${isSelected ? 'fa-check-square' : 'fa-square'}" style="color: var(--cc-primary); margin-right: 8px;"></i>
+                    <strong>${esc(prop.name)}</strong>
+                  </div>
+                  <div style="color: var(--cc-primary); font-weight: 700;">${prop.cost || 0} ₤</div>
+                </div>
+                ${prop.effect ? `<div class="small cc-muted mt-1 ms-4">${esc(prop.effect)}</div>` : ''}
+              </div>
+            `;
+          }).join('')}
         </div>
       `;
     }
@@ -282,6 +399,7 @@ window.CC_APP = {
       state.builderMode = 'library';
       state.builderTarget = unitName;
       state.selectedUnitId = null;
+      state.builderConfig = { upgrades: [], weaponProperties: [] };
       render();
     };
 
@@ -292,6 +410,66 @@ window.CC_APP = {
       render();
     };
 
+    window.toggleUpgrade = function(upgradeName, cost) {
+      let config;
+      
+      if (state.builderMode === 'library') {
+        config = state.builderConfig;
+      } else {
+        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
+        if (!rosterItem) return;
+        config = rosterItem.config || { upgrades: [], weaponProperties: [] };
+        rosterItem.config = config;
+      }
+
+      const index = config.upgrades.findIndex(u => u.name === upgradeName);
+      
+      if (index > -1) {
+        config.upgrades.splice(index, 1);
+      } else {
+        config.upgrades.push({ name: upgradeName, cost: cost });
+      }
+
+      if (state.builderMode === 'roster') {
+        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
+        const faction = state.factionData[state.currentFaction];
+        const baseUnit = faction.units.find(u => u.name === rosterItem.unitName);
+        rosterItem.totalCost = calculateUnitCost(baseUnit, config);
+      }
+
+      render();
+    };
+
+    window.toggleWeaponProperty = function(propName, cost) {
+      let config;
+      
+      if (state.builderMode === 'library') {
+        config = state.builderConfig;
+      } else {
+        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
+        if (!rosterItem) return;
+        config = rosterItem.config || { upgrades: [], weaponProperties: [] };
+        rosterItem.config = config;
+      }
+
+      const index = config.weaponProperties.findIndex(p => p.name === propName);
+      
+      if (index > -1) {
+        config.weaponProperties.splice(index, 1);
+      } else {
+        config.weaponProperties.push({ name: propName, cost: cost });
+      }
+
+      if (state.builderMode === 'roster') {
+        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
+        const faction = state.factionData[state.currentFaction];
+        const baseUnit = faction.units.find(u => u.name === rosterItem.unitName);
+        rosterItem.totalCost = calculateUnitCost(baseUnit, config);
+      }
+
+      render();
+    };
+
     window.addUnitToRoster = function() {
       if (!state.currentFaction || !state.builderTarget) return;
 
@@ -299,6 +477,9 @@ window.CC_APP = {
       const unit = faction.units.find(u => u.name === state.builderTarget);
       
       if (!unit) return;
+
+      const config = { ...state.builderConfig };
+      const totalCost = calculateUnitCost(unit, config);
 
       const rosterItem = {
         id: generateId(),
@@ -311,13 +492,19 @@ window.CC_APP = {
         speed: unit.speed,
         weapon: unit.weapon,
         abilities: unit.abilities || [],
-        totalCost: unit.cost
+        config: config,
+        totalCost: totalCost
       };
 
       state.roster.push(rosterItem);
       state.builderMode = 'roster';
       state.builderTarget = rosterItem.id;
       state.selectedUnitId = rosterItem.id;
+      state.builderConfig = { upgrades: [], weaponProperties: [] };
+      render();
+    };
+
+    window.saveRosterUnit = function() {
       render();
     };
 
@@ -328,6 +515,7 @@ window.CC_APP = {
         state.builderMode = null;
         state.builderTarget = null;
         state.selectedUnitId = null;
+        state.builderConfig = { upgrades: [], weaponProperties: [] };
       }
       
       render();
@@ -342,6 +530,25 @@ window.CC_APP = {
       render();
     };
 
+    window.exportRoster = function() {
+      const exportData = {
+        faction: state.currentFaction,
+        budget: state.budget,
+        roster: state.roster,
+        totalCost: calculateTotalCost(),
+        exportedAt: new Date().toISOString()
+      };
+
+      const json = JSON.stringify(exportData, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `roster-${state.currentFaction}-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    };
+
     // ================================
     // APP SHELL
     // ================================
@@ -353,7 +560,12 @@ window.CC_APP = {
             <h1 class="cc-app-title">Faction Builder</h1>
             <div class="cc-app-subtitle">Build Your Coffin Canyon Roster</div>
           </div>
-          <div id="cc-budget-display" style="font-size: 1.5rem; font-weight: 700;">0 ₤</div>
+          <div class="d-flex align-items-center gap-3">
+            <div id="cc-budget-display" style="font-size: 1.5rem; font-weight: 700;">0 ₤</div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportRoster()">
+              <i class="fa fa-download"></i> Export
+            </button>
+          </div>
         </div>
 
         <div class="cc-faction-controls">
