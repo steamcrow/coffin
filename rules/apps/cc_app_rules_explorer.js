@@ -1,5 +1,5 @@
 // ================================
-// Rules Explorer App - Production Final
+// Rules Explorer App - Stability Build
 // File: steamcrow/rules/apps/cc_app_rules_explorer.js
 // ================================
 
@@ -9,7 +9,7 @@ window.CC_APP = {
   async init({ root, ctx }) {
     console.log("🚀 Rules Explorer init", ctx);
 
-    // ---- 1. ASSET LOADING (Non-blocking) ----
+    // ---- 1. ASSET LOADING (Preserved) ----
     const loadStyle = (id, url) => {
       if (document.getElementById(id)) return;
       fetch(`${url}?t=${Date.now()}`).then(res => res.text()).then(css => {
@@ -17,8 +17,9 @@ window.CC_APP = {
         style.id = id;
         style.textContent = css;
         document.head.appendChild(style);
-      }).catch(e => console.error("CSS Load Error", e));
+      }).catch(err => console.error(`❌ CSS load failed: ${id}`, err));
     };
+
     loadStyle('cc-core-ui-styles', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css');
     loadStyle('cc-rules-explorer-styles', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_rules_explorer.css');
 
@@ -37,7 +38,7 @@ window.CC_APP = {
     let selectedId = null;
     let currentFilter = 'all';
 
-    // ---- 3. CORE UTILITIES (Preserved from Source) ----
+    // ---- 3. UTILITIES (Direct Data Access) ----
     const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     
     const titleize = (k) => {
@@ -50,13 +51,7 @@ window.CC_APP = {
 
     const resolvePath = (obj, path) => {
       if (!obj || !path) return undefined;
-      const parts = String(path).split(".");
-      let cur = obj;
-      for (const p of parts) {
-        if (cur && typeof cur === "object" && p in cur) cur = cur[p];
-        else return undefined;
-      }
-      return cur;
+      return String(path).split(".").reduce((cur, p) => (cur && typeof cur === "object") ? cur[p] : undefined, obj);
     };
 
     const candidatePaths = (metaPath) => {
@@ -73,62 +68,82 @@ window.CC_APP = {
     const saveFavorites = (favs) => localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
     const isFavorite = (id) => getFavorites().includes(id);
 
-    // ---- 4. RECURSIVE RENDER ENGINE (All features preserved) ----
-    const PROSE = ['philosophy', 'text', 'long', 'description', 'effect', 'definition', 'logic', 'resolution'];
-    const LISTS = ['usage', 'guidelines', 'modifiers', 'restrictions', 'choices', 'process', 'effects', 'rules'];
-    const NESTED = ['sections', 'mechanics', 'options', 'outcomes', 'status_conditions'];
-
-    function renderProse(label, val) {
-      if (!val) return '';
-      const text = typeof val === 'string' ? val : (val.text || val.long || val.description || '');
-      if (!text) return '';
-      return `<div class="mb-3">${label !== 'long' && label !== 'text' ? `<div class="cc-field-label">${esc(titleize(label))}</div>` : ''}<p class="mb-0">${esc(text)}</p></div>`;
+    // ---- 4. RENDERERS (Faction Styles Restored) ----
+    function renderFaction(factionId) {
+      const f = factionsData[factionId];
+      if (!f) return '<div class="cc-muted">Faction data missing.</div>';
+      const data = f.data;
+      return `
+        <h2 style="color: #ff7518">${esc(f.title)}</h2>
+        <div class="cc-callout mb-4">${esc(data.summary || '')}</div>
+        ${(data.units || []).map(u => `
+          <div class="cc-ability-card p-3 mb-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+            <div class="d-flex justify-content-between align-items-baseline mb-1">
+              <h4 class="fw-bold mb-0" style="color: #fff; font-size: 1.25rem;">${esc(u.name)}</h4>
+              <div class="fw-bold" style="color: #ff7518; font-size: 1.3rem;">${u.cost}₤</div>
+            </div>
+            <div class="small text-uppercase mb-2" style="color: #ff7518; font-weight: 700;">${esc(u.type || 'Unit')}</div>
+            <div class="d-flex gap-2 mb-3">
+              <div class="cc-stat-badge"><span class="cc-stat-label">Q</span><span class="cc-stat-value">${u.quality}</span></div>
+              <div class="cc-stat-badge"><span class="cc-stat-label">D</span><span class="cc-stat-value">${u.defense}</span></div>
+              <div class="cc-stat-badge"><span class="cc-stat-label">M</span><span class="cc-stat-value">${u.move}"</span></div>
+            </div>
+            <div class="small italic opacity-75 mb-2">${esc(u.lore || '')}</div>
+            ${u.weapon ? `<div class="small"><strong style="color:#ff7518">Weapon:</strong> ${esc(u.weapon)}</div>` : ''}
+          </div>
+        `).join('')}
+      `;
     }
 
-    function renderList(label, arr) {
-      if (!Array.isArray(arr) || !arr.length) return '';
-      const items = arr.map(i => {
-        if (typeof i === 'string') return `<li>${esc(i)}</li>`;
-        return `<li><strong>${esc(i.name || i.value || i.trait || 'Item')}:</strong> ${esc(i.effect || i.description || i.result || '')}</li>`;
-      }).join('');
-      return `<div class="mb-3"><div class="cc-field-label">${esc(titleize(label))}</div><ul>${items}</ul></div>`;
-    }
-
-    function renderNested(label, obj, depth = 0) {
-      if (!obj || typeof obj !== 'object' || Array.isArray(obj) || depth > 4) return '';
-      let html = '';
-      if (obj.title && depth > 0) html += `<div class="cc-section-title mb-2">${esc(obj.title)}</div>`;
+    function renderDeepObject(obj) {
+      if (!obj || typeof obj !== 'object') return esc(obj);
+      if (Array.isArray(obj)) return `<ul>${obj.map(i => `<li>${typeof i === 'object' ? (i.name || i.text || JSON.stringify(i)) : esc(i)}</li>`).join('')}</ul>`;
       
-      PROSE.forEach(f => obj[f] && (html += renderProse(f, obj[f])));
-      LISTS.forEach(f => obj[f] && (html += renderList(f, obj[f])));
-      NESTED.forEach(f => {
-        if (obj[f] && typeof obj[f] === 'object') {
-          if (Array.isArray(obj[f])) html += renderList(f, obj[f]);
-          else Object.entries(obj[f]).forEach(([k, v]) => html += renderNested(k, v, depth + 1));
-        }
-      });
-      return html;
+      return Object.entries(obj).map(([k, v]) => {
+        if (k.startsWith('_') || ['id', 'title', 'short'].includes(k)) return '';
+        return `<div class="mb-3"><div class="cc-field-label">${esc(titleize(k))}</div><div>${renderDeepObject(v)}</div></div>`;
+      }).join('');
     }
 
-    // ---- 5. UI SHELL ----
+    // ---- 5. UI SHELL & INTRO (Restored) ----
+    const introHtml = `
+      <div class="mb-4">
+        <h2 class="cc-rule-title" style="font-size: 2.5rem; margin-bottom: 1rem;">COFFIN CANYON</h2>
+        <div style="background: rgba(255,117,24,0.1); border-left: 4px solid #ff7518; padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
+          <h3 style="color: #ff7518; margin-top: 0;">What This Game Is</h3>
+          <p style="font-size: 1.1rem; line-height: 1.8;">Coffin Canyon is a skirmish game about bad ground, bad choices, and things that do not stay dead. Victory comes from pressure, positioning, and knowing when to run.</p>
+        </div>
+        <p><strong>Ready to start?</strong> Click any rule in the sidebar to begin!</p>
+      </div>`;
+
     root.innerHTML = `
       <div class="cc-app-shell h-100">
         <div class="cc-app-header">
-          <div><h1 class="cc-app-title">Rules Explorer</h1><div class="cc-app-subtitle">Interactive Coffin Canyon Reference</div></div>
+          <div><h1 class="cc-app-title">Rules Explorer</h1><div class="cc-app-subtitle">Interactive Reference</div></div>
           <button id="cc-print-btn" class="btn btn-sm btn-outline-secondary">🖨️ Print</button>
         </div>
         <div class="cc-rules-explorer">
-          <aside class="cc-rules-sidebar"><div class="cc-panel h-100"><div class="cc-panel-head">
-            <div class="btn-group btn-group-sm w-100 mb-3"><button class="btn btn-outline-secondary active" data-filter="all">All</button><button class="btn btn-outline-secondary" data-filter="favorites">★ Starred</button></div>
-            <input id="cc-rule-search" class="form-control form-control-sm cc-input" placeholder="Search rules..." />
-          </div><div id="cc-rule-list" class="cc-list"></div></div></aside>
-          <main class="cc-rules-main"><div class="cc-panel h-100">
-            <div class="cc-panel-head d-flex justify-content-between align-items-center"><div class="cc-panel-title">Rule Text</div><button id="cc-favorite-btn" class="btn btn-sm btn-link d-none"><span class="cc-star">☆</span></button></div>
-            <div id="cc-rule-detail" class="cc-body cc-rule-reader">
-              <div class="p-4 text-center"><h2 style="color:#ff7518">COFFIN CANYON</h2><p>Select a rule from the sidebar to begin.</p></div>
+          <aside class="cc-rules-sidebar"><div class="cc-panel h-100">
+            <div class="cc-panel-head">
+              <div class="btn-group btn-group-sm w-100 mb-3">
+                <button class="btn btn-outline-secondary active" data-filter="all">All</button>
+                <button class="btn btn-outline-secondary" data-filter="favorites">★ Starred</button>
+              </div>
+              <input id="cc-rule-search" class="form-control form-control-sm cc-input" placeholder="Search rules..." />
             </div>
+            <div id="cc-rule-list" class="cc-list"></div>
+          </div></aside>
+          <main class="cc-rules-main"><div class="cc-panel h-100">
+            <div class="cc-panel-head d-flex justify-content-between">
+              <div class="cc-panel-title">Rule Text</div>
+              <button id="cc-favorite-btn" class="btn btn-sm btn-link d-none"><span class="cc-star">☆</span></button>
+            </div>
+            <div id="cc-rule-detail" class="cc-body cc-rule-reader">${introHtml}</div>
           </div></main>
-          <aside class="cc-rules-context"><div class="cc-panel h-100"><div class="cc-panel-head"><div class="cc-panel-title">Subsections</div></div><div id="cc-rule-context" class="cc-body cc-muted">None.</div></div></aside>
+          <aside class="cc-rules-context"><div class="cc-panel h-100">
+            <div class="cc-panel-head"><div class="cc-panel-title">Subsections</div></div>
+            <div id="cc-rule-context" class="cc-body cc-muted">Nothing selected.</div>
+          </div></aside>
         </div>
       </div>`;
 
@@ -136,9 +151,9 @@ window.CC_APP = {
     const detailEl = root.querySelector("#cc-rule-detail");
     const searchEl = root.querySelector("#cc-rule-search");
     const favBtn = root.querySelector("#cc-favorite-btn");
+    const ctxEl = root.querySelector("#cc-rule-context");
 
-    // ---- 6. CORE LOGIC ----
-    function refreshList() {
+    function renderList() {
       const search = searchEl.value.toLowerCase();
       let items = index.filter(it => !EXCLUDED_IDS.includes(it.id));
       if (currentFilter === 'favorites') items = items.filter(it => isFavorite(it.id));
@@ -147,8 +162,9 @@ window.CC_APP = {
       listEl.innerHTML = items.map(it => `
         <button class="cc-list-item ${it.id === selectedId ? 'active' : ''}" data-id="${it.id}">
           <div class="cc-list-title">${esc(it.title || it.id)}</div>
-          <div class="small opacity-50 text-uppercase">${esc(it.type || 'rule')} ${isFavorite(it.id) ? '★' : ''}</div>
-        </button>`).join('');
+          <div class="cc-list-sub">${esc(it.type || 'rule')} ${isFavorite(it.id) ? '★' : ''}</div>
+        </button>
+      `).join('');
     }
 
     function showRule(id) {
@@ -159,35 +175,43 @@ window.CC_APP = {
       favBtn.classList.remove('d-none');
       favBtn.querySelector('.cc-star').innerText = isFavorite(id) ? '★' : '☆';
 
-      let content = null;
+      // CONTENT RESOLUTION
       if (factionsData[id]) {
-        // Faction Rendering Logic (same as previous)
-        detailEl.innerHTML = `<h2>${esc(factionsData[id].title)}</h2><p class="cc-callout">${esc(factionsData[id].data.summary || '')}</p>` + 
-          (factionsData[id].data.units || []).map(u => `<div class="cc-ability-card p-3 mb-3"><strong>${esc(u.name)}</strong> (${u.cost}₤)</div>`).join('');
+        detailEl.innerHTML = renderFaction(id);
       } else {
         const rootObj = getRulesRoot();
         const paths = candidatePaths(meta.path);
+        let content = null;
         for (const p of paths) {
           const found = resolvePath(rootObj, p);
           if (found !== undefined) { content = found; break; }
         }
-        detailEl.innerHTML = `<h2>${esc(meta.title || id)}</h2><div class="cc-content-body mt-3">${renderNested(id, content)}</div>`;
+        detailEl.innerHTML = `<h2 class="cc-rule-title">${esc(meta.title || id)}</h2><div class="mt-3">${renderDeepObject(content)}</div>`;
       }
-      
+
+      // SUBSECTIONS LOGIC
       const children = helpers.getChildren(id) || [];
-      root.querySelector("#cc-rule-context").innerHTML = children.length ? children.map(c => `<div class="cc-badge mb-1">${esc(c.title || c.id)}</div>`).join(' ') : 'None.';
-      refreshList();
+      ctxEl.innerHTML = children.length ? children.map(c => `<div class="cc-badge mb-1">${esc(c.title || c.id)}</div>`).join(' ') : 'None.';
+      renderList();
     }
 
-    // ---- 7. EVENT HANDLERS ----
-    listEl.addEventListener('click', e => { const btn = e.target.closest('.cc-list-item'); if (btn) showRule(btn.dataset.id); });
-    searchEl.addEventListener('input', refreshList);
-    root.querySelectorAll('[data-filter]').forEach(b => b.addEventListener('click', () => {
-      root.querySelectorAll('[data-filter]').forEach(x => x.classList.remove('active'));
-      b.classList.add('active');
-      currentFilter = b.dataset.filter;
-      refreshList();
-    }));
+    // ---- 6. EVENTS ----
+    listEl.addEventListener('click', e => {
+      const btn = e.target.closest('.cc-list-item');
+      if (btn) showRule(btn.dataset.id);
+    });
+
+    searchEl.addEventListener('input', renderList);
+
+    root.querySelectorAll('[data-filter]').forEach(b => {
+      b.addEventListener('click', () => {
+        root.querySelectorAll('[data-filter]').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        currentFilter = b.dataset.filter;
+        renderList();
+      });
+    });
+
     favBtn.addEventListener('click', () => {
       const favs = getFavorites();
       const idx = favs.indexOf(selectedId);
@@ -196,12 +220,26 @@ window.CC_APP = {
       showRule(selectedId);
     });
 
-    // Load Factions and Start
-    const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
-    await Promise.all(FACTION_FILES.map(async f => {
-      try { const r = await fetch(`${baseUrl}${f.file}?t=${Date.now()}`); factionsData[f.id] = { title: f.title, data: await r.json() }; } catch (e) {}
-    }));
+    // ---- 7. INITIAL LOAD ----
+    const FACTION_FILES = [
+      { id: 'monster_rangers', title: 'Monster Rangers', file: 'faction-monster-rangers-v5.json' },
+      { id: 'liberty_corps', title: 'Liberty Corps', file: 'faction-liberty-corps-v2.json' },
+      { id: 'monsterology', title: 'Monsterology', file: 'faction-monsterology-v2.json' },
+      { id: 'monsters', title: 'Monsters', file: 'faction-monsters-v2.json' },
+      { id: 'shine_riders', title: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
+    ];
 
-    refreshList();
+    const loadFactions = async () => {
+      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+      await Promise.all(FACTION_FILES.map(async f => {
+        try {
+          const res = await fetch(`${baseUrl}${f.file}?t=${Date.now()}`);
+          factionsData[f.id] = { title: f.title, data: await res.json() };
+        } catch (e) {}
+      }));
+      renderList();
+    };
+
+    loadFactions();
   }
 };
