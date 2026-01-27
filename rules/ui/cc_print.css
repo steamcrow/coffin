@@ -1,0 +1,76 @@
+/* =========================================================
+   COFFIN CANYON - UNIVERSAL PRINT SYSTEM
+   File: coffin/rules/ui/cc_print.css
+   ========================================================= */
+
+@media print {
+    /* 1. RESET FOR PAPER */
+    :root {
+        --cc-primary: #000; /* Print in black for contrast/ink saving */
+        --cc-bg-dark: #fff;
+        --cc-text: #000;
+        --cc-text-muted: #444;
+        --cc-border: #ccc;
+    }
+
+    body, .cc-app-shell, .cc-panel, .cc-list-item {
+        background: #fff !important;
+        color: #000 !important;
+        font-family: "Source Sans 3", serif !important;
+    }
+
+    /* 2. HIDE UI NOISE */
+    .cc-app-header, 
+    .cc-faction-controls, 
+    .cc-slide-panel, 
+    .cc-panel-close-btn,
+    .btn, 
+    .grid-item-delete,
+    .cc-roster-view-toggle,
+    #ability-tooltip {
+        display: none !important;
+    }
+
+    /* 3. FLATTEN LAYOUT */
+    .cc-faction-builder {
+        display: block !important; /* Kill the 3-column grid */
+        height: auto !important;
+        padding: 0 !important;
+    }
+
+    .cc-panel {
+        border: 1px solid #000 !important;
+        margin-bottom: 1rem;
+        page-break-inside: avoid;
+    }
+
+    /* 4. STAT BADGE OPTIMIZATION */
+    .cc-stat-badge {
+        border: 1px solid #000 !important;
+        box-shadow: none !important;
+        transform: none !important;
+    }
+
+    .cc-stat-label, .cc-stat-value {
+        background: #fff !important;
+        color: #000 !important;
+        border-right: 1px solid #000;
+    }
+
+    /* 5. ABILITY TAGS */
+    .ability-tag, .ability-tag-small {
+        border: 1px solid #ccc !important;
+        background: #f9f9f9 !important;
+        color: #000 !important;
+        padding: 2px 5px !important;
+    }
+
+    /* 6. TYPOGRAPHY */
+    .cc-app-title-print { /* A title visible only on paper */
+        display: block !important;
+        font-family: 'Bungee', sans-serif;
+        font-size: 24pt;
+        border-bottom: 2px solid #000;
+        margin-bottom: 20px;
+    }
+}
