@@ -1311,12 +1311,9 @@ window.CC_APP = {
         if (!foundSection) {
           console.log('⚠️ No stored section, searching all sections...');
           
-          // Try various name formats
-          const searchTerms = [
-            abilityId,
-            abilityId.replace(/-/g, '_'),
-            abilityId.replace(/_/g, '-')
-          ];
+          // Normalize the search term
+          const normalizedSearch = abilityId.toLowerCase().replace(/[^a-z0-9]/g, '');
+          console.log('Normalized search term:', normalizedSearch);
           
           for (const item of index) {
             try {
@@ -1324,22 +1321,29 @@ window.CC_APP = {
               if (section && section.content) {
                 const contentObj = section.content;
                 
-                // Check if any of our search terms match a key
+                // Check every key in the content
                 for (const key of Object.keys(contentObj)) {
-                  const keyNormalized = key.toLowerCase();
+                  const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
                   
-                  if (searchTerms.some(term => keyNormalized === term.toLowerCase() || 
-                                               keyNormalized.includes(term.toLowerCase()))) {
+                  // Check if normalized key matches or contains search term
+                  if (normalizedKey === normalizedSearch || 
+                      normalizedKey.includes(normalizedSearch) ||
+                      normalizedSearch.includes(normalizedKey)) {
                     foundSection = item.id;
-                    console.log('✅ Found ability', key, 'in section', item.id);
+                    console.log('✅ Found ability', key, 'in section', item.id, item.title);
                     break;
                   }
                 }
                 if (foundSection) break;
               }
             } catch (e) {
+              console.error('Error loading section', item.id, e);
               continue;
             }
+          }
+          
+          if (!foundSection) {
+            console.error('❌ Searched all', index.length, 'sections, could not find:', abilityId);
           }
         }
         
