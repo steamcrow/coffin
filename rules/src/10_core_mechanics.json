@@ -1,130 +1,999 @@
-{
-  "_id": "R-CORE",
-  "type": "rules_master",
-  "title": "Core Mechanics",
+// ================================
+// Rules Explorer App
+// File: steamcrow/rules/apps/cc_app_rules_explorer.js
+// ================================
 
-  "text": {
-    "_id": "R-CORE-00",
-    "long": "Everything in Coffin Canyon flows from a single value: Quality. It represents training, toughness, nerve, and luck. When Quality drops, everything becomes harder."
-  },
+console.log("📘 Rules Explorer app loaded");
 
-  "sections": {
-    "quality": {
-      "_id": "R-CORE-01",
-      "title": "Quality",
-      "short": "Quality defines how many dice you roll for most actions.",
-      "long": "Quality represents training, toughness, nerve, and luck. It is used for attacks, morale, special abilities, and environmental tests.",
+window.CC_APP = {
+  init({ root, ctx }) {
+    console.log("🚀 Rules Explorer init", ctx);
 
-      "usage": [
-        "Attacks",
-        "Morale",
-        "Special abilities",
-        "Environmental tests"
-      ],
-
-      "guidelines": [
-        { "value": 1, "description": "Basic trained human / small monster / civilian" },
-        { "value": 2, "description": "Veteran military unit / human-sized monster" },
-        { "value": 3, "description": "Elite unit / large monster / hard-to-kill beast" },
-        { "value": 4, "description": "Leader unit / low hero / powerful monster" },
-        { "value": 5, "description": "High hero / very large or mystically powerful monster" },
-        { "value": 6, "description": "Epic supernatural kaiju, titan, or super-heavy mechanical unit" }
-      ]
-    },
-
-    "the_roll": {
-      "_id": "R-CORE-02",
-      "title": "The Roll",
-      "short": "Roll a number of d6 equal to current Quality. 4+ = success.",
-      "long": "Roll d6s equal to current Quality. Each 4, 5, or 6 counts as 1 Success. One or more successes usually mean the action succeeds. Some rules scale with total successes.",
-
-      "mechanics": {
-        "pool": "Roll d6s equal to current Quality.",
-        "success_threshold": 4,
-        "logic": "Each 4, 5, or 6 is 1 Success."
-      }
-    },
-
-    "defense_and_damage": {
-      "_id": "R-CORE-03",
-      "title": "Defense & Damage",
-      "short": "If successes exceed Defense, damage is dealt.",
-      "long": "Defense is a passive value representing positioning, cover, armor, or skill. If Successes exceed Defense, the attack hits. Each success beyond Defense deals 1 damage.",
-
-      "definition": "Passive value representing positioning, cover, armor, or skill.",
-      "resolution": "If Successes > Defense, the attack hits. Each success beyond Defense deals 1 damage.",
-
-      "modifiers": [
-        { "name": "Cover", "effect": "+1 Defense vs ranged attacks" },
-        { "name": "Pierce", "effect": "Reduces Defense for that attack" },
-        { "name": "Dodge", "effect": "Cancels one Success after rolling" }
-      ],
-
-      "exceptions": "Defense does not apply to terrain damage, automatic damage, or environmental effects."
-    },
-
-    "six_based_effects": {
-      "_id": "R-CORE-04",
-      "title": "Six-Based Effects",
-      "short": "A roll may only resolve one six-based bonus.",
-      "long": "A single roll may only resolve one six-based bonus. Never more than one.",
-
-      "golden_rule": "A single roll may only resolve ONE six-based bonus.",
-
-      "options": {
-        "natural_six": {
-          "_id": "R-CORE-04A",
-          "name": "Natural Six",
-          "effect": "If the attack hits, it deals at least 1 damage even if Successes do not exceed Defense.",
-          "restriction": "Does not apply if the attack does not hit."
-        },
-
-        "lucky_break": {
-          "_id": "R-CORE-04B",
-          "name": "Lucky Break",
-          "trigger": "All dice in a Quality roll result in 6s.",
-
-          "restrictions": [
-            "Must be used immediately",
-            "Does not stack",
-            "Once per activation",
-            "Cannot be used for damage or attacks"
-          ],
-
-          "choices": [
-            { "id": "quick_step", "name": "Quick Step", "effect": "Free Half Move" },
-            { "id": "shake_it_off", "name": "Shake It Off", "effect": "Remove 1 Pin or Condition" },
-            { "id": "deadeye", "name": "Deadeye", "effect": "Gain +1 die to the next roll this activation" },
-            { "id": "get_it_done", "name": "Get It Done", "effect": "Perform a free Interact action" }
-          ]
-        }
-      },
-
-      "example": "Attacker Q2 rolls 6,6 vs Defense 4. Choose Natural Six (1 damage) OR Lucky Break (tempo)."
-    },
-
-    "critical_failure": {
-      "_id": "R-CORE-05",
-      "title": "Critical Failure",
-      "short": "All 1s = fail and become Shaken.",
-      "long": "If all dice in a Quality roll show 1s, the action fails and the model becomes Shaken. Terrain or scenario rules may apply additional consequences.",
-
-      "trigger": "All dice show 1s.",
-      "effects": "Action fails; model becomes Shaken."
-    },
-
-    "quality_tracking": {
-      "_id": "R-CORE-06",
-      "title": "Tracking Quality",
-      "short": "Track Quality openly; at 0 the model is removed.",
-      "long": "Quality is tracked openly using a die behind the model. It is never rolled. When Quality reaches 0, the model is removed immediately.",
-
-      "on_table": "Place one d6 behind the model as a tracker only.",
-      "reduction": "Reduce Quality immediately when damage, morale loss, or hazards occur.",
-      "quality_zero": "Remove the model from play immediately.",
-      "quality_cap": 6,
-
-      "design_intent": "Players should be able to judge risk and collapse at a glance."
+    // ---- LOAD CSS (Core + App-specific) ----
+    // Load core UI CSS first
+    if (!document.getElementById('cc-core-ui-styles')) {
+      console.log('🎨 Loading Core UI CSS...');
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
+        .then(res => res.text())
+        .then(css => {
+          const style = document.createElement('style');
+          style.id = 'cc-core-ui-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Core UI CSS applied!');
+        })
+        .catch(err => console.error('❌ Core CSS load failed:', err));
     }
-  }
-}
+    
+    // Then load app-specific CSS
+    if (!document.getElementById('cc-rules-explorer-styles')) {
+      console.log('🎨 Loading Rules Explorer CSS...');
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_rules_explorer.css?t=' + Date.now())
+        .then(res => res.text())
+        .then(css => {
+          const style = document.createElement('style');
+          style.id = 'cc-rules-explorer-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Rules Explorer CSS applied!');
+        })
+        .catch(err => console.error('❌ App CSS load failed:', err));
+    }
+
+    const helpers = ctx?.helpers;
+    const index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
+
+    // ---- SAFETY CHECK ----
+    if (!helpers) {
+      root.innerHTML = `
+        <div class="cc-app-shell h-100">
+          <div class="container py-5 text-danger">
+            <h4>Rules helpers not available</h4>
+            <p>Check loader injection.</p>
+          </div>
+        </div>
+      `;
+      return;
+    }
+
+    // ---- FAVORITES SYSTEM (localStorage) ----
+    const STORAGE_KEY = 'cc_rules_favorites';
+    
+    function getFavorites() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveFavorites(favorites) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+      } catch (e) {
+        console.error('Could not save favorites', e);
+      }
+    }
+
+    function isFavorite(id) {
+      return getFavorites().includes(id);
+    }
+
+    function toggleFavorite(id) {
+      const favorites = getFavorites();
+      const index = favorites.indexOf(id);
+      if (index > -1) {
+        favorites.splice(index, 1);
+      } else {
+        favorites.push(id);
+      }
+      saveFavorites(favorites);
+    }
+
+    // ---- FILTER OUT SCENARIO BUILDER FILES ----
+    const EXCLUDED_IDS = [
+      'location_vault',
+      'location_types',
+      'scenario_vault',
+      'objective_vault',
+      'location_vault_97'
+    ];
+
+    // ---- APP SHELL ----
+    root.innerHTML = `
+      <div class="cc-app-shell h-100">
+        
+        <!-- Standard App Header (uses cc_ui.css) -->
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Rules Explorer</h1>
+            <div class="cc-app-subtitle">Interactive Coffin Canyon Rules Reference</div>
+          </div>
+          <button id="cc-print-btn" class="btn btn-sm btn-outline-secondary" title="Print rulebook">
+            🖨️ Print
+          </button>
+        </div>
+
+        <div class="cc-rules-explorer">
+          
+          <!-- Sidebar (Table of Contents) -->
+          <aside class="cc-rules-sidebar" id="cc-rules-sidebar">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div class="cc-panel-title mb-2">Rules</div>
+                
+                <!-- Filter tabs -->
+                <div class="btn-group btn-group-sm w-100 mb-2" role="group">
+                  <button type="button" class="btn btn-outline-secondary active" data-filter="all">All</button>
+                  <button type="button" class="btn btn-outline-secondary" data-filter="favorites">★ Starred</button>
+                </div>
+                
+                <input
+                  id="cc-rule-search"
+                  class="form-control form-control-sm cc-input"
+                  placeholder="Search rules..."
+                />
+              </div>
+              <div id="cc-rule-list" class="cc-list"></div>
+            </div>
+          </aside>
+
+          <!-- Main content area -->
+          <main class="cc-rules-main">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head d-flex justify-content-between align-items-center">
+                <div class="cc-panel-title">Rule Text</div>
+                <div class="cc-rules-actions">
+                  <button id="cc-favorite-btn" class="btn btn-sm btn-link d-none" title="Star this rule">
+                    <span class="cc-star">☆</span>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Main rule content -->
+              <div id="cc-rule-detail" class="cc-body cc-rule-reader">
+                <div class="mb-4">
+                  <h2 class="cc-rule-title">👋 Welcome to the Rules Explorer</h2>
+                  
+                  <div class="cc-callout mb-4">
+                    <h4 style="color: #ff7518; margin-top: 0;">How to Use This Tool</h4>
+                    <p><strong>Navigate:</strong> Click any rule in the sidebar to view it in the center panel.</p>
+                    <p><strong>Star Favorites:</strong> Click the ☆ icon to save rules, subsections, or abilities you reference often. Find them all in the "★ Starred" filter.</p>
+                    <p><strong>Search:</strong> Use the search box to quickly find any rule by name or keyword.</p>
+                    <p><strong>Subsections:</strong> When viewing a rule with subsections, click them in the right panel to scroll directly to that part.</p>
+                    <p><strong>Print:</strong> Click the Print button in the header to generate a clean, formatted rulebook.</p>
+                  </div>
+                  
+                  <h4 style="color: #ff7518;">About Coffin Canyon</h4>
+                  <p>Coffin Canyon is a tactical tabletop game where players command factions of monsters, rangers, and more in strategic battles.</p>
+                  <p>This Rules Explorer provides interactive access to all game mechanics, abilities, and reference material.</p>
+                  <p><strong>Ready to start?</strong> Click "Core Mechanics" in the sidebar to begin!</p>
+                </div>
+              </div>
+              
+              <!-- Previous/Next navigation -->
+              <div id="cc-rule-nav" class="cc-rule-nav d-none">
+                <button id="cc-prev-btn" class="btn btn-outline-secondary">‹ Previous</button>
+                <button id="cc-next-btn" class="btn btn-outline-secondary">Next ›</button>
+              </div>
+            </div>
+          </main>
+
+          <!-- Context sidebar (collapsible) -->
+          <aside class="cc-rules-context" id="cc-rules-context">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div class="cc-panel-title">Subsections</div>
+              </div>
+              <div id="cc-rule-context" class="cc-body">
+                <div class="cc-muted">Nothing selected.</div>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    `;
+
+    // ---- DOM HOOKS ----
+    const sidebarEl = root.querySelector("#cc-rules-sidebar");
+    const listEl = root.querySelector("#cc-rule-list");
+    const detailEl = root.querySelector("#cc-rule-detail");
+    const ctxEl = root.querySelector("#cc-rule-context");
+    const contextPanelEl = root.querySelector("#cc-rules-context");
+    const searchEl = root.querySelector("#cc-rule-search");
+    const navEl = root.querySelector("#cc-rule-nav");
+    const prevBtnEl = root.querySelector("#cc-prev-btn");
+    const nextBtnEl = root.querySelector("#cc-next-btn");
+    const favoriteBtn = root.querySelector("#cc-favorite-btn");
+    const printBtn = root.querySelector("#cc-print-btn");
+
+    let selectedId = null;
+    let currentFilter = 'all';
+    let filteredIndex = [];
+
+    // ---- SMALL UTILS ----
+    const esc = (s) =>
+      String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+    const titleize = (k) => {
+      const str = String(k || "");
+      
+      // Handle ability dictionary keys (e.g., "movement_abilities" -> "Movement Abilities")
+      if (str.includes('_abilities') || str.includes('_ability')) {
+        return str
+          .replace(/_abilities?/, '')
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (m) => m.toUpperCase()) + ' Abilities';
+      }
+      
+      // Handle dictionary keys
+      if (str.includes('_dictionary')) {
+        return str
+          .replace(/_dictionary/, '')
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (m) => m.toUpperCase()) + ' Dictionary';
+      }
+      
+      // Default titleize
+      return str
+        .replace(/_/g, " ")
+        .replace(/\b\w/g, (m) => m.toUpperCase());
+    };
+
+    function getRulesRoot() {
+      return (
+        ctx?.rulesBase?.data ||
+        ctx?.rulesBase?.root ||
+        ctx?.rulesBase?.rules ||
+        ctx?.rulesBase?.json ||
+        ctx?.rulesBase ||
+        ctx?.rules ||
+        {}
+      );
+    }
+
+    function resolvePath(obj, path) {
+      if (!obj || !path) return undefined;
+      const parts = String(path).split(".");
+      let cur = obj;
+      for (const p of parts) {
+        if (cur && typeof cur === "object" && p in cur) cur = cur[p];
+        else return undefined;
+      }
+      return cur;
+    }
+
+    function candidatePaths(metaPath) {
+      const p = String(metaPath || "");
+      const out = [p];
+
+      out.push(p.replace(".quality_definition", ".sections.quality"));
+      out.push(p.replace(".the_roll", ".sections.the_roll"));
+      out.push(p.replace(".defense_and_damage", ".sections.defense_and_damage"));
+      out.push(p.replace(".six_based_effects", ".sections.six_based_effects"));
+      out.push(p.replace(".critical_failure", ".sections.critical_failure"));
+      out.push(p.replace(".quality_tracking", ".sections.quality_tracking"));
+      out.push(p.replace("rules_master.philosophy", "rules_master.sections.philosophy"));
+
+      return Array.from(new Set(out)).filter(Boolean);
+    }
+
+    function pickBestResolvedContent(meta, sectionContent) {
+      if (sectionContent !== undefined && sectionContent !== null) return sectionContent;
+
+      const rootObj = getRulesRoot();
+      const paths = candidatePaths(meta?.path);
+
+      for (const path of paths) {
+        const val = resolvePath(rootObj, path);
+        if (val !== undefined) return val;
+      }
+
+      return sectionContent;
+    }
+
+    // ---- FILTER SYSTEM ----
+    root.querySelectorAll('[data-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        root.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderList(searchEl.value);
+      });
+    });
+
+    // ---- LIST RENDER ----
+    function renderList(filter = "") {
+      const f = filter.trim().toLowerCase();
+
+      // Get all items from index
+      let items = index.filter((it) => !EXCLUDED_IDS.includes(it.id));
+      
+      // Apply favorites filter FIRST (before other filters)
+      if (currentFilter === 'favorites') {
+        const favorites = getFavorites();
+        // Include items from index that are favorited
+        const indexFavorites = items.filter(it => favorites.includes(it.id));
+        
+        // Also create pseudo-items for favorited abilities that aren't in the main index
+        const abilityFavorites = favorites
+          .filter(fav => fav.startsWith('ability-'))
+          .map(fav => ({
+            id: fav,
+            title: titleize(fav.replace('ability-', '').replace(/-/g, ' ')),
+            type: 'ability'
+          }));
+        
+        items = [...indexFavorites, ...abilityFavorites];
+      }
+      
+      // Filter out items that have no real content (just meta/empty shells)
+      items = items.filter(it => {
+        // Keep favorites always
+        if (currentFilter === 'favorites') return true;
+        
+        // Keep it if it has children (parent sections)
+        const children = helpers.getChildren(it.id);
+        if (children && children.length > 0) return true;
+        
+        // Otherwise, it should have actual content to display
+        return true;
+      });
+
+      // Apply search filter
+      if (f) {
+        items = items.filter((it) => {
+          const hay = `${it.title || ""} ${it.id || ""} ${it.type || ""}`.toLowerCase();
+          return hay.includes(f);
+        });
+      }
+
+      filteredIndex = items;
+
+      if (!items.length) {
+        listEl.innerHTML = `<div class="cc-muted p-2">No matches.</div>`;
+        return;
+      }
+
+      listEl.innerHTML = items
+        .map((it) => {
+          const active = it.id === selectedId ? "active" : "";
+          const starred = isFavorite(it.id) ? '★' : '';
+          return `
+            <button class="cc-list-item ${active}" data-id="${esc(it.id)}">
+              <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                  <div class="cc-list-title">${esc(it.title || it.id)}</div>
+                  <div class="cc-list-sub">${esc(it.type || "rule")}</div>
+                </div>
+                ${starred ? `<div class="cc-star-badge">${starred}</div>` : ''}
+              </div>
+            </button>
+          `;
+        })
+        .join("");
+    }
+
+    // ============================================
+    // IMPROVED RENDERING SYSTEM
+    // ============================================
+
+    const PROSE_FIELDS = [
+      'philosophy', 'text', 'long', 'short', 'effect', 'description',
+      'design_intent', 'definition', 'pool', 'logic', 'resolution',
+      'trigger', 'thematic_reason', 'golden_rule', 'fast_resolution',
+      'action_cost', 'completion', 'format'
+    ];
+
+    const LIST_FIELDS = [
+      'usage', 'guidelines', 'modifiers', 'restrictions', 'choices',
+      'process', 'sources', 'examples', 'effects', 'penalties',
+      'recovery', 'blockers', 'non_blockers', 'absolute',
+      'negation_triggers', 'terrain_trait_interactions',
+      'flexibility', 'common_actions_list', 'maintenance_steps',
+      'rules', 'logic_triggers', 'type_rules'
+    ];
+
+    const NESTED_FIELDS = [
+      'sections', 'mechanics', 'options', 'melee_rules', 'ranged_rules',
+      'rules_hooks', 'outcomes', 'status_conditions', 'attack_fundamentals',
+      'damage_resolution', 'the_morale_test', 'six_based_effects',
+      'cover_mechanics', 'movement_basics', 'terrain_penalties',
+      'model_interaction', 'engagement_and_pressure', 'verticality',
+      'trait_priority', 'activation_cycle', 'the_activation',
+      'round_definition', 'action_summaries', 'line_of_sight',
+      'initiative_logic'
+    ];
+
+    function renderProseField(label, value) {
+      if (!value) return '';
+      
+      let text = '';
+      if (typeof value === 'string') {
+        text = value;
+      } else if (value && typeof value === 'object') {
+        text = value.text || value.long || value.short || value.description || '';
+      }
+
+      if (!text) return '';
+
+      const className = label.toLowerCase().includes('philosophy') ? 'fw-semibold' : '';
+      return `
+        <div class="mb-3">
+          <div class="cc-field-label">${esc(titleize(label))}</div>
+          <p class="${className} mb-0">${esc(text)}</p>
+        </div>
+      `;
+    }
+
+    function renderList_Content(label, arr) {
+      if (!Array.isArray(arr) || !arr.length) return '';
+
+      const items = arr.map(item => {
+        if (typeof item === 'string') {
+          return `<li>${esc(item)}</li>`;
+        } else if (item && typeof item === 'object') {
+          if (item.name && (item.effect || item.description)) {
+            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.effect || item.description)}</li>`;
+          } else if (item.value && item.description) {
+            return `<li><strong>${esc(item.value)}:</strong> ${esc(item.description)}</li>`;
+          } else if (item.trait && item.result) {
+            return `<li><strong>${esc(item.trait)}:</strong> ${esc(item.result)}</li>`;
+          } else if (item.id && (item.name || item.effect)) {
+            return `<li><strong>${esc(item.name || item.id)}:</strong> ${esc(item.effect || '')}</li>`;
+          } else {
+            const parts = Object.entries(item)
+              .filter(([k]) => !k.startsWith('_'))
+              .map(([k, v]) => `<strong>${esc(titleize(k))}:</strong> ${esc(v)}`)
+              .join(' • ');
+            return `<li>${parts}</li>`;
+          }
+        }
+        return '';
+      }).filter(Boolean).join('');
+
+      if (!items) return '';
+
+      return `
+        <div class="mb-3">
+          <div class="cc-field-label">${esc(titleize(label))}</div>
+          <ul>${items}</ul>
+        </div>
+      `;
+    }
+
+    function renderNestedSection(label, obj, depth = 0) {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return '';
+
+      const MAX_DEPTH = 5;
+      if (depth >= MAX_DEPTH) return '';
+
+      let html = '';
+
+      const isAbilityDict = Object.values(obj).every(v => 
+        typeof v === 'string' || (v && typeof v === 'object' && (v.effect || v.short || v.long))
+      );
+
+      if (isAbilityDict) {
+        html += `
+          <div class="mb-4">
+            <div class="cc-field-label">${esc(titleize(label))}</div>
+            ${renderAbilityDictionary(obj)}
+          </div>
+        `;
+        return html;
+      }
+
+      const hasTitle = obj.title || obj.name;
+      const headerTag = depth === 0 ? 'h5' : depth === 1 ? 'h6' : 'div';
+      const headerClass = depth <= 1 ? 'cc-section-title' : 'cc-field-label';
+
+      // Only show title if it's not empty and not just repeating the label
+      if (hasTitle && (obj.title !== label || depth > 0)) {
+        const displayTitle = obj.title || obj.name || titleize(label);
+        // Don't show if the title is the same as what we're already rendering
+        if (displayTitle !== titleize(label) || depth > 0) {
+          html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
+        }
+      }
+
+      for (const field of PROSE_FIELDS) {
+        if (obj[field]) {
+          html += renderProseField(field, obj[field]);
+        }
+      }
+
+      for (const field of LIST_FIELDS) {
+        if (obj[field]) {
+          html += renderList_Content(field, obj[field]);
+        }
+      }
+
+      for (const field of NESTED_FIELDS) {
+        if (obj[field] && typeof obj[field] === 'object') {
+          if (Array.isArray(obj[field])) {
+            html += renderList_Content(field, obj[field]);
+          } else {
+            const nestedKeys = Object.keys(obj[field]).filter(k => !k.startsWith('_'));
+            for (const nestedKey of nestedKeys) {
+              html += renderNestedSection(nestedKey, obj[field][nestedKey], depth + 1);
+            }
+          }
+        }
+      }
+
+      const processedFields = new Set([
+        ...PROSE_FIELDS,
+        ...LIST_FIELDS,
+        ...NESTED_FIELDS,
+        'title', 'name', '_id', 'id', 'Id', 'ID', 'type', 'design_intent', 'designer_notes'
+      ]);
+
+      const remainingFields = Object.entries(obj)
+        .filter(([k, v]) => {
+          // Exclude processed fields
+          if (processedFields.has(k)) return false;
+          
+          // Exclude fields starting with underscore
+          if (k.startsWith('_')) return false;
+          
+          // Exclude any field with 'id' anywhere in the name (case insensitive)
+          const lowerKey = k.toLowerCase();
+          if (lowerKey.includes('id') || lowerKey.includes('ref')) return false;
+          
+          // Exclude undefined/null
+          if (v === undefined || v === null || v === '') return false;
+          
+          // Exclude string values that look like IDs (R- pattern or long alphanumeric)
+          if (typeof v === 'string') {
+            // R-ANYTHING pattern
+            if (v.match(/^R-[A-Z]/)) return false;
+            // UUID-like patterns
+            if (v.match(/^[A-Z0-9]{8,}-/)) return false;
+          }
+          
+          return true;
+        });
+
+      if (remainingFields.length > 0) {
+        html += '<div class="mb-3">';
+        for (const [key, value] of remainingFields) {
+          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            html += `
+              <div class="cc-kv mb-1">
+                <div class="cc-k">${esc(titleize(key))}</div>
+                <div class="cc-v">${esc(value)}</div>
+              </div>
+            `;
+          } else if (Array.isArray(value)) {
+            html += renderList_Content(key, value);
+          } else if (value && typeof value === 'object') {
+            html += renderNestedSection(key, value, depth + 1);
+          }
+        }
+        html += '</div>';
+      }
+
+      if (html) {
+        return `<div class="cc-section mb-4">${html}</div>`;
+      }
+
+      return '';
+    }
+
+    function renderAbilityDictionary(dict) {
+      return Object.entries(dict || {})
+        .map(([key, ability]) => {
+          // Create a unique ID for this ability
+          const abilityId = `ability-${key}`;
+          const starred = isFavorite(abilityId);
+          
+          if (typeof ability === 'string') {
+            return `
+              <div class="cc-ability-card p-3 mb-2">
+                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                  <div class="fw-bold flex-grow-1">${esc(titleize(key))}</div>
+                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
+                    <span class="cc-star">${starred ? '★' : '☆'}</span>
+                  </button>
+                </div>
+                <div>${esc(ability)}</div>
+              </div>
+            `;
+          }
+
+          const a = ability || {};
+          return `
+            <div class="cc-ability-card p-3 mb-2">
+              <div class="d-flex justify-content-between align-items-baseline mb-1">
+                <div class="fw-bold flex-grow-1">${esc(a.name || titleize(key))}</div>
+                <div class="d-flex align-items-center gap-2">
+                  ${a.timing ? `<div class="cc-muted small text-uppercase">${esc(a.timing)}</div>` : ''}
+                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
+                    <span class="cc-star">${starred ? '★' : '☆'}</span>
+                  </button>
+                </div>
+              </div>
+              ${a.short ? `<div class="fw-semibold mb-1">${esc(a.short)}</div>` : ''}
+              ${a.long ? `<div>${esc(a.long)}</div>` : ''}
+              ${a.effect ? `<div>${esc(a.effect)}</div>` : ''}
+              ${a.trigger ? `<div class="mt-1"><strong>Trigger:</strong> ${esc(a.trigger)}</div>` : ''}
+              ${a.restriction ? `<div class="cc-muted small mt-1">${esc(a.restriction)}</div>` : ''}
+              ${a.restrictions ? `<div class="cc-muted small mt-1">${esc(Array.isArray(a.restrictions) ? a.restrictions.join(' • ') : a.restrictions)}</div>` : ''}
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function renderContentSmart(meta, content) {
+      if (content === undefined || content === null) {
+        return `<div class="cc-muted">No content available.</div>`;
+      }
+
+      if (typeof content === 'string') {
+        return `<p>${esc(content)}</p>`;
+      }
+
+      if (typeof content !== 'object') {
+        return `<p>${esc(String(content))}</p>`;
+      }
+
+      if (content.abilities && typeof content.abilities === 'object') {
+        return renderAbilityDictionary(content.abilities);
+      }
+
+      if (content.properties && typeof content.properties === 'object') {
+        return renderAbilityDictionary(content.properties);
+      }
+
+      const isFlatAbilityDict = Object.values(content).every(v =>
+        typeof v === 'string' || 
+        (v && typeof v === 'object' && !Array.isArray(v) && (v.effect || v.short || v.long || v.description))
+      );
+
+      if (isFlatAbilityDict && !content.sections && !content.text) {
+        return renderAbilityDictionary(content);
+      }
+
+      return renderNestedSection('', content, 0) || `<div class="cc-muted">No renderable content found.</div>`;
+    }
+
+    // ---- BREADCRUMB ----
+    function renderBreadcrumb(meta) {
+      if (!meta) return '';
+      
+      const parts = [];
+      let current = meta;
+      
+      // Walk up the parent chain
+      while (current) {
+        parts.unshift(current);
+        if (current.parent) {
+          current = index.find(it => it.id === current.parent);
+        } else {
+          break;
+        }
+      }
+
+      return parts.map((p, i) => {
+        const isLast = i === parts.length - 1;
+        if (isLast) {
+          return `<span class="cc-breadcrumb-current">${esc(p.title || p.id)}</span>`;
+        } else {
+          return `<button class="cc-breadcrumb-link" data-id="${esc(p.id)}">${esc(p.title || p.id)}</button>`;
+        }
+      }).join(' › ');
+    }
+
+    // ---- SELECT RULE ----
+    async function selectRule(id) {
+      // Check if this is a subsection of the currently loaded rule
+      if (selectedId) {
+        const children = helpers.getChildren(selectedId);
+        const isChildOfCurrent = children.some(c => c.id === id);
+        
+        if (isChildOfCurrent) {
+          // Scroll to this subsection within the current content
+          const targetSection = detailEl.querySelector(`#section-${id}`);
+          if (targetSection) {
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Highlight briefly
+            targetSection.style.color = '#ff7518';
+            setTimeout(() => {
+              targetSection.style.color = '';
+            }, 2000);
+            return;
+          }
+        }
+      }
+      
+      selectedId = id;
+
+      detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+      ctxEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
+
+      const section = await helpers.getRuleSection(id);
+
+      if (!section || !section.meta) {
+        detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
+        ctxEl.innerHTML = `<div class="cc-muted">—</div>`;
+        navEl.classList.add('d-none');
+        favoriteBtn.classList.add('d-none');
+        return;
+      }
+
+      const meta = section.meta;
+      const children = helpers.getChildren(id);
+
+      const resolvedContent = pickBestResolvedContent(meta, section.content);
+      
+      // Check if content is actually empty or just meta
+      const hasRealContent = resolvedContent && (
+        typeof resolvedContent === 'string' ||
+        (typeof resolvedContent === 'object' && Object.keys(resolvedContent).some(k => 
+          !k.startsWith('_') && k !== 'id' && k !== 'title' && resolvedContent[k]
+        ))
+      );
+      
+      if (!hasRealContent) {
+        detailEl.innerHTML = `<div class="cc-muted">This section has no content yet.</div>`;
+        navEl.classList.add('d-none');
+        favoriteBtn.classList.add('d-none');
+        contextPanelEl.style.display = 'none';
+        renderList(searchEl.value);
+        return;
+      }
+      
+      const formattedContent = renderContentSmart(meta, resolvedContent);
+
+      // ---- FAVORITE BUTTON ----
+      favoriteBtn.classList.remove('d-none');
+      const star = favoriteBtn.querySelector('.cc-star');
+      star.textContent = isFavorite(id) ? '★' : '☆';
+
+      // ---- MAIN CONTENT (with anchor IDs for subsection navigation) ----
+      const titleHtml = `
+        <article class="cc-rule-article">
+          <h2 class="cc-rule-title">${esc(meta.title || "")}</h2>
+          <div class="cc-rule-content">
+      `;
+      const closingHtml = `
+          </div>
+        </article>
+      `;
+      detailEl.innerHTML = titleHtml + formattedContent + closingHtml;
+      
+      // Add anchor IDs to all subsection headers for smooth scrolling
+      if (children.length > 0) {
+        children.forEach(child => {
+          const childElement = detailEl.querySelector(`h2, h3, h4, h5, h6`);
+          if (childElement && childElement.textContent.trim() === child.title) {
+            childElement.id = `section-${child.id}`;
+          }
+        });
+      }
+
+      // ---- CONTEXT (show design_intent and children) ----
+      let contextHtml = '';
+      
+      // Add design_intent if it exists - check multiple locations
+      let designIntentText = null;
+      
+      if (resolvedContent && typeof resolvedContent === 'object') {
+        // Check direct property
+        if (resolvedContent.design_intent) {
+          designIntentText = resolvedContent.design_intent;
+        }
+        // Check nested in meta
+        else if (resolvedContent.meta && resolvedContent.meta.design_intent) {
+          designIntentText = resolvedContent.meta.design_intent;
+        }
+        // Check in notes
+        else if (resolvedContent.designer_notes) {
+          designIntentText = resolvedContent.designer_notes;
+        }
+        // Check in description object
+        else if (resolvedContent.description && typeof resolvedContent.description === 'object' && resolvedContent.description.design_intent) {
+          designIntentText = resolvedContent.description.design_intent;
+        }
+      }
+      
+      if (designIntentText) {
+        // Handle if design_intent is an object
+        if (typeof designIntentText === 'object') {
+          // Extract text from common properties
+          designIntentText = designIntentText.text || 
+                            designIntentText.description || 
+                            designIntentText.note ||
+                            designIntentText.content ||
+                            JSON.stringify(designIntentText, null, 2);
+        }
+        
+        contextHtml += `
+          <div class="cc-callout mb-3">
+            <div class="fw-bold small text-uppercase mb-2" style="color: #ff7518;">Designer Notes</div>
+            <div class="small">${esc(String(designIntentText))}</div>
+          </div>
+        `;
+      }
+      
+      // Add children/subsections
+      if (children.length > 0) {
+        contextHtml += `
+          <div class="fw-bold small text-uppercase mb-2" style="color: #ff7518;">Subsections</div>
+          <ul class="list-unstyled">
+            ${children
+              .map(
+                (c) => `
+                  <li class="mb-2 d-flex justify-content-between align-items-center">
+                    <button class="btn btn-link p-0 text-start flex-grow-1" data-id="${esc(c.id)}">
+                      ${esc(c.title)}
+                    </button>
+                    <button class="btn btn-link p-0 cc-context-star" data-star-id="${esc(c.id)}" title="Star this rule">
+                      <span class="cc-star">${isFavorite(c.id) ? '★' : '☆'}</span>
+                    </button>
+                  </li>`
+              )
+              .join("")}
+          </ul>
+        `;
+      }
+      
+      if (contextHtml) {
+        contextPanelEl.style.display = 'block';
+        ctxEl.innerHTML = contextHtml;
+      } else {
+        contextPanelEl.style.display = 'none';
+      }
+
+      // ---- NAVIGATION ----
+      updateNavigation();
+
+      renderList(searchEl.value);
+    }
+
+    // ---- NAVIGATION (Previous/Next) ----
+    function updateNavigation() {
+      const currentIndex = filteredIndex.findIndex(it => it.id === selectedId);
+      
+      if (currentIndex === -1) {
+        navEl.classList.add('d-none');
+        return;
+      }
+
+      navEl.classList.remove('d-none');
+
+      const hasPrev = currentIndex > 0;
+      const hasNext = currentIndex < filteredIndex.length - 1;
+
+      prevBtnEl.disabled = !hasPrev;
+      nextBtnEl.disabled = !hasNext;
+
+      if (hasPrev) {
+        prevBtnEl.onclick = () => selectRule(filteredIndex[currentIndex - 1].id);
+      }
+
+      if (hasNext) {
+        nextBtnEl.onclick = () => selectRule(filteredIndex[currentIndex + 1].id);
+      }
+    }
+
+    // ---- PRINT MODE ----
+    printBtn.addEventListener('click', () => {
+      window.print();
+    });
+
+    // ---- EVENTS ----
+    listEl.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-id]");
+      if (!btn) return;
+      
+      const clickedId = btn.dataset.id;
+      
+      // Handle ability clicks - find parent section
+      if (clickedId.startsWith('ability-')) {
+        // Extract ability name
+        const abilityName = clickedId.replace('ability-', '');
+        
+        // Find the section that contains this ability
+        // Look through all sections for ability dictionaries
+        const abilitySection = index.find(it => 
+          it.type === 'ability_dictionary' || 
+          it.id.includes('ability') ||
+          it.title?.toLowerCase().includes('ability')
+        );
+        
+        if (abilitySection) {
+          selectRule(abilitySection.id);
+          // After loading, scroll to the ability
+          setTimeout(() => {
+            const abilityCard = Array.from(detailEl.querySelectorAll('.cc-ability-card'))
+              .find(card => card.textContent.toLowerCase().includes(abilityName.replace(/-/g, ' ')));
+            if (abilityCard) {
+              abilityCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              abilityCard.style.borderColor = '#ff7518';
+              setTimeout(() => {
+                abilityCard.style.borderColor = '';
+              }, 2000);
+            }
+          }, 500);
+        } else {
+          detailEl.innerHTML = `<div class="cc-muted">Could not find the section containing "${titleize(abilityName)}". Try searching for it!</div>`;
+        }
+        return;
+      }
+      
+      selectRule(clickedId);
+    });
+
+    ctxEl.addEventListener("click", (e) => {
+      // Handle subsection navigation
+      const navBtn = e.target.closest("button[data-id]");
+      if (navBtn) {
+        selectRule(navBtn.dataset.id);
+        return;
+      }
+      
+      // Handle star toggles in context panel
+      const starBtn = e.target.closest("button[data-star-id]");
+      if (starBtn) {
+        const starId = starBtn.dataset.starId;
+        toggleFavorite(starId);
+        const star = starBtn.querySelector('.cc-star');
+        star.textContent = isFavorite(starId) ? '★' : '☆';
+        renderList(searchEl.value);
+        e.stopPropagation();
+      }
+    });
+
+    searchEl.addEventListener("input", () => {
+      renderList(searchEl.value);
+    });
+
+    favoriteBtn.addEventListener('click', () => {
+      if (!selectedId) return;
+      toggleFavorite(selectedId);
+      const star = favoriteBtn.querySelector('.cc-star');
+      star.textContent = isFavorite(selectedId) ? '★' : '☆';
+      
+      // Refresh the list to show/hide from favorites
+      renderList(searchEl.value);
+      
+      // If we're on the favorites filter and just unstarred, this item should disappear from list
+      if (currentFilter === 'favorites' && !isFavorite(selectedId)) {
+        // The item was unstarred while viewing favorites - list will auto-update
+        // If the list is now empty, show a message
+        if (filteredIndex.length === 0) {
+          detailEl.innerHTML = `<div class="cc-muted">No starred rules yet. Click the ☆ icon on any rule to star it!</div>`;
+          contextPanelEl.style.display = 'none';
+          navEl.classList.add('d-none');
+          favoriteBtn.classList.add('d-none');
+        }
+      }
+    });
+
+    // Handle ability star clicks in main content
+    detailEl.addEventListener('click', (e) => {
+      const starBtn = e.target.closest("button.cc-ability-star");
+      if (starBtn) {
+        const starId = starBtn.dataset.starId;
+        toggleFavorite(starId);
+        const star = starBtn.querySelector('.cc-star');
+        star.textContent = isFavorite(starId) ? '★' : '☆';
+        renderList(searchEl.value);
+        e.stopPropagation();
+      }
+    });
+
+    // ---- INIT ----
+    renderList();
+  },
+};
