@@ -289,7 +289,15 @@ window.CC_APP = {
     const titleize = (k) => {
       const str = String(k || "");
       
-      // Handle ability dictionary keys (e.g., "movement_abilities" -> "Movement Abilities")
+      // Handle ability dictionary keys (e.g., "A_deployment_timing" -> "Abilities: Deployment Timing")
+      if (str.match(/^[A-H]_/)) {
+        const topic = str.substring(2) // Remove "A_", "B_", etc.
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (m) => m.toUpperCase());
+        return `Abilities: ${topic}`;
+      }
+      
+      // Handle ability dictionary keys with full name (e.g., "movement_abilities" -> "Movement Abilities")
       if (str.includes('_abilities') || str.includes('_ability')) {
         return str
           .replace(/_abilities?/, '')
@@ -611,7 +619,10 @@ window.CC_APP = {
         ...PROSE_FIELDS,
         ...LIST_FIELDS,
         ...NESTED_FIELDS,
-        'title', 'Title', 'name', '_id', 'id', 'Id', 'ID', 'type', 'design_intent', 'designer_notes'
+        'title', 'Title', 'name', 'Name', '_id', 'id', 'Id', 'ID', 
+        'type', 'design_intent', 'designer_notes',
+        'effect', 'Effect', 'restriction', 'Restriction', 'trigger', 'Trigger',
+        'short', 'Short'
       ]);
 
       const remainingFields = Object.entries(obj)
