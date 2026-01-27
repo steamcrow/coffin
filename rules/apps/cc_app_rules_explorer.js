@@ -286,20 +286,20 @@ window.CC_APP = {
           <aside class="cc-rules-sidebar" id="cc-rules-sidebar">
             <div class="cc-panel h-100">
               <div class="cc-panel-head">
-                <div class="cc-panel-title mb-2">Rules</div>
+                <!-- Title -->
+                <div class="cc-panel-title mb-3">Rules</div>
                 
-                <!-- Filter tabs -->
-                <div class="btn-group btn-group-sm w-100" role="group" style="margin-bottom: 12px;">
+                <!-- Filter tabs on their own row -->
+                <div class="btn-group btn-group-sm w-100 mb-3" role="group">
                   <button type="button" class="btn btn-outline-secondary active" data-filter="all">All</button>
                   <button type="button" class="btn btn-outline-secondary" data-filter="favorites">★ Starred</button>
                 </div>
                 
-                <!-- Search on its own row with clear separation -->
+                <!-- Search on its own row with clear visual separation -->
                 <input
                   id="cc-rule-search"
                   class="form-control form-control-sm cc-input w-100"
                   placeholder="Search rules..."
-                  style="margin-top: 4px;"
                 />
               </div>
               <div id="cc-rule-list" class="cc-list"></div>
@@ -673,6 +673,10 @@ window.CC_APP = {
       // Skip 'short' and 'text' entirely - we prefer 'long' and 'text' is generic
       if (label === 'short' || label === 'text') return '';
       
+      // Skip any field that looks like an ID
+      const lowerLabel = label.toLowerCase();
+      if (lowerLabel.includes('id') || lowerLabel === 'ref' || lowerLabel === 'reference') return '';
+      
       let text = '';
       if (typeof value === 'string') {
         text = value;
@@ -682,6 +686,11 @@ window.CC_APP = {
       }
 
       if (!text) return '';
+      
+      // Filter out ID values (R-ANYTHING pattern)
+      if (typeof text === 'string' && text.trim().match(/^R-[A-Z0-9-]+$/i)) {
+        return '';
+      }
 
       // Don't show labels for 'long' or 'text' - just render the content
       if (label === 'long' || label === 'text') {
@@ -1258,51 +1267,52 @@ window.CC_APP = {
       
       // Handle ability clicks - find and load parent section, then scroll to ability
       if (clickedId.startsWith('ability-')) {
-        const abilityName = clickedId.replace('ability-', '').replace(/-/g, '_').toLowerCase();
-        const abilityNameDisplay = titleize(abilityName.replace(/_/g, ' '));
+        // Extract the ability name in various formats for searching
+        const abilityId = clickedId.replace('ability-', '');
+        const abilityNameUnderscore = abilityId.replace(/-/g, '_');
+        const abilityNameSpace = abilityId.replace(/-/g, ' ');
+        const abilityNameDisplay = titleize(abilityNameSpace);
+        
+        console.log('Searching for ability:', abilityId, 'formats:', { abilityNameUnderscore, abilityNameSpace });
         
         // First, try to find in ability dictionary sections specifically
         let foundSection = null;
+        let foundKey = null;
+        
         const abilityDictSections = index.filter(it => 
-          it.id && (it.id.includes('ability_dict') || it.title && it.title.toLowerCase().includes('ability'))
+          it.id && (
+            it.id.includes('ability_dict') || 
+            it.id.includes('ability') ||
+            (it.title && it.title.toLowerCase().includes('ability'))
+          )
         );
         
-        // Search ability dictionary sections first (more likely)
+        console.log('Checking', abilityDictSections.length, 'ability dictionary sections');
+        
+        // Search ability dictionary sections first (most likely location)
         for (const item of abilityDictSections) {
           try {
             const section = await helpers.getRuleSection(item.id);
             if (section && section.content) {
-              // Check if this ability exists as a key in the content
               const contentObj = section.content;
+              
+              // Check every key in the content for a match
               for (const key in contentObj) {
-                if (key.toLowerCase().replace(/_/g, ' ') === abilityName.replace(/_/g, ' ')) {
+                const keyLower = key.toLowerCase().replace(/_/g, '');
+                const searchLower = abilityNameUnderscore.toLowerCase().replace(/_/g, '');
+                
+                if (keyLower === searchLower || key === abilityNameUnderscore) {
                   foundSection = item.id;
+                  foundKey = key;
+                  console.log('Found ability', key, 'in section', item.id);
                   break;
                 }
               }
               if (foundSection) break;
             }
           } catch (e) {
+            console.error('Error checking section', item.id, e);
             continue;
-          }
-        }
-        
-        // If not found, search all sections
-        if (!foundSection) {
-          for (const item of index) {
-            if (abilityDictSections.includes(item)) continue; // Already checked
-            try {
-              const section = await helpers.getRuleSection(item.id);
-              if (section && section.content) {
-                const contentStr = JSON.stringify(section.content).toLowerCase();
-                if (contentStr.includes(abilityName)) {
-                  foundSection = item.id;
-                  break;
-                }
-              }
-            } catch (e) {
-              continue;
-            }
           }
         }
         
@@ -1313,11 +1323,29 @@ window.CC_APP = {
           // Wait for rendering, then scroll to the specific ability
           setTimeout(() => {
             const abilityCards = detailEl.querySelectorAll('.cc-ability-card');
-            const targetCard = Array.from(abilityCards).find(card => {
-              const cardText = card.textContent.toLowerCase();
-              return cardText.includes(abilityName.replace(/_/g, ' ')) || 
-                     cardText.includes(abilityName.replace(/_/g, ''));
-            });
+            let targetCard = null;
+            
+            // Try to find by exact key match first
+            if (foundKey) {
+              targetCard = Array.from(abilityCards).find(card => {
+                const cardTitle = card.querySelector('.fw-bold');
+                if (cardTitle) {
+                  const titleText = cardTitle.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  const searchText = foundKey.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  return titleText === searchText;
+                }
+                return false;
+              });
+            }
+            
+            // Fallback to partial match
+            if (!targetCard) {
+              targetCard = Array.from(abilityCards).find(card => {
+                const cardText = card.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const searchText = abilityNameUnderscore.toLowerCase().replace(/[^a-z0-9]/g, '');
+                return cardText.includes(searchText);
+              });
+            }
             
             if (targetCard) {
               targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1328,12 +1356,16 @@ window.CC_APP = {
                 targetCard.style.borderColor = '';
                 targetCard.style.boxShadow = '';
               }, 2000);
+            } else {
+              console.warn('Could not find ability card after loading section');
             }
           }, 500);
         } else {
+          console.error('Could not find section containing ability', abilityId);
           detailEl.innerHTML = `
             <div class="cc-muted p-4">
               <p>Could not find the section containing the ability "${esc(abilityNameDisplay)}".</p>
+              <p>This may be a custom ability defined inline in a unit card.</p>
               <p>Try using the search box to find it!</p>
             </div>
           `;
