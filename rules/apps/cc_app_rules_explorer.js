@@ -258,6 +258,9 @@ window.CC_APP = {
 
     const EXCLUDED_IDS = [
       'sections_philosophy',  // Just the metadata entry, not real content
+      'philosophy',           // The meta Philosophy & Design section
+      'philosophy_design',
+      'philosophy_and_design',
       'location_vault',
       'location_types',
       'scenario_vault',
@@ -773,8 +776,12 @@ window.CC_APP = {
         const displayTitle = obj.title || obj.name || titleize(label);
         const labelTitle = titleize(label);
         
+        // Skip if title looks like an ID (R-TURN, R-COMB, etc)
+        if (displayTitle && displayTitle.match(/^R-[A-Z0-9-]+$/i)) {
+          // Don't show ID as title
+        }
         // Skip if title is the same as the label (duplicate)
-        if (displayTitle.toLowerCase() === labelTitle.toLowerCase()) {
+        else if (displayTitle.toLowerCase() === labelTitle.toLowerCase()) {
           // Don't show duplicate title
         } else if (depth > 0) {
           // Show sub-section titles
@@ -1278,6 +1285,7 @@ window.CC_APP = {
       if (!btn) return;
       
       const clickedId = btn.dataset.id;
+      console.log('📍 Clicked item:', clickedId);
       
       // Handle ability clicks - find and load parent section, then scroll to ability
       if (clickedId.startsWith('ability-')) {
