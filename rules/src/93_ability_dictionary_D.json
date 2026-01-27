@@ -88,13 +88,6 @@
       "long": "Passive. Friendly units within 6\" gain +1 Defense."
     },
 
-    "witch_stitching": {
-      "_id": "R-ABIL-D-WITCH-STITCHING",
-      "timing": "passive",
-      "short": "Chance to ignore damage.",
-      "long": "Passive. First time per activation this unit would lose Quality: 5+ ignore 1 damage."
-    },
-
     "tough": {
       "_id": "R-ABIL-D-TOUGH",
       "timing": "passive",
@@ -207,11 +200,11 @@
       "long": "Passive. This unit ignores Coffin Cough, Choking Dust effects and other environmental gas/smoke/toxic effects to lungs and eyes as determined by scenario rules."
     },
 
-    "witch_stitched_clothing": {
-      "_id": "R-ABIL-D-WITCH-STITCHED-CLOTHING",
+    "witch_stitched": {
+      "_id": "R-ABIL-D-WITCH-STITCHED",
       "timing": "passive",
       "short": "+1 Defense light armor.",
-      "long": "Passive. +1 Defense. Counts as Light Armor. Does not reduce movement or prevent Flying."
+      "long": "Passive. +1 Defense. Majikal stitching enhances Defense, but does not add mass. Does not reduce movement or prevent Flying."
     }
 
   }
