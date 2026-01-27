@@ -1405,6 +1405,23 @@ window.CC_APP = {
     });
 
     // ---- INIT ----
+    
+    // Improve ability dictionary titles using path data from rules_base
+    index.forEach(item => {
+      if (item.id && item.id.startsWith('ability_dict_') && item.path) {
+        // Extract the descriptive part from path like "rules_master.ability_dictionary.A_deployment_timing"
+        const pathParts = item.path.split('.');
+        const lastPart = pathParts[pathParts.length - 1]; // "A_deployment_timing"
+        
+        if (lastPart && lastPart.match(/^[A-H]_/)) {
+          const topic = lastPart.substring(2) // Remove "A_"
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, m => m.toUpperCase());
+          item.title = `Abilities: ${topic}`;
+        }
+      }
+    });
+    
     renderList();
     
     // Load factions and add them to index
