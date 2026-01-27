@@ -873,11 +873,25 @@ window.CC_APP = {
     }
 
     function renderAbilityDictionary(dict) {
+      // Get the currently selected section ID to store with abilities
+      const currentSectionId = selectedId;
+      
       return Object.entries(dict || {})
         .map(([key, ability]) => {
-          // Create a unique ID for this ability
+          // Create a unique ID for this ability that includes the section
           const abilityId = `ability-${key}`;
           const starred = isFavorite(abilityId);
+          
+          // Store section mapping in localStorage for lookup later
+          if (currentSectionId) {
+            try {
+              const abilityMap = JSON.parse(localStorage.getItem('cc_ability_sections') || '{}');
+              abilityMap[abilityId] = currentSectionId;
+              localStorage.setItem('cc_ability_sections', JSON.stringify(abilityMap));
+            } catch (e) {
+              console.warn('Could not store ability section mapping', e);
+            }
+          }
           
           if (typeof ability === 'string') {
             return `
@@ -1267,108 +1281,103 @@ window.CC_APP = {
       
       // Handle ability clicks - find and load parent section, then scroll to ability
       if (clickedId.startsWith('ability-')) {
-        // Extract the ability name in various formats for searching
+        // Extract the ability name
         const abilityId = clickedId.replace('ability-', '');
-        const abilityNameUnderscore = abilityId.replace(/-/g, '_');
-        const abilityNameSpace = abilityId.replace(/-/g, ' ');
-        const abilityNameCamel = abilityId.replace(/-/g, '');
-        const abilityNameDisplay = titleize(abilityNameSpace);
+        const abilityNameDisplay = titleize(abilityId.replace(/_/g, ' ').replace(/-/g, ' '));
         
-        console.log('🔍 Searching for ability:', {
-          original: abilityId,
-          underscore: abilityNameUnderscore,
-          space: abilityNameSpace,
-          camel: abilityNameCamel
-        });
+        console.log('🔍 Looking for starred ability:', clickedId);
         
-        // Search ALL sections (not just ability dictionaries)
+        // First, check if we have a stored section mapping
         let foundSection = null;
-        let foundKey = null;
+        try {
+          const abilityMap = JSON.parse(localStorage.getItem('cc_ability_sections') || '{}');
+          foundSection = abilityMap[clickedId];
+          if (foundSection) {
+            console.log('✅ Found stored section:', foundSection);
+          }
+        } catch (e) {
+          console.warn('Could not load ability section mapping', e);
+        }
         
-        for (const item of index) {
-          try {
-            const section = await helpers.getRuleSection(item.id);
-            if (section && section.content) {
-              const contentObj = section.content;
-              
-              // Check every key in the content for a match
-              for (const key in contentObj) {
-                // Normalize both the key and search term for comparison
-                const keyNormalized = key.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const searchNormalized = abilityNameUnderscore.toLowerCase().replace(/[^a-z0-9]/g, '');
+        // If not in mapping, search for it
+        if (!foundSection) {
+          console.log('⚠️ No stored section, searching all sections...');
+          
+          // Try various name formats
+          const searchTerms = [
+            abilityId,
+            abilityId.replace(/-/g, '_'),
+            abilityId.replace(/_/g, '-')
+          ];
+          
+          for (const item of index) {
+            try {
+              const section = await helpers.getRuleSection(item.id);
+              if (section && section.content) {
+                const contentObj = section.content;
                 
-                // Also check if the key contains the search term or vice versa
-                if (keyNormalized === searchNormalized || 
-                    keyNormalized.includes(searchNormalized) ||
-                    searchNormalized.includes(keyNormalized)) {
-                  foundSection = item.id;
-                  foundKey = key;
-                  console.log('✅ Found ability', key, 'in section', item.id);
-                  break;
+                // Check if any of our search terms match a key
+                for (const key of Object.keys(contentObj)) {
+                  const keyNormalized = key.toLowerCase();
+                  
+                  if (searchTerms.some(term => keyNormalized === term.toLowerCase() || 
+                                               keyNormalized.includes(term.toLowerCase()))) {
+                    foundSection = item.id;
+                    console.log('✅ Found ability', key, 'in section', item.id);
+                    break;
+                  }
                 }
+                if (foundSection) break;
               }
-              if (foundSection) break;
+            } catch (e) {
+              continue;
             }
-          } catch (e) {
-            console.error('Error checking section', item.id, e);
-            continue;
           }
         }
         
         if (foundSection) {
-          // Load the section that contains this ability
+          // Load the section
           await selectRule(foundSection);
           
-          // Wait for rendering, then scroll to the specific ability
+          // Wait for rendering, then scroll to the ability
           setTimeout(() => {
             const abilityCards = detailEl.querySelectorAll('.cc-ability-card');
             let targetCard = null;
             
-            // Try multiple matching strategies
-            const searchTerms = [
-              foundKey,
-              abilityNameUnderscore,
-              abilityNameSpace,
-              abilityId
-            ];
-            
-            for (const term of searchTerms) {
-              if (targetCard) break;
-              
-              targetCard = Array.from(abilityCards).find(card => {
-                const cardTitle = card.querySelector('.fw-bold');
-                if (cardTitle) {
-                  const titleNormalized = cardTitle.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
-                  const searchNormalized = term.toLowerCase().replace(/[^a-z0-9]/g, '');
-                  return titleNormalized === searchNormalized || 
-                         titleNormalized.includes(searchNormalized);
+            // Find the card that matches
+            for (const card of abilityCards) {
+              const cardTitle = card.querySelector('.fw-bold');
+              if (cardTitle) {
+                const titleText = cardTitle.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const searchText = abilityId.toLowerCase().replace(/[^a-z0-9]/g, '');
+                
+                if (titleText.includes(searchText) || searchText.includes(titleText)) {
+                  targetCard = card;
+                  break;
                 }
-                return false;
-              });
+              }
             }
             
             if (targetCard) {
               targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              // Highlight it
               targetCard.style.borderColor = '#ff7518';
               targetCard.style.boxShadow = '0 0 0 2px rgba(255,117,24,0.3)';
               setTimeout(() => {
                 targetCard.style.borderColor = '';
                 targetCard.style.boxShadow = '';
               }, 2000);
-              console.log('✅ Scrolled to ability card');
+              console.log('✅ Scrolled to ability');
             } else {
               console.warn('⚠️ Loaded section but could not find ability card');
             }
           }, 500);
         } else {
-          console.error('❌ Could not find section containing ability', abilityId);
+          console.error('❌ Could not find section');
           detailEl.innerHTML = `
             <div class="cc-muted p-4">
-              <h4 style="color: #ff7518;">Could not find "${esc(abilityNameDisplay)}"</h4>
-              <p>The app searched all sections but could not locate this ability.</p>
-              <p><strong>Debugging info:</strong> Check the browser console for search details.</p>
-              <p><strong>Tip:</strong> Try using the search box to manually find it!</p>
+              <h4 style="color: #ff7518;">Could not locate "${esc(abilityNameDisplay)}"</h4>
+              <p>The ability may have been moved or renamed in the rules.</p>
+              <p><strong>Try this:</strong> Use the search box to find it manually, then star it again.</p>
             </div>
           `;
         }
