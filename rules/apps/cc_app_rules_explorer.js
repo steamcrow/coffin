@@ -1,16 +1,18 @@
 // ================================
-// Rules Explorer App (Optimized)
+// Rules Explorer App - Optimized
 // File: steamcrow/rules/apps/cc_app_rules_explorer.js
 // ================================
+
+console.log("📘 Rules Explorer app loaded");
 
 window.CC_APP = {
   async init({ root, ctx }) {
     console.log("🚀 Rules Explorer init", ctx);
 
-    // ---- HELPER: Inject CSS ----
+    // ---- ASSET LOADING ----
     const loadStyle = (id, url) => {
-      if (document.getElementById(id)) return Promise.resolve();
-      return fetch(`${url}?t=${Date.now()}`)
+      if (document.getElementById(id)) return;
+      fetch(`${url}?t=${Date.now()}`)
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
@@ -18,155 +20,234 @@ window.CC_APP = {
           style.textContent = css;
           document.head.appendChild(style);
         })
-        .catch(err => console.error(`❌ CSS Load Failure (${id}):`, err));
+        .catch(err => console.error(`❌ CSS load failed: ${id}`, err));
     };
 
-    // Parallel load styles
-    Promise.all([
-      loadStyle('cc-core-ui-styles', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css'),
-      loadStyle('cc-rules-explorer-styles', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_rules_explorer.css')
-    ]);
+    loadStyle('cc-core-ui-styles', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css');
+    loadStyle('cc-rules-explorer-styles', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_rules_explorer.css');
 
     const helpers = ctx?.helpers;
     const index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
 
     if (!helpers) {
-      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Rules helpers not available</h4></div></div>`;
+      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Rules helpers not available</h4><p>Check loader injection.</p></div></div>`;
       return;
     }
 
-    // ---- STATE & UTILS ----
+    // ---- STATE & CONSTANTS ----
     const STORAGE_KEY = 'cc_rules_favorites';
+    const FACTION_FILES = [
+      { id: 'monster_rangers', title: 'Monster Rangers', file: 'faction-monster-rangers-v5.json' },
+      { id: 'liberty_corps', title: 'Liberty Corps', file: 'faction-liberty-corps-v2.json' },
+      { id: 'monsterology', title: 'Monsterology', file: 'faction-monsterology-v2.json' },
+      { id: 'monsters', title: 'Monsters', file: 'faction-monsters-v2.json' },
+      { id: 'shine_riders', title: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
+    ];
+    const EXCLUDED_IDS = ['sections_philosophy', 'location_vault', 'location_types', 'scenario_vault', 'objective_vault', 'location_vault_97'];
+    
+    let factionsData = {};
+    let selectedId = null;
+    let currentFilter = 'all';
+    let filteredIndex = [];
+
+    // ---- UTILITIES ----
     const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
     
-    const getFavorites = () => {
-      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } 
-      catch { return []; }
+    const titleize = (k) => {
+      const str = String(k || "");
+      if (str.match(/^[A-H]_/)) return `Abilities: ${str.substring(2).replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase())}`;
+      return str.replace(/_dictionary|_abilities?/, '').replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
     };
 
-    const toggleFavorite = (id) => {
-      const favs = getFavorites();
-      const idx = favs.indexOf(id);
-      idx > -1 ? favs.splice(idx, 1) : favs.push(id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
-    };
+    const getFavorites = () => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } };
+    const saveFavorites = (favs) => localStorage.setItem(STORAGE_KEY, JSON.stringify(favs));
+    const isFavorite = (id) => getFavorites().includes(id);
 
-    // ---- DYNAMIC RENDERING ENGINE ----
-    const renderField = (label, value) => {
-      if (!value || label.startsWith('_') || label === 'id') return '';
-      
-      const title = label.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-      
-      if (Array.isArray(value)) {
-        const items = value.map(v => typeof v === 'object' ? `<li>${esc(v.name || v.text || JSON.stringify(v))}</li>` : `<li>${esc(v)}</li>`).join('');
-        return `<div class="mb-3"><div class="cc-field-label">${title}</div><ul>${items}</ul></div>`;
-      }
-      
-      if (typeof value === 'object') {
-        return `<div class="ms-3 border-start ps-2">${Object.entries(value).map(([k, v]) => renderField(k, v)).join('')}</div>`;
-      }
+    // ---- FACTION DATA LOAD ----
+    async function loadFactions() {
+      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+      const promises = FACTION_FILES.map(async f => {
+        try {
+          const res = await fetch(`${baseUrl}${f.file}?t=${Date.now()}`);
+          const data = await res.json();
+          factionsData[f.id] = { title: f.title, data };
+        } catch (e) { console.error(`Failed to load faction ${f.id}`, e); }
+      });
+      await Promise.all(promises);
+    }
 
-      return `<div class="mb-2"><strong>${title}:</strong> ${esc(value)}</div>`;
-    };
-
-    // ---- APP SHELL SETUP ----
+    // ---- UI SHELL ----
     root.innerHTML = `
       <div class="cc-app-shell h-100">
         <div class="cc-app-header">
-          <div><h1 class="cc-app-title">Rules Explorer</h1></div>
+          <div>
+            <h1 class="cc-app-title">Rules Explorer</h1>
+            <div class="cc-app-subtitle">Interactive Coffin Canyon Rules Reference</div>
+          </div>
           <button id="cc-print-btn" class="btn btn-sm btn-outline-secondary">🖨️ Print</button>
         </div>
         <div class="cc-rules-explorer">
           <aside class="cc-rules-sidebar">
             <div class="cc-panel h-100">
               <div class="cc-panel-head">
-                <input id="cc-rule-search" class="form-control form-control-sm cc-input mb-2" placeholder="Search rules..." />
-                <div class="btn-group btn-group-sm w-100">
+                <div class="btn-group btn-group-sm w-100 mb-3">
                   <button class="btn btn-outline-secondary active" data-filter="all">All</button>
                   <button class="btn btn-outline-secondary" data-filter="favorites">★ Starred</button>
                 </div>
+                <input id="cc-rule-search" class="form-control form-control-sm cc-input" placeholder="Search rules..." />
               </div>
               <div id="cc-rule-list" class="cc-list"></div>
             </div>
           </aside>
           <main class="cc-rules-main">
-            <div id="cc-rule-detail" class="cc-body cc-rule-reader p-4">
-              <div class="text-center cc-muted mt-5">Select a rule to begin.</div>
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head d-flex justify-content-between">
+                <div class="cc-panel-title">Rule Text</div>
+                <button id="cc-favorite-btn" class="btn btn-sm btn-link d-none"><span class="cc-star">☆</span></button>
+              </div>
+              <div id="cc-rule-detail" class="cc-body cc-rule-reader">
+                <div class="cc-welcome-screen p-4 text-center">
+                   <h2 style="color:#ff7518">COFFIN CANYON</h2>
+                   <p class="lead">Select a rule from the sidebar to begin.</p>
+                </div>
+              </div>
+              <div id="cc-rule-nav" class="cc-rule-nav d-none">
+                <button id="cc-prev-btn" class="btn btn-outline-secondary">‹ Previous</button>
+                <button id="cc-next-btn" class="btn btn-outline-secondary">Next ›</button>
+              </div>
             </div>
           </main>
+          <aside class="cc-rules-context" id="cc-rules-context">
+            <div class="cc-panel h-100"><div class="cc-panel-head"><div class="cc-panel-title">Subsections</div></div>
+            <div id="cc-rule-context" class="cc-body"><div class="cc-muted">No context available.</div></div></div>
+          </aside>
         </div>
       </div>`;
 
     const listEl = root.querySelector("#cc-rule-list");
     const detailEl = root.querySelector("#cc-rule-detail");
     const searchEl = root.querySelector("#cc-rule-search");
+    const favBtn = root.querySelector("#cc-favorite-btn");
 
     // ---- RENDER LOGIC ----
-    const renderList = () => {
-      const query = searchEl.value.toLowerCase();
-      const filter = root.querySelector('[data-filter].active').dataset.filter;
-      const favs = getFavorites();
+    function renderList() {
+      const search = searchEl.value.toLowerCase();
+      let items = index.filter(it => !EXCLUDED_IDS.includes(it.id));
+      
+      if (currentFilter === 'favorites') {
+        const favs = getFavorites();
+        items = items.filter(it => favs.includes(it.id));
+      }
 
-      const items = index.filter(it => {
-        const matchesSearch = it.title?.toLowerCase().includes(query) || it.id.includes(query);
-        const matchesFilter = filter === 'all' || favs.includes(it.id);
-        return matchesSearch && matchesFilter;
-      });
+      if (search) {
+        items = items.filter(it => it.title?.toLowerCase().includes(search) || it.id.includes(search));
+      }
 
       listEl.innerHTML = items.map(it => `
-        <button class="cc-list-item" data-id="${esc(it.id)}">
-          <div class="d-flex justify-content-between">
-            <span>${esc(it.title || it.id)}</span>
-            ${favs.includes(it.id) ? '<span>★</span>' : ''}
-          </div>
+        <button class="cc-list-item ${it.id === selectedId ? 'active' : ''}" data-id="${it.id}">
+          <div class="cc-list-title">${esc(it.title || it.id)}</div>
+          <div class="small opacity-50 text-uppercase">${esc(it.type || 'rule')} ${isFavorite(it.id) ? '★' : ''}</div>
         </button>
       `).join('');
-    };
+    }
 
-    const showDetail = (id) => {
-      const item = index.find(i => i.id === id);
-      if (!item) return;
+    function showRule(id) {
+      selectedId = id;
+      const meta = index.find(i => i.id === id);
+      if (!meta) return;
 
-      // Extract content using existing helpers
-      const content = helpers.getContent ? helpers.getContent(id) : item;
+      favBtn.classList.remove('d-none');
+      favBtn.querySelector('.cc-star').innerText = isFavorite(id) ? '★' : '☆';
+
+      // Resolve content via helper or faction data
+      let content = helpers.getContent(id);
       
-      detailEl.innerHTML = `
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h2>${esc(item.title || item.id)}</h2>
-          <button class="btn btn-sm btn-link fav-toggle" data-id="${id}">
-            ${getFavorites().includes(id) ? '★ Favorited' : '☆ Favorite'}
-          </button>
-        </div>
-        <div class="cc-content-body">
-          ${Object.entries(content).map(([k, v]) => renderField(k, v)).join('')}
-        </div>
-      `;
-    };
+      // If no standard content, check if it's a faction
+      if (!content && factionsData[id]) {
+        detailEl.innerHTML = renderFaction(id);
+      } else {
+        detailEl.innerHTML = `<h2>${esc(meta.title)}</h2><div class="cc-content-body">${renderNestedSection(id, content)}</div>`;
+      }
+      
+      renderList();
+      updateSubsections(id);
+    }
+
+    function renderFaction(factionId) {
+      const f = factionsData[factionId];
+      if (!f) return '';
+      return `
+        <h2 style="color: #ff7518">${esc(f.title)}</h2>
+        <p class="cc-callout">${esc(f.data.summary || '')}</p>
+        <div class="mt-4">
+          ${f.data.units?.map(u => `
+            <div class="cc-ability-card p-3 mb-3" style="border-left: 4px solid #ff7518; background: rgba(255,255,255,0.03)">
+              <div class="d-flex justify-content-between">
+                <h4 class="m-0">${esc(u.name)}</h4>
+                <div class="fw-bold" style="color:#ff7518">${u.cost}₤</div>
+              </div>
+              <div class="cc-stats-row d-flex gap-2 my-2">
+                <span class="badge bg-dark">Q: ${u.quality}</span>
+                <span class="badge bg-dark">D: ${u.defense}</span>
+                <span class="badge bg-dark">M: ${u.move}"</span>
+              </div>
+              <p class="small italic opacity-75">${esc(u.lore || '')}</p>
+            </div>
+          `).join('')}
+        </div>`;
+    }
+
+    function renderNestedSection(key, val) {
+      if (!val) return '';
+      if (typeof val === 'string') return `<p>${esc(val)}</p>`;
+      if (Array.isArray(val)) return `<ul>${val.map(v => `<li>${esc(typeof v === 'string' ? v : JSON.stringify(v))}</li>`).join('')}</ul>`;
+      
+      return Object.entries(val).map(([k, v]) => {
+        if (k.startsWith('_')) return '';
+        return `<div class="mb-2"><strong class="text-orange">${titleize(k)}:</strong> ${renderNestedSection(k, v)}</div>`;
+      }).join('');
+    }
+
+    function updateSubsections(id) {
+      const children = helpers.getChildren(id) || [];
+      const ctxEl = root.querySelector("#cc-rule-context");
+      if (!children.length) {
+        ctxEl.innerHTML = '<div class="cc-muted">No sub-rules.</div>';
+        return;
+      }
+      ctxEl.innerHTML = children.map(c => `<div class="cc-badge mb-1">${esc(c.title || c.id)}</div>`).join(' ');
+    }
 
     // ---- EVENTS ----
-    searchEl.addEventListener('input', renderList);
-    
-    root.querySelectorAll('[data-filter]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        root.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
-        e.target.classList.add('active');
+    listEl.addEventListener('click', e => {
+      const btn = e.target.closest('.cc-list-item');
+      if (btn) showRule(btn.dataset.id);
+    });
+
+    searchEl.addEventListener('input', () => renderList());
+
+    root.querySelectorAll('[data-filter]').forEach(b => {
+      b.addEventListener('click', () => {
+        root.querySelectorAll('[data-filter]').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        currentFilter = b.dataset.filter;
         renderList();
       });
     });
 
-    listEl.addEventListener('click', (e) => {
-      const btn = e.target.closest('.cc-list-item');
-      if (btn) showDetail(btn.dataset.id);
+    favBtn.addEventListener('click', () => {
+      const favs = getFavorites();
+      const idx = favs.indexOf(selectedId);
+      if (idx > -1) favs.splice(idx, 1);
+      else favs.push(selectedId);
+      saveFavorites(favs);
+      showRule(selectedId);
     });
 
-    detailEl.addEventListener('click', (e) => {
-      if (e.target.classList.contains('fav-toggle')) {
-        toggleFavorite(e.target.dataset.id);
-        showDetail(e.target.dataset.id);
-        renderList();
-      }
-    });
+    root.querySelector("#cc-print-btn").addEventListener('click', () => window.print());
 
+    // ---- INIT ----
+    await loadFactions();
     renderList();
   }
 };
