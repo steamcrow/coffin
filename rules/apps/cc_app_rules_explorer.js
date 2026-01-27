@@ -121,12 +121,7 @@ window.CC_APP = {
           <aside class="cc-rules-sidebar" id="cc-rules-sidebar">
             <div class="cc-panel h-100">
               <div class="cc-panel-head">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                  <div class="cc-panel-title">Rules</div>
-                  <button id="cc-sidebar-toggle" class="btn btn-sm btn-link p-0" title="Toggle sidebar">
-                    <span class="cc-sidebar-toggle-icon">‹</span>
-                  </button>
-                </div>
+                <div class="cc-panel-title mb-2">Rules</div>
                 
                 <!-- Filter tabs -->
                 <div class="btn-group btn-group-sm w-100 mb-2" role="group">
@@ -158,7 +153,23 @@ window.CC_APP = {
               
               <!-- Main rule content -->
               <div id="cc-rule-detail" class="cc-body cc-rule-reader">
-                <div class="cc-muted">Select a rule from the table of contents.</div>
+                <div class="mb-4">
+                  <h2 class="cc-rule-title">👋 Welcome to the Rules Explorer</h2>
+                  
+                  <div class="cc-callout mb-4">
+                    <h4 style="color: #ff7518; margin-top: 0;">How to Use This Tool</h4>
+                    <p><strong>Navigate:</strong> Click any rule in the sidebar to view it in the center panel.</p>
+                    <p><strong>Star Favorites:</strong> Click the ☆ icon to save rules, subsections, or abilities you reference often. Find them all in the "★ Starred" filter.</p>
+                    <p><strong>Search:</strong> Use the search box to quickly find any rule by name or keyword.</p>
+                    <p><strong>Subsections:</strong> When viewing a rule with subsections, click them in the right panel to scroll directly to that part.</p>
+                    <p><strong>Print:</strong> Click the Print button in the header to generate a clean, formatted rulebook.</p>
+                  </div>
+                  
+                  <h4 style="color: #ff7518;">About Coffin Canyon</h4>
+                  <p>Coffin Canyon is a tactical tabletop game where players command factions of monsters, rangers, and more in strategic battles.</p>
+                  <p>This Rules Explorer provides interactive access to all game mechanics, abilities, and reference material.</p>
+                  <p><strong>Ready to start?</strong> Click "Core Mechanics" in the sidebar to begin!</p>
+                </div>
               </div>
               
               <!-- Previous/Next navigation -->
@@ -197,7 +208,6 @@ window.CC_APP = {
     const nextBtnEl = root.querySelector("#cc-next-btn");
     const favoriteBtn = root.querySelector("#cc-favorite-btn");
     const printBtn = root.querySelector("#cc-print-btn");
-    const sidebarToggle = root.querySelector("#cc-sidebar-toggle");
 
     let selectedId = null;
     let currentFilter = 'all';
@@ -288,13 +298,6 @@ window.CC_APP = {
 
       return sectionContent;
     }
-
-    // ---- SIDEBAR TOGGLE ----
-    sidebarToggle.addEventListener('click', () => {
-      sidebarEl.classList.toggle('collapsed');
-      const icon = sidebarToggle.querySelector('.cc-sidebar-toggle-icon');
-      icon.textContent = sidebarEl.classList.contains('collapsed') ? '›' : '‹';
-    });
 
     // ---- FILTER SYSTEM ----
     root.querySelectorAll('[data-filter]').forEach(btn => {
@@ -530,7 +533,7 @@ window.CC_APP = {
         ...PROSE_FIELDS,
         ...LIST_FIELDS,
         ...NESTED_FIELDS,
-        'title', 'name', '_id', 'id', 'Id', 'ID', 'type', 'design_intent'
+        'title', 'name', '_id', 'id', 'Id', 'ID', 'type', 'design_intent', 'designer_notes'
       ]);
 
       const remainingFields = Object.entries(obj)
@@ -541,14 +544,20 @@ window.CC_APP = {
           // Exclude fields starting with underscore
           if (k.startsWith('_')) return false;
           
-          // Exclude any field with 'id' in the name (case insensitive)
-          if (k.toLowerCase().includes('id')) return false;
+          // Exclude any field with 'id' anywhere in the name (case insensitive)
+          const lowerKey = k.toLowerCase();
+          if (lowerKey.includes('id') || lowerKey.includes('ref')) return false;
           
           // Exclude undefined/null
-          if (v === undefined || v === null) return false;
+          if (v === undefined || v === null || v === '') return false;
           
-          // Exclude string values that look like IDs (R-ANYTHING)
-          if (typeof v === 'string' && v.match(/^R-[A-Z]/)) return false;
+          // Exclude string values that look like IDs (R- pattern or long alphanumeric)
+          if (typeof v === 'string') {
+            // R-ANYTHING pattern
+            if (v.match(/^R-[A-Z]/)) return false;
+            // UUID-like patterns
+            if (v.match(/^[A-Z0-9]{8,}-/)) return false;
+          }
           
           return true;
         });
@@ -886,7 +895,43 @@ window.CC_APP = {
     listEl.addEventListener("click", (e) => {
       const btn = e.target.closest("button[data-id]");
       if (!btn) return;
-      selectRule(btn.dataset.id);
+      
+      const clickedId = btn.dataset.id;
+      
+      // Handle ability clicks - find parent section
+      if (clickedId.startsWith('ability-')) {
+        // Extract ability name
+        const abilityName = clickedId.replace('ability-', '');
+        
+        // Find the section that contains this ability
+        // Look through all sections for ability dictionaries
+        const abilitySection = index.find(it => 
+          it.type === 'ability_dictionary' || 
+          it.id.includes('ability') ||
+          it.title?.toLowerCase().includes('ability')
+        );
+        
+        if (abilitySection) {
+          selectRule(abilitySection.id);
+          // After loading, scroll to the ability
+          setTimeout(() => {
+            const abilityCard = Array.from(detailEl.querySelectorAll('.cc-ability-card'))
+              .find(card => card.textContent.toLowerCase().includes(abilityName.replace(/-/g, ' ')));
+            if (abilityCard) {
+              abilityCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              abilityCard.style.borderColor = '#ff7518';
+              setTimeout(() => {
+                abilityCard.style.borderColor = '';
+              }, 2000);
+            }
+          }, 500);
+        } else {
+          detailEl.innerHTML = `<div class="cc-muted">Could not find the section containing "${titleize(abilityName)}". Try searching for it!</div>`;
+        }
+        return;
+      }
+      
+      selectRule(clickedId);
     });
 
     ctxEl.addEventListener("click", (e) => {
