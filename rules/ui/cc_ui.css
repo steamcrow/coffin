@@ -100,11 +100,24 @@ body {
 .cc-panel-head {
   padding: 10px 12px;
   border-bottom: 1px solid rgba(255,255,255,.08);
+  background: #161616;
+}
+
+/* When panel head has flex layout (for title row) */
+.cc-panel-head > .d-flex {
   display: flex;
   gap: 10px;
   align-items: center;
   justify-content: space-between;
-  background: #161616;
+}
+
+/* Spacing for filter buttons and search in panel head */
+.cc-panel-head .btn-group {
+  margin-bottom: 0;
+}
+
+.cc-panel-head .btn-group + * {
+  margin-top: 8px;
 }
 
 .cc-panel-title {
