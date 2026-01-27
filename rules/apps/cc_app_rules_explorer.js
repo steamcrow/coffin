@@ -261,6 +261,9 @@ window.CC_APP = {
       'philosophy',           // The meta Philosophy & Design section
       'philosophy_design',
       'philosophy_and_design',
+      'quality_system',       // Parent section, all content is in Core Mechanics
+      'the_roll',             // Parent section, all content is in Core Mechanics  
+      'defense_damage',       // Parent section, all content is in Core Mechanics
       'location_vault',
       'location_types',
       'scenario_vault',
@@ -884,6 +887,20 @@ window.CC_APP = {
       const currentSectionId = selectedId;
       
       return Object.entries(dict || {})
+        .filter(([key, value]) => {
+          // Filter out metadata fields
+          const metaFields = ['id', '_id', 'ID', 'Id'];
+          if (metaFields.includes(key)) return false;
+          
+          // Filter out fields that are just IDs
+          if (typeof value === 'string' && value.match(/^R-[A-Z0-9-]+$/i)) return false;
+          
+          // Filter out standalone Name, Effect, Restriction fields if they don't have complex data
+          const standaloneFields = ['name', 'Name', 'effect', 'Effect', 'restriction', 'Restriction'];
+          if (standaloneFields.includes(key) && typeof value === 'string') return false;
+          
+          return true;
+        })
         .map(([key, ability]) => {
           // Create a unique ID for this ability that includes the section
           const abilityId = `ability-${key}`;
