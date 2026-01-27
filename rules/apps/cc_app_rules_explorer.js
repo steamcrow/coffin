@@ -954,7 +954,21 @@ window.CC_APP = {
           
           // Show navigation
           navEl.classList.remove('d-none');
-          updateNavButtons();
+          
+          const currentIndex = filteredIndex.findIndex(it => it.id === selectedId);
+          const hasPrev = currentIndex > 0;
+          const hasNext = currentIndex < filteredIndex.length - 1;
+
+          prevBtnEl.disabled = !hasPrev;
+          nextBtnEl.disabled = !hasNext;
+
+          if (hasPrev) {
+            prevBtnEl.onclick = () => selectRule(filteredIndex[currentIndex - 1].id);
+          }
+
+          if (hasNext) {
+            nextBtnEl.onclick = () => selectRule(filteredIndex[currentIndex + 1].id);
+          }
           
           return;
         }
