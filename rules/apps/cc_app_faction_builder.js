@@ -75,7 +75,7 @@ window.CC_APP = {
         optionalUpgrades: [],
         supplemental: null
       },
-      rosterViewMode: 'list'
+      rosterViewMode: 'grid'
     };
 
     // ================================
@@ -169,7 +169,7 @@ window.CC_APP = {
       return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
     }
 
-    function buildStatBadges(unit, config) {
+    function buildStatBadges(unit, config, compact = false) {
       const base = {
         q: unit.quality || 0,
         d: unit.defense || 0,
@@ -179,7 +179,7 @@ window.CC_APP = {
 
       const mod = { ...base };
 
-      if (config.optionalUpgrades) {
+      if (config && config.optionalUpgrades) {
         config.optionalUpgrades.forEach(upgrade => {
           if (upgrade.stat_modifiers) {
             Object.entries(upgrade.stat_modifiers).forEach(([stat, value]) => {
@@ -195,7 +195,7 @@ window.CC_APP = {
         });
       }
 
-      if (config.supplemental && config.supplemental.stat_modifiers) {
+      if (config && config.supplemental && config.supplemental.stat_modifiers) {
         Object.entries(config.supplemental.stat_modifiers).forEach(([stat, value]) => {
           if (stat === 'quality') mod.q += value;
           else if (stat === 'defense') mod.d += value;
@@ -211,15 +211,16 @@ window.CC_APP = {
         const modified = val !== baseval;
         const suffix = (label === 'Q' || label === 'D') ? '+' : '"';
         const displayVal = (val === 0 && label === 'R') ? '-' : val;
+        const sizeClass = compact ? 'compact' : '';
         return `
-          <div class="cc-stat-badge stat-${cls}-border ${modified ? 'stat-modified' : ''}">
+          <div class="cc-stat-badge stat-${cls}-border ${modified ? 'stat-modified' : ''} ${sizeClass}">
             <span class="cc-stat-label stat-${cls}">${label}</span>
             <span class="cc-stat-value">${displayVal}${suffix}</span>
           </div>`;
       };
       
       return `
-        <div class="stat-badge-flex">
+        <div class="stat-badge-flex ${compact ? 'compact' : ''}">
           ${badge('Q', mod.q, base.q, 'q')}
           ${badge('D', mod.d, base.d, 'd')}
           ${badge('M', mod.m, base.m, 'm')}
@@ -251,6 +252,57 @@ window.CC_APP = {
         statusBar.innerHTML = `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
       }
     }
+
+    // ================================
+    // ABILITY TOOLTIP & PANEL
+    // ================================
+    window.showAbilityTooltip = function(abilityName, event) {
+      const tooltip = document.getElementById('ability-tooltip');
+      if (!tooltip) return;
+      
+      tooltip.textContent = `Click to view: ${abilityName}`;
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.pageX + 10 + 'px';
+      tooltip.style.top = event.pageY + 10 + 'px';
+    };
+
+    window.hideAbilityTooltip = function() {
+      const tooltip = document.getElementById('ability-tooltip');
+      if (tooltip) tooltip.style.display = 'none';
+    };
+
+    window.showAbilityPanel = function(abilityName) {
+      const panel = document.createElement('div');
+      panel.id = 'ability-panel';
+      panel.className = 'cc-slide-panel';
+
+      panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+          <h2><i class="fa fa-book"></i> ${esc(abilityName)}</h2>
+          <button onclick="closeAbilityPanel()" class="cc-panel-close-btn">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="cc-roster-list">
+          <p style="padding: 1rem; color: #bbb;">
+            Ability details for <strong>${esc(abilityName)}</strong> would appear here.
+            <br><br>
+            <em>Note: This would integrate with your rules database to show the full ability description, effects, and examples.</em>
+          </p>
+        </div>
+      `;
+
+      document.body.appendChild(panel);
+      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    };
+
+    window.closeAbilityPanel = function() {
+      const panel = document.getElementById('ability-panel');
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(() => panel.remove(), 300);
+      }
+    };
 
     // ================================
     // RENDERING
@@ -285,45 +337,79 @@ window.CC_APP = {
         return '<div class="cc-muted p-3">No units in roster</div>';
       }
 
-      if (state.rosterViewMode === 'grid') {
-        return `
-          <div class="cc-roster-grid">
-            ${state.roster.map(item => {
-              const isSelected = state.selectedUnitId === item.id;
-              return `
-                <div class="cc-roster-grid-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
-                  <button class="grid-item-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
-                    <i class="fa fa-trash"></i>
-                  </button>
-                  <div class="grid-item-name">${esc(item.name)}</div>
-                  <div class="grid-item-type">${esc(item.type)}</div>
-                  <div class="grid-item-cost">${item.totalCost} ₤</div>
+      if (state.rosterViewMode === 'list') {
+        return state.roster.map(item => {
+          const isSelected = state.selectedUnitId === item.id;
+          const abilities = item.abilities || [];
+          
+          return `
+            <div class="cc-roster-list-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
+              <div class="roster-list-header">
+                <div>
+                  <div class="roster-list-name">${esc(item.name)}</div>
+                  <div class="roster-list-type">${esc(item.type)}</div>
                 </div>
-              `;
-            }).join('')}
-          </div>
-        `;
+                <div class="roster-list-cost">${item.totalCost} ₤</div>
+              </div>
+              
+              ${buildStatBadges(item, item.config, true)}
+              
+              ${abilities.length > 0 ? `
+                <div class="roster-list-abilities">
+                  ${abilities.map(a => {
+                    const abilityName = typeof a === 'string' ? a : (a.name || '');
+                    return `<span class="ability-tag" 
+                      onmouseover="showAbilityTooltip('${esc(abilityName)}', event)"
+                      onmouseout="hideAbilityTooltip()"
+                      onclick="event.stopPropagation(); showAbilityPanel('${esc(abilityName)}')">${esc(abilityName)}</span>`;
+                  }).join('')}
+                </div>
+              ` : ''}
+              
+              <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>
+          `;
+        }).join('');
       }
 
-      return state.roster.map(item => {
-        const isSelected = state.selectedUnitId === item.id;
-        return `
-          <div class="cc-list-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
-            <div class="d-flex justify-content-between align-items-start">
-              <div style="flex: 1">
-                <div class="cc-list-title">${esc(item.name)}</div>
-                <div class="cc-list-sub">${esc(item.type)}</div>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <div class="fw-bold" style="color: var(--cc-primary)">${item.totalCost} ₤</div>
-                <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
+      // Grid view
+      return `
+        <div class="cc-roster-grid">
+          ${state.roster.map(item => {
+            const isSelected = state.selectedUnitId === item.id;
+            const abilities = item.abilities || [];
+            
+            return `
+              <div class="cc-roster-grid-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
+                <button class="grid-item-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
                   <i class="fa fa-trash"></i>
                 </button>
+                <div class="grid-item-name">${esc(item.name)}</div>
+                <div class="grid-item-type">${esc(item.type)}</div>
+                
+                ${buildStatBadges(item, item.config, true)}
+                
+                ${abilities.length > 0 ? `
+                  <div class="grid-item-abilities">
+                    ${abilities.slice(0, 3).map(a => {
+                      const abilityName = typeof a === 'string' ? a : (a.name || '');
+                      return `<span class="ability-tag-small" 
+                        onmouseover="showAbilityTooltip('${esc(abilityName)}', event)"
+                        onmouseout="hideAbilityTooltip()"
+                        onclick="event.stopPropagation(); showAbilityPanel('${esc(abilityName)}')">${esc(abilityName)}</span>`;
+                    }).join('')}
+                    ${abilities.length > 3 ? `<span class="ability-tag-small">+${abilities.length - 3}</span>` : ''}
+                  </div>
+                ` : ''}
+                
+                <div class="grid-item-cost">${item.totalCost} ₤</div>
               </div>
-            </div>
-          </div>
-        `;
-      }).join('');
+            `;
+          }).join('')}
+        </div>
+      `;
     }
 
     function renderBuilder() {
@@ -390,7 +476,10 @@ window.CC_APP = {
               <div class="cc-field-label">Abilities</div>
               ${unit.abilities.map(a => {
                 const abilityName = typeof a === 'string' ? a : (a.name || '');
-                return `<div class="mb-1">• <strong>${esc(abilityName)}</strong></div>`;
+                return `<div class="mb-1">• <strong class="ability-link" 
+                  onmouseover="showAbilityTooltip('${esc(abilityName)}', event)"
+                  onmouseout="hideAbilityTooltip()"
+                  onclick="showAbilityPanel('${esc(abilityName)}')">${esc(abilityName)}</strong></div>`;
               }).join('')}
             </div>
           ` : ''}
@@ -472,14 +561,32 @@ window.CC_APP = {
     }
 
     function render() {
-      const libraryEl = document.getElementById('cc-library-list');
-      const builderEl = document.getElementById('cc-builder-target');
-      const rosterEl = document.getElementById('cc-roster-list');
+      const builderEl = document.querySelector('.cc-faction-builder');
+      if (!builderEl) return;
+
+      // Toggle column visibility based on view mode
+      const libraryCol = document.querySelector('.cc-faction-sidebar');
+      const mainCol = document.querySelector('.cc-faction-main');
+      const rosterCol = document.querySelector('.cc-faction-roster');
+
+      if (state.rosterViewMode === 'list') {
+        if (libraryCol) libraryCol.style.display = 'none';
+        if (mainCol) mainCol.style.display = 'none';
+        if (rosterCol) rosterCol.style.display = 'block';
+      } else {
+        if (libraryCol) libraryCol.style.display = 'block';
+        if (mainCol) mainCol.style.display = 'block';
+        if (rosterCol) rosterCol.style.display = 'block';
+      }
+
+      const libraryListEl = document.getElementById('cc-library-list');
+      const builderTargetEl = document.getElementById('cc-builder-target');
+      const rosterListEl = document.getElementById('cc-roster-list');
       const budgetEl = document.getElementById('cc-budget-display');
 
-      if (libraryEl) libraryEl.innerHTML = renderLibrary();
-      if (builderEl) builderEl.innerHTML = renderBuilder();
-      if (rosterEl) rosterEl.innerHTML = renderRoster();
+      if (libraryListEl) libraryListEl.innerHTML = renderLibrary();
+      if (builderTargetEl) builderTargetEl.innerHTML = renderBuilder();
+      if (rosterListEl) rosterListEl.innerHTML = renderRoster();
       
       if (budgetEl) {
         const total = calculateTotalCost();
@@ -663,6 +770,7 @@ window.CC_APP = {
         return;
       }
 
+      const savedView = state.rosterViewMode;
       const total = calculateTotalCost();
       const factionName = FACTION_TITLES[state.currentFaction] || state.currentFaction;
       
@@ -674,11 +782,17 @@ window.CC_APP = {
             body { font-family: Arial, sans-serif; padding: 20px; }
             h1 { color: #ff7518; }
             .roster-header { border-bottom: 2px solid #ff7518; padding-bottom: 10px; margin-bottom: 20px; }
-            .unit { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; page-break-inside: avoid; }
-            .unit-name { font-size: 18px; font-weight: bold; color: #333; }
-            .unit-type { color: #888; font-size: 12px; text-transform: uppercase; }
-            .unit-cost { color: #ff7518; font-weight: bold; float: right; }
-            .upgrades { margin-top: 10px; font-size: 12px; color: #666; }
+            .unit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+            .unit { border: 1px solid #ccc; padding: 15px; page-break-inside: avoid; border-radius: 8px; }
+            .unit-name { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 5px; }
+            .unit-type { color: #888; font-size: 11px; text-transform: uppercase; margin-bottom: 10px; }
+            .unit-cost { color: #ff7518; font-weight: bold; font-size: 18px; text-align: right; }
+            .stat-badges { display: flex; gap: 5px; margin: 10px 0; flex-wrap: wrap; }
+            .stat-badge { background: #f0f0f0; border: 1px solid #ccc; padding: 3px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+            .abilities { margin-top: 10px; font-size: 10px; color: #666; }
+            .ability-tag { display: inline-block; background: #e8e8e8; padding: 2px 6px; margin: 2px; border-radius: 3px; font-size: 9px; }
+            .upgrades { margin-top: 8px; font-size: 10px; color: #666; border-top: 1px solid #eee; padding-top: 8px; }
+            @media print { .unit { page-break-inside: avoid; } }
           </style>
         </head>
         <body>
@@ -688,25 +802,42 @@ window.CC_APP = {
             <div><strong>Total Cost:</strong> ${total} ₤ ${state.budget > 0 ? `/ ${state.budget} ₤` : ''}</div>
             <div><strong>Units:</strong> ${state.roster.length}</div>
           </div>
-          ${state.roster.map(item => `
-            <div class="unit">
-              <div class="unit-name">
-                ${esc(item.name)}
-                <span class="unit-cost">${item.totalCost} ₤</span>
-              </div>
-              <div class="unit-type">${esc(item.type)}</div>
-              ${item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
-                <div class="upgrades">
-                  <strong>Upgrades:</strong> ${item.config.optionalUpgrades.map(u => u.name).join(', ')}
+          <div class="unit-grid">
+            ${state.roster.map(item => {
+              const abilities = item.abilities || [];
+              return `
+                <div class="unit">
+                  <div class="unit-name">${esc(item.name)}</div>
+                  <div class="unit-type">${esc(item.type)}</div>
+                  <div class="stat-badges">
+                    <span class="stat-badge">Q ${item.quality}+</span>
+                    <span class="stat-badge">D ${item.defense}+</span>
+                    <span class="stat-badge">M ${item.move}"</span>
+                    <span class="stat-badge">R ${item.range === 0 ? '-' : item.range + '"'}</span>
+                  </div>
+                  ${abilities.length > 0 ? `
+                    <div class="abilities">
+                      ${abilities.map(a => {
+                        const name = typeof a === 'string' ? a : (a.name || '');
+                        return `<span class="ability-tag">${esc(name)}</span>`;
+                      }).join('')}
+                    </div>
+                  ` : ''}
+                  ${item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
+                    <div class="upgrades">
+                      <strong>Upgrades:</strong> ${item.config.optionalUpgrades.map(u => u.name).join(', ')}
+                    </div>
+                  ` : ''}
+                  ${item.config.supplemental ? `
+                    <div class="upgrades">
+                      <strong>Supplemental:</strong> ${item.config.supplemental.name}
+                    </div>
+                  ` : ''}
+                  <div class="unit-cost">${item.totalCost} ₤</div>
                 </div>
-              ` : ''}
-              ${item.config.supplemental ? `
-                <div class="upgrades">
-                  <strong>Supplemental:</strong> ${item.config.supplemental.name}
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
+              `;
+            }).join('')}
+          </div>
         </body>
         </html>
       `;
@@ -714,7 +845,14 @@ window.CC_APP = {
       const printWindow = window.open('', '_blank');
       printWindow.document.write(printContent);
       printWindow.document.close();
+      
+      printWindow.onafterprint = function() {
+        printWindow.close();
+      };
+      
       printWindow.print();
+      
+      state.rosterViewMode = savedView;
     };
 
     window.changeFaction = function(factionId) {
@@ -1082,6 +1220,16 @@ window.CC_APP = {
           </div>
           <div class="d-flex align-items-center gap-2">
             <div id="cc-budget-display" style="font-size: 1.5rem; font-weight: 700;">0 ₤</div>
+            
+            <div class="cc-roster-view-toggle">
+              <button onclick="toggleRosterView('grid')" class="${state.rosterViewMode === 'grid' ? 'active' : ''}" title="Grid View">
+                <i class="fa fa-th"></i>
+              </button>
+              <button onclick="toggleRosterView('list')" class="${state.rosterViewMode === 'list' ? 'active' : ''}" title="List View">
+                <i class="fa fa-list"></i>
+              </button>
+            </div>
+            
             <button class="btn btn-sm btn-outline-secondary" onclick="printRoster()" title="Print Roster">
               <i class="fa fa-print"></i>
             </button>
@@ -1160,20 +1308,14 @@ window.CC_APP = {
             <div class="cc-panel h-100">
               <div class="cc-panel-head">
                 <div class="cc-panel-title">Your Roster</div>
-                <div class="cc-roster-view-toggle">
-                  <button onclick="toggleRosterView('list')" class="${state.rosterViewMode === 'list' ? 'active' : ''}" title="List View">
-                    <i class="fa fa-list"></i>
-                  </button>
-                  <button onclick="toggleRosterView('grid')" class="${state.rosterViewMode === 'grid' ? 'active' : ''}" title="Grid View">
-                    <i class="fa fa-th"></i>
-                  </button>
-                </div>
               </div>
               <div id="cc-roster-list" class="cc-body"></div>
             </div>
           </aside>
 
         </div>
+        
+        <div id="ability-tooltip" style="display: none; position: absolute; background: #000; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 12px; z-index: 10000; pointer-events: none; border: 1px solid var(--cc-primary);"></div>
       </div>
     `;
 
