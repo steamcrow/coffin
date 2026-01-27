@@ -1,0 +1,190 @@
+/* ================================
+   Faction Builder - App-Specific Styles
+   File: coffin/rules/apps/cc_app_faction_builder.css
+   
+   This file contains ONLY Faction Builder-specific styles.
+   Core styles come from: coffin/rules/ui/cc_ui.css
+   Layout utilities come from: Bootstrap (Odoo default)
+   ================================ */
+
+/* ===== Faction Controls Bar ===== */
+.cc-faction-controls {
+  display: flex;
+  gap: 1rem;
+  padding: 0 1rem 1rem 1rem;
+  align-items: center;
+}
+
+.cc-faction-controls select {
+  background: #101010;
+  border: 1px solid rgba(255,255,255,.12);
+  color: #e8e8e8;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-family: var(--cc-font-body);
+}
+
+.cc-faction-controls select:focus {
+  outline: none;
+  border-color: #ff7518;
+  box-shadow: 0 0 0 1px rgba(255,117,24,.35);
+}
+
+/* ===== Three-Column Layout ===== */
+.cc-faction-builder {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  gap: 1rem;
+  height: calc(100vh - 200px);
+  padding: 0 1rem 1rem 1rem;
+}
+
+.cc-faction-sidebar {
+  min-width: 0;
+}
+
+.cc-faction-main {
+  min-width: 0;
+  overflow: auto;
+}
+
+.cc-faction-roster {
+  min-width: 0;
+}
+
+/* ===== Unit Detail Wrapper ===== */
+.cc-detail-wrapper {
+  padding: 1.5rem;
+}
+
+.cc-mode-indicator {
+  text-align: center;
+  padding: 8px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--cc-border);
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 700;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--cc-border);
+}
+
+.u-name {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #e8e8e8;
+}
+
+.u-type {
+  font-size: 0.875rem;
+  color: var(--cc-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 1rem;
+}
+
+.u-lore {
+  font-style: italic;
+  color: var(--cc-text-muted);
+  padding: 1rem;
+  background: rgba(255,255,255,0.03);
+  border-left: 3px solid var(--cc-primary);
+  margin: 1rem 0;
+  line-height: 1.5;
+}
+
+/* ===== Stat Badges ===== */
+.stat-badge-flex {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 15px 0;
+}
+
+.stat-badge {
+  background: rgba(255, 117, 24, 0.15);
+  border: 1px solid var(--cc-primary);
+  color: var(--cc-primary);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 800;
+  font-size: 14px;
+  font-family: var(--cc-font-mono);
+}
+
+/* ===== Field Labels ===== */
+.cc-field-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--cc-primary);
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* ===== Empty State ===== */
+.cc-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--cc-text-muted);
+  text-align: center;
+  padding: 2rem;
+}
+
+.cc-empty-state i {
+  color: var(--cc-primary);
+  opacity: 0.3;
+}
+
+/* ===== Active Item Highlight ===== */
+.cc-item-active {
+  background: rgba(255, 117, 24, 0.2) !important;
+  border-left: 4px solid var(--cc-primary) !important;
+  box-shadow: 0 0 15px rgba(255, 117, 24, 0.3);
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .cc-faction-builder {
+    grid-template-columns: 250px 1fr 250px;
+  }
+}
+
+@media (max-width: 992px) {
+  .cc-faction-builder {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    height: auto;
+  }
+
+  .cc-faction-sidebar,
+  .cc-faction-main,
+  .cc-faction-roster {
+    max-height: 400px;
+    overflow: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .cc-faction-controls {
+    flex-direction: column;
+  }
+
+  .cc-faction-controls select {
+    width: 100%;
+  }
+}
