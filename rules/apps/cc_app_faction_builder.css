@@ -30,6 +30,19 @@
   box-shadow: 0 0 0 1px rgba(255,117,24,.35);
 }
 
+.cc-faction-controls input {
+  flex: 1;
+}
+
+.cc-faction-controls select#cc-faction-selector {
+  min-width: 200px;
+}
+
+.cc-faction-controls select#cc-budget-selector {
+  min-width: 150px;
+  flex-shrink: 0;
+}
+
 /* ===== Three-Column Layout ===== */
 .cc-faction-builder {
   display: grid;
@@ -122,6 +135,17 @@
   font-family: var(--cc-font-mono);
 }
 
+.stat-modified {
+  background: rgba(255, 215, 0, 0.2);
+  border-color: #ffd700;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
 /* ===== Field Labels ===== */
 .cc-field-label {
   font-size: 0.75rem;
@@ -157,6 +181,51 @@
   box-shadow: 0 0 15px rgba(255, 117, 24, 0.3);
 }
 
+/* ===== Upgrade Items ===== */
+.upgrade-item {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.upgrade-item:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--cc-primary);
+}
+
+.upgrade-item.selected {
+  background: rgba(255, 117, 24, 0.15);
+  border-color: var(--cc-primary);
+}
+
+/* ===== Login Status Bar ===== */
+.cc-login-status {
+  text-align: center;
+  padding: 6px 12px;
+  margin: 0 1rem 0.5rem 1rem;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--cc-border);
+  border-radius: 4px;
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cc-login-status.logged-in {
+  color: #4CAF50;
+  border-color: rgba(76, 175, 80, 0.3);
+}
+
+.cc-login-status.logged-out {
+  color: #ff9800;
+  border-color: rgba(255, 152, 0, 0.3);
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 1200px) {
   .cc-faction-builder {
@@ -184,7 +253,8 @@
     flex-direction: column;
   }
 
-  .cc-faction-controls select {
+  .cc-faction-controls select,
+  .cc-faction-controls input {
     width: 100%;
   }
 }
