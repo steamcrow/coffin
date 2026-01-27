@@ -205,11 +205,34 @@ window.CC_APP = {
                   <div class="fw-bold small mb-1" style="color: #ff7518;">Abilities:</div>
                   <div class="d-flex gap-1" style="flex-wrap: wrap;">
                     ${unit.abilities.map(ability => {
-                      const abilityName = typeof ability === 'string' ? ability : (ability.name || '');
-                      const abilityEffect = typeof ability === 'object' && ability.effect ? ability.effect : '';
+                      let abilityName = '';
+                      let abilityEffect = '';
                       
-                      // Show tooltip with effect if available, otherwise show "See Ability Dictionary"
-                      const tooltipText = abilityEffect || `${abilityName} - See Ability Dictionary for details`;
+                      if (typeof ability === 'string') {
+                        abilityName = ability;
+                        // Try to look up the ability from rules
+                        try {
+                          const rulesRoot = getRulesRoot();
+                          if (rulesRoot && rulesRoot.ability_dictionary) {
+                            // Search through all ability dictionary sections
+                            for (const section in rulesRoot.ability_dictionary) {
+                              if (rulesRoot.ability_dictionary[section] && rulesRoot.ability_dictionary[section][abilityName]) {
+                                const abilityData = rulesRoot.ability_dictionary[section][abilityName];
+                                abilityEffect = abilityData.short || abilityData.effect || abilityData.long || '';
+                                break;
+                              }
+                            }
+                          }
+                        } catch (e) {
+                          // Silently fail if lookup doesn't work
+                        }
+                      } else if (ability && typeof ability === 'object') {
+                        abilityName = ability.name || '';
+                        abilityEffect = ability.effect || ability.short || '';
+                      }
+                      
+                      // Show tooltip with effect if found, otherwise just the name
+                      const tooltipText = abilityEffect || abilityName;
                       const titleAttr = ` title="${tooltipText.replace(/"/g, '&quot;')}"`;
                       
                       return `<span class="cc-badge" style="cursor: help;"${titleAttr}>${esc(abilityName)}</span>`;
@@ -430,6 +453,21 @@ window.CC_APP = {
 
     const titleize = (k) => {
       const str = String(k || "");
+      
+      // Handle single letter ability dictionary keys (A, B, C, etc)
+      if (str.match(/^[A-H]$/)) {
+        const letterMap = {
+          'A': 'Deployment Timing',
+          'B': 'Movement Positioning', 
+          'C': 'Offense Damage',
+          'D': 'Defense Survival',
+          'E': 'Morale Fear',
+          'F': 'Terrain Environment',
+          'G': 'Thyr Ritual',
+          'H': 'Interaction Support'
+        };
+        return letterMap[str] ? `Abilities: ${letterMap[str]}` : `Abilities: ${str}`;
+      }
       
       // Handle ability dictionary keys (e.g., "A_deployment_timing" -> "Abilities: Deployment Timing")
       if (str.match(/^[A-H]_/)) {
@@ -1039,6 +1077,18 @@ window.CC_APP = {
         return;
       }
       
+      // Special handling for ability dictionaries - use section key for better title
+      let displayTitle = meta.title || "";
+      if (meta.type === 'abilities' || meta.id.includes('ability_dict')) {
+        // Try to extract the section key (A, B, C, etc) from the content
+        if (resolvedContent && typeof resolvedContent === 'object') {
+          const firstKey = Object.keys(resolvedContent)[0];
+          if (firstKey && firstKey.match(/^[A-H]$/)) {
+            displayTitle = titleize(firstKey);
+          }
+        }
+      }
+      
       const formattedContent = renderContentSmart(meta, resolvedContent);
 
       // ---- FAVORITE BUTTON ----
@@ -1049,7 +1099,7 @@ window.CC_APP = {
       // ---- MAIN CONTENT (with anchor IDs for subsection navigation) ----
       const titleHtml = `
         <article class="cc-rule-article">
-          <h2 class="cc-rule-title">${esc(meta.title || "")}</h2>
+          <h2 class="cc-rule-title">${esc(displayTitle)}</h2>
           <div class="cc-rule-content">
       `;
       const closingHtml = `
