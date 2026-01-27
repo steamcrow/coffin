@@ -15,7 +15,8 @@
   align-items: center;
 }
 
-.cc-faction-controls select {
+.cc-faction-controls select,
+.cc-faction-controls input {
   background: #101010;
   border: 1px solid rgba(255,255,255,.12);
   color: #e8e8e8;
@@ -24,23 +25,24 @@
   font-family: var(--cc-font-body);
 }
 
-.cc-faction-controls select:focus {
+.cc-faction-controls select:focus,
+.cc-faction-controls input:focus {
   outline: none;
   border-color: #ff7518;
   box-shadow: 0 0 0 1px rgba(255,117,24,.35);
 }
 
-.cc-faction-controls input {
-  flex: 1;
+.cc-faction-controls select#cc-faction-selector {
+  flex: 0 0 220px;
 }
 
-.cc-faction-controls select#cc-faction-selector {
+.cc-faction-controls input#cc-roster-name {
+  flex: 1;
   min-width: 200px;
 }
 
 .cc-faction-controls select#cc-budget-selector {
-  min-width: 150px;
-  flex-shrink: 0;
+  flex: 0 0 140px;
 }
 
 /* ===== Three-Column Layout ===== */
@@ -226,6 +228,101 @@
   border-color: rgba(255, 152, 0, 0.3);
 }
 
+/* ===== Roster View Toggle ===== */
+.cc-roster-view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+}
+
+.cc-roster-view-toggle button {
+  background: transparent;
+  border: none;
+  color: #888;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.cc-roster-view-toggle button:hover {
+  color: var(--cc-primary);
+}
+
+.cc-roster-view-toggle button.active {
+  background: var(--cc-primary);
+  color: #000;
+}
+
+/* ===== Roster Grid View ===== */
+.cc-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.cc-roster-grid-item {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.cc-roster-grid-item:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--cc-primary);
+}
+
+.cc-roster-grid-item.active {
+  background: rgba(255, 117, 24, 0.2);
+  border-color: var(--cc-primary);
+}
+
+.cc-roster-grid-item .grid-item-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+  color: #e8e8e8;
+}
+
+.cc-roster-grid-item .grid-item-type {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.cc-roster-grid-item .grid-item-cost {
+  font-weight: 700;
+  color: var(--cc-primary);
+  font-size: 0.9rem;
+}
+
+.cc-roster-grid-item .grid-item-delete {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(255, 77, 77, 0.8);
+  border: none;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.cc-roster-grid-item:hover .grid-item-delete {
+  opacity: 1;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 1200px) {
   .cc-faction-builder {
@@ -256,5 +353,10 @@
   .cc-faction-controls select,
   .cc-faction-controls input {
     width: 100%;
+    flex: 1 1 auto !important;
+  }
+
+  .cc-roster-grid {
+    grid-template-columns: 1fr;
   }
 }
