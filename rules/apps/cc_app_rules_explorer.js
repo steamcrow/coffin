@@ -1273,6 +1273,28 @@ window.CC_APP = {
         const abilityNameSpace = abilityId.replace(/-/g, ' ');
         const abilityNameDisplay = titleize(abilityNameSpace);
         
+        // Check if this looks like a custom unit ability (common patterns)
+        const customAbilityPatterns = [
+          'witch_stitched', 'gas_mask', 'pocket_snacks', 'blessed_shovel',
+          'armor', 'clothing', 'gear', 'equipment', 'upgrade'
+        ];
+        
+        const isLikelyCustom = customAbilityPatterns.some(pattern => 
+          abilityNameUnderscore.toLowerCase().includes(pattern)
+        );
+        
+        if (isLikelyCustom) {
+          detailEl.innerHTML = `
+            <div class="cc-muted p-4">
+              <h4 style="color: #ff7518;">"${esc(abilityNameDisplay)}" is a Unit-Specific Ability</h4>
+              <p>This ability is custom-defined for a specific unit and doesn't appear in the general Ability Dictionary.</p>
+              <p>To see this ability's full description, view the unit that has it in the Factions section.</p>
+              <p><strong>Tip:</strong> Use the search box and type the ability name to find which unit has it!</p>
+            </div>
+          `;
+          return;
+        }
+        
         console.log('Searching for ability:', abilityId, 'formats:', { abilityNameUnderscore, abilityNameSpace });
         
         // First, try to find in ability dictionary sections specifically
@@ -1364,9 +1386,14 @@ window.CC_APP = {
           console.error('Could not find section containing ability', abilityId);
           detailEl.innerHTML = `
             <div class="cc-muted p-4">
-              <p>Could not find the section containing the ability "${esc(abilityNameDisplay)}".</p>
-              <p>This may be a custom ability defined inline in a unit card.</p>
-              <p>Try using the search box to find it!</p>
+              <h4 style="color: #ff7518;">Could not find "${esc(abilityNameDisplay)}"</h4>
+              <p>This ability might be:</p>
+              <ul>
+                <li>A unit-specific upgrade or equipment (check Factions section)</li>
+                <li>Spelled differently in the rules (try searching)</li>
+                <li>Part of a weapon property instead of a standalone ability</li>
+              </ul>
+              <p><strong>Tip:</strong> Try using the search box to find it!</p>
             </div>
           `;
         }
