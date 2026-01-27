@@ -92,7 +92,141 @@ window.CC_APP = {
     }
 
     // ---- FILTER OUT SCENARIO BUILDER FILES ----
+    // ---- FACTIONS DATA ----
+    const FACTION_FILES = [
+      { id: 'monster_rangers', title: 'Monster Rangers', file: 'faction-monster-rangers-v5.json' },
+      { id: 'liberty_corps', title: 'Liberty Corps', file: 'faction-liberty-corps-v2.json' },
+      { id: 'monsterology', title: 'Monsterology', file: 'faction-monsterology-v2.json' },
+      { id: 'monsters', title: 'Monsters', file: 'faction-monsters-v2.json' },
+      { id: 'shine_riders', title: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
+    ];
+    
+    let factionsData = {};
+    
+    // Load all faction files
+    async function loadFactions() {
+      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+      
+      try {
+        const promises = FACTION_FILES.map(async (f) => {
+          const response = await fetch(baseUrl + f.file + '?t=' + Date.now());
+          const data = await response.json();
+          return { id: f.id, title: f.title, data: data };
+        });
+        
+        const results = await Promise.all(promises);
+        results.forEach(r => {
+          factionsData[r.id] = { title: r.title, data: r.data };
+        });
+        
+        console.log('✅ Factions loaded:', Object.keys(factionsData));
+        return true;
+      } catch (e) {
+        console.error('❌ Failed to load factions:', e);
+        return false;
+      }
+    }
+    
+    // Render a single faction
+    function renderFaction(factionId) {
+      const faction = factionsData[factionId];
+      if (!faction) return '<div class="cc-muted">Faction not found</div>';
+      
+      const data = faction.data;
+      let html = '';
+      
+      // Faction summary
+      if (data.summary) {
+        html += `<div class="cc-callout mb-4">${esc(data.summary)}</div>`;
+      }
+      
+      // Faction lore
+      if (data.lore) {
+        html += `<div class="mb-4"><p>${esc(data.lore)}</p></div>`;
+      }
+      
+      // Units
+      if (data.units && Array.isArray(data.units)) {
+        html += `<h3 style="color: #ff7518; margin-top: 2rem;">Units</h3>`;
+        
+        data.units.forEach(unit => {
+          html += `
+            <div class="cc-ability-card p-3 mb-3" style="background: rgba(255,255,255,0.05);">
+              <!-- Unit Header -->
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div>
+                  <h4 class="fw-bold mb-1" style="color: #fff;">${esc(unit.name)}</h4>
+                  <div class="small text-uppercase" style="color: #ff7518;">${esc(unit.type || 'Unit')}</div>
+                </div>
+                <div class="text-end">
+                  <div class="fw-bold" style="color: #ff7518; font-size: 1.2rem;">${unit.cost}₤</div>
+                </div>
+              </div>
+              
+              <!-- Stats -->
+              <div class="stat-badge-flex mb-2">
+                <div class="cc-stat-badge stat-q-border">
+                  <div class="cc-stat-label stat-q">Q</div>
+                  <div class="cc-stat-value">${unit.quality}</div>
+                </div>
+                <div class="cc-stat-badge stat-d-border">
+                  <div class="cc-stat-label stat-d">D</div>
+                  <div class="cc-stat-value">${unit.defense}</div>
+                </div>
+                <div class="cc-stat-badge stat-m-border">
+                  <div class="cc-stat-label stat-m">M</div>
+                  <div class="cc-stat-value">${unit.move}"</div>
+                </div>
+                ${unit.range ? `
+                  <div class="cc-stat-badge stat-r-border">
+                    <div class="cc-stat-label stat-r">R</div>
+                    <div class="cc-stat-value">${unit.range}"</div>
+                  </div>
+                ` : ''}
+              </div>
+              
+              <!-- Weapon -->
+              ${unit.weapon ? `
+                <div class="mb-2">
+                  <span class="fw-bold small">Weapon:</span> ${esc(unit.weapon)}
+                  ${unit.weapon_properties && unit.weapon_properties.length > 0 ? 
+                    ` (${unit.weapon_properties.map(p => esc(typeof p === 'string' ? p : p.name || '')).join(', ')})` 
+                    : ''}
+                </div>
+              ` : ''}
+              
+              <!-- Abilities -->
+              ${unit.abilities && unit.abilities.length > 0 ? `
+                <div class="mb-2">
+                  <span class="fw-bold small">Abilities:</span> 
+                  ${unit.abilities.map(ability => {
+                    const abilityName = typeof ability === 'string' ? ability : (ability.name || '');
+                    return `<span class="cc-badge">${esc(abilityName)}</span>`;
+                  }).join(' ')}
+                </div>
+              ` : ''}
+              
+              <!-- Lore -->
+              ${unit.lore ? `
+                <div class="small mt-2 mb-2" style="font-style: italic; opacity: 0.8;">${esc(unit.lore)}</div>
+              ` : ''}
+              
+              <!-- Tactics -->
+              ${unit.tactics ? `
+                <div class="small" style="border-left: 3px solid #ff7518; padding-left: 10px; margin-top: 10px;">
+                  <strong>Tactics:</strong> ${esc(unit.tactics)}
+                </div>
+              ` : ''}
+            </div>
+          `;
+        });
+      }
+      
+      return html;
+    }
+
     const EXCLUDED_IDS = [
+      'sections_philosophy',  // Just the metadata entry, not real content
       'location_vault',
       'location_types',
       'scenario_vault',
@@ -787,6 +921,45 @@ window.CC_APP = {
 
     // ---- SELECT RULE ----
     async function selectRule(id) {
+      // Check if this is a faction ID
+      if (id.startsWith('faction_')) {
+        const factionId = id.replace('faction_', '');
+        const faction = factionsData[factionId];
+        
+        if (faction) {
+          selectedId = id;
+          
+          // Update active state in list
+          renderList(searchEl.value);
+          
+          // Show favorite button
+          favoriteBtn.classList.remove('d-none');
+          const star = favoriteBtn.querySelector('.cc-star');
+          star.textContent = isFavorite(id) ? '★' : '☆';
+          
+          // Render faction content
+          const titleHtml = `
+            <article class="cc-rule-article">
+              <h2 class="cc-rule-title">${esc(faction.title)}</h2>
+              <div class="cc-rule-content">
+          `;
+          const closingHtml = `
+              </div>
+            </article>
+          `;
+          detailEl.innerHTML = titleHtml + renderFaction(factionId) + closingHtml;
+          
+          // Hide context panel for factions
+          contextPanelEl.style.display = 'none';
+          
+          // Show navigation
+          navEl.classList.remove('d-none');
+          updateNavButtons();
+          
+          return;
+        }
+      }
+      
       // Check if this is a subsection of the currently loaded rule
       if (selectedId) {
         const children = helpers.getChildren(selectedId);
@@ -1111,5 +1284,20 @@ window.CC_APP = {
 
     // ---- INIT ----
     renderList();
+    
+    // Load factions and add them to index
+    loadFactions().then(() => {
+      // Add faction entries to the index
+      FACTION_FILES.forEach(f => {
+        index.push({
+          id: 'faction_' + f.id,
+          title: f.title,
+          type: 'faction'
+        });
+      });
+      
+      // Refresh the list to show factions
+      renderList(searchEl.value);
+    });
   },
 };
