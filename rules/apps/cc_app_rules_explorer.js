@@ -147,24 +147,27 @@ window.CC_APP = {
       
       // Units
       if (data.units && Array.isArray(data.units)) {
-        html += `<h3 style="color: #ff7518; margin-top: 2rem;">Units</h3>`;
+        html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">Units</h3>`;
         
         data.units.forEach(unit => {
           html += `
-            <div class="cc-ability-card p-3 mb-3" style="background: rgba(255,255,255,0.05);">
-              <!-- Unit Header -->
-              <div class="d-flex justify-content-between align-items-start mb-2">
-                <div>
-                  <h4 class="fw-bold mb-1" style="color: #fff;">${esc(unit.name)}</h4>
-                  <div class="small text-uppercase" style="color: #ff7518;">${esc(unit.type || 'Unit')}</div>
-                </div>
-                <div class="text-end">
-                  <div class="fw-bold" style="color: #ff7518; font-size: 1.2rem;">${unit.cost}₤</div>
-                </div>
+            <div class="cc-ability-card p-3 mb-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+              <!-- Unit Name & Cost -->
+              <div class="d-flex justify-content-between align-items-baseline mb-1">
+                <h4 class="fw-bold mb-0" style="color: #fff; font-size: 1.25rem;">${esc(unit.name)}</h4>
+                <div class="fw-bold" style="color: #ff7518; font-size: 1.3rem;">${unit.cost}₤</div>
               </div>
               
+              <!-- Unit Type -->
+              <div class="small text-uppercase mb-2" style="color: #ff7518; font-weight: 700; letter-spacing: 0.05em;">${esc(unit.type || 'Unit')}</div>
+              
+              <!-- Description/Lore -->
+              ${unit.lore ? `
+                <div class="mb-3" style="font-style: italic; opacity: 0.85; font-size: 0.95rem; line-height: 1.5;">${esc(unit.lore)}</div>
+              ` : ''}
+              
               <!-- Stats -->
-              <div class="stat-badge-flex mb-2">
+              <div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
                 <div class="cc-stat-badge stat-q-border">
                   <div class="cc-stat-label stat-q">Q</div>
                   <div class="cc-stat-value">${unit.quality}</div>
@@ -188,33 +191,34 @@ window.CC_APP = {
               <!-- Weapon -->
               ${unit.weapon ? `
                 <div class="mb-2">
-                  <span class="fw-bold small">Weapon:</span> ${esc(unit.weapon)}
+                  <span class="fw-bold small" style="color: #ff7518;">Weapon:</span> 
+                  <span style="font-weight: 600;">${esc(unit.weapon)}</span>
                   ${unit.weapon_properties && unit.weapon_properties.length > 0 ? 
-                    ` (${unit.weapon_properties.map(p => esc(typeof p === 'string' ? p : p.name || '')).join(', ')})` 
+                    ` <span style="opacity: 0.7;">(${unit.weapon_properties.map(p => esc(typeof p === 'string' ? p : p.name || '')).join(', ')})</span>` 
                     : ''}
                 </div>
               ` : ''}
               
               <!-- Abilities -->
               ${unit.abilities && unit.abilities.length > 0 ? `
-                <div class="mb-2">
-                  <span class="fw-bold small">Abilities:</span> 
-                  ${unit.abilities.map(ability => {
-                    const abilityName = typeof ability === 'string' ? ability : (ability.name || '');
-                    return `<span class="cc-badge">${esc(abilityName)}</span>`;
-                  }).join(' ')}
+                <div class="mb-3">
+                  <div class="fw-bold small mb-1" style="color: #ff7518;">Abilities:</div>
+                  <div class="d-flex gap-1" style="flex-wrap: wrap;">
+                    ${unit.abilities.map(ability => {
+                      const abilityName = typeof ability === 'string' ? ability : (ability.name || '');
+                      const abilityEffect = typeof ability === 'object' && ability.effect ? ability.effect : '';
+                      const titleAttr = abilityEffect ? ` title="${esc(abilityEffect)}"` : '';
+                      return `<span class="cc-badge" style="cursor: help;"${titleAttr}>${esc(abilityName)}</span>`;
+                    }).join(' ')}
+                  </div>
                 </div>
-              ` : ''}
-              
-              <!-- Lore -->
-              ${unit.lore ? `
-                <div class="small mt-2 mb-2" style="font-style: italic; opacity: 0.8;">${esc(unit.lore)}</div>
               ` : ''}
               
               <!-- Tactics -->
               ${unit.tactics ? `
-                <div class="small" style="border-left: 3px solid #ff7518; padding-left: 10px; margin-top: 10px;">
-                  <strong>Tactics:</strong> ${esc(unit.tactics)}
+                <div class="mt-3 pt-2" style="border-top: 1px solid rgba(255,255,255,0.1);">
+                  <div class="fw-bold small mb-1" style="color: #ff7518;">Tactics:</div>
+                  <div class="small" style="line-height: 1.5;">${esc(unit.tactics)}</div>
                 </div>
               ` : ''}
             </div>
