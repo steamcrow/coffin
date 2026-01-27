@@ -52,14 +52,13 @@ window.CC_APP = {
       currentFaction: null,
       factionData: {},
       roster: [],
+      rosterName: 'Unnamed Roster',
       budget: 500,
       selectedUnitId: null,
       builderMode: null,
       builderTarget: null,
       builderConfig: {
-        upgrades: [],
-        weaponProperties: [],
-        optionalAbilities: [],
+        optionalUpgrades: [],
         supplemental: null
       }
     };
@@ -103,7 +102,7 @@ window.CC_APP = {
         state.selectedUnitId = null;
         state.builderMode = null;
         state.builderTarget = null;
-        state.builderConfig = { upgrades: [], weaponProperties: [], optionalAbilities: [], supplemental: null };
+        state.builderConfig = { optionalUpgrades: [], supplemental: null };
         render();
       }
     }
@@ -123,16 +122,8 @@ window.CC_APP = {
     function calculateUnitCost(baseUnit, config) {
       let cost = baseUnit.cost || 0;
       
-      if (config.upgrades) {
-        config.upgrades.forEach(u => { cost += u.cost || 0; });
-      }
-      
-      if (config.weaponProperties) {
-        config.weaponProperties.forEach(wp => { cost += wp.cost || 0; });
-      }
-      
-      if (config.optionalAbilities) {
-        config.optionalAbilities.forEach(a => { cost += a.cost || 0; });
+      if (config.optionalUpgrades) {
+        config.optionalUpgrades.forEach(u => { cost += u.cost || 0; });
       }
       
       if (config.supplemental) {
@@ -148,29 +139,50 @@ window.CC_APP = {
 
     function buildStatBadges(unit, config) {
       const base = {
-        q: unit.quality,
-        d: unit.defense,
+        q: unit.quality || 0,
+        d: unit.defense || 0,
         m: unit.move || 0,
         r: unit.range || 0
       };
 
       const mod = { ...base };
 
+      if (config.optionalUpgrades) {
+        config.optionalUpgrades.forEach(upgrade => {
+          if (upgrade.stat_modifiers) {
+            Object.entries(upgrade.stat_modifiers).forEach(([stat, value]) => {
+              if (stat === 'quality') mod.q += value;
+              else if (stat === 'defense') mod.d += value;
+              else if (stat === 'move') mod.m += value;
+              else if (stat === 'range') {
+                if (mod.r === 0) mod.r = value;
+                else mod.r += value;
+              }
+            });
+          }
+        });
+      }
+
       if (config.supplemental && config.supplemental.stat_modifiers) {
         Object.entries(config.supplemental.stat_modifiers).forEach(([stat, value]) => {
           if (stat === 'quality') mod.q += value;
           else if (stat === 'defense') mod.d += value;
           else if (stat === 'move') mod.m += value;
-          else if (stat === 'range') mod.r = mod.r === 0 ? value : mod.r + value;
+          else if (stat === 'range') {
+            if (mod.r === 0) mod.r = value;
+            else mod.r += value;
+          }
         });
       }
 
       const badge = (label, val, baseval, cls) => {
         const modified = val !== baseval;
+        const suffix = (label === 'Q' || label === 'D') ? '+' : '"';
+        const displayVal = (val === 0 && label === 'R') ? '-' : val;
         return `
           <div class="cc-stat-badge stat-${cls}-border ${modified ? 'stat-modified' : ''}">
             <span class="cc-stat-label stat-${cls}">${label}</span>
-            <span class="cc-stat-value">${val === 0 && label === 'R' ? '-' : val}${label !== 'Q' && label !== 'D' ? '"' : '+'}</span>
+            <span class="cc-stat-value">${displayVal}${suffix}</span>
           </div>`;
       };
       
@@ -259,7 +271,7 @@ window.CC_APP = {
         const rosterItem = state.roster.find(r => r.id === state.builderTarget);
         if (rosterItem) {
           unit = faction.units.find(u => u.name === rosterItem.unitName);
-          config = rosterItem.config || { upgrades: [], weaponProperties: [], optionalAbilities: [], supplemental: null };
+          config = rosterItem.config || { optionalUpgrades: [], supplemental: null };
         }
       }
 
@@ -299,13 +311,15 @@ window.CC_APP = {
           ${unit.abilities && unit.abilities.length > 0 ? `
             <div class="mt-3">
               <div class="cc-field-label">Abilities</div>
-              ${unit.abilities.map(a => `<div class="mb-1">• <strong>${esc(a)}</strong></div>`).join('')}
+              ${unit.abilities.map(a => {
+                const abilityName = typeof a === 'string' ? a : (a.name || '');
+                return `<div class="mb-1">• <strong>${esc(abilityName)}</strong></div>`;
+              }).join('')}
             </div>
           ` : ''}
 
           ${renderSupplemental(unit, config)}
-          ${renderUpgrades(unit, config)}
-          ${renderOptionalAbilities(unit, config)}
+          ${renderOptionalUpgrades(unit, config)}
 
           ${state.builderMode === 'library' ? `
             <button class="btn btn-primary w-100 mt-4" onclick="addUnitToRoster()">
@@ -352,53 +366,27 @@ window.CC_APP = {
       `;
     }
 
-    function renderUpgrades(unit, config) {
-      if (!unit.upgrades || unit.upgrades.length === 0) return '';
+    function renderOptionalUpgrades(unit, config) {
+      if (!unit.optional_upgrades || unit.optional_upgrades.length === 0) return '';
 
-      const selectedUpgrades = config.upgrades || [];
+      const selectedUpgrades = config.optionalUpgrades || [];
 
       return `
         <div class="mt-3">
-          <div class="cc-field-label">Upgrades</div>
-          ${unit.upgrades.map(upgrade => {
+          <div class="cc-field-label">Optional Upgrades</div>
+          ${unit.optional_upgrades.map(upgrade => {
             const isSelected = selectedUpgrades.some(u => u.name === upgrade.name);
             return `
-              <div class="upgrade-item ${isSelected ? 'selected' : ''}" onclick="toggleUpgrade('${esc(upgrade.name)}', ${upgrade.cost || 0})">
+              <div class="upgrade-item ${isSelected ? 'selected' : ''}" onclick="toggleOptionalUpgrade('${esc(upgrade.name)}', ${upgrade.cost || 0})">
                 <div class="d-flex justify-content-between align-items-center">
                   <div>
                     <i class="fa ${isSelected ? 'fa-check-square' : 'fa-square'}" style="color: var(--cc-primary); margin-right: 8px;"></i>
                     <strong>${esc(upgrade.name)}</strong>
+                    ${upgrade.type ? `<span class="cc-badge">${esc(upgrade.type)}</span>` : ''}
                   </div>
                   <div style="color: var(--cc-primary); font-weight: 700;">${upgrade.cost || 0} ₤</div>
                 </div>
                 ${upgrade.effect ? `<div class="small cc-muted mt-1 ms-4">${esc(upgrade.effect)}</div>` : ''}
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
-
-    function renderOptionalAbilities(unit, config) {
-      if (!unit.optional_abilities || unit.optional_abilities.length === 0) return '';
-
-      const selectedAbilities = config.optionalAbilities || [];
-
-      return `
-        <div class="mt-3">
-          <div class="cc-field-label">Optional Abilities</div>
-          ${unit.optional_abilities.map(ability => {
-            const isSelected = selectedAbilities.some(a => a.name === ability.name);
-            return `
-              <div class="upgrade-item ${isSelected ? 'selected' : ''}" onclick="toggleOptionalAbility('${esc(ability.name)}', ${ability.cost || 0})">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <i class="fa ${isSelected ? 'fa-check-square' : 'fa-square'}" style="color: var(--cc-primary); margin-right: 8px;"></i>
-                    <strong>${esc(ability.name)}</strong>
-                  </div>
-                  <div style="color: var(--cc-primary); font-weight: 700;">${ability.cost || 0} ₤</div>
-                </div>
-                ${ability.effect ? `<div class="small cc-muted mt-1 ms-4">${esc(ability.effect)}</div>` : ''}
               </div>
             `;
           }).join('')}
@@ -432,7 +420,7 @@ window.CC_APP = {
       state.builderMode = 'library';
       state.builderTarget = unitName;
       state.selectedUnitId = null;
-      state.builderConfig = { upgrades: [], weaponProperties: [], optionalAbilities: [], supplemental: null };
+      state.builderConfig = { optionalUpgrades: [], supplemental: null };
       render();
     };
 
@@ -472,32 +460,31 @@ window.CC_APP = {
       render();
     };
 
-    window.toggleUpgrade = function(upgradeName, cost) {
+    window.toggleOptionalUpgrade = function(upgradeName, cost) {
       let config = getActiveConfig();
       if (!config) return;
 
-      const index = config.upgrades.findIndex(u => u.name === upgradeName);
+      const faction = state.factionData[state.currentFaction];
+      let unit;
       
-      if (index > -1) {
-        config.upgrades.splice(index, 1);
+      if (state.builderMode === 'library') {
+        unit = faction.units.find(u => u.name === state.builderTarget);
       } else {
-        config.upgrades.push({ name: upgradeName, cost: cost });
+        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
+        unit = faction.units.find(u => u.name === rosterItem.unitName);
       }
 
-      updateRosterCost();
-      render();
-    };
+      if (!unit || !unit.optional_upgrades) return;
 
-    window.toggleOptionalAbility = function(abilityName, cost) {
-      let config = getActiveConfig();
-      if (!config) return;
-
-      const index = config.optionalAbilities.findIndex(a => a.name === abilityName);
+      const index = config.optionalUpgrades.findIndex(u => u.name === upgradeName);
       
       if (index > -1) {
-        config.optionalAbilities.splice(index, 1);
+        config.optionalUpgrades.splice(index, 1);
       } else {
-        config.optionalAbilities.push({ name: abilityName, cost: cost });
+        const upgrade = unit.optional_upgrades.find(u => u.name === upgradeName);
+        if (upgrade) {
+          config.optionalUpgrades.push({ ...upgrade });
+        }
       }
 
       updateRosterCost();
@@ -511,7 +498,7 @@ window.CC_APP = {
         const rosterItem = state.roster.find(r => r.id === state.builderTarget);
         if (!rosterItem) return null;
         if (!rosterItem.config) {
-          rosterItem.config = { upgrades: [], weaponProperties: [], optionalAbilities: [], supplemental: null };
+          rosterItem.config = { optionalUpgrades: [], supplemental: null };
         }
         return rosterItem.config;
       }
@@ -556,7 +543,7 @@ window.CC_APP = {
       state.builderMode = 'roster';
       state.builderTarget = rosterItem.id;
       state.selectedUnitId = rosterItem.id;
-      state.builderConfig = { upgrades: [], weaponProperties: [], optionalAbilities: [], supplemental: null };
+      state.builderConfig = { optionalUpgrades: [], supplemental: null };
       render();
     };
 
@@ -571,7 +558,7 @@ window.CC_APP = {
         state.builderMode = null;
         state.builderTarget = null;
         state.selectedUnitId = null;
-        state.builderConfig = { upgrades: [], weaponProperties: [], optionalAbilities: [], supplemental: null };
+        state.builderConfig = { optionalUpgrades: [], supplemental: null };
       }
       
       render();
@@ -586,8 +573,13 @@ window.CC_APP = {
       render();
     };
 
+    window.updateRosterName = function(name) {
+      state.rosterName = name;
+    };
+
     window.exportRoster = function() {
       const exportData = {
+        name: state.rosterName,
         faction: state.currentFaction,
         budget: state.budget,
         roster: state.roster,
@@ -600,9 +592,46 @@ window.CC_APP = {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `roster-${state.currentFaction}-${Date.now()}.json`;
+      a.download = `${state.rosterName.replace(/[^a-z0-9]/gi, '_')}-${Date.now()}.json`;
       a.click();
       URL.revokeObjectURL(url);
+    };
+
+    window.importRoster = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          
+          if (data.faction) {
+            await switchFaction(data.faction);
+            state.rosterName = data.name || 'Imported Roster';
+            state.budget = data.budget || 500;
+            state.roster = data.roster || [];
+            
+            const nameInput = document.getElementById('cc-roster-name');
+            if (nameInput) nameInput.value = state.rosterName;
+            
+            const budgetSelect = document.getElementById('cc-budget-selector');
+            if (budgetSelect) budgetSelect.value = state.budget;
+            
+            const factionSelect = document.getElementById('cc-faction-selector');
+            if (factionSelect) factionSelect.value = data.faction;
+            
+            render();
+            alert('Roster imported successfully!');
+          }
+        } catch (err) {
+          console.error('Import failed:', err);
+          alert('Failed to import roster. Check file format.');
+        }
+      };
+      reader.readAsText(file);
+      
+      event.target.value = '';
     };
 
     // ================================
@@ -618,6 +647,9 @@ window.CC_APP = {
           </div>
           <div class="d-flex align-items-center gap-3">
             <div id="cc-budget-display" style="font-size: 1.5rem; font-weight: 700;">0 ₤</div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('roster-import').click()">
+              <i class="fa fa-upload"></i> Import
+            </button>
             <button class="btn btn-sm btn-outline-secondary" onclick="exportRoster()">
               <i class="fa fa-download"></i> Export
             </button>
@@ -625,6 +657,16 @@ window.CC_APP = {
         </div>
 
         <div class="cc-faction-controls">
+          <input 
+            id="cc-roster-name" 
+            type="text" 
+            class="form-control cc-input" 
+            placeholder="Roster Name..." 
+            value="${esc(state.rosterName)}"
+            onchange="updateRosterName(this.value)"
+            style="flex: 1;"
+          />
+          
           <select id="cc-faction-selector" class="form-select" onchange="changeFaction(this.value)">
             <option value="">SELECT FACTION...</option>
             ${FACTION_FILES.map(f => `<option value="${f.id}">${f.title}</option>`).join('')}
@@ -638,6 +680,8 @@ window.CC_APP = {
             <option value="2000">2000 ₤</option>
           </select>
         </div>
+
+        <input type="file" id="roster-import" accept=".json" style="display: none;" onchange="importRoster(event)">
 
         <div class="cc-faction-builder">
           
