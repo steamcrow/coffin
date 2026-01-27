@@ -43,9 +43,9 @@
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         { 
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense. Light Armor.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -70,9 +70,9 @@
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         { 
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense. Light Armor.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -97,9 +97,9 @@
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         { 
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense. Light Armor.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -124,9 +124,9 @@
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
       {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -163,9 +163,9 @@
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
          {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -191,9 +191,9 @@
         { "name": "Fire Hat", "cost": 5, "type": "Upgrade", "effect": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster." },
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -218,9 +218,9 @@
       "optional_upgrades": [
         { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -244,9 +244,9 @@
       "tactics": "Each turn: Blood Transfusion (base contact, sacrifice 1Q to heal 1Q, or 2Q for monsters - RISKY!) OR Venom (6\" poison). VitaGood tokens (2) for recovery or emergency heal.",
       "optional_upgrades": [
         {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         }
@@ -270,9 +270,9 @@
       "optional_upgrades": [
         {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
         {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -297,9 +297,9 @@
       "optional_upgrades": [
         {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
         {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -323,7 +323,7 @@
       "tactics": "High-speed bomber. Fly over enemies dropping flechettes (automatic hits!). MUST move 6\"+ or risk crash. When destroyed, crashes spectacularly (AoE damage).",
       "optional_upgrades": [
         {
-          "name": "Witch-Stitched Wings", 
+          "name": "Witch-Stitched", 
           "cost": 15, 
           "type": "Upgrade", 
           "effect": "+1 Defense, Barely Controlled test succeeds on 3+ instead of 4+. More stable bomber.",
@@ -350,9 +350,9 @@
       "tactics": "Pressure engine (Brute role). Stealth + Fear creates board denial. Commits to combat, grinds enemies down. Makes bad decisions unavoidable.",
       "optional_upgrades": [
         {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         }
@@ -401,9 +401,9 @@
       "optional_upgrades": [
         {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
         {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
@@ -427,9 +427,9 @@
       "tactics": "Durable undead specialist (D3 + Tougher + Fearless). Befriend Bloodless (contested vs undead). Thrice-Blessed Shovel with Brutal Blow.",
       "optional_upgrades": [
         {
-          "name": "Witch-Stitched Armor", 
+          "name": "Witch-Stitched", 
           "cost": 10, 
-          "type": "Gear", 
+          "type": "Upgrade", 
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": { "defense": 1 }
         },
