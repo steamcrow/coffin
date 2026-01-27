@@ -289,16 +289,17 @@ window.CC_APP = {
                 <div class="cc-panel-title mb-2">Rules</div>
                 
                 <!-- Filter tabs -->
-                <div class="btn-group btn-group-sm w-100 mb-3" role="group">
+                <div class="btn-group btn-group-sm w-100" role="group" style="margin-bottom: 12px;">
                   <button type="button" class="btn btn-outline-secondary active" data-filter="all">All</button>
                   <button type="button" class="btn btn-outline-secondary" data-filter="favorites">★ Starred</button>
                 </div>
                 
-                <!-- Search on its own row -->
+                <!-- Search on its own row with clear separation -->
                 <input
                   id="cc-rule-search"
                   class="form-control form-control-sm cc-input w-100"
                   placeholder="Search rules..."
+                  style="margin-top: 4px;"
                 />
               </div>
               <div id="cc-rule-list" class="cc-list"></div>
@@ -617,15 +618,17 @@ window.CC_APP = {
       listEl.innerHTML = items
         .map((it) => {
           const active = it.id === selectedId ? "active" : "";
-          const starred = isFavorite(it.id) ? '★' : '';
+          const starred = isFavorite(it.id);
           return `
             <button class="cc-list-item ${active}" data-id="${esc(it.id)}">
-              <div class="d-flex justify-content-between align-items-start">
+              <div class="d-flex justify-content-between align-items-center w-100">
                 <div class="flex-grow-1">
                   <div class="cc-list-title">${esc(it.title || it.id)}</div>
                   <div class="cc-list-sub">${esc(it.type || "rule")}</div>
                 </div>
-                ${starred ? `<div class="cc-star-badge">${starred}</div>` : ''}
+                <span class="cc-star-btn" data-star-id="${esc(it.id)}" style="cursor: pointer; padding: 4px 8px; font-size: 14px;" title="Star/Unstar">
+                  ${starred ? '★' : '☆'}
+                </span>
               </div>
             </button>
           `;
@@ -1230,6 +1233,24 @@ window.CC_APP = {
 
     // ---- EVENTS ----
     listEl.addEventListener("click", async (e) => {
+      // Handle star clicks in the sidebar
+      if (e.target.closest('.cc-star-btn')) {
+        const starBtn = e.target.closest('.cc-star-btn');
+        const itemId = starBtn.dataset.starId;
+        if (itemId) {
+          toggleFavorite(itemId);
+          renderList(searchEl.value); // Re-render to update star display
+          
+          // If we're currently viewing this item, update the main star button too
+          if (selectedId === itemId) {
+            const mainStar = favoriteBtn.querySelector('.cc-star');
+            mainStar.textContent = isFavorite(itemId) ? '★' : '☆';
+          }
+        }
+        e.stopPropagation();
+        return;
+      }
+      
       const btn = e.target.closest("button[data-id]");
       if (!btn) return;
       
@@ -1237,24 +1258,51 @@ window.CC_APP = {
       
       // Handle ability clicks - find and load parent section, then scroll to ability
       if (clickedId.startsWith('ability-')) {
-        const abilityName = clickedId.replace('ability-', '').replace(/-/g, ' ').toLowerCase();
+        const abilityName = clickedId.replace('ability-', '').replace(/-/g, '_').toLowerCase();
+        const abilityNameDisplay = titleize(abilityName.replace(/_/g, ' '));
         
-        // Search through ALL sections to find which one contains this ability
+        // First, try to find in ability dictionary sections specifically
         let foundSection = null;
+        const abilityDictSections = index.filter(it => 
+          it.id && (it.id.includes('ability_dict') || it.title && it.title.toLowerCase().includes('ability'))
+        );
         
-        for (const item of index) {
+        // Search ability dictionary sections first (more likely)
+        for (const item of abilityDictSections) {
           try {
             const section = await helpers.getRuleSection(item.id);
             if (section && section.content) {
-              const contentStr = JSON.stringify(section.content).toLowerCase();
-              if (contentStr.includes(abilityName)) {
-                foundSection = item.id;
-                break;
+              // Check if this ability exists as a key in the content
+              const contentObj = section.content;
+              for (const key in contentObj) {
+                if (key.toLowerCase().replace(/_/g, ' ') === abilityName.replace(/_/g, ' ')) {
+                  foundSection = item.id;
+                  break;
+                }
               }
+              if (foundSection) break;
             }
           } catch (e) {
-            // Skip sections that error
             continue;
+          }
+        }
+        
+        // If not found, search all sections
+        if (!foundSection) {
+          for (const item of index) {
+            if (abilityDictSections.includes(item)) continue; // Already checked
+            try {
+              const section = await helpers.getRuleSection(item.id);
+              if (section && section.content) {
+                const contentStr = JSON.stringify(section.content).toLowerCase();
+                if (contentStr.includes(abilityName)) {
+                  foundSection = item.id;
+                  break;
+                }
+              }
+            } catch (e) {
+              continue;
+            }
           }
         }
         
@@ -1265,9 +1313,11 @@ window.CC_APP = {
           // Wait for rendering, then scroll to the specific ability
           setTimeout(() => {
             const abilityCards = detailEl.querySelectorAll('.cc-ability-card');
-            const targetCard = Array.from(abilityCards).find(card => 
-              card.textContent.toLowerCase().includes(abilityName)
-            );
+            const targetCard = Array.from(abilityCards).find(card => {
+              const cardText = card.textContent.toLowerCase();
+              return cardText.includes(abilityName.replace(/_/g, ' ')) || 
+                     cardText.includes(abilityName.replace(/_/g, ''));
+            });
             
             if (targetCard) {
               targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1283,7 +1333,7 @@ window.CC_APP = {
         } else {
           detailEl.innerHTML = `
             <div class="cc-muted p-4">
-              <p>Could not find the section containing the ability "${titleize(abilityName)}".</p>
+              <p>Could not find the section containing the ability "${esc(abilityNameDisplay)}".</p>
               <p>Try using the search box to find it!</p>
             </div>
           `;
