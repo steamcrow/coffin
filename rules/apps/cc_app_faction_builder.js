@@ -218,6 +218,30 @@ window.CC_APP = {
     }
 
     // ================================
+    // LOGIN STATUS
+    // ================================
+    async function updateLoginStatus() {
+      if (!window.CC_STORAGE) return;
+      
+      const statusBar = document.getElementById('cc-login-status');
+      if (!statusBar) return;
+
+      try {
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (auth.loggedIn) {
+          statusBar.className = 'cc-login-status logged-in';
+          statusBar.innerHTML = `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`;
+        } else {
+          statusBar.className = 'cc-login-status logged-out';
+          statusBar.innerHTML = `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
+        }
+      } catch (e) {
+        statusBar.className = 'cc-login-status logged-out';
+        statusBar.innerHTML = `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
+      }
+    }
+
+    // ================================
     // RENDERING
     // ================================
     function renderLibrary() {
@@ -856,25 +880,21 @@ window.CC_APP = {
           </button>
         </div>
 
-        <div class="cc-roster-list" style="padding: 1rem; max-height: calc(100vh - 100px); overflow-y: auto;">
+        <div class="cc-roster-list">
           ${rosters.map(r => `
-            <div class="cc-saved-roster-item" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
-              <div class="cc-saved-roster-header" style="margin-bottom: 0.5rem;">
-                <span class="cc-faction-type" style="color: var(--cc-primary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
-                  ${FACTION_TITLES[r.faction] || r.faction}
-                </span>
+            <div class="cc-saved-roster-item">
+              <div class="cc-saved-roster-header">
+                <span class="cc-faction-type">${FACTION_TITLES[r.faction] || r.faction}</span>
               </div>
 
-              <div class="cc-saved-roster-name" style="font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem;">
-                ${esc(r.name)}
-              </div>
+              <div class="cc-saved-roster-name">${esc(r.name)}</div>
 
-              <div class="cc-saved-roster-meta" style="font-size: 0.85rem; color: #999; margin-bottom: 1rem;">
+              <div class="cc-saved-roster-meta">
                 💰 ${r.totalCost} / ${r.budget > 0 ? r.budget + ' ₤' : 'UNLIMITED'} · 
                 ${new Date(r.write_date).toLocaleDateString()}
               </div>
 
-              <div class="cc-saved-roster-actions" style="display: flex; gap: 0.5rem;">
+              <div class="cc-saved-roster-actions">
                 <button onclick="loadCloudRoster(${r.id})" class="btn btn-sm btn-warning">
                   <i class="fa fa-folder-open"></i> LOAD
                 </button>
@@ -957,7 +977,16 @@ window.CC_APP = {
           </div>
         </div>
 
+        <div id="cc-login-status" class="cc-login-status logged-out">
+          <i class="fa fa-spinner fa-spin"></i> Checking login status...
+        </div>
+
         <div class="cc-faction-controls">
+          <select id="cc-faction-selector" class="form-select" onchange="changeFaction(this.value)">
+            <option value="">SELECT FACTION...</option>
+            ${FACTION_FILES.map(f => `<option value="${f.id}">${f.title}</option>`).join('')}
+          </select>
+
           <input 
             id="cc-roster-name" 
             type="text" 
@@ -965,13 +994,7 @@ window.CC_APP = {
             placeholder="Roster Name..." 
             value="${esc(state.rosterName)}"
             onchange="updateRosterName(this.value)"
-            style="flex: 1;"
           />
-          
-          <select id="cc-faction-selector" class="form-select" onchange="changeFaction(this.value)">
-            <option value="">SELECT FACTION...</option>
-            ${FACTION_FILES.map(f => `<option value="${f.id}">${f.title}</option>`).join('')}
-          </select>
 
           <select id="cc-budget-selector" class="form-select" onchange="changeBudget(this.value)">
             <option value="0">UNLIMITED ₤</option>
@@ -1022,6 +1045,11 @@ window.CC_APP = {
     // ================================
     checkSharedRoster();
     render();
+    
+    setTimeout(() => {
+      updateLoginStatus();
+    }, 500);
+    
     console.log("✅ Faction Builder mounted");
   }
 };
