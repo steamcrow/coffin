@@ -1271,48 +1271,21 @@ window.CC_APP = {
         const abilityId = clickedId.replace('ability-', '');
         const abilityNameUnderscore = abilityId.replace(/-/g, '_');
         const abilityNameSpace = abilityId.replace(/-/g, ' ');
+        const abilityNameCamel = abilityId.replace(/-/g, '');
         const abilityNameDisplay = titleize(abilityNameSpace);
         
-        // Check if this looks like a custom unit ability (common patterns)
-        const customAbilityPatterns = [
-          'witch_stitched', 'gas_mask', 'pocket_snacks', 'blessed_shovel',
-          'armor', 'clothing', 'gear', 'equipment', 'upgrade'
-        ];
+        console.log('🔍 Searching for ability:', {
+          original: abilityId,
+          underscore: abilityNameUnderscore,
+          space: abilityNameSpace,
+          camel: abilityNameCamel
+        });
         
-        const isLikelyCustom = customAbilityPatterns.some(pattern => 
-          abilityNameUnderscore.toLowerCase().includes(pattern)
-        );
-        
-        if (isLikelyCustom) {
-          detailEl.innerHTML = `
-            <div class="cc-muted p-4">
-              <h4 style="color: #ff7518;">"${esc(abilityNameDisplay)}" is a Unit-Specific Ability</h4>
-              <p>This ability is custom-defined for a specific unit and doesn't appear in the general Ability Dictionary.</p>
-              <p>To see this ability's full description, view the unit that has it in the Factions section.</p>
-              <p><strong>Tip:</strong> Use the search box and type the ability name to find which unit has it!</p>
-            </div>
-          `;
-          return;
-        }
-        
-        console.log('Searching for ability:', abilityId, 'formats:', { abilityNameUnderscore, abilityNameSpace });
-        
-        // First, try to find in ability dictionary sections specifically
+        // Search ALL sections (not just ability dictionaries)
         let foundSection = null;
         let foundKey = null;
         
-        const abilityDictSections = index.filter(it => 
-          it.id && (
-            it.id.includes('ability_dict') || 
-            it.id.includes('ability') ||
-            (it.title && it.title.toLowerCase().includes('ability'))
-          )
-        );
-        
-        console.log('Checking', abilityDictSections.length, 'ability dictionary sections');
-        
-        // Search ability dictionary sections first (most likely location)
-        for (const item of abilityDictSections) {
+        for (const item of index) {
           try {
             const section = await helpers.getRuleSection(item.id);
             if (section && section.content) {
@@ -1320,13 +1293,17 @@ window.CC_APP = {
               
               // Check every key in the content for a match
               for (const key in contentObj) {
-                const keyLower = key.toLowerCase().replace(/_/g, '');
-                const searchLower = abilityNameUnderscore.toLowerCase().replace(/_/g, '');
+                // Normalize both the key and search term for comparison
+                const keyNormalized = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const searchNormalized = abilityNameUnderscore.toLowerCase().replace(/[^a-z0-9]/g, '');
                 
-                if (keyLower === searchLower || key === abilityNameUnderscore) {
+                // Also check if the key contains the search term or vice versa
+                if (keyNormalized === searchNormalized || 
+                    keyNormalized.includes(searchNormalized) ||
+                    searchNormalized.includes(keyNormalized)) {
                   foundSection = item.id;
                   foundKey = key;
-                  console.log('Found ability', key, 'in section', item.id);
+                  console.log('✅ Found ability', key, 'in section', item.id);
                   break;
                 }
               }
@@ -1347,25 +1324,26 @@ window.CC_APP = {
             const abilityCards = detailEl.querySelectorAll('.cc-ability-card');
             let targetCard = null;
             
-            // Try to find by exact key match first
-            if (foundKey) {
+            // Try multiple matching strategies
+            const searchTerms = [
+              foundKey,
+              abilityNameUnderscore,
+              abilityNameSpace,
+              abilityId
+            ];
+            
+            for (const term of searchTerms) {
+              if (targetCard) break;
+              
               targetCard = Array.from(abilityCards).find(card => {
                 const cardTitle = card.querySelector('.fw-bold');
                 if (cardTitle) {
-                  const titleText = cardTitle.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
-                  const searchText = foundKey.toLowerCase().replace(/[^a-z0-9]/g, '');
-                  return titleText === searchText;
+                  const titleNormalized = cardTitle.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  const searchNormalized = term.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  return titleNormalized === searchNormalized || 
+                         titleNormalized.includes(searchNormalized);
                 }
                 return false;
-              });
-            }
-            
-            // Fallback to partial match
-            if (!targetCard) {
-              targetCard = Array.from(abilityCards).find(card => {
-                const cardText = card.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const searchText = abilityNameUnderscore.toLowerCase().replace(/[^a-z0-9]/g, '');
-                return cardText.includes(searchText);
               });
             }
             
@@ -1378,22 +1356,19 @@ window.CC_APP = {
                 targetCard.style.borderColor = '';
                 targetCard.style.boxShadow = '';
               }, 2000);
+              console.log('✅ Scrolled to ability card');
             } else {
-              console.warn('Could not find ability card after loading section');
+              console.warn('⚠️ Loaded section but could not find ability card');
             }
           }, 500);
         } else {
-          console.error('Could not find section containing ability', abilityId);
+          console.error('❌ Could not find section containing ability', abilityId);
           detailEl.innerHTML = `
             <div class="cc-muted p-4">
               <h4 style="color: #ff7518;">Could not find "${esc(abilityNameDisplay)}"</h4>
-              <p>This ability might be:</p>
-              <ul>
-                <li>A unit-specific upgrade or equipment (check Factions section)</li>
-                <li>Spelled differently in the rules (try searching)</li>
-                <li>Part of a weapon property instead of a standalone ability</li>
-              </ul>
-              <p><strong>Tip:</strong> Try using the search box to find it!</p>
+              <p>The app searched all sections but could not locate this ability.</p>
+              <p><strong>Debugging info:</strong> Check the browser console for search details.</p>
+              <p><strong>Tip:</strong> Try using the search box to manually find it!</p>
             </div>
           `;
         }
