@@ -1,0 +1,474 @@
+{
+  "file": "220_scenario_names.json",
+  "version": "1.0",
+  "description": "Scenario name generator with tagged prefixes and suffixes for intelligent matching",
+
+  "format": "The [PREFIX] of [SUFFIX]",
+
+  "prefixes": [
+    {
+      "text": "Night",
+      "tags": ["general", "time", "default"]
+    },
+    {
+      "text": "Day",
+      "tags": ["general", "time", "default"]
+    },
+    {
+      "text": "Long Night",
+      "tags": ["time", "dark", "danger_4", "danger_5", "danger_6"]
+    },
+    {
+      "text": "Last Night",
+      "tags": ["time", "dark", "danger_4", "danger_5", "danger_6", "desperate"]
+    },
+    {
+      "text": "Endless Night",
+      "tags": ["time", "dark", "danger_5", "danger_6", "horror"]
+    },
+    {
+      "text": "Black Night",
+      "tags": ["time", "dark", "danger_4", "danger_5", "death"]
+    },
+    {
+      "text": "Burning Night",
+      "tags": ["time", "dark", "danger_4", "danger_5", "fire", "destruction"]
+    },
+    {
+      "text": "Thyr",
+      "tags": ["thyr", "crystal", "mystical", "occult"]
+    },
+    {
+      "text": "Crystal",
+      "tags": ["thyr", "crystal", "mystical", "occult"]
+    },
+    {
+      "text": "Shard",
+      "tags": ["thyr", "crystal", "mystical", "broken"]
+    },
+    {
+      "text": "Vein",
+      "tags": ["thyr", "crystal", "resource", "extraction"]
+    },
+    {
+      "text": "Glow",
+      "tags": ["thyr", "crystal", "mystical", "light"]
+    },
+    {
+      "text": "Graves",
+      "tags": ["death", "undead", "coffin", "bones"]
+    },
+    {
+      "text": "Bones",
+      "tags": ["death", "undead", "skeletal"]
+    },
+    {
+      "text": "Coffins",
+      "tags": ["death", "undead", "burial", "coffin"]
+    },
+    {
+      "text": "Dust",
+      "tags": ["death", "decay", "wasteland", "dry"]
+    },
+    {
+      "text": "Dead",
+      "tags": ["death", "undead", "lifeless"]
+    },
+    {
+      "text": "Beast",
+      "tags": ["monster", "creature", "wild", "predator"]
+    },
+    {
+      "text": "Monster",
+      "tags": ["monster", "creature", "horror"]
+    },
+    {
+      "text": "Abomination",
+      "tags": ["monster", "horror", "twisted", "danger_4", "danger_5"]
+    },
+    {
+      "text": "Howl",
+      "tags": ["monster", "sound", "warning", "predator"]
+    },
+    {
+      "text": "Hunger",
+      "tags": ["monster", "desperation", "predator"]
+    },
+    {
+      "text": "Outlaw",
+      "tags": ["combat", "lawless", "shine_riders", "bandit"]
+    },
+    {
+      "text": "Guns",
+      "tags": ["combat", "violence", "liberty_corps", "shine_riders"]
+    },
+    {
+      "text": "Noose",
+      "tags": ["combat", "execution", "justice", "lawless"]
+    },
+    {
+      "text": "Badge",
+      "tags": ["combat", "authority", "liberty_corps", "law"]
+    },
+    {
+      "text": "Bounty",
+      "tags": ["combat", "reward", "shine_riders", "extraction"]
+    },
+    {
+      "text": "Horror",
+      "tags": ["danger_5", "danger_6", "terror", "fear"]
+    },
+    {
+      "text": "Terror",
+      "tags": ["danger_4", "danger_5", "danger_6", "fear"]
+    },
+    {
+      "text": "Doom",
+      "tags": ["danger_5", "danger_6", "inevitable", "catastrophe"]
+    },
+    {
+      "text": "Ruin",
+      "tags": ["danger_4", "danger_5", "destruction", "ruins", "collapse"]
+    },
+    {
+      "text": "Damnation",
+      "tags": ["danger_5", "danger_6", "cursed", "mystical"]
+    },
+    {
+      "text": "Hell",
+      "tags": ["danger_5", "danger_6", "fire", "suffering"]
+    },
+    {
+      "text": "Omen",
+      "tags": ["mystical", "warning", "prophecy", "ritual"]
+    },
+    {
+      "text": "Sign",
+      "tags": ["mystical", "warning", "prophecy", "symbol"]
+    },
+    {
+      "text": "Warning",
+      "tags": ["mystical", "prophecy", "danger"]
+    },
+    {
+      "text": "Prophecy",
+      "tags": ["mystical", "ritual", "fate", "prediction"]
+    },
+    {
+      "text": "Mark",
+      "tags": ["mystical", "symbol", "curse", "branded"]
+    },
+    {
+      "text": "Curse",
+      "tags": ["mystical", "ritual", "corrupted", "hexed"]
+    },
+    {
+      "text": "Reckoning",
+      "tags": ["justice", "consequence", "finale", "danger_4"]
+    },
+    {
+      "text": "Boomtown",
+      "tags": ["location", "settlement", "frontier", "boomtown"]
+    },
+    {
+      "text": "Ruins",
+      "tags": ["location", "abandoned", "ruins", "decay"]
+    },
+    {
+      "text": "Gallows",
+      "tags": ["location", "execution", "settlement", "justice"]
+    },
+    {
+      "text": "Badlands",
+      "tags": ["location", "wasteland", "hostile", "frontier"]
+    }
+  ],
+
+  "suffixes": [
+    {
+      "text": "Fortune",
+      "tags": ["location", "fortune", "boomtown", "greed"]
+    },
+    {
+      "text": "Diablo",
+      "tags": ["location", "diablo", "danger", "cursed"]
+    },
+    {
+      "text": "Plunder",
+      "tags": ["location", "fort_plunder", "theft", "combat"]
+    },
+    {
+      "text": "Coffin",
+      "tags": ["location", "camp_coffin", "death", "base"]
+    },
+    {
+      "text": "Huck",
+      "tags": ["location", "huck", "outpost"]
+    },
+    {
+      "text": "River City",
+      "tags": ["location", "river_city", "settlement", "trade"]
+    },
+    {
+      "text": "Broken Steel",
+      "tags": ["objective_engine", "wreck", "metal", "salvage"]
+    },
+    {
+      "text": "Twisted Iron",
+      "tags": ["objective_engine", "wreck", "metal", "corrupted"]
+    },
+    {
+      "text": "Shattered Machine",
+      "tags": ["objective_engine", "wreck", "destruction"]
+    },
+    {
+      "text": "Burning Engine",
+      "tags": ["objective_engine", "fire", "danger"]
+    },
+    {
+      "text": "Lost Cargo",
+      "tags": ["objective_cargo", "theft", "extraction"]
+    },
+    {
+      "text": "Stolen Goods",
+      "tags": ["objective_cargo", "theft", "crime"]
+    },
+    {
+      "text": "Forbidden Prize",
+      "tags": ["objective_cargo", "extraction", "occult"]
+    },
+    {
+      "text": "Blood Money",
+      "tags": ["objective_cargo", "violence", "bounty"]
+    },
+    {
+      "text": "Cursed Ground",
+      "tags": ["objective_ritual", "mystical", "tainted", "haunted"]
+    },
+    {
+      "text": "Dark Altar",
+      "tags": ["objective_ritual", "mystical", "sacrifice", "evil"]
+    },
+    {
+      "text": "Forbidden Circle",
+      "tags": ["objective_ritual", "mystical", "summoning"]
+    },
+    {
+      "text": "Unholy Rite",
+      "tags": ["objective_ritual", "mystical", "corruption"]
+    },
+    {
+      "text": "Burning Crystal",
+      "tags": ["objective_thyr", "fire", "energy"]
+    },
+    {
+      "text": "Glowing Stone",
+      "tags": ["objective_thyr", "light", "mystical"]
+    },
+    {
+      "text": "Poisoned Light",
+      "tags": ["objective_thyr", "corruption", "danger"]
+    },
+    {
+      "text": "Deadly Glow",
+      "tags": ["objective_thyr", "danger", "radiation"]
+    },
+    {
+      "text": "Doomed Convoy",
+      "tags": ["objective_vehicle", "escort", "failure"]
+    },
+    {
+      "text": "Final Run",
+      "tags": ["objective_vehicle", "escort", "desperate"]
+    },
+    {
+      "text": "Last Wagon",
+      "tags": ["objective_vehicle", "escort", "lone"]
+    },
+    {
+      "text": "Deadly Trail",
+      "tags": ["objective_vehicle", "escort", "danger"]
+    },
+    {
+      "text": "Contested Ground",
+      "tags": ["objective_marker", "territory", "conflict"]
+    },
+    {
+      "text": "Bloody Banner",
+      "tags": ["objective_marker", "violence", "war"]
+    },
+    {
+      "text": "Stolen Claim",
+      "tags": ["objective_marker", "theft", "territory"]
+    },
+    {
+      "text": "Blood and Dust",
+      "tags": ["plot_ambush", "violence", "desert"]
+    },
+    {
+      "text": "Broken Rails",
+      "tags": ["plot_ambush", "wreck", "derailment"]
+    },
+    {
+      "text": "Dead Track",
+      "tags": ["plot_ambush", "death", "railway"]
+    },
+    {
+      "text": "Crimson Trail",
+      "tags": ["plot_ambush", "violence", "blood"]
+    },
+    {
+      "text": "Long Road",
+      "tags": ["plot_escort", "journey", "endurance"]
+    },
+    {
+      "text": "Final Mile",
+      "tags": ["plot_escort", "desperate", "close"]
+    },
+    {
+      "text": "Last Journey",
+      "tags": ["plot_escort", "finale", "death"]
+    },
+    {
+      "text": "Stolen Treasure",
+      "tags": ["plot_extraction", "theft", "valuable"]
+    },
+    {
+      "text": "Hidden Vault",
+      "tags": ["plot_extraction", "secret", "discovery"]
+    },
+    {
+      "text": "Dark Secret",
+      "tags": ["plot_extraction", "mystery", "occult"]
+    },
+    {
+      "text": "Last Stand",
+      "tags": ["plot_siege", "defense", "desperate"]
+    },
+    {
+      "text": "Final Defense",
+      "tags": ["plot_siege", "defense", "finale"]
+    },
+    {
+      "text": "Broken Walls",
+      "tags": ["plot_siege", "defense", "breached"]
+    },
+    {
+      "text": "Bitter End",
+      "tags": ["plot_siege", "finale", "defeat"]
+    },
+    {
+      "text": "Twisted Faith",
+      "tags": ["plot_ritual", "mystical", "corrupted"]
+    },
+    {
+      "text": "Dark Ceremony",
+      "tags": ["plot_ritual", "mystical", "evil"]
+    },
+    {
+      "text": "Cursed Summoning",
+      "tags": ["plot_ritual", "mystical", "monster"]
+    },
+    {
+      "text": "Broken Earth",
+      "tags": ["plot_disaster", "terrain", "collapse"]
+    },
+    {
+      "text": "Angry Sky",
+      "tags": ["plot_disaster", "weather", "storm"]
+    },
+    {
+      "text": "Deadly Storm",
+      "tags": ["plot_disaster", "weather", "danger"]
+    },
+    {
+      "text": "Canyon Wrath",
+      "tags": ["plot_disaster", "nature", "fury"]
+    },
+    {
+      "text": "False Promise",
+      "tags": ["twist_decoy", "lie", "betrayal"]
+    },
+    {
+      "text": "Deadly Lie",
+      "tags": ["twist_decoy", "betrayal", "danger"]
+    },
+    {
+      "text": "Bitter Truth",
+      "tags": ["twist_decoy", "revelation", "harsh"]
+    },
+    {
+      "text": "Hidden Horror",
+      "tags": ["twist_monster", "secret", "fear"]
+    },
+    {
+      "text": "Greater Evil",
+      "tags": ["twist_monster", "escalation", "danger"]
+    },
+    {
+      "text": "Darker Beast",
+      "tags": ["twist_monster", "escalation", "creature"]
+    },
+    {
+      "text": "Living Land",
+      "tags": ["twist_location", "terrain", "awakened"]
+    },
+    {
+      "text": "Angry Earth",
+      "tags": ["twist_location", "terrain", "hostile"]
+    },
+    {
+      "text": "Vengeful Ground",
+      "tags": ["twist_location", "terrain", "cursed"]
+    },
+    {
+      "text": "Broken Dreams",
+      "tags": ["generic", "failure", "loss"]
+    },
+    {
+      "text": "Dark Desire",
+      "tags": ["generic", "greed", "corruption"]
+    },
+    {
+      "text": "Lost Hope",
+      "tags": ["generic", "despair", "defeat"]
+    },
+    {
+      "text": "Bloody Ground",
+      "tags": ["generic", "violence", "death"]
+    },
+    {
+      "text": "Shadow and Flame",
+      "tags": ["generic", "epic", "contrast"]
+    },
+    {
+      "text": "Dust and Bone",
+      "tags": ["generic", "death", "desert"]
+    },
+    {
+      "text": "Fire and Lead",
+      "tags": ["generic", "combat", "violence"]
+    }
+  ],
+
+  "matching_rules": {
+    "description": "How to match prefixes and suffixes to scenario content",
+    "priority": [
+      "Check for thyr/crystal objectives → use thyr-tagged prefixes",
+      "Check for death/grave themes → use death-tagged prefixes",
+      "Check for monster faction/content → use monster-tagged prefixes",
+      "Check for outlaw/combat themes → use combat-tagged prefixes",
+      "Check danger rating → use danger_X-tagged prefixes",
+      "Check for mystical/ritual → use mystical-tagged prefixes",
+      "Check location type → use location-tagged prefixes",
+      "Fallback to time-based or general prefixes"
+    ],
+    "suffix_matching": [
+      "If location name is short/dramatic → use location name directly",
+      "Otherwise match objective types to objective_X tags",
+      "Match plot family to plot_X tags",
+      "Match twist type to twist_X tags",
+      "Fallback to generic tags"
+    ]
+  }
+}
