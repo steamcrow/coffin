@@ -109,6 +109,23 @@
     "note": "If a Unit Card contradicts the Ability Dictionary, the Unit Card always wins."
   },
 
+  "action_chain_limit": {
+    "_id": "R-ABIL-ENGINE-09",
+    "title": "Action Chain Limit",
+
+    "core_rule": "A model may never resolve more than ONE bonus action outside its normal two actions per activation, regardless of source.",
+
+    "clarifications": [
+      "Bonus actions gained from abilities, effects, or once-per-game powers all count toward this limit",
+      "If multiple abilities would grant bonus actions, the controlling player chooses which one resolves",
+      "This restriction does not affect Reactions unless a Reaction explicitly grants a bonus action"
+    ],
+
+    "design_intent": "Abilities should create moments of advantage, not runaway turns.",
+
+    "thematic_note": "Units don’t withdraw because they’re losing. They withdraw because staying would make things worse."
+  },
+
   "design_notes": {
     "_id": "R-ABIL-ENGINE-99",
     "clarity_rule": "If an ability is unclear, resolve it in the least powerful way that still makes sense.",
