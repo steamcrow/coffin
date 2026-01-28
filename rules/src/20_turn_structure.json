@@ -41,7 +41,8 @@
       "Interact",
       "Befriend",
       "Repair",
-      "Special Ability"
+      "Special Ability",
+      "Withdraw"
     ],
     "reactions": {
       "_id": "R-TURN-03A",
@@ -67,7 +68,49 @@
   "action_summaries": {
     "_id": "R-TURN-05",
     "short": "Quick references for common actions.",
+
     "move": "Measure from base. Speed capped by Move value. Terrain affects speed. Movement can be split by other actions.",
-    "attack": "Requires an Action. Uses the Quality system. Usually requires Line of Sight."
+
+    "attack": "Requires an Action. Uses the Quality system. Usually requires Line of Sight.",
+
+    "withdraw": {
+      "title": "Withdraw (Main Action)",
+      "summary": "Withdraw represents a controlled retreat under pressure. Survival is a valid objective in Coffin Canyon.",
+
+      "cost": "1 Main Action",
+
+      "eligibility": [
+        "The model is not Engaged",
+        "OR the model immediately passes a Quality Test"
+      ],
+
+      "resolution": {
+        "on_success": [
+          "The model immediately moves up to its full Move value toward any table edge",
+          "This movement ignores engagement pressure, but does not ignore terrain penalties or hazards",
+          "If the model reaches a table edge during this move, it may exit the battlefield"
+        ],
+        "on_failure": [
+          "The action is lost",
+          "The model becomes Shaken",
+          "The model may not attempt Withdraw again this activation"
+        ]
+      },
+
+      "effects_of_withdrawal": [
+        "A model that exits the battlefield via Withdraw is not destroyed",
+        "It does not grant Victory Points for being killed",
+        "It is removed from play immediately",
+        "Friendly models within 6\" of a withdrawing model must immediately test Morale"
+      ],
+
+      "restrictions": [
+        "Titans may not Withdraw unless a scenario explicitly allows it",
+        "Models carrying Objectives may Withdraw, but drop the Objective at the point of exit unless the scenario states otherwise",
+        "A model may not Withdraw if it is Restrained, Bound, Immobilized, or otherwise prevented from moving by a rule or ability"
+      ],
+
+      "designer_notes": "Knowing when to leave is as important as knowing when to strike. Staying too long is how Coffin Canyon kills heroes."
+    }
   }
 }
