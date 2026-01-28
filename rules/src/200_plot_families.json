@@ -1,6 +1,6 @@
 {
   "file": "200_plot_families.json",
-  "version": "1.0",
+  "version": "1.1",
   "references": [
     "190_plot_engine_schema.json",
     "150_location_types.json",
@@ -312,6 +312,63 @@
       "solo_play_notes": [
         "ritual_progress_advances_each_round",
         "environment_acts_as_claimant"
+      ]
+    },
+
+    {
+      "id": "natural_disaster_response",
+      "name": "Natural Disaster / Environmental Collapse",
+      "description": "The Canyon itself destabilizes the situation. Survival, salvage, and escape matter more than victory.",
+
+      "emphasized_vectors": [
+        "inciting_pressure",
+        "escalation",
+        "twist",
+        "aftermath_mutation"
+      ],
+
+      "common_inciting_pressures": [
+        "environmental_rupture",
+        "infrastructure_failure",
+        "resource_collapse"
+      ],
+
+      "primary_resources": [
+        "survival",
+        "supplies_tools",
+        "riches"
+      ],
+
+      "default_objectives": [
+        "collapsing_route",
+        "fouled_resource",
+        "unstable_structure",
+        "evacuation_point"
+      ],
+
+      "escalation_bias": [
+        "environmental_hazards",
+        "structural_collapse",
+        "visibility_loss",
+        "panic_and_morale_failure"
+      ],
+
+      "twist_bias": [
+        "objective_reveals_hidden_nature",
+        "location_awakens_or_rejects_control",
+        "monster_holding_worse_threat_at_bay"
+      ],
+
+      "aftermath_bias": [
+        "location_state_change",
+        "new_landmark_created",
+        "resource_depletion_or_corruption"
+      ],
+
+      "solo_play_notes": [
+        "disaster_progresses_each_round",
+        "environment_replaces_active_opposition",
+        "monsters_may_arrive_as_secondary_pressure"
       ]
     }
 
