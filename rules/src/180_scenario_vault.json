@@ -682,45 +682,289 @@
       }
     },
 
+{
+  "id": "ooze_in_the_river",
+  "name": "Ooze in the River",
+  "tags": [
+    "plot_disaster",
+    "objective_device",
+    "objective_marker",
+    "resource_water",
+    "resource_occult",
+    "danger_4",
+    "horror",
+    "grim",
+    "boomtown",
+    "wasteland",
+    "monster_corrupted",
+    "monsterology",
+    "monsters",
+    "escalation_coffin_cough"
+  ],
+  "spotlight_factions": ["Monsterologists", "Monster Rangers", "Monsters"],
+  "location_rules": {
+    "allowed_location_types": ["boomtown_riverbase", "outpost", "wasteland"],
+    "river_runs_through_map": true
+  },
+  "danger_rating": 4,
+  "narrative_hook": "A Monsterologist pop-up factory is leaking chemical waste into the river. Now the water itself hunts the living.",
+  "objectives": [
     {
-      "id": "the_last_whistle",
-      "name": "The Last Whistle",
-      "tags": [
-        "plot_claim",
-        "objective_marker",
-        "danger_4",
-        "tense",
-        "mystical",
-        "boomtown",
-        "ruins",
-        "liberty_corps",
-        "shine_riders",
-        "monster_rangers"
-      ],
-      "spotlight_factions": [
-        "Liberty Corps",
-        "Shine Riders",
-        "Monster Rangers"
-      ],
-      "location_rules": {
-        "allowed_location_types": ["rail_yard", "boomtown_ruin"]
-      },
-      "danger_rating": 4,
-      "narrative_hook": "The whistle sounds. No trains remain.",
-      "objectives": [
-        {
-          "id": "whistle_engine",
-          "type": "device",
-          "interactions": ["silence", "sound", "retune"]
-        }
-      ],
-      "victory_conditions": {
-        "primary": "Decide who hears the whistle."
-      },
-      "aftermath_effects": {
-        "regional_travel": "safer_or_deadlier"
-      }
+      "id": "factory_module",
+      "type": "device",
+      "interactions": ["operate", "sabotage", "overload"],
+      "notes": [
+        "Operating produces resources but spawns additional Ooze units.",
+        "Sabotage reduces pollution but escalates Monsterologist response.",
+        "Overload forces immediate escalation checks."
+      ]
+    },
+    {
+      "id": "polluted_river_zones",
+      "type": "marker",
+      "count": "d3+1",
+      "notes": [
+        "Oozes may emerge from these zones.",
+        "Units ending activations here risk corruption."
+      ]
     }
+  ],
+  "victory_conditions": {
+    "monsterologists": "Extract resources and keep the factory operational.",
+    "monster_rangers": "Shut down or cleanse the river before escalation peaks.",
+    "monsters": "Maintain at least one polluted river zone at game end."
+  },
+  "monster_pressure": {
+    "enabled": true,
+    "trigger_round": 2,
+    "spawn_bias": ["Corrosive", "Amorphous"]
+  },
+  "aftermath_effects": {
+    "river": "purified_or_dead",
+    "monster_activity": "increase",
+    "monsterology": "profit_or_scandal"
+  }
+},
+
+{
+  "id": "the_golem_that_remembers",
+  "name": "The Golem That Remembers",
+  "tags": [
+    "plot_claim",
+    "objective_marker",
+    "resource_metal",
+    "resource_occult",
+    "danger_3",
+    "grim",
+    "mystical",
+    "boomtown",
+    "ruins",
+    "monster_elite",
+    "monsters",
+    "liberty_corps"
+  ],
+  "spotlight_factions": ["Liberty Corps", "Monster Rangers", "Monsters"],
+  "location_rules": {
+    "allowed_location_types": ["boomtown", "ruins"],
+    "key_landmark_present": "Foundry Hall"
+  },
+  "danger_rating": 3,
+  "narrative_hook": "An ancient Halloween Golem has activated an ownership charter older than the Canyon itself.",
+  "objectives": [
+    {
+      "id": "charter_core",
+      "type": "control",
+      "notes": [
+        "Represents the legal-industrial soul bound into the Golem.",
+        "Cannot be moved while the Golem lives."
+      ]
+    },
+    {
+      "id": "foundry_hall",
+      "type": "marker",
+      "resource": "mechanical_parts"
+    }
+  ],
+  "victory_conditions": {
+    "liberty_corps": "Seize the charter and enforce modern claim law.",
+    "monster_rangers": "Nullify the charter without destroying the Golem.",
+    "monsters": "Ensure the Golem retains control of Foundry Hall."
+  },
+  "monster_pressure": {
+    "enabled": true,
+    "bias": ["Stalwart"]
+  },
+  "aftermath_effects": {
+    "boomtown": "revived_or_scrapped",
+    "golem": "pacified_or_exiled"
+  }
+},
+
+{
+  "id": "the_coffin_crawler_job",
+  "name": "The Coffin Crawler Job",
+  "tags": [
+    "plot_extraction",
+    "objective_cargo",
+    "danger_3",
+    "tense",
+    "grim",
+    "ruins",
+    "graveyard",
+    "monster_predator",
+    "monsters"
+  ],
+  "spotlight_factions": ["Monster Rangers", "Monsters"],
+  "location_rules": {
+    "allowed_location_types": ["graveyard", "ruins"]
+  },
+  "danger_rating": 3,
+  "narrative_hook": "Coffins are going missing. Whatever’s taking them doesn’t want the bodies — it wants the names.",
+  "objectives": [
+    {
+      "id": "marked_coffins",
+      "type": "extraction",
+      "count": "d3",
+      "notes": [
+        "Removing a coffin angers the Coffin Crawler.",
+        "Destroying coffins prevents escalation but loses VP."
+      ]
+    }
+  ],
+  "victory_conditions": {
+    "monster_rangers": "Recover the coffins intact.",
+    "monsters": "Prevent removal and complete the Crawl."
+  },
+  "monster_pressure": {
+    "enabled": true,
+    "spawn_bias": ["Ambush"]
+  },
+  "aftermath_effects": {
+    "graveyard": "quieted_or_hungry"
+  }
+},
+
+{
+  "id": "steam_wretch_uprising",
+  "name": "Steam Wretch Uprising",
+  "tags": [
+    "plot_siege",
+    "objective_marker",
+    "resource_metal",
+    "danger_4",
+    "grim",
+    "combat",
+    "boomtown",
+    "monster_corrupted",
+    "monsterology",
+    "monsters"
+  ],
+  "spotlight_factions": ["Monsterologists", "Monsters"],
+  "location_rules": {
+    "allowed_location_types": ["factory_district", "boomtown"]
+  },
+  "danger_rating": 4,
+  "narrative_hook": "Steam Wretches have seized their factory. The valves won’t stop screaming.",
+  "objectives": [
+    {
+      "id": "pressure_valves",
+      "type": "control",
+      "count": 3,
+      "notes": [
+        "Each valve increases global pressure.",
+        "At max pressure, catastrophic rupture occurs."
+      ]
+    }
+  ],
+  "victory_conditions": {
+    "monsterologists": "Regain control and stabilize production.",
+    "monsters": "Force a full rupture or hold all valves."
+  },
+  "monster_pressure": {
+    "enabled": true,
+    "bias": ["Mechan", "Corrupted"]
+  },
+  "aftermath_effects": {
+    "boomtown": "industrial_collapse_or_expansion"
+  }
+},
+
+{
+  "id": "the_grave_mule_run",
+  "name": "The Grave Mule Run",
+  "tags": [
+    "plot_escort",
+    "objective_vehicle",
+    "resource_food",
+    "danger_2",
+    "tense",
+    "wilderness",
+    "monster_predator",
+    "monsters",
+    "monster_rangers"
+  ],
+  "spotlight_factions": ["Monster Rangers", "Monsters"],
+  "location_rules": {
+    "allowed_location_types": ["wilderness", "trail"]
+  },
+  "danger_rating": 2,
+  "narrative_hook": "Grave Mules haul food through monster territory. Everyone is hungry.",
+  "objectives": [
+    {
+      "id": "mule_train",
+      "type": "transport",
+      "resource": "food_good"
+    }
+  ],
+  "victory_conditions": {
+    "monster_rangers": "Escort the mules safely off-map.",
+    "monsters": "Force the mules to flee or be consumed."
+  },
+  "monster_pressure": {
+    "enabled": true,
+    "spawn_bias": ["Pack"]
+  },
+  "aftermath_effects": {
+    "food": "shortage_or_relief"
+  }
+},
+
+{
+  "id": "the_bell_that_bleeds",
+  "name": "The Bell That Bleeds",
+  "tags": [
+    "plot_ritual",
+    "objective_marker",
+    "resource_occult",
+    "danger_3",
+    "horror",
+    "grim",
+    "boomtown",
+    "ruins",
+    "monster_undead",
+    "monsters"
+  ],
+  "spotlight_factions": ["Monster Rangers", "Monsters"],
+  "location_rules": {
+    "allowed_location_types": ["chapel_ruin", "boomtown"]
+  },
+  "danger_rating": 3,
+  "narrative_hook": "Each time the bell rings, someone dies. No one remembers pulling the rope.",
+  "objectives": [
+    {
+      "id": "bleeding_bell",
+      "type": "control",
+      "interactions": ["silence", "ring", "consecrate"]
+    }
+  ],
+  "victory_conditions": {
+    "monster_rangers": "Consecrate or silence the bell.",
+    "monsters": "Ring the bell three times."
+  },
+  "aftermath_effects": {
+    "chapel": "holy_or_cursed"
+  }
+}
 
   ]
 }
