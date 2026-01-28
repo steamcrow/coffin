@@ -23,7 +23,7 @@
 /* ===== Two-Column Layout ===== */
 .cc-scenario-builder-layout {
   display: grid;
-  grid-template-columns: 450px 1fr;
+  grid-template-columns: 550px 1fr;
   gap: 1rem;
   height: calc(100vh - 150px);
   padding: 0 1rem 1rem 1rem;
@@ -32,11 +32,13 @@
 .cc-scenario-sidebar {
   min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .cc-scenario-main {
   min-width: 0;
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ===== Accordion Styles ===== */
@@ -44,6 +46,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  padding-bottom: 2rem;
 }
 
 .cc-accordion-item {
@@ -190,6 +193,18 @@
   border-color: rgba(255, 255, 255, 0.4);
 }
 
+.cc-btn-secondary {
+  background: #444;
+  color: #e8e8e8;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.cc-btn-secondary:hover:not(:disabled) {
+  background: #555;
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: translateY(-1px);
+}
+
 .cc-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -201,6 +216,7 @@
   margin-top: 2rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
 }
 
 /* ===== Faction Selection ===== */
