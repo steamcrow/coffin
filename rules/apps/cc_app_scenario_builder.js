@@ -96,6 +96,8 @@ window.CC_APP = {
       { id: 'monsters', name: 'Monsters', file: 'faction-monsters-v2.json' },
       { id: 'shine_riders', name: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
     ];
+    
+    // All factions are playable now, including Monsters!
 
     // ================================
     // DATA LOADING
@@ -225,9 +227,9 @@ window.CC_APP = {
       return `
         <div class="cc-form-section">
           <label class="cc-label">Select Participating Factions</label>
-          <p class="cc-help-text">Choose 2-4 factions for this scenario</p>
+          <p class="cc-help-text">Choose 2-4 factions for this scenario (Monsters now playable!)</p>
           
-          ${FACTIONS.filter(f => f.id !== 'monsters').map(faction => `
+          ${FACTIONS.map(faction => `
             <div class="cc-faction-row">
               <label class="cc-checkbox-label">
                 <input 
@@ -438,7 +440,10 @@ window.CC_APP = {
 
           <div class="cc-form-actions">
             <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">
-              🔄 Generate New Scenario
+              🔄 Start Over
+            </button>
+            <button class="cc-btn cc-btn-secondary" onclick="rollAgain()">
+              🎲 Roll Again
             </button>
             <button class="cc-btn cc-btn-primary" onclick="printScenario()">
               🖨️ Print Scenario
@@ -702,6 +707,12 @@ window.CC_APP = {
       state.generated = false;
       state.scenario = null;
       render();
+    };
+
+    window.rollAgain = function() {
+      // Keep all settings, just generate a new scenario
+      console.log('🎲 Rolling again with same settings...');
+      generateScenario();
     };
 
     window.printScenario = function() {
