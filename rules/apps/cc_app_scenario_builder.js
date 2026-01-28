@@ -1362,10 +1362,18 @@ window.CC_APP = {
           factions: state.factions,
           pointValue: state.pointValue,
           gameMode: state.gameMode,
+          dangerRating: state.dangerRating,
           savedAt: new Date().toISOString()
         };
 
-        await window.CC_STORAGE.saveDocument('scenario', state.scenario.name, JSON.stringify(exportData));
+        // Storage expects: doc_type, name, json_string
+        const result = await window.CC_STORAGE.saveDocument(
+          'scenario',
+          state.scenario.name,
+          JSON.stringify(exportData)
+        );
+        
+        console.log('Save result:', result);
         alert('✓ Scenario saved to cloud!');
       } catch (error) {
         console.error('Save error:', error);
