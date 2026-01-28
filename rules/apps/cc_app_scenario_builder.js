@@ -135,7 +135,7 @@ window.CC_APP = {
         scenarioVaultData = await scenarioVaultRes.json();
         
         // NEW: Load scenario names (tag-based generator)
-        const scenarioNamesRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/220_scenario_names.json?t=' + Date.now());
+        const scenarioNamesRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/230_scenario_names.json?t=' + Date.now());
         scenarioNamesData = await scenarioNamesRes.json();
         
         console.log('✅ Game data loaded', {
