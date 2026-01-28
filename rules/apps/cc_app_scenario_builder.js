@@ -67,6 +67,7 @@ window.CC_APP = {
       // Step 1: Game Setup
       gameMode: null, // 'solo' or 'multiplayer'
       pointValue: 500,
+      dangerRating: 3, // 1-6, user selected
       gameWarden: null, // null, 'observing', or 'npc'
       
       // Step 2: Factions
@@ -211,6 +212,18 @@ window.CC_APP = {
         </div>
 
         <div class="cc-form-section">
+          <label class="cc-label">Danger Rating</label>
+          <select class="cc-input" onchange="setDangerRating(this.value)">
+            <option value="1" ${state.dangerRating === 1 ? 'selected' : ''}>★☆☆☆☆☆ Tutorial / Low Escalation</option>
+            <option value="2" ${state.dangerRating === 2 ? 'selected' : ''}>★★☆☆☆☆ Frontier Skirmish</option>
+            <option value="3" ${state.dangerRating === 3 ? 'selected' : ''}>★★★☆☆☆ Standard Coffin Canyon</option>
+            <option value="4" ${state.dangerRating === 4 ? 'selected' : ''}>★★★★☆☆ High Pressure</option>
+            <option value="5" ${state.dangerRating === 5 ? 'selected' : ''}>★★★★★☆ Escalation Guaranteed</option>
+            <option value="6" ${state.dangerRating === 6 ? 'selected' : ''}>★★★★★★ Catastrostorm Risk</option>
+          </select>
+        </div>
+
+        <div class="cc-form-section">
           <label class="cc-label">Game Warden</label>
           <select class="cc-input" onchange="setGameWarden(this.value)">
             <option value="none" ${!state.gameWarden ? 'selected' : ''}>None</option>
@@ -257,11 +270,9 @@ window.CC_APP = {
 
           <div class="cc-form-section">
             <label class="cc-label">NPC Factions</label>
-            <p class="cc-help-text">Choose 1-3 NPC factions to face</p>
+            <p class="cc-help-text">Choose 1-3 NPC factions to face (any faction, including Monsters!)</p>
             ${FACTIONS.map(faction => {
-              const isPlayerFaction = state.factions.find(f => f.id === faction.id && !f.isNPC);
               const isNPCFaction = state.factions.find(f => f.id === faction.id && f.isNPC);
-              if (isPlayerFaction) return ''; // Don't show player's faction
               
               return `
                 <div class="cc-faction-row">
@@ -427,6 +438,7 @@ window.CC_APP = {
             <ul class="cc-summary-list">
               <li><strong>Game Mode:</strong> ${state.gameMode === 'solo' ? 'Solo Play' : 'Multiplayer'}</li>
               <li><strong>Point Value:</strong> ${state.pointValue} ₤</li>
+              <li><strong>Danger Rating:</strong> ${'★'.repeat(state.dangerRating)}${'☆'.repeat(6 - state.dangerRating)}</li>
               <li><strong>Factions:</strong> ${state.factions.map(f => f.name + (f.isNPC ? ' (NPC)' : '')).join(', ')}</li>
               <li><strong>Location:</strong> ${state.locationType === 'named' ? locationData?.locations.find(l => l.id === state.selectedLocation)?.name : 'Random'}</li>
             </ul>
@@ -530,7 +542,7 @@ window.CC_APP = {
               🔄 Start Over
             </button>
             <button class="cc-btn cc-btn-secondary" onclick="rollAgain()">
-              🎲 Roll Again
+              🌀 The Canyon Shifts
             </button>
             <button class="cc-btn cc-btn-primary" onclick="printScenario()">
               🖨️ Print Scenario
@@ -570,6 +582,7 @@ window.CC_APP = {
             <h4>Current Setup</h4>
             ${state.gameMode ? `<p><strong>Mode:</strong> ${state.gameMode === 'solo' ? 'Solo' : 'Multiplayer'}</p>` : ''}
             ${state.pointValue ? `<p><strong>Points:</strong> ${state.pointValue} ₤</p>` : ''}
+            ${state.dangerRating ? `<p><strong>Danger:</strong> ${'★'.repeat(state.dangerRating)}${'☆'.repeat(6 - state.dangerRating)}</p>` : ''}
             ${state.factions.length > 0 ? `<p><strong>Factions:</strong> ${state.factions.length}</p>` : ''}
             ${state.selectedLocation || state.locationType === 'random_any' ? `<p><strong>Location:</strong> ${state.locationType === 'named' ? '✓ Set' : 'Random'}</p>` : ''}
           </div>
@@ -640,6 +653,10 @@ window.CC_APP = {
 
     window.setPointValue = function(value) {
       state.pointValue = parseInt(value);
+    };
+
+    window.setDangerRating = function(value) {
+      state.dangerRating = parseInt(value);
     };
 
     window.setGameWarden = function(value) {
@@ -767,11 +784,9 @@ window.CC_APP = {
       const plotFamily = randomChoice(plotFamiliesData.plot_families);
       console.log('📖 Selected plot family:', plotFamily.name);
 
-      // Generate danger rating based on point value
-      const dangerRating = state.pointValue <= 500 ? randomInt(2, 3) : 
-                          state.pointValue <= 1000 ? randomInt(3, 4) :
-                          state.pointValue <= 1500 ? randomInt(4, 5) : 
-                          randomInt(5, 6);
+      // Use user-selected danger rating
+      const dangerRating = state.dangerRating;
+      console.log('⚠️ Using danger rating:', dangerRating);
 
       // Generate objectives based on plot family
       const objectives = generateObjectives(plotFamily);
@@ -847,28 +862,59 @@ window.CC_APP = {
 
     function makeObjectiveName(type) {
       const names = {
-        wrecked_engine: ['Crashed Engine', 'Derailed Locomotive', 'Wrecked Machine'],
-        scattered_crates: ['Scattered Supplies', 'Loose Cargo', 'Spilled Goods'],
-        cargo_vehicle: ['Supply Wagon', 'Cargo Truck', 'Transport Rig'],
-        ritual_site: ['Ritual Circle', 'Sacred Ground', 'Mystical Nexus'],
-        thyr_cache: ['Thyr Crystal Cache', 'Buried Crystals', 'Glowing Deposit'],
-        collapsing_route: ['Unstable Pass', 'Crumbling Bridge', 'Failing Structure'],
-        fortified_position: ['Defensive Bunker', 'Fortified Post', 'Barricaded Station']
+        // From plot families json - actual objectives
+        wrecked_engine: 'Wrecked Engine',
+        scattered_crates: 'Scattered Supply Crates',
+        derailed_cars: 'Derailed Cars',
+        cargo_vehicle: 'Cargo Vehicle',
+        pack_animals: 'Pack Animals',
+        ritual_components: 'Ritual Components',
+        ritual_site: 'Ritual Site',
+        land_marker: 'Land Marker',
+        command_structure: 'Command Structure',
+        thyr_cache: 'Thyr Crystal Cache',
+        artifact: 'Ancient Artifact',
+        captive_entity: 'Captive Entity',
+        fortified_position: 'Fortified Position',
+        barricades: 'Barricades',
+        stored_supplies: 'Stored Supplies',
+        ritual_circle: 'Ritual Circle',
+        tainted_ground: 'Tainted Ground',
+        sacrificial_focus: 'Sacrificial Focus',
+        collapsing_route: 'Collapsing Route',
+        fouled_resource: 'Fouled Resource',
+        unstable_structure: 'Unstable Structure',
+        evacuation_point: 'Evacuation Point'
       };
-      return randomChoice(names[type] || ['Unknown Objective', 'Mystery Site', 'Contested Point']);
+      return names[type] || 'Contested Objective';
     }
 
     function makeObjectiveDescription(type) {
       const descriptions = {
-        wrecked_engine: 'Salvage parts or prevent others from claiming them',
-        scattered_crates: 'Collect and extract scattered resources',
-        cargo_vehicle: 'Escort safely to the destination',
-        ritual_site: 'Control to complete or disrupt rituals',
-        thyr_cache: 'Extract or corrupt the Thyr crystals',
-        collapsing_route: 'Cross before it fails completely',
-        fortified_position: 'Hold against all comers'
+        wrecked_engine: 'Salvage mechanical parts or prevent others from claiming them. Each salvage increases Coffin Cough risk.',
+        scattered_crates: 'Collect and extract scattered food, water, and supplies before others claim them',
+        derailed_cars: 'Search the wreckage for valuable cargo before it\'s lost or claimed',
+        cargo_vehicle: 'Escort the vehicle safely across the board. Sweet scent may attract monsters.',
+        pack_animals: 'Control or escort the animals. They may panic under fire.',
+        ritual_components: 'Gather mystical components scattered across the battlefield',
+        ritual_site: 'Control this location to complete rituals or disrupt enemy mysticism',
+        land_marker: 'Hold this symbolic location to establish territorial claim',
+        command_structure: 'Control this position to coordinate forces and establish leadership',
+        thyr_cache: 'Extract or corrupt the glowing Thyr crystals. Handling Thyr is always dangerous.',
+        artifact: 'Recover the ancient artifact. Its true nature may be hidden.',
+        captive_entity: 'Free, capture, or control the entity. May not be what it appears.',
+        fortified_position: 'Hold this defensible position against all comers',
+        barricades: 'Control the chokepoint to restrict enemy movement',
+        stored_supplies: 'Secure stockpiled resources before they\'re depleted',
+        ritual_circle: 'Control the circle to empower rituals or prevent enemy mysticism',
+        tainted_ground: 'Interact at your own risk. Corruption spreads.',
+        sacrificial_focus: 'Control or destroy this dark altar',
+        collapsing_route: 'Cross the unstable passage before it fails completely',
+        fouled_resource: 'Recover or purify the contaminated supplies',
+        unstable_structure: 'Control or salvage before structural collapse',
+        evacuation_point: 'Reach this location to escape the escalating danger'
       };
-      return descriptions[type] || 'Control this objective';
+      return descriptions[type] || 'Control this objective to score victory points';
     }
 
     function makeObjectiveSpecial(type) {
@@ -921,37 +967,78 @@ window.CC_APP = {
       state.factions.forEach(faction => {
         const factionConditions = [];
         
-        // Base condition based on faction
+        // Base conditions based on faction identity
         switch(faction.id) {
           case 'monster_rangers':
-            factionConditions.push('Befriend or protect monsters');
-            factionConditions.push('Preserve mystical balance');
+            factionConditions.push('Befriend, protect, or escort monsters successfully');
+            factionConditions.push('Preserve mystical balance and prevent corruption');
+            factionConditions.push('Prevent unnecessary monster deaths');
+            if (plotFamily.primary_resources?.includes('occult')) {
+              factionConditions.push('Secure Thyr or mystical resources for study and protection');
+            }
             break;
+            
           case 'liberty_corps':
-            factionConditions.push('Establish territorial control');
-            factionConditions.push('Eliminate rival claimants');
+            factionConditions.push('Establish and maintain territorial control');
+            factionConditions.push('Eliminate or drive off rival factions');
+            factionConditions.push('Secure resources for Liberty Corps authority');
+            if (plotFamily.id.includes('ambush') || plotFamily.id.includes('escort')) {
+              factionConditions.push('Prevent unauthorized salvage or theft');
+            }
             break;
+            
           case 'monsterology':
-            factionConditions.push('Extract specimens or samples');
-            factionConditions.push('Complete research objectives');
+            factionConditions.push('Extract specimens, samples, or research data');
+            factionConditions.push('Complete field research objectives');
+            factionConditions.push('Capture monsters alive when possible');
+            if (plotFamily.primary_resources?.includes('occult')) {
+              factionConditions.push('Study Thyr effects and mystical phenomena');
+            }
             break;
+            
           case 'shine_riders':
-            factionConditions.push('Extract maximum profit');
-            factionConditions.push('Create memorable spectacle');
+            factionConditions.push('Extract maximum profit from the scenario');
+            factionConditions.push('Create memorable spectacle and legend');
+            factionConditions.push('Take valuable trophies or loot');
+            if (plotFamily.id.includes('extraction') || plotFamily.id.includes('ambush')) {
+              factionConditions.push('Steal the most valuable cargo');
+            }
             break;
+            
           case 'monsters':
-            factionConditions.push('Defend territory');
-            factionConditions.push('Survive and escape if needed');
+            factionConditions.push('Defend territorial claims and feeding grounds');
+            factionConditions.push('Survive and escape when overwhelmed');
+            factionConditions.push('Drive intruders from sacred or claimed spaces');
+            if (plotFamily.id.includes('ritual') || plotFamily.id.includes('claim')) {
+              factionConditions.push('Protect mystically significant locations');
+            }
             break;
         }
         
-        // Add plot-specific condition
-        if (plotFamily.primary_resources) {
-          const resource = randomChoice(plotFamily.primary_resources);
-          factionConditions.push(`Control ${resource.replace(/_/g, ' ')} resources`);
+        // Add plot-specific victory condition
+        if (plotFamily.id === 'escort_run') {
+          if (faction.id === 'monster_rangers') {
+            factionConditions.push('Ensure the cargo reaches its destination intact');
+          } else if (faction.id === 'liberty_corps') {
+            factionConditions.push('Seize or destroy the cargo convoy');
+          } else {
+            factionConditions.push('Intercept and claim the cargo for yourself');
+          }
         }
         
-        conditions[faction.id] = factionConditions;
+        if (plotFamily.id === 'extraction_heist') {
+          factionConditions.push('Extract the primary objective before Round 6');
+        }
+        
+        if (plotFamily.id === 'siege_standoff') {
+          if (faction.isNPC && state.gameMode === 'solo') {
+            factionConditions.push('Break the siege or eliminate the defender');
+          } else {
+            factionConditions.push('Hold your position until reinforcements or extraction');
+          }
+        }
+        
+        conditions[faction.id] = factionConditions.slice(0, 4); // Max 4 conditions
       });
       
       return conditions;
@@ -984,14 +1071,223 @@ window.CC_APP = {
     }
 
     function generateScenarioName(plotFamily, location, objectives, twist) {
-      // Generate name based on what was created
-      const templates = [
-        `${plotFamily.name} at ${location.name}`,
-        `The ${location.name} ${plotFamily.name}`,
-        `${objectives[0].name} of ${location.name}`,
-        twist ? `${twist.name}: ${location.name}` : `Conflict at ${location.name}`
-      ];
-      return randomChoice(templates);
+      // INTELLIGENT NAME GENERATION - reflects actual scenario content
+      // Format: "The [CONTEXT] of [LOCATION/DESCRIPTOR]"
+      
+      let prefix = '';
+      let suffix = '';
+      
+      // ===== STEP 1: Choose PREFIX based on what the scenario is ABOUT =====
+      
+      // Check for Thyr/Crystal objectives
+      const hasThyr = objectives.some(obj => 
+        obj.type.includes('thyr') || 
+        obj.name.toLowerCase().includes('thyr') || 
+        obj.name.toLowerCase().includes('crystal')
+      );
+      
+      // Check for death/grave themes
+      const hasDeath = objectives.some(obj =>
+        obj.type.includes('tainted') || 
+        obj.type.includes('grave') ||
+        obj.name.toLowerCase().includes('grave') ||
+        obj.name.toLowerCase().includes('bone') ||
+        obj.name.toLowerCase().includes('coffin')
+      );
+      
+      // Check for monster themes
+      const hasMonsters = state.factions.some(f => f.id === 'monsters') ||
+                         plotFamily.id.includes('disaster') ||
+                         plotFamily.common_inciting_pressures?.includes('monster_action');
+      
+      // Check for outlaw/lawless themes
+      const hasOutlaw = state.factions.some(f => f.id === 'shine_riders') ||
+                       objectives.some(obj => 
+                         obj.type.includes('cargo') || 
+                         obj.type.includes('crate') || 
+                         obj.type.includes('bounty')
+                       );
+      
+      // Check for doom/high danger
+      const isDangerous = state.dangerRating >= 5;
+      
+      // Check for mystical/warning themes
+      const isMystical = objectives.some(obj => 
+        obj.type.includes('ritual') || 
+        obj.type.includes('marker') ||
+        obj.type.includes('artifact')
+      ) || twist?.name.includes('Symbolic') || twist?.name.includes('Location');
+      
+      // Check for boomtown/settlement
+      const isBoomtown = location.name.toLowerCase().includes('fortune') ||
+                        location.name.toLowerCase().includes('town') ||
+                        location.type_ref?.includes('boomtown');
+      
+      // Check for ruins
+      const isRuins = location.name.toLowerCase().includes('ruin') ||
+                     location.type_ref?.includes('ruins') ||
+                     location.description?.toLowerCase().includes('ruin') ||
+                     location.description?.toLowerCase().includes('abandon');
+      
+      // INTELLIGENT PREFIX SELECTION (use your exact templates)
+      if (hasThyr) {
+        prefix = randomChoice([
+          'The Thyr of',
+          'The Crystal of',
+          'The Shard of',
+          'The Vein of',
+          'The Glow of'
+        ]);
+      } else if (hasDeath) {
+        prefix = randomChoice([
+          'The Graves of',
+          'The Bones of',
+          'The Coffins of',
+          'The Dust of',
+          'The Dead of'
+        ]);
+      } else if (hasMonsters) {
+        prefix = randomChoice([
+          'The Beast of',
+          'The Monster of',
+          'The Abomination of',
+          'The Howl of',
+          'The Hunger of'
+        ]);
+      } else if (hasOutlaw) {
+        prefix = randomChoice([
+          'The Outlaw of',
+          'The Guns of',
+          'The Noose of',
+          'The Badge of',
+          'The Bounty of'
+        ]);
+      } else if (isDangerous) {
+        prefix = randomChoice([
+          'The Horror of',
+          'The Terror of',
+          'The Doom of',
+          'The Ruin of',
+          'The Damnation of',
+          'The Hell of'
+        ]);
+      } else if (isMystical) {
+        prefix = randomChoice([
+          'The Omen of',
+          'The Sign of',
+          'The Warning of',
+          'The Prophecy of',
+          'The Mark of',
+          'The Curse of',
+          'The Reckoning of'
+        ]);
+      } else if (isRuins) {
+        prefix = randomChoice([
+          'The Ruins of',
+          'The Gallows of',
+          'The Badlands of'
+        ]);
+      } else if (isBoomtown) {
+        prefix = 'The Boomtown of';
+      } else {
+        // Time-based fallback (gets more dramatic with danger)
+        if (state.dangerRating >= 4) {
+          prefix = randomChoice([
+            'The Long Night of',
+            'The Last Night of',
+            'The Endless Night of',
+            'The Black Night of',
+            'The Burning Night of'
+          ]);
+        } else {
+          prefix = randomChoice([
+            'The Night of',
+            'The Day of',
+            'The Curse of',
+            'The Reckoning of'
+          ]);
+        }
+      }
+      
+      // ===== STEP 2: Choose SUFFIX - location name or descriptive phrase =====
+      
+      const locationName = location.name;
+      
+      // Use location name directly if it's dramatic/short enough
+      if (locationName.length <= 10 || 
+          ['Fortune', 'Diablo', 'Plunder', 'Coffin', 'Huck'].some(n => locationName.includes(n))) {
+        suffix = locationName;
+      } else {
+        // Build descriptive phrase based on scenario content
+        const descriptors = [];
+        
+        // Objective-based descriptors
+        if (objectives.some(obj => obj.type.includes('engine') || obj.type.includes('wreck'))) {
+          descriptors.push('Broken Steel', 'Twisted Iron', 'Shattered Machine', 'Burning Engine');
+        }
+        if (objectives.some(obj => obj.type.includes('cargo') || obj.type.includes('crate'))) {
+          descriptors.push('Lost Cargo', 'Stolen Goods', 'Forbidden Prize', 'Blood Money');
+        }
+        if (objectives.some(obj => obj.type.includes('ritual'))) {
+          descriptors.push('Cursed Ground', 'Dark Altar', 'Forbidden Circle', 'Unholy Rite');
+        }
+        if (objectives.some(obj => obj.type.includes('thyr'))) {
+          descriptors.push('Burning Crystal', 'Glowing Stone', 'Poisoned Light', 'Deadly Glow');
+        }
+        if (objectives.some(obj => obj.type.includes('vehicle'))) {
+          descriptors.push('Doomed Convoy', 'Final Run', 'Last Wagon', 'Deadly Trail');
+        }
+        if (objectives.some(obj => obj.type.includes('marker') || obj.type.includes('command'))) {
+          descriptors.push('Contested Ground', 'Bloody Banner', 'Stolen Claim');
+        }
+        
+        // Plot family descriptors
+        if (plotFamily.id.includes('ambush')) {
+          descriptors.push('Blood and Dust', 'Broken Rails', 'Dead Track', 'Crimson Trail');
+        }
+        if (plotFamily.id.includes('escort')) {
+          descriptors.push('Long Road', 'Final Mile', 'Deadly Trail', 'Last Journey');
+        }
+        if (plotFamily.id.includes('extraction')) {
+          descriptors.push('Stolen Treasure', 'Forbidden Prize', 'Dark Secret', 'Hidden Vault');
+        }
+        if (plotFamily.id.includes('siege')) {
+          descriptors.push('Last Stand', 'Final Defense', 'Broken Walls', 'Bitter End');
+        }
+        if (plotFamily.id.includes('ritual') || plotFamily.id.includes('corruption')) {
+          descriptors.push('Unholy Rite', 'Dark Ceremony', 'Cursed Summoning', 'Twisted Faith');
+        }
+        if (plotFamily.id.includes('disaster')) {
+          descriptors.push('Broken Earth', 'Angry Sky', 'Deadly Storm', 'Canyon Wrath');
+        }
+        
+        // Twist descriptors
+        if (twist) {
+          if (twist.name.includes('Decoy')) descriptors.push('False Promise', 'Deadly Lie', 'Bitter Truth');
+          if (twist.name.includes('Monster')) descriptors.push('Hidden Horror', 'Greater Evil', 'Darker Beast');
+          if (twist.name.includes('Location') || twist.name.includes('Awakens')) {
+            descriptors.push('Living Land', 'Angry Earth', 'Vengeful Ground');
+          }
+        }
+        
+        // Generic fallbacks (only if we don't have specific ones)
+        if (descriptors.length === 0) {
+          descriptors.push(
+            'Broken Dreams',
+            'Bitter End',
+            'Dark Desire',
+            'Lost Hope',
+            'Bloody Ground',
+            'Shadow and Flame',
+            'Dust and Bone',
+            'Fire and Lead'
+          );
+        }
+        
+        suffix = randomChoice(descriptors);
+      }
+      
+      return `${prefix} ${suffix}`;
     }
 
     function getDangerDescription(rating) {
