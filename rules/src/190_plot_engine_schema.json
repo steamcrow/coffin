@@ -1,0 +1,176 @@
+{
+  "file": "190_plot_engine_schema.json",
+  "version": "1.0",
+  "genre": "occult_pulp_weird_west",
+
+  "design_philosophy": {
+    "core_statement": "Coffin Canyon scenarios generate pressure, not plots.",
+    "principles": [
+      "killing_alone_never_resolves_a_scenario",
+      "resources_force_movement",
+      "escalation_punishes_delay_and_excess",
+      "the_canyon_remembers_what_happened_here"
+    ]
+  },
+
+  "core_plot_loop": [
+    "inciting_pressure",
+    "claimants",
+    "resource_pressure",
+    "escalation",
+    "twist",
+    "aftermath_mutation"
+  ],
+
+  "vectors": {
+    "inciting_pressure": {
+      "description": "what destabilized the location and drew attention",
+      "sources": [
+        "monster_action",
+        "human_overreach",
+        "infrastructure_failure",
+        "power_vacuum",
+        "environmental_rupture",
+        "ritual_misuse"
+      ],
+      "notes": [
+        "monsters_may_be_the_cause_not_merely_a_response",
+        "inciting_pressure_is_never_neutral"
+      ]
+    },
+
+    "claimants": {
+      "description": "who wants control and why",
+      "rules": [
+        "minimum_two_claimants",
+        "each_claimant_must_desire_a_different_end_state",
+        "a_claimant_may_be_a_monster_power_or_environmental_force"
+      ],
+      "canonical_motivations": {
+        "monster_rangers": "preserve_monsters_mysticism_and_balance",
+        "shine_riders": "profit_fame_and_spectacle",
+        "monsterologists": "control_extraction_and_weaponization",
+        "liberty_corps": "order_territory_and_exclusion_of_rivals",
+        "crow_queen": "mystical_dominion_and_symbolic_ownership",
+        "monsters": "territory_feeding_grounds_silence_or_migration"
+      }
+    },
+
+    "resource_pressure": {
+      "description": "what physically forces movement and conflict",
+      "resource_types": {
+        "riches": [
+          "silver",
+          "gildren",
+          "liberty_bucks"
+        ],
+        "supplies_tools": [
+          "tools",
+          "spare_parts",
+          "machines",
+          "medical_supplies"
+        ],
+        "survival": [
+          "food",
+          "water",
+          "livestock"
+        ],
+        "occult": [
+          "thyr",
+          "ritual_components"
+        ],
+        "belief": [
+          "cult_followers",
+          "territorial_claim",
+          "mystical_influence",
+          "symbolic_control"
+        ]
+      },
+      "rules": [
+        "resources_must_be_movable_destructible_corruptible_or_exhaustible",
+        "static_resources_should_escalate_if_ignored"
+      ]
+    },
+
+    "escalation": {
+      "description": "reactive_pressure_caused_by_violence_delay_or_misuse",
+      "triggers": [
+        "mass_casualties",
+        "monster_slaughter",
+        "thyr_fallout",
+        "ritual_completion",
+        "structural_collapse",
+        "objective_overburn"
+      ],
+      "effects": [
+        "environmental_hazards",
+        "visibility_loss",
+        "monster_migration",
+        "authority_intervention",
+        "panic_and_morale_failure"
+      ],
+      "notes": [
+        "escalation_is_optional_but_encouraged",
+        "escalation_should_feel_inevitable_not_fair"
+      ]
+    },
+
+    "twist": {
+      "description": "a_reframing_revelation_triggered_by_escalation",
+      "timing": "after_escalation",
+      "types": [
+        "objective_reveals_hidden_nature",
+        "monster_holding_worse_threat_at_bay",
+        "claimant_is_proxy_for_another_force",
+        "victory_conditions_invert",
+        "resource_becomes_sentient_or_cursed",
+        "location_awakens_or_rejects_control"
+      ],
+      "rules": [
+        "twists_reframe_player_decisions_not_invalidate_them",
+        "twists_force_reassessment_not_reset"
+      ]
+    },
+
+    "aftermath_mutation": {
+      "description": "how_the_scenario_permanently_alters_the_canyon",
+      "mutation_types": [
+        "location_state_change",
+        "resource_depletion_or_corruption",
+        "monster_bias_shift",
+        "faction_ownership",
+        "mystical_claim",
+        "new_landmark_created"
+      ],
+      "ownership": {
+        "types": [
+          "political",
+          "territorial",
+          "mystical",
+          "economic"
+        ],
+        "persistence": "carries_into_future_scenarios_unless_displaced"
+      },
+      "notes": [
+        "every_scenario_must_define_aftermath_outcomes",
+        "the_canyon_remembers_violence_and_neglect"
+      ]
+    }
+  },
+
+  "monster_plot_roles": {
+    "instigator": "caused_the_inciting_pressure",
+    "territorial_power": "controls_space_like_a_faction",
+    "escalator": "appears_when_pressure_spikes",
+    "corruptor": "alters_resources_or_objectives",
+    "silent_judge": "punishes_specific_player_behaviors"
+  },
+
+  "solo_play_support": {
+    "logic": [
+      "unfilled_claimant_slots_are_filled_by_monsters_or_environmental_forces",
+      "escalation_triggers_more_aggressively",
+      "aftermath_effects_skew_harsher"
+    ]
+  }
+}
