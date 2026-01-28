@@ -1,0 +1,242 @@
+{
+  "file": "180_scenario_vault.json",
+  "version": "1.0",
+  "design_intent": [
+    "Scenarios create lasting change to Coffin Canyon.",
+    "Objectives outweigh body count.",
+    "Violence accelerates escalation.",
+    "Resources matter beyond the current game."
+  ],
+
+  "global_tags": [
+    "solo_compatible",
+    "campaign_impact",
+    "resource_driven",
+    "coffin_cough_enabled"
+  ],
+
+  "scenario_danger_scaling": {
+    "1": "Tutorial / low escalation",
+    "2": "Frontier skirmish",
+    "3": "Standard Coffin Canyon conflict",
+    "4": "High pressure / monster interference",
+    "5": "Escalation guaranteed",
+    "6": "Catastrostorm risk / Titan possible"
+  },
+
+  "scenarios": [
+
+    {
+      "id": "ambush_crashed_supply_train",
+      "name": "Ambush at the Crashed Supply Train",
+      "spotlight_factions": [
+        "Liberty Corps",
+        "Shine Riders",
+        "Monster Rangers",
+        "Monsterologists"
+      ],
+      "location_rules": {
+        "allowed_named_locations": ["Fort Plunder", "Fortune", "Huck"],
+        "allowed_location_types": ["boomtown_riverbase", "debris_field"],
+        "random_between_locations": true
+      },
+      "danger_rating": 4,
+
+      "narrative_hook": "A Liberty Corps supply train has derailed and burned. The Corps wants everyone gone. Everyone else wants what spilled.",
+
+      "objectives": [
+        {
+          "id": "wrecked_engine",
+          "type": "device",
+          "resource": "mechanical_parts",
+          "rating": 2,
+          "interactions": ["salvage", "control", "sabotage"],
+          "notes": [
+            "Salvage produces Spare Parts.",
+            "Spare Parts may be spent to repair or heal Automats.",
+            "Each salvage increases Coffin Cough risk."
+          ]
+        },
+        {
+          "id": "scattered_supply_crates",
+          "type": "extraction",
+          "resources": ["food_good", "water_clean", "supplies"],
+          "count": "d3+2"
+        }
+      ],
+
+      "victory_conditions": {
+        "primary": "Extract the most total resource value.",
+        "secondary": "Maintain control of the wrecked engine."
+      },
+
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 3,
+        "bias": ["Carrion", "Opportunistic"],
+        "notes": "Monsters are drawn by blood, noise, and food."
+      },
+
+      "coffin_cough_triggers": [
+        "wrecked_engine overused",
+        "three_or_more_models_downed",
+        "objective_overburn"
+      ],
+
+      "aftermath_effects": {
+        "location_state": {
+          "if_corps_success": "claimed_hard",
+          "if_others_success": "contested"
+        },
+        "resource_shift": {
+          "food_good": -1,
+          "water_clean": -1,
+          "mechanical_parts": "conditional"
+        },
+        "persistent_landmark": {
+          "intact": "Salvage Site",
+          "destroyed": "Burned Wreck (Hazardous)"
+        }
+      },
+
+      "solo_play": {
+        "player_role": "Scavenger Force",
+        "opposition": "Escalating Liberty Corps patrols",
+        "win_condition": "Extract before Catastrostorm"
+      }
+    },
+
+    {
+      "id": "tigers_milk",
+      "name": "Tiger’s Milk",
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Monsterologists"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["boomtown_mesa", "outpost", "wasteland"]
+      },
+      "danger_rating": 3,
+
+      "narrative_hook": "A Cargo Tiger truck carries life-saving syrups to Camp Coffin. The land does not want it to pass.",
+
+      "objectives": [
+        {
+          "id": "cargo_tiger_truck",
+          "type": "transport",
+          "resource": "supplies",
+          "special": ["sweet_scent", "monster_lure"]
+        }
+      ],
+
+      "victory_conditions": {
+        "escort": "Truck exits the board intact.",
+        "intercept": "Truck disabled or captured."
+      },
+
+      "monster_pressure": {
+        "enabled": true,
+        "spawn_bias": ["Predators"],
+        "notes": "Monsters appear closer to the truck each round."
+      },
+
+      "aftermath_effects": {
+        "camp_coffin": {
+          "if_success": "medical_bonus_next_game",
+          "if_failure": "supply_shortage"
+        }
+      },
+
+      "solo_play": {
+        "player_role": "Escort Force",
+        "opposition": "Monster waves + terrain pressure"
+      }
+    },
+
+    {
+      "id": "brass_bronco",
+      "name": "The Brass Bronco",
+      "spotlight_factions": [
+        "Shine Riders",
+        "Monsterologists"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["boomtown_spire_stilts", "ruins"]
+      },
+      "danger_rating": 4,
+
+      "narrative_hook": "A legendary horse has been taken. Honor demands blood. The Canyon prepares something worse.",
+
+      "objectives": [
+        {
+          "id": "legendary_steed",
+          "type": "control",
+          "special": ["morale_anchor"]
+        }
+      ],
+
+      "midgame_twist": {
+        "round": 3,
+        "event": "Monsterologists lose control of their experiment."
+      },
+
+      "victory_conditions": {
+        "primary": "Control the steed at game end."
+      },
+
+      "aftermath_effects": {
+        "shine_riders": "honor_restored_or_shattered",
+        "location": "monster_pressure_increase"
+      }
+    },
+
+    {
+      "id": "thyr_harvester",
+      "name": "The Thyr Harvester",
+      "spotlight_factions": [
+        "Monsterologists",
+        "Crow Queen"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["thyr_field", "ruins"]
+      },
+      "danger_rating": 5,
+
+      "narrative_hook": "A machine that eats the Canyon is nearly ready.",
+
+      "objectives": [
+        {
+          "id": "thyr_harvester_device",
+          "type": "device",
+          "resource": "thyr",
+          "activation": {
+            "requirements": ["3 scientists", "1 coal", "2 turns"]
+          }
+        }
+      ],
+
+      "victory_conditions": {
+        "activate": "Harvester completes cycle.",
+        "prevent": "Harvester destroyed or corrupted."
+      },
+
+      "coffin_cough_triggers": [
+        "thyr_overburn",
+        "ritual_on_tainted_ground"
+      ],
+
+      "aftermath_effects": {
+        "thyr": {
+          "if_activated": "regional_thyr_depletion",
+          "if_destroyed": "haunted_field"
+        }
+      },
+
+      "solo_play": {
+        "player_role": "Saboteur",
+        "opposition": "Automated defenses + escalation"
+      }
+    }
+
+  ]
+}
