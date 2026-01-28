@@ -1,6 +1,7 @@
 // ================================
-// Scenario Builder App
+// Scenario Builder App - COMPLETE REWRITE
 // File: coffin/rules/apps/cc_app_scenario_builder.js
+// Uses: 180_scenario_vault.json, 190_plot_engine_schema.json, 200_plot_families.json, 210_twist_tables.json
 // ================================
 
 console.log("🎲 Scenario Builder app loaded");
@@ -63,15 +64,13 @@ window.CC_APP = {
     // STATE - What the user has chosen
     // ================================
     const state = {
-      scenarioName: 'Untitled Scenario',
-      
       // Step 1: Game Setup
       gameMode: null, // 'solo' or 'multiplayer'
       pointValue: 500,
-      gameWarden: null, // null, 'observing', or faction_id
+      gameWarden: null, // null, 'observing', or 'npc'
       
       // Step 2: Factions
-      factions: [], // Array of {id, name, player}
+      factions: [], // Array of {id, name, player, isNPC}
       
       // Step 3: Location
       locationType: null, // 'named', 'random_type', 'random_any'
@@ -96,21 +95,25 @@ window.CC_APP = {
       { id: 'monsters', name: 'Monsters', file: 'faction-monsters-v2.json' },
       { id: 'shine_riders', name: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
     ];
-    
-    // All factions are playable now, including Monsters!
 
     // ================================
     // DATA LOADING
     // ================================
-    let scenarioData = null;
+    let plotFamiliesData = null;
+    let twistTablesData = null;
     let locationData = null;
+    let locationTypesData = null;
     let monsterFactionData = null;
 
     async function loadGameData() {
       try {
-        // Load scenario vault
-        const scenarioRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json?t=' + Date.now());
-        scenarioData = await scenarioRes.json();
+        // Load plot families
+        const plotRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json?t=' + Date.now());
+        plotFamiliesData = await plotRes.json();
+        
+        // Load twist tables
+        const twistRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json?t=' + Date.now());
+        twistTablesData = await twistRes.json();
         
         // Load location data
         const locationsRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json?t=' + Date.now());
@@ -118,13 +121,13 @@ window.CC_APP = {
         
         // Load location types
         const locationTypesRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/150_location_types.json?t=' + Date.now());
-        const locationTypes = await locationTypesRes.json();
+        locationTypesData = await locationTypesRes.json();
         
         // Load monsters faction for monster list
         const monstersRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsters-v2.json?t=' + Date.now());
         monsterFactionData = await monstersRes.json();
         
-        console.log('✅ Game data loaded', {scenarioData, locationData, locationTypes, monsterFactionData});
+        console.log('✅ Game data loaded', {plotFamiliesData, twistTablesData, locationData, locationTypesData, monsterFactionData});
       } catch (err) {
         console.error('❌ Failed to load game data:', err);
         alert('Failed to load scenario data. Please refresh the page.');
@@ -135,7 +138,7 @@ window.CC_APP = {
     loadGameData();
 
     // ================================
-    // RENDER FUNCTIONS
+    // UTILITY FUNCTIONS
     // ================================
     
     function esc(str) {
@@ -148,6 +151,18 @@ window.CC_APP = {
         .replace(/'/g, '&#039;');
     }
 
+    function randomChoice(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // ================================
+    // RENDER FUNCTIONS
+    // ================================
+    
     function renderAccordionStep(stepNum, title, icon, content, isActive = false, isComplete = false) {
       return `
         <div class="cc-accordion-item ${isActive ? 'active' : ''} ${isComplete ? 'complete' : ''}">
@@ -167,17 +182,6 @@ window.CC_APP = {
 
     function renderStep1_GameSetup() {
       return `
-        <div class="cc-form-section">
-          <label class="cc-label">Scenario Name</label>
-          <input 
-            type="text" 
-            class="cc-input" 
-            value="${esc(state.scenarioName)}"
-            onchange="updateScenarioName(this.value)"
-            placeholder="Enter scenario name..."
-          />
-        </div>
-
         <div class="cc-form-section">
           <label class="cc-label">Game Mode</label>
           <div class="cc-button-group">
@@ -211,7 +215,7 @@ window.CC_APP = {
           <select class="cc-input" onchange="setGameWarden(this.value)">
             <option value="none" ${!state.gameWarden ? 'selected' : ''}>None</option>
             <option value="observing" ${state.gameWarden === 'observing' ? 'selected' : ''}>Observing (Not Playing)</option>
-            <option value="playing" ${state.gameWarden && state.gameWarden !== 'observing' ? 'selected' : ''}>Playing a Faction</option>
+            <option value="npc" ${state.gameWarden === 'npc' ? 'selected' : ''}>Playing as NPC Force</option>
           </select>
         </div>
 
@@ -224,62 +228,128 @@ window.CC_APP = {
     }
 
     function renderStep2_Factions() {
-      return `
-        <div class="cc-form-section">
-          <label class="cc-label">Select Participating Factions</label>
-          <p class="cc-help-text">Choose 2-4 factions for this scenario (Monsters now playable!)</p>
-          
-          ${FACTIONS.map(faction => `
-            <div class="cc-faction-row">
-              <label class="cc-checkbox-label">
-                <input 
-                  type="checkbox" 
-                  ${state.factions.find(f => f.id === faction.id) ? 'checked' : ''}
-                  onchange="toggleFaction('${faction.id}', '${esc(faction.name)}', this.checked)"
-                />
-                <span>${faction.name}</span>
-              </label>
-              
-              ${state.factions.find(f => f.id === faction.id) ? `
-                <input 
-                  type="text" 
-                  class="cc-input cc-player-name" 
-                  placeholder="Player name..."
-                  value="${esc(state.factions.find(f => f.id === faction.id).player || '')}"
-                  onchange="setFactionPlayer('${faction.id}', this.value)"
-                />
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-
-        ${state.gameWarden === 'playing' ? `
+      if (state.gameMode === 'solo') {
+        // Solo mode: Pick YOUR faction first, then add NPCs
+        return `
           <div class="cc-form-section">
-            <label class="cc-label">Which faction is the Game Warden playing?</label>
-            <select class="cc-input" onchange="setWardenFaction(this.value)">
-              <option value="">Choose a faction...</option>
-              ${state.factions.map(f => `
-                <option value="${f.id}" ${state.gameWarden === f.id ? 'selected' : ''}>
+            <label class="cc-label">Your Faction</label>
+            <p class="cc-help-text">Choose which faction you're playing</p>
+            <select class="cc-input" onchange="setPlayerFaction(this.value)">
+              <option value="">Choose your faction...</option>
+              ${FACTIONS.map(f => `
+                <option value="${f.id}" ${state.factions.find(fac => fac.id === f.id && !fac.isNPC) ? 'selected' : ''}>
                   ${f.name}
                 </option>
               `).join('')}
             </select>
+            
+            ${state.factions.find(f => !f.isNPC) ? `
+              <input 
+                type="text" 
+                class="cc-input" 
+                style="margin-top: 0.5rem;"
+                placeholder="Your name..."
+                value="${esc(state.factions.find(f => !f.isNPC).player || '')}"
+                onchange="setPlayerName(this.value)"
+              />
+            ` : ''}
           </div>
-        ` : ''}
 
-        <div class="cc-form-actions">
-          <button class="cc-btn cc-btn-ghost" onclick="goToStep(1)">
-            ← Back
-          </button>
-          <button 
-            class="cc-btn cc-btn-primary" 
-            onclick="completeStep(2)"
-            ${state.factions.length < 2 ? 'disabled' : ''}
-          >
-            Next: Choose Location →
-          </button>
-        </div>
-      `;
+          <div class="cc-form-section">
+            <label class="cc-label">NPC Factions</label>
+            <p class="cc-help-text">Choose 1-3 NPC factions to face</p>
+            ${FACTIONS.map(faction => {
+              const isPlayerFaction = state.factions.find(f => f.id === faction.id && !f.isNPC);
+              const isNPCFaction = state.factions.find(f => f.id === faction.id && f.isNPC);
+              if (isPlayerFaction) return ''; // Don't show player's faction
+              
+              return `
+                <div class="cc-faction-row">
+                  <label class="cc-checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      ${isNPCFaction ? 'checked' : ''}
+                      onchange="toggleNPCFaction('${faction.id}', '${esc(faction.name)}', this.checked)"
+                    />
+                    <span>${faction.name} (NPC)</span>
+                  </label>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="goToStep(1)">
+              ← Back
+            </button>
+            <button 
+              class="cc-btn cc-btn-primary" 
+              onclick="completeStep(2)"
+              ${state.factions.length < 2 ? 'disabled' : ''}
+            >
+              Next: Choose Location →
+            </button>
+          </div>
+        `;
+      } else {
+        // Multiplayer mode: Pick 2-4 factions with player names
+        return `
+          <div class="cc-form-section">
+            <label class="cc-label">Select Participating Factions</label>
+            <p class="cc-help-text">Choose 2-4 factions (all are playable including Monsters!)</p>
+            
+            ${FACTIONS.map(faction => `
+              <div class="cc-faction-row">
+                <label class="cc-checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    ${state.factions.find(f => f.id === faction.id) ? 'checked' : ''}
+                    onchange="toggleFaction('${faction.id}', '${esc(faction.name)}', this.checked)"
+                  />
+                  <span>${faction.name}</span>
+                </label>
+                
+                ${state.factions.find(f => f.id === faction.id) ? `
+                  <input 
+                    type="text" 
+                    class="cc-input cc-player-name" 
+                    placeholder="Player name..."
+                    value="${esc(state.factions.find(f => f.id === faction.id).player || '')}"
+                    onchange="setFactionPlayer('${faction.id}', this.value)"
+                  />
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          ${state.gameWarden === 'npc' ? `
+            <div class="cc-form-section">
+              <label class="cc-label">Which faction is the Game Warden controlling?</label>
+              <select class="cc-input" onchange="setWardenFaction(this.value)">
+                <option value="">Choose a faction...</option>
+                ${state.factions.map(f => `
+                  <option value="${f.id}" ${f.isWarden ? 'selected' : ''}>
+                    ${f.name}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          ` : ''}
+
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="goToStep(1)">
+              ← Back
+            </button>
+            <button 
+              class="cc-btn cc-btn-primary" 
+              onclick="completeStep(2)"
+              ${state.factions.length < 2 ? 'disabled' : ''}
+            >
+              Next: Choose Location →
+            </button>
+          </div>
+        `;
+      }
     }
 
     function renderStep3_Location() {
@@ -322,6 +392,7 @@ window.CC_APP = {
               <div class="cc-location-preview">
                 <h4>${locationData.locations.find(l => l.id === state.selectedLocation).emoji} ${locationData.locations.find(l => l.id === state.selectedLocation).name}</h4>
                 <p>${locationData.locations.find(l => l.id === state.selectedLocation).description}</p>
+                <p><em>"${locationData.locations.find(l => l.id === state.selectedLocation).atmosphere}"</em></p>
               </div>
             ` : ''}
           </div>
@@ -356,7 +427,7 @@ window.CC_APP = {
             <ul class="cc-summary-list">
               <li><strong>Game Mode:</strong> ${state.gameMode === 'solo' ? 'Solo Play' : 'Multiplayer'}</li>
               <li><strong>Point Value:</strong> ${state.pointValue} ₤</li>
-              <li><strong>Factions:</strong> ${state.factions.map(f => f.name).join(', ')}</li>
+              <li><strong>Factions:</strong> ${state.factions.map(f => f.name + (f.isNPC ? ' (NPC)' : '')).join(', ')}</li>
               <li><strong>Location:</strong> ${state.locationType === 'named' ? locationData?.locations.find(l => l.id === state.selectedLocation)?.name : 'Random'}</li>
             </ul>
             
@@ -379,62 +450,78 @@ window.CC_APP = {
     function renderGeneratedScenario() {
       if (!state.scenario) return '';
 
+      const playerFactions = state.factions.filter(f => !f.isNPC);
+
       return `
         <div class="cc-scenario-result">
           <h3>${state.scenario.name}</h3>
           <p class="cc-scenario-hook">${state.scenario.narrative_hook}</p>
           
           <div class="cc-scenario-section">
-            <h4>Location</h4>
-            <p><strong>${state.scenario.location.emoji} ${state.scenario.location.name}</strong></p>
+            <h4>📍 Location</h4>
+            <p><strong>${state.scenario.location.emoji || '🗺️'} ${state.scenario.location.name}</strong></p>
             <p>${state.scenario.location.description}</p>
-            <p><em>${state.scenario.location.atmosphere}</em></p>
+            <p><em>"${state.scenario.location.atmosphere}"</em></p>
           </div>
 
           <div class="cc-scenario-section">
-            <h4>Danger Rating</h4>
+            <h4>⚠️ Danger Rating</h4>
             <div class="cc-danger-rating">
               ${'★'.repeat(state.scenario.danger_rating)}${'☆'.repeat(6 - state.scenario.danger_rating)}
             </div>
+            <p class="cc-help-text">${state.scenario.danger_description}</p>
           </div>
 
           <div class="cc-scenario-section">
-            <h4>Objectives</h4>
+            <h4>🎯 Objectives</h4>
             ${state.scenario.objectives.map(obj => `
               <div class="cc-objective-card">
-                <strong>${obj.name || obj.id}</strong>
-                <p>${obj.description || obj.type}</p>
-                ${obj.special ? `<em>Special: ${obj.special.join(', ')}</em>` : ''}
+                <strong>${obj.name}</strong>
+                <p>${obj.description}</p>
+                ${obj.special ? `<em>Special: ${obj.special}</em>` : ''}
               </div>
             `).join('')}
           </div>
 
-          <div class="cc-scenario-section">
-            <h4>Monster Pressure</h4>
-            ${state.scenario.monster_pressure.enabled ? `
-              <p><strong>Trigger:</strong> Round ${state.scenario.monster_pressure.trigger_round}</p>
+          ${state.scenario.monster_pressure.enabled ? `
+            <div class="cc-scenario-section">
+              <h4>👹 Monster Pressure</h4>
+              <p><strong>Trigger:</strong> ${state.scenario.monster_pressure.trigger}</p>
               <p><strong>Monsters:</strong></p>
               <ul>
                 ${state.scenario.monster_pressure.monsters.map(m => `
                   <li>${m.name} (${m.type}) - ${m.cost} ₤</li>
                 `).join('')}
               </ul>
-            ` : '<p>No monster pressure in this scenario</p>'}
-          </div>
-
-          <div class="cc-scenario-section">
-            <h4>Victory Conditions</h4>
-            <p><strong>Primary:</strong> ${state.scenario.victory_conditions.primary}</p>
-            ${state.scenario.victory_conditions.secondary ? `
-              <p><strong>Secondary:</strong> ${state.scenario.victory_conditions.secondary}</p>
-            ` : ''}
-          </div>
+              ${state.scenario.monster_pressure.notes ? `<p><em>${state.scenario.monster_pressure.notes}</em></p>` : ''}
+            </div>
+          ` : ''}
 
           ${state.scenario.twist ? `
             <div class="cc-scenario-section cc-twist">
               <h4>🎭 Scenario Twist</h4>
               <p><strong>${state.scenario.twist.name}</strong></p>
               <p>${state.scenario.twist.description}</p>
+              ${state.scenario.twist.example ? `<p><em>Example: ${state.scenario.twist.example}</em></p>` : ''}
+            </div>
+          ` : ''}
+
+          <div class="cc-scenario-section">
+            <h4>🏆 Victory Conditions</h4>
+            ${state.factions.map(faction => `
+              <div class="cc-victory-card">
+                <strong>${faction.name}${faction.isNPC ? ' (NPC)' : ''}${faction.player ? ' - ' + faction.player : ''}</strong>
+                <ul>
+                  ${state.scenario.victory_conditions[faction.id]?.map(vc => `<li>${vc}</li>`).join('') || '<li>Standard victory conditions apply</li>'}
+                </ul>
+              </div>
+            `).join('')}
+          </div>
+
+          ${state.scenario.aftermath ? `
+            <div class="cc-scenario-section">
+              <h4>📜 Aftermath</h4>
+              <p>${state.scenario.aftermath}</p>
             </div>
           ` : ''}
 
@@ -487,13 +574,26 @@ window.CC_APP = {
             ${state.selectedLocation || state.locationType === 'random_any' ? `<p><strong>Location:</strong> ${state.locationType === 'named' ? '✓ Set' : 'Random'}</p>` : ''}
           </div>
         ` : ''}
+
+        ${state.generated ? `
+          <div class="cc-summary-details" style="border-top: 2px solid var(--cc-primary); margin-top: 1rem; padding-top: 1rem;">
+            <h4>Quick Actions</h4>
+            <button class="cc-btn cc-btn-ghost" style="width: 100%; margin-bottom: 0.5rem;" onclick="loadFromCloud()">
+              📂 Load Saved Scenario
+            </button>
+          </div>
+        ` : ''}
       `;
     }
 
     function render() {
       const html = `
-        <div class="cc-scenario-builder-header">
-          <h2>🎲 Coffin Canyon Scenario Builder</h2>
+        <!-- Use proper cc-app-header from cc_ui.css -->
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Coffin Canyon</h1>
+            <div class="cc-app-subtitle">Scenario Builder</div>
+          </div>
         </div>
 
         <div class="cc-scenario-builder-layout">
@@ -531,12 +631,10 @@ window.CC_APP = {
     // EVENT HANDLERS
     // ================================
     
-    window.updateScenarioName = function(name) {
-      state.scenarioName = name || 'Untitled Scenario';
-    };
-
     window.setGameMode = function(mode) {
       state.gameMode = mode;
+      // Reset factions when changing game mode
+      state.factions = [];
       render();
     };
 
@@ -547,17 +645,49 @@ window.CC_APP = {
     window.setGameWarden = function(value) {
       if (value === 'none') {
         state.gameWarden = null;
-      } else if (value === 'observing') {
-        state.gameWarden = 'observing';
       } else {
-        state.gameWarden = 'playing';
+        state.gameWarden = value;
       }
       render();
     };
 
+    // Solo mode handlers
+    window.setPlayerFaction = function(factionId) {
+      // Remove old player faction
+      state.factions = state.factions.filter(f => f.isNPC);
+      
+      if (factionId) {
+        const faction = FACTIONS.find(f => f.id === factionId);
+        state.factions.unshift({
+          id: faction.id,
+          name: faction.name,
+          player: '',
+          isNPC: false
+        });
+      }
+      render();
+    };
+
+    window.setPlayerName = function(name) {
+      const playerFaction = state.factions.find(f => !f.isNPC);
+      if (playerFaction) {
+        playerFaction.player = name;
+      }
+    };
+
+    window.toggleNPCFaction = function(id, name, checked) {
+      if (checked) {
+        state.factions.push({ id, name, player: 'NPC', isNPC: true });
+      } else {
+        state.factions = state.factions.filter(f => !(f.id === id && f.isNPC));
+      }
+      render();
+    };
+
+    // Multiplayer mode handlers
     window.toggleFaction = function(id, name, checked) {
       if (checked) {
-        state.factions.push({ id, name, player: '' });
+        state.factions.push({ id, name, player: '', isNPC: false });
       } else {
         state.factions = state.factions.filter(f => f.id !== id);
       }
@@ -572,7 +702,13 @@ window.CC_APP = {
     };
 
     window.setWardenFaction = function(factionId) {
-      state.gameWarden = factionId || 'playing';
+      // Clear all warden flags
+      state.factions.forEach(f => f.isWarden = false);
+      // Set new warden
+      const faction = state.factions.find(f => f.id === factionId);
+      if (faction) {
+        faction.isWarden = true;
+      }
     };
 
     window.setLocationType = function(type) {
@@ -605,12 +741,18 @@ window.CC_APP = {
     };
 
     // ================================
-    // SCENARIO GENERATION
+    // SCENARIO GENERATION ENGINE
+    // Uses: 200_plot_families.json, 210_twist_tables.json
     // ================================
     
     window.generateScenario = function() {
-      console.log('🎲 Generating scenario...', state);
+      console.log('🎲 Generating scenario using plot engine...', state);
       
+      if (!plotFamiliesData || !twistTablesData || !monsterFactionData) {
+        alert('Game data not loaded yet. Please wait a moment and try again.');
+        return;
+      }
+
       // Get location
       let location;
       if (state.locationType === 'named') {
@@ -618,82 +760,63 @@ window.CC_APP = {
       } else {
         // Pick random location
         const locations = locationData.locations;
-        location = locations[Math.floor(Math.random() * locations.length)];
+        location = randomChoice(locations);
       }
 
-      // Pick or generate scenario based on factions
-      let baseScenario = null;
-      
-      // Try to find a scenario that matches the factions
-      if (scenarioData?.scenarios) {
-        const matchingScenarios = scenarioData.scenarios.filter(s => {
-          if (!s.spotlight_factions) return true;
-          return state.factions.some(f => s.spotlight_factions.includes(FACTIONS.find(fac => fac.id === f.id)?.name));
-        });
-        
-        if (matchingScenarios.length > 0) {
-          baseScenario = matchingScenarios[Math.floor(Math.random() * matchingScenarios.length)];
+      // Pick a plot family
+      const plotFamily = randomChoice(plotFamiliesData.plot_families);
+      console.log('📖 Selected plot family:', plotFamily.name);
+
+      // Generate danger rating based on point value
+      const dangerRating = state.pointValue <= 500 ? randomInt(2, 3) : 
+                          state.pointValue <= 1000 ? randomInt(3, 4) :
+                          state.pointValue <= 1500 ? randomInt(4, 5) : 
+                          randomInt(5, 6);
+
+      // Generate objectives based on plot family
+      const objectives = generateObjectives(plotFamily);
+
+      // Generate monster pressure
+      const monsterPressure = generateMonsterPressure(plotFamily, dangerRating);
+
+      // Maybe add a twist (30% chance)
+      let twist = null;
+      if (Math.random() < 0.3) {
+        const eligibleTwists = twistTablesData.twists.filter(t => 
+          t.danger_floor <= dangerRating && t.danger_ceiling >= dangerRating
+        );
+        if (eligibleTwists.length > 0) {
+          const twistData = randomChoice(eligibleTwists);
+          twist = {
+            name: twistData.name,
+            description: twistData.description,
+            example: randomChoice(twistData.example_outcomes || [])
+          };
         }
       }
 
-      // If no matching scenario, use a generic one
-      if (!baseScenario) {
-        baseScenario = {
-          id: 'generic_skirmish',
-          name: 'Skirmish at ' + location.name,
-          narrative_hook: 'Forces clash over valuable territory. Objectives determine the victor.',
-          danger_rating: 3,
-          objectives: [
-            { id: 'center_control', type: 'control', description: 'Control the center objective' },
-            { id: 'extraction', type: 'extraction', description: 'Extract valuable resources' }
-          ],
-          victory_conditions: {
-            primary: 'Control the most objectives at game end',
-            secondary: 'Eliminate enemy leader'
-          },
-          monster_pressure: {
-            enabled: Math.random() > 0.5,
-            trigger_round: 3,
-            monsters: []
-          }
-        };
-      }
+      // Generate victory conditions per faction
+      const victoryConditions = generateVictoryConditions(plotFamily);
 
-      // Generate monster pressure if enabled
-      if (baseScenario.monster_pressure?.enabled && monsterFactionData) {
-        const monsterBudget = state.pointValue * 0.3; // 30% of point value for monsters
-        const availableMonsters = monsterFactionData.units.filter(u => u.cost <= monsterBudget);
-        const selectedMonsters = [];
-        let remainingBudget = monsterBudget;
+      // Generate aftermath
+      const aftermath = generateAftermath(plotFamily);
 
-        while (remainingBudget > 0 && availableMonsters.length > 0) {
-          const validMonsters = availableMonsters.filter(m => m.cost <= remainingBudget);
-          if (validMonsters.length === 0) break;
-          
-          const monster = validMonsters[Math.floor(Math.random() * validMonsters.length)];
-          selectedMonsters.push(monster);
-          remainingBudget -= monster.cost;
-        }
-
-        baseScenario.monster_pressure.monsters = selectedMonsters;
-      }
-
-      // Add a twist (20% chance)
-      if (Math.random() < 0.2) {
-        const twists = [
-          { name: 'Hidden Objective', description: 'One objective is not what it seems...' },
-          { name: 'Environmental Hazard', description: 'The terrain is more dangerous than expected' },
-          { name: 'Unexpected Ally', description: 'A neutral force may intervene' },
-          { name: 'Time Pressure', description: 'A catastrostorm approaches' }
-        ];
-        baseScenario.twist = twists[Math.floor(Math.random() * twists.length)];
-      }
+      // Generate name LAST based on what we created
+      const scenarioName = generateScenarioName(plotFamily, location, objectives, twist);
 
       // Build final scenario
       state.scenario = {
-        ...baseScenario,
+        name: scenarioName,
+        narrative_hook: generateNarrativeHook(plotFamily, location),
         location,
-        name: baseScenario.name || 'Scenario at ' + location.name,
+        danger_rating: dangerRating,
+        danger_description: getDangerDescription(dangerRating),
+        plot_family: plotFamily.name,
+        objectives,
+        monster_pressure: monsterPressure,
+        twist,
+        victory_conditions: victoryConditions,
+        aftermath,
         factions: state.factions,
         pointValue: state.pointValue,
         gameMode: state.gameMode
@@ -703,9 +826,196 @@ window.CC_APP = {
       render();
     };
 
+    function generateObjectives(plotFamily) {
+      const objectives = [];
+      const objectiveTypes = plotFamily.default_objectives || [];
+      
+      // Generate 2-3 objectives
+      const numObjectives = randomInt(2, 3);
+      for (let i = 0; i < numObjectives; i++) {
+        const objType = randomChoice(objectiveTypes);
+        objectives.push({
+          name: makeObjectiveName(objType),
+          description: makeObjectiveDescription(objType),
+          type: objType,
+          special: Math.random() < 0.2 ? makeObjectiveSpecial(objType) : null
+        });
+      }
+      
+      return objectives;
+    }
+
+    function makeObjectiveName(type) {
+      const names = {
+        wrecked_engine: ['Crashed Engine', 'Derailed Locomotive', 'Wrecked Machine'],
+        scattered_crates: ['Scattered Supplies', 'Loose Cargo', 'Spilled Goods'],
+        cargo_vehicle: ['Supply Wagon', 'Cargo Truck', 'Transport Rig'],
+        ritual_site: ['Ritual Circle', 'Sacred Ground', 'Mystical Nexus'],
+        thyr_cache: ['Thyr Crystal Cache', 'Buried Crystals', 'Glowing Deposit'],
+        collapsing_route: ['Unstable Pass', 'Crumbling Bridge', 'Failing Structure'],
+        fortified_position: ['Defensive Bunker', 'Fortified Post', 'Barricaded Station']
+      };
+      return randomChoice(names[type] || ['Unknown Objective', 'Mystery Site', 'Contested Point']);
+    }
+
+    function makeObjectiveDescription(type) {
+      const descriptions = {
+        wrecked_engine: 'Salvage parts or prevent others from claiming them',
+        scattered_crates: 'Collect and extract scattered resources',
+        cargo_vehicle: 'Escort safely to the destination',
+        ritual_site: 'Control to complete or disrupt rituals',
+        thyr_cache: 'Extract or corrupt the Thyr crystals',
+        collapsing_route: 'Cross before it fails completely',
+        fortified_position: 'Hold against all comers'
+      };
+      return descriptions[type] || 'Control this objective';
+    }
+
+    function makeObjectiveSpecial(type) {
+      const specials = [
+        'Unstable - may collapse if damaged',
+        'Tainted - triggers morale tests',
+        'Guarded - monster nearby',
+        'Valuable - worth extra VP',
+        'Corrupted - alters nearby terrain'
+      ];
+      return randomChoice(specials);
+    }
+
+    function generateMonsterPressure(plotFamily, dangerRating) {
+      const enabled = Math.random() > 0.3; // 70% chance of monster pressure
+      
+      if (!enabled || !monsterFactionData) {
+        return { enabled: false };
+      }
+
+      // Budget: 20-40% of point value based on danger
+      const budgetPercent = 0.2 + (dangerRating / 6) * 0.2;
+      const monsterBudget = Math.floor(state.pointValue * budgetPercent);
+      
+      // Pick monsters that fit budget
+      const availableMonsters = monsterFactionData.units.filter(u => u.cost <= monsterBudget);
+      const selectedMonsters = [];
+      let remainingBudget = monsterBudget;
+
+      while (remainingBudget > 0 && availableMonsters.length > 0) {
+        const validMonsters = availableMonsters.filter(m => m.cost <= remainingBudget);
+        if (validMonsters.length === 0) break;
+        
+        const monster = randomChoice(validMonsters);
+        selectedMonsters.push(monster);
+        remainingBudget -= monster.cost;
+      }
+
+      return {
+        enabled: true,
+        trigger: `Round ${randomInt(2, 4)}`,
+        monsters: selectedMonsters,
+        notes: plotFamily.escalation_bias ? `Escalation: ${randomChoice(plotFamily.escalation_bias).replace(/_/g, ' ')}` : null
+      };
+    }
+
+    function generateVictoryConditions(plotFamily) {
+      const conditions = {};
+      
+      state.factions.forEach(faction => {
+        const factionConditions = [];
+        
+        // Base condition based on faction
+        switch(faction.id) {
+          case 'monster_rangers':
+            factionConditions.push('Befriend or protect monsters');
+            factionConditions.push('Preserve mystical balance');
+            break;
+          case 'liberty_corps':
+            factionConditions.push('Establish territorial control');
+            factionConditions.push('Eliminate rival claimants');
+            break;
+          case 'monsterology':
+            factionConditions.push('Extract specimens or samples');
+            factionConditions.push('Complete research objectives');
+            break;
+          case 'shine_riders':
+            factionConditions.push('Extract maximum profit');
+            factionConditions.push('Create memorable spectacle');
+            break;
+          case 'monsters':
+            factionConditions.push('Defend territory');
+            factionConditions.push('Survive and escape if needed');
+            break;
+        }
+        
+        // Add plot-specific condition
+        if (plotFamily.primary_resources) {
+          const resource = randomChoice(plotFamily.primary_resources);
+          factionConditions.push(`Control ${resource.replace(/_/g, ' ')} resources`);
+        }
+        
+        conditions[faction.id] = factionConditions;
+      });
+      
+      return conditions;
+    }
+
+    function generateAftermath(plotFamily) {
+      const aftermathOptions = plotFamily.aftermath_bias || ['location_state_change', 'resource_depletion_or_corruption'];
+      const aftermathType = randomChoice(aftermathOptions);
+      
+      const descriptions = {
+        location_state_change: 'This location will be permanently altered by the outcome',
+        resource_depletion_or_corruption: 'Resources here will be depleted or corrupted',
+        new_landmark_created: 'A new landmark will mark what happened here',
+        faction_ownership: 'The victor will claim lasting control',
+        mystical_claim: 'Mystical forces will remember this event',
+        monster_bias_shift: 'Monster behavior in this region will change'
+      };
+      
+      return descriptions[aftermathType] || 'The Canyon will remember what happened here';
+    }
+
+    function generateNarrativeHook(plotFamily, location) {
+      const hooks = [
+        `${location.name} has become a flashpoint. ${plotFamily.description}`,
+        `Pressure builds at ${location.name}. ${plotFamily.description}`,
+        `${location.name} draws unwanted attention. ${plotFamily.description}`,
+        `Something has shifted at ${location.name}. ${plotFamily.description}`
+      ];
+      return randomChoice(hooks);
+    }
+
+    function generateScenarioName(plotFamily, location, objectives, twist) {
+      // Generate name based on what was created
+      const templates = [
+        `${plotFamily.name} at ${location.name}`,
+        `The ${location.name} ${plotFamily.name}`,
+        `${objectives[0].name} of ${location.name}`,
+        twist ? `${twist.name}: ${location.name}` : `Conflict at ${location.name}`
+      ];
+      return randomChoice(templates);
+    }
+
+    function getDangerDescription(rating) {
+      const descriptions = {
+        1: 'Controlled / Comparatively Safe',
+        2: 'Frontier Risk / Regular Patrols',
+        3: 'Hostile / Regular Monster Presence',
+        4: 'Dangerous / Lethal Terrain or Elite Monsters',
+        5: 'Extreme / Escalation Guaranteed, Titan Possible',
+        6: 'Catastrophic / Titan-Active or Immune-Dominant Zone'
+      };
+      return descriptions[rating] || 'Unknown Danger';
+    }
+
     window.resetScenario = function() {
+      // Start completely over
+      state.gameMode = null;
+      state.factions = [];
+      state.locationType = null;
+      state.selectedLocation = null;
       state.generated = false;
       state.scenario = null;
+      state.currentStep = 1;
+      state.completedSteps = [];
       render();
     };
 
@@ -719,6 +1029,10 @@ window.CC_APP = {
       window.print();
     };
 
+    // ================================
+    // SAVE/LOAD FUNCTIONALITY
+    // ================================
+
     window.saveScenario = async function() {
       if (!window.CC_STORAGE) {
         alert('Cloud storage not available. Please refresh the page.');
@@ -727,7 +1041,7 @@ window.CC_APP = {
 
       try {
         const exportData = {
-          name: state.scenarioName,
+          name: state.scenario.name,
           scenario: state.scenario,
           factions: state.factions,
           pointValue: state.pointValue,
@@ -735,11 +1049,116 @@ window.CC_APP = {
           savedAt: new Date().toISOString()
         };
 
-        await window.CC_STORAGE.saveDocument('scenario', state.scenarioName, JSON.stringify(exportData));
+        await window.CC_STORAGE.saveDocument('scenario', state.scenario.name, JSON.stringify(exportData));
         alert('✓ Scenario saved to cloud!');
       } catch (error) {
         console.error('Save error:', error);
         alert('Error saving scenario: ' + error.message);
+      }
+    };
+
+    window.loadFromCloud = async function() {
+      if (!window.CC_STORAGE) {
+        alert('Cloud storage not available. Please refresh the page.');
+        return;
+      }
+
+      try {
+        const rosters = await window.CC_STORAGE.listDocuments('scenario');
+        
+        if (!rosters || rosters.length === 0) {
+          alert('No saved scenarios found.');
+          return;
+        }
+
+        // Create slide panel with saved scenarios
+        const panel = document.createElement('div');
+        panel.id = 'cloud-scenario-panel';
+        panel.className = 'cc-slide-panel';
+        panel.innerHTML = `
+          <div class="cc-slide-panel-header">
+            <h2>Saved Scenarios</h2>
+            <button class="cc-panel-close-btn" onclick="closeCloudScenarioList()">×</button>
+          </div>
+          
+          <div class="cc-roster-list">
+            ${rosters.map(r => `
+              <div class="cc-saved-roster-item">
+                <div class="cc-saved-roster-header">
+                  <div class="cc-saved-roster-name">${r.name || 'Unnamed Scenario'}</div>
+                </div>
+
+                <div class="cc-saved-roster-meta">
+                  ${new Date(r.write_date).toLocaleDateString()}
+                </div>
+
+                <div class="cc-saved-roster-actions">
+                  <button onclick="loadCloudScenario(${r.id})" class="btn btn-sm btn-warning">
+                    <i class="fa fa-folder-open"></i> LOAD
+                  </button>
+                  <button onclick="deleteCloudScenario(${r.id})" class="btn btn-sm btn-danger">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        document.body.appendChild(panel);
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+      } catch (error) {
+        console.error('Load error:', error);
+        alert('Error loading scenarios: ' + error.message);
+      }
+    };
+
+    window.closeCloudScenarioList = function() {
+      const panel = document.getElementById('cloud-scenario-panel');
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(() => panel.remove(), 300);
+      }
+    };
+
+    window.loadCloudScenario = async function(docId) {
+      try {
+        const loaded = await window.CC_STORAGE.loadDocument(docId);
+        const parsed = JSON.parse(loaded.json);
+        
+        // Load the scenario data
+        state.scenario = parsed.scenario;
+        state.factions = parsed.factions;
+        state.pointValue = parsed.pointValue;
+        state.gameMode = parsed.gameMode;
+        state.generated = true;
+        state.completedSteps = [1, 2, 3];
+        state.currentStep = 4;
+        
+        closeCloudScenarioList();
+        render();
+        
+        alert(`✓ Loaded scenario: ${state.scenario.name}`);
+      } catch (error) {
+        console.error('Load error:', error);
+        closeCloudScenarioList();
+        alert('Error loading scenario: ' + (error.message || 'Unknown error'));
+      }
+    };
+
+    window.deleteCloudScenario = async function(docId) {
+      if (!confirm('Are you sure you want to delete this scenario?')) return;
+      
+      try {
+        await window.CC_STORAGE.deleteDocument(docId);
+        closeCloudScenarioList();
+        
+        setTimeout(() => {
+          loadFromCloud();
+        }, 300);
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Error deleting scenario: ' + error.message);
       }
     };
 
