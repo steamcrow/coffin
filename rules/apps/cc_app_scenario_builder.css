@@ -6,24 +6,10 @@
    Core styles come from: coffin/rules/ui/cc_ui.css
    ================================ */
 
-/* ===== Header ===== */
-.cc-scenario-builder-header {
-  padding: 1.5rem 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid var(--cc-border);
-}
-
-.cc-scenario-builder-header h2 {
-  margin: 0;
-  color: var(--cc-primary);
-  font-size: 1.75rem;
-  font-weight: 700;
-}
-
-/* ===== Two-Column Layout ===== */
+/* ===== Two-Column Layout - EQUAL SIZES ===== */
 .cc-scenario-builder-layout {
   display: grid;
-  grid-template-columns: 550px 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1rem;
   height: calc(100vh - 150px);
   padding: 0 1rem 1rem 1rem;
@@ -499,6 +485,33 @@
 
 .cc-twist h4 {
   color: #c77dff;
+}
+
+/* ===== Victory Condition Cards ===== */
+.cc-victory-card {
+  background: rgba(255, 215, 0, 0.05);
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid #ffd700;
+}
+
+.cc-victory-card strong {
+  display: block;
+  color: #ffd700;
+  margin-bottom: 0.5rem;
+  font-size: 1.05rem;
+}
+
+.cc-victory-card ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.cc-victory-card li {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
 }
 
 /* ===== Print Styles ===== */
