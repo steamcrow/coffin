@@ -798,48 +798,110 @@ window.CC_APP = {
         location = randomChoice(locations);
       }
 
-      // NEW: Try to find a matching scenario from the vault
+      // ===== BUILD CONTEXT TAGS FOR MATCHING =====
+      const contextTags = [];
+      
+      // Add danger tag
+      contextTags.push(`danger_${state.dangerRating}`);
+      
+      // Add faction tags
+      state.factions.forEach(f => {
+        contextTags.push(f.id);
+      });
+      
+      // Add location type tags
+      if (location.type_ref) {
+        if (location.type_ref.includes('boomtown')) contextTags.push('boomtown');
+        if (location.type_ref.includes('ruins')) contextTags.push('ruins');
+        if (location.type_ref.includes('wasteland')) contextTags.push('wasteland');
+        if (location.type_ref.includes('outpost')) contextTags.push('outpost');
+        if (location.type_ref.includes('fortress')) contextTags.push('fortress');
+      }
+      
+      // Add location archetype tags
+      if (location.archetype) {
+        contextTags.push(location.archetype);
+      }
+      
+      // Add general tone tags based on danger
+      if (state.dangerRating >= 5) {
+        contextTags.push('horror', 'extreme', 'deadly');
+      } else if (state.dangerRating >= 4) {
+        contextTags.push('combat', 'dangerous');
+      }
+      
+      console.log('🏷️ Context tags for matching:', contextTags);
+
+      // ===== FIND BEST VAULT SCENARIO USING TAG MATCHING =====
       let vaultScenario = null;
+      let maxMatchScore = 0;
+      
       if (scenarioVaultData && scenarioVaultData.scenarios) {
-        // Get faction IDs
-        const playerFactionIds = state.factions.map(f => f.id);
-        
-        // Find scenarios that match selected factions
-        const matchingScenarios = scenarioVaultData.scenarios.filter(scenario => {
-          if (!scenario.spotlight_factions) return false;
+        scenarioVaultData.scenarios.forEach(scenario => {
+          let matchScore = 0;
           
-          // Check if any of our factions are in spotlight
-          return scenario.spotlight_factions.some(spotlightFaction => {
-            return playerFactionIds.some(playerFaction => {
-              // Normalize faction names for comparison
-              const normalized = spotlightFaction.toLowerCase().replace(/ /g, '_');
-              return playerFaction.includes(normalized) || normalized.includes(playerFaction);
-            });
-          });
+          // Tag matching (if scenario has tags)
+          if (scenario.tags && Array.isArray(scenario.tags)) {
+            const tagMatches = scenario.tags.filter(tag => 
+              contextTags.includes(tag)
+            ).length;
+            matchScore += tagMatches;
+          }
+          
+          // Faction matching bonus (legacy support + boost)
+          if (scenario.spotlight_factions) {
+            const factionMatches = scenario.spotlight_factions.filter(spotlightFaction => {
+              return state.factions.some(playerFaction => {
+                // Normalize faction names for comparison
+                const normalized = spotlightFaction.toLowerCase().replace(/ /g, '_');
+                return playerFaction.id.includes(normalized) || normalized.includes(playerFaction.id);
+              });
+            }).length;
+            matchScore += factionMatches * 2; // Faction matches worth 2 points each
+          }
+          
+          // Track best match
+          if (matchScore > maxMatchScore) {
+            maxMatchScore = matchScore;
+            vaultScenario = scenario;
+          }
         });
         
-        if (matchingScenarios.length > 0) {
-          vaultScenario = randomChoice(matchingScenarios);
-          console.log('📖 Using scenario from vault:', vaultScenario.name);
+        // Only use vault scenario if we have at least 3 tag matches
+        if (maxMatchScore < 3) {
+          console.log(`⚠️ Best vault match only had ${maxMatchScore} points - falling back to procedural`);
+          vaultScenario = null;
+        } else {
+          console.log(`📖 Using vault scenario: "${vaultScenario.name}" (${maxMatchScore} match points)`);
         }
       }
 
-      // Pick a plot family (use vault's implied type or random)
+      // ===== PICK PLOT FAMILY =====
       let plotFamily;
-      if (vaultScenario && vaultScenario.id) {
-        // Infer plot family from vault scenario ID
-        if (vaultScenario.id.includes('ambush')) {
+      if (vaultScenario && vaultScenario.tags) {
+        // Try to infer plot family from vault tags
+        if (vaultScenario.tags.includes('plot_ambush')) {
           plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'ambush_derailment');
-        } else if (vaultScenario.id.includes('escort') || vaultScenario.id.includes('milk')) {
+        } else if (vaultScenario.tags.includes('plot_escort')) {
           plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'escort_run');
-        } else if (vaultScenario.id.includes('heist') || vaultScenario.id.includes('bronco')) {
+        } else if (vaultScenario.tags.includes('plot_extraction')) {
           plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'extraction_heist');
-        } else {
-          plotFamily = randomChoice(plotFamiliesData.plot_families);
+        } else if (vaultScenario.tags.includes('plot_siege')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'siege_standoff');
+        } else if (vaultScenario.tags.includes('plot_ritual')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'ritual_corruption');
+        } else if (vaultScenario.tags.includes('plot_claim')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'claim_and_hold');
+        } else if (vaultScenario.tags.includes('plot_disaster')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'natural_disaster');
         }
-      } else {
+      }
+      
+      // Fallback to random if not set
+      if (!plotFamily) {
         plotFamily = randomChoice(plotFamiliesData.plot_families);
       }
+      
       console.log('📖 Selected plot family:', plotFamily.name);
 
       // Use user-selected danger rating
@@ -877,7 +939,17 @@ window.CC_APP = {
       const aftermath = generateAftermath(plotFamily);
 
       // Generate name LAST using tag-based matching
-      const scenarioName = generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating);
+      // If we have vault scenario, add its tags to context for name generation
+      const nameContextTags = [...contextTags];
+      if (vaultScenario && vaultScenario.tags) {
+        vaultScenario.tags.forEach(tag => {
+          if (!nameContextTags.includes(tag)) {
+            nameContextTags.push(tag);
+          }
+        });
+      }
+      
+      const scenarioName = generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, nameContextTags);
 
       // Use vault narrative hook if available, otherwise generate one
       const narrative_hook = vaultScenario && vaultScenario.narrative_hook ?
@@ -900,7 +972,8 @@ window.CC_APP = {
         factions: state.factions,
         pointValue: state.pointValue,
         gameMode: state.gameMode,
-        vault_source: vaultScenario ? vaultScenario.name : null // Track if from vault
+        vault_source: vaultScenario ? vaultScenario.name : null, // Track if from vault
+        vault_match_score: vaultScenario ? maxMatchScore : 0 // Track match quality
       };
 
       state.generated = true;
@@ -1165,15 +1238,17 @@ window.CC_APP = {
       return randomChoice(hooks);
     }
 
-    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating) {
-      // Use tag-based name generation from 220_scenario_names.json
+    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, vaultTags = []) {
+      // Use tag-based name generation from 230_scenario_names.json
       if (!scenarioNamesData || !scenarioNamesData.prefixes || !scenarioNamesData.suffixes) {
         // Fallback if names data not loaded
         return `The Night of ${location.name}`;
       }
 
-      // Build tags for current scenario context
-      const scenarioTags = [];
+      // Build tags for current scenario context (start with vault tags if provided)
+      const scenarioTags = [...vaultTags];
+      
+      console.log('🏷️ Starting with vault tags:', vaultTags);
       
       // Add danger tags
       scenarioTags.push(`danger_${dangerRating}`);
@@ -1253,6 +1328,8 @@ window.CC_APP = {
         }
       }
       
+      console.log('🏷️ All name generation tags:', scenarioTags);
+      
       // Select PREFIX based on tag matching
       let chosenPrefix = null;
       let maxPrefixMatches = 0;
@@ -1273,6 +1350,8 @@ window.CC_APP = {
         chosenPrefix = randomChoice(generalPrefixes).text;
       }
       
+      console.log(`📝 Prefix: "The ${chosenPrefix} of" (${maxPrefixMatches} tag matches)`);
+      
       // Select SUFFIX based on tag matching
       let chosenSuffix = null;
       let maxSuffixMatches = 0;
@@ -1284,6 +1363,7 @@ window.CC_APP = {
       
       if (locationSuffix && location.name.length <= 12) {
         chosenSuffix = locationSuffix.text;
+        console.log(`📝 Suffix: "${chosenSuffix}" (location name)`);
       } else {
         // Match suffixes by tags
         scenarioNamesData.suffixes.forEach(suffix => {
@@ -1305,9 +1385,14 @@ window.CC_APP = {
             chosenSuffix = location.name;
           }
         }
+        
+        console.log(`📝 Suffix: "${chosenSuffix}" (${maxSuffixMatches} tag matches)`);
       }
       
-      return `The ${chosenPrefix} of ${chosenSuffix}`;
+      const finalName = `The ${chosenPrefix} of ${chosenSuffix}`;
+      console.log(`✨ Generated name: "${finalName}"`);
+      
+      return finalName;
     }
 
     function getDangerDescription(rating) {
