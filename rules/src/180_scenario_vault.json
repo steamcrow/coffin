@@ -1,6 +1,6 @@
 {
   "file": "180_scenario_vault.json",
-  "version": "1.0",
+  "version": "1.1",
   "design_intent": [
     "Scenarios create lasting change to Coffin Canyon.",
     "Objectives outweigh body count.",
@@ -29,6 +29,27 @@
     {
       "id": "ambush_crashed_supply_train",
       "name": "Ambush at the Crashed Supply Train",
+      "tags": [
+        "plot_ambush",
+        "objective_wreck",
+        "objective_cargo",
+        "resource_supplies",
+        "resource_metal",
+        "resource_food",
+        "resource_water",
+        "danger_4",
+        "combat",
+        "tense",
+        "grim",
+        "wasteland",
+        "ruins",
+        "monster_predator",
+        "escalation_coffin_cough",
+        "liberty_corps",
+        "shine_riders",
+        "monster_rangers",
+        "monsterology"
+      ],
       "spotlight_factions": [
         "Liberty Corps",
         "Shine Riders",
@@ -41,9 +62,7 @@
         "random_between_locations": true
       },
       "danger_rating": 4,
-
       "narrative_hook": "A Liberty Corps supply train has derailed and burned. The Corps wants everyone gone. Everyone else wants what spilled.",
-
       "objectives": [
         {
           "id": "wrecked_engine",
@@ -64,25 +83,21 @@
           "count": "d3+2"
         }
       ],
-
       "victory_conditions": {
         "primary": "Extract the most total resource value.",
         "secondary": "Maintain control of the wrecked engine."
       },
-
       "monster_pressure": {
         "enabled": true,
         "trigger_round": 3,
         "bias": ["Carrion", "Opportunistic"],
         "notes": "Monsters are drawn by blood, noise, and food."
       },
-
       "coffin_cough_triggers": [
         "wrecked_engine overused",
         "three_or_more_models_downed",
         "objective_overburn"
       ],
-
       "aftermath_effects": {
         "location_state": {
           "if_corps_success": "claimed_hard",
@@ -98,7 +113,6 @@
           "destroyed": "Burned Wreck (Hazardous)"
         }
       },
-
       "solo_play": {
         "player_role": "Scavenger Force",
         "opposition": "Escalating Liberty Corps patrols",
@@ -109,6 +123,20 @@
     {
       "id": "tigers_milk",
       "name": "Tiger’s Milk",
+      "tags": [
+        "plot_escort",
+        "objective_vehicle",
+        "objective_cargo",
+        "resource_supplies",
+        "danger_3",
+        "tense",
+        "desperate",
+        "wilderness",
+        "monster_predator",
+        "monster_corrupted",
+        "monster_rangers",
+        "monsterology"
+      ],
       "spotlight_factions": [
         "Monster Rangers",
         "Monsterologists"
@@ -117,9 +145,7 @@
         "allowed_location_types": ["boomtown_mesa", "outpost", "wasteland"]
       },
       "danger_rating": 3,
-
       "narrative_hook": "A Cargo Tiger truck carries life-saving syrups to Camp Coffin. The land does not want it to pass.",
-
       "objectives": [
         {
           "id": "cargo_tiger_truck",
@@ -128,25 +154,21 @@
           "special": ["sweet_scent", "monster_lure"]
         }
       ],
-
       "victory_conditions": {
         "escort": "Truck exits the board intact.",
         "intercept": "Truck disabled or captured."
       },
-
       "monster_pressure": {
         "enabled": true,
         "spawn_bias": ["Predators"],
         "notes": "Monsters appear closer to the truck each round."
       },
-
       "aftermath_effects": {
         "camp_coffin": {
           "if_success": "medical_bonus_next_game",
           "if_failure": "supply_shortage"
         }
       },
-
       "solo_play": {
         "player_role": "Escort Force",
         "opposition": "Monster waves + terrain pressure"
@@ -156,6 +178,20 @@
     {
       "id": "brass_bronco",
       "name": "The Brass Bronco",
+      "tags": [
+        "plot_claim",
+        "objective_marker",
+        "resource_occult",
+        "danger_4",
+        "combat",
+        "epic",
+        "mystical",
+        "boomtown",
+        "ruins",
+        "monster_elite",
+        "shine_riders",
+        "monsterology"
+      ],
       "spotlight_factions": [
         "Shine Riders",
         "Monsterologists"
@@ -164,9 +200,7 @@
         "allowed_location_types": ["boomtown_spire_stilts", "ruins"]
       },
       "danger_rating": 4,
-
       "narrative_hook": "A legendary horse has been taken. Honor demands blood. The Canyon prepares something worse.",
-
       "objectives": [
         {
           "id": "legendary_steed",
@@ -174,16 +208,13 @@
           "special": ["morale_anchor"]
         }
       ],
-
       "midgame_twist": {
         "round": 3,
         "event": "Monsterologists lose control of their experiment."
       },
-
       "victory_conditions": {
         "primary": "Control the steed at game end."
       },
-
       "aftermath_effects": {
         "shine_riders": "honor_restored_or_shattered",
         "location": "monster_pressure_increase"
@@ -193,6 +224,23 @@
     {
       "id": "thyr_harvester",
       "name": "The Thyr Harvester",
+      "tags": [
+        "plot_ritual",
+        "objective_thyr",
+        "objective_ritual",
+        "resource_thyr",
+        "resource_occult",
+        "danger_5",
+        "grim",
+        "epic",
+        "ruins",
+        "wilderness",
+        "monster_corrupted",
+        "escalation_ritual",
+        "escalation_coffin_cough",
+        "monsterology",
+        "monsters"
+      ],
       "spotlight_factions": [
         "Monsterologists",
         "Crow Queen"
@@ -201,9 +249,7 @@
         "allowed_location_types": ["thyr_field", "ruins"]
       },
       "danger_rating": 5,
-
       "narrative_hook": "A machine that eats the Canyon is nearly ready.",
-
       "objectives": [
         {
           "id": "thyr_harvester_device",
@@ -214,27 +260,465 @@
           }
         }
       ],
-
       "victory_conditions": {
         "activate": "Harvester completes cycle.",
         "prevent": "Harvester destroyed or corrupted."
       },
-
       "coffin_cough_triggers": [
         "thyr_overburn",
         "ritual_on_tainted_ground"
       ],
-
       "aftermath_effects": {
         "thyr": {
           "if_activated": "regional_thyr_depletion",
           "if_destroyed": "haunted_field"
         }
       },
-
       "solo_play": {
         "player_role": "Saboteur",
         "opposition": "Automated defenses + escalation"
+      }
+    },
+
+    {
+      "id": "the_black_water_claim",
+      "name": "The Black Water Claim",
+      "tags": [
+        "plot_claim",
+        "objective_marker",
+        "resource_water",
+        "resource_occult",
+        "danger_3",
+        "horror",
+        "grim",
+        "wasteland",
+        "boomtown",
+        "monster_corrupted",
+        "escalation_coffin_cough",
+        "liberty_corps",
+        "monster_rangers",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Liberty Corps",
+        "Monster Rangers",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["boomtown_riverbase", "wasteland", "ruins"],
+        "random_between_locations": true
+      },
+      "danger_rating": 3,
+      "narrative_hook": "A new water source has been claimed by the Liberty Corps. The water is black, warm, and whispering.",
+      "objectives": [
+        {
+          "id": "tainted_well",
+          "type": "control",
+          "resource": "water_foul",
+          "interactions": ["purify", "extract", "corrupt"]
+        }
+      ],
+      "monster_pressure": {
+        "enabled": true,
+        "spawn_bias": ["Amphibious", "Hunger"]
+      },
+      "victory_conditions": {
+        "primary": "Control or neutralize the well."
+      },
+      "coffin_cough_triggers": [
+        "drink_foul_water",
+        "ritual_purification_failed"
+      ],
+      "aftermath_effects": {
+        "water_clean": "conditional",
+        "location_state": "cursed_or_reclaimed"
+      }
+    },
+
+    {
+      "id": "dead_mans_signal",
+      "name": "Dead Man’s Signal",
+      "tags": [
+        "plot_disaster",
+        "objective_marker",
+        "danger_2",
+        "tense",
+        "mystical",
+        "ruins",
+        "outpost",
+        "shine_riders",
+        "liberty_corps"
+      ],
+      "spotlight_factions": [
+        "Shine Riders",
+        "Liberty Corps"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["signal_tower", "mesa", "ruins"]
+      },
+      "danger_rating": 2,
+      "narrative_hook": "A heliograph tower is flashing at night. The man who built it died last winter.",
+      "objectives": [
+        {
+          "id": "signal_tower",
+          "type": "device",
+          "interactions": ["activate", "disable", "misalign"]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Determine the signal’s fate."
+      },
+      "aftermath_effects": {
+        "regional_awareness": "increase_or_misdirect",
+        "liberty_corps": "reinforcement_delay_or_acceleration"
+      }
+    },
+
+    {
+      "id": "meat_for_the_canyon",
+      "name": "Meat for the Canyon",
+      "tags": [
+        "plot_extraction",
+        "objective_cargo",
+        "resource_food",
+        "danger_4",
+        "combat",
+        "grim",
+        "wilderness",
+        "monster_predator",
+        "monsters",
+        "monster_rangers"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["wasteland", "bone_field"]
+      },
+      "danger_rating": 4,
+      "narrative_hook": "A herd has gone missing. Something large is feeding. Something larger is waiting.",
+      "objectives": [
+        {
+          "id": "carcass_sites",
+          "type": "extraction",
+          "resource": "livestock",
+          "count": "d3"
+        }
+      ],
+      "monster_pressure": {
+        "enabled": true,
+        "spawn_bias": ["Carrion", "Pack"]
+      },
+      "victory_conditions": {
+        "primary": "Secure or destroy all carcass sites."
+      },
+      "aftermath_effects": {
+        "livestock": -1,
+        "monster_activity": "increase"
+      }
+    },
+
+    {
+      "id": "the_buried_badge",
+      "name": "The Buried Badge",
+      "tags": [
+        "plot_ritual",
+        "objective_marker",
+        "resource_occult",
+        "danger_3",
+        "mystical",
+        "grim",
+        "ruins",
+        "monster_undead",
+        "monster_rangers",
+        "liberty_corps"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Liberty Corps"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["graveyard", "ruins"]
+      },
+      "danger_rating": 3,
+      "narrative_hook": "A Ranger badge has been found nailed to a coffin. The Ranger is still listed as active.",
+      "objectives": [
+        {
+          "id": "marked_grave",
+          "type": "control",
+          "special": ["haunted", "honor_bound"]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Resolve the badge’s claim."
+      },
+      "aftermath_effects": {
+        "monster_rangers": "morale_shift",
+        "location": "haunted_or_quieted"
+      }
+    },
+
+    {
+      "id": "coal_and_blood",
+      "name": "Coal & Blood",
+      "tags": [
+        "plot_disaster",
+        "objective_thyr",
+        "resource_metal",
+        "resource_occult",
+        "danger_5",
+        "horror",
+        "desperate",
+        "wilderness",
+        "monster_corrupted",
+        "escalation_collapse",
+        "liberty_corps",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Liberty Corps",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["mine", "thyr_field"]
+      },
+      "danger_rating": 5,
+      "narrative_hook": "A coal seam has been opened through something alive.",
+      "objectives": [
+        {
+          "id": "open_seam",
+          "type": "device",
+          "resource": "coal",
+          "interactions": ["extract", "seal"]
+        }
+      ],
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 2,
+        "spawn_bias": ["Burrowers"]
+      },
+      "victory_conditions": {
+        "primary": "Control the seam’s fate."
+      },
+      "coffin_cough_triggers": [
+        "deep_mining",
+        "blood_in_thyr"
+      ],
+      "aftermath_effects": {
+        "coal": "conditional",
+        "thyr": -1
+      }
+    },
+
+    {
+      "id": "the_runaway_engine",
+      "name": "The Runaway Engine",
+      "tags": [
+        "plot_disaster",
+        "objective_vehicle",
+        "resource_metal",
+        "danger_4",
+        "tense",
+        "combat",
+        "wilderness",
+        "boomtown",
+        "shine_riders",
+        "monster_rangers"
+      ],
+      "spotlight_factions": [
+        "Shine Riders",
+        "Monster Rangers"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["rail_line", "mesa"]
+      },
+      "danger_rating": 4,
+      "narrative_hook": "An unmanned engine screams down the line. The whistle does not stop.",
+      "objectives": [
+        {
+          "id": "runaway_engine",
+          "type": "transport",
+          "interactions": ["board", "halt", "derail"]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Stop or redirect the engine."
+      },
+      "aftermath_effects": {
+        "rail_network": "damaged_or_secured"
+      }
+    },
+
+    {
+      "id": "saints_of_gunmetal",
+      "name": "Saints of Gunmetal",
+      "tags": [
+        "plot_claim",
+        "objective_marker",
+        "resource_metal",
+        "danger_3",
+        "grim",
+        "mystical",
+        "boomtown",
+        "ruins",
+        "liberty_corps",
+        "monster_rangers"
+      ],
+      "spotlight_factions": [
+        "Liberty Corps",
+        "Monster Rangers"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["chapel_ruin", "boomtown"]
+      },
+      "danger_rating": 3,
+      "narrative_hook": "Statues of soldiers weep oil. The Corps calls it morale.",
+      "objectives": [
+        {
+          "id": "gunmetal_shrine",
+          "type": "control",
+          "resource": "mechanical_parts"
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Control or defile the shrine."
+      },
+      "aftermath_effects": {
+        "liberty_corps": "propaganda_boost_or_scandal"
+      }
+    },
+
+    {
+      "id": "the_long_night_ride",
+      "name": "The Long Night Ride",
+      "tags": [
+        "plot_escort",
+        "objective_vehicle",
+        "danger_5",
+        "epic",
+        "desperate",
+        "wilderness",
+        "monster_elite",
+        "escalation_titan",
+        "shine_riders",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Shine Riders",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["wasteland", "storm_front"]
+      },
+      "danger_rating": 5,
+      "narrative_hook": "The Riders ride to keep the sun from setting too long.",
+      "objectives": [
+        {
+          "id": "sunward_route",
+          "type": "extraction",
+          "count": 1
+        }
+      ],
+      "monster_pressure": {
+        "enabled": true,
+        "spawn_bias": ["Nightbound"]
+      },
+      "victory_conditions": {
+        "primary": "Reach the far edge before total dark."
+      },
+      "aftermath_effects": {
+        "regional_time_anomaly": "stabilized_or_worsened"
+      }
+    },
+
+    {
+      "id": "bones_of_the_titan",
+      "name": "Bones of the Titan",
+      "tags": [
+        "plot_extraction",
+        "objective_thyr",
+        "resource_thyr",
+        "resource_occult",
+        "danger_6",
+        "epic",
+        "grim",
+        "wilderness",
+        "monster_elite",
+        "escalation_titan",
+        "monsterology",
+        "monster_rangers",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Monsterologists",
+        "Monsters",
+        "Monster Rangers"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["colossal_remains", "thyr_field"]
+      },
+      "danger_rating": 6,
+      "narrative_hook": "Something massive died here. The Canyon has not finished digesting it.",
+      "objectives": [
+        {
+          "id": "titan_remains",
+          "type": "extraction",
+          "resource": "thyr",
+          "rating": 3
+        }
+      ],
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 1,
+        "spawn_bias": ["Titanic", "Territorial"]
+      },
+      "victory_conditions": {
+        "primary": "Extract or consecrate the remains."
+      },
+      "aftermath_effects": {
+        "monster_activity": "surge",
+        "region": "scarred"
+      }
+    },
+
+    {
+      "id": "the_last_whistle",
+      "name": "The Last Whistle",
+      "tags": [
+        "plot_claim",
+        "objective_marker",
+        "danger_4",
+        "tense",
+        "mystical",
+        "boomtown",
+        "ruins",
+        "liberty_corps",
+        "shine_riders",
+        "monster_rangers"
+      ],
+      "spotlight_factions": [
+        "Liberty Corps",
+        "Shine Riders",
+        "Monster Rangers"
+      ],
+      "location_rules": {
+        "allowed_location_types": ["rail_yard", "boomtown_ruin"]
+      },
+      "danger_rating": 4,
+      "narrative_hook": "The whistle sounds. No trains remain.",
+      "objectives": [
+        {
+          "id": "whistle_engine",
+          "type": "device",
+          "interactions": ["silence", "sound", "retune"]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Decide who hears the whistle."
+      },
+      "aftermath_effects": {
+        "regional_travel": "safer_or_deadlier"
       }
     }
 
