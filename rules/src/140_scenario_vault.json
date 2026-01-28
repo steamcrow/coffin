@@ -38,5 +38,78 @@
 
   "multi_faction_logic": {
     "structure": "Alternating model activation remains. Temporary alliances are allowed."
+  },
+
+  "coffin_cough_pressure": {
+    "_id": "R-SCENARIO-CCP",
+    "title": "Coffin Cough & Battlefield Destabilization",
+
+    "scope": "Warden-facing escalation rule. Not a player mechanic.",
+
+    "overview": "Sustained violence, mass death, and reckless Thyr use destabilize the Canyon. When the land is pushed too far, it responds.",
+
+    "core_rule": "Coffin Canyon does not use a numerical pressure track. Escalation is story-driven and reactive.",
+
+    "drawing_the_coffin_cough": {
+      "timing": "At the end of any round",
+      "trigger_threshold": "Two or more of the following occurred during that round",
+      "triggers": [
+        "A Titan destroyed terrain, a structure, or caused forced terrain collapse",
+        "Three or more models were reduced to 0 Quality",
+        "Thyr Fallout was resolved",
+        "A Leader or Hero was destroyed",
+        "A Ritual was completed on Tainted or Haunted ground",
+        "An Objective Overburned, destabilized, or catastrophically failed"
+      ],
+      "warden_guidance": "Escalation is optional, but encouraged. The Canyon favors consequences."
+    },
+
+    "coffin_cough_effects": {
+      "selection": "Choose one effect below or roll 1d6",
+
+      "effects_table": {
+        "1": {
+          "name": "Rolling Coffin Cough",
+          "effects": [
+            "Place a 6\" radius Choking zone touching any board edge",
+            "At the end of each round, it drifts 3\" in a direction chosen by the Warden"
+          ]
+        },
+        "2": {
+          "name": "Ashfall",
+          "effects": [
+            "All models suffer –1 die on ranged attacks until the end of the next round",
+            "Burning terrain automatically escalates"
+          ]
+        },
+        "3": {
+          "name": "Visibility Collapse",
+          "effects": [
+            "Line of Sight beyond 12\" is blocked until the end of the next round",
+            "Fog blocks clarity and intent, not movement"
+          ]
+        },
+        "4": {
+          "name": "Panic on the Wind",
+          "effects": [
+            "All models must test Morale at the start of their next activation"
+          ]
+        },
+        "5": {
+          "name": "Dead Ground",
+          "effects": [
+            "One heavily contested terrain feature becomes Haunted or Unstable (Warden’s choice)"
+          ]
+        },
+        "6": {
+          "name": "Canyon Remembers",
+          "effects": [
+            "All Tainted terrain immediately escalates to Haunted"
+          ]
+        }
+      }
+    },
+
+    "design_note": "Players should learn that prolonged slaughter, reckless power, and hesitation invite the storm."
   }
 }
