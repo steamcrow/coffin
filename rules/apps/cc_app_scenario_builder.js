@@ -105,6 +105,8 @@ window.CC_APP = {
     let locationData = null;
     let locationTypesData = null;
     let monsterFactionData = null;
+    let scenarioVaultData = null; // NEW: Pre-made scenario templates
+    let scenarioNamesData = null; // NEW: Name generator with tags
 
     async function loadGameData() {
       try {
@@ -128,7 +130,23 @@ window.CC_APP = {
         const monstersRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsters-v2.json?t=' + Date.now());
         monsterFactionData = await monstersRes.json();
         
-        console.log('✅ Game data loaded', {plotFamiliesData, twistTablesData, locationData, locationTypesData, monsterFactionData});
+        // NEW: Load scenario vault (pre-made templates)
+        const scenarioVaultRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json?t=' + Date.now());
+        scenarioVaultData = await scenarioVaultRes.json();
+        
+        // NEW: Load scenario names (tag-based generator)
+        const scenarioNamesRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/220_scenario_names.json?t=' + Date.now());
+        scenarioNamesData = await scenarioNamesRes.json();
+        
+        console.log('✅ Game data loaded', {
+          plotFamiliesData, 
+          twistTablesData, 
+          locationData, 
+          locationTypesData, 
+          monsterFactionData,
+          scenarioVaultData,
+          scenarioNamesData
+        });
       } catch (err) {
         console.error('❌ Failed to load game data:', err);
         alert('Failed to load scenario data. Please refresh the page.');
@@ -780,16 +798,58 @@ window.CC_APP = {
         location = randomChoice(locations);
       }
 
-      // Pick a plot family
-      const plotFamily = randomChoice(plotFamiliesData.plot_families);
+      // NEW: Try to find a matching scenario from the vault
+      let vaultScenario = null;
+      if (scenarioVaultData && scenarioVaultData.scenarios) {
+        // Get faction IDs
+        const playerFactionIds = state.factions.map(f => f.id);
+        
+        // Find scenarios that match selected factions
+        const matchingScenarios = scenarioVaultData.scenarios.filter(scenario => {
+          if (!scenario.spotlight_factions) return false;
+          
+          // Check if any of our factions are in spotlight
+          return scenario.spotlight_factions.some(spotlightFaction => {
+            return playerFactionIds.some(playerFaction => {
+              // Normalize faction names for comparison
+              const normalized = spotlightFaction.toLowerCase().replace(/ /g, '_');
+              return playerFaction.includes(normalized) || normalized.includes(playerFaction);
+            });
+          });
+        });
+        
+        if (matchingScenarios.length > 0) {
+          vaultScenario = randomChoice(matchingScenarios);
+          console.log('📖 Using scenario from vault:', vaultScenario.name);
+        }
+      }
+
+      // Pick a plot family (use vault's implied type or random)
+      let plotFamily;
+      if (vaultScenario && vaultScenario.id) {
+        // Infer plot family from vault scenario ID
+        if (vaultScenario.id.includes('ambush')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'ambush_derailment');
+        } else if (vaultScenario.id.includes('escort') || vaultScenario.id.includes('milk')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'escort_run');
+        } else if (vaultScenario.id.includes('heist') || vaultScenario.id.includes('bronco')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'extraction_heist');
+        } else {
+          plotFamily = randomChoice(plotFamiliesData.plot_families);
+        }
+      } else {
+        plotFamily = randomChoice(plotFamiliesData.plot_families);
+      }
       console.log('📖 Selected plot family:', plotFamily.name);
 
       // Use user-selected danger rating
       const dangerRating = state.dangerRating;
       console.log('⚠️ Using danger rating:', dangerRating);
 
-      // Generate objectives based on plot family
-      const objectives = generateObjectives(plotFamily);
+      // Generate objectives (use vault objectives if available)
+      const objectives = vaultScenario && vaultScenario.objectives ? 
+        generateObjectivesFromVault(vaultScenario) : 
+        generateObjectives(plotFamily);
 
       // Generate monster pressure
       const monsterPressure = generateMonsterPressure(plotFamily, dangerRating);
@@ -816,13 +876,18 @@ window.CC_APP = {
       // Generate aftermath
       const aftermath = generateAftermath(plotFamily);
 
-      // Generate name LAST based on what we created
-      const scenarioName = generateScenarioName(plotFamily, location, objectives, twist);
+      // Generate name LAST using tag-based matching
+      const scenarioName = generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating);
+
+      // Use vault narrative hook if available, otherwise generate one
+      const narrative_hook = vaultScenario && vaultScenario.narrative_hook ?
+        vaultScenario.narrative_hook :
+        generateNarrativeHook(plotFamily, location);
 
       // Build final scenario
       state.scenario = {
         name: scenarioName,
-        narrative_hook: generateNarrativeHook(plotFamily, location),
+        narrative_hook,
         location,
         danger_rating: dangerRating,
         danger_description: getDangerDescription(dangerRating),
@@ -834,7 +899,8 @@ window.CC_APP = {
         aftermath,
         factions: state.factions,
         pointValue: state.pointValue,
-        gameMode: state.gameMode
+        gameMode: state.gameMode,
+        vault_source: vaultScenario ? vaultScenario.name : null // Track if from vault
       };
 
       state.generated = true;
@@ -855,6 +921,35 @@ window.CC_APP = {
           type: objType,
           special: Math.random() < 0.2 ? makeObjectiveSpecial(objType) : null
         });
+      }
+      
+      return objectives;
+    }
+
+    function generateObjectivesFromVault(vaultScenario) {
+      // Use objectives from vault scenario
+      const objectives = [];
+      
+      if (vaultScenario.objectives && Array.isArray(vaultScenario.objectives)) {
+        vaultScenario.objectives.forEach(vaultObj => {
+          objectives.push({
+            name: makeObjectiveName(vaultObj.id || vaultObj.type),
+            description: vaultObj.notes ? vaultObj.notes[0] : makeObjectiveDescription(vaultObj.id || vaultObj.type),
+            type: vaultObj.id || vaultObj.type,
+            special: vaultObj.special ? vaultObj.special.join(', ') : null
+          });
+        });
+      }
+      
+      // If vault didn't provide enough objectives, pad with generic ones
+      if (objectives.length < 2) {
+        const generic = {
+          name: 'Contested Objective',
+          description: 'Control this location to score victory points',
+          type: 'control_point',
+          special: null
+        };
+        objectives.push(generic);
       }
       
       return objectives;
@@ -1070,224 +1165,149 @@ window.CC_APP = {
       return randomChoice(hooks);
     }
 
-    function generateScenarioName(plotFamily, location, objectives, twist) {
-      // INTELLIGENT NAME GENERATION - reflects actual scenario content
-      // Format: "The [CONTEXT] of [LOCATION/DESCRIPTOR]"
+    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating) {
+      // Use tag-based name generation from 220_scenario_names.json
+      if (!scenarioNamesData || !scenarioNamesData.prefixes || !scenarioNamesData.suffixes) {
+        // Fallback if names data not loaded
+        return `The Night of ${location.name}`;
+      }
+
+      // Build tags for current scenario context
+      const scenarioTags = [];
       
-      let prefix = '';
-      let suffix = '';
+      // Add danger tags
+      scenarioTags.push(`danger_${dangerRating}`);
+      if (dangerRating >= 4) scenarioTags.push('dark', 'danger');
+      if (dangerRating >= 5) scenarioTags.push('horror', 'terror');
       
-      // ===== STEP 1: Choose PREFIX based on what the scenario is ABOUT =====
-      
-      // Check for Thyr/Crystal objectives
+      // Add thyr/crystal tags
       const hasThyr = objectives.some(obj => 
         obj.type.includes('thyr') || 
         obj.name.toLowerCase().includes('thyr') || 
         obj.name.toLowerCase().includes('crystal')
       );
+      if (hasThyr) scenarioTags.push('thyr', 'crystal', 'mystical', 'occult');
       
-      // Check for death/grave themes
+      // Add death tags
       const hasDeath = objectives.some(obj =>
         obj.type.includes('tainted') || 
         obj.type.includes('grave') ||
         obj.name.toLowerCase().includes('grave') ||
         obj.name.toLowerCase().includes('bone') ||
         obj.name.toLowerCase().includes('coffin')
-      );
+      ) || location.name.toLowerCase().includes('coffin');
+      if (hasDeath) scenarioTags.push('death', 'undead', 'bones');
       
-      // Check for monster themes
+      // Add monster tags
       const hasMonsters = state.factions.some(f => f.id === 'monsters') ||
-                         plotFamily.id.includes('disaster') ||
                          plotFamily.common_inciting_pressures?.includes('monster_action');
+      if (hasMonsters) scenarioTags.push('monster', 'creature', 'beast');
       
-      // Check for outlaw/lawless themes
-      const hasOutlaw = state.factions.some(f => f.id === 'shine_riders') ||
-                       objectives.some(obj => 
-                         obj.type.includes('cargo') || 
-                         obj.type.includes('crate') || 
-                         obj.type.includes('bounty')
-                       );
+      // Add combat/outlaw tags
+      const hasOutlaw = state.factions.some(f => f.id === 'shine_riders');
+      const hasCombat = state.factions.some(f => f.id === 'liberty_corps');
+      if (hasOutlaw) scenarioTags.push('shine_riders', 'outlaw', 'bandit', 'lawless');
+      if (hasCombat) scenarioTags.push('liberty_corps', 'combat', 'violence');
       
-      // Check for doom/high danger
-      const isDangerous = state.dangerRating >= 5;
-      
-      // Check for mystical/warning themes
+      // Add mystical/ritual tags
       const isMystical = objectives.some(obj => 
         obj.type.includes('ritual') || 
         obj.type.includes('marker') ||
         obj.type.includes('artifact')
       ) || twist?.name.includes('Symbolic') || twist?.name.includes('Location');
+      if (isMystical) scenarioTags.push('mystical', 'ritual', 'prophecy');
       
-      // Check for boomtown/settlement
-      const isBoomtown = location.name.toLowerCase().includes('fortune') ||
-                        location.name.toLowerCase().includes('town') ||
-                        location.type_ref?.includes('boomtown');
+      // Add location tags
+      const locationName = location.name.toLowerCase();
+      if (locationName.includes('fortune')) scenarioTags.push('fortune');
+      if (locationName.includes('diablo')) scenarioTags.push('diablo');
+      if (locationName.includes('plunder')) scenarioTags.push('fort_plunder');
+      if (locationName.includes('coffin')) scenarioTags.push('camp_coffin', 'coffin');
+      if (locationName.includes('ruin')) scenarioTags.push('ruins', 'abandoned');
+      if (location.type_ref?.includes('boomtown')) scenarioTags.push('boomtown', 'settlement');
       
-      // Check for ruins
-      const isRuins = location.name.toLowerCase().includes('ruin') ||
-                     location.type_ref?.includes('ruins') ||
-                     location.description?.toLowerCase().includes('ruin') ||
-                     location.description?.toLowerCase().includes('abandon');
+      // Add objective-type tags
+      objectives.forEach(obj => {
+        if (obj.type.includes('engine')) scenarioTags.push('objective_engine', 'wreck', 'salvage');
+        if (obj.type.includes('cargo') || obj.type.includes('crate')) scenarioTags.push('objective_cargo', 'theft');
+        if (obj.type.includes('ritual')) scenarioTags.push('objective_ritual');
+        if (obj.type.includes('thyr')) scenarioTags.push('objective_thyr');
+        if (obj.type.includes('vehicle')) scenarioTags.push('objective_vehicle', 'escort');
+        if (obj.type.includes('marker')) scenarioTags.push('objective_marker', 'territory');
+      });
       
-      // INTELLIGENT PREFIX SELECTION (use your exact templates)
-      if (hasThyr) {
-        prefix = randomChoice([
-          'The Thyr of',
-          'The Crystal of',
-          'The Shard of',
-          'The Vein of',
-          'The Glow of'
-        ]);
-      } else if (hasDeath) {
-        prefix = randomChoice([
-          'The Graves of',
-          'The Bones of',
-          'The Coffins of',
-          'The Dust of',
-          'The Dead of'
-        ]);
-      } else if (hasMonsters) {
-        prefix = randomChoice([
-          'The Beast of',
-          'The Monster of',
-          'The Abomination of',
-          'The Howl of',
-          'The Hunger of'
-        ]);
-      } else if (hasOutlaw) {
-        prefix = randomChoice([
-          'The Outlaw of',
-          'The Guns of',
-          'The Noose of',
-          'The Badge of',
-          'The Bounty of'
-        ]);
-      } else if (isDangerous) {
-        prefix = randomChoice([
-          'The Horror of',
-          'The Terror of',
-          'The Doom of',
-          'The Ruin of',
-          'The Damnation of',
-          'The Hell of'
-        ]);
-      } else if (isMystical) {
-        prefix = randomChoice([
-          'The Omen of',
-          'The Sign of',
-          'The Warning of',
-          'The Prophecy of',
-          'The Mark of',
-          'The Curse of',
-          'The Reckoning of'
-        ]);
-      } else if (isRuins) {
-        prefix = randomChoice([
-          'The Ruins of',
-          'The Gallows of',
-          'The Badlands of'
-        ]);
-      } else if (isBoomtown) {
-        prefix = 'The Boomtown of';
-      } else {
-        // Time-based fallback (gets more dramatic with danger)
-        if (state.dangerRating >= 4) {
-          prefix = randomChoice([
-            'The Long Night of',
-            'The Last Night of',
-            'The Endless Night of',
-            'The Black Night of',
-            'The Burning Night of'
-          ]);
-        } else {
-          prefix = randomChoice([
-            'The Night of',
-            'The Day of',
-            'The Curse of',
-            'The Reckoning of'
-          ]);
+      // Add plot family tags
+      if (plotFamily.id.includes('ambush')) scenarioTags.push('plot_ambush', 'violence');
+      if (plotFamily.id.includes('escort')) scenarioTags.push('plot_escort', 'journey');
+      if (plotFamily.id.includes('extraction')) scenarioTags.push('plot_extraction', 'theft');
+      if (plotFamily.id.includes('siege')) scenarioTags.push('plot_siege', 'defense');
+      if (plotFamily.id.includes('ritual')) scenarioTags.push('plot_ritual');
+      if (plotFamily.id.includes('disaster')) scenarioTags.push('plot_disaster');
+      
+      // Add twist tags
+      if (twist) {
+        if (twist.name.includes('Decoy')) scenarioTags.push('twist_decoy', 'lie');
+        if (twist.name.includes('Monster')) scenarioTags.push('twist_monster');
+        if (twist.name.includes('Location') || twist.name.includes('Awakens')) {
+          scenarioTags.push('twist_location', 'terrain');
         }
       }
       
-      // ===== STEP 2: Choose SUFFIX - location name or descriptive phrase =====
+      // Select PREFIX based on tag matching
+      let chosenPrefix = null;
+      let maxPrefixMatches = 0;
       
-      const locationName = location.name;
+      scenarioNamesData.prefixes.forEach(prefix => {
+        const matches = prefix.tags.filter(tag => scenarioTags.includes(tag)).length;
+        if (matches > maxPrefixMatches) {
+          maxPrefixMatches = matches;
+          chosenPrefix = prefix.text;
+        }
+      });
       
-      // Use location name directly if it's dramatic/short enough
-      if (locationName.length <= 10 || 
-          ['Fortune', 'Diablo', 'Plunder', 'Coffin', 'Huck'].some(n => locationName.includes(n))) {
-        suffix = locationName;
+      // Fallback to general prefix if no good match
+      if (!chosenPrefix || maxPrefixMatches === 0) {
+        const generalPrefixes = scenarioNamesData.prefixes.filter(p => 
+          p.tags.includes('general') || p.tags.includes('default') || p.tags.includes('time')
+        );
+        chosenPrefix = randomChoice(generalPrefixes).text;
+      }
+      
+      // Select SUFFIX based on tag matching
+      let chosenSuffix = null;
+      let maxSuffixMatches = 0;
+      
+      // First try to use location name directly if it's in the suffixes
+      const locationSuffix = scenarioNamesData.suffixes.find(s => 
+        s.text.toLowerCase() === location.name.toLowerCase()
+      );
+      
+      if (locationSuffix && location.name.length <= 12) {
+        chosenSuffix = locationSuffix.text;
       } else {
-        // Build descriptive phrase based on scenario content
-        const descriptors = [];
+        // Match suffixes by tags
+        scenarioNamesData.suffixes.forEach(suffix => {
+          const matches = suffix.tags.filter(tag => scenarioTags.includes(tag)).length;
+          if (matches > maxSuffixMatches) {
+            maxSuffixMatches = matches;
+            chosenSuffix = suffix.text;
+          }
+        });
         
-        // Objective-based descriptors
-        if (objectives.some(obj => obj.type.includes('engine') || obj.type.includes('wreck'))) {
-          descriptors.push('Broken Steel', 'Twisted Iron', 'Shattered Machine', 'Burning Engine');
-        }
-        if (objectives.some(obj => obj.type.includes('cargo') || obj.type.includes('crate'))) {
-          descriptors.push('Lost Cargo', 'Stolen Goods', 'Forbidden Prize', 'Blood Money');
-        }
-        if (objectives.some(obj => obj.type.includes('ritual'))) {
-          descriptors.push('Cursed Ground', 'Dark Altar', 'Forbidden Circle', 'Unholy Rite');
-        }
-        if (objectives.some(obj => obj.type.includes('thyr'))) {
-          descriptors.push('Burning Crystal', 'Glowing Stone', 'Poisoned Light', 'Deadly Glow');
-        }
-        if (objectives.some(obj => obj.type.includes('vehicle'))) {
-          descriptors.push('Doomed Convoy', 'Final Run', 'Last Wagon', 'Deadly Trail');
-        }
-        if (objectives.some(obj => obj.type.includes('marker') || obj.type.includes('command'))) {
-          descriptors.push('Contested Ground', 'Bloody Banner', 'Stolen Claim');
-        }
-        
-        // Plot family descriptors
-        if (plotFamily.id.includes('ambush')) {
-          descriptors.push('Blood and Dust', 'Broken Rails', 'Dead Track', 'Crimson Trail');
-        }
-        if (plotFamily.id.includes('escort')) {
-          descriptors.push('Long Road', 'Final Mile', 'Deadly Trail', 'Last Journey');
-        }
-        if (plotFamily.id.includes('extraction')) {
-          descriptors.push('Stolen Treasure', 'Forbidden Prize', 'Dark Secret', 'Hidden Vault');
-        }
-        if (plotFamily.id.includes('siege')) {
-          descriptors.push('Last Stand', 'Final Defense', 'Broken Walls', 'Bitter End');
-        }
-        if (plotFamily.id.includes('ritual') || plotFamily.id.includes('corruption')) {
-          descriptors.push('Unholy Rite', 'Dark Ceremony', 'Cursed Summoning', 'Twisted Faith');
-        }
-        if (plotFamily.id.includes('disaster')) {
-          descriptors.push('Broken Earth', 'Angry Sky', 'Deadly Storm', 'Canyon Wrath');
-        }
-        
-        // Twist descriptors
-        if (twist) {
-          if (twist.name.includes('Decoy')) descriptors.push('False Promise', 'Deadly Lie', 'Bitter Truth');
-          if (twist.name.includes('Monster')) descriptors.push('Hidden Horror', 'Greater Evil', 'Darker Beast');
-          if (twist.name.includes('Location') || twist.name.includes('Awakens')) {
-            descriptors.push('Living Land', 'Angry Earth', 'Vengeful Ground');
+        // Fallback to generic suffix if no good match
+        if (!chosenSuffix || maxSuffixMatches === 0) {
+          const genericSuffixes = scenarioNamesData.suffixes.filter(s => 
+            s.tags.includes('generic')
+          );
+          if (genericSuffixes.length > 0) {
+            chosenSuffix = randomChoice(genericSuffixes).text;
+          } else {
+            chosenSuffix = location.name;
           }
         }
-        
-        // Generic fallbacks (only if we don't have specific ones)
-        if (descriptors.length === 0) {
-          descriptors.push(
-            'Broken Dreams',
-            'Bitter End',
-            'Dark Desire',
-            'Lost Hope',
-            'Bloody Ground',
-            'Shadow and Flame',
-            'Dust and Bone',
-            'Fire and Lead'
-          );
-        }
-        
-        suffix = randomChoice(descriptors);
       }
       
-      return `${prefix} ${suffix}`;
+      return `The ${chosenPrefix} of ${chosenSuffix}`;
     }
 
     function getDangerDescription(rating) {
