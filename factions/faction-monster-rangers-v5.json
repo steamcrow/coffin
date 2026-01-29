@@ -1,8 +1,152 @@
 {
+  "_id": "FACTION-MONSTER-RANGERS",
   "faction": "Monster Rangers",
   "version": "8.2",
   "core_rules_version": "8.2",
-  "description": "Protectors of Obscuria who live in harmony with the canyon's mysteries. Monster Rangers scout, survive, and defend using wit, wilderness skills, and mystical bonds with the creatures they befriend.",
+  
+  "introduction": {
+    "title": "Monster Rangers: Protectors of Obscuria",
+    "tagline": "We are the bridge between monster and man.",
+    "description": "The Monster Rangers are protectors, scouts, and mystics who live in harmony with Coffin Canyon's mysteries. Founded to defend both humans and monsters from exploitation, they walk a dangerous line—befriending creatures others fear, studying forces others exploit, and preserving a balance others would destroy. They are not soldiers. They are guardians of an injured world.",
+    
+    "philosophy": "The Canyon is not our enemy—it is our patient. Monsters are not targets—they are neighbors. We do not conquer. We do not extract. We protect, preserve, and when necessary, we intervene.",
+    
+    "history": "Born from frontier scouts, wilderness survivors, and mystic traditions, the Monster Rangers formed when the Canyon's wounds began to bleed. They saw what reckless Thyr mining caused. They witnessed the Green Storm Catastrophe. Rather than flee or exploit, they chose to stay—learning to live with the land's wrath, to speak with its creatures, to stitch its wounds with thread and ritual."
+  },
+  
+  "faction_identity": {
+    "core_values": [
+      "Preserve the balance between monster and man",
+      "Study mysteries without exploitation",
+      "Protect the Canyon from those who would break it further",
+      "Befriend rather than destroy",
+      "Honor the old ways and new sciences equally"
+    ],
+    
+    "what_they_fight_for": [
+      "Mystical balance and environmental stability",
+      "Protection of endangered monster species",
+      "Prevention of Thyr over-extraction and corruption",
+      "Defense of sacred sites and ley lines",
+      "Harmony between human settlements and monster territories"
+    ],
+    
+    "what_they_fight_against": [
+      "Exploitation of monsters for profit or research",
+      "Corruption and uncontrolled Thyr spread",
+      "Destruction of the Canyon's mystical infrastructure",
+      "Genocide of monster species",
+      "Environmental catastrophe and Green Storm escalation"
+    ],
+    
+    "reputation": {
+      "allies_see_them_as": "Idealistic protectors, skilled scouts, vital mediators between worlds",
+      "enemies_see_them_as": "Naive obstructionists, monster sympathizers, barriers to progress",
+      "monsters_see_them_as": "Strange humans who speak the old languages, who can be trusted—sometimes",
+      "the_canyon_sees_them_as": "Listeners. The only humans who still try to understand."
+    }
+  },
+  
+  "faction_mechanics": {
+    "signature_ability": "Befriend Monsters",
+    "signature_ability_description": "Monster Rangers can befriend monsters using Pocket Snacks (contested Quality rolls) or specialized befriending abilities. Befriended monsters activate with Rangers, turning enemies into allies.",
+    
+    "playstyle": "Adaptive specialists with incredible diversity. Monster Rangers field stealth scouts, mystic casters, medics, mechanics, psychics, undead caretakers, titan specialists, and flying daredevils. They excel at unconventional solutions, terrain control, and turning the battlefield's monsters against their opponents.",
+    
+    "strengths": [
+      "Extreme unit diversity and specialist options",
+      "Befriend ability turns monsters into allies",
+      "Strong in hazardous/mystical terrain",
+      "Excellent at scenario objectives requiring finesse",
+      "Relics and mystical powers provide game-changing moments"
+    ],
+    
+    "weaknesses": [
+      "Lower armor than military factions",
+      "Befriending requires risk and positioning",
+      "Dependent on terrain and monster presence",
+      "Struggle in pure attrition fights",
+      "Expensive specialist units"
+    ]
+  },
+  
+  "canyon_state_relationships": {
+    "preferred_states": [
+      {
+        "state": "Held",
+        "reason": "Rangers' ideal: controlled but not destroyed, monsters contained not erased, land stable but alive"
+      },
+      {
+        "state": "Strangewild", 
+        "reason": "Rangers thrive in feral biomes, can navigate and befriend wild beasts, understand the growth"
+      },
+      {
+        "state": "Poisoned",
+        "reason": "Rangers have gas masks and respirators, know how to survive the storms, can operate where others suffocate"
+      }
+    ],
+    
+    "neutral_states": [
+      {
+        "state": "Haunted",
+        "reason": "Skull Rangers and Psychics excel here, but most Rangers find Bloodless difficult to manage"
+      },
+      {
+        "state": "Exalted",
+        "reason": "Mystical expertise helps, but Crow Queen's control makes befriending dangerous"
+      },
+      {
+        "state": "Lawless",
+        "reason": "Not ideal, but Rangers can operate in Shine Rider territory when needed"
+      }
+    ],
+    
+    "opposed_states": [
+      {
+        "state": "Liberated",
+        "reason": "Liberty Corps suppresses monsters and mysticism—nothing for Rangers to work with, air hostile to their mission"
+      },
+      {
+        "state": "Extracted",
+        "reason": "Monsterology's scarred wastelands offer only mutilated specimens and exploitation—everything Rangers oppose"
+      },
+      {
+        "state": "Rusted",
+        "reason": "Automat dominance, toxic machinery, no living creatures—Rangers struggle without monsters to befriend"
+      }
+    ]
+  },
+  
+  "faction_tags": [
+    "monster_protectors",
+    "mystical",
+    "defensive",
+    "befriend",
+    "ranger",
+    "survival",
+    "specialists",
+    "adaptive",
+    "environmental",
+    "harmony"
+  ],
+  
+  "scenario_preferences": {
+    "ideal_scenarios": [
+      "Monster rescue and liberation",
+      "Mystical site protection",
+      "Corruption prevention and purification",
+      "Titan calming and containment",
+      "Environmental disaster response",
+      "Sacred site defense"
+    ],
+    
+    "challenging_scenarios": [
+      "Pure combat attrition",
+      "No monsters present",
+      "Industrial/mechanical environments",
+      "Scenarios requiring monster destruction"
+    ]
+  },
   
   "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons (like Harpoons) have additional point costs listed in optional_upgrades.",
   
@@ -29,19 +173,6 @@
       "keywords": ["versatile", "adaptive", "specialists"]
     }
   ],
-  
-  "faction_motives": [
-    "Protect mystical balance and prevent corruption",
-    "Befriend and preserve monsters rather than destroy them",
-    "Defend territories from exploitation",
-    "Study and catalog the Canyon's mysteries",
-    "Maintain harmony between humans and monsters"
-  ],
-  
-  "faction_tags": ["monster_protectors", "mystical", "defensive", "befriend", "ranger", "survival"],
-  
-  "preferred_states": ["Held", "Strangewild", "Poisoned"],
-  "opposed_states": ["Liberated", "Extracted", "Rusted"],
   
   "units": [
     {
