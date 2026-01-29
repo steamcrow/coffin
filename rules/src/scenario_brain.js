@@ -39,54 +39,39 @@ class ScenarioBrain {
   async loadAllData() {
     console.log("📚 Brain loading all JSON files...");
     
-    try {
-      // Load scenario vault
-      const vaultRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json?t=' + Date.now());
-      this.data.scenarios = await vaultRes.json();
-      console.log("✅ Scenario vault loaded:", this.data.scenarios.scenarios?.length || 0, "scenarios");
-      
-      // Load scenario names
-      const namesRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/230_scenario_names.json?t=' + Date.now());
-      this.data.names = await namesRes.json();
-      console.log("✅ Scenario names loaded:", this.data.names.prefixes?.length || 0, "prefixes");
-      
-      // Load named locations
-      const locationsRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json?t=' + Date.now());
-      this.data.locations = await locationsRes.json();
-      console.log("✅ Named locations loaded:", this.data.locations.locations?.length || 0, "locations");
-      
-      // Load location types (for random generation)
-      const locationTypesRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/150_location_types.json?t=' + Date.now());
-      this.data.locationTypes = await locationTypesRes.json();
-      console.log("✅ Location types loaded:", this.data.locationTypes.location_types?.length || 0, "types");
-      
-      // Load plot families
-      const plotRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json?t=' + Date.now());
-      this.data.plotFamilies = await plotRes.json();
-      console.log("✅ Plot families loaded:", this.data.plotFamilies.plot_families?.length || 0, "plots");
-      
-      // Load twists
-      const twistRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json?t=' + Date.now());
-      this.data.twists = await twistRes.json();
-      console.log("✅ Twists loaded:", this.data.twists.twists?.length || 0, "twists");
-      
-      // Load campaign states
-      const campaignRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/R-CAMPAIGN.json?t=' + Date.now());
-      this.data.canyonStates = await campaignRes.json();
-      console.log("✅ Canyon States loaded");
-      
-      // Load Monster Rangers faction (others can be added later)
-      const monsterRangersRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monster-rangers-v5.json?t=' + Date.now());
-      this.data.factions['monster_rangers'] = await monsterRangersRes.json();
-      console.log("✅ Monster Rangers faction loaded");
-      
-      this.loaded = true;
-      console.log("🎉 Brain fully loaded and ready!");
-      
-    } catch (err) {
-      console.error("❌ Brain failed to load data:", err);
-      throw new Error("Brain initialization failed: " + err.message);
+    const files = [
+      { key: 'scenarios', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json' },
+      { key: 'names', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/230_scenario_names.json' },
+      { key: 'locations', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json' },
+      { key: 'locationTypes', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/150_location_types.json' },
+      { key: 'plotFamilies', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json' },
+      { key: 'twists', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json' },
+      { key: 'canyonStates', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/R-CAMPAIGN.json' },
+      { key: 'monsterRangers', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monster-rangers-v5.json', faction: 'monster_rangers' }
+    ];
+
+    for (const file of files) {
+      try {
+        console.log(`📡 Fetching: ${file.key}...`);
+        const res = await fetch(`${file.url}?t=${Date.now()}`);
+        if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+        
+        const json = await res.json();
+        
+        if (file.faction) {
+          this.data.factions[file.faction] = json;
+        } else {
+          this.data[file.key] = json;
+        }
+        console.log(`✅ ${file.key} loaded.`);
+      } catch (err) {
+        console.error(`❌ FAILED TO LOAD ${file.key}:`, err);
+        throw new Error(`Pattern Match Fail: ${file.key} (${file.url}) is malformed or missing.`);
+      }
     }
+    
+    this.loaded = true;
+    console.log("🎉 Brain fully loaded!");
   }
   
   // ================================
