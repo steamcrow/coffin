@@ -161,6 +161,42 @@ window.CC_APP = {
         .replace(/'/g, '&#039;');
     }
 
+function calculateVictoryMath(plotFamilyId, danger) {
+        const targetVP = 10 + (danger * 2);
+        
+        const logicMap = {
+            "extraction_heist": { label: "Items Extracted", val: 3 },
+            "claim_and_hold": { label: "Rounds Held", val: 2 },
+            "siege_standoff": { label: "Rounds Survived", val: 3 },
+            "ambush_derailment": { label: "Crates Salvaged", val: 2 }
+        };
+
+        const logic = logicMap[plotFamilyId] || { label: "Objectives Met", val: 2 };
+
+        return {
+            target_to_win: targetVP,
+            scoring_rule: `Gain ${logic.val} VP per ${logic.label}.`,
+            ticker_label: logic.label,
+            thresholds: {
+                minor: Math.floor(targetVP * 0.6),
+                major: targetVP,
+                legendary: Math.floor(targetVP * 1.5)
+            }
+        };
+    }
+
+    function generateMonsterBehavior(danger) {
+        const behaviors = [
+            "Passive: Monsters only attack if approached within 6\".",
+            "Defensive: Monsters hold objectives and use Overwatch.",
+            "Stalking: Monsters move toward nearest player but stay in cover.",
+            "Aggressive: Monsters Charge at every opportunity.",
+            "Frenzied: Monsters gain +1 Move and Charge lowest Health unit.",
+            "Apex: Monsters act twice per round and prioritize Leaders."
+        ];
+        return behaviors[danger - 1] || behaviors[2];
+    }
+
     // ================================
     // RENDER FUNCTIONS
     // ================================
@@ -475,163 +511,58 @@ window.CC_APP = {
       // Show generated scenario
       return renderGeneratedScenario();
     }
+function renderGeneratedScenario() {
+        if (!state.scenario) return '';
+        const s = state.scenario;
 
-    function renderGeneratedScenario() {
-      if (!state.scenario) return '';
-
-      return `
-        <div class="cc-scenario-result">
-          <h3>${state.scenario.name}</h3>
-          <p class="cc-scenario-hook">${state.scenario.narrative_hook}</p>
-          
-          ${state.scenario.plot_family ? `
-            <div class="cc-scenario-meta">
-              <span class="cc-badge">📖 ${state.scenario.plot_family}</span>
-              ${state.scenario.vault_source ? `<span class="cc-badge">📚 From Vault: ${state.scenario.vault_source}</span>` : '<span class="cc-badge">🎲 Procedurally Generated</span>'}
-            </div>
-          ` : ''}
-          
-          <div class="cc-scenario-section">
-            <h4>📍 Location</h4>
-            <p><strong>${state.scenario.location.emoji || '🗺️'} ${state.scenario.location.name}</strong></p>
-            <p>${state.scenario.location.description}</p>
-            ${state.scenario.location.atmosphere ? `<p><em>"${state.scenario.location.atmosphere}"</em></p>` : ''}
-          </div>
-
-          <div class="cc-scenario-section">
-            <h4>⚠️ Danger Rating</h4>
-            <div class="cc-danger-rating">
-              ${'★'.repeat(state.scenario.danger_rating)}${'☆'.repeat(6 - state.scenario.danger_rating)}
-            </div>
-            <p class="cc-help-text">${state.scenario.danger_description}</p>
-          </div>
-
-          ${state.scenario.canyon_state ? `
-            <div class="cc-scenario-section">
-              <h4>🌍 Canyon State: ${state.scenario.canyon_state.name}</h4>
-              ${state.scenario.canyon_state.terrain_features && state.scenario.canyon_state.terrain_features.length > 0 ? `
-                <p><strong>Terrain Features:</strong></p>
-                <ul>
-                  ${state.scenario.canyon_state.terrain_features.slice(0, 3).map(t => `<li>${t}</li>`).join('')}
-                </ul>
-              ` : ''}
-              ${state.scenario.canyon_state.environmental_effects && state.scenario.canyon_state.environmental_effects.length > 0 ? `
-                <p><strong>Environmental Effects:</strong></p>
-                <ul>
-                  ${state.scenario.canyon_state.environmental_effects.slice(0, 3).map(e => `<li>${e}</li>`).join('')}
-                </ul>
-              ` : ''}
-            </div>
-          ` : ''}
-
-          ${state.scenario.vp_spread ? `
-            <div class="cc-scenario-section">
-              <h4>🎯 Victory Points System</h4>
-              <div class="cc-vp-target">
-                <strong>Target to Win: ${state.scenario.vp_spread.target_to_win} VP</strong>
-              </div>
-              <p><strong>Primary Scoring:</strong> ${state.scenario.vp_spread.scoring_rule}</p>
-              <p><strong>Bonus Scoring:</strong> ${state.scenario.vp_spread.bonus_rule}</p>
-              <p><em>Formula: ${state.scenario.vp_spread.formula}</em></p>
-              
-              <div class="cc-vp-thresholds">
-                <div>Minor Victory: ${state.scenario.vp_spread.thresholds.minor_victory} VP</div>
-                <div>Major Victory: ${state.scenario.vp_spread.thresholds.major_victory} VP</div>
-                <div>Legendary: ${state.scenario.vp_spread.thresholds.legendary_victory} VP</div>
-              </div>
-            </div>
-          ` : ''}
-
-          <div class="cc-scenario-section">
-            <h4>🎯 Objectives</h4>
-            ${state.scenario.objectives.map(obj => `
-              <div class="cc-objective-card">
-                <strong>${obj.name}</strong>
-                <p>${obj.description}</p>
-                
-                ${obj.target_value ? `
-                  <div class="cc-objective-tracker">
-                    <span class="cc-ticker-label">${obj.progress_label}: [ ] / ${obj.target_value}</span>
-                    <span class="cc-vp-value">${obj.vp_per_unit} VP per unit = ${obj.max_vp || (obj.vp_per_unit * obj.target_value)} VP max</span>
-                  </div>
-                ` : ''}
-                
-                ${obj.special ? `<em class="cc-objective-special">⚡ ${obj.special}</em>` : ''}
-                ${obj.faction_specific ? `<span class="cc-faction-badge">Faction Specific</span>` : ''}
-              </div>
-            `).join('')}
-          </div>
-
-          ${state.scenario.monster_pressure && state.scenario.monster_pressure.enabled ? `
-            <div class="cc-scenario-section">
-              <h4>👹 Monster Pressure</h4>
-              <p><strong>Trigger:</strong> ${state.scenario.monster_pressure.trigger}</p>
-              ${state.scenario.monster_pressure.notes ? `<p><em>${state.scenario.monster_pressure.notes}</em></p>` : ''}
-            </div>
-          ` : ''}
-
-          ${state.scenario.twist ? `
-            <div class="cc-scenario-section cc-twist">
-              <h4>🎭 Scenario Twist</h4>
-              <p><strong>${state.scenario.twist.name}</strong></p>
-              <p>${state.scenario.twist.description}</p>
-              ${state.scenario.twist.example ? `<p><em>Example: ${state.scenario.twist.example}</em></p>` : ''}
-            </div>
-          ` : ''}
-
-          ${state.scenario.finale ? `
-            <div class="cc-scenario-section cc-finale">
-              <h4>🎭 Round ${state.scenario.finale.round} Finale: ${state.scenario.finale.title}</h4>
-              <p><strong>Narrative:</strong> ${state.scenario.finale.narrative}</p>
-              <p><strong>Mechanical Effect:</strong> ${state.scenario.finale.mechanical_effect}</p>
-              <p><em>Ticker Effect: ${state.scenario.finale.ticker_effect}</em></p>
-            </div>
-          ` : ''}
-
-          <div class="cc-scenario-section">
-            <h4>🏆 Victory Conditions</h4>
-            ${state.factions.map(faction => {
-              const conditions = state.scenario.victory_conditions[faction.id];
-              return `
-                <div class="cc-victory-card">
-                  <strong>${faction.name}${faction.isNPC ? ' (NPC)' : ''}${faction.player ? ' - ' + faction.player : ''}</strong>
-                  
-                  ${conditions && conditions.target_vp ? `
-                    <p class="cc-vp-target">Target: ${conditions.target_vp} VP</p>
-                  ` : ''}
-                  
-                  ${conditions && conditions.objectives ? `
-                    <ul>
-                      ${conditions.objectives.map(obj => `
-                        <li>${obj.name}: ${obj.vp_value} VP × ${obj.target} = ${obj.max_vp} VP max</li>
-                      `).join('')}
-                    </ul>
-                  ` : '<ul><li>Standard victory conditions apply</li></ul>'}
-                  
-                  ${conditions && conditions.faction_bonus ? `
-                    <p><em>Bonus: ${conditions.faction_bonus}</em></p>
-                  ` : ''}
+        return `
+            <div class="cc-scenario-result cc-battle-card danger-${state.dangerRating}">
+                <div class="cc-card-header">
+                    <div class="cc-danger-badge">${'★'.repeat(state.dangerRating)}</div>
+                    <h2 class="cc-briefing-title">${s.name}</h2>
+                    <p class="cc-flavor-quote">"${s.narrative_hook}"</p>
                 </div>
-              `;
-            }).join('')}
-          </div>
 
-          <div class="cc-form-actions">
-            <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">
-              🔄 Start Over
-            </button>
-            <button class="cc-btn cc-btn-secondary" onclick="rollAgain()">
-              🌀 The Canyon Shifts
-            </button>
-            <button class="cc-btn cc-btn-primary" onclick="printScenario()">
-              🖨️ Print Scenario
-            </button>
-            <button class="cc-btn cc-btn-primary" onclick="saveScenario()">
-              💾 Save to Cloud
-            </button>
-          </div>
-        </div>
-      `;
+                <div class="cc-objective-tracker-box">
+                    <h4 class="cc-task-title">🎯 PRIMARY TASK: ${s.vp_spread.ticker_label}</h4>
+                    <p class="cc-scoring-text">${s.vp_spread.scoring_rule}</p>
+                    
+                    <div class="cc-ticker-grid">
+                        ${Array.from({length: s.vp_spread.target_to_win}).map(() => `
+                            <div class="cc-ticker-box" onclick="this.classList.toggle('checked')"></div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="cc-goal-strip">
+                        <span>GOAL: ${s.vp_spread.target_to_win} VP</span>
+                        <span>MAJOR: ${s.vp_spread.thresholds.major} VP</span>
+                    </div>
+                </div>
+
+                <div class="cc-intel-grid">
+                    <div class="cc-intel-item">
+                        <h5>👹 MONSTER BEHAVIOR</h5>
+                        <p>${s.monster_ai}</p>
+                    </div>
+                    <div class="cc-intel-item">
+                        <h5>🎭 SCENARIO TWIST</h5>
+                        <p><strong>${s.twist.name}:</strong> ${s.twist.description}</p>
+                    </div>
+                </div>
+
+               <div class="cc-finale-alert">
+                    <h4>⚠️ ROUND 6 FINALE: ${s.finale.title}</h4>
+                    <p>${s.finale.mechanical_effect}</p>
+                </div>
+
+                <div class="cc-form-actions mt-4">
+                    <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">🔄 Start Over</button>
+                    <button class="cc-btn cc-btn-secondary" onclick="generateScenario()">🌀 The Canyon Shifts</button>
+                    <button class="cc-btn cc-btn-primary" onclick="window.print()">🖨️ Print</button>
+                    <button class="cc-btn cc-btn-primary" onclick="saveScenario()">💾 Save to Cloud</button>
+                </div>
+            </div>
+        `;
     }
 
     function renderSummaryPanel() {
@@ -840,36 +771,31 @@ window.CC_APP = {
     // SCENARIO GENERATION (Uses Brain)
     // ================================
     
-    window.generateScenario = async function() {
-      console.log('🧠 Generating scenario using Brain...', state);
-      
-      try {
-        // Initialize brain if needed
-        if (!scenarioBrain) {
-          console.log('Initializing Brain...');
-          scenarioBrain = await initializeBrain();
-        }
+ window.generateScenario = async function() {
+        const brain = await initializeBrain();
         
-        // Let the Brain do all the work!
-        const scenario = await scenarioBrain.generateCompleteScenario({
-          factions: state.factions,
-          dangerRating: state.dangerRating,
-          canyonState: state.canyonState,
-          locationType: state.locationType,
-          selectedLocation: state.selectedLocation,
-          gameMode: state.gameMode,
-          pointValue: state.pointValue
-        });
-        
+        const options = {
+            gameMode: state.gameMode,
+            dangerRating: state.dangerRating,
+            canyonState: state.canyonState,
+            factions: state.factions,
+            locationId: state.locationType === 'named' ? state.selectedLocation : null
+        };
+
+        console.log("🧠 Brain is thinking...", options);
+        const scenario = await brain.generateCompleteScenario(options);
+
+        // --- MATH INJECTION ---
+        // This takes the Brain's raw plot and turns it into measurable VP
+        scenario.vp_spread = calculateVictoryMath(scenario.plot_family_id, state.dangerRating);
+
+        // --- MONSTER AI INJECTION ---
+        scenario.monster_ai = generateMonsterBehavior(state.dangerRating);
+
         state.scenario = scenario;
         state.generated = true;
+        state.currentStep = 4;
         render();
-        
-        console.log('✅ Scenario generated successfully!');
-      } catch (error) {
-        console.error('❌ Scenario generation failed:', error);
-        alert('Failed to generate scenario: ' + error.message + '\n\nPlease check the console for details.');
-      }
     };
 
     window.resetScenario = function() {
