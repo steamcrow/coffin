@@ -4,6 +4,48 @@
 // Uses: 180_scenario_vault.json, 190_plot_engine_schema.json, 200_plot_families.json, 210_twist_tables.json
 // ================================
 
+// At the top, initialize the brain
+let scenarioBrain = null;
+
+async function initializeBrain() {
+  if (!window.ScenarioBrain) {
+    const scriptRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/scenario_brain.js?t=' + Date.now());
+    const scriptCode = await scriptRes.text();
+    const script = document.createElement('script');
+    script.textContent = scriptCode;
+    document.head.appendChild(script);
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  if (!scenarioBrain) {
+    scenarioBrain = new window.ScenarioBrain();
+    await scenarioBrain.loadAllData();
+  }
+  
+  return scenarioBrain;
+}
+
+// Replace your generateScenario function:
+window.generateScenario = async function() {
+  if (!scenarioBrain) {
+    scenarioBrain = await initializeBrain();
+  }
+  
+  const scenario = await scenarioBrain.generateCompleteScenario({
+    factions: state.factions,
+    dangerRating: state.dangerRating,
+    canyonState: state.canyonState || 'poisoned',
+    locationType: state.locationType,
+    selectedLocation: state.selectedLocation,
+    gameMode: state.gameMode,
+    pointValue: state.pointValue
+  });
+  
+  state.scenario = scenario;
+  state.generated = true;
+  render();
+};
+
 console.log("🎲 Scenario Builder app loaded");
 
 window.CC_APP = {
