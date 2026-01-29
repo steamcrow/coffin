@@ -13,7 +13,7 @@ let scenarioBrain = null;
 
 async function initializeBrain() {
   if (!window.ScenarioBrain) {
-    console.log("🧠 Loading Scenario Brain...");
+    console.log("🧠 Loading Scenario Brain script...");
     const scriptRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/scenario_brain.js?t=' + Date.now());
     const scriptCode = await scriptRes.text();
     const script = document.createElement('script');
@@ -23,13 +23,20 @@ async function initializeBrain() {
   }
   
   if (!scenarioBrain) {
-    scenarioBrain = new window.ScenarioBrain();
-    await scenarioBrain.loadAllData();
+    try {
+      scenarioBrain = new window.ScenarioBrain();
+      console.log("🧠 Initializing Brain Data...");
+      await scenarioBrain.loadAllData();
+      console.log("✅ Brain Ready!");
+    } catch (err) {
+      console.error("❌ BRAIN CRASHED during loadAllData:", err);
+      // This will tell you if it's a 404 or a Syntax Error
+      throw new Error(`Brain initialization failed: ${err.message}`);
+    }
   }
   
   return scenarioBrain;
 }
-
 // ================================
 // MAIN APP
 // ================================
