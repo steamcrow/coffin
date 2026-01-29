@@ -1,0 +1,305 @@
+{
+  "_id": "R-CAMPAIGN",
+  "type": "rules_master",
+  "title": "Campaigns in Coffin Canyon",
+
+  "text": {
+    "_id": "R-CAMPAIGN-00",
+    "long": "A Campaign is a series of linked scenarios fought over the broken regions of Coffin Canyon. Factions quarrel over boomtown ruins, poisoned rivers, feral biomes, industrial scars, and storm-ridden badlands—each battle reshaping the land itself. Coffin Canyon is not a neutral battlefield. It is an injured place, and every action leaves a mark."
+  },
+
+  "sections": {
+    "green_storm": {
+      "_id": "R-CAMPAIGN-01",
+      "title": "The Canyon and the Green Storm",
+      "long": "The Canyon was torn open by reckless mining and Thyr extraction. Rivers were poisoned, soil corrupted, and the air fractured. These wounds culminated in the Green Storm Catastrophe—toxic storms, spore-clouds, and harmonic backlash that still surge across the land. The Canyon did not heal. Instead, it entered a cycle of States—environmental conditions that define what can survive, what resources exist, and how difficult it is for men and monsters to endure. A Campaign tracks these changes."
+    },
+
+    "territories": {
+      "_id": "R-CAMPAIGN-02",
+      "title": "Territories",
+      "long": "A Territory represents a defined region of Coffin Canyon. Each Territory always exists in one Canyon State.",
+      "examples": [
+        "Boomtown ruin or mining settlement",
+        "Canyon pass or river stretch",
+        "Feral biome or industrial scar",
+        "Storm-dominated badland"
+      ]
+    },
+
+    "canyon_states": {
+      "_id": "R-CAMPAIGN-03",
+      "title": "Canyon States",
+      "long": "Canyon States are environmental conditions, not just ownership. They define terrain, storms, morale, and resource flow.",
+
+      "states": {
+        "poisoned": {
+          "_id": "R-CAMPAIGN-03A",
+          "name": "Poisoned",
+          "default": true,
+          "environment": [
+            "Green Storms of toxic air, spore clouds, and corrosive rain",
+            "Water and soil frequently poisoned",
+            "Food grown here is tainted unless treated"
+          ],
+          "terrain": [
+            "Sickly green haze",
+            "Warped trees and blistered stone",
+            "Leaking Thyr crystals",
+            "Corroded ruins and half-buried machinery"
+          ],
+          "effects": [
+            "Humans suffer attrition, fatigue, or morale penalties",
+            "Monsters are less affected; some thrive",
+            "Automat function normally"
+          ]
+        },
+
+        "lawless": {
+          "_id": "R-CAMPAIGN-03B",
+          "name": "Lawless",
+          "faction": "Shine Riders",
+          "terrain": [
+            "Casino Chapels",
+            "Adobe tower cantinas",
+            "Wooden standees of Shine anti-heroes",
+            "Fortress hideouts",
+            "Stilt towns and rope bridges",
+            "Wrecked vehicles"
+          ],
+          "plant_life": [
+            "Cleared, trampled, or burned back",
+            "Few large growths survive",
+            "Crops exist only in guarded pockets"
+          ],
+          "effects": [
+            "Monsters are hunted, sold, or driven off",
+            "Ambushes and vertical movement favored",
+            "Storms occur unpredictably"
+          ]
+        },
+
+        "haunted": {
+          "_id": "R-CAMPAIGN-03C",
+          "name": "Haunted",
+          "faction": "Bloodless",
+          "terrain": [
+            "Haunt-spawning ruins",
+            "Rotter gangs",
+            "Graveyards and broken churches",
+            "Halloween Golems and dead orchards",
+            "Perpetual twilight or endless night"
+          ],
+          "effects": [
+            "Haunts may appear from terrain",
+            "Beasts avoid Haunted regions",
+            "Automat unaffected",
+            "Manlings suffer morale and fear penalties"
+          ]
+        },
+
+        "strangewild": {
+          "_id": "R-CAMPAIGN-03D",
+          "name": "Strangewild",
+          "faction": "Beasts",
+          "terrain": [
+            "Bramble vines collapsing structures",
+            "Flesh-eating plants",
+            "Bone graveyards",
+            "Sinkholes and predator thickets"
+          ],
+          "storms": [
+            "Spore winds and biological surges",
+            "Less toxic, more invasive"
+          ],
+          "effects": [
+            "Humans suffer movement and visibility penalties",
+            "Beasts gain ambush and mobility advantages",
+            "Structures degrade rapidly"
+          ]
+        },
+
+        "exalted": {
+          "_id": "R-CAMPAIGN-03E",
+          "name": "Exalted",
+          "faction": "Crow Queen",
+          "terrain": [
+            "Black Obelisk Nodes",
+            "Bone arches and crown-shaped ruins",
+            "Hanging cages of monsters and men",
+            "Banners and ritual platforms"
+          ],
+          "storms": [
+            "Controlled and ceremonial Green Storms",
+            "Veiled zones radiating from Obelisks"
+          ],
+          "effects": [
+            "Monsters act in coordination",
+            "Manlings are hunted or enslaved",
+            "Destroying Obelisks weakens the State"
+          ]
+        },
+
+        "rusted": {
+          "_id": "R-CAMPAIGN-03F",
+          "name": "Rusted",
+          "faction": "Automat",
+          "terrain": [
+            "Rust-red rock formations",
+            "Seized engines fused into the earth",
+            "Iron growths and toxic trees",
+            "Oxide-red rivers"
+          ],
+          "effects": [
+            "Humans suffer respiratory and equipment degradation",
+            "Food scarce; water metallic",
+            "Automat operate efficiently",
+            "Beasts avoid prolonged exposure"
+          ]
+        },
+
+        "liberated": {
+          "_id": "R-CAMPAIGN-03G",
+          "name": "Liberated",
+          "faction": "Liberty Corps",
+          "terrain": [
+            "Graded roads and switchbacks",
+            "Control pylons and spotlights",
+            "Barricades and prefab walls",
+            "Patriotic banners and painted towns"
+          ],
+          "effects": [
+            "Monsters weakened or unable to breathe the air",
+            "Thyr crystals do not grow",
+            "Storms suppressed or redirected"
+          ]
+        },
+
+        "extracted": {
+          "_id": "R-CAMPAIGN-03H",
+          "name": "Extracted",
+          "faction": "Monsterology",
+          "terrain": [
+            "Open-pit mines and boreholes",
+            "Bone piles sorted by specimen",
+            "Broken labs and glass tanks",
+            "Victorian fortress-palaces",
+            "Abandoned paperwork and tagging systems"
+          ],
+          "effects": [
+            "Resources scarce but valuable",
+            "Monsters mutilated, hybridized, or escaped failures",
+            "Storm activity reduced but unstable"
+          ]
+        },
+
+        "held": {
+          "_id": "R-CAMPAIGN-03I",
+          "name": "Held",
+          "faction": "Monster Rangers",
+          "terrain": [
+            "Dolmens and lithics",
+            "Ley markers and stabilized ley lines",
+            "Monitored Thyr crystals",
+            "Patrol trails and ward stones"
+          ],
+          "effects": [
+            "Fewer storms",
+            "Monsters contained, not erased",
+            "Land tense but survivable"
+          ]
+        }
+      }
+    },
+
+    "state_shifts": {
+      "_id": "R-CAMPAIGN-04",
+      "title": "State Shifts",
+      "process": [
+        "Total Victory Points",
+        "Highest VP faction is Dominant Influence",
+        "Territory shifts State if appropriate"
+      ],
+      "visible_changes": [
+        "Terrain added or removed",
+        "Storm behavior changes",
+        "Resource availability changes"
+      ],
+      "notes": "Some States resist change. Some victories only damage a State rather than replace it."
+    },
+
+    "campaign_flow": {
+      "_id": "R-CAMPAIGN-05",
+      "title": "Campaign Flow",
+      "steps": [
+        "Choose a Territory and note its State",
+        "Play a Scenario",
+        "Count Victory Points",
+        "Apply State Shift (if any)",
+        "Resolve Death & Restocking",
+        "Update Resources",
+        "Proceed to the next scenario"
+      ]
+    },
+
+    "death_and_restocking": {
+      "_id": "R-CAMPAIGN-06",
+      "title": "Death & Restocking",
+      "income": {
+        "victory_points": "5 credits per VP",
+        "thyr_crystals": "10 credits per crystal sold"
+      },
+      "rules": [
+        "Income is added to the Faction Budget",
+        "Replace dead units at base cost",
+        "Equipment and recruits may cost more or less by State",
+        "No long injury trees by default"
+      ]
+    },
+
+    "resources": {
+      "_id": "R-CAMPAIGN-07",
+      "title": "Resources & Base Costs",
+      "base_costs": {
+        "coal": 5,
+        "feed": 4,
+        "food": 3,
+        "water": 2,
+        "weapons": 8,
+        "spare_parts": 6,
+        "monster_bait": 5,
+        "pocket_snacks": 1,
+        "special_gear": 12
+      }
+    },
+
+    "state_modifiers": {
+      "_id": "R-CAMPAIGN-08",
+      "title": "State Modifiers",
+      "modifiers": {
+        "liberated": { "feed": "½ cost", "monster_bait": "×2 cost" },
+        "strangewild": { "monster_bait": "½ cost", "food": "×2 cost" },
+        "rusted": { "spare_parts": "½ cost", "water": "×2 cost" },
+        "extracted": { "weapons": "½ cost", "special_gear": "×2 cost" },
+        "held": { "note": "No cost modifiers; storms reduced" }
+      }
+    },
+
+    "friendly_territories": {
+      "_id": "R-CAMPAIGN-09",
+      "title": "Friendly Territories",
+      "benefits": [
+        "Reinforcement costs reduced by 1 credit per unit",
+        "Gain one free basic resource after the battle",
+        "Optional scenario advantages such as cover, deployment, or intel"
+      ]
+    },
+
+    "campaign_end": {
+      "_id": "R-CAMPAIGN-10",
+      "title": "Ending a Campaign",
+      "condition": "A Campaign ends when one faction controls two-thirds or more of all Territories.",
+      "epilogue": "The Canyon does not recover. It simply remembers who broke it last."
+    }
+  }
+}
