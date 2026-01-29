@@ -579,4 +579,41 @@
   .cc-scenario-main {
     overflow-y: visible;
   }
+.cc-battle-card {
+    border: 2px solid #444;
+    background: #fdf6e3;
+    padding: 20px;
+    color: #222;
+}
+.cc-ticker-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 15px 0;
+}
+.cc-ticker-box {
+    width: 22px;
+    height: 22px;
+    border: 2px solid #333;
+    background: #fff;
+    cursor: pointer;
+}
+.cc-ticker-box.checked {
+    background: #333;
+    position: relative;
+}
+.cc-ticker-box.checked::after {
+    content: "✕";
+    color: white;
+    position: absolute;
+    top: -2px; left: 3px;
+}
+.cc-finale-alert {
+    background: #333;
+    color: #fff;
+    padding: 15px;
+    margin-top: 20px;
+    border-radius: 4px;
+}
+   
 }
