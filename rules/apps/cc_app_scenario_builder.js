@@ -13,7 +13,7 @@ let scenarioBrain = null;
 
 async function initializeBrain() {
   if (!window.ScenarioBrain) {
-    console.log("🧠 Loading Scenario Brain script...");
+    console.log("🧠 Loading Scenario Brain...");
     const scriptRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/scenario_brain.js?t=' + Date.now());
     const scriptCode = await scriptRes.text();
     const script = document.createElement('script');
@@ -25,13 +25,14 @@ async function initializeBrain() {
   if (!scenarioBrain) {
     try {
       scenarioBrain = new window.ScenarioBrain();
-      console.log("🧠 Initializing Brain Data...");
+      // WE ADD THIS LOG:
+      console.log("📂 Brain is attempting to load data files..."); 
       await scenarioBrain.loadAllData();
-      console.log("✅ Brain Ready!");
     } catch (err) {
-      console.error("❌ BRAIN CRASHED during loadAllData:", err);
-      // This will tell you if it's a 404 or a Syntax Error
-      throw new Error(`Brain initialization failed: ${err.message}`);
+      console.error("❌ DATA PATTERN ERROR:", err);
+      // This will pop up an alert so you can see the filename on mobile/test
+      alert("Brain Error: Check if a JSON file has a syntax error or a 404.");
+      throw err; 
     }
   }
   
