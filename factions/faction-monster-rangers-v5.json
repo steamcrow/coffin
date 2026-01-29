@@ -1,50 +1,45 @@
-{
-  "_id": "FACTION-MONSTER-RANGERS",
-  "faction": "Monster Rangers",
-  "version": "8.2",
-  "core_rules_version": "8.2",
+"introduction": {
+  "title": "Monster Rangers: Believe, Study, Protect",
+  "tagline": "Befriend the monster. Protect the world.",
+  "description": "The Monster Rangers are a frontier order dedicated to the belief that monsters are not aberrations, but living parts of Obscuria’s ecology. Founded in 1903 by Baron Davis, the Rangers exist to study monsters without exploitation, protect them from eradication, and defend human communities from panic-driven destruction. They walk the line between trust and danger—forming bonds where possible, standing firm where necessary, and choosing understanding over extermination.",
   
-  "introduction": {
-    "title": "Monster Rangers: Protectors of Obscuria",
-    "tagline": "We are the bridge between monster and man.",
-    "description": "The Monster Rangers are protectors, scouts, and mystics who live in harmony with Coffin Canyon's mysteries. Founded to defend both humans and monsters from exploitation, they walk a dangerous line—befriending creatures others fear, studying forces others exploit, and preserving a balance others would destroy. They are not soldiers. They are guardians of an injured world.",
-    
-    "philosophy": "The Canyon is not our enemy—it is our patient. Monsters are not targets—they are neighbors. We do not conquer. We do not extract. We protect, preserve, and when necessary, we intervene.",
-    
-    "history": "Born from frontier scouts, wilderness survivors, and mystic traditions, the Monster Rangers formed when the Canyon's wounds began to bleed. They saw what reckless Thyr mining caused. They witnessed the Green Storm Catastrophe. Rather than flee or exploit, they chose to stay—learning to live with the land's wrath, to speak with its creatures, to stitch its wounds with thread and ritual."
-  },
+  "philosophy": "Monsters are not enemies by default. Fear is not a plan. Knowledge is protection. We believe monsters deserve understanding, we study them so mistakes are not repeated, and we protect both monsters and people from those who would turn Obscuria into a slaughterhouse or a strip mine.",
   
-  "faction_identity": {
-    "core_values": [
-      "Preserve the balance between monster and man",
-      "Study mysteries without exploitation",
-      "Protect the Canyon from those who would break it further",
-      "Befriend rather than destroy",
-      "Honor the old ways and new sciences equally"
-    ],
-    
-    "what_they_fight_for": [
-      "Mystical balance and environmental stability",
-      "Protection of endangered monster species",
-      "Prevention of Thyr over-extraction and corruption",
-      "Defense of sacred sites and ley lines",
-      "Harmony between human settlements and monster territories"
-    ],
-    
-    "what_they_fight_against": [
-      "Exploitation of monsters for profit or research",
-      "Corruption and uncontrolled Thyr spread",
-      "Destruction of the Canyon's mystical infrastructure",
-      "Genocide of monster species",
-      "Environmental catastrophe and Green Storm escalation"
-    ],
-    
-    "reputation": {
-      "allies_see_them_as": "Idealistic protectors, skilled scouts, vital mediators between worlds",
-      "enemies_see_them_as": "Naive obstructionists, monster sympathizers, barriers to progress",
-      "monsters_see_them_as": "Strange humans who speak the old languages, who can be trusted—sometimes",
-      "the_canyon_sees_them_as": "Listeners. The only humans who still try to understand."
-    }
+  "history": "The Monster Rangers were formally established in 1903 by Baron Davis after witnessing repeated frontier massacres—both of monsters and of settlements—caused by ignorance, rumor, and reckless Thyr pursuit. Drawing from scouts, naturalists, folklorists, and survivors, the early Rangers cataloged monsters, mapped territories, and proved that many creatures could be reasoned with, relocated, or defended rather than destroyed. Over time, the Rangers became a recognized—if often distrusted—presence across Coffin Canyon, standing between hysteria and harmony."
+},
+
+"faction_identity": {
+  "core_values": [
+    "Believe monsters are living beings, not targets",
+    "Study monsters to prevent fear-driven violence",
+    "Protect monsters, people, and places from exploitation",
+    "Befriend when possible, intervene when necessary",
+    "Preserve Obscuria for future generations"
+  ],
+  
+  "what_they_fight_for": [
+    "Peaceful coexistence between monsters and settlements",
+    "Accurate knowledge of monster behavior and ecology",
+    "Protection of monster habitats and migration routes",
+    "Responsible containment of dangerous entities",
+    "A future where monsters are understood, not hunted"
+  ],
+  
+  "what_they_fight_against": [
+    "Indiscriminate monster hunting and eradication",
+    "Exploitation of monsters for profit, trophies, or fuel",
+    "Reckless Thyr extraction that destabilizes ecosystems",
+    "Panic, superstition, and frontier vigilantism",
+    "Those who profit from turning monsters into monsters"
+  ],
+  
+  "reputation": {
+    "allies_see_them_as": "Level-headed protectors, expert trackers, and the first line of calm when monsters appear",
+    "enemies_see_them_as": "Monster lovers, obstructionists, and meddlers standing in the way of easy profit",
+    "monsters_see_them_as": "Humans who do not always attack—sometimes helpers, sometimes wardens",
+    "the_canyon_sees_them_as": "Watchers. Walkers of old paths. Not conquerors."
+  }
+}
   },
   
   "faction_mechanics": {
