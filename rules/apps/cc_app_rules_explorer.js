@@ -105,7 +105,7 @@ window.CC_APP = {
     const CAMPAIGN_FILE = {
       id: 'campaign_system',
       title: 'Campaign System',
-      file: '30_campaign_system.json'
+      file: 'src/30_campaign_system.json'
     };
     
     let factionsData = {};
@@ -150,198 +150,6 @@ window.CC_APP = {
         console.error('❌ Failed to load campaign system:', e);
         return false;
       }
-    }
-    
-    // Render campaign system
-    function renderCampaign() {
-      if (!campaignData) return '<div class="cc-muted">Campaign system not loaded</div>';
-      
-      const data = campaignData.data;
-      let html = '';
-      
-      // Campaign overview
-      if (data.overview) {
-        html += `
-          <div class="mb-4" style="background: rgba(255,117,24,0.1); border-left: 4px solid #ff7518; padding: 1.5rem; border-radius: 8px;">
-            <h3 style="color: #ff7518; margin-top: 0;">Campaign Overview</h3>
-            <p style="font-size: 1.1rem; line-height: 1.8;">${esc(data.overview)}</p>
-          </div>
-        `;
-      }
-      
-      // Campaign structure
-      if (data.structure) {
-        html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">Campaign Structure</h3>`;
-        
-        if (typeof data.structure === 'string') {
-          html += `<p>${esc(data.structure)}</p>`;
-        } else if (typeof data.structure === 'object') {
-          html += renderNestedSection('', data.structure, 0);
-        }
-      }
-      
-      // Progression system
-      if (data.progression) {
-        html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">Progression System</h3>`;
-        
-        if (typeof data.progression === 'string') {
-          html += `<p>${esc(data.progression)}</p>`;
-        } else if (typeof data.progression === 'object') {
-          html += renderNestedSection('', data.progression, 0);
-        }
-      }
-      
-      // Experience and rewards
-      if (data.experience || data.rewards) {
-        html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">Experience & Rewards</h3>`;
-        
-        if (data.experience) {
-          if (typeof data.experience === 'string') {
-            html += `<div class="mb-3"><h4>Experience</h4><p>${esc(data.experience)}</p></div>`;
-          } else if (typeof data.experience === 'object') {
-            html += '<div class="mb-3">';
-            html += renderNestedSection('Experience', data.experience, 0);
-            html += '</div>';
-          }
-        }
-        
-        if (data.rewards) {
-          if (typeof data.rewards === 'string') {
-            html += `<div class="mb-3"><h4>Rewards</h4><p>${esc(data.rewards)}</p></div>`;
-          } else if (typeof data.rewards === 'object') {
-            html += '<div class="mb-3">';
-            html += renderNestedSection('Rewards', data.rewards, 0);
-            html += '</div>';
-          }
-        }
-      }
-      
-      // Injuries and casualties
-      if (data.injuries || data.casualties) {
-        html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">Injuries & Casualties</h3>`;
-        
-        if (data.injuries) {
-          if (Array.isArray(data.injuries)) {
-            html += '<div class="mb-3"><h4>Injury Table</h4><ul>';
-            data.injuries.forEach(injury => {
-              if (typeof injury === 'string') {
-                html += `<li>${esc(injury)}</li>`;
-              } else if (injury && typeof injury === 'object') {
-                const roll = injury.roll || injury.result || '';
-                const effect = injury.effect || injury.description || injury.name || '';
-                html += `<li><strong>${esc(roll)}:</strong> ${esc(effect)}</li>`;
-              }
-            });
-            html += '</ul></div>';
-          } else if (typeof data.injuries === 'object') {
-            html += renderNestedSection('Injuries', data.injuries, 0);
-          }
-        }
-        
-        if (data.casualties) {
-          if (typeof data.casualties === 'string') {
-            html += `<div class="mb-3"><h4>Casualties</h4><p>${esc(data.casualties)}</p></div>`;
-          } else if (typeof data.casualties === 'object') {
-            html += renderNestedSection('Casualties', data.casualties, 0);
-          }
-        }
-      }
-      
-      // Campaign special rules
-      if (data.special_rules) {
-        html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">Campaign Special Rules</h3>`;
-        
-        if (Array.isArray(data.special_rules)) {
-          html += '<ul>';
-          data.special_rules.forEach(rule => {
-            if (typeof rule === 'string') {
-              html += `<li>${esc(rule)}</li>`;
-            } else if (rule && typeof rule === 'object') {
-              const name = rule.name || rule.title || '';
-              const effect = rule.effect || rule.description || '';
-              html += `<li><strong>${esc(name)}:</strong> ${esc(effect)}</li>`;
-            }
-          });
-          html += '</ul>';
-        } else if (typeof data.special_rules === 'object') {
-          html += renderNestedSection('', data.special_rules, 0);
-        }
-      }
-      
-      // Warband management
-      if (data.warband_management || data.roster) {
-        html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">Warband Management</h3>`;
-        
-        if (data.warband_management) {
-          if (typeof data.warband_management === 'string') {
-            html += `<p>${esc(data.warband_management)}</p>`;
-          } else if (typeof data.warband_management === 'object') {
-            html += renderNestedSection('', data.warband_management, 0);
-          }
-        }
-        
-        if (data.roster) {
-          if (typeof data.roster === 'string') {
-            html += `<div class="mb-3"><h4>Roster Rules</h4><p>${esc(data.roster)}</p></div>`;
-          } else if (typeof data.roster === 'object') {
-            html += renderNestedSection('Roster', data.roster, 0);
-          }
-        }
-      }
-      
-      // Territories and resources
-      if (data.territories || data.resources) {
-        html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">Territories & Resources</h3>`;
-        
-        if (data.territories) {
-          if (typeof data.territories === 'string') {
-            html += `<div class="mb-3"><h4>Territories</h4><p>${esc(data.territories)}</p></div>`;
-          } else if (typeof data.territories === 'object') {
-            html += renderNestedSection('Territories', data.territories, 0);
-          }
-        }
-        
-        if (data.resources) {
-          if (typeof data.resources === 'string') {
-            html += `<div class="mb-3"><h4>Resources</h4><p>${esc(data.resources)}</p></div>`;
-          } else if (typeof data.resources === 'object') {
-            html += renderNestedSection('Resources', data.resources, 0);
-          }
-        }
-      }
-      
-      // Any other top-level sections
-      const handledKeys = [
-        'overview', 'structure', 'progression', 'experience', 'rewards',
-        'injuries', 'casualties', 'special_rules', 'warband_management',
-        'roster', 'territories', 'resources', 'id', '_id', 'title', 'name'
-      ];
-      
-      Object.entries(data).forEach(([key, value]) => {
-        if (!handledKeys.includes(key) && value && !key.startsWith('_')) {
-          html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">${esc(titleize(key))}</h3>`;
-          
-          if (typeof value === 'string') {
-            html += `<p>${esc(value)}</p>`;
-          } else if (Array.isArray(value)) {
-            html += '<ul>';
-            value.forEach(item => {
-              if (typeof item === 'string') {
-                html += `<li>${esc(item)}</li>`;
-              } else if (item && typeof item === 'object') {
-                const name = item.name || item.title || '';
-                const desc = item.effect || item.description || item.text || '';
-                html += `<li><strong>${esc(name)}:</strong> ${esc(desc)}</li>`;
-              }
-            });
-            html += '</ul>';
-          } else if (typeof value === 'object') {
-            html += renderNestedSection('', value, 0);
-          }
-        }
-      });
-      
-      return html;
     }
     
     // Render a single faction
@@ -471,6 +279,15 @@ window.CC_APP = {
       }
       
       return html;
+    }
+    
+    // Render campaign system - just pass to existing renderer
+    function renderCampaign() {
+      if (!campaignData) return '<div class="cc-muted">Campaign system not loaded</div>';
+      
+      // The campaign JSON structure will be rendered by renderNestedSection()
+      // No special handling needed - it's just JSON like everything else
+      return renderNestedSection('', campaignData.data, 0);
     }
 
     const EXCLUDED_IDS = [
@@ -1237,16 +1054,12 @@ window.CC_APP = {
       // Check if this is the campaign system
       if (id === 'campaign_system') {
         selectedId = id;
-        
-        // Update active state in list
         renderList(searchEl.value);
         
-        // Show favorite button
         favoriteBtn.classList.remove('d-none');
         const star = favoriteBtn.querySelector('.cc-star');
         star.textContent = isFavorite(id) ? '★' : '☆';
         
-        // Render campaign content
         const titleHtml = `
           <article class="cc-rule-article">
             <h2 class="cc-rule-title">${esc(CAMPAIGN_FILE.title)}</h2>
@@ -1258,27 +1071,10 @@ window.CC_APP = {
         `;
         detailEl.innerHTML = titleHtml + renderCampaign() + closingHtml;
         
-        // Hide context panel for campaign
         contextPanelEl.style.display = 'none';
-        
-        // Show navigation
         navEl.classList.remove('d-none');
         
-        const currentIndex = filteredIndex.findIndex(it => it.id === selectedId);
-        const hasPrev = currentIndex > 0;
-        const hasNext = currentIndex < filteredIndex.length - 1;
-
-        prevBtnEl.disabled = !hasPrev;
-        nextBtnEl.disabled = !hasNext;
-
-        if (hasPrev) {
-          prevBtnEl.onclick = () => selectRule(filteredIndex[currentIndex - 1].id);
-        }
-
-        if (hasNext) {
-          nextBtnEl.onclick = () => selectRule(filteredIndex[currentIndex + 1].id);
-        }
-        
+        updateNavigation();
         return;
       }
       
@@ -1763,14 +1559,12 @@ window.CC_APP = {
     
     // Load campaign system and add to index
     loadCampaign().then(() => {
-      // Add campaign entry to the index
       index.push({
         id: CAMPAIGN_FILE.id,
         title: CAMPAIGN_FILE.title,
         type: 'campaign'
       });
       
-      // Refresh the list to show campaign
       renderList(searchEl.value);
     });
     
