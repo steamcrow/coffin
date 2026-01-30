@@ -1,5 +1,5 @@
 // ================================
-// SCENARIO BRAIN - WITH EXPANDED OBJECTIVES
+// SCENARIO BRAIN - FULLY DEBUGGED VERSION
 // ================================
 
 console.log("🧠 Scenario Brain loading...");
@@ -60,52 +60,79 @@ class ScenarioBrain {
   }
   
   async generateCompleteScenario(userSelections) {
-    console.log("🎬 === STARTING SCENARIO GENERATION ===");
-    console.log("User selections:", userSelections);
+    console.log("\n\n🎬 ========================================");
+    console.log("    SCENARIO GENERATION START");
+    console.log("========================================\n");
+    console.log("User selections:", JSON.stringify(userSelections, null, 2));
     
     if (!this.loaded) {
+      console.log("⏳ Data not loaded, loading now...");
       await this.loadAllData();
     }
     
     // STEP 1: Location
-    console.log("\n📍 STEP 1: Generating location...");
+    console.log("\n📍 STEP 1: LOCATION");
+    console.log("─────────────────────────────────────────");
     const location = this.generateLocation(userSelections);
-    console.log("Location:", location.name);
-    console.log("Resources:", location.resources);
+    console.log("✓ Location:", location.name);
+    console.log("  Type:", location.type_ref || 'named');
+    console.log("  Resources:", JSON.stringify(location.resources));
     
     // STEP 2: Plot Family
-    console.log("\n📖 STEP 2: Selecting plot family...");
+    console.log("\n📖 STEP 2: PLOT FAMILY");
+    console.log("─────────────────────────────────────────");
     const plotFamily = this.selectPlotFamily(location, userSelections);
-    console.log("Plot Family:", plotFamily.name);
-    console.log("Default Objectives:", plotFamily.default_objectives);
+    console.log("✓ Plot Family:", plotFamily.name);
+    console.log("  ID:", plotFamily.id);
+    console.log("  Default Objectives:", JSON.stringify(plotFamily.default_objectives));
     
     // STEP 3: VP Spread
-    console.log("\n🎲 STEP 3: Calculating VP spread...");
+    console.log("\n🎲 STEP 3: VP SPREAD");
+    console.log("─────────────────────────────────────────");
     const vpSpread = this.calculateVPSpread(plotFamily.id, userSelections.dangerRating);
-    console.log("VP Target:", vpSpread.target_to_win);
-    console.log("Primary:", vpSpread.scoring_rule);
-    console.log("Bonus:", vpSpread.bonus_rule);
+    console.log("✓ VP System Created:");
+    console.log("  Target VP:", vpSpread.target_to_win);
+    console.log("  Primary:", vpSpread.scoring_rule);
+    console.log("  Bonus:", vpSpread.bonus_rule);
+    console.log("  Formula:", vpSpread.formula);
     
     // STEP 4: Objectives
-    console.log("\n🎯 STEP 4: Generating objectives...");
+    console.log("\n🎯 STEP 4: OBJECTIVES");
+    console.log("─────────────────────────────────────────");
     const objectives = this.generateObjectives(plotFamily, location, userSelections, vpSpread);
-    console.log("Generated objectives:", objectives.length);
-    objectives.forEach(obj => console.log(`  - ${obj.name} (${obj.vp_per_unit} VP each, max ${obj.max_vp})`));
+    console.log(`✓ Generated ${objectives.length} objectives:`);
+    objectives.forEach((obj, i) => {
+      console.log(`  ${i+1}. ${obj.name}`);
+      console.log(`     - Target: ${obj.target_value} ${obj.progress_label}`);
+      console.log(`     - VP: ${obj.vp_per_unit} per unit (Max: ${obj.max_vp})`);
+    });
     
     // STEP 5: Victory Conditions
-    console.log("\n🏆 STEP 5: Generating victory conditions...");
+    console.log("\n🏆 STEP 5: VICTORY CONDITIONS");
+    console.log("─────────────────────────────────────────");
     const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread);
-    console.log("Victory conditions for:", Object.keys(victoryConditions));
+    console.log("✓ Created conditions for factions:");
+    Object.keys(victoryConditions).forEach(factionId => {
+      const vc = victoryConditions[factionId];
+      console.log(`  ${factionId}:`);
+      console.log(`    - Target VP: ${vc.target_vp}`);
+      console.log(`    - Primary: ${vc.primary_scoring}`);
+      console.log(`    - Bonus: ${vc.bonus_scoring}`);
+      console.log(`    - Custom conditions: ${vc.faction_specific_conditions.length}`);
+    });
     
     // STEP 6: Name & Narrative
-    console.log("\n📝 STEP 6: Creating name & narrative...");
+    console.log("\n📝 STEP 6: NAME & NARRATIVE");
+    console.log("─────────────────────────────────────────");
     const tags = this.buildTags(userSelections);
     const name = this.generateName(tags, location);
     const narrative = this.generateNarrative(plotFamily, location, userSelections);
-    console.log("Name:", name);
+    console.log("✓ Scenario Name:", name);
+    console.log("✓ Narrative:", narrative);
     
-    // STEP 7: Additional elements
-    console.log("\n⚙️ STEP 7: Adding extras...");
+    // STEP 7: Extras
+    console.log("\n⚙️ STEP 7: EXTRAS");
+    console.log("─────────────────────────────────────────");
     const canyonState = userSelections.canyonState || 'poisoned';
     const monsterPressure = Math.random() > 0.3 ? {
       enabled: true,
@@ -116,6 +143,11 @@ class ScenarioBrain {
     
     const twist = Math.random() < 0.3 ? this.generateTwist(userSelections.dangerRating) : null;
     const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location);
+    
+    console.log("✓ Canyon State:", canyonState);
+    console.log("✓ Monster Pressure:", monsterPressure.enabled);
+    console.log("✓ Twist:", twist ? twist.name : 'None');
+    console.log("✓ Finale:", finale.title);
     
     // BUILD FINAL SCENARIO
     const scenario = {
@@ -137,10 +169,14 @@ class ScenarioBrain {
       vault_score: 0
     };
     
-    console.log("\n🎉 === GENERATION COMPLETE ===");
-    console.log("Final scenario:", scenario.name);
+    console.log("\n✅ ========================================");
+    console.log("    GENERATION COMPLETE");
+    console.log("========================================");
+    console.log("Scenario:", scenario.name);
+    console.log("Plot:", scenario.plot_family);
     console.log("Objectives:", scenario.objectives.length);
     console.log("VP Target:", scenario.vp_spread.target_to_win);
+    console.log("========================================\n\n");
     
     return scenario;
   }
@@ -164,6 +200,7 @@ class ScenarioBrain {
     if (!location.resources) location.resources = {};
     if (!location.hazards) location.hazards = [];
     if (!location.terrain_features) location.terrain_features = [];
+    if (!location.rewards) location.rewards = [];
     return location;
   }
   
@@ -186,6 +223,7 @@ class ScenarioBrain {
       resources: type.resources || {},
       hazards: type.environmental_hazards || [],
       terrain_features: type.terrain_features || [],
+      rewards: type.rewards || [],
       procedural: true
     };
   }
@@ -196,6 +234,7 @@ class ScenarioBrain {
   
   selectPlotFamily(location, userSelections) {
     if (!this.data.plotFamilies?.plot_families) {
+      console.error("⚠️ No plot families loaded! Using emergency plot.");
       return this.getEmergencyPlot();
     }
     
@@ -220,11 +259,14 @@ class ScenarioBrain {
         if (location.type_ref.includes('fortress') && plot.id === 'siege_standoff') score += 4;
         if (location.type_ref.includes('pass') && plot.id === 'escort_run') score += 4;
         if (location.type_ref.includes('ruins') && plot.id === 'ambush_derailment') score += 4;
+        if (location.type_ref.includes('mine') && plot.id === 'extraction_heist') score += 4;
       }
       
       // Faction matching
       userSelections.factions.forEach(faction => {
-        if (faction.id === 'monster_rangers' && plot.id === 'ritual_corruption') score += 3;
+        if (faction.id === 'monster_rangers' && plot.id === 'corruption_ritual') score += 3;
+        if (faction.id === 'liberty_corps' && plot.id === 'claim_and_hold') score += 2;
+        if (faction.id === 'shine_riders' && (plot.id === 'extraction_heist' || plot.id === 'sabotage_strike')) score += 2;
       });
       
       if (score > maxScore) {
@@ -233,6 +275,7 @@ class ScenarioBrain {
       }
     });
     
+    console.log(`  Matched: ${bestPlot.name} (score: ${maxScore})`);
     return bestPlot;
   }
   
@@ -250,25 +293,26 @@ class ScenarioBrain {
   }
   
   // ================================
-  // VP SPREAD
+  // VP SPREAD - CRITICAL FIX
   // ================================
   
   calculateVPSpread(plotId, danger) {
     const target = 10 + (danger * 2);
     
     const systems = {
-      'extraction_heist': { primary: 'Items Extracted', pVal: 3, bonus: 'Speed', bVal: 1 },
-      'claim_and_hold': { primary: 'Rounds Controlled', pVal: 2, bonus: 'Consecutive', bVal: 3 },
-      'ambush_derailment': { primary: 'Crates Salvaged', pVal: 2, bonus: 'Wreckage', bVal: 5 },
-      'siege_standoff': { primary: 'Rounds Survived', pVal: 3, bonus: 'Elites', bVal: 2 },
-      'escort_run': { primary: 'Distance', pVal: 1, bonus: 'Cargo Intact', bVal: 5 },
-      'ritual_corruption': { primary: 'Rituals', pVal: 4, bonus: 'Disruptions', bVal: 3 },
-      'natural_disaster': { primary: 'Evacuated', pVal: 2, bonus: 'Resources', bVal: 3 }
+      'extraction_heist': { primary: 'Items Extracted', pVal: 3, bonus: 'Speed Bonus', bVal: 1 },
+      'claim_and_hold': { primary: 'Rounds Controlled', pVal: 2, bonus: 'Consecutive Control', bVal: 3 },
+      'ambush_derailment': { primary: 'Crates Salvaged', pVal: 2, bonus: 'Wreckage Secured', bVal: 5 },
+      'siege_standoff': { primary: 'Rounds Survived', pVal: 3, bonus: 'Elite Kills', bVal: 2 },
+      'escort_run': { primary: 'Distance Traveled', pVal: 1, bonus: 'Cargo Intact', bVal: 5 },
+      'corruption_ritual': { primary: 'Rituals Complete', pVal: 4, bonus: 'Disruptions', bVal: 3 },
+      'natural_disaster_response': { primary: 'Units Evacuated', pVal: 2, bonus: 'Resources Saved', bVal: 3 },
+      'sabotage_strike': { primary: 'Systems Disabled', pVal: 3, bonus: 'Stealth Bonus', bVal: 2 }
     };
     
-    const sys = systems[plotId] || { primary: 'Objectives', pVal: 2, bonus: 'Kills', bVal: 1 };
+    const sys = systems[plotId] || { primary: 'Objectives Complete', pVal: 2, bonus: 'Enemy Eliminated', bVal: 1 };
     
-    return {
+    const vpSpread = {
       target_to_win: target,
       scoring_rule: `${sys.pVal} VP per ${sys.primary}`,
       bonus_rule: `${sys.bVal} VP per ${sys.bonus}`,
@@ -285,20 +329,38 @@ class ScenarioBrain {
         bonus_per_vp: sys.bVal
       }
     };
+    
+    // DEFENSIVE CHECK
+    if (!vpSpread.target_to_win || !vpSpread.scoring_rule) {
+      console.error("❌ VP Spread creation failed!");
+      console.error("Plot ID:", plotId);
+      console.error("Result:", vpSpread);
+    }
+    
+    return vpSpread;
   }
   
   // ================================
-  // OBJECTIVES - WITH YOUR EXPANDED LIST
+  // OBJECTIVES - COMPLETE REWRITE
   // ================================
   
   generateObjectives(plotFamily, location, userSelections, vpSpread) {
     const objectives = [];
     
+    console.log("  Starting objective generation...");
+    console.log("  Plot family has", plotFamily.default_objectives?.length || 0, "default objectives");
+    
     // FROM PLOT FAMILY
-    if (plotFamily.default_objectives && plotFamily.default_objectives.length > 0) {
-      plotFamily.default_objectives.forEach(objType => {
+    if (plotFamily.default_objectives && Array.isArray(plotFamily.default_objectives)) {
+      plotFamily.default_objectives.forEach((objType, index) => {
+        console.log(`  Attempting to build: ${objType}`);
         const obj = this.buildObjective(objType, location, userSelections.dangerRating, vpSpread);
-        if (obj) objectives.push(obj);
+        if (obj) {
+          console.log(`    ✓ Built successfully`);
+          objectives.push(obj);
+        } else {
+          console.warn(`    ✗ Failed to build ${objType}`);
+        }
       });
     }
     
@@ -312,24 +374,27 @@ class ScenarioBrain {
         const resource = this.randomChoice(matching);
         const amount = location.resources[resource];
         
+        console.log(`  Adding resource objective: ${resource} (${amount} units)`);
+        
         objectives.push({
           name: `Extract ${this.capitalize(resource)}`,
-          description: `Secure ${amount} units of ${resource}`,
+          description: `Secure ${amount} units of ${resource} from ${location.name}`,
           type: 'resource',
           target_value: amount,
-          progress_label: `${this.capitalize(resource)}`,
+          progress_label: this.capitalize(resource),
           vp_per_unit: this.getResourceVP(resource),
           max_vp: amount * this.getResourceVP(resource)
         });
       }
     }
     
-    // FALLBACK
+    // ABSOLUTE FALLBACK - Should never happen
     if (objectives.length === 0) {
+      console.error("⚠️ NO OBJECTIVES GENERATED! Adding emergency fallback.");
       objectives.push({
-        name: 'Control Key Position',
-        description: 'Hold this strategic location',
-        type: 'control',
+        name: 'Seize Strategic Position',
+        description: `Control the key position at ${location.name}`,
+        type: 'emergency_control',
         target_value: 3,
         progress_label: 'Rounds Held',
         vp_per_unit: 2,
@@ -342,64 +407,64 @@ class ScenarioBrain {
   
   buildObjective(type, location, danger, vpSpread) {
     const templates = {
-      // ——— CORE OBJECTIVES ———
-      'wrecked_engine': { name: 'Salvage Wrecked Engine', desc: 'Extract mechanical components. Coffin Cough risk increases.', target: Math.min(3, danger), label: 'Components', vp: 3 },
-      'scattered_crates': { name: 'Recover Supply Crates', desc: `Collect crates across ${location.name}. 1 Interact each.`, target: danger + 1, label: 'Crates', vp: 2 },
-      'derailed_cars': { name: 'Search Derailed Cars', desc: 'Search wreckage for cargo. 1 Interact per car.', target: Math.max(2, danger), label: 'Cars Searched', vp: 2 },
-      'cargo_vehicle': { name: 'Escort Cargo Vehicle', desc: 'Move vehicle 24" across board. 6" per activation.', target: 4, label: 'Distance (×6")', vp: vpSpread.ticker.primary_per_vp },
-      'pack_animals': { name: 'Capture Pack Animals', desc: 'Secure animals alive. May panic under fire.', target: Math.max(2, Math.floor(danger / 2)), label: 'Animals Captured', vp: 3 },
-      'ritual_components': { name: 'Gather Ritual Components', desc: 'Collect mystical components.', target: danger, label: 'Components', vp: 2 },
-      'ritual_site': { name: 'Complete the Ritual', desc: `Perform ${danger} Interact actions. Quality test required.`, target: danger, label: 'Rituals Complete', vp: 4 },
-      'land_marker': { name: 'Establish Territory', desc: 'Plant markers and hold. VP per round.', target: 3, label: 'Rounds Controlled', vp: vpSpread.ticker.primary_per_vp },
-      'command_structure': { name: 'Seize Command Post', desc: 'Control structure to coordinate.', target: 3, label: 'Rounds Held', vp: 3 },
-      'thyr_cache': { name: 'Extract Thyr Crystals', desc: 'Recover Thyr. Always risky.', target: Math.max(2, Math.floor(danger / 2)), label: 'Thyr Extracted', vp: 4 },
-      'artifact': { name: 'Recover Ancient Artifact', desc: 'Secure the artifact. True nature hidden.', target: 1, label: 'Artifact Secured', vp: 8 },
-      'captive_entity': { name: 'Free the Captive', desc: 'Rescue or capture entity. May not be what it appears.', target: 1, label: 'Entity Controlled', vp: 6 },
-      'fortified_position': { name: 'Hold Fortified Position', desc: 'Maintain control. VP per round.', target: 3, label: 'Rounds Held', vp: vpSpread.ticker.primary_per_vp },
-      'barricades': { name: 'Control Chokepoint', desc: 'Hold barricades to restrict movement.', target: 3, label: 'Rounds Controlled', vp: 2 },
-      'stored_supplies': { name: 'Raid Supply Depot', desc: 'Extract stockpiled resources.', target: danger + 1, label: 'Supplies', vp: 2 },
-      'ritual_circle': { name: 'Empower Ritual Circle', desc: 'Control circle for mystical workings.', target: danger, label: 'Rituals', vp: 4 },
-      'tainted_ground': { name: 'Cleanse Tainted Ground', desc: 'Purify corrupted terrain. Spreads each round.', target: Math.max(2, danger - 1), label: 'Cleansed', vp: 4 },
-      'sacrificial_focus': { name: 'Destroy Dark Altar', desc: 'Control or destroy the altar.', target: 1, label: 'Destroyed', vp: 8 },
-      'collapsing_route': { name: 'Cross Unstable Passage', desc: 'Traverse before collapse.', target: 24, label: 'Inches Crossed', vp: 1 },
-      'fouled_resource': { name: 'Purify Cache', desc: 'Recover and purify supplies.', target: Math.max(2, danger), label: 'Purified', vp: 3 },
-      'unstable_structure': { name: 'Salvage Before Collapse', desc: 'Extract before failure.', target: 3, label: 'Salvaged', vp: 3 },
-      'evacuation_point': { name: 'Reach Evacuation', desc: 'Get forces to safety.', target: 5, label: 'Evacuated', vp: 2 },
+      // CORE
+      'wrecked_engine': { name: 'Salvage Wrecked Engine', desc: 'Extract components. Coffin Cough risk.', target: Math.min(3, danger), label: 'Components', vp: 3 },
+      'scattered_crates': { name: 'Recover Supply Crates', desc: `Collect crates at ${location.name}. 1 Interact each.`, target: danger + 1, label: 'Crates', vp: 2 },
+      'derailed_cars': { name: 'Search Derailed Cars', desc: 'Search wreckage. 1 Interact per car.', target: Math.max(2, danger), label: 'Cars', vp: 2 },
+      'cargo_vehicle': { name: 'Escort Cargo Vehicle', desc: 'Move 24" across board. 6" per activation.', target: 4, label: 'Progress', vp: vpSpread.ticker.primary_per_vp },
+      'pack_animals': { name: 'Capture Pack Animals', desc: 'Secure alive. May panic.', target: Math.max(2, Math.floor(danger / 2)), label: 'Animals', vp: 3 },
+      'ritual_components': { name: 'Gather Ritual Components', desc: 'Collect mystical items.', target: danger, label: 'Components', vp: 2 },
+      'ritual_site': { name: 'Complete the Ritual', desc: `${danger} Interact actions. Quality test.`, target: danger, label: 'Rituals', vp: 4 },
+      'land_marker': { name: 'Establish Territory', desc: 'Plant markers. VP per round.', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
+      'command_structure': { name: 'Seize Command Post', desc: 'Control to coordinate.', target: 3, label: 'Rounds', vp: 3 },
+      'thyr_cache': { name: 'Extract Thyr Crystals', desc: 'Recover Thyr. Risky.', target: Math.max(2, Math.floor(danger / 2)), label: 'Thyr', vp: 4 },
+      'artifact': { name: 'Recover Ancient Artifact', desc: 'Secure artifact. Nature hidden.', target: 1, label: 'Artifact', vp: 8 },
+      'captive_entity': { name: 'Free the Captive', desc: 'Rescue entity.', target: 1, label: 'Captive', vp: 6 },
+      'fortified_position': { name: 'Hold Fortified Position', desc: 'Maintain control.', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
+      'barricades': { name: 'Control Chokepoint', desc: 'Hold barricades.', target: 3, label: 'Rounds', vp: 2 },
+      'stored_supplies': { name: 'Raid Supply Depot', desc: 'Extract stockpile.', target: danger + 1, label: 'Supplies', vp: 2 },
+      'ritual_circle': { name: 'Empower Ritual Circle', desc: 'Control circle.', target: danger, label: 'Rituals', vp: 4 },
+      'tainted_ground': { name: 'Cleanse Tainted Ground', desc: 'Purify corruption.', target: Math.max(2, danger - 1), label: 'Cleansed', vp: 4 },
+      'sacrificial_focus': { name: 'Destroy Dark Altar', desc: 'Eliminate altar.', target: 1, label: 'Destroyed', vp: 8 },
+      'collapsing_route': { name: 'Cross Unstable Passage', desc: 'Traverse before collapse.', target: 24, label: 'Inches', vp: 1 },
+      'fouled_resource': { name: 'Purify Cache', desc: 'Recover fouled supplies.', target: Math.max(2, danger), label: 'Purified', vp: 3 },
+      'unstable_structure': { name: 'Salvage Structure', desc: 'Extract before collapse.', target: 3, label: 'Salvaged', vp: 3 },
+      'evacuation_point': { name: 'Reach Evacuation', desc: 'Get to safety.', target: 5, label: 'Evacuated', vp: 2 },
       
-      // ——— RESCUE / EXTRACTION ———
-      'rescue_hostages': { name: 'Rescue the Hostages', desc: 'Free captives and escort them to safety. Hostages panic if left unattended.', target: Math.max(2, Math.floor(danger / 2)), label: 'Hostages Rescued', vp: 4 },
-      'downed_ally': { name: 'Recover Fallen Ally', desc: 'Stabilize and extract a downed figure under fire.', target: 1, label: 'Ally Extracted', vp: 6 },
-      'prison_break': { name: 'Stage a Prison Break', desc: 'Disable guards and free prisoners. Alarm escalates danger.', target: Math.max(2, danger), label: 'Cells Opened', vp: 3 },
+      // RESCUE
+      'rescue_hostages': { name: 'Rescue Hostages', desc: 'Free captives. Panic if unattended.', target: Math.max(2, Math.floor(danger / 2)), label: 'Rescued', vp: 4 },
+      'downed_ally': { name: 'Recover Fallen Ally', desc: 'Stabilize and extract under fire.', target: 1, label: 'Extracted', vp: 6 },
+      'prison_break': { name: 'Stage Prison Break', desc: 'Disable guards, free prisoners.', target: Math.max(2, danger), label: 'Freed', vp: 3 },
       
-      // ——— ESCORT / PROTECTION ———
-      'protect_informant': { name: 'Protect the Informant', desc: 'Keep the informant alive until extraction.', target: 3, label: 'Rounds Survived', vp: vpSpread.ticker.primary_per_vp },
-      'escort_civilians': { name: 'Escort Civilians', desc: 'Move civilians across the board without losses.', target: Math.max(2, danger - 1), label: 'Civilians Escorted', vp: 3 },
+      // ESCORT
+      'protect_informant': { name: 'Protect Informant', desc: 'Keep alive until extraction.', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
+      'escort_civilians': { name: 'Escort Civilians', desc: 'Move across board without losses.', target: Math.max(2, danger - 1), label: 'Escorted', vp: 3 },
       
-      // ——— SABOTAGE / DESTRUCTION ———
-      'sabotage_machinery': { name: 'Sabotage the Machinery', desc: 'Disable critical systems before reinforcements arrive.', target: Math.max(2, danger), label: 'Systems Disabled', vp: 3 },
-      'blow_the_bridge': { name: 'Destroy the Crossing', desc: 'Plant charges to deny pursuit.', target: 1, label: 'Crossing Destroyed', vp: 7 },
-      'cut_power': { name: 'Cut the Power', desc: 'Disable generators. Darkness spreads each round.', target: Math.max(2, Math.floor(danger / 2)), label: 'Generators Disabled', vp: 4 },
+      // SABOTAGE
+      'sabotage_machinery': { name: 'Sabotage Machinery', desc: 'Disable systems.', target: Math.max(2, danger), label: 'Disabled', vp: 3 },
+      'blow_the_bridge': { name: 'Destroy Crossing', desc: 'Plant charges.', target: 1, label: 'Destroyed', vp: 7 },
+      'cut_power': { name: 'Cut Power', desc: 'Disable generators.', target: Math.max(2, Math.floor(danger / 2)), label: 'Disabled', vp: 4 },
       
-      // ——— INVESTIGATION / MYSTERY ———
-      'gather_intel': { name: 'Gather Intelligence', desc: 'Search clues and piece together the truth.', target: danger + 1, label: 'Clues Found', vp: 2 },
-      'expose_conspiracy': { name: 'Expose the Conspiracy', desc: 'Collect proof and survive long enough to reveal it.', target: 3, label: 'Evidence Secured', vp: 5 },
+      // INVESTIGATION
+      'gather_intel': { name: 'Gather Intelligence', desc: 'Search and find clues.', target: danger + 1, label: 'Clues', vp: 2 },
+      'expose_conspiracy': { name: 'Expose Conspiracy', desc: 'Collect proof.', target: 3, label: 'Evidence', vp: 5 },
       
-      // ——— RACE / TIME PRESSURE ———
-      'race_the_clock': { name: 'Race Against Time', desc: 'Complete objectives before time runs out.', target: 3, label: 'Tasks Completed', vp: 3 },
-      'stop_the_train': { name: 'Stop the Runaway Train', desc: 'Reach and halt the engine before disaster.', target: 24, label: 'Inches Advanced', vp: 1 },
+      // RACE
+      'race_the_clock': { name: 'Race Against Time', desc: 'Complete before timeout.', target: 3, label: 'Tasks', vp: 3 },
+      'stop_the_train': { name: 'Stop Runaway Train', desc: 'Reach and halt engine.', target: 24, label: 'Inches', vp: 1 },
       
-      // ——— DECEPTION / MISDIRECTION ———
-      'decoy_operation': { name: 'Run a Decoy Operation', desc: 'Draw enemy forces away from the real objective.', target: 3, label: 'Rounds Distracted', vp: 2 },
-      'false_artifact': { name: 'Plant the False Artifact', desc: 'Swap the real prize with a convincing fake.', target: 1, label: 'Artifact Planted', vp: 6 },
+      // DECEPTION
+      'decoy_operation': { name: 'Run Decoy Operation', desc: 'Draw enemies away.', target: 3, label: 'Rounds', vp: 2 },
+      'false_artifact': { name: 'Plant False Artifact', desc: 'Swap with fake.', target: 1, label: 'Planted', vp: 6 },
       
-      // ——— SURVIVAL / HOLDOUT ———
-      'last_stand': { name: 'Hold the Line', desc: 'Survive overwhelming pressure.', target: 3, label: 'Rounds Survived', vp: vpSpread.ticker.primary_per_vp },
-      'secure_shelter': { name: 'Secure Shelter', desc: 'Barricade and defend a safe location.', target: 3, label: 'Rounds Secured', vp: 3 }
+      // SURVIVAL
+      'last_stand': { name: 'Hold the Line', desc: 'Survive overwhelming pressure.', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
+      'secure_shelter': { name: 'Secure Shelter', desc: 'Barricade and defend.', target: 3, label: 'Rounds', vp: 3 }
     };
     
     const t = templates[type];
     if (!t) {
-      console.warn(`Unknown objective type: ${type}`);
+      console.error(`    ✗ Template not found for: ${type}`);
       return null;
     }
     
@@ -419,50 +484,62 @@ class ScenarioBrain {
   }
   
   // ================================
-  // VICTORY CONDITIONS
+  // VICTORY CONDITIONS - COMPLETE FIX
   // ================================
   
   generateVictoryConditions(userSelections, objectives, vpSpread) {
+    console.log("  Generating victory conditions...");
+    console.log("  VP Spread received:", JSON.stringify(vpSpread, null, 2));
+    
     const conditions = {};
     
     userSelections.factions.forEach(faction => {
+      console.log(`  Processing faction: ${faction.name} (${faction.id})`);
+      
       const factionData = this.data.factions[faction.id];
       const customConditions = [];
       
       if (factionData) {
+        // IDENTITY
         if (factionData.faction_identity?.what_they_fight_for) {
           const fight = this.randomChoice(factionData.faction_identity.what_they_fight_for);
-          customConditions.push(`${fight} (+3 VP)`);
+          customConditions.push(`${fight} (+3 VP bonus when achieved)`);
         }
         
+        // SCENARIOS
         if (factionData.scenario_preferences?.ideal_scenarios) {
           const ideal = this.randomChoice(factionData.scenario_preferences.ideal_scenarios);
           customConditions.push(ideal);
         }
         
+        // FACTION SPECIFICS
         if (faction.id === 'monster_rangers') {
-          customConditions.push('Befriend monsters (+2 VP each)');
-          customConditions.push('Prevent deaths (-3 VP per killed)');
+          customConditions.push('Befriend monsters using abilities (+2 VP per befriended monster)');
+          customConditions.push('Prevent unnecessary monster deaths (-3 VP per monster killed by your faction)');
         } else if (faction.id === 'liberty_corps') {
-          customConditions.push('Territory control (+2 VP/round)');
-          customConditions.push('Eliminate leaders (+5 VP each)');
+          customConditions.push('Establish territorial dominance (+2 VP per round of area control)');
+          customConditions.push('Eliminate rival faction leaders (+5 VP per leader eliminated)');
         } else if (faction.id === 'monsterology') {
-          customConditions.push('Capture alive (+3 VP each)');
-          customConditions.push('Document specimens (+2 VP each)');
+          customConditions.push('Extract specimens alive for study (+3 VP per live capture)');
+          customConditions.push('Complete field research objectives (+2 VP per documented specimen)');
         } else if (faction.id === 'shine_riders') {
-          customConditions.push('Create spectacle (+2 VP/action)');
-          customConditions.push('Steal resources (+1 VP each)');
+          customConditions.push('Create memorable spectacle through daring maneuvers (+2 VP per legendary action)');
+          customConditions.push('Extract maximum profit from chaos (+1 VP per resource stolen from opponents)');
         } else if (faction.id === 'monsters') {
-          customConditions.push('Defend territory (+3 VP/round)');
-          customConditions.push('Drive out humans (+2 VP/kill)');
+          customConditions.push('Defend territorial claims from intruders (+3 VP per round holding sacred ground)');
+          customConditions.push('Drive humans from feeding grounds (+2 VP per human unit eliminated)');
         }
         
+        // WEAKNESSES
         if (factionData.faction_identity?.what_they_struggle_with) {
           const struggle = this.randomChoice(factionData.faction_identity.what_they_struggle_with);
-          customConditions.push(`⚠️ ${struggle}`);
+          customConditions.push(`⚠️ Weakness: ${struggle} (may cause VP penalties)`);
         }
       }
       
+      console.log(`    Custom conditions: ${customConditions.length}`);
+      
+      // BUILD FINAL CONDITION OBJECT
       conditions[faction.id] = {
         target_vp: vpSpread.target_to_win,
         thresholds: vpSpread.thresholds,
@@ -478,15 +555,21 @@ class ScenarioBrain {
           ticker: `${obj.progress_label}: [ ] / ${obj.target_value}`
         })),
         faction_bonus: factionData?.faction_identity?.what_they_fight_for ? 
-          this.randomChoice(factionData.faction_identity.what_they_fight_for) + ' (+3 VP)' : null
+          this.randomChoice(factionData.faction_identity.what_they_fight_for) + ' (+3 VP bonus)' : null
       };
+      
+      // DEFENSIVE CHECK
+      console.log(`    ✓ Victory condition created:`);
+      console.log(`      Target VP: ${conditions[faction.id].target_vp}`);
+      console.log(`      Primary: ${conditions[faction.id].primary_scoring}`);
+      console.log(`      Bonus: ${conditions[faction.id].bonus_scoring}`);
     });
     
     return conditions;
   }
   
   // ================================
-  // EXTRAS
+  // HELPERS
   // ================================
   
   buildTags(userSelections) {
@@ -512,7 +595,8 @@ class ScenarioBrain {
   generateNarrative(plotFamily, location, userSelections) {
     const pressure = this.randomChoice(plotFamily.common_inciting_pressures || ['conflict']);
     const faction = userSelections.factions[0].name;
-    return `${this.capitalize(pressure.replace(/_/g, ' '))} triggers ${plotFamily.name.toLowerCase()} at ${location.name}. ${faction} must act quickly.`;
+    const objective = plotFamily.default_objectives ? plotFamily.default_objectives[0] : 'the objective';
+    return `${this.capitalize(pressure.replace(/_/g, ' '))} triggers ${plotFamily.name.toLowerCase()} at ${location.name}. The ${faction} must secure ${objective.replace(/_/g, ' ')} before escalation makes extraction impossible.`;
   }
   
   getCanyonState(stateName) {
@@ -544,20 +628,36 @@ class ScenarioBrain {
   
   generateFinale(plotFamily, danger, location) {
     const escalation = this.randomChoice(plotFamily.escalation_bias || ['environmental_hazard']);
+    const damage = danger * 2;
+    
+    const templates = {
+      'monster_action': { title: 'THE BEASTS ARRIVE', flavor: `Monsters converge on ${location.name}`, effect: `Deploy ${danger}d6 monsters. VP doubles this round.`, ticker: '×2 VP' },
+      'authority_intervention': { title: 'LIBERTY CORPS ARRIVES', flavor: 'Authority enforcers arrive', effect: `Deploy ${Math.floor(danger * 1.5)} Liberty Corps units. VP doubles.`, ticker: '×2 VP' },
+      'environmental_hazards': { title: 'CATASTROPHIC COLLAPSE', flavor: `${location.name} collapses`, effect: `Quality test or take ${damage} damage. VP doubles.`, ticker: '×2 VP, tests' },
+      'environmental_rupture': { title: 'CANYON RUPTURE', flavor: 'The Canyon tears open', effect: `Quality test or ${damage} damage. VP doubles.`, ticker: '×2 VP, tests' },
+      'structural_collapse': { title: 'TOTAL COLLAPSE', flavor: 'Structure fails', effect: `All units Quality test or ${damage} damage. VP doubles.`, ticker: '×2 VP' },
+      'panic_and_morale_failure': { title: 'PANIC SPREADS', flavor: 'Morale breaks', effect: `Quality test or units flee. VP doubles.`, ticker: '×2 VP' },
+      'ritual_completion': { title: 'RITUAL COMPLETES', flavor: 'The ritual reaches climax', effect: `${location.name} transforms. VP doubles.`, ticker: '×2 VP' },
+      'monster_awakening': { title: 'TITAN STIRS', flavor: 'Something massive awakens', effect: `Deploy Titan-class threat. VP doubles.`, ticker: '×2 VP' },
+      'monster_migration': { title: 'MONSTER HORDE', flavor: 'A migration arrives', effect: `Deploy ${danger}d6 monsters. VP doubles.`, ticker: '×2 VP' },
+      'visibility_loss': { title: 'DARKNESS FALLS', flavor: 'Vision fails', effect: `Range reduced to 6". VP doubles.`, ticker: '×2 VP' }
+    };
+    
+    const finale = templates[escalation] || templates['environmental_hazards'];
     
     return {
       round: 6,
-      title: 'FINALE',
-      narrative: `Final escalation at ${location.name}`,
-      mechanical_effect: `Danger rating ${danger} effects. VP doubles.`,
-      ticker_effect: '×2 VP',
+      title: finale.title,
+      narrative: finale.flavor,
+      mechanical_effect: finale.effect,
+      ticker_effect: finale.ticker,
       escalation_type: escalation,
-      danger_scaling: danger * 2
+      danger_scaling: damage
     };
   }
   
   getDangerDesc(rating) {
-    return ['', 'Tutorial', 'Frontier', 'Standard', 'High Pressure', 'Extreme', 'Catastrophic'][rating] || 'Unknown';
+    return ['', 'Tutorial / Low Escalation', 'Frontier Skirmish', 'Standard Coffin Canyon', 'High Pressure', 'Escalation Guaranteed', 'Catastrostorm Risk'][rating] || 'Unknown';
   }
   
   capitalize(str) {
