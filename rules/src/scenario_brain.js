@@ -1,5 +1,5 @@
 // ================================
-// SCENARIO BRAIN - FULLY DEBUGGED VERSION
+// SCENARIO BRAIN - COMPLETE WORKING VERSION
 // ================================
 
 console.log("🧠 Scenario Brain loading...");
@@ -107,19 +107,19 @@ class ScenarioBrain {
       console.log(`     - VP: ${obj.vp_per_unit} per unit (Max: ${obj.max_vp})`);
     });
 
-// STEP 5: Victory Conditions
-console.log("\n🏆 STEP 5: VICTORY CONDITIONS");
-console.log("─────────────────────────────────────────");
-const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread);
-console.log("✓ Created conditions for factions:");
-Object.keys(victoryConditions).forEach(factionId => {
-  const vc = victoryConditions[factionId];
-  console.log(`  ${factionId}:`);
-  console.log(`    - Target VP: ${vc.target_vp}`);
-  console.log(`    - Primary: ${vc.primary_scoring}`);
-  console.log(`    - Bonus: ${vc.bonus_scoring}`);
-  console.log(`    - Faction objectives: ${vc.faction_objectives?.length || 0}`);  // FIXED!
-});
+    // STEP 5: Victory Conditions
+    console.log("\n🏆 STEP 5: VICTORY CONDITIONS");
+    console.log("─────────────────────────────────────────");
+    const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread);
+    console.log("✓ Created conditions for factions:");
+    Object.keys(victoryConditions).forEach(factionId => {
+      const vc = victoryConditions[factionId];
+      console.log(`  ${factionId}:`);
+      console.log(`    - Target VP: ${vc.target_vp}`);
+      console.log(`    - Primary: ${vc.primary_scoring}`);
+      console.log(`    - Bonus: ${vc.bonus_scoring}`);
+      console.log(`    - Faction objectives: ${vc.faction_objectives?.length || 0}`);
+    });
     
     // STEP 6: Name & Narrative
     console.log("\n📝 STEP 6: NAME & NARRATIVE");
@@ -245,7 +245,6 @@ Object.keys(victoryConditions).forEach(factionId => {
     plots.forEach(plot => {
       let score = 0;
       
-      // Resource matching
       if (location.resources && plot.primary_resources) {
         plot.primary_resources.forEach(res => {
           if (location.resources[res] && location.resources[res] > 0) {
@@ -254,7 +253,6 @@ Object.keys(victoryConditions).forEach(factionId => {
         });
       }
       
-      // Type matching
       if (location.type_ref) {
         if (location.type_ref.includes('fortress') && plot.id === 'siege_standoff') score += 4;
         if (location.type_ref.includes('pass') && plot.id === 'escort_run') score += 4;
@@ -262,7 +260,6 @@ Object.keys(victoryConditions).forEach(factionId => {
         if (location.type_ref.includes('mine') && plot.id === 'extraction_heist') score += 4;
       }
       
-      // Faction matching
       userSelections.factions.forEach(faction => {
         if (faction.id === 'monster_rangers' && plot.id === 'corruption_ritual') score += 3;
         if (faction.id === 'liberty_corps' && plot.id === 'claim_and_hold') score += 2;
@@ -293,7 +290,7 @@ Object.keys(victoryConditions).forEach(factionId => {
   }
   
   // ================================
-  // VP SPREAD - CRITICAL FIX
+  // VP SPREAD
   // ================================
   
   calculateVPSpread(plotId, danger) {
@@ -312,7 +309,7 @@ Object.keys(victoryConditions).forEach(factionId => {
     
     const sys = systems[plotId] || { primary: 'Objectives Complete', pVal: 2, bonus: 'Enemy Eliminated', bVal: 1 };
     
-    const vpSpread = {
+    return {
       target_to_win: target,
       scoring_rule: `${sys.pVal} VP per ${sys.primary}`,
       bonus_rule: `${sys.bVal} VP per ${sys.bonus}`,
@@ -329,19 +326,10 @@ Object.keys(victoryConditions).forEach(factionId => {
         bonus_per_vp: sys.bVal
       }
     };
-    
-    // DEFENSIVE CHECK
-    if (!vpSpread.target_to_win || !vpSpread.scoring_rule) {
-      console.error("❌ VP Spread creation failed!");
-      console.error("Plot ID:", plotId);
-      console.error("Result:", vpSpread);
-    }
-    
-    return vpSpread;
   }
   
   // ================================
-  // OBJECTIVES - COMPLETE REWRITE
+  // OBJECTIVES
   // ================================
   
   generateObjectives(plotFamily, location, userSelections, vpSpread) {
@@ -350,7 +338,6 @@ Object.keys(victoryConditions).forEach(factionId => {
     console.log("  Starting objective generation...");
     console.log("  Plot family has", plotFamily.default_objectives?.length || 0, "default objectives");
     
-    // FROM PLOT FAMILY
     if (plotFamily.default_objectives && Array.isArray(plotFamily.default_objectives)) {
       plotFamily.default_objectives.forEach((objType, index) => {
         console.log(`  Attempting to build: ${objType}`);
@@ -364,7 +351,6 @@ Object.keys(victoryConditions).forEach(factionId => {
       });
     }
     
-    // FROM RESOURCES
     if (location.resources && plotFamily.primary_resources) {
       const matching = plotFamily.primary_resources.filter(r => 
         location.resources[r] && location.resources[r] > 0
@@ -388,7 +374,6 @@ Object.keys(victoryConditions).forEach(factionId => {
       }
     }
     
-    // ABSOLUTE FALLBACK - Should never happen
     if (objectives.length === 0) {
       console.error("⚠️ NO OBJECTIVES GENERATED! Adding emergency fallback.");
       objectives.push({
@@ -407,7 +392,6 @@ Object.keys(victoryConditions).forEach(factionId => {
   
   buildObjective(type, location, danger, vpSpread) {
     const templates = {
-      // CORE
       'wrecked_engine': { name: 'Salvage Wrecked Engine', desc: 'Extract components. Coffin Cough risk.', target: Math.min(3, danger), label: 'Components', vp: 3 },
       'scattered_crates': { name: 'Recover Supply Crates', desc: `Collect crates at ${location.name}. 1 Interact each.`, target: danger + 1, label: 'Crates', vp: 2 },
       'derailed_cars': { name: 'Search Derailed Cars', desc: 'Search wreckage. 1 Interact per car.', target: Math.max(2, danger), label: 'Cars', vp: 2 },
@@ -430,34 +414,20 @@ Object.keys(victoryConditions).forEach(factionId => {
       'fouled_resource': { name: 'Purify Cache', desc: 'Recover fouled supplies.', target: Math.max(2, danger), label: 'Purified', vp: 3 },
       'unstable_structure': { name: 'Salvage Structure', desc: 'Extract before collapse.', target: 3, label: 'Salvaged', vp: 3 },
       'evacuation_point': { name: 'Reach Evacuation', desc: 'Get to safety.', target: 5, label: 'Evacuated', vp: 2 },
-      
-      // RESCUE
       'rescue_hostages': { name: 'Rescue Hostages', desc: 'Free captives. Panic if unattended.', target: Math.max(2, Math.floor(danger / 2)), label: 'Rescued', vp: 4 },
       'downed_ally': { name: 'Recover Fallen Ally', desc: 'Stabilize and extract under fire.', target: 1, label: 'Extracted', vp: 6 },
       'prison_break': { name: 'Stage Prison Break', desc: 'Disable guards, free prisoners.', target: Math.max(2, danger), label: 'Freed', vp: 3 },
-      
-      // ESCORT
       'protect_informant': { name: 'Protect Informant', desc: 'Keep alive until extraction.', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
       'escort_civilians': { name: 'Escort Civilians', desc: 'Move across board without losses.', target: Math.max(2, danger - 1), label: 'Escorted', vp: 3 },
-      
-      // SABOTAGE
       'sabotage_machinery': { name: 'Sabotage Machinery', desc: 'Disable systems.', target: Math.max(2, danger), label: 'Disabled', vp: 3 },
       'blow_the_bridge': { name: 'Destroy Crossing', desc: 'Plant charges.', target: 1, label: 'Destroyed', vp: 7 },
       'cut_power': { name: 'Cut Power', desc: 'Disable generators.', target: Math.max(2, Math.floor(danger / 2)), label: 'Disabled', vp: 4 },
-      
-      // INVESTIGATION
       'gather_intel': { name: 'Gather Intelligence', desc: 'Search and find clues.', target: danger + 1, label: 'Clues', vp: 2 },
       'expose_conspiracy': { name: 'Expose Conspiracy', desc: 'Collect proof.', target: 3, label: 'Evidence', vp: 5 },
-      
-      // RACE
       'race_the_clock': { name: 'Race Against Time', desc: 'Complete before timeout.', target: 3, label: 'Tasks', vp: 3 },
       'stop_the_train': { name: 'Stop Runaway Train', desc: 'Reach and halt engine.', target: 24, label: 'Inches', vp: 1 },
-      
-      // DECEPTION
       'decoy_operation': { name: 'Run Decoy Operation', desc: 'Draw enemies away.', target: 3, label: 'Rounds', vp: 2 },
       'false_artifact': { name: 'Plant False Artifact', desc: 'Swap with fake.', target: 1, label: 'Planted', vp: 6 },
-      
-      // SURVIVAL
       'last_stand': { name: 'Hold the Line', desc: 'Survive overwhelming pressure.', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
       'secure_shelter': { name: 'Secure Shelter', desc: 'Barricade and defend.', target: 3, label: 'Rounds', vp: 3 }
     };
@@ -483,265 +453,399 @@ Object.keys(victoryConditions).forEach(factionId => {
     return { thyr: 4, weapons: 3, coal: 2, livestock: 2, food: 2, water: 2, spare_parts: 2 }[resource] || 2;
   }
   
-// ================================
-// VICTORY CONDITIONS - FIXED + LORE-ALIGNED VERSION
-// ================================
+  // ================================
+  // VICTORY CONDITIONS
+  // ================================
 
-generateVictoryConditions(userSelections, objectives, vpSpread) {
-  console.log("🏆 Generating rich, story-driven victory conditions...");
-  console.log("  VP Spread:", vpSpread);
-  
-  const conditions = {};
-  
-  userSelections.factions.forEach(faction => {
-    console.log(`  Processing faction: ${faction.name} (${faction.id})`);
+  generateVictoryConditions(userSelections, objectives, vpSpread) {
+    console.log("🏆 Generating rich, story-driven victory conditions...");
+    console.log("  VP Spread:", vpSpread);
     
-    const factionData = this.data.factions[faction.id];
+    const conditions = {};
     
-    const factionObjectives = this.buildFactionSpecificObjectives(
-      faction, 
-      factionData, 
-      objectives, 
-      userSelections
-    );
+    userSelections.factions.forEach(faction => {
+      console.log(`  Processing faction: ${faction.name} (${faction.id})`);
+      
+      const factionData = this.data.factions[faction.id];
+      const factionObjectives = this.buildFactionSpecificObjectives(faction, factionData, objectives, userSelections);
+      const aftermath = this.generateFactionAftermath(faction, factionData, userSelections);
+      
+      conditions[faction.id] = {
+        target_vp: vpSpread.target_to_win,
+        thresholds: vpSpread.thresholds,
+        primary_scoring: vpSpread.scoring_rule,
+        bonus_scoring: vpSpread.bonus_rule,
+        formula: vpSpread.formula,
+        faction_objectives: factionObjectives || [],
+        aftermath: aftermath,
+        objectives: objectives.map(obj => ({
+          name: obj.name,
+          ticker: `${obj.progress_label}: [ ] / ${obj.target_value}`,
+          vp_formula: `${obj.vp_per_unit} VP × ___ = ___ VP`
+        }))
+      };
+    });
+    
+    return conditions;
+  }
 
-generateUniqueFactionObjective(factionId, factionData, objectives, userSelections) {
-  const danger = userSelections.dangerRating;
-  
-  const uniques = {
-    'monster_rangers': {
-      name: 'Minimize Casualties',
-      goal: 'Protect monsters and civilians',
-      scoring: `${danger * 2} VP minus casualties`,
-      method: 'Non-lethal tactics',
-      restriction: 'Excess deaths negate bonus'
-    },
-    'liberty_corps': {
-      name: 'Establish Authority',
-      goal: 'Assert federal jurisdiction',
-      scoring: `${danger * 2} VP if center held`,
-      method: 'Force and fortification',
-      restriction: 'Collateral damage costs VP'
-    },
-    'monsterology': {
-      name: 'Total Extraction Protocol',
-      goal: 'Exploit every available site',
-      scoring: `${danger * 2} VP if all objectives extracted from`,
-      method: 'Monster kills near rigs grant bonus VP',
-      restriction: 'Monster Ranger interference costs -3 VP per event'
-    },
-    'shine_riders': {
-      name: 'Legendary Heist',
-      goal: 'Steal the most valuable prize',
-      scoring: `${danger * 3} VP if you escape with it`,
-      method: 'Speed and deception',
-      restriction: 'Death transfers VP'
-    },
-    'monsters': {
-      name: 'Drive Out Invaders',
-      goal: 'Purge human presence',
-      scoring: `${danger * 2} VP per faction broken`,
-      method: 'Territorial aggression',
-      restriction: 'Human fortifications negate VP'
+  buildFactionSpecificObjectives(faction, factionData, objectives, userSelections) {
+    const factionObjectives = [];
+    
+    objectives.forEach(obj => {
+      const specific = this.getFactionObjectiveInterpretation(faction.id, obj, factionData, userSelections);
+      if (specific) factionObjectives.push(specific);
+    });
+    
+    const unique = this.generateUniqueFactionObjective(faction.id, factionData, objectives, userSelections);
+    if (unique) factionObjectives.push(unique);
+    
+    return factionObjectives;
+  }
+
+  getFactionObjectiveInterpretation(factionId, objective, factionData, userSelections) {
+    if (factionId === 'monster_rangers') {
+      const interpretations = {
+        'ritual_circle': {
+          name: 'Empower Ritual Circle',
+          goal: 'Channel ritual energy to stabilize the land',
+          scoring: `${objective.vp_per_unit} VP per cleansing ritual`,
+          method: 'Dark Librarian gains +1 die to ritual actions',
+          restriction: 'Corrupted creatures within 6" disrupt rituals'
+        },
+        'tainted_ground': {
+          name: 'Cleanse Tainted Ground',
+          goal: 'Restore balance without needless killing',
+          scoring: `${objective.vp_per_unit} VP per section cleansed`,
+          method: 'Befriend can neutralize corrupted monsters',
+          restriction: 'Killing monsters costs -2 VP each'
+        },
+        'scattered_crates': {
+          name: 'Recover Supply Crates',
+          goal: 'Distribute supplies to refugees',
+          scoring: `${objective.vp_per_unit} VP per crate to YOUR board edge`,
+          method: 'Befriend monsters to help carry',
+          restriction: 'Harming civilians costs -2 VP'
+        }
+      };
+      return interpretations[objective.type] || null;
     }
-  };
-  
-  return uniques[factionId] || null;
-}
+
+    if (factionId === 'liberty_corps') {
+      const interpretations = {
+        'ritual_circle': {
+          name: 'Secure Ritual Circle',
+          goal: 'Assert federal control over anomalous site',
+          scoring: `${objective.vp_per_unit} VP per round held`,
+          method: 'Barriers and patrols',
+          restriction: 'Contested control yields 0 VP'
+        },
+        'scattered_crates': {
+          name: 'Confiscate Contraband',
+          goal: 'Seize illegal salvage as evidence',
+          scoring: `${objective.vp_per_unit} VP per crate documented and secured`,
+          method: 'Commandeer from other factions',
+          restriction: 'Must maintain chain of custody'
+        }
+      };
+      return interpretations[objective.type] || null;
+    }
+
+    if (factionId === 'monsterology') {
+      const interpretations = {
+        'ritual_circle': {
+          name: 'Exploit Ritual Site',
+          goal: 'Harvest ritual energies and bound entities',
+          scoring: `${objective.vp_per_unit} VP per round extraction rigs operate`,
+          method: 'Extraction rigs grant +1 die vs monsters and constructs',
+          restriction: 'Destroying the site before full extraction loses -5 VP'
+        },
+        'tainted_ground': {
+          name: 'Strip the Taint',
+          goal: 'Excavate corrupted land for mord and reagents',
+          scoring: `${objective.vp_per_unit} VP per section fully extracted`,
+          method: 'Extraction ignores cleansing requirements',
+          restriction: 'Extracted land cannot be restored'
+        },
+        'sacrificial_focus': {
+          name: 'Bleed the Altar',
+          goal: 'Drain altar-bound creatures and mechanisms',
+          scoring: `${objective.vp_per_unit} VP per completed extraction cycle`,
+          method: 'Altar may remain active to continue harvesting',
+          restriction: 'Each round spawns unstable escaped experiments'
+        },
+        'gather_intel': {
+          name: 'Catalog Specimens',
+          goal: 'Tag, dissect, and process monster remains',
+          scoring: `${objective.vp_per_unit + 1} VP per monster killed and processed`,
+          method: 'Marked monsters yield bonus VP',
+          restriction: 'Unprocessed kills give 0 VP'
+        },
+        'scattered_crates': {
+          name: 'Harvest Specimens',
+          goal: 'Extract biological samples from containers',
+          scoring: `${objective.vp_per_unit} VP per crate processed in extraction rig`,
+          method: 'Mark crates with tracking beacons',
+          restriction: 'Unprocessed crates give 0 VP'
+        }
+      };
+      return interpretations[objective.type] || null;
+    }
+
+    if (factionId === 'shine_riders') {
+      const interpretations = {
+        'ritual_circle': {
+          name: 'Loot Ritual Circle',
+          goal: 'Steal anything valuable not nailed down',
+          scoring: `${objective.vp_per_unit + 1} VP per artifact escaped`,
+          method: 'Disengage without penalty',
+          restriction: 'Getting caught costs -5 VP'
+        },
+        'scattered_crates': {
+          name: 'Steal Everything Not Bolted Down',
+          goal: 'Grab crates and run',
+          scoring: `${objective.vp_per_unit + 1} VP per crate escaped via YOUR edge`,
+          method: 'Hit and run, no penalty to disengage',
+          restriction: 'Caught by Liberty Corps costs -5 VP'
+        }
+      };
+      return interpretations[objective.type] || null;
+    }
+
+    if (factionId === 'monsters') {
+      const interpretations = {
+        'ritual_circle': {
+          name: 'Defend Sacred Circle',
+          goal: 'Keep humans out of holy ground',
+          scoring: `${objective.vp_per_unit} VP per round humans excluded`,
+          method: '+1 Defense within territory',
+          restriction: 'Human rituals cost -5 VP'
+        },
+        'scattered_crates': {
+          name: 'Destroy Supply Lines',
+          goal: 'Deny resources to invaders',
+          scoring: `${objective.vp_per_unit} VP per crate destroyed or scattered`,
+          method: 'Crates don\'t need carrying, just denial',
+          restriction: 'Carrying makes you vulnerable'
+        }
+      };
+      return interpretations[objective.type] || null;
+    }
+
+    return null;
+  }
+
+  generateUniqueFactionObjective(factionId, factionData, objectives, userSelections) {
+    const danger = userSelections.dangerRating;
     
-    const aftermath = this.generateFactionAftermath(
-      faction,
-      factionData,
-      userSelections
-    );
+    const uniques = {
+      'monster_rangers': {
+        name: 'Minimize Casualties',
+        goal: 'Protect monsters and civilians',
+        scoring: `${danger * 2} VP minus casualties`,
+        method: 'Non-lethal tactics',
+        restriction: 'Excess deaths negate bonus'
+      },
+      'liberty_corps': {
+        name: 'Establish Authority',
+        goal: 'Assert federal jurisdiction',
+        scoring: `${danger * 2} VP if center held`,
+        method: 'Force and fortification',
+        restriction: 'Collateral damage costs VP'
+      },
+      'monsterology': {
+        name: 'Total Extraction Protocol',
+        goal: 'Exploit every available site',
+        scoring: `${danger * 2} VP if all objectives extracted from`,
+        method: 'Monster kills near rigs grant bonus VP',
+        restriction: 'Monster Ranger interference costs -3 VP per event'
+      },
+      'shine_riders': {
+        name: 'Legendary Heist',
+        goal: 'Steal the most valuable prize',
+        scoring: `${danger * 3} VP if you escape with it`,
+        method: 'Speed and deception',
+        restriction: 'Death transfers VP'
+      },
+      'monsters': {
+        name: 'Drive Out Invaders',
+        goal: 'Purge human presence',
+        scoring: `${danger * 2} VP per faction broken`,
+        method: 'Territorial aggression',
+        restriction: 'Human fortifications negate VP'
+      }
+    };
     
-    conditions[faction.id] = {
-      target_vp: vpSpread.target_to_win,
-      thresholds: vpSpread.thresholds,
-      primary_scoring: vpSpread.scoring_rule,
-      bonus_scoring: vpSpread.bonus_rule,
-      formula: vpSpread.formula,
-      
-      faction_objectives: factionObjectives || [],
-      aftermath: aftermath,
-      
-      objectives: objectives.map(obj => ({
-        name: obj.name,
-        ticker: `${obj.progress_label}: [ ] / ${obj.target_value}`,
-        vp_formula: `${obj.vp_per_unit} VP × ___ = ___ VP`
-      }))
-    };
-  });
-  
-  return conditions;
-}
+    return uniques[factionId] || null;
+  }
 
-buildFactionSpecificObjectives(faction, factionData, objectives, userSelections) {
-  const factionObjectives = [];
-  
-  objectives.forEach(obj => {
-    const specific = this.getFactionObjectiveInterpretation(
-      faction.id,
-      obj,
-      factionData,
-      userSelections
-    );
+  generateFactionAftermath(faction, factionData, userSelections) {
+    const factionId = faction.id;
+    const locationName = userSelections.location?.name || 'the region';
     
-    if (specific) factionObjectives.push(specific);
-  });
-  
-  const unique = this.generateUniqueFactionObjective(
-    faction.id,
-    factionData,
-    objectives,
-    userSelections
-  );
-  
-  if (unique) factionObjectives.push(unique);
-  
-  return factionObjectives;
-}
-
-getFactionObjectiveInterpretation(factionId, objective, factionData, userSelections) {
-
-  // MONSTER RANGERS
-  if (factionId === 'monster_rangers') {
-    const interpretations = {
-      'ritual_circle': {
-        name: 'Empower Ritual Circle',
-        goal: 'Channel ritual energy to stabilize the land',
-        scoring: `${objective.vp_per_unit} VP per cleansing ritual`,
-        method: 'Dark Librarian gains +1 die to ritual actions',
-        restriction: 'Corrupted creatures within 6" disrupt rituals'
+    const aftermaths = {
+      'monster_rangers': {
+        victory_type: 'Minor Victory',
+        immediate_effect: `${locationName} stabilizes under watchful patrols.`,
+        canyon_state_change: 'Shifts to "Held"',
+        long_term: 'Coexistence becomes possible',
+        flavor: 'The land survives, uneasy but breathing.'
       },
-      'tainted_ground': {
-        name: 'Cleanse Tainted Ground',
-        goal: 'Restore balance without needless killing',
-        scoring: `${objective.vp_per_unit} VP per section cleansed`,
-        method: 'Befriend can neutralize corrupted monsters',
-        restriction: 'Killing monsters costs -2 VP each'
-      },  // ADDED COMMA
-      'scattered_crates': {
-        name: 'Recover Supply Crates',
-        goal: 'Distribute supplies to refugees',
-        scoring: `${objective.vp_per_unit} VP per crate to YOUR board edge`,
-        method: 'Befriend monsters to help carry',
-        restriction: 'Harming civilians costs -2 VP'
-      }
-    };
-    return interpretations[objective.type] || null;
-  }
-
-  // LIBERTY CORPS
-  if (factionId === 'liberty_corps') {
-    const interpretations = {
-      'ritual_circle': {
-        name: 'Secure Ritual Circle',
-        goal: 'Assert federal control over anomalous site',
-        scoring: `${objective.vp_per_unit} VP per round held`,
-        method: 'Barriers and patrols',
-        restriction: 'Contested control yields 0 VP'
-      },  // ADDED COMMA
-      'scattered_crates': {
-        name: 'Confiscate Contraband',
-        goal: 'Seize illegal salvage as evidence',
-        scoring: `${objective.vp_per_unit} VP per crate documented and secured`,
-        method: 'Commandeer from other factions',
-        restriction: 'Must maintain chain of custody'
-      }
-    };
-    return interpretations[objective.type] || null;
-  }
-
-  // MONSTEROLOGY — REWRITTEN
-  if (factionId === 'monsterology') {
-    const interpretations = {
-      'ritual_circle': {
-        name: 'Exploit Ritual Site',
-        goal: 'Harvest ritual energies and bound entities',
-        scoring: `${objective.vp_per_unit} VP per round extraction rigs operate`,
-        method: 'Extraction rigs grant +1 die vs monsters and constructs',
-        restriction: 'Destroying the site before full extraction loses -5 VP'
+      'liberty_corps': {
+        victory_type: 'Major Victory',
+        immediate_effect: `${locationName} placed under martial law.`,
+        canyon_state_change: 'Shifts to "Liberated"',
+        long_term: 'Order enforced at gunpoint',
+        flavor: 'Peace, measured in patrol routes.'
       },
-      'tainted_ground': {
-        name: 'Strip the Taint',
-        goal: 'Excavate corrupted land for mord and reagents',
-        scoring: `${objective.vp_per_unit} VP per section fully extracted`,
-        method: 'Extraction ignores cleansing requirements',
-        restriction: 'Extracted land cannot be restored'
+      'monsterology': {
+        victory_type: 'Major Victory',
+        immediate_effect: `${locationName} is stripped, cataloged, and abandoned.`,
+        canyon_state_change: 'Shifts to "Extracted"',
+        long_term: 'Escaped horrors wander nearby regions',
+        flavor: 'Profit remains. So do the mistakes.'
       },
-      'sacrificial_focus': {
-        name: 'Bleed the Altar',
-        goal: 'Drain altar-bound creatures and mechanisms',
-        scoring: `${objective.vp_per_unit} VP per completed extraction cycle`,
-        method: 'Altar may remain active to continue harvesting',
-        restriction: 'Each round spawns unstable escaped experiments'
+      'shine_riders': {
+        victory_type: 'Major Victory',
+        immediate_effect: `${locationName} becomes a black-market haven.`,
+        canyon_state_change: 'Shifts to "Lawless"',
+        long_term: 'Chaos breeds opportunity',
+        flavor: 'They leave smoke, songs, and empty vaults.'
       },
-      'gather_intel': {
-        name: 'Catalog Specimens',
-        goal: 'Tag, dissect, and process monster remains',
-        scoring: `${objective.vp_per_unit + 1} VP per monster killed and processed`,
-        method: 'Marked monsters yield bonus VP',
-        restriction: 'Unprocessed kills give 0 VP'
-      },  // ADDED COMMA
-      'scattered_crates': {
-        name: 'Harvest Specimens',
-        goal: 'Extract biological samples from containers',
-        scoring: `${objective.vp_per_unit} VP per crate processed in extraction rig`,
-        method: 'Mark crates with tracking beacons',
-        restriction: 'Unprocessed crates give 0 VP'
+      'monsters': {
+        victory_type: 'Major Victory',
+        immediate_effect: `${locationName} is reclaimed by the wild.`,
+        canyon_state_change: 'Shifts to "Strangewild"',
+        long_term: 'Humans do not return',
+        flavor: 'The Canyon remembers its own.'
       }
     };
-    return interpretations[objective.type] || null;
-  }
-
-  // SHINE RIDERS
-  if (factionId === 'shine_riders') {
-    const interpretations = {
-      'ritual_circle': {
-        name: 'Loot Ritual Circle',
-        goal: 'Steal anything valuable not nailed down',
-        scoring: `${objective.vp_per_unit + 1} VP per artifact escaped`,
-        method: 'Disengage without penalty',
-        restriction: 'Getting caught costs -5 VP'
-      },  // ADDED COMMA
-      'scattered_crates': {
-        name: 'Steal Everything Not Bolted Down',
-        goal: 'Grab crates and run',
-        scoring: `${objective.vp_per_unit + 1} VP per crate escaped via YOUR edge`,
-        method: 'Hit and run, no penalty to disengage',
-        restriction: 'Caught by Liberty Corps costs -5 VP'
-      }
+    
+    return aftermaths[factionId] || {
+      victory_type: 'Victory',
+      immediate_effect: `${locationName} changes hands`,
+      canyon_state_change: 'No major shift',
+      long_term: 'Consequences unclear',
+      flavor: 'Another scar on the Canyon.'
     };
-    return interpretations[objective.type] || null;
   }
-
-  // MONSTERS
-  if (factionId === 'monsters') {
-    const interpretations = {
-      'ritual_circle': {
-        name: 'Defend Sacred Circle',
-        goal: 'Keep humans out of holy ground',
-        scoring: `${objective.vp_per_unit} VP per round humans excluded`,
-        method: '+1 Defense within territory',
-        restriction: 'Human rituals cost -5 VP'
-      },  // ADDED COMMA
-      'scattered_crates': {
-        name: 'Destroy Supply Lines',
-        goal: 'Deny resources to invaders',
-        scoring: `${objective.vp_per_unit} VP per crate destroyed or scattered`,
-        method: 'Crates don\'t need carrying, just denial',
-        restriction: 'Carrying makes you vulnerable'
-      }
-    };
-    return interpretations[objective.type] || null;
-  }
-
-  return null;
-}
   
   // ================================
-  // HELPERS
+  // NARRATIVE
+  // ================================
+  
+  generateNarrative(plotFamily, location, userSelections) {
+    const faction = userSelections.factions[0].name;
+    const pressure = this.randomChoice(plotFamily.common_inciting_pressures || ['conflict']);
+    const objective = plotFamily.default_objectives ? plotFamily.default_objectives[0] : 'the objective';
+    const danger = userSelections.dangerRating;
+    
+    const templates = [
+      `${location.name} erupts into chaos as ${pressure.replace(/_/g, ' ')} tears through the settlement. The ${faction} have only hours to ${this.getObjectiveAction(objective)} before the situation becomes irreversible.`,
+      `Reports from ${location.name} speak of ${pressure.replace(/_/g, ' ')}—the kind that draws scavengers from every corner of the Canyon. Intelligence suggests ${this.getObjectiveDescription(objective)} hidden within. The ${faction} move in before others stake their claim.`,
+      `A runner arrives at dawn with news from ${location.name}: ${pressure.replace(/_/g, ' ')} has created an opportunity. The ${faction} must act now to ${this.getObjectiveAction(objective)}. Delay means rivals, monsters, or worse.`,
+      `Strange lights were seen over ${location.name} last night. By morning, ${pressure.replace(/_/g, ' ')} had transformed the area entirely. The ${faction} investigate, knowing ${this.getObjectiveDescription(objective)} could be the key to understanding what happened—or preventing it from spreading.`,
+      `${location.name} is dying. ${this.capitalize(pressure.replace(/_/g, ' '))} advances with each passing hour. The ${faction} have one chance to ${this.getObjectiveAction(objective)} before the window closes forever. Success means survival. Failure means evacuation—or worse.`,
+      `Word spreads through the Canyon: ${location.name} is up for grabs. ${this.capitalize(pressure.replace(/_/g, ' '))} has created a power vacuum, and every faction with ambition is moving. The ${faction} know ${this.getObjectiveDescription(objective)} determines who controls the region tomorrow.`,
+      `The ${faction} have history with ${location.name}—old debts, buried secrets, things worth protecting. Now ${pressure.replace(/_/g, ' ')} threatens to expose everything. They return not for glory or profit, but to ${this.getObjectiveAction(objective)} before the past consumes the present.`,
+      danger >= 5 ? `${location.name} is a death trap. Everyone knows it. ${this.capitalize(pressure.replace(/_/g, ' '))} has made the area nearly impassable. But the ${faction} don't have a choice—${this.getObjectiveDescription(objective)} is too valuable to abandon. They go in knowing not everyone comes back.` : null,
+      `Scouts returned from ${location.name} with impossible reports: ${pressure.replace(/_/g, ' ')} has revealed something that shouldn't exist. The ${faction} assemble a team to investigate. If they can ${this.getObjectiveAction(objective)}, it could change everything. If they can't, others will.`,
+      `The clock is running. ${this.capitalize(pressure.replace(/_/g, ' '))} at ${location.name} creates a window that won't last. The ${faction} have until the Canyon shifts to ${this.getObjectiveAction(objective)}. After that, the opportunity—and possibly ${location.name} itself—will be gone.`
+    ].filter(Boolean);
+    
+    return this.randomChoice(templates);
+  }
+
+  getObjectiveAction(objType) {
+    const actions = {
+      'wrecked_engine': 'salvage the wrecked engine',
+      'scattered_crates': 'recover the scattered supply crates',
+      'derailed_cars': 'search the derailed cars',
+      'cargo_vehicle': 'escort the cargo vehicle to safety',
+      'pack_animals': 'secure the pack animals',
+      'ritual_components': 'gather the ritual components',
+      'ritual_site': 'complete the ritual',
+      'land_marker': 'establish territorial control',
+      'command_structure': 'seize the command post',
+      'thyr_cache': 'extract the Thyr crystals',
+      'artifact': 'recover the ancient artifact',
+      'captive_entity': 'free the captive',
+      'fortified_position': 'hold the fortified position',
+      'barricades': 'control the chokepoint',
+      'stored_supplies': 'raid the supply depot',
+      'ritual_circle': 'secure the ritual circle',
+      'tainted_ground': 'cleanse the corrupted terrain',
+      'sacrificial_focus': 'destroy the dark altar',
+      'collapsing_route': 'cross the unstable passage',
+      'fouled_resource': 'purify the contaminated cache',
+      'unstable_structure': 'salvage before total collapse',
+      'evacuation_point': 'evacuate before disaster',
+      'rescue_hostages': 'rescue the hostages',
+      'downed_ally': 'recover their fallen comrade',
+      'prison_break': 'break prisoners free',
+      'protect_informant': 'protect the informant',
+      'escort_civilians': 'escort civilians to safety',
+      'sabotage_machinery': 'sabotage enemy machinery',
+      'blow_the_bridge': 'destroy the crossing',
+      'cut_power': 'cut power to the facility',
+      'gather_intel': 'gather critical intelligence',
+      'expose_conspiracy': 'expose the conspiracy',
+      'race_the_clock': 'complete objectives before time runs out',
+      'stop_the_train': 'stop the runaway train',
+      'decoy_operation': 'execute the decoy operation',
+      'false_artifact': 'plant the false artifact',
+      'last_stand': 'hold the line',
+      'secure_shelter': 'secure shelter from the storm'
+    };
+    return actions[objType] || 'complete the objective';
+  }
+
+  getObjectiveDescription(objType) {
+    const descriptions = {
+      'wrecked_engine': 'the engine wreckage',
+      'scattered_crates': 'supply crates scattered across the site',
+      'derailed_cars': 'cargo from the derailed cars',
+      'cargo_vehicle': 'the cargo vehicle',
+      'pack_animals': 'the pack animals',
+      'ritual_components': 'ritual components of unknown power',
+      'ritual_site': 'the ritual site',
+      'land_marker': 'territorial markers',
+      'command_structure': 'the command structure',
+      'thyr_cache': 'a cache of raw Thyr',
+      'artifact': 'an artifact from before the Storm',
+      'captive_entity': 'a captive entity',
+      'fortified_position': 'the fortified position',
+      'barricades': 'the barricade chokepoint',
+      'stored_supplies': 'stockpiled supplies',
+      'ritual_circle': 'an active ritual circle',
+      'tainted_ground': 'corrupted ground spreading like infection',
+      'sacrificial_focus': 'a sacrificial altar',
+      'collapsing_route': 'a passage about to collapse',
+      'fouled_resource': 'contaminated resources',
+      'unstable_structure': 'a structure on the verge of collapse',
+      'evacuation_point': 'the evacuation zone',
+      'rescue_hostages': 'hostages held captive',
+      'downed_ally': 'a fallen ally',
+      'prison_break': 'imprisoned allies',
+      'protect_informant': 'a critical informant',
+      'escort_civilians': 'civilians trapped in the war zone',
+      'sabotage_machinery': 'enemy infrastructure',
+      'blow_the_bridge': 'a strategic crossing',
+      'cut_power': 'power to enemy facilities',
+      'gather_intel': 'intelligence that could change the war',
+      'expose_conspiracy': 'proof of conspiracy',
+      'race_the_clock': 'time-critical objectives',
+      'stop_the_train': 'a runaway train',
+      'decoy_operation': 'a window for deception',
+      'false_artifact': 'an opportunity to mislead',
+      'last_stand': 'a position worth dying for',
+      'secure_shelter': 'shelter from the approaching storm'
+    };
+    return descriptions[objType] || 'something valuable';
+  }
+  
+  // ================================
+  // EXTRAS
   // ================================
   
   buildTags(userSelections) {
@@ -763,136 +867,6 @@ getFactionObjectiveInterpretation(factionId, objective, factionData, userSelecti
     
     return `The ${prefix} of ${suffix}`;
   }
-  
-  generateNarrative(plotFamily, location, userSelections) {
-  const faction = userSelections.factions[0].name;
-  const pressure = this.randomChoice(plotFamily.common_inciting_pressures || ['conflict']);
-  const objective = plotFamily.default_objectives ? plotFamily.default_objectives[0] : 'the objective';
-  const danger = userSelections.dangerRating;
-  
-  // VARIED NARRATIVE TEMPLATES
-  const templates = [
-    // TEMPLATE 1: Dramatic Opening
-    `${location.name} erupts into chaos as ${pressure.replace(/_/g, ' ')} tears through the settlement. The ${faction} have only hours to ${this.getObjectiveAction(objective)} before the situation becomes irreversible.`,
-    
-    // TEMPLATE 2: Atmospheric
-    `Reports from ${location.name} speak of ${pressure.replace(/_/g, ' ')}—the kind that draws scavengers from every corner of the Canyon. Intelligence suggests ${this.getObjectiveDescription(objective)} hidden within. The ${faction} move in before others stake their claim.`,
-    
-    // TEMPLATE 3: Urgent
-    `A runner arrives at dawn with news from ${location.name}: ${pressure.replace(/_/g, ' ')} has created an opportunity. The ${faction} must act now to ${this.getObjectiveAction(objective)}. Delay means rivals, monsters, or worse.`,
-    
-    // TEMPLATE 4: Mysterious
-    `Strange lights were seen over ${location.name} last night. By morning, ${pressure.replace(/_/g, ' ')} had transformed the area entirely. The ${faction} investigate, knowing ${this.getObjectiveDescription(objective)} could be the key to understanding what happened—or preventing it from spreading.`,
-    
-    // TEMPLATE 5: Desperate
-    `${location.name} is dying. ${this.capitalize(pressure.replace(/_/g, ' '))} advances with each passing hour. The ${faction} have one chance to ${this.getObjectiveAction(objective)} before the window closes forever. Success means survival. Failure means evacuation—or worse.`,
-    
-    // TEMPLATE 6: Political
-    `Word spreads through the Canyon: ${location.name} is up for grabs. ${this.capitalize(pressure.replace(/_/g, ' '))} has created a power vacuum, and every faction with ambition is moving. The ${faction} know ${this.getObjectiveDescription(objective)} determines who controls the region tomorrow.`,
-    
-    // TEMPLATE 7: Personal Stakes
-    `The ${faction} have history with ${location.name}—old debts, buried secrets, things worth protecting. Now ${pressure.replace(/_/g, ' ')} threatens to expose everything. They return not for glory or profit, but to ${this.getObjectiveAction(objective)} before the past consumes the present.`,
-    
-    // TEMPLATE 8: High Danger
-    danger >= 5 ? `${location.name} is a death trap. Everyone knows it. ${this.capitalize(pressure.replace(/_/g, ' '))} has made the area nearly impassable. But the ${faction} don't have a choice—${this.getObjectiveDescription(objective)} is too valuable to abandon. They go in knowing not everyone comes back.` : null,
-    
-    // TEMPLATE 9: Discovery
-    `Scouts returned from ${location.name} with impossible reports: ${pressure.replace(/_/g, ' ')} has revealed something that shouldn't exist. The ${faction} assemble a team to investigate. If they can ${this.getObjectiveAction(objective)}, it could change everything. If they can't, others will.`,
-    
-    // TEMPLATE 10: Time Pressure
-    `The clock is running. ${this.capitalize(pressure.replace(/_/g, ' '))} at ${location.name} creates a window that won't last. The ${faction} have until the Canyon shifts to ${this.getObjectiveAction(objective)}. After that, the opportunity—and possibly ${location.name} itself—will be gone.`
-  ].filter(Boolean); // Remove nulls
-  
-  return this.randomChoice(templates);
-}
-
-getObjectiveAction(objType) {
-  const actions = {
-    'wrecked_engine': 'salvage the wrecked engine',
-    'scattered_crates': 'recover the scattered supply crates',
-    'derailed_cars': 'search the derailed cars',
-    'cargo_vehicle': 'escort the cargo vehicle to safety',
-    'pack_animals': 'secure the pack animals',
-    'ritual_components': 'gather the ritual components',
-    'ritual_site': 'complete the ritual',
-    'land_marker': 'establish territorial control',
-    'command_structure': 'seize the command post',
-    'thyr_cache': 'extract the Thyr crystals',
-    'artifact': 'recover the ancient artifact',
-    'captive_entity': 'free the captive',
-    'fortified_position': 'hold the fortified position',
-    'barricades': 'control the chokepoint',
-    'stored_supplies': 'raid the supply depot',
-    'ritual_circle': 'secure the ritual circle',
-    'tainted_ground': 'cleanse the corrupted terrain',
-    'sacrificial_focus': 'destroy the dark altar',
-    'collapsing_route': 'cross the unstable passage',
-    'fouled_resource': 'purify the contaminated cache',
-    'unstable_structure': 'salvage before total collapse',
-    'evacuation_point': 'evacuate before disaster',
-    'rescue_hostages': 'rescue the hostages',
-    'downed_ally': 'recover their fallen comrade',
-    'prison_break': 'break prisoners free',
-    'protect_informant': 'protect the informant',
-    'escort_civilians': 'escort civilians to safety',
-    'sabotage_machinery': 'sabotage enemy machinery',
-    'blow_the_bridge': 'destroy the crossing',
-    'cut_power': 'cut power to the facility',
-    'gather_intel': 'gather critical intelligence',
-    'expose_conspiracy': 'expose the conspiracy',
-    'race_the_clock': 'complete objectives before time runs out',
-    'stop_the_train': 'stop the runaway train',
-    'decoy_operation': 'execute the decoy operation',
-    'false_artifact': 'plant the false artifact',
-    'last_stand': 'hold the line',
-    'secure_shelter': 'secure shelter from the storm'
-  };
-  return actions[objType] || 'complete the objective';
-}
-
-getObjectiveDescription(objType) {
-  const descriptions = {
-    'wrecked_engine': 'the engine wreckage',
-    'scattered_crates': 'supply crates scattered across the site',
-    'derailed_cars': 'cargo from the derailed cars',
-    'cargo_vehicle': 'the cargo vehicle',
-    'pack_animals': 'the pack animals',
-    'ritual_components': 'ritual components of unknown power',
-    'ritual_site': 'the ritual site',
-    'land_marker': 'territorial markers',
-    'command_structure': 'the command structure',
-    'thyr_cache': 'a cache of raw Thyr',
-    'artifact': 'an artifact from before the Storm',
-    'captive_entity': 'a captive entity',
-    'fortified_position': 'the fortified position',
-    'barricades': 'the barricade chokepoint',
-    'stored_supplies': 'stockpiled supplies',
-    'ritual_circle': 'an active ritual circle',
-    'tainted_ground': 'corrupted ground spreading like infection',
-    'sacrificial_focus': 'a sacrificial altar',
-    'collapsing_route': 'a passage about to collapse',
-    'fouled_resource': 'contaminated resources',
-    'unstable_structure': 'a structure on the verge of collapse',
-    'evacuation_point': 'the evacuation zone',
-    'rescue_hostages': 'hostages held captive',
-    'downed_ally': 'a fallen ally',
-    'prison_break': 'imprisoned allies',
-    'protect_informant': 'a critical informant',
-    'escort_civilians': 'civilians trapped in the war zone',
-    'sabotage_machinery': 'enemy infrastructure',
-    'blow_the_bridge': 'a strategic crossing',
-    'cut_power': 'power to enemy facilities',
-    'gather_intel': 'intelligence that could change the war',
-    'expose_conspiracy': 'proof of conspiracy',
-    'race_the_clock': 'time-critical objectives',
-    'stop_the_train': 'a runaway train',
-    'decoy_operation': 'a window for deception',
-    'false_artifact': 'an opportunity to mislead',
-    'last_stand': 'a position worth dying for',
-    'secure_shelter': 'shelter from the approaching storm'
-  };
-  return descriptions[objType] || 'something valuable';
-}
   
   getCanyonState(stateName) {
     const stateData = this.data.canyonStates?.sections?.canyon_states?.states?.[stateName.toLowerCase()];
