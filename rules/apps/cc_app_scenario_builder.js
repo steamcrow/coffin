@@ -472,31 +472,50 @@ window.CC_APP = {
           ` : ''}
 
           <div class="cc-scenario-section">
-            <h4>🏆 Victory Conditions</h4>
-            ${state.factions.map(faction => {
-              const vc = s.victory_conditions ? s.victory_conditions[faction.id] : null;
-              return `
-                <div class="cc-victory-card">
-                  <strong>${faction.name}${faction.isNPC ? ' (NPC)' : ''}${faction.player ? ' - ' + faction.player : ''}</strong>
-                  ${vc ? `
-                    <p><strong>Target VP:</strong> ${vc.target_vp}</p>
-                    <p><strong>Primary:</strong> ${vc.primary_scoring}</p>
-                    <p><strong>Bonus:</strong> ${vc.bonus_scoring}</p>
-                    ${vc.faction_bonus ? `<p><em>💎 ${vc.faction_bonus}</em></p>` : ''}
-                    
-                    ${vc.faction_specific_conditions && vc.faction_specific_conditions.length > 0 ? `
-                      <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,215,0,0.3);">
-                        <p><strong>Faction-Specific:</strong></p>
-                        <ul>
-                          ${vc.faction_specific_conditions.map(cond => `<li>${cond}</li>`).join('')}
-                        </ul>
-                      </div>
-                    ` : ''}
-                  ` : '<p>Standard conditions apply</p>'}
-                </div>
-              `;
-            }).join('')}
+  <h4>🏆 Victory Conditions</h4>
+  ${state.factions.map(faction => {
+    const vc = s.victory_conditions ? s.victory_conditions[faction.id] : null;
+    return `
+      <div class="cc-victory-card">
+        <h5>${faction.name}${faction.isNPC ? ' (NPC)' : ''}${faction.player ? ' - ' + faction.player : ''}</h5>
+        
+        ${vc && vc.faction_objectives ? `
+          <div style="margin-bottom: 1rem;">
+            <p><strong>🎯 Your Objectives:</strong></p>
+            ${vc.faction_objectives.map(obj => `
+              <div style="margin-left: 1rem; margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-left: 3px solid var(--cc-primary);">
+                <p style="margin: 0;"><strong>${obj.name}</strong></p>
+                <p style="margin: 0.25rem 0;"><em>${obj.goal}</em></p>
+                <p style="margin: 0.25rem 0; color: #4ade80;">💰 ${obj.scoring}</p>
+                <p style="margin: 0.25rem 0; font-size: 0.9em;">📋 ${obj.method}</p>
+                ${obj.restriction ? `<p style="margin: 0.25rem 0; font-size: 0.9em; color: #fbbf24;">⚠️ ${obj.restriction}</p>` : ''}
+              </div>
+            `).join('')}
           </div>
+        ` : ''}
+        
+        ${vc && vc.aftermath ? `
+          <div style="margin-top: 1rem; padding-top: 1rem; border-top: 2px solid rgba(255,215,0,0.3);">
+            <p><strong>🏛️ If ${faction.name} Wins:</strong></p>
+            <p style="margin: 0.5rem 0;"><strong>Immediate:</strong> ${vc.aftermath.immediate_effect}</p>
+            <p style="margin: 0.5rem 0;"><strong>Canyon State:</strong> ${vc.aftermath.canyon_state_change}</p>
+            <p style="margin: 0.5rem 0;"><strong>Long Term:</strong> ${vc.aftermath.long_term}</p>
+            <p style="margin: 0.5rem 0; font-style: italic; color: rgba(255,215,0,0.8);">"${vc.aftermath.flavor}"</p>
+          </div>
+        ` : ''}
+        
+        ${vc && vc.objectives ? `
+          <div style="margin-top: 1rem; padding: 0.5rem; background: rgba(0,0,0,0.3);">
+            <p style="margin: 0; font-size: 0.9em;"><strong>📊 Tracking:</strong></p>
+            ${vc.objectives.map(obj => `
+              <p style="margin: 0.25rem 0; font-size: 0.85em; font-family: monospace;">${obj.ticker}</p>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+    `;
+  }).join('')}
+</div>
 
           <div class="cc-form-actions">
             <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">
