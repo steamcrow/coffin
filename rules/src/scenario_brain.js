@@ -484,12 +484,12 @@ class ScenarioBrain {
   }
   
 // ================================
-// VICTORY CONDITIONS - COMPLETE REWRITE
-// Rich, specific, story-driven conditions
+// VICTORY CONDITIONS - FIXED VERSION
 // ================================
 
 generateVictoryConditions(userSelections, objectives, vpSpread) {
   console.log("🏆 Generating rich, story-driven victory conditions...");
+  console.log("  VP Spread:", vpSpread);
   
   const conditions = {};
   
@@ -513,14 +513,17 @@ generateVictoryConditions(userSelections, objectives, vpSpread) {
       userSelections
     );
     
+    // BUILD COMPLETE VICTORY CONDITION
     conditions[faction.id] = {
+      // STANDARD VP DATA
       target_vp: vpSpread.target_to_win,
       thresholds: vpSpread.thresholds,
+      primary_scoring: vpSpread.scoring_rule,
+      bonus_scoring: vpSpread.bonus_rule,
+      formula: vpSpread.formula,
       
-      // SPECIFIC FACTION OBJECTIVES
-      faction_objectives: factionObjectives,
-      
-      // WHAT HAPPENS IF THEY WIN
+      // RICH FACTION-SPECIFIC DATA
+      faction_objectives: factionObjectives || [],
       aftermath: aftermath,
       
       // TICKER TRACKING
@@ -531,7 +534,7 @@ generateVictoryConditions(userSelections, objectives, vpSpread) {
       }))
     };
     
-    console.log(`  ✓ Victory condition created with ${factionObjectives.length} specific objectives`);
+    console.log(`  ✓ Created with ${factionObjectives?.length || 0} specific objectives`);
   });
   
   return conditions;
@@ -539,11 +542,6 @@ generateVictoryConditions(userSelections, objectives, vpSpread) {
 
 buildFactionSpecificObjectives(faction, factionData, objectives, userSelections) {
   const factionObjectives = [];
-  
-  // Get faction identity
-  const identity = factionData?.faction_identity || {};
-  const fightFor = identity.what_they_fight_for || [];
-  const struggle = identity.what_they_struggle_with || [];
   
   // FACTION-SPECIFIC INTERPRETATIONS OF EACH OBJECTIVE
   objectives.forEach(obj => {
@@ -559,7 +557,7 @@ buildFactionSpecificObjectives(faction, factionData, objectives, userSelections)
     }
   });
   
-  // ADD FACTION-UNIQUE OBJECTIVES
+  // ADD FACTION-UNIQUE OBJECTIVE
   const unique = this.generateUniqueFactionObjective(
     faction.id,
     factionData,
@@ -575,260 +573,98 @@ buildFactionSpecificObjectives(faction, factionData, objectives, userSelections)
 }
 
 getFactionObjectiveInterpretation(factionId, objective, factionData, userSelections) {
-  // MONSTER RANGERS interpretations
+  // MONSTER RANGERS
   if (factionId === 'monster_rangers') {
     const interpretations = {
+      'ritual_circle': {
+        name: 'Empower Ritual Circle',
+        goal: `Channel ritual energy to heal corrupted terrain`,
+        scoring: `${objective.vp_per_unit} VP per ritual action that cleanses corruption`,
+        method: `Dark Librarian gains +1 die for ritual actions`,
+        restriction: `Corrupted creatures within 6" disrupt rituals (-1 die penalty)`
+      },
+      'tainted_ground': {
+        name: 'Cleanse Tainted Ground',
+        goal: `Purify corruption to restore Canyon balance`,
+        scoring: `${objective.vp_per_unit} VP per section fully cleansed and delivered to board edge marker`,
+        method: `Use Befriend on corrupted creatures to reduce their threat`,
+        restriction: `Killing corrupted creatures spreads taint (-2 VP per kill)`
+      },
+      'sacrificial_focus': {
+        name: 'Destroy Dark Altar',
+        goal: `Eliminate source of corruption before it spreads`,
+        scoring: `${objective.vp_per_unit} VP if altar destroyed without civilian casualties`,
+        method: `Can evacuate nearby civilians first for +2 VP bonus`,
+        restriction: `Altar destruction releases corruption wave - all units within 12" test or take 2 damage`
+      },
       'scattered_crates': {
-        goal: `Recover supply crates to distribute to refugees`,
-        scoring: `${objective.vp_per_unit} VP per crate delivered to your board edge`,
-        method: `Use Befriend ability to have monsters help carry crates`,
+        name: 'Recover Supply Crates',
+        goal: `Secure supplies to distribute to refugees`,
+        scoring: `${objective.vp_per_unit} VP per crate delivered to YOUR board edge`,
+        method: `Befriend ability allows monsters to help carry crates`,
         restriction: `Lose -2 VP if you harm civilians or monsters while securing supplies`
       },
-      'thyr_cache': {
-        goal: `Secure Thyr crystals before they're weaponized`,
-        scoring: `${objective.vp_per_unit} VP per crystal sealed in protective containers`,
-        method: `Dark Librarian can safely handle Thyr with +1 die`,
-        restriction: `Crystals must be buried or contained, not extracted for profit`
-      },
-      'wrecked_engine': {
-        goal: `Salvage engine parts to repair settlement infrastructure`,
-        scoring: `${objective.vp_per_unit} VP per component used for civilian benefit`,
-        method: `Work with local population for +1 VP bonus per component`,
-        restriction: `Cannot sell components to highest bidder`
-      },
-      'hostages': {
-        goal: `Rescue captives and ensure their safe return`,
-        scoring: `${objective.vp_per_unit} VP per hostage escorted to safety`,
-        method: `Befriend ability works on panicked hostages`,
-        restriction: `All hostages must survive - lose objective if any die`
+      'gather_intel': {
+        name: 'Gather Intelligence',
+        goal: `Uncover truth about who caused the corruption`,
+        scoring: `${objective.vp_per_unit} VP per clue found and shared with all factions`,
+        method: `Can interview civilians and monsters for information`,
+        restriction: `Clues must be made public - hiding information gains 0 VP`
       }
     };
     return interpretations[objective.type] || null;
   }
   
-  // LIBERTY CORPS interpretations
+  // LIBERTY CORPS
   if (factionId === 'liberty_corps') {
     const interpretations = {
-      'scattered_crates': {
-        goal: `Secure supply crates as evidence of illegal salvage operations`,
-        scoring: `${objective.vp_per_unit} VP per crate tagged and documented`,
-        method: `Can commandeer crates from other factions (contested roll)`,
-        restriction: `Must maintain chain of custody - crates cannot be opened`
+      'ritual_circle': {
+        name: 'Secure Ritual Circle',
+        goal: `Establish Liberty Corps control over mystical site`,
+        scoring: `${objective.vp_per_unit} VP per round circle is under federal jurisdiction`,
+        method: `Can deploy barriers to restrict civilian access`,
+        restriction: `Other factions contesting control reduces VP to 0 that round`
       },
-      'thyr_cache': {
-        goal: `Confiscate Thyr crystals under federal authority`,
-        scoring: `${objective.vp_per_unit} VP per crystal registered and secured`,
-        method: `Authority Override: +2 VP if you eliminate unauthorized salvagers`,
-        restriction: `Crystals must be turned over to Liberty Corps command`
+      'tainted_ground': {
+        name: 'Quarantine Tainted Ground',
+        goal: `Contain corruption and prevent civilian exposure`,
+        scoring: `${objective.vp_per_unit} VP per section cordoned off with barriers`,
+        method: `Authority Override: can commandeer other factions' resources`,
+        restriction: `Must maintain perimeter - breaches cost -3 VP`
       },
-      'wrecked_engine': {
-        goal: `Secure crash site and establish Liberty Corps jurisdiction`,
-        scoring: `${objective.vp_per_unit} VP per component catalogued as federal property`,
-        method: `Deploy barriers to restrict access to crash site`,
-        restriction: `Cannot allow civilian salvagers to operate freely`
-      },
-      'hostages': {
-        goal: `Extract hostages and prosecute captors`,
-        scoring: `${objective.vp_per_unit} VP per hostage extracted + 2 VP per captor arrested`,
+      'sacrificial_focus': {
+        name: 'Neutralize Dark Altar',
+        goal: `Destroy altar and arrest any cultists present`,
+        scoring: `${objective.vp_per_unit} VP + 2 VP per cultist captured alive`,
         method: `Overwhelming force authorized`,
-        restriction: `Hostage casualties reflect poorly on Liberty Corps competence`
+        restriction: `Civilian casualties reflect poorly on Corps competence (-2 VP each)`
       }
     };
     return interpretations[objective.type] || null;
   }
   
-  // MONSTEROLOGY interpretations
+  // MONSTEROLOGY
   if (factionId === 'monsterology') {
     const interpretations = {
-      'scattered_crates': {
-        goal: `Recover crates containing research specimens or data`,
-        scoring: `${objective.vp_per_unit} VP per crate analyzed for scientific value`,
-        method: `Can identify valuable crates with Quality test`,
-        restriction: `Must preserve specimens - crude salvage worthless to science`
-      },
-      'thyr_cache': {
-        goal: `Extract Thyr samples for controlled study`,
-        scoring: `${objective.vp_per_unit} VP per crystal with documented origin and purity`,
-        method: `Scientific instruments provide safe extraction`,
-        restriction: `Samples must be properly contained and labeled`
-      },
-      'wrecked_engine': {
-        goal: `Study engine failure to advance understanding of Canyon technology`,
-        scoring: `${objective.vp_per_unit} VP per component analyzed in field lab`,
-        method: `Can extract data from components without removing them`,
-        restriction: `Components must be left intact for future study`
-      },
-      'monster': {
-        goal: `Capture specimen alive for research`,
-        scoring: `${objective.vp_per_unit} VP per specimen subdued and tagged`,
-        method: `Tranquilizer rounds available`,
-        restriction: `Dead specimens worth 0 VP - live capture required`
-      }
-    };
-    return interpretations[objective.type] || null;
-  }
-  
-  // SHINE RIDERS interpretations
-  if (factionId === 'shine_riders') {
-    const interpretations = {
-      'scattered_crates': {
-        goal: `Steal crates and fence them for profit`,
-        scoring: `${objective.vp_per_unit + 1} VP per crate smuggled off YOUR board edge`,
-        method: `Hit and run tactics - can disengage without penalty`,
-        restriction: `Crates only score if you get them off the board cleanly`
-      },
-      'thyr_cache': {
-        goal: `Grab Thyr and sell it on the black market`,
-        scoring: `${objective.vp_per_unit + 1} VP per crystal if you avoid getting caught`,
-        method: `Stealth approach - +2 VP if no alarms raised`,
-        restriction: `Getting caught by Liberty Corps costs -5 VP`
-      },
-      'wrecked_engine': {
-        goal: `Salvage the good parts before anyone notices`,
-        scoring: `${objective.vp_per_unit} VP per component + 2 VP if you frame someone else`,
-        method: `Can plant false evidence on rivals`,
-        restriction: `Liberty Corps arriving ends your salvage window`
-      },
-      'artifact': {
-        goal: `Steal the artifact and disappear`,
-        scoring: `${objective.vp_per_unit * 2} VP if artifact leaves board via YOUR edge`,
-        method: `Can use decoys and misdirection`,
-        restriction: `If caught carrying artifact, becomes contested by all factions`
-      }
-    };
-    return interpretations[objective.type] || null;
-  }
-  
-  // MONSTERS interpretations
-  if (factionId === 'monsters') {
-    const interpretations = {
-      'scattered_crates': {
-        goal: `Destroy human supply lines`,
-        scoring: `${objective.vp_per_unit} VP per crate destroyed or scattered`,
-        method: `Crates don't need to be carried - just deny them to humans`,
-        restriction: `Carrying crates off board makes you vulnerable`
-      },
       'ritual_circle': {
-        goal: `Protect sacred ground from desecration`,
-        scoring: `${objective.vp_per_unit} VP per round humans kept away from circle`,
-        method: `Territory defense - gain +1 Defense within 12" of circle`,
-        restriction: `Leaving the sacred ground undefended loses VP`
+        name: 'Study Ritual Circle',
+        goal: `Document mystical phenomena for science`,
+        scoring: `${objective.vp_per_unit} VP per round maintaining observation equipment at circle`,
+        method: `Scientific instruments provide +1 die to ritual understanding`,
+        restriction: `Equipment must remain intact - destruction costs -5 VP`
       },
-      'wrecked_engine': {
-        goal: `Reclaim territory where humans crashed their machine`,
-        scoring: `${objective.vp_per_unit} VP per human faction driven from the wreckage`,
-        method: `Mark territory with scent/signs`,
-        restriction: `Humans returning to claim salvage negates VP`
+      'tainted_ground': {
+        name: 'Sample Tainted Ground',
+        goal: `Extract corruption samples for analysis`,
+        scoring: `${objective.vp_per_unit} VP per sample properly contained and labeled`,
+        method: `Can extract samples without full cleansing`,
+        restriction: `Improper containment spreads corruption - lose all sample VP`
       },
-      'captive': {
-        goal: `Rescue pack member captured by humans`,
-        scoring: `${objective.vp_per_unit} VP if captive rejoins pack`,
-        method: `Pack tactics apply when rescuing pack member`,
-        restriction: `Captive dying is major loss - scenario becomes vendetta`
-      }
-    };
-    return interpretations[objective.type] || null;
-  }
-  
-  return null;
-}
-
-generateUniqueFactionObjective(factionId, factionData, objectives, userSelections) {
-  const danger = userSelections.dangerRating;
-  
-  // FACTION-UNIQUE OBJECTIVES
-  const uniques = {
-    'monster_rangers': {
-      name: 'Minimize Casualties',
-      goal: 'Protect civilians and prevent unnecessary monster deaths',
-      scoring: `Start with ${danger * 2} VP. Lose -3 VP for each civilian death, -2 VP for each monster killed by your faction`,
-      method: 'Use Befriend and non-lethal tactics',
-      restriction: 'If total casualties exceed danger rating, lose all bonus VP'
-    },
-    'liberty_corps': {
-      name: 'Establish Authority',
-      goal: 'Assert Liberty Corps jurisdiction over the area',
-      scoring: `${danger} VP if you control the center objective at end of game + 2 VP per rival faction driven off`,
-      method: 'Use Authority Override and overwhelming force',
-      restriction: 'Excessive collateral damage undermines authority (-1 VP per civilian casualty)'
-    },
-    'monsterology': {
-      name: 'Document Findings',
-      goal: 'Gather data and specimens for research',
-      scoring: `${danger} VP for maintaining field notes each round (requires 1 model with no combat actions)`,
-      method: 'Scientific observation takes priority over combat',
-      restriction: 'Losing your researcher loses all research VP'
-    },
-    'shine_riders': {
-      name: 'Legendary Heist',
-      goal: 'Pull off an audacious theft that becomes Canyon legend',
-      scoring: `${danger * 2} VP if you score the highest-value objective AND escape your board edge`,
-      method: 'High risk, high reward - style matters',
-      restriction: 'Getting eliminated while carrying loot gives VP to whoever kills you'
-    },
-    'monsters': {
-      name: 'Drive Out Invaders',
-      goal: 'Force humans from your territory',
-      scoring: `${danger} VP for each human faction reduced to 50% or fewer models`,
-      method: 'Overwhelming aggression and territorial advantage',
-      restriction: 'Humans establishing fortifications in your territory negates VP'
-    }
-  };
-  
-  return uniques[factionId] || null;
-}
-
-generateFactionAftermath(faction, factionData, userSelections) {
-  const factionId = faction.id;
-  const location = userSelections.location || 'the region';
-  
-  // WHAT HAPPENS IF THIS FACTION WINS
-  const aftermaths = {
-    'monster_rangers': {
-      victory_type: 'Minor Victory',
-      immediate_effect: `${location.name || location} stabilizes. Refugee aid distributed. Monster attacks decrease.`,
-      canyon_state_change: 'Shifts toward "Protected Zone" - Monster Rangers establish sanctuary',
-      long_term: 'Cooperation between humans and monsters becomes possible in this region',
-      flavor: 'The Monster Rangers prove that coexistence is possible, even in the darkest corners of the Canyon.'
-    },
-    'liberty_corps': {
-      victory_type: 'Major Victory',
-      immediate_effect: `${location.name || location} falls under Liberty Corps jurisdiction. Martial law declared.`,
-      canyon_state_change: 'Shifts to "Federal Control" - Liberty Corps establishes permanent garrison',
-      long_term: 'Region becomes heavily patrolled but safer for authorized travelers. Black market suppressed.',
-      flavor: 'Order is restored through force. The question is whether the cure is worse than the disease.'
-    },
-    'monsterology': {
-      victory_type: 'Minor Victory',
-      immediate_effect: `${location.name || location} becomes Monsterology research site. Area quarantined for study.`,
-      canyon_state_change: 'Shifts to "Research Zone" - Scientific priority over settlement',
-      long_term: 'Discoveries made here could change understanding of the Canyon, but locals are displaced.',
-      flavor: 'Science advances, but at what cost? The Canyon keeps its secrets, even from those who seek to understand it.'
-    },
-    'shine_riders': {
-      victory_type: 'Major Victory',
-      immediate_effect: `${location.name || location} becomes notorious black market hub. Authority collapses.`,
-      canyon_state_change: 'Shifts to "Lawless Zone" - No faction controls the region',
-      long_term: 'Freedom and chaos in equal measure. Opportunities for those brave or desperate enough.',
-      flavor: 'The Shine Riders ride off into legend, leaving a power vacuum and plenty of stories in their wake.'
-    },
-    'monsters': {
-      victory_type: 'Major Victory',
-      immediate_effect: `${location.name || location} abandoned by humans. Territory reclaimed by Canyon wildlife.`,
-      canyon_state_change: 'Shifts to "Wild Territory" - Human presence eliminated',
-      long_term: 'The Canyon takes back what was taken from it. Humans who enter do not return.',
-      flavor: 'The monsters have won. The Canyon remembers who truly belongs here.'
-    }
-  };
-  
-  return aftermaths[factionId] || {
-    victory_type: 'Victory',
-    immediate_effect: `The faction achieves their goals at ${location.name || location}`,
-    canyon_state_change: 'No significant change to Canyon state',
-    long_term: 'The implications of this victory remain unclear',
-    flavor: 'Another day, another battle, in the endless conflict over Coffin Canyon.'
-  };
-}
+      'sacrificial_focus': {
+        name: 'Research Dark Altar',
+        goal: `Study altar before destruction to understand its purpose`,
+        scoring: `${objective.vp_per_unit - 2} VP if altar analyzed before destroyed, 0 VP if destroyed first`,
+        method: `Can d
   
   // ================================
   // HELPERS
