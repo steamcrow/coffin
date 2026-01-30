@@ -593,11 +593,134 @@ class ScenarioBrain {
   }
   
   generateNarrative(plotFamily, location, userSelections) {
-    const pressure = this.randomChoice(plotFamily.common_inciting_pressures || ['conflict']);
-    const faction = userSelections.factions[0].name;
-    const objective = plotFamily.default_objectives ? plotFamily.default_objectives[0] : 'the objective';
-    return `${this.capitalize(pressure.replace(/_/g, ' '))} triggers ${plotFamily.name.toLowerCase()} at ${location.name}. The ${faction} must secure ${objective.replace(/_/g, ' ')} before escalation makes extraction impossible.`;
-  }
+  const faction = userSelections.factions[0].name;
+  const pressure = this.randomChoice(plotFamily.common_inciting_pressures || ['conflict']);
+  const objective = plotFamily.default_objectives ? plotFamily.default_objectives[0] : 'the objective';
+  const danger = userSelections.dangerRating;
+  
+  // VARIED NARRATIVE TEMPLATES
+  const templates = [
+    // TEMPLATE 1: Dramatic Opening
+    `${location.name} erupts into chaos as ${pressure.replace(/_/g, ' ')} tears through the settlement. The ${faction} have only hours to ${this.getObjectiveAction(objective)} before the situation becomes irreversible.`,
+    
+    // TEMPLATE 2: Atmospheric
+    `Reports from ${location.name} speak of ${pressure.replace(/_/g, ' ')}—the kind that draws scavengers from every corner of the Canyon. Intelligence suggests ${this.getObjectiveDescription(objective)} hidden within. The ${faction} move in before others stake their claim.`,
+    
+    // TEMPLATE 3: Urgent
+    `A runner arrives at dawn with news from ${location.name}: ${pressure.replace(/_/g, ' ')} has created an opportunity. The ${faction} must act now to ${this.getObjectiveAction(objective)}. Delay means rivals, monsters, or worse.`,
+    
+    // TEMPLATE 4: Mysterious
+    `Strange lights were seen over ${location.name} last night. By morning, ${pressure.replace(/_/g, ' ')} had transformed the area entirely. The ${faction} investigate, knowing ${this.getObjectiveDescription(objective)} could be the key to understanding what happened—or preventing it from spreading.`,
+    
+    // TEMPLATE 5: Desperate
+    `${location.name} is dying. ${this.capitalize(pressure.replace(/_/g, ' '))} advances with each passing hour. The ${faction} have one chance to ${this.getObjectiveAction(objective)} before the window closes forever. Success means survival. Failure means evacuation—or worse.`,
+    
+    // TEMPLATE 6: Political
+    `Word spreads through the Canyon: ${location.name} is up for grabs. ${this.capitalize(pressure.replace(/_/g, ' '))} has created a power vacuum, and every faction with ambition is moving. The ${faction} know ${this.getObjectiveDescription(objective)} determines who controls the region tomorrow.`,
+    
+    // TEMPLATE 7: Personal Stakes
+    `The ${faction} have history with ${location.name}—old debts, buried secrets, things worth protecting. Now ${pressure.replace(/_/g, ' ')} threatens to expose everything. They return not for glory or profit, but to ${this.getObjectiveAction(objective)} before the past consumes the present.`,
+    
+    // TEMPLATE 8: High Danger
+    danger >= 5 ? `${location.name} is a death trap. Everyone knows it. ${this.capitalize(pressure.replace(/_/g, ' '))} has made the area nearly impassable. But the ${faction} don't have a choice—${this.getObjectiveDescription(objective)} is too valuable to abandon. They go in knowing not everyone comes back.` : null,
+    
+    // TEMPLATE 9: Discovery
+    `Scouts returned from ${location.name} with impossible reports: ${pressure.replace(/_/g, ' ')} has revealed something that shouldn't exist. The ${faction} assemble a team to investigate. If they can ${this.getObjectiveAction(objective)}, it could change everything. If they can't, others will.`,
+    
+    // TEMPLATE 10: Time Pressure
+    `The clock is running. ${this.capitalize(pressure.replace(/_/g, ' '))} at ${location.name} creates a window that won't last. The ${faction} have until the Canyon shifts to ${this.getObjectiveAction(objective)}. After that, the opportunity—and possibly ${location.name} itself—will be gone.`
+  ].filter(Boolean); // Remove nulls
+  
+  return this.randomChoice(templates);
+}
+
+getObjectiveAction(objType) {
+  const actions = {
+    'wrecked_engine': 'salvage the wrecked engine',
+    'scattered_crates': 'recover the scattered supply crates',
+    'derailed_cars': 'search the derailed cars',
+    'cargo_vehicle': 'escort the cargo vehicle to safety',
+    'pack_animals': 'secure the pack animals',
+    'ritual_components': 'gather the ritual components',
+    'ritual_site': 'complete the ritual',
+    'land_marker': 'establish territorial control',
+    'command_structure': 'seize the command post',
+    'thyr_cache': 'extract the Thyr crystals',
+    'artifact': 'recover the ancient artifact',
+    'captive_entity': 'free the captive',
+    'fortified_position': 'hold the fortified position',
+    'barricades': 'control the chokepoint',
+    'stored_supplies': 'raid the supply depot',
+    'ritual_circle': 'secure the ritual circle',
+    'tainted_ground': 'cleanse the corrupted terrain',
+    'sacrificial_focus': 'destroy the dark altar',
+    'collapsing_route': 'cross the unstable passage',
+    'fouled_resource': 'purify the contaminated cache',
+    'unstable_structure': 'salvage before total collapse',
+    'evacuation_point': 'evacuate before disaster',
+    'rescue_hostages': 'rescue the hostages',
+    'downed_ally': 'recover their fallen comrade',
+    'prison_break': 'break prisoners free',
+    'protect_informant': 'protect the informant',
+    'escort_civilians': 'escort civilians to safety',
+    'sabotage_machinery': 'sabotage enemy machinery',
+    'blow_the_bridge': 'destroy the crossing',
+    'cut_power': 'cut power to the facility',
+    'gather_intel': 'gather critical intelligence',
+    'expose_conspiracy': 'expose the conspiracy',
+    'race_the_clock': 'complete objectives before time runs out',
+    'stop_the_train': 'stop the runaway train',
+    'decoy_operation': 'execute the decoy operation',
+    'false_artifact': 'plant the false artifact',
+    'last_stand': 'hold the line',
+    'secure_shelter': 'secure shelter from the storm'
+  };
+  return actions[objType] || 'complete the objective';
+}
+
+getObjectiveDescription(objType) {
+  const descriptions = {
+    'wrecked_engine': 'the engine wreckage',
+    'scattered_crates': 'supply crates scattered across the site',
+    'derailed_cars': 'cargo from the derailed cars',
+    'cargo_vehicle': 'the cargo vehicle',
+    'pack_animals': 'the pack animals',
+    'ritual_components': 'ritual components of unknown power',
+    'ritual_site': 'the ritual site',
+    'land_marker': 'territorial markers',
+    'command_structure': 'the command structure',
+    'thyr_cache': 'a cache of raw Thyr',
+    'artifact': 'an artifact from before the Storm',
+    'captive_entity': 'a captive entity',
+    'fortified_position': 'the fortified position',
+    'barricades': 'the barricade chokepoint',
+    'stored_supplies': 'stockpiled supplies',
+    'ritual_circle': 'an active ritual circle',
+    'tainted_ground': 'corrupted ground spreading like infection',
+    'sacrificial_focus': 'a sacrificial altar',
+    'collapsing_route': 'a passage about to collapse',
+    'fouled_resource': 'contaminated resources',
+    'unstable_structure': 'a structure on the verge of collapse',
+    'evacuation_point': 'the evacuation zone',
+    'rescue_hostages': 'hostages held captive',
+    'downed_ally': 'a fallen ally',
+    'prison_break': 'imprisoned allies',
+    'protect_informant': 'a critical informant',
+    'escort_civilians': 'civilians trapped in the war zone',
+    'sabotage_machinery': 'enemy infrastructure',
+    'blow_the_bridge': 'a strategic crossing',
+    'cut_power': 'power to enemy facilities',
+    'gather_intel': 'intelligence that could change the war',
+    'expose_conspiracy': 'proof of conspiracy',
+    'race_the_clock': 'time-critical objectives',
+    'stop_the_train': 'a runaway train',
+    'decoy_operation': 'a window for deception',
+    'false_artifact': 'an opportunity to mislead',
+    'last_stand': 'a position worth dying for',
+    'secure_shelter': 'shelter from the approaching storm'
+  };
+  return descriptions[objType] || 'something valuable';
+}
   
   getCanyonState(stateName) {
     const stateData = this.data.canyonStates?.sections?.canyon_states?.states?.[stateName.toLowerCase()];
