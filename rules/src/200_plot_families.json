@@ -1,6 +1,6 @@
 {
   "file": "200_plot_families.json",
-  "version": "1.1",
+  "version": "1.2",
   "references": [
     "190_plot_engine_schema.json",
     "150_location_types.json",
@@ -36,7 +36,9 @@
       "default_objectives": [
         "wrecked_engine",
         "scattered_crates",
-        "derailed_cars"
+        "derailed_cars",
+        "gather_intel",
+        "race_the_clock"
       ],
 
       "escalation_bias": [
@@ -89,7 +91,10 @@
       "default_objectives": [
         "cargo_vehicle",
         "pack_animals",
-        "ritual_components"
+        "ritual_components",
+        "protect_informant",
+        "escort_civilians",
+        "stop_the_train"
       ],
 
       "escalation_bias": [
@@ -140,7 +145,9 @@
       "default_objectives": [
         "ritual_site",
         "land_marker",
-        "command_structure"
+        "command_structure",
+        "last_stand",
+        "secure_shelter"
       ],
 
       "escalation_bias": [
@@ -190,7 +197,12 @@
       "default_objectives": [
         "thyr_cache",
         "artifact",
-        "captive_entity"
+        "captive_entity",
+        "rescue_hostages",
+        "downed_ally",
+        "prison_break",
+        "false_artifact",
+        "decoy_operation"
       ],
 
       "escalation_bias": [
@@ -239,7 +251,10 @@
       "default_objectives": [
         "fortified_position",
         "barricades",
-        "stored_supplies"
+        "stored_supplies",
+        "last_stand",
+        "secure_shelter",
+        "protect_informant"
       ],
 
       "escalation_bias": [
@@ -290,7 +305,9 @@
       "default_objectives": [
         "ritual_circle",
         "tainted_ground",
-        "sacrificial_focus"
+        "sacrificial_focus",
+        "expose_conspiracy",
+        "gather_intel"
       ],
 
       "escalation_bias": [
@@ -343,7 +360,9 @@
         "collapsing_route",
         "fouled_resource",
         "unstable_structure",
-        "evacuation_point"
+        "evacuation_point",
+        "race_the_clock",
+        "escort_civilians"
       ],
 
       "escalation_bias": [
@@ -369,6 +388,59 @@
         "disaster_progresses_each_round",
         "environment_replaces_active_opposition",
         "monsters_may_arrive_as_secondary_pressure"
+      ]
+    },
+
+    {
+      "id": "sabotage_strike",
+      "name": "Sabotage / Strike",
+      "description": "Disable, destroy, or disrupt enemy infrastructure before reinforcements arrive or alarms escalate.",
+
+      "emphasized_vectors": [
+        "escalation",
+        "twist",
+        "resource_pressure"
+      ],
+
+      "common_inciting_pressures": [
+        "retaliation",
+        "power_vacuum",
+        "infrastructure_failure"
+      ],
+
+      "primary_resources": [
+        "supplies_tools",
+        "belief"
+      ],
+
+      "default_objectives": [
+        "sabotage_machinery",
+        "blow_the_bridge",
+        "cut_power",
+        "decoy_operation",
+        "false_artifact"
+      ],
+
+      "escalation_bias": [
+        "authority_intervention",
+        "panic_and_morale_failure",
+        "visibility_loss"
+      ],
+
+      "twist_bias": [
+        "objective_reveals_hidden_nature",
+        "claimant_is_proxy_for_another_force"
+      ],
+
+      "aftermath_bias": [
+        "faction_ownership",
+        "location_state_change",
+        "resource_depletion_or_corruption"
+      ],
+
+      "solo_play_notes": [
+        "alarm_increases_each_round",
+        "reinforcements_arrive_as_escalation"
       ]
     }
 
