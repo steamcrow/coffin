@@ -504,6 +504,50 @@ generateVictoryConditions(userSelections, objectives, vpSpread) {
       objectives, 
       userSelections
     );
+
+generateUniqueFactionObjective(factionId, factionData, objectives, userSelections) {
+  const danger = userSelections.dangerRating;
+  
+  const uniques = {
+    'monster_rangers': {
+      name: 'Minimize Casualties',
+      goal: 'Protect monsters and civilians',
+      scoring: `${danger * 2} VP minus casualties`,
+      method: 'Non-lethal tactics',
+      restriction: 'Excess deaths negate bonus'
+    },
+    'liberty_corps': {
+      name: 'Establish Authority',
+      goal: 'Assert federal jurisdiction',
+      scoring: `${danger * 2} VP if center held`,
+      method: 'Force and fortification',
+      restriction: 'Collateral damage costs VP'
+    },
+    'monsterology': {
+      name: 'Total Extraction Protocol',
+      goal: 'Exploit every available site',
+      scoring: `${danger * 2} VP if all objectives extracted from`,
+      method: 'Monster kills near rigs grant bonus VP',
+      restriction: 'Monster Ranger interference costs -3 VP per event'
+    },
+    'shine_riders': {
+      name: 'Legendary Heist',
+      goal: 'Steal the most valuable prize',
+      scoring: `${danger * 3} VP if you escape with it`,
+      method: 'Speed and deception',
+      restriction: 'Death transfers VP'
+    },
+    'monsters': {
+      name: 'Drive Out Invaders',
+      goal: 'Purge human presence',
+      scoring: `${danger * 2} VP per faction broken`,
+      method: 'Territorial aggression',
+      restriction: 'Human fortifications negate VP'
+    }
+  };
+  
+  return uniques[factionId] || null;
+}
     
     const aftermath = this.generateFactionAftermath(
       faction,
