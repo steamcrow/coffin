@@ -1,133 +1,1461 @@
 // ================================
-// Scenario Builder App - BRAIN INTEGRATED
+// Scenario Builder App - COMPLETE VERSION
 // File: coffin/rules/apps/cc_app_scenario_builder.js
 // ================================
 
 console.log("🎲 Scenario Builder app loaded");
 
-// ================================
-// BRAIN INITIALIZATION (HARDENED)
-// ================================
-let scenarioBrain = null;
-let brainInitializing = false;
-
-async function initializeBrain() {
-  if (scenarioBrain) return scenarioBrain;
-  if (brainInitializing) {
-    // wait for in-progress init
-    while (!scenarioBrain) {
-      await new Promise(r => setTimeout(r, 25));
-    }
-    return scenarioBrain;
-  }
-
-  brainInitializing = true;
-
-  if (!window.ScenarioBrain) {
-    console.log("🧠 Loading Scenario Brain...");
-    const scriptRes = await fetch(
-      'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/scenario_brain.js?t=' + Date.now()
-    );
-    const scriptCode = await scriptRes.text();
-    const script = document.createElement('script');
-    script.textContent = scriptCode;
-    document.head.appendChild(script);
-    await new Promise(resolve => setTimeout(resolve, 100));
-  }
-
-  try {
-    scenarioBrain = new window.ScenarioBrain();
-    console.log("📂 Brain is attempting to load data files...");
-    await scenarioBrain.loadAllData();
-
-    // -----------------------------
-    // SAFETY NORMALIZATION LAYER
-    // -----------------------------
-    // canyonStates is DATA, not logic — ensure it exists
-    if (!scenarioBrain.data) scenarioBrain.data = {};
-
-    if (!scenarioBrain.data.canyonStates) {
-      console.warn(
-        "⚠️ canyonStates missing — campaign state system disabled safely"
-      );
-      scenarioBrain.data.canyonStates = {
-        states: [],
-        disabled: true
-      };
-    }
-
-  } catch (err) {
-    console.error("❌ Scenario Brain initialization failed:", err);
-    alert(
-      "Scenario Brain Error:\n\n" +
-      "A required data file failed to load.\n" +
-      "Check the console for the missing JSON filename."
-    );
-    brainInitializing = false;
-    throw err;
-  }
-
-  brainInitializing = false;
-  return scenarioBrain;
-}
-
-// ================================
-// MAIN APP
-// ================================
 window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Scenario Builder init", ctx);
 
-    /* ---------------------------------------------------------------------
-       EVERYTHING BELOW THIS LINE IS YOUR ORIGINAL FILE
-       NO FUNCTIONALITY REMOVED
-       NO LOGIC CHANGED
-       ONLY STABILITY FIXES ABOVE
-    --------------------------------------------------------------------- */
-
     // ---- LOAD CSS ----
     if (!document.getElementById('cc-core-ui-styles')) {
+      console.log('🎨 Loading Core UI CSS...');
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
-        .then(r => r.text())
+        .then(res => res.text())
         .then(css => {
-          const s = document.createElement('style');
-          s.id = 'cc-core-ui-styles';
-          s.textContent = css;
-          document.head.appendChild(s);
-        });
+          const style = document.createElement('style');
+          style.id = 'cc-core-ui-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Core UI CSS applied!');
+        })
+        .catch(err => console.error('❌ Core CSS load failed:', err));
     }
-
+    
     if (!document.getElementById('cc-scenario-builder-styles')) {
+      console.log('🎨 Loading Scenario Builder CSS...');
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_scenario_builder.css?t=' + Date.now())
-        .then(r => r.text())
+        .then(res => res.text())
         .then(css => {
-          const s = document.createElement('style');
-          s.id = 'cc-scenario-builder-styles';
-          s.textContent = css;
-          document.head.appendChild(s);
-        });
+          const style = document.createElement('style');
+          style.id = 'cc-scenario-builder-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Scenario Builder CSS applied!');
+        })
+        .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
     // ---- LOAD STORAGE HELPERS ----
     if (!window.CC_STORAGE) {
+      console.log('💾 Loading Storage Helpers...');
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
-        .then(r => r.text())
+        .then(res => res.text())
         .then(code => {
-          const s = document.createElement('script');
-          s.textContent = code;
-          document.head.appendChild(s);
-        });
+          const script = document.createElement('script');
+          script.textContent = code;
+          document.head.appendChild(script);
+          console.log('✅ Storage Helpers loaded!');
+        })
+        .catch(err => console.error('❌ Storage Helpers load failed:', err));
     }
 
     const helpers = ctx?.helpers;
+
     if (!helpers) {
-      root.innerHTML = `<div class="cc-app-shell"><h4>Helpers not available</h4></div>`;
+      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Helpers not available</h4></div></div>`;
       return;
     }
 
-    /* ---------------------------------------------------------------------
-       ⚠️ NOTHING BELOW THIS COMMENT WAS MODIFIED
-       Your scenario logic, UI, math, AI, save/load, etc are untouched.
-    --------------------------------------------------------------------- */
+    // ================================
+    // STATE - What the user has chosen
+    // ================================
+    const state = {
+      // Step 1: Game Setup
+      gameMode: null,
+      pointValue: 500,
+      dangerRating: 3,
+      gameWarden: null,
+      
+      // Step 2: Factions
+      factions: [],
+      
+      // Step 3: Location
+      locationType: null,
+      selectedLocation: null,
+      
+      // Step 4: Generated Scenario
+      generated: false,
+      scenario: null,
+      
+      // UI State
+      currentStep: 1,
+      completedSteps: []
+    };
 
-    // (Your full original file continues here unchanged)
+    // ================================
+    // FACTION DATA
+    // ================================
+    const FACTIONS = [
+      { id: 'monster_rangers', name: 'Monster Rangers', file: 'faction-monster-rangers-v5.json' },
+      { id: 'liberty_corps', name: 'Liberty Corps', file: 'faction-liberty-corps-v2.json' },
+      { id: 'monsterology', name: 'Monsterology', file: 'faction-monsterology-v2.json' },
+      { id: 'monsters', name: 'Monsters', file: 'faction-monsters-v2.json' },
+      { id: 'shine_riders', name: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
+    ];
+
+    // ================================
+    // DATA LOADING
+    // ================================
+    let plotFamiliesData = null;
+    let twistTablesData = null;
+    let locationData = null;
+    let locationTypesData = null;
+    let monsterFactionData = null;
+    let scenarioVaultData = null;
+    let scenarioNamesData = null;
+
+    async function loadGameData() {
+      try {
+        const plotRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json?t=' + Date.now());
+        plotFamiliesData = await plotRes.json();
+        
+        const twistRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json?t=' + Date.now());
+        twistTablesData = await twistRes.json();
+        
+        const locationsRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json?t=' + Date.now());
+        locationData = await locationsRes.json();
+        
+        const locationTypesRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/150_location_types.json?t=' + Date.now());
+        locationTypesData = await locationTypesRes.json();
+        
+        const monstersRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsters-v2.json?t=' + Date.now());
+        monsterFactionData = await monstersRes.json();
+        
+        const scenarioVaultRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json?t=' + Date.now());
+        scenarioVaultData = await scenarioVaultRes.json();
+        
+        const scenarioNamesRes = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/230_scenario_names.json?t=' + Date.now());
+        scenarioNamesData = await scenarioNamesRes.json();
+        
+        console.log('✅ Game data loaded');
+      } catch (err) {
+        console.error('❌ Failed to load game data:', err);
+        alert('Failed to load scenario data. Please refresh the page.');
+      }
+    }
+
+    loadGameData();
+
+    // ================================
+    // UTILITY FUNCTIONS
+    // ================================
+    
+    function esc(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function randomChoice(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // ================================
+    // RENDER FUNCTIONS
+    // ================================
+    
+    function renderAccordionStep(stepNum, title, icon, content, isActive = false, isComplete = false) {
+      return `
+        <div class="cc-accordion-item ${isActive ? 'active' : ''} ${isComplete ? 'complete' : ''}">
+          <div class="cc-accordion-header" onclick="openStep(${stepNum})">
+            <div class="cc-step-icon">${icon}</div>
+            <div class="cc-step-title">${title}</div>
+            <div class="cc-step-status">
+              ${isComplete ? '✓' : ''}
+            </div>
+          </div>
+          <div class="cc-accordion-body" style="display: ${isActive ? 'block' : 'none'}">
+            ${content}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderStep1_GameSetup() {
+      return `
+        <div class="cc-form-section">
+          <label class="cc-label">Game Mode</label>
+          <div class="cc-button-group">
+            <button 
+              class="cc-btn ${state.gameMode === 'solo' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
+              onclick="setGameMode('solo')"
+            >
+              Solo Play
+            </button>
+            <button 
+              class="cc-btn ${state.gameMode === 'multiplayer' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
+              onclick="setGameMode('multiplayer')"
+            >
+              Multiplayer
+            </button>
+          </div>
+        </div>
+
+        <div class="cc-form-section">
+          <label class="cc-label">Point Value</label>
+          <select class="cc-input" onchange="setPointValue(this.value)">
+            <option value="500" ${state.pointValue === 500 ? 'selected' : ''}>500 ₤</option>
+            <option value="1000" ${state.pointValue === 1000 ? 'selected' : ''}>1000 ₤</option>
+            <option value="1500" ${state.pointValue === 1500 ? 'selected' : ''}>1500 ₤</option>
+            <option value="2000" ${state.pointValue === 2000 ? 'selected' : ''}>2000 ₤</option>
+          </select>
+        </div>
+
+        <div class="cc-form-section">
+          <label class="cc-label">Danger Rating</label>
+          <select class="cc-input" onchange="setDangerRating(this.value)">
+            <option value="1" ${state.dangerRating === 1 ? 'selected' : ''}>★☆☆☆☆☆ Tutorial / Low Escalation</option>
+            <option value="2" ${state.dangerRating === 2 ? 'selected' : ''}>★★☆☆☆☆ Frontier Skirmish</option>
+            <option value="3" ${state.dangerRating === 3 ? 'selected' : ''}>★★★☆☆☆ Standard Coffin Canyon</option>
+            <option value="4" ${state.dangerRating === 4 ? 'selected' : ''}>★★★★☆☆ High Pressure</option>
+            <option value="5" ${state.dangerRating === 5 ? 'selected' : ''}>★★★★★☆ Escalation Guaranteed</option>
+            <option value="6" ${state.dangerRating === 6 ? 'selected' : ''}>★★★★★★ Catastrostorm Risk</option>
+          </select>
+        </div>
+
+        <div class="cc-form-section">
+          <label class="cc-label">Game Warden</label>
+          <select class="cc-input" onchange="setGameWarden(this.value)">
+            <option value="none" ${!state.gameWarden ? 'selected' : ''}>None</option>
+            <option value="observing" ${state.gameWarden === 'observing' ? 'selected' : ''}>Observing (Not Playing)</option>
+            <option value="npc" ${state.gameWarden === 'npc' ? 'selected' : ''}>Playing as NPC Force</option>
+          </select>
+        </div>
+
+        <div class="cc-form-actions">
+          <button class="cc-btn cc-btn-primary" onclick="completeStep(1)">
+            Next: Choose Factions →
+          </button>
+        </div>
+      `;
+    }
+
+    function renderStep2_Factions() {
+      if (state.gameMode === 'solo') {
+        return `
+          <div class="cc-form-section">
+            <label class="cc-label">Your Faction</label>
+            <p class="cc-help-text">Choose which faction you're playing</p>
+            <select class="cc-input" onchange="setPlayerFaction(this.value)">
+              <option value="">Choose your faction...</option>
+              ${FACTIONS.map(f => `
+                <option value="${f.id}" ${state.factions.find(fac => fac.id === f.id && !fac.isNPC) ? 'selected' : ''}>
+                  ${f.name}
+                </option>
+              `).join('')}
+            </select>
+            
+            ${state.factions.find(f => !f.isNPC) ? `
+              <input 
+                type="text" 
+                class="cc-input" 
+                style="margin-top: 0.5rem;"
+                placeholder="Your name..."
+                value="${esc(state.factions.find(f => !f.isNPC).player || '')}"
+                onchange="setPlayerName(this.value)"
+              />
+            ` : ''}
+          </div>
+
+          <div class="cc-form-section">
+            <label class="cc-label">NPC Factions</label>
+            <p class="cc-help-text">Choose 1-3 NPC factions to face</p>
+            ${FACTIONS.map(faction => {
+              const isNPCFaction = state.factions.find(f => f.id === faction.id && f.isNPC);
+              
+              return `
+                <div class="cc-faction-row">
+                  <label class="cc-checkbox-label">
+                    <input 
+                      type="checkbox" 
+                      ${isNPCFaction ? 'checked' : ''}
+                      onchange="toggleNPCFaction('${faction.id}', '${esc(faction.name)}', this.checked)"
+                    />
+                    <span>${faction.name} (NPC)</span>
+                  </label>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="goToStep(1)">
+              ← Back
+            </button>
+            <button 
+              class="cc-btn cc-btn-primary" 
+              onclick="completeStep(2)"
+              ${state.factions.length < 2 ? 'disabled' : ''}
+            >
+              Next: Choose Location →
+            </button>
+          </div>
+        `;
+      } else {
+        return `
+          <div class="cc-form-section">
+            <label class="cc-label">Select Participating Factions</label>
+            <p class="cc-help-text">Choose 2-4 factions</p>
+            
+            ${FACTIONS.map(faction => `
+              <div class="cc-faction-row">
+                <label class="cc-checkbox-label">
+                  <input 
+                    type="checkbox" 
+                    ${state.factions.find(f => f.id === faction.id) ? 'checked' : ''}
+                    onchange="toggleFaction('${faction.id}', '${esc(faction.name)}', this.checked)"
+                  />
+                  <span>${faction.name}</span>
+                </label>
+                
+                ${state.factions.find(f => f.id === faction.id) ? `
+                  <input 
+                    type="text" 
+                    class="cc-input cc-player-name" 
+                    placeholder="Player name..."
+                    value="${esc(state.factions.find(f => f.id === faction.id).player || '')}"
+                    onchange="setFactionPlayer('${faction.id}', this.value)"
+                  />
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          ${state.gameWarden === 'npc' ? `
+            <div class="cc-form-section">
+              <label class="cc-label">Which faction is the Game Warden controlling?</label>
+              <select class="cc-input" onchange="setWardenFaction(this.value)">
+                <option value="">Choose a faction...</option>
+                ${state.factions.map(f => `
+                  <option value="${f.id}" ${f.isWarden ? 'selected' : ''}>
+                    ${f.name}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+          ` : ''}
+
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="goToStep(1)">
+              ← Back
+            </button>
+            <button 
+              class="cc-btn cc-btn-primary" 
+              onclick="completeStep(2)"
+              ${state.factions.length < 2 ? 'disabled' : ''}
+            >
+              Next: Choose Location →
+            </button>
+          </div>
+        `;
+      }
+    }
+
+    function renderStep3_Location() {
+      if (!locationData) {
+        return '<p class="cc-help-text">Loading location data...</p>';
+      }
+
+      return `
+        <div class="cc-form-section">
+          <label class="cc-label">Location Type</label>
+          <div class="cc-button-group">
+            <button 
+              class="cc-btn ${state.locationType === 'named' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
+              onclick="setLocationType('named')"
+            >
+              Named Location
+            </button>
+            <button 
+              class="cc-btn ${state.locationType === 'random_any' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
+              onclick="setLocationType('random_any')"
+            >
+              Random Any
+            </button>
+          </div>
+        </div>
+
+        ${state.locationType === 'named' && locationData?.locations ? `
+          <div class="cc-form-section">
+            <label class="cc-label">Choose Location</label>
+            <select class="cc-input" onchange="selectLocation(this.value)">
+              <option value="">Select a location...</option>
+              ${locationData.locations.map(loc => `
+                <option value="${loc.id}" ${state.selectedLocation === loc.id ? 'selected' : ''}>
+                  ${loc.emoji} ${loc.name}
+                </option>
+              `).join('')}
+            </select>
+            
+            ${state.selectedLocation ? `
+              <div class="cc-location-preview">
+                <h4>${locationData.locations.find(l => l.id === state.selectedLocation).emoji} ${locationData.locations.find(l => l.id === state.selectedLocation).name}</h4>
+                <p>${locationData.locations.find(l => l.id === state.selectedLocation).description}</p>
+                <p><em>"${locationData.locations.find(l => l.id === state.selectedLocation).atmosphere}"</em></p>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
+
+        ${state.locationType === 'random_any' ? `
+          <div class="cc-info-box">
+            <p>✨ A random location will be generated when you create the scenario</p>
+          </div>
+        ` : ''}
+
+        <div class="cc-form-actions">
+          <button class="cc-btn cc-btn-ghost" onclick="goToStep(2)">
+            ← Back
+          </button>
+          <button 
+            class="cc-btn cc-btn-primary" 
+            onclick="completeStep(3)"
+            ${(state.locationType === 'named' && !state.selectedLocation) ? 'disabled' : ''}
+          >
+            Next: Generate Scenario →
+          </button>
+        </div>
+      `;
+    }
+
+    function renderStep4_Generate() {
+      if (!state.generated) {
+        return `
+          <div class="cc-generate-section">
+            <p class="cc-help-text">Ready to generate your scenario based on:</p>
+            <ul class="cc-summary-list">
+              <li><strong>Game Mode:</strong> ${state.gameMode === 'solo' ? 'Solo Play' : 'Multiplayer'}</li>
+              <li><strong>Point Value:</strong> ${state.pointValue} ₤</li>
+              <li><strong>Danger Rating:</strong> ${'★'.repeat(state.dangerRating)}${'☆'.repeat(6 - state.dangerRating)}</li>
+              <li><strong>Factions:</strong> ${state.factions.map(f => f.name + (f.isNPC ? ' (NPC)' : '')).join(', ')}</li>
+              <li><strong>Location:</strong> ${state.locationType === 'named' ? locationData?.locations.find(l => l.id === state.selectedLocation)?.name : 'Random'}</li>
+            </ul>
+            
+            <div class="cc-form-actions">
+              <button class="cc-btn cc-btn-ghost" onclick="goToStep(3)">
+                ← Back
+              </button>
+              <button class="cc-btn cc-btn-primary" onclick="generateScenario()">
+                🎲 Generate Scenario
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      return renderGeneratedScenario();
+    }
+
+    function renderGeneratedScenario() {
+      if (!state.scenario) return '';
+
+      return `
+        <div class="cc-scenario-result">
+          <h3>${state.scenario.name}</h3>
+          <p class="cc-scenario-hook">${state.scenario.narrative_hook}</p>
+          
+          <div class="cc-scenario-section">
+            <h4>📍 Location</h4>
+            <p><strong>${state.scenario.location.emoji || '🗺️'} ${state.scenario.location.name}</strong></p>
+            <p>${state.scenario.location.description}</p>
+            <p><em>"${state.scenario.location.atmosphere}"</em></p>
+          </div>
+
+          <div class="cc-scenario-section">
+            <h4>⚠️ Danger Rating</h4>
+            <div class="cc-danger-rating">
+              ${'★'.repeat(state.scenario.danger_rating)}${'☆'.repeat(6 - state.scenario.danger_rating)}
+            </div>
+            <p class="cc-help-text">${state.scenario.danger_description}</p>
+          </div>
+
+          <div class="cc-scenario-section">
+            <h4>🎯 Objectives</h4>
+            ${state.scenario.objectives.map(obj => `
+              <div class="cc-objective-card">
+                <strong>${obj.name}</strong>
+                <p>${obj.description}</p>
+                ${obj.special ? `<em>Special: ${obj.special}</em>` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          ${state.scenario.monster_pressure.enabled ? `
+            <div class="cc-scenario-section">
+              <h4>👹 Monster Pressure</h4>
+              <p><strong>Trigger:</strong> ${state.scenario.monster_pressure.trigger}</p>
+              <p><strong>Monsters:</strong></p>
+              <ul>
+                ${state.scenario.monster_pressure.monsters.map(m => `
+                  <li>${m.name} (${m.type}) - ${m.cost} ₤</li>
+                `).join('')}
+              </ul>
+              ${state.scenario.monster_pressure.notes ? `<p><em>${state.scenario.monster_pressure.notes}</em></p>` : ''}
+            </div>
+          ` : ''}
+
+          ${state.scenario.twist ? `
+            <div class="cc-scenario-section cc-twist">
+              <h4>🎭 Scenario Twist</h4>
+              <p><strong>${state.scenario.twist.name}</strong></p>
+              <p>${state.scenario.twist.description}</p>
+              ${state.scenario.twist.example ? `<p><em>Example: ${state.scenario.twist.example}</em></p>` : ''}
+            </div>
+          ` : ''}
+
+          <div class="cc-scenario-section">
+            <h4>🏆 Victory Conditions</h4>
+            ${state.factions.map(faction => `
+              <div class="cc-victory-card">
+                <strong>${faction.name}${faction.isNPC ? ' (NPC)' : ''}${faction.player ? ' - ' + faction.player : ''}</strong>
+                <ul>
+                  ${state.scenario.victory_conditions[faction.id]?.map(vc => `<li>${vc}</li>`).join('') || '<li>Standard victory conditions apply</li>'}
+                </ul>
+              </div>
+            `).join('')}
+          </div>
+
+          ${state.scenario.aftermath ? `
+            <div class="cc-scenario-section">
+              <h4>📜 Aftermath</h4>
+              <p>${state.scenario.aftermath}</p>
+            </div>
+          ` : ''}
+
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">
+              🔄 Start Over
+            </button>
+            <button class="cc-btn cc-btn-secondary" onclick="rollAgain()">
+              🌀 The Canyon Shifts
+            </button>
+            <button class="cc-btn cc-btn-primary" onclick="printScenario()">
+              🖨️ Print Scenario
+            </button>
+            <button class="cc-btn cc-btn-primary" onclick="saveScenario()">
+              💾 Save to Cloud
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSummaryPanel() {
+      const steps = [
+        { num: 1, title: 'Game Setup', complete: state.completedSteps.includes(1) },
+        { num: 2, title: 'Factions', complete: state.completedSteps.includes(2) },
+        { num: 3, title: 'Location', complete: state.completedSteps.includes(3) },
+        { num: 4, title: 'Generate', complete: state.generated }
+      ];
+
+      return `
+        <div class="cc-summary-header">
+          <h3>Scenario Progress</h3>
+        </div>
+        <div class="cc-summary-steps">
+          ${steps.map(step => `
+            <div class="cc-summary-step ${step.complete ? 'complete' : ''} ${state.currentStep === step.num ? 'active' : ''}" onclick="goToStep(${step.num})">
+              <div class="cc-summary-step-number">${step.num}</div>
+              <div class="cc-summary-step-title">${step.title}</div>
+              ${step.complete ? '<div class="cc-summary-step-check">✓</div>' : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        ${state.completedSteps.length > 0 ? `
+          <div class="cc-summary-details">
+            <h4>Current Setup</h4>
+            ${state.gameMode ? `<p><strong>Mode:</strong> ${state.gameMode === 'solo' ? 'Solo' : 'Multiplayer'}</p>` : ''}
+            ${state.pointValue ? `<p><strong>Points:</strong> ${state.pointValue} ₤</p>` : ''}
+            ${state.dangerRating ? `<p><strong>Danger:</strong> ${'★'.repeat(state.dangerRating)}${'☆'.repeat(6 - state.dangerRating)}</p>` : ''}
+            ${state.factions.length > 0 ? `<p><strong>Factions:</strong> ${state.factions.length}</p>` : ''}
+            ${state.selectedLocation || state.locationType === 'random_any' ? `<p><strong>Location:</strong> ${state.locationType === 'named' ? '✓ Set' : 'Random'}</p>` : ''}
+          </div>
+        ` : ''}
+
+        ${state.generated ? `
+          <div class="cc-summary-details" style="border-top: 2px solid var(--cc-primary); margin-top: 1rem; padding-top: 1rem;">
+            <h4>Quick Actions</h4>
+            <button class="cc-btn cc-btn-ghost" style="width: 100%; margin-bottom: 0.5rem;" onclick="loadFromCloud()">
+              📂 Load Saved Scenario
+            </button>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function render() {
+      const html = `
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Coffin Canyon</h1>
+            <div class="cc-app-subtitle">Scenario Builder</div>
+          </div>
+        </div>
+
+        <div class="cc-scenario-builder-layout">
+          <aside class="cc-scenario-sidebar">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div class="cc-panel-title">Build Scenario</div>
+              </div>
+              <div class="cc-body cc-accordion">
+                ${renderAccordionStep(1, 'Game Setup', '⚙️', renderStep1_GameSetup(), state.currentStep === 1, state.completedSteps.includes(1))}
+                ${renderAccordionStep(2, 'Factions & Forces', '⚔️', renderStep2_Factions(), state.currentStep === 2, state.completedSteps.includes(2))}
+                ${renderAccordionStep(3, 'Location', '🗺️', renderStep3_Location(), state.currentStep === 3, state.completedSteps.includes(3))}
+                ${renderAccordionStep(4, 'Generate Scenario', '🎲', renderStep4_Generate(), state.currentStep === 4, state.generated)}
+              </div>
+            </div>
+          </aside>
+
+          <main class="cc-scenario-main">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div class="cc-panel-title">Summary</div>
+              </div>
+              <div class="cc-body">
+                ${renderSummaryPanel()}
+              </div>
+            </div>
+          </main>
+        </div>
+      `;
+
+      root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
+    }
+
+    // ================================
+    // EVENT HANDLERS
+    // ================================
+    
+    window.setGameMode = function(mode) {
+      state.gameMode = mode;
+      state.factions = [];
+      render();
+    };
+
+    window.setPointValue = function(value) {
+      state.pointValue = parseInt(value);
+    };
+
+    window.setDangerRating = function(value) {
+      state.dangerRating = parseInt(value);
+    };
+
+    window.setGameWarden = function(value) {
+      if (value === 'none') {
+        state.gameWarden = null;
+      } else {
+        state.gameWarden = value;
+      }
+      render();
+    };
+
+    window.setPlayerFaction = function(factionId) {
+      state.factions = state.factions.filter(f => f.isNPC);
+      
+      if (factionId) {
+        const faction = FACTIONS.find(f => f.id === factionId);
+        state.factions.unshift({
+          id: faction.id,
+          name: faction.name,
+          player: '',
+          isNPC: false
+        });
+      }
+      render();
+    };
+
+    window.setPlayerName = function(name) {
+      const playerFaction = state.factions.find(f => !f.isNPC);
+      if (playerFaction) {
+        playerFaction.player = name;
+      }
+    };
+
+    window.toggleNPCFaction = function(id, name, checked) {
+      if (checked) {
+        state.factions.push({ id, name, player: 'NPC', isNPC: true });
+      } else {
+        state.factions = state.factions.filter(f => !(f.id === id && f.isNPC));
+      }
+      render();
+    };
+
+    window.toggleFaction = function(id, name, checked) {
+      if (checked) {
+        state.factions.push({ id, name, player: '', isNPC: false });
+      } else {
+        state.factions = state.factions.filter(f => f.id !== id);
+      }
+      render();
+    };
+
+    window.setFactionPlayer = function(factionId, playerName) {
+      const faction = state.factions.find(f => f.id === factionId);
+      if (faction) {
+        faction.player = playerName;
+      }
+    };
+
+    window.setWardenFaction = function(factionId) {
+      state.factions.forEach(f => f.isWarden = false);
+      const faction = state.factions.find(f => f.id === factionId);
+      if (faction) {
+        faction.isWarden = true;
+      }
+    };
+
+    window.setLocationType = function(type) {
+      state.locationType = type;
+      state.selectedLocation = null;
+      render();
+    };
+
+    window.selectLocation = function(locationId) {
+      state.selectedLocation = locationId;
+      render();
+    };
+
+    window.openStep = function(stepNum) {
+      state.currentStep = stepNum;
+      render();
+    };
+
+    window.goToStep = function(stepNum) {
+      state.currentStep = stepNum;
+      render();
+    };
+
+    window.completeStep = function(stepNum) {
+      if (!state.completedSteps.includes(stepNum)) {
+        state.completedSteps.push(stepNum);
+      }
+      state.currentStep = stepNum + 1;
+      render();
+    };
+
+    // ================================
+    // SCENARIO GENERATION ENGINE
+    // ================================
+    
+    window.generateScenario = function() {
+      console.log('🎲 Generating scenario...', state);
+      
+      if (!plotFamiliesData || !twistTablesData || !monsterFactionData) {
+        alert('Game data not loaded yet. Please wait a moment and try again.');
+        return;
+      }
+
+      let location;
+      if (state.locationType === 'named') {
+        location = locationData.locations.find(l => l.id === state.selectedLocation);
+      } else {
+        location = randomChoice(locationData.locations);
+      }
+
+      const contextTags = [];
+      contextTags.push(`danger_${state.dangerRating}`);
+      state.factions.forEach(f => contextTags.push(f.id));
+      
+      if (location.type_ref) {
+        if (location.type_ref.includes('boomtown')) contextTags.push('boomtown');
+        if (location.type_ref.includes('ruins')) contextTags.push('ruins');
+        if (location.type_ref.includes('wasteland')) contextTags.push('wasteland');
+      }
+      
+      if (location.archetype) {
+        contextTags.push(location.archetype);
+      }
+      
+      if (state.dangerRating >= 5) {
+        contextTags.push('horror', 'extreme', 'deadly');
+      } else if (state.dangerRating >= 4) {
+        contextTags.push('combat', 'dangerous');
+      }
+
+      let vaultScenario = null;
+      let maxMatchScore = 0;
+      
+      if (scenarioVaultData && scenarioVaultData.scenarios) {
+        scenarioVaultData.scenarios.forEach(scenario => {
+          let matchScore = 0;
+          
+          if (scenario.tags && Array.isArray(scenario.tags)) {
+            const tagMatches = scenario.tags.filter(tag => 
+              contextTags.includes(tag)
+            ).length;
+            matchScore += tagMatches;
+          }
+          
+          if (scenario.spotlight_factions) {
+            const factionMatches = scenario.spotlight_factions.filter(spotlightFaction => {
+              return state.factions.some(playerFaction => {
+                const normalized = spotlightFaction.toLowerCase().replace(/ /g, '_');
+                return playerFaction.id.includes(normalized) || normalized.includes(playerFaction.id);
+              });
+            }).length;
+            matchScore += factionMatches * 2;
+          }
+          
+          if (matchScore > maxMatchScore) {
+            maxMatchScore = matchScore;
+            vaultScenario = scenario;
+          }
+        });
+        
+        if (maxMatchScore < 3) {
+          console.log(`⚠️ Best vault match only had ${maxMatchScore} points - falling back to procedural`);
+          vaultScenario = null;
+        } else {
+          console.log(`📖 Using vault scenario: "${vaultScenario.name}" (${maxMatchScore} match points)`);
+        }
+      }
+
+      let plotFamily;
+      if (vaultScenario && vaultScenario.tags) {
+        if (vaultScenario.tags.includes('plot_ambush')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'ambush_derailment');
+        } else if (vaultScenario.tags.includes('plot_escort')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'escort_run');
+        } else if (vaultScenario.tags.includes('plot_extraction')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'extraction_heist');
+        } else if (vaultScenario.tags.includes('plot_siege')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'siege_standoff');
+        } else if (vaultScenario.tags.includes('plot_ritual')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'ritual_corruption');
+        } else if (vaultScenario.tags.includes('plot_claim')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'claim_and_hold');
+        } else if (vaultScenario.tags.includes('plot_disaster')) {
+          plotFamily = plotFamiliesData.plot_families.find(p => p.id === 'natural_disaster');
+        }
+      }
+      
+      if (!plotFamily) {
+        plotFamily = randomChoice(plotFamiliesData.plot_families);
+      }
+
+      const dangerRating = state.dangerRating;
+      const objectives = vaultScenario && vaultScenario.objectives ? 
+        generateObjectivesFromVault(vaultScenario) : 
+        generateObjectives(plotFamily);
+      const monsterPressure = generateMonsterPressure(plotFamily, dangerRating);
+
+      let twist = null;
+      if (Math.random() < 0.3) {
+        const eligibleTwists = twistTablesData.twists.filter(t => 
+          t.danger_floor <= dangerRating && t.danger_ceiling >= dangerRating
+        );
+        if (eligibleTwists.length > 0) {
+          const twistData = randomChoice(eligibleTwists);
+          twist = {
+            name: twistData.name,
+            description: twistData.description,
+            example: randomChoice(twistData.example_outcomes || [])
+          };
+        }
+      }
+
+      const victoryConditions = generateVictoryConditions(plotFamily);
+      const aftermath = generateAftermath(plotFamily);
+
+      const nameContextTags = [...contextTags];
+      if (vaultScenario && vaultScenario.tags) {
+        vaultScenario.tags.forEach(tag => {
+          if (!nameContextTags.includes(tag)) {
+            nameContextTags.push(tag);
+          }
+        });
+      }
+      
+      const scenarioName = generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, nameContextTags);
+      const narrative_hook = vaultScenario && vaultScenario.narrative_hook ?
+        vaultScenario.narrative_hook :
+        generateNarrativeHook(plotFamily, location);
+
+      state.scenario = {
+        name: scenarioName,
+        narrative_hook,
+        location,
+        danger_rating: dangerRating,
+        danger_description: getDangerDescription(dangerRating),
+        plot_family: plotFamily.name,
+        objectives,
+        monster_pressure: monsterPressure,
+        twist,
+        victory_conditions: victoryConditions,
+        aftermath,
+        factions: state.factions,
+        pointValue: state.pointValue,
+        gameMode: state.gameMode,
+        vault_source: vaultScenario ? vaultScenario.name : null,
+        vault_match_score: vaultScenario ? maxMatchScore : 0
+      };
+
+      state.generated = true;
+      render();
+    };
+
+    function generateObjectives(plotFamily) {
+      const objectives = [];
+      const objectiveTypes = plotFamily.default_objectives || [];
+      const numObjectives = randomInt(2, 3);
+      
+      for (let i = 0; i < numObjectives; i++) {
+        const objType = randomChoice(objectiveTypes);
+        objectives.push({
+          name: makeObjectiveName(objType),
+          description: makeObjectiveDescription(objType),
+          type: objType,
+          special: Math.random() < 0.2 ? makeObjectiveSpecial(objType) : null
+        });
+      }
+      
+      return objectives;
+    }
+
+    function generateObjectivesFromVault(vaultScenario) {
+      const objectives = [];
+      
+      if (vaultScenario.objectives && Array.isArray(vaultScenario.objectives)) {
+        vaultScenario.objectives.forEach(vaultObj => {
+          objectives.push({
+            name: makeObjectiveName(vaultObj.id || vaultObj.type),
+            description: vaultObj.notes ? vaultObj.notes[0] : makeObjectiveDescription(vaultObj.id || vaultObj.type),
+            type: vaultObj.id || vaultObj.type,
+            special: vaultObj.special ? vaultObj.special.join(', ') : null
+          });
+        });
+      }
+      
+      if (objectives.length < 2) {
+        objectives.push({
+          name: 'Contested Objective',
+          description: 'Control this location to score victory points',
+          type: 'control_point',
+          special: null
+        });
+      }
+      
+      return objectives;
+    }
+
+    function makeObjectiveName(type) {
+      const names = {
+        wrecked_engine: 'Wrecked Engine',
+        scattered_crates: 'Scattered Supply Crates',
+        derailed_cars: 'Derailed Cars',
+        cargo_vehicle: 'Cargo Vehicle',
+        pack_animals: 'Pack Animals',
+        ritual_components: 'Ritual Components',
+        ritual_site: 'Ritual Site',
+        land_marker: 'Land Marker',
+        command_structure: 'Command Structure',
+        thyr_cache: 'Thyr Crystal Cache',
+        artifact: 'Ancient Artifact',
+        captive_entity: 'Captive Entity',
+        fortified_position: 'Fortified Position',
+        barricades: 'Barricades',
+        stored_supplies: 'Stored Supplies',
+        ritual_circle: 'Ritual Circle',
+        tainted_ground: 'Tainted Ground',
+        sacrificial_focus: 'Sacrificial Focus',
+        collapsing_route: 'Collapsing Route',
+        fouled_resource: 'Fouled Resource',
+        unstable_structure: 'Unstable Structure',
+        evacuation_point: 'Evacuation Point'
+      };
+      return names[type] || 'Contested Objective';
+    }
+
+    function makeObjectiveDescription(type) {
+      const descriptions = {
+        wrecked_engine: 'Salvage mechanical parts or prevent others from claiming them',
+        scattered_crates: 'Collect and extract scattered supplies before others claim them',
+        derailed_cars: 'Search the wreckage for valuable cargo',
+        cargo_vehicle: 'Escort the vehicle safely across the board',
+        pack_animals: 'Control or escort the animals',
+        ritual_components: 'Gather mystical components scattered across the battlefield',
+        ritual_site: 'Control this location to complete rituals',
+        land_marker: 'Hold this symbolic location to establish territorial claim',
+        command_structure: 'Control this position to coordinate forces',
+        thyr_cache: 'Extract or corrupt the glowing Thyr crystals',
+        artifact: 'Recover the ancient artifact',
+        captive_entity: 'Free, capture, or control the entity',
+        fortified_position: 'Hold this defensible position',
+        barricades: 'Control the chokepoint',
+        stored_supplies: 'Secure stockpiled resources',
+        ritual_circle: 'Control the circle to empower rituals',
+        tainted_ground: 'Interact at your own risk',
+        sacrificial_focus: 'Control or destroy this dark altar',
+        collapsing_route: 'Cross the unstable passage',
+        fouled_resource: 'Recover or purify the contaminated supplies',
+        unstable_structure: 'Control or salvage before structural collapse',
+        evacuation_point: 'Reach this location to escape'
+      };
+      return descriptions[type] || 'Control this objective to score victory points';
+    }
+
+    function makeObjectiveSpecial(type) {
+      const specials = [
+        'Unstable - may collapse if damaged',
+        'Tainted - triggers morale tests',
+        'Guarded - monster nearby',
+        'Valuable - worth extra VP',
+        'Corrupted - alters nearby terrain'
+      ];
+      return randomChoice(specials);
+    }
+
+    function generateMonsterPressure(plotFamily, dangerRating) {
+      const enabled = Math.random() > 0.3;
+      
+      if (!enabled || !monsterFactionData) {
+        return { enabled: false };
+      }
+
+      const budgetPercent = 0.2 + (dangerRating / 6) * 0.2;
+      const monsterBudget = Math.floor(state.pointValue * budgetPercent);
+      const availableMonsters = monsterFactionData.units.filter(u => u.cost <= monsterBudget);
+      const selectedMonsters = [];
+      let remainingBudget = monsterBudget;
+
+      while (remainingBudget > 0 && availableMonsters.length > 0) {
+        const validMonsters = availableMonsters.filter(m => m.cost <= remainingBudget);
+        if (validMonsters.length === 0) break;
+        
+        const monster = randomChoice(validMonsters);
+        selectedMonsters.push(monster);
+        remainingBudget -= monster.cost;
+      }
+
+      return {
+        enabled: true,
+        trigger: `Round ${randomInt(2, 4)}`,
+        monsters: selectedMonsters,
+        notes: plotFamily.escalation_bias ? `Escalation: ${randomChoice(plotFamily.escalation_bias).replace(/_/g, ' ')}` : null
+      };
+    }
+
+    function generateVictoryConditions(plotFamily) {
+      const conditions = {};
+      
+      state.factions.forEach(faction => {
+        const factionConditions = [];
+        
+        switch(faction.id) {
+          case 'monster_rangers':
+            factionConditions.push('Befriend, protect, or escort monsters successfully');
+            factionConditions.push('Preserve mystical balance and prevent corruption');
+            factionConditions.push('Prevent unnecessary monster deaths');
+            if (plotFamily.primary_resources?.includes('occult')) {
+              factionConditions.push('Secure Thyr or mystical resources for study');
+            }
+            break;
+            
+          case 'liberty_corps':
+            factionConditions.push('Establish and maintain territorial control');
+            factionConditions.push('Eliminate or drive off rival factions');
+            factionConditions.push('Secure resources for Liberty Corps authority');
+            if (plotFamily.id.includes('ambush') || plotFamily.id.includes('escort')) {
+              factionConditions.push('Prevent unauthorized salvage or theft');
+            }
+            break;
+            
+          case 'monsterology':
+            factionConditions.push('Extract specimens, samples, or research data');
+            factionConditions.push('Complete field research objectives');
+            factionConditions.push('Capture monsters alive when possible');
+            if (plotFamily.primary_resources?.includes('occult')) {
+              factionConditions.push('Study Thyr effects and mystical phenomena');
+            }
+            break;
+            
+          case 'shine_riders':
+            factionConditions.push('Extract maximum profit from the scenario');
+            factionConditions.push('Create memorable spectacle and legend');
+            factionConditions.push('Take valuable trophies or loot');
+            if (plotFamily.id.includes('extraction') || plotFamily.id.includes('ambush')) {
+              factionConditions.push('Steal the most valuable cargo');
+            }
+            break;
+            
+          case 'monsters':
+            factionConditions.push('Defend territorial claims and feeding grounds');
+            factionConditions.push('Survive and escape when overwhelmed');
+            factionConditions.push('Drive intruders from sacred spaces');
+            if (plotFamily.id.includes('ritual') || plotFamily.id.includes('claim')) {
+              factionConditions.push('Protect mystically significant locations');
+            }
+            break;
+        }
+        
+        if (plotFamily.id === 'escort_run') {
+          if (faction.id === 'monster_rangers') {
+            factionConditions.push('Ensure the cargo reaches its destination intact');
+          } else if (faction.id === 'liberty_corps') {
+            factionConditions.push('Seize or destroy the cargo convoy');
+          } else {
+            factionConditions.push('Intercept and claim the cargo');
+          }
+        }
+        
+        if (plotFamily.id === 'extraction_heist') {
+          factionConditions.push('Extract the primary objective before Round 6');
+        }
+        
+        if (plotFamily.id === 'siege_standoff') {
+          if (faction.isNPC && state.gameMode === 'solo') {
+            factionConditions.push('Break the siege or eliminate the defender');
+          } else {
+            factionConditions.push('Hold your position until reinforcements');
+          }
+        }
+        
+        conditions[faction.id] = factionConditions.slice(0, 4);
+      });
+      
+      return conditions;
+    }
+
+    function generateAftermath(plotFamily) {
+      const aftermathOptions = plotFamily.aftermath_bias || ['location_state_change', 'resource_depletion_or_corruption'];
+      const aftermathType = randomChoice(aftermathOptions);
+      
+      const descriptions = {
+        location_state_change: 'This location will be permanently altered by the outcome',
+        resource_depletion_or_corruption: 'Resources here will be depleted or corrupted',
+        new_landmark_created: 'A new landmark will mark what happened here',
+        faction_ownership: 'The victor will claim lasting control',
+        mystical_claim: 'Mystical forces will remember this event',
+        monster_bias_shift: 'Monster behavior in this region will change'
+      };
+      
+      return descriptions[aftermathType] || 'The Canyon will remember what happened here';
+    }
+
+    function generateNarrativeHook(plotFamily, location) {
+      const hooks = [
+        `${location.name} has become a flashpoint. ${plotFamily.description}`,
+        `Pressure builds at ${location.name}. ${plotFamily.description}`,
+        `${location.name} draws unwanted attention. ${plotFamily.description}`,
+        `Something has shifted at ${location.name}. ${plotFamily.description}`
+      ];
+      return randomChoice(hooks);
+    }
+
+    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, vaultTags = []) {
+      if (!scenarioNamesData || !scenarioNamesData.prefixes || !scenarioNamesData.suffixes) {
+        return `The Night of ${location.name}`;
+      }
+
+      const scenarioTags = [...vaultTags];
+      scenarioTags.push(`danger_${dangerRating}`);
+      
+      if (dangerRating >= 4) scenarioTags.push('dark', 'danger');
+      if (dangerRating >= 5) scenarioTags.push('horror', 'terror');
+      
+      const hasThyr = objectives.some(obj => 
+        obj.type.includes('thyr') || 
+        obj.name.toLowerCase().includes('thyr') || 
+        obj.name.toLowerCase().includes('crystal')
+      );
+      if (hasThyr) scenarioTags.push('thyr', 'crystal', 'mystical', 'occult');
+      
+      const hasDeath = objectives.some(obj =>
+        obj.type.includes('tainted') || 
+        obj.type.includes('grave') ||
+        obj.name.toLowerCase().includes('grave') ||
+        obj.name.toLowerCase().includes('bone') ||
+        obj.name.toLowerCase().includes('coffin')
+      ) || location.name.toLowerCase().includes('coffin');
+      if (hasDeath) scenarioTags.push('death', 'undead', 'bones');
+      
+      const hasMonsters = state.factions.some(f => f.id === 'monsters') ||
+                         plotFamily.common_inciting_pressures?.includes('monster_action');
+      if (hasMonsters) scenarioTags.push('monster', 'creature', 'beast');
+      
+      const hasOutlaw = state.factions.some(f => f.id === 'shine_riders');
+      const hasCombat = state.factions.some(f => f.id === 'liberty_corps');
+      if (hasOutlaw) scenarioTags.push('shine_riders', 'outlaw', 'bandit', 'lawless');
+      if (hasCombat) scenarioTags.push('liberty_corps', 'combat', 'violence');
+      
+      const isMystical = objectives.some(obj => 
+        obj.type.includes('ritual') || 
+        obj.type.includes('marker') ||
+        obj.type.includes('artifact')
+      ) || twist?.name.includes('Symbolic') || twist?.name.includes('Location');
+      if (isMystical) scenarioTags.push('mystical', 'ritual', 'prophecy');
+      
+      const locationName = location.name.toLowerCase();
+      if (locationName.includes('fortune')) scenarioTags.push('fortune');
+      if (locationName.includes('diablo')) scenarioTags.push('diablo');
+      if (locationName.includes('plunder')) scenarioTags.push('fort_plunder');
+      if (locationName.includes('coffin')) scenarioTags.push('camp_coffin', 'coffin');
+      if (locationName.includes('ruin')) scenarioTags.push('ruins', 'abandoned');
+      if (location.type_ref?.includes('boomtown')) scenarioTags.push('boomtown', 'settlement');
+      
+      objectives.forEach(obj => {
+        if (obj.type.includes('engine')) scenarioTags.push('objective_engine', 'wreck', 'salvage');
+        if (obj.type.includes('cargo') || obj.type.includes('crate')) scenarioTags.push('objective_cargo', 'theft');
+        if (obj.type.includes('ritual')) scenarioTags.push('objective_ritual');
+        if (obj.type.includes('thyr')) scenarioTags.push('objective_thyr');
+        if (obj.type.includes('vehicle')) scenarioTags.push('objective_vehicle', 'escort');
+        if (obj.type.includes('marker')) scenarioTags.push('objective_marker', 'territory');
+      });
+      
+      if (plotFamily.id.includes('ambush')) scenarioTags.push('plot_ambush', 'violence');
+      if (plotFamily.id.includes('escort')) scenarioTags.push('plot_escort', 'journey');
+      if (plotFamily.id.includes('extraction')) scenarioTags.push('plot_extraction', 'theft');
+      if (plotFamily.id.includes('siege')) scenarioTags.push('plot_siege', 'defense');
+      if (plotFamily.id.includes('ritual')) scenarioTags.push('plot_ritual');
+      if (plotFamily.id.includes('disaster')) scenarioTags.push('plot_disaster');
+      
+      if (twist) {
+        if (twist.name.includes('Decoy')) scenarioTags.push('twist_decoy', 'lie');
+        if (twist.name.includes('Monster')) scenarioTags.push('twist_monster');
+        if (twist.name.includes('Location') || twist.name.includes('Awakens')) {
+          scenarioTags.push('twist_location', 'terrain');
+        }
+      }
+
+      let chosenPrefix = null;
+      let maxPrefixMatches = 0;
+      
+      scenarioNamesData.prefixes.forEach(prefix => {
+        const matches = prefix.tags.filter(tag => scenarioTags.includes(tag)).length;
+        if (matches > maxPrefixMatches) {
+          maxPrefixMatches = matches;
+          chosenPrefix = prefix.text;
+        }
+      });
+      
+      if (!chosenPrefix || maxPrefixMatches === 0) {
+        const generalPrefixes = scenarioNamesData.prefixes.filter(p => 
+          p.tags.includes('general') || p.tags.includes('default') || p.tags.includes('time')
+        );
+        chosenPrefix = randomChoice(generalPrefixes).text;
+      }
+
+      let chosenSuffix = null;
+      let maxSuffixMatches = 0;
+      
+      const locationSuffix = scenarioNamesData.suffixes.find(s => 
+        s.text.toLowerCase() === location.name.toLowerCase()
+      );
+      
+      if (locationSuffix && location.name.length <= 12) {
+        chosenSuffix = locationSuffix.text;
+      } else {
+        scenarioNamesData.suffixes.forEach(suffix => {
+          const matches = suffix.tags.filter(tag => scenarioTags.includes(tag)).length;
+          if (matches > maxSuffixMatches) {
+            maxSuffixMatches = matches;
+            chosenSuffix = suffix.text;
+          }
+        });
+        
+        if (!chosenSuffix || maxSuffixMatches === 0) {
+          const genericSuffixes = scenarioNamesData.suffixes.filter(s => 
+            s.tags.includes('generic')
+          );
+          if (genericSuffixes.length > 0) {
+            chosenSuffix = randomChoice(genericSuffixes).text;
+          } else {
+            chosenSuffix = location.name;
+          }
+        }
+      }
+      
+      return `The ${chosenPrefix} of ${chosenSuffix}`;
+    }
+
+    function getDangerDescription(rating) {
+      const descriptions = {
+        1: 'Controlled / Comparatively Safe',
+        2: 'Frontier Risk / Regular Patrols',
+        3: 'Hostile / Regular Monster Presence',
+        4: 'Dangerous / Lethal Terrain or Elite Monsters',
+        5: 'Extreme / Escalation Guaranteed, Titan Possible',
+        6: 'Catastrophic / Titan-Active or Immune-Dominant Zone'
+      };
+      return descriptions[rating] || 'Unknown Danger';
+    }
+
+    window.resetScenario = function() {
+      state.gameMode = null;
+      state.factions = [];
+      state.locationType = null;
+      state.selectedLocation = null;
+      state.generated = false;
+      state.scenario = null;
+      state.currentStep = 1;
+      state.completedSteps = [];
+      render();
+    };
+
+    window.rollAgain = function() {
+      console.log('🎲 Rolling again...');
+      generateScenario();
+    };
+
+    window.printScenario = function() {
+      window.print();
+    };
+
+    // ================================
+    // SAVE/LOAD FUNCTIONALITY
+    // ================================
+
+    window.saveScenario = async function() {
+      if (!window.CC_STORAGE) {
+        alert('Cloud storage not available. Please refresh the page.');
+        return;
+      }
+
+      try {
+        const exportData = {
+          name: state.scenario.name,
+          scenario: state.scenario,
+          factions: state.factions,
+          pointValue: state.pointValue,
+          gameMode: state.gameMode,
+          dangerRating: state.dangerRating,
+          savedAt: new Date().toISOString()
+        };
+
+        const result = await window.CC_STORAGE.saveDocument(
+          'scenario',
+          state.scenario.name,
+          JSON.stringify(exportData)
+        );
+        
+        console.log('Save result:', result);
+        alert('✓ Scenario saved to cloud!');
+      } catch (error) {
+        console.error('Save error:', error);
+        alert('Error saving scenario: ' + error.message);
+      }
+    };
+
+    window.loadFromCloud = async function() {
+      if (!window.CC_STORAGE) {
+        alert('Cloud storage not available. Please refresh the page.');
+        return;
+      }
+
+      try {
+        const rosters = await window.CC_STORAGE.listDocuments('scenario');
+        
+        if (!rosters || rosters.length === 0) {
+          alert('No saved scenarios found.');
+          return;
+        }
+
+        const panel = document.createElement('div');
+        panel.id = 'cloud-scenario-panel';
+        panel.className = 'cc-slide-panel';
+        panel.innerHTML = `
+          <div class="cc-slide-panel-header">
+            <h2>Saved Scenarios</h2>
+            <button class="cc-panel-close-btn" onclick="closeCloudScenarioList()">×</button>
+          </div>
+          
+          <div class="cc-roster-list">
+            ${rosters.map(r => `
+              <div class="cc-saved-roster-item">
+                <div class="cc-saved-roster-header">
+                  <div class="cc-saved-roster-name">${r.name || 'Unnamed Scenario'}</div>
+                </div>
+
+                <div class="cc-saved-roster-meta">
+                  ${new Date(r.write_date).toLocaleDateString()}
+                </div>
+
+                <div class="cc-saved-roster-actions">
+                  <button onclick="loadCloudScenario(${r.id})" class="btn btn-sm btn-warning">
+                    <i class="fa fa-folder-open"></i> LOAD
+                  </button>
+                  <button onclick="deleteCloudScenario(${r.id})" class="btn btn-sm btn-danger">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+
+        document.body.appendChild(panel);
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+      } catch (error) {
+        console.error('Load error:', error);
+        alert('Error loading scenarios: ' + error.message);
+      }
+    };
+
+    window.closeCloudScenarioList = function() {
+      const panel = document.getElementById('cloud-scenario-panel');
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(() => panel.remove(), 300);
+      }
+    };
+
+    window.loadCloudScenario = async function(docId) {
+      try {
+        const loaded = await window.CC_STORAGE.loadDocument(docId);
+        const parsed = JSON.parse(loaded.json);
+        
+        state.scenario = parsed.scenario;
+        state.factions = parsed.factions;
+        state.pointValue = parsed.pointValue;
+        state.gameMode = parsed.gameMode;
+        state.generated = true;
+        state.completedSteps = [1, 2, 3];
+        state.currentStep = 4;
+        
+        closeCloudScenarioList();
+        render();
+        
+        alert(`✓ Loaded scenario: ${state.scenario.name}`);
+      } catch (error) {
+        console.error('Load error:', error);
+        closeCloudScenarioList();
+        alert('Error loading scenario: ' + (error.message || 'Unknown error'));
+      }
+    };
+
+    window.deleteCloudScenario = async function(docId) {
+      if (!confirm('Are you sure you want to delete this scenario?')) return;
+      
+      try {
+        await window.CC_STORAGE.deleteDocument(docId);
+        closeCloudScenarioList();
+        
+        setTimeout(() => {
+          loadFromCloud();
+        }, 300);
+      } catch (error) {
+        console.error('Delete error:', error);
+        alert('Error deleting scenario: ' + error.message);
+      }
+    };
+
+    // ================================
+    // INITIALIZE
+    // ================================
+    render();
+    console.log("✅ Scenario Builder mounted");
+  }
+};
