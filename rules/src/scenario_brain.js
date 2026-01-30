@@ -106,20 +106,20 @@ class ScenarioBrain {
       console.log(`     - Target: ${obj.target_value} ${obj.progress_label}`);
       console.log(`     - VP: ${obj.vp_per_unit} per unit (Max: ${obj.max_vp})`);
     });
-    
+
     // STEP 5: Victory Conditions
-    console.log("\n🏆 STEP 5: VICTORY CONDITIONS");
-    console.log("─────────────────────────────────────────");
-    const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread);
-    console.log("✓ Created conditions for factions:");
-    Object.keys(victoryConditions).forEach(factionId => {
-      const vc = victoryConditions[factionId];
-      console.log(`  ${factionId}:`);
-      console.log(`    - Target VP: ${vc.target_vp}`);
-      console.log(`    - Primary: ${vc.primary_scoring}`);
-      console.log(`    - Bonus: ${vc.bonus_scoring}`);
-      console.log(`    - Custom conditions: ${vc.faction_specific_conditions.length}`);
-    });
+console.log("\n🏆 STEP 5: VICTORY CONDITIONS");
+console.log("─────────────────────────────────────────");
+const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread);
+console.log("✓ Created conditions for factions:");
+Object.keys(victoryConditions).forEach(factionId => {
+  const vc = victoryConditions[factionId];
+  console.log(`  ${factionId}:`);
+  console.log(`    - Target VP: ${vc.target_vp}`);
+  console.log(`    - Primary: ${vc.primary_scoring}`);
+  console.log(`    - Bonus: ${vc.bonus_scoring}`);
+  console.log(`    - Faction objectives: ${vc.faction_objectives?.length || 0}`);  // FIXED!
+});
     
     // STEP 6: Name & Narrative
     console.log("\n📝 STEP 6: NAME & NARRATIVE");
