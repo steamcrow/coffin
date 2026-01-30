@@ -332,63 +332,96 @@ class ScenarioBrain {
   // OBJECTIVES
   // ================================
   
-  generateObjectives(plotFamily, location, userSelections, vpSpread) {
-    const objectives = [];
-    
-    console.log("  Starting objective generation...");
-    console.log("  Plot family has", plotFamily.default_objectives?.length || 0, "default objectives");
-    
-    if (plotFamily.default_objectives && Array.isArray(plotFamily.default_objectives)) {
-      plotFamily.default_objectives.forEach((objType, index) => {
-        console.log(`  Attempting to build: ${objType}`);
-        const obj = this.buildObjective(objType, location, userSelections.dangerRating, vpSpread);
-        if (obj) {
-          console.log(`    ✓ Built successfully`);
-          objectives.push(obj);
-        } else {
-          console.warn(`    ✗ Failed to build ${objType}`);
-        }
-      });
-    }
-    
-    if (location.resources && plotFamily.primary_resources) {
-      const matching = plotFamily.primary_resources.filter(r => 
-        location.resources[r] && location.resources[r] > 0
-      );
-      
-      if (matching.length > 0) {
-        const resource = this.randomChoice(matching);
-        const amount = location.resources[resource];
-        
-        console.log(`  Adding resource objective: ${resource} (${amount} units)`);
-        
-        objectives.push({
-          name: `Extract ${this.capitalize(resource)}`,
-          description: `Secure ${amount} units of ${resource} from ${location.name}`,
-          type: 'resource',
-          target_value: amount,
-          progress_label: this.capitalize(resource),
-          vp_per_unit: this.getResourceVP(resource),
-          max_vp: amount * this.getResourceVP(resource)
-        });
-      }
-    }
-    
-    if (objectives.length === 0) {
-      console.error("⚠️ NO OBJECTIVES GENERATED! Adding emergency fallback.");
-      objectives.push({
-        name: 'Seize Strategic Position',
-        description: `Control the key position at ${location.name}`,
-        type: 'emergency_control',
-        target_value: 3,
-        progress_label: 'Rounds Held',
-        vp_per_unit: 2,
-        max_vp: 6
-      });
-    }
-    
-    return objectives;
+ generateObjectives(plotFamily, location, userSelections, vpSpread) {
+  const objectives = [];
+  const danger = userSelections.dangerRating;
+  
+  console.log("  Starting objective generation...");
+  
+  // STEP 1: Pick 1-2 from plot family (not all of them!)
+  if (plotFamily.default_objectives && plotFamily.default_objectives.length > 0) {
+    const plotObjectives = this.randomChoice(plotFamily.default_objectives, Math.min(2, plotFamily.default_objectives.length));
+    plotObjectives.forEach(objType => {
+      console.log(`  Adding plot objective: ${objType}`);
+      const obj = this.buildObjective(objType, location, danger, vpSpread);
+      if (obj) objectives.push(obj);
+    });
   }
+  
+  // STEP 2: Add location resource objectives
+  if (location.resources) {
+    const highValueResources = Object.entries(location.resources)
+      .filter(([key, val]) => val >= 2)
+      .map(([key]) => key);
+    
+    if (highValueResources.length > 0) {
+      const resource = this.randomChoice(highValueResources);
+      const amount = location.resources[resource];
+      
+      console.log(`  Adding resource objective: ${resource}`);
+      objectives.push({
+        name: `Extract ${this.capitalize(resource)}`,
+        description: `Secure valuable ${resource} stockpile`,
+        type: 'resource_extraction',
+        target_value: Math.min(amount, danger + 2),
+        progress_label: this.capitalize(resource),
+        vp_per_unit: this.getResourceVP(resource),
+        max_vp: Math.min(amount, danger + 2) * this.getResourceVP(resource)
+      });
+    }
+  }
+  
+  // STEP 3: Add general conflict objectives (the bread and butter)
+  const generalObjectives = [
+    'scattered_crates',
+    'wrecked_engine',
+    'land_marker',
+    'fortified_position',
+    'stored_supplies'
+  ];
+  
+  const numGeneral = Math.max(1, 4 - objectives.length); // Fill to ~4 total
+  for (let i = 0; i < numGeneral && generalObjectives.length > 0; i++) {
+    const objType = generalObjectives.splice(Math.floor(Math.random() * generalObjectives.length), 1)[0];
+    console.log(`  Adding general objective: ${objType}`);
+    const obj = this.buildObjective(objType, location, danger, vpSpread);
+    if (obj) objectives.push(obj);
+  }
+  
+  // STEP 4: Faction-specific objective (if applicable)
+  const hasMysticFaction = userSelections.factions.some(f => 
+    f.id === 'monster_rangers' || f.id === 'monsterology'
+  );
+  
+  if (hasMysticFaction && objectives.length < 5) {
+    const mysticObjectives = ['ritual_components', 'artifact', 'gather_intel'];
+    const objType = this.randomChoice(mysticObjectives);
+    console.log(`  Adding faction objective: ${objType}`);
+    const obj = this.buildObjective(objType, location, danger, vpSpread);
+    if (obj) objectives.push(obj);
+  }
+  
+  // EMERGENCY FALLBACK
+  if (objectives.length === 0) {
+    console.error("⚠️ NO OBJECTIVES! Emergency fallback.");
+    objectives.push(this.buildObjective('land_marker', location, danger, vpSpread));
+  }
+  
+  console.log(`  ✓ Generated ${objectives.length} varied objectives`);
+  return objectives;
+}
+
+// Helper to pick N random items from array
+randomChoice(arr, count = 1) {
+  if (!arr || arr.length === 0) return count === 1 ? null : [];
+  
+  if (count === 1) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+  
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+}
   
   buildObjective(type, location, danger, vpSpread) {
     const templates = {
