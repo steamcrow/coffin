@@ -107,7 +107,7 @@ class ScenarioBrain {
       console.log(`     - VP: ${obj.vp_per_unit} per unit (Max: ${obj.max_vp})`);
     });
 
-    // STEP 5: Victory Conditions
+// STEP 5: Victory Conditions
 console.log("\n🏆 STEP 5: VICTORY CONDITIONS");
 console.log("─────────────────────────────────────────");
 const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread);
