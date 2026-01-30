@@ -515,16 +515,43 @@ window.CC_APP = {
           ` : ''}
 
           <div class="cc-scenario-section">
-            <h4>🏆 Victory Conditions</h4>
-            ${state.factions.map(faction => `
-              <div class="cc-victory-card">
-                <strong>${faction.name}${faction.isNPC ? ' (NPC)' : ''}${faction.player ? ' - ' + faction.player : ''}</strong>
-                <ul>
-                  ${state.scenario.victory_conditions[faction.id]?.map(vc => `<li>${vc}</li>`).join('') || '<li>Standard victory conditions apply</li>'}
-                </ul>
-              </div>
-            `).join('')}
-          </div>
+  <h4>🏆 Victory Conditions</h4>
+  ${state.factions.map(faction => {
+    const conditions = state.scenario.victory_conditions ? state.scenario.victory_conditions[faction.id] : null;
+    return `
+      <div class="cc-victory-card">
+        <strong>${faction.name}${faction.isNPC ? ' (NPC)' : ''}${faction.player ? ' - ' + faction.player : ''}</strong>
+        ${conditions ? `
+          <p><strong>Target VP:</strong> ${conditions.target_vp}</p>
+          <p><strong>Primary Scoring:</strong> ${conditions.primary_scoring}</p>
+          <p><strong>Bonus Scoring:</strong> ${conditions.bonus_scoring}</p>
+          ${conditions.faction_bonus ? `<p><em>💎 Faction Bonus: ${conditions.faction_bonus}</em></p>` : ''}
+          
+          ${conditions.faction_specific_conditions && conditions.faction_specific_conditions.length > 0 ? `
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,215,0,0.3);">
+              <p><strong>Faction-Specific Win Conditions:</strong></p>
+              <ul>
+                ${conditions.faction_specific_conditions.map(cond => `<li>${cond}</li>`).join('')}
+              </ul>
+            </div>
+          ` : ''}
+          
+          ${conditions.objectives && conditions.objectives.length > 0 ? `
+            <div style="margin-top: 1rem;">
+              <p><strong>Objective Tracking:</strong></p>
+              <ul>
+                ${conditions.objectives.map(obj => `
+                  <li><strong>${obj.name}:</strong> ${obj.vp_value} VP per unit (Max: ${obj.max_vp} VP)<br/>
+                  <em>${obj.ticker}</em></li>
+                `).join('')}
+              </ul>
+            </div>
+          ` : ''}
+        ` : '<p>Standard victory conditions apply</p>'}
+      </div>
+    `;
+  }).join('')}
+</div>
 
           ${state.scenario.aftermath ? `
             <div class="cc-scenario-section">
