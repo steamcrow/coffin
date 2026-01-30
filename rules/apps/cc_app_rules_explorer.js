@@ -302,7 +302,7 @@ window.CC_APP = {
       'location_types',
       'scenario_vault',
       'objective_vault',
-      'location_vault_97'
+      'location_vault'
     ];
 
     // ---- APP SHELL ----
