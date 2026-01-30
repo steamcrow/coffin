@@ -499,6 +499,141 @@ class ScenarioBrain {
       "fouled_resource": { name: "Purify Cache", desc: "Recover and purify supplies.", target: Math.max(2, dangerRating), label: "Purified", vp: 3 },
       "unstable_structure": { name: "Salvage Before Collapse", desc: "Extract before failure.", target: 3, label: "Salvaged", vp: 3 },
       "evacuation_point": { name: "Reach Evacuation", desc: "Get forces to safety.", target: 5, label: "Evacuated", vp: 2 }
+            // ——— RESCUE / EXTRACTION ———
+      "rescue_hostages": { 
+        name: "Rescue the Hostages", 
+        desc: "Free captives and escort them to safety. Hostages panic if left unattended.", 
+        target: Math.max(2, Math.floor(dangerRating / 2)), 
+        label: "Hostages Rescued", 
+        vp: 4 
+      },
+
+      "downed_ally": { 
+        name: "Recover Fallen Ally", 
+        desc: "Stabilize and extract a downed figure under fire.", 
+        target: 1, 
+        label: "Ally Extracted", 
+        vp: 6 
+      },
+
+      "prison_break": { 
+        name: "Stage a Prison Break", 
+        desc: "Disable guards and free prisoners. Alarm escalates danger.", 
+        target: Math.max(2, dangerRating), 
+        label: "Cells Opened", 
+        vp: 3 
+      },
+
+      // ——— ESCORT / PROTECTION ———
+      "protect_informant": { 
+        name: "Protect the Informant", 
+        desc: "Keep the informant alive until extraction.", 
+        target: 3, 
+        label: "Rounds Survived", 
+        vp: vpSpread.ticker.primary_per_vp 
+      },
+
+      "escort_civilians": { 
+        name: "Escort Civilians", 
+        desc: "Move civilians across the board without losses.", 
+        target: Math.max(2, dangerRating - 1), 
+        label: "Civilians Escorted", 
+        vp: 3 
+      },
+
+      // ——— SABOTAGE / DESTRUCTION ———
+      "sabotage_machinery": { 
+        name: "Sabotage the Machinery", 
+        desc: "Disable critical systems before reinforcements arrive.", 
+        target: Math.max(2, dangerRating), 
+        label: "Systems Disabled", 
+        vp: 3 
+      },
+
+      "blow_the_bridge": { 
+        name: "Destroy the Crossing", 
+        desc: "Plant charges to deny pursuit.", 
+        target: 1, 
+        label: "Crossing Destroyed", 
+        vp: 7 
+      },
+
+      "cut_power": { 
+        name: "Cut the Power", 
+        desc: "Disable generators. Darkness spreads each round.", 
+        target: Math.max(2, Math.floor(dangerRating / 2)), 
+        label: "Generators Disabled", 
+        vp: 4 
+      },
+
+      // ——— INVESTIGATION / MYSTERY ———
+      "gather_intel": { 
+        name: "Gather Intelligence", 
+        desc: "Search clues and piece together the truth.", 
+        target: dangerRating + 1, 
+        label: "Clues Found", 
+        vp: 2 
+      },
+
+      "expose_conspiracy": { 
+        name: "Expose the Conspiracy", 
+        desc: "Collect proof and survive long enough to reveal it.", 
+        target: 3, 
+        label: "Evidence Secured", 
+        vp: 5 
+      },
+
+      // ——— RACE / TIME PRESSURE ———
+      "race_the_clock": { 
+        name: "Race Against Time", 
+        desc: "Complete objectives before time runs out.", 
+        target: 3, 
+        label: "Tasks Completed", 
+        vp: 3 
+      },
+
+      "stop_the_train": { 
+        name: "Stop the Runaway Train", 
+        desc: "Reach and halt the engine before disaster.", 
+        target: 24, 
+        label: "Inches Advanced", 
+        vp: 1 
+      },
+
+      // ——— DECEPTION / MISDIRECTION ———
+      "decoy_operation": { 
+        name: "Run a Decoy Operation", 
+        desc: "Draw enemy forces away from the real objective.", 
+        target: 3, 
+        label: "Rounds Distracted", 
+        vp: 2 
+      },
+
+      "false_artifact": { 
+        name: "Plant the False Artifact", 
+        desc: "Swap the real prize with a convincing fake.", 
+        target: 1, 
+        label: "Artifact Planted", 
+        vp: 6 
+      },
+
+      // ——— SURVIVAL / HOLDOUT ———
+      "last_stand": { 
+        name: "Hold the Line", 
+        desc: "Survive overwhelming pressure.", 
+        target: 3, 
+        label: "Rounds Survived", 
+        vp: vpSpread.ticker.primary_per_vp 
+      },
+
+      "secure_shelter": { 
+        name: "Secure Shelter", 
+        desc: "Barricade and defend a safe location.", 
+        target: 3, 
+        label: "Rounds Secured", 
+        vp: 3 
+      }
+
     };
     
     const template = templates[objType];
