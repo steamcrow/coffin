@@ -180,25 +180,33 @@
       ]
     },
 
-    {
-      "name": "The Jester",
-      "faction": "Crow Queen",
-      "type": "Mystic",
-      "cost": 0,
-      "quality": 3,
-      "defense": 2,
-      "move": 7,
-      "range": 6,
-      "weapon": "Mockery Blades",
-      "weapon_properties": ["Melee", "Fear"],
-      "abilities": [
-        "Lingering Harm",
-        "Disturbing Presence",
-        "Deploy Demesne Marker"
-      ],
-      "lore": "A laughing horror in bells and paint. Some say he is a Klowna. No one denies the fear he brings.",
-      "tactics": "Disrupt morale and poison key zones."
-    },
+{
+  "name": "The Jester",
+  "faction": "Crow Queen",
+  "type": "Mystic",
+  "cost": 195,
+  "quality": 5,
+  "defense": 2,
+  "move": 7,
+  "range": 6,
+  "weapon": "Mockery Implements",
+  "weapon_properties": ["Fear"],
+  "abilities": [
+    "Lingering Harm",
+    "Disturbing Presence",
+    "Deploy Demesne Marker"
+  ],
+  "lore": "A laughing horror in bells and paint. A Klowna bound by oath and hunger. The Queen finds him endlessly amusing.",
+  "tactics": "Morale annihilator. Area denial. Demesne accelerator. Forces bad decisions.",
+  "unit_tags": [
+    "klowna",
+    "morale_weapon",
+    "disruption",
+    "ritual_support",
+    "zone_control"
+  ]
+}
+
 
     {
       "name": "Major Domo",
