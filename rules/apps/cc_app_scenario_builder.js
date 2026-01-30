@@ -1,5 +1,5 @@
 // ================================
-// Scenario Builder App - CLEAN VERSION
+// Scenario Builder App - WITH LOCATION LOADING
 // File: coffin/rules/apps/cc_app_scenario_builder.js
 // ================================
 
@@ -77,6 +77,7 @@ window.CC_APP = {
       factions: [],
       locationType: null,
       selectedLocation: null,
+      availableLocations: null,
       generated: false,
       scenario: null,
       currentStep: 1,
@@ -106,6 +107,17 @@ window.CC_APP = {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+    }
+
+    async function loadNamedLocations() {
+      try {
+        const res = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json?t=' + Date.now());
+        const data = await res.json();
+        return data.locations || [];
+      } catch (err) {
+        console.error('Failed to load locations:', err);
+        return [];
+      }
     }
 
     // ================================
@@ -307,21 +319,22 @@ window.CC_APP = {
               class="cc-btn ${state.locationType === 'random_any' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
               onclick="setLocationType('random_any')"
             >
-              Random Any
+              Procedural Location
             </button>
           </div>
         </div>
 
         ${state.locationType === 'named' ? `
           <div class="cc-form-section">
-            <label class="cc-label">Location Name (optional)</label>
-            <input 
-              type="text" 
-              class="cc-input" 
-              placeholder="Leave blank for random named location..."
-              value="${state.selectedLocation || ''}"
-              onchange="setLocationName(this.value)"
-            />
+            <label class="cc-label">Choose Named Location</label>
+            <select class="cc-input" onchange="setLocationName(this.value)">
+              <option value="">Random Named Location...</option>
+              ${state.availableLocations ? state.availableLocations.map(loc => `
+                <option value="${loc.name}" ${state.selectedLocation === loc.name ? 'selected' : ''}>
+                  ${loc.emoji || '📍'} ${loc.name}
+                </option>
+              `).join('') : '<option>Loading...</option>'}
+            </select>
           </div>
         ` : ''}
 
@@ -349,7 +362,7 @@ window.CC_APP = {
               <li><strong>Points:</strong> ${state.pointValue} ₤</li>
               <li><strong>Danger:</strong> ${'★'.repeat(state.dangerRating)}${'☆'.repeat(6 - state.dangerRating)}</li>
               <li><strong>Factions:</strong> ${state.factions.map(f => f.name + (f.isNPC ? ' (NPC)' : '')).join(', ')}</li>
-              <li><strong>Location:</strong> ${state.locationType === 'named' && state.selectedLocation ? state.selectedLocation : 'Random'}</li>
+              <li><strong>Location:</strong> ${state.locationType === 'named' && state.selectedLocation ? state.selectedLocation : state.locationType === 'named' ? 'Random Named' : 'Procedural'}</li>
             </ul>
             
             <div class="cc-form-actions">
@@ -429,11 +442,23 @@ window.CC_APP = {
             </div>
           ` : ''}
 
+          ${s.canyon_state ? `
+            <div class="cc-scenario-section">
+              <h4>🏜️ Canyon State</h4>
+              <p><strong>${s.canyon_state.name}</strong></p>
+              ${s.canyon_state.faction ? `<p><em>Faction in Power: ${s.canyon_state.faction}</em></p>` : ''}
+              ${s.canyon_state.terrain_features && s.canyon_state.terrain_features.length > 0 ? `
+                <p><strong>Terrain:</strong> ${s.canyon_state.terrain_features.join(', ')}</p>
+              ` : ''}
+            </div>
+          ` : ''}
+
           ${s.twist ? `
             <div class="cc-scenario-section cc-twist">
               <h4>🎭 Twist</h4>
               <p><strong>${s.twist.name}</strong></p>
               <p>${s.twist.description}</p>
+              ${s.twist.example ? `<p><em>Example: ${s.twist.example}</em></p>` : ''}
             </div>
           ` : ''}
 
@@ -442,6 +467,7 @@ window.CC_APP = {
               <h4>🎭 Round ${s.finale.round} Finale: ${s.finale.title}</h4>
               <p><em>"${s.finale.narrative}"</em></p>
               <p><strong>Effect:</strong> ${s.finale.mechanical_effect}</p>
+              <p><strong>Ticker:</strong> ${s.finale.ticker_effect}</p>
             </div>
           ` : ''}
 
@@ -676,7 +702,6 @@ window.CC_APP = {
       }
       
       try {
-        // CREATE FRESH BRAIN INSTANCE
         const brain = new window.ScenarioBrain();
         
         const userSelections = {
@@ -759,5 +784,17 @@ window.CC_APP = {
     // ================================
     render();
     console.log("✅ Scenario Builder mounted");
+
+    // Load named locations after initial render
+    (async function() {
+      console.log("📍 Loading named locations...");
+      state.availableLocations = await loadNamedLocations();
+      console.log(`✅ Loaded ${state.availableLocations.length} named locations`);
+      
+      // Re-render if user is on location step
+      if (state.currentStep === 3) {
+        render();
+      }
+    })();
   }
 };
