@@ -577,6 +577,13 @@ getFactionObjectiveInterpretation(factionId, objective, factionData, userSelecti
         method: 'Befriend can neutralize corrupted monsters',
         restriction: 'Killing monsters costs -2 VP each'
       }
+      'scattered_crates': {
+  name: 'Recover Supply Crates',
+  goal: 'Distribute supplies to refugees',
+  scoring: `${objective.vp_per_unit} VP per crate to YOUR board edge`,
+  method: 'Befriend monsters to help carry',
+  restriction: 'Harming civilians costs -2 VP'
+},
     };
     return interpretations[objective.type] || null;
   }
@@ -591,6 +598,13 @@ getFactionObjectiveInterpretation(factionId, objective, factionData, userSelecti
         method: 'Barriers and patrols',
         restriction: 'Contested control yields 0 VP'
       }
+      'scattered_crates': {
+  name: 'Confiscate Contraband',
+  goal: 'Seize illegal salvage as evidence',
+  scoring: `${objective.vp_per_unit} VP per crate documented and secured`,
+  method: 'Commandeer from other factions',
+  restriction: 'Must maintain chain of custody'
+},
     };
     return interpretations[objective.type] || null;
   }
@@ -626,6 +640,14 @@ getFactionObjectiveInterpretation(factionId, objective, factionData, userSelecti
         method: 'Marked monsters yield bonus VP',
         restriction: 'Unprocessed kills give 0 VP'
       }
+      'scattered_crates': {
+  name: 'Harvest Specimens',
+  goal: 'Extract biological samples from containers',
+  scoring: `${objective.vp_per_unit} VP per crate processed in extraction rig`,
+  method: 'Mark crates with tracking beacons',
+  restriction: 'Unprocessed crates give 0 VP'
+},
+
     };
     return interpretations[objective.type] || null;
   }
@@ -640,6 +662,13 @@ getFactionObjectiveInterpretation(factionId, objective, factionData, userSelecti
         method: 'Disengage without penalty',
         restriction: 'Getting caught costs -5 VP'
       }
+      'scattered_crates': {
+  name: 'Steal Everything Not Bolted Down',
+  goal: 'Grab crates and run',
+  scoring: `${objective.vp_per_unit + 1} VP per crate escaped via YOUR edge`,
+  method: 'Hit and run, no penalty to disengage',
+  restriction: 'Caught by Liberty Corps costs -5 VP'
+},
     };
     return interpretations[objective.type] || null;
   }
@@ -654,6 +683,12 @@ getFactionObjectiveInterpretation(factionId, objective, factionData, userSelecti
         method: '+1 Defense within territory',
         restriction: 'Human rituals cost -5 VP'
       }
+      'scattered_crates': {
+  name: 'Destroy Supply Lines',
+  goal: 'Deny resources to invaders',
+  scoring: `${objective.vp_per_unit} VP per crate destroyed or scattered`,
+  method: 'Crates don't need carrying, just denial',
+  restriction: 'Carrying makes you vulnerable'
     };
     return interpretations[objective.type] || null;
   }
