@@ -87,6 +87,7 @@ window.CC_APP = {
       { id: 'monsterology', title: 'Monsterology', file: 'faction-monsterology-v2.json' },
       { id: 'monsters', title: 'Monsters', file: 'faction-monsters-v2.json' },
       { id: 'shine_riders', title: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
+      { id: 'crow_queen', title: 'Crow Queen', file: 'faction-crow-queen.json' }
     ];
 
     const FACTION_TITLES = {
@@ -95,6 +96,7 @@ window.CC_APP = {
       monsterology: 'Monsterology',
       monsters: 'Monsters',
       shine_riders: 'Shine Riders'
+      crow_queen: 'Crow Queen'
     };
 
     async function loadFaction(factionId) {
