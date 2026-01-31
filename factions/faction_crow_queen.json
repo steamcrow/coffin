@@ -3,8 +3,8 @@
     "title": "The Crow Queen",
     "tagline": "All land bends. All flesh kneels.",
     "description": "Once the absolute ruler of Monstru, the Crow Queen—now called the Regent Black—was deposed by a monster uprising. Stripped of her throne but not her will, she fled with her Inner Court into exile. In Coffin Canyon, she has found not refuge, but opportunity. Here, she consecrates land, enslaves monsters, and grinds manlings beneath the weight of returning dominion.",
-    "philosophy": "Order is not negotiated. It is imposed. Monsters are tools, humans are cattle, and land exists to be ruled. The Regent Black does not conquer for wealth—she conquers to restore hierarchy, with herself at its apex.",
-    "history": "The fall of Monstru shattered the Crow Court, but it did not destroy it. Loyal servants followed the Queen into exile, carrying relics, rituals, and ancient knowledge of dominion. Coffin Canyon is not a refuge—it is a staging ground. Every battle fought here is another stone laid in the foundation of her returning empire."
+    "philosophy": "Order is not negotiated. It is imposed. Monsters are tools, humans are cattle, and land exists to be ruled. The Regent Black does not conquer for wealth — she conquers to restore hierarchy, with herself at its apex.",
+    "history": "The fall of Monstru shattered the Crow Court, but it did not destroy it. Loyal servants followed the Queen into exile, carrying relics, rituals, and ancient knowledge of dominion. Coffin Canyon is not a refuge — it is a staging ground. Every battle fought here is another stone laid in the foundation of her returning empire."
   },
 
   "faction_identity": {
@@ -12,7 +12,7 @@
       "Absolute hierarchy",
       "Land is claimed, not shared",
       "Monsters exist to serve",
-      "Humans exist to submit or die",
+      "Humans exist to be punished or die",
       "Power is accumulated, then revealed"
     ],
 
@@ -150,7 +150,7 @@
         "Hierarchy of Flesh",
         "Immune to Shaken and Broken"
       ],
-      "lore": "The Crow Queen herself. Calm, composed, and utterly certain of her right to rule.",
+      "lore": "The Crow Queen herself. Calm, composed, and utterly certain of her right to rule. Bow down, fleshy mortal.",
       "tactics": "Anchor the battlefield and protect at all costs. Her fall is catastrophic."
     },
 
@@ -172,6 +172,7 @@
         { "name": "Sweet Cakes", "cost": 5, "effect": "Once per game: Remove Shaken from an allied unit within 6\"" }
       ],
       "lore": "Silent attendants who carry banners, obelisks, comforts, and poison-laced sweets."
+      "tactics": "INSERT HERE"
     },
 
     {
@@ -191,7 +192,8 @@
       "optional_upgrades": [
         { "name": "Brass Bow", "cost": 15, "effect": "Range becomes 36\"" }
       ],
-      "lore": "Master of the Queen’s hunts—manling or monster."
+      "lore": "Master of the Queen’s hunts — manling or monster, it matters not."
+      "tactics": "INSERT HERE"
     },
 
     {
@@ -208,7 +210,8 @@
         "Disturbing Presence",
         "Deploy Demesne Marker"
       ],
-      "lore": "A laughing Klowna horror bound by oath and hunger. The Queen finds him endlessly amusing."
+      "lore": "A laughing Klowna horror bound by oath and hunger. The Queen finds him endlessly amusing, the rest of the Court hold their tongues."
+      "tactics": "INSERT HERE"
     },
 
     {
@@ -225,6 +228,7 @@
         "Restock Demesne"
       ],
       "lore": "Banker, advisor, and keeper of the Queen’s ledgers."
+      "tactics": "INSERT HERE"
     },
 
     {
@@ -240,7 +244,8 @@
         "Bodyguard",
         "Unyielding"
       ],
-      "lore": "The Queen’s shield and executioner in one."
+      "lore": "The Queen’s shield and High Champion."
+      "tactics": "INSERT HERE"
     },
 
     {
@@ -251,12 +256,13 @@
       "quality": 3,
       "defense": 1,
       "move": 9,
-      "weapon": "Bite and Claws",
+      "weapon": "Tooth and nail",
       "abilities": [
         "First Strike",
         "Objective Runner"
       ],
       "lore": "A collared creature that scurries ahead to claim what the Queen desires."
+      "tactics": "INSERT HERE"
     },
 
     {
