@@ -86,7 +86,7 @@ window.CC_APP = {
       { id: 'liberty_corps', title: 'Liberty Corps', file: 'faction-liberty-corps-v2.json' },
       { id: 'monsterology', title: 'Monsterology', file: 'faction-monsterology-v2.json' },
       { id: 'monsters', title: 'Monsters', file: 'faction-monsters-v2.json' },
-      { id: 'shine_riders', title: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
+      { id: 'shine_riders', title: 'Shine Riders', file: 'faction-shine-riders-v2.json' },
       { id: 'crow_queen', title: 'Crow Queen', file: 'faction-crow-queen.json' }
     ];
 
@@ -95,7 +95,7 @@ window.CC_APP = {
       liberty_corps: 'Liberty Corps',
       monsterology: 'Monsterology',
       monsters: 'Monsters',
-      shine_riders: 'Shine Riders'
+      shine_riders: 'Shine Riders',
       crow_queen: 'Crow Queen'
     };
 
