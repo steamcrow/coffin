@@ -35,6 +35,8 @@
         "Hierarchy of Flesh": "Enemy units that become Shaken within Consecrated Ground suffer an additional penalty.",
         "Immune to Shaken and Broken": "This unit never gains Shaken or Broken.",
         "Crown of Unanswered Law": "Enemy units within Sovereign Presence suffer −1 to Morale checks."
+        "Throne Without Walls": "The Regent Black is always considered to be within Consecrated Ground for the purposes of her own abilities and effects, regardless of terrain or marker placement. This does not generate Consecrated Ground for other units."
+
       },
 
       "optional_upgrades": [
