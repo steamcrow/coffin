@@ -5,7 +5,7 @@
     "source_version": "8.2",
     "warnings": []
   },
-  "index": [
+ "index": [
     { "id": "philosophy", "title": "Philosophy & Design", "path": "rules_master.sections.philosophy", "type": "meta" },
 
     { "id": "core_mechanics", "title": "Core Mechanics", "path": "rules_master.core_mechanics", "type": "core", "file": "10_core_mechanics.json" },
@@ -30,9 +30,22 @@
     { "id": "ability_dict_C", "title": "Ability Dictionary – C", "path": "rules_master.ability_dictionary.C_offense_damage", "type": "abilities", "file": "92_ability_dictionary_C.json" },
     { "id": "ability_dict_D", "title": "Ability Dictionary – D", "path": "rules_master.ability_dictionary.D_defense_survival", "type": "abilities", "file": "93_ability_dictionary_D.json" },
     { "id": "ability_dict_E", "title": "Ability Dictionary – E", "path": "rules_master.ability_dictionary.E_morale_fear", "type": "abilities", "file": "94_ability_dictionary_E.json" },
+    
     { "id": "ability_dict_F", "title": "Ability Dictionary – F", "path": "rules_master.ability_dictionary.F_terrain_environment", "type": "abilities", "file": "95_ability_dictionary_F.json" },
+    { "id": "R-ABIL-F-CONSECRATED-GROUND", "file": "95_ability_dictionary_F.json", "path": "abilities.consecrated_ground", "parent": "ability_dict_F" },
+    { "id": "R-ABIL-F-THE-QUEENS-LAW", "file": "95_ability_dictionary_F.json", "path": "abilities.the_queens_law", "parent": "ability_dict_F" },
+    { "id": "R-ABIL-F-CONSECRATION-ENGINE", "file": "95_ability_dictionary_F.json", "path": "abilities.consecration_engine", "parent": "ability_dict_F" },
+
     { "id": "ability_dict_G", "title": "Ability Dictionary – G", "path": "rules_master.ability_dictionary.G_thyr_ritual", "type": "abilities", "file": "96_ability_dictionary_G.json" },
+    
     { "id": "ability_dict_H", "title": "Ability Dictionary – H", "path": "rules_master.ability_dictionary.H_interaction_support", "type": "abilities", "file": "97_ability_dictionary_H.json" },
+    { "id": "R-ABIL-H-SOVEREIGN-PRESENCE", "file": "97_ability_dictionary_H.json", "path": "abilities.sovereign_presence", "parent": "ability_dict_H" },
+    { "id": "R-ABIL-H-UNQUESTIONED-RULE", "file": "97_ability_dictionary_H.json", "path": "abilities.unquestioned_rule", "parent": "ability_dict_H" },
+    { "id": "R-ABIL-H-HIERARCHY-OF-FLESH", "file": "97_ability_dictionary_H.json", "path": "abilities.hierarchy_of_flesh", "parent": "ability_dict_H" },
+    { "id": "R-ABIL-H-CROWN-OF-UNANSWERED-LAW", "file": "97_ability_dictionary_H.json", "path": "abilities.crown_of_unanswered_law", "parent": "ability_dict_H" },
+    { "id": "R-ABIL-H-VEILED-WHISPERS", "file": "97_ability_dictionary_H.json", "path": "abilities.veiled_whispers", "parent": "ability_dict_H" },
+    { "id": "R-ABIL-H-RITUAL-COMFORT", "file": "97_ability_dictionary_H.json", "path": "abilities.ritual_comfort", "parent": "ability_dict_H" },
+    { "id": "R-ABIL-H-DEPLOY-DEMESNE-MARKER", "file": "97_ability_dictionary_H.json", "path": "abilities.deploy_demesne_marker", "parent": "ability_dict_H" },
 
     { "id": "location_vault_97", "title": "Location Vault (97)", "path": "rules_master.location_vault_97", "type": "vault", "file": "97_location_vault.json" },
 
