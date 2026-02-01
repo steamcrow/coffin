@@ -502,5 +502,19 @@ class ScenarioBrain {
 
 // Global Initialization
 const brain = new ScenarioBrain();
-console.log("🎉 SCENARIO BRAIN: Fully assembled and ready for generation.");
-  
+
+// The "Handshake" Bridge for cc_loader_core.js
+window.CC_APP = {
+    init: async function() {
+        console.log("🚀 CC_APP.init called: Starting Scenario Brain");
+        try {
+            await brain.loadAllData();
+            return brain; // This hands the brain back to the core loader
+        } catch (err) {
+            console.error("❌ CC_APP failed to initialize brain:", err);
+            throw err;
+        }
+    }
+};
+
+console.log("🎉 SCENARIO BRAIN: Fully assembled and Handshake Ready.");
