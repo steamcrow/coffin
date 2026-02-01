@@ -42,28 +42,14 @@
     "haunted_wake": {
       "_id": "R-ABIL-F-HAUNTED-WAKE",
       "timing": "passive",
-      "short": "Leave haunted terrain behind.",
-      "long": "Passive. Terrain passed through becomes Haunted until end of round."
+      "short": "Units leave Haunted trails.",
+      "long": "Passive. This unit leaves a trail of Haunted ground (1\" wide) along its path of movement. Trail lasts until the end of the round."
     },
 
-    "purify": {
-      "_id": "R-ABIL-F-PURIFY",
-      "timing": "main_action",
-      "short": "Cleanse terrain traits.",
-      "long": "Main Action. Remove 1 trait from terrain within 6\"; Haunted becomes Tainted."
-    },
-
-    "sacrilege": {
-      "_id": "R-ABIL-F-SACRILEGE",
+    "terrain_mastery": {
+      "_id": "R-ABIL-F-TERRAIN-MASTERY",
       "timing": "passive",
-      "short": "Desecrate sacred ground.",
-      "long": "Passive. While in Sacred terrain, enemies within 6\" suffer -1 die on Morale."
-    },
-
-    "terrain_adaptation": {
-      "_id": "R-ABIL-F-TERRAIN-ADAPTATION",
-      "timing": "passive",
-      "short": "Ignore one terrain penalty.",
+      "short": "Ignore 1 terrain trait.",
       "long": "Passive. Choose 1 terrain trait on deployment; ignore its penalties (not damage or escalation)."
     },
 
@@ -91,9 +77,29 @@
     "silent": {
       "_id": "R-ABIL-F-SILENT",
       "timing": "passive",
-      "short": "No sound; undetectable by audio.",
-      "long": "Passive. This unit makes no sound and cannot be detected by audio-based abilities or sound-based monster detection."
-    }
+      "short": "No sound-based detection.",
+      "long": "Passive. This unit makes no noise. It cannot be detected by hearing-based sensors or abilities. It cannot use audio-based Command or Inspire abilities."
+    },
 
+    "consecrated_ground": {
+      "_id": "R-ABIL-F-CONSECRATED-GROUND",
+      "timing": "passive",
+      "short": "Allies gain morale; enemies suffer movement/spirit penalties.",
+      "long": "Passive. Within this area, the laws of the Queen are absolute. Friendly units gain +1 to Quality checks and ignore the 'Shaken' status. Enemies within this area suffer penalties to movement and spirit as determined by scenario rules."
+    },
+
+    "the_queens_law": {
+      "_id": "R-ABIL-F-THE-QUEENS-LAW",
+      "timing": "aura",
+      "short": "Allies in Consecrated Ground gain +1 Quality and ignore Shaken.",
+      "long": "Aura. Friendly units within the radius of Consecrated Ground gain +1 to Quality checks and are immune to the 'Shaken' status condition."
+    },
+
+    "consecration_engine": {
+      "_id": "R-ABIL-F-CONSECRATION-ENGINE",
+      "timing": "passive",
+      "short": "Generates 12\" radius of Consecrated Ground.",
+      "long": "Passive. This unit projects a 12\" radius of Consecrated Ground. This terrain type overwrites all other environmental effects for enemy units."
+    }
   }
 }
