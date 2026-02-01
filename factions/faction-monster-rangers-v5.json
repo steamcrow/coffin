@@ -1,53 +1,44 @@
 {
-"introduction": {
-  "title": "Monster Rangers: Believe, Study, Protect",
-  "tagline": "Befriend the monster. Protect the world.",
-  "description": "The Monster Rangers are a frontier order dedicated to the belief that monsters are not aberrations, but living parts of Obscuria’s ecology. Founded in 1903 by Baron Davis, the Rangers exist to study monsters without exploitation, protect them from eradication, and defend human communities from panic-driven destruction. They walk the line between trust and danger—forming bonds where possible, standing firm where necessary, and choosing understanding over extermination.",
-  
-  "philosophy": "Monsters are not enemies by default. Fear is not a plan. Knowledge is protection. We believe monsters deserve understanding, we study them so mistakes are not repeated, and we protect both monsters and people from those who would turn Obscuria into a slaughterhouse or a strip mine.",
-  
-  "history": "The Monster Rangers were formally established in 1903 by Baron Davis after witnessing repeated frontier massacres—both of monsters and of settlements—caused by ignorance, rumor, and reckless Thyr pursuit. Drawing from scouts, naturalists, folklorists, and survivors, the early Rangers cataloged monsters, mapped territories, and proved that many creatures could be reasoned with, relocated, or defended rather than destroyed. Over time, the Rangers became a recognized—if often distrusted—presence across Coffin Canyon, standing between hysteria and harmony."
-},
-
-"faction_identity": {
-  "core_values": [
-    "Believe monsters are living beings, not targets",
-    "Study monsters to prevent fear-driven violence",
-    "Protect monsters, people, and places from exploitation",
-    "Befriend when possible, intervene when necessary",
-    "Preserve Obscuria for future generations"
-  ],
-  
-  "what_they_fight_for": [
-    "Peaceful coexistence between monsters and settlements",
-    "Accurate knowledge of monster behavior and ecology",
-    "Protection of monster habitats and migration routes",
-    "Responsible containment of dangerous entities",
-    "A future where monsters are understood, not hunted"
-  ],
-  
-  "what_they_fight_against": [
-    "Indiscriminate monster hunting and eradication",
-    "Exploitation of monsters for profit, trophies, or fuel",
-    "Reckless Thyr extraction that destabilizes ecosystems",
-    "Panic, superstition, and frontier vigilantism",
-    "Those who profit from turning monsters into monsters"
-  ],
-  
-  "reputation": {
-    "allies_see_them_as": "Level-headed protectors, expert trackers, and the first line of calm when monsters appear",
-    "enemies_see_them_as": "Monster lovers, obstructionists, and meddlers standing in the way of easy profit",
-    "monsters_see_them_as": "Humans who do not always attack—sometimes helpers, sometimes wardens",
-    "the_canyon_sees_them_as": "Watchers. Walkers of old paths. Not conquerors."
-  }
-},
-  
+  "introduction": {
+    "title": "Monster Rangers: Believe, Study, Protect",
+    "tagline": "Befriend the monster. Protect the world.",
+    "description": "The Monster Rangers are a frontier order dedicated to the belief that monsters are not aberrations, but living parts of Obscuria’s ecology. Founded in 1903 by Baron Davis, the Rangers exist to study monsters without exploitation, protect them from eradication, and defend human communities from panic-driven destruction. They walk the line between trust and danger—forming bonds where possible, standing firm where necessary, and choosing understanding over extermination.",
+    "philosophy": "Monsters are not enemies by default. Fear is not a plan. Knowledge is protection. We believe monsters deserve understanding, we study them so mistakes are not repeated, and we protect both monsters and people from those who would turn Obscuria into a slaughterhouse or a strip mine.",
+    "history": "The Monster Rangers were formally established in 1903 by Baron Davis after witnessing repeated frontier massacres—both of monsters and of settlements—caused by ignorance, rumor, and reckless Thyr pursuit. Drawing from scouts, naturalists, folklorists, and survivors, the early Rangers cataloged monsters, mapped territories, and proved that many creatures could be reasoned with, relocated, or defended rather than destroyed. Over time, the Rangers became a recognized—if often distrusted—presence across Coffin Canyon, standing between hysteria and harmony."
+  },
+  "faction_identity": {
+    "core_values": [
+      "Believe monsters are living beings, not targets",
+      "Study monsters to prevent fear-driven violence",
+      "Protect monsters, people, and places from exploitation",
+      "Befriend when possible, intervene when necessary",
+      "Preserve Obscuria for future generations"
+    ],
+    "what_they_fight_for": [
+      "Peaceful coexistence between monsters and settlements",
+      "Accurate knowledge of monster behavior and ecology",
+      "Protection of monster habitats and migration routes",
+      "Responsible containment of dangerous entities",
+      "A future where monsters are understood, not hunted"
+    ],
+    "what_they_fight_against": [
+      "Indiscriminate monster hunting and eradication",
+      "Exploitation of monsters for profit, trophies, or fuel",
+      "Reckless Thyr extraction that destabilizes ecosystems",
+      "Panic, superstition, and frontier vigilantism",
+      "Those who profit from turning monsters into monsters"
+    ],
+    "reputation": {
+      "allies_see_them_as": "Level-headed protectors, expert trackers, and the first line of calm when monsters appear",
+      "enemies_see_them_as": "Monster lovers, obstructionists, and meddlers standing in the way of easy profit",
+      "monsters_see_them_as": "Humans who do not always attack—sometimes helpers, sometimes wardens",
+      "the_canyon_sees_them_as": "Watchers. Walkers of old paths. Not conquerors."
+    }
+  },
   "faction_mechanics": {
     "signature_ability": "Befriend Monsters",
     "signature_ability_description": "Monster Rangers can befriend monsters using Pocket Snacks (contested Quality rolls) or specialized befriending abilities. Befriended monsters activate with Rangers, turning enemies into allies.",
-    
     "playstyle": "Adaptive specialists with incredible diversity. Monster Rangers field stealth scouts, mystic casters, medics, mechanics, psychics, undead caretakers, titan specialists, and flying daredevils. They excel at unconventional solutions, terrain control, and turning the battlefield's monsters against their opponents.",
-    
     "strengths": [
       "Extreme unit diversity and specialist options",
       "Befriend ability turns monsters into allies",
@@ -55,7 +46,6 @@
       "Excellent at scenario objectives requiring finesse",
       "Relics and mystical powers provide game-changing moments"
     ],
-    
     "weaknesses": [
       "Lower armor than military factions",
       "Befriending requires risk and positioning",
@@ -64,7 +54,6 @@
       "Expensive specialist units"
     ]
   },
-  
   "canyon_state_relationships": {
     "preferred_states": [
       {
@@ -72,7 +61,7 @@
         "reason": "Rangers' ideal: controlled but not destroyed, monsters contained not erased, land stable but alive"
       },
       {
-        "state": "Strangewild", 
+        "state": "Strangewild",
         "reason": "Rangers thrive in feral biomes, can navigate and befriend wild beasts, understand the growth"
       },
       {
@@ -80,7 +69,6 @@
         "reason": "Rangers have gas masks and respirators, know how to survive the storms, can operate where others suffocate"
       }
     ],
-    
     "neutral_states": [
       {
         "state": "Haunted",
@@ -95,7 +83,6 @@
         "reason": "Not ideal, but Rangers can operate in Shine Rider territory when needed"
       }
     ],
-    
     "opposed_states": [
       {
         "state": "Liberated",
@@ -111,7 +98,6 @@
       }
     ]
   },
-  
   "faction_tags": [
     "monster_protectors",
     "mystical",
@@ -124,7 +110,6 @@
     "environmental",
     "harmony"
   ],
-  
   "scenario_preferences": {
     "ideal_scenarios": [
       "Monster rescue and liberation",
@@ -134,7 +119,6 @@
       "Environmental disaster response",
       "Sacred site defense"
     ],
-    
     "challenging_scenarios": [
       "Pure combat attrition",
       "No monsters present",
@@ -142,33 +126,42 @@
       "Scenarios requiring monster destruction"
     ]
   },
-  
   "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons (like Harpoons) have additional point costs listed in optional_upgrades.",
-  
   "faction_features": [
     {
       "name": "Befriend Monsters",
       "cost": 0,
       "required": true,
       "effect": "Monster Rangers can befriend monsters using Pocket Snacks (contested Quality rolls) or specialized befriending abilities (Befriend Beast, Befriend Bloodless, Befriend Spirits, Befriend Automat, Befriend Kaiju). Befriended monsters activate with Rangers.",
-      "keywords": ["befriend", "monster_alliance", "peaceful_resolution"]
+      "keywords": [
+        "befriend",
+        "monster_alliance",
+        "peaceful_resolution"
+      ]
     },
     {
       "name": "Branch System",
       "cost": 0,
       "required": true,
       "effect": "Rangers belong to different Branches (Crow, Conjure Guard, Doom Mime, Signal, Skull, Yokai, etc.) which grant thematic abilities and playstyles.",
-      "keywords": ["diverse", "specialists", "branches"]
+      "keywords": [
+        "diverse",
+        "specialists",
+        "branches"
+      ]
     },
     {
       "name": "Diverse Specialists",
       "cost": 0,
       "required": false,
       "effect": "Monster Rangers field incredible variety: stealth scouts, mystic casters, medics, mechanics, psychics, undead caretakers, titan specialists, flying daredevils, and more.",
-      "keywords": ["versatile", "adaptive", "specialists"]
+      "keywords": [
+        "versatile",
+        "adaptive",
+        "specialists"
+      ]
     }
   ],
-  
   "units": [
     {
       "name": "Core Ranger",
@@ -180,33 +173,64 @@
       "move": 6,
       "range": 8,
       "weapon": "Standard-issue Ranger Hatchet, now balanced for throwing!",
-      "weapon_properties": ["Melee"],
-      "composition": { "per_points": 0 },
+      "weapon_properties": [
+        "Melee"
+      ],
+      "composition": {
+        "per_points": 0
+      },
       "abilities": [],
       "lore": "Field-trained Monster Ranger infantry straight from Boot Camp. Signature tool: hatchet, equal parts weapon and working tool.",
       "tactics": "Baseline skirmisher. Thrown hatchets for short-range pressure, finish in melee.",
-      
-      "unit_tags": ["basic", "skirmisher", "melee", "ranged"],
-      "terrain_preferences": ["general", "woods", "ruins"],
-      "objective_keywords": ["control", "patrol", "defend"],
+      "unit_tags": [
+        "basic",
+        "skirmisher",
+        "melee",
+        "ranged"
+      ],
+      "terrain_preferences": [
+        "general",
+        "woods",
+        "ruins"
+      ],
+      "objective_keywords": [
+        "control",
+        "patrol",
+        "defend"
+      ],
       "state_advantages": {
-        "good_in": ["Held", "Poisoned"],
-        "bad_in": ["Liberated"]
+        "good_in": [
+          "Held",
+          "Poisoned"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
       },
-      
       "optional_upgrades": [
-        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
-        { 
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense. Light Armor.",
-          "stat_modifiers": { "defense": 1 }
+        {
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Immune to Coffin Cough and Blinding effects."
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+        {
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense. Light Armor.",
+          "stat_modifiers": {
+            "defense": 1
+          }
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend attempt."
+        }
       ]
     },
-    
     {
       "name": "Cargo Tiger Porter",
       "faction": "Monster Rangers",
@@ -217,34 +241,75 @@
       "move": 6,
       "range": 12,
       "weapon": "Slingshot + Prybar",
-      "weapon_properties": ["Melee", "Prybar"],
-      "composition": { "per_points": 0 },
-      "abilities": ["Load and Carry", "Cut and Run", "Extraction Priority"],
+      "weapon_properties": [
+        "Melee",
+        "Prybar"
+      ],
+      "composition": {
+        "per_points": 0
+      },
+      "abilities": [
+        "Load and Carry",
+        "Cut and Run",
+        "Extraction Priority"
+      ],
       "lore": "Hard-working employees running Cargo Tiger routes and delivering packages.",
       "tactics": "Backline harassment and objective play.",
-      
-      "unit_tags": ["support", "carrier", "extraction", "objective_specialist"],
-      "terrain_preferences": ["open", "roads", "settlements"],
-      "objective_keywords": ["extraction", "escort", "cargo", "recovery", "salvage"],
+      "unit_tags": [
+        "support",
+        "carrier",
+        "extraction",
+        "objective_specialist"
+      ],
+      "terrain_preferences": [
+        "open",
+        "roads",
+        "settlements"
+      ],
+      "objective_keywords": [
+        "extraction",
+        "escort",
+        "cargo",
+        "recovery",
+        "salvage"
+      ],
       "state_advantages": {
-        "good_in": ["Held", "Lawless", "any"],
+        "good_in": [
+          "Held",
+          "Lawless",
+          "any"
+        ],
         "bad_in": []
       },
-      "special_scenarios": ["escort_missions", "extraction_heist", "cargo_recovery"],
-      
+      "special_scenarios": [
+        "escort_missions",
+        "extraction_heist",
+        "cargo_recovery"
+      ],
       "optional_upgrades": [
-        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
-        { 
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense. Light Armor.",
-          "stat_modifiers": { "defense": 1 }
+        {
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Immune to Coffin Cough and Blinding effects."
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
+        {
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense. Light Armor.",
+          "stat_modifiers": {
+            "defense": 1
+          }
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend Beast attempt."
+        }
       ]
     },
-    
     {
       "name": "Crow Ranger",
       "faction": "Monster Rangers",
@@ -255,34 +320,77 @@
       "move": 8,
       "range": 8,
       "weapon": "Hatchet",
-      "weapon_properties": ["Melee"],
-      "composition": { "per_points": 150 },
-      "abilities": ["Stealth", "Climber"],
+      "weapon_properties": [
+        "Melee"
+      ],
+      "composition": {
+        "per_points": 150
+      },
+      "abilities": [
+        "Stealth",
+        "Climber"
+      ],
       "lore": "First Ranger Branch. Masters of stealth and speed. Sneaky!",
       "tactics": "Fast scout and infiltrator.",
-      
-      "unit_tags": ["stealth", "scout", "fast", "infiltrator", "climber"],
-      "terrain_preferences": ["vertical", "ruins", "urban", "dense_cover"],
-      "objective_keywords": ["infiltration", "sabotage", "assassination", "recon", "ambush"],
+      "unit_tags": [
+        "stealth",
+        "scout",
+        "fast",
+        "infiltrator",
+        "climber"
+      ],
+      "terrain_preferences": [
+        "vertical",
+        "ruins",
+        "urban",
+        "dense_cover"
+      ],
+      "objective_keywords": [
+        "infiltration",
+        "sabotage",
+        "assassination",
+        "recon",
+        "ambush"
+      ],
       "state_advantages": {
-        "good_in": ["Lawless", "Strangewild", "Haunted"],
-        "bad_in": ["Liberated"]
+        "good_in": [
+          "Lawless",
+          "Strangewild",
+          "Haunted"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
       },
-      "special_scenarios": ["ambush", "assassination", "infiltration"],
-      
+      "special_scenarios": [
+        "ambush",
+        "assassination",
+        "infiltration"
+      ],
       "optional_upgrades": [
-        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
-        { 
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense. Light Armor.",
-          "stat_modifiers": { "defense": 1 }
+        {
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Immune to Coffin Cough and Blinding effects."
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
+        {
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense. Light Armor.",
+          "stat_modifiers": {
+            "defense": 1
+          }
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend Beast attempt."
+        }
       ]
     },
-    
     {
       "name": "Clocktalker Mechanic",
       "faction": "Monster Rangers",
@@ -293,34 +401,78 @@
       "move": 6,
       "range": 0,
       "weapon": "Heavy Wrench",
-      "weapon_properties": ["Impact", "Melee"],
-      "composition": { "per_points": 300 },
-      "abilities": ["Repair", "Befriend Automat", "Tough"],
+      "weapon_properties": [
+        "Impact",
+        "Melee"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Repair",
+        "Befriend Automat",
+        "Tough"
+      ],
       "lore": "Monster Ranger mechanics and Mechan tamers.",
       "tactics": "Support and construct control.",
-      
-      "unit_tags": ["mechanic", "repair", "automat_specialist", "support", "tough"],
-      "terrain_preferences": ["industrial", "ruins", "mechanical"],
-      "objective_keywords": ["repair", "salvage", "befriend_automat", "machinery", "constructs"],
+      "unit_tags": [
+        "mechanic",
+        "repair",
+        "automat_specialist",
+        "support",
+        "tough"
+      ],
+      "terrain_preferences": [
+        "industrial",
+        "ruins",
+        "mechanical"
+      ],
+      "objective_keywords": [
+        "repair",
+        "salvage",
+        "befriend_automat",
+        "machinery",
+        "constructs"
+      ],
       "state_advantages": {
-        "good_in": ["Rusted", "Extracted", "any_with_constructs"],
-        "bad_in": ["Strangewild"]
+        "good_in": [
+          "Rusted",
+          "Extracted",
+          "any_with_constructs"
+        ],
+        "bad_in": [
+          "Strangewild"
+        ]
       },
-      "special_scenarios": ["automat_control", "machine_salvage", "construct_befriending"],
-      
+      "special_scenarios": [
+        "automat_control",
+        "machine_salvage",
+        "construct_befriending"
+      ],
       "optional_upgrades": [
-        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Immune to Coffin Cough and Blinding effects."
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Automat attempt." }
+        {
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": {
+            "defense": 1
+          }
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend Automat attempt."
+        }
       ]
     },
-    
     {
       "name": "Relic Guardian",
       "faction": "Monster Rangers",
@@ -331,47 +483,120 @@
       "move": 6,
       "range": 0,
       "weapon": "Arcane Staff",
-      "weapon_properties": ["Melee"],
-      "composition": { "per_points": 400 },
-      "abilities": ["Fearless", "Relic Bearer"],
+      "weapon_properties": [
+        "Melee"
+      ],
+      "composition": {
+        "per_points": 400
+      },
+      "abilities": [
+        "Fearless",
+        "Relic Bearer"
+      ],
       "lore": "Field officers entrusted with sacred Conjure Guard relics.",
       "tactics": "Hero unit. Relic timing defines battlefield impact.",
-      
-      "unit_tags": ["hero", "mystical", "fearless", "relic_bearer", "game_changer"],
-      "terrain_preferences": ["mystical", "ritual_sites", "temples", "graveyards"],
-      "objective_keywords": ["ritual", "mystical", "artifact", "protection", "corruption_prevention"],
-      "state_advantages": {
-        "good_in": ["Held", "Exalted", "Haunted"],
-        "bad_in": ["Liberated", "Rusted"]
-      },
-      "special_scenarios": ["ritual_protection", "artifact_recovery", "mystical_corruption"],
-      
-      "supplemental_abilities": [
-        { "name": "Groom's Grail", "effect": "Once per game: 12\" cone freeze for 2 rounds." },
-        { "name": "Alune's Shovel", "effect": "Once per game: Create 10\" Hazardous thorn wall." },
-        { "name": "Blink Crown", "effect": "Once per game: Swap positions with any creature." },
-        { "name": "Gravewarden Bell", "effect": "Once per game: 8\" morale shock (Shaken → Panicked)." },
-        { "name": "Saltbound Reliquary", "effect": "Once per game: 6\" anti-undead damage aura." },
-        { "name": "Widow's Lantern", "effect": "Once per game: Remove Stealth and cover in 10\" aura." },
-        { "name": "Iron Psalm Nails", "effect": "Once per game: Anchor enemy for 2 rounds." },
-        { "name": "Roluun's Mask", "effect": "Once per game: Enemy morale fail = Broken." },
-        { "name": "Thurible of Crawling Smoke", "effect": "Once per game: Create 5\" smoke cloud." },
-        { "name": "Pact Mirror", "effect": "Once per game: Redirect all damage to ally." }
+      "unit_tags": [
+        "hero",
+        "mystical",
+        "fearless",
+        "relic_bearer",
+        "game_changer"
       ],
-      
-      "optional_upgrades": [
-        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
+      "terrain_preferences": [
+        "mystical",
+        "ritual_sites",
+        "temples",
+        "graveyards"
+      ],
+      "objective_keywords": [
+        "ritual",
+        "mystical",
+        "artifact",
+        "protection",
+        "corruption_prevention"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Held",
+          "Exalted",
+          "Haunted"
+        ],
+        "bad_in": [
+          "Liberated",
+          "Rusted"
+        ]
+      },
+      "special_scenarios": [
+        "ritual_protection",
+        "artifact_recovery",
+        "mystical_corruption"
+      ],
+      "supplemental_abilities": [
         {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
+          "name": "Groom's Grail",
+          "effect": "Once per game: 12\" cone freeze for 2 rounds."
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
+        {
+          "name": "Alune's Shovel",
+          "effect": "Once per game: Create 10\" Hazardous thorn wall."
+        },
+        {
+          "name": "Blink Crown",
+          "effect": "Once per game: Swap positions with any creature."
+        },
+        {
+          "name": "Gravewarden Bell",
+          "effect": "Once per game: 8\" morale shock (Shaken → Panicked)."
+        },
+        {
+          "name": "Saltbound Reliquary",
+          "effect": "Once per game: 6\" anti-undead damage aura."
+        },
+        {
+          "name": "Widow's Lantern",
+          "effect": "Once per game: Remove Stealth and cover in 10\" aura."
+        },
+        {
+          "name": "Iron Psalm Nails",
+          "effect": "Once per game: Anchor enemy for 2 rounds."
+        },
+        {
+          "name": "Roluun's Mask",
+          "effect": "Once per game: Enemy morale fail = Broken."
+        },
+        {
+          "name": "Thurible of Crawling Smoke",
+          "effect": "Once per game: Create 5\" smoke cloud."
+        },
+        {
+          "name": "Pact Mirror",
+          "effect": "Once per game: Redirect all damage to ally."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Immune to Coffin Cough and Blinding effects."
+        },
+        {
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": {
+            "defense": 1
+          }
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend Beast attempt."
+        }
       ]
     },
-    
     {
       "name": "Conjure Guard",
       "faction": "Monster Rangers",
@@ -383,34 +608,81 @@
       "range": 12,
       "weapon": "Hex Bolts",
       "weapon_properties": [],
-      "composition": {"per_points": 300},
-      "abilities": ["Shield Aura", "Hex", "Witch Stitching"],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Shield Aura",
+        "Hex",
+        "Witch Stitching"
+      ],
       "lore": "Mystic protectors who focus on Witch Stitches - systematic warding using thread and needle. Understand we are deeply linked like thread.",
       "tactics": "Position centrally for Shield Aura (+1 Defense to allies within 6\"). Hex debuffs enemies (-1 Quality). Witch Stitching ward (5+ ignore first damage per activation).",
-      
-      "unit_tags": ["mystic", "support", "defensive", "debuffer", "protector"],
-      "terrain_preferences": ["central", "defensive_positions", "ritual_sites"],
-      "objective_keywords": ["defense", "protection", "ward", "mystical_defense", "support"],
+      "unit_tags": [
+        "mystic",
+        "support",
+        "defensive",
+        "debuffer",
+        "protector"
+      ],
+      "terrain_preferences": [
+        "central",
+        "defensive_positions",
+        "ritual_sites"
+      ],
+      "objective_keywords": [
+        "defense",
+        "protection",
+        "ward",
+        "mystical_defense",
+        "support"
+      ],
       "state_advantages": {
-        "good_in": ["Held", "Haunted", "Exalted"],
-        "bad_in": ["Rusted", "Liberated"]
+        "good_in": [
+          "Held",
+          "Haunted",
+          "Exalted"
+        ],
+        "bad_in": [
+          "Rusted",
+          "Liberated"
+        ]
       },
-      "special_scenarios": ["defensive_siege", "protection", "mystical_warding"],
-      
+      "special_scenarios": [
+        "defensive_siege",
+        "protection",
+        "mystical_warding"
+      ],
       "optional_upgrades": [
-        { "name": "Fire Hat", "cost": 5, "type": "Upgrade", "effect": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster." },
-        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
+          "name": "Fire Hat",
+          "cost": 5,
+          "type": "Upgrade",
+          "effect": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster."
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+        {
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Immune to Coffin Cough and Blinding effects."
+        },
+        {
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": {
+            "defense": 1
+          }
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend attempt."
+        }
       ]
     },
-    
     {
       "name": "Dark Librarian",
       "faction": "Monster Rangers",
@@ -421,34 +693,75 @@
       "move": 6,
       "range": 0,
       "weapon": "Ritual Implements",
-      "weapon_properties": ["Melee"],
-      "composition": {"per_points": 300},
-      "abilities": ["Purification Ritual", "Forbidden Knowledge", "Formulae Master"],
+      "weapon_properties": [
+        "Melee"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Purification Ritual",
+        "Forbidden Knowledge",
+        "Formulae Master"
+      ],
       "lore": "Study, catalog, and protect Monster Ranger knowledge. Arcane repositories of legends, stories, Formulae. Motto: 'You are what you know.'",
       "tactics": "Backline support. (1) Purify hazardous terrain (12\" radius, once per game), (2) Boost befriend vs chosen monster type (+1 die within 12\"), (3) Amplify Conjure Guards (extend range/area +6\"/+3\").",
-      
-      "unit_tags": ["mystic", "support", "knowledge", "purification", "buff"],
-      "terrain_preferences": ["backline", "libraries", "study_sites"],
-      "objective_keywords": ["purification", "knowledge", "research", "mystical_study", "corruption_cleansing"],
+      "unit_tags": [
+        "mystic",
+        "support",
+        "knowledge",
+        "purification",
+        "buff"
+      ],
+      "terrain_preferences": [
+        "backline",
+        "libraries",
+        "study_sites"
+      ],
+      "objective_keywords": [
+        "purification",
+        "knowledge",
+        "research",
+        "mystical_study",
+        "corruption_cleansing"
+      ],
       "state_advantages": {
-        "good_in": ["Poisoned", "Haunted", "Exalted"],
+        "good_in": [
+          "Poisoned",
+          "Haunted",
+          "Exalted"
+        ],
         "bad_in": []
       },
-      "special_scenarios": ["purification", "corruption_cleansing", "knowledge_recovery"],
-      
+      "special_scenarios": [
+        "purification",
+        "corruption_cleansing",
+        "knowledge_recovery"
+      ],
       "optional_upgrades": [
-        { "name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Immune to Coffin Cough and Blinding effects." },
         {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Immune to Coffin Cough and Blinding effects."
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+        {
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": {
+            "defense": 1
+          }
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend attempt."
+        }
       ]
     },
-    
     {
       "name": "Monster Medic",
       "faction": "Monster Rangers",
@@ -459,32 +772,67 @@
       "move": 6,
       "range": 6,
       "weapon": "Surgical Implements",
-      "weapon_properties": ["Melee"],
-      "composition": {"per_points": 300},
-      "abilities": ["Blood Transfusion", "Venom", "VitaGood Brew", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "weapon_properties": [
+        "Melee"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Blood Transfusion",
+        "Venom",
+        "VitaGood Brew",
+        {
+          "name": "Built-In Respirator",
+          "effect": "Immune to gas, smoke, poison, and airborne hazard effects."
+        }
+      ],
       "lore": "Treat Monster and Manling alike. Med Kits contain as many poisons as medicines. Brew VitaGood, perform blood transfusions. Wear field Plague Doctor masks.",
       "tactics": "Each turn: Blood Transfusion (base contact, sacrifice 1Q to heal 1Q, or 2Q for monsters - RISKY!) OR Venom (6\" poison). VitaGood tokens (2) for recovery or emergency heal.",
-      
-      "unit_tags": ["medic", "healer", "poison", "support", "hazard_immune"],
-      "terrain_preferences": ["hazardous", "toxic", "anywhere_needed"],
-      "objective_keywords": ["healing", "poison", "survival", "attrition", "support"],
+      "unit_tags": [
+        "medic",
+        "healer",
+        "poison",
+        "support",
+        "hazard_immune"
+      ],
+      "terrain_preferences": [
+        "hazardous",
+        "toxic",
+        "anywhere_needed"
+      ],
+      "objective_keywords": [
+        "healing",
+        "poison",
+        "survival",
+        "attrition",
+        "support"
+      ],
       "state_advantages": {
-        "good_in": ["Poisoned", "Strangewild", "any_hazardous"],
+        "good_in": [
+          "Poisoned",
+          "Strangewild",
+          "any_hazardous"
+        ],
         "bad_in": []
       },
-      "special_scenarios": ["attrition", "survival", "toxic_environments"],
-      
+      "special_scenarios": [
+        "attrition",
+        "survival",
+        "toxic_environments"
+      ],
       "optional_upgrades": [
         {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
+          "stat_modifiers": {
+            "defense": 1
+          }
         }
       ]
     },
-    
     {
       "name": "Psychic Ranger",
       "faction": "Monster Rangers",
@@ -496,33 +844,79 @@
       "range": 12,
       "weapon": "Psychic Mind Ray",
       "weapon_properties": [],
-      "composition": {"per_points": 300},
-      "abilities": ["Fortuna Charms", "Third Eye Vision", "Mind Control", {"name": "Befriend Spirits", "effect": "May attempt Befriend against Ghost or Haunt Bloodless. Does not apply to physical undead."}],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Fortuna Charms",
+        "Third Eye Vision",
+        "Mind Control",
+        {
+          "name": "Befriend Spirits",
+          "effect": "May attempt Befriend against Ghost or Haunt Bloodless. Does not apply to physical undead."
+        }
+      ],
       "lore": "Pierce the BEYOND with Third Eye. Create Fortuna Charms (luck), project consciousness to control minds. Rare and vital. Motto: 'Seeing is Believing.'",
       "tactics": "Support specialist. (1) Fortuna Charms: 3 tokens for rerolls, (2) Third Eye: see Stealth/reveal hidden, (3) Mind Control: attack to control enemy's next activation.",
-      
-      "unit_tags": ["mystic", "psychic", "control", "support", "spirit_specialist"],
-      "terrain_preferences": ["mystical", "haunted", "ritual_sites"],
-      "objective_keywords": ["mind_control", "spirits", "revelation", "mystical_control", "befriend_haunts"],
+      "unit_tags": [
+        "mystic",
+        "psychic",
+        "control",
+        "support",
+        "spirit_specialist"
+      ],
+      "terrain_preferences": [
+        "mystical",
+        "haunted",
+        "ritual_sites"
+      ],
+      "objective_keywords": [
+        "mind_control",
+        "spirits",
+        "revelation",
+        "mystical_control",
+        "befriend_haunts"
+      ],
       "state_advantages": {
-        "good_in": ["Haunted", "Exalted", "Held"],
-        "bad_in": ["Rusted", "Liberated"]
+        "good_in": [
+          "Haunted",
+          "Exalted",
+          "Held"
+        ],
+        "bad_in": [
+          "Rusted",
+          "Liberated"
+        ]
       },
-      "special_scenarios": ["spirit_control", "haunt_befriending", "mystical_revelation"],
-      
+      "special_scenarios": [
+        "spirit_control",
+        "haunt_befriending",
+        "mystical_revelation"
+      ],
       "optional_upgrades": [
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
         {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Haunt attempt." }
+        {
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": {
+            "defense": 1
+          }
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend Haunt attempt."
+        }
       ]
     },
-    
     {
       "name": "Yokai Ranger",
       "faction": "Monster Rangers",
@@ -533,34 +927,76 @@
       "move": 6,
       "range": 0,
       "weapon": "Ritual Staff",
-      "weapon_properties": ["Melee"],
-      "composition": {"per_points": 300},
-      "abilities": ["Befriend Kaiju", "Kaiju Calming Ritual", "Yokai Knowledge"],
+      "weapon_properties": [
+        "Melee"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Befriend Kaiju",
+        "Kaiju Calming Ritual",
+        "Yokai Knowledge"
+      ],
       "lore": "Specialize in Yokai and Kaiju. Started 1909 when Baron Davis visited Osaka. 5000+ Yokai Rangers in Japan. Regimented scholarly approach. 'Kaiju Corps' - ultimate Kaiju specialists.",
       "tactics": "Titan specialist. Befriend Kaiju with +2 dice (Q3+2 = 5 dice vs Q6!). Kaiju Calming Ritual: 2-turn ritual to shrink rampaging Kaiju for +3 VP. Yokai Knowledge: +1 die aura vs Titans.",
-      
-      "unit_tags": ["specialist", "titan_expert", "kaiju_specialist", "ritual", "support"],
-      "terrain_preferences": ["open", "titan_zones", "ritual_sites"],
-      "objective_keywords": ["kaiju_control", "titan_calming", "befriend_titans", "ritual"],
+      "unit_tags": [
+        "specialist",
+        "titan_expert",
+        "kaiju_specialist",
+        "ritual",
+        "support"
+      ],
+      "terrain_preferences": [
+        "open",
+        "titan_zones",
+        "ritual_sites"
+      ],
+      "objective_keywords": [
+        "kaiju_control",
+        "titan_calming",
+        "befriend_titans",
+        "ritual"
+      ],
       "state_advantages": {
-        "good_in": ["Exalted", "Strangewild", "any_with_titans"],
-        "bad_in": ["Liberated"]
+        "good_in": [
+          "Exalted",
+          "Strangewild",
+          "any_with_titans"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
       },
-      "special_scenarios": ["titan_control", "kaiju_calming", "titan_befriending"],
-      
+      "special_scenarios": [
+        "titan_control",
+        "kaiju_calming",
+        "titan_befriending"
+      ],
       "optional_upgrades": [
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
         {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."
         },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
+        {
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "stat_modifiers": {
+            "defense": 1
+          }
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend attempt."
+        }
       ]
     },
-    
     {
       "name": "Scareforce Rattlekite",
       "faction": "Monster Rangers",
@@ -572,33 +1008,76 @@
       "range": 0,
       "weapon": "Dropped Flechettes",
       "weapon_properties": [],
-      "composition": {"per_points": 400},
-      "abilities": ["Flying", "Barely Controlled", "Flechette Drop", "Crash Landing", {"name": "Built-In Goggles", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "composition": {
+        "per_points": 400
+      },
+      "abilities": [
+        "Flying",
+        "Barely Controlled",
+        "Flechette Drop",
+        "Crash Landing",
+        {
+          "name": "Built-In Goggles",
+          "effect": "Immune to gas, smoke, poison, and airborne hazard effects."
+        }
+      ],
       "lore": "Blappo invention - canvas wings, firework propulsion, daredevil pilots. They only land... or crash. Erratic flight makes hard to hit (D3 from speed). Glorious death trap!",
       "tactics": "High-speed bomber. Fly over enemies dropping flechettes (automatic hits!). MUST move 6\"+ or risk crash. When destroyed, crashes spectacularly (AoE damage).",
-      
-      "unit_tags": ["flying", "bomber", "fast", "reckless", "hazard_immune", "aoe"],
-      "terrain_preferences": ["open", "vertical", "anywhere_with_airspace"],
-      "objective_keywords": ["bombing", "aerial_assault", "speed", "disruption"],
+      "unit_tags": [
+        "flying",
+        "bomber",
+        "fast",
+        "reckless",
+        "hazard_immune",
+        "aoe"
+      ],
+      "terrain_preferences": [
+        "open",
+        "vertical",
+        "anywhere_with_airspace"
+      ],
+      "objective_keywords": [
+        "bombing",
+        "aerial_assault",
+        "speed",
+        "disruption"
+      ],
       "state_advantages": {
-        "good_in": ["Poisoned", "any"],
+        "good_in": [
+          "Poisoned",
+          "any"
+        ],
         "bad_in": []
       },
-      "special_scenarios": ["aerial_bombardment", "speed_runs", "disruption"],
-      
+      "special_scenarios": [
+        "aerial_bombardment",
+        "speed_runs",
+        "disruption"
+      ],
       "optional_upgrades": [
         {
-          "name": "Witch-Stitched", 
-          "cost": 15, 
-          "type": "Upgrade", 
+          "name": "Witch-Stitched",
+          "cost": 15,
+          "type": "Upgrade",
           "effect": "+1 Defense, Barely Controlled test succeeds on 3+ instead of 4+. More stable bomber.",
-          "stat_modifiers": { "defense": 1 }
+          "stat_modifiers": {
+            "defense": 1
+          }
         },
-        {"name": "Firework Bombs", "cost": 10, "type": "Upgrade", "effect": "Once per game: Drop firework bomb with Blast and Fear. Spectacular explosive!"},
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt with flying monsters." }
+        {
+          "name": "Firework Bombs",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "Once per game: Drop firework bomb with Blast and Fear. Spectacular explosive!"
+        },
+        {
+          "name": "Pocket Snacks",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game, gain advantage on a Befriend attempt with flying monsters."
+        }
       ]
     },
-    
     {
       "name": "Doom Mime",
       "faction": "Monster Rangers",
@@ -610,31 +1089,69 @@
       "range": 0,
       "weapon": "Steel Baton",
       "weapon_properties": [],
-      "composition": {"per_points": 400},
-      "abilities": ["Stealth", "Fear", "Fearless", "Brutal Blow", "Silent", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "composition": {
+        "per_points": 400
+      },
+      "abilities": [
+        "Stealth",
+        "Fear",
+        "Fearless",
+        "Brutal Blow",
+        "Silent",
+        {
+          "name": "Built-In Respirator",
+          "effect": "Immune to gas, smoke, poison, and airborne hazard effects."
+        }
+      ],
       "lore": "Secret police of Monster Rangers. Masked enforcers. Fixers, advisors who 'deal with' problems. Invite-only. Know 100 ways to make you cry with steel batons. Metal Mask built-in.",
       "tactics": "Pressure engine (Brute role). Stealth + Fear creates board denial. Commits to combat, grinds enemies down. Makes bad decisions unavoidable.",
-      
-      "unit_tags": ["brute", "stealth", "fear", "enforcer", "assassin", "hazard_immune"],
-      "terrain_preferences": ["urban", "lawless", "anywhere_dark"],
-      "objective_keywords": ["assassination", "enforcement", "intimidation", "pressure", "area_denial"],
+      "unit_tags": [
+        "brute",
+        "stealth",
+        "fear",
+        "enforcer",
+        "assassin",
+        "hazard_immune"
+      ],
+      "terrain_preferences": [
+        "urban",
+        "lawless",
+        "anywhere_dark"
+      ],
+      "objective_keywords": [
+        "assassination",
+        "enforcement",
+        "intimidation",
+        "pressure",
+        "area_denial"
+      ],
       "state_advantages": {
-        "good_in": ["Lawless", "Haunted", "Poisoned"],
-        "bad_in": ["Liberated"]
+        "good_in": [
+          "Lawless",
+          "Haunted",
+          "Poisoned"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
       },
-      "special_scenarios": ["assassination", "enforcement", "terror_tactics"],
-      
+      "special_scenarios": [
+        "assassination",
+        "enforcement",
+        "terror_tactics"
+      ],
       "optional_upgrades": [
         {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
+          "name": "Witch-Stitched",
+          "cost": 10,
+          "type": "Upgrade",
           "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
+          "stat_modifiers": {
+            "defense": 1
+          }
         }
       ]
     },
-    
     {
       "name": "Brine Diver",
       "faction": "Monster Rangers",
@@ -645,32 +1162,69 @@
       "move": 4,
       "range": 0,
       "weapon": "Electro-Trident",
-      "weapon_properties": ["Pierce", "Melee"],
-      "composition": {"per_points": 400},
-      "abilities": ["Tougher", "Fearless", "Pressure Sealed", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
+      "weapon_properties": [
+        "Pierce",
+        "Melee"
+      ],
+      "composition": {
+        "per_points": 400
+      },
+      "abilities": [
+        "Tougher",
+        "Fearless",
+        "Pressure Sealed",
+        {
+          "name": "Built-In Respirator",
+          "effect": "Immune to gas, smoke, poison, and airborne hazard effects."
+        }
+      ],
       "lore": "Deep sea divers in heavy pressure suits. The suit is their temple - rarely removed. Sea Rangers adapted to deep pressure. Electro-tridents crackle with Pierce energy.",
       "tactics": "Front-line tank. D5 + Tougher = roll 2 dice per damage (5+ ignores). Pierce cuts armor. Slow (4\") but unstoppable. Park on objectives.",
-      
-      "unit_tags": ["tank", "durable", "slow", "pierce", "fearless", "hazard_immune"],
-      "terrain_preferences": ["hazardous", "toxic", "water", "deep_pressure"],
-      "objective_keywords": ["control", "durability", "objective_holding", "tanking"],
+      "unit_tags": [
+        "tank",
+        "durable",
+        "slow",
+        "pierce",
+        "fearless",
+        "hazard_immune"
+      ],
+      "terrain_preferences": [
+        "hazardous",
+        "toxic",
+        "water",
+        "deep_pressure"
+      ],
+      "objective_keywords": [
+        "control",
+        "durability",
+        "objective_holding",
+        "tanking"
+      ],
       "state_advantages": {
-        "good_in": ["Poisoned", "Rusted", "Strangewild"],
+        "good_in": [
+          "Poisoned",
+          "Rusted",
+          "Strangewild"
+        ],
         "bad_in": []
       },
-      "special_scenarios": ["objective_holding", "toxic_zones", "pressure_environments"],
-      
+      "special_scenarios": [
+        "objective_holding",
+        "toxic_zones",
+        "pressure_environments"
+      ],
       "optional_upgrades": [
         {
-          "name": "Harpoons", 
-          "cost": 10, 
-          "type": "Weapon", 
+          "name": "Harpoons",
+          "cost": 10,
+          "type": "Weapon",
           "effect": "Gain Ranged 10\" attack. 14\" total threat range (4\" move + 10\" range). Trained hunters.",
-          "stat_modifiers": { "range": 10 }
+          "stat_modifiers": {
+            "range": 10
+          }
         }
       ]
     },
-    
     {
       "name": "Signal Ranger",
       "faction": "Monster Rangers",
@@ -681,108 +1235,57 @@
       "move": 6,
       "range": 24,
       "weapon": "Calamity Flag",
-      "weapon_properties": ["Melee"],
-      "composition": {"per_points": 400},
-      "abilities": ["Inspire", "Rally", "Calamity Parade", "Radiomancer Jam"],
+      "weapon_properties": [
+        "Melee"
+      ],
+      "composition": {
+        "per_points": 400
+      },
+      "abilities": [
+        "Inspire",
+        "Rally",
+        "Calamity Parade",
+        "Radiomancer Jam"
+      ],
       "lore": "Leaders, communicators and flag-bearers. Lead Calamity Parades, use Radio technology. Some jam Monsterology Dynamo equipment.",
       "tactics": "Standard leader (Inspire +1 die, Rally morale). Save Calamity Parade for decisive moment (+3\" Move, +1 Quality, Fearless for 1 round, 6\" aura). Radiomancer Jam disrupts tech heroes (24\", jam Jagers/Haxans/Iron Diplomats).",
-      
-      "unit_tags": ["leader", "support", "inspire", "rally", "communication", "tech_disruption"],
-      "terrain_preferences": ["central", "elevated", "communication_hubs"],
-      "objective_keywords": ["leadership", "morale", "coordination", "tech_disruption"],
+      "unit_tags": [
+        "leader",
+        "support",
+        "inspire",
+        "rally",
+        "communication",
+        "tech_disruption"
+      ],
+      "terrain_preferences": [
+        "central",
+        "elevated",
+        "communication_hubs"
+      ],
+      "objective_keywords": [
+        "leadership",
+        "morale",
+        "coordination",
+        "tech_disruption"
+      ],
       "state_advantages": {
-        "good_in": ["any"],
+        "good_in": [
+          "any"
+        ],
         "bad_in": []
       },
-      "special_scenarios": ["leadership", "morale_crisis", "tech_disruption"],
-      
-      "optional_upgrades": [
-        {"name": "Gas Mask", "cost": 3, "type": "Gear", "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."},
-        {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
-        },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend Beast attempt." }
-      ]
-    },
-    
-    {
-      "name": "Skull Ranger",
-      "faction": "Monster Rangers",
-      "type": "Tank",
-      "cost": 170,
-      "quality": 4,
-      "defense": 3,
-      "move": 6,
-      "range": 0,
-      "weapon": "Thrice-Blessed Shovel",
-      "weapon_properties": ["Melee", "Brutal Blow"],
-      "composition": {"per_points": 400},
-      "abilities": ["Befriend Bloodless", "Tougher", "Fearless", "Brutal Blow", {"name": "Built-In Respirator", "effect": "Immune to gas, smoke, poison, and airborne hazard effects."}],
-      "lore": "Ancient sect (500+ years). Care for Bloodless: Haunts, Vampires, Embalma, Rotters. Founded by Joh Woefix. Cemetery caretakers. Only wear black, smell like earth, see beauty in death.",
-      "tactics": "Durable undead specialist (D3 + Tougher + Fearless). Befriend Bloodless (contested vs undead). Thrice-Blessed Shovel with Brutal Blow.",
-      
-      "unit_tags": ["tank", "undead_specialist", "fearless", "durable", "hazard_immune"],
-      "terrain_preferences": ["graveyards", "haunted", "death_sites", "cemeteries"],
-      "objective_keywords": ["undead_control", "befriend_bloodless", "graveyard_defense", "death_magic"],
-      "state_advantages": {
-        "good_in": ["Haunted", "Poisoned", "Exalted"],
-        "bad_in": ["Liberated"]
-      },
-      "special_scenarios": ["undead_befriending", "graveyard_defense", "death_rituals"],
-      
+      "special_scenarios": [
+        "leadership",
+        "morale_crisis",
+        "tech_disruption"
+      ],
       "optional_upgrades": [
         {
-          "name": "Witch-Stitched", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
-          "stat_modifiers": { "defense": 1 }
-        },
-        { "name": "Pocket Snacks", "cost": 5, "type": "Gear", "effect": "Once per game, gain advantage on a Befriend attempt." }
-      ]
-    },
-    
-    {
-      "name": "Cargo Tiger Truck",
-      "faction": "Monster Rangers",
-      "type": "Vehicle",
-      "cost": 220,
-      "quality": 5,
-      "defense": 4,
-      "move": 12,
-      "range": 0,
-      "weapon": "Ramming Bumper",
-      "weapon_properties": ["Melee", "Grapple"],
-      "composition": {"per_points": 400},
-      "abilities": ["Fast", "Disengage", "Mobile Cover", "Cargo Hold"],
-      "lore": "Cargo Tiger shipping company coal-fired truck. Hard-working employees drive supplies and troops into battle. Held together with rust and paint.",
-      "tactics": "Fast platform (12\" Move. Load Rangers/objectives for transport. Park for Mobile Cover (+1 Defense aura). Grapple enemies (pull 3\")",
-      
-      "unit_tags": ["vehicle", "transport", "fast", "mobile_cover", "extraction", "support"],
-      "terrain_preferences": ["roads", "open", "settlements"],
-      "objective_keywords": ["transport", "extraction", "escort", "cargo", "mobile_support"],
-      "state_advantages": {
-        "good_in": ["Held", "Lawless", "any"],
-        "bad_in": ["Strangewild"]
-      },
-      "special_scenarios": ["transport_missions", "extraction", "escort", "mobile_support"],
-      
-      "optional_upgrades": [
-        {
-          "name": "Reinforced Cab", 
-          "cost": 10, 
-          "type": "Upgrade", 
-          "effect": "+1 Defense (D4→D5), -1\" Move (10\"→9\"). Armored plating.",
-          "stat_modifiers": { 
-            "defense": 1,
-            "move": -1
-          }
-        },
-        {"name": "Extra Storage", "cost": 2, "type": "Upgrade", "effect": "Additional cargo rigging. Increase capacity: +2 Rangers OR +1 objective. Total: 6 Rangers OR 3 objectives."}
+          "name": "Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Protective eyewear and respirator. Immune to environmental penalties."
+        }
       ]
     }
   ]
