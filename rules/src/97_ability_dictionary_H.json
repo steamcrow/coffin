@@ -240,7 +240,55 @@
       "timing": "passive",
       "short": "Cannot be moved.",
       "long": "Passive. Cannot be moved by enemy abilities or effects. Ignores knockback and displacement."
-    }
+    },
 
+    "sovereign_presence": {
+      "_id": "R-ABIL-H-SOVEREIGN-PRESENCE",
+      "timing": "passive",
+      "short": "Projects an aura of absolute command.",
+      "long": "Passive. While this unit is on the table, all friendly units within 18\" automatically pass any morale checks caused by enemy abilities."
+    },
+
+    "unquestioned_rule": {
+      "_id": "R-ABIL-H-UNQUESTIONED-RULE",
+      "timing": "passive",
+      "short": "Nearby enemies cannot use reactions.",
+      "long": "Passive. Enemy units within 6\" of this model cannot take Reaction actions or use triggered defensive abilities."
+    },
+
+    "hierarchy_of_flesh": {
+      "_id": "R-ABIL-H-HIERARCHY-OF-FLESH",
+      "timing": "passive",
+      "short": "Sacrifice nearby grunts to ignore damage.",
+      "long": "Passive. Once per round, when this model takes damage, you may instead remove one friendly Grunt within 3\". The damage to the Queen is negated."
+    },
+
+    "crown_of_unanswered_law": {
+      "_id": "R-ABIL-H-CROWN-OF-UNANSWERED-LAW",
+      "timing": "main_action",
+      "short": "Reset canyon state to Exalted.",
+      "long": "Main Action. The Queen declares her law. Change the current Canyon State to 'Exalted' regardless of current conditions. This lasts until the end of the next round."
+    },
+
+    "veiled_whispers": {
+      "_id": "R-ABIL-H-VEILED-WHISPERS",
+      "timing": "passive",
+      "short": "Confuse enemies; -1 Quality for adjacent foes.",
+      "long": "Passive. Enemy units in base contact with this model suffer -1 Quality as they are distracted by the court's constant, unsettling murmurs."
+    },
+
+    "ritual_comfort": {
+      "_id": "R-ABIL-H-RITUAL-COMFORT",
+      "timing": "main_action",
+      "short": "Remove Strain from a Hero or Elite.",
+      "long": "Main Action. Remove 1 Strain from a friendly Hero or Elite unit in base contact."
+    },
+
+    "deploy_demesne_marker": {
+      "_id": "R-ABIL-H-DEPLOY-DEMESNE-MARKER",
+      "timing": "main_action",
+      "short": "Place a marker to expand Consecrated Ground.",
+      "long": "Main Action. Place a Demesne Marker within 3\". This marker generates a 6\" radius of Consecrated Ground. Markers can be destroyed by enemy Interact actions."
+    }
   }
 }
