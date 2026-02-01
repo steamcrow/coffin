@@ -104,7 +104,7 @@
       "state_advantages": { "good_in": ["Exalted"], "bad_in": ["Liberated"] },
       "optional_upgrades": [
         { "name": "Throne of Lies", "cost": 20, "type": "Relic", "effect": "The Regent is always considered to be within Consecrated Ground for her own abilities, regardless of markers." },
-        { "name": "Lead-Lined Veil", "cost": 5, "type": "Gear", "effect": "Immune to Gas and Blinding." }
+        { "name": "Lead-Lined Vestments", "cost": 25, "type": "Gear", "effect": "Immune to Spellcraft." }
       ]
     },
     {
