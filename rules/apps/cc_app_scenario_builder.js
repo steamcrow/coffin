@@ -100,20 +100,20 @@ window.CC_APP = {
     // UTILITY
     // ================================
     
-function esc(str) {
-  if (!str) return '';
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+    function esc(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
 
-function capitalize(str) {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
+    function capitalize(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    }
 
     async function loadNamedLocations() {
       try {
@@ -386,7 +386,7 @@ function capitalize(str) {
       return renderGeneratedScenario();
     }
 
-function renderGeneratedScenario() {
+    function renderGeneratedScenario() {
       if (!state.scenario) return '<p>No scenario generated</p>';
 
       const s = state.scenario;
