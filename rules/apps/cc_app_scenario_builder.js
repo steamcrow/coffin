@@ -92,7 +92,7 @@ window.CC_APP = {
       { id: 'liberty_corps', name: 'Liberty Corps', file: 'faction-liberty-corps-v2.json' },
       { id: 'monsterology', name: 'Monsterology', file: 'faction-monsterology-v2.json' },
       { id: 'monsters', name: 'Monsters', file: 'faction-monsters-v2.json' },
-      { id: 'shine_riders', name: 'Shine Riders', file: 'faction-shine-riders-v2.json' }
+      { id: 'shine_riders', name: 'Shine Riders', file: 'faction-shine-riders-v2.json' },
       { id: 'crow_queen', name: 'The Crow Queen', file: 'faction-crow-queen.json' }
     ];
 
