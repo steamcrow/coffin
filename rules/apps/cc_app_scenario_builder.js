@@ -526,7 +526,21 @@ window.CC_APP = {
               </div>
             `).join('')}
           </div>
-
+<div class="cc-scenario-section" style="margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.2);">
+  <h4>🏜️ Required Terrain</h4>
+  <p style="font-size: 0.9em; margin-bottom: 1rem; color: rgba(255,255,255,0.7);">
+    You'll need these terrain pieces to set up this scenario:
+  </p>
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem;">
+    ${s.terrain_requirements && s.terrain_requirements.length > 0 ? 
+      s.terrain_requirements.map(terrain => `
+        <div style="padding: 0.5rem; background: rgba(139,69,19,0.2); border-left: 2px solid #8b4513; font-size: 0.9em;">
+          🏔️ ${terrain}
+        </div>
+      `).join('') 
+      : '<p>Standard canyon terrain</p>'}
+  </div>
+</div>
           <div class="cc-form-actions">
             <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">
               🔄 Start Over
