@@ -102,33 +102,35 @@ class ScenarioBrain {
     const narrative = this.generateNarrative(plotFamily, location, userSelections);
     console.log("✓ Name:", name);
     
-    // STEP 7: Extras
-    console.log("\n🎭 STEP 7: EXTRAS");
-    const twist = this.generateTwist(userSelections.dangerRating);
-    const canyonState = this.getCanyonState(userSelections.canyonState);
-    const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location);
-    console.log("✓ Extras added");
-    
-    // ASSEMBLE FINAL SCENARIO
-    const scenario = {
-      name: name,
-      narrative_hook: narrative,
-      plot_family: plotFamily.name,
-      location: location,
-      danger_rating: userSelections.dangerRating,
-      danger_description: this.getDangerDesc(userSelections.dangerRating),
-      vp_spread: vpSpread,
-      objectives: objectives,
-      victory_conditions: victoryConditions,
-      monster_pressure: { 
-        enabled: userSelections.dangerRating >= 4,
-        trigger: userSelections.dangerRating >= 4 ? `Round ${userSelections.dangerRating}` : 'N/A',
-        escalation_type: userSelections.dangerRating >= 4 ? 'Environmental threat increases' : 'None'
-      },
-      canyon_state: canyonState,
-      twist: twist,
-      finale: finale
-    };
+ // STEP 7: Extras
+console.log("\n🎭 STEP 7: EXTRAS");
+const twist = this.generateTwist(userSelections.dangerRating);
+const canyonState = this.getCanyonState(userSelections.canyonState);
+const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location);
+const terrainRequirements = this.generateTerrainRequirements(location, objectives, plotFamily);
+console.log("✓ Extras added");
+
+// ASSEMBLE FINAL SCENARIO
+const scenario = {
+  name: name,
+  narrative_hook: narrative,
+  plot_family: plotFamily.name,
+  location: location,
+  danger_rating: userSelections.dangerRating,
+  danger_description: this.getDangerDesc(userSelections.dangerRating),
+  vp_spread: vpSpread,
+  objectives: objectives,
+  victory_conditions: victoryConditions,
+  monster_pressure: { 
+    enabled: userSelections.dangerRating >= 4,
+    trigger: userSelections.dangerRating >= 4 ? `Round ${userSelections.dangerRating}` : 'N/A',
+    escalation_type: userSelections.dangerRating >= 4 ? 'Environmental threat increases' : 'None'
+  },
+  canyon_state: canyonState,
+  twist: twist,
+  finale: finale,
+  terrain_requirements: terrainRequirements
+};
     
     console.log("\n✅ SCENARIO GENERATION COMPLETE\n");
     return scenario;
@@ -157,7 +159,7 @@ class ScenarioBrain {
     return location;
   }
   
-  generateProceduralLocation(dangerRating) {
+ generateProceduralLocation(dangerRating) {
     const types = this.data.locationTypes.location_types.filter(t => 
       (!t.danger_floor || dangerRating >= t.danger_floor) &&
       (!t.danger_ceiling || dangerRating <= t.danger_ceiling)
@@ -166,6 +168,14 @@ class ScenarioBrain {
     const type = types.length > 0 ? this.randomChoice(types) : this.data.locationTypes.location_types[0];
     const nearby = this.randomChoice(this.data.locations.locations);
     
+    // Limit resources to 3 max
+    let resources = type.resources || {};
+    if (Object.keys(resources).length > 3) {
+      const resourceEntries = Object.entries(resources);
+      const selectedResources = this.randomChoice(resourceEntries, 3);
+      resources = Object.fromEntries(selectedResources);
+    }
+    
     return {
       id: `proc_${Date.now()}`,
       name: `The Outskirts of ${nearby.name}`,
@@ -173,14 +183,13 @@ class ScenarioBrain {
       type_ref: type.id,
       description: `${type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
       atmosphere: this.randomChoice(type.atmosphere || ["Tension hangs heavy in the air", "The wind carries whispers of conflict"]),
-      resources: type.resources || {},
+      resources: resources,
       hazards: type.environmental_hazards || [],
       terrain_features: type.terrain_features || [],
       rewards: type.rewards || [],
       procedural: true
     };
-  }
-  
+}
   // ================================
   // PLOT FAMILY (STEP 2)
   // ================================
@@ -561,11 +570,62 @@ class ScenarioBrain {
     };
   }
 
-  getCanyonState(stateId) {
-    if (!this.data.canyonStates?.canyon_states) return { name: "Neutral", effect: "No additional effects" };
+getCanyonState(stateId) {
+    if (!this.data.canyonStates?.canyon_states) {
+      return { 
+        name: "Poisoned", 
+        effect: "The Canyon is tainted by industrial waste and dark magic",
+        terrain_features: ["Toxic pools", "Corrupted ground"]
+      };
+    }
     const state = this.data.canyonStates.canyon_states.find(s => s.id === stateId);
-    return state || { name: "Unknown State", effect: "Standard rules apply" };
-  }
+    if (!state) {
+      // Default to poisoned if not found
+      const poisoned = this.data.canyonStates.canyon_states.find(s => s.id === 'poisoned');
+      return poisoned || { 
+        name: "Poisoned", 
+        effect: "The Canyon is tainted",
+        terrain_features: []
+      };
+    }
+    return state;
+}
+
+  generateTerrainRequirements(location, objectives, plotFamily) {
+    const terrain = [];
+    
+    // Base terrain from location
+    if (location.terrain_features && location.terrain_features.length > 0) {
+      terrain.push(...location.terrain_features.slice(0, 3));
+    }
+    
+    // Terrain from plot family
+    const plotTerrainMap = {
+      'extraction_heist': ['Ruined buildings', 'Crates/containers'],
+      'claim_and_hold': ['Rock formations', 'Fortified positions'],
+      'ambush_derailment': ['Board walks', 'Wrecked machinery'],
+      'siege_standoff': ['Ruined buildings', 'Defensive walls'],
+      'escort_run': ['Board walks', 'Rock formations'],
+      'corruption_ritual': ['Stone circles', 'Corrupted ground'],
+      'sabotage_strike': ['Industrial structures', 'Pipelines']
+    };
+    
+    if (plotTerrainMap[plotFamily.id]) {
+      terrain.push(...plotTerrainMap[plotFamily.id]);
+    }
+    
+    // Terrain from objectives
+    objectives.forEach(obj => {
+      if (obj.type === 'ritual_circle') terrain.push('Stone circle');
+      if (obj.type === 'fortified_position') terrain.push('Defensive structure');
+      if (obj.type === 'scattered_crates') terrain.push('Supply crates');
+      if (obj.type === 'wrecked_engine') terrain.push('Wrecked machinery');
+    });
+    
+    // Remove duplicates and limit to 5-6 pieces
+    const uniqueTerrain = [...new Set(terrain)];
+    return uniqueTerrain.slice(0, 6);
+}
 
   generateFinale(plotFamily, danger, location) {
     const escalation = this.randomChoice(plotFamily.escalation_bias || ['environmental_hazard', 'reinforcements']);
