@@ -1,5 +1,5 @@
 // ================================
-// SCENARIO BRAIN - FULL VERSION (PART 1)
+// SCENARIO BRAIN - FULL VERSION
 // ================================
 
 console.log("🧠 Scenario Brain loading...");
@@ -90,7 +90,47 @@ class ScenarioBrain {
     console.log("\n🎯 STEP 4: OBJECTIVES");
     const objectives = this.generateObjectives(plotFamily, location, userSelections, vpSpread);
     console.log(`✓ Generated ${objectives.length} objectives`);
-// ================================
+    
+    // STEP 5: Victory Conditions
+    console.log("\n🏆 STEP 5: VICTORY CONDITIONS");
+    const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread);
+    console.log("✓ Victory conditions created");
+    
+    // STEP 6: Name & Narrative
+    console.log("\n📝 STEP 6: NAME & NARRATIVE");
+    const name = this.generateName(['battle'], location);
+    const narrative = this.generateNarrative(plotFamily, location, userSelections);
+    console.log("✓ Name:", name);
+    
+    // STEP 7: Extras
+    console.log("\n🎭 STEP 7: EXTRAS");
+    const twist = this.generateTwist(userSelections.dangerRating);
+    const canyonState = this.getCanyonState(userSelections.canyonState);
+    const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location);
+    console.log("✓ Extras added");
+    
+    // ASSEMBLE FINAL SCENARIO
+    const scenario = {
+      name: name,
+      narrative_hook: narrative,
+      plot_family: plotFamily.name,
+      location: location,
+      danger_rating: userSelections.dangerRating,
+      danger_description: this.getDangerDesc(userSelections.dangerRating),
+      vp_spread: vpSpread,
+      objectives: objectives,
+      victory_conditions: victoryConditions,
+      monster_pressure: { enabled: userSelections.dangerRating >= 4 },
+      canyon_state: canyonState,
+      twist: twist,
+      finale: finale
+    };
+    
+    console.log("\n✅ SCENARIO GENERATION COMPLETE\n");
+    return scenario;
+  }
+  
+  // ================================
   // LOCATION (STEP 1)
   // ================================
   
@@ -236,7 +276,8 @@ class ScenarioBrain {
       }
     };
   }
-// ================================
+
+  // ================================
   // OBJECTIVES (STEP 4)
   // ================================
   
@@ -327,7 +368,6 @@ class ScenarioBrain {
     const conditions = {};
     
     userSelections.factions.forEach(faction => {
-      const factionData = this.data.factions[faction.id];
       const factionObjectives = [];
       
       // Map global objectives to faction-specific flavor/rules
@@ -346,7 +386,11 @@ class ScenarioBrain {
         primary_scoring: vpSpread.scoring_rule,
         bonus_scoring: vpSpread.bonus_rule,
         faction_objectives: factionObjectives,
-        aftermath_hooks: this.generateFactionAftermath(faction.id)
+        aftermath: this.generateFactionAftermath(faction.id),
+        objectives: objectives.map(obj => ({
+          name: obj.name,
+          ticker: `${obj.progress_label}: ${obj.vp_per_unit} VP each`
+        }))
       };
     });
     
@@ -356,20 +400,20 @@ class ScenarioBrain {
   getFactionObjectiveInterpretation(factionId, objective) {
     const library = {
       'monster_rangers': {
-        'ritual_circle': { goal: 'Stabilize the land via ritual.', method: 'Dark Librarian gains +1 die to ritual actions.' },
-        'scattered_crates': { goal: 'Distribute supplies to refugees.', restriction: 'Harming civilians costs -2 VP.' }
+        'ritual_circle': { goal: 'Stabilize the land via ritual.', method: 'Dark Librarian gains +1 die to ritual actions.', scoring: '+4 VP per ritual' },
+        'scattered_crates': { goal: 'Distribute supplies to refugees.', method: 'Escort crates to civilians.', scoring: '+2 VP per crate', restriction: 'Harming civilians costs -2 VP.' }
       },
       'liberty_corps': {
-        'ritual_circle': { goal: 'Assert federal control over site.', method: 'Barriers and patrols.' },
-        'scattered_crates': { goal: 'Confiscate contraband as evidence.', restriction: 'Must maintain chain of custody.' }
+        'ritual_circle': { goal: 'Assert federal control over site.', method: 'Barriers and patrols.', scoring: '+4 VP per site controlled' },
+        'scattered_crates': { goal: 'Confiscate contraband as evidence.', method: 'Secure and tag all crates.', scoring: '+2 VP per crate', restriction: 'Must maintain chain of custody.' }
       },
       'monsterology': {
-        'ritual_circle': { goal: 'Harvest energies and bound entities.', method: 'Extraction rigs grant +1 die vs monsters.' },
-        'tainted_ground': { goal: 'Strip the Taint for reagents.', restriction: 'Extracted land cannot be restored.' }
+        'ritual_circle': { goal: 'Harvest energies and bound entities.', method: 'Extraction rigs grant +1 die vs monsters.', scoring: '+4 VP per extraction' },
+        'tainted_ground': { goal: 'Strip the Taint for reagents.', method: 'Deploy Taint collectors.', scoring: '+4 VP per site', restriction: 'Extracted land cannot be restored.' }
       },
       'crow_queen': {
-        'land_marker': { goal: 'Mark the boundaries of the new kingdom.', method: 'Ladies in Waiting gain +2" move when placing.' },
-        'ritual_circle': { goal: 'Consecrate the ground to the Regent Black.', method: 'Convert site to Consecrated terrain.' }
+        'land_marker': { goal: 'Mark the boundaries of the new kingdom.', method: 'Ladies in Waiting gain +2" move when placing.', scoring: '+2 VP per marker' },
+        'ritual_circle': { goal: 'Consecrate the ground to the Regent Black.', method: 'Convert site to Consecrated terrain.', scoring: '+4 VP per site' }
       }
     };
     
@@ -384,16 +428,64 @@ class ScenarioBrain {
 
   generateUniqueFactionObjective(factionId, danger) {
     const uniques = {
-      'monster_rangers': { name: 'Minimize Casualties', goal: 'Protect monsters/civilians.', scoring: `${danger * 2} VP minus deaths.` },
-      'liberty_corps': { name: 'Establish Authority', goal: 'Hold the center of the board.', scoring: `${danger * 2} VP if held at end.` },
-      'monsterology': { name: 'Total Extraction Protocol', goal: 'Exploit every site.', scoring: `${danger * 3} VP if all extracted.` },
-      'shine_riders': { name: 'Legendary Heist', goal: 'Steal the most valuable prize.', scoring: `${danger * 3} VP if escaped.` },
-      'crow_queen': { name: 'Divine Mandate', goal: 'Force enemies to kneel.', scoring: `${danger * 2} VP per enemy unit Broken.` },
-      'monsters': { name: 'Drive Out Invaders', goal: 'Purge humans.', scoring: `${danger * 2} VP per faction broken.` }
+      'monster_rangers': { name: 'Minimize Casualties', goal: 'Protect monsters/civilians.', method: 'Escort non-combatants to safety.', scoring: `${danger * 2} VP minus deaths.` },
+      'liberty_corps': { name: 'Establish Authority', goal: 'Hold the center of the board.', method: 'Maintain control for 3 rounds.', scoring: `${danger * 2} VP if held at end.` },
+      'monsterology': { name: 'Total Extraction Protocol', goal: 'Exploit every site.', method: 'Extract from all objectives.', scoring: `${danger * 3} VP if all extracted.` },
+      'shine_riders': { name: 'Legendary Heist', goal: 'Steal the most valuable prize.', method: 'Extract highest-value objective and escape.', scoring: `${danger * 3} VP if escaped.` },
+      'crow_queen': { name: 'Divine Mandate', goal: 'Force enemies to kneel.', method: 'Break enemy morale with Fear.', scoring: `${danger * 2} VP per enemy unit Broken.` },
+      'monsters': { name: 'Drive Out Invaders', goal: 'Purge humans.', method: 'Eliminate enemy leaders.', scoring: `${danger * 2} VP per faction broken.` }
     };
     return uniques[factionId] || null;
   }
-// ================================
+
+  generateFactionAftermath(factionId) {
+    const aftermaths = {
+      'monster_rangers': {
+        immediate_effect: 'The land begins to heal.',
+        canyon_state_change: 'Becomes Restored territory.',
+        long_term: 'Monster populations stabilize.',
+        flavor: 'The Rangers have bought time, but the Canyon never forgets.'
+      },
+      'liberty_corps': {
+        immediate_effect: 'Federal presence increases.',
+        canyon_state_change: 'Becomes Occupied territory.',
+        long_term: 'Trade routes secure, but tension rises.',
+        flavor: 'Order has been imposed. The question is: for how long?'
+      },
+      'monsterology': {
+        immediate_effect: 'The site is stripped bare.',
+        canyon_state_change: 'Becomes Depleted territory.',
+        long_term: 'Resource scarcity increases.',
+        flavor: 'Progress has a price, paid in full by the land itself.'
+      },
+      'shine_riders': {
+        immediate_effect: 'Valuables vanish into the night.',
+        canyon_state_change: 'Becomes Lawless territory.',
+        long_term: 'Crime and opportunity intertwine.',
+        flavor: 'The Riders leave only dust and legend behind.'
+      },
+      'crow_queen': {
+        immediate_effect: 'Dark banners rise.',
+        canyon_state_change: 'Becomes Consecrated territory.',
+        long_term: 'The Regent\'s influence spreads.',
+        flavor: 'All who remain know: the Queen is watching.'
+      },
+      'monsters': {
+        immediate_effect: 'Humans retreat in fear.',
+        canyon_state_change: 'Becomes Wild territory.',
+        long_term: 'The Canyon reclaims its own.',
+        flavor: 'Nature is not kind. It simply is.'
+      }
+    };
+    return aftermaths[factionId] || {
+      immediate_effect: 'The battle ends.',
+      canyon_state_change: 'Territory status unchanged.',
+      long_term: 'The struggle continues.',
+      flavor: 'Another skirmish in an endless war.'
+    };
+  }
+
+  // ================================
   // NAME & NARRATIVE (STEP 6)
   // ================================
 
@@ -404,7 +496,6 @@ class ScenarioBrain {
     const suffix = this.randomChoice(this.data.names.suffixes || ["Pass"]);
     const descriptor = this.randomChoice(this.data.names.descriptors || ["Bloody"]);
 
-    // Option to use the location name or a generated title
     const styles = [
       () => `${prefix} ${location.name}`,
       () => `The ${descriptor} ${suffix} of ${location.name}`,
@@ -429,7 +520,7 @@ class ScenarioBrain {
 
   generateTwist(danger) {
     if (!this.data.twists?.twists) {
-      return { name: "Unpredictable Winds", effect: "-1 to Ranged attacks." };
+      return { name: "Unpredictable Winds", description: "The canyon winds shift without warning.", effect: "-1 to Ranged attacks." };
     }
     const twist = this.randomChoice(this.data.twists.twists);
     return {
@@ -500,22 +591,6 @@ class ScenarioBrain {
   }
 }
 
-// Global Initialization
-const brain = new ScenarioBrain();
-
-// The "Handshake" Bridge for cc_loader_core.js
-window.CC_APP = {
-    init: async function() {
-        console.log("🚀 CC_APP.init called: Starting Scenario Brain");
-        try {
-            await brain.loadAllData();
-            return brain; // This hands the brain back to the core loader
-        } catch (err) {
-            console.error("❌ CC_APP failed to initialize brain:", err);
-            throw err;
-        }
-    }
-};
-
+// Expose to window
 window.ScenarioBrain = ScenarioBrain;
-console.log("🎉 SCENARIO BRAIN: Fully assembled and Handshake Ready.");
+console.log("🎉 SCENARIO BRAIN: Fully assembled and ready!");
