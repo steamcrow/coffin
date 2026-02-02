@@ -120,7 +120,11 @@ class ScenarioBrain {
       vp_spread: vpSpread,
       objectives: objectives,
       victory_conditions: victoryConditions,
-      monster_pressure: { enabled: userSelections.dangerRating >= 4 },
+      monster_pressure: { 
+        enabled: userSelections.dangerRating >= 4,
+        trigger: userSelections.dangerRating >= 4 ? `Round ${userSelections.dangerRating}` : 'N/A',
+        escalation_type: userSelections.dangerRating >= 4 ? 'Environmental threat increases' : 'None'
+      },
       canyon_state: canyonState,
       twist: twist,
       finale: finale
@@ -164,11 +168,11 @@ class ScenarioBrain {
     
     return {
       id: `proc_${Date.now()}`,
-      name: `Just outside of ${nearby.name}`,
+      name: `The Outskirts of ${nearby.name}`,
       emoji: type.emoji || "🗺️",
       type_ref: type.id,
-      description: `${type.description} Located near ${nearby.name}.`,
-      atmosphere: this.randomChoice(type.atmosphere || ["Tension fills the air"]),
+      description: `${type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
+      atmosphere: this.randomChoice(type.atmosphere || ["Tension hangs heavy in the air", "The wind carries whispers of conflict"]),
       resources: type.resources || {},
       hazards: type.environmental_hazards || [],
       terrain_features: type.terrain_features || [],
@@ -284,6 +288,7 @@ class ScenarioBrain {
   generateObjectives(plotFamily, location, userSelections, vpSpread) {
     const objectives = [];
     const danger = userSelections.dangerRating;
+    const usedTypes = new Set();
     
     console.log("  Starting objective generation...");
     
@@ -292,7 +297,10 @@ class ScenarioBrain {
       const plotObjectives = this.randomChoice(plotFamily.default_objectives, Math.min(2, plotFamily.default_objectives.length));
       plotObjectives.forEach(objType => {
         const obj = this.buildObjective(objType, location, danger, vpSpread);
-        if (obj) objectives.push(obj);
+        if (obj) {
+          objectives.push(obj);
+          usedTypes.add(objType);
+        }
       });
     }
     
@@ -302,28 +310,36 @@ class ScenarioBrain {
         .filter(([key, val]) => val >= 2)
         .map(([key]) => key);
       
-      if (highValueResources.length > 0) {
+      if (highValueResources.length > 0 && !usedTypes.has('resource_extraction')) {
         const resource = this.randomChoice(highValueResources);
         const amount = location.resources[resource];
         objectives.push({
           name: `Extract ${this.capitalize(resource)}`,
-          description: `Secure valuable ${resource} stockpile`,
+          description: `Secure valuable ${resource} stockpile from ${location.name}`,
           type: 'resource_extraction',
           target_value: Math.min(amount, danger + 2),
           progress_label: this.capitalize(resource),
           vp_per_unit: this.getResourceVP(resource),
           max_vp: Math.min(amount, danger + 2) * this.getResourceVP(resource)
         });
+        usedTypes.add('resource_extraction');
       }
     }
     
-    // STEP 4.3: Fill with General Conflict Objectives
+    // STEP 4.3: Fill with General Conflict Objectives (no duplicates)
     const generalObjectives = ['scattered_crates', 'wrecked_engine', 'land_marker', 'fortified_position', 'stored_supplies'];
     const numToFill = Math.max(1, 4 - objectives.length);
-    for (let i = 0; i < numToFill; i++) {
-      const objType = generalObjectives[Math.floor(Math.random() * generalObjectives.length)];
+
+    for (let i = 0; i < numToFill && generalObjectives.length > 0; i++) {
+      const availableTypes = generalObjectives.filter(t => !usedTypes.has(t));
+      if (availableTypes.length === 0) break;
+      
+      const objType = this.randomChoice(availableTypes);
       const obj = this.buildObjective(objType, location, danger, vpSpread);
-      if (obj) objectives.push(obj);
+      if (obj) {
+        objectives.push(obj);
+        usedTypes.add(objType);
+      }
     }
     
     return objectives;
@@ -331,14 +347,14 @@ class ScenarioBrain {
   
   buildObjective(type, location, danger, vpSpread) {
     const templates = {
-      'wrecked_engine': { name: 'Salvage Wrecked Engine', desc: 'Extract components. Coffin Cough risk.', target: Math.min(3, danger), label: 'Components', vp: 3 },
-      'scattered_crates': { name: 'Recover Supply Crates', desc: `Collect crates at ${location.name}.`, target: danger + 1, label: 'Crates', vp: 2 },
-      'ritual_circle': { name: 'Empower Ritual Circle', desc: 'Control circle for power.', target: danger, label: 'Rituals', vp: 4 },
-      'land_marker': { name: 'Establish Territory', desc: 'Plant markers. VP per round.', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
-      'fortified_position': { name: 'Hold Fortified Position', desc: 'Maintain control.', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
-      'stored_supplies': { name: 'Raid Supply Depot', desc: 'Extract stockpile.', target: danger + 1, label: 'Supplies', vp: 2 },
-      'artifact': { name: 'Recover Ancient Artifact', desc: 'Secure artifact. Nature hidden.', target: 1, label: 'Artifact', vp: 8 },
-      'tainted_ground': { name: 'Cleanse Tainted Ground', desc: 'Purify corruption.', target: Math.max(2, danger - 1), label: 'Cleansed', vp: 4 }
+      'wrecked_engine': { name: 'Salvage Wrecked Engine', desc: 'Extract mechanical components from abandoned machinery', target: Math.min(3, danger), label: 'Components', vp: 3 },
+      'scattered_crates': { name: 'Recover Supply Crates', desc: `Collect scattered supply crates across the battlefield`, target: danger + 1, label: 'Crates', vp: 2 },
+      'ritual_circle': { name: 'Control Ritual Site', desc: 'Maintain control of the ritual circle to channel its power', target: danger, label: 'Rituals', vp: 4 },
+      'land_marker': { name: 'Establish Territory', desc: 'Plant territorial markers and hold them', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
+      'fortified_position': { name: 'Hold Fortified Position', desc: 'Maintain control of the defensive structure', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
+      'stored_supplies': { name: 'Raid Supply Depot', desc: 'Extract stockpiled goods from the depot', target: danger + 1, label: 'Supplies', vp: 2 },
+      'artifact': { name: 'Recover Ancient Artifact', desc: 'Secure mysterious artifact of unknown power', target: 1, label: 'Artifact', vp: 8 },
+      'tainted_ground': { name: 'Cleanse Tainted Ground', desc: 'Purify corrupted territory', target: Math.max(2, danger - 1), label: 'Sites Cleansed', vp: 4 }
     };
     
     const t = templates[type];
@@ -400,20 +416,24 @@ class ScenarioBrain {
   getFactionObjectiveInterpretation(factionId, objective) {
     const library = {
       'monster_rangers': {
-        'ritual_circle': { goal: 'Stabilize the land via ritual.', method: 'Dark Librarian gains +1 die to ritual actions.', scoring: '+4 VP per ritual' },
-        'scattered_crates': { goal: 'Distribute supplies to refugees.', method: 'Escort crates to civilians.', scoring: '+2 VP per crate', restriction: 'Harming civilians costs -2 VP.' }
+        'ritual_circle': { goal: 'Stabilize the land via ritual', method: 'Dark Librarian gains +1 die to ritual actions', scoring: '+4 VP per ritual' },
+        'scattered_crates': { goal: 'Distribute supplies to refugees', method: 'Escort crates to civilians', scoring: '+2 VP per crate', restriction: 'Harming civilians costs -2 VP' }
       },
       'liberty_corps': {
-        'ritual_circle': { goal: 'Assert federal control over site.', method: 'Barriers and patrols.', scoring: '+4 VP per site controlled' },
-        'scattered_crates': { goal: 'Confiscate contraband as evidence.', method: 'Secure and tag all crates.', scoring: '+2 VP per crate', restriction: 'Must maintain chain of custody.' }
+        'ritual_circle': { goal: 'Assert federal control over site', method: 'Establish barriers and patrols', scoring: '+4 VP per site controlled' },
+        'scattered_crates': { goal: 'Confiscate contraband as evidence', method: 'Secure and tag all crates', scoring: '+2 VP per crate', restriction: 'Must maintain chain of custody' }
       },
       'monsterology': {
-        'ritual_circle': { goal: 'Harvest energies and bound entities.', method: 'Extraction rigs grant +1 die vs monsters.', scoring: '+4 VP per extraction' },
-        'tainted_ground': { goal: 'Strip the Taint for reagents.', method: 'Deploy Taint collectors.', scoring: '+4 VP per site', restriction: 'Extracted land cannot be restored.' }
+        'ritual_circle': { goal: 'Harvest energies and bound entities', method: 'Extraction rigs grant +1 die vs monsters', scoring: '+4 VP per extraction' },
+        'tainted_ground': { goal: 'Strip the Taint for reagents', method: 'Deploy Taint collectors', scoring: '+4 VP per site', restriction: 'Extracted land cannot be restored' }
       },
       'crow_queen': {
-        'land_marker': { goal: 'Mark the boundaries of the new kingdom.', method: 'Ladies in Waiting gain +2" move when placing.', scoring: '+2 VP per marker' },
-        'ritual_circle': { goal: 'Consecrate the ground to the Regent Black.', method: 'Convert site to Consecrated terrain.', scoring: '+4 VP per site' }
+        'land_marker': { goal: 'Mark the boundaries of the new kingdom', method: 'Ladies in Waiting gain +2" move when placing', scoring: '+2 VP per marker' },
+        'ritual_circle': { goal: 'Consecrate the ground to the Regent Black', method: 'Convert site to Consecrated terrain', scoring: '+4 VP per site' }
+      },
+      'shine_riders': {
+        'scattered_crates': { goal: 'Steal valuable goods', method: 'Fast extraction with Bikes', scoring: '+2 VP per crate' },
+        'stored_supplies': { goal: 'The legendary heist', method: 'Extract and escape with loot', scoring: '+2 VP per supply' }
       }
     };
     
@@ -428,12 +448,12 @@ class ScenarioBrain {
 
   generateUniqueFactionObjective(factionId, danger) {
     const uniques = {
-      'monster_rangers': { name: 'Minimize Casualties', goal: 'Protect monsters/civilians.', method: 'Escort non-combatants to safety.', scoring: `${danger * 2} VP minus deaths.` },
-      'liberty_corps': { name: 'Establish Authority', goal: 'Hold the center of the board.', method: 'Maintain control for 3 rounds.', scoring: `${danger * 2} VP if held at end.` },
-      'monsterology': { name: 'Total Extraction Protocol', goal: 'Exploit every site.', method: 'Extract from all objectives.', scoring: `${danger * 3} VP if all extracted.` },
-      'shine_riders': { name: 'Legendary Heist', goal: 'Steal the most valuable prize.', method: 'Extract highest-value objective and escape.', scoring: `${danger * 3} VP if escaped.` },
-      'crow_queen': { name: 'Divine Mandate', goal: 'Force enemies to kneel.', method: 'Break enemy morale with Fear.', scoring: `${danger * 2} VP per enemy unit Broken.` },
-      'monsters': { name: 'Drive Out Invaders', goal: 'Purge humans.', method: 'Eliminate enemy leaders.', scoring: `${danger * 2} VP per faction broken.` }
+      'monster_rangers': { name: 'Minimize Casualties', goal: 'Protect monsters and civilians', method: 'Escort non-combatants to safety', scoring: `${danger * 2} VP minus deaths` },
+      'liberty_corps': { name: 'Establish Authority', goal: 'Hold the center of the board', method: 'Maintain control for 3 rounds', scoring: `${danger * 2} VP if held at end` },
+      'monsterology': { name: 'Total Extraction Protocol', goal: 'Exploit every site', method: 'Extract from all objectives', scoring: `${danger * 3} VP if all extracted` },
+      'shine_riders': { name: 'Legendary Heist', goal: 'Steal the most valuable prize', method: 'Extract highest-value objective and escape', scoring: `${danger * 3} VP if escaped` },
+      'crow_queen': { name: 'Divine Mandate', goal: 'Force enemies to kneel', method: 'Break enemy morale with Fear', scoring: `${danger * 2} VP per enemy unit Broken` },
+      'monsters': { name: 'Drive Out Invaders', goal: 'Purge humans from the Canyon', method: 'Eliminate enemy leaders', scoring: `${danger * 2} VP per faction broken` }
     };
     return uniques[factionId] || null;
   }
@@ -441,47 +461,47 @@ class ScenarioBrain {
   generateFactionAftermath(factionId) {
     const aftermaths = {
       'monster_rangers': {
-        immediate_effect: 'The land begins to heal.',
-        canyon_state_change: 'Becomes Restored territory.',
-        long_term: 'Monster populations stabilize.',
-        flavor: 'The Rangers have bought time, but the Canyon never forgets.'
+        immediate_effect: 'The land begins to heal',
+        canyon_state_change: 'Territory becomes Restored',
+        long_term: 'Monster populations stabilize',
+        flavor: 'The Rangers have bought time, but the Canyon never forgets'
       },
       'liberty_corps': {
-        immediate_effect: 'Federal presence increases.',
-        canyon_state_change: 'Becomes Occupied territory.',
-        long_term: 'Trade routes secure, but tension rises.',
+        immediate_effect: 'Federal presence increases',
+        canyon_state_change: 'Territory becomes Occupied',
+        long_term: 'Trade routes secure, but tension rises',
         flavor: 'Order has been imposed. The question is: for how long?'
       },
       'monsterology': {
-        immediate_effect: 'The site is stripped bare.',
-        canyon_state_change: 'Becomes Depleted territory.',
-        long_term: 'Resource scarcity increases.',
-        flavor: 'Progress has a price, paid in full by the land itself.'
+        immediate_effect: 'The site is stripped bare',
+        canyon_state_change: 'Territory becomes Depleted',
+        long_term: 'Resource scarcity increases',
+        flavor: 'Progress has a price, paid in full by the land itself'
       },
       'shine_riders': {
-        immediate_effect: 'Valuables vanish into the night.',
-        canyon_state_change: 'Becomes Lawless territory.',
-        long_term: 'Crime and opportunity intertwine.',
-        flavor: 'The Riders leave only dust and legend behind.'
+        immediate_effect: 'Valuables vanish into the night',
+        canyon_state_change: 'Territory becomes Lawless',
+        long_term: 'Crime and opportunity intertwine',
+        flavor: 'The Riders leave only dust and legend behind'
       },
       'crow_queen': {
-        immediate_effect: 'Dark banners rise.',
-        canyon_state_change: 'Becomes Consecrated territory.',
-        long_term: 'The Regent\'s influence spreads.',
-        flavor: 'All who remain know: the Queen is watching.'
+        immediate_effect: 'Dark banners rise',
+        canyon_state_change: 'Territory becomes Consecrated',
+        long_term: 'The Regent\'s influence spreads',
+        flavor: 'All who remain know: the Queen is watching'
       },
       'monsters': {
-        immediate_effect: 'Humans retreat in fear.',
-        canyon_state_change: 'Becomes Wild territory.',
-        long_term: 'The Canyon reclaims its own.',
-        flavor: 'Nature is not kind. It simply is.'
+        immediate_effect: 'Humans retreat in fear',
+        canyon_state_change: 'Territory becomes Wild',
+        long_term: 'The Canyon reclaims its own',
+        flavor: 'Nature is not kind. It simply is'
       }
     };
     return aftermaths[factionId] || {
-      immediate_effect: 'The battle ends.',
-      canyon_state_change: 'Territory status unchanged.',
-      long_term: 'The struggle continues.',
-      flavor: 'Another skirmish in an endless war.'
+      immediate_effect: 'The battle ends',
+      canyon_state_change: 'Territory status unchanged',
+      long_term: 'The struggle continues',
+      flavor: 'Another skirmish in an endless war'
     };
   }
 
@@ -492,26 +512,37 @@ class ScenarioBrain {
   generateName(tags, location) {
     if (!this.data.names) return `The Battle at ${location.name}`;
     
-    const prefix = this.randomChoice(this.data.names.prefixes || ["Skirmish at"]);
-    const suffix = this.randomChoice(this.data.names.suffixes || ["Pass"]);
-    const descriptor = this.randomChoice(this.data.names.descriptors || ["Bloody"]);
+    const prefixes = this.data.names.prefixes || ["Skirmish at", "Battle of", "Conflict at"];
+    const suffixes = this.data.names.suffixes || ["Pass", "Ridge", "Crossing"];
+    const descriptors = this.data.names.descriptors || ["Bloody", "Desperate", "Final"];
+    
+    // Extract strings if they're objects
+    const getTextValue = (item) => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object' && item.text) return item.text;
+      return String(item);
+    };
+    
+    const prefix = getTextValue(this.randomChoice(prefixes));
+    const suffix = getTextValue(this.randomChoice(suffixes));
+    const descriptor = getTextValue(this.randomChoice(descriptors));
 
     const styles = [
-      () => `${prefix} ${location.name}`,
-      () => `The ${descriptor} ${suffix} of ${location.name}`,
-      () => `${location.name}: ${descriptor} ${prefix}`
+      `${prefix} ${location.name}`,
+      `The ${descriptor} ${suffix} of ${location.name}`,
+      `${location.name}: ${descriptor} Stand`
     ];
     
-    return this.randomChoice(styles)();
+    return this.randomChoice(styles);
   }
 
   generateNarrative(plotFamily, location, userSelections) {
     const factions = userSelections.factions.map(f => f.name).join(" and ");
     const intro = `The air at ${location.name} is thick with ${location.atmosphere || 'unrest'}.`;
     const hook = plotFamily.description || "A localized conflict has reached a breaking point.";
-    const pressure = this.randomChoice(plotFamily.common_inciting_pressures || ["Resource scarcity", "Old blood-feuds"]);
+    const pressure = this.randomChoice(plotFamily.common_inciting_pressures || ["resource scarcity", "old blood-feuds", "territorial disputes"]);
     
-    return `${intro} ${hook} ${factions} have collided here, driven by ${pressure.toLowerCase()}. ${location.description}`;
+    return `${intro} ${hook} ${factions} have collided here, driven by ${pressure.toLowerCase()}. ${location.description || ''}`;
   }
 
   // ================================
@@ -520,20 +551,20 @@ class ScenarioBrain {
 
   generateTwist(danger) {
     if (!this.data.twists?.twists) {
-      return { name: "Unpredictable Winds", description: "The canyon winds shift without warning.", effect: "-1 to Ranged attacks." };
+      return { name: "Unpredictable Winds", description: "The canyon winds shift without warning", effect: "-1 to Ranged attacks" };
     }
     const twist = this.randomChoice(this.data.twists.twists);
     return {
       name: twist.name,
       description: twist.description,
-      effect: twist.mechanical_effect
+      effect: twist.mechanical_effect || twist.effect || "Unknown effect"
     };
   }
 
   getCanyonState(stateId) {
-    if (!this.data.canyonStates?.canyon_states) return { name: "Neutral", effect: "No additional effects." };
+    if (!this.data.canyonStates?.canyon_states) return { name: "Neutral", effect: "No additional effects" };
     const state = this.data.canyonStates.canyon_states.find(s => s.id === stateId);
-    return state || { name: "Unknown State", effect: "Standard rules apply." };
+    return state || { name: "Unknown State", effect: "Standard rules apply" };
   }
 
   generateFinale(plotFamily, danger, location) {
@@ -541,11 +572,11 @@ class ScenarioBrain {
     const damage = danger + 1;
 
     const templates = {
-      'environmental_hazard': { title: 'THE CANYON REJECTS YOU', flavor: 'The very earth begins to buckle.', effect: `All units take ${damage} dice of environmental damage. VP for remaining units doubles.`, ticker: '×2 VP' },
-      'reinforcements': { title: 'NO SURRENDER', flavor: 'The local factions commit everything.', effect: `Deploy extra Grunt units for all sides. VP for kills doubles.`, ticker: '×2 VP' },
-      'ritual_completes': { title: 'THE RITUAL COMPLETES', flavor: 'The ritual reaches climax', effect: `${location.name} transforms. VP values on site double.`, ticker: '×2 VP' },
-      'monster_awakening': { title: 'TITAN STIRS', flavor: 'Something massive awakens below.', effect: `Deploy Titan-class threat. End-game scoring begins.`, ticker: '×2 VP' },
-      'visibility_loss': { title: 'DARKNESS FALLS', flavor: 'A thick unnatural fog rolls in.', effect: `Range reduced to 6". All VP scoring is halved.`, ticker: '÷2 VP' }
+      'environmental_hazard': { title: 'THE CANYON REJECTS YOU', flavor: 'The very earth begins to buckle', effect: `All units take ${damage} dice of environmental damage. VP for remaining units doubles`, ticker: '×2 VP' },
+      'reinforcements': { title: 'NO SURRENDER', flavor: 'The local factions commit everything', effect: `Deploy extra Grunt units for all sides. VP for kills doubles`, ticker: '×2 VP' },
+      'ritual_completes': { title: 'THE RITUAL COMPLETES', flavor: 'The ritual reaches climax', effect: `${location.name} transforms. VP values on site double`, ticker: '×2 VP' },
+      'monster_awakening': { title: 'TITAN STIRS', flavor: 'Something massive awakens below', effect: `Deploy Titan-class threat. End-game scoring begins`, ticker: '×2 VP' },
+      'visibility_loss': { title: 'DARKNESS FALLS', flavor: 'A thick unnatural fog rolls in', effect: `Range reduced to 6". All VP scoring is halved`, ticker: '÷2 VP' }
     };
     
     const finale = templates[escalation] || templates['environmental_hazard'];
