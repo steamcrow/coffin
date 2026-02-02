@@ -517,4 +517,5 @@ window.CC_APP = {
     }
 };
 
+window.ScenarioBrain = ScenarioBrain;
 console.log("🎉 SCENARIO BRAIN: Fully assembled and Handshake Ready.");
