@@ -100,15 +100,20 @@ window.CC_APP = {
     // UTILITY
     // ================================
     
-    function esc(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
-    }
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function capitalize(str) {
+  if (!str) return '';
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
 
     async function loadNamedLocations() {
       try {
@@ -403,7 +408,7 @@ function renderGeneratedScenario() {
                 <p style="margin: 0.5rem 0 0 0;">
                   ${Object.entries(s.location.resources)
                     .filter(([key, val]) => val > 0)
-                    .map(([key, val]) => `${this.capitalize(key)} (${val})`)
+                    .map(([key, val]) => `${capitalize(key)} (${val})`)
                     .join(' • ')}
                 </p>
               </div>
