@@ -737,8 +737,6 @@
 /* ===== FULL-WIDTH SCENARIO LAYOUT (generated mode) ===== */
 .cc-scenario-full-layout {
   padding: 1.5rem 2rem;
-  max-width: 900px;
-  margin: 0 auto;
   width: 100%;
   box-sizing: border-box;
 }
@@ -752,6 +750,101 @@
 .cc-scenario-full-layout .cc-scenario-hook {
   text-align: center;
   font-size: 1.15rem;
+}
+
+
+/* ===== Twist & Finale Callouts ===== */
+.cc-twist-example {
+  margin-top: 0.75rem;
+  padding: 0.6rem 0.75rem;
+  background: rgba(255, 180, 50, 0.12);
+  border-left: 3px solid rgba(255, 180, 50, 0.6);
+  border-radius: 0 6px 6px 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* ===== Coffin Cough Storm Section ===== */
+.cc-coffin-cough-section {
+  border: 1px solid rgba(200, 100, 50, 0.4);
+  border-radius: 8px;
+  background: rgba(60, 20, 10, 0.35);
+}
+
+.cc-coffin-cough-section h4 {
+  color: #e8845a;
+  margin-bottom: 0.5rem;
+}
+
+.cc-coffin-cough-instruction {
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.cc-coffin-cough-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cc-coffin-cough-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.cc-coffin-cough-roll {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  background: rgba(200, 100, 50, 0.35);
+  border: 1px solid rgba(200, 100, 50, 0.6);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #e8845a;
+}
+
+.cc-coffin-cough-effect {
+  flex: 1;
+}
+
+.cc-coffin-cough-effect strong {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.9rem;
+}
+
+.cc-coffin-cough-effect p {
+  margin: 0.15rem 0 0 0;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+}
+
+/* Single resolved Coffin Cough effect */
+.cc-coffin-cough-single {
+  padding: 1rem;
+  background: rgba(60, 20, 10, 0.3);
+  border: 1px solid rgba(200, 100, 50, 0.3);
+  border-radius: 8px;
+  margin-top: 0.5rem;
+}
+
+.cc-coffin-cough-name {
+  display: block;
+  font-size: 1.1rem;
+  color: #e8845a;
+  margin-bottom: 0.5rem;
+}
+
+.cc-coffin-cough-single p {
+  margin: 0.3rem 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.92rem;
 }
 
 /* ===== Print Styles ===== */
@@ -850,6 +943,34 @@
   .cc-terrain-atmosphere {
     color: #333 !important;
   }
+
+  /* Twist example print */
+  .cc-twist-example {
+    background: #fff8e0 !important;
+    border-left-color: #e6a817 !important;
+    color: #444 !important;
+  }
+
+    /* Coffin Cough print styles */
+  .cc-coffin-cough-section {
+    background: #fff3ee !important;
+    border-color: #c86432 !important;
+  }
+  .cc-coffin-cough-section h4 {
+    color: #a0522d !important;
+  }
+  .cc-coffin-cough-roll {
+    background: #ffe0d0 !important;
+    border-color: #c86432 !important;
+    color: #a0522d !important;
+  }
+  .cc-coffin-cough-effect strong { color: #333 !important; }
+  .cc-coffin-cough-effect p,
+  .cc-coffin-cough-instruction { color: #555 !important; }
+
+  .cc-coffin-cough-single { background: #fff3ee !important; border-color: #c86432 !important; }
+  .cc-coffin-cough-name { color: #a0522d !important; }
+  .cc-coffin-cough-single p { color: #555 !important; }
 }
 
 /* ===== Responsive ===== */
