@@ -391,12 +391,7 @@ window.CC_APP = {
           <h3>${s.name}</h3>
           <p class="cc-scenario-hook">${s.narrative_hook}</p>
           
-          ${s.plot_family ? `
-            <div class="cc-scenario-section">
-              <h4>📖 Plot Family</h4>
-              <p><strong>${s.plot_family}</strong></p>
-            </div>
-          ` : ''}
+
           
           <div class="cc-scenario-section">
             <h4>📍 Location</h4>
@@ -439,7 +434,7 @@ window.CC_APP = {
               <h4>🎭 Twist</h4>
               <p><strong>${s.twist.name}</strong></p>
               <p>${s.twist.description}</p>
-              ${s.twist.example ? `<p><em>Example: ${s.twist.example}</em></p>` : ''}
+              ${s.twist.example ? `<p class="cc-twist-example">📌 What this means at the table: <strong>${s.twist.example}</strong></p>` : ''}
             </div>
           ` : ''}
 
@@ -447,8 +442,8 @@ window.CC_APP = {
             <div class="cc-scenario-section cc-twist">
               <h4>🎭 Round ${s.finale.round} Finale: ${s.finale.title}</h4>
               <p><em>"${s.finale.narrative}"</em></p>
-              <p><strong>Effect:</strong> ${s.finale.mechanical_effect}</p>
-              <p><strong>Ticker:</strong> ${s.finale.ticker_effect}</p>
+              <p><strong>What happens:</strong> ${s.finale.mechanical_effect}</p>
+              ${s.finale.player_note ? `<p class="cc-twist-example">📌 What to expect: <strong>${s.finale.player_note}</strong></p>` : ''}
             </div>
           ` : ''}
 
@@ -518,6 +513,28 @@ window.CC_APP = {
                 `).join('')}
               </div>
 
+              ${s.terrain_setup.objective_markers && s.terrain_setup.objective_markers.length > 0 ? `
+                <div class="cc-terrain-group cc-terrain-markers">
+                  <p class="cc-terrain-label">🎯 Objective Markers</p>
+                  ${s.terrain_setup.objective_markers.map(m => `
+                    <div class="cc-terrain-piece cc-terrain-piece-core">
+                      <span>${m}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+              ${s.terrain_setup.cultist_markers && s.terrain_setup.cultist_markers.length > 0 ? `
+                <div class="cc-terrain-group cc-terrain-markers">
+                  <p class="cc-terrain-label">🕯️ Cultist Objective Markers</p>
+                  ${s.terrain_setup.cultist_markers.map(m => `
+                    <div class="cc-terrain-piece cc-terrain-piece-core" style="border-color: #e6a817; color: #e6a817;">
+                      <span>${m}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+
               ${s.terrain_setup.thyr_crystals ? `
                 <div class="cc-terrain-group cc-terrain-thyr">
                   <p class="cc-terrain-label">💎 Thyr Crystals</p>
@@ -538,20 +555,13 @@ window.CC_APP = {
                COFFIN COUGH STORM
                Only shows if the storm fired this scenario
                ============================================ -->
-          ${s.coffin_cough ? `
+          ${s.coffin_cough && s.coffin_cough.effect ? `
             <div class="cc-scenario-section cc-coffin-cough-section">
               <h4>☠️ Coffin Cough</h4>
-              <p class="cc-coffin-cough-instruction">${s.coffin_cough.instruction}</p>
-              <div class="cc-coffin-cough-table">
-                ${s.coffin_cough.effects_table.map(e => `
-                  <div class="cc-coffin-cough-row">
-                    <span class="cc-coffin-cough-roll">${e.roll}</span>
-                    <div class="cc-coffin-cough-effect">
-                      <strong>${e.name}</strong>
-                      ${e.effects.map(fx => `<p>${fx}</p>`).join('')}
-                    </div>
-                  </div>
-                `).join('')}
+              <p class="cc-coffin-cough-instruction">The storm hit this location. It rolls out as follows:</p>
+              <div class="cc-coffin-cough-single">
+                <strong class="cc-coffin-cough-name">${s.coffin_cough.effect.name}</strong>
+                ${s.coffin_cough.effect.effects.map(fx => `<p>${fx}</p>`).join('')}
               </div>
             </div>
           ` : ''}
