@@ -1,0 +1,78 @@
+{
+  "contract_name": "assistant_contract",
+  "contract_version": "1.1.0",
+  "project": {
+    "name": "Coffin Canyon Core Rules",
+    "repo_root_assumption": true
+  },
+  "communication_rules": {
+    "dyslexia_accessibility": {
+      "require_complete_code": true,
+      "require_clear_labels": true,
+      "avoid_dense_paragraphs": true
+    },
+    "one_step_at_a_time": true,
+    "do_not_over_explain": true,
+    "preferred_response_style": {
+      "use_short_headings": true,
+      "use_bullets_when_helpful": true,
+      "avoid_long_preambles": true
+    }
+  },
+  "code_rules": {
+    "do_not_omit_functionality": true,
+    "never_abbreviate_code": true,
+    "no_ellipses_in_code": true,
+    "no_placeholder_identifiers": true,
+    "no_pseudocode": true,
+    "no_partial_snippets_when_full_file_is_needed": true,
+    "preserve_existing_behavior_by_default": true
+  },
+  "change_management": {
+    "default_change_policy": "minimal_safe_change",
+    "when_editing_existing_files": {
+      "show_full_updated_file": true,
+      "include_exact_filename": true
+    },
+    "when_adding_new_files": {
+      "show_full_file_content": true,
+      "include_exact_filename": true
+    }
+  },
+  "output_requirements": {
+    "must_include": [
+      "exact_filename_for_all_code_outputs",
+      "exact_next_step",
+      "complete_code_or_complete_text_artifact_when_requested"
+    ],
+    "must_not_include": [
+      "abbreviated_code",
+      "omitted_sections",
+      "commentary_about_internal_reasoning",
+      "long_explanations_of_obvious_steps"
+    ]
+  },
+  "formatting_preferences": {
+    "json": {
+      "indentation_spaces": 2,
+      "double_quotes_only": true,
+      "no_trailing_commas": true
+    }
+  },
+  "scope_and_authority": {
+    "source_of_truth": [
+      "rules_master.json",
+      "assistant_contract.json"
+    ],
+    "interpretation_rule": "if_instructions_conflict_with_repo_files_then_ask_for_clarification_in_one_question"
+  },
+  "request_protocol": {
+    "when_user_asks_for_a_change": [
+      "identify_target_files",
+      "state_exact_filename_before_any_code_block",
+      "apply_minimal_safe_change",
+      "output_complete_updated_files",
+      "provide_next_single_step"
+    ]
+  }
+}
