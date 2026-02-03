@@ -655,7 +655,57 @@ window.CC_APP = {
       `;
     }
 
+    // ================================
+    // HORIZONTAL PROGRESS BAR (shown when scenario is generated)
+    // ================================
+    function renderHorizontalProgress() {
+      const steps = [
+        { num: 1, title: 'Game Setup', icon: '⚙️', complete: state.completedSteps.includes(1) },
+        { num: 2, title: 'Factions', icon: '⚔️', complete: state.completedSteps.includes(2) },
+        { num: 3, title: 'Location', icon: '🗺️', complete: state.completedSteps.includes(3) },
+        { num: 4, title: 'Generated', icon: '🎲', complete: state.generated }
+      ];
+
+      return `
+        <div class="cc-progress-bar">
+          ${steps.map((step, i) => `
+            <div class="cc-progress-step ${step.complete ? 'complete' : ''}" onclick="goToStep(${step.num})">
+              <span class="cc-progress-step-icon">${step.icon}</span>
+              <span class="cc-progress-step-title">${step.title}</span>
+              <span class="cc-progress-step-check">${step.complete ? '✓' : ''}</span>
+            </div>
+            ${i < steps.length - 1 ? '<div class="cc-progress-connector"></div>' : ''}
+          `).join('')}
+        </div>
+      `;
+    }
+
     function render() {
+      // ---- GENERATED MODE: single column, full focus on scenario ----
+      if (state.generated && state.scenario) {
+        const html = `
+          <div class="cc-app-header">
+            <div>
+              <h1 class="cc-app-title">Coffin Canyon</h1>
+              <div class="cc-app-subtitle">Scenario Builder</div>
+            </div>
+          </div>
+
+          ${renderHorizontalProgress()}
+
+          <div class="cc-scenario-full-layout">
+            <div class="cc-panel">
+              <div class="cc-body">
+                ${renderGeneratedScenario()}
+              </div>
+            </div>
+          </div>
+        `;
+        root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
+        return;
+      }
+
+      // ---- BUILDING MODE: two-column sidebar + summary ----
       const html = `
         <div class="cc-app-header">
           <div>
@@ -781,6 +831,10 @@ window.CC_APP = {
     };
 
     window.goToStep = function(stepNum) {
+      // If we're in generated/full-screen mode and user clicks a step, go back to building mode
+      if (stepNum < 4) {
+        state.generated = false;
+      }
       state.currentStep = stepNum;
       render();
     };
