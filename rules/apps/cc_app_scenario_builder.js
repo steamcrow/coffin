@@ -110,11 +110,6 @@ window.CC_APP = {
         .replace(/'/g, '&#039;');
     }
 
-    function capitalize(str) {
-      if (!str) return '';
-      return str.charAt(0).toUpperCase() + str.slice(1);
-    }
-
     async function loadNamedLocations() {
       try {
         const res = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json?t=' + Date.now());
@@ -396,32 +391,18 @@ window.CC_APP = {
           <h3>${s.name}</h3>
           <p class="cc-scenario-hook">${s.narrative_hook}</p>
           
+          ${s.plot_family ? `
+            <div class="cc-scenario-section">
+              <h4>📖 Plot Family</h4>
+              <p><strong>${s.plot_family}</strong></p>
+            </div>
+          ` : ''}
+          
           <div class="cc-scenario-section">
             <h4>📍 Location</h4>
             <p><strong>${s.location.emoji || '🗺️'} ${s.location.name}</strong></p>
             <p>${s.location.description}</p>
             ${s.location.atmosphere ? `<p><em>"${s.location.atmosphere}"</em></p>` : ''}
-            
-            ${s.location.resources && Object.keys(s.location.resources).length > 0 ? `
-              <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,215,0,0.1); border-left: 3px solid #ffd700;">
-                <p style="margin: 0; font-weight: bold; color: #ffd700;">💎 Available Resources:</p>
-                <p style="margin: 0.5rem 0 0 0;">
-                  ${Object.entries(s.location.resources)
-                    .filter(([key, val]) => val > 0)
-                    .map(([key, val]) => `${capitalize(key)} (${val})`)
-                    .join(' • ')}
-                </p>
-              </div>
-            ` : ''}
-            
-            ${s.location.hazards && s.location.hazards.length > 0 ? `
-              <div style="margin-top: 0.5rem; padding: 0.75rem; background: rgba(255,0,0,0.1); border-left: 3px solid #ff4444;">
-                <p style="margin: 0; font-weight: bold; color: #ff4444;">⚠️ Environmental Hazards:</p>
-                <p style="margin: 0.5rem 0 0 0; font-size: 0.9em;">
-                  ${s.location.hazards.join(' • ')}
-                </p>
-              </div>
-            ` : ''}
           </div>
 
           <div class="cc-scenario-section">
@@ -432,26 +413,41 @@ window.CC_APP = {
             <p class="cc-help-text">${s.danger_description}</p>
           </div>
 
+          ${s.vp_spread ? `
+            <div class="cc-scenario-section">
+              <h4>🎯 Victory Point System</h4>
+              <p><strong>Target:</strong> ${s.vp_spread.target_to_win} VP</p>
+              <p><strong>Primary:</strong> ${s.vp_spread.scoring_rule}</p>
+              <p><strong>Bonus:</strong> ${s.vp_spread.bonus_rule}</p>
+              <p><strong>Formula:</strong> ${s.vp_spread.formula}</p>
+            </div>
+          ` : ''}
+
           <div class="cc-scenario-section">
-            <h4>🎯 Victory Point System</h4>
-            <p><strong>Target:</strong> ${s.vp_spread.target_to_win} VP to win</p>
-            <p><strong>Primary Scoring:</strong> ${s.vp_spread.scoring_rule}</p>
-            <p><strong>Bonus Scoring:</strong> ${s.vp_spread.bonus_rule}</p>
+            <h4>🎯 Objectives</h4>
+            ${s.objectives.map(obj => `
+              <div class="cc-objective-card">
+                <strong>${obj.name}</strong>
+                <p>${obj.description}</p>
+                <p><strong>Target:</strong> ${obj.target_value} ${obj.progress_label}</p>
+                <p><strong>VP:</strong> ${obj.vp_per_unit} VP per unit (Max: ${obj.max_vp} VP)</p>
+              </div>
+            `).join('')}
           </div>
 
           ${s.monster_pressure && s.monster_pressure.enabled ? `
             <div class="cc-scenario-section">
               <h4>👹 Monster Pressure</h4>
               <p><strong>Trigger:</strong> ${s.monster_pressure.trigger}</p>
-              <p><strong>Effect:</strong> ${s.monster_pressure.escalation_type}</p>
+              <p><strong>Type:</strong> ${s.monster_pressure.escalation_type}</p>
             </div>
           ` : ''}
 
           ${s.canyon_state ? `
             <div class="cc-scenario-section">
-              <h4>🏜️ Canyon State: ${s.canyon_state.name}</h4>
+              <h4>🏜️ Canyon State</h4>
+              <p><strong>${s.canyon_state.name}</strong></p>
               ${s.canyon_state.faction ? `<p><em>Faction in Power: ${s.canyon_state.faction}</em></p>` : ''}
-              ${s.canyon_state.effect ? `<p>${s.canyon_state.effect}</p>` : ''}
               ${s.canyon_state.terrain_features && s.canyon_state.terrain_features.length > 0 ? `
                 <p><strong>Terrain:</strong> ${s.canyon_state.terrain_features.join(', ')}</p>
               ` : ''}
@@ -460,9 +456,10 @@ window.CC_APP = {
 
           ${s.twist ? `
             <div class="cc-scenario-section cc-twist">
-              <h4>🎭 Twist: ${s.twist.name}</h4>
+              <h4>🎭 Twist</h4>
+              <p><strong>${s.twist.name}</strong></p>
               <p>${s.twist.description}</p>
-              <p><strong>Effect:</strong> ${s.twist.effect}</p>
+              ${s.twist.example ? `<p><em>Example: ${s.twist.example}</em></p>` : ''}
             </div>
           ` : ''}
 
@@ -471,26 +468,112 @@ window.CC_APP = {
               <h4>🎭 Round ${s.finale.round} Finale: ${s.finale.title}</h4>
               <p><em>"${s.finale.narrative}"</em></p>
               <p><strong>Effect:</strong> ${s.finale.mechanical_effect}</p>
+              <p><strong>Ticker:</strong> ${s.finale.ticker_effect}</p>
             </div>
           ` : ''}
 
+          <!-- ============================================
+               CULTIST ENCOUNTER SECTION (NEW)
+               Shows up only if the brain rolled a cult
+               ============================================ -->
+          ${s.cultist_encounter && s.cultist_encounter.enabled ? `
+            <div class="cc-scenario-section cc-cultist-section">
+              <div class="cc-cultist-header" style="border-left-color: ${s.cultist_encounter.cult.color};">
+                <h4 style="color: ${s.cultist_encounter.cult.color};">🕯️ Cultist Encounter</h4>
+                <div class="cc-cultist-name" style="color: ${s.cultist_encounter.cult.color};">
+                  ${s.cultist_encounter.cult.name}
+                </div>
+                <p class="cc-cultist-theme"><em>${s.cultist_encounter.cult.theme}</em></p>
+                <p>${s.cultist_encounter.cult.description}</p>
+              </div>
+
+              <div class="cc-cultist-objective" style="border-color: ${s.cultist_encounter.cult.color};">
+                <p class="cc-cultist-objective-label">⚫ Cultist Objective</p>
+                <p><strong>${s.cultist_encounter.objective.name}</strong></p>
+                <p>${s.cultist_encounter.objective.description}</p>
+                <p><strong>⏳ Turn Limit:</strong> ${s.cultist_encounter.objective.turn_limit} turns</p>
+                <p><strong>💀 Win Condition:</strong> ${s.cultist_encounter.objective.win_condition}</p>
+                <p><strong>🛡️ How to Stop Them:</strong> ${s.cultist_encounter.objective.counter}</p>
+              </div>
+
+              <div class="cc-cultist-force">
+                <p><strong>⚔️ Force Size:</strong> ${s.cultist_encounter.force_size} models</p>
+                <p><strong>🎮 Controller:</strong> ${s.cultist_encounter.controller_note}</p>
+                <p class="cc-cultist-chance"><em>Spawn chance was: ${(s.cultist_encounter.chance_that_was_rolled * 100).toFixed(0)}% (state modifier: ${s.cultist_encounter.state_modifier_used >= 0 ? '+' : ''}${s.cultist_encounter.state_modifier_used})</em></p>
+              </div>
+
+              <div class="cc-cultist-warning">
+                ⚠️ <strong>Everyone Loses</strong> — If the cultists complete their objective, ALL factions lose. Stop them or die together.
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- ============================================
+               TERRAIN SETUP SECTION (NEW)
+               Always shows — tells players what to place
+               ============================================ -->
+          ${s.terrain_setup ? `
+            <div class="cc-scenario-section cc-terrain-section">
+              <h4>🗺️ Terrain Setup</h4>
+              
+              ${s.terrain_setup.atmosphere ? `
+                <p class="cc-terrain-atmosphere"><em>"${s.terrain_setup.atmosphere}"</em></p>
+              ` : ''}
+
+              <div class="cc-terrain-group cc-terrain-core">
+                <p class="cc-terrain-label">📌 Required Terrain</p>
+                ${s.terrain_setup.core_terrain.map(piece => `
+                  <div class="cc-terrain-piece cc-terrain-piece-core">
+                    <span>${piece}</span>
+                  </div>
+                `).join('')}
+              </div>
+
+              <div class="cc-terrain-group cc-terrain-optional">
+                <p class="cc-terrain-label">✨ Optional Terrain</p>
+                ${s.terrain_setup.optional_terrain.map(piece => `
+                  <div class="cc-terrain-piece cc-terrain-piece-optional">
+                    <span>${piece}</span>
+                  </div>
+                `).join('')}
+              </div>
+
+              ${s.terrain_setup.thyr_crystals ? `
+                <div class="cc-terrain-group cc-terrain-thyr">
+                  <p class="cc-terrain-label">💎 Thyr Crystals</p>
+                  <div class="cc-terrain-piece cc-terrain-piece-thyr">
+                    <span>${s.terrain_setup.thyr_crystals.count} crystal${s.terrain_setup.thyr_crystals.count > 1 ? 's' : ''} — ${s.terrain_setup.thyr_crystals.placement}</span>
+                  </div>
+                </div>
+              ` : ''}
+
+              <div class="cc-terrain-totals">
+                <p><strong>Total Terrain Pieces:</strong> ${s.terrain_setup.total_terrain_pieces}</p>
+                <p class="cc-terrain-note">${s.terrain_setup.setup_note}</p>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- ============================================
+               VICTORY CONDITIONS (existing)
+               ============================================ -->
           <div class="cc-scenario-section">
             <h4>🏆 Victory Conditions</h4>
             ${state.factions.map(faction => {
               const vc = s.victory_conditions ? s.victory_conditions[faction.id] : null;
               return `
                 <div class="cc-victory-card">
-                  <h5>${faction.name}${faction.isNPC ? ' (NPC)' : ''}${faction.player && !faction.isNPC ? ' - ' + faction.player : ''}</h5>
+                  <h5>${faction.name}${faction.isNPC ? ' (NPC)' : ''}${faction.player ? ' - ' + faction.player : ''}</h5>
                   
                   ${vc && vc.faction_objectives ? `
                     <div style="margin-bottom: 1rem;">
                       <p><strong>🎯 Your Objectives:</strong></p>
                       ${vc.faction_objectives.map(obj => `
-                        <div style="margin-left: 1rem; margin-bottom: 0.75rem; padding: 0.75rem; background: rgba(0,0,0,0.2); border-left: 3px solid var(--cc-primary);">
-                          <p style="margin: 0; font-weight: bold; font-size: 1.1em;">${obj.name}</p>
-                          <p style="margin: 0.25rem 0; font-style: italic;">${obj.goal}</p>
+                        <div style="margin-left: 1rem; margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(0,0,0,0.2); border-left: 3px solid var(--cc-primary);">
+                          <p style="margin: 0;"><strong>${obj.name}</strong></p>
+                          <p style="margin: 0.25rem 0;"><em>${obj.goal}</em></p>
                           <p style="margin: 0.25rem 0; color: #4ade80;">💰 ${obj.scoring}</p>
-                          ${obj.method ? `<p style="margin: 0.25rem 0; font-size: 0.9em;">📋 ${obj.method}</p>` : ''}
+                          <p style="margin: 0.25rem 0; font-size: 0.9em;">📋 ${obj.method}</p>
                           ${obj.restriction ? `<p style="margin: 0.25rem 0; font-size: 0.9em; color: #fbbf24;">⚠️ ${obj.restriction}</p>` : ''}
                         </div>
                       `).join('')}
@@ -506,41 +589,20 @@ window.CC_APP = {
                       <p style="margin: 0.5rem 0; font-style: italic; color: rgba(255,215,0,0.8);">"${vc.aftermath.flavor}"</p>
                     </div>
                   ` : ''}
+                  
+                  ${vc && vc.objectives ? `
+                    <div style="margin-top: 1rem; padding: 0.5rem; background: rgba(0,0,0,0.3);">
+                      <p style="margin: 0; font-size: 0.9em;"><strong>📊 Tracking:</strong></p>
+                      ${vc.objectives.map(obj => `
+                        <p style="margin: 0.25rem 0; font-size: 0.85em; font-family: monospace;">${obj.ticker}</p>
+                      `).join('')}
+                    </div>
+                  ` : ''}
                 </div>
               `;
             }).join('')}
           </div>
-          
-          <div class="cc-scenario-section" style="margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.2);">
-            <h4>📋 Battlefield Objectives (All Factions)</h4>
-            <p style="font-size: 0.9em; margin-bottom: 1rem; color: rgba(255,255,255,0.7);">
-              These objectives are available to all factions. Use them to track progress during the game.
-            </p>
-            ${s.objectives.map(obj => `
-              <div style="margin-bottom: 0.75rem; padding: 0.5rem; background: rgba(255,255,255,0.05); border-left: 2px solid rgba(255,255,255,0.2);">
-                <p style="margin: 0; font-weight: bold;">${obj.name}</p>
-                <p style="margin: 0.25rem 0; font-size: 0.9em;">${obj.description}</p>
-                <p style="margin: 0.25rem 0; font-size: 0.9em; color: #4ade80;">
-                  ${obj.vp_per_unit} VP per ${obj.progress_label} (Target: ${obj.target_value}, Max: ${obj.max_vp} VP)
-                </p>
-              </div>
-            `).join('')}
-          </div>
-<div class="cc-scenario-section" style="margin-top: 2rem; padding: 1rem; background: rgba(0,0,0,0.2);">
-  <h4>🏜️ Required Terrain</h4>
-  <p style="font-size: 0.9em; margin-bottom: 1rem; color: rgba(255,255,255,0.7);">
-    You'll need these terrain pieces to set up this scenario:
-  </p>
-  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.5rem;">
-    ${s.terrain_requirements && s.terrain_requirements.length > 0 ? 
-      s.terrain_requirements.map(terrain => `
-        <div style="padding: 0.5rem; background: rgba(139,69,19,0.2); border-left: 2px solid #8b4513; font-size: 0.9em;">
-          🏔️ ${terrain}
-        </div>
-      `).join('') 
-      : '<p>Standard canyon terrain</p>'}
-  </div>
-</div>
+
           <div class="cc-form-actions">
             <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">
               🔄 Start Over
