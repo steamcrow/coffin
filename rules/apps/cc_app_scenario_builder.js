@@ -413,27 +413,7 @@ window.CC_APP = {
             <p class="cc-help-text">${s.danger_description}</p>
           </div>
 
-          ${s.vp_spread ? `
-            <div class="cc-scenario-section">
-              <h4>🎯 Victory Point System</h4>
-              <p><strong>Target:</strong> ${s.vp_spread.target_to_win} VP</p>
-              <p><strong>Primary:</strong> ${s.vp_spread.scoring_rule}</p>
-              <p><strong>Bonus:</strong> ${s.vp_spread.bonus_rule}</p>
-              <p><strong>Formula:</strong> ${s.vp_spread.formula}</p>
-            </div>
-          ` : ''}
 
-          <div class="cc-scenario-section">
-            <h4>🎯 Objectives</h4>
-            ${s.objectives.map(obj => `
-              <div class="cc-objective-card">
-                <strong>${obj.name}</strong>
-                <p>${obj.description}</p>
-                <p><strong>Target:</strong> ${obj.target_value} ${obj.progress_label}</p>
-                <p><strong>VP:</strong> ${obj.vp_per_unit} VP per unit (Max: ${obj.max_vp} VP)</p>
-              </div>
-            `).join('')}
-          </div>
 
           ${s.monster_pressure && s.monster_pressure.enabled ? `
             <div class="cc-scenario-section">
@@ -550,6 +530,28 @@ window.CC_APP = {
               <div class="cc-terrain-totals">
                 <p><strong>Total Terrain Pieces:</strong> ${s.terrain_setup.total_terrain_pieces}</p>
                 <p class="cc-terrain-note">${s.terrain_setup.setup_note}</p>
+              </div>
+            </div>
+          ` : ''}
+
+          <!-- ============================================
+               COFFIN COUGH STORM
+               Only shows if the storm fired this scenario
+               ============================================ -->
+          ${s.coffin_cough ? `
+            <div class="cc-scenario-section cc-coffin-cough-section">
+              <h4>☠️ Coffin Cough</h4>
+              <p class="cc-coffin-cough-instruction">${s.coffin_cough.instruction}</p>
+              <div class="cc-coffin-cough-table">
+                ${s.coffin_cough.effects_table.map(e => `
+                  <div class="cc-coffin-cough-row">
+                    <span class="cc-coffin-cough-roll">${e.roll}</span>
+                    <div class="cc-coffin-cough-effect">
+                      <strong>${e.name}</strong>
+                      ${e.effects.map(fx => `<p>${fx}</p>`).join('')}
+                    </div>
+                  </div>
+                `).join('')}
               </div>
             </div>
           ` : ''}
