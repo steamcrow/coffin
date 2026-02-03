@@ -667,12 +667,100 @@
   font-style: italic;
 }
 
+
+/* ===== HORIZONTAL PROGRESS BAR (generated mode) ===== */
+.cc-progress-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin: 0 -1rem; /* bleed edge to edge under header */
+}
+
+.cc-progress-step {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.cc-progress-step:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.cc-progress-step.complete {
+  border-color: rgba(74, 222, 128, 0.4);
+  background: rgba(74, 222, 128, 0.08);
+}
+
+.cc-progress-step-icon {
+  font-size: 1rem;
+}
+
+.cc-progress-step-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.cc-progress-step.complete .cc-progress-step-title {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.cc-progress-step-check {
+  font-size: 0.75rem;
+  color: #4ade80;
+  font-weight: 700;
+  min-width: 0.75rem;
+}
+
+.cc-progress-connector {
+  width: 28px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.12);
+  flex-shrink: 0;
+}
+
+/* ===== FULL-WIDTH SCENARIO LAYOUT (generated mode) ===== */
+.cc-scenario-full-layout {
+  padding: 1.5rem 2rem;
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cc-scenario-full-layout .cc-scenario-result h3 {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+}
+
+.cc-scenario-full-layout .cc-scenario-hook {
+  text-align: center;
+  font-size: 1.15rem;
+}
+
 /* ===== Print Styles ===== */
 @media print {
   .cc-scenario-builder-header,
   .cc-scenario-sidebar,
   .cc-form-actions,
-  .cc-summary-steps {
+  .cc-summary-steps,
+  .cc-progress-bar {
     display: none !important;
   }
   
