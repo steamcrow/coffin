@@ -1,8 +1,174 @@
 // ================================
 // SCENARIO BRAIN - FULL VERSION
+// with Cultist System + Terrain Map
 // ================================
 
 console.log("🧠 Scenario Brain loading...");
+
+// ================================
+// CULT REGISTRY — 8 Named Cults
+// ================================
+const CULT_REGISTRY = [
+  { id: 'sons_of_ralu',            name: 'Sons of Ralu',              theme: 'Chaos & Destruction',     color: '#c44569', description: 'Worshippers of RALU, the monster god of chaos. They seek to unleash primal, mindless destruction upon the Canyon.' },
+  { id: 'new_children_of_tzul',    name: 'The New Children of Tzul', theme: 'Undead & Ancient Power',   color: '#7b2d8b', description: 'A new cult worshipping the ancient Tzul. They aid and summon the undead, seeking to resurrect their dark masters.' },
+  { id: 'burning_choir',           name: 'The Burning Choir',        theme: 'Fire & Purification',     color: '#e84545', description: 'Apocalypse cultists who believe the world must burn to be reborn. Fire is their sacrament.' },
+  { id: 'children_of_hollow',      name: 'Children of the Hollow',   theme: 'Void & Madness',          color: '#5a5aaa', description: 'They worship the void between worlds. Their rituals dissolve reality itself.' },
+  { id: 'thyr_eaters',             name: 'The Thyr Eaters',          theme: 'Addiction & Consumption',  color: '#daa520', description: 'Addicted to raw Thyr energy. They consume all magic and crystals, growing ever hungrier.' },
+  { id: 'blighted_root',           name: 'The Blighted Root',        theme: 'Corrupted Nature',        color: '#4caf50', description: 'Nature corruption cultists. They twist plants and beasts into horrifying, spreading abominations.' },
+  { id: 'bone_singers',            name: 'The Bone Singers',         theme: 'Death Magic',             color: '#78909c', description: 'Practitioners of death magic who raise the dead and commune with the grave.' },
+  { id: 'regents_faithful',        name: "Regent's Faithful",        theme: 'Dark Monarchy',           color: '#8e24aa', description: "Secret worshippers of a dark monarch. Only appear when The Crow Queen is NOT in the scenario." }
+];
+
+// ================================
+// CULT OBJECTIVES — What the cultists are trying to DO
+// Each has a turn limit (how long players have to stop them)
+// ================================
+const CULT_OBJECTIVES = [
+  {
+    id: 'awaken_tzul_dust_kings',
+    name: 'Awaken the Tzul Dust Kings',
+    description: 'The cultists are sacrificing local miners and their families at the ancient Tzul burial grounds. If the ritual completes, the Dust Kings rise.',
+    cult_affinity: ['new_children_of_tzul', 'bone_singers'],
+    turn_limit: 5,
+    win_condition: 'Ritual completes by turn limit. Stop it by controlling the burial grounds for 2 consecutive rounds.',
+    counter: 'Control the burial site for 2 consecutive rounds.'
+  },
+  {
+    id: 'awaken_ralu',
+    name: 'Awaken RALU at the Fountain Idol',
+    description: 'At the ancient RALU fountain idol, the Sons of Ralu are sacrificing a captured monster. If the sacrifice completes, the monster god of chaos stirs.',
+    cult_affinity: ['sons_of_ralu'],
+    turn_limit: 4,
+    win_condition: 'The monster sacrifice completes at the idol.',
+    counter: 'Destroy the idol OR rescue the captured monster.'
+  },
+  {
+    id: 'ring_the_doom_bell',
+    name: 'Ring the Bell of Doom',
+    description: 'The cultists are raising a dark temple in the Canyon. If they finish construction and ring the bell, something ancient and terrible answers the call.',
+    cult_affinity: ['burning_choir', 'new_children_of_tzul', 'regents_faithful'],
+    turn_limit: 6,
+    win_condition: 'Temple construction completes and the bell is rung.',
+    counter: 'Destroy the bell OR prevent 3 construction actions.'
+  },
+  {
+    id: 'open_hollow_portal',
+    name: 'Open a Portal to the Hollow',
+    description: 'The Children of the Hollow are completing a blood circle in the ruins. When finished, reality tears open and something worse pours through.',
+    cult_affinity: ['children_of_hollow'],
+    turn_limit: 5,
+    win_condition: 'The blood circle is completed.',
+    counter: 'Control the blood circle for 2 consecutive rounds to disrupt it.'
+  },
+  {
+    id: 'corrupt_thyr_vein',
+    name: 'Corrupt the Thyr Vein',
+    description: 'The Thyr Eaters are funneling raw Thyr into a corrupting device. If the vein is fully poisoned, the entire region becomes dead ground.',
+    cult_affinity: ['thyr_eaters'],
+    turn_limit: 5,
+    win_condition: 'The corruption device fully poisons the vein.',
+    counter: 'Destroy the corruption device OR extract the Thyr before it is consumed.'
+  },
+  {
+    id: 'raise_dead_army',
+    name: 'Raise an Army of the Dead',
+    description: 'The Bone Singers are raising the dead from the local graveyard. Each round they succeed, another wave of corpses joins them.',
+    cult_affinity: ['bone_singers', 'new_children_of_tzul'],
+    turn_limit: 4,
+    win_condition: 'The Bone Singers successfully raise 3 waves.',
+    counter: 'Destroy the Ritual Focus before 3 waves are raised.'
+  },
+  {
+    id: 'burn_the_boomtown',
+    name: 'Purge the Boomtown',
+    description: 'The Burning Choir has set fires across the boomtown as a "purification offering." Every round the flames spread further.',
+    cult_affinity: ['burning_choir'],
+    turn_limit: 4,
+    win_condition: 'Fire spreads to all objectives on the map.',
+    counter: 'Destroy all 3 fire sources before the flames spread.'
+  },
+  {
+    id: 'poison_water_supply',
+    name: 'Poison the Water Supply',
+    description: 'Cultists are adding something dark and ancient to the settlement water. If completed, mass hysteria breaks out and no one can think straight.',
+    cult_affinity: ['blighted_root', 'children_of_hollow'],
+    turn_limit: 3,
+    win_condition: 'The water supply is fully poisoned.',
+    counter: 'Destroy or capture the poison source before the turn limit.'
+  },
+  {
+    id: 'desecrate_sacred_site',
+    name: 'Desecrate the Sacred Site',
+    description: 'The cultists are performing dark rites at a sacred location, twisting its power for themselves.',
+    cult_affinity: ['regents_faithful', 'sons_of_ralu', 'burning_choir'],
+    turn_limit: 5,
+    win_condition: 'The desecration ritual is completed.',
+    counter: 'Hold the sacred site for 2 consecutive rounds.'
+  },
+  {
+    id: 'harvest_living_souls',
+    name: 'Harvest Living Souls',
+    description: 'The cultists have captured civilians and are feeding them to a terrible engine, one soul at a time.',
+    cult_affinity: ['bone_singers', 'children_of_hollow', 'sons_of_ralu'],
+    turn_limit: 4,
+    win_condition: 'All captured civilians are consumed by the engine.',
+    counter: 'Rescue the civilians by interacting with the cages.'
+  },
+  {
+    id: 'grow_the_blight',
+    name: 'Grow the Living Blight',
+    description: 'The Blighted Root has planted a seed of corruption. Each round it spreads, claiming more terrain and more lives.',
+    cult_affinity: ['blighted_root'],
+    turn_limit: 6,
+    win_condition: 'The Blight covers all objectives.',
+    counter: 'Destroy the Blight Heart to stop the spread.'
+  },
+  {
+    id: 'summon_canyon_titan',
+    name: 'Summon the Canyon Titan',
+    description: 'Deep beneath the canyon, something enormous sleeps. The cultists are performing the exact ritual to wake it. No one knows what follows.',
+    cult_affinity: ['sons_of_ralu', 'children_of_hollow', 'new_children_of_tzul'],
+    turn_limit: 5,
+    win_condition: 'The summoning ritual completes.',
+    counter: 'Destroy all 3 summoning pillars to break the ritual.'
+  }
+];
+
+// ================================
+// CANYON STATES — Which ones are "pro-cultist"
+// Haunted and Exalted are the big ones. Poisoned and Strangewild add a little.
+// Liberated and Rusted actually SUPPRESS cultists.
+// ================================
+const CULTIST_STATE_MODIFIERS = {
+  'poisoned':    { modifier: 0.10,  reason: 'Corruption breeds cult activity' },
+  'haunted':     { modifier: 0.25,  reason: 'Dark energy draws cultists like moths to flame' },
+  'exalted':     { modifier: 0.20,  reason: 'The Regent\'s dark power awakens darker forces' },
+  'strangewild': { modifier: 0.10,  reason: 'Feral chaos makes cults bold and reckless' },
+  'lawless':     { modifier: 0.05,  reason: 'No law means no one stops the cults' },
+  'liberated':   { modifier: -0.15, reason: 'Federal order suppresses cult activity' },
+  'extracted':   { modifier: -0.05, reason: 'Stripped wasteland offers little for rituals' },
+  'rusted':      { modifier: -0.10, reason: 'Machines don\'t worship gods' },
+  'held':        { modifier: 0.0,   reason: 'Controlled territory. Neutral.' }
+};
+
+// ================================
+// TERRAIN MAP — Plot types suggest what terrain to place
+// "core" = must have. "optional" = nice to have. Scales with danger.
+// ================================
+const TERRAIN_MAP = {
+  'extraction_heist':            { core: ['Mine Entrance', 'Thyr Extraction Rig', 'Supply Crates (×3)'], optional: ['Quonset Huts', 'Rail Tracks'], atmosphere: 'Active industrial dig site' },
+  'claim_and_hold':              { core: ['Fortified Post', 'Territory Markers (×3)', 'Board Walks'], optional: ['Ruined Cantina', 'Stilt Buildings'], atmosphere: 'Contested frontier outpost' },
+  'ambush_derailment':           { core: ['Rail Tracks', 'Overpass / Bridge', 'Scattered Crates (×4)'], optional: ['Stagecoach Ruins', 'Rocky Outcrop'], atmosphere: 'Remote stretch of rail' },
+  'siege_standoff':              { core: ['Fortified Wall', 'Guard Tower', 'Barricades (×2)'], optional: ['Quonset Huts', 'Supply Depot'], atmosphere: 'Fortified position under siege' },
+  'escort_run':                  { core: ['Trail Path', 'Waypoint Markers (×2)', 'Escort Cargo'], optional: ['Monster Den / Nest', 'Bridge Ruins'], atmosphere: 'Dangerous mountain trail' },
+  'sabotage_strike':             { core: ['Thyr Extraction Rig', 'Dynamo', 'Control Panel'], optional: ['Quonset Huts', 'Rail Tracks'], atmosphere: 'Active industrial site. Explosions possible.' },
+  'corruption_ritual':           { core: ['Ritual Circle', 'Tainted Ground', 'Ancient Altar'], optional: ['Tzul Ruins', 'Strange Plants'], atmosphere: 'Dark, oppressive, and wrong.' },
+  'natural_disaster_response':   { core: ['Cracked Ground', 'Collapsing Structure', 'Evacuation Point'], optional: ['Buried Supplies', 'Unstable Terrain'], atmosphere: 'Active catastrophe.' }
+};
+
+// ================================
+// SCENARIO BRAIN CLASS
+// ================================
 
 class ScenarioBrain {
   
@@ -24,19 +190,19 @@ class ScenarioBrain {
     console.log("📚 Loading all data files...");
     
     const files = [
-      { key: 'scenarios', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json' },
-      { key: 'names', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/230_scenario_names.json' },
-      { key: 'locations', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json' },
-      { key: 'locationTypes', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/150_location_types.json' },
-      { key: 'plotFamilies', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json' },
-      { key: 'twists', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json' },
-      { key: 'canyonStates', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/30_campaign_system.json' },
-      { key: 'monsterRangers', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monster-rangers-v5.json', faction: 'monster_rangers' },
-      { key: 'libertyCorps', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-liberty-corps-v2.json', faction: 'liberty_corps' },
-      { key: 'monsterology', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsterology-v2.json', faction: 'monsterology' },
-      { key: 'monsters', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsters-v2.json', faction: 'monsters' },
-      { key: 'shineRiders', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-shine-riders-v2.json', faction: 'shine_riders' },
-      { key: 'crowQueen', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-crow-queen.json', faction: 'crow_queen' }
+      { key: 'scenarios',        url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json' },
+      { key: 'names',            url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/230_scenario_names.json' },
+      { key: 'locations',        url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json' },
+      { key: 'locationTypes',    url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/150_location_types.json' },
+      { key: 'plotFamilies',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json' },
+      { key: 'twists',           url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json' },
+      { key: 'canyonStates',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/30_campaign_system.json' },
+      { key: 'monsterRangers',   url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monster-rangers-v5.json',  faction: 'monster_rangers' },
+      { key: 'libertyCorps',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-liberty-corps-v2.json',   faction: 'liberty_corps' },
+      { key: 'monsterology',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsterology-v2.json',    faction: 'monsterology' },
+      { key: 'monsters',         url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsters-v2.json',        faction: 'monsters' },
+      { key: 'shineRiders',      url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-shine-riders-v2.json',   faction: 'shine_riders' },
+      { key: 'crowQueen',        url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-crow-queen.json',        faction: 'crow_queen' }
     ];
 
     for (const file of files) {
@@ -59,6 +225,10 @@ class ScenarioBrain {
     this.loaded = true;
     console.log("🎉 All data loaded!");
   }
+  
+  // ================================
+  // MAIN GENERATOR — assembles the full scenario
+  // ================================
   
   async generateCompleteScenario(userSelections) {
     console.log("\n\n🎬 ========================================");
@@ -102,35 +272,47 @@ class ScenarioBrain {
     const narrative = this.generateNarrative(plotFamily, location, userSelections);
     console.log("✓ Name:", name);
     
- // STEP 7: Extras
-console.log("\n🎭 STEP 7: EXTRAS");
-const twist = this.generateTwist(userSelections.dangerRating);
-const canyonState = this.getCanyonState(userSelections.canyonState);
-const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location);
-const terrainRequirements = this.generateTerrainRequirements(location, objectives, plotFamily);
-console.log("✓ Extras added");
-
-// ASSEMBLE FINAL SCENARIO
-const scenario = {
-  name: name,
-  narrative_hook: narrative,
-  plot_family: plotFamily.name,
-  location: location,
-  danger_rating: userSelections.dangerRating,
-  danger_description: this.getDangerDesc(userSelections.dangerRating),
-  vp_spread: vpSpread,
-  objectives: objectives,
-  victory_conditions: victoryConditions,
-  monster_pressure: { 
-    enabled: userSelections.dangerRating >= 4,
-    trigger: userSelections.dangerRating >= 4 ? `Round ${userSelections.dangerRating}` : 'N/A',
-    escalation_type: userSelections.dangerRating >= 4 ? 'Environmental threat increases' : 'None'
-  },
-  canyon_state: canyonState,
-  twist: twist,
-  finale: finale,
-  terrain_requirements: terrainRequirements
-};
+    // STEP 7: Extras (twist, canyon state, finale)
+    console.log("\n🎭 STEP 7: EXTRAS");
+    const twist = this.generateTwist(userSelections.dangerRating);
+    const canyonState = this.getCanyonState(userSelections.canyonState);
+    const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location);
+    console.log("✓ Extras added");
+    
+    // STEP 8: Cultist Encounter (NEW!)
+    console.log("\n👹 STEP 8: CULTIST ENCOUNTER");
+    const cultistEncounter = this.generateCultistEncounter(userSelections, plotFamily, location);
+    console.log("✓ Cultist check:", cultistEncounter ? `${cultistEncounter.cult.name} APPEARING` : 'No cultists this time');
+    
+    // STEP 9: Terrain Setup (NEW!)
+    console.log("\n🏜️ STEP 9: TERRAIN SETUP");
+    const terrainSetup = this.generateTerrainSetup(plotFamily, location, userSelections.dangerRating);
+    console.log("✓ Terrain setup generated");
+    
+    // ================================
+    // ASSEMBLE FINAL SCENARIO
+    // ================================
+    const scenario = {
+      name: name,
+      narrative_hook: narrative,
+      plot_family: plotFamily.name,
+      location: location,
+      danger_rating: userSelections.dangerRating,
+      danger_description: this.getDangerDesc(userSelections.dangerRating),
+      vp_spread: vpSpread,
+      objectives: objectives,
+      victory_conditions: victoryConditions,
+      monster_pressure: { 
+        enabled: userSelections.dangerRating >= 4,
+        trigger: userSelections.dangerRating >= 4 ? `Round ${userSelections.dangerRating - 1}` : 'N/A',
+        escalation_type: userSelections.dangerRating >= 4 ? 'Environmental threat increases each round' : 'None'
+      },
+      canyon_state: canyonState,
+      twist: twist,
+      finale: finale,
+      cultist_encounter: cultistEncounter,
+      terrain_setup: terrainSetup
+    };
     
     console.log("\n✅ SCENARIO GENERATION COMPLETE\n");
     return scenario;
@@ -159,7 +341,7 @@ const scenario = {
     return location;
   }
   
- generateProceduralLocation(dangerRating) {
+  generateProceduralLocation(dangerRating) {
     const types = this.data.locationTypes.location_types.filter(t => 
       (!t.danger_floor || dangerRating >= t.danger_floor) &&
       (!t.danger_ceiling || dangerRating <= t.danger_ceiling)
@@ -168,14 +350,6 @@ const scenario = {
     const type = types.length > 0 ? this.randomChoice(types) : this.data.locationTypes.location_types[0];
     const nearby = this.randomChoice(this.data.locations.locations);
     
-    // Limit resources to 3 max
-    let resources = type.resources || {};
-    if (Object.keys(resources).length > 3) {
-      const resourceEntries = Object.entries(resources);
-      const selectedResources = this.randomChoice(resourceEntries, 3);
-      resources = Object.fromEntries(selectedResources);
-    }
-    
     return {
       id: `proc_${Date.now()}`,
       name: `The Outskirts of ${nearby.name}`,
@@ -183,13 +357,14 @@ const scenario = {
       type_ref: type.id,
       description: `${type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
       atmosphere: this.randomChoice(type.atmosphere || ["Tension hangs heavy in the air", "The wind carries whispers of conflict"]),
-      resources: resources,
+      resources: type.resources || {},
       hazards: type.environmental_hazards || [],
       terrain_features: type.terrain_features || [],
       rewards: type.rewards || [],
       procedural: true
     };
-}
+  }
+  
   // ================================
   // PLOT FAMILY (STEP 2)
   // ================================
@@ -259,14 +434,14 @@ const scenario = {
     const target = 10 + (danger * 2);
     
     const systems = {
-      'extraction_heist': { primary: 'Items Extracted', pVal: 3, bonus: 'Speed Bonus', bVal: 1 },
-      'claim_and_hold': { primary: 'Rounds Controlled', pVal: 2, bonus: 'Consecutive Control', bVal: 3 },
-      'ambush_derailment': { primary: 'Crates Salvaged', pVal: 2, bonus: 'Wreckage Secured', bVal: 5 },
-      'siege_standoff': { primary: 'Rounds Survived', pVal: 3, bonus: 'Elite Kills', bVal: 2 },
-      'escort_run': { primary: 'Distance Traveled', pVal: 1, bonus: 'Cargo Intact', bVal: 5 },
-      'corruption_ritual': { primary: 'Rituals Complete', pVal: 4, bonus: 'Disruptions', bVal: 3 },
-      'natural_disaster_response': { primary: 'Units Evacuated', pVal: 2, bonus: 'Resources Saved', bVal: 3 },
-      'sabotage_strike': { primary: 'Systems Disabled', pVal: 3, bonus: 'Stealth Bonus', bVal: 2 }
+      'extraction_heist':            { primary: 'Items Extracted',    pVal: 3, bonus: 'Speed Bonus',        bVal: 1 },
+      'claim_and_hold':              { primary: 'Rounds Controlled',  pVal: 2, bonus: 'Consecutive Control', bVal: 3 },
+      'ambush_derailment':           { primary: 'Crates Salvaged',    pVal: 2, bonus: 'Wreckage Secured',    bVal: 5 },
+      'siege_standoff':              { primary: 'Rounds Survived',    pVal: 3, bonus: 'Elite Kills',         bVal: 2 },
+      'escort_run':                  { primary: 'Distance Traveled',  pVal: 1, bonus: 'Cargo Intact',        bVal: 5 },
+      'corruption_ritual':           { primary: 'Rituals Complete',   pVal: 4, bonus: 'Disruptions',         bVal: 3 },
+      'natural_disaster_response':   { primary: 'Units Evacuated',    pVal: 2, bonus: 'Resources Saved',     bVal: 3 },
+      'sabotage_strike':             { primary: 'Systems Disabled',   pVal: 3, bonus: 'Stealth Bonus',       bVal: 2 }
     };
     
     const sys = systems[plotId] || { primary: 'Objectives Complete', pVal: 2, bonus: 'Enemy Eliminated', bVal: 1 };
@@ -356,14 +531,14 @@ const scenario = {
   
   buildObjective(type, location, danger, vpSpread) {
     const templates = {
-      'wrecked_engine': { name: 'Salvage Wrecked Engine', desc: 'Extract mechanical components from abandoned machinery', target: Math.min(3, danger), label: 'Components', vp: 3 },
-      'scattered_crates': { name: 'Recover Supply Crates', desc: `Collect scattered supply crates across the battlefield`, target: danger + 1, label: 'Crates', vp: 2 },
-      'ritual_circle': { name: 'Control Ritual Site', desc: 'Maintain control of the ritual circle to channel its power', target: danger, label: 'Rituals', vp: 4 },
-      'land_marker': { name: 'Establish Territory', desc: 'Plant territorial markers and hold them', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
-      'fortified_position': { name: 'Hold Fortified Position', desc: 'Maintain control of the defensive structure', target: 3, label: 'Rounds', vp: vpSpread.ticker.primary_per_vp },
-      'stored_supplies': { name: 'Raid Supply Depot', desc: 'Extract stockpiled goods from the depot', target: danger + 1, label: 'Supplies', vp: 2 },
-      'artifact': { name: 'Recover Ancient Artifact', desc: 'Secure mysterious artifact of unknown power', target: 1, label: 'Artifact', vp: 8 },
-      'tainted_ground': { name: 'Cleanse Tainted Ground', desc: 'Purify corrupted territory', target: Math.max(2, danger - 1), label: 'Sites Cleansed', vp: 4 }
+      'wrecked_engine':      { name: 'Salvage Wrecked Engine',     desc: 'Extract mechanical components from abandoned machinery.',   target: Math.min(3, danger), label: 'Components', vp: 3 },
+      'scattered_crates':    { name: 'Recover Supply Crates',      desc: 'Collect scattered supply crates across the battlefield.',    target: danger + 1,          label: 'Crates',     vp: 2 },
+      'ritual_circle':       { name: 'Control Ritual Site',        desc: 'Maintain control of the ritual circle to channel its power.',target: danger,              label: 'Rituals',    vp: 4 },
+      'land_marker':         { name: 'Establish Territory',        desc: 'Plant territorial markers and hold them.',                   target: 3,                   label: 'Rounds',     vp: vpSpread.ticker.primary_per_vp },
+      'fortified_position':  { name: 'Hold Fortified Position',    desc: 'Maintain control of the defensive structure.',              target: 3,                   label: 'Rounds',     vp: vpSpread.ticker.primary_per_vp },
+      'stored_supplies':     { name: 'Raid Supply Depot',          desc: 'Extract stockpiled goods from the depot.',                  target: danger + 1,          label: 'Supplies',   vp: 2 },
+      'artifact':            { name: 'Recover Ancient Artifact',   desc: 'Secure mysterious artifact of unknown power.',              target: 1,                   label: 'Artifact',   vp: 8 },
+      'tainted_ground':      { name: 'Cleanse Tainted Ground',     desc: 'Purify corrupted territory.',                               target: Math.max(2, danger - 1), label: 'Sites Cleansed', vp: 4 }
     };
     
     const t = templates[type];
@@ -425,24 +600,24 @@ const scenario = {
   getFactionObjectiveInterpretation(factionId, objective) {
     const library = {
       'monster_rangers': {
-        'ritual_circle': { goal: 'Stabilize the land via ritual', method: 'Dark Librarian gains +1 die to ritual actions', scoring: '+4 VP per ritual' },
-        'scattered_crates': { goal: 'Distribute supplies to refugees', method: 'Escort crates to civilians', scoring: '+2 VP per crate', restriction: 'Harming civilians costs -2 VP' }
+        'ritual_circle':    { goal: 'Stabilize the land via ritual.',         method: 'Dark Librarian gains +1 die to ritual actions.',    scoring: '+4 VP per ritual' },
+        'scattered_crates': { goal: 'Distribute supplies to refugees.',       method: 'Escort crates to civilians.',                       scoring: '+2 VP per crate',  restriction: 'Harming civilians costs -2 VP' }
       },
       'liberty_corps': {
-        'ritual_circle': { goal: 'Assert federal control over site', method: 'Establish barriers and patrols', scoring: '+4 VP per site controlled' },
-        'scattered_crates': { goal: 'Confiscate contraband as evidence', method: 'Secure and tag all crates', scoring: '+2 VP per crate', restriction: 'Must maintain chain of custody' }
+        'ritual_circle':    { goal: 'Assert federal control over site.',      method: 'Establish barriers and patrols.',                   scoring: '+4 VP per site controlled' },
+        'scattered_crates': { goal: 'Confiscate contraband as evidence.',     method: 'Secure and tag all crates.',                        scoring: '+2 VP per crate',  restriction: 'Must maintain chain of custody' }
       },
       'monsterology': {
-        'ritual_circle': { goal: 'Harvest energies and bound entities', method: 'Extraction rigs grant +1 die vs monsters', scoring: '+4 VP per extraction' },
-        'tainted_ground': { goal: 'Strip the Taint for reagents', method: 'Deploy Taint collectors', scoring: '+4 VP per site', restriction: 'Extracted land cannot be restored' }
+        'ritual_circle':    { goal: 'Harvest energies and bound entities.',   method: 'Extraction rigs grant +1 die vs monsters.',        scoring: '+4 VP per extraction' },
+        'tainted_ground':   { goal: 'Strip the Taint for reagents.',         method: 'Deploy Taint collectors.',                          scoring: '+4 VP per site',   restriction: 'Extracted land cannot be restored' }
       },
       'crow_queen': {
-        'land_marker': { goal: 'Mark the boundaries of the new kingdom', method: 'Ladies in Waiting gain +2" move when placing', scoring: '+2 VP per marker' },
-        'ritual_circle': { goal: 'Consecrate the ground to the Regent Black', method: 'Convert site to Consecrated terrain', scoring: '+4 VP per site' }
+        'land_marker':      { goal: 'Mark the boundaries of the new kingdom.', method: 'Ladies in Waiting gain +2" move when placing.',  scoring: '+2 VP per marker' },
+        'ritual_circle':    { goal: 'Consecrate the ground to the Regent Black.', method: 'Convert site to Consecrated terrain.',         scoring: '+4 VP per site' }
       },
       'shine_riders': {
-        'scattered_crates': { goal: 'Steal valuable goods', method: 'Fast extraction with Bikes', scoring: '+2 VP per crate' },
-        'stored_supplies': { goal: 'The legendary heist', method: 'Extract and escape with loot', scoring: '+2 VP per supply' }
+        'scattered_crates': { goal: 'Steal valuable goods.',                 method: 'Fast extraction with Bikes.',                       scoring: '+2 VP per crate' },
+        'stored_supplies':  { goal: 'The legendary heist.',                  method: 'Extract and escape with loot.',                    scoring: '+2 VP per supply' }
       }
     };
     
@@ -457,60 +632,30 @@ const scenario = {
 
   generateUniqueFactionObjective(factionId, danger) {
     const uniques = {
-      'monster_rangers': { name: 'Minimize Casualties', goal: 'Protect monsters and civilians', method: 'Escort non-combatants to safety', scoring: `${danger * 2} VP minus deaths` },
-      'liberty_corps': { name: 'Establish Authority', goal: 'Hold the center of the board', method: 'Maintain control for 3 rounds', scoring: `${danger * 2} VP if held at end` },
-      'monsterology': { name: 'Total Extraction Protocol', goal: 'Exploit every site', method: 'Extract from all objectives', scoring: `${danger * 3} VP if all extracted` },
-      'shine_riders': { name: 'Legendary Heist', goal: 'Steal the most valuable prize', method: 'Extract highest-value objective and escape', scoring: `${danger * 3} VP if escaped` },
-      'crow_queen': { name: 'Divine Mandate', goal: 'Force enemies to kneel', method: 'Break enemy morale with Fear', scoring: `${danger * 2} VP per enemy unit Broken` },
-      'monsters': { name: 'Drive Out Invaders', goal: 'Purge humans from the Canyon', method: 'Eliminate enemy leaders', scoring: `${danger * 2} VP per faction broken` }
+      'monster_rangers': { name: 'Minimize Casualties',         goal: 'Protect monsters and civilians.',                  method: 'Escort non-combatants to safety.',          scoring: `${danger * 2} VP minus deaths` },
+      'liberty_corps':   { name: 'Establish Authority',         goal: 'Hold the center of the board.',                    method: 'Maintain control for 3 rounds.',            scoring: `${danger * 2} VP if held at end` },
+      'monsterology':    { name: 'Total Extraction Protocol',   goal: 'Exploit every site.',                              method: 'Extract from all objectives.',              scoring: `${danger * 3} VP if all extracted` },
+      'shine_riders':    { name: 'Legendary Heist',             goal: 'Steal the most valuable prize.',                   method: 'Extract highest-value objective and escape.',scoring: `${danger * 3} VP if escaped` },
+      'crow_queen':      { name: 'Divine Mandate',              goal: 'Force enemies to kneel.',                          method: 'Break enemy morale with Fear.',             scoring: `${danger * 2} VP per enemy unit Broken` },
+      'monsters':        { name: 'Drive Out Invaders',          goal: 'Purge humans from the Canyon.',                    method: 'Eliminate enemy leaders.',                  scoring: `${danger * 2} VP per faction broken` }
     };
     return uniques[factionId] || null;
   }
 
   generateFactionAftermath(factionId) {
     const aftermaths = {
-      'monster_rangers': {
-        immediate_effect: 'The land begins to heal',
-        canyon_state_change: 'Territory becomes Restored',
-        long_term: 'Monster populations stabilize',
-        flavor: 'The Rangers have bought time, but the Canyon never forgets'
-      },
-      'liberty_corps': {
-        immediate_effect: 'Federal presence increases',
-        canyon_state_change: 'Territory becomes Occupied',
-        long_term: 'Trade routes secure, but tension rises',
-        flavor: 'Order has been imposed. The question is: for how long?'
-      },
-      'monsterology': {
-        immediate_effect: 'The site is stripped bare',
-        canyon_state_change: 'Territory becomes Depleted',
-        long_term: 'Resource scarcity increases',
-        flavor: 'Progress has a price, paid in full by the land itself'
-      },
-      'shine_riders': {
-        immediate_effect: 'Valuables vanish into the night',
-        canyon_state_change: 'Territory becomes Lawless',
-        long_term: 'Crime and opportunity intertwine',
-        flavor: 'The Riders leave only dust and legend behind'
-      },
-      'crow_queen': {
-        immediate_effect: 'Dark banners rise',
-        canyon_state_change: 'Territory becomes Consecrated',
-        long_term: 'The Regent\'s influence spreads',
-        flavor: 'All who remain know: the Queen is watching'
-      },
-      'monsters': {
-        immediate_effect: 'Humans retreat in fear',
-        canyon_state_change: 'Territory becomes Wild',
-        long_term: 'The Canyon reclaims its own',
-        flavor: 'Nature is not kind. It simply is'
-      }
+      'monster_rangers': { immediate_effect: 'The land begins to heal.',              canyon_state_change: 'Territory becomes Restored.',  long_term: 'Monster populations stabilize.',      flavor: 'The Rangers have bought time, but the Canyon never forgets.' },
+      'liberty_corps':   { immediate_effect: 'Federal presence increases.',          canyon_state_change: 'Territory becomes Occupied.',  long_term: 'Trade routes secure, but tension rises.', flavor: 'Order has been imposed. The question is: for how long?' },
+      'monsterology':    { immediate_effect: 'The site is stripped bare.',           canyon_state_change: 'Territory becomes Depleted.',  long_term: 'Resource scarcity increases.',         flavor: 'Progress has a price, paid in full by the land itself.' },
+      'shine_riders':    { immediate_effect: 'Valuables vanish into the night.',     canyon_state_change: 'Territory becomes Lawless.',   long_term: 'Crime and opportunity intertwine.',    flavor: 'The Riders leave only dust and legend behind.' },
+      'crow_queen':      { immediate_effect: 'Dark banners rise.',                   canyon_state_change: 'Territory becomes Consecrated.', long_term: 'The Regent\'s influence spreads.',   flavor: 'All who remain know: the Queen is watching.' },
+      'monsters':        { immediate_effect: 'Humans retreat in fear.',              canyon_state_change: 'Territory becomes Wild.',      long_term: 'The Canyon reclaims its own.',         flavor: 'Nature is not kind. It simply is.' }
     };
     return aftermaths[factionId] || {
-      immediate_effect: 'The battle ends',
-      canyon_state_change: 'Territory status unchanged',
-      long_term: 'The struggle continues',
-      flavor: 'Another skirmish in an endless war'
+      immediate_effect: 'The battle ends.',
+      canyon_state_change: 'Territory status unchanged.',
+      long_term: 'The struggle continues.',
+      flavor: 'Another skirmish in an endless war.'
     };
   }
 
@@ -525,7 +670,7 @@ const scenario = {
     const suffixes = this.data.names.suffixes || ["Pass", "Ridge", "Crossing"];
     const descriptors = this.data.names.descriptors || ["Bloody", "Desperate", "Final"];
     
-    // Extract strings if they're objects
+    // Extract strings if they're objects (some name data uses {text, tags} format)
     const getTextValue = (item) => {
       if (typeof item === 'string') return item;
       if (item && typeof item === 'object' && item.text) return item.text;
@@ -560,83 +705,32 @@ const scenario = {
 
   generateTwist(danger) {
     if (!this.data.twists?.twists) {
-      return { name: "Unpredictable Winds", description: "The canyon winds shift without warning", effect: "-1 to Ranged attacks" };
+      return { name: "Unpredictable Winds", description: "The canyon winds shift without warning.", effect: "-1 to Ranged attacks." };
     }
     const twist = this.randomChoice(this.data.twists.twists);
     return {
       name: twist.name,
       description: twist.description,
-      effect: twist.mechanical_effect || twist.effect || "Unknown effect"
+      effect: twist.mechanical_effect || twist.effect || "Unknown effect."
     };
   }
 
-getCanyonState(stateId) {
-    if (!this.data.canyonStates?.canyon_states) {
-      return { 
-        name: "Poisoned", 
-        effect: "The Canyon is tainted by industrial waste and dark magic",
-        terrain_features: ["Toxic pools", "Corrupted ground"]
-      };
-    }
+  getCanyonState(stateId) {
+    if (!this.data.canyonStates?.canyon_states) return { name: "Neutral", effect: "No additional effects." };
     const state = this.data.canyonStates.canyon_states.find(s => s.id === stateId);
-    if (!state) {
-      // Default to poisoned if not found
-      const poisoned = this.data.canyonStates.canyon_states.find(s => s.id === 'poisoned');
-      return poisoned || { 
-        name: "Poisoned", 
-        effect: "The Canyon is tainted",
-        terrain_features: []
-      };
-    }
-    return state;
-}
-
-  generateTerrainRequirements(location, objectives, plotFamily) {
-    const terrain = [];
-    
-    // Base terrain from location
-    if (location.terrain_features && location.terrain_features.length > 0) {
-      terrain.push(...location.terrain_features.slice(0, 3));
-    }
-    
-    // Terrain from plot family
-    const plotTerrainMap = {
-      'extraction_heist': ['Ruined buildings', 'Crates/containers'],
-      'claim_and_hold': ['Rock formations', 'Fortified positions'],
-      'ambush_derailment': ['Board walks', 'Wrecked machinery'],
-      'siege_standoff': ['Ruined buildings', 'Defensive walls'],
-      'escort_run': ['Board walks', 'Rock formations'],
-      'corruption_ritual': ['Stone circles', 'Corrupted ground'],
-      'sabotage_strike': ['Industrial structures', 'Pipelines']
-    };
-    
-    if (plotTerrainMap[plotFamily.id]) {
-      terrain.push(...plotTerrainMap[plotFamily.id]);
-    }
-    
-    // Terrain from objectives
-    objectives.forEach(obj => {
-      if (obj.type === 'ritual_circle') terrain.push('Stone circle');
-      if (obj.type === 'fortified_position') terrain.push('Defensive structure');
-      if (obj.type === 'scattered_crates') terrain.push('Supply crates');
-      if (obj.type === 'wrecked_engine') terrain.push('Wrecked machinery');
-    });
-    
-    // Remove duplicates and limit to 5-6 pieces
-    const uniqueTerrain = [...new Set(terrain)];
-    return uniqueTerrain.slice(0, 6);
-}
+    return state || { name: "Unknown State", effect: "Standard rules apply." };
+  }
 
   generateFinale(plotFamily, danger, location) {
     const escalation = this.randomChoice(plotFamily.escalation_bias || ['environmental_hazard', 'reinforcements']);
     const damage = danger + 1;
 
     const templates = {
-      'environmental_hazard': { title: 'THE CANYON REJECTS YOU', flavor: 'The very earth begins to buckle', effect: `All units take ${damage} dice of environmental damage. VP for remaining units doubles`, ticker: '×2 VP' },
-      'reinforcements': { title: 'NO SURRENDER', flavor: 'The local factions commit everything', effect: `Deploy extra Grunt units for all sides. VP for kills doubles`, ticker: '×2 VP' },
-      'ritual_completes': { title: 'THE RITUAL COMPLETES', flavor: 'The ritual reaches climax', effect: `${location.name} transforms. VP values on site double`, ticker: '×2 VP' },
-      'monster_awakening': { title: 'TITAN STIRS', flavor: 'Something massive awakens below', effect: `Deploy Titan-class threat. End-game scoring begins`, ticker: '×2 VP' },
-      'visibility_loss': { title: 'DARKNESS FALLS', flavor: 'A thick unnatural fog rolls in', effect: `Range reduced to 6". All VP scoring is halved`, ticker: '÷2 VP' }
+      'environmental_hazard': { title: 'THE CANYON REJECTS YOU',  flavor: 'The very earth begins to buckle.',           effect: `All units take ${damage} dice of environmental damage. VP for remaining units doubles.`, ticker: '×2 VP' },
+      'reinforcements':       { title: 'NO SURRENDER',            flavor: 'The local factions commit everything.',      effect: `Deploy extra Grunt units for all sides. VP for kills doubles.`,                         ticker: '×2 VP' },
+      'ritual_completes':     { title: 'THE RITUAL COMPLETES',    flavor: 'The ritual reaches its climax.',            effect: `${location.name} transforms. VP values on site double.`,                                ticker: '×2 VP' },
+      'monster_awakening':    { title: 'TITAN STIRS',             flavor: 'Something massive awakens below.',          effect: `Deploy Titan-class threat. End-game scoring begins.`,                                    ticker: '×2 VP' },
+      'visibility_loss':      { title: 'DARKNESS FALLS',          flavor: 'A thick unnatural fog rolls in.',           effect: `Range reduced to 6". All VP scoring is halved.`,                                        ticker: '÷2 VP' }
     };
     
     const finale = templates[escalation] || templates['environmental_hazard'];
@@ -648,6 +742,143 @@ getCanyonState(stateId) {
       mechanical_effect: finale.effect,
       ticker_effect: finale.ticker,
       escalation_type: escalation
+    };
+  }
+
+  // ================================
+  // CULTIST ENCOUNTER (STEP 8) — NEW!
+  // Decides IF cultists appear, WHICH cult, WHAT they want, WHO plays them
+  // ================================
+
+  generateCultistEncounter(userSelections, plotFamily, location) {
+    const danger = userSelections.dangerRating;
+    const canyonStateId = userSelections.canyonState || 'poisoned';
+    
+    // BASE CHANCE by danger rating
+    let baseChance = 0;
+    if (danger <= 2) baseChance = 0.05;       // 5%  — very rare at low danger
+    else if (danger === 3) baseChance = 0.10; // 10%
+    else if (danger === 4) baseChance = 0.20; // 20%
+    else if (danger === 5) baseChance = 0.45; // 45% — user-requested
+    else if (danger >= 6)  baseChance = 0.65; // 65% — user-requested
+    
+    // ALWAYS appear for ritual/corruption plot types
+    const alwaysCultPlots = ['corruption_ritual'];
+    if (alwaysCultPlots.includes(plotFamily.id)) {
+      baseChance = 1.0;
+    }
+    
+    // CANYON STATE modifier (haunted/exalted boost, liberated/rusted suppress)
+    const stateModifier = CULTIST_STATE_MODIFIERS[canyonStateId]?.modifier || 0;
+    const finalChance = Math.min(1.0, Math.max(0, baseChance + stateModifier));
+    
+    console.log(`  Cultist check: base=${baseChance}, state_mod=${stateModifier}, final=${finalChance.toFixed(2)}`);
+    
+    // THE ROLL
+    if (Math.random() > finalChance) {
+      return null; // No cultists this scenario
+    }
+    
+    // ===== CULTISTS APPEAR =====
+    console.log("  🔥 CULTISTS ARE COMING");
+    
+    // Pick a cult — filter out Regent's Faithful if Crow Queen is playing
+    let availableCults = [...CULT_REGISTRY];
+    const hasCrowQueen = userSelections.factions.some(f => f.id === 'crow_queen');
+    if (hasCrowQueen) {
+      availableCults = availableCults.filter(c => c.id !== 'regents_faithful');
+    }
+    
+    const selectedCult = this.randomChoice(availableCults);
+    
+    // Pick objective — prefer one that MATCHES this cult's affinity
+    const matchingObjectives = CULT_OBJECTIVES.filter(o => o.cult_affinity.includes(selectedCult.id));
+    const objective = matchingObjectives.length > 0 
+      ? this.randomChoice(matchingObjectives) 
+      : this.randomChoice(CULT_OBJECTIVES);
+    
+    // FORCE SIZE — kept small and manageable!
+    // danger 3-4: 2-3 models, danger 5: 3-4 models, danger 6: 4-5 models
+    let forceMin, forceMax;
+    if (danger <= 3)      { forceMin = 2; forceMax = 3; }
+    else if (danger === 4){ forceMin = 2; forceMax = 4; }
+    else if (danger === 5){ forceMin = 3; forceMax = 4; }
+    else                  { forceMin = 4; forceMax = 5; }
+    
+    const actualForce = forceMin + Math.floor(Math.random() * (forceMax - forceMin + 1));
+    
+    // WHO PLAYS THEM?
+    // If multiplayer with 2+ player factions, one of them runs the cultists (rotates each round).
+    // If solo or only 1 player faction, the Game Warden or the other NPC faction runs them.
+    const playerFactions = userSelections.factions.filter(f => !f.isNPC);
+    const allFactions = userSelections.factions;
+    
+    let controllerNote = '';
+    let controllerFaction = null;
+    
+    if (playerFactions.length >= 2) {
+      // Multiplayer: assign to a random player faction to START, then it rotates
+      controllerFaction = this.randomChoice(playerFactions);
+      controllerNote = `${controllerFaction.name} controls the cultists first. Control rotates to the next player each round.`;
+    } else if (playerFactions.length === 1) {
+      // Solo or 1-player: assign to an NPC faction, or Game Warden handles it
+      const npcs = allFactions.filter(f => f.isNPC);
+      if (npcs.length > 0) {
+        controllerFaction = this.randomChoice(npcs);
+        controllerNote = `${controllerFaction.name} (NPC) plays the cultists. Their controller handles cultist moves.`;
+      } else {
+        controllerNote = 'Game Warden controls the cultists.';
+      }
+    } else {
+      controllerNote = 'Game Warden controls the cultists.';
+    }
+    
+    return {
+      enabled: true,
+      cult: {
+        id: selectedCult.id,
+        name: selectedCult.name,
+        theme: selectedCult.theme,
+        color: selectedCult.color,
+        description: selectedCult.description
+      },
+      objective: {
+        name: objective.name,
+        description: objective.description,
+        turn_limit: objective.turn_limit,
+        win_condition: objective.win_condition,
+        counter: objective.counter
+      },
+      force_size: actualForce,
+      controller: controllerFaction ? { id: controllerFaction.id, name: controllerFaction.name } : null,
+      controller_note: controllerNote,
+      everyone_loses: true,
+      state_modifier_used: stateModifier,
+      chance_that_was_rolled: parseFloat(finalChance.toFixed(2))
+    };
+  }
+  
+  // ================================
+  // TERRAIN SETUP (STEP 9) — NEW!
+  // Tells the players what terrain to place and where
+  // ================================
+  
+  generateTerrainSetup(plotFamily, location, danger) {
+    const baseSetup = TERRAIN_MAP[plotFamily.id] || TERRAIN_MAP['claim_and_hold'];
+    
+    // Thyr crystals from location data
+    const thyrCount = location.resources?.thyr || 0;
+    
+    // Total terrain pieces scales with danger (4 at danger 3, up to 6 at danger 6)
+    const totalPieces = Math.min(6, 3 + Math.min(danger, 3));
+    
+    return {
+      atmosphere: baseSetup.atmosphere,
+      core_terrain: baseSetup.core,
+      optional_terrain: baseSetup.optional,
+      thyr_crystals: thyrCount > 0 ? { count: Math.min(thyrCount, 3), placement: 'Place as physical markers on or near extraction objectives.' } : null,
+      total_terrain_pieces: totalPieces,
+      setup_note: `Place ${totalPieces} terrain pieces total. Core terrain is required. Optional terrain adds flavor and cover.`
     };
   }
 
