@@ -312,7 +312,7 @@ class ScenarioBrain {
     
     // STEP 7: Extras (twist, canyon state, finale)
     console.log("\n🎭 STEP 7: EXTRAS");
-    const twist = this.generateTwist(userSelections.dangerRating);
+    const twist = this.generateTwist(userSelections.dangerRating, location);
     const canyonState = this.getCanyonState(userSelections.canyonState);
     const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location);
     console.log("✓ Extras added");
@@ -606,7 +606,24 @@ class ScenarioBrain {
   }
 
   getResourceVP(resource) {
-    const rates = { thyr: 4, weapons: 3, coal: 2, livestock: 2, food: 2, water: 2 };
+    const rates = {
+      'thyr': 4,
+      'tzul_silver': 4,
+      'weapons': 3,
+      'mechanical_parts': 3,
+      'gildren': 3,
+      'livestock': 2,
+      'food': 2,
+      'water': 2,
+      'food_good': 2,
+      'water_clean': 2,
+      'coal': 2,
+      'silver': 2,
+      'lead': 2,
+      'supplies': 2,
+      'food_foul': 1,  // corrupted resources worth less
+      'water_foul': 1
+    };
     return rates[resource] || 2;
   }
 
@@ -792,10 +809,17 @@ class ScenarioBrain {
   // EXTRAS (STEP 7)
   // ================================
 
-  generateTwist(danger) {
+  generateTwist(danger, location) {
     if (!this.data.twists?.twists) {
       return { name: "Unpredictable Winds", description: "The canyon winds shift without warning.", effect: "-1 to Ranged attacks.", example: null };
     }
+    
+    // Check for resource corruption twist first (30% chance if applicable)
+    if (location && Math.random() < 0.3) {
+      const corruptionTwist = this.checkResourceCorruption(location);
+      if (corruptionTwist) return corruptionTwist;
+    }
+    
     // Filter by danger range
     let pool = this.data.twists.twists.filter(t => {
       if (t.danger_floor && danger < t.danger_floor) return false;
@@ -817,6 +841,38 @@ class ScenarioBrain {
       effect: twist.mechanical_effect || twist.effect || "Unknown effect.",
       example: example
     };
+  }
+  
+  checkResourceCorruption(location) {
+    if (!location.resources) return null;
+    
+    const corruptible = [];
+    if (location.resources.food > 0 || location.resources.food_good > 0) {
+      corruptible.push({
+        name: 'Poisoned Supplies',
+        description: 'The food stockpile has been compromised.',
+        effect: 'All Food resources are actually Foul Food. Models consuming them must test against Poison.',
+        example: 'What looked like fresh rations is crawling with Coffin Cough spores.'
+      });
+    }
+    if (location.resources.water > 0 || location.resources.water_clean > 0) {
+      corruptible.push({
+        name: 'Tainted Water',
+        description: 'The water supply is contaminated.',
+        effect: 'All Water resources are actually Foul Water. Models drinking it suffer -1 Stamina until treated.',
+        example: 'The well looked clean. It wasn\'t.'
+      });
+    }
+    if (location.resources.mechanical_parts > 0) {
+      corruptible.push({
+        name: 'Sabotaged Components',
+        description: 'Someone rigged the machinery.',
+        effect: 'Mechanical Parts have a 50% chance to explode when salvaged (1d6 damage to salvager).',
+        example: 'The gears were fine. The explosive charge hidden inside them was not.'
+      });
+    }
+    
+    return corruptible.length > 0 ? this.randomChoice(corruptible) : null;
   }
 
   getCanyonState(stateId) {
