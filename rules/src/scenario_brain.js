@@ -148,7 +148,7 @@ const CULTIST_STATE_MODIFIERS = {
   'liberated':   { modifier: -0.15, reason: 'Federal order suppresses cult activity' },
   'extracted':   { modifier: -0.05, reason: 'Stripped wasteland offers little for rituals' },
   'rusted':      { modifier: -0.10, reason: 'Machines don\'t worship gods' },
-  'held':        { modifier: 0.0,   reason: 'Controlled territory. Neutral.' }
+  'held':        { modifier: 0.0,   reason: 'Controlled territory. Cults are watched.' }
 };
 
 // ================================
@@ -289,6 +289,11 @@ class ScenarioBrain {
     const terrainSetup = this.generateTerrainSetup(plotFamily, location, userSelections.dangerRating);
     console.log("✓ Terrain setup generated");
     
+    // STEP 10: Coffin Cough Storm
+    console.log("\n☠️ STEP 10: COFFIN COUGH STORM");
+    const coffinCough = this.generateCoffinCough(location, userSelections.dangerRating);
+    console.log("✓ Coffin Cough:", coffinCough ? 'STORM INCOMING' : 'Clear skies');
+    
     // ================================
     // ASSEMBLE FINAL SCENARIO
     // ================================
@@ -311,7 +316,8 @@ class ScenarioBrain {
       twist: twist,
       finale: finale,
       cultist_encounter: cultistEncounter,
-      terrain_setup: terrainSetup
+      terrain_setup: terrainSetup,
+      coffin_cough: coffinCough
     };
     
     console.log("\n✅ SCENARIO GENERATION COMPLETE\n");
@@ -497,12 +503,13 @@ class ScenarioBrain {
       if (highValueResources.length > 0 && !usedTypes.has('resource_extraction')) {
         const resource = this.randomChoice(highValueResources);
         const amount = location.resources[resource];
+        const prettyName = this.formatResourceName(resource);
         objectives.push({
-          name: `Extract ${this.capitalize(resource)}`,
-          description: `Secure valuable ${resource} stockpile from ${location.name}`,
+          name: `Extract ${prettyName}`,
+          description: `Secure valuable ${prettyName.toLowerCase()} stockpile from ${location.name}`,
           type: 'resource_extraction',
           target_value: Math.min(amount, danger + 2),
-          progress_label: this.capitalize(resource),
+          progress_label: prettyName,
           vp_per_unit: this.getResourceVP(resource),
           max_vp: Math.min(amount, danger + 2) * this.getResourceVP(resource)
         });
@@ -716,7 +723,7 @@ class ScenarioBrain {
   }
 
   getCanyonState(stateId) {
-    if (!this.data.canyonStates?.canyon_states) return { name: "Neutral", effect: "No additional effects." };
+    if (!this.data.canyonStates?.canyon_states) return { name: "Poisoned", effect: "The Canyon's default state. Toxic air, poisoned water, corrupted soil." };
     const state = this.data.canyonStates.canyon_states.find(s => s.id === stateId);
     return state || { name: "Unknown State", effect: "Standard rules apply." };
   }
@@ -859,6 +866,49 @@ class ScenarioBrain {
   }
   
   // ================================
+  // COFFIN COUGH STORM (STEP 10)
+  // Location has a coffinCoughChance. Danger rating adds to it.
+  // If it fires, we pick one of the 6 effects from the scenario vault.
+  // ================================
+  
+  generateCoffinCough(location, danger) {
+    // Base chance comes from the location. Default 0.10 if not specified.
+    const baseChance = location.coffinCoughChance || 0.10;
+    
+    // Danger adds pressure. Each point above 3 adds 5% chance.
+    const dangerBonus = Math.max(0, (danger - 3)) * 0.05;
+    
+    const finalChance = Math.min(0.95, baseChance + dangerBonus);
+    
+    console.log(`  Coffin Cough check: base=${baseChance}, danger_bonus=${dangerBonus.toFixed(2)}, final=${finalChance.toFixed(2)}`);
+    
+    // THE ROLL
+    if (Math.random() > finalChance) {
+      console.log("  ☀️ No Coffin Cough this time.");
+      return null;
+    }
+    
+    console.log("  ☠️ COFFIN COUGH IS COMING");
+    
+    // The 6 effects from 140_scenario_vault.json — player rolls 1d6 at the table
+    const effects = [
+      { roll: 1, name: 'Rolling Coffin Cough',  effects: ['Place a 6" radius Choking zone touching any board edge.', 'At the end of each round, it drifts 3" in a direction chosen by the Warden.'] },
+      { roll: 2, name: 'Ashfall',               effects: ['All models suffer –1 die on ranged attacks until end of next round.', 'Burning terrain automatically escalates.'] },
+      { roll: 3, name: 'Visibility Collapse',   effects: ['Line of Sight beyond 12" is blocked until end of next round.', 'Fog blocks clarity and intent, not movement.'] },
+      { roll: 4, name: 'Panic on the Wind',     effects: ['All models must test Morale at the start of their next activation.'] },
+      { roll: 5, name: 'Dead Ground',           effects: ["One heavily contested terrain feature becomes Haunted or Unstable (Warden's choice)."] },
+      { roll: 6, name: 'Canyon Remembers',      effects: ['All Tainted terrain immediately escalates to Haunted.'] }
+    ];
+    
+    return {
+      active: true,
+      chance_rolled: parseFloat(finalChance.toFixed(2)),
+      instruction: 'Roll 1d6 at the table to determine which Coffin Cough effect hits.',
+      effects_table: effects
+    };
+  }
+
+  // ================================
   // TERRAIN SETUP (STEP 9) — NEW!
   // Tells the players what terrain to place and where
   // ================================
@@ -897,6 +947,28 @@ class ScenarioBrain {
       'Catastrostorm Risk'
     ];
     return levels[rating] || 'Extreme Danger';
+  }
+
+  formatResourceName(key) {
+    const pretty = {
+      'food_foul':      'Foul Food',
+      'food_good':      'Good Food',
+      'water_foul':     'Foul Water',
+      'water_clean':    'Clean Water',
+      'mechanical_parts': 'Mechanical Parts',
+      'tzul_silver':    'Tzul Silver',
+      'thyr':           'Thyr Crystals',
+      'livestock':      'Livestock',
+      'supplies':       'Supplies',
+      'silver':         'Silver',
+      'lead':           'Lead',
+      'coal':           'Coal',
+      'weapons':        'Weapons',
+      'food':           'Food',
+      'water':          'Water',
+      'gildren':        'Gildren'
+    };
+    return pretty[key] || this.capitalize(key.replace(/_/g, ' '));
   }
 
   capitalize(str) {
