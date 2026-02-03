@@ -500,6 +500,173 @@
   font-size: 0.9rem;
 }
 
+/* ===== CULTIST ENCOUNTER CARD ===== */
+.cc-cultist-section {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cc-cultist-header {
+  background: rgba(0, 0, 0, 0.4);
+  border-left: 4px solid #c44569; /* default; overridden inline per cult */
+  padding: 1rem 1rem 0.75rem 1rem;
+  border-radius: 6px 6px 0 0;
+  margin-bottom: 0;
+}
+
+.cc-cultist-header h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  /* color set inline per cult */
+}
+
+.cc-cultist-name {
+  font-size: 1.35rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+  /* color set inline per cult */
+}
+
+.cc-cultist-theme {
+  color: rgba(255, 255, 255, 0.55) !important;
+  font-size: 0.9rem !important;
+  margin: 0 0 0.5rem 0 !important;
+}
+
+.cc-cultist-header p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0.25rem 0;
+  font-size: 0.92rem;
+}
+
+.cc-cultist-objective {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid #555; /* default; overridden inline */
+  border-top: none;
+  padding: 1rem;
+  margin: 0;
+}
+
+.cc-cultist-objective-label {
+  font-weight: 700;
+  font-size: 0.85rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.5) !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.cc-cultist-objective p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0.4rem 0;
+  font-size: 0.92rem;
+}
+
+.cc-cultist-force {
+  background: rgba(0, 0, 0, 0.25);
+  padding: 0.85rem 1rem;
+  margin-top: 0.5rem;
+  border-radius: 0 0 6px 6px;
+}
+
+.cc-cultist-force p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+}
+
+.cc-cultist-chance {
+  color: rgba(255, 255, 255, 0.4) !important;
+  font-size: 0.8rem !important;
+  margin-top: 0.5rem !important;
+}
+
+.cc-cultist-warning {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(200, 0, 0, 0.18);
+  border: 1px solid rgba(200, 0, 0, 0.4);
+  border-radius: 6px;
+  color: #f88;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ===== TERRAIN SETUP CARD ===== */
+.cc-terrain-section h4 {
+  color: var(--cc-primary);
+}
+
+.cc-terrain-atmosphere {
+  color: rgba(255, 255, 255, 0.6) !important;
+  font-size: 0.95rem !important;
+  margin-bottom: 1rem !important;
+  padding: 0.5rem 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.cc-terrain-group {
+  margin-bottom: 0.85rem;
+}
+
+.cc-terrain-label {
+  font-weight: 700;
+  font-size: 0.82rem !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.45) !important;
+  margin-bottom: 0.4rem !important;
+}
+
+.cc-terrain-piece {
+  display: inline-block;
+  padding: 0.3rem 0.7rem;
+  margin: 0.2rem 0.2rem 0.2rem 0;
+  border-radius: 4px;
+  font-size: 0.88rem;
+}
+
+.cc-terrain-piece-core {
+  background: rgba(255, 117, 24, 0.15);
+  border: 1px solid rgba(255, 117, 24, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.cc-terrain-piece-optional {
+  background: rgba(100, 100, 100, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.cc-terrain-piece-thyr {
+  background: rgba(74, 222, 128, 0.12);
+  border: 1px solid rgba(74, 222, 128, 0.35);
+  color: #4ade80;
+  display: block;
+  font-size: 0.9rem;
+  padding: 0.4rem 0.75rem;
+}
+
+.cc-terrain-totals {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cc-terrain-totals p {
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.cc-terrain-note {
+  color: rgba(255, 255, 255, 0.45) !important;
+  font-size: 0.82rem !important;
+  font-style: italic;
+}
+
 /* ===== Print Styles ===== */
 @media print {
   .cc-scenario-builder-header,
@@ -548,6 +715,52 @@
   .cc-twist {
     background: #f0f0f0 !important;
     border-color: #999 !important;
+  }
+
+  /* Cultist print styles */
+  .cc-cultist-header,
+  .cc-cultist-objective,
+  .cc-cultist-force {
+    background: #f5f0f0 !important;
+    border-color: #999 !important;
+  }
+
+  .cc-cultist-header h4,
+  .cc-cultist-name {
+    color: #333 !important;
+  }
+
+  .cc-cultist-warning {
+    background: #ffe0e0 !important;
+    border-color: #c00 !important;
+    color: #900 !important;
+  }
+
+  /* Terrain print styles */
+  .cc-terrain-piece-core {
+    background: #fff3e0 !important;
+    border-color: #ff7518 !important;
+    color: #333 !important;
+  }
+
+  .cc-terrain-piece-optional {
+    background: #f0f0f0 !important;
+    border-color: #999 !important;
+    color: #555 !important;
+  }
+
+  .cc-terrain-piece-thyr {
+    background: #e8ffe8 !important;
+    border-color: #4ade80 !important;
+    color: #2d7a4f !important;
+  }
+
+  .cc-cultist-header,
+  .cc-cultist-objective,
+  .cc-cultist-force,
+  .cc-cultist-warning,
+  .cc-terrain-atmosphere {
+    color: #333 !important;
   }
 }
 
