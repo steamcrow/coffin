@@ -429,23 +429,9 @@ window.CC_APP = {
             </div>
           ` : ''}
 
-          ${s.twist ? `
-            <div class="cc-scenario-section cc-twist">
-              <h4>🎭 Twist</h4>
-              <p><strong>${s.twist.name}</strong></p>
-              <p>${s.twist.description}</p>
-              ${s.twist.example ? `<p class="cc-twist-example">📌 What this means at the table: <strong>${s.twist.example}</strong></p>` : ''}
-            </div>
-          ` : ''}
 
-          ${s.finale ? `
-            <div class="cc-scenario-section cc-twist">
-              <h4>🎭 Round ${s.finale.round} Finale: ${s.finale.title}</h4>
-              <p><em>"${s.finale.narrative}"</em></p>
-              <p><strong>What happens:</strong> ${s.finale.mechanical_effect}</p>
-              ${s.finale.player_note ? `<p class="cc-twist-example">📌 What to expect: <strong>${s.finale.player_note}</strong></p>` : ''}
-            </div>
-          ` : ''}
+
+
 
           <!-- ============================================
                CULTIST ENCOUNTER SECTION (NEW)
@@ -544,9 +530,8 @@ window.CC_APP = {
                 </div>
               ` : ''}
 
-              <div class="cc-terrain-totals">
-                <p><strong>Total Terrain Pieces:</strong> ${s.terrain_setup.total_terrain_pieces}</p>
-                <p class="cc-terrain-note">${s.terrain_setup.setup_note}</p>
+              <div class="cc-terrain-note">
+                <p>${s.terrain_setup.setup_note}</p>
               </div>
             </div>
           ` : ''}
@@ -563,6 +548,24 @@ window.CC_APP = {
                 <strong class="cc-coffin-cough-name">${s.coffin_cough.effect.name}</strong>
                 ${s.coffin_cough.effect.effects.map(fx => `<p>${fx}</p>`).join('')}
               </div>
+            </div>
+          ` : ''}
+
+          ${s.twist ? `
+            <div class="cc-scenario-section cc-twist">
+              <h4>🎭 Twist</h4>
+              <p><strong>${s.twist.name}</strong></p>
+              <p>${s.twist.description}</p>
+              ${s.twist.example ? `<p class="cc-twist-example">📌 What this means at the table: <strong>${s.twist.example}</strong></p>` : ''}
+            </div>
+          ` : ''}
+
+          ${s.finale ? `
+            <div class="cc-scenario-section cc-twist">
+              <h4>🎭 Round ${s.finale.round} Finale: ${s.finale.title}</h4>
+              <p><em>"${s.finale.narrative}"</em></p>
+              <p><strong>What happens:</strong> ${s.finale.mechanical_effect}</p>
+              ${s.finale.player_note ? `<p class="cc-twist-example">📌 What to expect: <strong>${s.finale.player_note}</strong></p>` : ''}
             </div>
           ` : ''}
 
@@ -926,8 +929,8 @@ window.CC_APP = {
     };
 
     window.saveScenario = async function() {
-      if (!window.CC_STORAGE) {
-        alert('Cloud storage not available');
+      if (!state.scenario) {
+        alert('No scenario to save!');
         return;
       }
 
@@ -942,8 +945,22 @@ window.CC_APP = {
           savedAt: new Date().toISOString()
         };
 
-        await window.CC_STORAGE.saveDocument('scenario', state.scenario.name, JSON.stringify(exportData));
-        alert('✓ Scenario saved!');
+        // Save to localStorage
+        const key = `coffin_canyon_scenario_${Date.now()}`;
+        localStorage.setItem(key, JSON.stringify(exportData));
+        
+        // Also trigger download
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${state.scenario.name.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        alert('✓ Scenario saved to downloads!');
       } catch (error) {
         console.error('Save error:', error);
         alert('Error saving: ' + error.message);
