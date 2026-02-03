@@ -556,7 +556,8 @@ window.CC_APP = {
               <h4>🎭 Twist</h4>
               <p><strong>${s.twist.name}</strong></p>
               <p>${s.twist.description}</p>
-              ${s.twist.example ? `<p class="cc-twist-example">📌 What this means at the table: <strong>${s.twist.example}</strong></p>` : ''}
+              <p><strong>Effect:</strong> ${s.twist.effect}</p>
+              ${s.twist.example ? `<p class="cc-twist-example">📌 What this looks like: <strong>${s.twist.example}</strong></p>` : ''}
             </div>
           ` : ''}
 
