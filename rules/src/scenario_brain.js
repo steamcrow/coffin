@@ -170,6 +170,45 @@ const TERRAIN_MAP = {
 // SCENARIO BRAIN CLASS
 // ================================
 
+// ================================
+// PRESSURE LABELS — human-readable versions of plotFamily pressure IDs
+// ================================
+const PRESSURE_PRETTY = {
+  'ritual_misuse':          'ritual misuse',
+  'belief_conflict':        'a clash of beliefs',
+  'occult_overreach':       'occult forces none of them fully understand',
+  'power_vacuum':           'a power vacuum',
+  'retaliation':            'retaliation',
+  'territorial_control':    'the fight for territorial control',
+  'resource_scarcity':      'dwindling resources',
+  'old_blood_feuds':        'old blood feuds',
+  'monster_incursion':      'a monster incursion',
+  'supply_shortage':        'a supply shortage',
+  'faction_rivalry':        'faction rivalry',
+  'desperation':            'sheer desperation',
+  'survival':               'the need to survive',
+  'greed':                  'greed',
+  'curiosity':              'dangerous curiosity'
+};
+
+// ================================
+// CULTIST TERRAIN — what physical markers each cultist objective needs on the table
+// ================================
+const CULTIST_TERRAIN_MARKERS = {
+  'awaken_tzul_dust_kings':  ['Tzul Burial Ground', 'Captive Markers (x2)'],
+  'awaken_ralu':             ['RALU Fountain Idol', 'Captive Monster Marker'],
+  'ring_the_doom_bell':      ['Dark Temple (incomplete)', 'Doom Bell'],
+  'open_hollow_portal':      ['Blood Circle', 'Ruined Archway'],
+  'corrupt_thyr_vein':       ['Thyr Vein', 'Corruption Device'],
+  'raise_dead_army':         ['Graveyard', 'Ritual Focus Marker'],
+  'burn_the_boomtown':       ['Fire Source Markers (x3)'],
+  'poison_water_supply':     ['Water Supply Marker', 'Poison Source'],
+  'desecrate_sacred_site':   ['Sacred Site Marker'],
+  'harvest_living_souls':    ['Soul Engine', 'Captive Cages (x3)'],
+  'grow_the_blight':         ['Blight Heart Marker'],
+  'summon_canyon_titan':     ['Summoning Pillars (x3)']
+};
+
 class ScenarioBrain {
   
   constructor() {
@@ -266,10 +305,9 @@ class ScenarioBrain {
     const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread);
     console.log("✓ Victory conditions created");
     
-    // STEP 6: Name & Narrative
-    console.log("\n📝 STEP 6: NAME & NARRATIVE");
+    // STEP 6: Name (narrative comes later — needs cultist data)
+    console.log("\n📝 STEP 6: NAME");
     const name = this.generateName(['battle'], location);
-    const narrative = this.generateNarrative(plotFamily, location, userSelections);
     console.log("✓ Name:", name);
     
     // STEP 7: Extras (twist, canyon state, finale)
@@ -279,14 +317,19 @@ class ScenarioBrain {
     const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location);
     console.log("✓ Extras added");
     
-    // STEP 8: Cultist Encounter (NEW!)
+    // STEP 8: Cultist Encounter
     console.log("\n👹 STEP 8: CULTIST ENCOUNTER");
     const cultistEncounter = this.generateCultistEncounter(userSelections, plotFamily, location);
     console.log("✓ Cultist check:", cultistEncounter ? `${cultistEncounter.cult.name} APPEARING` : 'No cultists this time');
     
-    // STEP 9: Terrain Setup (NEW!)
+    // STEP 8b: Narrative — now we know if cultists are here
+    console.log("\n📝 STEP 8b: NARRATIVE");
+    const narrative = this.generateNarrative(plotFamily, location, userSelections, cultistEncounter);
+    console.log("✓ Narrative written");
+    
+    // STEP 9: Terrain Setup — needs objectives + cultist encounter for markers
     console.log("\n🏜️ STEP 9: TERRAIN SETUP");
-    const terrainSetup = this.generateTerrainSetup(plotFamily, location, userSelections.dangerRating);
+    const terrainSetup = this.generateTerrainSetup(plotFamily, location, userSelections.dangerRating, objectives, cultistEncounter);
     console.log("✓ Terrain setup generated");
     
     // STEP 10: Coffin Cough Storm
@@ -697,13 +740,52 @@ class ScenarioBrain {
     return this.randomChoice(styles);
   }
 
-  generateNarrative(plotFamily, location, userSelections) {
-    const factions = userSelections.factions.map(f => f.name).join(" and ");
-    const intro = `The air at ${location.name} is thick with ${location.atmosphere || 'unrest'}.`;
-    const hook = plotFamily.description || "A localized conflict has reached a breaking point.";
-    const pressure = this.randomChoice(plotFamily.common_inciting_pressures || ["resource scarcity", "old blood-feuds", "territorial disputes"]);
+  generateNarrative(plotFamily, location, userSelections, cultistEncounter) {
+    // Oxford comma for 3+ factions
+    const names = userSelections.factions.map(f => f.name);
+    const factions = names.length <= 2 
+      ? names.join(' and ') 
+      : names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
     
-    return `${intro} ${hook} ${factions} have collided here, driven by ${pressure.toLowerCase()}. ${location.description || ''}`;
+    const atmo = location.atmosphere || 'unrest';
+    
+    // If cultists are present, the opening LEADS with what they're actually doing.
+    // That's the real story. The faction clash is secondary.
+    if (cultistEncounter && cultistEncounter.enabled) {
+      const cultName = cultistEncounter.cult.name;
+      const cultTheme = cultistEncounter.cult.theme;
+      const objName = cultistEncounter.objective.name;
+      const objDesc = cultistEncounter.objective.description;
+      
+      // Cultist-led narrative: what's happening is the ritual. Everyone else is reacting.
+      const cultHooks = [
+        `The ${cultName} are here. ${objDesc} ${factions} have all arrived at ${location.name} — whether they know it or not, they're walking into it.`,
+        `Something is wrong at ${location.name}. The ${cultName} have been working in the dark. ${objDesc} ${factions} have collided here, and none of them are ready for what comes next.`,
+        `${atmo.charAt(0).toUpperCase() + atmo.slice(1)}. The ${cultName} have chosen this ground for a reason. ${objDesc} ${factions} are all here. The ritual doesn't care why.`
+      ];
+      
+      return this.randomChoice(cultHooks);
+    }
+    
+    // No cultists — plot-family-specific hooks
+    const plotHooks = {
+      'corruption_ritual':          `Something is stirring at ${location.name}. It doesn't care who wakes it.`,
+      'extraction_heist':           `The resources buried beneath ${location.name} are worth killing for. Everyone in the Canyon knows it.`,
+      'claim_and_hold':             `${location.name} has changed hands before. It will again.`,
+      'ambush_derailment':          `The rails through ${location.name} don't care who controls them. Neither does what's waiting along them.`,
+      'siege_standoff':             `The walls at ${location.name} are holding. For now.`,
+      'escort_run':                 `Getting through ${location.name} alive is the hard part. Everything after is a bonus.`,
+      'sabotage_strike':            `One well-placed detonation at ${location.name} changes everything. The question is who gets there first.`,
+      'natural_disaster_response':  `The Canyon doesn't negotiate. ${location.name} is breaking apart.`
+    };
+    
+    const hook = plotHooks[plotFamily.id] || `Conflict has reached ${location.name}.`;
+    
+    // Readable pressure label
+    const rawPressure = this.randomChoice(plotFamily.common_inciting_pressures || ['conflict']);
+    const pressure = PRESSURE_PRETTY[rawPressure] || rawPressure.replace(/_/g, ' ');
+    
+    return `${hook} ${factions} have collided here, drawn by ${pressure}.`;
   }
 
   // ================================
@@ -712,13 +794,28 @@ class ScenarioBrain {
 
   generateTwist(danger) {
     if (!this.data.twists?.twists) {
-      return { name: "Unpredictable Winds", description: "The canyon winds shift without warning.", effect: "-1 to Ranged attacks." };
+      return { name: "Unpredictable Winds", description: "The canyon winds shift without warning.", effect: "-1 to Ranged attacks.", example: null };
     }
-    const twist = this.randomChoice(this.data.twists.twists);
+    // Filter by danger range
+    let pool = this.data.twists.twists.filter(t => {
+      if (t.danger_floor && danger < t.danger_floor) return false;
+      if (t.danger_ceiling && danger > t.danger_ceiling) return false;
+      return true;
+    });
+    if (pool.length === 0) pool = this.data.twists.twists;
+    
+    const twist = this.randomChoice(pool);
+    
+    // Pick one example so players know what this looks like in play
+    const example = twist.example_outcomes && twist.example_outcomes.length > 0
+      ? this.randomChoice(twist.example_outcomes)
+      : null;
+    
     return {
       name: twist.name,
       description: twist.description,
-      effect: twist.mechanical_effect || twist.effect || "Unknown effect."
+      effect: twist.mechanical_effect || twist.effect || "Unknown effect.",
+      example: example
     };
   }
 
@@ -729,15 +826,65 @@ class ScenarioBrain {
   }
 
   generateFinale(plotFamily, danger, location) {
-    const escalation = this.randomChoice(plotFamily.escalation_bias || ['environmental_hazard', 'reinforcements']);
+    const rawKey = this.randomChoice(plotFamily.escalation_bias || ['environmental_hazard', 'reinforcements']);
     const damage = danger + 1;
 
+    // plotFamily bias keys don't match template keys — map them
+    const KEY_MAP = {
+      'ritual_completion':          'ritual_completes',
+      'environmental_rupture':      'environmental_hazard',
+      'environmental_hazards':      'environmental_hazard',
+      'panic_and_morale_failure':   'panic_and_morale',
+      'monster_migration':          'monster_awakening',
+      'reinforcements':             'reinforcements',
+      'authority_intervention':     'reinforcements',
+      'objective_instability':      'environmental_hazard'
+    };
+    const escalation = KEY_MAP[rawKey] || rawKey;
+
     const templates = {
-      'environmental_hazard': { title: 'THE CANYON REJECTS YOU',  flavor: 'The very earth begins to buckle.',           effect: `All units take ${damage} dice of environmental damage. VP for remaining units doubles.`, ticker: '×2 VP' },
-      'reinforcements':       { title: 'NO SURRENDER',            flavor: 'The local factions commit everything.',      effect: `Deploy extra Grunt units for all sides. VP for kills doubles.`,                         ticker: '×2 VP' },
-      'ritual_completes':     { title: 'THE RITUAL COMPLETES',    flavor: 'The ritual reaches its climax.',            effect: `${location.name} transforms. VP values on site double.`,                                ticker: '×2 VP' },
-      'monster_awakening':    { title: 'TITAN STIRS',             flavor: 'Something massive awakens below.',          effect: `Deploy Titan-class threat. End-game scoring begins.`,                                    ticker: '×2 VP' },
-      'visibility_loss':      { title: 'DARKNESS FALLS',          flavor: 'A thick unnatural fog rolls in.',           effect: `Range reduced to 6". All VP scoring is halved.`,                                        ticker: '÷2 VP' }
+      'environmental_hazard': {
+        title: 'THE CANYON REJECTS YOU',
+        flavor: 'The very earth begins to buckle.',
+        effect: `All units take ${damage} dice of environmental damage. VP for surviving units doubles.`,
+        ticker: '×2 VP',
+        player_note: 'Every unit on the table takes damage simultaneously. Keep your strongest models alive — they score double.'
+      },
+      'reinforcements': {
+        title: 'NO SURRENDER',
+        flavor: 'The local factions commit everything they have.',
+        effect: `Deploy extra Grunt units for every faction. VP for kills doubles.`,
+        ticker: '×2 VP',
+        player_note: 'Both sides get more bodies. Don\'t overextend before Round 6 — you\'ll be outnumbered.'
+      },
+      'ritual_completes': {
+        title: 'THE RITUAL COMPLETES',
+        flavor: 'The ground cracks open and something old answers.',
+        effect: `${location.name} transforms. All VP values on site double. Any unstopped ritual resolves.`,
+        ticker: '×2 VP',
+        player_note: 'If nobody stopped the ritual, it fires now. Get your models onto objectives before the ground changes.'
+      },
+      'monster_awakening': {
+        title: 'TITAN STIRS',
+        flavor: 'Something massive, impossibly old, begins to move.',
+        effect: `Deploy a Titan-class threat. End-game scoring begins immediately.`,
+        ticker: '×2 VP',
+        player_note: 'A Titan enters play. Secure your objectives now — it will reach them before you think it will.'
+      },
+      'visibility_loss': {
+        title: 'DARKNESS FALLS',
+        flavor: 'A thick, unnatural fog swallows the battlefield.',
+        effect: `All Range reduced to 6". All VP scoring is halved.`,
+        ticker: '÷2 VP',
+        player_note: 'You can barely see. Close-range fights only from here. Models further than 6" can\'t target each other.'
+      },
+      'panic_and_morale': {
+        title: 'THE CANYON SCREAMS',
+        flavor: 'Something in the air breaks everyone\'s nerve.',
+        effect: `All models must test Morale. Failed models freeze or flee. VP for holding position doubles.`,
+        ticker: '×2 VP',
+        player_note: 'Every single model tests Morale. Weak or leaderless units will likely break. Shore up your weakest before Round 6.'
+      }
     };
     
     const finale = templates[escalation] || templates['environmental_hazard'];
@@ -748,6 +895,7 @@ class ScenarioBrain {
       narrative: finale.flavor,
       mechanical_effect: finale.effect,
       ticker_effect: finale.ticker,
+      player_note: finale.player_note,
       escalation_type: escalation
     };
   }
@@ -850,6 +998,7 @@ class ScenarioBrain {
         description: selectedCult.description
       },
       objective: {
+        id: objective.id,
         name: objective.name,
         description: objective.description,
         turn_limit: objective.turn_limit,
@@ -872,39 +1021,34 @@ class ScenarioBrain {
   // ================================
   
   generateCoffinCough(location, danger) {
-    // Base chance comes from the location. Default 0.10 if not specified.
     const baseChance = location.coffinCoughChance || 0.10;
-    
-    // Danger adds pressure. Each point above 3 adds 5% chance.
     const dangerBonus = Math.max(0, (danger - 3)) * 0.05;
-    
     const finalChance = Math.min(0.95, baseChance + dangerBonus);
     
     console.log(`  Coffin Cough check: base=${baseChance}, danger_bonus=${dangerBonus.toFixed(2)}, final=${finalChance.toFixed(2)}`);
     
-    // THE ROLL
     if (Math.random() > finalChance) {
-      console.log("  ☀️ No Coffin Cough this time.");
+      console.log("  No Coffin Cough this time.");
       return null;
     }
     
-    console.log("  ☠️ COFFIN COUGH IS COMING");
+    console.log("  COFFIN COUGH IS COMING");
     
-    // The 6 effects from 140_scenario_vault.json — player rolls 1d6 at the table
     const effects = [
-      { roll: 1, name: 'Rolling Coffin Cough',  effects: ['Place a 6" radius Choking zone touching any board edge.', 'At the end of each round, it drifts 3" in a direction chosen by the Warden.'] },
-      { roll: 2, name: 'Ashfall',               effects: ['All models suffer –1 die on ranged attacks until end of next round.', 'Burning terrain automatically escalates.'] },
-      { roll: 3, name: 'Visibility Collapse',   effects: ['Line of Sight beyond 12" is blocked until end of next round.', 'Fog blocks clarity and intent, not movement.'] },
-      { roll: 4, name: 'Panic on the Wind',     effects: ['All models must test Morale at the start of their next activation.'] },
-      { roll: 5, name: 'Dead Ground',           effects: ["One heavily contested terrain feature becomes Haunted or Unstable (Warden's choice)."] },
-      { roll: 6, name: 'Canyon Remembers',      effects: ['All Tainted terrain immediately escalates to Haunted.'] }
+      { name: 'Rolling Coffin Cough',  effects: ['Place a 6" radius Choking zone touching any board edge.', 'At the end of each round, it drifts 3" in a direction chosen by the Warden.'] },
+      { name: 'Ashfall',               effects: ['All models suffer -1 die on ranged attacks until end of next round.', 'Burning terrain automatically escalates.'] },
+      { name: 'Visibility Collapse',   effects: ['Line of Sight beyond 12" is blocked until end of next round.', 'Fog blocks clarity and intent, not movement.'] },
+      { name: 'Panic on the Wind',     effects: ['All models must test Morale at the start of their next activation.'] },
+      { name: 'Dead Ground',           effects: ["One heavily contested terrain feature becomes Haunted or Unstable (Warden\'s choice)."] },
+      { name: 'Canyon Remembers',      effects: ['All Tainted terrain immediately escalates to Haunted.'] }
     ];
+    
+    // Pick one — this is fully resolved for the players
+    const picked = this.randomChoice(effects);
     
     return {
       active: true,
-      chance_rolled: parseFloat(finalChance.toFixed(2)),
-      instruction: 'Roll 1d6 at the table to determine which Coffin Cough effect hits.',
-      effects_table: effects
+      effect: picked
     };
   }
 
@@ -913,22 +1057,45 @@ class ScenarioBrain {
   // Tells the players what terrain to place and where
   // ================================
   
-  generateTerrainSetup(plotFamily, location, danger) {
+  generateTerrainSetup(plotFamily, location, danger, objectives, cultistEncounter) {
     const baseSetup = TERRAIN_MAP[plotFamily.id] || TERRAIN_MAP['claim_and_hold'];
     
-    // Thyr crystals from location data
-    const thyrCount = location.resources?.thyr || 0;
+    // Thyr: danger-scaled. 3 at danger 1, up to 12 at danger 6. Always at least 3.
+    const thyrCount = Math.min(12, Math.max(3, danger * 2));
     
-    // Total terrain pieces scales with danger (4 at danger 3, up to 6 at danger 6)
+    // Total terrain pieces scales with danger
     const totalPieces = Math.min(6, 3 + Math.min(danger, 3));
+    
+    // Objective markers — every objective that was actually generated needs a physical marker
+    const objMarkers = objectives ? objectives.map(obj => {
+      const markerMap = {
+        'ritual_circle':      'Ritual Circle marker',
+        'tainted_ground':     'Tainted Ground marker',
+        'scattered_crates':   'Supply Crates (x' + (obj.target_value || 3) + ')',
+        'land_marker':        'Territory Markers (x' + (obj.target_value || 3) + ')',
+        'fortified_position': 'Fortified Position marker',
+        'wrecked_engine':     'Wrecked Engine marker',
+        'stored_supplies':    'Supply Depot marker',
+        'artifact':           'Artifact marker (high ground or hidden)',
+        'resource_extraction': obj.name + ' marker'
+      };
+      return markerMap[obj.type] || obj.name + ' marker';
+    }) : [];
+    
+    // Cultist markers — if a cult showed up, their objective needs terrain too
+    const cultMarkers = cultistEncounter && cultistEncounter.enabled && cultistEncounter.objective
+      ? (CULTIST_TERRAIN_MARKERS[cultistEncounter.objective.id] || ['Cultist Objective marker'])
+      : [];
     
     return {
       atmosphere: baseSetup.atmosphere,
       core_terrain: baseSetup.core,
       optional_terrain: baseSetup.optional,
-      thyr_crystals: thyrCount > 0 ? { count: Math.min(thyrCount, 3), placement: 'Place as physical markers on or near extraction objectives.' } : null,
+      objective_markers: objMarkers,
+      cultist_markers: cultMarkers,
+      thyr_crystals: { count: thyrCount, placement: 'Scatter across the board. Each model is a cache — when mined, roll for how many crystals are inside.' },
       total_terrain_pieces: totalPieces,
-      setup_note: `Place ${totalPieces} terrain pieces total. Core terrain is required. Optional terrain adds flavor and cover.`
+      setup_note: `Place ${totalPieces} terrain pieces total. Core terrain is required. Optional terrain adds cover.`
     };
   }
 
