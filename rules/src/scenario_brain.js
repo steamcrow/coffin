@@ -9,14 +9,14 @@ console.log("🧠 Scenario Brain loading...");
 // CULT REGISTRY — 8 Named Cults
 // ================================
 const CULT_REGISTRY = [
-  { id: 'sons_of_ralu',            name: 'Sons of Ralu',              theme: 'Chaos & Destruction',     color: '#c44569', description: 'Worshippers of RALU, the monster god of chaos. They seek to unleash primal, mindless destruction upon the Canyon.' },
-  { id: 'new_children_of_tzul',    name: 'The New Children of Tzul', theme: 'Undead & Ancient Power',   color: '#7b2d8b', description: 'A new cult worshipping the ancient Tzul. They aid and summon the undead, seeking to resurrect their dark masters.' },
-  { id: 'burning_choir',           name: 'The Burning Choir',        theme: 'Fire & Purification',     color: '#e84545', description: 'Apocalypse cultists who believe the world must burn to be reborn. Fire is their sacrament.' },
-  { id: 'children_of_hollow',      name: 'Children of the Hollow',   theme: 'Void & Madness',          color: '#5a5aaa', description: 'They worship the void between worlds. Their rituals dissolve reality itself.' },
-  { id: 'thyr_eaters',             name: 'The Thyr Eaters',          theme: 'Addiction & Consumption',  color: '#daa520', description: 'Addicted to raw Thyr energy. They consume all magic and crystals, growing ever hungrier.' },
-  { id: 'blighted_root',           name: 'The Blighted Root',        theme: 'Corrupted Nature',        color: '#4caf50', description: 'Nature corruption cultists. They twist plants and beasts into horrifying, spreading abominations.' },
-  { id: 'bone_singers',            name: 'The Bone Singers',         theme: 'Death Magic',             color: '#78909c', description: 'Practitioners of death magic who raise the dead and commune with the grave.' },
-  { id: 'regents_faithful',        name: "Regent's Faithful",        theme: 'Dark Monarchy',           color: '#8e24aa', description: "Secret worshippers of a dark monarch. Only appear when The Crow Queen is NOT in the scenario." }
+  { id: 'sons_of_ralu',            name: 'Sons of Ralu',              theme: 'Chaos & Destruction',     color: '#c44569', description: 'Worshippers of RALU, the monster god of chaos. They seek to unleash primal, mindless destruction upon the Canyon.', weight: 8 },
+  { id: 'new_children_of_tzul',    name: 'The New Children of Tzul', theme: 'Undead & Ancient Power',   color: '#7b2d8b', description: 'A new cult worshipping the ancient Tzul. They aid and summon the undead, seeking to resurrect their dark masters.', weight: 7 },
+  { id: 'burning_choir',           name: 'The Burning Choir',        theme: 'Fire & Purification',     color: '#e84545', description: 'Apocalypse cultists who believe the world must burn to be reborn. Fire is their sacrament.', weight: 6 },
+  { id: 'children_of_hollow',      name: 'Children of the Hollow',   theme: 'Void & Madness',          color: '#5a5aaa', description: 'They worship the void between worlds. Their rituals dissolve reality itself.', weight: 5 },
+  { id: 'thyr_eaters',             name: 'The Thyr Eaters',          theme: 'Addiction & Consumption',  color: '#daa520', description: 'Addicted to raw Thyr energy. They consume all magic and crystals, growing ever hungrier.', weight: 8 },
+  { id: 'blighted_root',           name: 'The Blighted Root',        theme: 'Corrupted Nature',        color: '#4caf50', description: 'Nature corruption cultists. They twist plants and beasts into horrifying, spreading abominations.', weight: 4 },
+  { id: 'bone_singers',            name: 'The Bone Singers',         theme: 'Death Magic',             color: '#78909c', description: 'Practitioners of death magic who raise the dead and commune with the grave.', weight: 7 },
+  { id: 'regents_faithful',        name: "Regent's Faithful",        theme: 'Dark Monarchy',           color: '#8e24aa', description: "Secret worshippers of a dark monarch. Only appear when The Crow Queen is NOT in the scenario.", weight: 3 }
 ];
 
 // ================================
@@ -364,7 +364,55 @@ class ScenarioBrain {
     };
     
     console.log("\n✅ SCENARIO GENERATION COMPLETE\n");
-    return scenario;
+    return this.validateScenario(scenario);
+  }
+  
+  // Validation ensures all required fields exist
+  validateScenario(scenario) {
+    const validated = {
+      name: scenario.name || 'Unnamed Scenario',
+      narrative_hook: scenario.narrative_hook || 'A conflict in the Canyon.',
+      danger_rating: scenario.danger_rating || 3,
+      danger_description: scenario.danger_description || 'Standard danger',
+      location: scenario.location || { name: 'Unknown Location', description: 'A place in the Canyon' },
+      canyon_state: scenario.canyon_state || { name: 'Poisoned', effect: 'Standard Canyon state' },
+      factions: scenario.factions || [],
+      objectives: scenario.objectives || [],
+      victory_conditions: scenario.victory_conditions || {},
+      twist: scenario.twist || null,
+      finale: scenario.finale || null,
+      terrain_setup: scenario.terrain_setup || { core_terrain: [], optional_terrain: [] },
+      coffin_cough: scenario.coffin_cough || null,
+      cultist_encounter: scenario.cultist_encounter || null,
+      monster_pressure: scenario.monster_pressure || null
+    };
+    
+    // Ensure location has required fields
+    if (validated.location) {
+      validated.location = {
+        name: validated.location.name || 'Unknown',
+        description: validated.location.description || '',
+        emoji: validated.location.emoji || '🗺️',
+        atmosphere: validated.location.atmosphere || null,
+        resources: validated.location.resources || {},
+        hazards: validated.location.hazards || []
+      };
+    }
+    
+    // Ensure terrain_setup has required fields
+    if (validated.terrain_setup) {
+      validated.terrain_setup = {
+        atmosphere: validated.terrain_setup.atmosphere || '',
+        core_terrain: validated.terrain_setup.core_terrain || [],
+        optional_terrain: validated.terrain_setup.optional_terrain || [],
+        objective_markers: validated.terrain_setup.objective_markers || [],
+        cultist_markers: validated.terrain_setup.cultist_markers || [],
+        thyr_crystals: validated.terrain_setup.thyr_crystals || null,
+        setup_note: validated.terrain_setup.setup_note || 'Standard terrain setup.'
+      };
+    }
+    
+    return validated;
   }
   
   // ================================
@@ -794,59 +842,67 @@ class ScenarioBrain {
     
     // If cultists are present, lead with their plot
     if (cultistEncounter && cultistEncounter.enabled) {
-      const cultName = cultistEncounter.cult.name;
-      const objDesc = cultistEncounter.objective.description;
+      const context = {
+        location: location.name,
+        cult: cultistEncounter.cult.name,
+        objective: cultistEncounter.objective.description,
+        factions: factions
+      };
       
       const cultNarratives = [
-        `${location.name} was quiet until the ${cultName} arrived. ${objDesc} ${factions} have stumbled into something they weren't prepared for.`,
-        `The ${cultName} chose ${location.name} for a reason. ${objDesc} ${factions} showed up at the worst possible time.`,
-        `${objDesc} The ${cultName} have been working in secret at ${location.name}. ${factions} are about to interrupt them.`
+        '{location} was quiet until the {cult} arrived. {objective} {factions} have stumbled into something they weren\'t prepared for.',
+        'The {cult} chose {location} for a reason. {objective} {factions} showed up at the worst possible time.',
+        '{objective} The {cult} have been working in secret at {location}. {factions} are about to interrupt them.'
       ];
       
-      return this.randomChoice(cultNarratives);
+      const template = this.randomChoice(cultNarratives);
+      return this.parseTemplate(template, context);
     }
     
-    // PLOT-DRIVEN NARRATIVES
-    // Each tells a 2-3 sentence story about WHY and WHAT'S AT STAKE
+    // PLOT-DRIVEN NARRATIVES with template parsing
+    const context = { location: location.name, factions: factions };
+    
     const plotNarratives = {
       'extraction_heist': () => {
         const resources = location.resources ? Object.keys(location.resources).filter(r => location.resources[r] > 0) : [];
         const resource = resources.length > 0 ? this.formatResourceName(this.randomChoice(resources)) : 'valuable cargo';
-        return `${location.name} sits on a cache of ${resource.toLowerCase()}. Word got out. ${factions} all want it, and none of them are walking away empty-handed.`;
+        context.resource = resource.toLowerCase();
+        return this.parseTemplate('{location} sits on a cache of {resource}. Word got out. {factions} all want it, and none of them are walking away empty-handed.', context);
       },
       
       'ambush_derailment': () => {
-        return `The rails through ${location.name} are a critical supply line. ${factions} know that whoever controls the rails controls the flow of weapons, food, and power in this part of the Canyon. Someone's about to derail that.`;
+        return this.parseTemplate('The rails through {location} are a critical supply line. {factions} know that whoever controls the rails controls the flow of weapons, food, and power in this part of the Canyon. Someone\'s about to derail that.', context);
       },
       
       'claim_and_hold': () => {
-        return `${location.name} has changed hands three times in the last year. ${factions} are here to make sure the fourth time is permanent. Nobody's leaving until the question is settled.`;
+        return this.parseTemplate('{location} has changed hands three times in the last year. {factions} are here to make sure the fourth time is permanent. Nobody\'s leaving until the question is settled.', context);
       },
       
       'corruption_ritual': () => {
-        return `Something ancient sleeps beneath ${location.name}. ${factions} are about to wake it up — whether they mean to or not. The ground is already starting to crack.`;
+        return this.parseTemplate('Something ancient sleeps beneath {location}. {factions} are about to wake it up — whether they mean to or not. The ground is already starting to crack.', context);
       },
       
       'siege_standoff': () => {
-        return `The fortifications at ${location.name} have held for weeks. ${factions} are done waiting. Someone breaks through today, or everyone starves tomorrow.`;
+        return this.parseTemplate('The fortifications at {location} have held for weeks. {factions} are done waiting. Someone breaks through today, or everyone starves tomorrow.', context);
       },
       
       'escort_run': () => {
         const cargo = location.resources && Object.keys(location.resources).length > 0 ? 'critical cargo' : 'people who can\'t defend themselves';
-        return `${cargo.charAt(0).toUpperCase() + cargo.slice(1)} needs to cross ${location.name}. ${factions} all have different ideas about where it ends up. The crossing is the killing ground.`;
+        context.cargo = cargo.charAt(0).toUpperCase() + cargo.slice(1);
+        return this.parseTemplate('{cargo} needs to cross {location}. {factions} all have different ideas about where it ends up. The crossing is the killing ground.', context);
       },
       
       'sabotage_strike': () => {
-        return `${location.name} is infrastructure. Blow it, and supply lines collapse for a hundred miles. ${factions} are racing to either destroy it or defend it. The charges are already placed.`;
+        return this.parseTemplate('{location} is infrastructure. Blow it, and supply lines collapse for a hundred miles. {factions} are racing to either destroy it or defend it. The charges are already placed.', context);
       },
       
       'natural_disaster_response': () => {
-        return `${location.name} is tearing itself apart. ${factions} are here to save what they can — or loot what's left. The Canyon doesn't care which.`;
+        return this.parseTemplate('{location} is tearing itself apart. {factions} are here to save what they can — or loot what\'s left. The Canyon doesn\'t care which.', context);
       }
     };
     
     const narrative = plotNarratives[plotFamily.id];
-    return narrative ? narrative() : `${factions} have collided at ${location.name}. The fight starts now.`;
+    return narrative ? narrative() : this.parseTemplate('{factions} have collided at {location}. The fight starts now.', context);
   }
 
   // ================================
@@ -872,7 +928,7 @@ class ScenarioBrain {
     });
     if (pool.length === 0) pool = this.data.twists.twists;
     
-    const twist = this.randomChoice(pool);
+    const twist = this.weightedRandomChoice(pool);
     
     // Pick one example so players know what this looks like in play
     const example = twist.example_outcomes && twist.example_outcomes.length > 0
@@ -937,14 +993,16 @@ class ScenarioBrain {
           flavor: 'You weren\'t the only ones with this idea.',
           effect: `Deploy ${damage} hostile NPC models. They attack whoever is winning.`,
           ticker: '×2 VP',
-          player_note: 'New enemies target the leader. If you\'re ahead, prepare for a fight.'
+          player_note: 'New enemies target the leader. If you\'re ahead, prepare for a fight.',
+          weight: 10
         },
         {
           title: 'RESOURCE DEPLETION',
           flavor: 'The cache is running dry.',
           effect: `Halve all remaining resource values. First to extract gets full points.`,
           ticker: '÷2 VP',
-          player_note: 'Rush objectives now. Waiting means they\'re worth less.'
+          player_note: 'Rush objectives now. Waiting means they\'re worth less.',
+          weight: 5
         }
       ],
       'ambush_derailment': [
@@ -953,14 +1011,16 @@ class ScenarioBrain {
           flavor: 'Someone rigged the tracks.',
           effect: `All models within 6" of rails take ${damage} dice damage. Rails become Impassable.`,
           ticker: '×2 VP',
-          player_note: 'Get away from the rails before Round 6. Cargo near rails is lost.'
+          player_note: 'Get away from the rails before Round 6. Cargo near rails is lost.',
+          weight: 8
         },
         {
           title: 'REINFORCEMENT TRAIN',
           flavor: 'Steel screams as the engine arrives.',
           effect: `Each faction deploys ${damage} Grunt units from board edge. VP for kills doubles.`,
           ticker: '×2 VP',
-          player_note: 'Both sides get reinforcements. Hold your objectives before the fresh troops arrive.'
+          player_note: 'Both sides get reinforcements. Hold your objectives before the fresh troops arrive.',
+          weight: 7
         }
       ],
       'claim_and_hold': [
@@ -969,14 +1029,16 @@ class ScenarioBrain {
           flavor: 'The Canyon judges who truly holds this ground.',
           effect: `Only models ON objectives score. All VP values double.`,
           ticker: '×2 VP',
-          player_note: 'If you\'re not standing on it at Round 6, it doesn\'t count.'
+          player_note: 'If you\'re not standing on it at Round 6, it doesn\'t count.',
+          weight: 10
         },
         {
           title: 'CONTESTED COLLAPSE',
           flavor: 'The ground rejects your claim.',
           effect: `All contested objectives become Impassable. Uncontested objectives triple VP.`,
           ticker: '×3 VP',
-          player_note: 'Secure one fully or lose them all. Split forces = disaster.'
+          player_note: 'Secure one fully or lose them all. Split forces = disaster.',
+          weight: 4
         }
       ],
       'corruption_ritual': [
@@ -985,14 +1047,16 @@ class ScenarioBrain {
           flavor: 'The ground cracks open. Something answers.',
           effect: `${location.name} transforms. If ritual wasn\'t stopped, deploy Corrupted entity.`,
           ticker: '×2 VP',
-          player_note: 'If nobody disrupted the ritual, a new threat spawns. Position to finish the ritual OR stop it.'
+          player_note: 'If nobody disrupted the ritual, a new threat spawns. Position to finish the ritual OR stop it.',
+          weight: 9
         },
         {
           title: 'TAINT SPREADS',
           flavor: 'Corruption seeps across the battlefield.',
           effect: `All terrain becomes Tainted. Models on Tainted ground take ${damage - 1} damage per round.`,
           ticker: '÷2 VP',
-          player_note: 'Standing still kills you. Keep moving or find Clean ground.'
+          player_note: 'Standing still kills you. Keep moving or find Clean ground.',
+          weight: 6
         }
       ]
     };
@@ -1036,7 +1100,7 @@ class ScenarioBrain {
       ];
     }
     
-    const finale = this.randomChoice(finalePool);
+    const finale = this.weightedRandomChoice(finalePool);
     
     return {
       round: 6,
@@ -1093,7 +1157,7 @@ class ScenarioBrain {
       availableCults = availableCults.filter(c => c.id !== 'regents_faithful');
     }
     
-    const selectedCult = this.randomChoice(availableCults);
+    const selectedCult = this.weightedRandomChoice(availableCults);
     
     // Pick objective — prefer one that MATCHES this cult's affinity
     const matchingObjectives = CULT_OBJECTIVES.filter(o => o.cult_affinity.includes(selectedCult.id));
@@ -1326,6 +1390,33 @@ class ScenarioBrain {
     
     const shuffled = [...arr].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
+  }
+  
+  // Weighted random selection - items with higher weight are more likely
+  weightedRandomChoice(arr) {
+    if (!arr || arr.length === 0) return null;
+    
+    // If array has no weights, treat as equal probability
+    const hasWeights = arr.some(item => item.weight !== undefined);
+    if (!hasWeights) return this.randomChoice(arr);
+    
+    const totalWeight = arr.reduce((sum, item) => sum + (item.weight || 1), 0);
+    let random = Math.random() * totalWeight;
+    
+    for (let item of arr) {
+      random -= (item.weight || 1);
+      if (random <= 0) return item;
+    }
+    
+    return arr[arr.length - 1]; // Fallback
+  }
+  
+  // Template parser - replaces {faction}, {location}, etc with actual values
+  parseTemplate(template, context) {
+    if (!template) return '';
+    return template.replace(/{(\w+)}/g, (match, key) => {
+      return context[key] !== undefined ? context[key] : match;
+    });
   }
 }
 
