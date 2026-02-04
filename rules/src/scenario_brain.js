@@ -644,7 +644,7 @@ class ScenarioBrain {
       });
       
       // Add the Unique Faction Grand Goal
-      const unique = this.generateUniqueFactionObjective(faction.id, userSelections.dangerRating);
+      const unique = this.generateUniqueFactionObjective(faction.id, userSelections.dangerRating, userSelections.factions);
       if (unique) factionObjectives.push(unique);
       
       conditions[faction.id] = {
@@ -685,6 +685,12 @@ class ScenarioBrain {
       'shine_riders': {
         'scattered_crates': { goal: 'Steal valuable goods.',                 method: 'Fast extraction with Bikes.',                       scoring: '+2 VP per crate' },
         'stored_supplies':  { goal: 'The legendary heist.',                  method: 'Extract and escape with loot.',                    scoring: '+2 VP per supply' }
+      },
+      'monsters': {
+        'resource_extraction': { goal: 'Consume resources.',                  method: 'Monster units that consume Thyr/Livestock gain bonuses.', scoring: '+VP per resource consumed', restriction: 'Consumed resources trigger mutation rolls' },
+        'scattered_crates':    { goal: 'Hoard food stores.',                  method: 'Drag crates to Monster den.',                           scoring: '+2 VP per crate hoarded' },
+        'land_marker':         { goal: 'Mark territory.',                     method: 'Territorial scent markers.',                            scoring: '+2 VP per marker held' },
+        'ritual_circle':       { goal: 'Disrupt human ritual.',               method: 'Monsters can sense magical energies.',                  scoring: '+4 VP per site disrupted' }
       }
     };
     
@@ -697,15 +703,38 @@ class ScenarioBrain {
     };
   }
 
-  generateUniqueFactionObjective(factionId, danger) {
+  generateUniqueFactionObjective(factionId, danger, allFactions) {
     const uniques = {
       'monster_rangers': { name: 'Minimize Casualties',         goal: 'Protect monsters and civilians.',                  method: 'Escort non-combatants to safety.',          scoring: `${danger * 2} VP minus deaths` },
       'liberty_corps':   { name: 'Establish Authority',         goal: 'Hold the center of the board.',                    method: 'Maintain control for 3 rounds.',            scoring: `${danger * 2} VP if held at end` },
       'monsterology':    { name: 'Total Extraction Protocol',   goal: 'Exploit every site.',                              method: 'Extract from all objectives.',              scoring: `${danger * 3} VP if all extracted` },
       'shine_riders':    { name: 'Legendary Heist',             goal: 'Steal the most valuable prize.',                   method: 'Extract highest-value objective and escape.',scoring: `${danger * 3} VP if escaped` },
-      'crow_queen':      { name: 'Divine Mandate',              goal: 'Force enemies to kneel.',                          method: 'Break enemy morale with Fear.',             scoring: `${danger * 2} VP per enemy unit Broken` },
-      'monsters':        { name: 'Drive Out Invaders',          goal: 'Purge humans from the Canyon.',                    method: 'Eliminate enemy leaders.',                  scoring: `${danger * 2} VP per faction broken` }
+      'crow_queen':      { name: 'Divine Mandate',              goal: 'Force enemies to kneel.',                          method: 'Break enemy morale with Fear.',             scoring: `${danger * 2} VP per enemy unit Broken` }
     };
+    
+    // MONSTERS - context-aware objectives
+    if (factionId === 'monsters') {
+      const humanFactions = allFactions.filter(f => f.id !== 'monsters' && f.id !== 'crow_queen');
+      
+      if (humanFactions.length === 0) {
+        // No humans = territorial fight
+        return {
+          name: 'Territorial Supremacy',
+          goal: 'Drive out all intruders.',
+          method: 'Eliminate enemy leaders and hold ground.',
+          scoring: `${danger * 2} VP per enemy faction broken`
+        };
+      } else {
+        // Humans present = purge them
+        return {
+          name: 'Drive Out Invaders',
+          goal: 'Purge humans from the Canyon.',
+          method: 'Eliminate enemy leaders.',
+          scoring: `${danger * 2} VP per human faction broken`
+        };
+      }
+    }
+    
     return uniques[factionId] || null;
   }
 
@@ -757,52 +786,67 @@ class ScenarioBrain {
     return this.randomChoice(styles);
   }
 
-  generateNarrative(plotFamily, location, userSelections, cultistEncounter) {
-    // Oxford comma for 3+ factions
+    generateNarrative(plotFamily, location, userSelections, cultistEncounter) {
     const names = userSelections.factions.map(f => f.name);
     const factions = names.length <= 2 
       ? names.join(' and ') 
       : names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
     
-    const atmo = location.atmosphere || 'unrest';
-    
-    // If cultists are present, the opening LEADS with what they're actually doing.
-    // That's the real story. The faction clash is secondary.
+    // If cultists are present, lead with their plot
     if (cultistEncounter && cultistEncounter.enabled) {
       const cultName = cultistEncounter.cult.name;
-      const cultTheme = cultistEncounter.cult.theme;
-      const objName = cultistEncounter.objective.name;
       const objDesc = cultistEncounter.objective.description;
       
-      // Cultist-led narrative: what's happening is the ritual. Everyone else is reacting.
-      const cultHooks = [
-        `The ${cultName} are here. ${objDesc} ${factions} have all arrived at ${location.name} — whether they know it or not, they're walking into it.`,
-        `Something is wrong at ${location.name}. The ${cultName} have been working in the dark. ${objDesc} ${factions} have collided here, and none of them are ready for what comes next.`,
-        `${atmo.charAt(0).toUpperCase() + atmo.slice(1)}. The ${cultName} have chosen this ground for a reason. ${objDesc} ${factions} are all here. The ritual doesn't care why.`
+      const cultNarratives = [
+        `${location.name} was quiet until the ${cultName} arrived. ${objDesc} ${factions} have stumbled into something they weren't prepared for.`,
+        `The ${cultName} chose ${location.name} for a reason. ${objDesc} ${factions} showed up at the worst possible time.`,
+        `${objDesc} The ${cultName} have been working in secret at ${location.name}. ${factions} are about to interrupt them.`
       ];
       
-      return this.randomChoice(cultHooks);
+      return this.randomChoice(cultNarratives);
     }
     
-    // No cultists — plot-family-specific hooks
-    const plotHooks = {
-      'corruption_ritual':          `Something is stirring at ${location.name}. It doesn't care who wakes it.`,
-      'extraction_heist':           `The resources buried beneath ${location.name} are worth killing for. Everyone in the Canyon knows it.`,
-      'claim_and_hold':             `${location.name} has changed hands before. It will again.`,
-      'ambush_derailment':          `The rails through ${location.name} don't care who controls them. Neither does what's waiting along them.`,
-      'siege_standoff':             `The walls at ${location.name} are holding. For now.`,
-      'escort_run':                 `Getting through ${location.name} alive is the hard part. Everything after is a bonus.`,
-      'sabotage_strike':            `One well-placed detonation at ${location.name} changes everything. The question is who gets there first.`,
-      'natural_disaster_response':  `The Canyon doesn't negotiate. ${location.name} is breaking apart.`
+    // PLOT-DRIVEN NARRATIVES
+    // Each tells a 2-3 sentence story about WHY and WHAT'S AT STAKE
+    const plotNarratives = {
+      'extraction_heist': () => {
+        const resources = location.resources ? Object.keys(location.resources).filter(r => location.resources[r] > 0) : [];
+        const resource = resources.length > 0 ? this.formatResourceName(this.randomChoice(resources)) : 'valuable cargo';
+        return `${location.name} sits on a cache of ${resource.toLowerCase()}. Word got out. ${factions} all want it, and none of them are walking away empty-handed.`;
+      },
+      
+      'ambush_derailment': () => {
+        return `The rails through ${location.name} are a critical supply line. ${factions} know that whoever controls the rails controls the flow of weapons, food, and power in this part of the Canyon. Someone's about to derail that.`;
+      },
+      
+      'claim_and_hold': () => {
+        return `${location.name} has changed hands three times in the last year. ${factions} are here to make sure the fourth time is permanent. Nobody's leaving until the question is settled.`;
+      },
+      
+      'corruption_ritual': () => {
+        return `Something ancient sleeps beneath ${location.name}. ${factions} are about to wake it up — whether they mean to or not. The ground is already starting to crack.`;
+      },
+      
+      'siege_standoff': () => {
+        return `The fortifications at ${location.name} have held for weeks. ${factions} are done waiting. Someone breaks through today, or everyone starves tomorrow.`;
+      },
+      
+      'escort_run': () => {
+        const cargo = location.resources && Object.keys(location.resources).length > 0 ? 'critical cargo' : 'people who can\'t defend themselves';
+        return `${cargo.charAt(0).toUpperCase() + cargo.slice(1)} needs to cross ${location.name}. ${factions} all have different ideas about where it ends up. The crossing is the killing ground.`;
+      },
+      
+      'sabotage_strike': () => {
+        return `${location.name} is infrastructure. Blow it, and supply lines collapse for a hundred miles. ${factions} are racing to either destroy it or defend it. The charges are already placed.`;
+      },
+      
+      'natural_disaster_response': () => {
+        return `${location.name} is tearing itself apart. ${factions} are here to save what they can — or loot what's left. The Canyon doesn't care which.`;
+      }
     };
     
-    const hook = plotHooks[plotFamily.id] || `Conflict has reached ${location.name}.`;
-    
-    // Readable pressure label
-    const rawPressure = this.randomChoice(plotFamily.common_inciting_pressures || ['conflict']);
-    const pressure = PRESSURE_PRETTY[rawPressure] || rawPressure.replace(/_/g, ' ');
-    
-    return `${hook} ${factions} have collided here, drawn by ${pressure}.`;
+    const narrative = plotNarratives[plotFamily.id];
+    return narrative ? narrative() : `${factions} have collided at ${location.name}. The fight starts now.`;
   }
 
   // ================================
@@ -881,69 +925,102 @@ class ScenarioBrain {
     return state || { name: "Unknown State", effect: "Standard rules apply." };
   }
 
-  generateFinale(plotFamily, danger, location) {
-    const rawKey = this.randomChoice(plotFamily.escalation_bias || ['environmental_hazard', 'reinforcements']);
+    generateFinale(plotFamily, danger, location) {
     const damage = danger + 1;
-
-    // plotFamily bias keys don't match template keys — map them
-    const KEY_MAP = {
-      'ritual_completion':          'ritual_completes',
-      'environmental_rupture':      'environmental_hazard',
-      'environmental_hazards':      'environmental_hazard',
-      'panic_and_morale_failure':   'panic_and_morale',
-      'monster_migration':          'monster_awakening',
-      'reinforcements':             'reinforcements',
-      'authority_intervention':     'reinforcements',
-      'objective_instability':      'environmental_hazard'
-    };
-    const escalation = KEY_MAP[rawKey] || rawKey;
-
-    const templates = {
-      'environmental_hazard': {
-        title: 'THE CANYON REJECTS YOU',
-        flavor: 'The very earth begins to buckle.',
-        effect: `All units take ${damage} dice of environmental damage. VP for surviving units doubles.`,
-        ticker: '×2 VP',
-        player_note: 'Every unit on the table takes damage simultaneously. Keep your strongest models alive — they score double.'
-      },
-      'reinforcements': {
-        title: 'NO SURRENDER',
-        flavor: 'The local factions commit everything they have.',
-        effect: `Deploy extra Grunt units for every faction. VP for kills doubles.`,
-        ticker: '×2 VP',
-        player_note: 'Both sides get more bodies. Don\'t overextend before Round 6 — you\'ll be outnumbered.'
-      },
-      'ritual_completes': {
-        title: 'THE RITUAL COMPLETES',
-        flavor: 'The ground cracks open and something old answers.',
-        effect: `${location.name} transforms. All VP values on site double. Any unstopped ritual resolves.`,
-        ticker: '×2 VP',
-        player_note: 'If nobody stopped the ritual, it fires now. Get your models onto objectives before the ground changes.'
-      },
-      'monster_awakening': {
-        title: 'TITAN STIRS',
-        flavor: 'Something massive, impossibly old, begins to move.',
-        effect: `Deploy a Titan-class threat. End-game scoring begins immediately.`,
-        ticker: '×2 VP',
-        player_note: 'A Titan enters play. Secure your objectives now — it will reach them before you think it will.'
-      },
-      'visibility_loss': {
-        title: 'DARKNESS FALLS',
-        flavor: 'A thick, unnatural fog swallows the battlefield.',
-        effect: `All Range reduced to 6". All VP scoring is halved.`,
-        ticker: '÷2 VP',
-        player_note: 'You can barely see. Close-range fights only from here. Models further than 6" can\'t target each other.'
-      },
-      'panic_and_morale': {
-        title: 'THE CANYON SCREAMS',
-        flavor: 'Something in the air breaks everyone\'s nerve.',
-        effect: `All models must test Morale. Failed models freeze or flee. VP for holding position doubles.`,
-        ticker: '×2 VP',
-        player_note: 'Every single model tests Morale. Weak or leaderless units will likely break. Shore up your weakest before Round 6.'
-      }
+    
+    // PLOT-SPECIFIC FINALE TEMPLATES
+    // Each plot family has themed escalations that reflect what's happening
+    const plotFinales = {
+      'extraction_heist': [
+        {
+          title: 'RIVAL EXTRACTORS ARRIVE',
+          flavor: 'You weren\'t the only ones with this idea.',
+          effect: `Deploy ${damage} hostile NPC models. They attack whoever is winning.`,
+          ticker: '×2 VP',
+          player_note: 'New enemies target the leader. If you\'re ahead, prepare for a fight.'
+        },
+        {
+          title: 'RESOURCE DEPLETION',
+          flavor: 'The cache is running dry.',
+          effect: `Halve all remaining resource values. First to extract gets full points.`,
+          ticker: '÷2 VP',
+          player_note: 'Rush objectives now. Waiting means they\'re worth less.'
+        }
+      ],
+      'ambush_derailment': [
+        {
+          title: 'THE RAIL EXPLODES',
+          flavor: 'Someone rigged the tracks.',
+          effect: `All models within 6" of rails take ${damage} dice damage. Rails become Impassable.`,
+          ticker: '×2 VP',
+          player_note: 'Get away from the rails before Round 6. Cargo near rails is lost.'
+        },
+        {
+          title: 'REINFORCEMENT TRAIN',
+          flavor: 'Steel screams as the engine arrives.',
+          effect: `Each faction deploys ${damage} Grunt units from board edge. VP for kills doubles.`,
+          ticker: '×2 VP',
+          player_note: 'Both sides get reinforcements. Hold your objectives before the fresh troops arrive.'
+        }
+      ],
+      'claim_and_hold': [
+        {
+          title: 'TERRITORIAL DEADLINE',
+          flavor: 'The Canyon judges who truly holds this ground.',
+          effect: `Only models ON objectives score. All VP values double.`,
+          ticker: '×2 VP',
+          player_note: 'If you\'re not standing on it at Round 6, it doesn\'t count.'
+        },
+        {
+          title: 'CONTESTED COLLAPSE',
+          flavor: 'The ground rejects your claim.',
+          effect: `All contested objectives become Impassable. Uncontested objectives triple VP.`,
+          ticker: '×3 VP',
+          player_note: 'Secure one fully or lose them all. Split forces = disaster.'
+        }
+      ],
+      'corruption_ritual': [
+        {
+          title: 'THE RITUAL COMPLETES',
+          flavor: 'The ground cracks open. Something answers.',
+          effect: `${location.name} transforms. If ritual wasn\'t stopped, deploy Corrupted entity.`,
+          ticker: '×2 VP',
+          player_note: 'If nobody disrupted the ritual, a new threat spawns. Position to finish the ritual OR stop it.'
+        },
+        {
+          title: 'TAINT SPREADS',
+          flavor: 'Corruption seeps across the battlefield.',
+          effect: `All terrain becomes Tainted. Models on Tainted ground take ${damage - 1} damage per round.`,
+          ticker: '÷2 VP',
+          player_note: 'Standing still kills you. Keep moving or find Clean ground.'
+        }
+      ]
     };
     
-    const finale = templates[escalation] || templates['environmental_hazard'];
+    // Get plot-specific finales, or use generic escalation
+    let finalePool = plotFinales[plotFamily.id];
+    
+    if (!finalePool || finalePool.length === 0) {
+      // Fallback to danger-based generic finales
+      finalePool = [
+        {
+          title: 'THE CANYON REJECTS YOU',
+          flavor: 'The very earth begins to buckle.',
+          effect: `All units take ${damage} dice of environmental damage. VP for surviving units doubles.`,
+          ticker: '×2 VP',
+          player_note: 'Every unit on the table takes damage simultaneously. Keep your strongest models alive — they score double.'
+        },
+        {
+          title: 'NO SURRENDER',
+          flavor: 'The local factions commit everything they have.',
+          effect: `Deploy extra Grunt units for every faction. VP for kills doubles.`,
+          ticker: '×2 VP',
+          player_note: 'Both sides get more bodies. Don\'t overextend before Round 6 — you\'ll be outnumbered.'
+        }
+      ];
+    }
+    
+    const finale = this.randomChoice(finalePool);
     
     return {
       round: 6,
@@ -952,7 +1029,7 @@ class ScenarioBrain {
       mechanical_effect: finale.effect,
       ticker_effect: finale.ticker,
       player_note: finale.player_note,
-      escalation_type: escalation
+      escalation_type: plotFamily.id
     };
   }
 
@@ -1122,20 +1199,48 @@ class ScenarioBrain {
     // Total terrain pieces scales with danger
     const totalPieces = Math.min(6, 3 + Math.min(danger, 3));
     
-    // Objective markers — every objective that was actually generated needs a physical marker
+    // Objective markers — specific to plot and physical objects
     const objMarkers = objectives ? objectives.map(obj => {
-      const markerMap = {
-        'ritual_circle':      'Ritual Circle marker',
-        'tainted_ground':     'Tainted Ground marker',
-        'scattered_crates':   'Supply Crates (x' + (obj.target_value || 3) + ')',
-        'land_marker':        'Territory Markers (x' + (obj.target_value || 3) + ')',
-        'fortified_position': 'Fortified Position marker',
-        'wrecked_engine':     'Wrecked Engine marker',
-        'stored_supplies':    'Supply Depot marker',
-        'artifact':           'Artifact marker (high ground or hidden)',
-        'resource_extraction': obj.name + ' marker'
+      // Plot-specific marker descriptions
+      const plotMarkers = {
+        'extraction_heist': {
+          'scattered_crates':   `Supply Crates (×${obj.target_value || 3}) - use crate tokens or models`,
+          'resource_extraction': `${obj.progress_label} Cache - use appropriate resource tokens`,
+          'stored_supplies':    'Locked Supply Depot - 3" building or token'
+        },
+        'ambush_derailment': {
+          'scattered_crates':   `Cargo Crates (×${obj.target_value || 3}) - scattered along rails`,
+          'resource_extraction': `${obj.progress_label} in Rail Cars - use cargo tokens`,
+          'wrecked_engine':     'Derailed Engine - large wreck model'
+        },
+        'claim_and_hold': {
+          'land_marker':        `Territory Markers (×${obj.target_value || 3}) - faction-specific obelisks/flags`,
+          'fortified_position': 'Defensible Structure - bunker, watchtower, or barricade'
+        },
+        'corruption_ritual': {
+          'ritual_circle':      'Ritual Site - 6" circle with runes/stones',
+          'tainted_ground':     'Corrupted Ground (×' + (obj.target_value || 2) + ') - 3" zones with taint tokens'
+        }
       };
-      return markerMap[obj.type] || obj.name + ' marker';
+      
+      const plotSpecific = plotMarkers[plotFamily.id];
+      if (plotSpecific && plotSpecific[obj.type]) {
+        return plotSpecific[obj.type];
+      }
+      
+      // Fallback generic markers
+      const genericMap = {
+        'ritual_circle':      'Ritual Site - 6" circle',
+        'tainted_ground':     'Corrupted Ground markers (×' + (obj.target_value || 2) + ')',
+        'scattered_crates':   'Supply Crates (×' + (obj.target_value || 3) + ')',
+        'land_marker':        'Territory Markers (×' + (obj.target_value || 3) + ') - obelisks or flags',
+        'fortified_position': 'Fortified Position - bunker or watchtower',
+        'wrecked_engine':     'Wrecked Engine - large terrain piece',
+        'stored_supplies':    'Supply Depot - 3" building',
+        'artifact':           'Artifact - place on high ground or hidden',
+        'resource_extraction': `${obj.progress_label} - use ${obj.progress_label.toLowerCase()} tokens`
+      };
+      return genericMap[obj.type] || obj.name + ' marker';
     }) : [];
     
     // Cultist markers — if a cult showed up, their objective needs terrain too
