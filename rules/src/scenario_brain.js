@@ -1034,18 +1034,15 @@ const PRESSURE_PRETTY = {
 // CULTIST TERRAIN — what physical markers each cultist objective needs on the table
 // ================================
 const CULTIST_TERRAIN_MARKERS = {
-  'awaken_tzul_dust_kings':  ['Tzul Burial Ground', 'Captive Markers (x2)'],
-  'awaken_ralu':             ['RALU Fountain Idol', 'Captive Monster Marker'],
-  'ring_the_doom_bell':      ['Dark Temple (incomplete)', 'Doom Bell'],
-  'open_hollow_portal':      ['Blood Circle', 'Ruined Archway'],
-  'corrupt_thyr_vein':       ['Thyr Vein', 'Corruption Device'],
-  'raise_dead_army':         ['Graveyard', 'Ritual Focus Marker'],
-  'burn_the_boomtown':       ['Fire Source Markers (x3)'],
-  'poison_water_supply':     ['Water Supply Marker', 'Poison Source'],
-  'desecrate_sacred_site':   ['Sacred Site Marker'],
-  'harvest_living_souls':    ['Soul Engine', 'Captive Cages (x3)'],
-  'grow_the_blight':         ['Blight Heart Marker'],
-  'summon_canyon_titan':     ['Summoning Pillars (x3)']
+  // Map pressure types to terrain markers
+  'chaos_escalation':     ['Chaos Corruption Markers (x3)', 'Reality Distortion Zones'],
+  'necromantic_rise':     ['Burial Ground', 'Ritual Circle', 'Undead Spawn Points (x2)'],
+  'fire_spread':          ['Fire Source Markers (x3)', 'Burning Terrain'],
+  'reality_erosion':      ['Void Rift Markers (x2)', 'Dimensional Tear'],
+  'resource_consumption': ['Thyr Crystal Cache', 'Consumption Device', 'Depleted Crystal Markers'],
+  'corruption_spread':    ['Blight Heart', 'Corrupted Terrain Markers (x3)'],
+  'death_magic':          ['Necromantic Focus', 'Grave Sites (x2)', 'Death Magic Circle'],
+  'dark_consecration':    ['Dark Obelisks (x3)', 'Consecration Circle']
 };
 
 // ================================
@@ -2142,14 +2139,14 @@ class ScenarioBrain {
       const context = {
         location: location.name,
         cult: cultistEncounter.cult.name,
-        objective: cultistEncounter.objective.description,
+        pressure: cultistEncounter.pressure.description,
         factions: factions
       };
       
       const cultNarratives = [
-        '{location} was quiet until the {cult} arrived. {objective} {factions} have stumbled into something they weren\'t prepared for.',
-        'The {cult} chose {location} for a reason. {objective} {factions} showed up at the worst possible time.',
-        '{objective} The {cult} have been working in secret at {location}. {factions} are about to interrupt them.'
+        '{location} was quiet until the {cult} arrived. {pressure} {factions} have stumbled into something they weren\'t prepared for.',
+        'The {cult} chose {location} for a reason. {pressure} {factions} showed up at the worst possible time.',
+        '{pressure} The {cult} have been working in secret at {location}. {factions} are about to interrupt them.'
       ];
       
       const template = this.randomChoice(cultNarratives);
@@ -2649,9 +2646,9 @@ class ScenarioBrain {
       return genericMap[obj.type] || obj.name + ' marker';
     }) : [];
     
-    // Cultist markers — if a cult showed up, their objective needs terrain too
-    const cultMarkers = cultistEncounter && cultistEncounter.enabled && cultistEncounter.objective
-      ? (CULTIST_TERRAIN_MARKERS[cultistEncounter.objective.id] || ['Cultist Objective marker'])
+    // Cultist markers — if a cult showed up, their pressure needs terrain too
+    const cultMarkers = cultistEncounter && cultistEncounter.enabled && cultistEncounter.pressure
+      ? (CULTIST_TERRAIN_MARKERS[cultistEncounter.pressure.type] || ['Pressure markers - see pressure visual description'])
       : [];
     
     return {
