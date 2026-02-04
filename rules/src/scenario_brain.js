@@ -300,9 +300,14 @@ class ScenarioBrain {
     const objectives = this.generateObjectives(plotFamily, location, userSelections, vpSpread);
     console.log(`✓ Generated ${objectives.length} objectives`);
     
-    // STEP 5: Victory Conditions
+    // STEP 4.5: Cultist Encounter (must happen before victory conditions)
+    console.log("\n👹 STEP 4.5: CULTIST ENCOUNTER");
+    const cultistEncounter = this.generateCultistEncounter(userSelections, plotFamily, location);
+    console.log("✓ Cultist check:", cultistEncounter ? `${cultistEncounter.cult.name} APPEARING` : 'No cultists this time');
+    
+    // STEP 5: Victory Conditions (now knows about cultists)
     console.log("\n🏆 STEP 5: VICTORY CONDITIONS");
-    const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread);
+    const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread, cultistEncounter);
     console.log("✓ Victory conditions created");
     
     // STEP 6: Name (narrative comes later — needs cultist data)
@@ -317,13 +322,8 @@ class ScenarioBrain {
     const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location, userSelections.factions);
     console.log("✓ Extras added");
     
-    // STEP 8: Cultist Encounter
-    console.log("\n👹 STEP 8: CULTIST ENCOUNTER");
-    const cultistEncounter = this.generateCultistEncounter(userSelections, plotFamily, location);
-    console.log("✓ Cultist check:", cultistEncounter ? `${cultistEncounter.cult.name} APPEARING` : 'No cultists this time');
-    
-    // STEP 8b: Narrative — now we know if cultists are here
-    console.log("\n📝 STEP 8b: NARRATIVE");
+    // STEP 8: Narrative — now we have cultist data
+    console.log("\n📝 STEP 8: NARRATIVE");
     const narrative = this.generateNarrative(plotFamily, location, userSelections, cultistEncounter);
     console.log("✓ Narrative written");
     
@@ -679,11 +679,17 @@ class ScenarioBrain {
   // VICTORY CONDITIONS (STEP 5)
   // ================================
 
-  generateVictoryConditions(userSelections, objectives, vpSpread) {
+  generateVictoryConditions(userSelections, objectives, vpSpread, cultistEncounter) {
     const conditions = {};
     
     userSelections.factions.forEach(faction => {
       const factionObjectives = [];
+      
+      // If cultists are present, add faction-specific response objective FIRST
+      if (cultistEncounter && cultistEncounter.enabled) {
+        const cultistResponse = this.generateCultistResponseObjective(faction.id, cultistEncounter, userSelections.dangerRating);
+        if (cultistResponse) factionObjectives.push(cultistResponse);
+      }
       
       // Map global objectives to faction-specific flavor/rules
       objectives.forEach(obj => {
@@ -710,6 +716,64 @@ class ScenarioBrain {
     });
     
     return conditions;
+  }
+  
+  // Generate faction-specific response to cultist threat
+  generateCultistResponseObjective(factionId, cultistEncounter, danger) {
+    const cult = cultistEncounter.cult;
+    const objective = cultistEncounter.objective;
+    
+    // Detect threat type from cultist objective
+    const isFire = objective.description.toLowerCase().includes('fire') || objective.description.toLowerCase().includes('burn');
+    const isRitual = objective.description.toLowerCase().includes('ritual') || objective.description.toLowerCase().includes('summon');
+    const isTaint = objective.description.toLowerCase().includes('taint') || objective.description.toLowerCase().includes('corrupt');
+    
+    const responses = {
+      'monster_rangers': {
+        fire:   { name: 'Extinguish the Flames', goal: 'Protect civilians and wildlife from the spreading fire.', method: 'Deploy water sources. Rangers gain +1 die near fire zones.', scoring: `+${danger * 2} VP per fire source extinguished` },
+        ritual: { name: 'Disrupt the Ritual', goal: 'Prevent cultist ritual completion.', method: 'Dark Librarian can counter-ritual.', scoring: `+${danger * 2} VP if ritual prevented` },
+        taint:  { name: 'Contain the Corruption', goal: 'Prevent Taint from spreading.', method: 'Rangers can cleanse corrupted ground.', scoring: `+${danger} VP per Tainted zone cleansed` }
+      },
+      'liberty_corps': {
+        fire:   { name: 'Establish Firebreaks', goal: 'Coordinate firefighting efforts.', method: 'Corps units can create firebreak barriers.', scoring: `+${danger * 2} VP per fire source contained` },
+        ritual: { name: 'Federal Intervention', goal: 'Arrest cultists and seize ritual components.', method: 'Gain +1 die when engaging cultists.', scoring: `+${danger * 2} VP per cultist eliminated` },
+        taint:  { name: 'Quarantine the Zone', goal: 'Establish containment perimeter.', method: 'Deploy barrier units.', scoring: `+${danger} VP per zone quarantined` }
+      },
+      'monsterology': {
+        fire:   { name: 'Harvest Fire Energy', goal: 'Extract magical energy from the flames.', method: 'Fire grants bonus Thyr when harvested.', scoring: `+${danger} VP per fire source controlled` },
+        ritual: { name: 'Study the Ritual', goal: 'Document cultist techniques.', method: 'Monsterology gains research data from ritual sites.', scoring: `+${danger * 2} VP if ritual observed` },
+        taint:  { name: 'Extract Taint Samples', goal: 'Collect corrupted materials for study.', method: 'Taint can be harvested as resource.', scoring: `+${danger} VP per Taint sample collected` }
+      },
+      'shine_riders': {
+        fire:   { name: 'Loot the Chaos', goal: 'Steal valuables while everyone fights the fire.', method: 'Riders move faster through smoke.', scoring: `+${danger} VP per objective stolen during fire` },
+        ritual: { name: 'Steal Cult Artifacts', goal: 'Acquire valuable ritual components.', method: 'Riders can grab artifacts and escape.', scoring: `+${danger * 2} VP per artifact stolen` },
+        taint:  { name: 'Exploit the Distraction', goal: 'Use chaos to complete heists.', method: 'Enemies distracted by Taint.', scoring: `+${danger} VP per heist completed` }
+      },
+      'crow_queen': {
+        fire:   { name: 'Embrace the Purge', goal: 'Let the fire cleanse the unworthy.', method: 'Queen units immune to fire damage.', scoring: `+${danger} VP per enemy unit killed by fire` },
+        ritual: { name: 'Subvert the Ritual', goal: 'Turn cultist power toward the Regent.', method: 'Ladies in Waiting can redirect ritual energy.', scoring: `+${danger * 2} VP if ritual redirected` },
+        taint:  { name: 'Consecrate Through Corruption', goal: 'Transform Taint into Consecrated ground.', method: 'Queen can convert Tainted terrain.', scoring: `+${danger} VP per zone converted` }
+      },
+      'monsters': {
+        fire:   { name: 'Flee or Fight', goal: 'Protect territory from flames.', method: 'Monsters enraged by fire. +1 Attack die.', scoring: `+${danger} VP per fire source destroyed` },
+        ritual: { name: 'Disrupt Through Violence', goal: 'Kill cultists to stop ritual.', method: 'Monsters sense ritual energy.', scoring: `+${danger * 2} VP per cultist killed` },
+        taint:  { name: 'Reclaim Wild Land', goal: 'Drive corruption from territory.', method: 'Monsters can mark over Tainted ground.', scoring: `+${danger} VP per zone reclaimed` }
+      }
+    };
+    
+    const factionResponses = responses[factionId] || responses['monster_rangers'];
+    
+    if (isFire) return factionResponses.fire;
+    if (isRitual) return factionResponses.ritual;
+    if (isTaint) return factionResponses.taint;
+    
+    // Default generic response
+    return {
+      name: `Stop the ${cult.name}`,
+      goal: `Prevent cultist objective completion.`,
+      method: `Engage cultists directly.`,
+      scoring: `+${danger * 2} VP if cultists stopped`
+    };
   }
 
   getFactionObjectiveInterpretation(factionId, objective) {
@@ -1122,18 +1186,18 @@ class ScenarioBrain {
     const danger = userSelections.dangerRating;
     const canyonStateId = userSelections.canyonState || 'poisoned';
     
-    // BASE CHANCE by danger rating
+    // BASE CHANCE by danger rating - cults should be rare special events
     let baseChance = 0;
-    if (danger <= 2) baseChance = 0.05;       // 5%  — very rare at low danger
-    else if (danger === 3) baseChance = 0.10; // 10%
-    else if (danger === 4) baseChance = 0.20; // 20%
-    else if (danger === 5) baseChance = 0.45; // 45% — user-requested
-    else if (danger >= 6)  baseChance = 0.65; // 65% — user-requested
+    if (danger <= 1) baseChance = 0.03;       // 3%  — very rare
+    else if (danger === 2) baseChance = 0.05; // 5%
+    else if (danger === 3) baseChance = 0.10; // 10% — standard encounters
+    else if (danger === 4) baseChance = 0.15; // 15%
+    else if (danger === 5) baseChance = 0.20; // 20%
+    else if (danger >= 6)  baseChance = 0.30; // 30% — extreme danger
     
-    // ALWAYS appear for ritual/corruption plot types
-    const alwaysCultPlots = ['corruption_ritual'];
-    if (alwaysCultPlots.includes(plotFamily.id)) {
-      baseChance = 1.0;
+    // Corruption rituals are more likely to involve cults, but not guaranteed
+    if (plotFamily.id === 'corruption_ritual') {
+      baseChance = Math.min(1.0, baseChance * 2); // Double the chance, capped at 100%
     }
     
     // CANYON STATE modifier (haunted/exalted boost, liberated/rusted suppress)
