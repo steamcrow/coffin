@@ -314,7 +314,7 @@ class ScenarioBrain {
     console.log("\n🎭 STEP 7: EXTRAS");
     const twist = this.generateTwist(userSelections.dangerRating, location);
     const canyonState = this.getCanyonState(userSelections.canyonState);
-    const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location);
+    const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location, userSelections.factions);
     console.log("✓ Extras added");
     
     // STEP 8: Cultist Encounter
@@ -687,7 +687,7 @@ class ScenarioBrain {
         'stored_supplies':  { goal: 'The legendary heist.',                  method: 'Extract and escape with loot.',                    scoring: '+2 VP per supply' }
       },
       'monsters': {
-        'resource_extraction': { goal: 'Consume resources.',                  method: 'Monster units that consume Thyr/Livestock gain bonuses.', scoring: '+VP per resource consumed', restriction: 'Consumed resources trigger mutation rolls' },
+        'resource_extraction': { goal: 'Consume resources.',                  method: 'Monsters gain +2 VP per resource consumed.', scoring: '+2 VP per resource consumed' },
         'scattered_crates':    { goal: 'Hoard food stores.',                  method: 'Drag crates to Monster den.',                           scoring: '+2 VP per crate hoarded' },
         'land_marker':         { goal: 'Mark territory.',                     method: 'Territorial scent markers.',                            scoring: '+2 VP per marker held' },
         'ritual_circle':       { goal: 'Disrupt human ritual.',               method: 'Monsters can sense magical energies.',                  scoring: '+4 VP per site disrupted' }
@@ -925,7 +925,7 @@ class ScenarioBrain {
     return state || { name: "Unknown State", effect: "Standard rules apply." };
   }
 
-    generateFinale(plotFamily, danger, location) {
+    generateFinale(plotFamily, danger, location, factions) {
     const damage = danger + 1;
     
     // PLOT-SPECIFIC FINALE TEMPLATES
@@ -999,6 +999,22 @@ class ScenarioBrain {
     
     // Get plot-specific finales, or use generic escalation
     let finalePool = plotFinales[plotFamily.id];
+    
+    // Filter finales based on which factions are playing
+    if (finalePool && finalePool.length > 0 && factions) {
+      const factionIds = factions.map(f => f.id);
+      const hasHumans = factionIds.some(id => id !== 'monsters' && id !== 'crow_queen');
+      const hasMachines = factionIds.some(id => id === 'liberty_corps' || id === 'monsterology');
+      
+      finalePool = finalePool.filter(finale => {
+        // "REINFORCEMENT TRAIN" only works if someone operates trains
+        if (finale.title === 'REINFORCEMENT TRAIN') {
+          return hasMachines || hasHumans;
+        }
+        // All other finales work for everyone
+        return true;
+      });
+    }
     
     if (!finalePool || finalePool.length === 0) {
       // Fallback to danger-based generic finales
