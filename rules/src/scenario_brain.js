@@ -20,6 +20,844 @@ const CULT_REGISTRY = [
 ];
 
 // ================================
+// PRESSURE TRACKS - Cults as Environmental Forces
+// ================================
+// Cults create escalating pressure, not strategic opposition
+// They are weather, infection, entropy - inevitable forces
+const PRESSURE_TRACKS = {
+  'sons_of_ralu': {
+    type: 'chaos_escalation',
+    label: 'Chaos Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null, // Doesn't consume resources, just spreads
+    thresholds: {
+      2: { effect: 'minor_mutations', desc: 'Strange growths appear on terrain', forces_cooperation: false },
+      4: { effect: 'major_instability', desc: 'Reality becomes unstable - all terrain Difficult', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Chaos unleashed - location becomes Wild', world_scar: 'Wild' }
+    },
+    visual: 'Chaos corruption markers spread across board',
+    player_experience: 'Terrain and units behave unpredictably'
+  },
+  
+  'new_children_of_tzul': {
+    type: 'necromantic_rise',
+    label: 'Undead Rising',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'shambling_dead', desc: 'Undead servants spawn at burial sites', forces_cooperation: false },
+      4: { effect: 'tzul_awakening', desc: 'Ancient Tzul warriors rise - hostile to all', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Tzul King manifests - everyone loses', world_scar: 'Haunted' }
+    },
+    visual: 'Undead models appear at ritual markers',
+    player_experience: 'Fighting on two fronts - factions AND undead'
+  },
+  
+  'burning_choir': {
+    type: 'fire_spread',
+    label: 'Flames Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'smoke_penalty', desc: 'Smoke obscures battlefield - ranged attacks -1 die', forces_cooperation: false },
+      4: { effect: 'inferno', desc: 'Buildings collapse, terrain destroyed', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Scorched earth - location becomes Depleted', world_scar: 'Scorched' }
+    },
+    visual: 'Fire tokens spread each round',
+    player_experience: 'Shrinking battlefield, forced movement'
+  },
+  
+  'children_of_hollow': {
+    type: 'reality_erosion',
+    label: 'Void Incursion',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'void_whispers', desc: 'Models must pass Will checks or Act Erratically', forces_cooperation: false },
+      4: { effect: 'dimensional_tears', desc: 'Random teleportation effects - models displaced', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Reality collapses - location Forbidden', world_scar: 'Forbidden' }
+    },
+    visual: 'Void rifts appear as terrain features',
+    player_experience: 'Sanity mechanics, unpredictable board state'
+  },
+  
+  'thyr_eaters': {
+    type: 'resource_consumption',
+    label: 'Thyr Depletion',
+    rate: 1,
+    max: 6,
+    consumes: 'thyr', // Actually consumes location resource
+    thresholds: {
+      2: { effect: 'crystal_dimming', desc: 'Thyr crystals pulse erratically - magic unreliable', forces_cooperation: false },
+      4: { effect: 'magical_collapse', desc: 'Thyr vein collapsing - all magical abilities -2 dice', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Dead zone - all magic fails, location Depleted', world_scar: 'Depleted' }
+    },
+    visual: 'Thyr crystal markers dim and disappear',
+    player_experience: 'Resource race - extract before depletion'
+  },
+  
+  'blighted_root': {
+    type: 'corruption_spread',
+    label: 'Blight Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'tainted_growth', desc: 'Corrupted plants grow - terrain becomes Difficult', forces_cooperation: false },
+      4: { effect: 'twisted_ecosystem', desc: 'Plants attack models - 2 damage per round in vegetation', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Permanent corruption - location becomes Tainted', world_scar: 'Tainted' }
+    },
+    visual: 'Corruption spreads from ritual sites',
+    player_experience: 'Safe zones shrink, must keep moving'
+  },
+  
+  'bone_singers': {
+    type: 'death_magic',
+    label: 'Necromantic Power',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'grave_chill', desc: 'All models -1 to Movement', forces_cooperation: false },
+      4: { effect: 'mass_resurrection', desc: 'All killed models return as hostile undead', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Death claims all - location becomes Haunted', world_scar: 'Haunted' }
+    },
+    visual: 'Killed models remain on board as threats',
+    player_experience: 'Cautious combat - kills create problems'
+  },
+  
+  'regents_faithful': {
+    type: 'dark_consecration',
+    label: 'Dark Monarchy Rising',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'whispered_oaths', desc: 'Models must resist Dominated status', forces_cooperation: false },
+      4: { effect: 'regents_gaze', desc: 'Regent Black manifests - hostile to all non-Queen factions', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Eternal allegiance - location becomes Consecrated', world_scar: 'Consecrated' }
+    },
+    visual: 'Dark obelisks rise from ground',
+    player_experience: 'Mind control effects, loyalty tests'
+  },
+  
+  // ================================
+  // AMBIENT/NON-CULT PRESSURE TRACKS
+  // These occur without cultists - natural disasters, wildlife, social unrest
+  // ================================
+  
+  'earthquake': {
+    type: 'seismic_activity',
+    label: 'Ground Shaking',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'tremors', desc: 'All terrain becomes Difficult', forces_cooperation: false },
+      4: { effect: 'major_quake', desc: 'Buildings collapse. D6 damage to models near structures.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Canyon splits open - location Fractured', world_scar: 'Fractured' }
+    },
+    visual: 'Shake table, rubble markers spread',
+    player_experience: 'Unpredictable terrain destruction, forced repositioning'
+  },
+  
+  'flash_flood': {
+    type: 'rising_water',
+    label: 'Flood Waters Rising',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'ankle_deep', desc: 'Difficult terrain. -1 Movement.', forces_cooperation: false },
+      4: { effect: 'waist_deep', desc: 'Models must swim or drown. Non-swimmers take 3 damage per round.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Location underwater - becomes Submerged', world_scar: 'Submerged' }
+    },
+    visual: 'Water level markers rise each round. Low ground disappears.',
+    player_experience: 'Race to high ground, items lost to water, drowning mechanics'
+  },
+  
+  'sandstorm': {
+    type: 'weather_hazard',
+    label: 'Sandstorm Intensifying',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'poor_visibility', desc: 'Line of Sight reduced to 12". Ranged attacks -1 die.', forces_cooperation: false },
+      4: { effect: 'blinding_storm', desc: 'Line of Sight reduced to 6". All models -2 dice to actions.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Buried alive - location becomes Desert Wastes', world_scar: 'Buried' }
+    },
+    visual: 'Visibility markers, sand drifts appear',
+    player_experience: 'Can\'t see enemies, forced into close combat, choking hazard'
+  },
+  
+  'wildfire': {
+    type: 'natural_fire',
+    label: 'Wildfire Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'smoke', desc: 'Smoke zones block line of sight. Models inside take 1 damage.', forces_cooperation: false },
+      4: { effect: 'conflagration', desc: 'Fire spreads to all vegetation. 3 damage per round in fire.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Everything burns - location becomes Scorched', world_scar: 'Scorched' }
+    },
+    visual: 'Fire spreads naturally from vegetation to vegetation',
+    player_experience: 'Natural fire without cultists - wind-driven, unpredictable'
+  },
+  
+  'monster_stampede': {
+    type: 'wildlife_threat',
+    label: 'Monster Herd Migration',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'distant_rumble', desc: 'Herd approaching. Models hear thundering hooves.', forces_cooperation: false },
+      4: { effect: 'stampede', desc: 'Herd crosses board. Models in path take 6 damage. Terrain destroyed.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Trampled - location becomes Wild', world_scar: 'Wild' }
+    },
+    visual: 'Monster herd models move across board each round',
+    player_experience: 'Avoid the herd or be trampled, terrain rearranged by passage'
+  },
+  
+  'predator_pack': {
+    type: 'wildlife_threat',
+    label: 'Predator Pack Hunting',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'stalking', desc: 'Predators watching. Models alone are Vulnerable.', forces_cooperation: false },
+      4: { effect: 'hunting', desc: 'Pack attacks isolated models. 2d6 damage per round if alone.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Pack claims territory - location becomes Wild', world_scar: 'Wild' }
+    },
+    visual: 'Predator models lurk at board edges, attack stragglers',
+    player_experience: 'Stay in groups or get picked off, horror movie vibes'
+  },
+  
+  'insect_swarm': {
+    type: 'wildlife_threat',
+    label: 'Locust Swarm',
+    rate: 1,
+    max: 6,
+    consumes: 'food',
+    thresholds: {
+      2: { effect: 'buzzing_cloud', desc: 'Swarm blocks vision. -1 die to all actions.', forces_cooperation: false },
+      4: { effect: 'devouring', desc: 'Swarm strips all vegetation. Food resources destroyed.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Famine - location becomes Depleted', world_scar: 'Depleted' }
+    },
+    visual: 'Swarm tokens spread, vegetation markers removed',
+    player_experience: 'Can\'t see through bugs, food disappears, panic sets in'
+  },
+  
+  'drought': {
+    type: 'resource_scarcity',
+    label: 'Wells Running Dry',
+    rate: 1,
+    max: 6,
+    consumes: 'clean_water',
+    thresholds: {
+      2: { effect: 'rationing', desc: 'Water scarce. -1 to Endurance checks.', forces_cooperation: false },
+      4: { effect: 'desperation', desc: 'Fighting over last water. All factions hostile to water carriers.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Total drought - location becomes Depleted', world_scar: 'Depleted' }
+    },
+    visual: 'Water sources dry up, dust spreads',
+    player_experience: 'Race for remaining water, thirst mechanics, desperation'
+  },
+  
+  'plague_outbreak': {
+    type: 'disease',
+    label: 'Plague Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'infected', desc: 'Models must pass Endurance or become Diseased (-1 to all actions).', forces_cooperation: false },
+      4: { effect: 'epidemic', desc: 'Diseased models die at end of round unless treated.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Quarantine zone - location becomes Forbidden', world_scar: 'Forbidden' }
+    },
+    visual: 'Disease tokens on models, quarantine markers',
+    player_experience: 'Infection spreads through contact, race for cure, triage decisions'
+  },
+  
+  'civilian_riot': {
+    type: 'social_pressure',
+    label: 'Civilian Panic',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'unrest', desc: 'Crowds block movement. Difficult terrain in populated areas.', forces_cooperation: false },
+      4: { effect: 'riot', desc: 'Civilians become hostile. 3d6 attack vs any faction.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Anarchy - location becomes Lawless', world_scar: 'Lawless' }
+    },
+    visual: 'Civilian models swarm streets, throw objects',
+    player_experience: 'Navigate angry mobs, protect civilians from themselves, control vs compassion'
+  },
+  
+  'toxic_spill': {
+    type: 'contamination',
+    label: 'Toxins Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'fumes', desc: 'Toxic clouds. Models in area -1 die, take 1 damage per round.', forces_cooperation: false },
+      4: { effect: 'contamination', desc: 'Ground poisoned. All terrain in area becomes Tainted.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Dead zone - location becomes Poisoned', world_scar: 'Poisoned' }
+    },
+    visual: 'Toxic cloud spreads from spill point, contaminates terrain',
+    player_experience: 'Avoid toxic zones, rescue trapped models, contain the spill'
+  },
+  
+  'ley_line_surge': {
+    type: 'magical_anomaly',
+    label: 'Wild Magic Surge',
+    rate: 1,
+    max: 6,
+    consumes: 'thyr',
+    thresholds: {
+      2: { effect: 'unpredictable', desc: 'Magic becomes erratic. All magical abilities roll twice, use worse result.', forces_cooperation: false },
+      4: { effect: 'arcane_storm', desc: 'Random magical effects each round. Roll on chaos table.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Ley line rupture - location becomes Haunted', world_scar: 'Haunted' }
+    },
+    visual: 'Magical energy arcs between terrain, random spell effects',
+    player_experience: 'Magic users endangered, unpredictable battlefield, reality bends'
+  },
+  
+  'time_distortion': {
+    type: 'temporal_anomaly',
+    label: 'Time Fracturing',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'time_slip', desc: 'Models randomly skip or repeat activations.', forces_cooperation: false },
+      4: { effect: 'temporal_chaos', desc: 'Past versions of models appear. Fight your own echoes.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Time collapses - location becomes Forbidden', world_scar: 'Forbidden' }
+    },
+    visual: 'Ghost images of models, terrain phases in/out',
+    player_experience: 'Weird time mechanics, fight past selves, causality breaks'
+  },
+  
+  'gravity_anomaly': {
+    type: 'physics_distortion',
+    label: 'Gravity Failing',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'light_gravity', desc: 'Movement +2", falling damage halved, ranged attacks -1 die.', forces_cooperation: false },
+      4: { effect: 'no_gravity', desc: 'Models float. Difficult to aim, hard to move. All actions -2 dice.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Objects torn into sky - location becomes Forbidden', world_scar: 'Forbidden' }
+    },
+    visual: 'Objects float, dust hangs in air, models drift',
+    player_experience: 'Low gravity combat, everything floats, disorienting'
+  },
+  
+  'train_derailment': {
+    type: 'industrial_disaster',
+    label: 'Runaway Train',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'warning', desc: 'Train whistle. Evacuate the rails.', forces_cooperation: false },
+      4: { effect: 'derailment', desc: 'Train crashes. 12" radius explosion. 6d6 damage at center.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Rail line destroyed - location becomes Ruined', world_scar: 'Ruined' }
+    },
+    visual: 'Train model barrels across board, crashes spectacularly',
+    player_experience: 'Countdown to impact, clear the rails, massive explosion'
+  },
+  
+  'dam_burst': {
+    type: 'infrastructure_failure',
+    label: 'Dam Failing',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'cracks_forming', desc: 'Water leaking. Low ground becomes Difficult terrain.', forces_cooperation: false },
+      4: { effect: 'structural_failure', desc: 'Dam bursts. Wall of water sweeps board. 8 damage to all in path.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Valley flooded - location becomes Submerged', world_scar: 'Submerged' }
+    },
+    visual: 'Dam cracks, water gushes, eventually massive flood wave',
+    player_experience: 'Race to evacuate low ground, stop the dam breaking, or surf the wave'
+  },
+  
+  'building_collapse': {
+    type: 'structural_failure',
+    label: 'Buildings Failing',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'unstable', desc: 'Buildings creak. Models on upper floors -1 die to actions.', forces_cooperation: false },
+      4: { effect: 'partial_collapse', desc: 'One building collapses each round. Models inside take 6 damage.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Total collapse - location becomes Ruined', world_scar: 'Ruined' }
+    },
+    visual: 'Buildings marked unstable, eventually collapse into rubble',
+    player_experience: 'Get out before it falls, rescue trapped models, navigate rubble'
+  },
+  
+  'ammunition_fire': {
+    type: 'explosive_hazard',
+    label: 'Munitions Cooking Off',
+    rate: 1,
+    max: 6,
+    consumes: 'weapons',
+    thresholds: {
+      2: { effect: 'small_arms', desc: 'Bullets cook off randomly. 1d6 damage to random model each round.', forces_cooperation: false },
+      4: { effect: 'explosives', desc: 'Artillery shells explode. 3d6 damage in 6" radius each round.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Magazine detonates - location becomes Scorched', world_scar: 'Scorched' }
+    },
+    visual: 'Random explosions, ammunition cache visibly burning',
+    player_experience: 'Unpredictable danger from all directions, firefight hazard'
+  },
+  
+  'sinkhole': {
+    type: 'geological_hazard',
+    label: 'Ground Collapsing',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'subsidence', desc: 'Ground unstable. Random 3" zones become Difficult terrain.', forces_cooperation: false },
+      4: { effect: 'major_sinkhole', desc: 'Center of board collapses. Models in area fall, take 4 damage, trapped.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Cavern opens - location becomes Fractured', world_scar: 'Fractured' }
+    },
+    visual: 'Cracks spread, ground gives way, pit appears',
+    player_experience: 'Watch your footing, rescue fallen models, avoid the pit'
+  },
+  
+  'avalanche': {
+    type: 'natural_disaster',
+    label: 'Snow Slide',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'rumbling', desc: 'Snow unstable. Loud noises risk triggering slide.', forces_cooperation: false },
+      4: { effect: 'avalanche', desc: 'Snow sweeps down slope. Models in path take 6 damage, buried.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Mountain collapses - location becomes Buried', world_scar: 'Buried' }
+    },
+    visual: 'Snow accumulates, eventually cascades down',
+    player_experience: 'Move quietly, dig out buried allies, escape the slide'
+  },
+  
+  'fungal_bloom': {
+    type: 'biological_hazard',
+    label: 'Spore Cloud Growing',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'spores', desc: 'Spore clouds spread. Models inhaling spores -1 die to actions.', forces_cooperation: false },
+      4: { effect: 'infection', desc: 'Infected models sprout mushrooms. Take 2 damage per round, spread spores.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Fungal takeover - location becomes Tainted', world_scar: 'Tainted' }
+    },
+    visual: 'Mushrooms grow, spore clouds drift, infected models bloom',
+    player_experience: 'Don\'t breathe deep, burn the infected, body horror'
+  },
+  
+  'ghost_manifestation': {
+    type: 'paranormal',
+    label: 'Spirits Awakening',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'cold_spots', desc: 'Temperature drops. Models must pass Will checks or become Frightened.', forces_cooperation: false },
+      4: { effect: 'manifestations', desc: 'Ghosts appear. Hostile to all living. 3d6 attack, incorporeal.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Permanently haunted - location becomes Haunted', world_scar: 'Haunted' }
+    },
+    visual: 'Ghost models materialize, cold mist spreads',
+    player_experience: 'Horror atmosphere, can\'t hurt ghosts normally, fear mechanics'
+  },
+  
+  'solar_flare': {
+    type: 'cosmic_event',
+    label: 'Radiation Storm',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'interference', desc: 'Communications fail. Technology -1 die to function.', forces_cooperation: false },
+      4: { effect: 'radiation', desc: 'Harmful radiation. All models take 2 damage per round outdoors.', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Irradiated - location becomes Poisoned', world_scar: 'Poisoned' }
+    },
+    visual: 'Aurora effect, technology sparks and fails',
+    player_experience: 'Get to cover, tech fails, radiation sickness'
+  }
+};
+
+// ================================
+// AMBIENT PRESSURE TRACKS - Environmental Forces (No Cult Required)
+// ================================
+// These pressures occur naturally or from accidents/disasters
+// Scenarios can have these WITHOUT cultist encounters
+const AMBIENT_PRESSURE_TRACKS = {
+  // ===== NATURAL DISASTERS =====
+  'earthquake': {
+    type: 'seismic_activity',
+    label: 'Ground Shaking',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'tremors', desc: 'Difficult terrain - all Movement -1"', forces_cooperation: false },
+      4: { effect: 'major_quake', desc: 'Buildings collapse, models take 2 damage if inside structures', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Canyon splits - location Unstable', world_scar: 'Fractured' }
+    },
+    visual: 'Terrain pieces shift position each round',
+    player_experience: 'Unstable footing, buildings dangerous, forced repositioning'
+  },
+  
+  'flash_flood': {
+    type: 'rising_water',
+    label: 'Flood Waters Rising',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'ankle_deep', desc: 'Difficult terrain, all Movement -2"', forces_cooperation: false },
+      4: { effect: 'waist_deep', desc: 'Models must pass Athletics or be swept away', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Total submersion - location Drowned', world_scar: 'Submerged' }
+    },
+    visual: 'Water level markers rise, low terrain becomes impassable',
+    player_experience: 'Race to high ground, equipment lost to water, drowning mechanics'
+  },
+  
+  'landslide': {
+    type: 'terrain_collapse',
+    label: 'Canyon Wall Collapsing',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'rockfall', desc: 'Random rocks fall - 3 damage to models in 6" zone', forces_cooperation: false },
+      4: { effect: 'major_slide', desc: 'Half the board becomes Impassable rubble', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Location buried - becomes Forbidden', world_scar: 'Buried' }
+    },
+    visual: 'Rubble tokens spread from one board edge inward',
+    player_experience: 'Shrinking safe zones, forced movement away from collapse'
+  },
+  
+  'sinkhole': {
+    type: 'ground_collapse',
+    label: 'Ground Opening Up',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'small_holes', desc: 'Random 3" zones become Dangerous Terrain', forces_cooperation: false },
+      4: { effect: 'massive_sinkhole', desc: 'Center 12" becomes pit - models fall take 6 damage', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Entire location collapses into caverns below', world_scar: 'Hollow' }
+    },
+    visual: 'Growing pit in center of board',
+    player_experience: 'Avoid the center, objectives become unreachable'
+  },
+  
+  // ===== WEATHER & ENVIRONMENTAL =====
+  'dust_storm': {
+    type: 'visibility_loss',
+    label: 'Dust Storm Intensifying',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'reduced_visibility', desc: 'Line of Sight limited to 12"', forces_cooperation: false },
+      4: { effect: 'blinding_storm', desc: 'Cannot see beyond 6", ranged attacks impossible', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Complete whiteout - location lost', world_scar: 'Buried' }
+    },
+    visual: 'Visibility markers shrink radius each round',
+    player_experience: 'Forced close combat, objectives hidden'
+  },
+  
+  'heat_wave': {
+    type: 'extreme_temperature',
+    label: 'Scorching Heat',
+    rate: 1,
+    max: 6,
+    consumes: 'clean_water',
+    thresholds: {
+      2: { effect: 'exhaustion', desc: 'All models -1 to Athletics checks', forces_cooperation: false },
+      4: { effect: 'heat_stroke', desc: 'Models take 1 damage per round in direct sun', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Fatal temperatures - location Scorched', world_scar: 'Scorched' }
+    },
+    visual: 'Shade zones shrink, water sources dry up',
+    player_experience: 'Must stay in shade, water becomes critical resource'
+  },
+  
+  'blizzard': {
+    type: 'extreme_cold',
+    label: 'Freezing Temperatures',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'frostbite', desc: 'Models take -1 to Dexterity checks', forces_cooperation: false },
+      4: { effect: 'hypothermia', desc: 'Models take 2 damage per round without heat source', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Everything freezes - location becomes Frozen', world_scar: 'Frozen' }
+    },
+    visual: 'Ice tokens spread, movement becomes treacherous',
+    player_experience: 'Must find/create heat sources, slippery terrain'
+  },
+  
+  'toxic_fog': {
+    type: 'poison_cloud',
+    label: 'Toxic Gas Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'choking_gas', desc: 'Models in fog take -1 die to all actions', forces_cooperation: false },
+      4: { effect: 'deadly_toxin', desc: 'Models in fog take 3 damage per round', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Lethal atmosphere - location Poisoned permanently', world_scar: 'Poisoned' }
+    },
+    visual: 'Gas cloud tokens expand from source',
+    player_experience: 'Avoid the gas, need gas masks or high ground'
+  },
+  
+  // ===== WILDLIFE & ECOLOGICAL =====
+  'monster_stampede': {
+    type: 'wildlife_threat',
+    label: 'Monster Herd Migration',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'scouts', desc: 'Individual monsters appear at board edges', forces_cooperation: false },
+      4: { effect: 'main_herd', desc: 'Stampede crosses board - 6 damage if in path', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Trampled flat - location Wild', world_scar: 'Wild' }
+    },
+    visual: 'Monster miniatures cross board following migration path',
+    player_experience: 'Get out of the way or fight monsters + enemies'
+  },
+  
+  'swarm': {
+    type: 'insect_plague',
+    label: 'Locust Swarm',
+    rate: 1,
+    max: 6,
+    consumes: 'livestock',
+    thresholds: {
+      2: { effect: 'harassment', desc: 'Ranged attacks -1 die due to insects', forces_cooperation: false },
+      4: { effect: 'devouring', desc: 'All vegetation destroyed, visibility reduced', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'All organic resources consumed - location Depleted', world_scar: 'Depleted' }
+    },
+    visual: 'Swarm tokens cover terrain, livestock markers removed',
+    player_experience: 'Cannot see through swarm, ranged attacks useless, resources vanishing'
+  },
+  
+  'predator_pack': {
+    type: 'apex_predator',
+    label: 'Kaiju Territory',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'stalking', desc: 'Predator tracks visible, anxiety rising', forces_cooperation: false },
+      4: { effect: 'attack', desc: 'Kaiju appears and attacks nearest models', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Kaiju claims territory - location Wild', world_scar: 'Wild' }
+    },
+    visual: 'Kaiju miniature hunts players, ignores faction allegiance',
+    player_experience: 'All factions vs one massive threat'
+  },
+  
+  'blight_spread': {
+    type: 'disease_natural',
+    label: 'Crop Blight',
+    rate: 1,
+    max: 6,
+    consumes: 'food',
+    thresholds: {
+      2: { effect: 'wilting', desc: 'Plant life dying, food scarce', forces_cooperation: false },
+      4: { effect: 'famine', desc: 'No food sources remain, desperation sets in', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Ecological collapse - location Depleted', world_scar: 'Depleted' }
+    },
+    visual: 'Vegetation markers removed, farms destroyed',
+    player_experience: 'Fighting over remaining food'
+  },
+  
+  // ===== RESOURCE SCARCITY =====
+  'water_shortage': {
+    type: 'resource_depletion',
+    label: 'Wells Running Dry',
+    rate: 1,
+    max: 6,
+    consumes: 'clean_water',
+    thresholds: {
+      2: { effect: 'rationing', desc: 'Water sources halved in value', forces_cooperation: false },
+      4: { effect: 'desperation', desc: 'Last water source - all factions converge', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Complete drought - location Depleted', world_scar: 'Depleted' }
+    },
+    visual: 'Water markers removed one by one',
+    player_experience: 'Racing to secure last water before depleted'
+  },
+  
+  'mine_collapse': {
+    type: 'infrastructure_failure',
+    label: 'Mine Caving In',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'partial_collapse', desc: 'Tunnels blocked, some resources trapped', forces_cooperation: false },
+      4: { effect: 'major_collapse', desc: 'Mine entrance sealed, models inside trapped', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Total collapse - location Buried', world_scar: 'Buried' }
+    },
+    visual: 'Cave entrance closes progressively',
+    player_experience: 'Extract resources before tunnel closes'
+  },
+  
+  'thyr_surge': {
+    type: 'magical_overload',
+    label: 'Thyr Crystal Overload',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'radiation', desc: 'Magical abilities unpredictable, roll twice for spell effects', forces_cooperation: false },
+      4: { effect: 'crystal_explosion', desc: 'Random crystals explode - 4 damage in 6" radius', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Magical dead zone - location Depleted', world_scar: 'Depleted' }
+    },
+    visual: 'Crystals pulse and crack, emit dangerous light',
+    player_experience: 'Magic is dangerous, crystals are bombs'
+  },
+  
+  // ===== SOCIAL/CIVILIAN =====
+  'civilian_panic': {
+    type: 'social_pressure',
+    label: 'Mass Hysteria',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'unrest', desc: 'Civilians block movement, create difficult terrain', forces_cooperation: false },
+      4: { effect: 'riot', desc: 'Civilians become hostile - attack nearest armed models', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Total anarchy - location Lawless', world_scar: 'Lawless' }
+    },
+    visual: 'Civilian miniatures spread chaos',
+    player_experience: 'Cannot harm civilians but they block path and attack'
+  },
+  
+  'mass_exodus': {
+    type: 'refugee_crisis',
+    label: 'Civilian Evacuation',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'crowding', desc: 'Civilians fleeing - movement reduced', forces_cooperation: false },
+      4: { effect: 'trampling', desc: 'Stampede - 3 damage if in crowd path', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Ghost town - location Abandoned', world_scar: 'Abandoned' }
+    },
+    visual: 'Civilians stream toward one board edge',
+    player_experience: 'Protect/ignore/exploit fleeing civilians'
+  },
+  
+  // ===== INDUSTRIAL/MECHANICAL =====
+  'train_derailment': {
+    type: 'ongoing_disaster',
+    label: 'Train Wreck Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'initial_crash', desc: 'Cargo spills, creates hazardous terrain', forces_cooperation: false },
+      4: { effect: 'secondary_explosions', desc: 'Boiler explodes - 8 damage in 12" radius', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Rails destroyed - location Isolated', world_scar: 'Isolated' }
+    },
+    visual: 'Train cars pile up, fire and wreckage spread',
+    player_experience: 'Loot the cargo while avoiding explosions'
+  },
+  
+  'dam_breach': {
+    type: 'infrastructure_catastrophe',
+    label: 'Dam Breaking',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'cracks_forming', desc: 'Water seepage, some terrain flooding', forces_cooperation: false },
+      4: { effect: 'major_breach', desc: 'Wall of water - 10 damage to models in path', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Total flood - location Drowned', world_scar: 'Submerged' }
+    },
+    visual: 'Water flows from one direction, intensifying each round',
+    player_experience: 'See it coming, must evacuate or drown'
+  },
+  
+  'clockwork_malfunction': {
+    type: 'technology_failure',
+    label: 'Automated Defenses Gone Haywire',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'targeting_errors', desc: 'Turrets fire randomly - 2 damage to random models', forces_cooperation: false },
+      4: { effect: 'full_hostile', desc: 'All automated systems attack everyone', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Self-destruct sequence - location Destroyed', world_scar: 'Ruins' }
+    },
+    visual: 'Automated turrets, robots, traps activate',
+    player_experience: 'Environment itself is the enemy'
+  },
+  
+  // ===== TEMPORAL/ANOMALOUS =====
+  'time_distortion': {
+    type: 'temporal_anomaly',
+    label: 'Time Flowing Erratically',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'time_hiccup', desc: 'Some models move twice, some skip turn (roll)', forces_cooperation: false },
+      4: { effect: 'temporal_chaos', desc: 'Turn order randomizes, actions unpredictable', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Frozen in time - location Suspended', world_scar: 'Timeless' }
+    },
+    visual: 'Models flicker, appear in multiple places',
+    player_experience: 'Turn order unpredictable, actions unreliable, reality unstable'
+  },
+  
+  'reality_tear': {
+    type: 'dimensional_breach',
+    label: 'Barrier Between Worlds Weakening',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'glimpses', desc: 'Models see alternate realities, -1 to Will checks', forces_cooperation: false },
+      4: { effect: 'breach_opens', desc: 'Things from other dimensions emerge', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Dimensions merge - location Warped', world_scar: 'Otherworldly' }
+    },
+    visual: 'Rift markers expand, strange creatures appear',
+    player_experience: 'Fighting enemies + dimensional horrors'
+  },
+  
+  'ghost_manifestation': {
+    type: 'spiritual_pressure',
+    label: 'Vengeful Spirits Rising',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'haunting', desc: 'Cold spots, unnatural fear, -1 to Morale', forces_cooperation: false },
+      4: { effect: 'possession', desc: 'Ghosts possess models - opposed Will checks', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Spirit realm overlaps - location Haunted', world_scar: 'Haunted' }
+    },
+    visual: 'Ghostly miniatures phase in and out',
+    player_experience: 'Fighting incorporeal enemies and possession'
+  }
+};
+
+// ================================
+
+// ================================
 // CULT OBJECTIVES — What the cultists are trying to DO
 // Each has a turn limit (how long players have to stop them)
 // ================================
@@ -173,6 +1011,7 @@ const TERRAIN_MAP = {
 // ================================
 // PRESSURE LABELS — human-readable versions of plotFamily pressure IDs
 // ================================
+
 const PRESSURE_PRETTY = {
   'ritual_misuse':          'ritual misuse',
   'belief_conflict':        'a clash of beliefs',
@@ -207,6 +1046,258 @@ const CULTIST_TERRAIN_MARKERS = {
   'harvest_living_souls':    ['Soul Engine', 'Captive Cages (x3)'],
   'grow_the_blight':         ['Blight Heart Marker'],
   'summon_canyon_titan':     ['Summoning Pillars (x3)']
+};
+
+// ================================
+// OBJECTIVE BUILDERS - Strategy Pattern
+// ================================
+const OBJECTIVE_BUILDERS = {
+  'wrecked_engine': (loc, danger, vpSpread) => ({
+    name: 'Salvage Wrecked Engine',
+    description: `Extract mechanical components from abandoned machinery at ${loc.name}.`,
+    target_value: Math.min(3, danger),
+    progress_label: 'Components',
+    vp_per_unit: 3
+  }),
+  'scattered_crates': (loc, danger, vpSpread) => ({
+    name: 'Recover Supply Crates',
+    description: `Collect scattered supply crates across the battlefield at ${loc.name}.`,
+    target_value: danger + 1,
+    progress_label: 'Crates',
+    vp_per_unit: 2
+  }),
+  'ritual_circle': (loc, danger, vpSpread) => ({
+    name: 'Control Ritual Site',
+    description: `Maintain control of the ritual circle at ${loc.name} to channel its power.`,
+    target_value: danger,
+    progress_label: 'Rituals',
+    vp_per_unit: 4
+  }),
+  'land_marker': (loc, danger, vpSpread) => ({
+    name: 'Establish Territory',
+    description: `Plant territorial markers at ${loc.name} and hold them.`,
+    target_value: 3,
+    progress_label: 'Rounds',
+    vp_per_unit: vpSpread.ticker.primary_per_vp
+  }),
+  'fortified_position': (loc, danger, vpSpread) => ({
+    name: 'Hold Fortified Position',
+    description: `Maintain control of the defensive structure at ${loc.name}.`,
+    target_value: 3,
+    progress_label: 'Rounds',
+    vp_per_unit: vpSpread.ticker.primary_per_vp
+  }),
+  'stored_supplies': (loc, danger, vpSpread) => ({
+    name: 'Raid Supply Depot',
+    description: `Extract stockpiled goods from the depot at ${loc.name}.`,
+    target_value: danger + 1,
+    progress_label: 'Supplies',
+    vp_per_unit: 2
+  }),
+  'artifact': (loc, danger, vpSpread) => ({
+    name: 'Recover Ancient Artifact',
+    description: `Secure mysterious artifact of unknown power from ${loc.name}.`,
+    target_value: 1,
+    progress_label: 'Artifact',
+    vp_per_unit: 8
+  }),
+  'tainted_ground': (loc, danger, vpSpread) => ({
+    name: 'Cleanse Tainted Ground',
+    description: `Purify corrupted territory at ${loc.name}.`,
+    target_value: Math.max(2, danger - 1),
+    progress_label: 'Sites Cleansed',
+    vp_per_unit: 4
+  }),
+  'resource_extraction': (loc, danger, vpSpread, extra) => ({
+    name: `Extract ${extra.name}`,
+    description: `Secure valuable ${extra.name.toLowerCase()} from ${loc.name}.`,
+    target_value: extra.amount,
+    progress_label: extra.name,
+    vp_per_unit: extra.vp
+  })
+};
+
+// ================================
+// VP SCORING SYSTEMS - Data-Driven Configuration
+// ================================
+const VP_SYSTEMS = {
+  'extraction_heist': {
+    primary: 'Items Extracted',
+    primary_vp: 3,
+    bonus: 'Speed Bonus',
+    bonus_vp: 1,
+    ticker_primary: 2,
+    ticker_bonus: 1
+  },
+  'claim_and_hold': {
+    primary: 'Rounds Controlled',
+    primary_vp: 2,
+    bonus: 'Consecutive Control',
+    bonus_vp: 3,
+    ticker_primary: 2,
+    ticker_bonus: 2
+  },
+  'corruption_ritual': {
+    primary: 'Rituals Disrupted',
+    primary_vp: 4,
+    bonus: 'Taint Cleansed',
+    bonus_vp: 2,
+    ticker_primary: 4,
+    ticker_bonus: 1
+  },
+  'ambush_derailment': {
+    primary: 'Cargo Secured',
+    primary_vp: 3,
+    bonus: 'Ambush Success',
+    bonus_vp: 2,
+    ticker_primary: 3,
+    ticker_bonus: 1
+  },
+  'siege_standoff': {
+    primary: 'Defenses Held',
+    primary_vp: 2,
+    bonus: 'Breach Points',
+    bonus_vp: 3,
+    ticker_primary: 2,
+    ticker_bonus: 2
+  },
+  'escort_run': {
+    primary: 'Cargo Delivered',
+    primary_vp: 4,
+    bonus: 'Zero Casualties',
+    bonus_vp: 3,
+    ticker_primary: 3,
+    ticker_bonus: 2
+  },
+  'sabotage_strike': {
+    primary: 'Targets Destroyed',
+    primary_vp: 4,
+    bonus: 'Clean Escape',
+    bonus_vp: 2,
+    ticker_primary: 3,
+    ticker_bonus: 1
+  },
+  'natural_disaster_response': {
+    primary: 'Civilians Saved',
+    primary_vp: 3,
+    bonus: 'Resources Secured',
+    bonus_vp: 2,
+    ticker_primary: 2,
+    ticker_bonus: 1
+  }
+};
+
+// Faction-Plot Affinity Map (for faster plot selection)
+const FACTION_PLOT_AFFINITIES = {
+  'monster_rangers': {
+    'corruption_ritual': 3,
+    'natural_disaster_response': 2,
+    'escort_run': 2
+  },
+  'liberty_corps': {
+    'claim_and_hold': 2,
+    'siege_standoff': 2,
+    'escort_run': 1
+  },
+  'monsterology': {
+    'extraction_heist': 2,
+    'corruption_ritual': 2,
+    'sabotage_strike': 1
+  },
+  'shine_riders': {
+    'extraction_heist': 2,
+    'sabotage_strike': 2,
+    'ambush_derailment': 1
+  },
+  'crow_queen': {
+    'corruption_ritual': 2,
+    'claim_and_hold': 1,
+    'siege_standoff': 1
+  },
+  'monsters': {
+    'natural_disaster_response': 2,
+    'ambush_derailment': 1
+  }
+};
+
+// ================================
+// FACTION THEMES - Asymmetric Motivations
+// ================================
+// Defines how each faction responds to pressure and resources
+const FACTION_THEMES = {
+  'monster_rangers': {
+    primary_theme: 'Protect the Wild',
+    pressure_stance: 'containment', // Tries to slow/stop pressure
+    resource_priorities: ['livestock', 'clean_water', 'wildlife'],
+    tactical_asset: {
+      name: 'Ranger Outpost',
+      effect: 'Pressure rate -1 within 6"',
+      destruction_vp: 3,
+      pressure_limit: 5 // Fails if pressure >= 5
+    }
+  },
+  
+  'liberty_corps': {
+    primary_theme: 'Federal Control',
+    pressure_stance: 'containment',
+    resource_priorities: ['weapons', 'supplies', 'communications'],
+    tactical_asset: {
+      name: 'Field Communications Relay',
+      effect: '+1 die to nearby Federal units',
+      destruction_vp: 3,
+      pressure_limit: 4
+    }
+  },
+  
+  'monsterology': {
+    primary_theme: 'Scientific Progress',
+    pressure_stance: 'exploitation', // Benefits from moderate pressure
+    resource_priorities: ['thyr', 'specimens', 'mechanical_parts'],
+    exploitation_sweet_spot: [3, 5], // Benefits most at pressure 3-5
+    tactical_asset: {
+      name: 'Extraction Rig',
+      effect: '+1 die to resource extraction actions',
+      destruction_vp: 4,
+      pressure_limit: 6
+    }
+  },
+  
+  'shine_riders': {
+    primary_theme: 'Profit from Chaos',
+    pressure_stance: 'opportunist', // Benefits from any pressure
+    resource_priorities: ['valuables', 'contraband', 'weapons'],
+    tactical_asset: {
+      name: 'Hidden Cache',
+      effect: 'Can stash stolen goods mid-game',
+      destruction_vp: 2,
+      pressure_limit: 6 // Riders adapt to anything
+    }
+  },
+  
+  'crow_queen': {
+    primary_theme: 'Establish Dominion',
+    pressure_stance: 'redirection', // Converts pressure to control
+    resource_priorities: ['territory', 'followers', 'relics'],
+    tactical_asset: {
+      name: 'Consecration Obelisk',
+      effect: 'Terrain within 6" becomes Consecrated',
+      destruction_vp: 4,
+      pressure_limit: 5,
+      pressure_interaction: 'Converts pressure into territory control'
+    }
+  },
+  
+  'monsters': {
+    primary_theme: 'Reclaim Territory',
+    pressure_stance: 'adaptive', // Responds based on pressure type
+    resource_priorities: ['food', 'territory', 'safety'],
+    tactical_asset: {
+      name: 'Monster Den',
+      effect: 'Spawns additional Monster units at pressure thresholds',
+      destruction_vp: 3,
+      pressure_limit: 6
+    }
+  }
 };
 
 class ScenarioBrain {
@@ -479,6 +1570,7 @@ class ScenarioBrain {
     plots.forEach(plot => {
       let score = 0;
       
+      // Resource matching
       if (location.resources && plot.primary_resources) {
         plot.primary_resources.forEach(res => {
           if (location.resources[res] && location.resources[res] > 0) {
@@ -487,6 +1579,7 @@ class ScenarioBrain {
         });
       }
       
+      // Location type matching
       if (location.type_ref) {
         if (location.type_ref.includes('fortress') && plot.id === 'siege_standoff') score += 4;
         if (location.type_ref.includes('pass') && plot.id === 'escort_run') score += 4;
@@ -494,10 +1587,10 @@ class ScenarioBrain {
         if (location.type_ref.includes('mine') && plot.id === 'extraction_heist') score += 4;
       }
       
+      // Faction affinity scoring using data-driven map
       userSelections.factions.forEach(faction => {
-        if (faction.id === 'monster_rangers' && plot.id === 'corruption_ritual') score += 3;
-        if (faction.id === 'liberty_corps' && plot.id === 'claim_and_hold') score += 2;
-        if (faction.id === 'shine_riders' && (plot.id === 'extraction_heist' || plot.id === 'sabotage_strike')) score += 2;
+        const affinity = FACTION_PLOT_AFFINITIES[faction.id]?.[plot.id] || 0;
+        score += affinity;
       });
       
       if (score > maxScore) {
@@ -530,24 +1623,21 @@ class ScenarioBrain {
   calculateVPSpread(plotId, danger) {
     const target = 10 + (danger * 2);
     
-    const systems = {
-      'extraction_heist':            { primary: 'Items Extracted',    pVal: 3, bonus: 'Speed Bonus',        bVal: 1 },
-      'claim_and_hold':              { primary: 'Rounds Controlled',  pVal: 2, bonus: 'Consecutive Control', bVal: 3 },
-      'ambush_derailment':           { primary: 'Crates Salvaged',    pVal: 2, bonus: 'Wreckage Secured',    bVal: 5 },
-      'siege_standoff':              { primary: 'Rounds Survived',    pVal: 3, bonus: 'Elite Kills',         bVal: 2 },
-      'escort_run':                  { primary: 'Distance Traveled',  pVal: 1, bonus: 'Cargo Intact',        bVal: 5 },
-      'corruption_ritual':           { primary: 'Rituals Complete',   pVal: 4, bonus: 'Disruptions',         bVal: 3 },
-      'natural_disaster_response':   { primary: 'Units Evacuated',    pVal: 2, bonus: 'Resources Saved',     bVal: 3 },
-      'sabotage_strike':             { primary: 'Systems Disabled',   pVal: 3, bonus: 'Stealth Bonus',       bVal: 2 }
+    // Use data-driven VP system from registry
+    const sys = VP_SYSTEMS[plotId] || {
+      primary: 'Objectives Complete',
+      primary_vp: 2,
+      bonus: 'Enemy Eliminated',
+      bonus_vp: 1,
+      ticker_primary: 2,
+      ticker_bonus: 1
     };
-    
-    const sys = systems[plotId] || { primary: 'Objectives Complete', pVal: 2, bonus: 'Enemy Eliminated', bVal: 1 };
     
     return {
       target_to_win: target,
-      scoring_rule: `${sys.pVal} VP per ${sys.primary}`,
-      bonus_rule: `${sys.bVal} VP per ${sys.bonus}`,
-      formula: `(${sys.primary} × ${sys.pVal}) + (${sys.bonus} × ${sys.bVal})`,
+      scoring_rule: `${sys.primary_vp} VP per ${sys.primary}`,
+      bonus_rule: `${sys.bonus_vp} VP per ${sys.bonus}`,
+      formula: `(${sys.primary} × ${sys.primary_vp}) + (${sys.bonus} × ${sys.bonus_vp})`,
       thresholds: {
         minor_victory: Math.floor(target * 0.6),
         major_victory: target,
@@ -555,9 +1645,9 @@ class ScenarioBrain {
       },
       ticker: {
         primary_label: sys.primary,
-        primary_per_vp: sys.pVal,
+        primary_per_vp: sys.ticker_primary,
         bonus_label: sys.bonus,
-        bonus_per_vp: sys.bVal
+        bonus_per_vp: sys.ticker_bonus
       }
     };
   }
@@ -595,16 +1685,18 @@ class ScenarioBrain {
         const resource = this.randomChoice(highValueResources);
         const amount = location.resources[resource];
         const prettyName = this.formatResourceName(resource);
-        objectives.push({
-          name: `Extract ${prettyName}`,
-          description: `Secure valuable ${prettyName.toLowerCase()} stockpile from ${location.name}`,
-          type: 'resource_extraction',
-          target_value: Math.min(amount, danger + 2),
-          progress_label: prettyName,
-          vp_per_unit: this.getResourceVP(resource),
-          max_vp: Math.min(amount, danger + 2) * this.getResourceVP(resource)
+        
+        // Use buildObjective with extraData for resource extraction
+        const obj = this.buildObjective('resource_extraction', location, danger, vpSpread, {
+          name: prettyName,
+          amount: Math.min(amount, danger + 2),
+          vp: this.getResourceVP(resource)
         });
-        usedTypes.add('resource_extraction');
+        
+        if (obj) {
+          objectives.push(obj);
+          usedTypes.add('resource_extraction');
+        }
       }
     }
     
@@ -627,30 +1719,19 @@ class ScenarioBrain {
     return objectives;
   }
   
-  buildObjective(type, location, danger, vpSpread) {
-    const templates = {
-      'wrecked_engine':      { name: 'Salvage Wrecked Engine',     desc: 'Extract mechanical components from abandoned machinery.',   target: Math.min(3, danger), label: 'Components', vp: 3 },
-      'scattered_crates':    { name: 'Recover Supply Crates',      desc: 'Collect scattered supply crates across the battlefield.',    target: danger + 1,          label: 'Crates',     vp: 2 },
-      'ritual_circle':       { name: 'Control Ritual Site',        desc: 'Maintain control of the ritual circle to channel its power.',target: danger,              label: 'Rituals',    vp: 4 },
-      'land_marker':         { name: 'Establish Territory',        desc: 'Plant territorial markers and hold them.',                   target: 3,                   label: 'Rounds',     vp: vpSpread.ticker.primary_per_vp },
-      'fortified_position':  { name: 'Hold Fortified Position',    desc: 'Maintain control of the defensive structure.',              target: 3,                   label: 'Rounds',     vp: vpSpread.ticker.primary_per_vp },
-      'stored_supplies':     { name: 'Raid Supply Depot',          desc: 'Extract stockpiled goods from the depot.',                  target: danger + 1,          label: 'Supplies',   vp: 2 },
-      'artifact':            { name: 'Recover Ancient Artifact',   desc: 'Secure mysterious artifact of unknown power.',              target: 1,                   label: 'Artifact',   vp: 8 },
-      'tainted_ground':      { name: 'Cleanse Tainted Ground',     desc: 'Purify corrupted territory.',                               target: Math.max(2, danger - 1), label: 'Sites Cleansed', vp: 4 }
-    };
+  buildObjective(type, location, danger, vpSpread, extraData = {}) {
+    // Use strategy pattern - each builder function handles its own logic
+    const builder = OBJECTIVE_BUILDERS[type];
+    if (!builder) return null;
     
-    const t = templates[type];
-    if (!t) return null;
+    // Call builder function with context
+    const obj = builder(location, danger, vpSpread, extraData);
     
-    return {
-      name: t.name,
-      description: t.desc,
-      type: type,
-      target_value: t.target,
-      progress_label: t.label,
-      vp_per_unit: t.vp,
-      max_vp: t.target * t.vp
-    };
+    // Add common fields
+    obj.type = type;
+    obj.max_vp = obj.target_value * obj.vp_per_unit;
+    
+    return obj;
   }
 
   getResourceVP(resource) {
@@ -721,61 +1802,213 @@ class ScenarioBrain {
   // Generate faction-specific response to cultist threat
   generateCultistResponseObjective(factionId, cultistEncounter, danger) {
     const cult = cultistEncounter.cult;
-    const objective = cultistEncounter.objective;
+    const pressure = cultistEncounter.pressure;
+    const factionTheme = FACTION_THEMES[factionId];
     
-    // Detect threat type from cultist objective
-    const isFire = objective.description.toLowerCase().includes('fire') || objective.description.toLowerCase().includes('burn');
-    const isRitual = objective.description.toLowerCase().includes('ritual') || objective.description.toLowerCase().includes('summon');
-    const isTaint = objective.description.toLowerCase().includes('taint') || objective.description.toLowerCase().includes('corrupt');
+    if (!factionTheme) {
+      console.warn(`No theme found for faction: ${factionId}`);
+      return null;
+    }
     
-    const responses = {
-      'monster_rangers': {
-        fire:   { name: 'Extinguish the Flames', goal: 'Protect civilians and wildlife from the spreading fire.', method: 'Deploy water sources. Rangers gain +1 die near fire zones.', scoring: `+${danger * 2} VP per fire source extinguished` },
-        ritual: { name: 'Disrupt the Ritual', goal: 'Prevent cultist ritual completion.', method: 'Dark Librarian can counter-ritual.', scoring: `+${danger * 2} VP if ritual prevented` },
-        taint:  { name: 'Contain the Corruption', goal: 'Prevent Taint from spreading.', method: 'Rangers can cleanse corrupted ground.', scoring: `+${danger} VP per Tainted zone cleansed` }
+    // Detect pressure type and generate stance-appropriate response
+    const pressureType = pressure.type;
+    const stance = factionTheme.pressure_stance;
+    const theme = factionTheme.primary_theme;
+    
+    // Build objectives based on faction stance toward this pressure type
+    if (stance === 'containment') {
+      return this.generateContainmentObjective(pressureType, theme, danger, pressure);
+    } else if (stance === 'exploitation') {
+      return this.generateExploitationObjective(pressureType, theme, danger, pressure);
+    } else if (stance === 'opportunist') {
+      return this.generateOpportunistObjective(pressureType, theme, danger, pressure);
+    } else if (stance === 'redirection') {
+      return this.generateRedirectionObjective(pressureType, theme, danger, pressure);
+    } else if (stance === 'adaptive') {
+      return this.generateAdaptiveObjective(pressureType, theme, danger, pressure);
+    }
+    
+    // Fallback
+    return {
+      name: `Respond to ${pressure.label}`,
+      goal: `Deal with the ${cult.name} threat.`,
+      method: `Engage cult directly.`,
+      scoring: `+${danger * 2} VP if pressure contained`
+    };
+  }
+  
+  // Containment stance - slow or stop pressure
+  generateContainmentObjective(pressureType, theme, danger, pressure) {
+    const containmentMap = {
+      'fire_spread': {
+        name: 'Extinguish the Flames',
+        goal: `${theme}: Protect from fire`,
+        method: 'Deploy water sources. +1 die near fire zones.',
+        scoring: `+${danger * 2} VP per fire source extinguished`,
+        effect: 'pressure_rate - 1 when active'
       },
-      'liberty_corps': {
-        fire:   { name: 'Establish Firebreaks', goal: 'Coordinate firefighting efforts.', method: 'Corps units can create firebreak barriers.', scoring: `+${danger * 2} VP per fire source contained` },
-        ritual: { name: 'Federal Intervention', goal: 'Arrest cultists and seize ritual components.', method: 'Gain +1 die when engaging cultists.', scoring: `+${danger * 2} VP per cultist eliminated` },
-        taint:  { name: 'Quarantine the Zone', goal: 'Establish containment perimeter.', method: 'Deploy barrier units.', scoring: `+${danger} VP per zone quarantined` }
+      'resource_consumption': {
+        name: 'Protect the Resource',
+        goal: `${theme}: Preserve ${pressure.consumes}`,
+        method: 'Guard resource locations. Slow consumption.',
+        scoring: `+${danger * 2} VP if consumption slowed`,
+        effect: 'pressure_rate - 1 when guarding'
       },
-      'monsterology': {
-        fire:   { name: 'Harvest Fire Energy', goal: 'Extract magical energy from the flames.', method: 'Fire grants bonus Thyr when harvested.', scoring: `+${danger} VP per fire source controlled` },
-        ritual: { name: 'Study the Ritual', goal: 'Document cultist techniques.', method: 'Monsterology gains research data from ritual sites.', scoring: `+${danger * 2} VP if ritual observed` },
-        taint:  { name: 'Extract Taint Samples', goal: 'Collect corrupted materials for study.', method: 'Taint can be harvested as resource.', scoring: `+${danger} VP per Taint sample collected` }
+      'necromantic_rise': {
+        name: 'Suppress the Undead',
+        goal: `${theme}: Prevent undead rising`,
+        method: 'Consecrate burial sites. +1 die vs undead.',
+        scoring: `+${danger * 2} VP per site consecrated`,
+        effect: 'pressure_rate - 1 per consecrated site'
       },
-      'shine_riders': {
-        fire:   { name: 'Loot the Chaos', goal: 'Steal valuables while everyone fights the fire.', method: 'Riders move faster through smoke.', scoring: `+${danger} VP per objective stolen during fire` },
-        ritual: { name: 'Steal Cult Artifacts', goal: 'Acquire valuable ritual components.', method: 'Riders can grab artifacts and escape.', scoring: `+${danger * 2} VP per artifact stolen` },
-        taint:  { name: 'Exploit the Distraction', goal: 'Use chaos to complete heists.', method: 'Enemies distracted by Taint.', scoring: `+${danger} VP per heist completed` }
+      'chaos_escalation': {
+        name: 'Stabilize Reality',
+        goal: `${theme}: Restore order`,
+        method: 'Deploy stabilization wards. Counter chaos.',
+        scoring: `+${danger} VP per round chaos contained`,
+        effect: 'pressure_rate - 1 within ward radius'
       },
-      'crow_queen': {
-        fire:   { name: 'Embrace the Purge', goal: 'Let the fire cleanse the unworthy.', method: 'Queen units immune to fire damage.', scoring: `+${danger} VP per enemy unit killed by fire` },
-        ritual: { name: 'Subvert the Ritual', goal: 'Turn cultist power toward the Regent.', method: 'Ladies in Waiting can redirect ritual energy.', scoring: `+${danger * 2} VP if ritual redirected` },
-        taint:  { name: 'Consecrate Through Corruption', goal: 'Transform Taint into Consecrated ground.', method: 'Queen can convert Tainted terrain.', scoring: `+${danger} VP per zone converted` }
+      'reality_erosion': {
+        name: 'Seal the Rifts',
+        goal: `${theme}: Close void portals`,
+        method: 'Ritual to seal rifts. +1 die vs void entities.',
+        scoring: `+${danger * 2} VP per rift sealed`,
+        effect: 'pressure_rate - 1 per sealed rift'
       },
-      'monsters': {
-        fire:   { name: 'Flee or Fight', goal: 'Protect territory from flames.', method: 'Monsters enraged by fire. +1 Attack die.', scoring: `+${danger} VP per fire source destroyed` },
-        ritual: { name: 'Disrupt Through Violence', goal: 'Kill cultists to stop ritual.', method: 'Monsters sense ritual energy.', scoring: `+${danger * 2} VP per cultist killed` },
-        taint:  { name: 'Reclaim Wild Land', goal: 'Drive corruption from territory.', method: 'Monsters can mark over Tainted ground.', scoring: `+${danger} VP per zone reclaimed` }
+      'corruption_spread': {
+        name: 'Contain the Blight',
+        goal: `${theme}: Stop corruption spread`,
+        method: 'Cleanse corrupted ground. Create barriers.',
+        scoring: `+${danger} VP per zone cleansed`,
+        effect: 'pressure_rate - 1 per barrier deployed'
+      },
+      'death_magic': {
+        name: 'Counter Necromancy',
+        goal: `${theme}: Disrupt death magic`,
+        method: 'Life-affirming rituals. Protect the living.',
+        scoring: `+${danger * 2} VP if death magic countered`,
+        effect: 'pressure_rate - 1 within ritual area'
+      },
+      'dark_consecration': {
+        name: 'Resist Domination',
+        goal: `${theme}: Maintain free will`,
+        method: 'Mental fortification. +2 to Will checks.',
+        scoring: `+${danger} VP per ally freed from control`,
+        effect: 'pressure_rate - 1 within fortified area'
       }
     };
     
-    const factionResponses = responses[factionId] || responses['monster_rangers'];
+    return containmentMap[pressureType] || containmentMap['chaos_escalation'];
+  }
+  
+  // Exploitation stance - benefit from moderate pressure
+  generateExploitationObjective(pressureType, theme, danger, pressure) {
+    const exploitationMap = {
+      'fire_spread': {
+        name: 'Harvest Fire Energy',
+        goal: `${theme}: Extract power from flames`,
+        method: 'Fire grants bonus Thyr when harvested.',
+        scoring: `+${danger * 2} VP when pressure = 3-5`,
+        trigger: 'pressure >= 3'
+      },
+      'resource_consumption': {
+        name: 'Study the Consumption',
+        goal: `${theme}: Learn from cult methods`,
+        method: 'Document consumption process for research.',
+        scoring: `+${danger * 2} VP when pressure = 4-5`,
+        trigger: 'pressure >= 4'
+      },
+      'necromantic_rise': {
+        name: 'Capture Undead Specimens',
+        goal: `${theme}: Research necromancy`,
+        method: 'Trap and study undead. Gain research tokens.',
+        scoring: `+${danger} VP per undead captured`,
+        trigger: 'pressure >= 3'
+      },
+      'chaos_escalation': {
+        name: 'Harvest Chaos Energy',
+        goal: `${theme}: Study reality instability`,
+        method: 'Extract chaos samples. +1 research per round.',
+        scoring: `+${danger * 2} VP when pressure = 3-5`,
+        trigger: 'pressure >= 3'
+      },
+      'reality_erosion': {
+        name: 'Map the Void',
+        goal: `${theme}: Chart dimensional rifts`,
+        method: 'Collect void data. Dangerous but valuable.',
+        scoring: `+${danger * 3} VP when pressure = 4-5`,
+        trigger: 'pressure >= 4'
+      },
+      'corruption_spread': {
+        name: 'Extract Blight Samples',
+        goal: `${theme}: Study corrupted biology`,
+        method: 'Harvest corrupted specimens.',
+        scoring: `+${danger} VP per sample collected`,
+        trigger: 'pressure >= 3'
+      },
+      'death_magic': {
+        name: 'Document Death Magic',
+        goal: `${theme}: Record necromantic techniques`,
+        method: 'Observe and document rituals.',
+        scoring: `+${danger * 2} VP if fully documented`,
+        trigger: 'pressure >= 4'
+      },
+      'dark_consecration': {
+        name: 'Steal Dark Relics',
+        goal: `${theme}: Acquire cult artifacts`,
+        method: 'Raid cult sites during ritual.',
+        scoring: `+${danger * 2} VP per relic stolen`,
+        trigger: 'pressure >= 3'
+      }
+    };
     
-    if (isFire) return factionResponses.fire;
-    if (isRitual) return factionResponses.ritual;
-    if (isTaint) return factionResponses.taint;
-    
-    // Default generic response
+    return exploitationMap[pressureType] || exploitationMap['chaos_escalation'];
+  }
+  
+  // Opportunist stance - profit from any chaos
+  generateOpportunistObjective(pressureType, theme, danger, pressure) {
     return {
-      name: `Stop the ${cult.name}`,
-      goal: `Prevent cultist objective completion.`,
-      method: `Engage cultists directly.`,
-      scoring: `+${danger * 2} VP if cultists stopped`
+      name: 'Profit from Chaos',
+      goal: `${theme}: Loot during pressure`,
+      method: `+1 VP per pressure level. Move faster through chaos.`,
+      scoring: `+${danger} VP per objective stolen, +1 VP per pressure level`,
+      special: 'Benefits increase as pressure rises'
     };
   }
-
+  
+  // Redirection stance - convert pressure to advantage
+  generateRedirectionObjective(pressureType, theme, danger, pressure) {
+    return {
+      name: 'Weaponize the Pressure',
+      goal: `${theme}: Turn chaos into control`,
+      method: `Pressure converts into territory control at objectives.`,
+      scoring: `+${danger} VP per objective controlled, +2 VP per pressure level`,
+      effect: 'Controlled territory persists after scenario'
+    };
+  }
+  
+  // Adaptive stance - respond based on situation
+  generateAdaptiveObjective(pressureType, theme, danger, pressure) {
+    const isPressureLow = pressure.current < 3;
+    
+    if (isPressureLow) {
+      return {
+        name: 'Defend Territory',
+        goal: `${theme}: Protect from invaders`,
+        method: `+1 Attack when defending held ground.`,
+        scoring: `+${danger} VP per enemy driven off`,
+        adaptive: 'Switches to survival mode at pressure >= 4'
+      };
+    } else {
+      return {
+        name: 'Survival Mode',
+        goal: `${theme}: Escape the danger`,
+        method: `+2 Movement when fleeing. Extract what you can.`,
+        scoring: `+${danger} VP per unit evacuated safely`,
+        adaptive: 'Fight becomes retreat at high pressure'
+      };
+    }
+  }
   getFactionObjectiveInterpretation(factionId, objective) {
     const library = {
       'monster_rangers': {
@@ -1223,11 +2456,21 @@ class ScenarioBrain {
     
     const selectedCult = this.weightedRandomChoice(availableCults);
     
-    // Pick objective — prefer one that MATCHES this cult's affinity
-    const matchingObjectives = CULT_OBJECTIVES.filter(o => o.cult_affinity.includes(selectedCult.id));
-    const objective = matchingObjectives.length > 0 
-      ? this.randomChoice(matchingObjectives) 
-      : this.randomChoice(CULT_OBJECTIVES);
+    // Get pressure track for this cult
+    const pressureTrack = PRESSURE_TRACKS[selectedCult.id];
+    if (!pressureTrack) {
+      console.error(`⚠️ No pressure track found for cult: ${selectedCult.id}`);
+      return null;
+    }
+    
+    // Check if pressure track consumes a resource - verify location has it
+    let canConsume = true;
+    if (pressureTrack.consumes) {
+      const resourceAmount = location.resources?.[pressureTrack.consumes] || 0;
+      if (resourceAmount === 0) {
+        console.log(`  Cult would consume ${pressureTrack.consumes} but location has none. Cult pressure will be abstract.`);
+      }
+    }
     
     // FORCE SIZE — kept small and manageable!
     // danger 3-4: 2-3 models, danger 5: 3-4 models, danger 6: 4-5 models
@@ -1240,8 +2483,6 @@ class ScenarioBrain {
     const actualForce = forceMin + Math.floor(Math.random() * (forceMax - forceMin + 1));
     
     // WHO PLAYS THEM?
-    // If multiplayer with 2+ player factions, one of them runs the cultists (rotates each round).
-    // If solo or only 1 player faction, the Game Warden or the other NPC faction runs them.
     const playerFactions = userSelections.factions.filter(f => !f.isNPC);
     const allFactions = userSelections.factions;
     
@@ -1249,11 +2490,9 @@ class ScenarioBrain {
     let controllerFaction = null;
     
     if (playerFactions.length >= 2) {
-      // Multiplayer: assign to a random player faction to START, then it rotates
       controllerFaction = this.randomChoice(playerFactions);
       controllerNote = `${controllerFaction.name} controls the cultists first. Control rotates to the next player each round.`;
     } else if (playerFactions.length === 1) {
-      // Solo or 1-player: assign to an NPC faction, or Game Warden handles it
       const npcs = allFactions.filter(f => f.isNPC);
       if (npcs.length > 0) {
         controllerFaction = this.randomChoice(npcs);
@@ -1265,6 +2504,9 @@ class ScenarioBrain {
       controllerNote = 'Game Warden controls the cultists.';
     }
     
+    // Generate pressure-specific description
+    const pressureDescription = this.generatePressureDescription(pressureTrack, selectedCult, location);
+    
     return {
       enabled: true,
       cult: {
@@ -1274,21 +2516,41 @@ class ScenarioBrain {
         color: selectedCult.color,
         description: selectedCult.description
       },
-      objective: {
-        id: objective.id,
-        name: objective.name,
-        description: objective.description,
-        turn_limit: objective.turn_limit,
-        win_condition: objective.win_condition,
-        counter: objective.counter
+      pressure: {
+        type: pressureTrack.type,
+        label: pressureTrack.label,
+        description: pressureDescription,
+        rate: pressureTrack.rate,
+        max: pressureTrack.max,
+        current: 0, // Starts at 0
+        consumes: pressureTrack.consumes,
+        thresholds: pressureTrack.thresholds,
+        visual: pressureTrack.visual,
+        player_experience: pressureTrack.player_experience
       },
       force_size: actualForce,
       controller: controllerFaction ? { id: controllerFaction.id, name: controllerFaction.name } : null,
       controller_note: controllerNote,
-      everyone_loses: true,
+      everyone_loses: true, // Still true - catastrophe threshold means everyone loses
       state_modifier_used: stateModifier,
       chance_that_was_rolled: parseFloat(finalChance.toFixed(2))
     };
+  }
+  
+  // Generate descriptive text for what the pressure looks/feels like
+  generatePressureDescription(pressureTrack, cult, location) {
+    const descriptions = {
+      'fire_spread': `The ${cult.name} has set fires across ${location.name}. Every round the flames spread further.`,
+      'resource_consumption': `The ${cult.name} is consuming the ${pressureTrack.consumes} at ${location.name}. The resource depletes each round.`,
+      'necromantic_rise': `The ${cult.name} is awakening the dead at ${location.name}. More undead rise each round.`,
+      'chaos_escalation': `The ${cult.name} is unleashing chaos at ${location.name}. Reality becomes unstable each round.`,
+      'reality_erosion': `The ${cult.name} is opening rifts to the void at ${location.name}. The barriers between worlds thin each round.`,
+      'corruption_spread': `The ${cult.name} is spreading blight across ${location.name}. Corrupted growth spreads each round.`,
+      'death_magic': `The ${cult.name} is channeling necromantic power at ${location.name}. Death's grip tightens each round.`,
+      'dark_consecration': `The ${cult.name} is consecrating ${location.name} to the Regent Black. Dark oaths spread each round.`
+    };
+    
+    return descriptions[pressureTrack.type] || `The ${cult.name} has begun their ritual at ${location.name}. Pressure escalates each round.`;
   }
   
   // ================================
