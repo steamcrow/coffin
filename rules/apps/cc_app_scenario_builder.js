@@ -1,52 +1,35 @@
 // ================================
-// Scenario Builder App - SOPHISTICATED
+// Scenario Builder App - SOPHISTICATED & CLEAN
 // File: coffin/rules/apps/cc_app_scenario_builder.js
 // ================================
 
-console.log("🎲 Scenario Builder app loaded");
+console.log("🎲 Scenario Builder: Sophisticated UI Loaded");
 
 window.CC_APP = {
   async init({ root, ctx }) {
-    console.log("🚀 Scenario Builder init", ctx);
-
-    // ---- ASSET LOADER HELPER ----
+    // ---- ASSET LOADING ----
     const loadResource = async (id, url, type = 'script') => {
       if (document.getElementById(id)) return;
-      try {
-        const res = await fetch(`${url}?t=${Date.now()}`);
-        const content = await res.text();
-        const el = document.createElement(type === 'style' ? 'style' : 'script');
-        el.id = id;
-        el.textContent = content;
-        document.head.appendChild(el);
-      } catch (err) {
-        console.error(`❌ Load failed: ${id}`, err);
-      }
+      const res = await fetch(`${url}?t=${Date.now()}`);
+      const content = await res.text();
+      const el = document.createElement(type === 'style' ? 'style' : 'script');
+      el.id = id;
+      el.textContent = content;
+      document.head.appendChild(el);
     };
 
-    // ---- LOAD DEPENDENCIES ----
     await Promise.all([
       loadResource('cc-core-ui-styles', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css', 'style'),
-      loadResource('cc-app-styles', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_scenario_builder.css', 'style'),
-      loadResource('cc-storage-lib', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js'),
-      loadResource('cc-brain-lib', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/scenario_brain.js')
+      loadResource('cc-app-styles', 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_scenario_builder.css', 'style')
     ]);
 
-    const helpers = ctx?.helpers;
-    if (!helpers) {
-      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Helpers not available</h4></div></div>`;
-      return;
-    }
-
     // ================================
-    // STATE & DATA
+    // STATE
     // ================================
     const state = {
       gameMode: 'solo',
       pointValue: 500,
       dangerRating: 3,
-      gameWarden: null,
-      canyonState: 'poisoned',
       factions: [],
       locationType: 'random_any',
       selectedLocation: null,
@@ -68,42 +51,18 @@ window.CC_APP = {
     ];
 
     // ================================
-    // LOGIC & ACTIONS
+    // ACTIONS
     // ================================
-    
-    window.openStep = (n) => {
-      state.currentStep = n;
-      render();
-    };
-
-    window.goToStep = (n) => {
-      state.currentStep = n;
-      render();
-    };
-
-    window.completeStep = (n) => {
-      if (!state.completedSteps.includes(n)) state.completedSteps.push(n);
-      state.currentStep = n + 1;
-      render();
-    };
-
-    window.setGameMode = (m) => {
-      state.gameMode = m;
-      state.factions = []; // Reset factions on mode change
-      render();
-    };
-
+    window.openStep = (n) => { state.currentStep = n; render(); };
+    window.setGameMode = (m) => { state.gameMode = m; state.factions = []; render(); };
     window.setPointValue = (v) => { state.pointValue = parseInt(v); render(); };
     window.setDangerRating = (v) => { state.dangerRating = parseInt(v); render(); };
     window.setLocationType = (v) => { state.locationType = v; render(); };
     window.setLocationName = (v) => { state.selectedLocation = v; render(); };
 
-    window.toggleFaction = (id, name, checked) => {
-      if (checked) {
-        state.factions.push({ id, name, player: '', isNPC: false });
-      } else {
-        state.factions = state.factions.filter(f => f.id !== id);
-      }
+    window.toggleNPCFaction = (id, name, checked) => {
+      if (checked) state.factions.push({ id, name, isNPC: true });
+      else state.factions = state.factions.filter(f => !(f.id === id && f.isNPC));
       render();
     };
 
@@ -114,197 +73,189 @@ window.CC_APP = {
       render();
     };
 
-    window.toggleNPCFaction = (id, name, checked) => {
-      if (checked) {
-        state.factions.push({ id, name, isNPC: true });
-      } else {
-        state.factions = state.factions.filter(f => !(f.id === id && f.isNPC));
-      }
+    window.completeStep = (n) => {
+      if (!state.completedSteps.includes(n)) state.completedSteps.push(n);
+      state.currentStep = n + 1;
       render();
     };
 
     window.generateScenario = async () => {
       state.generating = true;
-      state.generated = false;
       render();
-
-      // Artificial delay for "Smarter" feel
-      await new Promise(r => setTimeout(r, 800));
-
+      await new Promise(r => setTimeout(r, 1200)); // Sophisticated "Thinking" time
+      
       if (window.ScenarioBrain) {
-        state.scenario = window.ScenarioBrain.generate({
-          mode: state.gameMode,
-          points: state.pointValue,
-          danger: state.dangerRating,
-          factions: state.factions,
-          locationType: state.locationType,
-          locationName: state.selectedLocation
-        });
+        state.scenario = window.ScenarioBrain.generate(state);
+        state.generated = true;
       }
-
       state.generating = false;
-      state.generated = true;
       render();
     };
 
     window.resetScenario = () => {
       state.generated = false;
-      state.scenario = null;
       state.currentStep = 1;
       state.completedSteps = [];
       render();
     };
 
-    window.rollAgain = () => {
-      const el = document.querySelector('.cc-scenario-result');
-      if (el) el.style.opacity = '0.5';
-      setTimeout(window.generateScenario, 300);
-    };
-
     // ================================
-    // RENDERING ENGINE
+    // RENDERERS
     // ================================
-    
-    function esc(str) {
-      return String(str || '').replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-      })[m]);
-    }
-
-    const renderStep = () => {
-      switch(state.currentStep) {
-        case 1: return renderStep1();
-        case 2: return renderStep2();
-        case 3: return renderStep3();
-        case 4: return renderStep4();
-        default: return '';
-      }
-    };
-
-    function renderStep1() {
+    const renderAccordionItem = (n, title, icon, content) => {
+      const isActive = state.currentStep === n;
+      const isDone = state.completedSteps.includes(n);
       return `
-        <div class="cc-form-section">
-          <label class="cc-label">Game Mode</label>
-          <div class="cc-button-group">
-            <button class="cc-btn ${state.gameMode === 'solo' ? 'cc-btn-primary' : 'cc-btn-ghost'}" onclick="setGameMode('solo')">Solo</button>
-            <button class="cc-btn ${state.gameMode === 'multiplayer' ? 'cc-btn-primary' : 'cc-btn-ghost'}" onclick="setGameMode('multiplayer')">Multiplayer</button>
+        <div class="cc-accordion-item ${isActive ? 'active' : ''} ${isDone ? 'complete' : ''}">
+          <div class="cc-accordion-header" onclick="openStep(${n})">
+            <span class="cc-step-icon">${icon}</span>
+            <span class="cc-step-title">${title}</span>
+            <span class="cc-step-status">${isDone ? '✓' : ''}</span>
+          </div>
+          <div class="cc-accordion-body" style="display: ${isActive ? 'block' : 'none'}">
+            ${content}
           </div>
         </div>
-        <div class="cc-form-section">
-          <label class="cc-label">Point Value</label>
-          <select class="cc-input" onchange="setPointValue(this.value)">
-            ${[500, 1000, 1500, 2000].map(v => `<option value="${v}" ${state.pointValue === v ? 'selected' : ''}>${v} ₤</option>`).join('')}
-          </select>
-        </div>
-        <button class="cc-btn cc-btn-primary w-100" onclick="completeStep(1)">Next Step</button>
       `;
-    }
+    };
 
-    function renderStep2() {
-      const isSolo = state.gameMode === 'solo';
-      return `
-        <div class="cc-form-section">
-          <label class="cc-label">${isSolo ? 'Your Faction' : 'Select Factions'}</label>
-          ${isSolo ? `
-            <select class="cc-input" onchange="setPlayerFaction(this.value)">
-              <option value="">Choose...</option>
-              ${FACTIONS.map(f => `<option value="${f.id}" ${state.factions.find(fac => fac.id === f.id && !fac.isNPC) ? 'selected' : ''}>${f.name}</option>`).join('')}
-            </select>
-          ` : FACTIONS.map(f => `
-            <label class="cc-checkbox-label">
-              <input type="checkbox" ${state.factions.find(fac => fac.id === f.id) ? 'checked' : ''} onchange="toggleFaction('${f.id}', '${f.name}', this.checked)"> ${f.name}
-            </label>
-          `).join('')}
+    const renderStep1 = () => `
+      <div class="cc-form-section">
+        <label class="cc-label">Game Mode</label>
+        <div class="cc-button-group">
+          <button class="cc-btn ${state.gameMode === 'solo' ? 'cc-btn-primary' : 'cc-btn-ghost'}" onclick="setGameMode('solo')">Solo</button>
+          <button class="cc-btn ${state.gameMode === 'multiplayer' ? 'cc-btn-primary' : 'cc-btn-ghost'}" onclick="setGameMode('multiplayer')">Versus</button>
         </div>
-        <div class="cc-form-actions">
-          <button class="cc-btn cc-btn-ghost" onclick="goToStep(1)">Back</button>
-          <button class="cc-btn cc-btn-primary" onclick="completeStep(2)" ${state.factions.length < (isSolo ? 1 : 2) ? 'disabled' : ''}>Next</button>
-        </div>
-      `;
-    }
+      </div>
+      <div class="cc-form-section">
+        <label class="cc-label">Danger Level</label>
+        <select class="cc-input" onchange="setDangerRating(this.value)">
+          ${[1,2,3,4,5,6].map(n => `<option value="${n}" ${state.dangerRating === n ? 'selected' : ''}>Rating ${n}</option>`).join('')}
+        </select>
+      </div>
+      <button class="cc-btn cc-btn-primary w-100" onclick="completeStep(1)">Lock Setup</button>
+    `;
 
-    function renderStep3() {
-      return `
-        <div class="cc-form-section">
-          <label class="cc-label">Location Style</label>
-          <div class="cc-button-group">
-            <button class="cc-btn ${state.locationType === 'named' ? 'cc-btn-primary' : 'cc-btn-ghost'}" onclick="setLocationType('named')">Named</button>
-            <button class="cc-btn ${state.locationType === 'random_any' ? 'cc-btn-primary' : 'cc-btn-ghost'}" onclick="setLocationType('random_any')">Procedural</button>
-          </div>
-        </div>
-        <button class="cc-btn cc-btn-primary w-100" onclick="completeStep(3)">Review Scenario</button>
-      `;
-    }
+    const renderStep2 = () => `
+      <div class="cc-form-section">
+        <label class="cc-label">Your Faction</label>
+        <select class="cc-input" onchange="setPlayerFaction(this.value)">
+          <option value="">Select...</option>
+          ${FACTIONS.map(f => `<option value="${f.id}" ${state.factions.find(fac => fac.id === f.id && !fac.isNPC) ? 'selected' : ''}>${f.name}</option>`).join('')}
+        </select>
+      </div>
+      <div class="cc-form-section">
+        <label class="cc-label">NPC Factions</label>
+        ${FACTIONS.map(f => `
+          <label class="cc-checkbox-label">
+            <input type="checkbox" onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)" ${state.factions.find(fac => fac.id === f.id && fac.isNPC) ? 'checked' : ''}> ${f.name}
+          </label>
+        `).join('')}
+      </div>
+      <button class="cc-btn cc-btn-primary w-100" onclick="completeStep(2)">Confirm Teams</button>
+    `;
 
-    function renderStep4() {
-      if (state.generating) return `<div class="cc-loading-text">🎲 Constructing the Canyon...</div>`;
-      return `
-        <div class="cc-summary-list">
-          <p><strong>Mode:</strong> ${state.gameMode}</p>
-          <p><strong>Factions:</strong> ${state.factions.map(f => f.name).join(', ')}</p>
+    const renderStep3 = () => `
+      <div class="cc-form-section">
+        <label class="cc-label">Location Type</label>
+        <div class="cc-button-group">
+          <button class="cc-btn ${state.locationType === 'named' ? 'cc-btn-primary' : 'cc-btn-ghost'}" onclick="setLocationType('named')">Named</button>
+          <button class="cc-btn ${state.locationType === 'random_any' ? 'cc-btn-primary' : 'cc-btn-ghost'}" onclick="setLocationType('random_any')">Random</button>
         </div>
+      </div>
+      <button class="cc-btn cc-btn-primary w-100" onclick="completeStep(3)">Finalize</button>
+    `;
+
+    const renderStep4 = () => `
+      <div class="cc-generate-section">
+        <p>Scenario is ready to assemble with your parameters.</p>
         <button class="cc-btn cc-btn-primary w-100" onclick="generateScenario()">🎲 Generate Scenario</button>
+      </div>
+    `;
+
+    const renderScenarioOutput = () => {
+      const s = state.scenario;
+      return `
+        <div class="cc-scenario-result animate-fade-in">
+          <div class="cc-scenario-header">
+            <div class="cc-badge">Danger ${'★'.repeat(s.danger_rating)}</div>
+            <h1>${s.name}</h1>
+            <p class="cc-hook">"${s.narrative_hook}"</p>
+          </div>
+          
+          <div class="cc-grid-2">
+            <div class="cc-panel-sub">
+              <h4>📍 ${s.location.name}</h4>
+              <p>${s.location.description}</p>
+              <p class="cc-flavor"><em>${s.location.atmosphere}</em></p>
+            </div>
+            <div class="cc-panel-sub">
+              <h4>🎭 Twist: ${s.twist.name}</h4>
+              <p>${s.twist.effect}</p>
+            </div>
+          </div>
+
+          ${s.cultist_encounter.enabled ? `
+            <div class="cc-panel-cult" style="border-left: 4px solid ${s.cultist_encounter.cult.color}">
+              <h4 style="color: ${s.cultist_encounter.cult.color}">🕯️ Cult: ${s.cultist_encounter.cult.name}</h4>
+              <p>${s.cultist_encounter.objective.description}</p>
+              <div class="cc-flex-between">
+                <span><strong>Force:</strong> ${s.cultist_encounter.force_size} Models</span>
+                <span><strong>Limit:</strong> ${s.cultist_encounter.objective.turn_limit} Turns</span>
+              </div>
+            </div>
+          ` : ''}
+
+          <div class="cc-footer-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">🔄 Start Over</button>
+            <button class="cc-btn cc-btn-primary" onclick="window.print()">🖨️ Print</button>
+          </div>
+        </div>
       `;
-    }
+    };
 
     function render() {
-      if (state.generated && state.scenario) {
-        root.innerHTML = `
-          <div class="cc-app-shell container py-4">
-            <div class="cc-panel p-4">
-              <h2>${state.scenario.name}</h2>
-              <p class="lead">${state.scenario.narrative_hook}</p>
-              <hr>
-              <div class="row">
-                <div class="col-md-6">
-                  <h4>📍 ${state.scenario.location.name}</h4>
-                  <p>${state.scenario.location.description}</p>
-                </div>
-                <div class="col-md-6">
-                  <h4>⚠️ Danger: ${state.scenario.danger_rating}/6</h4>
-                  <p>${state.scenario.danger_description}</p>
-                </div>
-              </div>
-              <div class="mt-4">
-                <button class="cc-btn cc-btn-secondary" onclick="rollAgain()">🌀 Shift Canyon</button>
-                <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">🔄 New Setup</button>
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        root.innerHTML = `
-          <div class="cc-app-shell container py-4">
-            <div class="row">
-              <div class="col-md-4">
-                <div class="cc-panel p-3">
-                  <h5>Progress</h5>
-                  <div class="cc-step-indicator">Step ${state.currentStep} of 4</div>
-                </div>
-              </div>
-              <div class="col-md-8">
-                <div class="cc-panel p-4">
-                  ${renderStep()}
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
+      if (state.generating) {
+        root.innerHTML = `<div class="cc-app-shell h-100"><div class="cc-loading-container"><div class="cc-loading-bar"><div class="cc-loading-progress"></div></div><p>Assembling the Canyon...</p></div></div>`;
+        return;
       }
+
+      if (state.generated) {
+        root.innerHTML = `<div class="cc-app-shell h-100 container py-5">${renderScenarioOutput()}</div>`;
+        return;
+      }
+
+      root.innerHTML = `
+        <div class="cc-app-shell h-100">
+          <div class="cc-scenario-builder-layout">
+            <aside class="cc-scenario-sidebar">
+              <div class="cc-panel">
+                <div class="cc-panel-head"><h3>Scenario Builder</h3></div>
+                <div class="cc-accordion">
+                  ${renderAccordionItem(1, "Game Setup", "⚙️", renderStep1())}
+                  ${renderAccordionItem(2, "Factions", "⚔️", renderStep2())}
+                  ${renderAccordionItem(3, "Location", "🗺️", renderStep3())}
+                  ${renderAccordionItem(4, "Generate", "🎲", renderStep4())}
+                </div>
+              </div>
+            </aside>
+            <main class="cc-scenario-main">
+              <div class="cc-panel-empty">
+                <p>Configure your scenario on the left to begin.</p>
+              </div>
+            </main>
+          </div>
+        </div>
+      `;
     }
 
-    // Load initial data then render
-    state.availableLocations = await loadNamedLocations();
+    // Initialize
+    try {
+      const res = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json');
+      const data = await res.json();
+      state.availableLocations = data.locations || [];
+    } catch (e) { console.warn("Locations load failed."); }
+    
     render();
   }
 };
-
-async function loadNamedLocations() {
-  try {
-    const res = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json');
-    const data = await res.json();
-    return data.locations || [];
-  } catch {
-    return [];
-  }
-}
