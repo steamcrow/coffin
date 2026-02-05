@@ -881,6 +881,10 @@ class ScenarioBrain {
     return null;
   }
   
+  generateCultistEncounter(userSelections, plotFamily, location) {
+    return null;
+  }
+  
   getDangerDesc(rating) {
     const levels = ['None', 'Low', 'Standard', 'High', 'Extreme', 'Catastrophic'];
     return levels[rating] || 'Unknown';
