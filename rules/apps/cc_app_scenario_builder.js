@@ -47,23 +47,32 @@ window.CC_APP = {
     }
 
     // ---- LOAD BRAIN ----
-    if (!window.ScenarioBrain) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/scenario_brain.js?t=' + Date.now())
-        .then(res => res.text())
-        .then(code => {
-          const script = document.createElement('script');
-          script.textContent = code;
-          document.head.appendChild(script);
-        })
-        .catch(err => console.error('❌ Brain load failed:', err));
+// ---- LOAD BRAIN (MODULAR) ----
+if (!window.ScenarioBrain) {
+  const brainFiles = [
+    'brain_constants.js',
+    'brain_generators.js',
+    'brain_core.js'
+  ];
+  
+  // Load them in sequence (order matters!)
+  async function loadBrainModules() {
+    for (const file of brainFiles) {
+      try {
+        const res = await fetch(`https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/${file}?t=${Date.now()}`);
+        const code = await res.text();
+        const script = document.createElement('script');
+        script.textContent = code;
+        document.head.appendChild(script);
+        console.log(`✅ Loaded: ${file}`);
+      } catch (err) {
+        console.error(`❌ Failed to load ${file}:`, err);
+      }
     }
-
-    const helpers = ctx?.helpers;
-
-    if (!helpers) {
-      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Helpers not available</h4></div></div>`;
-      return;
-    }
+  }
+  
+  loadBrainModules();
+}
 
     // ================================
     // STATE
