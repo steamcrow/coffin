@@ -18,7 +18,81 @@ const CULT_REGISTRY = [
   { id: 'bone_singers',            name: 'The Bone Singers',         theme: 'Death Magic',             color: '#78909c', description: 'Practitioners of death magic who raise the dead and commune with the grave.', weight: 7 },
   { id: 'regents_faithful',        name: "Regent's Faithful",        theme: 'Dark Monarchy',           color: '#8e24aa', description: "Secret worshippers of a dark monarch. Only appear when The Crow Queen is NOT in the scenario.", weight: 3 }
 ];
+// ================================
+// ADD THIS AFTER CULT_REGISTRY (around line 20)
+// ================================
 
+// ================================
+// FACTION CORE VERBS
+// ================================
+const FACTION_CORE_VERBS = {
+  monster_rangers: {
+    primary_verb: 'PROTECT',
+    secondary_verbs: ['PRESERVE', 'STABILIZE', 'DEFEND'],
+    approach: 'defensive'
+  },
+  liberty_corps: {
+    primary_verb: 'CONTROL',
+    secondary_verbs: ['SECURE', 'ENFORCE', 'OCCUPY'],
+    approach: 'authoritarian'
+  },
+  monsterology: {
+    primary_verb: 'DEVOUR',
+    secondary_verbs: ['HARVEST', 'EXTRACT', 'CONSUME'],
+    approach: 'exploitative'
+  },
+  shine_riders: {
+    primary_verb: 'STEAL',
+    secondary_verbs: ['LOOT', 'RAID', 'PLUNDER'],
+    approach: 'opportunistic'
+  },
+  crow_queen: {
+    primary_verb: 'CONSECRATE',
+    secondary_verbs: ['CLAIM', 'SANCTIFY', 'CONVERT'],
+    approach: 'mystical'
+  },
+  monsters: {
+    primary_verb: 'BREED',
+    secondary_verbs: ['FEED', 'NEST', 'MIGRATE'],
+    approach: 'primal'
+  }
+};
+
+// ================================
+// FACTION THEMES
+// ================================
+const FACTION_THEMES = {
+  monster_rangers: {
+    primary_theme: 'Protect the Wild',
+    secondary_themes: ['Contain threats', 'Preserve balance'],
+    tone: 'grim_duty'
+  },
+  liberty_corps: {
+    primary_theme: 'Establish Order',
+    secondary_themes: ['Enforce law', 'Control chaos'],
+    tone: 'authoritarian'
+  },
+  monsterology: {
+    primary_theme: 'Advance Science',
+    secondary_themes: ['Extract knowledge', 'Ignore ethics'],
+    tone: 'clinical'
+  },
+  shine_riders: {
+    primary_theme: 'Turn Profit',
+    secondary_themes: ['Move fast', 'Sell stories'],
+    tone: 'opportunistic'
+  },
+  crow_queen: {
+    primary_theme: 'Serve the Crown',
+    secondary_themes: ['Claim territory', 'Convert subjects'],
+    tone: 'dark_royal'
+  },
+  monsters: {
+    primary_theme: 'Survive',
+    secondary_themes: ['Breed', 'Feed', 'Territory'],
+    tone: 'primal'
+  }
+};
 // ================================
 // PRESSURE TRACKS - Cults as Environmental Forces
 // ================================
@@ -2151,6 +2225,194 @@ class ScenarioBrain {
       };
     }
   }
+// ================================
+// ADD THESE 6 FUNCTIONS BEFORE getFactionObjectiveInterpretation
+// (probably around line 600-700)
+// ================================
+
+  // ================================
+  // FACTION-SPECIFIC OBJECTIVE INTERPRETATION
+  // ================================
+  
+  generateFactionObjectiveInterpretation(objective, faction, pressure = null) {
+    const factionId = faction.id;
+    const verb = FACTION_CORE_VERBS[factionId];
+    const theme = FACTION_THEMES[factionId];
+    
+    if (!verb || !theme) {
+      return {
+        name: objective.name,
+        goal: objective.description,
+        method: objective.success || 'Complete objective',
+        scoring: `+${objective.vp_value} VP per ${objective.vp_per}`,
+        flavor: null
+      };
+    }
+    
+    const factionName = this.generateFactionObjectiveName(objective, verb, theme);
+    const goal = this.generateFactionGoal(objective, verb, theme, pressure);
+    const method = this.generateFactionMethod(objective, verb, theme);
+    const scoring = this.generateFactionScoring(objective, verb, theme);
+    const flavor = this.generateFactionFlavor(objective, verb, faction);
+    
+    return {
+      name: factionName,
+      goal: goal,
+      method: method,
+      scoring: scoring,
+      flavor: flavor,
+      action_type: objective.action_type,
+      action_cost: objective.action_cost,
+      test_required: objective.test_required,
+      vp_value: objective.vp_value
+    };
+  }
+  
+  generateFactionObjectiveName(objective, verb, theme) {
+    const baseWords = objective.name.toLowerCase();
+    
+    const patterns = {
+      'PROTECT': ['Defend', 'Preserve', 'Stabilize', 'Guard'],
+      'CONTROL': ['Secure', 'Establish Control of', 'Enforce Order at', 'Occupy'],
+      'DEVOUR': ['Harvest', 'Extract', 'Consume', 'Weaponize'],
+      'STEAL': ['Loot', 'Raid', 'Plunder', 'Claim'],
+      'CONSECRATE': ['Claim', 'Sanctify', 'Convert', 'Dedicate'],
+      'BREED': ['Nest in', 'Claim as Territory', 'Feed from', 'Spawn at']
+    };
+    
+    const verbs = patterns[verb.primary_verb] || [verb.primary_verb];
+    const selectedVerb = this.randomChoice(verbs);
+    const keyNoun = this.extractKeyNoun(objective.name);
+    
+    return `${selectedVerb} ${keyNoun}`;
+  }
+  
+  extractKeyNoun(name) {
+    const important = name
+      .replace(/Salvage|Recover|Control|Complete|Destroy|Gather|Search|Raid|Stage/gi, '')
+      .replace(/the|a|an/gi, '')
+      .trim();
+    return important || name;
+  }
+  
+  generateFactionGoal(objective, verb, theme, pressure) {
+    const baseGoal = objective.description;
+    
+    const motivations = {
+      'monster_rangers': `The ${theme.primary_theme} demands action. ${baseGoal} Rangers know that`,
+      'liberty_corps': `${theme.primary_theme} requires ${baseGoal} The Corps will`,
+      'monsterology': `${theme.primary_theme} depends on ${baseGoal} The Institute must`,
+      'shine_riders': `${theme.primary_theme} means ${baseGoal} Riders can`,
+      'crow_queen': `The Queen's ${theme.primary_theme} commands ${baseGoal} Her servants`,
+      'monsters': `Survival requires ${baseGoal} The pack`
+    };
+    
+    const factionId = theme.primary_theme ? Object.keys(FACTION_THEMES).find(id => 
+      FACTION_THEMES[id].primary_theme === theme.primary_theme
+    ) : null;
+    
+    const prefix = motivations[factionId] || baseGoal;
+    
+    if (pressure) {
+      return `${prefix} before ${pressure.label} reaches critical mass.`;
+    }
+    
+    return prefix;
+  }
+  
+  generateFactionMethod(objective, verb, theme) {
+    const baseMethod = objective.success || 'Complete the objective';
+    
+    const tactics = {
+      'PROTECT': 'Defensive positioning. +1 die when protecting objectives.',
+      'CONTROL': 'Overwhelming force. Control requires majority presence.',
+      'DEVOUR': 'Surgical extraction. Ignore collateral damage.',
+      'STEAL': 'Hit and run. +1 Movement when carrying loot.',
+      'CONSECRATE': 'Ritual conversion. Area remains claimed.',
+      'BREED': 'Territorial marking. Spawns reinforcements when held.'
+    };
+    
+    return `${baseMethod} ${tactics[verb.primary_verb] || ''}`;
+  }
+  
+  generateFactionScoring(objective, verb, theme) {
+    const base = `+${objective.vp_value} VP per ${objective.vp_per}`;
+    
+    const bonuses = {
+      'PROTECT': 'Bonus VP if no casualties.',
+      'CONTROL': 'Bonus VP if held for 2+ rounds.',
+      'DEVOUR': 'Can convert extracted resources to VP.',
+      'STEAL': 'Double VP if extracted before enemy arrives.',
+      'CONSECRATE': 'Permanent VP if site remains claimed.',
+      'BREED': 'Spawned units worth VP.'
+    };
+    
+    const bonus = bonuses[verb.primary_verb];
+    return bonus ? `${base}. ${bonus}` : base;
+  }
+  
+  generateFactionFlavor(objective, verb, faction) {
+    const quotes = {
+      'monster_rangers': [
+        '"We don\'t deal with this often. But when we do, we deal with it permanently."',
+        '"The Canyon doesn\'t care about fair. Neither do we."',
+        '"Save what can be saved. The rest becomes a lesson."'
+      ],
+      'liberty_corps': [
+        '"Order isn\'t negotiable."',
+        '"The Corps protects. Even from themselves."',
+        '"Lawlessness ends here."'
+      ],
+      'monsterology': [
+        '"Science requires sacrifice. Usually someone else\'s."',
+        '"Progress doesn\'t ask permission."',
+        '"The Institute takes what it needs."'
+      ],
+      'shine_riders': [
+        '"Everything\'s for sale if you\'re fast enough."',
+        '"Profit waits for no one."',
+        '"This\'ll sell papers for months."'
+      ],
+      'crow_queen': [
+        '"What the Queen claims, Regent Black keeps."',
+        '"All who remain will kneel."',
+        '"The Crown does not ask. It takes."'
+      ],
+      'monsters': [
+        '"The pack does not negotiate."',
+        '"Survival is not a crime."',
+        '"Territory. Food. Breeding. Everything else is noise."'
+      ]
+    };
+    
+    const factionQuotes = quotes[faction.id] || [];
+    return factionQuotes.length > 0 ? this.randomChoice(factionQuotes) : null;
+  }
+
+  // ================================
+  // NOW MODIFY YOUR EXISTING getFactionObjectiveInterpretation FUNCTION
+  // Find it and change the FIRST few lines to this:
+  // ================================
+  
+  getFactionObjectiveInterpretation(factionId, objective, pressure = null) {
+    // PRIORITY 1: Try dynamic generation system
+    const faction = { id: factionId };
+    const dynamic = this.generateFactionObjectiveInterpretation(objective, faction, pressure);
+    if (dynamic && dynamic.name) {
+      return dynamic;
+    }
+    
+    // PRIORITY 2: Fall back to library for special cases
+    const library = {
+      'monster_rangers': {
+        // ... keep your existing library intact ...
+      }
+      // ... rest of existing code ...
+    };
+    
+    // ... rest of your existing getFactionObjectiveInterpretation code ...
+  }
+  
   getFactionObjectiveInterpretation(factionId, objective) {
     const library = {
       'monster_rangers': {
