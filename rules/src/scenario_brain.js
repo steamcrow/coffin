@@ -374,6 +374,34 @@ const PRESSURE_TRACKS = {
     visual: 'Train model barrels across board, crashes spectacularly',
     player_experience: 'Countdown to impact, clear the rails, massive explosion'
   },
+
+'mine_collapse': {
+  type: 'industrial_hazard',
+  label: 'Mine Cave-In',
+  rate: 1,
+  max: 6,
+  consumes: null,
+  thresholds: {
+    2: {
+      effect: 'support_failure',
+      desc: 'Timbers creak and give. Shoring buckles as dust clouds erupt. Random 3" zones become Difficult terrain.',
+      forces_cooperation: false
+    },
+    4: {
+      effect: 'tunnel_collapse',
+      desc: 'A primary shaft caves in. Beams snap, rails twist, and the ground drops away. Models in the area fall, take 4 damage, and are buried or trapped.',
+      forces_cooperation: true
+    },
+    6: {
+      effect: 'total_cave_in',
+      desc: 'The mine catastrophically fails. Shafts collapse, passages seal, and the ground ruptures from below.',
+      world_scar: 'Fractured'
+    }
+  },
+  visual: 'Wooden supports splinter, lanterns shatter, dust clouds choke the air',
+  player_experience: 'Listen for cracking timbers, dig out the buried, escape collapsing tunnels'
+}
+
   
   'dam_burst': {
     type: 'infrastructure_failure',
