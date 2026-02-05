@@ -9,7 +9,9 @@
       "killing_alone_never_resolves_a_scenario",
       "resources_force_movement",
       "escalation_punishes_delay_and_excess",
-      "the_canyon_remembers_what_happened_here"
+      "the_canyon_remembers_what_happened_here",
+      "success_often_creates_new_problems",
+      "control_is_temporary_and_contested"
     ]
   },
 
@@ -31,11 +33,16 @@
         "infrastructure_failure",
         "power_vacuum",
         "environmental_rupture",
-        "ritual_misuse"
+        "ritual_misuse",
+        "failed_extraction",
+        "broken_agreement",
+        "forgotten_boundary_crossed"
       ],
       "notes": [
         "monsters_may_be_the_cause_not_merely_a_response",
-        "inciting_pressure_is_never_neutral"
+        "inciting_pressure_is_never_neutral",
+        "pressure_often_originates_from_prior_scenarios",
+        "the_canyon_frequently_reacts_late_not_immediately"
       ]
     },
 
@@ -44,7 +51,8 @@
       "rules": [
         "minimum_two_claimants",
         "each_claimant_must_desire_a_different_end_state",
-        "a_claimant_may_be_a_monster_power_or_environmental_force"
+        "a_claimant_may_be_a_monster_power_or_environmental_force",
+        "claimants_do_not_need_to_be_present_initially"
       ],
       "canonical_motivations": {
         "monster_rangers": "preserve_monsters_mysticism_and_balance",
@@ -52,7 +60,10 @@
         "monsterologists": "control_extraction_and_weaponization",
         "liberty_corps": "order_territory_and_exclusion_of_rivals",
         "crow_queen": "mystical_dominion_and_symbolic_ownership",
-        "monsters": "territory_feeding_grounds_silence_or_migration"
+        "monsters": "territory_feeding_grounds_silence_or_migration",
+        "local_settlers": "survival_claims_and_fear_driven_defense",
+        "cult_orders": "belief_validation_and_ritual_completion",
+        "industrial_interests": "throughput_control_and_resource_monopoly"
       }
     },
 
@@ -62,33 +73,45 @@
         "riches": [
           "silver",
           "gildren",
-          "liberty_bucks"
+          "liberty_bucks",
+          "salvaged_relics",
+          "refined_monster_parts"
         ],
         "supplies_tools": [
           "tools",
           "spare_parts",
           "machines",
-          "medical_supplies"
+          "medical_supplies",
+          "explosives",
+          "rail_components"
         ],
         "survival": [
           "food",
           "water",
-          "livestock"
+          "livestock",
+          "clean_air",
+          "shelter"
         ],
         "occult": [
           "thyr",
-          "ritual_components"
+          "ritual_components",
+          "bound_artifacts",
+          "living_symbols"
         ],
         "belief": [
           "cult_followers",
           "territorial_claim",
           "mystical_influence",
-          "symbolic_control"
+          "symbolic_control",
+          "flags_markers_and_shrines",
+          "stories_that_spread"
         ]
       },
       "rules": [
         "resources_must_be_movable_destructible_corruptible_or_exhaustible",
-        "static_resources_should_escalate_if_ignored"
+        "static_resources_should_escalate_if_ignored",
+        "resource_control_invites_additional_claimants",
+        "excess_extraction_triggers_escalation"
       ]
     },
 
@@ -100,18 +123,25 @@
         "thyr_fallout",
         "ritual_completion",
         "structural_collapse",
-        "objective_overburn"
+        "objective_overburn",
+        "resource_contamination",
+        "panic_events",
+        "authority_signal_detected"
       ],
       "effects": [
         "environmental_hazards",
         "visibility_loss",
         "monster_migration",
         "authority_intervention",
-        "panic_and_morale_failure"
+        "panic_and_morale_failure",
+        "infrastructure_shutdown",
+        "loss_of_safe_routes",
+        "uncontrolled_crowds_or_stampedes"
       ],
       "notes": [
         "escalation_is_optional_but_encouraged",
-        "escalation_should_feel_inevitable_not_fair"
+        "escalation_should_feel_inevitable_not_fair",
+        "escalation_should_complicate_success_not_undo_it"
       ]
     },
 
@@ -124,11 +154,15 @@
         "claimant_is_proxy_for_another_force",
         "victory_conditions_invert",
         "resource_becomes_sentient_or_cursed",
-        "location_awakens_or_rejects_control"
+        "location_awakens_or_rejects_control",
+        "extraction_was_the_trigger",
+        "authority_intervention_changes_the_game",
+        "the_real_resource_is_people_or_belief"
       ],
       "rules": [
         "twists_reframe_player_decisions_not_invalidate_them",
-        "twists_force_reassessment_not_reset"
+        "twists_force_reassessment_not_reset",
+        "twists_should_create_moral_or_strategic_discomfort"
       ]
     },
 
@@ -140,7 +174,9 @@
         "monster_bias_shift",
         "faction_ownership",
         "mystical_claim",
-        "new_landmark_created"
+        "new_landmark_created",
+        "area_becomes_avoided_or_feared",
+        "authority_attention_flagged"
       ],
       "ownership": {
         "types": [
@@ -153,7 +189,8 @@
       },
       "notes": [
         "every_scenario_must_define_aftermath_outcomes",
-        "the_canyon_remembers_violence_and_neglect"
+        "the_canyon_remembers_violence_and_neglect",
+        "absence_of_action_is_also_a_choice_with_consequences"
       ]
     }
   },
@@ -163,14 +200,18 @@
     "territorial_power": "controls_space_like_a_faction",
     "escalator": "appears_when_pressure_spikes",
     "corruptor": "alters_resources_or_objectives",
-    "silent_judge": "punishes_specific_player_behaviors"
+    "silent_judge": "punishes_specific_player_behaviors",
+    "warden": "maintains_balance_until_disturbed",
+    "harbinger": "signals_future_catastrophe"
   },
 
   "solo_play_support": {
     "logic": [
       "unfilled_claimant_slots_are_filled_by_monsters_or_environmental_forces",
       "escalation_triggers_more_aggressively",
-      "aftermath_effects_skew_harsher"
+      "aftermath_effects_skew_harsher",
+      "twists_trigger_earlier_and_more_often",
+      "authority_intervention_is_more_likely"
     ]
   }
 }
