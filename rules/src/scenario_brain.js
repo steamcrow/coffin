@@ -374,34 +374,6 @@ const PRESSURE_TRACKS = {
     visual: 'Train model barrels across board, crashes spectacularly',
     player_experience: 'Countdown to impact, clear the rails, massive explosion'
   },
-
-'mine_collapse': {
-  type: 'industrial_hazard',
-  label: 'Mine Cave-In',
-  rate: 1,
-  max: 6,
-  consumes: null,
-  thresholds: {
-    2: {
-      effect: 'support_failure',
-      desc: 'Timbers creak and give. Shoring buckles as dust clouds erupt. Random 3" zones become Difficult terrain.',
-      forces_cooperation: false
-    },
-    4: {
-      effect: 'tunnel_collapse',
-      desc: 'A primary shaft caves in. Beams snap, rails twist, and the ground drops away. Models in the area fall, take 4 damage, and are buried or trapped.',
-      forces_cooperation: true
-    },
-    6: {
-      effect: 'total_cave_in',
-      desc: 'The mine catastrophically fails. Shafts collapse, passages seal, and the ground ruptures from below.',
-      world_scar: 'Fractured'
-    }
-  },
-  visual: 'Wooden supports splinter, lanterns shatter, dust clouds choke the air',
-  player_experience: 'Listen for cracking timbers, dig out the buried, escape collapsing tunnels'
-}
-
   
   'dam_burst': {
     type: 'infrastructure_failure',
@@ -1330,11 +1302,17 @@ class ScenarioBrain {
   constructor() {
     this.data = {
       scenarios: null,
+      scenarioVault140: null,
       names: null,
       locations: null,
+      locationArchetypes: null,      // 97 - Rules-facing location types
       locationTypes: null,
       plotFamilies: null,
+      plotEngine: null,               // 190 - Design philosophy
+      objectiveVault: null,           // 160 - Complete objective rules
       twists: null,
+      turnStructure: null,
+      unitIdentities: null,
       canyonStates: null,
       factions: {}
     };
@@ -1345,13 +1323,26 @@ class ScenarioBrain {
     console.log("📚 Loading all data files...");
     
     const files = [
-      { key: 'scenarios',        url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json' },
-      { key: 'names',            url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/230_scenario_names.json' },
-      { key: 'locations',        url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json' },
-      { key: 'locationTypes',    url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/150_location_types.json' },
-      { key: 'plotFamilies',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json' },
-      { key: 'twists',           url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json' },
-      { key: 'canyonStates',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/30_campaign_system.json' },
+      // Core scenario data
+      { key: 'scenarios',          url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json' },
+      { key: 'scenarioVault140',   url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/140_scenario_vault.json' },
+      { key: 'names',              url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/230_scenario_names.json' },
+      
+      // Location data
+      { key: 'locations',          url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json' },
+      { key: 'locationArchetypes', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/97_location_vault.json' },      // Location archetypes (boomtown, mine, etc.)
+      { key: 'locationTypes',      url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/150_location_types.json' },
+      
+      // Plot and objectives
+      { key: 'plotFamilies',       url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json' },
+      { key: 'plotEngine',         url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/190_plot_engine_schema.json' },  // Design philosophy
+      { key: 'objectiveVault',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/160_objective_vault.json' },     // CORRECT FILE - Complete objective rules
+      
+      // Game mechanics data
+      { key: 'twists',             url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json' },
+      { key: 'turnStructure',      url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/20_turn_structure.json' },
+      { key: 'unitIdentities',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/70_unit_identities.json' },      // Unit flavor
+      { key: 'canyonStates',       url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/30_campaign_system.json' },
       { key: 'monsterRangers',   url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monster-rangers-v5.json',  faction: 'monster_rangers' },
       { key: 'libertyCorps',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-liberty-corps-v2.json',   faction: 'liberty_corps' },
       { key: 'monsterology',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsterology-v2.json',    faction: 'monsterology' },
@@ -1551,6 +1542,25 @@ class ScenarioBrain {
     if (!location.hazards) location.hazards = [];
     if (!location.terrain_features) location.terrain_features = [];
     if (!location.rewards) location.rewards = [];
+    
+    // ENHANCEMENT: Add archetype data from 97_location_vault.json
+    if (this.data.locationArchetypes?.location_archetypes && location.type_ref) {
+      const archetype = this.data.locationArchetypes.location_archetypes[location.type_ref];
+      
+      if (archetype) {
+        // Add terrain traits
+        location.default_traits = archetype.terrain_profile?.default_traits || [];
+        location.common_traits = archetype.terrain_profile?.common_traits || [];
+        location.rare_traits = archetype.terrain_profile?.rare_traits || [];
+        
+        // Store escalation logic for narrative
+        location.escalation_logic = archetype.escalation_logic || [];
+        
+        // Store objective patterns for matching
+        location.objective_patterns = archetype.objective_patterns || {};
+      }
+    }
+    
     return location;
   }
   
@@ -1563,18 +1573,44 @@ class ScenarioBrain {
     const type = types.length > 0 ? this.randomChoice(types) : this.data.locationTypes.location_types[0];
     const nearby = this.randomChoice(this.data.locations.locations);
     
+    // Location positioning patterns - varied and interesting
+    const positionPatterns = [
+      { pattern: 'outskirts', template: 'The Outskirts of {location}', weight: 3 },
+      { pattern: 'inside', template: 'Inside {location}', weight: 2 },
+      { pattern: 'near', template: 'Near {location}', weight: 2 },
+      { pattern: 'edge', template: 'At the Edge of {location}', weight: 2 },
+      { pattern: 'beyond', template: 'Beyond {location}', weight: 1 },
+      { pattern: 'below', template: 'Below {location}', weight: 1 },
+      { pattern: 'above', template: 'Above {location}', weight: 1 },
+      { pattern: 'ruins', template: 'The Ruins Near {location}', weight: 1 },
+      { pattern: 'shadows', template: 'In the Shadow of {location}', weight: 2 }
+    ];
+    
+    const position = this.weightedRandomChoice(positionPatterns);
+    const locationName = position.template.replace('{location}', nearby.name);
+    
+    // Description templates for variety
+    const descTemplates = [
+      `${type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
+      `A ${type.id.replace(/_/g, ' ')} where ${nearby.name}'s influence reaches, but authority does not.`,
+      `The kind of place ${nearby.name} pretends doesn't exist.`,
+      `${nearby.name} casts a long shadow. This is where that shadow falls.`,
+      `Close enough to ${nearby.name} to hear the gunshots. Far enough to ignore them.`
+    ];
+    
     return {
       id: `proc_${Date.now()}`,
-      name: `The Outskirts of ${nearby.name}`,
+      name: locationName,
       emoji: type.emoji || "🗺️",
       type_ref: type.id,
-      description: `${type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
+      description: this.randomChoice(descTemplates),
       atmosphere: this.randomChoice(type.atmosphere || ["Tension hangs heavy in the air", "The wind carries whispers of conflict"]),
       resources: type.resources || {},
       hazards: type.environmental_hazards || [],
       terrain_features: type.terrain_features || [],
       rewards: type.rewards || [],
-      procedural: true
+      procedural: true,
+      nearby_location: nearby.name  // Track this for narrative hooks
     };
   }
   
@@ -1745,18 +1781,99 @@ class ScenarioBrain {
   }
   
   buildObjective(type, location, danger, vpSpread, extraData = {}) {
-    // Use strategy pattern - each builder function handles its own logic
+    // PRIORITY 1: Try objective vault (160_objective_vault.json)
+    if (this.data.objectiveVault?.objective_categories) {
+      const vaultObj = this.findVaultObjective(type);
+      if (vaultObj) {
+        return this.buildFromVault(vaultObj, location, danger, extraData);
+      }
+    }
+    
+    // PRIORITY 2: Fall back to OBJECTIVE_BUILDERS
     const builder = OBJECTIVE_BUILDERS[type];
     if (!builder) return null;
     
-    // Call builder function with context
     const obj = builder(location, danger, vpSpread, extraData);
-    
-    // Add common fields
     obj.type = type;
     obj.max_vp = obj.target_value * obj.vp_per_unit;
     
     return obj;
+  }
+  
+  findVaultObjective(objectiveId) {
+    // Search all categories for objective by ID
+    if (!this.data.objectiveVault?.objective_categories) return null;
+    
+    for (const category of this.data.objectiveVault.objective_categories) {
+      const obj = category.objectives.find(o => o.objective_id === objectiveId);
+      if (obj) return obj;
+    }
+    return null;
+  }
+  
+  buildFromVault(vaultObj, location, danger, extraData = {}) {
+    // Build rich objective from vault data
+    const obj = {
+      type: vaultObj.objective_id,
+      name: vaultObj.name,
+      description: vaultObj.description,
+      
+      // Setup
+      markers: this.evaluateVaultValue(vaultObj.setup?.markers, danger),
+      marker_type: vaultObj.setup?.marker_type || vaultObj.objective_id,
+      
+      // Interaction
+      action_type: vaultObj.interaction?.action_type || 'interact',
+      action_cost: vaultObj.interaction?.action_cost || 1,
+      test_required: vaultObj.interaction?.test_required || false,
+      test_type: vaultObj.interaction?.test_type || 'quality',
+      success: vaultObj.interaction?.success || 'Complete objective',
+      failure: vaultObj.interaction?.failure || 'Action wasted',
+      
+      // Victory Points
+      vp_value: vaultObj.vp_value || 3,
+      vp_per: vaultObj.vp_per || 'completion',
+      danger_scaling: vaultObj.danger_scaling || false,
+      
+      // Calculate max VP
+      target_value: this.evaluateVaultValue(vaultObj.setup?.markers, danger) || danger,
+      vp_per_unit: vaultObj.vp_value || 3
+    };
+    
+    // Add bonus VP if present
+    if (vaultObj.bonus_vp) {
+      obj.bonus_vp = vaultObj.bonus_vp;
+    }
+    
+    // Add special mechanics
+    if (vaultObj.extraction_required) obj.extraction_required = true;
+    if (vaultObj.hazard_level) obj.hazard_level = vaultObj.hazard_level;
+    if (vaultObj.escalation) obj.escalation = vaultObj.escalation;
+    if (vaultObj.corruption_spread) obj.corruption_spread = vaultObj.corruption_spread;
+    
+    obj.max_vp = obj.target_value * obj.vp_per_unit;
+    
+    return obj;
+  }
+  
+  evaluateVaultValue(expression, danger) {
+    // Evaluate string expressions like "danger_rating + 1"
+    if (typeof expression === 'number') return expression;
+    if (typeof expression !== 'string') return danger;
+    
+    try {
+      // Replace danger_rating with actual value
+      const evaluated = expression
+        .replace(/danger_rating/g, danger)
+        .replace(/Math\.max/g, 'Math.max')
+        .replace(/Math\.floor/g, 'Math.floor');
+      
+      // Safe evaluation
+      return eval(evaluated) || danger;
+    } catch (e) {
+      console.warn("Could not evaluate:", expression, e);
+      return danger;
+    }
   }
 
   getResourceVP(resource) {
