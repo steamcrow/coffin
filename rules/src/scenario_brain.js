@@ -59,41 +59,6 @@ const FACTION_CORE_VERBS = {
 };
 
 // ================================
-// FACTION THEMES
-// ================================
-const FACTION_THEMES = {
-  monster_rangers: {
-    primary_theme: 'Protect the Wild',
-    secondary_themes: ['Contain threats', 'Preserve balance'],
-    tone: 'grim_duty'
-  },
-  liberty_corps: {
-    primary_theme: 'Establish Order',
-    secondary_themes: ['Enforce law', 'Control chaos'],
-    tone: 'authoritarian'
-  },
-  monsterology: {
-    primary_theme: 'Advance Science',
-    secondary_themes: ['Extract knowledge', 'Ignore ethics'],
-    tone: 'clinical'
-  },
-  shine_riders: {
-    primary_theme: 'Turn Profit',
-    secondary_themes: ['Move fast', 'Sell stories'],
-    tone: 'opportunistic'
-  },
-  crow_queen: {
-    primary_theme: 'Serve the Crown',
-    secondary_themes: ['Claim territory', 'Convert subjects'],
-    tone: 'dark_royal'
-  },
-  monsters: {
-    primary_theme: 'Survive',
-    secondary_themes: ['Breed', 'Feed', 'Territory'],
-    tone: 'primal'
-  }
-};
-// ================================
 // PRESSURE TRACKS - Cults as Environmental Forces
 // ================================
 // Cults create escalating pressure, not strategic opposition
