@@ -18,6 +18,14 @@ const CULT_REGISTRY = [
   { id: 'bone_singers',            name: 'The Bone Singers',         theme: 'Death Magic',             color: '#78909c', description: 'Practitioners of death magic who raise the dead and commune with the grave.', weight: 7 },
   { id: 'regents_faithful',        name: "Regent's Faithful",        theme: 'Dark Monarchy',           color: '#8e24aa', description: "Secret worshippers of a dark monarch. Only appear when The Crow Queen is NOT in the scenario.", weight: 3 }
 ];
+const FACTION_CORE_VERBS = {
+  monster_rangers: { primary_verb: 'PROTECT', secondary_verbs: ['PRESERVE', 'STABILIZE', 'DEFEND'], approach: 'defensive' },
+  liberty_corps: { primary_verb: 'CONTROL', secondary_verbs: ['SECURE', 'ENFORCE', 'OCCUPY'], approach: 'authoritarian' },
+  monsterology: { primary_verb: 'DEVOUR', secondary_verbs: ['HARVEST', 'EXTRACT', 'CONSUME'], approach: 'exploitative' },
+  shine_riders: { primary_verb: 'STEAL', secondary_verbs: ['LOOT', 'RAID', 'PLUNDER'], approach: 'opportunistic' },
+  crow_queen: { primary_verb: 'CONSECRATE', secondary_verbs: ['CLAIM', 'SANCTIFY', 'CONVERT'], approach: 'mystical' },
+  monsters: { primary_verb: 'BREED', secondary_verbs: ['FEED', 'NEST', 'MIGRATE'], approach: 'primal' }
+};
 
 // ================================
 // PRESSURE TRACKS - Cults as Environmental Forces
@@ -1336,7 +1344,7 @@ class ScenarioBrain {
       // Plot and objectives
       { key: 'plotFamilies',       url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json' },
       { key: 'plotEngine',         url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/190_plot_engine_schema.json' },  // Design philosophy
-      { key: 'objectiveVault',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/160_objective_vault.json' },     // CORRECT FILE - Complete objective rules
+      { key: 'objectiveVault',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/240_objective_vault.json' },     // CORRECT FILE - Complete objective rules
       
       // Game mechanics data
       { key: 'twists',             url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json' },
