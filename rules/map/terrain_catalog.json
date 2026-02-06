@@ -1,73 +1,165 @@
 {
-  "schema_version": "1.0",
-  "items": [
-    {
-      "id": "mesa_large",
-      "name": "Mesa",
-      "category": "elevation",
-      "size": "L",
+  "terrain_catalog": {
+    "version": "1.1",
+    "last_updated": "2026-02-05",
+    "notes": [
+      "Catalog defines WHAT terrain is and what it can do.",
+      "Rules app defines HOW hooks (high_ground, fall_risk, etc.) behave mechanically."
+    ],
 
-      "movement": "impassable",
-      "height_levels": 3,
-      "cover": "hard",
-      "occluder": true,
-
-      "traits": [],
-      "tags": ["mesa", "cliff", "high_ground"],
-
-      "footprint_in": { "w": 12, "d": 10 },
-
-      "art": {
-        "type": "png",
-        "src": "assets/terrain/mesa_large.png",
-        "anchor": "bottom-center"
-      }
+    "enums": {
+      "category": ["building", "natural", "scatter", "industrial", "ruins", "water", "hazard", "roads"],
+      "footprint_shape": ["circle", "rect", "oval", "poly", "line"],
+      "cover_type": ["none", "light", "heavy"],
+      "los_behavior": ["open", "obscures", "blocks"],
+      "passability": ["open", "difficult", "impassable"],
+      "elevation_system": ["none", "levels", "heightband"],
+      "access_type": ["stairs", "ladder", "climb", "ramp", "jump", "elevator", "teleport"],
+      "slot_tag": [
+        "objective_anchor",
+        "searchable",
+        "lootable",
+        "interior",
+        "roof",
+        "high_point",
+        "cover_node",
+        "ritual_site",
+        "spawn_point",
+        "extraction_point"
+      ]
     },
 
-    {
-      "id": "rock_outcroppings",
-      "name": "Rock Outcroppings",
-      "category": "cover",
-      "size": "M",
+    "terrain_type": {
+      "terrain_type_id": "string (unique)",
+      "name": "string",
+      "category": "enum(category)",
+      "tags": ["string"],
+      "size_class": "string (e.g., S/M/L/XL)",
 
-      "movement": "difficult",
-      "height_levels": 1,
-      "cover": "hard",
-      "occluder": true,
+      "footprint": {
+        "shape": "enum(footprint_shape)",
+        "width": "number (inches, optional if not rect)",
+        "height": "number (inches, optional if not rect)",
+        "radius": "number (inches, optional if circle)",
+        "points": "array of [x,y] (optional if poly)",
+        "base_required": "boolean",
+        "base_notes": "string (optional)"
+      },
 
-      "traits": [],
-      "tags": ["rock", "cover"],
+      "visibility": {
+        "default_los": "enum(los_behavior)",
+        "blocks_behind": "boolean (optional)",
+        "windows_or_gaps": "boolean (optional)",
+        "notes": "string (optional)"
+      },
 
-      "footprint_in": { "w": 6, "d": 5 },
+      "movement": {
+        "default_passability": "enum(passability)",
+        "climbable": "boolean",
+        "jumpable": "boolean",
+        "hazardous": "boolean",
+        "notes": "string (optional)"
+      },
+
+      "cover": {
+        "default_cover": "enum(cover_type)",
+        "within_inches": "number (optional, default 1)",
+        "directional": "boolean (optional)",
+        "notes": "string (optional)"
+      },
+
+      "elevation": {
+        "system": "enum(elevation_system)",
+        "max_level": "integer (required if system=levels)",
+        "level_height_inches": "number (optional, informational)",
+        "levels": [
+          {
+            "level": "integer (0..max_level)",
+            "label": "string",
+            "los": {
+              "behavior": "enum(los_behavior) (optional override)",
+              "notes": "string (optional)"
+            },
+            "movement": {
+              "passability": "enum(passability) (optional override)",
+              "treat_as": ["enum(passability) or tags like 'difficult'"],
+              "notes": "string (optional)"
+            },
+            "cover": {
+              "type": "enum(cover_type) (optional override)",
+              "within_inches": "number (optional)",
+              "notes": "string (optional)"
+            },
+
+            "limits": {
+              "max_models": "integer (optional)",
+              "max_base_mm": "integer (optional, e.g., 40)",
+              "notes": "string (optional)"
+            },
+
+            "slots": [
+              {
+                "slot_id": "string (unique within terrain_type)",
+                "slot_tags": ["enum(slot_tag) or string"],
+                "max_markers": "integer (optional)",
+                "max_models": "integer (optional)",
+                "notes": "string (optional)"
+              }
+            ],
+
+            "rules_hooks": {
+              "high_ground": { "enabled": "boolean", "note": "string (optional)" },
+              "fall_risk": { "enabled": "boolean", "note": "string (optional)" },
+              "interior": { "enabled": "boolean", "note": "string (optional)" }
+            }
+          }
+        ],
+
+        "access": [
+          {
+            "type": "enum(access_type)",
+            "from_level": "integer",
+            "to_level": "integer",
+            "cost": "number (actions or movement units; your rules decide)",
+            "requires_tag": "string (optional, e.g., 'climbable')",
+            "test": {
+              "required": "boolean",
+              "test_type": "string (e.g., quality, stamina)",
+              "dc": "integer (optional)",
+              "on_fail": "string (optional)"
+            },
+            "notes": "string (optional)"
+          }
+        ]
+      },
+
+      "markers": {
+        "supports_objectives": "boolean",
+        "default_marker_types": ["string"],
+        "notes": "string (optional)"
+      },
+
+      "spawn": {
+        "is_spawn_point": "boolean",
+        "spawn_tags": ["string"],
+        "notes": "string (optional)"
+      },
+
+      "hazards": [
+        {
+          "hazard_id": "string",
+          "label": "string",
+          "rules_hook": "string",
+          "severity": "integer (optional)",
+          "notes": "string (optional)"
+        }
+      ],
 
       "art": {
-        "type": "png",
-        "src": "assets/terrain/rock_outcroppings.png",
-        "anchor": "bottom-center"
-      }
-    },
-
-    {
-      "id": "sinkhole",
-      "name": "Sinkhole",
-      "category": "hazard",
-      "size": "M",
-
-      "movement": "impassable",
-      "height_levels": -2,
-      "cover": "none",
-      "occluder": false,
-
-      "traits": ["unstable", "hazardous"],
-      "tags": ["pit", "drop"],
-
-      "footprint_in": { "w": 6, "d": 6 },
-
-      "art": {
-        "type": "png",
-        "src": "assets/terrain/sinkhole.png",
-        "anchor": "center"
+        "icon": "string (optional)",
+        "silhouette": "string (optional)",
+        "gallery": ["string (optional URLs/paths)"]
       }
     }
-  ]
+  }
 }
