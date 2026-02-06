@@ -1,0 +1,73 @@
+{
+  "schema_version": "1.0",
+  "items": [
+    {
+      "id": "mesa_large",
+      "name": "Mesa",
+      "category": "elevation",
+      "size": "L",
+
+      "movement": "impassable",
+      "height_levels": 3,
+      "cover": "hard",
+      "occluder": true,
+
+      "traits": [],
+      "tags": ["mesa", "cliff", "high_ground"],
+
+      "footprint_in": { "w": 12, "d": 10 },
+
+      "art": {
+        "type": "png",
+        "src": "assets/terrain/mesa_large.png",
+        "anchor": "bottom-center"
+      }
+    },
+
+    {
+      "id": "rock_outcroppings",
+      "name": "Rock Outcroppings",
+      "category": "cover",
+      "size": "M",
+
+      "movement": "difficult",
+      "height_levels": 1,
+      "cover": "hard",
+      "occluder": true,
+
+      "traits": [],
+      "tags": ["rock", "cover"],
+
+      "footprint_in": { "w": 6, "d": 5 },
+
+      "art": {
+        "type": "png",
+        "src": "assets/terrain/rock_outcroppings.png",
+        "anchor": "bottom-center"
+      }
+    },
+
+    {
+      "id": "sinkhole",
+      "name": "Sinkhole",
+      "category": "hazard",
+      "size": "M",
+
+      "movement": "impassable",
+      "height_levels": -2,
+      "cover": "none",
+      "occluder": false,
+
+      "traits": ["unstable", "hazardous"],
+      "tags": ["pit", "drop"],
+
+      "footprint_in": { "w": 6, "d": 6 },
+
+      "art": {
+        "type": "png",
+        "src": "assets/terrain/sinkhole.png",
+        "anchor": "center"
+      }
+    }
+  ]
+}
