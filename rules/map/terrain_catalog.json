@@ -1,165 +1,196 @@
 {
-  "terrain_catalog": {
-    "version": "1.1",
-    "last_updated": "2026-02-05",
-    "notes": [
-      "Catalog defines WHAT terrain is and what it can do.",
-      "Rules app defines HOW hooks (high_ground, fall_risk, etc.) behave mechanically."
-    ],
+  "schema_id": "cc_terrain_catalog",
+  "schema_version": "1.1",
+  "last_updated": "2026-02-05",
+  "notes": [
+    "Catalog entries define terrain TYPES (what a piece is).",
+    "Scenario/Map uses terrain_instances.json to place copies."
+  ],
 
-    "enums": {
-      "category": ["building", "natural", "scatter", "industrial", "ruins", "water", "hazard", "roads"],
-      "footprint_shape": ["circle", "rect", "oval", "poly", "line"],
-      "cover_type": ["none", "light", "heavy"],
-      "los_behavior": ["open", "obscures", "blocks"],
-      "passability": ["open", "difficult", "impassable"],
-      "elevation_system": ["none", "levels", "heightband"],
-      "access_type": ["stairs", "ladder", "climb", "ramp", "jump", "elevator", "teleport"],
-      "slot_tag": [
-        "objective_anchor",
-        "searchable",
-        "lootable",
-        "interior",
-        "roof",
-        "high_point",
-        "cover_node",
-        "ritual_site",
-        "spawn_point",
-        "extraction_point"
-      ]
-    },
+  "enums": {
+    "terrain_kind": ["building", "scatter", "obstacle", "area", "hazard", "feature", "objective"],
+    "footprint_shape": ["rect", "circle", "poly", "line"],
+    "los_profile": ["blocks", "partial", "none"],
+    "cover_grade": ["none", "light", "heavy"],
+    "climb_mode": ["none", "ladder", "stairs", "scramble", "rope", "any"],
+    "surface_kind": ["ground", "interior", "balcony", "roof", "catwalk", "platform", "stairs"],
+    "slot_kind": ["objective", "spawn", "loot", "interaction", "hazard_anchor", "story_anchor"]
+  },
 
-    "terrain_type": {
-      "terrain_type_id": "string (unique)",
-      "name": "string",
-      "category": "enum(category)",
-      "tags": ["string"],
-      "size_class": "string (e.g., S/M/L/XL)",
+  "terrain_types": [
+    {
+      "terrain_type_id": "building_saloon_two_story",
+      "name": "Two-Story Saloon",
+      "kind": "building",
+      "tags": ["wood", "old_west", "walkable", "multi_level"],
+      "emoji": "🏚️",
 
       "footprint": {
-        "shape": "enum(footprint_shape)",
-        "width": "number (inches, optional if not rect)",
-        "height": "number (inches, optional if not rect)",
-        "radius": "number (inches, optional if circle)",
-        "points": "array of [x,y] (optional if poly)",
-        "base_required": "boolean",
-        "base_notes": "string (optional)"
+        "shape": "rect",
+        "size_in": { "w": 6, "d": 4 },
+        "base_height_in": 0.5
       },
 
       "visibility": {
-        "default_los": "enum(los_behavior)",
-        "blocks_behind": "boolean (optional)",
-        "windows_or_gaps": "boolean (optional)",
-        "notes": "string (optional)"
-      },
-
-      "movement": {
-        "default_passability": "enum(passability)",
-        "climbable": "boolean",
-        "jumpable": "boolean",
-        "hazardous": "boolean",
-        "notes": "string (optional)"
+        "los_profile": "blocks",
+        "blocks_los_when": "between models if line crosses footprint and neither model is on a higher level with clear line",
+        "window_los": "partial"
       },
 
       "cover": {
-        "default_cover": "enum(cover_type)",
-        "within_inches": "number (optional, default 1)",
-        "directional": "boolean (optional)",
-        "notes": "string (optional)"
+        "default_cover": "light",
+        "edges_cover": "heavy",
+        "interior_cover": "light"
       },
 
       "elevation": {
-        "system": "enum(elevation_system)",
-        "max_level": "integer (required if system=levels)",
-        "level_height_inches": "number (optional, informational)",
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 2,
+
         "levels": [
           {
-            "level": "integer (0..max_level)",
-            "label": "string",
-            "los": {
-              "behavior": "enum(los_behavior) (optional override)",
-              "notes": "string (optional)"
-            },
-            "movement": {
-              "passability": "enum(passability) (optional override)",
-              "treat_as": ["enum(passability) or tags like 'difficult'"],
-              "notes": "string (optional)"
-            },
-            "cover": {
-              "type": "enum(cover_type) (optional override)",
-              "within_inches": "number (optional)",
-              "notes": "string (optional)"
-            },
-
-            "limits": {
-              "max_models": "integer (optional)",
-              "max_base_mm": "integer (optional, e.g., 40)",
-              "notes": "string (optional)"
-            },
-
-            "slots": [
-              {
-                "slot_id": "string (unique within terrain_type)",
-                "slot_tags": ["enum(slot_tag) or string"],
-                "max_markers": "integer (optional)",
-                "max_models": "integer (optional)",
-                "notes": "string (optional)"
-              }
-            ],
-
-            "rules_hooks": {
-              "high_ground": { "enabled": "boolean", "note": "string (optional)" },
-              "fall_risk": { "enabled": "boolean", "note": "string (optional)" },
-              "interior": { "enabled": "boolean", "note": "string (optional)" }
-            }
-          }
-        ],
-
-        "access": [
+            "level": 0,
+            "name": "Ground Floor",
+            "surface_kind": "interior",
+            "walkable": true,
+            "blocks_los_from_outside": true,
+            "notes": ["Interior. Treat as difficult to see through."]
+          },
           {
-            "type": "enum(access_type)",
-            "from_level": "integer",
-            "to_level": "integer",
-            "cost": "number (actions or movement units; your rules decide)",
-            "requires_tag": "string (optional, e.g., 'climbable')",
-            "test": {
-              "required": "boolean",
-              "test_type": "string (e.g., quality, stamina)",
-              "dc": "integer (optional)",
-              "on_fail": "string (optional)"
-            },
-            "notes": "string (optional)"
+            "level": 1,
+            "name": "Balcony / Second Floor",
+            "surface_kind": "balcony",
+            "walkable": true,
+            "railings_cover": "light",
+            "notes": ["Counts as elevated for line of sight checks."]
+          },
+          {
+            "level": 2,
+            "name": "Roof",
+            "surface_kind": "roof",
+            "walkable": true,
+            "edge_fall_risk": false,
+            "notes": ["High ground. Great firing perch."]
           }
         ]
       },
 
-      "markers": {
-        "supports_objectives": "boolean",
-        "default_marker_types": ["string"],
-        "notes": "string (optional)"
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": true,
+        "difficult_terrain_on": ["interior"],
+        "climb": {
+          "allowed": true,
+          "mode": "ladder",
+          "min_level_access": 1,
+          "max_level_access": 2,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No movement; action spent"
+          }
+        }
       },
 
-      "spawn": {
-        "is_spawn_point": "boolean",
-        "spawn_tags": ["string"],
-        "notes": "string (optional)"
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "bar_counter",
+            "name": "Ransack the Bar",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Gain 1 Loot token.",
+            "on_fail": "Make noise: nearest enemy gains +1 die vs you next attack."
+          }
+        ]
       },
 
-      "hazards": [
+      "slots": [
         {
-          "hazard_id": "string",
-          "label": "string",
-          "rules_hook": "string",
-          "severity": "integer (optional)",
-          "notes": "string (optional)"
+          "slot_id": "saloon_roof_objective",
+          "slot_kind": "objective",
+          "label": "Roof Objective Spot",
+          "recommended_marker": "artifact",
+          "level": 2,
+          "position_hint": "center_roof",
+          "notes": ["Used by scenario builder to place an objective on the roof."]
+        },
+        {
+          "slot_id": "saloon_backdoor_spawn",
+          "slot_kind": "spawn",
+          "label": "Back Door",
+          "level": 0,
+          "position_hint": "rear_edge",
+          "notes": ["Optional entry point / ambush spawn."]
         }
       ],
 
-      "art": {
-        "icon": "string (optional)",
-        "silhouette": "string (optional)",
-        "gallery": ["string (optional URLs/paths)"]
+      "destructibility": {
+        "destructible": true,
+        "structure_rating": 6,
+        "breakpoints": [
+          { "at_damage": 3, "effect": "Windows shattered: interior loses cover." },
+          { "at_damage": 6, "effect": "Collapse: level 2 becomes impassable rubble; anyone on roof takes 2 dice damage." }
+        ],
+        "rubble_result": {
+          "spawns_terrain_type_id": "rubble_wood_medium",
+          "notes": ["Replace piece with rubble marker or template."]
+        }
       }
+    },
+
+    {
+      "terrain_type_id": "scatter_crates_small",
+      "name": "Supply Crates (Small Cluster)",
+      "kind": "scatter",
+      "tags": ["lootable", "cover", "portable_optional"],
+      "emoji": "📦",
+
+      "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 2 }, "base_height_in": 1.0 },
+
+      "visibility": { "los_profile": "partial", "window_los": "none" },
+
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+
+      "elevation": { "system": "none" },
+
+      "movement": { "is_passable": true, "is_walkable_on_top": false },
+
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "search_crates",
+            "name": "Search Crates",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 2,
+            "on_success": "Gain 1 Supply token.",
+            "on_fail": "Empty."
+          }
+        ]
+      },
+
+      "slots": [
+        {
+          "slot_id": "crate_loot_anchor",
+          "slot_kind": "loot",
+          "label": "Loot Anchor",
+          "level": 0,
+          "position_hint": "center",
+          "notes": ["Scenario builder can attach loot or an objective marker here."]
+        }
+      ],
+
+      "destructibility": { "destructible": false }
     }
-  }
+  ]
 }
