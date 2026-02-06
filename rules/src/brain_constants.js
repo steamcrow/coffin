@@ -243,7 +243,6 @@ const OBJECTIVE_BUILDERS = {
 
 console.log("✅ Brain Constants loaded!");
 
-// Export for use in other modules
 if (typeof window !== 'undefined') {
   window.BRAIN_CONSTANTS = {
     CULT_REGISTRY,
@@ -254,6 +253,7 @@ if (typeof window !== 'undefined') {
     TERRAIN_MAP,
     VP_SYSTEMS,
     FACTION_PLOT_AFFINITIES,
-    OBJECTIVE_BUILDERS
+    OBJECTIVE_BUILDERS,
+    CULTIST_TERRAIN_MARKERS
   };
 }
