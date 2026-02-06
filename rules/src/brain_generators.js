@@ -21,7 +21,7 @@ const BrainGenerators = {
         name: objective.name,
         goal: objective.description,
         method: objective.success || 'Complete objective',
-        scoring: `+${objective.vp_value} VP per ${objective.vp_per}`,
+        scoring: `+${objective.vp_value || objective.vp_per_unit || 2} VP per ${objective.vp_per || objective.progress_label || 'completion'}`,
         flavor: null
       };
     }
@@ -41,7 +41,7 @@ const BrainGenerators = {
       action_type: objective.action_type,
       action_cost: objective.action_cost,
       test_required: objective.test_required,
-      vp_value: objective.vp_value
+      vp_value: objective.vp_value || objective.vp_per_unit
     };
   },
   
@@ -64,40 +64,38 @@ const BrainGenerators = {
   
   extractKeyNoun(name) {
     const important = name
-      .replace(/Salvage|Recover|Control|Complete|Destroy|Gather|Search|Raid|Stage/gi, '')
+      .replace(/Salvage|Recover|Control|Complete|Destroy|Gather|Search|Raid|Stage|Extract/gi, '')
       .replace(/the|a|an/gi, '')
       .trim();
     return important || name;
   },
   
   generateFactionGoal(objective, verb, theme, pressure) {
-    const baseGoal = objective.description;
-    
-    const motivations = {
-      'monster_rangers': `The ${theme.primary_theme} demands action. ${baseGoal} Rangers know that`,
-      'liberty_corps': `${theme.primary_theme} requires ${baseGoal} The Corps will`,
-      'monsterology': `${theme.primary_theme} depends on ${baseGoal} The Institute must`,
-      'shine_riders': `${theme.primary_theme} means ${baseGoal} Riders can`,
-      'crow_queen': `The Queen's ${theme.primary_theme} commands ${baseGoal} Her servants`,
-      'monsters': `Survival requires ${baseGoal} The pack`
+    // FIX: Create proper complete sentences
+    const goalMap = {
+      'monster_rangers': `Rangers must protect the Wild. ${objective.description}`,
+      'liberty_corps': `Federal law demands order. ${objective.description}`,
+      'monsterology': `The Institute requires specimens. ${objective.description}`,
+      'shine_riders': `Everything has a price. ${objective.description}`,
+      'crow_queen': `The Queen's will must be done. ${objective.description}`,
+      'monsters': `The pack needs territory. ${objective.description}`
     };
     
-    const factionId = theme.primary_theme ? Object.keys(FACTION_THEMES).find(id => 
+    // Find faction by matching theme
+    const factionId = Object.keys(FACTION_THEMES).find(id => 
       FACTION_THEMES[id].primary_theme === theme.primary_theme
-    ) : null;
+    );
     
-    const prefix = motivations[factionId] || baseGoal;
+    const baseGoal = goalMap[factionId] || objective.description;
     
     if (pressure) {
-      return `${prefix} before ${pressure.label} reaches critical mass.`;
+      return `${baseGoal} Time is running out before ${pressure.label}.`;
     }
     
-    return prefix;
+    return baseGoal;
   },
   
   generateFactionMethod(objective, verb, theme) {
-    const baseMethod = objective.success || 'Complete the objective';
-    
     const tactics = {
       'PROTECT': 'Defensive positioning. +1 die when protecting objectives.',
       'CONTROL': 'Overwhelming force. Control requires majority presence.',
@@ -107,11 +105,13 @@ const BrainGenerators = {
       'BREED': 'Territorial marking. Spawns reinforcements when held.'
     };
     
-    return `${baseMethod} ${tactics[verb.primary_verb] || ''}`;
+    return tactics[verb.primary_verb] || 'Complete the objective.';
   },
   
   generateFactionScoring(objective, verb, theme) {
-    const base = `+${objective.vp_value} VP per ${objective.vp_per}`;
+    const vpValue = objective.vp_value || objective.vp_per_unit || 2;
+    const vpPer = objective.vp_per || objective.progress_label || 'completion';
+    const base = `+${vpValue} VP per ${vpPer}`;
     
     const bonuses = {
       'PROTECT': 'Bonus VP if no casualties.',
@@ -218,12 +218,18 @@ const BrainGenerators = {
       'gildren': 'Gildren'
     };
     return pretty[key] || this.capitalize(key.replace(/_/g, ' '));
+  },
+  
+  parseTemplate(template, context) {
+    if (!template) return '';
+    return template.replace(/{(\w+)}/g, (match, key) => {
+      return context[key] !== undefined ? context[key] : match;
+    });
   }
 };
 
 console.log("✅ Brain Generators loaded!");
 
-// Export
 if (typeof window !== 'undefined') {
   window.BrainGenerators = BrainGenerators;
 }
