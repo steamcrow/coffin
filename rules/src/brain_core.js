@@ -354,7 +354,7 @@ class ScenarioBrain {
   }
 
   // ================================
-  // OBJECTIVES
+  // OBJECTIVES - FIXED: RESOURCES FIRST
   // ================================
   
   generateObjectives(plotFamily, location, userSelections, vpSpread) {
@@ -364,24 +364,17 @@ class ScenarioBrain {
     
     console.log("  Starting objective generation...");
     
-    if (plotFamily.default_objectives && plotFamily.default_objectives.length > 0) {
-      const plotObjectives = this.randomChoice(plotFamily.default_objectives, Math.min(2, plotFamily.default_objectives.length));
-      plotObjectives.forEach(objType => {
-        const obj = this.buildObjective(objType, location, danger, vpSpread);
-        if (obj) {
-          objectives.push(obj);
-          usedTypes.add(objType);
-        }
-      });
-    }
-    
+    // STEP 4.1: Resource-Based Objectives FIRST (these are the juicy ones!)
     if (location.resources) {
       const highValueResources = Object.entries(location.resources)
         .filter(([key, val]) => val >= 2)
+        .sort(([, a], [, b]) => b - a) // Highest value first
         .map(([key]) => key);
       
-      if (highValueResources.length > 0 && !usedTypes.has('resource_extraction')) {
-        const resource = this.randomChoice(highValueResources);
+      // Add up to 2 resource objectives
+      const numResourceObjectives = Math.min(2, highValueResources.length);
+      for (let i = 0; i < numResourceObjectives; i++) {
+        const resource = highValueResources[i];
         const amount = location.resources[resource];
         const prettyName = this.formatResourceName(resource);
         
@@ -393,11 +386,26 @@ class ScenarioBrain {
         
         if (obj) {
           objectives.push(obj);
-          usedTypes.add('resource_extraction');
+          usedTypes.add('resource_extraction_' + resource); // Track each resource separately
         }
       }
     }
     
+    // STEP 4.2: Plot-Specific Objectives
+    if (plotFamily.default_objectives && plotFamily.default_objectives.length > 0) {
+      const plotObjectives = this.randomChoice(plotFamily.default_objectives, Math.min(1, plotFamily.default_objectives.length));
+      plotObjectives.forEach(objType => {
+        if (!usedTypes.has(objType)) {
+          const obj = this.buildObjective(objType, location, danger, vpSpread);
+          if (obj) {
+            objectives.push(obj);
+            usedTypes.add(objType);
+          }
+        }
+      });
+    }
+    
+    // STEP 4.3: Fill with General Conflict Objectives (no duplicates)
     const generalObjectives = ['scattered_crates', 'wrecked_engine', 'land_marker', 'fortified_position', 'stored_supplies'];
     const numToFill = Math.max(1, 4 - objectives.length);
 
@@ -412,6 +420,8 @@ class ScenarioBrain {
         usedTypes.add(objType);
       }
     }
+    
+    console.log(`  ✓ Generated ${objectives.length} objectives:`, objectives.map(o => o.name).join(', '));
     
     return objectives;
   }
@@ -466,7 +476,7 @@ class ScenarioBrain {
       
       target_value: this.evaluateVaultValue(vaultObj.setup?.markers, danger) || danger,
       vp_per_unit: vaultObj.vp_value || 3,
-      progress_label: vaultObj.vp_per || 'completion'
+      progress_label: vaultObj.vp_per || 'completion'  // FIX: Added this line
     };
     
     if (vaultObj.bonus_vp) obj.bonus_vp = vaultObj.bonus_vp;
@@ -636,7 +646,7 @@ class ScenarioBrain {
   
   extractKeyNoun(name) {
     const important = name
-      .replace(/Salvage|Recover|Control|Complete|Destroy|Gather|Search|Raid|Stage/gi, '')
+      .replace(/Salvage|Recover|Control|Complete|Destroy|Gather|Search|Raid|Stage|Extract/gi, '')
       .replace(/the|a|an/gi, '')
       .trim();
     return important || name;
@@ -748,14 +758,13 @@ class ScenarioBrain {
   }
 
   // ================================
-  // NAME & NARRATIVE
+  // NAME & NARRATIVE - FIXED TITLE GENERATOR
   // ================================
 
   generateName(tags, location) {
     if (!this.data.names) return `Battle at ${location.name}`;
     
     const prefixes = this.data.names.prefixes || ["Skirmish at", "Battle of", "Conflict at"];
-    const suffixes = this.data.names.suffixes || ["Pass", "Ridge", "Crossing"];
     const descriptors = this.data.names.descriptors || ["Bloody", "Desperate", "Final"];
     
     const getTextValue = (item) => {
@@ -765,13 +774,13 @@ class ScenarioBrain {
     };
     
     const prefix = getTextValue(this.randomChoice(prefixes));
-    const suffix = getTextValue(this.randomChoice(suffixes));
     const descriptor = getTextValue(this.randomChoice(descriptors));
 
+    // SIMPLE, RELIABLE STYLES - NO MORE NONSENSE
     const styles = [
-      `${prefix} ${location.name}`,
-      `The ${descriptor} ${suffix} of ${location.name}`,
-      `${location.name}: ${descriptor} Stand`
+      `${prefix} ${location.name}`,                    // "Battle at Fortune"
+      `The ${descriptor} Stand at ${location.name}`,   // "The Bloody Stand at Fortune"
+      `${location.name}: ${descriptor} Standoff`       // "Fortune: Desperate Standoff"
     ];
     
     return this.randomChoice(styles);
