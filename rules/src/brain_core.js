@@ -354,7 +354,7 @@ class ScenarioBrain {
   }
 
   // ================================
-  // OBJECTIVES - FIXED: RESOURCES FIRST
+  // OBJECTIVES - FIXED: forEach BUG
   // ================================
   
   generateObjectives(plotFamily, location, userSelections, vpSpread) {
@@ -386,14 +386,21 @@ class ScenarioBrain {
         
         if (obj) {
           objectives.push(obj);
-          usedTypes.add('resource_extraction_' + resource); // Track each resource separately
+          usedTypes.add('resource_extraction_' + resource);
         }
       }
     }
     
     // STEP 4.2: Plot-Specific Objectives
     if (plotFamily.default_objectives && plotFamily.default_objectives.length > 0) {
-      const plotObjectives = this.randomChoice(plotFamily.default_objectives, Math.min(1, plotFamily.default_objectives.length));
+      const numToSelect = Math.min(1, plotFamily.default_objectives.length);
+      let plotObjectives = this.randomChoice(plotFamily.default_objectives, numToSelect);
+      
+      // FIX: randomChoice returns single item when count=1, wrap it in array
+      if (!Array.isArray(plotObjectives)) {
+        plotObjectives = plotObjectives ? [plotObjectives] : [];
+      }
+      
       plotObjectives.forEach(objType => {
         if (!usedTypes.has(objType)) {
           const obj = this.buildObjective(objType, location, danger, vpSpread);
@@ -476,7 +483,7 @@ class ScenarioBrain {
       
       target_value: this.evaluateVaultValue(vaultObj.setup?.markers, danger) || danger,
       vp_per_unit: vaultObj.vp_value || 3,
-      progress_label: vaultObj.vp_per || 'completion'  // FIX: Added this line
+      progress_label: vaultObj.vp_per || 'completion'
     };
     
     if (vaultObj.bonus_vp) obj.bonus_vp = vaultObj.bonus_vp;
@@ -758,7 +765,7 @@ class ScenarioBrain {
   }
 
   // ================================
-  // NAME & NARRATIVE - FIXED TITLE GENERATOR
+  // NAME & NARRATIVE
   // ================================
 
   generateName(tags, location) {
@@ -776,11 +783,10 @@ class ScenarioBrain {
     const prefix = getTextValue(this.randomChoice(prefixes));
     const descriptor = getTextValue(this.randomChoice(descriptors));
 
-    // SIMPLE, RELIABLE STYLES - NO MORE NONSENSE
     const styles = [
-      `${prefix} ${location.name}`,                    // "Battle at Fortune"
-      `The ${descriptor} Stand at ${location.name}`,   // "The Bloody Stand at Fortune"
-      `${location.name}: ${descriptor} Standoff`       // "Fortune: Desperate Standoff"
+      `${prefix} ${location.name}`,
+      `The ${descriptor} Stand at ${location.name}`,
+      `${location.name}: ${descriptor} Standoff`
     ];
     
     return this.randomChoice(styles);
