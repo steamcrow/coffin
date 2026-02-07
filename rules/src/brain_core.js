@@ -34,17 +34,6 @@ class ScenarioBrain {
   capitalize(str) { return BrainGenerators.capitalize(str); }
   parseTemplate(template, context) { return BrainGenerators.parseTemplate(template, context); }
   
-  // Inherit faction generation methods
-  generateFactionGoal(obj, verb, theme, pressure) { 
-    return BrainGenerators.generateFactionGoal(obj, verb, theme, pressure); 
-  }
-  generateFactionMethod(verb) { 
-    return BrainGenerators.generateFactionMethod(verb); 
-  }
-  generateFactionScoring(obj, verb) { 
-    return BrainGenerators.generateFactionScoring(obj, verb); 
-  }
-  
   async loadAllData() {
     console.log("📚 Loading all data files...");
     
@@ -99,68 +88,66 @@ class ScenarioBrain {
       await this.loadAllData();
     }
     
-    // STEP 1: Location
     const location = this.generateLocation(userSelections);
     console.log("✓ Location:", location.name);
     
-    // STEP 2: Plot Family  
     const plotFamily = this.selectPlotFamily(location, userSelections);
     console.log("✓ Plot:", plotFamily.name);
     
-    // STEP 3: VP Spread
     const vpSpread = this.calculateVPSpread(plotFamily.id, userSelections.dangerRating);
     
-    // STEP 4: Objectives
     const objectives = this.generateObjectives(plotFamily, location, userSelections, vpSpread);
     
-    // STEP 5: Cultists
-    const cultistEncounter = { enabled: false }; // Simplified for now
+    const cultistEncounter = { enabled: false };
     
-// STEP 6: Victory Conditions
-const victoryConditions = {};
-userSelections.factions.forEach(faction => {
-  // FIX: Filter out any null objectives before mapping
-  const validObjectives = objectives.filter(obj => obj !== null);
-  
-  victoryConditions[faction.id] = {
-    target_vp: vpSpread.target_to_win,
-    faction_objectives: validObjectives.map(obj => ({
-      name: obj.name,
-      goal: obj.description,
-      method: "Complete objective",
-      scoring: `+${obj.vp_per_unit} VP per ${obj.progress_label}`
-    })),
-    aftermath: { 
-      immediate_effect: "Conflict resolved", 
-      canyon_state_change: "None", 
-      long_term: "Status quo", 
-      flavor: "The fight continues." 
-    }
-  };
-});
+    const victoryConditions = {};
+    userSelections.factions.forEach(faction => {
+      const validObjectives = objectives.filter(obj => obj !== null);
+      
+      victoryConditions[faction.id] = {
+        target_vp: vpSpread.target_to_win,
+        faction_objectives: validObjectives.map(obj => ({
+          name: obj.name,
+          goal: obj.description,
+          method: "Complete objective",
+          scoring: `+${obj.vp_per_unit} VP per ${obj.progress_label}`
+        })),
+        aftermath: { 
+          immediate_effect: "Conflict resolved", 
+          canyon_state_change: "None", 
+          long_term: "Status quo", 
+          flavor: "The fight continues." 
+        }
+      };
+    });
     
-    // STEP 7: Name & Narrative
     const name = this.generateName(['battle'], location);
     const narrative = `${userSelections.factions.map(f => f.name).join(' and ')} clash at ${location.name}.`;
     
-    // STEP 8: Extras
     const twist = this.generateTwist(userSelections.dangerRating, location);
     const canyonState = this.getCanyonState(userSelections.canyonState);
     const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location, userSelections.factions);
     
-    // STEP 9: Terrain
     const terrainSetup = this.generateTerrainSetup(plotFamily, location, userSelections.dangerRating, objectives, cultistEncounter);
     
-    // STEP 10: Coffin Cough
-    const coffinCough = null; // Simplified
+    const coffinCough = null;
     
     return {
-      name, narrative_hook: narrative, plot_family: plotFamily.name,
-      location, danger_rating: userSelections.dangerRating,
+      name, 
+      narrative_hook: narrative, 
+      plot_family: plotFamily.name,
+      location, 
+      danger_rating: userSelections.dangerRating,
       danger_description: this.getDangerDesc(userSelections.dangerRating),
-      vp_spread: vpSpread, objectives, victory_conditions: victoryConditions,
-      canyon_state: canyonState, twist, finale, cultist_encounter: cultistEncounter,
-      terrain_setup: terrainSetup, coffin_cough: coffinCough
+      vp_spread: vpSpread, 
+      objectives, 
+      victory_conditions: victoryConditions,
+      canyon_state: canyonState, 
+      twist, 
+      finale, 
+      cultist_encounter: cultistEncounter,
+      terrain_setup: terrainSetup, 
+      coffin_cough: coffinCough
     };
   }
 
@@ -235,79 +222,71 @@ userSelections.factions.forEach(faction => {
     };
   }
 
-generateObjectives(plotFamily, location, userSelections, vpSpread) {
-  const objectives = [];
-  const danger = userSelections.dangerRating;
-  const usedTypes = new Set();
-  
-  console.log("  Starting objective generation...");
-  
-  // Define resource vs territory plots
-  const resourcePlots = ['extraction_heist', 'sabotage_strike', 'ambush_derailment'];
-  const isResourcePlot = resourcePlots.includes(plotFamily.id);
-  
-  // STEP 1: Resources (ONLY for resource-focused plots)
-  if (isResourcePlot && location.resources) {
-    const resources = Object.entries(location.resources).filter(([k, v]) => v >= 2);
-    const numToAdd = Math.min(2, resources.length);
+  generateObjectives(plotFamily, location, userSelections, vpSpread) {
+    const objectives = [];
+    const danger = userSelections.dangerRating;
+    const usedTypes = new Set();
     
-    for (let i = 0; i < numToAdd; i++) {
-      const [key, amount] = resources[i];
-      const name = this.formatResourceName(key);
-      const obj = this.buildObjective('resource_extraction', location, danger, vpSpread, {
-        name: name,
-        amount: Math.min(amount, danger + 2),
-        vp: this.getResourceVP(key)
-      });
+    console.log("  Starting objective generation...");
+    
+    const resourcePlots = ['extraction_heist', 'sabotage_strike', 'ambush_derailment'];
+    const isResourcePlot = resourcePlots.includes(plotFamily.id);
+    
+    if (isResourcePlot && location.resources) {
+      const resources = Object.entries(location.resources).filter(([k, v]) => v >= 2);
+      const numToAdd = Math.min(2, resources.length);
       
-      if (obj) {
-        objectives.push(obj);
-        usedTypes.add(`resource_${key}`);
-      }
-    }
-  }
-  
-  // STEP 2: Plot objectives (MORE for territory plots)
-  if (plotFamily.default_objectives) {
-    const numToSelect = isResourcePlot ? 1 : Math.min(3, plotFamily.default_objectives.length);
-    let selected = this.randomChoice(plotFamily.default_objectives, numToSelect);
-    if (!Array.isArray(selected)) selected = selected ? [selected] : [];
-    
-    selected.forEach(objType => {
-      if (!usedTypes.has(objType)) {
-        const obj = this.buildObjective(objType, location, danger, vpSpread);
+      for (let i = 0; i < numToAdd; i++) {
+        const [key, amount] = resources[i];
+        const name = this.formatResourceName(key);
+        const obj = this.buildObjective('resource_extraction', location, danger, vpSpread, {
+          name: name,
+          amount: Math.min(amount, danger + 2),
+          vp: this.getResourceVP(key)
+        });
+        
         if (obj) {
           objectives.push(obj);
-          usedTypes.add(objType);
+          usedTypes.add(`resource_${key}`);
         }
       }
-    });
-  }
-  
-  // STEP 3: Fill to 4 total
-  const general = ['scattered_crates', 'wrecked_engine', 'fortified_position', 'stored_supplies'];
-  while (objectives.length < 4 && general.length > 0) {
-    const available = general.filter(t => !usedTypes.has(t));
-    if (available.length === 0) break;
-    
-    const type = this.randomChoice(available);
-    const obj = this.buildObjective(type, location, danger, vpSpread);
-    if (obj) {
-      objectives.push(obj);
-      usedTypes.add(type);
-    } else {
-      const idx = general.indexOf(type);
-      if (idx > -1) general.splice(idx, 1);
     }
+    
+    if (plotFamily.default_objectives) {
+      const numToSelect = isResourcePlot ? 1 : Math.min(3, plotFamily.default_objectives.length);
+      let selected = this.randomChoice(plotFamily.default_objectives, numToSelect);
+      if (!Array.isArray(selected)) selected = selected ? [selected] : [];
+      
+      selected.forEach(objType => {
+        if (!usedTypes.has(objType)) {
+          const obj = this.buildObjective(objType, location, danger, vpSpread);
+          if (obj) {
+            objectives.push(obj);
+            usedTypes.add(objType);
+          }
+        }
+      });
+    }
+    
+    const general = ['scattered_crates', 'wrecked_engine', 'fortified_position', 'stored_supplies'];
+    while (objectives.length < 4 && general.length > 0) {
+      const available = general.filter(t => !usedTypes.has(t));
+      if (available.length === 0) break;
+      
+      const type = this.randomChoice(available);
+      const obj = this.buildObjective(type, location, danger, vpSpread);
+      if (obj) {
+        objectives.push(obj);
+        usedTypes.add(type);
+      } else {
+        const idx = general.indexOf(type);
+        if (idx > -1) general.splice(idx, 1);
+      }
+    }
+    
+    console.log(`  ✓ Generated ${objectives.length} objectives`);
+    return objectives.filter(obj => obj !== null);
   }
-  
-  console.log(`  ✓ Generated ${objectives.length} objectives`);
-  return objectives.filter(obj => obj !== null);
-}
-  
-  console.log(`  ✓ Generated ${objectives.length} objectives`);
-  return objectives;
-}
 
   buildObjective(type, location, danger, vpSpread, extra = {}) {
     const builder = OBJECTIVE_BUILDERS[type];
@@ -376,6 +355,5 @@ generateObjectives(plotFamily, location, userSelections, vpSpread) {
   }
 }
 
-// Export to global
 window.ScenarioBrain = ScenarioBrain;
 console.log("✅ ScenarioBrain class exported to window!");
