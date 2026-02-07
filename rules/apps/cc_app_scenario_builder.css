@@ -986,7 +986,7 @@
   }
 }
 
-/* ===== Loading State ===== */
+/* ===== Loading State - IMPROVED PROGRESS BAR ===== */
 .cc-loading-container {
   display: flex;
   flex-direction: column;
@@ -999,28 +999,30 @@
 .cc-loading-bar {
   width: 100%;
   max-width: 500px;
-  height: 8px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
   overflow: hidden;
   position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }
 
 .cc-loading-progress {
   height: 100%;
-  background: linear-gradient(90deg, #e6a817 0%, #f4c842 50%, #e6a817 100%);
-  background-size: 200% 100%;
-  animation: loading-shimmer 1.5s ease-in-out infinite;
-  width: 100%;
+  background: linear-gradient(90deg, 
+    var(--cc-primary) 0%, 
+    #ff9147 50%, 
+    var(--cc-primary) 100%);
+  width: 0%;
+  animation: loading-fill 2s ease-in-out forwards;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(255, 117, 24, 0.6);
 }
 
-@keyframes loading-shimmer {
-  0% {
-    background-position: -200% 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+@keyframes loading-fill {
+  0% { width: 0%; }
+  50% { width: 75%; }
+  100% { width: 95%; }
 }
 
 .cc-loading-text {
@@ -1029,4 +1031,21 @@
   font-size: 1.1rem;
   font-weight: 500;
   text-align: center;
+  animation: pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
+/* ===== Color Overrides - Replace Yellow with Neutral ===== */
+.cc-twist-example,
+.cc-terrain-piece-core[style*="e6a817"],
+.cc-cultist-markers [style*="e6a817"] {
+  color: #b8b8b8 !important;
+  border-color: #888 !important;
+}
+
+.cc-terrain-piece-core {
+  border-color: var(--cc-primary) !important;
 }
