@@ -116,20 +116,28 @@ class ScenarioBrain {
     // STEP 5: Cultists
     const cultistEncounter = { enabled: false }; // Simplified for now
     
-    // STEP 6: Victory Conditions
-    const victoryConditions = {};
-    userSelections.factions.forEach(faction => {
-      victoryConditions[faction.id] = {
-        target_vp: vpSpread.target_to_win,
-        faction_objectives: objectives.map(obj => ({
-          name: obj.name,
-          goal: obj.description,
-          method: "Complete objective",
-          scoring: `+${obj.vp_per_unit} VP per ${obj.progress_label}`
-        })),
-        aftermath: { immediate_effect: "Conflict resolved", canyon_state_change: "None", long_term: "Status quo", flavor: "The fight continues." }
-      };
-    });
+// STEP 6: Victory Conditions
+const victoryConditions = {};
+userSelections.factions.forEach(faction => {
+  // FIX: Filter out any null objectives before mapping
+  const validObjectives = objectives.filter(obj => obj !== null);
+  
+  victoryConditions[faction.id] = {
+    target_vp: vpSpread.target_to_win,
+    faction_objectives: validObjectives.map(obj => ({
+      name: obj.name,
+      goal: obj.description,
+      method: "Complete objective",
+      scoring: `+${obj.vp_per_unit} VP per ${obj.progress_label}`
+    })),
+    aftermath: { 
+      immediate_effect: "Conflict resolved", 
+      canyon_state_change: "None", 
+      long_term: "Status quo", 
+      flavor: "The fight continues." 
+    }
+  };
+});
     
     // STEP 7: Name & Narrative
     const name = this.generateName(['battle'], location);
@@ -232,7 +240,11 @@ generateObjectives(plotFamily, location, userSelections, vpSpread) {
   const danger = userSelections.dangerRating;
   const usedTypes = new Set();
   
-  console.log("  Starting objective generation...");
+  console.log(`  ✓ Generated ${objectives.length} objectives`);
+    // FIX: Filter out any nulls that snuck through
+
+  return objectives.filter(obj => obj !== null);
+}
   
   // Define resource vs territory plots
   const resourcePlots = ['extraction_heist', 'sabotage_strike', 'ambush_derailment'];
