@@ -222,7 +222,7 @@ const FACTION_PLOT_AFFINITIES = {
 const OBJECTIVE_BUILDERS = {
   'wrecked_engine': (loc, danger, vpSpread) => ({
     name: 'Salvage Wrecked Engine',
-    description: `Extract mechanical components from abandoned machinery at ${loc.name}.`,
+    description: `Extract mechanical components from wrecked machinery at ${loc.name}.`,
     target_value: Math.min(3, danger),
     progress_label: 'Components',
     vp_per_unit: 3,
@@ -262,7 +262,7 @@ const OBJECTIVE_BUILDERS = {
   }),
   'stored_supplies': (loc, danger, vpSpread) => ({
     name: 'Raid Supply Depot',
-    description: `Extract stockpiled goods from the depot at ${loc.name}.`,
+    description: `Extract stockpiled resources from the supply depot at ${loc.name}.`,
     target_value: danger + 1,
     progress_label: 'Supplies',
     vp_per_unit: 2,
@@ -284,14 +284,38 @@ const OBJECTIVE_BUILDERS = {
     vp_per_unit: 4,
     type: 'tainted_ground'
   }),
-  'resource_extraction': (loc, danger, vpSpread, extra) => ({
-    name: `Extract ${extra.name}`,
-    description: `Secure valuable ${extra.name.toLowerCase()} from ${loc.name}.`,
-    target_value: extra.amount,
-    progress_label: extra.name,
-    vp_per_unit: extra.vp,
-    type: 'resource_extraction'
-  })
+  'resource_extraction': (loc, danger, vpSpread, extra) => {
+    // FIX: Add specific container types for different resources
+    const containerMap = {
+      'Water': `water barrels at ${loc.name}`,
+      'Clean Water': `water tanks at ${loc.name}`,
+      'Foul Water': `contaminated water barrels at ${loc.name}`,
+      'Food': `food crates at ${loc.name}`,
+      'Good Food': `preserved food supplies at ${loc.name}`,
+      'Foul Food': `spoiled food stockpile at ${loc.name}`,
+      'Supplies': `supply depot at ${loc.name}`,
+      'Mechanical Parts': `salvage yard at ${loc.name}`,
+      'Tzul Silver': `tzul silver cache at ${loc.name}`,
+      'Silver': `silver ingots at ${loc.name}`,
+      'Lead': `lead stockpile at ${loc.name}`,
+      'Coal': `coal bunker at ${loc.name}`,
+      'Livestock': `corrals at ${loc.name}`,
+      'Gildren': `gildren hoard at ${loc.name}`,
+      'Thyr Crystals': `thyr crystal deposits at ${loc.name}`,
+      'Weapons': `armory at ${loc.name}`
+    };
+    
+    const container = containerMap[extra.name] || `${extra.name.toLowerCase()} at ${loc.name}`;
+    
+    return {
+      name: `Extract ${extra.name}`,
+      description: `Secure valuable ${extra.name.toLowerCase()} from the ${container}.`,
+      target_value: extra.amount,
+      progress_label: extra.name,
+      vp_per_unit: extra.vp,
+      type: 'resource_extraction'
+    };
+  }
 };
 
 const CULTIST_TERRAIN_MARKERS = {
