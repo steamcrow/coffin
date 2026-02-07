@@ -32,32 +32,32 @@ const FACTION_THEMES = {
   'monster_rangers': {
     primary_theme: 'Protect the Wild',
     pressure_stance: 'containment',
-    resource_priorities: ['livestock', 'clean_water', 'wildlife']
+    resource_priorities: ['livestock', 'clean_water', 'wildlife', 'civilian']
   },
   'liberty_corps': {
     primary_theme: 'Federal Control',
     pressure_stance: 'containment',
-    resource_priorities: ['weapons', 'supplies', 'communications']
+    resource_priorities: ['weapons', 'supplies', 'communications', 'fortified_position', 'land_marker']
   },
   'monsterology': {
     primary_theme: 'Scientific Progress',
     pressure_stance: 'exploitation',
-    resource_priorities: ['thyr', 'specimens', 'mechanical_parts']
+    resource_priorities: ['thyr', 'specimens', 'mechanical_parts', 'artifact']
   },
   'shine_riders': {
     primary_theme: 'Profit from Chaos',
     pressure_stance: 'opportunist',
-    resource_priorities: ['valuables', 'contraband', 'weapons']
+    resource_priorities: ['valuables', 'contraband', 'weapons', 'silver', 'gildren']
   },
   'crow_queen': {
     primary_theme: 'Establish Dominion',
     pressure_stance: 'redirection',
-    resource_priorities: ['territory', 'followers', 'relics']
+    resource_priorities: ['territory', 'followers', 'relics', 'ritual_circle', 'consecrated']
   },
   'monsters': {
     primary_theme: 'Reclaim Territory',
     pressure_stance: 'adaptive',
-    resource_priorities: ['food', 'territory', 'safety']
+    resource_priorities: ['food', 'territory', 'safety', 'nest']
   }
 };
 
@@ -226,7 +226,7 @@ const OBJECTIVE_BUILDERS = {
     target_value: Math.min(3, danger),
     progress_label: 'Components',
     vp_per_unit: 3,
-    type: 'wrecked_engine'
+    type: 'mechanical_parts'
   }),
   'scattered_crates': (loc, danger, vpSpread) => ({
     name: 'Recover Supply Crates',
@@ -234,7 +234,7 @@ const OBJECTIVE_BUILDERS = {
     target_value: danger + 1,
     progress_label: 'Crates',
     vp_per_unit: 2,
-    type: 'scattered_crates'
+    type: 'supplies'
   }),
   'ritual_circle': (loc, danger, vpSpread) => ({
     name: 'Control Ritual Site',
@@ -249,7 +249,7 @@ const OBJECTIVE_BUILDERS = {
     description: `Plant territorial markers at ${loc.name} and hold them.`,
     target_value: 3,
     progress_label: 'Rounds',
-    vp_per_unit: vpSpread.ticker.primary_per_vp,
+    vp_per_unit: vpSpread.ticker?.primary_per_vp || 2,
     type: 'land_marker'
   }),
   'fortified_position': (loc, danger, vpSpread) => ({
@@ -257,7 +257,7 @@ const OBJECTIVE_BUILDERS = {
     description: `Maintain control of the defensive structure at ${loc.name}.`,
     target_value: 3,
     progress_label: 'Rounds',
-    vp_per_unit: vpSpread.ticker.primary_per_vp,
+    vp_per_unit: vpSpread.ticker?.primary_per_vp || 2,
     type: 'fortified_position'
   }),
   'stored_supplies': (loc, danger, vpSpread) => ({
@@ -266,7 +266,7 @@ const OBJECTIVE_BUILDERS = {
     target_value: danger + 1,
     progress_label: 'Supplies',
     vp_per_unit: 2,
-    type: 'stored_supplies'
+    type: 'supplies'
   }),
   'artifact': (loc, danger, vpSpread) => ({
     name: 'Recover Ancient Artifact',
@@ -285,7 +285,6 @@ const OBJECTIVE_BUILDERS = {
     type: 'tainted_ground'
   }),
   'resource_extraction': (loc, danger, vpSpread, extra) => {
-    // FIX: Add specific container types for different resources
     const containerMap = {
       'Water': `water barrels at ${loc.name}`,
       'Clean Water': `water tanks at ${loc.name}`,
@@ -313,7 +312,7 @@ const OBJECTIVE_BUILDERS = {
       target_value: extra.amount,
       progress_label: extra.name,
       vp_per_unit: extra.vp,
-      type: 'resource_extraction'
+      type: extra.name.toLowerCase().replace(/\s+/g, '_')
     };
   }
 };
