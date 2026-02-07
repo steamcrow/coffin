@@ -227,62 +227,76 @@ class ScenarioBrain {
     };
   }
 
-  generateObjectives(plotFamily, location, userSelections, vpSpread) {
-    const objectives = [];
-    const danger = userSelections.dangerRating;
-    const usedTypes = new Set();
+generateObjectives(plotFamily, location, userSelections, vpSpread) {
+  const objectives = [];
+  const danger = userSelections.dangerRating;
+  const usedTypes = new Set();
+  
+  console.log("  Starting objective generation...");
+  
+  // Define resource vs territory plots
+  const resourcePlots = ['extraction_heist', 'sabotage_strike', 'ambush_derailment'];
+  const isResourcePlot = resourcePlots.includes(plotFamily.id);
+  
+  // STEP 1: Resources (ONLY for resource-focused plots)
+  if (isResourcePlot && location.resources) {
+    const resources = Object.entries(location.resources).filter(([k, v]) => v >= 2);
+    const numToAdd = Math.min(2, resources.length);
     
-    // FIXED: Define resource vs territory plots
-    const resourcePlots = ['extraction_heist', 'sabotage_strike', 'ambush_derailment'];
-    const isResourcePlot = resourcePlots.includes(plotFamily.id);
-    
-    // STEP 1: Resources (ONLY for resource-focused plots)
-    if (isResourcePlot && location.resources) {
-      const resources = Object.entries(location.resources).filter(([k, v]) => v >= 2);
-      const numToAdd = Math.min(2, resources.length);
+    for (let i = 0; i < numToAdd; i++) {
+      const [key, amount] = resources[i];
+      const name = this.formatResourceName(key);
+      const obj = this.buildObjective('resource_extraction', location, danger, vpSpread, {
+        name: name,
+        amount: Math.min(amount, danger + 2),
+        vp: this.getResourceVP(key)
+      });
       
-      for (let i = 0; i < numToAdd; i++) {
-        const [key, amount] = resources[i];
-        const name = this.formatResourceName(key);
-        objectives.push({
-          type: 'resource_extraction',
-          name: `Extract ${name}`,
-          description: `Secure ${name.toLowerCase()} from ${location.name}.`,
-          target_value: Math.min(amount, danger + 2),
-          progress_label: name,
-          vp_per_unit: 2,
-          max_vp: Math.min(amount, danger + 2) * 2
-        });
+      if (obj) {  // FIX: Only add if not null
+        objectives.push(obj);
         usedTypes.add(`resource_${key}`);
       }
     }
+  }
+  
+  // STEP 2: Plot objectives (MORE for territory plots)
+  if (plotFamily.default_objectives) {
+    const numToSelect = isResourcePlot ? 1 : Math.min(3, plotFamily.default_objectives.length);
+    let selected = this.randomChoice(plotFamily.default_objectives, numToSelect);
+    if (!Array.isArray(selected)) selected = selected ? [selected] : [];
     
-    // STEP 2: Plot objectives (MORE for territory plots)
-    if (plotFamily.default_objectives) {
-      const numToSelect = isResourcePlot ? 1 : Math.min(3, plotFamily.default_objectives.length);
-      let selected = this.randomChoice(plotFamily.default_objectives, numToSelect);
-      if (!Array.isArray(selected)) selected = [selected];
-      
-      selected.forEach(objType => {
-        if (!usedTypes.has(objType)) {
-          objectives.push(this.buildObjective(objType, location, danger, vpSpread));
+    selected.forEach(objType => {
+      if (!usedTypes.has(objType)) {
+        const obj = this.buildObjective(objType, location, danger, vpSpread);
+        if (obj) {  // FIX: Only add if not null
+          objectives.push(obj);
           usedTypes.add(objType);
         }
-      });
-    }
-    
-    // STEP 3: Fill to 4 total
-    const general = ['scattered_crates', 'wrecked_engine', 'fortified_position'];
-    while (objectives.length < 4) {
-      const available = general.filter(t => !usedTypes.has(t));
-      if (available.length === 0) break;
-      const type = this.randomChoice(available);
-      objectives.push(this.buildObjective(type, location, danger, vpSpread));
-      usedTypes.add(type);
-    }
-    
-    return objectives;
+      }
+    });
   }
+  
+  // STEP 3: Fill to 4 total
+  const general = ['scattered_crates', 'wrecked_engine', 'fortified_position', 'stored_supplies'];
+  while (objectives.length < 4 && general.length > 0) {
+    const available = general.filter(t => !usedTypes.has(t));
+    if (available.length === 0) break;
+    
+    const type = this.randomChoice(available);
+    const obj = this.buildObjective(type, location, danger, vpSpread);
+    if (obj) {  // FIX: Only add if not null
+      objectives.push(obj);
+      usedTypes.add(type);
+    } else {
+      // If builder failed, remove from general pool so we don't retry
+      const idx = general.indexOf(type);
+      if (idx > -1) general.splice(idx, 1);
+    }
+  }
+  
+  console.log(`  ✓ Generated ${objectives.length} objectives`);
+  return objectives;
+}
 
   buildObjective(type, location, danger, vpSpread, extra = {}) {
     const builder = OBJECTIVE_BUILDERS[type];
