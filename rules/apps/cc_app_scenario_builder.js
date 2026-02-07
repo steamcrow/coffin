@@ -576,8 +576,9 @@ if (!window.ScenarioBrain) {
             </div>
           ` : ''}
 
+   <!-- TWIST HIDDEN - Data preserved for future turn counter app
           ${s.twist ? `
-            <div class="cc-scenario-section cc-twist">
+            <div class="cc-scenario-section cc-twist" style="display: none;">
               <h4>🎭 Twist</h4>
               <p><strong>${s.twist.name}</strong></p>
               <p>${s.twist.description}</p>
@@ -585,15 +586,7 @@ if (!window.ScenarioBrain) {
               ${s.twist.example ? `<p class="cc-twist-example">📌 What this looks like: <strong>${s.twist.example}</strong></p>` : ''}
             </div>
           ` : ''}
-
-          ${s.finale ? `
-            <div class="cc-scenario-section cc-twist">
-              <h4>🎭 Round ${s.finale.round} Finale: ${s.finale.title}</h4>
-              <p><em>"${s.finale.narrative}"</em></p>
-              <p><strong>What happens:</strong> ${s.finale.mechanical_effect}</p>
-              ${s.finale.player_note ? `<p class="cc-twist-example">📌 What to expect: <strong>${s.finale.player_note}</strong></p>` : ''}
-            </div>
-          ` : ''}
+          -->
 
           <!-- ============================================
                VICTORY CONDITIONS (existing)
@@ -643,7 +636,17 @@ if (!window.ScenarioBrain) {
               `;
             }).join('')}
           </div>
-
+          <!-- ============================================
+               ROUND 6 FINALE - MOVED TO BOTTOM
+               ============================================ -->
+     ${s.finale ? `
+            <div class="cc-scenario-section cc-twist">
+              <h4>🎭 Round ${s.finale.round} Finale: ${s.finale.title}</h4>
+              <p><em>"${s.finale.narrative}"</em></p>
+              <p><strong>What happens:</strong> ${s.finale.mechanical_effect}</p>
+              ${s.finale.player_note ? `<p class="cc-twist-example">📌 What to expect: <strong>${s.finale.player_note}</strong></p>` : ''}
+            </div>
+          ` : ''}
           <div class="cc-form-actions">
             <button class="cc-btn cc-btn-ghost" onclick="resetScenario()">
               🔄 Start Over
