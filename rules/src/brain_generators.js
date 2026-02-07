@@ -8,34 +8,26 @@ console.log("🎲 Brain Generators loading...");
 const BrainGenerators = {
 
   // ================================
-  // RELEVANCY FILTER (The "Better" Logic)
+  // RELEVANCY FILTER
   // ================================
-  
-  /**
-   * Checks if an objective type aligns with a faction's priorities.
-   */
   isRelevantToFaction(objType, factionId) {
     const themes = FACTION_THEMES[factionId];
-    if (!themes || !themes.resource_priorities) return true; // Default to relevant if no data
-    
-    // Check if the objective type (e.g., 'thyr') is in the faction's priority list
+    if (!themes || !themes.resource_priorities) return true;
     return themes.resource_priorities.some(priority => objType.includes(priority));
   },
 
   // ================================
-  // FACTION INTERPRETATION
+  // OBJECTIVE INTERPRETATION
   // ================================
-
   generateFactionObjectiveInterpretation(objective, faction) {
     const factionId = faction.id;
-    const verbs = FACTION_CORE_VERBS[factionId] || { primary_verb: 'SECURE' };
+    const verbs = FACTION_CORE_VERBS[factionId] || { primary_verb: 'SECURE', approach: 'tactical' };
     const isPriority = this.isRelevantToFaction(objective.type, factionId);
     
-    // Base mapping for flavor
     const flavorMap = {
       'monster_rangers': `The Wild must remain balanced.`,
       'liberty_corps': `Federal protocol dictates we secure this immediately.`,
-      'monsterology': `This specimen/resource is vital for the Institute.`,
+      'monsterology': `This specimen is vital for the Institute's research.`,
       'shine_riders': `Look at that... it's practically begging to be taken.`,
       'crow_queen': `The Queen desires this. It shall be hers.`,
       'monsters': `*Low growls* This belongs to the pack now.`
@@ -44,16 +36,15 @@ const BrainGenerators = {
     return {
       name: `${verbs.primary_verb} ${objective.name.replace('Extract ', '').replace('Recover ', '')}`,
       goal: `${flavorMap[factionId] || ''} ${objective.description}`,
-      method: `Standard ${verbs.approach || 'tactical'} engagement.`,
+      method: `Standard ${verbs.approach} engagement.`,
       scoring: `+${objective.vp_per_unit} VP per ${objective.progress_label}`,
-      is_priority: isPriority // Used by Core to decide whether to show this or hide it
+      is_priority: isPriority
     };
   },
 
   // ================================
-  // THE MISSING FUNCTION (Fixes your Error)
+  // UNIQUE FACTION GOALS
   // ================================
-
   generateUniqueFactionObjective(factionId, danger, allFactions) {
     const uniques = {
       'monster_rangers': { 
@@ -93,20 +84,17 @@ const BrainGenerators = {
         scoring: `+${danger + 1} VP for the successful hunt.` 
       }
     };
-
     return uniques[factionId] || null;
   },
 
   // ================================
-  // CULTISTS & NARRATIVE
+  // CULTIST SYSTEM (FIXED)
   // ================================
-
   generateCultistEncounter(userSelections, plotFamily, location) {
-    // 20% base chance, +10% per Danger Rating over 3
     const chance = 0.2 + (Math.max(0, userSelections.dangerRating - 3) * 0.1);
     if (Math.random() > chance) return null;
 
-    const cult = this.randomChoice(CULT_REGISTRY);
+    const cult = this.weightedRandomChoice(CULT_REGISTRY);
     const pressure = PRESSURE_TRACKS[cult.id];
 
     return {
@@ -117,27 +105,51 @@ const BrainGenerators = {
     };
   },
 
-  generateNarrative(plotFamily, location, userSelections, cultistEncounter) {
-    let text = `The conflict at ${location.name} centers on ${plotFamily.name}. `;
-    text += location.description + " " + location.atmosphere;
-    
-    if (cultistEncounter) {
-      text += ` WARNING: Reports indicate ${cultistEncounter.cult.name} activity in the area, bringing ${cultistEncounter.pressure.label}.`;
-    }
-
-    return text;
+  // THIS IS THE FUNCTION THAT WAS MISSING/UNDEFINED
+  generateCultistResponseObjective(factionId, encounter, danger) {
+    return {
+      name: `Suppress ${encounter.cult.name}`,
+      goal: `Prevent the ${encounter.pressure.label} from reaching critical mass.`,
+      method: `Destroy cultist markers or interact with ritual sites.`,
+      scoring: `+${danger} VP if the pressure track remains below 4.`
+    };
   },
 
   // ================================
-  // UTILITIES
+  // NARRATIVE & TERRAIN
   // ================================
+  generateNarrative(plotFamily, location, userSelections, cultistEncounter) {
+    let text = `The conflict at ${location.name} centers on ${plotFamily.name}. `;
+    text += location.description + " " + location.atmosphere;
+    if (cultistEncounter) {
+      text += ` WARNING: Reports indicate ${cultistEncounter.cult.name} activity in the area, bringing ${cultistEncounter.pressure.label}.`;
+    }
+    return text;
+  },
 
-  randomChoice(arr, count = 1) {
-    if (!arr || arr.length === 0) return null;
-    if (count === 1) return arr[Math.floor(Math.random() * arr.length)];
-    
-    const shuffled = [...arr].sort(() => 0.5 - Math.random());
-    return shuffled.slice(0, count);
+  generateTerrainSetup(plot, loc, danger, objectives, cultists) {
+    const base = TERRAIN_MAP[plot.id] || { core: ['Cover'], optional: [], atmosphere: 'Standard' };
+    return {
+      core: [...base.core],
+      optional: [...base.optional],
+      atmosphere: base.atmosphere
+    };
+  },
+
+  // ================================
+  // UTILITIES & STUBS
+  // ================================
+  getDangerDesc(rating) {
+    return ["Negligible", "Low", "Moderate", "High", "Extreme", "Suicidal"][rating] || "Unknown";
+  },
+
+  getCanyonState(state) { return state || "Stable"; },
+  generateTwist(danger, loc) { return "The wind picks up, obscuring vision."; },
+  generateFinale(plot, danger, loc, factions) { return "A sudden extraction window opens."; },
+  generateCoffinCough(loc, danger) { return danger > 4 ? "A light dust storm is approaching." : null; },
+
+  randomChoice(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
   },
 
   weightedRandomChoice(items) {
@@ -150,34 +162,9 @@ const BrainGenerators = {
     return items[0];
   },
 
-  formatResourceName(str) {
-    return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
-  },
-
   validateScenario(scenario) {
-    console.log("🔍 Validating Scenario...");
     if (!scenario.name) scenario.name = "Unnamed Skirmish";
     return scenario;
-  },
-
-  // Stub methods for functionality called by Core
-  getDangerDesc(rating) {
-    const levels = ["Negligible", "Low", "Moderate", "High", "Extreme", "Suicidal"];
-    return levels[rating] || "Unknown";
-  },
-
-  getCanyonState(state) { return state || "Stable"; },
-  generateTwist(danger, loc) { return "The wind picks up, obscuring vision."; },
-  generateFinale(plot, danger, loc, factions) { return "A sudden extraction window opens."; },
-  generateTerrainSetup(plot, loc, danger, objectives, cultists) { return TERRAIN_MAP[plot.id] || { core: ['Cover'] }; },
-  generateCoffinCough(loc, danger) { return danger > 4 ? "A light dust storm is approaching." : null; },
-  generateCultistResponseObjective(factionId, encounter, danger) {
-    return {
-      name: `Suppress ${encounter.cult.name}`,
-      goal: `Prevent the ${encounter.pressure.label} from reaching critical mass.`,
-      method: `Destroy cultist markers or interact with ritual sites.`,
-      scoring: `+${danger} VP if the track remains below 4.`
-    };
   }
 };
 
