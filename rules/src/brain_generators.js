@@ -70,30 +70,32 @@ const BrainGenerators = {
     return important || name;
   },
   
-  generateFactionGoal(objective, verb, theme, pressure) {
-    // FIX: Create proper complete sentences
-    const goalMap = {
-      'monster_rangers': `Rangers must protect the Wild. ${objective.description}`,
-      'liberty_corps': `Federal law demands order. ${objective.description}`,
-      'monsterology': `The Institute requires specimens. ${objective.description}`,
-      'shine_riders': `Everything has a price. ${objective.description}`,
-      'crow_queen': `The Queen's will must be done. ${objective.description}`,
-      'monsters': `The pack needs territory. ${objective.description}`
-    };
-    
-    // Find faction by matching theme
-    const factionId = Object.keys(FACTION_THEMES).find(id => 
-      FACTION_THEMES[id].primary_theme === theme.primary_theme
-    );
-    
-    const baseGoal = goalMap[factionId] || objective.description;
-    
-    if (pressure) {
-      return `${baseGoal} Time is running out before ${pressure.label}.`;
-    }
-    
-    return baseGoal;
-  },
+ generateFactionGoal(objective, verb, theme, pressure) {
+  // FIX: Use faction motivation as context, not repetitive prefix
+  // The description already explains what to do, we just add WHY
+  
+  const contextMap = {
+    'monster_rangers': objective.description,  // Rangers' descriptions are already clear
+    'liberty_corps': objective.description,     // Corps descriptions are already clear
+    'monsterology': objective.description,      // Institute descriptions are already clear
+    'shine_riders': objective.description,      // Riders descriptions are already clear
+    'crow_queen': objective.description,        // Queen descriptions are already clear
+    'monsters': objective.description           // Monsters descriptions are already clear
+  };
+  
+  // Find faction by matching theme
+  const factionId = Object.keys(FACTION_THEMES).find(id => 
+    FACTION_THEMES[id].primary_theme === theme.primary_theme
+  );
+  
+  const baseGoal = contextMap[factionId] || objective.description;
+  
+  if (pressure) {
+    return `${baseGoal} Time is running out before ${pressure.label}.`;
+  }
+  
+  return baseGoal;
+}
   
   generateFactionMethod(objective, verb, theme) {
     const tactics = {
