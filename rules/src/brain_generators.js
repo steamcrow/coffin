@@ -1,188 +1,111 @@
 // ================================
 // SCENARIO BRAIN GENERATORS
-// Logic for specific sub-components
 // ================================
 
 console.log("🎲 Brain Generators loading...");
 
 const BrainGenerators = {
 
-  // ================================
-  // RELEVANCY FILTER
-  // ================================
+  // 1. RELEVANCY (For the Thyr/Monsterology logic)
   isRelevantToFaction(objType, factionId) {
     const themes = FACTION_THEMES[factionId];
     if (!themes || !themes.resource_priorities) return true;
     return themes.resource_priorities.some(priority => objType.includes(priority));
   },
 
-  // ================================
-  // OBJECTIVE INTERPRETATION
-  // ================================
+  // 2. INTERPRETATION (The "Voice" of the faction)
   generateFactionObjectiveInterpretation(objective, faction) {
-    const factionId = faction.id;
-    const verbs = FACTION_CORE_VERBS[factionId] || { primary_verb: 'SECURE', approach: 'tactical' };
-    const isPriority = this.isRelevantToFaction(objective.type, factionId);
-    
-    const flavorMap = {
-      'monster_rangers': `The Wild must remain balanced.`,
-      'liberty_corps': `Federal protocol dictates we secure this immediately.`,
-      'monsterology': `This specimen is vital for the Institute's research.`,
-      'shine_riders': `Look at that... it's practically begging to be taken.`,
-      'crow_queen': `The Queen desires this. It shall be hers.`,
-      'monsters': `*Low growls* This belongs to the pack now.`
+    const fId = faction.id;
+    const verbs = FACTION_CORE_VERBS[fId] || { primary_verb: 'SECURE', approach: 'tactical' };
+    const flavor = {
+      monster_rangers: "The Wild must remain balanced.",
+      liberty_corps: "Federal protocol dictates we secure this.",
+      monsterology: "This specimen is vital for research.",
+      shine_riders: "It's practically begging to be taken.",
+      crow_queen: "The Queen desires this. It shall be hers.",
+      monsters: "*Low growls* This belongs to the pack."
     };
 
     return {
       name: `${verbs.primary_verb} ${objective.name.replace('Extract ', '').replace('Recover ', '')}`,
-      goal: `${flavorMap[factionId] || ''} ${objective.description}`,
+      goal: `${flavor[fId] || ''} ${objective.description}`,
       method: `Standard ${verbs.approach} engagement.`,
       scoring: `+${objective.vp_per_unit} VP per ${objective.progress_label}`,
-      is_priority: isPriority
+      is_priority: this.isRelevantToFaction(objective.type, fId)
     };
   },
 
-  // ================================
-  // UNIQUE FACTION GOALS
-  // ================================
-  generateUniqueFactionObjective(factionId, danger, allFactions) {
-    const uniques = {
-      'monster_rangers': { 
-        name: 'Minimize Casualties', 
-        goal: 'Protect the innocent and the local fauna.', 
-        method: 'Keep all units above 50% health.', 
-        scoring: `+${danger} Bonus VP if no units were destroyed.` 
-      },
-      'liberty_corps': { 
-        name: 'Establish Perimeter', 
-        goal: 'Create a zone of absolute control.', 
-        method: 'End the game with no enemies in your deployment zone.', 
-        scoring: `+${danger + 2} VP for a clear perimeter.` 
-      },
-      'monsterology': { 
-        name: 'Field Data Collection', 
-        goal: 'Observe the enemy under live-fire conditions.', 
-        method: 'Spend at least one action within 3" of an enemy leader.', 
-        scoring: `+${danger * 2} VP for successful observation.` 
-      },
-      'shine_riders': { 
-        name: 'High Roller', 
-        goal: 'Show off and make it look easy.', 
-        method: 'Succeed on a Test with 3+ extra successes.', 
-        scoring: `+4 VP for the style points.` 
-      },
-      'crow_queen': { 
-        name: 'Fear the Shadow', 
-        goal: 'Break their spirits.', 
-        method: 'Cause at least one enemy unit to Flee.', 
-        scoring: `+${danger} VP for every Broken enemy.` 
-      },
-      'monsters': { 
-        name: 'Scent of Blood', 
-        goal: 'Identify the weakest link.', 
-        method: 'Completely eliminate the smallest enemy unit first.', 
-        scoring: `+${danger + 1} VP for the successful hunt.` 
-      }
+  // 3. UNIQUE GOALS (The specific faction missions)
+  generateUniqueFactionObjective(fId, danger, allFactions) {
+    const goals = {
+      monster_rangers: { name: 'Minimize Casualties', goal: 'Protect fauna.', method: 'Keep units above 50% HP.', scoring: `+${danger} VP.` },
+      liberty_corps: { name: 'Establish Perimeter', goal: 'Zone control.', method: 'Clear deployment zone.', scoring: `+${danger + 2} VP.` },
+      monsterology: { name: 'Field Data', goal: 'Observe enemy.', method: 'Near enemy leader.', scoring: `+${danger * 2} VP.` },
+      shine_riders: { name: 'High Roller', goal: 'Show off.', method: '3+ extra successes.', scoring: '+4 VP.' },
+      crow_queen: { name: 'Fear Shadow', goal: 'Break spirits.', method: 'Enemy must Flee.', scoring: `+${danger} VP.` },
+      monsters: { name: 'Scent of Blood', goal: 'Hunt weak.', method: 'Kill smallest unit first.', scoring: `+${danger + 1} VP.` }
     };
-    return uniques[factionId] || null;
+    return goals[fId] || null;
   },
 
-  // ================================
-  // CULTIST SYSTEM
-  // ================================
-  generateCultistEncounter(userSelections, plotFamily, location) {
-    const chance = 0.2 + (Math.max(0, userSelections.dangerRating - 3) * 0.1);
+  // 4. AFTERMATH (The Missing Piece)
+  generateFactionAftermath(fId) {
+    const texts = {
+      monster_rangers: "Area stabilized; wildlife remains skittish.",
+      liberty_corps: "Federal outpost established.",
+      monsterology: "Data logs uploaded; harvest acceptable.",
+      shine_riders: "Loot divided; riders are richer.",
+      crow_queen: "Her shadow grows longer here.",
+      monsters: "The pack feeds. Territory is quiet."
+    };
+    return texts[fId] || "The dust settles.";
+  },
+
+  // 5. CULTISTS
+  generateCultistEncounter(selections, plot, location) {
+    const chance = 0.2 + (Math.max(0, selections.dangerRating - 3) * 0.1);
     if (Math.random() > chance) return null;
-
     const cult = this.weightedRandomChoice(CULT_REGISTRY);
-    const pressure = PRESSURE_TRACKS[cult.id];
-
     return {
-      enabled: true,
-      cult: cult,
-      pressure: pressure,
-      markers: CULTIST_TERRAIN_MARKERS[pressure.type] || ['Ritual Site']
+      enabled: true, cult: cult, pressure: PRESSURE_TRACKS[cult.id],
+      markers: CULTIST_TERRAIN_MARKERS[PRESSURE_TRACKS[cult.id].type] || ['Ritual Site']
     };
   },
 
-  generateCultistResponseObjective(factionId, encounter, danger) {
+  generateCultistResponseObjective(fId, encounter, danger) {
     return {
       name: `Suppress ${encounter.cult.name}`,
-      goal: `Prevent the ${encounter.pressure.label} from reaching critical mass.`,
-      method: `Destroy cultist markers or interact with ritual sites.`,
-      scoring: `+${danger} VP if the pressure track remains below 4.`
+      goal: `Stop the ${encounter.pressure.label}.`,
+      method: "Interact with ritual sites.",
+      scoring: `+${danger} VP if pressure < 4.`
     };
   },
 
-  // ================================
-  // AFTERMATH GENERATION (FIXED)
-  // ================================
-  generateFactionAftermath(factionId) {
-    const aftermaths = {
-      'monster_rangers': "The area is stabilized, but the wildlife remains skittish.",
-      'liberty_corps': "A temporary outpost is established to maintain federal order.",
-      'monsterology': "Data logs are uploaded; the harvest was... acceptable.",
-      'shine_riders': "The loot is divided. Some riders are richer; others are dead.",
-      'crow_queen': "The ground feels colder. Her shadow grows longer here.",
-      'monsters': "The pack feeds. For now, the territory is quiet."
-    };
-    return aftermaths[factionId] || "The dust settles as the factions withdraw.";
+  // 6. NARRATIVE & TERRAIN
+  generateNarrative(plot, loc, selections, cult) {
+    let t = `Conflict at ${loc.name} centers on ${plot.name}. ${loc.description}`;
+    if (cult) t += ` WARNING: ${cult.cult.name} activity detected!`;
+    return t;
   },
 
-  // ================================
-  // NARRATIVE & WORLD BUILDING
-  // ================================
-  generateNarrative(plotFamily, location, userSelections, cultistEncounter) {
-    let text = `The conflict at ${location.name} centers on ${plotFamily.name}. `;
-    text += location.description + " " + location.atmosphere;
-    if (cultistEncounter) {
-      text += ` WARNING: Reports indicate ${cultistEncounter.cult.name} activity in the area, bringing ${cultistEncounter.pressure.label}.`;
-    }
-    return text;
+  generateTerrainSetup(plot, loc, danger) {
+    return TERRAIN_MAP[plot.id] || { core: ['Cover'], optional: [], atmosphere: 'Standard' };
   },
 
-  generateTerrainSetup(plot, loc, danger, objectives, cultists) {
-    const base = TERRAIN_MAP[plot.id] || { core: ['Cover'], optional: [], atmosphere: 'Standard' };
-    return {
-      core: [...base.core],
-      optional: [...base.optional],
-      atmosphere: base.atmosphere
-    };
-  },
-
-  // ================================
-  // UTILITIES & STUBS
-  // ================================
-  getDangerDesc(rating) {
-    return ["Negligible", "Low", "Moderate", "High", "Extreme", "Suicidal"][rating] || "Unknown";
-  },
-
-  getCanyonState(state) { return state || "Stable"; },
-  generateTwist(danger, loc) { return "The wind picks up, obscuring vision."; },
-  generateFinale(plot, danger, loc, factions) { return "A sudden extraction window opens."; },
-  generateCoffinCough(loc, danger) { return danger > 4 ? "A light dust storm is approaching." : null; },
-
-  randomChoice(arr) {
-    if (!arr || arr.length === 0) return null;
-    return arr[Math.floor(Math.random() * arr.length)];
-  },
+  // 7. UTILITIES (The "Short" versions)
+  getDangerDesc(r) { return ["Negligible", "Low", "Moderate", "High", "Extreme", "Suicidal"][r] || "Unknown"; },
+  getCanyonState(s) { return s || "Stable"; },
+  generateTwist() { return "The wind picks up, obscuring vision."; },
+  generateFinale() { return "A sudden extraction window opens."; },
+  generateCoffinCough(loc, d) { return d > 4 ? "Dust storm approaching." : null; },
+  validateScenario(s) { if (!s.name) s.name = "Unnamed Skirmish"; return s; },
 
   weightedRandomChoice(items) {
-    const totalWeight = items.reduce((sum, item) => sum + (item.weight || 1), 0);
-    let random = Math.random() * totalWeight;
-    for (const item of items) {
-      if (random < (item.weight || 1)) return item;
-      random -= (item.weight || 1);
-    }
+    const total = items.reduce((s, i) => s + (i.weight || 1), 0);
+    let r = Math.random() * total;
+    for (const i of items) { if (r < (i.weight || 1)) return i; r -= (i.weight || 1); }
     return items[0];
-  },
-
-  validateScenario(scenario) {
-    if (!scenario.name) scenario.name = "Unnamed Skirmish";
-    return scenario;
   }
 };
 
-if (typeof window !== 'undefined') {
-  window.BrainGenerators = BrainGenerators;
-}
+if (typeof window !== 'undefined') { window.BrainGenerators = BrainGenerators; }
