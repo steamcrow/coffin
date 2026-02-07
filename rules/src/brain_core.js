@@ -240,11 +240,7 @@ generateObjectives(plotFamily, location, userSelections, vpSpread) {
   const danger = userSelections.dangerRating;
   const usedTypes = new Set();
   
-  console.log(`  ✓ Generated ${objectives.length} objectives`);
-    // FIX: Filter out any nulls that snuck through
-
-  return objectives.filter(obj => obj !== null);
-}
+  console.log("  Starting objective generation...");
   
   // Define resource vs territory plots
   const resourcePlots = ['extraction_heist', 'sabotage_strike', 'ambush_derailment'];
@@ -264,7 +260,7 @@ generateObjectives(plotFamily, location, userSelections, vpSpread) {
         vp: this.getResourceVP(key)
       });
       
-      if (obj) {  // FIX: Only add if not null
+      if (obj) {
         objectives.push(obj);
         usedTypes.add(`resource_${key}`);
       }
@@ -280,7 +276,7 @@ generateObjectives(plotFamily, location, userSelections, vpSpread) {
     selected.forEach(objType => {
       if (!usedTypes.has(objType)) {
         const obj = this.buildObjective(objType, location, danger, vpSpread);
-        if (obj) {  // FIX: Only add if not null
+        if (obj) {
           objectives.push(obj);
           usedTypes.add(objType);
         }
@@ -296,15 +292,18 @@ generateObjectives(plotFamily, location, userSelections, vpSpread) {
     
     const type = this.randomChoice(available);
     const obj = this.buildObjective(type, location, danger, vpSpread);
-    if (obj) {  // FIX: Only add if not null
+    if (obj) {
       objectives.push(obj);
       usedTypes.add(type);
     } else {
-      // If builder failed, remove from general pool so we don't retry
       const idx = general.indexOf(type);
       if (idx > -1) general.splice(idx, 1);
     }
   }
+  
+  console.log(`  ✓ Generated ${objectives.length} objectives`);
+  return objectives.filter(obj => obj !== null);
+}
   
   console.log(`  ✓ Generated ${objectives.length} objectives`);
   return objectives;
