@@ -373,81 +373,84 @@ class ScenarioBrain {
   // OBJECTIVES - FIXED: forEach BUG
   // ================================
   
-  generateObjectives(plotFamily, location, userSelections, vpSpread) {
-    const objectives = [];
-    const danger = userSelections.dangerRating;
-    const usedTypes = new Set();
+generateObjectives(plotFamily, location, userSelections, vpSpread) {
+  const objectives = [];
+  const danger = userSelections.dangerRating;
+  const usedTypes = new Set();
+  
+  console.log("  Starting objective generation...");
+  
+  // Define which plots are resource-focused vs territory-focused
+  const resourcePlots = ['extraction_heist', 'sabotage_strike', 'ambush_derailment'];
+  const isResourcePlot = resourcePlots.includes(plotFamily.id);
+  
+  // STEP 4.1: Resource-Based Objectives (ONLY for resource-focused plots)
+  if (isResourcePlot && location.resources) {
+    const highValueResources = Object.entries(location.resources)
+      .filter(([key, val]) => val >= 2)
+      .sort(([, a], [, b]) => b - a)
+      .map(([key]) => key);
     
-    console.log("  Starting objective generation...");
-    
-    // STEP 4.1: Resource-Based Objectives FIRST (these are the juicy ones!)
-    if (location.resources) {
-      const highValueResources = Object.entries(location.resources)
-        .filter(([key, val]) => val >= 2)
-        .sort(([, a], [, b]) => b - a) // Highest value first
-        .map(([key]) => key);
+    const numResourceObjectives = Math.min(2, highValueResources.length);
+    for (let i = 0; i < numResourceObjectives; i++) {
+      const resource = highValueResources[i];
+      const amount = location.resources[resource];
+      const prettyName = this.formatResourceName(resource);
       
-      // Add up to 2 resource objectives
-      const numResourceObjectives = Math.min(2, highValueResources.length);
-      for (let i = 0; i < numResourceObjectives; i++) {
-        const resource = highValueResources[i];
-        const amount = location.resources[resource];
-        const prettyName = this.formatResourceName(resource);
-        
-        const obj = this.buildObjective('resource_extraction', location, danger, vpSpread, {
-          name: prettyName,
-          amount: Math.min(amount, danger + 2),
-          vp: this.getResourceVP(resource)
-        });
-        
-        if (obj) {
-          objectives.push(obj);
-          usedTypes.add('resource_extraction_' + resource);
-        }
-      }
-    }
-    
-    // STEP 4.2: Plot-Specific Objectives
-    if (plotFamily.default_objectives && plotFamily.default_objectives.length > 0) {
-      const numToSelect = Math.min(1, plotFamily.default_objectives.length);
-      let plotObjectives = this.randomChoice(plotFamily.default_objectives, numToSelect);
-      
-      // FIX: randomChoice returns single item when count=1, wrap it in array
-      if (!Array.isArray(plotObjectives)) {
-        plotObjectives = plotObjectives ? [plotObjectives] : [];
-      }
-      
-      plotObjectives.forEach(objType => {
-        if (!usedTypes.has(objType)) {
-          const obj = this.buildObjective(objType, location, danger, vpSpread);
-          if (obj) {
-            objectives.push(obj);
-            usedTypes.add(objType);
-          }
-        }
+      const obj = this.buildObjective('resource_extraction', location, danger, vpSpread, {
+        name: prettyName,
+        amount: Math.min(amount, danger + 2),
+        vp: this.getResourceVP(resource)
       });
-    }
-    
-    // STEP 4.3: Fill with General Conflict Objectives (no duplicates)
-    const generalObjectives = ['scattered_crates', 'wrecked_engine', 'land_marker', 'fortified_position', 'stored_supplies'];
-    const numToFill = Math.max(1, 4 - objectives.length);
-
-    for (let i = 0; i < numToFill && generalObjectives.length > 0; i++) {
-      const availableTypes = generalObjectives.filter(t => !usedTypes.has(t));
-      if (availableTypes.length === 0) break;
       
-      const objType = this.randomChoice(availableTypes);
-      const obj = this.buildObjective(objType, location, danger, vpSpread);
       if (obj) {
         objectives.push(obj);
-        usedTypes.add(objType);
+        usedTypes.add('resource_extraction_' + resource);
       }
     }
-    
-    console.log(`  ✓ Generated ${objectives.length} objectives:`, objectives.map(o => o.name).join(', '));
-    
-    return objectives;
   }
+  
+  // STEP 4.2: Plot-Specific Objectives (prioritize these for non-resource plots)
+  if (plotFamily.default_objectives && plotFamily.default_objectives.length > 0) {
+    // For non-resource plots, add MORE plot objectives
+    const numToSelect = isResourcePlot ? 1 : Math.min(3, plotFamily.default_objectives.length);
+    let plotObjectives = this.randomChoice(plotFamily.default_objectives, numToSelect);
+    
+    if (!Array.isArray(plotObjectives)) {
+      plotObjectives = plotObjectives ? [plotObjectives] : [];
+    }
+    
+    plotObjectives.forEach(objType => {
+      if (!usedTypes.has(objType)) {
+        const obj = this.buildObjective(objType, location, danger, vpSpread);
+        if (obj) {
+          objectives.push(obj);
+          usedTypes.add(objType);
+        }
+      }
+    });
+  }
+  
+  // STEP 4.3: Fill with General Conflict Objectives
+  const generalObjectives = ['scattered_crates', 'wrecked_engine', 'land_marker', 'fortified_position', 'stored_supplies'];
+  const numToFill = Math.max(1, 4 - objectives.length);
+
+  for (let i = 0; i < numToFill && generalObjectives.length > 0; i++) {
+    const availableTypes = generalObjectives.filter(t => !usedTypes.has(t));
+    if (availableTypes.length === 0) break;
+    
+    const objType = this.randomChoice(availableTypes);
+    const obj = this.buildObjective(objType, location, danger, vpSpread);
+    if (obj) {
+      objectives.push(obj);
+      usedTypes.add(objType);
+    }
+  }
+  
+  console.log(`  ✓ Generated ${objectives.length} objectives:`, objectives.map(o => o.name).join(', '));
+  
+  return objectives;
+}
   
   buildObjective(type, location, danger, vpSpread, extraData = {}) {
     if (this.data.objectiveVault?.objective_categories) {
