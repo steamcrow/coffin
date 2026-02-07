@@ -8,6 +8,27 @@ console.log("⚙️ Brain Generators loading...");
 const BrainGenerators = {
   
   // ================================
+  // RELEVANCY FILTER
+  // Prevents "Nonsense" by limiting objective bloat
+  // ================================
+
+  isRelevantToFaction(factionId, objective) {
+    // Mapping specific objective types to faction interests
+    const mapping = {
+      'monster_rangers': ['silver', 'lead', 'fortified_position', 'civilians', 'supplies', 'water_clean'],
+      'crow_queen': ['thyr', 'tzul_silver', 'ritual_site', 'fortified_position', 'wrecked_engine', 'weapons'],
+      'monsters': ['food', 'territory', 'wrecked_engine', 'land_marker', 'livestock', 'water_foul'],
+      'liberty_corps': ['fortified_position', 'coal', 'lead', 'weapons', 'land_marker'],
+      'monsterology': ['thyr', 'specimen', 'wrecked_engine', 'mechanical_parts'],
+      'shine_riders': ['silver', 'gildren', 'supplies', 'weapons', 'mechanical_parts']
+    };
+    
+    const interests = mapping[factionId] || [];
+    // Returns true if the objective type matches an interest or by 30% chance for variety
+    return interests.some(i => objective.type.toLowerCase().includes(i)) || Math.random() < 0.3;
+  },
+
+  // ================================
   // FACTION OBJECTIVE INTERPRETATION
   // ================================
   
@@ -26,9 +47,15 @@ const BrainGenerators = {
       };
     }
     
+    // Check if this faction actually cares about this specific objective
+    const isCoreInterest = this.isRelevantToFaction(factionId, objective);
+
     const factionName = this.generateFactionObjectiveName(objective, verb, theme);
     const goal = this.generateFactionGoal(objective, verb, theme, pressure);
-    const method = this.generateFactionMethod(objective, verb, theme);
+    const method = isCoreInterest 
+      ? `Priority: ${this.generateFactionMethod(objective, verb, theme)}` 
+      : `Secondary: Standard interaction.`;
+    
     const scoring = this.generateFactionScoring(objective, verb, theme);
     const flavor = this.generateFactionFlavor(objective, verb, faction);
     
@@ -41,7 +68,8 @@ const BrainGenerators = {
       action_type: objective.action_type,
       action_cost: objective.action_cost,
       test_required: objective.test_required,
-      vp_value: objective.vp_value
+      vp_value: objective.vp_value,
+      is_priority: isCoreInterest
     };
   },
   
@@ -70,15 +98,11 @@ const BrainGenerators = {
     return important || name;
   },
   
-  // FIXED: No more repetitive "Rangers must protect the Wild" prefix
   generateFactionGoal(objective, verb, theme, pressure) {
-    // Just return the objective description - it's already clear and specific
     const baseGoal = objective.description;
-    
     if (pressure) {
       return `${baseGoal} Time is running out before ${pressure.label}.`;
     }
-    
     return baseGoal;
   },
   
@@ -96,10 +120,8 @@ const BrainGenerators = {
   },
   
   generateFactionScoring(objective, verb, theme) {
-    // Safely extract VP value
     const vpValue = objective.vp_per_unit || objective.vp_value || 2;
     const progressLabel = objective.progress_label || objective.vp_per || 'completion';
-    
     const base = `+${vpValue} VP per ${progressLabel}`;
     
     const bonuses = {
@@ -160,25 +182,18 @@ const BrainGenerators = {
   randomChoice(arr, count = 1) {
     if (!arr || arr.length === 0) return null;
     if (count === 1) return arr[Math.floor(Math.random() * arr.length)];
-    
     const shuffled = [...arr].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   },
   
   weightedRandomChoice(arr) {
     if (!arr || arr.length === 0) return null;
-    
-    const hasWeights = arr.some(item => item.weight !== undefined);
-    if (!hasWeights) return this.randomChoice(arr);
-    
     const totalWeight = arr.reduce((sum, item) => sum + (item.weight || 1), 0);
     let random = Math.random() * totalWeight;
-    
     for (let item of arr) {
       random -= (item.weight || 1);
       if (random <= 0) return item;
     }
-    
     return arr[arr.length - 1];
   },
   
@@ -189,22 +204,13 @@ const BrainGenerators = {
   
   formatResourceName(key) {
     const pretty = {
-      'food_foul': 'Foul Food',
-      'food_good': 'Good Food',
-      'water_foul': 'Foul Water',
-      'water_clean': 'Clean Water',
-      'mechanical_parts': 'Mechanical Parts',
-      'tzul_silver': 'Tzul Silver',
-      'thyr': 'Thyr Crystals',
-      'livestock': 'Livestock',
-      'supplies': 'Supplies',
-      'silver': 'Silver',
-      'lead': 'Lead',
-      'coal': 'Coal',
-      'weapons': 'Weapons',
-      'food': 'Food',
-      'water': 'Water',
-      'gildren': 'Gildren'
+      'food_foul': 'Foul Food', 'food_good': 'Good Food',
+      'water_foul': 'Foul Water', 'water_clean': 'Clean Water',
+      'mechanical_parts': 'Mechanical Parts', 'tzul_silver': 'Tzul Silver',
+      'thyr': 'Thyr Crystals', 'livestock': 'Livestock',
+      'supplies': 'Supplies', 'silver': 'Silver',
+      'lead': 'Lead', 'coal': 'Coal', 'weapons': 'Weapons',
+      'food': 'Food', 'water': 'Water', 'gildren': 'Gildren'
     };
     return pretty[key] || this.capitalize(key.replace(/_/g, ' '));
   },
@@ -219,7 +225,6 @@ const BrainGenerators = {
 
 console.log("✅ Brain Generators loaded!");
 
-// Export to global scope
 if (typeof window !== 'undefined') {
   window.BrainGenerators = BrainGenerators;
 }
