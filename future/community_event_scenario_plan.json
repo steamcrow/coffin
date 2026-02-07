@@ -1,0 +1,555 @@
+{
+  "document": "Coffin Canyon — Scenario Pack + Scenario Schema (Layer 0 Organized Play)",
+  "status": "DRAFT",
+  "design_intent": {
+    "one_scenario_shared_to_all_players": true,
+    "scenario_contains_all_factions_objectives": true,
+    "players_filter_to_their_faction_view": true,
+    "supports_open_book_or_secret_objectives": true,
+    "layer0_no_accounts_no_backend": true,
+    "failure_policy": {
+      "no_silent_failure": true,
+      "show_versions_and_source": true,
+      "treat_html_as_fetch_failure": true
+    },
+    "citation": " [oai_citation:0‡PROJECT MANIFESTO & COMMANDMENTS v2.0.json](file-service://file-DpGrem1wVK27v9vgDbsV5Z)"
+  },
+
+  "enums": {
+    "visibility": ["public", "faction", "organizer"],
+    "trigger_timing": ["start_of_round", "end_of_round", "immediate", "on_event"],
+    "trigger_event": [
+      "round_start",
+      "round_end",
+      "unit_destroyed",
+      "unit_exits_table",
+      "thyr_claimed",
+      "thyr_consumed",
+      "objective_completed",
+      "area_controlled",
+      "custom"
+    ],
+    "score_mode": ["fixed", "per", "tiered", "threshold"],
+    "objective_scope": ["global", "faction_only"],
+    "objective_kind": [
+      "kill",
+      "survive",
+      "control_zone",
+      "escort_exit",
+      "interact",
+      "collect_resource",
+      "consume_resource",
+      "destroy_target",
+      "protect_target",
+      "deny_enemy",
+      "special"
+    ]
+  },
+
+  "schema": {
+    "scenario_pack": {
+      "packId": "string (stable id; e.g. 'cc-pack-2026-iron-barrow-01')",
+      "packName": "string",
+      "createdAt": "ISO8601",
+      "lockedAt": "ISO8601|null",
+      "rules": {
+        "rulesetId": "string (e.g. 'coffin_canyon_core')",
+        "rulesVersion": "string (e.g. '8.2')",
+        "factionDataVersion": "string (optional; e.g. 'factions-2026.02')",
+        "scenarioSchemaVersion": "string (e.g. '1.0.0')"
+      },
+      "eventMeta": {
+        "eventId": "string|null",
+        "seasonId": "string|null",
+        "location": "string|null",
+        "organizer": "string|null",
+        "notes": "string|null"
+      },
+      "visibilityPolicy": {
+        "defaultObjectiveVisibility": "visibility",
+        "allowSecretObjectives": "boolean",
+        "playerViewMode": "open_book|filtered",
+        "organizerViewMode": "full|full_plus_tools"
+      },
+      "scenarios": ["scenario[]"],
+      "integrity": {
+        "packHash": "string (sha256 of canonicalized pack json, optional)",
+        "signing": {
+          "method": "none|simple_hash|ed25519_optional",
+          "publicKeyId": "string|null",
+          "signature": "string|null"
+        }
+      }
+    },
+
+    "scenario": {
+      "scenarioId": "string (stable id; e.g. 'cc-scn-iron-barrow-01-a')",
+      "scenarioName": "string",
+      "version": "string (scenario content version; e.g. '1.0.0')",
+      "tags": ["string"],
+      "createdAt": "ISO8601",
+      "lockedAt": "ISO8601|null",
+
+      "rulesRefs": {
+        "rulesVersion": "string",
+        "scenarioSchemaVersion": "string"
+      },
+
+      "setup": {
+        "table": {
+          "size": {
+            "widthIn": "number",
+            "heightIn": "number"
+          },
+          "recommendedTerrainDensity": "low|med|high",
+          "terrainKeywords": ["string"]
+        },
+        "deployment": {
+          "style": "opposed_edges|quarters|diagonal|custom",
+          "zones": [
+            {
+              "zoneId": "string",
+              "label": "string",
+              "shape": "rect|poly|band",
+              "constraints": {
+                "minFromCenterIn": "number|null",
+                "maxFromEdgeIn": "number|null"
+              },
+              "visibility": "public|organizer"
+            }
+          ],
+          "specialRules": ["string"]
+        },
+        "rounds": {
+          "roundLimit": "integer",
+          "initiative": "standard|alternate|custom",
+          "firstRoundSpecial": "string|null"
+        },
+        "resources": {
+          "thyr": {
+            "enabled": "boolean",
+            "placement": {
+              "mode": "fixed|scatter|zone_based|table_quadrants|custom",
+              "count": "integer",
+              "notes": "string|null",
+              "markers": [
+                {
+                  "markerId": "string",
+                  "kind": "thyr",
+                  "pos": { "xPct": "number", "yPct": "number },
+                  "radiusIn": "number|null",
+                  "visibility": "public|organizer"
+                }
+              ]
+            },
+            "carryRulesRef": "string|null"
+          }
+        },
+        "hazards": [
+          {
+            "hazardId": "string",
+            "name": "string",
+            "timing": "trigger_timing",
+            "effectRef": "string (rules key or inline short text)",
+            "visibility": "visibility"
+          }
+        ],
+        "specialTokens": [
+          {
+            "tokenId": "string",
+            "name": "string",
+            "kind": "objective|trap|artifact|exit|npc|custom",
+            "pos": { "xPct": "number", "yPct": "number },
+            "radiusIn": "number|null",
+            "visibility": "visibility",
+            "notes": "string|null"
+          }
+        ]
+      },
+
+      "objectives": {
+        "globalObjectives": [
+          {
+            "objectiveId": "string",
+            "name": "string",
+            "kind": "objective_kind",
+            "scope": "global",
+            "visibility": "visibility",
+            "scoring": {
+              "mode": "score_mode",
+              "vp": "number|null",
+              "per": {
+                "unit": "string|null",
+                "cap": "number|null"
+              },
+              "tiers": [
+                {
+                  "threshold": "number",
+                  "vp": "number"
+                }
+              ],
+              "notes": "string|null"
+            },
+            "requirements": {
+              "when": "start|end|anytime|on_trigger",
+              "triggerId": "string|null",
+              "target": {
+                "type": "zone|token|unit|faction|resource|custom",
+                "refId": "string|null"
+              },
+              "test": {
+                "type": "none|quality|defense|custom",
+                "vs": "number|null",
+                "notes": "string|null"
+              }
+            },
+            "ui": {
+              "short": "string",
+              "long": "string"
+            }
+          }
+        ],
+
+        "factionObjectives": {
+          "byFactionId": {
+            "FACTION_ID": [
+              {
+                "objectiveId": "string",
+                "name": "string",
+                "kind": "objective_kind",
+                "scope": "faction_only",
+                "visibility": "visibility",
+                "scoring": {
+                  "mode": "score_mode",
+                  "vp": "number|null",
+                  "per": { "unit": "string|null", "cap": "number|null" },
+                  "tiers": [],
+                  "notes": "string|null"
+                },
+                "requirements": {
+                  "when": "start|end|anytime|on_trigger",
+                  "triggerId": "string|null",
+                  "target": {
+                    "type": "zone|token|unit|faction|resource|custom",
+                    "refId": "string|null"
+                  },
+                  "constraints": {
+                    "onlyThisFactionCanScore": true,
+                    "opponentsCanDeny": "boolean",
+                    "denialRule": "string|null"
+                  }
+                },
+                "ui": { "short": "string", "long": "string" }
+              }
+            ]
+          }
+        },
+
+        "secretObjectives": {
+          "enabled": "boolean",
+          "byFactionId": {
+            "FACTION_ID": [
+              {
+                "objectiveId": "string",
+                "name": "string",
+                "kind": "objective_kind",
+                "scope": "faction_only",
+                "visibility": "faction",
+                "scoring": {
+                  "mode": "score_mode",
+                  "vp": "number",
+                  "per": { "unit": "string|null", "cap": "number|null" },
+                  "tiers": [],
+                  "notes": "string|null"
+                },
+                "requirements": {
+                  "when": "end|anytime|on_trigger",
+                  "triggerId": "string|null",
+                  "notes": "string|null"
+                },
+                "ui": { "short": "string", "long": "string" }
+              }
+            ]
+          }
+        }
+      },
+
+      "triggers": [
+        {
+          "triggerId": "string",
+          "name": "string",
+          "timing": "trigger_timing",
+          "event": "trigger_event",
+          "visibility": "visibility",
+          "condition": {
+            "expr": "string (simple expression language; e.g. 'round==2' or 'event.kind==thyr_consumed')",
+            "notes": "string|null"
+          },
+          "effects": [
+            {
+              "effectId": "string",
+              "type": "spawn|hazard|score|modify|announce|custom",
+              "visibility": "visibility",
+              "payload": "object (effect-specific)"
+            }
+          ],
+          "ui": {
+            "short": "string",
+            "long": "string"
+          }
+        }
+      ],
+
+      "turnCounterSupport": {
+        "enabled": "boolean",
+        "roundStartChecklist": ["string"],
+        "roundEndChecklist": ["string"],
+        "autoTrigger": "boolean",
+        "logEvents": "boolean"
+      },
+
+      "integrity": {
+        "scenarioHash": "string (sha256 canonicalized scenario json, optional)",
+        "source": "network|cached|bundled|local",
+        "dataVersionsSeen": {
+          "rulesVersion": "string",
+          "factionDataVersion": "string|null",
+          "terrainCatalogVersion": "string|null"
+        }
+      }
+    }
+  },
+
+  "example_pack": {
+    "packId": "cc-pack-2026-barrows-quickplay-01",
+    "packName": "Barrows Quickplay Pack 01",
+    "createdAt": "2026-02-07T14:00:00Z",
+    "lockedAt": null,
+    "rules": {
+      "rulesetId": "coffin_canyon_core",
+      "rulesVersion": "8.2",
+      "factionDataVersion": "factions-2026.02",
+      "scenarioSchemaVersion": "1.0.0"
+    },
+    "eventMeta": {
+      "eventId": null,
+      "seasonId": null,
+      "location": null,
+      "organizer": null,
+      "notes": "Open share pack for casual events."
+    },
+    "visibilityPolicy": {
+      "defaultObjectiveVisibility": "public",
+      "allowSecretObjectives": true,
+      "playerViewMode": "filtered",
+      "organizerViewMode": "full"
+    },
+    "scenarios": [
+      {
+        "scenarioId": "cc-scn-barrows-01-a",
+        "scenarioName": "Thyr at the Ruin Line",
+        "version": "1.0.0",
+        "tags": ["quickplay", "thyr", "ruins"],
+        "createdAt": "2026-02-07T14:00:00Z",
+        "lockedAt": null,
+        "rulesRefs": {
+          "rulesVersion": "8.2",
+          "scenarioSchemaVersion": "1.0.0"
+        },
+        "setup": {
+          "table": {
+            "size": { "widthIn": 36, "heightIn": 36 },
+            "recommendedTerrainDensity": "med",
+            "terrainKeywords": ["ruin", "cover", "lanes"]
+          },
+          "deployment": {
+            "style": "opposed_edges",
+            "zones": [
+              {
+                "zoneId": "A",
+                "label": "Edge A",
+                "shape": "band",
+                "constraints": { "minFromCenterIn": null, "maxFromEdgeIn": 6 },
+                "visibility": "public"
+              },
+              {
+                "zoneId": "B",
+                "label": "Edge B",
+                "shape": "band",
+                "constraints": { "minFromCenterIn": null, "maxFromEdgeIn": 6 },
+                "visibility": "public"
+              }
+            ],
+            "specialRules": []
+          },
+          "rounds": { "roundLimit": 5, "initiative": "standard", "firstRoundSpecial": null },
+          "resources": {
+            "thyr": {
+              "enabled": true,
+              "placement": {
+                "mode": "fixed",
+                "count": 3,
+                "notes": "Place 1 center and 2 near midline cover.",
+                "markers": [
+                  { "markerId": "T1", "kind": "thyr", "pos": { "xPct": 50, "yPct": 50 }, "radiusIn": 2, "visibility": "public" },
+                  { "markerId": "T2", "kind": "thyr", "pos": { "xPct": 35, "yPct": 55 }, "radiusIn": 2, "visibility": "public" },
+                  { "markerId": "T3", "kind": "thyr", "pos": { "xPct": 65, "yPct": 45 }, "radiusIn": 2, "visibility": "public" }
+                ]
+              },
+              "carryRulesRef": "thyr_carrying"
+            }
+          },
+          "hazards": [],
+          "specialTokens": [
+            { "tokenId": "R1", "name": "Ruin Line", "kind": "objective", "pos": { "xPct": 50, "yPct": 50 }, "radiusIn": 8, "visibility": "public", "notes": "Control zone centered on mid-table ruin cluster." }
+          ]
+        },
+        "objectives": {
+          "globalObjectives": [
+            {
+              "objectiveId": "G_CTRL_RUIN",
+              "name": "Hold the Ruin Line",
+              "kind": "control_zone",
+              "scope": "global",
+              "visibility": "public",
+              "scoring": { "mode": "per", "vp": null, "per": { "unit": "end_of_round_control", "cap": 3 }, "tiers": [], "notes": "Score 1 VP each Round you control the Ruin Line." },
+              "requirements": { "when": "on_trigger", "triggerId": "TR_END_ROUND", "target": { "type": "token", "refId": "R1" }, "test": { "type": "none", "vs": null, "notes": null } },
+              "ui": { "short": "Score 1 VP/Round if you control Ruin Line.", "long": "At end of each Round, if you control the Ruin Line token zone, score 1 VP (max 3 VP total from this objective)." }
+            }
+          ],
+          "factionObjectives": {
+            "byFactionId": {
+              "monster_rangers": [
+                {
+                  "objectiveId": "MR_ESCORT",
+                  "name": "Escort a Befriended Monster",
+                  "kind": "escort_exit",
+                  "scope": "faction_only",
+                  "visibility": "public",
+                  "scoring": { "mode": "fixed", "vp": 3, "per": { "unit": null, "cap": 1 }, "tiers": [], "notes": "Score once." },
+                  "requirements": {
+                    "when": "end",
+                    "triggerId": null,
+                    "target": { "type": "custom", "refId": "befriended_monster_exits" },
+                    "constraints": { "onlyThisFactionCanScore": true, "opponentsCanDeny": true, "denialRule": "If the escorted monster is destroyed before exiting, you cannot score." }
+                  },
+                  "ui": { "short": "3 VP if a befriended monster exits alive.", "long": "If you befriend a monster and successfully escort it off the table via your edge, score 3 VP (once). If it dies, you lose this chance." }
+                }
+              ],
+              "monsterologists": [
+                {
+                  "objectiveId": "MO_MORT",
+                  "name": "Harvest Mort",
+                  "kind": "kill",
+                  "scope": "faction_only",
+                  "visibility": "public",
+                  "scoring": { "mode": "per", "vp": null, "per": { "unit": "monster_killed", "cap": 4 }, "tiers": [], "notes": "1 VP per monster removed (max 4)." },
+                  "requirements": {
+                    "when": "anytime",
+                    "triggerId": null,
+                    "target": { "type": "custom", "refId": "monster_removed_from_play" },
+                    "constraints": { "onlyThisFactionCanScore": true, "opponentsCanDeny": false, "denialRule": null }
+                  },
+                  "ui": { "short": "1 VP per monster removed (max 4).", "long": "Score 1 VP each time you remove a monster from play, up to 4 VP total. (Represents harvested Mort.)" }
+                }
+              ],
+              "monsters": [
+                {
+                  "objectiveId": "MS_SURVIVE",
+                  "name": "Survive the Intrusion",
+                  "kind": "survive",
+                  "scope": "faction_only",
+                  "visibility": "public",
+                  "scoring": { "mode": "tiered", "vp": null, "per": { "unit": null, "cap": null }, "tiers": [{ "threshold": 50, "vp": 2 }, { "threshold": 75, "vp": 4 }], "notes": "% of starting monster models still alive." },
+                  "requirements": {
+                    "when": "end",
+                    "triggerId": null,
+                    "target": { "type": "custom", "refId": "percent_alive" },
+                    "constraints": { "onlyThisFactionCanScore": true, "opponentsCanDeny": true, "denialRule": "Reduce monster survival % by killing monsters." }
+                  },
+                  "ui": { "short": "2 VP (50% alive) / 4 VP (75% alive).", "long": "At game end, score 2 VP if at least 50% of your starting monster models are alive; score 4 VP if at least 75% are alive." }
+                }
+              ],
+              "liberty_corps": [
+                {
+                  "objectiveId": "LC_STUDY",
+                  "name": "Secure Thyr Samples",
+                  "kind": "collect_resource",
+                  "scope": "faction_only",
+                  "visibility": "public",
+                  "scoring": { "mode": "per", "vp": null, "per": { "unit": "thyr_held_endgame", "cap": 3 }, "tiers": [], "notes": "1 VP per Thyr held at end (max 3)." },
+                  "requirements": {
+                    "when": "end",
+                    "triggerId": null,
+                    "target": { "type": "resource", "refId": "thyr" },
+                    "constraints": { "onlyThisFactionCanScore": true, "opponentsCanDeny": true, "denialRule": "Thyr can be stolen/consumed/removed as normal." }
+                  },
+                  "ui": { "short": "1 VP per Thyr held at end (max 3).", "long": "At game end, score 1 VP per Thyr crystal your models are carrying or controlling, up to 3 VP." }
+                }
+              ]
+            }
+          },
+          "secretObjectives": {
+            "enabled": true,
+            "byFactionId": {
+              "monster_rangers": [
+                {
+                  "objectiveId": "MR_SECRET_KINDNESS",
+                  "name": "Mercy in the Dust",
+                  "kind": "special",
+                  "scope": "faction_only",
+                  "visibility": "faction",
+                  "scoring": { "mode": "fixed", "vp": 2, "per": { "unit": null, "cap": 1 }, "tiers": [], "notes": "Optional secret." },
+                  "requirements": { "when": "end", "triggerId": null, "notes": "Score if you end the game with 0 monster kills." },
+                  "ui": { "short": "2 VP if you killed no monsters.", "long": "If you have not destroyed any monster models by game end, score 2 VP." }
+                }
+              ]
+            }
+          }
+        },
+        "triggers": [
+          {
+            "triggerId": "TR_END_ROUND",
+            "name": "End of Round Scoring",
+            "timing": "end_of_round",
+            "event": "round_end",
+            "visibility": "public",
+            "condition": { "expr": "true", "notes": null },
+            "effects": [
+              { "effectId": "E_SCORE_GLOBAL", "type": "score", "visibility": "public", "payload": { "objectiveIds": ["G_CTRL_RUIN"] } }
+            ],
+            "ui": { "short": "Resolve end-of-round scoring.", "long": "At the end of each Round, resolve any objectives keyed to round end (like control zones)." }
+          },
+          {
+            "triggerId": "TR_ROUND_2_EVENT",
+            "name": "Round 2 Escalation",
+            "timing": "start_of_round",
+            "event": "round_start",
+            "visibility": "public",
+            "condition": { "expr": "round==2", "notes": null },
+            "effects": [
+              { "effectId": "E_ANNOUNCE", "type": "announce", "visibility": "public", "payload": { "text": "Round 2: the canyon stirs. Resolve any scenario escalation effects." } }
+            ],
+            "ui": { "short": "Round 2 escalation.", "long": "At the start of Round 2, announce and apply escalation rules if any are present in this scenario." }
+          }
+        ],
+        "turnCounterSupport": {
+          "enabled": true,
+          "roundStartChecklist": ["Resolve start-of-round triggers.", "Confirm initiative/activation order."],
+          "roundEndChecklist": ["Resolve end-of-round scoring.", "Log any scenario events."],
+          "autoTrigger": true,
+          "logEvents": true
+        },
+        "integrity": {
+          "scenarioHash": "sha256:TBD",
+          "source": "network",
+          "dataVersionsSeen": { "rulesVersion": "8.2", "factionDataVersion": "factions-2026.02", "terrainCatalogVersion": null }
+        }
+      }
+    ],
+    "integrity": {
+      "packHash": "sha256:TBD",
+      "signing": { "method": "simple_hash", "publicKeyId": null, "signature": null }
+    }
+  }
+}
