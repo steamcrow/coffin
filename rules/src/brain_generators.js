@@ -1,15 +1,10 @@
 // ==========================================
-// SCENARIO BRAIN GENERATORS (REPAIRED VERSION)
+// SCENARIO BRAIN GENERATORS
 // ==========================================
 
 console.log("🎲 Brain Generators loading...");
 
 const BrainGenerators = {
-
-  // SAFETY CHECK: This is just to prove to you it's working
-  checkStatus: function() {
-    console.log("✅ SAFETY CHECK: Aftermath function is LOADED and ready.");
-  },
 
   // 1. RELEVANCY FILTER
   isRelevantToFaction: function(objType, factionId) {
@@ -56,7 +51,7 @@ const BrainGenerators = {
     return goals[fId] || null;
   },
 
-  // 4. AFTERMATH (This is what was failing)
+  // 4. AFTERMATH
   generateFactionAftermath: function(fId) {
     var texts = {
       'monster_rangers': "Area stabilized; wildlife remains skittish.",
@@ -69,28 +64,37 @@ const BrainGenerators = {
     return texts[fId] || "The dust settles as the factions withdraw.";
   },
 
-  // 5. CULTISTS
+  // 5. CULTIST SYSTEM (FIXED FOR RENDERER ERROR)
   generateCultistEncounter: function(selections, plot, location) {
     var chance = 0.2 + (Math.max(0, selections.dangerRating - 3) * 0.1);
     if (Math.random() > chance) { return null; }
     
     var cult = this.weightedRandomChoice(CULT_REGISTRY);
     var pressure = PRESSURE_TRACKS[cult.id];
+    var danger = selections.dangerRating;
     
     return {
       enabled: true,
       cult: cult,
       pressure: pressure,
-      markers: CULTIST_TERRAIN_MARKERS[pressure.type] || ['Ritual Site']
+      markers: CULTIST_TERRAIN_MARKERS[pressure.type] || ['Ritual Site'],
+      // The Renderer looks for this 'objective' block. We must provide it here.
+      objective: {
+        name: "Suppress " + cult.name,
+        goal: "Prevent the " + pressure.label + " from reaching critical mass.",
+        method: "Destroy cultist markers or interact with ritual sites.",
+        scoring: "+" + danger + " VP if the pressure track remains below 4."
+      }
     };
   },
 
   generateCultistResponseObjective: function(fId, encounter, danger) {
+    // This provides the faction-specific version of the cult objective
     return {
-      name: "Suppress " + encounter.cult.name,
-      goal: "Stop the " + encounter.pressure.label + ".",
-      method: "Interact with ritual sites.",
-      scoring: "+" + danger + " VP if pressure stays low."
+      name: "Tactical Suppression: " + encounter.cult.name,
+      goal: "Interfere with the " + encounter.pressure.label + " before it ruins our operation.",
+      method: "Standard suppression of ritual sites.",
+      scoring: "+" + danger + " VP for containing the threat."
     };
   },
 
@@ -102,7 +106,12 @@ const BrainGenerators = {
   },
 
   generateTerrainSetup: function(plot, loc, danger) {
-    return TERRAIN_MAP[plot.id] || { core: ['Cover'], optional: [], atmosphere: 'Standard' };
+    var base = TERRAIN_MAP[plot.id] || { core: ['Cover'], optional: [], atmosphere: 'Standard' };
+    return {
+      core: base.core,
+      optional: base.optional,
+      atmosphere: base.atmosphere
+    };
   },
 
   // 7. UTILITIES
@@ -129,8 +138,6 @@ const BrainGenerators = {
   }
 };
 
-// Connect to the Brain
 if (typeof window !== 'undefined') { 
   window.BrainGenerators = BrainGenerators;
-  BrainGenerators.checkStatus(); // This will run in your console
 }
