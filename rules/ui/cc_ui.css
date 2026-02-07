@@ -462,3 +462,58 @@ code, pre, kbd, samp {
     right: -100vw;
   }
 }
+/* ===================================
+   LOADING ANIMATION (REUSABLE)
+   =================================== */
+
+.cc-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  min-height: 300px;
+}
+
+.cc-loading-bar {
+  width: 100%;
+  max-width: 500px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.cc-loading-progress {
+  height: 100%;
+  background: linear-gradient(90deg, 
+    var(--cc-primary) 0%, 
+    #ff9147 50%, 
+    var(--cc-primary) 100%);
+  width: 0%;
+  animation: cc-loading-fill 2s ease-in-out forwards;
+  border-radius: 8px;
+  box-shadow: 0 0 20px rgba(255, 117, 24, 0.6);
+}
+
+@keyframes cc-loading-fill {
+  0% { width: 0%; }
+  50% { width: 75%; }
+  100% { width: 95%; }
+}
+
+.cc-loading-text {
+  margin-top: 1.5rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.1rem;
+  font-weight: 500;
+  text-align: center;
+  animation: cc-pulse-text 1.5s ease-in-out infinite;
+}
+
+@keyframes cc-pulse-text {
+  0%, 100% { opacity: 0.8; }
+  50% { opacity: 1; }
+}
