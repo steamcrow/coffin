@@ -1,145 +1,204 @@
 // ================================
 // BRAIN CONSTANTS
-// All data registries, lookup tables, and configuration
+// All registries, lookups, and data structures
 // ================================
 
 console.log("📊 Brain Constants loading...");
 
 // ================================
-// CULT REGISTRY — 8 Named Cults
+// CULT REGISTRY
 // ================================
 const CULT_REGISTRY = [
-  { id: 'sons_of_ralu',            name: 'Sons of Ralu',              theme: 'Chaos & Destruction',     color: '#c44569', description: 'Worshippers of RALU, the monster god of chaos. They seek to unleash primal, mindless destruction upon the Canyon.', weight: 8 },
-  { id: 'new_children_of_tzul',    name: 'The New Children of Tzul', theme: 'Undead & Ancient Power',   color: '#7b2d8b', description: 'A new cult worshipping the ancient Tzul. They aid and summon the undead, seeking to resurrect their dark masters.', weight: 7 },
-  { id: 'burning_choir',           name: 'The Burning Choir',        theme: 'Fire & Purification',     color: '#e84545', description: 'Apocalypse cultists who believe the world must burn to be reborn. Fire is their sacrament.', weight: 6 },
-  { id: 'children_of_hollow',      name: 'Children of the Hollow',   theme: 'Void & Madness',          color: '#5a5aaa', description: 'They worship the void between worlds. Their rituals dissolve reality itself.', weight: 5 },
-  { id: 'thyr_eaters',             name: 'The Thyr Eaters',          theme: 'Addiction & Consumption',  color: '#daa520', description: 'Addicted to raw Thyr energy. They consume all magic and crystals, growing ever hungrier.', weight: 8 },
-  { id: 'blighted_root',           name: 'The Blighted Root',        theme: 'Corrupted Nature',        color: '#4caf50', description: 'Nature corruption cultists. They twist plants and beasts into horrifying, spreading abominations.', weight: 4 },
-  { id: 'bone_singers',            name: 'The Bone Singers',         theme: 'Death Magic',             color: '#78909c', description: 'Practitioners of death magic who raise the dead and commune with the grave.', weight: 7 },
-  { id: 'regents_faithful',        name: "Regent's Faithful",        theme: 'Dark Monarchy',           color: '#8e24aa', description: "Secret worshippers of a dark monarch. Only appear when The Crow Queen is NOT in the scenario.", weight: 3 }
+  { id: 'sons_of_ralu', name: 'Sons of Ralu', theme: 'Chaos & Destruction', color: '#c44569', description: 'Worshippers of RALU, the monster god of chaos. They seek to unleash primal, mindless destruction upon the Canyon.', weight: 8 },
+  { id: 'new_children_of_tzul', name: 'The New Children of Tzul', theme: 'Undead & Ancient Power', color: '#7b2d8b', description: 'A new cult worshipping the ancient Tzul. They aid and summon the undead, seeking to resurrect their dark masters.', weight: 7 },
+  { id: 'burning_choir', name: 'The Burning Choir', theme: 'Fire & Purification', color: '#e84545', description: 'Apocalypse cultists who believe the world must burn to be reborn. Fire is their sacrament.', weight: 6 },
+  { id: 'children_of_hollow', name: 'Children of the Hollow', theme: 'Void & Madness', color: '#5a5aaa', description: 'They worship the void between worlds. Their rituals dissolve reality itself.', weight: 5 },
+  { id: 'thyr_eaters', name: 'The Thyr Eaters', theme: 'Addiction & Consumption', color: '#daa520', description: 'Addicted to raw Thyr energy. They consume all magic and crystals, growing ever hungrier.', weight: 8 },
+  { id: 'blighted_root', name: 'The Blighted Root', theme: 'Corrupted Nature', color: '#4caf50', description: 'Nature corruption cultists. They twist plants and beasts into horrifying, spreading abominations.', weight: 4 },
+  { id: 'bone_singers', name: 'The Bone Singers', theme: 'Death Magic', color: '#78909c', description: 'Practitioners of death magic who raise the dead and commune with the grave.', weight: 7 },
+  { id: 'regents_faithful', name: "Regent's Faithful", theme: 'Dark Monarchy', color: '#8e24aa', description: "Secret worshippers of a dark monarch. Only appear when The Crow Queen is NOT in the scenario.", weight: 3 }
 ];
 
-// ================================
-// FACTION CORE VERBS
-// ================================
 const FACTION_CORE_VERBS = {
-  monster_rangers: {
-    primary_verb: 'PROTECT',
-    secondary_verbs: ['PRESERVE', 'STABILIZE', 'DEFEND'],
-    approach: 'defensive'
-  },
-  liberty_corps: {
-    primary_verb: 'CONTROL',
-    secondary_verbs: ['SECURE', 'ENFORCE', 'OCCUPY'],
-    approach: 'authoritarian'
-  },
-  monsterology: {
-    primary_verb: 'DEVOUR',
-    secondary_verbs: ['HARVEST', 'EXTRACT', 'CONSUME'],
-    approach: 'exploitative'
-  },
-  shine_riders: {
-    primary_verb: 'STEAL',
-    secondary_verbs: ['LOOT', 'RAID', 'PLUNDER'],
-    approach: 'opportunistic'
-  },
-  crow_queen: {
-    primary_verb: 'CONSECRATE',
-    secondary_verbs: ['CLAIM', 'SANCTIFY', 'CONVERT'],
-    approach: 'mystical'
-  },
-  monsters: {
-    primary_verb: 'BREED',
-    secondary_verbs: ['FEED', 'NEST', 'MIGRATE'],
-    approach: 'primal'
-  }
+  monster_rangers: { primary_verb: 'PROTECT', secondary_verbs: ['PRESERVE', 'STABILIZE', 'DEFEND'], approach: 'defensive' },
+  liberty_corps: { primary_verb: 'CONTROL', secondary_verbs: ['SECURE', 'ENFORCE', 'OCCUPY'], approach: 'authoritarian' },
+  monsterology: { primary_verb: 'DEVOUR', secondary_verbs: ['HARVEST', 'EXTRACT', 'CONSUME'], approach: 'exploitative' },
+  shine_riders: { primary_verb: 'STEAL', secondary_verbs: ['LOOT', 'RAID', 'PLUNDER'], approach: 'opportunistic' },
+  crow_queen: { primary_verb: 'CONSECRATE', secondary_verbs: ['CLAIM', 'SANCTIFY', 'CONVERT'], approach: 'mystical' },
+  monsters: { primary_verb: 'BREED', secondary_verbs: ['FEED', 'NEST', 'MIGRATE'], approach: 'primal' }
 };
 
-// ================================
-// FACTION THEMES
-// ================================
 const FACTION_THEMES = {
-  monster_rangers: {
+  'monster_rangers': {
     primary_theme: 'Protect the Wild',
-    secondary_themes: ['Contain threats', 'Preserve balance'],
-    tone: 'grim_duty'
+    pressure_stance: 'containment',
+    resource_priorities: ['livestock', 'clean_water', 'wildlife']
   },
-  liberty_corps: {
-    primary_theme: 'Establish Order',
-    secondary_themes: ['Enforce law', 'Control chaos'],
-    tone: 'authoritarian'
+  'liberty_corps': {
+    primary_theme: 'Federal Control',
+    pressure_stance: 'containment',
+    resource_priorities: ['weapons', 'supplies', 'communications']
   },
-  monsterology: {
-    primary_theme: 'Advance Science',
-    secondary_themes: ['Extract knowledge', 'Ignore ethics'],
-    tone: 'clinical'
+  'monsterology': {
+    primary_theme: 'Scientific Progress',
+    pressure_stance: 'exploitation',
+    resource_priorities: ['thyr', 'specimens', 'mechanical_parts']
   },
-  shine_riders: {
-    primary_theme: 'Turn Profit',
-    secondary_themes: ['Move fast', 'Sell stories'],
-    tone: 'opportunistic'
+  'shine_riders': {
+    primary_theme: 'Profit from Chaos',
+    pressure_stance: 'opportunist',
+    resource_priorities: ['valuables', 'contraband', 'weapons']
   },
-  crow_queen: {
-    primary_theme: 'Serve the Crown',
-    secondary_themes: ['Claim territory', 'Convert subjects'],
-    tone: 'dark_royal'
+  'crow_queen': {
+    primary_theme: 'Establish Dominion',
+    pressure_stance: 'redirection',
+    resource_priorities: ['territory', 'followers', 'relics']
   },
-  monsters: {
-    primary_theme: 'Survive',
-    secondary_themes: ['Breed', 'Feed', 'Territory'],
-    tone: 'primal'
+  'monsters': {
+    primary_theme: 'Reclaim Territory',
+    pressure_stance: 'adaptive',
+    resource_priorities: ['food', 'territory', 'safety']
   }
 };
 
-// ================================
-// PRESSURE TRACKS (large - just include the structure)
-// Full definitions in your original file
-// ================================
 const PRESSURE_TRACKS = {
-  // Cult pressure tracks
-  'sons_of_ralu': { type: 'chaos_escalation', label: 'Chaos Spreading', rate: 1, max: 6 },
-  'new_children_of_tzul': { type: 'necromantic_rise', label: 'Undead Rising', rate: 1, max: 6 },
-  'burning_choir': { type: 'fire_spread', label: 'Flames Spreading', rate: 1, max: 6 },
-  'children_of_hollow': { type: 'reality_erosion', label: 'Void Incursion', rate: 1, max: 6 },
-  'thyr_eaters': { type: 'resource_consumption', label: 'Thyr Depletion', rate: 1, max: 6 },
-  'blighted_root': { type: 'corruption_spread', label: 'Blight Spreading', rate: 1, max: 6 },
-  'bone_singers': { type: 'death_magic', label: 'Necromantic Power', rate: 1, max: 6 },
-  'regents_faithful': { type: 'dark_consecration', label: 'Dark Monarchy Rising', rate: 1, max: 6 }
-  // Add ambient tracks as needed
+  'sons_of_ralu': {
+    type: 'chaos_escalation',
+    label: 'Chaos Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'minor_mutations', desc: 'Strange growths appear on terrain', forces_cooperation: false },
+      4: { effect: 'major_instability', desc: 'Reality becomes unstable - all terrain Difficult', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Chaos unleashed - location becomes Wild', world_scar: 'Wild' }
+    },
+    visual: 'Chaos corruption markers spread across board',
+    player_experience: 'Terrain and units behave unpredictably'
+  },
+  'new_children_of_tzul': {
+    type: 'necromantic_rise',
+    label: 'Undead Rising',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'shambling_dead', desc: 'Undead servants spawn at burial sites', forces_cooperation: false },
+      4: { effect: 'tzul_awakening', desc: 'Ancient Tzul warriors rise - hostile to all', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Tzul King manifests - everyone loses', world_scar: 'Haunted' }
+    },
+    visual: 'Undead models appear at ritual markers',
+    player_experience: 'Fighting on two fronts - factions AND undead'
+  },
+  'burning_choir': {
+    type: 'fire_spread',
+    label: 'Flames Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'smoke_penalty', desc: 'Smoke obscures battlefield - ranged attacks -1 die', forces_cooperation: false },
+      4: { effect: 'inferno', desc: 'Buildings collapse, terrain destroyed', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Scorched earth - location becomes Depleted', world_scar: 'Scorched' }
+    },
+    visual: 'Fire tokens spread each round',
+    player_experience: 'Shrinking battlefield, forced movement'
+  },
+  'children_of_hollow': {
+    type: 'reality_erosion',
+    label: 'Void Incursion',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'void_whispers', desc: 'Models must pass Will checks or Act Erratically', forces_cooperation: false },
+      4: { effect: 'dimensional_tears', desc: 'Random teleportation effects - models displaced', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Reality collapses - location Forbidden', world_scar: 'Forbidden' }
+    },
+    visual: 'Void rifts appear as terrain features',
+    player_experience: 'Sanity mechanics, unpredictable board state'
+  },
+  'thyr_eaters': {
+    type: 'resource_consumption',
+    label: 'Thyr Depletion',
+    rate: 1,
+    max: 6,
+    consumes: 'thyr',
+    thresholds: {
+      2: { effect: 'crystal_dimming', desc: 'Thyr crystals pulse erratically - magic unreliable', forces_cooperation: false },
+      4: { effect: 'magical_collapse', desc: 'Thyr vein collapsing - all magical abilities -2 dice', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Dead zone - all magic fails, location Depleted', world_scar: 'Depleted' }
+    },
+    visual: 'Thyr crystal markers dim and disappear',
+    player_experience: 'Resource race - extract before depletion'
+  },
+  'blighted_root': {
+    type: 'corruption_spread',
+    label: 'Blight Spreading',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'tainted_growth', desc: 'Corrupted plants grow - terrain becomes Difficult', forces_cooperation: false },
+      4: { effect: 'twisted_ecosystem', desc: 'Plants attack models - 2 damage per round in vegetation', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Permanent corruption - location becomes Tainted', world_scar: 'Tainted' }
+    },
+    visual: 'Corruption spreads from ritual sites',
+    player_experience: 'Safe zones shrink, must keep moving'
+  },
+  'bone_singers': {
+    type: 'death_magic',
+    label: 'Necromantic Power',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'grave_chill', desc: 'All models -1 to Movement', forces_cooperation: false },
+      4: { effect: 'mass_resurrection', desc: 'All killed models return as hostile undead', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Death claims all - location becomes Haunted', world_scar: 'Haunted' }
+    },
+    visual: 'Killed models remain on board as threats',
+    player_experience: 'Cautious combat - kills create problems'
+  },
+  'regents_faithful': {
+    type: 'dark_consecration',
+    label: 'Dark Monarchy Rising',
+    rate: 1,
+    max: 6,
+    consumes: null,
+    thresholds: {
+      2: { effect: 'whispered_oaths', desc: 'Models must resist Dominated status', forces_cooperation: false },
+      4: { effect: 'regents_gaze', desc: 'Regent Black manifests - hostile to all non-Queen factions', forces_cooperation: true },
+      6: { effect: 'catastrophe', desc: 'Eternal allegiance - location becomes Consecrated', world_scar: 'Consecrated' }
+    },
+    visual: 'Dark obelisks rise from ground',
+    player_experience: 'Mind control effects, loyalty tests'
+  }
 };
 
-// ================================
-// CULTIST STATE MODIFIERS
-// ================================
 const CULTIST_STATE_MODIFIERS = {
-  'poisoned':    { modifier: 0.10,  reason: 'Corruption breeds cult activity' },
-  'haunted':     { modifier: 0.25,  reason: 'Dark energy draws cultists like moths to flame' },
-  'exalted':     { modifier: 0.20,  reason: 'The Regent\'s dark power awakens darker forces' },
-  'strangewild': { modifier: 0.10,  reason: 'Feral chaos makes cults bold and reckless' },
-  'lawless':     { modifier: 0.05,  reason: 'No law means no one stops the cults' },
-  'liberated':   { modifier: -0.15, reason: 'Federal order suppresses cult activity' },
-  'extracted':   { modifier: -0.05, reason: 'Stripped wasteland offers little for rituals' },
-  'rusted':      { modifier: -0.10, reason: 'Machines don\'t worship gods' },
-  'held':        { modifier: 0.0,   reason: 'Controlled territory. Cults are watched.' }
+  'poisoned': { modifier: 0.10, reason: 'Corruption breeds cult activity' },
+  'haunted': { modifier: 0.25, reason: 'Dark energy draws cultists like moths to flame' },
+  'exalted': { modifier: 0.20, reason: 'The Regent\'s dark power awakens darker forces' },
+  'strangewild': { modifier: 0.10, reason: 'Feral chaos makes cults bold and reckless' },
+  'lawless': { modifier: 0.05, reason: 'No law means no one stops the cults' },
+  'liberated': { modifier: -0.15, reason: 'Federal order suppresses cult activity' },
+  'extracted': { modifier: -0.05, reason: 'Stripped wasteland offers little for rituals' },
+  'rusted': { modifier: -0.10, reason: 'Machines don\'t worship gods' },
+  'held': { modifier: 0.0, reason: 'Controlled territory. Cults are watched.' }
 };
 
-// ================================
-// TERRAIN MAP
-// ================================
 const TERRAIN_MAP = {
-  'extraction_heist':            { core: ['Mine Entrance', 'Thyr Extraction Rig', 'Supply Crates (×3)'], optional: ['Quonset Huts', 'Rail Tracks'], atmosphere: 'Active industrial dig site' },
-  'claim_and_hold':              { core: ['Fortified Post', 'Territory Markers (×3)', 'Board Walks'], optional: ['Ruined Cantina', 'Stilt Buildings'], atmosphere: 'Contested frontier outpost' },
-  'ambush_derailment':           { core: ['Rail Tracks', 'Overpass / Bridge', 'Scattered Crates (×4)'], optional: ['Stagecoach Ruins', 'Rocky Outcrop'], atmosphere: 'Remote stretch of rail' },
-  'siege_standoff':              { core: ['Fortified Wall', 'Guard Tower', 'Barricades (×2)'], optional: ['Quonset Huts', 'Supply Depot'], atmosphere: 'Fortified position under siege' },
-  'escort_run':                  { core: ['Trail Path', 'Waypoint Markers (×2)', 'Escort Cargo'], optional: ['Monster Den / Nest', 'Bridge Ruins'], atmosphere: 'Dangerous mountain trail' },
-  'sabotage_strike':             { core: ['Thyr Extraction Rig', 'Dynamo', 'Control Panel'], optional: ['Quonset Huts', 'Rail Tracks'], atmosphere: 'Active industrial site. Explosions possible.' },
-  'corruption_ritual':           { core: ['Ritual Circle', 'Tainted Ground', 'Ancient Altar'], optional: ['Tzul Ruins', 'Strange Plants'], atmosphere: 'Dark, oppressive, and wrong.' },
-  'natural_disaster_response':   { core: ['Cracked Ground', 'Collapsing Structure', 'Evacuation Point'], optional: ['Buried Supplies', 'Unstable Terrain'], atmosphere: 'Active catastrophe.' }
+  'extraction_heist': { core: ['Mine Entrance', 'Thyr Extraction Rig', 'Supply Crates (×3)'], optional: ['Quonset Huts', 'Rail Tracks'], atmosphere: 'Active industrial dig site' },
+  'claim_and_hold': { core: ['Fortified Post', 'Territory Markers (×3)', 'Board Walks'], optional: ['Ruined Cantina', 'Stilt Buildings'], atmosphere: 'Contested frontier outpost' },
+  'ambush_derailment': { core: ['Rail Tracks', 'Overpass / Bridge', 'Scattered Crates (×4)'], optional: ['Stagecoach Ruins', 'Rocky Outcrop'], atmosphere: 'Remote stretch of rail' },
+  'siege_standoff': { core: ['Fortified Wall', 'Guard Tower', 'Barricades (×2)'], optional: ['Quonset Huts', 'Supply Depot'], atmosphere: 'Fortified position under siege' },
+  'escort_run': { core: ['Trail Path', 'Waypoint Markers (×2)', 'Escort Cargo'], optional: ['Monster Den / Nest', 'Bridge Ruins'], atmosphere: 'Dangerous mountain trail' },
+  'sabotage_strike': { core: ['Thyr Extraction Rig', 'Dynamo', 'Control Panel'], optional: ['Quonset Huts', 'Rail Tracks'], atmosphere: 'Active industrial site. Explosions possible.' },
+  'corruption_ritual': { core: ['Ritual Circle', 'Tainted Ground', 'Ancient Altar'], optional: ['Tzul Ruins', 'Strange Plants'], atmosphere: 'Dark, oppressive, and wrong.' },
+  'natural_disaster_response': { core: ['Cracked Ground', 'Collapsing Structure', 'Evacuation Point'], optional: ['Buried Supplies', 'Unstable Terrain'], atmosphere: 'Active catastrophe.' }
 };
 
-// ================================
-// VP SYSTEMS
-// ================================
 const VP_SYSTEMS = {
   'extraction_heist': { primary: 'Items Extracted', primary_vp: 3, bonus: 'Speed Bonus', bonus_vp: 1, ticker_primary: 2, ticker_bonus: 1 },
   'claim_and_hold': { primary: 'Rounds Controlled', primary_vp: 2, bonus: 'Consecutive Control', bonus_vp: 3, ticker_primary: 2, ticker_bonus: 2 },
@@ -151,9 +210,6 @@ const VP_SYSTEMS = {
   'natural_disaster_response': { primary: 'Civilians Saved', primary_vp: 3, bonus: 'Resources Secured', bonus_vp: 2, ticker_primary: 2, ticker_bonus: 1 }
 };
 
-// ================================
-// FACTION PLOT AFFINITIES
-// ================================
 const FACTION_PLOT_AFFINITIES = {
   'monster_rangers': { 'corruption_ritual': 3, 'natural_disaster_response': 2, 'escort_run': 2 },
   'liberty_corps': { 'claim_and_hold': 2, 'siege_standoff': 2, 'escort_run': 1 },
@@ -163,9 +219,6 @@ const FACTION_PLOT_AFFINITIES = {
   'monsters': { 'natural_disaster_response': 2, 'ambush_derailment': 1 }
 };
 
-// ================================
-// OBJECTIVE BUILDERS
-// ================================
 const OBJECTIVE_BUILDERS = {
   'wrecked_engine': (loc, danger, vpSpread) => ({
     name: 'Salvage Wrecked Engine',
@@ -241,9 +294,32 @@ const OBJECTIVE_BUILDERS = {
   })
 };
 
+const CULTIST_TERRAIN_MARKERS = {
+  'chaos_escalation': ['Chaos Corruption Markers (x3)', 'Reality Distortion Zones'],
+  'necromantic_rise': ['Burial Ground', 'Ritual Circle', 'Undead Spawn Points (x2)'],
+  'fire_spread': ['Fire Source Markers (x3)', 'Burning Terrain'],
+  'reality_erosion': ['Void Rift Markers (x2)', 'Dimensional Tear'],
+  'resource_consumption': ['Thyr Crystal Cache', 'Consumption Device', 'Depleted Crystal Markers'],
+  'corruption_spread': ['Blight Heart', 'Corrupted Terrain Markers (x3)'],
+  'death_magic': ['Necromantic Focus', 'Grave Sites (x2)', 'Death Magic Circle'],
+  'dark_consecration': ['Dark Obelisks (x3)', 'Consecration Circle']
+};
+
 console.log("✅ Brain Constants loaded!");
 
+// Make constants globally accessible
 if (typeof window !== 'undefined') {
+  window.CULT_REGISTRY = CULT_REGISTRY;
+  window.FACTION_CORE_VERBS = FACTION_CORE_VERBS;
+  window.FACTION_THEMES = FACTION_THEMES;
+  window.PRESSURE_TRACKS = PRESSURE_TRACKS;
+  window.CULTIST_STATE_MODIFIERS = CULTIST_STATE_MODIFIERS;
+  window.TERRAIN_MAP = TERRAIN_MAP;
+  window.VP_SYSTEMS = VP_SYSTEMS;
+  window.FACTION_PLOT_AFFINITIES = FACTION_PLOT_AFFINITIES;
+  window.OBJECTIVE_BUILDERS = OBJECTIVE_BUILDERS;
+  window.CULTIST_TERRAIN_MARKERS = CULTIST_TERRAIN_MARKERS;
+  
   window.BRAIN_CONSTANTS = {
     CULT_REGISTRY,
     FACTION_CORE_VERBS,
