@@ -88,7 +88,7 @@ const BrainGenerators = {
   },
 
   // ================================
-  // CULTIST SYSTEM (FIXED)
+  // CULTIST SYSTEM
   // ================================
   generateCultistEncounter(userSelections, plotFamily, location) {
     const chance = 0.2 + (Math.max(0, userSelections.dangerRating - 3) * 0.1);
@@ -105,7 +105,6 @@ const BrainGenerators = {
     };
   },
 
-  // THIS IS THE FUNCTION THAT WAS MISSING/UNDEFINED
   generateCultistResponseObjective(factionId, encounter, danger) {
     return {
       name: `Suppress ${encounter.cult.name}`,
@@ -116,7 +115,22 @@ const BrainGenerators = {
   },
 
   // ================================
-  // NARRATIVE & TERRAIN
+  // AFTERMATH GENERATION (FIXED)
+  // ================================
+  generateFactionAftermath(factionId) {
+    const aftermaths = {
+      'monster_rangers': "The area is stabilized, but the wildlife remains skittish.",
+      'liberty_corps': "A temporary outpost is established to maintain federal order.",
+      'monsterology': "Data logs are uploaded; the harvest was... acceptable.",
+      'shine_riders': "The loot is divided. Some riders are richer; others are dead.",
+      'crow_queen': "The ground feels colder. Her shadow grows longer here.",
+      'monsters': "The pack feeds. For now, the territory is quiet."
+    };
+    return aftermaths[factionId] || "The dust settles as the factions withdraw.";
+  },
+
+  // ================================
+  // NARRATIVE & WORLD BUILDING
   // ================================
   generateNarrative(plotFamily, location, userSelections, cultistEncounter) {
     let text = `The conflict at ${location.name} centers on ${plotFamily.name}. `;
@@ -146,10 +160,10 @@ const BrainGenerators = {
   getCanyonState(state) { return state || "Stable"; },
   generateTwist(danger, loc) { return "The wind picks up, obscuring vision."; },
   generateFinale(plot, danger, loc, factions) { return "A sudden extraction window opens."; },
-  generateTerrainSetup(plot, loc, danger, objectives, cultists) { return TERRAIN_MAP[plot.id] || { core: ['Cover'] }; },
   generateCoffinCough(loc, danger) { return danger > 4 ? "A light dust storm is approaching." : null; },
 
   randomChoice(arr) {
+    if (!arr || arr.length === 0) return null;
     return arr[Math.floor(Math.random() * arr.length)];
   },
 
