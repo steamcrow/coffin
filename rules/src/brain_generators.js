@@ -146,6 +146,7 @@ const BrainGenerators = {
   getCanyonState(state) { return state || "Stable"; },
   generateTwist(danger, loc) { return "The wind picks up, obscuring vision."; },
   generateFinale(plot, danger, loc, factions) { return "A sudden extraction window opens."; },
+  generateTerrainSetup(plot, loc, danger, objectives, cultists) { return TERRAIN_MAP[plot.id] || { core: ['Cover'] }; },
   generateCoffinCough(loc, danger) { return danger > 4 ? "A light dust storm is approaching." : null; },
 
   randomChoice(arr) {
