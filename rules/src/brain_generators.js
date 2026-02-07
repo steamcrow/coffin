@@ -1,229 +1,185 @@
 // ================================
-// BRAIN GENERATORS
-// Faction interpretation methods and utilities
+// SCENARIO BRAIN GENERATORS
+// Logic for specific sub-components
 // ================================
 
-console.log("⚙️ Brain Generators loading...");
+console.log("🎲 Brain Generators loading...");
 
 const BrainGenerators = {
-  
-  // ================================
-  // RELEVANCY FILTER
-  // Prevents "Nonsense" by limiting objective bloat
-  // ================================
 
-  isRelevantToFaction(factionId, objective) {
-    // Mapping specific objective types to faction interests
-    const mapping = {
-      'monster_rangers': ['silver', 'lead', 'fortified_position', 'civilians', 'supplies', 'water_clean'],
-      'crow_queen': ['thyr', 'tzul_silver', 'ritual_site', 'fortified_position', 'wrecked_engine', 'weapons'],
-      'monsters': ['food', 'territory', 'wrecked_engine', 'land_marker', 'livestock', 'water_foul'],
-      'liberty_corps': ['fortified_position', 'coal', 'lead', 'weapons', 'land_marker'],
-      'monsterology': ['thyr', 'specimen', 'wrecked_engine', 'mechanical_parts'],
-      'shine_riders': ['silver', 'gildren', 'supplies', 'weapons', 'mechanical_parts']
-    };
+  // ================================
+  // RELEVANCY FILTER (The "Better" Logic)
+  // ================================
+  
+  /**
+   * Checks if an objective type aligns with a faction's priorities.
+   */
+  isRelevantToFaction(objType, factionId) {
+    const themes = FACTION_THEMES[factionId];
+    if (!themes || !themes.resource_priorities) return true; // Default to relevant if no data
     
-    const interests = mapping[factionId] || [];
-    // Returns true if the objective type matches an interest or by 30% chance for variety
-    return interests.some(i => objective.type.toLowerCase().includes(i)) || Math.random() < 0.3;
+    // Check if the objective type (e.g., 'thyr') is in the faction's priority list
+    return themes.resource_priorities.some(priority => objType.includes(priority));
   },
 
   // ================================
-  // FACTION OBJECTIVE INTERPRETATION
+  // FACTION INTERPRETATION
   // ================================
-  
-  generateFactionObjectiveInterpretation(objective, faction, pressure = null) {
+
+  generateFactionObjectiveInterpretation(objective, faction) {
     const factionId = faction.id;
-    const verb = FACTION_CORE_VERBS[factionId];
-    const theme = FACTION_THEMES[factionId];
+    const verbs = FACTION_CORE_VERBS[factionId] || { primary_verb: 'SECURE' };
+    const isPriority = this.isRelevantToFaction(objective.type, factionId);
     
-    if (!verb || !theme) {
-      return {
-        name: objective.name,
-        goal: objective.description,
-        method: objective.success || 'Complete objective',
-        scoring: `+${objective.vp_value} VP per ${objective.vp_per}`,
-        flavor: null
-      };
-    }
-    
-    // Check if this faction actually cares about this specific objective
-    const isCoreInterest = this.isRelevantToFaction(factionId, objective);
+    // Base mapping for flavor
+    const flavorMap = {
+      'monster_rangers': `The Wild must remain balanced.`,
+      'liberty_corps': `Federal protocol dictates we secure this immediately.`,
+      'monsterology': `This specimen/resource is vital for the Institute.`,
+      'shine_riders': `Look at that... it's practically begging to be taken.`,
+      'crow_queen': `The Queen desires this. It shall be hers.`,
+      'monsters': `*Low growls* This belongs to the pack now.`
+    };
 
-    const factionName = this.generateFactionObjectiveName(objective, verb, theme);
-    const goal = this.generateFactionGoal(objective, verb, theme, pressure);
-    const method = isCoreInterest 
-      ? `Priority: ${this.generateFactionMethod(objective, verb, theme)}` 
-      : `Secondary: Standard interaction.`;
-    
-    const scoring = this.generateFactionScoring(objective, verb, theme);
-    const flavor = this.generateFactionFlavor(objective, verb, faction);
-    
     return {
-      name: factionName,
-      goal: goal,
-      method: method,
-      scoring: scoring,
-      flavor: flavor,
-      action_type: objective.action_type,
-      action_cost: objective.action_cost,
-      test_required: objective.test_required,
-      vp_value: objective.vp_value,
-      is_priority: isCoreInterest
+      name: `${verbs.primary_verb} ${objective.name.replace('Extract ', '').replace('Recover ', '')}`,
+      goal: `${flavorMap[factionId] || ''} ${objective.description}`,
+      method: `Standard ${verbs.approach || 'tactical'} engagement.`,
+      scoring: `+${objective.vp_per_unit} VP per ${objective.progress_label}`,
+      is_priority: isPriority // Used by Core to decide whether to show this or hide it
     };
   },
-  
-  generateFactionObjectiveName(objective, verb, theme) {
-    const patterns = {
-      'PROTECT': ['Defend', 'Preserve', 'Stabilize', 'Guard'],
-      'CONTROL': ['Secure', 'Establish Control of', 'Enforce Order at', 'Occupy'],
-      'DEVOUR': ['Harvest', 'Extract', 'Consume', 'Weaponize'],
-      'STEAL': ['Loot', 'Raid', 'Plunder', 'Claim'],
-      'CONSECRATE': ['Claim', 'Sanctify', 'Convert', 'Dedicate'],
-      'BREED': ['Nest in', 'Claim as Territory', 'Feed from', 'Spawn at']
+
+  // ================================
+  // THE MISSING FUNCTION (Fixes your Error)
+  // ================================
+
+  generateUniqueFactionObjective(factionId, danger, allFactions) {
+    const uniques = {
+      'monster_rangers': { 
+        name: 'Minimize Casualties', 
+        goal: 'Protect the innocent and the local fauna.', 
+        method: 'Keep all units above 50% health.', 
+        scoring: `+${danger} Bonus VP if no units were destroyed.` 
+      },
+      'liberty_corps': { 
+        name: 'Establish Perimeter', 
+        goal: 'Create a zone of absolute control.', 
+        method: 'End the game with no enemies in your deployment zone.', 
+        scoring: `+${danger + 2} VP for a clear perimeter.` 
+      },
+      'monsterology': { 
+        name: 'Field Data Collection', 
+        goal: 'Observe the enemy under live-fire conditions.', 
+        method: 'Spend at least one action within 3" of an enemy leader.', 
+        scoring: `+${danger * 2} VP for successful observation.` 
+      },
+      'shine_riders': { 
+        name: 'High Roller', 
+        goal: 'Show off and make it look easy.', 
+        method: 'Succeed on a Test with 3+ extra successes.', 
+        scoring: `+4 VP for the style points.` 
+      },
+      'crow_queen': { 
+        name: 'Fear the Shadow', 
+        goal: 'Break their spirits.', 
+        method: 'Cause at least one enemy unit to Flee.', 
+        scoring: `+${danger} VP for every Broken enemy.` 
+      },
+      'monsters': { 
+        name: 'Scent of Blood', 
+        goal: 'Identify the weakest link.', 
+        method: 'Completely eliminate the smallest enemy unit first.', 
+        scoring: `+${danger + 1} VP for the successful hunt.` 
+      }
     };
-    
-    const verbs = patterns[verb.primary_verb] || [verb.primary_verb];
-    const selectedVerb = this.randomChoice(verbs);
-    const keyNoun = this.extractKeyNoun(objective.name);
-    
-    return `${selectedVerb} ${keyNoun}`;
+
+    return uniques[factionId] || null;
   },
-  
-  extractKeyNoun(name) {
-    const important = name
-      .replace(/Salvage|Recover|Control|Complete|Destroy|Gather|Search|Raid|Stage|Extract/gi, '')
-      .replace(/the|a|an/gi, '')
-      .trim();
-    return important || name;
+
+  // ================================
+  // CULTISTS & NARRATIVE
+  // ================================
+
+  generateCultistEncounter(userSelections, plotFamily, location) {
+    // 20% base chance, +10% per Danger Rating over 3
+    const chance = 0.2 + (Math.max(0, userSelections.dangerRating - 3) * 0.1);
+    if (Math.random() > chance) return null;
+
+    const cult = this.randomChoice(CULT_REGISTRY);
+    const pressure = PRESSURE_TRACKS[cult.id];
+
+    return {
+      enabled: true,
+      cult: cult,
+      pressure: pressure,
+      markers: CULTIST_TERRAIN_MARKERS[pressure.type] || ['Ritual Site']
+    };
   },
-  
-  generateFactionGoal(objective, verb, theme, pressure) {
-    const baseGoal = objective.description;
-    if (pressure) {
-      return `${baseGoal} Time is running out before ${pressure.label}.`;
+
+  generateNarrative(plotFamily, location, userSelections, cultistEncounter) {
+    let text = `The conflict at ${location.name} centers on ${plotFamily.name}. `;
+    text += location.description + " " + location.atmosphere;
+    
+    if (cultistEncounter) {
+      text += ` WARNING: Reports indicate ${cultistEncounter.cult.name} activity in the area, bringing ${cultistEncounter.pressure.label}.`;
     }
-    return baseGoal;
+
+    return text;
   },
-  
-  generateFactionMethod(objective, verb, theme) {
-    const tactics = {
-      'PROTECT': 'Defensive positioning. +1 die when protecting objectives.',
-      'CONTROL': 'Overwhelming force. Control requires majority presence.',
-      'DEVOUR': 'Surgical extraction. Ignore collateral damage.',
-      'STEAL': 'Hit and run. +1 Movement when carrying loot.',
-      'CONSECRATE': 'Ritual conversion. Area remains claimed.',
-      'BREED': 'Territorial marking. Spawns reinforcements when held.'
-    };
-    
-    return tactics[verb.primary_verb] || 'Complete the objective';
-  },
-  
-  generateFactionScoring(objective, verb, theme) {
-    const vpValue = objective.vp_per_unit || objective.vp_value || 2;
-    const progressLabel = objective.progress_label || objective.vp_per || 'completion';
-    const base = `+${vpValue} VP per ${progressLabel}`;
-    
-    const bonuses = {
-      'PROTECT': 'Bonus VP if no casualties.',
-      'CONTROL': 'Bonus VP if held for 2+ rounds.',
-      'DEVOUR': 'Can convert extracted resources to VP.',
-      'STEAL': 'Double VP if extracted before enemy arrives.',
-      'CONSECRATE': 'Permanent VP if site remains claimed.',
-      'BREED': 'Spawned units worth VP.'
-    };
-    
-    const bonus = bonuses[verb.primary_verb];
-    return bonus ? `${base}. ${bonus}` : base;
-  },
-  
-  generateFactionFlavor(objective, verb, faction) {
-    const quotes = {
-      'monster_rangers': [
-        '"We don\'t deal with this often. But when we do, we deal with it permanently."',
-        '"The Canyon doesn\'t care about fair. Neither do we."',
-        '"Save what can be saved. The rest becomes a lesson."'
-      ],
-      'liberty_corps': [
-        '"Order isn\'t negotiable."',
-        '"The Corps protects. Even from themselves."',
-        '"Lawlessness ends here."'
-      ],
-      'monsterology': [
-        '"Science requires sacrifice. Usually someone else\'s."',
-        '"Progress doesn\'t ask permission."',
-        '"The Institute takes what it needs."'
-      ],
-      'shine_riders': [
-        '"Everything\'s for sale if you\'re fast enough."',
-        '"Profit waits for no one."',
-        '"This\'ll sell papers for months."'
-      ],
-      'crow_queen': [
-        '"What the Queen claims, Regent Black keeps."',
-        '"All who remain will kneel."',
-        '"The Crown does not ask. It takes."'
-      ],
-      'monsters': [
-        '"The pack does not negotiate."',
-        '"Survival is not a crime."',
-        '"Territory. Food. Breeding. Everything else is noise."'
-      ]
-    };
-    
-    const factionQuotes = quotes[faction.id] || [];
-    return factionQuotes.length > 0 ? this.randomChoice(factionQuotes) : null;
-  },
-  
+
   // ================================
-  // UTILITY METHODS
+  // UTILITIES
   // ================================
-  
+
   randomChoice(arr, count = 1) {
     if (!arr || arr.length === 0) return null;
     if (count === 1) return arr[Math.floor(Math.random() * arr.length)];
+    
     const shuffled = [...arr].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, count);
   },
-  
-  weightedRandomChoice(arr) {
-    if (!arr || arr.length === 0) return null;
-    const totalWeight = arr.reduce((sum, item) => sum + (item.weight || 1), 0);
+
+  weightedRandomChoice(items) {
+    const totalWeight = items.reduce((sum, item) => sum + (item.weight || 1), 0);
     let random = Math.random() * totalWeight;
-    for (let item of arr) {
+    for (const item of items) {
+      if (random < (item.weight || 1)) return item;
       random -= (item.weight || 1);
-      if (random <= 0) return item;
     }
-    return arr[arr.length - 1];
+    return items[0];
   },
-  
-  capitalize(str) {
-    if (!str) return '';
-    return str.charAt(0).toUpperCase() + str.slice(1);
+
+  formatResourceName(str) {
+    return str.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   },
-  
-  formatResourceName(key) {
-    const pretty = {
-      'food_foul': 'Foul Food', 'food_good': 'Good Food',
-      'water_foul': 'Foul Water', 'water_clean': 'Clean Water',
-      'mechanical_parts': 'Mechanical Parts', 'tzul_silver': 'Tzul Silver',
-      'thyr': 'Thyr Crystals', 'livestock': 'Livestock',
-      'supplies': 'Supplies', 'silver': 'Silver',
-      'lead': 'Lead', 'coal': 'Coal', 'weapons': 'Weapons',
-      'food': 'Food', 'water': 'Water', 'gildren': 'Gildren'
+
+  validateScenario(scenario) {
+    console.log("🔍 Validating Scenario...");
+    if (!scenario.name) scenario.name = "Unnamed Skirmish";
+    return scenario;
+  },
+
+  // Stub methods for functionality called by Core
+  getDangerDesc(rating) {
+    const levels = ["Negligible", "Low", "Moderate", "High", "Extreme", "Suicidal"];
+    return levels[rating] || "Unknown";
+  },
+
+  getCanyonState(state) { return state || "Stable"; },
+  generateTwist(danger, loc) { return "The wind picks up, obscuring vision."; },
+  generateFinale(plot, danger, loc, factions) { return "A sudden extraction window opens."; },
+  generateTerrainSetup(plot, loc, danger, objectives, cultists) { return TERRAIN_MAP[plot.id] || { core: ['Cover'] }; },
+  generateCoffinCough(loc, danger) { return danger > 4 ? "A light dust storm is approaching." : null; },
+  generateCultistResponseObjective(factionId, encounter, danger) {
+    return {
+      name: `Suppress ${encounter.cult.name}`,
+      goal: `Prevent the ${encounter.pressure.label} from reaching critical mass.`,
+      method: `Destroy cultist markers or interact with ritual sites.`,
+      scoring: `+${danger} VP if the track remains below 4.`
     };
-    return pretty[key] || this.capitalize(key.replace(/_/g, ' '));
-  },
-  
-  parseTemplate(template, context) {
-    if (!template) return '';
-    return template.replace(/{(\w+)}/g, (match, key) => {
-      return context[key] !== undefined ? context[key] : match;
-    });
   }
 };
-
-console.log("✅ Brain Generators loaded!");
 
 if (typeof window !== 'undefined') {
   window.BrainGenerators = BrainGenerators;
