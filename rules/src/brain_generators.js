@@ -1,6 +1,6 @@
 // ================================
 // BRAIN GENERATORS
-// All the generation methods for objectives, factions, terrain, etc.
+// Faction interpretation methods and utilities
 // ================================
 
 console.log("⚙️ Brain Generators loading...");
@@ -21,7 +21,7 @@ const BrainGenerators = {
         name: objective.name,
         goal: objective.description,
         method: objective.success || 'Complete objective',
-        scoring: `+${objective.vp_value || objective.vp_per_unit || 2} VP per ${objective.vp_per || objective.progress_label || 'completion'}`,
+        scoring: `+${objective.vp_value} VP per ${objective.vp_per}`,
         flavor: null
       };
     }
@@ -41,7 +41,7 @@ const BrainGenerators = {
       action_type: objective.action_type,
       action_cost: objective.action_cost,
       test_required: objective.test_required,
-      vp_value: objective.vp_value || objective.vp_per_unit
+      vp_value: objective.vp_value
     };
   },
   
@@ -70,32 +70,17 @@ const BrainGenerators = {
     return important || name;
   },
   
- generateFactionGoal(objective, verb, theme, pressure) {
-  // FIX: Use faction motivation as context, not repetitive prefix
-  // The description already explains what to do, we just add WHY
-  
-  const contextMap = {
-    'monster_rangers': objective.description,  // Rangers' descriptions are already clear
-    'liberty_corps': objective.description,     // Corps descriptions are already clear
-    'monsterology': objective.description,      // Institute descriptions are already clear
-    'shine_riders': objective.description,      // Riders descriptions are already clear
-    'crow_queen': objective.description,        // Queen descriptions are already clear
-    'monsters': objective.description           // Monsters descriptions are already clear
-  };
-  
-  // Find faction by matching theme
-  const factionId = Object.keys(FACTION_THEMES).find(id => 
-    FACTION_THEMES[id].primary_theme === theme.primary_theme
-  );
-  
-  const baseGoal = contextMap[factionId] || objective.description;
-  
-  if (pressure) {
-    return `${baseGoal} Time is running out before ${pressure.label}.`;
-  }
-  
-  return baseGoal;
-}
+  // FIXED: No more repetitive "Rangers must protect the Wild" prefix
+  generateFactionGoal(objective, verb, theme, pressure) {
+    // Just return the objective description - it's already clear and specific
+    const baseGoal = objective.description;
+    
+    if (pressure) {
+      return `${baseGoal} Time is running out before ${pressure.label}.`;
+    }
+    
+    return baseGoal;
+  },
   
   generateFactionMethod(objective, verb, theme) {
     const tactics = {
@@ -107,13 +92,15 @@ const BrainGenerators = {
       'BREED': 'Territorial marking. Spawns reinforcements when held.'
     };
     
-    return tactics[verb.primary_verb] || 'Complete the objective.';
+    return tactics[verb.primary_verb] || 'Complete the objective';
   },
   
   generateFactionScoring(objective, verb, theme) {
-    const vpValue = objective.vp_value || objective.vp_per_unit || 2;
-    const vpPer = objective.vp_per || objective.progress_label || 'completion';
-    const base = `+${vpValue} VP per ${vpPer}`;
+    // Safely extract VP value
+    const vpValue = objective.vp_per_unit || objective.vp_value || 2;
+    const progressLabel = objective.progress_label || objective.vp_per || 'completion';
+    
+    const base = `+${vpValue} VP per ${progressLabel}`;
     
     const bonuses = {
       'PROTECT': 'Bonus VP if no casualties.',
@@ -232,6 +219,7 @@ const BrainGenerators = {
 
 console.log("✅ Brain Generators loaded!");
 
+// Export to global scope
 if (typeof window !== 'undefined') {
   window.BrainGenerators = BrainGenerators;
 }
