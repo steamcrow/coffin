@@ -267,43 +267,59 @@ class ScenarioBrain {
   // PLOT FAMILY SELECTION
   // ================================
   
-  selectPlotFamily(location, userSelections) {
-    if (!this.data.plotFamilies?.plot_families) {
-      console.error("⚠️ No plot families loaded! Using emergency plot.");
-      return this.getEmergencyPlot();
+ selectPlotFamily(location, userSelections) {
+  if (!this.data.plotFamilies?.plot_families) {
+    console.error("⚠️ No plot families loaded! Using emergency plot.");
+    return this.getEmergencyPlot();
+  }
+  
+  const plots = this.data.plotFamilies.plot_families;
+  let bestPlots = []; // Track ALL plots with the highest score
+  let maxScore = 0;
+  
+  plots.forEach(plot => {
+    let score = 0;
+    
+    // Score based on resources matching plot's primary resources
+    if (location.resources && plot.primary_resources) {
+      plot.primary_resources.forEach(res => {
+        if (location.resources[res] && location.resources[res] > 0) {
+          score += 3;
+        }
+      });
     }
     
-    const plots = this.data.plotFamilies.plot_families;
-    let bestPlot = plots[0];
-    let maxScore = 0;
+    // Score based on location type matching plot themes
+    if (location.type_ref) {
+      if (location.type_ref.includes('fortress') && plot.id === 'siege_standoff') score += 4;
+      if (location.type_ref.includes('pass') && plot.id === 'escort_run') score += 4;
+      if (location.type_ref.includes('ruins') && plot.id === 'ambush_derailment') score += 4;
+      if (location.type_ref.includes('mine') && plot.id === 'extraction_heist') score += 4;
+      if (location.type_ref.includes('rail') && plot.id === 'ambush_derailment') score += 4;
+    }
     
-    plots.forEach(plot => {
-      let score = 0;
-      
-      if (location.resources && plot.primary_resources) {
-        plot.primary_resources.forEach(res => {
-          if (location.resources[res] && location.resources[res] > 0) {
-            score += 3;
-          }
-        });
-      }
-      
-      if (location.type_ref) {
-        if (location.type_ref.includes('fortress') && plot.id === 'siege_standoff') score += 4;
-        if (location.type_ref.includes('pass') && plot.id === 'escort_run') score += 4;
-        if (location.type_ref.includes('ruins') && plot.id === 'ambush_derailment') score += 4;
-        if (location.type_ref.includes('mine') && plot.id === 'extraction_heist') score += 4;
-      }
-      
-      if (score > maxScore) {
-        maxScore = score;
-        bestPlot = plot;
-      }
-    });
-    
-    console.log(`Matched: ${bestPlot.name} (score: ${maxScore})`);
-    return bestPlot;
+    // Track best plots
+    if (score > maxScore) {
+      maxScore = score;
+      bestPlots = [plot];
+    } else if (score === maxScore) {
+      bestPlots.push(plot);
+    }
+  });
+  
+  // FIX: If no plot scored points (maxScore = 0), randomize from ALL plots
+  if (maxScore === 0) {
+    console.log(`No strong plot match found. Randomizing from all ${plots.length} plots.`);
+    const randomPlot = this.randomChoice(plots);
+    console.log(`Matched: ${randomPlot.name} (random selection)`);
+    return randomPlot;
   }
+  
+  // If we have multiple plots with the same high score, pick randomly
+  const selectedPlot = this.randomChoice(bestPlots);
+  console.log(`Matched: ${selectedPlot.name} (score: ${maxScore})`);
+  return selectedPlot;
+}
   
   getEmergencyPlot() {
     return {
