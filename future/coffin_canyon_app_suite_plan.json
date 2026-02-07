@@ -1,0 +1,666 @@
+{
+  "project": "Coffin Canyon App Suite",
+  "purpose": "Define a container-ready contract for multiple Coffin Canyon web apps (and later an iOS WebView container) sharing the same JSON data sources with resilient offline-first behavior.",
+  "date_context": "2026-02-07",
+  "core_principles": {
+    "no_silent_failure": true,
+    "blank_screens_are_bugs": true,
+    "data_is_json_first": true,
+    "apps_are_independent_tools": true,
+    "container_is_a_shell_not_a_rewrite": true,
+    "fallback_order": [
+      "memory_cache",
+      "local_cache",
+      "network_fetch",
+      "inline_bundled_snapshot",
+      "hard_fail_with_visible_error"
+    ],
+    "failure_detection": {
+      "treat_html_as_failure": true,
+      "html_heuristic": "responseText.trim().startsWith('<')",
+      "must_surface_error_ui": true
+    },
+    "source_note": "Fallback doctrine derived from your token failure contingency approach and resilience policy.",
+    "citations": [
+      " [oai_citation:0‡instructions_for_chatgpt_to_convert_faction_builder_3.json](file-service://file-63QJM7feYimxUnvr4uQU9d)"
+    ]
+  },
+  "container_model": {
+    "recommended": {
+      "name": "Coffin Canyon Field Kit",
+      "type": "single_container_app",
+      "shell": "web_shell_now__ios_webview_later",
+      "apps_mounted": [
+        "faction_builder",
+        "rules_explorer",
+        "scenario_builder",
+        "canyon_map",
+        "turn_counter"
+      ],
+      "navigation": {
+        "mode": "tab_or_launcher",
+        "deep_links": true,
+        "url_strategy": {
+          "base": "/cc",
+          "routes": {
+            "faction_builder": "/cc/faction",
+            "rules_explorer": "/cc/rules",
+            "scenario_builder": "/cc/scenario",
+            "canyon_map": "/cc/map",
+            "turn_counter": "/cc/turns"
+          },
+          "query_params": {
+            "roster_id": "string",
+            "scenario_id": "string",
+            "faction": "string",
+            "rule": "string",
+            "map_region": "string",
+            "turn": "integer"
+          }
+        }
+      }
+    },
+    "not_recommended": {
+      "multiple_separate_apps": {
+        "reasons": [
+          "apple_review_spam_risk",
+          "maintenance_duplication",
+          "user_confusion",
+          "harder_cross_tool_sharing"
+        ]
+      }
+    }
+  },
+  "apps": {
+    "faction_builder": {
+      "id": "faction_builder",
+      "label": "Faction Builder",
+      "version": "TBD",
+      "requires_datasets": [
+        "rules_core",
+        "factions",
+        "point_formula",
+        "schema_roster"
+      ],
+      "exports": [
+        "roster_json",
+        "roster_share_link",
+        "roster_print_pdf_optional"
+      ],
+      "imports": [
+        "roster_json",
+        "roster_share_link"
+      ],
+      "capabilities": {
+        "offline_ok": true,
+        "needs_auth": false,
+        "local_save": true
+      }
+    },
+    "rules_explorer": {
+      "id": "rules_explorer",
+      "label": "Rules Explorer",
+      "version": "TBD",
+      "requires_datasets": [
+        "rules_core",
+        "rules_index_optional"
+      ],
+      "exports": [
+        "rule_deep_link"
+      ],
+      "imports": [
+        "rule_deep_link"
+      ],
+      "capabilities": {
+        "offline_ok": true,
+        "needs_auth": false
+      }
+    },
+    "scenario_builder": {
+      "id": "scenario_builder",
+      "label": "Scenario Builder",
+      "version": "TBD",
+      "requires_datasets": [
+        "rules_core",
+        "schema_scenario",
+        "terrain_catalog",
+        "map_regions_optional",
+        "factions_optional"
+      ],
+      "exports": [
+        "scenario_json",
+        "scenario_share_link"
+      ],
+      "imports": [
+        "scenario_json",
+        "scenario_share_link",
+        "roster_json_optional"
+      ],
+      "capabilities": {
+        "offline_ok": true,
+        "needs_auth": false,
+        "local_save": true
+      }
+    },
+    "canyon_map": {
+      "id": "canyon_map",
+      "label": "Canyon Map",
+      "version": "TBD",
+      "requires_datasets": [
+        "map_regions",
+        "map_state_optional",
+        "terrain_catalog_optional"
+      ],
+      "exports": [
+        "map_state_json",
+        "region_deep_link"
+      ],
+      "imports": [
+        "map_state_json",
+        "region_deep_link"
+      ],
+      "capabilities": {
+        "offline_ok": true,
+        "needs_auth": false,
+        "local_save": true
+      }
+    },
+    "turn_counter": {
+      "id": "turn_counter",
+      "label": "Turn Counter & Triggers",
+      "version": "TBD",
+      "requires_datasets": [
+        "schema_scenario",
+        "scenario_json_optional",
+        "rules_core_optional"
+      ],
+      "exports": [
+        "turn_state_json",
+        "trigger_log_json"
+      ],
+      "imports": [
+        "scenario_json_optional",
+        "turn_state_json_optional"
+      ],
+      "capabilities": {
+        "offline_ok": true,
+        "needs_auth": false,
+        "local_save": true
+      }
+    }
+  },
+  "shared_contracts": {
+    "window_globals": {
+      "CC_APP": {
+        "description": "Per-app identity + boot handshake (app declares itself).",
+        "shape": {
+          "id": "string",
+          "label": "string",
+          "version": "string",
+          "requires": "string[]",
+          "supportsOffline": "boolean",
+          "routeBase": "string"
+        }
+      },
+      "CC_CONTAINER": {
+        "description": "Provided by container shell. Offers navigation, unlock flags, and host services.",
+        "shape": {
+          "host": {
+            "type": "web|ios_webview",
+            "version": "string"
+          },
+          "unlocks": {
+            "mode": "none|iap|license|dev",
+            "flags": "Record<string, boolean>"
+          },
+          "nav": {
+            "go": "function(route, params)",
+            "openRule": "function(ruleKey)",
+            "openRoster": "function(rosterId)",
+            "openScenario": "function(scenarioId)",
+            "openRegion": "function(regionId)"
+          },
+          "ui": {
+            "toast": "function(msg, level)",
+            "confirm": "function(prompt) -> Promise<boolean>"
+          }
+        }
+      }
+    },
+    "cc_data_layer": {
+      "name": "CC_DATA",
+      "goal": "Single shared data access API used by all apps. Enforces fallback order, caching, versioning, and visible failure UI.",
+      "public_api": {
+        "init": {
+          "args": {
+            "env": "web|ios_webview",
+            "cacheNamespace": "string",
+            "defaultTimeoutMs": "integer"
+          },
+          "returns": "Promise<void>"
+        },
+        "get": {
+          "args": {
+            "datasetId": "string",
+            "options": {
+              "allowNetwork": "boolean",
+              "preferFresh": "boolean",
+              "maxAgeMs": "integer",
+              "onProgress": "function(pct,msg)"
+            }
+          },
+          "returns": "Promise<{data:any, meta:CC_DATASET_META}>"
+        },
+        "prefetch": {
+          "args": {
+            "datasetIds": "string[]",
+            "options": {
+              "allowNetwork": "boolean",
+              "onProgress": "function(pct,msg)"
+            }
+          },
+          "returns": "Promise<Record<string, {data:any, meta:CC_DATASET_META}>>"
+        },
+        "setLocal": {
+          "args": {
+            "key": "string",
+            "value": "any",
+            "meta": "object"
+          },
+          "returns": "void"
+        },
+        "getLocal": {
+          "args": {
+            "key": "string"
+          },
+          "returns": "{value:any, meta:any} | null"
+        },
+        "invalidate": {
+          "args": {
+            "datasetId": "string"
+          },
+          "returns": "void"
+        },
+        "health": {
+          "returns": {
+            "network": "ok|down|unknown",
+            "cache": "ok|full|unknown",
+            "datasets": "Record<string, CC_DATASET_META>"
+          }
+        }
+      },
+      "dataset_meta_shape": {
+        "CC_DATASET_META": {
+          "datasetId": "string",
+          "version": "string",
+          "source": "memory|local|network|bundled",
+          "fetchedAt": "ISO8601",
+          "checksum": "string_optional",
+          "etag": "string_optional",
+          "sizeBytes": "integer_optional",
+          "warnings": "string[]",
+          "errors": "string[]"
+        }
+      },
+      "error_ui_contract": {
+        "must_render_into": "#cc-error-root (or app root)",
+        "payload_shape": {
+          "datasetId": "string",
+          "route": "string",
+          "sourceAttempted": "string[]",
+          "httpStatus": "integer_optional",
+          "responsePreview": "string_optional",
+          "message": "string",
+          "recoveryHints": "string[]"
+        }
+      }
+    }
+  },
+  "datasets": {
+    "rules_core": {
+      "datasetId": "rules_core",
+      "description": "Core rules, ability definitions, and shared mechanics.",
+      "format": "json",
+      "required_by": [
+        "faction_builder",
+        "rules_explorer",
+        "scenario_builder_optional",
+        "turn_counter_optional"
+      ],
+      "network_sources": [
+        {
+          "type": "github_jsdelivr",
+          "urlTemplate": "TBD",
+          "headers": {
+            "accept": "application/json"
+          }
+        },
+        {
+          "type": "odoo_documents_token",
+          "urlTemplate": "TBD",
+          "notes": "Token responses may return HTML/login; detect and fallback."
+        }
+      ],
+      "bundled_snapshot": {
+        "enabled": true,
+        "strategy": "inline_script_json_or_app_bundle",
+        "id": "cc-core-rules"
+      },
+      "cache_policy": {
+        "localStorageKey": "cc_cache_rules_core",
+        "maxAgeMs": 604800000,
+        "preferFreshIfOnline": true
+      }
+    },
+    "factions": {
+      "datasetId": "factions",
+      "description": "Faction JSON data (units, upgrades, faction features, objectives).",
+      "format": "json",
+      "required_by": [
+        "faction_builder",
+        "scenario_builder_optional"
+      ],
+      "network_sources": [
+        {
+          "type": "github_jsdelivr",
+          "urlTemplate": "TBD"
+        },
+        {
+          "type": "odoo_documents_token_multi",
+          "urlTemplate": "TBD"
+        }
+      ],
+      "bundled_snapshot": {
+        "enabled": true,
+        "strategy": "inline_script_json_or_app_bundle",
+        "id": "cc-factions"
+      },
+      "cache_policy": {
+        "localStorageKey": "cc_cache_factions",
+        "maxAgeMs": 604800000,
+        "preferFreshIfOnline": true
+      }
+    },
+    "schema_roster": {
+      "datasetId": "schema_roster",
+      "description": "Roster JSON schema contract for save/load/share across apps.",
+      "format": "json",
+      "required_by": [
+        "faction_builder"
+      ],
+      "network_sources": [
+        {
+          "type": "github_jsdelivr",
+          "urlTemplate": "TBD"
+        }
+      ],
+      "bundled_snapshot": {
+        "enabled": true
+      },
+      "cache_policy": {
+        "localStorageKey": "cc_cache_schema_roster",
+        "maxAgeMs": 2592000000
+      }
+    },
+    "schema_scenario": {
+      "datasetId": "schema_scenario",
+      "description": "Scenario JSON schema contract for builder + turn counter triggers.",
+      "format": "json",
+      "required_by": [
+        "scenario_builder",
+        "turn_counter"
+      ],
+      "network_sources": [
+        {
+          "type": "github_jsdelivr",
+          "urlTemplate": "TBD"
+        }
+      ],
+      "bundled_snapshot": {
+        "enabled": true
+      },
+      "cache_policy": {
+        "localStorageKey": "cc_cache_schema_scenario",
+        "maxAgeMs": 2592000000
+      }
+    },
+    "terrain_catalog": {
+      "datasetId": "terrain_catalog",
+      "description": "Terrain definitions and optional art refs for scenario builder and map tool.",
+      "format": "json",
+      "required_by": [
+        "scenario_builder",
+        "canyon_map_optional"
+      ],
+      "network_sources": [
+        {
+          "type": "github_jsdelivr",
+          "urlTemplate": "TBD"
+        }
+      ],
+      "bundled_snapshot": {
+        "enabled": true
+      },
+      "cache_policy": {
+        "localStorageKey": "cc_cache_terrain_catalog",
+        "maxAgeMs": 2592000000
+      }
+    },
+    "map_regions": {
+      "datasetId": "map_regions",
+      "description": "Region geometry/ids + metadata for the canyon map (clickable).",
+      "format": "json",
+      "required_by": [
+        "canyon_map"
+      ],
+      "network_sources": [
+        {
+          "type": "github_jsdelivr",
+          "urlTemplate": "TBD"
+        }
+      ],
+      "bundled_snapshot": {
+        "enabled": true
+      },
+      "cache_policy": {
+        "localStorageKey": "cc_cache_map_regions",
+        "maxAgeMs": 2592000000
+      }
+    },
+    "point_formula": {
+      "datasetId": "point_formula",
+      "description": "Point calculation rules for units/upgrades/options (if separated from rules_core).",
+      "format": "json",
+      "required_by": [
+        "faction_builder"
+      ],
+      "network_sources": [
+        {
+          "type": "github_jsdelivr",
+          "urlTemplate": "TBD"
+        }
+      ],
+      "bundled_snapshot": {
+        "enabled": true
+      },
+      "cache_policy": {
+        "localStorageKey": "cc_cache_point_formula",
+        "maxAgeMs": 2592000000
+      }
+    }
+  },
+  "cross_app_assets": {
+    "shared_css": {
+      "goal": "Consistent UI/typography/controls across apps without forcing one mega CSS file.",
+      "strategy": "small_shared_tokens + per-app_css",
+      "tokens": {
+        "fontStack": "system-ui",
+        "baseBg": "#eee",
+        "panelBg": "#fff",
+        "accent": "#cc9900",
+        "danger": "#d9534f"
+      }
+    },
+    "shared_ui_components": {
+      "allowed": [
+        "loader_overlay",
+        "error_panel",
+        "toast",
+        "simple_tabs_or_launcher"
+      ],
+      "forbidden_now": [
+        "deep_component_frameworks",
+        "large_third_party_ui_libs"
+      ]
+    }
+  },
+  "unlock_and_monetization_model": {
+    "target": "ios_iap_one_time_unlocks",
+    "free_core_rule": "App must be useful without payment.",
+    "unlock_flags": {
+      "faction_builder_pro": {
+        "default": true,
+        "notes": "You can later gate advanced exports/roster library if desired."
+      },
+      "scenario_builder": {
+        "default": true
+      },
+      "canyon_map": {
+        "default": true
+      },
+      "turn_counter": {
+        "default": true
+      },
+      "offline_pack": {
+        "default": true,
+        "notes": "May become paid later; implement as a capability flag."
+      }
+    },
+    "flag_delivery": {
+      "web": "querystring_or_local_config",
+      "ios_webview": "native_bridge_injects_window.CC_CONTAINER.unlocks.flags"
+    }
+  },
+  "storage_contract": {
+    "namespacing": "cc:{appId}:{key}",
+    "rosters": {
+      "local_index_key": "cc:shared:rosters:index",
+      "item_key_template": "cc:shared:rosters:{rosterId}",
+      "share_link": {
+        "format": "base64url_json",
+        "max_size_target_kb": 64,
+        "optional_compression": "lz-string_optional"
+      }
+    },
+    "scenarios": {
+      "local_index_key": "cc:shared:scenarios:index",
+      "item_key_template": "cc:shared:scenarios:{scenarioId}",
+      "share_link": {
+        "format": "base64url_json"
+      }
+    },
+    "map_state": {
+      "local_index_key": "cc:shared:maps:index",
+      "item_key_template": "cc:shared:maps:{mapStateId}"
+    },
+    "turn_state": {
+      "local_index_key": "cc:shared:turns:index",
+      "item_key_template": "cc:shared:turns:{turnStateId}"
+    }
+  },
+  "events_and_hooks": {
+    "goal": "Allow apps to interoperate without sharing internal state.",
+    "event_bus": {
+      "name": "CC_BUS",
+      "pattern": "window.dispatchEvent(CustomEvent)",
+      "events": [
+        {
+          "name": "cc:data:ready",
+          "payload": {
+            "datasets": "string[]"
+          }
+        },
+        {
+          "name": "cc:roster:saved",
+          "payload": {
+            "rosterId": "string",
+            "name": "string",
+            "faction": "string",
+            "points": "number"
+          }
+        },
+        {
+          "name": "cc:scenario:saved",
+          "payload": {
+            "scenarioId": "string",
+            "name": "string"
+          }
+        },
+        {
+          "name": "cc:nav:openRule",
+          "payload": {
+            "ruleKey": "string"
+          }
+        },
+        {
+          "name": "cc:nav:openScenario",
+          "payload": {
+            "scenarioId": "string"
+          }
+        },
+        {
+          "name": "cc:nav:openRoster",
+          "payload": {
+            "rosterId": "string"
+          }
+        }
+      ]
+    }
+  },
+  "implementation_phases": {
+    "phase_0_now": {
+      "title": "Container-Ready Without Combining",
+      "deliverables": [
+        "Add CC_APP metadata to each app",
+        "Create CC_DATA module and use it in each app for dataset fetch",
+        "Unify loader + error panel across apps",
+        "Ensure deep-linkable routes (even if simple)",
+        "Ensure hard-refresh safety (no app assumes prior state)"
+      ],
+      "non_goals": [
+        "Do not merge codebases",
+        "Do not build a complex router",
+        "Do not introduce third-party frameworks"
+      ]
+    },
+    "phase_1_web_shell": {
+      "title": "Single Website Container Shell",
+      "deliverables": [
+        "One launcher page hosting all apps via routes",
+        "Shared CC_DATA + shared storage index",
+        "Cross-app deep linking"
+      ]
+    },
+    "phase_2_ios_webview": {
+      "title": "iOS WebView Wrapper",
+      "deliverables": [
+        "WKWebView loads /cc shell",
+        "Native cache strategy mirrors CC_DATA policy",
+        "Native injects unlock flags",
+        "Export/share uses iOS share sheet"
+      ]
+    }
+  },
+  "success_criteria": {
+    "web": [
+      "Each app loads on mobile Safari reliably",
+      "If network data fails or returns HTML, app shows a visible error and uses fallback",
+      "Rosters and scenarios can be shared and imported across apps"
+    ],
+    "ios": [
+      "All tools function offline with cached or bundled snapshots",
+      "Deep links open correct tool + context",
+      "No white screen failure mode"
+    ]
+  }
+}
