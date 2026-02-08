@@ -1,384 +1,93 @@
 /* ================================================================
-   Coffin Canyon Map - CORRECT DESIGN (Final)
-   File: cc_canyon_map.css
-   
-   LAYERS (bottom to top):
-   1. Large blurry base map (fills container, centered)
-   2. Brass frame overlay (centered on top of map)
-   3. Magnified lens view (inside frame's iron window)
-   4. BLAPPO knob (on frame's right groove)
+   COFFIN CANYON MAP - CLEAN SLATE
    ================================================================ */
 
-/* === OUTER CONTAINER (masks/crops the edges) === */
-.cc-cm-mapwrap {
-  position: relative !important;
-  width: 100%;
-  height: 85vh !important;
-  min-height: 700px !important;
-  max-height: 900px !important;
-  overflow: hidden !important;  /* Hides edges of large map */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-}
-
-.cc-cm-body--lens .cc-cm-mapwrap {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Update these in your .cc-lens and .cc-frame-overlay */
-
 :root {
-  --frame-width: 900px; /* Base size */
+  --frame-width: 900px; 
   --frame-ratio: 1.5;   /* 900 / 600 */
+  --lens-w: 585px;      /* 65% of 900 */
+  --lens-h: 396px;      /* 44% of 900 */
 }
 
-}
-
-/* === LARGE BASE MAP (Background layer - fills container) === */
-/* This is the blurry/low-res version that fills the whole view */
-#cc-cm-map,
-#cc-cm-map.cc-cm-map {
+/* === 1. THE LARGE BACKGROUND MAP === */
+#cc-cm-map {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%) !important;
-  
-  /* LARGE - fills most of the container */
-  width: 90% !important;
-  height: 90% !important;
-  min-width: 800px !important;
-  min-height: 600px !important;
-  
+  width: 1200px !important;
+  height: 800px !important;
   z-index: 1 !important;
-  
-  /* Will appear slightly blurry due to scaling */
   image-rendering: auto;
 }
 
-/* Prevent Leaflet layers from floating above */
-#cc-cm-map .leaflet-pane,
-#cc-cm-map .leaflet-map-pane,
-#cc-cm-map .leaflet-control-container {
-  z-index: 1 !important;
-}
-
-/* === MAGNIFYING LENS (Inside frame's iron window) === */
-
-/* Hidden SVG for lens warp effect */
-.cc-lens-svg {
-  position: absolute !important;
-  left: -9999px !important;
-  top: -9999px !important;
-  width: 0 !important;
-  height: 0 !important;
-  pointer-events: none !important;
-}
-  
-}
-/* Lens container - centered, fits inside iron window */
+/* === 2. THE MAGNIFYING LENS (Behind Frame) === */
 .cc-lens {
-  width: calc(var(--frame-width) * 0.65) !important; 
-  height: calc(var(--frame-width) * 0.44) !important;
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
-  width: var(--lens-w);
-  height: var(--lens-h);
   transform: translate(-50%, -50%) !important;
-  border-radius: 18px;
+  width: var(--lens-w) !important;
+  height: var(--lens-h) !important;
+  border-radius: 20px;
   z-index: 30 !important;
   pointer-events: none !important;
-}
-
-/* NO visible rim - frame provides the border */
-.cc-lens-rim {
-  display: none !important;
-}
-
-/* Inner lens content with distortion filter */
-.cc-lens-inner {
-  position: absolute;
-  inset: 40;
-  border-radius: 50px;
   overflow: hidden;
-  
-  /* Magnifying glass distortion effect */
-  filter: url(#ccLensWarp) !important;
-  -webkit-filter: url(#ccLensWarp);
 }
 
-/* The magnified (sharp/clear) map inside lens */
-.cc-lens-map {
+.cc-lens-inner, .cc-lens-map {
   position: absolute;
-  inset: 50;
+  inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
-  
-  /* Sharp rendering for magnified view */
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
 }
 
-/* Subtle lens glare */
-.cc-lens-glare {
-  position: absolute;
-  inset: 0;
-  border-radius: 55px;
-  background: radial-gradient(
-    circle at 30% 25%, 
-    rgba(255,255,255,0.15), 
-    rgba(255,255,255,0.00) 55%
-  );
-  mix-blend-mode: screen;
-  opacity: 0.4;
-}
-
-/* === BRASS FRAME OVERLAY (Centered, on top of base map) === */
-  /* ... keep your other centered positioning ... */
+/* === 3. THE BRASS FRAME (The "Window") === */
 .cc-frame-overlay {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
+  transform: translate(-50%, -50%) !important;
   width: var(--frame-width) !important;
   height: calc(var(--frame-width) / var(--frame-ratio)) !important;
-  max-width: 1100px !important;
-  max-height: 750px !important;
-  transform: translate(-50%, -50%) !important;
   z-index: 35 !important;
   pointer-events: none !important;
   
-  /* Your mag_frame.png graphic */
-  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png');
+  /* FIXED URL: This is the FRAME */
+  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/mag_frame.png') !important;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-/* === BLAPPO KNOB (On frame's right vertical groove) === */
-
-/* Container positioned on frame's right side */
+/* === 4. THE BLAPPO KNOB (On Top) === */
 .cc-scroll {
-  position: absolute !important;
-  
-  /* Position relative to frame, not screen */
-  right: calc(12.5% + 20px) !important;  /* Adjust to align with groove */
-  top: 50% !important;
-  transform: translateY(-50%) !important;
-  
-  height: 45% !important;  /* Height of vertical groove */
-  width: 40px !important;
-  z-index: 40 !important;
-  pointer-events: auto !important;
-}
-
-/* Track (the groove) - make this invisible or subtle */
-.cc-scroll-track {
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  
-  /* Semi-transparent or invisible since frame has the groove */
-  background: rgba(0, 0, 0, 0.15);
-  border: 1px solid rgba(139, 90, 43, 0.3);
-  box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
-  pointer-events: auto !important;
-}
-
-/* BLAPPO knob - you'll replace this with your graphic */
-.cc-scroll-knob {
-  position: absolute !important;
-  left: 50% !important;
-  /* top is set by JavaScript */
-  width: 36px !important;
-  height: 70px !important;
-  border-radius: 15px;
-  transform: translate(-50%, -50%) !important;
-  cursor: grab !important;
-  touch-action: none !important;
-  pointer-events: auto !important;
-  
-  /* Temporary brass styling - will be replaced by your BLAPPO graphic */
-  background: linear-gradient(
-    135deg,
-    rgba(184, 134, 11, 0.95),
-    rgba(139, 90, 43, 1),
-    rgba(160, 110, 50, 0.95)
-  );
-  border: 2px solid rgba(205, 155, 29, 0.8);
-  box-shadow: 
-    0 6px 16px rgba(0,0,0,0.8),
-    inset 0 1px 3px rgba(255, 215, 100, 0.6),
-    inset 0 -1px 3px rgba(80, 50, 20, 
-                          
-  background-image: url('data/blappo_knob.png');
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: transparent;
-  border: none;
-  
-}
-
-.cc-scroll-knob:hover {
-  background: linear-gradient(
-    135deg,
-    rgba(205, 155, 29, 1),
-    rgba(160, 110, 50, 1),
-    rgba(184, 134, 11, 1)
-  );
-  box-shadow: 
-    0 8px 20px rgba(0,0,0,0.9),
-    0 0 25px rgba(218, 165, 32, 0.6),
-    inset 0 1px 4px rgba(255, 215, 100, 0.8);
-}
-
-.cc-scroll-knob:active {
-  cursor: grabbing !important;
-  background: linear-gradient(
-    135deg,
-    rgba(160, 110, 50, 1),
-    rgba(139, 90, 43, 1),
-    rgba(120, 80, 40, 1)
-  );
-  box-shadow: 
-    0 3px 10px rgba(0,0,0,0.95),
-    inset 0 3px 8px rgba(0,0,0,0.8);
-}
-
-/* === Responsive adjustments === */
-@media (max-width: 980px) {
-  .cc-cm-mapwrap {
-    height: 75vh !important;
-    min-height: 500px !important;
-  }
-  
-  #cc-cm-map {
-    width: 95% !important;
-    height: 95% !important;
-    min-width: 600px !important;
-    min-height: 450px !important;
-  }
-  
-  .cc-lens {
-    width: min(70vw, 450px);
-    height: min(45vh, 320px);
-  }
-  
-  .cc-frame-overlay {
-    width: 85% !important;
-    height: 85% !important;
-  }
-  
-  .cc-scroll {
-    right: calc(7.5% + 10px) !important;
-    width: 36px;
-    height: 40%;
-  }
-  
-  .cc-scroll-knob {
-    width: 32px;
-    height: 60px;
-  }
-}
-/* ================================================================
-   QUICK FIXES - Add these to the END of your CSS file
-   These override the existing rules to fix the layout
-   ================================================================ */
-
-/* === FIX 1: Make base map MUCH LARGER and centered === */
-#cc-cm-map,
-#cc-cm-map.cc-cm-map {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  
-  /* MUCH BIGGER - should fill most of the view */
-  width: 1200px !important;
-  height: 800px !important;
-  
-  z-index: 1 !important;
-  
-  /* Slightly blurry is OK - it's the background */
-  image-rendering: auto;
-}
-
-/* === FIX 2: Move BLAPPO knob to frame's groove === */
-.cc-scroll {
-  position: absolute !important;
-  
-  /* Position on frame's right side */
-  right: 8% !important;  /* Adjust this to align with groove */
-  top: 50% !important;
+  /* Adjust margin-left until it sits in the right-side groove */
+  margin-left: 410px !important; 
   transform: translateY(-50%) !important;
-  
   height: 50% !important;
   width: 40px !important;
   z-index: 40 !important;
   pointer-events: auto !important;
 }
 
-/* === FIX 3: Ensure frame is centered and proper size === */
-.cc-frame-overlay {
+.cc-scroll-knob {
   position: absolute !important;
   left: 50% !important;
-  top: 50% !important;
-  width: 900px !important;  /* Fixed size for better control */
-  height: 600px !important;  /* Fixed size for better control */
+  width: 36px !important;
+  height: 70px !important;
   transform: translate(-50%, -50%) !important;
-  z-index: 35 !important;
-  pointer-events: none !important;
+  cursor: grab !important;
+  z-index: 41 !important;
   
-  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/mag_frame.png');
+  /* FIXED URL: This is the KNOB */
+  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png') !important;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
+  background-color: transparent !important;
+  border: none !important;
 }
-
-/* === FIX 4: Adjust lens to fit iron window === */
-.cc-lens {
-  --lens-w: 580px;  /* Slightly bigger */
-  --lens-h: 400px;  /* Slightly bigger */
-}
-
-/* ================================================================
-   FINE-TUNING GUIDE:
-   
-   If base map is too small/big:
-   - Adjust width/height in #cc-cm-map (try 1000px-1400px)
-   
-   If BLAPPO not in groove:
-   - Adjust "right: 8%" (try 6%-12%)
-   
-   If frame too small/big:
-   - Adjust width/height in .cc-frame-overlay
-   
-   If lens doesn't fit iron window:
-   - Adjust --lens-w and --lens-h
-   ================================================================ */
-/* === FINE-TUNING COMMENTS === */
-
-/*
-ADJUST THESE VALUES TO PERFECT THE ALIGNMENT:
-
-1. LENS SIZE (to fit iron window):
-   .cc-lens { width: 520px; height: 360px; }
-
-2. FRAME SIZE:
-   .cc-frame-overlay { width: 75%; height: 75%; }
-
-3. BLAPPO POSITION (to align with groove on frame):
-   .cc-scroll { right: calc(12.5% + 20px); }
-   
-   Adjust the "20px" until knob sits in the groove
-   Adjust "12.5%" if frame size changes
-
-4. BASE MAP SIZE (background):
-   #cc-cm-map { width: 90%; height: 90%; }
-   
-   Make larger if you want more map visible outside frame
-   Make smaller if edges should be cropped more
-*/
