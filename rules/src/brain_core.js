@@ -95,42 +95,48 @@ class ScenarioBrain {
     console.log("✓ Plot:", plotFamily.name);
     
     const vpSpread = this.calculateVPSpread(plotFamily.id, userSelections.dangerRating);
-    
     const objectives = this.generateObjectives(plotFamily, location, userSelections, vpSpread);
-    
     const cultistEncounter = { enabled: false };
     
+    // ENHANCED: Better narrative generation
+    const narrative = this.generateNarrative(plotFamily, location, userSelections, cultistEncounter);
+    
+    // ENHANCED: Faction-specific victory conditions
     const victoryConditions = {};
     userSelections.factions.forEach(faction => {
       const validObjectives = objectives.filter(obj => obj !== null);
       
+      // Use BrainGenerators for faction interpretation
+      const factionObjectives = validObjectives.map(obj => {
+        const interpreted = BrainGenerators.generateFactionObjectiveInterpretation(obj, faction);
+        return {
+          name: interpreted.name,
+          goal: interpreted.goal,
+          method: interpreted.method,
+          scoring: interpreted.scoring,
+          flavor: interpreted.flavor
+        };
+      });
+      
+      // Add unique faction objective
+      const uniqueObj = this.generateUniqueFactionObjective(faction.id, userSelections.dangerRating, userSelections.factions);
+      if (uniqueObj) factionObjectives.push(uniqueObj);
+      
+      // Faction-specific aftermath
+      const aftermath = this.generateFactionAftermath(faction.id);
+      
       victoryConditions[faction.id] = {
         target_vp: vpSpread.target_to_win,
-        faction_objectives: validObjectives.map(obj => ({
-          name: obj.name,
-          goal: obj.description,
-          method: "Complete objective",
-          scoring: `+${obj.vp_per_unit} VP per ${obj.progress_label}`
-        })),
-        aftermath: { 
-          immediate_effect: "Conflict resolved", 
-          canyon_state_change: "None", 
-          long_term: "Status quo", 
-          flavor: "The fight continues." 
-        }
+        faction_objectives: factionObjectives,
+        aftermath: aftermath
       };
     });
     
     const name = this.generateName(['battle'], location);
-    const narrative = `${userSelections.factions.map(f => f.name).join(' and ')} clash at ${location.name}.`;
-    
     const twist = this.generateTwist(userSelections.dangerRating, location);
     const canyonState = this.getCanyonState(userSelections.canyonState);
     const finale = this.generateFinale(plotFamily, userSelections.dangerRating, location, userSelections.factions);
-    
     const terrainSetup = this.generateTerrainSetup(plotFamily, location, userSelections.dangerRating, objectives, cultistEncounter);
-    
-    const coffinCough = null;
     
     return {
       name, 
@@ -147,7 +153,7 @@ class ScenarioBrain {
       finale, 
       cultist_encounter: cultistEncounter,
       terrain_setup: terrainSetup, 
-      coffin_cough: coffinCough
+      coffin_cough: null
     };
   }
 
@@ -169,15 +175,36 @@ class ScenarioBrain {
 
   generateProceduralLocation(danger) {
     const types = this.data.locationTypes.location_types;
-    const type = this.randomChoice(types);
+    const type = types ? this.randomChoice(types) : { id: 'frontier_outpost', description: 'A small outpost' };
     const nearby = this.randomChoice(this.data.locations.locations);
+    
+    // Better positioning patterns
+    const positionPatterns = [
+      { pattern: 'outskirts', template: 'The Outskirts of {location}', weight: 3 },
+      { pattern: 'inside', template: 'Inside {location}', weight: 2 },
+      { pattern: 'edge', template: 'At the Edge of {location}', weight: 2 },
+      { pattern: 'beyond', template: 'Beyond {location}', weight: 1 },
+      { pattern: 'below', template: 'Below {location}', weight: 1 },
+      { pattern: 'ruins', template: 'The Ruins Near {location}', weight: 1 },
+      { pattern: 'shadows', template: 'In the Shadow of {location}', weight: 2 }
+    ];
+    
+    const position = this.weightedRandomChoice(positionPatterns);
+    const locationName = position.template.replace('{location}', nearby.name);
+    
+    const descTemplates = [
+      `${type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
+      `The kind of place ${nearby.name} pretends doesn't exist.`,
+      `Close enough to ${nearby.name} to hear the gunshots. Far enough to ignore them.`,
+      `${nearby.name} casts a long shadow. This is where that shadow falls.`
+    ];
     
     return {
       id: `proc_${Date.now()}`,
-      name: `Near ${nearby.name}`,
+      name: locationName,
       emoji: type.emoji || "🗺️",
       type_ref: type.id,
-      description: `A ${type.id.replace(/_/g, ' ')} near ${nearby.name}.`,
+      description: this.randomChoice(descTemplates),
       resources: type.resources || {},
       hazards: type.environmental_hazards || []
     };
@@ -304,7 +331,77 @@ class ScenarioBrain {
   }
 
   generateName(tags, location) {
-    return `The Battle at ${location.name}`;
+    if (!this.data.names) return `The Battle at ${location.name}`;
+    
+    const prefixes = this.data.names.prefixes || ["Skirmish at", "Battle of", "Conflict at"];
+    const descriptors = this.data.names.descriptors || ["Bloody", "Desperate", "Final"];
+    
+    const getTextValue = (item) => {
+      if (typeof item === 'string') return item;
+      if (item && typeof item === 'object' && item.text) return item.text;
+      return String(item);
+    };
+    
+    const prefix = getTextValue(this.randomChoice(prefixes));
+    const descriptor = getTextValue(this.randomChoice(descriptors));
+    
+    const styles = [
+      `${prefix} ${location.name}`,
+      `The ${descriptor} Battle of ${location.name}`,
+      `${location.name}: ${descriptor} Stand`
+    ];
+    
+    return this.randomChoice(styles);
+  }
+
+  generateNarrative(plotFamily, location, userSelections, cultistEncounter) {
+    const names = userSelections.factions.map(f => f.name);
+    const factions = names.length <= 2 ? names.join(' and ') : names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
+    
+    const context = { location: location.name, factions: factions };
+    
+    const plotNarratives = {
+      'extraction_heist': () => {
+        const resources = location.resources ? Object.keys(location.resources).filter(r => location.resources[r] > 0) : [];
+        const resource = resources.length > 0 ? this.formatResourceName(this.randomChoice(resources)) : 'valuable cargo';
+        context.resource = resource.toLowerCase();
+        return this.parseTemplate('{location} sits on a cache of {resource}. Word got out. {factions} all want it, and none of them are walking away empty-handed.', context);
+      },
+      'ambush_derailment': () => this.parseTemplate('The rails through {location} are a critical supply line. {factions} know that whoever controls the rails controls the flow of weapons, food, and power. Someone\'s about to derail that.', context),
+      'claim_and_hold': () => this.parseTemplate('{location} has changed hands three times in the last year. {factions} are here to make sure the fourth time is permanent. Nobody\'s leaving until the question is settled.', context),
+      'corruption_ritual': () => this.parseTemplate('Something ancient sleeps beneath {location}. {factions} are about to wake it up — whether they mean to or not. The ground is already starting to crack.', context),
+      'siege_standoff': () => this.parseTemplate('The fortifications at {location} have held for weeks. {factions} are done waiting. Someone breaks through today, or everyone starves tomorrow.', context),
+      'escort_run': () => this.parseTemplate('Critical cargo needs to cross {location}. {factions} all have different ideas about whether it makes it through intact.', context),
+      'sabotage_strike': () => this.parseTemplate('The machinery at {location} keeps half the Canyon running. {factions} are here to either protect it or tear it apart. Both, if they\'re lucky.', context),
+      'natural_disaster_response': () => this.parseTemplate('The ground at {location} just gave way. {factions} are scrambling to save what—and who—they can. If they don\'t kill each other first.', context)
+    };
+    
+    const generator = plotNarratives[plotFamily.id];
+    return generator ? generator() : this.parseTemplate('{factions} clash at {location}.', context);
+  }
+
+  generateUniqueFactionObjective(factionId, danger, allFactions) {
+    const uniques = {
+      'monster_rangers': { name: 'Minimize Casualties', goal: 'Protect monsters and civilians.', method: 'Escort non-combatants to safety.', scoring: `${danger * 2} VP minus deaths` },
+      'liberty_corps': { name: 'Establish Authority', goal: 'Hold the center of the board.', method: 'Maintain control for 3 rounds.', scoring: `${danger * 2} VP if held at end` },
+      'monsterology': { name: 'Total Extraction Protocol', goal: 'Exploit every site.', method: 'Extract from all objectives.', scoring: `${danger * 3} VP if all extracted` },
+      'shine_riders': { name: 'Legendary Heist', goal: 'Steal the most valuable prize.', method: 'Extract highest-value objective and escape.', scoring: `${danger * 3} VP for biggest score` },
+      'crow_queen': { name: 'The Reaping', goal: 'The shadows require souls.', method: 'Be first to eliminate an enemy unit.', scoring: `${danger * 2} VP` },
+      'monsters': { name: 'Territorial Display', goal: 'Drive the intruders away.', method: 'End with a unit in the center.', scoring: '4 VP' }
+    };
+    return uniques[factionId] || null;
+  }
+
+  generateFactionAftermath(factionId) {
+    const aftermaths = {
+      'monster_rangers': { immediate_effect: 'The Rangers restore balance.', canyon_state_change: 'Territory becomes Protected.', long_term: 'The Wild remains wild.', flavor: 'Not all protectors carry badges.' },
+      'liberty_corps': { immediate_effect: 'Federal flags rise.', canyon_state_change: 'Territory becomes Liberated.', long_term: 'Order is enforced.', flavor: 'The Corps protects. Always.' },
+      'monsterology': { immediate_effect: 'Specimen crates loaded.', canyon_state_change: 'Territory becomes Extracted.', long_term: 'Progress continues.', flavor: 'Progress has a price, paid in full by the land.' },
+      'shine_riders': { immediate_effect: 'Valuables vanish into the night.', canyon_state_change: 'Territory becomes Lawless.', long_term: 'Crime and opportunity intertwine.', flavor: 'The Riders leave only dust and legend behind.' },
+      'crow_queen': { immediate_effect: 'Dark banners rise.', canyon_state_change: 'Territory becomes Consecrated.', long_term: 'The Regent\'s influence spreads.', flavor: 'All who remain know: the Queen is watching.' },
+      'monsters': { immediate_effect: 'Humans retreat in fear.', canyon_state_change: 'Territory becomes Wild.', long_term: 'The Canyon reclaims its own.', flavor: 'Nature is not kind. It simply is.' }
+    };
+    return aftermaths[factionId] || { immediate_effect: 'The battle ends.', canyon_state_change: 'Territory unchanged.', long_term: 'The struggle continues.', flavor: 'Another skirmish in an endless war.' };
   }
 
   generateTwist(danger, location) {
