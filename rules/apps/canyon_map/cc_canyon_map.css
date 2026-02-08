@@ -1,26 +1,23 @@
-/* === Magnifying Lens + Scroll Knob (Canyon Map) === */
-/* Fixed version - consistent z-index layering */
+/* ================================================================
+   Coffin Canyon Map - Complete Fixed CSS
+   File: cc_canyon_map.css
+   
+   Fixed Issues:
+   - Consistent z-index layering (no conflicts)
+   - Working vertical scroller with proper positioning
+   - Frame-ready styling for steampunk brass/iron frame
+   ================================================================ */
 
-.cc-cm-body--lens .cc-cm-mapwrap {
-  position: relative;
-  overflow: hidden;
-}
-
-.cc-lens-svg { 
-  position: absolute; 
-  left: -9999px; 
-  top: -9999px; 
-}
-
-/* === Critical: Leaflet needs a real height === */
+/* === Base Map Container === */
 .cc-cm-mapwrap {
   position: relative !important;
   width: 100%;
   height: 70vh;
   min-height: 650px;
+  overflow: hidden;
 }
 
-/* === BASE MAP (Bottom Layer) === */
+/* === BASE MAP (Bottom Layer - z-index: 1) === */
 #cc-cm-map.cc-cm-map,
 #cc-cm-map {
   position: absolute !important;
@@ -28,14 +25,23 @@
   z-index: 1 !important;
 }
 
-/* Make sure Leaflet panes don't float above */
+/* Prevent Leaflet internal layers from floating above lens */
 #cc-cm-map .leaflet-pane,
 #cc-cm-map .leaflet-map-pane,
 #cc-cm-map .leaflet-control-container {
   z-index: 1 !important;
 }
 
-/* === LENS (Middle Layer) === */
+/* === MAGNIFYING LENS (Middle Layer - z-index: 30) === */
+
+/* Hidden SVG for lens warp effect */
+.cc-lens-svg { 
+  position: absolute; 
+  left: -9999px; 
+  top: -9999px; 
+}
+
+/* Main lens container - centered on screen */
 .cc-lens {
   --lens-w: 520px;
   --lens-h: 360px;
@@ -47,10 +53,10 @@
   transform: translate(-50%, -50%) !important;
   border-radius: 18px;
   z-index: 30 !important;
-  pointer-events: none !important;
+  pointer-events: none !important; /* Let clicks pass through to regions */
 }
 
-/* Lens components */
+/* Lens frame/rim - the decorative border */
 .cc-lens-rim {
   position: absolute;
   inset: 0;
@@ -61,6 +67,7 @@
     inset 0 0 0 1px rgba(0,0,0,0.35);
 }
 
+/* Inner lens content with warp effect */
 .cc-lens-inner {
   position: absolute;
   inset: 8px;
@@ -69,6 +76,7 @@
   filter: url(#ccLensWarp);
 }
 
+/* The actual magnified map inside lens */
 .cc-lens-map {
   position: absolute;
   inset: 0;
@@ -76,64 +84,109 @@
   height: 100% !important;
 }
 
+/* Subtle lens glare effect */
 .cc-lens-glare {
   position: absolute;
   inset: 0;
   border-radius: 18px;
-  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.20), rgba(255,255,255,0.00) 55%);
+  background: radial-gradient(
+    circle at 30% 25%, 
+    rgba(255,255,255,0.20), 
+    rgba(255,255,255,0.00) 55%
+  );
   mix-blend-mode: screen;
   opacity: 0.55;
 }
 
-/* === SCROLL KNOB (Top Layer) === */
+/* === VERTICAL SCROLLER (Top Layer - z-index: 40) === */
+
+/* Scroller container - vertical bar on right side */
 .cc-scroll {
   position: absolute !important;
-  right: 10px;
-  top: 64px;
-  bottom: 14px;
-  width: 36px;
+  right: 10px !important;
+  top: 64px !important;
+  bottom: 14px !important;
+  width: 36px !important;
   z-index: 40 !important;
-  pointer-events: auto !important;
+  pointer-events: auto !important; /* MUST accept clicks */
 }
 
+/* Scroller track background */
 .cc-scroll-track {
   position: absolute;
   inset: 0;
   border-radius: 18px;
   background: rgba(0,0,0,0.25);
   border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
 }
 
+/* The draggable knob (BLAPPO knob) */
 .cc-scroll-knob {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 26px;
-  height: 56px;
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 26px !important;
+  height: 56px !important;
   border-radius: 14px;
   background: rgba(255,255,255,0.18);
   border: 1px solid rgba(255,255,255,0.22);
   box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-  cursor: grab;
-  touch-action: none;
+  transform: translate(-50%, -50%) !important;
+  cursor: grab !important;
+  touch-action: none !important;
+  pointer-events: auto !important; /* MUST be draggable */
+}
+
+.cc-scroll-knob:hover {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.35);
 }
 
 .cc-scroll-knob:active {
-  cursor: grabbing;
+  cursor: grabbing !important;
+  background: rgba(255,255,255,0.30);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.5);
 }
 
-/* === Responsive lens === */
+/* === Body modifier when lens is enabled === */
+.cc-cm-body--lens .cc-cm-mapwrap {
+  position: relative;
+  overflow: hidden;
+}
+
+/* === Responsive adjustments === */
 @media (max-width: 980px) {
   .cc-lens {
     width: min(86vw, 520px);
     height: min(42vh, 360px);
   }
+  
   .cc-scroll {
     right: 6px;
     width: 32px;
   }
+  
   .cc-scroll-knob {
     width: 24px;
     height: 52px;
   }
+}
+
+/* === Steampunk Frame Integration (Optional) === */
+
+/* When frame image is added as background */
+.cc-cm-mapwrap.has-frame {
+  background-image: url('your-frame-image.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 5% 10%; /* Adjust to fit map within iron frame */
+}
+
+/* Adjust lens to sit within iron inner frame */
+.cc-cm-mapwrap.has-frame .cc-lens {
+  /* Adjust these values to fit within your iron frame */
+  width: min(var(--lens-w), 45vw);
+  height: min(var(--lens-h), 32vh);
 }
