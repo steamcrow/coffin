@@ -2,15 +2,6 @@
    Coffin Canyon — Canyon Map (read-only v1)
    ODOO CSP-SAFE + FIXED MAGNIFIER LENS + VERTICAL SCROLLER KNOB
 
-   Features:
-   - Leaflet static-image map (CRS.Simple)
-   - Region polygons from JSON points (optional)
-   - Click region => drawer info
-   - Separate canyon_state.json recolors regions
-   - Fixed center rectangular lens (separate Leaflet map) using HIGH-RES image
-   - Vertical scroller knob pans the map like paper under glass
-   - iPad-friendly: errors are rendered on-screen
-
    Mounts into: #cc-app-root[data-cc-app="canyon_map"]
 */
 
@@ -26,7 +17,7 @@
     stateUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_state.json",
 
-    // App CSS (your app's styles)
+    // App CSS (optional – we still inject safety CSS below)
     appCssUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map.css",
 
@@ -38,15 +29,14 @@
 
     // Lens behavior
     lensEnabled: true,
-    lensZoomOffset: 2, // magnification steps (Leaflet zoom is exponential)
+    lensZoomOffset: 2,
     lensWidthPx: 520,
     lensHeightPx: 360,
 
     // Panning behavior
-    // Back-compat: if lockHorizontalPan === true, we force maxHorizontalDriftPx = 0
     lockHorizontalPan: false,
-    maxHorizontalDriftPx: 260, // allow some left/right wiggle; set 0 for strict vertical
-    allowMapDrag: true, // drag map as well as knob
+    maxHorizontalDriftPx: 260,
+    allowMapDrag: true,
 
     // Region coloring
     factionColors: {
@@ -109,7 +99,7 @@
   }
 
   // ---------------------------
-  // Odoo CSP-safe loaders (fetch -> <style> / blob <script>)
+  // Odoo CSP-safe loaders
   // ---------------------------
   const _loaded = { css: new Set(), js: new Set() };
 
@@ -156,6 +146,78 @@
   }
 
   // ---------------------------
+  // CRITICAL CSS safety override
+  // (z-index/pointer-events/touch-action so lens+scroller always sit above Leaflet)
+  // ---------------------------
+  function injectCssSafetyOnce() {
+    const key = "cc_canyon_map_safety_css";
+    if (document.querySelector(`style[data-cc-style="${key}"]`)) return;
+
+    const style = document.createElement("style");
+    style.setAttribute("data-cc-style", key);
+
+    style.textContent = `
+/* --- CC Canyon Map SAFETY CSS (wins even if external CSS is missing) --- */
+.cc-canyon-map { color: #eee; }
+.cc-cm-header { display:flex; align-items:center; justify-content:center; gap:14px; margin: 10px 0 12px; }
+.cc-cm-title { font-size: 18px; opacity: .95; }
+.cc-cm-actions { display:flex; gap: 10px; }
+.cc-btn { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.10); color:#fff; cursor:pointer; }
+.cc-btn:hover { background: rgba(255,255,255,.16); }
+.cc-btn-x { width:34px; height:34px; padding:0; display:flex; align-items:center; justify-content:center; }
+
+.cc-cm-body { display:flex; gap:12px; align-items:stretch; justify-content:center; }
+.cc-cm-mapwrap { position:relative; flex: 0 1 920px; width: min(92vw, 920px); height: min(72vh, 860px); min-height: 560px; overflow:hidden; border-radius: 14px; }
+.cc-cm-map { position:absolute; inset:0; z-index: 1; }
+
+/* Leaflet panes can overlap overlays if we don't control stacking */
+#cc-cm-map .leaflet-pane,
+#cc-cm-map .leaflet-control-container { z-index: 2 !important; }
+
+/* Lens ABOVE Leaflet */
+.cc-lens { position:absolute; z-index: 50 !important; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  width: var(--lens-w, 520px); height: var(--lens-h, 360px);
+  pointer-events: none; /* lens should not block interaction */
+}
+.cc-lens-inner { width:100%; height:100%; overflow:hidden; border-radius: 16px; filter: url(#ccLensWarp); }
+.cc-lens-map { width:100%; height:100%; }
+.cc-lens-rim { position:absolute; inset:-8px; border-radius: 20px; border: 2px solid rgba(255,255,255,.25); box-shadow: 0 10px 40px rgba(0,0,0,.45); }
+.cc-lens-glare { position:absolute; inset:0; border-radius: 16px; background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.16), rgba(255,255,255,0) 55%); }
+
+/* Scroller ABOVE EVERYTHING and must receive touches */
+.cc-scroll { position:absolute; z-index: 60 !important; right: 10px; top: 10px; bottom: 10px; width: 44px; pointer-events: auto !important; }
+.cc-scroll-track { position:absolute; left:50%; top:0; bottom:0; width:8px; transform: translateX(-50%); border-radius: 999px; background: rgba(255,255,255,.12); }
+.cc-scroll-knob { position:absolute; left:50%; width: 34px; height: 34px; border-radius: 999px;
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,.34);
+  border: 1px solid rgba(255,255,255,.28);
+  backdrop-filter: blur(6px);
+  cursor: grab;
+  touch-action: none; /* IMPORTANT for iOS dragging */
+}
+
+/* Drawer */
+.cc-cm-drawer { width: 320px; max-width: 42vw; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.12);
+  border-radius: 14px; padding: 10px; }
+.cc-cm-drawer.open { outline: 1px solid rgba(255,255,255,.18); }
+.cc-cm-drawer-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 8px; }
+.cc-cm-drawer-title { font-weight: 700; opacity:.95; }
+.cc-muted { opacity: .75; }
+.cc-block { margin: 10px 0; }
+.cc-h { font-weight: 700; margin-bottom: 4px; }
+.cc-ul { margin: 6px 0 0 18px; padding: 0; }
+
+/* Mobile layout */
+@media (max-width: 920px){
+  .cc-cm-body { flex-direction: column; align-items:center; }
+  .cc-cm-drawer { width: min(92vw, 920px); max-width: none; }
+  .cc-cm-mapwrap { width: min(92vw, 920px); height: min(70vh, 760px); }
+}
+`;
+    document.head.appendChild(style);
+  }
+
+  // ---------------------------
   // Data validation + geometry
   // ---------------------------
   function normalizePoints(points, coordSystem) {
@@ -163,7 +225,7 @@
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
     return points
       .filter((p) => p && typeof p.x === "number" && typeof p.y === "number")
-      .map((p) => [p.y, p.x]); // Leaflet CRS.Simple uses [y, x]
+      .map((p) => [p.y, p.x]);
   }
 
   function validateMapDoc(doc) {
@@ -233,7 +295,6 @@
 
     const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
 
-    // Lens overlay
     const lens = el("div", { class: "cc-lens", id: "cc-lens" }, [
       el("div", { class: "cc-lens-rim" }),
       el("div", { class: "cc-lens-inner", id: "cc-lens-inner" }, [
@@ -242,7 +303,6 @@
       el("div", { class: "cc-lens-glare" })
     ]);
 
-    // Vertical scroller
     const scroller = el("div", { class: "cc-scroll", id: "cc-scroll" }, [
       el("div", { class: "cc-scroll-track" }),
       el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob" })
@@ -273,7 +333,6 @@
     root.appendChild(header);
     root.appendChild(body);
 
-    // Set lens dimensions (desktop default; CSS can override responsively)
     lens.style.setProperty("--lens-w", `${opts.lensWidthPx}px`);
     lens.style.setProperty("--lens-h", `${opts.lensHeightPx}px`);
 
@@ -306,7 +365,9 @@
         el("div", { class: "cc-h" }, ["State"]),
         el("div", {}, [`Controller: ${controller}`]),
         el("div", {}, [`Status: ${status}`]),
-        weather ? el("div", {}, [`Weather: ${weather}`]) : el("div", { class: "cc-muted" }, ["Weather: (none)"])
+        weather
+          ? el("div", {}, [`Weather: ${weather}`])
+          : el("div", { class: "cc-muted" }, ["Weather: (none)"])
       ])
     );
 
@@ -378,19 +439,20 @@
   async function mount(root, userOpts) {
     const opts = { ...DEFAULTS, ...(userOpts || {}) };
 
-    // Back-compat: lockHorizontalPan true => strict vertical
+    // Back-compat
     let maxDrift = typeof opts.maxHorizontalDriftPx === "number" ? opts.maxHorizontalDriftPx : 0;
     if (opts.lockHorizontalPan === true) maxDrift = 0;
 
-    // Load CSS + Leaflet
+    // Load external CSS (optional), then inject safety CSS that forces proper stacking.
     if (opts.appCssUrl) await loadCssTextOnce(opts.appCssUrl, "cc_canyon_map_css");
+    injectCssSafetyOnce();
+
     await ensureLeaflet(opts);
 
     const ui = buildLayout(root, opts);
 
     let mapDoc = null;
     let stateDoc = null;
-
     let mainMap = null;
     let lensMap = null;
 
@@ -458,7 +520,6 @@
       }
     }
 
-    // Keep horizontal bounded (paper wiggle)
     function clampHorizontal() {
       if (!mainMap || !mapDoc) return;
       const px = mapDoc.map.background.image_pixel_size;
@@ -474,7 +535,6 @@
       }
     }
 
-    // Lens map sync
     const syncLens = rafThrottle(() => {
       if (!opts.lensEnabled) return;
       if (!mainMap || !lensMap) return;
@@ -483,7 +543,6 @@
       lensMap.setView(c, z + opts.lensZoomOffset, { animate: false });
     });
 
-    // Scroll knob helpers
     function getScrollRange() {
       if (!mainMap || !mapDoc) return { yMin: 0, yMax: 0 };
       const px = mapDoc.map.background.image_pixel_size;
@@ -522,7 +581,6 @@
 
       const y = yMin + clamp(t, 0, 1) * (yMax - yMin);
 
-      // keep current x, but clamp within drift
       const c = mainMap.getCenter();
       const minX = cx - maxDrift;
       const maxX = cx + maxDrift;
@@ -576,7 +634,6 @@
         { passive: false }
       );
 
-      // Clicking on the track moves too
       ui.scrollEl.addEventListener("mousedown", (e) => {
         if (e.target === ui.knobEl) return;
         setFromClientY(e.clientY);
@@ -586,16 +643,12 @@
         "touchstart",
         (e) => {
           if (e.target === ui.knobEl) return;
-          const clientY = e.touches[0].clientY;
-          setFromClientY(clientY);
+          setFromClientY(e.touches[0].clientY);
         },
         { passive: true }
       );
     }
 
-    // ---------------------------
-    // Load + build
-    // ---------------------------
     async function loadAll() {
       ui.drawerContentEl.innerHTML = "";
       ui.drawerContentEl.appendChild(el("div", { class: "cc-muted" }, ["Loading…"]));
@@ -612,7 +665,6 @@
       const stateErr = validateStateDoc(stateDoc);
       if (stateErr) throw new Error("Bad canyon_state.json: " + stateErr);
 
-      // Destroy old maps
       if (mainMap) {
         try {
           mainMap.remove();
@@ -629,14 +681,12 @@
       const px = mapDoc.map.background.image_pixel_size;
       const bounds = [[0, 0], [px.h, px.w]];
 
-      // Main map
       mainMap = window.L.map(ui.mapEl, {
         crs: window.L.CRS.Simple,
         minZoom: -3,
         maxZoom: 3,
         zoomSnap: 0.25,
         zoomDelta: 0.25,
-        wheelDebounceTime: 30,
         attributionControl: false,
         zoomControl: false,
         scrollWheelZoom: false,
@@ -654,20 +704,46 @@
       mainMap.setMaxBounds(bounds);
       fitToImage();
 
-      // Horizontal clamp (wiggle) if needed
+      // IMPORTANT: Safari/iOS needs invalidateSize after layout.
+      mainMap.whenReady(() => {
+        try {
+          mainMap.invalidateSize(true);
+        } catch (e) {}
+        try {
+          updateKnobFromMap();
+        } catch (e) {}
+        try {
+          syncLens();
+        } catch (e) {}
+      });
+      setTimeout(() => {
+        try {
+          mainMap.invalidateSize(true);
+        } catch (e) {}
+        try {
+          if (lensMap) lensMap.invalidateSize(true);
+        } catch (e) {}
+        try {
+          updateKnobFromMap();
+        } catch (e) {}
+        try {
+          syncLens();
+        } catch (e) {}
+      }, 60);
+
       if (maxDrift >= 0) {
         mainMap.on("move", clampHorizontal);
         clampHorizontal();
       }
 
-      // Regions
       rebuildRegions();
       closeDrawer(ui);
       ui.drawerTitleEl.textContent = "Region";
       ui.drawerContentEl.innerHTML = "";
-      ui.drawerContentEl.appendChild(el("div", { class: "cc-muted" }, ["Click a region to view details."]));
+      ui.drawerContentEl.appendChild(
+        el("div", { class: "cc-muted" }, ["Click a region to view details."])
+      );
 
-      // Lens
       if (opts.lensEnabled) {
         ui.lensEl.style.display = "block";
 
@@ -692,6 +768,13 @@
         window.L.imageOverlay(lensImageKey, bounds, { opacity: 1.0 }).addTo(lensMap);
         lensMap.setMaxBounds(bounds);
 
+        lensMap.whenReady(() => {
+          try {
+            lensMap.invalidateSize(true);
+          } catch (e) {}
+          syncLens();
+        });
+
         syncLens();
         mainMap.on("move", syncLens);
         mainMap.on("zoom", syncLens);
@@ -699,9 +782,9 @@
         ui.lensEl.style.display = "none";
       }
 
-      // Scroller
       bindScrollerOnce();
       updateKnobFromMap();
+
       mainMap.on("move", () => {
         updateKnobFromMap();
         syncLens();
@@ -717,7 +800,6 @@
 
     await loadAll();
 
-    // Exposed API
     const api = {
       reload: async () => await loadAll(),
       fit: () => fitToImage(),
@@ -761,7 +843,6 @@
     return api;
   }
 
-  // Auto-mount (iPad-friendly error output)
   async function autoMountIfPresent() {
     const root = document.getElementById("cc-app-root");
     if (!root) return;
@@ -779,11 +860,11 @@
       const msg = (e && (e.message || String(e))) || "Unknown error";
       root.innerHTML =
         "<div style='padding:12px;opacity:.92;line-height:1.35'>" +
-          "<div style='font-weight:700;margin-bottom:6px'>❌ Canyon Map failed to load</div>" +
-          "<div style='font-family:monospace;font-size:12px;white-space:pre-wrap;background:rgba(0,0,0,.25);padding:10px;border-radius:8px'>" +
-            msg +
-          "</div>" +
-          "<div style='margin-top:10px;opacity:.8'>Tip: this message is your iPad console now.</div>" +
+        "<div style='font-weight:700;margin-bottom:6px'>❌ Canyon Map failed to load</div>" +
+        "<div style='font-family:monospace;font-size:12px;white-space:pre-wrap;background:rgba(0,0,0,.25);padding:10px;border-radius:8px'>" +
+        msg +
+        "</div>" +
+        "<div style='margin-top:10px;opacity:.8'>Tip: this message is your iPad console now.</div>" +
         "</div>";
     }
   }
@@ -794,6 +875,5 @@
     autoMountIfPresent();
   }
 
-  // Global export (so other apps can embed it)
   window.CC_CanyonMap = { mount };
 })();
