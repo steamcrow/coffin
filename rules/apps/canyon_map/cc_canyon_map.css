@@ -1,0 +1,134 @@
+/* File: apps/canyon_map/cc_canyon_map.css
+   Minimal styling that should play nice with your shared ui.css
+*/
+
+.cc-canyon-map {
+  position: relative;
+  min-height: 800px;
+  background: rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.cc-cm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+.cc-cm-title {
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.cc-cm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.cc-btn {
+  appearance: none;
+  border: 1px solid rgba(255,255,255,0.18);
+  background: rgba(0,0,0,0.35);
+  color: inherit;
+  padding: 6px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.cc-btn:hover { border-color: rgba(255,255,255,0.35); }
+
+.cc-btn-x {
+  width: 34px;
+  height: 34px;
+  line-height: 30px;
+  font-size: 18px;
+  padding: 0;
+  border-radius: 10px;
+}
+
+.cc-cm-body {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  height: calc(100% - 52px);
+  min-height: 740px;
+}
+
+.cc-cm-mapwrap {
+  position: relative;
+  min-height: 740px;
+}
+
+.cc-cm-map {
+  position: absolute;
+  inset: 0;
+}
+
+.cc-cm-drawer {
+  border-left: 1px solid rgba(255,255,255,0.10);
+  background: rgba(0,0,0,0.35);
+  transform: translateX(0);
+  transition: transform 160ms ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.cc-cm-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+
+.cc-cm-drawer-title {
+  font-weight: 700;
+}
+
+.cc-cm-drawer-content {
+  padding: 12px;
+  overflow: auto;
+}
+
+.cc-block {
+  padding: 10px 10px;
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: 12px;
+  background: rgba(0,0,0,0.25);
+  margin-bottom: 10px;
+}
+
+.cc-h {
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.cc-ul {
+  margin: 6px 0 0 18px;
+}
+
+.cc-muted {
+  opacity: 0.75;
+}
+
+/* Mobile: drawer becomes overlay */
+@media (max-width: 980px) {
+  .cc-cm-body {
+    grid-template-columns: 1fr;
+  }
+  .cc-cm-drawer {
+    position: absolute;
+    right: 0;
+    top: 52px;
+    bottom: 0;
+    width: min(92vw, 420px);
+    transform: translateX(105%);
+    box-shadow: 0 0 40px rgba(0,0,0,0.45);
+  }
+  .cc-cm-drawer.open {
+    transform: translateX(0);
+  }
+}
