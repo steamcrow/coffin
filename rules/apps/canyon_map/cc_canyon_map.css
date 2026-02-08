@@ -1,134 +1,112 @@
-/* File: apps/canyon_map/cc_canyon_map.css
-   Minimal styling that should play nice with your shared ui.css
-*/
+/* === Magnifying Lens + Scroll Knob (Canyon Map only) === */
 
-.cc-canyon-map {
+.cc-cm-body--lens .cc-cm-mapwrap{
   position: relative;
-  min-height: 800px;
-  background: rgba(0,0,0,0.15);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 12px;
   overflow: hidden;
 }
 
-.cc-cm-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
+.cc-lens-svg { position: absolute; left: -9999px; top: -9999px; }
+
+/* Fixed center lens */
+.cc-lens{
+  --lens-w: 520px;
+  --lens-h: 360px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--lens-w);
+  height: var(--lens-h);
+  transform: translate(-50%, -50%);
+  border-radius: 18px;
+  z-index: 30;
+  pointer-events: none; /* clicks go through to regions */
 }
 
-.cc-cm-title {
-  font-weight: 700;
-  letter-spacing: 0.3px;
+/* Rim */
+.cc-lens-rim{
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  border: 2px solid rgba(255,255,255,0.32);
+  box-shadow:
+    0 10px 40px rgba(0,0,0,0.35),
+    inset 0 0 0 1px rgba(0,0,0,0.35);
 }
 
-.cc-cm-actions {
-  display: flex;
-  gap: 8px;
+/* The warped glass content */
+.cc-lens-inner{
+  position: absolute;
+  inset: 8px;
+  border-radius: 14px;
+  overflow: hidden;
+  filter: url(#ccLensWarp);
 }
 
-.cc-btn {
-  appearance: none;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(0,0,0,0.35);
-  color: inherit;
-  padding: 6px 10px;
-  border-radius: 10px;
-  cursor: pointer;
-}
-.cc-btn:hover { border-color: rgba(255,255,255,0.35); }
-
-.cc-btn-x {
-  width: 34px;
-  height: 34px;
-  line-height: 30px;
-  font-size: 18px;
-  padding: 0;
-  border-radius: 10px;
-}
-
-.cc-cm-body {
-  display: grid;
-  grid-template-columns: 1fr 360px;
-  height: calc(100% - 52px);
-  min-height: 740px;
-}
-
-.cc-cm-mapwrap {
-  position: relative;
-  min-height: 740px;
-}
-
-.cc-cm-map {
+/* Leaflet inside lens */
+.cc-lens-map{
   position: absolute;
   inset: 0;
 }
 
-.cc-cm-drawer {
-  border-left: 1px solid rgba(255,255,255,0.10);
-  background: rgba(0,0,0,0.35);
-  transform: translateX(0);
-  transition: transform 160ms ease;
-  display: flex;
-  flex-direction: column;
+/* Subtle glare */
+.cc-lens-glare{
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.20), rgba(255,255,255,0.00) 55%);
+  mix-blend-mode: screen;
+  opacity: 0.55;
 }
 
-.cc-cm-drawer-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.10);
+/* Vertical scroll knob */
+.cc-scroll{
+  position: absolute;
+  right: 10px;
+  top: 64px;
+  bottom: 14px;
+  width: 36px;
+  z-index: 40;
+  pointer-events: auto;
 }
 
-.cc-cm-drawer-title {
-  font-weight: 700;
-}
-
-.cc-cm-drawer-content {
-  padding: 12px;
-  overflow: auto;
-}
-
-.cc-block {
-  padding: 10px 10px;
-  border: 1px solid rgba(255,255,255,0.10);
-  border-radius: 12px;
+.cc-scroll-track{
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
   background: rgba(0,0,0,0.25);
-  margin-bottom: 10px;
+  border: 1px solid rgba(255,255,255,0.12);
 }
 
-.cc-h {
-  font-weight: 700;
-  margin-bottom: 6px;
+.cc-scroll-knob{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 26px;
+  height: 56px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.18);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+  cursor: grab;
+  touch-action: none;
 }
 
-.cc-ul {
-  margin: 6px 0 0 18px;
+.cc-scroll-knob:active{
+  cursor: grabbing;
 }
 
-.cc-muted {
-  opacity: 0.75;
-}
-
-/* Mobile: drawer becomes overlay */
-@media (max-width: 980px) {
-  .cc-cm-body {
-    grid-template-columns: 1fr;
+/* Responsive lens */
+@media (max-width: 980px){
+  .cc-lens{
+    width: min(86vw, 520px);
+    height: min(42vh, 360px);
   }
-  .cc-cm-drawer {
-    position: absolute;
-    right: 0;
-    top: 52px;
-    bottom: 0;
-    width: min(92vw, 420px);
-    transform: translateX(105%);
-    box-shadow: 0 0 40px rgba(0,0,0,0.45);
+  .cc-scroll{
+    right: 6px;
+    width: 32px;
   }
-  .cc-cm-drawer.open {
-    transform: translateX(0);
+  .cc-scroll-knob{
+    width: 24px;
+    height: 52px;
   }
 }
