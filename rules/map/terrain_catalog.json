@@ -1862,3 +1862,1280 @@
   "slots": [{ "slot_id": "armory_objective", "slot_kind": "objective", "label": "Armory Objective Anchor", "level": 0, "position_hint": "interior_center", "notes": ["High-value loot objective."] }],
   "destructibility": { "destructible": true, "structure_rating": 8, "breakpoints": [{ "at_damage": 4, "effect": "Breached: edges cover drops from Heavy to Light." }, { "at_damage": 8, "effect": "Detonation/collapse: replace with large rubble; create Unstable Terrain in footprint (scenario-defined)." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble field."] } }
 }
+[
+  {
+    "terrain_type_id": "cultist_ralu_red_wine_fountain",
+    "schema_version": "1.0.0",
+    "name": "Red Wine Fountain of Ralu",
+    "short_name": "Wine Fountain",
+    "kind": "objective",
+    "category": "cult_site",
+    "faction_affinity": "Sons of Ralu",
+    "rarity": "rare",
+    "tags": ["cultist", "sons_of_ralu", "ralu", "ritual", "madness", "chaos", "statue", "fountain"],
+
+    "art": {
+      "icon_key": "cult_wine_fountain",
+      "image_key": "terrain/cultist/ralu_red_wine_fountain.png",
+      "emoji": "🍷",
+      "silhouette_key": "silhouettes/cult_wine_fountain.svg"
+    },
+
+    "footprint": {
+      "shape": "round",
+      "size_in": { "diameter": 5.0 },
+      "base_height_in": 6.0,
+      "ground_contact": "base",
+      "rotation_snaps_deg": 45
+    },
+
+    "elevation": {
+      "is_climbable": false,
+      "stories": 0,
+      "story_height_in": 3.0,
+      "top_surface_walkable": false,
+      "jump_down_allowed": false
+    },
+
+    "placement": {
+      "suggested_quantity_per_table": "0-1",
+      "recommended_min_spacing_in": 6.0,
+      "allowed_zones": ["center", "midfield"],
+      "forbidden_zones": ["deployment"],
+      "must_be_on_flat_ground": true,
+      "cannot_overlap": true,
+      "notes": [
+        "Place near contested lanes to tempt interaction.",
+        "Avoid deploying within 6\" of a table edge unless scenario calls for it."
+      ]
+    },
+
+    "visibility": {
+      "los_profile": "blocks",
+      "blocks_los": true,
+      "blocks_los_height_in": 6.0,
+      "windows": [],
+      "special": [
+        {
+          "id": "wine_mist_distortion",
+          "name": "Wine Mist",
+          "effect": "Attacks drawn through the fountain (LoS line intersects the footprint) suffer -1 Success (to a minimum of 0) due to refracting vapors.",
+          "applies_to": ["ranged_attacks"],
+          "range_in": 0.0
+        }
+      ]
+    },
+
+    "cover": {
+      "default_cover": "heavy",
+      "edge_cover": "heavy",
+      "interior_cover": "none",
+      "cover_height_in": 4.0,
+      "notes": ["Counts as Heavy Cover for models touching the base."]
+    },
+
+    "movement": {
+      "is_passable": false,
+      "is_breachable": true,
+      "breach_requires": "destroy",
+      "difficult_terrain": false,
+      "hazardous_terrain": false,
+      "slows_by": 0,
+      "cannot_end_move_on": true
+    },
+
+    "hazards": {
+      "hazard_id": "ralu_inebriation",
+      "is_hazard": true,
+      "trigger": "enter_within",
+      "range_in": 1.0,
+      "frequency": "once_per_activation",
+      "effect": "A living model entering within 1\" must immediately make a Quality test (TN 3). On fail: becomes Irate until end of next Round.",
+      "immunities": ["construct", "undead"],
+      "stacking": "refresh_duration"
+    },
+
+    "interaction": {
+      "interactable": true,
+      "interaction_window": "anytime_on_activation",
+      "interactions": [
+        {
+          "interaction_id": "drink_ralu_wine",
+          "name": "Drink the Wine",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 1,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 3,
+          "on_success": [
+            "Gain +1 Success on the next melee attack this activation.",
+            "Become Irate until end of next Round."
+          ],
+          "on_fail": [
+            "Become Irate until end of next Round.",
+            "Immediately make a free Move toward the nearest unit (any faction) if able."
+          ],
+          "notes": ["This is a temptation play: power now, control later."]
+        },
+        {
+          "interaction_id": "defile_fountain",
+          "name": "Defile the Fountain",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 1,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 4,
+          "on_success": [
+            "Remove Wine Mist Distortion special rule for the rest of the game.",
+            "All models within 3\" immediately remove Irate (if present)."
+          ],
+          "on_fail": [
+            "The defiler becomes Irate until end of next Round."
+          ],
+          "notes": ["Useful for control/denial scenarios."]
+        }
+      ]
+    },
+
+    "scenario_hooks": {
+      "objective_value": 2,
+      "scoring": [
+        {
+          "id": "score_revel",
+          "name": "Revel in Ralu",
+          "when": "end_of_round",
+          "condition": "Your faction has at least 1 model within 1\" and no enemy models within 1\" of the fountain.",
+          "score": 1,
+          "limit_per_game": 3
+        }
+      ],
+      "pressure": {
+        "adds_pressure": true,
+        "pressure_amount": 1,
+        "when": "each_time_someone_drinks",
+        "notes": ["Drinking accelerates catastrophe themes."]
+      }
+    },
+
+    "destructibility": {
+      "destructible": true,
+      "structure_rating": 6,
+      "armor": 0,
+      "damage_type_modifiers": [],
+      "breakpoints": [
+        {
+          "at_damage": 3,
+          "effect": "Cracked Basin: Hazard range increases to 2\" for the rest of the game."
+        },
+        {
+          "at_damage": 6,
+          "effect": "Collapse: The fountain is removed and replaced with Difficult Terrain (5\" diameter). All models within 3\" become Irate."
+        }
+      ],
+      "on_destroy_loot": []
+    },
+
+    "ui": {
+      "list_priority": 70,
+      "display_badges": ["Objective", "Hazard", "Heavy Cover"],
+      "tooltip_short": "Tempting fountain that drives Irate madness and scores contested points.",
+      "rules_reference": ["interaction", "hazards", "pressure"]
+    },
+
+    "balance_notes": [
+      "Strong focal-point objective; keep to 0-1 per table.",
+      "Irate effects create chaos but can be managed by careful spacing."
+    ]
+  },
+
+  {
+    "terrain_type_id": "cultist_tzul_reliquary_engine",
+    "schema_version": "1.0.0",
+    "name": "Reliquary Engine of Tzul",
+    "short_name": "Reliquary Engine",
+    "kind": "objective",
+    "category": "cult_site",
+    "faction_affinity": "New Children of Tzul",
+    "rarity": "rare",
+    "tags": ["cultist", "tzul", "ritual", "undead", "necromancy", "engine", "reliquary", "spawn"],
+
+    "art": {
+      "icon_key": "cult_reliquary_engine",
+      "image_key": "terrain/cultist/tzul_reliquary_engine.png",
+      "emoji": "☠️",
+      "silhouette_key": "silhouettes/cult_reliquary_engine.svg"
+    },
+
+    "footprint": {
+      "shape": "rect",
+      "size_in": { "w": 4.0, "d": 4.0 },
+      "base_height_in": 4.0,
+      "ground_contact": "base",
+      "rotation_snaps_deg": 90
+    },
+
+    "elevation": {
+      "is_climbable": false,
+      "stories": 0,
+      "story_height_in": 3.0,
+      "top_surface_walkable": false,
+      "jump_down_allowed": false
+    },
+
+    "placement": {
+      "suggested_quantity_per_table": "0-1",
+      "recommended_min_spacing_in": 8.0,
+      "allowed_zones": ["center", "midfield"],
+      "forbidden_zones": ["deployment"],
+      "must_be_on_flat_ground": true,
+      "cannot_overlap": true,
+      "notes": [
+        "Place where corpses are likely to occur: intersections, choke points.",
+        "Avoid placement inside dense terrain clusters; it wants space to matter."
+      ]
+    },
+
+    "visibility": {
+      "los_profile": "blocks",
+      "blocks_los": true,
+      "blocks_los_height_in": 4.0,
+      "windows": [],
+      "special": []
+    },
+
+    "cover": {
+      "default_cover": "heavy",
+      "edge_cover": "heavy",
+      "interior_cover": "none",
+      "cover_height_in": 3.5,
+      "notes": ["A solid housing; treat as Heavy Cover."]
+    },
+
+    "movement": {
+      "is_passable": false,
+      "is_breachable": true,
+      "breach_requires": "destroy",
+      "difficult_terrain": false,
+      "hazardous_terrain": false,
+      "slows_by": 0,
+      "cannot_end_move_on": true
+    },
+
+    "hazards": {
+      "hazard_id": "tzul_funeral_thrum",
+      "is_hazard": true,
+      "trigger": "start_activation_within",
+      "range_in": 2.0,
+      "frequency": "once_per_activation",
+      "effect": "Living models that start activation within 2\" suffer -1 Success on all Quality tests this activation (minimum 0).",
+      "immunities": ["undead", "construct"],
+      "stacking": "does_not_stack"
+    },
+
+    "interaction": {
+      "interactable": true,
+      "interaction_window": "main_action_only",
+      "interactions": [
+        {
+          "interaction_id": "feed_reliquary",
+          "name": "Feed the Reliquary",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 3,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 3,
+          "requirements": [
+            "There is at least one corpse marker within 2\" of the engine."
+          ],
+          "on_success": [
+            "Remove one corpse marker within 2\".",
+            "Spawn 1 Rotter within 1\" of the engine under the feeding player's control.",
+            "The spawned Rotter immediately activates after this model finishes its activation."
+          ],
+          "on_fail": [
+            "The engine shrieks; the interacting model suffers Staggered (if your rules use it) OR loses its remaining movement this activation."
+          ],
+          "notes": ["If you don’t use Staggered, treat it as: cannot make additional Moves this activation."]
+        },
+        {
+          "interaction_id": "seal_engine",
+          "name": "Seal the Engine",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 1,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 4,
+          "on_success": [
+            "Disable Feed the Reliquary for the rest of the game.",
+            "Remove Funeral Thrum hazard for the rest of the game."
+          ],
+          "on_fail": [
+            "Immediately spawn 1 uncontrolled Rotter within 1\". It activates at the end of the current activation and attacks the nearest unit."
+          ],
+          "notes": ["Hard denial play; high risk."]
+        }
+      ]
+    },
+
+    "scenario_hooks": {
+      "objective_value": 3,
+      "scoring": [
+        {
+          "id": "score_engine_control",
+          "name": "Control the Reliquary",
+          "when": "end_of_round",
+          "condition": "You have at least 1 model within 1\" and no enemy models within 1\" of the engine.",
+          "score": 1,
+          "limit_per_game": 4
+        },
+        {
+          "id": "score_feeding",
+          "name": "Harvest the Dead",
+          "when": "each_time_success_feed",
+          "condition": "You successfully feed the engine.",
+          "score": 1,
+          "limit_per_game": 3
+        }
+      ],
+      "pressure": {
+        "adds_pressure": true,
+        "pressure_amount": 1,
+        "when": "each_successful_feed",
+        "notes": ["Necromantic acceleration increases the table’s doom clock."]
+      }
+    },
+
+    "destructibility": {
+      "destructible": true,
+      "structure_rating": 7,
+      "armor": 1,
+      "damage_type_modifiers": [
+        { "damage_type": "fire", "modifier": "+1", "notes": "Fire destabilizes the binding tar." }
+      ],
+      "breakpoints": [
+        {
+          "at_damage": 4,
+          "effect": "Rattling Cages: The engine’s hazard range increases to 3\"."
+        },
+        {
+          "at_damage": 7,
+          "effect": "Ruin: The engine explodes. All models within 2\" take 1 hit (or suffer -1 Quality until end of Round if you prefer non-damage). Remove the engine and replace with Difficult Terrain (4\"x4\"). Spawn 1 uncontrolled Rotter."
+        }
+      ],
+      "on_destroy_loot": []
+    },
+
+    "ui": {
+      "list_priority": 75,
+      "display_badges": ["Objective", "Hazard", "Spawner", "Heavy Cover"],
+      "tooltip_short": "Consumes corpses to spawn Rotters; strong control objective with denial option.",
+      "rules_reference": ["interaction", "hazards", "pressure", "spawning"]
+    },
+
+    "balance_notes": [
+      "Spawner effects can swing scenarios—limit feed uses and quantity per table.",
+      "Pairs well with corpse-marker scenarios."
+    ]
+  },
+
+  {
+    "terrain_type_id": "cultist_burning_choir_bell_furnace",
+    "schema_version": "1.0.0",
+    "name": "Bell Furnace",
+    "short_name": "Bell Furnace",
+    "kind": "objective",
+    "category": "cult_site",
+    "faction_affinity": "The Burning Choir",
+    "rarity": "uncommon",
+    "tags": ["cultist", "burning_choir", "fire", "ritual", "bell", "furnace", "aura"],
+
+    "art": {
+      "icon_key": "cult_bell_furnace",
+      "image_key": "terrain/cultist/burning_choir_bell_furnace.png",
+      "emoji": "🔔",
+      "silhouette_key": "silhouettes/cult_bell_furnace.svg"
+    },
+
+    "footprint": {
+      "shape": "round",
+      "size_in": { "diameter": 4.0 },
+      "base_height_in": 5.0,
+      "ground_contact": "base",
+      "rotation_snaps_deg": 45
+    },
+
+    "elevation": {
+      "is_climbable": false,
+      "stories": 0,
+      "story_height_in": 3.0,
+      "top_surface_walkable": false,
+      "jump_down_allowed": false
+    },
+
+    "placement": {
+      "suggested_quantity_per_table": "0-2",
+      "recommended_min_spacing_in": 6.0,
+      "allowed_zones": ["midfield", "center"],
+      "forbidden_zones": ["deployment"],
+      "must_be_on_flat_ground": true,
+      "cannot_overlap": true,
+      "notes": [
+        "Plays best when there is nearby cover to force choices: shelter vs. heat."
+      ]
+    },
+
+    "visibility": {
+      "los_profile": "blocks",
+      "blocks_los": true,
+      "blocks_los_height_in": 5.0,
+      "windows": [],
+      "special": []
+    },
+
+    "cover": {
+      "default_cover": "heavy",
+      "edge_cover": "heavy",
+      "interior_cover": "none",
+      "cover_height_in": 4.0
+    },
+
+    "movement": {
+      "is_passable": false,
+      "is_breachable": true,
+      "breach_requires": "destroy",
+      "difficult_terrain": false,
+      "hazardous_terrain": true,
+      "slows_by": 0,
+      "cannot_end_move_on": true
+    },
+
+    "hazards": {
+      "hazard_id": "bell_heat",
+      "is_hazard": true,
+      "trigger": "end_activation_within",
+      "range_in": 2.0,
+      "frequency": "once_per_activation",
+      "effect": "Any model that ends its activation within 2\" suffers 1 hit OR gains Scorched token (scenario-defined).",
+      "immunities": ["fireproof", "construct"],
+      "stacking": "stack"
+    },
+
+    "interaction": {
+      "interactable": true,
+      "interaction_window": "main_action_only",
+      "interactions": [
+        {
+          "interaction_id": "ring_bell",
+          "name": "Ring the Bell",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 2,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 3,
+          "on_success": [
+            "Choose one: (A) Ignite: All terrain features within 3\" become Hazardous (Fire) until end of next Round; OR (B) Sootveil: Create a 3\" radius Smoke zone centered on the furnace until end of next Round (LoS through smoke suffers -1 Success)."
+          ],
+          "on_fail": [
+            "Backdraft: The ringer suffers 1 hit and becomes Scorched (or cannot Sprint next activation)."
+          ],
+          "notes": ["Pick (A) if you want area denial; (B) if you want ranged disruption."]
+        }
+      ]
+    },
+
+    "scenario_hooks": {
+      "objective_value": 2,
+      "scoring": [
+        {
+          "id": "score_bell_held",
+          "name": "Hold the Furnace",
+          "when": "end_of_round",
+          "condition": "Your faction has at least 1 model within 1\" of the furnace and no enemy models within 1\".",
+          "score": 1,
+          "limit_per_game": 3
+        }
+      ],
+      "pressure": {
+        "adds_pressure": true,
+        "pressure_amount": 1,
+        "when": "each_time_ring_bell",
+        "notes": ["The Choir’s rites push the board toward catastrophe."]
+      }
+    },
+
+    "destructibility": {
+      "destructible": true,
+      "structure_rating": 6,
+      "armor": 0,
+      "damage_type_modifiers": [
+        { "damage_type": "cold", "modifier": "+1", "notes": "Thermal shock cracks the bell." }
+      ],
+      "breakpoints": [
+        {
+          "at_damage": 3,
+          "effect": "Cracked Bell: Ring the Bell now has difficulty +1."
+        },
+        {
+          "at_damage": 6,
+          "effect": "Ruin: Remove the furnace; place a 4\" diameter Fire Patch hazard that lasts until end of game."
+        }
+      ],
+      "on_destroy_loot": []
+    },
+
+    "ui": {
+      "list_priority": 60,
+      "display_badges": ["Objective", "Hazard", "Heavy Cover"],
+      "tooltip_short": "A hot objective that can ignite terrain or throw smoke; risky to approach.",
+      "rules_reference": ["interaction", "hazards", "pressure", "smoke"]
+    },
+
+    "balance_notes": [
+      "Keep ring uses low; smoke + cover can be oppressive if spammed.",
+      "If your core rules already handle Fire patches, map the hazard to that system."
+    ]
+  },
+
+  {
+    "terrain_type_id": "cultist_hollow_world_rift",
+    "schema_version": "1.0.0",
+    "name": "Rift in the World",
+    "short_name": "World Rift",
+    "kind": "objective",
+    "category": "anomaly",
+    "faction_affinity": "Children of the Hollow",
+    "rarity": "rare",
+    "tags": ["cultist", "children_of_hollow", "void", "rift", "teleport", "reality_warp", "anomaly"],
+
+    "art": {
+      "icon_key": "cult_world_rift",
+      "image_key": "terrain/cultist/hollow_world_rift.png",
+      "emoji": "🕳️",
+      "silhouette_key": "silhouettes/cult_world_rift.svg"
+    },
+
+    "footprint": {
+      "shape": "irregular",
+      "size_in": { "diameter": 3.0 },
+      "base_height_in": 4.0,
+      "ground_contact": "base",
+      "rotation_snaps_deg": 45
+    },
+
+    "elevation": {
+      "is_climbable": false,
+      "stories": 0,
+      "story_height_in": 3.0,
+      "top_surface_walkable": false,
+      "jump_down_allowed": false
+    },
+
+    "placement": {
+      "suggested_quantity_per_table": "0-1",
+      "recommended_min_spacing_in": 10.0,
+      "allowed_zones": ["center"],
+      "forbidden_zones": ["deployment", "table_edge"],
+      "must_be_on_flat_ground": true,
+      "cannot_overlap": true,
+      "notes": [
+        "Treat as a centerpiece. Do not place within 8\" of any edge unless scenario demands."
+      ]
+    },
+
+    "visibility": {
+      "los_profile": "distorts",
+      "blocks_los": false,
+      "blocks_los_height_in": 0.0,
+      "windows": [],
+      "special": [
+        {
+          "id": "rift_refraction",
+          "name": "Rift Refraction",
+          "effect": "Ranged attacks that draw LoS through the rift suffer -1 Success. Additionally, on a Natural 1 (or Critical Fail), the attack targets the nearest model within 3\" of the original target instead (random if tied).",
+          "applies_to": ["ranged_attacks"],
+          "range_in": 0.0
+        }
+      ]
+    },
+
+    "cover": {
+      "default_cover": "none",
+      "edge_cover": "none",
+      "interior_cover": "none",
+      "cover_height_in": 0.0
+    },
+
+    "movement": {
+      "is_passable": true,
+      "is_breachable": false,
+      "difficult_terrain": false,
+      "hazardous_terrain": true,
+      "slows_by": 0,
+      "cannot_end_move_on": false
+    },
+
+    "hazards": {
+      "hazard_id": "hollow_pull",
+      "is_hazard": true,
+      "trigger": "end_activation_within",
+      "range_in": 1.0,
+      "frequency": "once_per_activation",
+      "effect": "A model ending within 1\" must make a Quality test (TN 3). On fail: it is Pulled 2\" toward the rift (ignore terrain; stop if base contact).",
+      "immunities": ["anchored", "immovable"],
+      "stacking": "does_not_stack"
+    },
+
+    "interaction": {
+      "interactable": true,
+      "interaction_window": "main_action_only",
+      "interactions": [
+        {
+          "interaction_id": "enter_rift",
+          "name": "Enter the Rift",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 99,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 3,
+          "on_success": [
+            "Remove this model from the table (it is 'In the Hollow').",
+            "At the start of your next activation, place it anywhere within 6\" of the rift and at least 1\" from enemies.",
+            "If no legal placement exists, it remains In the Hollow and tries again next activation."
+          ],
+          "on_fail": [
+            "The model is Lost: remove it from play as destroyed (counts as a casualty for scoring).",
+            "Add +1 Pressure (if using Pressure)."
+          ],
+          "notes": ["This is powerful mobility with a real death risk."]
+        },
+        {
+          "interaction_id": "anchor_reality",
+          "name": "Anchor Reality",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 1,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 4,
+          "on_success": [
+            "Disable Enter the Rift for the rest of the game.",
+            "Remove Rift Refraction special rule for the rest of the game."
+          ],
+          "on_fail": [
+            "The anchoring tool shatters. The model suffers 1 hit and is Pulled into base contact with the rift."
+          ],
+          "notes": ["Denial option for scenario balance."]
+        }
+      ]
+    },
+
+    "scenario_hooks": {
+      "objective_value": 3,
+      "scoring": [
+        {
+          "id": "score_hollow_control",
+          "name": "Hold the Rift",
+          "when": "end_of_round",
+          "condition": "Your faction has at least 1 model within 2\" of the rift and no enemy models within 2\".",
+          "score": 1,
+          "limit_per_game": 4
+        },
+        {
+          "id": "score_hollow_dive",
+          "name": "Dare the Hollow",
+          "when": "each_time_success_enter",
+          "condition": "You successfully Enter the Rift.",
+          "score": 1,
+          "limit_per_game": 2
+        }
+      ],
+      "pressure": {
+        "adds_pressure": true,
+        "pressure_amount": 1,
+        "when": "each_time_someone_enters",
+        "notes": ["Reality tearing accelerates doom clocks."]
+      }
+    },
+
+    "destructibility": {
+      "destructible": false,
+      "structure_rating": 0,
+      "armor": 0,
+      "damage_type_modifiers": [],
+      "breakpoints": [],
+      "on_destroy_loot": []
+    },
+
+    "ui": {
+      "list_priority": 80,
+      "display_badges": ["Objective", "Hazard", "Anomaly"],
+      "tooltip_short": "Reality-warp objective: risky teleport, LoS distortion, and gravity pull.",
+      "rules_reference": ["interaction", "hazards", "pressure", "teleport"]
+    },
+
+    "balance_notes": [
+      "If teleport is too strong for your meta, reduce placement radius from 6\" to 4\".",
+      "Consider limiting Enter the Rift to 1 use per model per game."
+    ]
+  },
+
+  {
+    "terrain_type_id": "cultist_thyr_eaters_grinding_altar",
+    "schema_version": "1.0.0",
+    "name": "Grinding Altar",
+    "short_name": "Grinding Altar",
+    "kind": "objective",
+    "category": "cult_site",
+    "faction_affinity": "Thyr Eaters",
+    "rarity": "uncommon",
+    "tags": ["cultist", "thyr_eaters", "thyr", "altar", "consumption", "buff", "ritual"],
+
+    "art": {
+      "icon_key": "cult_grinding_altar",
+      "image_key": "terrain/cultist/thyr_eaters_grinding_altar.png",
+      "emoji": "⚙️",
+      "silhouette_key": "silhouettes/cult_grinding_altar.svg"
+    },
+
+    "footprint": {
+      "shape": "rect",
+      "size_in": { "w": 3.0, "d": 3.0 },
+      "base_height_in": 3.0,
+      "ground_contact": "base",
+      "rotation_snaps_deg": 90
+    },
+
+    "elevation": {
+      "is_climbable": false,
+      "stories": 0,
+      "story_height_in": 3.0,
+      "top_surface_walkable": false,
+      "jump_down_allowed": false
+    },
+
+    "placement": {
+      "suggested_quantity_per_table": "0-2",
+      "recommended_min_spacing_in": 6.0,
+      "allowed_zones": ["midfield", "center"],
+      "forbidden_zones": ["deployment"],
+      "must_be_on_flat_ground": true,
+      "cannot_overlap": true,
+      "notes": ["Pairs well with Thyr nodes or shard objectives."]
+    },
+
+    "visibility": {
+      "los_profile": "blocks",
+      "blocks_los": true,
+      "blocks_los_height_in": 3.0,
+      "windows": [],
+      "special": []
+    },
+
+    "cover": {
+      "default_cover": "heavy",
+      "edge_cover": "heavy",
+      "interior_cover": "none",
+      "cover_height_in": 3.0
+    },
+
+    "movement": {
+      "is_passable": false,
+      "is_breachable": true,
+      "breach_requires": "destroy",
+      "difficult_terrain": false,
+      "hazardous_terrain": false,
+      "slows_by": 0,
+      "cannot_end_move_on": true
+    },
+
+    "hazards": {
+      "hazard_id": "thyr_dust",
+      "is_hazard": true,
+      "trigger": "start_activation_within",
+      "range_in": 2.0,
+      "frequency": "once_per_activation",
+      "effect": "Models starting within 2\" must choose: (A) cough and lose 1\" movement this activation, OR (B) gain +1 Pressure (if using Pressure).",
+      "immunities": ["construct", "masked"],
+      "stacking": "does_not_stack"
+    },
+
+    "interaction": {
+      "interactable": true,
+      "interaction_window": "main_action_only",
+      "interactions": [
+        {
+          "interaction_id": "grind_thyr",
+          "name": "Grind Thyr",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 3,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 3,
+          "requirements": ["The interacting model is carrying Thyr OR a Thyr token is within 1\"."],
+          "on_success": [
+            "Consume 1 Thyr (remove carried token or remove token within 1\").",
+            "Choose one boon for this model until end of next Round: (A) +1 Success on melee attacks, (B) +1 Defense against ranged attacks, (C) ignore Difficult Terrain."
+          ],
+          "on_fail": [
+            "The grinder jams; the model suffers 1 hit OR becomes Staggered (cannot Sprint next activation)."
+          ],
+          "notes": ["This is a flexible buff station; keep uses limited."]
+        },
+        {
+          "interaction_id": "sabotage_gears",
+          "name": "Sabotage the Gears",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 1,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 4,
+          "on_success": [
+            "Disable Grind Thyr for the rest of the game.",
+            "Immediately remove Thyr Dust hazard."
+          ],
+          "on_fail": [
+            "The saboteur is sprayed with shards: suffers 1 hit and becomes Scorched/Marked (pick your token) until end of Round."
+          ],
+          "notes": ["Hard denial with risk."]
+        }
+      ]
+    },
+
+    "scenario_hooks": {
+      "objective_value": 2,
+      "scoring": [
+        {
+          "id": "score_altar_control",
+          "name": "Hold the Altar",
+          "when": "end_of_round",
+          "condition": "Your faction has at least 1 model within 1\" and no enemy models within 1\" of the altar.",
+          "score": 1,
+          "limit_per_game": 3
+        },
+        {
+          "id": "score_thyr_ground",
+          "name": "Powdered Offering",
+          "when": "each_time_success_grind",
+          "condition": "You successfully Grind Thyr.",
+          "score": 1,
+          "limit_per_game": 2
+        }
+      ],
+      "pressure": {
+        "adds_pressure": true,
+        "pressure_amount": 1,
+        "when": "each_time_thyr_is_consumed",
+        "notes": ["Thyr consumption accelerates doom if you’re using Pressure/Calling mechanics."]
+      }
+    },
+
+    "destructibility": {
+      "destructible": true,
+      "structure_rating": 5,
+      "armor": 0,
+      "damage_type_modifiers": [
+        { "damage_type": "blunt", "modifier": "+1", "notes": "Gears hate hammers." }
+      ],
+      "breakpoints": [
+        {
+          "at_damage": 5,
+          "effect": "Ruin: Remove the altar; place a 3\"x3\" Difficult Terrain rubble patch."
+        }
+      ],
+      "on_destroy_loot": []
+    },
+
+    "ui": {
+      "list_priority": 55,
+      "display_badges": ["Objective", "Hazard", "Heavy Cover"],
+      "tooltip_short": "Consumes Thyr for powerful temporary boons; can be sabotaged.",
+      "rules_reference": ["interaction", "hazards", "thyr", "pressure"]
+    },
+
+    "balance_notes": [
+      "If your Thyr economy is already strong, reduce uses to 2 per game.",
+      "Boons are broad by design; use scenario limits to control power."
+    ]
+  },
+
+  {
+    "terrain_type_id": "cultist_blighted_root_spore_groves",
+    "schema_version": "1.0.0",
+    "name": "Spore Groves",
+    "short_name": "Spore Groves",
+    "kind": "hazard",
+    "category": "area_terrain",
+    "faction_affinity": "Blighted Root",
+    "rarity": "common",
+    "tags": ["cultist", "blighted_root", "spores", "corruption", "difficult_terrain", "area", "plants"],
+
+    "art": {
+      "icon_key": "cult_spore_groves",
+      "image_key": "terrain/cultist/blighted_root_spore_groves.png",
+      "emoji": "🌿",
+      "silhouette_key": "silhouettes/cult_spore_groves.svg"
+    },
+
+    "footprint": {
+      "shape": "round",
+      "size_in": { "diameter": 3.0 },
+      "base_height_in": 1.0,
+      "ground_contact": "patch",
+      "rotation_snaps_deg": 45
+    },
+
+    "elevation": {
+      "is_climbable": false,
+      "stories": 0,
+      "story_height_in": 3.0,
+      "top_surface_walkable": true,
+      "jump_down_allowed": true
+    },
+
+    "placement": {
+      "suggested_quantity_per_table": "1-4",
+      "recommended_min_spacing_in": 3.0,
+      "allowed_zones": ["midfield", "center", "flanks"],
+      "forbidden_zones": [],
+      "must_be_on_flat_ground": false,
+      "cannot_overlap": true,
+      "notes": ["Scatter for lane shaping; do not cluster all into one quadrant unless scenario wants it."]
+    },
+
+    "visibility": {
+      "los_profile": "soft",
+      "blocks_los": false,
+      "blocks_los_height_in": 0.0,
+      "windows": [],
+      "special": [
+        {
+          "id": "spore_haze",
+          "name": "Spore Haze",
+          "effect": "Models inside the grove gain Light Cover, but suffer -1 Success on ranged attacks (spores foul sights).",
+          "applies_to": ["ranged_attacks", "cover"],
+          "range_in": 0.0
+        }
+      ]
+    },
+
+    "cover": {
+      "default_cover": "light",
+      "edge_cover": "light",
+      "interior_cover": "light",
+      "cover_height_in": 1.0
+    },
+
+    "movement": {
+      "is_passable": true,
+      "is_breachable": false,
+      "difficult_terrain": true,
+      "hazardous_terrain": true,
+      "slows_by": 1,
+      "cannot_end_move_on": false
+    },
+
+    "hazards": {
+      "hazard_id": "spore_infection",
+      "is_hazard": true,
+      "trigger": "end_activation_inside",
+      "range_in": 0.0,
+      "frequency": "once_per_activation",
+      "effect": "Living models ending activation inside must make a Quality test (TN 3). On fail: gain 1 Infection token. At 2 Infection tokens: suffer 1 hit and clear Infection.",
+      "immunities": ["undead", "construct", "sealed_suit"],
+      "stacking": "stack"
+    },
+
+    "interaction": {
+      "interactable": true,
+      "interaction_window": "main_action_only",
+      "interactions": [
+        {
+          "interaction_id": "burn_spores",
+          "name": "Burn the Groves",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": false,
+          "uses_per_game": 1,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 3,
+          "requirements": ["The interacting model has a Fire source (weapon, torch, rule, or carried item)."],
+          "on_success": [
+            "Remove this terrain piece from play.",
+            "All models that were inside immediately suffer 1 hit (fire flash) OR are Pushed 1\" out of the grove (choose your preferred fire behavior)."
+          ],
+          "on_fail": [
+            "Backlash spores: the interacting model gains 1 Infection token."
+          ],
+          "notes": ["This is soft terrain denial that costs an action."]
+        }
+      ]
+    },
+
+    "scenario_hooks": {
+      "objective_value": 0,
+      "scoring": [],
+      "pressure": {
+        "adds_pressure": false,
+        "pressure_amount": 0,
+        "when": "never"
+      }
+    },
+
+    "destructibility": {
+      "destructible": true,
+      "structure_rating": 3,
+      "armor": 0,
+      "damage_type_modifiers": [
+        { "damage_type": "fire", "modifier": "+2", "notes": "Burns readily." },
+        { "damage_type": "cold", "modifier": "-1", "notes": "Frost slows growth." }
+      ],
+      "breakpoints": [
+        {
+          "at_damage": 3,
+          "effect": "Scorched Patch: Convert to Difficult Terrain only (remove Infection hazard and Spore Haze)."
+        }
+      ],
+      "on_destroy_loot": []
+    },
+
+    "ui": {
+      "list_priority": 40,
+      "display_badges": ["Hazard", "Area Terrain", "Light Cover"],
+      "tooltip_short": "Difficult, hazardous groves that grant cover but infect the living.",
+      "rules_reference": ["hazards", "cover", "difficult_terrain"]
+    },
+
+    "balance_notes": [
+      "Great for shaping lanes without hard-blocking.",
+      "Infection is intentionally slow; tune TN or token threshold if too punishing."
+    ]
+  },
+
+  {
+    "terrain_type_id": "cultist_bone_singers_ossuary_organ",
+    "schema_version": "1.0.0",
+    "name": "Ossuary Organ",
+    "short_name": "Ossuary Organ",
+    "kind": "objective",
+    "category": "cult_site",
+    "faction_affinity": "Bone Singers",
+    "rarity": "rare",
+    "tags": ["cultist", "bone_singers", "organ", "ossuary", "necromancy", "music", "aura", "undead"],
+
+    "art": {
+      "icon_key": "cult_ossuary_organ",
+      "image_key": "terrain/cultist/bone_singers_ossuary_organ.png",
+      "emoji": "🎼",
+      "silhouette_key": "silhouettes/cult_ossuary_organ.svg"
+    },
+
+    "footprint": {
+      "shape": "rect",
+      "size_in": { "w": 5.0, "d": 3.0 },
+      "base_height_in": 5.0,
+      "ground_contact": "base",
+      "rotation_snaps_deg": 90
+    },
+
+    "elevation": {
+      "is_climbable": false,
+      "stories": 0,
+      "story_height_in": 3.0,
+      "top_surface_walkable": false,
+      "jump_down_allowed": false
+    },
+
+    "placement": {
+      "suggested_quantity_per_table": "0-1",
+      "recommended_min_spacing_in": 8.0,
+      "allowed_zones": ["center", "midfield"],
+      "forbidden_zones": ["deployment"],
+      "must_be_on_flat_ground": true,
+      "cannot_overlap": true,
+      "notes": [
+        "Works best when there are corpse/kill incentives in the scenario."
+      ]
+    },
+
+    "visibility": {
+      "los_profile": "blocks",
+      "blocks_los": true,
+      "blocks_los_height_in": 5.0,
+      "windows": [],
+      "special": []
+    },
+
+    "cover": {
+      "default_cover": "heavy",
+      "edge_cover": "heavy",
+      "interior_cover": "none",
+      "cover_height_in": 4.0
+    },
+
+    "movement": {
+      "is_passable": false,
+      "is_breachable": true,
+      "breach_requires": "destroy",
+      "difficult_terrain": false,
+      "hazardous_terrain": true,
+      "slows_by": 0,
+      "cannot_end_move_on": true
+    },
+
+    "hazards": {
+      "hazard_id": "death_chord",
+      "is_hazard": true,
+      "trigger": "start_activation_within",
+      "range_in": 3.0,
+      "frequency": "once_per_activation",
+      "effect": "Living models starting within 3\" must make a Quality test (TN 3). On fail: suffer -1 Defense until end of activation (the chord weakens will).",
+      "immunities": ["undead", "construct"],
+      "stacking": "does_not_stack"
+    },
+
+    "interaction": {
+      "interactable": true,
+      "interaction_window": "main_action_only",
+      "interactions": [
+        {
+          "interaction_id": "play_organ",
+          "name": "Play the Organ",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 2,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 3,
+          "on_success": [
+            "Choose one hymn until end of next Round: (A) Requiem: friendly undead within 6\" gain +1 Success on melee; (B) Dirge: enemy living within 6\" suffer -1 Success on Quality tests; (C) Rattlecall: spawn 1 Skeleton within 2\" of the organ under your control."
+          ],
+          "on_fail": [
+            "Wrong Note: immediately apply Death Chord hazard effect to the player’s own model (even if immune, ignore). Additionally add +1 Pressure."
+          ],
+          "notes": ["Pick A/B for buffs/debuffs, C for board presence."]
+        },
+        {
+          "interaction_id": "silence_organ",
+          "name": "Silence the Organ",
+          "action_type": "interact",
+          "action_cost": 1,
+          "range_in": 1.0,
+          "requires_los": false,
+          "requires_base_contact": true,
+          "uses_per_game": 1,
+          "test_required": true,
+          "test_type": "quality",
+          "difficulty": 4,
+          "on_success": [
+            "Remove Death Chord hazard and disable Play the Organ for the rest of the game."
+          ],
+          "on_fail": [
+            "The organ bites: suffer 1 hit and become Marked (or Irate) until end of Round."
+          ],
+          "notes": ["Denial option; hard TN to keep it meaningful."]
+        }
+      ]
+    },
+
+    "scenario_hooks": {
+      "objective_value": 3,
+      "scoring": [
+        {
+          "id": "score_organ_control",
+          "name": "Hold the Organ",
+          "when": "end_of_round",
+          "condition": "Your faction has at least 1 model within 1\" and no enemy models within 1\" of the organ.",
+          "score": 1,
+          "limit_per_game": 4
+        },
+        {
+          "id": "score_hymn",
+          "name": "Sing the Dead",
+          "when": "each_time_success_play",
+          "condition": "You successfully Play the Organ.",
+          "score": 1,
+          "limit_per_game": 2
+        }
+      ],
+      "pressure": {
+        "adds_pressure": true,
+        "pressure_amount": 1,
+        "when": "each_time_play_organ",
+        "notes": ["Bone music agitates the storm/doom clock."]
+      }
+    },
+
+    "destructibility": {
+      "destructible": true,
+      "structure_rating": 6,
+      "armor": 0,
+      "damage_type_modifiers": [
+        { "damage_type": "sonic", "modifier": "-1", "notes": "It resonates; hard to break with sound." }
+      ],
+      "breakpoints": [
+        {
+          "at_damage": 3,
+          "effect": "Broken Pipes: Play the Organ difficulty +1."
+        },
+        {
+          "at_damage": 6,
+          "effect": "Ruin: Remove the organ; place a 3\"x5\" rubble patch as Difficult Terrain."
+        }
+      ],
+      "on_destroy_loot": []
+    },
+
+    "ui": {
+      "list_priority": 78,
+      "display_badges": ["Objective", "Hazard", "Spawner", "Heavy Cover"],
+      "tooltip_short": "Necromantic organ that buffs undead, weakens living, or spawns skeletons.",
+      "rules_reference": ["interaction", "hazards", "pressure", "spawning"]
+    },
+
+    "balance_notes": [
+      "This is a high-impact centerpiece; keep to 0-1 per table.",
+      "If spawning is too much, remove option C or make it cost a corpse token."
+    ]
+  }
+]
