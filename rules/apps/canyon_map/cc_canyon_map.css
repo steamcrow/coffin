@@ -95,6 +95,27 @@
   cursor: grabbing;
 }
 
+/* Critical: Leaflet needs a real height */
+.cc-cm-mapwrap {
+  position: relative;
+  width: 100%;
+  height: 70vh;
+  min-height: 650px;
+}
+
+#cc-cm-map {
+  position: absolute;
+  inset: 0;
+}
+
+/* Make lens visible above the map */
+.cc-lens,
+.cc-scroll {
+  position: absolute;
+  z-index: 5;
+}
+
+
 /* Responsive lens */
 @media (max-width: 980px){
   .cc-lens{
