@@ -186,75 +186,91 @@
   // ---------------------------
   // UI
   // ---------------------------
-  function buildLayout(root, opts) {
-    root.innerHTML = "";
-    root.classList.add("cc-canyon-map");
+// ================================================================
+// COMPLETE buildLayout FUNCTION WITH FRAME INTEGRATED
+// File: cc_canyon_map_app.js
+// 
+// INSTRUCTIONS: Copy this ENTIRE function and replace your existing
+// buildLayout function in cc_canyon_map_app.js
+// ================================================================
 
-    const header = el("div", { class: "cc-cm-header" }, [
-      el("div", { class: "cc-cm-title" }, [opts.title]),
-      el("div", { class: "cc-cm-actions" }, [
-        el("button", { class: "cc-btn", type: "button", id: "cc-cm-reload" }, ["Reload"]),
-        el("button", { class: "cc-btn", type: "button", id: "cc-cm-fit" }, ["Fit"])
-      ])
-    ]);
+function buildLayout(root, opts) {
+  root.innerHTML = "";
+  root.classList.add("cc-canyon-map");
 
-    const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
+  const header = el("div", { class: "cc-cm-header" }, [
+    el("div", { class: "cc-cm-title" }, [opts.title]),
+    el("div", { class: "cc-cm-actions" }, [
+      el("button", { class: "cc-btn", type: "button", id: "cc-cm-reload" }, ["Reload"]),
+      el("button", { class: "cc-btn", type: "button", id: "cc-cm-fit" }, ["Fit"])
+    ])
+  ]);
 
-    const lens = el("div", { class: "cc-lens", id: "cc-lens" }, [
-      el("div", { class: "cc-lens-rim" }),
-      el("div", { class: "cc-lens-inner", id: "cc-lens-inner" }, [
-        el("div", { class: "cc-lens-map", id: "cc-lens-map" })
+  const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
+
+  const lens = el("div", { class: "cc-lens", id: "cc-lens" }, [
+    el("div", { class: "cc-lens-rim" }),
+    el("div", { class: "cc-lens-inner", id: "cc-lens-inner" }, [
+      el("div", { class: "cc-lens-map", id: "cc-lens-map" })
+    ]),
+    el("div", { class: "cc-lens-glare" })
+  ]);
+
+  // *** NEW: Frame overlay element ***
+  const frameOverlay = el("div", { class: "cc-frame-overlay", id: "cc-frame" });
+
+  const scroller = el("div", { class: "cc-scroll", id: "cc-scroll" }, [
+    el("div", { class: "cc-scroll-track" }),
+    el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob" })
+  ]);
+
+  const body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
+    el("div", { class: "cc-cm-mapwrap" }, [
+      mapEl,           // z-index: 1 - Base map
+      lens,            // z-index: 30 - Magnifying lens
+      frameOverlay,    // z-index: 35 - Brass frame (NEW!)
+      scroller         // z-index: 40 - BLAPPO knob
+    ]),
+    el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
+      el("div", { class: "cc-cm-drawer-head" }, [
+        el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Region"]),
+        el(
+          "button",
+          {
+            class: "cc-btn cc-btn-x",
+            type: "button",
+            onClick: () => root._ccApi && root._ccApi.drawerClose()
+          },
+          ["×"]
+        )
       ]),
-      el("div", { class: "cc-lens-glare" })
-    ]);
-
-    const scroller = el("div", { class: "cc-scroll", id: "cc-scroll" }, [
-      el("div", { class: "cc-scroll-track" }),
-      el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob" })
-    ]);
-
-    const body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
-      el("div", { class: "cc-cm-mapwrap" }, [mapEl, lens, scroller]),
-      el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
-        el("div", { class: "cc-cm-drawer-head" }, [
-          el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Region"]),
-          el(
-            "button",
-            {
-              class: "cc-btn cc-btn-x",
-              type: "button",
-              onClick: () => root._ccApi && root._ccApi.drawerClose()
-            },
-            ["×"]
-          )
-        ]),
-        el("div", { class: "cc-cm-drawer-content", id: "cc-cm-drawer-content" }, [
-          el("div", { class: "cc-muted" }, ["Click a region to view details."])
-        ])
+      el("div", { class: "cc-cm-drawer-content", id: "cc-cm-drawer-content" }, [
+        el("div", { class: "cc-muted" }, ["Click a region to view details."])
       ])
-    ]);
+    ])
+  ]);
 
-    root.appendChild(header);
-    root.appendChild(body);
+  root.appendChild(header);
+  root.appendChild(body);
 
-    // Lens dimensions
-    lens.style.setProperty("--lens-w", `${opts.lensWidthPx}px`);
-    lens.style.setProperty("--lens-h", `${opts.lensHeightPx}px`);
+  // Lens dimensions
+  lens.style.setProperty("--lens-w", `${opts.lensWidthPx}px`);
+  lens.style.setProperty("--lens-h", `${opts.lensHeightPx}px`);
 
-    return {
-      mapEl,
-      lensEl: lens,
-      lensMapEl: root.querySelector("#cc-lens-map"),
-      btnReload: root.querySelector("#cc-cm-reload"),
-      btnFit: root.querySelector("#cc-cm-fit"),
-      drawerEl: root.querySelector("#cc-cm-drawer"),
-      drawerTitleEl: root.querySelector("#cc-cm-drawer-title"),
-      drawerContentEl: root.querySelector("#cc-cm-drawer-content"),
-      scrollEl: scroller,
-      knobEl: root.querySelector("#cc-scroll-knob")
-    };
-  }
-
+  return {
+    mapEl,
+    lensEl: lens,
+    lensMapEl: root.querySelector("#cc-lens-map"),
+    frameEl: frameOverlay,  // NEW: return frame element reference
+    btnReload: root.querySelector("#cc-cm-reload"),
+    btnFit: root.querySelector("#cc-cm-fit"),
+    drawerEl: root.querySelector("#cc-cm-drawer"),
+    drawerTitleEl: root.querySelector("#cc-cm-drawer-title"),
+    drawerContentEl: root.querySelector("#cc-cm-drawer-content"),
+    scrollEl: scroller,
+    knobEl: root.querySelector("#cc-scroll-knob")
+  };
+}
   function openDrawer(ui) {
     ui.drawerEl.classList.add("open");
   }
