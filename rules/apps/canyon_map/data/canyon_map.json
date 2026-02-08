@@ -1,12 +1,13 @@
 {
   "schema_id": "cc_canyon_map",
   "schema_version": "1.0",
-  "last_updated": "2026-02-07",
+  "last_updated": "2026-02-08",
   "notes": [
-    "Coffin Canyon regional map",
-    "Base image is small (scroll layer)",
-    "Lens image is large (magnifier layer)",
-    "All coordinates are in image_px based on the art pixel size"
+    "Coffin Canyon regional canyon map",
+    "background.image_key is the SMALL image for the base view",
+    "lens.image_key is the LARGE image for the magnifier",
+    "coord_system image_px means polygon points are in pixels",
+    "regions can be empty until you rebuild them"
   ],
   "map": {
     "background": {
