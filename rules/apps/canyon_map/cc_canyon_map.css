@@ -114,6 +114,61 @@
   position: absolute;
   z-index: 5;
 }
+/* =========================================================
+   Canyon Map - Layering Fix
+   File: rules/apps/canyon_map/cc_canyon_map.css
+   Purpose: ensure lens is ABOVE base map, scroller above all
+   ========================================================= */
+
+.cc-cm-mapwrap {
+  position: relative !important;
+}
+
+/* Base map layer (small map) */
+#cc-cm-map.cc-cm-map,
+#cc-cm-map {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+/* Lens sits ABOVE the base map */
+#cc-lens.cc-lens,
+#cc-lens {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  z-index: 5 !important;
+
+  /* Important: don't let lens steal gestures meant for map/knob */
+  pointer-events: none !important;
+}
+
+/* The leaflet map inside the lens should fill the lens */
+#cc-lens-map {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Scroller is always on top */
+#cc-scroll.cc-scroll,
+#cc-scroll {
+  position: absolute !important;
+  right: 12px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 10 !important;
+
+  /* scroller needs pointer events */
+  pointer-events: auto !important;
+}
+
+/* Make sure Leaflet panes don't accidentally float above the lens due to internal z-indexes */
+#cc-cm-map .leaflet-pane,
+#cc-cm-map .leaflet-map-pane,
+#cc-cm-map .leaflet-control-container {
+  z-index: 1 !important;
+}
 
 
 /* Responsive lens */
