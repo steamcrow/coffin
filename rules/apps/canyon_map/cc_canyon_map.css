@@ -273,7 +273,82 @@
     height: 60px;
   }
 }
+/* ================================================================
+   QUICK FIXES - Add these to the END of your CSS file
+   These override the existing rules to fix the layout
+   ================================================================ */
 
+/* === FIX 1: Make base map MUCH LARGER and centered === */
+#cc-cm-map,
+#cc-cm-map.cc-cm-map {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  
+  /* MUCH BIGGER - should fill most of the view */
+  width: 1200px !important;
+  height: 800px !important;
+  
+  z-index: 1 !important;
+  
+  /* Slightly blurry is OK - it's the background */
+  image-rendering: auto;
+}
+
+/* === FIX 2: Move BLAPPO knob to frame's groove === */
+.cc-scroll {
+  position: absolute !important;
+  
+  /* Position on frame's right side */
+  right: 8% !important;  /* Adjust this to align with groove */
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  
+  height: 50% !important;
+  width: 40px !important;
+  z-index: 40 !important;
+  pointer-events: auto !important;
+}
+
+/* === FIX 3: Ensure frame is centered and proper size === */
+.cc-frame-overlay {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  width: 900px !important;  /* Fixed size for better control */
+  height: 600px !important;  /* Fixed size for better control */
+  transform: translate(-50%, -50%) !important;
+  z-index: 35 !important;
+  pointer-events: none !important;
+  
+  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/mag_frame.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* === FIX 4: Adjust lens to fit iron window === */
+.cc-lens {
+  --lens-w: 580px;  /* Slightly bigger */
+  --lens-h: 400px;  /* Slightly bigger */
+}
+
+/* ================================================================
+   FINE-TUNING GUIDE:
+   
+   If base map is too small/big:
+   - Adjust width/height in #cc-cm-map (try 1000px-1400px)
+   
+   If BLAPPO not in groove:
+   - Adjust "right: 8%" (try 6%-12%)
+   
+   If frame too small/big:
+   - Adjust width/height in .cc-frame-overlay
+   
+   If lens doesn't fit iron window:
+   - Adjust --lens-w and --lens-h
+   ================================================================ */
 /* === FINE-TUNING COMMENTS === */
 
 /*
