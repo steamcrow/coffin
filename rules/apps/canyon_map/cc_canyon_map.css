@@ -1,20 +1,26 @@
 /* ================================================================
-   Coffin Canyon Map - FIXED CSS
+   Coffin Canyon Map - CORRECT DESIGN (Final)
    File: cc_canyon_map.css
    
-   FIXES:
-   - Smaller frame (more base map visible)
-   - Larger base map container
-   - Working scroller
+   LAYERS (bottom to top):
+   1. Large blurry base map (fills container, centered)
+   2. Brass frame overlay (centered on top of map)
+   3. Magnified lens view (inside frame's iron window)
+   4. BLAPPO knob (on frame's right groove)
    ================================================================ */
 
-/* === LARGER Base Map Container === */
+/* === OUTER CONTAINER (masks/crops the edges) === */
 .cc-cm-mapwrap {
   position: relative !important;
   width: 100%;
-  height: 80vh !important;  /* BIGGER: was 70vh */
-  min-height: 750px !important;  /* BIGGER: was 650px */
-  overflow: hidden;
+  height: 85vh !important;
+  min-height: 700px !important;
+  max-height: 900px !important;
+  overflow: hidden !important;  /* Hides edges of large map */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
 }
 
 .cc-cm-body--lens .cc-cm-mapwrap {
@@ -22,31 +28,47 @@
   overflow: hidden;
 }
 
-/* === BASE MAP (Bottom Layer - z-index: 1) === */
+/* === LARGE BASE MAP (Background layer - fills container) === */
+/* This is the blurry/low-res version that fills the whole view */
 #cc-cm-map,
 #cc-cm-map.cc-cm-map {
   position: absolute !important;
-  inset: 0;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  
+  /* LARGE - fills most of the container */
+  width: 90% !important;
+  height: 90% !important;
+  min-width: 800px !important;
+  min-height: 600px !important;
+  
   z-index: 1 !important;
+  
+  /* Will appear slightly blurry due to scaling */
+  image-rendering: auto;
 }
 
-/* Prevent Leaflet internal layers from floating above lens */
+/* Prevent Leaflet layers from floating above */
 #cc-cm-map .leaflet-pane,
 #cc-cm-map .leaflet-map-pane,
 #cc-cm-map .leaflet-control-container {
   z-index: 1 !important;
 }
 
-/* === MAGNIFYING LENS (Middle Layer - z-index: 30) === */
+/* === MAGNIFYING LENS (Inside frame's iron window) === */
 
 /* Hidden SVG for lens warp effect */
-.cc-lens-svg { 
-  position: absolute; 
-  left: -9999px; 
-  top: -9999px; 
+.cc-lens-svg {
+  position: absolute !important;
+  left: -9999px !important;
+  top: -9999px !important;
+  width: 0 !important;
+  height: 0 !important;
+  pointer-events: none !important;
 }
 
-/* Main lens container - centered on screen */
+/* Lens container - centered, fits inside iron window */
 .cc-lens {
   --lens-w: 520px;
   --lens-h: 360px;
@@ -61,176 +83,217 @@
   pointer-events: none !important;
 }
 
-/* Lens frame/rim */
+/* NO visible rim - frame provides the border */
 .cc-lens-rim {
+  display: none !important;
+}
+
+/* Inner lens content with distortion filter */
+.cc-lens-inner {
   position: absolute;
   inset: 0;
   border-radius: 18px;
-  border: 2px solid rgba(255,255,255,0.32);
-  box-shadow:
-    0 10px 40px rgba(0,0,0,0.35),
-    inset 0 0 0 1px rgba(0,0,0,0.35);
-}
-
-/* Inner lens content with warp effect */
-.cc-lens-inner {
-  position: absolute;
-  inset: 8px;
-  border-radius: 14px;
   overflow: hidden;
-  filter: url(#ccLensWarp);
+  
+  /* Magnifying glass distortion effect */
+  filter: url(#ccLensWarp) !important;
+  -webkit-filter: url(#ccLensWarp);
 }
 
-/* The actual magnified map inside lens */
+/* The magnified (sharp/clear) map inside lens */
 .cc-lens-map {
   position: absolute;
   inset: 0;
   width: 100% !important;
   height: 100% !important;
+  
+  /* Sharp rendering for magnified view */
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
 }
 
-/* Subtle lens glare effect */
+/* Subtle lens glare */
 .cc-lens-glare {
   position: absolute;
   inset: 0;
   border-radius: 18px;
   background: radial-gradient(
     circle at 30% 25%, 
-    rgba(255,255,255,0.20), 
+    rgba(255,255,255,0.15), 
     rgba(255,255,255,0.00) 55%
   );
   mix-blend-mode: screen;
-  opacity: 0.55;
+  opacity: 0.4;
 }
 
-/* === BRASS FRAME OVERLAY (z-index: 35) === */
-/* SMALLER FRAME - 70% size instead of 100% */
+/* === BRASS FRAME OVERLAY (Centered, on top of base map) === */
 .cc-frame-overlay {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
-  width: 70% !important;  /* SMALLER: was 100% (full width) */
-  height: 70% !important;  /* SMALLER: was 100% (full height) */
+  width: 75% !important;
+  height: 75% !important;
+  max-width: 1100px !important;
+  max-height: 750px !important;
   transform: translate(-50%, -50%) !important;
   z-index: 35 !important;
   pointer-events: none !important;
   
-  /* Frame image from data folder */
+  /* Your mag_frame.png graphic */
   background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/mag_frame.png');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-/* === VERTICAL SCROLLER (Top Layer - z-index: 40) === */
+/* === BLAPPO KNOB (On frame's right vertical groove) === */
 
-/* FIXED: Scroller container - must be tall enough to drag */
+/* Container positioned on frame's right side */
 .cc-scroll {
   position: absolute !important;
-  right: 15px !important;  /* Moved slightly away from edge */
-  top: 15% !important;  /* Start lower */
-  bottom: 15% !important;  /* End higher */
-  width: 40px !important;  /* Slightly wider for easier clicking */
+  
+  /* Position relative to frame, not screen */
+  right: calc(12.5% + 20px) !important;  /* Adjust to align with groove */
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  
+  height: 45% !important;  /* Height of vertical groove */
+  width: 40px !important;
   z-index: 40 !important;
-  pointer-events: auto !important;  /* CRITICAL: Must accept clicks */
+  pointer-events: auto !important;
 }
 
-/* Dark track with brass tint */
+/* Track (the groove) - make this invisible or subtle */
 .cc-scroll-track {
   position: absolute;
   inset: 0;
   border-radius: 18px;
-  background: linear-gradient(
-    to bottom,
-    rgba(40, 35, 30, 0.6),
-    rgba(25, 20, 18, 0.7)
-  );
-  border: 1px solid rgba(139, 90, 43, 0.5);
-  box-shadow: 
-    inset 0 2px 8px rgba(0,0,0,0.5),
-    0 0 10px rgba(139, 90, 43, 0.3);
-  pointer-events: auto !important;  /* Track also needs clicks */
+  
+  /* Semi-transparent or invisible since frame has the groove */
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(139, 90, 43, 0.3);
+  box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+  pointer-events: auto !important;
 }
 
-/* FIXED: Brass/copper knob (BLAPPO) */
+/* BLAPPO knob - you'll replace this with your graphic */
 .cc-scroll-knob {
   position: absolute !important;
   left: 50% !important;
-  /* top is set by JavaScript - DO NOT override here */
-  width: 30px !important;  /* Slightly bigger for easier grabbing */
-  height: 60px !important;  /* Slightly bigger for easier grabbing */
+  /* top is set by JavaScript */
+  width: 36px !important;
+  height: 70px !important;
   border-radius: 15px;
   transform: translate(-50%, -50%) !important;
   cursor: grab !important;
   touch-action: none !important;
-  pointer-events: auto !important;  /* CRITICAL: Must be draggable */
+  pointer-events: auto !important;
   
-  /* Brass gradient with metallic look */
+  /* Temporary brass styling - will be replaced by your BLAPPO graphic */
   background: linear-gradient(
     135deg,
-    rgba(184, 134, 11, 0.9),
-    rgba(139, 90, 43, 0.95),
-    rgba(160, 110, 50, 0.9)
-  ) !important;
-  
-  /* Golden brass border */
-  border: 2px solid rgba(205, 155, 29, 0.7) !important;
-  
-  /* Metallic shadows and highlights */
+    rgba(184, 134, 11, 0.95),
+    rgba(139, 90, 43, 1),
+    rgba(160, 110, 50, 0.95)
+  );
+  border: 2px solid rgba(205, 155, 29, 0.8);
   box-shadow: 
-    0 4px 12px rgba(0,0,0,0.7),
-    inset 0 1px 2px rgba(255, 215, 100, 0.5),
-    inset 0 -1px 2px rgba(80, 50, 20, 0.7) !important;
+    0 6px 16px rgba(0,0,0,0.8),
+    inset 0 1px 3px rgba(255, 215, 100, 0.6),
+    inset 0 -1px 3px rgba(80, 50, 20, 0.8);
+  
+  /* When you have the BLAPPO graphic, use this instead:
+  background-image: url('data/blappo_knob.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: transparent;
+  border: none;
+  */
 }
 
-/* Hover effect - brighter brass */
 .cc-scroll-knob:hover {
   background: linear-gradient(
     135deg,
-    rgba(205, 155, 29, 0.95),
+    rgba(205, 155, 29, 1),
     rgba(160, 110, 50, 1),
-    rgba(184, 134, 11, 0.95)
-  ) !important;
-  border-color: rgba(218, 165, 32, 0.9) !important;
+    rgba(184, 134, 11, 1)
+  );
   box-shadow: 
-    0 6px 16px rgba(0,0,0,0.8),
-    0 0 20px rgba(218, 165, 32, 0.5),
-    inset 0 1px 3px rgba(255, 215, 100, 0.7) !important;
+    0 8px 20px rgba(0,0,0,0.9),
+    0 0 25px rgba(218, 165, 32, 0.6),
+    inset 0 1px 4px rgba(255, 215, 100, 0.8);
 }
 
-/* Active/dragging effect - pressed brass */
 .cc-scroll-knob:active {
   cursor: grabbing !important;
   background: linear-gradient(
     135deg,
     rgba(160, 110, 50, 1),
     rgba(139, 90, 43, 1),
-    rgba(120, 80, 40, 0.95)
-  ) !important;
+    rgba(120, 80, 40, 1)
+  );
   box-shadow: 
-    0 2px 8px rgba(0,0,0,0.9),
-    inset 0 2px 6px rgba(0,0,0,0.7) !important;
+    0 3px 10px rgba(0,0,0,0.95),
+    inset 0 3px 8px rgba(0,0,0,0.8);
 }
 
 /* === Responsive adjustments === */
 @media (max-width: 980px) {
+  .cc-cm-mapwrap {
+    height: 75vh !important;
+    min-height: 500px !important;
+  }
+  
+  #cc-cm-map {
+    width: 95% !important;
+    height: 95% !important;
+    min-width: 600px !important;
+    min-height: 450px !important;
+  }
+  
   .cc-lens {
-    width: min(86vw, 520px);
-    height: min(42vh, 360px);
+    width: min(70vw, 450px);
+    height: min(45vh, 320px);
   }
   
   .cc-frame-overlay {
-    width: 80% !important;
-    height: 80% !important;
+    width: 85% !important;
+    height: 85% !important;
   }
   
   .cc-scroll {
-    right: 10px;
+    right: calc(7.5% + 10px) !important;
     width: 36px;
+    height: 40%;
   }
   
   .cc-scroll-knob {
-    width: 26px;
-    height: 56px;
+    width: 32px;
+    height: 60px;
   }
 }
+
+/* === FINE-TUNING COMMENTS === */
+
+/*
+ADJUST THESE VALUES TO PERFECT THE ALIGNMENT:
+
+1. LENS SIZE (to fit iron window):
+   .cc-lens { width: 520px; height: 360px; }
+
+2. FRAME SIZE:
+   .cc-frame-overlay { width: 75%; height: 75%; }
+
+3. BLAPPO POSITION (to align with groove on frame):
+   .cc-scroll { right: calc(12.5% + 20px); }
+   
+   Adjust the "20px" until knob sits in the groove
+   Adjust "12.5%" if frame size changes
+
+4. BASE MAP SIZE (background):
+   #cc-cm-map { width: 90%; height: 90%; }
+   
+   Make larger if you want more map visible outside frame
+   Make smaller if edges should be cropped more
+*/
