@@ -1,31 +1,39 @@
 /* ================================================================
-   Coffin Canyon Map - Complete Fixed CSS
+   Coffin Canyon Map - COMPLETE CSS FILE
    File: cc_canyon_map.css
    
-   Fixed Issues:
-   - Consistent z-index layering (no conflicts)
-   - Working vertical scroller with proper positioning
-   - Frame-ready styling for steampunk brass/iron frame
+   Complete styling for canyon map with:
+   - Base map and container
+   - Magnifying lens with glass effect
+   - Brass frame overlay (mag_frame.png)
+   - Brass-styled vertical scroller
+   - Proper z-index layering
    ================================================================ */
 
-/* === Base Map Container === */
+/* === BASE MAP CONTAINER === */
+
+.cc-cm-body--lens .cc-cm-mapwrap {
+  position: relative;
+  overflow: hidden;
+}
+
 .cc-cm-mapwrap {
   position: relative !important;
   width: 100%;
   height: 70vh;
   min-height: 650px;
-  overflow: hidden;
 }
 
 /* === BASE MAP (Bottom Layer - z-index: 1) === */
-#cc-cm-map.cc-cm-map,
-#cc-cm-map {
+
+#cc-cm-map,
+#cc-cm-map.cc-cm-map {
   position: absolute !important;
   inset: 0;
   z-index: 1 !important;
 }
 
-/* Prevent Leaflet internal layers from floating above lens */
+/* Prevent Leaflet internal panes from floating above lens */
 #cc-cm-map .leaflet-pane,
 #cc-cm-map .leaflet-map-pane,
 #cc-cm-map .leaflet-control-container {
@@ -42,7 +50,8 @@
 }
 
 /* Main lens container - centered on screen */
-.cc-lens {
+.cc-lens,
+#cc-lens {
   --lens-w: 520px;
   --lens-h: 360px;
   position: absolute !important;
@@ -53,10 +62,10 @@
   transform: translate(-50%, -50%) !important;
   border-radius: 18px;
   z-index: 30 !important;
-  pointer-events: none !important; /* Let clicks pass through to regions */
+  pointer-events: none !important; /* Clicks pass through to regions */
 }
 
-/* Lens frame/rim - the decorative border */
+/* Lens rim/border */
 .cc-lens-rim {
   position: absolute;
   inset: 0;
@@ -67,7 +76,7 @@
     inset 0 0 0 1px rgba(0,0,0,0.35);
 }
 
-/* Inner lens content with warp effect */
+/* Inner lens content with optional warp effect */
 .cc-lens-inner {
   position: absolute;
   inset: 8px;
@@ -84,7 +93,7 @@
   height: 100% !important;
 }
 
-/* Subtle lens glare effect */
+/* Subtle glass glare effect */
 .cc-lens-glare {
   position: absolute;
   inset: 0;
@@ -98,64 +107,114 @@
   opacity: 0.55;
 }
 
+/* === BRASS FRAME OVERLAY (z-index: 35) === */
+
+.cc-frame-overlay,
+#cc-frame {
+  position: absolute !important;
+  inset: 0;
+  z-index: 35 !important;
+  pointer-events: none !important;
+  
+  /* Your brass frame image */
+  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/mag_frame.png');
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
 /* === VERTICAL SCROLLER (Top Layer - z-index: 40) === */
 
 /* Scroller container - vertical bar on right side */
-.cc-scroll {
+.cc-scroll,
+#cc-scroll {
   position: absolute !important;
   right: 10px !important;
   top: 64px !important;
   bottom: 14px !important;
   width: 36px !important;
   z-index: 40 !important;
-  pointer-events: auto !important; /* MUST accept clicks */
+  pointer-events: auto !important; /* Must accept clicks */
 }
 
-/* Scroller track background */
+/* Scroller track - dark with brass tint */
 .cc-scroll-track {
   position: absolute;
   inset: 0;
   border-radius: 18px;
-  background: rgba(0,0,0,0.25);
-  border: 1px solid rgba(255,255,255,0.12);
-  box-shadow: inset 0 2px 8px rgba(0,0,0,0.3);
+  background: linear-gradient(
+    to bottom,
+    rgba(40, 35, 30, 0.6),
+    rgba(25, 20, 18, 0.7)
+  );
+  border: 1px solid rgba(139, 90, 43, 0.5);
+  box-shadow: 
+    inset 0 2px 8px rgba(0,0,0,0.5),
+    0 0 10px rgba(139, 90, 43, 0.3);
 }
 
-/* The draggable knob (BLAPPO knob) */
+/* The draggable knob (BLAPPO) - brass/copper styling */
 .cc-scroll-knob {
   position: absolute !important;
   left: 50% !important;
-  top: 50% !important;
+  /* top is set dynamically by JavaScript */
   width: 26px !important;
   height: 56px !important;
   border-radius: 14px;
-  background: rgba(255,255,255,0.18);
-  border: 1px solid rgba(255,255,255,0.22);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
   transform: translate(-50%, -50%) !important;
   cursor: grab !important;
   touch-action: none !important;
-  pointer-events: auto !important; /* MUST be draggable */
+  pointer-events: auto !important; /* Must be draggable */
+  
+  /* Brass gradient with metallic appearance */
+  background: linear-gradient(
+    135deg,
+    rgba(184, 134, 11, 0.9),
+    rgba(139, 90, 43, 0.95),
+    rgba(160, 110, 50, 0.9)
+  );
+  
+  /* Golden brass border */
+  border: 2px solid rgba(205, 155, 29, 0.7);
+  
+  /* Metallic shadows and highlights */
+  box-shadow: 
+    0 4px 12px rgba(0,0,0,0.7),
+    inset 0 1px 2px rgba(255, 215, 100, 0.5),
+    inset 0 -1px 2px rgba(80, 50, 20, 0.7);
 }
 
+/* Hover state - brighter brass */
 .cc-scroll-knob:hover {
-  background: rgba(255,255,255,0.25);
-  border-color: rgba(255,255,255,0.35);
+  background: linear-gradient(
+    135deg,
+    rgba(205, 155, 29, 0.95),
+    rgba(160, 110, 50, 1),
+    rgba(184, 134, 11, 0.95)
+  );
+  border-color: rgba(218, 165, 32, 0.9);
+  box-shadow: 
+    0 6px 16px rgba(0,0,0,0.8),
+    0 0 20px rgba(218, 165, 32, 0.5),
+    inset 0 1px 3px rgba(255, 215, 100, 0.7);
 }
 
+/* Active/dragging state - pressed brass */
 .cc-scroll-knob:active {
   cursor: grabbing !important;
-  background: rgba(255,255,255,0.30);
-  box-shadow: 0 3px 8px rgba(0,0,0,0.5);
+  background: linear-gradient(
+    135deg,
+    rgba(160, 110, 50, 1),
+    rgba(139, 90, 43, 1),
+    rgba(120, 80, 40, 0.95)
+  );
+  box-shadow: 
+    0 2px 8px rgba(0,0,0,0.9),
+    inset 0 2px 6px rgba(0,0,0,0.7);
 }
 
-/* === Body modifier when lens is enabled === */
-.cc-cm-body--lens .cc-cm-mapwrap {
-  position: relative;
-  overflow: hidden;
-}
+/* === RESPONSIVE ADJUSTMENTS === */
 
-/* === Responsive adjustments === */
 @media (max-width: 980px) {
   .cc-lens {
     width: min(86vw, 520px);
@@ -173,20 +232,150 @@
   }
 }
 
-/* === Steampunk Frame Integration (Optional) === */
+/* === ADDITIONAL CANYON MAP STYLES === */
 
-/* When frame image is added as background */
-.cc-cm-mapwrap.has-frame {
-  background-image: url('your-frame-image.png');
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  padding: 5% 10%; /* Adjust to fit map within iron frame */
+/* Header */
+.cc-cm-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: rgba(0,0,0,0.3);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
 }
 
-/* Adjust lens to sit within iron inner frame */
-.cc-cm-mapwrap.has-frame .cc-lens {
-  /* Adjust these values to fit within your iron frame */
-  width: min(var(--lens-w), 45vw);
-  height: min(var(--lens-h), 32vh);
+.cc-cm-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cc-cm-actions {
+  display: flex;
+  gap: 8px;
+}
+
+/* Buttons */
+.cc-btn {
+  padding: 6px 14px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cc-btn:hover {
+  background: rgba(255,255,255,0.2);
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* Drawer (region details panel) */
+.cc-cm-drawer {
+  position: fixed;
+  right: -400px;
+  top: 0;
+  bottom: 0;
+  width: 380px;
+  background: rgba(20,20,20,0.95);
+  border-left: 2px solid rgba(255,255,255,0.2);
+  box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+  transition: right 0.3s ease;
+  z-index: 50;
+  overflow-y: auto;
+}
+
+.cc-cm-drawer.open {
+  right: 0;
+}
+
+.cc-cm-drawer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.3);
+}
+
+.cc-cm-drawer-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.cc-btn-x {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+}
+
+.cc-btn-x:hover {
+  color: #fff;
+  background: rgba(255,255,255,0.1);
+}
+
+.cc-cm-drawer-content {
+  padding: 16px;
+  color: #fff;
+}
+
+/* Content blocks */
+.cc-block {
+  margin-bottom: 20px;
+}
+
+.cc-h {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.cc-muted {
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.cc-ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.cc-ul li {
+  padding: 4px 0;
+  color: rgba(255,255,255,0.9);
+  font-size: 14px;
+}
+
+.cc-ul li::before {
+  content: "•";
+  color: rgba(255,255,255,0.5);
+  margin-right: 8px;
+}
+
+/* Body layout */
+.cc-cm-body {
+  position: relative;
+  height: calc(100vh - 60px);
+}
+
+/* Root container */
+.cc-canyon-map {
+  width: 100%;
+  height: 100vh;
+  background: #1a1a1a;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
