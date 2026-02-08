@@ -1,22 +1,29 @@
-/* File: apps/canyon_map/cc_canyon_map_app.js
-   Coffin Canyon — Canyon Map (read-only v1)
+/* File: rules/apps/canyon_map/cc_canyon_map_app.js
+   Coffin Canyon — Canyon Map (read-only v1) — ODOO CSP-SAFE
+   - Loads Leaflet (CSS+JS) via fetch + <style> + Blob <script> (no external <script src>)
+   - Loads app CSS via fetch + <style>
    - Leaflet static-image map (CRS.Simple)
    - Region polygons from JSON points
    - Click region => drawer info
    - Separate canyon_state.json recolors regions
+   - Auto-mounts when #cc-app-root[data-cc-app="canyon_map"]
 */
 
 (function () {
-  const DEFAULTS = {
-    // REQUIRED by you at runtime:
-    // mapUrl: "https://.../data/canyon_map.json",
-    // stateUrl: "https://.../data/canyon_state.json",
+  const APP_ID = "canyon_map";
 
+  // If you move folders later, only change these defaults.
+  const DEFAULTS = {
     title: "Coffin Canyon — Canyon Map",
+
+    // ✅ Your repo structure (matches your screenshot)
+    mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json",
+    stateUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_state.json",
+    appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map.css",
+
     leafletCssUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css",
     leafletJsUrl: "https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js",
 
-    // Visual mapping from “controller_faction_id” -> color
     factionColors: {
       monster_rangers: "#4caf50",
       monsterologists: "#ff9800",
@@ -25,7 +32,6 @@
       neutral: "#9e9e9e"
     },
 
-    // Status styles (optional)
     statusStyles: {
       controlled: { fillOpacity: 0.35 },
       contested: { fillOpacity: 0.18, dashArray: "6 6" },
@@ -45,12 +51,14 @@
     return n;
   }
 
-  function safeJsonParse(str, fallback = null) {
-    try {
-      return JSON.parse(str);
-    } catch (e) {
-      return fallback;
-    }
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
+
+  async function fetchText(url) {
+    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
+    if (!res.ok) throw new Error(`Fetch failed (${res.status}) for ${url}`);
+    return await res.text();
   }
 
   async function fetchJson(url) {
@@ -59,37 +67,69 @@
     return await res.json();
   }
 
-  async function loadCssOnce(href) {
-    if ([...document.querySelectorAll("link[rel='stylesheet']")].some((l) => l.href === href)) return;
-    const link = el("link", { rel: "stylesheet", href });
-    document.head.appendChild(link);
+  // ---------------------------
+  // Odoo CSP-safe loaders
+  // ---------------------------
+  const _loaded = {
+    cssKeys: new Set(),
+    jsKeys: new Set()
+  };
+
+  function _keyFor(urlOrKey) {
+    return String(urlOrKey || "").trim();
   }
 
-  async function loadScriptOnce(src) {
-    if ([...document.querySelectorAll("script")].some((s) => s.src === src)) return;
+  async function loadCssTextOnce(url, keyOverride = null) {
+    const key = _keyFor(keyOverride || url);
+    if (_loaded.cssKeys.has(key)) return;
+
+    const css = await fetchText(url);
+    const style = document.createElement("style");
+    style.setAttribute("data-cc-style", key);
+    style.textContent = css;
+    document.head.appendChild(style);
+
+    _loaded.cssKeys.add(key);
+  }
+
+  async function loadScriptViaBlobOnce(url, keyOverride = null) {
+    const key = _keyFor(keyOverride || url);
+    if (_loaded.jsKeys.has(key)) return;
+
+    const code = await fetchText(url);
+    const blob = new Blob([code], { type: "text/javascript" });
+    const blobUrl = URL.createObjectURL(blob);
+
     await new Promise((resolve, reject) => {
-      const s = el("script", { src });
-      s.onload = resolve;
-      s.onerror = () => reject(new Error("Script failed: " + src));
+      const s = document.createElement("script");
+      s.src = blobUrl;
+      s.onload = () => {
+        URL.revokeObjectURL(blobUrl);
+        resolve();
+      };
+      s.onerror = () => {
+        URL.revokeObjectURL(blobUrl);
+        reject(new Error("Script failed: " + url));
+      };
       document.head.appendChild(s);
     });
+
+    _loaded.jsKeys.add(key);
   }
 
   async function ensureLeaflet(opts) {
-    await loadCssOnce(opts.leafletCssUrl);
-    await loadScriptOnce(opts.leafletJsUrl);
+    // Leaflet CSS + JS via CSP-safe loading
+    await loadCssTextOnce(opts.leafletCssUrl, "leaflet_css");
+    await loadScriptViaBlobOnce(opts.leafletJsUrl, "leaflet_js");
     if (!window.L) throw new Error("Leaflet did not load (window.L missing).");
   }
 
-  function clamp(n, min, max) {
-    return Math.max(min, Math.min(max, n));
-  }
-
+  // ---------------------------
+  // Map logic
+  // ---------------------------
   function normalizePoints(points, coordSystem) {
-    // We store points as {x,y} in either:
-    // - "image_px": x,y in pixels of the original background image
-    // - "map_units": already in Leaflet CRS.Simple units (we’ll use pixels as units anyway)
-    // Leaflet CRS.Simple expects [y, x] (lat,lng) style.
+    // Stored points: {x,y} in pixels of background image (image_px)
+    // Leaflet CRS.Simple uses [y,x]
     if (!Array.isArray(points)) return [];
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
 
@@ -115,11 +155,15 @@
       el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
         el("div", { class: "cc-cm-drawer-head" }, [
           el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Region"]),
-          el("button", {
-            class: "cc-btn cc-btn-x",
-            type: "button",
-            onClick: () => root._ccApi && root._ccApi.drawerClose()
-          }, ["×"])
+          el(
+            "button",
+            {
+              class: "cc-btn cc-btn-x",
+              type: "button",
+              onClick: () => root._ccApi && root._ccApi.drawerClose()
+            },
+            ["×"]
+          )
         ]),
         el("div", { class: "cc-cm-drawer-content", id: "cc-cm-drawer-content" }, [
           el("div", { class: "cc-muted" }, ["Click a region to view details."])
@@ -148,9 +192,9 @@
     const weather = stateForRegion?.weather_tag || null;
 
     const lines = [];
+
     if (region?.description) lines.push(el("div", { class: "cc-block" }, [region.description]));
 
-    // State block
     lines.push(
       el("div", { class: "cc-block" }, [
         el("div", { class: "cc-h" }, ["State"]),
@@ -160,7 +204,6 @@
       ])
     );
 
-    // Resources
     const resources = region?.resources || [];
     lines.push(
       el("div", { class: "cc-block" }, [
@@ -171,7 +214,6 @@
       ])
     );
 
-    // Encounters
     const encounters = region?.encounters || [];
     lines.push(
       el("div", { class: "cc-block" }, [
@@ -214,7 +256,7 @@
   function highlightLayer(layer) {
     try {
       layer.setStyle({ weight: 3, color: "rgba(255,255,255,0.85)" });
-      if (!layer._bringToFrontLocked) layer.bringToFront();
+      layer.bringToFront();
     } catch (e) {}
   }
 
@@ -243,6 +285,8 @@
     if (!opts.mapUrl) throw new Error("mount() requires opts.mapUrl");
     if (!opts.stateUrl) throw new Error("mount() requires opts.stateUrl");
 
+    // ✅ Load app CSS and Leaflet in CSP-safe way
+    if (opts.appCssUrl) await loadCssTextOnce(opts.appCssUrl, "cc_canyon_map_css");
     await ensureLeaflet(opts);
 
     const ui = buildLayout(root, opts);
@@ -251,7 +295,6 @@
     let stateDoc = null;
 
     let leafletMap = null;
-    let imageOverlay = null;
     const regionLayersById = {};
     const regionsById = {};
     let selectedRegionId = null;
@@ -273,7 +316,6 @@
         if (!latlngs.length) return;
 
         const baseStyle = buildRegionStyle(opts, r.region_id, stateByRegion);
-
         const poly = window.L.polygon(latlngs, baseStyle);
 
         poly.on("mouseover", () => highlightLayer(poly));
@@ -303,7 +345,6 @@
         } catch (e) {}
       });
 
-      // If drawer open, refresh it too
       if (selectedRegionId && regionsById[selectedRegionId]) {
         renderDrawer(ui, regionsById[selectedRegionId], stateByRegion[selectedRegionId] || null);
       }
@@ -329,9 +370,10 @@
       const stateErr = validateStateDoc(stateDoc);
       if (stateErr) throw new Error("Bad canyon_state.json: " + stateErr);
 
-      // Create Leaflet map
       if (leafletMap) {
-        try { leafletMap.remove(); } catch (e) {}
+        try {
+          leafletMap.remove();
+        } catch (e) {}
         leafletMap = null;
       }
 
@@ -348,7 +390,7 @@
         attributionControl: false
       });
 
-      imageOverlay = window.L.imageOverlay(mapDoc.map.background.image_key, bounds, {
+      window.L.imageOverlay(mapDoc.map.background.image_key, bounds, {
         opacity: clamp(mapDoc.map.background.opacity ?? 1.0, 0, 1)
       }).addTo(leafletMap);
 
@@ -367,12 +409,10 @@
 
     await loadAll();
 
-    // Exposed API for other apps (scenario builder, etc.)
     const api = {
       reload: async () => await loadAll(),
       fit: () => fitToImage(),
 
-      // Replace ONLY state (fast)
       setState: (newStateDoc) => {
         const err = validateStateDoc(newStateDoc);
         if (err) throw new Error("Bad state doc: " + err);
@@ -380,7 +420,6 @@
         applyStateStyles();
       },
 
-      // Convenience: set a single region state
       setRegionState: (regionId, patch) => {
         if (!stateDoc || !stateDoc.state_by_region) return;
         stateDoc.state_by_region[regionId] = { ...(stateDoc.state_by_region[regionId] || {}), ...(patch || {}) };
@@ -396,7 +435,6 @@
         openDrawer(ui);
       },
 
-      // Read access
       getMapDoc: () => mapDoc,
       getStateDoc: () => stateDoc
     };
@@ -405,6 +443,30 @@
     return api;
   }
 
-  // Global export (so other apps can embed it)
+  // Auto-mount when embedded the same way as your other apps
+  async function autoMountIfPresent() {
+    const root = document.getElementById("cc-app-root");
+    if (!root) return;
+    const appId = root.getAttribute("data-cc-app");
+    if (appId !== APP_ID) return;
+
+    try {
+      console.log("🗺️ CC Canyon Map: mounting…");
+      await mount(root, {});
+      console.log("✅ CC Canyon Map: mounted");
+    } catch (e) {
+      console.error("❌ CC Canyon Map mount failed:", e);
+      root.innerHTML =
+        "<div style='padding:12px;opacity:.85'>❌ Canyon Map failed to load. Check console.</div>";
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", autoMountIfPresent);
+  } else {
+    autoMountIfPresent();
+  }
+
+  // Global export (for other apps to embed programmatically)
   window.CC_CanyonMap = { mount };
 })();
