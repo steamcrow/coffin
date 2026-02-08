@@ -708,10 +708,20 @@
       console.log("🗺️ CC Canyon Map: mounting…");
       await mount(root, {});
       console.log("✅ CC Canyon Map: mounted");
-    } catch (e) {
-      console.error("❌ CC Canyon Map mount failed:", e);
-      root.innerHTML = "<div style='padding:12px;opacity:.85'>❌ Canyon Map failed to load. Check console.</div>";
-    }
+  } catch (e) {
+  console.error("❌ CC Canyon Map mount failed:", e);
+
+  const msg = (e && (e.message || String(e))) || "Unknown error";
+  root.innerHTML =
+    "<div style='padding:12px;opacity:.9;line-height:1.35'>" +
+      "<div style='font-weight:700;margin-bottom:6px'>❌ Canyon Map failed to load</div>" +
+      "<div style='font-family:monospace;font-size:12px;white-space:pre-wrap;background:rgba(0,0,0,.25);padding:10px;border-radius:8px'>" +
+        msg +
+      "</div>" +
+      "<div style='margin-top:10px;opacity:.8'>Tip: this message is your iPad console now.</div>" +
+    "</div>";
+}
+
   }
 
   if (document.readyState === "loading") {
