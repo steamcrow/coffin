@@ -2,6 +2,12 @@
    Coffin Canyon — Canyon Map (read-only v1)
    ODOO CSP-SAFE + FIXED MAGNIFIER LENS + VERTICAL SCROLLER KNOB
 
+   Fixes in this version:
+   ✅ CRS.Simple scrolling math corrected (Leaflet "north/south" inverted)
+   ✅ Exports CC_APP.init for your core loader (fixes "CC_APP.init missing")
+   ✅ Lens uses map.map.lens.image_key when present (your hi-res)
+   ✅ On-screen error console for iPad
+
    Mounts into: #cc-app-root[data-cc-app="canyon_map"]
 */
 
@@ -17,11 +23,11 @@
     stateUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_state.json",
 
-    // App CSS (optional – we still inject safety CSS below)
+    // App CSS (your app's styles)
     appCssUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map.css",
 
-    // Leaflet (hosted in your repo to avoid CDN/CSP issues)
+    // Leaflet (hosted in your repo)
     leafletCssUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css",
     leafletJsUrl:
@@ -61,10 +67,13 @@
     Object.entries(attrs).forEach(([k, v]) => {
       if (k === "class") n.className = v;
       else if (k === "style") n.setAttribute("style", v);
-      else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
+      else if (k.startsWith("on") && typeof v === "function")
+        n.addEventListener(k.slice(2), v);
       else n.setAttribute(k, v);
     });
-    children.forEach((c) => n.appendChild(typeof c === "string" ? document.createTextNode(c) : c));
+    children.forEach((c) =>
+      n.appendChild(typeof c === "string" ? document.createTextNode(c) : c)
+    );
     return n;
   }
 
@@ -87,13 +96,17 @@
   }
 
   async function fetchText(url) {
-    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
+    const res = await fetch(
+      url + (url.includes("?") ? "&" : "?") + "t=" + Date.now()
+    );
     if (!res.ok) throw new Error(`Fetch failed (${res.status}) for ${url}`);
     return await res.text();
   }
 
   async function fetchJson(url) {
-    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
+    const res = await fetch(
+      url + (url.includes("?") ? "&" : "?") + "t=" + Date.now()
+    );
     if (!res.ok) throw new Error(`Fetch failed (${res.status}) for ${url}`);
     return await res.json();
   }
@@ -146,78 +159,6 @@
   }
 
   // ---------------------------
-  // CRITICAL CSS safety override
-  // (z-index/pointer-events/touch-action so lens+scroller always sit above Leaflet)
-  // ---------------------------
-  function injectCssSafetyOnce() {
-    const key = "cc_canyon_map_safety_css";
-    if (document.querySelector(`style[data-cc-style="${key}"]`)) return;
-
-    const style = document.createElement("style");
-    style.setAttribute("data-cc-style", key);
-
-    style.textContent = `
-/* --- CC Canyon Map SAFETY CSS (wins even if external CSS is missing) --- */
-.cc-canyon-map { color: #eee; }
-.cc-cm-header { display:flex; align-items:center; justify-content:center; gap:14px; margin: 10px 0 12px; }
-.cc-cm-title { font-size: 18px; opacity: .95; }
-.cc-cm-actions { display:flex; gap: 10px; }
-.cc-btn { font: inherit; padding: 6px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,.22); background: rgba(255,255,255,.10); color:#fff; cursor:pointer; }
-.cc-btn:hover { background: rgba(255,255,255,.16); }
-.cc-btn-x { width:34px; height:34px; padding:0; display:flex; align-items:center; justify-content:center; }
-
-.cc-cm-body { display:flex; gap:12px; align-items:stretch; justify-content:center; }
-.cc-cm-mapwrap { position:relative; flex: 0 1 920px; width: min(92vw, 920px); height: min(72vh, 860px); min-height: 560px; overflow:hidden; border-radius: 14px; }
-.cc-cm-map { position:absolute; inset:0; z-index: 1; }
-
-/* Leaflet panes can overlap overlays if we don't control stacking */
-#cc-cm-map .leaflet-pane,
-#cc-cm-map .leaflet-control-container { z-index: 2 !important; }
-
-/* Lens ABOVE Leaflet */
-.cc-lens { position:absolute; z-index: 50 !important; left: 50%; top: 50%; transform: translate(-50%, -50%);
-  width: var(--lens-w, 520px); height: var(--lens-h, 360px);
-  pointer-events: none; /* lens should not block interaction */
-}
-.cc-lens-inner { width:100%; height:100%; overflow:hidden; border-radius: 16px; filter: url(#ccLensWarp); }
-.cc-lens-map { width:100%; height:100%; }
-.cc-lens-rim { position:absolute; inset:-8px; border-radius: 20px; border: 2px solid rgba(255,255,255,.25); box-shadow: 0 10px 40px rgba(0,0,0,.45); }
-.cc-lens-glare { position:absolute; inset:0; border-radius: 16px; background: radial-gradient(ellipse at 30% 20%, rgba(255,255,255,.16), rgba(255,255,255,0) 55%); }
-
-/* Scroller ABOVE EVERYTHING and must receive touches */
-.cc-scroll { position:absolute; z-index: 60 !important; right: 10px; top: 10px; bottom: 10px; width: 44px; pointer-events: auto !important; }
-.cc-scroll-track { position:absolute; left:50%; top:0; bottom:0; width:8px; transform: translateX(-50%); border-radius: 999px; background: rgba(255,255,255,.12); }
-.cc-scroll-knob { position:absolute; left:50%; width: 34px; height: 34px; border-radius: 999px;
-  transform: translate(-50%, -50%);
-  background: rgba(255,255,255,.34);
-  border: 1px solid rgba(255,255,255,.28);
-  backdrop-filter: blur(6px);
-  cursor: grab;
-  touch-action: none; /* IMPORTANT for iOS dragging */
-}
-
-/* Drawer */
-.cc-cm-drawer { width: 320px; max-width: 42vw; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.12);
-  border-radius: 14px; padding: 10px; }
-.cc-cm-drawer.open { outline: 1px solid rgba(255,255,255,.18); }
-.cc-cm-drawer-head { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-bottom: 8px; }
-.cc-cm-drawer-title { font-weight: 700; opacity:.95; }
-.cc-muted { opacity: .75; }
-.cc-block { margin: 10px 0; }
-.cc-h { font-weight: 700; margin-bottom: 4px; }
-.cc-ul { margin: 6px 0 0 18px; padding: 0; }
-
-/* Mobile layout */
-@media (max-width: 920px){
-  .cc-cm-body { flex-direction: column; align-items:center; }
-  .cc-cm-drawer { width: min(92vw, 920px); max-width: none; }
-  .cc-cm-mapwrap { width: min(92vw, 920px); height: min(70vh, 760px); }
-}
-`;
-    document.head.appendChild(style);
-  }
-
-  // ---------------------------
   // Data validation + geometry
   // ---------------------------
   function normalizePoints(points, coordSystem) {
@@ -225,20 +166,23 @@
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
     return points
       .filter((p) => p && typeof p.x === "number" && typeof p.y === "number")
-      .map((p) => [p.y, p.x]);
+      .map((p) => [p.y, p.x]); // CRS.Simple uses [y,x]
   }
 
   function validateMapDoc(doc) {
-    if (!doc || doc.schema_id !== "cc_canyon_map") return "schema_id must be cc_canyon_map";
+    if (!doc || doc.schema_id !== "cc_canyon_map")
+      return "schema_id must be cc_canyon_map";
     if (!doc.map || !doc.map.background || !doc.map.background.image_key)
       return "map.background.image_key missing";
-    if (!doc.map.background.image_pixel_size) return "map.background.image_pixel_size missing";
+    if (!doc.map.background.image_pixel_size)
+      return "map.background.image_pixel_size missing";
     if (!Array.isArray(doc.regions)) return "regions must be array";
     return null;
   }
 
   function validateStateDoc(doc) {
-    if (!doc || doc.schema_id !== "cc_canyon_state") return "schema_id must be cc_canyon_state";
+    if (!doc || doc.schema_id !== "cc_canyon_state")
+      return "schema_id must be cc_canyon_state";
     if (!doc.state_by_region || typeof doc.state_by_region !== "object")
       return "state_by_region missing";
     return null;
@@ -251,7 +195,6 @@
     root.innerHTML = "";
     root.classList.add("cc-canyon-map");
 
-    // Inline SVG filter (lens distortion)
     const svgFilter = el(
       "svg",
       {
@@ -288,7 +231,9 @@
     const header = el("div", { class: "cc-cm-header" }, [
       el("div", { class: "cc-cm-title" }, [opts.title]),
       el("div", { class: "cc-cm-actions" }, [
-        el("button", { class: "cc-btn", type: "button", id: "cc-cm-reload" }, ["Reload"]),
+        el("button", { class: "cc-btn", type: "button", id: "cc-cm-reload" }, [
+          "Reload"
+        ]),
         el("button", { class: "cc-btn", type: "button", id: "cc-cm-fit" }, ["Fit"])
       ])
     ]);
@@ -312,7 +257,9 @@
       el("div", { class: "cc-cm-mapwrap" }, [mapEl, lens, scroller]),
       el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
         el("div", { class: "cc-cm-drawer-head" }, [
-          el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Region"]),
+          el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, [
+            "Region"
+          ]),
           el(
             "button",
             {
@@ -350,6 +297,14 @@
     };
   }
 
+  function openDrawer(ui) {
+    ui.drawerEl.classList.add("open");
+  }
+
+  function closeDrawer(ui) {
+    ui.drawerEl.classList.remove("open");
+  }
+
   function renderDrawer(ui, region, stateForRegion) {
     ui.drawerTitleEl.textContent = region?.name || "Region";
 
@@ -357,10 +312,11 @@
     const status = stateForRegion?.status || "neutral";
     const weather = stateForRegion?.weather_tag || null;
 
-    const lines = [];
-    if (region?.description) lines.push(el("div", { class: "cc-block" }, [region.description]));
+    const blocks = [];
 
-    lines.push(
+    if (region?.description) blocks.push(el("div", { class: "cc-block" }, [region.description]));
+
+    blocks.push(
       el("div", { class: "cc-block" }, [
         el("div", { class: "cc-h" }, ["State"]),
         el("div", {}, [`Controller: ${controller}`]),
@@ -372,7 +328,7 @@
     );
 
     const resources = region?.resources || [];
-    lines.push(
+    blocks.push(
       el("div", { class: "cc-block" }, [
         el("div", { class: "cc-h" }, ["Resources"]),
         resources.length
@@ -382,7 +338,7 @@
     );
 
     const encounters = region?.encounters || [];
-    lines.push(
+    blocks.push(
       el("div", { class: "cc-block" }, [
         el("div", { class: "cc-h" }, ["Encounters"]),
         encounters.length
@@ -392,15 +348,7 @@
     );
 
     ui.drawerContentEl.innerHTML = "";
-    lines.forEach((n) => ui.drawerContentEl.appendChild(n));
-  }
-
-  function openDrawer(ui) {
-    ui.drawerEl.classList.add("open");
-  }
-
-  function closeDrawer(ui) {
-    ui.drawerEl.classList.remove("open");
+    blocks.forEach((n) => ui.drawerContentEl.appendChild(n));
   }
 
   function buildRegionStyle(opts, regionId, stateByRegion) {
@@ -420,39 +368,23 @@
     };
   }
 
-  function highlightLayer(layer) {
-    try {
-      layer.setStyle({ weight: 3, color: "rgba(255,255,255,0.85)" });
-      layer.bringToFront();
-    } catch (e) {}
-  }
-
-  function unhighlightLayer(layer, baseStyle) {
-    try {
-      layer.setStyle(baseStyle);
-    } catch (e) {}
-  }
-
   // ---------------------------
   // Main mount
   // ---------------------------
   async function mount(root, userOpts) {
     const opts = { ...DEFAULTS, ...(userOpts || {}) };
 
-    // Back-compat
     let maxDrift = typeof opts.maxHorizontalDriftPx === "number" ? opts.maxHorizontalDriftPx : 0;
     if (opts.lockHorizontalPan === true) maxDrift = 0;
 
-    // Load external CSS (optional), then inject safety CSS that forces proper stacking.
     if (opts.appCssUrl) await loadCssTextOnce(opts.appCssUrl, "cc_canyon_map_css");
-    injectCssSafetyOnce();
-
     await ensureLeaflet(opts);
 
     const ui = buildLayout(root, opts);
 
     let mapDoc = null;
     let stateDoc = null;
+
     let mainMap = null;
     let lensMap = null;
 
@@ -471,9 +403,7 @@
 
     function rebuildRegions() {
       Object.values(regionLayersById).forEach((layer) => {
-        try {
-          mainMap.removeLayer(layer);
-        } catch (e) {}
+        try { mainMap.removeLayer(layer); } catch (e) {}
       });
       for (const k of Object.keys(regionLayersById)) delete regionLayersById[k];
 
@@ -489,10 +419,12 @@
         const baseStyle = buildRegionStyle(opts, r.region_id, stateByRegion);
         const poly = window.L.polygon(latlngs, baseStyle);
 
-        poly.on("mouseover", () => highlightLayer(poly));
+        poly.on("mouseover", () => {
+          try { poly.setStyle({ weight: 3, color: "rgba(255,255,255,0.85)" }); poly.bringToFront(); } catch (e) {}
+        });
         poly.on("mouseout", () => {
           const freshStyle = buildRegionStyle(opts, r.region_id, stateByRegion);
-          unhighlightLayer(poly, freshStyle);
+          try { poly.setStyle(freshStyle); } catch (e) {}
         });
 
         poly.on("click", () => {
@@ -510,9 +442,7 @@
       const stateByRegion = stateDoc?.state_by_region || {};
       Object.entries(regionLayersById).forEach(([regionId, layer]) => {
         const style = buildRegionStyle(opts, regionId, stateByRegion);
-        try {
-          layer.setStyle(style);
-        } catch (e) {}
+        try { layer.setStyle(style); } catch (e) {}
       });
 
       if (selectedRegionId && regionsById[selectedRegionId]) {
@@ -543,18 +473,26 @@
       lensMap.setView(c, z + opts.lensZoomOffset, { animate: false });
     });
 
+    // ✅ CRS.Simple friendly scroll math
+    function getViewportHeightInMapUnits() {
+      if (!mainMap) return 0;
+      const view = mainMap.getBounds();
+      // CRS.Simple often has north < south, so abs() is required
+      return Math.abs(view.getSouth() - view.getNorth());
+    }
+
     function getScrollRange() {
       if (!mainMap || !mapDoc) return { yMin: 0, yMax: 0 };
-      const px = mapDoc.map.background.image_pixel_size;
-      const bounds = [[0, 0], [px.h, px.w]];
-      const b = window.L.latLngBounds(bounds);
 
-      const view = mainMap.getBounds();
-      const viewH = view.getNorth() - view.getSouth();
+      const px = mapDoc.map.background.image_pixel_size;
+      const mapTop = 0;
+      const mapBottom = px.h;
+
+      const viewH = getViewportHeightInMapUnits();
       const half = viewH / 2;
 
-      const yMin = b.getSouth() + half;
-      const yMax = b.getNorth() - half;
+      const yMin = mapTop + half;
+      const yMax = mapBottom - half;
 
       return { yMin, yMax };
     }
@@ -563,19 +501,22 @@
       if (!mainMap || !mapDoc) return 0;
       const { yMin, yMax } = getScrollRange();
       const c = mainMap.getCenter();
-      const t = (c.lat - yMin) / Math.max(1e-6, yMax - yMin);
+
+      const denom = Math.max(1e-6, (yMax - yMin));
+      const t = (c.lat - yMin) / denom; // lat increases downward in our [y,x] system
       return clamp(t, 0, 1);
     }
 
     function updateKnobFromMap() {
       const t = centerToKnobT();
       ui.knobEl.style.top = `${t * 100}%`;
-      ui.knobEl.style.transform = `translate(-50%, -50%)`;
+      ui.knobEl.style.transform = "translate(-50%, -50%)";
     }
 
     function panMapToT(t) {
       if (!mainMap || !mapDoc) return;
       const { yMin, yMax } = getScrollRange();
+
       const px = mapDoc.map.background.image_pixel_size;
       const cx = px.w / 2;
 
@@ -597,7 +538,7 @@
 
       function setFromClientY(clientY) {
         const rect = ui.scrollEl.getBoundingClientRect();
-        const t = (clientY - rect.top) / rect.height;
+        const t = (clientY - rect.top) / Math.max(1, rect.height);
         panMapToT(t);
       }
 
@@ -653,9 +594,6 @@
       ui.drawerContentEl.innerHTML = "";
       ui.drawerContentEl.appendChild(el("div", { class: "cc-muted" }, ["Loading…"]));
 
-      console.log("🗺️ canyon_map.json:", opts.mapUrl);
-      console.log("🗺️ canyon_state.json:", opts.stateUrl);
-
       mapDoc = await fetchJson(opts.mapUrl);
       stateDoc = await fetchJson(opts.stateUrl);
 
@@ -665,22 +603,14 @@
       const stateErr = validateStateDoc(stateDoc);
       if (stateErr) throw new Error("Bad canyon_state.json: " + stateErr);
 
-      if (mainMap) {
-        try {
-          mainMap.remove();
-        } catch (e) {}
-        mainMap = null;
-      }
-      if (lensMap) {
-        try {
-          lensMap.remove();
-        } catch (e) {}
-        lensMap = null;
-      }
+      // Destroy old maps
+      if (mainMap) { try { mainMap.remove(); } catch (e) {} mainMap = null; }
+      if (lensMap) { try { lensMap.remove(); } catch (e) {} lensMap = null; }
 
       const px = mapDoc.map.background.image_pixel_size;
       const bounds = [[0, 0], [px.h, px.w]];
 
+      // Main map
       mainMap = window.L.map(ui.mapEl, {
         crs: window.L.CRS.Simple,
         minZoom: -3,
@@ -704,46 +634,20 @@
       mainMap.setMaxBounds(bounds);
       fitToImage();
 
-      // IMPORTANT: Safari/iOS needs invalidateSize after layout.
-      mainMap.whenReady(() => {
-        try {
-          mainMap.invalidateSize(true);
-        } catch (e) {}
-        try {
-          updateKnobFromMap();
-        } catch (e) {}
-        try {
-          syncLens();
-        } catch (e) {}
-      });
-      setTimeout(() => {
-        try {
-          mainMap.invalidateSize(true);
-        } catch (e) {}
-        try {
-          if (lensMap) lensMap.invalidateSize(true);
-        } catch (e) {}
-        try {
-          updateKnobFromMap();
-        } catch (e) {}
-        try {
-          syncLens();
-        } catch (e) {}
-      }, 60);
-
+      // Horizontal clamp
       if (maxDrift >= 0) {
         mainMap.on("move", clampHorizontal);
         clampHorizontal();
       }
 
+      // Regions
       rebuildRegions();
       closeDrawer(ui);
       ui.drawerTitleEl.textContent = "Region";
       ui.drawerContentEl.innerHTML = "";
-      ui.drawerContentEl.appendChild(
-        el("div", { class: "cc-muted" }, ["Click a region to view details."])
-      );
+      ui.drawerContentEl.appendChild(el("div", { class: "cc-muted" }, ["Click a region to view details."]));
 
+      // Lens
       if (opts.lensEnabled) {
         ui.lensEl.style.display = "block";
 
@@ -763,17 +667,12 @@
           tap: false
         });
 
-        const lensImageKey = mapDoc.map?.lens?.image_key || mapDoc.map.background.image_key;
+        const lensImageKey =
+          (mapDoc.map && mapDoc.map.lens && mapDoc.map.lens.image_key) ||
+          mapDoc.map.background.image_key;
 
         window.L.imageOverlay(lensImageKey, bounds, { opacity: 1.0 }).addTo(lensMap);
         lensMap.setMaxBounds(bounds);
-
-        lensMap.whenReady(() => {
-          try {
-            lensMap.invalidateSize(true);
-          } catch (e) {}
-          syncLens();
-        });
 
         syncLens();
         mainMap.on("move", syncLens);
@@ -782,6 +681,7 @@
         ui.lensEl.style.display = "none";
       }
 
+      // Scroller
       bindScrollerOnce();
       updateKnobFromMap();
 
@@ -793,6 +693,9 @@
         updateKnobFromMap();
         syncLens();
       });
+
+      // Optional: keep styles in sync if you later change stateDoc
+      applyStateStyles();
     }
 
     ui.btnReload.addEventListener("click", () => loadAll().catch((e) => console.error(e)));
@@ -803,14 +706,12 @@
     const api = {
       reload: async () => await loadAll(),
       fit: () => fitToImage(),
-
       setState: (newStateDoc) => {
         const err = validateStateDoc(newStateDoc);
         if (err) throw new Error("Bad state doc: " + err);
         stateDoc = newStateDoc;
         applyStateStyles();
       },
-
       setRegionState: (regionId, patch) => {
         if (!stateDoc || !stateDoc.state_by_region) return;
         stateDoc.state_by_region[regionId] = {
@@ -819,7 +720,6 @@
         };
         applyStateStyles();
       },
-
       drawerClose: () => closeDrawer(ui),
       drawerOpenRegion: (regionId) => {
         const r = regionsById[regionId];
@@ -828,13 +728,11 @@
         renderDrawer(ui, r, stateDoc?.state_by_region?.[regionId] || null);
         openDrawer(ui);
       },
-
       setLensEnabled: (on) => {
         opts.lensEnabled = !!on;
         ui.lensEl.style.display = opts.lensEnabled ? "block" : "none";
         if (opts.lensEnabled && mainMap && lensMap) syncLens();
       },
-
       getMapDoc: () => mapDoc,
       getStateDoc: () => stateDoc
     };
@@ -860,11 +758,11 @@
       const msg = (e && (e.message || String(e))) || "Unknown error";
       root.innerHTML =
         "<div style='padding:12px;opacity:.92;line-height:1.35'>" +
-        "<div style='font-weight:700;margin-bottom:6px'>❌ Canyon Map failed to load</div>" +
-        "<div style='font-family:monospace;font-size:12px;white-space:pre-wrap;background:rgba(0,0,0,.25);padding:10px;border-radius:8px'>" +
-        msg +
-        "</div>" +
-        "<div style='margin-top:10px;opacity:.8'>Tip: this message is your iPad console now.</div>" +
+          "<div style='font-weight:700;margin-bottom:6px'>❌ Canyon Map failed to load</div>" +
+          "<div style='font-family:monospace;font-size:12px;white-space:pre-wrap;background:rgba(0,0,0,.25);padding:10px;border-radius:8px'>" +
+            msg +
+          "</div>" +
+          "<div style='margin-top:10px;opacity:.8'>Tip: this message is your iPad console now.</div>" +
         "</div>";
     }
   }
@@ -875,5 +773,12 @@
     autoMountIfPresent();
   }
 
+  // ✅ Exports:
   window.CC_CanyonMap = { mount };
+
+  // ✅ This fixes your loader: it wants CC_APP.init
+  window.CC_APP = window.CC_APP || {};
+  window.CC_APP.init = async function initCanyonMap(rootEl, opts) {
+    return await mount(rootEl || document.getElementById("cc-app-root"), opts || {});
+  };
 })();
