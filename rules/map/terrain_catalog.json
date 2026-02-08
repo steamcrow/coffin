@@ -1077,3 +1077,788 @@
     }
   }
 }
+,
+{
+  "terrain_type_id": "building_hotel",
+  "name": "Hotel",
+  "kind": "building",
+  "tags": ["town", "large", "multi_level", "interior", "walkable", "lodging"],
+  "emoji": "🏨",
+  "footprint": { "shape": "rect", "size_in": { "w": 10, "d": 7 }, "base_height_in": 4.0 },
+  "visibility": {
+    "los_profile": "blocks",
+    "blocks_los_when": "Blocks LoS through exterior walls; windows/doors grant partial LoS",
+    "window_los": "partial"
+  },
+  "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+  "elevation": {
+    "system": "levels",
+    "level_unit_in": 2.0,
+    "max_level": 3,
+    "levels": [
+      { "level": 0, "name": "Lobby / Ground Floor", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Long hallways, rooms, and furniture cover."] },
+      { "level": 1, "name": "Second Floor", "surface_kind": "balcony", "walkable": true, "railings_cover": "light", "notes": ["Balcony corridors overlooking lobby (optional)."] },
+      { "level": 2, "name": "Third Floor", "surface_kind": "balcony", "walkable": true, "railings_cover": "light", "notes": ["Upper rooms / sniper lanes."] },
+      { "level": 3, "name": "Roof", "surface_kind": "roof", "walkable": true, "edge_fall_risk": false, "notes": ["Rooftop objective perch."] }
+    ]
+  },
+  "movement": {
+    "is_passable": false,
+    "is_walkable_on_top": true,
+    "difficult_terrain_on": ["interior"],
+    "climb": {
+      "allowed": true,
+      "mode": "stairs",
+      "min_level_access": 1,
+      "max_level_access": 3,
+      "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" }
+    }
+  },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      {
+        "interaction_id": "search_hotel",
+        "name": "Search Rooms",
+        "action_type": "interact",
+        "action_cost": 1,
+        "test_required": true,
+        "test_type": "quality",
+        "difficulty": 4,
+        "on_success": "Gain 1 Loot token and 1 Supply token (or scenario-defined intel).",
+        "on_fail": "Ruckus: nearest enemy gains +1 die vs this model’s next defense."
+      }
+    ]
+  },
+  "slots": [
+    { "slot_id": "hotel_roof_objective", "slot_kind": "objective", "label": "Roof Objective", "level": 3, "position_hint": "center_roof", "notes": ["Artifact/flag placement, dramatic high ground."] },
+    { "slot_id": "hotel_front_desk_loot", "slot_kind": "loot", "label": "Front Desk Safe", "level": 0, "position_hint": "front_center", "notes": ["Optional cashbox, keys, manifest."] },
+    { "slot_id": "hotel_story_anchor", "slot_kind": "story_anchor", "label": "Guest Ledger", "level": 0, "position_hint": "rear_office", "notes": ["Scenario hooks: names, clues, blackmail, cult check-ins."] }
+  ],
+  "destructibility": {
+    "destructible": true,
+    "structure_rating": 10,
+    "breakpoints": [
+      { "at_damage": 5, "effect": "Windows blown out: interior cover reduced (Light -> None) on level 0 only." },
+      { "at_damage": 8, "effect": "Partial collapse: roof becomes Difficult; anyone on roof takes 1 die damage." },
+      { "at_damage": 10, "effect": "Total collapse: replace with large rubble; models inside take 2 dice damage." }
+    ],
+    "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace footprint with large rubble field."] }
+  }
+},
+{
+  "terrain_type_id": "building_hotel_ruined",
+  "name": "Ruined Hotel",
+  "kind": "building",
+  "tags": ["ruin", "town", "large", "interior", "difficult", "multi_level"],
+  "emoji": "🏚️",
+  "footprint": { "shape": "rect", "size_in": { "w": 10, "d": 7 }, "base_height_in": 2.5 },
+  "visibility": {
+    "los_profile": "partial",
+    "blocks_los_when": "Broken walls and collapsed floors partially block LoS",
+    "window_los": "partial"
+  },
+  "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+  "elevation": {
+    "system": "levels",
+    "level_unit_in": 2.0,
+    "max_level": 1,
+    "levels": [
+      { "level": 0, "name": "Rubble Interior", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": false, "notes": ["Open breaches; lots of debris cover."] },
+      { "level": 1, "name": "Broken Upper Floor", "surface_kind": "platform", "walkable": true, "railings_cover": "none", "edge_fall_risk": true, "notes": ["Precarious perch (counts as dangerous high ground)."] }
+    ]
+  },
+  "movement": {
+    "is_passable": true,
+    "is_walkable_on_top": true,
+    "difficult_terrain_on": ["interior"],
+    "climb": {
+      "allowed": true,
+      "mode": "scramble",
+      "min_level_access": 1,
+      "max_level_access": 1,
+      "test": { "required": true, "type": "quality", "difficulty": 3, "on_fail": "Slip: remain at level 0; take 1 die damage" }
+    }
+  },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      {
+        "interaction_id": "search_ruined_hotel",
+        "name": "Search the Ruin",
+        "action_type": "interact",
+        "action_cost": 1,
+        "test_required": true,
+        "test_type": "quality",
+        "difficulty": 3,
+        "on_success": "Gain 1 Loot token (or 1 Intel token if scenario uses intel).",
+        "on_fail": "Unstable floor: acting model becomes Pressured until end of round."
+      }
+    ]
+  },
+  "slots": [
+    { "slot_id": "ruined_hotel_high_objective", "slot_kind": "objective", "label": "Upper Perch Objective", "level": 1, "position_hint": "stable_corner", "notes": ["Place artifact/control marker here."] },
+    { "slot_id": "ruined_hotel_loot", "slot_kind": "loot", "label": "Collapsed Safe", "level": 0, "position_hint": "rear_office", "notes": ["Optional loot anchor."] }
+  ],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "building_stilt_building",
+  "name": "Stilt Building",
+  "kind": "building",
+  "tags": ["wood", "elevated", "platform", "underpass", "walkable", "town"],
+  "emoji": "🏗️",
+  "footprint": { "shape": "rect", "size_in": { "w": 6, "d": 5 }, "base_height_in": 3.0 },
+  "visibility": {
+    "los_profile": "partial",
+    "blocks_los_when": "Upper walls block LoS; the open space beneath does not",
+    "window_los": "partial"
+  },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "light" },
+  "elevation": {
+    "system": "levels",
+    "level_unit_in": 2.0,
+    "max_level": 1,
+    "levels": [
+      { "level": 0, "name": "Understructure", "surface_kind": "ground", "walkable": true, "blocks_los_from_outside": false, "notes": ["Open shade beneath the building; stilts provide partial blockers."] },
+      { "level": 1, "name": "Raised Floor", "surface_kind": "platform", "walkable": true, "railings_cover": "light", "notes": ["Primary interior floor."] }
+    ]
+  },
+  "movement": {
+    "is_passable": true,
+    "is_walkable_on_top": true,
+    "difficult_terrain_on": ["interior"],
+    "climb": {
+      "allowed": true,
+      "mode": "stairs",
+      "min_level_access": 1,
+      "max_level_access": 1,
+      "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" }
+    }
+  },
+  "interaction": { "interactable": false, "interactions": [] },
+  "slots": [
+    { "slot_id": "stilt_under_story", "slot_kind": "story_anchor", "label": "Understructure Hide", "level": 0, "position_hint": "center", "notes": ["Ambush, stash, or crawlspace objective."] },
+    { "slot_id": "stilt_top_objective", "slot_kind": "objective", "label": "Raised Floor Objective", "level": 1, "position_hint": "center", "notes": ["Great for control objectives."] }
+  ],
+  "destructibility": {
+    "destructible": true,
+    "structure_rating": 5,
+    "breakpoints": [
+      { "at_damage": 3, "effect": "Shattered supports: climb tests now require Quality 2." },
+      { "at_damage": 5, "effect": "Collapse: raised floor becomes impassable rubble; models on level 1 take 2 dice damage." }
+    ],
+    "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_medium", "notes": ["Replace with medium rubble/planks."] }
+  }
+},
+
+{
+  "terrain_type_id": "objective_supply_crate",
+  "name": "Supply Crate",
+  "kind": "objective",
+  "tags": ["objective", "loot", "crate", "supplies"],
+  "emoji": "📦",
+  "footprint": { "shape": "rect", "size_in": { "w": 2, "d": 2 }, "base_height_in": 1.0 },
+  "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+  "cover": { "default_cover": "none", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": {
+    "is_passable": true,
+    "is_walkable_on_top": false,
+    "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } }
+  },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      {
+        "interaction_id": "open_supply_crate",
+        "name": "Open Supply Crate",
+        "action_type": "interact",
+        "action_cost": 1,
+        "test_required": true,
+        "test_type": "quality",
+        "difficulty": 2,
+        "on_success": "Gain 1 Supply token (or scenario-defined resource).",
+        "on_fail": "Busted latch: gain nothing."
+      }
+    ]
+  },
+  "slots": [
+    { "slot_id": "supply_crate_loot", "slot_kind": "loot", "label": "Crate Loot Anchor", "level": 0, "position_hint": "top", "notes": ["Recommended: place 3–4 crates for a crate cluster."] }
+  ],
+  "destructibility": {
+    "destructible": true,
+    "structure_rating": 1,
+    "breakpoints": [{ "at_damage": 1, "effect": "Smashed: crate is destroyed." }],
+    "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with splinters/debris."] }
+  }
+},
+{
+  "terrain_type_id": "scatter_scattered_crates",
+  "name": "Scattered Crates",
+  "kind": "scatter",
+  "tags": ["crate", "scatter", "cover_light", "scenario_scaling"],
+  "emoji": "📦",
+  "footprint": { "shape": "rect", "size_in": { "w": 4, "d": 3 }, "base_height_in": 1.0 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS near ground due to multiple crate edges", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": {
+    "is_passable": true,
+    "is_walkable_on_top": false,
+    "difficult_terrain_on": ["ground"],
+    "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } }
+  },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      {
+        "interaction_id": "scavenge_scattered_crates",
+        "name": "Scavenge Crates",
+        "action_type": "interact",
+        "action_cost": 1,
+        "test_required": true,
+        "test_type": "quality",
+        "difficulty": 3,
+        "on_success": "Gain 1 Supply token. If scenario uses scaling, place (danger+1) instances across the map.",
+        "on_fail": "Empty packing straw: gain nothing."
+      }
+    ]
+  },
+  "slots": [{ "slot_id": "scattered_crates_story", "slot_kind": "story_anchor", "label": "Crate Scatter Anchor", "level": 0, "position_hint": "center", "notes": ["Recommended count: (danger + 1)."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "objective_cargo_crate",
+  "name": "Cargo Crate",
+  "kind": "objective",
+  "tags": ["objective", "cargo", "heavy", "loot"],
+  "emoji": "📦",
+  "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 2 }, "base_height_in": 1.5 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS across the crate bulk", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      {
+        "interaction_id": "secure_cargo",
+        "name": "Secure Cargo",
+        "action_type": "interact",
+        "action_cost": 1,
+        "test_required": true,
+        "test_type": "quality",
+        "difficulty": 3,
+        "on_success": "Mark this cargo as Secured (scenario-defined) or gain 1 Loot token.",
+        "on_fail": "Damaged seal: cargo counts as Contested until end of round."
+      }
+    ]
+  },
+  "slots": [{ "slot_id": "cargo_objective", "slot_kind": "objective", "label": "Cargo Objective Anchor", "level": 0, "position_hint": "top_center", "notes": ["Use for escort/steal/secure scenarios."] }],
+  "destructibility": { "destructible": true, "structure_rating": 2, "breakpoints": [{ "at_damage": 2, "effect": "Crate burst: drop contents; replace with rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with splinters/debris."] } }
+},
+{
+  "terrain_type_id": "building_locked_supply_depot",
+  "name": "Locked Supply Depot",
+  "kind": "building",
+  "tags": ["depot", "locked", "objective", "supplies", "small"],
+  "emoji": "🔒",
+  "footprint": { "shape": "rect", "size_in": { "w": 4, "d": 3 }, "base_height_in": 2.2 },
+  "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls; loading door grants partial LoS if opened", "window_los": "partial" },
+  "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "heavy" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": false, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      {
+        "interaction_id": "breach_depot",
+        "name": "Breach the Depot",
+        "action_type": "interact",
+        "action_cost": 1,
+        "test_required": true,
+        "test_type": "quality",
+        "difficulty": 5,
+        "on_success": "Depot opened: gain 2 Supply tokens (or scenario-defined stock). After success, this depot becomes passable for the rest of the game.",
+        "on_fail": "Lock bites back: take 1 die damage (cut/shock) and become Pressured."
+      }
+    ]
+  },
+  "slots": [
+    { "slot_id": "depot_objective", "slot_kind": "objective", "label": "Depot Objective Anchor", "level": 0, "position_hint": "front_door", "notes": ["Primary breach/secure objective."] },
+    { "slot_id": "depot_loot", "slot_kind": "loot", "label": "Depot Stock", "level": 0, "position_hint": "interior_center", "notes": ["Becomes available after breach."] }
+  ],
+  "destructibility": { "destructible": true, "structure_rating": 7, "breakpoints": [{ "at_damage": 4, "effect": "Breached wall: edges cover drops from Heavy to Light." }, { "at_damage": 7, "effect": "Caved in: replace with medium rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_medium", "notes": ["Replace with medium rubble."] } }
+},
+{
+  "terrain_type_id": "objective_stored_supplies",
+  "name": "Stored Supplies",
+  "kind": "objective",
+  "tags": ["objective", "supplies", "pile", "resource"],
+  "emoji": "🧺",
+  "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 3 }, "base_height_in": 1.2 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS close to ground due to stacked goods", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "collect_supplies", "name": "Collect Supplies", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Gain 1 Supply token and 1 Food token (if scenario uses Food).", "on_fail": "Spoiled/empty: gain nothing." }] },
+  "slots": [{ "slot_id": "stored_supplies_loot", "slot_kind": "loot", "label": "Supply Anchor", "level": 0, "position_hint": "top_center", "notes": ["Use for supply pickup objectives."] }],
+  "destructibility": { "destructible": true, "structure_rating": 2, "breakpoints": [{ "at_damage": 2, "effect": "Scattered: becomes rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with scattered debris."] } }
+},
+
+{
+  "terrain_type_id": "feature_steam_engine",
+  "name": "Steam Engine",
+  "kind": "feature",
+  "tags": ["industrial", "machinery", "rail", "cover", "story_anchor"],
+  "emoji": "🚂",
+  "footprint": { "shape": "rect", "size_in": { "w": 10, "d": 3 }, "base_height_in": 3.0 },
+  "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through engine bulk", "window_los": "none" },
+  "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": {
+    "is_passable": false,
+    "is_walkable_on_top": true,
+    "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 3, "on_fail": "Slip: remain at base; take 1 die damage" } }
+  },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      { "interaction_id": "stoke_engine", "name": "Stoke / Operate Engine", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Advance train/rail scenario state (move, whistle, power).", "on_fail": "Scalding steam: take 1 die damage and become Pressured." }
+    ]
+  },
+  "slots": [
+    { "slot_id": "engine_story", "slot_kind": "story_anchor", "label": "Engine Story Anchor", "level": 0, "position_hint": "cab", "notes": ["Train arrival/departure, shipment, whistle triggers."] },
+    { "slot_id": "engine_objective", "slot_kind": "objective", "label": "Cab Control", "level": 0, "position_hint": "cab", "notes": ["Use as control point in rail scenarios."] }
+  ],
+  "destructibility": { "destructible": true, "structure_rating": 9, "breakpoints": [{ "at_damage": 5, "effect": "Damaged boiler: stoke/operate difficulty +1." }, { "at_damage": 9, "effect": "Wrecked: replace with large rubble/wreck." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large wreckage."] } }
+},
+{
+  "terrain_type_id": "feature_wrecked_steam_engine_large",
+  "name": "Wrecked Steam Engine",
+  "kind": "feature",
+  "tags": ["wreck", "industrial", "rail", "cover_heavy", "large"],
+  "emoji": "🧯",
+  "footprint": { "shape": "rect", "size_in": { "w": 10, "d": 4 }, "base_height_in": 2.5 },
+  "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through twisted metal mass", "window_los": "none" },
+  "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "light" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "No movement; action spent" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "salvage_engine", "name": "Salvage Components", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Mechanical Parts token.", "on_fail": "Jagged scrap: take 1 die damage." }] },
+  "slots": [{ "slot_id": "wrecked_engine_loot", "slot_kind": "loot", "label": "Salvage Anchor", "level": 0, "position_hint": "boiler_area", "notes": ["Attach salvage/loot here."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "feature_derailed_steam_engine",
+  "name": "Derailed Steam Engine",
+  "kind": "feature",
+  "tags": ["rail", "industrial", "wreck", "objective", "story_anchor"],
+  "emoji": "🚧",
+  "footprint": { "shape": "rect", "size_in": { "w": 10, "d": 4 }, "base_height_in": 3.0 },
+  "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through engine bulk", "window_los": "none" },
+  "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "light" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 3, "on_fail": "Slip: take 1 die damage; remain at base" } } },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      { "interaction_id": "secure_derail_site", "name": "Secure Derail Site", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Mark as Secured (scenario-defined) and gain 1 Loot token.", "on_fail": "Steam burst: take 1 die damage and become Pressured." }
+    ]
+  },
+  "slots": [
+    { "slot_id": "derailed_engine_objective", "slot_kind": "objective", "label": "Derail Objective Anchor", "level": 0, "position_hint": "cab", "notes": ["Core objective point in rail scenarios."] },
+    { "slot_id": "derailed_engine_story", "slot_kind": "story_anchor", "label": "Derail Story Anchor", "level": 0, "position_hint": "front", "notes": ["Hooks: fire, survivors, cargo spill, monster scent trail."] }
+  ],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "feature_derailed_cars",
+  "name": "Derailed Cars",
+  "kind": "feature",
+  "tags": ["rail", "wreck", "cover", "linear", "cargo"],
+  "emoji": "🛤️",
+  "footprint": { "shape": "rect", "size_in": { "w": 12, "d": 4 }, "base_height_in": 2.0 },
+  "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through piled cars; gaps allow partial LoS", "window_los": "partial" },
+  "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "light" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "No movement; action spent" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "pry_cargo", "name": "Pry Open Cargo", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Loot token OR 1 Supply token (scenario choice).", "on_fail": "Rusty bite: take 1 die damage." }] },
+  "slots": [{ "slot_id": "derailed_cars_loot", "slot_kind": "loot", "label": "Car Cargo Anchor", "level": 0, "position_hint": "mid_car", "notes": ["Attach cargo objectives here."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "area_junkyard_salvage",
+  "name": "Junkyard (Salvage Components)",
+  "kind": "area",
+  "tags": ["junkyard", "industrial", "salvage", "difficult", "cover_light"],
+  "emoji": "🪛",
+  "footprint": { "shape": "poly", "size_in": { "w": 10, "d": 8 }, "base_height_in": 1.0 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Provides partial LoS through heaps and frames", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "light" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "salvage_junkyard", "name": "Salvage the Yard", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Mechanical Parts token. If scenario uses escalation, you may also gain 1 Supply token.", "on_fail": "Tetanus scrap: take 1 die damage." }] },
+  "slots": [{ "slot_id": "junkyard_loot", "slot_kind": "loot", "label": "Salvage Anchor", "level": 0, "position_hint": "center", "notes": ["Primary salvage pickup point."] }],
+  "destructibility": { "destructible": false }
+},
+
+{
+  "terrain_type_id": "objective_dynamo_monsterology",
+  "name": "Dynamo (Monsterology)",
+  "kind": "objective",
+  "tags": ["monsterology", "tech", "power", "interaction", "objective"],
+  "emoji": "⚡",
+  "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 3 }, "base_height_in": 2.0 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS due to coils and frame", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      { "interaction_id": "charge_dynamo", "name": "Charge / Disrupt Dynamo", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Flip Dynamo state (Powered/Disabled). Scenario-defined effects: shields, doors, ray-boost, alarms.", "on_fail": "Arc shock: take 1 die damage and become Pressured." }
+    ]
+  },
+  "slots": [
+    { "slot_id": "dynamo_objective", "slot_kind": "objective", "label": "Dynamo Objective Anchor", "level": 0, "position_hint": "front", "notes": ["Use as a control objective for Monsterology tech."] },
+    { "slot_id": "dynamo_hazard", "slot_kind": "hazard_anchor", "label": "Arc Hazard Anchor", "level": 0, "position_hint": "base_edge", "notes": ["Hooks for shock fields / misfire events."] }
+  ],
+  "destructibility": { "destructible": true, "structure_rating": 4, "breakpoints": [{ "at_damage": 2, "effect": "Sparking: all interact tests here are +1 difficulty." }, { "at_damage": 4, "effect": "Destroyed: Dynamo is Disabled permanently." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_medium", "notes": ["Replace with scrap and broken coils."] } }
+},
+{
+  "terrain_type_id": "objective_thyr_extraction_rig",
+  "name": "Thyr Extraction Rig",
+  "kind": "objective",
+  "tags": ["thyr", "industrial", "resource", "objective", "machinery"],
+  "emoji": "🧪",
+  "footprint": { "shape": "rect", "size_in": { "w": 6, "d": 4 }, "base_height_in": 3.0 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Frames and pipes partially block LoS", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+  "elevation": { "system": "levels", "level_unit_in": 2.0, "max_level": 1, "levels": [{ "level": 0, "name": "Rig Base", "surface_kind": "ground", "walkable": true, "blocks_los_from_outside": false, "notes": ["Pumps and hoses."] }, { "level": 1, "name": "Rig Platform", "surface_kind": "platform", "walkable": true, "railings_cover": "light", "notes": ["Operator platform."] }] },
+  "movement": { "is_passable": true, "is_walkable_on_top": true, "difficult_terrain_on": ["ground"], "climb": { "allowed": true, "mode": "ladder", "min_level_access": 1, "max_level_access": 1, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "extract_thyr", "name": "Extract / Sabotage Thyr", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 5, "on_success": "Gain 1 Thyr token (or advance extraction progress). Alternatively, mark Rig as Sabotaged (scenario-defined).", "on_fail": "Pressure burst: take 1 die damage and create a 3\" Unstable Terrain patch adjacent (scenario-defined placement)." }] },
+  "slots": [
+    { "slot_id": "rig_objective", "slot_kind": "objective", "label": "Rig Objective Anchor", "level": 1, "position_hint": "platform_center", "notes": ["Primary extraction/sabotage point."] },
+    { "slot_id": "rig_hazard", "slot_kind": "hazard_anchor", "label": "Leak/Blast Anchor", "level": 0, "position_hint": "pipe_cluster", "notes": ["Hooks for leaks, storms, ignition."] }
+  ],
+  "destructibility": { "destructible": true, "structure_rating": 6, "breakpoints": [{ "at_damage": 3, "effect": "Damaged rig: extract/sabotage difficulty +1." }, { "at_damage": 6, "effect": "Destroyed: replace with medium rubble; create Unstable Terrain in footprint." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_medium", "notes": ["Replace with twisted machinery rubble."] } }
+},
+{
+  "terrain_type_id": "objective_infernal_engine_monsterology",
+  "name": "Infernal Engine (Monsterology Invention)",
+  "kind": "objective",
+  "tags": ["monsterology", "invention", "hazardous", "objective", "power"],
+  "emoji": "🔥",
+  "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 5 }, "base_height_in": 3.5 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Engine frame partially blocks LoS; flames/smoke do not", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      { "interaction_id": "tune_infernal_engine", "name": "Tune / Overload Infernal Engine", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 6, "on_success": "Choose: Power Surge (scenario-defined boon) OR Overload (create a 3\" Tainted Ground zone adjacent and mark engine unstable).", "on_fail": "Backfire: take 2 dice damage and become Pressured." }
+    ]
+  },
+  "slots": [
+    { "slot_id": "infernal_objective", "slot_kind": "objective", "label": "Engine Control", "level": 0, "position_hint": "control_face", "notes": ["High-risk/high-reward objective."] },
+    { "slot_id": "infernal_hazard", "slot_kind": "hazard_anchor", "label": "Backfire Anchor", "level": 0, "position_hint": "rear_vents", "notes": ["Hooks for flames, corruption, catastrophic events."] }
+  ],
+  "destructibility": {
+    "destructible": true,
+    "structure_rating": 5,
+    "breakpoints": [
+      { "at_damage": 3, "effect": "Unstable: all interact tests here are +1 difficulty." },
+      { "at_damage": 5, "effect": "Meltdown: replace with medium rubble and create a 3\" Tainted Ground zone centered on this terrain." }
+    ],
+    "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_medium", "notes": ["Replace with wrecked engine scrap."] }
+  }
+},
+
+{
+  "terrain_type_id": "objective_territory_marker_obelisk",
+  "name": "Territory Marker",
+  "kind": "objective",
+  "tags": ["objective", "territory", "control", "marker"],
+  "emoji": "🗼",
+  "footprint": { "shape": "circle", "size_in": { "w": 2, "d": 2 }, "base_height_in": 2.5 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS due to tall marker", "window_los": "none" },
+  "cover": { "default_cover": "none", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "claim_marker", "name": "Claim Territory", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Flip/control this marker for your faction (scenario-defined scoring).", "on_fail": "Contested: no flip; acting model becomes Pressured." }] },
+  "slots": [{ "slot_id": "territory_objective", "slot_kind": "objective", "label": "Territory Objective Anchor", "level": 0, "position_hint": "base", "notes": ["Recommended: place 3 territory markers for control scenarios."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "feature_land_marker",
+  "name": "Land Marker",
+  "kind": "feature",
+  "tags": ["marker", "boundary", "survey", "story_anchor"],
+  "emoji": "📍",
+  "footprint": { "shape": "circle", "size_in": { "w": 2, "d": 2 }, "base_height_in": 1.5 },
+  "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+  "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "survey_marker", "name": "Survey / Record", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Gain 1 Lore token or advance scenario navigation state.", "on_fail": "Bad reading: no progress." }] },
+  "slots": [{ "slot_id": "land_marker_story", "slot_kind": "story_anchor", "label": "Survey Anchor", "level": 0, "position_hint": "center", "notes": ["Good for navigation and boundary disputes."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "objective_waypoint_marker",
+  "name": "Waypoint Marker",
+  "kind": "objective",
+  "tags": ["objective", "waypoint", "navigation", "marker"],
+  "emoji": "🧭",
+  "footprint": { "shape": "circle", "size_in": { "w": 2, "d": 2 }, "base_height_in": 0.8 },
+  "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+  "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "tag_waypoint", "name": "Tag Waypoint", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Mark waypoint as Visited (scenario-defined scoring or movement bonus).", "on_fail": "No effect" }] },
+  "slots": [{ "slot_id": "waypoint_objective", "slot_kind": "objective", "label": "Waypoint Objective", "level": 0, "position_hint": "center", "notes": ["Recommended: place 2 waypoint markers for route scenarios."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "objective_escort_cargo",
+  "name": "Escort Cargo",
+  "kind": "objective",
+  "tags": ["objective", "escort", "cargo", "movable", "story_anchor"],
+  "emoji": "🚚",
+  "footprint": { "shape": "rect", "size_in": { "w": 4, "d": 2 }, "base_height_in": 1.5 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS due to cargo bulk", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      { "interaction_id": "advance_escort", "name": "Advance the Cargo", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Move this cargo up to 3\" in a scenario-legal direction (or advance an escort track).", "on_fail": "Snagged: cargo does not move; acting model becomes Pressured." }
+    ]
+  },
+  "slots": [
+    { "slot_id": "escort_objective", "slot_kind": "objective", "label": "Escort Objective Anchor", "level": 0, "position_hint": "center", "notes": ["Scenario builder should treat this as a movable objective instance."] },
+    { "slot_id": "escort_story", "slot_kind": "story_anchor", "label": "Cargo Manifest", "level": 0, "position_hint": "rear_edge", "notes": ["Hooks: stolen goods, contraband, monster bait, Thyr shipment."] }
+  ],
+  "destructibility": { "destructible": true, "structure_rating": 3, "breakpoints": [{ "at_damage": 3, "effect": "Cargo destroyed: replace with small rubble and drop contents token (scenario-defined)." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with splintered cargo debris."] } }
+},
+
+{
+  "terrain_type_id": "building_fortified_position",
+  "name": "Fortified Position (Bunker/Watchtower)",
+  "kind": "building",
+  "tags": ["defensive", "fortification", "cover_heavy", "objective", "multi_role"],
+  "emoji": "🪖",
+  "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 5 }, "base_height_in": 3.0 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Solid faces block LoS; firing slits grant partial LoS out", "window_los": "partial" },
+  "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "heavy" },
+  "elevation": { "system": "levels", "level_unit_in": 2.0, "max_level": 1, "levels": [{ "level": 0, "name": "Bunker Interior", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Hard cover inside."] }, { "level": 1, "name": "Watch Platform", "surface_kind": "roof", "walkable": true, "edge_fall_risk": false, "notes": ["Perch with parapet."] }] },
+  "movement": { "is_passable": false, "is_walkable_on_top": true, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "ladder", "min_level_access": 1, "max_level_access": 1, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": false, "interactions": [] },
+  "slots": [{ "slot_id": "fortified_position_objective", "slot_kind": "objective", "label": "Platform Objective", "level": 1, "position_hint": "center", "notes": ["Classic hold-the-fort objective."] }],
+  "destructibility": { "destructible": true, "structure_rating": 9, "breakpoints": [{ "at_damage": 5, "effect": "Cracked cover: edges cover drops from Heavy to Light." }, { "at_damage": 9, "effect": "Breach: interior becomes passable; treat as rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble field."] } }
+},
+{
+  "terrain_type_id": "obstacle_barricade",
+  "name": "Barricade",
+  "kind": "obstacle",
+  "tags": ["obstacle", "defensive", "cover_heavy", "linear"],
+  "emoji": "🪵",
+  "footprint": { "shape": "line", "size_in": { "w": 6, "d": 1 }, "base_height_in": 1.5 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Does not fully block LoS; provides partial obstruction along the line", "window_los": "none" },
+  "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": false, "is_walkable_on_top": false, "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "Stumble: remain on original side; action spent" } } },
+  "interaction": { "interactable": false, "interactions": [] },
+  "slots": [{ "slot_id": "barricade_anchor", "slot_kind": "interaction", "label": "Barricade Anchor", "level": 0, "position_hint": "midpoint", "notes": ["Recommended: place 2 barricades for defensive setups."] }],
+  "destructibility": { "destructible": true, "structure_rating": 3, "breakpoints": [{ "at_damage": 3, "effect": "Breach: becomes passable; cover reduced to Light." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with broken planks/debris."] } }
+},
+{
+  "terrain_type_id": "building_supply_depot_small",
+  "name": "Supply Depot",
+  "kind": "building",
+  "tags": ["depot", "supplies", "objective", "small", "3in_building"],
+  "emoji": "🏚️",
+  "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 3 }, "base_height_in": 2.0 },
+  "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls; door grants partial LoS", "window_los": "partial" },
+  "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": false, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "loot_supply_depot", "name": "Loot Depot", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 2 Supply tokens (or 1 Supply + 1 Loot).", "on_fail": "Empty: gain nothing." }] },
+  "slots": [{ "slot_id": "supply_depot_loot", "slot_kind": "loot", "label": "Depot Cache", "level": 0, "position_hint": "interior_center", "notes": ["Core supply objective building (3\" footprint)."] }],
+  "destructibility": { "destructible": true, "structure_rating": 4, "breakpoints": [{ "at_damage": 4, "effect": "Destroyed: replace with small rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with small rubble."] } }
+},
+
+{
+  "terrain_type_id": "area_tainted_ground",
+  "name": "Tainted Ground",
+  "kind": "hazard",
+  "tags": ["mystical", "taint", "zone", "hazard"],
+  "emoji": "☣️",
+  "footprint": { "shape": "circle", "size_in": { "w": 3, "d": 3 }, "base_height_in": 0.1 },
+  "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+  "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": true, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      { "interaction_id": "cleanse_taint", "name": "Cleanse / Contaminate", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Remove this Tainted Ground zone (or flip it to Blessed/Safe if scenario uses states).", "on_fail": "Backlash: acting model takes 1 die damage and becomes Pressured." }
+    ]
+  },
+  "slots": [{ "slot_id": "taint_hazard", "slot_kind": "hazard_anchor", "label": "Taint Anchor", "level": 0, "position_hint": "center", "notes": ["Recommended: place 2–3 zones (3\" each)."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "objective_artifact_marker",
+  "name": "Artifact",
+  "kind": "objective",
+  "tags": ["objective", "artifact", "high_ground", "loot"],
+  "emoji": "💎",
+  "footprint": { "shape": "circle", "size_in": { "w": 2, "d": 2 }, "base_height_in": 0.8 },
+  "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+  "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "claim_artifact", "name": "Claim the Artifact", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Pick up/secure artifact (scenario-defined carry rules).", "on_fail": "Warded: become Pressured." }] },
+  "slots": [{ "slot_id": "artifact_objective", "slot_kind": "objective", "label": "Artifact Objective", "level": 0, "position_hint": "center", "notes": ["Recommended placement: on high ground or rooftop."] }],
+  "destructibility": { "destructible": false }
+},
+
+{
+  "terrain_type_id": "resource_thyr_deposit",
+  "name": "Thyr Crystal Deposit",
+  "kind": "objective",
+  "tags": ["thyr", "resource", "objective", "crystal"],
+  "emoji": "💠",
+  "footprint": { "shape": "circle", "size_in": { "w": 4, "d": 4 }, "base_height_in": 1.5 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS due to crystal clusters", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "harvest_thyr", "name": "Harvest / Consume Thyr", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Thyr token (or apply a Thyr boost per faction rules).", "on_fail": "Crystal backlash: take 1 die damage." }] },
+  "slots": [{ "slot_id": "thyr_resource", "slot_kind": "loot", "label": "Thyr Resource Anchor", "level": 0, "position_hint": "center", "notes": ["Use for Thyr objectives/caches."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "resource_water_tanks",
+  "name": "Water Barrels / Tanks",
+  "kind": "objective",
+  "tags": ["resource", "water", "supplies", "objective"],
+  "emoji": "🛢️",
+  "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 2 }, "base_height_in": 2.0 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS due to stacked barrels", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "collect_water", "name": "Collect Water", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Gain 1 Water token (or scenario resource).", "on_fail": "Dry/tainted: gain nothing." }] },
+  "slots": [{ "slot_id": "water_resource", "slot_kind": "loot", "label": "Water Anchor", "level": 0, "position_hint": "side", "notes": ["Resource pickup point."] }],
+  "destructibility": { "destructible": true, "structure_rating": 2, "breakpoints": [{ "at_damage": 2, "effect": "Burst/leak: footprint becomes Difficult (mud/wet) for the rest of the game." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with debris; treat area as wet/difficult if scenario supports it."] } }
+},
+{
+  "terrain_type_id": "resource_food_crates",
+  "name": "Food Crates",
+  "kind": "objective",
+  "tags": ["resource", "food", "supplies", "loot"],
+  "emoji": "🥫",
+  "footprint": { "shape": "rect", "size_in": { "w": 2, "d": 2 }, "base_height_in": 1.0 },
+  "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+  "cover": { "default_cover": "none", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "collect_food", "name": "Collect Food", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Gain 1 Food token (or 1 Supply token if scenario doesn’t track Food).", "on_fail": "Spoiled: gain nothing." }] },
+  "slots": [{ "slot_id": "food_loot", "slot_kind": "loot", "label": "Food Anchor", "level": 0, "position_hint": "top", "notes": ["Resource pickup point."] }],
+  "destructibility": { "destructible": true, "structure_rating": 1, "breakpoints": [{ "at_damage": 1, "effect": "Smashed: remove." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with litter/debris."] } }
+},
+{
+  "terrain_type_id": "resource_mechanical_parts_stockpile",
+  "name": "Mechanical Parts Stockpile",
+  "kind": "objective",
+  "tags": ["resource", "mechanical_parts", "salvage", "objective"],
+  "emoji": "⚙️",
+  "footprint": { "shape": "rect", "size_in": { "w": 4, "d": 3 }, "base_height_in": 1.5 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partial LoS through stacked parts and frames", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "light" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "collect_parts", "name": "Collect Parts", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Mechanical Parts token.", "on_fail": "Sharp edges: take 1 die damage." }] },
+  "slots": [{ "slot_id": "parts_loot", "slot_kind": "loot", "label": "Parts Anchor", "level": 0, "position_hint": "center", "notes": ["Resource pickup point."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "resource_silver_lead_stockpile",
+  "name": "Silver/Lead Stockpile",
+  "kind": "objective",
+  "tags": ["resource", "metal", "ammo", "objective"],
+  "emoji": "🪙",
+  "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 3 }, "base_height_in": 1.2 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Partial LoS due to stacked ingots/crates", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "secure_stockpile", "name": "Secure Stockpile", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Loot token OR mark stockpile as Controlled (scenario-defined scoring).", "on_fail": "Spill: acting model becomes Pressured." }] },
+  "slots": [{ "slot_id": "metal_objective", "slot_kind": "objective", "label": "Stockpile Objective", "level": 0, "position_hint": "center", "notes": ["Good for mining/armament scenarios."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "resource_coal_bunker",
+  "name": "Coal Bunker",
+  "kind": "objective",
+  "tags": ["resource", "coal", "industrial", "objective"],
+  "emoji": "🪨",
+  "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 4 }, "base_height_in": 2.0 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Coal heap provides partial LoS obstruction near ground", "window_los": "none" },
+  "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": true, "difficult_terrain_on": ["ground"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "collect_coal", "name": "Collect Coal", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Fuel/Coal token (or Supply token if scenario doesn’t track fuel).", "on_fail": "Choking dust: become Pressured." }] },
+  "slots": [{ "slot_id": "coal_loot", "slot_kind": "loot", "label": "Coal Anchor", "level": 0, "position_hint": "heap_center", "notes": ["Resource pickup point."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "feature_livestock_corral",
+  "name": "Livestock Corral",
+  "kind": "feature",
+  "tags": ["farm", "fence", "animal", "objective"],
+  "emoji": "🐄",
+  "footprint": { "shape": "rect", "size_in": { "w": 8, "d": 6 }, "base_height_in": 1.2 },
+  "visibility": { "los_profile": "partial", "blocks_los_when": "Fence rails do not block LoS; animals/pen clutter can grant partial", "window_los": "none" },
+  "cover": { "default_cover": "none", "edges_cover": "light", "interior_cover": "light" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "Tangled: no movement; action spent" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "herd_or_free", "name": "Herd / Free Livestock", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Food token OR advance escort/rescue objective (scenario-defined).", "on_fail": "Stampede: acting model takes 1 die damage or is pushed 1\" (scenario-defined)." }] },
+  "slots": [{ "slot_id": "corral_objective", "slot_kind": "objective", "label": "Corral Objective Anchor", "level": 0, "position_hint": "gate", "notes": ["Rescue/raid objective."] }],
+  "destructibility": { "destructible": true, "structure_rating": 4, "breakpoints": [{ "at_damage": 4, "effect": "Fence smashed: becomes open ground; edge cover removed." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with broken fence debris."] } }
+},
+{
+  "terrain_type_id": "resource_gildren_hoard",
+  "name": "Gildren Hoard",
+  "kind": "objective",
+  "tags": ["resource", "treasure", "gildren", "objective", "loot"],
+  "emoji": "💰",
+  "footprint": { "shape": "circle", "size_in": { "w": 3, "d": 3 }, "base_height_in": 1.0 },
+  "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+  "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "claim_hoard", "name": "Claim Hoard", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 2 Loot tokens (or mark hoard as Secured for scoring).", "on_fail": "Cursed glitter: become Pressured." }] },
+  "slots": [{ "slot_id": "hoard_objective", "slot_kind": "objective", "label": "Hoard Objective", "level": 0, "position_hint": "center", "notes": ["Treasure objective marker."] }],
+  "destructibility": { "destructible": false }
+},
+{
+  "terrain_type_id": "building_weapon_armory",
+  "name": "Weapon Armory",
+  "kind": "building",
+  "tags": ["armory", "weapons", "objective", "military", "loot"],
+  "emoji": "🧨",
+  "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 4 }, "base_height_in": 2.5 },
+  "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through reinforced walls; firing slit windows are partial", "window_los": "partial" },
+  "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "heavy" },
+  "elevation": { "system": "none" },
+  "movement": { "is_passable": false, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+  "interaction": { "interactable": true, "interactions": [{ "interaction_id": "raid_armory", "name": "Raid the Armory", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 5, "on_success": "Gain 2 Supply tokens OR 1 Loot + 1 Mechanical Parts (scenario choice).", "on_fail": "Booby trap: take 2 dice damage." }] },
+  "slots": [{ "slot_id": "armory_objective", "slot_kind": "objective", "label": "Armory Objective Anchor", "level": 0, "position_hint": "interior_center", "notes": ["High-value loot objective."] }],
+  "destructibility": { "destructible": true, "structure_rating": 8, "breakpoints": [{ "at_damage": 4, "effect": "Breached: edges cover drops from Heavy to Light." }, { "at_damage": 8, "effect": "Detonation/collapse: replace with large rubble; create Unstable Terrain in footprint (scenario-defined)." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble field."] } }
+}
