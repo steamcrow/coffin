@@ -1,0 +1,13 @@
+{
+  "schema_id": "cc_canyon_state",
+  "schema_version": "0.2",
+  "last_updated": "2026-02-07",
+  "state_by_region": {
+    "region_001": {
+      "controller_faction_id": "neutral",
+      "status": "neutral",
+      "weather_tag": "clear",
+      "notes": "Unclaimed."
+    }
+  }
+}
