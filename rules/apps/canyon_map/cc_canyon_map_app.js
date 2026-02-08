@@ -194,6 +194,13 @@
 // buildLayout function in cc_canyon_map_app.js
 // ================================================================
 
+ // ================================================================
+// COMPLETE buildLayout FUNCTION WITH SVG DISTORTION FILTER
+// File: cc_canyon_map_app.js
+// 
+// This version includes the magnifying glass distortion effect
+// ================================================================
+
 function buildLayout(root, opts) {
   root.innerHTML = "";
   root.classList.add("cc-canyon-map");
@@ -208,6 +215,27 @@ function buildLayout(root, opts) {
 
   const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
 
+  // *** SVG FILTER FOR LENS DISTORTION ***
+  const lensSvg = el("svg", { 
+    class: "cc-lens-svg",
+    id: "cc-lens-svg",
+    xmlns: "http://www.w3.org/2000/svg"
+  });
+  lensSvg.innerHTML = `
+    <defs>
+      <filter id="ccLensWarp" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="0" result="blur"/>
+        <feDisplacementMap 
+          in="SourceGraphic" 
+          in2="blur" 
+          scale="0" 
+          xChannelSelector="R" 
+          yChannelSelector="G"
+        />
+      </filter>
+    </defs>
+  `;
+
   const lens = el("div", { class: "cc-lens", id: "cc-lens" }, [
     el("div", { class: "cc-lens-rim" }),
     el("div", { class: "cc-lens-inner", id: "cc-lens-inner" }, [
@@ -216,7 +244,7 @@ function buildLayout(root, opts) {
     el("div", { class: "cc-lens-glare" })
   ]);
 
-  // *** NEW: Frame overlay element ***
+  // *** Frame overlay element ***
   const frameOverlay = el("div", { class: "cc-frame-overlay", id: "cc-frame" });
 
   const scroller = el("div", { class: "cc-scroll", id: "cc-scroll" }, [
@@ -225,10 +253,11 @@ function buildLayout(root, opts) {
   ]);
 
   const body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
+    lensSvg,  // SVG filter definition
     el("div", { class: "cc-cm-mapwrap" }, [
-      mapEl,           // z-index: 1 - Base map
+      mapEl,           // z-index: 1 - Base map (small box)
       lens,            // z-index: 30 - Magnifying lens
-      frameOverlay,    // z-index: 35 - Brass frame (NEW!)
+      frameOverlay,    // z-index: 35 - Brass frame
       scroller         // z-index: 40 - BLAPPO knob
     ]),
     el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
@@ -261,7 +290,7 @@ function buildLayout(root, opts) {
     mapEl,
     lensEl: lens,
     lensMapEl: root.querySelector("#cc-lens-map"),
-    frameEl: frameOverlay,  // NEW: return frame element reference
+    frameEl: frameOverlay,
     btnReload: root.querySelector("#cc-cm-reload"),
     btnFit: root.querySelector("#cc-cm-fit"),
     drawerEl: root.querySelector("#cc-cm-drawer"),
@@ -271,6 +300,7 @@ function buildLayout(root, opts) {
     knobEl: root.querySelector("#cc-scroll-knob")
   };
 }
+
   function openDrawer(ui) {
     ui.drawerEl.classList.add("open");
   }
