@@ -1,59 +1,191 @@
 {
   "faction": "Liberty Corps",
-  "version": "1.9",
-  "description": "The Liberty Corps enforces order in Obscuria through authority, arrest, and judgment. Steam-powered law enforcement backed by federal mandate—efficient, relentless, and incorruptible.",
+  "version": "2.0",
+  "introduction": {
+    "title": "Liberty Corps: Preservation Through Authority",
+    "tagline": "Stabilize the park. Enforce the border. Make the canyon compliant.",
+    "description": "From the maps of Liberty City, Coffin Canyon is not chaos. It is a Forbidden National Park: a vast, federally claimed preserve set aside for study, stabilization, and eventual development under the authority of the United States of Liberty. Entry without permit is illegal. Resource extraction without oversight is theft. Armed presence without sanction is sedition. That anyone disputes this is… unfortunate. The Liberty Corps exists to resolve that misunderstanding.",
+    "philosophy": "The Liberty Corps believes in preservation—and understands that preservation requires decisive action. Unchecked monsters threaten survey teams. Unregulated gangs destabilize claims. Unlicensed mystics interfere with classified research. The canyon cannot be protected if it is allowed to remain wild. Monsters are hazards and unlawful presences; if they can be studied, cataloged, or contained, they will be. If they interfere with infrastructure or personnel, they will be put down. This is not cruelty. It is stewardship. Patriotism is not pageantry—it is procedure.",
+    "history": "For decades, Coffin Canyon was quarantined, studied from afar, and written off as too costly to tame. That has changed. Silver veins demand oversight. Thyr demands control. Monsters demand management. The Liberty Corps has been dispatched to secure the park, enforce federal exclusion, and prepare Coffin Canyon for responsible use—checkpoints, forts, railheads, controlled extraction, and where necessary, lethal intervention. Progress does not ask permission."
+  },
+  "faction_identity": {
+    "core_values": [
+      "Preservation through authority",
+      "Procedure over sentiment",
+      "Federal jurisdiction and exclusion enforcement",
+      "Stabilization before development",
+      "Containment, arrest, or removal of unlawful presences"
+    ],
+    "what_they_fight_for": [
+      "A stabilized, productive Coffin Canyon under federal control",
+      "Controlled infrastructure (forts, railheads, checkpoints)",
+      "Regulated silver and Thyr oversight",
+      "Public safety through enforcement",
+      "An orderly battlefield—quiet, compliant, logged"
+    ],
+    "what_they_fight_against": [
+      "Unpermitted entry and armed trespass",
+      "Unregulated extraction and theft",
+      "Unlicensed mystics and unsanctioned research",
+      "Gangs, vandals, and insurgent factions",
+      "Uncontrolled monsters as hazards and occult contamination"
+    ],
+    "reputation": {
+      "allies_see_them_as": "Immaculate professionals bringing stability, logistics, and security to a hostile preserve",
+      "enemies_see_them_as": "Occupation forces—paperwork-backed violence with steam and steel",
+      "monsters_see_them_as": "Cages, chains, and gunfire—jurisdiction made physical",
+      "the_canyon_sees_them_as": "Flags in the dust. Checkpoints at the throat. A claim made real."
+    },
+    "how_they_see_others": {
+      "monster_rangers": "Well-meaning but misguided. Their sentimentality undermines containment and emboldens threats. Tolerated—for now—under watchful files and standing orders to leave.",
+      "shine_riders": "Criminal trespassers. Poachers. Vandals. Arrest on sight. Recover stolen assets where possible.",
+      "monsterologists": "Once sanctioned partners under classified agreements—now untrustworthy and driven by greed. Unwelcome trespassers on Liberty’s hallowed ground."
+    },
+    "on_monsters": "Monsters are illegal occult foreigners—unregistered entities operating inside a federally restricted National Park without permit, citizenship, or recognized legal standing. Some may be temporarily tolerated for study, containment, or sanctioned use. Most are subject to removal, neutralization, or classified disposition. This is not hatred. This is enforcement. Liberty does not negotiate with unlawful presences. Liberty cleans its borders.",
+    "uncle_liberty": "There are contingencies the Corps does not discuss publicly. One of them is Uncle Liberty: the first President of the United States of Liberty, sustained beyond mortality by steam, steel, and duty. Uncle Liberty is not deployed lightly. He is a national response asset. When he appears, it means the situation has escalated beyond local authority, beyond negotiation, beyond patience. Liberty itself has deemed the canyon’s condition unacceptable. And Liberty will be obeyed."
+  },
+  "faction_mechanics": {
+    "signature_ability": "Arrest & Removal",
+    "signature_ability_description": "Liberty Corps wins by turning resistance into compliance: restrain, arrest, transport, and extract. They control space with pins, lockdowns, and disciplined advance—then score through removal and zone stability.",
+    "playstyle": "Zone-control enforcers who secure areas, expand outward, and escalate deliberately. They prefer tidy battlefields: pinned lanes, denied reactions, constrained movement, and arrests/extractions backed by steam hardware and command authority.",
+    "strengths": [
+      "Excellent movement denial (pin, lockdown, grapple, suppress)",
+      "Durable, organized front line supported by technicians",
+      "Strong command aura and morale reliability",
+      "Scoring through removal/extraction rather than pure attrition"
+    ],
+    "weaknesses": [
+      "Can be outmaneuvered by extreme mobility and deep infiltration",
+      "Arrest plans can collapse if key control pieces fall",
+      "Less flexible in highly mystical play without dedicated counters",
+      "High-value assets can become liabilities if lost early"
+    ]
+  },
+  "canyon_state_relationships": {
+    "preferred_states": [
+      {
+        "state": "Liberated",
+        "reason": "The Corps’ ideal end-state: cleared lanes, enforced exclusion, and the battlefield made compliant for development."
+      },
+      {
+        "state": "Held",
+        "reason": "Stable, controlled zones reward disciplined expansion and checkpoint play."
+      }
+    ],
+    "neutral_states": [
+      {
+        "state": "Lawless",
+        "reason": "The Corps treats it as under-policed territory—more paperwork, more arrests."
+      },
+      {
+        "state": "Poisoned",
+        "reason": "Operationally unpleasant, but the Corps fields respirators and procedures for toxic environments."
+      }
+    ],
+    "opposed_states": [
+      {
+        "state": "Strangewild",
+        "reason": "Uncontrolled ecology and monster proliferation undermines stabilization and infrastructure."
+      },
+      {
+        "state": "Haunted",
+        "reason": "Haunts and occult contamination disrupt procedure and complicate containment."
+      },
+      {
+        "state": "Exalted",
+        "reason": "Competing sovereignty and mystic law interferes with federal authority."
+      },
+      {
+        "state": "Extracted",
+        "reason": "Monsterology’s exploitation turns the park into a scarred theft-zone—hostile to lawful oversight."
+      },
+      {
+        "state": "Rusted",
+        "reason": "Automation-heavy dead zones reduce the Corps’ leverage against living hazards and complicate arrests."
+      }
+    ]
+  },
+  "faction_tags": [
+    "authority",
+    "zone_control",
+    "arrest",
+    "movement_denial",
+    "durable",
+    "command",
+    "industrial",
+    "procedure",
+    "suppression",
+    "stabilization"
+  ],
+  "scenario_preferences": {
+    "ideal_scenarios": [
+      "Checkpoint control and area holding",
+      "Arrest/extraction missions",
+      "Escort of survey teams and rail crews",
+      "Asset recovery and evidence seizure",
+      "Containment and quarantine operations"
+    ],
+    "challenging_scenarios": [
+      "High-mobility hit-and-run environments",
+      "Deeply mystical battlefields without clear lines",
+      "Monster-swarm scenarios that overwhelm arrest capacity",
+      "Fog/Haunt-heavy boards that disrupt command"
+    ]
+  },
+  "weapons_note": "Unit costs include standard-issue weapons. Where a weapon/property grants an explicit rules effect, it is included below as weapon_effects for that unit.",
   "faction_features": [
     {
-      "name": "Arrest Mechanics",
+      "name": "Federal Exclusion Jurisdiction",
       "cost": 0,
       "required": true,
-      "effect": "Liberty Corps units can Arrest targets instead of killing them. Arrested units are removed from play and may score VP. Units with Grapple can initiate arrests more easily."
+      "effect": "Liberty Corps treats Coffin Canyon as a Forbidden National Park under federal control. Their operations prioritize stabilization, eviction, and removal of unlawful presences.",
+      "keywords": ["jurisdiction", "exclusion", "procedure"]
     },
     {
-      "name": "Warrant System",
+      "name": "Arrest & Extraction Doctrine",
+      "cost": 0,
+      "required": true,
+      "effect": "Liberty Corps specializes in restraining and removing targets rather than simply destroying them. Units with Grapple/Binding Rig/Lockdown excel at creating arrests; transport units convert arrests into secure removals and scoring.",
+      "keywords": ["arrest", "containment", "extraction", "control"]
+    },
+    {
+      "name": "Procedure Is Patriotism",
       "cost": 0,
       "required": false,
-      "effect": "Certain units (Warrant Officers, Detectives) can issue Warrants, marking targets for arrest. Units gain bonuses when engaging Warranted targets."
-    },
-    {
-      "name": "Steam Technology",
-      "cost": 0,
-      "required": true,
-      "effect": "Many Liberty Corps units are powered by steam engines (Steam Constables, Black Mariah). They are reliable, heavily armored, and mechanically precise."
+      "effect": "Command presence (Authority/Inspire/Signal Orders) keeps units coordinated and resistant to morale disruption—so long as the chain of command remains intact.",
+      "keywords": ["command", "morale", "discipline"]
     }
   ],
-  "victory_objectives": [
-    {
-      "type": "Arrests",
-      "vp": "2-5 VP per arrest",
-      "description": "Score VP for successfully arresting targets. High-value targets (Leaders, Mystics, Monsters) score more VP when arrested alive rather than killed."
-    },
-    {
-      "type": "Extraction",
-      "vp": "3 VP per unit extracted",
-      "description": "Score VP for extracting arrested units from the battlefield via the Black Mariah or designated extraction points."
-    },
-    {
-      "type": "Judgment",
-      "vp": "4 VP per judgment",
-      "description": "The Judge scores VP for passing judgment on arrested targets. Represents upholding the law through due process."
-    },
-    {
-      "type": "Area Control",
-      "vp": "2 VP per objective held",
-      "description": "Score VP for controlling key locations (towns, crossroads, settlements). Liberty Corps establishes order through occupation."
-    },
-    {
-      "type": "Target Elimination",
-      "vp": "Varies",
-      "description": "Some scenarios designate specific targets (outlaws, rogue Monsters, insurgents). Score bonus VP for eliminating these threats."
-    }
-  ],
-  "composition_requirements": {
-    "minimum_constables": 1,
-    "note": "Liberty Corps forces must include at least 1 Steam Constable unit to represent frontline enforcement. Warrant Officers and Judges are limited to 1 each per army."
-  },
   "units": [
+    {
+      "name": "Patriot Asset",
+      "faction": "Liberty Corps",
+      "type": "Grunt",
+      "cost": 42,
+      "quality": 2,
+      "defense": 1,
+      "move": 6,
+      "range": 0,
+      "weapon": "Truncheon, Net, Restraints",
+      "weapon_properties": ["melee"],
+      "weapon_effects": [
+        {
+          "name": "Improvised Restraints",
+          "effect": "Counts as suitable gear for arrests and prisoner handling where scenario rules require restraints."
+        }
+      ],
+      "composition": { "per_points": 0 },
+      "abilities": [
+        {
+          "name": "Runner",
+          "ref": "R-ABIL-B-RUNNER",
+          "effect": "If no attacks are made during activation, make an additional Move at the end."
+        }
+      ],
+      "lore": "Cheap bodies in cheap uniforms—pressed into service, promised glory, issued a whistle and a pair of cuffs.",
+      "tactics": "Flood lanes, contest objectives, and enable arrests. Trade lives for time and position."
+    },
+
     {
       "name": "Steam Constable",
       "faction": "Liberty Corps",
@@ -62,81 +194,71 @@
       "quality": 4,
       "defense": 3,
       "move": 5,
-      "range": null,
+      "range": 0,
       "weapon": "Steam Fists & Iron Baton",
-      "weapon_properties": [],
-      "abilities": [
-        "Grapple",
-        "Shield Wall"
-      ],
-      "lore": "Uniformed enforcers in slab wool coats and iron helmets. Their steam backpacks drive piston-fists and batons built for arrests, not duels.",
-      "tactics": "Frontline control. Grapple and Pinning keep targets in place for arrests and for loading into the Black Mariah. Shield Wall rewards constables operating in pairs.",
-      "upgrades": [
+      "weapon_properties": ["melee"],
+      "weapon_effects": [
         {
-          "name": "Reinforced Slabcoat",
-          "cost": 2,
-          "effect": "Gain HEAVY ARMOR keyword."
-        },
-        {
-          "name": "Steam Overpressure",
-          "cost": 2,
-          "effect": "Once per game: add +2\" Push to a successful Grapple."
+          "name": "Baton Interdiction",
+          "effect": "Designed for arrests: pair with Grapple/Lockdown to prevent disengage and set up prisoner capture."
         }
       ],
-      "composition_limit": "0-4 per army",
-      "max_count": 4,
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+      "composition": { "per_points": 0 },
+      "abilities": [
+        {
+          "name": "Grapple",
+          "ref": "R-ABIL-B-GRAPPLE",
+          "effect": "On hit, pull target 3\" toward self; target cannot move next activation."
+        },
+        {
+          "name": "Shield Wall",
+          "ref": "R-ABIL-D-SHIELD-WALL",
+          "effect": "+1 Defense while adjacent to another Shield Wall model; no bonus vs Blast."
+        }
+      ],
+      "lore": "Uniformed enforcers in slab-wool coats and iron helmets. Steam packs drive piston-fists built for arrests, not duels.",
+      "tactics": "Frontline control. Grapple and Shield Wall make lanes sticky, enabling arrests and denying breakthroughs."
     },
+
     {
       "name": "Field Technician",
       "faction": "Liberty Corps",
-      "type": "Frail",
+      "type": "Specialist",
       "cost": 87,
       "quality": 3,
       "defense": 2,
       "move": 6,
-      "range": null,
+      "range": 0,
       "weapon": "Tool Roll & Shock Stick",
-      "weapon_properties": [],
-      "abilities": [
-        "Assistant",
-        "Repair"
-      ],
-      "lore": "Cable-haulers and wrench-hands who keep Liberty Corps machinery operational in places it was never meant to operate.",
-      "tactics": "Support backbone. Keep vehicles, devices, and assets operational. Remove debuffs and keep the plan from collapsing.",
-      "upgrades": [
+      "weapon_properties": ["melee"],
+      "weapon_effects": [
         {
-          "name": "Spare Valves",
-          "cost": 2,
-          "effect": "+1 use of Repair per game."
+          "name": "Shock Stick",
+          "effect": "Useful for discouraging close threats while the Technician keeps assets operational."
         }
       ],
-      "composition_limit": "0-2 per army",
-      "max_count": 2,
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
-    },
-    {
-      "name": "Patriot Asset",
-      "faction": "Liberty Corps",
-      "type": "Frail",
-      "cost": 42,
-      "quality": 2,
-      "defense": 1,
-      "move": 6,
-      "range": null,
-      "weapon": "Truncheon, Net, Restraints",
-      "weapon_properties": [
-        "Grapple"
-      ],
+      "composition": { "per_points": 300 },
       "abilities": [
-        "Runner"
+        {
+          "name": "Assistant",
+          "ref": "R-ABIL-H-ASSISTANT",
+          "effect": "May assist an adjacent Mystic or Scientist with special activations."
+        },
+        {
+          "name": "Repair",
+          "ref": "R-ABIL-H-REPAIR",
+          "effect": "Restore 1 damage to an adjacent friendly vehicle/device/mechanical unit by consuming Spare Parts."
+        },
+        {
+          "name": "Kick the Machine",
+          "ref": "R-ABIL-H-KICK-THE-MACHINE",
+          "effect": "Remove one debuff (Hex, Stagger, Suppression, Pinned) from an adjacent friendly unit."
+        }
       ],
-      "lore": "Cheap bodies in cheap uniforms---pressed into service, promised glory, issued a whistle and a pair of cuffs.",
-      "tactics": "Flood lanes, contest objectives, and enable arrests. Trade lives for time and position.",
-      "composition_limit": "unlimited",
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+      "lore": "Cable-haulers and wrench-hands who keep Liberty Corps machinery alive in places it was never meant to operate.",
+      "tactics": "Support backbone. Keep vehicles and control pieces functioning; strip debuffs at key moments."
     },
+
     {
       "name": "Liberty Corps Detective",
       "faction": "Liberty Corps",
@@ -147,70 +269,82 @@
       "move": 6,
       "range": 12,
       "weapon": "Liberty Revolver",
-      "weapon_properties": [
-        "Pinning Shot"
-      ],
-      "abilities": [
-        "Scout",
-        "Mark Target",
-        "Runner"
-      ],
-      "lore": "Plain clothes, keen eyes, documented everything. The arrest warrant is already in their coat pocket---signed, stamped, and inevitable.",
-      "tactics": "Deploy forward to reveal hidden threats. Mark priority targets for arrest or elimination. Use Runner to maintain positioning and escape engagement.",
-      "upgrades": [
+      "weapon_properties": ["ranged"],
+      "weapon_effects": [
         {
-          "name": "Wire Tap Kit",
-          "cost": 3,
-          "effect": "Once per game, place a 3\" radius marker on the battlefield. Enemies starting activation within this area are revealed as if by Scout."
-        },
-        {
-          "name": "Warrant Badge",
-          "cost": 2,
-          "effect": "When this unit uses Mark Target, if the marked target is later Arrested, your controller gains +1 VP."
+          "name": "Pinning Shot",
+          "ref": "R-ABIL-C-PINNING-SHOT",
+          "effect": "On hit, target cannot move during its next activation."
         }
       ],
-      "composition_limit": "0-2 per army",
-      "max_count": 2,
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+      "composition": { "per_points": 300 },
+      "abilities": [
+        {
+          "name": "Runner",
+          "ref": "R-ABIL-B-RUNNER",
+          "effect": "If no attacks are made during activation, make an additional Move at the end."
+        },
+        {
+          "name": "Mark Target",
+          "ref": "R-ABIL-C-MARK-TARGET",
+          "effect": "Once per game: choose one enemy in LoS; that target takes +1 damage from all sources until end of round."
+        },
+        {
+          "name": "Third Eye Vision",
+          "ref": "R-ABIL-H-THIRD-EYE-VISION",
+          "effect": "Reveal hidden units within 12\"; can see Stealth units; ignores Fog/Smoke for targeting."
+        }
+      ],
+      "lore": "Plain clothes, keen eyes, documented everything. The warrant is already drafted—signed, stamped, inevitable.",
+      "tactics": "Priority marking and lane control. Use pinning to set up arrests and prevent escapes."
     },
+
     {
       "name": "Warrant Officer",
       "faction": "Liberty Corps",
-      "type": "Tank",
+      "type": "Elite",
       "cost": 153,
       "quality": 5,
       "defense": 3,
       "move": 7,
-      "range": null,
+      "range": 0,
       "weapon": "Shock Baton & Restraint Rig",
-      "weapon_properties": [
-        "Grapple"
-      ],
-      "abilities": [
-        "Tough(1)",
-        "Fast",
-        "Binding Rig"
-      ],
-      "lore": "The best at what they do. Steam-assisted reflexes, reinforced armor, and a perfect arrest record. They don't bring you in. They bring you down.",
-      "tactics": "Elite arrest specialist. Use Fast to position for Grapple. Binding Rig works on Brutes and Monsters. More mobile than Constables but equally durable.",
-      "upgrades": [
+      "weapon_properties": ["melee"],
+      "weapon_effects": [
         {
-          "name": "Pursuit Boots",
-          "cost": 2,
-          "effect": "Gain +2\" Move when activating to move toward an enemy unit marked for arrest."
-        },
-        {
-          "name": "Reinforced Cuffs",
-          "cost": 3,
-          "effect": "Units arrested by this model cannot be rescued by allies (they must destroy the Black Mariah to free prisoners)."
+          "name": "Restraint Rig",
+          "effect": "Built to convert contact into containment—best used immediately after a successful Grapple."
         }
       ],
-      "composition_limit": "0-2 per army",
-      "max_count": 2,
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+      "composition": { "per_points": 400 },
+      "abilities": [
+        {
+          "name": "Fast",
+          "ref": "R-ABIL-B-FAST",
+          "effect": "+2\" to base movement."
+        },
+        {
+          "name": "Grapple",
+          "ref": "R-ABIL-B-GRAPPLE",
+          "effect": "On hit, pull target 3\" toward self; target cannot move next activation."
+        },
+        {
+          "name": "Binding Rig",
+          "ref": "R-ABIL-H-BINDING-RIG",
+          "effect": "On successful Grapple vs Brute or Monster type: target becomes Restrained (cannot move or attack until freed or this unit dies)."
+        },
+        {
+          "name": "Tough",
+          "ref": "R-ABIL-D-TOUGH",
+          "effect": "When taking damage, roll 1 die per damage; each 5+ ignores 1 damage."
+        }
+      ],
+      "lore": "The best at what they do: steam-assisted reflexes, reinforced armor, and a perfect arrest record.",
+      "tactics": "Mobile arrest specialist. Fast + Grapple + Binding Rig is the Corps’ cleanest capture package."
     },
+
     {
-      "name": "Pinkerton Marksman",
+      "name": "Marksman Contractor",
       "faction": "Liberty Corps",
       "type": "Shooter",
       "cost": 162,
@@ -219,46 +353,71 @@
       "move": 6,
       "range": 20,
       "weapon": "Precision Rifle",
-      "weapon_properties": [
-        "AP(2)",
-        "Deadly Shot"
+      "weapon_properties": ["ranged"],
+      "weapon_effects": [
+        {
+          "name": "Brutal Pierce",
+          "ref": "R-ABIL-C-BRUTAL-PIERCE",
+          "effect": "Ignores 2 points of Defense."
+        }
       ],
+      "composition": { "per_points": 400 },
       "abilities": [
-        "Deadeye",
-        "Mark Target"
+        {
+          "name": "Deadeye",
+          "ref": "R-ABIL-C-DEADEYE",
+          "effect": "Once per game: re-roll all failed dice on a single ranged attack."
+        },
+        {
+          "name": "Mark Target",
+          "ref": "R-ABIL-C-MARK-TARGET",
+          "effect": "Once per game: choose one enemy in LoS; that target takes +1 damage from all sources until end of round."
+        }
       ],
-      "lore": "Private detective turned contractor. Their job isn't justice---it's results, documented and delivered.",
-      "tactics": "Lane control and surgical removals. Mark priority targets for arrest or elimination.",
-      "composition_limit": "0-2 per army",
-      "max_count": 2,
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+      "lore": "Contract shooters attached to enforcement columns. Their job isn’t justice—it’s results, recorded and delivered.",
+      "tactics": "Delete or cripple key pieces. Mark targets to concentrate fire and force compliance."
     },
+
     {
       "name": "Riot Harmonist",
       "faction": "Liberty Corps",
-      "type": "Mystic",
+      "type": "Specialist",
       "cost": 136,
       "quality": 4,
       "defense": 2,
       "move": 5,
-      "range": 10,
+      "range": 12,
       "weapon": "Bombardion (Steam Sonic Tuba)",
-      "weapon_properties": [
-        "Sonic",
-        "Blast(2)"
+      "weapon_properties": ["ranged"],
+      "weapon_effects": [
+        {
+          "name": "Sonic",
+          "ref": "R-ABIL-C-SONIC",
+          "effect": "Ignores Cover; may cause Deafening/Disorientation where applicable."
+        },
+        {
+          "name": "Blast",
+          "ref": "R-ABIL-C-BLAST",
+          "effect": "3\" radius area attack; roll separately for each model; Cover applies normally unless ignored."
+        }
       ],
+      "composition": { "per_points": 400 },
       "abilities": [
-        "Audio Suppression",
-        "Signal Orders"
+        {
+          "name": "Audio Suppression",
+          "ref": "R-ABIL-E-AUDIO-SUPPRESSION",
+          "effect": "Enemies within 6\" suffer -1 to Morale checks."
+        },
+        {
+          "name": "Signal Orders",
+          "ref": "R-ABIL-H-SIGNAL-ORDERS",
+          "effect": "One friendly unit within 12\" may immediately move 3\"."
+        }
       ],
-      "lore": "A brass-backed crowd-control officer carrying a steam-powered bombardion. Used for signaling and for breaking resolve with weaponized sound.",
-      "tactics": "Area denial and morale pressure. Sonic ignores Heavy Armor and cover bonuses. Keep spacing---friendly resonance is dangerous.",
-      "composition_limit": "0-2 per army",
-      "max_count": 2,
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+      "lore": "A brass-backed crowd-control officer. Used for signaling, dispersal, and breaking resolve with weaponized sound.",
+      "tactics": "Area denial + morale pressure. Best behind the line, shaping movement and punishing clustered units."
     },
+
     {
       "name": "Liberty Corps Judge",
       "faction": "Liberty Corps",
@@ -267,35 +426,38 @@
       "quality": 5,
       "defense": 3,
       "move": 5,
-      "range": 10,
-      "weapon": "Liberty Revolver",
-      "weapon_properties": [
-        "AP(1)",
-        "Pinning Shot"
-      ],
-      "abilities": [
-        "Authority",
-        "Inspire",
-        "Pass Judgment"
-      ],
-      "lore": "In Liberty Corps jurisdiction, Judges hold executive power in the field. They prosecute, sentence, and execute all in one. Their presence turns mob into firing squad.",
-      "tactics": "Command hub. Authority negates enemy Suppression. Inspire boosts morale. Pass Judgment marks targets for harsh penalties. Position centrally to maximize aura effects.",
-      "upgrades": [
+      "range": 12,
+      "weapon": "Judicial Revolver",
+      "weapon_properties": ["ranged"],
+      "weapon_effects": [
         {
-          "name": "Law Books",
-          "cost": 2,
-          "effect": "Gain +1 use of Pass Judgment (twice per game instead of once)."
-        },
-        {
-          "name": "Judicial Robes",
-          "cost": 3,
-          "effect": "Friendly Liberty Corps units within 6\" gain +1 to Quality checks when attempting to Arrest enemy units."
+          "name": "Pinning Shot",
+          "ref": "R-ABIL-C-PINNING-SHOT",
+          "effect": "On hit, target cannot move during its next activation."
         }
       ],
-      "composition_limit": "0-1 per army",
-      "unique": true,
-      "max_count": 1
+      "composition": { "per_points": 400 },
+      "abilities": [
+        {
+          "name": "Authority",
+          "ref": "R-ABIL-E-AUTHORITY",
+          "effect": "Friendly units within 6\" ignore Suppression effects."
+        },
+        {
+          "name": "Inspire",
+          "ref": "R-ABIL-E-INSPIRE",
+          "effect": "Friendly units within 6\" gain +1 to Morale checks."
+        },
+        {
+          "name": "Pass Judgment",
+          "ref": "R-ABIL-C-PASS-JUDGMENT",
+          "effect": "Once per game: target one enemy within 12\". Until end of game, that unit suffers -1 to all Defense rolls; Liberty Corps may reroll 1s when attacking it."
+        }
+      ],
+      "lore": "In Liberty Corps jurisdiction, Judges hold executive power in the field. They prosecute, sentence, and enforce—cleanly, publicly, and without appeal.",
+      "tactics": "Command anchor. Keeps the line steady and selects one enemy to become the example."
     },
+
     {
       "name": "Black Mariah",
       "faction": "Liberty Corps",
@@ -304,24 +466,37 @@
       "quality": 5,
       "defense": 3,
       "move": 8,
-      "range": null,
+      "range": 0,
       "weapon": "Armored Ram & Restraint Winch",
-      "weapon_properties": [
-        "Grapple"
+      "weapon_properties": ["melee"],
+      "weapon_effects": [
+        {
+          "name": "Restraint Winch",
+          "effect": "Ideal for collecting arrested/prisoner targets and converting control into removal/extraction."
+        }
       ],
+      "composition": { "per_points": 400 },
       "abilities": [
-        "Cargo Hold",
-        "Mobile Cell Block",
-        "High-Value Target"
+        {
+          "name": "Cargo Hold",
+          "ref": "R-ABIL-H-CARGO-HOLD",
+          "effect": "Transport up to 4 Rangers OR 1 medium Monster OR 2 objectives; load/unload requires base contact and one activation."
+        },
+        {
+          "name": "Mobile Cell Block",
+          "ref": "R-ABIL-B-MOBILE-CELL-BLOCK",
+          "effect": "Transports Captured models. If destroyed, prisoners are released."
+        },
+        {
+          "name": "Armored",
+          "ref": "R-ABIL-D-ARMORED",
+          "effect": "Reduce damage taken by 1 (minimum 0); does not affect terrain/environmental damage."
+        }
       ],
-      "lore": "A steam-powered armored prison wagon. It doesn't bring help. It brings jurisdiction.",
-      "tactics": "Primary scoring engine. Load restrained units and extract. If destroyed, all prisoners are released.",
-      "composition_limit": "0-1 per army",
-      "unique": true,
-      "max_count": 1,
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+      "lore": "A steam-powered armored prison wagon. It doesn’t bring help. It brings jurisdiction.",
+      "tactics": "Scoring engine and denial piece. Collect, transport, and secure removals—protect it or your captures spill back into the fight."
     },
+
     {
       "name": "Classified Asset: Troll-Howitzer",
       "faction": "Liberty Corps",
@@ -332,23 +507,46 @@
       "move": 2,
       "range": 26,
       "weapon": "Howitzer Cannon (Fused)",
-      "weapon_properties": [
-        "Blast(3)",
-        "AP(3)"
+      "weapon_properties": ["ranged"],
+      "weapon_effects": [
+        {
+          "name": "Massive Blast",
+          "ref": "R-ABIL-C-MASSIVE-BLAST",
+          "effect": "6\" radius area attack; roll separately for each model; Cover applies normally."
+        },
+        {
+          "name": "Savage Pierce",
+          "ref": "R-ABIL-C-SAVAGE-PIERCE",
+          "effect": "Ignores 3 points of Defense."
+        },
+        {
+          "name": "Universal Terror",
+          "ref": "R-ABIL-C-UNIVERSAL-TERROR",
+          "effect": "When this unit fires: ALL units (friendly AND enemy) within 12\" must test Morale."
+        }
       ],
+      "composition": { "per_points": 600 },
       "abilities": [
-        "Monster+Device",
-        "Fear(2)",
-        "Mismanaged Asset"
+        {
+          "name": "Mismanaged Asset",
+          "ref": "R-ABIL-H-MISMANAGED-ASSET",
+          "effect": "If this unit is destroyed before Round 4, your faction loses 5 Victory Points."
+        },
+        {
+          "name": "Armored",
+          "ref": "R-ABIL-D-ARMORED",
+          "effect": "Reduce damage taken by 1 (minimum 0)."
+        },
+        {
+          "name": "Steadfast",
+          "ref": "R-ABIL-D-STEADFAST",
+          "effect": "Failed Morale results in normal failure, never Panic."
+        }
       ],
       "lore": "A restrained monster fused to artillery hardware. It fires because it hurts. It exists because paperwork said it could.",
-      "tactics": "Deterrence through escalation. Every shot risks morale collapse on both sides.",
-      "composition_limit": "0-1 per army (centerpiece)",
-      "unique": true,
-      "max_count": 1,
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+      "tactics": "Deterrence through escalation. Every shot reshapes morale; protect it until it has done its work."
     },
+
     {
       "name": "Uncle Liberty",
       "faction": "Liberty Corps",
@@ -357,29 +555,46 @@
       "quality": 6,
       "defense": 4,
       "move": 6,
-      "range": null,
+      "range": 0,
       "weapon": "Steam-Powered Fists",
-      "weapon_properties": [
-        "Impact(3)"
+      "weapon_properties": ["melee"],
+      "weapon_effects": [
+        {
+          "name": "Savage Impact",
+          "ref": "R-ABIL-C-SAVAGE-IMPACT",
+          "effect": "Moving 3\"+ into contact deals 3 automatic hits before rolling attack dice."
+        }
       ],
+      "composition": { "per_points": 800 },
       "abilities": [
-        "Inspire",
-        "Fear(2)",
-        "Regeneration"
+        {
+          "name": "Inspire",
+          "ref": "R-ABIL-E-INSPIRE",
+          "effect": "Friendly units within 6\" gain +1 to Morale checks."
+        },
+        {
+          "name": "Fear",
+          "ref": "R-ABIL-E-FEAR",
+          "effect": "Enemies within 6\" suffer -1 die on Morale tests."
+        },
+        {
+          "name": "Regeneration",
+          "ref": "R-ABIL-D-REGENERATION",
+          "effect": "At start of activation, heal 1 wound on a 5+."
+        },
+        {
+          "name": "Unyielding",
+          "ref": "R-ABIL-D-UNYIELDING",
+          "effect": "Cannot be pushed/pulled/repositioned by enemy abilities."
+        }
       ],
-      "lore": "The first President of the United States of Liberty. Half man, half machine, sustained by steam, myth, and unfinished business. He fights for Liberty---until Liberty demands more.",
-      "tactics": "Devastating charge unit with Impact(3) delivering automatic hits. If killed, rises once as UNCONTROLLED---control alternates between players each round. High-risk centerpiece that becomes everyone's problem.",
+      "lore": "The first President of the United States of Liberty. A living symbol of national resolve, sustained beyond mortality by steam, steel, and duty. He is not deployed lightly. He is a national response asset.",
+      "tactics": "Catastrophic closer. When he arrives, it’s no longer a negotiation—it's national compliance.",
       "special_rules": {
-        "Been Killed Seven Times": "If Uncle Liberty is reduced to 0 Quality for the FIRST TIME: Remove all damage, place within 6\" of death location, becomes UNCONTROLLED permanently. Control alternates each round (Round 1: opponent, Round 2: owner, etc.). Controlling player activates him, MUST move toward and attack nearest enemy. Cannot use choice abilities or score objectives. Regeneration works automatically. If reduced to 0 Quality while UNCONTROLLED: destroyed permanently, no VP awarded. ONE RESURRECTION ONLY.",
-        "Guardian of the Land": "Cannot be Arrested, Charmed, Transported, or Embarked. If destroyed after resurrection is exhausted, neither player scores VP."
-      },
-      "composition_limit": "0-1 per army (Hero)",
-      "unique": true,
-      "max_count": 1,
-      "upgrades": [],
-      "upgrades_note": "May purchase universal upgrades: Gas Mask, Spare Parts"
+        "national_response_asset": "Scenario/roster rules may restrict or condition Uncle Liberty’s inclusion (campaign escalation, high point thresholds, or special missions).",
+        "insane_contingency": "If your core rules include Uncle Liberty becoming uncontrollable, place that rule here in your master faction file so it stays consistent across apps."
+      }
     }
   ],
-  "universal_upgrades_available": true,
-  "universal_upgrades_note": "Liberty Corps units may purchase universal upgrades from core rules (Gas Mask, Spare Parts, vehicle upgrades) where appropriate."
+  "optional_upgrades_note": "Liberty Corps commonly fields respirators, goggles, and hardened kit for toxic operations. If your universal upgrades include Gas Mask / Built-In Respirator / Built-In Goggles, apply them via your shared upgrade system rather than duplicating here."
 }
