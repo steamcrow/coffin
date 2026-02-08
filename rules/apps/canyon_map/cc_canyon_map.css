@@ -28,6 +28,15 @@
   overflow: hidden;
 }
 
+/* Update these in your .cc-lens and .cc-frame-overlay */
+
+:root {
+  --frame-width: 900px; /* Base size */
+  --frame-ratio: 1.5;   /* 900 / 600 */
+}
+
+}
+
 /* === LARGE BASE MAP (Background layer - fills container) === */
 /* This is the blurry/low-res version that fills the whole view */
 #cc-cm-map,
@@ -67,11 +76,12 @@
   height: 0 !important;
   pointer-events: none !important;
 }
-
+  
+}
 /* Lens container - centered, fits inside iron window */
 .cc-lens {
-  --lens-w: 520px;
-  --lens-h: 360px;
+  width: calc(var(--frame-width) * 0.65) !important; 
+  height: calc(var(--frame-width) * 0.44) !important;
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
@@ -127,12 +137,13 @@
 }
 
 /* === BRASS FRAME OVERLAY (Centered, on top of base map) === */
+  /* ... keep your other centered positioning ... */
 .cc-frame-overlay {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
-  width: 75% !important;
-  height: 75% !important;
+  width: var(--frame-width) !important;
+  height: calc(var(--frame-width) / var(--frame-ratio)) !important;
   max-width: 1100px !important;
   max-height: 750px !important;
   transform: translate(-50%, -50%) !important;
