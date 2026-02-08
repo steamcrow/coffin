@@ -1,6 +1,6 @@
 {
   "faction": "Liberty Corps",
-  "version": "2.0",
+  "version": "2.1",
   "introduction": {
     "title": "Liberty Corps: Preservation Through Authority",
     "tagline": "Stabilize the park. Enforce the border. Make the canyon compliant.",
@@ -139,21 +139,34 @@
       "cost": 0,
       "required": true,
       "effect": "Liberty Corps treats Coffin Canyon as a Forbidden National Park under federal control. Their operations prioritize stabilization, eviction, and removal of unlawful presences.",
-      "keywords": ["jurisdiction", "exclusion", "procedure"]
+      "keywords": [
+        "jurisdiction",
+        "exclusion",
+        "procedure"
+      ]
     },
     {
       "name": "Arrest & Extraction Doctrine",
       "cost": 0,
       "required": true,
       "effect": "Liberty Corps specializes in restraining and removing targets rather than simply destroying them. Units with Grapple/Binding Rig/Lockdown excel at creating arrests; transport units convert arrests into secure removals and scoring.",
-      "keywords": ["arrest", "containment", "extraction", "control"]
+      "keywords": [
+        "arrest",
+        "containment",
+        "extraction",
+        "control"
+      ]
     },
     {
       "name": "Procedure Is Patriotism",
       "cost": 0,
       "required": false,
       "effect": "Command presence (Authority/Inspire/Signal Orders) keeps units coordinated and resistant to morale disruption—so long as the chain of command remains intact.",
-      "keywords": ["command", "morale", "discipline"]
+      "keywords": [
+        "command",
+        "morale",
+        "discipline"
+      ]
     }
   ],
   "units": [
@@ -167,14 +180,18 @@
       "move": 6,
       "range": 0,
       "weapon": "Truncheon, Net, Restraints",
-      "weapon_properties": ["melee"],
+      "weapon_properties": [
+        "melee"
+      ],
       "weapon_effects": [
         {
           "name": "Improvised Restraints",
           "effect": "Counts as suitable gear for arrests and prisoner handling where scenario rules require restraints."
         }
       ],
-      "composition": { "per_points": 0 },
+      "composition": {
+        "per_points": 0
+      },
       "abilities": [
         {
           "name": "Runner",
@@ -183,9 +200,42 @@
         }
       ],
       "lore": "Cheap bodies in cheap uniforms—pressed into service, promised glory, issued a whistle and a pair of cuffs.",
-      "tactics": "Flood lanes, contest objectives, and enable arrests. Trade lives for time and position."
+      "tactics": "Flood lanes, contest objectives, and enable arrests. Trade lives for time and position.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Cold-Iron Handcuffs",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Actionable rule: When this unit helps apply a Restrained/Captured state (from Grapple/Binding Rig/scenario arrest), the restrained target’s Break Free attempt is harder. If the restrained target attempts to Break Free as a Main Action, it must score 2+ successes on its Quality test (instead of 1). Titans ignore this upgrade.",
+          "keywords": [
+            "arrest",
+            "containment",
+            "anti_monster"
+          ]
+        },
+        {
+          "name": "Citation Ledger",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Actionable rule: Once per activation, when this model makes an Interact action tied to Seize/Arrest/Evidence/Objective handling, gain +1 die for that Interact roll (or +1 success if your Interact uses flat success).",
+          "keywords": [
+            "procedure",
+            "objective",
+            "interact"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Steam Constable",
       "faction": "Liberty Corps",
@@ -196,14 +246,18 @@
       "move": 5,
       "range": 0,
       "weapon": "Steam Fists & Iron Baton",
-      "weapon_properties": ["melee"],
+      "weapon_properties": [
+        "melee"
+      ],
       "weapon_effects": [
         {
           "name": "Baton Interdiction",
           "effect": "Designed for arrests: pair with Grapple/Lockdown to prevent disengage and set up prisoner capture."
         }
       ],
-      "composition": { "per_points": 0 },
+      "composition": {
+        "per_points": 0
+      },
       "abilities": [
         {
           "name": "Grapple",
@@ -216,10 +270,52 @@
           "effect": "+1 Defense while adjacent to another Shield Wall model; no bonus vs Blast."
         }
       ],
-      "lore": "Uniformed enforcers in slab-wool coats and iron helmets. Steam packs drive piston-fists built for arrests, not duels.",
-      "tactics": "Frontline control. Grapple and Shield Wall make lanes sticky, enabling arrests and denying breakthroughs."
+      "lore": "Uniformed enforcers in wool coats and iron helmets. Steam packs drive piston-fists built for arrests, not duels.",
+      "tactics": "Frontline control. Grapple and Shield Wall make lanes sticky, enabling arrests and denying breakthroughs.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Iron Slab Plating",
+          "cost": 15,
+          "type": "Upgrade",
+          "effect": "Bolt-on armor plates. Gain Armored (reduce damage taken by 1, minimum 0). Also +1 Defense, but -1\" Move from the extra mass.",
+          "stat_modifiers": {
+            "defense": 1,
+            "move": -1
+          },
+          "grants_abilities": [
+            "armored"
+          ],
+          "keywords": [
+            "armor",
+            "tank",
+            "industrial"
+          ]
+        },
+        {
+          "name": "Cold-Iron Restraint Kit",
+          "cost": 6,
+          "type": "Gear",
+          "effect": "Actionable rule: While this model is Engaged with an enemy model it has Grappled or that is Restrained, that enemy model cannot Disengage and cannot use free moves (as Lockdown). Ends if this model becomes Shaken or is forcibly moved.",
+          "grants_abilities": [
+            "lockdown"
+          ],
+          "keywords": [
+            "lockdown",
+            "arrest"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Field Technician",
       "faction": "Liberty Corps",
@@ -230,14 +326,18 @@
       "move": 6,
       "range": 0,
       "weapon": "Tool Roll & Shock Stick",
-      "weapon_properties": ["melee"],
+      "weapon_properties": [
+        "melee"
+      ],
       "weapon_effects": [
         {
           "name": "Shock Stick",
           "effect": "Useful for discouraging close threats while the Technician keeps assets operational."
         }
       ],
-      "composition": { "per_points": 300 },
+      "composition": {
+        "per_points": 300
+      },
       "abilities": [
         {
           "name": "Assistant",
@@ -256,9 +356,43 @@
         }
       ],
       "lore": "Cable-haulers and wrench-hands who keep Liberty Corps machinery alive in places it was never meant to operate.",
-      "tactics": "Support backbone. Keep vehicles and control pieces functioning; strip debuffs at key moments."
+      "tactics": "Support backbone. Keep vehicles and control pieces functioning; strip debuffs at key moments.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Spare Parts Satchel",
+          "cost": 6,
+          "type": "Gear",
+          "effect": "Actionable rule: Start the game with 2 Spare Parts tokens. Each time you use Repair, you may spend a token instead of requiring (or consuming) any other Spare Parts source. If you already track Spare Parts globally, this adds +2 uses for this model only.",
+          "keywords": [
+            "repair",
+            "support"
+          ]
+        },
+        {
+          "name": "Portable Jamming Coil",
+          "cost": 8,
+          "type": "Device",
+          "effect": "Actionable rule: Enemy units within 6\" cannot use Hex, Charm, or other Mystic special abilities.",
+          "grants_abilities": [
+            "sonic_nullifier"
+          ],
+          "keywords": [
+            "anti_mystic",
+            "tech"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Liberty Corps Detective",
       "faction": "Liberty Corps",
@@ -269,7 +403,9 @@
       "move": 6,
       "range": 12,
       "weapon": "Liberty Revolver",
-      "weapon_properties": ["ranged"],
+      "weapon_properties": [
+        "ranged"
+      ],
       "weapon_effects": [
         {
           "name": "Pinning Shot",
@@ -277,7 +413,9 @@
           "effect": "On hit, target cannot move during its next activation."
         }
       ],
-      "composition": { "per_points": 300 },
+      "composition": {
+        "per_points": 300
+      },
       "abilities": [
         {
           "name": "Runner",
@@ -296,9 +434,44 @@
         }
       ],
       "lore": "Plain clothes, keen eyes, documented everything. The warrant is already drafted—signed, stamped, inevitable.",
-      "tactics": "Priority marking and lane control. Use pinning to set up arrests and prevent escapes."
+      "tactics": "Priority marking and lane control. Use pinning to set up arrests and prevent escapes.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Cold-Iron Handcuffs",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Actionable rule: When this unit helps apply a Restrained/Captured state (from Grapple/Binding Rig/scenario arrest), the restrained target’s Break Free attempt is harder. If the restrained target attempts to Break Free as a Main Action, it must score 2+ successes on its Quality test (instead of 1). Titans ignore this upgrade.",
+          "keywords": [
+            "arrest",
+            "containment",
+            "anti_monster"
+          ]
+        },
+        {
+          "name": "Case File: Pattern Analysis",
+          "cost": 6,
+          "type": "Gear",
+          "effect": "Actionable rule: Once per game, when you use Mark Target, also apply Suppressed to that target (their next Action suffers -1 die).",
+          "grants_abilities": [
+            "suppress"
+          ],
+          "keywords": [
+            "control",
+            "debuff"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Warrant Officer",
       "faction": "Liberty Corps",
@@ -309,14 +482,18 @@
       "move": 7,
       "range": 0,
       "weapon": "Shock Baton & Restraint Rig",
-      "weapon_properties": ["melee"],
+      "weapon_properties": [
+        "melee"
+      ],
       "weapon_effects": [
         {
           "name": "Restraint Rig",
           "effect": "Built to convert contact into containment—best used immediately after a successful Grapple."
         }
       ],
-      "composition": { "per_points": 400 },
+      "composition": {
+        "per_points": 400
+      },
       "abilities": [
         {
           "name": "Fast",
@@ -340,9 +517,44 @@
         }
       ],
       "lore": "The best at what they do: steam-assisted reflexes, reinforced armor, and a perfect arrest record.",
-      "tactics": "Mobile arrest specialist. Fast + Grapple + Binding Rig is the Corps’ cleanest capture package."
+      "tactics": "Mobile arrest specialist. Fast + Grapple + Binding Rig is the Corps’ cleanest capture package.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Cold-Iron Handcuffs",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Actionable rule: When this unit helps apply a Restrained/Captured state (from Grapple/Binding Rig/scenario arrest), the restrained target’s Break Free attempt is harder. If the restrained target attempts to Break Free as a Main Action, it must score 2+ successes on its Quality test (instead of 1). Titans ignore this upgrade.",
+          "keywords": [
+            "arrest",
+            "containment",
+            "anti_monster"
+          ]
+        },
+        {
+          "name": "Heroic Grit",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Once per game: Ignore the first wound suffered.",
+          "grants_abilities": [
+            "heroic_grit"
+          ],
+          "keywords": [
+            "survival",
+            "elite"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Marksman Contractor",
       "faction": "Liberty Corps",
@@ -353,7 +565,9 @@
       "move": 6,
       "range": 20,
       "weapon": "Precision Rifle",
-      "weapon_properties": ["ranged"],
+      "weapon_properties": [
+        "ranged"
+      ],
       "weapon_effects": [
         {
           "name": "Brutal Pierce",
@@ -361,7 +575,9 @@
           "effect": "Ignores 2 points of Defense."
         }
       ],
-      "composition": { "per_points": 400 },
+      "composition": {
+        "per_points": 400
+      },
       "abilities": [
         {
           "name": "Deadeye",
@@ -375,9 +591,40 @@
         }
       ],
       "lore": "Contract shooters attached to enforcement columns. Their job isn’t justice—it’s results, recorded and delivered.",
-      "tactics": "Delete or cripple key pieces. Mark targets to concentrate fire and force compliance."
+      "tactics": "Delete or cripple key pieces. Mark targets to concentrate fire and force compliance.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Camouflage Mantle",
+          "cost": 6,
+          "type": "Gear",
+          "effect": "Actionable rule: Gain Stealth while in Cover. If you leave cover, Stealth ends until you enter cover again.",
+          "keywords": [
+            "stealth",
+            "shooter"
+          ]
+        },
+        {
+          "name": "Shredder Rounds",
+          "cost": 8,
+          "type": "Ammo",
+          "effect": "Actionable rule: Once per game, declare Shredder Rounds before making a ranged attack. That attack upgrades Pierce to Savage Pierce (ignore 3 Defense) for this attack only.",
+          "keywords": [
+            "pierce",
+            "burst_damage"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Riot Harmonist",
       "faction": "Liberty Corps",
@@ -388,7 +635,9 @@
       "move": 5,
       "range": 12,
       "weapon": "Bombardion (Steam Sonic Tuba)",
-      "weapon_properties": ["ranged"],
+      "weapon_properties": [
+        "ranged"
+      ],
       "weapon_effects": [
         {
           "name": "Sonic",
@@ -401,7 +650,9 @@
           "effect": "3\" radius area attack; roll separately for each model; Cover applies normally unless ignored."
         }
       ],
-      "composition": { "per_points": 400 },
+      "composition": {
+        "per_points": 400
+      },
       "abilities": [
         {
           "name": "Audio Suppression",
@@ -415,9 +666,46 @@
         }
       ],
       "lore": "A brass-backed crowd-control officer. Used for signaling, dispersal, and breaking resolve with weaponized sound.",
-      "tactics": "Area denial + morale pressure. Best behind the line, shaping movement and punishing clustered units."
+      "tactics": "Area denial + morale pressure. Best behind the line, shaping movement and punishing clustered units.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Smoke Canisters",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Actionable rule: Gain Smoke Screen as a Main Action, once per game.",
+          "grants_abilities": [
+            "smoke_screen"
+          ],
+          "keywords": [
+            "terrain",
+            "control"
+          ]
+        },
+        {
+          "name": "Discipline Cadence",
+          "cost": 6,
+          "type": "Upgrade",
+          "effect": "Actionable rule: Gain Authority aura (friendly within 6\" ignore Suppression).",
+          "grants_abilities": [
+            "authority"
+          ],
+          "keywords": [
+            "command",
+            "support"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Liberty Corps Judge",
       "faction": "Liberty Corps",
@@ -428,7 +716,9 @@
       "move": 5,
       "range": 12,
       "weapon": "Judicial Revolver",
-      "weapon_properties": ["ranged"],
+      "weapon_properties": [
+        "ranged"
+      ],
       "weapon_effects": [
         {
           "name": "Pinning Shot",
@@ -436,7 +726,9 @@
           "effect": "On hit, target cannot move during its next activation."
         }
       ],
-      "composition": { "per_points": 400 },
+      "composition": {
+        "per_points": 400
+      },
       "abilities": [
         {
           "name": "Authority",
@@ -455,9 +747,43 @@
         }
       ],
       "lore": "In Liberty Corps jurisdiction, Judges hold executive power in the field. They prosecute, sentence, and enforce—cleanly, publicly, and without appeal.",
-      "tactics": "Command anchor. Keeps the line steady and selects one enemy to become the example."
+      "tactics": "Command anchor. Keeps the line steady and selects one enemy to become the example.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Seal of Office",
+          "cost": 7,
+          "type": "Relic",
+          "effect": "Actionable rule: Gain Intimidate as a Main Action (force Morale test on enemy within 6\" and LoS; no effect on Titans).",
+          "grants_abilities": [
+            "intimidate"
+          ],
+          "keywords": [
+            "morale",
+            "leader"
+          ]
+        },
+        {
+          "name": "Writ of Eviction",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Actionable rule: Once per round, after this model resolves an Interact action, choose one enemy within 6\". That enemy cannot take Reaction actions until the end of the round (paperwork-backed momentum).",
+          "keywords": [
+            "anti_reaction",
+            "control"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Black Mariah",
       "faction": "Liberty Corps",
@@ -468,14 +794,18 @@
       "move": 8,
       "range": 0,
       "weapon": "Armored Ram & Restraint Winch",
-      "weapon_properties": ["melee"],
+      "weapon_properties": [
+        "melee"
+      ],
       "weapon_effects": [
         {
           "name": "Restraint Winch",
           "effect": "Ideal for collecting arrested/prisoner targets and converting control into removal/extraction."
         }
       ],
-      "composition": { "per_points": 400 },
+      "composition": {
+        "per_points": 400
+      },
       "abilities": [
         {
           "name": "Cargo Hold",
@@ -494,9 +824,40 @@
         }
       ],
       "lore": "A steam-powered armored prison wagon. It doesn’t bring help. It brings jurisdiction.",
-      "tactics": "Scoring engine and denial piece. Collect, transport, and secure removals—protect it or your captures spill back into the fight."
+      "tactics": "Scoring engine and denial piece. Collect, transport, and secure removals—protect it or your captures spill back into the fight.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Reinforced Cell Bars",
+          "cost": 12,
+          "type": "Upgrade",
+          "effect": "Actionable rule: If this unit is destroyed, captured/prisoner models are still released, but they enter play Shaken and Pinned (representing disorientation and partial restraint).",
+          "keywords": [
+            "transport",
+            "arrest"
+          ]
+        },
+        {
+          "name": "Steam Booster",
+          "cost": 6,
+          "type": "Upgrade",
+          "effect": "Actionable rule: Once per game, after this model moves, it may immediately move an additional 4\".",
+          "keywords": [
+            "mobility",
+            "transport"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Classified Asset: Troll-Howitzer",
       "faction": "Liberty Corps",
@@ -507,7 +868,9 @@
       "move": 2,
       "range": 26,
       "weapon": "Howitzer Cannon (Fused)",
-      "weapon_properties": ["ranged"],
+      "weapon_properties": [
+        "ranged"
+      ],
       "weapon_effects": [
         {
           "name": "Massive Blast",
@@ -525,7 +888,9 @@
           "effect": "When this unit fires: ALL units (friendly AND enemy) within 12\" must test Morale."
         }
       ],
-      "composition": { "per_points": 600 },
+      "composition": {
+        "per_points": 600
+      },
       "abilities": [
         {
           "name": "Mismanaged Asset",
@@ -544,9 +909,43 @@
         }
       ],
       "lore": "A restrained monster fused to artillery hardware. It fires because it hurts. It exists because paperwork said it could.",
-      "tactics": "Deterrence through escalation. Every shot reshapes morale; protect it until it has done its work."
+      "tactics": "Deterrence through escalation. Every shot reshapes morale; protect it until it has done its work.",
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask (Crew Issue)",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask (for attached crew). Practical effect: this unit ignores Coffin Cough / gas & smoke visual/lung penalties where scenarios would apply them to crewed assets.",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Stabilizer Spikes",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Actionable rule: Gain Anchor (cannot be moved by enemy abilities/effects; ignores knockback/displacement).",
+          "grants_abilities": [
+            "anchor"
+          ],
+          "keywords": [
+            "anti_displacement",
+            "siege"
+          ]
+        },
+        {
+          "name": "Reinforced Restraint Harness",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "Actionable rule: The first time each round this unit would be forcibly moved or repositioned by an enemy ability, ignore it (no effect).",
+          "keywords": [
+            "durability",
+            "control"
+          ]
+        }
+      ]
     },
-
     {
       "name": "Uncle Liberty",
       "faction": "Liberty Corps",
@@ -557,7 +956,9 @@
       "move": 6,
       "range": 0,
       "weapon": "Steam-Powered Fists",
-      "weapon_properties": ["melee"],
+      "weapon_properties": [
+        "melee"
+      ],
       "weapon_effects": [
         {
           "name": "Savage Impact",
@@ -565,7 +966,9 @@
           "effect": "Moving 3\"+ into contact deals 3 automatic hits before rolling attack dice."
         }
       ],
-      "composition": { "per_points": 800 },
+      "composition": {
+        "per_points": 800
+      },
       "abilities": [
         {
           "name": "Inspire",
@@ -593,8 +996,43 @@
       "special_rules": {
         "national_response_asset": "Scenario/roster rules may restrict or condition Uncle Liberty’s inclusion (campaign escalation, high point thresholds, or special missions).",
         "insane_contingency": "If your core rules include Uncle Liberty becoming uncontrollable, place that rule here in your master faction file so it stays consistent across apps."
-      }
+      },
+      "optional_upgrades": [
+        {
+          "name": "Federal Gas Mask (Symbolic)",
+          "cost": 3,
+          "type": "Gear",
+          "effect": "Same as Monster Rangers Gas Mask. Practical effect: ignores Coffin Cough / gas & smoke visual/lung penalties (scenario-defined).",
+          "grants_abilities": [
+            "gas_mask",
+            "built_in_goggles"
+          ]
+        },
+        {
+          "name": "Steam Governor",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "Actionable rule: Once per game, when Uncle Liberty would suffer damage, reduce that damage by 2 before applying reductions/rolls (minimum 0).",
+          "keywords": [
+            "survival",
+            "hero"
+          ]
+        },
+        {
+          "name": "Overdrive Directive",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "Once per game: After Uncle Liberty resolves an Attack or Interact action, he may immediately take one additional action. After the second action resolves, Uncle Liberty loses 1 Quality.",
+          "grants_abilities": [
+            "bite_the_bullet"
+          ],
+          "keywords": [
+            "burst",
+            "hero"
+          ]
+        }
+      ]
     }
   ],
-  "optional_upgrades_note": "Liberty Corps commonly fields respirators, goggles, and hardened kit for toxic operations. If your universal upgrades include Gas Mask / Built-In Respirator / Built-In Goggles, apply them via your shared upgrade system rather than duplicating here."
+  "optional_upgrades_note": "Federal Gas Mask is intentionally priced and worded to match the Monster Rangers Gas Mask option (3 points) while mapping to your D-dictionary protections (gas_mask + built_in_goggles). Cold-Iron restraint rules are written to be actionable without inventing new core subsystems."
 }
