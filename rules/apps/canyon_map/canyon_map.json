@@ -1,32 +1,34 @@
 {
   "schema_id": "cc_canyon_map",
-  "schema_version": "0.2",
+  "schema_version": "1.0",
   "last_updated": "2026-02-07",
+
+  "notes": [
+    "Coffin Canyon regional map",
+    "Base image is a reduced-size parchment map for scrolling",
+    "Lens image is a high-resolution version used only inside the magnifier",
+    "All region geometry uses image_px coordinates based on the ORIGINAL art size"
+  ],
+
   "map": {
-    "map_id": "coffin_canyon_region",
-    "title": "Coffin Canyon",
     "background": {
-      "image_key": "https://YOUR-CDN-OR-GITHUB-RAW/path/to/coffin_canyon_canyonmap.jpg",
-      "image_pixel_size": { "w": 6000, "h": 4000 },
+      "image_key": "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/map_coffin_canyon_small.jpg",
+      "image_pixel_size": {
+        "w": 2824,
+        "h": 4000
+      },
       "coord_system": "image_px",
-      "opacity": 1.0
-    }
-  },
-  "regions": [
-    {
-      "region_id": "region_001",
-      "name": "The Rustwater Bend",
-      "description": "A twisted oxbow where scrap-boats get stranded and disappear.",
-      "resources": ["Thyr seams (shallow)", "Scrap iron", "Cursed driftwood"],
-      "encounters": ["Ditch Goblins", "Crowbot patrol", "Thyr bloom"],
-      "shape": {
-        "points": [
-          { "x": 800, "y": 900 },
-          { "x": 1200, "y": 820 },
-          { "x": 1400, "y": 1100 },
-          { "x": 980, "y": 1250 }
-        ]
+      "opacity": 1
+    },
+
+    "lens": {
+      "image_key": "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/map_coffin_canyon_large.jpg",
+      "image_pixel_size": {
+        "w": 2824,
+        "h": 4000
       }
     }
-  ]
+  },
+
+  "regions": []
 }
