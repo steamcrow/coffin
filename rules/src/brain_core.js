@@ -98,15 +98,15 @@ class ScenarioBrain {
     const objectives = this.generateObjectives(plotFamily, location, userSelections, vpSpread);
     const cultistEncounter = { enabled: false };
     
-    // ENHANCED: Better narrative generation
+    // BETTER NARRATIVE
     const narrative = this.generateNarrative(plotFamily, location, userSelections, cultistEncounter);
     
-    // ENHANCED: Faction-specific victory conditions
+    // FACTION-SPECIFIC VICTORY CONDITIONS
     const victoryConditions = {};
     userSelections.factions.forEach(faction => {
       const validObjectives = objectives.filter(obj => obj !== null);
       
-      // Use BrainGenerators for faction interpretation
+      // Use faction interpretation for each objective
       const factionObjectives = validObjectives.map(obj => {
         const interpreted = BrainGenerators.generateFactionObjectiveInterpretation(obj, faction);
         return {
@@ -315,7 +315,16 @@ class ScenarioBrain {
     return objectives.filter(obj => obj !== null);
   }
 
+  // ENHANCED: Now uses objectiveVault data!
   buildObjective(type, location, danger, vpSpread, extra = {}) {
+    // PRIORITY 1: Check objectiveVault (240)
+    const vaultObj = this.findVaultObjective(type);
+    if (vaultObj) {
+      console.log(`  📦 Using vault objective: ${type}`);
+      return this.buildFromVault(vaultObj, location, danger, extra);
+    }
+    
+    // PRIORITY 2: Fall back to OBJECTIVE_BUILDERS
     const builder = OBJECTIVE_BUILDERS[type];
     if (!builder) return null;
     
@@ -323,6 +332,103 @@ class ScenarioBrain {
     obj.type = type;
     obj.max_vp = obj.target_value * obj.vp_per_unit;
     return obj;
+  }
+
+  // NEW: Search vault for objective
+  findVaultObjective(objectiveId) {
+    if (!this.data.objectiveVault?.objective_categories) return null;
+    
+    for (const category of this.data.objectiveVault.objective_categories) {
+      const obj = category.objectives.find(o => o.objective_id === objectiveId);
+      if (obj) return obj;
+    }
+    return null;
+  }
+
+  // NEW: Build rich objective from vault data
+  buildFromVault(vaultObj, location, danger, extra = {}) {
+    // Parse danger-scaled values
+    const markers = this.evaluateVaultValue(vaultObj.setup?.markers, danger);
+    const vpValue = vaultObj.vp_value || 3;
+    
+    // Build rich objective with mechanics
+    const obj = {
+      type: vaultObj.objective_id,
+      name: vaultObj.name,
+      description: vaultObj.description,
+      
+      // Setup
+      markers: markers,
+      marker_type: vaultObj.setup?.marker_type || vaultObj.objective_id,
+      
+      // Interaction mechanics
+      action_type: vaultObj.interaction?.action_type || 'interact',
+      action_cost: vaultObj.interaction?.action_cost || 1,
+      test_required: vaultObj.interaction?.test_required || false,
+      test_type: vaultObj.interaction?.test_type || null,
+      success_text: vaultObj.interaction?.success || 'Complete objective',
+      failure_text: vaultObj.interaction?.failure || null,
+      
+      // VP calculation
+      target_value: markers || danger,
+      vp_per_unit: vpValue,
+      progress_label: this.getProgressLabel(vaultObj),
+      
+      // Special mechanics
+      extraction_required: vaultObj.extraction_required || false,
+      hazard_level: vaultObj.hazard_level || null,
+      danger_scaling: vaultObj.danger_scaling || false
+    };
+    
+    obj.max_vp = obj.target_value * obj.vp_per_unit;
+    
+    return obj;
+  }
+
+  // NEW: Evaluate vault values that might be formulas
+  evaluateVaultValue(value, danger) {
+    if (!value) return null;
+    if (typeof value === 'number') return value;
+    if (typeof value === 'string') {
+      // Handle formulas like "danger_rating + 1"
+      if (value.includes('danger_rating')) {
+        try {
+          const formula = value.replace(/danger_rating/g, danger);
+          return eval(formula);
+        } catch (e) {
+          return danger;
+        }
+      }
+      // Handle Math formulas like "Math.max(2, Math.floor(danger_rating / 2))"
+      if (value.includes('Math.')) {
+        try {
+          const formula = value.replace(/danger_rating/g, danger);
+          return eval(formula);
+        } catch (e) {
+          return danger;
+        }
+      }
+    }
+    return danger;
+  }
+
+  // NEW: Get appropriate progress label for objective type
+  getProgressLabel(vaultObj) {
+    const labels = {
+      'round_controlled': 'Rounds',
+      'round_survived_with_models_inside': 'Rounds',
+      'crystal': 'Crystals',
+      'artifact_extracted': 'Artifact',
+      'supply_unit': 'Supplies',
+      'purified_unit': 'Purified',
+      'clue_gathered': 'Clues',
+      'evidence_delivered': 'Evidence',
+      'objective_completed_on_time': 'Objectives',
+      'completion': 'Completed'
+    };
+    
+    const vpPer = vaultObj.vp_per || 'completion';
+    return labels[vpPer] || 'Progress';
   }
 
   getResourceVP(resource) {
