@@ -1,10 +1,11 @@
 {
   "schema_id": "cc_terrain_catalog",
   "schema_version": "1.1",
-  "last_updated": "2026-02-05",
+  "last_updated": "2026-02-07",
   "notes": [
     "Catalog entries define terrain TYPES (what a piece is).",
-    "Scenario/Map uses terrain_instances.json to place copies."
+    "Scenario/Map uses terrain_instances.json to place copies.",
+    "All entries include the same schema sections (footprint/visibility/cover/elevation/movement/interaction/slots/destructibility) even when minimal."
   ],
 
   "enums": {
@@ -19,178 +20,970 @@
 
   "terrain_types": [
     {
-      "terrain_type_id": "building_saloon_two_story",
-      "name": "Two-Story Saloon",
-      "kind": "building",
-      "tags": ["wood", "old_west", "walkable", "multi_level"],
-      "emoji": "🏚️",
-
-      "footprint": {
-        "shape": "rect",
-        "size_in": { "w": 6, "d": 4 },
-        "base_height_in": 0.5
-      },
-
+      "terrain_type_id": "feature_mine_entrance",
+      "name": "Mine Entrance",
+      "kind": "feature",
+      "tags": ["rock", "tunnel", "entry", "story_anchor"],
+      "emoji": "⛏️",
+      "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 4 }, "base_height_in": 2.0 },
       "visibility": {
-        "los_profile": "blocks",
-        "blocks_los_when": "between models if line crosses footprint and neither model is on a higher level with clear line",
-        "window_los": "partial"
+        "los_profile": "partial",
+        "blocks_los_when": "Blocks partial line of sight if line passes through the entrance face at ground level",
+        "window_los": "none"
       },
-
-      "cover": {
-        "default_cover": "light",
-        "edges_cover": "heavy",
-        "interior_cover": "light"
-      },
-
-      "elevation": {
-        "system": "levels",
-        "level_unit_in": 2.0,
-        "max_level": 2,
-
-        "levels": [
-          {
-            "level": 0,
-            "name": "Ground Floor",
-            "surface_kind": "interior",
-            "walkable": true,
-            "blocks_los_from_outside": true,
-            "notes": ["Interior. Treat as difficult to see through."]
-          },
-          {
-            "level": 1,
-            "name": "Balcony / Second Floor",
-            "surface_kind": "balcony",
-            "walkable": true,
-            "railings_cover": "light",
-            "notes": ["Counts as elevated for line of sight checks."]
-          },
-          {
-            "level": 2,
-            "name": "Roof",
-            "surface_kind": "roof",
-            "walkable": true,
-            "edge_fall_risk": false,
-            "notes": ["High ground. Great firing perch."]
-          }
-        ]
-      },
-
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "heavy" },
+      "elevation": { "system": "none" },
       "movement": {
         "is_passable": false,
-        "is_walkable_on_top": true,
-        "difficult_terrain_on": ["interior"],
-        "climb": {
-          "allowed": true,
-          "mode": "ladder",
-          "min_level_access": 1,
-          "max_level_access": 2,
-          "test": {
-            "required": false,
-            "type": "quality",
-            "difficulty": 0,
-            "on_fail": "No movement; action spent"
-          }
-        }
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": ["ground"],
+        "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } }
       },
-
       "interaction": {
         "interactable": true,
         "interactions": [
           {
-            "interaction_id": "bar_counter",
-            "name": "Ransack the Bar",
+            "interaction_id": "enter_mine",
+            "name": "Enter the Mine",
             "action_type": "interact",
             "action_cost": 1,
             "test_required": true,
             "test_type": "quality",
             "difficulty": 3,
-            "on_success": "Gain 1 Loot token.",
-            "on_fail": "Make noise: nearest enemy gains +1 die vs you next attack."
+            "on_success": "Place this model in Mine Network (scenario-defined) or gain 1 Hidden token.",
+            "on_fail": "Cave air: model becomes Pressured until end of round."
           }
         ]
       },
-
       "slots": [
-        {
-          "slot_id": "saloon_roof_objective",
-          "slot_kind": "objective",
-          "label": "Roof Objective Spot",
-          "recommended_marker": "artifact",
-          "level": 2,
-          "position_hint": "center_roof",
-          "notes": ["Used by scenario builder to place an objective on the roof."]
-        },
-        {
-          "slot_id": "saloon_backdoor_spawn",
-          "slot_kind": "spawn",
-          "label": "Back Door",
-          "level": 0,
-          "position_hint": "rear_edge",
-          "notes": ["Optional entry point / ambush spawn."]
-        }
+        { "slot_id": "mine_entry_spawn", "slot_kind": "spawn", "label": "Mine Mouth", "level": 0, "position_hint": "center_front", "notes": ["Scenario builder can use as a spawn/exit or objective anchor."] },
+        { "slot_id": "mine_story_anchor", "slot_kind": "story_anchor", "label": "Mine Story Anchor", "level": 0, "position_hint": "inside_edge", "notes": ["Hooks for events: cave-in, echoes, hidden loot."] }
       ],
-
-      "destructibility": {
-        "destructible": true,
-        "structure_rating": 6,
-        "breakpoints": [
-          { "at_damage": 3, "effect": "Windows shattered: interior loses cover." },
-          { "at_damage": 6, "effect": "Collapse: level 2 becomes impassable rubble; anyone on roof takes 2 dice damage." }
-        ],
-        "rubble_result": {
-          "spawns_terrain_type_id": "rubble_wood_medium",
-          "notes": ["Replace piece with rubble marker or template."]
-        }
-      }
+      "destructibility": { "destructible": false }
     },
 
     {
-      "terrain_type_id": "scatter_crates_small",
-      "name": "Supply Crates (Small Cluster)",
-      "kind": "scatter",
-      "tags": ["lootable", "cover", "portable_optional"],
-      "emoji": "📦",
-
-      "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 2 }, "base_height_in": 1.0 },
-
-      "visibility": { "los_profile": "partial", "window_los": "none" },
-
-      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
-
+      "terrain_type_id": "feature_control_panel",
+      "name": "Control Panel",
+      "kind": "objective",
+      "tags": ["interaction", "tech", "objective"],
+      "emoji": "🧰",
+      "footprint": { "shape": "rect", "size_in": { "w": 2, "d": 2 }, "base_height_in": 1.5 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "light", "interior_cover": "none" },
       "elevation": { "system": "none" },
-
-      "movement": { "is_passable": true, "is_walkable_on_top": false },
-
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
       "interaction": {
         "interactable": true,
         "interactions": [
           {
-            "interaction_id": "search_crates",
-            "name": "Search Crates",
+            "interaction_id": "hack_panel",
+            "name": "Operate Control Panel",
             "action_type": "interact",
             "action_cost": 1,
             "test_required": true,
             "test_type": "quality",
-            "difficulty": 2,
-            "on_success": "Gain 1 Supply token.",
-            "on_fail": "Empty."
+            "difficulty": 4,
+            "on_success": "Flip/advance scenario state (doors, lights, rails, alarms).",
+            "on_fail": "Alarm: nearest enemy gains +1 die vs this model’s next defense."
           }
         ]
       },
-
       "slots": [
-        {
-          "slot_id": "crate_loot_anchor",
-          "slot_kind": "loot",
-          "label": "Loot Anchor",
-          "level": 0,
-          "position_hint": "center",
-          "notes": ["Scenario builder can attach loot or an objective marker here."]
-        }
+        { "slot_id": "panel_objective", "slot_kind": "objective", "label": "Objective Anchor", "level": 0, "position_hint": "center", "notes": ["Used for 'Control Point' style scenarios."] }
       ],
+      "destructibility": { "destructible": true, "structure_rating": 2, "breakpoints": [{ "at_damage": 2, "effect": "Disabled: interactions on this panel are no longer available." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with small rubble."] } }
+    },
 
+    {
+      "terrain_type_id": "building_fortified_post",
+      "name": "Fortified Post",
+      "kind": "building",
+      "tags": ["fortification", "cover", "defensive", "walkable"],
+      "emoji": "🪖",
+      "footprint": { "shape": "rect", "size_in": { "w": 4, "d": 4 }, "base_height_in": 2.0 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Blocks LoS through solid walls; firing slits allow partial LoS out", "window_los": "partial" },
+      "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "heavy" },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 1,
+        "levels": [
+          { "level": 0, "name": "Interior", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Bunker interior."] },
+          { "level": 1, "name": "Roof Platform", "surface_kind": "roof", "walkable": true, "edge_fall_risk": false, "notes": ["Firing perch with parapet."] }
+        ]
+      },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": true,
+        "difficult_terrain_on": ["interior"],
+        "climb": { "allowed": true, "mode": "ladder", "min_level_access": 1, "max_level_access": 1, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No movement; action spent" } }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [
+        { "slot_id": "fort_post_roof_objective", "slot_kind": "objective", "label": "Roof Objective Spot", "level": 1, "position_hint": "center_roof", "notes": ["Great for artifact/control objectives."] },
+        { "slot_id": "fort_post_interior_loot", "slot_kind": "loot", "label": "Interior Cache", "level": 0, "position_hint": "rear_corner", "notes": ["Optional loot anchor (ammo, maps)."] }
+      ],
+      "destructibility": { "destructible": true, "structure_rating": 8, "breakpoints": [{ "at_damage": 4, "effect": "Cracked cover: edges cover drops from Heavy to Light." }, { "at_damage": 8, "effect": "Breach: interior becomes passable; treat as rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble field."] } }
+    },
+
+    {
+      "terrain_type_id": "obstacle_fortified_wall",
+      "name": "Fortified Wall",
+      "kind": "obstacle",
+      "tags": ["wall", "defensive", "linear"],
+      "emoji": "🧱",
+      "footprint": { "shape": "line", "size_in": { "w": 8, "d": 1 }, "base_height_in": 2.0 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS when line crosses the wall segment at equal or lower elevation", "window_los": "none" },
+      "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 3, "on_fail": "Fall back: remain on original side; take 1 die damage" } }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [
+        { "slot_id": "wall_interaction_anchor", "slot_kind": "interaction", "label": "Wall Anchor", "level": 0, "position_hint": "midpoint", "notes": ["Hook for 'plant charges', 'climb here', etc."] }
+      ],
+      "destructibility": { "destructible": true, "structure_rating": 5, "breakpoints": [{ "at_damage": 5, "effect": "Breach: becomes passable gap (treat as Difficult rubble crossing)." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_medium", "notes": ["Replace breached segment with rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "building_guard_tower",
+      "name": "Guard Tower",
+      "kind": "building",
+      "tags": ["tower", "wood", "high_ground", "multi_level"],
+      "emoji": "🗼",
+      "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 3 }, "base_height_in": 5.0 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Main supports block partially; platform provides elevated firing", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "light" },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 2,
+        "levels": [
+          { "level": 0, "name": "Base", "surface_kind": "ground", "walkable": false, "blocks_los_from_outside": false, "notes": ["Supports only."] },
+          { "level": 1, "name": "Mid Platform", "surface_kind": "platform", "walkable": true, "railings_cover": "light", "notes": ["Optional landing."] },
+          { "level": 2, "name": "Top Platform", "surface_kind": "platform", "walkable": true, "railings_cover": "light", "notes": ["High ground."] }
+        ]
+      },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": true,
+        "climb": { "allowed": true, "mode": "ladder", "min_level_access": 1, "max_level_access": 2, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No movement; action spent" } }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [
+        { "slot_id": "tower_top_objective", "slot_kind": "objective", "label": "Top Platform Objective", "level": 2, "position_hint": "center", "notes": ["Classic high-ground objective."] }
+      ],
+      "destructibility": { "destructible": true, "structure_rating": 4, "breakpoints": [{ "at_damage": 2, "effect": "Shaken supports: climb tests now require Quality 2." }, { "at_damage": 4, "effect": "Collapse: platforms become impassable rubble; models on platforms take 2 dice damage." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_medium", "notes": ["Replace with medium rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "feature_trail_path",
+      "name": "Trail Path",
+      "kind": "area",
+      "tags": ["route", "ground", "movement"],
+      "emoji": "🥾",
+      "footprint": { "shape": "line", "size_in": { "w": 12, "d": 2 }, "base_height_in": 0.1 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [{ "slot_id": "trail_story_anchor", "slot_kind": "story_anchor", "label": "Trail Story Anchor", "level": 0, "position_hint": "midpoint", "notes": ["Use for patrol routes, tracks, ambush triggers."] }],
       "destructibility": { "destructible": false }
-    }
-  ]
-}
+    },
+
+    {
+      "terrain_type_id": "feature_overpass_bridge",
+      "name": "Overpass / Bridge",
+      "kind": "feature",
+      "tags": ["bridge", "elevated", "walkable"],
+      "emoji": "🌉",
+      "footprint": { "shape": "rect", "size_in": { "w": 10, "d": 3 }, "base_height_in": 2.5 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Bridge deck does not block LoS; supports can partially block at ground level", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "light", "interior_cover": "none" },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 1,
+        "levels": [
+          { "level": 0, "name": "Underpass", "surface_kind": "ground", "walkable": true, "blocks_los_from_outside": false, "notes": ["Ground beneath bridge."] },
+          { "level": 1, "name": "Bridge Deck", "surface_kind": "catwalk", "walkable": true, "railings_cover": "light", "notes": ["Elevated crossing."] }
+        ]
+      },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": true, "mode": "stairs", "min_level_access": 1, "max_level_access": 1, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [
+        { "slot_id": "bridge_deck_objective", "slot_kind": "objective", "label": "Deck Objective", "level": 1, "position_hint": "center", "notes": ["Good for escort checkpoints."] }
+      ],
+      "destructibility": { "destructible": true, "structure_rating": 7, "breakpoints": [{ "at_damage": 4, "effect": "Cracked deck: Bridge Deck counts as Difficult terrain." }, { "at_damage": 7, "effect": "Collapse: place a 6\" rubble hazard beneath; deck becomes impassable gap." }], "rubble_result": { "spawns_terrain_type_id": "hazard_unstable_terrain_patch", "notes": ["Replace collapse area with Unstable Terrain patch."] } }
+    },
+
+    {
+      "terrain_type_id": "feature_ancient_altar",
+      "name": "Ancient Altar",
+      "kind": "objective",
+      "tags": ["mystical", "ritual", "objective"],
+      "emoji": "🗿",
+      "footprint": { "shape": "rect", "size_in": { "w": 4, "d": 3 }, "base_height_in": 1.5 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS across the altar mass", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          { "interaction_id": "consecrate_altar", "name": "Consecrate / Desecrate", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Ritual point or flip altar control to your faction.", "on_fail": "Backlash: take 1 die damage (echo burn / dread)." }
+        ]
+      },
+      "slots": [
+        { "slot_id": "altar_objective", "slot_kind": "objective", "label": "Altar Objective Anchor", "level": 0, "position_hint": "top_center", "notes": ["Place Artifact or Ritual token here."] }
+      ],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "area_ritual_circle_large",
+      "name": "Ritual Circle",
+      "kind": "area",
+      "tags": ["mystical", "runes", "zone"],
+      "emoji": "⭕",
+      "footprint": { "shape": "circle", "size_in": { "w": 6, "d": 6 }, "base_height_in": 0.1 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          { "interaction_id": "complete_ritual", "name": "Work the Circle", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Place/advance Ritual progress (scenario-defined).", "on_fail": "Disruption: lose 1 progress or become Pressured." }
+        ]
+      },
+      "slots": [
+        { "slot_id": "ritual_center_objective", "slot_kind": "objective", "label": "Circle Center", "level": 0, "position_hint": "center", "notes": ["Primary ritual objective point."] },
+        { "slot_id": "ritual_hazard_anchor", "slot_kind": "hazard_anchor", "label": "Backlash Anchor", "level": 0, "position_hint": "ring_edge", "notes": ["Use for backlash / corruption effects."] }
+      ],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "hazard_collapsing_structure",
+      "name": "Collapsing Structure",
+      "kind": "hazard",
+      "tags": ["ruin", "unstable", "danger"],
+      "emoji": "🏚️",
+      "footprint": { "shape": "rect", "size_in": { "w": 6, "d": 5 }, "base_height_in": 2.5 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS through broken walls", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": ["ground", "interior"],
+        "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          { "interaction_id": "trigger_collapse", "name": "Risk the Collapse", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Choose: gain 1 Loot token OR force an enemy within 3\" to take 1 die damage (falling debris).", "on_fail": "Collapse: this area becomes Unstable Terrain; acting model takes 2 dice damage." }
+        ]
+      },
+      "slots": [
+        { "slot_id": "collapse_hazard_anchor", "slot_kind": "hazard_anchor", "label": "Collapse Anchor", "level": 0, "position_hint": "center", "notes": ["Scenario can convert this into an Unstable patch."] }
+      ],
+      "destructibility": { "destructible": true, "structure_rating": 3, "breakpoints": [{ "at_damage": 3, "effect": "Full collapse: replace with Unstable Terrain patch." }], "rubble_result": { "spawns_terrain_type_id": "hazard_unstable_terrain_patch", "notes": ["Replace with Unstable Terrain."] } }
+    },
+
+    {
+      "terrain_type_id": "objective_evacuation_point",
+      "name": "Evacuation Point",
+      "kind": "objective",
+      "tags": ["objective", "extract", "story_anchor"],
+      "emoji": "🚩",
+      "footprint": { "shape": "circle", "size_in": { "w": 4, "d": 4 }, "base_height_in": 0.1 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "evac_extract", "name": "Extract / Evacuate", "action_type": "interact", "action_cost": 1, "test_required": false, "test_type": "quality", "difficulty": 0, "on_success": "Scenario-defined extraction (remove model/objective).", "on_fail": "No effect" }] },
+      "slots": [{ "slot_id": "evac_objective", "slot_kind": "objective", "label": "Evac Anchor", "level": 0, "position_hint": "center", "notes": ["Use as extraction point."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "hazard_cracked_ground",
+      "name": "Cracked Ground",
+      "kind": "hazard",
+      "tags": ["ground", "difficult", "trip"],
+      "emoji": "🕳️",
+      "footprint": { "shape": "poly", "size_in": { "w": 6, "d": 6 }, "base_height_in": 0.1 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": true,
+        "difficult_terrain_on": ["ground"],
+        "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [{ "slot_id": "cracked_hazard_anchor", "slot_kind": "hazard_anchor", "label": "Crack Anchor", "level": 0, "position_hint": "center", "notes": ["Hook for 'fall through' or tremor events."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "feature_rail_tracks",
+      "name": "Rail Tracks",
+      "kind": "feature",
+      "tags": ["rail", "line", "movement"],
+      "emoji": "🛤️",
+      "footprint": { "shape": "line", "size_in": { "w": 16, "d": 2 }, "base_height_in": 0.2 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "track_switch", "name": "Throw a Switch", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Advance rail event (scenario-defined).", "on_fail": "Jammed: cannot be used again this round." }] },
+      "slots": [{ "slot_id": "tracks_story_anchor", "slot_kind": "story_anchor", "label": "Rail Story Anchor", "level": 0, "position_hint": "midpoint", "notes": ["For trains, derailments, shipments."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "feature_boardwalks",
+      "name": "Board Walks",
+      "kind": "feature",
+      "tags": ["wood", "walkway", "line", "old_west"],
+      "emoji": "🪵",
+      "footprint": { "shape": "line", "size_in": { "w": 12, "d": 2 }, "base_height_in": 0.5 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [{ "slot_id": "boardwalk_story_anchor", "slot_kind": "story_anchor", "label": "Boardwalk Anchor", "level": 0, "position_hint": "midpoint", "notes": ["Great for streetfront scenes and chases."] }],
+      "destructibility": { "destructible": true, "structure_rating": 2, "breakpoints": [{ "at_damage": 2, "effect": "Broken planks: becomes Difficult terrain." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with small rubble/planks."] } }
+    },
+
+    {
+      "terrain_type_id": "building_water_tower",
+      "name": "Water Tower",
+      "kind": "building",
+      "tags": ["tower", "industrial", "high_ground", "objective"],
+      "emoji": "🚰",
+      "footprint": { "shape": "circle", "size_in": { "w": 4, "d": 4 }, "base_height_in": 6.0 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Tank mass partially blocks LoS; legs do not", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 2,
+        "levels": [
+          { "level": 0, "name": "Base", "surface_kind": "ground", "walkable": true, "blocks_los_from_outside": false, "notes": ["Area under tower."] },
+          { "level": 1, "name": "Ladder/Platform", "surface_kind": "platform", "walkable": true, "railings_cover": "light", "notes": ["Maintenance ring."] },
+          { "level": 2, "name": "Tank Top", "surface_kind": "roof", "walkable": true, "edge_fall_risk": false, "notes": ["Extreme high ground."] }
+        ]
+      },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": true,
+        "climb": { "allowed": true, "mode": "ladder", "min_level_access": 1, "max_level_access": 2, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "Slip: remain at current level; take 1 die damage" } }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          { "interaction_id": "drain_tower", "name": "Tap the Tower", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Water token (or scenario resource).", "on_fail": "Valve seized: cannot be tapped again this round." }
+        ]
+      },
+      "slots": [
+        { "slot_id": "water_tower_top_objective", "slot_kind": "objective", "label": "Tank Top Objective", "level": 2, "position_hint": "center", "notes": ["Artifact/flag placement."] },
+        { "slot_id": "water_tower_resource", "slot_kind": "loot", "label": "Water Resource Anchor", "level": 0, "position_hint": "base_edge", "notes": ["Resource pickup."] }
+      ],
+      "destructibility": { "destructible": true, "structure_rating": 6, "breakpoints": [{ "at_damage": 3, "effect": "Leaking: ground within 3\" counts as Difficult (mud/wet)."}, { "at_damage": 6, "effect": "Collapse: models on levels 1-2 take 3 dice damage; replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large wreckage."] } }
+    },
+
+    {
+      "terrain_type_id": "feature_stagecoach_ruins",
+      "name": "Stagecoach Ruins",
+      "kind": "scatter",
+      "tags": ["wreck", "old_west", "cover", "lootable"],
+      "emoji": "🛞",
+      "footprint": { "shape": "rect", "size_in": { "w": 4, "d": 2 }, "base_height_in": 1.0 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS across the wreck bulk", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_stagecoach", "name": "Search the Wreck", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Gain 1 Loot token.", "on_fail": "Empty." }] },
+      "slots": [{ "slot_id": "stagecoach_loot_anchor", "slot_kind": "loot", "label": "Loot Anchor", "level": 0, "position_hint": "center", "notes": ["Attach loot/objective here."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "obstacle_rocky_outcrop",
+      "name": "Rocky Outcrop",
+      "kind": "obstacle",
+      "tags": ["rock", "cover", "natural"],
+      "emoji": "🪨",
+      "footprint": { "shape": "poly", "size_in": { "w": 4, "d": 3 }, "base_height_in": 2.0 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through rock mass", "window_los": "none" },
+      "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": false, "is_walkable_on_top": true, "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "Slip: no movement; action spent" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [{ "slot_id": "outcrop_story_anchor", "slot_kind": "story_anchor", "label": "Outcrop Anchor", "level": 0, "position_hint": "top_flat", "notes": ["Good perch or hidden cache spot."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "obstacle_rocky_outcrop_large",
+      "name": "Large Rocky Outcrop",
+      "kind": "obstacle",
+      "tags": ["rock", "cover", "natural", "large"],
+      "emoji": "🪨",
+      "footprint": { "shape": "poly", "size_in": { "w": 6, "d": 5 }, "base_height_in": 3.0 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through rock mass", "window_los": "none" },
+      "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": false, "is_walkable_on_top": true, "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 3, "on_fail": "Slip: take 1 die damage; remain at base" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [{ "slot_id": "outcrop_large_objective", "slot_kind": "objective", "label": "High Ground Objective", "level": 0, "position_hint": "top_center", "notes": ["Place artifact here for dramatic play."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "feature_mesa",
+      "name": "Mesa",
+      "kind": "feature",
+      "tags": ["high_ground", "natural", "cliff"],
+      "emoji": "🏜️",
+      "footprint": { "shape": "poly", "size_in": { "w": 10, "d": 8 }, "base_height_in": 4.0 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Mesa sides block LoS when line crosses cliff face at equal elevation", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 2,
+        "levels": [
+          { "level": 0, "name": "Base", "surface_kind": "ground", "walkable": true, "blocks_los_from_outside": false, "notes": ["Around the mesa."] },
+          { "level": 2, "name": "Mesa Top", "surface_kind": "platform", "walkable": true, "edge_fall_risk": true, "notes": ["Treat as elevated high ground."] }
+        ]
+      },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": true,
+        "climb": { "allowed": true, "mode": "rope", "min_level_access": 2, "max_level_access": 2, "test": { "required": true, "type": "quality", "difficulty": 4, "on_fail": "Fall: take 2 dice damage; remain at base" } }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [
+        { "slot_id": "mesa_top_objective", "slot_kind": "objective", "label": "Mesa Top Objective", "level": 2, "position_hint": "center", "notes": ["Signature 'fight for the high ground' point."] },
+        { "slot_id": "mesa_hazard_anchor", "slot_kind": "hazard_anchor", "label": "Cliff Edge Anchor", "level": 2, "position_hint": "edge", "notes": ["Use for fall risk / shove effects."] }
+      ],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "feature_monster_den",
+      "name": "Monster Den / Nest",
+      "kind": "objective",
+      "tags": ["monster", "nest", "spawn", "story_anchor"],
+      "emoji": "🪺",
+      "footprint": { "shape": "circle", "size_in": { "w": 5, "d": 5 }, "base_height_in": 1.0 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Low mounds/roots partially block LoS", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          { "interaction_id": "calm_den", "name": "Soothe / Stake Out", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Monster Clue token (or scenario objective progress).", "on_fail": "Agitation: nearest monster/enemy spawn triggers (scenario-defined)." }
+        ]
+      },
+      "slots": [
+        { "slot_id": "den_spawn", "slot_kind": "spawn", "label": "Nest Spawn Point", "level": 0, "position_hint": "center", "notes": ["Use as monster spawn/arrival."] },
+        { "slot_id": "den_objective", "slot_kind": "objective", "label": "Nest Objective Anchor", "level": 0, "position_hint": "center", "notes": ["Destroy/protect/secure objective."] }
+      ],
+      "destructibility": { "destructible": true, "structure_rating": 3, "breakpoints": [{ "at_damage": 3, "effect": "Destroyed: remove den; place rubble/ash patch." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with small debris."] } }
+    },
+
+    {
+      "terrain_type_id": "feature_bridge_ruins",
+      "name": "Bridge Ruins",
+      "kind": "obstacle",
+      "tags": ["ruin", "bridge", "gap", "danger"],
+      "emoji": "🌉",
+      "footprint": { "shape": "rect", "size_in": { "w": 10, "d": 3 }, "base_height_in": 1.5 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Broken spans partially block LoS; gaps do not", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 3, "on_fail": "Slip: no crossing; action spent" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [{ "slot_id": "bridge_ruins_story_anchor", "slot_kind": "story_anchor", "label": "Ruins Anchor", "level": 0, "position_hint": "midpoint", "notes": ["Use for chase hazards or collapse triggers."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "building_tzul_ruins",
+      "name": "Tzul Ruins",
+      "kind": "building",
+      "tags": ["tzul", "ruin", "stone", "ancient"],
+      "emoji": "🏛️",
+      "footprint": { "shape": "rect", "size_in": { "w": 6, "d": 6 }, "base_height_in": 2.5 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Broken stone walls partially block LoS", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "No movement; action spent" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "study_ruins", "name": "Study the Ruins", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Lore token or reveal a secret (scenario-defined).", "on_fail": "False omen: become Pressured." }] },
+      "slots": [{ "slot_id": "tzul_ruins_objective", "slot_kind": "objective", "label": "Ruins Objective Anchor", "level": 0, "position_hint": "inner_sanctum", "notes": ["Place Artifact / clue marker."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "building_tzul_pyramid",
+      "name": "Tzul Pyramid",
+      "kind": "building",
+      "tags": ["tzul", "pyramid", "stone", "high_ground"],
+      "emoji": "🔺",
+      "footprint": { "shape": "poly", "size_in": { "w": 8, "d": 8 }, "base_height_in": 4.0 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Pyramid mass blocks LoS through its body", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 2,
+        "levels": [
+          { "level": 0, "name": "Base", "surface_kind": "ground", "walkable": true, "blocks_los_from_outside": false, "notes": ["Around the pyramid base."] },
+          { "level": 1, "name": "Mid Steps", "surface_kind": "stairs", "walkable": true, "notes": ["Stepped sides."] },
+          { "level": 2, "name": "Apex Platform", "surface_kind": "platform", "walkable": true, "edge_fall_risk": true, "notes": ["Apex altar zone."] }
+        ]
+      },
+      "movement": { "is_passable": false, "is_walkable_on_top": true, "climb": { "allowed": true, "mode": "stairs", "min_level_access": 1, "max_level_access": 2, "test": { "required": true, "type": "quality", "difficulty": 3, "on_fail": "Lose footing: remain at current level; take 1 die damage" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "apex_rite", "name": "Apex Rite", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Ritual point and 1 Lore token.", "on_fail": "Backlash: take 2 dice damage." }] },
+      "slots": [{ "slot_id": "pyramid_apex_objective", "slot_kind": "objective", "label": "Apex Objective", "level": 2, "position_hint": "center", "notes": ["Artifact placement."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "feature_tzul_statue",
+      "name": "Tzul Statue",
+      "kind": "feature",
+      "tags": ["tzul", "stone", "cover", "monument"],
+      "emoji": "🗿",
+      "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 3 }, "base_height_in": 3.0 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through statue mass", "window_los": "none" },
+      "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": false, "is_walkable_on_top": false, "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 4, "on_fail": "Fall: take 2 dice damage; remain at base" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "invoke_statue", "name": "Invoke the Effigy", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Reveal/flip a Tzul effect (scenario-defined).", "on_fail": "Dread surge: become Pressured." }] },
+      "slots": [{ "slot_id": "tzul_statue_story", "slot_kind": "story_anchor", "label": "Effigy Anchor", "level": 0, "position_hint": "front_base", "notes": ["For faction rituals and omens."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "feature_tzul_statue_huge",
+      "name": "Huge Tzul Statue",
+      "kind": "feature",
+      "tags": ["tzul", "stone", "massive", "blocks_los"],
+      "emoji": "🗿",
+      "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 5 }, "base_height_in": 6.0 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through statue mass; counts as tall blocker", "window_los": "none" },
+      "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": false, "is_walkable_on_top": false, "climb": { "allowed": true, "mode": "rope", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 5, "on_fail": "Fall: take 3 dice damage; remain at base" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "awaken_colossus", "name": "Awaken the Colossus (Risky)", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 5, "on_success": "Trigger major Tzul event (scenario-defined).", "on_fail": "Catastrophic backlash: take 3 dice damage; create a 3\" Tainted Ground zone." }] },
+      "slots": [
+        { "slot_id": "huge_statue_objective", "slot_kind": "objective", "label": "Monument Objective", "level": 0, "position_hint": "base_center", "notes": ["Place a faction banner / obelisk marker here."] }
+      ],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "area_strange_plants",
+      "name": "Strange Plants",
+      "kind": "area",
+      "tags": ["flora", "concealment", "alien"],
+      "emoji": "🌿",
+      "footprint": { "shape": "poly", "size_in": { "w": 6, "d": 6 }, "base_height_in": 1.5 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Provides concealment: treat LoS through as partial", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "harvest_strange_plants", "name": "Harvest Samples", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Sample token (counts as Loot or Lore).", "on_fail": "Irritant: take 1 die damage." }] },
+      "slots": [{ "slot_id": "plants_loot", "slot_kind": "loot", "label": "Sample Anchor", "level": 0, "position_hint": "center", "notes": ["Attach samples/loot."] }],
+      "destructibility": { "destructible": true, "structure_rating": 2, "breakpoints": [{ "at_damage": 2, "effect": "Burned/cleared: remove concealment; becomes open ground." }], "rubble_result": { "spawns_terrain_type_id": "area_barren_ground_patch", "notes": ["Replace with barren patch."] } }
+    },
+
+    {
+      "terrain_type_id": "objective_buried_supplies",
+      "name": "Buried Supplies",
+      "kind": "objective",
+      "tags": ["loot", "cache", "objective"],
+      "emoji": "🧺",
+      "footprint": { "shape": "circle", "size_in": { "w": 3, "d": 3 }, "base_height_in": 0.2 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "dig_up_cache", "name": "Dig Up Cache", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 2 Supply tokens (or 1 Loot + 1 Resource).", "on_fail": "False spot: gain nothing." }] },
+      "slots": [{ "slot_id": "buried_loot_anchor", "slot_kind": "loot", "label": "Buried Loot Anchor", "level": 0, "position_hint": "center", "notes": ["Primary pickup point."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "hazard_unstable_terrain_patch",
+      "name": "Unstable Terrain",
+      "kind": "hazard",
+      "tags": ["unstable", "danger", "zone"],
+      "emoji": "⚠️",
+      "footprint": { "shape": "poly", "size_in": { "w": 6, "d": 6 }, "base_height_in": 0.1 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [{ "slot_id": "unstable_hazard", "slot_kind": "hazard_anchor", "label": "Unstable Anchor", "level": 0, "position_hint": "center", "notes": ["Use for cave-in, sink, detonation, storm effects."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "scatter_rocks_small",
+      "name": "Rocks",
+      "kind": "scatter",
+      "tags": ["rock", "cover"],
+      "emoji": "🪨",
+      "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 2 }, "base_height_in": 1.0 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS across the pile", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "scatter_rubble_small",
+      "name": "Rubble (Small)",
+      "kind": "scatter",
+      "tags": ["rubble", "difficult", "cover"],
+      "emoji": "🧱",
+      "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 3 }, "base_height_in": 0.8 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS close to ground", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "scatter_rubble_medium",
+      "name": "Rubble (Medium)",
+      "kind": "scatter",
+      "tags": ["rubble", "difficult", "cover"],
+      "emoji": "🧱",
+      "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 4 }, "base_height_in": 1.2 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS close to ground", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "scatter_rubble_large",
+      "name": "Rubble (Large)",
+      "kind": "scatter",
+      "tags": ["rubble", "difficult", "cover", "large"],
+      "emoji": "🧱",
+      "footprint": { "shape": "rect", "size_in": { "w": 7, "d": 6 }, "base_height_in": 1.5 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Partially blocks LoS close to ground", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "building_shed",
+      "name": "Shed",
+      "kind": "building",
+      "tags": ["wood", "small", "old_west"],
+      "emoji": "🏚️",
+      "footprint": { "shape": "rect", "size_in": { "w": 3, "d": 3 }, "base_height_in": 2.0 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": false, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_shed", "name": "Search the Shed", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Gain 1 Supply token.", "on_fail": "Empty." }] },
+      "slots": [{ "slot_id": "shed_loot_anchor", "slot_kind": "loot", "label": "Shed Loot Anchor", "level": 0, "position_hint": "rear_wall", "notes": ["Optional cache."] }],
+      "destructibility": { "destructible": true, "structure_rating": 3, "breakpoints": [{ "at_damage": 3, "effect": "Destroyed: replace with small rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_small", "notes": ["Replace with small rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "building_barn",
+      "name": "Barn",
+      "kind": "building",
+      "tags": ["wood", "farm", "large"],
+      "emoji": "🏚️",
+      "footprint": { "shape": "rect", "size_in": { "w": 8, "d": 6 }, "base_height_in": 3.0 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls; doorways grant partial LoS", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 1,
+        "levels": [
+          { "level": 0, "name": "Barn Floor", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Big interior lanes."] },
+          { "level": 1, "name": "Hay Loft", "surface_kind": "balcony", "walkable": true, "railings_cover": "light", "notes": ["Loft firing lane."] }
+        ]
+      },
+      "movement": { "is_passable": false, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "ladder", "min_level_access": 1, "max_level_access": 1, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_barn", "name": "Search the Barn", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Supply token and 1 Food token.", "on_fail": "Rats and dust: become Pressured." }] },
+      "slots": [{ "slot_id": "barn_loft_objective", "slot_kind": "objective", "label": "Loft Objective", "level": 1, "position_hint": "center_loft", "notes": ["High shelf objective."] }],
+      "destructibility": { "destructible": true, "structure_rating": 7, "breakpoints": [{ "at_damage": 4, "effect": "Roof damage: loft loses cover (Light -> None)." }, { "at_damage": 7, "effect": "Collapse: loft becomes impassable rubble; models on loft take 2 dice damage." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "area_farm_field",
+      "name": "Farm Field",
+      "kind": "area",
+      "tags": ["field", "cover_light", "agriculture"],
+      "emoji": "🌾",
+      "footprint": { "shape": "rect", "size_in": { "w": 12, "d": 10 }, "base_height_in": 0.2 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Provides partial LoS through tall rows", "window_los": "none" },
+      "cover": { "default_cover": "light", "edges_cover": "light", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "difficult_terrain_on": ["ground"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [{ "slot_id": "field_story_anchor", "slot_kind": "story_anchor", "label": "Field Anchor", "level": 0, "position_hint": "center", "notes": ["Good for stealth lanes and crop fires."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "area_barren_ground_patch",
+      "name": "Barren Field",
+      "kind": "area",
+      "tags": ["open", "ground", "no_cover"],
+      "emoji": "🏜️",
+      "footprint": { "shape": "rect", "size_in": { "w": 12, "d": 10 }, "base_height_in": 0.1 },
+      "visibility": { "los_profile": "none", "blocks_los_when": "Never blocks line of sight", "window_los": "none" },
+      "cover": { "default_cover": "none", "edges_cover": "none", "interior_cover": "none" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": true, "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "building_farmhouse",
+      "name": "Farmhouse",
+      "kind": "building",
+      "tags": ["wood", "home", "old_west"],
+      "emoji": "🏠",
+      "footprint": { "shape": "rect", "size_in": { "w": 6, "d": 5 }, "base_height_in": 2.5 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls; windows grant partial LoS", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 2,
+        "levels": [
+          { "level": 0, "name": "Ground Floor", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Rooms and cover."] },
+          { "level": 1, "name": "Second Floor", "surface_kind": "balcony", "walkable": true, "railings_cover": "light", "notes": ["Upper windows."] },
+          { "level": 2, "name": "Roof", "surface_kind": "roof", "walkable": true, "edge_fall_risk": false, "notes": ["High perch."] }
+        ]
+      },
+      "movement": { "is_passable": false, "is_walkable_on_top": true, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "stairs", "min_level_access": 1, "max_level_access": 2, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "ransack_house", "name": "Ransack House", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Loot token and 1 Food token.", "on_fail": "Noise: nearest enemy gains +1 die vs you next attack." }] },
+      "slots": [{ "slot_id": "farmhouse_roof_objective", "slot_kind": "objective", "label": "Roof Objective", "level": 2, "position_hint": "center_roof", "notes": ["Classic rooftop objective."] }],
+      "destructibility": { "destructible": true, "structure_rating": 7, "breakpoints": [{ "at_damage": 4, "effect": "Windows shattered: interior cover reduced (Light -> None in affected rooms)." }, { "at_damage": 7, "effect": "Collapse: roof becomes impassable rubble; anyone on roof takes 2 dice damage." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "building_quonset_hut",
+      "name": "Quonset Hut",
+      "kind": "building",
+      "tags": ["metal", "industrial", "bunkerish"],
+      "emoji": "🏗️",
+      "footprint": { "shape": "rect", "size_in": { "w": 7, "d": 4 }, "base_height_in": 2.5 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through metal shell", "window_los": "partial" },
+      "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "heavy" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": false, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "loot_quonset", "name": "Loot the Hut", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Mechanical Parts token and 1 Supply token.", "on_fail": "Locked down: take 1 die damage (shock/cut) and gain nothing." }] },
+      "slots": [{ "slot_id": "quonset_loot", "slot_kind": "loot", "label": "Hut Cache", "level": 0, "position_hint": "rear_wall", "notes": ["Industrial cache."] }],
+      "destructibility": { "destructible": true, "structure_rating": 8, "breakpoints": [{ "at_damage": 4, "effect": "Shell breached: edges cover drops from Heavy to Light." }, { "at_damage": 8, "effect": "Caved in: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "building_cantina",
+      "name": "Cantina",
+      "kind": "building",
+      "tags": ["town", "social", "old_west"],
+      "emoji": "🍻",
+      "footprint": { "shape": "rect", "size_in": { "w": 6, "d": 4 }, "base_height_in": 2.5 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls; windows/doors partial", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": false, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "scavenge_cantina", "name": "Scavenge the Cantina", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Loot token. If you have a Social/Charm hook, gain +1 extra token (scenario-defined).", "on_fail": "Brawl: take 1 die damage." }] },
+      "slots": [{ "slot_id": "cantina_objective", "slot_kind": "objective", "label": "Back Room Objective", "level": 0, "position_hint": "rear_room", "notes": ["Hide intel/loot here."] }],
+      "destructibility": { "destructible": true, "structure_rating": 6, "breakpoints": [{ "at_damage": 3, "effect": "Interior wrecked: interior cover becomes None." }, { "at_damage": 6, "effect": "Collapse: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "building_cantina_ruined",
+      "name": "Ruined Cantina",
+      "kind": "building",
+      "tags": ["ruin", "town", "old_west"],
+      "emoji": "🍻",
+      "footprint": { "shape": "rect", "size_in": { "w": 6, "d": 4 }, "base_height_in": 1.8 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Broken walls partially block LoS", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "No movement; action spent" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_ruined_cantina", "name": "Search the Ruins", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Gain 1 Loot token.", "on_fail": "Empty." }] },
+      "slots": [{ "slot_id": "ruined_cantina_loot", "slot_kind": "loot", "label": "Ruins Loot Anchor", "level": 0, "position_hint": "center", "notes": ["Attach loot here."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "building_church",
+      "name": "Church",
+      "kind": "building",
+      "tags": ["town", "stone", "tall", "objective"],
+      "emoji": "⛪",
+      "footprint": { "shape": "rect", "size_in": { "w": 7, "d": 5 }, "base_height_in": 3.5 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls; stained windows are partial", "window_los": "partial" },
+      "cover": { "default_cover": "heavy", "edges_cover": "heavy", "interior_cover": "heavy" },
+      "elevation": { "system": "levels", "level_unit_in": 2.0, "max_level": 1, "levels": [{ "level": 0, "name": "Nave", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Long interior lanes."] }, { "level": 1, "name": "Bell Platform", "surface_kind": "balcony", "walkable": true, "railings_cover": "light", "notes": ["Elevated bell perch."] }] },
+      "movement": { "is_passable": false, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "stairs", "min_level_access": 1, "max_level_access": 1, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "sanctify", "name": "Sanctify / Profane", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Faith token (or flip a Consecration state).", "on_fail": "Dread: become Pressured." }] },
+      "slots": [{ "slot_id": "church_altar_objective", "slot_kind": "objective", "label": "Altar Objective", "level": 0, "position_hint": "front_center", "notes": ["Place relic/artifact here."] }],
+      "destructibility": { "destructible": true, "structure_rating": 9, "breakpoints": [{ "at_damage": 5, "effect": "Cracked stone: edges cover drops from Heavy to Light." }, { "at_damage": 9, "effect": "Collapse: replace with large rubble; models inside take 2 dice damage." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "building_church_ruined",
+      "name": "Ruined Church",
+      "kind": "building",
+      "tags": ["ruin", "stone", "town"],
+      "emoji": "⛪",
+      "footprint": { "shape": "rect", "size_in": { "w": 7, "d": 5 }, "base_height_in": 2.0 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Broken walls partially block LoS", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "No movement; action spent" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_ruined_church", "name": "Search the Ruined Church", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Lore token.", "on_fail": "Omen: become Pressured." }] },
+      "slots": [{ "slot_id": "ruined_church_objective", "slot_kind": "objective", "label": "Ruin Sanctuary Objective", "level": 0, "position_hint": "front_center", "notes": ["Artifact/ritual anchor."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "building_brothel",
+      "name": "Brothel",
+      "kind": "building",
+      "tags": ["town", "wood", "two_story", "old_west"],
+      "emoji": "🏚️",
+      "footprint": { "shape": "rect", "size_in": { "w": 7, "d": 5 }, "base_height_in": 2.5 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls; many windows are partial", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 2,
+        "levels": [
+          { "level": 0, "name": "Ground Floor", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Cluttered rooms."] },
+          { "level": 1, "name": "Second Floor", "surface_kind": "balcony", "walkable": true, "railings_cover": "light", "notes": ["Balcony and rooms."] },
+          { "level": 2, "name": "Roof", "surface_kind": "roof", "walkable": true, "edge_fall_risk": false, "notes": ["Rooftop perch."] }
+        ]
+      },
+      "movement": { "is_passable": false, "is_walkable_on_top": true, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "stairs", "min_level_access": 1, "max_level_access": 2, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_brothel", "name": "Search for Intel", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Intel token (counts as Loot).", "on_fail": "Compromised: nearest enemy gains +1 die vs you next attack." }] },
+      "slots": [{ "slot_id": "brothel_roof_objective", "slot_kind": "objective", "label": "Roof Objective", "level": 2, "position_hint": "center_roof", "notes": ["Objective perch."] }],
+      "destructibility": { "destructible": true, "structure_rating": 7, "breakpoints": [{ "at_damage": 4, "effect": "Interior wrecked: interior cover becomes None." }, { "at_damage": 7, "effect": "Collapse: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "building_brothel_ruined",
+      "name": "Ruined Brothel",
+      "kind": "building",
+      "tags": ["ruin", "town", "wood"],
+      "emoji": "🏚️",
+      "footprint": { "shape": "rect", "size_in": { "w": 7, "d": 5 }, "base_height_in": 1.8 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Broken walls partially block LoS", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "No movement; action spent" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_ruined_brothel", "name": "Search the Ruins", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Gain 1 Loot token.", "on_fail": "Empty." }] },
+      "slots": [{ "slot_id": "ruined_brothel_loot", "slot_kind": "loot", "label": "Loot Anchor", "level": 0, "position_hint": "center", "notes": ["Attach loot here."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "building_shop",
+      "name": "Shop",
+      "kind": "building",
+      "tags": ["town", "wood", "commerce"],
+      "emoji": "🏪",
+      "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 4 }, "base_height_in": 2.5 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls; windows partial", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": false, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "loot_shop", "name": "Loot the Shop", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Supply token and 1 Loot token.", "on_fail": "Trap/lock: take 1 die damage." }] },
+      "slots": [{ "slot_id": "shop_loot_anchor", "slot_kind": "loot", "label": "Shop Counter Cache", "level": 0, "position_hint": "front_center", "notes": ["Loot anchor."] }],
+      "destructibility": { "destructible": true, "structure_rating": 6, "breakpoints": [{ "at_damage": 3, "effect": "Shelves smashed: interior cover becomes None." }, { "at_damage": 6, "effect": "Collapse: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "building_shop_ruined",
+      "name": "Ruined Shop",
+      "kind": "building",
+      "tags": ["ruin", "town", "wood"],
+      "emoji": "🏪",
+      "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 4 }, "base_height_in": 1.8 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Broken walls partially block LoS", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "No movement; action spent" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_ruined_shop", "name": "Search the Ruined Shop", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 2, "on_success": "Gain 1 Supply token.", "on_fail": "Empty." }] },
+      "slots": [{ "slot_id": "ruined_shop_loot", "slot_kind": "loot", "label": "Loot Anchor", "level": 0, "position_hint": "center", "notes": ["Attach loot here."] }],
+      "destructibility": { "destructible": false }
+    },
+
+    {
+      "terrain_type_id": "building_house",
+      "name": "House",
+      "kind": "building",
+      "tags": ["town", "home", "wood"],
+      "emoji": "🏠",
+      "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 4 }, "base_height_in": 2.5 },
+      "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks LoS through walls", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "levels", "level_unit_in": 2.0, "max_level": 1, "levels": [{ "level": 0, "name": "Interior", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Rooms."] }, { "level": 1, "name": "Roof", "surface_kind": "roof", "walkable": true, "edge_fall_risk": false, "notes": ["Roof perch."] }] },
+      "movement": { "is_passable": false, "is_walkable_on_top": true, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "ladder", "min_level_access": 1, "max_level_access": 1, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } } },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_house", "name": "Search the House", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Loot token.", "on_fail": "Noise: nearest enemy gains +1 die vs you next attack." }] },
+      "slots": [{ "slot_id": "house_roof_objective", "slot_kind": "objective", "label": "Roof Objective", "level": 1, "position_hint": "center_roof", "notes": ["Objective perch."] }],
+      "destructibility": { "destructible": true, "structure_rating": 6, "breakpoints": [{ "at_damage": 3, "effect": "Windows shattered: interior cover becomes None." }, { "at_damage": 6, "effect": "Collapse: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with rubble."] } }
+    },
+
+    {
+      "terrain_type_id": "building_house_ruined",
+      "name": "Ruined House",
+      "kind": "building",
+      "tags": ["ruin", "town", "wood"],
+      "emoji": "🏚️",
+      "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 4 }, "base_height_in": 1.8 },
+      "visibility": { "los_profile": "partial", "blocks_los_when": "Broken walls partially block LoS", "window_los": "partial" },
+      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
+      "elevation": { "system": "none" },
+      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "No movement; action spent" } } },
+      "interaction": { "interactable": true, "interactions
