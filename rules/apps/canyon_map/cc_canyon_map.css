@@ -102,7 +102,7 @@
 .cc-lens-inner {
   position: absolute;
   inset: 0;
-  border-radius: 18px;
+  border-radius: 50px;
   overflow: hidden;
   
   /* Magnifying glass distortion effect */
@@ -126,7 +126,7 @@
 .cc-lens-glare {
   position: absolute;
   inset: 0;
-  border-radius: 18px;
+  border-radius: 55px;
   background: radial-gradient(
     circle at 30% 25%, 
     rgba(255,255,255,0.15), 
@@ -151,7 +151,7 @@
   pointer-events: none !important;
   
   /* Your mag_frame.png graphic */
-  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/mag_frame.png');
+  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
