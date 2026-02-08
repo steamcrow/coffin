@@ -1,13 +1,11 @@
 {
   "schema_id": "cc_canyon_state",
-  "schema_version": "0.2",
+  "schema_version": "1.0",
   "last_updated": "2026-02-07",
-  "state_by_region": {
-    "region_001": {
-      "controller_faction_id": "neutral",
-      "status": "neutral",
-      "weather_tag": "clear",
-      "notes": "Unclaimed."
-    }
-  }
+  "notes": [
+    "Region control/state for the Coffin Canyon regional map.",
+    "Keys are region_id values from canyon_map.json regions[].region_id",
+    "Empty is valid while regions are being built."
+  ],
+  "state_by_region": {}
 }
