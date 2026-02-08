@@ -101,7 +101,7 @@
 /* Inner lens content with distortion filter */
 .cc-lens-inner {
   position: absolute;
-  inset: 0;
+  inset: 40;
   border-radius: 50px;
   overflow: hidden;
   
@@ -113,7 +113,7 @@
 /* The magnified (sharp/clear) map inside lens */
 .cc-lens-map {
   position: absolute;
-  inset: 0;
+  inset: 50;
   width: 100% !important;
   height: 100% !important;
   
@@ -211,16 +211,15 @@
   box-shadow: 
     0 6px 16px rgba(0,0,0,0.8),
     inset 0 1px 3px rgba(255, 215, 100, 0.6),
-    inset 0 -1px 3px rgba(80, 50, 20, 0.8);
-  
-  /* When you have the BLAPPO graphic, use this instead:
+    inset 0 -1px 3px rgba(80, 50, 20, 
+                          
   background-image: url('data/blappo_knob.png');
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
   background-color: transparent;
   border: none;
-  */
+  
 }
 
 .cc-scroll-knob:hover {
