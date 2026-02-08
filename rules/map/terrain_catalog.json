@@ -976,14 +976,104 @@
     },
 
     {
-      "terrain_type_id": "building_house_ruined",
-      "name": "Ruined House",
-      "kind": "building",
-      "tags": ["ruin", "town", "wood"],
-      "emoji": "🏚️",
-      "footprint": { "shape": "rect", "size_in": { "w": 5, "d": 4 }, "base_height_in": 1.8 },
-      "visibility": { "los_profile": "partial", "blocks_los_when": "Broken walls partially block LoS", "window_los": "partial" },
-      "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
-      "elevation": { "system": "none" },
-      "movement": { "is_passable": true, "is_walkable_on_top": false, "difficult_terrain_on": ["interior"], "climb": { "allowed": true, "mode": "scramble", "min_level_access": 0, "max_level_access": 0, "test": { "required": true, "type": "quality", "difficulty": 2, "on_fail": "No movement; action spent" } } },
-      "interaction": { "interactable": true, "interactions
+  "terrain_type_id": "building_house_ruined",
+  "name": "Ruined House",
+  "kind": "building",
+  "tags": ["ruin", "town", "wood", "interior", "difficult"],
+  "emoji": "🏚️",
+
+  "footprint": {
+    "shape": "rect",
+    "size_in": { "w": 5, "d": 4 },
+    "base_height_in": 1.8
+  },
+
+  "visibility": {
+    "los_profile": "partial",
+    "blocks_los_when": "Broken walls and collapsed sections partially block LoS",
+    "window_los": "partial"
+  },
+
+  "cover": {
+    "default_cover": "light",
+    "edges_cover": "heavy",
+    "interior_cover": "light"
+  },
+
+  "elevation": {
+    "system": "none"
+  },
+
+  "movement": {
+    "is_passable": true,
+    "is_walkable_on_top": false,
+    "difficult_terrain_on": ["interior"],
+    "climb": {
+      "allowed": true,
+      "mode": "scramble",
+      "min_level_access": 0,
+      "max_level_access": 0,
+      "test": {
+        "required": true,
+        "type": "quality",
+        "difficulty": 2,
+        "on_fail": "No movement; action spent"
+      }
+    }
+  },
+
+  "interaction": {
+    "interactable": true,
+    "interactions": [
+      {
+        "interaction_id": "search_ruins",
+        "name": "Search the Ruins",
+        "action_type": "interact",
+        "action_cost": 1,
+        "test_required": true,
+        "test_type": "quality",
+        "difficulty": 3,
+        "on_success": "Gain 1 Loot or Supply token (scenario choice).",
+        "on_fail": "Disturb unstable debris; this unit suffers 1 die damage."
+      }
+    ]
+  },
+
+  "slots": [
+    {
+      "slot_id": "ruined_house_loot",
+      "slot_kind": "loot",
+      "label": "Hidden Cache",
+      "level": 0,
+      "position_hint": "interior",
+      "notes": ["Optional loot or objective placement."]
+    },
+    {
+      "slot_id": "ruined_house_story",
+      "slot_kind": "story_anchor",
+      "label": "Civilian Remains / Clue",
+      "level": 0,
+      "position_hint": "corner",
+      "notes": ["Scenario hook, narrative trigger, or investigation point."]
+    }
+  ],
+
+  "destructibility": {
+    "destructible": true,
+    "structure_rating": 3,
+    "breakpoints": [
+      {
+        "at_damage": 2,
+        "effect": "Further collapse: interior becomes hazardous terrain."
+      },
+      {
+        "at_damage": 3,
+        "effect": "Total collapse: replace with rubble."
+      }
+    ],
+    "rubble_result": {
+      "spawns_terrain_type_id": "rubble_wood_medium",
+      "notes": ["Any units inside take 1 die damage when collapse occurs."]
+    }
+  }
+}
