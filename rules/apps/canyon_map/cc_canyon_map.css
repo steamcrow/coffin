@@ -1,27 +1,51 @@
 /* ================================================================
-   COFFIN CANYON MAP - CLEAN SLATE
+   COFFIN CANYON MAP - FINAL INTEGRATED DESIGN
    ================================================================ */
 
 :root {
   --frame-width: 900px; 
-  --frame-ratio: 1.5;   /* 900 / 600 */
-  --lens-w: 585px;      /* 65% of 900 */
-  --lens-h: 396px;      /* 44% of 900 */
+  --frame-ratio: 1.5;   
+  --lens-w: 585px;      
+  --lens-h: 396px;      
+  /* Integration with your ui.css variables */
+  --cc-map-border: #4a3728; 
 }
 
-/* === 1. THE LARGE BACKGROUND MAP === */
+/* === 1. OUTER CONTAINER (The UI Panel Box) === */
+.cc-cm-mapwrap {
+  position: relative !important;
+  width: 100%;
+  height: 85vh !important;
+  min-height: 700px !important;
+  max-height: 900px !important;
+  overflow: hidden !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Matches your .cc-panel style but with a heavy tabletop border */
+  background: var(--cc-bg-darker);
+  border: 8px solid var(--cc-map-border);
+  border-radius: 12px;
+  box-shadow: 
+    inset 0 0 40px rgba(0,0,0,1), 
+    0 15px 35px rgba(0,0,0,0.7);
+}
+
+/* === 2. BASE MAP (Background Layer) === */
 #cc-cm-map {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%) !important;
-  width: 1200px !important;
-  height: 800px !important;
+  width: 1400px !important; /* Enlarged background */
+  height: 950px !important;
   z-index: 1 !important;
-  image-rendering: auto;
+  opacity: 0.5;
+  filter: blur(2px) sepia(0.3); /* Thematic "dusty" look */
 }
 
-/* === 2. THE MAGNIFYING LENS (Behind Frame) === */
+/* === 3. MAGNIFYING LENS (The Clear Window) === */
 .cc-lens {
   position: absolute !important;
   left: 50% !important;
@@ -29,20 +53,22 @@
   transform: translate(-50%, -50%) !important;
   width: var(--lens-w) !important;
   height: var(--lens-h) !important;
-  border-radius: 20px;
-  z-index: 30 !important;
-  pointer-events: none !important;
-  overflow: hidden;
+  z-index: 30 !important; /* Behind the frame */
+  overflow: hidden !important; 
+  border-radius: 25px; 
+  pointer-events: none;
+  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
 }
 
-.cc-lens-inner, .cc-lens-map {
+.cc-lens-inner, 
+.cc-lens-map {
   position: absolute;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
 }
 
-/* === 3. THE BRASS FRAME (The "Window") === */
+/* === 4. BRASS FRAME OVERLAY === */
 .cc-frame-overlay {
   position: absolute !important;
   left: 50% !important;
@@ -50,44 +76,49 @@
   transform: translate(-50%, -50%) !important;
   width: var(--frame-width) !important;
   height: calc(var(--frame-width) / var(--frame-ratio)) !important;
-  z-index: 35 !important;
+  z-index: 35 !important; /* On top of map and lens */
   pointer-events: none !important;
   
-  /* FIXED URL: This is the FRAME */
   background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/mag_frame.png') !important;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-/* === 4. THE BLAPPO KNOB (On Top) === */
+/* === 5. BLAPPO KNOB (Interactive Slider) === */
 .cc-scroll {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
-  /* Adjust margin-left until it sits in the right-side groove */
-  margin-left: 410px !important; 
+  /* Adjust this margin to align precisely with the frame slot */
+  margin-left: 368px !important; 
   transform: translateY(-50%) !important;
-  height: 50% !important;
-  width: 40px !important;
-  z-index: 40 !important;
+  height: 400px !important; /* Height of the slot track */
+  width: 70px !important;
+  z-index: 40 !important; /* Top layer for interaction */
   pointer-events: auto !important;
 }
 
 .cc-scroll-knob {
   position: absolute !important;
   left: 50% !important;
-  width: 36px !important;
-  height: 70px !important;
+  top: 50%; /* Positioned via JS */
+  width: 60px !important;  /* Enlarged */
+  height: 105px !important; /* Enlarged */
   transform: translate(-50%, -50%) !important;
   cursor: grab !important;
-  z-index: 41 !important;
+  touch-action: none;
   
-  /* FIXED URL: This is the KNOB */
   background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png') !important;
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
   background-color: transparent !important;
   border: none !important;
+  filter: drop-shadow(0 8px 15px rgba(0,0,0,0.6));
+}
+
+.cc-scroll-knob:active {
+  cursor: grabbing !important;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.8)) brightness(1.1);
 }
