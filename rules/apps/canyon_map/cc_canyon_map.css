@@ -1,66 +1,86 @@
 /* File: rules/apps/canyon_map/cc_canyon_map.css
    COFFIN CANYON — CANYON MAP (Ultimate Design)
-   Full CSS (no omissions) — UPDATED for:
-   - Lens window enlarged to hide beneath metal frame
-   - Frame glow (no shadow)
-   - Horizontal knob bigger
-   - Both knobs use blappo_knob.png
-   - Lens overscan via CSS vars set by JS
+   FULL CSS (no omissions) — FINAL:
+   - dual Blappo knobs (vertical + horizontal)
+   - crisp lens with edge-only distortion overlay
+   - lens overscan so edges hide under frame
+   - frame glow (no shadow)
+   - iOS-friendly (warp overlay can be reduced via .cc-ios)
 */
 
+/* ================================================================
+   ROOT TOKENS
+   ================================================================ */
 :root{
   --frame-width: 1000px;
   --frame-ratio: 1.5;
 
-  /* Lens window size — MUST be larger than the frame opening so edges tuck under */
-  --lens-w: 780px;
-  --lens-h: 540px;
+  /* Lens window size (intentionally larger than frame opening) */
+  --lens-w: 760px;
+  --lens-h: 520px;
 
-  /* Overscan makes the leafet lens container bigger than the mask (hides seams) */
-  --lens-overscan-x: 110px;
-  --lens-overscan-y: 110px;
+  /* Lens overscan (extends Leaflet container beyond mask so no gaps) */
+  --lens-overscan-x: 70px;
+  --lens-overscan-y: 70px;
+
+  --lens-radius: 22px;
 
   --cc-map-border: #4a3728;
 
-  --lens-contrast: 1;
-  --lens-radius: 20px;
+  /* Background “bigness” (purely visual, blurred anyway) */
+  --bg-scale: 3.0;
 
-  /* Vertical scroller */
-  --scroll-h: 440px;
-  --scroll-w: 80px;
-  --knob-w: 80px;
-  --knob-h: 140px;
+  /* Lens look */
+  --lens-contrast: 1.08;
+  --lens-sat: 1.06;
+
+  /* Warp tuning (edge-only overlay) */
+  --warp-contrast: 1.05;
+
+  /* Scroll geometry */
+  --scroll-v-h: 440px;
+  --scroll-v-w: 90px;
+
+  --scroll-h-h: 64px;
+  --scroll-h-pad: 80px; /* left/right inset inside map box */
+
+  /* Your groove offset on the right side */
   --scroll-offset-x: 343px;
+
+  /* Fine alignment: knob needs to sit in groove */
   --knob-offset-x: 9px;
 
-  /* Horizontal scroller */
-  --hscroll-h: 72px;
-  --hscroll-side-inset: 80px;
-  --hscroll-bottom: 18px;
+  /* Blappo knob sizes */
+  --knob-v-w: 86px;
+  --knob-v-h: 150px;
 
-  /* Bigger “feel” knob */
-  --hknob-w: 240px;
-  --hknob-h: 72px;
+  --knob-h-size: 74px; /* bigger than before */
 
+  /* Shadows/glow */
   --shadow-inset: inset 0 0 60px #000;
   --shadow-outer: 0 10px 30px rgba(0,0,0,0.8);
 
-  /* Glow colors */
-  --frame-glow-1: rgba(255, 208, 120, 0.28);
-  --frame-glow-2: rgba(255, 190, 90, 0.18);
-  --frame-glow-3: rgba(255, 220, 160, 0.10);
+  /* Frame glow */
+  --frame-glow-1: rgba(255, 198, 120, 0.22);
+  --frame-glow-2: rgba(255, 160, 70, 0.14);
 }
 
+/* ================================================================
+   APP WRAPPER + BASIC TYPOGRAPHY
+   ================================================================ */
 .cc-canyon-map{
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  color: rgba(255,255,255,0.9);
+  color: rgba(255,255,255,0.92);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
 }
+
 .cc-muted{ opacity: 0.7; }
 
-/* Header */
+/* ================================================================
+   HEADER
+   ================================================================ */
 .cc-cm-header{
   display: flex;
   align-items: center;
@@ -68,32 +88,61 @@
   gap: 12px;
   padding: 10px 12px;
 }
-.cc-cm-title{ font-weight: 700; letter-spacing: 0.2px; }
-.cc-cm-actions{ display: flex; gap: 8px; }
+
+.cc-cm-title{
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.cc-cm-actions{
+  display: flex;
+  gap: 8px;
+}
 
 .cc-btn{
   appearance: none;
   border: 1px solid rgba(255,255,255,0.25);
   background: rgba(0,0,0,0.35);
-  color: rgba(255,255,255,0.9);
+  color: rgba(255,255,255,0.92);
   padding: 6px 10px;
   border-radius: 8px;
   font-weight: 600;
   cursor: pointer;
 }
-.cc-btn:hover{ background: rgba(255,255,255,0.08); }
-.cc-btn:active{ transform: translateY(1px); }
+
+.cc-btn:hover{
+  background: rgba(255,255,255,0.08);
+}
+
+.cc-btn:active{
+  transform: translateY(1px);
+}
+
 .cc-btn.cc-btn-x{
-  width: 34px; height: 34px; padding: 0;
-  line-height: 32px; text-align: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  line-height: 32px;
+  text-align: center;
   border-radius: 10px;
 }
 
-/* Body */
-.cc-cm-body{ position: relative; width: 100%; display: block; }
-.cc-cm-body--lens{ padding: 10px 12px 18px; }
+/* ================================================================
+   BODY LAYOUT
+   ================================================================ */
+.cc-cm-body{
+  position: relative;
+  width: 100%;
+  display: block;
+}
 
-/* Outer container */
+.cc-cm-body--lens{
+  padding: 10px 12px 18px;
+}
+
+/* ================================================================
+   OUTER MAP CONTAINER (UI Bordered Box)
+   ================================================================ */
 .cc-cm-mapwrap{
   position: relative !important;
   width: 100%;
@@ -106,26 +155,37 @@
   justify-content: center;
 
   background: #000;
+
   border: 10px solid var(--cc-map-border);
   border-radius: 12px;
   box-shadow: var(--shadow-inset), var(--shadow-outer);
 }
 
-/* Base map */
+/* ================================================================
+   LEAFLET MAP BASE (BACKGROUND MAP)
+   ================================================================ */
 #cc-cm-map{
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
+
   z-index: 1 !important;
 
-  opacity: 0.4;
-  filter: blur(6px) sepia(0.3);
+  opacity: 0.40;
+  filter: blur(7px) sepia(0.26) saturate(0.95);
   pointer-events: none;
+
+  transform: scale(var(--bg-scale));
+  transform-origin: 50% 50%;
 }
+
+/* Hide Leaflet controls */
 #cc-cm-map .leaflet-control-container{ display: none !important; }
 
-/* Lens */
+/* ================================================================
+   LENS (MASKED HIGH-RES VIEW) — sharp center + edge-only warp overlay
+   ================================================================ */
 .cc-lens{
   position: absolute !important;
   left: 50% !important;
@@ -136,55 +196,99 @@
   height: var(--lens-h) !important;
 
   z-index: 30 !important;
+
   overflow: hidden !important;
   border-radius: var(--lens-radius);
 
   box-shadow:
     inset 0 0 0 2px rgba(255,255,255,0.06),
-    inset 0 0 30px rgba(0,0,0,0.25);
+    inset 0 0 34px rgba(0,0,0,0.18);
 }
+
 .cc-lens-inner{
   position: absolute !important;
   inset: 0 !important;
   overflow: hidden !important;
 }
 
-/* Overscan: extend the lens map under the frame window */
+/* Both Leaflet containers live inside lens-inner */
 .cc-lens-map{
   position: absolute !important;
+
+  /* Overscan so edges hide under the metal frame */
   left: calc(-1 * var(--lens-overscan-x)) !important;
   top:  calc(-1 * var(--lens-overscan-y)) !important;
-  width: calc(100% + (2 * var(--lens-overscan-x))) !important;
-  height: calc(100% + (2 * var(--lens-overscan-y))) !important;
 
-  filter: url(#ccLensWarp) contrast(var(--lens-contrast)) saturate(1.05) !important;
+  width:  calc(100% + (var(--lens-overscan-x) * 2)) !important;
+  height: calc(100% + (var(--lens-overscan-y) * 2)) !important;
+
+  /* NO CSS scaling. Crispness comes from using a bigger source image. */
   transform: none !important;
+
   will-change: transform;
 }
 
+/* Sharp base lens map (no warp) */
+#cc-lens-map{
+  z-index: 1 !important;
+  filter: contrast(var(--lens-contrast)) saturate(var(--lens-sat)) !important;
+}
+
+/* Warp overlay lens map — masked to edges only */
+#cc-lens-map-warp{
+  z-index: 2 !important;
+
+  /* Apply SVG warp only to this overlay */
+  filter: url(#ccLensWarp) contrast(var(--warp-contrast)) !important;
+
+  /* Only show warp at edges; center is transparent */
+  -webkit-mask-image: radial-gradient(circle at 50% 50%,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 55%,
+    rgba(0,0,0,0.85) 78%,
+    rgba(0,0,0,1) 100%);
+  mask-image: radial-gradient(circle at 50% 50%,
+    rgba(0,0,0,0) 0%,
+    rgba(0,0,0,0) 55%,
+    rgba(0,0,0,0.85) 78%,
+    rgba(0,0,0,1) 100%);
+
+  pointer-events: none !important;
+  opacity: 0.95;
+}
+
+/* Glare */
 .cc-lens-glare{
   position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 90% at 30% 20%, rgba(255,255,255,0.14), rgba(255,255,255,0) 55%),
+    radial-gradient(120% 90% at 30% 20%, rgba(255,255,255,0.12), rgba(255,255,255,0) 55%),
     radial-gradient(100% 80% at 70% 70%, rgba(255,255,255,0.08), rgba(255,255,255,0) 55%);
   mix-blend-mode: screen;
-  opacity: 0.5;
+  opacity: 0.55;
 }
+
+/* Extra glass sheen */
 .cc-lens::after{
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 90% at 28% 18%, rgba(255,255,255,0.10), rgba(255,255,255,0) 55%),
-    radial-gradient(110% 90% at 74% 72%, rgba(255,255,255,0.06), rgba(255,255,255,0) 55%);
+    radial-gradient(120% 90% at 28% 18%, rgba(255,255,255,0.09), rgba(255,255,255,0) 55%),
+    radial-gradient(110% 90% at 74% 72%, rgba(255,255,255,0.05), rgba(255,255,255,0) 55%);
   mix-blend-mode: screen;
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
-/* Frame overlay + GLOW instead of shadow */
+/* Hide Leaflet controls in lens maps */
+#cc-lens-map .leaflet-control-container,
+#cc-lens-map-warp .leaflet-control-container{ display: none !important; }
+
+/* ================================================================
+   FRAME OVERLAY — glow instead of shadow
+   ================================================================ */
 .cc-frame-overlay{
   position: absolute !important;
   left: 50% !important;
@@ -201,56 +305,112 @@
   background-position: center;
   background-repeat: no-repeat;
 
+  pointer-events: none !important;
+
   /* Glow */
   filter:
-    drop-shadow(0 0 26px var(--frame-glow-1))
-    drop-shadow(0 0 14px var(--frame-glow-2))
-    drop-shadow(0 0 6px  var(--frame-glow-3));
-
-  pointer-events: none !important;
+    drop-shadow(0 0 18px var(--frame-glow-1))
+    drop-shadow(0 0 44px var(--frame-glow-2));
 }
 
-/* Scrollers */
-.cc-scroll{
-  position: absolute !important;
-  z-index: 50 !important;
-  pointer-events: auto !important;
-}
-.cc-scroll-track{
-  position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  background: rgba(0,0,0,0.0);
-}
-
-/* Vertical */
+/* ================================================================
+   VERTICAL SCROLLER (RIGHT) — Blappo knob
+   ================================================================ */
 .cc-scroll-vertical{
+  position: absolute !important;
   left: 50% !important;
   top: 50% !important;
+
   margin-left: var(--scroll-offset-x) !important;
   transform: translateY(-50%) !important;
 
-  height: var(--scroll-h) !important;
-  width: var(--scroll-w) !important;
+  height: var(--scroll-v-h) !important;
+  width: var(--scroll-v-w) !important;
+
+  z-index: 60 !important;
+  pointer-events: auto !important;
 }
 
-/* Horizontal */
-.cc-scroll-horizontal{
-  left: var(--hscroll-side-inset) !important;
-  right: var(--hscroll-side-inset) !important;
-  bottom: var(--hscroll-bottom) !important;
-  height: var(--hscroll-h) !important;
-}
-.cc-scroll-horizontal .cc-scroll-track{
-  border-radius: 999px;
-  background: rgba(0,0,0,0.20);
-  border: 1px solid rgba(255,255,255,0.18);
-  box-shadow: inset 0 2px 10px rgba(0,0,0,0.55);
+.cc-scroll-vertical .cc-scroll-track{
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: rgba(0,0,0,0.00);
 }
 
-/* Shared knob art */
-.cc-scroll-knob{
+/* Vertical knob */
+.cc-scroll-vertical .cc-scroll-knob{
   position: absolute !important;
+
+  left: calc(50% + var(--knob-offset-x)) !important;
+  top: 0px !important;
+
+  width: var(--knob-v-w) !important;
+  height: var(--knob-v-h) !important;
+
+  transform: translateX(-50%) !important;
+
+  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png") !important;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  cursor: grab !important;
+
+  filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
+  transition: transform 140ms ease, filter 140ms ease;
+
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.cc-scroll-knob:hover{
+  transform: translateX(-50%) scale(1.03) !important;
+  filter: drop-shadow(0 12px 18px rgba(0,0,0,0.9)) brightness(1.06);
+}
+
+.cc-scroll-knob.is-active{
+  cursor: grabbing !important;
+  transform: translateX(-50%) scale(1.06) !important;
+  filter: drop-shadow(0 14px 20px rgba(0,0,0,0.95)) brightness(1.10);
+}
+
+/* ================================================================
+   HORIZONTAL SCROLLER (BOTTOM) — Blappo knob
+   ================================================================ */
+.cc-scroll-horizontal{
+  position: absolute !important;
+  left: var(--scroll-h-pad) !important;
+  right: var(--scroll-h-pad) !important;
+  bottom: 28px !important;
+
+  height: var(--scroll-h-h) !important;
+
+  z-index: 65 !important;
+  pointer-events: auto !important;
+}
+
+.cc-scroll-horizontal .cc-scroll-track{
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: rgba(0,0,0,0.22);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow:
+    inset 0 2px 10px rgba(0,0,0,0.55);
+}
+
+/* Horizontal knob uses same Blappo graphic (bigger coin) */
+.cc-scroll-horizontal .cc-scroll-knob{
+  position: absolute !important;
+  left: 0px !important;
+  top: 50% !important;
+
+  width: var(--knob-h-size) !important;
+  height: var(--knob-h-size) !important;
+
+  transform: translate(-50%, -50%) !important;
 
   background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png") !important;
   background-size: contain;
@@ -259,43 +419,24 @@
 
   cursor: grab !important;
   filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
-  transition: transform 120ms ease, filter 120ms ease;
+  transition: transform 140ms ease, filter 140ms ease;
 
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
 
-/* Vertical knob */
-.cc-scroll-vertical .cc-scroll-knob{
-  left: calc(50% + var(--knob-offset-x)) !important;
-  top: 0px !important; /* JS sets */
-  width: var(--knob-w) !important;
-  height: var(--knob-h) !important;
-  transform: translateX(-50%) !important;
+.cc-scroll-horizontal .cc-scroll-knob:hover{
+  transform: translate(-50%, -50%) scale(1.04) !important;
 }
 
-/* Horizontal knob — larger */
-.cc-scroll-horizontal .cc-scroll-knob{
-  left: 0px !important; /* JS sets */
-  top: 50% !important;
-  width: var(--hknob-w) !important;
-  height: var(--hknob-h) !important;
-  transform: translateY(-50%) !important;
+.cc-scroll-horizontal .cc-scroll-knob.is-active{
+  transform: translate(-50%, -50%) scale(1.07) !important;
 }
 
-.cc-scroll-knob:hover{
-  filter: drop-shadow(0 12px 18px rgba(0,0,0,0.9)) brightness(1.06);
-}
-.cc-scroll-knob.is-active{
-  cursor: grabbing !important;
-  filter: drop-shadow(0 14px 20px rgba(0,0,0,0.95)) brightness(1.08);
-}
-.cc-scroll:active .cc-scroll-track{
-  background: rgba(255,255,255,0.03);
-}
-
-/* Drawer */
+/* ================================================================
+   DRAWER (REGION DETAILS)
+   ================================================================ */
 .cc-cm-drawer{
   margin-top: 10px;
   border: 1px solid rgba(255,255,255,0.18);
@@ -305,7 +446,9 @@
   max-height: 0;
   transition: max-height 220ms ease;
 }
+
 .cc-cm-drawer.open{ max-height: 420px; }
+
 .cc-cm-drawer-head{
   display: flex;
   align-items: center;
@@ -314,38 +457,39 @@
   padding: 10px 12px;
   border-bottom: 1px solid rgba(255,255,255,0.12);
 }
-.cc-cm-drawer-title{ font-weight: 800; }
-.cc-cm-drawer-content{ padding: 10px 12px 14px; }
-.cc-block{ margin-bottom: 10px; }
-.cc-h{ font-weight: 800; margin-bottom: 4px; }
 
-/* Leaflet lens QoL */
-#cc-lens-map .leaflet-control-container{ display: none !important; }
-#cc-lens-map .leaflet-tile-pane,
-#cc-lens-map .leaflet-map-pane,
-#cc-lens-map .leaflet-overlay-pane{
-  will-change: transform;
+.cc-cm-drawer-title{ font-weight: 800; }
+
+.cc-cm-drawer-content{ padding: 10px 12px 14px; }
+
+.cc-block{ margin-bottom: 10px; }
+
+.cc-h{
+  font-weight: 800;
+  margin-bottom: 4px;
 }
 
-/* Responsive */
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
 @media (max-width: 980px){
   :root{
     --frame-width: 920px;
     --scroll-offset-x: 315px;
+    --scroll-h-pad: 70px;
   }
 }
+
 @media (max-width: 820px){
   :root{
     --frame-width: 860px;
     --lens-w: 700px;
     --lens-h: 490px;
     --scroll-offset-x: 295px;
-
-    --hscroll-side-inset: 60px;
-    --hknob-w: 220px;
-    --hknob-h: 68px;
+    --scroll-h-pad: 64px;
   }
 }
+
 @media (max-width: 700px){
   .cc-cm-mapwrap{
     min-height: 640px !important;
@@ -354,20 +498,23 @@
   :root{
     --frame-width: 760px;
     --lens-w: 640px;
-    --lens-h: 450px;
+    --lens-h: 460px;
     --scroll-offset-x: 255px;
-    --scroll-h: 420px;
-    --knob-h: 132px;
 
-    --hscroll-side-inset: 40px;
-    --hscroll-h: 66px;
-    --hknob-w: 200px;
-    --hknob-h: 66px;
+    --scroll-v-h: 420px;
+
+    --knob-v-w: 78px;
+    --knob-v-h: 136px;
+
+    --knob-h-size: 66px;
+    --scroll-h-pad: 46px;
   }
 }
 
-/* iOS sharpness fallback */
-.cc-ios .cc-lens-map{
-  filter: contrast(var(--lens-contrast)) saturate(1.05) !important;
+/* ================================================================
+   iOS fallback: keep warp but reduce harshness if needed
+   ================================================================ */
+.cc-ios #cc-lens-map-warp{
+  opacity: 0.85;
 }
 
