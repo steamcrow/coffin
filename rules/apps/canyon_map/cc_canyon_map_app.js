@@ -1,8 +1,7 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
-   UPDATE: Distortion only on TOP magnified lens map + lens overscan re-center.
-   - Background map stays clean (no SVG filter involvement).
-   - Lens map gets the SVG filter via CSS, and we re-size/position its internal Leaflet container
-     to match the overscan so you never see gaps at the lens edges.
+   UPDATE: Added HORIZONTAL scroller knob at bottom + distortion on lens.
+   - Vertical scroller controls up/down (latitude)
+   - NEW: Horizontal scroller controls left/right (longitude)
 */
 
 (function () {
@@ -26,14 +25,12 @@
     lensWidthPx: 638,
     lensHeightPx: 438,
 
-    // Distortion is lens-only (background should not use this)
     warpEnabled: true,
     warpBaseFrequency: 0.008,
     warpScale: 16,
 
-    // NEW: match CSS overscan tokens (so JS can size Leaflet lens container correctly)
-    lensOverscanX: 22, // MUST match --lens-overscan-x
-    lensOverscanY: 22, // MUST match --lens-overscan-y
+    lensOverscanX: 22,
+    lensOverscanY: 22,
 
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
@@ -187,9 +184,16 @@
 
     const frameOverlay = el("div", { class: "cc-frame-overlay", id: "cc-frame" });
 
-    const scroller = el("div", { class: "cc-scroll", id: "cc-scroll" }, [
+    // VERTICAL SCROLLER (up/down on the right side)
+    const scrollerVertical = el("div", { class: "cc-scroll cc-scroll-vertical", id: "cc-scroll-vertical" }, [
       el("div", { class: "cc-scroll-track" }),
-      el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob" })
+      el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" })
+    ]);
+
+    // NEW: HORIZONTAL SCROLLER (left/right on the bottom)
+    const scrollerHorizontal = el("div", { class: "cc-scroll cc-scroll-horizontal", id: "cc-scroll-horizontal" }, [
+      el("div", { class: "cc-scroll-track" }),
+      el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" })
     ]);
 
     const body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
@@ -198,7 +202,8 @@
         mapEl,
         lens,
         frameOverlay,
-        scroller
+        scrollerVertical,      // vertical scroller
+        scrollerHorizontal     // NEW: horizontal scroller
       ]),
       el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
         el("div", { class: "cc-cm-drawer-head" }, [
@@ -231,8 +236,10 @@
       drawerEl: root.querySelector("#cc-cm-drawer"),
       drawerTitleEl: root.querySelector("#cc-cm-drawer-title"),
       drawerContentEl: root.querySelector("#cc-cm-drawer-content"),
-      scrollEl: scroller,
-      knobEl: root.querySelector("#cc-scroll-knob")
+      scrollElVertical: scrollerVertical,
+      knobElVertical: root.querySelector("#cc-scroll-knob-v"),
+      scrollElHorizontal: scrollerHorizontal,
+      knobElHorizontal: root.querySelector("#cc-scroll-knob-h")
     };
   }
 
@@ -269,7 +276,6 @@
 
     const ui = buildLayout(root, opts);
 
-    // Build SVG warp filter (lens only; background never references it)
     if (opts.warpEnabled) {
       ui.lensSvgEl.innerHTML = `
         <defs>
@@ -286,12 +292,23 @@
     let mapDoc = null, stateDoc = null, mainMap = null, lensMap = null;
     const regionLayersById = {}, regionsById = {};
 
-    const scrollerRef = {
+    // VERTICAL scroller reference (controls up/down)
+    const scrollerVerticalRef = {
       bound: false,
       px: null,
       mainMap: null,
-      trackEl: ui.scrollEl,
-      knobEl: ui.knobEl,
+      trackEl: ui.scrollElVertical,
+      knobEl: ui.knobElVertical,
+      setKnobFromT: null
+    };
+
+    // NEW: HORIZONTAL scroller reference (controls left/right)
+    const scrollerHorizontalRef = {
+      bound: false,
+      px: null,
+      mainMap: null,
+      trackEl: ui.scrollElHorizontal,
+      knobEl: ui.knobElHorizontal,
       setKnobFromT: null
     };
 
@@ -307,14 +324,14 @@
     }
 
     const syncLens = rafThrottle(() => {
-      if (!opts.lensEnabled || !scrollerRef.mainMap || !lensMap) return;
-      const m = scrollerRef.mainMap;
+      if (!opts.lensEnabled || !scrollerVerticalRef.mainMap || !lensMap) return;
+      const m = scrollerVerticalRef.mainMap;
       lensMap.setView(m.getCenter(), m.getZoom() + opts.lensZoomOffset, { animate: false });
     });
 
     function rebuildRegions() {
-      if (!scrollerRef.mainMap) return;
-      Object.values(regionLayersById).forEach(l => scrollerRef.mainMap.removeLayer(l));
+      if (!scrollerVerticalRef.mainMap) return;
+      Object.values(regionLayersById).forEach(l => scrollerVerticalRef.mainMap.removeLayer(l));
       const stateByRegion = stateDoc?.state_by_region || {};
       (mapDoc.regions || []).forEach((r) => {
         regionsById[r.region_id] = r;
@@ -325,23 +342,24 @@
           renderDrawer(ui, r, stateByRegion[r.region_id]);
           openDrawer(ui);
         });
-        poly.addTo(scrollerRef.mainMap);
+        poly.addTo(scrollerVerticalRef.mainMap);
         regionLayersById[r.region_id] = poly;
       });
     }
 
     async function invalidateMapsHard() {
       await nextFrame();
-      if (scrollerRef.mainMap) scrollerRef.mainMap.invalidateSize({ animate: false });
+      if (scrollerVerticalRef.mainMap) scrollerVerticalRef.mainMap.invalidateSize({ animate: false });
       if (lensMap) lensMap.invalidateSize({ animate: false });
     }
 
-    function bindScrollerOnce() {
-      if (scrollerRef.bound) return;
-      scrollerRef.bound = true;
+    // VERTICAL SCROLLER BINDING (up/down movement)
+    function bindVerticalScrollerOnce() {
+      if (scrollerVerticalRef.bound) return;
+      scrollerVerticalRef.bound = true;
 
-      const trackEl = scrollerRef.trackEl;
-      const knobEl = scrollerRef.knobEl;
+      const trackEl = scrollerVerticalRef.trackEl;
+      const knobEl = scrollerVerticalRef.knobEl;
 
       function getTrackRect() { return trackEl.getBoundingClientRect(); }
       function getKnobH() { return knobEl.getBoundingClientRect().height || 140; }
@@ -365,17 +383,17 @@
       }
 
       function panMapFromT(t) {
-        const m = scrollerRef.mainMap;
-        const px = scrollerRef.px;
+        const m = scrollerVerticalRef.mainMap;
+        const px = scrollerVerticalRef.px;
         if (!m || !px) return;
         const lat = px.h * (1 - t);
         m.panTo([lat, m.getCenter().lng], { animate: false });
       }
 
-      scrollerRef.setKnobFromT = setKnobFromT;
+      scrollerVerticalRef.setKnobFromT = setKnobFromT;
 
       trackEl.addEventListener("pointerdown", (e) => {
-        if (!scrollerRef.mainMap || !scrollerRef.px) return;
+        if (!scrollerVerticalRef.mainMap || !scrollerVerticalRef.px) return;
         const { t, yClamped } = pxToT(e.clientY);
         knobEl.style.top = `${yClamped}px`;
         panMapFromT(t);
@@ -412,15 +430,89 @@
       window.addEventListener("mouseup", () => knobEl.classList.remove("is-active"));
     }
 
-    // NEW: size/position the Leaflet lens container to match CSS overscan.
-    // This prevents edge seams and ensures the visible window is filled.
+    // NEW: HORIZONTAL SCROLLER BINDING (left/right movement)
+    function bindHorizontalScrollerOnce() {
+      if (scrollerHorizontalRef.bound) return;
+      scrollerHorizontalRef.bound = true;
+
+      const trackEl = scrollerHorizontalRef.trackEl;
+      const knobEl = scrollerHorizontalRef.knobEl;
+
+      function getTrackRect() { return trackEl.getBoundingClientRect(); }
+      function getKnobW() { return knobEl.getBoundingClientRect().width || 140; }
+
+      function pxToT(clientX) {
+        const rect = getTrackRect();
+        const knobW = getKnobW();
+        const x = clamp(clientX - rect.left, 0, rect.width);
+        const xClamped = clamp(x - knobW / 2, 0, Math.max(0, rect.width - knobW));
+        const denom = Math.max(1, rect.width - knobW);
+        const t = clamp(xClamped / denom, 0, 1);
+        return { t, xClamped };
+      }
+
+      function setKnobFromT(t) {
+        const rect = getTrackRect();
+        const knobW = getKnobW();
+        const denom = Math.max(1, rect.width - knobW);
+        const x = denom * clamp(t, 0, 1);
+        knobEl.style.left = `${x}px`;
+      }
+
+      function panMapFromT(t) {
+        const m = scrollerHorizontalRef.mainMap;
+        const px = scrollerHorizontalRef.px;
+        if (!m || !px) return;
+        const lng = px.w * t;
+        m.panTo([m.getCenter().lat, lng], { animate: false });
+      }
+
+      scrollerHorizontalRef.setKnobFromT = setKnobFromT;
+
+      trackEl.addEventListener("pointerdown", (e) => {
+        if (!scrollerHorizontalRef.mainMap || !scrollerHorizontalRef.px) return;
+        const { t, xClamped } = pxToT(e.clientX);
+        knobEl.style.left = `${xClamped}px`;
+        panMapFromT(t);
+      });
+
+      knobEl.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        knobEl.classList.add("is-active");
+        try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
+
+        const onMove = (ev) => {
+          const { t, xClamped } = pxToT(ev.clientX);
+          knobEl.style.left = `${xClamped}px`;
+          panMapFromT(t);
+        };
+
+        const onUp = () => {
+          knobEl.classList.remove("is-active");
+          knobEl.removeEventListener("pointermove", onMove);
+          knobEl.removeEventListener("pointerup", onUp);
+          knobEl.removeEventListener("pointercancel", onUp);
+        };
+
+        knobEl.addEventListener("pointermove", onMove);
+        knobEl.addEventListener("pointerup", onUp);
+        knobEl.addEventListener("pointercancel", onUp);
+      });
+
+      knobEl.addEventListener("touchstart", () => knobEl.classList.add("is-active"), { passive: true });
+      knobEl.addEventListener("touchend", () => knobEl.classList.remove("is-active"), { passive: true });
+      knobEl.addEventListener("touchcancel", () => knobEl.classList.remove("is-active"), { passive: true });
+      knobEl.addEventListener("mousedown", () => knobEl.classList.add("is-active"));
+      window.addEventListener("mouseup", () => knobEl.classList.remove("is-active"));
+    }
+
     function applyLensOverscanSizing() {
       if (!ui.lensMapEl) return;
 
       const x = Number(opts.lensOverscanX || 0);
       const y = Number(opts.lensOverscanY || 0);
 
-      // .cc-lens-map is the element we pass to Leaflet; make it overscanned.
       ui.lensMapEl.style.position = "absolute";
       ui.lensMapEl.style.left = (-x) + "px";
       ui.lensMapEl.style.top = (-y) + "px";
@@ -459,7 +551,7 @@
       window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
 
       if (opts.lensEnabled) {
-        applyLensOverscanSizing(); // must be before creating Leaflet map
+        applyLensOverscanSizing();
 
         lensMap = window.L.map(ui.lensMapEl, {
           crs: window.L.CRS.Simple,
@@ -480,27 +572,37 @@
       mainMap.fitBounds(bounds, { padding: [10, 10], animate: false });
       mainMap.setZoom(mainMap.getZoom() + opts.backgroundZoomOffset, { animate: false });
 
-      scrollerRef.mainMap = mainMap;
-      scrollerRef.px = px;
+      scrollerVerticalRef.mainMap = mainMap;
+      scrollerVerticalRef.px = px;
+
+      // NEW: Set horizontal scroller reference
+      scrollerHorizontalRef.mainMap = mainMap;
+      scrollerHorizontalRef.px = px;
 
       rebuildRegions();
 
-      // Lens map: follow main center, zoomed in, then invalidate after overscan sizing
       if (opts.lensEnabled && lensMap) {
         lensMap.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
         await nextFrame();
         lensMap.invalidateSize({ animate: false });
       }
 
-      bindScrollerOnce();
+      bindVerticalScrollerOnce();
+      bindHorizontalScrollerOnce(); // NEW: Bind horizontal scroller
 
       if (_onMoveZoom) {
         try { mainMap.off("move zoom", _onMoveZoom); } catch (_) {}
       }
 
       _onMoveZoom = () => {
-        const t = 1 - (mainMap.getCenter().lat / px.h);
-        if (scrollerRef.setKnobFromT) scrollerRef.setKnobFromT(t);
+        // Update VERTICAL knob position
+        const tVertical = 1 - (mainMap.getCenter().lat / px.h);
+        if (scrollerVerticalRef.setKnobFromT) scrollerVerticalRef.setKnobFromT(tVertical);
+
+        // NEW: Update HORIZONTAL knob position
+        const tHorizontal = mainMap.getCenter().lng / px.w;
+        if (scrollerHorizontalRef.setKnobFromT) scrollerHorizontalRef.setKnobFromT(tHorizontal);
+
         syncLens();
       };
 
@@ -511,10 +613,10 @@
     ui.btnReload.addEventListener("click", loadAll);
 
     ui.btnFit.addEventListener("click", () => {
-      if (!mapDoc || !scrollerRef.mainMap) return;
+      if (!mapDoc || !scrollerVerticalRef.mainMap) return;
       const px = mapDoc.map.background.image_pixel_size;
-      scrollerRef.mainMap.fitBounds([[0, 0], [px.h, px.w]], { animate: false });
-      scrollerRef.mainMap.setZoom(scrollerRef.mainMap.getZoom() + opts.backgroundZoomOffset, { animate: false });
+      scrollerVerticalRef.mainMap.fitBounds([[0, 0], [px.h, px.w]], { animate: false });
+      scrollerVerticalRef.mainMap.setZoom(scrollerVerticalRef.mainMap.getZoom() + opts.backgroundZoomOffset, { animate: false });
     });
 
     await loadAll();
