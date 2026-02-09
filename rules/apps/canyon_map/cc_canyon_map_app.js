@@ -1,7 +1,10 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
    COFFIN CANYON — CANYON MAP (read-only v1)
-   ODOO CSP-SAFE + CRISP LENS + EDGE-ONLY DISTORTION + DUAL BLAPPO SCROLLERS
-   RESTORED: HEAVY EASING (oil-damped), knobs ease too, no reset between knobs
+   FIXES:
+   - Lens uses LARGE image rendered into SMALL bounds => same coords, crisp
+   - Lens warp is EDGE-ONLY overlay layer
+   - Longer/heavier easing (map + knobs), no early stop
+   - Horizontal scroller clamps correctly + uses blappo knob (rotated via CSS)
 */
 
 (function () {
@@ -19,22 +22,22 @@
     baseMapMaxHeightVh: 70,
     allowMapDrag: true,
 
-    // Lens behavior
     lensEnabled: true,
-    lensZoomOffset: 3,
 
-    // Edge warp tuning
+    // Make the top lens "smaller" (less zoom) now that the image is crisp:
+    lensZoomOffset: 1,  // try 1; if you want more, set to 2
+
+    // Edge warp
     warpEnabled: true,
     warpBaseFrequency: 0.010,
     warpScaleDesktop: 22,
     warpScaleIOS: 14,
 
-    // HEAVY FEEL (tune these)
-    // Lower mapEase = heavier, slower
-    mapEase: 0.085,          // 0.06–0.12 feels “heavy”
-    knobEase: 0.16,          // 0.12–0.22 feels “heavy”
-    settleFrames: 26,        // how long we keep easing after release
-    minCenterDeltaPx: 0.18,  // don't snap too early
+    // HEAVIER / LONGER SLIDE
+    mapEase: 0.045,       // lower = heavier/longer
+    knobEase: 0.10,       // lower = heavier/longer
+    settleFrames: 90,     // longer coast
+    minCenterDeltaPx: 0.04,
 
     factionColors: {
       monster_rangers: "#4caf50",
@@ -50,9 +53,6 @@
     }
   };
 
-  // ---------------------------
-  // Utils
-  // ---------------------------
   function el(tag, attrs = {}, children = []) {
     const n = document.createElement(tag);
     Object.entries(attrs).forEach(([k, v]) => {
@@ -102,9 +102,6 @@
     );
   }
 
-  // ---------------------------
-  // Odoo CSP-safe loaders
-  // ---------------------------
   const _loaded = { css: new Set(), js: new Set() };
 
   async function loadCssTextOnce(url, key) {
@@ -124,7 +121,7 @@
 
     let code = await fetchText(url);
 
-    // kill the leaflet.js.map warning spam
+    // remove sourcemap reference => no "leaflet.js.map" warnings
     code = code.replace(/\/\/# sourceMappingURL=.*$/gm, "");
 
     const blob = new Blob([code], { type: "text/javascript" });
@@ -147,9 +144,6 @@
     if (!window.L) throw new Error("Leaflet did not load (window.L missing).");
   }
 
-  // ---------------------------
-  // Validation + geometry
-  // ---------------------------
   function normalizePoints(points, coordSystem) {
     if (!Array.isArray(points)) return [];
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
@@ -162,7 +156,6 @@
     if (!doc || doc.schema_id !== "cc_canyon_map") return "schema_id must be cc_canyon_map";
     if (!doc.map?.background?.image_key) return "map.background.image_key missing";
     if (!doc.map.background.image_pixel_size) return "map.background.image_pixel_size missing";
-    if (!Array.isArray(doc.regions)) return "regions must be array";
     return null;
   }
 
@@ -172,9 +165,6 @@
     return null;
   }
 
-  // ---------------------------
-  // UI
-  // ---------------------------
   function buildLayout(root, opts) {
     root.innerHTML = "";
     root.classList.add("cc-canyon-map");
@@ -207,12 +197,12 @@
 
     const frameOverlay = el("div", { class: "cc-frame-overlay", id: "cc-frame" });
 
-    const scrollerV = el("div", { class: "cc-scroll-vertical", id: "cc-scroll-vertical" }, [
+    const scrollerV = el("div", { id: "cc-scroll-vertical" }, [
       el("div", { class: "cc-scroll-track" }),
       el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" })
     ]);
 
-    const scrollerH = el("div", { class: "cc-scroll-horizontal", id: "cc-scroll-horizontal" }, [
+    const scrollerH = el("div", { id: "cc-scroll-horizontal" }, [
       el("div", { class: "cc-scroll-track" }),
       el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" })
     ]);
@@ -225,19 +215,6 @@
         frameOverlay,
         scrollerV,
         scrollerH
-      ]),
-      el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
-        el("div", { class: "cc-cm-drawer-head" }, [
-          el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Region"]),
-          el("button", {
-            class: "cc-btn cc-btn-x",
-            type: "button",
-            onClick: () => root._ccApi && root._ccApi.drawerClose()
-          }, ["×"])
-        ]),
-        el("div", { class: "cc-cm-drawer-content", id: "cc-cm-drawer-content" }, [
-          el("div", { class: "cc-muted" }, ["Click a region to view details."])
-        ])
       ])
     ]);
 
@@ -252,30 +229,11 @@
       lensWarpEl: root.querySelector("#cc-lens-map-warp"),
       btnReload: root.querySelector("#cc-cm-reload"),
       btnFit: root.querySelector("#cc-cm-fit"),
-      drawerEl: root.querySelector("#cc-cm-drawer"),
-      drawerTitleEl: root.querySelector("#cc-cm-drawer-title"),
-      drawerContentEl: root.querySelector("#cc-cm-drawer-content"),
-      scrollVEl: scrollerV,
+      scrollVEl: root.querySelector("#cc-scroll-vertical"),
       knobVEl: root.querySelector("#cc-scroll-knob-v"),
-      scrollHEl: scrollerH,
+      scrollHEl: root.querySelector("#cc-scroll-horizontal"),
       knobHEl: root.querySelector("#cc-scroll-knob-h")
     };
-  }
-
-  function openDrawer(ui) { ui.drawerEl.classList.add("open"); }
-  function closeDrawer(ui) { ui.drawerEl.classList.remove("open"); }
-
-  function renderDrawer(ui, region, stateForRegion) {
-    ui.drawerTitleEl.textContent = region?.name || "Region";
-    const nodes = [];
-    if (region?.description) nodes.push(el("div", { class: "cc-block" }, [region.description]));
-    nodes.push(el("div", { class: "cc-block" }, [
-      el("div", { class: "cc-h" }, ["State"]),
-      el("div", {}, [`Controller: ${stateForRegion?.controller_faction_id || "neutral"}`]),
-      el("div", {}, [`Status: ${stateForRegion?.status || "neutral"}`])
-    ]));
-    ui.drawerContentEl.innerHTML = "";
-    nodes.forEach((n) => ui.drawerContentEl.appendChild(n));
   }
 
   function buildRegionStyle(opts, regionId, stateByRegion) {
@@ -287,9 +245,6 @@
     return { color: "rgba(255,255,255,0.45)", weight: 2, fillColor, fillOpacity: 0.18, ...statusPatch };
   }
 
-  // ---------------------------
-  // Main mount
-  // ---------------------------
   async function mount(root, userOpts) {
     const opts = { ...DEFAULTS, ...(userOpts || {}) };
 
@@ -313,84 +268,36 @@
     }
 
     let mapDoc = null, stateDoc = null;
-    let mainMap = null;
-    let lensMapSharp = null;
-    let lensMapWarp = null;
+    let mainMap = null, lensSharp = null, lensWarp = null;
+    let regionLayersById = {};
 
-    const regionLayersById = {};
-    const regionsById = {};
-
-    // Targets shared by both knobs (prevents “reset”)
+    // Shared targets (prevents “reset” between knobs)
     let targetLat = 0;
     let targetLng = 0;
 
-    // Smoothed knob display state
+    // Smoothed knob display
     let knobTV = 0, knobTH = 0;
     let knobTargetTV = 0, knobTargetTH = 0;
 
-    // Animation control
-    let animRaf = 0;
+    // Animation / easing
+    let raf = 0;
     let animating = false;
     let draggingKnob = false;
-    let settleCountdown = 0; // frames to continue easing after release
+    let settle = 0;
 
     function stopAnim() {
-      if (animRaf) cancelAnimationFrame(animRaf);
-      animRaf = 0;
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
       animating = false;
     }
 
-    function startAnim() {
-      if (animating) return;
-      animating = true;
-
-      const tick = () => {
-        animRaf = requestAnimationFrame(tick);
-        if (!mainMap) return;
-
-        // Always ease knobs toward targets (even if map is close)
-        knobTV += (knobTargetTV - knobTV) * opts.knobEase;
-        knobTH += (knobTargetTH - knobTH) * opts.knobEase;
-
-        setVerticalKnobFromT(knobTV);
-        setHorizontalKnobFromT(knobTH);
-
-        // Ease map toward target
-        const c = mainMap.getCenter();
-        const dLat = targetLat - c.lat;
-        const dLng = targetLng - c.lng;
-        const dist = Math.abs(dLat) + Math.abs(dLng);
-
-        if (dist > opts.minCenterDeltaPx) {
-          const nLat = c.lat + dLat * opts.mapEase;
-          const nLng = c.lng + dLng * opts.mapEase;
-          mainMap.setView([nLat, nLng], mainMap.getZoom(), { animate: false });
-          syncLens();
-          settleCountdown = opts.settleFrames; // reset settle window while moving
-          return;
-        }
-
-        // If we're close, keep a little “settle” time unless we're fully idle
-        if (draggingKnob) {
-          // while dragging, never stop: it keeps the weighty feel
-          syncLens();
-          return;
-        }
-
-        if (settleCountdown > 0) {
-          settleCountdown--;
-          syncLens();
-          return;
-        }
-
-        // final snap to exact target, then stop
-        mainMap.setView([targetLat, targetLng], mainMap.getZoom(), { animate: false });
-        syncLens();
-        stopAnim();
-      };
-
-      tick();
-    }
+    const syncLens = rafThrottle(() => {
+      if (!opts.lensEnabled || !mainMap || !lensSharp || !lensWarp) return;
+      const center = mainMap.getCenter();
+      const z = mainMap.getZoom() + opts.lensZoomOffset;
+      lensSharp.setView(center, z, { animate: false });
+      lensWarp.setView(center, z, { animate: false });
+    });
 
     function enforceBaseMapSize() {
       if (!mapDoc) return;
@@ -401,44 +308,6 @@
       ui.mapEl.style.width = Math.round(h * (px.w / px.h)) + "px";
     }
 
-    const syncLens = rafThrottle(() => {
-      if (!opts.lensEnabled || !mainMap || !lensMapSharp || !lensMapWarp) return;
-      const center = mainMap.getCenter();
-      const z = mainMap.getZoom() + opts.lensZoomOffset;
-      lensMapSharp.setView(center, z, { animate: false });
-      lensMapWarp.setView(center, z, { animate: false });
-    });
-
-    function rebuildRegions() {
-      if (!mainMap) return;
-      Object.values(regionLayersById).forEach(l => mainMap.removeLayer(l));
-      const stateByRegion = stateDoc?.state_by_region || {};
-
-      (mapDoc.regions || []).forEach((r) => {
-        regionsById[r.region_id] = r;
-        const latlngs = normalizePoints(r.shape?.points, mapDoc.map?.background?.coord_system || "image_px");
-        if (!latlngs.length) return;
-
-        const poly = window.L.polygon(latlngs, buildRegionStyle(opts, r.region_id, stateByRegion));
-        poly.on("click", () => {
-          renderDrawer(ui, r, stateByRegion[r.region_id]);
-          openDrawer(ui);
-        });
-        poly.addTo(mainMap);
-        regionLayersById[r.region_id] = poly;
-      });
-    }
-
-    async function invalidateMapsHard() {
-      await nextFrame();
-      if (mainMap) mainMap.invalidateSize({ animate: false });
-      if (lensMapSharp) lensMapSharp.invalidateSize({ animate: false });
-      if (lensMapWarp) lensMapWarp.invalidateSize({ animate: false });
-    }
-
-    // ---------------------------
-    // Knob -> T helpers
-    // ---------------------------
     function setVerticalKnobFromT(t) {
       const trackEl = ui.scrollVEl;
       const knobEl = ui.knobVEl;
@@ -448,7 +317,6 @@
       const knobH = knobEl.getBoundingClientRect().height || 140;
       const denom = Math.max(1, rect.height - knobH);
       const y = denom * clamp(t, 0, 1);
-
       knobEl.style.top = `${y}px`;
     }
 
@@ -458,7 +326,7 @@
       if (!trackEl || !knobEl) return;
 
       const rect = trackEl.getBoundingClientRect();
-      const knobW = knobEl.getBoundingClientRect().width || 70;
+      const knobW = knobEl.getBoundingClientRect().width || 140;
 
       const minX = knobW / 2;
       const maxX = Math.max(minX, rect.width - knobW / 2);
@@ -467,279 +335,45 @@
       knobEl.style.left = `${x}px`;
     }
 
-    // ---------------------------
-    // Bind scrollers
-    // ---------------------------
-    function bindVerticalScrollerOnce(pxH) {
-      const trackEl = ui.scrollVEl;
-      const knobEl = ui.knobVEl;
-      if (!trackEl || !knobEl) return;
+    function startAnim() {
+      if (animating) return;
+      animating = true;
 
-      const getRect = () => trackEl.getBoundingClientRect();
-      const getKnobH = () => knobEl.getBoundingClientRect().height || 140;
+      const tick = () => {
+        raf = requestAnimationFrame(tick);
+        if (!mainMap) return;
 
-      const clientYToT = (clientY) => {
-        const rect = getRect();
-        const knobH = getKnobH();
+        // knobs ease longer
+        knobTV += (knobTargetTV - knobTV) * opts.knobEase;
+        knobTH += (knobTargetTH - knobTH) * opts.knobEase;
+        setVerticalKnobFromT(knobTV);
+        setHorizontalKnobFromT(knobTH);
 
-        const y = clamp(clientY - rect.top, 0, rect.height);
-        const yClamped = clamp(y - knobH / 2, 0, Math.max(0, rect.height - knobH));
-        const denom = Math.max(1, rect.height - knobH);
-        return clamp(yClamped / denom, 0, 1);
-      };
+        // map heavy ease longer
+        const c = mainMap.getCenter();
+        const dLat = targetLat - c.lat;
+        const dLng = targetLng - c.lng;
 
-      const applyT = (t) => {
-        // CRS.Simple: lat increases downward
-        knobTargetTV = t;
-        targetLat = pxH * t;
-        settleCountdown = opts.settleFrames;
-        startAnim();
-      };
+        const dist = Math.abs(dLat) + Math.abs(dLng);
+        if (dist > opts.minCenterDeltaPx) {
+          const nLat = c.lat + dLat * opts.mapEase;
+          const nLng = c.lng + dLng * opts.mapEase;
+          mainMap.setView([nLat, nLng], mainMap.getZoom(), { animate: false });
+          syncLens();
+          settle = opts.settleFrames;
+          return;
+        }
 
-      trackEl.addEventListener("pointerdown", (e) => {
-        if (e.target === knobEl) return;
-        applyT(clientYToT(e.clientY));
-      });
+        // settle window (keeps “heavy” feeling)
+        if (draggingKnob) {
+          syncLens();
+          return;
+        }
+        if (settle > 0) {
+          settle--;
+          syncLens();
+          return;
+        }
 
-      knobEl.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        draggingKnob = true;
-        settleCountdown = opts.settleFrames;
-
-        knobEl.classList.add("is-active");
-        try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
-
-        const onMove = (ev) => applyT(clientYToT(ev.clientY));
-
-        const onUp = () => {
-          draggingKnob = false;
-          knobEl.classList.remove("is-active");
-          knobEl.removeEventListener("pointermove", onMove);
-          knobEl.removeEventListener("pointerup", onUp);
-          knobEl.removeEventListener("pointercancel", onUp);
-          settleCountdown = opts.settleFrames; // keep heavy settle after release
-          startAnim();
-        };
-
-        knobEl.addEventListener("pointermove", onMove);
-        knobEl.addEventListener("pointerup", onUp);
-        knobEl.addEventListener("pointercancel", onUp);
-      });
-    }
-
-    function bindHorizontalScrollerOnce(pxW) {
-      const trackEl = ui.scrollHEl;
-      const knobEl = ui.knobHEl;
-      if (!trackEl || !knobEl) return;
-
-      const getRect = () => trackEl.getBoundingClientRect();
-      const getKnobW = () => knobEl.getBoundingClientRect().width || 70;
-
-      const clientXToT = (clientX) => {
-        const rect = getRect();
-        const knobW = getKnobW();
-
-        const minX = knobW / 2;
-        const maxX = Math.max(minX, rect.width - knobW / 2);
-
-        const x = clamp(clientX - rect.left, minX, maxX);
-        const t = (x - minX) / Math.max(1, (maxX - minX));
-        return clamp(t, 0, 1);
-      };
-
-      const applyT = (t) => {
-        knobTargetTH = t;
-        targetLng = pxW * t;
-        settleCountdown = opts.settleFrames;
-        startAnim();
-      };
-
-      trackEl.addEventListener("pointerdown", (e) => {
-        if (e.target === knobEl) return;
-        applyT(clientXToT(e.clientX));
-      });
-
-      knobEl.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        draggingKnob = true;
-        settleCountdown = opts.settleFrames;
-
-        knobEl.classList.add("is-active");
-        try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
-
-        const onMove = (ev) => applyT(clientXToT(ev.clientX));
-
-        const onUp = () => {
-          draggingKnob = false;
-          knobEl.classList.remove("is-active");
-          knobEl.removeEventListener("pointermove", onMove);
-          knobEl.removeEventListener("pointerup", onUp);
-          knobEl.removeEventListener("pointercancel", onUp);
-          settleCountdown = opts.settleFrames;
-          startAnim();
-        };
-
-        knobEl.addEventListener("pointermove", onMove);
-        knobEl.addEventListener("pointerup", onUp);
-        knobEl.addEventListener("pointercancel", onUp);
-      });
-    }
-
-    // ---------------------------
-    // Load
-    // ---------------------------
-    async function loadAll() {
-      mapDoc = await fetchJson(opts.mapUrl);
-      stateDoc = await fetchJson(opts.stateUrl);
-
-      const mapErr = validateMapDoc(mapDoc);
-      const stateErr = validateStateDoc(stateDoc);
-      if (mapErr) console.warn("[CC CanyonMap] map doc validation:", mapErr);
-      if (stateErr) console.warn("[CC CanyonMap] state doc validation:", stateErr);
-
-      enforceBaseMapSize();
-
-      const bgPx = mapDoc.map.background.image_pixel_size;
-      const bgBounds = [[0, 0], [bgPx.h, bgPx.w]];
-
-      // Lens should use your large image:
-      const lensImageKey = mapDoc.map.lens?.image_key || mapDoc.map.background.image_key;
-      const lensPx = mapDoc.map.lens?.image_pixel_size || bgPx;
-      const lensBounds = [[0, 0], [lensPx.h, lensPx.w]];
-
-      stopAnim();
-      if (mainMap) mainMap.remove();
-      if (lensMapSharp) lensMapSharp.remove();
-      if (lensMapWarp) lensMapWarp.remove();
-
-      mainMap = window.L.map(ui.mapEl, {
-        crs: window.L.CRS.Simple,
-        attributionControl: false,
-        zoomControl: false,
-        dragging: !!opts.allowMapDrag,
-        zoomAnimation: false,
-        fadeAnimation: false,
-        markerZoomAnimation: false,
-        minZoom: -5,
-        maxZoom: 6
-      });
-
-      window.L.imageOverlay(mapDoc.map.background.image_key, bgBounds).addTo(mainMap);
-
-      if (opts.lensEnabled) {
-        lensMapSharp = window.L.map(ui.lensMapEl, {
-          crs: window.L.CRS.Simple,
-          attributionControl: false,
-          zoomControl: false,
-          dragging: false,
-          zoomAnimation: false,
-          fadeAnimation: false,
-          markerZoomAnimation: false,
-          minZoom: -5,
-          maxZoom: 6
-        });
-
-        lensMapWarp = window.L.map(ui.lensWarpEl, {
-          crs: window.L.CRS.Simple,
-          attributionControl: false,
-          zoomControl: false,
-          dragging: false,
-          zoomAnimation: false,
-          fadeAnimation: false,
-          markerZoomAnimation: false,
-          minZoom: -5,
-          maxZoom: 6
-        });
-
-        // Use large lens image + lens bounds
-        window.L.imageOverlay(lensImageKey, lensBounds).addTo(lensMapSharp);
-        window.L.imageOverlay(lensImageKey, lensBounds).addTo(lensMapWarp);
-      }
-
-      await invalidateMapsHard();
-
-      mainMap.fitBounds(bgBounds, { padding: [10, 10], animate: false });
-
-      const c = mainMap.getCenter();
-      targetLat = c.lat;
-      targetLng = c.lng;
-
-      rebuildRegions();
-
-      bindVerticalScrollerOnce(bgPx.h);
-      bindHorizontalScrollerOnce(bgPx.w);
-
-      // Initialize knob targets from center
-      knobTargetTV = clamp(targetLat / bgPx.h, 0, 1);
-      knobTargetTH = clamp(targetLng / bgPx.w, 0, 1);
-      knobTV = knobTargetTV;
-      knobTH = knobTargetTH;
-      setVerticalKnobFromT(knobTV);
-      setHorizontalKnobFromT(knobTH);
-
-      // Sync lens now
-      if (opts.lensEnabled && lensMapSharp && lensMapWarp) {
-        lensMapSharp.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
-        lensMapWarp.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
-        await nextFrame();
-        lensMapSharp.invalidateSize({ animate: false });
-        lensMapWarp.invalidateSize({ animate: false });
-      }
-
-      // If user drags the map, update targets but KEEP the heavy settle feeling
-      mainMap.on("move", () => {
-        if (draggingKnob) return;
-        const cc = mainMap.getCenter();
-        targetLat = cc.lat;
-        targetLng = cc.lng;
-
-        knobTargetTV = clamp(targetLat / bgPx.h, 0, 1);
-        knobTargetTH = clamp(targetLng / bgPx.w, 0, 1);
-
-        // Keep anim alive briefly so it feels weighty, not “hard stop”
-        settleCountdown = opts.settleFrames;
-        startAnim();
-      });
-
-      mainMap.on("zoom", () => {
-        settleCountdown = opts.settleFrames;
-        startAnim();
-      });
-
-      settleCountdown = opts.settleFrames;
-      startAnim();
-    }
-
-    ui.btnReload.addEventListener("click", loadAll);
-
-    ui.btnFit.addEventListener("click", () => {
-      if (!mapDoc || !mainMap) return;
-      const bgPx = mapDoc.map.background.image_pixel_size;
-      const bgBounds = [[0, 0], [bgPx.h, bgPx.w]];
-
-      mainMap.fitBounds(bgBounds, { animate: false });
-
-      const c = mainMap.getCenter();
-      targetLat = c.lat;
-      targetLng = c.lng;
-
-      knobTargetTV = clamp(targetLat / bgPx.h, 0, 1);
-      knobTargetTH = clamp(targetLng / bgPx.w, 0, 1);
-
-      settleCountdown = opts.settleFrames;
-      startAnim();
-    });
-
-    await loadAll();
-
-    root._ccApi = { drawerClose: () => closeDrawer(ui) };
-  }
-
-  // Auto-mount
-  const root = document.getElementById("cc-app-root");
-  if (root && root.getAttribute("data-cc-app") === APP_ID) mount(root, {});
-
-  window.CC_CanyonMap = { mount };
-})();
+        // final snap and stop
+        mainMap.setView([targetLat, targetLng], mainMap.getZoom(), {
