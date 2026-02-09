@@ -1,6 +1,10 @@
 /* File: rules/apps/canyon_map/cc_canyon_map.css
    COFFIN CANYON — CANYON MAP (Ultimate Design)
-   Full CSS (no omissions)
+   Full CSS (no omissions) — UPDATED for:
+   - knob shifted right ~9px (groove alignment)
+   - lens inner guaranteed to fill (prevents “doesn’t fill metal frame”)
+   - lens stays sharp (no CSS scaling on lens map)
+   - distortions kept but less “mushy” on iPad (tune via JS filter scale too)
 */
 
 /* ================================================================
@@ -11,8 +15,8 @@
   --frame-ratio: 1.5;
 
   /* Lens window size (should match your iron window opening) */
-  --lens-w: 635px;
-  --lens-h: 435px;
+  --lens-w: 635px; /* bump this to 680–710 if you still see gaps */
+  --lens-h: 435px; /* bump this to 460–490 if you still see gaps */
 
   --cc-map-border: #4a3728;
 
@@ -33,6 +37,9 @@
 
   /* Slot alignment (your groove offset from center) */
   --scroll-offset-x: 343px;
+
+  /* Fine alignment: knob needs to move right 8–10px */
+  --knob-offset-x: 9px;
 
   /* Shadows */
   --shadow-inset: inset 0 0 60px #000;
@@ -182,15 +189,22 @@
     inset 0 0 30px rgba(0,0,0,0.25);
 }
 
+/* IMPORTANT: ensure lens inner wrapper fills the mask */
+.cc-lens-inner{
+  position: absolute !important;
+  inset: 0 !important;
+}
+
 /* This element is created by Leaflet (div.leaflet-container) */
 .cc-lens-map{
-  position: absolute;
+  position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
 
-  /* SVG warp (optional) + contrast */
-  filter: url(#ccLensWarp) contrast(var(--lens-contrast)) !important;
+  /* SVG warp (optional) + contrast
+     NOTE: If iPad still looks mushy, also reduce feDisplacementMap scale in JS */
+  filter: url(#ccLensWarp) contrast(var(--lens-contrast)) saturate(1.05) !important;
 
   /* IMPORTANT: do NOT scale here; magnification is via Leaflet zoom */
   transform: none !important;
@@ -209,6 +223,19 @@
     radial-gradient(100% 80% at 70% 70%, rgba(255,255,255,0.08), rgba(255,255,255,0) 55%);
   mix-blend-mode: screen;
   opacity: 0.6;
+}
+
+/* Extra glass sheen without blur */
+.cc-lens::after{
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(120% 90% at 28% 18%, rgba(255,255,255,0.10), rgba(255,255,255,0) 55%),
+    radial-gradient(110% 90% at 74% 72%, rgba(255,255,255,0.06), rgba(255,255,255,0) 55%);
+  mix-blend-mode: screen;
+  opacity: 0.7;
 }
 
 /* ================================================================
@@ -264,12 +291,16 @@
 /* Knob: JS sets top in px. Only translate X for centering. */
 .cc-scroll-knob{
   position: absolute !important;
-  left: 50% !important;
+
+  /* Shift right ~9px to sit in the groove */
+  left: calc(50% + var(--knob-offset-x)) !important;
+
   top: 0px !important; /* JS updates */
 
   width: var(--knob-w) !important;
   height: var(--knob-h) !important;
 
+  /* CRITICAL: no translateY here; JS positions top in px */
   transform: translateX(-50%) !important;
 
   background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png") !important;
@@ -400,5 +431,5 @@
      this disables the SVG warp (which can rasterize blurry on iOS).
    ================================================================ */
 .cc-ios .cc-lens-map{
-  filter: contrast(var(--lens-contrast)) !important; /* no url(#ccLensWarp) */
+  filter: contrast(var(--lens-contrast)) saturate(1.05) !important; /* no url(#ccLensWarp) */
 }
