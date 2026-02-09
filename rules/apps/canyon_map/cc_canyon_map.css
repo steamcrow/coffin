@@ -15,19 +15,19 @@
   --frame-ratio: 1.5;
 
   /* Lens window size (should match your iron window opening) */
-  --lens-w: 635px; /* bump this to 680–710 if you still see gaps */
-  --lens-h: 435px; /* bump this to 460–490 if you still see gaps */
+  --lens-w: 710px; /* bump this to 680–710 if you still see gaps */
+  --lens-h: 490px; /* bump this to 460–490 if you still see gaps */
 
   --cc-map-border: #4a3728;
 
   /* Background “bigness” (visual scale only) */
-  --bg-scale: 2.0; /* try 2.0–3.0 */
+  --bg-scale: 3; /* try 2.0–3.0 */
 
   /* If you keep SVG warp, keep it subtle for iOS sharpness */
-  --lens-contrast: 1.2;
+  --lens-contrast: 1;
 
   /* Optional: if you want the lens corners rounder/less round */
-  --lens-radius: 40px;
+  --lens-radius: 20px;
 
   /* Scroll area + knob geometry */
   --scroll-h: 440px;
@@ -222,7 +222,7 @@
     radial-gradient(120% 90% at 30% 20%, rgba(255,255,255,0.14), rgba(255,255,255,0) 55%),
     radial-gradient(100% 80% at 70% 70%, rgba(255,255,255,0.08), rgba(255,255,255,0) 55%);
   mix-blend-mode: screen;
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 /* Extra glass sheen without blur */
