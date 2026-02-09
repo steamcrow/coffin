@@ -1,46 +1,65 @@
 /* File: rules/apps/canyon_map/cc_canyon_map.css
    COFFIN CANYON — CANYON MAP (Ultimate Design)
    Full CSS (no omissions) — UPDATED for:
-   - Lens uses 2 layers: sharp base + edge-only warp overlay
-   - Horizontal scroller uses SAME blappo knob (rotated)
-   - Knob alignment + pointer events reliable
-   - Frame glow instead of shadow
+   - Lens larger than frame hole (edges hide under metal)
+   - Lens uses sharp base + edge-only warp overlay (warp not detectable in center)
+   - Frame uses glow (not shadow)
+   - Vertical knob shifted right ~9px
+   - Horizontal scroller uses SAME blappo knob (rotated), bigger knob
+   - Keeps drawer + responsive rules
 */
 
+/* ================================================================
+   ROOT TOKENS
+   ================================================================ */
 :root{
   --frame-width: 1000px;
   --frame-ratio: 1.5;
 
-  /* Lens window size (make it bigger than the hole so edges hide under frame) */
+  /* Lens window size (intentionally BIG so it tucks under the metal) */
   --lens-w: 740px;
   --lens-h: 510px;
 
   --cc-map-border: #4a3728;
 
+  /* Background “bigness” (visual scale only) */
   --bg-scale: 3;
 
+  /* Lens tuning */
   --lens-contrast: 1.02;
   --lens-radius: 20px;
 
-  /* Vertical scroll */
+  /* VERTICAL Scroll area + knob geometry */
   --scroll-h: 440px;
   --scroll-w: 80px;
   --knob-w: 80px;
   --knob-h: 140px;
+
+  /* Slot alignment (your groove offset from center) */
   --scroll-offset-x: 343px;
+
+  /* Fine alignment: knob needs to move right 8–10px */
   --knob-offset-x: 9px;
 
-  /* Horizontal scroll */
+  /* HORIZONTAL scroller (bottom) */
   --hscroll-w: 820px;
   --hscroll-h: 80px;
-  --hknob-w: 140px;   /* bigger than before */
-  --hknob-h: 80px;
+
+  /* Bottom knob should be BIGGER */
+  --hknob-w: 150px;
+  --hknob-h: 90px;
+
+  /* Slot placement under the lens/frame */
   --hscroll-offset-y: 280px;
 
+  /* Shadows */
   --shadow-inset: inset 0 0 60px #000;
   --shadow-outer: 0 10px 30px rgba(0,0,0,0.8);
 }
 
+/* ================================================================
+   APP WRAPPER + BASIC TYPOGRAPHY
+   ================================================================ */
 .cc-canyon-map{
   position: relative;
   width: 100%;
@@ -51,6 +70,9 @@
 
 .cc-muted{ opacity: 0.7; }
 
+/* ================================================================
+   HEADER
+   ================================================================ */
 .cc-cm-header{
   display: flex;
   align-items: center;
@@ -79,8 +101,15 @@
   font-weight: 600;
   cursor: pointer;
 }
-.cc-btn:hover{ background: rgba(255,255,255,0.08); }
-.cc-btn:active{ transform: translateY(1px); }
+
+.cc-btn:hover{
+  background: rgba(255,255,255,0.08);
+}
+
+.cc-btn:active{
+  transform: translateY(1px);
+}
+
 .cc-btn.cc-btn-x{
   width: 34px;
   height: 34px;
@@ -90,13 +119,22 @@
   border-radius: 10px;
 }
 
+/* ================================================================
+   BODY LAYOUT
+   ================================================================ */
 .cc-cm-body{
   position: relative;
   width: 100%;
   display: block;
 }
-.cc-cm-body--lens{ padding: 10px 12px 18px; }
 
+.cc-cm-body--lens{
+  padding: 10px 12px 18px;
+}
+
+/* ================================================================
+   OUTER MAP CONTAINER (UI Bordered Box)
+   ================================================================ */
 .cc-cm-mapwrap{
   position: relative !important;
   width: 100%;
@@ -109,26 +147,35 @@
   justify-content: center;
 
   background: #000;
+
   border: 10px solid var(--cc-map-border);
   border-radius: 12px;
   box-shadow: var(--shadow-inset), var(--shadow-outer);
 }
 
-/* Background map (blurred only) */
+/* ================================================================
+   LEAFLET MAP BASE (BACKGROUND MAP)
+   ================================================================ */
 #cc-cm-map{
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
+
   z-index: 1 !important;
 
   opacity: 0.40;
   filter: blur(7px) sepia(0.25);
   pointer-events: none;
 }
+
+/* Keep Leaflet controls out */
 #cc-cm-map .leaflet-control-container{ display: none !important; }
 
-/* Lens container */
+/* ================================================================
+   LENS (MASKED HIGH-RES VIEW)
+   - Two layers: sharp base + edge-only warp overlay
+   ================================================================ */
 .cc-lens{
   position: absolute !important;
   left: 50% !important;
@@ -138,10 +185,12 @@
   width: var(--lens-w) !important;
   height: var(--lens-h) !important;
 
-  z-index: 30 !important;
-  overflow: hidden !important;
+  z-index: 30 !important; /* behind frame overlay */
+
+  overflow: hidden !important; /* mask */
   border-radius: var(--lens-radius);
 
+  /* Slight internal vignette/glass feel */
   box-shadow:
     inset 0 0 0 2px rgba(255,255,255,0.06),
     inset 0 0 30px rgba(0,0,0,0.25);
@@ -153,30 +202,32 @@
   overflow: hidden !important;
 }
 
-/* Two lens layers */
+/* This element is created by Leaflet (div.leaflet-container) */
 .cc-lens-map{
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
+
+  /* IMPORTANT: do NOT scale here; magnification is via Leaflet zoom */
   transform: none !important;
+
+  /* Helps iOS repainting */
   will-change: transform;
 }
 
-/* Sharp base layer: NO warp */
+/* Sharp base layer: no warp */
 #cc-lens-map{
   filter: contrast(var(--lens-contrast)) saturate(1.04) !important;
   z-index: 1;
 }
 
-/* Warp overlay layer: EDGE ONLY (masked) */
+/* Warp overlay layer: edge only */
 #cc-lens-map-warp{
   z-index: 2;
   opacity: 0.55;
-
   filter: url(#ccLensWarp) contrast(var(--lens-contrast)) saturate(1.04) !important;
 
-  /* Edge-only effect: strong mask that fades in toward edges */
   -webkit-mask-image: radial-gradient(closest-side at 50% 50%,
     rgba(0,0,0,0) 0%,
     rgba(0,0,0,0) 60%,
@@ -189,7 +240,7 @@
     rgba(0,0,0,1) 100%);
 }
 
-/* Glare */
+/* Subtle glare layer */
 .cc-lens-glare{
   position: absolute;
   inset: 0;
@@ -202,7 +253,10 @@
   z-index: 3;
 }
 
-/* Frame overlay (glow instead of shadow) */
+/* ================================================================
+   FRAME OVERLAY (IRON/BRASS PNG)
+   - Glow instead of shadow
+   ================================================================ */
 .cc-frame-overlay{
   position: absolute !important;
   left: 50% !important;
@@ -221,19 +275,19 @@
 
   pointer-events: none !important;
 
-  /* soft warm glow */
   filter:
     drop-shadow(0 0 18px rgba(255, 210, 120, 0.18))
     drop-shadow(0 0 42px rgba(255, 170, 70, 0.10));
 }
 
-/* ===========================
-   VERTICAL SCROLLER
-   =========================== */
+/* ================================================================
+   VERTICAL SCROLLER (RIGHT SIDE)
+   ================================================================ */
 #cc-scroll-vertical{
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
+
   margin-left: var(--scroll-offset-x) !important;
   transform: translateY(-50%) !important;
 
@@ -251,10 +305,12 @@
   background: rgba(0,0,0,0.0);
 }
 
+/* Blappo knob - vertical */
 #cc-scroll-knob-v{
   position: absolute !important;
+
   left: calc(50% + var(--knob-offset-x)) !important;
-  top: 0px !important;
+  top: 0px !important; /* JS updates */
 
   width: var(--knob-w) !important;
   height: var(--knob-h) !important;
@@ -267,6 +323,7 @@
   background-position: center;
 
   cursor: grab !important;
+
   filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
   transition: transform 160ms ease, filter 160ms ease;
 
@@ -279,21 +336,21 @@
   transform: translateX(-50%) scale(1.03) !important;
   filter: drop-shadow(0 12px 18px rgba(0,0,0,0.9)) brightness(1.06);
 }
+
 #cc-scroll-knob-v.is-active{
   cursor: grabbing !important;
   transform: translateX(-50%) scale(1.05) !important;
   filter: drop-shadow(0 14px 20px rgba(0,0,0,0.95)) brightness(1.08);
 }
 
-/* ===========================
-   HORIZONTAL SCROLLER (BLAPPO)
-   =========================== */
+/* ================================================================
+   HORIZONTAL SCROLLER (BOTTOM) — uses BLAPPO knob (rotated)
+   ================================================================ */
 #cc-scroll-horizontal{
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
 
-  /* place under frame */
   transform: translate(-50%, calc(-50% + var(--hscroll-offset-y))) !important;
 
   width: var(--hscroll-w) !important;
@@ -311,15 +368,15 @@
   box-shadow: inset 0 0 24px rgba(0,0,0,0.45);
 }
 
+/* Blappo knob - horizontal (rotated), JS sets LEFT in PX */
 #cc-scroll-knob-h{
   position: absolute !important;
-  left: 50% !important;
+  left: 50% !important; /* JS updates; this is overwritten to px each time */
   top: 50% !important;
 
   width: var(--hknob-w) !important;
   height: var(--hknob-h) !important;
 
-  /* we set left in px; keep center aligned */
   transform: translate(-50%, -50%) rotate(90deg) !important;
 
   background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png") !important;
@@ -328,6 +385,7 @@
   background-position: center;
 
   cursor: grab !important;
+
   filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
   transition: transform 160ms ease, filter 160ms ease;
 
@@ -340,13 +398,16 @@
   transform: translate(-50%, -50%) rotate(90deg) scale(1.03) !important;
   filter: drop-shadow(0 12px 18px rgba(0,0,0,0.9)) brightness(1.06);
 }
+
 #cc-scroll-knob-h.is-active{
   cursor: grabbing !important;
   transform: translate(-50%, -50%) rotate(90deg) scale(1.05) !important;
   filter: drop-shadow(0 14px 20px rgba(0,0,0,0.95)) brightness(1.08);
 }
 
-/* Drawer */
+/* ================================================================
+   DRAWER (REGION DETAILS)
+   ================================================================ */
 .cc-cm-drawer{
   margin-top: 10px;
   border: 1px solid rgba(255,255,255,0.18);
@@ -356,7 +417,10 @@
   max-height: 0;
   transition: max-height 220ms ease;
 }
-.cc-cm-drawer.open{ max-height: 420px; }
+
+.cc-cm-drawer.open{
+  max-height: 420px;
+}
 
 .cc-cm-drawer-head{
   display: flex;
@@ -366,11 +430,27 @@
   padding: 10px 12px;
   border-bottom: 1px solid rgba(255,255,255,0.12);
 }
-.cc-cm-drawer-title{ font-weight: 800; }
-.cc-cm-drawer-content{ padding: 10px 12px 14px; }
-.cc-block{ margin-bottom: 10px; }
-.cc-h{ font-weight: 800; margin-bottom: 4px; }
 
+.cc-cm-drawer-title{
+  font-weight: 800;
+}
+
+.cc-cm-drawer-content{
+  padding: 10px 12px 14px;
+}
+
+.cc-block{
+  margin-bottom: 10px;
+}
+
+.cc-h{
+  font-weight: 800;
+  margin-bottom: 4px;
+}
+
+/* ================================================================
+   LEAFLET IN LENS: QUALITY-OF-LIFE
+   ================================================================ */
 #cc-lens-map .leaflet-control-container{ display: none !important; }
 #cc-lens-map .leaflet-tile-pane,
 #cc-lens-map .leaflet-map-pane,
@@ -378,8 +458,59 @@
   will-change: transform;
 }
 #cc-lens-map-warp .leaflet-control-container{ display: none !important; }
+#cc-lens-map-warp .leaflet-tile-pane,
+#cc-lens-map-warp .leaflet-map-pane,
+#cc-lens-map-warp .leaflet-overlay-pane{
+  will-change: transform;
+}
 
-/* iOS fallback: keep warp but lighter is handled in JS via warpScaleIOS */
+/* ================================================================
+   RESPONSIVE TWEAKS
+   ================================================================ */
+@media (max-width: 980px){
+  :root{
+    --frame-width: 920px;
+    --scroll-offset-x: 315px;
+    --hscroll-w: 760px;
+  }
+}
+
+@media (max-width: 820px){
+  :root{
+    --frame-width: 860px;
+    --lens-w: 660px;
+    --lens-h: 470px;
+    --scroll-offset-x: 295px;
+    --hscroll-w: 700px;
+    --hscroll-offset-y: 260px;
+  }
+}
+
+@media (max-width: 700px){
+  .cc-cm-mapwrap{
+    min-height: 640px !important;
+    height: 80vh !important;
+  }
+  :root{
+    --frame-width: 760px;
+    --lens-w: 600px;
+    --lens-h: 430px;
+    --scroll-offset-x: 255px;
+    --scroll-h: 420px;
+    --knob-h: 132px;
+
+    --hscroll-w: 620px;
+    --hscroll-h: 76px;
+    --hknob-w: 140px;
+    --hknob-h: 84px;
+    --hscroll-offset-y: 245px;
+  }
+}
+
+/* ================================================================
+   OPTIONAL: iOS sharpness fallback
+   (warp scale reduced in JS; base layer stays sharp)
+   ================================================================ */
 .cc-ios #cc-lens-map{
   filter: contrast(var(--lens-contrast)) saturate(1.04) !important;
 }
