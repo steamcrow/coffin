@@ -1,9 +1,11 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
-   UPDATE: Blappo scroller graphic used for BOTH vertical + horizontal knobs
-   - Removes inline styling for horizontal scroller/knob (CSS drives it)
-   - Keeps lens overscan via CSS vars on .cc-lens (so Leaflet sizing stays correct)
-   - Lens-only distortion (filter is only on .cc-lens-map via CSS)
-   - Strips leaflet sourcemap directive to stop "leaflet.js.map" console spam
+   UPDATE: Fixes for:
+   - Lens window enlarged + overscan hidden beneath metal frame
+   - Knobs move reliably (vertical + horizontal)
+   - Heavy “eased” scrolling using a shared target center + smoothing loop
+   - Switching knobs does NOT reset (shared target continues)
+   - No inline styling for scrollers
+   - Strips leaflet sourcemap directives to prevent leaflet.js.map console spam
 */
 
 (function () {
@@ -24,18 +26,24 @@
 
     lensEnabled: true,
     lensZoomOffset: 3,
-    lensWidthPx: 638,
-    lensHeightPx: 438,
+
+    /* IMPORTANT: match/enlarge lens window so it tucks under frame */
+    lensWidthPx: 780,
+    lensHeightPx: 540,
 
     warpEnabled: true,
     warpBaseFrequency: 0.008,
     warpScale: 16,
 
-    // Overscan hides lens edges beneath your iron frame window
-    lensOverscanX: 60,
-    lensOverscanY: 60,
+    /* More overscan so seams are hidden */
+    lensOverscanX: 110,
+    lensOverscanY: 110,
 
     allowMapDrag: true,
+
+    /* Heavy feel (0..1). Higher = snappier. Lower = heavier. */
+    heavyEase: 0.14,
+    heavyStopEps: 0.35,
 
     factionColors: {
       monster_rangers: "#4caf50",
@@ -168,7 +176,7 @@
   }
 
   // ---------------------------
-  // UI - buildLayout
+  // UI
   // ---------------------------
   function buildLayout(root, opts) {
     root.innerHTML = "";
@@ -204,13 +212,11 @@
 
     const frameOverlay = el("div", { class: "cc-frame-overlay", id: "cc-frame" });
 
-    // Vertical scroller (right side)
     const scrollerVertical = el("div", { class: "cc-scroll cc-scroll-vertical", id: "cc-scroll-vertical" }, [
       el("div", { class: "cc-scroll-track" }),
       el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" })
     ]);
 
-    // Horizontal scroller (bottom) — same knob class + image
     const scrollerHorizontal = el("div", { class: "cc-scroll cc-scroll-horizontal", id: "cc-scroll-horizontal" }, [
       el("div", { class: "cc-scroll-track" }),
       el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" })
@@ -243,7 +249,7 @@
     root.appendChild(header);
     root.appendChild(body);
 
-    // Feed sizing + overscan into CSS vars (CSS handles the actual geometry)
+    /* Lens sizing is driven by these vars */
     lens.style.setProperty("--lens-w", `${opts.lensWidthPx}px`);
     lens.style.setProperty("--lens-h", `${opts.lensHeightPx}px`);
     lens.style.setProperty("--lens-overscan-x", `${Number(opts.lensOverscanX || 0)}px`);
@@ -358,7 +364,72 @@
     }
 
     // ==========================================================
-    // Scroller binding (vertical + horizontal)
+    // Heavy easing: shared target center + smoothing loop
+    // ==========================================================
+    let target = null;     // {lat,lng}
+    let animRaf = 0;
+
+    function stopHeavyLoop() {
+      if (animRaf) cancelAnimationFrame(animRaf);
+      animRaf = 0;
+    }
+
+    function startHeavyLoop(px) {
+      if (!mainMap) return;
+      if (animRaf) return;
+
+      const ease = clamp(Number(opts.heavyEase || 0.14), 0.05, 0.5);
+      const eps = clamp(Number(opts.heavyStopEps || 0.35), 0.05, 3);
+
+      const tick = () => {
+        animRaf = 0;
+        if (!mainMap || !target) return;
+
+        const c = mainMap.getCenter();
+        const dLat = target.lat - c.lat;
+        const dLng = target.lng - c.lng;
+
+        if (Math.abs(dLat) < eps && Math.abs(dLng) < eps) {
+          mainMap.panTo([target.lat, target.lng], { animate: false });
+          target = null;
+          return;
+        }
+
+        const nLat = c.lat + dLat * ease;
+        const nLng = c.lng + dLng * ease;
+
+        // Clamp to map bounds in image px space
+        const clampedLat = clamp(nLat, 0, px.h);
+        const clampedLng = clamp(nLng, 0, px.w);
+
+        mainMap.panTo([clampedLat, clampedLng], { animate: false });
+
+        animRaf = requestAnimationFrame(tick);
+      };
+
+      animRaf = requestAnimationFrame(tick);
+    }
+
+    function setTarget(px, partial) {
+      if (!mainMap) return;
+
+      // IMPORTANT: keep a shared target so switching knobs doesn’t “start over”
+      if (!target) {
+        const c = mainMap.getCenter();
+        target = { lat: c.lat, lng: c.lng };
+      }
+      if (typeof partial.lat === "number") target.lat = partial.lat;
+      if (typeof partial.lng === "number") target.lng = partial.lng;
+
+      // Clamp target
+      target.lat = clamp(target.lat, 0, px.h);
+      target.lng = clamp(target.lng, 0, px.w);
+
+      startHeavyLoop(px);
+    }
+
+    // ==========================================================
+    // Scrollers (bind once)
     // ==========================================================
     const vScroll = { bound: false, trackEl: ui.scrollElVertical, knobEl: ui.knobElVertical, setKnobFromT: null };
     const hScroll = { bound: false, trackEl: ui.scrollElHorizontal, knobEl: ui.knobElHorizontal, setKnobFromT: null };
@@ -388,11 +459,10 @@
         knobEl.style.top = `${y}px`;
       }
 
-      function panMapFromT(t) {
-        if (!mainMap) return;
+      function setTargetFromT(t) {
         const lat = px.h * (1 - t);
-        const lng = mainMap.getCenter().lng;
-        mainMap.panTo([lat, lng], { animate: false });
+        // Keep shared target lng (do not “reset”)
+        setTarget(px, { lat });
       }
 
       vScroll.setKnobFromT = setKnobFromT;
@@ -402,7 +472,7 @@
         if (e.target === knobEl) return;
         const { t, yClamped } = pxToT(e.clientY);
         knobEl.style.top = `${yClamped}px`;
-        panMapFromT(t);
+        setTargetFromT(t);
       });
 
       knobEl.addEventListener("pointerdown", (e) => {
@@ -415,7 +485,7 @@
         const onMove = (ev) => {
           const { t, yClamped } = pxToT(ev.clientY);
           knobEl.style.top = `${yClamped}px`;
-          panMapFromT(t);
+          setTargetFromT(t);
         };
 
         const onUp = () => {
@@ -440,7 +510,7 @@
 
       function pxToT(clientX) {
         const rect = trackEl.getBoundingClientRect();
-        const knobW = knobEl.getBoundingClientRect().width || 140;
+        const knobW = knobEl.getBoundingClientRect().width || 200;
         const x = clamp(clientX - rect.left, 0, rect.width);
         const xClamped = clamp(x - knobW / 2, 0, Math.max(0, rect.width - knobW));
         const denom = Math.max(1, rect.width - knobW);
@@ -450,17 +520,16 @@
 
       function setKnobFromT(t) {
         const rect = trackEl.getBoundingClientRect();
-        const knobW = knobEl.getBoundingClientRect().width || 140;
+        const knobW = knobEl.getBoundingClientRect().width || 200;
         const denom = Math.max(1, rect.width - knobW);
         const x = denom * clamp(t, 0, 1);
         knobEl.style.left = `${x}px`;
       }
 
-      function panMapFromT(t) {
-        if (!mainMap) return;
+      function setTargetFromT(t) {
         const lng = px.w * t;
-        const lat = mainMap.getCenter().lat;
-        mainMap.panTo([lat, lng], { animate: false });
+        // Keep shared target lat (do not “reset”)
+        setTarget(px, { lng });
       }
 
       hScroll.setKnobFromT = setKnobFromT;
@@ -470,7 +539,7 @@
         if (e.target === knobEl) return;
         const { t, xClamped } = pxToT(e.clientX);
         knobEl.style.left = `${xClamped}px`;
-        panMapFromT(t);
+        setTargetFromT(t);
       });
 
       knobEl.addEventListener("pointerdown", (e) => {
@@ -483,7 +552,7 @@
         const onMove = (ev) => {
           const { t, xClamped } = pxToT(ev.clientX);
           knobEl.style.left = `${xClamped}px`;
-          panMapFromT(t);
+          setTargetFromT(t);
         };
 
         const onUp = () => {
@@ -500,6 +569,9 @@
     }
 
     async function loadAll() {
+      stopHeavyLoop();
+      target = null;
+
       mapDoc = await fetchJson(opts.mapUrl);
       stateDoc = await fetchJson(opts.stateUrl);
 
@@ -575,10 +647,13 @@
       }
 
       _onMoveZoom = () => {
-        const tV = clamp(1 - (mainMap.getCenter().lat / bgPx.h), 0, 1);
+        // Keep knobs synced even while heavy easing loop runs
+        const c = mainMap.getCenter();
+
+        const tV = clamp(1 - (c.lat / bgPx.h), 0, 1);
         if (vScroll.setKnobFromT) vScroll.setKnobFromT(tV);
 
-        const tH = clamp(mainMap.getCenter().lng / bgPx.w, 0, 1);
+        const tH = clamp(c.lng / bgPx.w, 0, 1);
         if (hScroll.setKnobFromT) hScroll.setKnobFromT(tH);
 
         syncLens();
@@ -595,6 +670,8 @@
       const px = mapDoc.map.background.image_pixel_size;
       mainMap.fitBounds([[0, 0], [px.h, px.w]], { animate: false });
       mainMap.setZoom(mainMap.getZoom() + Number(opts.backgroundZoomOffset || 0), { animate: false });
+      target = null; // stop trying to ease toward an old target after a fit
+      stopHeavyLoop();
     });
 
     await loadAll();
