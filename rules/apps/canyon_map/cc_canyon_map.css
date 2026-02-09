@@ -16,8 +16,8 @@
   --frame-ratio: 1.5;
 
   /* Lens window size (should match your iron window opening) */
-  --lens-w: 710px; /* bump this to 680–710 if you still see gaps */
-  --lens-h: 490px; /* bump this to 460–490 if you still see gaps */
+  --lens-w: 790px; /* bump this to 680–710 if you still see gaps */
+  --lens-h: 550px; /* bump this to 460–490 if you still see gaps */
 
   /* NEW: Overscan so lens edges tuck under the iron frame */
   --lens-overscan-x: 22px; /* try 18–32 */
