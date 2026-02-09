@@ -1,6 +1,13 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
    Coffin Canyon — Canyon Map (read-only v1)
    ODOO CSP-SAFE + FIXED MAGNIFIER LENS + VERTICAL SCROLLER KNOB + SVG DISTORTION
+
+   UPDATED (no omissions) for:
+   - iOS class toggle (.cc-ios) retained
+   - lens SVG warp made subtle (prevents iPad “mush”)
+   - scroller knob moves with map + stays clamped in slot (PX, not %)
+   - touch rollover/pressed state via .is-active
+   - prevents double-binding map move handler on Reload (unbinds safely)
 */
 
 (function () {
@@ -16,8 +23,8 @@
     baseMapHeightPx: 640,
     baseMapMaxHeightVh: 70,
     lensEnabled: true,
-    lensZoomOffset: 2,
-    lensWidthPx: 638, // Expanded to fit iron frame
+    lensZoomOffset: 2, // bump to 3 if you want more magnification in lens
+    lensWidthPx: 638,  // Expanded to fit iron frame
     lensHeightPx: 438, // Expanded to fit iron frame
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
@@ -168,6 +175,7 @@
     const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
 
     // *** SVG FILTER FOR LENS DISTORTION ***
+    // Keep subtle to avoid iOS raster mush.
     const lensSvg = el("svg", {
       style: "position: absolute; width: 0; height: 0; overflow: hidden;",
       "aria-hidden": "true"
@@ -175,8 +183,8 @@
     lensSvg.innerHTML = `
       <defs>
         <filter id="ccLensWarp">
-          <feTurbulence type="fractalNoise" baseFrequency="0.012" numOctaves="1" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="80" xChannelSelector="R" yChannelSelector="G" />
+          <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="1" seed="2" result="noise" />
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="16" xChannelSelector="R" yChannelSelector="G" />
         </filter>
       </defs>
     `;
@@ -280,6 +288,9 @@
     const regionLayersById = {}, regionsById = {};
     let selectedRegionId = null, scrollerBound = false;
 
+    // used to avoid stacking multiple handlers after reloads
+    let _onMoveZoom = null;
+
     function enforceBaseMapSize() {
       if (!mapDoc) return;
       const px = mapDoc.map.background.image_pixel_size;
@@ -333,7 +344,11 @@
       const px = mapDoc.map.background.image_pixel_size;
       const bounds = [[0, 0], [px.h, px.w]];
 
+      // remove old maps
       if (mainMap) mainMap.remove();
+      if (lensMap) lensMap.remove();
+
+      // create main map
       mainMap = window.L.map(ui.mapEl, {
         crs: window.L.CRS.Simple,
         attributionControl: false,
@@ -345,8 +360,8 @@
       });
       window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
 
+      // create lens map
       if (opts.lensEnabled) {
-        if (lensMap) lensMap.remove();
         lensMap = window.L.map(ui.lensMapEl, {
           crs: window.L.CRS.Simple,
           attributionControl: false,
@@ -377,17 +392,14 @@
           const rect = trackEl.getBoundingClientRect();
           const knobH = knobEl.getBoundingClientRect().height || 140;
 
-          // pointer Y inside track
           const y = clamp(clientY - rect.top, 0, rect.height);
 
-          // clamp so knob never leaves slot
           const yClamped = clamp(
             y - knobH / 2,
             0,
             Math.max(0, rect.height - knobH)
           );
 
-          // convert to 0..1
           const denom = Math.max(1, rect.height - knobH);
           const t = clamp(yClamped / denom, 0, 1);
 
@@ -403,12 +415,11 @@
         }
 
         function panMapFromT(t) {
-          // t=0 -> top, t=1 -> bottom
           const lat = px.h * (1 - t);
           mainMap.panTo([lat, mainMap.getCenter().lng], { animate: false });
         }
 
-        // Click/tap in slot jumps knob + map
+        // Tap/click the slot jumps knob + map
         trackEl.addEventListener("pointerdown", (e) => {
           const { t, yClamped } = pxToT(e.clientY);
           knobEl.style.top = `${yClamped}px`;
@@ -418,7 +429,9 @@
         // Drag knob (touch + mouse)
         knobEl.addEventListener("pointerdown", (e) => {
           e.preventDefault();
-          knobEl.classList.add("is-active"); // rollover/pressed look
+          e.stopPropagation();
+
+          knobEl.classList.add("is-active");
           knobEl.setPointerCapture(e.pointerId);
 
           const onMove = (ev) => {
@@ -444,16 +457,28 @@
       }
 
       // Keep knob synced to map movement (PX, not %)
-      mainMap.on("move zoom", () => {
+      if (_onMoveZoom && mainMap) {
+        // paranoia: remove if it somehow survived (normally mainMap.remove() clears)
+        try { mainMap.off("move zoom", _onMoveZoom); } catch (_) {}
+      }
+
+      _onMoveZoom = () => {
         const t = 1 - (mainMap.getCenter().lat / px.h);
         if (ui._setKnobFromT) ui._setKnobFromT(t);
         syncLens();
-      });
+      };
+
+      mainMap.on("move zoom", _onMoveZoom);
+
+      // Initialize knob position immediately (so it isn't “stuck” until first move)
+      const t0 = 1 - (mainMap.getCenter().lat / px.h);
+      if (ui._setKnobFromT) ui._setKnobFromT(t0);
     }
 
     ui.btnReload.addEventListener("click", loadAll);
+
     ui.btnFit.addEventListener("click", () => {
-      if (!mapDoc) return;
+      if (!mapDoc || !mainMap) return;
       const px = mapDoc.map.background.image_pixel_size;
       mainMap.fitBounds([[0, 0], [px.h, px.w]]);
     });
