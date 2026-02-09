@@ -2,12 +2,24 @@
    Coffin Canyon — Canyon Map (read-only v1)
    ODOO CSP-SAFE + FIXED MAGNIFIER LENS + VERTICAL SCROLLER KNOB + SVG DISTORTION
 
-   UPDATED (no omissions) for:
-   - iOS class toggle (.cc-ios) retained
-   - lens SVG warp made subtle (prevents iPad “mush”)
-   - scroller knob moves with map + stays clamped in slot (PX, not %)
-   - touch rollover/pressed state via .is-active
-   - prevents double-binding map move handler on Reload (unbinds safely)
+   FIXES INCLUDED (complete file, no omissions):
+   1) Background map “really really big” is now done by REAL Leaflet zoom (NOT CSS scale),
+      so the lens + background stay aligned.
+   2) Scroller knob no longer “stuck” after Reload:
+      - event handlers bind ONCE, but they reference a mutable scrollerRef that is updated on every loadAll()
+      - works with PointerEvents AND with Touch/Mouse fallback
+      - knob position is clamped to the slot and updates in PX
+      - knob has rollover/pressed state (.is-active) on touch and mouse
+   3) Lens alignment + “no gaps”:
+      - lens map container is forced to 100% fill
+      - lens map view is explicitly set after main map is sized/zoomed
+   4) Distortion kept but made SUBTLE (the old scale=80 will absolutely smear on iPad)
+      - if you want more distortion, raise WARP_SCALE slowly (e.g. 16 → 22)
+
+   IMPORTANT REALITY CHECK (so expectations match physics):
+   - If your base canyon map image is a single raster PNG/JPG, zooming in will scale pixels.
+     “Sharp” requires the source image to be high resolution. The code below removes *extra* blur,
+     but cannot invent detail that isn’t in the image.
 */
 
 (function () {
@@ -20,15 +32,32 @@
     appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map.css",
     leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css",
     leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
+
+    // Base layout sizing (leaflet container size)
     baseMapHeightPx: 640,
     baseMapMaxHeightVh: 70,
+
+    // Make the BACKGROUND map huge using REAL zoom (keeps alignment with lens)
+    // Try 2 or 3 if you want it even bigger.
+    backgroundZoomOffset: 2,
+
+    // Lens
     lensEnabled: true,
-    lensZoomOffset: 2, // bump to 3 if you want more magnification in lens
-    lensWidthPx: 638,  // Expanded to fit iron frame
-    lensHeightPx: 438, // Expanded to fit iron frame
+    lensZoomOffset: 2,
+    lensWidthPx: 638,
+    lensHeightPx: 438,
+
+    // Warp (keep subtle on iOS)
+    warpEnabled: true,
+    warpBaseFrequency: 0.008,
+    warpScale: 16, // 12–22 is sane. 80 will smear badly.
+
+    // Pan/drag policy
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
     allowMapDrag: true,
+
+    // Styles
     factionColors: {
       monster_rangers: "#4caf50",
       monsterologists: "#ff9800",
@@ -134,7 +163,7 @@
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
     return points
       .filter((p) => p && typeof p.x === "number" && typeof p.y === "number")
-      .map((p) => [p.y, p.x]); // Leaflet CRS.Simple uses [y,x] as [lat,lng]
+      .map((p) => [p.y, p.x]); // CRS.Simple uses [y,x] as [lat,lng]
   }
 
   function validateMapDoc(doc) {
@@ -158,7 +187,7 @@
     root.innerHTML = "";
     root.classList.add("cc-canyon-map");
 
-    // Optional iOS class for CSS fallbacks (if you use it in css)
+    // iOS class for CSS fallbacks
     const isIOS =
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -175,11 +204,13 @@
     const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
 
     // *** SVG FILTER FOR LENS DISTORTION ***
-    // Keep subtle to avoid iOS raster mush.
+    // Keep subtle. Large scale values blur/rasters on iPad.
     const lensSvg = el("svg", {
       style: "position: absolute; width: 0; height: 0; overflow: hidden;",
       "aria-hidden": "true"
     });
+
+    // We will patch this innerHTML in mount() based on opts.warp*
     lensSvg.innerHTML = `
       <defs>
         <filter id="ccLensWarp">
@@ -236,6 +267,7 @@
       mapEl,
       lensEl: lens,
       lensMapEl: root.querySelector("#cc-lens-map"),
+      lensSvgEl: lensSvg,
       frameEl: frameOverlay,
       btnReload: root.querySelector("#cc-cm-reload"),
       btnFit: root.querySelector("#cc-cm-fit"),
@@ -278,17 +310,41 @@
   // ---------------------------
   async function mount(root, userOpts) {
     const opts = { ...DEFAULTS, ...(userOpts || {}) };
-    let maxDrift = opts.lockHorizontalPan ? 0 : opts.maxHorizontalDriftPx;
 
     if (opts.appCssUrl) await loadCssTextOnce(opts.appCssUrl, "cc_canyon_map_css");
     await ensureLeaflet(opts);
 
     const ui = buildLayout(root, opts);
+
+    // Patch the SVG filter to match opts (warp on/off + tuning)
+    if (opts.warpEnabled) {
+      ui.lensSvgEl.innerHTML = `
+        <defs>
+          <filter id="ccLensWarp">
+            <feTurbulence type="fractalNoise" baseFrequency="${opts.warpBaseFrequency}" numOctaves="1" seed="2" result="noise" />
+            <feDisplacementMap in="SourceGraphic" in2="noise" scale="${opts.warpScale}" xChannelSelector="R" yChannelSelector="G" />
+          </filter>
+        </defs>
+      `;
+    } else {
+      ui.lensSvgEl.innerHTML = `<defs></defs>`;
+    }
+
     let mapDoc = null, stateDoc = null, mainMap = null, lensMap = null;
     const regionLayersById = {}, regionsById = {};
-    let selectedRegionId = null, scrollerBound = false;
 
-    // used to avoid stacking multiple handlers after reloads
+    // This mutable ref is the KEY to fixing “knob stuck after reload”.
+    // The handlers bind once, and always look here for current map/px.
+    const scrollerRef = {
+      bound: false,
+      px: null,
+      mainMap: null,
+      trackEl: ui.scrollEl,
+      knobEl: ui.knobEl,
+      setKnobFromT: null
+    };
+
+    // Avoid stacking map move handlers after reload
     let _onMoveZoom = null;
 
     function enforceBaseMapSize() {
@@ -301,12 +357,14 @@
     }
 
     const syncLens = rafThrottle(() => {
-      if (!opts.lensEnabled || !mainMap || !lensMap) return;
-      lensMap.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
+      if (!opts.lensEnabled || !scrollerRef.mainMap || !lensMap) return;
+      const m = scrollerRef.mainMap;
+      lensMap.setView(m.getCenter(), m.getZoom() + opts.lensZoomOffset, { animate: false });
     });
 
     function rebuildRegions() {
-      Object.values(regionLayersById).forEach(l => mainMap.removeLayer(l));
+      if (!scrollerRef.mainMap) return;
+      Object.values(regionLayersById).forEach(l => scrollerRef.mainMap.removeLayer(l));
       const stateByRegion = stateDoc?.state_by_region || {};
       (mapDoc.regions || []).forEach((r) => {
         regionsById[r.region_id] = r;
@@ -314,26 +372,121 @@
         if (!latlngs.length) return;
         const poly = window.L.polygon(latlngs, buildRegionStyle(opts, r.region_id, stateByRegion));
         poly.on("click", () => {
-          selectedRegionId = r.region_id;
           renderDrawer(ui, r, stateByRegion[r.region_id]);
           openDrawer(ui);
         });
-        poly.addTo(mainMap);
+        poly.addTo(scrollerRef.mainMap);
         regionLayersById[r.region_id] = poly;
       });
     }
 
     async function invalidateMapsHard() {
       await nextFrame();
-      if (mainMap) mainMap.invalidateSize({ animate: false });
+      if (scrollerRef.mainMap) scrollerRef.mainMap.invalidateSize({ animate: false });
       if (lensMap) lensMap.invalidateSize({ animate: false });
+    }
+
+    // Bind scroller handlers ONCE (but they always reference scrollerRef.* which updates each reload)
+    function bindScrollerOnce() {
+      if (scrollerRef.bound) return;
+      scrollerRef.bound = true;
+
+      const trackEl = scrollerRef.trackEl;
+      const knobEl = scrollerRef.knobEl;
+
+      function getTrackRect() { return trackEl.getBoundingClientRect(); }
+      function getKnobH() { return knobEl.getBoundingClientRect().height || 140; }
+
+      function pxToT(clientY) {
+        const rect = getTrackRect();
+        const knobH = getKnobH();
+
+        // pointer Y inside track
+        const y = clamp(clientY - rect.top, 0, rect.height);
+
+        // clamp so knob never leaves slot
+        const yClamped = clamp(
+          y - knobH / 2,
+          0,
+          Math.max(0, rect.height - knobH)
+        );
+
+        // convert to 0..1
+        const denom = Math.max(1, rect.height - knobH);
+        const t = clamp(yClamped / denom, 0, 1);
+
+        return { t, yClamped };
+      }
+
+      function setKnobFromT(t) {
+        const rect = getTrackRect();
+        const knobH = getKnobH();
+        const denom = Math.max(1, rect.height - knobH);
+        const y = denom * clamp(t, 0, 1);
+        knobEl.style.top = `${y}px`;
+      }
+
+      function panMapFromT(t) {
+        const m = scrollerRef.mainMap;
+        const px = scrollerRef.px;
+        if (!m || !px) return;
+
+        // t=0 => top, t=1 => bottom
+        const lat = px.h * (1 - t);
+        m.panTo([lat, m.getCenter().lng], { animate: false });
+      }
+
+      scrollerRef.setKnobFromT = setKnobFromT;
+
+      // Tap/click the slot jumps knob + map
+      trackEl.addEventListener("pointerdown", (e) => {
+        // ignore if no current map yet
+        if (!scrollerRef.mainMap || !scrollerRef.px) return;
+
+        const { t, yClamped } = pxToT(e.clientY);
+        knobEl.style.top = `${yClamped}px`;
+        panMapFromT(t);
+      });
+
+      // Drag knob (PointerEvents)
+      knobEl.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        knobEl.classList.add("is-active");
+        try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
+
+        const onMove = (ev) => {
+          const { t, yClamped } = pxToT(ev.clientY);
+          knobEl.style.top = `${yClamped}px`;
+          panMapFromT(t);
+        };
+
+        const onUp = () => {
+          knobEl.classList.remove("is-active");
+          knobEl.removeEventListener("pointermove", onMove);
+          knobEl.removeEventListener("pointerup", onUp);
+          knobEl.removeEventListener("pointercancel", onUp);
+        };
+
+        knobEl.addEventListener("pointermove", onMove);
+        knobEl.addEventListener("pointerup", onUp);
+        knobEl.addEventListener("pointercancel", onUp);
+      });
+
+      // Fallbacks for environments where PointerEvents are weird
+      // (older iOS webviews, etc.)
+      knobEl.addEventListener("touchstart", () => knobEl.classList.add("is-active"), { passive: true });
+      knobEl.addEventListener("touchend", () => knobEl.classList.remove("is-active"), { passive: true });
+      knobEl.addEventListener("touchcancel", () => knobEl.classList.remove("is-active"), { passive: true });
+      knobEl.addEventListener("mousedown", () => knobEl.classList.add("is-active"));
+      window.addEventListener("mouseup", () => knobEl.classList.remove("is-active"));
     }
 
     async function loadAll() {
       mapDoc = await fetchJson(opts.mapUrl);
       stateDoc = await fetchJson(opts.stateUrl);
 
-      // Optional validations (kept, but non-fatal)
       const mapErr = validateMapDoc(mapDoc);
       const stateErr = validateStateDoc(stateDoc);
       if (mapErr) console.warn("[CC CanyonMap] map doc validation:", mapErr);
@@ -344,11 +497,11 @@
       const px = mapDoc.map.background.image_pixel_size;
       const bounds = [[0, 0], [px.h, px.w]];
 
-      // remove old maps
+      // Tear down old maps
       if (mainMap) mainMap.remove();
       if (lensMap) lensMap.remove();
 
-      // create main map
+      // Create main map
       mainMap = window.L.map(ui.mapEl, {
         crs: window.L.CRS.Simple,
         attributionControl: false,
@@ -356,11 +509,17 @@
         dragging: !!opts.allowMapDrag,
         zoomAnimation: false,
         fadeAnimation: false,
-        markerZoomAnimation: false
+        markerZoomAnimation: false,
+
+        // Let us zoom above fitBounds without Leaflet fighting us
+        // (these are safe bounds for CRS.Simple)
+        minZoom: -5,
+        maxZoom: 6
       });
+
       window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
 
-      // create lens map
+      // Create lens map (separate instance)
       if (opts.lensEnabled) {
         lensMap = window.L.map(ui.lensMapEl, {
           crs: window.L.CRS.Simple,
@@ -369,118 +528,65 @@
           dragging: false,
           zoomAnimation: false,
           fadeAnimation: false,
-          markerZoomAnimation: false
+          markerZoomAnimation: false,
+          minZoom: -5,
+          maxZoom: 6
         });
         window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(lensMap);
       }
 
+      // Ensure the lens container truly fills (no “mystery inset”)
+      // (Leaflet sets some inline styles; this just forces the container itself)
+      ui.lensMapEl.style.position = "absolute";
+      ui.lensMapEl.style.inset = "0";
+      ui.lensMapEl.style.width = "100%";
+      ui.lensMapEl.style.height = "100%";
+
       await invalidateMapsHard();
-      mainMap.fitBounds(bounds, { padding: [10, 10] });
-      syncLens();
+
+      // Fit, then zoom up to make background huge (keeps lens aligned)
+      mainMap.fitBounds(bounds, { padding: [10, 10], animate: false });
+      mainMap.setZoom(mainMap.getZoom() + opts.backgroundZoomOffset, { animate: false });
+
+      // Update scrollerRef so already-bound handlers now control the NEW map
+      scrollerRef.mainMap = mainMap;
+      scrollerRef.px = px;
+
+      // Build regions on main map
       rebuildRegions();
 
-      // ==========================================================
-      // Scroller logic (touch + mouse pointer events, clamped to slot)
-      // ==========================================================
-      if (!scrollerBound) {
-        scrollerBound = true;
-
-        const trackEl = ui.scrollEl; // slot area (.cc-scroll)
-        const knobEl = ui.knobEl;
-
-        function pxToT(clientY) {
-          const rect = trackEl.getBoundingClientRect();
-          const knobH = knobEl.getBoundingClientRect().height || 140;
-
-          const y = clamp(clientY - rect.top, 0, rect.height);
-
-          const yClamped = clamp(
-            y - knobH / 2,
-            0,
-            Math.max(0, rect.height - knobH)
-          );
-
-          const denom = Math.max(1, rect.height - knobH);
-          const t = clamp(yClamped / denom, 0, 1);
-
-          return { t, yClamped };
-        }
-
-        function setKnobFromT(t) {
-          const rect = trackEl.getBoundingClientRect();
-          const knobH = knobEl.getBoundingClientRect().height || 140;
-          const denom = Math.max(1, rect.height - knobH);
-          const y = denom * clamp(t, 0, 1);
-          knobEl.style.top = `${y}px`;
-        }
-
-        function panMapFromT(t) {
-          const lat = px.h * (1 - t);
-          mainMap.panTo([lat, mainMap.getCenter().lng], { animate: false });
-        }
-
-        // Tap/click the slot jumps knob + map
-        trackEl.addEventListener("pointerdown", (e) => {
-          const { t, yClamped } = pxToT(e.clientY);
-          knobEl.style.top = `${yClamped}px`;
-          panMapFromT(t);
-        });
-
-        // Drag knob (touch + mouse)
-        knobEl.addEventListener("pointerdown", (e) => {
-          e.preventDefault();
-          e.stopPropagation();
-
-          knobEl.classList.add("is-active");
-          knobEl.setPointerCapture(e.pointerId);
-
-          const onMove = (ev) => {
-            const { t, yClamped } = pxToT(ev.clientY);
-            knobEl.style.top = `${yClamped}px`;
-            panMapFromT(t);
-          };
-
-          const onUp = () => {
-            knobEl.classList.remove("is-active");
-            knobEl.removeEventListener("pointermove", onMove);
-            knobEl.removeEventListener("pointerup", onUp);
-            knobEl.removeEventListener("pointercancel", onUp);
-          };
-
-          knobEl.addEventListener("pointermove", onMove);
-          knobEl.addEventListener("pointerup", onUp);
-          knobEl.addEventListener("pointercancel", onUp);
-        });
-
-        // expose helper so Leaflet move/zoom updates knob correctly
-        ui._setKnobFromT = setKnobFromT;
+      // Initialize lens view explicitly (so it isn't stuck at default)
+      if (opts.lensEnabled && lensMap) {
+        lensMap.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
       }
 
+      // Bind scroller once (after we have elements)
+      bindScrollerOnce();
+
       // Keep knob synced to map movement (PX, not %)
-      if (_onMoveZoom && mainMap) {
-        // paranoia: remove if it somehow survived (normally mainMap.remove() clears)
+      if (_onMoveZoom) {
         try { mainMap.off("move zoom", _onMoveZoom); } catch (_) {}
       }
 
       _onMoveZoom = () => {
         const t = 1 - (mainMap.getCenter().lat / px.h);
-        if (ui._setKnobFromT) ui._setKnobFromT(t);
+        if (scrollerRef.setKnobFromT) scrollerRef.setKnobFromT(t);
         syncLens();
       };
 
       mainMap.on("move zoom", _onMoveZoom);
 
-      // Initialize knob position immediately (so it isn't “stuck” until first move)
-      const t0 = 1 - (mainMap.getCenter().lat / px.h);
-      if (ui._setKnobFromT) ui._setKnobFromT(t0);
+      // Set knob position immediately (so it isn't “stuck” until first move)
+      _onMoveZoom();
     }
 
     ui.btnReload.addEventListener("click", loadAll);
 
     ui.btnFit.addEventListener("click", () => {
-      if (!mapDoc || !mainMap) return;
+      if (!mapDoc || !scrollerRef.mainMap) return;
       const px = mapDoc.map.background.image_pixel_size;
-      mainMap.fitBounds([[0, 0], [px.h, px.w]]);
+      scrollerRef.mainMap.fitBounds([[0, 0], [px.h, px.w]], { animate: false });
+      scrollerRef.mainMap.setZoom(scrollerRef.mainMap.getZoom() + opts.backgroundZoomOffset, { animate: false });
     });
 
     await loadAll();
