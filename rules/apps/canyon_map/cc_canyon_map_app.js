@@ -21,7 +21,7 @@
     backgroundZoomOffset: 2,
 
     lensEnabled: true,
-    lensZoomOffset: 2,
+    lensZoomOffset: 3,  // Increased from 2 to 3 for more obvious magnification
     lensWidthPx: 638,
     lensHeightPx: 438,
 
@@ -29,8 +29,8 @@
     warpBaseFrequency: 0.008,
     warpScale: 16,
 
-    lensOverscanX: 22,
-    lensOverscanY: 22,
+    lensOverscanX: 60,
+    lensOverscanY: 60,
 
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
@@ -176,13 +176,21 @@
     lensSvg.innerHTML = `<defs></defs>`;
 
     const lens = el("div", { class: "cc-lens", id: "cc-lens" }, [
-      el("div", { class: "cc-lens-inner", id: "cc-lens-inner" }, [
+      el("div", { 
+        class: "cc-lens-inner", 
+        id: "cc-lens-inner",
+        style: "overflow: hidden; position: relative; width: 100%; height: 100%;"
+      }, [
         el("div", { class: "cc-lens-map", id: "cc-lens-map" })
       ]),
       el("div", { class: "cc-lens-glare" })
     ]);
 
-    const frameOverlay = el("div", { class: "cc-frame-overlay", id: "cc-frame" });
+    const frameOverlay = el("div", { 
+      class: "cc-frame-overlay", 
+      id: "cc-frame",
+      style: "filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5)) drop-shadow(0 4px 8px rgba(0,0,0,0.3));"
+    });
 
     // VERTICAL SCROLLER (up/down on the right side)
     const scrollerVertical = el("div", { class: "cc-scroll cc-scroll-vertical", id: "cc-scroll-vertical" }, [
@@ -194,16 +202,16 @@
     const scrollerHorizontal = el("div", { 
       class: "cc-scroll cc-scroll-horizontal", 
       id: "cc-scroll-horizontal",
-      style: "position: absolute; bottom: 15px; left: 70px; right: 70px; height: 35px; pointer-events: auto; z-index: 100;"
+      style: "position: absolute; bottom: 20px; left: 80px; right: 80px; height: 40px; pointer-events: auto; z-index: 1000;"
     }, [
       el("div", { 
         class: "cc-scroll-track",
-        style: "width: 100%; height: 100%; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.3); border-radius: 18px; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);"
+        style: "width: 100%; height: 100%; background: rgba(50,50,50,0.8); border: 3px solid rgba(255,255,255,0.4); border-radius: 20px; position: relative; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5), 0 4px 8px rgba(0,0,0,0.4);"
       }),
       el("div", { 
         class: "cc-scroll-knob", 
         id: "cc-scroll-knob-h",
-        style: "position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 120px; height: 90%; background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3)); border: 2px solid rgba(255,255,255,0.6); border-radius: 15px; cursor: grab; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"
+        style: "position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 140px; height: 90%; background: linear-gradient(180deg, rgba(255,255,255,0.6), rgba(200,200,200,0.5)); border: 3px solid rgba(255,255,255,0.8); border-radius: 18px; cursor: grab; box-shadow: 0 3px 8px rgba(0,0,0,0.4), inset 0 1px 2px rgba(255,255,255,0.5);"
       })
     ]);
 
@@ -528,6 +536,8 @@
       const x = Number(opts.lensOverscanX || 0);
       const y = Number(opts.lensOverscanY || 0);
 
+      console.log("[CC Canyon Map] Applying lens overscan - X:", x, "Y:", y);
+
       ui.lensMapEl.style.position = "absolute";
       ui.lensMapEl.style.left = (-x) + "px";
       ui.lensMapEl.style.top = (-y) + "px";
@@ -564,6 +574,7 @@
         maxZoom: 6
       });
       // Use the SMALL background image for the base map
+      console.log("[CC Canyon Map] Loading background image:", mapDoc.map.background.image_key);
       window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
 
       if (opts.lensEnabled) {
@@ -582,6 +593,8 @@
         });
         // Use the LARGE lens image for the magnified view
         const lensImageKey = mapDoc.map.lens?.image_key || mapDoc.map.background.image_key;
+        console.log("[CC Canyon Map] Loading lens image:", lensImageKey);
+        console.log("[CC Canyon Map] Lens zoom offset:", opts.lensZoomOffset);
         window.L.imageOverlay(lensImageKey, bounds).addTo(lensMap);
       }
 
