@@ -2,9 +2,10 @@
    COFFIN CANYON — CANYON MAP (Ultimate Design)
    Full CSS (no omissions) — UPDATED for:
    - knob shifted right ~9px (groove alignment)
+   - lens OVERSCAN (edges hidden beneath iron frame)
    - lens inner guaranteed to fill (prevents “doesn’t fill metal frame”)
    - lens stays sharp (no CSS scaling on lens map)
-   - distortions kept but less “mushy” on iPad (tune via JS filter scale too)
+   - distortions are LENS-ONLY; background stays mostly clean
 */
 
 /* ================================================================
@@ -17,6 +18,10 @@
   /* Lens window size (should match your iron window opening) */
   --lens-w: 710px; /* bump this to 680–710 if you still see gaps */
   --lens-h: 490px; /* bump this to 460–490 if you still see gaps */
+
+  /* NEW: Overscan so lens edges tuck under the iron frame */
+  --lens-overscan-x: 22px; /* try 18–32 */
+  --lens-overscan-y: 22px; /* try 18–32 */
 
   --cc-map-border: #4a3728;
 
@@ -144,8 +149,7 @@
 
 /* ================================================================
    LEAFLET MAP BASE (BACKGROUND MAP)
-   - We keep it visually huge using CSS scale (since it's blurred anyway)
-   - Leaflet still gets a normal container size (inset:0)
+   - Background stays mostly clean: NO warp filter here.
    ================================================================ */
 #cc-cm-map{
   position: absolute !important;
@@ -159,6 +163,9 @@
   filter: blur(6px) sepia(0.3);
   pointer-events: none;
 
+  /* (optional) if you want it “bigger” visually, you can re-enable: */
+  /* transform: scale(var(--bg-scale));
+     transform-origin: 50% 50%; */
 }
 
 /* Keep Leaflet controls out (you disabled zoomControl anyway, but safe) */
@@ -166,6 +173,8 @@
 
 /* ================================================================
    LENS (MASKED HIGH-RES VIEW)
+   - Overscanned so edges hide under the iron frame.
+   - Leaflet lens container is oversized and centered to prevent seams.
    ================================================================ */
 .cc-lens{
   position: absolute !important;
@@ -173,15 +182,15 @@
   top: 50% !important;
   transform: translate(-50%, -50%) !important;
 
-  width: var(--lens-w) !important;
-  height: var(--lens-h) !important;
+  /* Overscan the lens container itself (bigger than window opening) */
+  width: calc(var(--lens-w) + (var(--lens-overscan-x) * 2)) !important;
+  height: calc(var(--lens-h) + (var(--lens-overscan-y) * 2)) !important;
 
   z-index: 30 !important; /* behind frame overlay */
 
   overflow: hidden !important; /* mask */
   border-radius: var(--lens-radius);
 
-  /* Slight internal vignette/glass feel */
   box-shadow:
     inset 0 0 0 2px rgba(255,255,255,0.06),
     inset 0 0 30px rgba(0,0,0,0.25);
@@ -194,14 +203,16 @@
 }
 
 /* This element is created by Leaflet (div.leaflet-container) */
+/* We overscan the Leaflet container inside the mask to hide seams */
 .cc-lens-map{
   position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
 
-  /* SVG warp (optional) + contrast
-     NOTE: If iPad still looks mushy, also reduce feDisplacementMap scale in JS */
+  left: calc(var(--lens-overscan-x) * -1) !important;
+  top: calc(var(--lens-overscan-y) * -1) !important;
+  width: calc(100% + (var(--lens-overscan-x) * 2)) !important;
+  height: calc(100% + (var(--lens-overscan-y) * 2)) !important;
+
+  /* Distortion is LENS-ONLY */
   filter: url(#ccLensWarp) contrast(var(--lens-contrast)) saturate(1.05) !important;
 
   /* IMPORTANT: do NOT scale here; magnification is via Leaflet zoom */
@@ -311,7 +322,6 @@
   filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
   transition: transform 120ms ease, filter 120ms ease;
 
-  /* Needed for pointer dragging on iPad/iPhone */
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -408,7 +418,6 @@
 }
 
 @media (max-width: 700px){
-  /* On small screens, keep everything usable */
   .cc-cm-mapwrap{
     min-height: 640px !important;
     height: 80vh !important;
@@ -424,9 +433,7 @@
 }
 
 /* ================================================================
-   OPTIONAL: iOS sharpness fallback (if you decide to toggle .cc-ios)
-   - If your JS adds root.classList.add("cc-ios") on iPad/iPhone,
-     this disables the SVG warp (which can rasterize blurry on iOS).
+   OPTIONAL: iOS sharpness fallback
    ================================================================ */
 .cc-ios .cc-lens-map{
   filter: contrast(var(--lens-contrast)) saturate(1.05) !important; /* no url(#ccLensWarp) */
