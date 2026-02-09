@@ -1,11 +1,11 @@
 /* File: rules/apps/canyon_map/cc_canyon_map.css
    COFFIN CANYON — CANYON MAP (Ultimate Design)
    Full CSS (no omissions) — UPDATED for:
-   - knob shifted right ~9px (groove alignment)
-   - lens OVERSCAN (edges hidden beneath iron frame)
-   - lens inner guaranteed to fill (prevents “doesn’t fill metal frame”)
-   - lens stays sharp (no CSS scaling on lens map)
-   - distortions are LENS-ONLY; background stays mostly clean
+   - Blappo knob graphic used for BOTH vertical + horizontal scrollers
+   - Horizontal scroller is CSS-driven (no inline JS styles)
+   - Vertical knob offset still supported (groove alignment)
+   - Lens overscan supported via CSS vars (set by JS): --lens-overscan-x / --lens-overscan-y
+   - Lens remains sharp (no CSS scaling); distortion remains lens-only (filter applies only to .cc-lens-map)
 */
 
 /* ================================================================
@@ -16,27 +16,29 @@
   --frame-ratio: 1.5;
 
   /* Lens window size (should match your iron window opening) */
-  --lens-w: 790px; /* bump this to 680–710 if you still see gaps */
-  --lens-h: 550px; /* bump this to 460–490 if you still see gaps */
+  --lens-w: 710px; /* bump if you still see gaps */
+  --lens-h: 490px;
 
-  /* NEW: Overscan so lens edges tuck under the iron frame */
-  --lens-overscan-x: 32px; /* try 18–32 */
-  --lens-overscan-y: 32px; /* try 18–32 */
+  /* Lens “overscan” (lens map extends under frame so edges are hidden) */
+  --lens-overscan-x: 60px;
+  --lens-overscan-y: 60px;
 
   --cc-map-border: #4a3728;
 
   /* Background “bigness” (visual scale only) */
-  --bg-scale: 4; /* try 2.0–3.0 */
+  --bg-scale: 3;
 
-  /* If you keep SVG warp, keep it subtle for iOS sharpness */
+  /* Lens contrast */
   --lens-contrast: 1;
 
-  /* Optional: if you want the lens corners rounder/less round */
+  /* Lens corner radius */
   --lens-radius: 20px;
 
-  /* Scroll area + knob geometry */
+  /* ========= Vertical scroller geometry ========= */
   --scroll-h: 440px;
   --scroll-w: 80px;
+
+  /* Blappo knob graphic base geometry (vertical) */
   --knob-w: 80px;
   --knob-h: 140px;
 
@@ -45,6 +47,17 @@
 
   /* Fine alignment: knob needs to move right 8–10px */
   --knob-offset-x: 9px;
+
+  /* ========= Horizontal scroller geometry =========
+     Using SAME blappo knob image, but sized to a horizontal slot.
+     (No rotation so JS width math stays sane.)
+  */
+  --hscroll-h: 46px;
+  --hscroll-side-inset: 80px;
+  --hscroll-bottom: 18px;
+
+  --hknob-w: 140px;
+  --hknob-h: 46px;
 
   /* Shadows */
   --shadow-inset: inset 0 0 60px #000;
@@ -96,13 +109,8 @@
   cursor: pointer;
 }
 
-.cc-btn:hover{
-  background: rgba(255,255,255,0.08);
-}
-
-.cc-btn:active{
-  transform: translateY(1px);
-}
+.cc-btn:hover{ background: rgba(255,255,255,0.08); }
+.cc-btn:active{ transform: translateY(1px); }
 
 .cc-btn.cc-btn-x{
   width: 34px;
@@ -149,7 +157,6 @@
 
 /* ================================================================
    LEAFLET MAP BASE (BACKGROUND MAP)
-   - Background stays mostly clean: NO warp filter here.
    ================================================================ */
 #cc-cm-map{
   position: absolute !important;
@@ -162,19 +169,13 @@
   opacity: 0.4;
   filter: blur(6px) sepia(0.3);
   pointer-events: none;
-
-  /* (optional) if you want it “bigger” visually, you can re-enable: */
-  /* transform: scale(var(--bg-scale));
-     transform-origin: 50% 50%; */
 }
 
-/* Keep Leaflet controls out (you disabled zoomControl anyway, but safe) */
 #cc-cm-map .leaflet-control-container{ display: none !important; }
 
 /* ================================================================
    LENS (MASKED HIGH-RES VIEW)
-   - Overscanned so edges hide under the iron frame.
-   - Leaflet lens container is oversized and centered to prevent seams.
+   - Overscan is applied to the Leaflet container via inset negatives
    ================================================================ */
 .cc-lens{
   position: absolute !important;
@@ -182,12 +183,10 @@
   top: 50% !important;
   transform: translate(-50%, -50%) !important;
 
-  /* Overscan the lens container itself (bigger than window opening) */
-  width: calc(var(--lens-w) + (var(--lens-overscan-x) * 2)) !important;
-  height: calc(var(--lens-h) + (var(--lens-overscan-y) * 2)) !important;
+  width: var(--lens-w) !important;
+  height: var(--lens-h) !important;
 
   z-index: 30 !important; /* behind frame overlay */
-
   overflow: hidden !important; /* mask */
   border-radius: var(--lens-radius);
 
@@ -196,33 +195,31 @@
     inset 0 0 30px rgba(0,0,0,0.25);
 }
 
-/* IMPORTANT: ensure lens inner wrapper fills the mask */
+/* Ensure lens inner wrapper fills mask */
 .cc-lens-inner{
   position: absolute !important;
   inset: 0 !important;
+  overflow: hidden !important;
 }
 
-/* This element is created by Leaflet (div.leaflet-container) */
-/* We overscan the Leaflet container inside the mask to hide seams */
+/* Leaflet container for the lens map
+   Overscan: extend the container under the frame so the edges are hidden */
 .cc-lens-map{
   position: absolute !important;
 
-  left: calc(var(--lens-overscan-x) * -1) !important;
-  top: calc(var(--lens-overscan-y) * -1) !important;
-  width: calc(100% + (var(--lens-overscan-x) * 2)) !important;
-  height: calc(100% + (var(--lens-overscan-y) * 2)) !important;
+  /* Overscan makes the lens “bigger than the window” so frame hides seams */
+  left: calc(-1 * var(--lens-overscan-x)) !important;
+  top:  calc(-1 * var(--lens-overscan-y)) !important;
+  width: calc(100% + (2 * var(--lens-overscan-x))) !important;
+  height: calc(100% + (2 * var(--lens-overscan-y))) !important;
 
-  /* Distortion is LENS-ONLY */
+  /* Distortion applies to the lens only */
   filter: url(#ccLensWarp) contrast(var(--lens-contrast)) saturate(1.05) !important;
 
-  /* IMPORTANT: do NOT scale here; magnification is via Leaflet zoom */
   transform: none !important;
-
-  /* Helps iOS repainting */
   will-change: transform;
 }
 
-/* Subtle glare layer from your markup */
 .cc-lens-glare{
   position: absolute;
   inset: 0;
@@ -234,7 +231,6 @@
   opacity: 0.5;
 }
 
-/* Extra glass sheen without blur */
 .cc-lens::after{
   content: "";
   position: absolute;
@@ -270,26 +266,16 @@
 }
 
 /* ================================================================
-   VERTICAL SCROLLER (TRACK + KNOB)
-   - Track defines the slot region
-   - JS positions knob in PX so it stays in the groove
+   SCROLLERS (VERTICAL + HORIZONTAL)
+   - Both knobs use the SAME blappo_knob.png
    ================================================================ */
 .cc-scroll{
   position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-
-  margin-left: var(--scroll-offset-x) !important;
-  transform: translateY(-50%) !important;
-
-  height: var(--scroll-h) !important;
-  width: var(--scroll-w) !important;
-
   z-index: 50 !important;
   pointer-events: auto !important;
 }
 
-/* Track is the positioning reference; you can skin it later if desired */
+/* Track common */
 .cc-scroll-track{
   position: absolute;
   inset: 0;
@@ -297,28 +283,43 @@
   background: rgba(0,0,0,0.0);
 }
 
-/* Knob: JS sets top in px. Only translate X for centering. */
+/* ===== Vertical scroller placement ===== */
+.cc-scroll-vertical{
+  left: 50% !important;
+  top: 50% !important;
+  margin-left: var(--scroll-offset-x) !important;
+  transform: translateY(-50%) !important;
+
+  height: var(--scroll-h) !important;
+  width: var(--scroll-w) !important;
+}
+
+/* ===== Horizontal scroller placement ===== */
+.cc-scroll-horizontal{
+  left: var(--hscroll-side-inset) !important;
+  right: var(--hscroll-side-inset) !important;
+  bottom: var(--hscroll-bottom) !important;
+
+  height: var(--hscroll-h) !important;
+}
+
+/* Give horizontal track a subtle slot feel */
+.cc-scroll-horizontal .cc-scroll-track{
+  border-radius: 999px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.16);
+  box-shadow: inset 0 2px 10px rgba(0,0,0,0.55);
+}
+
+/* ===== Shared knob skin (blappo) ===== */
 .cc-scroll-knob{
   position: absolute !important;
-
-  /* Shift right ~9px to sit in the groove */
-  left: calc(50% + var(--knob-offset-x)) !important;
-
-  top: 0px !important; /* JS updates */
-
-  width: var(--knob-w) !important;
-  height: var(--knob-h) !important;
-
-  /* CRITICAL: no translateY here; JS positions top in px */
-  transform: translateX(-50%) !important;
-
   background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png") !important;
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 
   cursor: grab !important;
-
   filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
   transition: transform 120ms ease, filter 120ms ease;
 
@@ -327,44 +328,37 @@
   -webkit-user-select: none;
 }
 
-/* Desktop hover rollover */
+/* ===== Vertical knob geometry + groove offset ===== */
+.cc-scroll-vertical .cc-scroll-knob{
+  left: calc(50% + var(--knob-offset-x)) !important;
+  top: 0px !important; /* JS sets */
+  width: var(--knob-w) !important;
+  height: var(--knob-h) !important;
+  transform: translateX(-50%) !important; /* JS positions top only */
+}
+
+/* ===== Horizontal knob geometry (same image, resized) ===== */
+.cc-scroll-horizontal .cc-scroll-knob{
+  left: 0px !important; /* JS sets */
+  top: 50% !important;
+  width: var(--hknob-w) !important;
+  height: var(--hknob-h) !important;
+
+  /* JS positions left only; keep center vertically */
+  transform: translateY(-50%) !important;
+}
+
+/* Hover + active */
 .cc-scroll-knob:hover{
-  transform: translateX(-50%) scale(1.03) !important;
   filter: drop-shadow(0 12px 18px rgba(0,0,0,0.9)) brightness(1.06);
 }
 
-/* Touch rollover + dragging */
 .cc-scroll-knob.is-active{
   cursor: grabbing !important;
-  transform: translateX(-50%) scale(1.05) !important;
   filter: drop-shadow(0 14px 20px rgba(0,0,0,0.95)) brightness(1.08);
 }
-/* Horizontal scroller styling */
-.cc-scroll-horizontal {
-  position: absolute;
-  bottom: 10px; /* Position at bottom of frame */
-  left: 10px;
-  right: 10px;
-  height: 30px; /* Height of the horizontal track */
-  width: auto;
-}
 
-.cc-scroll-horizontal .cc-scroll-track {
-  width: 100%;
-  height: 100%;
-  border-radius: 15px;
-}
-
-.cc-scroll-horizontal .cc-scroll-knob {
-  position: absolute;
-  left: 0; /* Will be updated by JS */
-  top: 50%;
-  transform: translateY(-50%);
-  width: 80px; /* Width of the horizontal knob */
-  height: 100%;
-  border-radius: 15px;
-}
-/* Optional: make the whole slot clickable-feeling */
+/* Optional: slot feedback */
 .cc-scroll:active .cc-scroll-track{
   background: rgba(255,255,255,0.03);
 }
@@ -382,9 +376,7 @@
   transition: max-height 220ms ease;
 }
 
-.cc-cm-drawer.open{
-  max-height: 420px;
-}
+.cc-cm-drawer.open{ max-height: 420px; }
 
 .cc-cm-drawer-head{
   display: flex;
@@ -395,25 +387,15 @@
   border-bottom: 1px solid rgba(255,255,255,0.12);
 }
 
-.cc-cm-drawer-title{
-  font-weight: 800;
-}
+.cc-cm-drawer-title{ font-weight: 800; }
 
-.cc-cm-drawer-content{
-  padding: 10px 12px 14px;
-}
+.cc-cm-drawer-content{ padding: 10px 12px 14px; }
 
-.cc-block{
-  margin-bottom: 10px;
-}
-
-.cc-h{
-  font-weight: 800;
-  margin-bottom: 4px;
-}
+.cc-block{ margin-bottom: 10px; }
+.cc-h{ font-weight: 800; margin-bottom: 4px; }
 
 /* ================================================================
-   LEAFLET IN LENS: SMALL QUALITY-OF-LIFE
+   LEAFLET IN LENS: QUALITY-OF-LIFE
    ================================================================ */
 #cc-lens-map .leaflet-control-container{ display: none !important; }
 #cc-lens-map .leaflet-tile-pane,
@@ -453,6 +435,10 @@
     --scroll-offset-x: 255px;
     --scroll-h: 420px;
     --knob-h: 132px;
+
+    --hscroll-side-inset: 40px;
+    --hknob-w: 120px;
+    --hknob-h: 44px;
   }
 }
 
@@ -460,5 +446,6 @@
    OPTIONAL: iOS sharpness fallback
    ================================================================ */
 .cc-ios .cc-lens-map{
-  filter: contrast(var(--lens-contrast)) saturate(1.05) !important; /* no url(#ccLensWarp) */
+  filter: contrast(var(--lens-contrast)) saturate(1.05) !important; /* disables warp on iOS */
 }
+
