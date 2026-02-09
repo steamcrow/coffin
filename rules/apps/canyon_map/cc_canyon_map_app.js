@@ -191,9 +191,20 @@
     ]);
 
     // NEW: HORIZONTAL SCROLLER (left/right on the bottom)
-    const scrollerHorizontal = el("div", { class: "cc-scroll cc-scroll-horizontal", id: "cc-scroll-horizontal" }, [
-      el("div", { class: "cc-scroll-track" }),
-      el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" })
+    const scrollerHorizontal = el("div", { 
+      class: "cc-scroll cc-scroll-horizontal", 
+      id: "cc-scroll-horizontal",
+      style: "position: absolute; bottom: 15px; left: 70px; right: 70px; height: 35px; pointer-events: auto; z-index: 100;"
+    }, [
+      el("div", { 
+        class: "cc-scroll-track",
+        style: "width: 100%; height: 100%; background: rgba(0,0,0,0.4); border: 2px solid rgba(255,255,255,0.3); border-radius: 18px; position: relative; box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);"
+      }),
+      el("div", { 
+        class: "cc-scroll-knob", 
+        id: "cc-scroll-knob-h",
+        style: "position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 120px; height: 90%; background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.3)); border: 2px solid rgba(255,255,255,0.6); border-radius: 15px; cursor: grab; box-shadow: 0 2px 6px rgba(0,0,0,0.3);"
+      })
     ]);
 
     const body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
@@ -386,8 +397,9 @@
         const m = scrollerVerticalRef.mainMap;
         const px = scrollerVerticalRef.px;
         if (!m || !px) return;
-        const lat = px.h * (1 - t);
-        m.panTo([lat, m.getCenter().lng], { animate: false });
+        const lat = px.h * (1 - t); // t=0 -> top of map, t=1 -> bottom of map
+        const currentLng = m.getCenter().lng; // KEEP the current left/right position
+        m.panTo([lat, currentLng], { animate: false });
       }
 
       scrollerVerticalRef.setKnobFromT = setKnobFromT;
@@ -463,8 +475,9 @@
         const m = scrollerHorizontalRef.mainMap;
         const px = scrollerHorizontalRef.px;
         if (!m || !px) return;
-        const lng = px.w * t;
-        m.panTo([m.getCenter().lat, lng], { animate: false });
+        const lng = px.w * t; // t=0 -> left edge, t=1 -> right edge
+        const currentLat = m.getCenter().lat; // KEEP the current up/down position
+        m.panTo([currentLat, lng], { animate: false });
       }
 
       scrollerHorizontalRef.setKnobFromT = setKnobFromT;
@@ -480,6 +493,7 @@
         e.preventDefault();
         e.stopPropagation();
         knobEl.classList.add("is-active");
+        knobEl.style.cursor = "grabbing"; // Change cursor while dragging
         try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
 
         const onMove = (ev) => {
@@ -490,6 +504,7 @@
 
         const onUp = () => {
           knobEl.classList.remove("is-active");
+          knobEl.style.cursor = "grab"; // Reset cursor
           knobEl.removeEventListener("pointermove", onMove);
           knobEl.removeEventListener("pointerup", onUp);
           knobEl.removeEventListener("pointercancel", onUp);
