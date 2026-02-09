@@ -1,25 +1,8 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
-   Coffin Canyon — Canyon Map (read-only v1)
-   ODOO CSP-SAFE + FIXED MAGNIFIER LENS + VERTICAL SCROLLER KNOB + SVG DISTORTION
-
-   FIXES INCLUDED (complete file, no omissions):
-   1) Background map “really really big” is now done by REAL Leaflet zoom (NOT CSS scale),
-      so the lens + background stay aligned.
-   2) Scroller knob no longer “stuck” after Reload:
-      - event handlers bind ONCE, but they reference a mutable scrollerRef that is updated on every loadAll()
-      - works with PointerEvents AND with Touch/Mouse fallback
-      - knob position is clamped to the slot and updates in PX
-      - knob has rollover/pressed state (.is-active) on touch and mouse
-   3) Lens alignment + “no gaps”:
-      - lens map container is forced to 100% fill
-      - lens map view is explicitly set after main map is sized/zoomed
-   4) Distortion kept but made SUBTLE (the old scale=80 will absolutely smear on iPad)
-      - if you want more distortion, raise WARP_SCALE slowly (e.g. 16 → 22)
-
-   IMPORTANT REALITY CHECK (so expectations match physics):
-   - If your base canyon map image is a single raster PNG/JPG, zooming in will scale pixels.
-     “Sharp” requires the source image to be high resolution. The code below removes *extra* blur,
-     but cannot invent detail that isn’t in the image.
+   UPDATE: Distortion only on TOP magnified lens map + lens overscan re-center.
+   - Background map stays clean (no SVG filter involvement).
+   - Lens map gets the SVG filter via CSS, and we re-size/position its internal Leaflet container
+     to match the overscan so you never see gaps at the lens edges.
 */
 
 (function () {
@@ -33,31 +16,29 @@
     leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css",
     leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
-    // Base layout sizing (leaflet container size)
     baseMapHeightPx: 640,
     baseMapMaxHeightVh: 70,
 
-    // Make the BACKGROUND map huge using REAL zoom (keeps alignment with lens)
-    // Try 2 or 3 if you want it even bigger.
     backgroundZoomOffset: 2,
 
-    // Lens
     lensEnabled: true,
     lensZoomOffset: 2,
     lensWidthPx: 638,
     lensHeightPx: 438,
 
-    // Warp (keep subtle on iOS)
+    // Distortion is lens-only (background should not use this)
     warpEnabled: true,
     warpBaseFrequency: 0.008,
-    warpScale: 16, // 12–22 is sane. 80 will smear badly.
+    warpScale: 16,
 
-    // Pan/drag policy
+    // NEW: match CSS overscan tokens (so JS can size Leaflet lens container correctly)
+    lensOverscanX: 22, // MUST match --lens-overscan-x
+    lensOverscanY: 22, // MUST match --lens-overscan-y
+
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
     allowMapDrag: true,
 
-    // Styles
     factionColors: {
       monster_rangers: "#4caf50",
       monsterologists: "#ff9800",
@@ -72,9 +53,6 @@
     }
   };
 
-  // ---------------------------
-  // Utils
-  // ---------------------------
   function el(tag, attrs = {}, children = []) {
     const n = document.createElement(tag);
     Object.entries(attrs).forEach(([k, v]) => {
@@ -117,9 +95,6 @@
     return await res.json();
   }
 
-  // ---------------------------
-  // Odoo CSP-safe loaders
-  // ---------------------------
   const _loaded = { css: new Set(), js: new Set() };
 
   async function loadCssTextOnce(url, key) {
@@ -155,15 +130,12 @@
     if (!window.L) throw new Error("Leaflet did not load (window.L missing).");
   }
 
-  // ---------------------------
-  // Validation + geometry
-  // ---------------------------
   function normalizePoints(points, coordSystem) {
     if (!Array.isArray(points)) return [];
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
     return points
       .filter((p) => p && typeof p.x === "number" && typeof p.y === "number")
-      .map((p) => [p.y, p.x]); // CRS.Simple uses [y,x] as [lat,lng]
+      .map((p) => [p.y, p.x]);
   }
 
   function validateMapDoc(doc) {
@@ -180,14 +152,10 @@
     return null;
   }
 
-  // ---------------------------
-  // UI - buildLayout
-  // ---------------------------
   function buildLayout(root, opts) {
     root.innerHTML = "";
     root.classList.add("cc-canyon-map");
 
-    // iOS class for CSS fallbacks
     const isIOS =
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
@@ -203,22 +171,12 @@
 
     const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
 
-    // *** SVG FILTER FOR LENS DISTORTION ***
-    // Keep subtle. Large scale values blur/rasters on iPad.
     const lensSvg = el("svg", {
       style: "position: absolute; width: 0; height: 0; overflow: hidden;",
       "aria-hidden": "true"
     });
 
-    // We will patch this innerHTML in mount() based on opts.warp*
-    lensSvg.innerHTML = `
-      <defs>
-        <filter id="ccLensWarp">
-          <feTurbulence type="fractalNoise" baseFrequency="0.008" numOctaves="1" seed="2" result="noise" />
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="16" xChannelSelector="R" yChannelSelector="G" />
-        </filter>
-      </defs>
-    `;
+    lensSvg.innerHTML = `<defs></defs>`;
 
     const lens = el("div", { class: "cc-lens", id: "cc-lens" }, [
       el("div", { class: "cc-lens-inner", id: "cc-lens-inner" }, [
@@ -268,7 +226,6 @@
       lensEl: lens,
       lensMapEl: root.querySelector("#cc-lens-map"),
       lensSvgEl: lensSvg,
-      frameEl: frameOverlay,
       btnReload: root.querySelector("#cc-cm-reload"),
       btnFit: root.querySelector("#cc-cm-fit"),
       drawerEl: root.querySelector("#cc-cm-drawer"),
@@ -279,7 +236,6 @@
     };
   }
 
-  // --- Drawer logic ---
   function openDrawer(ui) { ui.drawerEl.classList.add("open"); }
   function closeDrawer(ui) { ui.drawerEl.classList.remove("open"); }
 
@@ -305,9 +261,6 @@
     return { color: "rgba(255,255,255,0.45)", weight: 2, fillColor, fillOpacity: 0.18, ...statusPatch };
   }
 
-  // ---------------------------
-  // Main mount
-  // ---------------------------
   async function mount(root, userOpts) {
     const opts = { ...DEFAULTS, ...(userOpts || {}) };
 
@@ -316,7 +269,7 @@
 
     const ui = buildLayout(root, opts);
 
-    // Patch the SVG filter to match opts (warp on/off + tuning)
+    // Build SVG warp filter (lens only; background never references it)
     if (opts.warpEnabled) {
       ui.lensSvgEl.innerHTML = `
         <defs>
@@ -333,8 +286,6 @@
     let mapDoc = null, stateDoc = null, mainMap = null, lensMap = null;
     const regionLayersById = {}, regionsById = {};
 
-    // This mutable ref is the KEY to fixing “knob stuck after reload”.
-    // The handlers bind once, and always look here for current map/px.
     const scrollerRef = {
       bound: false,
       px: null,
@@ -344,7 +295,6 @@
       setKnobFromT: null
     };
 
-    // Avoid stacking map move handlers after reload
     let _onMoveZoom = null;
 
     function enforceBaseMapSize() {
@@ -386,7 +336,6 @@
       if (lensMap) lensMap.invalidateSize({ animate: false });
     }
 
-    // Bind scroller handlers ONCE (but they always reference scrollerRef.* which updates each reload)
     function bindScrollerOnce() {
       if (scrollerRef.bound) return;
       scrollerRef.bound = true;
@@ -400,21 +349,10 @@
       function pxToT(clientY) {
         const rect = getTrackRect();
         const knobH = getKnobH();
-
-        // pointer Y inside track
         const y = clamp(clientY - rect.top, 0, rect.height);
-
-        // clamp so knob never leaves slot
-        const yClamped = clamp(
-          y - knobH / 2,
-          0,
-          Math.max(0, rect.height - knobH)
-        );
-
-        // convert to 0..1
+        const yClamped = clamp(y - knobH / 2, 0, Math.max(0, rect.height - knobH));
         const denom = Math.max(1, rect.height - knobH);
         const t = clamp(yClamped / denom, 0, 1);
-
         return { t, yClamped };
       }
 
@@ -430,29 +368,22 @@
         const m = scrollerRef.mainMap;
         const px = scrollerRef.px;
         if (!m || !px) return;
-
-        // t=0 => top, t=1 => bottom
         const lat = px.h * (1 - t);
         m.panTo([lat, m.getCenter().lng], { animate: false });
       }
 
       scrollerRef.setKnobFromT = setKnobFromT;
 
-      // Tap/click the slot jumps knob + map
       trackEl.addEventListener("pointerdown", (e) => {
-        // ignore if no current map yet
         if (!scrollerRef.mainMap || !scrollerRef.px) return;
-
         const { t, yClamped } = pxToT(e.clientY);
         knobEl.style.top = `${yClamped}px`;
         panMapFromT(t);
       });
 
-      // Drag knob (PointerEvents)
       knobEl.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         e.stopPropagation();
-
         knobEl.classList.add("is-active");
         try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
 
@@ -474,13 +405,27 @@
         knobEl.addEventListener("pointercancel", onUp);
       });
 
-      // Fallbacks for environments where PointerEvents are weird
-      // (older iOS webviews, etc.)
       knobEl.addEventListener("touchstart", () => knobEl.classList.add("is-active"), { passive: true });
       knobEl.addEventListener("touchend", () => knobEl.classList.remove("is-active"), { passive: true });
       knobEl.addEventListener("touchcancel", () => knobEl.classList.remove("is-active"), { passive: true });
       knobEl.addEventListener("mousedown", () => knobEl.classList.add("is-active"));
       window.addEventListener("mouseup", () => knobEl.classList.remove("is-active"));
+    }
+
+    // NEW: size/position the Leaflet lens container to match CSS overscan.
+    // This prevents edge seams and ensures the visible window is filled.
+    function applyLensOverscanSizing() {
+      if (!ui.lensMapEl) return;
+
+      const x = Number(opts.lensOverscanX || 0);
+      const y = Number(opts.lensOverscanY || 0);
+
+      // .cc-lens-map is the element we pass to Leaflet; make it overscanned.
+      ui.lensMapEl.style.position = "absolute";
+      ui.lensMapEl.style.left = (-x) + "px";
+      ui.lensMapEl.style.top = (-y) + "px";
+      ui.lensMapEl.style.width = `calc(100% + ${x * 2}px)`;
+      ui.lensMapEl.style.height = `calc(100% + ${y * 2}px)`;
     }
 
     async function loadAll() {
@@ -497,11 +442,9 @@
       const px = mapDoc.map.background.image_pixel_size;
       const bounds = [[0, 0], [px.h, px.w]];
 
-      // Tear down old maps
       if (mainMap) mainMap.remove();
       if (lensMap) lensMap.remove();
 
-      // Create main map
       mainMap = window.L.map(ui.mapEl, {
         crs: window.L.CRS.Simple,
         attributionControl: false,
@@ -510,17 +453,14 @@
         zoomAnimation: false,
         fadeAnimation: false,
         markerZoomAnimation: false,
-
-        // Let us zoom above fitBounds without Leaflet fighting us
-        // (these are safe bounds for CRS.Simple)
         minZoom: -5,
         maxZoom: 6
       });
-
       window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
 
-      // Create lens map (separate instance)
       if (opts.lensEnabled) {
+        applyLensOverscanSizing(); // must be before creating Leaflet map
+
         lensMap = window.L.map(ui.lensMapEl, {
           crs: window.L.CRS.Simple,
           attributionControl: false,
@@ -535,35 +475,25 @@
         window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(lensMap);
       }
 
-      // Ensure the lens container truly fills (no “mystery inset”)
-      // (Leaflet sets some inline styles; this just forces the container itself)
-      ui.lensMapEl.style.position = "absolute";
-      ui.lensMapEl.style.inset = "0";
-      ui.lensMapEl.style.width = "100%";
-      ui.lensMapEl.style.height = "100%";
-
       await invalidateMapsHard();
 
-      // Fit, then zoom up to make background huge (keeps lens aligned)
       mainMap.fitBounds(bounds, { padding: [10, 10], animate: false });
       mainMap.setZoom(mainMap.getZoom() + opts.backgroundZoomOffset, { animate: false });
 
-      // Update scrollerRef so already-bound handlers now control the NEW map
       scrollerRef.mainMap = mainMap;
       scrollerRef.px = px;
 
-      // Build regions on main map
       rebuildRegions();
 
-      // Initialize lens view explicitly (so it isn't stuck at default)
+      // Lens map: follow main center, zoomed in, then invalidate after overscan sizing
       if (opts.lensEnabled && lensMap) {
         lensMap.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
+        await nextFrame();
+        lensMap.invalidateSize({ animate: false });
       }
 
-      // Bind scroller once (after we have elements)
       bindScrollerOnce();
 
-      // Keep knob synced to map movement (PX, not %)
       if (_onMoveZoom) {
         try { mainMap.off("move zoom", _onMoveZoom); } catch (_) {}
       }
@@ -575,8 +505,6 @@
       };
 
       mainMap.on("move zoom", _onMoveZoom);
-
-      // Set knob position immediately (so it isn't “stuck” until first move)
       _onMoveZoom();
     }
 
@@ -594,7 +522,6 @@
     root._ccApi = { drawerClose: () => closeDrawer(ui) };
   }
 
-  // Auto-mount
   const root = document.getElementById("cc-app-root");
   if (root && root.getAttribute("data-cc-app") === APP_ID) mount(root, {});
 
