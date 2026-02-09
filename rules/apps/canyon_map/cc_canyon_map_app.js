@@ -125,7 +125,9 @@
   function normalizePoints(points, coordSystem) {
     if (!Array.isArray(points)) return [];
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
-    return points.filter((p) => p && typeof p.x === "number" && typeof p.y === "number").map((p) => [p.y, p.x]);
+    return points
+      .filter((p) => p && typeof p.x === "number" && typeof p.y === "number")
+      .map((p) => [p.y, p.x]); // Leaflet CRS.Simple uses [y,x] as [lat,lng]
   }
 
   function validateMapDoc(doc) {
@@ -149,6 +151,12 @@
     root.innerHTML = "";
     root.classList.add("cc-canyon-map");
 
+    // Optional iOS class for CSS fallbacks (if you use it in css)
+    const isIOS =
+      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    if (isIOS) root.classList.add("cc-ios");
+
     const header = el("div", { class: "cc-cm-header" }, [
       el("div", { class: "cc-cm-title" }, [opts.title]),
       el("div", { class: "cc-cm-actions" }, [
@@ -160,7 +168,7 @@
     const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
 
     // *** SVG FILTER FOR LENS DISTORTION ***
-    const lensSvg = el("svg", { 
+    const lensSvg = el("svg", {
       style: "position: absolute; width: 0; height: 0; overflow: hidden;",
       "aria-hidden": "true"
     });
@@ -198,7 +206,11 @@
       el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
         el("div", { class: "cc-cm-drawer-head" }, [
           el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Region"]),
-          el("button", { class: "cc-btn cc-btn-x", type: "button", onClick: () => root._ccApi && root._ccApi.drawerClose() }, ["×"])
+          el("button", {
+            class: "cc-btn cc-btn-x",
+            type: "button",
+            onClick: () => root._ccApi && root._ccApi.drawerClose()
+          }, ["×"])
         ]),
         el("div", { class: "cc-cm-drawer-content", id: "cc-cm-drawer-content" }, [
           el("div", { class: "cc-muted" }, ["Click a region to view details."])
@@ -213,12 +225,17 @@
     lens.style.setProperty("--lens-h", `${opts.lensHeightPx}px`);
 
     return {
-      mapEl, lensEl: lens, lensMapEl: root.querySelector("#cc-lens-map"),
-      frameEl: frameOverlay, btnReload: root.querySelector("#cc-cm-reload"),
-      btnFit: root.querySelector("#cc-cm-fit"), drawerEl: root.querySelector("#cc-cm-drawer"),
+      mapEl,
+      lensEl: lens,
+      lensMapEl: root.querySelector("#cc-lens-map"),
+      frameEl: frameOverlay,
+      btnReload: root.querySelector("#cc-cm-reload"),
+      btnFit: root.querySelector("#cc-cm-fit"),
+      drawerEl: root.querySelector("#cc-cm-drawer"),
       drawerTitleEl: root.querySelector("#cc-cm-drawer-title"),
       drawerContentEl: root.querySelector("#cc-cm-drawer-content"),
-      scrollEl: scroller, knobEl: root.querySelector("#cc-scroll-knob")
+      scrollEl: scroller,
+      knobEl: root.querySelector("#cc-scroll-knob")
     };
   }
 
@@ -304,17 +321,41 @@
     async function loadAll() {
       mapDoc = await fetchJson(opts.mapUrl);
       stateDoc = await fetchJson(opts.stateUrl);
+
+      // Optional validations (kept, but non-fatal)
+      const mapErr = validateMapDoc(mapDoc);
+      const stateErr = validateStateDoc(stateDoc);
+      if (mapErr) console.warn("[CC CanyonMap] map doc validation:", mapErr);
+      if (stateErr) console.warn("[CC CanyonMap] state doc validation:", stateErr);
+
       enforceBaseMapSize();
+
       const px = mapDoc.map.background.image_pixel_size;
       const bounds = [[0, 0], [px.h, px.w]];
 
       if (mainMap) mainMap.remove();
-      mainMap = window.L.map(ui.mapEl, { crs: window.L.CRS.Simple, attributionControl: false, zoomControl: false });
+      mainMap = window.L.map(ui.mapEl, {
+        crs: window.L.CRS.Simple,
+        attributionControl: false,
+        zoomControl: false,
+        dragging: !!opts.allowMapDrag,
+        zoomAnimation: false,
+        fadeAnimation: false,
+        markerZoomAnimation: false
+      });
       window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
 
       if (opts.lensEnabled) {
         if (lensMap) lensMap.remove();
-        lensMap = window.L.map(ui.lensMapEl, { crs: window.L.CRS.Simple, attributionControl: false, zoomControl: false, dragging: false });
+        lensMap = window.L.map(ui.lensMapEl, {
+          crs: window.L.CRS.Simple,
+          attributionControl: false,
+          zoomControl: false,
+          dragging: false,
+          zoomAnimation: false,
+          fadeAnimation: false,
+          markerZoomAnimation: false
+        });
         window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(lensMap);
       }
 
@@ -323,31 +364,100 @@
       syncLens();
       rebuildRegions();
 
-      // Scroller logic
+      // ==========================================================
+      // Scroller logic (touch + mouse pointer events, clamped to slot)
+      // ==========================================================
       if (!scrollerBound) {
         scrollerBound = true;
-        const onScroll = (e) => {
-          const rect = ui.scrollEl.getBoundingClientRect();
-          const t = clamp((e.clientY - rect.top) / rect.height, 0, 1);
-          mainMap.panTo([px.h * (1 - t), mainMap.getCenter().lng], { animate: false });
-        };
-        ui.knobEl.addEventListener("mousedown", () => {
-          const move = (e) => onScroll(e);
-          const up = () => { document.removeEventListener("mousemove", move); document.removeEventListener("mouseup", up); };
-          document.addEventListener("mousemove", move);
-          document.addEventListener("mouseup", up);
+
+        const trackEl = ui.scrollEl; // slot area (.cc-scroll)
+        const knobEl = ui.knobEl;
+
+        function pxToT(clientY) {
+          const rect = trackEl.getBoundingClientRect();
+          const knobH = knobEl.getBoundingClientRect().height || 140;
+
+          // pointer Y inside track
+          const y = clamp(clientY - rect.top, 0, rect.height);
+
+          // clamp so knob never leaves slot
+          const yClamped = clamp(
+            y - knobH / 2,
+            0,
+            Math.max(0, rect.height - knobH)
+          );
+
+          // convert to 0..1
+          const denom = Math.max(1, rect.height - knobH);
+          const t = clamp(yClamped / denom, 0, 1);
+
+          return { t, yClamped };
+        }
+
+        function setKnobFromT(t) {
+          const rect = trackEl.getBoundingClientRect();
+          const knobH = knobEl.getBoundingClientRect().height || 140;
+          const denom = Math.max(1, rect.height - knobH);
+          const y = denom * clamp(t, 0, 1);
+          knobEl.style.top = `${y}px`;
+        }
+
+        function panMapFromT(t) {
+          // t=0 -> top, t=1 -> bottom
+          const lat = px.h * (1 - t);
+          mainMap.panTo([lat, mainMap.getCenter().lng], { animate: false });
+        }
+
+        // Click/tap in slot jumps knob + map
+        trackEl.addEventListener("pointerdown", (e) => {
+          const { t, yClamped } = pxToT(e.clientY);
+          knobEl.style.top = `${yClamped}px`;
+          panMapFromT(t);
         });
+
+        // Drag knob (touch + mouse)
+        knobEl.addEventListener("pointerdown", (e) => {
+          e.preventDefault();
+          knobEl.classList.add("is-active"); // rollover/pressed look
+          knobEl.setPointerCapture(e.pointerId);
+
+          const onMove = (ev) => {
+            const { t, yClamped } = pxToT(ev.clientY);
+            knobEl.style.top = `${yClamped}px`;
+            panMapFromT(t);
+          };
+
+          const onUp = () => {
+            knobEl.classList.remove("is-active");
+            knobEl.removeEventListener("pointermove", onMove);
+            knobEl.removeEventListener("pointerup", onUp);
+            knobEl.removeEventListener("pointercancel", onUp);
+          };
+
+          knobEl.addEventListener("pointermove", onMove);
+          knobEl.addEventListener("pointerup", onUp);
+          knobEl.addEventListener("pointercancel", onUp);
+        });
+
+        // expose helper so Leaflet move/zoom updates knob correctly
+        ui._setKnobFromT = setKnobFromT;
       }
 
+      // Keep knob synced to map movement (PX, not %)
       mainMap.on("move zoom", () => {
         const t = 1 - (mainMap.getCenter().lat / px.h);
-        ui.knobEl.style.top = `${t * 100}%`;
+        if (ui._setKnobFromT) ui._setKnobFromT(t);
         syncLens();
       });
     }
 
     ui.btnReload.addEventListener("click", loadAll);
-    ui.btnFit.addEventListener("click", () => mainMap.fitBounds([[0,0],[mapDoc.map.background.image_pixel_size.h, mapDoc.map.background.image_pixel_size.w]]));
+    ui.btnFit.addEventListener("click", () => {
+      if (!mapDoc) return;
+      const px = mapDoc.map.background.image_pixel_size;
+      mainMap.fitBounds([[0, 0], [px.h, px.w]]);
+    });
+
     await loadAll();
 
     root._ccApi = { drawerClose: () => closeDrawer(ui) };
