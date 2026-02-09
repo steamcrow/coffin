@@ -1,124 +1,39 @@
-/* ================================================================
-   COFFIN CANYON MAP - FINAL INTEGRATED DESIGN
-   ================================================================ */
+// Function to handle the Blappo Knob Logic
+(function() {
+    const knob = document.querySelector('.cc-scroll-knob');
+    const track = document.querySelector('.cc-scroll');
+    const root = document.documentElement;
 
-:root {
-  --frame-width: 900px; 
-  --frame-ratio: 1.5;   
-  --lens-w: 585px;      
-  --lens-h: 396px;      
-  /* Integration with your ui.css variables */
-  --cc-map-border: #4a3728; 
-}
+    if (!knob || !track) return;
 
-/* === 1. OUTER CONTAINER (The UI Panel Box) === */
-.cc-cm-mapwrap {
-  position: relative !important;
-  width: 100%;
-  height: 85vh !important;
-  min-height: 700px !important;
-  max-height: 900px !important;
-  overflow: hidden !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  
-  /* Matches your .cc-panel style but with a heavy tabletop border */
-  background: var(--cc-bg-darker);
-  border: 8px solid var(--cc-map-border);
-  border-radius: 12px;
-  box-shadow: 
-    inset 0 0 40px rgba(0,0,0,1), 
-    0 15px 35px rgba(0,0,0,0.7);
-}
+    let isDragging = false;
 
-/* === 2. BASE MAP (Background Layer) === */
-#cc-cm-map {
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  width: 1400px !important; /* Enlarged background */
-  height: 950px !important;
-  z-index: 1 !important;
-  opacity: 0.5;
-  filter: blur(2px) sepia(0.3); /* Thematic "dusty" look */
-}
+    const updateMapPosition = (e) => {
+        if (!isDragging) return;
 
-/* === 3. MAGNIFYING LENS (The Clear Window) === */
-.cc-lens {
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  width: var(--lens-w) !important;
-  height: var(--lens-h) !important;
-  z-index: 30 !important; /* Behind the frame */
-  overflow: hidden !important; 
-  border-radius: 25px; 
-  pointer-events: none;
-  box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-}
+        const rect = track.getBoundingClientRect();
+        let percentage = (e.clientY - rect.top) / rect.height;
 
-.cc-lens-inner, 
-.cc-lens-map {
-  position: absolute;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-}
+        // Clamp 0 to 1
+        percentage = Math.max(0, Math.min(1, percentage));
 
-/* === 4. BRASS FRAME OVERLAY === */
-.cc-frame-overlay {
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-  width: var(--frame-width) !important;
-  height: calc(var(--frame-width) / var(--frame-ratio)) !important;
-  z-index: 35 !important; /* On top of map and lens */
-  pointer-events: none !important;
-  
-  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/mag_frame.png') !important;
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-}
+        // 1. Visually move knob
+        knob.style.top = (percentage * 100) + "%";
 
-/* === 5. BLAPPO KNOB (Interactive Slider) === */
-.cc-scroll {
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-  /* Adjust this margin to align precisely with the frame slot */
-  margin-left: 368px !important; 
-  transform: translateY(-50%) !important;
-  height: 400px !important; /* Height of the slot track */
-  width: 70px !important;
-  z-index: 40 !important; /* Top layer for interaction */
-  pointer-events: auto !important;
-}
+        // 2. Adjust Distortion (bulge map more as you zoom)
+        const newWarp = 1.3 - (percentage * 0.4); 
+        root.style.setProperty('--warp-scale', newWarp);
 
-.cc-scroll-knob {
-  position: absolute !important;
-  left: 50% !important;
-  top: 50%; /* Positioned via JS */
-  width: 60px !important;  /* Enlarged */
-  height: 105px !important; /* Enlarged */
-  transform: translate(-50%, -50%) !important;
-  cursor: grab !important;
-  touch-action: none;
-  
-  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png') !important;
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-color: transparent !important;
-  border: none !important;
-  filter: drop-shadow(0 8px 15px rgba(0,0,0,0.6));
-}
+        // 3. Zoom the Map (Assuming 'map' is your Leaflet variable)
+        if (window.map) {
+            const minZoom = 2;
+            const maxZoom = 6;
+            const targetZoom = maxZoom - (percentage * (maxZoom - minZoom));
+            window.map.setZoom(targetZoom);
+        }
+    };
 
-.cc-scroll-knob:active {
-  cursor: grabbing !important;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.8)) brightness(1.1);
-}
+    knob.addEventListener('mousedown', () => { isDragging = true; });
+    window.addEventListener('mouseup', () => { isDragging = false; });
+    window.addEventListener('mousemove', updateMapPosition);
+})();
