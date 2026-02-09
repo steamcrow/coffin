@@ -20,13 +20,13 @@
   --lens-h: 550px; /* bump this to 460–490 if you still see gaps */
 
   /* NEW: Overscan so lens edges tuck under the iron frame */
-  --lens-overscan-x: 22px; /* try 18–32 */
-  --lens-overscan-y: 22px; /* try 18–32 */
+  --lens-overscan-x: 32px; /* try 18–32 */
+  --lens-overscan-y: 32px; /* try 18–32 */
 
   --cc-map-border: #4a3728;
 
   /* Background “bigness” (visual scale only) */
-  --bg-scale: 3; /* try 2.0–3.0 */
+  --bg-scale: 4; /* try 2.0–3.0 */
 
   /* If you keep SVG warp, keep it subtle for iOS sharpness */
   --lens-contrast: 1;
