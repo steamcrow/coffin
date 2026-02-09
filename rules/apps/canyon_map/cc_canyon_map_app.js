@@ -376,4 +376,262 @@
         }
 
         // final snap and stop
-        mainMap.setView([targetLat, targetLng], mainMap.getZoom(), {
+        mainMap.setView([targetLat, targetLng], mainMap.getZoom(), { animate: false });
+        syncLens();
+        stopAnim();
+      };
+
+      tick();
+    }
+
+    async function invalidateMapsHard() {
+      await nextFrame();
+      if (mainMap) mainMap.invalidateSize({ animate: false });
+      if (lensSharp) lensSharp.invalidateSize({ animate: false });
+      if (lensWarp) lensWarp.invalidateSize({ animate: false });
+    }
+
+    function bindVerticalScrollerOnce(pxH) {
+      const trackEl = ui.scrollVEl;
+      const knobEl = ui.knobVEl;
+      if (!trackEl || !knobEl) return;
+
+      const clientYToT = (clientY) => {
+        const rect = trackEl.getBoundingClientRect();
+        const knobH = knobEl.getBoundingClientRect().height || 140;
+
+        const y = clamp(clientY - rect.top, 0, rect.height);
+        const yClamped = clamp(y - knobH / 2, 0, Math.max(0, rect.height - knobH));
+        const denom = Math.max(1, rect.height - knobH);
+        return clamp(yClamped / denom, 0, 1);
+      };
+
+      const applyT = (t) => {
+        knobTargetTV = t;
+        targetLat = pxH * t;
+        settle = opts.settleFrames;
+        startAnim();
+      };
+
+      trackEl.addEventListener("pointerdown", (e) => {
+        if (e.target === knobEl) return;
+        applyT(clientYToT(e.clientY));
+      });
+
+      knobEl.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        draggingKnob = true;
+        knobEl.classList.add("is-active");
+        try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
+
+        const onMove = (ev) => applyT(clientYToT(ev.clientY));
+        const onUp = () => {
+          draggingKnob = false;
+          knobEl.classList.remove("is-active");
+          knobEl.removeEventListener("pointermove", onMove);
+          knobEl.removeEventListener("pointerup", onUp);
+          knobEl.removeEventListener("pointercancel", onUp);
+          settle = opts.settleFrames;
+          startAnim();
+        };
+
+        knobEl.addEventListener("pointermove", onMove);
+        knobEl.addEventListener("pointerup", onUp);
+        knobEl.addEventListener("pointercancel", onUp);
+      });
+    }
+
+    function bindHorizontalScrollerOnce(pxW) {
+      const trackEl = ui.scrollHEl;
+      const knobEl = ui.knobHEl;
+      if (!trackEl || !knobEl) return;
+
+      const clientXToT = (clientX) => {
+        const rect = trackEl.getBoundingClientRect();
+        const knobW = knobEl.getBoundingClientRect().width || 140;
+
+        const minX = knobW / 2;
+        const maxX = Math.max(minX, rect.width - knobW / 2);
+
+        const x = clamp(clientX - rect.left, minX, maxX);
+        const t = (x - minX) / Math.max(1, (maxX - minX));
+        return clamp(t, 0, 1);
+      };
+
+      const applyT = (t) => {
+        knobTargetTH = t;
+        targetLng = pxW * t;
+        settle = opts.settleFrames;
+        startAnim();
+      };
+
+      trackEl.addEventListener("pointerdown", (e) => {
+        if (e.target === knobEl) return;
+        applyT(clientXToT(e.clientX));
+      });
+
+      knobEl.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        draggingKnob = true;
+        knobEl.classList.add("is-active");
+        try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
+
+        const onMove = (ev) => applyT(clientXToT(ev.clientX));
+        const onUp = () => {
+          draggingKnob = false;
+          knobEl.classList.remove("is-active");
+          knobEl.removeEventListener("pointermove", onMove);
+          knobEl.removeEventListener("pointerup", onUp);
+          knobEl.removeEventListener("pointercancel", onUp);
+          settle = opts.settleFrames;
+          startAnim();
+        };
+
+        knobEl.addEventListener("pointermove", onMove);
+        knobEl.addEventListener("pointerup", onUp);
+        knobEl.addEventListener("pointercancel", onUp);
+      });
+    }
+
+    async function loadAll() {
+      mapDoc = await fetchJson(opts.mapUrl);
+      stateDoc = await fetchJson(opts.stateUrl);
+
+      const mapErr = validateMapDoc(mapDoc);
+      const stateErr = validateStateDoc(stateDoc);
+      if (mapErr) console.warn("[CC CanyonMap] map doc validation:", mapErr);
+      if (stateErr) console.warn("[CC CanyonMap] state doc validation:", stateErr);
+
+      enforceBaseMapSize();
+
+      const bgPx = mapDoc.map.background.image_pixel_size;
+      const bgBounds = [[0, 0], [bgPx.h, bgPx.w]];
+
+      // IMPORTANT FIX:
+      // Use LARGE image but render into bgBounds so coords match mainMap exactly.
+      const lensImageKey = mapDoc.map.lens?.image_key || mapDoc.map.background.image_key;
+
+      stopAnim();
+      if (mainMap) mainMap.remove();
+      if (lensSharp) lensSharp.remove();
+      if (lensWarp) lensWarp.remove();
+
+      mainMap = window.L.map(ui.mapEl, {
+        crs: window.L.CRS.Simple,
+        attributionControl: false,
+        zoomControl: false,
+        dragging: !!opts.allowMapDrag,
+        zoomAnimation: false,
+        fadeAnimation: false,
+        markerZoomAnimation: false,
+        minZoom: -5,
+        maxZoom: 6
+      });
+      window.L.imageOverlay(mapDoc.map.background.image_key, bgBounds).addTo(mainMap);
+
+      if (opts.lensEnabled) {
+        lensSharp = window.L.map(ui.lensMapEl, {
+          crs: window.L.CRS.Simple,
+          attributionControl: false,
+          zoomControl: false,
+          dragging: false,
+          zoomAnimation: false,
+          fadeAnimation: false,
+          markerZoomAnimation: false,
+          minZoom: -5,
+          maxZoom: 6
+        });
+
+        lensWarp = window.L.map(ui.lensWarpEl, {
+          crs: window.L.CRS.Simple,
+          attributionControl: false,
+          zoomControl: false,
+          dragging: false,
+          zoomAnimation: false,
+          fadeAnimation: false,
+          markerZoomAnimation: false,
+          minZoom: -5,
+          maxZoom: 6
+        });
+
+        // key fix: large image, small bounds
+        window.L.imageOverlay(lensImageKey, bgBounds).addTo(lensSharp);
+        window.L.imageOverlay(lensImageKey, bgBounds).addTo(lensWarp);
+      }
+
+      await invalidateMapsHard();
+
+      mainMap.fitBounds(bgBounds, { padding: [10, 10], animate: false });
+
+      // init targets at current center (prevents “backwards first scroll” feel)
+      const c = mainMap.getCenter();
+      targetLat = c.lat;
+      targetLng = c.lng;
+
+      // init knob targets
+      knobTargetTV = clamp(targetLat / bgPx.h, 0, 1);
+      knobTargetTH = clamp(targetLng / bgPx.w, 0, 1);
+      knobTV = knobTargetTV;
+      knobTH = knobTargetTH;
+      setVerticalKnobFromT(knobTV);
+      setHorizontalKnobFromT(knobTH);
+
+      // initial lens sync
+      if (opts.lensEnabled && lensSharp && lensWarp) {
+        syncLens();
+        await nextFrame();
+        lensSharp.invalidateSize({ animate: false });
+        lensWarp.invalidateSize({ animate: false });
+      }
+
+      // bind scrollers
+      bindVerticalScrollerOnce(bgPx.h);
+      bindHorizontalScrollerOnce(bgPx.w);
+
+      // if user drags map, follow it but keep heavy settle
+      mainMap.on("move", () => {
+        if (draggingKnob) return;
+        const cc = mainMap.getCenter();
+        targetLat = cc.lat;
+        targetLng = cc.lng;
+
+        knobTargetTV = clamp(targetLat / bgPx.h, 0, 1);
+        knobTargetTH = clamp(targetLng / bgPx.w, 0, 1);
+
+        settle = opts.settleFrames;
+        startAnim();
+      });
+
+      settle = opts.settleFrames;
+      startAnim();
+    }
+
+    ui.btnReload.addEventListener("click", loadAll);
+
+    ui.btnFit.addEventListener("click", () => {
+      if (!mapDoc || !mainMap) return;
+      const bgPx = mapDoc.map.background.image_pixel_size;
+      const bgBounds = [[0, 0], [bgPx.h, bgPx.w]];
+      mainMap.fitBounds(bgBounds, { animate: false });
+
+      const c = mainMap.getCenter();
+      targetLat = c.lat;
+      targetLng = c.lng;
+
+      knobTargetTV = clamp(targetLat / bgPx.h, 0, 1);
+      knobTargetTH = clamp(targetLng / bgPx.w, 0, 1);
+
+      settle = opts.settleFrames;
+      startAnim();
+    });
+
+    await loadAll();
+  }
+
+  const root = document.getElementById("cc-app-root");
+  if (root && root.getAttribute("data-cc-app") === APP_ID) mount(root, {});
+
+  window.CC_CanyonMap = { mount };
+})();
