@@ -1,12 +1,7 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
    COFFIN CANYON — CANYON MAP (read-only v1)
    ODOO CSP-SAFE + CRISP LENS + EDGE-ONLY DISTORTION + DUAL BLAPPO SCROLLERS
-   - Vertical Blappo knob: controls latitude (up/down)
-   - Horizontal Blappo knob: controls longitude (left/right)
-   - Heavy easing: map eases toward target; knobs ease too
-   - Lens uses map.lens.image_key + map.lens.image_pixel_size when present (crisp)
-   - Distortion is edge-only via a second overlay lens map masked to edges
-   - Strips Leaflet sourcemap reference to remove "leaflet.js.map" console warnings
+   RESTORED: HEAVY EASING (oil-damped), knobs ease too, no reset between knobs
 */
 
 (function () {
@@ -22,25 +17,24 @@
 
     baseMapHeightPx: 640,
     baseMapMaxHeightVh: 70,
-
     allowMapDrag: true,
 
     // Lens behavior
     lensEnabled: true,
-    lensZoomOffset: 3, // magnification comes from zoom offset (not CSS scale)
+    lensZoomOffset: 3,
 
-    // Edge warp tuning (SVG filter)
+    // Edge warp tuning
     warpEnabled: true,
     warpBaseFrequency: 0.010,
     warpScaleDesktop: 22,
     warpScaleIOS: 14,
 
-    // Heavy feel
-    mapEase: 0.12,   // smaller = heavier (0.08–0.16)
-    knobEase: 0.22,  // smaller = heavier knob (0.18–0.30)
-
-    // Prevent infinite micro-updates
-    minCenterDeltaPx: 0.35,
+    // HEAVY FEEL (tune these)
+    // Lower mapEase = heavier, slower
+    mapEase: 0.085,          // 0.06–0.12 feels “heavy”
+    knobEase: 0.16,          // 0.12–0.22 feels “heavy”
+    settleFrames: 26,        // how long we keep easing after release
+    minCenterDeltaPx: 0.18,  // don't snap too early
 
     factionColors: {
       monster_rangers: "#4caf50",
@@ -130,9 +124,7 @@
 
     let code = await fetchText(url);
 
-    // Remove sourcemap reference so devtools doesn't spam:
-    // "Could not resolve map url: leaflet.js.map"
-    // (This does not affect runtime.)
+    // kill the leaflet.js.map warning spam
     code = code.replace(/\/\/# sourceMappingURL=.*$/gm, "");
 
     const blob = new Blob([code], { type: "text/javascript" });
@@ -163,7 +155,7 @@
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
     return points
       .filter((p) => p && typeof p.x === "number" && typeof p.y === "number")
-      .map((p) => [p.y, p.x]); // [lat,lng] = [y,x]
+      .map((p) => [p.y, p.x]);
   }
 
   function validateMapDoc(doc) {
@@ -181,7 +173,7 @@
   }
 
   // ---------------------------
-  // UI - buildLayout
+  // UI
   // ---------------------------
   function buildLayout(root, opts) {
     root.innerHTML = "";
@@ -200,7 +192,6 @@
 
     const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
 
-    // SVG FILTER FOR EDGE WARP (only applied to #cc-lens-map-warp)
     const lensSvg = el("svg", {
       style: "position:absolute; width:0; height:0; overflow:hidden;",
       "aria-hidden": "true"
@@ -208,21 +199,19 @@
 
     const lens = el("div", { class: "cc-lens", id: "cc-lens" }, [
       el("div", { class: "cc-lens-inner", id: "cc-lens-inner" }, [
-        el("div", { class: "cc-lens-map", id: "cc-lens-map" }),           // sharp lens map
-        el("div", { class: "cc-lens-map", id: "cc-lens-map-warp" })       // warp overlay map
+        el("div", { class: "cc-lens-map", id: "cc-lens-map" }),
+        el("div", { class: "cc-lens-map", id: "cc-lens-map-warp" })
       ]),
       el("div", { class: "cc-lens-glare" })
     ]);
 
     const frameOverlay = el("div", { class: "cc-frame-overlay", id: "cc-frame" });
 
-    // Vertical scroller (right)
     const scrollerV = el("div", { class: "cc-scroll-vertical", id: "cc-scroll-vertical" }, [
       el("div", { class: "cc-scroll-track" }),
       el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" })
     ]);
 
-    // Horizontal scroller (bottom)
     const scrollerH = el("div", { class: "cc-scroll-horizontal", id: "cc-scroll-horizontal" }, [
       el("div", { class: "cc-scroll-track" }),
       el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" })
@@ -266,16 +255,13 @@
       drawerEl: root.querySelector("#cc-cm-drawer"),
       drawerTitleEl: root.querySelector("#cc-cm-drawer-title"),
       drawerContentEl: root.querySelector("#cc-cm-drawer-content"),
-
       scrollVEl: scrollerV,
       knobVEl: root.querySelector("#cc-scroll-knob-v"),
-
       scrollHEl: scrollerH,
       knobHEl: root.querySelector("#cc-scroll-knob-h")
     };
   }
 
-  // --- Drawer logic ---
   function openDrawer(ui) { ui.drawerEl.classList.add("open"); }
   function closeDrawer(ui) { ui.drawerEl.classList.remove("open"); }
 
@@ -312,7 +298,6 @@
 
     const ui = buildLayout(root, opts);
 
-    // Build SVG warp filter (only affects #cc-lens-map-warp)
     const warpScale = ui.ios ? opts.warpScaleIOS : opts.warpScaleDesktop;
     if (opts.warpEnabled) {
       ui.lensSvgEl.innerHTML = `
@@ -335,18 +320,19 @@
     const regionLayersById = {};
     const regionsById = {};
 
-    // Target center (so knobs don't reset when switching)
+    // Targets shared by both knobs (prevents “reset”)
     let targetLat = 0;
     let targetLng = 0;
 
-    // Knob easing state
-    let knobTV = 0, knobTH = 0;          // displayed
-    let knobTargetTV = 0, knobTargetTH = 0; // target
+    // Smoothed knob display state
+    let knobTV = 0, knobTH = 0;
+    let knobTargetTV = 0, knobTargetTH = 0;
 
-    // Animation loop state
+    // Animation control
     let animRaf = 0;
     let animating = false;
-    let scrollerDragging = false;
+    let draggingKnob = false;
+    let settleCountdown = 0; // frames to continue easing after release
 
     function stopAnim() {
       if (animRaf) cancelAnimationFrame(animRaf);
@@ -357,38 +343,50 @@
     function startAnim() {
       if (animating) return;
       animating = true;
+
       const tick = () => {
         animRaf = requestAnimationFrame(tick);
+        if (!mainMap) return;
 
-        if (!mainMap || !mapDoc) return;
-
-        // Ease map toward target
-        const c = mainMap.getCenter();
-        const dLat = targetLat - c.lat;
-        const dLng = targetLng - c.lng;
-
-        const dist = Math.abs(dLat) + Math.abs(dLng);
-        if (dist > opts.minCenterDeltaPx) {
-          const nLat = c.lat + dLat * opts.mapEase;
-          const nLng = c.lng + dLng * opts.mapEase;
-          mainMap.setView([nLat, nLng], mainMap.getZoom(), { animate: false });
-        } else {
-          // Close enough: snap and stop anim unless actively dragging
-          if (!scrollerDragging) {
-            mainMap.setView([targetLat, targetLng], mainMap.getZoom(), { animate: false });
-            stopAnim();
-          }
-        }
-
-        // Ease knobs toward their targets (heavy feel)
+        // Always ease knobs toward targets (even if map is close)
         knobTV += (knobTargetTV - knobTV) * opts.knobEase;
         knobTH += (knobTargetTH - knobTH) * opts.knobEase;
 
         setVerticalKnobFromT(knobTV);
         setHorizontalKnobFromT(knobTH);
 
-        // Sync lens every frame while animating (cheap because animate:false)
+        // Ease map toward target
+        const c = mainMap.getCenter();
+        const dLat = targetLat - c.lat;
+        const dLng = targetLng - c.lng;
+        const dist = Math.abs(dLat) + Math.abs(dLng);
+
+        if (dist > opts.minCenterDeltaPx) {
+          const nLat = c.lat + dLat * opts.mapEase;
+          const nLng = c.lng + dLng * opts.mapEase;
+          mainMap.setView([nLat, nLng], mainMap.getZoom(), { animate: false });
+          syncLens();
+          settleCountdown = opts.settleFrames; // reset settle window while moving
+          return;
+        }
+
+        // If we're close, keep a little “settle” time unless we're fully idle
+        if (draggingKnob) {
+          // while dragging, never stop: it keeps the weighty feel
+          syncLens();
+          return;
+        }
+
+        if (settleCountdown > 0) {
+          settleCountdown--;
+          syncLens();
+          return;
+        }
+
+        // final snap to exact target, then stop
+        mainMap.setView([targetLat, targetLng], mainMap.getZoom(), { animate: false });
         syncLens();
+        stopAnim();
       };
 
       tick();
@@ -438,9 +436,9 @@
       if (lensMapWarp) lensMapWarp.invalidateSize({ animate: false });
     }
 
-    // ------------------------------------------------------------
-    // Scroller helpers (PX positioning so it stays in slots)
-    // ------------------------------------------------------------
+    // ---------------------------
+    // Knob -> T helpers
+    // ---------------------------
     function setVerticalKnobFromT(t) {
       const trackEl = ui.scrollVEl;
       const knobEl = ui.knobVEl;
@@ -448,7 +446,6 @@
 
       const rect = trackEl.getBoundingClientRect();
       const knobH = knobEl.getBoundingClientRect().height || 140;
-
       const denom = Math.max(1, rect.height - knobH);
       const y = denom * clamp(t, 0, 1);
 
@@ -463,8 +460,6 @@
       const rect = trackEl.getBoundingClientRect();
       const knobW = knobEl.getBoundingClientRect().width || 70;
 
-      // For horizontal knob, CSS transform uses translate(-50%, -50%)
-      // So we position by "center X"
       const minX = knobW / 2;
       const maxX = Math.max(minX, rect.width - knobW / 2);
 
@@ -472,6 +467,9 @@
       knobEl.style.left = `${x}px`;
     }
 
+    // ---------------------------
+    // Bind scrollers
+    // ---------------------------
     function bindVerticalScrollerOnce(pxH) {
       const trackEl = ui.scrollVEl;
       const knobEl = ui.knobVEl;
@@ -483,49 +481,45 @@
       const clientYToT = (clientY) => {
         const rect = getRect();
         const knobH = getKnobH();
-        const y = clamp(clientY - rect.top, 0, rect.height);
 
+        const y = clamp(clientY - rect.top, 0, rect.height);
         const yClamped = clamp(y - knobH / 2, 0, Math.max(0, rect.height - knobH));
         const denom = Math.max(1, rect.height - knobH);
         return clamp(yClamped / denom, 0, 1);
       };
 
       const applyT = (t) => {
-        // CRS.Simple: lat increases downward. t=0 -> top (lat=0), t=1 -> bottom (lat=px.h)
+        // CRS.Simple: lat increases downward
         knobTargetTV = t;
         targetLat = pxH * t;
-
+        settleCountdown = opts.settleFrames;
         startAnim();
       };
 
-      // Jump on track click/tap
       trackEl.addEventListener("pointerdown", (e) => {
-        // Ignore if actually on knob (knob handles its own)
         if (e.target === knobEl) return;
-        const t = clientYToT(e.clientY);
-        applyT(t);
+        applyT(clientYToT(e.clientY));
       });
 
-      // Drag knob
       knobEl.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         e.stopPropagation();
+        draggingKnob = true;
+        settleCountdown = opts.settleFrames;
 
-        scrollerDragging = true;
         knobEl.classList.add("is-active");
         try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
 
-        const onMove = (ev) => {
-          const t = clientYToT(ev.clientY);
-          applyT(t);
-        };
+        const onMove = (ev) => applyT(clientYToT(ev.clientY));
 
         const onUp = () => {
-          scrollerDragging = false;
+          draggingKnob = false;
           knobEl.classList.remove("is-active");
           knobEl.removeEventListener("pointermove", onMove);
           knobEl.removeEventListener("pointerup", onUp);
           knobEl.removeEventListener("pointercancel", onUp);
+          settleCountdown = opts.settleFrames; // keep heavy settle after release
+          startAnim();
         };
 
         knobEl.addEventListener("pointermove", onMove);
@@ -546,7 +540,6 @@
         const rect = getRect();
         const knobW = getKnobW();
 
-        // knob is positioned by center X
         const minX = knobW / 2;
         const maxX = Math.max(minX, rect.width - knobW / 2);
 
@@ -558,37 +551,34 @@
       const applyT = (t) => {
         knobTargetTH = t;
         targetLng = pxW * t;
-
+        settleCountdown = opts.settleFrames;
         startAnim();
       };
 
-      // Jump on track click/tap
       trackEl.addEventListener("pointerdown", (e) => {
         if (e.target === knobEl) return;
-        const t = clientXToT(e.clientX);
-        applyT(t);
+        applyT(clientXToT(e.clientX));
       });
 
-      // Drag knob
       knobEl.addEventListener("pointerdown", (e) => {
         e.preventDefault();
         e.stopPropagation();
+        draggingKnob = true;
+        settleCountdown = opts.settleFrames;
 
-        scrollerDragging = true;
         knobEl.classList.add("is-active");
         try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
 
-        const onMove = (ev) => {
-          const t = clientXToT(ev.clientX);
-          applyT(t);
-        };
+        const onMove = (ev) => applyT(clientXToT(ev.clientX));
 
         const onUp = () => {
-          scrollerDragging = false;
+          draggingKnob = false;
           knobEl.classList.remove("is-active");
           knobEl.removeEventListener("pointermove", onMove);
           knobEl.removeEventListener("pointerup", onUp);
           knobEl.removeEventListener("pointercancel", onUp);
+          settleCountdown = opts.settleFrames;
+          startAnim();
         };
 
         knobEl.addEventListener("pointermove", onMove);
@@ -597,9 +587,9 @@
       });
     }
 
-    // ------------------------------------------------------------
-    // Load & build maps
-    // ------------------------------------------------------------
+    // ---------------------------
+    // Load
+    // ---------------------------
     async function loadAll() {
       mapDoc = await fetchJson(opts.mapUrl);
       stateDoc = await fetchJson(opts.stateUrl);
@@ -614,18 +604,16 @@
       const bgPx = mapDoc.map.background.image_pixel_size;
       const bgBounds = [[0, 0], [bgPx.h, bgPx.w]];
 
-      // Lens image (crisp): prefer map.lens.image_key + map.lens.image_pixel_size
+      // Lens should use your large image:
       const lensImageKey = mapDoc.map.lens?.image_key || mapDoc.map.background.image_key;
       const lensPx = mapDoc.map.lens?.image_pixel_size || bgPx;
       const lensBounds = [[0, 0], [lensPx.h, lensPx.w]];
 
-      // Tear down
       stopAnim();
       if (mainMap) mainMap.remove();
       if (lensMapSharp) lensMapSharp.remove();
       if (lensMapWarp) lensMapWarp.remove();
 
-      // Main map (blurred by CSS)
       mainMap = window.L.map(ui.mapEl, {
         crs: window.L.CRS.Simple,
         attributionControl: false,
@@ -640,7 +628,6 @@
 
       window.L.imageOverlay(mapDoc.map.background.image_key, bgBounds).addTo(mainMap);
 
-      // Lens maps (two layers: sharp + warp overlay)
       if (opts.lensEnabled) {
         lensMapSharp = window.L.map(ui.lensMapEl, {
           crs: window.L.CRS.Simple,
@@ -666,29 +653,25 @@
           maxZoom: 6
         });
 
-        // Both overlays use the SAME lens image + lens bounds
+        // Use large lens image + lens bounds
         window.L.imageOverlay(lensImageKey, lensBounds).addTo(lensMapSharp);
         window.L.imageOverlay(lensImageKey, lensBounds).addTo(lensMapWarp);
       }
 
       await invalidateMapsHard();
 
-      // Fit main map to its bounds
       mainMap.fitBounds(bgBounds, { padding: [10, 10], animate: false });
 
-      // Initialize target center from fitted view (so knobs start correct)
       const c = mainMap.getCenter();
       targetLat = c.lat;
       targetLng = c.lng;
 
-      // Build regions on main map (regions are in background coord space)
       rebuildRegions();
 
-      // Bind scrollers (now that layout is measurable)
       bindVerticalScrollerOnce(bgPx.h);
       bindHorizontalScrollerOnce(bgPx.w);
 
-      // Initialize knob targets from current map center
+      // Initialize knob targets from center
       knobTargetTV = clamp(targetLat / bgPx.h, 0, 1);
       knobTargetTH = clamp(targetLng / bgPx.w, 0, 1);
       knobTV = knobTargetTV;
@@ -696,7 +679,7 @@
       setVerticalKnobFromT(knobTV);
       setHorizontalKnobFromT(knobTH);
 
-      // Keep lens synced (uses main center; lens maps have their own bounds)
+      // Sync lens now
       if (opts.lensEnabled && lensMapSharp && lensMapWarp) {
         lensMapSharp.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
         lensMapWarp.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
@@ -705,11 +688,9 @@
         lensMapWarp.invalidateSize({ animate: false });
       }
 
-      // If user drags the map, update targets + knobs (but don’t "reset")
-      // We only do this when NOT actively dragging a knob.
+      // If user drags the map, update targets but KEEP the heavy settle feeling
       mainMap.on("move", () => {
-        if (scrollerDragging) return;
-
+        if (draggingKnob) return;
         const cc = mainMap.getCenter();
         targetLat = cc.lat;
         targetLng = cc.lng;
@@ -717,43 +698,38 @@
         knobTargetTV = clamp(targetLat / bgPx.h, 0, 1);
         knobTargetTH = clamp(targetLng / bgPx.w, 0, 1);
 
-        // No need to animate map here (it's already moving), but keep lens synced
-        syncLens();
+        // Keep anim alive briefly so it feels weighty, not “hard stop”
+        settleCountdown = opts.settleFrames;
+        startAnim();
       });
 
       mainMap.on("zoom", () => {
-        if (scrollerDragging) return;
-        syncLens();
+        settleCountdown = opts.settleFrames;
+        startAnim();
       });
 
-      syncLens();
+      settleCountdown = opts.settleFrames;
+      startAnim();
     }
 
     ui.btnReload.addEventListener("click", loadAll);
 
     ui.btnFit.addEventListener("click", () => {
       if (!mapDoc || !mainMap) return;
-
       const bgPx = mapDoc.map.background.image_pixel_size;
       const bgBounds = [[0, 0], [bgPx.h, bgPx.w]];
 
       mainMap.fitBounds(bgBounds, { animate: false });
 
-      // Update targets to new center
       const c = mainMap.getCenter();
       targetLat = c.lat;
       targetLng = c.lng;
 
-      // Update knobs
       knobTargetTV = clamp(targetLat / bgPx.h, 0, 1);
       knobTargetTH = clamp(targetLng / bgPx.w, 0, 1);
-      knobTV = knobTargetTV;
-      knobTH = knobTargetTH;
 
-      setVerticalKnobFromT(knobTV);
-      setHorizontalKnobFromT(knobTH);
-
-      syncLens();
+      settleCountdown = opts.settleFrames;
+      startAnim();
     });
 
     await loadAll();
