@@ -563,6 +563,7 @@
         minZoom: -5,
         maxZoom: 6
       });
+      // Use the SMALL background image for the base map
       window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
 
       if (opts.lensEnabled) {
@@ -579,7 +580,9 @@
           minZoom: -5,
           maxZoom: 6
         });
-        window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(lensMap);
+        // Use the LARGE lens image for the magnified view
+        const lensImageKey = mapDoc.map.lens?.image_key || mapDoc.map.background.image_key;
+        window.L.imageOverlay(lensImageKey, bounds).addTo(lensMap);
       }
 
       await invalidateMapsHard();
