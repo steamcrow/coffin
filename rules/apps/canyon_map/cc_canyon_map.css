@@ -159,8 +159,6 @@
   filter: blur(6px) sepia(0.3);
   pointer-events: none;
 
-  transform: scale(var(--bg-scale));
-  transform-origin: 50% 50%;
 }
 
 /* Keep Leaflet controls out (you disabled zoomControl anyway, but safe) */
