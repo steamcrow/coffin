@@ -42,13 +42,13 @@
      ============================================ */
   --bg-opacity: 0.38;
   --bg-blur: 1.5px;
-  --bg-sepia: 0.50;
+  --bg-sepia: 1.50;
 
   /* ============================================
      LENS APPEARANCE & DISTORTION
      Adjust clarity and edge effects
      ============================================ */
-  --lens-radius: 22px;
+  --lens-radius: 100px;
   --lens-contrast: 1.12;
   --lens-distortion-scale: 180;  /* Higher = more edge warp */
 
