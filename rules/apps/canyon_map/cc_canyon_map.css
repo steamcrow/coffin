@@ -7,9 +7,9 @@
   --frame-width: 1000px;
   --frame-ratio: 1.5;
 
-  /* Lens window is now 20% smaller */
-  --lens-w: 608px;  /* was 760px, now 760 * 0.8 = 608 */
-  --lens-h: 416px;  /* was 520px, now 520 * 0.8 = 416 */
+  /* Lens window should FILL the brass frame's iron window */
+  --lens-w: 760px;
+  --lens-h: 520px;
 
   /* Lens overscan (extra pixels beyond lens mask) to eliminate any edge gaps */
   --lens-overscan-x: 80px;
@@ -166,6 +166,14 @@
 
 #cc-cm-map .leaflet-control-container{ display: none !important; }
 
+/* Ensure Leaflet's internal containers fill the map div */
+#cc-cm-map .leaflet-container,
+#cc-cm-map .leaflet-pane,
+#cc-cm-map .leaflet-map-pane{
+  width: 100% !important;
+  height: 100% !important;
+}
+
 /* ================================================================
    LENS (MASK + OVERSCAN)
    ================================================================ */
@@ -218,8 +226,13 @@
 }
 
 #cc-lens-map .leaflet-control-container{ display: none !important; }
+#cc-lens-map .leaflet-container,
+#cc-lens-map .leaflet-pane,
+#cc-lens-map .leaflet-map-pane{
+  width: 100% !important;
+  height: 100% !important;
+}
 #cc-lens-map .leaflet-tile-pane,
-#cc-lens-map .leaflet-map-pane,
 #cc-lens-map .leaflet-overlay-pane{
   will-change: transform;
 }
