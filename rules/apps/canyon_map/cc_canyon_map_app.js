@@ -1,7 +1,7 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
    Coffin Canyon — Canyon Map
    
-   WITH: Preloader + Clickable Named Locations
+   FIXED VERSION - Maps fill properly, knobs centered, scrolling works
 */
 
 (function () {
@@ -32,7 +32,7 @@
 
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
-    allowMapDrag: true,
+    allowMapDrag: false,
 
     factionColors: {
       monster_rangers: "#4caf50",
@@ -406,8 +406,7 @@
 
         poly.on("click", () => {
           selectedRegionId = r.region_id;
-          renderDrawer(ui, r, stateByRegion[r.region_id] || null);
-          openDrawer(ui);
+          // Don't open drawer for regions - only for named locations
         });
 
         poly.addTo(mainMap);
@@ -426,8 +425,7 @@
         } catch (e) {}
       });
 
-      // Map location IDs to pixel coordinates (you'll need to map these properly)
-      // For now, using placeholder coordinates
+      // Map location IDs to pixel coordinates
       const locationCoords = {
         "fort-plunder": [500, 1400],
         "ratsville": [2200, 2000],
@@ -470,10 +468,6 @@
           layer.setStyle(style);
         } catch (e) {}
       });
-
-      if (selectedRegionId && regionsById[selectedRegionId]) {
-        renderDrawer(ui, regionsById[selectedRegionId], stateByRegion[selectedRegionId] || null);
-      }
     }
 
     function getScrollRange() {
@@ -788,6 +782,7 @@
       const px = mapDoc.map.background.image_pixel_size;
       const bounds = [[0, 0], [px.h, px.w]];
 
+      // MAIN MAP - CSS handles size (fills mapwrap container)
       mainMap = window.L.map(ui.mapEl, {
         crs: window.L.CRS.Simple,
         minZoom: -3,
@@ -810,6 +805,7 @@
 
       mainMap.setMaxBounds(bounds);
 
+      // LENS MAP
       if (opts.lensEnabled) {
         ui.lensEl.style.display = "block";
 
@@ -842,11 +838,14 @@
 
       await invalidateMapsHard();
 
-      mainMap.fitBounds(bounds, { padding: [20, 20] });
+      // Set to center with a zoom that fills the view nicely
+      mainMap.setView([px.h / 2, px.w / 2], 0, { animate: false });
 
       await invalidateMapsHard();
 
-      initializeToCenter();
+      // Initialize knobs to center and sync lens
+      updateKnobsFromMap();
+      syncLens();
 
       rebuildRegions();
       closeDrawer(ui);
@@ -872,18 +871,22 @@
 
       window.addEventListener("resize", rafThrottle(async () => {
         await invalidateMapsHard();
-        mainMap.fitBounds(bounds, { padding: [20, 20] });
+        if (!mainMap || !mapDoc) return;
+        const px = mapDoc.map.background.image_pixel_size;
+        mainMap.setView([px.h / 2, px.w / 2], 0, { animate: false });
         await invalidateMapsHard();
-        initializeToCenter();
+        updateKnobsFromMap();
+        syncLens();
       }));
     }
 
     ui.btnReload.addEventListener("click", () => loadAll().catch((e) => console.error(e)));
     ui.btnFit.addEventListener("click", () => {
+      if (!mainMap || !mapDoc) return;
       const px = mapDoc.map.background.image_pixel_size;
-      const bounds = [[0, 0], [px.h, px.w]];
-      mainMap.fitBounds(bounds, { padding: [20, 20] });
-      initializeToCenter();
+      mainMap.setView([px.h / 2, px.w / 2], 0, { animate: false });
+      updateKnobsFromMap();
+      syncLens();
     });
 
     await loadAll();
@@ -891,10 +894,11 @@
     const api = {
       reload: async () => await loadAll(),
       fit: () => {
+        if (!mainMap || !mapDoc) return;
         const px = mapDoc.map.background.image_pixel_size;
-        const bounds = [[0, 0], [px.h, px.w]];
-        mainMap.fitBounds(bounds, { padding: [20, 20] });
-        initializeToCenter();
+        mainMap.setView([px.h / 2, px.w / 2], 0, { animate: false });
+        updateKnobsFromMap();
+        syncLens();
       },
       setState: (newStateDoc) => {
         const err = validateStateDoc(newStateDoc);
@@ -911,13 +915,6 @@
         applyStateStyles();
       },
       drawerClose: () => closeDrawer(ui),
-      drawerOpenRegion: (regionId) => {
-        const r = regionsById[regionId];
-        if (!r) return;
-        selectedRegionId = regionId;
-        renderDrawer(ui, r, stateDoc?.state_by_region?.[regionId] || null);
-        openDrawer(ui);
-      },
       setLensEnabled: (on) => {
         opts.lensEnabled = !!on;
         ui.lensEl.style.display = opts.lensEnabled ? "block" : "none";
