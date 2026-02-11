@@ -1,10 +1,16 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
-   Coffin Canyon — Canyon Map (read-only v1)
-   ODOO CSP-SAFE + FIXED MAGNIFIER LENS + VERTICAL+HORIZONTAL BLAPPO SCROLLERS
-   - Bottom map fills the whole frame and is made “very large” via zoom offset
-   - Lens uses LARGE image and stays crisp; distortion mainly on lens
-   - Knobs move (px), with heavy easing and no axis reset
-   - Strips Leaflet sourcemap line to stop leaflet.js.map console spam
+   Coffin Canyon — Canyon Map
+   
+   WITH DUAL SCROLLERS + MOMENTUM + MIDDLE START
+   
+   Features:
+   - Vertical scroller (right side) controls Y position
+   - Horizontal scroller (bottom) controls X position  
+   - Both knobs start in MIDDLE of their ranges
+   - Momentum scrolling (coasts when you drag fast)
+   - Visual feedback when grabbing (is-active class)
+   - Fixed: No backwards scrolling
+   - Fixed: Knobs move smoothly when dragged
 */
 
 (function () {
@@ -13,40 +19,38 @@
   const DEFAULTS = {
     title: "Coffin Canyon — Canyon Map",
 
-    mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json",
-    stateUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_state.json",
+    // Data
+    mapUrl:
+      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json",
+    stateUrl:
+      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_state.json",
 
-    appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map.css",
-    leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css",
-    leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
+    // App CSS
+    appCssUrl:
+      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map.css",
 
+    // Leaflet (hosted in your repo)
+    leafletCssUrl:
+      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css",
+    leafletJsUrl:
+      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
+
+    // Layout sizing
+    baseMapHeightPx: 640,
+    baseMapMaxHeightVh: 70,
+
+    // Lens behavior - NOW 20% SMALLER
+    lensEnabled: true,
+    lensZoomOffset: 2,
+    lensWidthPx: 416,  // was 520, now 520 * 0.8 = 416
+    lensHeightPx: 288, // was 360, now 360 * 0.8 = 288
+
+    // Panning behavior
+    lockHorizontalPan: false,
+    maxHorizontalDriftPx: 260,
     allowMapDrag: true,
 
-    // Make the BASE map feel huge
-    backgroundZoomOffset: 1.4,     // higher => “bigger” feeling
-    backgroundMinZoom: -6,
-    backgroundMaxZoom: 7,
-    zoomSnap: 0.1,
-    zoomDelta: 0.2,
-
-    // Lens
-    lensEnabled: true,
-    lensZoomOffset: 2.2,           // magnifier strength (relative to base map)
-    lensMinZoom: -6,
-    lensMaxZoom: 9,
-
-    // Distortion (mostly on lens)
-    warpEnabled: true,
-    warpBaseFrequency: 0.010,
-    warpScale: 18,                 // increase to make distortion more detectable
-    warpOctaves: 1,
-
-    // “Heavy” easing
-    easeDurationJumpMs: 720,       // track click/tap
-    easeDurationDragMs: 180,       // knob drag smoothing
-    easeLinearity: 0.16,           // lower = heavier
-    easeMaxFPS: 60,
-
+    // Region coloring
     factionColors: {
       monster_rangers: "#4caf50",
       monsterologists: "#ff9800",
@@ -76,7 +80,9 @@
     return n;
   }
 
-  function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+  function clamp(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+  }
 
   function rafThrottle(fn) {
     let pending = false;
@@ -92,28 +98,8 @@
     };
   }
 
-  function nextFrame() { return new Promise((r) => requestAnimationFrame(r)); }
-
-  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
-
-  // A small tween helper for “heavy” motion
-  function tween({ from, to, ms, onUpdate, onDone }) {
-    const start = performance.now();
-    const dur = Math.max(1, ms || 1);
-    let stopped = false;
-
-    function frame(now) {
-      if (stopped) return;
-      const t = clamp((now - start) / dur, 0, 1);
-      const e = easeOutCubic(t);
-      const v = from + (to - from) * e;
-      onUpdate(v, t);
-      if (t < 1) requestAnimationFrame(frame);
-      else onDone && onDone();
-    }
-
-    requestAnimationFrame(frame);
-    return () => { stopped = true; };
+  function nextFrame() {
+    return new Promise((r) => requestAnimationFrame(r));
   }
 
   async function fetchText(url) {
@@ -148,19 +134,21 @@
     const k = key || url;
     if (_loaded.js.has(k)) return;
 
-    let code = await fetchText(url);
-
-    // IMPORTANT: Strip sourcemap hint so browser doesn’t try to resolve leaflet.js.map from blob:
-    code = code.replace(/\/\/# sourceMappingURL=.*$/gm, "");
-
+    const code = await fetchText(url);
     const blob = new Blob([code], { type: "text/javascript" });
     const blobUrl = URL.createObjectURL(blob);
 
     await new Promise((resolve, reject) => {
       const s = document.createElement("script");
       s.src = blobUrl;
-      s.onload = () => { URL.revokeObjectURL(blobUrl); resolve(); };
-      s.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error("Script failed: " + url)); };
+      s.onload = () => {
+        URL.revokeObjectURL(blobUrl);
+        resolve();
+      };
+      s.onerror = () => {
+        URL.revokeObjectURL(blobUrl);
+        reject(new Error("Script failed: " + url));
+      };
       document.head.appendChild(s);
     });
 
@@ -181,34 +169,31 @@
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
     return points
       .filter((p) => p && typeof p.x === "number" && typeof p.y === "number")
-      .map((p) => [p.y, p.x]); // CRS.Simple uses [y,x] as [lat,lng]
+      .map((p) => [p.y, p.x]); // CRS.Simple => [y, x]
   }
 
   function validateMapDoc(doc) {
     if (!doc || doc.schema_id !== "cc_canyon_map") return "schema_id must be cc_canyon_map";
-    if (!doc.map?.background?.image_key) return "map.background.image_key missing";
+    if (!doc.map || !doc.map.background || !doc.map.background.image_key)
+      return "map.background.image_key missing";
     if (!doc.map.background.image_pixel_size) return "map.background.image_pixel_size missing";
+    if (!Array.isArray(doc.regions)) return "regions must be array";
     return null;
   }
 
   function validateStateDoc(doc) {
     if (!doc || doc.schema_id !== "cc_canyon_state") return "schema_id must be cc_canyon_state";
-    if (!doc.state_by_region || typeof doc.state_by_region !== "object") return "state_by_region missing";
+    if (!doc.state_by_region || typeof doc.state_by_region !== "object")
+      return "state_by_region missing";
     return null;
   }
 
   // ---------------------------
-  // UI - buildLayout
+  // UI
   // ---------------------------
   function buildLayout(root, opts) {
     root.innerHTML = "";
     root.classList.add("cc-canyon-map");
-
-    // iOS class for CSS fallback (warp can rasterize mushy on some iPads)
-    const isIOS =
-      /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-    if (isIOS) root.classList.add("cc-ios");
 
     const header = el("div", { class: "cc-cm-header" }, [
       el("div", { class: "cc-cm-title" }, [opts.title]),
@@ -220,54 +205,45 @@
 
     const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
 
-    // SVG defs for lens warp
-    const lensSvg = el("svg", {
-      style: "position: absolute; width: 0; height: 0; overflow: hidden;",
-      "aria-hidden": "true"
-    });
-    lensSvg.innerHTML = `<defs></defs>`;
+    // Lens with overscan wrapper
+    const lensOverscan = el("div", { class: "cc-lens-overscan" }, [
+      el("div", { id: "cc-lens-map" })
+    ]);
 
-    // Lens structure: mask -> inner -> overscan -> leaflet container
     const lens = el("div", { class: "cc-lens", id: "cc-lens" }, [
-      el("div", { class: "cc-lens-inner", id: "cc-lens-inner" }, [
-        el("div", { class: "cc-lens-overscan", id: "cc-lens-overscan" }, [
-          el("div", { class: "cc-lens-map", id: "cc-lens-map" })
-        ])
-      ]),
+      el("div", { class: "cc-lens-inner" }, [lensOverscan]),
       el("div", { class: "cc-lens-glare" })
     ]);
 
-    const frameOverlay = el("div", { class: "cc-frame-overlay", id: "cc-frame" });
+    // Frame overlay
+    const frame = el("div", { class: "cc-frame-overlay" });
 
-    // Vertical (right) scroller
+    // Vertical scroller (right side)
     const scrollerV = el("div", { class: "cc-scroll-vertical", id: "cc-scroll-vertical" }, [
       el("div", { class: "cc-scroll-track" }),
       el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" })
     ]);
 
-    // Horizontal (bottom) scroller
+    // Horizontal scroller (bottom)
     const scrollerH = el("div", { class: "cc-scroll-horizontal", id: "cc-scroll-horizontal" }, [
       el("div", { class: "cc-scroll-track" }),
       el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" })
     ]);
 
     const body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
-      lensSvg,
-      el("div", { class: "cc-cm-mapwrap" }, [
-        mapEl,
-        lens,
-        frameOverlay,
-        scrollerV,
-        scrollerH
-      ]),
+      el("div", { class: "cc-cm-mapwrap" }, [mapEl, lens, frame, scrollerV, scrollerH]),
       el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
         el("div", { class: "cc-cm-drawer-head" }, [
           el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Region"]),
-          el("button", {
-            class: "cc-btn cc-btn-x",
-            type: "button",
-            onClick: () => root._ccApi && root._ccApi.drawerClose()
-          }, ["×"])
+          el(
+            "button",
+            {
+              class: "cc-btn cc-btn-x",
+              type: "button",
+              onClick: () => root._ccApi && root._ccApi.drawerClose()
+            },
+            ["×"]
+          )
         ]),
         el("div", { class: "cc-cm-drawer-content", id: "cc-cm-drawer-content" }, [
           el("div", { class: "cc-muted" }, ["Click a region to view details."])
@@ -278,37 +254,77 @@
     root.appendChild(header);
     root.appendChild(body);
 
+    // Lens dimensions
+    lens.style.setProperty("--lens-w", `${opts.lensWidthPx}px`);
+    lens.style.setProperty("--lens-h", `${opts.lensHeightPx}px`);
+
     return {
       mapEl,
-      lensSvgEl: lensSvg,
+      lensEl: lens,
       lensMapEl: root.querySelector("#cc-lens-map"),
+      frameEl: frame,
       btnReload: root.querySelector("#cc-cm-reload"),
       btnFit: root.querySelector("#cc-cm-fit"),
       drawerEl: root.querySelector("#cc-cm-drawer"),
       drawerTitleEl: root.querySelector("#cc-cm-drawer-title"),
       drawerContentEl: root.querySelector("#cc-cm-drawer-content"),
-
-      scrollVEl: scrollerV,
-      knobVEl: root.querySelector("#cc-scroll-knob-v"),
-
-      scrollHEl: scrollerH,
-      knobHEl: root.querySelector("#cc-scroll-knob-h")
+      scrollElV: scrollerV,
+      knobElV: root.querySelector("#cc-scroll-knob-v"),
+      scrollElH: scrollerH,
+      knobElH: root.querySelector("#cc-scroll-knob-h")
     };
   }
 
-  // --- Drawer logic ---
-  function openDrawer(ui) { ui.drawerEl.classList.add("open"); }
-  function closeDrawer(ui) { ui.drawerEl.classList.remove("open"); }
+  function openDrawer(ui) {
+    ui.drawerEl.classList.add("open");
+  }
+
+  function closeDrawer(ui) {
+    ui.drawerEl.classList.remove("open");
+  }
 
   function renderDrawer(ui, region, stateForRegion) {
     ui.drawerTitleEl.textContent = region?.name || "Region";
+
+    const controller = stateForRegion?.controller_faction_id || "neutral";
+    const status = stateForRegion?.status || "neutral";
+    const weather = stateForRegion?.weather_tag || null;
+
     const nodes = [];
+
     if (region?.description) nodes.push(el("div", { class: "cc-block" }, [region.description]));
-    nodes.push(el("div", { class: "cc-block" }, [
-      el("div", { class: "cc-h" }, ["State"]),
-      el("div", {}, [`Controller: ${stateForRegion?.controller_faction_id || "neutral"}`]),
-      el("div", {}, [`Status: ${stateForRegion?.status || "neutral"}`])
-    ]));
+
+    nodes.push(
+      el("div", { class: "cc-block" }, [
+        el("div", { class: "cc-h" }, ["State"]),
+        el("div", {}, [`Controller: ${controller}`]),
+        el("div", {}, [`Status: ${status}`]),
+        weather
+          ? el("div", {}, [`Weather: ${weather}`])
+          : el("div", { class: "cc-muted" }, ["Weather: (none)"])
+      ])
+    );
+
+    const resources = region?.resources || [];
+    nodes.push(
+      el("div", { class: "cc-block" }, [
+        el("div", { class: "cc-h" }, ["Resources"]),
+        resources.length
+          ? el("ul", { class: "cc-ul" }, resources.map((r) => el("li", {}, [String(r)])))
+          : el("div", { class: "cc-muted" }, ["(none)"])
+      ])
+    );
+
+    const encounters = region?.encounters || [];
+    nodes.push(
+      el("div", { class: "cc-block" }, [
+        el("div", { class: "cc-h" }, ["Encounters"]),
+        encounters.length
+          ? el("ul", { class: "cc-ul" }, encounters.map((e) => el("li", {}, [String(e)])))
+          : el("div", { class: "cc-muted" }, ["(none)"])
+      ])
+    );
+
     ui.drawerContentEl.innerHTML = "";
     nodes.forEach((n) => ui.drawerContentEl.appendChild(n));
   }
@@ -317,9 +333,17 @@
     const st = stateByRegion[regionId] || {};
     const controller = st.controller_faction_id || "neutral";
     const status = st.status || "neutral";
-    const fillColor = opts.factionColors[controller] || "#9e9e9e";
-    const statusPatch = opts.statusStyles[status] || {};
-    return { color: "rgba(255,255,255,0.45)", weight: 2, fillColor, fillOpacity: 0.18, ...statusPatch };
+
+    const fillColor = opts.factionColors[controller] || opts.factionColors.neutral || "#999";
+    const statusPatch = opts.statusStyles[status] || opts.statusStyles.neutral || {};
+
+    return {
+      color: "rgba(255,255,255,0.45)",
+      weight: 2,
+      fillColor,
+      fillOpacity: 0.18,
+      ...statusPatch
+    };
   }
 
   // ---------------------------
@@ -328,367 +352,604 @@
   async function mount(root, userOpts) {
     const opts = { ...DEFAULTS, ...(userOpts || {}) };
 
+    let maxDrift = typeof opts.maxHorizontalDriftPx === "number" ? opts.maxHorizontalDriftPx : 0;
+    if (opts.lockHorizontalPan === true) maxDrift = 0;
+
     if (opts.appCssUrl) await loadCssTextOnce(opts.appCssUrl, "cc_canyon_map_css");
     await ensureLeaflet(opts);
 
     const ui = buildLayout(root, opts);
 
-    // Build/refresh SVG warp filter
-    if (opts.warpEnabled) {
-      ui.lensSvgEl.innerHTML = `
-        <defs>
-          <filter id="ccLensWarp">
-            <feTurbulence type="fractalNoise"
-              baseFrequency="${opts.warpBaseFrequency}"
-              numOctaves="${opts.warpOctaves}"
-              seed="2"
-              result="noise" />
-            <feDisplacementMap in="SourceGraphic" in2="noise"
-              scale="${opts.warpScale}"
-              xChannelSelector="R" yChannelSelector="G" />
-          </filter>
-        </defs>
-      `;
-    } else {
-      ui.lensSvgEl.innerHTML = `<defs></defs>`;
-    }
+    let mapDoc = null;
+    let stateDoc = null;
 
-    let mapDoc = null, stateDoc = null;
-    let mainMap = null, lensMap = null;
+    let mainMap = null;
+    let lensMap = null;
 
     const regionLayersById = {};
     const regionsById = {};
+    let selectedRegionId = null;
 
-    // Keep current scroll positions (0..1) so neither axis resets the other
-    const scrollState = {
-      tY: 0.5,
-      tX: 0.5
-    };
+    let scrollersBound = false;
 
-    // For canceling ongoing tweens
-    let cancelLatTween = null;
-    let cancelLngTween = null;
+    function enforceBaseMapSize() {
+      if (!mapDoc) return;
 
-    // Lens sync
-    const syncLens = rafThrottle(() => {
-      if (!opts.lensEnabled || !mainMap || !lensMap) return;
-      lensMap.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
-    });
+      const px = mapDoc.map.background.image_pixel_size;
+      const aspect = px.w / px.h;
 
-    function stopTweens() {
-      if (cancelLatTween) { cancelLatTween(); cancelLatTween = null; }
-      if (cancelLngTween) { cancelLngTween(); cancelLngTween = null; }
+      const vh = window.innerHeight || 900;
+      const maxH = Math.floor((opts.baseMapMaxHeightVh / 100) * vh);
+      const h = clamp(opts.baseMapHeightPx, 320, maxH);
+      const w = Math.round(h * aspect);
+
+      ui.mapEl.style.height = h + "px";
+      ui.mapEl.style.width = w + "px";
     }
 
-    function rebuildRegions() {
+    function fitToImage() {
       if (!mainMap || !mapDoc) return;
-      Object.values(regionLayersById).forEach((l) => mainMap.removeLayer(l));
+      const px = mapDoc.map.background.image_pixel_size;
+      const bounds = [[0, 0], [px.h, px.w]];
+      mainMap.fitBounds(bounds, { padding: [10, 10] });
+    }
+
+    function clampHorizontal() {
+      if (!mainMap || !mapDoc) return;
+      const px = mapDoc.map.background.image_pixel_size;
+      const cx = px.w / 2;
+
+      const c = mainMap.getCenter();
+      const minX = cx - maxDrift;
+      const maxX = cx + maxDrift;
+
+      const clampedX = clamp(c.lng, minX, maxX);
+      if (Math.abs(clampedX - c.lng) > 0.5) {
+        mainMap.panTo([c.lat, clampedX], { animate: false });
+      }
+    }
+
+    const syncLens = rafThrottle(() => {
+      if (!opts.lensEnabled) return;
+      if (!mainMap || !lensMap) return;
+      const c = mainMap.getCenter();
+      const z = mainMap.getZoom();
+      lensMap.setView(c, z + opts.lensZoomOffset, { animate: false });
+    });
+
+    function rebuildRegions() {
+      Object.values(regionLayersById).forEach((layer) => {
+        try {
+          mainMap.removeLayer(layer);
+        } catch (e) {}
+      });
+      for (const k of Object.keys(regionLayersById)) delete regionLayersById[k];
 
       const stateByRegion = stateDoc?.state_by_region || {};
+      const coordSystem = mapDoc.map?.background?.coord_system || "image_px";
+
       (mapDoc.regions || []).forEach((r) => {
         regionsById[r.region_id] = r;
-        const latlngs = normalizePoints(r.shape?.points, mapDoc.map?.background?.coord_system || "image_px");
+
+        const latlngs = normalizePoints(r.shape?.points, coordSystem);
         if (!latlngs.length) return;
 
-        const poly = window.L.polygon(latlngs, buildRegionStyle(opts, r.region_id, stateByRegion));
+        const baseStyle = buildRegionStyle(opts, r.region_id, stateByRegion);
+        const poly = window.L.polygon(latlngs, baseStyle);
+
         poly.on("click", () => {
-          renderDrawer(ui, r, stateByRegion[r.region_id]);
+          selectedRegionId = r.region_id;
+          renderDrawer(ui, r, stateByRegion[r.region_id] || null);
           openDrawer(ui);
         });
+
         poly.addTo(mainMap);
         regionLayersById[r.region_id] = poly;
       });
     }
 
-    async function invalidateMapsHard() {
-      await nextFrame();
-      if (mainMap) mainMap.invalidateSize({ animate: false });
-      if (lensMap) lensMap.invalidateSize({ animate: false });
+    function applyStateStyles() {
+      const stateByRegion = stateDoc?.state_by_region || {};
+      Object.entries(regionLayersById).forEach(([regionId, layer]) => {
+        const style = buildRegionStyle(opts, regionId, stateByRegion);
+        try {
+          layer.setStyle(style);
+        } catch (e) {}
+      });
+
+      if (selectedRegionId && regionsById[selectedRegionId]) {
+        renderDrawer(ui, regionsById[selectedRegionId], stateByRegion[selectedRegionId] || null);
+      }
     }
 
-    // Knob setters (px, clamped)
-    function setVKnobFromT(t) {
-      const track = ui.scrollVEl.getBoundingClientRect();
-      const knob = ui.knobVEl.getBoundingClientRect();
-      const denom = Math.max(1, track.height - knob.height);
-      const y = denom * clamp(t, 0, 1);
-      ui.knobVEl.style.top = `${y}px`;
-    }
-
-    function setHKnobFromT(t) {
-      const track = ui.scrollHEl.getBoundingClientRect();
-      const knob = ui.knobHEl.getBoundingClientRect();
-      const denom = Math.max(1, track.width - knob.width);
-      const x = denom * clamp(t, 0, 1);
-      ui.knobHEl.style.left = `${x}px`;
-    }
-
-    // Heavy animated pan (keeps other axis)
-    function animatePanTo({ tY, tX, durationMs }) {
-      if (!mainMap || !mapDoc) return;
+    // ---- Scroller math (BOTH AXES) ----
+    function getScrollRange() {
+      if (!mainMap || !mapDoc) return { yMin: 0, yMax: 0, xMin: 0, xMax: 0 };
 
       const px = mapDoc.map.background.image_pixel_size;
-      const targetLat = clamp(tY, 0, 1) * px.h; // IMPORTANT: no inversion => no “backwards on first scroll”
-      const targetLng = clamp(tX, 0, 1) * px.w;
+      const view = mainMap.getBounds();
+      const viewH = Math.abs(view.getNorth() - view.getSouth());
+      const viewW = Math.abs(view.getEast() - view.getWest());
 
-      const start = mainMap.getCenter();
-      const startLat = start.lat;
-      const startLng = start.lng;
+      const halfH = viewH / 2;
+      const halfW = viewW / 2;
 
-      stopTweens();
+      // Y range
+      let yMin, yMax;
+      if (viewH >= px.h) {
+        yMin = yMax = px.h / 2;
+      } else {
+        yMin = 0 + halfH;
+        yMax = px.h - halfH;
+      }
 
-      cancelLatTween = tween({
-        from: startLat,
-        to: targetLat,
-        ms: durationMs,
-        onUpdate: (lat) => {
-          const cur = mainMap.getCenter();
-          mainMap.panTo([lat, cur.lng], { animate: false });
-          // keep knobs eased with map
-          const tNowY = clamp(lat / px.h, 0, 1);
-          setVKnobFromT(tNowY);
-          syncLens();
-        }
-      });
+      // X range
+      let xMin, xMax;
+      if (viewW >= px.w) {
+        xMin = xMax = px.w / 2;
+      } else {
+        xMin = 0 + halfW;
+        xMax = px.w - halfW;
+      }
 
-      cancelLngTween = tween({
-        from: startLng,
-        to: targetLng,
-        ms: durationMs,
-        onUpdate: (lng) => {
-          const cur = mainMap.getCenter();
-          mainMap.panTo([cur.lat, lng], { animate: false });
-          const tNowX = clamp(lng / px.w, 0, 1);
-          setHKnobFromT(tNowX);
-          syncLens();
-        }
-      });
+      return { yMin, yMax, xMin, xMax };
     }
 
-    // Pointer -> t conversion
-    function vPointerToT(clientY) {
-      const rect = ui.scrollVEl.getBoundingClientRect();
-      const knobH = ui.knobVEl.getBoundingClientRect().height || 140;
-      const y = clamp(clientY - rect.top, 0, rect.height);
-      const yClamped = clamp(y - knobH / 2, 0, Math.max(0, rect.height - knobH));
-      const denom = Math.max(1, rect.height - knobH);
-      return clamp(yClamped / denom, 0, 1);
+    function mapCenterToKnobT() {
+      if (!mainMap || !mapDoc) return { tY: 0.5, tX: 0.5 };
+      const { yMin, yMax, xMin, xMax } = getScrollRange();
+      const c = mainMap.getCenter();
+
+      const tY = yMax === yMin ? 0.5 : (c.lat - yMin) / (yMax - yMin);
+      const tX = xMax === xMin ? 0.5 : (c.lng - xMin) / (xMax - xMin);
+
+      return { tY: clamp(tY, 0, 1), tX: clamp(tX, 0, 1) };
     }
 
-    function hPointerToT(clientX) {
-      const rect = ui.scrollHEl.getBoundingClientRect();
-      const knobW = ui.knobHEl.getBoundingClientRect().width || 140;
-      const x = clamp(clientX - rect.left, 0, rect.width);
-      const xClamped = clamp(x - knobW / 2, 0, Math.max(0, rect.width - knobW));
-      const denom = Math.max(1, rect.width - knobW);
-      return clamp(xClamped / denom, 0, 1);
+    function updateKnobsFromMap() {
+      const { tY, tX } = mapCenterToKnobT();
+      
+      // Vertical knob
+      ui.knobElV.style.top = `${tY * 100}%`;
+      
+      // Horizontal knob
+      ui.knobElH.style.left = `${tX * 100}%`;
     }
 
+    function panMapToTY(tY) {
+      if (!mainMap || !mapDoc) return;
+      const { yMin, yMax } = getScrollRange();
+      const y = yMin === yMax ? yMin : yMin + clamp(tY, 0, 1) * (yMax - yMin);
+
+      const c = mainMap.getCenter();
+      mainMap.panTo([y, c.lng], { animate: false });
+    }
+
+    function panMapToTX(tX) {
+      if (!mainMap || !mapDoc) return;
+      const { xMin, xMax } = getScrollRange();
+      const x = xMin === xMax ? xMin : xMin + clamp(tX, 0, 1) * (xMax - xMin);
+
+      const c = mainMap.getCenter();
+      mainMap.panTo([c.lat, x], { animate: false });
+    }
+
+    // ---- Initialize to middle ----
+    function initializeToMiddle() {
+      if (!mainMap || !mapDoc) return;
+      const px = mapDoc.map.background.image_pixel_size;
+      const centerY = px.h / 2;
+      const centerX = px.w / 2;
+      
+      mainMap.panTo([centerY, centerX], { animate: false });
+      updateKnobsFromMap();
+    }
+
+    // ---- MOMENTUM SCROLLING ----
     function bindScrollersOnce() {
-      // Vertical track click
-      ui.scrollVEl.addEventListener("pointerdown", (e) => {
-        if (!mainMap || !mapDoc) return;
-        const tY = vPointerToT(e.clientY);
-        scrollState.tY = tY;
-        animatePanTo({
-          tY: scrollState.tY,
-          tX: scrollState.tX,
-          durationMs: opts.easeDurationJumpMs
-        });
-      });
+      if (scrollersBound) return;
+      scrollersBound = true;
 
-      // Vertical knob drag
-      ui.knobVEl.addEventListener("pointerdown", (e) => {
+      // --- VERTICAL SCROLLER ---
+      let draggingV = false;
+      let lastYV = 0;
+      let lastTimeV = 0;
+      let velocityY = 0;
+
+      function setFromClientY(clientY) {
+        const rect = ui.scrollElV.getBoundingClientRect();
+        const tY = (clientY - rect.top) / rect.height;
+        panMapToTY(tY);
+      }
+
+      const onMoveV = (e) => {
+        if (!draggingV) return;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+        
+        // Track velocity for momentum
+        const now = Date.now();
+        const dt = now - lastTimeV;
+        if (dt > 0) {
+          velocityY = (clientY - lastYV) / dt;
+        }
+        lastYV = clientY;
+        lastTimeV = now;
+
+        setFromClientY(clientY);
+        if (e.cancelable) e.preventDefault();
+      };
+
+      const onUpV = () => {
+        draggingV = false;
+        ui.knobElV.classList.remove("is-active");
+
+        // Apply momentum
+        const applyMomentum = () => {
+          if (Math.abs(velocityY) < 0.01) return;
+          
+          const rect = ui.scrollElV.getBoundingClientRect();
+          lastYV += velocityY * 16; // ~60fps frame
+          const tY = (lastYV - rect.top) / rect.height;
+          panMapToTY(tY);
+          
+          velocityY *= 0.92; // Friction
+          requestAnimationFrame(applyMomentum);
+        };
+        
+        if (Math.abs(velocityY) > 0.5) {
+          applyMomentum();
+        }
+
+        document.removeEventListener("mousemove", onMoveV);
+        document.removeEventListener("mouseup", onUpV);
+        document.removeEventListener("touchmove", onMoveV);
+        document.removeEventListener("touchend", onUpV);
+      };
+
+      ui.knobElV.addEventListener("mousedown", (e) => {
+        draggingV = true;
+        ui.knobElV.classList.add("is-active");
+        lastYV = e.clientY;
+        lastTimeV = Date.now();
+        velocityY = 0;
+
+        document.addEventListener("mousemove", onMoveV);
+        document.addEventListener("mouseup", onUpV);
         e.preventDefault();
-        e.stopPropagation();
-        ui.knobVEl.classList.add("is-active");
-        try { ui.knobVEl.setPointerCapture(e.pointerId); } catch (_) {}
-
-        const onMove = (ev) => {
-          if (!mainMap || !mapDoc) return;
-          const tY = vPointerToT(ev.clientY);
-          scrollState.tY = tY;
-          // Slight smoothing (still “heavy”)
-          animatePanTo({
-            tY: scrollState.tY,
-            tX: scrollState.tX,
-            durationMs: opts.easeDurationDragMs
-          });
-        };
-
-        const onUp = () => {
-          ui.knobVEl.classList.remove("is-active");
-          ui.knobVEl.removeEventListener("pointermove", onMove);
-          ui.knobVEl.removeEventListener("pointerup", onUp);
-          ui.knobVEl.removeEventListener("pointercancel", onUp);
-        };
-
-        ui.knobVEl.addEventListener("pointermove", onMove);
-        ui.knobVEl.addEventListener("pointerup", onUp);
-        ui.knobVEl.addEventListener("pointercancel", onUp);
       });
 
-      // Horizontal track click
-      ui.scrollHEl.addEventListener("pointerdown", (e) => {
-        if (!mainMap || !mapDoc) return;
-        const tX = hPointerToT(e.clientX);
-        scrollState.tX = tX;
-        animatePanTo({
-          tY: scrollState.tY,
-          tX: scrollState.tX,
-          durationMs: opts.easeDurationJumpMs
-        });
+      ui.knobElV.addEventListener(
+        "touchstart",
+        (e) => {
+          draggingV = true;
+          ui.knobElV.classList.add("is-active");
+          lastYV = e.touches[0].clientY;
+          lastTimeV = Date.now();
+          velocityY = 0;
+
+          document.addEventListener("touchmove", onMoveV, { passive: false });
+          document.addEventListener("touchend", onUpV);
+          if (e.cancelable) e.preventDefault();
+        },
+        { passive: false }
+      );
+
+      ui.scrollElV.addEventListener("mousedown", (e) => {
+        if (e.target === ui.knobElV) return;
+        setFromClientY(e.clientY);
       });
 
-      // Horizontal knob drag
-      ui.knobHEl.addEventListener("pointerdown", (e) => {
+      ui.scrollElV.addEventListener(
+        "touchstart",
+        (e) => {
+          if (e.target === ui.knobElV) return;
+          setFromClientY(e.touches[0].clientY);
+        },
+        { passive: true }
+      );
+
+      // --- HORIZONTAL SCROLLER ---
+      let draggingH = false;
+      let lastXH = 0;
+      let lastTimeH = 0;
+      let velocityX = 0;
+
+      function setFromClientX(clientX) {
+        const rect = ui.scrollElH.getBoundingClientRect();
+        const tX = (clientX - rect.left) / rect.width;
+        panMapToTX(tX);
+      }
+
+      const onMoveH = (e) => {
+        if (!draggingH) return;
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        
+        // Track velocity for momentum
+        const now = Date.now();
+        const dt = now - lastTimeH;
+        if (dt > 0) {
+          velocityX = (clientX - lastXH) / dt;
+        }
+        lastXH = clientX;
+        lastTimeH = now;
+
+        setFromClientX(clientX);
+        if (e.cancelable) e.preventDefault();
+      };
+
+      const onUpH = () => {
+        draggingH = false;
+        ui.knobElH.classList.remove("is-active");
+
+        // Apply momentum
+        const applyMomentum = () => {
+          if (Math.abs(velocityX) < 0.01) return;
+          
+          const rect = ui.scrollElH.getBoundingClientRect();
+          lastXH += velocityX * 16;
+          const tX = (lastXH - rect.left) / rect.width;
+          panMapToTX(tX);
+          
+          velocityX *= 0.92; // Friction
+          requestAnimationFrame(applyMomentum);
+        };
+        
+        if (Math.abs(velocityX) > 0.5) {
+          applyMomentum();
+        }
+
+        document.removeEventListener("mousemove", onMoveH);
+        document.removeEventListener("mouseup", onUpH);
+        document.removeEventListener("touchmove", onMoveH);
+        document.removeEventListener("touchend", onUpH);
+      };
+
+      ui.knobElH.addEventListener("mousedown", (e) => {
+        draggingH = true;
+        ui.knobElH.classList.add("is-active");
+        lastXH = e.clientX;
+        lastTimeH = Date.now();
+        velocityX = 0;
+
+        document.addEventListener("mousemove", onMoveH);
+        document.addEventListener("mouseup", onUpH);
         e.preventDefault();
-        e.stopPropagation();
-        ui.knobHEl.classList.add("is-active");
-        try { ui.knobHEl.setPointerCapture(e.pointerId); } catch (_) {}
-
-        const onMove = (ev) => {
-          if (!mainMap || !mapDoc) return;
-          const tX = hPointerToT(ev.clientX);
-          scrollState.tX = tX;
-          animatePanTo({
-            tY: scrollState.tY,
-            tX: scrollState.tX,
-            durationMs: opts.easeDurationDragMs
-          });
-        };
-
-        const onUp = () => {
-          ui.knobHEl.classList.remove("is-active");
-          ui.knobHEl.removeEventListener("pointermove", onMove);
-          ui.knobHEl.removeEventListener("pointerup", onUp);
-          ui.knobHEl.removeEventListener("pointercancel", onUp);
-        };
-
-        ui.knobHEl.addEventListener("pointermove", onMove);
-        ui.knobHEl.addEventListener("pointerup", onUp);
-        ui.knobHEl.addEventListener("pointercancel", onUp);
       });
+
+      ui.knobElH.addEventListener(
+        "touchstart",
+        (e) => {
+          draggingH = true;
+          ui.knobElH.classList.add("is-active");
+          lastXH = e.touches[0].clientX;
+          lastTimeH = Date.now();
+          velocityX = 0;
+
+          document.addEventListener("touchmove", onMoveH, { passive: false });
+          document.addEventListener("touchend", onUpH);
+          if (e.cancelable) e.preventDefault();
+        },
+        { passive: false }
+      );
+
+      ui.scrollElH.addEventListener("mousedown", (e) => {
+        if (e.target === ui.knobElH) return;
+        setFromClientX(e.clientX);
+      });
+
+      ui.scrollElH.addEventListener(
+        "touchstart",
+        (e) => {
+          if (e.target === ui.knobElH) return;
+          setFromClientX(e.touches[0].clientX);
+        },
+        { passive: true }
+      );
     }
 
+    // ---- Leaflet size fix ----
+    async function invalidateMapsHard() {
+      await nextFrame();
+      try {
+        mainMap && mainMap.invalidateSize({ animate: false });
+      } catch (e) {}
+      try {
+        lensMap && lensMap.invalidateSize({ animate: false });
+      } catch (e) {}
+
+      await nextFrame();
+      try {
+        mainMap && mainMap.invalidateSize({ animate: false });
+      } catch (e) {}
+      try {
+        lensMap && lensMap.invalidateSize({ animate: false });
+      } catch (e) {}
+    }
+
+    // ---------------------------
+    // Load + build
+    // ---------------------------
     async function loadAll() {
+      ui.drawerContentEl.innerHTML = "";
+      ui.drawerContentEl.appendChild(el("div", { class: "cc-muted" }, ["Loading…"]));
+
       mapDoc = await fetchJson(opts.mapUrl);
       stateDoc = await fetchJson(opts.stateUrl);
 
       const mapErr = validateMapDoc(mapDoc);
+      if (mapErr) throw new Error("Bad canyon_map.json: " + mapErr);
+
       const stateErr = validateStateDoc(stateDoc);
-      if (mapErr) console.warn("[CC CanyonMap] map doc validation:", mapErr);
-      if (stateErr) console.warn("[CC CanyonMap] state doc validation:", stateErr);
+      if (stateErr) throw new Error("Bad canyon_state.json: " + stateErr);
+
+      // Destroy old maps
+      if (mainMap) {
+        try {
+          mainMap.remove();
+        } catch (e) {}
+        mainMap = null;
+      }
+      if (lensMap) {
+        try {
+          lensMap.remove();
+        } catch (e) {}
+        lensMap = null;
+      }
+
+      enforceBaseMapSize();
 
       const px = mapDoc.map.background.image_pixel_size;
       const bounds = [[0, 0], [px.h, px.w]];
 
-      // Reset maps
-      if (mainMap) mainMap.remove();
-      if (lensMap) lensMap.remove();
-
-      // BASE MAP (fills the whole wrapper via CSS)
+      // Main map (small)
       mainMap = window.L.map(ui.mapEl, {
         crs: window.L.CRS.Simple,
+        minZoom: -3,
+        maxZoom: 3,
+        zoomSnap: 0.25,
+        zoomDelta: 0.25,
         attributionControl: false,
         zoomControl: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false,
         dragging: !!opts.allowMapDrag,
-        zoomAnimation: false,
-        fadeAnimation: false,
-        markerZoomAnimation: false,
-        minZoom: opts.backgroundMinZoom,
-        maxZoom: opts.backgroundMaxZoom,
-        zoomSnap: opts.zoomSnap,
-        zoomDelta: opts.zoomDelta,
-        inertia: true,
-        inertiaDeceleration: 1400
+        tap: true
       });
 
-      // Use SMALL image for background
-      window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
+      window.L.imageOverlay(mapDoc.map.background.image_key, bounds, {
+        opacity: clamp(mapDoc.map.background.opacity ?? 1.0, 0, 1)
+      }).addTo(mainMap);
 
-      await invalidateMapsHard();
+      mainMap.setMaxBounds(bounds);
 
-      // Fit + “make it huge”
-      mainMap.fitBounds(bounds, { padding: [10, 10], animate: false });
-      mainMap.setZoom(mainMap.getZoom() + opts.backgroundZoomOffset, { animate: false });
-
-      // Init scroll state from map center
-      const c0 = mainMap.getCenter();
-      scrollState.tY = clamp(c0.lat / px.h, 0, 1);
-      scrollState.tX = clamp(c0.lng / px.w, 0, 1);
-
-      // LENS MAP (uses LARGE image if available)
+      // Lens map (large, CLEARER)
       if (opts.lensEnabled) {
+        ui.lensEl.style.display = "block";
+
         lensMap = window.L.map(ui.lensMapEl, {
           crs: window.L.CRS.Simple,
+          minZoom: -3,
+          maxZoom: 6,
+          zoomSnap: 0.25,
+          zoomDelta: 0.25,
           attributionControl: false,
           zoomControl: false,
+          scrollWheelZoom: false,
+          doubleClickZoom: false,
+          boxZoom: false,
+          keyboard: false,
           dragging: false,
-          zoomAnimation: false,
-          fadeAnimation: false,
-          markerZoomAnimation: false,
-          minZoom: opts.lensMinZoom,
-          maxZoom: opts.lensMaxZoom,
-          zoomSnap: opts.zoomSnap,
-          zoomDelta: opts.zoomDelta
+          tap: false
         });
 
         const lensImageKey = mapDoc.map?.lens?.image_key || mapDoc.map.background.image_key;
 
-        // IMPORTANT: we still use the SAME bounds so geometry aligns,
-        // but the large image has more pixels, so it looks crisp.
-        window.L.imageOverlay(lensImageKey, bounds).addTo(lensMap);
+        window.L.imageOverlay(lensImageKey, bounds, { opacity: 1.0 }).addTo(lensMap);
+        lensMap.setMaxBounds(bounds);
+      } else {
+        ui.lensEl.style.display = "none";
+      }
 
-        lensMap.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
-        await nextFrame();
-        lensMap.invalidateSize({ animate: false });
+      await invalidateMapsHard();
+      fitToImage();
+      await invalidateMapsHard();
+      
+      // INITIALIZE TO MIDDLE!
+      initializeToMiddle();
+      
+      syncLens();
+
+      // Clamp horizontal drift
+      if (maxDrift >= 0) {
+        mainMap.on("move", clampHorizontal);
+        clampHorizontal();
       }
 
       rebuildRegions();
+      closeDrawer(ui);
+      ui.drawerTitleEl.textContent = "Region";
+      ui.drawerContentEl.innerHTML = "";
+      ui.drawerContentEl.appendChild(el("div", { class: "cc-muted" }, ["Click a region to view details."]));
 
-      // Sync knobs to current state
-      setVKnobFromT(scrollState.tY);
-      setHKnobFromT(scrollState.tX);
-      syncLens();
+      // Scroller + syncing
+      bindScrollersOnce();
+      updateKnobsFromMap();
+
+      mainMap.on("move", () => {
+        updateKnobsFromMap();
+        syncLens();
+      });
+      mainMap.on("zoom", () => {
+        updateKnobsFromMap();
+        syncLens();
+      });
+
+      if (lensMap) {
+        mainMap.on("move", syncLens);
+        mainMap.on("zoom", syncLens);
+      }
+
+      // On resize
+      window.addEventListener("resize", rafThrottle(async () => {
+        enforceBaseMapSize();
+        await invalidateMapsHard();
+        fitToImage();
+        await invalidateMapsHard();
+        syncLens();
+      }));
     }
 
-    // Bind once
-    bindScrollersOnce();
-
-    ui.btnReload.addEventListener("click", async () => {
-      stopTweens();
-      await loadAll();
-    });
-
+    ui.btnReload.addEventListener("click", () => loadAll().catch((e) => console.error(e)));
     ui.btnFit.addEventListener("click", () => {
-      if (!mainMap || !mapDoc) return;
-      stopTweens();
-
-      const px = mapDoc.map.background.image_pixel_size;
-      const bounds = [[0, 0], [px.h, px.w]];
-
-      mainMap.fitBounds(bounds, { animate: false });
-      mainMap.setZoom(mainMap.getZoom() + opts.backgroundZoomOffset, { animate: false });
-
-      // update scroll state + knobs
-      const c = mainMap.getCenter();
-      scrollState.tY = clamp(c.lat / px.h, 0, 1);
-      scrollState.tX = clamp(c.lng / px.w, 0, 1);
-
-      setVKnobFromT(scrollState.tY);
-      setHKnobFromT(scrollState.tX);
-      syncLens();
+      fitToImage();
+      initializeToMiddle();
     });
 
     await loadAll();
 
-    root._ccApi = { drawerClose: () => closeDrawer(ui) };
+    const api = {
+      reload: async () => await loadAll(),
+      fit: () => {
+        fitToImage();
+        initializeToMiddle();
+      },
+      setState: (newStateDoc) => {
+        const err = validateStateDoc(newStateDoc);
+        if (err) throw new Error("Bad state doc: " + err);
+        stateDoc = newStateDoc;
+        applyStateStyles();
+      },
+      setRegionState: (regionId, patch) => {
+        if (!stateDoc || !stateDoc.state_by_region) return;
+        stateDoc.state_by_region[regionId] = {
+          ...(stateDoc.state_by_region[regionId] || {}),
+          ...(patch || {})
+        };
+        applyStateStyles();
+      },
+      drawerClose: () => closeDrawer(ui),
+      drawerOpenRegion: (regionId) => {
+        const r = regionsById[regionId];
+        if (!r) return;
+        selectedRegionId = regionId;
+        renderDrawer(ui, r, stateDoc?.state_by_region?.[regionId] || null);
+        openDrawer(ui);
+      },
+      setLensEnabled: (on) => {
+        opts.lensEnabled = !!on;
+        ui.lensEl.style.display = opts.lensEnabled ? "block" : "none";
+        if (on && lensMap) syncLens();
+      }
+    };
+
+    root._ccApi = api;
+    return api;
   }
 
-  // Auto-mount
-  const root = document.getElementById("cc-app-root");
-  if (root && root.getAttribute("data-cc-app") === APP_ID) mount(root, {});
-
+  // Export
   window.CC_CanyonMap = { mount };
+
+  console.log("✅ cc_canyon_map_app.js loaded: CC_CanyonMap.mount ready");
 })();
