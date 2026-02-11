@@ -4,52 +4,82 @@
 */
 
 :root{
+  /* ============================================
+     FRAME & LAYOUT DIMENSIONS
+     Adjust these to change overall size
+     ============================================ */
   --frame-width: 1000px;
   --frame-ratio: 1.5;
 
-  /* Lens window should FILL the brass frame's iron window */
-  --lens-w: 760px;
-  --lens-h: 520px;
+  /* ============================================
+     LENS SIZE ADJUSTMENT
+     Currently 40% smaller than frame window
+     Original: 760x520, Current: 456x312
+     ============================================ */
+  --lens-w: 456px;
+  --lens-h: 312px;
 
-  /* Lens overscan (extra pixels beyond lens mask) to eliminate any edge gaps */
+  /* ============================================
+     LENS OVERSCAN
+     Extra pixels to prevent edge gaps
+     ============================================ */
   --lens-overscan-x: 80px;
   --lens-overscan-y: 80px;
 
   --cc-map-border: #4a3728;
 
-  /* Background "bigness" (visual feel) — blur makes it safe */
+  /* ============================================
+     BASE MAP APPEARANCE
+     Background layer styling
+     ============================================ */
   --bg-opacity: 0.38;
   --bg-blur: 2px;
   --bg-sepia: 0.25;
 
-  /* Lens look - NO BLUR, clearer view */
+  /* ============================================
+     LENS APPEARANCE & DISTORTION
+     Adjust clarity and edge effects
+     ============================================ */
   --lens-radius: 22px;
-  --lens-contrast: 1.12;  /* Increased for clarity */
+  --lens-contrast: 1.12;
+  --lens-distortion-scale: 80;  /* Higher = more edge warp */
+
+  /* ============================================
+     LENS HIGHLIGHT/GLARE
+     Visible reflection effect
+     ============================================ */
+  --lens-highlight-opacity: 0.35;
+  --lens-highlight-size: 40%;
 
   /* Frame glow */
   --frame-glow-a: rgba(70, 220, 255, 0.20);
   --frame-glow-b: rgba(255, 210, 120, 0.12);
 
-  /* Vertical scroller geometry */
+  /* ============================================
+     SCROLLER GEOMETRY
+     Position and size of knobs/tracks
+     ============================================ */
   --scroll-v-h: 440px;
   --scroll-v-w: 90px;
   --scroll-v-offset-x: 343px;
 
-  /* Horizontal scroller geometry */
   --scroll-h-h: 90px;
   --scroll-h-w: 640px;
-  --scroll-h-offset-y: 320px; /* relative to center via translate */
+  --scroll-h-offset-y: 320px;
 
-  /* Shared knob sizing (Blappo knob art) */
+  /* ============================================
+     KNOB SIZING & EASING
+     Momentum scroll parameters
+     ============================================ */
   --knob-w: 92px;
   --knob-h: 150px;
-
-  /* Horizontal knob - SAME SIZE as vertical now (no rotation) */
   --knob-horiz-w: 92px;
   --knob-horiz-h: 150px;
-
-  /* Fine alignment for groove */
   --knob-offset-x: 9px;
+  
+  /* Momentum physics (controlled in JS) */
+  --scroll-friction: 0.92;     /* Higher = more coasting */
+  --scroll-min-velocity: 0.5;  /* Minimum speed to trigger momentum */
 
   /* Shadows */
   --shadow-inset: inset 0 0 60px #000;
@@ -237,16 +267,22 @@
   will-change: transform;
 }
 
-/* Lens glare */
+/* Lens glare - MORE VISIBLE */
 .cc-lens-glare{
   position: absolute;
   inset: 0;
   pointer-events: none;
   background:
-    radial-gradient(120% 90% at 30% 20%, rgba(255,255,255,0.14), rgba(255,255,255,0) 55%),
-    radial-gradient(100% 80% at 70% 70%, rgba(255,255,255,0.08), rgba(255,255,255,0) 55%);
+    radial-gradient(var(--lens-highlight-size) var(--lens-highlight-size) at 35% 25%, 
+      rgba(255,255,255,0.45), 
+      rgba(255,255,255,0.15) 40%, 
+      rgba(255,255,255,0) 60%),
+    radial-gradient(25% 20% at 65% 60%, 
+      rgba(255,255,255,0.25), 
+      rgba(255,255,255,0) 50%);
   mix-blend-mode: screen;
-  opacity: 0.55;
+  opacity: var(--lens-highlight-opacity);
+  border-radius: var(--lens-radius);
 }
 
 .cc-lens::after{
@@ -393,19 +429,28 @@
 #cc-scroll-knob-h:hover{ transform: translateY(-50%) scale(1.03) !important; }
 
 /* ================================================================
-   DRAWER
+   DRAWER (SLIDES FROM RIGHT SIDE)
    ================================================================ */
 .cc-cm-drawer{
-  margin-top: 10px;
-  border: 1px solid rgba(255,255,255,0.18);
-  background: rgba(0,0,0,0.35);
-  border-radius: 12px;
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 220ms ease;
+  position: fixed;
+  top: 0;
+  right: -450px;
+  width: 400px;
+  height: 100vh;
+  
+  background: #111;
+  border-left: 3px solid #ff7518;
+  box-shadow: -10px 0 50px rgba(0,0,0,0.8);
+  
+  overflow-y: auto;
+  z-index: 9999;
+  
+  transition: right 0.3s ease-in-out;
 }
 
-.cc-cm-drawer.open{ max-height: 420px; }
+.cc-cm-drawer.open{ 
+  right: 0;
+}
 
 .cc-cm-drawer-head{
   display: flex;
@@ -418,6 +463,14 @@
 
 .cc-cm-drawer-title{ font-weight: 900; }
 .cc-cm-drawer-content{ padding: 10px 12px 14px; }
+
+/* Mobile slide panel */
+@media (max-width: 768px) {
+  .cc-cm-drawer {
+    width: 100vw;
+    right: -100vw;
+  }
+}
 
 /* ================================================================
    RESPONSIVE
