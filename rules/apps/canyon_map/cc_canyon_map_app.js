@@ -658,12 +658,12 @@
           if (Math.abs(velocityY) < 0.002) return;  // Lower threshold = longer slide
 
           const rect = ui.scrollElV.getBoundingClientRect();
-          lastYV += velocityY * 2;  // Increased multiplier for smoother movement
+          lastYV += velocityY * .5;  // Increased multiplier for smoother movement
           const tY = (lastYV - rect.top) / rect.height;
           panMapToTY(tY);
           updateKnobsFromMap();
 
-          velocityY *= 1.25;  // HIGHER friction = heavier, slower momentum
+          velocityY *= 2.5;  // HIGHER friction = heavier, slower momentum
           requestAnimationFrame(applyMomentum);
         };
 
