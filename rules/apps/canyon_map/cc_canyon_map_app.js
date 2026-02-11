@@ -512,42 +512,60 @@
     function getScrollRange() {
       if (!mainMap || !mapDoc) return { yMin: 0, yMax: 0, xMin: 0, xMax: 0 };
 
-      const px = mapDoc.map.background.image_pixel_size;
-      const view = mainMap.getBounds();
-      const viewH = Math.abs(view.getNorth() - view.getSouth());
-      const viewW = Math.abs(view.getEast() - view.getWest());
+      // Safety check: ensure map has been initialized with center/zoom
+      try {
+        const view = mainMap.getBounds();
+        if (!view) return { yMin: 0, yMax: 0, xMin: 0, xMax: 0 };
+        
+        const px = mapDoc.map.background.image_pixel_size;
+        const viewH = Math.abs(view.getNorth() - view.getSouth());
+        const viewW = Math.abs(view.getEast() - view.getWest());
 
-      const halfH = viewH / 2;
-      const halfW = viewW / 2;
+        const halfH = viewH / 2;
+        const halfW = viewW / 2;
 
-      let yMin, yMax, xMin, xMax;
+        let yMin, yMax, xMin, xMax;
 
-      if (viewH >= px.h) {
-        yMin = yMax = px.h / 2;
-      } else {
-        yMin = 0 + halfH;
-        yMax = px.h - halfH;
+        if (viewH >= px.h) {
+          yMin = yMax = px.h / 2;
+        } else {
+          yMin = 0 + halfH;
+          yMax = px.h - halfH;
+        }
+
+        if (viewW >= px.w) {
+          xMin = xMax = px.w / 2;
+        } else {
+          xMin = 0 + halfW;
+          xMax = px.w - halfW;
+        }
+
+        return { yMin, yMax, xMin, xMax };
+      } catch (e) {
+        // Map not ready yet, return safe defaults
+        return { yMin: 0, yMax: 0, xMin: 0, xMax: 0 };
       }
-
-      if (viewW >= px.w) {
-        xMin = xMax = px.w / 2;
-      } else {
-        xMin = 0 + halfW;
-        xMax = px.w - halfW;
-      }
-
-      return { yMin, yMax, xMin, xMax };
     }
 
     function mapCenterToKnobT() {
       if (!mainMap || !mapDoc) return { tY: 0.5, tX: 0.5 };
-      const { yMin, yMax, xMin, xMax } = getScrollRange();
-      const c = mainMap.getCenter();
+      
+      try {
+        const { yMin, yMax, xMin, xMax } = getScrollRange();
+        if (yMin === 0 && yMax === 0 && xMin === 0 && xMax === 0) {
+          return { tY: 0.5, tX: 0.5 }; // Map not ready
+        }
+        
+        const c = mainMap.getCenter();
+        if (!c) return { tY: 0.5, tX: 0.5 }; // Safety check
 
-      const tY = yMax === yMin ? 0.5 : (c.lat - yMin) / (yMax - yMin);
-      const tX = xMax === xMin ? 0.5 : (c.lng - xMin) / (xMax - xMin);
+        const tY = yMax === yMin ? 0.5 : (c.lat - yMin) / (yMax - yMin);
+        const tX = xMax === xMin ? 0.5 : (c.lng - xMin) / (xMax - xMin);
 
-      return { tY: clamp(tY, 0, 1), tX: clamp(tX, 0, 1) };
+        return { tY: clamp(tY, 0, 1), tX: clamp(tX, 0, 1) };
+      } catch (e) {
+        return { tY: 0.5, tX: 0.5 }; // Map not ready
+      }
     }
 
     function updateKnobsFromMap() {
@@ -558,20 +576,34 @@
 
     function panMapToTY(tY) {
       if (!mainMap || !mapDoc) return;
-      const { yMin, yMax } = getScrollRange();
-      const y = yMin === yMax ? yMin : yMin + clamp(tY, 0, 1) * (yMax - yMin);
+      try {
+        const { yMin, yMax } = getScrollRange();
+        if (yMin === 0 && yMax === 0) return; // Map not ready
+        
+        const y = yMin === yMax ? yMin : yMin + clamp(tY, 0, 1) * (yMax - yMin);
 
-      const c = mainMap.getCenter();
-      mainMap.panTo([y, c.lng], { animate: false });
+        const c = mainMap.getCenter();
+        if (!c) return; // Safety check
+        mainMap.panTo([y, c.lng], { animate: false });
+      } catch (e) {
+        // Map not ready, silently skip
+      }
     }
 
     function panMapToTX(tX) {
       if (!mainMap || !mapDoc) return;
-      const { xMin, xMax } = getScrollRange();
-      const x = xMin === xMax ? xMin : xMin + clamp(tX, 0, 1) * (xMax - xMin);
+      try {
+        const { xMin, xMax } = getScrollRange();
+        if (xMin === 0 && xMax === 0) return; // Map not ready
+        
+        const x = xMin === xMax ? xMin : xMin + clamp(tX, 0, 1) * (xMax - xMin);
 
-      const c = mainMap.getCenter();
-      mainMap.panTo([c.lat, x], { animate: false });
+        const c = mainMap.getCenter();
+        if (!c) return; // Safety check
+        mainMap.panTo([c.lat, x], { animate: false });
+      } catch (e) {
+        // Map not ready, silently skip
+      }
     }
 
     function initializeToCenter() {
@@ -593,6 +625,7 @@
       let velocityY = 0;
 
       function setFromClientY(clientY) {
+        if (!mainMap || !mapDoc) return; // Safety check
         const rect = ui.scrollElV.getBoundingClientRect();
         const tY = (clientY - rect.top) / rect.height;
         panMapToTY(tY);
@@ -620,6 +653,7 @@
         ui.knobElV.classList.remove("is-active");
 
         const applyMomentum = () => {
+          if (!mainMap || !mapDoc) return; // Safety check
           if (Math.abs(velocityY) < 0.005) return;  // Lower threshold = longer slide
 
           const rect = ui.scrollElV.getBoundingClientRect();
@@ -689,6 +723,7 @@
       let velocityX = 0;
 
       function setFromClientX(clientX) {
+        if (!mainMap || !mapDoc) return; // Safety check
         const rect = ui.scrollElH.getBoundingClientRect();
         const tX = (clientX - rect.left) / rect.width;
         panMapToTX(tX);
@@ -716,6 +751,7 @@
         ui.knobElH.classList.remove("is-active");
 
         const applyMomentum = () => {
+          if (!mainMap || !mapDoc) return; // Safety check
           if (Math.abs(velocityX) < 0.005) return;  // Lower threshold = longer slide
 
           const rect = ui.scrollElH.getBoundingClientRect();
