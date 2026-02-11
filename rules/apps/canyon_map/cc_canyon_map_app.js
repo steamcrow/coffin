@@ -28,7 +28,7 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
     lensEnabled: true,
-    lensZoomOffset: 1,  // HOW MUCH MORE ZOOMED IS THE LENS?
+    lensZoomOffset: .50,  // HOW MUCH MORE ZOOMED IS THE LENS
                          // 0 = same as background (see most of map)
                          // 1 = slightly zoomed (CURRENT - good balance)
                          // 2 = more zoomed (see less area, more detail)
