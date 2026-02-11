@@ -28,7 +28,11 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
     lensEnabled: true,
-    lensZoomOffset: 2,
+    lensZoomOffset: 1,  // HOW MUCH MORE ZOOMED IS THE LENS?
+                         // 0 = same as background (see most of map)
+                         // 1 = slightly zoomed (CURRENT - good balance)
+                         // 2 = more zoomed (see less area, more detail)
+                         // 3 = very zoomed (close-up view)
 
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
@@ -616,19 +620,19 @@
         ui.knobElV.classList.remove("is-active");
 
         const applyMomentum = () => {
-          if (Math.abs(velocityY) < 0.01) return;
+          if (Math.abs(velocityY) < 0.005) return;  // Lower threshold = longer slide
 
           const rect = ui.scrollElV.getBoundingClientRect();
-          lastYV += velocityY * 16;
+          lastYV += velocityY * 20;  // Increased multiplier for smoother movement
           const tY = (lastYV - rect.top) / rect.height;
           panMapToTY(tY);
           updateKnobsFromMap();
 
-          velocityY *= 0.92;
+          velocityY *= 0.96;  // Higher friction = longer momentum (was 0.92)
           requestAnimationFrame(applyMomentum);
         };
 
-        if (Math.abs(velocityY) > 0.5) {
+        if (Math.abs(velocityY) > 0.3) {  // Lower threshold to trigger momentum more easily
           applyMomentum();
         }
 
@@ -712,19 +716,19 @@
         ui.knobElH.classList.remove("is-active");
 
         const applyMomentum = () => {
-          if (Math.abs(velocityX) < 0.01) return;
+          if (Math.abs(velocityX) < 0.005) return;  // Lower threshold = longer slide
 
           const rect = ui.scrollElH.getBoundingClientRect();
-          lastXH += velocityX * 16;
+          lastXH += velocityX * 20;  // Increased multiplier for smoother movement
           const tX = (lastXH - rect.left) / rect.width;
           panMapToTX(tX);
           updateKnobsFromMap();
 
-          velocityX *= 0.92;
+          velocityX *= 0.96;  // Higher friction = longer momentum (was 0.92)
           requestAnimationFrame(applyMomentum);
         };
 
-        if (Math.abs(velocityX) > 0.5) {
+        if (Math.abs(velocityX) > 0.3) {  // Lower threshold to trigger momentum more easily
           applyMomentum();
         }
 
