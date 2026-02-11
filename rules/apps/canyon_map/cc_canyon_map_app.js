@@ -28,7 +28,7 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
     lensEnabled: true,
-    lensZoomOffset: 0.2,  // HOW MUCH MORE ZOOMED IS THE LENS?
+    lensZoomOffset: 0.33,  // HOW MUCH MORE ZOOMED IS THE LENS?
                           // 0 = same as background (see most of map)
                           // 0.5 = slightly zoomed (CURRENT - see lots of area)
                           // 1 = moderately zoomed (good balance)
@@ -761,7 +761,7 @@
           panMapToTX(tX);
           updateKnobsFromMap();
 
-          velocityX *= 0.98;  // HIGHER friction = heavier, slower momentum
+          velocityX *= 1.5;  // HIGHER friction = heavier, slower momentum
           requestAnimationFrame(applyMomentum);
         };
 
