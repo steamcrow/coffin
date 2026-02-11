@@ -23,8 +23,11 @@
      MAP ZOOM LEVELS
      Controlled in JavaScript DEFAULTS:
      - lensZoomOffset: How much more zoomed the lens is
-       Lower = see MORE of map (e.g., 0 or 1)
-       Higher = see LESS of map, more detail (e.g., 2 or 3)
+       0 = see MOST of map (same as background)
+       0.5 = see lots of area (CURRENT)
+       1 = good balance
+       2 = see less area, more detail
+       3 = close-up view
      ============================================ */
 
   /* ============================================
@@ -41,22 +44,22 @@
      Background layer styling
      ============================================ */
   --bg-opacity: 0.38;
-  --bg-blur: 1.5px;
-  --bg-sepia: 1.50;
+  --bg-blur: 2px;
+  --bg-sepia: 0.25;
 
   /* ============================================
      LENS APPEARANCE & DISTORTION
      Adjust clarity and edge effects
      ============================================ */
-  --lens-radius: 100px;
+  --lens-radius: 22px;
   --lens-contrast: 1.12;
-  --lens-distortion-scale: 180;  /* Higher = more edge warp */
+  --lens-distortion-scale: 80;  /* Higher = more edge warp */
 
   /* ============================================
      LENS HIGHLIGHT/GLARE
      Visible reflection effect
      ============================================ */
-  --lens-highlight-opacity: 0.65;
+  --lens-highlight-opacity: 0.35;
   --lens-highlight-size: 40%;
 
   /* Frame glow */
@@ -86,7 +89,7 @@
   --knob-offset-x: 9px;
   
   /* Momentum physics (controlled in JavaScript):
-     - Friction: 0.96 (higher = longer coast)
+     - Friction: 0.98 (higher = heavier, slower momentum)
      - Min velocity: 0.005 (lower = longer animation)
      - Trigger threshold: 0.3 (easier to trigger momentum)
      - Movement multiplier: 20 (smoother transitions)
