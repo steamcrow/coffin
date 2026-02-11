@@ -19,7 +19,7 @@
 
   /* Background “bigness” (visual feel) — blur makes it safe */
   --bg-opacity: 0.38;
-  --bg-blur: 7px;
+  --bg-blur: 2px;
   --bg-sepia: 0.25;
 
   /* Lens look */
