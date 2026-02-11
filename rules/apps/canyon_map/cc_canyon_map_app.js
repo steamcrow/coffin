@@ -1,7 +1,7 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
    Coffin Canyon — Canyon Map
    
-   FIXED VERSION - Maps fill properly, knobs centered, scrolling works
+   FINAL VERSION with all fixes
 */
 
 (function () {
@@ -138,21 +138,24 @@
     if (!window.L) throw new Error("Leaflet did not load (window.L missing).");
   }
 
-  // PRELOADER
+  // PRELOADER with Coffin Canyon logo
   function showPreloader(root) {
+    const logoUrl = "https://www.coffincanyon.com/static/src/img/logo.png";
+    
     const preloader = el("div", { 
       class: "cc-cm-preloader",
       style: "position: absolute; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.95);"
     }, [
-      el("div", { class: "cc-loading-container" }, [
-        el("div", { style: "text-align: center; margin-bottom: 2rem;" }, [
-          el("h1", { style: "font-size: 3rem; font-weight: 900; color: #ff7518; letter-spacing: -1px; margin: 0; text-shadow: 0 0 20px rgba(255,117,24,0.5);" }, ["COFFIN CANYON"]),
-          el("div", { style: "color: #888; font-size: 0.9rem; letter-spacing: 2px; margin-top: 0.5rem;" }, ["CANYON MAP"])
-        ]),
+      el("div", { class: "cc-loading-container", style: "text-align: center;" }, [
+        el("img", { 
+          src: logoUrl,
+          alt: "Coffin Canyon",
+          style: "width: 300px; max-width: 80vw; margin-bottom: 2rem; filter: drop-shadow(0 0 20px rgba(255,117,24,0.5));"
+        }),
         el("div", { class: "cc-loading-bar" }, [
           el("div", { class: "cc-loading-progress" })
         ]),
-        el("p", { class: "cc-loading-text" }, ["Loading map data..."])
+        el("p", { class: "cc-loading-text" }, ["Loading canyon map..."])
       ])
     ]);
     root.appendChild(preloader);
@@ -190,9 +193,32 @@
     return null;
   }
 
+  // Add SVG filter for lens distortion
+  function addSVGFilter(root) {
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("width", "0");
+    svg.setAttribute("height", "0");
+    svg.style.position = "absolute";
+    svg.style.pointerEvents = "none";
+    
+    svg.innerHTML = `
+      <defs>
+        <filter id="ccLensWarp" x="-50%" y="-50%" width="200%" height="200%">
+          <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise"/>
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="80" xChannelSelector="R" yChannelSelector="G"/>
+        </filter>
+      </defs>
+    `;
+    
+    root.appendChild(svg);
+  }
+
   function buildLayout(root, opts) {
     root.innerHTML = "";
     root.classList.add("cc-canyon-map");
+
+    // Add SVG filter
+    addSVGFilter(root);
 
     const header = el("div", { class: "cc-cm-header" }, [
       el("div", { class: "cc-cm-title" }, [opts.title]),
@@ -226,28 +252,31 @@
     ]);
 
     const body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
-      el("div", { class: "cc-cm-mapwrap" }, [mapEl, lens, frame, scrollerV, scrollerH]),
-      el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
-        el("div", { class: "cc-cm-drawer-head" }, [
-          el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Location"]),
-          el(
-            "button",
-            {
-              class: "cc-btn cc-btn-x",
-              type: "button",
-              onClick: () => root._ccApi && root._ccApi.drawerClose()
-            },
-            ["×"]
-          )
-        ]),
-        el("div", { class: "cc-cm-drawer-content", id: "cc-cm-drawer-content" }, [
-          el("div", { class: "cc-muted" }, ["Click a named location to view details."])
-        ])
+      el("div", { class: "cc-cm-mapwrap" }, [mapEl, lens, frame, scrollerV, scrollerH])
+    ]);
+
+    // Drawer slides from side
+    const drawer = el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
+      el("div", { class: "cc-cm-drawer-head" }, [
+        el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Location"]),
+        el(
+          "button",
+          {
+            class: "cc-btn cc-btn-x",
+            type: "button",
+            onClick: () => root._ccApi && root._ccApi.drawerClose()
+          },
+          ["×"]
+        )
+      ]),
+      el("div", { class: "cc-cm-drawer-content", id: "cc-cm-drawer-content" }, [
+        el("div", { class: "cc-muted" }, ["Click a named location to view details."])
       ])
     ]);
 
     root.appendChild(header);
     root.appendChild(body);
+    root.appendChild(drawer);
 
     return {
       mapEl,
@@ -406,7 +435,6 @@
 
         poly.on("click", () => {
           selectedRegionId = r.region_id;
-          // Don't open drawer for regions - only for named locations
         });
 
         poly.addTo(mainMap);
@@ -418,7 +446,6 @@
     function addNamedLocationMarkers() {
       if (!locationsData || !lensMap) return;
 
-      // Clear existing markers
       Object.values(locationMarkersById).forEach(marker => {
         try {
           lensMap.removeLayer(marker);
@@ -427,31 +454,21 @@
 
       // Map location IDs to pixel coordinates [y, x]
       // Map is 2824w x 4000h pixels
-      // Based on canyon geography: north entrance to south sprawl
       const locationCoords = {
-        // NORTHERN (Top of Canyon - Entrance)
-        "fort-plunder": [400, 1400],        // ⚖️ Liberty Corps HQ - North entrance
-        
-        // UPPER REGIONS
-        "deerhoof": [800, 2200],            // 🦌 Highland refuge - upper right
-        "huck": [1000, 700],                // 🧭 Frontier outpost - upper left
-        "camp-coffin": [1100, 1400],        // 🦅 Monster Rangers HQ - upper center
-        "silverpit": [1200, 2100],          // ⛏️ Active mine - upper right (visible on map)
-        
-        // MIDDLE REGIONS
-        "ghost-mountain": [1600, 900],      // ⛰️ Mesa landmark - mid-left
-        "plata": [1800, 2300],              // 🏔️ Mountain silver camp - mid-right
-        "fortune": [2000, 1100],            // 🌵 River crossroads - mid-left
-        
-        // LOWER REGIONS
-        "ratsville": [2400, 1600],          // 🐀 Shantytown - lower center
-        "cowtown": [2600, 2400],            // 🐄 Ranch land - lower right
-        "river-city": [2800, 800],          // 🌊 River settlement - lower left
-        "dustbuck": [3000, 2000],           // 🐂 Boomtown - lower center-right
-        
-        // SOUTHERN (Bottom of Canyon - Major Hub)
-        "bayou-city": [3500, 1800],         // 🌊 Coastal river city - south
-        "diablo": [3600, 1400]              // 🏴‍☠️ Lawless sprawl - south center
+        "fort-plunder": [400, 1400],
+        "deerhoof": [800, 2200],
+        "huck": [1000, 700],
+        "camp-coffin": [1100, 1400],
+        "silverpit": [1200, 2100],
+        "ghost-mountain": [1600, 900],
+        "plata": [1800, 2300],
+        "fortune": [2000, 1100],
+        "ratsville": [2400, 1600],
+        "cowtown": [2600, 2400],
+        "river-city": [2800, 800],
+        "dustbuck": [3000, 2000],
+        "bayou-city": [3500, 1800],
+        "diablo": [3600, 1400]
       };
 
       locationsData.locations.forEach(loc => {
@@ -565,6 +582,7 @@
       if (scrollersBound) return;
       scrollersBound = true;
 
+      // VERTICAL SCROLLER with smooth momentum
       let draggingV = false;
       let lastYV = 0;
       let lastTimeV = 0;
@@ -574,6 +592,7 @@
         const rect = ui.scrollElV.getBoundingClientRect();
         const tY = (clientY - rect.top) / rect.height;
         panMapToTY(tY);
+        updateKnobsFromMap(); // Update immediately for smooth tracking
       }
 
       const onMoveV = (e) => {
@@ -603,6 +622,7 @@
           lastYV += velocityY * 16;
           const tY = (lastYV - rect.top) / rect.height;
           panMapToTY(tY);
+          updateKnobsFromMap();
 
           velocityY *= 0.92;
           requestAnimationFrame(applyMomentum);
@@ -658,6 +678,7 @@
         { passive: true }
       );
 
+      // HORIZONTAL SCROLLER with smooth momentum
       let draggingH = false;
       let lastXH = 0;
       let lastTimeH = 0;
@@ -667,6 +688,7 @@
         const rect = ui.scrollElH.getBoundingClientRect();
         const tX = (clientX - rect.left) / rect.width;
         panMapToTX(tX);
+        updateKnobsFromMap(); // Update immediately for smooth tracking
       }
 
       const onMoveH = (e) => {
@@ -696,6 +718,7 @@
           lastXH += velocityX * 16;
           const tX = (lastXH - rect.left) / rect.width;
           panMapToTX(tX);
+          updateKnobsFromMap();
 
           velocityX *= 0.92;
           requestAnimationFrame(applyMomentum);
@@ -800,7 +823,6 @@
       const px = mapDoc.map.background.image_pixel_size;
       const bounds = [[0, 0], [px.h, px.w]];
 
-      // MAIN MAP - CSS handles size (fills mapwrap container)
       mainMap = window.L.map(ui.mapEl, {
         crs: window.L.CRS.Simple,
         minZoom: -3,
@@ -813,7 +835,7 @@
         doubleClickZoom: false,
         boxZoom: false,
         keyboard: false,
-        dragging: !!opts.allowMapDrag,
+        dragging: false,
         tap: true
       });
 
@@ -823,7 +845,6 @@
 
       mainMap.setMaxBounds(bounds);
 
-      // LENS MAP
       if (opts.lensEnabled) {
         ui.lensEl.style.display = "block";
 
@@ -848,7 +869,6 @@
         window.L.imageOverlay(lensImageKey, bounds, { opacity: 1.0 }).addTo(lensMap);
         lensMap.setMaxBounds(bounds);
 
-        // ADD NAMED LOCATION MARKERS
         addNamedLocationMarkers();
       } else {
         ui.lensEl.style.display = "none";
@@ -856,12 +876,10 @@
 
       await invalidateMapsHard();
 
-      // Set to center with a zoom that fills the view nicely
       mainMap.setView([px.h / 2, px.w / 2], 0, { animate: false });
 
       await invalidateMapsHard();
 
-      // Initialize knobs to center and sync lens
       updateKnobsFromMap();
       syncLens();
 
