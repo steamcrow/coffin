@@ -655,10 +655,10 @@
 
         const applyMomentum = () => {
           if (!mainMap || !mapDoc) return; // Safety check
-          if (Math.abs(velocityY) < 0.004) return;  // Lower threshold = longer slide
+          if (Math.abs(velocityY) < 0.002) return;  // Lower threshold = longer slide
 
           const rect = ui.scrollElV.getBoundingClientRect();
-          lastYV += velocityY * 25;  // Increased multiplier for smoother movement
+          lastYV += velocityY * 2;  // Increased multiplier for smoother movement
           const tY = (lastYV - rect.top) / rect.height;
           panMapToTY(tY);
           updateKnobsFromMap();
