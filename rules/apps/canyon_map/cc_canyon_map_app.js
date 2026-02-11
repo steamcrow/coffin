@@ -28,11 +28,12 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
     lensEnabled: true,
-    lensZoomOffset: .50,  // HOW MUCH MORE ZOOMED IS THE LENS
-                         // 0 = same as background (see most of map)
-                         // 1 = slightly zoomed (CURRENT - good balance)
-                         // 2 = more zoomed (see less area, more detail)
-                         // 3 = very zoomed (close-up view)
+    lensZoomOffset: 0.5,  // HOW MUCH MORE ZOOMED IS THE LENS?
+                          // 0 = same as background (see most of map)
+                          // 0.5 = slightly zoomed (CURRENT - see lots of area)
+                          // 1 = moderately zoomed (good balance)
+                          // 2 = more zoomed (see less area, more detail)
+                          // 3 = very zoomed (close-up view)
 
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
@@ -268,7 +269,7 @@
           {
             class: "cc-btn cc-btn-x",
             type: "button",
-            onClick: () => root._ccApi && root._ccApi.drawerClose()
+            id: "cc-cm-drawer-close"
           },
           ["×"]
         )
@@ -662,7 +663,7 @@
           panMapToTY(tY);
           updateKnobsFromMap();
 
-          velocityY *= 0.96;  // Higher friction = longer momentum (was 0.92)
+          velocityY *= 0.98;  // HIGHER friction = heavier, slower momentum
           requestAnimationFrame(applyMomentum);
         };
 
@@ -760,7 +761,7 @@
           panMapToTX(tX);
           updateKnobsFromMap();
 
-          velocityX *= 0.96;  // Higher friction = longer momentum (was 0.92)
+          velocityX *= 0.98;  // HIGHER friction = heavier, slower momentum
           requestAnimationFrame(applyMomentum);
         };
 
@@ -963,6 +964,22 @@
       mainMap.setView([px.h / 2, px.w / 2], 0, { animate: false });
       updateKnobsFromMap();
       syncLens();
+    });
+
+    // Drawer close button
+    const closeBtn = root.querySelector("#cc-cm-drawer-close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => closeDrawer(ui));
+    }
+
+    // Click outside drawer to close
+    document.addEventListener("click", (e) => {
+      if (!ui.drawerEl.classList.contains("open")) return;
+      
+      // Check if click is outside drawer
+      if (!ui.drawerEl.contains(e.target)) {
+        closeDrawer(ui);
+      }
     });
 
     await loadAll();
