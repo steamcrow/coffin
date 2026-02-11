@@ -13,11 +13,19 @@
 
   /* ============================================
      LENS SIZE ADJUSTMENT
-     Currently 40% smaller than frame window
-     Original: 760x520, Current: 456x312
+     Must fill frame's iron window completely
+     so edges are hidden by metal frame overlay
      ============================================ */
-  --lens-w: 456px;
-  --lens-h: 312px;
+  --lens-w: 760px;
+  --lens-h: 520px;
+  
+  /* ============================================
+     MAP ZOOM LEVELS
+     Controlled in JavaScript DEFAULTS:
+     - lensZoomOffset: How much more zoomed the lens is
+       Lower = see MORE of map (e.g., 0 or 1)
+       Higher = see LESS of map, more detail (e.g., 2 or 3)
+     ============================================ */
 
   /* ============================================
      LENS OVERSCAN
@@ -69,7 +77,7 @@
 
   /* ============================================
      KNOB SIZING & EASING
-     Momentum scroll parameters
+     Momentum scroll parameters (in JavaScript)
      ============================================ */
   --knob-w: 92px;
   --knob-h: 150px;
@@ -77,9 +85,12 @@
   --knob-horiz-h: 150px;
   --knob-offset-x: 9px;
   
-  /* Momentum physics (controlled in JS) */
-  --scroll-friction: 0.92;     /* Higher = more coasting */
-  --scroll-min-velocity: 0.5;  /* Minimum speed to trigger momentum */
+  /* Momentum physics (controlled in JavaScript):
+     - Friction: 0.96 (higher = longer coast)
+     - Min velocity: 0.005 (lower = longer animation)
+     - Trigger threshold: 0.3 (easier to trigger momentum)
+     - Movement multiplier: 20 (smoother transitions)
+  */
 
   /* Shadows */
   --shadow-inset: inset 0 0 60px #000;
@@ -377,15 +388,19 @@
    SHARED KNOB (BLAPPO) + ACTIVE STATES
    ================================================================ */
 .cc-scroll-knob{
-  position: absolute !important;
-  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png") !important;
+  position: absolute;
+  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
 
-  cursor: grab !important;
+  cursor: grab;
   filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
-  transition: transform 140ms ease, filter 140ms ease;
+  
+  /* NO transition here - JavaScript controls smooth movement */
+  transition: filter 140ms ease;
+  will-change: top, left;
+}
 
   touch-action: none;
   user-select: none;
@@ -401,32 +416,32 @@
   filter: drop-shadow(0 14px 20px rgba(0,0,0,0.95)) brightness(1.08);
 }
 
-/* Vertical knob positioning (JS sets top in px) */
+/* Vertical knob positioning (JS controls top dynamically) */
 #cc-scroll-knob-v{
   width: var(--knob-w) !important;
   height: var(--knob-h) !important;
 
   left: calc(50% + var(--knob-offset-x)) !important;
-  top: 0px !important;
+  top: 50%;  /* JS overrides - removed !important */
 
-  transform: translateX(-50%) !important;
+  transform: translateX(-50%) translateY(-50%) !important;
 }
-#cc-scroll-knob-v.is-active{ transform: translateX(-50%) scale(1.05) !important; }
-#cc-scroll-knob-v:hover{ transform: translateX(-50%) scale(1.03) !important; }
+#cc-scroll-knob-v.is-active{ transform: translateX(-50%) translateY(-50%) scale(1.05) !important; }
+#cc-scroll-knob-v:hover{ transform: translateX(-50%) translateY(-50%) scale(1.03) !important; }
 
-/* Horizontal knob positioning (JS sets left in px) - NO ROTATION! */
+/* Horizontal knob positioning (JS controls left dynamically) */
 #cc-scroll-knob-h{
   width: var(--knob-horiz-w) !important;
   height: var(--knob-horiz-h) !important;
 
-  left: 0px !important;
+  left: 50%;  /* JS overrides - removed !important */
   top: 50% !important;
 
   /* NO rotation - knob faces same way as vertical */
-  transform: translateY(-50%) !important;
+  transform: translateX(-50%) translateY(-50%) !important;
 }
-#cc-scroll-knob-h.is-active{ transform: translateY(-50%) scale(1.05) !important; }
-#cc-scroll-knob-h:hover{ transform: translateY(-50%) scale(1.03) !important; }
+#cc-scroll-knob-h.is-active{ transform: translateX(-50%) translateY(-50%) scale(1.05) !important; }
+#cc-scroll-knob-h:hover{ transform: translateX(-50%) translateY(-50%) scale(1.03) !important; }
 
 /* ================================================================
    DRAWER (SLIDES FROM RIGHT SIDE)
