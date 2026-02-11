@@ -28,7 +28,7 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
     lensEnabled: true,
-    lensZoomOffset: 0.33,  // HOW MUCH MORE ZOOMED IS THE LENS?
+    lensZoomOffset: 0.35,  // HOW MUCH MORE ZOOMED IS THE LENS?
                           // 0 = same as background (see most of map)
                           // 0.5 = slightly zoomed (CURRENT - see lots of area)
                           // 1 = moderately zoomed (good balance)
@@ -655,15 +655,15 @@
 
         const applyMomentum = () => {
           if (!mainMap || !mapDoc) return; // Safety check
-          if (Math.abs(velocityY) < 0.005) return;  // Lower threshold = longer slide
+          if (Math.abs(velocityY) < 0.004) return;  // Lower threshold = longer slide
 
           const rect = ui.scrollElV.getBoundingClientRect();
-          lastYV += velocityY * 20;  // Increased multiplier for smoother movement
+          lastYV += velocityY * 25;  // Increased multiplier for smoother movement
           const tY = (lastYV - rect.top) / rect.height;
           panMapToTY(tY);
           updateKnobsFromMap();
 
-          velocityY *= 0.98;  // HIGHER friction = heavier, slower momentum
+          velocityY *= 1.25;  // HIGHER friction = heavier, slower momentum
           requestAnimationFrame(applyMomentum);
         };
 
