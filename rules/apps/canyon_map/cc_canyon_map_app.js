@@ -425,15 +425,33 @@
         } catch (e) {}
       });
 
-      // Map location IDs to pixel coordinates
+      // Map location IDs to pixel coordinates [y, x]
+      // Map is 2824w x 4000h pixels
+      // Based on canyon geography: north entrance to south sprawl
       const locationCoords = {
-        "fort-plunder": [500, 1400],
-        "ratsville": [2200, 2000],
-        "ghost-mountain": [1500, 800],
-        "deerhoof": [600, 600],
-        "huck": [2000, 1200],
-        "dustbuck": [1800, 2800],
-        "bayou-city": [3200, 1800]
+        // NORTHERN (Top of Canyon - Entrance)
+        "fort-plunder": [400, 1400],        // ⚖️ Liberty Corps HQ - North entrance
+        
+        // UPPER REGIONS
+        "deerhoof": [800, 2200],            // 🦌 Highland refuge - upper right
+        "huck": [1000, 700],                // 🧭 Frontier outpost - upper left
+        "camp-coffin": [1100, 1400],        // 🦅 Monster Rangers HQ - upper center
+        "silverpit": [1200, 2100],          // ⛏️ Active mine - upper right (visible on map)
+        
+        // MIDDLE REGIONS
+        "ghost-mountain": [1600, 900],      // ⛰️ Mesa landmark - mid-left
+        "plata": [1800, 2300],              // 🏔️ Mountain silver camp - mid-right
+        "fortune": [2000, 1100],            // 🌵 River crossroads - mid-left
+        
+        // LOWER REGIONS
+        "ratsville": [2400, 1600],          // 🐀 Shantytown - lower center
+        "cowtown": [2600, 2400],            // 🐄 Ranch land - lower right
+        "river-city": [2800, 800],          // 🌊 River settlement - lower left
+        "dustbuck": [3000, 2000],           // 🐂 Boomtown - lower center-right
+        
+        // SOUTHERN (Bottom of Canyon - Major Hub)
+        "bayou-city": [3500, 1800],         // 🌊 Coastal river city - south
+        "diablo": [3600, 1400]              // 🏴‍☠️ Lawless sprawl - south center
       };
 
       locationsData.locations.forEach(loc => {
