@@ -44,8 +44,8 @@
      Background layer styling
      ============================================ */
   --bg-opacity: 0.88;
-  --bg-blur: 1px;
-  --bg-sepia: 0.80;
+  --bg-blur: 5px;
+  --bg-sepia: 1;
 
   /* ============================================
      LENS APPEARANCE & DISTORTION
@@ -53,7 +53,7 @@
      ============================================ */
   --lens-radius: 220px;
   --lens-contrast: 1.12;
-  --lens-distortion-scale: 80;  /* Higher = more edge warp */
+  --lens-distortion-scale: 180;  /* Higher = more edge warp */
 
   /* ============================================
      LENS HIGHLIGHT/GLARE
