@@ -1,14 +1,7 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
    Coffin Canyon — Canyon Map
    
-   COMPLETE WORKING VERSION
-   - Large base map (fills container)
-   - Smaller lens (20% smaller = 608x416)
-   - Both maps perfectly synchronized
-   - Both start centered
-   - Knobs start centered
-   - Momentum scrolling works
-   - No rotation on horizontal knob
+   WITH: Preloader + Clickable Named Locations
 */
 
 (function () {
@@ -21,20 +14,22 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json",
     stateUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_state.json",
+    locationsUrl:
+      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json",
 
     appCssUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map.css",
+    uiCssUrl:
+      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css",
 
     leafletCssUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css",
     leafletJsUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
-    // Lens behavior - CSS handles the size (608x416)
     lensEnabled: true,
     lensZoomOffset: 2,
 
-    // Panning behavior
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
     allowMapDrag: true,
@@ -143,6 +138,34 @@
     if (!window.L) throw new Error("Leaflet did not load (window.L missing).");
   }
 
+  // PRELOADER
+  function showPreloader(root) {
+    const preloader = el("div", { 
+      class: "cc-cm-preloader",
+      style: "position: absolute; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.95);"
+    }, [
+      el("div", { class: "cc-loading-container" }, [
+        el("div", { style: "text-align: center; margin-bottom: 2rem;" }, [
+          el("h1", { style: "font-size: 3rem; font-weight: 900; color: #ff7518; letter-spacing: -1px; margin: 0; text-shadow: 0 0 20px rgba(255,117,24,0.5);" }, ["COFFIN CANYON"]),
+          el("div", { style: "color: #888; font-size: 0.9rem; letter-spacing: 2px; margin-top: 0.5rem;" }, ["CANYON MAP"])
+        ]),
+        el("div", { class: "cc-loading-bar" }, [
+          el("div", { class: "cc-loading-progress" })
+        ]),
+        el("p", { class: "cc-loading-text" }, ["Loading map data..."])
+      ])
+    ]);
+    root.appendChild(preloader);
+    return preloader;
+  }
+
+  function hidePreloader(preloader) {
+    if (!preloader) return;
+    preloader.style.opacity = "0";
+    preloader.style.transition = "opacity 0.4s";
+    setTimeout(() => preloader.remove(), 400);
+  }
+
   function normalizePoints(points, coordSystem) {
     if (!Array.isArray(points)) return [];
     if (coordSystem !== "image_px" && coordSystem !== "map_units") return [];
@@ -206,7 +229,7 @@
       el("div", { class: "cc-cm-mapwrap" }, [mapEl, lens, frame, scrollerV, scrollerH]),
       el("div", { class: "cc-cm-drawer", id: "cc-cm-drawer" }, [
         el("div", { class: "cc-cm-drawer-head" }, [
-          el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Region"]),
+          el("div", { class: "cc-cm-drawer-title", id: "cc-cm-drawer-title" }, ["Location"]),
           el(
             "button",
             {
@@ -218,7 +241,7 @@
           )
         ]),
         el("div", { class: "cc-cm-drawer-content", id: "cc-cm-drawer-content" }, [
-          el("div", { class: "cc-muted" }, ["Click a region to view details."])
+          el("div", { class: "cc-muted" }, ["Click a named location to view details."])
         ])
       ])
     ]);
@@ -251,50 +274,58 @@
     ui.drawerEl.classList.remove("open");
   }
 
-  function renderDrawer(ui, region, stateForRegion) {
-    ui.drawerTitleEl.textContent = region?.name || "Region";
+  // Render meter bar
+  function renderMeterBar(value, max, color) {
+    const pct = Math.round((value / max) * 100);
+    return `
+      <div style="width: 100%; height: 24px; background: rgba(255,255,255,0.08); border-radius: 12px; overflow: hidden; position: relative; border: 1px solid rgba(255,255,255,0.12);">
+        <div style="height: 100%; width: ${pct}%; background: linear-gradient(90deg, ${color}, ${color}88); transition: width 0.3s; box-shadow: 0 0 10px ${color}66;"></div>
+        <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 3px #000;">${value} / ${max}</div>
+      </div>
+    `;
+  }
 
-    const controller = stateForRegion?.controller_faction_id || "neutral";
-    const status = stateForRegion?.status || "neutral";
-    const weather = stateForRegion?.weather_tag || null;
+  // Render location drawer
+  function renderLocationDrawer(ui, location) {
+    ui.drawerTitleEl.textContent = `${location.emoji || '📍'} ${location.name}`;
 
-    const nodes = [];
+    const danger = location.danger || 0;
+    const population = location.population || 0;
 
-    if (region?.description) nodes.push(el("div", { class: "cc-block" }, [region.description]));
+    ui.drawerContentEl.innerHTML = `
+      <div class="cc-block">
+        <div class="cc-h">Description</div>
+        <p>${location.description || 'No description available.'}</p>
+      </div>
 
-    nodes.push(
-      el("div", { class: "cc-block" }, [
-        el("div", { class: "cc-h" }, ["State"]),
-        el("div", {}, [`Controller: ${controller}`]),
-        el("div", {}, [`Status: ${status}`]),
-        weather
-          ? el("div", {}, [`Weather: ${weather}`])
-          : el("div", { class: "cc-muted" }, ["Weather: (none)"])
-      ])
-    );
+      <div class="cc-block">
+        <div class="cc-h">Danger Level</div>
+        ${renderMeterBar(danger, 6, '#ff4444')}
+      </div>
 
-    const resources = region?.resources || [];
-    nodes.push(
-      el("div", { class: "cc-block" }, [
-        el("div", { class: "cc-h" }, ["Resources"]),
-        resources.length
-          ? el("ul", { class: "cc-ul" }, resources.map((r) => el("li", {}, [String(r)])))
-          : el("div", { class: "cc-muted" }, ["(none)"])
-      ])
-    );
+      <div class="cc-block">
+        <div class="cc-h">Population</div>
+        ${renderMeterBar(population, 6, '#4caf50')}
+      </div>
 
-    const encounters = region?.encounters || [];
-    nodes.push(
-      el("div", { class: "cc-block" }, [
-        el("div", { class: "cc-h" }, ["Encounters"]),
-        encounters.length
-          ? el("ul", { class: "cc-ul" }, encounters.map((e) => el("li", {}, [String(e)])))
-          : el("div", { class: "cc-muted" }, ["(none)"])
-      ])
-    );
+      ${location.atmosphere ? `
+        <div class="cc-block">
+          <div class="cc-h">Atmosphere</div>
+          <p style="font-style: italic; color: #aaa;">"${location.atmosphere}"</p>
+        </div>
+      ` : ''}
 
-    ui.drawerContentEl.innerHTML = "";
-    nodes.forEach((n) => ui.drawerContentEl.appendChild(n));
+      ${location.features && location.features.length > 0 ? `
+        <div class="cc-block">
+          <div class="cc-h">Features</div>
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            ${location.features.map(f => 
+              `<span style="padding: 4px 10px; background: rgba(255,117,24,0.2); border: 1px solid rgba(255,117,24,0.4); border-radius: 4px; font-size: 0.85rem;">${f}</span>`
+            ).join('')}
+          </div>
+        </div>
+      ` : ''}
+    `;
   }
 
   function buildRegionStyle(opts, regionId, stateByRegion) {
@@ -320,13 +351,20 @@
     let maxDrift = typeof opts.maxHorizontalDriftPx === "number" ? opts.maxHorizontalDriftPx : 0;
     if (opts.lockHorizontalPan === true) maxDrift = 0;
 
+    // Show preloader
+    const preloader = showPreloader(root);
+
     if (opts.appCssUrl) await loadCssTextOnce(opts.appCssUrl, "cc_canyon_map_css");
+    if (opts.uiCssUrl) await loadCssTextOnce(opts.uiCssUrl, "cc_ui_css");
     await ensureLeaflet(opts);
+
+    hidePreloader(preloader);
 
     const ui = buildLayout(root, opts);
 
     let mapDoc = null;
     let stateDoc = null;
+    let locationsData = null;
 
     let mainMap = null;
     let lensMap = null;
@@ -334,6 +372,8 @@
     const regionLayersById = {};
     const regionsById = {};
     let selectedRegionId = null;
+
+    const locationMarkersById = {};
 
     let scrollersBound = false;
 
@@ -372,6 +412,53 @@
 
         poly.addTo(mainMap);
         regionLayersById[r.region_id] = poly;
+      });
+    }
+
+    // Add named location markers (LENS MAP ONLY)
+    function addNamedLocationMarkers() {
+      if (!locationsData || !lensMap) return;
+
+      // Clear existing markers
+      Object.values(locationMarkersById).forEach(marker => {
+        try {
+          lensMap.removeLayer(marker);
+        } catch (e) {}
+      });
+
+      // Map location IDs to pixel coordinates (you'll need to map these properly)
+      // For now, using placeholder coordinates
+      const locationCoords = {
+        "fort-plunder": [500, 1400],
+        "ratsville": [2200, 2000],
+        "ghost-mountain": [1500, 800],
+        "deerhoof": [600, 600],
+        "huck": [2000, 1200],
+        "dustbuck": [1800, 2800],
+        "bayou-city": [3200, 1800]
+      };
+
+      locationsData.locations.forEach(loc => {
+        const coords = locationCoords[loc.id];
+        if (!coords) return;
+
+        const icon = window.L.divIcon({
+          className: 'cc-location-marker',
+          html: `<div style="font-size: 24px; text-shadow: 0 2px 4px #000; cursor: pointer; transition: transform 0.2s;" 
+                      onmouseover="this.style.transform='scale(1.3)'" 
+                      onmouseout="this.style.transform='scale(1)'">${loc.emoji || '📍'}</div>`,
+          iconSize: [30, 30],
+          iconAnchor: [15, 15]
+        });
+
+        const marker = window.L.marker(coords, { icon });
+        marker.on('click', () => {
+          renderLocationDrawer(ui, loc);
+          openDrawer(ui);
+        });
+
+        marker.addTo(lensMap);
+        locationMarkersById[loc.id] = marker;
       });
     }
 
@@ -677,6 +764,7 @@
 
       mapDoc = await fetchJson(opts.mapUrl);
       stateDoc = await fetchJson(opts.stateUrl);
+      locationsData = await fetchJson(opts.locationsUrl);
 
       const mapErr = validateMapDoc(mapDoc);
       if (mapErr) throw new Error("Bad canyon_map.json: " + mapErr);
@@ -745,6 +833,9 @@
 
         window.L.imageOverlay(lensImageKey, bounds, { opacity: 1.0 }).addTo(lensMap);
         lensMap.setMaxBounds(bounds);
+
+        // ADD NAMED LOCATION MARKERS
+        addNamedLocationMarkers();
       } else {
         ui.lensEl.style.display = "none";
       }
@@ -759,9 +850,9 @@
 
       rebuildRegions();
       closeDrawer(ui);
-      ui.drawerTitleEl.textContent = "Region";
+      ui.drawerTitleEl.textContent = "Location";
       ui.drawerContentEl.innerHTML = "";
-      ui.drawerContentEl.appendChild(el("div", { class: "cc-muted" }, ["Click a region to view details."]));
+      ui.drawerContentEl.appendChild(el("div", { class: "cc-muted" }, ["Click a named location to view details."]));
 
       bindScrollersOnce();
 
