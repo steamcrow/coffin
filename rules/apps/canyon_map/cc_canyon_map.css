@@ -43,9 +43,9 @@
      BASE MAP APPEARANCE
      Background layer styling
      ============================================ */
-  --bg-opacity: 1;
-  --bg-blur: 10px;
-  --bg-sepia: 5;
+  --bg-opacity: .1;
+  --bg-blur: 5px;
+  --bg-sepia: .5;
 
   /* ============================================
      LENS APPEARANCE & DISTORTION
