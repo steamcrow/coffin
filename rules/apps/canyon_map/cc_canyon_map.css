@@ -24,10 +24,11 @@
      Controlled in JavaScript DEFAULTS:
      - lensZoomOffset: How much more zoomed the lens is
        0 = see MOST of map (same as background)
-       0.5 = see lots of area (CURRENT)
-       1 = good balance
-       2 = see less area, more detail
-       3 = close-up view
+       0.5 = minimal zoom (lots of area but less crisp)
+       0.75 = good balance (CURRENT - crisp detail + good area)
+       1 = moderately zoomed (crisp detail)
+       2 = close-up detail
+       3 = very close-up
      ============================================ */
 
   /* ============================================
@@ -52,8 +53,8 @@
      Adjust clarity and edge effects
      ============================================ */
   --lens-radius: 22px;
-  --lens-contrast: 1.12;
-  --lens-distortion-scale: 99;  /* Higher = more edge warp */
+  --lens-contrast: 1.15;  /* Increased for crisper detail */
+  --lens-distortion-scale: 80;  /* Higher = more edge warp */
 
   /* ============================================
      LENS HIGHLIGHT/GLARE
@@ -89,10 +90,13 @@
   --knob-offset-x: 9px;
   
   /* Momentum physics (controlled in JavaScript):
-     - Friction: 0.98 (higher = heavier, slower momentum)
-     - Min velocity: 0.005 (lower = longer animation)
-     - Trigger threshold: 0.3 (easier to trigger momentum)
-     - Movement multiplier: 20 (smoother transitions)
+     - Friction: 0.88 (HEAVY - stops much sooner with gradual curve)
+     - Min velocity: 0.02 (higher = stops sooner)
+     - Trigger threshold: 0.2 (easy to trigger)
+     - Movement multiplier: 18 (smooth controlled motion)
+     - Velocity capture: 1.2x (better fling response)
+     
+     Effect: Fling the knob → gradual deceleration → stops sooner
   */
 
   /* Shadows */
