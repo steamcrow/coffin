@@ -210,8 +210,9 @@
     svg.innerHTML = `
       <defs>
         <filter id="ccLensWarp" x="-50%" y="-50%" width="200%" height="200%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise"/>
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="80" xChannelSelector="R" yChannelSelector="G"/>
+          <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="5" result="noise"/>
+          <!-- DISTORTION SCALE: Currently 600 (EXTREME) - adjust down to 100-200 for subtle effect -->
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="600" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
       </defs>
     `;
@@ -222,6 +223,14 @@
   function buildLayout(root, opts) {
     root.innerHTML = "";
     root.classList.add("cc-canyon-map");
+
+    // Add mobile viewport meta if not present
+    if (!document.querySelector('meta[name="viewport"]')) {
+      const meta = document.createElement('meta');
+      meta.name = 'viewport';
+      meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      document.head.appendChild(meta);
+    }
 
     // Add SVG filter
     addSVGFilter(root);
@@ -322,7 +331,7 @@
 
   // Render location drawer
   function renderLocationDrawer(ui, location) {
-    ui.drawerTitleEl.textContent = `${location.emoji || '📍'} ${location.name}`;
+    ui.drawerTitleEl.textContent = location.name;
 
     const danger = location.danger || 0;
     const population = location.population || 0;
@@ -382,6 +391,14 @@
 
   async function mount(root, userOpts) {
     const opts = { ...DEFAULTS, ...(userOpts || {}) };
+
+    // Ensure mobile viewport is set
+    if (!document.querySelector('meta[name="viewport"]')) {
+      const viewport = document.createElement('meta');
+      viewport.name = 'viewport';
+      viewport.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+      document.head.appendChild(viewport);
+    }
 
     let maxDrift = typeof opts.maxHorizontalDriftPx === "number" ? opts.maxHorizontalDriftPx : 0;
     if (opts.lockHorizontalPan === true) maxDrift = 0;
@@ -486,11 +503,41 @@
 
         const icon = window.L.divIcon({
           className: 'cc-location-marker',
-          html: `<div style="font-size: 24px; text-shadow: 0 2px 4px #000; cursor: pointer; transition: transform 0.2s;" 
-                      onmouseover="this.style.transform='scale(1.3)'" 
-                      onmouseout="this.style.transform='scale(1)'">${loc.emoji || '📍'}</div>`,
-          iconSize: [30, 30],
-          iconAnchor: [15, 15]
+          html: `
+            <div style="
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              cursor: pointer;
+              padding: 10px;
+              background: rgba(0,0,0,0.85);
+              border: 1px solid rgba(255,255,255,0.3);
+              border-radius: 4px;
+              transition: transform 0.2s, background 0.2s;
+              box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+            " 
+            onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(0,0,0,0.95)'" 
+            onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(0,0,0,0.85)'">
+              <div style="
+                width: 8px;
+                height: 8px;
+                background: #ff0000;
+                border-radius: 50%;
+                box-shadow: 0 0 8px rgba(255,0,0,0.8), 0 0 16px rgba(255,0,0,0.4);
+                flex-shrink: 0;
+              "></div>
+              <div style="
+                color: #fff;
+                font-size: 12px;
+                font-weight: 700;
+                text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,0.8);
+                white-space: nowrap;
+                line-height: 1;
+              ">${loc.name}</div>
+            </div>
+          `,
+          iconSize: null,
+          iconAnchor: [0, 15]
         });
 
         const marker = window.L.marker(coords, { icon });
