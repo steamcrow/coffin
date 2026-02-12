@@ -210,9 +210,9 @@
     svg.innerHTML = `
       <defs>
         <filter id="ccLensWarp" x="-50%" y="-50%" width="200%" height="200%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="5" result="noise"/>
-          <!-- DISTORTION SCALE: Currently 600 (EXTREME) - adjust down to 100-200 for subtle effect -->
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="600" xChannelSelector="R" yChannelSelector="G"/>
+          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="6" result="noise"/>
+          <!-- DISTORTION SCALE: Currently 1200 (INSANE) - should be VERY visible, adjust down to 100-300 for subtle -->
+          <feDisplacementMap in="SourceGraphic" in2="noise" scale="1200" xChannelSelector="R" yChannelSelector="G"/>
         </filter>
       </defs>
     `;
@@ -468,8 +468,8 @@
       });
     }
 
-    // Add named location markers (LENS MAP ONLY)
-    function addNamedLocationMarkers() {
+    // Add invisible hitboxes for named locations (text labels and red dots on map)
+    function addNamedLocationHitboxes() {
       if (!locationsData || !lensMap) return;
 
       Object.values(locationMarkersById).forEach(marker => {
@@ -478,7 +478,7 @@
         } catch (e) {}
       });
 
-      // Map location IDs to pixel coordinates [y, x]
+      // Map location IDs to pixel coordinates [y, x] where text/dots appear on map
       // Map is 2824w x 4000h pixels
       const locationCoords = {
         "fort-plunder": [400, 1400],
@@ -501,59 +501,34 @@
         const coords = locationCoords[loc.id];
         if (!coords) return;
 
-        const icon = window.L.divIcon({
-          className: 'cc-location-marker',
-          html: `
-            <div style="
-              display: flex;
-              align-items: center;
-              gap: 6px;
-              cursor: pointer;
-              padding: 10px;
-              background: rgba(0,0,0,0.85);
-              border: 1px solid rgba(255,255,255,0.3);
-              border-radius: 4px;
-              transition: transform 0.2s, background 0.2s;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.6);
-            " 
-            onmouseover="this.style.transform='scale(1.1)'; this.style.background='rgba(0,0,0,0.95)'" 
-            onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(0,0,0,0.85)'">
-              <div style="
-                width: 8px;
-                height: 8px;
-                background: #ff0000;
-                border-radius: 50%;
-                box-shadow: 0 0 8px rgba(255,0,0,0.8), 0 0 16px rgba(255,0,0,0.4);
-                flex-shrink: 0;
-              "></div>
-              <div style="
-                color: #fff;
-                font-size: 12px;
-                font-weight: 700;
-                text-shadow: 0 1px 3px #000, 0 0 8px rgba(0,0,0,0.8);
-                white-space: nowrap;
-                line-height: 1;
-              ">${loc.name}</div>
-            </div>
-          `,
-          iconSize: null,
-          iconAnchor: [0, 15]
+        // Create invisible rectangle hitbox around text label and red dot
+        // Approximate 100px wide x 30px tall hitbox centered on coordinate
+        const hitboxSize = 50; // pixels radius
+        const bounds = [
+          [coords[0] - hitboxSize, coords[1] - hitboxSize],
+          [coords[0] + hitboxSize, coords[1] + hitboxSize]
+        ];
+
+        const hitbox = window.L.rectangle(bounds, {
+          color: 'transparent',
+          fillColor: 'transparent',
+          fillOpacity: 0,
+          weight: 0,
+          interactive: true
         });
 
-        const marker = window.L.marker(coords, { icon });
-        marker.on('click', () => {
+        hitbox.on('click', () => {
           renderLocationDrawer(ui, loc);
           drawerJustOpened = true;
           openDrawer(ui);
           
-          // Clear flag after a brief delay
           setTimeout(() => {
             drawerJustOpened = false;
           }, 100);
         });
 
-        marker.addTo(lensMap);
-        locationMarkersById[loc.id] = marker;
+        hitbox.addTo(lensMap);
+        locationMarkersById[loc.id] = hitbox;
       });
     }
 
@@ -967,7 +942,7 @@
         window.L.imageOverlay(lensImageKey, bounds, { opacity: 1.0 }).addTo(lensMap);
         lensMap.setMaxBounds(bounds);
 
-        addNamedLocationMarkers();
+        addNamedLocationHitboxes();
       } else {
         ui.lensEl.style.display = "none";
       }
