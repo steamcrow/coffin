@@ -28,12 +28,13 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
     lensEnabled: true,
-    lensZoomOffset: 0.6,  // HOW MUCH MORE ZOOMED IS THE LENS?
-                          // 0 = same as background (see most of map)
-                          // 0.5 = slightly zoomed (CURRENT - see lots of area)
-                          // 1 = moderately zoomed (good balance)
-                          // 2 = more zoomed (see less area, more detail)
-                          // 3 = very zoomed (close-up view)
+    lensZoomOffset: 0.75,  // HOW MUCH MORE ZOOMED IS THE LENS?
+                           // 0 = same as background (see most of map)
+                           // 0.5 = minimal zoom (lots of area but less crisp)
+                           // 0.75 = good balance (CURRENT - crisp + good area)
+                           // 1 = moderately zoomed (crisp detail)
+                           // 2 = more zoomed (close-up)
+                           // 3 = very zoomed
 
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
@@ -649,7 +650,7 @@
         const now = Date.now();
         const dt = now - lastTimeV;
         if (dt > 0) {
-          velocityY = (clientY - lastYV) / dt;
+          velocityY = (clientY - lastYV) / dt * 1.2;  // Capture velocity better
         }
         lastYV = clientY;
         lastTimeV = now;
@@ -664,19 +665,19 @@
 
         const applyMomentum = () => {
           if (!mainMap || !mapDoc) return; // Safety check
-          if (Math.abs(velocityY) < 0.005) return;  // Lower threshold = longer slide
+          if (Math.abs(velocityY) < 0.02) return;  // Higher threshold = stops sooner
 
           const rect = ui.scrollElV.getBoundingClientRect();
-          lastYV += velocityY * 20;  // Increased multiplier for smoother movement
+          lastYV += velocityY * 18;  // Slightly reduced for more control
           const tY = (lastYV - rect.top) / rect.height;
           panMapToTY(tY);
           updateKnobsFromMap();
 
-          velocityY *= 111;  // HIGHER friction = heavier, slower momentum
+          velocityY *= 0.88;  // MUCH HIGHER friction = stops much sooner with gradual curve
           requestAnimationFrame(applyMomentum);
         };
 
-        if (Math.abs(velocityY) > .1) {  // Lower threshold to trigger momentum more easily
+        if (Math.abs(velocityY) > 0.2) {  // Lower threshold to trigger more easily
           applyMomentum();
         }
 
@@ -747,7 +748,7 @@
         const now = Date.now();
         const dt = now - lastTimeH;
         if (dt > 0) {
-          velocityX = (clientX - lastXH) / dt;
+          velocityX = (clientX - lastXH) / dt * 1.2;  // Capture velocity better
         }
         lastXH = clientX;
         lastTimeH = now;
@@ -762,19 +763,19 @@
 
         const applyMomentum = () => {
           if (!mainMap || !mapDoc) return; // Safety check
-          if (Math.abs(velocityX) < 0.005) return;  // Lower threshold = longer slide
+          if (Math.abs(velocityX) < 0.02) return;  // Higher threshold = stops sooner
 
           const rect = ui.scrollElH.getBoundingClientRect();
-          lastXH += velocityX * 20;  // Increased multiplier for smoother movement
+          lastXH += velocityX * 18;  // Slightly reduced for more control
           const tX = (lastXH - rect.left) / rect.width;
           panMapToTX(tX);
           updateKnobsFromMap();
 
-          velocityX *= 0.98;  // HIGHER friction = heavier, slower momentum
+          velocityX *= 0.88;  // MUCH HIGHER friction = stops much sooner with gradual curve
           requestAnimationFrame(applyMomentum);
         };
 
-        if (Math.abs(velocityX) > 0.3) {  // Lower threshold to trigger momentum more easily
+        if (Math.abs(velocityX) > 0.2) {  // Lower threshold to trigger more easily
           applyMomentum();
         }
 
