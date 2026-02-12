@@ -1,4 +1,4 @@
- /* File: rules/apps/canyon_map/cc_canyon_map_app.js
+/* File: rules/apps/canyon_map/cc_canyon_map_app.js
    Coffin Canyon — Canyon Map
    
    FINAL VERSION with all fixes
@@ -199,42 +199,8 @@
     return null;
   }
 
-  // Add SVG filter for lens distortion
-  function addSVGFilter(root) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("width", "0");
-    svg.setAttribute("height", "0");
-    svg.style.position = "absolute";
-    svg.style.pointerEvents = "none";
-    svg.setAttribute("id", "ccLensWarpSVG");
-    
-    svg.innerHTML = `
-      <defs>
-        <filter id="ccLensWarp" x="-50%" y="-50%" width="200%" height="200%">
-          <feTurbulence type="fractalNoise" baseFrequency="0.03" numOctaves="6" result="noise"/>
-          <!-- DISTORTION SCALE: Currently 1200 (INSANE) - should be VERY visible, adjust down to 100-300 for subtle -->
-          <feDisplacementMap in="SourceGraphic" in2="noise" scale="1200" xChannelSelector="R" yChannelSelector="G"/>
-        </filter>
-      </defs>
-    `;
-    
-    root.appendChild(svg);
-    
-    // Debug logging
-    console.log("✅ SVG filter added to DOM with ID: ccLensWarp");
-    console.log("📍 Filter scale: 1200 (EXTREME - should be very visible)");
-    console.log("🎨 Filter applied to: .cc-lens-overscan");
-    
-    // Check if filter is accessible
-    setTimeout(() => {
-      const filterElement = document.getElementById("ccLensWarp");
-      if (filterElement) {
-        console.log("✅ SVG filter element found in DOM");
-      } else {
-        console.error("❌ SVG filter element NOT found in DOM!");
-      }
-    }, 100);
-  }
+  // CSS-based distortion (no SVG filter needed)
+  // Distortion is applied via CSS transforms in cc_canyon_map.css
 
   function buildLayout(root, opts) {
     root.innerHTML = "";
@@ -248,8 +214,7 @@
       document.head.appendChild(meta);
     }
 
-    // Add SVG filter
-    addSVGFilter(root);
+    // CSS-based lens distortion (no SVG filter needed)
 
     const header = el("div", { class: "cc-cm-header" }, [
       el("div", { class: "cc-cm-title" }, [opts.title]),
@@ -447,12 +412,18 @@
     
     // Flag to prevent click-outside from closing drawer immediately after opening
     let drawerJustOpened = false;
+    
+    // Track if user has manually zoomed the lens
+    let userLensZoom = null;
 
     const syncLens = rafThrottle(() => {
       if (!opts.lensEnabled || !mainMap || !lensMap) return;
       const c = mainMap.getCenter();
       const z = mainMap.getZoom();
-      lensMap.setView(c, z + opts.lensZoomOffset, { animate: false });
+      
+      // Use user's zoom level if they've manually zoomed, otherwise use offset
+      const targetZoom = userLensZoom !== null ? userLensZoom : z + opts.lensZoomOffset;
+      lensMap.setView(c, targetZoom, { animate: false });
     });
 
     function rebuildRegions() {
@@ -484,7 +455,7 @@
       });
     }
 
-    // Add invisible hitboxes for named locations (text labels and red dots on map)
+    // Add clickable markers for named locations (invisible but large hit areas)
     function addNamedLocationHitboxes() {
       if (!locationsData || !lensMap) {
         console.warn("⚠️ Cannot add hitboxes - missing locationsData or lensMap");
@@ -524,26 +495,30 @@
           return;
         }
 
-        // Create invisible rectangle hitbox around text label and red dot
-        // Approximate 100px wide x 100px tall hitbox centered on coordinate
-        const hitboxSize = 50; // pixels radius (100px total)
-        const bounds = [
-          [coords[0] - hitboxSize, coords[1] - hitboxSize],
-          [coords[0] + hitboxSize, coords[1] + hitboxSize]
-        ];
-
-        const hitbox = window.L.rectangle(bounds, {
-          color: '#ff0000',
-          fillColor: '#ff0000',
-          fillOpacity: 0.01,  // Nearly invisible but still interactive
-          weight: 1,
-          opacity: 0.05,
-          interactive: true,
-          bubblingMouseEvents: false
+        // Create large invisible divIcon marker (150x150px clickable area)
+        const icon = window.L.divIcon({
+          className: 'cc-location-hitbox',
+          html: `<div style="
+            width: 150px;
+            height: 150px;
+            cursor: pointer;
+            background: rgba(255,0,0,0.02);
+            border: 1px solid rgba(255,0,0,0.1);
+            border-radius: 4px;
+          " title="${loc.name}"></div>`,
+          iconSize: [150, 150],
+          iconAnchor: [75, 75]  // Center the hitbox on the coordinate
         });
 
-        hitbox.on('click', () => {
-          console.log(`📍 Clicked hitbox for: ${loc.name}`);
+        const marker = window.L.marker(coords, { 
+          icon,
+          interactive: true,
+          keyboard: false
+        });
+
+        marker.on('click', (e) => {
+          console.log(`📍 Clicked marker for: ${loc.name} at`, coords);
+          e.originalEvent.stopPropagation();
           renderLocationDrawer(ui, loc);
           drawerJustOpened = true;
           openDrawer(ui);
@@ -553,12 +528,12 @@
           }, 100);
         });
 
-        hitbox.addTo(lensMap);
-        locationMarkersById[loc.id] = hitbox;
+        marker.addTo(lensMap);
+        locationMarkersById[loc.id] = marker;
         hitboxCount++;
       });
       
-      console.log(`✅ Added ${hitboxCount} location hitboxes to lens map`);
+      console.log(`✅ Added ${hitboxCount} clickable markers to lens map (150x150px hit areas)`);
     }
 
     function applyStateStyles() {
@@ -952,24 +927,32 @@
 
         lensMap = window.L.map(ui.lensMapEl, {
           crs: window.L.CRS.Simple,
-          minZoom: -3,
-          maxZoom: 6,
-          zoomSnap: 0.25,
+          minZoom: 0,  // Don't zoom out past the base level
+          maxZoom: 3,  // Allow zooming in for detail
+          zoomSnap: 0.1,
           zoomDelta: 0.25,
           attributionControl: false,
           zoomControl: false,
-          scrollWheelZoom: false,
-          doubleClickZoom: false,
+          scrollWheelZoom: true,  // Enable scroll wheel zoom
+          doubleClickZoom: true,  // Enable double-click zoom
+          touchZoom: true,  // Enable pinch zoom on mobile
           boxZoom: false,
           keyboard: false,
-          dragging: false,
-          tap: false
+          dragging: false,  // Keep dragging disabled - knobs control panning
+          tap: true  // Enable tap for mobile
         });
 
         const lensImageKey = mapDoc.map?.lens?.image_key || mapDoc.map.background.image_key;
 
         window.L.imageOverlay(lensImageKey, bounds, { opacity: 1.0 }).addTo(lensMap);
-        lensMap.setMaxBounds(bounds);
+        
+        // Set max bounds with padding to prevent seeing blank areas
+        const paddedBounds = [
+          [bounds[0][0] - 100, bounds[0][1] - 100],
+          [bounds[1][0] + 100, bounds[1][1] + 100]
+        ];
+        lensMap.setMaxBounds(paddedBounds);
+        lensMap.setMinZoom(0);  // Prevent zooming out past full map view
 
         addNamedLocationHitboxes();
       } else {
@@ -1005,6 +988,21 @@
       if (lensMap) {
         mainMap.on("move", syncLens);
         mainMap.on("zoom", syncLens);
+        
+        // Track when user manually zooms the lens (pinch/scroll/double-click)
+        lensMap.on("zoomend", () => {
+          const currentZoom = lensMap.getZoom();
+          const expectedZoom = mainMap.getZoom() + opts.lensZoomOffset;
+          
+          // If zoom differs from expected, user has manually zoomed
+          if (Math.abs(currentZoom - expectedZoom) > 0.1) {
+            userLensZoom = currentZoom;
+            console.log(`🔍 User zoomed lens to: ${currentZoom.toFixed(2)}`);
+          }
+        });
+        
+        // Reset user zoom on double-click (they're zooming in, not resetting)
+        // To reset, they can use the Fit button
       }
 
       window.addEventListener("resize", rafThrottle(async () => {
@@ -1023,6 +1021,7 @@
       if (!mainMap || !mapDoc) return;
       const px = mapDoc.map.background.image_pixel_size;
       mainMap.setView([px.h / 2, px.w / 2], 0, { animate: false });
+      userLensZoom = null;  // Reset user's custom zoom
       updateKnobsFromMap();
       syncLens();
     });
