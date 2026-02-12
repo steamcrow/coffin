@@ -28,7 +28,7 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
     lensEnabled: true,
-    lensZoomOffset: 0.35,  // HOW MUCH MORE ZOOMED IS THE LENS?
+    lensZoomOffset: 0.5,  // HOW MUCH MORE ZOOMED IS THE LENS?
                           // 0 = same as background (see most of map)
                           // 0.5 = slightly zoomed (CURRENT - see lots of area)
                           // 1 = moderately zoomed (good balance)
@@ -300,7 +300,7 @@
     };
   }
 
-  function openDrawer(ui) {
+  function openDrawer(ui, drawerJustOpenedFlag) {
     ui.drawerEl.classList.add("open");
   }
 
@@ -410,6 +410,9 @@
     const locationMarkersById = {};
 
     let scrollersBound = false;
+    
+    // Flag to prevent click-outside from closing drawer immediately after opening
+    let drawerJustOpened = false;
 
     const syncLens = rafThrottle(() => {
       if (!opts.lensEnabled || !mainMap || !lensMap) return;
@@ -492,7 +495,13 @@
         const marker = window.L.marker(coords, { icon });
         marker.on('click', () => {
           renderLocationDrawer(ui, loc);
+          drawerJustOpened = true;
           openDrawer(ui);
+          
+          // Clear flag after a brief delay
+          setTimeout(() => {
+            drawerJustOpened = false;
+          }, 100);
         });
 
         marker.addTo(lensMap);
@@ -655,15 +664,15 @@
 
         const applyMomentum = () => {
           if (!mainMap || !mapDoc) return; // Safety check
-          if (Math.abs(velocityY) < 0.002) return;  // Lower threshold = longer slide
+          if (Math.abs(velocityY) < 0.005) return;  // Lower threshold = longer slide
 
           const rect = ui.scrollElV.getBoundingClientRect();
-          lastYV += velocityY * .5;  // Increased multiplier for smoother movement
+          lastYV += velocityY * 20;  // Increased multiplier for smoother movement
           const tY = (lastYV - rect.top) / rect.height;
           panMapToTY(tY);
           updateKnobsFromMap();
 
-          velocityY *= 2.5;  // HIGHER friction = heavier, slower momentum
+          velocityY *= 0.98;  // HIGHER friction = heavier, slower momentum
           requestAnimationFrame(applyMomentum);
         };
 
@@ -761,7 +770,7 @@
           panMapToTX(tX);
           updateKnobsFromMap();
 
-          velocityX *= 1.5;  // HIGHER friction = heavier, slower momentum
+          velocityX *= 0.98;  // HIGHER friction = heavier, slower momentum
           requestAnimationFrame(applyMomentum);
         };
 
@@ -972,9 +981,10 @@
       closeBtn.addEventListener("click", () => closeDrawer(ui));
     }
 
-    // Click outside drawer to close
+    // Click outside drawer to close (with delay to prevent interfering with opening)
     document.addEventListener("click", (e) => {
       if (!ui.drawerEl.classList.contains("open")) return;
+      if (drawerJustOpened) return; // Don't close immediately after opening
       
       // Check if click is outside drawer
       if (!ui.drawerEl.contains(e.target)) {
