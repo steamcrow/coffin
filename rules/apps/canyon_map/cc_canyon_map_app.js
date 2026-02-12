@@ -1,4 +1,4 @@
-/* File: rules/apps/canyon_map/cc_canyon_map_app.js
+ /* File: rules/apps/canyon_map/cc_canyon_map_app.js
    Coffin Canyon — Canyon Map
    
    FINAL VERSION with all fixes
@@ -28,12 +28,12 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
     lensEnabled: true,
-    lensZoomOffset: 0.75,  // HOW MUCH MORE ZOOMED IS THE LENS?
-                           // 0 = same as background (see most of map)
-                           // 0.5 = minimal zoom (lots of area but less crisp)
-                           // 0.75 = good balance (CURRENT - crisp + good area)
-                           // 1 = moderately zoomed (crisp detail)
-                           // 2 = more zoomed (close-up)
+    lensZoomOffset: 1.25,  // HOW MUCH MORE ZOOMED IS THE LENS?
+                           // Increased for sharper detail
+                           // 0.75 = good area coverage
+                           // 1.25 = CURRENT - sharp and crisp
+                           // 1.5 = very crisp, closer
+                           // 2 = close-up
                            // 3 = very zoomed
 
     lockHorizontalPan: false,
@@ -206,6 +206,7 @@
     svg.setAttribute("height", "0");
     svg.style.position = "absolute";
     svg.style.pointerEvents = "none";
+    svg.setAttribute("id", "ccLensWarpSVG");
     
     svg.innerHTML = `
       <defs>
@@ -218,6 +219,21 @@
     `;
     
     root.appendChild(svg);
+    
+    // Debug logging
+    console.log("✅ SVG filter added to DOM with ID: ccLensWarp");
+    console.log("📍 Filter scale: 1200 (EXTREME - should be very visible)");
+    console.log("🎨 Filter applied to: .cc-lens-overscan");
+    
+    // Check if filter is accessible
+    setTimeout(() => {
+      const filterElement = document.getElementById("ccLensWarp");
+      if (filterElement) {
+        console.log("✅ SVG filter element found in DOM");
+      } else {
+        console.error("❌ SVG filter element NOT found in DOM!");
+      }
+    }, 100);
   }
 
   function buildLayout(root, opts) {
@@ -470,7 +486,10 @@
 
     // Add invisible hitboxes for named locations (text labels and red dots on map)
     function addNamedLocationHitboxes() {
-      if (!locationsData || !lensMap) return;
+      if (!locationsData || !lensMap) {
+        console.warn("⚠️ Cannot add hitboxes - missing locationsData or lensMap");
+        return;
+      }
 
       Object.values(locationMarkersById).forEach(marker => {
         try {
@@ -497,27 +516,34 @@
         "diablo": [3600, 1400]
       };
 
+      let hitboxCount = 0;
       locationsData.locations.forEach(loc => {
         const coords = locationCoords[loc.id];
-        if (!coords) return;
+        if (!coords) {
+          console.warn(`⚠️ No coordinates for location: ${loc.id}`);
+          return;
+        }
 
         // Create invisible rectangle hitbox around text label and red dot
-        // Approximate 100px wide x 30px tall hitbox centered on coordinate
-        const hitboxSize = 50; // pixels radius
+        // Approximate 100px wide x 100px tall hitbox centered on coordinate
+        const hitboxSize = 50; // pixels radius (100px total)
         const bounds = [
           [coords[0] - hitboxSize, coords[1] - hitboxSize],
           [coords[0] + hitboxSize, coords[1] + hitboxSize]
         ];
 
         const hitbox = window.L.rectangle(bounds, {
-          color: 'transparent',
-          fillColor: 'transparent',
-          fillOpacity: 0,
-          weight: 0,
-          interactive: true
+          color: '#ff0000',
+          fillColor: '#ff0000',
+          fillOpacity: 0.01,  // Nearly invisible but still interactive
+          weight: 1,
+          opacity: 0.05,
+          interactive: true,
+          bubblingMouseEvents: false
         });
 
         hitbox.on('click', () => {
+          console.log(`📍 Clicked hitbox for: ${loc.name}`);
           renderLocationDrawer(ui, loc);
           drawerJustOpened = true;
           openDrawer(ui);
@@ -529,7 +555,10 @@
 
         hitbox.addTo(lensMap);
         locationMarkersById[loc.id] = hitbox;
+        hitboxCount++;
       });
+      
+      console.log(`✅ Added ${hitboxCount} location hitboxes to lens map`);
     }
 
     function applyStateStyles() {
