@@ -672,11 +672,11 @@
           panMapToTY(tY);
           updateKnobsFromMap();
 
-          velocityY *= .4;  // HIGHER friction = heavier, slower momentum
+          velocityY *= 1;  // HIGHER friction = heavier, slower momentum
           requestAnimationFrame(applyMomentum);
         };
 
-        if (Math.abs(velocityY) > 0.3) {  // Lower threshold to trigger momentum more easily
+        if (Math.abs(velocityY) > 1) {  // Lower threshold to trigger momentum more easily
           applyMomentum();
         }
 
