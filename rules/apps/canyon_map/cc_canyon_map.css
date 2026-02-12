@@ -272,9 +272,18 @@
   width: calc(100% + (var(--lens-overscan-x) * 2)) !important;
   height: calc(100% + (var(--lens-overscan-y) * 2)) !important;
   
-  /* DISTORTION FILTER APPLIED HERE - scale=1200 in JavaScript SVG filter */
-  /* If not visible, check browser console for SVG filter errors */
-  filter: url(#ccLensWarp) contrast(var(--lens-contrast)) saturate(1.1) brightness(1.02) !important;
+  /* CSS-BASED LENS DISTORTION - fisheye/barrel effect */
+  transform: perspective(600px) rotateX(0deg);
+  filter: contrast(var(--lens-contrast)) saturate(1.1) brightness(1.02);
+  
+  /* Subtle vignette/edge darkening for glass lens effect */
+  box-shadow: inset 0 0 80px rgba(0,0,0,0.15);
+}
+
+/* Add subtle barrel distortion to lens content */
+#cc-lens-map .leaflet-tile-pane{
+  transform: scale(1.02);
+  filter: blur(0px);  /* Keep crisp, no blur */
 }
 
 /* Leaflet lens container */
@@ -289,6 +298,16 @@
 #cc-lens-map .leaflet-container,
 #cc-lens-map{
   /* Filter moved to .cc-lens-overscan */
+}
+
+/* Location hitbox markers - ensure they're clickable */
+.cc-location-hitbox{
+  z-index: 1000 !important;
+  pointer-events: auto !important;
+}
+
+.cc-location-hitbox div{
+  pointer-events: auto !important;
 }
 
 #cc-lens-map .leaflet-control-container{ display: none !important; }
