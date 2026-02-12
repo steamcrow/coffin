@@ -53,7 +53,7 @@
      Adjust clarity and edge effects
      ============================================ */
   --lens-radius: 22px;
-  --lens-contrast: 1.15;  /* Increased for crisper detail */
+  --lens-contrast: 1.20;  /* Increased for maximum sharpness */
   --lens-distortion-scale: 600;  /* EXTREME (for testing) - adjust down to 100-200 for subtle, 300-400 for strong */
 
   /* ============================================
@@ -271,6 +271,10 @@
   top:  calc(var(--lens-overscan-y) * -1) !important;
   width: calc(100% + (var(--lens-overscan-x) * 2)) !important;
   height: calc(100% + (var(--lens-overscan-y) * 2)) !important;
+  
+  /* DISTORTION FILTER APPLIED HERE - scale=1200 in JavaScript SVG filter */
+  /* If not visible, check browser console for SVG filter errors */
+  filter: url(#ccLensWarp) contrast(var(--lens-contrast)) saturate(1.1) brightness(1.02) !important;
 }
 
 /* Leaflet lens container */
@@ -281,12 +285,10 @@
   height: 100% !important;
 }
 
-/* Lens is CLEAR with edge distortion only (no blur!) */
+/* Lens is CLEAR (filter applied to .cc-lens-overscan wrapper above) */
 #cc-lens-map .leaflet-container,
-#cc-lens-map,
-#cc-lens-map .leaflet-tile-pane,
-#cc-lens-map .leaflet-overlay-pane{
-  filter: url(#ccLensWarp) contrast(var(--lens-contrast)) saturate(1.08) !important;
+#cc-lens-map{
+  /* Filter moved to .cc-lens-overscan */
 }
 
 #cc-lens-map .leaflet-control-container{ display: none !important; }
