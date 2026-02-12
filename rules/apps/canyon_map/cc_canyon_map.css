@@ -43,17 +43,17 @@
      BASE MAP APPEARANCE
      Background layer styling
      ============================================ */
-  --bg-opacity: .5;
-  --bg-blur: 2.75px;
-  --bg-sepia: .01;
+  --bg-opacity: 0.38;
+  --bg-blur: 2px;
+  --bg-sepia: 0.25;
 
   /* ============================================
      LENS APPEARANCE & DISTORTION
      Adjust clarity and edge effects
      ============================================ */
-  --lens-radius: 90px;
-  --lens-contrast: 90;
-  --lens-distortion-scale: 500;  /* Higher = more edge warp */
+  --lens-radius: 22px;
+  --lens-contrast: 1.12;
+  --lens-distortion-scale: 80;  /* Higher = more edge warp */
 
   /* ============================================
      LENS HIGHLIGHT/GLARE
