@@ -77,7 +77,7 @@
 
   --scroll-h-h: 90px;
   --scroll-h-w: 640px;
-  --scroll-h-offset-y: 320px;
+  --scroll-h-offset-y: 305px;  /* Raised 15px from 320px */
 
   /* ============================================
      KNOB SIZING & EASING
@@ -283,7 +283,9 @@
 
 /* Lens is CLEAR with edge distortion only (no blur!) */
 #cc-lens-map .leaflet-container,
-#cc-lens-map{
+#cc-lens-map,
+#cc-lens-map .leaflet-tile-pane,
+#cc-lens-map .leaflet-overlay-pane{
   filter: url(#ccLensWarp) contrast(var(--lens-contrast)) saturate(1.08) !important;
 }
 
@@ -416,25 +418,23 @@
   background-position: center;
 
   cursor: grab;
-  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6));
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));  /* Lighter base shadow */
   
   /* NO transition here - JavaScript controls smooth movement */
   transition: filter 140ms ease;
   will-change: top, left;
-}
-
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
 }
 
 .cc-scroll-knob:hover{
-  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.7)) brightness(1.05);
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)) brightness(1.05);
 }
 
 .cc-scroll-knob.is-active{
   cursor: grabbing !important;
-  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.75)) brightness(1.08);
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.65)) brightness(1.08);
 }
 
 /* Vertical knob positioning (JS controls top dynamically) */
@@ -463,11 +463,11 @@
 }
 #cc-scroll-knob-h:hover{ 
   transform: translateX(-50%) translateY(-50%) scale(1.03) !important; 
-  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.7)) brightness(1.05);
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)) brightness(1.05);
 }
 #cc-scroll-knob-h.is-active{ 
   transform: translateX(-50%) translateY(-50%) scale(1.05) !important; 
-  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.75)) brightness(1.08);
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.65)) brightness(1.08);
 }
 
 /* ================================================================
@@ -537,12 +537,6 @@
     --frame-width: 95vw;
     --lens-w: 65vw;
     --lens-h: 35vh;
-  }
-  
-  /* Larger location markers for touch */
-  .cc-location-marker div {
-    font-size: 14px !important;
-    padding: 12px !important;
   }
   
   /* More compact header */
