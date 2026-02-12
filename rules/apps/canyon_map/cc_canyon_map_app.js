@@ -672,7 +672,7 @@
           panMapToTY(tY);
           updateKnobsFromMap();
 
-          velocityY *= 1.2;  // HIGHER friction = heavier, slower momentum
+          velocityY *= 2.5;  // HIGHER friction = heavier, slower momentum
           requestAnimationFrame(applyMomentum);
         };
 
