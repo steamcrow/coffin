@@ -53,7 +53,7 @@
      ============================================ */
   --lens-radius: 22px;
   --lens-contrast: 1.12;
-  --lens-distortion-scale: 80;  /* Higher = more edge warp */
+  --lens-distortion-scale: 99;  /* Higher = more edge warp */
 
   /* ============================================
      LENS HIGHLIGHT/GLARE
