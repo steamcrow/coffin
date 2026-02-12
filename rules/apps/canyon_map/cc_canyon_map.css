@@ -54,7 +54,7 @@
      ============================================ */
   --lens-radius: 22px;
   --lens-contrast: 1.15;  /* Increased for crisper detail */
-  --lens-distortion-scale: 80;  /* Higher = more edge warp */
+  --lens-distortion-scale: 600;  /* EXTREME (for testing) - adjust down to 100-200 for subtle, 300-400 for strong */
 
   /* ============================================
      LENS HIGHLIGHT/GLARE
@@ -113,6 +113,20 @@
   box-sizing: border-box;
   color: rgba(255,255,255,0.9);
   font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+  
+  /* Prevent mobile browser interference */
+  touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Prevent pull-to-refresh and overscroll */
+.cc-cm-mapwrap,
+.cc-scroll-vertical,
+.cc-scroll-horizontal {
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .cc-muted{ opacity: 0.7; }
@@ -402,7 +416,7 @@
   background-position: center;
 
   cursor: grab;
-  filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8));
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6));
   
   /* NO transition here - JavaScript controls smooth movement */
   transition: filter 140ms ease;
@@ -415,12 +429,12 @@
 }
 
 .cc-scroll-knob:hover{
-  filter: drop-shadow(0 12px 18px rgba(0,0,0,0.9)) brightness(1.06);
+  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.7)) brightness(1.05);
 }
 
 .cc-scroll-knob.is-active{
   cursor: grabbing !important;
-  filter: drop-shadow(0 14px 20px rgba(0,0,0,0.95)) brightness(1.08);
+  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.75)) brightness(1.08);
 }
 
 /* Vertical knob positioning (JS controls top dynamically) */
@@ -447,8 +461,14 @@
   /* NO rotation - knob faces same way as vertical */
   transform: translateX(-50%) translateY(-50%) !important;
 }
-#cc-scroll-knob-h.is-active{ transform: translateX(-50%) translateY(-50%) scale(1.05) !important; }
-#cc-scroll-knob-h:hover{ transform: translateX(-50%) translateY(-50%) scale(1.03) !important; }
+#cc-scroll-knob-h:hover{ 
+  transform: translateX(-50%) translateY(-50%) scale(1.03) !important; 
+  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.7)) brightness(1.05);
+}
+#cc-scroll-knob-h.is-active{ 
+  transform: translateX(-50%) translateY(-50%) scale(1.05) !important; 
+  filter: drop-shadow(0 10px 14px rgba(0,0,0,0.75)) brightness(1.08);
+}
 
 /* ================================================================
    DRAWER (SLIDES FROM RIGHT SIDE)
@@ -491,6 +511,79 @@
   .cc-cm-drawer {
     width: 100vw;
     right: -100vw;
+  }
+  
+  /* Make map container better for mobile */
+  .cc-cm-mapwrap {
+    min-height: 400px !important;
+    height: 60vh !important;
+  }
+  
+  /* Make scrollers larger for touch */
+  .cc-scroll-knob {
+    width: 70px !important;
+    height: 120px !important;
+    touch-action: none;
+  }
+  
+  #cc-scroll-knob-h {
+    width: 120px !important;
+    height: 70px !important;
+    touch-action: none;
+  }
+  
+  /* Adjust frame for smaller screens */
+  :root {
+    --frame-width: 95vw;
+    --lens-w: 65vw;
+    --lens-h: 35vh;
+  }
+  
+  /* Larger location markers for touch */
+  .cc-location-marker div {
+    font-size: 14px !important;
+    padding: 12px !important;
+  }
+  
+  /* More compact header */
+  .cc-cm-header {
+    padding: 8px;
+  }
+  
+  .cc-cm-title {
+    font-size: 14px;
+  }
+  
+  .cc-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .cc-cm-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .cc-cm-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+  
+  .cc-cm-actions .cc-btn {
+    flex: 1;
+  }
+  
+  /* Even larger touch targets on small phones */
+  .cc-scroll-knob {
+    width: 70px !important;
+    height: 110px !important;
+  }
+  
+  #cc-scroll-knob-h {
+    width: 110px !important;
+    height: 70px !important;
   }
 }
 
