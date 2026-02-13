@@ -1,9 +1,17 @@
 /* =========================================================
-   COFFIN CANYON - CORE UI SYSTEM
+   COFFIN CANYON - CORE UI SYSTEM (SAFE UPDATE)
    File: coffin/rules/ui/cc_ui.css
-   
-   Generic styles for all Coffin Canyon apps
-   Works alongside Bootstrap (Odoo default)
+
+   Goal:
+   - Improve “card / page / step-by-step” feel
+   - Keep existing class names working (non-breaking)
+   - Add new optional helpers: .cc-shell .cc-page .cc-steps .cc-sticky
+   - Fix one risky global typography override (div/span)
+
+   Notes:
+   - Existing selectors are preserved.
+   - Any changes that could be “breaking” are avoided.
+   - New styles are appended and mostly additive.
    ========================================================= */
 
 /* ===== GOOGLE FONTS IMPORT ===== */
@@ -22,11 +30,17 @@
   --cc-text: #e8e8e8;
   --cc-text-muted: #999;
   --cc-text-dim: #666;
-  
+
   /* Typography */
   --cc-font-title: 'Bungee', system-ui, sans-serif;
   --cc-font-body: 'Source Sans 3', system-ui, sans-serif;
-  --cc-font-mono: 'Roboto Mono', monospace;
+  --cc-font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  /* Soft UI tokens (additive) */
+  --cc-radius: 12px;
+  --cc-radius-lg: 14px;
+  --cc-shadow-sm: 0 8px 18px rgba(0,0,0,0.28);
+  --cc-shadow: 0 10px 28px rgba(0,0,0,0.35);
 }
 
 /* ===== BASE TYPOGRAPHY ===== */
@@ -89,7 +103,7 @@ body {
 .cc-panel { 
   background: #151515;
   border: 1px solid rgba(255,255,255,.10);
-  border-radius: 12px;
+  border-radius: var(--cc-radius);
   overflow: hidden;
   color: #e8e8e8;
   height: 100%;
@@ -248,6 +262,7 @@ body {
   font-weight: 900; 
   color: #fff; 
   text-transform: uppercase;
+  font-family: var(--cc-font-mono);
 }
 
 .cc-stat-value { 
@@ -258,6 +273,7 @@ body {
   font-weight: bold; 
   min-width: 22px; 
   text-align: center;
+  font-family: var(--cc-font-mono);
 }
 
 .stat-q { background-color: #2c5282; }
@@ -338,15 +354,26 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 400;
 }
 
-/* Body text gets Source Sans Pro */
-p, li, span, div {
-  font-family: var(--cc-font-body);
-}
-
 /* Code and technical elements get Roboto Mono */
 code, pre, kbd, samp {
   font-family: var(--cc-font-mono);
 }
+
+/* =========================================================
+   SAFE TYPOGRAPHY FIX (non-breaking)
+   - Removed global div/span font forcing (was risky)
+   - Keep body + app shell as default font
+   ========================================================= */
+.cc-app-shell,
+.cc-app-shell p,
+.cc-app-shell li {
+  font-family: var(--cc-font-body);
+}
+
+/* Optional helpers */
+.cc-mono { font-family: var(--cc-font-mono) !important; }
+.cc-title-font { font-family: var(--cc-font-title) !important; }
+
 /* ===== SLIDE PANEL ===== */
 .cc-slide-panel {
   position: fixed;
@@ -462,6 +489,7 @@ code, pre, kbd, samp {
     right: -100vw;
   }
 }
+
 /* ===================================
    LOADING ANIMATION (REUSABLE)
    =================================== */
@@ -516,4 +544,165 @@ code, pre, kbd, samp {
 @keyframes cc-pulse-text {
   0%, 100% { opacity: 0.8; }
   50% { opacity: 1; }
+}
+
+/* =========================================================
+   PREMIUM BUILDER LAYER (additive; should not break anything)
+   Use these in new layouts; old layouts remain valid.
+   ========================================================= */
+
+/* Subtle “premium” background when using cc-shell */
+.cc-shell {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 16px 28px;
+}
+
+.cc-app-shell.cc-premium {
+  background: radial-gradient(1200px 600px at 20% 0%, rgba(255,117,24,.10), transparent 60%),
+              linear-gradient(180deg, #141414, #0f0f0f);
+}
+
+/* Make header feel like an app bar if cc-premium is present */
+.cc-app-shell.cc-premium .cc-app-header{
+  border: 1px solid rgba(255,255,255,0.10);
+  border-radius: var(--cc-radius-lg);
+  box-shadow: var(--cc-shadow);
+  margin-bottom: 14px;
+}
+
+/* Panels get a little more depth in premium mode */
+.cc-app-shell.cc-premium .cc-panel{
+  background: radial-gradient(1200px 450px at 15% 0%, rgba(255,255,255,.05), transparent 55%),
+              linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.14));
+  box-shadow: var(--cc-shadow-sm);
+  border-radius: var(--cc-radius-lg);
+}
+
+.cc-app-shell.cc-premium .cc-panel-head{
+  background: rgba(0,0,0,.16);
+  padding: 12px 14px;
+}
+
+.cc-app-shell.cc-premium .cc-body{
+  padding: 14px;
+}
+
+/* Optional “page card” for step sections */
+.cc-page{
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 16px;
+  background: radial-gradient(1200px 450px at 15% 0%, rgba(255,255,255,.06), transparent 60%),
+              linear-gradient(180deg, rgba(255,255,255,.02), rgba(0,0,0,.16));
+  box-shadow: var(--cc-shadow);
+  overflow: hidden;
+}
+.cc-page + .cc-page{ margin-top: 14px; }
+
+.cc-page-head{
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 10px;
+  background: rgba(0,0,0,.16);
+}
+
+.cc-page-title{
+  margin: 0;
+  font-family: var(--cc-font-title);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  font-size: 12px;
+  color: var(--cc-primary);
+}
+.cc-page-hint{
+  color: rgba(255,255,255,.60);
+  font-size: 12.5px;
+  font-family: var(--cc-font-body);
+}
+.cc-page-body{ padding: 16px; }
+
+/* Stepper */
+.cc-steps{
+  display:flex;
+  flex-wrap:wrap;
+  gap: 10px;
+}
+
+.cc-step{
+  display:flex;
+  align-items:center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  cursor: pointer;
+  user-select:none;
+}
+
+.cc-step-num{
+  width: 22px;
+  height: 22px;
+  display:grid;
+  place-items:center;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  font-size: 12px;
+  color: rgba(255,255,255,.65);
+  font-family: var(--cc-font-mono);
+}
+
+.cc-step-label{
+  font-size: 12.5px;
+  color: rgba(255,255,255,.80);
+  font-family: var(--cc-font-body);
+}
+
+.cc-step.active{
+  border-color: rgba(255,117,24,.55);
+  box-shadow: 0 0 0 3px rgba(255,117,24,.18);
+  background: rgba(255,117,24,.08);
+}
+
+.cc-step.active .cc-step-num{
+  border-color: rgba(255,117,24,.55);
+  color: rgba(255,255,255,.92);
+}
+
+/* Sticky helper (right column summaries) */
+.cc-sticky{
+  position: sticky;
+  top: 14px;
+  align-self: start;
+}
+
+/* Make list items feel more tappable in premium mode */
+.cc-app-shell.cc-premium .cc-list{
+  padding: 10px;
+  gap: 10px;
+}
+.cc-app-shell.cc-premium .cc-list-item{
+  padding: 12px 12px;
+  border-radius: 12px;
+  transition: border-color .18s ease, background-color .18s ease, transform .12s ease;
+}
+.cc-app-shell.cc-premium .cc-list-item:hover{
+  transform: translateY(-1px);
+}
+
+/* Better focus ring in premium mode */
+.cc-app-shell.cc-premium .cc-input:focus{
+  box-shadow: 0 0 0 3px rgba(255,117,24,.22);
+}
+
+/* Mobile tightening */
+@media (max-width: 768px){
+  .cc-shell{ padding: 12px 12px 20px; }
+  .cc-page-head{ padding: 12px 12px; }
+  .cc-page-body{ padding: 12px; }
 }
