@@ -50,21 +50,36 @@
   display: grid;
   grid-template-columns: 300px 1fr 300px;
   gap: 1rem;
-  height: calc(100vh - 200px);
+  /* FIXED: Changed from fixed height to auto */
+  height: auto;
+  min-height: 600px;
   padding: 0 1rem 1rem 1rem;
 }
 
 .cc-faction-sidebar {
   min-width: 0;
+  /* FIXED: Added max-height and overflow */
+  max-height: 700px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .cc-faction-main {
   min-width: 0;
-  overflow: auto;
+  /* FIXED: Added max-height */
+  max-height: 700px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* FIXED: Added padding-bottom so buttons are visible */
+  padding-bottom: 2rem;
 }
 
 .cc-faction-roster {
   min-width: 0;
+  /* FIXED: Added max-height and overflow */
+  max-height: 700px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* ===== Unit Detail Wrapper ===== */
@@ -340,8 +355,9 @@
   .cc-faction-sidebar,
   .cc-faction-main,
   .cc-faction-roster {
-    max-height: 400px;
-    overflow: auto;
+    /* FIXED: Removed fixed max-height on mobile */
+    max-height: none;
+    overflow: visible;
   }
 }
 
