@@ -30,7 +30,8 @@ class ScenarioBrain {
   // Inherit utility methods from BrainGenerators
   randomChoice(arr, count = 1) { return BrainGenerators.randomChoice(arr, count); }
   randomInt(min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min; }
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
   weightedRandomChoice(arr) { return BrainGenerators.weightedRandomChoice(arr); }
   formatResourceName(key) { return BrainGenerators.formatResourceName(key); }
   capitalize(str) { return BrainGenerators.capitalize(str); }
@@ -104,40 +105,7 @@ class ScenarioBrain {
     const narrative = this.generateNarrative(plotFamily, location, userSelections, cultistEncounter);
     
     // FACTION-SPECIFIC VICTORY CONDITIONS
-
-    const numObjectivesToGive = Math.min(objectives.length, this.randomInt(2, 3));
-const selectedObjectives = this.randomChoice(objectives, numObjectivesToGive);
-
-selectedObjectives.forEach(obj => {
-  const interpretation = this.getFactionObjectiveInterpretation(faction.id, obj);
-  if (interpretation) factionObjectives.push(interpretation);
-});
-      
-      // Use faction interpretation for each objective
-      const factionObjectives = validObjectives.map(obj => {
-        const interpreted = BrainGenerators.generateFactionObjectiveInterpretation(obj, faction);
-        return {
-          name: interpreted.name,
-          goal: interpreted.goal,
-          method: interpreted.method,
-          scoring: interpreted.scoring,
-          flavor: interpreted.flavor
-        };
-      });
-      
-      // Add unique faction objective
-      const uniqueObj = this.generateUniqueFactionObjective(faction.id, userSelections.dangerRating, userSelections.factions);
-      if (uniqueObj) factionObjectives.push(uniqueObj);
-      
-      // Faction-specific aftermath
-      const aftermath = this.generateFactionAftermath(faction.id);
-      
-      victoryConditions[faction.id] = {
-        target_vp: vpSpread.target_to_win,
-        faction_objectives: factionObjectives,
-        aftermath: aftermath
-      };
-    });
+    const victoryConditions = this.generateVictoryConditions(userSelections, objectives, vpSpread, cultistEncounter);
     
     const name = this.generateName(['battle'], location);
     const twist = this.generateTwist(userSelections.dangerRating, location);
@@ -162,6 +130,51 @@ selectedObjectives.forEach(obj => {
       terrain_setup: terrainSetup, 
       coffin_cough: null
     };
+  }
+
+  // ================================
+  // VICTORY CONDITIONS - FIXED VERSION
+  // ================================
+  generateVictoryConditions(userSelections, objectives, vpSpread, cultistEncounter) {
+    const victoryConditions = {};
+    
+    userSelections.factions.forEach(faction => {
+      const factionObjectives = [];
+      
+      // Randomly select 2-3 objectives for this faction
+      const numObjectivesToGive = Math.min(objectives.length, this.randomInt(2, 3));
+      const selectedObjectives = this.randomChoice(objectives, numObjectivesToGive);
+      
+      // Convert selected objectives to array if single item
+      const objectivesArray = Array.isArray(selectedObjectives) ? selectedObjectives : [selectedObjectives];
+      
+      // Use faction interpretation for each selected objective
+      objectivesArray.forEach(obj => {
+        const interpreted = BrainGenerators.generateFactionObjectiveInterpretation(obj, faction);
+        factionObjectives.push({
+          name: interpreted.name,
+          goal: interpreted.goal,
+          method: interpreted.method,
+          scoring: interpreted.scoring,
+          flavor: interpreted.flavor
+        });
+      });
+      
+      // Add unique faction objective
+      const uniqueObj = this.generateUniqueFactionObjective(faction.id, userSelections.dangerRating, userSelections.factions);
+      if (uniqueObj) factionObjectives.push(uniqueObj);
+      
+      // Faction-specific aftermath
+      const aftermath = this.generateFactionAftermath(faction.id);
+      
+      victoryConditions[faction.id] = {
+        target_vp: vpSpread.target_to_win,
+        faction_objectives: factionObjectives,
+        aftermath: aftermath
+      };
+    });
+    
+    return victoryConditions;
   }
 
   generateLocation(userSelections) {
