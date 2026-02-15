@@ -29,6 +29,8 @@ class ScenarioBrain {
   
   // Inherit utility methods from BrainGenerators
   randomChoice(arr, count = 1) { return BrainGenerators.randomChoice(arr, count); }
+  randomInt(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min; }
   weightedRandomChoice(arr) { return BrainGenerators.weightedRandomChoice(arr); }
   formatResourceName(key) { return BrainGenerators.formatResourceName(key); }
   capitalize(str) { return BrainGenerators.capitalize(str); }
@@ -102,9 +104,14 @@ class ScenarioBrain {
     const narrative = this.generateNarrative(plotFamily, location, userSelections, cultistEncounter);
     
     // FACTION-SPECIFIC VICTORY CONDITIONS
-    const victoryConditions = {};
-    userSelections.factions.forEach(faction => {
-      const validObjectives = objectives.filter(obj => obj !== null);
+
+    const numObjectivesToGive = Math.min(objectives.length, this.randomInt(2, 3));
+const selectedObjectives = this.randomChoice(objectives, numObjectivesToGive);
+
+selectedObjectives.forEach(obj => {
+  const interpretation = this.getFactionObjectiveInterpretation(faction.id, obj);
+  if (interpretation) factionObjectives.push(interpretation);
+});
       
       // Use faction interpretation for each objective
       const factionObjectives = validObjectives.map(obj => {
