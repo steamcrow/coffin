@@ -28,7 +28,7 @@
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
     lensEnabled: true,
-    lensZoomOffset: 1.25,
+    lensZoomOffset: 1.75,
 
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
