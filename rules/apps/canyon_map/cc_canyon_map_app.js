@@ -444,27 +444,26 @@
         } catch (e) {}
       });
 
-       // Scaled from 1445x2048 -> 2824x4000
-// Format: [y, x]
-const locationCoords_YX = {
-  "witches-roost":   [ 103, 2329],
-  "fort-plunder":    [ 589, 1309],
-  "huck":            [ 606, 2655],
-  "deerhoof":        [ 828, 2269],
-  "little-rica":     [ 962,  642],
-  "fortune":         [1032, 1433], // diamond marker center
-  "ghost-mountain":  [1350,  335],
-  "plata":           [1422, 1000],
-  "silverpit":       [1818, 1648],
-  "cowtown":         [1703, 2227],
-  "dustbuck":        [1876, 2403],
-  "skull-water":     [2213,  599],
-  "quinne-jimmy":    [2263, 1005],
-  "ratsville":       [2496, 2078],
-  "river-city":      [2860, 1720],
-  "bayou-city":      [2767, 2641],
-  "diablo":          [3354, 1561],
-  "rey":             [3875, 1970]
+       // Same locations as above, but format: [x, y]
+const locationCoords_XY = {
+  "witches-roost":   [2329,  103],
+  "fort-plunder":    [1309,  589],
+  "huck":            [2655,  606],
+  "deerhoof":        [2269,  828],
+  "little-rica":     [ 642,  962],
+  "fortune":         [1433, 1032],
+  "ghost-mountain":  [ 335, 1350],
+  "plata":           [1000, 1422],
+  "silverpit":       [1648, 1818],
+  "cowtown":         [2227, 1703],
+  "dustbuck":        [2403, 1876],
+  "skull-water":     [ 599, 2213],
+  "quinne-jimmy":    [1005, 2263],
+  "ratsville":       [2078, 2496],
+  "river-city":      [1720, 2860],
+  "bayou-city":      [2641, 2767],
+  "diablo":          [1561, 3354],
+  "rey":             [1970, 3875]
 };
 
       const isMobile = window.innerWidth <= 768;
