@@ -445,7 +445,7 @@
       });
 
        // Same locations as above, but format: [x, y]
-const locationCoords_XY = {
+const locationCoords = {
   "witches-roost":   [2329,  103],
   "fort-plunder":    [1309,  589],
   "huck":            [2655,  606],
