@@ -444,29 +444,28 @@
         } catch (e) {}
       });
 
-      // Extracted marker centers, scaled to 2824w x 4000h
+       // Scaled from 1445x2048 -> 2824x4000
 // Format: [y, x]
-const locationCoords = {
+const locationCoords_YX = {
   "witches-roost":   [ 103, 2329],
   "fort-plunder":    [ 589, 1309],
   "huck":            [ 606, 2655],
   "deerhoof":        [ 828, 2269],
   "little-rica":     [ 962,  642],
-  "fortune":         [1032, 1433], // red diamond marker
+  "fortune":         [1032, 1433], // diamond marker center
   "ghost-mountain":  [1350,  335],
   "plata":           [1422, 1000],
-  "cowtown":         [1703, 2227],
   "silverpit":       [1818, 1648],
+  "cowtown":         [1703, 2227],
   "dustbuck":        [1876, 2403],
   "skull-water":     [2213,  599],
   "quinne-jimmy":    [2263, 1005],
   "ratsville":       [2496, 2078],
-  "bayou-city":      [2767, 2641],
   "river-city":      [2860, 1720],
+  "bayou-city":      [2767, 2641],
   "diablo":          [3354, 1561],
   "rey":             [3875, 1970]
 };
-
 
       const isMobile = window.innerWidth <= 768;
       const hitboxSize = isMobile ? 200 : 160;
