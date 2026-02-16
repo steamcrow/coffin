@@ -444,27 +444,22 @@
         } catch (e) {}
       });
 
-       // Same locations as above, but format: [x, y]
-const locationCoords = {
-  "witches-roost":   [2329,  103],
-  "fort-plunder":    [1309,  589],
-  "huck":            [2655,  606],
-  "deerhoof":        [2269,  828],
-  "little-rica":     [ 642,  962],
-  "fortune":         [1433, 1032],
-  "ghost-mountain":  [ 335, 1350],
-  "plata":           [1000, 1422],
-  "silverpit":       [1648, 1818],
-  "cowtown":         [2227, 1703],
-  "dustbuck":        [2403, 1876],
-  "skull-water":     [ 599, 2213],
-  "quinne-jimmy":    [1005, 2263],
-  "ratsville":       [2078, 2496],
-  "river-city":      [1720, 2860],
-  "bayou-city":      [2641, 2767],
-  "diablo":          [1561, 3354],
-  "rey":             [1970, 3875]
-};
+      const locationCoords = {
+        "fort-plunder": [400, 1400],
+        "deerhoof": [800, 2200],
+        "huck": [1000, 700],
+        "camp-coffin": [1100, 1400],
+        "silverpit": [1200, 2100],
+        "ghost-mountain": [1600, 900],
+        "plata": [1800, 2300],
+        "fortune": [2000, 1100],
+        "ratsville": [2400, 1600],
+        "cowtown": [2600, 2400],
+        "river-city": [2800, 800],
+        "dustbuck": [3000, 2000],
+        "bayou-city": [3500, 1800],
+        "diablo": [3600, 1400]
+      };
 
       const isMobile = window.innerWidth <= 768;
       const hitboxSize = isMobile ? 200 : 160;
