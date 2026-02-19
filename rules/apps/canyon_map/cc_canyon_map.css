@@ -54,7 +54,7 @@
      ============================================ */
   --lens-radius: 22px;
   --lens-contrast: 1.20;  /* Increased for maximum sharpness */
-  --lens-distortion-scale: 600;  /* EXTREME (for testing) - adjust down to 100-200 for subtle, 300-400 for strong */
+  --lens-distortion-scale: 1200;  /* EXTREME (for testing) - adjust down to 100-200 for subtle, 300-400 for strong */
 
   /* ============================================
      LENS HIGHLIGHT/GLARE
