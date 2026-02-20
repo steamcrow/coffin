@@ -437,19 +437,15 @@
         console.warn("⚠️ Cannot add hitboxes - missing locationsData or lensMap");
         return;
       }
-    
+
       // Clear existing markers
       Object.values(locationMarkersById).forEach(marker => {
         try {
           lensMap.removeLayer(marker);
         } catch (e) {}
       });
-    
-      // Get image dimensions
-      const px = mapDoc.map.background.image_pixel_size;
-      const imageHeight = px.h; // Should be 4000
-    
-      // Bounding box coordinates [topY, leftX, bottomY, rightX] in SVG space
+
+      // Bounding box coordinates [top, left, bottom, right]
       const coffinPlacesHitboxes = {
         "little-rica": [818, 500, 1036, 784],
         "ghost-mountain": [1151, 12, 1387, 338],
@@ -487,10 +483,10 @@
         "witches-roost": [274, 2270, 482, 2554],
         "huck": [482, 2542, 694, 2823]
       };
-    
+
       const isMobile = window.innerWidth <= 768;
       let hitboxCount = 0;
-    
+
       locationsData.locations.forEach(loc => {
         const bbox = coffinPlacesHitboxes[loc.id];
         
@@ -498,24 +494,17 @@
           console.warn(`⚠️ No hitbox for location: ${loc.id}`);
           return;
         }
-    
-        // Bounding box format: [topY, leftX, bottomY, rightX] in SVG coordinates
-        const [svgTop, left, svgBottom, right] = bbox;
-        
-        // ⚠️ INVERT Y-AXIS: SVG Y goes down, Leaflet might expect Y going up
-        // If map appears flipped, swap these:
-        const top = imageHeight - svgBottom;  // Flip: bottom becomes top
-        const bottom = imageHeight - svgTop;  // Flip: top becomes bottom
+
+        // Bounding box format: [top, left, bottom, right]
+        const [top, left, bottom, right] = bbox;
         
         // Calculate center point for label
         const centerY = (top + bottom) / 2;
         const centerX = (left + right) / 2;
-    
+
         // Create rectangle bounds [[top, left], [bottom, right]]
         const bounds = [[top, left], [bottom, right]];
-    
-        console.log(`📍 ${loc.id}: SVG[${svgTop}-${svgBottom}] → Leaflet[${top.toFixed(0)}-${bottom.toFixed(0)}]`);
-    
+
         // Create clickable rectangle
         const rectangle = window.L.rectangle(bounds, {
           color: 'rgba(255,117,24,0.6)',
@@ -525,7 +514,7 @@
           interactive: true,
           className: 'cc-location-hitbox'
         });
-    
+
         // Add hover effects
         rectangle.on('mouseover', function() {
           this.setStyle({
@@ -534,7 +523,7 @@
             weight: 3
           });
         });
-    
+
         rectangle.on('mouseout', function() {
           this.setStyle({
             fillOpacity: 0.3,
@@ -542,7 +531,7 @@
             weight: 2
           });
         });
-    
+
         // Click handler
         rectangle.on('click', (e) => {
           console.log(`📍 Clicked: ${loc.name}`);
@@ -555,7 +544,7 @@
             drawerJustOpened = false;
           }, 100);
         });
-    
+
         // Touch feedback for mobile
         rectangle.on('touchstart', function() {
           this.setStyle({
@@ -563,7 +552,7 @@
             fillColor: 'rgba(255,117,24,0.5)'
           });
         });
-    
+
         rectangle.on('touchend', function() {
           setTimeout(() => {
             this.setStyle({
@@ -572,9 +561,9 @@
             });
           }, 150);
         });
-    
+
         rectangle.addTo(lensMap);
-    
+
         // Add text label at center
         const label = window.L.marker([centerY, centerX], {
           icon: window.L.divIcon({
@@ -595,12 +584,12 @@
           }),
           interactive: false
         }).addTo(lensMap);
-    
+
         locationMarkersById[loc.id] = rectangle;
         hitboxCount++;
       });
       
-      console.log(`✅ Added ${hitboxCount} clickable location hitboxes (Y-axis FLIPPED)`);
+      console.log(`✅ Added ${hitboxCount} clickable location hitboxes (rectangles)`);
     }
 
     function applyStateStyles() {
