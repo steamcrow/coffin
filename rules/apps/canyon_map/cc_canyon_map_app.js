@@ -27,8 +27,9 @@
     leafletJsUrl:
       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
 
+/* ADJUST ZOOM HERE */
     lensEnabled: true,
-    lensZoomOffset: 1.2,
+    lensZoomOffset: 1,
 
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
