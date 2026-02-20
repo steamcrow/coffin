@@ -139,7 +139,7 @@
   }
 
   function showPreloader(root) {
-    const logoUrl = "https://www.coffincanyon.com/static/src/img/logo.png";
+    const logoUrl = "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png";
     
     const preloader = el("div", { 
       class: "cc-cm-preloader",
