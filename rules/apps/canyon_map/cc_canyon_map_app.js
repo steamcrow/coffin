@@ -445,44 +445,47 @@
         } catch (e) {}
       });
 
-      // Bounding box coordinates [top, left, bottom, right]
-      const coffinPlacesHitboxes = {
-        "little-rica": [818, 500, 1036, 784],
-        "ghost-mountain": [1151, 12, 1387, 338],
-        "plata": [1141, 790, 1395, 1133],
-        "fortune": [1036, 944, 1292, 1243],
-        "gore-mule-drop": [917, 1608, 1151, 2082],
-        "fort-plunder": [482, 680, 694, 954],
-        "deerhoof": [626, 1651, 856, 1930],
-        "cowtown": [1334, 1898, 1553, 2176],
-        "dustbuck": [1441, 2184, 1664, 2463],
-        "silverpit": [1633, 1344, 1905, 1602],
-        "skull-water": [2019, 344, 2237, 628],
-        "lost-yots": [2040, 1303, 2418, 1616],
-        "ratsville": [2237, 1898, 2471, 2176],
-        "santos-grin": [2604, 1898, 2815, 2176],
-        "river-city": [2471, 680, 2704, 954],
-        "diablo": [2908, 566, 3259, 910],
-        "rey": [3641, 866, 4000, 1202],
-        "bayou-city": [2418, 2403, 2690, 2682],
-        "tin-flats": [2455, 1161, 2666, 1562],
-        "sangr": [2685, 1172, 2895, 1573],
-        "splitglass-arroyo": [2954, 1417, 3265, 1673],
-        "bandit-buck": [1176, 1584, 1387, 1927],
-        "tzulto": [1413, 1542, 1669, 1885],
-        "kraise": [1783, 1243, 1978, 1524],
-        "mindshaft": [899, 812, 992, 1261],
-        "pallor": [1914, 1609, 2675, 1822],
-        "widowflow": [2002, 1820, 2341, 1963],
-        "fool-boot": [2182, 1752, 2369, 1872],
-        "grade-grind": [622, 790, 833, 1133],
-        "crackpits": [1141, 1138, 1395, 1427],
-        "martygrail": [1286, 1971, 1564, 2315],
-        "heckweed": [1553, 1334, 1771, 1526],
-        "quinne-jimmy": [2002, 680, 2237, 954],
-        "witches-roost": [274, 2270, 482, 2554],
-        "huck": [482, 2542, 694, 2823]
-      };
+      // Coffin Canyon hitboxes
+// Coordinate system: 2823x4000, ORIGIN = BOTTOM-LEFT (Y increases upward)
+// bbox format: [topY, leftX, bottomY, rightX]
+
+const coffinPlacesHitboxes = {
+  "bandit-buck": [2613, 1584, 2824, 1927],
+  "bayou-city": [1175, 2501, 1386, 2767],
+  "cowtown": [2166, 2079, 2356, 2404],
+  "crackpits": [2605, 1138, 2859, 1427],
+  "deerhoof": [3112, 2130, 3329, 2412],
+  "diablo": [505, 1432, 716, 1698],
+  "dustbuck": [1974, 2243, 2164, 2542],
+  "fool-boot": [1631, 1752, 1818, 1872],
+  "fort-plunder": [3348, 1209, 3631, 1427],
+  "fortune": [2887, 1284, 3121, 1567],
+  "ghost-mountain": [2597, 205, 2849, 489],
+  "gore-mule-drop": [2849, 1608, 3083, 2082],
+  "grade-grind": [3167, 790, 3378, 1133],
+  "heckweed": [2229, 1334, 2447, 1526],
+  "huck": [3332, 2569, 3550, 2749],
+  "kraise": [2022, 1243, 2217, 1524],
+  "little-rica": [2964, 500, 3182, 784],
+  "lost-yots": [1582, 1303, 1960, 1616],
+  "martygrail": [2436, 1971, 2714, 2315],
+  "mindshaft": [3008, 812, 3101, 1261],
+  "pallor": [1325, 1609, 2086, 1822],
+  "plata": [2513, 916, 2765, 1089],
+  "quinne-jimmy": [1687, 810, 1877, 1172],
+  "ratsville": [1450, 1941, 1661, 2219],
+  "rey": [19, 1883, 230, 2046],
+  "river-city": [1068, 1595, 1279, 1861],
+  "sangr": [1105, 1172, 1315, 1573],
+  "santos-grin": [1185, 1898, 1396, 2176],
+  "silverpit": [2132, 1537, 2321, 1746],
+  "skull-water": [1609, 492, 1841, 701],
+  "splitglass-arroyo": [735, 1417, 1046, 1673],
+  "tin-flats": [1334, 1161, 1545, 1562],
+  "tzulto": [2331, 1542, 2587, 1885],
+  "widowflow": [1659, 1820, 1998, 1963],
+  "witches-roost": [3767, 2130, 3965, 2495]
+};
 
       const isMobile = window.innerWidth <= 768;
       let hitboxCount = 0;
