@@ -52,7 +52,7 @@
      LENS APPEARANCE & DISTORTION
      Adjust clarity and edge effects
      ============================================ */
-  --lens-radius:200px;
+  --lens-radius:100px;
   --lens-contrast: 5.20;  /* Increased for maximum sharpness */
   --lens-distortion-scale: 1200;  /* EXTREME (for testing) - adjust down to 100-200 for subtle, 300-400 for strong */
 
