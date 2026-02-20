@@ -1,7 +1,7 @@
 /* File: rules/apps/canyon_map/cc_canyon_map_app.js
    Coffin Canyon — Canyon Map
    
-   FIXED VERSION - Visible clickable location markers
+   FIXED VERSION - Rectangle hitboxes for all locations
 */
 
 (function () {
@@ -438,196 +438,158 @@
         return;
       }
 
+      // Clear existing markers
       Object.values(locationMarkersById).forEach(marker => {
         try {
           lensMap.removeLayer(marker);
         } catch (e) {}
       });
 
-  // ================================================================
-// UPDATED addNamedLocationHitboxes() FUNCTION
-// Replace the entire function in cc_canyon_map_app.js (around line 620)
-// with this complete version
-// ================================================================
+      // Bounding box coordinates [top, left, bottom, right]
+      const coffinPlacesHitboxes = {
+        "little-rica": [818, 500, 1036, 784],
+        "ghost-mountain": [1151, 12, 1387, 338],
+        "plata": [1141, 790, 1395, 1133],
+        "fortune": [1036, 944, 1292, 1243],
+        "gore-mule-drop": [917, 1608, 1151, 2082],
+        "fort-plunder": [482, 680, 694, 954],
+        "deerhoof": [626, 1651, 856, 1930],
+        "cowtown": [1334, 1898, 1553, 2176],
+        "dustbuck": [1441, 2184, 1664, 2463],
+        "silverpit": [1633, 1344, 1905, 1602],
+        "skull-water": [2019, 344, 2237, 628],
+        "lost-yots": [2040, 1303, 2418, 1616],
+        "ratsville": [2237, 1898, 2471, 2176],
+        "santos-grin": [2604, 1898, 2815, 2176],
+        "river-city": [2471, 680, 2704, 954],
+        "diablo": [2908, 566, 3259, 910],
+        "rey": [3641, 866, 4000, 1202],
+        "bayou-city": [2418, 2403, 2690, 2682],
+        "tin-flats": [2455, 1161, 2666, 1562],
+        "sangr": [2685, 1172, 2895, 1573],
+        "splitglass-arroyo": [2954, 1417, 3265, 1673],
+        "bandit-buck": [1176, 1584, 1387, 1927],
+        "tzulto": [1413, 1542, 1669, 1885],
+        "kraise": [1783, 1243, 1978, 1524],
+        "mindshaft": [899, 812, 992, 1261],
+        "pallor": [1914, 1609, 2675, 1822],
+        "widowflow": [2002, 1820, 2341, 1963],
+        "fool-boot": [2182, 1752, 2369, 1872],
+        "grade-grind": [622, 790, 833, 1133],
+        "crackpits": [1141, 1138, 1395, 1427],
+        "martygrail": [1286, 1971, 1564, 2315],
+        "heckweed": [1553, 1334, 1771, 1526],
+        "quinne-jimmy": [2002, 680, 2237, 954],
+        "witches-roost": [274, 2270, 482, 2554],
+        "huck": [482, 2542, 694, 2823]
+      };
 
-function addNamedLocationHitboxes() {
-  if (!locationsData || !lensMap) {
-    console.warn("⚠️ Cannot add hitboxes - missing locationsData or lensMap");
-    return;
-  }
+      const isMobile = window.innerWidth <= 768;
+      let hitboxCount = 0;
 
-  // Clear existing markers
-  Object.values(locationMarkersById).forEach(marker => {
-    try {
-      lensMap.removeLayer(marker);
-    } catch (e) {}
-  });
+      locationsData.locations.forEach(loc => {
+        const bbox = coffinPlacesHitboxes[loc.id];
+        
+        if (!bbox) {
+          console.warn(`⚠️ No hitbox for location: ${loc.id}`);
+          return;
+        }
 
-  // Bounding box coordinates [top, left, bottom, right]
-  const coffinPlacesHitboxes = {
-    "little-rica": [818, 500, 1036, 784],
-    "ghost-mountain": [1151, 12, 1387, 338],
-    "plata": [1141, 790, 1395, 1133],
-    "fortune": [1036, 944, 1292, 1243],
-    "gore-mule-drop": [917, 1608, 1151, 2082],
-    "fort-plunder": [482, 680, 694, 954],
-    "deerhoof": [626, 1651, 856, 1930],
-    "cowtown": [1334, 1898, 1553, 2176],
-    "dustbuck": [1441, 2184, 1664, 2463],
-    "silverpit": [1633, 1344, 1905, 1602],
-    "skull-water": [2019, 344, 2237, 628],
-    "lost-yots": [2040, 1303, 2418, 1616],
-    "ratsville": [2237, 1898, 2471, 2176],
-    "santos-grin": [2604, 1898, 2815, 2176],
-    "river-city": [2471, 680, 2704, 954],
-    "diablo": [2908, 566, 3259, 910],
-    "rey": [3641, 866, 4000, 1202],
-    "bayou-city": [2418, 2403, 2690, 2682],
-    "tin-flats": [2455, 1161, 2666, 1562],
-    "sangr": [2685, 1172, 2895, 1573],
-    "splitglass-arroyo": [2954, 1417, 3265, 1673],
-    "bandit-buck": [1176, 1584, 1387, 1927],
-    "tzulto": [1413, 1542, 1669, 1885],
-    "kraise": [1783, 1243, 1978, 1524],
-    "mindshaft": [899, 812, 992, 1261],
-    "pallor": [1914, 1609, 2675, 1822],
-    "widowflow": [2002, 1820, 2341, 1963],
-    "fool-boot": [2182, 1752, 2369, 1872],
-    "grade-grind": [622, 790, 833, 1133],
-    "crackpits": [1141, 1138, 1395, 1427],
-    "martygrail": [1286, 1971, 1564, 2315],
-    "heckweed": [1553, 1334, 1771, 1526],
-    "quinne-jimmy": [2002, 680, 2237, 954],
-    "witches-roost": [274, 2270, 482, 2554],
-    "huck": [482, 2542, 694, 2823]
-  };
+        // Bounding box format: [top, left, bottom, right]
+        const [top, left, bottom, right] = bbox;
+        
+        // Calculate center point for label
+        const centerY = (top + bottom) / 2;
+        const centerX = (left + right) / 2;
 
-  const isMobile = window.innerWidth <= 768;
-  let hitboxCount = 0;
+        // Create rectangle bounds [[top, left], [bottom, right]]
+        const bounds = [[top, left], [bottom, right]];
 
-  locationsData.locations.forEach(loc => {
-    const bbox = coffinPlacesHitboxes[loc.id];
-    
-    if (!bbox) {
-      console.warn(`⚠️ No hitbox for location: ${loc.id}`);
-      return;
-    }
-
-    // Bounding box format: [top, left, bottom, right]
-    const [top, left, bottom, right] = bbox;
-    
-    // Calculate center point for label
-    const centerY = (top + bottom) / 2;
-    const centerX = (left + right) / 2;
-
-    // Create rectangle bounds [[top, left], [bottom, right]]
-    const bounds = [[top, left], [bottom, right]];
-
-    // Create clickable rectangle
-    const rectangle = window.L.rectangle(bounds, {
-      color: 'rgba(255,117,24,0.6)',
-      fillColor: 'rgba(255,117,24,0.25)',
-      fillOpacity: 0.3,
-      weight: 2,
-      interactive: true,
-      className: 'cc-location-hitbox'
-    });
-
-    // Add hover effects
-    rectangle.on('mouseover', function() {
-      this.setStyle({
-        fillOpacity: 0.5,
-        fillColor: 'rgba(255,117,24,0.4)',
-        weight: 3
-      });
-    });
-
-    rectangle.on('mouseout', function() {
-      this.setStyle({
-        fillOpacity: 0.3,
-        fillColor: 'rgba(255,117,24,0.25)',
-        weight: 2
-      });
-    });
-
-    // Click handler
-    rectangle.on('click', (e) => {
-      console.log(`📍 Clicked: ${loc.name}`);
-      e.originalEvent.stopPropagation();
-      renderLocationDrawer(ui, loc);
-      drawerJustOpened = true;
-      openDrawer(ui);
-      
-      setTimeout(() => {
-        drawerJustOpened = false;
-      }, 100);
-    });
-
-    // Touch feedback for mobile
-    rectangle.on('touchstart', function() {
-      this.setStyle({
-        fillOpacity: 0.6,
-        fillColor: 'rgba(255,117,24,0.5)'
-      });
-    });
-
-    rectangle.on('touchend', function() {
-      setTimeout(() => {
-        this.setStyle({
+        // Create clickable rectangle
+        const rectangle = window.L.rectangle(bounds, {
+          color: 'rgba(255,117,24,0.6)',
+          fillColor: 'rgba(255,117,24,0.25)',
           fillOpacity: 0.3,
-          fillColor: 'rgba(255,117,24,0.25)'
+          weight: 2,
+          interactive: true,
+          className: 'cc-location-hitbox'
         });
-      }, 150);
-    });
 
-    rectangle.addTo(lensMap);
+        // Add hover effects
+        rectangle.on('mouseover', function() {
+          this.setStyle({
+            fillOpacity: 0.5,
+            fillColor: 'rgba(255,117,24,0.4)',
+            weight: 3
+          });
+        });
 
-    // Add text label at center
-    const label = window.L.marker([centerY, centerX], {
-      icon: window.L.divIcon({
-        className: 'cc-location-label',
-        html: `<div style="
-          font-weight: 800;
-          font-size: ${isMobile ? '13px' : '11px'};
-          color: #fff;
-          text-align: center;
-          text-shadow: 
-            0 2px 4px rgba(0,0,0,0.9),
-            0 0 10px rgba(0,0,0,0.8);
-          white-space: nowrap;
-          pointer-events: none;
-        ">${loc.emoji || '📍'} ${loc.name}</div>`,
-        iconSize: [0, 0],
-        iconAnchor: [0, 0]
-      }),
-      interactive: false
-    }).addTo(lensMap);
+        rectangle.on('mouseout', function() {
+          this.setStyle({
+            fillOpacity: 0.3,
+            fillColor: 'rgba(255,117,24,0.25)',
+            weight: 2
+          });
+        });
 
-    locationMarkersById[loc.id] = rectangle;
-    hitboxCount++;
-  });
-  
-  console.log(`✅ Added ${hitboxCount} clickable location hitboxes (rectangles)`);
-}
+        // Click handler
+        rectangle.on('click', (e) => {
+          console.log(`📍 Clicked: ${loc.name}`);
+          e.originalEvent.stopPropagation();
+          renderLocationDrawer(ui, loc);
+          drawerJustOpened = true;
+          openDrawer(ui);
+          
+          setTimeout(() => {
+            drawerJustOpened = false;
+          }, 100);
+        });
 
+        // Touch feedback for mobile
+        rectangle.on('touchstart', function() {
+          this.setStyle({
+            fillOpacity: 0.6,
+            fillColor: 'rgba(255,117,24,0.5)'
+          });
+        });
 
-// ================================================================
-// WHAT CHANGED:
-// ================================================================
-//
-// BEFORE: Single-point circular markers
-//   - Hard to click accurately
-//   - Arbitrary size (150px or 200px)
-//   - Didn't match actual location areas on map
-//
-// AFTER: Rectangular bounding boxes
-//   - Exact match to location areas on map
-//   - Easy to click anywhere in the region
-//   - Hover effects show the clickable area
-//   - Text labels centered in each region
-//
-// ================================================================    
-      console.log(`✅ Added ${hitboxCount} clickable markers (${hitboxSize}x${hitboxSize}px)`);
+        rectangle.on('touchend', function() {
+          setTimeout(() => {
+            this.setStyle({
+              fillOpacity: 0.3,
+              fillColor: 'rgba(255,117,24,0.25)'
+            });
+          }, 150);
+        });
+
+        rectangle.addTo(lensMap);
+
+        // Add text label at center
+        const label = window.L.marker([centerY, centerX], {
+          icon: window.L.divIcon({
+            className: 'cc-location-label',
+            html: `<div style="
+              font-weight: 800;
+              font-size: ${isMobile ? '13px' : '11px'};
+              color: #fff;
+              text-align: center;
+              text-shadow: 
+                0 2px 4px rgba(0,0,0,0.9),
+                0 0 10px rgba(0,0,0,0.8);
+              white-space: nowrap;
+              pointer-events: none;
+            ">${loc.emoji || '📍'} ${loc.name}</div>`,
+            iconSize: [0, 0],
+            iconAnchor: [0, 0]
+          }),
+          interactive: false
+        }).addTo(lensMap);
+
+        locationMarkersById[loc.id] = rectangle;
+        hitboxCount++;
+      });
+      
+      console.log(`✅ Added ${hitboxCount} clickable location hitboxes (rectangles)`);
     }
 
     function applyStateStyles() {
