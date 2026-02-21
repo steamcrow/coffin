@@ -103,8 +103,10 @@
     // reference filters defined inside it
     const svg = document.createElementNS(ns, "svg");
     svg.id = "cc-lens-warp-svg";
-    svg.setAttribute("style", "position:absolute;left:-9999px;top:-9999px;width:0;height:0;overflow:hidden");
+    // width/height must be at least 1px — Safari ignores SVG filters on 0-size elements
+    svg.setAttribute("style", "position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden");
     svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("xmlns", ns);
 
     const filter = document.createElementNS(ns, "filter");
     filter.id = "ccLensWarp";
@@ -246,7 +248,7 @@
       ])
     ]);
 
-    const mapEl = el("div", { class: "cc-cm-map" });
+    const mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
     const lensMapEl = el("div", { style: "width:100%; height:100%;" });
 
     // Lens structure:
@@ -271,9 +273,42 @@
       el("div", { class: "cc-cm-drawer-content" })
     ]);
 
+    // --- PRELOADER ---
+    // Simple overlay that covers the mapwrap while data is fetching.
+    // showLoader() displays it, hideLoader() fades it out.
+    const loaderEl = el("div", {
+      id: "cc-map-loader",
+      style: [
+        "position:absolute;inset:0;z-index:200;",
+        "display:flex;flex-direction:column;align-items:center;justify-content:center;",
+        "background:rgba(0,0,0,0.75);border-radius:12px;",
+        "transition:opacity 0.4s ease;"
+      ].join("")
+    }, [
+      el("div", { style: "width:60px;height:60px;border:4px solid rgba(255,117,24,0.25);border-top:4px solid #ff7518;border-radius:50%;animation:cc-spin 1s linear infinite;" }),
+      el("div", { style: "color:#ff7518;margin-top:18px;font-family:system-ui;font-weight:700;font-size:1rem;letter-spacing:2px;text-transform:uppercase;" }, ["Loading..."])
+    ]);
+
+    // Inject the spin keyframes once
+    if (!document.getElementById("cc-spin-style")) {
+      document.head.appendChild(el("style", { id: "cc-spin-style" }, [
+        "@keyframes cc-spin { 0%{ transform:rotate(0deg) } 100%{ transform:rotate(360deg) } }"
+      ]));
+    }
+
+    function showLoader() {
+      loaderEl.style.opacity = "1";
+      loaderEl.style.display = "flex";
+    }
+
+    function hideLoader() {
+      loaderEl.style.opacity = "0";
+      setTimeout(() => { loaderEl.style.display = "none"; }, 420);
+    }
+
     const body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
       el("div", { class: "cc-cm-mapwrap" }, [
-        mapEl, lensEl, el("div", { class: "cc-frame-overlay" }),
+        mapEl, lensEl, loaderEl, el("div", { class: "cc-frame-overlay" }),
         el("div", { class: "cc-scroll-vertical" }, [el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" })]),
         el("div", { class: "cc-scroll-horizontal" }, [el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" })])
       ])
@@ -304,7 +339,76 @@
       lensMap.setView(mainMap.getCenter(), mainMap.getZoom() + opts.lensZoomOffset, { animate: false });
     });
 
+    // --- KNOB DRAG SYSTEM ---
+    // Each knob (vertical + horizontal) is draggable.
+    // Dragging a knob pans the mainMap, which then fires 'move',
+    // which updates the knob position — completing the feedback loop.
+    function bindKnob(knobEl, axis, getMapSize) {
+      let dragging = false;
+      let startPointer = 0;
+      let startMapCoord = 0;
+
+      function onDown(e) {
+        dragging = true;
+        knobEl.classList.add("is-active");
+        startPointer = axis === "v" ? e.clientY : e.clientX;
+        const c = mainMap.getCenter();
+        startMapCoord = axis === "v" ? c.lat : c.lng;
+        e.preventDefault();
+      }
+
+      function onMove(e) {
+        if (!dragging || !mainMap) return;
+        const client = axis === "v"
+          ? (e.touches ? e.touches[0].clientY : e.clientY)
+          : (e.touches ? e.touches[0].clientX : e.clientX);
+        const delta = client - startPointer;
+        const { w, h } = getMapSize();
+        const trackSize = axis === "v" ? h : w;
+        const { image_pixel_size: px } = mapDoc.map.background;
+        const mapRange = axis === "v" ? px.h : px.w;
+        // Convert pixel drag into map coordinate offset
+        const coordDelta = (delta / trackSize) * mapRange;
+        const c = mainMap.getCenter();
+        if (axis === "v") {
+          mainMap.panTo([startMapCoord + coordDelta, c.lng], { animate: false });
+        } else {
+          mainMap.panTo([c.lat, startMapCoord + coordDelta], { animate: false });
+        }
+      }
+
+      function onUp() {
+        dragging = false;
+        knobEl.classList.remove("is-active");
+      }
+
+      knobEl.addEventListener("mousedown",  onDown);
+      knobEl.addEventListener("touchstart", onDown, { passive: false });
+      window.addEventListener("mousemove",  onMove);
+      window.addEventListener("touchmove",  onMove, { passive: false });
+      window.addEventListener("mouseup",    onUp);
+      window.addEventListener("touchend",   onUp);
+    }
+
+    // --- KNOB POSITION UPDATER ---
+    // Called whenever the map moves — slides the knob to reflect current position.
+    function updateKnobs(px) {
+      const c = mainMap.getCenter();
+      const t = clamp(c.lat / px.h, 0, 1);
+      const l = clamp(c.lng / px.w, 0, 1);
+      // top/left are set as inline styles; CSS transform centers the knob on that point
+      ui.knobV.style.top  = `${t * 100}%`;
+      ui.knobH.style.left = `${l * 100}%`;
+    }
+
+    function getMapSize() {
+      const r = ui.mapEl.getBoundingClientRect();
+      return { w: r.width, h: r.height };
+    }
+
     async function init() {
+      showLoader();
+
       // Start a new load session — cancels any previous in-flight fetches
       const signal = newInitSession();
 
@@ -321,7 +425,8 @@
       const bounds = [[0, 0], [px.h, px.w]];
 
       mainMap = window.L.map(ui.mapEl, {
-        crs: window.L.CRS.Simple, minZoom: -2, maxZoom: 2, dragging: false, zoomControl: false, attributionControl: false
+        crs: window.L.CRS.Simple, minZoom: -2, maxZoom: 2,
+        dragging: false, zoomControl: false, attributionControl: false
       });
       window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
       mainMap.fitBounds(bounds);
@@ -345,25 +450,30 @@
           ui.drawerEl.classList.add("open");
         });
 
-        // BUGFIX: was location.name (undefined) — should be loc.name
         window.L.marker([(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2], {
           icon: window.L.divIcon({
             className: 'cc-location-label',
-            html: `<div style="color:#fff; font-weight:800; text-shadow:0 2px 4px #000;">${loc.emoji || '📍'} ${loc.name}</div>`
+            html: `<div style="color:#fff;font-weight:800;text-shadow:0 2px 4px #000;">${loc.emoji || '📍'} ${loc.name}</div>`
           }),
           interactive: false
         }).addTo(lensMap);
       });
 
+      // Sync lens and knobs whenever the main map moves
       mainMap.on('move', () => {
         syncLens();
-        // Update Scroll Knobs
-        const center = mainMap.getCenter();
-        ui.knobV.style.top = `${clamp((center.lat / px.h) * 100, 0, 100)}%`;
-        ui.knobH.style.left = `${clamp((center.lng / px.w) * 100, 0, 100)}%`;
+        updateKnobs(px);
       });
 
+      // Bind knob drag — must happen after mainMap exists
+      bindKnob(ui.knobV, "v", getMapSize);
+      bindKnob(ui.knobH, "h", getMapSize);
+
+      // Initial sync
       syncLens();
+      updateKnobs(px);
+
+      hideLoader();
     }
 
     root.querySelector("#cc-cm-reload").onclick = init;
