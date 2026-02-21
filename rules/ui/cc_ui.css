@@ -521,7 +521,7 @@ code, pre, kbd, samp {
     #ff9147 50%, 
     var(--cc-primary) 100%);
   width: 0%;
-  animation: cc-loading-fill 2s ease-in-out forwards;
+  animation: cc-loading-fill 5s ease-in-out forwards;
   border-radius: 8px;
   box-shadow: 0 0 20px rgba(255, 117, 24, 0.6);
 }
