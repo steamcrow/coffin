@@ -259,8 +259,8 @@
     const body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
       el("div", { class: "cc-cm-mapwrap" }, [
         mapEl, lensEl, el("div", { class: "cc-frame-overlay" }),
-        el("div", { class: "cc-scroll-vertical" }, [el("div", { class: "cc-scroll-knob", id: "knob-v" })]),
-        el("div", { class: "cc-scroll-horizontal" }, [el("div", { class: "cc-scroll-knob", id: "knob-h" })])
+        el("div", { class: "cc-scroll-vertical" }, [el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" })]),
+        el("div", { class: "cc-scroll-horizontal" }, [el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" })])
       ])
     ]);
 
@@ -273,8 +273,8 @@
       drawerEl: drawer,
       drawerTitleEl: drawer.querySelector(".cc-cm-drawer-title"),
       drawerContentEl: drawer.querySelector(".cc-cm-drawer-content"),
-      knobV: root.querySelector("#knob-v"),
-      knobH: root.querySelector("#knob-h")
+      knobV: root.querySelector("#cc-scroll-knob-v"),
+      knobH: root.querySelector("#cc-scroll-knob-h")
     };
 
     // Dependencies
@@ -355,5 +355,5 @@
     await init();
   }
 
-  window.CC_CANYON_MAP = { mount };
+  window.CC_CanyonMap = { mount };
 })();
