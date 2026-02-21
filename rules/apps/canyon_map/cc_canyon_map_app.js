@@ -29,7 +29,7 @@
 
 /* ADJUST ZOOM HERE */
     lensEnabled: true,
-    lensZoomOffset: .75,
+    lensZoomOffset: .5,
 
     lockHorizontalPan: false,
     maxHorizontalDriftPx: 260,
