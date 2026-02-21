@@ -159,27 +159,42 @@
     document.body.appendChild(svg);
   }
 
-  // --- NETWORK (With Abort Protection) ---
-  let currentFetchController = null;
-  async function fetchWithTimeout(url, type = 'json') {
-    if (currentFetchController) currentFetchController.abort();
-    currentFetchController = new AbortController();
-    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), { signal: currentFetchController.signal });
+  // --- NETWORK ---
+  // One AbortController per init() call — all fetches in that batch share it.
+  // When init() fires again (e.g. Reload), the old controller is aborted first,
+  // which cancels any still-in-flight requests from the previous load.
+  // Individual fetches within the same init() do NOT abort each other.
+  let _initController = null;
+
+  function newInitSession() {
+    if (_initController) _initController.abort();
+    _initController = new AbortController();
+    return _initController.signal;
+  }
+
+  async function fetchJson(url, signal) {
+    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), { signal });
     if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
-    return type === 'json' ? res.json() : res.text();
+    return res.json();
+  }
+
+  async function fetchText(url, signal) {
+    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now(), { signal });
+    if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+    return res.text();
   }
 
   const _loaded = { css: new Set(), js: new Set() };
   async function loadCssOnce(url, key) {
     if (_loaded.css.has(key)) return;
-    const css = await fetchWithTimeout(url, 'text');
+    const css = await fetchText(url);
     document.head.appendChild(el("style", { "data-cc-style": key }, [css]));
     _loaded.css.add(key);
   }
 
   async function loadScriptOnce(url, key) {
     if (_loaded.js.has(key)) return;
-    const code = await fetchWithTimeout(url, 'text');
+    const code = await fetchText(url);
     const blob = new Blob([code], { type: "text/javascript" });
     const blobUrl = URL.createObjectURL(blob);
     await new Promise((resolve) => {
@@ -290,10 +305,13 @@
     });
 
     async function init() {
+      // Start a new load session — cancels any previous in-flight fetches
+      const signal = newInitSession();
+
       [mapDoc, stateDoc, locationsData] = await Promise.all([
-        fetchWithTimeout(opts.mapUrl),
-        fetchWithTimeout(opts.stateUrl),
-        fetchWithTimeout(opts.locationsUrl)
+        fetchJson(opts.mapUrl, signal),
+        fetchJson(opts.stateUrl, signal),
+        fetchJson(opts.locationsUrl, signal)
       ]);
 
       if (mainMap) mainMap.remove();
