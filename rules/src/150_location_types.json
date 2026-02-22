@@ -74,24 +74,24 @@
       "monster_bias_add": ["Cunning", "Territorial"]
     }
   },
-"resources_catalog": [
-  "silver",
-  "gildren",
-  "tzul_silver",
-  "lead",
-  "mechanical_parts",
-  "spare_parts",
-  "supplies",
-  "livestock",
-  "food_good",
-  "food_foul",
-  "water_clean",
-  "water_foul",
-  "moonshine",
-  "rotgut",
-  "medicine",
-  "thyr"
-]
+  "resources_catalog": [
+    "silver",
+    "gildren",
+    "tzul_silver",
+    "lead",
+    "mechanical_parts",
+    "spare_parts",
+    "supplies",
+    "livestock",
+    "food_good",
+    "food_foul",
+    "water_clean",
+    "water_foul",
+    "moonshine",
+    "rotgut",
+    "medicine",
+    "thyr"
+  ],
   "location_types": [
     {
       "id": "boomtown_riverside",
@@ -108,10 +108,8 @@
         "livestock": 3,
         "supplies": 4,
         "gildren": 2,
-        "food": 4,
         "food_good": 3,
         "food_foul": 1,
-        "water": 5,
         "water_clean": 3,
         "water_foul": 2,
         "thyr": 1,
@@ -124,13 +122,12 @@
       "monster_seeds": [
         { "name": "Kelpie", "weight": 3 },
         { "name": "Crocodile", "weight": 3 },
-        { "name": "Will-o’-Wisp", "weight": 2 },
+        { "name": "Will-o'-Wisp", "weight": 2 },
         { "name": "Rat Swarm", "weight": 2 },
         { "name": "Ruster", "weight": 1 }
       ],
       "notes": ["Boomtowns attract predators and opportunists. River brings trade and trouble."]
     },
-
     {
       "id": "boomtown_mesa",
       "name": "Boomtown (Mesa Top)",
@@ -146,10 +143,8 @@
         "livestock": 2,
         "supplies": 2,
         "gildren": 2,
-        "food": 2,
         "food_good": 1,
         "food_foul": 2,
-        "water": 2,
         "water_clean": 1,
         "water_foul": 2,
         "thyr": 2,
@@ -167,7 +162,6 @@
       ],
       "notes": ["Mesa towns are hard to supply and easy to besiege."]
     },
-
     {
       "id": "boomtown_spire_stilts",
       "name": "Boomtown (Spire Stilts)",
@@ -183,10 +177,8 @@
         "livestock": 1,
         "supplies": 1,
         "gildren": 1,
-        "food": 1,
         "food_good": 0,
         "food_foul": 2,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
@@ -204,7 +196,6 @@
       ],
       "notes": ["Perfect for ambush and vertical horrors."]
     },
-
     {
       "id": "boomtown_riverbase",
       "name": "Boomtown (River Base / Canyon Floor)",
@@ -220,10 +211,8 @@
         "livestock": 2,
         "supplies": 4,
         "gildren": 2,
-        "food": 4,
         "food_good": 2,
         "food_foul": 2,
-        "water": 5,
         "water_clean": 2,
         "water_foul": 3,
         "thyr": 1,
@@ -241,7 +230,6 @@
       ],
       "notes": ["Trade comes through; so does rot."]
     },
-
     {
       "id": "boomtown_dryriver",
       "name": "Boomtown (Dry Riverbed)",
@@ -257,10 +245,8 @@
         "livestock": 1,
         "supplies": 1,
         "gildren": 1,
-        "food": 1,
         "food_good": 0,
         "food_foul": 2,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
@@ -274,11 +260,10 @@
         { "name": "Sand Shark", "weight": 3 },
         { "name": "Sand Worm", "weight": 1 },
         { "name": "Skeleton", "weight": 2 },
-        { "name": "Will-o’-Wisp", "weight": 2 }
+        { "name": "Will-o'-Wisp", "weight": 2 }
       ],
       "notes": ["Dry rivers become roads. Roads become hunting lanes."]
     },
-
     {
       "id": "diablo_booming_hub",
       "name": "Diablo (Always Booming)",
@@ -294,10 +279,8 @@
         "livestock": 4,
         "supplies": 6,
         "gildren": 3,
-        "food": 6,
         "food_good": 5,
         "food_foul": 1,
-        "water": 4,
         "water_clean": 3,
         "water_foul": 1,
         "thyr": 2,
@@ -311,7 +294,7 @@
         { "name": "Red Goblin", "weight": 2 },
         { "name": "Feratu Stalker", "weight": 2 },
         { "name": "Ruster", "weight": 1 },
-        { "name": "Will-o’-Wisp", "weight": 1 },
+        { "name": "Will-o'-Wisp", "weight": 1 },
         { "name": "Klowna", "weight": 1 }
       ],
       "notes": [
@@ -319,7 +302,6 @@
         "Klowna may appear near civilization if the dominant threat is immune/inevitable."
       ]
     },
-
     {
       "id": "camp_coffin_hq",
       "name": "Camp Coffin (Headquarters)",
@@ -335,10 +317,8 @@
         "livestock": 2,
         "supplies": 5,
         "gildren": 1,
-        "food": 4,
         "food_good": 3,
         "food_foul": 1,
-        "water": 3,
         "water_clean": 2,
         "water_foul": 1,
         "thyr": 1,
@@ -351,11 +331,10 @@
       "monster_seeds": [
         { "name": "Canyon Goblin", "weight": 2 },
         { "name": "Wolf", "weight": 2 },
-        { "name": "Will-o’-Wisp", "weight": 1 }
+        { "name": "Will-o'-Wisp", "weight": 1 }
       ],
       "notes": ["The canyon is never fully safe, but HQ is defended and supplied."]
     },
-
     {
       "id": "mine_abandoned",
       "name": "Mine (Abandoned)",
@@ -371,10 +350,8 @@
         "livestock": 0,
         "supplies": 1,
         "gildren": 2,
-        "food": 0,
         "food_good": 0,
         "food_foul": 2,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
@@ -393,7 +370,6 @@
       ],
       "notes": ["Abandoned mines are perfect Monster Exits."]
     },
-
     {
       "id": "mine_active_shineriders",
       "name": "Mine (Active / Shine Riders Territory)",
@@ -409,10 +385,8 @@
         "livestock": 1,
         "supplies": 3,
         "gildren": 2,
-        "food": 2,
         "food_good": 1,
         "food_foul": 2,
-        "water": 2,
         "water_clean": 1,
         "water_foul": 2,
         "thyr": 2,
@@ -425,11 +399,10 @@
       "monster_seeds": [
         { "name": "Ruster", "weight": 2 },
         { "name": "Gray Ooze", "weight": 1 },
-        { "name": "Will-o’-Wisp", "weight": 1 }
+        { "name": "Will-o'-Wisp", "weight": 1 }
       ],
       "notes": ["Humans are present; monsters still slip in."]
     },
-
     {
       "id": "tzul_ruins_embalma",
       "name": "Tzul Ruins (Embalma Quarter)",
@@ -445,10 +418,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 0,
-        "food": 0,
         "food_good": 0,
         "food_foul": 3,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 3,
         "thyr": 3,
@@ -467,7 +438,6 @@
       ],
       "notes": ["Heavy Bloodless/Haunt pressure. Skull Ranger interactions likely."]
     },
-
     {
       "id": "river_active",
       "name": "River (Active Flow)",
@@ -483,10 +453,8 @@
         "livestock": 1,
         "supplies": 1,
         "gildren": 0,
-        "food": 2,
         "food_good": 2,
         "food_foul": 2,
-        "water": 6,
         "water_clean": 2,
         "water_foul": 3,
         "thyr": 1,
@@ -499,11 +467,10 @@
       "monster_seeds": [
         { "name": "Kelpie", "weight": 3 },
         { "name": "Crocodile", "weight": 3 },
-        { "name": "Will-o’-Wisp", "weight": 2 }
+        { "name": "Will-o'-Wisp", "weight": 2 }
       ],
       "notes": ["The river is a resource and a trap."]
     },
-
     {
       "id": "river_dried",
       "name": "River (Dried Up)",
@@ -519,10 +486,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 0,
-        "food": 0,
         "food_good": 0,
         "food_foul": 2,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
@@ -534,12 +499,11 @@
       "features": ["CrackedChannel", "BoneDrifts", "DustRoad"],
       "monster_seeds": [
         { "name": "Sand Shark", "weight": 3 },
-        { "name": "Will-o’-Wisp", "weight": 2 },
+        { "name": "Will-o'-Wisp", "weight": 2 },
         { "name": "Skeleton", "weight": 2 }
       ],
       "notes": ["Dry riverbeds become fast lanes for predators."]
     },
-
     {
       "id": "sand_wasteland",
       "name": "Sand Wasteland",
@@ -555,10 +519,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 1,
-        "food": 0,
         "food_good": 0,
         "food_foul": 1,
-        "water": 0,
         "water_clean": 0,
         "water_foul": 1,
         "thyr": 1,
@@ -573,9 +535,8 @@
         { "name": "Sand Worm", "weight": 2 },
         { "name": "Wyvern", "weight": 1 }
       ],
-      "notes": ["You don’t cross this unless you have to."]
+      "notes": ["You don't cross this unless you have to."]
     },
-
     {
       "id": "rock_outcroppings",
       "name": "Rock Outcroppings",
@@ -591,10 +552,8 @@
         "livestock": 1,
         "supplies": 0,
         "gildren": 1,
-        "food": 1,
         "food_good": 0,
         "food_foul": 1,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 1,
         "thyr": 2,
@@ -612,7 +571,6 @@
       ],
       "notes": ["The canyon provides ambush structure for everything."]
     },
-
     {
       "id": "mesa",
       "name": "Mesa",
@@ -628,10 +586,8 @@
         "livestock": 1,
         "supplies": 0,
         "gildren": 0,
-        "food": 1,
         "food_good": 0,
         "food_foul": 1,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 1,
         "thyr": 2,
@@ -648,7 +604,6 @@
       ],
       "notes": ["Anything with wings loves a mesa."]
     },
-
     {
       "id": "cave",
       "name": "Cave",
@@ -664,10 +619,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 1,
-        "food": 0,
         "food_good": 0,
         "food_foul": 2,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
@@ -685,7 +638,6 @@
       ],
       "notes": ["Caves are where plans go to die."]
     },
-
     {
       "id": "sinkhole",
       "name": "Sinkhole",
@@ -701,10 +653,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 0,
-        "food": 0,
         "food_good": 0,
         "food_foul": 2,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
@@ -715,13 +665,12 @@
       },
       "features": ["HiddenDrop", "CrackedRim", "MonsterExit"],
       "monster_seeds": [
-        { "name": "Will-o’-Wisp", "weight": 3 },
+        { "name": "Will-o'-Wisp", "weight": 3 },
         { "name": "Ghoul", "weight": 2 },
         { "name": "Sand Shark", "weight": 1 }
       ],
       "notes": ["A sinkhole is a place the canyon steals from you."]
     },
-
     {
       "id": "debris_field",
       "name": "Debris Field (Wagon Rot / Junkyard / Dead Camp / Ruined Fort / Ancient Adobe)",
@@ -737,10 +686,8 @@
         "livestock": 0,
         "supplies": 2,
         "gildren": 1,
-        "food": 1,
         "food_good": 0,
         "food_foul": 2,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
@@ -758,7 +705,6 @@
       ],
       "notes": ["Greed draws you in. Something else keeps you there."]
     },
-
     {
       "id": "thyr_outcroppings",
       "name": "Thyr Outcroppings",
@@ -774,10 +720,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 0,
-        "food": 0,
         "food_good": 0,
         "food_foul": 1,
-        "water": 0,
         "water_clean": 0,
         "water_foul": 1,
         "thyr": 5,
@@ -795,7 +739,6 @@
       ],
       "notes": ["Thyr changes behavior. Territorial monsters gather."]
     },
-
     {
       "id": "thyr_field",
       "name": "Thyr Field (Heavy Veins)",
@@ -811,10 +754,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 0,
-        "food": 0,
         "food_good": 0,
         "food_foul": 2,
-        "water": 0,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 6,
@@ -832,7 +773,6 @@
       ],
       "notes": ["This is where the canyon feels awake."]
     },
-
     {
       "id": "graveyard",
       "name": "Graveyard",
@@ -848,10 +788,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 0,
-        "food": 0,
         "food_good": 0,
         "food_foul": 2,
-        "water": 0,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
@@ -869,7 +807,6 @@
       ],
       "notes": ["Not all graves are for people."]
     },
-
     {
       "id": "bone_graveyard",
       "name": "Bone Graveyard (Herdbeasts / Owlbears / Big Dying Ground)",
@@ -885,10 +822,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 0,
-        "food": 1,
         "food_good": 0,
         "food_foul": 3,
-        "water": 0,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
@@ -906,7 +841,6 @@
       ],
       "notes": ["Predators arrive when the canyon serves dinner."]
     },
-
     {
       "id": "monsterologist_town_active",
       "name": "Active Monsterologist Town",
@@ -922,10 +856,8 @@
         "livestock": 1,
         "supplies": 4,
         "gildren": 2,
-        "food": 3,
         "food_good": 2,
         "food_foul": 2,
-        "water": 2,
         "water_clean": 1,
         "water_foul": 2,
         "thyr": 3,
@@ -943,7 +875,6 @@
       ],
       "notes": ["A town that studies monsters tends to create them."]
     },
-
     {
       "id": "cultist_revival_tents",
       "name": "Cultist Revival Tents (Roadside / Between Places)",
@@ -959,10 +890,8 @@
         "livestock": 0,
         "supplies": 1,
         "gildren": 1,
-        "food": 1,
         "food_good": 0,
         "food_foul": 3,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 3,
         "thyr": 2,
@@ -984,51 +913,43 @@
         "If ignored, escalation can push this to Danger 6 quickly."
       ]
     },
-
-    // ============================================================
-    // ADDED TYPES (merged in) — from the newer brainstormed set
-    // ============================================================
-
-   {
-  "id": "cantina",
-  "name": "Cantina",
-  "kind": "Service Node",
-  "state_default": "alive",
-  "danger_base": 3,
-  "population_base": 3,
-  "resources": {
-    "silver": 4,
-    "tzul_silver": 0,
-    "lead": 0,
-    "mechanical_parts": 1,
-    "livestock": 0,
-    "supplies": 2,
-    "gildren": 3,
-
-    "food_good": 2,
-    "food_foul": 2,
-    "water_clean": 1,
-    "water_foul": 2,
-
-    "thyr": 0,
-    "moonshine": 5,
-    "medicine": 0,
-    "spare_parts": 1,
-    "weapons": 1
-  },
-  "features": ["MainBar", "BackRoom", "CardTable", "BottleCrates", "RumorWall"],
-  "monster_seeds": [
-    { "name": "Wererat", "weight": 2 },
-    { "name": "Will-o’-Wisp", "weight": 2 },
-    { "name": "Imp", "weight": 1 },
-    { "name": "Ruster", "weight": 1 }
-  ],
-  "notes": [
-    "Cantinas are pressure valves: rumors, trade, betrayal.",
-    "Quality is expressed via food_good/food_foul and water_clean/water_foul."
-  ]
-}
-
+    {
+      "id": "cantina",
+      "name": "Cantina",
+      "kind": "Service Node",
+      "state_default": "alive",
+      "danger_base": 3,
+      "population_base": 3,
+      "resources": {
+        "silver": 4,
+        "tzul_silver": 0,
+        "lead": 0,
+        "mechanical_parts": 1,
+        "livestock": 0,
+        "supplies": 2,
+        "gildren": 3,
+        "food_good": 2,
+        "food_foul": 2,
+        "water_clean": 1,
+        "water_foul": 2,
+        "thyr": 0,
+        "moonshine": 5,
+        "medicine": 0,
+        "spare_parts": 1,
+        "weapons": 1
+      },
+      "features": ["MainBar", "BackRoom", "CardTable", "BottleCrates", "RumorWall"],
+      "monster_seeds": [
+        { "name": "Wererat", "weight": 2 },
+        { "name": "Will-o'-Wisp", "weight": 2 },
+        { "name": "Imp", "weight": 1 },
+        { "name": "Ruster", "weight": 1 }
+      ],
+      "notes": [
+        "Cantinas are pressure valves: rumors, trade, betrayal.",
+        "Quality is expressed via food_good/food_foul and water_clean/water_foul."
+      ]
+    },
     {
       "id": "clinic",
       "name": "Clinic / Field Hospital",
@@ -1044,10 +965,8 @@
         "livestock": 0,
         "supplies": 3,
         "gildren": 0,
-        "food": 1,
         "food_good": 1,
         "food_foul": 1,
-        "water": 3,
         "water_clean": 2,
         "water_foul": 1,
         "thyr": 0,
@@ -1059,7 +978,7 @@
       "features": ["Cots", "OperatingTable", "MedicineCabinet", "WashBasin", "QuarantineCurtain"],
       "monster_seeds": [
         { "name": "Ghoul", "weight": 2 },
-        { "name": "Will-o’-Wisp", "weight": 1 },
+        { "name": "Will-o'-Wisp", "weight": 1 },
         { "name": "Specter", "weight": 1 }
       ],
       "notes": [
@@ -1067,7 +986,6 @@
         "To make it desperate: drop medicine to 2–3 and raise food_foul/water_foul."
       ]
     },
-
     {
       "id": "general_store",
       "name": "General Store",
@@ -1083,10 +1001,8 @@
         "livestock": 0,
         "supplies": 4,
         "gildren": 1,
-        "food": 6,
         "food_good": 4,
         "food_foul": 2,
-        "water": 4,
         "water_clean": 3,
         "water_foul": 1,
         "thyr": 0,
@@ -1107,7 +1023,6 @@
         "If 'picked clean', invert: raise foul, drop good, lower supplies."
       ]
     },
-
     {
       "id": "ranch",
       "name": "Ranch",
@@ -1123,10 +1038,8 @@
         "livestock": 5,
         "supplies": 2,
         "gildren": 1,
-        "food": 3,
         "food_good": 2,
         "food_foul": 1,
-        "water": 3,
         "water_clean": 2,
         "water_foul": 1,
         "thyr": 0,
@@ -1146,7 +1059,6 @@
         "If poisoned: reduce livestock and raise water_foul/food_foul."
       ]
     },
-
     {
       "id": "thyr_cache",
       "name": "Thyr Cache",
@@ -1162,10 +1074,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 0,
-        "food": 0,
         "food_good": 0,
         "food_foul": 1,
-        "water": 0,
         "water_clean": 0,
         "water_foul": 1,
         "thyr": "ROLL:1d6",
@@ -1179,14 +1089,13 @@
         { "name": "Doom Eye", "weight": 2 },
         { "name": "Owlbear", "weight": 2 },
         { "name": "Lionvulture", "weight": 1 },
-        { "name": "Will-o’-Wisp", "weight": 1 }
+        { "name": "Will-o'-Wisp", "weight": 1 }
       ],
       "notes": [
-        "Special rule: thyr is not a flat rating here—it's an actual cache amount.",
+        "Special rule: thyr is not a flat rating here — it is an actual cache amount.",
         "Always yields 1d6 thyr crystals (or convert the roll to a rating if needed)."
       ]
     },
-
     {
       "id": "tzul_ruins_generic",
       "name": "Tzul Ruins (Generic)",
@@ -1202,10 +1111,8 @@
         "livestock": 0,
         "supplies": 0,
         "gildren": 0,
-        "food": 0,
         "food_good": 0,
         "food_foul": 3,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 3,
         "thyr": 2,
@@ -1226,7 +1133,6 @@
         "Use as a template for named Tzul Ruin quarters (Embalma, etc.)."
       ]
     },
-
     {
       "id": "monster_settlement_hidden",
       "name": "Monster Settlement (Hidden)",
@@ -1242,10 +1148,8 @@
         "livestock": 1,
         "supplies": 0,
         "gildren": 0,
-        "food": 2,
         "food_good": 0,
         "food_foul": 2,
-        "water": 1,
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
