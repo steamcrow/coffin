@@ -74,26 +74,24 @@
       "monster_bias_add": ["Cunning", "Territorial"]
     }
   },
-  "resources_catalog": [
-    "silver",
-    "tzul_silver",
-    "lead",
-    "mechanical_parts",
-    "livestock",
-    "supplies",
-    "gildren",
-    "food",
-    "food_good",
-    "food_foul",
-    "water",
-    "water_clean",
-    "water_foul",
-    "thyr",
-    "moonshine",
-    "medicine",
-    "spare_parts",
-    "weapons"
-  ],
+"resources_catalog": [
+  "silver",
+  "gildren",
+  "tzul_silver",
+  "lead",
+  "mechanical_parts",
+  "spare_parts",
+  "supplies",
+  "livestock",
+  "food_good",
+  "food_foul",
+  "water_clean",
+  "water_foul",
+  "moonshine",
+  "rotgut",
+  "medicine",
+  "thyr"
+]
   "location_types": [
     {
       "id": "boomtown_riverside",
