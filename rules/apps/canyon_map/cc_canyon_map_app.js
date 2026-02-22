@@ -69,7 +69,7 @@
   // Momentum physics for the brass knobs.
   // FRICTION: velocity multiplied by this each animation frame (0-1).
   //   0.95 = long coast, 0.80 = snappy stop
-  var FRICTION = 0.90;
+  var FRICTION = 0.88;
   // MIN_VEL: coast stops when velocity (in t-units/frame) drops below this.
   var MIN_VEL = 0.0003;
 
@@ -85,7 +85,7 @@
   // DATA DEFAULTS
   // ═══════════════════════════════════════════════════════════════
   var DEFAULTS = {
-    title:         "Coffin Canyon Map",
+    title:         "Coffin Canyon — Canyon Map",
     mapUrl:        "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json",
     stateUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_state.json",
     locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json",
@@ -202,7 +202,7 @@
     var disp = document.createElementNS(ns, "feDisplacementMap");
     disp.setAttribute("in",               "SourceGraphic");
     disp.setAttribute("in2",              "noise");
-    disp.setAttribute("scale",            "15");
+    disp.setAttribute("scale",            "12");
     //  ↑ TUNE: THIS IS THE MAIN STRENGTH KNOB.
     //    ~5  = barely visible shimmer (quality modern optics)
     //    ~12 = noticeable old-glass warp (current default)
@@ -378,7 +378,13 @@
       style: "pointer-events:auto;"
     }, [el("div", { class:"cc-lens-overscan", style:"pointer-events:auto;" }, [lensMapEl])]);
 
-    var lensEl = el("div", { class:"cc-lens" }, [
+    var lensEl = el("div", { class:"cc-lens",
+      // overflow:hidden is critical here — the SVG feDisplacementMap filter
+      // can push warped pixels beyond the element boundary. Without this,
+      // those pixels bleed past the border-radius and are visible as a
+      // distorted fringe at the lens edges (especially bottom in Chrome).
+      style:"overflow:hidden;"
+    }, [
       lensInner,
       el("div", { class:"cc-lens-chromatic", style:"pointer-events:none;" }),
       el("div", { class:"cc-lens-glare",     style:"pointer-events:none;" })
@@ -681,6 +687,13 @@
           });
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
+          // Prevent the browser's default image-drag behaviour inside the lens.
+          // Without this, clicking and holding on the map image lets the user
+          // drag it around as a ghost image (the browser's native drag-image feature).
+          ui.lensMapEl.addEventListener("dragstart", function(e) { e.preventDefault(); });
+          ui.lensMapEl.style.userSelect   = "none";
+          ui.lensMapEl.style.webkitUserSelect = "none";
+
           // Force pointer-events on lensMapEl and its Leaflet internals.
           // The .cc-lens parent has pointer-events:none in the CSS (correct,
           // so the glass border doesn't steal knob drags), but that cascades
@@ -707,19 +720,7 @@
               { color:"rgba(255,117,24,0.8)", fillOpacity:0.25, weight:2, interactive:false }
             ).addTo(lensMap);
 
-            // Location name label
-            window.L.marker(
-              [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2],
-              {
-                icon: window.L.divIcon({
-                  className: "cc-location-label",
-                  html: '<div style="color:#fff;font-weight:800;white-space:nowrap;' +
-                        'text-shadow:0 2px 4px #000;pointer-events:none;">' +
-                        (loc.emoji || "\uD83D\uDCCD") + " " + loc.name + "</div>"
-                }),
-                interactive: false
-              }
-            ).addTo(lensMap);
+            // (Labels intentionally removed — clean map view)
           });
 
           // ── Single DOM click handler for all hitboxes ─────────────
@@ -811,12 +812,21 @@
     root.querySelector("#cc-cm-reload").onclick = function() { init(); };
     root.querySelector("#close-dr").onclick     = function() { ui.drawerEl.classList.remove("open"); };
     root.querySelector("#cc-cm-fit").onclick    = function() {
-      // Fit = reset both axes to centre
       if (mapDoc) {
         currentTx = 0.5;
         applyT(0.5, mapDoc.map.background.image_pixel_size);
       }
     };
+
+    // Click anywhere outside the open drawer (but still inside the app root)
+    // to slide it closed. We use the root element rather than `document` so
+    // this doesn't interfere with the rest of the Odoo page.
+    root.addEventListener("click", function(e) {
+      if (!ui.drawerEl.classList.contains("open")) return;
+      // If the click landed inside the drawer, do nothing
+      if (ui.drawerEl.contains(e.target)) return;
+      ui.drawerEl.classList.remove("open");
+    });
 
     return init().then(function() { return {}; });
   }
