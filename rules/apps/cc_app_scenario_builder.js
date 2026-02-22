@@ -462,6 +462,22 @@ window.CC_APP = {
             `).join('')}
           </div>
 
+          ${s.objective_markers?.length ? `
+            <div class="cc-scenario-section">
+              <h4>🏗️ Objective Markers</h4>
+              <p class="cc-help-text">Place these tokens on the board before the game begins.</p>
+              ${s.objective_markers.map(m => `
+                <div class="cc-marker-row">
+                  <strong>${m.name}</strong> <span class="cc-marker-count">(×${m.count})</span>
+                  <p class="cc-help-text">${m.placement}</p>
+                  <p><em>${m.token}</em></p>
+                  ${m.interactions?.length ? `<p class="cc-help-text">Interactions: ${m.interactions.join(' · ')}</p>` : ''}
+                  ${m.notes ? `<p class="cc-help-text">${m.notes}</p>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+
           ${s.monster_pressure?.enabled ? `
             <div class="cc-scenario-section">
               <h4>👹 Monster Pressure</h4>
@@ -922,6 +938,9 @@ window.CC_APP = {
         }
       }
 
+      // ── Objective Markers (board setup) ──
+      const objectiveMarkers = generateObjectiveMarkers(objectives, vaultScenario);
+
       // ── Victory Conditions ──
       const victoryConditions = generateVictoryConditions(plotFamily, objectives, locProfile);
 
@@ -956,6 +975,7 @@ window.CC_APP = {
         pointValue:  state.pointValue,
         gameMode:    state.gameMode,
         loc_profile: locProfile,
+        objective_markers: objectiveMarkers,
         vault_source:      vaultScenario ? vaultScenario.name : null,
         vault_match_score: vaultScenario ? maxMatchScore : 0
       };
@@ -1192,6 +1212,80 @@ window.CC_APP = {
       ];
       return randomChoice(specials);
     }
+
+    // ================================
+    // OBJECTIVE MARKERS
+    // Tells players what tokens to place before the game.
+    // Pulls from the vault scenario if one was used,
+    // otherwise derives sensible counts from objective types.
+    // ================================
+
+    const OBJECTIVE_MARKER_TABLE = {
+      wrecked_engine:     { count: '1',    placement: 'Center board',                token: 'Wreck token or large model',   interactions: ['salvage', 'control', 'sabotage'] },
+      scattered_crates:   { count: 'd3+2', placement: 'Scattered across board',      token: 'Crate tokens',                 interactions: ['collect', 'extract'] },
+      stored_supplies:    { count: 'd3+1', placement: 'Within 6″ of center',         token: 'Supply crate tokens',          interactions: ['claim', 'extract'] },
+      derailed_cars:      { count: 'd3+1', placement: 'Scattered near wreck',        token: 'Rail car tokens',              interactions: ['search', 'extract'] },
+      cargo_vehicle:      { count: '1',    placement: 'One table edge, facing across','token': 'Vehicle model',             interactions: ['board', 'escort', 'disable'] },
+      pack_animals:       { count: 'd3',   placement: 'Center board',                token: 'Animal tokens',                interactions: ['control', 'escort'] },
+      ritual_components:  { count: 'd3+1', placement: 'Scattered across board',      token: 'Component tokens',             interactions: ['gather', 'corrupt'] },
+      ritual_site:        { count: '1',    placement: 'Center board',                token: 'Ritual marker (3″ radius)',    interactions: ['activate', 'disrupt', 'corrupt'] },
+      ritual_circle:      { count: '1',    placement: 'Center board',                token: 'Circle marker (3″ radius)',    interactions: ['activate', 'disrupt', 'corrupt'] },
+      land_marker:        { count: '1',    placement: 'Center board',                token: 'Stake or territory marker',    interactions: ['claim', 'remove'] },
+      command_structure:  { count: '1',    placement: 'Random mid-board position',   token: 'Structure or ruin token',      interactions: ['control', 'sabotage'] },
+      fortified_position: { count: '1',    placement: 'One player\'s deployment edge','token': 'Fortification token',       interactions: ['hold', 'assault'] },
+      barricades:         { count: 'd3',   placement: 'Across center line',          token: 'Barricade tokens',             interactions: ['hold', 'destroy'] },
+      thyr_cache:         { count: 'd3',   placement: 'Scattered, marked positions', token: 'Thyr crystal tokens',          interactions: ['extract', 'corrupt', 'destroy'] },
+      artifact:           { count: '1',    placement: 'Center board',                token: 'Artifact token',               interactions: ['claim', 'extract'] },
+      captive_entity:     { count: '1',    placement: 'Center board',                token: 'Entity token',                 interactions: ['free', 'capture', 'control'] },
+      fouled_resource:    { count: '1',    placement: 'Near water or resource terrain','token': 'Contamination marker',     interactions: ['purify', 'spread', 'collect'] },
+      tainted_ground:     { count: '1',    placement: 'Random position',             token: 'Taint marker (3″ radius)',     interactions: ['consecrate', 'harvest', 'spread'] },
+      unstable_structure: { count: '1',    placement: 'Random mid-board',            token: 'Structure marker',             interactions: ['salvage', 'control', 'collapse'] },
+      sacrificial_focus:  { count: '1',    placement: 'Center board',                token: 'Altar token',                  interactions: ['control', 'destroy', 'activate'] },
+      collapsing_route:   { count: '1',    placement: 'Divides board in half',       token: 'Route markers at each end',    interactions: ['cross', 'block', 'reinforce'] },
+      evacuation_point:   { count: '1',    placement: 'Far table edge, center',      token: 'Exit marker',                  interactions: ['reach', 'escape'] }
+    };
+
+    function generateObjectiveMarkers(objectives, vaultScenario) {
+      const markers = [];
+
+      objectives.forEach(obj => {
+        // First try to pull data from the vault scenario's objective entry
+        let vaultObj = null;
+        if (vaultScenario?.objectives) {
+          vaultObj = vaultScenario.objectives.find(vo => vo.id === obj.type || vo.type === obj.type);
+        }
+
+        const defaults = OBJECTIVE_MARKER_TABLE[obj.type] || {
+          count:    '1',
+          placement:'Board center',
+          token:    'Objective token',
+          interactions: []
+        };
+
+        // Use vault count if available, otherwise use table default
+        const count = vaultObj?.count || defaults.count;
+
+        // Use vault interactions if available
+        const interactions = vaultObj?.interactions?.length
+          ? vaultObj.interactions
+          : defaults.interactions;
+
+        // Use first vault note as a setup note if available
+        const notes = vaultObj?.notes ? vaultObj.notes[0] : null;
+
+        markers.push({
+          name:         obj.name,
+          type:         obj.type,
+          count,
+          placement:    defaults.placement,
+          token:        defaults.token,
+          interactions,
+          notes
+        });
+      });
+
+      return markers;
+    }
     // ================================
     // VICTORY CONDITIONS ENGINE
     // Each faction gets objectives drawn from the ACTUAL
@@ -1372,20 +1466,15 @@ window.CC_APP = {
         const approach  = FACTION_APPROACH[faction.id] || FACTION_APPROACH.monsters;
         const flavorMap = FACTION_OBJECTIVE_FLAVOR[faction.id] || {};
 
-        // Build list of objectives for this faction
-        // If monsters are present, prepend a monster objective FIRST
-        const workingObjectives = [...objectives];
-        if (injectMonsterObjective && faction.id !== 'monsters') {
-          const monsterFlavor =
-            flavorMap['monsters_befriendable'] ||
-            flavorMap['monsters_hostile']      ||
-            'Deal with the monsters on the board according to your faction\'s methods.';
+        // Build a pool of candidate objective cards for this faction,
+        // then randomly pick 1 or 2 — not one per every objective.
+        const candidatePool = [];
 
-          // Pick the right flavor based on faction
+        // Monster card goes in first if relevant (always show it if present)
+        if (injectMonsterObjective && faction.id !== 'monsters') {
           const isFriendly  = faction.id === 'monster_rangers' || faction.id === 'crow_queen';
           const flavorKey   = isFriendly ? 'monsters_befriendable' : 'monsters_hostile';
-          const monsterDesc = flavorMap[flavorKey] || monsterFlavor;
-
+          const monsterDesc = flavorMap[flavorKey] || "Deal with the monsters on the board.";
           const monsterVPLine = {
             monster_rangers: '+3 VP per monster safely escorted off board. +5 VP if befriended and fighting alongside you.',
             monsterology:    '+4 VP per monster Mort harvested and extracted off board. +2 VP per live capture.',
@@ -1393,45 +1482,38 @@ window.CC_APP = {
             shine_riders:    '+3 VP if you redirect a monster into an enemy faction this game. +1 VP per round you avoid monster contact.',
             crow_queen:      '+4 VP per monster converted to a Crown Subject. +2 VP per round a converted monster fights for you.'
           };
-
-          workingObjectives.unshift({
+          candidatePool.push({
             name:    'Monsters on the Board',
             desc:    monsterDesc,
             vp:      monsterVPLine[faction.id] || '+2 VP per monster interaction.',
             tactic:  approach.tactic,
-            _isMonsterObjective: true
+            priority: 10  // always included
           });
         }
 
-        // One card per actual objective (plus the injected monster one above)
-        const factionObjectives = workingObjectives.map(obj => {
-          // Monster objective was already pre-built above
-          if (obj._isMonsterObjective) return obj;
-
+        // Add one card per scenario objective into the pool
+        objectives.forEach(obj => {
           const verb   = randomChoice(approach.verbs);
           const desc   = flavorMap[obj.type] || obj.description;
           const vpBase = obj.vp_base || 2;
-
           let vpLine;
           switch (approach.vp_style) {
-            case 'per_round':
-              vpLine = `+${vpBase} VP per Round held. ${approach.bonus}`;
-              break;
-            case 'per_extraction':
-              vpLine = `+${vpBase} VP per ${getResourceUnit(obj.type)} extracted. ${approach.bonus}`;
-              break;
-            case 'area_control':
-              vpLine = `+${vpBase} VP per Objective controlled at round end. ${approach.bonus}`;
-              break;
-            case 'hit_and_run':
-              vpLine = `+${vpBase + 1} VP per ${getResourceUnit(obj.type)} if extracted before Round 4. ${approach.bonus}`;
-              break;
-            default:
-              vpLine = `+${vpBase} VP. ${approach.bonus}`;
+            case 'per_round':      vpLine = `+${vpBase} VP per Round held. ${approach.bonus}`;                                                    break;
+            case 'per_extraction': vpLine = `+${vpBase} VP per ${getResourceUnit(obj.type)} extracted. ${approach.bonus}`;                        break;
+            case 'area_control':   vpLine = `+${vpBase} VP per Objective controlled at round end. ${approach.bonus}`;                             break;
+            case 'hit_and_run':    vpLine = `+${vpBase + 1} VP per ${getResourceUnit(obj.type)} if extracted before Round 4. ${approach.bonus}`;  break;
+            default:               vpLine = `+${vpBase} VP. ${approach.bonus}`;
           }
-
-          return { name: `${verb} ${obj.name}`, desc, vp: vpLine, tactic: approach.tactic };
+          candidatePool.push({ name: `${verb} ${obj.name}`, desc, vp: vpLine, tactic: approach.tactic, priority: 5 });
         });
+
+        // Pick the monster card (if present) + 1 random scenario objective = max 2 cards
+        const monsterCard    = candidatePool.find(c => c.priority === 10);
+        const scenarioCards  = candidatePool.filter(c => c.priority !== 10);
+        const chosenScenario = scenarioCards.length > 0 ? [randomChoice(scenarioCards)] : [];
+        const factionObjectives = monsterCard
+          ? [monsterCard, ...chosenScenario]
+          : chosenScenario;
 
         const finale    = buildFinaleGoal(faction.id, objectives, locProfile);
         const aftermath = buildFactionAftermath(faction.id, plotFamily);
@@ -1856,5 +1938,4 @@ window.CC_APP = {
     // ── Initial render ──
     render();
   }
-};  
-        
+};        
