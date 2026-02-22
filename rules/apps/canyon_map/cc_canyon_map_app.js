@@ -69,7 +69,7 @@
   // Momentum physics for the brass knobs.
   // FRICTION: velocity multiplied by this each animation frame (0-1).
   //   0.95 = long coast, 0.80 = snappy stop
-  var FRICTION = 0.88;
+  var FRICTION = 0.90;
   // MIN_VEL: coast stops when velocity (in t-units/frame) drops below this.
   var MIN_VEL = 0.0003;
 
@@ -85,7 +85,7 @@
   // DATA DEFAULTS
   // ═══════════════════════════════════════════════════════════════
   var DEFAULTS = {
-    title:         "Coffin Canyon — Canyon Map",
+    title:         "Coffin Canyon Map",
     mapUrl:        "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json",
     stateUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_state.json",
     locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json",
@@ -202,7 +202,7 @@
     var disp = document.createElementNS(ns, "feDisplacementMap");
     disp.setAttribute("in",               "SourceGraphic");
     disp.setAttribute("in2",              "noise");
-    disp.setAttribute("scale",            "12");
+    disp.setAttribute("scale",            "15");
     //  ↑ TUNE: THIS IS THE MAIN STRENGTH KNOB.
     //    ~5  = barely visible shimmer (quality modern optics)
     //    ~12 = noticeable old-glass warp (current default)
