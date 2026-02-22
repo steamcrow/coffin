@@ -407,7 +407,7 @@
         src:   opts.logoUrl,
         alt:   "Coffin Canyon",
         style: [
-          "width:240px;max-width:70vw;",
+          "width:360px;max-width:80vw;",
           "margin-bottom:32px;",
           "filter:drop-shadow(0 0 28px rgba(255,117,24,.45));",
           "animation:cc-pulse 2.5s ease-in-out infinite;"
@@ -720,7 +720,19 @@
               { color:"rgba(255,117,24,0.8)", fillOpacity:0.25, weight:2, interactive:false }
             ).addTo(lensMap);
 
-            // (Labels intentionally removed — clean map view)
+            // Location name label
+            window.L.marker(
+              [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2],
+              {
+                icon: window.L.divIcon({
+                  className: "cc-location-label",
+                  html: '<div style="color:#fff;font-weight:800;white-space:nowrap;' +
+                        'text-shadow:0 2px 4px #000;pointer-events:none;">' +
+                        (loc.emoji || "\uD83D\uDCCD") + " " + loc.name + "</div>"
+                }),
+                interactive: false
+              }
+            ).addTo(lensMap);
           });
 
           // ── Single DOM click handler for all hitboxes ─────────────
@@ -755,6 +767,7 @@
             });
 
             if (hit) {
+              e.stopPropagation(); // prevent bubble to root's close-drawer listener
               renderDrawer(ui, hit);
               ui.drawerEl.classList.add("open");
             }
