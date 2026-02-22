@@ -6,13 +6,15 @@
     "All named locations explicitly include full location-type variables.",
     "Values are resolved from type_ref plus authored narrative intent.",
     "State effects are NOT auto-applied; these are final authored stats.",
-    "coffinCoughChance is retained for environmental systems."
+    "coffinCoughChance is retained for environmental systems.",
+    "Resource keys aligned to resources_catalog. Removed mechanical_parts and legacy food/water keys. Added spare_parts, moonshine, rotgut, medicine."
   ],
   "locations": [
+
     {
       "id": "gore-mule-drop",
       "name": "Gore Mule Drop",
-      "emoji": "ðŸ©¸",
+      "emoji": "🩸",
       "type_ref": "region_rail_grade_cursed",
       "archetype": "rail_grade",
       "state": "alive",
@@ -31,7 +33,7 @@
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
-        "rotgut": 0,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 1
       },
@@ -43,31 +45,13 @@
         "CarrionWind"
       ],
       "monster_seeds": [
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 2
-        },
-        {
-          "name": "Ghost",
-          "weight": 2
-        },
-        {
-          "name": "Sand Shark",
-          "weight": 1
-        }
+        { "name": "Will-o’-Wisp", "weight": 2 },
+        { "name": "Ghost", "weight": 2 },
+        { "name": "Sand Shark", "weight": 1 }
       ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
+      "variance": { "layout": "fixed", "resources": "scarce", "threats": "weighted" },
       "description": "A steep rail drop where engines scream and brakes turn to prayer. The stones are stained in the shapes of old wrecks.",
-      "terrain_flavor": [
-        "Rail grade",
-        "Brake scars",
-        "Rockfall chutes",
-        "Whistle posts"
-      ],
+      "terrain_flavor": ["Rail grade", "Brake scars", "Rockfall chutes", "Whistle posts"],
       "coffinCoughChance": 0.25,
       "atmosphere": "Metal shriek, carrion wind",
       "rumors": [
@@ -75,14 +59,13 @@
         "Something drags wreckage into the ravine to build a nest.",
         "Rail crews leave offerings in grease to keep the grade quiet."
       ],
-      "notes": [
-        "Travel choke point. Escalation-ready ambush terrain."
-      ]
+      "notes": ["Travel choke point. Escalation-ready ambush terrain."]
     },
+
     {
       "id": "lost-yots",
       "name": "Lost Yots",
-      "emoji": "ðŸª¦",
+      "emoji": "🪦",
       "type_ref": "region_badland_crossing",
       "archetype": "crossing",
       "state": "alive",
@@ -101,41 +84,19 @@
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
-        "rotgut": 0,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 1
       },
-      "features": [
-        "OldWagonRuts",
-        "BoneMarkers",
-        "FalseTrails",
-        "WindPits"
-      ],
+      "features": ["OldWagonRuts", "BoneMarkers", "FalseTrails", "WindPits"],
       "monster_seeds": [
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 2
-        },
-        {
-          "name": "Gnoll",
-          "weight": 1
-        },
-        {
-          "name": "Rat Swarm",
-          "weight": 1
-        }
+        { "name": "Will-o’-Wisp", "weight": 2 },
+        { "name": "Gnoll", "weight": 1 },
+        { "name": "Rat Swarm", "weight": 1 }
       ],
-      "variance": {
-        "layout": "semi",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
+      "variance": { "layout": "semi", "resources": "scarce", "threats": "weighted" },
       "description": "A wrong-way crossing full of misleading tracks and half-buried markers. People swear the land re-arranges itself.",
-      "terrain_flavor": [
-        "Old wagon ruts",
-        "Bone markers",
-        "False trails"
-      ],
+      "terrain_flavor": ["Old wagon ruts", "Bone markers", "False trails"],
       "coffinCoughChance": 0.2,
       "atmosphere": "Bad directions whispered by wind",
       "rumors": [
@@ -143,14 +104,12 @@
         "A traveler can walk in a circle and come out days older.",
         "The markers were placed by someone who wanted you lost."
       ],
-      "notes": [
-        "Navigation pressure zone. Great for pursuit / evasion."
-      ]
+      "notes": ["Navigation pressure zone. Great for pursuit / evasion."]
     },
     {
       "id": "santos-grin",
-      "name": "Santoâ€™s Grin",
-      "emoji": "â›ª",
+      "name": "Santo’s Grin",
+      "emoji": "⛪",
       "type_ref": "region_shrine_corrupt",
       "archetype": "shrine",
       "state": "alive",
@@ -169,41 +128,19 @@
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
-        "rotgut": 0,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 2
       },
-      "features": [
-        "WaysideShrine",
-        "VotiveCups",
-        "CandleGutters",
-        "WhisperNiche"
-      ],
+      "features": ["WaysideShrine", "VotiveCups", "CandleGutters", "WhisperNiche"],
       "monster_seeds": [
-        {
-          "name": "Ghost",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Feratu Stalker",
-          "weight": 1
-        }
+        { "name": "Ghost", "weight": 2 },
+        { "name": "Will-o’-Wisp", "weight": 1 },
+        { "name": "Feratu Stalker", "weight": 1 }
       ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A cracked saint-face carved into stoneâ€”half chapel, half warning. Candles burn even when no one lights them.",
-      "terrain_flavor": [
-        "Wayside shrine",
-        "Votive cups",
-        "Candle gutters"
-      ],
+      "variance": { "layout": "fixed", "resources": "scarce", "threats": "weighted" },
+      "description": "A cracked saint-face carved into stone—half chapel, half warning. Candles burn even when no one lights them.",
+      "terrain_flavor": ["Wayside shrine", "Votive cups", "Candle gutters"],
       "coffinCoughChance": 0.18,
       "atmosphere": "Smiling stone, bad comfort",
       "rumors": [
@@ -211,14 +148,13 @@
         "A Shine Rider once tried to rob the offerings and never blinked again.",
         "The grin grows wider after blood is spilled nearby."
       ],
-      "notes": [
-        "Spooky Mexico flavor. Excellent for bargains, curses, confessions."
-      ]
+      "notes": ["Spooky Mexico flavor. Excellent for bargains, curses, confessions."]
     },
+
     {
       "id": "tin-flats",
       "name": "Tin Flats",
-      "emoji": "ðŸ¥«",
+      "emoji": "🥫",
       "type_ref": "region_scrap_plain",
       "archetype": "wastes",
       "state": "alive",
@@ -237,56 +173,32 @@
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
-        "rotgut": 0,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 0
       },
-      "features": [
-        "ScrapFields",
-        "SunGlare",
-        "WindRattle",
-        "HiddenCaches"
-      ],
+      "features": ["ScrapFields", "SunGlare", "WindRattle", "HiddenCaches"],
       "monster_seeds": [
-        {
-          "name": "Ruster",
-          "weight": 2
-        },
-        {
-          "name": "Rat Swarm",
-          "weight": 1
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        }
+        { "name": "Ruster", "weight": 2 },
+        { "name": "Rat Swarm", "weight": 1 },
+        { "name": "Will-o’-Wisp", "weight": 1 }
       ],
-      "variance": {
-        "layout": "random",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
+      "variance": { "layout": "random", "resources": "weighted", "threats": "weighted" },
       "description": "A hard, flat spread of discarded metal and busted rail goods that rings like bells when the wind comes through.",
-      "terrain_flavor": [
-        "Scrap fields",
-        "Sun glare",
-        "Wind rattle"
-      ],
+      "terrain_flavor": ["Scrap fields", "Sun glare", "Wind rattle"],
       "coffinCoughChance": 0.22,
       "atmosphere": "Hot glare on cold metal",
       "rumors": [
         "The flats hide a buried boxcar nobody can open twice.",
         "Rust here moves like ants when the moon is thin.",
-        "Thereâ€™s a â€˜cleanâ€™ path acrossâ€”if you donâ€™t mind paying."
+        "There’s a ‘clean’ path across—if you don’t mind paying."
       ],
-      "notes": [
-        "Loot terrain. Great for scavenging pressure + ambush cover."
-      ]
+      "notes": ["Loot terrain. Great for scavenging pressure + ambush cover."]
     },
-    {
+        {
       "id": "sangr",
       "name": "Sangr",
-      "emoji": "ðŸ¦‚",
+      "emoji": "🦂",
       "type_ref": "region_arroyo_blood",
       "archetype": "arroyo",
       "state": "alive",
@@ -305,56 +217,33 @@
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
-        "rotgut": 0,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 1
       },
-      "features": [
-        "DryCuts",
-        "FlashFloodGutters",
-        "BloodQuartz",
-        "EchoingWalls"
-      ],
+      "features": ["DryCuts", "FlashFloodGutters", "BloodQuartz", "EchoingWalls"],
       "monster_seeds": [
-        {
-          "name": "Sand Shark",
-          "weight": 2
-        },
-        {
-          "name": "Gnoll",
-          "weight": 1
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        }
+        { "name": "Sand Shark", "weight": 2 },
+        { "name": "Gnoll", "weight": 1 },
+        { "name": "Will-o’-Wisp", "weight": 1 }
       ],
-      "variance": {
-        "layout": "semi",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
+      "variance": { "layout": "semi", "resources": "scarce", "threats": "weighted" },
       "description": "A dry arroyo with red-stained stone that looks wet even in full sun. The name was misspelled once and stuck forever.",
-      "terrain_flavor": [
-        "Dry cuts",
-        "Flash-flood gutters",
-        "Echoing walls"
-      ],
+      "terrain_flavor": ["Dry cuts", "Flash-flood gutters", "Echoing walls"],
       "coffinCoughChance": 0.28,
       "atmosphere": "Heat, thirst, red stone",
       "rumors": [
-        "The cut floods with something that isnâ€™t water when the canyon â€˜turns.â€™",
+        "The cut floods with something that isn’t water when the canyon ‘turns.’",
         "Old prayers in bad Spanish are carved under the overhangs.",
-        "Blood dries slower here. Sometimes it doesnâ€™t dry at all."
+        "Blood dries slower here. Sometimes it doesn’t dry at all."
       ],
-      "notes": [
-        "Violent travel lane. Good for chase scenes and sudden hazards."
-      ]
+      "notes": ["Violent travel lane. Good for chase scenes and sudden hazards."]
     },
+
     {
       "id": "splitglass-arroyo",
       "name": "Splitglass Arroyo",
-      "emoji": "ðŸªŸ",
+      "emoji": "🪟",
       "type_ref": "region_arroyo_sharp",
       "archetype": "arroyo",
       "state": "alive",
@@ -373,41 +262,19 @@
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
-        "rotgut": 0,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 1
       },
-      "features": [
-        "KnifeRocks",
-        "GlassShards",
-        "NarrowPass",
-        "SoundTraps"
-      ],
+      "features": ["KnifeRocks", "GlassShards", "NarrowPass", "SoundTraps"],
       "monster_seeds": [
-        {
-          "name": "Feratu Stalker",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Gargoyle",
-          "weight": 1
-        }
+        { "name": "Feratu Stalker", "weight": 2 },
+        { "name": "Will-o’-Wisp", "weight": 1 },
+        { "name": "Gargoyle", "weight": 1 }
       ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
+      "variance": { "layout": "fixed", "resources": "scarce", "threats": "weighted" },
       "description": "A tight-cut ravine glittering with sharp stone like broken bottle-glass. Sound carries wrong and returns in pieces.",
-      "terrain_flavor": [
-        "Knife rocks",
-        "Narrow pass",
-        "Sound traps"
-      ],
+      "terrain_flavor": ["Knife rocks", "Narrow pass", "Sound traps"],
       "coffinCoughChance": 0.24,
       "atmosphere": "Sharp light, sharper echoes",
       "rumors": [
@@ -415,14 +282,12 @@
         "A man can whisper at one end and hear it answered from behind him.",
         "Something nests where the glass shines brightest."
       ],
-      "notes": [
-        "Ambush canyon. Echo and sound tricks encouraged."
-      ]
+      "notes": ["Ambush canyon. Echo and sound tricks encouraged."]
     },
-    {
+        {
       "id": "bandit-buck",
       "name": "Bandit Buck",
-      "emoji": "ðŸš‚",
+      "emoji": "🚂",
       "type_ref": "region_rail_stop_unsafe",
       "archetype": "rail_stop",
       "state": "alive",
@@ -440,59 +305,34 @@
         "food_foul": 1,
         "water_clean": 0,
         "water_foul": 1,
-        "moonshine": 0,
-        "rotgut": 0,
+        "moonshine": 1,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 1
       },
-      "features": [
-        "RailStop",
-        "CoalShed",
-        "SignalArm",
-        "DerailHooks",
-        "BlindTurns"
-      ],
+      "features": ["RailStop", "CoalShed", "SignalArm", "DerailHooks", "BlindTurns"],
       "monster_seeds": [
-        {
-          "name": "Red Goblin",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Ruster",
-          "weight": 1
-        }
+        { "name": "Red Goblin", "weight": 2 },
+        { "name": "Will-o’-Wisp", "weight": 1 },
+        { "name": "Ruster", "weight": 1 }
       ],
-      "variance": {
-        "layout": "semi",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
       "description": "A half-legit rail stop where freight slows down and trouble speeds up. Bandits, deputies, and monsters all know the schedule.",
-      "terrain_flavor": [
-        "Rail stop",
-        "Signal arm",
-        "Coal shed",
-        "Blind turns"
-      ],
+      "terrain_flavor": ["Rail stop", "Signal arm", "Coal shed", "Blind turns"],
       "coffinCoughChance": 0.18,
       "atmosphere": "Steam, gun oil, bad timing",
       "rumors": [
         "The stop was named after a man who robbed the same train twice.",
-        "A â€˜ghost freightâ€™ passes through without stoppingâ€”unless it sees you.",
-        "Someone here sells keys that open locks you donâ€™t own."
+        "A ‘ghost freight’ passes through without stopping—unless it sees you.",
+        "Someone here sells keys that open locks you don’t own."
       ],
-      "notes": [
-        "Scenario ignition point. Great for timed arrivals, heists, standoffs."
-      ]
+      "notes": ["Scenario ignition point. Great for timed arrivals, heists, standoffs."]
     },
+
     {
       "id": "tzulto",
       "name": "Tzulto",
-      "emoji": "ðŸ—¿",
+      "emoji": "🗿",
       "type_ref": "region_ruins_crater_tzul",
       "archetype": "ruins",
       "state": "alive",
@@ -511,58 +351,32 @@
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
-        "rotgut": 0,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 3
       },
-      "features": [
-        "CraterTemple",
-        "BasaltStairs",
-        "SealedDoors",
-        "GlyphWalls",
-        "WrongSilence"
-      ],
+      "features": ["CraterTemple", "BasaltStairs", "SealedDoors", "GlyphWalls", "WrongSilence"],
       "monster_seeds": [
-        {
-          "name": "Gargoyle",
-          "weight": 2
-        },
-        {
-          "name": "Ghost",
-          "weight": 2
-        },
-        {
-          "name": "Mimic",
-          "weight": 1
-        }
+        { "name": "Gargoyle", "weight": 2 },
+        { "name": "Ghost", "weight": 2 },
+        { "name": "Mimic", "weight": 1 }
       ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A crater with a temple inside itâ€”Tzul stone that doesnâ€™t weather right. The air feels â€˜heldâ€™ as if the place is still listening.",
-      "terrain_flavor": [
-        "Crater temple",
-        "Basalt stairs",
-        "Glyph walls",
-        "Wrong silence"
-      ],
-      "coffinCoughChance": 0.3,
+      "variance": { "layout": "fixed", "resources": "scarce", "threats": "weighted" },
+      "description": "A crater with a temple inside it—Tzul stone that doesn’t weather right. The air feels ‘held’ as if the place is still listening.",
+      "terrain_flavor": ["Crater temple", "Basalt stairs", "Glyph walls", "Wrong silence"],
+      "coffinCoughChance": 0.30,
       "atmosphere": "Ancient patience, modern fear",
       "rumors": [
-        "The crater wasnâ€™t formed by impactâ€”it was removed.",
+        "The crater wasn’t formed by impact—it was removed.",
         "Certain words spoken here come out in a different voice.",
         "Monsterology has a map of this place they refuse to share."
       ],
-      "notes": [
-        "High danger landmark. Lore anchor. Thyr-rich."
-      ]
+      "notes": ["High danger landmark. Lore anchor. Thyr-rich."]
     },
-    {
+        {
       "id": "kraise",
       "name": "Kraise",
-      "emoji": "ðŸ“œ",
+      "emoji": "📜",
       "type_ref": "region_claim_old_name",
       "archetype": "claim",
       "state": "barely_alive",
@@ -581,56 +395,33 @@
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
-        "rotgut": 0,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 1
       },
-      "features": [
-        "OldClaims",
-        "PaperMarkers",
-        "CollapsedCabin",
-        "WindLedger"
-      ],
+      "features": ["OldClaims", "PaperMarkers", "CollapsedCabin", "WindLedger"],
       "monster_seeds": [
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Ghost",
-          "weight": 1
-        },
-        {
-          "name": "Rat Swarm",
-          "weight": 1
-        }
+        { "name": "Will-o’-Wisp", "weight": 1 },
+        { "name": "Ghost", "weight": 1 },
+        { "name": "Rat Swarm", "weight": 1 }
       ],
-      "variance": {
-        "layout": "semi",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "An old claim district named from a misspelled surname that nobody corrects anymore. Deeds change hands, but the ground doesnâ€™t care.",
-      "terrain_flavor": [
-        "Old claims",
-        "Paper markers",
-        "Collapsed cabin"
-      ],
+      "variance": { "layout": "semi", "resources": "scarce", "threats": "weighted" },
+      "description": "An old claim district named from a misspelled surname that nobody corrects anymore. Deeds change hands, but the ground doesn’t care.",
+      "terrain_flavor": ["Old claims", "Paper markers", "Collapsed cabin"],
       "coffinCoughChance": 0.18,
       "atmosphere": "Ownership argued over bones",
       "rumors": [
         "The original Kraise is buried somewhere in the markers, still holding the first deed.",
         "If you steal here, your footprints appear ahead of you.",
-        "A â€˜perfectâ€™ vein is rumoredâ€”always one shovel deeper than anyone digs."
+        "A ‘perfect’ vein is rumored—always one shovel deeper than anyone digs."
       ],
-      "notes": [
-        "Legal conflict zone. Great for debt, claim jumping, and betrayals."
-      ]
+      "notes": ["Legal conflict zone. Great for debt, claim jumping, and betrayals."]
     },
+
     {
       "id": "mindshaft",
       "name": "Mindshaft",
-      "emoji": "ðŸ•³ï¸",
+      "emoji": "🕳️",
       "type_ref": "region_mine_field_black",
       "archetype": "mine_field",
       "state": "alive",
@@ -649,128 +440,79 @@
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
-        "rotgut": 0,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 3
       },
-      "features": [
-        "MineSquares",
-        "BlackShafts",
-        "CaveBreath",
-        "HaulChains",
-        "EchoSickness"
-      ],
+      "features": ["MineSquares", "BlackShafts", "CaveBreath", "HaulChains", "EchoSickness"],
       "monster_seeds": [
-        {
-          "name": "Ruster",
-          "weight": 2
-        },
-        {
-          "name": "Gray Ooze",
-          "weight": 2
-        },
-        {
-          "name": "Ghost",
-          "weight": 1
-        }
+        { "name": "Ruster", "weight": 2 },
+        { "name": "Gray Ooze", "weight": 2 },
+        { "name": "Ghost", "weight": 1 }
       ],
-      "variance": {
-        "layout": "semi",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "A field of working and abandoned minesâ€”dark mouths laid out like a grid. People come back with ore and leave with fewer thoughts.",
-      "terrain_flavor": [
-        "Mine squares",
-        "Black shafts",
-        "Haul chains",
-        "Echo sickness"
-      ],
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
+      "description": "A field of working and abandoned mines—dark mouths laid out like a grid. People come back with ore and leave with fewer thoughts.",
+      "terrain_flavor": ["Mine squares", "Black shafts", "Haul chains", "Echo sickness"],
       "coffinCoughChance": 0.35,
       "atmosphere": "Headache country",
       "rumors": [
         "Miners here dream the same dream on the same night.",
-        "Something hums when Thyr is nearâ€”like a tuning fork inside your skull.",
+        "Something hums when Thyr is near—like a tuning fork inside your skull.",
         "A shaft exists that only opens when someone lies."
       ],
-      "notes": [
-        "High pressure, high reward. Strong monster / Thyr interactions."
-      ]
+      "notes": ["High pressure, high reward. Strong monster / Thyr interactions."]
     },
-    {
-      "id": "pallor",
-      "name": "Pallor",
-      "emoji": "ðŸ¤",
-      "type_ref": "region_bleached_plain",
-      "archetype": "wastes",
+        {
+      "id": "hollow-crossing",
+      "name": "Hollow Crossing",
+      "emoji": "🌵",
+      "type_ref": "region_crossroads_dust",
+      "archetype": "crossroads",
       "state": "alive",
       "danger": 3,
-      "population": 1,
+      "population": 2,
       "resources": {
-        "silver": 0,
-        "gildren": 0,
+        "silver": 1,
+        "gildren": 2,
         "tzul_silver": 0,
-        "lead": 0,
-        "spare_parts": 0,
-        "supplies": 1,
-        "livestock": 0,
-        "food_good": 0,
+        "lead": 1,
+        "spare_parts": 1,
+        "supplies": 2,
+        "livestock": 1,
+        "food_good": 1,
         "food_foul": 1,
-        "water_clean": 0,
+        "water_clean": 1,
         "water_foul": 1,
-        "moonshine": 0,
-        "rotgut": 0,
+        "moonshine": 1,
+        "rotgut": 1,
         "medicine": 0,
-        "thyr": 2
+        "thyr": 0
       },
-      "features": [
-        "BleachedGround",
-        "WhiteDust",
-        "NoShade",
-        "HeatMirage"
-      ],
+      "features": ["Signpost", "WaterBarrel", "WindFence", "DustRoads"],
       "monster_seeds": [
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 2
-        },
-        {
-          "name": "Feratu Stalker",
-          "weight": 1
-        },
-        {
-          "name": "Skeleton",
-          "weight": 1
-        }
+        { "name": "Canyon Goblin", "weight": 2 },
+        { "name": "Wolf", "weight": 1 },
+        { "name": "Will-o’-Wisp", "weight": 1 }
       ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A bleached stretch of earth where color seems to drain out of people. Even blood looks wrong against the dust.",
-      "terrain_flavor": [
-        "Bleached ground",
-        "White dust",
-        "No shade"
-      ],
-      "coffinCoughChance": 0.22,
-      "atmosphere": "Sun-sick quiet",
+      "variance": { "layout": "random", "resources": "weighted", "threats": "weighted" },
+      "description": "Four roads meet and none of them agree. A few barrels, a leaning signpost, and travelers who pretend not to stare at each other.",
+      "terrain_flavor": ["Dust roads", "Leaning sign", "Water barrel"],
+      "coffinCoughChance": 0.12,
+      "atmosphere": "Tense hospitality",
       "rumors": [
-        "Photographs taken here come out blank except for teeth.",
-        "A traveler can lose their shadow for a day.",
-        "The ground tastes like chalk and old sermons."
+        "A Vendomat was last seen here, trading bullets for secrets.",
+        "The signpost points differently at dawn.",
+        "Someone buries something new at the crossroads every full moon."
       ],
-      "notes": [
-        "Mood shift zone. Great for dread, hallucinations, and heat pressure."
-      ]
+      "notes": ["Travel node. Excellent for wandering NPCs and shifting alliances."]
     },
+
     {
-      "id": "widowflow",
-      "name": "Widowflow",
-      "emoji": "ðŸŒ‘",
-      "type_ref": "river_cursed",
-      "archetype": "river",
+      "id": "black-echo-well",
+      "name": "Black Echo Well",
+      "emoji": "🪣",
+      "type_ref": "region_well_deep",
+      "archetype": "well",
       "state": "alive",
       "danger": 4,
       "population": 1,
@@ -780,215 +522,99 @@
         "tzul_silver": 0,
         "lead": 0,
         "spare_parts": 0,
-        "supplies": 0,
+        "supplies": 1,
         "livestock": 0,
         "food_good": 0,
-        "food_foul": 2,
-        "water_clean": 1,
-        "water_foul": 4,
+        "food_foul": 1,
+        "water_clean": 2,
+        "water_foul": 1,
         "moonshine": 0,
         "rotgut": 0,
         "medicine": 0,
         "thyr": 2
       },
-      "features": [
-        "CursedRiver",
-        "UndertowPools",
-        "DrownedTrees",
-        "WhisperBanks"
-      ],
+      "features": ["StoneRing", "DeepRope", "ColdDraft", "EchoChamber"],
       "monster_seeds": [
-        {
-          "name": "Kelpie",
-          "weight": 3
-        },
-        {
-          "name": "Crocodile",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 2
-        }
+        { "name": "Ghost", "weight": 2 },
+        { "name": "Will-o’-Wisp", "weight": 2 },
+        { "name": "Shadow", "weight": 1 }
       ],
-      "variance": {
-        "layout": "semi",
-        "resources": "fixed",
-        "threats": "weighted"
-      },
-      "description": "The river that River City serves, fears, and measures. It takes more than it gives and sometimes returns things that shouldnâ€™t be returned.",
-      "terrain_flavor": [
-        "Undertow pools",
-        "Drowned trees",
-        "Whisper banks"
-      ],
-      "coffinCoughChance": 0.18,
-      "atmosphere": "Water that remembers",
+      "variance": { "layout": "fixed", "resources": "scarce", "threats": "weighted" },
+      "description": "A well so deep it gives your voice back wrong. The water is clean if you ignore the way it tastes like old coins.",
+      "terrain_flavor": ["Stone ring", "Deep rope", "Cold draft"],
+      "coffinCoughChance": 0.26,
+      "atmosphere": "Stillness that listens",
       "rumors": [
-        "The Widowflow runs uphill on certain nights.",
-        "If you speak a name into the water, it answers in bubbles.",
-        "A ferryman works this river who never steps onto land."
+        "Lower a lantern and it comes back lit blue.",
+        "The rope sometimes returns tied in knots nobody made.",
+        "A Skull Ranger once tried to bless it. The blessing sank."
       ],
-      "notes": [
-        "Major lore artery. Excellent for rituals, crossings, disappearances."
-      ]
+      "notes": ["Resource + haunt node. Perfect for moral dilemmas around water."]
     },
-    {
-      "id": "fool-boot",
-      "name": "Fool Boot",
-      "emoji": "ðŸ‘¢",
-      "type_ref": "region_landmark_omen",
-      "archetype": "landmark",
-      "state": "alive",
+        {
+      "id": "cinder-bend",
+      "name": "Cinder Bend",
+      "emoji": "🔥",
+      "type_ref": "region_burned_ranch",
+      "archetype": "ranch",
+      "state": "barely_alive",
       "danger": 3,
-      "population": 1,
+      "population": 2,
       "resources": {
-        "silver": 0,
-        "gildren": 0,
-        "tzul_silver": 0,
-        "lead": 0,
-        "spare_parts": 0,
-        "supplies": 0,
-        "livestock": 0,
-        "food_good": 0,
-        "food_foul": 1,
-        "water_clean": 0,
-        "water_foul": 1,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
-        "thyr": 1
-      },
-      "features": [
-        "BootRock",
-        "BadOmen",
-        "KnifeWind",
-        "CampScars"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 2
-        },
-        {
-          "name": "Ghost",
-          "weight": 1
-        },
-        {
-          "name": "Gnoll",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A boot-shaped rock formation used as a waypoint and a warning. The smart pass by. The foolish camp.",
-      "terrain_flavor": [
-        "Boot rock",
-        "Knife wind",
-        "Old camp scars"
-      ],
-      "coffinCoughChance": 0.2,
-      "atmosphere": "A warning you can touch",
-      "rumors": [
-        "Someone always leaves a boot hereâ€”no one admits itâ€™s theirs.",
-        "Shots fired near Fool Boot attract things from far away.",
-        "The rock â€˜pointsâ€™ a different direction after storms."
-      ],
-      "notes": [
-        "Waypoint landmark. Great for rendezvous, betrayal, omen scenes."
-      ]
-    },
-    {
-      "id": "grade-grind",
-      "name": "Grade Grind",
-      "emoji": "âš™ï¸",
-      "type_ref": "region_rail_grade_hard",
-      "archetype": "rail_grade",
-      "state": "alive",
-      "danger": 3,
-      "population": 1,
-      "resources": {
-        "silver": 0,
-        "gildren": 0,
+        "silver": 1,
+        "gildren": 1,
         "tzul_silver": 0,
         "lead": 1,
         "spare_parts": 1,
-        "supplies": 1,
-        "livestock": 0,
-        "food_good": 0,
+        "supplies": 2,
+        "livestock": 2,
+        "food_good": 1,
         "food_foul": 1,
-        "water_clean": 0,
+        "water_clean": 1,
         "water_foul": 1,
-        "moonshine": 0,
-        "rotgut": 0,
+        "moonshine": 1,
+        "rotgut": 1,
         "medicine": 0,
         "thyr": 0
       },
-      "features": [
-        "RailGrade",
-        "SparkMarks",
-        "BrakeSmoke",
-        "SniperRocks"
-      ],
+      "features": ["BurnedBarn", "HalfFence", "AshFields", "WaterTrough"],
       "monster_seeds": [
-        {
-          "name": "Red Goblin",
-          "weight": 2
-        },
-        {
-          "name": "Ruster",
-          "weight": 1
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        }
+        { "name": "Dire Wolf", "weight": 2 },
+        { "name": "Canyon Goblin", "weight": 1 },
+        { "name": "Will-o’-Wisp", "weight": 1 }
       ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A punishing incline where engines labor and freight slows to a crawl. Everyone watching knows exactly how long youâ€™ll be exposed.",
-      "terrain_flavor": [
-        "Rail grade",
-        "Spark marks",
-        "Brake smoke",
-        "Sniper rocks"
-      ],
-      "coffinCoughChance": 0.15,
-      "atmosphere": "Slow climb under open sky",
+      "variance": { "layout": "semi", "resources": "weighted", "threats": "weighted" },
+      "description": "A ranch half-burned and half-rebuilt. The cattle are thin. The owners thinner. Something circles at night.",
+      "terrain_flavor": ["Burned barn", "Ash fields", "Broken fence"],
+      "coffinCoughChance": 0.16,
+      "atmosphere": "Stubborn survival",
       "rumors": [
-        "A train once stalled here and never moved again.",
-        "Someone keeps replacing the same broken signal lamp.",
-        "Bandits wonâ€™t attack on Thursdays. No one knows why."
+        "The fire started without smoke.",
+        "A Shine Rider promised protection and never returned.",
+        "One calf was born with glass in its eyes."
       ],
-      "notes": [
-        "Tactical choke. Great for timed pressure and long exposure."
-      ]
+      "notes": ["Livestock pressure + faction leverage node."]
     },
+
     {
-      "id": "crackpits",
-      "name": "Crackpits",
-      "emoji": "ðŸ•¯ï¸",
-      "type_ref": "region_sinkfield_gas",
-      "archetype": "sinkfield",
+      "id": "glasswind-mesa",
+      "name": "Glasswind Mesa",
+      "emoji": "🌬️",
+      "type_ref": "region_mesa_thyr",
+      "archetype": "mesa",
       "state": "alive",
-      "danger": 5,
+      "danger": 4,
       "population": 1,
       "resources": {
-        "silver": 1,
+        "silver": 0,
         "gildren": 0,
-        "tzul_silver": 1,
+        "tzul_silver": 0,
         "lead": 1,
         "spare_parts": 0,
         "supplies": 0,
-        "livestock": 0,
+        "livestock": 1,
         "food_good": 0,
-        "food_foul": 2,
+        "food_foul": 1,
         "water_clean": 0,
         "water_foul": 1,
         "moonshine": 0,
@@ -996,1229 +622,284 @@
         "medicine": 0,
         "thyr": 3
       },
-      "features": [
-        "GroundCracks",
-        "SinkPits",
-        "GasBreathers",
-        "LanternWarnings",
-        "EchoHollows"
-      ],
+      "features": ["WindCliffs", "ShardDrifts", "LongSightlines", "HowlingGusts"],
       "monster_seeds": [
-        {
-          "name": "Gray Ooze",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 2
-        },
-        {
-          "name": "Mimic",
-          "weight": 1
-        }
+        { "name": "Harpy", "weight": 2 },
+        { "name": "Gargoyle", "weight": 2 },
+        { "name": "Doom Eye", "weight": 1 }
       ],
-      "variance": {
-        "layout": "random",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "A field of fractures and sudden pits where the ground sighs and lanterns gutter. The land opens without warning and closes without apology.",
-      "terrain_flavor": [
-        "Ground cracks",
-        "Sink pits",
-        "Gas breathers",
-        "Lantern warnings"
-      ],
-      "coffinCoughChance": 0.4,
-      "atmosphere": "The earth wants you",
+      "variance": { "layout": "fixed", "resources": "scarce", "threats": "weighted" },
+      "description": "A high mesa where the wind carries fine Thyr dust that sings against stone like broken glass.",
+      "terrain_flavor": ["Wind cliffs", "Shard drifts", "Howling gusts"],
+      "coffinCoughChance": 0.29,
+      "atmosphere": "High wind, high risk",
       "rumors": [
-        "A crack here leads to a chamber that smells like a lit church.",
-        "People fall in and come out speaking politely to nobody.",
-        "Monsterology pays good money for soil taken from the deepest pits."
+        "If you shout your name here, something else answers it.",
+        "A young dragon once nested here and left something behind.",
+        "The wind sharpens metal overnight."
       ],
-      "notes": [
-        "High danger terrain. Strong atmospheric hazard + horror hooks."
-      ]
+      "notes": ["Territorial monsters + Thyr resonance interactions."]
     },
-    {
-      "id": "martygrail",
-      "name": "Martygrail",
-      "emoji": "ðŸ•Šï¸",
-      "type_ref": "region_relic_site_corrupt",
-      "archetype": "relic_site",
+        {
+      "id": "red-lantern-cantina",
+      "name": "Red Lantern Cantina",
+      "emoji": "🍺",
+      "type_ref": "node_cantina",
+      "archetype": "social_node",
       "state": "alive",
-      "danger": 4,
-      "population": 1,
+      "danger": 2,
+      "population": 3,
       "resources": {
-        "silver": 0,
-        "gildren": 1,
-        "tzul_silver": 1,
-        "lead": 0,
-        "spare_parts": 0,
-        "supplies": 0,
+        "silver": 4,
+        "gildren": 3,
+        "tzul_silver": 0,
+        "lead": 1,
+        "spare_parts": 1,
+        "supplies": 2,
         "livestock": 0,
-        "food_good": 0,
-        "food_foul": 1,
-        "water_clean": 0,
-        "water_foul": 1,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
-        "thyr": 2
-      },
-      "features": [
-        "RelicMarker",
-        "BrokenIcons",
-        "PrayerScraps",
-        "BloodChalk",
-        "QuietCircle"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Ghost",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Feratu Stalker",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A relic site of contested faithâ€”half saint story, half canyon trick. People leave prayers and take curses by mistake.",
-      "terrain_flavor": [
-        "Broken icons",
-        "Prayer scraps",
-        "Blood chalk",
-        "Quiet circle"
-      ],
-      "coffinCoughChance": 0.22,
-      "atmosphere": "Faith with teeth",
-      "rumors": [
-        "A cup exists here that fills only for the unworthy.",
-        "The site â€˜movesâ€™ a few yards after every killing.",
-        "Somebody keeps repainting the same symbol even after rain."
-      ],
-      "notes": [
-        "Excellent for cult pressure, relic hunts, and moral bargains."
-      ]
-    },
-    {
-      "id": "heckweed",
-      "name": "Heckweed",
-      "emoji": "ðŸŒ¾",
-      "type_ref": "region_thorn_scrub",
-      "archetype": "scrubland",
-      "state": "alive",
-      "danger": 3,
-      "population": 1,
-      "resources": {
-        "silver": 0,
-        "gildren": 0,
-        "tzul_silver": 0,
-        "lead": 0,
-        "spare_parts": 0,
-        "supplies": 0,
-        "livestock": 1,
-        "food_good": 0,
-        "food_foul": 1,
-        "water_clean": 0,
-        "water_foul": 1,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
-        "thyr": 1
-      },
-      "features": [
-        "ThornScrub",
-        "StickerFields",
-        "HiddenBurrows",
-        "BadFooting"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Canyon Goblin",
-          "weight": 2
-        },
-        {
-          "name": "Dire Wolf",
-          "weight": 1
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "semi",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A spread of angry scrub that tears clothes, hides burrows, and makes every step feel like a mistake.",
-      "terrain_flavor": [
-        "Thorn scrub",
-        "Sticker fields",
-        "Hidden burrows"
-      ],
-      "coffinCoughChance": 0.16,
-      "atmosphere": "Prickly silence and watching eyes",
-      "rumors": [
-        "Heckweed grows thicker where someone lied.",
-        "A â€˜cleanâ€™ trail appears sometimesâ€”then vanishes.",
-        "Creatures here leave no tracks until you look away."
-      ],
-      "notes": [
-        "Low-supply friction zone. Great for survival pressure and stalking monsters."
-      ]
-    },
-    {
-      "id": "fort-plunder",
-      "name": "Fort Plunder",
-      "emoji": "âš–ï¸",
-      "type_ref": "fort_plunder_hq",
-      "archetype": "outpost",
-      "state": "alive",
-      "danger": 3,
-      "population": 4,
-      "resources": {
-        "silver": 1,
-        "gildren": 2,
-        "tzul_silver": 0,
-        "lead": 2,
-        "spare_parts": 4,
-        "supplies": 5,
-        "livestock": 1,
         "food_good": 2,
         "food_foul": 1,
         "water_clean": 2,
-        "water_foul": 0,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 1,
-        "thyr": 1
-      },
-      "features": [
-        "FortifiedWalls",
-        "RailCheckpoint",
-        "Barracks",
-        "SealedTunnels",
-        "Armory",
-        "CommandPost"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Ghost",
-          "weight": 1
-        },
-        {
-          "name": "Klowna",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "fixed",
-        "threats": "weighted"
-      },
-      "description": "Liberty Corps stronghold at the northern mouth of Coffin Canyon. Rail-controlled, procedural, and lethal by design.",
-      "terrain_flavor": [
-        "Fortified walls",
-        "Rail checkpoint",
-        "Barracks",
-        "Sealed tunnels"
-      ],
-      "coffinCoughChance": 0.15,
-      "atmosphere": "Order enforced at gunpoint",
-      "rumors": [
-        "A sealed rail tunnel beneath the fort leads to something the Corps refuses to map.",
-        "Officers stationed here are rotated early because of recurring nightmares.",
-        "Uncle Liberty has been sighted here exactly once."
-      ],
-      "notes": [
-        "Controlled danger. Escalation-ready."
-      ]
-    },
-    {
-      "id": "diablo",
-      "name": "Diablo",
-      "emoji": "ðŸ´â€â˜ ï¸",
-      "type_ref": "diablo_booming_hub",
-      "archetype": "boomtown",
-      "state": "booming",
-      "danger": 3,
-      "population": 6,
-      "resources": {
-        "silver": 3,
-        "gildren": 3,
-        "tzul_silver": 1,
-        "lead": 2,
-        "spare_parts": 5,
-        "supplies": 6,
-        "livestock": 4,
-        "food_good": 5,
-        "food_foul": 1,
-        "water_clean": 3,
         "water_foul": 1,
         "moonshine": 5,
         "rotgut": 2,
         "medicine": 0,
-        "thyr": 2
+        "thyr": 0
       },
-      "features": [
-        "RailSpur",
-        "AuctionYard",
-        "MonsterStages",
-        "PitBrothels",
-        "GunsmithRow",
-        "TinChurch",
-        "Jailhouse"
-      ],
+      "features": ["BarTop", "CardTables", "BackRoom", "LanternLight"],
       "monster_seeds": [
-        {
-          "name": "Red Goblin",
-          "weight": 2
-        },
-        {
-          "name": "Feratu Stalker",
-          "weight": 2
-        },
-        {
-          "name": "Ruster",
-          "weight": 1
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Klowna",
-          "weight": 1
-        }
+        { "name": "Wererat", "weight": 1 },
+        { "name": "Imp", "weight": 1 }
       ],
-      "variance": {
-        "layout": "semi",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "A vast, lawless sprawl at the canyonâ€™s southern end. Smoke-choked streets, rotbuck deals, pit brothels, and monsters sold on stage.",
-      "terrain_flavor": [
-        "Saloons",
-        "Pit brothels",
-        "Monster auction stages",
-        "Escape tunnels"
-      ],
-      "coffinCoughChance": 0.25,
-      "atmosphere": "Lawless, ruthless, thriving",
+      "variance": { "layout": "fixed", "resources": "weighted", "threats": "light" },
+      "description": "A loud, red-lit cantina where coin flows faster than clean water. Deals are struck between swigs.",
+      "terrain_flavor": ["Bar top", "Card tables", "Lantern light"],
+      "coffinCoughChance": 0.08,
+      "atmosphere": "Sweat, smoke, secrets",
       "rumors": [
-        "The city is built atop a buried Dust King temple that still feeds it power.",
-        "Monsters refuse to enter Diablo unless driven or wounded.",
-        "Every Shine Rider gang has betrayed someone here."
+        "A Vendomat sometimes drinks here and never pays.",
+        "The owner keeps a ledger of favors thicker than the Bible.",
+        "Someone waters the rotgut with river water."
       ],
-      "notes": [
-        "Always booming. Volatile equilibrium normalized."
-      ]
+      "notes": ["Primary money + social leverage node."]
     },
+
     {
-      "id": "camp-coffin",
-      "name": "Camp Coffin",
-      "emoji": "ðŸ¦…",
-      "type_ref": "camp_coffin_hq",
-      "archetype": "hq",
+      "id": "mercy-clinic",
+      "name": "Mercy Clinic",
+      "emoji": "🩺",
+      "type_ref": "node_clinic",
+      "archetype": "support_node",
       "state": "alive",
       "danger": 2,
-      "population": 4,
+      "population": 2,
       "resources": {
-        "silver": 0,
+        "silver": 1,
         "gildren": 1,
         "tzul_silver": 0,
+        "lead": 0,
+        "spare_parts": 1,
+        "supplies": 2,
+        "livestock": 0,
+        "food_good": 1,
+        "food_foul": 0,
+        "water_clean": 2,
+        "water_foul": 0,
+        "moonshine": 1,
+        "rotgut": 0,
+        "medicine": 5,
+        "thyr": 0
+      },
+      "features": ["SurgeryTable", "BandageCrates", "PrayerCorner", "BoilingPot"],
+      "monster_seeds": [
+        { "name": "Ghost", "weight": 1 }
+      ],
+      "variance": { "layout": "fixed", "resources": "strategic", "threats": "light" },
+      "description": "A frontier clinic doing more with less. Bandages boil, prayers mutter, and bullets get dug out by lamplight.",
+      "terrain_flavor": ["Surgery table", "Boiling pot", "Prayer corner"],
+      "coffinCoughChance": 0.05,
+      "atmosphere": "Hope under strain",
+      "rumors": [
+        "The doctor keeps something alive in a jar.",
+        "Medicine goes missing whenever a certain faction visits.",
+        "Someone here knows how to treat Thyr sickness."
+      ],
+      "notes": ["Critical objective node for rescue, defense, or supply missions."]
+    },
+        {
+      "id": "general-store-ramble",
+      "name": "Ramble General Store",
+      "emoji": "🏪",
+      "type_ref": "node_general_store",
+      "archetype": "supply_node",
+      "state": "alive",
+      "danger": 2,
+      "population": 2,
+      "resources": {
+        "silver": 2,
+        "gildren": 2,
+        "tzul_silver": 0,
         "lead": 1,
-        "spare_parts": 3,
-        "supplies": 5,
-        "livestock": 2,
+        "spare_parts": 2,
+        "supplies": 4,
+        "livestock": 1,
         "food_good": 3,
         "food_foul": 1,
-        "water_clean": 2,
+        "water_clean": 3,
+        "water_foul": 1,
+        "moonshine": 2,
+        "rotgut": 1,
+        "medicine": 3,
+        "thyr": 0
+      },
+      "features": ["FrontPorch", "CrateStacks", "BulletCase", "BackLedger"],
+      "monster_seeds": [
+        { "name": "Wererat", "weight": 1 }
+      ],
+      "variance": { "layout": "fixed", "resources": "strategic", "threats": "light" },
+      "description": "A packed frontier store with everything from flour to firing pins—if you’ve got the coin.",
+      "terrain_flavor": ["Crate stacks", "Bullet case", "Front porch"],
+      "coffinCoughChance": 0.07,
+      "atmosphere": "Order in the chaos",
+      "rumors": [
+        "The owner knows who’s stockpiling for war.",
+        "A crate marked ‘soap’ hums faintly at night.",
+        "Prices change depending on which uniform you wear."
+      ],
+      "notes": ["Major supply objective. Economic control matters."]
+    },
+
+    {
+      "id": "dust-oasis",
+      "name": "Dust Oasis",
+      "emoji": "🏝️",
+      "type_ref": "region_oasis",
+      "archetype": "oasis",
+      "state": "alive",
+      "danger": 3,
+      "population": 1,
+      "resources": {
+        "silver": 0,
+        "gildren": 0,
+        "tzul_silver": 0,
+        "lead": 0,
+        "spare_parts": 0,
+        "supplies": 1,
+        "livestock": 1,
+        "food_good": 2,
+        "food_foul": 1,
+        "water_clean": 5,
         "water_foul": 1,
         "moonshine": 0,
         "rotgut": 0,
-        "medicine": 4,
+        "medicine": 0,
         "thyr": 1
       },
-      "features": [
-        "CommandTent",
-        "WatchLine",
-        "MedicalStation",
-        "Workshop",
-        "Stables",
-        "MonsterShelters"
-      ],
+      "features": ["PalmCluster", "ClearPool", "ReedBeds", "ShadeRocks"],
       "monster_seeds": [
-        {
-          "name": "Wolf",
-          "weight": 2
-        },
-        {
-          "name": "Canyon Goblin",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        }
+        { "name": "Kelpie", "weight": 2 },
+        { "name": "Will-o’-Wisp", "weight": 1 }
       ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "fixed",
-        "threats": "weighted"
-      },
-      "description": "Monster Rangers headquarters built atop a forgotten Tejas town. A hard sanctuary where monsters are neighbors, not resources.",
-      "terrain_flavor": [
-        "Canvas tents",
-        "Corrals",
-        "Watch posts",
-        "Medical station"
-      ],
-      "coffinCoughChance": 0.1,
-      "atmosphere": "Uneasy peace held by tired veterans",
+      "variance": { "layout": "semi", "resources": "strategic", "threats": "weighted" },
+      "description": "A small miracle of clean water and shade in a canyon that offers neither freely.",
+      "terrain_flavor": ["Clear pool", "Palm cluster", "Shade rocks"],
+      "coffinCoughChance": 0.11,
+      "atmosphere": "Relief edged with suspicion",
       "rumors": [
-        "Thyr behaves differently inside the camp walls.",
-        "A monster elder advises the Rangers in secret.",
-        "Monsterology has tried and failed to destroy Camp Coffin three times."
+        "The pool reflects stars not in the sky.",
+        "Water drawn at midnight tastes sweet but changes you.",
+        "Someone buried silver beneath the reeds."
       ],
-      "notes": [
-        "Safest known location in the canyon."
-      ]
+      "notes": ["Water objective. Highly strategic in travel scenarios."]
     },
-    {
-      "id": "the-laboratorium",
-      "name": "The Laboratorium",
-      "emoji": "ðŸ§ª",
-      "type_ref": "monsterologist_town_active",
-      "archetype": "outpost",
-      "state": "prospering",
-      "danger": 3,
-      "population": 4,
-      "resources": {
-        "silver": 1,
-        "gildren": 2,
-        "tzul_silver": 1,
-        "lead": 2,
-        "spare_parts": 4,
-        "supplies": 4,
-        "livestock": 1,
-        "food_good": 2,
-        "food_foul": 2,
-        "water_clean": 1,
-        "water_foul": 2,
-        "moonshine": 3,
-        "rotgut": 2,
-        "medicine": 1,
-        "thyr": 3
-      },
-      "features": [
-        "DissectionHalls",
-        "SpecimenPens",
-        "MortVats",
-        "ExperimentalEngines",
-        "GuardPatrols"
-      ],
-      "monster_seeds": [
         {
-          "name": "Flesh Golem",
-          "weight": 2
-        },
-        {
-          "name": "Patchwork Wonder",
-          "weight": 2
-        },
-        {
-          "name": "Mimic",
-          "weight": 1
-        },
-        {
-          "name": "Imp",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "Monsterologyâ€™s primary research complex. Cages, vats, engines, and things that should not be alive.",
-      "terrain_flavor": [
-        "Dissection halls",
-        "Specimen cages",
-        "Mort vats",
-        "Experimental engines"
-      ],
-      "coffinCoughChance": 0.15,
-      "atmosphere": "Science without conscience",
-      "rumors": [
-        "Something intelligent is kept alive in the lowest level.",
-        "Mort from this site tastes different.",
-        "The complex is built on pre-human ruins."
-      ],
-      "notes": [
-        "Prospering, unstable, ethically compromised."
-      ]
-    },
-    {
-      "id": "silverpit",
-      "name": "Silverpit",
-      "emoji": "â›ï¸",
-      "type_ref": "mine_active_shineriders",
-      "archetype": "mine",
+      "id": "wandering-vendomat",
+      "name": "Wandering Vendomat",
+      "emoji": "🤖",
+      "type_ref": "node_wandering_vendor",
+      "archetype": "wandering",
       "state": "alive",
       "danger": 3,
-      "population": 3,
-      "resources": {
-        "silver": 4,
-        "gildren": 2,
-        "tzul_silver": 2,
-        "lead": 3,
-        "spare_parts": 3,
-        "supplies": 3,
-        "livestock": 1,
-        "food_good": 1,
-        "food_foul": 2,
-        "water_clean": 1,
-        "water_foul": 2,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
-        "thyr": 2
-      },
-      "features": [
-        "MineShafts",
-        "OreProcessors",
-        "RailCarts",
-        "Barracks",
-        "ExplosivesLocker"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Ruster",
-          "weight": 2
-        },
-        {
-          "name": "Gray Ooze",
-          "weight": 1
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "semi",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "An active mining wound carved into the canyon wall. Ownership changes violently and often.",
-      "terrain_flavor": [
-        "Mine shafts",
-        "Ore processors",
-        "Rail carts",
-        "Barracks"
-      ],
-      "coffinCoughChance": 0.2,
-      "atmosphere": "Industrial greed",
-      "rumors": [
-        "The deepest shaft opens into something that breathes.",
-        "A monster nests inside the ore itself.",
-        "Silver from Silverpit curses hoarders."
-      ],
-      "notes": [
-        "Violently contested asset."
-      ]
-    },
-    {
-      "id": "fortune",
-      "name": "Fortune",
-      "emoji": "ðŸŒµ",
-      "type_ref": "boomtown_riverside",
-      "archetype": "boomtown",
-      "state": "alive",
-      "danger": 3,
-      "population": 4,
+      "population": 1,
       "resources": {
         "silver": 3,
         "gildren": 2,
         "tzul_silver": 0,
         "lead": 2,
         "spare_parts": 3,
-        "supplies": 4,
-        "livestock": 3,
-        "food_good": 3,
-        "food_foul": 1,
-        "water_clean": 3,
-        "water_foul": 2,
-        "moonshine": 4,
-        "rotgut": 2,
-        "medicine": 0,
-        "thyr": 1
-      },
-      "features": [
-        "TradingPost",
-        "RailSpur",
-        "WagonRoutes",
-        "SupplyYards",
-        "MarketRow"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Kelpie",
-          "weight": 2
-        },
-        {
-          "name": "Rat Swarm",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "semi",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "A crossroads settlement that survives by staying useful and pretending neutrality.",
-      "terrain_flavor": [
-        "Trading post",
-        "Rail spur",
-        "Wagon routes",
-        "Supply yards"
-      ],
-      "coffinCoughChance": 0.2,
-      "atmosphere": "Desperation meets opportunity",
-      "rumors": [
-        "The town council sells information to every faction.",
-        "A buried rail line runs under the main street.",
-        "Nobody in Fortune sleeps well."
-      ],
-      "notes": [
-        "Information economy hub."
-      ]
-    },
-    {
-      "id": "river-city",
-      "name": "River City",
-      "emoji": "ðŸŒŠ",
-      "type_ref": "river_active",
-      "archetype": "river",
-      "state": "alive",
-      "danger": 3,
-      "population": 3,
-      "resources": {
-        "silver": 0,
-        "gildren": 0,
-        "tzul_silver": 0,
-        "lead": 0,
-        "spare_parts": 1,
-        "supplies": 1,
-        "livestock": 1,
-        "food_good": 2,
-        "food_foul": 2,
-        "water_clean": 2,
-        "water_foul": 3,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
-        "thyr": 1
-      },
-      "features": [
-        "Docks",
-        "Ferries",
-        "FishMarkets",
-        "FloodMarkers",
-        "RiverCrossings"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Kelpie",
-          "weight": 3
-        },
-        {
-          "name": "Crocodile",
-          "weight": 3
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 2
-        }
-      ],
-      "variance": {
-        "layout": "semi",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "A settlement clinging to the Widowflow. Life is cheap. Water is not.",
-      "terrain_flavor": [
-        "Docks",
-        "Ferries",
-        "Fish markets",
-        "Flood markers"
-      ],
-      "coffinCoughChance": 0.15,
-      "atmosphere": "Life clings to waterâ€™s edge",
-      "rumors": [
-        "The river changes depth overnight.",
-        "Something answers if you speak to the water.",
-        "Entire crews vanish mid-crossing."
-      ],
-      "notes": [
-        "Water is power here."
-      ]
-    },
-    {
-      "id": "plata",
-      "name": "Plata",
-      "emoji": "ðŸ”ï¸",
-      "type_ref": "boomtown_mesa",
-      "archetype": "boomtown",
-      "state": "barely_alive",
-      "danger": 4,
-      "population": 3,
-      "resources": {
-        "silver": 4,
-        "gildren": 2,
-        "tzul_silver": 1,
-        "lead": 3,
-        "spare_parts": 2,
-        "supplies": 2,
-        "livestock": 2,
-        "food_good": 1,
-        "food_foul": 2,
-        "water_clean": 1,
-        "water_foul": 2,
-        "moonshine": 3,
-        "rotgut": 3,
-        "medicine": 0,
-        "thyr": 2
-      },
-      "features": [
-        "MountainMines",
-        "OreChutes",
-        "UnstableShafts",
-        "ProcessingSheds"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Harpy",
-          "weight": 3
-        },
-        {
-          "name": "Gargoyle",
-          "weight": 2
-        },
-        {
-          "name": "Dire Wolf",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "semi",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "High-altitude silver camp balanced on narrow ridges and bad luck.",
-      "terrain_flavor": [
-        "Mountain mines",
-        "Ore chutes",
-        "Unstable shafts"
-      ],
-      "coffinCoughChance": 0.25,
-      "atmosphere": "Greed carved in stone",
-      "rumors": [
-        "A hidden vein of pure Thyr lies above the camp.",
-        "Miners hear singing from sealed tunnels.",
-        "No one buried here stays buried."
-      ],
-      "notes": [
-        "Hard to supply. Easy to lose."
-      ]
-    },
-    {
-      "id": "cowtown",
-      "name": "Cowtown",
-      "emoji": "ðŸ„",
-      "type_ref": "bone_graveyard",
-      "archetype": "outpost",
-      "state": "alive",
-      "danger": 4,
-      "population": 2,
-      "resources": {
-        "silver": 0,
-        "gildren": 0,
-        "tzul_silver": 0,
-        "lead": 0,
-        "spare_parts": 0,
-        "supplies": 1,
-        "livestock": 3,
-        "food_good": 1,
-        "food_foul": 2,
-        "water_clean": 1,
-        "water_foul": 1,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
-        "thyr": 2
-      },
-      "features": [
-        "Corrals",
-        "FeedBarns",
-        "WateringHoles",
-        "RanchHouses"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Gnoll",
-          "weight": 2
-        },
-        {
-          "name": "Lionvulture",
-          "weight": 2
-        },
-        {
-          "name": "Ghoul",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "semi",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "Ranch land built atop ancient monster grazing grounds. Livestock thrives unnaturally well.",
-      "terrain_flavor": [
-        "Corrals",
-        "Feed barns",
-        "Watering holes"
-      ],
-      "coffinCoughChance": 0.15,
-      "atmosphere": "Stolen land, borrowed time",
-      "rumors": [
-        "The cattle are not entirely mundane.",
-        "Monsters mark the land but do not attack openly.",
-        "Every herd has a favored animal."
-      ],
-      "notes": [
-        "Predators are tolerated until they are not."
-      ]
-    },
-    {
-      "id": "ratsville",
-      "name": "Ratsville",
-      "emoji": "ðŸ€",
-      "type_ref": "debris_field",
-      "archetype": "ruins",
-      "state": "ruins",
-      "danger": 4,
-      "population": 2,
-      "resources": {
-        "silver": 0,
-        "gildren": 1,
-        "tzul_silver": 0,
-        "lead": 1,
-        "spare_parts": 4,
         "supplies": 2,
         "livestock": 0,
-        "food_good": 0,
-        "food_foul": 2,
-        "water_clean": 0,
-        "water_foul": 2,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
+        "food_good": 1,
+        "food_foul": 1,
+        "water_clean": 1,
+        "water_foul": 1,
+        "moonshine": 2,
+        "rotgut": 2,
+        "medicine": 2,
         "thyr": 1
       },
-      "features": [
-        "TinShacks",
-        "MudStreets",
-        "HiddenTunnels",
-        "BlackMarkets"
-      ],
+      "features": ["BrassCabinet", "GlassFront", "CoinSlot", "SteamVents", "RollingWheels"],
       "monster_seeds": [
-        {
-          "name": "Wererat",
-          "weight": 2
-        },
-        {
-          "name": "Rat Swarm",
-          "weight": 2
-        },
-        {
-          "name": "Mimic",
-          "weight": 1
-        }
+        { "name": "Ruster", "weight": 1 },
+        { "name": "Imp", "weight": 1 }
       ],
-      "variance": {
-        "layout": "random",
-        "resources": "random",
-        "threats": "weighted"
-      },
-      "description": "A shantytown built from scrap, desperation, and bad luck. No law holds.",
-      "terrain_flavor": [
-        "Tin shacks",
-        "Mud streets",
-        "Hidden tunnels"
-      ],
-      "coffinCoughChance": 0.35,
-      "atmosphere": "Where desperate disappear",
+      "variance": { "layout": "mobile", "resources": "variable", "threats": "contextual" },
+      "description": "A wheeled, brass-bodied machine that trundles between settlements selling goods at unfair but dependable prices.",
+      "terrain_flavor": ["Brass cabinet", "Steam vents", "Rolling wheels"],
+      "coffinCoughChance": 0.14,
+      "atmosphere": "Mechanical neutrality",
       "rumors": [
-        "Ratsville sits atop a collapsed mine full of bones.",
-        "The town moves slightly each year.",
-        "Something protects it for unknown reasons."
+        "It remembers who shorted it a coin.",
+        "Sometimes it sells things not yet invented.",
+        "If destroyed, another appears within a week."
       ],
-      "notes": [
-        "Migratory ruin."
-      ]
+      "notes": ["Mobile resource node. Excellent dynamic objective."]
     },
+
     {
-      "id": "ghost-mountain",
-      "name": "Ghost Mountain",
-      "emoji": "â›°ï¸",
-      "type_ref": "mesa",
-      "archetype": "landmark",
+      "id": "monte-haul",
+      "name": "Monte Haul",
+      "emoji": "🎰",
+      "type_ref": "node_monte_haul_vendor",
+      "archetype": "wandering",
       "state": "alive",
-      "danger": 4,
+      "danger": 3,
       "population": 1,
       "resources": {
-        "silver": 1,
-        "gildren": 0,
-        "tzul_silver": 0,
-        "lead": 1,
-        "spare_parts": 0,
-        "supplies": 0,
-        "livestock": 0,
-        "food_good": 0,
-        "food_foul": 1,
-        "water_clean": 0,
-        "water_foul": 1,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
-        "thyr": 2
-      },
-      "features": [
-        "SignalCairns",
-        "CollapsedTunnels",
-        "WindBlastedRidges",
-        "AncientWatchPoints"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Harpy",
-          "weight": 2
-        },
-        {
-          "name": "Gargoyle",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "fixed",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A wind-scoured massif riddled with old tunnels and signal fires.",
-      "terrain_flavor": [
-        "Signal cairns",
-        "Collapsed tunnels",
-        "Wind-blasted ridges"
-      ],
-      "coffinCoughChance": 0.2,
-      "atmosphere": "Signals without senders",
-      "rumors": [
-        "Lights answer each other across impossible distances.",
-        "A hidden observatory crowns the peak.",
-        "Climbers age faster on the ascent."
-      ],
-      "notes": [
-        "Landmark-scale danger."
-      ]
-    },
-    {
-      "id": "deerhoof",
-      "name": "Deerhoof",
-      "emoji": "ðŸ¦Œ",
-      "type_ref": "rock_outcroppings",
-      "archetype": "refuge",
-      "state": "alive",
-      "danger": 2,
-      "population": 2,
-      "resources": {
-        "silver": 1,
-        "gildren": 1,
-        "tzul_silver": 0,
-        "lead": 1,
-        "spare_parts": 0,
-        "supplies": 0,
-        "livestock": 1,
-        "food_good": 1,
-        "food_foul": 0,
-        "water_clean": 1,
-        "water_foul": 0,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
-        "thyr": 2
-      },
-      "features": [
-        "AntlerShrines",
-        "StoneLodges",
-        "GameTrails",
-        "FogClearings"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Dire Wolf",
-          "weight": 1
-        },
-        {
-          "name": "Gargoyle",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "semi",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A quiet highland settlement and monster refuge beyond the canyon rim.",
-      "terrain_flavor": [
-        "Antler shrines",
-        "Stone lodges",
-        "Game trails"
-      ],
-      "coffinCoughChance": 0.15,
-      "atmosphere": "The land watches how you walk",
-      "rumors": [
-        "The spirits guide the respectful and ruin the careless.",
-        "Monsters shelter here without fear.",
-        "No blood spilled here ever dries."
-      ],
-      "notes": [
-        "Protected by custom, not walls."
-      ]
-    },
-    {
-      "id": "huck",
-      "name": "Huck",
-      "emoji": "ðŸ§­",
-      "type_ref": "boomtown_mesa",
-      "archetype": "outpost",
-      "state": "barely_alive",
-      "danger": 3,
-      "population": 2,
-      "resources": {
-        "silver": 2,
-        "gildren": 1,
-        "tzul_silver": 0,
-        "lead": 2,
-        "spare_parts": 1,
-        "supplies": 1,
-        "livestock": 1,
-        "food_good": 0,
-        "food_foul": 1,
-        "water_clean": 0,
-        "water_foul": 1,
-        "moonshine": 0,
-        "rotgut": 0,
-        "medicine": 0,
-        "thyr": 1
-      },
-      "features": [
-        "SurveyTents",
-        "SignalPoles",
-        "Windmills",
-        "SupplyCaches"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Harpy",
-          "weight": 1
-        },
-        {
-          "name": "Dire Wolf",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "semi",
-        "resources": "scarce",
-        "threats": "weighted"
-      },
-      "description": "A remote frontier stop used by scouts, smugglers, and canyon runners.",
-      "terrain_flavor": [
-        "Survey tents",
-        "Signal poles",
-        "Windmills"
-      ],
-      "coffinCoughChance": 0.1,
-      "atmosphere": "Last stop before bad decisions",
-      "rumors": [
-        "Maps bought here are never fully accurate.",
-        "Someone in Huck tracks every traveler.",
-        "The outpost has been rebuilt in the exact same spot four times."
-      ],
-      "notes": [
-        "Transient population hub."
-      ]
-    },
-    {
-      "id": "dustbuck",
-      "name": "Dustbuck",
-      "emoji": "ðŸ‚",
-      "type_ref": "boomtown_dryriver",
-      "archetype": "boomtown",
-      "state": "ruins",
-      "danger": 4,
-      "population": 3,
-      "resources": {
-        "silver": 2,
-        "gildren": 1,
-        "tzul_silver": 0,
-        "lead": 1,
+        "silver": 5,
+        "gildren": 4,
+        "tzul_silver": 1,
+        "lead": 3,
         "spare_parts": 3,
-        "supplies": 2,
-        "livestock": 3,
-        "food_good": 1,
-        "food_foul": 2,
-        "water_clean": 0,
-        "water_foul": 2,
-        "moonshine": 2,
-        "rotgut": 3,
-        "medicine": 0,
-        "thyr": 1
-      },
-      "features": [
-        "LivestockYards",
-        "AuctionPens",
-        "SlaughterSheds",
-        "DustStreets"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Sand Shark",
-          "weight": 2
-        },
-        {
-          "name": "Skeleton",
-          "weight": 2
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 1
-        }
-      ],
-      "variance": {
-        "layout": "semi",
-        "resources": "weighted",
-        "threats": "weighted"
-      },
-      "description": "A trade town grown fat on livestock drives and canyon spillover.",
-      "terrain_flavor": [
-        "Livestock yards",
-        "Auction pens",
-        "Dust-choked streets"
-      ],
-      "coffinCoughChance": 0.25,
-      "atmosphere": "Everything is for sale eventually",
-      "rumors": [
-        "Some cattle walk themselves to market.",
-        "Dustbuck brands appear burned into bones miles away.",
-        "The town prospers when Coffin Canyon worsens."
-      ],
-      "notes": [
-        "Decay feeds profit."
-      ]
-    },
-    {
-      "id": "bayou-city",
-      "name": "Bayou City",
-      "emoji": "ðŸŒŠ",
-      "type_ref": "river_active",
-      "archetype": "river_city",
-      "state": "alive",
-      "danger": 3,
-      "population": 5,
-      "resources": {
-        "silver": 0,
-        "gildren": 1,
-        "tzul_silver": 0,
-        "lead": 0,
-        "spare_parts": 2,
         "supplies": 3,
-        "livestock": 2,
-        "food_good": 3,
-        "food_foul": 2,
-        "water_clean": 2,
-        "water_foul": 3,
-        "moonshine": 4,
+        "livestock": 0,
+        "food_good": 2,
+        "food_foul": 1,
+        "water_clean": 1,
+        "water_foul": 1,
+        "moonshine": 3,
         "rotgut": 2,
-        "medicine": 0,
-        "thyr": 1
+        "medicine": 2,
+        "thyr": 2
       },
-      "features": [
-        "StiltedDocks",
-        "FloodedAlleys",
-        "FishMarkets",
-        "RottenBoardwalks"
-      ],
+      "features": ["FlashyWagon", "LockedCrates", "GuardedPerimeter", "DiceTable"],
       "monster_seeds": [
-        {
-          "name": "Kelpie",
-          "weight": 3
-        },
-        {
-          "name": "Crocodile",
-          "weight": 3
-        },
-        {
-          "name": "Will-oâ€™-Wisp",
-          "weight": 2
-        }
+        { "name": "Red Goblin", "weight": 1 },
+        { "name": "Wererat", "weight": 1 }
       ],
-      "variance": {
-        "layout": "semi",
-        "resources": "abundant",
-        "threats": "weighted"
-      },
-      "description": "A swollen river-mouth city where canyon runoff meets the coast.",
-      "terrain_flavor": [
-        "Stilted docks",
-        "Flooded alleys",
-        "Fish markets"
-      ],
-      "coffinCoughChance": 0.2,
-      "atmosphere": "Where the canyon leaks into the world",
+      "variance": { "layout": "mobile", "resources": "rich", "threats": "opportunistic" },
+      "description": "A flashy traveling vendor operation with guards, gambling, and crates nobody inspects too closely.",
+      "terrain_flavor": ["Flashy wagon", "Locked crates", "Dice table"],
+      "coffinCoughChance": 0.16,
+      "atmosphere": "Temptation on wheels",
       "rumors": [
-        "Bodies travel upstream at night.",
-        "The water listens if spoken to softly.",
-        "Some ships refuse to leave once docked."
+        "Monte Haul once sold a dragon egg as a ‘paperweight.’",
+        "Every purchase ties you to a future favor.",
+        "Their guards never blink at the same time."
       ],
-      "notes": [
-        "Major river-city spillover zone."
-      ]
+      "notes": ["High-value wandering objective. Escalation magnet."]
     }
+
   ]
 }
+    
