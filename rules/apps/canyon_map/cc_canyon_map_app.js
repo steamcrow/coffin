@@ -445,7 +445,7 @@
     var body = el("div", { class:"cc-cm-body cc-cm-body--lens" }, [
       el("div", { class:"cc-cm-mapwrap" }, [
         mapEl, lensEl, loaderEl,
-        el("div", { class:"cc-frame-overlay" }),
+        el("div", { class:"cc-frame-overlay", style:"pointer-events:none;" }),
         el("div", { class:"cc-scroll-vertical"   }, [el("div", { class:"cc-scroll-knob", id:"cc-scroll-knob-v" })]),
         el("div", { class:"cc-scroll-horizontal" }, [el("div", { class:"cc-scroll-knob", id:"cc-scroll-knob-h" })])
       ])
@@ -484,37 +484,61 @@
     var mainMap = null, lensMap = null;
     var mapDoc  = null, locationsData = null;
 
-    // ── Normalised scroll position (t) ─────────────────────────────
-    // Everything is expressed as t in [0, 1]:
-    //   0.0 = viewing the very top of the image
-    //   1.0 = viewing the very bottom
-    //
-    // applyT() converts t into a concrete lat/lng centre for each map
-    // using that map's own safe range, so neither map ever shows blank.
-    var currentT = 0.5;
+    // ── Normalised scroll positions ─────────────────────────────────
+    // currentT  = vertical   scroll, 0 = top,  1 = bottom
+    // currentTx = horizontal scroll, 0 = left, 1 = right
+    // Both clamped [0,1] — neither map ever shows blank space.
+    var currentT  = 0.5;
+    var currentTx = 0.5;
 
+    // Horizontal equivalent of safeRange (see safeRange above for explanation)
+    function safeRangeX(containerEl, zoom, imageW) {
+      var w       = containerEl.getBoundingClientRect().width || containerEl.offsetWidth || 600;
+      var visible = w / Math.pow(2, zoom);
+      var half    = visible / 2;
+      if (half >= imageW / 2) return { min: imageW / 2, max: imageW / 2 };
+      return { min: half, max: imageW - half };
+    }
+
+    // applyT: reposition both maps using currentT (vertical) and currentTx (horizontal).
+    // Both maps compute their own safe ranges from their real container sizes,
+    // so both always hit their edges at the same normalised t/tx.
     function applyT(t, px) {
       if (!mainMap || !lensMap || !px) return;
       t = clamp(t, 0, 1);
       currentT = t;
 
       var lensZoom = BG_ZOOM + opts.lensZoomOffset;
+      var tx = currentTx;
 
-      // Background map — compute its own safe range and pan to it
-      var bgR = safeRange(ui.mapEl, BG_ZOOM, px.h);
-      mainMap.panTo([bgR.min + t * (bgR.max - bgR.min), px.w / 2], { animate: false });
+      // Background map — vertical + horizontal
+      var bgRy  = safeRange( ui.mapEl, BG_ZOOM, px.h);
+      var bgRx  = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
+      mainMap.panTo(
+        [bgRy.min + t * (bgRy.max - bgRy.min),
+         bgRx.min + tx * (bgRx.max - bgRx.min)],
+        { animate: false }
+      );
 
-      // Lens map — different zoom + container, but same t.
-      // Because both use t, their edges always align simultaneously.
-      var lnR = safeRange(ui.lensMapEl, lensZoom, px.h);
+      // Lens map — same t/tx, but its own safe ranges (different zoom + container size)
+      var lnRy  = safeRange( ui.lensMapEl, lensZoom, px.h);
+      var lnRx  = safeRangeX(ui.lensMapEl, lensZoom, px.w);
       lensMap.setView(
-        [lnR.min + t * (lnR.max - lnR.min), px.w / 2],
+        [lnRy.min + t * (lnRy.max - lnRy.min),
+         lnRx.min + tx * (lnRx.max - lnRx.min)],
         lensZoom,
         { animate: false }
       );
 
-      // Knob visual always reflects current t exactly
-      ui.knobV.style.top = (t * 100) + "%";
+      // Knobs visually track t/tx exactly
+      ui.knobV.style.top  = (t  * 100) + "%";
+      ui.knobH.style.left = (tx * 100) + "%";
+    }
+
+    // applyTx: horizontal-only update, then redraws both maps
+    function applyTx(tx, px) {
+      currentTx = clamp(tx, 0, 1);
+      applyT(currentT, px);
     }
 
     // ── Knob drag + momentum (bound once) ─────────────────────────
@@ -547,7 +571,8 @@
 
         function momentumLoop() {
           if (Math.abs(velocity) < MIN_VEL) { rafId = null; return; }
-          applyT(currentT + velocity, px);
+          if (axis === "v") applyT( currentT  + velocity, px);
+          else              applyTx(currentTx + velocity, px);
           velocity *= FRICTION;
           rafId = requestAnimationFrame(momentumLoop);
         }
@@ -570,7 +595,8 @@
           var pxDelta = client - lastClient;
           var dt      = Math.max(now - lastTime, 1);
           var dT      = pxTodt(pxDelta);
-          applyT(currentT + dT, px);
+          if (axis === "v") applyT( currentT  + dT, px);
+          else              applyTx(currentTx + dT, px);
           velocity   = dT / dt * 16; // normalise to ~60fps
           lastClient = client;
           lastTime   = now;
@@ -593,13 +619,9 @@
       }
 
       bindKnob(ui.knobV, "v"); // vertical brass knob
+      bindKnob(ui.knobH, "h"); // horizontal brass knob
 
-      // Horizontal knob wired up but pans the background map only.
-      // The lens stays centred horizontally (same geographic centre as bg).
-      // Uncomment the line below if you want horizontal pan enabled:
-      // bindKnob(ui.knobH, "h");
-
-      // On resize: re-measure containers and re-apply scroll position
+      // On resize: re-measure containers and re-apply both scroll positions
       window.addEventListener("resize", rafThrottle(function() {
         try { if (mainMap) mainMap.invalidateSize({ animate: false }); } catch(e){}
         try { if (lensMap)  lensMap.invalidateSize({ animate: false }); } catch(e){}
@@ -704,6 +726,8 @@
             .then(function() {
               try { mainMap.invalidateSize({ animate: false }); } catch(e){}
               try { lensMap.invalidateSize({ animate: false }); } catch(e){}
+              currentT  = 0.5;
+              currentTx = 0.5;
               applyT(0.5, px); // centre both maps, using real container sizes
             })
             .then(function() {
@@ -730,8 +754,11 @@
     root.querySelector("#cc-cm-reload").onclick = function() { init(); };
     root.querySelector("#close-dr").onclick     = function() { ui.drawerEl.classList.remove("open"); };
     root.querySelector("#cc-cm-fit").onclick    = function() {
-      // Fit = reset to centre (t = 0.5)
-      if (mapDoc) applyT(0.5, mapDoc.map.background.image_pixel_size);
+      // Fit = reset both axes to centre
+      if (mapDoc) {
+        currentTx = 0.5;
+        applyT(0.5, mapDoc.map.background.image_pixel_size);
+      }
     };
 
     return init().then(function() { return {}; });
