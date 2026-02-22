@@ -81,7 +81,8 @@ window.CC_APP = {
       { id: 'liberty_corps',   name: 'Liberty Corps',   file: 'faction-liberty-corps-v2.json'  },
       { id: 'monsterology',    name: 'Monsterology',    file: 'faction-monsterology-v2.json'   },
       { id: 'monsters',        name: 'Monsters',        file: 'faction-monsters-v2.json'       },
-      { id: 'shine_riders',    name: 'Shine Riders',    file: 'faction-shine-riders-v2.json'   }
+      { id: 'shine_riders',    name: 'Shine Riders',    file: 'faction-shine-riders-v2.json'   },
+      { id: 'crow_queen',    name: 'Crow Queen',    file: 'faction-crow-queen.json'   }
     ];
 
     // ================================
@@ -124,7 +125,8 @@ window.CC_APP = {
           { id: 'monster_rangers', file: 'faction-monster-rangers-v5.json' },
           { id: 'liberty_corps',   file: 'faction-liberty-corps-v2.json'  },
           { id: 'monsterology',    file: 'faction-monsterology-v2.json'   },
-          { id: 'shine_riders',    file: 'faction-shine-riders-v2.json'   }
+          { id: 'shine_riders',    file: 'faction-shine-riders-v2.json'   },
+          { id: 'crow_queen',    file: 'faction-crow-queen.json'   }
         ];
         factionDataMap = {};
         await Promise.all(PLAYER_FACTIONS.map(async ({ id, file }) => {
