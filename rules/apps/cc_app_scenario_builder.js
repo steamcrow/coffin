@@ -120,7 +120,7 @@ window.CC_APP = {
         scenarioVaultData  = await vaultRes.json();
         scenarioNamesData  = await namesRes.json();
 
-        // Load all player faction files for faction-aware victory conditions
+      // Load all player faction files for faction-aware victory conditions
         const PLAYER_FACTIONS = [
           { id: 'monster_rangers', file: 'faction-monster-rangers-v5.json' },
           { id: 'liberty_corps',   file: 'faction-liberty-corps-v2.json'  },
@@ -1227,6 +1227,13 @@ window.CC_APP = {
         tactic:   'Speed over combat. Extract early, stay mobile.',
         quote:    'Everything has a price. We just set it.'
       },
+      crow_queen: {
+        verbs:    ['Claim', 'Convert', 'Subjugate', 'Consecrate', 'Crown'],
+        vp_style: 'per_round',
+        bonus:    'Bonus VP for each monster converted to a Subject.',
+        tactic:   'Dominance through will. Obelisk presence amplifies control.',
+        quote:    'Everything in the canyon kneels. Eventually.'
+      },
       monsters: {
         verbs:    ['Claim', 'Guard', 'Hold', 'Escape', 'Feed'],
         vp_style: 'survival',
@@ -1236,8 +1243,20 @@ window.CC_APP = {
       }
     };
 
+    // ─────────────────────────────────────────────────────────────────────
+    // FACTION × OBJECTIVE FLAVOR
+    // Two special keys added to every faction:
+    //   monsters_befriendable  — a monster that CAN be befriended/converted
+    //   monsters_hostile       — a monster that is just a threat
+    // Every faction handles both situations differently.
+    // ─────────────────────────────────────────────────────────────────────
     const FACTION_OBJECTIVE_FLAVOR = {
+
       monster_rangers: {
+        // ── Monster objectives (PRIMARY — always show these first) ──
+        monsters_befriendable: "There's a creature out there that doesn't want to fight. Reach it before the others do. Offer the Pocket Snacks. Walk it off the board alive.",
+        monsters_hostile:      "The monster is terrified or cornered. Don't kill it — get between it and the ones who will. Escort it to an exit and let it go free.",
+        // ── All other objectives ──
         stored_supplies:    "These caches belong to the canyon's people. Every crate we hold is someone who doesn't go hungry.",
         scattered_crates:   "Gather what's left. Supplies belong to survivors, not scavengers.",
         thyr_cache:         "Thyr in the wrong hands is a weapon. Contain it. Stabilise it. Protect it.",
@@ -1253,7 +1272,12 @@ window.CC_APP = {
         captive_entity:     "The entity is not a prize. Find out if it can be helped.",
         command_structure:  "Establish command — Rangers hold ground through organisation, not brute force."
       },
+
       monsterology: {
+        // ── Monster objectives ──
+        monsters_befriendable: "Live capture is preferred — the specimen is worth three times as much breathing. Pin it, crate it, and get it back to the field lab before the Rangers interfere.",
+        monsters_hostile:      "Hunt it down. Kill it cleanly if you can — degraded Mort is worth less. Harvest the carcass immediately and get the Mort off the board before corruption sets in.",
+        // ── All other objectives ──
         stored_supplies:    "Supplies catalogued and extracted. Everything here has research or resale value.",
         scattered_crates:   "Rapid field collection. Prioritise biological samples and preserved stock.",
         thyr_cache:         "Maximum yield. Extract every crystal before rivals contaminate the site.",
@@ -1269,7 +1293,12 @@ window.CC_APP = {
         captive_entity:     "Premium specimen. Containment apparatus is already prepped.",
         command_structure:  "Field HQ established. Coordinate full extraction protocol from here."
       },
+
       liberty_corps: {
+        // ── Monster objectives ──
+        monsters_befriendable: "The creature is a public hazard. Alive is acceptable — Corps containment is operational. Capture it, tag it, and remove it from the landscape permanently.",
+        monsters_hostile:      "Threat level elevated. Authorised lethal response. Eliminate the monster, document the engagement, and file the clearance paperwork by 1800.",
+        // ── All other objectives ──
         stored_supplies:    "This cache falls under Corps jurisdiction. Unauthorised access is a federal offence.",
         scattered_crates:   "Secure the goods. Issue receipts. No looting while the Corps is watching.",
         thyr_cache:         "Thyr is a controlled substance. Seize it, log it, hold it for federal processing.",
@@ -1285,7 +1314,12 @@ window.CC_APP = {
         captive_entity:     "Entity is under federal custody pending full threat assessment.",
         command_structure:  "Command post established. Issue orders. Maintain compliance."
       },
+
       shine_riders: {
+        // ── Monster objectives ──
+        monsters_befriendable: "Don't fight it — bait it. Run the creature toward whoever's ahead of us on points. A monster in their lane is worth more than a bullet.",
+        monsters_hostile:      "Stay out of its way. Toss something shiny near the other faction and let them deal with it. We'll be at the extraction point before the screaming stops.",
+        // ── All other objectives ──
         stored_supplies:    "Fast hands. Grab the best crates and run. Leave the heavy ones.",
         scattered_crates:   "Sweep and dash. More hands on crates, less time shooting.",
         thyr_cache:         "Each crystal is coin in hand. Move fast — Thyr draws predators.",
@@ -1300,29 +1334,100 @@ window.CC_APP = {
         tainted_ground:     "Leave a present in the taint. Someone's going to step in it.",
         captive_entity:     "If it fits in a sack, it's coming with us.",
         command_structure:  "Salt their command post. They can't coordinate from a pile of ash."
+      },
+
+      crow_queen: {
+        // ── Monster objectives ──
+        monsters_befriendable: "That creature is not an obstacle. It is a Subject waiting to kneel. Approach it. Impose the Queen's will. When it bows, it fights for the Crown — and stays on the board as ours.",
+        monsters_hostile:      "It resists because it has not felt the weight of the Crown yet. Suppress it. Channel the Obelisk. Break its will and bring it into the fold. Dead monsters are a waste of good subjects.",
+        // ── All other objectives ──
+        stored_supplies:    "The canyon's resources belong to the Crown. Claim them and redistribute as tribute.",
+        scattered_crates:   "Scattered goods are an insult to order. Collect them under Crown authority.",
+        thyr_cache:         "Thyr is the canyon's blood and the Crown demands it. Consecrate this cache — no one touches it without her blessing.",
+        land_marker:        "Plant the Obelisk. This ground is Crown territory now and the canyon will remember it.",
+        wrecked_engine:     "The wreck is raw material. The Crown builds. Claim it and begin.",
+        pack_animals:       "The animals of the canyon are subjects too. Herd them. They belong to the Crown.",
+        fouled_resource:    "Corruption without purpose is waste. Consecrate the fouled ground and make it serve.",
+        ritual_site:        "This site already hums with the old power. The Crow Queen claims all old power. Consecrate it.",
+        fortified_position: "Hold this ground in the Queen's name. Black stone remembers its masters.",
+        artifact:           "Ancient things answer to older crowns. Claim it. It was hers before anyone knew her name.",
+        ritual_circle:      "The circle was made by hands that did not understand what they were making. The Crown does. Take it.",
+        tainted_ground:     "Taint is potential corruption not yet directed. Consecrate it. Give it a queen.",
+        captive_entity:     "The entity is a Subject in waiting. Break its resistance. It will serve or it will kneel broken.",
+        command_structure:  "The only command structure in the canyon answers to the Crown. Claim it or replace it."
       }
     };
 
     function generateVictoryConditions(plotFamily, objectives, locProfile) {
       const conditions = {};
 
+      // ── Check if any monsters are present in this scenario ──
+      const hasMonsterPressure = state.scenario?.monster_pressure?.enabled ||
+                                 objectives.some(o => o.type === 'captive_entity');
+      // We'll inject a monsters objective for every faction if monsters are on the board
+      const injectMonsterObjective = hasMonsterPressure ||
+        state.factions.some(f => f.id === 'monsters');
+
       state.factions.forEach(faction => {
         const approach  = FACTION_APPROACH[faction.id] || FACTION_APPROACH.monsters;
         const flavorMap = FACTION_OBJECTIVE_FLAVOR[faction.id] || {};
 
-        // One entry per ACTUAL SCENARIO OBJECTIVE, flavoured per faction
-        const factionObjectives = objectives.map(obj => {
+        // Build list of objectives for this faction
+        // If monsters are present, prepend a monster objective FIRST
+        const workingObjectives = [...objectives];
+        if (injectMonsterObjective && faction.id !== 'monsters') {
+          const monsterFlavor =
+            flavorMap['monsters_befriendable'] ||
+            flavorMap['monsters_hostile']      ||
+            'Deal with the monsters on the board according to your faction\'s methods.';
+
+          // Pick the right flavor based on faction
+          const isFriendly  = faction.id === 'monster_rangers' || faction.id === 'crow_queen';
+          const flavorKey   = isFriendly ? 'monsters_befriendable' : 'monsters_hostile';
+          const monsterDesc = flavorMap[flavorKey] || monsterFlavor;
+
+          const monsterVPLine = {
+            monster_rangers: '+3 VP per monster safely escorted off board. +5 VP if befriended and fighting alongside you.',
+            monsterology:    '+4 VP per monster Mort harvested and extracted off board. +2 VP per live capture.',
+            liberty_corps:   '+3 VP per monster captured. +2 VP per monster eliminated. Bonus +5 VP if all monsters removed from board.',
+            shine_riders:    '+3 VP if you redirect a monster into an enemy faction this game. +1 VP per round you avoid monster contact.',
+            crow_queen:      '+4 VP per monster converted to a Crown Subject. +2 VP per round a converted monster fights for you.'
+          };
+
+          workingObjectives.unshift({
+            name:    'Monsters on the Board',
+            desc:    monsterDesc,
+            vp:      monsterVPLine[faction.id] || '+2 VP per monster interaction.',
+            tactic:  approach.tactic,
+            _isMonsterObjective: true
+          });
+        }
+
+        // One card per actual objective (plus the injected monster one above)
+        const factionObjectives = workingObjectives.map(obj => {
+          // Monster objective was already pre-built above
+          if (obj._isMonsterObjective) return obj;
+
           const verb   = randomChoice(approach.verbs);
           const desc   = flavorMap[obj.type] || obj.description;
           const vpBase = obj.vp_base || 2;
 
           let vpLine;
           switch (approach.vp_style) {
-            case 'per_round':      vpLine = `+${vpBase} VP per Round held. ${approach.bonus}`;                                                          break;
-            case 'per_extraction': vpLine = `+${vpBase} VP per ${getResourceUnit(obj.type)} extracted. ${approach.bonus}`;                              break;
-            case 'area_control':   vpLine = `+${vpBase} VP per Objective controlled at round end. ${approach.bonus}`;                                   break;
-            case 'hit_and_run':    vpLine = `+${vpBase + 1} VP per ${getResourceUnit(obj.type)} if extracted before Round 4. ${approach.bonus}`;        break;
-            default:               vpLine = `+${vpBase} VP. ${approach.bonus}`;
+            case 'per_round':
+              vpLine = `+${vpBase} VP per Round held. ${approach.bonus}`;
+              break;
+            case 'per_extraction':
+              vpLine = `+${vpBase} VP per ${getResourceUnit(obj.type)} extracted. ${approach.bonus}`;
+              break;
+            case 'area_control':
+              vpLine = `+${vpBase} VP per Objective controlled at round end. ${approach.bonus}`;
+              break;
+            case 'hit_and_run':
+              vpLine = `+${vpBase + 1} VP per ${getResourceUnit(obj.type)} if extracted before Round 4. ${approach.bonus}`;
+              break;
+            default:
+              vpLine = `+${vpBase} VP. ${approach.bonus}`;
           }
 
           return { name: `${verb} ${obj.name}`, desc, vp: vpLine, tactic: approach.tactic };
@@ -1367,29 +1472,34 @@ window.CC_APP = {
 
       const pool = {
         monster_rangers: [
-          { name: 'Deny the Extraction',   vp: `15 VP if no enemy has extracted ${primaryUnit}s by Round 5`, desc: `What was taken cannot be given back. Prevent ${primaryName} from leaving with anyone else.` },
-          { name: 'Protect the Innocent',  vp: '10 VP if 2+ non-combatants reach safety',                    desc: 'When the shooting stops, people need to leave alive.' },
-          { name: 'Protect the Wild',      vp: '12 VP if no monsters were killed this game',                 desc: "The canyon's creatures are not the enemy here." }
+          { name: 'Deny the Extraction',      vp: `15 VP if no enemy has extracted ${primaryUnit}s by Round 5`, desc: `What was taken cannot be given back. Prevent ${primaryName} from leaving with anyone else.` },
+          { name: 'No Monster Casualties',    vp: '15 VP if no monsters were killed this game',                 desc: "The canyon's creatures are not the enemy. Keep them alive." },
+          { name: 'Escort Complete',           vp: '15 VP if a befriended monster exits the board safely',      desc: 'Walk it out. Everything else is secondary.' }
         ],
         monsterology: [
-          { name: 'Total Extraction Protocol', vp: `15 VP if all ${primaryUnit}s extracted`,                 desc: `Exploit every site. Leave nothing of value. Every ${primaryUnit} counts.` },
-          { name: 'Live Specimen Secured',     vp: '10 VP if a living monster is held at game end',          desc: 'The real prize was always the biology.' },
-          { name: 'Monopoly on Resources',     vp: '12 VP if Monsterology controls all objectives at end',   desc: 'Efficiency is power. Redundancy is weakness.' }
+          { name: 'Total Extraction Protocol', vp: `15 VP if all ${primaryUnit}s extracted`,                    desc: `Exploit every site. Leave nothing of value. Every ${primaryUnit} counts.` },
+          { name: 'Prime Specimen Secured',    vp: '15 VP if a monster is alive in containment at game end',    desc: 'The Mort is useful. The living specimen is invaluable.' },
+          { name: 'Full Mort Harvest',         vp: '15 VP if 2+ monsters killed and their Mort extracted',      desc: 'Clean kills. Fast harvest. No waste.' }
         ],
         liberty_corps: [
-          { name: 'Jurisdiction Established',  vp: '15 VP if Corps holds majority of objectives at end',    desc: "Order is not given — it's taken." },
-          { name: 'Mass Arrest',               vp: '10 VP if 3+ enemies arrested rather than killed',       desc: 'The law respects process. So should the suspects.' },
-          { name: 'Asset Seizure Complete',    vp: `12 VP if all ${primaryUnit}s are held by Corps`,        desc: `Federal property. Every last ${primaryUnit}.` }
+          { name: 'Jurisdiction Established',  vp: '15 VP if Corps holds majority of objectives at end',        desc: "Order is not given — it's taken." },
+          { name: 'Landscape Cleared',         vp: '15 VP if all monsters are eliminated or captured',          desc: 'A Corps-controlled territory has no monster problem. Only solved ones.' },
+          { name: 'Mass Arrest',               vp: '10 VP if 3+ enemies arrested rather than killed',          desc: 'The law respects process. So should the suspects.' }
         ],
         shine_riders: [
-          { name: 'Successful Extraction',     vp: `15 VP if Shine Boss exits with a ${primaryUnit}`,       desc: "The job isn't done till the Boss is gone." },
-          { name: 'Hit and Run',               vp: `10 VP if all ${primaryUnit}s extracted before Round 4`, desc: 'Quick hands, quicker feet.' },
-          { name: 'Scorched Run',              vp: '12 VP if Shine Riders deny all objectives to enemies',  desc: "If we can't have it, nobody can." }
+          { name: 'Successful Extraction',     vp: `15 VP if Shine Boss exits with a ${primaryUnit}`,          desc: "The job isn't done till the Boss is gone." },
+          { name: 'Monster Redirection',       vp: '15 VP if a monster kills at least one model from a rival faction this game', desc: 'Why do the work yourself?' },
+          { name: 'Hit and Run',               vp: `10 VP if all ${primaryUnit}s extracted before Round 4`,    desc: 'Quick hands, quicker feet.' }
+        ],
+        crow_queen: [
+          { name: 'The Crown Expands',         vp: '15 VP if 2+ monsters converted to Crown Subjects',         desc: 'Every beast that kneels is a throne made larger.' },
+          { name: 'Obelisk Dominance',         vp: '15 VP if Crow Queen controls majority of objectives at game end', desc: 'The canyon bows to old stone and older will.' },
+          { name: 'The Last Subjugation',      vp: '15 VP if the largest monster on the board ends as a Crown Subject', desc: "If the biggest thing out there answers to the Queen, everything else already does." }
         ],
         monsters: [
-          { name: 'Survival',                  vp: '2 VP per surviving Monster at game end',                desc: 'The canyon endures. So do they.' },
-          { name: 'Territorial Defence',       vp: '10 VP if Monsters hold starting zone through Round 5', desc: 'This was their territory before anyone arrived.' },
-          { name: 'Drive Out the Intruders',   vp: '15 VP if no human faction controls objectives at end', desc: "The canyon ejects what doesn't belong." }
+          { name: 'Survival',                  vp: '2 VP per surviving Monster at game end',                   desc: 'The canyon endures. So do they.' },
+          { name: 'Territorial Defence',       vp: '10 VP if Monsters hold starting zone through Round 5',     desc: 'This was their territory before anyone arrived.' },
+          { name: 'Drive Out the Intruders',   vp: '15 VP if no human faction controls objectives at end',     desc: "The canyon ejects what doesn't belong." }
         ]
       };
 
@@ -1402,6 +1512,7 @@ window.CC_APP = {
         monsterology:    ['Specimen crates loaded.', 'The survey is complete.', 'Progress continues.'],
         liberty_corps:   ['The area is secured.', 'Jurisdiction established.', 'The law holds.'],
         shine_riders:    ['The crew rides out.', 'The haul is counted.', 'Nobody left empty-handed.'],
+        crow_queen:      ['The Obelisk pulses once and goes dark.', 'New subjects kneel.', 'The canyon has a queen again.'],
         monsters:        ['The canyon reclaims it.', 'The predators scatter.', 'Silence returns.']
       };
       const longTerms = {
@@ -1409,16 +1520,21 @@ window.CC_APP = {
         monsterology:    ['Progress has a price, paid in full by the land.', 'The specimens will be studied.', 'Science marches forward.'],
         liberty_corps:   ['Order will be maintained.', 'The Corps will return.', 'The territory is listed.'],
         shine_riders:    ["They'll be back when the heat dies down.", 'The canyon is stripped a little more.', 'The score is settled.'],
+        crow_queen:      ['The canyon wears a crown now.', 'Old stone remembers old names.', 'The subjects multiply.'],
         monsters:        ['They were here before the people came.', 'The canyon is older than all of them.', 'Something waits in the dark.']
       };
       const canyonStates = {
-        monster_rangers: 'Protected', monsterology: 'Extracted',
-        liberty_corps:   'Claimed',   shine_riders:  'Stripped', monsters: 'Feral'
+        monster_rangers: 'Protected',
+        monsterology:    'Extracted',
+        liberty_corps:   'Claimed',
+        shine_riders:    'Stripped',
+        crow_queen:      'Exalted',
+        monsters:        'Feral'
       };
       return {
-        immediate:    randomChoice((immediates[factionId]  || immediates.monsters)),
+        immediate:    randomChoice(immediates[factionId]  || immediates.monsters),
         canyon_state: canyonStates[factionId] || 'Contested',
-        long_term:    randomChoice((longTerms[factionId]   || longTerms.monsters))
+        long_term:    randomChoice(longTerms[factionId]   || longTerms.monsters)
       };
     }
     // ================================
@@ -1740,4 +1856,5 @@ window.CC_APP = {
     // ── Initial render ──
     render();
   }
-};
+};  
+        
