@@ -1005,3 +1005,51 @@
 .cc-terrain-piece-core {
   border-color: var(--cc-primary) !important;
 }
+/* ===== Location Profile (v1.1) ===== */
+.cc-location-profile {
+  border-left-color: #7ecbc4;
+}
+
+.cc-state-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  margin-left: 8px;
+  letter-spacing: 0.04em;
+}
+
+.cc-state-alive       { background: rgba(100,200,100,0.2); color: #7dda7d; }
+.cc-state-ruins       { background: rgba(180,100,60,0.2);  color: #d49060; }
+.cc-state-barely_alive{ background: rgba(200,150,50,0.2);  color: #e0b060; }
+.cc-state-prospering  { background: rgba(80,160,220,0.2);  color: #70aaee; }
+.cc-state-booming     { background: rgba(255,215,0,0.2);   color: #ffd700; }
+
+.cc-resource-summary {
+  font-size: 0.85rem;
+  margin: 0.4rem 0;
+}
+
+.cc-resource-high {
+  display: inline-block;
+  background: rgba(100,220,100,0.12);
+  border: 1px solid rgba(100,220,100,0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin: 2px;
+  color: #90ee90;
+  font-size: 0.82rem;
+}
+
+.cc-resource-absent {
+  display: inline-block;
+  background: rgba(220,60,60,0.12);
+  border: 1px solid rgba(220,60,60,0.3);
+  border-radius: 4px;
+  padding: 1px 6px;
+  margin: 2px;
+  color: #ff8080;
+  font-size: 0.82rem;
+}
