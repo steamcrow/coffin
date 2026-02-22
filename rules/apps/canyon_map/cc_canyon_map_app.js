@@ -681,34 +681,82 @@
           });
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
-          // ── Location hitboxes ─────────────────────────────────────
-          // On the lens map so they're large enough to tap on mobile.
+          // Force pointer-events on lensMapEl and its Leaflet internals.
+          // The .cc-lens parent has pointer-events:none in the CSS (correct,
+          // so the glass border doesn't steal knob drags), but that cascades
+          // down and kills clicks on the map. Override it here at the DOM
+          // level so our plain addEventListener below actually fires.
+          ui.lensMapEl.style.pointerEvents = "auto";
+          // Also unlock the Leaflet container div itself
+          var lensContainer = ui.lensMapEl.querySelector(".leaflet-container");
+          if (lensContainer) lensContainer.style.pointerEvents = "auto";
+
+          // ── Location hitboxes (visual only — click handled via DOM) ──
+          // Rectangles are drawn for visual feedback only (interactive:false).
+          // A single DOM listener on lensMapEl converts the click point to
+          // map coordinates and checks which hitbox was hit.
+          // This avoids all the Leaflet internal event-chain complexity that
+          // was silently dropping clicks.
           locationsData.locations.forEach(function(loc) {
             var bbox = HITBOXES[loc.id];
             if (!bbox) return;
 
-            var rect = window.L.rectangle(
+            // Visual orange box — NOT interactive (no Leaflet click handling)
+            window.L.rectangle(
               [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-              { color:"rgba(255,117,24,0.6)", fillOpacity:0.3, weight:2, interactive:true }
+              { color:"rgba(255,117,24,0.8)", fillOpacity:0.25, weight:2, interactive:false }
             ).addTo(lensMap);
 
-            rect.on("click", function(e) {
-              window.L.DomEvent.stopPropagation(e);
-              renderDrawer(ui, loc);
-              ui.drawerEl.classList.add("open");
-            });
-
+            // Location name label
             window.L.marker(
               [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2],
               {
                 icon: window.L.divIcon({
                   className: "cc-location-label",
-                  html: '<div style="color:#fff;font-weight:800;white-space:nowrap;text-shadow:0 2px 4px #000">' +
+                  html: '<div style="color:#fff;font-weight:800;white-space:nowrap;' +
+                        'text-shadow:0 2px 4px #000;pointer-events:none;">' +
                         (loc.emoji || "\uD83D\uDCCD") + " " + loc.name + "</div>"
                 }),
                 interactive: false
               }
             ).addTo(lensMap);
+          });
+
+          // ── Single DOM click handler for all hitboxes ─────────────
+          // Listens on the raw lensMapEl div. On click, converts the
+          // pixel position to a Leaflet lat/lng, then walks the HITBOXES
+          // table to find which location was clicked. No Leaflet event
+          // system involved — just a plain addEventListener.
+          ui.lensMapEl.addEventListener("click", function(e) {
+            if (!lensMap) return;
+
+            // Convert the click's offset inside the div to a map coordinate
+            var rect   = ui.lensMapEl.getBoundingClientRect();
+            var pixelX = e.clientX - rect.left;
+            var pixelY = e.clientY - rect.top;
+            var latlng = lensMap.containerPointToLatLng(
+              window.L.point(pixelX, pixelY)
+            );
+            var clickLat = latlng.lat;
+            var clickLng = latlng.lng;
+
+            // Walk every known hitbox and find the first one that contains
+            // the click coordinate. bbox = [minY, minX, maxY, maxX]
+            var hit = null;
+            locationsData.locations.forEach(function(loc) {
+              if (hit) return; // stop once we found one
+              var bbox = HITBOXES[loc.id];
+              if (!bbox) return;
+              if (clickLat >= bbox[0] && clickLat <= bbox[2] &&
+                  clickLng >= bbox[1] && clickLng <= bbox[3]) {
+                hit = loc;
+              }
+            });
+
+            if (hit) {
+              renderDrawer(ui, hit);
+              ui.drawerEl.classList.add("open");
+            }
           });
 
           bindKnobs(px);
@@ -729,6 +777,15 @@
               currentT  = 0.5;
               currentTx = 0.5;
               applyT(0.5, px); // centre both maps, using real container sizes
+
+              // Re-apply pointer-events unlock after Leaflet finishes building
+              // its internal DOM (it creates .leaflet-container lazily).
+              ui.lensMapEl.style.pointerEvents = "auto";
+              var lc = ui.lensMapEl.querySelector(".leaflet-container");
+              if (lc) lc.style.pointerEvents = "auto";
+              // Also unlock the parent chain in case CSS !important cascaded down
+              var inner = ui.lensMapEl.closest(".cc-lens-inner");
+              if (inner) inner.style.pointerEvents = "auto";
             })
             .then(function() {
               // Wait however long remains of MIN_LOADER_MS before hiding
