@@ -6,7 +6,49 @@
    Bootstrap utilities used throughout.
    ================================ */
 
-/* ===== Two-Column Layout ===== */
+/* ===== App Shell ===== */
+.cc-app-shell {
+  min-height: 100%;
+  background: var(--cc-bg, #0d0d0d);
+  color: var(--cc-text, #e0e0e0);
+}
+
+/* ===== App Header ===== */
+.cc-app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1rem 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.cc-app-title {
+  font-family: var(--cc-font-title, sans-serif);
+  font-size: 1.5rem;
+  color: var(--cc-primary, #ff7518);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cc-app-subtitle {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  font-family: var(--cc-font-mono, monospace);
+}
+
+.cc-app-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ===== Builder Two-Column Layout ===== */
 .cc-scenario-builder-layout {
   display: grid;
   grid-template-columns: 550px 1fr;
@@ -16,6 +58,25 @@
   padding: 0 1rem 1rem 1rem;
   align-items: start;
 }
+
+/* ===== Results Full-Width Layout ===== */
+.cc-scenario-results-layout {
+  padding: 1rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.cc-scenario-results-layout .cc-scenario-result {
+  background: rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  padding: 2rem;
+}
+
+.cc-scenario-results-layout .cc-scenario-result h3 {
+  font-size: 2rem;
+}
+
 
 /* Sidebar: allow the panel inside to grow and scroll naturally */
 .cc-scenario-sidebar {
