@@ -5,37 +5,9 @@
 
 console.log("🎲 Scenario Builder app loaded");
 
-// ── MUST be at top level, capture phase (true), registered immediately
-//    so it fires BEFORE Odoo's bubble-phase listener.
-//    stopImmediatePropagation prevents Odoo from ever seeing the event.
-(function() {
-  window.addEventListener('unhandledrejection', function(event) {
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    var reason = event.reason;
-    if (reason instanceof Error) {
-      console.error('[ScenarioBuilder] Unhandled rejection:', reason.message);
-    } else {
-      console.error('[ScenarioBuilder] Unhandled rejection (non-Error):', reason);
-    }
-  }, true /* capture phase — fires BEFORE Odoo's bubble listener */);
-})();
-
 window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Scenario Builder init", ctx);
-
-    // ── Stop Odoo's error handler from crashing on promise rejections
-    //    that don't carry a proper Error object with .stack
-    window.addEventListener('unhandledrejection', function(event) {
-      event.preventDefault();
-      const reason = event.reason;
-      if (reason instanceof Error) {
-        console.error('❌ Unhandled promise rejection:', reason.message, reason.stack);
-      } else {
-        console.error('❌ Unhandled promise rejection (non-Error):', reason);
-      }
-    });
 
     // ---- LOAD CSS ----
     if (!document.getElementById('cc-core-ui-styles')) {
@@ -586,7 +558,8 @@ window.CC_APP = {
             <button class="cc-btn cc-btn-ghost"     onclick="resetScenario()"><i class="fa fa-refresh"></i> Start Over</button>
             <button class="cc-btn cc-btn-secondary" onclick="rollAgain()"><i class="fa fa-random"></i> The Canyon Shifts</button>
             <button class="cc-btn cc-btn-primary"   onclick="printScenario()"><i class="fa fa-print"></i> Print</button>
-            <button class="cc-btn cc-btn-primary"   onclick="saveScenario()"><i class="fa fa-cloud-upload"></i> Save</button>
+            <button class="cc-btn cc-btn-primary"   onclick="window.saveScenario().catch(function(e){console.error('Save failed:',e instanceof Error?e.message:String(e))})"><i class="fa fa-cloud-upload"></i> Save</button>
+            <button class="cc-btn cc-btn-ghost w-100 mt-2" onclick="window.loadFromCloud().catch(function(e){console.error('Load failed:',e instanceof Error?e.message:String(e))})"><i class="fa fa-cloud-download"></i> Load Saved</button>
           </div>
         </div>
       `;
@@ -629,7 +602,7 @@ window.CC_APP = {
         ${state.generated ? `
           <div class="cc-summary-details">
             <h4>Quick Actions</h4>
-            <button class="cc-btn cc-btn-ghost w-100 mb-1" onclick="loadFromCloud()">
+            <button class="cc-btn cc-btn-ghost w-100 mb-1" onclick="window.loadFromCloud().catch(function(e){console.error('Load failed:',e instanceof Error?e.message:String(e))})">
               <i class="fa fa-cloud-download"></i> Load Saved Scenario
             </button>
           </div>
@@ -880,7 +853,7 @@ window.CC_APP = {
         land_marker:        'Establish and hold your claim over this territory. Presence is everything.',
         command_structure:  'Seize or destroy the command post to dominate battlefield coordination.',
         thyr_cache:         'The Thyr crystals pulse with dangerous energy. Extract, corrupt, or guard them — every option has consequences.',
-        artifact:           'The artifact's true purpose is unclear. Recover it before someone else does.',
+        artifact:           "The artifact's true purpose is unclear. Recover it before someone else does.",
         captive_entity:     'The bound creature may be asset, prisoner, or disaster. Your call.',
         fortified_position: 'Occupy and hold the prepared defensive ground. Breaking it costs as much as taking it.',
         barricades:         'The barricades block key routes. Hold them to channel enemy movement.',
