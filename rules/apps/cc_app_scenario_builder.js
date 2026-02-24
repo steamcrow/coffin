@@ -5,6 +5,22 @@
 
 console.log("🎲 Scenario Builder app loaded");
 
+// ── MUST be at top level, capture phase (true), registered immediately
+//    so it fires BEFORE Odoo's bubble-phase listener.
+//    stopImmediatePropagation prevents Odoo from ever seeing the event.
+(function() {
+  window.addEventListener('unhandledrejection', function(event) {
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    var reason = event.reason;
+    if (reason instanceof Error) {
+      console.error('[ScenarioBuilder] Unhandled rejection:', reason.message);
+    } else {
+      console.error('[ScenarioBuilder] Unhandled rejection (non-Error):', reason);
+    }
+  }, true /* capture phase — fires BEFORE Odoo's bubble listener */);
+})();
+
 window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Scenario Builder init", ctx);
@@ -153,7 +169,10 @@ window.CC_APP = {
       }
     }
 
-    loadGameData();
+    loadGameData().catch(function(e) {
+      console.error('[ScenarioBuilder] loadGameData rejected:', e instanceof Error ? e.message : String(e));
+      render();
+    });
 
     // ================================
     // UTILITIES
@@ -1717,6 +1736,6 @@ window.CC_APP = {
       }
     };
 
-    render();
+    try { render(); } catch(e) { console.error('[ScenarioBuilder] Initial render failed:', e instanceof Error ? e.message : String(e)); }
   }
 };
