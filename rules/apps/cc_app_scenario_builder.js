@@ -985,40 +985,43 @@ window.CC_APP = {
     function generateObjectives(plotFamily, locProfile) {
       const scores = {};
 
-      // ── Every type gets a small random baseline (0–2) so no type is permanently
-      //    locked out just because the location lacks a specific resource.
-      ALL_OBJECTIVE_TYPES.forEach(t => { scores[t] = randomInt(0, 2); });
+      // ── All types start at a small random baseline (0–1)
+      //    so even non-key objectives have some chance to appear
+      ALL_OBJECTIVE_TYPES.forEach(t => { scores[t] = randomInt(0, 1); });
 
-      // ── Plot family defaults get a strong boost (+5) — these are the "intended" objectives
+      // ── Plot family defaults get a solid boost (+5)
       (plotFamily.default_objectives || []).forEach(t => {
         if (scores[t] !== undefined) scores[t] += 5;
       });
 
-      // ── Resource affinity: locations with relevant resources push matching objectives higher.
-      //    Threshold lowered to >= 1 so even modest resources count.
+      // ── Key resources get STRONG boosts (+8 to the matching objective types).
+      //    These are the 2–5 resources that define the location — they should
+      //    almost always show up in the scenario objectives.
       if (locProfile?.effectiveResources) {
         const r = locProfile.effectiveResources;
         for (const [key, val] of Object.entries(r)) {
           if (typeof val === 'number' && val >= 1) {
+            // Scale the boost by the resource value: key resource of 4 = +12
+            const boost = val * 3;
             (RESOURCE_OBJECTIVE_AFFINITY[key] || []).forEach(t => {
-              if (scores[t] !== undefined) scores[t] += val;
+              if (scores[t] !== undefined) scores[t] += boost;
             });
           }
         }
 
-        // Penalise irrelevant objectives when the relevant resource is absent
-        if ((r.water_clean || 0) < 1 && (r.water_foul || 0) < 1)
-          scores['fouled_resource'] = Math.max(0, scores['fouled_resource'] - 3);
-        if ((r.thyr || 0) < 1) {
-          scores['thyr_cache']    = Math.max(0, scores['thyr_cache']    - 3);
-          scores['ritual_circle'] = Math.max(0, scores['ritual_circle'] - 2);
+        // Penalise objectives that need resources this location clearly lacks
+        if (!r.water_clean && !r.water_foul)
+          scores['fouled_resource'] = Math.max(0, scores['fouled_resource'] - 4);
+        if (!r.thyr) {
+          scores['thyr_cache']    = Math.max(0, scores['thyr_cache']    - 4);
+          scores['ritual_circle'] = Math.max(0, scores['ritual_circle'] - 3);
         }
-        if ((r.mechanical_parts || 0) < 1 && (r.spare_parts || 0) < 1)
-          scores['wrecked_engine'] = Math.max(0, scores['wrecked_engine'] - 2);
-        if ((r.livestock || 0) < 1)
-          scores['pack_animals'] = Math.max(0, scores['pack_animals'] - 2);
-        if ((r.tzul_silver || 0) < 1)
-          scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 2);
+        if (!r.mechanical_parts && !r.spare_parts)
+          scores['wrecked_engine'] = Math.max(0, scores['wrecked_engine'] - 3);
+        if (!r.livestock)
+          scores['pack_animals'] = 0;
+        if (!r.tzul_silver)
+          scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 3);
       }
 
       // ── Sort by score descending; all positive-scoring types are eligible
@@ -1026,17 +1029,18 @@ window.CC_APP = {
         .filter(([, s]) => s > 0)
         .sort((a, b) => b[1] - a[1]);
 
-      console.log('Objective scores (top 8):', sorted.slice(0, 8).map(([t, s]) => `${t}:${s}`).join(', '));
+      console.log('🎯 Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
 
+      // ── Always take the top-scoring objective (most relevant to this location)
+      // ── Then add one from the next tier for variety
       const numObjectives = randomInt(2, 3);
       const objectives    = [];
       const used          = new Set();
 
-      // ── Pick top objective(s), then add one random lower-ranked pick for variety
-      const topPicks    = sorted.slice(0, Math.ceil(sorted.length * 0.4));
-      const lowerPicks  = sorted.slice(Math.ceil(sorted.length * 0.4));
+      const topTier    = sorted.slice(0, Math.max(2, Math.ceil(sorted.length * 0.3)));
+      const lowerTier  = sorted.slice(topTier.length);
 
-      for (const [type] of topPicks) {
+      for (const [type] of topTier) {
         if (objectives.length >= numObjectives - 1) break;
         if (used.has(type)) continue;
         used.add(type);
@@ -1049,10 +1053,11 @@ window.CC_APP = {
         });
       }
 
-      // ── Add one pick from the lower tier to add surprise
-      if (objectives.length < numObjectives && lowerPicks.length > 0) {
-        const [type] = randomChoice(lowerPicks.slice(0, Math.min(5, lowerPicks.length)));
-        if (type && !used.has(type)) {
+      // Add one surprise from the lower tier
+      if (objectives.length < numObjectives && lowerTier.length > 0) {
+        const pick = randomChoice(lowerTier.slice(0, Math.min(6, lowerTier.length)));
+        if (pick && !used.has(pick[0])) {
+          const [type] = pick;
           used.add(type);
           objectives.push({
             name:        makeObjectiveName(type),
@@ -1550,8 +1555,40 @@ window.CC_APP = {
 
     function buildLocProfile(location) {
       if (!location) return null;
-      const r = location.resources || {};
-      return { effectiveResources: r };
+      const allResources = location.resources || {};
+
+      // key_resources is the authoritative list of 2–5 resources that define this
+      // location and should drive scenario objectives. If the location has them, use
+      // only those. Otherwise fall back to every non-zero resource.
+      const keyKeys = location.key_resources;
+      let effectiveResources;
+      if (keyKeys && keyKeys.length > 0) {
+        effectiveResources = {};
+        keyKeys.forEach(k => {
+          if (allResources[k] !== undefined && allResources[k] > 0) {
+            effectiveResources[k] = allResources[k];
+          }
+        });
+      } else {
+        // Legacy locations without key_resources — use all non-zero entries
+        effectiveResources = Object.fromEntries(
+          Object.entries(allResources).filter(([, v]) => v > 0)
+        );
+      }
+
+      return {
+        effectiveResources,
+        monster_seeds: location.monster_seeds || [],
+        tags: [
+          location.archetype || '',
+          location.state || '',
+          location.type_ref?.includes('boomtown') ? 'settlement' : '',
+          location.type_ref?.includes('ruins')    ? 'ruins'      : '',
+          location.type_ref?.includes('rail')     ? 'rail'       : '',
+          location.type_ref?.includes('tzul')     ? 'undead'     : '',
+          location.type_ref?.includes('thyr')     ? 'mystical'   : ''
+        ].filter(Boolean)
+      };
     }
 
     function generateScenarioName(plotFamily, location, objectives) {
@@ -1736,7 +1773,9 @@ window.CC_APP = {
           return;
         }
 
+        const docName   = 'SCN_' + state.scenario.name;
         const exportData = {
+          _type:       'scenario',
           name:        state.scenario.name,
           scenario:    state.scenario,
           factions:    state.factions,
@@ -1746,7 +1785,7 @@ window.CC_APP = {
         };
 
         const result = await window.CC_STORAGE.saveDocument(
-          state.scenario.name,
+          docName,
           JSON.stringify(exportData, null, 2)
         );
 
@@ -1778,9 +1817,12 @@ window.CC_APP = {
           return;
         }
 
-        const docs = await window.CC_STORAGE.loadDocumentList();
+        const allDocs = await window.CC_STORAGE.loadDocumentList();
 
-        if (!docs || docs.length === 0) {
+        // Only show scenario saves (prefix SCN_), not faction rosters
+        const docs = (allDocs || []).filter(d => d.name && d.name.startsWith('SCN_'));
+
+        if (docs.length === 0) {
           alert("You don't have any saved scenarios yet!");
           return;
         }
@@ -1793,7 +1835,7 @@ window.CC_APP = {
               const parsed = JSON.parse(loaded.json);
               return {
                 id:         doc.id,
-                name:       parsed.name || doc.name.replace('.json', ''),
+                name:       parsed.name || doc.name.replace(/^SCN_/, '').replace('.json', ''),
                 gameMode:   parsed.gameMode || 'multiplayer',
                 factions:   (parsed.factions || []).map(f => f.name).join(', '),
                 savedAt:    parsed.savedAt || doc.write_date,
@@ -1802,7 +1844,7 @@ window.CC_APP = {
             } catch (e) {
               return {
                 id:         doc.id,
-                name:       doc.name.replace('.json', ''),
+                name:       doc.name.replace(/^SCN_/, '').replace('.json', ''),
                 gameMode:   '',
                 factions:   '',
                 savedAt:    doc.write_date,
