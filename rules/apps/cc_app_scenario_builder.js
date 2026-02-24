@@ -36,20 +36,52 @@ window.CC_APP = {
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
-    // ---- PRELOADER ----
-    if (!window.CC_LOADER) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/cc_loader_core.js?t=' + Date.now())
-        .then(res => res.text())
-        .then(code => {
-          const script = document.createElement('script');
-          script.textContent = code;
-          document.head.appendChild(script);
-          // Show loader once CC_LOADER is available
-          if (window.CC_LOADER) window.CC_LOADER.show(root, 'Loading game data\u2026');
-        })
-        .catch(err => console.warn('⚠️ Loader not available:', err));
-    } else {
-      window.CC_LOADER.show(root, 'Loading game data\u2026');
+    // ---- PRELOADER (synchronous — shows instantly before any async work) ----
+    const LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png';
+    const MIN_LOADER_MS = 5000;
+    const _loaderStart = Date.now();
+
+    root.innerHTML = `
+      <div id="cc-sb-loader" style="
+        position:relative;min-height:500px;
+        display:flex;flex-direction:column;align-items:center;justify-content:center;
+        background:rgba(10,10,10,0.97);gap:1.75rem;padding:2rem;
+      ">
+        <img src="${LOGO_URL}" alt="Coffin Canyon"
+          style="width:340px;max-width:82vw;
+                 filter:drop-shadow(0 0 28px rgba(255,117,24,0.45));
+                 animation:ccSbPulse 2.5s ease-in-out infinite;">
+        <div style="width:360px;max-width:80vw;height:6px;
+                    background:rgba(255,255,255,0.07);border-radius:99px;overflow:hidden;">
+          <div style="height:100%;background:linear-gradient(90deg,#ff7518,#ff9147,#ff7518);
+                      background-size:200% 100%;border-radius:99px;
+                      animation:ccSbFill 5s ease-in-out forwards,ccSbShimmer 1.8s linear infinite;
+                      box-shadow:0 0 14px rgba(255,117,24,0.5);"></div>
+        </div>
+        <div style="color:#ff7518;font-size:0.68rem;letter-spacing:0.28em;
+                    text-transform:uppercase;font-family:monospace;
+                    animation:ccSbPulse 1.5s ease-in-out infinite;">Loading…</div>
+      </div>
+      <style>
+        @keyframes ccSbPulse  { 0%,100%{opacity:0.6} 50%{opacity:1} }
+        @keyframes ccSbFill   { 0%{width:0%} 40%{width:55%} 75%{width:80%} 100%{width:96%} }
+        @keyframes ccSbShimmer{ 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+      </style>
+    `;
+
+    function hideLoaderAndRender() {
+      const elapsed   = Date.now() - _loaderStart;
+      const remaining = Math.max(0, MIN_LOADER_MS - elapsed);
+      setTimeout(() => {
+        const loader = document.getElementById('cc-sb-loader');
+        if (loader) {
+          loader.style.transition = 'opacity 0.45s ease';
+          loader.style.opacity    = '0';
+          setTimeout(() => render(), 460);
+        } else {
+          render();
+        }
+      }, remaining);
     }
 
     // ---- LOAD STORAGE HELPERS ----
@@ -149,20 +181,15 @@ window.CC_APP = {
           = results.map(r => r.status === 'fulfilled' ? r.value : null);
         locationData = locationsData; // alias
         console.log('✅ Game data loaded');
-        if (window.CC_LOADER) window.CC_LOADER.hide();
-        render();
+        hideLoaderAndRender();
       } catch (err) {
         const safeErr = err instanceof Error ? err : new Error(String(err));
         console.error('❌ Data load error:', safeErr.message);
         if (window.CC_LOADER) window.CC_LOADER.hide();
-        render(); // render anyway so the UI isn't blank
+        hideLoaderAndRender();
       }
     }
 
-    loadGameData().catch(function(e) {
-      console.error('[ScenarioBuilder] loadGameData rejected:', e instanceof Error ? e.message : String(e));
-      render();
-    });
 
     // ================================
     // UTILITIES
@@ -372,28 +399,32 @@ window.CC_APP = {
           </div>
         </div>
 
-        ${state.locationType === 'named' && locationData?.locations ? `
+        ${state.locationType === 'named' ? `
           <div class="cc-form-section">
             <label class="cc-label">Choose Location</label>
-            <select class="cc-input w-100" onchange="selectLocation(this.value)">
-              <option value="">Select a location...</option>
-              ${locationData.locations.map(loc => `
-                <option value="${loc.id}" ${state.selectedLocation === loc.id ? 'selected' : ''}>
-                  ${loc.emoji || '📍'} ${loc.name}
-                </option>
-              `).join('')}
-            </select>
+            ${locationData?.locations?.length > 0 ? `
+              <select class="cc-input w-100" onchange="window.selectLocation(this.value)">
+                <option value="">Select a location…</option>
+                ${locationData.locations.map(loc => `
+                  <option value="${loc.id}" ${state.selectedLocation === loc.id ? 'selected' : ''}>
+                    ${loc.emoji || '📍'} ${loc.name}
+                  </option>
+                `).join('')}
+              </select>
 
-            ${state.selectedLocation ? (() => {
-              const loc = locationData.locations.find(l => l.id === state.selectedLocation);
-              return `
-                <div class="cc-location-preview mt-2">
-                  <h4>${loc.emoji || ''} ${loc.name}</h4>
-                  <p>${loc.description}</p>
-                  <p><em>"${loc.atmosphere}"</em></p>
-                </div>
-              `;
-            })() : ''}
+              ${state.selectedLocation ? (() => {
+                const loc = locationData.locations.find(l => l.id === state.selectedLocation);
+                return loc ? `
+                  <div class="cc-location-preview mt-2">
+                    <h4>${loc.emoji || ''} ${loc.name}</h4>
+                    <p>${loc.description || ''}</p>
+                    <p><em>"${loc.atmosphere || ''}"</em></p>
+                  </div>
+                ` : '';
+              })() : ''}
+            ` : `
+              <p class="cc-help-text"><i class="fa fa-spinner fa-spin"></i> Loading location data — please wait a moment then try again.</p>
+            `}
           </div>
         ` : ''}
 
@@ -954,47 +985,60 @@ window.CC_APP = {
 
     function generateObjectives(plotFamily, locProfile) {
       const scores = {};
-      ALL_OBJECTIVE_TYPES.forEach(t => scores[t] = 0);
 
+      // ── Every type gets a small random baseline (0–2) so no type is permanently
+      //    locked out just because the location lacks a specific resource.
+      ALL_OBJECTIVE_TYPES.forEach(t => { scores[t] = randomInt(0, 2); });
+
+      // ── Plot family defaults get a strong boost (+5) — these are the "intended" objectives
       (plotFamily.default_objectives || []).forEach(t => {
-        if (scores[t] !== undefined) scores[t] += 3;
+        if (scores[t] !== undefined) scores[t] += 5;
       });
 
+      // ── Resource affinity: locations with relevant resources push matching objectives higher.
+      //    Threshold lowered to >= 1 so even modest resources count.
       if (locProfile?.effectiveResources) {
         const r = locProfile.effectiveResources;
         for (const [key, val] of Object.entries(r)) {
-          if (typeof val === 'number' && val >= 3) {
+          if (typeof val === 'number' && val >= 1) {
             (RESOURCE_OBJECTIVE_AFFINITY[key] || []).forEach(t => {
               if (scores[t] !== undefined) scores[t] += val;
             });
           }
         }
-        if ((r.water_clean || 0) < 2 && (r.water_foul || 0) < 2)
-          scores['fouled_resource'] = Math.max(0, scores['fouled_resource'] - 4);
-        if ((r.thyr || 0) < 2) {
-          scores['thyr_cache']    = Math.max(0, scores['thyr_cache']    - 4);
+
+        // Penalise irrelevant objectives when the relevant resource is absent
+        if ((r.water_clean || 0) < 1 && (r.water_foul || 0) < 1)
+          scores['fouled_resource'] = Math.max(0, scores['fouled_resource'] - 3);
+        if ((r.thyr || 0) < 1) {
+          scores['thyr_cache']    = Math.max(0, scores['thyr_cache']    - 3);
           scores['ritual_circle'] = Math.max(0, scores['ritual_circle'] - 2);
         }
-        if ((r.mechanical_parts || 0) < 2 && (r.spare_parts || 0) < 2)
-          scores['wrecked_engine'] = Math.max(0, scores['wrecked_engine'] - 3);
-        if ((r.livestock || 0) < 2)
-          scores['pack_animals'] = 0;
-        if ((r.tzul_silver || 0) < 3)
+        if ((r.mechanical_parts || 0) < 1 && (r.spare_parts || 0) < 1)
+          scores['wrecked_engine'] = Math.max(0, scores['wrecked_engine'] - 2);
+        if ((r.livestock || 0) < 1)
+          scores['pack_animals'] = Math.max(0, scores['pack_animals'] - 2);
+        if ((r.tzul_silver || 0) < 1)
           scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 2);
       }
 
+      // ── Sort by score descending; all positive-scoring types are eligible
       const sorted = Object.entries(scores)
         .filter(([, s]) => s > 0)
         .sort((a, b) => b[1] - a[1]);
 
-      console.log('Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
+      console.log('Objective scores (top 8):', sorted.slice(0, 8).map(([t, s]) => `${t}:${s}`).join(', '));
 
       const numObjectives = randomInt(2, 3);
       const objectives    = [];
       const used          = new Set();
 
-      for (const [type] of sorted) {
-        if (objectives.length >= numObjectives) break;
+      // ── Pick top objective(s), then add one random lower-ranked pick for variety
+      const topPicks    = sorted.slice(0, Math.ceil(sorted.length * 0.4));
+      const lowerPicks  = sorted.slice(Math.ceil(sorted.length * 0.4));
+
+      for (const [type] of topPicks) {
+        if (objectives.length >= numObjectives - 1) break;
         if (used.has(type)) continue;
         used.add(type);
         objectives.push({
@@ -1004,6 +1048,21 @@ window.CC_APP = {
           vp_base:     calcObjectiveVP(type, locProfile),
           special:     Math.random() < 0.25 ? makeObjectiveSpecial(type) : null
         });
+      }
+
+      // ── Add one pick from the lower tier to add surprise
+      if (objectives.length < numObjectives && lowerPicks.length > 0) {
+        const [type] = randomChoice(lowerPicks.slice(0, Math.min(5, lowerPicks.length)));
+        if (type && !used.has(type)) {
+          used.add(type);
+          objectives.push({
+            name:        makeObjectiveName(type),
+            description: makeObjectiveDescription(type, locProfile),
+            type,
+            vp_base:     calcObjectiveVP(type, locProfile),
+            special:     Math.random() < 0.2 ? makeObjectiveSpecial(type) : null
+          });
+        }
       }
 
       if (objectives.length === 0) {
@@ -1869,6 +1928,6 @@ window.CC_APP = {
       }
     };
 
-    try { render(); } catch(e) { console.error('[ScenarioBuilder] Initial render failed:', e instanceof Error ? e.message : String(e)); }
+    try { loadGameData(); } catch(e) { console.error('[ScenarioBuilder] loadGameData start failed:', e instanceof Error ? e.message : String(e)); }
   }
 };
