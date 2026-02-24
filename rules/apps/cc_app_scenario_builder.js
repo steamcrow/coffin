@@ -9,6 +9,18 @@ window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Scenario Builder init", ctx);
 
+    // ── Stop Odoo's error handler from crashing on promise rejections
+    //    that don't carry a proper Error object with .stack
+    window.addEventListener('unhandledrejection', function(event) {
+      event.preventDefault();
+      const reason = event.reason;
+      if (reason instanceof Error) {
+        console.error('❌ Unhandled promise rejection:', reason.message, reason.stack);
+      } else {
+        console.error('❌ Unhandled promise rejection (non-Error):', reason);
+      }
+    });
+
     // ---- LOAD CSS ----
     if (!document.getElementById('cc-core-ui-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
@@ -117,14 +129,27 @@ window.CC_APP = {
           'canyon_states.json'
         ];
         const results = await Promise.allSettled(
-          files.map(f => fetch(DATA_BASE + f + '?t=' + Date.now()).then(r => r.json()))
+          files.map(f =>
+            fetch(DATA_BASE + f + '?t=' + Date.now())
+              .then(r => {
+                if (!r.ok) throw new Error(`HTTP ${r.status} loading ${f}`);
+                return r.json();
+              })
+              .catch(e => {
+                console.warn(`⚠️ Could not load ${f}:`, e.message || e);
+                return null;
+              })
+          )
         );
-        [plotFamiliesData, locationsData, locationTypesData, twistTablesData, scenarioVaultData, scenarioNamesData, canyonStatesData] = results.map(r => r.status === 'fulfilled' ? r.value : null);
+        [plotFamiliesData, locationsData, locationTypesData, twistTablesData, scenarioVaultData, scenarioNamesData, canyonStatesData]
+          = results.map(r => r.status === 'fulfilled' ? r.value : null);
         locationData = locationsData; // alias
         console.log('✅ Game data loaded');
         render();
       } catch (err) {
-        console.error('❌ Data load error:', err);
+        const safeErr = err instanceof Error ? err : new Error(String(err));
+        console.error('❌ Data load error:', safeErr.message);
+        render(); // render anyway so the UI isn't blank
       }
     }
 
@@ -395,7 +420,7 @@ window.CC_APP = {
             </ul>
             <div class="cc-form-actions">
               <button class="cc-btn cc-btn-ghost" onclick="goToStep(3)"><i class="fa fa-arrow-left"></i> Back</button>
-              <button class="cc-btn cc-btn-primary" onclick="generateScenario()">
+              <button class="cc-btn cc-btn-primary" onclick="window.generateScenario().catch(function(e){console.error('Generate failed:',e)})">
                 <i class="fa fa-bolt"></i> Generate Scenario
               </button>
             </div>
@@ -749,10 +774,13 @@ window.CC_APP = {
       render();
     };
 
-    window.rollAgain = async function() {
+    window.rollAgain = function() {
       state.generated = false;
       state.scenario  = null;
-      await generateScenario();
+      window.generateScenario().catch(err => {
+        const safeErr = err instanceof Error ? err : new Error(String(err));
+        console.error('❌ rollAgain failed:', safeErr.message);
+      });
     };
 
     window.printScenario = function() {
@@ -1458,8 +1486,9 @@ window.CC_APP = {
     // ================================
 
     window.generateScenario = async function() {
-      console.log('\n🎬 GENERATING SCENARIO...');
-      console.log('State:', JSON.stringify(state, null, 2));
+      try {
+        console.log('\n🎬 GENERATING SCENARIO...');
+        console.log('State:', JSON.stringify(state, null, 2));
 
       // ── Pick Location ──
       let location;
@@ -1584,6 +1613,11 @@ window.CC_APP = {
       state.generated = true;
       render();
       console.log('✅ Scenario generated:', state.scenario.name);
+      } catch (err) {
+        const safeErr = err instanceof Error ? err : new Error(String(err));
+        console.error('❌ Scenario generation failed:', safeErr.message, safeErr.stack);
+        alert('Scenario generation failed: ' + safeErr.message + '\n\nCheck the console for details.');
+      }
     };
 
     // ================================
@@ -1601,9 +1635,10 @@ window.CC_APP = {
         };
         await window.CC_STORAGE.saveDocument('scenario', state.scenario.name, JSON.stringify(data));
         alert(`✓ Saved: ${state.scenario.name}`);
-      } catch (error) {
-        console.error('Save error:', error);
-        alert('Error saving scenario: ' + (error.message || 'Unknown error'));
+      } catch (err) {
+        const safeErr = err instanceof Error ? err : new Error(String(err));
+        console.error('Save error:', safeErr);
+        alert('Error saving scenario: ' + safeErr.message);
       }
     };
 
@@ -1661,10 +1696,11 @@ window.CC_APP = {
         closeCloudScenarioList();
         render();
         alert(`✓ Loaded: ${state.scenario.name}`);
-      } catch (error) {
-        console.error('Load error:', error);
+      } catch (err) {
+        const safeErr = err instanceof Error ? err : new Error(String(err));
+        console.error('Load error:', safeErr);
         closeCloudScenarioList();
-        alert('Error loading scenario: ' + (error.message || 'Unknown error'));
+        alert('Error loading scenario: ' + safeErr.message);
       }
     };
 
@@ -1674,8 +1710,10 @@ window.CC_APP = {
         await window.CC_STORAGE.deleteDocument(docId);
         closeCloudScenarioList();
         await loadFromCloud();
-      } catch (error) {
-        alert('Error deleting: ' + error.message);
+      } catch (err) {
+        const safeErr = err instanceof Error ? err : new Error(String(err));
+        console.error('Delete error:', safeErr);
+        alert('Error deleting: ' + safeErr.message);
       }
     };
 
