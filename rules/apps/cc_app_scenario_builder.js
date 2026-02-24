@@ -36,6 +36,22 @@ window.CC_APP = {
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
+    // ---- PRELOADER ----
+    if (!window.CC_LOADER) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/cc_loader_core.js?t=' + Date.now())
+        .then(res => res.text())
+        .then(code => {
+          const script = document.createElement('script');
+          script.textContent = code;
+          document.head.appendChild(script);
+          // Show loader once CC_LOADER is available
+          if (window.CC_LOADER) window.CC_LOADER.show(root, 'Loading game data\u2026');
+        })
+        .catch(err => console.warn('⚠️ Loader not available:', err));
+    } else {
+      window.CC_LOADER.show(root, 'Loading game data\u2026');
+    }
+
     // ---- LOAD STORAGE HELPERS ----
     if (!window.CC_STORAGE) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
@@ -133,10 +149,12 @@ window.CC_APP = {
           = results.map(r => r.status === 'fulfilled' ? r.value : null);
         locationData = locationsData; // alias
         console.log('✅ Game data loaded');
+        if (window.CC_LOADER) window.CC_LOADER.hide();
         render();
       } catch (err) {
         const safeErr = err instanceof Error ? err : new Error(String(err));
         console.error('❌ Data load error:', safeErr.message);
+        if (window.CC_LOADER) window.CC_LOADER.hide();
         render(); // render anyway so the UI isn't blank
       }
     }
@@ -553,14 +571,6 @@ window.CC_APP = {
               <p class="cc-help-text"><em><i class="fa fa-book"></i> Based on vault scenario: "${s.vault_source}" (${s.vault_match_score} tag matches)</em></p>
             </div>
           ` : ''}
-
-          <div class="cc-form-actions">
-            <button class="cc-btn cc-btn-ghost"     onclick="resetScenario()"><i class="fa fa-refresh"></i> Start Over</button>
-            <button class="cc-btn cc-btn-secondary" onclick="rollAgain()"><i class="fa fa-random"></i> The Canyon Shifts</button>
-            <button class="cc-btn cc-btn-primary"   onclick="printScenario()"><i class="fa fa-print"></i> Print</button>
-            <button class="cc-btn cc-btn-primary"   onclick="window.saveScenario().catch(function(e){console.error('Save failed:',e instanceof Error?e.message:String(e))})"><i class="fa fa-cloud-upload"></i> Save</button>
-            <button class="cc-btn cc-btn-ghost w-100 mt-2" onclick="window.loadFromCloud().catch(function(e){console.error('Load failed:',e instanceof Error?e.message:String(e))})"><i class="fa fa-cloud-download"></i> Load Saved</button>
-          </div>
         </div>
       `;
     }
@@ -615,11 +625,41 @@ window.CC_APP = {
     // ================================
 
     function render() {
+
+      // ── When a scenario has been generated, use a full-width results layout
+      if (state.generated && state.scenario) {
+        const html = `
+          <div class="cc-app-header">
+            <div>
+              <h1 class="cc-app-title">Coffin Canyon</h1>
+              <div class="cc-app-subtitle">Scenario Builder</div>
+            </div>
+            <div class="cc-app-header-actions">
+              <button class="cc-btn cc-btn-ghost"     onclick="resetScenario()"><i class="fa fa-refresh"></i> Start Over</button>
+              <button class="cc-btn cc-btn-secondary" onclick="rollAgain()"><i class="fa fa-random"></i> The Canyon Shifts</button>
+              <button class="cc-btn cc-btn-primary"   onclick="printScenario()"><i class="fa fa-print"></i> Print</button>
+              <button class="cc-btn cc-btn-primary"   onclick="window.saveScenario().catch(function(e){console.error('Save failed:',e instanceof Error?e.message:String(e))})"><i class="fa fa-cloud-upload"></i> Save</button>
+              <button class="cc-btn cc-btn-ghost"     onclick="window.loadFromCloud().catch(function(e){console.error('Load failed:',e instanceof Error?e.message:String(e))})"><i class="fa fa-cloud-download"></i> Load</button>
+            </div>
+          </div>
+
+          <div class="cc-scenario-results-layout">
+            ${renderGeneratedScenario()}
+          </div>
+        `;
+        root.innerHTML = `<div class="cc-app-shell">${html}</div>`;
+        return;
+      }
+
+      // ── Normal builder layout (accordion + summary sidebar)
       const html = `
         <div class="cc-app-header">
           <div>
             <h1 class="cc-app-title">Coffin Canyon</h1>
             <div class="cc-app-subtitle">Scenario Builder</div>
+          </div>
+          <div class="cc-app-header-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="window.loadFromCloud().catch(function(e){console.error('Load failed:',e instanceof Error?e.message:String(e))})"><i class="fa fa-cloud-download"></i> Load Saved</button>
           </div>
         </div>
 
@@ -1616,78 +1656,189 @@ window.CC_APP = {
     // SAVE / LOAD
     // ================================
 
+    // ================================
+    // SAVE / LOAD (CLOUD) — mirrors Faction Builder pattern
+    // ================================
+
     window.saveScenario = async function() {
-      if (!window.CC_STORAGE) { alert('Cloud storage not available. Please refresh.'); return; }
       try {
-        const data = {
-          scenario:   state.scenario,
-          factions:   state.factions,
-          pointValue: state.pointValue,
-          gameMode:   state.gameMode
+        if (!window.CC_STORAGE) {
+          alert('Cloud storage not available. Please refresh the page.');
+          return;
+        }
+
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (!auth.loggedIn) {
+          alert('Please sign in to save scenarios to the cloud!');
+          return;
+        }
+
+        if (!state.scenario || !state.scenario.name) {
+          alert('No scenario to save. Generate one first!');
+          return;
+        }
+
+        const exportData = {
+          name:        state.scenario.name,
+          scenario:    state.scenario,
+          factions:    state.factions,
+          pointValue:  state.pointValue,
+          gameMode:    state.gameMode,
+          savedAt:     new Date().toISOString()
         };
-        await window.CC_STORAGE.saveDocument('scenario', state.scenario.name, JSON.stringify(data));
-        alert(`✓ Saved: ${state.scenario.name}`);
+
+        const result = await window.CC_STORAGE.saveDocument(
+          state.scenario.name,
+          JSON.stringify(exportData, null, 2)
+        );
+
+        if (result.success) {
+          const action = result.action === 'created' ? 'saved' : 'updated';
+          alert(`✓ Scenario "${state.scenario.name}" ${action} to cloud!`);
+        }
       } catch (err) {
         const safeErr = err instanceof Error ? err : new Error(String(err));
         console.error('Save error:', safeErr);
-        alert('Error saving scenario: ' + safeErr.message);
+        if (safeErr.message === 'Not logged in') {
+          alert('Please sign in to save scenarios!');
+        } else {
+          alert('Error saving scenario: ' + safeErr.message);
+        }
       }
     };
 
     window.loadFromCloud = async function() {
-      if (!window.CC_STORAGE) { alert('Cloud storage not available. Please refresh.'); return; }
       try {
-        const rosters = await window.CC_STORAGE.listDocuments('scenario');
-        if (!rosters || rosters.length === 0) { alert('No saved scenarios found.'); return; }
+        if (!window.CC_STORAGE) {
+          alert('Cloud storage not available. Please refresh the page.');
+          return;
+        }
 
-        const panel = document.createElement('div');
-        panel.id        = 'cloud-scenario-panel';
-        panel.className = 'cc-slide-panel';
-        panel.innerHTML = `
-          <div class="cc-slide-panel-header">
-            <h2>Saved Scenarios</h2>
-            <button class="cc-panel-close-btn" onclick="closeCloudScenarioList()">×</button>
-          </div>
-          <div class="cc-roster-list">
-            ${rosters.map(r => `
-              <div class="cc-saved-roster-item">
-                <div class="cc-saved-roster-name">${r.name || 'Unnamed Scenario'}</div>
-                <div class="cc-saved-roster-meta">${new Date(r.write_date).toLocaleDateString()}</div>
-                <div class="cc-saved-roster-actions">
-                  <button onclick="loadCloudScenario(${r.id})" class="btn btn-sm btn-warning"><i class="fa fa-folder-open"></i> Load</button>
-                  <button onclick="deleteCloudScenario(${r.id})" class="btn btn-sm btn-danger"><i class="fa fa-trash"></i></button>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        `;
-        document.body.appendChild(panel);
-        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
-      } catch (error) {
-        console.error('Load error:', error);
-        alert('Error loading scenarios: ' + error.message);
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (!auth.loggedIn) {
+          alert('Please sign in to load scenarios from the cloud!');
+          return;
+        }
+
+        const docs = await window.CC_STORAGE.loadDocumentList();
+
+        if (!docs || docs.length === 0) {
+          alert("You don't have any saved scenarios yet!");
+          return;
+        }
+
+        // Enrich each doc by reading its contents (like Faction Builder)
+        const enriched = await Promise.all(
+          docs.map(async (doc) => {
+            try {
+              const loaded = await window.CC_STORAGE.loadDocument(doc.id);
+              const parsed = JSON.parse(loaded.json);
+              return {
+                id:         doc.id,
+                name:       parsed.name || doc.name.replace('.json', ''),
+                gameMode:   parsed.gameMode || 'multiplayer',
+                factions:   (parsed.factions || []).map(f => f.name).join(', '),
+                savedAt:    parsed.savedAt || doc.write_date,
+                write_date: doc.write_date
+              };
+            } catch (e) {
+              return {
+                id:         doc.id,
+                name:       doc.name.replace('.json', ''),
+                gameMode:   '',
+                factions:   '',
+                savedAt:    doc.write_date,
+                write_date: doc.write_date
+              };
+            }
+          })
+        );
+
+        showCloudScenarioList(enriched);
+
+      } catch (err) {
+        const safeErr = err instanceof Error ? err : new Error(String(err));
+        console.error('Load error:', safeErr);
+        if (safeErr.message === 'Not logged in') {
+          alert('Please sign in to load scenarios!');
+        } else {
+          alert('Error loading scenarios: ' + safeErr.message);
+        }
       }
     };
 
+    function showCloudScenarioList(scenarios) {
+      closeCloudScenarioList();
+
+      const panel = document.createElement('div');
+      panel.id        = 'cloud-scenario-panel';
+      panel.className = 'cc-slide-panel';
+
+      panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+          <h2><i class="fa fa-cloud"></i> SAVED SCENARIOS</h2>
+          <button onclick="closeCloudScenarioList()" class="cc-panel-close-btn">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+
+        <div class="cc-roster-list">
+          ${scenarios.map(s => `
+            <div class="cc-saved-roster-item">
+              <div class="cc-saved-roster-header">
+                <span class="cc-faction-type">${esc(s.gameMode === 'solo' ? 'Solo Play' : 'Multiplayer')}</span>
+              </div>
+              <div class="cc-saved-roster-name">${esc(s.name)}</div>
+              <div class="cc-saved-roster-meta">
+                ${s.factions ? '<i class="fa fa-shield"></i> ' + esc(s.factions) + '<br>' : ''}
+                <i class="fa fa-calendar"></i> ${new Date(s.write_date).toLocaleDateString()}
+              </div>
+              <div class="cc-saved-roster-actions">
+                <button onclick="loadCloudScenario(${s.id})" class="btn btn-sm btn-warning">
+                  <i class="fa fa-folder-open"></i> LOAD
+                </button>
+                <button onclick="deleteCloudScenario(${s.id})" class="btn btn-sm btn-danger">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      document.body.appendChild(panel);
+      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    }
+
     window.closeCloudScenarioList = function() {
       const panel = document.getElementById('cloud-scenario-panel');
-      if (panel) { panel.classList.remove('cc-slide-panel-open'); setTimeout(() => panel.remove(), 300); }
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(() => panel.remove(), 300);
+      }
     };
 
     window.loadCloudScenario = async function(docId) {
       try {
+        if (!window.CC_STORAGE) {
+          alert('Cloud storage not available. Please refresh the page.');
+          return;
+        }
+
         const loaded = await window.CC_STORAGE.loadDocument(docId);
         const parsed = JSON.parse(loaded.json);
+
         state.scenario       = parsed.scenario;
-        state.factions       = parsed.factions;
-        state.pointValue     = parsed.pointValue;
-        state.gameMode       = parsed.gameMode;
+        state.factions       = parsed.factions  || [];
+        state.pointValue     = parsed.pointValue || 500;
+        state.gameMode       = parsed.gameMode   || 'multiplayer';
         state.generated      = true;
         state.completedSteps = [1, 2, 3];
         state.currentStep    = 4;
+
         closeCloudScenarioList();
         render();
-        alert(`✓ Loaded: ${state.scenario.name}`);
+        console.log(`✅ Loaded scenario: ${state.scenario.name}`);
       } catch (err) {
         const safeErr = err instanceof Error ? err : new Error(String(err));
         console.error('Load error:', safeErr);
@@ -1699,9 +1850,18 @@ window.CC_APP = {
     window.deleteCloudScenario = async function(docId) {
       if (!confirm('Delete this scenario?')) return;
       try {
+        if (!window.CC_STORAGE) {
+          alert('Cloud storage not available. Please refresh the page.');
+          return;
+        }
         await window.CC_STORAGE.deleteDocument(docId);
         closeCloudScenarioList();
-        await loadFromCloud();
+        // Re-open the panel with the refreshed list
+        setTimeout(() => {
+          window.loadFromCloud().catch(function(e) {
+            console.error('Reload after delete failed:', e instanceof Error ? e.message : String(e));
+          });
+        }, 320);
       } catch (err) {
         const safeErr = err instanceof Error ? err : new Error(String(err));
         console.error('Delete error:', safeErr);
