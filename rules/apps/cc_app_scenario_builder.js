@@ -110,7 +110,6 @@ window.CC_APP = {
     // DATA
     // ================================
 
-    const DATA_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/data/';
 
     let plotFamiliesData  = null;
     let locationsData     = null;
@@ -154,25 +153,26 @@ window.CC_APP = {
     // ================================
 
     async function loadGameData() {
+      const SRC = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/';
       try {
         const files = [
-          'plot_families.json',
-          'locations.json',
-          'location_types.json',
-          'twist_tables.json',
-          'scenario_vault.json',
-          'scenario_names.json',
-          'canyon_states.json'
+          { key: 'plot_families',   url: SRC + '200_plot_families.json'   },
+          { key: 'locations',       url: SRC + '170_named_locations.json' },
+          { key: 'location_types',  url: SRC + '150_location_types.json'  },
+          { key: 'twist_tables',    url: SRC + '210_twist_tables.json'    },
+          { key: 'scenario_vault',  url: SRC + '140_scenario_vault.json'  },
+          { key: 'scenario_names',  url: SRC + '230_scenario_names.json'  },
+          { key: 'canyon_states',   url: SRC + '30_campaign_system.json'  }
         ];
         const results = await Promise.allSettled(
           files.map(f =>
-            fetch(DATA_BASE + f + '?t=' + Date.now())
+            fetch(f.url + '?t=' + Date.now())
               .then(r => {
-                if (!r.ok) throw new Error(`HTTP ${r.status} loading ${f}`);
+                if (!r.ok) throw new Error(`HTTP ${r.status} loading ${f.key}`);
                 return r.json();
               })
               .catch(e => {
-                console.warn(`⚠️ Could not load ${f}:`, e.message || e);
+                console.warn(`⚠️ Could not load ${f.key}:`, e.message || e);
                 return null;
               })
           )
@@ -180,12 +180,11 @@ window.CC_APP = {
         [plotFamiliesData, locationsData, locationTypesData, twistTablesData, scenarioVaultData, scenarioNamesData, canyonStatesData]
           = results.map(r => r.status === 'fulfilled' ? r.value : null);
         locationData = locationsData; // alias
-        console.log('✅ Game data loaded');
+        console.log('✅ Game data loaded. Locations:', locationsData?.locations?.length || 0);
         hideLoaderAndRender();
       } catch (err) {
         const safeErr = err instanceof Error ? err : new Error(String(err));
         console.error('❌ Data load error:', safeErr.message);
-        if (window.CC_LOADER) window.CC_LOADER.hide();
         hideLoaderAndRender();
       }
     }
