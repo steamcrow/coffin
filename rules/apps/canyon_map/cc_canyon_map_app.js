@@ -93,7 +93,7 @@
     leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css",
     leafletJsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
     logoUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png",
-    lensZoomOffset: 0.5  // lens zoom = BG_ZOOM + this. Higher = more magnification.
+    lensZoomOffset: 0.2  // lens zoom = BG_ZOOM + this. Higher = more magnification.
   };
 
   // ═══════════════════════════════════════════════════════════════
