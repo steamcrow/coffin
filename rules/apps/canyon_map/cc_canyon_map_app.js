@@ -100,28 +100,28 @@
   // LOCATION HITBOXES
   // [minY, minX, maxY, maxX] in image pixels
   // ═══════════════════════════════════════════════════════════════
-var HITBOXES = {
-  "bandit-buck":       [2613,1584,2824,1927], "bayou-city":       [1175,2501,1386,2767],
-  "cowtown":           [2166,2079,2356,2404], "crackpits":        [735, 1417,1046,1673],
-  "deerhoof":          [3112,2130,3329,2412], "diablo":           [505, 1432,716, 1698],
-  "dustbuck":          [1974,2243,2164,2542], "fool-boot":        [2040,1375,2214,1505],
-  "fort-plunder":      [3348,1209,3631,1427], "fortune":          [2887,1284,3121,1567],
-  "ghost-mountain":    [2597,205, 2849,489],  "gore-mule-drop":   [3167,790, 3378,1133],
-  "grade-grind":       [2849,1608,3083,2082], "heckweed":         [2331,1542,2587,1885],
-  "huck":              [3332,2569,3550,2749], "kraise":           [2022,1243,2217,1524],
-  "little-rica":       [2964,500, 3182,784],  "lost-yots":        [1582,1303,1960,1616],
-  "martygrail":        [2436,1971,2714,2315], "mindshaft":        [3008,812, 3101,1261],
-  "pallor":            [1659,1820,1998,1963], "plata":            [2513,916, 2765,1089],
-  "quinne-jimmy":      [1687,810, 1877,1172], "ratsville":        [1450,1941,1661,2219],
-  "rey":               [19,  1883,230, 2046],  "river-city":       [1068,1595,1279,1861],
-  "sangr":             [1105,1172,1315,1573], "santos-grin":      [1185,1898,1396,2176],
-  "silverpit":         [2132,1537,2321,1746], "skull-water":      [1609,492, 1841,701],
-  "splitglass-arroyo": [2605,1138,2859,1427], "tin-flats":        [1334,1161,1545,1562],
-  "tzulto":            [2229,1334,2447,1526], "widowflow":        [1325,1609,2086,1822],
-  "witches-roost":     [3767,2130,3965,2495]
-};
+  var HITBOXES = {
+    "bandit-buck":       [2613,1584,2824,1927], "bayou-city":       [1175,2501,1386,2767],
+    "cowtown":           [2166,2079,2356,2404], "crackpits":        [735, 1417,1046,1673],
+    "deerhoof":          [3112,2130,3329,2412], "diablo":           [505, 1432,716, 1698],
+    "dustbuck":          [1974,2243,2164,2542], "fool-boot":        [2040,1375,2214,1505],
+    "fort-plunder":      [3348,1209,3631,1427], "fortune":          [2887,1284,3121,1567],
+    "ghost-mountain":    [2597,205, 2849,489],  "gore-mule-drop":   [3167,790, 3378,1133],
+    "grade-grind":       [2849,1608,3083,2082], "heckweed":         [2331,1542,2587,1885],
+    "huck":              [3332,2569,3550,2749], "kraise":           [2022,1243,2217,1524],
+    "little-rica":       [2964,500, 3182,784],  "lost-yots":        [1582,1303,1960,1616],
+    "martygrail":        [2436,1971,2714,2315], "mindshaft":        [3008,812, 3101,1261],
+    "pallor":            [1659,1820,1998,1963], "plata":            [2513,916, 2765,1089],
+    "quinne-jimmy":      [1687,810, 1877,1172], "ratsville":        [1450,1941,1661,2219],
+    "rey":               [19,  1883,230, 2046],  "river-city":       [1068,1595,1279,1861],
+    "sangr":             [1105,1172,1315,1573], "santos-grin":      [1185,1898,1396,2176],
+    "silverpit":         [2132,1537,2321,1746], "skull-water":      [1609,492, 1841,701],
+    "splitglass-arroyo": [2605,1138,2859,1427], "tin-flats":        [1334,1161,1545,1562],
+    "tzulto":            [2229,1334,2447,1526], "widowflow":        [1325,1609,2086,1822],
+    "witches-roost":     [3767,2130,3965,2495]
+  };
 
-   // ═══════════════════════════════════════════════════════════════
+  // ═══════════════════════════════════════════════════════════════
   // UTILITIES
   // ═══════════════════════════════════════════════════════════════
   function el(tag, attrs, children) {
@@ -313,21 +313,6 @@ var HITBOXES = {
   // ═══════════════════════════════════════════════════════════════
   // SAFE-RANGE MATHS
   // ═══════════════════════════════════════════════════════════════
-  //
-  // In Leaflet CRS.Simple, at zoom level z:
-  //   1 map-unit  =  2^z  screen-pixels
-  //
-  // So the number of map-units visible in a container of H screen-px is:
-  //   visibleH  =  H / 2^z
-  //
-  // To keep the map edge exactly flush with the container edge, the
-  // map centre must stay within:
-  //   min  =  visibleH / 2           (half a viewport down from the top edge)
-  //   max  =  imageH − visibleH / 2  (half a viewport up from the bottom edge)
-  //
-  // If the whole image fits in the container (visibleH >= imageH),
-  // we lock the centre at imageH/2 — no panning possible.
-  //
   function safeRange(containerEl, zoom, imageH) {
     var h       = containerEl.getBoundingClientRect().height || containerEl.offsetHeight || 360;
     var visible = h / Math.pow(2, zoom); // map-units visible at this zoom level
@@ -362,6 +347,25 @@ var HITBOXES = {
     root.innerHTML = "";
     root.classList.add("cc-canyon-map");
 
+    // DEV: hitbox editor CSS (inline so you don't have to touch cc_canyon_map.css)
+    if (!document.getElementById("cc-hitbox-editor-style")) {
+      var hbStyle = document.createElement("style");
+      hbStyle.id = "cc-hitbox-editor-style";
+      hbStyle.textContent = [
+        ".cc-canyon-map.cc-hitbox-edit .cc-lens,",
+        ".cc-canyon-map.cc-hitbox-edit .cc-frame-overlay,",
+        ".cc-canyon-map.cc-hitbox-edit .cc-scroll-vertical,",
+        ".cc-canyon-map.cc-hitbox-edit .cc-scroll-horizontal{display:none!important;}",
+        ".cc-canyon-map.cc-hitbox-edit #cc-cm-map{position:absolute;inset:0;z-index:50;}",
+        "#cc-hitbox-editor{position:absolute;inset:0;z-index:999999;pointer-events:auto;}",
+        ".cc-hb-box{position:absolute;outline:2px solid rgba(0,0,0,.7);background:rgba(255,255,0,.18);border-radius:6px;box-sizing:border-box;cursor:grab;user-select:none;}",
+        ".cc-hb-box:active{cursor:grabbing;}",
+        ".cc-hb-label{position:absolute;left:0;top:-18px;padding:2px 6px;border-radius:6px;background:rgba(0,0,0,.75);color:#fff;font:12px/1 system-ui,sans-serif;white-space:nowrap;pointer-events:none;}",
+        ".cc-hb-handle{position:absolute;width:12px;height:12px;right:-6px;bottom:-6px;background:rgba(0,0,0,.85);border-radius:3px;cursor:nwse-resize;}"
+      ].join("");
+      document.head.appendChild(hbStyle);
+    }
+
     // Background map container.
     // id="cc-cm-map" is required — the CSS file targets #cc-cm-map.
     var mapEl = el("div", { id:"cc-cm-map", class:"cc-cm-map" });
@@ -379,21 +383,13 @@ var HITBOXES = {
     }, [el("div", { class:"cc-lens-overscan", style:"pointer-events:auto;" }, [lensMapEl])]);
 
     var lensEl = el("div", { class:"cc-lens",
-      // overflow:hidden is critical here — the SVG feDisplacementMap filter
-      // can push warped pixels beyond the element boundary. Without this,
-      // those pixels bleed past the border-radius and are visible as a
-      // distorted fringe at the lens edges (especially bottom in Chrome).
       style:"overflow:hidden;"
     }, [
       lensInner,
       el("div", { class:"cc-lens-chromatic", style:"pointer-events:none;" }),
       el("div", { class:"cc-lens-glare",     style:"pointer-events:none;" })
     ]);
-
-    // ── Preloader ──────────────────────────────────────────────────
-    // Visible for at least MIN_LOADER_MS ms (default 5s).
-    // Logo image: coffin_canyon_logo.png
-    // Spinner and pulsing text beneath.
+       // ── Preloader ──────────────────────────────────────────────────
     var loaderEl = el("div", {
       id:    "cc-map-loader",
       style: [
@@ -436,7 +432,10 @@ var HITBOXES = {
       el("div", { class:"cc-cm-title" }, [opts.title]),
       el("div", { class:"cc-cm-actions" }, [
         el("button", { class:"cc-btn", id:"cc-cm-reload" }, ["Reload"]),
-        el("button", { class:"cc-btn", id:"cc-cm-fit"    }, ["Fit"])
+        el("button", { class:"cc-btn", id:"cc-cm-fit"    }, ["Fit"]),
+        // DEV: hitbox editor buttons
+        el("button", { class:"cc-btn", id:"cc-cm-edit"   }, ["Edit Hitboxes"]),
+        el("button", { class:"cc-btn", id:"cc-cm-export" }, ["Export"])
       ])
     ]);
 
@@ -469,8 +468,199 @@ var HITBOXES = {
       drawerTitleEl:   drawer.querySelector(".cc-cm-drawer-title"),
       drawerContentEl: drawer.querySelector(".cc-cm-drawer-content"),
       knobV:           root.querySelector("#cc-scroll-knob-v"),
-      knobH:           root.querySelector("#cc-scroll-knob-h")
+      knobH:           root.querySelector("#cc-scroll-knob-h"),
+      _hbEditor:       null
     };
+
+    // DEV: Hitbox editor (private tool; remove after use)
+    // HITBOXES format is [minY, minX, maxY, maxX]
+    // Robust across Reload (mainMap recreated)
+    function createHitboxEditor(root, ui) {
+      var state = {
+        editing: false,
+        editorEl: null,
+        active: null,
+        mainMap: null,
+        px: null,
+        bound: false
+      };
+
+      function ensureEditorLayer() {
+        if (state.editorEl) return state.editorEl;
+        state.editorEl = document.createElement("div");
+        state.editorEl.id = "cc-hitbox-editor";
+        ui.mapEl.appendChild(state.editorEl);
+        return state.editorEl;
+      }
+
+      function rectFromHitbox(b) { return { y1:b[0], x1:b[1], y2:b[2], x2:b[3] }; }
+      function hitboxFromRect(r) { return [Math.round(r.y1), Math.round(r.x1), Math.round(r.y2), Math.round(r.x2)]; }
+
+      function latLngToPx(lat, lng) {
+        var pt = state.mainMap.latLngToContainerPoint(window.L.latLng(lat, lng));
+        return { x: pt.x, y: pt.y };
+      }
+
+      function drawBoxes() {
+        if (!state.editing || !state.mainMap || !state.px) return;
+        var layer = ensureEditorLayer();
+        layer.innerHTML = "";
+
+        Object.keys(HITBOXES).forEach(function(id) {
+          var b = HITBOXES[id];
+          if (!b) return;
+
+          var r = rectFromHitbox(b);
+          var p1 = latLngToPx(r.y1, r.x1);
+          var p2 = latLngToPx(r.y2, r.x2);
+
+          var box = document.createElement("div");
+          box.className = "cc-hb-box";
+          box.dataset.id = id;
+          box.style.left   = Math.min(p1.x, p2.x) + "px";
+          box.style.top    = Math.min(p1.y, p2.y) + "px";
+          box.style.width  = Math.abs(p2.x - p1.x) + "px";
+          box.style.height = Math.abs(p2.y - p1.y) + "px";
+
+          var label = document.createElement("div");
+          label.className = "cc-hb-label";
+          label.textContent = id;
+          box.appendChild(label);
+
+          var handle = document.createElement("div");
+          handle.className = "cc-hb-handle";
+          handle.title = "Drag to resize";
+          box.appendChild(handle);
+
+          layer.appendChild(box);
+        });
+      }
+
+      function updateHitboxFromBox(box) {
+        var id = box.dataset.id;
+        var left   = parseFloat(box.style.left);
+        var top    = parseFloat(box.style.top);
+        var width  = parseFloat(box.style.width);
+        var height = parseFloat(box.style.height);
+
+        var p1 = state.mainMap.containerPointToLatLng(window.L.point(left, top));
+        var p2 = state.mainMap.containerPointToLatLng(window.L.point(left + width, top + height));
+
+        var r = {
+          y1: Math.min(p1.lat, p2.lat),
+          x1: Math.min(p1.lng, p2.lng),
+          y2: Math.max(p1.lat, p2.lat),
+          x2: Math.max(p1.lng, p2.lng)
+        };
+
+        HITBOXES[id] = hitboxFromRect(r);
+      }
+
+      function onPointerDown(e) {
+        if (!state.editing) return;
+        var box = e.target.closest(".cc-hb-box");
+        if (!box) return;
+
+        var isHandle = e.target.classList.contains("cc-hb-handle");
+        state.active = {
+          box: box,
+          mode: isHandle ? "resize" : "move",
+          startX: e.clientX,
+          startY: e.clientY,
+          left: parseFloat(box.style.left),
+          top: parseFloat(box.style.top),
+          width: parseFloat(box.style.width),
+          height: parseFloat(box.style.height)
+        };
+
+        box.setPointerCapture(e.pointerId);
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      function onPointerMove(e) {
+        if (!state.editing || !state.active) return;
+
+        var dx = e.clientX - state.active.startX;
+        var dy = e.clientY - state.active.startY;
+
+        if (state.active.mode === "move") {
+          state.active.box.style.left = Math.round(state.active.left + dx) + "px";
+          state.active.box.style.top  = Math.round(state.active.top  + dy) + "px";
+        } else {
+          state.active.box.style.width  = Math.max(6, Math.round(state.active.width  + dx)) + "px";
+          state.active.box.style.height = Math.max(6, Math.round(state.active.height + dy)) + "px";
+        }
+
+        updateHitboxFromBox(state.active.box);
+        e.preventDefault();
+      }
+
+      function onPointerUp(e) {
+        if (!state.editing || !state.active) return;
+        try { state.active.box.releasePointerCapture(e.pointerId); } catch (err) {}
+        state.active = null;
+      }
+
+      function exportHitboxes() {
+        var keys = Object.keys(HITBOXES).sort();
+        var lines = keys.map(function(k) {
+          return '  "' + k + '": [' + HITBOXES[k].join(",") + '],';
+        });
+        var text = "var HITBOXES = {\n" + lines.join("\n") + "\n};";
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).catch(function() {
+            window.prompt("Copy HITBOXES:", text);
+          });
+        } else {
+          window.prompt("Copy HITBOXES:", text);
+        }
+      }
+
+      function setEditing(on) {
+        state.editing = on;
+        root.classList.toggle("cc-hitbox-edit", on);
+
+        if (!on) {
+          if (state.editorEl) state.editorEl.style.display = "none";
+          if (state.mainMap) state.mainMap.off("move zoom resize", drawBoxes);
+          return;
+        }
+
+        if (!state.mainMap || !state.px) return;
+
+        // 1:1 view (CRS.Simple zoom 0)
+        state.mainMap.setView([state.px.h / 2, state.px.w / 2], 0, { animate:false });
+
+        ensureEditorLayer().style.display = "block";
+        drawBoxes();
+        state.mainMap.on("move zoom resize", drawBoxes);
+      }
+
+      function bindOnce() {
+        if (state.bound) return;
+        state.bound = true;
+        ui.mapEl.addEventListener("pointerdown", onPointerDown);
+        window.addEventListener("pointermove", onPointerMove, { passive:false });
+        window.addEventListener("pointerup", onPointerUp);
+      }
+
+      bindOnce();
+
+      return {
+        attach: function(mainMap, px) {
+          state.mainMap = mainMap;
+          state.px = px;
+          if (state.editing) setEditing(true); // survives Reload
+        },
+        toggle: function() { setEditing(!state.editing); },
+        export: function() { if (state.editing) exportHitboxes(); }
+      };
+    }
+
+    // DEV: create editor instance once per mount
+    ui._hbEditor = createHitboxEditor(root, ui);
 
     function showLoader() {
       loaderEl.style.display = "flex";
@@ -491,9 +681,6 @@ var HITBOXES = {
     var mapDoc  = null, locationsData = null;
 
     // ── Normalised scroll positions ─────────────────────────────────
-    // currentT  = vertical   scroll, 0 = top,  1 = bottom
-    // currentTx = horizontal scroll, 0 = left, 1 = right
-    // Both clamped [0,1] — neither map ever shows blank space.
     var currentT  = 0.5;
     var currentTx = 0.5;
 
@@ -507,8 +694,6 @@ var HITBOXES = {
     }
 
     // applyT: reposition both maps using currentT (vertical) and currentTx (horizontal).
-    // Both maps compute their own safe ranges from their real container sizes,
-    // so both always hit their edges at the same normalised t/tx.
     function applyT(t, px) {
       if (!mainMap || !lensMap || !px) return;
       t = clamp(t, 0, 1);
@@ -541,7 +726,6 @@ var HITBOXES = {
       ui.knobH.style.left = (tx * 100) + "%";
     }
 
-    // applyTx: horizontal-only update, then redraws both maps
     function applyTx(tx, px) {
       currentTx = clamp(tx, 0, 1);
       applyT(currentT, px);
@@ -634,7 +818,6 @@ var HITBOXES = {
         if (mapDoc) applyT(currentT, mapDoc.map.background.image_pixel_size);
       }));
     }
-
     // ── init ───────────────────────────────────────────────────────
     function init() {
       showLoader();
@@ -674,6 +857,9 @@ var HITBOXES = {
           window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
           mainMap.setView([px.h / 2, px.w / 2], BG_ZOOM, { animate: false });
 
+          // DEV: attach editor to freshly created map (survives Reload)
+          if (ui._hbEditor) ui._hbEditor.attach(mainMap, px);
+
           // ── Lens map ──────────────────────────────────────────────
           var lensUrl = (mapDoc.map.lens && mapDoc.map.lens.image_key)
             ? mapDoc.map.lens.image_key
@@ -688,28 +874,16 @@ var HITBOXES = {
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
           // Prevent the browser's default image-drag behaviour inside the lens.
-          // Without this, clicking and holding on the map image lets the user
-          // drag it around as a ghost image (the browser's native drag-image feature).
           ui.lensMapEl.addEventListener("dragstart", function(e) { e.preventDefault(); });
           ui.lensMapEl.style.userSelect   = "none";
           ui.lensMapEl.style.webkitUserSelect = "none";
 
           // Force pointer-events on lensMapEl and its Leaflet internals.
-          // The .cc-lens parent has pointer-events:none in the CSS (correct,
-          // so the glass border doesn't steal knob drags), but that cascades
-          // down and kills clicks on the map. Override it here at the DOM
-          // level so our plain addEventListener below actually fires.
           ui.lensMapEl.style.pointerEvents = "auto";
-          // Also unlock the Leaflet container div itself
           var lensContainer = ui.lensMapEl.querySelector(".leaflet-container");
           if (lensContainer) lensContainer.style.pointerEvents = "auto";
 
           // ── Location hitboxes (visual only — click handled via DOM) ──
-          // Rectangles are drawn for visual feedback only (interactive:false).
-          // A single DOM listener on lensMapEl converts the click point to
-          // map coordinates and checks which hitbox was hit.
-          // This avoids all the Leaflet internal event-chain complexity that
-          // was silently dropping clicks.
           locationsData.locations.forEach(function(loc) {
             var bbox = HITBOXES[loc.id];
             if (!bbox) return;
@@ -736,14 +910,9 @@ var HITBOXES = {
           });
 
           // ── Single DOM click handler for all hitboxes ─────────────
-          // Listens on the raw lensMapEl div. On click, converts the
-          // pixel position to a Leaflet lat/lng, then walks the HITBOXES
-          // table to find which location was clicked. No Leaflet event
-          // system involved — just a plain addEventListener.
           ui.lensMapEl.addEventListener("click", function(e) {
             if (!lensMap) return;
 
-            // Convert the click's offset inside the div to a map coordinate
             var rect   = ui.lensMapEl.getBoundingClientRect();
             var pixelX = e.clientX - rect.left;
             var pixelY = e.clientY - rect.top;
@@ -753,11 +922,10 @@ var HITBOXES = {
             var clickLat = latlng.lat;
             var clickLng = latlng.lng;
 
-            // Walk every known hitbox and find the first one that contains
-            // the click coordinate. bbox = [minY, minX, maxY, maxX]
+            // Walk every known hitbox and find the first one that contains the click coordinate.
             var hit = null;
             locationsData.locations.forEach(function(loc) {
-              if (hit) return; // stop once we found one
+              if (hit) return;
               var bbox = HITBOXES[loc.id];
               if (!bbox) return;
               if (clickLat >= bbox[0] && clickLat <= bbox[2] &&
@@ -767,7 +935,7 @@ var HITBOXES = {
             });
 
             if (hit) {
-              e.stopPropagation(); // prevent bubble to root's close-drawer listener
+              e.stopPropagation();
               renderDrawer(ui, hit);
               ui.drawerEl.classList.add("open");
             }
@@ -776,9 +944,6 @@ var HITBOXES = {
           bindKnobs(px);
 
           // ── Wait for layout to settle, then position maps ─────────
-          // Two invalidateSize passes: first lets the browser do layout,
-          // second catches any second-pass adjustments (common in Odoo).
-          // After that we read real container dimensions for safeRange().
           return nextFrame()
             .then(function() {
               try { mainMap.invalidateSize({ animate: false }); } catch(e){}
@@ -790,19 +955,15 @@ var HITBOXES = {
               try { lensMap.invalidateSize({ animate: false }); } catch(e){}
               currentT  = 0.5;
               currentTx = 0.5;
-              applyT(0.5, px); // centre both maps, using real container sizes
+              applyT(0.5, px);
 
-              // Re-apply pointer-events unlock after Leaflet finishes building
-              // its internal DOM (it creates .leaflet-container lazily).
               ui.lensMapEl.style.pointerEvents = "auto";
               var lc = ui.lensMapEl.querySelector(".leaflet-container");
               if (lc) lc.style.pointerEvents = "auto";
-              // Also unlock the parent chain in case CSS !important cascaded down
               var inner = ui.lensMapEl.closest(".cc-lens-inner");
               if (inner) inner.style.pointerEvents = "auto";
             })
             .then(function() {
-              // Wait however long remains of MIN_LOADER_MS before hiding
               var elapsed   = Date.now() - loadStart;
               var remaining = Math.max(0, MIN_LOADER_MS - elapsed);
               return delay(remaining);
@@ -812,7 +973,7 @@ var HITBOXES = {
           hideLoader();
         })
         .catch(function(err) {
-          if (err && err.name === "AbortError") return; // expected on Reload
+          if (err && err.name === "AbortError") return;
           console.error("Canyon Map init failed:", err);
           hideLoader();
           ui.drawerContentEl.innerHTML =
@@ -820,8 +981,7 @@ var HITBOXES = {
           ui.drawerEl.classList.add("open");
         });
     }
-
-    // ── Button wiring ──────────────────────────────────────────────
+       // ── Button wiring ──────────────────────────────────────────────
     root.querySelector("#cc-cm-reload").onclick = function() { init(); };
     root.querySelector("#close-dr").onclick     = function() { ui.drawerEl.classList.remove("open"); };
     root.querySelector("#cc-cm-fit").onclick    = function() {
@@ -831,12 +991,18 @@ var HITBOXES = {
       }
     };
 
+    // DEV: hitbox editor buttons
+    root.querySelector("#cc-cm-edit").onclick = function() {
+      if (ui._hbEditor) ui._hbEditor.toggle();
+    };
+    root.querySelector("#cc-cm-export").onclick = function() {
+      if (ui._hbEditor) ui._hbEditor.export();
+    };
+
     // Click anywhere outside the open drawer (but still inside the app root)
-    // to slide it closed. We use the root element rather than `document` so
-    // this doesn't interfere with the rest of the Odoo page.
+    // to slide it closed.
     root.addEventListener("click", function(e) {
       if (!ui.drawerEl.classList.contains("open")) return;
-      // If the click landed inside the drawer, do nothing
       if (ui.drawerEl.contains(e.target)) return;
       ui.drawerEl.classList.remove("open");
     });
@@ -846,4 +1012,5 @@ var HITBOXES = {
 
   window.CC_CanyonMap = { mount: mount };
 
-})();
+})();  
+   
