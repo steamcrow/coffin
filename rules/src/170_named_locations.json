@@ -16,7 +16,7 @@
       "type_ref": "diablo_booming_hub",
       "archetype": "boomtown",
       "state": "booming",
-      "danger": 3,
+      "danger": 4,
       "population": 6,
       "key_resources": [
         "supplies",
@@ -31,12 +31,13 @@
         "food_good": 4
       },
       "features": [
-        "RailSpur",
+        "RailTerminus",
         "AuctionYard",
         "GunsmithRow",
         "CompanyOffice",
         "Jailhouse",
-        "Hotel"
+        "Hotel",
+        "Brothel"
       ],
       "monster_seeds": [
         {
@@ -52,8 +53,8 @@
           "weight": 1
         }
       ],
-      "description": "Diablo booms by decree, greed, and violence. The rail spur keeps it fed. The guns keep it profitable.",
-      "atmosphere": "Noise, commerce, and a gun under every counter",
+      "description": "Diablo booms by decree, greed, and violence. The rail line used to keep it fed. The guns keep it profitable.",
+      "atmosphere": "Noise, commerce, and a crook under every counter",
       "coffinCoughChance": 0.15,
       "terrain_flavor": [
         "Rail spur",
@@ -82,12 +83,12 @@
       "key_resources": [
         "medicine",
         "supplies",
-        "lead"
+        "food_good"
       ],
       "resources": {
         "medicine": 3,
         "supplies": 4,
-        "lead": 1
+        "food_good": 2
       },
       "features": [
         "CommandTent",
