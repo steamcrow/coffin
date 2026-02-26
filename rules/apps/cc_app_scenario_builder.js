@@ -295,7 +295,7 @@ window.CC_APP = {
       return `<p>${highs.concat(absent).join(' ')}</p>`;
     }
 
-    // ================================
+      // ================================
     // NARRATIVE HOOK GENERATOR
     // Location-aware, varied, never generic "flashpoint" filler.
     // ================================
@@ -326,23 +326,35 @@ window.CC_APP = {
       ];
 
       // Try to pull a plot-family specific hook if one exists
-      if (plotFamily.hook) return plotFamily.hook;
-      if (plotFamily.flavor) return `${plotFamily.flavor} ${plotDesc} at ${locName}.`;
+      if (plotFamily && plotFamily.hook) return plotFamily.hook;
+      if (plotFamily && plotFamily.flavor) return `${plotFamily.flavor} ${plotDesc} at ${locName}.`;
 
       return randomChoice(pools);
-    }(plotFamily, location, objectives, twist, dangerRating, contextTags) {
+    }
+
+    // ================================
+    // SCENARIO NAME GENERATOR (tag-aware)
+    // Signature kept to match your calls:
+    //   (plotFamily, location, objectives, twist, dangerRating, contextTags)
+    // ================================
+    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
+      // safe guards for missing data
+      contextTags = contextTags || [];
+      location = location || { name: 'Unknown' };
+
       if (scenarioNamesData) {
         const prefixes  = scenarioNamesData.prefixes  || [];
         const middles   = scenarioNamesData.middles   || [];
         const suffixes  = scenarioNamesData.suffixes  || [];
 
-        // Tag-aware prefix selection
+        // Tag-aware prefix selection (defensive check for .tags)
         const taggedPrefixes = prefixes.filter(p =>
-          (p.tags || []).some(t => contextTags.includes(t))
+          Array.isArray(p.tags) && p.tags.some(t => contextTags.includes(t))
         );
+
         const prefix = taggedPrefixes.length
-          ? randomChoice(taggedPrefixes).text
-          : randomChoice(prefixes)?.text || 'Bloody';
+          ? (randomChoice(taggedPrefixes)?.text || randomChoice(prefixes)?.text || 'Bloody')
+          : (randomChoice(prefixes)?.text || 'Bloody');
 
         const middle = randomChoice(middles)?.text || location.name;
         const suffix = randomChoice(suffixes)?.text || 'Reckoning';
@@ -350,11 +362,11 @@ window.CC_APP = {
         return `${prefix} ${location.name} — ${middle} ${suffix}`;
       }
 
+      // Fallback generation
       const fallbackPrefixes = ['Bloody', 'Burning', 'Broken', 'Cursed', 'Forsaken', 'Iron'];
       const fallbackSuffixes = ['Reckoning', 'Standoff', 'Collapse', 'Ruin', 'Harvest', 'Judgment'];
       return `${randomChoice(fallbackPrefixes)} ${location.name} — ${randomChoice(fallbackSuffixes)}`;
     }
-
 
     // ================================
     // MONSTER PRESSURE GENERATOR
