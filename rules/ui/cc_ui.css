@@ -706,3 +706,98 @@ code, pre, kbd, samp {
   .cc-page-head{ padding: 12px 12px; }
   .cc-page-body{ padding: 12px; }
 }
+/* ── Objective Markers Table ── */
+.cc-markers-section { margin-top: 1.5rem; }
+.cc-markers-intro   { font-size: 0.85rem; opacity: 0.7; margin-bottom: 0.75rem; }
+
+.cc-marker-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.cc-marker-table th {
+  background: var(--cc-primary);
+  color: var(--cc-bg, #fff);
+  padding: 0.4rem 0.6rem;
+  text-align: left;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+}
+.cc-marker-table td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  vertical-align: top;
+}
+.cc-marker-table tr:nth-child(even) td {
+  background: rgba(255,255,255,0.03);
+}
+.cc-marker-token {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  font-style: italic;
+}
+.cc-marker-count {
+  text-align: center;
+  font-weight: bold;
+}
+.cc-marker-action {
+  display: inline-block;
+  background: var(--cc-primary);
+  color: #fff;
+  font-size: 0.65rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  margin: 0.1rem 0.15rem 0.1rem 0;
+  letter-spacing: 0.05em;
+}
+.cc-marker-note-row td {
+  font-size: 0.8rem;
+  opacity: 0.65;
+  padding-top: 0;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+}
+
+/* ── Victory Card improvements ── */
+.cc-vc-header {
+  border-bottom: 2px solid var(--cc-primary);
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.cc-vc-header h5 { margin: 0; font-size: 1rem; }
+
+.cc-vc-obj {
+  background: rgba(255,255,255,0.04);
+  border-left: 3px solid var(--cc-primary);
+  border-radius: 4px;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.6rem;
+}
+.cc-vc-obj-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.5;
+  margin-bottom: 0.2rem;
+}
+.cc-vc-obj-name  { font-weight: bold; margin-bottom: 0.3rem; }
+.cc-vc-obj-desc  { font-size: 0.875rem; margin-bottom: 0.4rem; }
+.cc-vc-obj-meta  { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.8rem; }
+
+.cc-vc-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.12);
+  margin: 0.75rem 0;
+}
+
+.cc-vc-finale {
+  background: rgba(255,255,255,0.02);
+  border-left: 3px solid var(--cc-accent, gold);
+  border-radius: 4px;
+  padding: 0.6rem 0.75rem;
+}
+
+.cc-vc-aftermath {
+  font-size: 0.875rem;
+  padding: 0.4rem 0;
+}
+.cc-vc-aftermath p { margin: 0.25rem 0; }
