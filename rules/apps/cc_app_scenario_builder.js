@@ -296,9 +296,41 @@ window.CC_APP = {
     }
 
     // ================================
-    // SCENARIO NAME GENERATOR
+    // NARRATIVE HOOK GENERATOR
+    // Location-aware, varied, never generic "flashpoint" filler.
     // ================================
-    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
+    function generateNarrativeHook(plotFamily, location) {
+      const locName  = location.name;
+      const plotDesc = (plotFamily.description || '').replace(/\.$/, '');
+      const atmo     = location.atmosphere || '';
+      const desc     = location.description ? location.description.split('.')[0] : '';
+      const state_   = location.state || 'alive';
+
+      // Pick from strongly-voiced, situation-specific hooks
+      const pools = [
+        // Arrival hooks
+        `Nobody who left ${locName} told the same story. ${plotDesc}. The only way to know is to go in.`,
+        `Three factions picked up the same rumour about ${locName} within 48 hours of each other. That's not coincidence. ${plotDesc}.`,
+        `${locName} was supposed to be a clean job. The Canyon had other ideas. ${plotDesc}.`,
+        `${desc ? desc + '. ' : ''}${plotDesc}. The factions arrive at the same time. That's the problem.`,
+        // Tension hooks
+        `The window at ${locName} is closing. ${plotDesc}. Whoever moves first may be the only one who leaves with anything.`,
+        `Something at ${locName} drew too much attention. ${plotDesc}. Now everyone is reacting and nobody is thinking.`,
+        `${plotDesc} at ${locName}. The smart money said don't get involved. The smart money wasn't enough.`,
+        `The last group through ${locName} didn't come back whole. ${plotDesc}. That didn't stop the next group from going in.`,
+        // Canyon voice hooks
+        `The Canyon doesn't warn you. At ${locName}, it just changes the terms. ${plotDesc}.`,
+        `${locName}. ${atmo ? '"' + atmo + '"' : 'Whatever it was, it isn\'t that anymore.'}. ${plotDesc}.`,
+        `${plotDesc}. ${locName} is where it ends — or where it gets worse.`,
+        `Word reached ${locName} before anyone expected. ${plotDesc}. By the time boots hit the ground, it was already complicated.`,
+      ];
+
+      // Try to pull a plot-family specific hook if one exists
+      if (plotFamily.hook) return plotFamily.hook;
+      if (plotFamily.flavor) return `${plotFamily.flavor} ${plotDesc} at ${locName}.`;
+
+      return randomChoice(pools);
+    }(plotFamily, location, objectives, twist, dangerRating, contextTags) {
       if (scenarioNamesData) {
         const prefixes  = scenarioNamesData.prefixes  || [];
         const middles   = scenarioNamesData.middles   || [];
@@ -323,18 +355,6 @@ window.CC_APP = {
       return `${randomChoice(fallbackPrefixes)} ${location.name} — ${randomChoice(fallbackSuffixes)}`;
     }
 
-    // ================================
-    // NARRATIVE HOOK GENERATOR
-    // ================================
-    function generateNarrativeHook(plotFamily, location) {
-      const hooks = [
-        `${location.name} has become a flashpoint. ${plotFamily.description}`,
-        `Pressure builds at ${location.name}. ${plotFamily.description}`,
-        `${location.name} draws unwanted attention. ${plotFamily.description}`,
-        `Something has shifted at ${location.name}. The Canyon itself destabilizes the situation. Survival, salvage, and escape matter more than victory.`
-      ];
-      return randomChoice(hooks);
-    }
 
     // ================================
     // MONSTER PRESSURE GENERATOR
@@ -650,12 +670,32 @@ window.CC_APP = {
       const objectives    = [];
       const used          = new Set();
 
+      // These groups can only contribute ONE objective each to prevent
+      // "everything is tainted ground" results on foul-resource locations.
+      const EXCLUSIVE_GROUPS = {
+        taint_group:   ['tainted_ground', 'fouled_resource'],
+        ritual_group:  ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'ritual_components'],
+        salvage_group: ['wrecked_engine', 'derailed_cars', 'unstable_structure'],
+        supply_group:  ['stored_supplies', 'scattered_crates']
+      };
+      const usedGroups = new Set();
+
+      function getGroup(type) {
+        for (const [grp, types] of Object.entries(EXCLUSIVE_GROUPS)) {
+          if (types.includes(type)) return grp;
+        }
+        return null;
+      }
+
       for (const [type] of sorted) {
         if (objectives.length >= numObjectives) break;
         if (used.has(type)) continue;
+        const grp = getGroup(type);
+        if (grp && usedGroups.has(grp)) continue; // already have one from this group
         used.add(type);
+        if (grp) usedGroups.add(grp);
         objectives.push({
-          name:        makeObjectiveName(type, locProfile),   // FIX 2: pass locProfile
+          name:        makeObjectiveName(type, locProfile),
           description: makeObjectiveDescription(type, locProfile),
           type,
           vp_base:     calcObjectiveVP(type, locProfile),
@@ -809,8 +849,8 @@ window.CC_APP = {
     // Per-faction, per-objective flavor text
     const FACTION_OBJECTIVE_FLAVOR = {
       monster_rangers: {
-        monsters_befriendable: "There's a creature out there that doesn't want to fight. Reach it before the others do. Offer the Pocket Snacks. Walk it off the board alive.",
-        monsters_hostile:      "The monster is terrified or cornered. Don't kill it — get between it and the ones who will. Escort it to an exit and let it go free.",
+        monsters_befriendable: "There's a creature out there that doesn't want to fight. Reach it before the others do — use your Pocket Snacks. Walk it off the board alive.",
+        monsters_hostile:      "The monster is cornered or terrified. Don't put it down — get between it and the factions that will. Escort it to an exit.",
         stored_supplies:       "These caches belong to the canyon's people. Every crate we hold is someone who doesn't go hungry.",
         scattered_crates:      "Gather what's left. Supplies belong to survivors, not scavengers.",
         fouled_resource:       "Contaminated doesn't mean worthless. We can purify it. Others will weaponize it.",
@@ -821,8 +861,8 @@ window.CC_APP = {
         command_structure:     "Control the structure. Use it to call in support, not to fortify."
       },
       monsterology: {
-        monsters_befriendable: "Unclassified specimen. Mobile, possibly sapient, definitely valuable. Capture it intact — no kill shots.",
-        monsters_hostile:      "Threat-class specimen. If capture is impossible, harvest what you can on the way out.",
+        monsters_befriendable: "Unclassified specimen. Mobile, possibly sapient, definitely valuable. Capture it intact — no kill shots until a live capture is confirmed impossible.",
+        monsters_hostile:      "Threat-class specimen. If live capture is impossible, harvest what you can on the way out. The Institute pays by weight.",
         stored_supplies:       "Survey the caches. Record contents. Extract anything with research value.",
         scattered_crates:      "Scattered materials mean a field opportunity. Collect everything, sort later.",
         fouled_resource:       "Contaminated supplies are a sample set. The Institute wants the contaminant, not the supplies.",
@@ -1173,15 +1213,17 @@ window.CC_APP = {
     // ================================
     // RENDER: ACCORDION STEP WRAPPER
     // ================================
-    function renderAccordionStep(num, title, icon, content, isOpen, isComplete) {
+    function renderAccordionStep(stepNum, title, icon, content, isActive, isComplete) {
       return `
-        <div class="cc-accordion-item ${isOpen ? 'open' : ''} ${isComplete ? 'complete' : ''}">
-          <div class="cc-accordion-header" onclick="goToStep(${num})">
-            <span class="cc-accordion-icon">${icon}</span>
-            <span class="cc-accordion-title">${num}. ${title}</span>
-            ${isComplete ? '<span class="cc-accordion-check">✓</span>' : ''}
+        <div class="cc-accordion-item ${isActive ? 'active' : ''} ${isComplete ? 'complete' : ''}">
+          <div class="cc-accordion-header" onclick="openStep(${stepNum})">
+            <div class="cc-step-icon">${icon}</div>
+            <div class="cc-step-title">${title}</div>
+            <div class="cc-step-status">${isComplete ? '<i class="fa fa-check"></i>' : ''}</div>
           </div>
-          ${isOpen ? `<div class="cc-accordion-body">${content}</div>` : ''}
+          <div class="cc-accordion-body" style="display: ${isActive ? 'block' : 'none'}">
+            ${content}
+          </div>
         </div>
       `;
     }
@@ -1191,81 +1233,136 @@ window.CC_APP = {
     // ================================
     function renderStep1_GameSetup() {
       return `
-        <div class="cc-form-group">
+        <div class="cc-form-section">
           <label class="cc-label">Game Mode</label>
-          <div class="cc-btn-group">
+          <div class="cc-button-group">
             <button class="cc-btn ${state.gameMode === 'solo' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
-                    onclick="setGameMode('solo')">Solo</button>
+                    onclick="setGameMode('solo')">Solo Play</button>
             <button class="cc-btn ${state.gameMode === 'multiplayer' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
                     onclick="setGameMode('multiplayer')">Multiplayer</button>
           </div>
         </div>
 
-        <div class="cc-form-group">
+        <div class="cc-form-section">
           <label class="cc-label">Point Value</label>
-          <select class="cc-select" onchange="setPointValue(this.value)">
-            <option value="250"  ${state.pointValue === 250  ? 'selected' : ''}>250 ₤  — Skirmish</option>
-            <option value="500"  ${state.pointValue === 500  ? 'selected' : ''}>500 ₤  — Standard</option>
-            <option value="750"  ${state.pointValue === 750  ? 'selected' : ''}>750 ₤  — Campaign</option>
-            <option value="1000" ${state.pointValue === 1000 ? 'selected' : ''}>1000 ₤ — Epic</option>
+          <select class="cc-input" onchange="setPointValue(this.value)">
+            <option value="500"  ${state.pointValue === 500  ? 'selected' : ''}>500 ₤</option>
+            <option value="1000" ${state.pointValue === 1000 ? 'selected' : ''}>1000 ₤</option>
+            <option value="1500" ${state.pointValue === 1500 ? 'selected' : ''}>1500 ₤</option>
+            <option value="2000" ${state.pointValue === 2000 ? 'selected' : ''}>2000 ₤</option>
           </select>
         </div>
 
-        <div class="cc-form-group">
+        <div class="cc-form-section">
           <label class="cc-label">Danger Rating</label>
-          <div class="cc-rating-row">
-            ${[1,2,3,4,5,6].map(n => `
-              <button class="cc-rating-btn ${state.dangerRating === n ? 'active' : ''}"
-                      onclick="setDangerRating(${n})">${n}</button>
-            `).join('')}
-          </div>
-          <p class="cc-help-text">${getDangerDescription(state.dangerRating)}</p>
-        </div>
-
-        <div class="cc-form-group">
-          <label class="cc-label">Game Warden (optional)</label>
-          <select class="cc-select" onchange="setGameWarden(this.value)">
-            <option value="none">No Game Warden</option>
-            ${FACTIONS.map(f => `
-              <option value="${f.id}" ${state.gameWarden === f.id ? 'selected' : ''}>${f.name}</option>
-            `).join('')}
+          <select class="cc-input" onchange="setDangerRating(this.value)">
+            <option value="1" ${state.dangerRating === 1 ? 'selected' : ''}>&#9733;&#9734;&#9734;&#9734;&#9734;&#9734; &mdash; Controlled</option>
+            <option value="2" ${state.dangerRating === 2 ? 'selected' : ''}>&#9733;&#9733;&#9734;&#9734;&#9734;&#9734; &mdash; Frontier Risk</option>
+            <option value="3" ${state.dangerRating === 3 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9734;&#9734;&#9734; &mdash; Hostile</option>
+            <option value="4" ${state.dangerRating === 4 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9734;&#9734; &mdash; Dangerous</option>
+            <option value="5" ${state.dangerRating === 5 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9733;&#9734; &mdash; Extreme</option>
+            <option value="6" ${state.dangerRating === 6 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9733;&#9733; &mdash; Catastrophic</option>
           </select>
         </div>
 
-        <div class="cc-form-actions">
-          <button class="cc-btn cc-btn-primary" onclick="completeStep(1)">Next →</button>
+        <div class="cc-form-section">
+          <label class="cc-label">Game Warden</label>
+          <select class="cc-input" onchange="setGameWarden(this.value)">
+            <option value="none"      ${!state.gameWarden               ? 'selected' : ''}>No Warden</option>
+            <option value="observing" ${state.gameWarden === 'observing' ? 'selected' : ''}>Observing</option>
+            <option value="npc"       ${state.gameWarden === 'npc'       ? 'selected' : ''}>Running NPC</option>
+          </select>
         </div>
+
+        ${state.gameMode ? `
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-primary" onclick="completeStep(1)">Next: Factions &rarr;</button>
+          </div>
+        ` : ''}
       `;
     }
 
     // ================================
-    // RENDER: STEP 2 — FACTIONS
+    // RENDER: STEP 2 — FACTIONS & FORCES
     // ================================
     function renderStep2_Factions() {
-      return `
-        <div class="cc-form-group">
-          <label class="cc-label">Select Factions</label>
-          <p class="cc-help-text">Choose 2–4 factions for this scenario.</p>
-          <div class="cc-faction-grid">
+      if (!state.gameMode) {
+        return `<div class="cc-info-box"><p>Complete Step 1 first.</p></div>`;
+      }
+
+      if (state.gameMode === 'solo') {
+        const playerFaction = state.factions.find(f => !f.isNPC);
+        return `
+          <div class="cc-form-section">
+            <label class="cc-label">Your Faction</label>
+            <select class="cc-input" onchange="setPlayerFaction(this.value)">
+              <option value="">Choose your faction&hellip;</option>
+              ${FACTIONS.filter(f => f.id !== 'monsters').map(f => `
+                <option value="${f.id}" ${playerFaction?.id === f.id ? 'selected' : ''}>${f.name}</option>
+              `).join('')}
+            </select>
+          </div>
+
+          <div class="cc-form-section">
+            <label class="cc-label">NPC Opponents</label>
+            <p class="cc-help-text">Choose which factions you'll be playing against.</p>
             ${FACTIONS.map(f => {
-              const isSelected = state.factions.some(sf => sf.id === f.id);
+              const isNPC = state.factions.some(sf => sf.id === f.id && sf.isNPC);
               return `
-                <button class="cc-faction-btn ${isSelected ? 'selected' : ''}"
-                        onclick="toggleFaction('${f.id}', '${f.name}')">
-                  ${f.name}
-                </button>
+                <div class="cc-faction-row">
+                  <label class="cc-checkbox-label">
+                    <input type="checkbox" ${isNPC ? 'checked' : ''}
+                      onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)">
+                    ${f.name}
+                  </label>
+                  <span class="cc-help-text" style="margin:0">(NPC)</span>
+                </div>
               `;
             }).join('')}
           </div>
-          ${state.factions.length > 0 ? `
-            <p class="cc-help-text"><strong>Selected:</strong> ${state.factions.map(f => f.name).join(', ')}</p>
-          ` : ''}
+
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
+            <button class="cc-btn cc-btn-primary" onclick="completeStep(2)"
+              ${!playerFaction ? 'disabled' : ''}>Next: Location &rarr;</button>
+          </div>
+        `;
+      }
+
+      // Multiplayer
+      return `
+        <div class="cc-form-section">
+          <label class="cc-label">Factions Playing</label>
+          <p class="cc-help-text">Select each faction in this game. Mark NPCs where needed.</p>
+          ${FACTIONS.map(f => {
+            const inGame = state.factions.find(sf => sf.id === f.id);
+            return `
+              <div class="cc-faction-row">
+                <label class="cc-checkbox-label">
+                  <input type="checkbox" ${inGame ? 'checked' : ''}
+                    onchange="toggleFaction('${f.id}', '${f.name}', this.checked)">
+                  ${f.name}
+                </label>
+                ${inGame ? `
+                  <input type="text" class="cc-input cc-player-name"
+                    placeholder="Player name..."
+                    value="${inGame.player || ''}"
+                    onchange="setFactionPlayer('${f.id}', this.value)">
+                  <label class="cc-checkbox-label" style="flex:0 0 auto">
+                    <input type="checkbox" ${inGame.isNPC ? 'checked' : ''}
+                      onchange="toggleFactionNPC('${f.id}', this.checked)">
+                    NPC
+                  </label>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
         </div>
 
         <div class="cc-form-actions">
-          <button class="cc-btn cc-btn-ghost" onclick="goToStep(1)">← Back</button>
+          <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
           <button class="cc-btn cc-btn-primary" onclick="completeStep(2)"
-                  ${state.factions.length < 2 ? 'disabled' : ''}>Next →</button>
+            ${state.factions.length < 2 ? 'disabled' : ''}>Next: Location &rarr;</button>
         </div>
       `;
     }
@@ -1277,9 +1374,9 @@ window.CC_APP = {
       const namedLocations = locationData?.locations || [];
 
       return `
-        <div class="cc-form-group">
+        <div class="cc-form-section">
           <label class="cc-label">Location Type</label>
-          <div class="cc-btn-group">
+          <div class="cc-button-group">
             <button class="cc-btn ${state.locationType === 'random_any' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
                     onclick="setLocationType('random_any')">Random</button>
             <button class="cc-btn ${state.locationType === 'named' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
@@ -1288,23 +1385,29 @@ window.CC_APP = {
         </div>
 
         ${state.locationType === 'named' ? `
-          <div class="cc-form-group">
+          <div class="cc-form-section">
             <label class="cc-label">Choose Location</label>
-            <select class="cc-select" onchange="setSelectedLocation(this.value)">
-              <option value="">— Select a location —</option>
+            <select class="cc-input" onchange="setSelectedLocation(this.value)">
+              <option value="">&mdash; Select a location &mdash;</option>
               ${namedLocations.map(loc => `
                 <option value="${loc.id}" ${state.selectedLocation === loc.id ? 'selected' : ''}>
-                  ${loc.emoji || '📍'} ${loc.name} (Danger ${loc.danger})
+                  ${loc.name} (Danger ${loc.danger || '?'})
                 </option>
               `).join('')}
             </select>
           </div>
         ` : ''}
 
+        ${state.locationType === 'random_any' ? `
+          <div class="cc-info-box"><p><i class="fa fa-info-circle"></i> A random location will be chosen when you generate.</p></div>
+        ` : ''}
+
         <div class="cc-form-actions">
-          <button class="cc-btn cc-btn-ghost" onclick="goToStep(2)">← Back</button>
+          <button class="cc-btn cc-btn-ghost" onclick="openStep(2)">&larr; Back</button>
           <button class="cc-btn cc-btn-primary" onclick="completeStep(3)"
-                  ${!state.locationType ? 'disabled' : ''}>Next →</button>
+            ${(state.locationType === 'named' && !state.selectedLocation) || !state.locationType ? 'disabled' : ''}>
+            Next: Generate Scenario &rarr;
+          </button>
         </div>
       `;
     }
@@ -1313,18 +1416,28 @@ window.CC_APP = {
     // RENDER: STEP 4 — GENERATE
     // ================================
     function renderStep4_Generate() {
-      return `
-        <div class="cc-generate-section">
-          <p>Ready to generate your scenario. Click below when you're set.</p>
-          ${state.generated ? `
-            <p class="cc-help-text">A scenario has already been generated. Clicking again will create a new one.</p>
-          ` : ''}
-          <div class="cc-form-actions">
-            <button class="cc-btn cc-btn-ghost" onclick="goToStep(3)">← Back</button>
-            <button class="cc-btn cc-btn-primary" onclick="generateScenario()">🎲 Generate Scenario</button>
+      if (!state.generated) {
+        const locName = state.locationType === 'named'
+          ? locationData?.locations.find(l => l.id === state.selectedLocation)?.name || 'Named'
+          : 'Random';
+        return `
+          <div class="cc-generate-section">
+            <p class="cc-help-text">Ready to generate your scenario based on:</p>
+            <ul class="cc-summary-list">
+              <li><strong>Mode:</strong> ${state.gameMode === 'solo' ? 'Solo Play' : 'Multiplayer'}</li>
+              <li><strong>Points:</strong> ${state.pointValue} &#8356;</li>
+              <li><strong>Danger:</strong> ${'&#9733;'.repeat(state.dangerRating)}${'&#9734;'.repeat(6 - state.dangerRating)}</li>
+              <li><strong>Factions:</strong> ${state.factions.map(f => f.name + (f.isNPC ? ' (NPC)' : '')).join(', ') || '—'}</li>
+              <li><strong>Location:</strong> ${locName}</li>
+            </ul>
+            <div class="cc-form-actions">
+              <button class="cc-btn cc-btn-ghost" onclick="openStep(3)">&larr; Back</button>
+              <button class="cc-btn cc-btn-primary" onclick="generateScenario()"><i class="fa fa-dice"></i> Generate Scenario</button>
+            </div>
           </div>
-        </div>
-      `;
+        `;
+      }
+      return renderScenarioOutput();
     }
 
     // ================================
@@ -1344,37 +1457,35 @@ window.CC_APP = {
 
           <!-- LOCATION -->
           <div class="cc-scenario-section">
-            <h4>📍 Location</h4>
+            <h4><i class="fa fa-map-marker"></i> Location</h4>
             <p>
-              <strong>${s.location.emoji || '📍'} ${s.location.name}</strong>
+              <strong>${s.location.name}</strong>
               <span class="cc-state-badge cc-state-${s.location.state}">${s.location.state}</span>
-              &nbsp;Danger ${s.danger_rating} — ${s.danger_description}
+              &nbsp;Danger ${s.danger_rating} &mdash; ${s.danger_description}
             </p>
             ${s.location.description ? `<p class="cc-help-text"><em>${s.location.description}</em></p>` : ''}
-            ${s.location.atmosphere   ? `<p class="cc-quote">"${s.location.atmosphere}"</p>`           : ''}
-            ${s.location.features?.length
-              ? `<p class="cc-help-text">${s.location.features.join(' · ')}</p>`
-              : ''}
+            ${s.location.atmosphere  ? `<p class="cc-quote">"${s.location.atmosphere}"</p>` : ''}
+            ${s.location.features?.length ? `<p class="cc-help-text">${s.location.features.join(' &middot; ')}</p>` : ''}
             ${buildResourceSummary(s.location.effectiveResources)}
           </div>
 
           <!-- OBJECTIVES -->
           <div class="cc-scenario-section">
-            <h4>🎯 Objectives</h4>
+            <h4><i class="fa fa-crosshairs"></i> Objectives</h4>
             ${s.objectives.map(obj => `
               <div class="cc-objective-card">
                 <strong>${obj.name}</strong>
                 <p>${obj.description}</p>
-                <p class="cc-vp-line">💰 ${obj.vp_base} VP base</p>
-                ${obj.special ? `<p><em>⚠️ Special: ${obj.special}</em></p>` : ''}
+                <p class="cc-vp-line"><i class="fa fa-star"></i> ${obj.vp_base} VP base</p>
+                ${obj.special ? `<p><em><i class="fa fa-exclamation-triangle"></i> Special: ${obj.special}</em></p>` : ''}
               </div>
             `).join('')}
           </div>
 
-          <!-- FIX 3: OBJECTIVE MARKERS TABLE -->
+          <!-- OBJECTIVE MARKERS TABLE -->
           ${s.objective_markers?.length ? `
             <div class="cc-scenario-section cc-markers-section">
-              <h4>📌 Board Setup — Objective Markers</h4>
+              <h4><i class="fa fa-thumb-tack"></i> Board Setup &mdash; Objective Markers</h4>
               <p class="cc-markers-intro">Before the game begins, place these tokens on the board as described.</p>
               <table class="cc-marker-table">
                 <thead>
@@ -1394,15 +1505,9 @@ window.CC_APP = {
                       </td>
                       <td class="cc-marker-count">${m.count}</td>
                       <td>${m.placement}</td>
-                      <td>${(m.interactions || []).map(i =>
-                        `<span class="cc-marker-action">${i}</span>`
-                      ).join(' ')}</td>
+                      <td>${(m.interactions || []).map(i => `<span class="cc-marker-action">${i}</span>`).join(' ')}</td>
                     </tr>
-                    ${m.notes ? `
-                      <tr class="cc-marker-note-row">
-                        <td colspan="4"><em>📎 ${m.notes}</em></td>
-                      </tr>
-                    ` : ''}
+                    ${m.notes ? `<tr class="cc-marker-note-row"><td colspan="4"><em><i class="fa fa-info-circle"></i> ${m.notes}</em></td></tr>` : ''}
                   `).join('')}
                 </tbody>
               </table>
@@ -1412,13 +1517,11 @@ window.CC_APP = {
           <!-- MONSTER PRESSURE -->
           ${s.monster_pressure?.enabled ? `
             <div class="cc-scenario-section">
-              <h4>👹 Monster Pressure</h4>
+              <h4><i class="fa fa-paw"></i> Monster Pressure</h4>
               <p><strong>Trigger:</strong> ${s.monster_pressure.trigger}</p>
               ${s.monster_pressure.seed_based ? '<p class="cc-help-text"><em>Location-specific monsters selected.</em></p>' : ''}
               <ul>
-                ${s.monster_pressure.monsters.map(m =>
-                  `<li>${m.name} (${m.type || 'Monster'}) — ${m.cost} ₤</li>`
-                ).join('')}
+                ${s.monster_pressure.monsters.map(m => `<li>${m.name} (${m.type || 'Monster'}) &mdash; ${m.cost} &#8356;</li>`).join('')}
               </ul>
               ${s.monster_pressure.notes ? `<p><em>${s.monster_pressure.notes}</em></p>` : ''}
             </div>
@@ -1427,60 +1530,49 @@ window.CC_APP = {
           <!-- TWIST -->
           ${s.twist ? `
             <div class="cc-scenario-section cc-twist">
-              <h4>🎭 Scenario Twist</h4>
+              <h4><i class="fa fa-random"></i> Scenario Twist</h4>
               <p><strong>${s.twist.name}</strong></p>
               <p>${s.twist.description}</p>
               ${s.twist.example ? `<p><em>Example: ${s.twist.example}</em></p>` : ''}
             </div>
           ` : ''}
 
-          <!-- FIX 4: VICTORY CONDITIONS — improved card structure -->
+          <!-- VICTORY CONDITIONS -->
           <div class="cc-scenario-section">
-            <h4>🏆 Victory Conditions</h4>
+            <h4><i class="fa fa-trophy"></i> Victory Conditions</h4>
             ${Object.entries(s.victory_conditions).map(([factionId, vc]) => `
               <div class="cc-victory-card">
-
-                <!-- HEADER -->
                 <div class="cc-vc-header">
                   <h5>${vc.faction_name}${vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : ''}</h5>
                 </div>
-
-                <!-- OBJECTIVES -->
                 <div class="cc-vc-objectives">
                   ${(vc.objectives || []).map((obj, i) => `
                     <div class="cc-vc-obj">
                       <div class="cc-vc-obj-label">Objective ${i + 1}</div>
-                      <div class="cc-vc-obj-name">🎯 ${obj.name}</div>
+                      <div class="cc-vc-obj-name"><i class="fa fa-crosshairs"></i> ${obj.name}</div>
                       <p class="cc-vc-obj-desc">${obj.desc}</p>
                       <div class="cc-vc-obj-meta">
-                        <span class="cc-vp-line">💰 ${obj.vp}</span>
-                        <span class="cc-tactic-line">📋 ${obj.tactic}</span>
+                        <span class="cc-vp-line"><i class="fa fa-star"></i> ${obj.vp}</span>
+                        <span class="cc-tactic-line"><i class="fa fa-book"></i> ${obj.tactic}</span>
                       </div>
                     </div>
                   `).join('')}
                 </div>
-
                 <hr class="cc-vc-divider" />
-
-                <!-- FINALE -->
                 <div class="cc-vc-finale">
                   <div class="cc-vc-obj-label">Finale</div>
-                  <div class="cc-vc-obj-name">⚡ ${vc.finale.name}</div>
+                  <div class="cc-vc-obj-name"><i class="fa fa-bolt"></i> ${vc.finale.name}</div>
                   <p>${vc.finale.desc}</p>
-                  <p class="cc-vp-line">💰 ${vc.finale.vp}</p>
+                  <p class="cc-vp-line"><i class="fa fa-star"></i> ${vc.finale.vp}</p>
                 </div>
-
                 <hr class="cc-vc-divider" />
-
-                <!-- AFTERMATH -->
                 <div class="cc-vc-aftermath">
                   <div class="cc-vc-obj-label">If ${vc.faction_name} Wins</div>
-                  <p>🔹 ${vc.aftermath.immediate}</p>
-                  <p>🏛️ Territory becomes <strong>${vc.aftermath.canyon_state}</strong>.</p>
-                  <p>📅 ${vc.aftermath.long_term}</p>
+                  <p><i class="fa fa-chevron-right"></i> ${vc.aftermath.immediate}</p>
+                  <p><i class="fa fa-university"></i> Territory becomes <strong>${vc.aftermath.canyon_state}</strong>.</p>
+                  <p><i class="fa fa-calendar"></i> ${vc.aftermath.long_term}</p>
                   ${vc.quote ? `<p class="cc-quote">"${vc.quote}"</p>` : ''}
                 </div>
-
               </div>
             `).join('')}
           </div>
@@ -1488,24 +1580,22 @@ window.CC_APP = {
           <!-- AFTERMATH -->
           ${s.aftermath ? `
             <div class="cc-scenario-section">
-              <h4>📜 Aftermath</h4>
+              <h4><i class="fa fa-scroll"></i> Aftermath</h4>
               <p>${s.aftermath}</p>
             </div>
           ` : ''}
 
           ${s.vault_source ? `
             <div class="cc-scenario-section">
-              <p class="cc-help-text">
-                <em>📖 Based on vault scenario: "${s.vault_source}" (${s.vault_match_score} tag matches)</em>
-              </p>
+              <p class="cc-help-text"><em><i class="fa fa-book"></i> Based on vault scenario: "${s.vault_source}" (${s.vault_match_score} tag matches)</em></p>
             </div>
           ` : ''}
 
           <div class="cc-form-actions">
-            <button class="cc-btn cc-btn-ghost"      onclick="resetScenario()">🔄 Start Over</button>
-            <button class="cc-btn cc-btn-secondary"  onclick="rollAgain()">🌀 The Canyon Shifts</button>
-            <button class="cc-btn cc-btn-primary"    onclick="printScenario()">🖨️ Print</button>
-            <button class="cc-btn cc-btn-primary"    onclick="saveScenario()">💾 Save to Cloud</button>
+            <button class="cc-btn cc-btn-ghost"     onclick="resetScenario()"><i class="fa fa-refresh"></i> Start Over</button>
+            <button class="cc-btn cc-btn-secondary" onclick="rollAgain()"><i class="fa fa-random"></i> The Canyon Shifts</button>
+            <button class="cc-btn cc-btn-primary"   onclick="printScenario()"><i class="fa fa-print"></i> Print</button>
+            <button class="cc-btn cc-btn-primary"   onclick="saveScenario()"><i class="fa fa-cloud"></i> Save to Cloud</button>
           </div>
 
         </div>
@@ -1516,10 +1606,6 @@ window.CC_APP = {
     // RENDER: SUMMARY SIDEBAR PANEL
     // ================================
     function renderSummaryPanel() {
-      if (state.generated && state.scenario) {
-        return renderScenarioOutput();
-      }
-
       const steps = [
         { num: 1, title: 'Game Setup', complete: state.completedSteps.includes(1) },
         { num: 2, title: 'Factions',   complete: state.completedSteps.includes(2) },
@@ -1532,10 +1618,10 @@ window.CC_APP = {
         <div class="cc-summary-steps">
           ${steps.map(step => `
             <div class="cc-summary-step ${step.complete ? 'complete' : ''} ${state.currentStep === step.num ? 'active' : ''}"
-                 onclick="goToStep(${step.num})">
+                 onclick="openStep(${step.num})">
               <div class="cc-summary-step-number">${step.num}</div>
               <div class="cc-summary-step-title">${step.title}</div>
-              ${step.complete ? '<div class="cc-summary-step-check">✓</div>' : ''}
+              ${step.complete ? '<div class="cc-summary-step-check"><i class="fa fa-check"></i></div>' : ''}
             </div>
           `).join('')}
         </div>
@@ -1544,11 +1630,11 @@ window.CC_APP = {
           <div class="cc-summary-details">
             <h4>Current Setup</h4>
             ${state.gameMode    ? `<p><strong>Mode:</strong> ${state.gameMode === 'solo' ? 'Solo' : 'Multiplayer'}</p>` : ''}
-            ${state.pointValue  ? `<p><strong>Points:</strong> ${state.pointValue} ₤</p>` : ''}
-            ${state.dangerRating ? `<p><strong>Danger:</strong> ${'★'.repeat(state.dangerRating)}${'☆'.repeat(6 - state.dangerRating)}</p>` : ''}
+            ${state.pointValue  ? `<p><strong>Points:</strong> ${state.pointValue} &#8356;</p>` : ''}
+            ${state.dangerRating ? `<p><strong>Danger:</strong> ${'&#9733;'.repeat(state.dangerRating)}${'&#9734;'.repeat(6 - state.dangerRating)}</p>` : ''}
             ${state.factions.length ? `<p><strong>Factions:</strong> ${state.factions.map(f => f.name).join(', ')}</p>` : ''}
             ${state.selectedLocation || state.locationType === 'random_any'
-              ? `<p><strong>Location:</strong> ${state.locationType === 'named' ? '✓ Named' : 'Random'}</p>`
+              ? `<p><strong>Location:</strong> ${state.locationType === 'named' ? '&#10003; Named' : 'Random'}</p>`
               : ''}
           </div>
         ` : ''}
@@ -1557,7 +1643,7 @@ window.CC_APP = {
           <div class="cc-summary-details" style="border-top: 2px solid var(--cc-primary); margin-top: 1rem; padding-top: 1rem;">
             <h4>Quick Actions</h4>
             <button class="cc-btn cc-btn-ghost" style="width: 100%; margin-bottom: 0.5rem;"
-                    onclick="loadFromCloud()">📂 Load Saved Scenario</button>
+                    onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
           </div>
         ` : ''}
       `;
@@ -1565,8 +1651,28 @@ window.CC_APP = {
 
     // ================================
     // RENDER: MAIN RENDER FUNCTION
+    // When generated: full-width single-column layout
+    // When building: two-column sidebar + summary layout
     // ================================
     function render() {
+      if (state.generated && state.scenario) {
+        // Full-width result view — no sidebar
+        const html = `
+          <div class="cc-app-header">
+            <div>
+              <h1 class="cc-app-title">Coffin Canyon</h1>
+              <div class="cc-app-subtitle">Scenario Builder</div>
+            </div>
+          </div>
+          <div class="cc-scenario-full-layout">
+            ${renderScenarioOutput()}
+          </div>
+        `;
+        root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
+        return;
+      }
+
+      // Build wizard — two-column layout
       const html = `
         <div class="cc-app-header">
           <div>
@@ -1582,10 +1688,10 @@ window.CC_APP = {
                 <div class="cc-panel-title">Build Scenario</div>
               </div>
               <div class="cc-body cc-accordion">
-                ${renderAccordionStep(1, 'Game Setup',        '⚙️', renderStep1_GameSetup(), state.currentStep === 1, state.completedSteps.includes(1))}
-                ${renderAccordionStep(2, 'Factions & Forces', '⚔️', renderStep2_Factions(),  state.currentStep === 2, state.completedSteps.includes(2))}
-                ${renderAccordionStep(3, 'Location',          '🗺️', renderStep3_Location(),  state.currentStep === 3, state.completedSteps.includes(3))}
-                ${renderAccordionStep(4, 'Generate Scenario', '🎲', renderStep4_Generate(),  state.currentStep === 4, state.generated)}
+                ${renderAccordionStep(1, 'Game Setup',        '<i class="fa fa-cog"></i>',        renderStep1_GameSetup(), state.currentStep === 1, state.completedSteps.includes(1))}
+                ${renderAccordionStep(2, 'Factions & Forces', '<i class="fa fa-users"></i>',      renderStep2_Factions(),  state.currentStep === 2, state.completedSteps.includes(2))}
+                ${renderAccordionStep(3, 'Location',          '<i class="fa fa-map"></i>',        renderStep3_Location(),  state.currentStep === 3, state.completedSteps.includes(3))}
+                ${renderAccordionStep(4, 'Generate Scenario', '<i class="fa fa-dice"></i>',       renderStep4_Generate(),  state.currentStep === 4, state.generated)}
               </div>
             </div>
           </aside>
@@ -1593,9 +1699,7 @@ window.CC_APP = {
           <main class="cc-scenario-main">
             <div class="cc-panel h-100">
               <div class="cc-panel-head">
-                <div class="cc-panel-title">
-                  ${state.generated ? state.scenario?.name || 'Scenario' : 'Summary'}
-                </div>
+                <div class="cc-panel-title">Summary</div>
               </div>
               <div class="cc-body">
                 ${renderSummaryPanel()}
@@ -1612,6 +1716,7 @@ window.CC_APP = {
     // ================================
     window.setGameMode = function(mode) {
       state.gameMode = mode;
+      state.factions = [];
       render();
     };
 
@@ -1628,14 +1733,48 @@ window.CC_APP = {
       state.gameWarden = (value === 'none') ? null : value;
     };
 
-    window.toggleFaction = function(id, name) {
-      const idx = state.factions.findIndex(f => f.id === id);
-      if (idx > -1) {
-        state.factions.splice(idx, 1);
-      } else {
-        state.factions.push({ id, name });
+    // Solo mode
+    window.setPlayerFaction = function(factionId) {
+      state.factions = state.factions.filter(f => f.isNPC);
+      if (factionId) {
+        const faction = FACTIONS.find(f => f.id === factionId);
+        if (faction) state.factions.unshift({ id: faction.id, name: faction.name, player: '', isNPC: false });
       }
       render();
+    };
+
+    window.toggleNPCFaction = function(id, name, checked) {
+      if (checked) {
+        if (!state.factions.some(f => f.id === id && f.isNPC)) {
+          state.factions.push({ id, name, player: 'NPC', isNPC: true });
+        }
+      } else {
+        state.factions = state.factions.filter(f => !(f.id === id && f.isNPC));
+      }
+      render();
+    };
+
+    // Multiplayer mode
+    window.toggleFaction = function(id, name, checked) {
+      if (checked) {
+        if (!state.factions.some(f => f.id === id)) {
+          state.factions.push({ id, name, player: '', isNPC: false });
+        }
+      } else {
+        state.factions = state.factions.filter(f => f.id !== id);
+      }
+      render();
+    };
+
+    window.toggleFactionNPC = function(id, isNPC) {
+      const f = state.factions.find(f => f.id === id);
+      if (f) { f.isNPC = isNPC; f.player = isNPC ? 'NPC' : ''; }
+      render();
+    };
+
+    window.setFactionPlayer = function(factionId, playerName) {
+      const f = state.factions.find(f => f.id === factionId);
+      if (f) f.player = playerName;
     };
 
     window.setLocationType = function(type) {
@@ -1648,14 +1787,11 @@ window.CC_APP = {
       state.selectedLocation = id || null;
     };
 
-    window.goToStep = function(num) {
-      state.currentStep = num;
-      render();
-    };
-
-    window.completeStep = function(num) {
-      if (!state.completedSteps.includes(num)) state.completedSteps.push(num);
-      state.currentStep = num + 1;
+    window.openStep    = function(n) { state.currentStep = n; render(); };
+    window.goToStep    = function(n) { state.currentStep = n; render(); };
+    window.completeStep = function(n) {
+      if (!state.completedSteps.includes(n)) state.completedSteps.push(n);
+      state.currentStep = n + 1;
       render();
     };
 
@@ -1890,12 +2026,33 @@ window.CC_APP = {
     // ================================
     injectPatchCSS();
 
+    // Show preloader immediately — logo + animated loading bar
+    root.innerHTML = `
+      <div class="cc-app-shell h-100">
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Coffin Canyon</h1>
+            <div class="cc-app-subtitle">Scenario Builder</div>
+          </div>
+        </div>
+        <div class="cc-loading-container">
+          <img
+            src="https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png"
+            alt="Coffin Canyon"
+            style="width:320px;max-width:80vw;margin-bottom:2rem;filter:drop-shadow(0 0 28px rgba(255,117,24,.45));"
+          />
+          <div class="cc-loading-bar">
+            <div class="cc-loading-progress"></div>
+          </div>
+          <div class="cc-loading-text">Loading scenario data&hellip;</div>
+        </div>
+      </div>
+    `;
+
     loadGameData().then(() => {
       console.log('✅ Game data ready — rendering app');
       render();
     });
-
-    render(); // Initial render (shows loading state while data fetches)
 
   } // end init()
 }; // end window.CC_APP
