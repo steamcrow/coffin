@@ -1029,6 +1029,7 @@
   }
 
   window.CC_CanyonMap = { mount: mount };
+  window.CC_HITBOXES = HITBOXES;
 
 })();  
    
