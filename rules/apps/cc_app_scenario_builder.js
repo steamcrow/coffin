@@ -113,6 +113,7 @@ window.CC_APP = {
     let monsterFactionData = null;
     let scenarioVaultData  = null;
     let scenarioNamesData  = null;
+    let campaignSystemData = null;   // 30_campaign_system.json — location states + effects
     let factionDataMap     = {};
 
     async function loadGameData() {
@@ -120,14 +121,15 @@ window.CC_APP = {
         const base = 'https://raw.githubusercontent.com/steamcrow/coffin/main';
         const t    = '?t=' + Date.now();
 
-        const [plotRes, twistRes, locRes, locTypesRes, monstersRes, vaultRes, namesRes] = await Promise.all([
+        const [plotRes, twistRes, locRes, locTypesRes, monstersRes, vaultRes, namesRes, campRes] = await Promise.all([
           fetch(`${base}/rules/src/200_plot_families.json${t}`),
           fetch(`${base}/rules/src/210_twist_tables.json${t}`),
           fetch(`${base}/rules/src/170_named_locations.json${t}`),
           fetch(`${base}/rules/src/150_location_types.json${t}`),
           fetch(`${base}/factions/faction-monsters-v2.json${t}`),
           fetch(`${base}/rules/src/180_scenario_vault.json${t}`),
-          fetch(`${base}/rules/src/230_scenario_names.json${t}`)
+          fetch(`${base}/rules/src/230_scenario_names.json${t}`),
+          fetch(`${base}/rules/src/30_campaign_system.json${t}`)
         ]);
 
         plotFamiliesData   = await plotRes.json();
@@ -137,6 +139,8 @@ window.CC_APP = {
         monsterFactionData = await monstersRes.json();
         scenarioVaultData  = await vaultRes.json();
         scenarioNamesData  = await namesRes.json();
+        // Campaign system is optional — don't fail if the file isn't there yet
+        try { campaignSystemData = await campRes.json(); } catch { campaignSystemData = null; }
 
         const PLAYER_FACTIONS = [
           { id: 'monster_rangers', file: 'faction-monster-rangers-v5.json' },
@@ -265,6 +269,23 @@ window.CC_APP = {
     }
 
     // ================================
+    // CAMPAIGN STATE LOOKUP
+    // Reads 30_campaign_system.json for environment/terrain/effects
+    // ================================
+    function getCampaignStateDef(stateId) {
+      if (!campaignSystemData) return null;
+      // Try common structures: location_states array, or states array, or direct object
+      const pool = campaignSystemData.location_states
+                || campaignSystemData.states
+                || (Array.isArray(campaignSystemData) ? campaignSystemData : null);
+      if (!pool) return null;
+      return pool.find(s => s.id === stateId || s.name?.toLowerCase() === stateId?.toLowerCase()) || null;
+    }
+
+    // States applied when a location has no defined state (or has the generic 'alive')
+    const RANDOM_STATES = ['poisoned', 'haunted', 'strangewild'];
+
+    // ================================
     // LOCATION PROFILE BUILDER
     // ================================
     function buildLocationProfile(locationType, selectedLocationId) {
@@ -284,7 +305,7 @@ window.CC_APP = {
           name:             'Unknown Territory',
           emoji:            '❓',
           archetype:        'frontier',
-          state:            'poisoned',
+          state:            randomChoice(RANDOM_STATES),
           features:         [],
           effectiveDanger:  state.dangerRating,
           effectiveResources: {},
@@ -304,12 +325,18 @@ window.CC_APP = {
       const effectiveResources = Object.assign({}, typeDefaults.base_resources || {}, location.resources || {});
       const effectiveDanger    = location.danger ?? state.dangerRating;
 
+      // If the JSON state is 'alive' (generic default) or missing, roll a random atmospheric state
+      const rawState = location.state || '';
+      const resolvedState = (!rawState || rawState === 'alive')
+        ? randomChoice(RANDOM_STATES)
+        : rawState;
+
       return {
         id:               location.id,
         name:             location.name,
         emoji:            location.emoji || '📍',
         archetype:        location.archetype || 'unknown',
-        state:            location.state || 'alive',
+        state:            resolvedState,
         features:         location.features || [],
         effectiveDanger,
         effectiveResources,
@@ -787,9 +814,12 @@ window.CC_APP = {
       if (locProfile?.effectiveResources) {
         const r = locProfile.effectiveResources;
         for (const [key, val] of Object.entries(r)) {
-          if (typeof val === 'number' && val >= 2) {
+          if (typeof val === 'number' && val >= 1) {
+            // Weight: each resource point adds to objective score
+            // Resources with 3+ are major features; multiply for stronger signal
+            const weight = val >= 3 ? val * 2 : val >= 2 ? val + 2 : val + 1;
             (RESOURCE_OBJECTIVE_AFFINITY[key] || []).forEach(t => {
-              if (scores[t] !== undefined) scores[t] += val;
+              if (scores[t] !== undefined) scores[t] += weight;
             });
           }
         }
@@ -811,7 +841,7 @@ window.CC_APP = {
       // ---- RAIL GATE ----
       // wrecked_engine and derailed_cars only make sense at rail locations.
       // If the location has no rail features/archetype, zero them out entirely.
-      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur'];
+      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'rail', 'Rail'];
       const RAIL_ARCHETYPES = ['rail_grade', 'rail_terminus', 'rail_depot'];
       const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
                    || RAIL_ARCHETYPES.includes(locProfile?.archetype || '');
@@ -905,13 +935,13 @@ window.CC_APP = {
     // ================================
     const OBJECTIVE_MARKER_TABLE = {
       wrecked_engine:     { count: '1',    placement: 'Center board',              token: 'Wreck token or large model',    interactions: ['SALVAGE', 'CONTROL', 'SABOTAGE'] },
-      scattered_crates:   { count: 'd3+2', placement: 'Scattered across board',    token: 'Crate tokens',                  interactions: ['COLLECT', 'EXTRACT'] },
-      stored_supplies:    { count: 'd3+1', placement: 'Within 6″ of center',       token: 'Supply crate tokens',           interactions: ['CLAIM', 'EXTRACT'] },
-      derailed_cars:      { count: 'd3+1', placement: 'Scattered near wreck',      token: 'Rail car tokens',               interactions: ['SEARCH', 'EXTRACT'] },
+      scattered_crates:   { count: 'd6', placement: 'Scattered across board',    token: 'Crate tokens',                  interactions: ['COLLECT', 'EXTRACT'] },
+      stored_supplies:    { count: 'd6', placement: 'Within 6″ of center',       token: 'Supply crate tokens',           interactions: ['CLAIM', 'EXTRACT'] },
+      derailed_cars:      { count: 'd6', placement: 'Scattered near wreck',      token: 'Rail car tokens',               interactions: ['SEARCH', 'EXTRACT'] },
       // FIX 3: cargo_vehicle uses the faction-aware name at render time
       cargo_vehicle:      { count: '1',    placement: 'One table edge, center',    token: 'Vehicle model',                 interactions: ['BOARD', 'ESCORT', 'DISABLE'] },
-      pack_animals:       { count: 'd3',   placement: 'Center board',              token: 'Animal tokens',                 interactions: ['CONTROL', 'ESCORT'] },
-      ritual_components:  { count: 'd3+1', placement: 'Scattered across board',    token: 'Component tokens',              interactions: ['GATHER', 'CORRUPT'] },
+      pack_animals:       { count: 'd6',   placement: 'Center board',              token: 'Animal tokens',                 interactions: ['CONTROL', 'ESCORT'] },
+      ritual_components:  { count: 'd6', placement: 'Scattered across board',    token: 'Component tokens',              interactions: ['GATHER', 'CORRUPT'] },
       ritual_site:        { count: '1',    placement: 'Center board',              token: 'Ritual marker (3″ radius)',     interactions: ['ACTIVATE', 'DISRUPT', 'CORRUPT'] },
       ritual_circle:      { count: '1',    placement: 'Center board',              token: 'Circle marker (3″ radius)',     interactions: ['ACTIVATE', 'DISRUPT', 'CONTROL'] },
       land_marker:        { count: '3',    placement: 'Spread across board',       token: 'Territory markers',             interactions: ['CLAIM', 'CONTROL'] },
@@ -1804,36 +1834,52 @@ window.CC_APP = {
             <h4><i class="fa fa-map-marker"></i> Location</h4>
             <p>
               <strong>${s.location.name}</strong>
-              ${(() => {
-                // Each state gets a label and a one-line definition shown inline
-                const STATE_DEFS = {
-                  booming:      { label: 'Booming',      def: 'Active, loud, and growing fast. Resources flow here.' },
-                  thriving:     { label: 'Thriving',     def: 'Stable enough that people are building things to last.' },
-                  stable:       { label: 'Stable',       def: 'Not safe — just predictable. Factions have settled into position.' },
-                  troubled:     { label: 'Troubled',     def: 'Something is wrong here. People feel it even if they can\'t name it.' },
-                  contested:    { label: 'Contested',    def: 'Multiple factions are actively fighting for control.' },
-                  dangerous:    { label: 'Dangerous',    def: 'Expect violence. Anyone here is either desperate or armed.' },
-                  lawless:      { label: 'Lawless',      def: 'No authority holds. Rules are made by whoever is strongest today.' },
-                  strangewild:  { label: 'Strangewild',  def: 'Monster activity is high. The canyon is reclaiming this place.' },
-                  ruined:       { label: 'Ruined',       def: 'What was here is gone. The bones are all that remain.' },
-                  abandoned:    { label: 'Abandoned',    def: 'Everyone left. The question is why.' },
-                  exalted:      { label: 'Exalted',      def: 'The Crow Queen\'s influence is strong here. The canyon obeys.' },
-                  held:         { label: 'Held',         def: 'A faction has established real control. Recognised, if not welcome.' },
-                  haunted:      { label: 'Haunted',      def: 'The dead don\'t rest here. Something unresolved keeps them.' },
-                  barely_alive: { label: 'Haunted',      def: 'The dead don\'t rest here. Something unresolved keeps them.' },
-                  poisoned:     { label: 'Poisoned',     def: 'The ground or water is tainted. Everything that stays too long suffers.' },
-                  liberated:    { label: 'Liberated',    def: 'Recently taken by a formal authority. Control is thin and contested.' },
-                  alive:        null  // generic/fallback — not a meaningful player-facing state
-                };
-                const raw  = s.location.state || '';
-                const def  = STATE_DEFS[raw];
-                if (def === null || (!def && !raw)) return ''; // 'alive' and empty show nothing
-                const label = def?.label || raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                const desc  = def?.def  || '';
-                return `<span class="cc-state-badge cc-state-${raw}" title="${desc}">${label}</span>${desc ? `<span class="cc-state-def"> &mdash; <em>${desc}</em></span>` : ''}`;
-              })()}
               &nbsp;Danger ${s.danger_rating} &mdash; ${s.danger_description}
             </p>
+            ${(() => {
+              const raw = s.location.state || '';
+              if (!raw || raw === 'alive') return '';
+
+              // Fallback definitions when campaign JSON isn't loaded
+              const FALLBACKS = {
+                booming:      { label: 'Booming',     def: 'Active, loud, and growing fast. Resources flow here.' },
+                thriving:     { label: 'Thriving',    def: 'Stable enough that people are building things to last.' },
+                stable:       { label: 'Stable',      def: 'Not safe — just predictable. Factions have settled into position.' },
+                troubled:     { label: 'Troubled',    def: 'Something is wrong here. People feel it even if they can\'t name it.' },
+                contested:    { label: 'Contested',   def: 'Multiple factions are actively fighting for control.' },
+                dangerous:    { label: 'Dangerous',   def: 'Expect violence. Anyone here is either desperate or armed.' },
+                lawless:      { label: 'Lawless',     def: 'No authority holds. Rules are made by whoever is strongest today.' },
+                strangewild:  { label: 'Strangewild', def: 'Monster activity is high. The canyon is reclaiming this place.' },
+                ruined:       { label: 'Ruined',      def: 'What was here is gone. The bones are all that remain.' },
+                abandoned:    { label: 'Abandoned',   def: 'Everyone left. The question is why.' },
+                exalted:      { label: 'Exalted',     def: 'The Crow Queen\'s influence is strong here. The canyon obeys.' },
+                held:         { label: 'Held',        def: 'A faction has established real control. Recognised, if not welcome.' },
+                haunted:      { label: 'Haunted',     def: 'The dead don\'t rest here. Something unresolved keeps them.' },
+                barely_alive: { label: 'Haunted',     def: 'The dead don\'t rest here. Something unresolved keeps them.' },
+                poisoned:     { label: 'Poisoned',    def: 'The ground or water is tainted. Everything that stays too long suffers.' },
+                liberated:    { label: 'Liberated',   def: 'Recently taken by a formal authority. Control is thin and contested.' },
+              };
+
+              const camp  = getCampaignStateDef(raw);
+              const fb    = FALLBACKS[raw] || {};
+              const label = camp?.name  || fb.label || raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+              const def   = camp?.description || fb.def || '';
+
+              // Environment / Terrain / Effects rows if campaign data provides them
+              const rows = [];
+              const TD_KEY = 'style="color:rgba(255,255,255,0.45);padding-right:1rem;white-space:nowrap;font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;vertical-align:top;"';
+              const TD_VAL = 'style="font-size:0.82rem;line-height:1.5;"';
+              if (camp?.environment) rows.push(`<tr><td ${TD_KEY}>Environment</td><td ${TD_VAL}>${camp.environment}</td></tr>`);
+              if (camp?.terrain)     rows.push(`<tr><td ${TD_KEY}>Terrain</td><td ${TD_VAL}>${camp.terrain}</td></tr>`);
+              if (camp?.effects)     rows.push(`<tr><td ${TD_KEY}>Effects</td><td ${TD_VAL}>${camp.effects}</td></tr>`);
+
+              return `
+                <div class="cc-state-block" style="margin:0.4rem 0 0.75rem 0;">
+                  <span class="cc-state-badge cc-state-${raw}">${label}</span>
+                  ${def ? `<span class="cc-state-def"> — <em>${def}</em></span>` : ''}
+                  ${rows.length ? `<table style="margin-top:0.5rem;border-collapse:collapse;">${rows.join('')}</table>` : ''}
+                </div>`;
+            })()}
             ${s.location.description ? `<p><em>${s.location.description}</em></p>` : ''}
             ${s.location.atmosphere  ? `<p class="cc-quote">"${s.location.atmosphere}"</p>` : ''}
             ${renderLocationMapEmbed()}
@@ -2230,25 +2276,24 @@ window.CC_APP = {
         return;
       }
 
-      // File name is the scenario title (slugified) + timestamp — shown in Odoo
-      // But the panel shows state.scenario.name (the actual generated title)
+      // Compact save format — mirrors faction builder's clean JSON shape
       const slug = (state.scenario.name || 'scenario')
         .replace(/[^a-zA-Z0-9 \-]/g, '')
         .replace(/\s+/g, '_')
         .substring(0, 50);
       const docName = `SCN_${slug}_${Date.now()}`;
 
+      // Compact payload — full scenario data stays intact but setup keys are tightened
       const data = JSON.stringify({
-        savedAt:  new Date().toISOString(),
-        scenario: state.scenario,
-        setup: {
-          gameMode:         state.gameMode,
-          pointValue:       state.pointValue,
-          dangerRating:     state.dangerRating,
-          factions:         state.factions,
-          locationType:     state.locationType,
-          selectedLocation: state.selectedLocation
-        }
+        version:   '1.0',
+        name:      state.scenario.name,
+        location:  state.scenario.location?.name,
+        danger:    state.scenario.danger_rating,
+        factions:  state.factions.map(f => ({ id: f.id, npc: f.isNPC || false })),
+        gameMode:  state.gameMode,
+        pts:       state.pointValue,
+        scenario:  state.scenario,
+        timestamp: new Date().toISOString()
       });
 
       try {
@@ -2383,11 +2428,14 @@ window.CC_APP = {
         const { json } = await window.CC_STORAGE.loadDocument(docId);
         const saved = JSON.parse(json);
 
+        // Support both new compact format (version:'1.0') and old verbose format
         state.scenario         = saved.scenario;
-        state.gameMode         = saved.setup?.gameMode         || state.gameMode;
-        state.pointValue       = saved.setup?.pointValue       || state.pointValue;
-        state.dangerRating     = saved.setup?.dangerRating     || state.dangerRating;
-        state.factions         = saved.setup?.factions         || state.factions;
+        state.gameMode         = saved.gameMode   || saved.setup?.gameMode         || state.gameMode;
+        state.pointValue       = saved.pts        || saved.setup?.pointValue       || state.pointValue;
+        state.dangerRating     = saved.danger     || saved.setup?.dangerRating     || state.dangerRating;
+        state.factions         = saved.factions?.map(f => ({
+                                   id: f.id, name: f.id, player: f.npc ? 'NPC' : '', isNPC: f.npc || false
+                                 })) || saved.setup?.factions || state.factions;
         state.locationType     = saved.setup?.locationType     || state.locationType;
         state.selectedLocation = saved.setup?.selectedLocation || state.selectedLocation;
         state.generated        = true;
