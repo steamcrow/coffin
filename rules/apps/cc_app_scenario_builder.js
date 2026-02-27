@@ -1938,12 +1938,10 @@ window.CC_APP = {
             </div>
           ` : ''}
 
-          <div class="cc-form-actions">
+          <div class="cc-form-actions" style="padding-top:1rem;">
             <button class="cc-btn cc-btn-ghost"     onclick="resetScenario()"><i class="fa fa-refresh"></i> Start Over</button>
             <button class="cc-btn cc-btn-secondary" onclick="rollAgain()"><i class="fa fa-random"></i> The Canyon Shifts</button>
             <button class="cc-btn cc-btn-primary"   onclick="printScenario()"><i class="fa fa-print"></i> Print</button>
-            <button class="cc-btn cc-btn-primary"   onclick="saveScenario()"><i class="fa fa-cloud"></i> Save</button>
-            <button class="cc-btn cc-btn-ghost"     onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load</button>
           </div>
 
         </div>
@@ -2005,6 +2003,13 @@ window.CC_APP = {
               <h1 class="cc-app-title">Coffin Canyon</h1>
               <div class="cc-app-subtitle">Scenario Builder</div>
             </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <button class="btn btn-sm btn-outline-secondary" onclick="printScenario()"   title="Print Scenario"><i class="fa fa-print"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetScenario()"   title="Start Over"><i class="fa fa-refresh"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()"   title="Load Scenario"><i class="fa fa-cloud-download"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="saveScenario()"    title="Save Scenario"><i class="fa fa-cloud-upload"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="rollAgain()"       title="The Canyon Shifts"><i class="fa fa-random"></i></button>
+            </div>
           </div>
           <div class="cc-scenario-full-layout">
             ${renderScenarioOutput()}
@@ -2025,6 +2030,9 @@ window.CC_APP = {
           <div>
             <h1 class="cc-app-title">Coffin Canyon</h1>
             <div class="cc-app-subtitle">Scenario Builder</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()" title="Load Scenario"><i class="fa fa-cloud-download"></i></button>
           </div>
         </div>
 
@@ -2174,10 +2182,6 @@ window.CC_APP = {
     // ================================
     // SAVE / LOAD
     // Uses window.CC_STORAGE from storage_helpers.js
-    // API: saveDocument(name, json, folderId)
-    //      loadDocumentList(folderId) → [{id, name, write_date}]
-    //      loadDocument(docId)        → {json, name}
-    // Scenarios go in folder 90 (Coffin Canyon Factions folder)
     // ================================
     const SCENARIO_FOLDER = 90;
 
@@ -2188,10 +2192,13 @@ window.CC_APP = {
         return;
       }
 
-      // Build a human-readable name: SCN_LocationName_Timestamp
-      const locSlug = (state.scenario.location?.name || 'Unknown')
-        .replace(/[^a-zA-Z0-9]/g, '_').substring(0, 24);
-      const docName = `SCN_${locSlug}_${Date.now()}`;
+      // File name is the scenario title (slugified) + timestamp — shown in Odoo
+      // But the panel shows state.scenario.name (the actual generated title)
+      const slug = (state.scenario.name || 'scenario')
+        .replace(/[^a-zA-Z0-9 \-]/g, '')
+        .replace(/\s+/g, '_')
+        .substring(0, 50);
+      const docName = `SCN_${slug}_${Date.now()}`;
 
       const data = JSON.stringify({
         savedAt:  new Date().toISOString(),
@@ -2207,46 +2214,135 @@ window.CC_APP = {
       });
 
       try {
-        const result = await window.CC_STORAGE.saveDocument(docName, data, SCENARIO_FOLDER);
-        alert(`Saved: ${docName}`);
+        await window.CC_STORAGE.saveDocument(docName, data, SCENARIO_FOLDER);
+        // Brief visual confirmation without a blocking alert
+        const btn = document.querySelector('[onclick="saveScenario()"]');
+        if (btn) {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<i class="fa fa-check"></i>';
+          btn.style.color = '#4ade80';
+          setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1800);
+        }
       } catch (err) {
         console.error('Save failed:', err);
-        alert('Save failed: ' + err.message + '\n\nAre you logged in to Coffin Canyon?');
+        alert('Save failed: ' + err.message + '\n\nAre you logged in?');
       }
     };
+
+    // ---- Slide panel helpers ----
+    window.closeScenarioPanel = function() {
+      const panel = document.getElementById('cc-scenario-load-panel');
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(() => panel.remove(), 300);
+      }
+    };
+
+    function showScenarioList(scenarios) {
+      window.closeScenarioPanel();
+
+      const FACTION_NAMES = {
+        monster_rangers: 'Monster Rangers', liberty_corps: 'Liberty Corps',
+        monsterology: 'Monsterology',       monsters:      'Monsters',
+        shine_riders: 'Shine Riders',       crow_queen:    'Crow Queen'
+      };
+
+      const panel = document.createElement('div');
+      panel.id    = 'cc-scenario-load-panel';
+      panel.className = 'cc-slide-panel';
+
+      panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+          <h2><i class="fa fa-cloud"></i> SAVED SCENARIOS</h2>
+          <button onclick="closeScenarioPanel()" class="cc-panel-close-btn">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="cc-roster-list">
+          ${scenarios.length === 0
+            ? '<p style="padding:1.5rem;color:#888;">No saved scenarios found.</p>'
+            : scenarios.map(s => `
+            <div class="cc-saved-roster-item">
+              <div class="cc-saved-roster-header">
+                <span class="cc-faction-type">
+                  ${(s.factions || []).map(f => FACTION_NAMES[f.id] || f.name).join(' · ') || 'Scenario'}
+                </span>
+              </div>
+              <div class="cc-saved-roster-name">${s.scenarioName || s.docName}</div>
+              <div class="cc-saved-roster-meta">
+                <i class="fa fa-map-marker"></i> ${s.locationName || '—'} &nbsp;·&nbsp;
+                Danger ${s.dangerRating || '?'} &nbsp;·&nbsp;
+                ${s.savedAt ? new Date(s.savedAt).toLocaleDateString() : ''}
+              </div>
+              <div class="cc-saved-roster-actions">
+                <button onclick="loadScenarioById(${s.docId})" class="btn btn-sm btn-warning">
+                  <i class="fa fa-folder-open"></i> LOAD
+                </button>
+                <button onclick="deleteScenario(${s.docId})" class="btn btn-sm btn-danger">
+                  <i class="fa fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+
+      document.body.appendChild(panel);
+      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    }
 
     window.loadFromCloud = async function() {
       if (!window.CC_STORAGE) {
         alert('Storage helper not loaded yet. Please wait a moment.');
         return;
       }
-
       try {
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (!auth.loggedIn) {
+          alert('You need to be logged in to load saved scenarios.');
+          return;
+        }
+
         const docs = await window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER);
-
-        // Filter to only scenario saves
         const saves = docs.filter(d => d.name.startsWith('SCN_'));
-        if (!saves.length) {
-          alert('No saved scenarios found.');
-          return;
-        }
 
-        // Build a prompt list with names and dates
-        const list = saves.map((d, i) => {
-          const date = d.write_date ? d.write_date.split(' ')[0] : '?';
-          return `${i + 1}. ${d.name.replace('.json', '')}  (${date})`;
-        }).join('\n');
+        // Enrich each save to get the real scenario name (like faction builder)
+        const enriched = await Promise.all(saves.map(async (doc) => {
+          try {
+            const { json } = await window.CC_STORAGE.loadDocument(doc.id);
+            const parsed   = JSON.parse(json);
+            return {
+              docId:        doc.id,
+              docName:      doc.name.replace('.json', ''),
+              scenarioName: parsed.scenario?.name || null,
+              locationName: parsed.scenario?.location?.name || null,
+              dangerRating: parsed.scenario?.danger_rating || null,
+              factions:     parsed.setup?.factions || [],
+              savedAt:      parsed.savedAt || doc.write_date
+            };
+          } catch {
+            return {
+              docId:        doc.id,
+              docName:      doc.name.replace('.json', ''),
+              scenarioName: null,
+              locationName: null,
+              dangerRating: null,
+              factions:     [],
+              savedAt:      doc.write_date
+            };
+          }
+        }));
 
-        const choice = prompt(`Choose a scenario to load (enter number):\n\n${list}`);
-        if (!choice) return;
+        showScenarioList(enriched);
+      } catch (err) {
+        console.error('Load failed:', err);
+        alert('Load failed: ' + err.message);
+      }
+    };
 
-        const idx = parseInt(choice) - 1;
-        if (isNaN(idx) || idx < 0 || idx >= saves.length) {
-          alert('Invalid choice.');
-          return;
-        }
-
-        const { json } = await window.CC_STORAGE.loadDocument(saves[idx].id);
+    window.loadScenarioById = async function(docId) {
+      try {
+        const { json } = await window.CC_STORAGE.loadDocument(docId);
         const saved = JSON.parse(json);
 
         state.scenario         = saved.scenario;
@@ -2259,16 +2355,33 @@ window.CC_APP = {
         state.generated        = true;
         state.completedSteps   = [1, 2, 3];
         state.currentStep      = 4;
+        window.closeScenarioPanel();
         render();
       } catch (err) {
         console.error('Load failed:', err);
-        alert('Load failed: ' + err.message + '\n\nAre you logged in to Coffin Canyon?');
+        window.closeScenarioPanel();
+        alert('Load failed: ' + err.message);
+      }
+    };
+
+    window.deleteScenario = async function(docId) {
+      if (!confirm('Delete this saved scenario? This cannot be undone.')) return;
+      try {
+        await window.CC_STORAGE.deleteDocument(docId);
+        window.closeScenarioPanel();
+        // Re-open the panel with updated list after a beat
+        setTimeout(() => window.loadFromCloud(), 350);
+      } catch (err) {
+        console.error('Delete failed:', err);
+        alert('Delete failed: ' + err.message);
       }
     };
 
     // ================================
     // BOOT
     // ================================
+    const _bootStart = Date.now();
+
     root.innerHTML = `
       <div class="cc-app-shell h-100">
         <div class="cc-app-header">
@@ -2277,7 +2390,7 @@ window.CC_APP = {
             <div class="cc-app-subtitle">Scenario Builder</div>
           </div>
         </div>
-        <div class="cc-loading-container">
+        <div id="cc-splash-screen" class="cc-loading-container" style="transition:opacity 0.6s ease;">
           <img
             src="https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png"
             alt="Coffin Canyon"
@@ -2291,9 +2404,26 @@ window.CC_APP = {
       </div>
     `;
 
+    // Minimum 5 seconds on the splash before we fade and swap
+    const MIN_SPLASH_MS = 5000;
+
     loadGameData().then(() => {
-      console.log('✅ Game data ready — rendering app');
-      render();
+      console.log('✅ Game data ready');
+      const elapsed  = Date.now() - _bootStart;
+      const holdFor  = Math.max(0, MIN_SPLASH_MS - elapsed);
+
+      setTimeout(() => {
+        const splash = document.getElementById('cc-splash-screen');
+        if (splash) {
+          splash.style.opacity = '0';
+          setTimeout(() => {
+            console.log('✅ Rendering app');
+            render();
+          }, 650); // wait for fade-out
+        } else {
+          render();
+        }
+      }, holdFor);
     });
 
   } // end init()
