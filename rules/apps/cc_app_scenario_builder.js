@@ -36,6 +36,24 @@ window.CC_APP = {
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
+    // ---- INLINE OVERRIDES (small rules that belong in-app) ----
+    if (!document.getElementById('cc-scenario-inline-styles')) {
+      const style = document.createElement('style');
+      style.id = 'cc-scenario-inline-styles';
+      style.textContent = `
+        .cc-state-def {
+          font-size: 0.78rem;
+          color: rgba(255,255,255,0.45);
+          font-style: italic;
+        }
+        .cc-state-badge {
+          display: inline-block;
+          vertical-align: middle;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
     // ---- LOAD STORAGE HELPERS ----
     if (!window.CC_STORAGE) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
@@ -788,6 +806,18 @@ window.CC_APP = {
           scores['pack_animals'] = 0;
         if ((r.tzul_silver || 0) < 3)
           scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 2);
+      }
+
+      // ---- RAIL GATE ----
+      // wrecked_engine and derailed_cars only make sense at rail locations.
+      // If the location has no rail features/archetype, zero them out entirely.
+      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur'];
+      const RAIL_ARCHETYPES = ['rail_grade', 'rail_terminus', 'rail_depot'];
+      const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
+                   || RAIL_ARCHETYPES.includes(locProfile?.archetype || '');
+      if (!hasRail) {
+        scores['wrecked_engine'] = 0;
+        scores['derailed_cars']  = 0;
       }
 
       const sorted = Object.entries(scores)
@@ -1775,24 +1805,32 @@ window.CC_APP = {
             <p>
               <strong>${s.location.name}</strong>
               ${(() => {
-                const STATE_LABELS = {
-                  booming:      'Booming',
-                  thriving:     'Thriving',
-                  stable:       'Stable',
-                  troubled:     'Troubled',
-                  contested:    'Contested',
-                  dangerous:    'Dangerous',
-                  lawless:      'Lawless',
-                  strangewild:  'Strangewild',
-                  ruined:       'Ruined',
-                  abandoned:    'Abandoned',
-                  exalted:      'Exalted',
-                  held:         'Held',
-                  barely_alive: 'Haunted'   // remapped — barely_alive not in active use
+                // Each state gets a label and a one-line definition shown inline
+                const STATE_DEFS = {
+                  booming:      { label: 'Booming',      def: 'Active, loud, and growing fast. Resources flow here.' },
+                  thriving:     { label: 'Thriving',     def: 'Stable enough that people are building things to last.' },
+                  stable:       { label: 'Stable',       def: 'Not safe — just predictable. Factions have settled into position.' },
+                  troubled:     { label: 'Troubled',     def: 'Something is wrong here. People feel it even if they can\'t name it.' },
+                  contested:    { label: 'Contested',    def: 'Multiple factions are actively fighting for control.' },
+                  dangerous:    { label: 'Dangerous',    def: 'Expect violence. Anyone here is either desperate or armed.' },
+                  lawless:      { label: 'Lawless',      def: 'No authority holds. Rules are made by whoever is strongest today.' },
+                  strangewild:  { label: 'Strangewild',  def: 'Monster activity is high. The canyon is reclaiming this place.' },
+                  ruined:       { label: 'Ruined',       def: 'What was here is gone. The bones are all that remain.' },
+                  abandoned:    { label: 'Abandoned',    def: 'Everyone left. The question is why.' },
+                  exalted:      { label: 'Exalted',      def: 'The Crow Queen\'s influence is strong here. The canyon obeys.' },
+                  held:         { label: 'Held',         def: 'A faction has established real control. Recognised, if not welcome.' },
+                  haunted:      { label: 'Haunted',      def: 'The dead don\'t rest here. Something unresolved keeps them.' },
+                  barely_alive: { label: 'Haunted',      def: 'The dead don\'t rest here. Something unresolved keeps them.' },
+                  poisoned:     { label: 'Poisoned',     def: 'The ground or water is tainted. Everything that stays too long suffers.' },
+                  liberated:    { label: 'Liberated',    def: 'Recently taken by a formal authority. Control is thin and contested.' },
+                  alive:        null  // generic/fallback — not a meaningful player-facing state
                 };
-                const raw   = s.location.state || '';
-                const label = STATE_LABELS[raw] || (raw ? raw.replace(/_/g, ' ') : '');
-                return label ? `<span class="cc-state-badge cc-state-${raw}">${label}</span>` : '';
+                const raw  = s.location.state || '';
+                const def  = STATE_DEFS[raw];
+                if (def === null || (!def && !raw)) return ''; // 'alive' and empty show nothing
+                const label = def?.label || raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                const desc  = def?.def  || '';
+                return `<span class="cc-state-badge cc-state-${raw}" title="${desc}">${label}</span>${desc ? `<span class="cc-state-def"> &mdash; <em>${desc}</em></span>` : ''}`;
               })()}
               &nbsp;Danger ${s.danger_rating} &mdash; ${s.danger_description}
             </p>
