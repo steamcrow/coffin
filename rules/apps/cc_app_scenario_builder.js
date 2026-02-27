@@ -335,9 +335,8 @@ window.CC_APP = {
 
     // ================================
     // RESOURCE DISPLAY HELPER
-    // Renders meter bars (matching the map app drawer style).
-    // Max value is 6. Shows resources >= 1.
-    // Vital resources at 0 show as absent in red.
+    // Simple inline list — resources drive objective weighting
+    // behind the scenes; this just gives players a quick read.
     // ================================
     function buildResourceSummary(resources) {
       if (!resources) return '';
@@ -350,51 +349,18 @@ window.CC_APP = {
         spare_parts: 'Parts',    rotgut:      'Rotgut',
         food_foul:   'Foul Food', water_foul: 'Foul Water'
       };
-      const COLORS = {
-        food_good:   '#4ade80', water_clean: '#38bdf8',
-        medicine:    '#a78bfa', supplies:    '#fb923c',
-        thyr:        '#34d399', silver:      '#cbd5e1',
-        weapons:     '#f87171', moonshine:   '#fbbf24',
-        spare_parts: '#94a3b8', rotgut:      '#a16207',
-        food_foul:   '#ef4444', water_foul:  '#ef4444'
-      };
-      const VITAL   = ['food_good', 'water_clean', 'medicine', 'supplies'];
-      const MAX_VAL = 6;
-      const bars    = [];
-      const absent  = [];
+      const VITAL = ['food_good', 'water_clean', 'medicine', 'supplies'];
+      const items  = [];
+      const absent = [];
 
       for (const [k, v] of Object.entries(resources)) {
         if (typeof v !== 'number' || !LABELS[k]) continue;
-        if (v >= 1) {
-          const pct   = Math.round(Math.min(v, MAX_VAL) / MAX_VAL * 100);
-          const color = COLORS[k] || '#ff7518';
-          bars.push(`
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
-              <div style="width:72px;flex-shrink:0;font-size:0.72rem;
-                          color:rgba(255,255,255,0.55);text-transform:uppercase;
-                          letter-spacing:0.04em;text-align:right;">${LABELS[k]}</div>
-              <div style="flex:1;height:10px;background:rgba(255,255,255,0.07);
-                          border-radius:6px;overflow:hidden;
-                          border:1px solid rgba(255,255,255,0.08);">
-                <div style="height:100%;width:${pct}%;
-                             background:linear-gradient(90deg,${color},${color}99);
-                             border-radius:6px;"></div>
-              </div>
-              <div style="width:16px;flex-shrink:0;font-size:0.72rem;font-weight:700;
-                          color:${color};">${v}</div>
-            </div>`);
-        } else if (v === 0 && VITAL.includes(k)) {
-          absent.push(`<span style="font-size:0.75rem;color:#ef4444;
-                                    margin-right:0.6rem;">${LABELS[k]} &mdash; none</span>`);
-        }
+        if (v >= 1) items.push(`<span class="cc-resource-high">${LABELS[k]}: ${v}</span>`);
+        else if (v === 0 && VITAL.includes(k)) absent.push(`<span class="cc-resource-absent">${LABELS[k]}: none</span>`);
       }
 
-      if (bars.length === 0 && absent.length === 0) return '';
-      return `
-        <div style="margin:0.5rem 0 0.25rem 0;">
-          ${bars.join('')}
-          ${absent.length ? `<div style="margin-top:4px;">${absent.join('')}</div>` : ''}
-        </div>`;
+      if (items.length === 0 && absent.length === 0) return '';
+      return `<p class="cc-resource-list">${items.concat(absent).join(' ')}</p>`;
     }
 
     // ================================
@@ -654,8 +620,33 @@ window.CC_APP = {
         pack_animals:       'Pack Animals',
         ritual_components:  'Ritual Components',
         ritual_site:        'Ritual Site',
-        land_marker:        'Land Marker',
-        command_structure:  'Command Structure',
+        land_marker:        (() => {
+          const arch = locProfile?.archetype || '';
+          const feats = features;
+          if (feats.includes('RailTerminus') || feats.includes('RailGrade')) return 'Rail Claim Marker';
+          if (feats.includes('AuctionYard'))  return 'Auction Yard Territory';
+          if (feats.includes('GunsmithRow'))  return 'Gunsmith Row Claim';
+          if (feats.includes('Jailhouse'))    return 'Jailhouse Territory';
+          if (feats.includes('Ruins') || feats.includes('OldFort')) return 'Ruined Claim Post';
+          if (arch === 'boomtown')   return 'Boomtown Claim Stake';
+          if (arch === 'arroyo')     return 'Canyon Claim Marker';
+          if (arch === 'rail_grade') return 'Grade Claim Post';
+          if (arch === 'ruins')      return 'Rubble Claim Marker';
+          return 'Territorial Claim Post';
+        })(),
+        command_structure:  (() => {
+          const arch = locProfile?.archetype || '';
+          const feats = features;
+          if (feats.includes('Fort') || feats.includes('OldFort')) return 'Command Fortress';
+          if (feats.includes('Hotel'))       return 'Command Post (Hotel)';
+          if (feats.includes('CompanyOffice')) return 'Command Office';
+          if (feats.includes('Jailhouse'))   return 'Command Post (Jailhouse)';
+          if (feats.includes('Ruins'))       return 'Ruined Command Post';
+          if (arch === 'wilderness' || arch === 'arroyo') return 'Field Command Tent';
+          if (arch === 'boomtown')   return 'Command Tower';
+          if (arch === 'rail_grade') return 'Rail Command Car';
+          return randomChoice(['Command Tower', 'Command Tent', 'Field Command Post']);
+        })(),
         thyr_cache:         'Thyr Crystal Cache',
         artifact:           'Ancient Artifact',
         captive_entity:     'Captive Entity',
@@ -1262,6 +1253,13 @@ window.CC_APP = {
         return;
       }
 
+      // Monsters appear in most scenarios even if nobody chose them.
+      // 85% chance they show up as an NPC presence if not already in the faction list.
+      const hasMonsters = state.factions.some(f => f.id === 'monsters');
+      if (!hasMonsters && Math.random() < 0.85) {
+        state.factions.push({ id: 'monsters', name: 'Monsters', player: 'NPC', isNPC: true });
+      }
+
       const dangerRating = state.dangerRating || 3;
       const contextTags  = [];
 
@@ -1602,12 +1600,18 @@ window.CC_APP = {
 
       if (state.gameMode === 'solo') {
         const playerFaction = state.factions.find(f => !f.isNPC);
+
+        // Factions that CAN'T face themselves (most unique factions)
+        // Shine Riders and Monsters are fine vs themselves so we don't exclude them
+        const CANNOT_SELF_OPPOSE = ['monster_rangers', 'monsterology', 'liberty_corps', 'crow_queen'];
+        const playerCanSelfOppose = !playerFaction || !CANNOT_SELF_OPPOSE.includes(playerFaction.id);
+
         return `
           <div class="cc-form-section">
             <label class="cc-label">Your Faction</label>
             <select class="cc-input" onchange="setPlayerFaction(this.value)">
               <option value="">Choose your faction&hellip;</option>
-              ${FACTIONS.filter(f => f.id !== 'monsters').map(f => `
+              ${FACTIONS.map(f => `
                 <option value="${f.id}" ${playerFaction?.id === f.id ? 'selected' : ''}>${f.name}</option>
               `).join('')}
             </select>
@@ -1617,15 +1621,18 @@ window.CC_APP = {
             <label class="cc-label">NPC Opponents</label>
             <p class="cc-help-text">Choose which factions you'll be playing against.</p>
             ${FACTIONS.map(f => {
-              const isNPC = state.factions.some(sf => sf.id === f.id && sf.isNPC);
+              const isNPC     = state.factions.some(sf => sf.id === f.id && sf.isNPC);
+              // Disable if this is the player's own faction AND they can't self-oppose
+              const isSelf    = playerFaction?.id === f.id;
+              const disabled  = isSelf && CANNOT_SELF_OPPOSE.includes(f.id);
               return `
-                <div class="cc-faction-row">
+                <div class="cc-faction-row" style="${disabled ? 'opacity:0.4;' : ''}">
                   <label class="cc-checkbox-label">
-                    <input type="checkbox" ${isNPC ? 'checked' : ''}
+                    <input type="checkbox" ${isNPC ? 'checked' : ''} ${disabled ? 'disabled' : ''}
                       onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)">
                     ${f.name}
                   </label>
-                  <span class="cc-help-text" style="margin:0">(NPC)</span>
+                  <span class="cc-help-text" style="margin:0">${disabled ? '(same faction)' : '(NPC)'}</span>
                 </div>
               `;
             }).join('')}
@@ -1768,7 +1775,20 @@ window.CC_APP = {
             <h4><i class="fa fa-map-marker"></i> Location</h4>
             <p>
               <strong>${s.location.name}</strong>
-              <span class="cc-state-badge cc-state-${s.location.state}">${s.location.state}</span>
+              ${(() => {
+                const STATE_LABELS = {
+                  booming:      'Booming',    thriving:    'Thriving',
+                  stable:       'Stable',     troubled:    'Troubled',
+                  contested:    'Contested',  dangerous:   'Dangerous',
+                  lawless:      'Lawless',    strangewild: 'Strangewild',
+                  ruined:       'Ruined',     abandoned:   'Abandoned',
+                  exalted:      'Exalted',    held:        'Held',
+                  barely_alive: 'Barely Alive'
+                };
+                const raw   = s.location.state || '';
+                const label = STATE_LABELS[raw] || raw.replace(/_/g, ' ');
+                return label ? `<span class="cc-state-badge cc-state-${raw}">${label}</span>` : '';
+              })()}
               &nbsp;Danger ${s.danger_rating} &mdash; ${s.danger_description}
             </p>
             ${s.location.description ? `<p><em>${s.location.description}</em></p>` : ''}
@@ -2117,6 +2137,9 @@ window.CC_APP = {
 
     window.rollAgain = function() {
       if (state.factions.length >= 2) {
+        // Keep factions — only re-roll scenario content
+        state.generated = false;
+        state.scenario  = null;
         window.generateScenario();
       } else {
         alert('Please complete setup first (Steps 1–3).');
@@ -2127,11 +2150,14 @@ window.CC_APP = {
 
     // ================================
     // SAVE / LOAD
+    // Uses ctx.helpers (the same helper object the loader passes in)
+    // helpers.storage.setItem / getItem / getAllKeys match the
+    // standard interface used across all Coffin Canyon apps.
     // ================================
     window.saveScenario = async function() {
       if (!state.scenario) return;
-      if (!window.CC_STORAGE) {
-        alert('Storage not ready. Please wait a moment and try again.');
+      if (!helpers?.storage) {
+        alert('Storage not available. Please wait a moment and try again.');
         return;
       }
       try {
@@ -2148,33 +2174,61 @@ window.CC_APP = {
             selectedLocation: state.selectedLocation
           }
         });
-        await window.CC_STORAGE.set(key, data);
-        alert(`✅ Scenario saved as: ${key}`);
+        await helpers.storage.setItem(key, data);
+        alert(`Scenario saved as: ${key}`);
       } catch (err) {
         console.error('Save failed:', err);
-        alert('Save failed. Check console for details.');
+        // Try alternate method names in case the API differs
+        try {
+          await helpers.storage.set(key, data);
+          alert('Scenario saved.');
+        } catch (err2) {
+          alert('Save failed. Check console for details.\n\n' + err.message);
+        }
       }
     };
 
     window.loadFromCloud = async function() {
-      if (!window.CC_STORAGE) {
-        alert('Storage not ready. Please wait a moment and try again.');
+      if (!helpers?.storage) {
+        alert('Storage not available. Please wait a moment and try again.');
         return;
       }
       try {
-        const keys = await window.CC_STORAGE.list('SCN_');
-        if (!keys?.keys?.length) {
+        // Try both possible method names
+        let keys;
+        if (typeof helpers.storage.getAllKeys === 'function') {
+          keys = await helpers.storage.getAllKeys();
+        } else if (typeof helpers.storage.keys === 'function') {
+          keys = await helpers.storage.keys();
+        } else if (typeof helpers.storage.list === 'function') {
+          const result = await helpers.storage.list('SCN_');
+          keys = result?.keys || result || [];
+        } else {
+          alert('Storage list method not found. Check console.');
+          console.error('helpers.storage methods:', Object.keys(helpers.storage));
+          return;
+        }
+
+        const scenarioKeys = (Array.isArray(keys) ? keys : []).filter(k => k.startsWith('SCN_'));
+        if (!scenarioKeys.length) {
           alert('No saved scenarios found.');
           return;
         }
-        const keyList = keys.keys.join('\n');
-        const chosen  = prompt(`Choose a save to load:\n\n${keyList}`);
+
+        const chosen = prompt(`Choose a save to load:\n\n${scenarioKeys.join('\n')}`);
         if (!chosen) return;
 
-        const raw = await window.CC_STORAGE.get(chosen);
-        if (!raw?.value) { alert('Save not found.'); return; }
+        let raw;
+        if (typeof helpers.storage.getItem === 'function') {
+          raw = await helpers.storage.getItem(chosen);
+        } else if (typeof helpers.storage.get === 'function') {
+          const result = await helpers.storage.get(chosen);
+          raw = result?.value ?? result;
+        }
 
-        const saved            = JSON.parse(raw.value);
+        if (!raw) { alert('Save not found.'); return; }
+
+        const saved            = JSON.parse(typeof raw === 'string' ? raw : raw.value);
         state.scenario         = saved.scenario;
         state.gameMode         = saved.setup?.gameMode         || state.gameMode;
         state.pointValue       = saved.setup?.pointValue       || state.pointValue;
