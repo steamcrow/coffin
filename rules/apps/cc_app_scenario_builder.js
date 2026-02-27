@@ -335,32 +335,11 @@ window.CC_APP = {
 
     // ================================
     // RESOURCE DISPLAY HELPER
-    // Simple inline list — resources drive objective weighting
-    // behind the scenes; this just gives players a quick read.
+    // Resources drive objective weighting internally but are NOT
+    // shown to players — they're canyon facts, not player info.
     // ================================
     function buildResourceSummary(resources) {
-      if (!resources) return '';
-
-      const LABELS = {
-        food_good:   'Food',     water_clean: 'Water',
-        medicine:    'Medicine', supplies:    'Supplies',
-        thyr:        'Thyr',     silver:      'Silver',
-        weapons:     'Weapons',  moonshine:   'Moonshine',
-        spare_parts: 'Parts',    rotgut:      'Rotgut',
-        food_foul:   'Foul Food', water_foul: 'Foul Water'
-      };
-      const VITAL = ['food_good', 'water_clean', 'medicine', 'supplies'];
-      const items  = [];
-      const absent = [];
-
-      for (const [k, v] of Object.entries(resources)) {
-        if (typeof v !== 'number' || !LABELS[k]) continue;
-        if (v >= 1) items.push(`<span class="cc-resource-high">${LABELS[k]}: ${v}</span>`);
-        else if (v === 0 && VITAL.includes(k)) absent.push(`<span class="cc-resource-absent">${LABELS[k]}: none</span>`);
-      }
-
-      if (items.length === 0 && absent.length === 0) return '';
-      return `<p class="cc-resource-list">${items.concat(absent).join(' ')}</p>`;
+      return ''; // Intentionally hidden — resources drive logic, not display
     }
 
     // ================================
@@ -1584,9 +1563,14 @@ window.CC_APP = {
 
         ${state.gameMode ? `
           <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
             <button class="cc-btn cc-btn-primary" onclick="completeStep(1)">Next: Factions &rarr;</button>
           </div>
-        ` : ''}
+        ` : `
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
+          </div>
+        `}
       `;
     }
 
@@ -1777,23 +1761,28 @@ window.CC_APP = {
               <strong>${s.location.name}</strong>
               ${(() => {
                 const STATE_LABELS = {
-                  booming:      'Booming',    thriving:    'Thriving',
-                  stable:       'Stable',     troubled:    'Troubled',
-                  contested:    'Contested',  dangerous:   'Dangerous',
-                  lawless:      'Lawless',    strangewild: 'Strangewild',
-                  ruined:       'Ruined',     abandoned:   'Abandoned',
-                  exalted:      'Exalted',    held:        'Held',
-                  barely_alive: 'Barely Alive'
+                  booming:      'Booming',
+                  thriving:     'Thriving',
+                  stable:       'Stable',
+                  troubled:     'Troubled',
+                  contested:    'Contested',
+                  dangerous:    'Dangerous',
+                  lawless:      'Lawless',
+                  strangewild:  'Strangewild',
+                  ruined:       'Ruined',
+                  abandoned:    'Abandoned',
+                  exalted:      'Exalted',
+                  held:         'Held',
+                  barely_alive: 'Haunted'   // remapped — barely_alive not in active use
                 };
                 const raw   = s.location.state || '';
-                const label = STATE_LABELS[raw] || raw.replace(/_/g, ' ');
+                const label = STATE_LABELS[raw] || (raw ? raw.replace(/_/g, ' ') : '');
                 return label ? `<span class="cc-state-badge cc-state-${raw}">${label}</span>` : '';
               })()}
               &nbsp;Danger ${s.danger_rating} &mdash; ${s.danger_description}
             </p>
             ${s.location.description ? `<p><em>${s.location.description}</em></p>` : ''}
             ${s.location.atmosphere  ? `<p class="cc-quote">"${s.location.atmosphere}"</p>` : ''}
-            ${buildResourceSummary(s.location.effectiveResources)}
             ${renderLocationMapEmbed()}
           </div>
 
@@ -1855,16 +1844,6 @@ window.CC_APP = {
             </div>
           ` : ''}
 
-          <!-- TWIST -->
-          ${s.twist ? `
-            <div class="cc-scenario-section cc-twist">
-              <h4><i class="fa fa-random"></i> Scenario Twist</h4>
-              <p><strong>${s.twist.name}</strong></p>
-              <p>${s.twist.description}</p>
-              ${s.twist.example ? `<p><em>Example: ${s.twist.example}</em></p>` : ''}
-            </div>
-          ` : ''}
-
           <!-- VICTORY CONDITIONS -->
           <div class="cc-scenario-section">
             <h4><i class="fa fa-trophy"></i> Victory Conditions</h4>
@@ -1923,7 +1902,8 @@ window.CC_APP = {
             <button class="cc-btn cc-btn-ghost"     onclick="resetScenario()"><i class="fa fa-refresh"></i> Start Over</button>
             <button class="cc-btn cc-btn-secondary" onclick="rollAgain()"><i class="fa fa-random"></i> The Canyon Shifts</button>
             <button class="cc-btn cc-btn-primary"   onclick="printScenario()"><i class="fa fa-print"></i> Print</button>
-            <button class="cc-btn cc-btn-primary"   onclick="saveScenario()"><i class="fa fa-cloud"></i> Save to Cloud</button>
+            <button class="cc-btn cc-btn-primary"   onclick="saveScenario()"><i class="fa fa-cloud"></i> Save</button>
+            <button class="cc-btn cc-btn-ghost"     onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load</button>
           </div>
 
         </div>
@@ -1967,13 +1947,10 @@ window.CC_APP = {
           </div>
         ` : ''}
 
-        ${state.generated ? `
-          <div class="cc-summary-details" style="border-top: 2px solid var(--cc-primary); margin-top: 1rem; padding-top: 1rem;">
-            <h4>Quick Actions</h4>
-            <button class="cc-btn cc-btn-ghost" style="width: 100%; margin-bottom: 0.5rem;"
-                    onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
-          </div>
-        ` : ''}
+        <div class="cc-summary-details" style="margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1);">
+          <button class="cc-btn cc-btn-ghost" style="width:100%;"
+                  onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
+        </div>
       `;
     }
 
@@ -2150,85 +2127,82 @@ window.CC_APP = {
 
     // ================================
     // SAVE / LOAD
-    // Uses ctx.helpers (the same helper object the loader passes in)
-    // helpers.storage.setItem / getItem / getAllKeys match the
-    // standard interface used across all Coffin Canyon apps.
+    // Uses window.CC_STORAGE from storage_helpers.js
+    // API: saveDocument(name, json, folderId)
+    //      loadDocumentList(folderId) → [{id, name, write_date}]
+    //      loadDocument(docId)        → {json, name}
+    // Scenarios go in folder 90 (Coffin Canyon Factions folder)
     // ================================
+    const SCENARIO_FOLDER = 90;
+
     window.saveScenario = async function() {
       if (!state.scenario) return;
-      if (!helpers?.storage) {
-        alert('Storage not available. Please wait a moment and try again.');
+      if (!window.CC_STORAGE) {
+        alert('Storage helper not loaded yet. Please wait a moment.');
         return;
       }
+
+      // Build a human-readable name: SCN_LocationName_Timestamp
+      const locSlug = (state.scenario.location?.name || 'Unknown')
+        .replace(/[^a-zA-Z0-9]/g, '_').substring(0, 24);
+      const docName = `SCN_${locSlug}_${Date.now()}`;
+
+      const data = JSON.stringify({
+        savedAt:  new Date().toISOString(),
+        scenario: state.scenario,
+        setup: {
+          gameMode:         state.gameMode,
+          pointValue:       state.pointValue,
+          dangerRating:     state.dangerRating,
+          factions:         state.factions,
+          locationType:     state.locationType,
+          selectedLocation: state.selectedLocation
+        }
+      });
+
       try {
-        const key  = 'SCN_' + Date.now();
-        const data = JSON.stringify({
-          savedAt:  new Date().toISOString(),
-          scenario: state.scenario,
-          setup: {
-            gameMode:         state.gameMode,
-            pointValue:       state.pointValue,
-            dangerRating:     state.dangerRating,
-            factions:         state.factions,
-            locationType:     state.locationType,
-            selectedLocation: state.selectedLocation
-          }
-        });
-        await helpers.storage.setItem(key, data);
-        alert(`Scenario saved as: ${key}`);
+        const result = await window.CC_STORAGE.saveDocument(docName, data, SCENARIO_FOLDER);
+        alert(`Saved: ${docName}`);
       } catch (err) {
         console.error('Save failed:', err);
-        // Try alternate method names in case the API differs
-        try {
-          await helpers.storage.set(key, data);
-          alert('Scenario saved.');
-        } catch (err2) {
-          alert('Save failed. Check console for details.\n\n' + err.message);
-        }
+        alert('Save failed: ' + err.message + '\n\nAre you logged in to Coffin Canyon?');
       }
     };
 
     window.loadFromCloud = async function() {
-      if (!helpers?.storage) {
-        alert('Storage not available. Please wait a moment and try again.');
+      if (!window.CC_STORAGE) {
+        alert('Storage helper not loaded yet. Please wait a moment.');
         return;
       }
-      try {
-        // Try both possible method names
-        let keys;
-        if (typeof helpers.storage.getAllKeys === 'function') {
-          keys = await helpers.storage.getAllKeys();
-        } else if (typeof helpers.storage.keys === 'function') {
-          keys = await helpers.storage.keys();
-        } else if (typeof helpers.storage.list === 'function') {
-          const result = await helpers.storage.list('SCN_');
-          keys = result?.keys || result || [];
-        } else {
-          alert('Storage list method not found. Check console.');
-          console.error('helpers.storage methods:', Object.keys(helpers.storage));
-          return;
-        }
 
-        const scenarioKeys = (Array.isArray(keys) ? keys : []).filter(k => k.startsWith('SCN_'));
-        if (!scenarioKeys.length) {
+      try {
+        const docs = await window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER);
+
+        // Filter to only scenario saves
+        const saves = docs.filter(d => d.name.startsWith('SCN_'));
+        if (!saves.length) {
           alert('No saved scenarios found.');
           return;
         }
 
-        const chosen = prompt(`Choose a save to load:\n\n${scenarioKeys.join('\n')}`);
-        if (!chosen) return;
+        // Build a prompt list with names and dates
+        const list = saves.map((d, i) => {
+          const date = d.write_date ? d.write_date.split(' ')[0] : '?';
+          return `${i + 1}. ${d.name.replace('.json', '')}  (${date})`;
+        }).join('\n');
 
-        let raw;
-        if (typeof helpers.storage.getItem === 'function') {
-          raw = await helpers.storage.getItem(chosen);
-        } else if (typeof helpers.storage.get === 'function') {
-          const result = await helpers.storage.get(chosen);
-          raw = result?.value ?? result;
+        const choice = prompt(`Choose a scenario to load (enter number):\n\n${list}`);
+        if (!choice) return;
+
+        const idx = parseInt(choice) - 1;
+        if (isNaN(idx) || idx < 0 || idx >= saves.length) {
+          alert('Invalid choice.');
+          return;
         }
 
-        if (!raw) { alert('Save not found.'); return; }
+        const { json } = await window.CC_STORAGE.loadDocument(saves[idx].id);
+        const saved = JSON.parse(json);
 
-        const saved            = JSON.parse(typeof raw === 'string' ? raw : raw.value);
         state.scenario         = saved.scenario;
         state.gameMode         = saved.setup?.gameMode         || state.gameMode;
         state.pointValue       = saved.setup?.pointValue       || state.pointValue;
@@ -2242,7 +2216,7 @@ window.CC_APP = {
         render();
       } catch (err) {
         console.error('Load failed:', err);
-        alert('Load failed. Check console for details.');
+        alert('Load failed: ' + err.message + '\n\nAre you logged in to Coffin Canyon?');
       }
     };
 
