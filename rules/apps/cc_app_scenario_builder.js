@@ -553,12 +553,35 @@ window.CC_APP = {
         ? `Escalation: ${randomChoice(plotFamily.escalation_bias).replace(/_/g, ' ')}`
         : null;
 
+      // ---- CANYON NOISE METER ----
+      // Replaces the old "Round X" trigger.
+      // Monsters respond to noise and violence — not a clock.
+      // Threshold drops as danger rises: loud places attract faster.
+      // Danger 1 = very quiet canyon, threshold 9. Danger 6 = seething, threshold 4.
+      const noiseThreshold = Math.max(4, 10 - dangerRating);
+
+      // Location-flavoured noise sources (always shown)
+      const hasRail     = (locProfile?.features || []).some(f => ['RailTerminus','RailGrade','BrakeScars','RailYard','Trestle','RailSpur','rail','Rail'].includes(f));
+      const hasVehicles = (locProfile?.features || []).some(f => ['Road','Highway','Trail'].includes(f));
+      const isRuined    = ['ruined','abandoned','strangewild'].includes(locProfile?.state || '');
+
+      const noiseSources = [
+        { source: 'Loud weapon fired (e.g. rifle, cannon)',   points: 2 },
+        { source: 'Standard weapon fired (e.g. pistol)',      points: 1 },
+        { source: 'Vehicle moves or starts engine',           points: 2 },
+        { source: 'Explosive detonated',                      points: 3 },
+        { source: 'Structure collapses or is destroyed',      points: 2 },
+      ];
+      if (hasRail)     noiseSources.push({ source: 'Rail engine moves or derails',  points: 3 });
+      if (isRuined)    noiseSources.push({ source: 'Disturbing the ruins (already agitated)', points: 1 });
+
       return {
-        enabled:    true,
-        trigger:    `Round ${randomInt(2, 4)}`,
-        monsters:   selectedMonsters,
-        seed_based: seedBased,
-        notes:      escalationNote
+        enabled:         true,
+        noise_threshold: noiseThreshold,
+        noise_sources:   noiseSources,
+        monsters:        selectedMonsters,
+        seed_based:      seedBased,
+        notes:           escalationNote
       };
     }
 
@@ -1102,6 +1125,146 @@ window.CC_APP = {
       }
     };
 
+    // ================================
+    // FACTIONAL MOTIVES — The 'Why'
+    // Each faction has a specific reason for being at each objective type.
+    // One motive is rolled per faction per primary objective at generation time.
+    // ================================
+    const FACTION_MOTIVES = {
+      monster_rangers: {
+        ritual_site:        'Sanctify this site before another faction can corrupt or weaponize it.',
+        ritual_circle:      'Sanctify the circle. Close whatever opened it.',
+        thyr_cache:         'Monitor the Thyr cluster — record it and leave it intact.',
+        land_marker:        'Witness this territory. Record it. Let the canyon remember it was seen.',
+        command_structure:  'Secure the structure to co-ordinate canyon protection from it.',
+        stored_supplies:    'These supplies belong to canyon survivors. Get them out.',
+        scattered_crates:   'Scavengers will come for these. Get there first.',
+        cargo_vehicle:      'Escort whatever is in this vehicle to safety. That is the job.',
+        artifact:           'Recover the artifact before it falls into dangerous hands.',
+        tainted_ground:     'The taint spreads. Contain it before the contamination is permanent.',
+        fouled_resource:    'Purify what can be saved. Destroy what cannot.',
+        captive_entity:     'Whatever is held here did not ask to be held. Free it.',
+        wrecked_engine:     'Salvage what the canyon can use. Leave the rest.',
+        pack_animals:       'These animals are not weapons. Get them out of the line of fire.',
+        default:            'Protect what the canyon cannot protect for itself.'
+      },
+      monsterology: {
+        ritual_site:        'Conduct a Society ritual using the site\'s residual power.',
+        ritual_circle:      'Activate the circle for Institute research. Record every reading.',
+        thyr_cache:         'Extract maximum Thyr yield. Radiation protocols are in effect.',
+        land_marker:        'File a resource survey claim in the Society\'s name.',
+        command_structure:  'This installation has records. Extract them all.',
+        stored_supplies:    'Survey the caches. Extract anything with research value.',
+        scattered_crates:   'Field sample opportunity. Collect everything — sort it later.',
+        cargo_vehicle:      'The vehicle is the specimen. Analyse contents, extract samples.',
+        artifact:           'Unclassified object of significant power. Acquire at any cost.',
+        tainted_ground:     'The contaminant is the find. The Institute wants the source, not the land.',
+        fouled_resource:    'Contaminated supplies are a sample set. Extract the contaminant.',
+        captive_entity:     'Unclassified specimen. Capture intact if possible.',
+        wrecked_engine:     'Mechanical failure analysis. Extract components for reverse engineering.',
+        pack_animals:       'Biological specimens. Catalogue and tag before others destroy them.',
+        default:            'Extract. Catalogue. Report. Leave nothing of value behind.'
+      },
+      liberty_corps: {
+        ritual_site:        'Unlicensed ritual activity is a federal offence. Shut it down.',
+        ritual_circle:      'Cordon the site. No unauthorised use of federal territory.',
+        thyr_cache:         'Unregulated Thyr extraction is illegal. Secure the site.',
+        land_marker:        'This territory is Corps jurisdiction. Plant the flag. Hold it.',
+        command_structure:  'Seize the command post. Everything else flows from here.',
+        stored_supplies:    'Unsecured federal property. Lock it down. Anyone else touching it is a thief.',
+        scattered_crates:   'Contraband until proven otherwise. Collect, tag, and impound.',
+        cargo_vehicle:      'Intercept the vehicle. Inspect its cargo. Impound if necessary.',
+        artifact:           'Seized under federal authority. No further questions.',
+        tainted_ground:     'Biohazard. This is Corps jurisdiction. Decontamination begins now.',
+        fouled_resource:    'Cordon the area. No-one goes near it without clearance.',
+        captive_entity:     'Unlicensed biological entity. Subdue and contain for classification.',
+        wrecked_engine:     'Wreck site secured. No salvage without Corps permit.',
+        pack_animals:       'Unlicensed livestock in a federal zone. Impound the lot.',
+        default:            'Order will be maintained. By any means the Corps sees fit.'
+      },
+      shine_riders: {
+        ritual_site:        'The soil here is worth more than the ritual. Steal it and sell it.',
+        ritual_circle:      'Someone built this. Someone will pay us to destroy it. Or to use it.',
+        thyr_cache:         'Hot cargo but the buyer doesn\'t ask questions. Extract fast, exit faster.',
+        land_marker:        'Nobody owns the canyon. But if we plant the marker, we collect the fee.',
+        command_structure:  'Hit the command post. Take what\'s valuable. Make it look like someone else.',
+        stored_supplies:    'Full caches. Best haul in the canyon if we move before anyone notices.',
+        scattered_crates:   'Grab what you can carry. Leave the rest for whoever\'s dumb enough to linger.',
+        cargo_vehicle:      'Whatever that vehicle is carrying is worth more than the vehicle. Take it and go.',
+        artifact:           'One buyer. Very high offer. No questions asked — perfect.',
+        tainted_ground:     'Contaminated supplies are worse than nothing — unless you know the right chemist.',
+        fouled_resource:    'The chaos from the contamination is our window. Hit the real objective now.',
+        captive_entity:     'Chaos costs nothing. Release it. Let it eat whoever\'s slowest.',
+        wrecked_engine:     'Quick salvage before it comes down. We\'ve worked in worse.',
+        pack_animals:       'Animals are cargo. Cargo has a price. Price beats sentiment every time.',
+        default:            'Everything in the canyon has a price. We just set it.'
+      },
+      crow_queen: {
+        ritual_site:        'These sites already answer to the Crown. Claim them formally.',
+        ritual_circle:      'The circle was built for her. Activate it in the Crown\'s name.',
+        thyr_cache:         'The crystals already answer to the Crown. Make it official.',
+        land_marker:        'The canyon was always hers. This marker is a formality.',
+        command_structure:  'There is one command in this canyon. Replace whatever is here with an Obelisk.',
+        stored_supplies:    'The canyon\'s resources flow to the Crown. Consecrate the cache.',
+        scattered_crates:   'Scattered tribute. Gather it in the Crown\'s name.',
+        cargo_vehicle:      'The vehicle carries something useful. Crown it. Then redirect it.',
+        artifact:           'Old power belongs to the oldest power. Claim it.',
+        tainted_ground:     'What others call poison, the Crown calls potential. Claim and convert.',
+        fouled_resource:    'Contamination is opportunity for those who understand the canyon\'s will.',
+        captive_entity:     'These creatures are subjects who have not yet pledged. Convert them.',
+        wrecked_engine:     'The canyon reshapes itself for her. Claim what\'s within before it transforms.',
+        pack_animals:       'Canyon animals are not livestock. They are subjects. Treat them accordingly.',
+        default:            'Everything in the canyon kneels. Eventually.'
+      },
+      monsters: {
+        ritual_site:        'This place is sacred ground. Others must not be allowed to corrupt it.',
+        ritual_circle:      'Nesting ground. Defend it.',
+        thyr_cache:         'The crystals are part of the canyon\'s body. Guard them.',
+        land_marker:        'This territory is feeding ground. Drive off the intruders.',
+        command_structure:  'Strange structure. Dangerous smells. Tear it down or drive them out.',
+        stored_supplies:    'The caches contain food. Feed. Defend the food.',
+        scattered_crates:   'Unfamiliar objects on known ground. Investigate. Destroy if threatening.',
+        cargo_vehicle:      'Loud, smelly machine. A threat or a meal. Find out which.',
+        artifact:           'This object hums with wrong energy. Guard it or destroy it.',
+        tainted_ground:     'The water is wrong. The herd knows. Something must be done.',
+        fouled_resource:    'The food is wrong. Attack whatever caused this.',
+        captive_entity:     'One of the herd is trapped. Free it. Kill who trapped it.',
+        wrecked_engine:     'Dead machine on sacred ground. Investigate. Nest if safe.',
+        pack_animals:       'Territory boundary contested. Hold the ground.',
+        default:            'The canyon was here first. Act accordingly.'
+      }
+    };
+
+    // ================================
+    // OBJECTIVE CHAIN GENERATOR — The 'Twist'
+    // Assigns Primary (A) and Secondary (B) roles to objectives.
+    // Creates a chain link: controlling A grants a bonus when interacting with B.
+    // ================================
+    const CHAIN_LINK_VERBS = [
+      'grants +1 die when interacting with',
+      'opens a supply line to',
+      'reveals the hidden approach to',
+      'provides cover fire for operations at',
+      'unlocks a shortcut toward',
+      'draws defenders away from'
+    ];
+
+    function generateObjectiveChain(objectives) {
+      if (objectives.length < 2) {
+        if (objectives.length === 1) objectives[0].role = 'primary';
+        return;
+      }
+      objectives[0].role = 'primary';
+      objectives[1].role = 'secondary';
+      const linkVerb = randomChoice(CHAIN_LINK_VERBS);
+      objectives[0].chain_link = `Controlling ${objectives[0].name} ${linkVerb} ${objectives[1].name}.`;
+      // Any third objective is standalone
+      if (objectives[2]) objectives[2].role = 'standalone';
+    }
+
+    // ================================
+    // VICTORY CONDITIONS ENGINE
+    // ================================
     function generateVictoryConditions(plotFamily, objectives, locProfile) {
       const conditions = {};
 
@@ -1110,8 +1273,13 @@ window.CC_APP = {
         state.factions.some(f => f.id === 'monsters');
 
       state.factions.forEach(faction => {
-        const approach  = FACTION_APPROACH[faction.id] || FACTION_APPROACH.monsters;
-        const flavorMap = FACTION_OBJECTIVE_FLAVOR[faction.id] || {};
+        const approach    = FACTION_APPROACH[faction.id] || FACTION_APPROACH.monsters;
+        const flavorMap   = FACTION_OBJECTIVE_FLAVOR[faction.id] || {};
+        const motivesMap  = FACTION_MOTIVES[faction.id] || FACTION_MOTIVES.monsters;
+
+        // Roll a motive based on the primary (first) objective type
+        const primaryObjType = objectives[0]?.type || 'default';
+        const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
 
         const candidatePool = [];
 
@@ -1160,6 +1328,7 @@ window.CC_APP = {
         conditions[faction.id] = {
           faction_name: faction.name,
           is_npc:       isNPC,
+          motive,
           objectives:   pickedObjectives,
           finale,
           aftermath,
@@ -1332,6 +1501,9 @@ window.CC_APP = {
       const objectives = vaultScenario
         ? generateObjectivesFromVault(vaultScenario, locProfile)
         : generateObjectives(plotFamily, locProfile);
+
+      // Assign Primary / Secondary roles and chain link between them
+      generateObjectiveChain(objectives);
 
       const monsterPressure = generateMonsterPressure(plotFamily, dangerRating, locProfile);
 
@@ -1888,14 +2060,27 @@ window.CC_APP = {
           <!-- OBJECTIVES -->
           <div class="cc-scenario-section">
             <h4><i class="fa fa-crosshairs"></i> Objectives</h4>
-            ${s.objectives.map(obj => `
-              <div class="cc-objective-card">
+            ${s.objectives.map((obj, i) => {
+              const ROLE_LABELS = { primary: 'Primary Objective', secondary: 'Secondary Objective', standalone: 'Objective' };
+              const roleLabel   = ROLE_LABELS[obj.role] || `Objective ${i + 1}`;
+              const isPrimary   = obj.role === 'primary';
+              return `
+              <div class="cc-objective-card" style="${isPrimary ? 'border-left-width:3px;' : ''}">
+                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+                  <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:${isPrimary ? 'var(--cc-primary)' : 'rgba(255,255,255,0.35)'};">
+                    ${isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>'} ${roleLabel}
+                  </span>
+                </div>
                 <strong>${obj.name}</strong>
                 <p>${obj.description}</p>
                 <p class="cc-vp-line"><i class="fa fa-star"></i> ${obj.vp_base} VP base</p>
+                ${obj.chain_link ? `
+                  <p style="margin-top:0.5rem;padding:0.4rem 0.6rem;background:rgba(255,117,24,0.08);border-left:2px solid var(--cc-primary);border-radius:2px;font-size:0.82rem;">
+                    <i class="fa fa-link" style="color:var(--cc-primary);"></i> <strong>Chain:</strong> ${obj.chain_link}
+                  </p>` : ''}
                 ${obj.special ? `<p><em><i class="fa fa-exclamation-triangle"></i> Special: ${obj.special}</em></p>` : ''}
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
 
           <!-- BOARD SETUP TABLE -->
@@ -1933,10 +2118,33 @@ window.CC_APP = {
           <!-- MONSTER PRESSURE -->
           ${s.monster_pressure?.enabled ? `
             <div class="cc-scenario-section">
-              <h4><i class="fa fa-paw"></i> Monster Pressure</h4>
-              <p><strong>Trigger:</strong> ${s.monster_pressure.trigger}</p>
-              ${s.monster_pressure.seed_based ? '<p class="cc-help-text"><em>Location-specific monsters selected.</em></p>' : ''}
-              <ul>
+              <h4><i class="fa fa-paw"></i> Monster Pressure &mdash; Canyon Noise Meter</h4>
+              <p>
+                Monsters don't watch the clock. They respond to <strong>noise and violence</strong>.
+                Track the Canyon Noise meter. When it reaches <strong>${s.monster_pressure.noise_threshold}</strong>, the monsters arrive.
+              </p>
+              <table style="width:100%;border-collapse:collapse;margin:0.75rem 0;font-size:0.85rem;">
+                <thead>
+                  <tr>
+                    <th style="text-align:left;padding:4px 8px;color:rgba(255,255,255,0.45);font-size:0.7rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid rgba(255,255,255,0.1);">Noise Source</th>
+                    <th style="text-align:center;padding:4px 8px;color:rgba(255,255,255,0.45);font-size:0.7rem;text-transform:uppercase;letter-spacing:.05em;border-bottom:1px solid rgba(255,255,255,0.1);">+Noise</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${(s.monster_pressure.noise_sources || []).map(ns => `
+                    <tr>
+                      <td style="padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.05);">${ns.source}</td>
+                      <td style="text-align:center;padding:4px 8px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--cc-primary);font-weight:700;">+${ns.points}</td>
+                    </tr>
+                  `).join('')}
+                  <tr style="background:rgba(255,117,24,0.08);">
+                    <td style="padding:6px 8px;font-weight:700;">Threshold — Monsters Arrive</td>
+                    <td style="text-align:center;padding:6px 8px;color:var(--cc-primary);font-weight:700;font-size:1rem;">${s.monster_pressure.noise_threshold}</td>
+                  </tr>
+                </tbody>
+              </table>
+              ${s.monster_pressure.seed_based ? '<p class="cc-help-text"><em><i class="fa fa-map-marker"></i> These monsters are specific to this location.</em></p>' : ''}
+              <ul style="margin-top:0.5rem;">
                 ${s.monster_pressure.monsters.map(m => `<li>${m.name} (${m.type || 'Monster'}) &mdash; ${m.cost} &#8356;</li>`).join('')}
               </ul>
               ${s.monster_pressure.notes ? `<p><em>${s.monster_pressure.notes}</em></p>` : ''}
@@ -1972,6 +2180,11 @@ window.CC_APP = {
                     <h5 style="color:${id.color}; margin:0;">${vc.faction_name}${vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : ''}</h5>
                   </div>
                   ${id.tag ? `<div style="font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-top:2px; padding-left:1.7rem;">${id.tag}</div>` : ''}
+                  ${vc.motive ? `
+                    <div style="margin-top:0.6rem;padding:0.5rem 0.6rem;background:rgba(0,0,0,0.3);border-left:2px solid ${id.color};border-radius:2px;font-size:0.83rem;line-height:1.45;color:rgba(255,255,255,0.75);">
+                      <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:${id.color};display:block;margin-bottom:0.2rem;"><i class="fa fa-bullseye"></i> Mission</span>
+                      ${vc.motive}
+                    </div>` : ''}
                 </div>
 
                 <div class="cc-vc-objectives">
