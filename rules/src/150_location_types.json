@@ -52,13 +52,6 @@
       "tags_add": ["Desperate"],
       "monster_bias_add": []
     },
-    "alive": {
-      "danger_mod": 0,
-      "population_mod": 0,
-      "resource_mods": {},
-      "tags_add": [],
-      "monster_bias_add": []
-    },
     "prospering": {
       "danger_mod": -1,
       "population_mod": 1,
