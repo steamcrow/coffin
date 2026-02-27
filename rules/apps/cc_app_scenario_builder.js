@@ -422,33 +422,48 @@ window.CC_APP = {
     // ================================
     function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
       contextTags = contextTags || [];
-      location    = location || { name: 'Unknown' };
+      const locName = (location || { name: 'Unknown' }).name;
+
+      let prefix = 'Bloody';
+      let suffix = 'Reckoning';
 
       if (scenarioNamesData) {
         const prefixes = scenarioNamesData.prefixes || [];
         const suffixes = scenarioNamesData.suffixes || [];
 
-        // Tag-aware prefix selection
         const taggedPrefixes = prefixes.filter(p =>
           Array.isArray(p.tags) && p.tags.some(t => contextTags.includes(t))
         );
-
-        const prefix = taggedPrefixes.length
+        prefix = taggedPrefixes.length
           ? (randomChoice(taggedPrefixes)?.text || randomChoice(prefixes)?.text || 'Bloody')
           : (randomChoice(prefixes)?.text || 'Bloody');
 
-        const suffix = randomChoice(suffixes)?.text || 'Reckoning';
-
-        // FIX: location.name appears exactly ONCE — in the center slot only.
-        // Do NOT use the "middle" field from names data (it contains location names
-        // which caused "Camp Coffin — Camp Coffin Huck" duplication).
-        return `${prefix} ${location.name} — ${suffix}`;
+        suffix = randomChoice(suffixes)?.text || 'Reckoning';
+      } else {
+        const fallbackPrefixes = ['Bloody', 'Burning', 'Broken', 'Cursed', 'Forsaken', 'Iron'];
+        const fallbackSuffixes = ['Reckoning', 'Standoff', 'Collapse', 'Ruin', 'Harvest', 'Judgment'];
+        prefix = randomChoice(fallbackPrefixes);
+        suffix = randomChoice(fallbackSuffixes);
       }
 
-      // Fallback without JSON data
-      const fallbackPrefixes = ['Bloody', 'Burning', 'Broken', 'Cursed', 'Forsaken', 'Iron'];
-      const fallbackSuffixes = ['Reckoning', 'Standoff', 'Collapse', 'Ruin', 'Harvest', 'Judgment'];
-      return `${randomChoice(fallbackPrefixes)} ${location.name} — ${randomChoice(fallbackSuffixes)}`;
+      // Use multiple natural templates so "Black Night" and "Shard" etc.
+      // always read as intended rather than forcing "Shard Lost Yots — X"
+      const templates = [
+        () => `${prefix} at ${locName}`,                     // "Black Night at Fool Boot"
+        () => `${prefix} at ${locName} — ${suffix}`,         // "Black Night at Fool Boot — Reckoning"
+        () => `${prefix} ${locName} — ${suffix}`,            // "Bloody Lost Yots — Reckoning" (classic)
+        () => `${locName} — ${suffix}`,                      // "Lost Yots — Shadow and Flame"
+        () => `${suffix} at ${locName}`,                     // "Reckoning at Lost Yots"
+        () => `The ${suffix} of ${locName}`,                 // "The Reckoning of Lost Yots"
+      ];
+
+      // Weight: prefer "at" templates when prefix is multi-word or starts with uppercase noun
+      const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
+      const pick = isAdjectivePrefix
+        ? randomChoice([templates[1], templates[2], templates[2], templates[3]])   // adjective: prefer classic
+        : randomChoice([templates[0], templates[0], templates[1], templates[4]]);  // noun/phrase: prefer "at"
+
+      return pick();
     }
 
     // ================================
@@ -1847,41 +1862,66 @@ window.CC_APP = {
           <!-- VICTORY CONDITIONS -->
           <div class="cc-scenario-section">
             <h4><i class="fa fa-trophy"></i> Victory Conditions</h4>
-            ${Object.entries(s.victory_conditions).map(([factionId, vc]) => `
-              <div class="cc-victory-card">
-                <div class="cc-vc-header">
-                  <h5>${vc.faction_name}${vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : ''}</h5>
+            ${Object.entries(s.victory_conditions).map(([factionId, vc]) => {
+
+              // Faction identity: accent color + icon + flavour tag
+              const FACTION_IDENTITY = {
+                monster_rangers: { color: '#4ade80', border: '#166534', icon: 'fa-paw',        tag: 'Protectors of the Canyon' },
+                liberty_corps:   { color: '#60a5fa', border: '#1e3a5f', icon: 'fa-shield',     tag: 'Federal Authority' },
+                monsterology:    { color: '#a78bfa', border: '#3b1f6e', icon: 'fa-flask',      tag: 'The Society' },
+                monsters:        { color: '#ef4444', border: '#7f1d1d', icon: 'fa-skull',      tag: 'Canyon Predators' },
+                shine_riders:    { color: '#fbbf24', border: '#78350f', icon: 'fa-bolt',       tag: 'Fast Money, Faster Exit' },
+                crow_queen:      { color: '#c084fc', border: '#581c87', icon: 'fa-eye',        tag: 'The Crown Remembers' },
+              };
+              const id = FACTION_IDENTITY[factionId] || { color: '#ff7518', border: '#7c2d12', icon: 'fa-flag', tag: '' };
+
+              return `
+              <div class="cc-victory-card" style="
+                border-left: 4px solid ${id.color};
+                background: linear-gradient(135deg,
+                  rgba(0,0,0,0.4) 0%,
+                  color-mix(in srgb, ${id.color} 6%, transparent) 100%);
+              ">
+                <div class="cc-vc-header" style="border-bottom: 1px solid ${id.border}; padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <i class="fa ${id.icon}" style="color:${id.color}; font-size:1.1rem;"></i>
+                    <h5 style="color:${id.color}; margin:0;">${vc.faction_name}${vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : ''}</h5>
+                  </div>
+                  ${id.tag ? `<div style="font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-top:2px; padding-left:1.7rem;">${id.tag}</div>` : ''}
                 </div>
+
                 <div class="cc-vc-objectives">
                   ${(vc.objectives || []).map((obj, i) => `
-                    <div class="cc-vc-obj">
+                    <div class="cc-vc-obj" style="border-left: 2px solid ${id.border};">
                       <div class="cc-vc-obj-label">Objective ${i + 1}</div>
-                      <div class="cc-vc-obj-name"><i class="fa fa-crosshairs"></i> ${obj.name}</div>
+                      <div class="cc-vc-obj-name"><i class="fa fa-crosshairs" style="color:${id.color};"></i> ${obj.name}</div>
                       <p class="cc-vc-obj-desc">${obj.desc}</p>
                       <div class="cc-vc-obj-meta">
-                        <span class="cc-vp-line"><i class="fa fa-star"></i> ${obj.vp}</span>
+                        <span class="cc-vp-line"><i class="fa fa-star" style="color:${id.color};"></i> ${obj.vp}</span>
                         <span class="cc-tactic-line"><i class="fa fa-book"></i> ${obj.tactic}</span>
                       </div>
                     </div>
                   `).join('')}
                 </div>
-                <hr class="cc-vc-divider" />
+
+                <hr class="cc-vc-divider" style="border-color:${id.border};" />
                 <div class="cc-vc-finale">
                   <div class="cc-vc-obj-label">Finale</div>
-                  <div class="cc-vc-obj-name"><i class="fa fa-bolt"></i> ${vc.finale.name}</div>
+                  <div class="cc-vc-obj-name"><i class="fa fa-bolt" style="color:${id.color};"></i> ${vc.finale.name}</div>
                   <p>${vc.finale.desc}</p>
-                  <p class="cc-vp-line"><i class="fa fa-star"></i> ${vc.finale.vp}</p>
+                  <p class="cc-vp-line"><i class="fa fa-star" style="color:${id.color};"></i> ${vc.finale.vp}</p>
                 </div>
-                <hr class="cc-vc-divider" />
+
+                <hr class="cc-vc-divider" style="border-color:${id.border};" />
                 <div class="cc-vc-aftermath">
                   <div class="cc-vc-obj-label">If ${vc.faction_name} Wins</div>
-                  <p><i class="fa fa-chevron-right"></i> ${vc.aftermath.immediate}</p>
-                  <p><i class="fa fa-university"></i> Territory becomes <strong>${vc.aftermath.canyon_state}</strong>.</p>
+                  <p><i class="fa fa-chevron-right" style="color:${id.color};"></i> ${vc.aftermath.immediate}</p>
+                  <p><i class="fa fa-university"></i> Territory becomes <strong style="color:${id.color};">${vc.aftermath.canyon_state}</strong>.</p>
                   <p><i class="fa fa-calendar"></i> ${vc.aftermath.long_term}</p>
-                  ${vc.quote ? `<p class="cc-quote">"${vc.quote}"</p>` : ''}
+                  ${vc.quote ? `<p class="cc-quote" style="border-left-color:${id.color};">"${vc.quote}"</p>` : ''}
                 </div>
-              </div>
-            `).join('')}
+              </div>`;
+            }).join('')}
           </div>
 
           <!-- AFTERMATH -->
@@ -2041,10 +2081,16 @@ window.CC_APP = {
     };
 
     window.setPlayerFaction = function(factionId) {
+      const CANNOT_SELF_OPPOSE = ['monster_rangers', 'monsterology', 'liberty_corps', 'crow_queen'];
+      // Remove old player entry
       state.factions = state.factions.filter(f => f.isNPC);
       if (factionId) {
         const faction = FACTIONS.find(f => f.id === factionId);
         if (faction) state.factions.unshift({ id: faction.id, name: faction.name, player: '', isNPC: false });
+        // Also remove from NPC list if they can't self-oppose
+        if (CANNOT_SELF_OPPOSE.includes(factionId)) {
+          state.factions = state.factions.filter(f => !(f.id === factionId && f.isNPC));
+        }
       }
       render();
     };
