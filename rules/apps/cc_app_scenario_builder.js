@@ -335,35 +335,66 @@ window.CC_APP = {
 
     // ================================
     // RESOURCE DISPLAY HELPER
+    // Renders meter bars (matching the map app drawer style).
+    // Max value is 6. Shows resources >= 1.
+    // Vital resources at 0 show as absent in red.
     // ================================
     function buildResourceSummary(resources) {
       if (!resources) return '';
+
       const LABELS = {
-        food_good:    '🍖 Food',
-        water_clean:  '💧 Water',
-        medicine:     '💉 Medicine',
-        supplies:     '📦 Supplies',
-        thyr:         '💎 Thyr',
-        silver:       '🥈 Silver',
-        weapons:      '🔫 Weapons',
-        moonshine:    '🥃 Moonshine',
-        spare_parts:  '⚙️ Parts',
-        rotgut:       '🍶 Rotgut',
-        food_foul:    '☠️ Foul Food',
-        water_foul:   '🤢 Foul Water'
+        food_good:   'Food',     water_clean: 'Water',
+        medicine:    'Medicine', supplies:    'Supplies',
+        thyr:        'Thyr',     silver:      'Silver',
+        weapons:     'Weapons',  moonshine:   'Moonshine',
+        spare_parts: 'Parts',    rotgut:      'Rotgut',
+        food_foul:   'Foul Food', water_foul: 'Foul Water'
       };
-      const VITAL = ['food_good', 'water_clean', 'medicine', 'supplies'];
-      const highs  = [];
-      const absent = [];
+      const COLORS = {
+        food_good:   '#4ade80', water_clean: '#38bdf8',
+        medicine:    '#a78bfa', supplies:    '#fb923c',
+        thyr:        '#34d399', silver:      '#cbd5e1',
+        weapons:     '#f87171', moonshine:   '#fbbf24',
+        spare_parts: '#94a3b8', rotgut:      '#a16207',
+        food_foul:   '#ef4444', water_foul:  '#ef4444'
+      };
+      const VITAL   = ['food_good', 'water_clean', 'medicine', 'supplies'];
+      const MAX_VAL = 6;
+      const bars    = [];
+      const absent  = [];
 
       for (const [k, v] of Object.entries(resources)) {
-        if (typeof v !== 'number') continue;
-        if (v >= 2 && LABELS[k]) highs.push(`<span class="cc-resource-high">${LABELS[k]}: ${v}</span>`);
-        if (v === 0 && VITAL.includes(k)) absent.push(`<span class="cc-resource-absent">${LABELS[k]} ✗</span>`);
+        if (typeof v !== 'number' || !LABELS[k]) continue;
+        if (v >= 1) {
+          const pct   = Math.round(Math.min(v, MAX_VAL) / MAX_VAL * 100);
+          const color = COLORS[k] || '#ff7518';
+          bars.push(`
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+              <div style="width:72px;flex-shrink:0;font-size:0.72rem;
+                          color:rgba(255,255,255,0.55);text-transform:uppercase;
+                          letter-spacing:0.04em;text-align:right;">${LABELS[k]}</div>
+              <div style="flex:1;height:10px;background:rgba(255,255,255,0.07);
+                          border-radius:6px;overflow:hidden;
+                          border:1px solid rgba(255,255,255,0.08);">
+                <div style="height:100%;width:${pct}%;
+                             background:linear-gradient(90deg,${color},${color}99);
+                             border-radius:6px;"></div>
+              </div>
+              <div style="width:16px;flex-shrink:0;font-size:0.72rem;font-weight:700;
+                          color:${color};">${v}</div>
+            </div>`);
+        } else if (v === 0 && VITAL.includes(k)) {
+          absent.push(`<span style="font-size:0.75rem;color:#ef4444;
+                                    margin-right:0.6rem;">${LABELS[k]} &mdash; none</span>`);
+        }
       }
 
-      if (highs.length === 0 && absent.length === 0) return '';
-      return `<p>${highs.concat(absent).join(' ')}</p>`;
+      if (bars.length === 0 && absent.length === 0) return '';
+      return `
+        <div style="margin:0.5rem 0 0.25rem 0;">
+          ${bars.join('')}
+          ${absent.length ? `<div style="margin-top:4px;">${absent.join('')}</div>` : ''}
+        </div>`;
     }
 
     // ================================
@@ -1330,14 +1361,23 @@ window.CC_APP = {
                     border:1px solid rgba(255,117,24,0.3);
                     align-items:stretch;">
 
-          <!-- LEFT: static overview — width drives the layout, image fills it naturally -->
+          <!-- LEFT: static overview -->
           <div id="cc-scenario-map-overview"
                style="flex:0 0 33%;position:relative;overflow:hidden;background:#0a0a0a;">
+
+            <!-- Label at TOP -->
+            <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                        padding:6px 8px;
+                        background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
+                        font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
+                        text-transform:uppercase;color:rgba(255,255,255,0.7);
+                        text-align:center;">Canyon Overview</div>
+
             <img id="cc-scenario-map-tiny"
                  src="${TINY_MAP_URL}"
                  alt="Canyon overview"
                  style="width:100%;height:auto;display:block;opacity:0.85;">
-            <!-- highlight box injected by initLocationMapEmbed -->
+
             <div id="cc-scenario-map-highlight"
                  style="display:none;position:absolute;
                         border:2px solid #ff7518;
@@ -1345,16 +1385,11 @@ window.CC_APP = {
                         box-shadow:0 0 0 1px rgba(0,0,0,0.6),
                                    0 0 12px rgba(255,117,24,0.5);
                         pointer-events:none;"></div>
-            <div id="cc-scenario-map-here"
-                 style="display:none;position:absolute;bottom:6px;left:0;right:0;
-                        text-align:center;
-                        font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;
-                        color:rgba(255,255,255,0.5);">Canyon overview</div>
           </div>
 
-          <!-- RIGHT: zoomed Leaflet map — stretches to match left panel height -->
+          <!-- RIGHT: zoomed Leaflet map -->
           <div id="cc-scenario-map-embed"
-               style="flex:1;position:relative;background:#111;min-height:260px;">
+               style="flex:1;position:relative;background:#111;min-height:320px;">
             <div style="position:absolute;inset:0;display:flex;align-items:center;
                         justify-content:center;color:rgba(255,255,255,0.25);
                         font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;">
@@ -1368,7 +1403,6 @@ window.CC_APP = {
     async function initLocationMapEmbed(locProfile) {
       const leafletContainer = document.getElementById('cc-scenario-map-embed');
       const highlightEl      = document.getElementById('cc-scenario-map-highlight');
-      const hereEl           = document.getElementById('cc-scenario-map-here');
       if (!leafletContainer) return;
 
       if (_scenarioMap) {
@@ -1387,28 +1421,22 @@ window.CC_APP = {
         const bbox = hitboxes[locProfile.id];
 
         // ── LEFT PANEL: position the highlight box ──────────────────
-        // Leaflet CRS.Simple: lat=0 is BOTTOM of image, lat=px.h is TOP.
-        // CSS:                top=0% is TOP of img,      top=100% is BOTTOM.
-        // So we flip the Y axis: cssTop = (1 - maxLat/px.h) * 100
-        if (bbox && highlightEl && hereEl) {
+        // Leaflet CRS.Simple: lat=0 is BOTTOM, lat=px.h is TOP.
+        // CSS: top=0% is TOP. So flip Y: cssTop = (1 - maxLat/px.h) * 100
+        if (bbox && highlightEl) {
           const minLat = bbox[0], maxLat = bbox[2];
           const minLng = bbox[1], maxLng = bbox[3];
 
-          const cssTop    = (1 - maxLat / px.h) * 100;   // flip Y
+          const cssTop    = (1 - maxLat / px.h) * 100;
           const cssLeft   = (minLng / px.w) * 100;
-          const cssHeight = ((maxLat - minLat) / px.h) * 100;
-          const cssWidth  = ((maxLng - minLng) / px.w) * 100;
-
-          // Minimum visible size for tiny locations
-          const minW = Math.max(cssWidth,  1.5);
-          const minH = Math.max(cssHeight, 0.8);
+          const cssHeight = Math.max((maxLat - minLat) / px.h * 100, 0.8);
+          const cssWidth  = Math.max((maxLng - minLng) / px.w * 100, 1.5);
 
           highlightEl.style.top     = cssTop  + '%';
           highlightEl.style.left    = cssLeft + '%';
-          highlightEl.style.width   = minW   + '%';
-          highlightEl.style.height  = minH   + '%';
+          highlightEl.style.width   = cssWidth  + '%';
+          highlightEl.style.height  = cssHeight + '%';
           highlightEl.style.display = 'block';
-          hereEl.style.display      = 'block';
         }
 
         // ── RIGHT PANEL: Leaflet zoomed map ────────────────────────
@@ -1425,7 +1453,7 @@ window.CC_APP = {
         const L = window.L;
         _scenarioMap = L.map(leafletContainer, {
           crs:                L.CRS.Simple,
-          minZoom:            -4,
+          minZoom:            -5,
           maxZoom:            0,
           zoomControl:        false,
           attributionControl: false,
@@ -1439,6 +1467,7 @@ window.CC_APP = {
         L.imageOverlay(mapData.map.background.image_key, bounds).addTo(_scenarioMap);
 
         if (bbox) {
+          // Orange highlight rectangle
           L.rectangle(
             [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
             {
@@ -1450,6 +1479,7 @@ window.CC_APP = {
             }
           ).addTo(_scenarioMap);
 
+          // Gold star at centre — no name label (name shown in header above)
           L.marker([centerLat, centerLng], {
             icon: L.divIcon({
               className: '',
@@ -1462,27 +1492,21 @@ window.CC_APP = {
             }),
             interactive: false
           }).addTo(_scenarioMap);
-
-          L.marker([centerLat, centerLng], {
-            icon: L.divIcon({
-              className: '',
-              html: `<div style="color:#fff;font-weight:800;white-space:nowrap;
-                                 font-size:0.72rem;letter-spacing:0.03em;
-                                 text-shadow:0 1px 4px #000,0 0 8px #000;
-                                 padding-top:4px;">
-                       ${locProfile.emoji || '📍'} ${locProfile.name}
-                     </div>`,
-              iconSize:   [0, 0],
-              iconAnchor: [-4, -12]
-            }),
-            interactive: false
-          }).addTo(_scenarioMap);
         }
 
-        _scenarioMap.setView([centerLat, centerLng], -2);
-
+        // fitBounds with generous padding fills the container without black bars
         requestAnimationFrame(() => {
-          try { _scenarioMap.invalidateSize({ animate: false }); } catch (e) {}
+          try {
+            _scenarioMap.invalidateSize({ animate: false });
+            if (bbox) {
+              _scenarioMap.fitBounds(
+                [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+                { padding: [60, 80], animate: false, maxZoom: -1 }
+              );
+            } else {
+              _scenarioMap.fitBounds(bounds, { padding: [20, 20], animate: false });
+            }
+          } catch (e) {}
         });
 
       } catch (err) {
@@ -1749,7 +1773,6 @@ window.CC_APP = {
             </p>
             ${s.location.description ? `<p><em>${s.location.description}</em></p>` : ''}
             ${s.location.atmosphere  ? `<p class="cc-quote">"${s.location.atmosphere}"</p>` : ''}
-            ${s.location.features?.length ? `<p class="cc-help-text">${s.location.features.join(' &middot; ')}</p>` : ''}
             ${buildResourceSummary(s.location.effectiveResources)}
             ${renderLocationMapEmbed()}
           </div>
