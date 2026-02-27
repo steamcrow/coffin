@@ -2093,6 +2093,7 @@ window.CC_APP = {
 
     window.setSelectedLocation = function(id) {
       state.selectedLocation = id || null;
+      render();
     };
 
     window.openStep     = function(n) { state.currentStep = n; render(); };
