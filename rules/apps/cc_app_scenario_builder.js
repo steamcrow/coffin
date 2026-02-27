@@ -623,7 +623,10 @@ window.CC_APP = {
       weapons:          ['fortified_position', 'command_structure', 'barricades'],
       moonshine:        ['scattered_crates', 'cargo_vehicle'],
       rotgut:           ['fouled_resource', 'scattered_crates'],
-      gildren:          ['land_marker', 'command_structure']
+      gildren:          ['land_marker', 'command_structure'],
+      vitagood:         ['stored_supplies', 'scattered_crates', 'feeding_trough'],
+      monster_data:     ['observation_post', 'nesting_site', 'artifact'],
+      strange_flora:    ['tainted_ground', 'ritual_site']
     };
 
     const ALL_OBJECTIVE_TYPES = [
@@ -675,13 +678,13 @@ window.CC_APP = {
         return 'Unstable Structure';
       }
 
-      const names = {
+    const names = {
         wrecked_engine:     'Wrecked Engine',
         scattered_crates:   'Scattered Supply Crates',
         derailed_cars:      'Derailed Cars',
         pack_animals:       'Pack Animals',
         ritual_components:  'Ritual Components',
-        ritual_site:        'Ritual Site',
+        ritual_site:        hasRangers ? 'Monster Sanctuary Site' : 'Ritual Site',
         land_marker:        (() => {
           const arch = locProfile?.archetype || '';
           const feats = features;
@@ -707,21 +710,22 @@ window.CC_APP = {
           if (arch === 'wilderness' || arch === 'arroyo') return 'Field Command Tent';
           if (arch === 'boomtown')   return 'Command Tower';
           if (arch === 'rail_grade') return 'Rail Command Car';
-          return randomChoice(['Command Tower', 'Command Tent', 'Field Command Post']);
+          return 'Tactical Command Center';
         })(),
-        thyr_cache:         'Thyr Crystal Cache',
-        artifact:           'Ancient Artifact',
-        captive_entity:     'Captive Entity',
-        fortified_position: 'Fortified Position',
-        barricades:         'Barricades',
-        stored_supplies:    'Stored Supplies',
-        ritual_circle:      'Ritual Circle',
-        tainted_ground:     'Tainted Ground',
-        sacrificial_focus:  'Sacrificial Focus',
-        collapsing_route:   'Collapsing Route',
-        evacuation_point:   'Evacuation Point'
+        thyr_cache:         'Raw Thyr Fissure',
+        artifact:           'Pre-Calamity Relic',
+        captive_entity:     hasRangers ? 'Injured Monster Friend' : 'Captive Subject',
+        fortified_position: 'High-Ground Outpost',
+        barricades:         'Improvised Cover',
+        stored_supplies:    hasRangers ? 'Crate of VitaGood' : 'Stored Supplies',
+        ritual_circle:      hasRangers ? 'Purification Circle' : 'Ritual Circle',
+        tainted_ground:     'Corrupted Earth',
+        sacrificial_focus:  'Dark Attractor',
+        collapsing_route:   'Narrow Escarpment',
+        evacuation_point:   'Extraction Zone'
       };
-      return names[type] || 'Contested Objective';
+
+      return names[type] || 'Important Objective';
     }
 
     function makeObjectiveDescription(type, locProfile) {
@@ -969,7 +973,7 @@ window.CC_APP = {
       ritual_circle:      { count: '1',    placement: 'Center board',              token: 'Circle marker (3″ radius)',     interactions: ['ACTIVATE', 'DISRUPT', 'CONTROL'] },
       land_marker:        { count: '3',    placement: 'Spread across board',       token: 'Territory markers',             interactions: ['CLAIM', 'CONTROL'] },
       command_structure:  { count: '1',    placement: 'Strategic position',        token: 'Command post marker',           interactions: ['CONTROL', 'HOLD', 'DESTROY'] },
-      thyr_cache:         { count: '1',    placement: 'Center board',              token: 'Glowing crystal token',         interactions: ['EXTRACT', 'CORRUPT', 'DESTROY'] },
+      thyr_cache:         { count: '1',    placement: 'Scatter on board',              token: 'Glowing crystal token',         interactions: ['EXTRACT', 'CORRUPT', 'DESTROY'] },
       artifact:           { count: '1',    placement: 'Center board',              token: 'Artifact token',                interactions: ['RECOVER', 'EXAMINE', 'DESTROY'] },
       captive_entity:     { count: '1',    placement: 'Random mid-board',          token: 'Entity marker or model',        interactions: ['FREE', 'CAPTURE', 'CONTROL'] },
       fortified_position: { count: '1',    placement: 'Defensible terrain',        token: 'Fortification marker',          interactions: ['HOLD', 'ASSAULT', 'REINFORCE'] },
