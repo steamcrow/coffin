@@ -1311,65 +1311,125 @@ window.CC_APP = {
 
     // ================================
     // LOCATION MAP EMBED
-    // A small read-only Leaflet map showing where the scenario
-    // takes place. Centered on the location's hitbox center,
-    // with a gold star and name label.
+    // Two-panel layout:
+    //   LEFT  — static tiny overview of the whole canyon.
+    //           An orange highlight box shows where the location is.
+    //           Never moves, never loads Leaflet.
+    //   RIGHT — zoomed Leaflet map centered on the location.
+    //           Gold star + name label. Read-only.
     // ================================
 
-    // Returns the HTML placeholder div (Leaflet fills it in initLocationMapEmbed)
+    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/map_coffin_canyon_tiny.jpg';
+
+    // Returns the two-panel placeholder HTML.
+    // Leaflet fills in the right panel; the overview box is positioned in initLocationMapEmbed.
     function renderLocationMapEmbed() {
       return `
-        <div id="cc-scenario-map-embed"
-             style="height:280px;border-radius:8px;overflow:hidden;
+        <div id="cc-scenario-map-wrap"
+             style="display:flex;gap:6px;height:260px;
                     margin:0.5rem 0 0.75rem 0;
-                    border:1px solid rgba(255,117,24,0.3);
-                    background:#111;
-                    position:relative;">
-          <div style="position:absolute;inset:0;display:flex;align-items:center;
-                      justify-content:center;color:rgba(255,255,255,0.3);font-size:0.8rem;
-                      letter-spacing:0.1em;text-transform:uppercase;">
-            Loading map&hellip;
+                    border-radius:8px;overflow:hidden;
+                    border:1px solid rgba(255,117,24,0.3);">
+
+          <!-- LEFT: static overview -->
+          <div id="cc-scenario-map-overview"
+               style="flex:0 0 32%;position:relative;overflow:hidden;background:#0a0a0a;">
+            <img id="cc-scenario-map-tiny"
+                 src="${TINY_MAP_URL}"
+                 alt="Canyon overview"
+                 style="width:100%;height:100%;object-fit:cover;object-position:top left;
+                        display:block;opacity:0.85;">
+            <!-- highlight box injected here by initLocationMapEmbed -->
+            <div id="cc-scenario-map-highlight"
+                 style="display:none;position:absolute;
+                        border:2px solid #ff7518;
+                        background:rgba(255,117,24,0.25);
+                        box-shadow:0 0 0 1px rgba(0,0,0,0.6),
+                                   0 0 12px rgba(255,117,24,0.5);
+                        pointer-events:none;"></div>
+            <!-- "YOU ARE HERE" label -->
+            <div id="cc-scenario-map-here"
+                 style="display:none;position:absolute;bottom:6px;left:0;right:0;
+                        text-align:center;
+                        font-size:0.55rem;letter-spacing:0.12em;text-transform:uppercase;
+                        color:rgba(255,255,255,0.5);">Canyon overview</div>
           </div>
+
+          <!-- RIGHT: zoomed Leaflet map -->
+          <div id="cc-scenario-map-embed"
+               style="flex:1;position:relative;background:#111;">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;
+                        justify-content:center;color:rgba(255,255,255,0.25);
+                        font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;">
+              Loading map&hellip;
+            </div>
+          </div>
+
         </div>`;
     }
 
-    // Called after render() sets innerHTML — boots Leaflet into the embed div
+    // Called after render() sets innerHTML.
+    // 1. Positions the highlight box on the static overview.
+    // 2. Boots Leaflet into the right panel.
     async function initLocationMapEmbed(locProfile) {
-      const container = document.getElementById('cc-scenario-map-embed');
-      if (!container) return;
+      const leafletContainer  = document.getElementById('cc-scenario-map-embed');
+      const highlightEl       = document.getElementById('cc-scenario-map-highlight');
+      const hereEl            = document.getElementById('cc-scenario-map-here');
+      const tinyImg           = document.getElementById('cc-scenario-map-tiny');
+      if (!leafletContainer) return;
 
-      // Destroy any previous Leaflet instance to avoid "container already initialised" errors
+      // Destroy any previous Leaflet instance
       if (_scenarioMap) {
         try { _scenarioMap.remove(); } catch (e) {}
         _scenarioMap = null;
       }
 
       try {
-        // Load Leaflet + hitboxes + map data in parallel
+        // Load everything in parallel
         const [hitboxes, mapData] = await Promise.all([
           ensureHitboxes(),
           fetchMapData(),
           ensureLeaflet()
         ]);
 
-        const px     = mapData.map.background.image_pixel_size;
-        const bounds = [[0, 0], [px.h, px.w]];
-        const bbox   = hitboxes[locProfile.id];
+        const px    = mapData.map.background.image_pixel_size;  // full map pixel dimensions
+        const bbox  = hitboxes[locProfile.id];
 
-        // Work out where to centre the map
-        let centerLat = px.h / 2;
-        let centerLng = px.w / 2;
+        // ── LEFT PANEL: position the highlight box as % of full map dims ──
+        // Since the tiny image uses object-fit:cover / object-position:top left,
+        // percentage coordinates map directly onto the full map's coordinate space.
+        if (bbox && highlightEl && hereEl) {
+          const left   = (bbox[1] / px.w) * 100;
+          const top    = (bbox[0] / px.h) * 100;
+          const width  = ((bbox[3] - bbox[1]) / px.w) * 100;
+          const height = ((bbox[2] - bbox[0]) / px.h) * 100;
+
+          // Minimum visible size so tiny locations still show a box
+          const minW = Math.max(width,  1.5);
+          const minH = Math.max(height, 1.0);
+
+          highlightEl.style.left    = left + '%';
+          highlightEl.style.top     = top  + '%';
+          highlightEl.style.width   = minW + '%';
+          highlightEl.style.height  = minH + '%';
+          highlightEl.style.display = 'block';
+          hereEl.style.display      = 'block';
+        }
+
+        // ── RIGHT PANEL: Leaflet zoomed map ──
+        const bounds    = [[0, 0], [px.h, px.w]];
+        let centerLat   = px.h / 2;
+        let centerLng   = px.w / 2;
         if (bbox) {
           centerLat = (bbox[0] + bbox[2]) / 2;
           centerLng = (bbox[1] + bbox[3]) / 2;
         }
 
-        // Clear the "Loading map…" placeholder text
-        container.innerHTML = '';
+        // Clear the "Loading map…" placeholder
+        leafletContainer.innerHTML = '';
 
-        // Create the Leaflet map (read-only: no drag, no zoom controls)
         const L = window.L;
-        _scenarioMap = L.map(container, {
+        _scenarioMap = L.map(leafletContainer, {
           crs:                L.CRS.Simple,
           minZoom:            -4,
           maxZoom:            0,
@@ -1386,61 +1446,63 @@ window.CC_APP = {
         L.imageOverlay(mapData.map.background.image_key, bounds).addTo(_scenarioMap);
 
         if (bbox) {
-          // Soft highlight box for the location
+          // Soft orange highlight matching the overview box
           L.rectangle(
             [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
             {
               color:       'rgba(255,117,24,0.9)',
-              fillColor:   'rgba(255,117,24,0.15)',
+              fillColor:   'rgba(255,117,24,0.18)',
               fillOpacity: 1,
               weight:      2,
               interactive: false
             }
           ).addTo(_scenarioMap);
 
-          // Gold star at the hitbox centre
-          const starIcon = L.divIcon({
-            className: '',
-            html: `<i class="fa fa-star"
-                      style="color:#ffd700;font-size:1.6rem;
-                             text-shadow:0 0 10px rgba(0,0,0,0.9),
-                                         0 0 4px rgba(0,0,0,1);
-                             display:block;line-height:1;"></i>`,
-            iconSize:   [22, 22],
-            iconAnchor: [11, 11]
-          });
-          L.marker([centerLat, centerLng], { icon: starIcon, interactive: false })
-            .addTo(_scenarioMap);
+          // Gold star at centre
+          L.marker([centerLat, centerLng], {
+            icon: L.divIcon({
+              className: '',
+              html: `<i class="fa fa-star"
+                        style="color:#ffd700;font-size:1.5rem;
+                               text-shadow:0 0 10px rgba(0,0,0,0.9),0 0 4px #000;
+                               display:block;line-height:1;"></i>`,
+              iconSize:   [20, 20],
+              iconAnchor: [10, 10]
+            }),
+            interactive: false
+          }).addTo(_scenarioMap);
 
-          // Location name label below the star
-          const labelIcon = L.divIcon({
-            className: '',
-            html: `<div style="color:#fff;font-weight:800;white-space:nowrap;
-                               font-size:0.75rem;letter-spacing:0.03em;
-                               text-shadow:0 1px 4px #000,0 0 8px #000;
-                               padding-top:6px;">${locProfile.emoji || '📍'} ${locProfile.name}</div>`,
-            iconSize:   [0, 0],
-            iconAnchor: [-4, -14]  // sits just below and right of the star
-          });
-          L.marker([centerLat, centerLng], { icon: labelIcon, interactive: false })
-            .addTo(_scenarioMap);
+          // Name label just below the star
+          L.marker([centerLat, centerLng], {
+            icon: L.divIcon({
+              className: '',
+              html: `<div style="color:#fff;font-weight:800;white-space:nowrap;
+                                 font-size:0.72rem;letter-spacing:0.03em;
+                                 text-shadow:0 1px 4px #000,0 0 8px #000;
+                                 padding-top:4px;">
+                       ${locProfile.emoji || '📍'} ${locProfile.name}
+                     </div>`,
+              iconSize:   [0, 0],
+              iconAnchor: [-4, -12]
+            }),
+            interactive: false
+          }).addTo(_scenarioMap);
         }
 
-        // Set the view — zoom out just enough to show surrounding context
+        // Zoom level -2 shows good surrounding context without black edges
         _scenarioMap.setView([centerLat, centerLng], -2);
 
-        // Give Leaflet a tick to measure the container before invalidating size
         requestAnimationFrame(() => {
           try { _scenarioMap.invalidateSize({ animate: false }); } catch (e) {}
         });
 
       } catch (err) {
         console.warn('⚠️ Location map embed failed:', err);
-        if (container) {
-          container.innerHTML = `<div style="padding:1rem;color:rgba(255,255,255,0.3);
-                                              font-size:0.8rem;text-align:center;">
-                                    Map unavailable
-                                  </div>`;
+        if (leafletContainer) {
+          leafletContainer.innerHTML = `<div style="padding:1rem;color:rgba(255,255,255,0.25);
+                                                    font-size:0.8rem;text-align:center;">
+                                          Map unavailable
+                                        </div>`;
         }
       }
     }
