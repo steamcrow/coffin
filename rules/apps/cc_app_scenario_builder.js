@@ -41,6 +41,7 @@ window.CC_APP = {
       const style = document.createElement('style');
       style.id = 'cc-scenario-inline-styles';
       style.textContent = `
+        /* ---- State badges ---- */
         .cc-state-def {
           font-size: 0.78rem;
           color: rgba(255,255,255,0.45);
@@ -50,8 +51,275 @@ window.CC_APP = {
           display: inline-block;
           vertical-align: middle;
         }
+
+        /* ---- Splash logo pulse ---- */
+        @keyframes cc-logo-pulse {
+          0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
+          50%  { filter: drop-shadow(0 0 48px rgba(255,117,24,0.85)); transform: scale(1.03); }
+          100% { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
+        }
+        .cc-splash-logo {
+          animation: cc-logo-pulse 2.4s ease-in-out infinite;
+        }
+
+        /* ---- Mini-map left panel double-border ---- */
+        #cc-scenario-map-overview {
+          outline: 2px solid rgba(255,117,24,0.55);
+          outline-offset: -1px;
+          box-shadow:
+            inset 0 0 0 4px rgba(0,0,0,0.7),
+            0 0 0 3px rgba(255,117,24,0.18),
+            0 0 18px rgba(255,117,24,0.25);
+        }
+
+        /* ============================================================
+           PRINT STYLES
+           Loads cc_print.css via JS (below) then these rules override
+           anything specific to the scenario builder output.
+           ============================================================ */
+        @media print {
+
+          /* Hide everything that isn't the scenario output */
+          body > *:not(#cc-print-root),
+          .cc-app-header,
+          .cc-scenario-sidebar,
+          .cc-scenario-builder-layout,
+          .cc-summary-sidebar,
+          .cc-form-actions,
+          .cc-accordion-header,
+          #cc-splash-screen,
+          nav, header, footer,
+          .cc-btn,
+          button,
+          [onclick] { display: none !important; }
+
+          /* Show only the scenario output card */
+          .cc-scenario-result,
+          .cc-scenario-full-layout { display: block !important; }
+
+          /* Base page */
+          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          html, body {
+            background: #fff !important;
+            color: #111 !important;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.55;
+            margin: 0;
+            padding: 0;
+          }
+
+          /* Outer wrapper — full width, no chrome */
+          .cc-scenario-result {
+            width: 100% !important;
+            max-width: 100% !important;
+            background: #fff !important;
+            color: #111 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+
+          /* Title */
+          .cc-scenario-result h3 {
+            font-size: 22pt !important;
+            font-weight: 700 !important;
+            color: #111 !important;
+            border-bottom: 2.5pt solid #111 !important;
+            padding-bottom: 6pt !important;
+            margin-bottom: 10pt !important;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            page-break-after: avoid;
+          }
+
+          /* Narrative hook */
+          .cc-scenario-hook {
+            font-style: italic !important;
+            font-size: 11pt !important;
+            color: #333 !important;
+            background: none !important;
+            border-left: 3pt solid #555 !important;
+            padding: 6pt 10pt !important;
+            margin-bottom: 14pt !important;
+            border-radius: 0 !important;
+          }
+
+          /* Section headers */
+          .cc-scenario-section { page-break-inside: avoid; margin-bottom: 14pt !important; }
+          .cc-scenario-section h4 {
+            font-size: 12pt !important;
+            font-weight: 700 !important;
+            color: #111 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+            border-bottom: 1pt solid #999 !important;
+            padding-bottom: 3pt !important;
+            margin-bottom: 8pt !important;
+          }
+          .cc-scenario-section h4 i { display: none !important; }
+
+          /* Location state block */
+          .cc-state-block { margin-bottom: 8pt !important; }
+          .cc-state-badge {
+            font-weight: 700 !important;
+            font-size: 10pt !important;
+            color: #111 !important;
+            background: #eee !important;
+            border: 1pt solid #999 !important;
+            border-radius: 2pt !important;
+            padding: 1pt 5pt !important;
+          }
+          .cc-state-def { color: #555 !important; font-size: 9.5pt !important; }
+
+          /* Objectives */
+          .cc-objective-card {
+            background: none !important;
+            border: 1pt solid #ccc !important;
+            border-left: 3pt solid #555 !important;
+            border-radius: 0 !important;
+            padding: 6pt 8pt !important;
+            margin-bottom: 6pt !important;
+            page-break-inside: avoid;
+          }
+          .cc-objective-card strong { font-size: 11pt !important; color: #111 !important; }
+          .cc-objective-card p      { font-size: 10pt !important; color: #333 !important; margin: 3pt 0 !important; }
+          .cc-vp-line               { font-size: 9.5pt !important; color: #555 !important; }
+          .cc-vp-line i             { display: none !important; }
+
+          /* Chain link box */
+          .cc-objective-card p[style*="fa-link"] {
+            background: #f5f5f5 !important;
+            border-left: 2pt solid #555 !important;
+            color: #333 !important;
+            font-size: 9.5pt !important;
+          }
+
+          /* Board setup table */
+          .cc-marker-table {
+            width: 100% !important;
+            font-size: 9.5pt !important;
+            border-collapse: collapse !important;
+          }
+          .cc-marker-table th {
+            background: #222 !important;
+            color: #fff !important;
+            padding: 4pt 6pt !important;
+            text-align: left !important;
+            font-size: 8.5pt !important;
+          }
+          .cc-marker-table td {
+            border-bottom: 0.5pt solid #ddd !important;
+            padding: 4pt 6pt !important;
+            color: #111 !important;
+            vertical-align: top !important;
+          }
+          .cc-marker-token   { font-size: 8.5pt !important; color: #555 !important; }
+          .cc-marker-action  {
+            display: inline-block;
+            font-size: 7.5pt !important;
+            background: #eee !important;
+            color: #333 !important;
+            padding: 0 3pt !important;
+            margin: 1pt !important;
+            border-radius: 1pt !important;
+          }
+          .cc-markers-intro  { font-size: 9.5pt !important; color: #555 !important; }
+
+          /* Monster pressure table */
+          #cc-scenario-map-wrap,
+          #cc-scenario-map-embed { display: none !important; }
+
+          /* Victory cards */
+          .cc-victory-card {
+            background: none !important;
+            border: 1pt solid #ccc !important;
+            border-left: 4pt solid #333 !important;
+            border-radius: 0 !important;
+            padding: 6pt 8pt !important;
+            margin-bottom: 8pt !important;
+            page-break-inside: avoid;
+          }
+          .cc-vc-header { border-bottom: 1pt solid #ccc !important; padding-bottom: 4pt !important; margin-bottom: 6pt !important; }
+          .cc-vc-header h5 { font-size: 11pt !important; color: #111 !important; margin: 0 !important; }
+          .cc-vc-header h5 i { display: none !important; }
+          .cc-npc-tag {
+            font-size: 7.5pt !important;
+            background: #eee !important;
+            color: #555 !important;
+            padding: 0 3pt !important;
+            border-radius: 1pt !important;
+          }
+
+          /* Motive block */
+          .cc-victory-card div[style*="fa-bullseye"] {
+            background: #f5f5f5 !important;
+            border-left: 2pt solid #555 !important;
+            color: #333 !important;
+            font-size: 9.5pt !important;
+            margin-top: 4pt !important;
+          }
+
+          .cc-vc-obj {
+            border-left: 1.5pt solid #bbb !important;
+            padding: 4pt 6pt !important;
+            margin-bottom: 4pt !important;
+          }
+          .cc-vc-obj-label { font-size: 7.5pt !important; color: #888 !important; text-transform: uppercase !important; letter-spacing: 0.08em !important; }
+          .cc-vc-obj-name  { font-size: 10pt !important; font-weight: 700 !important; color: #111 !important; }
+          .cc-vc-obj-name  i { display: none !important; }
+          .cc-vc-obj-desc  { font-size: 9.5pt !important; color: #333 !important; margin: 2pt 0 !important; }
+          .cc-vc-obj-meta  { font-size: 8.5pt !important; color: #666 !important; }
+          .cc-tactic-line  i { display: none !important; }
+          .cc-vc-divider { border-color: #ddd !important; margin: 6pt 0 !important; }
+
+          .cc-vc-finale   { page-break-inside: avoid; }
+          .cc-vc-aftermath{ page-break-inside: avoid; }
+          .cc-vc-finale .cc-vc-obj-name i,
+          .cc-vc-aftermath i { display: none !important; }
+
+          /* Quotes */
+          .cc-quote {
+            border-left: 2pt solid #999 !important;
+            color: #555 !important;
+            font-style: italic !important;
+            font-size: 9.5pt !important;
+            padding: 3pt 8pt !important;
+            background: none !important;
+          }
+
+          /* Aftermath section */
+          .cc-scenario-section p i { display: none !important; }
+
+          /* Hide the logo everywhere in print */
+          img[alt="Coffin Canyon"],
+          img[src*="coffin_canyon_logo"],
+          img[src*="logo"] { display: none !important; }
+
+          /* Help text */
+          .cc-help-text { font-size: 9pt !important; color: #888 !important; }
+
+          /* Page breaks between major sections */
+          .cc-markers-section  { page-break-before: auto; }
+          .cc-scenario-section + .cc-scenario-section { margin-top: 10pt !important; }
+        }
       `;
       document.head.appendChild(style);
+    }
+
+    // ---- LOAD PRINT CSS ----
+    if (!document.getElementById('cc-print-styles')) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_print.css?t=' + Date.now())
+        .then(res => res.text())
+        .then(css => {
+          const style = document.createElement('style');
+          style.id = 'cc-print-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Print CSS applied!');
+        })
+        .catch(() => console.warn('⚠️ cc_print.css not found — using inline print styles only'));
     }
 
     // ---- LOAD STORAGE HELPERS ----
@@ -1588,30 +1856,35 @@ window.CC_APP = {
                     border:1px solid rgba(255,117,24,0.3);
                     align-items:stretch;">
 
-          <!-- LEFT: static overview -->
-          <div id="cc-scenario-map-overview"
-               style="flex:0 0 33%;position:relative;overflow:hidden;background:#0a0a0a;">
+          <!-- LEFT: static overview — double-border via CSS class -->
+          <div style="flex:0 0 33%;padding:3px;background:rgba(255,117,24,0.18);
+                      box-shadow:0 0 0 1px rgba(255,117,24,0.55);
+                      border-right:2px solid rgba(255,117,24,0.5);">
+            <div id="cc-scenario-map-overview"
+                 style="position:relative;overflow:hidden;background:#0a0a0a;height:100%;
+                        border:1px solid rgba(255,117,24,0.4);border-radius:2px;">
 
-            <!-- Label at TOP -->
-            <div style="position:absolute;top:0;left:0;right:0;z-index:10;
-                        padding:6px 8px;
-                        background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
-                        font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
-                        text-transform:uppercase;color:rgba(255,255,255,0.7);
-                        text-align:center;">Canyon Overview</div>
+              <!-- Label at TOP -->
+              <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                          padding:6px 8px;
+                          background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
+                          font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
+                          text-transform:uppercase;color:rgba(255,255,255,0.7);
+                          text-align:center;">Canyon Overview</div>
 
-            <img id="cc-scenario-map-tiny"
-                 src="${TINY_MAP_URL}"
-                 alt="Canyon overview"
-                 style="width:100%;height:auto;display:block;opacity:0.85;">
+              <img id="cc-scenario-map-tiny"
+                   src="${TINY_MAP_URL}"
+                   alt="Canyon overview"
+                   style="width:100%;height:auto;display:block;opacity:0.85;">
 
-            <div id="cc-scenario-map-highlight"
-                 style="display:none;position:absolute;
-                        border:2px solid #ff7518;
-                        background:rgba(255,117,24,0.25);
-                        box-shadow:0 0 0 1px rgba(0,0,0,0.6),
-                                   0 0 12px rgba(255,117,24,0.5);
-                        pointer-events:none;"></div>
+              <div id="cc-scenario-map-highlight"
+                   style="display:none;position:absolute;
+                          border:2px solid #ff7518;
+                          background:rgba(255,117,24,0.25);
+                          box-shadow:0 0 0 1px rgba(0,0,0,0.6),
+                                     0 0 12px rgba(255,117,24,0.5);
+                          pointer-events:none;"></div>
+            </div>
           </div>
 
           <!-- RIGHT: zoomed Leaflet map -->
@@ -2696,7 +2969,8 @@ window.CC_APP = {
           <img
             src="https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png"
             alt="Coffin Canyon"
-            style="width:320px;max-width:80vw;margin-bottom:2rem;filter:drop-shadow(0 0 28px rgba(255,117,24,.45));"
+            class="cc-splash-logo"
+            style="width:320px;max-width:80vw;margin-bottom:2rem;"
           />
           <div class="cc-loading-bar">
             <div class="cc-loading-progress"></div>
