@@ -1,7 +1,38 @@
-// ================================
-// Scenario Builder App
-// File: coffin/rules/apps/cc_app_scenario_builder.js
-// ================================
+// ── cc_app_scenario_builder.js ──────────────────────────────────────────────
+// Coffin Canyon · Scenario Builder
+// Loaded by cc_loader_core.js and mounted as window.CC_APP.
+//
+// SECTION MAP
+//   ~   8  Init, CSS loading, inline styles (pulse / mini-map / print)
+//   ~ 347  App state + faction registry
+//   ~ 376  Data loading (JSON files + faction data from GitHub)
+//   ~ 441  Map embed URLs and Leaflet helper functions
+//   ~ 508  Utilities  (randomChoice, randomInt, getDangerDescription)
+//   ~ 532  Small helpers  (cargo name, campaign state lookup)
+//   ~ 558  buildLocationProfile
+//   ~ 651  buildResourceSummary  (intentionally empty)
+//   ~ 660  generateNarrativeHook
+//   ~ 732  generateScenarioNameFromTags
+//   ~ 784  generateMonsterPressure  (data only — not displayed; feeds Turn Counter)
+//   ~ 834  generateAftermath
+//   ~ 851  Objective engine  (scoring, names, descriptions, VP)
+//   ~1273  Objective marker table + generateObjectiveMarkers
+//   ~1337  Victory condition tables  (approaches, flavor text, motives)
+//   ~1564  Tactical Link  (chain verbs, intros, generateObjectiveChain)
+//   ~1603  generateVictoryConditions + buildFactionFinale / buildFactionAftermath
+//   ~1809  window.generateScenario  — main generation entry point
+//   ~1905  Location map embed  (two-panel Leaflet view)
+//   ~2090  Accordion step wrapper
+//   ~2108  Step renders  (renderStep1 – renderStep4)
+//   ~2337  renderScenarioOutput
+//   ~2559  renderSummaryPanel
+//   ~2603  render()  — master render dispatcher
+//   ~2677  Event handlers  (setGameMode, toggleFaction, openStep, etc.)
+//   ~2788  window.printScenario  — opens a clean standalone print window
+//   ~3141  Save / Load  (CC_STORAGE, cloud sync, slide panel)
+//   ~3341  Boot  (splash screen, loadGameData, fade transition)
+// ─────────────────────────────────────────────────────────────────────────────
+
 
 console.log("🎲 Scenario Builder app loaded");
 
@@ -9,7 +40,7 @@ window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Scenario Builder init", ctx);
 
-    // ---- LOAD CSS ----
+    // Load shared UI CSS and app-specific CSS from GitHub raw URLs.
     if (!document.getElementById('cc-core-ui-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
         .then(res => res.text())
@@ -36,7 +67,7 @@ window.CC_APP = {
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
-    // ---- INLINE OVERRIDES (small rules that belong in-app) ----
+    // Inline styles: splash logo pulse, mini-map double border, and print rules.
     if (!document.getElementById('cc-scenario-inline-styles')) {
       const style = document.createElement('style');
       style.id = 'cc-scenario-inline-styles';
@@ -98,7 +129,9 @@ window.CC_APP = {
           .cc-scenario-full-layout { display: block !important; }
 
           /* Base page */
-          * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          html, body, div, p, h1, h2, h3, h4, h5, span, ul, li, table, tr, td, th {
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+          }
           html, body {
             background: #fff !important;
             color: #111 !important;
@@ -308,7 +341,7 @@ window.CC_APP = {
       document.head.appendChild(style);
     }
 
-    // ---- LOAD PRINT CSS ----
+    // Load cc_print.css from GitHub if it exists; the inline @media print block above is the fallback.
     if (!document.getElementById('cc-print-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_print.css?t=' + Date.now())
         .then(res => res.text())
@@ -322,7 +355,7 @@ window.CC_APP = {
         .catch(() => console.warn('⚠️ cc_print.css not found — using inline print styles only'));
     }
 
-    // ---- LOAD STORAGE HELPERS ----
+    // Load CC_STORAGE helper (cloud save/load) via blob script.
     if (!window.CC_STORAGE) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
         .then(res => res.text())
@@ -342,9 +375,7 @@ window.CC_APP = {
       return;
     }
 
-    // ================================
-    // STATE
-    // ================================
+    // ── App state ─────────────────────────────────────────────────────────────
     const state = {
       gameMode: null,
       pointValue: 500,
@@ -359,9 +390,7 @@ window.CC_APP = {
       completedSteps: []
     };
 
-    // ================================
-    // FACTION REGISTRY
-    // ================================
+    // ── Faction registry — all six factions; used for dropdowns, NPC injection, display ──
     const FACTIONS = [
       { id: 'monster_rangers', name: 'Monster Rangers', file: 'faction-monster-rangers-v5.json' },
       { id: 'liberty_corps',   name: 'Liberty Corps',   file: 'faction-liberty-corps-v2.json'  },
@@ -371,9 +400,7 @@ window.CC_APP = {
       { id: 'crow_queen',      name: 'Crow Queen',      file: 'faction-crow-queen.json'        }
     ];
 
-    // ================================
-    // DATA LOADING
-    // ================================
+    // ── Data loading — all JSON files fetched in parallel at boot ───────────────────
     let plotFamiliesData   = null;
     let twistTablesData    = null;
     let locationData       = null;
@@ -436,9 +463,7 @@ window.CC_APP = {
       }
     }
 
-    // ================================
-    // MAP EMBED — URLs + STATE
-    // ================================
+    // ── Map embed — remote URLs and Leaflet instance cache ─────────────────────────────
     const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map_app.js';
     const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json';
     const LEAFLET_CSS_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css';
@@ -448,7 +473,7 @@ window.CC_APP = {
     let _leafletReady = false;  // have we loaded Leaflet yet?
     let _scenarioMap  = null;   // active Leaflet instance in the embed (so we can destroy it on re-render)
 
-    // Load a remote JS file as a blob script (same pattern as the map app)
+    // Fetch a remote JS file and execute it as a blob script.
     function loadScriptDynamic(url) {
       return fetch(url + '?t=' + Date.now())
         .then(r => r.text())
@@ -463,7 +488,7 @@ window.CC_APP = {
         }));
     }
 
-    // Load a remote CSS file as an inline <style> (same pattern as map app)
+    // Fetch a remote CSS file and inject it as an inline <style> tag.
     function loadStyleDynamic(url, id) {
       if (document.getElementById(id)) return Promise.resolve();
       return fetch(url + '?t=' + Date.now())
@@ -476,7 +501,7 @@ window.CC_APP = {
         });
     }
 
-    // Ensure Leaflet CSS + JS are available (idempotent)
+    // Load Leaflet CSS + JS if not already present. Safe to call multiple times.
     async function ensureLeaflet() {
       if (_leafletReady && window.L) return;
       await loadStyleDynamic(LEAFLET_CSS_URL, 'cc-leaflet-css');
@@ -484,7 +509,7 @@ window.CC_APP = {
       _leafletReady = true;
     }
 
-    // Ensure window.CC_HITBOXES is available by loading the map app (idempotent)
+    // Load the canyon map app to get CC_HITBOXES (location bounding boxes). Safe to call multiple times.
     async function ensureHitboxes() {
       if (window.CC_HITBOXES) return window.CC_HITBOXES;
       try {
@@ -495,7 +520,7 @@ window.CC_APP = {
       return window.CC_HITBOXES || {};
     }
 
-    // Fetch and cache canyon_map.json
+    // Fetch and cache the canyon map JSON (image dimensions + location bounds).
     async function fetchMapData() {
       if (_mapData) return _mapData;
       const res = await fetch(MAP_DATA_URL + '?t=' + Date.now());
@@ -503,9 +528,7 @@ window.CC_APP = {
       return _mapData;
     }
 
-    // ================================
-    // UTILITIES
-    // ================================
+    // ── Utilities ─────────────────────────────────────────────────────────────────
     function randomChoice(arr) {
       if (!arr || arr.length === 0) return null;
       return arr[Math.floor(Math.random() * arr.length)];
@@ -527,19 +550,13 @@ window.CC_APP = {
       return map[rating] || 'Unknown danger level';
     }
 
-    // ================================
-    // FIX 3: CARGO VEHICLE NAME HELPER
-    // Returns "Cargo Tiger Truck" for Monster Rangers, otherwise "Cargo Vehicle"
-    // ================================
+    // ── getCargoVehicleName — "Cargo Tiger Truck" when Monster Rangers are playing ────
     function getCargoVehicleName() {
       const hasRangers = state.factions.some(f => f.id === 'monster_rangers');
       return hasRangers ? 'Cargo Tiger Truck' : 'Cargo Vehicle';
     }
 
-    // ================================
-    // CAMPAIGN STATE LOOKUP
-    // Reads 30_campaign_system.json for environment/terrain/effects
-    // ================================
+    // ── getCampaignStateDef — looks up environment/terrain/effects from campaign JSON ──
     function getCampaignStateDef(stateId) {
       if (!campaignSystemData) return null;
       // Try common structures: location_states array, or states array, or direct object
@@ -550,12 +567,10 @@ window.CC_APP = {
       return pool.find(s => s.id === stateId || s.name?.toLowerCase() === stateId?.toLowerCase()) || null;
     }
 
-    // States applied when a location has no defined state (or has the generic 'alive')
+    // Pool of atmospheric states rolled when a location has no defined state.
     const RANDOM_STATES = ['poisoned', 'haunted', 'strangewild'];
 
-    // ================================
-    // LOCATION PROFILE BUILDER
-    // ================================
+    // ── buildLocationProfile — merges location data, type defaults, and rolls a state ──
     function buildLocationProfile(locationType, selectedLocationId) {
       let location = null;
 
@@ -593,7 +608,7 @@ window.CC_APP = {
       const effectiveResources = Object.assign({}, typeDefaults.base_resources || {}, location.resources || {});
       const effectiveDanger    = location.danger ?? state.dangerRating;
 
-      // If the JSON state is 'alive' (generic default) or missing, roll a random atmospheric state
+      // Locations with no defined state (or the generic "alive") get a random atmospheric state.
       const rawState = location.state || '';
       const resolvedState = (!rawState || rawState === 'alive')
         ? randomChoice(RANDOM_STATES)
@@ -618,9 +633,7 @@ window.CC_APP = {
       };
     }
 
-    // ================================
-    // VAULT SCENARIO MATCHING
-    // ================================
+    // ── matchVaultScenario — scores pre-written vault scenarios against the current setup ─
     function matchVaultScenario(plotFamily, locProfile, contextTags) {
       if (!scenarioVaultData?.scenarios?.length) return { scenario: null, score: 0 };
 
@@ -646,30 +659,21 @@ window.CC_APP = {
       return { scenario: bestScore >= 2 ? best : null, score: bestScore };
     }
 
-    // ================================
-    // RESOURCE DISPLAY HELPER
-    // Resources drive objective weighting internally but are NOT
-    // shown to players — they're canyon facts, not player info.
-    // ================================
+    // ── buildResourceSummary — intentionally empty; resources drive logic, not display ─
     function buildResourceSummary(resources) {
       return ''; // Intentionally hidden — resources drive logic, not display
     }
 
-    // ================================
-    // FIX 2: NARRATIVE HOOK GENERATOR
-    // Now accepts objectives array so it can name specific things
-    // (e.g. "Cargo Tiger Truck" instead of "a fragile or vital asset")
-    // ================================
+    // ── generateNarrativeHook — scenario flavour opener, woven from objectives + location
     function generateNarrativeHook(plotFamily, location, objectives) {
       const locName  = location.name;
       const atmo     = location.atmosphere || '';
       const desc     = location.description ? location.description.split('.')[0] : '';
 
-      // Build a specific plot description based on actual objectives
-      // instead of falling back to the generic plotFamily.description
+      // Use the actual plot family description, but replace any generic "asset" language
+      // with the real objective name if a cargo vehicle is in play.
       let plotDesc = (plotFamily.description || '').replace(/\.$/, '');
 
-      // --- Replace generic asset language with the real objective name ---
       const cargoObj = objectives?.find(o => o.type === 'cargo_vehicle');
       if (cargoObj) {
         const cargoName = cargoObj.name; // "Cargo Tiger Truck" or "Cargo Vehicle"
@@ -684,7 +688,7 @@ window.CC_APP = {
       const supplyObj   = objectives?.find(o => o.type === 'stored_supplies' || o.type === 'scattered_crates');
       const ritualObj   = objectives?.find(o => o.type === 'ritual_components' || o.type === 'ritual_circle');
 
-      // Build a specific situation summary from the actual objectives
+      // Build a one-sentence situation summary keyed to the most important objective type.
       let situationLine = '';
       if (cargoObj) {
         situationLine = `The ${cargoObj.name} needs to cross ${locName} intact — that's already the hard part.`;
@@ -696,43 +700,35 @@ window.CC_APP = {
         situationLine = `The caches at ${locName} are the kind of find that changes who survives the season.`;
       }
 
-      // Pick from a pool of strongly-voiced hooks
+      // Pick a voiced hook from the appropriate pool.
       const pools = [
-        // Arrival hooks
         `Nobody who left ${locName} told the same story. ${plotDesc}. The only way to know is to go in.`,
         `Three factions picked up the same rumour about ${locName} within 48 hours. That's not coincidence. ${plotDesc}.`,
         `${locName} was supposed to be a clean job. The Canyon had other ideas. ${plotDesc}.`,
         `${desc ? desc + '. ' : ''}${plotDesc}. The factions arrive at the same time. That's the problem.`,
-        // Tension hooks
         `The window at ${locName} is closing. ${plotDesc}. Whoever moves first may be the only one who leaves with anything.`,
         `Something at ${locName} drew too much attention. ${plotDesc}. Now everyone is reacting and nobody is thinking.`,
         `${plotDesc} at ${locName}. The smart money said don't get involved. The smart money wasn't enough.`,
         `The last group through ${locName} didn't come back whole. ${plotDesc}. That didn't stop the next group.`,
-        // Canyon voice hooks
         `The Canyon doesn't warn you. At ${locName}, it just changes the terms. ${plotDesc}.`,
         `${locName}. ${atmo ? '"' + atmo + '"' : 'Whatever it was, it isn\'t that anymore.'}. ${plotDesc}.`,
         `${plotDesc}. ${locName} is where it ends — or where it gets worse.`,
         `Word reached ${locName} before anyone expected. ${plotDesc}. By the time boots hit the ground, it was already complicated.`,
       ];
 
-      // If we have a specific situation line, prepend it to a pool pick
+      // Specific situation line goes first; a canyon-voice hook follows as the second sentence.
       if (situationLine) {
         return situationLine + ' ' + randomChoice(pools.slice(6)); // use a canyon-voice hook as the second sentence
       }
 
-      // Try plot-family specific hook first
+      // Fall back to a plot-family hook if available, then a generic pool pick.
       if (plotFamily?.hook)   return plotFamily.hook;
       if (plotFamily?.flavor) return `${plotFamily.flavor} ${plotDesc} at ${locName}.`;
 
       return randomChoice(pools);
     }
 
-    // ================================
-    // FIX 1: SCENARIO NAME GENERATOR
-    // Fixed double-location bug: location.name no longer appears in
-    // both the prefix slot AND the middle slot.
-    // New format: "[Adjective] [Location] — [Noun]"
-    // ================================
+    // ── generateScenarioNameFromTags — title builder; location name appears exactly once ─
     function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
       contextTags = contextTags || [];
       const locName = (location || { name: 'Unknown' }).name;
@@ -759,8 +755,7 @@ window.CC_APP = {
         suffix = randomChoice(fallbackSuffixes);
       }
 
-      // Use multiple natural templates so "Black Night" and "Shard" etc.
-      // always read as intended rather than forcing "Shard Lost Yots — X"
+      // Several templates ensure the location name reads naturally in all cases.
       const templates = [
         () => `${prefix} at ${locName}`,                     // "Black Night at Fool Boot"
         () => `${prefix} at ${locName} — ${suffix}`,         // "Black Night at Fool Boot — Reckoning"
@@ -770,7 +765,7 @@ window.CC_APP = {
         () => `The ${suffix} of ${locName}`,                 // "The Reckoning of Lost Yots"
       ];
 
-      // Weight: prefer "at" templates when prefix is multi-word or starts with uppercase noun
+      // Adjective prefixes (Bloody, Burning…) favour the classic "Adjective Location — Noun" form.
       const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
       const pick = isAdjectivePrefix
         ? randomChoice([templates[1], templates[2], templates[2], templates[3]])   // adjective: prefer classic
@@ -779,9 +774,9 @@ window.CC_APP = {
       return pick();
     }
 
-    // ================================
-    // MONSTER PRESSURE GENERATOR
-    // ================================
+    // ── generateMonsterPressure — builds monster roster for this scenario ────────────
+    //    Stored in the save file for the upcoming Turn Counter app.
+    //    Nothing from this section is shown in the scenario output.
     function generateMonsterPressure(plotFamily, dangerRating, locProfile) {
       const enabled = Math.random() > 0.3;
       if (!enabled || !monsterFactionData) return { enabled: false };
@@ -829,9 +824,7 @@ window.CC_APP = {
       };
     }
 
-    // ================================
-    // AFTERMATH GENERATOR
-    // ================================
+    // ── generateAftermath — one sentence describing what changes after the game ─────
     function generateAftermath(plotFamily) {
       const options = plotFamily.aftermath_bias || ['location_state_change', 'resource_depletion_or_corruption'];
       const type    = randomChoice(options);
@@ -846,9 +839,11 @@ window.CC_APP = {
       return descriptions[type] || 'The Canyon will remember what happened here.';
     }
 
-    // ================================
-    // OBJECTIVE GENERATION ENGINE
-    // ================================
+    // ── Objective engine ─────────────────────────────────────────────────────────────
+    //    RESOURCE_OBJECTIVE_AFFINITY maps location resources to likely objective types.
+    //    generateObjectives scores all objective types, gates rail/supply/ritual as needed,
+    //    then picks the top 2–3. makeObjectiveName resolves the most specific possible
+    //    name for each type based on location features and archetype.
 
     const RESOURCE_OBJECTIVE_AFFINITY = {
       supplies:         ['stored_supplies', 'scattered_crates'],
@@ -881,12 +876,10 @@ window.CC_APP = {
       'evacuation_point'
     ];
 
-    // FIX 3: makeObjectiveName uses getCargoVehicleName() for the cargo_vehicle type
     function makeObjectiveName(type, locProfile) {
       const r        = locProfile?.effectiveResources || {};
       const features = locProfile?.features || [];
 
-      // FIX 3: Cargo vehicle respects faction context
       if (type === 'cargo_vehicle') {
         return getCargoVehicleName();
       }
@@ -905,7 +898,6 @@ window.CC_APP = {
 
       if (type === 'unstable_structure') {
         const arch = locProfile?.archetype || '';
-        // Feature-specific first — most precise
         if (features.includes('GlassShards') || features.includes('KnifeRocks'))
           return 'Glass-Wall Overhang';
         if (features.includes('BrakeScars'))
@@ -942,7 +934,6 @@ window.CC_APP = {
           return 'Failing Livestock Barn';
         if (features.includes('Mineshaft') || features.includes('Mine'))
           return 'Collapsing Mineshaft Entrance';
-        // Archetype fallback
         if (arch === 'arroyo')          return 'Eroded Canyon Wall';
         if (arch === 'rail_grade'
          || arch === 'rail_terminus'
@@ -957,7 +948,6 @@ window.CC_APP = {
         if (arch === 'wilderness')      return 'Unstable Rocky Overhang';
         if (arch === 'canyon')          return 'Eroded Canyon Ledge';
         if (arch === 'frontier')        return 'Condemned Frontier Shack';
-        // Final fallback — still more specific than just "Unstable Structure"
         return randomChoice([
           'Condemned Building',
           'Failing Outpost Wall',
@@ -966,7 +956,7 @@ window.CC_APP = {
         ]);
       }
 
-      // Declare hasRangers HERE so the names table below can use it
+      // hasRangers must be declared here so the names table below can reference it.
       const hasRangers = state.factions.some(f => f.id === 'monster_rangers');
 
       const names = {
@@ -979,16 +969,33 @@ window.CC_APP = {
         land_marker:        (() => {
           const arch = locProfile?.archetype || '';
           const feats = features;
-          if (feats.includes('RailTerminus') || feats.includes('RailGrade')) return 'Rail Claim Marker';
-          if (feats.includes('AuctionYard'))  return 'Auction Yard Territory';
-          if (feats.includes('GunsmithRow'))  return 'Gunsmith Row Claim';
-          if (feats.includes('Jailhouse'))    return 'Jailhouse Territory';
-          if (feats.includes('Ruins') || feats.includes('OldFort')) return 'Ruined Claim Post';
-          if (arch === 'boomtown')   return 'Boomtown Claim Stake';
-          if (arch === 'arroyo')     return 'Canyon Claim Marker';
-          if (arch === 'rail_grade') return 'Grade Claim Post';
-          if (arch === 'ruins')      return 'Rubble Claim Marker';
-          return 'Territorial Claim Post';
+          if (feats.includes('RailTerminus'))  return 'Rail Terminus Boundary Post';
+          if (feats.includes('RailGrade') || feats.includes('RailSpur')) return 'Rail Right-of-Way Stake';
+          if (feats.includes('BrakeScars'))    return 'Grade Survey Stake';
+          if (feats.includes('AuctionYard'))   return 'Auction Yard Deed Notice';
+          if (feats.includes('GunsmithRow'))   return 'Street Boundary Sign';
+          if (feats.includes('Jailhouse'))     return 'Jurisdiction Notice Post';
+          if (feats.includes('Ruins') || feats.includes('OldFort')) return 'Salvage Claim Stake';
+          if (feats.includes('Hotel'))         return 'Deed Notice Board';
+          if (feats.includes('CompanyOffice')) return 'Company Land Claim Notice';
+          if (feats.includes('Saloon'))        return 'Block Claim Sign';
+          if (feats.includes('Church'))        return 'Parish Boundary Marker';
+          if (feats.includes('Mineshaft') || feats.includes('Mine')) return 'Mine Claim Stake';
+          if (feats.includes('Stockyard'))     return 'Stockyard Brand Post';
+          if (feats.includes('WaterTower'))    return 'Water Rights Notice';
+          if (feats.includes('Corral') || feats.includes('Barn')) return 'Grazing Rights Post';
+          if (arch === 'boomtown')   return randomChoice(['Town Sign', 'Block Claim Board', 'Boomtown Deed Post']);
+          if (arch === 'arroyo')     return randomChoice(['Canyon Survey Stake', 'Trail Claim Cairn', 'Canyon Boundary Post']);
+          if (arch === 'rail_grade') return 'Rail Right-of-Way Stake';
+          if (arch === 'rail_terminus' || arch === 'rail_depot') return 'Station Boundary Post';
+          if (arch === 'ruins')      return randomChoice(['Salvage Claim Stake', 'Ruins Survey Post', 'Rubble Claim Marker']);
+          if (arch === 'mine')       return randomChoice(['Mine Claim Stake', 'Assay Notice Post', 'Mineral Rights Stake']);
+          if (arch === 'settlement') return randomChoice(['Town Sign', 'Settlement Charter Post', 'Boundary Marker']);
+          if (arch === 'outpost')    return 'Outpost Boundary Sign';
+          if (arch === 'wilderness') return randomChoice(['Survey Stake', 'Pioneer Claim Post', 'Boundary Cairn']);
+          if (arch === 'canyon')     return randomChoice(['Canyon Survey Post', 'Trail Claim Cairn', 'Boundary Stone']);
+          if (arch === 'frontier')   return randomChoice(['Frontier Claim Stake', 'Pioneer Survey Post', 'Homestead Sign']);
+          return randomChoice(['Claim Stake', 'Survey Post', 'Boundary Sign', 'Deed Notice Board']);
         })(),
         command_structure:  (() => {
           const arch = locProfile?.archetype || '';
@@ -1020,18 +1027,17 @@ window.CC_APP = {
 
     function makeObjectiveDescription(type, locProfile) {
       const r = locProfile?.effectiveResources || {};
-      const cargoName = getCargoVehicleName(); // FIX 3
+      const cargoName = getCargoVehicleName();
 
       const descriptions = {
         wrecked_engine:     'Salvage mechanical parts or prevent others from claiming them. Each salvage increases Coffin Cough risk.',
         scattered_crates:   'Collect and extract scattered food, water, and supplies before others claim them.',
         derailed_cars:      "Search the wreckage for valuable cargo before it's lost or claimed.",
-        // FIX 3: use the real vehicle name in the description
-        cargo_vehicle:      `Escort the ${cargoName} safely across the board. The sweet scent may attract monsters.`,
+          cargo_vehicle:      `Escort the ${cargoName} safely across the board. The sweet scent may attract monsters.`,
         pack_animals:       'Control or escort the animals. They may panic under fire.',
         ritual_components:  'Gather mystical components scattered across the battlefield.',
         ritual_site:        'Control this location to complete rituals or disrupt enemy mysticism.',
-        land_marker:        'Hold this symbolic location to establish territorial claim.',
+        land_marker:        'Claim and hold these marked positions. Whoever controls them at game end controls the ground.',
         command_structure:  'Control this position to coordinate forces and establish leadership.',
         thyr_cache:         'Extract or corrupt the glowing Thyr crystals. Handling Thyr is always dangerous.',
         artifact:           'Recover the ancient artifact. Its true nature may be hidden.',
@@ -1065,16 +1071,14 @@ window.CC_APP = {
       return base;
     }
 
-    // FIX 4: makeObjectiveSpecial names the actual monster when available
     function makeObjectiveSpecial(type, locProfile) {
-      // For "guarded" specials, try to name a real monster from seeds or faction data
+      // 40% chance of a "Guarded" special — names a real monster from location seeds or faction data.
       if (Math.random() < 0.4) {
         const seeds = locProfile?.monster_seeds || [];
         if (seeds.length > 0) {
           const seed = randomChoice(seeds);
           return `Guarded — ${seed.name} nearby`;
         }
-        // Fall back to a generic monster from the faction data
         if (monsterFactionData?.units?.length) {
           const genericMonster = randomChoice(monsterFactionData.units);
           if (genericMonster) return `Guarded — ${genericMonster.name} nearby`;
@@ -1124,8 +1128,8 @@ window.CC_APP = {
       const scores = {};
       ALL_OBJECTIVE_TYPES.forEach(t => scores[t] = 0);
 
-      // Give thyr_cache a baseline score so it competes even without Thyr resources.
-      // The canyon always has Thyr somewhere — it's the setting's core resource.
+      // Thyr Cache gets a baseline score so it appears in most scenarios;
+      // the canyon always has Thyr somewhere.
       scores['thyr_cache'] += 2;
 
       (plotFamily.default_objectives || []).forEach(t => {
@@ -1136,8 +1140,7 @@ window.CC_APP = {
         const r = locProfile.effectiveResources;
         for (const [key, val] of Object.entries(r)) {
           if (typeof val === 'number' && val >= 1) {
-            // Weight: each resource point adds to objective score
-            // Resources with 3+ are major features; multiply for stronger signal
+            // Weight: high-value resources (3+) get doubled contribution.
             const weight = val >= 3 ? val * 2 : val >= 2 ? val + 2 : val + 1;
             (RESOURCE_OBJECTIVE_AFFINITY[key] || []).forEach(t => {
               if (scores[t] !== undefined) scores[t] += weight;
@@ -1160,8 +1163,7 @@ window.CC_APP = {
       }
 
       // ---- RAIL GATE ----
-      // wrecked_engine and derailed_cars only make sense at rail locations.
-      // If the location has no rail features/archetype, zero them out entirely.
+      // Rail objectives are gated: only score if the location has rail features or a rail archetype.
       const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'rail', 'Rail'];
       const RAIL_ARCHETYPES = ['rail_grade', 'rail_terminus', 'rail_depot'];
       const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
@@ -1208,7 +1210,7 @@ window.CC_APP = {
           description: makeObjectiveDescription(type, locProfile),
           type,
           vp_base:     calcObjectiveVP(type, locProfile),
-          special:     Math.random() < 0.2 ? makeObjectiveSpecial(type, locProfile) : null  // FIX 4: pass locProfile
+          special:     Math.random() < 0.2 ? makeObjectiveSpecial(type, locProfile) : null
         });
       }
 
@@ -1251,22 +1253,19 @@ window.CC_APP = {
       return objectives;
     }
 
-    // ================================
-    // OBJECTIVE MARKERS TABLE
-    // ================================
+    // ── Objective marker table — token counts, placement, and allowed interactions ───
     const OBJECTIVE_MARKER_TABLE = {
       wrecked_engine:     { count: '1',    placement: 'Center board',              token: 'Wreck token or large model',    interactions: ['SALVAGE', 'CONTROL', 'SABOTAGE'] },
-      scattered_crates:   { count: 'd6', placement: 'Scattered across board',    token: 'Crate tokens',                  interactions: ['COLLECT', 'EXTRACT'] },
+      scattered_crates:   { count: 'd6', placement: 'Scattered across board',    token: 'Supply crate tokens',            interactions: ['COLLECT', 'EXTRACT'] },
       stored_supplies:    { count: 'd6', placement: 'Within 6″ of center',       token: 'Supply crate tokens',           interactions: ['CLAIM', 'EXTRACT'] },
       derailed_cars:      { count: 'd6', placement: 'Scattered near wreck',      token: 'Rail car tokens',               interactions: ['SEARCH', 'EXTRACT'] },
-      // FIX 3: cargo_vehicle uses the faction-aware name at render time
-      // Placement is computed in generateObjectiveMarkers, not here
+      // Cargo placement is computed at marker time (factions are finalised by then).
       cargo_vehicle:      { count: '1',    placement: '__CARGO_PLACEMENT__',    token: 'Vehicle model',                 interactions: ['BOARD', 'ESCORT', 'DISABLE'] },
       pack_animals:       { count: 'd6',   placement: 'Center board',              token: 'Animal tokens',                 interactions: ['CONTROL', 'ESCORT'] },
       ritual_components:  { count: 'd6', placement: 'Scattered across board',    token: 'Component tokens',              interactions: ['GATHER', 'CORRUPT'] },
       ritual_site:        { count: '1',    placement: 'Center board',              token: 'Ritual marker (3″ radius)',     interactions: ['ACTIVATE', 'DISRUPT', 'CORRUPT'] },
       ritual_circle:      { count: '1',    placement: 'Center board',              token: 'Circle marker (3″ radius)',     interactions: ['ACTIVATE', 'DISRUPT', 'CONTROL'] },
-      land_marker:        { count: '3',    placement: 'Spread across board',       token: 'Territory markers',             interactions: ['CLAIM', 'CONTROL'] },
+      land_marker:        { count: '3',    placement: 'Spread across board',       token: 'Claim stake / survey post / deed notice (3 per set)', interactions: ['CLAIM', 'CONTROL'] },
       command_structure:  { count: '1',    placement: 'Strategic position',        token: 'Command post marker',           interactions: ['CONTROL', 'HOLD', 'DESTROY'] },
       thyr_cache:         { count: '1',    placement: 'Center board',              token: 'Glowing crystal token',         interactions: ['EXTRACT', 'CORRUPT', 'DESTROY'] },
       artifact:           { count: '1',    placement: 'Center board',              token: 'Artifact token',                interactions: ['RECOVER', 'EXAMINE', 'DESTROY'] },
@@ -1294,7 +1293,7 @@ window.CC_APP = {
           token:        'Objective token',
           interactions: []
         };
-        // Compute cargo placement now — factions are finalised by this point
+        // Cargo vehicle placement is faction-aware: Rangers get the escort-from-edge version.
         let resolvedPlacement = defaults.placement;
         if (obj.type === 'cargo_vehicle') {
           const hasRangers = state.factions.some(f => f.id === 'monster_rangers');
@@ -1315,9 +1314,10 @@ window.CC_APP = {
       return markers;
     }
 
-    // ================================
-    // VICTORY CONDITIONS ENGINE
-    // ================================
+    // ── Victory condition tables ──────────────────────────────────────────────────
+    //    FACTION_APPROACH   — verbs, VP style, tactic line, faction quote
+    //    FACTION_OBJECTIVE_FLAVOR — per-faction flavor text keyed by objective type
+    //    FACTION_MOTIVES    — the specific WHY each faction is at each objective type
 
     const FACTION_APPROACH = {
       monster_rangers: {
@@ -1432,11 +1432,8 @@ window.CC_APP = {
       }
     };
 
-    // ================================
-    // FACTIONAL MOTIVES — The 'Why'
-    // Each faction has a specific reason for being at each objective type.
-    // One motive is rolled per faction per primary objective at generation time.
-    // ================================
+    // ── FACTION_MOTIVES — 6 factions × 15 objective types = 90 specific mission lines ──
+    //    Rolled at generation time based on the primary objective type.
     const FACTION_MOTIVES = {
       monster_rangers: {
         ritual_site:        'Sanctify this site before another faction can corrupt or weaponize it.',
@@ -1542,11 +1539,7 @@ window.CC_APP = {
       }
     };
 
-    // ================================
-    // OBJECTIVE CHAIN GENERATOR — The 'Twist'
-    // Assigns Primary (A) and Secondary (B) roles to objectives.
-    // Creates a chain link: controlling A grants a bonus when interacting with B.
-    // ================================
+    // ── Tactical Link — assigns Primary/Secondary roles and a mechanical chain bonus ──
     const CHAIN_LINK_VERBS = [
       'grants +1 die when interacting with',
       'opens a supply line to',
@@ -1581,9 +1574,10 @@ window.CC_APP = {
       if (objectives[2]) objectives[2].role = 'standalone';
     }
 
-    // ================================
-    // VICTORY CONDITIONS ENGINE
-    // ================================
+    // ── Victory condition tables ──────────────────────────────────────────────────
+    //    FACTION_APPROACH   — verbs, VP style, tactic line, faction quote
+    //    FACTION_OBJECTIVE_FLAVOR — per-faction flavor text keyed by objective type
+    //    FACTION_MOTIVES    — the specific WHY each faction is at each objective type
     function generateVictoryConditions(plotFamily, objectives, locProfile) {
       const conditions = {};
 
@@ -1596,7 +1590,6 @@ window.CC_APP = {
         const flavorMap   = FACTION_OBJECTIVE_FLAVOR[faction.id] || {};
         const motivesMap  = FACTION_MOTIVES[faction.id] || FACTION_MOTIVES.monsters;
 
-        // Roll a motive based on the primary (first) objective type
         const primaryObjType = objectives[0]?.type || 'default';
         const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
 
@@ -1622,8 +1615,6 @@ window.CC_APP = {
         }
 
         objectives.forEach(obj => {
-          // FIX 3: use the actual objective name (already "Cargo Tiger Truck") as the flavorMap key
-          // Try the type key first, then fall back to the generic verb approach
           const flavorKey = obj.type;
           const desc      = flavorMap[flavorKey]
             || `${randomChoice(approach.verbs)} the ${obj.name}.`;
@@ -1784,9 +1775,7 @@ window.CC_APP = {
       };
     }
 
-    // ================================
-    // MAIN SCENARIO GENERATION
-    // ================================
+    // ── window.generateScenario — main generation entry point ──────────────────────
     window.generateScenario = function() {
       console.log('🎲 Generating scenario...', state);
 
@@ -1795,8 +1784,7 @@ window.CC_APP = {
         return;
       }
 
-      // Monsters appear in most scenarios even if nobody chose them.
-      // 85% chance they show up as an NPC presence if not already in the faction list.
+      // Inject Monsters as an NPC faction with 85% probability if not already chosen.
       const hasMonsters = state.factions.some(f => f.id === 'monsters');
       if (!hasMonsters && Math.random() < 0.85) {
         state.factions.push({ id: 'monsters', name: 'Monsters', player: 'NPC', isNPC: true });
@@ -1815,13 +1803,11 @@ window.CC_APP = {
       const { scenario: vaultScenario, score: maxMatchScore } = matchVaultScenario(plotFamily, locProfile, contextTags);
       if (vaultScenario) console.log(`📚 Vault match: ${vaultScenario.name} (${maxMatchScore} tags)`);
 
-      // Generate objectives BEFORE generating the name or narrative hook
-      // so the hook and name can reference specific objective names
+      // Objectives are generated first so the name and hook can reference their real names.
       const objectives = vaultScenario
         ? generateObjectivesFromVault(vaultScenario, locProfile)
         : generateObjectives(plotFamily, locProfile);
 
-      // Assign Primary / Secondary roles and chain link between them
       generateObjectiveChain(objectives);
 
       const monsterPressure = generateMonsterPressure(plotFamily, dangerRating, locProfile);
@@ -1850,10 +1836,8 @@ window.CC_APP = {
         vaultScenario.tags.forEach(t => { if (!nameContextTags.includes(t)) nameContextTags.push(t); });
       }
 
-      // FIX 1: scenario name no longer repeats location.name
       const scenarioName = generateScenarioNameFromTags(plotFamily, locProfile, objectives, twist, dangerRating, nameContextTags);
 
-      // FIX 2: narrative hook now knows about objectives so it can name specific things
       const narrative_hook = vaultScenario?.narrative_hook
         ? vaultScenario.narrative_hook
         : generateNarrativeHook(plotFamily, locProfile, objectives);
@@ -1883,15 +1867,9 @@ window.CC_APP = {
       render();
     };
 
-    // ================================
-    // LOCATION MAP EMBED
-    // Two-panel layout:
-    //   LEFT  — static tiny overview of the whole canyon.
-    //           An orange highlight box shows where the location is.
-    //           Never moves, never loads Leaflet.
-    //   RIGHT — zoomed Leaflet map centered on the location.
-    //           Gold star + name label. Read-only.
-    // ================================
+    // ── Location map embed ────────────────────────────────────────────────────────
+    //    Left panel:  static canyon overview with orange highlight box.
+    //    Right panel: zoomed Leaflet map, gold star at location centre.
 
     const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/map_coffin_canyon_tiny.jpg';
 
@@ -1968,9 +1946,8 @@ window.CC_APP = {
         const px   = mapData.map.background.image_pixel_size;
         const bbox = hitboxes[locProfile.id];
 
-        // ── LEFT PANEL: position the highlight box ──────────────────
-        // Leaflet CRS.Simple: lat=0 is BOTTOM, lat=px.h is TOP.
-        // CSS: top=0% is TOP. So flip Y: cssTop = (1 - maxLat/px.h) * 100
+        // Position the highlight box on the overview image.
+        // Leaflet CRS.Simple has lat=0 at the BOTTOM; CSS top=0 is the TOP — flip Y.
         if (bbox && highlightEl) {
           const minLat = bbox[0], maxLat = bbox[2];
           const minLng = bbox[1], maxLng = bbox[3];
@@ -1987,7 +1964,6 @@ window.CC_APP = {
           highlightEl.style.display = 'block';
         }
 
-        // ── RIGHT PANEL: Leaflet zoomed map ────────────────────────
         const bounds  = [[0, 0], [px.h, px.w]];
         let centerLat = px.h / 2;
         let centerLng = px.w / 2;
@@ -2015,7 +1991,6 @@ window.CC_APP = {
         L.imageOverlay(mapData.map.background.image_key, bounds).addTo(_scenarioMap);
 
         if (bbox) {
-          // Orange highlight rectangle
           L.rectangle(
             [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
             {
@@ -2027,7 +2002,6 @@ window.CC_APP = {
             }
           ).addTo(_scenarioMap);
 
-          // Gold star at centre — no name label (name shown in header above)
           L.marker([centerLat, centerLng], {
             icon: L.divIcon({
               className: '',
@@ -2042,7 +2016,6 @@ window.CC_APP = {
           }).addTo(_scenarioMap);
         }
 
-        // fitBounds with generous padding fills the container without black bars
         requestAnimationFrame(() => {
           try {
             _scenarioMap.invalidateSize({ animate: false });
@@ -2068,9 +2041,7 @@ window.CC_APP = {
       }
     }
 
-    // ================================
-    // RENDER: ACCORDION STEP WRAPPER
-    // ================================
+    // ── renderAccordionStep — shared wrapper for all four setup steps ──────────────
     function renderAccordionStep(stepNum, title, icon, content, isActive, isComplete) {
       return `
         <div class="cc-accordion-item ${isActive ? 'active' : ''} ${isComplete ? 'complete' : ''}">
@@ -2086,9 +2057,7 @@ window.CC_APP = {
       `;
     }
 
-    // ================================
-    // RENDER: STEP 1 — GAME SETUP
-    // ================================
+    // ── renderStep1_GameSetup ────────────────────────────────────────────────────
     function renderStep1_GameSetup() {
       return `
         <div class="cc-form-section">
@@ -2145,9 +2114,7 @@ window.CC_APP = {
       `;
     }
 
-    // ================================
-    // RENDER: STEP 2 — FACTIONS & FORCES
-    // ================================
+    // ── renderStep2_Factions ─────────────────────────────────────────────────────
     function renderStep2_Factions() {
       if (!state.gameMode) {
         return `<div class="cc-info-box"><p>Complete Step 1 first.</p></div>`;
@@ -2156,8 +2123,7 @@ window.CC_APP = {
       if (state.gameMode === 'solo') {
         const playerFaction = state.factions.find(f => !f.isNPC);
 
-        // Factions that CAN'T face themselves (most unique factions)
-        // Shine Riders and Monsters are fine vs themselves so we don't exclude them
+        // Most factions cannot oppose themselves. Shine Riders and Monsters can.
         const CANNOT_SELF_OPPOSE = ['monster_rangers', 'monsterology', 'liberty_corps', 'crow_queen'];
         const playerCanSelfOppose = !playerFaction || !CANNOT_SELF_OPPOSE.includes(playerFaction.id);
 
@@ -2177,8 +2143,7 @@ window.CC_APP = {
             <p class="cc-help-text">Choose which factions you'll be playing against.</p>
             ${FACTIONS.map(f => {
               const isNPC     = state.factions.some(sf => sf.id === f.id && sf.isNPC);
-              // Disable if this is the player's own faction AND they can't self-oppose
-              const isSelf    = playerFaction?.id === f.id;
+                const isSelf    = playerFaction?.id === f.id;
               const disabled  = isSelf && CANNOT_SELF_OPPOSE.includes(f.id);
               return `
                 <div class="cc-faction-row" style="${disabled ? 'opacity:0.4;' : ''}">
@@ -2201,7 +2166,6 @@ window.CC_APP = {
         `;
       }
 
-      // Multiplayer
       return `
         <div class="cc-form-section">
           <label class="cc-label">Factions Playing</label>
@@ -2239,9 +2203,7 @@ window.CC_APP = {
       `;
     }
 
-    // ================================
-    // RENDER: STEP 3 — LOCATION
-    // ================================
+    // ── renderStep3_Location ─────────────────────────────────────────────────────
     function renderStep3_Location() {
       const namedLocations = locationData?.locations || [];
 
@@ -2284,9 +2246,7 @@ window.CC_APP = {
       `;
     }
 
-    // ================================
-    // RENDER: STEP 4 — GENERATE
-    // ================================
+    // ── renderStep4_Generate ─────────────────────────────────────────────────────
     function renderStep4_Generate() {
       if (!state.generated) {
         const locName = state.locationType === 'named'
@@ -2312,9 +2272,7 @@ window.CC_APP = {
       return renderScenarioOutput();
     }
 
-    // ================================
-    // RENDER: SCENARIO OUTPUT
-    // ================================
+    // ── renderScenarioOutput — full scenario card; shown after generation ──────────
     function renderScenarioOutput() {
       const s = state.scenario;
       if (!s) return '';
@@ -2336,8 +2294,7 @@ window.CC_APP = {
               const raw = s.location.state || '';
               if (!raw || raw === 'alive') return '';
 
-              // Fallback definitions when campaign JSON isn't loaded
-              const FALLBACKS = {
+                const FALLBACKS = {
                 booming:      { label: 'Booming',     def: 'Active, loud, and growing fast. Resources flow here.' },
                 thriving:     { label: 'Thriving',    def: 'Stable enough that people are building things to last.' },
                 stable:       { label: 'Stable',      def: 'Not safe — just predictable. Factions have settled into position.' },
@@ -2361,7 +2318,6 @@ window.CC_APP = {
               const label = camp?.name  || fb.label || raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
               const def   = camp?.description || fb.def || '';
 
-              // Environment / Terrain / Effects rows if campaign data provides them
               const rows = [];
               const TD_KEY = 'style="color:rgba(255,255,255,0.45);padding-right:1rem;white-space:nowrap;font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;vertical-align:top;"';
               const TD_VAL = 'style="font-size:0.82rem;line-height:1.5;"';
@@ -2441,25 +2397,13 @@ window.CC_APP = {
             </div>
           ` : ''}
 
-          <!-- MONSTER PRESSURE -->
-          ${s.monster_pressure?.enabled && s.monster_pressure.monsters?.length ? `
-            <div class="cc-scenario-section">
-              <h4><i class="fa fa-paw"></i> Monster Pressure</h4>
-              <p class="cc-help-text">These monsters enter play based on conditions tracked in the Canyon Game Counter.</p>
-              ${s.monster_pressure.seed_based ? '<p class="cc-help-text"><em><i class="fa fa-map-marker"></i> Location-specific monsters.</em></p>' : ''}
-              <ul style="margin:0.5rem 0;">
-                ${s.monster_pressure.monsters.map(m => `<li>${m.name} (${m.type || 'Monster'}) &mdash; ${m.cost} &#8356;</li>`).join('')}
-              </ul>
-              ${s.monster_pressure.notes ? `<p><em>${s.monster_pressure.notes}</em></p>` : ''}
-            </div>
-          ` : ''}
+          <!-- MONSTER PRESSURE: data kept in save for Turn Counter app, not shown here -->
 
           <!-- VICTORY CONDITIONS -->
           <div class="cc-scenario-section">
             <h4><i class="fa fa-trophy"></i> Victory Conditions</h4>
             ${Object.entries(s.victory_conditions).map(([factionId, vc]) => {
 
-              // Faction identity: accent color + icon + flavour tag
               const FACTION_IDENTITY = {
                 monster_rangers: { color: '#4ade80', border: '#166534', icon: 'fa-paw',        tag: 'Protectors of the Canyon' },
                 liberty_corps:   { color: '#60a5fa', border: '#1e3a5f', icon: 'fa-shield',     tag: 'Federal Authority' },
@@ -2548,9 +2492,7 @@ window.CC_APP = {
       `;
     }
 
-    // ================================
-    // RENDER: SUMMARY SIDEBAR PANEL
-    // ================================
+    // ── renderSummaryPanel — progress tracker shown during setup ───────────────────
     function renderSummaryPanel() {
       const steps = [
         { num: 1, title: 'Game Setup', complete: state.completedSteps.includes(1) },
@@ -2592,9 +2534,7 @@ window.CC_APP = {
       `;
     }
 
-    // ================================
-    // RENDER: MAIN
-    // ================================
+    // ── render() — master dispatcher; shows splash → setup wizard → scenario output ─
     function render() {
       if (state.generated && state.scenario) {
         const html = `
@@ -2666,9 +2606,7 @@ window.CC_APP = {
       root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
     }
 
-    // ================================
-    // EVENT HANDLERS
-    // ================================
+    // ── Event handlers — all window.* functions called from HTML onclick attrs ────
     window.setGameMode = function(mode) {
       state.gameMode = mode;
       state.factions = [];
@@ -2690,12 +2628,10 @@ window.CC_APP = {
 
     window.setPlayerFaction = function(factionId) {
       const CANNOT_SELF_OPPOSE = ['monster_rangers', 'monsterology', 'liberty_corps', 'crow_queen'];
-      // Remove old player entry
       state.factions = state.factions.filter(f => f.isNPC);
       if (factionId) {
         const faction = FACTIONS.find(f => f.id === factionId);
         if (faction) state.factions.unshift({ id: faction.id, name: faction.name, player: '', isNPC: false });
-        // Also remove from NPC list if they can't self-oppose
         if (CANNOT_SELF_OPPOSE.includes(factionId)) {
           state.factions = state.factions.filter(f => !(f.id === factionId && f.isNPC));
         }
@@ -2768,7 +2704,6 @@ window.CC_APP = {
 
     window.rollAgain = function() {
       if (state.factions.length >= 2) {
-        // Keep factions — only re-roll scenario content
         state.generated = false;
         state.scenario  = null;
         window.generateScenario();
@@ -2781,7 +2716,6 @@ window.CC_APP = {
       if (!state.scenario) return;
       const s = state.scenario;
 
-      // Build faction victory cards as clean print HTML
       function printFactionCards() {
         return Object.entries(s.victory_conditions || {}).map(([fid, vc]) => {
           const objs = (vc.objectives || []).map((o, i) => `
@@ -2848,13 +2782,7 @@ window.CC_APP = {
       }
 
       function printMonsterPressure() {
-        if (!s.monster_pressure?.enabled || !s.monster_pressure?.monsters?.length) return '';
-        return `
-          <div class="print-section">
-            <h4>Monster Pressure</h4>
-            <p>Managed via the Canyon Game Counter.</p>
-            <ul>${s.monster_pressure.monsters.map(m => `<li>${m.name} — ${m.cost} £</li>`).join('')}</ul>
-          </div>`;
+        return ''; // Data lives in the save; displayed by the Turn Counter app.
       }
 
       const locationState = (() => {
@@ -2876,7 +2804,11 @@ window.CC_APP = {
 <meta charset="UTF-8">
 <title>${s.name}</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body, div, p, h1, h2, h3, h4, strong, em, span, ul, li, table, tr, td, th {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
   body {
     font-family: Georgia, 'Times New Roman', serif;
     font-size: 10.5pt;
@@ -3126,10 +3058,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       setTimeout(() => { win.print(); }, 500);
     };
 
-    // ================================
-    // SAVE / LOAD
-    // Uses window.CC_STORAGE from storage_helpers.js
-    // ================================
+    // ── Save / Load — uses CC_STORAGE; folder 90 = scenario saves ──────────────────
     const SCENARIO_FOLDER = 90;
 
     window.saveScenario = async function() {
@@ -3139,14 +3068,12 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         return;
       }
 
-      // Compact save format — mirrors faction builder's clean JSON shape
       const slug = (state.scenario.name || 'scenario')
         .replace(/[^a-zA-Z0-9 \-]/g, '')
         .replace(/\s+/g, '_')
         .substring(0, 50);
       const docName = `SCN_${slug}_${Date.now()}`;
 
-      // Compact payload — full scenario data stays intact but setup keys are tightened
       const data = JSON.stringify({
         version:   '1.0',
         name:      state.scenario.name,
@@ -3161,7 +3088,6 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
 
       try {
         await window.CC_STORAGE.saveDocument(docName, data, SCENARIO_FOLDER);
-        // Brief visual confirmation without a blocking alert
         const btn = document.querySelector('[onclick="saveScenario()"]');
         if (btn) {
           const orig = btn.innerHTML;
@@ -3175,7 +3101,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       }
     };
 
-    // ---- Slide panel helpers ----
+    // Slide panel — animates in/out for the saved-scenario list.
     window.closeScenarioPanel = function() {
       const panel = document.getElementById('cc-scenario-load-panel');
       if (panel) {
@@ -3252,7 +3178,6 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         const docs = await window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER);
         const saves = docs.filter(d => d.name.startsWith('SCN_'));
 
-        // Enrich each save to get the real scenario name (like faction builder)
         const enriched = await Promise.all(saves.map(async (doc) => {
           try {
             const { json } = await window.CC_STORAGE.loadDocument(doc.id);
@@ -3291,7 +3216,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         const { json } = await window.CC_STORAGE.loadDocument(docId);
         const saved = JSON.parse(json);
 
-        // Support both new compact format (version:'1.0') and old verbose format
+        // Handle both v1.0 compact format and any older verbose saves.
         state.scenario         = saved.scenario;
         state.gameMode         = saved.gameMode   || saved.setup?.gameMode         || state.gameMode;
         state.pointValue       = saved.pts        || saved.setup?.pointValue       || state.pointValue;
@@ -3318,7 +3243,6 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       try {
         await window.CC_STORAGE.deleteDocument(docId);
         window.closeScenarioPanel();
-        // Re-open the panel with updated list after a beat
         setTimeout(() => window.loadFromCloud(), 350);
       } catch (err) {
         console.error('Delete failed:', err);
@@ -3326,9 +3250,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       }
     };
 
-    // ================================
-    // BOOT
-    // ================================
+    // ── Boot — splash screen, data load, 5-second minimum hold, then render() ──────
     const _bootStart = Date.now();
 
     root.innerHTML = `
@@ -3354,7 +3276,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       </div>
     `;
 
-    // Minimum 5 seconds on the splash before we fade and swap
+    // Hold splash for at least 5 seconds regardless of how fast data loads.
     const MIN_SPLASH_MS = 5000;
 
     loadGameData().then(() => {
@@ -3369,7 +3291,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
           setTimeout(() => {
             console.log('✅ Rendering app');
             render();
-          }, 650); // wait for fade-out
+          }, 650); // wait for CSS fade-out to finish
         } else {
           render();
         }
