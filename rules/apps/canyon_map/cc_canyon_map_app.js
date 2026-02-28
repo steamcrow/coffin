@@ -446,7 +446,7 @@
       }, ["Loading\u2026"])
     ]);
 
-    var header = el("div", { class:"cc-cm-header" }, [
+    var header = el("div", { class:"cc-cm-header cc-app-header" }, [
       el("div", { class:"cc-cm-title" }, [opts.title]),
       el("div", { class:"cc-cm-actions" }, [
         el("button", { class:"cc-btn", id:"cc-cm-reload" }, ["Reload"]),
