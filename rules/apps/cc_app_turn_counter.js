@@ -41,19 +41,7 @@ window.CC_APP = {
         .catch(err => console.error('❌ Core CSS failed:', err));
     }
 
-    // App-specific CSS — optional, 404 is fine if not yet deployed
-    if (!document.getElementById('cc-turn-counter-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_turn_counter.css?t=' + Date.now())
-        .then(r => r.ok ? r.text() : null)
-        .then(css => {
-          if (!css) return;
-          const s = document.createElement('style');
-          s.id = 'cc-turn-counter-styles';
-          s.textContent = css;
-          document.head.appendChild(s);
-        })
-        .catch(() => {}); // optional file — ignore if missing
-    }
+    // App-specific CSS — no separate file yet; all styles are inline or in cc_ui.css
 
     // ── Load CC_STORAGE helper ────────────────────────────────────────────────
     if (!window.CC_STORAGE) {
@@ -115,7 +103,7 @@ window.CC_APP = {
       { id: 'thyr_pulse',   icon: '🔆', text: 'The canyon pulses with Thyr light. All ritual actions cost +1 noise this round.' },
     ];
 
-    const FACTION_LOADER_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/';
+    const FACTION_LOADER_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
     const SCENARIO_FOLDER     = 90;   // scenario builder saves here (SCN_ prefix)
     const FACTION_SAVE_FOLDER = 90;   // faction builder saves in same folder
     const TURN_SAVE_FOLDER    = 91;   // turn counter game saves
@@ -185,6 +173,12 @@ window.CC_APP = {
       if (typeof e === 'string') return e;
       if (e.message) return e.message;
       try { return JSON.stringify(e); } catch (_) { return String(e); }
+    }
+
+    // Safe JSON parse — returns null instead of throwing on empty/bad input
+    function safeParseJson(str) {
+      if (!str || typeof str !== 'string' || str.trim() === '') return null;
+      try { return JSON.parse(str); } catch (_) { return null; }
     }
 
     // Backstop: Odoo's unhandledrejection handler crashes when the rejection
@@ -1443,7 +1437,8 @@ window.CC_APP = {
       try {
         // API: loadDocument(id) -> {json: string}
         var doc     = await window.CC_STORAGE.loadDocument(docId);
-        var payload = JSON.parse(doc.json);
+        var payload = safeParseJson(doc.json);
+        if (!payload) throw new Error('Scenario save is empty or unreadable. Try re-saving it in the Scenario Builder.');
 
         state.scenarioSave   = payload.scenario || payload;
         state.scenarioName   = payload.name || (payload.scenario && payload.scenario.name) || 'Scenario';
@@ -1477,10 +1472,13 @@ window.CC_APP = {
           state.factionSaveList = await Promise.all(nonScenario.map(async function(d) {
             try {
               var parsed = await window.CC_STORAGE.loadDocument(d.id);
-              var data   = JSON.parse(parsed.json);
-              d._factionName  = data.factionName  || data.faction || null;
-              d._armyName     = data.armyName     || null;
-              d._totalPoints  = data.totalPoints  || data.pts || null;
+              var data   = safeParseJson(parsed.json);
+              if (data) {
+                d._factionId    = data.faction      || null;  // e.g. 'monster_rangers'
+                d._factionName  = data.factionName  || data.faction || null;
+                d._armyName     = data.armyName     || data.name || null;
+                d._totalPoints  = data.totalCost    || data.totalPoints || data.pts || null;
+              }
             } catch (_) { /* enrichment failed — still show the doc */ }
             return d;
           }));
@@ -1513,9 +1511,13 @@ window.CC_APP = {
 
     window.CC_TC.openFactionSavePicker = function(factionId) {
       var meta = FACTION_META[factionId] || {};
-      var docs = state.factionSaveList;
-      if (!docs || !docs.length) {
-        alert('No faction saves found in your cloud storage.\n\nSave a faction build in the Faction Builder first, then come back.');
+      // Only show saves that belong to this faction (matched by faction ID stored in _factionId)
+      var docs = (state.factionSaveList || []).filter(function(d) {
+        if (!d._factionId) return true;  // no faction info — show it anyway
+        return d._factionId === factionId;
+      });
+      if (!docs.length) {
+        alert('No saved builds found for ' + (meta.name || factionId) + '.\n\nBuild and save a ' + (meta.name || factionId) + ' roster in the Faction Builder first.');
         return;
       }
 
@@ -1579,7 +1581,7 @@ window.CC_APP = {
           // Load from CC_STORAGE faction save
           try {
             var saveDoc  = await window.CC_STORAGE.loadDocument(assign.docId);
-            var saveParsed = JSON.parse(saveDoc.json);
+            var saveParsed = safeParseJson(saveDoc.json);
             faction = await buildFactionFromSave(pf.id, saveParsed, pf.npc);
           } catch (err) {
             console.warn('Failed to load faction save for ' + pf.id + ', falling back to default:', safeErr(err));
