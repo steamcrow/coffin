@@ -1340,20 +1340,25 @@ window.CC_APP = {
 
       var terrainTypes = [
         { icon: 'fa-grip-lines', label: 'Boardwalk',     note: 'Elevated walkway, +1 height' },
-        { icon: 'fa-home',  label: 'Building',      note: 'Blocks LOS, can be entered' },
-        { icon: 'fa-gem', label: 'Thyr Crystal',  note: 'Magical resource — mark it' },
-        { icon: 'fa-map-marker', label: 'Objective',      note: 'Scoring marker' },
-        { icon: 'fa-mountain', label: 'Rocky Outcrop', note: 'Difficult terrain, partial cover' },
-        { icon: 'fa-tree', label: 'Canyon Brush',  note: 'Light cover, passable' },
+        { icon: 'fa-home',       label: 'Building',      note: 'Blocks LOS, can be entered' },
+        { icon: 'fa-gem',        label: 'Thyr Crystal',  note: 'Magical resource — mark it' },
+        { icon: 'fa-map-marker', label: 'Objective',     note: 'Scoring marker' },
+        { icon: 'fa-mountain',   label: 'Rocky Outcrop', note: 'Difficult terrain, partial cover' },
+        { icon: 'fa-tree',       label: 'Canyon Brush',  note: 'Light cover, passable' },
         { icon: 'fa-campground', label: 'Ruin / Debris', note: 'Narrative terrain' },
-        { icon: 'fa-barricade', label: 'Barricade',      note: 'Low cover, blocks movement' },
+        { icon: 'fa-barricade',  label: 'Barricade',     note: 'Low cover, blocks movement' },
       ];
 
-      var terrainButtons = terrainTypes.map(function(t) {
-        return '<button onclick="window.CC_TC.logTerrainPlace(' + JSON.stringify(t.label) + ',' + JSON.stringify(t.icon) + ')" ' +
+      // Store on window so the onclick handler can look up by index safely.
+      // Passing label/icon as strings through onclick="..." breaks whenever
+      // the string contains quotes, slashes, or special characters.
+      window.CC_TC._terrainTypes = terrainTypes;
+
+      var terrainButtons = terrainTypes.map(function(t, idx) {
+        return '<button onclick="window.CC_TC.logTerrainPlace(' + idx + ')" ' +
           'class="cc-btn cc-btn-secondary" ' +
           'style="text-align:left;display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;">' +
-          '<span style="font-size:1.3rem;flex-shrink:0;">' + t.icon + '</span>' +
+          '<i class="fa ' + t.icon + '" style="font-size:1.1rem;flex-shrink:0;width:20px;text-align:center;"></i>' +
           '<span><strong>' + t.label + '</strong> ' +
           '<span style="color:#666;font-size:.78rem;">' + t.note + '</span></span>' +
           '</button>';
@@ -1424,72 +1429,152 @@ window.CC_APP = {
         return;
       }
 
-      var rows = state.pendingFactions.map(function(pf) {
+      // ── Left column: factions waiting for a roster assignment ───────────────
+      var leftRows = state.pendingFactions.map(function(pf) {
         var meta       = FACTION_META[pf.id] || {};
         var color      = meta.color || '#888';
         var fname      = meta.name  || pf.id;
         var assignment = state.factionAssignments[pf.id];
-        var assignLabel = assignment
-          ? assignment.docName.replace(/_/g,' ').replace(/[0-9]{13}/,'').trim()
-          : 'Default Roster (game data)';
-        var hasSaves   = state.factionSaveList.length > 0;
+        var isAssigned = !!assignment;
 
-        return '<div style="padding:.85rem;border:1px solid ' + color + '33;border-radius:6px;background:rgba(0,0,0,.2);">' +
-          '<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;">' +
-          '<img src="' + LOGO_BASE + pf.id + '_logo.svg" ' +
-          'alt="' + fname + '" ' +
-          'style="width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 0 4px ' + color + '88);flex-shrink:0;" ' +
-          'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:36px;height:36px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">'  +
-          '<strong style="flex:1;color:' + color + ';">' + fname + '</strong>' +
-          '<label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:#aaa;cursor:pointer;">' +
+        // If already assigned, show it greyed out with a "Change" button
+        var borderStyle = isAssigned
+          ? 'border:1px solid ' + color + '33;opacity:.55;'
+          : 'border:1px solid ' + color + '66;';
+
+        return '<div style="' + borderStyle + 'border-radius:8px;padding:.7rem;background:rgba(0,0,0,.25);transition:opacity .2s;">' +
+          // Faction name row
+          '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">' +
+          '<img src="' + LOGO_BASE + pf.id + '_logo.svg" alt="' + fname + '" ' +
+          'style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 3px ' + color + '88);flex-shrink:0;" ' +
+          'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:28px;height:28px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.75rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
+          '<strong style="flex:1;color:' + color + ';font-size:.9rem;">' + fname + '</strong>' +
+          '<label style="display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:#aaa;cursor:pointer;flex-shrink:0;">' +
           '<input type="checkbox" id="npc_toggle_' + pf.id + '"' + (pf.npc ? ' checked' : '') +
           ' onchange="window.CC_TC.toggleNPC(\'' + pf.id + '\')"> NPC</label>' +
           '</div>' +
-          '<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">' +
-          '<span style="font-size:.8rem;color:#888;flex:1;min-width:120px;">Roster: ' + assignLabel + '</span>' +
-          (hasSaves ? '<button onclick="window.CC_TC.openFactionSavePicker(\'' + pf.id + '\')" ' +
-            'class="cc-btn cc-btn-secondary" style="font-size:.75rem;padding:.25rem .6rem;flex-shrink:0;">Browse Saves</button>' : '') +
-          (assignment ? ' <button onclick="window.CC_TC.clearFactionSave(\'' + pf.id + '\')" ' +
-            'class="cc-btn cc-btn-secondary" style="font-size:.75rem;padding:.25rem .6rem;color:#ef5350;flex-shrink:0;">Reset</button>' : '') +
-          '</div>' +
+          // Browse / Change button
+          (state.factionSaveList.length > 0
+            ? '<button onclick="window.CC_TC.openFactionSavePicker(\'' + pf.id + '\')" ' +
+              'class="cc-btn cc-btn-secondary" style="width:100%;font-size:.75rem;padding:.3rem .5rem;">' +
+              (isAssigned ? '<i class="fa fa-refresh"></i> Change Save' : '<i class="fa fa-folder-open"></i> Browse Saves') +
+              '</button>'
+            : '<div style="font-size:.75rem;color:#555;text-align:center;padding:.25rem 0;">No saves found — will use default</div>') +
           '</div>';
       }).join('');
 
+      // ── Right column: confirmed assignments ─────────────────────────────────
+      var rightRows = state.pendingFactions.map(function(pf) {
+        var meta       = FACTION_META[pf.id] || {};
+        var color      = meta.color || '#888';
+        var fname      = meta.name  || pf.id;
+        var assignment = state.factionAssignments[pf.id];
+
+        if (assignment) {
+          // Show the assigned save name
+          var saveName = assignment.docName
+            .replace(/_/g,' ').replace(/[0-9]{13}/,'').trim();
+          // Find enriched data from preloaded list
+          var saveDoc  = (state.factionSaveList || []).find(function(d) { return d.id === assignment.docId; });
+          var pts      = saveDoc && saveDoc._totalPoints ? saveDoc._totalPoints + ' pts' : '';
+          var unitCount = saveDoc && saveDoc._unitCount  ? saveDoc._unitCount + ' units' : '';
+
+          return '<div style="border:2px solid ' + color + ';border-radius:8px;padding:.7rem;' +
+            'background:' + color + '18;animation:cc-fade-in .25s ease;">' +
+            '<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;">' +
+            '<img src="' + LOGO_BASE + pf.id + '_logo.svg" alt="' + fname + '" ' +
+            'style="width:22px;height:22px;object-fit:contain;flex-shrink:0;" ' +
+            'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:22px;height:22px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.65rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
+            '<span style="color:' + color + ';font-size:.8rem;font-weight:700;flex:1;">' + fname + '</span>' +
+            '<button onclick="window.CC_TC.clearFactionSave(\'' + pf.id + '\')" ' +
+            'style="background:none;border:none;color:#ef5350;cursor:pointer;font-size:.8rem;padding:0;" ' +
+            'title="Remove assignment">✕</button>' +
+            '</div>' +
+            '<div style="font-size:.78rem;color:#ccc;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + saveName + '</div>' +
+            (pts || unitCount ? '<div style="font-size:.7rem;color:#888;margin-top:.2rem;">' + [pts, unitCount].filter(Boolean).join(' · ') + '</div>' : '') +
+            '</div>';
+        } else {
+          // Empty slot — show a dim placeholder
+          return '<div style="border:1px dashed rgba(255,255,255,.12);border-radius:8px;padding:.7rem;' +
+            'display:flex;align-items:center;justify-content:center;min-height:72px;">' +
+            '<span style="color:#444;font-size:.78rem;text-align:center;">' +
+            '<i class="fa fa-arrow-left" style="margin-right:.4rem;"></i>' + fname + '<br>' +
+            '<span style="font-size:.7rem;">using default roster</span>' +
+            '</span>' +
+            '</div>';
+        }
+      }).join('');
+
+      var allAssigned = state.pendingFactions.every(function(pf) {
+        return !!state.factionAssignments[pf.id];
+      });
+
       root.innerHTML =
-        '<div class="cc-app-shell h-100">' +
+        '<div class="cc-app-shell h-100" style="display:flex;flex-direction:column;">' +
         '<div class="cc-app-header">' +
         '<div><h1 class="cc-app-title">Coffin Canyon</h1>' +
         '<div class="cc-app-subtitle">' + (state.scenarioName || 'Faction Setup') + '</div></div>' +
-        '<button class="cc-btn cc-btn-secondary" onclick="window.CC_TC.backToSetup()">Back</button>' +
+        '<button class="cc-btn cc-btn-secondary" onclick="window.CC_TC.backToSetup()">← Back</button>' +
         '</div>' +
-        '<div style="max-width:600px;margin:0 auto;padding:1.5rem;">' +
 
+        '<div style="flex:1;overflow-y:auto;padding:1rem;">' +
+
+        // Scenario summary strip
         (state.scenarioSave
-          ? '<div class="cc-panel" style="margin-bottom:1rem;">' +
-            '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">Scenario</h5></div>' +
-            '<div class="cc-panel-body" style="font-size:.85rem;color:#aaa;">' +
-            '<p style="margin:0;">' + (state.scenarioSave.narrative_hook || 'Ready to play.') + '</p>' +
+          ? '<div style="padding:.6rem 1rem;background:rgba(255,117,24,.08);border:1px solid rgba(255,117,24,.2);' +
+            'border-radius:6px;font-size:.82rem;color:#aaa;margin-bottom:1rem;">' +
+            (state.scenarioSave.narrative_hook || '') +
             ((state.scenarioSave.objectives || []).length
-              ? '<p style="margin:.5rem 0 0;"><strong style="color:#ccc;">Objectives:</strong> ' +
-                (state.scenarioSave.objectives || []).map(function(o){return o.name||String(o);}).join(' &middot; ') + '</p>'
+              ? ' <strong style="color:#ccc;">Objectives:</strong> ' +
+                (state.scenarioSave.objectives || []).map(function(o){return o.name||String(o);}).join(' · ')
               : '') +
-            '</div></div>'
+            '</div>'
           : '') +
 
+        // ── Two-column layout ──────────────────────────────────────────────
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;">' +
+
+        // Left panel — pick a save
         '<div class="cc-panel">' +
-        '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">Factions &amp; Rosters</h5></div>' +
-        '<div class="cc-panel-body" style="display:flex;flex-direction:column;gap:.6rem;">' +
-        rows +
-        '</div></div>' +
+        '<div class="cc-panel-header" style="padding:.6rem .85rem;">' +
+        '<h5 style="margin:0;color:var(--cc-primary);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;">' +
+        '<i class="fa fa-folder-open"></i> Assign Rosters' +
+        '</h5>' +
+        '</div>' +
+        '<div class="cc-panel-body" style="display:flex;flex-direction:column;gap:.5rem;padding:.75rem;">' +
+        leftRows +
+        '</div>' +
+        '</div>' +
+
+        // Right panel — confirmed selections
+        '<div class="cc-panel">' +
+        '<div class="cc-panel-header" style="padding:.6rem .85rem;">' +
+        '<h5 style="margin:0;color:var(--cc-primary);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;">' +
+        '<i class="fa fa-check-circle"></i> Confirmed' +
+        '</h5>' +
+        '</div>' +
+        '<div class="cc-panel-body" style="display:flex;flex-direction:column;gap:.5rem;padding:.75rem;">' +
+        rightRows +
+        '</div>' +
+        '</div>' +
+
+        '</div>' + // end grid
 
         (state.factionSaveList.length === 0
-          ? '<p style="font-size:.8rem;color:#555;text-align:center;margin:.75rem 0;">No saved faction rosters found in storage — all factions will use default game data rosters.</p>'
+          ? '<p style="font-size:.78rem;color:#444;text-align:center;margin:.75rem 0 0;">' +
+            'No saved rosters found — all factions will use default game data.</p>'
           : '') +
 
+        // Begin Game button
         '<div style="margin-top:1rem;">' +
-        '<button class="cc-btn" style="width:100%;font-size:1.05rem;padding:.85rem;" onclick="window.CC_TC.startFromFactionSetup()">Begin Game &rarr;</button>' +
+        '<button class="cc-btn" style="width:100%;font-size:1rem;padding:.85rem;" ' +
+        'onclick="window.CC_TC.startFromFactionSetup()">' +
+        (allAssigned ? 'Begin Game →' : 'Begin Game with Defaults →') +
+        '</button>' +
         '</div>' +
-        '</div></div>';
+
+        '</div>' + // end scroll area
+        '</div>';  // end app-shell
     }
 
     function render() {
@@ -1824,11 +1909,13 @@ window.CC_APP = {
 
     // ── TERRAIN SETUP HANDLERS ────────────────────────────────────────────────
 
-    window.CC_TC.logTerrainPlace = function(label, icon) {
-      var factions   = state.factions;
-      var turnIdx    = state.setupTurnIndex % Math.max(factions.length, 1);
-      var faction    = factions[turnIdx];
-      var fname      = faction ? faction.name : 'Unknown';
+    window.CC_TC.logTerrainPlace = function(idx) {
+      var t       = (window.CC_TC._terrainTypes || [])[idx];
+      var label   = t ? t.label : 'Terrain';
+      var factions = state.factions;
+      var turnIdx  = state.setupTurnIndex % Math.max(factions.length, 1);
+      var faction  = factions[turnIdx];
+      var fname    = faction ? faction.name : 'Unknown';
       state.roundLog.push('[' + label + '] ' + fname + ' placed: ' + label);
       state.setupTurnIndex++;
       render();
