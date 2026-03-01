@@ -41,6 +41,35 @@ window.CC_APP = {
         .catch(err => console.error('❌ Core CSS failed:', err));
     }
 
+    // ── Patch JSON.parse to be safe before loading ANY external storage code ──
+    //
+    // WHY THIS EXISTS:
+    // storage_helpers.js (and Odoo's own code) calls JSON.parse() internally on
+    // data that sometimes comes back as an empty string — for example when an
+    // Odoo RPC returns an empty body, or when a document has no content yet.
+    // The native JSON.parse('') throws SyntaxError: Unexpected end of input.
+    // That error bubbles up through Odoo's error handler as an unhandled
+    // exception even though we have try/catch blocks everywhere in our code,
+    // because it originates INSIDE the library before our handlers run.
+    //
+    // The fix: intercept JSON.parse globally. If the input is empty/null/undefined,
+    // return null silently instead of throwing. All other inputs behave exactly
+    // as normal — this is a one-line guard, not a rewrite.
+    //
+    // We only install this once (guard flag prevents double-patching).
+    if (!window._ccJsonPatchInstalled) {
+      window._ccJsonPatchInstalled = true;
+      var _nativeJSONParse = JSON.parse.bind(JSON);
+      JSON.parse = function ccSafeJSONParse(text, reviver) {
+        // Handle null, undefined, or empty/whitespace-only strings
+        if (text === null || text === undefined) return null;
+        if (typeof text === 'string' && text.trim() === '') return null;
+        // Everything else goes to the native parser as normal
+        return reviver ? _nativeJSONParse(text, reviver) : _nativeJSONParse(text);
+      };
+      console.log('🛡️ JSON.parse safety patch installed');
+    }
+
     // ── Load CC_STORAGE helper ────────────────────────────────────────────────
     if (!window.CC_STORAGE) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
