@@ -41,8 +41,6 @@ window.CC_APP = {
         .catch(err => console.error('❌ Core CSS failed:', err));
     }
 
-    // App-specific CSS — no separate file yet; all styles are inline or in cc_ui.css
-
     // ── Load CC_STORAGE helper ────────────────────────────────────────────────
     if (!window.CC_STORAGE) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
@@ -74,11 +72,8 @@ window.CC_APP = {
       crow_queen:      { name: 'Crow Queen',       color: '#00bcd4', isMonster: false, file: 'faction-crow-queen.json'        }
     };
 
-    // Faction logo PNGs — grey, transparent background.
-    // Fallback SVG badge is generated inline if the PNG 404s.
     const LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/';
 
-    // Noise values per logged action
     const NOISE_VALUES = {
       shot:      { label: 'Shot',      value: 2 },
       explosion: { label: 'Explosion', value: 3 },
@@ -87,7 +82,6 @@ window.CC_APP = {
       silent:    { label: 'Silent',    value: 0 }
     };
 
-    // Canyon event table — fires at round end with escalating probability
     const CANYON_EVENTS = [
       { id: 'dust_devil',   icon: 'fa-wind', text: 'A dust devil cuts across the board. Ranged attacks are at −1 die until next round.' },
       { id: 'thyr_flare',   icon: 'fa-gem', text: 'Thyr crystals flare. Any unit within 3" of a cache tests Quality or is Shaken.' },
@@ -104,70 +98,43 @@ window.CC_APP = {
     ];
 
     const FACTION_LOADER_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
-    const SCENARIO_FOLDER     = 90;   // scenario builder saves here (SCN_ prefix)
-    const FACTION_SAVE_FOLDER = 90;   // faction builder saves in same folder
-    const TURN_SAVE_FOLDER    = 91;   // turn counter game saves
+    const SCENARIO_FOLDER     = 90;
+    const FACTION_SAVE_FOLDER = 90;
+    const TURN_SAVE_FOLDER    = 91;
 
     // ═══════════════════════════════════════════════════════════════════════════
     // APP STATE
     // ═══════════════════════════════════════════════════════════════════════════
 
     const state = {
-      // Screens: 'splash' | 'setup' | 'round_banner' | 'activation' | 'round_end' | 'game_over'
       phase: 'splash',
-
-      // Loaded data
-      scenarioSave:   null,   // full parsed scenario save object
+      scenarioSave:   null,
       scenarioName:   '',
-
-      // Factions in this game
       factions: [],
-      // [{ id, name, color, isMonster, isNPC, logoUrl,
-      //    allUnits: [{id, name, quality, move, combat, shoot, special, cost}],
-      //    deployIndex: 0 }]
-
-      // Live unit states — keyed "factionId::unitId"
       unitState: {},
-      // { quality: N, out: false, activated: false }
-
-      // Turn tracking
       round:  1,
-      queue:  [],          // [{ factionId, unitId }] — ordered activations this round
-      queueIndex: 0,       // which activation we're on
-
-      // Noise
+      queue:  [],
+      queueIndex: 0,
       noiseLevel:    0,
-      noiseThreshold: 12,  // overridden from scenario save
-      monsterRoster: [],   // from scenario monster_pressure
+      noiseThreshold: 12,
+      monsterRoster: [],
       monstersTriggered: 0,
-
-      // Coffin Cough
-      coughSeverity: 0,    // 0–5
-
-      // Timer (per activation)
+      coughSeverity: 0,
       timerRunning: false,
       timerStart:   null,
       timerElapsed: 0,
-
-      // Round log
       roundLog: [],
       allRoundLogs: [],
-
-      // Canyon event tracking
       lastEventRound: 0,
-
-      // Setup helpers
-      setupMode:       null,    // 'scenario' | 'quick'
+      setupMode:       null,
       loadingData:     false,
-      setupTurnIndex:  0,       // whose turn during Round 0 terrain placement
-      activationOrder: [],         // set by buildQueue: [{factionId, name, totalCost}] lowest-first
+      setupTurnIndex:  0,
+      activationOrder: [],
     };
 
-    // ── Unit state key ────────────────────────────────────────────────────────
     function unitKey(factionId, unitId) { return `${factionId}::${unitId}`; }
 
-    // Safe error string — avoids Odoo's 'error.stack.split' crash when the
-    // rejected value is a string, number, or plain object instead of an Error.
+    // Safe error string — avoids crashes when the rejected value isn't a proper Error.
     function safeErr(e) {
       if (!e) return 'Unknown error';
       if (typeof e === 'string') return e;
@@ -175,33 +142,102 @@ window.CC_APP = {
       try { return JSON.stringify(e); } catch (_) { return String(e); }
     }
 
-    // Safe JSON parse — returns null instead of throwing on empty/bad input
+    // Safe JSON parse — NEVER throws. Returns null on any failure.
     function safeParseJson(str) {
-      if (!str || typeof str !== 'string' || str.trim() === '') return null;
+      if (str === null || str === undefined) return null;
+      if (typeof str !== 'string') {
+        // If it's already an object, just return it
+        if (typeof str === 'object') return str;
+        return null;
+      }
+      if (str.trim() === '') return null;
       try { return JSON.parse(str); } catch (_) { return null; }
     }
 
-    // Extract JSON from a CC_STORAGE document response.
-    // CC_STORAGE may return data in two ways depending on which app saved it:
-    //   1. { json: "..." }          — newer storage_helpers.js style
-    //   2. { datas: "base64..." }   — older CCFB component style (atob encoded)
-    // We try both so saves from either app load correctly.
+    // ── FIX: Extract JSON from a CC_STORAGE document response ─────────────────
+    //
+    // This is the most important safety function in the whole app.
+    // CC_STORAGE can return documents in several different shapes:
+    //
+    //   1. { json: "..." }        — storage_helpers.js style
+    //   2. { datas: "base64..." } — older CCFB component style
+    //   3. A plain string         — if loadDocument returns the raw content
+    //   4. Already an object      — if it was already parsed upstream
+    //
+    // We try ALL of these, never throwing, always returning null on failure.
     function docToJson(doc) {
       if (!doc) return null;
-      // Try .json first (storage_helpers.js style)
-      if (doc.json && doc.json.trim() !== '') return safeParseJson(doc.json);
-      // Fall back to base64 .datas (CCFB component style)
-      if (doc.datas) {
-        try {
-          var decoded = decodeURIComponent(escape(atob(doc.datas)));
-          return safeParseJson(decoded);
-        } catch (_) { return null; }
+
+      // Case 3: doc is already a plain string — try parsing it directly
+      if (typeof doc === 'string') {
+        return safeParseJson(doc);
       }
+
+      // Case 4: doc is already a plain data object (not a wrapper)
+      // We detect wrappers by checking for the .json or .datas fields.
+      // If neither exists but it IS an object with actual data keys, return it.
+      if (typeof doc === 'object') {
+        var hasJson  = doc.json  !== undefined && doc.json  !== null;
+        var hasDatas = doc.datas !== undefined && doc.datas !== null;
+
+        if (!hasJson && !hasDatas) {
+          // No wrapper fields — this might already be the parsed data object
+          // (e.g. the faction roster itself). Return it if it has any keys.
+          if (Object.keys(doc).length > 0) return doc;
+          return null;
+        }
+
+        // Case 1: .json field — try this first
+        if (hasJson) {
+          var jsonStr = String(doc.json).trim();
+          if (jsonStr) {
+            var parsed = safeParseJson(jsonStr);
+            if (parsed !== null) return parsed;
+            // Fall through to try .datas if .json parse failed
+          }
+        }
+
+        // Case 2: .datas field — base64 encoded content
+        if (hasDatas) {
+          try {
+            var raw     = String(doc.datas);
+            var decoded = decodeURIComponent(escape(atob(raw)));
+            var result  = safeParseJson(decoded);
+            if (result !== null) return result;
+          } catch (_) {
+            // atob failed (bad base64) — fall through to null
+          }
+        }
+      }
+
       return null;
     }
 
-    // Rejection guard lives in cc_master_shell.html (must be first on page).
-    // Keeping a lightweight backup here in case the app is loaded standalone.
+    // ── Safe wrapper for CC_STORAGE.loadDocument ──────────────────────────────
+    //
+    // THE KEY FIX: loadDocument sometimes calls JSON.parse internally without
+    // a try/catch. If it hits a bad document, it throws a SyntaxError that
+    // becomes an unhandled Promise rejection and crashes Odoo's error handler.
+    //
+    // This wrapper catches EVERYTHING — SyntaxError, TypeError, network errors,
+    // rejected promises — and returns null instead of letting the error escape.
+    async function safeLoadDocument(docId) {
+      if (!window.CC_STORAGE) return null;
+      try {
+        // The .catch() here catches rejections that might escape async/await
+        var result = await Promise.resolve(window.CC_STORAGE.loadDocument(docId))
+          .catch(function(e) {
+            console.warn('⚠️ loadDocument(' + docId + ') rejected:', safeErr(e));
+            return null;
+          });
+        return result || null;
+      } catch (e) {
+        console.warn('⚠️ loadDocument(' + docId + ') threw:', safeErr(e));
+        return null;
+      }
+    }
+
+    // Rejection guard — backup handler for any unhandled promise rejections.
     (function() {
       if (window._ccRejectionGuardInstalled) return;
       window._ccRejectionGuardInstalled = true;
@@ -220,7 +256,6 @@ window.CC_APP = {
         setTimeout(function() { throw new Error('[CC] ' + msg); }, 0);
       }, { capture: true });
     }());
-
 
 
     function getUnitState(factionId, unitId) {
@@ -254,13 +289,11 @@ window.CC_APP = {
       }
     }
 
-    // Build a faction entry from raw JSON data
     function buildFactionEntry(factionId, factionData, isNPC, isMonster) {
       const meta  = FACTION_META[factionId] || {};
       const color = meta.color || '#888';
       const name  = meta.name  || factionId;
 
-      // Normalise units from faction JSON format
       const rawUnits = factionData?.units || factionData?.roster || [];
       const allUnits = rawUnits.map((u, i) => ({
         id:      u.id   || `unit_${i}`,
@@ -283,11 +316,10 @@ window.CC_APP = {
         isNPC,
         logoUrl:      LOGO_BASE + factionId + '_logo.svg',
         allUnits,
-        deployIndex:  0,   // next unit to deploy when roster grows
+        deployIndex:  0,
       };
     }
 
-    // Build a quick-mode faction with manual unit entries
     function buildQuickFaction(id, name, unitCount, isNPC, isMonster) {
       const meta  = FACTION_META[id] || {};
       const color = meta.color || '#888';
@@ -302,43 +334,57 @@ window.CC_APP = {
 
     // Build a faction entry from a Faction Builder cloud save.
     //
-    // The faction builder saves in this shape (from saveToCloud / exportRoster):
-    //   { name, faction, budget, totalCost, roster: [ {unitName, name, type,
-    //     quality, defense, move, range, weapon, abilities, config, totalCost} ] }
-    //
-    // All stats are already in the save — no GitHub fetch needed.
-    // Each roster item is already one unit (quantity = 1 in the builder).
+    // FIX: This function is now much more tolerant of different save shapes.
+    // The faction builder may save roster items in slightly different formats
+    // depending on which version of the builder created the save. We try
+    // every reasonable field name before giving up.
     function buildFactionFromSave(factionId, saveData, isNPC) {
-      var meta    = FACTION_META[factionId] || {};
-      var color   = meta.color    || '#888';
-      var name    = meta.name     || factionId;
+      var meta      = FACTION_META[factionId] || {};
+      var color     = meta.color    || '#888';
+      var name      = meta.name     || factionId;
       var isMonster = meta.isMonster || false;
 
-      // saveData must exist and have a roster array
-      if (!saveData || !Array.isArray(saveData.roster) || !saveData.roster.length) {
-        console.warn('buildFactionFromSave: no usable roster in save for ' + factionId);
-        return null;   // caller falls back to GitHub default
+      // Guard: need a valid object with a non-empty roster array
+      if (!saveData || typeof saveData !== 'object') {
+        console.warn('buildFactionFromSave: saveData is null/invalid for ' + factionId);
+        return null;
       }
 
-      var allUnits = saveData.roster.map(function(item, i) {
-        // The faction builder stores stats directly on each roster item
+      // Find the roster — try every field name the builder might use
+      var roster = saveData.roster || saveData.units || saveData.army || saveData.list || null;
+
+      if (!Array.isArray(roster) || roster.length === 0) {
+        console.warn('buildFactionFromSave: no usable roster in save for ' + factionId,
+          '(keys found:', Object.keys(saveData).join(', ') + ')');
+        return null;
+      }
+
+      var allUnits = roster.map(function(item, i) {
+        if (!item || typeof item !== 'object') return null;
         return {
-          id:       item.id       || ('saved_' + i),
-          name:     item.name     || item.unitName || ('Unit ' + (i + 1)),
-          quality:  item.quality  || 4,
-          move:     item.move     || 6,
-          combat:   item.combat   || null,
-          shoot:    item.range    || item.shoot    || null,   // builder uses 'range'
-          armor:    item.defense  || item.armor    || null,   // builder uses 'defense'
-          cost:     item.totalCost || item.cost    || null,
-          special:  item.abilities || [],
-          isTitan:  item.isTitan  || false,
+          id:      item.id       || ('saved_' + i),
+          name:    item.name     || item.unitName || item.label || ('Unit ' + (i + 1)),
+          quality: item.quality  || item.Quality  || 4,
+          move:    item.move     || item.Move     || 6,
+          combat:  item.combat   || item.Combat   || null,
+          // builder uses 'range' for shoot stat
+          shoot:   item.shoot    || item.Shoot    || item.range  || item.Range  || null,
+          // builder uses 'defense' for armor stat
+          armor:   item.armor    || item.Armor    || item.defense || item.Defence || null,
+          cost:    item.totalCost || item.cost    || item.points  || null,
+          special: item.abilities || item.special || item.rules  || [],
+          isTitan: item.isTitan  || item.titan    || false,
         };
-      });
+      }).filter(function(u) { return u !== null; }); // remove any nulls from bad items
+
+      if (allUnits.length === 0) {
+        console.warn('buildFactionFromSave: all roster items were invalid for ' + factionId);
+        return null;
+      }
 
       return {
         id:         factionId,
-        name:       saveData.name || name,   // use the saved roster name if present
+        name:       saveData.name || saveData.armyName || saveData.factionName || name,
         color:      color,
         isMonster:  isMonster,
         isNPC:      isNPC,
@@ -348,7 +394,6 @@ window.CC_APP = {
       };
     }
 
-    // Initialise unitState for all active units in a faction
     function initUnitStates(faction) {
       faction.allUnits.forEach(u => {
         const k = unitKey(faction.id, u.id);
@@ -362,7 +407,6 @@ window.CC_APP = {
     // TURN QUEUE ENGINE
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // Active units for a faction this round (not OUT, and deployed)
     function getActiveUnits(faction) {
       return faction.allUnits.filter(u => {
         const us = getUnitState(faction.id, u.id);
@@ -370,32 +414,17 @@ window.CC_APP = {
       });
     }
 
-    // Build the activation queue for a round.
-    //
-    // COLUMN-FIRST ROTATION — units activate by slot number across all factions.
-    // Example with 3 factions (Monsters, Rangers, Liberty Corps):
-    //   Slot 1: Monsters #1 → Rangers #1 → Liberty #1
-    //   Slot 2: Monsters #2 → Rangers #2 → Liberty #2
-    //   ...and so on until every active unit has acted.
-    //
-    // NPCs are treated exactly like player factions — just another column.
-    // If a faction has fewer units than another, its column ends early (no blank turns).
     function buildQueue() {
-
-      // ── Step 1: separate monsters from everyone else ────────────────────────
       var monsterFactions = state.factions.filter(function(f) { return f.isMonster; });
       var otherFactions   = state.factions.filter(function(f) { return !f.isMonster; });
 
-      // ── Step 2: shuffle the non-monster factions (random each round) ────────
       for (var i = otherFactions.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
         var tmp = otherFactions[i]; otherFactions[i] = otherFactions[j]; otherFactions[j] = tmp;
       }
 
-      // Final order: all monster factions first, then shuffled others
       var orderedFactions = monsterFactions.concat(otherFactions);
 
-      // ── Step 3: within each faction, sort active units cheapest first ───────
       var columns = orderedFactions.map(function(f) {
         var active = getActiveUnits(f).slice().sort(function(a, b) {
           return (a.cost != null ? a.cost : 9999) - (b.cost != null ? b.cost : 9999);
@@ -410,7 +439,6 @@ window.CC_APP = {
         };
       }).filter(function(col) { return col.units.length > 0; });
 
-      // ── Step 4: column-first interleave ────────────────────────────────────
       var maxLen = 0;
       columns.forEach(function(col) { if (col.units.length > maxLen) maxLen = col.units.length; });
 
@@ -429,7 +457,6 @@ window.CC_APP = {
         return { factionId: c.factionId, name: c.factionName, totalCost: c.totalCost, isMonster: c.isMonster };
       });
 
-      // Reset activated flags
       state.factions.forEach(function(f) {
         f.allUnits.forEach(function(u) {
           var k = unitKey(f.id, u.id);
@@ -450,9 +477,7 @@ window.CC_APP = {
       return faction?.allUnits.find(u => u.id === unitId) || null;
     }
 
-    // Advance to the next non-OUT unit in the queue
     function advanceQueue() {
-      // Mark current unit activated
       const cur = currentQueueItem();
       if (cur) {
         setUnitState(cur.factionId, cur.unitId, { activated: true });
@@ -460,7 +485,6 @@ window.CC_APP = {
 
       state.queueIndex++;
 
-      // Skip units that went OUT mid-round
       while (state.queueIndex < state.queue.length) {
         const item = state.queue[state.queueIndex];
         const us   = getUnitState(item.factionId, item.unitId);
@@ -471,19 +495,16 @@ window.CC_APP = {
       return state.queueIndex < state.queue.length;
     }
 
-    // Are all activations done this round?
     function isRoundComplete() {
       return state.queueIndex >= state.queue.length;
     }
 
-    // Deploy next reserve unit for each faction at round start
     function deployReserves() {
       state.factions.forEach(f => {
         const active = getActiveUnits(f);
         if (active.length === 0 && f.deployIndex < f.allUnits.length) {
           const nextUnit = f.allUnits[f.deployIndex];
           f.deployIndex++;
-          // Restore this unit to play (was OUT, or never activated)
           setUnitState(f.id, nextUnit.id, { quality: nextUnit.quality, out: false, activated: false });
           state.roundLog.push(`[Deploy] ${f.name}: ${nextUnit.name} deploys.`);
         }
@@ -506,7 +527,7 @@ window.CC_APP = {
 
       const monster = state.monsterRoster[state.monstersTriggered];
       state.monstersTriggered++;
-      state.noiseLevel = Math.floor(state.noiseLevel / 2);  // noise drops after scare
+      state.noiseLevel = Math.floor(state.noiseLevel / 2);
 
       const msg = monster
         ? `[Monster] Monster Encounter! ${monster.name} approaches from the nearest edge.`
@@ -526,7 +547,6 @@ window.CC_APP = {
       const ev = CANYON_EVENTS[Math.floor(Math.random() * CANYON_EVENTS.length)];
       state.lastEventRound = state.round;
 
-      // Apply side effects
       if (ev.id === 'canyon_echo') addNoise(2, 'Canyon Echo');
       if (ev.id === 'silence')     addNoise(3, 'Unnatural Silence');
 
@@ -541,7 +561,7 @@ window.CC_APP = {
       if (state.coughSeverity >= 5) {
         state.roundLog.push('[Storm] Coffin Cough Storm! Every unit tests Quality or degrades by 1.');
         setTimeout(() => {
-          state.coughSeverity = 2; // storm passes, leaves residue
+          state.coughSeverity = 2;
           render();
         }, 4000);
       }
@@ -552,31 +572,28 @@ window.CC_APP = {
     // ═══════════════════════════════════════════════════════════════════════════
 
     function buildDirective(faction, unit) {
-      const motive = state.scenarioSave?.factions?.find(f => f.id === faction.id)?.motive || null;
+      const motive   = state.scenarioSave?.factions?.find(f => f.id === faction.id)?.motive   || null;
       const approach = state.scenarioSave?.factions?.find(f => f.id === faction.id)?.approach || 'aggressive';
 
-      // Priority tree
       const us = getUnitState(faction.id, unit.id);
       const q  = us?.quality || unit.quality;
 
-      let priority = '';
+      let priority  = '';
       let ifEngaged = `Attack (Q${q}, 2 actions)`;
       let ifClear   = 'Hold position';
 
       if (motive) {
         priority = motive;
       } else {
-        // Generic fallback based on approach
         const approachMap = {
-          aggressive:   'Press forward — engage the nearest enemy.',
-          defensive:    'Hold current position and protect nearby allies.',
-          opportunistic:'Move toward the highest-value unclaimed objective.',
-          support:      'Stay near your faction\'s strongest unit.',
+          aggressive:    'Press forward — engage the nearest enemy.',
+          defensive:     'Hold current position and protect nearby allies.',
+          opportunistic: 'Move toward the highest-value unclaimed objective.',
+          support:       'Stay near your faction\'s strongest unit.',
         };
         priority = approachMap[approach] || approachMap.aggressive;
       }
 
-      // Objective from scenario
       const primaryObj = state.scenarioSave?.objectives?.[0];
       if (primaryObj?.name) {
         ifClear = `Move toward ${primaryObj.name} and Interact.`;
@@ -589,11 +606,9 @@ window.CC_APP = {
     // FACTION LOGO HELPER
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // Renders a faction logo — PNG with CSS tint, falling back to SVG badge if 404.
     function logoHtml(faction, sizePx = 48) {
       const initial = (faction.name || '?')[0].toUpperCase();
       const color   = faction.color || '#888';
-      // The onerror swaps to an inline SVG badge
       return `
         <img
           src="${faction.logoUrl}"
@@ -614,12 +629,12 @@ window.CC_APP = {
     // ═══════════════════════════════════════════════════════════════════════════
 
     const STAT_COLORS = {
-      quality: '#ff7518',   // canyon orange
-      move:    '#42a5f5',   // blue
-      combat:  '#ef5350',   // red
-      shoot:   '#ffd600',   // gold
-      armor:   '#90a4ae',   // grey
-      cost:    '#555',      // dim
+      quality: '#ff7518',
+      move:    '#42a5f5',
+      combat:  '#ef5350',
+      shoot:   '#ffd600',
+      armor:   '#90a4ae',
+      cost:    '#555',
     };
 
     function statBadge(label, value, colorKey, big = false) {
@@ -637,7 +652,6 @@ window.CC_APP = {
         </div>`;
     }
 
-    // Quality track — tappable dots showing current/max quality
     function qualityTrack(faction, unit) {
       const us  = getUnitState(faction.id, unit.id);
       const cur = us?.quality ?? unit.quality;
@@ -692,7 +706,6 @@ window.CC_APP = {
         </div>`;
     }
 
-    // Coffin Cough severity bar
     function coughBarHtml() {
       if (state.coughSeverity === 0) return '';
       const pct   = Math.round((state.coughSeverity / 5) * 100);
@@ -743,8 +756,6 @@ window.CC_APP = {
     // RENDER: SETUP SCREEN
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // ── Login status bar ─────────────────────────────────────────────────────
-    // Checks Odoo session and updates the bar in the setup screen.
     function updateLoginStatus() {
       var bar = document.getElementById('cc-tc-login-status');
       if (!bar) return;
@@ -797,7 +808,6 @@ window.CC_APP = {
                 <p style="color:#888;">Loading faction data…</p>
               </div>` : `
 
-            <!-- Mode selector -->
             <div class="cc-panel" style="margin-bottom:1rem;">
               <div class="cc-panel-header">
                 <h5 style="margin:0;color:var(--cc-primary);"><i class="fa fa-dice"></i> Start a Game</h5>
@@ -830,7 +840,6 @@ window.CC_APP = {
               </div>
             </div>
 
-            <!-- Resume saved game -->
             ${hasStorage ? `
               <div class="cc-panel">
                 <div class="cc-panel-header">
@@ -848,8 +857,6 @@ window.CC_APP = {
         </div>`;
       setTimeout(updateLoginStatus, 100);
     }
-
-    // ── Quick Mode faction picker ─────────────────────────────────────────────
 
     function renderQuickSetup() {
       const factionList = Object.entries(FACTION_META).map(([id, meta]) => `
@@ -905,7 +912,6 @@ window.CC_APP = {
     function renderRoundBanner() {
       const totalActivations = state.queue.length;
 
-      // Build activation order strip — monsters pinned first, others randomized
       const orderStrip = state.activationOrder.map(function(ao, idx) {
         var f = getFactionById(ao.factionId);
         if (!f) return '';
@@ -933,25 +939,21 @@ window.CC_APP = {
         '<div style="color:var(--cc-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:.2em;margin-bottom:.5rem;">Beginning</div>' +
         '<h1 style="font-size:clamp(3rem,10vw,5rem);margin:0;color:#fff;line-height:1;">Round ' + state.round + '</h1>' +
         '<p style="color:#888;margin:.5rem 0 1.25rem;">' + totalActivations + ' activation' + (totalActivations !== 1 ? 's' : '') + ' this round</p>' +
-
-        // Activation order — lowest pts first
         (orderStrip
           ? '<div style="margin-bottom:1.25rem;">' +
             '<div style="font-size:.7rem;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;">Activation Order &mdash; Monsters First, then Randomized &mdash; Units: Cheapest to Costliest</div>' +
             '<div style="display:flex;flex-direction:column;gap:.3rem;">' + orderStrip + '</div>' +
             '</div>'
           : '') +
-
         noiseBarHtml() +
         coughBarHtml() +
-
         '<button class="cc-btn" style="width:100%;font-size:1.1rem;padding:1rem;margin-top:1rem;" ' +
         'onclick="window.CC_TC.startRound()">Begin Round ' + state.round + ' →</button>' +
         '</div></div>';
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // RENDER: ACTIVATION SCREEN — THE MAIN SCREEN
+    // RENDER: ACTIVATION SCREEN
     // ═══════════════════════════════════════════════════════════════════════════
 
     function renderActivation() {
@@ -966,7 +968,6 @@ window.CC_APP = {
       const remaining = state.queue.length - state.queueIndex;
       const color     = faction.color;
 
-      // Build stat badges row
       const statBadges = [
         statBadge('Move', unit.move ? unit.move + '"' : null, 'move'),
         statBadge('Combat', unit.combat, 'combat'),
@@ -975,7 +976,6 @@ window.CC_APP = {
         unit.cost  ? statBadge('Cost', unit.cost + '£', 'cost')  : '',
       ].join('');
 
-      // NPC directive if applicable
       const directive = faction.isNPC ? buildDirective(faction, unit) : null;
 
       const directiveHtml = directive ? `
@@ -995,7 +995,6 @@ window.CC_APP = {
           </div>
         </div>` : '';
 
-      // Special abilities (if any)
       const specialHtml = unit.special?.length ? `
         <div style="margin:.75rem 0;display:flex;flex-wrap:wrap;gap:.4rem;">
           ${(Array.isArray(unit.special) ? unit.special : [unit.special]).map(s =>
@@ -1008,7 +1007,6 @@ window.CC_APP = {
       root.innerHTML = `
         <div class="cc-app-shell h-100" style="display:flex;flex-direction:column;">
 
-          <!-- Header -->
           <div class="cc-app-header" style="padding:.75rem 1rem;">
             <div style="display:flex;align-items:center;gap:.75rem;">
               ${logoHtml(faction, 32)}
@@ -1021,7 +1019,6 @@ window.CC_APP = {
               </div>
             </div>
             <div style="display:flex;align-items:center;gap:.5rem;">
-              <!-- Timer -->
               <div id="cc-timer" style="color:#888;font-size:.8rem;font-family:monospace;">
                 00:00
               </div>
@@ -1034,11 +1031,9 @@ window.CC_APP = {
             </div>
           </div>
 
-          <!-- Scroll area -->
           <div style="flex:1;overflow-y:auto;padding:1rem;max-width:600px;width:100%;
                       margin:0 auto;box-sizing:border-box;">
 
-            <!-- Unit name — BIG -->
             <div style="margin-bottom:.75rem;">
               <h2 style="font-size:clamp(1.8rem,6vw,2.6rem);margin:0;color:#fff;line-height:1.1;">
                 ${unit.name}
@@ -1047,23 +1042,17 @@ window.CC_APP = {
                 text-transform:uppercase;letter-spacing:.1em;"><i class="fa fa-bolt"></i> Titan</span>` : ''}
             </div>
 
-            <!-- Quality track (big, tappable) -->
             <div style="margin-bottom:1rem;">
               ${qualityTrack(faction, unit)}
             </div>
 
-            <!-- Stat badges row -->
             <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.75rem;">
               ${statBadges}
             </div>
 
-            <!-- Special abilities -->
             ${specialHtml}
-
-            <!-- NPC Directive -->
             ${directiveHtml}
 
-            <!-- Noise logging -->
             <div class="cc-panel" style="margin:1rem 0;">
               <div class="cc-panel-header">
                 <h6 style="margin:0;color:#888;font-size:.7rem;text-transform:uppercase;
@@ -1084,7 +1073,6 @@ window.CC_APP = {
 
           </div>
 
-          <!-- Bottom action bar -->
           <div style="padding:1rem;border-top:1px solid rgba(255,255,255,.08);
                       background:rgba(0,0,0,.3);display:flex;gap:.75rem;
                       max-width:600px;width:100%;margin:0 auto;box-sizing:border-box;">
@@ -1103,11 +1091,8 @@ window.CC_APP = {
 
         </div>`;
 
-      // Start timer if running
       if (state.timerRunning) startTimerDisplay();
     }
-
-    // ── Timer display loop ────────────────────────────────────────────────────
 
     let _timerInterval = null;
 
@@ -1132,7 +1117,6 @@ window.CC_APP = {
       const canyonEvent = rollCanyonEvent();
       tickCoffeinCough();
 
-      // Build unit status table
       const unitRows = state.factions.flatMap(f =>
         f.allUnits.map(u => {
           const us = getUnitState(f.id, u.id);
@@ -1179,7 +1163,6 @@ window.CC_APP = {
                 </div>
               </div>` : ''}
 
-            <!-- Noise & Cough status -->
             <div class="cc-panel" style="margin-bottom:1rem;">
               <div class="cc-panel-body">
                 ${noiseBarHtml()}
@@ -1187,7 +1170,6 @@ window.CC_APP = {
               </div>
             </div>
 
-            <!-- Round log -->
             <div class="cc-panel" style="margin-bottom:1rem;">
               <div class="cc-panel-header">
                 <h5 style="margin:0;"><i class="fa fa-list"></i> Round Log</h5>
@@ -1197,7 +1179,6 @@ window.CC_APP = {
               </div>
             </div>
 
-            <!-- Unit status -->
             <div class="cc-panel" style="margin-bottom:1.5rem;">
               <div class="cc-panel-header">
                 <h5 style="margin:0;">Unit Status</h5>
@@ -1265,18 +1246,9 @@ window.CC_APP = {
         </div>`;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // RENDER: MASTER DISPATCHER
-    // ═══════════════════════════════════════════════════════════════════════════
-
-
-
     // =========================================================================
     // RENDER: ROUND 0 — TERRAIN SETUP
     // =========================================================================
-    // Players alternate placing one terrain piece per turn.
-    // Factions rotate in order (same order as activation).
-    // Tap what you placed, or Pass. When the board is ready, Begin Round 1.
 
     function renderSetupRound() {
       var factions       = state.factions;
@@ -1328,7 +1300,6 @@ window.CC_APP = {
 
         '<div style="max-width:600px;margin:0 auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;">' +
 
-        // Active faction prompt
         '<div style="background:' + color + '18;border:2px solid ' + color + ';border-radius:8px;padding:1rem;">' +
         '<div style="font-size:1.15rem;font-weight:700;color:' + color + ';margin-bottom:.35rem;">' +
         fname + (isNPC ? ' (NPC)' : '') + '</div>' +
@@ -1337,7 +1308,6 @@ window.CC_APP = {
           : '<p style="color:#aaa;font-size:.85rem;margin:0;">Place one terrain piece anywhere on the board, then tap what you placed below.</p>') +
         '</div>' +
 
-        // Terrain picker
         '<div class="cc-panel">' +
         '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">What did you place?</h5></div>' +
         '<div class="cc-panel-body" style="display:flex;flex-direction:column;gap:.4rem;">' +
@@ -1347,7 +1317,6 @@ window.CC_APP = {
         '<button onclick="window.CC_TC.skipTerrainTurn()" class="cc-btn cc-btn-secondary" style="width:100%;">' +
         'Pass &mdash; no placement this turn</button>' +
 
-        // Placement log
         '<div class="cc-panel">' +
         '<div class="cc-panel-header">' +
         '<h5 style="margin:0;color:var(--cc-text);">Board So Far</h5>' +
@@ -1355,7 +1324,6 @@ window.CC_APP = {
         '<div class="cc-panel-body">' + logHtml + '</div>' +
         '</div>' +
 
-        // Begin Round 1
         '<div style="margin-top:.25rem;">' +
         '<button onclick="window.CC_TC.beginRound1()" class="cc-btn" style="width:100%;padding:.85rem;font-size:1rem;">' +
         'Terrain is Set &mdash; Begin Round 1 &rarr;</button>' +
@@ -1389,7 +1357,7 @@ window.CC_APP = {
         return '<div style="padding:.85rem;border:1px solid ' + color + '33;border-radius:6px;background:rgba(0,0,0,.2);">' +
           '<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;">' +
           '<img src="' + LOGO_BASE + pf.id + '_logo.svg" ' +
-          'alt="' + '" ' +
+          'alt="' + fname + '" ' +
           'style="width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 0 4px ' + color + '88);flex-shrink:0;" ' +
           'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:36px;height:36px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">'  +
           '<strong style="flex:1;color:' + color + ';">' + fname + '</strong>' +
@@ -1416,7 +1384,6 @@ window.CC_APP = {
         '</div>' +
         '<div style="max-width:600px;margin:0 auto;padding:1.5rem;">' +
 
-        // Scenario summary
         (state.scenarioSave
           ? '<div class="cc-panel" style="margin-bottom:1rem;">' +
             '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">Scenario</h5></div>' +
@@ -1429,7 +1396,6 @@ window.CC_APP = {
             '</div></div>'
           : '') +
 
-        // Faction rows
         '<div class="cc-panel">' +
         '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">Factions &amp; Rosters</h5></div>' +
         '<div class="cc-panel-body" style="display:flex;flex-direction:column;gap:.6rem;">' +
@@ -1461,9 +1427,8 @@ window.CC_APP = {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // ── Event handlers — individual window.CC_TC assignments ─────────────────
-    // Must use window.CC_TC.method = function() style (not object shorthand)
-    // because the browser blob executor rejects method shorthand syntax.
+    // EVENT HANDLERS
+    // ═══════════════════════════════════════════════════════════════════════════
 
     window.CC_TC = {};
 
@@ -1518,7 +1483,6 @@ window.CC_APP = {
     window.CC_TC.openScenarioList = function() {
       if (!window.CC_STORAGE) { alert('Storage not available.'); return; }
 
-      // Show a loading panel immediately
       var existingPanel = document.getElementById('cc-tc-scenario-panel');
       if (existingPanel) existingPanel.parentNode.removeChild(existingPanel);
 
@@ -1574,8 +1538,8 @@ window.CC_APP = {
     window.CC_TC.loadScenario = async function(docId) {
       window.CC_TC.closeScenarioPanel();
       try {
-        // API: loadDocument(id) -> {json: string}
-        var doc     = await window.CC_STORAGE.loadDocument(docId);
+        // Use safeLoadDocument — never throws, returns null on failure
+        var doc     = await safeLoadDocument(docId);
         var payload = docToJson(doc);
         if (!payload) throw new Error('Scenario save is empty or unreadable. Try re-saving it in the Scenario Builder.');
 
@@ -1585,7 +1549,6 @@ window.CC_APP = {
         var mp = state.scenarioSave && state.scenarioSave.monster_pressure;
         state.monsterRoster  = (mp && mp.monsters) || [];
 
-        // Factions from payload — normalise to [{id, npc}]
         var rawFactions = payload.factions || (payload.scenario && payload.scenario.factions) || [];
         state.pendingFactions = rawFactions.map(function(f) {
           return { id: f.id, npc: f.npc !== undefined ? f.npc : (f.isNPC !== undefined ? f.isNPC : true) };
@@ -1596,35 +1559,38 @@ window.CC_APP = {
           state.phase = 'setup'; render(); return;
         }
 
-        // Init assignments (null = use default GitHub JSON)
         state.factionAssignments = {};
         state.pendingFactions.forEach(function(f) { state.factionAssignments[f.id] = null; });
 
-        // Pre-load faction save list (non-SCN_ docs from folder 90)
+        // Pre-load faction save list — each doc loaded individually and safely
         state.loadingData = true; render();
         try {
-          var allDocs = await window.CC_STORAGE.loadDocumentList(FACTION_SAVE_FOLDER);
+          var allDocs = await window.CC_STORAGE.loadDocumentList(FACTION_SAVE_FOLDER)
+            .catch(function() { return []; });
+
           var nonScenario = (allDocs || []).filter(function(d) {
             return d.name && d.name.indexOf('SCN_') !== 0;
           });
-          // Enrich with parsed metadata — fully guarded so one bad doc never
-          // breaks the whole list. Uses Promise.resolve() wrapper so a rejected
-          // loadDocument promise can't escape into an unhandled rejection.
-          state.factionSaveList = await Promise.all(nonScenario.map(function(d) {
-            return Promise.resolve().then(async function() {
-              try {
-                var parsed = await window.CC_STORAGE.loadDocument(d.id);
-                var data   = docToJson(parsed);
-                if (data) {
-                  d._factionId   = data.faction   || null;
-                  d._factionName = data.factionName || data.faction || null;
-                  d._armyName    = data.armyName   || data.name    || null;
-                  d._totalPoints = data.totalCost  || data.totalPoints || data.pts || null;
-                }
-              } catch (_) { /* one bad doc — skip enrichment, still show it */ }
-              return d;
-            }).catch(function() { return d; }); // belt AND suspenders
+
+          // ── FIX: Load each doc with safeLoadDocument ──────────────────────
+          // The old code used Promise.resolve().then(async function() { ... })
+          // which could let SyntaxErrors escape into unhandled rejections.
+          // safeLoadDocument() catches everything including SyntaxError from
+          // JSON.parse inside CC_STORAGE, and always resolves with null on error.
+          state.factionSaveList = await Promise.all(nonScenario.map(async function(d) {
+            var parsed = await safeLoadDocument(d.id);
+            if (parsed) {
+              var data = docToJson(parsed);
+              if (data) {
+                d._factionId   = data.faction     || null;
+                d._factionName = data.factionName || data.faction || null;
+                d._armyName    = data.armyName    || data.name    || null;
+                d._totalPoints = data.totalCost   || data.totalPoints || data.pts || null;
+              }
+            }
+            return d;
           }));
+
         } catch (e) {
           state.factionSaveList = [];
           console.warn('Faction save list failed:', safeErr(e));
@@ -1643,8 +1609,7 @@ window.CC_APP = {
       alert('Resume coming soon — save/load is in the next build pass!');
     };
 
-
-    // ── FACTION SETUP HANDLERS ─────────────────────────────────────────────────
+    // ── FACTION SETUP HANDLERS ────────────────────────────────────────────────
 
     window.CC_TC.toggleNPC = function(factionId) {
       var el = document.getElementById('npc_toggle_' + factionId);
@@ -1654,9 +1619,8 @@ window.CC_APP = {
 
     window.CC_TC.openFactionSavePicker = function(factionId) {
       var meta = FACTION_META[factionId] || {};
-      // Only show saves that belong to this faction (matched by faction ID stored in _factionId)
       var docs = (state.factionSaveList || []).filter(function(d) {
-        if (!d._factionId) return true;  // no faction info — show it anyway
+        if (!d._factionId) return true;
         return d._factionId === factionId;
       });
       if (!docs.length) {
@@ -1664,16 +1628,13 @@ window.CC_APP = {
         return;
       }
 
-      // Build buttons — enrich label from parsed save if available
       var items = docs.map(function(d) {
-        // Prettify stored name: strip timestamps, underscores
         var label = (d.name || String(d.id))
           .replace(/\.json$/i, '')
           .replace(/_\d{10,}/, '')
           .replace(/_/g, ' ')
           .trim();
-        // Add point value if the save pre-loaded it
-        var pts = d._totalPoints ? ' — ' + d._totalPoints + ' pts' : '';
+        var pts     = d._totalPoints ? ' — ' + d._totalPoints + ' pts' : '';
         var faction = d._factionName ? ' (' + d._factionName + ')' : '';
         return '<button onclick="window.CC_TC.selectFactionSave(\'' + factionId + '\',' + d.id + ',' + JSON.stringify(d.name || String(d.id)) + ')" ' +
           'class="cc-btn cc-btn-secondary" ' +
@@ -1709,6 +1670,15 @@ window.CC_APP = {
       render();
     };
 
+    // ── BEGIN GAME FROM FACTION SETUP ─────────────────────────────────────────
+    //
+    // FIX: This is the main place the crash was happening.
+    // The old code had a try/catch, but CC_STORAGE.loadDocument could throw
+    // a SyntaxError internally (from JSON.parse on bad data) that escaped.
+    // Now we use safeLoadDocument() which catches ALL errors including SyntaxError
+    // and returns null, letting buildFactionFromSave gracefully fall back to
+    // loading default roster data from GitHub instead.
+
     window.CC_TC.startFromFactionSetup = async function() {
       state.loadingData = true;
       state.factions    = [];
@@ -1718,22 +1688,38 @@ window.CC_APP = {
         var pf     = state.pendingFactions[i];
         var meta   = FACTION_META[pf.id];
         var assign = state.factionAssignments[pf.id];
-        var faction;
+        var faction = null;
 
         if (assign && assign.docId) {
-          // Load from CC_STORAGE faction save
-          try {
-            var saveDoc  = await window.CC_STORAGE.loadDocument(assign.docId);
+          // ── FIX: Use safeLoadDocument instead of raw CC_STORAGE.loadDocument ──
+          // safeLoadDocument wraps the call in both .catch() AND try/catch,
+          // so a SyntaxError from inside CC_STORAGE can never escape.
+          console.log('📂 Loading faction save for ' + pf.id + ' (doc ' + assign.docId + ')');
+
+          var saveDoc = await safeLoadDocument(assign.docId);
+
+          if (saveDoc) {
             var saveParsed = docToJson(saveDoc);
-            faction = buildFactionFromSave(pf.id, saveParsed, pf.npc);
-          } catch (err) {
-            console.warn('Failed to load faction save for ' + pf.id + ', falling back to default:', safeErr(err));
+            if (saveParsed) {
+              console.log('✅ Parsed faction save for ' + pf.id + ', keys:', Object.keys(saveParsed).join(', '));
+              faction = buildFactionFromSave(pf.id, saveParsed, pf.npc);
+            } else {
+              console.warn('⚠️ docToJson returned null for ' + pf.id + ' save — falling back to default');
+            }
+          } else {
+            console.warn('⚠️ safeLoadDocument returned null for ' + pf.id + ' — falling back to default');
+          }
+
+          if (!faction) {
+            // Save load failed or produced no usable data.
+            // Clear the assignment and silently fall back to GitHub JSON.
             assign = null;
           }
         }
 
         if (!faction) {
           // Default: load from GitHub faction JSON
+          console.log('📦 Loading default GitHub data for ' + pf.id);
           var fData = await loadFactionData(pf.id);
           faction = fData
             ? buildFactionEntry(pf.id, fData, pf.npc, meta.isMonster)
@@ -1748,8 +1734,7 @@ window.CC_APP = {
       window.CC_TC.beginGame();
     };
 
-
-    // ── TERRAIN SETUP HANDLERS ─────────────────────────────────────────────────
+    // ── TERRAIN SETUP HANDLERS ────────────────────────────────────────────────
 
     window.CC_TC.logTerrainPlace = function(label, icon) {
       var factions   = state.factions;
@@ -1772,16 +1757,16 @@ window.CC_APP = {
     };
 
     window.CC_TC.beginGame = function() {
-      state.round         = 0;          // 0 = terrain setup phase
+      state.round         = 0;
       state.unitState     = {};
       state.noiseLevel    = 0;
       state.roundLog      = [];
       state.allRoundLogs  = [];
       state.coughSeverity = 0;
       state.monstersTriggered = 0;
-      state.setupTurnIndex    = 0;      // whose turn it is to place terrain
+      state.setupTurnIndex    = 0;
       state.factions.forEach(function(f) { initUnitStates(f); });
-      state.phase = 'setup_round';      // terrain placement before round 1
+      state.phase = 'setup_round';
       render();
     };
 
@@ -1914,7 +1899,7 @@ window.CC_APP = {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // INLINE KEYFRAME STYLES (injected once)
+    // INLINE KEYFRAME STYLES
     // ═══════════════════════════════════════════════════════════════════════════
 
     if (!document.getElementById('cc-tc-keyframes')) {
@@ -1932,11 +1917,10 @@ window.CC_APP = {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // BOOT — 5-second splash, then setup
+    // BOOT
     // ═══════════════════════════════════════════════════════════════════════════
 
     const MIN_SPLASH_MS = 3000;
-    const _bootStart    = Date.now();
 
     render(); // Shows splash immediately
 
