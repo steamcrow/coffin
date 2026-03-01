@@ -79,6 +79,29 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
   window.addEventListener('unhandledrejection', function ccRejectionGuard(event) {
     var reason = event.reason;
 
+    // ── Odoo-internal Bootstrap dropdown error ────────────────────────────────
+    // Odoo's nav menu throws "DROPDOWN: Option autoClose provided type null"
+    // when you hover their own menus. It's entirely inside Odoo's own assets.
+    // We can't fix it, but we can stop it from crashing Odoo's own handleError.
+    if (reason instanceof Error && reason.message &&
+        reason.message.indexOf('DROPDOWN') !== -1) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      return; // silently swallow — it's Odoo's own bug
+    }
+
+    // ── Any error whose stack only references Odoo's own bundled assets ───────
+    // These are Odoo-internal errors we have no control over.
+    if (reason instanceof Error &&
+        typeof reason.stack === 'string' &&
+        reason.stack.indexOf('assets_frontend_lazy') !== -1 &&
+        reason.stack.indexOf('cc_app_') === -1) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      console.warn('[CC] Swallowed Odoo-internal error:', reason.message);
+      return;
+    }
+
     // The only case Odoo can handle safely: a proper Error with a real .stack.
     if (reason instanceof Error &&
         typeof reason.stack === 'string' &&
@@ -98,10 +121,8 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
       } else if (typeof reason === 'string') {
         msg += reason;
       } else if (reason instanceof Error) {
-        // Error with no stack — still log the message
         msg += reason.message || reason.toString();
       } else if (typeof reason === 'object') {
-        // Odoo RPC errors: {message, data, code, ...}
         msg += reason.message || reason.data || JSON.stringify(reason);
       } else {
         msg += String(reason);
@@ -111,7 +132,6 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
     }
 
     console.warn(msg, reason);
-    // Do NOT re-throw — that creates another unhandled rejection.
   }, { capture: true });
 
   console.log('🛡️ Rejection guard installed');
