@@ -182,23 +182,41 @@ window.CC_APP = {
     }
 
     // Backstop: Odoo's unhandledrejection handler crashes when the rejection
-    // reason is not a proper Error (no .stack property). Intercept first and
-    // normalize so Odoo never sees a raw string, object, or undefined.
+    // reason has no .stack property (plain string, object, undefined, etc).
+    // We register with { capture: true } so our handler runs in the CAPTURE
+    // phase — which always fires before bubble-phase listeners (like Odoo's)
+    // regardless of registration order.
     (function() {
+      if (window._ccRejectionGuardInstalled) return; // only install once
+      window._ccRejectionGuardInstalled = true;
+
       function ccNormalizeRejection(event) {
         var reason = event.reason;
-        if (reason instanceof Error) return; // already fine — let Odoo handle it
-        // Convert to a real Error so .stack exists
-        var msg = reason == null ? 'Unhandled rejection'
-                : typeof reason === 'string' ? reason
-                : (reason.message || JSON.stringify(reason) || 'Unhandled rejection');
-        var err = new Error('[CC] ' + msg);
-        // Stop Odoo from seeing the original bad reason
+        // If it's already a proper Error with a stack, Odoo can handle it fine
+        if (reason instanceof Error && typeof reason.stack === 'string') return;
+
+        // Build a safe message from whatever we got
+        var msg;
+        try {
+          msg = reason == null        ? 'Unhandled promise rejection'
+              : typeof reason === 'string' ? reason
+              : reason.message         ? String(reason.message)
+              : JSON.stringify(reason);
+        } catch (_) {
+          msg = 'Unhandled promise rejection';
+        }
+
+        // Block Odoo's handler from seeing the bad reason
         event.preventDefault();
-        // Re-throw as a proper Error after a tick so it shows in the console
+        event.stopImmediatePropagation();
+
+        // Re-throw as a real Error so it still appears in the console
+        var err = new Error('[CC App] ' + msg);
         setTimeout(function() { throw err; }, 0);
       }
-      window.addEventListener('unhandledrejection', ccNormalizeRejection);
+
+      // capture:true = fires before all bubble-phase listeners (including Odoo's)
+      window.addEventListener('unhandledrejection', ccNormalizeRejection, { capture: true });
     }());
 
 
