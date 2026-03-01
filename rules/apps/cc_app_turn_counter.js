@@ -24,6 +24,64 @@
 
 console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// EARLY REJECTION GUARD — installed IMMEDIATELY when this script loads,
+// before any async work begins.
+//
+// Odoo's handleError does: error.stack.split(...)
+// If the rejection reason is a plain string, null, undefined, or an Odoo RPC
+// error object ({message, data, code}), then .stack doesn't exist and Odoo
+// crashes with "undefined is not an object (evaluating 'error.stack.split')".
+//
+// We intercept every unhandled rejection. If it's a proper Error with a real
+// string .stack, we let Odoo handle it. Everything else we swallow safely.
+// ═══════════════════════════════════════════════════════════════════════════════
+(function installCCRejectionGuard() {
+  if (window._ccRejectionGuardInstalled) return;
+  window._ccRejectionGuardInstalled = true;
+
+  window.addEventListener('unhandledrejection', function ccRejectionGuard(event) {
+    var reason = event.reason;
+
+    // Only let through: real Error objects that have a non-empty string .stack.
+    // Those are the only ones Odoo's handler can safely process.
+    if (reason instanceof Error &&
+        typeof reason.stack === 'string' &&
+        reason.stack.length > 0) {
+      return;
+    }
+
+    // Everything else (null, undefined, string, plain object, Error without
+    // stack) will crash Odoo. Stop the event here.
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+    // Build a safe log message from whatever the rejection reason was
+    var msg = '[CC] Caught unhandled rejection: ';
+    try {
+      if (reason === null || reason === undefined) {
+        msg += '(null/undefined)';
+      } else if (typeof reason === 'string') {
+        msg += reason;
+      } else if (reason instanceof Error) {
+        msg += reason.message || reason.toString();
+      } else if (typeof reason === 'object') {
+        // Odoo RPC errors arrive as plain objects: {message, data, code, ...}
+        msg += reason.message || reason.data || JSON.stringify(reason);
+      } else {
+        msg += String(reason);
+      }
+    } catch (_) {
+      msg += '(could not read reason)';
+    }
+
+    console.warn(msg, reason);
+    // Do NOT re-throw here — that would create another unhandled rejection.
+  }, { capture: true });
+
+  console.log('🛡️ CC rejection guard installed');
+}());
+
 window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Turn Counter init", ctx);
@@ -266,25 +324,8 @@ window.CC_APP = {
       }
     }
 
-    // Rejection guard — backup handler for any unhandled promise rejections.
-    (function() {
-      if (window._ccRejectionGuardInstalled) return;
-      window._ccRejectionGuardInstalled = true;
-      window.addEventListener('unhandledrejection', function(event) {
-        var reason = event.reason;
-        if (reason instanceof Error && typeof reason.stack === 'string') return;
-        var msg;
-        try {
-          msg = reason == null ? 'Unhandled promise rejection'
-              : typeof reason === 'string' ? reason
-              : reason.message ? String(reason.message)
-              : JSON.stringify(reason);
-        } catch(_) { msg = 'Unhandled promise rejection'; }
-        event.preventDefault();
-        event.stopImmediatePropagation();
-        setTimeout(function() { throw new Error('[CC] ' + msg); }, 0);
-      }, { capture: true });
-    }());
+    // Rejection guard is installed at file level (top of this script),
+    // before init() runs. Nothing to do here.
 
 
     function getUnitState(factionId, unitId) {
