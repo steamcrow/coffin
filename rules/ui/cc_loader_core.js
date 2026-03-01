@@ -80,7 +80,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   // ── Launcher ─────────────────────────────────────────────────────────────────
 
   function renderLauncher() {
-    console.log('🚀 cc_loader_core boot()');
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
 
@@ -279,14 +278,66 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   }
 
   // ── Boot ─────────────────────────────────────────────────────────────────────
-  // If a data-cc-app is already set on the root (direct link), load that app.
-  // Otherwise show the launcher.
+  // Show the Coffin Canyon preloader for 2 seconds, then launch.
 
-  var existingRoot = document.getElementById('cc-app-root');
-  if (existingRoot && existingRoot.dataset.ccApp) {
-    loadApp(existingRoot.dataset.ccApp);
-  } else {
-    renderLauncher();
+  var LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png';
+  var MIN_PRELOAD_MS = 2000;
+
+  function showPreloader() {
+    var root = document.getElementById('cc-master-shell-root');
+    if (!root) return;
+    root.innerHTML = '<div id="cc-preloader" style="'
+      + 'min-height:100vh;display:flex;flex-direction:column;'
+      + 'align-items:center;justify-content:center;'
+      + 'background:#0a0a0a;gap:2rem;">'
+      + '<img src="' + LOGO_URL + '" alt="Coffin Canyon"'
+      + ' style="width:260px;max-width:70vw;'
+      + 'filter:drop-shadow(0 0 28px rgba(255,117,24,.5));'
+      + 'animation:cc-pulse 2s ease-in-out infinite;"/>'
+      // Progress bar track
+      + '<div style="width:260px;max-width:70vw;height:4px;'
+      + 'background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;">'
+      + '<div id="cc-preload-bar" style="height:100%;width:0%;'
+      + 'background:#ff7518;border-radius:2px;'
+      + 'transition:width ' + (MIN_PRELOAD_MS / 1000) + 's linear;"></div>'
+      + '</div>'
+      + '<div style="color:#ff7518;font-size:.7rem;letter-spacing:.28em;'
+      + 'text-transform:uppercase;animation:cc-pulse 1.5s ease-in-out infinite;">'
+      + 'Loading…</div>'
+      + '</div>';
+
+    // Inject keyframes if not present
+    if (!document.getElementById('cc-preloader-keyframes')) {
+      var s = document.createElement('style');
+      s.id = 'cc-preloader-keyframes';
+      s.textContent = '@keyframes cc-pulse{0%,100%{opacity:.55}50%{opacity:1}}';
+      document.head.appendChild(s);
+    }
+
+    // Kick off the progress bar animation on next frame
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        var bar = document.getElementById('cc-preload-bar');
+        if (bar) bar.style.width = '100%';
+      });
+    });
   }
+
+  function boot() {
+    console.log('🚀 cc_loader_core boot()');
+    showPreloader();
+    setTimeout(function () {
+      var preloader = document.getElementById('cc-preloader');
+      if (preloader) {
+        preloader.style.transition = 'opacity .4s ease';
+        preloader.style.opacity = '0';
+        setTimeout(renderLauncher, 400);
+      } else {
+        renderLauncher();
+      }
+    }, MIN_PRELOAD_MS);
+  }
+
+  boot();
 
 }());
