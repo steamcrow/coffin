@@ -167,8 +167,9 @@ window.CC_APP = {
       lastEventRound: 0,
 
       // Setup helpers
-      setupMode:    null,    // 'scenario' | 'quick'
-      loadingData:  false,
+      setupMode:       null,    // 'scenario' | 'quick'
+      loadingData:     false,
+      setupTurnIndex:  0,       // whose turn during Round 0 terrain placement
     };
 
     // ── Unit state key ────────────────────────────────────────────────────────
@@ -271,33 +272,46 @@ window.CC_APP = {
     }
 
     // Build the activation queue for a round.
-    // Monsters activate first; then alternate human/monster one model at a time.
+    //
+    // COLUMN-FIRST ROTATION — units activate by slot number across all factions.
+    // Example with 3 factions (Monsters, Rangers, Liberty Corps):
+    //   Slot 1: Monsters #1 → Rangers #1 → Liberty #1
+    //   Slot 2: Monsters #2 → Rangers #2 → Liberty #2
+    //   ...and so on until every active unit has acted.
+    //
+    // NPCs are treated exactly like player factions — just another column.
+    // If a faction has fewer units than another, its column ends early (no blank turns).
     function buildQueue() {
-      const monsterUnits = [];
-      const humanUnits   = [];
-
-      state.factions.forEach(f => {
-        const active = getActiveUnits(f);
-        active.forEach(u => {
-          (f.isMonster ? monsterUnits : humanUnits).push({ factionId: f.id, unitId: u.id });
-        });
+      // Collect active units per faction, preserving faction order.
+      // Factions are already ordered by state.factions (set at game start).
+      var columns = state.factions.map(function(f) {
+        return {
+          factionId: f.id,
+          units: getActiveUnits(f).map(function(u) { return u.id; })
+        };
       });
 
-      // Interleave: monsters first, then alternate
-      const queue = [];
-      let mi = 0, hi = 0;
-      while (mi < monsterUnits.length || hi < humanUnits.length) {
-        if (mi < monsterUnits.length) queue.push(monsterUnits[mi++]);
-        if (hi < humanUnits.length)   queue.push(humanUnits[hi++]);
+      // Find the max column length (longest faction roster this round)
+      var maxLen = 0;
+      columns.forEach(function(col) { if (col.units.length > maxLen) maxLen = col.units.length; });
+
+      // Walk slot 1 across all factions, then slot 2, etc.
+      var queue = [];
+      for (var slot = 0; slot < maxLen; slot++) {
+        columns.forEach(function(col) {
+          if (slot < col.units.length) {
+            queue.push({ factionId: col.factionId, unitId: col.units[slot] });
+          }
+        });
       }
 
       state.queue      = queue;
       state.queueIndex = 0;
 
-      // Reset activated flags
-      state.factions.forEach(f => {
-        f.allUnits.forEach(u => {
-          const k = unitKey(f.id, u.id);
+      // Reset activated flags for all units
+      state.factions.forEach(function(f) {
+        f.allUnits.forEach(function(u) {
+          var k = unitKey(f.id, u.id);
           if (state.unitState[k]) state.unitState[k].activated = false;
         });
       });
@@ -1092,6 +1106,100 @@ window.CC_APP = {
     // ═══════════════════════════════════════════════════════════════════════════
 
 
+
+    // =========================================================================
+    // RENDER: ROUND 0 — TERRAIN SETUP
+    // =========================================================================
+    // Players alternate placing one terrain piece per turn.
+    // Factions rotate in order (same order as activation).
+    // Tap what you placed, or Pass. When the board is ready, Begin Round 1.
+
+    function renderSetupRound() {
+      var factions       = state.factions;
+      var turnIdx        = state.setupTurnIndex % Math.max(factions.length, 1);
+      var activeFaction  = factions[turnIdx] || factions[0];
+      var color          = activeFaction ? activeFaction.color : '#888';
+      var fname          = activeFaction ? activeFaction.name  : '?';
+      var isNPC          = activeFaction && activeFaction.isNPC;
+
+      var terrainTypes = [
+        { icon: '🪵', label: 'Boardwalk',     note: 'Elevated walkway, +1 height' },
+        { icon: '🏚',  label: 'Building',      note: 'Blocks LOS, can be entered' },
+        { icon: '💎', label: 'Thyr Crystal',  note: 'Magical resource — mark it' },
+        { icon: '📍', label: 'Objective',      note: 'Scoring marker' },
+        { icon: '🪨', label: 'Rocky Outcrop', note: 'Difficult terrain, partial cover' },
+        { icon: '🌵', label: 'Canyon Brush',  note: 'Light cover, passable' },
+        { icon: '⛺', label: 'Ruin / Debris', note: 'Narrative terrain' },
+        { icon: '🚧', label: 'Barricade',      note: 'Low cover, blocks movement' },
+      ];
+
+      var terrainButtons = terrainTypes.map(function(t) {
+        return '<button onclick="window.CC_TC.logTerrainPlace(' + JSON.stringify(t.label) + ',' + JSON.stringify(t.icon) + ')" ' +
+          'class="cc-btn cc-btn-secondary" ' +
+          'style="text-align:left;display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;">' +
+          '<span style="font-size:1.3rem;flex-shrink:0;">' + t.icon + '</span>' +
+          '<span><strong>' + t.label + '</strong> ' +
+          '<span style="color:#666;font-size:.78rem;">' + t.note + '</span></span>' +
+          '</button>';
+      }).join('');
+
+      var logHtml = state.roundLog.length
+        ? '<ul style="list-style:none;margin:0;padding:0;">' +
+          state.roundLog.map(function(l) {
+            return '<li style="color:#aaa;font-size:.82rem;padding:.25rem 0;border-bottom:1px solid rgba(255,255,255,.04);">' + l + '</li>';
+          }).join('') + '</ul>'
+        : '<p style="color:#555;font-size:.85rem;margin:0;">Nothing placed yet.</p>';
+
+      root.innerHTML =
+        '<div class="cc-app-shell h-100">' +
+        '<div class="cc-app-header">' +
+        '<div style="display:flex;align-items:center;gap:.75rem;">' +
+        logoHtml(activeFaction, 32) +
+        '<div>' +
+        '<div style="color:' + color + ';font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">' + fname + '</div>' +
+        '<div style="color:#888;font-size:.7rem;">Round 0 &mdash; Terrain Setup &mdash; Turn ' + (state.setupTurnIndex + 1) + '</div>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+
+        '<div style="max-width:600px;margin:0 auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;">' +
+
+        // Active faction prompt
+        '<div style="background:' + color + '18;border:2px solid ' + color + ';border-radius:8px;padding:1rem;">' +
+        '<div style="font-size:1.15rem;font-weight:700;color:' + color + ';margin-bottom:.35rem;">' +
+        fname + (isNPC ? ' (NPC)' : '') + '</div>' +
+        (isNPC
+          ? '<p style="color:#aaa;font-size:.85rem;margin:0;">NPC turn &mdash; roll a die: 1&ndash;2 = Boardwalk, 3&ndash;4 = Objective, 5 = Thyr Crystal, 6 = Building. Place it, then log it.</p>'
+          : '<p style="color:#aaa;font-size:.85rem;margin:0;">Place one terrain piece anywhere on the board, then tap what you placed below.</p>') +
+        '</div>' +
+
+        // Terrain picker
+        '<div class="cc-panel">' +
+        '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">What did you place?</h5></div>' +
+        '<div class="cc-panel-body" style="display:flex;flex-direction:column;gap:.4rem;">' +
+        terrainButtons +
+        '</div></div>' +
+
+        '<button onclick="window.CC_TC.skipTerrainTurn()" class="cc-btn cc-btn-secondary" style="width:100%;">' +
+        'Pass &mdash; no placement this turn</button>' +
+
+        // Placement log
+        '<div class="cc-panel">' +
+        '<div class="cc-panel-header">' +
+        '<h5 style="margin:0;color:var(--cc-text);">Board So Far</h5>' +
+        '</div>' +
+        '<div class="cc-panel-body">' + logHtml + '</div>' +
+        '</div>' +
+
+        // Begin Round 1
+        '<div style="margin-top:.25rem;">' +
+        '<button onclick="window.CC_TC.beginRound1()" class="cc-btn" style="width:100%;padding:.85rem;font-size:1rem;">' +
+        'Terrain is Set &mdash; Begin Round 1 &rarr;</button>' +
+        '</div>' +
+
+        '</div></div>';
+    }
+
     // =========================================================================
     // RENDER: FACTION SETUP
     // =========================================================================
@@ -1176,6 +1284,7 @@ window.CC_APP = {
         case 'splash':       return renderSplash();
         case 'setup':        return renderSetup();
         case 'quick_setup':   return renderQuickSetup();
+        case 'setup_round':   return renderSetupRound();
         case 'faction_setup': return renderFactionSetup();
         case 'round_banner': return renderRoundBanner();
         case 'activation':   return renderActivation();
@@ -1400,12 +1509,45 @@ window.CC_APP = {
       window.CC_TC.beginGame();
     };
 
+
+    // ── TERRAIN SETUP HANDLERS ─────────────────────────────────────────────────
+
+    window.CC_TC.logTerrainPlace = function(label, icon) {
+      var factions   = state.factions;
+      var turnIdx    = state.setupTurnIndex % Math.max(factions.length, 1);
+      var faction    = factions[turnIdx];
+      var fname      = faction ? faction.name : 'Unknown';
+      state.roundLog.push(icon + ' ' + fname + ' placed: ' + label);
+      state.setupTurnIndex++;
+      render();
+    };
+
+    window.CC_TC.skipTerrainTurn = function() {
+      var factions = state.factions;
+      var turnIdx  = state.setupTurnIndex % Math.max(factions.length, 1);
+      var faction  = factions[turnIdx];
+      var fname    = faction ? faction.name : 'Unknown';
+      state.roundLog.push('— ' + fname + ' passed.');
+      state.setupTurnIndex++;
+      render();
+    };
+
     window.CC_TC.beginGame = function() {
-      state.round      = 1;
-      state.unitState  = {};
-      state.noiseLevel = 0;
-      state.roundLog   = [];
+      state.round         = 0;          // 0 = terrain setup phase
+      state.unitState     = {};
+      state.noiseLevel    = 0;
+      state.roundLog      = [];
+      state.allRoundLogs  = [];
+      state.coughSeverity = 0;
+      state.monstersTriggered = 0;
+      state.setupTurnIndex    = 0;      // whose turn it is to place terrain
       state.factions.forEach(function(f) { initUnitStates(f); });
+      state.phase = 'setup_round';      // terrain placement before round 1
+      render();
+    };
+
+    window.CC_TC.beginRound1 = function() {
+      state.round = 1;
       buildQueue();
       state.phase = 'round_banner';
       render();
