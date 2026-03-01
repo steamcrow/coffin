@@ -9,15 +9,15 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 
   var COMPONENTS_JS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_components.js';
   var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/rules_helpers.js';
-  var RULES_BASE    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/rules_base.json';
+  var RULES_BASE    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/rules_base.json';
   var APPS_BASE     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/';
 
   var APPS = {
-    faction_builder:  { title: 'Faction Builder',  icon: '⚔️',  description: 'Build your roster',   file: 'cc_app_faction_builder.js'  },
-    scenario_builder: { title: 'Scenario Builder', icon: '🎲',  description: 'Generate scenarios',  file: 'cc_app_scenario_builder.js' },
-    rules_explorer:   { title: 'Rules Explorer',   icon: '📘',  description: 'Browse game rules',   file: 'cc_app_rules_explorer.js'   },
-    canyon_map:       { title: 'Canyon Map',        icon: '🗺️', description: 'Interactive map',     file: 'cc_app_canyon_map.js'       },
-    turn_counter:     { title: 'Turn Counter',     icon: '⏱️',  description: 'Run your game',       file: 'turn_counter.js'            }
+    faction_builder:  { title: 'Faction Builder',  icon: 'fa-shield',      description: 'Build your roster',  file: 'cc_app_faction_builder.js'  },
+    scenario_builder: { title: 'Scenario Builder', icon: 'fa-map-signs',   description: 'Generate scenarios', file: 'cc_app_scenario_builder.js' },
+    rules_explorer:   { title: 'Rules Explorer',   icon: 'fa-book',        description: 'Browse game rules',  file: 'cc_app_rules_explorer.js'   },
+    canyon_map:       { title: 'Canyon Map',        icon: 'fa-map',         description: 'Interactive map',    file: 'cc_app_canyon_map.js'       },
+    turn_counter:     { title: 'Turn Counter',     icon: 'fa-hourglass-half', description: 'Run your game',   file: 'turn_counter.js'            }
   };
 
   var currentApp = null;
@@ -87,7 +87,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       var app = APPS[id];
       return '<div class="cc-panel app-card" data-app-id="' + id + '" style="cursor:pointer;transition:all .2s ease;">'
         + '<div class="cc-panel-body" style="text-align:center;padding:2rem;">'
-        + '<div style="font-size:4rem;margin-bottom:1rem;">' + app.icon + '</div>'
+        + '<div style="font-size:3rem;margin-bottom:1rem;color:var(--cc-primary);"><i class="fa ' + app.icon + '"></i></div>'
         + '<h3 style="color:var(--cc-primary);margin:0 0 .5rem;font-size:1.3rem;">' + app.title + '</h3>'
         + '<p style="color:var(--cc-text-muted);margin:0 0 1.5rem;">' + app.description + '</p>'
         + '<button class="cc-btn cc-btn-block">Launch App →</button>'
@@ -194,8 +194,15 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     console.log('📦 Loading rules helpers');
     loadScriptViaBlob(RULES_HELPERS)
       .then(function () {
-        console.log('📦 Loading rules_base.json');
-        return fetch(RULES_BASE + '?t=' + Date.now()).then(function (r) { return r.json(); });
+        console.log('📦 Loading rules_base.json (optional)');
+        return fetch(RULES_BASE + '?t=' + Date.now())
+          .then(function (r) {
+            if (!r.ok) { console.warn('rules_base.json not found — continuing without it'); return {}; }
+            return r.text().then(function(t) {
+              try { return JSON.parse(t); } catch(e) { console.warn('rules_base.json parse failed:', e.message); return {}; }
+            });
+          })
+          .catch(function () { return {}; });
       })
       .then(function (rulesBase) {
         var helpers = window.createRulesHelpers ? window.createRulesHelpers(rulesBase) : {};
