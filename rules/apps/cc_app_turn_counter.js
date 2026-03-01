@@ -295,6 +295,54 @@ window.CC_APP = {
                allUnits: units, deployIndex: 0 };
     }
 
+    // Build a faction entry from a Faction Builder cloud save.
+    //
+    // The faction builder saves in this shape (from saveToCloud / exportRoster):
+    //   { name, faction, budget, totalCost, roster: [ {unitName, name, type,
+    //     quality, defense, move, range, weapon, abilities, config, totalCost} ] }
+    //
+    // All stats are already in the save — no GitHub fetch needed.
+    // Each roster item is already one unit (quantity = 1 in the builder).
+    function buildFactionFromSave(factionId, saveData, isNPC) {
+      var meta    = FACTION_META[factionId] || {};
+      var color   = meta.color    || '#888';
+      var name    = meta.name     || factionId;
+      var isMonster = meta.isMonster || false;
+
+      // saveData must exist and have a roster array
+      if (!saveData || !Array.isArray(saveData.roster) || !saveData.roster.length) {
+        console.warn('buildFactionFromSave: no usable roster in save for ' + factionId);
+        return null;   // caller falls back to GitHub default
+      }
+
+      var allUnits = saveData.roster.map(function(item, i) {
+        // The faction builder stores stats directly on each roster item
+        return {
+          id:       item.id       || ('saved_' + i),
+          name:     item.name     || item.unitName || ('Unit ' + (i + 1)),
+          quality:  item.quality  || 4,
+          move:     item.move     || 6,
+          combat:   item.combat   || null,
+          shoot:    item.range    || item.shoot    || null,   // builder uses 'range'
+          armor:    item.defense  || item.armor    || null,   // builder uses 'defense'
+          cost:     item.totalCost || item.cost    || null,
+          special:  item.abilities || [],
+          isTitan:  item.isTitan  || false,
+        };
+      });
+
+      return {
+        id:         factionId,
+        name:       saveData.name || name,   // use the saved roster name if present
+        color:      color,
+        isMonster:  isMonster,
+        isNPC:      isNPC,
+        logoUrl:    LOGO_BASE + factionId + '_logo.svg',
+        allUnits:   allUnits,
+        deployIndex: 0,
+      };
+    }
+
     // Initialise unitState for all active units in a faction
     function initUnitStates(faction) {
       faction.allUnits.forEach(u => {
@@ -1600,7 +1648,7 @@ window.CC_APP = {
           try {
             var saveDoc  = await window.CC_STORAGE.loadDocument(assign.docId);
             var saveParsed = safeParseJson(saveDoc.json);
-            faction = await buildFactionFromSave(pf.id, saveParsed, pf.npc);
+            faction = buildFactionFromSave(pf.id, saveParsed, pf.npc);
           } catch (err) {
             console.warn('Failed to load faction save for ' + pf.id + ', falling back to default:', safeErr(err));
             assign = null;
