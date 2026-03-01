@@ -295,29 +295,33 @@ window.CC_APP = {
     // If a faction has fewer units than another, its column ends early (no blank turns).
     function buildQueue() {
 
-      // ── Step 1: total cost per faction (active units only) ──────────────────
-      function factionCost(f) {
-        return getActiveUnits(f).reduce(function(sum, u) { return sum + (u.cost || 0); }, 0);
+      // ── Step 1: separate monsters from everyone else ────────────────────────
+      var monsterFactions = state.factions.filter(function(f) { return f.isMonster; });
+      var otherFactions   = state.factions.filter(function(f) { return !f.isMonster; });
+
+      // ── Step 2: shuffle the non-monster factions (random each round) ────────
+      for (var i = otherFactions.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var tmp = otherFactions[i]; otherFactions[i] = otherFactions[j]; otherFactions[j] = tmp;
       }
 
-      // ── Step 2: sort factions lowest-cost first ─────────────────────────────
-      var sortedFactions = state.factions.slice().sort(function(a, b) {
-        return factionCost(a) - factionCost(b);
-      });
+      // Final order: all monster factions first, then shuffled others
+      var orderedFactions = monsterFactions.concat(otherFactions);
 
-      // ── Step 3: within each faction sort units cheapest first ───────────────
-      var columns = sortedFactions.map(function(f) {
+      // ── Step 3: within each faction, sort active units cheapest first ───────
+      var columns = orderedFactions.map(function(f) {
         var active = getActiveUnits(f).slice().sort(function(a, b) {
           return (a.cost != null ? a.cost : 9999) - (b.cost != null ? b.cost : 9999);
         });
-        var tc = factionCost(f);
+        var totalCost = active.reduce(function(s, u) { return s + (u.cost || 0); }, 0);
         return {
           factionId:   f.id,
           factionName: f.name,
-          totalCost:   tc,
+          isMonster:   f.isMonster,
+          totalCost:   totalCost,
           units:       active.map(function(u) { return u.id; })
         };
-      });
+      }).filter(function(col) { return col.units.length > 0; });
 
       // ── Step 4: column-first interleave ────────────────────────────────────
       var maxLen = 0;
@@ -335,7 +339,7 @@ window.CC_APP = {
       state.queue           = queue;
       state.queueIndex      = 0;
       state.activationOrder = columns.map(function(c) {
-        return { factionId: c.factionId, name: c.factionName, totalCost: c.totalCost };
+        return { factionId: c.factionId, name: c.factionName, totalCost: c.totalCost, isMonster: c.isMonster };
       });
 
       // Reset activated flags
@@ -779,21 +783,24 @@ window.CC_APP = {
     function renderRoundBanner() {
       const totalActivations = state.queue.length;
 
-      // Build activation order strip (lowest points → highest points)
+      // Build activation order strip — monsters pinned first, others randomized
       const orderStrip = state.activationOrder.map(function(ao, idx) {
         var f = getFactionById(ao.factionId);
         if (!f) return '';
         var active = getActiveUnits(f);
         if (!active.length) return '';
         var color = f.color;
+        var badge = ao.isMonster
+          ? '<span style="font-size:.65rem;color:#ff7518;font-weight:700;margin-left:.25rem;">FIRST</span>'
+          : (idx === 1 ? '<span style="font-size:.65rem;color:#888;margin-left:.25rem;">🎲</span>' : '');
         return '<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;' +
-          'border:1px solid ' + color + '44;border-radius:6px;background:' + color + '0d;">' +
+          'border:1px solid ' + color + (ao.isMonster ? '88' : '44') + ';border-radius:6px;background:' + color + (ao.isMonster ? '1a' : '0d') + ';">' +
           '<span style="color:#555;font-size:.7rem;font-weight:700;min-width:1rem;">' + (idx+1) + '</span>' +
           logoHtml(f, 22) +
-          '<div style="text-align:left;">' +
-          '<div style="color:' + color + ';font-size:.75rem;font-weight:700;">' + f.name + '</div>' +
+          '<div style="text-align:left;flex:1;">' +
+          '<div style="color:' + color + ';font-size:.75rem;font-weight:700;">' + f.name + badge + '</div>' +
           '<div style="color:#666;font-size:.65rem;">' + active.length + ' unit' + (active.length !== 1 ? 's' : '') +
-          (ao.totalCost ? ' &middot; ' + ao.totalCost + ' pts' : '') + '</div>' +
+          (ao.totalCost ? ' &middot; ' + ao.totalCost + ' pts' : '') + ' &middot; cheapest first</div>' +
           '</div>' +
           '</div>';
       }).join('');
@@ -808,7 +815,7 @@ window.CC_APP = {
         // Activation order — lowest pts first
         (orderStrip
           ? '<div style="margin-bottom:1.25rem;">' +
-            '<div style="font-size:.7rem;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;">Activation Order — Lowest Points First</div>' +
+            '<div style="font-size:.7rem;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;">Activation Order &mdash; Monsters First, then Randomized &mdash; Units: Cheapest to Costliest</div>' +
             '<div style="display:flex;flex-direction:column;gap:.3rem;">' + orderStrip + '</div>' +
             '</div>'
           : '') +
