@@ -1716,7 +1716,7 @@ window.CC_APP = {
           .trim();
         var pts     = d._totalPoints ? ' — ' + d._totalPoints + ' pts' : '';
         var faction = d._factionName ? ' (' + d._factionName + ')' : '';
-        return '<button onclick="window.CC_TC.selectFactionSave(\'' + factionId + '\',' + d.id + ',' + JSON.stringify(d.name || String(d.id)) + ')" ' +
+        return '<button onclick="window.CC_TC.selectFactionSave(\'' + factionId + '\',' + d.id + ')" ' +
           'class="cc-btn cc-btn-secondary" ' +
           'style="width:100%;margin-bottom:.4rem;text-align:left;display:flex;justify-content:space-between;align-items:center;">' +
           '<span>' + label + faction + '</span>' +
@@ -1738,7 +1738,15 @@ window.CC_APP = {
       document.body.appendChild(overlay);
     };
 
-    window.CC_TC.selectFactionSave = function(factionId, docId, docName) {
+    window.CC_TC.selectFactionSave = function(factionId, docId) {
+      // Look up the doc name from state instead of injecting it through HTML onclick.
+      // (Injecting d.name via JSON.stringify into a double-quoted HTML attribute
+      // breaks if the name contains quotes — the onclick gets truncated mid-JS.)
+      var doc = (state.factionSaveList || []).find(function(d) { return d.id === docId; });
+      var docName = (doc && (doc.name || doc._armyName || doc._factionName))
+        ? (doc.name || doc._armyName || doc._factionName)
+        : String(docId);
+
       state.factionAssignments[factionId] = { docId: docId, docName: docName };
       var picker = document.getElementById('cc-tc-save-picker');
       if (picker) picker.remove();
