@@ -1,0 +1,342 @@
+<div class="cc-app">
+  <div id="cc-master-shell-root" class="container-fluid" style="min-height: 100vh; padding: 0;"></div>
+</div>
+
+<script>
+(function () {
+  const CORE_CSS    = "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css";
+  const COMPONENTS_JS = "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_components.js";
+  const CORE_LOADER = "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_loader_core.js";
+
+  const APPS = {
+    faction_builder:  { title: 'Faction Builder',  icon: '⚔️', description: 'Build your roster'    },
+    scenario_builder: { title: 'Scenario Builder', icon: '🎲', description: 'Generate scenarios'   },
+    rules_explorer:   { title: 'Rules Explorer',   icon: '📘', description: 'Browse game rules'    },
+    canyon_map:       { title: 'Canyon Map',        icon: '🗺️', description: 'Interactive map'      },
+    turn_counter:     { title: 'Turn Counter',     icon: '⏱️', description: 'Run your game'       }
+  };
+
+  let currentApp  = null;
+  let CCComponents = null;
+
+  // ── Blob script / CSS helpers (unchanged — apps depend on this pattern) ────
+
+  async function loadScriptViaBlob(url) {
+    const res = await fetch(url + "?t=" + Date.now());
+    if (!res.ok) throw new Error("Fetch failed: " + url);
+    const code    = await res.text();
+    const blob    = new Blob([code], { type: "text/javascript" });
+    const blobUrl = URL.createObjectURL(blob);
+    return new Promise((resolve, reject) => {
+      const s   = document.createElement("script");
+      s.src     = blobUrl;
+      s.onload  = () => { URL.revokeObjectURL(blobUrl); resolve(); };
+      s.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error("Script failed: " + url)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  async function loadCss(url) {
+    const res = await fetch(url + "?t=" + Date.now());
+    if (!res.ok) throw new Error("CSS fetch failed: " + res.status);
+    const css   = await res.text();
+    const style = document.createElement("style");
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────────────────────
+
+  async function bootMasterShell() {
+    const root = document.getElementById("cc-master-shell-root");
+    if (!root) return console.error("❌ #cc-master-shell-root not found");
+
+    root.innerHTML = `
+      <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;
+                  background:#0a0a0a;color:#e8e8e8;font-family:Arial,sans-serif;">
+        <div style="text-align:center;">
+          <div style="font-size:4rem;margin-bottom:1rem;">🎮</div>
+          <h2 style="color:#ff7518;margin:0;">Loading Coffin Canyon…</h2>
+          <p style="color:#999;margin-top:.5rem;">Initializing</p>
+        </div>
+      </div>`;
+
+    try {
+      await loadCss(CORE_CSS);
+      await loadScriptViaBlob(COMPONENTS_JS);
+      if (typeof window.CCComponents === 'undefined') throw new Error("CCComponents not loaded");
+      CCComponents = window.CCComponents;
+      renderLauncher();
+    } catch (err) {
+      console.error("❌ Boot failed:", err);
+      root.innerHTML = `
+        <div style="min-height:100vh;padding:2rem;background:#0a0a0a;color:#e8e8e8;font-family:Arial,sans-serif;">
+          <div style="max-width:600px;margin:0 auto;background:#1a1a1a;border:2px solid #ef5350;
+                      border-radius:8px;padding:2rem;">
+            <h3 style="color:#ef5350;margin:0 0 1rem 0;">Failed to Load</h3>
+            <p style="color:#ffcdd2;font-family:monospace;background:#000;padding:1rem;
+                      border-radius:4px;">${err.message}</p>
+          </div>
+        </div>`;
+    }
+  }
+
+  // ── Launcher ─────────────────────────────────────────────────────────────────
+
+  function renderLauncher() {
+    const root = document.getElementById("cc-master-shell-root");
+    root.innerHTML = `
+      <div class="cc-app-shell" style="min-height:100vh;padding:2rem;">
+        <div style="max-width:1200px;margin:0 auto;">
+
+          <div style="text-align:center;margin-bottom:3rem;">
+            <h1 class="cc-app-title" style="font-size:clamp(2rem,5vw,3.5rem);margin-bottom:.5rem;">
+              Coffin Canyon
+            </h1>
+            <p class="cc-app-subtitle" style="font-size:1.2rem;">Choose an app to launch</p>
+          </div>
+
+          <div class="app-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+                                       gap:1.5rem;margin-bottom:2rem;">
+            ${Object.entries(APPS).map(([id, app]) => `
+              <div class="cc-panel app-card" data-app-id="${id}"
+                   style="cursor:pointer;transition:all 0.2s ease;">
+                <div class="cc-panel-body" style="text-align:center;padding:2rem;">
+                  <div style="font-size:4rem;margin-bottom:1rem;">${app.icon}</div>
+                  <h3 style="color:var(--cc-primary);margin:0 0 .5rem 0;font-size:1.3rem;">
+                    ${app.title}
+                  </h3>
+                  <p style="color:var(--cc-text-muted);margin:0 0 1.5rem 0;">${app.description}</p>
+                  <button class="cc-btn cc-btn-block">Launch App →</button>
+                </div>
+              </div>`).join('')}
+          </div>
+
+          <div style="text-align:center;padding-top:2rem;border-top:1px solid var(--cc-border);
+                      color:var(--cc-text-dim);font-size:.85rem;">
+            <p style="margin:0;">Master App Shell v1.0</p>
+          </div>
+
+        </div>
+      </div>`;
+
+    document.querySelectorAll('.app-card').forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        card.style.transform   = 'translateY(-4px)';
+        card.style.borderColor = 'var(--cc-primary)';
+      });
+      card.addEventListener('mouseleave', () => {
+        card.style.transform   = 'translateY(0)';
+        card.style.borderColor = '';
+      });
+      card.addEventListener('click', () => loadApp(card.dataset.appId));
+    });
+  }
+
+  // ── Home button injector ──────────────────────────────────────────────────────
+  // Apps call root.innerHTML = ... on every render(), wiping the button we
+  // injected. A MutationObserver watches #cc-app-root continuously and
+  // re-injects the button any time a re-render blows it away.
+
+  let _homeObserver = null;
+
+  function injectHomeButton() {
+    if (document.getElementById('cc-shell-home-btn')) return;
+    const header = document.querySelector('#cc-app-root .cc-app-header');
+    if (!header) return;
+
+    header.style.display        = header.style.display || 'flex';
+    header.style.alignItems     = header.style.alignItems || 'center';
+    header.style.justifyContent = 'space-between';
+
+    const btn = document.createElement('button');
+    btn.id        = 'cc-shell-home-btn';
+    btn.className = 'cc-btn cc-btn-ghost';
+    btn.style.cssText = 'margin-left:auto;flex-shrink:0;font-size:.8rem;padding:.35rem .75rem;opacity:.75;';
+    btn.innerHTML = '← Home';
+    btn.title     = 'Return to Coffin Canyon launcher';
+    btn.addEventListener('click', backToLauncher);
+    header.appendChild(btn);
+  }
+
+  function injectFloatingHomeButton() {
+    // Fallback for apps that don't use cc-app-header (e.g. Canyon Map).
+    // Places a small fixed button in the top-right corner of the viewport.
+    if (document.getElementById('cc-shell-home-btn')) return;
+    const btn = document.createElement('button');
+    btn.id        = 'cc-shell-home-btn';
+    btn.className = 'cc-btn cc-btn-ghost';
+    btn.style.cssText = [
+      'position:fixed',
+      'top:12px',
+      'right:16px',
+      'z-index:99999',
+      'font-size:.8rem',
+      'padding:.35rem .75rem',
+      'opacity:.8',
+      'box-shadow:0 2px 8px rgba(0,0,0,.5)'
+    ].join(';');
+    btn.innerHTML = '← Home';
+    btn.title     = 'Return to Coffin Canyon launcher';
+    btn.addEventListener('click', backToLauncher);
+    document.body.appendChild(btn);
+  }
+
+  function startHomeButtonObserver() {
+    if (_homeObserver) { _homeObserver.disconnect(); _homeObserver = null; }
+    const appRoot = document.getElementById('cc-app-root');
+    if (!appRoot) return;
+
+    // Try immediately in case the header is already rendered
+    injectHomeButton();
+
+    // Re-inject any time the app re-renders (innerHTML swap destroys the button)
+    _homeObserver = new MutationObserver(() => injectHomeButton());
+    _homeObserver.observe(appRoot, { childList: true, subtree: true });
+
+    // Fallback: if no cc-app-header appears within 8 seconds,
+    // the app has its own layout (e.g. Canyon Map) — use a floating button instead.
+    setTimeout(() => {
+      if (!document.getElementById('cc-shell-home-btn')) {
+        injectFloatingHomeButton();
+      }
+    }, 6000);
+  }
+
+  function stopHomeButtonObserver() {
+    if (_homeObserver) { _homeObserver.disconnect(); _homeObserver = null; }
+    // Also remove any floating fallback button (Canyon Map style)
+    const floating = document.getElementById('cc-shell-home-btn');
+    if (floating && floating.style.position === 'fixed') floating.remove();
+  }
+
+  // ── App loader ───────────────────────────────────────────────────────────────
+
+  async function loadApp(appId) {
+    if (!APPS[appId]) return console.error("Unknown app:", appId);
+
+    const root = document.getElementById("cc-master-shell-root");
+    currentApp = appId;
+
+    // Shell renders ONLY the app content area — no header of its own.
+    // The app will render its own cc-app-header; we inject the Home button into it.
+    root.innerHTML = `
+      <div class="cc-app-shell" style="min-height:100vh;">
+        <div id="cc-app-root" data-cc-app="${appId}" style="min-height:100vh;"></div>
+      </div>`;
+
+    // Start polling for the app's own header so we can add the Home button
+    startHomeButtonObserver();
+
+    try {
+      await loadScriptViaBlob(CORE_LOADER);
+    } catch (err) {
+      console.error("❌ Failed to load app:", err);
+      const appRoot = document.getElementById('cc-app-root');
+      if (appRoot) {
+        appRoot.innerHTML = `
+          <div class="cc-panel" style="margin:2rem auto;max-width:600px;">
+            <div class="cc-panel-header">
+              <h3 style="color:#ef5350;margin:0;">Failed to Load App</h3>
+            </div>
+            <div class="cc-panel-body">
+              <p style="color:var(--cc-text);">${err.message}</p>
+              <button class="cc-btn cc-btn-block" onclick="window.CC_MASTER.backToLauncher()">
+                ← Home
+              </button>
+            </div>
+          </div>`;
+      }
+    }
+  }
+
+  // ── Back to launcher ─────────────────────────────────────────────────────────
+
+  function backToLauncher() {
+    stopHomeButtonObserver();
+    currentApp = null;
+
+    const appRoot = document.getElementById('cc-app-root');
+    if (appRoot) {
+      appRoot.innerHTML = '';
+      appRoot.removeAttribute('data-cc-app');
+      delete appRoot.dataset.ccMounted;
+    }
+
+    // Remove any Leaflet instances or other globals the app may have set
+    if (window._scenarioMap) {
+      try { window._scenarioMap.remove(); } catch(e) {}
+      window._scenarioMap = null;
+    }
+
+    renderLauncher();
+  }
+
+  // ── Global API (unchanged shape) ─────────────────────────────────────────────
+
+  window.CC_MASTER = {
+    loadApp:        loadApp,
+    backToLauncher: backToLauncher,
+    getCurrentApp:  () => currentApp
+  };
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootMasterShell);
+  } else {
+    bootMasterShell();
+  }
+
+})();
+</script>
+
+<style>
+  .cc-panel {
+    background: var(--cc-panel-bg, #1a1a1a);
+    border: 1px solid var(--cc-border, rgba(255,255,255,0.12));
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .cc-panel-body   { padding: 1.5rem; }
+  .cc-panel-header { padding: 1rem 1.5rem; border-bottom: 1px solid var(--cc-border, rgba(255,255,255,0.12)); }
+
+  .cc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: .75rem 1.5rem;
+    font-weight: 600;
+    font-size: .9rem;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all .2s ease;
+    background: var(--cc-primary, #ff7518);
+    color: #000;
+  }
+  .cc-btn:hover      { background: #ff8c3d; }
+  .cc-btn-secondary  { background: rgba(255,255,255,.1); color: #fff; border: 1px solid rgba(255,255,255,.2); }
+  .cc-btn-secondary:hover { background: rgba(255,255,255,.15); }
+  .cc-btn-ghost      { background: transparent; color: rgba(255,255,255,.6); border: 1px solid rgba(255,255,255,.15); }
+  .cc-btn-ghost:hover { background: rgba(255,255,255,.08); color: #fff; border-color: rgba(255,255,255,.3); }
+  .cc-btn-block { width: 100%; }
+
+  .cc-app-shell { animation: cc-fade-in .3s ease; }
+  @keyframes cc-fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Home button — subtle, sits right-most in whatever header the app draws */
+  #cc-shell-home-btn {
+    transition: opacity .2s ease;
+  }
+  #cc-shell-home-btn:hover {
+    opacity: 1 !important;
+  }
+
+  @media (max-width: 768px) {
+    .app-grid          { grid-template-columns: 1fr !important; }
+    .cc-app-header     { flex-direction: column !important; align-items: flex-start !important; }
+    .cc-app-header button { width: 100%; }
+    #cc-shell-home-btn { width: auto !important; margin-left: 0 !important; margin-top: .5rem; }
+  }
+</style>
