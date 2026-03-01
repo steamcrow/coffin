@@ -225,6 +225,10 @@ window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Turn Counter init", ctx);
 
+    // Initialise the global handler object immediately so any code below can
+    // safely attach methods to it regardless of declaration order.
+    window.CC_TC = {};
+
     // ── Load shared UI CSS ────────────────────────────────────────────────────
     if (!document.getElementById('cc-core-ui-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
@@ -1958,35 +1962,50 @@ window.CC_APP = {
         var fname      = meta.name  || pf.id;
         var assignment = state.factionAssignments[pf.id];
         var isAssigned = !!assignment;
+        var isSkipped  = !!pf.skipped;
 
-        // If already assigned, show it greyed out with a "Change" button
-        var borderStyle = isAssigned
-          ? 'border:1px solid ' + color + '33;opacity:.55;'
-          : 'border:1px solid ' + color + '66;';
+        var borderStyle = isSkipped
+          ? 'border:1px solid #333;opacity:.4;'
+          : isAssigned
+            ? 'border:1px solid ' + color + '33;opacity:.55;'
+            : 'border:1px solid ' + color + '66;';
 
         return '<div style="' + borderStyle + 'border-radius:8px;padding:.7rem;background:rgba(0,0,0,.25);transition:opacity .2s;">' +
           // Faction name row
           '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">' +
           '<img src="' + LOGO_BASE + pf.id + '_logo.svg" alt="' + fname + '" ' +
-          'style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 3px ' + color + '88);flex-shrink:0;" ' +
+          'style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 3px ' + color + '88)' + (isSkipped ? ' grayscale(1)' : '') + ';flex-shrink:0;" ' +
           'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:28px;height:28px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.75rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
-          '<strong style="flex:1;color:' + color + ';font-size:.9rem;">' + fname + '</strong>' +
-          '<label style="display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:#aaa;cursor:pointer;flex-shrink:0;">' +
-          '<input type="checkbox" id="npc_toggle_' + pf.id + '"' + (pf.npc ? ' checked' : '') +
-          ' onchange="window.CC_TC.toggleNPC(\'' + pf.id + '\')"> NPC</label>' +
+          '<strong style="flex:1;color:' + (isSkipped ? '#555' : color) + ';font-size:.9rem;">' + fname +
+          (isSkipped ? ' <span style="color:#555;font-size:.7rem;font-weight:400;">(skipped)</span>' : '') + '</strong>' +
+          // NPC toggle — hidden when skipped
+          (!isSkipped
+            ? '<label style="display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:#aaa;cursor:pointer;flex-shrink:0;">' +
+              '<input type="checkbox" id="npc_toggle_' + pf.id + '"' + (pf.npc ? ' checked' : '') +
+              ' onchange="window.CC_TC.toggleNPC(\'' + pf.id + '\')"> NPC</label>'
+            : '') +
           '</div>' +
-          // Browse / Change button
-          (state.factionSaveList.length > 0
+          // Browse / Change button — hidden when skipped
+          (!isSkipped && state.factionSaveList.length > 0
             ? '<button onclick="window.CC_TC.openFactionSavePicker(\'' + pf.id + '\')" ' +
-              'class="cc-btn cc-btn-secondary" style="width:100%;font-size:.75rem;padding:.3rem .5rem;">' +
+              'class="cc-btn cc-btn-secondary" style="width:100%;font-size:.75rem;padding:.3rem .5rem;margin-bottom:.4rem;">' +
               (isAssigned ? '<i class="fa fa-refresh"></i> Change Save' : '<i class="fa fa-folder-open"></i> Browse Saves') +
               '</button>'
-            : '<div style="font-size:.75rem;color:#555;text-align:center;padding:.25rem 0;">No saves found — will use default</div>') +
+            : (!isSkipped
+                ? '<div style="font-size:.75rem;color:#555;text-align:center;padding:.25rem 0 .4rem;">No saves found — will use default</div>'
+                : '')) +
+          // Skip / Un-skip button
+          '<button onclick="window.CC_TC.toggleSkip(\'' + pf.id + '\')" ' +
+          'class="cc-btn ' + (isSkipped ? '' : 'cc-btn-secondary') + '" ' +
+          'style="width:100%;font-size:.72rem;padding:.25rem .5rem;' +
+          (isSkipped ? 'background:rgba(255,255,255,.08);color:#aaa;' : 'color:#ef5350;border-color:#ef535044;background:rgba(239,83,80,.06);') + '">' +
+          (isSkipped ? '↩ Include This Faction' : '✕ Skip This Faction') +
+          '</button>' +
           '</div>';
       }).join('');
 
       // ── Right column: confirmed assignments ─────────────────────────────────
-      var rightRows = state.pendingFactions.map(function(pf) {
+      var rightRows = state.pendingFactions.filter(function(pf) { return !pf.skipped; }).map(function(pf) {
         var meta       = FACTION_META[pf.id] || {};
         var color      = meta.color || '#888';
         var fname      = meta.name  || pf.id;
@@ -2027,7 +2046,8 @@ window.CC_APP = {
         }
       }).join('');
 
-      var allAssigned = state.pendingFactions.every(function(pf) {
+      var activeFactions = state.pendingFactions.filter(function(pf) { return !pf.skipped; });
+      var allAssigned = activeFactions.every(function(pf) {
         return !!state.factionAssignments[pf.id];
       });
 
@@ -2170,8 +2190,6 @@ window.CC_APP = {
     // EVENT HANDLERS
     // ═══════════════════════════════════════════════════════════════════════════
 
-    window.CC_TC = {};
-
     window.CC_TC.backToSetup = function() {
       state.phase = 'setup';
       render();
@@ -2291,7 +2309,7 @@ window.CC_APP = {
 
         var rawFactions = payload.factions || (payload.scenario && payload.scenario.factions) || [];
         state.pendingFactions = rawFactions.map(function(f) {
-          return { id: f.id, npc: f.npc !== undefined ? f.npc : (f.isNPC !== undefined ? f.isNPC : true) };
+          return { id: f.id, npc: f.npc !== undefined ? f.npc : (f.isNPC !== undefined ? f.isNPC : true), skipped: false };
         }).filter(function(f) { return !!FACTION_META[f.id]; });
 
         if (!state.pendingFactions.length) {
@@ -2355,6 +2373,34 @@ window.CC_APP = {
       var el = document.getElementById('npc_toggle_' + factionId);
       var pf = state.pendingFactions.find(function(f) { return f.id === factionId; });
       if (pf && el) pf.npc = el.checked;
+    };
+
+    window.CC_TC.toggleSkip = function(factionId) {
+      var pf   = state.pendingFactions.find(function(f) { return f.id === factionId; });
+      var meta = FACTION_META[factionId] || {};
+      if (!pf) return;
+
+      // Warn before skipping the monster faction — it powers noise/encounters
+      if (!pf.skipped && meta.isMonster) {
+        if (!confirm(
+          (meta.name || factionId) + ' is the Monster faction.\n\n' +
+          'Skipping them disables monster encounters and the noise system for this game.\n\n' +
+          'Skip anyway?'
+        )) return;
+      }
+
+      pf.skipped = !pf.skipped;
+
+      // Enforce minimum: need at least 2 active factions
+      var active = state.pendingFactions.filter(function(f) { return !f.skipped; });
+      if (active.length < 2) {
+        pf.skipped = false; // revert
+        alert('You need at least 2 factions to play. Un-skip another faction first.');
+        render();
+        return;
+      }
+
+      render();
     };
 
     window.CC_TC.openFactionSavePicker = function(factionId) {
@@ -2434,6 +2480,7 @@ window.CC_APP = {
 
       for (var i = 0; i < state.pendingFactions.length; i++) {
         var pf     = state.pendingFactions[i];
+        if (pf.skipped) continue;   // ← skip factions the user excluded
         var meta   = FACTION_META[pf.id];
         var assign = state.factionAssignments[pf.id];
         var faction = null;
