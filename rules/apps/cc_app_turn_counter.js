@@ -717,14 +717,16 @@ window.CC_APP = {
 
     // Canyon-generic fallback pool — used only when scenario has no monster list
     // AND the Monsters faction JSON hasn't loaded yet.
+    // Ability names here MUST match keys in the ability dictionaries
+    // (converted: "brutal_blow" → "Brutal Blow", "berserk" → "Berserk")
     var FALLBACK_MONSTERS = [
-      { id: 'ruster',         name: 'Ruster',         quality: 4, move: 6,  combat: 4, shoot: null, armor: null, special: ['Rust Bite'],        isTitan: false },
-      { id: 'snarl',          name: 'Snarl',          quality: 4, move: 8,  combat: 5, shoot: null, armor: null, special: ['Pounce'],            isTitan: false },
-      { id: 'canyon_crawler', name: 'Canyon Crawler', quality: 3, move: 5,  combat: 3, shoot: null, armor: 2,    special: ['Tough 1'],           isTitan: false },
-      { id: 'dust_wraith',    name: 'Dust Wraith',    quality: 4, move: 7,  combat: 3, shoot: 3,    armor: null, special: ['Stealth'],           isTitan: false },
-      { id: 'thyr_hound',     name: 'Thyr Hound',     quality: 4, move: 7,  combat: 4, shoot: null, armor: null, special: ['Frenzy'],            isTitan: false },
-      { id: 'iron_stalker',   name: 'Iron Stalker',   quality: 3, move: 5,  combat: 4, shoot: null, armor: 3,    special: ['Tough 2'],           isTitan: false },
-      { id: 'canyon_titan',   name: 'Canyon Titan',   quality: 3, move: 4,  combat: 5, shoot: null, armor: 4,    special: ['Titan','Fearsome'],  isTitan: true  },
+      { id: 'ruster',         name: 'Ruster',         quality: 4, move: 6,  combat: 4, shoot: null, armor: null, special: ['Corrode'],              isTitan: false },
+      { id: 'snarl',          name: 'Snarl',          quality: 4, move: 8,  combat: 5, shoot: null, armor: null, special: ['Berserk'],               isTitan: false },
+      { id: 'canyon_crawler', name: 'Canyon Crawler', quality: 3, move: 5,  combat: 3, shoot: null, armor: 2,    special: ['Armored'],               isTitan: false },
+      { id: 'dust_wraith',    name: 'Dust Wraith',    quality: 4, move: 7,  combat: 3, shoot: 3,    armor: null, special: ['Ambush', 'Fast'],        isTitan: false },
+      { id: 'thyr_hound',     name: 'Thyr Hound',     quality: 4, move: 7,  combat: 4, shoot: null, armor: null, special: ['Brutal Blow'],           isTitan: false },
+      { id: 'iron_stalker',   name: 'Iron Stalker',   quality: 3, move: 5,  combat: 4, shoot: null, armor: 3,    special: ['Armored', 'Anchor'],     isTitan: false },
+      { id: 'canyon_titan',   name: 'Canyon Titan',   quality: 3, move: 4,  combat: 5, shoot: null, armor: 4,    special: ['Brutal Blow', 'Anchor'], isTitan: true  },
     ];
 
     // Live pool fetched from the Monsters faction JSON — filled in loadMonstersFactionData()
@@ -2476,8 +2478,8 @@ window.CC_APP = {
     // "Stealth", "Brutal 3". The actual rule text lives in the ability
     // dictionary JSON files. We lazy-fetch those files once and cache them.
 
-    var _abilityCache   = {};   // normalised_name → {name, short, long, timing}
-    var _abilityFetched = false;
+    var _abilityCache    = {};     // slug → { name, id, timing, short, long }
+    var _abilityFetched  = false;
     var _abilityFetching = false;
 
     var ABILITY_FILES = [
@@ -2492,30 +2494,36 @@ window.CC_APP = {
     ];
     var ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/';
 
-    // Flatten any JSON object tree into all leaf objects that look like an ability
-    // (have a short_text or long_text or description or effect field).
-    function extractAbilitiesFromJson(obj, results) {
-      if (!obj || typeof obj !== 'object') return;
-      // Does this object look like an ability definition?
-      var hasText = obj.short_text || obj.long_text || obj.description ||
-                    obj.effect || obj.effect_text || obj.rules_text || obj.text;
-      var hasName = obj.name || obj.id || obj.keyword;
-      if (hasText && hasName) {
-        var name = String(obj.name || obj.id || obj.keyword || '').trim();
-        var key  = name.toLowerCase().replace(/\s+\d+$/, '').replace(/[^a-z0-9]/g, '');
-        if (key && !results[key]) {
-          results[key] = {
-            name:   name,
-            short:  obj.short_text  || obj.description || obj.effect || '',
-            long:   obj.long_text   || obj.effect_text || obj.rules_text || obj.text || '',
-            timing: obj.timing      || obj.timing_note || '',
-          };
-        }
-      }
-      // Recurse into all child objects and arrays
-      Object.values(obj).forEach(function(v) {
-        if (v && typeof v === 'object') extractAbilitiesFromJson(v, results);
+    // Each file has the shape:
+    //   { "_id": "R-ABIL-A", "title": "...", "abilities": { "aim": { "_id", "timing", "short", "long" } } }
+    // We store every entry under its slug key (e.g. "aim", "audio_suppression").
+    function ingestAbilityFile(data) {
+      if (!data || typeof data.abilities !== 'object') return 0;
+      var count = 0;
+      Object.keys(data.abilities).forEach(function(slug) {
+        var entry = data.abilities[slug];
+        if (!entry || typeof entry !== 'object') return;
+        _abilityCache[slug] = {
+          name:   slugToName(slug),         // "audio_suppression" → "Audio Suppression"
+          id:     entry._id    || '',
+          timing: entry.timing || '',
+          short:  entry.short  || '',
+          long:   entry.long   || '',
+        };
+        count++;
       });
+      return count;
+    }
+
+    // "audio_suppression" → "Audio Suppression"
+    function slugToName(slug) {
+      return slug.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+    }
+
+    // "once_per_activation" → "Once Per Activation"
+    function formatTiming(timing) {
+      if (!timing) return '';
+      return timing.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
     }
 
     function loadAbilityDictionaries() {
@@ -2524,96 +2532,164 @@ window.CC_APP = {
 
       var promises = ABILITY_FILES.map(function(filename) {
         return fetch(ABILITY_BASE + filename + '?t=' + Date.now())
-          .then(function(r) { return r.ok ? r.text() : ''; })
+          .then(function(r) { return r.ok ? r.text() : '{}'; })
           .then(function(text) {
-            if (!text) return;
-            var data = JSON.parse(text);   // safe — our patch catches errors
-            if (data) extractAbilitiesFromJson(data, _abilityCache);
+            var data = safeParseJson(text);
+            if (data) ingestAbilityFile(data);
           })
-          .catch(function() {}); // one bad file never breaks the rest
+          .catch(function(e) {
+            console.warn('[CC] Ability file failed:', filename, safeErr(e));
+          });
       });
 
       Promise.all(promises).then(function() {
         _abilityFetched  = true;
         _abilityFetching = false;
-        console.log('📖 Ability dictionary loaded —', Object.keys(_abilityCache).length, 'entries');
+        console.log('[CC] Abilities loaded — ' + Object.keys(_abilityCache).length + ' entries');
       });
     }
 
-    // Look up an ability by name (handles "Tough 2" → search "tough", "tough2", "tough 2")
-    function lookupAbility(abilityName) {
-      var raw    = String(abilityName || '').trim();
-      // Try exact key
-      var exact  = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (_abilityCache[exact]) return _abilityCache[exact];
-      // Try base keyword without trailing number ("Tough 2" → "tough")
-      var base   = raw.toLowerCase().replace(/\s+\d+$/, '').replace(/[^a-z0-9]/g, '');
+    // Look up an ability by its display name.
+    // Handles:
+    //   "Aim"              → slug "aim"
+    //   "Audio Suppression"→ slug "audio_suppression"
+    //   "Tough 2"          → slug "tough_2" → miss → strip number → "tough"
+    //   "Fast"             → slug "fast"
+    function lookupAbility(displayName) {
+      if (!displayName) return null;
+      var raw = String(displayName).trim();
+
+      // Step 1 — convert display name to slug: spaces → underscores, lowercase
+      var slug = raw.toLowerCase().replace(/\s+/g, '_');
+      if (_abilityCache[slug]) return _abilityCache[slug];
+
+      // Step 2 — strip trailing number ("tough_2" → "tough", "blast_3" → "blast")
+      var base = slug.replace(/_\d+$/, '');
       if (_abilityCache[base]) return _abilityCache[base];
-      // Try partial match (first word)
-      var first  = raw.toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g, '');
-      var keys   = Object.keys(_abilityCache);
+
+      // Step 3 — try without any underscores at all (handles edge-case compounding)
+      var flat = slug.replace(/_/g, '');
+      var keys = Object.keys(_abilityCache);
       for (var i = 0; i < keys.length; i++) {
-        if (keys[i].startsWith(first)) return _abilityCache[keys[i]];
+        if (keys[i].replace(/_/g, '') === flat) return _abilityCache[keys[i]];
       }
+
+      // Step 4 — first word only, as a last resort ("Consecrated Ground" → "consecrated")
+      var firstWord = slug.split('_')[0];
+      if (firstWord.length >= 4) {   // don't match on tiny words like "of", "the"
+        for (var j = 0; j < keys.length; j++) {
+          if (keys[j] === firstWord || keys[j].startsWith(firstWord + '_')) {
+            return _abilityCache[keys[j]];
+          }
+        }
+      }
+
       return null;
     }
 
-    // Show ability rule popup
-    window.CC_TC.showAbilityRule = function(idx, factionId, unitId) {
-      var abilities = window.CC_TC._currentUnitAbilities || [];
+    // ── Ability popup ────────────────────────────────────────────────────────
+    window.CC_TC.showAbilityRule = function(idx) {
+      var abilities   = window.CC_TC._currentUnitAbilities || [];
       var abilityName = abilities[idx];
       if (!abilityName) return;
 
-      // Start loading dictionaries in the background if not already done
+      // Kick off loading if not done yet
       loadAbilityDictionaries();
 
       var existing = document.getElementById('cc-ability-overlay');
       if (existing) existing.remove();
 
-      var entry   = lookupAbility(abilityName);
+      // If still fetching, show a spinner and retry once done
+      if (_abilityFetching && !_abilityFetched) {
+        var spinOverlay = document.createElement('div');
+        spinOverlay.id  = 'cc-ability-overlay';
+        spinOverlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);' +
+          'display:flex;align-items:center;justify-content:center;padding:1rem;box-sizing:border-box;';
+        spinOverlay.innerHTML =
+          '<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,.15);border-radius:12px;' +
+          'padding:2rem;max-width:320px;width:100%;text-align:center;">' +
+          '<div style="font-size:1.8rem;animation:cc-spin 1s linear infinite;margin-bottom:.75rem;">⟳</div>' +
+          '<div style="color:#aaa;font-size:.9rem;">Loading ability rules…</div>' +
+          '<button onclick="document.getElementById(\'cc-ability-overlay\').remove()" ' +
+          'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:1rem;">Cancel</button>' +
+          '</div>';
+        document.body.appendChild(spinOverlay);
+        // Retry when loaded (poll every 300ms, give up after 8 seconds)
+        var _retries = 0;
+        var _poll = setInterval(function() {
+          _retries++;
+          if (_abilityFetched || _retries > 26) {
+            clearInterval(_poll);
+            var ov = document.getElementById('cc-ability-overlay');
+            if (ov) ov.remove();
+            if (_abilityFetched) window.CC_TC.showAbilityRule(idx);
+          }
+        }, 300);
+        return;
+      }
+
+      var entry = lookupAbility(abilityName);
+
+      // Format timing label nicely
+      var timingLabel = entry ? formatTiming(entry.timing) : '';
+      var timingColor = {
+        'Passive':              '#90a4ae',
+        'Main Action':          '#42a5f5',
+        'Once Per Activation':  '#ffd600',
+        'Once Per Round':       '#ff9800',
+        'Once Per Game':        '#ef5350',
+        'Deployment':           '#9c27b0',
+        'Reaction':             '#4caf50',
+      }[timingLabel] || '#888';
+
+      var bodyHtml;
+      if (entry) {
+        bodyHtml =
+          // Timing pill
+          (timingLabel
+            ? '<div style="display:inline-block;padding:2px 10px;border-radius:999px;' +
+              'border:1px solid ' + timingColor + ';color:' + timingColor + ';' +
+              'font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.85rem;">' +
+              timingLabel + '</div><br>'
+            : '') +
+          // Short — one-line summary shown as a muted intro
+          (entry.short
+            ? '<div style="color:#aaa;font-size:.82rem;font-style:italic;margin-bottom:.65rem;line-height:1.45;">' +
+              entry.short + '</div>'
+            : '') +
+          // Long — the full rule text, shown big and clear
+          (entry.long
+            ? '<div style="color:#e8e8e8;font-size:.95rem;line-height:1.65;">' + entry.long + '</div>'
+            : '') +
+          // Rule ID — small, for cross-referencing the Rules Explorer
+          (entry.id
+            ? '<div style="margin-top:.85rem;font-size:.68rem;color:#444;font-family:monospace;">' + entry.id + '</div>'
+            : '');
+      } else {
+        bodyHtml =
+          '<div style="color:#888;font-size:.88rem;line-height:1.55;margin-bottom:.5rem;">' +
+          'No rule entry found for <em style="color:#bbb;">' + abilityName + '</em>.</div>' +
+          '<div style="font-size:.8rem;color:#555;line-height:1.5;">' +
+          'Open the Rules Explorer and search for <em>' + abilityName.split(' ')[0] + '</em>.' +
+          '</div>';
+      }
+
       var overlay = document.createElement('div');
       overlay.id  = 'cc-ability-overlay';
       overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);' +
         'display:flex;align-items:center;justify-content:center;animation:cc-fade-in .2s ease;' +
         'padding:1rem;box-sizing:border-box;';
-
-      var bodyHtml;
-      if (entry) {
-        bodyHtml =
-          '<div style="font-size:.72rem;color:#888;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;">' +
-          (entry.timing || 'Ability') + '</div>' +
-          (entry.short
-            ? '<div style="color:#fff;font-size:.95rem;font-weight:600;margin-bottom:.6rem;line-height:1.4;">' + entry.short + '</div>'
-            : '') +
-          (entry.long && entry.long !== entry.short
-            ? '<div style="color:#bbb;font-size:.85rem;line-height:1.55;">' + entry.long + '</div>'
-            : '');
-      } else if (_abilityFetching) {
-        bodyHtml = '<div style="color:#888;font-size:.9rem;text-align:center;padding:1rem;">' +
-          '<div style="animation:cc-spin 1s linear infinite;font-size:1.5rem;margin-bottom:.5rem;display:inline-block;">⟳</div>' +
-          '<br>Loading rules dictionary…</div>';
-        // Re-open when loaded
-        setTimeout(function() {
-          window.CC_TC.showAbilityRule(idx, factionId, unitId);
-        }, 1200);
-      } else {
-        bodyHtml = '<div style="color:#666;font-size:.85rem;line-height:1.5;">' +
-          'Rule text not found in the ability dictionary.<br><br>' +
-          '<span style="color:#555;font-size:.78rem;">Check the Rules Explorer for the full text.</span>' +
-          '</div>';
-      }
-
       overlay.innerHTML =
         '<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,.15);border-radius:12px;' +
-        'padding:1.5rem;max-width:420px;width:100%;">' +
+        'padding:1.5rem;max-width:440px;width:100%;max-height:85vh;overflow-y:auto;">' +
         '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.75rem;">' +
-        '<h4 style="margin:0;color:var(--cc-primary);font-size:1.1rem;">' + abilityName + '</h4>' +
+        '<h4 style="margin:0;color:var(--cc-primary);font-size:1.15rem;line-height:1.2;">' + abilityName + '</h4>' +
         '<button onclick="document.getElementById(\'cc-ability-overlay\').remove()" ' +
-        'style="background:none;border:none;color:#666;cursor:pointer;font-size:1.2rem;padding:0;flex-shrink:0;line-height:1;">✕</button>' +
+        'style="background:none;border:none;color:#555;cursor:pointer;font-size:1.3rem;padding:0;flex-shrink:0;line-height:1;">✕</button>' +
         '</div>' +
         bodyHtml +
         '<button onclick="document.getElementById(\'cc-ability-overlay\').remove()" ' +
-        'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:1rem;">Close</button>' +
+        'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:1.25rem;">Close</button>' +
         '</div>';
 
       document.body.appendChild(overlay);
