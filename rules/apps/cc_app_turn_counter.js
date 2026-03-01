@@ -204,7 +204,7 @@ window.CC_APP = {
     // ═══════════════════════════════════════════════════════════════════════════
 
     const state = {
-      phase: 'splash',
+      phase: 'setup',
       scenarioSave:   null,
       scenarioName:   '',
       factions: [],
@@ -732,6 +732,146 @@ window.CC_APP = {
         </div>`;
     }
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // QUALITY DICE ROLLER
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // Rules: roll 1d6 per current Quality pip. A 4, 5, or 6 = 1 success.
+    // ALL SIXES → Lucky Break (must be resolved immediately).
+    // ALL ONES  → Spectacular failure (narrative callout only, no rule penalty).
+    // Natural Sixes on an attack: guarantees at least 1 damage if the attack
+    // hits — but we don't track attack context here, so we flag the presence
+    // of any 6 for the player to apply at the table.
+
+    function rollQuality(currentQ) {
+      // Roll currentQ dice, each 1d6
+      var dice = [];
+      for (var i = 0; i < currentQ; i++) {
+        dice.push(Math.floor(Math.random() * 6) + 1);
+      }
+
+      var successes  = dice.filter(function(d) { return d >= 4; }).length;
+      var allSixes   = dice.length > 0 && dice.every(function(d) { return d === 6; });
+      var allOnes    = dice.length > 0 && dice.every(function(d) { return d === 1; });
+      var hasAnySix  = dice.some(function(d) { return d === 6; });
+
+      return { dice: dice, successes: successes, allSixes: allSixes,
+               allOnes: allOnes, hasAnySix: hasAnySix };
+    }
+
+    // Show the dice roll result in an overlay
+    function showRollResult(result, unitName) {
+      var existing = document.getElementById('cc-roll-overlay');
+      if (existing) existing.remove();
+
+      // Render each die as a coloured pip
+      var diceHtml = result.dice.map(function(d) {
+        var isHit    = d >= 4;
+        var isSix    = d === 6;
+        var bg       = isSix ? '#ffd600' : isHit ? '#ff7518' : 'rgba(255,255,255,.1)';
+        var fg       = isSix || isHit ? '#000' : '#888';
+        var ring     = isSix ? '0 0 0 2px #ffd600' : '';
+        return '<div style="width:44px;height:44px;border-radius:8px;background:' + bg + ';' +
+          'display:flex;align-items:center;justify-content:center;' +
+          'font-size:1.4rem;font-weight:900;color:' + fg + ';' +
+          'box-shadow:' + ring + ';flex-shrink:0;">' + d + '</div>';
+      }).join('');
+
+      // Result colour
+      var resultColor = result.allSixes ? '#ffd600'
+                      : result.successes >= Math.ceil(result.dice.length * 0.6) ? '#4caf50'
+                      : result.successes > 0 ? '#ff7518'
+                      : '#ef5350';
+
+      // Special callout text
+      var specialHtml = '';
+      if (result.allSixes) {
+        specialHtml =
+          '<div style="background:#ffd60022;border:2px solid #ffd600;border-radius:8px;padding:.85rem;margin:.75rem 0 0;">' +
+          '<div style="color:#ffd600;font-weight:900;font-size:1rem;margin-bottom:.4rem;">' +
+          '⭐ LUCKY BREAK — All Sixes!</div>' +
+          '<div style="color:#fff;font-size:.82rem;line-height:1.5;margin-bottom:.5rem;">' +
+          'Must be used immediately. Cannot be saved. Choose one:' +
+          '</div>' +
+          '<div style="display:flex;flex-direction:column;gap:.3rem;">' +
+          '<div style="font-size:.82rem;color:#ffe082;"><strong>Quick Step</strong> — Free Half Move</div>' +
+          '<div style="font-size:.82rem;color:#ffe082;"><strong>Shake It Off</strong> — Remove 1 Pin or Condition</div>' +
+          '<div style="font-size:.82rem;color:#ffe082;"><strong>Deadeye</strong> — +1 die on next roll this activation</div>' +
+          '<div style="font-size:.82rem;color:#ffe082;"><strong>Get It Done</strong> — Free Interact action</div>' +
+          '</div>' +
+          '<div style="font-size:.72rem;color:#888;margin-top:.5rem;">' +
+          'Only one Lucky Break per activation. Cannot modify attack damage.' +
+          '</div>' +
+          '</div>';
+      } else if (result.allOnes) {
+        specialHtml =
+          '<div style="background:#ef535022;border:2px solid #ef5350;border-radius:8px;padding:.75rem;margin:.75rem 0 0;">' +
+          '<div style="color:#ef5350;font-weight:900;font-size:1rem;">💀 All Ones — Total Failure</div>' +
+          '<div style="color:#ffcdd2;font-size:.82rem;margin-top:.3rem;">' +
+          'Zero successes. No special rule triggered — just bad luck today.' +
+          '</div>' +
+          '</div>';
+      } else if (result.hasAnySix && !result.allSixes) {
+        specialHtml =
+          '<div style="background:#ffd60011;border:1px solid #ffd60066;border-radius:6px;' +
+          'padding:.5rem .75rem;margin:.75rem 0 0;font-size:.78rem;color:#ffe082;">' +
+          '<i class="fa fa-star"></i> <strong>Natural Six present.</strong> ' +
+          'If this is an attack roll and it hits, it deals at least 1 damage regardless of total successes.' +
+          '</div>';
+      }
+
+      var overlay = document.createElement('div');
+      overlay.id  = 'cc-roll-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);' +
+        'display:flex;align-items:center;justify-content:center;animation:cc-fade-in .2s ease;';
+
+      overlay.innerHTML =
+        '<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,.12);border-radius:12px;' +
+        'padding:1.5rem;max-width:400px;width:92%;text-align:center;">' +
+
+        // Unit name + roll label
+        '<div style="font-size:.7rem;color:#666;text-transform:uppercase;letter-spacing:.12em;margin-bottom:.25rem;">' +
+        'Quality Roll — ' + unitName +
+        '</div>' +
+
+        // Dice row
+        '<div style="display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin:.75rem 0;">' +
+        diceHtml +
+        '</div>' +
+
+        // Legend
+        '<div style="font-size:.68rem;color:#555;margin-bottom:.75rem;">' +
+        '<span style="color:#ffd600;">■</span> 6 &nbsp;' +
+        '<span style="color:#ff7518;">■</span> 4–5 = hit &nbsp;' +
+        '<span style="color:rgba(255,255,255,.2);">■</span> 1–3 = miss' +
+        '</div>' +
+
+        // Successes
+        '<div style="font-size:2.2rem;font-weight:900;color:' + resultColor + ';line-height:1;">' +
+        result.successes +
+        '</div>' +
+        '<div style="font-size:.78rem;color:' + resultColor + ';margin-bottom:.25rem;">' +
+        'SUCCESS' + (result.successes !== 1 ? 'ES' : '') +
+        '</div>' +
+        '<div style="font-size:.72rem;color:#555;">' +
+        result.dice.length + 'd6 rolled' +
+        '</div>' +
+
+        // Special callout (lucky break / all ones / natural 6)
+        specialHtml +
+
+        // Dismiss button
+        '<button onclick="document.getElementById(\'cc-roll-overlay\').remove()" ' +
+        'class="cc-btn" style="width:100%;margin-top:1rem;font-size:1rem;padding:.85rem;">' +
+        'Got It' +
+        '</button>' +
+
+        '</div>';
+
+      document.body.appendChild(overlay);
+    }
+
+    // The quality track: dots to wound/heal + a ROLL button
     function qualityTrack(faction, unit) {
       const us  = getUnitState(faction.id, unit.id);
       const cur = us?.quality ?? unit.quality;
@@ -744,21 +884,29 @@ window.CC_APP = {
         dots += `<button
           onclick="window.CC_TC.adjustQuality('${faction.id}','${unit.id}',${filled ? -1 : 1})"
           class="cc-q-dot ${filled ? 'filled' : 'empty'}"
-          style="width:28px;height:28px;border-radius:50%;border:2px solid ${color};
+          style="width:30px;height:30px;border-radius:50%;border:2px solid ${color};
                  background:${filled ? color : 'transparent'};cursor:pointer;
-                 transition:all .15s ease;margin:2px;"
+                 transition:all .15s ease;margin:2px;flex-shrink:0;"
           title="${filled ? 'Tap to wound' : 'Tap to heal'}"
         ></button>`;
       }
 
       return `
-        <div class="cc-quality-track" style="display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+        <div class="cc-quality-track" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
           <span style="color:${color}99;font-size:.7rem;text-transform:uppercase;
-                       letter-spacing:.08em;margin-right:4px;">Quality</span>
+                       letter-spacing:.08em;margin-right:2px;flex-shrink:0;">Q</span>
           <div style="display:flex;flex-wrap:wrap;gap:2px;">${dots}</div>
-          <span style="color:${color};font-weight:900;font-size:1.1rem;margin-left:6px;">
-            ${cur > 0 ? 'Q' + cur : 'OUT?'}
+          <span style="color:${color};font-weight:900;font-size:1.1rem;margin-left:4px;flex-shrink:0;">
+            ${cur > 0 ? cur : 'OUT?'}
           </span>
+          ${cur > 0 ? `
+          <button
+            onclick="window.CC_TC.rollQualityForUnit('${faction.id}','${unit.id}')"
+            class="cc-btn cc-btn-secondary"
+            style="margin-left:auto;padding:.35rem .85rem;font-size:.8rem;flex-shrink:0;
+                   border-color:${color}66;color:${color};">
+            🎲 Roll Q${cur}
+          </button>` : ''}
         </div>`;
     }
 
@@ -813,19 +961,34 @@ window.CC_APP = {
 
     function showMonsterAlert(monster) {
       const name = monster?.name || 'Something from the Canyon';
+      // Remove any existing alert first
+      var existing = document.getElementById('cc-monster-alert');
+      if (existing) existing.remove();
+
       const overlay = document.createElement('div');
+      overlay.id = 'cc-monster-alert';
       overlay.style.cssText = [
         'position:fixed;inset:0;z-index:9999;',
-        'background:rgba(0,0,0,.85);',
+        'background:rgba(0,0,0,.88);',
         'display:flex;align-items:center;justify-content:center;',
         'animation:cc-fade-in .3s ease;'
       ].join('');
       overlay.innerHTML = `
-        <div style="text-align:center;padding:2rem;max-width:400px;">
-          <div style="font-size:3rem;margin-bottom:1rem;color:#ef5350;animation:cc-pulse 1s ease infinite;"><i class='fa fa-dragon'></i></div>
-          <h2 style="color:#ef5350;margin:0 0 .5rem;font-size:1.8rem;">Monster Encounter!</h2>
-          <p style="color:#ffcdd2;font-size:1.1rem;margin:.5rem 0 1.5rem;">${name} approaches from the nearest board edge.</p>
-          <button onclick="this.closest('div[style]').remove()" class="cc-btn" style="width:100%;">
+        <div style="text-align:center;padding:2rem;max-width:400px;width:90%;">
+          <div style="font-size:3rem;margin-bottom:1rem;color:#ef5350;
+                      animation:cc-pulse 1s ease infinite;">
+            <i class="fa fa-dragon"></i>
+          </div>
+          <h2 style="color:#ef5350;margin:0 0 .5rem;font-size:1.8rem;">
+            Monster Encounter!
+          </h2>
+          <p style="color:#ffcdd2;font-size:1.1rem;margin:.5rem 0 1.5rem;">
+            ${name} approaches from the nearest board edge.
+          </p>
+          <button
+            onclick="document.getElementById('cc-monster-alert').remove()"
+            class="cc-btn"
+            style="width:100%;font-size:1rem;padding:.85rem;">
             Acknowledged — Continue
           </button>
         </div>`;
@@ -1286,46 +1449,6 @@ window.CC_APP = {
         </div>`;
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // RENDER: SPLASH
-    // ═══════════════════════════════════════════════════════════════════════════
-
-    function renderSplash() {
-      root.innerHTML = `
-        <div class="cc-app-shell h-100">
-          <div class="cc-app-header">
-            <div>
-              <h1 class="cc-app-title">Coffin Canyon</h1>
-              <div class="cc-app-subtitle">Game Turn Counter</div>
-            </div>
-          </div>
-          <div id="cc-tc-splash" style="
-            display:flex;flex-direction:column;align-items:center;justify-content:center;
-            min-height:calc(100vh - 80px);
-            transition:opacity .6s ease;">
-            <img
-              src="https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png"
-              alt="Coffin Canyon"
-              style="width:280px;max-width:75vw;margin-bottom:2rem;
-                     filter:drop-shadow(0 0 28px rgba(255,117,24,.45));
-                     animation:cc-pulse 2.4s ease-in-out infinite;"
-            />
-            <div style="
-              width:44px;height:44px;
-              border:4px solid rgba(255,117,24,.18);
-              border-top:4px solid #ff7518;
-              border-radius:50%;
-              animation:cc-spin 1s linear infinite;">
-            </div>
-            <div style="color:#ff7518;margin-top:14px;font-size:.7rem;
-                        letter-spacing:.28em;text-transform:uppercase;
-                        animation:cc-pulse 1.5s ease-in-out infinite;">
-              Loading…
-            </div>
-          </div>
-        </div>`;
-    }
-
     // =========================================================================
     // RENDER: ROUND 0 — TERRAIN SETUP
     // =========================================================================
@@ -1579,8 +1702,7 @@ window.CC_APP = {
 
     function render() {
       switch (state.phase) {
-        case 'splash':       return renderSplash();
-        case 'setup':        return renderSetup();
+        case 'setup':         return renderSetup();
         case 'quick_setup':   return renderQuickSetup();
         case 'setup_round':   return renderSetupRound();
         case 'faction_setup': return renderFactionSetup();
@@ -2005,6 +2127,17 @@ window.CC_APP = {
       render();
     };
 
+    window.CC_TC.rollQualityForUnit = function(factionId, unitId) {
+      var faction = getFactionById(factionId);
+      var unit    = getUnitById(faction, unitId);
+      var us      = getUnitState(factionId, unitId);
+      if (!unit || !us || us.out) return;
+      var currentQ = us.quality || unit.quality;
+      if (currentQ < 1) return;
+      var result = rollQuality(currentQ);
+      showRollResult(result, unit.name);
+    };
+
     window.CC_TC.logNoise = function(key) {
       var n = NOISE_VALUES[key];
       if (!n) return;
@@ -2092,26 +2225,12 @@ window.CC_APP = {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // BOOT
+    // BOOT — go straight to setup, no second splash screen.
+    // (The loader already shows the Coffin Canyon logo while loading this file.)
     // ═══════════════════════════════════════════════════════════════════════════
 
-    const MIN_SPLASH_MS = 3000;
-
-    render(); // Shows splash immediately
-
-    setTimeout(() => {
-      const splash = document.getElementById('cc-tc-splash');
-      if (splash) {
-        splash.style.opacity = '0';
-        setTimeout(() => {
-          state.phase = 'setup';
-          render();
-        }, 650);
-      } else {
-        state.phase = 'setup';
-        render();
-      }
-    }, MIN_SPLASH_MS);
+    state.phase = 'setup';
+    render();
 
   } // end init()
 }; // end window.CC_APP
