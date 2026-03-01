@@ -139,13 +139,25 @@ window.CC_APP = {
     // place before any async work begins.
 
     // ── Load CC_STORAGE helper ────────────────────────────────────────────────
+    // IMPORTANT: storage_helpers.js loads asynchronously. We must NOT snapshot
+    // `!!window.CC_STORAGE` at render time — it will always be false because the
+    // fetch hasn't finished yet. Instead we wait for the script to fully load,
+    // then re-render the setup screen so `hasStorage` evaluates correctly.
     if (!window.CC_STORAGE) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
         .then(r => r.text())
         .then(code => {
-          const s = document.createElement('script');
-          s.textContent = code;
-          document.head.appendChild(s);
+          return new Promise(function(resolve) {
+            const s = document.createElement('script');
+            s.textContent = code;
+            document.head.appendChild(s);
+            // Give the script one tick to execute and set window.CC_STORAGE
+            setTimeout(resolve, 50);
+          });
+        })
+        .then(function() {
+          // Re-render setup screen now that CC_STORAGE is available
+          if (state.phase === 'setup') render();
         })
         .catch(err => console.error('❌ Storage helpers failed:', err));
     }
@@ -1010,10 +1022,19 @@ window.CC_APP = {
       var bar = document.getElementById('cc-tc-login-status');
       if (!bar) return;
       if (!window.CC_STORAGE) {
-        bar.className = 'cc-login-status logged-out';
-        bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Storage unavailable — cloud saves disabled';
+        // Storage script may still be loading — retry in 500ms before giving up
+        if (!window._ccStorageGaveUp) {
+          setTimeout(function() {
+            window._ccStorageGaveUp = true;
+            updateLoginStatus();
+          }, 500);
+        } else {
+          bar.className = 'cc-login-status logged-out';
+          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Storage unavailable — cloud saves disabled';
+        }
         return;
       }
+      window._ccStorageGaveUp = false; // reset for next time
       window.CC_STORAGE.checkAuth().then(function(auth) {
         var bar2 = document.getElementById('cc-tc-login-status');
         if (!bar2) return;
