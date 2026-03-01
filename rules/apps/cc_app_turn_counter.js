@@ -540,7 +540,10 @@ window.CC_APP = {
       state.factions.forEach(function(f) {
         f.allUnits.forEach(function(u) {
           var k = unitKey(f.id, u.id);
-          if (state.unitState[k]) state.unitState[k].activated = false;
+          if (state.unitState[k]) {
+            state.unitState[k].activated = false;
+            state.unitState[k].lastRoll  = null;   // clear roll result each new round
+          }
         });
       });
     }
@@ -760,7 +763,7 @@ window.CC_APP = {
     }
 
     // Show the dice roll result in an overlay
-    function showRollResult(result, unitName) {
+    function showRollResult(result, unitName, isReview) {
       var existing = document.getElementById('cc-roll-overlay');
       if (existing) existing.remove();
 
@@ -831,8 +834,9 @@ window.CC_APP = {
 
         // Unit name + roll label
         '<div style="font-size:.7rem;color:#666;text-transform:uppercase;letter-spacing:.12em;margin-bottom:.25rem;">' +
-        'Quality Roll — ' + unitName +
+        (isReview ? '↩ Previous Roll — ' : 'Quality Roll — ') + unitName +
         '</div>' +
+        (isReview ? '<div style="font-size:.72rem;color:#555;margin-bottom:.5rem;">One roll per activation. This was your result.</div>' : '') +
 
         // Dice row
         '<div style="display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin:.75rem 0;">' +
@@ -877,6 +881,7 @@ window.CC_APP = {
       const cur = us?.quality ?? unit.quality;
       const max = unit.quality;
       const color = cur <= 1 ? '#ef5350' : STAT_COLORS.quality;
+      const hasRolled = !!(us?.lastRoll);
 
       let dots = '';
       for (let i = max; i >= 1; i--) {
@@ -904,8 +909,10 @@ window.CC_APP = {
             onclick="window.CC_TC.rollQualityForUnit('${faction.id}','${unit.id}')"
             class="cc-btn cc-btn-secondary"
             style="margin-left:auto;padding:.35rem .85rem;font-size:.8rem;flex-shrink:0;
-                   border-color:${color}66;color:${color};">
-            🎲 Roll Q${cur}
+                   border-color:${hasRolled ? '#666' : color + '66'};
+                   color:${hasRolled ? '#666' : color};"
+            title="${hasRolled ? 'Tap to review your roll (one roll per activation)' : 'Roll quality dice'}">
+            ${hasRolled ? '↩ View Roll' : '🎲 Roll Q' + cur}
           </button>` : ''}
         </div>`;
     }
@@ -1216,7 +1223,6 @@ window.CC_APP = {
         statBadge('Combat', unit.combat, 'combat'),
         statBadge('Shoot', unit.shoot, 'shoot'),
         unit.armor ? statBadge('Armor', unit.armor, 'armor') : '',
-        unit.cost  ? statBadge('Cost', unit.cost + '£', 'cost')  : '',
       ].join('');
 
       const directive = faction.isNPC ? buildDirective(faction, unit) : null;
@@ -1239,13 +1245,29 @@ window.CC_APP = {
         </div>` : '';
 
       const specialHtml = unit.special?.length ? `
-        <div style="margin:.75rem 0;display:flex;flex-wrap:wrap;gap:.4rem;">
-          ${(Array.isArray(unit.special) ? unit.special : [unit.special]).map(s =>
-            `<span style="padding:3px 8px;background:rgba(255,255,255,.06);
-                          border:1px solid rgba(255,255,255,.12);border-radius:4px;
-                          font-size:.78rem;color:#ccc;">${s}</span>`
-          ).join('')}
+        <div style="margin:.75rem 0;">
+          <div style="font-size:.68rem;color:#555;text-transform:uppercase;letter-spacing:.1em;
+                      margin-bottom:.35rem;">Abilities <span style="color:#444;font-style:italic;
+                      text-transform:none;letter-spacing:0;">— tap to look up rule</span></div>
+          <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
+            ${(Array.isArray(unit.special) ? unit.special : [unit.special]).map((s, idx) =>
+              `<button
+                onclick="window.CC_TC.showAbilityRule(${idx}, '${faction.id}', '${unit.id}')"
+                style="padding:4px 10px;background:rgba(255,255,255,.06);
+                       border:1px solid rgba(255,255,255,.18);border-radius:4px;
+                       font-size:.78rem;color:#ddd;cursor:pointer;
+                       transition:border-color .15s,color .15s;"
+                onmouseenter="this.style.borderColor='${color}';this.style.color='${color}'"
+                onmouseleave="this.style.borderColor='rgba(255,255,255,.18)';this.style.color='#ddd'"
+              >${s}</button>`
+            ).join('')}
+          </div>
         </div>` : '';
+
+      // Store unit abilities on CC_TC so the handler can look them up by index
+      // (avoids injecting ability names as strings into onclick attributes)
+      window.CC_TC._currentUnitAbilities = Array.isArray(unit.special)
+        ? unit.special : (unit.special ? [unit.special] : []);
 
       root.innerHTML = `
         <div class="cc-app-shell h-100" style="display:flex;flex-direction:column;">
@@ -2064,6 +2086,7 @@ window.CC_APP = {
       state.setupTurnIndex    = 0;
       state.factions.forEach(function(f) { initUnitStates(f); });
       state.phase = 'setup_round';
+      loadAbilityDictionaries(); // pre-fetch in background so first tap is instant
       render();
     };
 
@@ -2127,15 +2150,175 @@ window.CC_APP = {
       render();
     };
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ABILITY LOOKUP SYSTEM
+    // ═══════════════════════════════════════════════════════════════════════════
+    //
+    // Ability names come from faction JSON as plain strings e.g. "Tough 2",
+    // "Stealth", "Brutal 3". The actual rule text lives in the ability
+    // dictionary JSON files. We lazy-fetch those files once and cache them.
+
+    var _abilityCache   = {};   // normalised_name → {name, short, long, timing}
+    var _abilityFetched = false;
+    var _abilityFetching = false;
+
+    var ABILITY_FILES = [
+      '90_ability_dictionary_A.json',
+      '91_ability_dictionary_B.json',
+      '92_ability_dictionary_C.json',
+      '93_ability_dictionary_D.json',
+      '94_ability_dictionary_E.json',
+      '95_ability_dictionary_F.json',
+      '96_ability_dictionary_G.json',
+      '97_ability_dictionary_H.json',
+    ];
+    var ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
+
+    // Flatten any JSON object tree into all leaf objects that look like an ability
+    // (have a short_text or long_text or description or effect field).
+    function extractAbilitiesFromJson(obj, results) {
+      if (!obj || typeof obj !== 'object') return;
+      // Does this object look like an ability definition?
+      var hasText = obj.short_text || obj.long_text || obj.description ||
+                    obj.effect || obj.effect_text || obj.rules_text || obj.text;
+      var hasName = obj.name || obj.id || obj.keyword;
+      if (hasText && hasName) {
+        var name = String(obj.name || obj.id || obj.keyword || '').trim();
+        var key  = name.toLowerCase().replace(/\s+\d+$/, '').replace(/[^a-z0-9]/g, '');
+        if (key && !results[key]) {
+          results[key] = {
+            name:   name,
+            short:  obj.short_text  || obj.description || obj.effect || '',
+            long:   obj.long_text   || obj.effect_text || obj.rules_text || obj.text || '',
+            timing: obj.timing      || obj.timing_note || '',
+          };
+        }
+      }
+      // Recurse into all child objects and arrays
+      Object.values(obj).forEach(function(v) {
+        if (v && typeof v === 'object') extractAbilitiesFromJson(v, results);
+      });
+    }
+
+    function loadAbilityDictionaries() {
+      if (_abilityFetched || _abilityFetching) return;
+      _abilityFetching = true;
+
+      var promises = ABILITY_FILES.map(function(filename) {
+        return fetch(ABILITY_BASE + filename + '?t=' + Date.now())
+          .then(function(r) { return r.ok ? r.text() : ''; })
+          .then(function(text) {
+            if (!text) return;
+            var data = JSON.parse(text);   // safe — our patch catches errors
+            if (data) extractAbilitiesFromJson(data, _abilityCache);
+          })
+          .catch(function() {}); // one bad file never breaks the rest
+      });
+
+      Promise.all(promises).then(function() {
+        _abilityFetched  = true;
+        _abilityFetching = false;
+        console.log('📖 Ability dictionary loaded —', Object.keys(_abilityCache).length, 'entries');
+      });
+    }
+
+    // Look up an ability by name (handles "Tough 2" → search "tough", "tough2", "tough 2")
+    function lookupAbility(abilityName) {
+      var raw    = String(abilityName || '').trim();
+      // Try exact key
+      var exact  = raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (_abilityCache[exact]) return _abilityCache[exact];
+      // Try base keyword without trailing number ("Tough 2" → "tough")
+      var base   = raw.toLowerCase().replace(/\s+\d+$/, '').replace(/[^a-z0-9]/g, '');
+      if (_abilityCache[base]) return _abilityCache[base];
+      // Try partial match (first word)
+      var first  = raw.toLowerCase().split(/\s+/)[0].replace(/[^a-z0-9]/g, '');
+      var keys   = Object.keys(_abilityCache);
+      for (var i = 0; i < keys.length; i++) {
+        if (keys[i].startsWith(first)) return _abilityCache[keys[i]];
+      }
+      return null;
+    }
+
+    // Show ability rule popup
+    window.CC_TC.showAbilityRule = function(idx, factionId, unitId) {
+      var abilities = window.CC_TC._currentUnitAbilities || [];
+      var abilityName = abilities[idx];
+      if (!abilityName) return;
+
+      // Start loading dictionaries in the background if not already done
+      loadAbilityDictionaries();
+
+      var existing = document.getElementById('cc-ability-overlay');
+      if (existing) existing.remove();
+
+      var entry   = lookupAbility(abilityName);
+      var overlay = document.createElement('div');
+      overlay.id  = 'cc-ability-overlay';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);' +
+        'display:flex;align-items:center;justify-content:center;animation:cc-fade-in .2s ease;' +
+        'padding:1rem;box-sizing:border-box;';
+
+      var bodyHtml;
+      if (entry) {
+        bodyHtml =
+          '<div style="font-size:.72rem;color:#888;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;">' +
+          (entry.timing || 'Ability') + '</div>' +
+          (entry.short
+            ? '<div style="color:#fff;font-size:.95rem;font-weight:600;margin-bottom:.6rem;line-height:1.4;">' + entry.short + '</div>'
+            : '') +
+          (entry.long && entry.long !== entry.short
+            ? '<div style="color:#bbb;font-size:.85rem;line-height:1.55;">' + entry.long + '</div>'
+            : '');
+      } else if (_abilityFetching) {
+        bodyHtml = '<div style="color:#888;font-size:.9rem;text-align:center;padding:1rem;">' +
+          '<div style="animation:cc-spin 1s linear infinite;font-size:1.5rem;margin-bottom:.5rem;display:inline-block;">⟳</div>' +
+          '<br>Loading rules dictionary…</div>';
+        // Re-open when loaded
+        setTimeout(function() {
+          window.CC_TC.showAbilityRule(idx, factionId, unitId);
+        }, 1200);
+      } else {
+        bodyHtml = '<div style="color:#666;font-size:.85rem;line-height:1.5;">' +
+          'Rule text not found in the ability dictionary.<br><br>' +
+          '<span style="color:#555;font-size:.78rem;">Check the Rules Explorer for the full text.</span>' +
+          '</div>';
+      }
+
+      overlay.innerHTML =
+        '<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,.15);border-radius:12px;' +
+        'padding:1.5rem;max-width:420px;width:100%;">' +
+        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.75rem;">' +
+        '<h4 style="margin:0;color:var(--cc-primary);font-size:1.1rem;">' + abilityName + '</h4>' +
+        '<button onclick="document.getElementById(\'cc-ability-overlay\').remove()" ' +
+        'style="background:none;border:none;color:#666;cursor:pointer;font-size:1.2rem;padding:0;flex-shrink:0;line-height:1;">✕</button>' +
+        '</div>' +
+        bodyHtml +
+        '<button onclick="document.getElementById(\'cc-ability-overlay\').remove()" ' +
+        'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:1rem;">Close</button>' +
+        '</div>';
+
+      document.body.appendChild(overlay);
+    };
+
     window.CC_TC.rollQualityForUnit = function(factionId, unitId) {
       var faction = getFactionById(factionId);
       var unit    = getUnitById(faction, unitId);
       var us      = getUnitState(factionId, unitId);
       if (!unit || !us || us.out) return;
+
+      // If already rolled this activation, show the cached result instead of re-rolling.
+      // A unit only gets one roll per activation — tap again to review, not re-roll.
+      if (us.lastRoll) {
+        showRollResult(us.lastRoll, unit.name, true);
+        return;
+      }
+
       var currentQ = us.quality || unit.quality;
       if (currentQ < 1) return;
       var result = rollQuality(currentQ);
-      showRollResult(result, unit.name);
+      setUnitState(factionId, unitId, { lastRoll: result });
+      showRollResult(result, unit.name, false);
     };
 
     window.CC_TC.logNoise = function(key) {
