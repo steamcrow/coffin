@@ -1483,42 +1483,72 @@ window.CC_APP = {
       }
     };
 
+    window.CC_TC.closeScenarioPanel = function() {
+      var panel = document.getElementById('cc-tc-scenario-panel');
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(function() { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 300);
+      }
+    };
+
     window.CC_TC.openScenarioList = function() {
       if (!window.CC_STORAGE) { alert('Storage not available.'); return; }
-      // API: loadDocumentList -> [{id, name, write_date}]
+
+      // Show a loading panel immediately
+      var existingPanel = document.getElementById('cc-tc-scenario-panel');
+      if (existingPanel) existingPanel.parentNode.removeChild(existingPanel);
+
+      var panel = document.createElement('div');
+      panel.id = 'cc-tc-scenario-panel';
+      panel.className = 'cc-slide-panel';
+      panel.innerHTML =
+        '<div class="cc-slide-panel-header">' +
+        '<h2><i class="fa fa-map"></i> LOAD SCENARIO</h2>' +
+        '<button onclick="window.CC_TC.closeScenarioPanel()" class="cc-panel-close-btn">' +
+        '<i class="fa fa-times"></i></button>' +
+        '</div>' +
+        '<div class="cc-roster-list" id="cc-tc-scenario-list">' +
+        '<div style="padding:1.5rem;color:#888;text-align:center;">' +
+        '<i class="fa fa-spinner fa-spin"></i> Loading saves...</div>' +
+        '</div>';
+      document.body.appendChild(panel);
+      setTimeout(function() { panel.classList.add('cc-slide-panel-open'); }, 10);
+
       window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER).then(function(docs) {
         var scenarios = (docs || []).filter(function(d) {
           return d.name && d.name.indexOf('SCN_') === 0;
         });
+        var listEl = document.getElementById('cc-tc-scenario-list');
+        if (!listEl) return;
+
         if (!scenarios.length) {
-          alert('No scenario saves found.\nSave a scenario in the Scenario Builder first.');
+          listEl.innerHTML = '<div style="padding:1.5rem;color:#888;">' +
+            '<p>No scenario saves found.</p>' +
+            '<p style="font-size:.85rem;">Save a scenario in the Scenario Builder first, then come back.</p>' +
+            '</div>';
           return;
         }
-        var list = scenarios.map(function(d) {
-          var label = d.name.replace(/^SCN_/, '').replace(/_\d{13}$/, '').replace(/_/g, ' ');
-          return '<button onclick="window.CC_TC.loadScenario(' + d.id + ')" ' +
-            'class="cc-btn cc-btn-secondary" style="width:100%;margin-bottom:.5rem;text-align:left;">' +
-            label + '</button>';
+
+        listEl.innerHTML = scenarios.map(function(d) {
+          var label = d.name.replace(/^SCN_/, '').replace(/_\d{13}$/, '').replace(/_/g, ' ').trim();
+          var date  = d.write_date ? new Date(d.write_date).toLocaleDateString() : '';
+          return '<div class="cc-saved-roster-item">' +
+            '<div class="cc-saved-roster-name">' + label + '</div>' +
+            (date ? '<div class="cc-saved-roster-meta">' + date + '</div>' : '') +
+            '<div class="cc-saved-roster-actions">' +
+            '<button onclick="window.CC_TC.loadScenario(' + d.id + ')" class="btn-outline-warning">' +
+            '<i class="fa fa-folder-open"></i> LOAD</button>' +
+            '</div>' +
+            '</div>';
         }).join('');
-        var overlay = document.createElement('div');
-        overlay.id = 'cc-tc-overlay';
-        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);' +
-          'display:flex;align-items:center;justify-content:center;';
-        overlay.innerHTML =
-          '<div style="background:#1a1a1a;border:1px solid rgba(255,117,24,.4);border-radius:8px;' +
-          'padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">' +
-          '<h5 style="margin:0 0 1rem;color:var(--cc-primary);">Load Scenario</h5>' +
-          list +
-          '<button onclick="document.getElementById(\'cc-tc-overlay\').remove()" ' +
-          'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:.5rem;">Cancel</button>' +
-          '</div>';
-        document.body.appendChild(overlay);
-      }).catch(function(err) { alert('Failed to list saves: ' + safeErr(err)); });
+      }).catch(function(err) {
+        var listEl = document.getElementById('cc-tc-scenario-list');
+        if (listEl) listEl.innerHTML = '<div style="padding:1.5rem;color:#f66;">Failed to load: ' + safeErr(err) + '</div>';
+      });
     };
 
     window.CC_TC.loadScenario = async function(docId) {
-      var overlay = document.getElementById('cc-tc-overlay');
-      if (overlay) overlay.remove();
+      window.CC_TC.closeScenarioPanel();
       try {
         // API: loadDocument(id) -> {json: string}
         var doc     = await window.CC_STORAGE.loadDocument(docId);
@@ -1553,19 +1583,23 @@ window.CC_APP = {
           var nonScenario = (allDocs || []).filter(function(d) {
             return d.name && d.name.indexOf('SCN_') !== 0;
           });
-          // Enrich with parsed metadata (factionName, totalPoints) for display
-          state.factionSaveList = await Promise.all(nonScenario.map(async function(d) {
-            try {
-              var parsed = await window.CC_STORAGE.loadDocument(d.id);
-              var data   = docToJson(parsed);
-              if (data) {
-                d._factionId    = data.faction      || null;  // e.g. 'monster_rangers'
-                d._factionName  = data.factionName  || data.faction || null;
-                d._armyName     = data.armyName     || data.name || null;
-                d._totalPoints  = data.totalCost    || data.totalPoints || data.pts || null;
-              }
-            } catch (_) { /* enrichment failed — still show the doc */ }
-            return d;
+          // Enrich with parsed metadata — fully guarded so one bad doc never
+          // breaks the whole list. Uses Promise.resolve() wrapper so a rejected
+          // loadDocument promise can't escape into an unhandled rejection.
+          state.factionSaveList = await Promise.all(nonScenario.map(function(d) {
+            return Promise.resolve().then(async function() {
+              try {
+                var parsed = await window.CC_STORAGE.loadDocument(d.id);
+                var data   = docToJson(parsed);
+                if (data) {
+                  d._factionId   = data.faction   || null;
+                  d._factionName = data.factionName || data.faction || null;
+                  d._armyName    = data.armyName   || data.name    || null;
+                  d._totalPoints = data.totalCost  || data.totalPoints || data.pts || null;
+                }
+              } catch (_) { /* one bad doc — skip enrichment, still show it */ }
+              return d;
+            }).catch(function() { return d; }); // belt AND suspenders
           }));
         } catch (e) {
           state.factionSaveList = [];
