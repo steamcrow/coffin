@@ -1091,11 +1091,92 @@ window.CC_APP = {
     // RENDER: MASTER DISPATCHER
     // ═══════════════════════════════════════════════════════════════════════════
 
+
+    // =========================================================================
+    // RENDER: FACTION SETUP
+    // =========================================================================
+
+    function renderFactionSetup() {
+      if (state.loadingData) {
+        root.innerHTML = '<div class="cc-app-shell h-100" style="display:flex;align-items:center;justify-content:center;flex-direction:column;gap:1rem;">' +
+          '<div style="font-size:2rem;animation:cc-spin 1s linear infinite;">⚙️</div>' +
+          '<p style="color:#888;">Loading faction saves...</p></div>';
+        return;
+      }
+
+      var rows = state.pendingFactions.map(function(pf) {
+        var meta       = FACTION_META[pf.id] || {};
+        var color      = meta.color || '#888';
+        var fname      = meta.name  || pf.id;
+        var assignment = state.factionAssignments[pf.id];
+        var assignLabel = assignment
+          ? assignment.docName.replace(/_/g,' ').replace(/[0-9]{13}/,'').trim()
+          : 'Default Roster (game data)';
+        var hasSaves   = state.factionSaveList.length > 0;
+
+        return '<div style="padding:.85rem;border:1px solid ' + color + '33;border-radius:6px;background:rgba(0,0,0,.2);">' +
+          '<div style="display:flex;align-items:center;gap:.75rem;margin-bottom:.6rem;">' +
+          '<div style="width:36px;height:36px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;color:' + color + ';flex-shrink:0;">' + fname[0] + '</div>' +
+          '<strong style="flex:1;color:' + color + ';">' + fname + '</strong>' +
+          '<label style="display:flex;align-items:center;gap:.4rem;font-size:.8rem;color:#aaa;cursor:pointer;">' +
+          '<input type="checkbox" id="npc_toggle_' + pf.id + '"' + (pf.npc ? ' checked' : '') +
+          ' onchange="window.CC_TC.toggleNPC(\'' + pf.id + '\')"> NPC</label>' +
+          '</div>' +
+          '<div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">' +
+          '<span style="font-size:.8rem;color:#888;flex:1;min-width:120px;">Roster: ' + assignLabel + '</span>' +
+          (hasSaves ? '<button onclick="window.CC_TC.openFactionSavePicker(\'' + pf.id + '\')" ' +
+            'class="cc-btn cc-btn-secondary" style="font-size:.75rem;padding:.25rem .6rem;flex-shrink:0;">Browse Saves</button>' : '') +
+          (assignment ? ' <button onclick="window.CC_TC.clearFactionSave(\'' + pf.id + '\')" ' +
+            'class="cc-btn cc-btn-secondary" style="font-size:.75rem;padding:.25rem .6rem;color:#ef5350;flex-shrink:0;">Reset</button>' : '') +
+          '</div>' +
+          '</div>';
+      }).join('');
+
+      root.innerHTML =
+        '<div class="cc-app-shell h-100">' +
+        '<div class="cc-app-header">' +
+        '<div><h1 class="cc-app-title">Coffin Canyon</h1>' +
+        '<div class="cc-app-subtitle">' + (state.scenarioName || 'Faction Setup') + '</div></div>' +
+        '<button class="cc-btn cc-btn-secondary" onclick="window.CC_TC.backToSetup()">Back</button>' +
+        '</div>' +
+        '<div style="max-width:600px;margin:0 auto;padding:1.5rem;">' +
+
+        // Scenario summary
+        (state.scenarioSave
+          ? '<div class="cc-panel" style="margin-bottom:1rem;">' +
+            '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">Scenario</h5></div>' +
+            '<div class="cc-panel-body" style="font-size:.85rem;color:#aaa;">' +
+            '<p style="margin:0;">' + (state.scenarioSave.narrative_hook || 'Ready to play.') + '</p>' +
+            ((state.scenarioSave.objectives || []).length
+              ? '<p style="margin:.5rem 0 0;"><strong style="color:#ccc;">Objectives:</strong> ' +
+                (state.scenarioSave.objectives || []).map(function(o){return o.name||String(o);}).join(' &middot; ') + '</p>'
+              : '') +
+            '</div></div>'
+          : '') +
+
+        // Faction rows
+        '<div class="cc-panel">' +
+        '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">Factions &amp; Rosters</h5></div>' +
+        '<div class="cc-panel-body" style="display:flex;flex-direction:column;gap:.6rem;">' +
+        rows +
+        '</div></div>' +
+
+        (state.factionSaveList.length === 0
+          ? '<p style="font-size:.8rem;color:#555;text-align:center;margin:.75rem 0;">No saved faction rosters found in storage — all factions will use default game data rosters.</p>'
+          : '') +
+
+        '<div style="margin-top:1rem;">' +
+        '<button class="cc-btn" style="width:100%;font-size:1.05rem;padding:.85rem;" onclick="window.CC_TC.startFromFactionSetup()">Begin Game &rarr;</button>' +
+        '</div>' +
+        '</div></div>';
+    }
+
     function render() {
       switch (state.phase) {
         case 'splash':       return renderSplash();
         case 'setup':        return renderSetup();
-        case 'quick_setup':  return renderQuickSetup();
+        case 'quick_setup':   return renderQuickSetup();
+        case 'faction_setup': return renderFactionSetup();
         case 'round_banner': return renderRoundBanner();
         case 'activation':   return renderActivation();
         case 'round_end':    return renderRoundEnd();
@@ -1148,68 +1229,175 @@ window.CC_APP = {
 
     window.CC_TC.openScenarioList = function() {
       if (!window.CC_STORAGE) { alert('Storage not available.'); return; }
-      window.CC_STORAGE.listDocuments(SCENARIO_FOLDER).then(function(docs) {
-        if (!docs || !docs.length) { alert('No scenario saves found.'); return; }
-        var list = docs.map(function(d) {
-          return '<button onclick="window.CC_TC.loadScenario(\'' + d.id + '\')" ' +
+      // API: loadDocumentList -> [{id, name, write_date}]
+      window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER).then(function(docs) {
+        var scenarios = (docs || []).filter(function(d) {
+          return d.name && d.name.indexOf('SCN_') === 0;
+        });
+        if (!scenarios.length) {
+          alert('No scenario saves found.\nSave a scenario in the Scenario Builder first.');
+          return;
+        }
+        var list = scenarios.map(function(d) {
+          var label = d.name.replace(/^SCN_/, '').replace(/_\d{13}$/, '').replace(/_/g, ' ');
+          return '<button onclick="window.CC_TC.loadScenario(' + d.id + ')" ' +
             'class="cc-btn cc-btn-secondary" style="width:100%;margin-bottom:.5rem;text-align:left;">' +
-            '\uD83D\uDCCB ' + (d.name || d.id) + '</button>';
+            label + '</button>';
         }).join('');
         var overlay = document.createElement('div');
+        overlay.id = 'cc-tc-overlay';
         overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);' +
           'display:flex;align-items:center;justify-content:center;';
         overlay.innerHTML =
-          '<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,.15);border-radius:8px;' +
+          '<div style="background:#1a1a1a;border:1px solid rgba(255,117,24,.4);border-radius:8px;' +
           'padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">' +
           '<h5 style="margin:0 0 1rem;color:var(--cc-primary);">Load Scenario</h5>' +
           list +
-          '<button onclick="this.closest(\'div\').parentElement.remove()" ' +
+          '<button onclick="document.getElementById(\'cc-tc-overlay\').remove()" ' +
           'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:.5rem;">Cancel</button>' +
           '</div>';
         document.body.appendChild(overlay);
-      }).catch(function() { alert('Failed to load saves.'); });
+      }).catch(function(err) { alert('Failed to list saves: ' + (err && err.message || err)); });
     };
 
     window.CC_TC.loadScenario = async function(docId) {
-      var modal = document.querySelector('div[style*="z-index:9999"]');
-      if (modal) modal.remove();
+      var overlay = document.getElementById('cc-tc-overlay');
+      if (overlay) overlay.remove();
       try {
-        var doc     = await window.CC_STORAGE.getDocument(docId);
-        var payload = JSON.parse(doc.content);
+        // API: loadDocument(id) -> {json: string}
+        var doc     = await window.CC_STORAGE.loadDocument(docId);
+        var payload = JSON.parse(doc.json);
+
         state.scenarioSave   = payload.scenario || payload;
-        state.scenarioName   = payload.name || 'Scenario';
-        state.noiseThreshold = 8 + ((payload.danger || 3) * 2);
+        state.scenarioName   = payload.name || (payload.scenario && payload.scenario.name) || 'Scenario';
+        state.noiseThreshold = 8 + ((payload.danger || (payload.scenario && payload.scenario.danger_rating) || 3) * 2);
         var mp = state.scenarioSave && state.scenarioSave.monster_pressure;
         state.monsterRoster  = (mp && mp.monsters) || [];
-        state.loadingData    = true;
-        state.factions       = [];
-        render();
-        var factionEntries = payload.factions || [];
-        for (var i = 0; i < factionEntries.length; i++) {
-          var fe   = factionEntries[i];
-          var id   = fe.id;
-          var meta = FACTION_META[id];
-          if (!meta) continue;
-          var fData   = await loadFactionData(id);
-          var isNPC   = (fe.npc !== false);
-          var faction = fData
-            ? buildFactionEntry(id, fData, isNPC, meta.isMonster)
-            : buildQuickFaction(id, meta.name, 3, isNPC, meta.isMonster);
-          initUnitStates(faction);
-          state.factions.push(faction);
+
+        // Factions from payload — normalise to [{id, npc}]
+        var rawFactions = payload.factions || (payload.scenario && payload.scenario.factions) || [];
+        state.pendingFactions = rawFactions.map(function(f) {
+          return { id: f.id, npc: f.npc !== undefined ? f.npc : (f.isNPC !== undefined ? f.isNPC : true) };
+        }).filter(function(f) { return !!FACTION_META[f.id]; });
+
+        if (!state.pendingFactions.length) {
+          alert('No valid factions found in this scenario save.\nWas it saved from the Scenario Builder?');
+          state.phase = 'setup'; render(); return;
+        }
+
+        // Init assignments (null = use default GitHub JSON)
+        state.factionAssignments = {};
+        state.pendingFactions.forEach(function(f) { state.factionAssignments[f.id] = null; });
+
+        // Pre-load faction save list (non-SCN_ docs from folder 90)
+        state.loadingData = true; render();
+        try {
+          var allDocs = await window.CC_STORAGE.loadDocumentList(FACTION_SAVE_FOLDER);
+          state.factionSaveList = (allDocs || []).filter(function(d) {
+            return d.name && d.name.indexOf('SCN_') !== 0;
+          });
+        } catch (e) {
+          state.factionSaveList = [];
+          console.warn('Faction save list failed:', e.message);
         }
         state.loadingData = false;
-        window.CC_TC.beginGame();
+        state.phase = 'faction_setup';
+        render();
+
       } catch (err) {
         alert('Failed to load scenario: ' + err.message);
-        state.loadingData = false;
-        state.phase = 'setup';
-        render();
+        state.loadingData = false; state.phase = 'setup'; render();
       }
     };
 
     window.CC_TC.openGameList = function() {
       alert('Resume coming soon — save/load is in the next build pass!');
+    };
+
+
+    // ── FACTION SETUP HANDLERS ─────────────────────────────────────────────────
+
+    window.CC_TC.toggleNPC = function(factionId) {
+      var el = document.getElementById('npc_toggle_' + factionId);
+      var pf = state.pendingFactions.find(function(f) { return f.id === factionId; });
+      if (pf && el) pf.npc = el.checked;
+    };
+
+    window.CC_TC.openFactionSavePicker = function(factionId) {
+      var meta = FACTION_META[factionId] || {};
+      var docs = state.factionSaveList;
+      if (!docs.length) { alert('No faction saves in storage.'); return; }
+
+      var items = docs.map(function(d) {
+        var label = d.name.replace(/_/g,' ').replace(/[0-9]{13}/,'').trim();
+        return '<button onclick="window.CC_TC.selectFactionSave(\'' + factionId + '\',' + d.id + ',\'' + d.name + '\')" ' +
+          'class="cc-btn cc-btn-secondary" style="width:100%;margin-bottom:.4rem;text-align:left;">' +
+          label + '</button>';
+      }).join('');
+
+      var overlay = document.createElement('div');
+      overlay.id = 'cc-tc-save-picker';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;';
+      overlay.innerHTML =
+        '<div style="background:#1a1a1a;border:1px solid rgba(255,117,24,.4);border-radius:8px;padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">' +
+        '<h5 style="margin:0 0 1rem;color:var(--cc-primary);">Saved Builds for ' + (meta.name || factionId) + '</h5>' +
+        '<p style="font-size:.8rem;color:#888;margin:0 0 .75rem;">Pick the saved army list to use for this faction.</p>' +
+        items +
+        '<button onclick="document.getElementById(\'cc-tc-save-picker\').remove()" ' +
+        'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:.5rem;">Cancel</button>' +
+        '</div>';
+      document.body.appendChild(overlay);
+    };
+
+    window.CC_TC.selectFactionSave = function(factionId, docId, docName) {
+      state.factionAssignments[factionId] = { docId: docId, docName: docName };
+      var picker = document.getElementById('cc-tc-save-picker');
+      if (picker) picker.remove();
+      render();
+    };
+
+    window.CC_TC.clearFactionSave = function(factionId) {
+      state.factionAssignments[factionId] = null;
+      render();
+    };
+
+    window.CC_TC.startFromFactionSetup = async function() {
+      state.loadingData = true;
+      state.factions    = [];
+      render();
+
+      for (var i = 0; i < state.pendingFactions.length; i++) {
+        var pf     = state.pendingFactions[i];
+        var meta   = FACTION_META[pf.id];
+        var assign = state.factionAssignments[pf.id];
+        var faction;
+
+        if (assign && assign.docId) {
+          // Load from CC_STORAGE faction save
+          try {
+            var saveDoc  = await window.CC_STORAGE.loadDocument(assign.docId);
+            var saveParsed = JSON.parse(saveDoc.json);
+            faction = await buildFactionFromSave(pf.id, saveParsed, pf.npc);
+          } catch (err) {
+            console.warn('Failed to load faction save for ' + pf.id + ', falling back to default:', err.message);
+            assign = null;
+          }
+        }
+
+        if (!faction) {
+          // Default: load from GitHub faction JSON
+          var fData = await loadFactionData(pf.id);
+          faction = fData
+            ? buildFactionEntry(pf.id, fData, pf.npc, meta.isMonster)
+            : buildQuickFaction(pf.id, meta.name, 3, pf.npc, meta.isMonster);
+        }
+
+        initUnitStates(faction);
+        state.factions.push(faction);
+      }
+
+      state.loadingData = false;
+      window.CC_TC.beginGame();
     };
 
     window.CC_TC.beginGame = function() {
