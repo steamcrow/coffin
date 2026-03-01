@@ -200,42 +200,25 @@ window.CC_APP = {
       return null;
     }
 
-    // Backstop: Odoo's unhandledrejection handler crashes when the rejection
-    // reason has no .stack property (plain string, object, undefined, etc).
-    // We register with { capture: true } so our handler runs in the CAPTURE
-    // phase — which always fires before bubble-phase listeners (like Odoo's)
-    // regardless of registration order.
+    // Rejection guard lives in cc_master_shell.html (must be first on page).
+    // Keeping a lightweight backup here in case the app is loaded standalone.
     (function() {
-      if (window._ccRejectionGuardInstalled) return; // only install once
+      if (window._ccRejectionGuardInstalled) return;
       window._ccRejectionGuardInstalled = true;
-
-      function ccNormalizeRejection(event) {
+      window.addEventListener('unhandledrejection', function(event) {
         var reason = event.reason;
-        // If it's already a proper Error with a stack, Odoo can handle it fine
         if (reason instanceof Error && typeof reason.stack === 'string') return;
-
-        // Build a safe message from whatever we got
         var msg;
         try {
-          msg = reason == null        ? 'Unhandled promise rejection'
+          msg = reason == null ? 'Unhandled promise rejection'
               : typeof reason === 'string' ? reason
-              : reason.message         ? String(reason.message)
+              : reason.message ? String(reason.message)
               : JSON.stringify(reason);
-        } catch (_) {
-          msg = 'Unhandled promise rejection';
-        }
-
-        // Block Odoo's handler from seeing the bad reason
+        } catch(_) { msg = 'Unhandled promise rejection'; }
         event.preventDefault();
         event.stopImmediatePropagation();
-
-        // Re-throw as a real Error so it still appears in the console
-        var err = new Error('[CC App] ' + msg);
-        setTimeout(function() { throw err; }, 0);
-      }
-
-      // capture:true = fires before all bubble-phase listeners (including Odoo's)
-      window.addEventListener('unhandledrejection', ccNormalizeRejection, { capture: true });
+        setTimeout(function() { throw new Error('[CC] ' + msg); }, 0);
+      }, { capture: true });
     }());
 
 
