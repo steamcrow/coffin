@@ -289,6 +289,7 @@ window.CC_APP = {
 
     const NOISE_VALUES = {
       shot:      { label: 'Shot',      value: 2 },
+      melee:     { label: 'Melee',     value: 3 },
       explosion: { label: 'Explosion', value: 3 },
       ritual:    { label: 'Ritual',    value: 4 },
       ability:   { label: 'Ability',   value: 2 },
@@ -714,17 +715,118 @@ window.CC_APP = {
     // NOISE & MONSTER PRESSURE
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // Fallback monster pool — used when Quick Mode has no scenario data,
-    // or when the scenario monster list is exhausted.
+    // Canyon-generic fallback pool — used only when scenario has no monster list
+    // AND the Monsters faction JSON hasn't loaded yet.
     var FALLBACK_MONSTERS = [
-      { id: 'ruster',          name: 'Ruster',          quality: 4, move: 6,  combat: 4, shoot: null, armor: null, special: ['Rust Bite'], isTitan: false },
-      { id: 'snarl',           name: 'Snarl',           quality: 4, move: 8,  combat: 5, shoot: null, armor: null, special: ['Pounce'],    isTitan: false },
-      { id: 'canyon_crawler',  name: 'Canyon Crawler',  quality: 3, move: 5,  combat: 3, shoot: null, armor: 2,    special: ['Tough 1'],   isTitan: false },
-      { id: 'dust_wraith',     name: 'Dust Wraith',     quality: 4, move: 7,  combat: 3, shoot: 3,    armor: null, special: ['Stealth'],   isTitan: false },
-      { id: 'thyr_hound',      name: 'Thyr Hound',      quality: 4, move: 7,  combat: 4, shoot: null, armor: null, special: ['Frenzy'],    isTitan: false },
-      { id: 'iron_stalker',    name: 'Iron Stalker',    quality: 3, move: 5,  combat: 4, shoot: null, armor: 3,    special: ['Tough 2'],   isTitan: false },
-      { id: 'canyon_titan',    name: 'Canyon Titan',    quality: 3, move: 4,  combat: 5, shoot: null, armor: 4,    special: ['Titan','Fearsome'], isTitan: true },
+      { id: 'ruster',         name: 'Ruster',         quality: 4, move: 6,  combat: 4, shoot: null, armor: null, special: ['Rust Bite'],        isTitan: false },
+      { id: 'snarl',          name: 'Snarl',          quality: 4, move: 8,  combat: 5, shoot: null, armor: null, special: ['Pounce'],            isTitan: false },
+      { id: 'canyon_crawler', name: 'Canyon Crawler', quality: 3, move: 5,  combat: 3, shoot: null, armor: 2,    special: ['Tough 1'],           isTitan: false },
+      { id: 'dust_wraith',    name: 'Dust Wraith',    quality: 4, move: 7,  combat: 3, shoot: 3,    armor: null, special: ['Stealth'],           isTitan: false },
+      { id: 'thyr_hound',     name: 'Thyr Hound',     quality: 4, move: 7,  combat: 4, shoot: null, armor: null, special: ['Frenzy'],            isTitan: false },
+      { id: 'iron_stalker',   name: 'Iron Stalker',   quality: 3, move: 5,  combat: 4, shoot: null, armor: 3,    special: ['Tough 2'],           isTitan: false },
+      { id: 'canyon_titan',   name: 'Canyon Titan',   quality: 3, move: 4,  combat: 5, shoot: null, armor: 4,    special: ['Titan','Fearsome'],  isTitan: true  },
     ];
+
+    // Live pool fetched from the Monsters faction JSON — filled in loadMonstersFactionData()
+    var _monstersFactionPool = [];
+
+    // Pre-fetch the Monsters faction JSON so we have real stats for encounters.
+    // Called from beginGame so the data is ready before the first trigger fires.
+    async function loadMonstersFactionData() {
+      if (_monstersFactionPool.length > 0) return; // already loaded
+      try {
+        var meta = FACTION_META['monsters'];
+        if (!meta) return;
+        var url  = FACTION_LOADER_BASE + meta.file + '?t=' + Date.now();
+        var res  = await fetch(url);
+        if (!res.ok) return;
+        var text = await res.text();
+        var data = safeParseJson(text);
+        if (!data) return;
+        var rawUnits = data.units || data.roster || [];
+        _monstersFactionPool = rawUnits.map(function(u, i) {
+          return {
+            id:      u.id      || ('monsters_' + i),
+            name:    u.name    || ('Monster ' + (i+1)),
+            quality: u.quality || 4,
+            move:    u.move    || 6,
+            combat:  u.combat  || 4,
+            shoot:   u.shoot   || null,
+            armor:   u.armor   || null,
+            special: u.special || u.abilities || [],
+            isTitan: u.titan   || u.is_titan  || false,
+          };
+        });
+        console.log('🐉 Monsters faction loaded — ' + _monstersFactionPool.length + ' monster types');
+      } catch (e) {
+        console.warn('Could not load monsters faction:', safeErr(e));
+      }
+    }
+
+    // Pick ONE monster definition for an encounter.
+    //
+    // Priority:
+    //   80% — pick from the scenario's location monster list (state.monsterRoster),
+    //          looking up full stats from the Monsters faction pool.
+    //   20% — pick from the full Monsters faction pool (random, not back-to-back).
+    //   Fallback — FALLBACK_MONSTERS table if neither list has data.
+    //
+    // Within the scenario list we cycle (modulo) so repeated encounters
+    // rotate through all listed types rather than repeating the first one.
+    function pickEncounterMonster() {
+      var scenarioList = state.monsterRoster || [];   // names/objects from scenario
+      var factionPool  = _monstersFactionPool;
+      var fallbackPool = FALLBACK_MONSTERS;
+
+      // Helper: find stats for a name, checking faction pool then fallback table
+      function statsForName(nameOrObj) {
+        var rawName = (typeof nameOrObj === 'string')
+          ? nameOrObj
+          : (nameOrObj && (nameOrObj.name || nameOrObj.id || ''));
+        if (!rawName) return null;
+        var lower = rawName.toLowerCase();
+        var fromFaction = factionPool.find(function(m) {
+          return m.name.toLowerCase() === lower || m.id.toLowerCase() === lower;
+        });
+        if (fromFaction) return fromFaction;
+        var fromFallback = fallbackPool.find(function(m) {
+          return m.name.toLowerCase() === lower || m.id.toLowerCase() === lower;
+        });
+        return fromFallback || {
+          id:      lower.replace(/\s+/g,'_') + '_gen',
+          name:    rawName,
+          quality: 4, move: 6, combat: 4, shoot: null, armor: null,
+          special: [], isTitan: false
+        };
+      }
+
+      // Avoid repeating the exact same monster back-to-back
+      var lastId = state._lastMonsterTriggered || '';
+
+      if (scenarioList.length > 0 && Math.random() < 0.80) {
+        // 80%: cycle through the scenario list
+        var attempts = 0;
+        while (attempts < scenarioList.length * 2) {
+          var idx   = (state.monstersTriggered + attempts) % scenarioList.length;
+          var entry = scenarioList[idx];
+          var def   = statsForName(entry);
+          if (def && def.id !== lastId) return def;
+          attempts++;
+        }
+        // If we can't avoid a repeat, just take whatever is next
+        return statsForName(scenarioList[state.monstersTriggered % scenarioList.length]) || randomFromPool(factionPool, fallbackPool, lastId);
+      }
+
+      // 20% (or no scenario list): pick randomly from faction pool
+      return randomFromPool(factionPool, fallbackPool, lastId);
+    }
+
+    function randomFromPool(factionPool, fallbackPool, excludeId) {
+      var pool = factionPool.length > 0 ? factionPool : fallbackPool;
+      var filtered = pool.filter(function(m) { return m.id !== excludeId; });
+      var candidates = filtered.length > 0 ? filtered : pool;
+      return candidates[Math.floor(Math.random() * candidates.length)];
+    }
 
     function addNoise(amount, label) {
       state.noiseLevel += amount;
@@ -735,30 +837,8 @@ window.CC_APP = {
     function checkMonsterTrigger() {
       if (state.noiseLevel < state.noiseThreshold) return;
 
-      // Pick monster from scenario roster (loop if exhausted) or random fallback
-      var monsterDef;
-      if (state.monsterRoster && state.monsterRoster.length > 0) {
-        // Use modulo so we loop through the roster rather than stopping after one
-        var rosterIdx = state.monstersTriggered % state.monsterRoster.length;
-        var entry     = state.monsterRoster[rosterIdx];
-        // Roster entry may be a plain name string OR an object with .name
-        var mName = (typeof entry === 'string') ? entry : (entry && entry.name) || 'Ruster';
-        // Try to find matching stats in fallback table, else build a generic entry
-        monsterDef = FALLBACK_MONSTERS.find(function(m) {
-          return m.name.toLowerCase() === mName.toLowerCase();
-        }) || {
-          id:      mName.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(),
-          name:    mName,
-          quality: 4, move: 6, combat: 4, shoot: null, armor: null,
-          special: [], isTitan: false
-        };
-      } else {
-        // Quick Mode or empty roster — pick randomly, never repeat back-to-back
-        var pool = FALLBACK_MONSTERS.filter(function(m) {
-          return m.id !== (state._lastMonsterTriggered || '');
-        });
-        monsterDef = pool[Math.floor(Math.random() * pool.length)];
-      }
+      var monsterDef = pickEncounterMonster();
+      if (!monsterDef) return;
 
       state._lastMonsterTriggered = monsterDef.id;
       state.monstersTriggered++;
@@ -766,37 +846,28 @@ window.CC_APP = {
 
       state.roundLog.push('[Monster] Encounter! ' + monsterDef.name + ' approaches from the nearest edge.');
 
-      // ── Inject the monster into the live game ─────────────────────────────
-      // We give it a unique instance ID so multiple Rusters can appear in the
-      // same game without colliding in unitState.
+      // Give this instance a unique ID so multiple encounters don't collide
       var instanceId = monsterDef.id + '_enc' + state.monstersTriggered;
       var unit = Object.assign({}, monsterDef, { id: instanceId });
 
-      // Find the monsters faction (isMonster: true) — use the first one found,
-      // or create a temporary Encounters faction if none exists.
+      // Find or create the monsters faction
       var monsterFaction = state.factions.find(function(f) { return f.isMonster; });
       if (!monsterFaction) {
         monsterFaction = {
-          id:          'encounters',
-          name:        'Encounters',
-          color:       '#ef5350',
-          isMonster:   true,
-          isNPC:       true,
-          logoUrl:     LOGO_BASE + 'monsters_logo.svg',
-          allUnits:    [],
-          deployIndex: 0,
+          id: 'encounters', name: 'Encounters', color: '#ef5350',
+          isMonster: true, isNPC: true,
+          logoUrl: LOGO_BASE + 'monsters_logo.svg',
+          allUnits: [], deployIndex: 0,
         };
         state.factions.push(monsterFaction);
       }
 
-      // Add unit to faction roster and initialise its state
       monsterFaction.allUnits.push(unit);
       var k = unitKey(monsterFaction.id, unit.id);
       state.unitState[k] = { quality: unit.quality, out: false, activated: false, lastRoll: null };
 
-      // Insert at the NEXT position in the queue (right after current activation)
-      var insertAt = state.queueIndex + 1;
-      state.queue.splice(insertAt, 0, { factionId: monsterFaction.id, unitId: unit.id });
+      // Insert immediately after the current activation
+      state.queue.splice(state.queueIndex + 1, 0, { factionId: monsterFaction.id, unitId: unit.id });
 
       showMonsterAlert(monsterDef, monsterFaction, unit);
     }
@@ -1691,27 +1762,39 @@ window.CC_APP = {
       var fname          = activeFaction ? activeFaction.name  : '?';
       var isNPC          = activeFaction && activeFaction.isNPC;
 
+      // ── Build terrain list ──────────────────────────────────────────────────
+      // Boardwalk is always present (it exists in every location).
+      // Objectives come from the loaded scenario if available;
+      // otherwise a generic marker is added.
       var terrainTypes = [
-        { icon: 'fa-grip-lines', label: 'Boardwalk',     note: 'Elevated walkway, +1 height' },
-        { icon: 'fa-home',       label: 'Building',      note: 'Blocks LOS, can be entered' },
-        { icon: 'fa-gem',        label: 'Thyr Crystal',  note: 'Magical resource — mark it' },
-        { icon: 'fa-map-marker', label: 'Objective',     note: 'Scoring marker' },
-        { icon: 'fa-mountain',   label: 'Rocky Outcrop', note: 'Difficult terrain, partial cover' },
-        { icon: 'fa-tree',       label: 'Canyon Brush',  note: 'Light cover, passable' },
-        { icon: 'fa-campground', label: 'Ruin / Debris', note: 'Narrative terrain' },
-        { icon: 'fa-barricade',  label: 'Barricade',     note: 'Low cover, blocks movement' },
+        { icon: 'fa-grip-lines',  label: 'Boardwalk',    note: 'Elevated walkway — present in every location', isObjective: false },
+        { icon: 'fa-home',        label: 'Building',     note: 'Blocks LOS, can be entered',                   isObjective: false },
+        { icon: 'fa-mountain',    label: 'Rocky Outcrop',note: 'Difficult terrain, partial cover',             isObjective: false },
+        { icon: 'fa-tree',        label: 'Canyon Brush', note: 'Light cover, passable',                        isObjective: false },
+        { icon: 'fa-campground',  label: 'Ruin / Debris',note: 'Narrative terrain',                            isObjective: false },
+        { icon: 'fa-barricade',   label: 'Barricade',    note: 'Low cover, blocks movement',                   isObjective: false },
+        { icon: 'fa-gem',         label: 'Thyr Crystal', note: 'Magical resource — mark it',                   isObjective: false },
       ];
 
-      // Store on window so the onclick handler can look up by index safely.
-      // Passing label/icon as strings through onclick="..." breaks whenever
-      // the string contains quotes, slashes, or special characters.
+      var scenarioObjectives = (state.scenarioSave && state.scenarioSave.objectives) || [];
+      if (scenarioObjectives.length > 0) {
+        scenarioObjectives.forEach(function(obj) {
+          var objName = (typeof obj === 'string') ? obj : (obj.name || obj.id || 'Objective');
+          var objNote = (obj.description || obj.type || 'Scenario objective') + ' — place as marker';
+          terrainTypes.push({ icon: 'fa-map-marker', label: objName, note: objNote, isObjective: true });
+        });
+      } else {
+        terrainTypes.push({ icon: 'fa-map-marker', label: 'Objective Marker', note: 'Scoring marker', isObjective: true });
+      }
+
       window.CC_TC._terrainTypes = terrainTypes;
 
       var terrainButtons = terrainTypes.map(function(t, idx) {
+        var accent = t.isObjective ? '#ffd600' : 'var(--cc-primary)';
         return '<button onclick="window.CC_TC.logTerrainPlace(' + idx + ')" ' +
           'class="cc-btn cc-btn-secondary" ' +
           'style="text-align:left;display:flex;align-items:center;gap:.6rem;padding:.5rem .75rem;">' +
-          '<i class="fa ' + t.icon + '" style="font-size:1.1rem;flex-shrink:0;width:20px;text-align:center;"></i>' +
+          '<i class="fa ' + t.icon + '" style="flex-shrink:0;color:' + accent + ';width:1.2rem;text-align:center;"></i>' +
           '<span><strong>' + t.label + '</strong> ' +
           '<span style="color:#666;font-size:.78rem;">' + t.note + '</span></span>' +
           '</button>';
@@ -1724,6 +1807,40 @@ window.CC_APP = {
           }).join('') + '</ul>'
         : '<p style="color:#555;font-size:.85rem;margin:0;">Nothing placed yet.</p>';
 
+      // ── NPC auto-directive ─────────────────────────────────────────────────
+      // Don't ask the player to roll — pick right now using weighted probability.
+      var npcDirectiveHtml = '';
+      if (isNPC) {
+        var roll = Math.random();
+        var picked;
+        if (roll < 0.20) {
+          picked = terrainTypes.find(function(t) { return t.label === 'Boardwalk'; });
+        } else if (roll < 0.50) {
+          var objPool = terrainTypes.filter(function(t) { return t.isObjective; });
+          picked = objPool[Math.floor(Math.random() * objPool.length)];
+        } else if (roll < 0.65) {
+          picked = terrainTypes.find(function(t) { return t.label === 'Thyr Crystal'; });
+        } else if (roll < 0.80) {
+          picked = terrainTypes.find(function(t) { return t.label === 'Building'; });
+        } else {
+          var misc = terrainTypes.filter(function(t) {
+            return !t.isObjective && ['Rocky Outcrop','Canyon Brush','Ruin / Debris','Barricade'].indexOf(t.label) !== -1;
+          });
+          picked = misc[Math.floor(Math.random() * misc.length)];
+        }
+        if (!picked) picked = terrainTypes[0];
+
+        var pickedIdx = terrainTypes.indexOf(picked);
+        npcDirectiveHtml =
+          '<div style="background:' + color + '18;border:2px solid ' + color + ';border-radius:8px;padding:1rem;">' +
+          '<div style="font-size:.7rem;color:' + color + ';text-transform:uppercase;letter-spacing:.1em;margin-bottom:.35rem;">' + fname + ' (NPC) — Terrain Directive</div>' +
+          '<div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:.25rem;">' +
+          '<i class="fa ' + picked.icon + '" style="color:' + color + ';margin-right:.5rem;"></i>Place: ' + picked.label + '</div>' +
+          '<p style="color:#aaa;font-size:.85rem;margin:0 0 .7rem;">' + picked.note + '</p>' +
+          '<button onclick="window.CC_TC.logTerrainPlace(' + pickedIdx + ')" class="cc-btn" style="background:' + color + ';color:#000;width:100%;">Log This Placement →</button>' +
+          '</div>';
+      }
+
       root.innerHTML =
         '<div class="cc-app-shell h-100">' +
         '<div class="cc-app-header">' +
@@ -1731,41 +1848,33 @@ window.CC_APP = {
         logoHtml(activeFaction, 32) +
         '<div>' +
         '<div style="color:' + color + ';font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;">' + fname + '</div>' +
-        '<div style="color:#888;font-size:.7rem;">Round 0 &mdash; Terrain Setup &mdash; Turn ' + (state.setupTurnIndex + 1) + '</div>' +
-        '</div>' +
-        '</div>' +
-        '</div>' +
+        '<div style="color:#888;font-size:.7rem;">Round 0 — Terrain Setup — Turn ' + (state.setupTurnIndex + 1) + '</div>' +
+        '</div></div></div>' +
 
         '<div style="max-width:600px;margin:0 auto;padding:1rem;display:flex;flex-direction:column;gap:.75rem;">' +
 
-        '<div style="background:' + color + '18;border:2px solid ' + color + ';border-radius:8px;padding:1rem;">' +
-        '<div style="font-size:1.15rem;font-weight:700;color:' + color + ';margin-bottom:.35rem;">' +
-        fname + (isNPC ? ' (NPC)' : '') + '</div>' +
-        (isNPC
-          ? '<p style="color:#aaa;font-size:.85rem;margin:0;">NPC turn &mdash; roll a die: 1&ndash;2 = Boardwalk, 3&ndash;4 = Objective, 5 = Thyr Crystal, 6 = Building. Place it, then log it.</p>'
-          : '<p style="color:#aaa;font-size:.85rem;margin:0;">Place one terrain piece anywhere on the board, then tap what you placed below.</p>') +
-        '</div>' +
+        (isNPC ? npcDirectiveHtml :
+          '<div style="background:' + color + '18;border:2px solid ' + color + ';border-radius:8px;padding:1rem;">' +
+          '<div style="font-size:1.05rem;font-weight:700;color:' + color + ';margin-bottom:.3rem;">' + fname + '</div>' +
+          '<p style="color:#aaa;font-size:.85rem;margin:0;">Place one terrain piece anywhere on the board, then tap what you placed below.</p>' +
+          '</div>'
+        ) +
+
+        (!isNPC ?
+          '<div class="cc-panel">' +
+          '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">What did you place?</h5></div>' +
+          '<div class="cc-panel-body" style="display:flex;flex-direction:column;gap:.4rem;">' +
+          terrainButtons +
+          '</div></div>' +
+          '<button onclick="window.CC_TC.skipTerrainTurn()" class="cc-btn cc-btn-secondary" style="width:100%;">Pass — no placement this turn</button>'
+        : '') +
 
         '<div class="cc-panel">' +
-        '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-primary);">What did you place?</h5></div>' +
-        '<div class="cc-panel-body" style="display:flex;flex-direction:column;gap:.4rem;">' +
-        terrainButtons +
-        '</div></div>' +
-
-        '<button onclick="window.CC_TC.skipTerrainTurn()" class="cc-btn cc-btn-secondary" style="width:100%;">' +
-        'Pass &mdash; no placement this turn</button>' +
-
-        '<div class="cc-panel">' +
-        '<div class="cc-panel-header">' +
-        '<h5 style="margin:0;color:var(--cc-text);">Board So Far</h5>' +
-        '</div>' +
+        '<div class="cc-panel-header"><h5 style="margin:0;color:var(--cc-text);">Board So Far</h5></div>' +
         '<div class="cc-panel-body">' + logHtml + '</div>' +
         '</div>' +
 
-        '<div style="margin-top:.25rem;">' +
-        '<button onclick="window.CC_TC.beginRound1()" class="cc-btn" style="width:100%;padding:.85rem;font-size:1rem;">' +
-        'Terrain is Set &mdash; Begin Round 1 &rarr;</button>' +
-        '</div>' +
+        '<button onclick="window.CC_TC.beginRound1()" class="cc-btn" style="width:100%;padding:.85rem;font-size:1rem;">Terrain is Set — Begin Round 1 →</button>' +
 
         '</div></div>';
     }
@@ -2294,7 +2403,8 @@ window.CC_APP = {
       state.setupTurnIndex    = 0;
       state.factions.forEach(function(f) { initUnitStates(f); });
       state.phase = 'setup_round';
-      loadAbilityDictionaries(); // pre-fetch in background so first tap is instant
+      loadAbilityDictionaries();   // pre-fetch in background so ability taps are instant
+      loadMonstersFactionData();   // pre-fetch monsters faction for encounter variety
       render();
     };
 
@@ -2380,7 +2490,7 @@ window.CC_APP = {
       '96_ability_dictionary_G.json',
       '97_ability_dictionary_H.json',
     ];
-    var ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
+    var ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/';
 
     // Flatten any JSON object tree into all leaf objects that look like an ability
     // (have a short_text or long_text or description or effect field).
