@@ -974,20 +974,74 @@ window.CC_APP = {
       cost:    '#555',
     };
 
-    function statBadge(label, value, colorKey, big = false) {
+    // Stat definitions shown in the slide panel
+    var STAT_DEFINITIONS = {
+      move:   { label: 'Move', icon: 'fa-shoe-prints', color: '#42a5f5',
+                short: 'How far this unit can travel in one action.',
+                long:  'Move is measured in inches. A unit may spend one Simple Action to move up to its full Move distance. Difficult terrain costs double movement. A unit may not move through enemy models.' },
+      combat: { label: 'Combat', icon: 'fa-sword', color: '#ef5350',
+                short: 'Dice rolled in melee attacks.',
+                long:  'Combat is the number of dice this unit rolls when making a melee attack. Roll against a target number of 4+. Each die showing 4, 5, or 6 counts as one success. Compare successes to the target\'s Defense to determine damage.' },
+      shoot:  { label: 'Shoot', icon: 'fa-crosshairs', color: '#ffd600',
+                short: 'Dice rolled in ranged attacks.',
+                long:  'Shoot is the number of dice rolled when making a ranged attack. Requires Line of Sight to the target. Ranges are Short (3"), Medium (6"), Long (12") — each step beyond Short costs 1 die. Shooting into melee is not permitted.' },
+      armor:  { label: 'Armor', icon: 'fa-shield-alt', color: '#90a4ae',
+                short: 'Reduces incoming damage.',
+                long:  'Armor reduces damage taken by its value after all other modifiers. A result of 0 or less deals no damage. Armor does not apply against Automatic Damage sources unless the ability specifically states otherwise.' },
+    };
+
+    function statBadge(label, value, colorKey) {
       if (value === null || value === undefined) return '';
-      const color = STAT_COLORS[colorKey] || '#888';
-      const size  = big ? 'font-size:1.4rem;padding:.4rem .7rem;' : 'font-size:.85rem;padding:.25rem .5rem;';
-      return `
-        <div class="cc-stat-badge" style="
-          display:inline-flex;flex-direction:column;align-items:center;
-          background:${color}22;border:1px solid ${color}66;border-radius:6px;
-          ${size}min-width:${big ? 56 : 44}px;gap:1px;">
-          <span style="color:${color};font-weight:900;line-height:1;">${value}</span>
-          <span style="color:${color}99;font-size:.65rem;text-transform:uppercase;
-                       letter-spacing:.06em;line-height:1;">${label}</span>
-        </div>`;
+      const color  = STAT_COLORS[colorKey] || '#888';
+      const hasDef = !!STAT_DEFINITIONS[colorKey];
+      const clickAttr = hasDef
+        ? 'onclick="window.CC_TC.openStatPanel(\'' + colorKey + '\')" style="cursor:pointer;" title="Tap for definition"'
+        : '';
+      return '<div class="cc-stat-badge" ' + clickAttr +
+        ' style="display:inline-flex;flex-direction:column;align-items:center;' +
+        'background:' + color + '22;border:1px solid ' + color + '66;border-radius:6px;' +
+        'font-size:.85rem;padding:.25rem .5rem;min-width:44px;gap:1px;' +
+        (hasDef ? 'transition:background .15s,border-color .15s;' : '') + '">' +
+        '<span style="color:' + color + ';font-weight:900;line-height:1;">' + value + '</span>' +
+        '<span style="color:' + color + '99;font-size:.65rem;text-transform:uppercase;letter-spacing:.06em;line-height:1;">' + label + '</span>' +
+        '</div>';
     }
+
+    // Open the stat definition slide panel
+    window.CC_TC.openStatPanel = function(statKey) {
+      if (_destroyed) return;
+      var def = STAT_DEFINITIONS[statKey];
+      if (!def) return;
+
+      var existing = document.getElementById('cc-tc-stat-panel');
+      if (existing) existing.parentNode.removeChild(existing);
+
+      var panel = document.createElement('div');
+      panel.id = 'cc-tc-stat-panel';
+      panel.className = 'cc-slide-panel';
+      panel.innerHTML =
+        '<div class="cc-slide-panel-header">' +
+        '<h2><i class="fa ' + def.icon + '"></i> ' + def.label.toUpperCase() + '</h2>' +
+        '<button onclick="window.CC_TC.closeStatPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>' +
+        '</div>' +
+        '<div style="padding:1.5rem;">' +
+        '<div style="display:inline-block;margin-bottom:1.25rem;padding:3px 12px;border-radius:999px;' +
+        'border:1px solid ' + def.color + ';color:' + def.color + ';font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;">' +
+        'Stat</div>' +
+        '<p style="color:#fff;font-size:1rem;font-weight:600;line-height:1.5;margin:0 0 1rem;">' + def.short + '</p>' +
+        '<p style="color:#bbb;font-size:.9rem;line-height:1.7;margin:0;">' + def.long + '</p>' +
+        '</div>';
+      document.body.appendChild(panel);
+      setTimeout(function() { panel.classList.add('cc-slide-panel-open'); }, 10);
+    };
+
+    window.CC_TC.closeStatPanel = function() {
+      var panel = document.getElementById('cc-tc-stat-panel');
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(function() { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 300);
+      }
+    };
 
     // ═══════════════════════════════════════════════════════════════════════════
     // QUALITY DICE ROLLER
@@ -1151,22 +1205,26 @@ window.CC_APP = {
       }
 
       return `
-        <div class="cc-quality-track" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
-          <span style="color:${color}99;font-size:.7rem;text-transform:uppercase;
-                       letter-spacing:.08em;margin-right:2px;flex-shrink:0;">Q</span>
-          <div style="display:flex;flex-wrap:wrap;gap:2px;">${dots}</div>
-          <span style="color:${color};font-weight:900;font-size:1.1rem;margin-left:4px;flex-shrink:0;">
-            ${cur > 0 ? cur : 'OUT?'}
-          </span>
+        <div class="cc-quality-track" style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+            <span style="color:${color}99;font-size:.7rem;text-transform:uppercase;
+                         letter-spacing:.08em;margin-right:2px;flex-shrink:0;">Q</span>
+            <div style="display:flex;flex-wrap:wrap;gap:2px;">${dots}</div>
+            <span style="color:${color};font-weight:900;font-size:1.1rem;margin-left:4px;flex-shrink:0;">
+              ${cur > 0 ? cur : 'OUT?'}
+            </span>
+          </div>
           ${cur > 0 ? `
           <button
             onclick="window.CC_TC.rollQualityForUnit('${faction.id}','${unit.id}')"
-            class="cc-btn cc-btn-secondary"
-            style="margin-left:auto;padding:.35rem .85rem;font-size:.8rem;flex-shrink:0;
-                   border-color:${hasRolled ? '#666' : color + '66'};
-                   color:${hasRolled ? '#666' : color};"
+            class="cc-btn"
+            style="width:100%;padding:.75rem 1rem;font-size:1rem;letter-spacing:.06em;
+                   background:${hasRolled ? 'rgba(255,255,255,.08)' : color + 'dd'};
+                   color:${hasRolled ? '#888' : '#000'};
+                   border:1px solid ${hasRolled ? '#444' : color};
+                   border-radius:8px;"
             title="${hasRolled ? 'Tap to review your roll (one roll per activation)' : 'Roll quality dice'}">
-            ${hasRolled ? '↩ View Roll' : '🎲 Roll Q' + cur}
+            ${hasRolled ? '↩ &nbsp;View Roll' : '🎲 &nbsp;Roll Q' + cur}
           </button>` : ''}
         </div>`;
     }
@@ -1528,13 +1586,13 @@ window.CC_APP = {
       const specialHtml = unit.special?.length ? `
         <div style="margin:.75rem 0;">
           <div style="font-size:.68rem;color:#555;text-transform:uppercase;letter-spacing:.1em;
-                      margin-bottom:.35rem;">Abilities <span style="color:#444;font-style:italic;
+                      margin-bottom:.4rem;">Abilities <span style="color:#444;font-style:italic;
                       text-transform:none;letter-spacing:0;">— tap to look up rule</span></div>
           <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
             ${(Array.isArray(unit.special) ? unit.special : [unit.special]).map((s, idx) =>
               `<button
-                onclick="window.CC_TC.showAbilityRule(${idx}, '${faction.id}', '${unit.id}')"
-                style="padding:4px 10px;background:rgba(255,255,255,.06);
+                onclick="window.CC_TC.openAbilityPanel(${idx})"
+                style="padding:5px 11px;background:rgba(255,255,255,.06);
                        border:1px solid rgba(255,255,255,.18);border-radius:4px;
                        font-size:.78rem;color:#ddd;cursor:pointer;
                        transition:border-color .15s,color .15s;"
@@ -1545,8 +1603,7 @@ window.CC_APP = {
           </div>
         </div>` : '';
 
-      // Store unit abilities on CC_TC so the handler can look them up by index
-      // (avoids injecting ability names as strings into onclick attributes)
+      // Store unit abilities so the panel handler can look them up by index
       window.CC_TC._currentUnitAbilities = Array.isArray(unit.special)
         ? unit.special : (unit.special ? [unit.special] : []);
 
@@ -1644,7 +1701,8 @@ window.CC_APP = {
 
     function startTimerDisplay() {
       clearInterval(_timerInterval);
-      _timerInterval = setInterval(() => {
+      _timerInterval = setInterval(function() {
+        if (_destroyed) { clearInterval(_timerInterval); return; }
         const el = document.getElementById('cc-timer');
         if (!el) { clearInterval(_timerInterval); return; }
         const elapsed = state.timerElapsed +
@@ -2041,7 +2099,61 @@ window.CC_APP = {
         '</div>';  // end app-shell
     }
 
+    // ── Destroyed guard ────────────────────────────────────────────────────────
+    // When the loader navigates away it calls appRoot.innerHTML = '' which
+    // detaches `root` from the document but never tells the app.
+    // Every render call checks this first so nothing tries to write to a dead node.
+    var _destroyed = false;
+
+    function isRootAlive() {
+      return !_destroyed && root && document.body.contains(root);
+    }
+
+    // Full teardown — called either by the MutationObserver (automatic) or
+    // by CC_APP.destroy (if the loader ever adds that call).
+    function destroyApp() {
+      if (_destroyed) return;
+      _destroyed = true;
+
+      // Kill the activation timer
+      if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+
+      // Kill any ability-load poll that might still be spinning
+      if (window._ccAbilityPoll) { clearInterval(window._ccAbilityPoll); delete window._ccAbilityPoll; }
+
+      // Remove any leftover overlays we injected into document.body
+      ['cc-ability-overlay','cc-roll-overlay','cc-monster-alert',
+       'cc-tc-scenario-panel','cc-tc-save-picker'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.remove();
+      });
+
+      // Null out the global so stale onclick="" handlers fail quietly
+      // instead of running against dead state
+      window.CC_TC = null;
+
+      // Disconnect our own observer
+      if (_rootObserver) { _rootObserver.disconnect(); _rootObserver = null; }
+
+      console.log('[CC] Turn Counter destroyed — cleaned up globals and intervals');
+    }
+
+    // Watch for the loader wiping our root node
+    var _rootObserver = null;
+    if (window.MutationObserver && root && root.parentNode) {
+      _rootObserver = new MutationObserver(function() {
+        if (!document.body.contains(root)) destroyApp();
+      });
+      _rootObserver.observe(root.parentNode, { childList: true, subtree: false });
+    }
+
+    // Also expose destroy on CC_APP so a future loader version can call it directly
+    window.CC_APP.destroy = destroyApp;
+
     function render() {
+      // Bail immediately if the loader has navigated away
+      if (!isRootAlive()) return;
+
       switch (state.phase) {
         case 'setup':         return renderSetup();
         case 'quick_setup':   return renderQuickSetup();
@@ -2587,50 +2699,59 @@ window.CC_APP = {
       return null;
     }
 
-    // ── Ability popup ────────────────────────────────────────────────────────
-    window.CC_TC.showAbilityRule = function(idx) {
+    // ── Ability slide panel ───────────────────────────────────────────────────
+    window.CC_TC.closeAbilityPanel = function() {
+      var panel = document.getElementById('cc-tc-ability-panel');
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(function() { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 300);
+      }
+    };
+
+    window.CC_TC.openAbilityPanel = function(idx) {
+      if (_destroyed) return;
       var abilities   = window.CC_TC._currentUnitAbilities || [];
       var abilityName = abilities[idx];
       if (!abilityName) return;
 
-      // Kick off loading if not done yet
       loadAbilityDictionaries();
 
-      var existing = document.getElementById('cc-ability-overlay');
-      if (existing) existing.remove();
+      var existing = document.getElementById('cc-tc-ability-panel');
+      if (existing) existing.parentNode.removeChild(existing);
 
-      // If still fetching, show a spinner and retry once done
+      var panel = document.createElement('div');
+      panel.id = 'cc-tc-ability-panel';
+      panel.className = 'cc-slide-panel';
+
+      // If still loading, show a spinner and reopen when ready
       if (_abilityFetching && !_abilityFetched) {
-        var spinOverlay = document.createElement('div');
-        spinOverlay.id  = 'cc-ability-overlay';
-        spinOverlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);' +
-          'display:flex;align-items:center;justify-content:center;padding:1rem;box-sizing:border-box;';
-        spinOverlay.innerHTML =
-          '<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,.15);border-radius:12px;' +
-          'padding:2rem;max-width:320px;width:100%;text-align:center;">' +
-          '<div style="font-size:1.8rem;animation:cc-spin 1s linear infinite;margin-bottom:.75rem;">⟳</div>' +
-          '<div style="color:#aaa;font-size:.9rem;">Loading ability rules…</div>' +
-          '<button onclick="document.getElementById(\'cc-ability-overlay\').remove()" ' +
-          'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:1rem;">Cancel</button>' +
-          '</div>';
-        document.body.appendChild(spinOverlay);
-        // Retry when loaded (poll every 300ms, give up after 8 seconds)
+        panel.innerHTML =
+          '<div class="cc-slide-panel-header">' +
+          '<h2>' + abilityName.toUpperCase() + '</h2>' +
+          '<button onclick="window.CC_TC.closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>' +
+          '</div>' +
+          '<div style="padding:2rem;text-align:center;color:#888;">' +
+          '<div style="font-size:2rem;animation:cc-spin 1s linear infinite;margin-bottom:.75rem;">⟳</div>' +
+          'Loading ability dictionary…</div>';
+        document.body.appendChild(panel);
+        setTimeout(function() { panel.classList.add('cc-slide-panel-open'); }, 10);
+
         var _retries = 0;
         var _poll = setInterval(function() {
           _retries++;
-          if (_abilityFetched || _retries > 26) {
+          if (_abilityFetched || _retries > 26 || _destroyed) {
             clearInterval(_poll);
-            var ov = document.getElementById('cc-ability-overlay');
-            if (ov) ov.remove();
-            if (_abilityFetched) window.CC_TC.showAbilityRule(idx);
+            window._ccAbilityPoll = null;
+            var ov = document.getElementById('cc-tc-ability-panel');
+            if (ov) { ov.classList.remove('cc-slide-panel-open'); setTimeout(function() { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 300); }
+            if (_abilityFetched && !_destroyed && window.CC_TC) window.CC_TC.openAbilityPanel(idx);
           }
         }, 300);
+        window._ccAbilityPoll = _poll;
         return;
       }
 
-      var entry = lookupAbility(abilityName);
-
-      // Format timing label nicely
+      var entry      = lookupAbility(abilityName);
       var timingLabel = entry ? formatTiming(entry.timing) : '';
       var timingColor = {
         'Passive':              '#90a4ae',
@@ -2645,55 +2766,42 @@ window.CC_APP = {
       var bodyHtml;
       if (entry) {
         bodyHtml =
-          // Timing pill
           (timingLabel
-            ? '<div style="display:inline-block;padding:2px 10px;border-radius:999px;' +
-              'border:1px solid ' + timingColor + ';color:' + timingColor + ';' +
-              'font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.85rem;">' +
-              timingLabel + '</div><br>'
+            ? '<div style="display:inline-block;margin-bottom:1.25rem;padding:3px 12px;' +
+              'border-radius:999px;border:1px solid ' + timingColor + ';color:' + timingColor + ';' +
+              'font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;">' + timingLabel + '</div><br>'
             : '') +
-          // Short — one-line summary shown as a muted intro
           (entry.short
-            ? '<div style="color:#aaa;font-size:.82rem;font-style:italic;margin-bottom:.65rem;line-height:1.45;">' +
-              entry.short + '</div>'
+            ? '<p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">' + entry.short + '</p>'
             : '') +
-          // Long — the full rule text, shown big and clear
           (entry.long
-            ? '<div style="color:#e8e8e8;font-size:.95rem;line-height:1.65;">' + entry.long + '</div>'
+            ? '<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">' + entry.long + '</p>'
             : '') +
-          // Rule ID — small, for cross-referencing the Rules Explorer
           (entry.id
-            ? '<div style="margin-top:.85rem;font-size:.68rem;color:#444;font-family:monospace;">' + entry.id + '</div>'
+            ? '<div style="margin-top:1.25rem;font-size:.68rem;color:#444;font-family:monospace;">' + entry.id + '</div>'
             : '');
       } else {
         bodyHtml =
-          '<div style="color:#888;font-size:.88rem;line-height:1.55;margin-bottom:.5rem;">' +
-          'No rule entry found for <em style="color:#bbb;">' + abilityName + '</em>.</div>' +
-          '<div style="font-size:.8rem;color:#555;line-height:1.5;">' +
+          '<p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">' +
+          'No rule entry found for <em style="color:#bbb;">' + abilityName + '</em>.</p>' +
+          '<p style="color:#555;font-size:.82rem;line-height:1.5;margin:0;">' +
           'Open the Rules Explorer and search for <em>' + abilityName.split(' ')[0] + '</em>.' +
-          '</div>';
+          '</p>';
       }
 
-      var overlay = document.createElement('div');
-      overlay.id  = 'cc-ability-overlay';
-      overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.88);' +
-        'display:flex;align-items:center;justify-content:center;animation:cc-fade-in .2s ease;' +
-        'padding:1rem;box-sizing:border-box;';
-      overlay.innerHTML =
-        '<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,.15);border-radius:12px;' +
-        'padding:1.5rem;max-width:440px;width:100%;max-height:85vh;overflow-y:auto;">' +
-        '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:.75rem;margin-bottom:.75rem;">' +
-        '<h4 style="margin:0;color:var(--cc-primary);font-size:1.15rem;line-height:1.2;">' + abilityName + '</h4>' +
-        '<button onclick="document.getElementById(\'cc-ability-overlay\').remove()" ' +
-        'style="background:none;border:none;color:#555;cursor:pointer;font-size:1.3rem;padding:0;flex-shrink:0;line-height:1;">✕</button>' +
+      panel.innerHTML =
+        '<div class="cc-slide-panel-header">' +
+        '<h2>' + abilityName.toUpperCase() + '</h2>' +
+        '<button onclick="window.CC_TC.closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>' +
         '</div>' +
-        bodyHtml +
-        '<button onclick="document.getElementById(\'cc-ability-overlay\').remove()" ' +
-        'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:1.25rem;">Close</button>' +
-        '</div>';
+        '<div style="padding:1.5rem;">' + bodyHtml + '</div>';
 
-      document.body.appendChild(overlay);
+      document.body.appendChild(panel);
+      setTimeout(function() { panel.classList.add('cc-slide-panel-open'); }, 10);
     };
+
+    // Keep old name as alias
+    window.CC_TC.showAbilityRule = window.CC_TC.openAbilityPanel;
 
     window.CC_TC.rollQualityForUnit = function(factionId, unitId) {
       var faction = getFactionById(factionId);
