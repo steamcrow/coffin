@@ -757,6 +757,36 @@ window.CC_APP = {
     // RENDER: SETUP SCREEN
     // ═══════════════════════════════════════════════════════════════════════════
 
+    // ── Login status bar ─────────────────────────────────────────────────────
+    // Checks Odoo session and updates the bar in the setup screen.
+    function updateLoginStatus() {
+      var bar = document.getElementById('cc-tc-login-status');
+      if (!bar) return;
+      if (!window.CC_STORAGE) {
+        bar.className = 'cc-login-status logged-out';
+        bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Storage unavailable — cloud saves disabled';
+        return;
+      }
+      window.CC_STORAGE.checkAuth().then(function(auth) {
+        var bar2 = document.getElementById('cc-tc-login-status');
+        if (!bar2) return;
+        if (auth && auth.loggedIn) {
+          bar2.className = 'cc-login-status logged-in';
+          bar2.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as ' +
+            (auth.userName || 'User') + ' — cloud saves enabled';
+        } else {
+          bar2.className = 'cc-login-status logged-out';
+          bar2.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in — log in to load scenario &amp; faction saves';
+        }
+      }).catch(function() {
+        var bar2 = document.getElementById('cc-tc-login-status');
+        if (bar2) {
+          bar2.className = 'cc-login-status logged-out';
+          bar2.innerHTML = '<i class="fa fa-exclamation-circle"></i> Could not check login status';
+        }
+      });
+    }
+
     function renderSetup() {
       const hasStorage = !!window.CC_STORAGE;
       root.innerHTML = `
@@ -767,6 +797,10 @@ window.CC_APP = {
               <h1 class="cc-app-title">Coffin Canyon</h1>
               <div class="cc-app-subtitle">Game Turn Counter</div>
             </div>
+          </div>
+
+          <div id="cc-tc-login-status" class="cc-login-status logged-out">
+            <i class="fa fa-spinner fa-spin"></i> Checking login&hellip;
           </div>
 
           <div style="max-width:600px;margin:0 auto;padding:1.5rem;">
@@ -826,6 +860,7 @@ window.CC_APP = {
 
           </div>
         </div>`;
+      setTimeout(updateLoginStatus, 100);
     }
 
     // ── Quick Mode faction picker ─────────────────────────────────────────────
