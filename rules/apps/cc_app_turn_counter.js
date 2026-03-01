@@ -170,10 +170,22 @@ window.CC_APP = {
       setupMode:       null,    // 'scenario' | 'quick'
       loadingData:     false,
       setupTurnIndex:  0,       // whose turn during Round 0 terrain placement
+      activationOrder: [],         // set by buildQueue: [{factionId, name, totalCost}] lowest-first
     };
 
     // ── Unit state key ────────────────────────────────────────────────────────
     function unitKey(factionId, unitId) { return `${factionId}::${unitId}`; }
+
+    // Safe error string — avoids Odoo's 'error.stack.split' crash when the
+    // rejected value is a string, number, or plain object instead of an Error.
+    function safeErr(e) {
+      if (!e) return 'Unknown error';
+      if (typeof e === 'string') return e;
+      if (e.message) return e.message;
+      try { return JSON.stringify(e); } catch (_) { return String(e); }
+    }
+
+
 
     function getUnitState(factionId, unitId) {
       const k = unitKey(factionId, unitId);
@@ -282,20 +294,35 @@ window.CC_APP = {
     // NPCs are treated exactly like player factions — just another column.
     // If a faction has fewer units than another, its column ends early (no blank turns).
     function buildQueue() {
-      // Collect active units per faction, preserving faction order.
-      // Factions are already ordered by state.factions (set at game start).
-      var columns = state.factions.map(function(f) {
+
+      // ── Step 1: total cost per faction (active units only) ──────────────────
+      function factionCost(f) {
+        return getActiveUnits(f).reduce(function(sum, u) { return sum + (u.cost || 0); }, 0);
+      }
+
+      // ── Step 2: sort factions lowest-cost first ─────────────────────────────
+      var sortedFactions = state.factions.slice().sort(function(a, b) {
+        return factionCost(a) - factionCost(b);
+      });
+
+      // ── Step 3: within each faction sort units cheapest first ───────────────
+      var columns = sortedFactions.map(function(f) {
+        var active = getActiveUnits(f).slice().sort(function(a, b) {
+          return (a.cost != null ? a.cost : 9999) - (b.cost != null ? b.cost : 9999);
+        });
+        var tc = factionCost(f);
         return {
-          factionId: f.id,
-          units: getActiveUnits(f).map(function(u) { return u.id; })
+          factionId:   f.id,
+          factionName: f.name,
+          totalCost:   tc,
+          units:       active.map(function(u) { return u.id; })
         };
       });
 
-      // Find the max column length (longest faction roster this round)
+      // ── Step 4: column-first interleave ────────────────────────────────────
       var maxLen = 0;
       columns.forEach(function(col) { if (col.units.length > maxLen) maxLen = col.units.length; });
 
-      // Walk slot 1 across all factions, then slot 2, etc.
       var queue = [];
       for (var slot = 0; slot < maxLen; slot++) {
         columns.forEach(function(col) {
@@ -305,10 +332,13 @@ window.CC_APP = {
         });
       }
 
-      state.queue      = queue;
-      state.queueIndex = 0;
+      state.queue           = queue;
+      state.queueIndex      = 0;
+      state.activationOrder = columns.map(function(c) {
+        return { factionId: c.factionId, name: c.factionName, totalCost: c.totalCost };
+      });
 
-      // Reset activated flags for all units
+      // Reset activated flags
       state.factions.forEach(function(f) {
         f.allUnits.forEach(function(u) {
           var k = unitKey(f.id, u.id);
@@ -748,42 +778,47 @@ window.CC_APP = {
 
     function renderRoundBanner() {
       const totalActivations = state.queue.length;
-      root.innerHTML = `
-        <div class="cc-app-shell h-100" style="display:flex;align-items:center;justify-content:center;">
-          <div style="text-align:center;padding:2rem;max-width:400px;">
-            <div style="color:var(--cc-primary);font-size:.8rem;text-transform:uppercase;
-                        letter-spacing:.2em;margin-bottom:.5rem;">Beginning</div>
-            <h1 style="font-size:clamp(3rem,10vw,5rem);margin:0;color:#fff;line-height:1;">
-              Round ${state.round}
-            </h1>
-            <p style="color:#888;margin:.5rem 0 2rem;">
-              ${totalActivations} activation${totalActivations !== 1 ? 's' : ''} this round
-            </p>
 
-            <!-- Faction lineup -->
-            <div style="display:flex;justify-content:center;gap:1rem;flex-wrap:wrap;margin-bottom:2rem;">
-              ${state.factions.map(f => {
-                const active = getActiveUnits(f);
-                if (active.length === 0) return '';
-                return `
-                  <div style="text-align:center;opacity:${active.length > 0 ? 1 : .3};">
-                    ${logoHtml(f, 36)}
-                    <div style="color:${f.color};font-size:.7rem;margin-top:4px;font-weight:700;">
-                      ${active.length} unit${active.length !== 1 ? 's' : ''}
-                    </div>
-                  </div>`;
-              }).join('')}
-            </div>
+      // Build activation order strip (lowest points → highest points)
+      const orderStrip = state.activationOrder.map(function(ao, idx) {
+        var f = getFactionById(ao.factionId);
+        if (!f) return '';
+        var active = getActiveUnits(f);
+        if (!active.length) return '';
+        var color = f.color;
+        return '<div style="display:flex;align-items:center;gap:.5rem;padding:.4rem .6rem;' +
+          'border:1px solid ' + color + '44;border-radius:6px;background:' + color + '0d;">' +
+          '<span style="color:#555;font-size:.7rem;font-weight:700;min-width:1rem;">' + (idx+1) + '</span>' +
+          logoHtml(f, 22) +
+          '<div style="text-align:left;">' +
+          '<div style="color:' + color + ';font-size:.75rem;font-weight:700;">' + f.name + '</div>' +
+          '<div style="color:#666;font-size:.65rem;">' + active.length + ' unit' + (active.length !== 1 ? 's' : '') +
+          (ao.totalCost ? ' &middot; ' + ao.totalCost + ' pts' : '') + '</div>' +
+          '</div>' +
+          '</div>';
+      }).join('');
 
-            ${noiseBarHtml()}
-            ${coughBarHtml()}
+      root.innerHTML =
+        '<div class="cc-app-shell h-100" style="display:flex;align-items:center;justify-content:center;">' +
+        '<div style="text-align:center;padding:1.5rem;max-width:440px;width:100%;">' +
+        '<div style="color:var(--cc-primary);font-size:.8rem;text-transform:uppercase;letter-spacing:.2em;margin-bottom:.5rem;">Beginning</div>' +
+        '<h1 style="font-size:clamp(3rem,10vw,5rem);margin:0;color:#fff;line-height:1;">Round ' + state.round + '</h1>' +
+        '<p style="color:#888;margin:.5rem 0 1.25rem;">' + totalActivations + ' activation' + (totalActivations !== 1 ? 's' : '') + ' this round</p>' +
 
-            <button class="cc-btn" style="width:100%;font-size:1.1rem;padding:1rem;"
-                    onclick="window.CC_TC.startRound()">
-              Begin Round ${state.round} →
-            </button>
-          </div>
-        </div>`;
+        // Activation order — lowest pts first
+        (orderStrip
+          ? '<div style="margin-bottom:1.25rem;">' +
+            '<div style="font-size:.7rem;color:#555;text-transform:uppercase;letter-spacing:.1em;margin-bottom:.4rem;">Activation Order — Lowest Points First</div>' +
+            '<div style="display:flex;flex-direction:column;gap:.3rem;">' + orderStrip + '</div>' +
+            '</div>'
+          : '') +
+
+        noiseBarHtml() +
+        coughBarHtml() +
+
+        '<button class="cc-btn" style="width:100%;font-size:1.1rem;padding:1rem;margin-top:1rem;" ' +
+        'onclick="window.CC_TC.startRound()">Begin Round ' + state.round + ' →</button>' +
+        '</div></div>';
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -1366,7 +1401,7 @@ window.CC_APP = {
           'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:.5rem;">Cancel</button>' +
           '</div>';
         document.body.appendChild(overlay);
-      }).catch(function(err) { alert('Failed to list saves: ' + (err && err.message || err)); });
+      }).catch(function(err) { alert('Failed to list saves: ' + safeErr(err)); });
     };
 
     window.CC_TC.loadScenario = async function(docId) {
@@ -1402,19 +1437,30 @@ window.CC_APP = {
         state.loadingData = true; render();
         try {
           var allDocs = await window.CC_STORAGE.loadDocumentList(FACTION_SAVE_FOLDER);
-          state.factionSaveList = (allDocs || []).filter(function(d) {
+          var nonScenario = (allDocs || []).filter(function(d) {
             return d.name && d.name.indexOf('SCN_') !== 0;
           });
+          // Enrich with parsed metadata (factionName, totalPoints) for display
+          state.factionSaveList = await Promise.all(nonScenario.map(async function(d) {
+            try {
+              var parsed = await window.CC_STORAGE.loadDocument(d.id);
+              var data   = JSON.parse(parsed.json);
+              d._factionName  = data.factionName  || data.faction || null;
+              d._armyName     = data.armyName     || null;
+              d._totalPoints  = data.totalPoints  || data.pts || null;
+            } catch (_) { /* enrichment failed — still show the doc */ }
+            return d;
+          }));
         } catch (e) {
           state.factionSaveList = [];
-          console.warn('Faction save list failed:', e.message);
+          console.warn('Faction save list failed:', safeErr(e));
         }
         state.loadingData = false;
         state.phase = 'faction_setup';
         render();
 
       } catch (err) {
-        alert('Failed to load scenario: ' + err.message);
+        alert('Failed to load scenario: ' + safeErr(err));
         state.loadingData = false; state.phase = 'setup'; render();
       }
     };
@@ -1435,13 +1481,28 @@ window.CC_APP = {
     window.CC_TC.openFactionSavePicker = function(factionId) {
       var meta = FACTION_META[factionId] || {};
       var docs = state.factionSaveList;
-      if (!docs.length) { alert('No faction saves in storage.'); return; }
+      if (!docs || !docs.length) {
+        alert('No faction saves found in your cloud storage.\n\nSave a faction build in the Faction Builder first, then come back.');
+        return;
+      }
 
+      // Build buttons — enrich label from parsed save if available
       var items = docs.map(function(d) {
-        var label = d.name.replace(/_/g,' ').replace(/[0-9]{13}/,'').trim();
-        return '<button onclick="window.CC_TC.selectFactionSave(\'' + factionId + '\',' + d.id + ',\'' + d.name + '\')" ' +
-          'class="cc-btn cc-btn-secondary" style="width:100%;margin-bottom:.4rem;text-align:left;">' +
-          label + '</button>';
+        // Prettify stored name: strip timestamps, underscores
+        var label = (d.name || String(d.id))
+          .replace(/\.json$/i, '')
+          .replace(/_\d{10,}/, '')
+          .replace(/_/g, ' ')
+          .trim();
+        // Add point value if the save pre-loaded it
+        var pts = d._totalPoints ? ' — ' + d._totalPoints + ' pts' : '';
+        var faction = d._factionName ? ' (' + d._factionName + ')' : '';
+        return '<button onclick="window.CC_TC.selectFactionSave(\'' + factionId + '\',' + d.id + ',' + JSON.stringify(d.name || String(d.id)) + ')" ' +
+          'class="cc-btn cc-btn-secondary" ' +
+          'style="width:100%;margin-bottom:.4rem;text-align:left;display:flex;justify-content:space-between;align-items:center;">' +
+          '<span>' + label + faction + '</span>' +
+          (pts ? '<span style="color:#888;font-size:.78rem;flex-shrink:0;">' + pts + '</span>' : '') +
+          '</button>';
       }).join('');
 
       var overlay = document.createElement('div');
@@ -1449,8 +1510,8 @@ window.CC_APP = {
       overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;';
       overlay.innerHTML =
         '<div style="background:#1a1a1a;border:1px solid rgba(255,117,24,.4);border-radius:8px;padding:1.5rem;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;">' +
-        '<h5 style="margin:0 0 1rem;color:var(--cc-primary);">Saved Builds for ' + (meta.name || factionId) + '</h5>' +
-        '<p style="font-size:.8rem;color:#888;margin:0 0 .75rem;">Pick the saved army list to use for this faction.</p>' +
+        '<h5 style="margin:0 0 .25rem;color:var(--cc-primary);">Pick a Saved Build</h5>' +
+        '<p style="font-size:.8rem;color:#888;margin:0 0 .75rem;">For: <strong style="color:#ccc;">' + (meta.name || factionId) + '</strong></p>' +
         items +
         '<button onclick="document.getElementById(\'cc-tc-save-picker\').remove()" ' +
         'class="cc-btn cc-btn-secondary" style="width:100%;margin-top:.5rem;">Cancel</button>' +
@@ -1488,7 +1549,7 @@ window.CC_APP = {
             var saveParsed = JSON.parse(saveDoc.json);
             faction = await buildFactionFromSave(pf.id, saveParsed, pf.npc);
           } catch (err) {
-            console.warn('Failed to load faction save for ' + pf.id + ', falling back to default:', err.message);
+            console.warn('Failed to load faction save for ' + pf.id + ', falling back to default:', safeErr(err));
             assign = null;
           }
         }
@@ -1649,7 +1710,7 @@ window.CC_APP = {
           setTimeout(function() { btn.innerHTML = orig; }, 1500);
         }
       } catch (err) {
-        alert('Save failed: ' + err.message);
+        alert('Save failed: ' + safeErr(err));
       }
     };
 
