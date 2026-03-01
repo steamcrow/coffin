@@ -41,17 +41,18 @@ window.CC_APP = {
         .catch(err => console.error('❌ Core CSS failed:', err));
     }
 
-    // ── Load app-specific CSS ────────────────────────────────────────────────
+    // App-specific CSS — optional, 404 is fine if not yet deployed
     if (!document.getElementById('cc-turn-counter-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_turn_counter.css?t=' + Date.now())
-        .then(r => r.text())
+        .then(r => r.ok ? r.text() : null)
         .then(css => {
+          if (!css) return;
           const s = document.createElement('style');
           s.id = 'cc-turn-counter-styles';
           s.textContent = css;
           document.head.appendChild(s);
         })
-        .catch(() => console.warn('⚠️ Turn Counter CSS not found — using inline styles only'));
+        .catch(() => {}); // optional file — ignore if missing
     }
 
     // ── Load CC_STORAGE helper ────────────────────────────────────────────────
@@ -115,8 +116,9 @@ window.CC_APP = {
     ];
 
     const FACTION_LOADER_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/';
-    const SCENARIO_FOLDER     = 90;
-    const TURN_SAVE_FOLDER    = 91;
+    const SCENARIO_FOLDER     = 90;   // scenario builder saves here (SCN_ prefix)
+    const FACTION_SAVE_FOLDER = 90;   // faction builder saves in same folder
+    const TURN_SAVE_FOLDER    = 91;   // turn counter game saves
 
     // ═══════════════════════════════════════════════════════════════════════════
     // APP STATE
