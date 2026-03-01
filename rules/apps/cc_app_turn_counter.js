@@ -25,17 +25,53 @@
 console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// EARLY REJECTION GUARD — installed IMMEDIATELY when this script loads,
-// before any async work begins.
+// SAFETY PATCHES — installed synchronously at file load, before ANYTHING else.
 //
-// Odoo's handleError does: error.stack.split(...)
-// If the rejection reason is a plain string, null, undefined, or an Odoo RPC
-// error object ({message, data, code}), then .stack doesn't exist and Odoo
-// crashes with "undefined is not an object (evaluating 'error.stack.split')".
+// These two patches protect against two different ways the page can crash:
 //
-// We intercept every unhandled rejection. If it's a proper Error with a real
-// string .stack, we let Odoo handle it. Everything else we swallow safely.
+//  1. JSON.parse patch:
+//     storage_helpers.js and Odoo's RPC layer both call JSON.parse() on data
+//     that is sometimes empty, undefined, or malformed (a partial network
+//     response, an empty Odoo document, etc). Native JSON.parse('') throws
+//     SyntaxError: Unexpected end of input. We replace JSON.parse with a
+//     wrapper that catches ALL parse errors and returns null instead of
+//     throwing, so the error can never become an unhandled rejection.
+//
+//  2. Rejection guard:
+//     Odoo's handleError does error.stack.split(...) without checking first
+//     whether .stack exists. If anything rejects with a plain string, null,
+//     undefined, or an Odoo RPC error object {message, data, code}, there is
+//     no .stack and Odoo crashes with "undefined is not an object".
+//     We intercept every unhandled rejection before Odoo sees it. Only proper
+//     Error objects with a real string .stack are let through to Odoo.
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// ── 1. JSON.parse safety patch ────────────────────────────────────────────────
+(function installCCJsonPatch() {
+  if (window._ccJsonPatchInstalled) return;
+  window._ccJsonPatchInstalled = true;
+
+  var _nativeJSONParse = JSON.parse.bind(JSON);
+
+  JSON.parse = function ccSafeJSONParse(text, reviver) {
+    // Return null for anything that would definitely throw before we even try
+    if (text === null || text === undefined) return null;
+    if (typeof text === 'string' && text.trim() === '') return null;
+
+    // Wrap the actual parse in try/catch so even truly malformed JSON
+    // (truncated responses, "undefined" the word, binary garbage, etc.)
+    // returns null instead of throwing a SyntaxError into a Promise chain.
+    try {
+      return reviver ? _nativeJSONParse(text, reviver) : _nativeJSONParse(text);
+    } catch (_) {
+      return null;
+    }
+  };
+
+  console.log('🛡️ JSON.parse patch installed');
+}());
+
+// ── 2. Unhandled rejection guard ─────────────────────────────────────────────
 (function installCCRejectionGuard() {
   if (window._ccRejectionGuardInstalled) return;
   window._ccRejectionGuardInstalled = true;
@@ -43,43 +79,42 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
   window.addEventListener('unhandledrejection', function ccRejectionGuard(event) {
     var reason = event.reason;
 
-    // Only let through: real Error objects that have a non-empty string .stack.
-    // Those are the only ones Odoo's handler can safely process.
+    // The only case Odoo can handle safely: a proper Error with a real .stack.
     if (reason instanceof Error &&
         typeof reason.stack === 'string' &&
         reason.stack.length > 0) {
-      return;
+      return; // Let Odoo handle it normally
     }
 
-    // Everything else (null, undefined, string, plain object, Error without
-    // stack) will crash Odoo. Stop the event here.
+    // Everything else will crash Odoo's handler — swallow it here.
     event.preventDefault();
     event.stopImmediatePropagation();
 
-    // Build a safe log message from whatever the rejection reason was
-    var msg = '[CC] Caught unhandled rejection: ';
+    // Log something useful to the console so we still know what happened
+    var msg = '[CC] Caught rejection: ';
     try {
       if (reason === null || reason === undefined) {
         msg += '(null/undefined)';
       } else if (typeof reason === 'string') {
         msg += reason;
       } else if (reason instanceof Error) {
+        // Error with no stack — still log the message
         msg += reason.message || reason.toString();
       } else if (typeof reason === 'object') {
-        // Odoo RPC errors arrive as plain objects: {message, data, code, ...}
+        // Odoo RPC errors: {message, data, code, ...}
         msg += reason.message || reason.data || JSON.stringify(reason);
       } else {
         msg += String(reason);
       }
     } catch (_) {
-      msg += '(could not read reason)';
+      msg += '(unreadable reason)';
     }
 
     console.warn(msg, reason);
-    // Do NOT re-throw here — that would create another unhandled rejection.
+    // Do NOT re-throw — that creates another unhandled rejection.
   }, { capture: true });
 
-  console.log('🛡️ CC rejection guard installed');
+  console.log('🛡️ Rejection guard installed');
 }());
 
 window.CC_APP = {
@@ -99,34 +134,9 @@ window.CC_APP = {
         .catch(err => console.error('❌ Core CSS failed:', err));
     }
 
-    // ── Patch JSON.parse to be safe before loading ANY external storage code ──
-    //
-    // WHY THIS EXISTS:
-    // storage_helpers.js (and Odoo's own code) calls JSON.parse() internally on
-    // data that sometimes comes back as an empty string — for example when an
-    // Odoo RPC returns an empty body, or when a document has no content yet.
-    // The native JSON.parse('') throws SyntaxError: Unexpected end of input.
-    // That error bubbles up through Odoo's error handler as an unhandled
-    // exception even though we have try/catch blocks everywhere in our code,
-    // because it originates INSIDE the library before our handlers run.
-    //
-    // The fix: intercept JSON.parse globally. If the input is empty/null/undefined,
-    // return null silently instead of throwing. All other inputs behave exactly
-    // as normal — this is a one-line guard, not a rewrite.
-    //
-    // We only install this once (guard flag prevents double-patching).
-    if (!window._ccJsonPatchInstalled) {
-      window._ccJsonPatchInstalled = true;
-      var _nativeJSONParse = JSON.parse.bind(JSON);
-      JSON.parse = function ccSafeJSONParse(text, reviver) {
-        // Handle null, undefined, or empty/whitespace-only strings
-        if (text === null || text === undefined) return null;
-        if (typeof text === 'string' && text.trim() === '') return null;
-        // Everything else goes to the native parser as normal
-        return reviver ? _nativeJSONParse(text, reviver) : _nativeJSONParse(text);
-      };
-      console.log('🛡️ JSON.parse safety patch installed');
-    }
+    // JSON.parse safety patch and rejection guard are both installed at the
+    // very top of this file (before window.CC_APP), so they are always in
+    // place before any async work begins.
 
     // ── Load CC_STORAGE helper ────────────────────────────────────────────────
     if (!window.CC_STORAGE) {
