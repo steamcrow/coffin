@@ -17,7 +17,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     scenario_builder: { title: 'Scenario Builder', icon: 'fa-map-signs',   description: 'Generate scenarios', file: 'cc_app_scenario_builder.js' },
     rules_explorer:   { title: 'Rules Explorer',   icon: 'fa-book',        description: 'Browse game rules',  file: 'cc_app_rules_explorer.js'   },
     canyon_map:       { title: 'Canyon Map',        icon: 'fa-map',         description: 'Interactive map',    file: 'cc_app_canyon_map.js'       },
-    turn_counter:     { title: 'Turn Counter',     icon: 'fa-hourglass-half', description: 'Run your game',   file: 'turn_counter.js'            }
+    turn_counter:     { title: 'Turn Counter',     icon: 'fa-hourglass-half', description: 'Run your game',   file: 'cc_app_turn_counter.js'            }
   };
 
   var currentApp = null;
