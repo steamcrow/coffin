@@ -181,6 +181,25 @@ window.CC_APP = {
       try { return JSON.parse(str); } catch (_) { return null; }
     }
 
+    // Extract JSON from a CC_STORAGE document response.
+    // CC_STORAGE may return data in two ways depending on which app saved it:
+    //   1. { json: "..." }          — newer storage_helpers.js style
+    //   2. { datas: "base64..." }   — older CCFB component style (atob encoded)
+    // We try both so saves from either app load correctly.
+    function docToJson(doc) {
+      if (!doc) return null;
+      // Try .json first (storage_helpers.js style)
+      if (doc.json && doc.json.trim() !== '') return safeParseJson(doc.json);
+      // Fall back to base64 .datas (CCFB component style)
+      if (doc.datas) {
+        try {
+          var decoded = decodeURIComponent(escape(atob(doc.datas)));
+          return safeParseJson(decoded);
+        } catch (_) { return null; }
+      }
+      return null;
+    }
+
     // Backstop: Odoo's unhandledrejection handler crashes when the rejection
     // reason has no .stack property (plain string, object, undefined, etc).
     // We register with { capture: true } so our handler runs in the CAPTURE
@@ -1503,7 +1522,7 @@ window.CC_APP = {
       try {
         // API: loadDocument(id) -> {json: string}
         var doc     = await window.CC_STORAGE.loadDocument(docId);
-        var payload = safeParseJson(doc.json);
+        var payload = docToJson(doc);
         if (!payload) throw new Error('Scenario save is empty or unreadable. Try re-saving it in the Scenario Builder.');
 
         state.scenarioSave   = payload.scenario || payload;
@@ -1538,7 +1557,7 @@ window.CC_APP = {
           state.factionSaveList = await Promise.all(nonScenario.map(async function(d) {
             try {
               var parsed = await window.CC_STORAGE.loadDocument(d.id);
-              var data   = safeParseJson(parsed.json);
+              var data   = docToJson(parsed);
               if (data) {
                 d._factionId    = data.faction      || null;  // e.g. 'monster_rangers'
                 d._factionName  = data.factionName  || data.faction || null;
@@ -1647,7 +1666,7 @@ window.CC_APP = {
           // Load from CC_STORAGE faction save
           try {
             var saveDoc  = await window.CC_STORAGE.loadDocument(assign.docId);
-            var saveParsed = safeParseJson(saveDoc.json);
+            var saveParsed = docToJson(saveDoc);
             faction = buildFactionFromSave(pf.id, saveParsed, pf.npc);
           } catch (err) {
             console.warn('Failed to load faction save for ' + pf.id + ', falling back to default:', safeErr(err));
