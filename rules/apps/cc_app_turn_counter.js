@@ -71,7 +71,91 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
   console.log('🛡️ JSON.parse patch installed');
 }());
 
-// ── 2. Unhandled rejection guard ─────────────────────────────────────────────
+// ── 3. Bootstrap Dropdown autoClose:null patch ────────────────────────────────
+// Odoo's navbar renders dropdown toggles with data-bs-auto-close="null" (a
+// string "null" or an actual null, depending on the template version).
+// Bootstrap 5's Dropdown._typeCheckConfig() throws a TypeError when it sees
+// autoClose is null instead of a boolean or string like "outside"/"inside".
+// The error surfaces through Odoo's own owl event wrapper as a synchronous
+// throw — NOT as an unhandled Promise rejection — so our rejection guard
+// above cannot intercept it.  Fix it at the source instead.
+(function patchBootstrapDropdownAutoClose() {
+  if (window._ccDropdownPatchInstalled) return;
+
+  function doPatch() {
+    // Fix any existing DOM elements that have the bad attribute value
+    document.querySelectorAll('[data-bs-auto-close]').forEach(function(el) {
+      var v = el.getAttribute('data-bs-auto-close');
+      if (v === 'null' || v === null || v === '') {
+        el.setAttribute('data-bs-auto-close', 'true');
+      }
+    });
+
+    // Patch Bootstrap's Dropdown class if available
+    var BS = window.bootstrap;
+    if (!BS || !BS.Dropdown) return false;
+
+    // Wrap getOrCreateInstance to sanitise config before Bootstrap sees it
+    var origGet = BS.Dropdown.getOrCreateInstance;
+    if (origGet && !origGet._ccPatched) {
+      BS.Dropdown.getOrCreateInstance = function(el, cfg) {
+        if (cfg && cfg.autoClose == null) cfg.autoClose = true;
+        return origGet.call(this, el, cfg);
+      };
+      BS.Dropdown.getOrCreateInstance._ccPatched = true;
+    }
+
+    // Also wrap the constructor itself as a second line of defence
+    // (some Odoo versions call `new Dropdown(el, config)` directly)
+    var OrigDropdown = BS.Dropdown;
+    if (!OrigDropdown._ccPatched) {
+      function PatchedDropdown(el, cfg) {
+        if (cfg && cfg.autoClose == null) cfg.autoClose = true;
+        return new OrigDropdown(el, cfg);
+      }
+      PatchedDropdown.getOrCreateInstance = BS.Dropdown.getOrCreateInstance;
+      PatchedDropdown._ccPatched = true;
+      // Copy any static methods Bootstrap added
+      Object.keys(OrigDropdown).forEach(function(k) {
+        if (!(k in PatchedDropdown)) PatchedDropdown[k] = OrigDropdown[k];
+      });
+      BS.Dropdown = PatchedDropdown;
+    }
+    return true;
+  }
+
+  // Try immediately, then retry after Odoo finishes loading its assets
+  if (!doPatch()) {
+    var _attempts = 0;
+    var _timer = setInterval(function() {
+      _attempts++;
+      if (doPatch() || _attempts > 20) {
+        clearInterval(_timer);
+        window._ccDropdownPatchInstalled = true;
+      }
+    }, 300);
+  } else {
+    window._ccDropdownPatchInstalled = true;
+  }
+
+  // Also fix DOM nodes added later (Odoo re-renders the navbar on navigation)
+  if (window.MutationObserver) {
+    new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        m.addedNodes.forEach(function(node) {
+          if (node.querySelectorAll) {
+            node.querySelectorAll('[data-bs-auto-close]').forEach(function(el) {
+              if (el.getAttribute('data-bs-auto-close') === 'null') {
+                el.setAttribute('data-bs-auto-close', 'true');
+              }
+            });
+          }
+        });
+      });
+    }).observe(document.body || document.documentElement,
+               { childList: true, subtree: true });
+  }
+}());
 (function installCCRejectionGuard() {
   if (window._ccRejectionGuardInstalled) return;
   window._ccRejectionGuardInstalled = true;
@@ -630,26 +714,91 @@ window.CC_APP = {
     // NOISE & MONSTER PRESSURE
     // ═══════════════════════════════════════════════════════════════════════════
 
+    // Fallback monster pool — used when Quick Mode has no scenario data,
+    // or when the scenario monster list is exhausted.
+    var FALLBACK_MONSTERS = [
+      { id: 'ruster',          name: 'Ruster',          quality: 4, move: 6,  combat: 4, shoot: null, armor: null, special: ['Rust Bite'], isTitan: false },
+      { id: 'snarl',           name: 'Snarl',           quality: 4, move: 8,  combat: 5, shoot: null, armor: null, special: ['Pounce'],    isTitan: false },
+      { id: 'canyon_crawler',  name: 'Canyon Crawler',  quality: 3, move: 5,  combat: 3, shoot: null, armor: 2,    special: ['Tough 1'],   isTitan: false },
+      { id: 'dust_wraith',     name: 'Dust Wraith',     quality: 4, move: 7,  combat: 3, shoot: 3,    armor: null, special: ['Stealth'],   isTitan: false },
+      { id: 'thyr_hound',      name: 'Thyr Hound',      quality: 4, move: 7,  combat: 4, shoot: null, armor: null, special: ['Frenzy'],    isTitan: false },
+      { id: 'iron_stalker',    name: 'Iron Stalker',    quality: 3, move: 5,  combat: 4, shoot: null, armor: 3,    special: ['Tough 2'],   isTitan: false },
+      { id: 'canyon_titan',    name: 'Canyon Titan',    quality: 3, move: 4,  combat: 5, shoot: null, armor: 4,    special: ['Titan','Fearsome'], isTitan: true },
+    ];
+
     function addNoise(amount, label) {
       state.noiseLevel += amount;
-      if (amount > 0) state.roundLog.push(`[Noise] Noise +${amount} (${label})`);
+      if (amount > 0) state.roundLog.push('[Noise] Noise +' + amount + ' (' + label + ')');
       checkMonsterTrigger();
     }
 
     function checkMonsterTrigger() {
       if (state.noiseLevel < state.noiseThreshold) return;
-      if (state.monstersTriggered >= state.monsterRoster.length) return;
 
-      const monster = state.monsterRoster[state.monstersTriggered];
+      // Pick monster from scenario roster (loop if exhausted) or random fallback
+      var monsterDef;
+      if (state.monsterRoster && state.monsterRoster.length > 0) {
+        // Use modulo so we loop through the roster rather than stopping after one
+        var rosterIdx = state.monstersTriggered % state.monsterRoster.length;
+        var entry     = state.monsterRoster[rosterIdx];
+        // Roster entry may be a plain name string OR an object with .name
+        var mName = (typeof entry === 'string') ? entry : (entry && entry.name) || 'Ruster';
+        // Try to find matching stats in fallback table, else build a generic entry
+        monsterDef = FALLBACK_MONSTERS.find(function(m) {
+          return m.name.toLowerCase() === mName.toLowerCase();
+        }) || {
+          id:      mName.toLowerCase().replace(/\s+/g, '_') + '_' + Date.now(),
+          name:    mName,
+          quality: 4, move: 6, combat: 4, shoot: null, armor: null,
+          special: [], isTitan: false
+        };
+      } else {
+        // Quick Mode or empty roster — pick randomly, never repeat back-to-back
+        var pool = FALLBACK_MONSTERS.filter(function(m) {
+          return m.id !== (state._lastMonsterTriggered || '');
+        });
+        monsterDef = pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      state._lastMonsterTriggered = monsterDef.id;
       state.monstersTriggered++;
       state.noiseLevel = Math.floor(state.noiseLevel / 2);
 
-      const msg = monster
-        ? `[Monster] Monster Encounter! ${monster.name} approaches from the nearest edge.`
-        : `[Monster] Monster Encounter! Something stirs in the canyon.`;
+      state.roundLog.push('[Monster] Encounter! ' + monsterDef.name + ' approaches from the nearest edge.');
 
-      state.roundLog.push(msg);
-      showMonsterAlert(monster);
+      // ── Inject the monster into the live game ─────────────────────────────
+      // We give it a unique instance ID so multiple Rusters can appear in the
+      // same game without colliding in unitState.
+      var instanceId = monsterDef.id + '_enc' + state.monstersTriggered;
+      var unit = Object.assign({}, monsterDef, { id: instanceId });
+
+      // Find the monsters faction (isMonster: true) — use the first one found,
+      // or create a temporary Encounters faction if none exists.
+      var monsterFaction = state.factions.find(function(f) { return f.isMonster; });
+      if (!monsterFaction) {
+        monsterFaction = {
+          id:          'encounters',
+          name:        'Encounters',
+          color:       '#ef5350',
+          isMonster:   true,
+          isNPC:       true,
+          logoUrl:     LOGO_BASE + 'monsters_logo.svg',
+          allUnits:    [],
+          deployIndex: 0,
+        };
+        state.factions.push(monsterFaction);
+      }
+
+      // Add unit to faction roster and initialise its state
+      monsterFaction.allUnits.push(unit);
+      var k = unitKey(monsterFaction.id, unit.id);
+      state.unitState[k] = { quality: unit.quality, out: false, activated: false, lastRoll: null };
+
+      // Insert at the NEXT position in the queue (right after current activation)
+      var insertAt = state.queueIndex + 1;
+      state.queue.splice(insertAt, 0, { factionId: monsterFaction.id, unitId: unit.id });
+
+      showMonsterAlert(monsterDef, monsterFaction, unit);
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -998,39 +1147,57 @@ window.CC_APP = {
     // RENDER: MONSTER ALERT OVERLAY
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function showMonsterAlert(monster) {
-      const name = monster?.name || 'Something from the Canyon';
-      // Remove any existing alert first
+    function showMonsterAlert(unit, faction, queueUnit) {
+      var name  = unit.name || 'Something from the Canyon';
+      var color = (faction && faction.color) || '#ef5350';
+
       var existing = document.getElementById('cc-monster-alert');
       if (existing) existing.remove();
 
-      const overlay = document.createElement('div');
+      // Stat badges for the monster
+      var stats = '';
+      if (unit.quality) stats += '<span style="background:#ff751822;border:1px solid #ff751866;' +
+        'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#ff7518;font-weight:700;">Q' + unit.quality + '</span> ';
+      if (unit.move)    stats += '<span style="background:#42a5f522;border:1px solid #42a5f566;' +
+        'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#42a5f5;font-weight:700;">' + unit.move + '"</span> ';
+      if (unit.combat)  stats += '<span style="background:#ef535022;border:1px solid #ef535066;' +
+        'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#ef5350;font-weight:700;">C' + unit.combat + '</span> ';
+      if (unit.armor)   stats += '<span style="background:#90a4ae22;border:1px solid #90a4ae66;' +
+        'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#90a4ae;font-weight:700;">A' + unit.armor + '</span> ';
+
+      var specials = Array.isArray(unit.special) ? unit.special : (unit.special ? [unit.special] : []);
+      var specialHtml = specials.length
+        ? '<div style="margin-top:.5rem;display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center;">' +
+          specials.map(function(s) {
+            return '<span style="padding:2px 7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);' +
+                   'border-radius:3px;font-size:.75rem;color:#ccc;">' + s + '</span>';
+          }).join('') + '</div>'
+        : '';
+
+      var overlay = document.createElement('div');
       overlay.id = 'cc-monster-alert';
-      overlay.style.cssText = [
-        'position:fixed;inset:0;z-index:9999;',
-        'background:rgba(0,0,0,.88);',
-        'display:flex;align-items:center;justify-content:center;',
-        'animation:cc-fade-in .3s ease;'
-      ].join('');
-      overlay.innerHTML = `
-        <div style="text-align:center;padding:2rem;max-width:400px;width:90%;">
-          <div style="font-size:3rem;margin-bottom:1rem;color:#ef5350;
-                      animation:cc-pulse 1s ease infinite;">
-            <i class="fa fa-dragon"></i>
-          </div>
-          <h2 style="color:#ef5350;margin:0 0 .5rem;font-size:1.8rem;">
-            Monster Encounter!
-          </h2>
-          <p style="color:#ffcdd2;font-size:1.1rem;margin:.5rem 0 1.5rem;">
-            ${name} approaches from the nearest board edge.
-          </p>
-          <button
-            onclick="document.getElementById('cc-monster-alert').remove()"
-            class="cc-btn"
-            style="width:100%;font-size:1rem;padding:.85rem;">
-            Acknowledged — Continue
-          </button>
-        </div>`;
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);' +
+        'display:flex;align-items:center;justify-content:center;animation:cc-fade-in .3s ease;padding:1rem;box-sizing:border-box;';
+
+      overlay.innerHTML =
+        '<div style="text-align:center;padding:1.5rem;max-width:380px;width:100%;' +
+        'background:#1a1a1a;border:2px solid ' + color + ';border-radius:12px;">' +
+        '<div style="font-size:2.5rem;margin-bottom:.5rem;color:' + color + ';animation:cc-pulse 1s ease infinite;">' +
+        '<i class="fa fa-dragon"></i></div>' +
+        '<h2 style="color:' + color + ';margin:0 0 .25rem;font-size:1.5rem;">Monster Encounter!</h2>' +
+        '<p style="color:#ffcdd2;font-size:1rem;margin:.25rem 0 .75rem;">' +
+        '<strong>' + name + '</strong> approaches from the nearest board edge.</p>' +
+        '<div style="display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;margin-bottom:.5rem;">' + stats + '</div>' +
+        specialHtml +
+        '<div style="margin:.85rem 0 .5rem;padding:.6rem;background:rgba(0,0,0,.3);border-radius:6px;' +
+        'font-size:.82rem;color:#aaa;border:1px solid rgba(255,255,255,.08);">' +
+        '<i class="fa fa-chevron-right" style="color:' + color + ';margin-right:.4rem;"></i>' +
+        name + ' <strong style="color:#fff;">added to the queue</strong> — activates next.</div>' +
+        '<button onclick="document.getElementById(\'cc-monster-alert\').remove()" ' +
+        'class="cc-btn" style="width:100%;font-size:1rem;padding:.85rem;background:' + color + ';color:#000;">' +
+        'Acknowledged — Continue</button>' +
+        '</div>';
+
       document.body.appendChild(overlay);
     }
 
