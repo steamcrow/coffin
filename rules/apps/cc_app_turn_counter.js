@@ -187,6 +187,26 @@ window.CC_APP = {
       try { return JSON.stringify(e); } catch (_) { return String(e); }
     }
 
+    // Backstop: Odoo's unhandledrejection handler crashes when the rejection
+    // reason is not a proper Error (no .stack property). Intercept first and
+    // normalize so Odoo never sees a raw string, object, or undefined.
+    (function() {
+      function ccNormalizeRejection(event) {
+        var reason = event.reason;
+        if (reason instanceof Error) return; // already fine — let Odoo handle it
+        // Convert to a real Error so .stack exists
+        var msg = reason == null ? 'Unhandled rejection'
+                : typeof reason === 'string' ? reason
+                : (reason.message || JSON.stringify(reason) || 'Unhandled rejection');
+        var err = new Error('[CC] ' + msg);
+        // Stop Odoo from seeing the original bad reason
+        event.preventDefault();
+        // Re-throw as a proper Error after a tick so it shows in the console
+        setTimeout(function() { throw err; }, 0);
+      }
+      window.addEventListener('unhandledrejection', ccNormalizeRejection);
+    }());
+
 
 
     function getUnitState(factionId, unitId) {
@@ -1355,29 +1375,33 @@ window.CC_APP = {
     };
 
     window.CC_TC.startFromQuickSetup = async function() {
-      var checked = Array.from(document.querySelectorAll('input[name="faction"]:checked'));
-      if (checked.length < 2) {
-        alert('Please select at least 2 factions.');
-        return;
+      try {
+        var checked = Array.from(document.querySelectorAll('input[name="faction"]:checked'));
+        if (checked.length < 2) { alert('Please select at least 2 factions.'); return; }
+        state.loadingData = true;
+        state.factions = [];
+        render();
+        for (var i = 0; i < checked.length; i++) {
+          var cb      = checked[i];
+          var id      = cb.value;
+          var meta    = FACTION_META[id];
+          var sel     = document.querySelector('select[name="npc_' + id + '"]');
+          var isNPC   = !sel || sel.value === 'npc';
+          var fData   = await loadFactionData(id);
+          var faction = fData
+            ? buildFactionEntry(id, fData, isNPC, meta.isMonster)
+            : buildQuickFaction(id, meta.name, 3, isNPC, meta.isMonster);
+          initUnitStates(faction);
+          state.factions.push(faction);
+        }
+        state.loadingData = false;
+        window.CC_TC.beginGame();
+      } catch (err) {
+        state.loadingData = false;
+        state.phase = 'setup';
+        render();
+        alert('Failed to start game: ' + safeErr(err));
       }
-      state.loadingData = true;
-      state.factions = [];
-      render();
-      for (var i = 0; i < checked.length; i++) {
-        var cb      = checked[i];
-        var id      = cb.value;
-        var meta    = FACTION_META[id];
-        var sel     = document.querySelector('select[name="npc_' + id + '"]');
-        var isNPC   = !sel || sel.value === 'npc';
-        var fData   = await loadFactionData(id);
-        var faction = fData
-          ? buildFactionEntry(id, fData, isNPC, meta.isMonster)
-          : buildQuickFaction(id, meta.name, 3, isNPC, meta.isMonster);
-        initUnitStates(faction);
-        state.factions.push(faction);
-      }
-      state.loadingData = false;
-      window.CC_TC.beginGame();
     };
 
     window.CC_TC.openScenarioList = function() {
