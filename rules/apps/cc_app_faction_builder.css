@@ -32,10 +32,6 @@
   box-shadow: 0 0 0 1px rgba(255,117,24,.35);
 }
 
-.cc-faction-controls select#cc-faction-selector {
-  flex: 0 0 220px;
-}
-
 .cc-faction-controls input#cc-roster-name {
   flex: 1;
   min-width: 200px;
@@ -45,12 +41,64 @@
   flex: 0 0 140px;
 }
 
+/* ===== Faction Selector with Icon ===== */
+/* Wraps the faction <select> + the icon shown beside it */
+.cc-faction-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.cc-faction-selector-wrap select#cc-faction-selector {
+  flex: 0 0 220px;
+}
+
+/* The icon slot sitting to the left of the dropdown */
+.cc-faction-selector-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ===== Faction Icon (shared) ===== */
+/* Applied to every <img> produced by factionIconHtml() */
+.cc-faction-icon {
+  object-fit: contain;
+  flex-shrink: 0;
+  /* The glow colour is passed in via --faction-color on the element */
+  filter: drop-shadow(0 0 5px var(--faction-color, #ff751888))
+          brightness(1.1);
+  transition: filter 0.2s;
+}
+
+/* Panel title row that holds an icon + text side-by-side */
+.cc-panel-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+/* Unit Builder detail header: icon sits left of the unit name */
+.detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Cloud roster list: faction icon next to the faction label */
+.cc-saved-roster-faction-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 /* ===== Three-Column Layout ===== */
 .cc-faction-builder {
   display: grid;
   grid-template-columns: 300px 1fr 300px;
   gap: 1rem;
-  /* FIXED: Changed from fixed height to auto */
   height: auto;
   min-height: 600px;
   padding: 0 1rem 1rem 1rem;
@@ -58,7 +106,6 @@
 
 .cc-faction-sidebar {
   min-width: 0;
-  /* FIXED: Added max-height and overflow */
   max-height: 700px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -66,17 +113,14 @@
 
 .cc-faction-main {
   min-width: 0;
-  /* FIXED: Added max-height */
   max-height: 700px;
   overflow-y: auto;
   overflow-x: hidden;
-  /* FIXED: Added padding-bottom so buttons are visible */
   padding-bottom: 2rem;
 }
 
 .cc-faction-roster {
   min-width: 0;
-  /* FIXED: Added max-height and overflow */
   max-height: 700px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -160,7 +204,7 @@
 
 @keyframes pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
+  50%       { opacity: 0.7; }
 }
 
 /* ===== Field Labels ===== */
@@ -355,7 +399,6 @@
   .cc-faction-sidebar,
   .cc-faction-main,
   .cc-faction-roster {
-    /* FIXED: Removed fixed max-height on mobile */
     max-height: none;
     overflow: visible;
   }
@@ -367,9 +410,15 @@
   }
 
   .cc-faction-controls select,
-  .cc-faction-controls input {
+  .cc-faction-controls input,
+  .cc-faction-selector-wrap {
     width: 100%;
     flex: 1 1 auto !important;
+  }
+
+  .cc-faction-selector-wrap select#cc-faction-selector {
+    flex: 1 1 auto;
+    width: 100%;
   }
 
   .cc-roster-grid {
