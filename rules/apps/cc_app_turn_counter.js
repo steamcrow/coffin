@@ -499,13 +499,14 @@ window.CC_APP = {
       const allUnits = rawUnits.map((u, i) => ({
         id:      u.id   || `unit_${i}`,
         name:    u.name || `Unit ${i + 1}`,
-        lore:    u.lore || u.flavor || u.description || u.bio || null,
+        lore:    u.lore || u.Lore || u.flavor || u.Flavor || u.description || u.bio || null,
         quality: u.quality     || u.Quality     || 4,
         move:    u.move        || u.Move        || 6,
         defense: u.defense     || u.Defense     || u.armor || u.Armor || null,
         range:   u.range       || u.Range       || u.shoot || u.Shoot || null,
         cost:    u.cost        || u.points      || null,
         special: u.special     || u.abilities   || [],
+        upgrades: u.upgrades   || u.Upgrades    || u.equipment || u.gear || u.loadout || [],
         isTitan: u.titan       || u.is_titan    || false,
       }));
 
@@ -565,13 +566,14 @@ window.CC_APP = {
         return {
           id:      item.id       || ('saved_' + i),
           name:    item.name     || item.unitName || item.label || ('Unit ' + (i + 1)),
-          lore:    item.lore     || item.flavor   || item.description || item.bio || null,
+          lore:    item.lore     || item.Lore    || item.flavor   || item.description || item.bio || null,
           quality: item.quality  || item.Quality  || 4,
           move:    item.move     || item.Move     || 6,
           defense: item.defense  || item.Defense  || item.armor   || item.Armor   || null,
           range:   item.range    || item.Range    || item.shoot   || item.Shoot   || null,
           cost:    item.totalCost || item.cost    || item.points  || null,
           special: item.abilities || item.special || item.rules  || [],
+          upgrades: item.upgrades || item.Upgrades || item.equipment || item.gear || item.loadout || [],
           isTitan: item.isTitan  || item.titan    || false,
         };
       }).filter(function(u) { return u !== null; }); // remove any nulls from bad items
@@ -752,7 +754,7 @@ window.CC_APP = {
           return {
             id:      u.id      || ('monsters_' + i),
             name:    u.name    || ('Monster ' + (i+1)),
-            lore:    u.lore    || u.flavor || u.description || null,
+            lore:    u.lore    || u.Lore    || u.flavor || u.description || null,
             quality: u.quality || 4,
             move:    u.move    || 6,
             defense: u.defense || u.armor  || null,
@@ -1656,6 +1658,22 @@ window.CC_APP = {
             ${specialHtml}
             ${directiveHtml}
 
+            ${(unit.upgrades && unit.upgrades.length) ? `
+            <div style="margin:.75rem 0;">
+              <div style="font-size:.68rem;color:#555;text-transform:uppercase;letter-spacing:.1em;
+                          margin-bottom:.4rem;">Upgrades</div>
+              <div style="display:flex;flex-wrap:wrap;gap:.4rem;">
+                ${(Array.isArray(unit.upgrades) ? unit.upgrades : [unit.upgrades]).map(upg => {
+                  const label = (typeof upg === 'string') ? upg : (upg.name || upg.label || String(upg));
+                  const note  = (typeof upg === 'object' && (upg.effect || upg.description || upg.note)) || null;
+                  return `<div style="padding:5px 10px;background:rgba(255,215,0,.06);
+                    border:1px solid rgba(255,215,0,.25);border-radius:4px;font-size:.78rem;color:#ffd600;">
+                    ${label}${note ? `<span style="color:#888;font-size:.72rem;margin-left:.4rem;">${note}</span>` : ''}
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>` : ''}
+
             <div class="cc-panel" style="margin:1rem 0;">
               <div class="cc-panel-header">
                 <h6 style="margin:0;color:#888;font-size:.7rem;text-transform:uppercase;
@@ -1823,19 +1841,58 @@ window.CC_APP = {
       var isNPC          = activeFaction && activeFaction.isNPC;
 
       // ── Build terrain list ──────────────────────────────────────────────────
-      // Boardwalk is always present (it exists in every location).
-      // Objectives come from the loaded scenario if available;
-      // otherwise a generic marker is added.
-      var terrainTypes = [
-        { icon: 'fa-grip-lines',  label: 'Boardwalk',    note: 'Elevated walkway — present in every location', isObjective: false },
-        { icon: 'fa-home',        label: 'Building',     note: 'Blocks LOS, can be entered',                   isObjective: false },
-        { icon: 'fa-mountain',    label: 'Rocky Outcrop',note: 'Difficult terrain, partial cover',             isObjective: false },
-        { icon: 'fa-tree',        label: 'Canyon Brush', note: 'Light cover, passable',                        isObjective: false },
-        { icon: 'fa-campground',  label: 'Ruin / Debris',note: 'Narrative terrain',                            isObjective: false },
-        { icon: 'fa-barricade',   label: 'Barricade',    note: 'Low cover, blocks movement',                   isObjective: false },
-        { icon: 'fa-gem',         label: 'Thyr Crystal', note: 'Magical resource — mark it',                   isObjective: false },
+      // Pull available terrain from the scenario save if it lists any.
+      // Field names tried: terrain, available_terrain, terrain_pool, tiles, pieces.
+      // If nothing is found, use a short default list weighted toward the
+      // two pieces that appear most often in play: Boardwalk and Thyr Crystal.
+
+      var scenarioTerrain = null;
+      if (state.scenarioSave) {
+        scenarioTerrain = state.scenarioSave.terrain
+          || state.scenarioSave.available_terrain
+          || state.scenarioSave.terrain_pool
+          || state.scenarioSave.tiles
+          || state.scenarioSave.pieces
+          || null;
+      }
+
+      // Normalise whatever shape the scenario uses into { label, note, icon, isObjective }
+      var BASE_TERRAIN = [
+        { icon: 'fa-grip-lines', label: 'Boardwalk',    note: 'Elevated walkway — present in every location', isObjective: false },
+        { icon: 'fa-grip-lines', label: 'Boardwalk',    note: 'Elevated walkway — place a second one',        isObjective: false },
+        { icon: 'fa-gem',        label: 'Thyr Crystal', note: 'Magical resource — mark it',                   isObjective: false },
+        { icon: 'fa-home',       label: 'Building',     note: 'Blocks LOS, can be entered',                   isObjective: false },
+        { icon: 'fa-mountain',   label: 'Rocky Outcrop',note: 'Difficult terrain, partial cover',             isObjective: false },
+        { icon: 'fa-tree',       label: 'Canyon Brush', note: 'Light cover, passable',                        isObjective: false },
+        { icon: 'fa-campground', label: 'Ruin / Debris',note: 'Narrative terrain',                            isObjective: false },
+        { icon: 'fa-barricade',  label: 'Barricade',    note: 'Low cover, blocks movement',                   isObjective: false },
       ];
 
+      var terrainTypes;
+      if (Array.isArray(scenarioTerrain) && scenarioTerrain.length > 0) {
+        // Always keep Boardwalk and Thyr Crystal available even if not in scenario list
+        terrainTypes = scenarioTerrain.map(function(t) {
+          if (typeof t === 'string') return { icon: 'fa-map-signs', label: t, note: '', isObjective: false };
+          return {
+            icon:        t.icon  || 'fa-map-signs',
+            label:       t.name  || t.label || t.type || String(t),
+            note:        t.note  || t.description || '',
+            isObjective: !!(t.isObjective || t.objective),
+          };
+        });
+        // Inject Boardwalk if absent (it's always available)
+        if (!terrainTypes.find(function(t) { return t.label === 'Boardwalk'; })) {
+          terrainTypes.unshift({ icon: 'fa-grip-lines', label: 'Boardwalk', note: 'Elevated walkway — present in every location', isObjective: false });
+        }
+        // Inject Thyr Crystal if absent
+        if (!terrainTypes.find(function(t) { return t.label === 'Thyr Crystal'; })) {
+          terrainTypes.splice(1, 0, { icon: 'fa-gem', label: 'Thyr Crystal', note: 'Magical resource — mark it', isObjective: false });
+        }
+      } else {
+        terrainTypes = BASE_TERRAIN.slice();
+      }
+
+      // Append scenario objectives as placeable markers
       var scenarioObjectives = (state.scenarioSave && state.scenarioSave.objectives) || [];
       if (scenarioObjectives.length > 0) {
         scenarioObjectives.forEach(function(obj) {
@@ -1873,16 +1930,21 @@ window.CC_APP = {
       if (isNPC) {
         var roll = Math.random();
         var picked;
-        if (roll < 0.20) {
+        if (roll < 0.35) {
+          // ~35% — Boardwalk (most common addition)
           picked = terrainTypes.find(function(t) { return t.label === 'Boardwalk'; });
         } else if (roll < 0.50) {
+          // ~15% — Thyr Crystal
+          picked = terrainTypes.find(function(t) { return t.label === 'Thyr Crystal'; });
+        } else if (roll < 0.75) {
+          // ~25% — Scenario objectives
           var objPool = terrainTypes.filter(function(t) { return t.isObjective; });
           picked = objPool[Math.floor(Math.random() * objPool.length)];
-        } else if (roll < 0.65) {
-          picked = terrainTypes.find(function(t) { return t.label === 'Thyr Crystal'; });
-        } else if (roll < 0.80) {
+        } else if (roll < 0.88) {
+          // ~13% — Building
           picked = terrainTypes.find(function(t) { return t.label === 'Building'; });
         } else {
+          // ~12% — misc
           var misc = terrainTypes.filter(function(t) {
             return !t.isObjective && ['Rocky Outcrop','Canyon Brush','Ruin / Debris','Barricade'].indexOf(t.label) !== -1;
           });
