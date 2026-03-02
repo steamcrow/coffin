@@ -72,88 +72,75 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
 }());
 
 // ── 3. Bootstrap Dropdown autoClose:null patch ────────────────────────────────
-// Odoo's navbar renders dropdown toggles with data-bs-auto-close="null" (a
-// string "null" or an actual null, depending on the template version).
-// Bootstrap 5's Dropdown._typeCheckConfig() throws a TypeError when it sees
-// autoClose is null instead of a boolean or string like "outside"/"inside".
-// The error surfaces through Odoo's own owl event wrapper as a synchronous
-// throw — NOT as an unhandled Promise rejection — so our rejection guard
-// above cannot intercept it.  Fix it at the source instead.
+// ─── Bootstrap Dropdown autoClose:null patch ───────────────────────────────
+// Odoo's navbar renders dropdowns with data-bs-auto-close="null".
+// Bootstrap 5 parses that string as JSON → JS null → _typeCheckConfig throws.
+// Our previous approach sanitised the JS config object, but Bootstrap re-reads
+// the data attribute INSIDE the constructor and never uses our sanitised object.
+// The only reliable fix is to patch the prototype _getConfig method so it
+// cleans the element attribute before Bootstrap's own _typeCheckConfig sees it.
 (function patchBootstrapDropdownAutoClose() {
   if (window._ccDropdownPatchInstalled) return;
+  window._ccDropdownPatchInstalled = true;
 
-  function doPatch() {
-    // Fix any existing DOM elements that have the bad attribute value
-    document.querySelectorAll('[data-bs-auto-close]').forEach(function(el) {
-      var v = el.getAttribute('data-bs-auto-close');
-      if (v === 'null' || v === null || v === '') {
-        el.setAttribute('data-bs-auto-close', 'true');
-      }
-    });
+  function fixEl(el) {
+    if (!el || !el.getAttribute) return;
+    var v = el.getAttribute('data-bs-auto-close');
+    if (v === 'null' || v === null || v === '') {
+      el.setAttribute('data-bs-auto-close', 'true');
+    }
+  }
 
-    // Patch Bootstrap's Dropdown class if available
+  function patchPrototype() {
     var BS = window.bootstrap;
-    if (!BS || !BS.Dropdown) return false;
+    if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
+    var proto = BS.Dropdown.prototype;
+    if (proto._ccAutoClosePatch) return true;
+    proto._ccAutoClosePatch = true;
 
-    // Wrap getOrCreateInstance to sanitise config before Bootstrap sees it
-    var origGet = BS.Dropdown.getOrCreateInstance;
-    if (origGet && !origGet._ccPatched) {
-      BS.Dropdown.getOrCreateInstance = function(el, cfg) {
-        if (cfg && cfg.autoClose == null) cfg.autoClose = true;
-        return origGet.call(this, el, cfg);
-      };
-      BS.Dropdown.getOrCreateInstance._ccPatched = true;
-    }
-
-    // Also wrap the constructor itself as a second line of defence
-    // (some Odoo versions call `new Dropdown(el, config)` directly)
-    var OrigDropdown = BS.Dropdown;
-    if (!OrigDropdown._ccPatched) {
-      function PatchedDropdown(el, cfg) {
-        if (cfg && cfg.autoClose == null) cfg.autoClose = true;
-        return new OrigDropdown(el, cfg);
-      }
-      PatchedDropdown.getOrCreateInstance = BS.Dropdown.getOrCreateInstance;
-      PatchedDropdown._ccPatched = true;
-      // Copy any static methods Bootstrap added
-      Object.keys(OrigDropdown).forEach(function(k) {
-        if (!(k in PatchedDropdown)) PatchedDropdown[k] = OrigDropdown[k];
-      });
-      BS.Dropdown = PatchedDropdown;
-    }
+    // _getConfig is where Bootstrap reads data attributes and calls _typeCheckConfig.
+    // We intercept it to sanitise the element before the read happens.
+    var orig = proto._getConfig;
+    proto._getConfig = function(config) {
+      // `this._element` is set by BaseComponent before _getConfig is called
+      if (this._element) fixEl(this._element);
+      // Also sanitise the passed config object as a second line of defence
+      if (config && config.autoClose == null) config.autoClose = true;
+      return orig.call(this, config);
+    };
     return true;
   }
 
-  // Try immediately, then retry after Odoo finishes loading its assets
-  if (!doPatch()) {
-    var _attempts = 0;
-    var _timer = setInterval(function() {
-      _attempts++;
-      if (doPatch() || _attempts > 20) {
-        clearInterval(_timer);
-        window._ccDropdownPatchInstalled = true;
-      }
-    }, 300);
-  } else {
-    window._ccDropdownPatchInstalled = true;
+  // Fix any elements already in the DOM
+  function fixDOM() {
+    document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
   }
 
-  // Also fix DOM nodes added later (Odoo re-renders the navbar on navigation)
+  fixDOM();
+
+  // Retry patching the prototype until Bootstrap has loaded
+  if (!patchPrototype()) {
+    var _attempts = 0;
+    var _retry = setInterval(function() {
+      _attempts++;
+      fixDOM();
+      if (patchPrototype() || _attempts > 30) clearInterval(_retry);
+    }, 200);
+  }
+
+  // Catch any new elements added to the DOM (Odoo re-renders nav on route change)
   if (window.MutationObserver) {
     new MutationObserver(function(mutations) {
       mutations.forEach(function(m) {
         m.addedNodes.forEach(function(node) {
+          if (node.nodeType !== 1) return;
+          fixEl(node);
           if (node.querySelectorAll) {
-            node.querySelectorAll('[data-bs-auto-close]').forEach(function(el) {
-              if (el.getAttribute('data-bs-auto-close') === 'null') {
-                el.setAttribute('data-bs-auto-close', 'true');
-              }
-            });
+            node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
           }
         });
       });
-    }).observe(document.body || document.documentElement,
-               { childList: true, subtree: true });
+    }).observe(document.documentElement, { childList: true, subtree: true });
   }
 }());
 (function installCCRejectionGuard() {
