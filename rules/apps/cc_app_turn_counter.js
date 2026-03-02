@@ -499,11 +499,11 @@ window.CC_APP = {
       const allUnits = rawUnits.map((u, i) => ({
         id:      u.id   || `unit_${i}`,
         name:    u.name || `Unit ${i + 1}`,
+        lore:    u.lore || u.flavor || u.description || u.bio || null,
         quality: u.quality     || u.Quality     || 4,
         move:    u.move        || u.Move        || 6,
-        combat:  u.combat      || u.Combat      || null,
-        shoot:   u.shoot       || u.Shoot       || null,
-        armor:   u.armor       || u.Armor       || null,
+        defense: u.defense     || u.Defense     || u.armor || u.Armor || null,
+        range:   u.range       || u.Range       || u.shoot || u.Shoot || null,
         cost:    u.cost        || u.points      || null,
         special: u.special     || u.abilities   || [],
         isTitan: u.titan       || u.is_titan    || false,
@@ -565,13 +565,11 @@ window.CC_APP = {
         return {
           id:      item.id       || ('saved_' + i),
           name:    item.name     || item.unitName || item.label || ('Unit ' + (i + 1)),
+          lore:    item.lore     || item.flavor   || item.description || item.bio || null,
           quality: item.quality  || item.Quality  || 4,
           move:    item.move     || item.Move     || 6,
-          combat:  item.combat   || item.Combat   || null,
-          // builder uses 'range' for shoot stat
-          shoot:   item.shoot    || item.Shoot    || item.range  || item.Range  || null,
-          // builder uses 'defense' for armor stat
-          armor:   item.armor    || item.Armor    || item.defense || item.Defence || null,
+          defense: item.defense  || item.Defense  || item.armor   || item.Armor   || null,
+          range:   item.range    || item.Range    || item.shoot   || item.Shoot   || null,
           cost:    item.totalCost || item.cost    || item.points  || null,
           special: item.abilities || item.special || item.rules  || [],
           isTitan: item.isTitan  || item.titan    || false,
@@ -754,11 +752,11 @@ window.CC_APP = {
           return {
             id:      u.id      || ('monsters_' + i),
             name:    u.name    || ('Monster ' + (i+1)),
+            lore:    u.lore    || u.flavor || u.description || null,
             quality: u.quality || 4,
             move:    u.move    || 6,
-            combat:  u.combat  || 4,
-            shoot:   u.shoot   || null,
-            armor:   u.armor   || null,
+            defense: u.defense || u.armor  || null,
+            range:   u.range   || u.shoot  || null,
             special: u.special || u.abilities || [],
             isTitan: u.titan   || u.is_titan  || false,
           };
@@ -970,28 +968,24 @@ window.CC_APP = {
     // ═══════════════════════════════════════════════════════════════════════════
 
     const STAT_COLORS = {
-      quality: '#ff7518',
-      move:    '#42a5f5',
-      combat:  '#ef5350',
-      shoot:   '#ffd600',
-      armor:   '#90a4ae',
-      cost:    '#555',
+      quality:  '#ff7518',
+      move:     '#42a5f5',
+      defense:  '#ef5350',
+      range:    '#ffd600',
+      cost:     '#555',
     };
 
     // Stat definitions shown in the slide panel
     var STAT_DEFINITIONS = {
-      move:   { label: 'Move', icon: 'fa-shoe-prints', color: '#42a5f5',
-                short: 'How far this unit can travel in one action.',
-                long:  'Move is measured in inches. A unit may spend one Simple Action to move up to its full Move distance. Difficult terrain costs double movement. A unit may not move through enemy models.' },
-      combat: { label: 'Combat', icon: 'fa-sword', color: '#ef5350',
-                short: 'Dice rolled in melee attacks.',
-                long:  'Combat is the number of dice this unit rolls when making a melee attack. Roll against a target number of 4+. Each die showing 4, 5, or 6 counts as one success. Compare successes to the target\'s Defense to determine damage.' },
-      shoot:  { label: 'Shoot', icon: 'fa-crosshairs', color: '#ffd600',
-                short: 'Dice rolled in ranged attacks.',
-                long:  'Shoot is the number of dice rolled when making a ranged attack. Requires Line of Sight to the target. Ranges are Short (3"), Medium (6"), Long (12") — each step beyond Short costs 1 die. Shooting into melee is not permitted.' },
-      armor:  { label: 'Armor', icon: 'fa-shield-alt', color: '#90a4ae',
-                short: 'Reduces incoming damage.',
-                long:  'Armor reduces damage taken by its value after all other modifiers. A result of 0 or less deals no damage. Armor does not apply against Automatic Damage sources unless the ability specifically states otherwise.' },
+      move:    { label: 'Move', icon: 'fa-shoe-prints', color: '#42a5f5',
+                 short: 'How far this unit can travel in one action.',
+                 long:  'Move is measured in inches. A unit may spend one Simple Action to move up to its full Move distance. Difficult terrain costs double movement. A unit may not move through enemy models.' },
+      defense: { label: 'Defense', icon: 'fa-shield-alt', color: '#ef5350',
+                 short: 'How hard this unit is to damage.',
+                 long:  'Defense is the target number of successes an attacker must beat to deal damage. An attacker rolls their Quality dice — each 4, 5, or 6 is a success. If their successes exceed your Defense, you take one point of damage.' },
+      range:   { label: 'Range', icon: 'fa-crosshairs', color: '#ffd600',
+                 short: 'Maximum distance for ranged attacks.',
+                 long:  'Range is the maximum distance in inches this unit can shoot. Ranges are grouped as Short (3"), Medium (6"), and Long (12"). Shooting requires Line of Sight and is not permitted into or out of melee.' },
     };
 
     function statBadge(label, value, colorKey) {
@@ -1291,14 +1285,14 @@ window.CC_APP = {
 
       // Stat badges for the monster
       var stats = '';
-      if (unit.quality) stats += '<span style="background:#ff751822;border:1px solid #ff751866;' +
+      if (unit.quality)  stats += '<span style="background:#ff751822;border:1px solid #ff751866;' +
         'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#ff7518;font-weight:700;">Q' + unit.quality + '</span> ';
-      if (unit.move)    stats += '<span style="background:#42a5f522;border:1px solid #42a5f566;' +
+      if (unit.move)     stats += '<span style="background:#42a5f522;border:1px solid #42a5f566;' +
         'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#42a5f5;font-weight:700;">' + unit.move + '"</span> ';
-      if (unit.combat)  stats += '<span style="background:#ef535022;border:1px solid #ef535066;' +
-        'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#ef5350;font-weight:700;">C' + unit.combat + '</span> ';
-      if (unit.armor)   stats += '<span style="background:#90a4ae22;border:1px solid #90a4ae66;' +
-        'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#90a4ae;font-weight:700;">A' + unit.armor + '</span> ';
+      if (unit.defense)  stats += '<span style="background:#ef535022;border:1px solid #ef535066;' +
+        'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#ef5350;font-weight:700;">Def ' + unit.defense + '</span> ';
+      if (unit.range)    stats += '<span style="background:#ffd60022;border:1px solid #ffd60066;' +
+        'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#ffd600;font-weight:700;">' + unit.range + '"</span> ';
 
       var specials = Array.isArray(unit.special) ? unit.special : (unit.special ? [unit.special] : []);
       var specialHtml = specials.length
@@ -1322,6 +1316,7 @@ window.CC_APP = {
         '<h2 style="color:' + color + ';margin:0 0 .25rem;font-size:1.5rem;">Monster Encounter!</h2>' +
         '<p style="color:#ffcdd2;font-size:1rem;margin:.25rem 0 .75rem;">' +
         '<strong>' + name + '</strong> approaches from the nearest board edge.</p>' +
+        (unit.lore ? '<p style="color:#888;font-size:.82rem;font-style:italic;margin:0 0 .75rem;line-height:1.5;">' + unit.lore + '</p>' : '') +
         '<div style="display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;margin-bottom:.5rem;">' + stats + '</div>' +
         specialHtml +
         '<div style="margin:.85rem 0 .5rem;padding:.6rem;background:rgba(0,0,0,.3);border-radius:6px;' +
@@ -1562,10 +1557,9 @@ window.CC_APP = {
       const color     = faction.color;
 
       const statBadges = [
-        statBadge('Move', unit.move ? unit.move + '"' : null, 'move'),
-        statBadge('Combat', unit.combat, 'combat'),
-        statBadge('Shoot', unit.shoot, 'shoot'),
-        unit.armor ? statBadge('Armor', unit.armor, 'armor') : '',
+        statBadge('Move',    unit.move    ? unit.move + '"' : null, 'move'),
+        statBadge('Defense', unit.defense, 'defense'),
+        unit.range ? statBadge('Range', unit.range + '"', 'range') : '',
       ].join('');
 
       const directive = faction.isNPC ? buildDirective(faction, unit) : null;
@@ -1647,6 +1641,8 @@ window.CC_APP = {
               </h2>
               ${unit.isTitan ? `<span style="color:#ffd600;font-size:.75rem;font-weight:700;
                 text-transform:uppercase;letter-spacing:.1em;"><i class="fa fa-bolt"></i> Titan</span>` : ''}
+              ${unit.lore ? `<p style="color:#888;font-size:.88rem;font-style:italic;
+                margin:.4rem 0 0;line-height:1.5;">${unit.lore}</p>` : ''}
             </div>
 
             <div style="margin-bottom:1rem;">
