@@ -56,18 +56,36 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     }
 
     // Catch elements added after initial render (Odoo re-renders nav on route change)
-    if (window.MutationObserver) {
-      new MutationObserver(function (mutations) {
-        mutations.forEach(function (m) {
-          m.addedNodes.forEach(function (node) {
-            if (node.nodeType !== 1) return;
-            fixEl(node);
-            if (node.querySelectorAll) node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
-          });
+   // Catch any new elements added to the DOM (Odoo re-renders nav on route change)
+  if (window.MutationObserver) {
+    new MutationObserver(function(mutations) {
+      mutations.forEach(function(m) {
+        m.addedNodes.forEach(function(node) {
+          if (node.nodeType !== 1) return;
+          fixEl(node);
+          if (node.querySelectorAll) {
+            node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
+          }
         });
-      }).observe(document.documentElement, { childList: true, subtree: true });
+      });
+      // Re-check the prototype on every mutation batch — Odoo's lazy loader can
+      // replace the Bootstrap bundle after any async re-render.
+      patchPrototype();
+    }).observe(document.documentElement, { childList: true, subtree: true });
+  }
+
+  // ── Long-lived heartbeat ──────────────────────────────────────────────────
+  // After a long idle period Odoo can reload its Bootstrap bundle, giving
+  // Dropdown a fresh prototype that has never been patched.  Check every 30 s.
+  setInterval(function() {
+    fixDOM();
+    var BS = window.bootstrap;
+    if (BS && BS.Dropdown && BS.Dropdown.prototype && !BS.Dropdown.prototype._ccAutoClosePatch) {
+      console.log('[CC] Bootstrap Dropdown prototype replaced — re-patching');
+      patchPrototype();
     }
-  }());
+  }, 30000);
+}());
 
   // ── App registry ──────────────────────────────────────────────────────────
   var COMPONENTS_JS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_components.js';
