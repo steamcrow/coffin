@@ -859,7 +859,7 @@ window.CC_APP = {
     // FACTION LOGO HELPER
     // ═══════════════════════════════════════════════════════════════════════════
 
-    function logoHtml(faction, sizePx = 48) {
+    function logoHtml(faction, sizePx = 64) {
       const initial = (faction.name || '?')[0].toUpperCase();
       const color   = faction.color || '#888';
       return `
@@ -1915,7 +1915,7 @@ window.CC_APP = {
         return '<div style="' + borderStyle + 'border-radius:8px;padding:.7rem;background:rgba(0,0,0,.25);transition:opacity .2s;">' +
           '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">' +
           '<img src="' + LOGO_BASE + pf.id + '_logo.svg" alt="' + fname + '" ' +
-          'style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 3px ' + color + '88)' + (isSkipped ? ' grayscale(1)' : '') + ';flex-shrink:0;" ' +
+          'style="width:48px;height:48px;object-fit:contain;filter:drop-shadow(0 0 3px ' + color + '88)' + (isSkipped ? ' grayscale(1)' : '') + ';flex-shrink:0;" ' +
           'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:28px;height:28px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.75rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
           '<strong style="flex:1;color:' + (isSkipped ? '#555' : color) + ';font-size:.9rem;">' + fname +
           (isSkipped ? ' <span style="color:#555;font-size:.7rem;font-weight:400;">(skipped)</span>' : '') + '</strong>' +
@@ -1961,7 +1961,7 @@ window.CC_APP = {
             'background:' + color + '18;animation:cc-fade-in .25s ease;">' +
             '<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;">' +
             '<img src="' + LOGO_BASE + pf.id + '_logo.svg" alt="' + fname + '" ' +
-            'style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 0 4px ' + color + '88);flex-shrink:0;" ' +
+            'style="width:74px;height:74px;object-fit:contain;filter:drop-shadow(0 0 4px ' + color + '88);flex-shrink:0;" ' +
             'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:44px;height:44px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
             '<span style="color:' + color + ';font-size:.8rem;font-weight:700;flex:1;">' + fname + '</span>' +
             '<button onclick="window.CC_TC.clearFactionSave(\'' + pf.id + '\')" ' +
