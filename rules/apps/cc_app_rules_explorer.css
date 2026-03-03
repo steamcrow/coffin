@@ -1,280 +1,662 @@
 /* ================================
-   Rules Explorer - App-Specific Styles
-   File: steamcrow/rules/apps/cc_app_rules_explorer.css
-   
-   This file contains ONLY Rules Explorer-specific styles.
-   Core styles come from: coffin/rules/ui/cc_ui.css
-   Layout utilities come from: Bootstrap (Odoo default)
+   Faction Builder - App-Specific Styles
+   File: coffin/rules/apps/cc_app_faction_builder.css
+
+   Core styles from: coffin/rules/ui/cc_ui.css
+   Print styles from: coffin/rules/ui/cc_print.css
+   Layout utilities: Bootstrap (Odoo default)
    ================================ */
 
-/* ===== Three-Column Layout ===== */
-.cc-rules-explorer {
-  display: grid;
-  grid-template-columns: 280px 1fr 240px;
+/* ===== Faction Controls Bar ===== */
+.cc-faction-controls {
+  display: flex;
   gap: 1rem;
-  height: 100%;
-  padding: 1rem;
+  padding: 0 1rem 1rem 1rem;
+  align-items: center;
 }
 
-/* Sidebar (TOC) */
-.cc-rules-sidebar {
-  min-width: 0;
-}
-
-/* Main content area */
-.cc-rules-main {
-  min-width: 0;
-  overflow: auto;
-}
-
-/* Context sidebar */
-.cc-rules-context {
-  min-width: 0;
-}
-
-/* ===== Book-Like Reader ===== */
-.cc-rule-reader {
-  max-width: 800px;
-  margin: 0;
-  padding: 2rem;
-  text-align: left;
-  line-height: 1.7;
-  font-size: 16px;
-}
-
-.cc-rule-article {
-  text-align: left;
-}
-
-.cc-rule-title {
-  font-size: 2rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: #ff7518;
-  text-align: left;
-}
-
-.cc-section-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-top: 2rem;
-  margin-bottom: 1rem;
+.cc-faction-controls select,
+.cc-faction-controls input {
+  background: #101010;
+  border: 1px solid rgba(255,255,255,.12);
   color: #e8e8e8;
-  text-align: left;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-family: var(--cc-font-body);
 }
 
-.cc-field-label {
-  font-size: 0.875rem;
-  font-weight: 600;
+.cc-faction-controls select:focus,
+.cc-faction-controls input:focus {
+  outline: none;
+  border-color: #ff7518;
+  box-shadow: 0 0 0 1px rgba(255,117,24,.35);
+}
+
+.cc-faction-controls input#cc-roster-name {
+  flex: 1;
+  min-width: 200px;
+}
+
+.cc-faction-controls select#cc-budget-selector {
+  flex: 0 0 140px;
+}
+
+/* ===== Faction Selector with Icon ===== */
+.cc-faction-selector-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.cc-faction-selector-wrap select#cc-faction-selector {
+  flex: 0 0 220px;
+}
+
+.cc-faction-selector-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ===== Faction Icon (shared) ===== */
+.cc-faction-icon {
+  object-fit: contain;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 5px var(--faction-color, #ff751888))
+          brightness(1.1);
+  transition: filter 0.2s;
+}
+
+.cc-panel-title-with-icon {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.detail-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cc-saved-roster-faction-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== FIX 1: Three-Column Layout — TALLER ===== */
+/* Uses viewport height so the app fills the screen properly */
+.cc-faction-builder {
+  display: grid;
+  grid-template-columns: 300px 1fr 300px;
+  gap: 1rem;
+  /* FIX: was min-height 600px + 700px max on columns — now fills available viewport */
+  height: calc(100vh - 210px);
+  min-height: 560px;
+  padding: 0 1rem 1rem 1rem;
+}
+
+.cc-faction-sidebar,
+.cc-faction-main,
+.cc-faction-roster {
+  min-width: 0;
+  /* FIX: columns now stretch to fill the full builder height */
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Ensure panels inside each column fill the full height */
+.cc-faction-sidebar  .cc-panel,
+.cc-faction-main     .cc-panel,
+.cc-faction-roster   .cc-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cc-faction-sidebar  .cc-body,
+.cc-faction-main     .cc-body,
+.cc-faction-roster   .cc-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0; /* critical for flex children that scroll */
+}
+
+/* ===== Unit Detail Wrapper ===== */
+.cc-unit-detail {
+  padding: 1.25rem;
+}
+
+.cc-detail-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #e8e8e8;
+}
+
+.cc-detail-sub {
+  font-size: 0.8rem;
+  color: #888;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  color: #9a9a9a;
-  margin-bottom: 0.5rem;
-  text-align: left;
+  letter-spacing: 0.08em;
 }
 
-.cc-rule-content {
-  text-align: left;
+.cc-detail-cost {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--cc-primary);
+  margin: 0.5rem 0;
 }
 
-.cc-rule-content p {
-  margin-bottom: 1rem;
-  text-align: left;
+.u-lore {
+  font-style: italic;
+  color: var(--cc-text-muted, #888);
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.03);
+  border-left: 3px solid var(--cc-primary);
+  margin: 1rem 0;
+  line-height: 1.5;
+  font-size: 0.9rem;
 }
 
-.cc-rule-content ul {
-  margin-left: 1.5rem;
-  margin-bottom: 1rem;
-  text-align: left;
+/* ===== FIX 3 & 6: Warning Bar ===== */
+/* Shown when a unit would exceed budget or composition limit */
+.cc-warning-bar {
+  background: #7b1414;
+  border: 1px solid #ff4444;
+  border-left: 5px solid #ff1a1a;
+  border-radius: 6px;
+  color: #ffe0e0;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-top: 1rem;
 }
 
-.cc-rule-content li {
-  margin-bottom: 0.5rem;
-  text-align: left;
+.cc-warning-bar strong {
+  color: #ffb3b3;
 }
 
-/* ===== Previous/Next Navigation ===== */
-.cc-rule-nav {
+/* ===== FIX 6: At-limit library items ===== */
+/* Dims units that are already at their composition cap */
+.cc-list-item-at-limit {
+  opacity: 0.5;
+  cursor: default !important;
+}
+
+.cc-list-item-at-limit:hover {
+  background: inherit !important;
+  border-color: rgba(255,255,255,.07) !important;
+}
+
+/* ===== Stat Badges ===== */
+.stat-badge-flex {
+  display: flex;
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.stat-badge-flex.compact {
+  gap: 4px;
+  margin: 6px 0;
+}
+
+.cc-stat-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 42px;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid;
+}
+
+.cc-stat-badge.compact {
+  min-width: 34px;
+}
+
+.cc-stat-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 4px 0;
+  background: rgba(0,0,0,.3);
+  width: 100%;
+  text-align: center;
+}
+
+.cc-stat-value {
+  font-size: 0.9rem;
+  font-weight: 900;
+  padding: 2px 4px 3px;
+  font-family: var(--cc-font-mono, monospace);
+}
+
+.cc-stat-badge.compact .cc-stat-value { font-size: 0.75rem; }
+
+/* Stat colour families */
+.stat-q-border { border-color: #42a5f5; }
+.stat-q { color: #42a5f5; }
+.stat-d-border { border-color: #ef5350; }
+.stat-d { color: #ef5350; }
+.stat-m-border { border-color: #66bb6a; }
+.stat-m { color: #66bb6a; }
+.stat-r-border { border-color: #ffd600; }
+.stat-r { color: #ffd600; }
+
+.stat-modified {
+  box-shadow: 0 0 6px rgba(255,215,0,.5);
+  border-color: #ffd700 !important;
+}
+
+.ability-link {
+  cursor: pointer;
+  color: var(--cc-primary);
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
+}
+
+.ability-link:hover { color: #ff9147; }
+
+/* ===== Field Labels ===== */
+.cc-field-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--cc-primary);
+  margin-bottom: 0.4rem;
+  margin-top: 0.9rem;
+}
+
+/* ===== Upgrade Rows ===== */
+.cc-upgrade-row {
   display: flex;
   justify-content: space-between;
-  padding: 1rem 2rem;
-  border-top: 1px solid rgba(255,255,255,.10);
-  margin-top: 2rem;
-}
-
-.cc-rule-nav button {
-  min-width: 120px;
-}
-
-/* ===== Star Badge (in sidebar list) ===== */
-.cc-star-badge {
-  color: #f39c12;
-  font-size: 1.2rem;
-  margin-left: 0.5rem;
-}
-
-/* ===== Action Buttons ===== */
-.cc-rules-actions {
-  display: flex;
+  align-items: flex-start;
   gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.4rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
 }
 
-.cc-star {
-  font-size: 1.5rem;
-  line-height: 1;
-  transition: transform 0.2s ease;
+.cc-upgrade-row:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: var(--cc-primary);
 }
 
-.btn-link:hover .cc-star {
-  transform: scale(1.2);
+.cc-upgrade-row.selected {
+  background: rgba(255, 117, 24, 0.15);
+  border-color: var(--cc-primary);
 }
 
-/* ===== Responsive Design ===== */
+/* ===== Roster Grid View ===== */
+.cc-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 0.75rem;
+  padding: 0.5rem;
+}
+
+.cc-roster-grid-item {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 6px;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.cc-roster-grid-item:hover {
+  background: rgba(255,255,255,0.08);
+  border-color: var(--cc-primary);
+}
+
+.cc-roster-grid-item.active {
+  background: rgba(255, 117, 24, 0.18);
+  border-color: var(--cc-primary);
+}
+
+.cc-roster-grid-item .grid-item-name {
+  font-weight: 700;
+  font-size: 0.88rem;
+  margin-bottom: 0.2rem;
+  color: #e8e8e8;
+  padding-right: 22px; /* avoid overlap with delete btn */
+}
+
+.cc-roster-grid-item .grid-item-type {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+  letter-spacing: .04em;
+}
+
+.cc-roster-grid-item .grid-item-delete {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: rgba(255, 77, 77, 0.8);
+  border: none;
+  color: #fff;
+  padding: 2px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.cc-roster-grid-item:hover .grid-item-delete { opacity: 1; }
+
+.cc-roster-grid-item .grid-item-abilities {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+/* ===== Roster List View ===== */
+.cc-roster-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.cc-roster-list-item:hover  { background: rgba(255,255,255,0.05); }
+.cc-roster-list-item.active { background: rgba(255,117,24,0.12); }
+
+.roster-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.roster-list-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #e8e8e8;
+}
+
+.roster-list-type {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.roster-list-cost {
+  font-weight: 700;
+  color: var(--cc-primary);
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.roster-list-abilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.roster-list-delete {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: rgba(255,77,77,0.7);
+  border: none;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.cc-roster-list-item:hover .roster-list-delete { opacity: 1; }
+
+/* ===== Ability Tags ===== */
+.ability-tag {
+  display: inline-block;
+  background: rgba(255,117,24,.12);
+  border: 1px solid rgba(255,117,24,.3);
+  color: #ff9147;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+
+.ability-tag:hover {
+  background: rgba(255,117,24,.25);
+  border-color: var(--cc-primary);
+  color: #fff;
+}
+
+.ability-tag-small {
+  display: inline-block;
+  background: rgba(255,117,24,.1);
+  border: 1px solid rgba(255,117,24,.25);
+  color: #ff9147;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+
+.ability-tag-small:hover {
+  background: rgba(255,117,24,.2);
+  border-color: var(--cc-primary);
+}
+
+/* ===== Login Status Bar ===== */
+.cc-login-status {
+  text-align: center;
+  padding: 5px 12px;
+  margin: 0 1rem 0.5rem;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--cc-border, rgba(255,255,255,.1));
+  border-radius: 4px;
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cc-login-status.logged-in {
+  color: #4caf50;
+  border-color: rgba(76,175,80,.3);
+}
+
+.cc-login-status.logged-out {
+  color: #ff9800;
+  border-color: rgba(255,152,0,.3);
+}
+
+/* ===== Roster View Toggle ===== */
+.cc-roster-view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+}
+
+.cc-roster-view-toggle button {
+  background: transparent;
+  border: none;
+  color: #888;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.cc-roster-view-toggle button:hover { color: var(--cc-primary); }
+
+.cc-roster-view-toggle button.active {
+  background: var(--cc-primary);
+  color: #000;
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 1200px) {
+  .cc-faction-builder {
+    grid-template-columns: 250px 1fr 250px;
+  }
+}
+
 @media (max-width: 992px) {
-  .cc-rules-explorer {
+  .cc-faction-builder {
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr;
+    grid-template-rows: auto auto auto;
+    height: auto;
+    min-height: 0;
   }
 
-  .cc-rules-sidebar {
-    grid-row: 1;
-  }
-
-  .cc-rules-main {
-    grid-row: 2;
-  }
-
-  .cc-rules-context {
-    display: none;
-  }
-
-  .cc-rule-reader {
-    padding: 1rem;
+  .cc-faction-sidebar,
+  .cc-faction-main,
+  .cc-faction-roster {
+    height: auto;
+    max-height: 60vh;
   }
 }
 
-/* ===== Print Styles ===== */
+@media (max-width: 768px) {
+  .cc-faction-controls {
+    flex-direction: column;
+  }
+
+  .cc-faction-controls select,
+  .cc-faction-controls input,
+  .cc-faction-selector-wrap {
+    width: 100%;
+    flex: 1 1 auto !important;
+  }
+
+  .cc-faction-selector-wrap select#cc-faction-selector {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+
+  .cc-roster-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Print: roster card grid ===== */
+/* The @media print block from cc_print.css handles the global resets.
+   These classes are used inside the printRoster() popup window. */
 @media print {
-  /* Hide UI elements */
-  .cc-rules-sidebar,
-  .cc-rules-context,
-  .cc-panel-head,
-  .cc-rule-nav,
-  .cc-rules-actions,
+  .cc-faction-controls,
+  .cc-app-header,
+  .cc-login-status,
+  .cc-roster-view-toggle,
+  .cc-slide-panel,
+  .cc-panel-close-btn,
   .btn,
-  button {
+  .grid-item-delete,
+  .roster-list-delete,
+  #ability-tooltip {
     display: none !important;
   }
 
-  /* Full width for content */
-  .cc-rules-explorer {
-    display: block;
-    padding: 0;
+  .cc-faction-builder {
+    display: block !important;
+    height: auto !important;
   }
 
-  .cc-rules-main {
-    max-width: 100%;
+  .cc-faction-sidebar,
+  .cc-faction-roster {
+    display: none !important;
   }
 
-  .cc-rule-reader {
-    max-width: 100%;
-    padding: 0;
+  .cc-faction-main {
+    display: block !important;
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
   }
 
-  /* Better typography for print */
-  body {
-    font-size: 11pt;
-    line-height: 1.5;
-  }
-
-  .cc-rule-title {
-    font-size: 18pt;
-    margin-top: 0;
-    page-break-after: avoid;
-  }
-
-  .cc-section-title {
-    font-size: 14pt;
-    margin-top: 12pt;
-    page-break-after: avoid;
-  }
-
-  .cc-field-label {
-    font-size: 9pt;
-    page-break-after: avoid;
-  }
-
-  /* Prevent orphans and widows */
-  p, li {
-    orphans: 3;
-    widows: 3;
-  }
-
-  /* Keep content together */
-  .cc-section {
+  .cc-panel {
+    border: 1px solid #000 !important;
+    margin-bottom: 1rem;
     page-break-inside: avoid;
+    height: auto !important;
+    overflow: visible !important;
   }
 
-  .cc-ability-card {
-    page-break-inside: avoid;
-    border: 1px solid #000;
-    padding: 8pt;
-    margin-bottom: 8pt;
+  .cc-stat-badge {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
   }
 
-  /* Lists */
-  ul {
-    margin-left: 20pt;
-  }
-
-  li {
-    margin-bottom: 4pt;
-  }
-
-  /* Remove backgrounds for print */
-  .cc-ability-card {
-    background: white;
-  }
-
-  /* Add page numbers */
-  @page {
-    margin: 0.75in;
-    
-    @bottom-right {
-      content: "Page " counter(page);
-      font-size: 9pt;
-    }
-  }
-
-  /* First page special formatting */
-  @page :first {
-    @bottom-right {
-      content: "";
-    }
-  }
-
-  /* Headers and footers */
-  h2, h3, h4, h5, h6 {
-    page-break-after: avoid;
-  }
-
-  /* Links */
-  a {
-    text-decoration: none;
-    color: inherit;
-  }
-
-  /* Table formatting if needed */
-  table {
-    page-break-inside: avoid;
+  .ability-tag,
+  .ability-tag-small {
+    border: 1px solid #ccc !important;
+    background: #f9f9f9 !important;
+    color: #000 !important;
   }
 }
 
-/* ===== Smooth Scrolling ===== */
-html {
-  scroll-behavior: smooth;
+/* ===== LIST MODE: single-column layout ===== */
+.cc-faction-builder.cc-list-mode {
+  flex-direction: column;
+  height: auto !important;
+  min-height: 0;
 }
 
-.cc-rules-main {
-  scroll-behavior: smooth;
+.cc-faction-builder.cc-list-mode .cc-faction-roster {
+  order: 1;
+  width: 100%;
+  height: auto;
+  min-height: 180px;
+  max-height: none;
+}
+
+.cc-faction-builder.cc-list-mode .cc-faction-main {
+  order: 2;
+  width: 100%;
+  height: auto;
+}
+
+.cc-faction-builder.cc-list-mode .cc-faction-sidebar {
+  order: 3;
+  width: 100%;
+  height: auto;
+}
+
+.cc-faction-builder.cc-list-mode .cc-panel {
+  height: auto !important;
+}
+
+.cc-faction-builder.cc-list-mode .cc-body {
+  max-height: none;
+  overflow: visible;
 }
