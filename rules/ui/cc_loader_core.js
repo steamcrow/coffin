@@ -12,76 +12,85 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   // Bootstrap 5 JSON-parses that string → JS null → _typeCheckConfig throws.
   // This patch must live in the LOADER (not inside any app) so it runs on
   // every page load regardless of which app is open.
-  (function patchBootstrapDropdownAutoClose() {
-    if (window._ccDropdownPatchInstalled) return;
-    window._ccDropdownPatchInstalled = true;
+(function patchBootstrapDropdownAutoClose() {
+  if (window._ccDropdownPatchInstalled) return;
+  window._ccDropdownPatchInstalled = true;
 
-    function fixEl(el) {
-      if (!el || !el.getAttribute) return;
-      var v = el.getAttribute('data-bs-auto-close');
-      if (v === 'null' || v === null || v === '') {
-        el.setAttribute('data-bs-auto-close', 'true');
-      }
+  function fixEl(el) {
+    if (!el || !el.getAttribute) return;
+    var v = el.getAttribute('data-bs-auto-close');
+    if (v === 'null' || v === null || v === '') {
+      el.setAttribute('data-bs-auto-close', 'true');
     }
+  }
 
-    function fixDOM() {
-      document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
-    }
+  function fixDOM() {
+    document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
+  }
 
-    // Patch Bootstrap.Dropdown.prototype._getConfig — this fires inside the
-    // constructor before _typeCheckConfig reads the element attribute.
-    function patchPrototype() {
-      var BS = window.bootstrap;
-      if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
-      var proto = BS.Dropdown.prototype;
-      if (proto._ccAutoClosePatch) return true;
-      proto._ccAutoClosePatch = true;
-      var orig = proto._getConfig;
-      proto._getConfig = function (config) {
-        if (this._element) fixEl(this._element);
+  function patchPrototype() {
+    var BS = window.bootstrap;
+    if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
+    var proto = BS.Dropdown.prototype;
+    if (proto._ccAutoClosePatch) return true;
+    proto._ccAutoClosePatch = true;
+
+    // ── Layer 1: fix the DOM attribute and config object in _getConfig ────────
+    var origGetConfig = proto._getConfig;
+    proto._getConfig = function (config) {
+      if (this._element) fixEl(this._element);
+      if (config && config.autoClose == null) config.autoClose = true;
+      return origGetConfig.call(this, config);
+    };
+
+    // ── Layer 2: patch _typeCheckConfig on BaseComponent.prototype ────────────
+    // This is the method that actually throws. Even if the config was re-built
+    // from raw data attributes after our _getConfig fix, this catches it last.
+    var BaseProto = Object.getPrototypeOf(proto);
+    if (BaseProto && typeof BaseProto._typeCheckConfig === 'function' && !BaseProto._ccTypeCheckPatch) {
+      BaseProto._ccTypeCheckPatch = true;
+      var origTypeCheck = BaseProto._typeCheckConfig;
+      BaseProto._typeCheckConfig = function (config) {
         if (config && config.autoClose == null) config.autoClose = true;
-        return orig.call(this, config);
+        return origTypeCheck.call(this, config);
       };
-      return true;
     }
 
-    fixDOM();
-    if (!patchPrototype()) {
-      var _att = 0;
-      var _iv = setInterval(function () {
-        _att++;
-        fixDOM();
-        if (patchPrototype() || _att > 40) clearInterval(_iv);
-      }, 150);
-    }
+    return true;
+  }
 
-    // Catch elements added after initial render (Odoo re-renders nav on route change)
-   // Catch any new elements added to the DOM (Odoo re-renders nav on route change)
+  fixDOM();
+
+  if (!patchPrototype()) {
+    var _att = 0;
+    var _iv = setInterval(function () {
+      _att++;
+      fixDOM();
+      if (patchPrototype() || _att > 40) clearInterval(_iv);
+    }, 150);
+  }
+
+  // Re-patch on every DOM mutation — Odoo's lazy loader can replace Bootstrap
   if (window.MutationObserver) {
-    new MutationObserver(function(mutations) {
-      mutations.forEach(function(m) {
-        m.addedNodes.forEach(function(node) {
+    new MutationObserver(function (mutations) {
+      mutations.forEach(function (m) {
+        m.addedNodes.forEach(function (node) {
           if (node.nodeType !== 1) return;
           fixEl(node);
-          if (node.querySelectorAll) {
-            node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
-          }
+          if (node.querySelectorAll) node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
         });
       });
-      // Re-check the prototype on every mutation batch — Odoo's lazy loader can
-      // replace the Bootstrap bundle after any async re-render.
+      // Re-check prototype every batch — covers Bootstrap hot-replacements
       patchPrototype();
     }).observe(document.documentElement, { childList: true, subtree: true });
   }
 
-  // ── Long-lived heartbeat ──────────────────────────────────────────────────
-  // After a long idle period Odoo can reload its Bootstrap bundle, giving
-  // Dropdown a fresh prototype that has never been patched.  Check every 30 s.
-  setInterval(function() {
+  // 30-second heartbeat for long idle sessions
+  setInterval(function () {
     fixDOM();
     var BS = window.bootstrap;
     if (BS && BS.Dropdown && BS.Dropdown.prototype && !BS.Dropdown.prototype._ccAutoClosePatch) {
-      console.log('[CC] Bootstrap Dropdown prototype replaced — re-patching');
+      console.log('[CC] Bootstrap replaced — re-patching Dropdown');
       patchPrototype();
     }
   }, 30000);
