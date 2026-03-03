@@ -54,13 +54,8 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
   var _nativeJSONParse = JSON.parse.bind(JSON);
 
   JSON.parse = function ccSafeJSONParse(text, reviver) {
-    // Return null for anything that would definitely throw before we even try
     if (text === null || text === undefined) return null;
     if (typeof text === 'string' && text.trim() === '') return null;
-
-    // Wrap the actual parse in try/catch so even truly malformed JSON
-    // (truncated responses, "undefined" the word, binary garbage, etc.)
-    // returns null instead of throwing a SyntaxError into a Promise chain.
     try {
       return reviver ? _nativeJSONParse(text, reviver) : _nativeJSONParse(text);
     } catch (_) {
@@ -72,13 +67,6 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
 }());
 
 // ── 3. Bootstrap Dropdown autoClose:null patch ────────────────────────────────
-// ─── Bootstrap Dropdown autoClose:null patch ───────────────────────────────
-// Odoo's navbar renders dropdowns with data-bs-auto-close="null".
-// Bootstrap 5 parses that string as JSON → JS null → _typeCheckConfig throws.
-// Our previous approach sanitised the JS config object, but Bootstrap re-reads
-// the data attribute INSIDE the constructor and never uses our sanitised object.
-// The only reliable fix is to patch the prototype _getConfig method so it
-// cleans the element attribute before Bootstrap's own _typeCheckConfig sees it.
 (function patchBootstrapDropdownAutoClose() {
   if (window._ccDropdownPatchInstalled) return;
   window._ccDropdownPatchInstalled = true;
@@ -98,27 +86,21 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
     if (proto._ccAutoClosePatch) return true;
     proto._ccAutoClosePatch = true;
 
-    // _getConfig is where Bootstrap reads data attributes and calls _typeCheckConfig.
-    // We intercept it to sanitise the element before the read happens.
     var orig = proto._getConfig;
     proto._getConfig = function(config) {
-      // `this._element` is set by BaseComponent before _getConfig is called
       if (this._element) fixEl(this._element);
-      // Also sanitise the passed config object as a second line of defence
       if (config && config.autoClose == null) config.autoClose = true;
       return orig.call(this, config);
     };
     return true;
   }
 
-  // Fix any elements already in the DOM
   function fixDOM() {
     document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
   }
 
   fixDOM();
 
-  // Retry patching the prototype until Bootstrap has loaded
   if (!patchPrototype()) {
     var _attempts = 0;
     var _retry = setInterval(function() {
@@ -128,8 +110,6 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
     }, 200);
   }
 
-  // Catch any new elements added to the DOM (Odoo re-renders nav on route change)
-// Catch any new elements added to the DOM (Odoo re-renders nav on route change)
   if (window.MutationObserver) {
     new MutationObserver(function(mutations) {
       mutations.forEach(function(m) {
@@ -141,15 +121,10 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
           }
         });
       });
-      // Re-check the prototype on every mutation batch — Odoo's lazy loader can
-      // replace the Bootstrap bundle after any async re-render.
       patchPrototype();
     }).observe(document.documentElement, { childList: true, subtree: true });
   }
 
-  // ── Long-lived heartbeat ──────────────────────────────────────────────────
-  // After a long idle period Odoo can reload its Bootstrap bundle, giving
-  // Dropdown a fresh prototype that has never been patched.  Check every 30 s.
   setInterval(function() {
     fixDOM();
     var BS = window.bootstrap;
@@ -167,19 +142,13 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
   window.addEventListener('unhandledrejection', function ccRejectionGuard(event) {
     var reason = event.reason;
 
-    // ── Odoo-internal Bootstrap dropdown error ────────────────────────────────
-    // Odoo's nav menu throws "DROPDOWN: Option autoClose provided type null"
-    // when you hover their own menus. It's entirely inside Odoo's own assets.
-    // We can't fix it, but we can stop it from crashing Odoo's own handleError.
     if (reason instanceof Error && reason.message &&
         reason.message.indexOf('DROPDOWN') !== -1) {
       event.preventDefault();
       event.stopImmediatePropagation();
-      return; // silently swallow — it's Odoo's own bug
+      return;
     }
 
-    // ── Any error whose stack only references Odoo's own bundled assets ───────
-    // These are Odoo-internal errors we have no control over.
     if (reason instanceof Error &&
         typeof reason.stack === 'string' &&
         reason.stack.indexOf('assets_frontend_lazy') !== -1 &&
@@ -190,18 +159,15 @@ console.log("⏱️ Turn Counter loaded — coffin/rules/apps/turn_counter.js");
       return;
     }
 
-    // The only case Odoo can handle safely: a proper Error with a real .stack.
     if (reason instanceof Error &&
         typeof reason.stack === 'string' &&
         reason.stack.length > 0) {
-      return; // Let Odoo handle it normally
+      return;
     }
 
-    // Everything else will crash Odoo's handler — swallow it here.
     event.preventDefault();
     event.stopImmediatePropagation();
 
-    // Log something useful to the console so we still know what happened
     var msg = '[CC] Caught rejection: ';
     try {
       if (reason === null || reason === undefined) {
@@ -229,8 +195,6 @@ window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Turn Counter init", ctx);
 
-    // Initialise the global handler object immediately so any code below can
-    // safely attach methods to it regardless of declaration order.
     window.CC_TC = {};
 
     // ── Load shared UI CSS ────────────────────────────────────────────────────
@@ -246,15 +210,7 @@ window.CC_APP = {
         .catch(err => console.error('❌ Core CSS failed:', err));
     }
 
-    // JSON.parse safety patch and rejection guard are both installed at the
-    // very top of this file (before window.CC_APP), so they are always in
-    // place before any async work begins.
-
     // ── Load CC_STORAGE helper ────────────────────────────────────────────────
-    // IMPORTANT: storage_helpers.js loads asynchronously. We must NOT snapshot
-    // `!!window.CC_STORAGE` at render time — it will always be false because the
-    // fetch hasn't finished yet. Instead we wait for the script to fully load,
-    // then re-render the setup screen so `hasStorage` evaluates correctly.
     if (!window.CC_STORAGE) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
         .then(r => r.text())
@@ -263,12 +219,10 @@ window.CC_APP = {
             const s = document.createElement('script');
             s.textContent = code;
             document.head.appendChild(s);
-            // Give the script one tick to execute and set window.CC_STORAGE
             setTimeout(resolve, 50);
           });
         })
         .then(function() {
-          // Re-render setup screen now that CC_STORAGE is available
           if (state.phase === 'setup') render();
         })
         .catch(err => console.error('❌ Storage helpers failed:', err));
@@ -356,7 +310,6 @@ window.CC_APP = {
 
     function unitKey(factionId, unitId) { return `${factionId}::${unitId}`; }
 
-    // Safe error string — avoids crashes when the rejected value isn't a proper Error.
     function safeErr(e) {
       if (!e) return 'Unknown error';
       if (typeof e === 'string') return e;
@@ -364,11 +317,9 @@ window.CC_APP = {
       try { return JSON.stringify(e); } catch (_) { return String(e); }
     }
 
-    // Safe JSON parse — NEVER throws. Returns null on any failure.
     function safeParseJson(str) {
       if (str === null || str === undefined) return null;
       if (typeof str !== 'string') {
-        // If it's already an object, just return it
         if (typeof str === 'object') return str;
         return null;
       }
@@ -376,77 +327,46 @@ window.CC_APP = {
       try { return JSON.parse(str); } catch (_) { return null; }
     }
 
-    // ── FIX: Extract JSON from a CC_STORAGE document response ─────────────────
-    //
-    // This is the most important safety function in the whole app.
-    // CC_STORAGE can return documents in several different shapes:
-    //
-    //   1. { json: "..." }        — storage_helpers.js style
-    //   2. { datas: "base64..." } — older CCFB component style
-    //   3. A plain string         — if loadDocument returns the raw content
-    //   4. Already an object      — if it was already parsed upstream
-    //
-    // We try ALL of these, never throwing, always returning null on failure.
     function docToJson(doc) {
       if (!doc) return null;
 
-      // Case 3: doc is already a plain string — try parsing it directly
       if (typeof doc === 'string') {
         return safeParseJson(doc);
       }
 
-      // Case 4: doc is already a plain data object (not a wrapper)
-      // We detect wrappers by checking for the .json or .datas fields.
-      // If neither exists but it IS an object with actual data keys, return it.
       if (typeof doc === 'object') {
         var hasJson  = doc.json  !== undefined && doc.json  !== null;
         var hasDatas = doc.datas !== undefined && doc.datas !== null;
 
         if (!hasJson && !hasDatas) {
-          // No wrapper fields — this might already be the parsed data object
-          // (e.g. the faction roster itself). Return it if it has any keys.
           if (Object.keys(doc).length > 0) return doc;
           return null;
         }
 
-        // Case 1: .json field — try this first
         if (hasJson) {
           var jsonStr = String(doc.json).trim();
           if (jsonStr) {
             var parsed = safeParseJson(jsonStr);
             if (parsed !== null) return parsed;
-            // Fall through to try .datas if .json parse failed
           }
         }
 
-        // Case 2: .datas field — base64 encoded content
         if (hasDatas) {
           try {
             var raw     = String(doc.datas);
             var decoded = decodeURIComponent(escape(atob(raw)));
             var result  = safeParseJson(decoded);
             if (result !== null) return result;
-          } catch (_) {
-            // atob failed (bad base64) — fall through to null
-          }
+          } catch (_) {}
         }
       }
 
       return null;
     }
 
-    // ── Safe wrapper for CC_STORAGE.loadDocument ──────────────────────────────
-    //
-    // THE KEY FIX: loadDocument sometimes calls JSON.parse internally without
-    // a try/catch. If it hits a bad document, it throws a SyntaxError that
-    // becomes an unhandled Promise rejection and crashes Odoo's error handler.
-    //
-    // This wrapper catches EVERYTHING — SyntaxError, TypeError, network errors,
-    // rejected promises — and returns null instead of letting the error escape.
     async function safeLoadDocument(docId) {
       if (!window.CC_STORAGE) return null;
       try {
-        // The .catch() here catches rejections that might escape async/await
         var result = await Promise.resolve(window.CC_STORAGE.loadDocument(docId))
           .catch(function(e) {
             console.warn('⚠️ loadDocument(' + docId + ') rejected:', safeErr(e));
@@ -458,10 +378,6 @@ window.CC_APP = {
         return null;
       }
     }
-
-    // Rejection guard is installed at file level (top of this script),
-    // before init() runs. Nothing to do here.
-
 
     function getUnitState(factionId, unitId) {
       const k = unitKey(factionId, unitId);
@@ -539,24 +455,17 @@ window.CC_APP = {
     }
 
     // Build a faction entry from a Faction Builder cloud save.
-    //
-    // FIX: This function is now much more tolerant of different save shapes.
-    // The faction builder may save roster items in slightly different formats
-    // depending on which version of the builder created the save. We try
-    // every reasonable field name before giving up.
     function buildFactionFromSave(factionId, saveData, isNPC) {
       var meta      = FACTION_META[factionId] || {};
       var color     = meta.color    || '#888';
       var name      = meta.name     || factionId;
       var isMonster = meta.isMonster || false;
 
-      // Guard: need a valid object with a non-empty roster array
       if (!saveData || typeof saveData !== 'object') {
         console.warn('buildFactionFromSave: saveData is null/invalid for ' + factionId);
         return null;
       }
 
-      // Find the roster — try every field name the builder might use
       var roster = saveData.roster || saveData.units || saveData.army || saveData.list || null;
 
       if (!Array.isArray(roster) || roster.length === 0) {
@@ -567,33 +476,27 @@ window.CC_APP = {
 
       var allUnits = roster.map(function(item, i) {
         if (!item || typeof item !== 'object') return null;
+
         // Base stats from the save
-        var baseQuality = item.quality || item.Quality || 4;
-        var baseDefense = item.defense || item.Defense || item.armor || item.Armor || null;
-        var baseMove    = item.move    || item.Move    || 6;
-        var baseRange   = item.range   || item.Range   || item.shoot || item.Shoot || null;
+        var _q = item.quality  || item.Quality  || 4;
+        var _d = item.defense  || item.Defense  || item.armor || item.Armor || null;
+        var _m = item.move     || item.Move     || 6;
+        var _r = item.range    || item.Range    || item.shoot || item.Shoot || null;
 
-        // Apply stat_modifiers from purchased optional upgrades and supplemental
-        var cfg = item.config || {};
-        var purchasedUpgrades = (cfg.optionalUpgrades && cfg.optionalUpgrades.length)
-          ? cfg.optionalUpgrades
+        // Apply stat_modifiers from any purchased optional upgrades + supplemental
+        var _cfg = item.config || {};
+        var _bought = (_cfg.optionalUpgrades && _cfg.optionalUpgrades.length)
+          ? _cfg.optionalUpgrades
           : (item.upgrades || item.Upgrades || item.equipment || item.gear || item.loadout || []);
-
-        var allMods = purchasedUpgrades.slice();
-        if (cfg.supplemental && cfg.supplemental.stat_modifiers) {
-          allMods.push(cfg.supplemental);
-        }
-
-        allMods.forEach(function(upg) {
+        var _mods = _bought.slice();
+        if (_cfg.supplemental && _cfg.supplemental.stat_modifiers) _mods.push(_cfg.supplemental);
+        _mods.forEach(function(upg) {
           if (!upg || !upg.stat_modifiers) return;
-          var m = upg.stat_modifiers;
-          if (m.quality) baseQuality += m.quality;
-          if (m.defense) baseDefense = (baseDefense || 0) + m.defense;
-          if (m.move)    baseMove    += m.move;
-          if (m.range) {
-            if (!baseRange) baseRange = m.range;
-            else            baseRange += m.range;
-          }
+          var sm = upg.stat_modifiers;
+          if (sm.quality) _q += sm.quality;
+          if (sm.defense) _d  = (_d || 0) + sm.defense;
+          if (sm.move)    _m += sm.move;
+          if (sm.range) { if (!_r) _r = sm.range; else _r += sm.range; }
         });
 
         return {
@@ -601,16 +504,16 @@ window.CC_APP = {
           name:    item.name     || item.unitName || item.label || ('Unit ' + (i + 1)),
           lore:    item.lore     || item.Lore    || item.flavor   || item.description
             || item.bio || null,
-          quality: baseQuality,
-          move:    baseMove,
-          defense: baseDefense,
-          range:   baseRange,
+          quality: _q,
+          move:    _m,
+          defense: _d,
+          range:   _r,
           cost:    item.totalCost || item.cost || item.points || null,
           special: item.abilities || item.special || item.rules || [],
-          upgrades: purchasedUpgrades,
+          upgrades: _bought,
           isTitan: item.isTitan || item.titan || false,
         };
-      }).filter(function(u) { return u !== null; }); // remove any nulls from bad items
+      }).filter(function(u) { return u !== null; });
 
       if (allUnits.length === 0) {
         console.warn('buildFactionFromSave: all roster items were invalid for ' + factionId);
@@ -697,7 +600,7 @@ window.CC_APP = {
           var k = unitKey(f.id, u.id);
           if (state.unitState[k]) {
             state.unitState[k].activated = false;
-            state.unitState[k].lastRoll  = null;   // clear roll result each new round
+            state.unitState[k].lastRoll  = null;
           }
         });
       });
@@ -753,10 +656,6 @@ window.CC_APP = {
     // NOISE & MONSTER PRESSURE
     // ═══════════════════════════════════════════════════════════════════════════
 
-    // Canyon-generic fallback pool — used only when scenario has no monster list
-    // AND the Monsters faction JSON hasn't loaded yet.
-    // Ability names here MUST match keys in the ability dictionaries
-    // (converted: "brutal_blow" → "Brutal Blow", "berserk" → "Berserk")
     var FALLBACK_MONSTERS = [
       { id: 'ruster',         name: 'Ruster',         quality: 4, move: 6,  combat: 4, shoot: null, armor: null, special: ['Corrode'],              isTitan: false },
       { id: 'snarl',          name: 'Snarl',          quality: 4, move: 8,  combat: 5, shoot: null, armor: null, special: ['Berserk'],               isTitan: false },
@@ -767,13 +666,10 @@ window.CC_APP = {
       { id: 'canyon_titan',   name: 'Canyon Titan',   quality: 3, move: 4,  combat: 5, shoot: null, armor: 4,    special: ['Brutal Blow', 'Anchor'], isTitan: true  },
     ];
 
-    // Live pool fetched from the Monsters faction JSON — filled in loadMonstersFactionData()
     var _monstersFactionPool = [];
 
-    // Pre-fetch the Monsters faction JSON so we have real stats for encounters.
-    // Called from beginGame so the data is ready before the first trigger fires.
     async function loadMonstersFactionData() {
-      if (_monstersFactionPool.length > 0) return; // already loaded
+      if (_monstersFactionPool.length > 0) return;
       try {
         var meta = FACTION_META['monsters'];
         if (!meta) return;
@@ -803,22 +699,11 @@ window.CC_APP = {
       }
     }
 
-    // Pick ONE monster definition for an encounter.
-    //
-    // Priority:
-    //   80% — pick from the scenario's location monster list (state.monsterRoster),
-    //          looking up full stats from the Monsters faction pool.
-    //   20% — pick from the full Monsters faction pool (random, not back-to-back).
-    //   Fallback — FALLBACK_MONSTERS table if neither list has data.
-    //
-    // Within the scenario list we cycle (modulo) so repeated encounters
-    // rotate through all listed types rather than repeating the first one.
     function pickEncounterMonster() {
-      var scenarioList = state.monsterRoster || [];   // names/objects from scenario
+      var scenarioList = state.monsterRoster || [];
       var factionPool  = _monstersFactionPool;
       var fallbackPool = FALLBACK_MONSTERS;
 
-      // Helper: find stats for a name, checking faction pool then fallback table
       function statsForName(nameOrObj) {
         var rawName = (typeof nameOrObj === 'string')
           ? nameOrObj
@@ -840,11 +725,9 @@ window.CC_APP = {
         };
       }
 
-      // Avoid repeating the exact same monster back-to-back
       var lastId = state._lastMonsterTriggered || '';
 
       if (scenarioList.length > 0 && Math.random() < 0.80) {
-        // 80%: cycle through the scenario list
         var attempts = 0;
         while (attempts < scenarioList.length * 2) {
           var idx   = (state.monstersTriggered + attempts) % scenarioList.length;
@@ -853,11 +736,9 @@ window.CC_APP = {
           if (def && def.id !== lastId) return def;
           attempts++;
         }
-        // If we can't avoid a repeat, just take whatever is next
         return statsForName(scenarioList[state.monstersTriggered % scenarioList.length]) || randomFromPool(factionPool, fallbackPool, lastId);
       }
 
-      // 20% (or no scenario list): pick randomly from faction pool
       return randomFromPool(factionPool, fallbackPool, lastId);
     }
 
@@ -886,11 +767,9 @@ window.CC_APP = {
 
       state.roundLog.push('[Monster] Encounter! ' + monsterDef.name + ' approaches from the nearest edge.');
 
-      // Give this instance a unique ID so multiple encounters don't collide
       var instanceId = monsterDef.id + '_enc' + state.monstersTriggered;
       var unit = Object.assign({}, monsterDef, { id: instanceId });
 
-      // Find or create the monsters faction
       var monsterFaction = state.factions.find(function(f) { return f.isMonster; });
       if (!monsterFaction) {
         monsterFaction = {
@@ -906,7 +785,6 @@ window.CC_APP = {
       var k = unitKey(monsterFaction.id, unit.id);
       state.unitState[k] = { quality: unit.quality, out: false, activated: false, lastRoll: null };
 
-      // Insert immediately after the current activation
       state.queue.splice(state.queueIndex + 1, 0, { factionId: monsterFaction.id, unitId: unit.id });
 
       showMonsterAlert(monsterDef, monsterFaction, unit);
@@ -1011,7 +889,6 @@ window.CC_APP = {
       cost:     '#555',
     };
 
-    // Stat definitions shown in the slide panel
     var STAT_DEFINITIONS = {
       move:    { label: 'Move', icon: 'fa-shoe-prints', color: '#42a5f5',
                  short: 'How far this unit can travel in one action.',
@@ -1041,6 +918,31 @@ window.CC_APP = {
         '</div>';
     }
 
+    // ── Shared panel management ───────────────────────────────────────────────
+    // All slide panels share one backdrop. Clicking the backdrop closes everything.
+    // Opening any panel closes all others first — no stacking.
+
+    function closeAllSlidePanels() {
+      ['cc-tc-ability-panel','cc-tc-stat-panel','cc-tc-scenario-panel'].forEach(function(id) {
+        var p = document.getElementById(id);
+        if (p) {
+          p.classList.remove('cc-slide-panel-open');
+          setTimeout(function(){ if(p.parentNode) p.parentNode.removeChild(p); }, 300);
+        }
+      });
+      var bd = document.getElementById('cc-tc-panel-backdrop');
+      if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
+    }
+
+    function installPanelBackdrop() {
+      if (document.getElementById('cc-tc-panel-backdrop')) return;
+      var bd = document.createElement('div');
+      bd.id = 'cc-tc-panel-backdrop';
+      bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
+      bd.addEventListener('click', closeAllSlidePanels);
+      document.body.appendChild(bd);
+    }
+
     // Open the stat definition slide panel
     window.CC_TC.openStatPanel = function(statKey) {
       if (_destroyed) return;
@@ -1053,6 +955,7 @@ window.CC_APP = {
       var panel = document.createElement('div');
       panel.id = 'cc-tc-stat-panel';
       panel.className = 'cc-slide-panel';
+      panel.addEventListener('click', function(e) { e.stopPropagation(); });
       panel.innerHTML =
         '<div class="cc-slide-panel-header">' +
         '<h2><i class="fa ' + def.icon + '"></i> ' + def.label.toUpperCase() + '</h2>' +
@@ -1074,16 +977,8 @@ window.CC_APP = {
     // ═══════════════════════════════════════════════════════════════════════════
     // QUALITY DICE ROLLER
     // ═══════════════════════════════════════════════════════════════════════════
-    //
-    // Rules: roll 1d6 per current Quality pip. A 4, 5, or 6 = 1 success.
-    // ALL SIXES → Lucky Break (must be resolved immediately).
-    // ALL ONES  → Spectacular failure (narrative callout only, no rule penalty).
-    // Natural Sixes on an attack: guarantees at least 1 damage if the attack
-    // hits — but we don't track attack context here, so we flag the presence
-    // of any 6 for the player to apply at the table.
 
     function rollQuality(currentQ) {
-      // Roll currentQ dice, each 1d6
       var dice = [];
       for (var i = 0; i < currentQ; i++) {
         dice.push(Math.floor(Math.random() * 6) + 1);
@@ -1098,12 +993,10 @@ window.CC_APP = {
                allOnes: allOnes, hasAnySix: hasAnySix };
     }
 
-    // Show the dice roll result in an overlay
     function showRollResult(result, unitName, isReview) {
       var existing = document.getElementById('cc-roll-overlay');
       if (existing) existing.remove();
 
-      // Render each die as a coloured pip
       var diceHtml = result.dice.map(function(d) {
         var isHit    = d >= 4;
         var isSix    = d === 6;
@@ -1116,13 +1009,11 @@ window.CC_APP = {
           'box-shadow:' + ring + ';flex-shrink:0;">' + d + '</div>';
       }).join('');
 
-      // Result colour
       var resultColor = result.allSixes ? '#ffd600'
                       : result.successes >= Math.ceil(result.dice.length * 0.6) ? '#4caf50'
                       : result.successes > 0 ? '#ff7518'
                       : '#ef5350';
 
-      // Special callout text
       var specialHtml = '';
       if (result.allSixes) {
         specialHtml =
@@ -1167,26 +1058,18 @@ window.CC_APP = {
       overlay.innerHTML =
         '<div style="background:#1a1a1a;border:1px solid rgba(255,255,255,.12);border-radius:12px;' +
         'padding:1.5rem;max-width:400px;width:92%;text-align:center;">' +
-
-        // Unit name + roll label
         '<div style="font-size:.7rem;color:#666;text-transform:uppercase;letter-spacing:.12em;margin-bottom:.25rem;">' +
         (isReview ? '↩ Previous Roll — ' : 'Quality Roll — ') + unitName +
         '</div>' +
         (isReview ? '<div style="font-size:.72rem;color:#555;margin-bottom:.5rem;">One roll per activation. This was your result.</div>' : '') +
-
-        // Dice row
         '<div style="display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center;margin:.75rem 0;">' +
         diceHtml +
         '</div>' +
-
-        // Legend
         '<div style="font-size:.68rem;color:#555;margin-bottom:.75rem;">' +
         '<span style="color:#ffd600;">■</span> 6 &nbsp;' +
         '<span style="color:#ff7518;">■</span> 4–5 = hit &nbsp;' +
         '<span style="color:rgba(255,255,255,.2);">■</span> 1–3 = miss' +
         '</div>' +
-
-        // Successes
         '<div style="font-size:2.2rem;font-weight:900;color:' + resultColor + ';line-height:1;">' +
         result.successes +
         '</div>' +
@@ -1196,22 +1079,16 @@ window.CC_APP = {
         '<div style="font-size:.72rem;color:#555;">' +
         result.dice.length + 'd6 rolled' +
         '</div>' +
-
-        // Special callout (lucky break / all ones / natural 6)
         specialHtml +
-
-        // Dismiss button
         '<button onclick="document.getElementById(\'cc-roll-overlay\').remove()" ' +
         'class="cc-btn" style="width:100%;margin-top:1rem;font-size:1rem;padding:.85rem;">' +
         'Got It' +
         '</button>' +
-
         '</div>';
 
       document.body.appendChild(overlay);
     }
 
-    // The quality track: dots to wound/heal + a ROLL button
     function qualityTrack(faction, unit) {
       const us  = getUnitState(faction.id, unit.id);
       const cur = us?.quality ?? unit.quality;
@@ -1313,7 +1190,6 @@ window.CC_APP = {
       var existing = document.getElementById('cc-monster-alert');
       if (existing) existing.remove();
 
-      // Stat badges for the monster
       var stats = '';
       if (unit.quality)  stats += '<span style="background:#ff751822;border:1px solid #ff751866;' +
         'border-radius:4px;padding:2px 8px;font-size:.82rem;color:#ff7518;font-weight:700;">Q' + unit.quality + '</span> ';
@@ -1369,7 +1245,6 @@ window.CC_APP = {
       var bar = document.getElementById('cc-tc-login-status');
       if (!bar) return;
       if (!window.CC_STORAGE) {
-        // Storage script may still be loading — retry in 500ms before giving up
         if (!window._ccStorageGaveUp) {
           setTimeout(function() {
             window._ccStorageGaveUp = true;
@@ -1381,7 +1256,7 @@ window.CC_APP = {
         }
         return;
       }
-      window._ccStorageGaveUp = false; // reset for next time
+      window._ccStorageGaveUp = false;
       window.CC_STORAGE.checkAuth().then(function(auth) {
         var bar2 = document.getElementById('cc-tc-login-status');
         if (!bar2) return;
@@ -1631,7 +1506,6 @@ window.CC_APP = {
           </div>
         </div>` : '';
 
-      // Store unit abilities so the panel handler can look them up by index
       window.CC_TC._currentUnitAbilities = Array.isArray(unit.special)
         ? unit.special : (unit.special ? [unit.special] : []);
 
@@ -1868,12 +1742,6 @@ window.CC_APP = {
       var fname          = activeFaction ? activeFaction.name  : '?';
       var isNPC          = activeFaction && activeFaction.isNPC;
 
-      // ── Build terrain list ──────────────────────────────────────────────────
-      // Pull available terrain from the scenario save if it lists any.
-      // Field names tried: terrain, available_terrain, terrain_pool, tiles, pieces.
-      // If nothing is found, use a short default list weighted toward the
-      // two pieces that appear most often in play: Boardwalk and Thyr Crystal.
-
       var scenarioTerrain = null;
       if (state.scenarioSave) {
         scenarioTerrain = state.scenarioSave.terrain
@@ -1884,7 +1752,6 @@ window.CC_APP = {
           || null;
       }
 
-      // Normalise whatever shape the scenario uses into { label, note, icon, isObjective }
       var BASE_TERRAIN = [
         { icon: 'fa-grip-lines', label: 'Boardwalk',    note: 'Elevated walkway — present in every location', isObjective: false },
         { icon: 'fa-grip-lines', label: 'Boardwalk',    note: 'Elevated walkway — place a second one',        isObjective: false },
@@ -1898,7 +1765,6 @@ window.CC_APP = {
 
       var terrainTypes;
       if (Array.isArray(scenarioTerrain) && scenarioTerrain.length > 0) {
-        // Always keep Boardwalk and Thyr Crystal available even if not in scenario list
         terrainTypes = scenarioTerrain.map(function(t) {
           if (typeof t === 'string') return { icon: 'fa-map-signs', label: t, note: '', isObjective: false };
           return {
@@ -1908,11 +1774,9 @@ window.CC_APP = {
             isObjective: !!(t.isObjective || t.objective),
           };
         });
-        // Inject Boardwalk if absent (it's always available)
         if (!terrainTypes.find(function(t) { return t.label === 'Boardwalk'; })) {
           terrainTypes.unshift({ icon: 'fa-grip-lines', label: 'Boardwalk', note: 'Elevated walkway — present in every location', isObjective: false });
         }
-        // Inject Thyr Crystal if absent
         if (!terrainTypes.find(function(t) { return t.label === 'Thyr Crystal'; })) {
           terrainTypes.splice(1, 0, { icon: 'fa-gem', label: 'Thyr Crystal', note: 'Magical resource — mark it', isObjective: false });
         }
@@ -1920,7 +1784,6 @@ window.CC_APP = {
         terrainTypes = BASE_TERRAIN.slice();
       }
 
-      // Append scenario objectives as placeable markers
       var scenarioObjectives = (state.scenarioSave && state.scenarioSave.objectives) || [];
       if (scenarioObjectives.length > 0) {
         scenarioObjectives.forEach(function(obj) {
@@ -1952,27 +1815,20 @@ window.CC_APP = {
           }).join('') + '</ul>'
         : '<p style="color:#555;font-size:.85rem;margin:0;">Nothing placed yet.</p>';
 
-      // ── NPC auto-directive ─────────────────────────────────────────────────
-      // Don't ask the player to roll — pick right now using weighted probability.
       var npcDirectiveHtml = '';
       if (isNPC) {
         var roll = Math.random();
         var picked;
         if (roll < 0.35) {
-          // ~35% — Boardwalk (most common addition)
           picked = terrainTypes.find(function(t) { return t.label === 'Boardwalk'; });
         } else if (roll < 0.50) {
-          // ~15% — Thyr Crystal
           picked = terrainTypes.find(function(t) { return t.label === 'Thyr Crystal'; });
         } else if (roll < 0.75) {
-          // ~25% — Scenario objectives
           var objPool = terrainTypes.filter(function(t) { return t.isObjective; });
           picked = objPool[Math.floor(Math.random() * objPool.length)];
         } else if (roll < 0.88) {
-          // ~13% — Building
           picked = terrainTypes.find(function(t) { return t.label === 'Building'; });
         } else {
-          // ~12% — misc
           var misc = terrainTypes.filter(function(t) {
             return !t.isObjective && ['Rocky Outcrop','Canyon Brush','Ruin / Debris','Barricade'].indexOf(t.label) !== -1;
           });
@@ -2057,21 +1913,18 @@ window.CC_APP = {
             : 'border:1px solid ' + color + '66;';
 
         return '<div style="' + borderStyle + 'border-radius:8px;padding:.7rem;background:rgba(0,0,0,.25);transition:opacity .2s;">' +
-          // Faction name row
           '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">' +
           '<img src="' + LOGO_BASE + pf.id + '_logo.svg" alt="' + fname + '" ' +
-'style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 0 4px ' + color + '88);flex-shrink:0;" ' +
-'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:44px;height:44px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
+          'style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 3px ' + color + '88)' + (isSkipped ? ' grayscale(1)' : '') + ';flex-shrink:0;" ' +
+          'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:28px;height:28px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.75rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
           '<strong style="flex:1;color:' + (isSkipped ? '#555' : color) + ';font-size:.9rem;">' + fname +
           (isSkipped ? ' <span style="color:#555;font-size:.7rem;font-weight:400;">(skipped)</span>' : '') + '</strong>' +
-          // NPC toggle — hidden when skipped
           (!isSkipped
             ? '<label style="display:flex;align-items:center;gap:.3rem;font-size:.75rem;color:#aaa;cursor:pointer;flex-shrink:0;">' +
               '<input type="checkbox" id="npc_toggle_' + pf.id + '"' + (pf.npc ? ' checked' : '') +
               ' onchange="window.CC_TC.toggleNPC(\'' + pf.id + '\')"> NPC</label>'
             : '') +
           '</div>' +
-          // Browse / Change button — hidden when skipped
           (!isSkipped && state.factionSaveList.length > 0
             ? '<button onclick="window.CC_TC.openFactionSavePicker(\'' + pf.id + '\')" ' +
               'class="cc-btn cc-btn-secondary" style="width:100%;font-size:.75rem;padding:.3rem .5rem;margin-bottom:.4rem;">' +
@@ -2080,7 +1933,6 @@ window.CC_APP = {
             : (!isSkipped
                 ? '<div style="font-size:.75rem;color:#555;text-align:center;padding:.25rem 0 .4rem;">No saves found — will use default</div>'
                 : '')) +
-          // Skip / Un-skip button
           '<button onclick="window.CC_TC.toggleSkip(\'' + pf.id + '\')" ' +
           'class="cc-btn ' + (isSkipped ? '' : 'cc-btn-secondary') + '" ' +
           'style="width:100%;font-size:.72rem;padding:.25rem .5rem;' +
@@ -2091,6 +1943,7 @@ window.CC_APP = {
       }).join('');
 
       // ── Right column: confirmed assignments ─────────────────────────────────
+      // FIX: Icons are now 44px (doubled from 22px) with a glow filter
       var rightRows = state.pendingFactions.filter(function(pf) { return !pf.skipped; }).map(function(pf) {
         var meta       = FACTION_META[pf.id] || {};
         var color      = meta.color || '#888';
@@ -2098,10 +1951,8 @@ window.CC_APP = {
         var assignment = state.factionAssignments[pf.id];
 
         if (assignment) {
-          // Show the assigned save name
           var saveName = assignment.docName
             .replace(/_/g,' ').replace(/[0-9]{13}/,'').trim();
-          // Find enriched data from preloaded list
           var saveDoc  = (state.factionSaveList || []).find(function(d) { return d.id === assignment.docId; });
           var pts      = saveDoc && saveDoc._totalPoints ? saveDoc._totalPoints + ' pts' : '';
           var unitCount = saveDoc && saveDoc._unitCount  ? saveDoc._unitCount + ' units' : '';
@@ -2110,8 +1961,8 @@ window.CC_APP = {
             'background:' + color + '18;animation:cc-fade-in .25s ease;">' +
             '<div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;">' +
             '<img src="' + LOGO_BASE + pf.id + '_logo.svg" alt="' + fname + '" ' +
-            'style="width:22px;height:22px;object-fit:contain;flex-shrink:0;" ' +
-            'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:22px;height:22px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.65rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
+            'style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 0 4px ' + color + '88);flex-shrink:0;" ' +
+            'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:44px;height:44px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
             '<span style="color:' + color + ';font-size:.8rem;font-weight:700;flex:1;">' + fname + '</span>' +
             '<button onclick="window.CC_TC.clearFactionSave(\'' + pf.id + '\')" ' +
             'style="background:none;border:none;color:#ef5350;cursor:pointer;font-size:.8rem;padding:0;" ' +
@@ -2121,7 +1972,6 @@ window.CC_APP = {
             (pts || unitCount ? '<div style="font-size:.7rem;color:#888;margin-top:.2rem;">' + [pts, unitCount].filter(Boolean).join(' · ') + '</div>' : '') +
             '</div>';
         } else {
-          // Empty slot — show a dim placeholder
           return '<div style="border:1px dashed rgba(255,255,255,.12);border-radius:8px;padding:.7rem;' +
             'display:flex;align-items:center;justify-content:center;min-height:72px;">' +
             '<span style="color:#444;font-size:.78rem;text-align:center;">' +
@@ -2147,7 +1997,6 @@ window.CC_APP = {
 
         '<div style="flex:1;overflow-y:auto;padding:1rem;">' +
 
-        // Scenario summary strip
         (state.scenarioSave
           ? '<div style="padding:.6rem 1rem;background:rgba(255,117,24,.08);border:1px solid rgba(255,117,24,.2);' +
             'border-radius:6px;font-size:.82rem;color:#aaa;margin-bottom:1rem;">' +
@@ -2159,10 +2008,8 @@ window.CC_APP = {
             '</div>'
           : '') +
 
-        // ── Two-column layout ──────────────────────────────────────────────
         '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;align-items:start;">' +
 
-        // Left panel — pick a save
         '<div class="cc-panel">' +
         '<div class="cc-panel-header" style="padding:.6rem .85rem;">' +
         '<h5 style="margin:0;color:var(--cc-primary);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;">' +
@@ -2174,7 +2021,6 @@ window.CC_APP = {
         '</div>' +
         '</div>' +
 
-        // Right panel — confirmed selections
         '<div class="cc-panel">' +
         '<div class="cc-panel-header" style="padding:.6rem .85rem;">' +
         '<h5 style="margin:0;color:var(--cc-primary);font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;">' +
@@ -2186,14 +2032,13 @@ window.CC_APP = {
         '</div>' +
         '</div>' +
 
-        '</div>' + // end grid
+        '</div>' +
 
         (state.factionSaveList.length === 0
           ? '<p style="font-size:.78rem;color:#444;text-align:center;margin:.75rem 0 0;">' +
             'No saved rosters found — all factions will use default game data.</p>'
           : '') +
 
-        // Begin Game button
         '<div style="margin-top:1rem;">' +
         '<button class="cc-btn" style="width:100%;font-size:1rem;padding:.85rem;" ' +
         'onclick="window.CC_TC.startFromFactionSetup()">' +
@@ -2201,50 +2046,37 @@ window.CC_APP = {
         '</button>' +
         '</div>' +
 
-        '</div>' + // end scroll area
-        '</div>';  // end app-shell
+        '</div>' +
+        '</div>';
     }
 
     // ── Destroyed guard ────────────────────────────────────────────────────────
-    // When the loader navigates away it calls appRoot.innerHTML = '' which
-    // detaches `root` from the document but never tells the app.
-    // Every render call checks this first so nothing tries to write to a dead node.
     var _destroyed = false;
 
     function isRootAlive() {
       return !_destroyed && root && document.body.contains(root);
     }
 
-    // Full teardown — called either by the MutationObserver (automatic) or
-    // by CC_APP.destroy (if the loader ever adds that call).
     function destroyApp() {
       if (_destroyed) return;
       _destroyed = true;
 
-      // Kill the activation timer
       if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
-
-      // Kill any ability-load poll that might still be spinning
       if (window._ccAbilityPoll) { clearInterval(window._ccAbilityPoll); delete window._ccAbilityPoll; }
 
-      // Remove any leftover overlays we injected into document.body
       ['cc-ability-overlay','cc-roll-overlay','cc-monster-alert',
-       'cc-tc-scenario-panel','cc-tc-save-picker'].forEach(function(id) {
+       'cc-tc-scenario-panel','cc-tc-save-picker','cc-tc-panel-backdrop'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.remove();
       });
 
-      // Null out the global so stale onclick="" handlers fail quietly
-      // instead of running against dead state
       window.CC_TC = null;
 
-      // Disconnect our own observer
       if (_rootObserver) { _rootObserver.disconnect(); _rootObserver = null; }
 
       console.log('[CC] Turn Counter destroyed — cleaned up globals and intervals');
     }
 
-    // Watch for the loader wiping our root node
     var _rootObserver = null;
     if (window.MutationObserver && root && root.parentNode) {
       _rootObserver = new MutationObserver(function() {
@@ -2253,11 +2085,9 @@ window.CC_APP = {
       _rootObserver.observe(root.parentNode, { childList: true, subtree: false });
     }
 
-    // Also expose destroy on CC_APP so a future loader version can call it directly
     window.CC_APP.destroy = destroyApp;
 
     function render() {
-      // Bail immediately if the loader has navigated away
       if (!isRootAlive()) return;
 
       switch (state.phase) {
@@ -2317,22 +2147,19 @@ window.CC_APP = {
     };
 
     window.CC_TC.closeScenarioPanel = function() {
-      var panel = document.getElementById('cc-tc-scenario-panel');
-      if (panel) {
-        panel.classList.remove('cc-slide-panel-open');
-        setTimeout(function() { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 300);
-      }
+      closeAllSlidePanels();
     };
 
     window.CC_TC.openScenarioList = function() {
       if (!window.CC_STORAGE) { alert('Storage not available.'); return; }
 
-      var existingPanel = document.getElementById('cc-tc-scenario-panel');
-      if (existingPanel) existingPanel.parentNode.removeChild(existingPanel);
+      closeAllSlidePanels();
+      installPanelBackdrop();
 
       var panel = document.createElement('div');
       panel.id = 'cc-tc-scenario-panel';
       panel.className = 'cc-slide-panel';
+      panel.addEventListener('click', function(e) { e.stopPropagation(); });
       panel.innerHTML =
         '<div class="cc-slide-panel-header">' +
         '<h2><i class="fa fa-map"></i> LOAD SCENARIO</h2>' +
@@ -2382,7 +2209,6 @@ window.CC_APP = {
     window.CC_TC.loadScenario = async function(docId) {
       window.CC_TC.closeScenarioPanel();
       try {
-        // Use safeLoadDocument — never throws, returns null on failure
         var doc     = await safeLoadDocument(docId);
         var payload = docToJson(doc);
         if (!payload) throw new Error('Scenario save is empty or unreadable. Try re-saving it in the Scenario Builder.');
@@ -2406,7 +2232,6 @@ window.CC_APP = {
         state.factionAssignments = {};
         state.pendingFactions.forEach(function(f) { state.factionAssignments[f.id] = null; });
 
-        // Pre-load faction save list — each doc loaded individually and safely
         state.loadingData = true; render();
         try {
           var allDocs = await window.CC_STORAGE.loadDocumentList(FACTION_SAVE_FOLDER)
@@ -2416,11 +2241,6 @@ window.CC_APP = {
             return d.name && d.name.indexOf('SCN_') !== 0;
           });
 
-          // ── FIX: Load each doc with safeLoadDocument ──────────────────────
-          // The old code used Promise.resolve().then(async function() { ... })
-          // which could let SyntaxErrors escape into unhandled rejections.
-          // safeLoadDocument() catches everything including SyntaxError from
-          // JSON.parse inside CC_STORAGE, and always resolves with null on error.
           state.factionSaveList = await Promise.all(nonScenario.map(async function(d) {
             var parsed = await safeLoadDocument(d.id);
             if (parsed) {
@@ -2466,7 +2286,6 @@ window.CC_APP = {
       var meta = FACTION_META[factionId] || {};
       if (!pf) return;
 
-      // Warn before skipping the monster faction — it powers noise/encounters
       if (!pf.skipped && meta.isMonster) {
         if (!confirm(
           (meta.name || factionId) + ' is the Monster faction.\n\n' +
@@ -2477,10 +2296,9 @@ window.CC_APP = {
 
       pf.skipped = !pf.skipped;
 
-      // Enforce minimum: need at least 2 active factions
       var active = state.pendingFactions.filter(function(f) { return !f.skipped; });
       if (active.length < 2) {
-        pf.skipped = false; // revert
+        pf.skipped = false;
         alert('You need at least 2 factions to play. Un-skip another faction first.');
         render();
         return;
@@ -2531,9 +2349,6 @@ window.CC_APP = {
     };
 
     window.CC_TC.selectFactionSave = function(factionId, docId) {
-      // Look up the doc name from state instead of injecting it through HTML onclick.
-      // (Injecting d.name via JSON.stringify into a double-quoted HTML attribute
-      // breaks if the name contains quotes — the onclick gets truncated mid-JS.)
       var doc = (state.factionSaveList || []).find(function(d) { return d.id === docId; });
       var docName = (doc && (doc.name || doc._armyName || doc._factionName))
         ? (doc.name || doc._armyName || doc._factionName)
@@ -2550,15 +2365,6 @@ window.CC_APP = {
       render();
     };
 
-    // ── BEGIN GAME FROM FACTION SETUP ─────────────────────────────────────────
-    //
-    // FIX: This is the main place the crash was happening.
-    // The old code had a try/catch, but CC_STORAGE.loadDocument could throw
-    // a SyntaxError internally (from JSON.parse on bad data) that escaped.
-    // Now we use safeLoadDocument() which catches ALL errors including SyntaxError
-    // and returns null, letting buildFactionFromSave gracefully fall back to
-    // loading default roster data from GitHub instead.
-
     window.CC_TC.startFromFactionSetup = async function() {
       state.loadingData = true;
       state.factions    = [];
@@ -2566,15 +2372,12 @@ window.CC_APP = {
 
       for (var i = 0; i < state.pendingFactions.length; i++) {
         var pf     = state.pendingFactions[i];
-        if (pf.skipped) continue;   // ← skip factions the user excluded
+        if (pf.skipped) continue;
         var meta   = FACTION_META[pf.id];
         var assign = state.factionAssignments[pf.id];
         var faction = null;
 
         if (assign && assign.docId) {
-          // ── FIX: Use safeLoadDocument instead of raw CC_STORAGE.loadDocument ──
-          // safeLoadDocument wraps the call in both .catch() AND try/catch,
-          // so a SyntaxError from inside CC_STORAGE can never escape.
           console.log('📂 Loading faction save for ' + pf.id + ' (doc ' + assign.docId + ')');
 
           var saveDoc = await safeLoadDocument(assign.docId);
@@ -2592,14 +2395,11 @@ window.CC_APP = {
           }
 
           if (!faction) {
-            // Save load failed or produced no usable data.
-            // Clear the assignment and silently fall back to GitHub JSON.
             assign = null;
           }
         }
 
         if (!faction) {
-          // Default: load from GitHub faction JSON
           console.log('📦 Loading default GitHub data for ' + pf.id);
           var fData = await loadFactionData(pf.id);
           faction = fData
@@ -2650,8 +2450,8 @@ window.CC_APP = {
       state.setupTurnIndex    = 0;
       state.factions.forEach(function(f) { initUnitStates(f); });
       state.phase = 'setup_round';
-      loadAbilityDictionaries();   // pre-fetch in background so ability taps are instant
-      loadMonstersFactionData();   // pre-fetch monsters faction for encounter variety
+      loadAbilityDictionaries();
+      loadMonstersFactionData();
       render();
     };
 
@@ -2718,12 +2518,8 @@ window.CC_APP = {
     // ═══════════════════════════════════════════════════════════════════════════
     // ABILITY LOOKUP SYSTEM
     // ═══════════════════════════════════════════════════════════════════════════
-    //
-    // Ability names come from faction JSON as plain strings e.g. "Tough 2",
-    // "Stealth", "Brutal 3". The actual rule text lives in the ability
-    // dictionary JSON files. We lazy-fetch those files once and cache them.
 
-    var _abilityCache    = {};     // slug → { name, id, timing, short, long }
+    var _abilityCache    = {};
     var _abilityFetched  = false;
     var _abilityFetching = false;
 
@@ -2739,9 +2535,6 @@ window.CC_APP = {
     ];
     var ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/';
 
-    // Each file has the shape:
-    //   { "_id": "R-ABIL-A", "title": "...", "abilities": { "aim": { "_id", "timing", "short", "long" } } }
-    // We store every entry under its slug key (e.g. "aim", "audio_suppression").
     function ingestAbilityFile(data) {
       if (!data || typeof data.abilities !== 'object') return 0;
       var count = 0;
@@ -2749,7 +2542,7 @@ window.CC_APP = {
         var entry = data.abilities[slug];
         if (!entry || typeof entry !== 'object') return;
         _abilityCache[slug] = {
-          name:   slugToName(slug),         // "audio_suppression" → "Audio Suppression"
+          name:   slugToName(slug),
           id:     entry._id    || '',
           timing: entry.timing || '',
           short:  entry.short  || '',
@@ -2760,12 +2553,10 @@ window.CC_APP = {
       return count;
     }
 
-    // "audio_suppression" → "Audio Suppression"
     function slugToName(slug) {
       return slug.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
     }
 
-    // "once_per_activation" → "Once Per Activation"
     function formatTiming(timing) {
       if (!timing) return '';
       return timing.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
@@ -2794,34 +2585,24 @@ window.CC_APP = {
       });
     }
 
-    // Look up an ability by its display name.
-    // Handles:
-    //   "Aim"              → slug "aim"
-    //   "Audio Suppression"→ slug "audio_suppression"
-    //   "Tough 2"          → slug "tough_2" → miss → strip number → "tough"
-    //   "Fast"             → slug "fast"
     function lookupAbility(displayName) {
       if (!displayName) return null;
       var raw = String(displayName).trim();
 
-      // Step 1 — convert display name to slug: spaces → underscores, lowercase
       var slug = raw.toLowerCase().replace(/\s+/g, '_');
       if (_abilityCache[slug]) return _abilityCache[slug];
 
-      // Step 2 — strip trailing number ("tough_2" → "tough", "blast_3" → "blast")
       var base = slug.replace(/_\d+$/, '');
       if (_abilityCache[base]) return _abilityCache[base];
 
-      // Step 3 — try without any underscores at all (handles edge-case compounding)
       var flat = slug.replace(/_/g, '');
       var keys = Object.keys(_abilityCache);
       for (var i = 0; i < keys.length; i++) {
         if (keys[i].replace(/_/g, '') === flat) return _abilityCache[keys[i]];
       }
 
-      // Step 4 — first word only, as a last resort ("Consecrated Ground" → "consecrated")
       var firstWord = slug.split('_')[0];
-      if (firstWord.length >= 4) {   // don't match on tiny words like "of", "the"
+      if (firstWord.length >= 4) {
         for (var j = 0; j < keys.length; j++) {
           if (keys[j] === firstWord || keys[j].startsWith(firstWord + '_')) {
             return _abilityCache[keys[j]];
@@ -2831,52 +2612,10 @@ window.CC_APP = {
 
       return null;
     }
-// ── Shared panel management ───────────────────────────────────────────────
-    // All slide panels share one backdrop. Clicking the backdrop closes everything.
-    // Opening any panel closes all others first — no stacking.
-
-    var _panelIds = ['cc-tc-ability-panel', 'cc-tc-stat-panel', 'cc-tc-scenario-panel'];
-
-    function closeAllSlidePanels() {
-      _panelIds.forEach(function(id) {
-        var p = document.getElementById(id);
-        if (p) {
-          p.classList.remove('cc-slide-panel-open');
-          setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 300);
-        }
-      });
-      var bd = document.getElementById('cc-tc-panel-backdrop');
-      if (bd) bd.parentNode.removeChild(bd);
-    }
-
-    function installPanelBackdrop() {
-      if (document.getElementById('cc-tc-panel-backdrop')) return;
-      var bd = document.createElement('div');
-      bd.id = 'cc-tc-panel-backdrop';
-      bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
-      bd.addEventListener('click', function() { closeAllSlidePanels(); });
-      document.body.appendChild(bd);
-    }
-    // ── Shared panel close helper ─────────────────────────────────────────────
-    function closeAllSlidePanels() {
-      ['cc-tc-ability-panel','cc-tc-stat-panel','cc-tc-scenario-panel'].forEach(function(id) {
-        var p = document.getElementById(id);
-        if (p) { p.classList.remove('cc-slide-panel-open'); setTimeout(function(){ if(p.parentNode) p.parentNode.removeChild(p); }, 300); }
-      });
-      var bd = document.getElementById('cc-tc-panel-backdrop');
-      if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
-    }
-    function installPanelBackdrop() {
-      if (document.getElementById('cc-tc-panel-backdrop')) return;
-      var bd = document.createElement('div');
-      bd.id = 'cc-tc-panel-backdrop';
-      bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
-      bd.addEventListener('click', closeAllSlidePanels);
-      document.body.appendChild(bd);
-    }
 
     // ── Ability slide panel ───────────────────────────────────────────────────
     window.CC_TC.closeAbilityPanel = function() { closeAllSlidePanels(); };
+
     window.CC_TC.openAbilityPanel = function(idx) {
       if (_destroyed) return;
       var abilities   = window.CC_TC._currentUnitAbilities || [];
@@ -2891,8 +2630,8 @@ window.CC_APP = {
       var panel = document.createElement('div');
       panel.id = 'cc-tc-ability-panel';
       panel.className = 'cc-slide-panel';
+      panel.addEventListener('click', function(e) { e.stopPropagation(); });
 
-      // If still loading, show a spinner and reopen when ready
       if (_abilityFetching && !_abilityFetched) {
         panel.innerHTML =
           '<div class="cc-slide-panel-header">' +
@@ -2969,7 +2708,6 @@ window.CC_APP = {
       setTimeout(function() { panel.classList.add('cc-slide-panel-open'); }, 10);
     };
 
-    // Keep old name as alias
     window.CC_TC.showAbilityRule = window.CC_TC.openAbilityPanel;
 
     window.CC_TC.rollQualityForUnit = function(factionId, unitId) {
@@ -2978,8 +2716,6 @@ window.CC_APP = {
       var us      = getUnitState(factionId, unitId);
       if (!unit || !us || us.out) return;
 
-      // If already rolled this activation, show the cached result instead of re-rolling.
-      // A unit only gets one roll per activation — tap again to review, not re-roll.
       if (us.lastRoll) {
         showRollResult(us.lastRoll, unit.name, true);
         return;
@@ -3079,8 +2815,7 @@ window.CC_APP = {
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // BOOT — go straight to setup, no second splash screen.
-    // (The loader already shows the Coffin Canyon logo while loading this file.)
+    // BOOT
     // ═══════════════════════════════════════════════════════════════════════════
 
     state.phase = 'setup';
