@@ -793,6 +793,16 @@ window.CC_APP = {
       if (builderTargetEl) builderTargetEl.innerHTML = renderBuilder();
       if (rosterListEl)    rosterListEl.innerHTML    = renderRoster();
 
+      // Apply list-mode class to layout container
+      var builderLayout = root.querySelector('.cc-faction-builder');
+      if (builderLayout) {
+        if (state.rosterViewMode === 'list') {
+          builderLayout.classList.add('cc-list-mode');
+        } else {
+          builderLayout.classList.remove('cc-list-mode');
+        }
+      }
+
       if (budgetEl) {
         const total      = calculateTotalCost();
         const overBudget = state.budget > 0 && total > state.budget;
@@ -839,21 +849,42 @@ window.CC_APP = {
     };
 
     window.toggleOptionalUpgrade = function(upgradeName) {
-      const config = getActiveConfig();
+      var config = getActiveConfig();
       if (!config) return;
-      const faction = state.factionData[state.currentFaction];
-      const target  = state.builderMode === 'library'
-        ? state.builderTarget
-        : (function(){ var _r = state.roster.find(function(r){ return r.id === state.builderTarget; }); return _r && _r.unitName; }());
-      const unit = (faction && faction.units && faction.units.find(function(u){ return u.name === target; }));
-      if (!unit) return;
-      const upg = (unit.optional_upgrades && unit.optional_upgrades.find(function(u){ return u.name === upgradeName; }));
-      if (!upg) return;
       if (!config.optionalUpgrades) config.optionalUpgrades = [];
-      const idx = config.optionalUpgrades.findIndex(u => u.name === upgradeName);
+
+      // Removal only needs name — no unit lookup required
+      var idx = -1;
+      for (var i = 0; i < config.optionalUpgrades.length; i++) {
+        if (config.optionalUpgrades[i].name === upgradeName) { idx = i; break; }
+      }
+
       if (idx > -1) {
         config.optionalUpgrades.splice(idx, 1);
       } else {
+        // Adding: look up full object so stat_modifiers are preserved
+        var faction = state.factionData[state.currentFaction];
+        if (!faction) return;
+        var unitName = state.builderMode === 'library'
+          ? state.builderTarget
+          : (function() {
+              for (var j = 0; j < state.roster.length; j++) {
+                if (state.roster[j].id === state.builderTarget) return state.roster[j].unitName;
+              }
+              return null;
+            }());
+        var unit = null;
+        if (faction.units) {
+          for (var k = 0; k < faction.units.length; k++) {
+            if (faction.units[k].name === unitName) { unit = faction.units[k]; break; }
+          }
+        }
+        if (!unit || !unit.optional_upgrades) return;
+        var upg = null;
+        for (var m = 0; m < unit.optional_upgrades.length; m++) {
+          if (unit.optional_upgrades[m].name === upgradeName) { upg = unit.optional_upgrades[m]; break; }
+        }
+        if (!upg) return;
         config.optionalUpgrades.push(Object.assign({}, upg));
       }
       updateRosterCost();
@@ -968,7 +999,18 @@ window.CC_APP = {
     .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; color: #000; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 8pt; }
     .upgrades { margin-top: 6px; font-size: 8.5pt; color: #444; border-top: 1px solid #eee; padding-top: 5px; }
     .cc-app-title-print { display: block; }
-    @media print { .unit { page-break-inside: avoid; } }
+    .ability-defs-section { margin-top: 28px; border-top: 2px solid #000; padding-top: 14px; }
+    .ability-defs-section h2 { font-family: 'Bungee', sans-serif; font-size: 14pt; margin-bottom: 10px; }
+    .ability-def { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd; break-inside: avoid; }
+    .ability-def:last-child { border-bottom: none; }
+    .ability-def-name { font-weight: 700; font-size: 10pt; margin-bottom: 2px; }
+    .ability-def-timing { background: #222; color: #fff; font-size: 7.5pt; padding: 1px 5px; border-radius: 3px; margin-right: 5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; vertical-align: middle; }
+    .ability-def-short { font-style: italic; color: #555; font-size: 8.5pt; margin-bottom: 3px; }
+    .ability-def-long { font-size: 9pt; color: #222; line-height: 1.5; }
+    @media print {
+      .unit { page-break-inside: avoid; }
+      .ability-def { page-break-inside: avoid; }
+    }
   </style>
 </head>
 <body>
@@ -977,31 +1019,69 @@ window.CC_APP = {
   <div class="roster-meta"><strong>Total:</strong> ${total} ₤${state.budget > 0 ? ` / ${state.budget} ₤` : ' (Unlimited)'}</div>
   <div class="roster-meta"><strong>Units:</strong> ${state.roster.length}</div>
   <div class="unit-grid">
-    ${state.roster.map(item => {
-      const abilities = item.abilities || [];
-      return `
-        <div class="unit">
-          <div class="unit-name">${esc(item.name)}</div>
-          <div class="unit-cost">${item.totalCost} ₤</div>
-          <div class="unit-type">${esc(item.type)}</div>
-          ${item.lore ? `<div class="lore">"${esc(item.lore)}"</div>` : ''}
-          <div class="stat-badges">
-            <span class="stat-badge">Q ${item.quality}+</span>
-            <span class="stat-badge">D ${item.defense}+</span>
-            <span class="stat-badge">M ${item.move}"</span>
-            <span class="stat-badge">R ${item.range === 0 ? '–' : item.range + '"'}</span>
-          </div>
-          ${abilities.length > 0 ? `
-            <div class="abilities">
-              ${abilities.map(a => `<span class="ability-tag">${esc(typeof a === 'string' ? a : (a.name || ''))}</span>`).join('')}
-            </div>` : ''}
-          ${(item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? `
-            <div class="upgrades"><strong>Upgrades:</strong> ${item.config.optionalUpgrades.map(u => esc(u.name)).join(', ')}</div>` : ''}
-          ${(item.config && item.config.supplemental) ? `
-            <div class="upgrades"><strong>Supplemental:</strong> ${esc(item.config.supplemental.name)}</div>` : ''}
-        </div>`;
+    \${state.roster.map(function(item) {
+      var abilities = item.abilities || [];
+      return '<div class="unit">' +
+        '<div class="unit-name">' + esc(item.name) + '</div>' +
+        '<div class="unit-cost">' + item.totalCost + ' ₤</div>' +
+        '<div class="unit-type">' + esc(item.type) + '</div>' +
+        (item.lore ? '<div class="lore">"' + esc(item.lore) + '"</div>' : '') +
+        '<div class="stat-badges">' +
+          '<span class="stat-badge">Q ' + item.quality + '+</span>' +
+          '<span class="stat-badge">D ' + item.defense + '+</span>' +
+          '<span class="stat-badge">M ' + item.move + '"</span>' +
+          '<span class="stat-badge">R ' + (item.range === 0 ? '–' : item.range + '"') + '</span>' +
+        '</div>' +
+        (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
+        ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="upgrades"><strong>Upgrades:</strong> ' + item.config.optionalUpgrades.map(function(u){ return esc(u.name); }).join(', ') + '</div>' : '') +
+        ((item.config && item.config.supplemental) ? '<div class="upgrades"><strong>Supplemental:</strong> ' + esc(item.config.supplemental.name) + '</div>' : '') +
+      '</div>';
     }).join('')}
   </div>
+
+  \${(function() {
+    // Collect all unique ability names across entire roster
+    var seen = {};
+    var allAbilityNames = [];
+    state.roster.forEach(function(item) {
+      var abilities = item.abilities || [];
+      abilities.forEach(function(a) {
+        var name = typeof a === 'string' ? a : (a.name || '');
+        if (name && !seen[name]) { seen[name] = true; allAbilityNames.push(name); }
+      });
+      // Also include supplemental and upgrade abilities if they have descriptions
+      if (item.config && item.config.supplemental && item.config.supplemental.name) {
+        var sName = item.config.supplemental.name;
+        if (!seen[sName]) { seen[sName] = true; allAbilityNames.push(sName); }
+      }
+    });
+
+    // Look up each ability in the cache
+    var defs = [];
+    allAbilityNames.forEach(function(name) {
+      var entry = lookupAbility(name);
+      if (entry && (entry.long || entry.short)) {
+        defs.push({ name: name, entry: entry });
+      }
+    });
+
+    if (!defs.length) return '';
+
+    // Sort alphabetically
+    defs.sort(function(a, b) { return a.name.localeCompare(b.name); });
+
+    return '<div class="ability-defs-section">' +
+      '<h2>Ability Definitions</h2>' +
+      defs.map(function(d) {
+        var timing = d.entry.timing ? '<span class="ability-def-timing">' + esc(d.entry.timing.replace(/_/g,' ')) + '</span> ' : '';
+        return '<div class="ability-def">' +
+          '<div class="ability-def-name">' + timing + esc(d.name) + '</div>' +
+          (d.entry.short ? '<div class="ability-def-short">' + esc(d.entry.short) + '</div>' : '') +
+          (d.entry.long  ? '<div class="ability-def-long">'  + esc(d.entry.long)  + '</div>' : '') +
+        '</div>';
+      }).join('') +
+    '</div>';
+  }())}
 </body>
 </html>`;
 
