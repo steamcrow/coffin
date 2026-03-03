@@ -40,11 +40,28 @@ window.CC_APP = {
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
-    const helpers = ctx?.helpers;
+    const helpersRaw = ctx?.helpers || {};
+
+// Adapter: tolerate different helper API shapes across versions
+const helpers = {
+  ...helpersRaw,
+  getRuleSection:
+    (typeof helpersRaw.getRuleSection === 'function' && helpersRaw.getRuleSection) ||
+    (typeof helpersRaw.getSection === 'function' && helpersRaw.getSection) ||
+    (typeof helpersRaw.getRule === 'function' && helpersRaw.getRule) ||
+    (typeof helpersRaw.getRuleData === 'function' && helpersRaw.getRuleData) ||
+    null,
+  getChildren:
+    (typeof helpersRaw.getChildren === 'function' && helpersRaw.getChildren) ||
+    null,
+};
+
+console.log('🧰 helpers keys:', Object.keys(helpersRaw));
+console.log('🧰 getRuleSection resolved:', helpers.getRuleSection ? 'OK' : 'MISSING');
     const index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
 
     // ---- SAFETY CHECK ----
-    if (!helpers) {
+    if (!helpers || typeof helpers.getRuleSection !== 'function') {
       root.innerHTML = `
         <div class="cc-app-shell h-100">
           <div class="container py-5 text-danger">
