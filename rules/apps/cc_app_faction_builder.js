@@ -774,18 +774,19 @@ window.CC_APP = {
       const config    = JSON.parse(JSON.stringify(state.builderConfig));
       const totalCost = calculateUnitCost(unit, config);
 
-      const rosterItem = {
-        id:        generateId(),
-        unitName:  unit.name,
-        name:      unit.name,
-        type:      unit.type,
-        quality:   unit.quality,
-        defense:   unit.defense,
-        move:      unit.move,
-        range:     unit.range,
-        weapon:    unit.weapon,
+     const rosterItem = {
+        id: generateId(),
+        unitName: unit.name,
+        name: unit.name,
+        type: unit.type,
+        quality: unit.quality,
+        defense: unit.defense,
+        move: unit.move,
+        range: unit.range,
+        weapon: unit.weapon,
+        lore: unit.lore || '',
         abilities: unit.abilities || [],
-        config:    config,
+        config: config,
         totalCost: totalCost
       };
 
