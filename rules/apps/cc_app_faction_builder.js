@@ -11,7 +11,6 @@ window.CC_APP = {
 
     // ---- LOAD CSS ----
     if (!document.getElementById('cc-core-ui-styles')) {
-      console.log('🎨 Loading Core UI CSS...');
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
@@ -23,9 +22,8 @@ window.CC_APP = {
         })
         .catch(err => console.error('❌ Core CSS load failed:', err));
     }
-    
+
     if (!document.getElementById('cc-faction-builder-styles')) {
-      console.log('🎨 Loading Faction Builder CSS...');
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_faction_builder.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
@@ -38,9 +36,22 @@ window.CC_APP = {
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
+    // FIX 5 ── Load print CSS from the shared print helper
+    if (!document.getElementById('cc-print-styles')) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_print.css?t=' + Date.now())
+        .then(res => res.text())
+        .then(css => {
+          const style = document.createElement('style');
+          style.id = 'cc-print-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Print CSS applied!');
+        })
+        .catch(() => console.warn('⚠️ cc_print.css not found — using inline print styles only'));
+    }
+
     // ---- LOAD STORAGE HELPERS ----
     if (!window.CC_STORAGE) {
-      console.log('💾 Loading Storage Helpers...');
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
         .then(res => res.text())
         .then(code => {
@@ -53,7 +64,6 @@ window.CC_APP = {
     }
 
     const helpers = ctx?.helpers;
-
     if (!helpers) {
       root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Helpers not available</h4></div></div>`;
       return;
@@ -71,10 +81,7 @@ window.CC_APP = {
       selectedUnitId: null,
       builderMode: null,
       builderTarget: null,
-      builderConfig: {
-        optionalUpgrades: [],
-        supplemental: null
-      },
+      builderConfig: { optionalUpgrades: [], supplemental: null },
       rosterViewMode: 'grid'
     };
 
@@ -102,69 +109,191 @@ window.CC_APP = {
     // ================================
     // FACTION ICON SYSTEM
     // ================================
-    // SVG logos live at: coffin/rules/apps/{faction_id}_logo.svg
-    // Each faction has an accent color used for the CSS glow.
-    // If the SVG fails to load, a fallback letter-circle is shown instead.
-    // ================================
-    const FACTION_META = {
-      monster_rangers: { color: '#4caf50', title: 'Monster Rangers' },
-      liberty_corps:   { color: '#ef5350', title: 'Liberty Corps'   },
-      monsterology:    { color: '#9c27b0', title: 'Monsterology'    },
-      monsters:        { color: '#ff7518', title: 'Monsters'        },
-      shine_riders:    { color: '#ffd600', title: 'Shine Riders'    },
-      crow_queen:      { color: '#00bcd4', title: 'Crow Queen'      },
+    const FACTION_COLORS = {
+      monster_rangers: '#4caf50',
+      liberty_corps:   '#ef5350',
+      monsterology:    '#9c27b0',
+      monsters:        '#ff7518',
+      shine_riders:    '#ffd600',
+      crow_queen:      '#00bcd4'
     };
 
-    const LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/';
+    const FACTION_ICON_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/';
 
-    /**
-     * Returns an <img> for the faction's SVG logo, with a coloured glow.
-     * If the image fails to load it swaps itself for a coloured letter circle.
-     *
-     * @param {string} factionId  e.g. 'monster_rangers'
-     * @param {number} sizePx     display size in pixels
-     */
-    function factionIconHtml(factionId, sizePx = 32) {
-      const meta = FACTION_META[factionId];
-      if (!meta) return '';
-
-      const color   = meta.color;
-      const initial = meta.title[0].toUpperCase();
-      const src     = `${LOGO_BASE}${factionId}_logo.svg`;
-      const fs      = Math.round(sizePx * 0.44);
-
-      const fallback =
-        `this.onerror=null;` +
-        `this.outerHTML='<div class=\\'cc-faction-icon-fallback\\' ` +
-        `style=\\'width:${sizePx}px;height:${sizePx}px;border-radius:50%;` +
-        `background:${color}22;border:2px solid ${color};` +
-        `display:flex;align-items:center;justify-content:center;` +
-        `font-weight:900;font-size:${fs}px;color:${color};flex-shrink:0;\\'>${initial}</div>'`;
-
-      return (
-        `<img ` +
-        `src="${src}" ` +
-        `alt="${esc(meta.title)}" ` +
-        `class="cc-faction-icon" ` +
-        `width="${sizePx}" ` +
-        `height="${sizePx}" ` +
-        `style="--faction-color:${color};" ` +
-        `onerror="${fallback}" />`
-      );
+    function factionIconHtml(factionId, size = 32) {
+      if (!factionId) return '';
+      const color = FACTION_COLORS[factionId] || '#ff7518';
+      const src   = `${FACTION_ICON_BASE}${factionId}_logo.svg`;
+      const label = (FACTION_TITLES[factionId] || '?').charAt(0);
+      return `<img
+        src="${src}"
+        class="cc-faction-icon"
+        style="width:${size}px;height:${size}px;--faction-color:${color};"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+        alt="${esc(factionId)}"
+      /><div style="display:none;width:${size}px;height:${size}px;background:${color}22;border:1px solid ${color};border-radius:50%;align-items:center;justify-content:center;font-size:${Math.round(size * 0.45)}px;font-weight:900;color:${color};">${label}</div>`;
     }
 
     // ================================
-    // FACTION LOADING
+    // FIX 2 ── ABILITY DICTIONARY SYSTEM
+    // Loads all 8 ability dictionary files from GitHub in the background.
+    // Clicking an ability tag opens a proper slide panel with timing + rules text.
     // ================================
-    async function loadFaction(factionId) {
-      const factionInfo = FACTION_FILES.find(f => f.id === factionId);
-      if (!factionInfo) return null;
+    const ABILITY_FILES = [
+      '90_ability_dictionary_A.json',
+      '91_ability_dictionary_B.json',
+      '92_ability_dictionary_C.json',
+      '93_ability_dictionary_D.json',
+      '94_ability_dictionary_E.json',
+      '95_ability_dictionary_F.json',
+      '96_ability_dictionary_G.json',
+      '97_ability_dictionary_H.json',
+    ];
+    const ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/';
 
-      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
-      
+    let _abilityCache    = {};
+    let _abilityFetched  = false;
+    let _abilityFetching = false;
+
+    function ingestAbilityFile(data) {
+      if (!data || typeof data.abilities !== 'object') return;
+      Object.keys(data.abilities).forEach(slug => {
+        const entry = data.abilities[slug];
+        if (!entry || typeof entry !== 'object') return;
+        _abilityCache[slug] = {
+          name:   slugToName(slug),
+          id:     entry._id    || '',
+          timing: entry.timing || '',
+          short:  entry.short  || '',
+          long:   entry.long   || '',
+        };
+      });
+    }
+
+    function slugToName(slug) {
+      return slug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function formatTiming(timing) {
+      if (!timing) return '';
+      return timing.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function loadAbilityDictionaries() {
+      if (_abilityFetched || _abilityFetching) return;
+      _abilityFetching = true;
+      const promises = ABILITY_FILES.map(filename =>
+        fetch(ABILITY_BASE + filename + '?t=' + Date.now())
+          .then(r => r.ok ? r.json() : null)
+          .then(data => { if (data) ingestAbilityFile(data); })
+          .catch(e => console.warn('⚠️ Ability file failed:', filename, e))
+      );
+      Promise.all(promises).then(() => {
+        _abilityFetched  = true;
+        _abilityFetching = false;
+        console.log('[FB] Abilities loaded —', Object.keys(_abilityCache).length, 'entries');
+      });
+    }
+
+    function lookupAbility(displayName) {
+      if (!displayName) return null;
+      const slug = String(displayName).trim().toLowerCase().replace(/\s+/g, '_');
+      if (_abilityCache[slug]) return _abilityCache[slug];
+      const base = slug.replace(/_\d+$/, '');
+      if (_abilityCache[base]) return _abilityCache[base];
+      const flat = slug.replace(/_/g, '');
+      const keys = Object.keys(_abilityCache);
+      for (const k of keys) {
+        if (k.replace(/_/g, '') === flat) return _abilityCache[k];
+      }
+      const firstWord = slug.split('_')[0];
+      if (firstWord.length >= 4) {
+        for (const k of keys) {
+          if (k === firstWord || k.startsWith(firstWord + '_')) return _abilityCache[k];
+        }
+      }
+      return null;
+    }
+
+    // ================================
+    // FIX 4 ── SLIDE PANEL MANAGEMENT
+    // One backdrop, one open panel at a time. Clicking anywhere outside closes.
+    // ================================
+    const FB_PANEL_IDS = ['fb-ability-panel', 'fb-cloud-roster-panel'];
+
+    function closeAllSlidePanels() {
+      FB_PANEL_IDS.forEach(id => {
+        const p = document.getElementById(id);
+        if (p) {
+          p.classList.remove('cc-slide-panel-open');
+          setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 300);
+        }
+      });
+      const bd = document.getElementById('fb-panel-backdrop');
+      if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
+    }
+
+    function installPanelBackdrop() {
+      if (document.getElementById('fb-panel-backdrop')) return;
+      const bd = document.createElement('div');
+      bd.id = 'fb-panel-backdrop';
+      bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
+      bd.addEventListener('click', closeAllSlidePanels);
+      document.body.appendChild(bd);
+    }
+
+    // ================================
+    // UTILITIES
+    // ================================
+    function esc(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function generateId() {
+      return 'u_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function calculateTotalCost() {
+      return state.roster.reduce((sum, item) => sum + (item.totalCost || 0), 0);
+    }
+
+    function calculateUnitCost(baseUnit, config) {
+      let cost = baseUnit.cost || 0;
+      (config.optionalUpgrades || []).forEach(u => { cost += u.cost || 0; });
+      if (config.supplemental) cost += config.supplemental.cost || 0;
+      return cost;
+    }
+
+    // FIX 6 ── Composition limit: 1 of this unit type per composition.per_points ₤
+    // Example: per_points: 150, budget: 500 → floor(500/150) = 3 max
+    function getMaxAllowed(unit) {
+      if (!unit.composition || !unit.composition.per_points) return Infinity;
+      if (state.budget <= 0) return Infinity; // unlimited budget = unlimited units
+      return Math.floor(state.budget / unit.composition.per_points);
+    }
+
+    function countInRoster(unitName) {
+      return state.roster.filter(r => r.unitName === unitName).length;
+    }
+
+    // ================================
+    // DATA LOADING
+    // ================================
+    const FACTION_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+
+    async function loadFaction(factionId) {
+      if (state.factionData[factionId]) return state.factionData[factionId];
+      const factionFile = FACTION_FILES.find(f => f.id === factionId);
+      if (!factionFile) throw new Error(`Unknown faction: ${factionId}`);
       try {
-        const response = await fetch(baseUrl + factionInfo.file + '?t=' + Date.now());
-        if (!response.ok) throw new Error(`Failed to load faction: ${response.status}`);
+        const response = await fetch(`${FACTION_BASE_URL}${factionFile.file}?t=${Date.now()}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = await response.json();
         state.factionData[factionId] = data;
         console.log('✅ Faction loaded:', factionId);
@@ -182,11 +311,11 @@ window.CC_APP = {
         const data = await loadFaction(factionId);
         if (data) {
           state.currentFaction = factionId;
-          state.roster = [];
+          state.roster         = [];
           state.selectedUnitId = null;
-          state.builderMode = null;
-          state.builderTarget = null;
-          state.builderConfig = { optionalUpgrades: [], supplemental: null };
+          state.builderMode    = null;
+          state.builderTarget  = null;
+          state.builderConfig  = { optionalUpgrades: [], supplemental: null };
           render();
         }
       } catch (e) {
@@ -196,76 +325,162 @@ window.CC_APP = {
     }
 
     // ================================
-    // UTILITIES
+    // LOGIN STATUS
     // ================================
-    function esc(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function calculateTotalCost() {
-      return state.roster.reduce((sum, item) => sum + (item.totalCost || 0), 0);
-    }
-
-    function calculateUnitCost(baseUnit, config) {
-      let cost = baseUnit.cost || 0;
-      if (config.optionalUpgrades) {
-        config.optionalUpgrades.forEach(u => { cost += u.cost || 0; });
+    async function updateLoginStatus() {
+      if (!window.CC_STORAGE) return;
+      const statusBar = document.getElementById('cc-login-status');
+      if (!statusBar) return;
+      try {
+        const auth = await window.CC_STORAGE.checkAuth();
+        statusBar.className = auth.loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out';
+        statusBar.innerHTML = auth.loggedIn
+          ? `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`
+          : `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
+      } catch (e) {
+        const bar = document.getElementById('cc-login-status');
+        if (bar) {
+          bar.className = 'cc-login-status logged-out';
+          bar.innerHTML = `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
+        }
       }
-      if (config.supplemental) {
-        cost += config.supplemental.cost || 0;
+    }
+
+    // ================================
+    // ABILITY TOOLTIP & PANEL
+    // FIX 2: real dictionary lookup
+    // FIX 4: no stacking — uses shared backdrop
+    // ================================
+    window.showAbilityTooltip = function(abilityName, event) {
+      const tooltip = document.getElementById('ability-tooltip');
+      if (!tooltip) return;
+      tooltip.textContent = `Click to view: ${abilityName}`;
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.pageX + 12 + 'px';
+      tooltip.style.top  = event.pageY + 12 + 'px';
+    };
+
+    window.hideAbilityTooltip = function() {
+      const tooltip = document.getElementById('ability-tooltip');
+      if (tooltip) tooltip.style.display = 'none';
+    };
+
+    window.showAbilityPanel = function(abilityName) {
+      loadAbilityDictionaries(); // no-op if already loaded/loading
+      closeAllSlidePanels();
+      installPanelBackdrop();
+
+      const panel = document.createElement('div');
+      panel.id = 'fb-ability-panel';
+      panel.className = 'cc-slide-panel';
+      panel.addEventListener('click', e => e.stopPropagation());
+
+      // Still loading — show spinner, retry when done
+      if (_abilityFetching && !_abilityFetched) {
+        panel.innerHTML = `
+          <div class="cc-slide-panel-header">
+            <h2><i class="fa fa-book"></i> ${esc(abilityName).toUpperCase()}</h2>
+            <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
+          </div>
+          <div style="padding:2rem;text-align:center;color:#888;">
+            <div style="font-size:2rem;animation:cc-spin 1s linear infinite;display:inline-block;margin-bottom:.75rem;">⟳</div><br>
+            Loading ability dictionary…
+          </div>`;
+        document.body.appendChild(panel);
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+
+        let retries = 0;
+        const poll = setInterval(() => {
+          retries++;
+          if (_abilityFetched || retries > 26) {
+            clearInterval(poll);
+            const old = document.getElementById('fb-ability-panel');
+            if (old) { old.classList.remove('cc-slide-panel-open'); setTimeout(() => old.remove(), 300); }
+            const bd = document.getElementById('fb-panel-backdrop');
+            if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
+            if (_abilityFetched) window.showAbilityPanel(abilityName);
+          }
+        }, 300);
+        return;
       }
-      return cost;
-    }
 
-    function generateId() {
-      return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
-    }
+      const entry = lookupAbility(abilityName);
 
-    function buildStatBadges(unit, config, compact = false) {
-      const base = {
-        q: unit.quality || 0,
-        d: unit.defense || 0,
-        m: unit.move || 0,
-        r: unit.range || 0
+      const TIMING_COLORS = {
+        'Passive':             '#90a4ae',
+        'Main Action':         '#42a5f5',
+        'Once Per Activation': '#ffd600',
+        'Once Per Round':      '#ff9800',
+        'Once Per Game':       '#ef5350',
+        'Deployment':          '#9c27b0',
+        'Reaction':            '#4caf50',
       };
-      const mod = { ...base };
+      const timingLabel = entry ? formatTiming(entry.timing) : '';
+      const timingColor = TIMING_COLORS[timingLabel] || '#888';
 
-      if (config && config.optionalUpgrades) {
-        config.optionalUpgrades.forEach(upgrade => {
-          if (upgrade.stat_modifiers) {
-            Object.entries(upgrade.stat_modifiers).forEach(([stat, value]) => {
-              if (stat === 'quality') mod.q += value;
-              else if (stat === 'defense') mod.d += value;
-              else if (stat === 'move') mod.m += value;
-              else if (stat === 'range') {
-                if (mod.r === 0) mod.r = value;
-                else mod.r += value;
-              }
-            });
-          }
-        });
+      let bodyHtml;
+      if (entry) {
+        bodyHtml = `
+          ${timingLabel ? `
+            <div style="display:inline-block;margin-bottom:1.25rem;padding:3px 12px;border-radius:999px;
+                        border:1px solid ${timingColor};color:${timingColor};
+                        font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;">
+              ${timingLabel}
+            </div><br>` : ''}
+          ${entry.short ? `<p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(entry.short)}</p>` : ''}
+          ${entry.long  ? `<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(entry.long)}</p>` : ''}
+          ${entry.id    ? `<div style="margin-top:1.5rem;font-size:.68rem;color:#333;font-family:monospace;">${esc(entry.id)}</div>` : ''}`;
+      } else {
+        bodyHtml = `
+          <p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">
+            No rule entry found for <em style="color:#bbb;">${esc(abilityName)}</em>.
+          </p>
+          <p style="color:#555;font-size:.82rem;line-height:1.5;margin:0;">
+            Open the Rules Explorer and search for <em>${esc(abilityName.split(' ')[0])}</em>.
+          </p>`;
       }
 
-      if (config && config.supplemental && config.supplemental.stat_modifiers) {
-        Object.entries(config.supplemental.stat_modifiers).forEach(([stat, value]) => {
-          if (stat === 'quality') mod.q += value;
-          else if (stat === 'defense') mod.d += value;
-          else if (stat === 'move') mod.m += value;
-          else if (stat === 'range') {
-            if (mod.r === 0) mod.r = value;
-            else mod.r += value;
-          }
-        });
+      panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+          <h2><i class="fa fa-book"></i> ${esc(abilityName).toUpperCase()}</h2>
+          <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
+        </div>
+        <div style="padding:1.5rem;">${bodyHtml}</div>`;
+
+      document.body.appendChild(panel);
+      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    };
+
+    window.closeAbilityPanel = function() {
+      closeAllSlidePanels();
+    };
+
+    // ================================
+    // STAT BADGES
+    // ================================
+    function buildStatBadges(unit, config, compact = false) {
+      const base = { q: unit.quality || 4, d: unit.defense || 2, m: unit.move || 5, r: unit.range || 0 };
+      const mods = { q: 0, d: 0, m: 0, r: 0 };
+
+      (config?.optionalUpgrades || []).forEach(u => {
+        const sm = u.stat_modifiers || {};
+        if (sm.quality) mods.q += sm.quality;
+        if (sm.defense) mods.d += sm.defense;
+        if (sm.move)    mods.m += sm.move;
+        if (sm.range)   mods.r += sm.range;
+      });
+      if (config?.supplemental?.stat_modifiers) {
+        const sm = config.supplemental.stat_modifiers;
+        if (sm.quality) mods.q += sm.quality;
+        if (sm.defense) mods.d += sm.defense;
+        if (sm.move)    mods.m += sm.move;
+        if (sm.range)   mods.r += sm.range;
       }
 
-      const badge = (label, val, baseval, cls) => {
-        const modified   = val !== baseval;
+      const mod = { q: base.q + mods.q, d: base.d + mods.d, m: base.m + mods.m, r: base.r + mods.r };
+
+      const badge = (label, val, baseVal, cls) => {
+        const modified   = val !== baseVal;
         const suffix     = (label === 'Q' || label === 'D') ? '+' : '"';
         const displayVal = (val === 0 && label === 'R') ? '-' : val;
         const sizeClass  = compact ? 'compact' : '';
@@ -286,77 +501,6 @@ window.CC_APP = {
     }
 
     // ================================
-    // LOGIN STATUS
-    // ================================
-    async function updateLoginStatus() {
-      if (!window.CC_STORAGE) return;
-      const statusBar = document.getElementById('cc-login-status');
-      if (!statusBar) return;
-      try {
-        const auth = await window.CC_STORAGE.checkAuth();
-        if (auth.loggedIn) {
-          statusBar.className = 'cc-login-status logged-in';
-          statusBar.innerHTML = `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`;
-        } else {
-          statusBar.className = 'cc-login-status logged-out';
-          statusBar.innerHTML = `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
-        }
-      } catch (e) {
-        console.error('❌ Login status check failed:', e);
-        statusBar.className = 'cc-login-status logged-out';
-        statusBar.innerHTML = `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
-      }
-    }
-
-    // ================================
-    // ABILITY TOOLTIP & PANEL
-    // ================================
-    window.showAbilityTooltip = function(abilityName, event) {
-      const tooltip = document.getElementById('ability-tooltip');
-      if (!tooltip) return;
-      tooltip.textContent = `Click to view: ${abilityName}`;
-      tooltip.style.display = 'block';
-      tooltip.style.left = event.pageX + 10 + 'px';
-      tooltip.style.top  = event.pageY + 10 + 'px';
-    };
-
-    window.hideAbilityTooltip = function() {
-      const tooltip = document.getElementById('ability-tooltip');
-      if (tooltip) tooltip.style.display = 'none';
-    };
-
-    window.showAbilityPanel = function(abilityName) {
-      const panel = document.createElement('div');
-      panel.id = 'ability-panel';
-      panel.className = 'cc-slide-panel';
-      panel.innerHTML = `
-        <div class="cc-slide-panel-header">
-          <h2><i class="fa fa-book"></i> ${esc(abilityName)}</h2>
-          <button onclick="closeAbilityPanel()" class="cc-panel-close-btn">
-            <i class="fa fa-times"></i>
-          </button>
-        </div>
-        <div class="cc-roster-list">
-          <p style="padding: 1rem; color: #bbb;">
-            Ability details for <strong>${esc(abilityName)}</strong> would appear here.
-            <br><br>
-            <em>Note: This would integrate with your rules database to show the full ability description, effects, and examples.</em>
-          </p>
-        </div>
-      `;
-      document.body.appendChild(panel);
-      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
-    };
-
-    window.closeAbilityPanel = function() {
-      const panel = document.getElementById('ability-panel');
-      if (panel) {
-        panel.classList.remove('cc-slide-panel-open');
-        setTimeout(() => panel.remove(), 300);
-      }
-    };
-
-    // ================================
     // RENDERING
     // ================================
     function renderLibrary() {
@@ -367,17 +511,28 @@ window.CC_APP = {
       if (!faction || !faction.units) {
         return '<div class="cc-muted p-3">No units available</div>';
       }
-      return faction.units.map(unit => `
-        <div class="cc-list-item" onclick="selectLibraryUnit('${esc(unit.name)}')">
-          <div class="d-flex justify-content-between align-items-start">
-            <div>
-              <div class="cc-list-title">${esc(unit.name)}</div>
-              <div class="cc-list-sub">${esc(unit.type)}</div>
+
+      return faction.units.map(unit => {
+        const maxAllowed = getMaxAllowed(unit);
+        const inRoster   = countInRoster(unit.name);
+        const atLimit    = maxAllowed !== Infinity && inRoster >= maxAllowed;
+
+        // Show count badge: "2/3" next to the name
+        const limitHint = maxAllowed !== Infinity
+          ? `<span style="font-size:0.72rem;font-weight:600;margin-left:4px;color:${atLimit ? '#ff4444' : '#888'};">(${inRoster}/${maxAllowed})</span>`
+          : '';
+
+        return `
+          <div class="cc-list-item${atLimit ? ' cc-list-item-at-limit' : ''}" onclick="selectLibraryUnit('${esc(unit.name)}')">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="cc-list-title">${esc(unit.name)}${limitHint}</div>
+                <div class="cc-list-sub">${esc(unit.type)}</div>
+              </div>
+              <div class="fw-bold" style="color: var(--cc-primary)">${unit.cost} ₤</div>
             </div>
-            <div class="fw-bold" style="color: var(--cc-primary)">${unit.cost} ₤</div>
-          </div>
-        </div>
-      `).join('');
+          </div>`;
+      }).join('');
     }
 
     function renderRoster() {
@@ -402,19 +557,17 @@ window.CC_APP = {
               ${abilities.length > 0 ? `
                 <div class="roster-list-abilities">
                   ${abilities.map(a => {
-                    const abilityName = typeof a === 'string' ? a : (a.name || '');
+                    const n = typeof a === 'string' ? a : (a.name || '');
                     return `<span class="ability-tag"
-                      onmouseover="showAbilityTooltip('${esc(abilityName)}', event)"
+                      onmouseover="showAbilityTooltip('${esc(n)}', event)"
                       onmouseout="hideAbilityTooltip()"
-                      onclick="event.stopPropagation(); showAbilityPanel('${esc(abilityName)}')">${esc(abilityName)}</span>`;
+                      onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')">${esc(n)}</span>`;
                   }).join('')}
-                </div>
-              ` : ''}
+                </div>` : ''}
               <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
                 <i class="fa fa-trash"></i>
               </button>
-            </div>
-          `;
+            </div>`;
         }).join('');
       }
 
@@ -435,68 +588,123 @@ window.CC_APP = {
                 ${abilities.length > 0 ? `
                   <div class="grid-item-abilities">
                     ${abilities.slice(0, 3).map(a => {
-                      const abilityName = typeof a === 'string' ? a : (a.name || '');
+                      const n = typeof a === 'string' ? a : (a.name || '');
                       return `<span class="ability-tag-small"
-                        onmouseover="showAbilityTooltip('${esc(abilityName)}', event)"
+                        onmouseover="showAbilityTooltip('${esc(n)}', event)"
                         onmouseout="hideAbilityTooltip()"
-                        onclick="event.stopPropagation(); showAbilityPanel('${esc(abilityName)}')">${esc(abilityName)}</span>`;
+                        onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')">${esc(n)}</span>`;
                     }).join('')}
-                    ${abilities.length > 3 ? `<span class="ability-tag-small">+${abilities.length - 3}</span>` : ''}
-                  </div>
-                ` : ''}
-                <div class="grid-item-cost">${item.totalCost} ₤</div>
-              </div>
-            `;
+                    ${abilities.length > 3 ? `<span class="ability-tag-small" style="opacity:0.6">+${abilities.length - 3}</span>` : ''}
+                  </div>` : ''}
+              </div>`;
           }).join('')}
-        </div>
-      `;
+        </div>`;
+    }
+
+    function getActiveConfig() {
+      if (state.builderMode === 'library') return state.builderConfig;
+      if (state.builderMode === 'roster') {
+        const item = state.roster.find(r => r.id === state.builderTarget);
+        return item ? item.config : null;
+      }
+      return null;
+    }
+
+    function updateRosterCost() {
+      if (state.builderMode !== 'roster') return;
+      const item = state.roster.find(r => r.id === state.builderTarget);
+      if (!item) return;
+      const faction  = state.factionData[state.currentFaction];
+      const baseUnit = faction?.units?.find(u => u.name === item.unitName);
+      if (!baseUnit) return;
+      item.totalCost = calculateUnitCost(baseUnit, item.config);
+    }
+
+    function renderSupplemental(unit, config) {
+      if (!unit.supplemental_abilities?.length) return '';
+      const selected = config.supplemental;
+      return `
+        <div class="mt-3">
+          <div class="cc-field-label">Supplemental (Choose Version)</div>
+          <select class="form-select cc-input" onchange="selectSupplemental(this.value)">
+            <option value="">-- Select Version --</option>
+            ${unit.supplemental_abilities.map(supp => `
+              <option value="${esc(supp.name)}" ${selected?.name === supp.name ? 'selected' : ''}>
+                ${esc(supp.name)} ${supp.cost ? `(+${supp.cost}₤)` : ''}
+              </option>`).join('')}
+          </select>
+          ${selected ? `
+            <div class="mt-2 p-2" style="background:rgba(255,117,24,.1);border-left:3px solid var(--cc-primary);border-radius:4px;">
+              <div class="small">${esc(selected.effect || '')}</div>
+              ${selected.stat_modifiers ? `
+                <div class="small mt-1" style="color:var(--cc-primary);font-weight:600;">
+                  Modifiers: ${Object.entries(selected.stat_modifiers).map(([k,v]) => `${k.toUpperCase()} ${v > 0 ? '+' : ''}${v}`).join(', ')}
+                </div>` : ''}
+            </div>` : ''}
+        </div>`;
+    }
+
+    function renderOptionalUpgrades(unit, config) {
+      if (!unit.optional_upgrades?.length) return '';
+      return `
+        <div class="mt-3">
+          <div class="cc-field-label">Optional Upgrades</div>
+          ${unit.optional_upgrades.map(upg => {
+            const isSelected = config.optionalUpgrades?.some(u => u.name === upg.name);
+            return `
+              <div class="cc-upgrade-row ${isSelected ? 'selected' : ''}" onclick="toggleOptionalUpgrade('${esc(upg.name)}', ${upg.cost || 0})">
+                <div>
+                  <div class="fw-bold" style="font-size:.9rem;">${esc(upg.name)}</div>
+                  ${upg.effect ? `<div class="small cc-muted">${esc(upg.effect)}</div>` : ''}
+                </div>
+                <div style="color:var(--cc-primary);font-weight:700;">${upg.cost ? `+${upg.cost} ₤` : 'Free'}</div>
+              </div>`;
+          }).join('')}
+        </div>`;
     }
 
     function renderBuilder() {
       if (!state.builderMode || !state.builderTarget) {
-        return `
-          <div class="cc-empty-state">
-            <i class="fa fa-crosshairs mb-3" style="font-size: 2rem;"></i>
-            <div>SELECT A UNIT TO CUSTOMIZE</div>
-          </div>
-        `;
+        return `<div class="cc-muted p-3">${state.currentFaction
+          ? 'Select a unit from the library to build, or click an existing roster unit to edit.'
+          : 'Select a faction first.'}</div>`;
       }
 
       const faction = state.factionData[state.currentFaction];
-      if (!faction) return '';
+      if (!faction) return '<div class="cc-muted p-3">Loading faction data…</div>';
 
       let unit, config;
       if (state.builderMode === 'library') {
-        unit   = faction.units.find(u => u.name === state.builderTarget);
+        unit   = faction.units?.find(u => u.name === state.builderTarget);
         config = state.builderConfig;
       } else {
         const rosterItem = state.roster.find(r => r.id === state.builderTarget);
-        if (rosterItem) {
-          unit   = faction.units.find(u => u.name === rosterItem.unitName);
-          config = rosterItem.config || { optionalUpgrades: [], supplemental: null };
-        }
+        if (!rosterItem) return '<div class="cc-muted p-3">Unit not found</div>';
+        unit   = faction.units?.find(u => u.name === rosterItem.unitName);
+        config = rosterItem.config;
       }
+      if (!unit) return '<div class="cc-muted p-3">Unit not found in faction data</div>';
 
-      if (!unit) return '';
+      const previewCost  = calculateUnitCost(unit, config);
+      const currentTotal = calculateTotalCost();
+      const maxAllowed   = getMaxAllowed(unit);
+      const inRoster     = countInRoster(unit.name);
 
-      const totalCost = calculateUnitCost(unit, config);
-      const modeLabel = state.builderMode === 'library'
-        ? '<i class="fa fa-plus-circle"></i> NEW UNIT'
-        : '<i class="fa fa-edit"></i> EDITING ROSTER UNIT';
+      // FIX 3: compute warning messages
+      const wouldExceedBudget = state.budget > 0 && state.builderMode === 'library' && (currentTotal + previewCost > state.budget);
+      const wouldExceedLimit  = maxAllowed !== Infinity && state.builderMode === 'library' && inRoster >= maxAllowed;
+      const canAdd            = !wouldExceedBudget && !wouldExceedLimit;
 
       return `
-        <div class="cc-detail-wrapper">
-          <div class="cc-mode-indicator">${modeLabel}</div>
-
-          <div class="detail-header">
-            <div class="detail-header-left">
-              ${factionIconHtml(state.currentFaction, 38)}
-              <div class="u-name">${esc(unit.name)}</div>
+        <div class="cc-unit-detail">
+          <div class="detail-header-left">
+            ${factionIconHtml(state.currentFaction, 28)}
+            <div>
+              <div class="cc-detail-title">${esc(unit.name)}</div>
+              <div class="cc-detail-sub">${esc(unit.type)}</div>
             </div>
-            <div style="color: var(--cc-primary); font-weight: 800; font-size: 18px;">${totalCost} ₤</div>
           </div>
-
-          <div class="u-type">${esc(unit.type)}</div>
+          <div class="cc-detail-cost">${previewCost} ₤</div>
 
           ${buildStatBadges(unit, config)}
 
@@ -505,122 +713,50 @@ window.CC_APP = {
           ${unit.weapon ? `
             <div class="mt-3">
               <div class="cc-field-label">Weapon</div>
-              <div>
-                <strong>${esc(unit.weapon)}</strong>
-                ${unit.weapon_properties && unit.weapon_properties.length > 0
-                  ? ` - ${unit.weapon_properties.map(p => esc(p)).join(', ')}`
-                  : ''}
-              </div>
-            </div>
-          ` : ''}
+              <div><strong>${esc(unit.weapon)}</strong>${unit.weapon_properties?.length
+                ? ` — ${unit.weapon_properties.map(p => esc(p)).join(', ')}` : ''}</div>
+            </div>` : ''}
 
-          ${unit.abilities && unit.abilities.length > 0 ? `
+          ${unit.abilities?.length > 0 ? `
             <div class="mt-3">
               <div class="cc-field-label">Abilities</div>
               ${unit.abilities.map(a => {
-                const abilityName = typeof a === 'string' ? a : (a.name || '');
+                const n = typeof a === 'string' ? a : (a.name || '');
                 return `<div class="mb-1">• <strong class="ability-link"
-                  onmouseover="showAbilityTooltip('${esc(abilityName)}', event)"
+                  onmouseover="showAbilityTooltip('${esc(n)}', event)"
                   onmouseout="hideAbilityTooltip()"
-                  onclick="showAbilityPanel('${esc(abilityName)}')">${esc(abilityName)}</strong></div>`;
+                  onclick="showAbilityPanel('${esc(n)}')">${esc(n)}</strong></div>`;
               }).join('')}
-            </div>
-          ` : ''}
+            </div>` : ''}
 
           ${renderSupplemental(unit, config)}
           ${renderOptionalUpgrades(unit, config)}
 
+          ${wouldExceedBudget ? `
+            <div class="cc-warning-bar">
+              ⚠️ Adding this unit would exceed your <strong>${state.budget} ₤</strong> budget!
+              This unit costs <strong>${previewCost} ₤</strong> and you only have <strong>${state.budget - currentTotal} ₤</strong> left.
+            </div>` : ''}
+
+          ${wouldExceedLimit ? `
+            <div class="cc-warning-bar">
+              ⚠️ Roster limit reached! At <strong>${state.budget} ₤</strong>, this unit type is capped at <strong>${maxAllowed}</strong>
+              (1 per ${unit.composition.per_points} ₤). Raise your budget to add more.
+            </div>` : ''}
+
           ${state.builderMode === 'library' ? `
-            <button class="btn btn-primary w-100 mt-4" onclick="addUnitToRoster()">
+            <button class="btn btn-primary w-100 mt-4" onclick="addUnitToRoster()"
+              ${!canAdd ? 'disabled style="opacity:0.45;cursor:not-allowed;"' : ''}>
               <i class="fa fa-plus"></i> ADD TO ROSTER
-            </button>
-          ` : `
+            </button>` : `
             <button class="btn btn-success w-100 mt-4" onclick="saveRosterUnit()">
               <i class="fa fa-save"></i> SAVE CHANGES
-            </button>
-          `}
-        </div>
-      `;
+            </button>`}
+        </div>`;
     }
 
-    function renderSupplemental(unit, config) {
-      if (!unit.supplemental_abilities || unit.supplemental_abilities.length === 0) return '';
-      const selected = config.supplemental;
-      return `
-        <div class="mt-3">
-          <div class="cc-field-label">Supplemental (Choose Version)</div>
-          <select class="form-select cc-input" onchange="selectSupplemental(this.value)">
-            <option value="">-- Select Version --</option>
-            ${unit.supplemental_abilities.map(supp => `
-              <option value="${esc(supp.name)}" ${selected && selected.name === supp.name ? 'selected' : ''}>
-                ${esc(supp.name)} ${supp.cost ? `(+${supp.cost}₤)` : ''}
-              </option>
-            `).join('')}
-          </select>
-          ${selected ? `
-            <div class="mt-2 p-2" style="background: rgba(255,117,24,0.1); border-left: 3px solid var(--cc-primary); border-radius: 4px;">
-              <div class="small">${esc(selected.effect || '')}</div>
-              ${selected.stat_modifiers ? `
-                <div class="small mt-1" style="color: var(--cc-primary); font-weight: 600;">
-                  Modifiers: ${Object.entries(selected.stat_modifiers).map(([k, v]) =>
-                    `${k.toUpperCase()} ${v > 0 ? '+' : ''}${v}`
-                  ).join(', ')}
-                </div>
-              ` : ''}
-            </div>
-          ` : ''}
-        </div>
-      `;
-    }
-
-    function renderOptionalUpgrades(unit, config) {
-      if (!unit.optional_upgrades || unit.optional_upgrades.length === 0) return '';
-      const selectedUpgrades = config.optionalUpgrades || [];
-      return `
-        <div class="mt-3">
-          <div class="cc-field-label">Optional Upgrades</div>
-          ${unit.optional_upgrades.map(upgrade => {
-            const isSelected = selectedUpgrades.some(u => u.name === upgrade.name);
-            return `
-              <div class="upgrade-item ${isSelected ? 'selected' : ''}" onclick="toggleOptionalUpgrade('${esc(upgrade.name)}', ${upgrade.cost || 0})">
-                <div class="d-flex justify-content-between align-items-center">
-                  <div>
-                    <i class="fa ${isSelected ? 'fa-check-square' : 'fa-square'}" style="color: var(--cc-primary); margin-right: 8px;"></i>
-                    <strong>${esc(upgrade.name)}</strong>
-                    ${upgrade.type ? `<span class="cc-badge">${esc(upgrade.type)}</span>` : ''}
-                  </div>
-                  <div style="color: var(--cc-primary); font-weight: 700;">${upgrade.cost || 0} ₤</div>
-                </div>
-                ${upgrade.effect ? `<div class="small cc-muted mt-1 ms-4">${esc(upgrade.effect)}</div>` : ''}
-              </div>
-            `;
-          }).join('')}
-        </div>
-      `;
-    }
-
-    // ================================
-    // MAIN RENDER
-    // ================================
     function render() {
-      const builderEl = document.querySelector('.cc-faction-builder');
-      if (!builderEl) return;
-
-      const libraryCol = document.querySelector('.cc-faction-sidebar');
-      const mainCol    = document.querySelector('.cc-faction-main');
-      const rosterCol  = document.querySelector('.cc-faction-roster');
-
-      if (state.rosterViewMode === 'list') {
-        if (libraryCol) libraryCol.style.display = 'none';
-        if (mainCol)    mainCol.style.display    = 'none';
-        if (rosterCol)  rosterCol.style.display  = 'block';
-      } else {
-        if (libraryCol) libraryCol.style.display = 'block';
-        if (mainCol)    mainCol.style.display    = 'block';
-        if (rosterCol)  rosterCol.style.display  = 'block';
-      }
-
-      // ---- Faction selector icon (next to the dropdown) ----
+      // Faction selector icon
       const selectorIconEl = document.getElementById('cc-faction-selector-icon');
       if (selectorIconEl) {
         if (state.currentFaction) {
@@ -632,32 +768,20 @@ window.CC_APP = {
         }
       }
 
-      // ---- Library panel title with faction icon ----
+      // Library panel title
       const libraryTitleEl = document.getElementById('cc-library-panel-title');
       if (libraryTitleEl) {
-        if (state.currentFaction) {
-          libraryTitleEl.innerHTML = `
-            <div class="cc-panel-title-with-icon">
-              ${factionIconHtml(state.currentFaction, 22)}
-              <span>${esc(FACTION_TITLES[state.currentFaction])} · Units</span>
-            </div>`;
-        } else {
-          libraryTitleEl.innerHTML = '<span>Unit Library</span>';
-        }
+        libraryTitleEl.innerHTML = state.currentFaction
+          ? `<div class="cc-panel-title-with-icon">${factionIconHtml(state.currentFaction, 22)}<span>${esc(FACTION_TITLES[state.currentFaction])} · Units</span></div>`
+          : '<span>Unit Library</span>';
       }
 
-      // ---- Roster panel title with faction icon ----
+      // Roster panel title
       const rosterTitleEl = document.getElementById('cc-roster-panel-title');
       if (rosterTitleEl) {
-        if (state.currentFaction) {
-          rosterTitleEl.innerHTML = `
-            <div class="cc-panel-title-with-icon">
-              ${factionIconHtml(state.currentFaction, 22)}
-              <span>Your Roster</span>
-            </div>`;
-        } else {
-          rosterTitleEl.innerHTML = '<span>Your Roster</span>';
-        }
+        rosterTitleEl.innerHTML = state.currentFaction
+          ? `<div class="cc-panel-title-with-icon">${factionIconHtml(state.currentFaction, 22)}<span>Your Roster</span></div>`
+          : '<span>Your Roster</span>';
       }
 
       const libraryListEl   = document.getElementById('cc-library-list');
@@ -671,9 +795,8 @@ window.CC_APP = {
 
       if (budgetEl) {
         const total      = calculateTotalCost();
-        const budgetText = state.budget > 0 ? `${total} / ${state.budget} ₤` : `${total} ₤`;
         const overBudget = state.budget > 0 && total > state.budget;
-        budgetEl.innerHTML   = budgetText;
+        budgetEl.innerHTML   = state.budget > 0 ? `${total} / ${state.budget} ₤` : `${total} ₤`;
         budgetEl.style.color = overBudget ? '#ff4444' : 'var(--cc-primary)';
       }
     }
@@ -681,6 +804,10 @@ window.CC_APP = {
     // ================================
     // USER ACTIONS
     // ================================
+    window.changeFaction   = function(factionId) { switchFaction(factionId); };
+    window.changeBudget    = function(val) { state.budget = parseInt(val) || 0; render(); };
+    window.updateRosterName = function(val) { state.rosterName = val; };
+
     window.selectLibraryUnit = function(unitName) {
       state.builderMode    = 'library';
       state.builderTarget  = unitName;
@@ -697,97 +824,83 @@ window.CC_APP = {
     };
 
     window.selectSupplemental = function(suppName) {
-      let config = getActiveConfig();
+      const config = getActiveConfig();
       if (!config) return;
-
       const faction = state.factionData[state.currentFaction];
-      let unit;
-      if (state.builderMode === 'library') {
-        unit = faction.units.find(u => u.name === state.builderTarget);
-      } else {
-        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
-        unit = faction.units.find(u => u.name === rosterItem.unitName);
-      }
-      if (!unit || !unit.supplemental_abilities) return;
+      const target  = state.builderMode === 'library'
+        ? state.builderTarget
+        : state.roster.find(r => r.id === state.builderTarget)?.unitName;
+      const unit = faction?.units?.find(u => u.name === target);
+      if (!unit?.supplemental_abilities) return;
+      config.supplemental = suppName === '' ? null
+        : { ...unit.supplemental_abilities.find(s => s.name === suppName) };
+      updateRosterCost();
+      render();
+    };
 
-      if (suppName === '') {
-        config.supplemental = null;
+    window.toggleOptionalUpgrade = function(upgradeName) {
+      const config = getActiveConfig();
+      if (!config) return;
+      const faction = state.factionData[state.currentFaction];
+      const target  = state.builderMode === 'library'
+        ? state.builderTarget
+        : state.roster.find(r => r.id === state.builderTarget)?.unitName;
+      const unit = faction?.units?.find(u => u.name === target);
+      if (!unit) return;
+      const upg = unit.optional_upgrades?.find(u => u.name === upgradeName);
+      if (!upg) return;
+      if (!config.optionalUpgrades) config.optionalUpgrades = [];
+      const idx = config.optionalUpgrades.findIndex(u => u.name === upgradeName);
+      if (idx > -1) {
+        config.optionalUpgrades.splice(idx, 1);
       } else {
-        const supp = unit.supplemental_abilities.find(s => s.name === suppName);
-        if (supp) config.supplemental = { ...supp };
+        config.optionalUpgrades.push({ ...upg });
       }
       updateRosterCost();
       render();
     };
 
-    window.toggleOptionalUpgrade = function(upgradeName, cost) {
-      let config = getActiveConfig();
-      if (!config) return;
-
-      const faction = state.factionData[state.currentFaction];
-      let unit;
-      if (state.builderMode === 'library') {
-        unit = faction.units.find(u => u.name === state.builderTarget);
-      } else {
-        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
-        unit = faction.units.find(u => u.name === rosterItem.unitName);
-      }
-      if (!unit || !unit.optional_upgrades) return;
-
-      const index = config.optionalUpgrades.findIndex(u => u.name === upgradeName);
-      if (index > -1) {
-        config.optionalUpgrades.splice(index, 1);
-      } else {
-        const upgrade = unit.optional_upgrades.find(u => u.name === upgradeName);
-        if (upgrade) config.optionalUpgrades.push({ ...upgrade });
-      }
-      updateRosterCost();
-      render();
-    };
-
-    function getActiveConfig() {
-      if (state.builderMode === 'library') {
-        return state.builderConfig;
-      } else {
-        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
-        if (!rosterItem) return null;
-        if (!rosterItem.config) rosterItem.config = { optionalUpgrades: [], supplemental: null };
-        return rosterItem.config;
-      }
-    }
-
-    function updateRosterCost() {
-      if (state.builderMode === 'roster') {
-        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
-        const faction    = state.factionData[state.currentFaction];
-        const baseUnit   = faction.units.find(u => u.name === rosterItem.unitName);
-        rosterItem.totalCost = calculateUnitCost(baseUnit, rosterItem.config);
-      }
-    }
-
+    // FIX 3 & 6 ── Block add if over budget or at composition limit
     window.addUnitToRoster = function() {
       if (!state.currentFaction || !state.builderTarget) return;
       const faction = state.factionData[state.currentFaction];
-      const unit    = faction.units.find(u => u.name === state.builderTarget);
+      const unit    = faction?.units?.find(u => u.name === state.builderTarget);
       if (!unit) return;
 
       const config    = JSON.parse(JSON.stringify(state.builderConfig));
       const totalCost = calculateUnitCost(unit, config);
 
-     const rosterItem = {
-        id: generateId(),
-        unitName: unit.name,
-        name: unit.name,
-        type: unit.type,
-        quality: unit.quality,
-        defense: unit.defense,
-        move: unit.move,
-        range: unit.range,
-        weapon: unit.weapon,
-        lore: unit.lore || '',
+      // Budget check
+      if (state.budget > 0) {
+        const currentTotal = calculateTotalCost();
+        if (currentTotal + totalCost > state.budget) {
+          alert(`⚠️ Budget exceeded!\n\n${unit.name} costs ${totalCost} ₤.\nYou have ${state.budget - currentTotal} ₤ remaining.\n\nRaise your budget or remove a unit first.`);
+          return;
+        }
+      }
+
+      // Composition limit check
+      const maxAllowed = getMaxAllowed(unit);
+      const inRoster   = countInRoster(unit.name);
+      if (maxAllowed !== Infinity && inRoster >= maxAllowed) {
+        alert(`⚠️ Unit limit reached!\n\nAt ${state.budget} ₤ you can only field ${maxAllowed} × ${unit.name} (1 per ${unit.composition.per_points} ₤).\n\nRaise your budget to add more.`);
+        return;
+      }
+
+      const rosterItem = {
+        id:        generateId(),
+        unitName:  unit.name,
+        name:      unit.name,
+        type:      unit.type,
+        quality:   unit.quality,
+        defense:   unit.defense,
+        move:      unit.move,
+        range:     unit.range,
+        weapon:    unit.weapon,
+        lore:      unit.lore || '',
         abilities: unit.abilities || [],
-        config: config,
-        totalCost: totalCost
+        config,
+        totalCost
       };
 
       state.roster.push(rosterItem);
@@ -826,118 +939,96 @@ window.CC_APP = {
       render();
     };
 
+    // FIX 5 ── Print view uses cc_print.css logic in the popup window
     window.printRoster = function() {
-      if (state.roster.length === 0) {
-        alert('No units in roster to print!');
-        return;
-      }
-      const savedView   = state.rosterViewMode;
+      if (state.roster.length === 0) { alert('No units in roster to print!'); return; }
       const total       = calculateTotalCost();
-      const factionName = FACTION_TITLES[state.currentFaction] || state.currentFaction;
+      const factionName = FACTION_TITLES[state.currentFaction] || state.currentFaction || 'Unknown';
 
-      let printContent = `
-        <html>
-        <head>
-          <title>${esc(state.rosterName)} - ${factionName}</title>
-          <style>
-            body { font-family: Arial, sans-serif; padding: 20px; }
-            h1 { color: #ff7518; }
-            .roster-header { border-bottom: 2px solid #ff7518; padding-bottom: 10px; margin-bottom: 20px; }
-            .unit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-            .unit { border: 1px solid #ccc; padding: 15px; page-break-inside: avoid; border-radius: 8px; }
-            .unit-name { font-size: 16px; font-weight: bold; color: #333; margin-bottom: 5px; }
-            .unit-type { color: #888; font-size: 11px; text-transform: uppercase; margin-bottom: 10px; }
-            .unit-cost { color: #ff7518; font-weight: bold; font-size: 18px; text-align: right; }
-            .stat-badges { display: flex; gap: 5px; margin: 10px 0; flex-wrap: wrap; }
-            .stat-badge { background: #f0f0f0; border: 1px solid #ccc; padding: 3px 6px; border-radius: 3px; font-size: 11px; font-weight: bold; }
-            .abilities { margin-top: 10px; font-size: 10px; color: #666; }
-            .ability-tag { display: inline-block; background: #e8e8e8; padding: 2px 6px; margin: 2px; border-radius: 3px; font-size: 9px; }
-            .upgrades { margin-top: 8px; font-size: 10px; color: #666; border-top: 1px solid #eee; padding-top: 8px; }
-            @media print { .unit { page-break-inside: avoid; } }
-          </style>
-        </head>
-        <body>
-          <div class="roster-header">
-            <h1>${esc(state.rosterName)}</h1>
-            <div><strong>Faction:</strong> ${factionName}</div>
-            <div><strong>Total Cost:</strong> ${total} ₤ ${state.budget > 0 ? `/ ${state.budget} ₤` : ''}</div>
-            <div><strong>Units:</strong> ${state.roster.length}</div>
+      const printContent = `<!DOCTYPE html>
+<html>
+<head>
+  <title>${esc(state.rosterName)} – ${factionName}</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Source+Sans+3:wght@400;600;700&display=swap">
+  <style>
+    /* cc_print.css logic applied inline for popup window */
+    :root { --cc-primary: #000; }
+    body { font-family: "Source Sans 3", Arial, sans-serif; padding: 20px; background: #fff; color: #000; margin: 0; }
+    h1 { font-family: 'Bungee', sans-serif; font-size: 22pt; border-bottom: 2px solid #000; margin-bottom: 16px; padding-bottom: 8px; }
+    .roster-meta { font-size: 10pt; color: #444; margin-bottom: 3px; }
+    .unit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
+    .unit { border: 1px solid #000; padding: 12px; page-break-inside: avoid; border-radius: 4px; position: relative; }
+    .unit-name { font-size: 13pt; font-weight: 700; color: #000; margin-bottom: 2px; }
+    .unit-cost { font-weight: 700; font-size: 13pt; position: absolute; top: 12px; right: 12px; }
+    .unit-type { color: #555; font-size: 8.5pt; text-transform: uppercase; margin-bottom: 6px; letter-spacing: .05em; }
+    .lore { font-style: italic; color: #666; font-size: 8.5pt; margin: 5px 0; border-left: 2px solid #ccc; padding-left: 6px; }
+    .stat-badges { display: flex; gap: 4px; margin: 6px 0; flex-wrap: wrap; }
+    .stat-badge { border: 1px solid #000; padding: 2px 5px; border-radius: 3px; font-size: 8.5pt; font-weight: 700; }
+    .abilities { margin-top: 6px; }
+    .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; color: #000; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 8pt; }
+    .upgrades { margin-top: 6px; font-size: 8.5pt; color: #444; border-top: 1px solid #eee; padding-top: 5px; }
+    .cc-app-title-print { display: block; }
+    @media print { .unit { page-break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <h1>${esc(state.rosterName)}</h1>
+  <div class="roster-meta"><strong>Faction:</strong> ${factionName}</div>
+  <div class="roster-meta"><strong>Total:</strong> ${total} ₤${state.budget > 0 ? ` / ${state.budget} ₤` : ' (Unlimited)'}</div>
+  <div class="roster-meta"><strong>Units:</strong> ${state.roster.length}</div>
+  <div class="unit-grid">
+    ${state.roster.map(item => {
+      const abilities = item.abilities || [];
+      return `
+        <div class="unit">
+          <div class="unit-name">${esc(item.name)}</div>
+          <div class="unit-cost">${item.totalCost} ₤</div>
+          <div class="unit-type">${esc(item.type)}</div>
+          ${item.lore ? `<div class="lore">"${esc(item.lore)}"</div>` : ''}
+          <div class="stat-badges">
+            <span class="stat-badge">Q ${item.quality}+</span>
+            <span class="stat-badge">D ${item.defense}+</span>
+            <span class="stat-badge">M ${item.move}"</span>
+            <span class="stat-badge">R ${item.range === 0 ? '–' : item.range + '"'}</span>
           </div>
-          <div class="unit-grid">
-            ${state.roster.map(item => {
-              const abilities = item.abilities || [];
-              return `
-                <div class="unit">
-                  <div class="unit-name">${esc(item.name)}</div>
-                  <div class="unit-type">${esc(item.type)}</div>
-                  <div class="stat-badges">
-                    <span class="stat-badge">Q ${item.quality}+</span>
-                    <span class="stat-badge">D ${item.defense}+</span>
-                    <span class="stat-badge">M ${item.move}"</span>
-                    <span class="stat-badge">R ${item.range === 0 ? '-' : item.range + '"'}</span>
-                  </div>
-                  ${abilities.length > 0 ? `
-                    <div class="abilities">
-                      ${abilities.map(a => {
-                        const name = typeof a === 'string' ? a : (a.name || '');
-                        return `<span class="ability-tag">${esc(name)}</span>`;
-                      }).join('')}
-                    </div>
-                  ` : ''}
-                  ${item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
-                    <div class="upgrades">
-                      <strong>Upgrades:</strong> ${item.config.optionalUpgrades.map(u => u.name).join(', ')}
-                    </div>
-                  ` : ''}
-                  ${item.config.supplemental ? `
-                    <div class="upgrades">
-                      <strong>Supplemental:</strong> ${item.config.supplemental.name}
-                    </div>
-                  ` : ''}
-                  <div class="unit-cost">${item.totalCost} ₤</div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </body>
-        </html>
-      `;
+          ${abilities.length > 0 ? `
+            <div class="abilities">
+              ${abilities.map(a => `<span class="ability-tag">${esc(typeof a === 'string' ? a : (a.name || ''))}</span>`).join('')}
+            </div>` : ''}
+          ${item.config?.optionalUpgrades?.length > 0 ? `
+            <div class="upgrades"><strong>Upgrades:</strong> ${item.config.optionalUpgrades.map(u => esc(u.name)).join(', ')}</div>` : ''}
+          ${item.config?.supplemental ? `
+            <div class="upgrades"><strong>Supplemental:</strong> ${esc(item.config.supplemental.name)}</div>` : ''}
+        </div>`;
+    }).join('')}
+  </div>
+</body>
+</html>`;
 
-      const printWindow = window.open('', '_blank');
-      printWindow.document.write(printContent);
-      printWindow.document.close();
-      printWindow.onafterprint = function() { printWindow.close(); };
-      printWindow.print();
-      state.rosterViewMode = savedView;
+      const pw = window.open('', '_blank');
+      pw.document.write(printContent);
+      pw.document.close();
+      pw.focus();
+      setTimeout(() => pw.print(), 500);
     };
-
-    window.changeFaction = function(factionId) { switchFaction(factionId); };
-
-    window.changeBudget = function(budget) {
-      state.budget = parseInt(budget) || 0;
-      render();
-    };
-
-    window.updateRosterName = function(name) { state.rosterName = name; };
 
     // ================================
-    // LOCAL FILE IMPORT/EXPORT
+    // IMPORT / EXPORT
     // ================================
     window.exportRoster = function() {
       const exportData = {
-        name:       state.rosterName,
-        faction:    state.currentFaction,
-        budget:     state.budget,
-        roster:     state.roster,
-        totalCost:  calculateTotalCost(),
-        exportedAt: new Date().toISOString()
+        name:      state.rosterName,
+        faction:   state.currentFaction,
+        budget:    state.budget,
+        roster:    state.roster,
+        totalCost: calculateTotalCost(),
+        savedAt:   new Date().toISOString()
       };
-      const json = JSON.stringify(exportData, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.href     = url;
-      a.download = `${state.rosterName.replace(/[^a-z0-9]/gi, '_')}-${Date.now()}.json`;
+      a.download = (state.rosterName || 'roster').replace(/\s+/g, '_') + '.json';
       a.click();
       URL.revokeObjectURL(url);
     };
@@ -946,31 +1037,28 @@ window.CC_APP = {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = async function(e) {
+      reader.onload = function(e) {
         try {
-          const data = JSON.parse(e.target.result);
-          if (data.faction) {
-            await switchFaction(data.faction);
-            state.rosterName = data.name || 'Imported Roster';
-            state.budget     = data.budget || 500;
-            state.roster     = data.roster || [];
-
-            const nameInput = document.getElementById('cc-roster-name');
-            if (nameInput) nameInput.value = state.rosterName;
+          const parsed = JSON.parse(e.target.result);
+          switchFaction(parsed.faction).then(() => {
+            state.rosterName = parsed.name || 'Imported Roster';
+            state.budget     = parsed.budget || 500;
+            state.roster     = parsed.roster || [];
+            const nameInput    = document.getElementById('cc-roster-name');
             const budgetSelect = document.getElementById('cc-budget-selector');
+            const factionSel   = document.getElementById('cc-faction-selector');
+            if (nameInput)    nameInput.value    = state.rosterName;
             if (budgetSelect) budgetSelect.value = state.budget;
-            const factionSelect = document.getElementById('cc-faction-selector');
-            if (factionSelect) factionSelect.value = data.faction;
-
+            if (factionSel)   factionSel.value   = parsed.faction;
             render();
-            alert('Roster imported successfully!');
-          }
+            alert('✓ Roster imported!');
+          });
         } catch (err) {
           console.error('Import failed:', err);
           alert('Failed to import roster: ' + (err.message || 'Check file format'));
         }
       };
-      reader.onerror = function() { alert('Failed to read file'); };
+      reader.onerror = () => alert('Failed to read file');
       reader.readAsText(file);
       event.target.value = '';
     };
@@ -983,7 +1071,7 @@ window.CC_APP = {
         if (!window.CC_STORAGE) { alert("Cloud storage not available. Please refresh the page."); return; }
         const auth = await window.CC_STORAGE.checkAuth();
         if (!auth.loggedIn) { alert("Please sign in to save rosters to the cloud!"); return; }
-        if (!state.rosterName || state.rosterName.trim() === "") { alert("Please give your roster a name first!"); return; }
+        if (!state.rosterName?.trim()) { alert("Please give your roster a name first!"); return; }
 
         const exportData = {
           name:      state.rosterName,
@@ -993,203 +1081,126 @@ window.CC_APP = {
           totalCost: calculateTotalCost(),
           savedAt:   new Date().toISOString()
         };
-        const jsonString = JSON.stringify(exportData, null, 2);
-        const result     = await window.CC_STORAGE.saveDocument(state.rosterName, jsonString);
+        const result = await window.CC_STORAGE.saveDocument(state.rosterName, JSON.stringify(exportData, null, 2));
         if (result.success) {
-          const action = result.action === 'created' ? 'saved' : 'updated';
-          alert(`✓ Roster "${state.rosterName}" ${action} to cloud!`);
+          alert(`✓ Roster "${state.rosterName}" ${result.action === 'created' ? 'saved' : 'updated'} to cloud!`);
         }
       } catch (error) {
-        console.error('Save error:', error);
-        alert(error.message === 'Not logged in'
-          ? 'Please sign in to save rosters!'
-          : 'Error saving roster: ' + error.message);
+        alert(error.message === 'Not logged in' ? 'Please sign in to save rosters!' : 'Error saving: ' + error.message);
       }
     };
 
     window.loadFromCloud = async function() {
       try {
-        if (!window.CC_STORAGE) { alert("Cloud storage not available. Please refresh the page."); return; }
+        if (!window.CC_STORAGE) { alert("Cloud storage not available."); return; }
         const auth = await window.CC_STORAGE.checkAuth();
-        if (!auth.loggedIn) { alert("Please sign in to load rosters from the cloud!"); return; }
+        if (!auth.loggedIn) { alert("Please sign in to load rosters!"); return; }
 
         const docs = await window.CC_STORAGE.loadDocumentList();
-        if (!docs || docs.length === 0) { alert("You don't have any saved rosters yet!"); return; }
+        if (!docs?.length) { alert("No saved rosters found."); return; }
 
-        const enriched = await Promise.all(docs.map(async (doc) => {
-          try {
-            const loaded = await window.CC_STORAGE.loadDocument(doc.id);
-            const parsed = JSON.parse(loaded.json);
-            return {
-              id:         doc.id,
-              name:       parsed.name || doc.name.replace('.json', ''),
-              faction:    parsed.faction || 'monster_rangers',
-              budget:     parsed.budget || 0,
-              totalCost:  parsed.totalCost || 0,
-              write_date: doc.write_date
-            };
-          } catch (e) {
-            return {
-              id:         doc.id,
-              name:       doc.name.replace('.json', ''),
-              faction:    'monster_rangers',
-              budget:     0,
-              totalCost:  0,
-              write_date: doc.write_date
-            };
-          }
-        }));
+        // Only show roster saves — not SCN_ scenario saves
+        const rosterDocs = docs.filter(d => !d.name?.startsWith('SCN_'));
+        if (!rosterDocs.length) { alert("No roster saves found."); return; }
 
-        showCloudRosterList(enriched);
+        closeAllSlidePanels();
+        installPanelBackdrop();
+
+        const panel = document.createElement('div');
+        panel.id = 'fb-cloud-roster-panel';
+        panel.className = 'cc-slide-panel';
+        panel.addEventListener('click', e => e.stopPropagation());
+        panel.innerHTML = `
+          <div class="cc-slide-panel-header">
+            <h2><i class="fa fa-cloud-download"></i> LOAD ROSTER</h2>
+            <button onclick="closeCloudRosterList()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
+          </div>
+          <div class="cc-roster-list">
+            ${rosterDocs.map(r => `
+              <div class="cc-saved-roster-item">
+                <div class="cc-saved-roster-name">${esc(r.name)}</div>
+                <div class="cc-saved-roster-meta">${r.write_date ? new Date(r.write_date).toLocaleDateString() : ''}</div>
+                <div class="cc-saved-roster-actions">
+                  <button onclick="loadCloudRoster(${r.id})" class="btn btn-sm btn-warning">
+                    <i class="fa fa-folder-open"></i> LOAD
+                  </button>
+                  <button onclick="deleteCloudRoster(${r.id})" class="btn btn-sm btn-danger">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                </div>
+              </div>`).join('')}
+          </div>`;
+        document.body.appendChild(panel);
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
       } catch (error) {
-        console.error('Load error:', error);
-        alert(error.message === 'Not logged in'
-          ? 'Please sign in to load rosters!'
-          : 'Error loading rosters: ' + error.message);
+        alert('Error loading rosters: ' + error.message);
       }
     };
 
     window.loadCloudRoster = async function(docId) {
       try {
-        if (!window.CC_STORAGE) { alert("Cloud storage not available. Please refresh the page."); return; }
-        const loaded = await window.CC_STORAGE.loadDocument(docId);
-        const parsed = JSON.parse(loaded.json);
-
+        if (!window.CC_STORAGE) return;
+        const doc    = await window.CC_STORAGE.loadDocument(docId);
+        if (!doc) { alert('Roster not found!'); return; }
+        const parsed = JSON.parse(doc.content || doc.value || doc);
+        closeAllSlidePanels();
         await switchFaction(parsed.faction);
-        state.rosterName = parsed.name || 'Imported Roster';
+        state.rosterName = parsed.name || 'Loaded Roster';
         state.budget     = parsed.budget || 500;
         state.roster     = parsed.roster || [];
-
-        const nameInput = document.getElementById('cc-roster-name');
-        if (nameInput) nameInput.value = state.rosterName;
+        const nameInput    = document.getElementById('cc-roster-name');
         const budgetSelect = document.getElementById('cc-budget-selector');
+        const factionSel   = document.getElementById('cc-faction-selector');
+        if (nameInput)    nameInput.value    = state.rosterName;
         if (budgetSelect) budgetSelect.value = state.budget;
-        const factionSelect = document.getElementById('cc-faction-selector');
-        if (factionSelect) factionSelect.value = parsed.faction;
-
-        closeCloudRosterList();
+        if (factionSel)   factionSel.value   = parsed.faction;
         render();
-        alert(`✓ Loaded roster: ${state.rosterName}`);
-      } catch (error) {
-        console.error('Load error:', error);
-        closeCloudRosterList();
-        alert('Error loading roster: ' + (error.message || 'Unknown error'));
+        alert(`✓ Roster "${state.rosterName}" loaded!`);
+      } catch (err) {
+        alert('Failed to load roster: ' + err.message);
       }
     };
 
     window.deleteCloudRoster = async function(docId) {
-      if (!confirm('Are you sure you want to delete this roster?')) return;
+      if (!confirm('Delete this roster? This cannot be undone.')) return;
       try {
-        if (!window.CC_STORAGE) { alert("Cloud storage not available. Please refresh the page."); return; }
-        await window.CC_STORAGE.deleteDocument(docId);
-        closeCloudRosterList();
-        setTimeout(() => loadFromCloud(), 300);
-      } catch (error) {
-        console.error('Delete error:', error);
-        alert('Error deleting roster: ' + error.message);
+        await window.CC_STORAGE?.deleteDocument(docId);
+        closeAllSlidePanels();
+        alert('Roster deleted.');
+      } catch (err) {
+        alert('Failed to delete: ' + err.message);
       }
     };
 
-    window.shareRoster = function() {
-      if (!window.CC_STORAGE) { alert("Sharing not available. Please refresh the page."); return; }
-      const exportData = {
-        name:      state.rosterName,
-        faction:   state.currentFaction,
-        budget:    state.budget,
-        roster:    state.roster,
-        totalCost: calculateTotalCost(),
-        sharedAt:  new Date().toISOString()
-      };
-      const jsonString = JSON.stringify(exportData);
-      const shareUrl   = window.CC_STORAGE.createShareUrl(jsonString);
-      navigator.clipboard.writeText(shareUrl)
-        .then(() => alert("✓ Share link copied to clipboard!"))
-        .catch(() => prompt("Copy this link to share your roster:", shareUrl));
-    };
-
-    function showCloudRosterList(rosters) {
-      closeCloudRosterList();
-      const panel = document.createElement('div');
-      panel.id        = 'cloud-roster-panel';
-      panel.className = 'cc-slide-panel';
-      panel.innerHTML = `
-        <div class="cc-slide-panel-header">
-          <h2><i class="fa fa-cloud"></i> SAVED ROSTERS</h2>
-          <button onclick="closeCloudRosterList()" class="cc-panel-close-btn">
-            <i class="fa fa-times"></i>
-          </button>
-        </div>
-        <div class="cc-roster-list">
-          ${rosters.map(r => `
-            <div class="cc-saved-roster-item">
-              <div class="cc-saved-roster-header">
-                <div class="cc-saved-roster-faction-badge">
-                  ${factionIconHtml(r.faction, 24)}
-                  <span class="cc-faction-type">${FACTION_TITLES[r.faction] || r.faction}</span>
-                </div>
-              </div>
-              <div class="cc-saved-roster-name">${esc(r.name)}</div>
-              <div class="cc-saved-roster-meta">
-                💰 ${r.totalCost} / ${r.budget > 0 ? r.budget + ' ₤' : 'UNLIMITED'} · 
-                ${new Date(r.write_date).toLocaleDateString()}
-              </div>
-              <div class="cc-saved-roster-actions">
-                <button onclick="loadCloudRoster(${r.id})" class="btn btn-sm btn-warning">
-                  <i class="fa fa-folder-open"></i> LOAD
-                </button>
-                <button onclick="deleteCloudRoster(${r.id})" class="btn btn-sm btn-danger">
-                  <i class="fa fa-trash"></i>
-                </button>
-              </div>
-            </div>
-          `).join('')}
-        </div>
-      `;
-      document.body.appendChild(panel);
-      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
-    }
-
-    window.closeCloudRosterList = function() {
-      const panel = document.getElementById('cloud-roster-panel');
-      if (panel) {
-        panel.classList.remove('cc-slide-panel-open');
-        setTimeout(() => panel.remove(), 300);
-      }
-    };
+    window.closeCloudRosterList = function() { closeAllSlidePanels(); };
 
     function checkSharedRoster() {
       if (!window.CC_STORAGE) return;
-      const sharedData = window.CC_STORAGE.getSharedData();
-      if (sharedData) {
-        try {
-          const parsed = JSON.parse(sharedData);
-          switchFaction(parsed.faction).then(() => {
-            state.rosterName = parsed.name || 'Shared Roster';
-            state.budget     = parsed.budget || 500;
-            state.roster     = parsed.roster || [];
-
-            const nameInput = document.getElementById('cc-roster-name');
-            if (nameInput) nameInput.value = state.rosterName;
-            const budgetSelect = document.getElementById('cc-budget-selector');
-            if (budgetSelect) budgetSelect.value = state.budget;
-            const factionSelect = document.getElementById('cc-faction-selector');
-            if (factionSelect) factionSelect.value = parsed.faction;
-
-            render();
-            alert('✓ Loaded shared roster!');
-          }).catch(e => {
-            console.error('Failed to load shared roster:', e);
-            alert('Failed to load shared roster: ' + (e.message || 'Unknown error'));
-          });
-        } catch (e) {
-          console.error('Failed to parse shared roster:', e);
-          alert('Failed to load shared roster: Invalid data format');
-        }
+      const sharedData = window.CC_STORAGE.getSharedData?.();
+      if (!sharedData) return;
+      try {
+        const parsed = JSON.parse(sharedData);
+        switchFaction(parsed.faction).then(() => {
+          state.rosterName = parsed.name || 'Shared Roster';
+          state.budget     = parsed.budget || 500;
+          state.roster     = parsed.roster || [];
+          const nameInput    = document.getElementById('cc-roster-name');
+          const budgetSelect = document.getElementById('cc-budget-selector');
+          const factionSel   = document.getElementById('cc-faction-selector');
+          if (nameInput)    nameInput.value    = state.rosterName;
+          if (budgetSelect) budgetSelect.value = state.budget;
+          if (factionSel)   factionSel.value   = parsed.faction;
+          render();
+          alert('✓ Loaded shared roster!');
+        });
+      } catch (e) {
+        console.error('Failed to parse shared roster:', e);
       }
     }
 
     // ================================
     // APP SHELL HTML
+    // FIX 1: taller layout — min-height is set in CSS via cc_app_faction_builder.css
     // ================================
     root.innerHTML = `
       <div class="cc-app-shell h-100">
@@ -1199,37 +1210,46 @@ window.CC_APP = {
             <h1 class="cc-app-title">Faction Builder</h1>
             <div class="cc-app-subtitle">Build Your Coffin Canyon Roster</div>
           </div>
-          <div class="d-flex align-items-center gap-2">
-            <div id="cc-budget-display" style="font-size: 1.5rem; font-weight: 700;">0 ₤</div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div id="cc-budget-display" style="font-size:1.5rem;font-weight:700;">0 ₤</div>
             <div class="cc-roster-view-toggle">
-              <button onclick="toggleRosterView('grid')" class="${state.rosterViewMode === 'grid' ? 'active' : ''}" title="Grid View">
+              <button onclick="toggleRosterView('grid')" class="${state.rosterViewMode === 'grid' ? 'active' : ''}">
                 <i class="fa fa-th"></i>
               </button>
-              <button onclick="toggleRosterView('list')" class="${state.rosterViewMode === 'list' ? 'active' : ''}" title="List View">
+              <button onclick="toggleRosterView('list')" class="${state.rosterViewMode === 'list' ? 'active' : ''}">
                 <i class="fa fa-list"></i>
               </button>
             </div>
-            <button class="btn btn-sm btn-outline-secondary" onclick="printRoster()"    title="Print Roster">   <i class="fa fa-print"></i>          </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="clearRoster()"    title="Clear Roster">   <i class="fa fa-trash"></i>          </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()"  title="Load from Cloud"><i class="fa fa-cloud-download"></i>  </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="saveToCloud()"    title="Save to Cloud">  <i class="fa fa-cloud-upload"></i>   </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="shareRoster()"    title="Share Roster">   <i class="fa fa-share"></i>          </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('roster-import').click()" title="Import File"><i class="fa fa-upload"></i></button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="exportRoster()"   title="Export File">    <i class="fa fa-download"></i>       </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="saveToCloud()" title="Save Roster to Cloud">
+              <i class="fa fa-cloud-upload"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()" title="Load Roster from Cloud">
+              <i class="fa fa-cloud-download"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportRoster()" title="Export JSON">
+              <i class="fa fa-download"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('roster-import').click()" title="Import JSON">
+              <i class="fa fa-upload"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="clearRoster()" title="Clear Roster">
+              <i class="fa fa-trash"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="printRoster()" title="Print Roster">
+              <i class="fa fa-print"></i>
+            </button>
           </div>
         </div>
 
         <div id="cc-login-status" class="cc-login-status logged-out">
-          <i class="fa fa-spinner fa-spin"></i> Checking login status...
+          <i class="fa fa-exclamation-circle"></i> Checking login status…
         </div>
 
         <div class="cc-faction-controls">
-
-          <!-- Faction selector with icon shown alongside it -->
           <div class="cc-faction-selector-wrap">
             <div id="cc-faction-selector-icon" class="cc-faction-selector-icon" style="display:none;"></div>
             <select id="cc-faction-selector" class="form-select" onchange="changeFaction(this.value)">
-              <option value="">SELECT FACTION...</option>
+              <option value="">SELECT FACTION…</option>
               ${FACTION_FILES.map(f => `<option value="${f.id}">${f.title}</option>`).join('')}
             </select>
           </div>
@@ -1238,7 +1258,7 @@ window.CC_APP = {
             id="cc-roster-name"
             type="text"
             class="form-control cc-input"
-            placeholder="Roster Name..."
+            placeholder="Roster Name…"
             value="${esc(state.rosterName)}"
             onchange="updateRosterName(this.value)"
           />
@@ -1250,10 +1270,9 @@ window.CC_APP = {
             <option value="1500">1500 ₤</option>
             <option value="2000">2000 ₤</option>
           </select>
-
         </div>
 
-        <input type="file" id="roster-import" accept=".json" style="display: none;" onchange="importRoster(event)">
+        <input type="file" id="roster-import" accept=".json" style="display:none;" onchange="importRoster(event)">
 
         <div class="cc-faction-builder">
 
@@ -1286,7 +1305,7 @@ window.CC_APP = {
 
         </div>
 
-        <div id="ability-tooltip" style="display: none; position: absolute; background: #000; color: #fff; padding: 8px 12px; border-radius: 4px; font-size: 12px; z-index: 10000; pointer-events: none; border: 1px solid var(--cc-primary);"></div>
+        <div id="ability-tooltip" style="display:none;position:fixed;background:#000;color:#fff;padding:7px 11px;border-radius:4px;font-size:12px;z-index:10000;pointer-events:none;border:1px solid var(--cc-primary);max-width:220px;line-height:1.4;"></div>
       </div>
     `;
 
@@ -1296,6 +1315,7 @@ window.CC_APP = {
     checkSharedRoster();
     render();
     setTimeout(() => updateLoginStatus(), 500);
+    loadAbilityDictionaries(); // pre-load in background so ability panels are instant
     console.log("✅ Faction Builder mounted");
   }
 };
