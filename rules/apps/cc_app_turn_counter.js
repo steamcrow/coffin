@@ -2038,8 +2038,8 @@ window.CC_APP = {
           // Faction name row
           '<div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">' +
           '<img src="' + LOGO_BASE + pf.id + '_logo.svg" alt="' + fname + '" ' +
-          'style="width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 3px ' + color + '88)' + (isSkipped ? ' grayscale(1)' : '') + ';flex-shrink:0;" ' +
-          'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:28px;height:28px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.75rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
+'style="width:44px;height:44px;object-fit:contain;filter:drop-shadow(0 0 4px ' + color + '88);flex-shrink:0;" ' +
+'onerror="this.onerror=null;this.outerHTML=\'<div style=\\\'width:44px;height:44px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:' + color + ';flex-shrink:0;\\\'>' + fname[0] + '</div>\'">' +
           '<strong style="flex:1;color:' + (isSkipped ? '#555' : color) + ';font-size:.9rem;">' + fname +
           (isSkipped ? ' <span style="color:#555;font-size:.7rem;font-weight:400;">(skipped)</span>' : '') + '</strong>' +
           // NPC toggle — hidden when skipped
