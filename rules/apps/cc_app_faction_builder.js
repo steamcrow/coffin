@@ -833,7 +833,7 @@ window.CC_APP = {
       const unit = (faction && faction.units && faction.units.find(function(u){ return u.name === target; }));
       if (!unit || !unit.supplemental_abilities) return;
       config.supplemental = suppName === '' ? null
-        : { ...unit.supplemental_abilities.find(s => s.name === suppName) };
+        : Object.assign({}, unit.supplemental_abilities.find(function(s){ return s.name === suppName; }));
       updateRosterCost();
       render();
     };
@@ -854,7 +854,7 @@ window.CC_APP = {
       if (idx > -1) {
         config.optionalUpgrades.splice(idx, 1);
       } else {
-        config.optionalUpgrades.push({ ...upg });
+        config.optionalUpgrades.push(Object.assign({}, upg));
       }
       updateRosterCost();
       render();
