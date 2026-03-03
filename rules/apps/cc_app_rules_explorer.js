@@ -40,33 +40,80 @@ window.CC_APP = {
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
-    const helpersRaw = ctx?.helpers || {};
+     // ---- HELPERS (robust injection + adapter) ----
+    // The loader SHOULD pass ctx.helpers, but sometimes it doesn't — so we fall back to globals.
+    const helpersCandidate =
+      ctx?.helpers ||
+      window.CC_RULES_HELPERS ||
+      window.rules_helpers ||
+      window.RULES_HELPERS ||
+      window.CC_HELPERS ||
+      null;
 
-// Adapter: tolerate different helper API shapes across versions
-const helpers = {
-  ...helpersRaw,
-  getRuleSection:
-    (typeof helpersRaw.getRuleSection === 'function' && helpersRaw.getRuleSection) ||
-    (typeof helpersRaw.getSection === 'function' && helpersRaw.getSection) ||
-    (typeof helpersRaw.getRule === 'function' && helpersRaw.getRule) ||
-    (typeof helpersRaw.getRuleData === 'function' && helpersRaw.getRuleData) ||
-    null,
-  getChildren:
-    (typeof helpersRaw.getChildren === 'function' && helpersRaw.getChildren) ||
-    null,
-};
+    // Some builds namespace helpers under .rules or .api
+    const helpersRaw =
+      (helpersCandidate && helpersCandidate.rules) ? helpersCandidate.rules :
+      (helpersCandidate && helpersCandidate.api) ? helpersCandidate.api :
+      helpersCandidate ||
+      {};
 
-console.log('🧰 helpers keys:', Object.keys(helpersRaw));
-console.log('🧰 getRuleSection resolved:', helpers.getRuleSection ? 'OK' : 'MISSING');
+    // Adapter: tolerate different helper API shapes across versions
+    const helpers = {
+      ...helpersRaw,
+
+      // normalize: section loader
+      getRuleSection:
+        (typeof helpersRaw.getRuleSection === 'function' && helpersRaw.getRuleSection) ||
+        (typeof helpersRaw.getSection === 'function' && helpersRaw.getSection) ||
+        (typeof helpersRaw.getRule === 'function' && helpersRaw.getRule) ||
+        (typeof helpersRaw.getRuleData === 'function' && helpersRaw.getRuleData) ||
+        (typeof helpersRaw.fetchSection === 'function' && helpersRaw.fetchSection) ||
+        null,
+
+      // normalize: children lookup
+      getChildren:
+        (typeof helpersRaw.getChildren === 'function' && helpersRaw.getChildren) ||
+        (typeof helpersRaw.childrenOf === 'function' && helpersRaw.childrenOf) ||
+        (typeof helpersRaw.getSubsections === 'function' && helpersRaw.getSubsections) ||
+        null,
+    };
+
+    // Debug (helps you identify the real export shape instantly)
+    try {
+      console.log("🧰 helpers candidate:", helpersCandidate);
+      console.log("🧰 helpersRaw keys:", Object.keys(helpersRaw || {}));
+      console.log("🧰 getRuleSection:", helpers.getRuleSection ? "OK" : "MISSING");
+      console.log("🧰 getChildren:", helpers.getChildren ? "OK" : "MISSING");
+    } catch (e) {}
+
     const index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
 
     // ---- SAFETY CHECK ----
-    if (!helpers || typeof helpers.getRuleSection !== 'function') {
+    // We need BOTH: a section loader and a children function (your UI uses both).
+    if (typeof helpers.getRuleSection !== "function" || typeof helpers.getChildren !== "function") {
+      const found = Object.keys(helpersRaw || {}).join(", ");
+      const globals = [
+        ["window.CC_RULES_HELPERS", window.CC_RULES_HELPERS],
+        ["window.rules_helpers", window.rules_helpers],
+        ["window.RULES_HELPERS", window.RULES_HELPERS],
+        ["window.CC_HELPERS", window.CC_HELPERS],
+      ]
+        .filter(([, v]) => !!v)
+        .map(([k, v]) => `${k} (${Object.keys((v.rules || v.api || v) || {}).length} keys)`)
+        .join(" • ");
+
       root.innerHTML = `
         <div class="cc-app-shell h-100">
           <div class="container py-5 text-danger">
-            <h4>Rules helpers not available</h4>
-            <p>Check loader injection.</p>
+            <h4>Rules helpers not available (or missing required functions)</h4>
+            <p><strong>Need:</strong> getRuleSection() and getChildren()</p>
+            <p><strong>Found keys:</strong> ${esc(found || "(none)")}</p>
+            <p><strong>Globals seen:</strong> ${esc(globals || "(none)")}</p>
+            <hr/>
+            <p class="mb-0">
+              This means your loader did not inject helpers into <code>ctx.helpers</code>,
+              or your helpers bundle exports different function names.
+            </p>
           </div>
         </div>
       `;
