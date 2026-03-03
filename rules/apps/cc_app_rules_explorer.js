@@ -63,12 +63,13 @@ window.CC_APP = {
 
       // normalize: section loader
       getRuleSection:
-        (typeof helpersRaw.getRuleSection === 'function' && helpersRaw.getRuleSection) ||
-        (typeof helpersRaw.getSection === 'function' && helpersRaw.getSection) ||
-        (typeof helpersRaw.getRule === 'function' && helpersRaw.getRule) ||
-        (typeof helpersRaw.getRuleData === 'function' && helpersRaw.getRuleData) ||
-        (typeof helpersRaw.fetchSection === 'function' && helpersRaw.fetchSection) ||
-        null,
+  (typeof helpersRaw.getRuleSection === 'function' && helpersRaw.getRuleSection) ||
+  (typeof helpersRaw.getById === 'function' && helpersRaw.getById) ||   // ✅ YOUR CURRENT HELPERS
+  (typeof helpersRaw.getSection === 'function' && helpersRaw.getSection) ||
+  (typeof helpersRaw.getRule === 'function' && helpersRaw.getRule) ||
+  (typeof helpersRaw.getRuleData === 'function' && helpersRaw.getRuleData) ||
+  (typeof helpersRaw.fetchSection === 'function' && helpersRaw.fetchSection) ||
+  null,
 
       // normalize: children lookup
       getChildren:
@@ -88,7 +89,7 @@ window.CC_APP = {
 
     const index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
 
-    // ---- SAFETY CHECK ----
+        // ---- SAFETY CHECK ----
     // We need BOTH: a section loader and a children function (your UI uses both).
     if (typeof helpers.getRuleSection !== "function" || typeof helpers.getChildren !== "function") {
       const found = Object.keys(helpersRaw || {}).join(", ");
@@ -102,17 +103,17 @@ window.CC_APP = {
         .map(([k, v]) => `${k} (${Object.keys((v.rules || v.api || v) || {}).length} keys)`)
         .join(" • ");
 
+      // NOTE: don't use esc() here — esc is declared later in the file
       root.innerHTML = `
         <div class="cc-app-shell h-100">
           <div class="container py-5 text-danger">
             <h4>Rules helpers not available (or missing required functions)</h4>
             <p><strong>Need:</strong> getRuleSection() and getChildren()</p>
-            <p><strong>Found keys:</strong> ${esc(found || "(none)")}</p>
-            <p><strong>Globals seen:</strong> ${esc(globals || "(none)")}</p>
+            <p><strong>Found keys:</strong> ${found || "(none)"}</p>
+            <p><strong>Globals seen:</strong> ${globals || "(none)"}</p>
             <hr/>
             <p class="mb-0">
-              This means your loader did not inject helpers into <code>ctx.helpers</code>,
-              or your helpers bundle exports different function names.
+              Your loader injected helpers, but the function names don't match what the app expects.
             </p>
           </div>
         </div>
