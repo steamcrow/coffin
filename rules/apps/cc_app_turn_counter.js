@@ -577,7 +577,9 @@ window.CC_APP = {
           range:   item.range    || item.Range    || item.shoot   || item.Shoot   || null,
           cost:    item.totalCost || item.cost    || item.points  || null,
           special: item.abilities || item.special || item.rules  || [],
-          upgrades: item.upgrades || item.Upgrades || item.equipment || item.gear || item.loadout || [],
+          upgrades: (item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length
+                      ? item.config.optionalUpgrades : null)
+                    || item.upgrades || item.Upgrades || item.equipment || item.gear || item.loadout || [],
           isTitan: item.isTitan  || item.titan    || false,
         };
       }).filter(function(u) { return u !== null; }); // remove any nulls from bad items
