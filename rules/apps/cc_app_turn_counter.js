@@ -567,20 +567,48 @@ window.CC_APP = {
 
       var allUnits = roster.map(function(item, i) {
         if (!item || typeof item !== 'object') return null;
+        // Base stats from the save
+        var baseQuality = item.quality || item.Quality || 4;
+        var baseDefense = item.defense || item.Defense || item.armor || item.Armor || null;
+        var baseMove    = item.move    || item.Move    || 6;
+        var baseRange   = item.range   || item.Range   || item.shoot || item.Shoot || null;
+
+        // Apply stat_modifiers from purchased optional upgrades and supplemental
+        var cfg = item.config || {};
+        var purchasedUpgrades = (cfg.optionalUpgrades && cfg.optionalUpgrades.length)
+          ? cfg.optionalUpgrades
+          : (item.upgrades || item.Upgrades || item.equipment || item.gear || item.loadout || []);
+
+        var allMods = purchasedUpgrades.slice();
+        if (cfg.supplemental && cfg.supplemental.stat_modifiers) {
+          allMods.push(cfg.supplemental);
+        }
+
+        allMods.forEach(function(upg) {
+          if (!upg || !upg.stat_modifiers) return;
+          var m = upg.stat_modifiers;
+          if (m.quality) baseQuality += m.quality;
+          if (m.defense) baseDefense = (baseDefense || 0) + m.defense;
+          if (m.move)    baseMove    += m.move;
+          if (m.range) {
+            if (!baseRange) baseRange = m.range;
+            else            baseRange += m.range;
+          }
+        });
+
         return {
           id:      item.id       || ('saved_' + i),
           name:    item.name     || item.unitName || item.label || ('Unit ' + (i + 1)),
-          lore:    item.lore     || item.Lore    || item.flavor   || item.description || item.bio || null,
-          quality: item.quality  || item.Quality  || 4,
-          move:    item.move     || item.Move     || 6,
-          defense: item.defense  || item.Defense  || item.armor   || item.Armor   || null,
-          range:   item.range    || item.Range    || item.shoot   || item.Shoot   || null,
-          cost:    item.totalCost || item.cost    || item.points  || null,
-          special: item.abilities || item.special || item.rules  || [],
-          upgrades: (item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length
-                      ? item.config.optionalUpgrades : null)
-                    || item.upgrades || item.Upgrades || item.equipment || item.gear || item.loadout || [],
-          isTitan: item.isTitan  || item.titan    || false,
+          lore:    item.lore     || item.Lore    || item.flavor   || item.description
+            || item.bio || null,
+          quality: baseQuality,
+          move:    baseMove,
+          defense: baseDefense,
+          range:   baseRange,
+          cost:    item.totalCost || item.cost || item.points || null,
+          special: item.abilities || item.special || item.rules || [],
+          upgrades: purchasedUpgrades,
+          isTitan: item.isTitan || item.titan || false,
         };
       }).filter(function(u) { return u !== null; }); // remove any nulls from bad items
 
@@ -1019,8 +1047,8 @@ window.CC_APP = {
       var def = STAT_DEFINITIONS[statKey];
       if (!def) return;
 
-      var existing = document.getElementById('cc-tc-stat-panel');
-      if (existing) existing.parentNode.removeChild(existing);
+      closeAllSlidePanels();
+      installPanelBackdrop();
 
       var panel = document.createElement('div');
       panel.id = 'cc-tc-stat-panel';
@@ -1041,13 +1069,7 @@ window.CC_APP = {
       setTimeout(function() { panel.classList.add('cc-slide-panel-open'); }, 10);
     };
 
-    window.CC_TC.closeStatPanel = function() {
-      var panel = document.getElementById('cc-tc-stat-panel');
-      if (panel) {
-        panel.classList.remove('cc-slide-panel-open');
-        setTimeout(function() { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 300);
-      }
-    };
+    window.CC_TC.closeStatPanel = function() { closeAllSlidePanels(); };
 
     // ═══════════════════════════════════════════════════════════════════════════
     // QUALITY DICE ROLLER
@@ -2809,16 +2831,52 @@ window.CC_APP = {
 
       return null;
     }
+// ── Shared panel management ───────────────────────────────────────────────
+    // All slide panels share one backdrop. Clicking the backdrop closes everything.
+    // Opening any panel closes all others first — no stacking.
+
+    var _panelIds = ['cc-tc-ability-panel', 'cc-tc-stat-panel', 'cc-tc-scenario-panel'];
+
+    function closeAllSlidePanels() {
+      _panelIds.forEach(function(id) {
+        var p = document.getElementById(id);
+        if (p) {
+          p.classList.remove('cc-slide-panel-open');
+          setTimeout(function() { if (p.parentNode) p.parentNode.removeChild(p); }, 300);
+        }
+      });
+      var bd = document.getElementById('cc-tc-panel-backdrop');
+      if (bd) bd.parentNode.removeChild(bd);
+    }
+
+    function installPanelBackdrop() {
+      if (document.getElementById('cc-tc-panel-backdrop')) return;
+      var bd = document.createElement('div');
+      bd.id = 'cc-tc-panel-backdrop';
+      bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
+      bd.addEventListener('click', function() { closeAllSlidePanels(); });
+      document.body.appendChild(bd);
+    }
+    // ── Shared panel close helper ─────────────────────────────────────────────
+    function closeAllSlidePanels() {
+      ['cc-tc-ability-panel','cc-tc-stat-panel','cc-tc-scenario-panel'].forEach(function(id) {
+        var p = document.getElementById(id);
+        if (p) { p.classList.remove('cc-slide-panel-open'); setTimeout(function(){ if(p.parentNode) p.parentNode.removeChild(p); }, 300); }
+      });
+      var bd = document.getElementById('cc-tc-panel-backdrop');
+      if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
+    }
+    function installPanelBackdrop() {
+      if (document.getElementById('cc-tc-panel-backdrop')) return;
+      var bd = document.createElement('div');
+      bd.id = 'cc-tc-panel-backdrop';
+      bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
+      bd.addEventListener('click', closeAllSlidePanels);
+      document.body.appendChild(bd);
+    }
 
     // ── Ability slide panel ───────────────────────────────────────────────────
-    window.CC_TC.closeAbilityPanel = function() {
-      var panel = document.getElementById('cc-tc-ability-panel');
-      if (panel) {
-        panel.classList.remove('cc-slide-panel-open');
-        setTimeout(function() { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 300);
-      }
-    };
-
+    window.CC_TC.closeAbilityPanel = function() { closeAllSlidePanels(); };
     window.CC_TC.openAbilityPanel = function(idx) {
       if (_destroyed) return;
       var abilities   = window.CC_TC._currentUnitAbilities || [];
@@ -2827,8 +2885,8 @@ window.CC_APP = {
 
       loadAbilityDictionaries();
 
-      var existing = document.getElementById('cc-tc-ability-panel');
-      if (existing) existing.parentNode.removeChild(existing);
+      closeAllSlidePanels();
+      installPanelBackdrop();
 
       var panel = document.createElement('div');
       panel.id = 'cc-tc-ability-panel';
