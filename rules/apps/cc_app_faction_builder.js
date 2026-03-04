@@ -5,6 +5,37 @@
 
 console.log("⚔️ Faction Builder app loaded");
 
+// ── Bootstrap Dropdown null-autoClose patch ──────────────────────────────
+// Odoo's HoverableDropdown passes autoClose:null which crashes Bootstrap 5.
+// We patch the Dropdown constructor once to coerce null → true (the default).
+(function() {
+  function patchDropdown() {
+    if (!window.bootstrap || !window.bootstrap.Dropdown) return false;
+    var OrigDropdown = window.bootstrap.Dropdown;
+    function PatchedDropdown(el, config) {
+      if (config && config.autoClose === null) config.autoClose = true;
+      return new OrigDropdown(el, config);
+    }
+    // Copy all static methods (getOrCreateInstance, getInstance, etc.)
+    Object.keys(OrigDropdown).forEach(function(k) {
+      PatchedDropdown[k] = typeof OrigDropdown[k] === 'function'
+        ? function() { return OrigDropdown[k].apply(OrigDropdown, arguments); }
+        : OrigDropdown[k];
+    });
+    PatchedDropdown.prototype = OrigDropdown.prototype;
+    window.bootstrap.Dropdown = PatchedDropdown;
+    console.log("✅ Bootstrap Dropdown autoClose patch applied");
+    return true;
+  }
+  // Try immediately, then retry until bootstrap is ready
+  if (!patchDropdown()) {
+    var _tries = 0;
+    var _iv = setInterval(function() {
+      if (patchDropdown() || _tries++ > 20) clearInterval(_iv);
+    }, 100);
+  }
+}());
+
 window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Faction Builder init", ctx);
