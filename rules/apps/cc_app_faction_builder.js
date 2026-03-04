@@ -646,21 +646,23 @@ window.CC_APP = {
 
     function renderOptionalUpgrades(unit, config) {
       if (!unit.optional_upgrades || !unit.optional_upgrades.length) return '';
-      return `
-        <div class="mt-3">
-          <div class="cc-field-label">Optional Upgrades</div>
-          ${unit.optional_upgrades.map(upg => {
-            const isSelected = (config.optionalUpgrades && config.optionalUpgrades.some(function(u){ return u.name === upg.name; }));
-            return `
-              <div class="cc-upgrade-row ${isSelected ? 'selected' : ''}" onclick="toggleOptionalUpgrade('${esc(upg.name)}', ${upg.cost || 0})">
-                <div>
-                  <div class="fw-bold" style="font-size:.9rem;">${esc(upg.name)}</div>
-                  ${upg.effect ? `<div class="small cc-muted">${esc(upg.effect)}</div>` : ''}
-                </div>
-                <div style="color:var(--cc-primary);font-weight:700;">${upg.cost ? `+${upg.cost} ₤` : 'Free'}</div>
-              </div>`;
-          }).join('')}
-        </div>`;
+      var rows = unit.optional_upgrades.map(function(upg, idx) {
+        var isSelected = (config.optionalUpgrades && config.optionalUpgrades.some(function(u){ return u.name === upg.name; }));
+        // Use data-upg-idx so upgrade names with apostrophes never break onclick JS strings
+        return '<div class="cc-upgrade-row' + (isSelected ? ' selected' : '') + '" ' +
+               'data-upg-idx="' + idx + '" onclick="toggleOptionalUpgrade(this)">' +
+               '<div class="cc-upgrade-check">' + (isSelected ? '&#10003;' : '') + '</div>' +
+               '<div style="flex:1;">' +
+               '<div class="fw-bold" style="font-size:.9rem;">' + esc(upg.name) + '</div>' +
+               (upg.effect ? '<div class="small cc-muted">' + esc(upg.effect) + '</div>' : '') +
+               '</div>' +
+               '<div style="color:var(--cc-primary);font-weight:700;">' + (upg.cost ? '+' + upg.cost + ' ₤' : 'Free') + '</div>' +
+               '</div>';
+      });
+      return '<div class="mt-3">' +
+             '<div class="cc-field-label">Optional Upgrades</div>' +
+             rows.join('') +
+             '</div>';
     }
 
     function renderBuilder() {
@@ -848,43 +850,43 @@ window.CC_APP = {
       render();
     };
 
-    window.toggleOptionalUpgrade = function(upgradeName) {
+    window.toggleOptionalUpgrade = function(el) {
+      // el is the clicked .cc-upgrade-row element; read index from data attribute
+      var upgIdx = parseInt(el.getAttribute('data-upg-idx'), 10);
+
       var config = getActiveConfig();
       if (!config) return;
       if (!config.optionalUpgrades) config.optionalUpgrades = [];
 
-      // Removal only needs name — no unit lookup required
-      var idx = -1;
-      for (var i = 0; i < config.optionalUpgrades.length; i++) {
-        if (config.optionalUpgrades[i].name === upgradeName) { idx = i; break; }
+      // Get the unit so we can find the upgrade by index
+      var faction = state.factionData[state.currentFaction];
+      if (!faction) return;
+      var unitName = state.builderMode === 'library'
+        ? state.builderTarget
+        : (function() {
+            for (var j = 0; j < state.roster.length; j++) {
+              if (state.roster[j].id === state.builderTarget) return state.roster[j].unitName;
+            }
+            return null;
+          }());
+      var unit = null;
+      if (faction.units) {
+        for (var k = 0; k < faction.units.length; k++) {
+          if (faction.units[k].name === unitName) { unit = faction.units[k]; break; }
+        }
       }
+      if (!unit || !unit.optional_upgrades) return;
+      var upg = unit.optional_upgrades[upgIdx];
+      if (!upg) return;
 
-      if (idx > -1) {
-        config.optionalUpgrades.splice(idx, 1);
+      // Toggle: if already selected, remove it; otherwise add it
+      var existingIdx = -1;
+      for (var i = 0; i < config.optionalUpgrades.length; i++) {
+        if (config.optionalUpgrades[i].name === upg.name) { existingIdx = i; break; }
+      }
+      if (existingIdx > -1) {
+        config.optionalUpgrades.splice(existingIdx, 1);
       } else {
-        // Adding: look up full object so stat_modifiers are preserved
-        var faction = state.factionData[state.currentFaction];
-        if (!faction) return;
-        var unitName = state.builderMode === 'library'
-          ? state.builderTarget
-          : (function() {
-              for (var j = 0; j < state.roster.length; j++) {
-                if (state.roster[j].id === state.builderTarget) return state.roster[j].unitName;
-              }
-              return null;
-            }());
-        var unit = null;
-        if (faction.units) {
-          for (var k = 0; k < faction.units.length; k++) {
-            if (faction.units[k].name === unitName) { unit = faction.units[k]; break; }
-          }
-        }
-        if (!unit || !unit.optional_upgrades) return;
-        var upg = null;
-        for (var m = 0; m < unit.optional_upgrades.length; m++) {
-          if (unit.optional_upgrades[m].name === upgradeName) { upg = unit.optional_upgrades[m]; break; }
-        }
-        if (!upg) return;
         config.optionalUpgrades.push(Object.assign({}, upg));
       }
       updateRosterCost();
@@ -1234,18 +1236,28 @@ window.CC_APP = {
           throw new Error('Unrecognised roster format from cloud storage');
         }
         closeAllSlidePanels();
-        await switchFaction(parsed.faction);
-        state.rosterName = parsed.name || 'Loaded Roster';
-        state.budget     = parsed.budget || 500;
-        state.roster     = parsed.roster || [];
-        const nameInput    = document.getElementById('cc-roster-name');
-        const budgetSelect = document.getElementById('cc-budget-selector');
-        const factionSel   = document.getElementById('cc-faction-selector');
+        // Load faction data WITHOUT calling switchFaction (which resets roster).
+        // We load the faction data silently, then restore all state at once.
+        var loadedFaction = await loadFaction(parsed.faction);
+        if (!loadedFaction) { alert('Could not load faction data for this roster.'); return; }
+
+        state.currentFaction = parsed.faction;
+        state.rosterName     = parsed.name   || 'Loaded Roster';
+        state.budget         = parsed.budget || 500;
+        state.roster         = parsed.roster || [];
+        state.builderMode    = null;
+        state.builderTarget  = null;
+        state.selectedUnitId = null;
+        state.builderConfig  = { optionalUpgrades: [], supplemental: null };
+
+        var nameInput    = document.getElementById('cc-roster-name');
+        var budgetSelect = document.getElementById('cc-budget-selector');
+        var factionSel   = document.getElementById('cc-faction-selector');
         if (nameInput)    nameInput.value    = state.rosterName;
         if (budgetSelect) budgetSelect.value = state.budget;
         if (factionSel)   factionSel.value   = parsed.faction;
         render();
-        alert(`✓ Roster "${state.rosterName}" loaded!`);
+        alert('✓ Roster "' + state.rosterName + '" loaded!');
       } catch (err) {
         alert('Failed to load roster: ' + err.message);
       }
