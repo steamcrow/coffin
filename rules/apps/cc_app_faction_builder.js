@@ -1021,7 +1021,7 @@ window.CC_APP = {
   <div class="roster-meta"><strong>Total:</strong> ${total} ₤${state.budget > 0 ? ` / ${state.budget} ₤` : ' (Unlimited)'}</div>
   <div class="roster-meta"><strong>Units:</strong> ${state.roster.length}</div>
   <div class="unit-grid">
-    \${state.roster.map(function(item) {
+    ${state.roster.map(function(item) {
       var abilities = item.abilities || [];
       return '<div class="unit">' +
         '<div class="unit-name">' + esc(item.name) + '</div>' +
@@ -1041,7 +1041,7 @@ window.CC_APP = {
     }).join('')}
   </div>
 
-  \${(function() {
+  ${(function() {
     // Collect all unique ability names across entire roster
     var seen = {};
     var allAbilityNames = [];
