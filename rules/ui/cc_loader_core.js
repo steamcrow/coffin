@@ -95,7 +95,25 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     }
   }, 30000);
 }());
+// ── Global safety net for Odoo Bootstrap conflicts ─────────────────────────
+// Even if the Dropdown patch above fires too late, this stops the unhandled
+// rejection from crashing the page. Only suppresses the specific known error.
+window.addEventListener('unhandledrejection', function(e) {
+  var msg = e.reason && (e.reason.message || String(e.reason));
+  if (msg && msg.indexOf('DROPDOWN') !== -1 && msg.indexOf('autoClose') !== -1) {
+    e.preventDefault();
+    console.warn('[CC] Suppressed Odoo Bootstrap nav conflict:', msg);
+  }
+});
 
+window.addEventListener('error', function(e) {
+  var msg = e.message || '';
+  if (msg.indexOf('DROPDOWN') !== -1 && msg.indexOf('autoClose') !== -1) {
+    e.preventDefault();
+    console.warn('[CC] Suppressed Odoo Bootstrap nav conflict:', msg);
+    return true;
+  }
+});
   // ── App registry ──────────────────────────────────────────────────────────
   var COMPONENTS_JS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_components.js';
   var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/rules_helpers.js';
