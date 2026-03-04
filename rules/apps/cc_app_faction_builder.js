@@ -1230,16 +1230,33 @@ window.CC_APP = {
         if (!window.CC_STORAGE) return;
         const doc    = await window.CC_STORAGE.loadDocument(docId);
         if (!doc) { alert('Roster not found!'); return; }
-        // doc may be: a string, an object with .content (string or object), or .value
-        var rawData = doc.content || doc.value || doc;
-        var parsed;
-        if (typeof rawData === 'string') {
-          parsed = JSON.parse(rawData);
-        } else if (typeof rawData === 'object' && rawData !== null) {
-          // already a plain object — use directly
-          parsed = rawData;
-        } else {
-          throw new Error('Unrecognised roster format from cloud storage');
+        // CC_STORAGE can return many shapes — try each until we find one with .faction
+        function tryParse(val) {
+          if (!val) return null;
+          if (typeof val === 'string') {
+            try { return JSON.parse(val); } catch(e) { return null; }
+          }
+          if (typeof val === 'object') return val;
+          return null;
+        }
+
+        var parsed = null;
+        var candidates = [
+          doc,
+          doc.content,
+          doc.value,
+          doc.data,
+          (doc.content && doc.content.content),
+          (doc.value   && doc.value.content)
+        ];
+        for (var _ci = 0; _ci < candidates.length; _ci++) {
+          var attempt = tryParse(candidates[_ci]);
+          if (attempt && attempt.faction) { parsed = attempt; break; }
+        }
+        if (!parsed) {
+          // Last resort: log the whole doc so we can see its shape
+          console.error('[FB] loadCloudRoster — could not find faction in doc:', JSON.stringify(doc));
+          throw new Error('Could not find roster data in cloud response. Check console for details.');
         }
         closeAllSlidePanels();
         // Load faction data WITHOUT calling switchFaction (which resets roster).
