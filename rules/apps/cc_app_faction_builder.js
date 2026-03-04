@@ -1242,6 +1242,7 @@ window.CC_APP = {
 
         var parsed = null;
         var candidates = [
+          doc.json,
           doc,
           doc.content,
           doc.value,
