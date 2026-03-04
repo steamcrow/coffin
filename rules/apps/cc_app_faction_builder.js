@@ -1222,7 +1222,17 @@ window.CC_APP = {
         if (!window.CC_STORAGE) return;
         const doc    = await window.CC_STORAGE.loadDocument(docId);
         if (!doc) { alert('Roster not found!'); return; }
-        const parsed = JSON.parse(doc.content || doc.value || doc);
+        // doc may be: a string, an object with .content (string or object), or .value
+        var rawData = doc.content || doc.value || doc;
+        var parsed;
+        if (typeof rawData === 'string') {
+          parsed = JSON.parse(rawData);
+        } else if (typeof rawData === 'object' && rawData !== null) {
+          // already a plain object — use directly
+          parsed = rawData;
+        } else {
+          throw new Error('Unrecognised roster format from cloud storage');
+        }
         closeAllSlidePanels();
         await switchFaction(parsed.faction);
         state.rosterName = parsed.name || 'Loaded Roster';
