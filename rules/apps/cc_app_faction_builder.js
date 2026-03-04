@@ -989,17 +989,20 @@ window.CC_APP = {
     body { font-family: "Source Sans 3", Arial, sans-serif; padding: 20px; background: #fff; color: #000; margin: 0; }
     h1 { font-family: 'Bungee', sans-serif; font-size: 22pt; border-bottom: 2px solid #000; margin-bottom: 16px; padding-bottom: 8px; }
     .roster-meta { font-size: 10pt; color: #444; margin-bottom: 3px; }
-    .unit-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px; }
-    .unit { border: 1px solid #000; padding: 12px; page-break-inside: avoid; border-radius: 4px; position: relative; }
-    .unit-name { font-size: 13pt; font-weight: 700; color: #000; margin-bottom: 2px; }
-    .unit-cost { font-weight: 700; font-size: 13pt; position: absolute; top: 12px; right: 12px; }
-    .unit-type { color: #555; font-size: 8.5pt; text-transform: uppercase; margin-bottom: 6px; letter-spacing: .05em; }
-    .lore { font-style: italic; color: #666; font-size: 8.5pt; margin: 5px 0; border-left: 2px solid #ccc; padding-left: 6px; }
-    .stat-badges { display: flex; gap: 4px; margin: 6px 0; flex-wrap: wrap; }
-    .stat-badge { border: 1px solid #000; padding: 2px 5px; border-radius: 3px; font-size: 8.5pt; font-weight: 700; }
-    .abilities { margin-top: 6px; }
-    .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; color: #000; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 8pt; }
-    .upgrades { margin-top: 6px; font-size: 8.5pt; color: #444; border-top: 1px solid #eee; padding-top: 5px; }
+    .unit-list { margin-top: 16px; }
+    .unit { display: flex; align-items: flex-start; gap: 14px; border-bottom: 1px solid #ccc; padding: 10px 0; page-break-inside: avoid; }
+    .unit:last-child { border-bottom: none; }
+    .unit-left { flex: 1; min-width: 0; }
+    .unit-right { min-width: 60px; text-align: right; }
+    .unit-name { font-size: 11pt; font-weight: 700; color: #000; }
+    .unit-cost { font-weight: 700; font-size: 11pt; color: #000; white-space: nowrap; }
+    .unit-type { color: #555; font-size: 8pt; text-transform: uppercase; margin-bottom: 4px; letter-spacing: .05em; }
+    .lore { font-style: italic; color: #666; font-size: 8pt; margin: 3px 0; border-left: 2px solid #ccc; padding-left: 5px; }
+    .stat-badges { display: flex; gap: 4px; margin: 4px 0; flex-wrap: nowrap; }
+    .stat-badge { border: 1px solid #000; padding: 1px 4px; border-radius: 3px; font-size: 8pt; font-weight: 700; }
+    .abilities { margin-top: 4px; }
+    .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; color: #000; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 7.5pt; }
+    .upgrades { margin-top: 4px; font-size: 8pt; color: #444; }
     .cc-app-title-print { display: block; }
     .ability-defs-section { margin-top: 28px; border-top: 2px solid #000; padding-top: 14px; }
     .ability-defs-section h2 { font-family: 'Bungee', sans-serif; font-size: 14pt; margin-bottom: 10px; }
@@ -1020,26 +1023,29 @@ window.CC_APP = {
   <div class="roster-meta"><strong>Faction:</strong> ${factionName}</div>
   <div class="roster-meta"><strong>Total:</strong> ${total} ₤${state.budget > 0 ? ` / ${state.budget} ₤` : ' (Unlimited)'}</div>
   <div class="roster-meta"><strong>Units:</strong> ${state.roster.length}</div>
-  <div class="unit-grid">
+  <div class="unit-list">
     ${state.roster.map(function(item) {
       var abilities = item.abilities || [];
       return '<div class="unit">' +
-        '<div class="unit-name">' + esc(item.name) + '</div>' +
-        '<div class="unit-cost">' + item.totalCost + ' ₤</div>' +
-        '<div class="unit-type">' + esc(item.type) + '</div>' +
-        (item.lore ? '<div class="lore">"' + esc(item.lore) + '"</div>' : '') +
-        '<div class="stat-badges">' +
-          '<span class="stat-badge">Q ' + item.quality + '+</span>' +
-          '<span class="stat-badge">D ' + item.defense + '+</span>' +
-          '<span class="stat-badge">M ' + item.move + '"</span>' +
-          '<span class="stat-badge">R ' + (item.range === 0 ? '–' : item.range + '"') + '</span>' +
+        '<div class="unit-left">' +
+          '<div class="unit-name">' + esc(item.name) + '</div>' +
+          '<div class="unit-type">' + esc(item.type) + '</div>' +
+          (item.lore ? '<div class="lore">\"' + esc(item.lore) + '\"</div>' : '') +
+          '<div class="stat-badges">' +
+            '<span class="stat-badge">Q ' + item.quality + '+</span> ' +
+            '<span class="stat-badge">D ' + item.defense + '+</span> ' +
+            '<span class="stat-badge">M ' + item.move + '\"</span> ' +
+            '<span class="stat-badge">R ' + (item.range === 0 ? '\u2013' : item.range + '\"') + '</span>' +
+          '</div>' +
+          (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
+          ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="upgrades"><strong>Upgrades:</strong> ' + item.config.optionalUpgrades.map(function(u){ return esc(u.name); }).join(', ') + '</div>' : '') +
+          ((item.config && item.config.supplemental) ? '<div class="upgrades"><strong>Supplemental:</strong> ' + esc(item.config.supplemental.name) + '</div>' : '') +
         '</div>' +
-        (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
-        ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="upgrades"><strong>Upgrades:</strong> ' + item.config.optionalUpgrades.map(function(u){ return esc(u.name); }).join(', ') + '</div>' : '') +
-        ((item.config && item.config.supplemental) ? '<div class="upgrades"><strong>Supplemental:</strong> ' + esc(item.config.supplemental.name) + '</div>' : '') +
+        '<div class="unit-right"><span class="unit-cost">' + item.totalCost + ' ₤</span></div>' +
       '</div>';
     }).join('')}
   </div>
+
 
   ${(function() {
     // Collect all unique ability names across entire roster
