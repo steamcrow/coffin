@@ -647,30 +647,39 @@
 }
 
 /* ===== LIST MODE: single-column layout ===== */
+/* The layout is display:grid, so we override to a 1-column grid.
+   CSS grid items don't use order, so we use grid-row to place them. */
 .cc-faction-builder.cc-list-mode {
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto auto;
   height: auto !important;
   min-height: 0;
 }
 
+/* Roster goes to row 1 (top) */
 .cc-faction-builder.cc-list-mode .cc-faction-roster {
-  order: 1;
-  width: 100%;
+  grid-row: 1;
+  grid-column: 1;
   height: auto;
-  min-height: 180px;
-  max-height: none;
+  min-height: 120px;
+  overflow-y: visible;
 }
 
+/* Builder goes to row 2 */
 .cc-faction-builder.cc-list-mode .cc-faction-main {
-  order: 2;
-  width: 100%;
+  grid-row: 2;
+  grid-column: 1;
   height: auto;
+  overflow-y: visible;
 }
 
+/* Library goes to row 3 (bottom) */
 .cc-faction-builder.cc-list-mode .cc-faction-sidebar {
-  order: 3;
-  width: 100%;
+  grid-row: 3;
+  grid-column: 1;
   height: auto;
+  overflow-y: visible;
 }
 
 .cc-faction-builder.cc-list-mode .cc-panel {
@@ -678,6 +687,6 @@
 }
 
 .cc-faction-builder.cc-list-mode .cc-body {
-  max-height: none;
-  overflow: visible;
+  max-height: none !important;
+  overflow-y: visible !important;
 }
