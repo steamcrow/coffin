@@ -1,10 +1,10 @@
 /* ================================
    Faction Builder - App-Specific Styles
    File: coffin/rules/apps/cc_app_faction_builder.css
-   
-   This file contains ONLY Faction Builder-specific styles.
-   Core styles come from: coffin/rules/ui/cc_ui.css
-   Layout utilities come from: Bootstrap (Odoo default)
+
+   Core styles from: coffin/rules/ui/cc_ui.css
+   Print styles from: coffin/rules/ui/cc_print.css
+   Layout utilities: Bootstrap (Odoo default)
    ================================ */
 
 /* ===== Faction Controls Bar ===== */
@@ -42,7 +42,6 @@
 }
 
 /* ===== Faction Selector with Icon ===== */
-/* Wraps the faction <select> + the icon shown beside it */
 .cc-faction-selector-wrap {
   display: flex;
   align-items: center;
@@ -54,7 +53,6 @@
   flex: 0 0 220px;
 }
 
-/* The icon slot sitting to the left of the dropdown */
 .cc-faction-selector-icon {
   display: flex;
   align-items: center;
@@ -63,262 +61,272 @@
 }
 
 /* ===== Faction Icon (shared) ===== */
-/* Applied to every <img> produced by factionIconHtml() */
 .cc-faction-icon {
   object-fit: contain;
   flex-shrink: 0;
-  /* The glow colour is passed in via --faction-color on the element */
   filter: drop-shadow(0 0 5px var(--faction-color, #ff751888))
           brightness(1.1);
   transition: filter 0.2s;
 }
 
-/* Panel title row that holds an icon + text side-by-side */
 .cc-panel-title-with-icon {
   display: flex;
   align-items: center;
   gap: 7px;
 }
 
-/* Unit Builder detail header: icon sits left of the unit name */
 .detail-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-/* Cloud roster list: faction icon next to the faction label */
 .cc-saved-roster-faction-badge {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-/* ===== Three-Column Layout ===== */
+/* ===== FIX 1: Three-Column Layout — TALLER ===== */
+/* Uses viewport height so the app fills the screen properly */
 .cc-faction-builder {
   display: grid;
   grid-template-columns: 300px 1fr 300px;
   gap: 1rem;
-  height: auto;
-  min-height: 600px;
+  /* FIX: was min-height 600px + 700px max on columns — now fills available viewport */
+  height: calc(100vh - 210px);
+  min-height: 560px;
   padding: 0 1rem 1rem 1rem;
 }
 
-.cc-faction-sidebar {
-  min-width: 0;
-  max-height: 700px;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.cc-faction-main {
-  min-width: 0;
-  max-height: 700px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding-bottom: 2rem;
-}
-
+.cc-faction-sidebar,
+.cc-faction-main,
 .cc-faction-roster {
   min-width: 0;
-  max-height: 700px;
+  /* FIX: columns now stretch to fill the full builder height */
+  height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+}
+
+/* Ensure panels inside each column fill the full height */
+.cc-faction-sidebar  .cc-panel,
+.cc-faction-main     .cc-panel,
+.cc-faction-roster   .cc-panel {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.cc-faction-sidebar  .cc-body,
+.cc-faction-main     .cc-body,
+.cc-faction-roster   .cc-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0; /* critical for flex children that scroll */
 }
 
 /* ===== Unit Detail Wrapper ===== */
-.cc-detail-wrapper {
-  padding: 1.5rem;
+.cc-unit-detail {
+  padding: 1.25rem;
 }
 
-.cc-mode-indicator {
-  text-align: center;
-  padding: 8px;
-  background: rgba(0,0,0,0.3);
-  border: 1px solid var(--cc-border);
-  border-radius: 4px;
-  margin-bottom: 15px;
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 700;
-}
-
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--cc-border);
-}
-
-.u-name {
-  font-size: 1.5rem;
+.cc-detail-title {
+  font-size: 1.25rem;
   font-weight: 800;
   color: #e8e8e8;
 }
 
-.u-type {
-  font-size: 0.875rem;
-  color: var(--cc-text-muted);
+.cc-detail-sub {
+  font-size: 0.8rem;
+  color: #888;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 1rem;
+  letter-spacing: 0.08em;
+}
+
+.cc-detail-cost {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--cc-primary);
+  margin: 0.5rem 0;
 }
 
 .u-lore {
   font-style: italic;
-  color: var(--cc-text-muted);
-  padding: 1rem;
+  color: var(--cc-text-muted, #888);
+  padding: 0.75rem 1rem;
   background: rgba(255,255,255,0.03);
   border-left: 3px solid var(--cc-primary);
   margin: 1rem 0;
   line-height: 1.5;
+  font-size: 0.9rem;
+}
+
+/* ===== FIX 3 & 6: Warning Bar ===== */
+/* Shown when a unit would exceed budget or composition limit */
+.cc-warning-bar {
+  background: #7b1414;
+  border: 1px solid #ff4444;
+  border-left: 5px solid #ff1a1a;
+  border-radius: 6px;
+  color: #ffe0e0;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  margin-top: 1rem;
+}
+
+.cc-warning-bar strong {
+  color: #ffb3b3;
+}
+
+/* ===== FIX 6: At-limit library items ===== */
+/* Dims units that are already at their composition cap */
+.cc-list-item-at-limit {
+  opacity: 0.5;
+  cursor: default !important;
+}
+
+.cc-list-item-at-limit:hover {
+  background: inherit !important;
+  border-color: rgba(255,255,255,.07) !important;
 }
 
 /* ===== Stat Badges ===== */
 .stat-badge-flex {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  margin: 15px 0;
+  gap: 6px;
+  flex-wrap: nowrap;
+  margin: 12px 0;
+  overflow-x: auto;
 }
 
-.stat-badge {
-  background: rgba(255, 117, 24, 0.15);
-  border: 1px solid var(--cc-primary);
-  color: var(--cc-primary);
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-weight: 800;
-  font-size: 14px;
-  font-family: var(--cc-font-mono);
+.stat-badge-flex.compact {
+  gap: 4px;
+  margin: 6px 0;
 }
 
-.stat-modified {
-  background: rgba(255, 215, 0, 0.2);
-  border-color: #ffd700;
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0.7; }
-}
-
-/* ===== Field Labels ===== */
-.cc-field-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--cc-primary);
-  margin-bottom: 0.5rem;
-  margin-top: 1rem;
-}
-
-/* ===== Empty State ===== */
-.cc-empty-state {
+.cc-stat-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100%;
-  color: var(--cc-text-muted);
+  min-width: 42px;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 1px solid;
+}
+
+.cc-stat-badge.compact {
+  min-width: 34px;
+}
+
+.cc-stat-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 4px 0;
+  background: rgba(0,0,0,.3);
+  width: 100%;
   text-align: center;
-  padding: 2rem;
 }
 
-.cc-empty-state i {
+.cc-stat-value {
+  font-size: 0.9rem;
+  font-weight: 900;
+  padding: 2px 4px 3px;
+  font-family: var(--cc-font-mono, monospace);
+}
+
+.cc-stat-badge.compact .cc-stat-value { font-size: 0.75rem; }
+
+/* Stat colour families */
+.stat-q-border { border-color: #42a5f5; }
+.stat-q { color: #42a5f5; }
+.stat-d-border { border-color: #ef5350; }
+.stat-d { color: #ef5350; }
+.stat-m-border { border-color: #66bb6a; }
+.stat-m { color: #66bb6a; }
+.stat-r-border { border-color: #ffd600; }
+.stat-r { color: #ffd600; }
+
+.stat-modified {
+  box-shadow: 0 0 6px rgba(255,215,0,.5);
+  border-color: #ffd700 !important;
+}
+
+.ability-link {
+  cursor: pointer;
   color: var(--cc-primary);
-  opacity: 0.3;
+  text-decoration: underline dotted;
+  text-underline-offset: 2px;
+  transition: color 0.15s;
 }
 
-/* ===== Active Item Highlight ===== */
-.cc-item-active {
-  background: rgba(255, 117, 24, 0.2) !important;
-  border-left: 4px solid var(--cc-primary) !important;
-  box-shadow: 0 0 15px rgba(255, 117, 24, 0.3);
+.ability-link:hover { color: #ff9147; }
+
+/* ===== Field Labels ===== */
+.cc-field-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--cc-primary);
+  margin-bottom: 0.4rem;
+  margin-top: 0.9rem;
 }
 
-/* ===== Upgrade Items ===== */
-.upgrade-item {
-  padding: 0.75rem;
-  margin-bottom: 0.5rem;
+/* ===== Upgrade Rows ===== */
+.cc-upgrade-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.4rem;
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
 }
 
-.upgrade-item:hover {
-  background: rgba(255,255,255,0.08);
+.cc-upgrade-row:hover {
+  background: rgba(255,255,255,0.07);
   border-color: var(--cc-primary);
 }
 
-.upgrade-item.selected {
+.cc-upgrade-row.selected {
   background: rgba(255, 117, 24, 0.15);
   border-color: var(--cc-primary);
 }
 
-/* ===== Login Status Bar ===== */
-.cc-login-status {
-  text-align: center;
-  padding: 6px 12px;
-  margin: 0 1rem 0.5rem 1rem;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--cc-border);
+.cc-upgrade-check {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  border: 2px solid rgba(255,255,255,0.25);
   border-radius: 4px;
-  font-size: 11px;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.cc-login-status.logged-in {
-  color: #4CAF50;
-  border-color: rgba(76, 175, 80, 0.3);
-}
-
-.cc-login-status.logged-out {
-  color: #ff9800;
-  border-color: rgba(255, 152, 0, 0.3);
-}
-
-/* ===== Roster View Toggle ===== */
-.cc-roster-view-toggle {
   display: flex;
-  gap: 0.25rem;
-  padding: 0.25rem;
-  background: rgba(0,0,0,0.3);
-  border-radius: 4px;
-}
-
-.cc-roster-view-toggle button {
-  background: transparent;
-  border: none;
-  color: #888;
-  padding: 4px 8px;
-  cursor: pointer;
-  border-radius: 3px;
-  transition: all 0.2s;
-}
-
-.cc-roster-view-toggle button:hover {
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
   color: var(--cc-primary);
+  margin-right: 0.5rem;
+  background: rgba(255,255,255,0.04);
+  transition: all 0.15s;
 }
 
-.cc-roster-view-toggle button.active {
-  background: var(--cc-primary);
-  color: #000;
+.cc-upgrade-row.selected .cc-upgrade-check {
+  border-color: var(--cc-primary);
+  background: rgba(255,117,24,0.2);
 }
 
 /* ===== Roster Grid View ===== */
 .cc-roster-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 0.75rem;
   padding: 0.5rem;
 }
@@ -339,15 +347,16 @@
 }
 
 .cc-roster-grid-item.active {
-  background: rgba(255, 117, 24, 0.2);
+  background: rgba(255, 117, 24, 0.18);
   border-color: var(--cc-primary);
 }
 
 .cc-roster-grid-item .grid-item-name {
   font-weight: 700;
-  font-size: 0.9rem;
-  margin-bottom: 0.25rem;
+  font-size: 0.88rem;
+  margin-bottom: 0.2rem;
   color: #e8e8e8;
+  padding-right: 22px; /* avoid overlap with delete btn */
 }
 
 .cc-roster-grid-item .grid-item-type {
@@ -355,12 +364,7 @@
   color: #888;
   text-transform: uppercase;
   margin-bottom: 0.5rem;
-}
-
-.cc-roster-grid-item .grid-item-cost {
-  font-weight: 700;
-  color: var(--cc-primary);
-  font-size: 0.9rem;
+  letter-spacing: .04em;
 }
 
 .cc-roster-grid-item .grid-item-delete {
@@ -368,6 +372,78 @@
   top: 0.5rem;
   right: 0.5rem;
   background: rgba(255, 77, 77, 0.8);
+  border: none;
+  color: #fff;
+  padding: 2px 5px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.cc-roster-grid-item:hover .grid-item-delete { opacity: 1; }
+
+.cc-roster-grid-item .grid-item-abilities {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+/* ===== Roster List View ===== */
+.cc-roster-list-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.cc-roster-list-item:hover  { background: rgba(255,255,255,0.05); }
+.cc-roster-list-item.active { background: rgba(255,117,24,0.12); }
+
+.roster-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.roster-list-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #e8e8e8;
+}
+
+.roster-list-type {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.roster-list-cost {
+  font-weight: 700;
+  color: var(--cc-primary);
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.roster-list-abilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.roster-list-delete {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  background: rgba(255,77,77,0.7);
   border: none;
   color: #fff;
   padding: 2px 6px;
@@ -378,8 +454,96 @@
   transition: opacity 0.2s;
 }
 
-.cc-roster-grid-item:hover .grid-item-delete {
-  opacity: 1;
+.cc-roster-list-item:hover .roster-list-delete { opacity: 1; }
+
+/* ===== Ability Tags ===== */
+.ability-tag {
+  display: inline-block;
+  background: rgba(255,117,24,.12);
+  border: 1px solid rgba(255,117,24,.3);
+  color: #ff9147;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+
+.ability-tag:hover {
+  background: rgba(255,117,24,.25);
+  border-color: var(--cc-primary);
+  color: #fff;
+}
+
+.ability-tag-small {
+  display: inline-block;
+  background: rgba(255,117,24,.1);
+  border: 1px solid rgba(255,117,24,.25);
+  color: #ff9147;
+  padding: 1px 5px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  line-height: 1.4;
+}
+
+.ability-tag-small:hover {
+  background: rgba(255,117,24,.2);
+  border-color: var(--cc-primary);
+}
+
+/* ===== Login Status Bar ===== */
+.cc-login-status {
+  text-align: center;
+  padding: 5px 12px;
+  margin: 0 1rem 0.5rem;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--cc-border, rgba(255,255,255,.1));
+  border-radius: 4px;
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.cc-login-status.logged-in {
+  color: #4caf50;
+  border-color: rgba(76,175,80,.3);
+}
+
+.cc-login-status.logged-out {
+  color: #ff9800;
+  border-color: rgba(255,152,0,.3);
+}
+
+/* ===== Roster View Toggle ===== */
+.cc-roster-view-toggle {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+}
+
+.cc-roster-view-toggle button {
+  background: transparent;
+  border: none;
+  color: #888;
+  padding: 4px 8px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.cc-roster-view-toggle button:hover { color: var(--cc-primary); }
+
+.cc-roster-view-toggle button.active {
+  background: var(--cc-primary);
+  color: #000;
 }
 
 /* ===== Responsive ===== */
@@ -394,13 +558,14 @@
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
     height: auto;
+    min-height: 0;
   }
 
   .cc-faction-sidebar,
   .cc-faction-main,
   .cc-faction-roster {
-    max-height: none;
-    overflow: visible;
+    height: auto;
+    max-height: 60vh;
   }
 }
 
@@ -424,4 +589,95 @@
   .cc-roster-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ===== Print: roster card grid ===== */
+/* The @media print block from cc_print.css handles the global resets.
+   These classes are used inside the printRoster() popup window. */
+@media print {
+  .cc-faction-controls,
+  .cc-app-header,
+  .cc-login-status,
+  .cc-roster-view-toggle,
+  .cc-slide-panel,
+  .cc-panel-close-btn,
+  .btn,
+  .grid-item-delete,
+  .roster-list-delete,
+  #ability-tooltip {
+    display: none !important;
+  }
+
+  .cc-faction-builder {
+    display: block !important;
+    height: auto !important;
+  }
+
+  .cc-faction-sidebar,
+  .cc-faction-roster {
+    display: none !important;
+  }
+
+  .cc-faction-main {
+    display: block !important;
+    width: 100% !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .cc-panel {
+    border: 1px solid #000 !important;
+    margin-bottom: 1rem;
+    page-break-inside: avoid;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .cc-stat-badge {
+    border: 1px solid #000 !important;
+    box-shadow: none !important;
+  }
+
+  .ability-tag,
+  .ability-tag-small {
+    border: 1px solid #ccc !important;
+    background: #f9f9f9 !important;
+    color: #000 !important;
+  }
+}
+
+/* ===== LIST MODE: single-column layout ===== */
+.cc-faction-builder.cc-list-mode {
+  flex-direction: column;
+  height: auto !important;
+  min-height: 0;
+}
+
+.cc-faction-builder.cc-list-mode .cc-faction-roster {
+  order: 1;
+  width: 100%;
+  height: auto;
+  min-height: 180px;
+  max-height: none;
+}
+
+.cc-faction-builder.cc-list-mode .cc-faction-main {
+  order: 2;
+  width: 100%;
+  height: auto;
+}
+
+.cc-faction-builder.cc-list-mode .cc-faction-sidebar {
+  order: 3;
+  width: 100%;
+  height: auto;
+}
+
+.cc-faction-builder.cc-list-mode .cc-panel {
+  height: auto !important;
+}
+
+.cc-faction-builder.cc-list-mode .cc-body {
+  max-height: none;
+  overflow: visible;
 }
