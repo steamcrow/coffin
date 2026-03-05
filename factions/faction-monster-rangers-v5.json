@@ -249,9 +249,9 @@
         "per_points": 0
       },
       "abilities": [
-        "Load and Carry",
-        "Cut and Run",
-        "Extraction Priority"
+        "load_and_carry",
+        "cut_and_run",
+        "extraction_priority"
       ],
       "lore": "Hard-working employees running Cargo Tiger routes and delivering packages.",
       "tactics": "Backline harassment and objective play.",
@@ -327,8 +327,8 @@
         "per_points": 150
       },
       "abilities": [
-        "Stealth",
-        "Climber"
+        "stealth",
+        "climber"
       ],
       "lore": "First Ranger Branch. Masters of stealth and speed. Sneaky!",
       "tactics": "Fast scout and infiltrator.",
@@ -409,9 +409,9 @@
         "per_points": 300
       },
       "abilities": [
-        "Repair",
-        "Befriend Automat",
-        "Tough"
+        "repair",
+        "befriend_automat",
+        "tough"
       ],
       "lore": "Monster Ranger mechanics and Mechan tamers.",
       "tactics": "Support and construct control.",
@@ -490,8 +490,8 @@
         "per_points": 400
       },
       "abilities": [
-        "Fearless",
-        "Relic Bearer"
+        "fearless",
+        "relic_bearer"
       ],
       "lore": "Field officers entrusted with sacred Conjure Guard relics.",
       "tactics": "Hero unit. Relic timing defines battlefield impact.",
@@ -612,9 +612,9 @@
         "per_points": 300
       },
       "abilities": [
-        "Shield Aura",
-        "Hex",
-        "Witch Stitching"
+        "shield_aura",
+        "hex",
+        "witch_stitched"
       ],
       "lore": "Mystic protectors who focus on Witch Stitches - systematic warding using thread and needle. Understand we are deeply linked like thread.",
       "tactics": "Position centrally for Shield Aura (+1 Defense to allies within 6\"). Hex debuffs enemies (-1 Quality). Witch Stitching ward (5+ ignore first damage per activation).",
@@ -700,9 +700,9 @@
         "per_points": 300
       },
       "abilities": [
-        "Purification Ritual",
-        "Forbidden Knowledge",
-        "Formulae Master"
+        "purification_ritual",
+        "forbidden_knowledge",
+        "formulae_master"
       ],
       "lore": "Study, catalog, and protect Monster Ranger knowledge. Arcane repositories of legends, stories, Formulae. Motto: 'You are what you know.'",
       "tactics": "Backline support. (1) Purify hazardous terrain (12\" radius, once per game), (2) Boost befriend vs chosen monster type (+1 die within 12\"), (3) Amplify Conjure Guards (extend range/area +6\"/+3\").",
@@ -779,13 +779,10 @@
         "per_points": 300
       },
       "abilities": [
-        "Blood Transfusion",
-        "Venom",
-        "VitaGood Brew",
-        {
-          "name": "Built-In Respirator",
-          "effect": "Immune to gas, smoke, poison, and airborne hazard effects."
-        }
+        "blood_transfusion",
+        "venom",
+        "vitagood_brew",
+        "built_in_respirator"
       ],
       "lore": "Treat Monster and Manling alike. Med Kits contain as many poisons as medicines. Brew VitaGood, perform blood transfusions. Wear field Plague Doctor masks.",
       "tactics": "Each turn: Blood Transfusion (base contact, sacrifice 1Q to heal 1Q, or 2Q for monsters - RISKY!) OR Venom (6\" poison). VitaGood tokens (2) for recovery or emergency heal.",
@@ -848,13 +845,10 @@
         "per_points": 300
       },
       "abilities": [
-        "Fortuna Charms",
-        "Third Eye Vision",
-        "Mind Control",
-        {
-          "name": "Befriend Spirits",
-          "effect": "May attempt Befriend against Ghost or Haunt Bloodless. Does not apply to physical undead."
-        }
+        "fortuna_charms",
+        "third_eye_vision",
+        "mind_control",
+        "befriend_spirits"
       ],
       "lore": "Pierce the BEYOND with Third Eye. Create Fortuna Charms (luck), project consciousness to control minds. Rare and vital. Motto: 'Seeing is Believing.'",
       "tactics": "Support specialist. (1) Fortuna Charms: 3 tokens for rerolls, (2) Third Eye: see Stealth/reveal hidden, (3) Mind Control: attack to control enemy's next activation.",
@@ -934,9 +928,9 @@
         "per_points": 300
       },
       "abilities": [
-        "Befriend Kaiju",
-        "Kaiju Calming Ritual",
-        "Yokai Knowledge"
+        "befriend_kaiju",
+        "kaiju_calming_ritual",
+        "yokai_knowledge"
       ],
       "lore": "Specialize in Yokai and Kaiju. Started 1909 when Baron Davis visited Osaka. 5000+ Yokai Rangers in Japan. Regimented scholarly approach. 'Kaiju Corps' - ultimate Kaiju specialists.",
       "tactics": "Titan specialist. Befriend Kaiju with +2 dice (Q3+2 = 5 dice vs Q6!). Kaiju Calming Ritual: 2-turn ritual to shrink rampaging Kaiju for +3 VP. Yokai Knowledge: +1 die aura vs Titans.",
@@ -1012,14 +1006,11 @@
         "per_points": 400
       },
       "abilities": [
-        "Flying",
-        "Barely Controlled",
-        "Flechette Drop",
-        "Crash Landing",
-        {
-          "name": "Built-In Goggles",
-          "effect": "Immune to gas, smoke, poison, and airborne hazard effects."
-        }
+        "flying",
+        "barely_controlled",
+        "flechette_drop",
+        "crash_landing",
+        "built_in_goggles"
       ],
       "lore": "Blappo invention - canvas wings, firework propulsion, daredevil pilots. They only land... or crash. Erratic flight makes hard to hit (D3 from speed). Glorious death trap!",
       "tactics": "High-speed bomber. Fly over enemies dropping flechettes (automatic hits!). MUST move 6\"+ or risk crash. When destroyed, crashes spectacularly (AoE damage).",
@@ -1093,15 +1084,12 @@
         "per_points": 400
       },
       "abilities": [
-        "Stealth",
-        "Fear",
-        "Fearless",
-        "Brutal Blow",
-        "Silent",
-        {
-          "name": "Built-In Respirator",
-          "effect": "Immune to gas, smoke, poison, and airborne hazard effects."
-        }
+        "stealth",
+        "fear",
+        "fearless",
+        "brutal_blow",
+        "silent",
+        "built_in_respirator"
       ],
       "lore": "Secret police of Monster Rangers. Masked enforcers. Fixers, advisors who 'deal with' problems. Invite-only. Know 100 ways to make you cry with steel batons. Metal Mask built-in.",
       "tactics": "Pressure engine (Brute role). Stealth + Fear creates board denial. Commits to combat, grinds enemies down. Makes bad decisions unavoidable.",
@@ -1170,13 +1158,10 @@
         "per_points": 400
       },
       "abilities": [
-        "Tougher",
-        "Fearless",
-        "Pressure Sealed",
-        {
-          "name": "Built-In Respirator",
-          "effect": "Immune to gas, smoke, poison, and airborne hazard effects."
-        }
+        "tougher",
+        "fearless",
+        "pressure_sealed",
+        "built_in_respirator"
       ],
       "lore": "Deep sea divers in heavy pressure suits. The suit is their temple - rarely removed. Sea Rangers adapted to deep pressure. Electro-tridents crackle with Pierce energy.",
       "tactics": "Front-line tank. D5 + Tougher = roll 2 dice per damage (5+ ignores). Pierce cuts armor. Slow (4\") but unstoppable. Park on objectives.",
@@ -1242,10 +1227,10 @@
         "per_points": 400
       },
       "abilities": [
-        "Inspire",
-        "Rally",
-        "Calamity Parade",
-        "Radiomancer Jam"
+        "inspire",
+        "rally",
+        "calamity_parade",
+        "radiomancer_jam"
       ],
       "lore": "Leaders, communicators and flag-bearers. Lead Calamity Parades, use Radio technology. Some jam Monsterology Dynamo equipment.",
       "tactics": "Standard leader (Inspire +1 die, Rally morale). Save Calamity Parade for decisive moment (+3\" Move, +1 Quality, Fearless for 1 round, 6\" aura). Radiomancer Jam disrupts tech heroes (24\", jam Jagers/Haxans/Iron Diplomats).",
