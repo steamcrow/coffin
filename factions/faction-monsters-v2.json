@@ -977,3 +977,84 @@
     }
   ]
 }
+{
+  "name": "Medusa",
+  "faction": "Monsters",
+  "type": "Mystic",
+  "cost": 134,
+  "quality": 5,
+  "defense": 3,
+  "move": 5,
+  "range": 8,
+  "weapon": "Cursed Gaze",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 400
+  },
+  "abilities": [
+    "hex",
+    "fear",
+    "petrify"
+  ],
+  "lore": "A ruin-queen who wanders the shattered temples and dry river shrines of Coffin Canyon. Her gaze does not kill outright—it turns courage into hesitation and flesh slowly into stone. The canyon is littered with statues that once had names.",
+  "tactics": "Debuff controller. Keep distance and maintain line of sight while weakening enemies with petrifying gaze.",
+  "upgrades": [],
+  "temperament": "Cunning",
+  "flags": [
+    "CannotBeBefriended",
+    "Large"
+  ]
+}
+{
+  "name": "Dog Spider",
+  "faction": "Monsters",
+  "type": "Rogue",
+  "cost": 88,
+  "quality": 3,
+  "defense": 2,
+  "move": 8,
+  "range": 0,
+  "weapon": "Fangs & Skittering Claws",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 200
+  },
+  "abilities": [
+    "fast",
+    "venom",
+    "disengage"
+  ],
+  "lore": "Dog spiders are canyon ambush predators the size of wolves. They skitter across rocks and wagon trails alike, striking from shadows before retreating into cracks in the stone.",
+  "tactics": "Fast ambusher. Strike isolated targets and retreat before heavy units can respond.",
+  "upgrades": [
+    {
+      "name": "Web Spitter",
+      "cost": 10,
+      "range": 6,
+      "effect": "Gain a web spit attack (Range 6\"). On a successful hit the target becomes Pinned."
+    },
+    {
+      "name": "Burrower",
+      "cost": 15,
+      "effect": "Once per game, this model may emerge anywhere within 8\" of its starting position that is not within 3\" of an enemy."
+    }
+  ],
+  "temperament": "Predatory",
+  "flags": [
+    "CannotBeBefriended",
+    "Beast"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Thyrfang Spider",
+      "cost": 25,
+      "quality": 4,
+      "abilities": [
+        "fear",
+        "venom",
+        "furious"
+      ],
+      "effect": "A Dog Spider warped by feeding on Thyr crystals. Its fangs glow faintly and its attacks grow more savage the more blood it spills."
+    }
+  ]
+}
