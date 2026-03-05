@@ -770,3 +770,157 @@
     }
   ]
 }
+{
+  "name": "Golem",
+  "faction": "Monsters",
+  "type": "Tank",
+  "cost": 120,
+  "quality": 3,
+  "defense": 3,
+  "move": 4,
+  "range": 0,
+  "weapon": "Heavy Construct Fists",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 300
+  },
+  "abilities": [
+    "fearless",
+    "bloodless",
+    "tough"
+  ],
+  "lore": "Constructs stitched, sculpted, or forged into life by the strange sciences of Coffin Canyon. Some are academic experiments, others relics of industry, and some simply refuse to stop moving.",
+  "tactics": "Durable front-line anchor. Choose a material variant to define how the Golem behaves on the battlefield.",
+  "temperament": "Stalwart",
+  "flags": [
+    "CannotBeBefriended",
+    "Mechan"
+  ],
+  "upgrades": [],
+  "supplemental_abilities": [
+    {
+      "name": "Flesh Golem",
+      "cost": 35,
+      "quality": 3,
+      "defense": 3,
+      "abilities": [
+        "relentless",
+        "fear"
+      ],
+      "effect": "A grotesque monsterologist construct stitched from grave-rotted remains. Flesh golems stagger forward with stubborn determination."
+    },
+    {
+      "name": "Clay Golem",
+      "cost": 60,
+      "quality": 4,
+      "defense": 4,
+      "abilities": [
+        "tougher",
+        "fearless"
+      ],
+      "effect": "Shaped from canyon clay and kiln-fired mud, these silent guardians once watched over forgotten shrines and camps."
+    },
+    {
+      "name": "Iron Golem",
+      "cost": 85,
+      "quality": 5,
+      "defense": 5,
+      "abilities": [
+        "toughest",
+        "fearless",
+        "spare_parts_drop"
+      ],
+      "effect": "A brutal iron construct of forgotten industry. When destroyed, it leaves behind scattered Spare Parts."
+    }
+  ]
+}
+
+{
+  "name": "Canyon Harpy",
+  "faction": "Monsters",
+  "type": "Rogue",
+  "cost": 95,
+  "quality": 2,
+  "defense": 2,
+  "move": 8,
+  "range": 6,
+  "weapon": "Filthy Claws & Screech",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 200
+  },
+  "abilities": [
+    "flying",
+    "sonic",
+    "venom",
+    "disengage"
+  ],
+  "lore": "Canyon harpies roost in the high red cliffs, building nests of bones, broken bottles, and stolen jewelry. Their feathers stink of rot and carrion, and their claws carry the sickness of everything they have eaten.",
+  "tactics": "Fast harassment predator. Fly over screens, strike weak targets, and retreat before heavier units can respond.",
+  "temperament": "Skittish",
+  "flags": [
+    "CannotBeBefriended",
+    "Beast",
+    "Flying"
+  ],
+  "upgrades": [],
+  "supplemental_abilities": [
+    {
+      "name": "Rotwing Harpy",
+      "cost": 30,
+      "quality": 4,
+      "abilities": [
+        "fear",
+        "venom",
+        "choking_dust"
+      ],
+      "effect": "A diseased canyon harpy whose wings are mottled with rot and parasites. Its claws drip infection and its breath carries the stench of shallow graves."
+    }
+  ]
+}
+{
+  "name": "Ridge Satyr",
+  "faction": "Monsters",
+  "type": "Rogue",
+  "cost": 97,
+  "quality": 2,
+  "defense": 2,
+  "move": 6,
+  "range": 6,
+  "weapon": "Pan Pipes & Knife",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 200
+  },
+  "abilities": [
+    "hex",
+    "sonic",
+    "disengage"
+  ],
+  "lore": "Ridge satyrs haunt the dry groves and hidden springs of Coffin Canyon. With cracked pan pipes and crooked smiles, they play tunes that slip into the bones and make good sense wander off somewhere else. They are not cruel creatures—but they are terrible influences.",
+  "tactics": "Control rogue. Hex dangerous enemies and disrupt formations with pipe-song. Avoid direct combat; satyrs win by mischief rather than strength.",
+  "upgrades": [
+    {
+      "name": "Brass Bow",
+      "cost": 15,
+      "range": 18,
+      "effect": "Add a Brass Bow (Range 18\"). A strange mechanical bow of brass limbs and tension springs that hums faintly when drawn."
+    }
+  ],
+  "temperament": "Cunning",
+  "flags": [
+    "CanBeBefriended",
+    "EscortEligible"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Moonridge Satyr",
+      "cost": 18,
+      "quality": 3,
+      "abilities": [
+        "fear"
+      ],
+      "effect": "A pale satyr that wanders the canyon by moonlight. Its pipe-song chills the heart and unsettles even hardened gunslingers."
+    }
+  ]
+}
