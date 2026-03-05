@@ -521,7 +521,7 @@
   "weapon": "Raking Talons & Pounce",
   "weapon_properties": [],
   "composition": {
-    "per_points": 0
+    "per_points": 200
   },
   "abilities": [
     "fast",
@@ -550,6 +550,63 @@
     },
     {
       "name": "Blood Scent",
+      "cost": 6,
+      "effect": "This unit gains Blood in the Air."
+    }
+  ]
+}
+{
+  "name": "Kelpie",
+  "faction": "Monsters",
+  "type": "Cavalry",
+  "cost": 121,
+  "quality": 4,
+  "defense": 3,
+  "move": 9,
+  "range": 0,
+  "weapon": "Drowning Drag",
+  "weapon_properties": [
+    "grapple"
+  ],
+  "composition": {
+    "per_points": 150
+  },
+  "abilities": [
+    "fear",
+    "amphibious",
+    "water_lurker",
+    "dry_desperation"
+  ],
+  "lore": "A damp horse-beast out of place in the dry canyon. Desperate, thirsty, and dangerous—pulling prey into shade, mud, or deeper trouble.",
+  "tactics": "Hit-and-run controller. Grapple key targets off objectives or into danger zones. Works best near water terrain.",
+  "temperament": "Skittish",
+  "flags": [
+    "Beast"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "River Kelpie",
+      "cost": 25,
+      "defense": 4,
+      "abilities": ["fast"],
+      "effect": "A strong river hunter."
+    },
+    {
+      "name": "Starved Kelpie",
+      "cost": -25,
+      "quality": 3,
+      "abilities": ["furious"],
+      "effect": "A desperate desert wanderer."
+    }
+  ],
+  "upgrades": [
+    {
+      "name": "Deepwater Pull",
+      "cost": 8,
+      "effect": "This unit gains Impact."
+    },
+    {
+      "name": "Bog Hunter",
       "cost": 6,
       "effect": "This unit gains Blood in the Air."
     }
