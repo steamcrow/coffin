@@ -3,6 +3,13 @@
   "title": "Ability Dictionary — I (Thyr Interaction & Mutation)",
 
   "abilities": {
+    "blood_feast": {
+    "_id": "R-ABIL-I-BLOOD-FEAST",
+    "timing": "passive",
+    "short": "Kills grant Blood Feast dice.",
+    "long": "Passive. Each time this unit destroys a Human model, it gains +1 Blood Feast die. Blood Feast dice persist. At the start of this unit's activation, it may add all Blood Feast dice to ONE chosen pool for that activation: attack, defense, or interaction."
+    }
+
     "thyr_devourer": {
       "_id": "R-ABIL-I-THYR-DEVOURER",
       "timing": "main_action",
