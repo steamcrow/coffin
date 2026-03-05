@@ -18,6 +18,7 @@
       "Curse",
       "Backlash"
     ],
+
     "what_they_fight_for": [
       "Dominance of hunting grounds",
       "Protection of nests, warrens, and lairs",
@@ -25,6 +26,7 @@
       "Spreading taint, fear, and disruption",
       "Punishing intrusion"
     ],
+
     "what_they_fight_against": [
       "Containment and eradication",
       "Industrial control of the canyon",
@@ -609,6 +611,81 @@
       "name": "Bog Hunter",
       "cost": 6,
       "effect": "This unit gains Blood in the Air."
+    }
+  ]
+}
+{
+  "name": "Feratu",
+  "faction": "Monsters",
+  "type": "Rogue",
+  "cost": 110,
+  "quality": 4,
+  "defense": 3,
+  "move": 7,
+  "range": 0,
+  "weapon": "Fangs & Blade",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 200
+  },
+  "abilities": [
+    "stealth",
+    "fear",
+    "blood_feast"
+  ],
+  "lore": "Tall, pale blood drinkers hiding behind civility and shadow. In Coffin Canyon they hunt selectively, feeding on the living and growing bolder with every kill.",
+  "tactics": "A scaling predator. Early game: isolate Rabble and wounded targets. Late game: Blood Feast dice turn it into a nightmare if unchecked.",
+  "temperament": "Cunning",
+  "flags": [
+    "Bloodless"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Feratu Stalker",
+      "cost": 10,
+      "move": 8,
+      "abilities": [
+        "fast"
+      ],
+      "flags": [
+        "CannotBeBefriended"
+      ],
+      "effect": "A feral night-hunter that abandons all civility. Even Skull Rangers cannot befriend it."
+    },
+    {
+      "name": "Feratu Bride",
+      "cost": 15,
+      "defense": 2,
+      "abilities": [
+        "brutal_fear"
+      ],
+      "effect": "A charming predator that draws victims close before feeding."
+    },
+    {
+      "name": "Feratu Gentleman",
+      "cost": 20,
+      "quality": 5,
+      "abilities": [
+        "mark_target"
+      ],
+      "effect": "An aristocratic hunter who studies prey before striking. Quality cannot exceed 6."
+    }
+  ],
+  "upgrades": [
+    {
+      "name": "Piercing Bite",
+      "cost": 10,
+      "effect": "This unit gains Pierce."
+    },
+    {
+      "name": "Brutal Blow",
+      "cost": 15,
+      "effect": "This unit gains Brutal Blow."
+    },
+    {
+      "name": "Thyr Frenzy",
+      "cost": 20,
+      "effect": "This unit gains Thyr Devourer and Thyr Frenzy. If this would increase its Quality above 6, it remains 6."
     }
   ]
 }
