@@ -689,3 +689,36 @@
     }
   ]
 }
+{
+  "name": "Klowna",
+  "faction": "Monsters",
+  "type": "Titan",
+  "cost": 257,
+  "quality": 6,
+  "defense": 5,
+  "move": 7,
+  "range": 0,
+  "weapon": "Titan Talons, Twin Maw & Triple-Leg Lunge",
+  "weapon_properties": [
+    "brutal_pierce"
+  ],
+  "composition": {
+    "per_points": 1000
+  },
+  "abilities": [
+    "savage_fear",
+    "toughest",
+    "down_the_hatch",
+    "klowna_spawn",
+    "twin_maw",
+    "two_heads"
+  ],
+  "lore": "A towering chitinous horror—nearly 14 feet tall—with two heads, three legs, and enormous talons. It crawls out of an old wreck like a bad joke that refuses to end.",
+  "tactics": "A shared catastrophe. Spawn it mid-game to spike tension. Force everyone to decide: keep scoring, or deal with the Titan before it eats the canyon.",
+  "temperament": "Vengeful",
+  "flags": [
+    "Titan",
+    "CannotBeBefriended"
+  ],
+  "upgrades": []
+}
