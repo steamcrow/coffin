@@ -722,3 +722,51 @@
   ],
   "upgrades": []
 }
+{
+  "name": "Canyon Goblin",
+  "faction": "Monsters",
+  "type": "Frail",
+  "cost": 29,
+  "quality": 1,
+  "defense": 1,
+  "move": 5,
+  "range": 2,
+  "weapon": "Rust Blade & Rock Tossing",
+  "weapon_properties": [
+    "thrown"
+  ],
+  "composition": {
+    "per_points": 100
+  },
+  "abilities": [
+    "skittish"
+  ],
+  "lore": "Canyon goblins scavenge old rails, broken wagons, and ruined camps. They know every crack in the stone, every shade line at noon, and every hiding place worth having.",
+  "tactics": "Objective nuisance. Use them to screen, contest, and flee. They are not fighters.",
+  "temperament": "Skittish",
+  "flags": [
+    "CanBeBefriended",
+    "EscortEligible",
+    "Small"
+  ],
+  "upgrades": [],
+  "supplemental_abilities": [
+    {
+      "name": "Red Goblin",
+      "cost": 67,
+      "quality": 2,
+      "defense": 2,
+      "move": 6,
+      "abilities": [
+        "stealth",
+        "backstab",
+        "poison",
+        "iron_shoes"
+      ],
+      "flags": [
+        "CannotBeBefriended"
+      ],
+      "effect": "Circus goblins wear the red hat like a brand and iron shoes like a sentence. Fast, cruel, and difficult to pin down."
+    }
+  ]
+}
