@@ -37,7 +37,14 @@
       "timing": "passive",
       "short": "Immune to sound-based effects.",
       "long": "This unit is immune to sound-based abilities, fear effects, and sonic attacks unless explicitly stated otherwise."
+
     },
+    "iron_shoes": {
+    "_id": "R-ABIL-A-IRON-SHOES",
+    "timing": "passive",
+    "short": "Move after a melee kill.",
+    "long": "Passive. When this unit destroys an enemy model in melee, it may immediately move up to 2\"."
+    }
 
     "armored": {
       "_id": "R-ABIL-A-ARMORED",
