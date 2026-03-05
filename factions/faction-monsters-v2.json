@@ -459,3 +459,53 @@
     }
   ]
 }
+{
+  "name": "Patchwork Wonder",
+  "faction": "Monsters",
+  "type": "Brute",
+  "cost": 144,
+  "quality": 5,
+  "defense": 3,
+  "move": 5,
+  "range": 2,
+  "weapon": "Stitched Limbs & Aethyr Surge",
+  "weapon_properties": [
+    "Thrown 6\""
+  ],
+  "composition": {
+    "per_points": 0
+  },
+  "abilities": [
+    "relentless",
+    "fear",
+    "brutal_blow",
+    "furious"
+  ],
+  "lore": "A creature of many parts, sewn together with string and wire and sparked to life by aethyr. Sometimes cloth. Sometimes muscle and gristle. Always strange.",
+  "tactics": "Close in fast, hit hard, and keep pressure. Patchwork thrives in messy fights and punishes anyone who tries to bully monsters off objectives.",
+  "temperament": "Vengeful",
+  "flags": [
+    "CannotBeBefriended"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Sackcloth Patchwork",
+      "cost": -40,
+      "quality": 4,
+      "defense": 2,
+      "effect": "A cheap and unstable cloth-stuffed construct."
+    }
+  ],
+  "upgrades": [
+    {
+      "name": "Aethyr Surge",
+      "cost": 8,
+      "effect": "This unit gains Hex."
+    },
+    {
+      "name": "Heavy Limbs",
+      "cost": 6,
+      "effect": "This unit gains Brutal Blow."
+    }
+  ]
+}
