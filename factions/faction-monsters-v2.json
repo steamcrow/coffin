@@ -414,3 +414,44 @@
     }
   ]
 }
+{
+  "name": "Halloween Golem",
+  "faction": "Monsters",
+  "type": "Tank",
+  "cost": 155,
+  "quality": 3,
+  "defense": 3,
+  "move": 5,
+  "range": 0,
+  "weapon": "Woodcutter Axe",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 0
+  },
+  "abilities": [
+    "toughest",
+    "spare_parts_drop"
+  ],
+  "lore": "Obsolete mechanical pumpkin-headed men built to bring order to the wilderness — cutting trees and tending farms. Now they wander about looking for trees to accost, and Thyr.",
+  "tactics": "Reliable blockers that grind forward and absorb punishment while leaving salvage behind.",
+  "temperament": "Stalwart",
+  "flags": [
+    "Mechan",
+    "HeavyArmor"
+  ],
+
+  "supplemental_abilities": [
+    {
+      "name": "Rusty Halloween Golem",
+      "effect": "Cost -50. Move -2. Quality -2."
+    }
+  ],
+
+  "upgrades": [
+    {
+      "name": "Keen Axe",
+      "cost": 6,
+      "effect": "This unit gains Pierce."
+    }
+  ]
+}
