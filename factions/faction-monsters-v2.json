@@ -443,7 +443,11 @@
   "supplemental_abilities": [
     {
       "name": "Rusty Halloween Golem",
-      "effect": "Cost -50. Move -2. Quality -2."
+      "cost": -50,
+      "quality": 2,
+      "defense":2,
+      "move": 3,
+      "effect": "Rusting piece of trash."
     }
   ],
 
