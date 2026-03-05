@@ -25,11 +25,11 @@
     },
 
     "thyr_frenzy": {
-  "_id": "R-ABIL-I-THYR-FRENZY",
-  "timing": "trigger",
-  "short": "After consuming Thyr, become enraged and more lethal.",
-  "long": "Trigger. After this unit consumes a Thyr Crystal Cache, it gains +1 Quality and gains Brutal Impact for the remainder of the game. It also becomes CannotBeBefriended for the remainder of the game (existing Befriend status immediately ends)."
-}
+    "_id": "R-ABIL-I-THYR-FRENZY",
+    "timing": "trigger",
+    "short": "After consuming Thyr, become enraged and more lethal.",
+    "long": "Trigger. After this unit consumes a Thyr Crystal Cache, it gains +1 Quality and gains Brutal Impact for the remainder of the game. It also becomes CannotBeBefriended for the remainder of the game (existing Befriend status immediately ends)."
+    }
 
     "thyr_regeneration": {
       "_id": "R-ABIL-I-THYR-REGENERATION",
@@ -65,6 +65,13 @@
       "short": "Gain bonuses while near Thyr (without consuming it).",
       "long": "Passive. While this unit is within 6\" of a Thyr Crystal Cache, it gains +1 die on all Quality checks and gains Fear (or increases Fear by one tier, if it already has Fear). This does not consume the Cache."
     },
+
+    "thyr_guardian": {
+    "_id": "R-ABIL-C-THYR-GUARDIAN",
+    "timing": "passive",
+    "short": "Fights harder near Thyr.",
+    "long": "Passive. While this unit is within 6\" of a Thyr Crystal, it gains +1 Quality on melee attacks."
+    }
 
     "thyr_sated": {
       "_id": "R-ABIL-I-THYR-SATED",
