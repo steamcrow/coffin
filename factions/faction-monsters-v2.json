@@ -509,3 +509,49 @@
     }
   ]
 }
+{
+  "name": "Lionvulture",
+  "faction": "Monsters",
+  "type": "Cavalry",
+  "cost": 122,
+  "quality": 4,
+  "defense": 3,
+  "move": 10,
+  "range": 0,
+  "weapon": "Raking Talons & Pounce",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 0
+  },
+  "abilities": [
+    "fast",
+    "thyr_guardian"
+  ],
+  "lore": "A four-legged wild beast—more animal than intellect—nesting near Thyr outcroppings where it can guard and feed.",
+  "tactics": "Flank, pounce, and retreat. Use speed to contest Thyr and punish isolated models. Avoid prolonged brawls.",
+  "temperament": "Territorial",
+  "flags": [
+    "Beast"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Alpha Lionvulture",
+      "cost": 30,
+      "quality": 5,
+      "effect": "Dominant territorial predator.",
+      "abilities": ["fear"]
+    }
+  ],
+  "upgrades": [
+    {
+      "name": "Savage Pounce",
+      "cost": 6,
+      "effect": "This unit gains Impact."
+    },
+    {
+      "name": "Blood Scent",
+      "cost": 6,
+      "effect": "This unit gains Blood in the Air."
+    }
+  ]
+}
