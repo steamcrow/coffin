@@ -242,12 +242,19 @@
       "long": "Passive. When this unit fires its weapon: ALL units (friendly AND enemy) within 12\" must test Morale."
     },
     "spare_parts_drop": {
-  "_id": "R-ABIL-C-SPARE-PARTS-DROP",
-  "timing": "passive",
-  "short": "Drops Spare Parts when destroyed.",
-  "long": "Passive. When this unit is reduced to 0 Quality, place one Spare Parts token in base contact with its base before removing the model."
-}
+    "_id": "R-ABIL-C-SPARE-PARTS-DROP",
+    "timing": "passive",
+    "short": "Drops Spare Parts when destroyed.",
+    "long": "Passive. When this unit is reduced to 0 Quality, place one Spare Parts token in base contact with its base before removing the model."
+    }
 
+    "thyr_guardian": {
+    "_id": "R-ABIL-C-THYR-GUARDIAN",
+    "timing": "passive",
+    "short": "Fights harder near Thyr.",
+    "long": "Passive. While this unit is within 6\" of a Thyr Crystal, it gains +1 die on melee attacks."
+    }
+    
     "choking_dust": {
       "_id": "R-ABIL-C-CHOKING-DUST",
       "timing": "passive",
