@@ -102,6 +102,27 @@
       "long": "Passive. When taking damage, roll 2 dice per point of damage. Each 5+ ignores 1 damage."
     },
 
+    "amphibious": {
+    "_id": "R-ABIL-D-AMPHIBIOUS",
+    "timing": "passive",
+    "short": "Moves freely through water.",
+    "long": "Passive. This unit treats Water terrain as normal ground and may enter or exit Water terrain without penalty."
+    }
+
+    "dry_desperation": {
+    "_id": "R-ABIL-D-DRY-DESPERATION",
+    "timing": "passive",
+    "short": "Pushes itself when parched.",
+    "long": "Passive. If this unit begins its activation on Sand terrain, it may lose 1 Quality to gain +2 Move this activation."
+    }
+    
+    "water_lurker": {
+    "_id": "R-ABIL-D-WATER-LURKER",
+    "timing": "passive",
+    "short": "Stronger near water.",
+    "long": "Passive. While within 3\" of Water terrain, this unit gains +1 Defense."
+    }
+    
     "toughest": {
       "_id": "R-ABIL-D-TOUGHEST",
       "timing": "passive",
