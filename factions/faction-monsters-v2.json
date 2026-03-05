@@ -247,18 +247,18 @@
   "variants": [
     {
       "name": "Baby Bête",
-      "cost": 120,
-      "quality": 5,
+      "cost": -100,
+      "quality": 2,
       "defense": 2,
-      "move": 7,
+      "move": 5,
       "abilities": [
         "fear"
       ]
     },
     {
       "name": "Mama Bête",
-      "cost": 210,
-      "quality": 6,
+      "cost": -50,
+      "quality": 4,
       "defense": 4,
       "move": 5,
       "abilities": [
