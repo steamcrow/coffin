@@ -924,3 +924,56 @@
     }
   ]
 }
+{
+  "name": "Valley Centaur",
+  "faction": "Monsters",
+  "type": "Cavalry",
+  "cost": 136,
+  "quality": 4,
+  "defense": 3,
+  "move": 9,
+  "range": 6,
+  "weapon": "Bow & Hooves",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 200
+  },
+  "abilities": [
+    "fast",
+    "suppression"
+  ],
+  "lore": "Nomads of the high mesas, valley centaurs roam the broken trails and wind-cut ridges of Coffin Canyon. Some will bargain for water, salt, or news. Most prefer to run strangers off with a warning arrow.",
+  "tactics": "Mobile skirmisher. Suppress dangerous enemies from range, then reposition quickly to stay out of melee.",
+  "upgrades": [
+    {
+      "name": "Longbow",
+      "cost": 15,
+      "range": 18,
+      "effect": "Replace this unit's weapon with a Longbow (Range 18\"). Valley centaurs are legendary canyon archers, able to strike from surprising distances."
+    }
+  ],
+  "temperament": "Cunning",
+  "flags": [
+    "CanBeBefriended",
+    "EscortEligible",
+    "Large"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Bloodhoof Centaur",
+      "cost": 40,
+      "quality": 5,
+      "defense": 4,
+      "move": 7,
+      "range": 0,
+      "composition": {
+      "per_points": 550
+      "abilities": [
+        "fear",
+        "brutal_impact",
+        "relentless"
+      ],
+      "effect": "No one knows where the Bloodhoof Centaurs came from. These enormous ogre-centaurs appeared in Coffin Canyon only recently—towering, scarred, and violently territorial. They charge like living avalanches, crushing bone and stone beneath their hooves."
+    }
+  ]
+}
