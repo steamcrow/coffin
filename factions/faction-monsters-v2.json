@@ -293,3 +293,124 @@
     }
   ]
 }
+{
+  "name": "Dust King",
+  "faction": "Monsters",
+  "type": "Brute",
+  "cost": 162,
+  "quality": 5,
+  "defense": 4,
+  "move": 4,
+  "range": 0,
+  "weapon": "Black-Tarnished Silver Sword",
+  "weapon_properties": [
+    "pierce"
+  ],
+  "composition": {
+    "per_points": 200
+  },
+  "abilities": [
+    "fear",
+    "relentless",
+    "tougher"
+  ],
+  "lore": "Ancient bandaged dead-men, risen from forbidden chemical ruins. Dust Kings wander out of collapsed tombs and sunken chambers, chewing fresh flesh when they find it.",
+  "tactics": "Slow, durable melee pressure. Park them in ruins or choke points and force enemies to deal with Fear and grinding attacks.",
+  "temperament": "Vengeful",
+  "flags": [
+    "Bloodless",
+    "SkullRangerBefriendOnly"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Ruinbound",
+      "effect": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation."
+    }
+  ],
+  "variants": [
+    {
+      "name": "Dust King Revenant",
+      "cost": 195,
+      "quality": 6,
+      "defense": 4,
+      "move": 4,
+      "range": 0,
+      "weapon_properties": [
+        "brutal_pierce"
+      ],
+      "composition": {
+        "per_points": 500
+      },
+      "abilities": [
+        "brutal_fear",
+        "relentless",
+        "tougher"
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Ruinbound",
+          "effect": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation."
+        },
+        {
+          "name": "Tomb-Curse",
+          "effect": "When an enemy ends its activation engaged with this unit, that enemy must test Morale."
+        }
+      ]
+    },
+    {
+      "name": "Dust Emperor",
+      "type": "Hero",
+      "cost": 260,
+      "quality": 6,
+      "defense": 5,
+      "move": 4,
+      "range": 0,
+      "weapon_properties": [
+        "brutal_pierce"
+      ],
+      "composition": {
+        "per_points": 2000
+      },
+      "abilities": [
+        "savage_fear",
+        "relentless",
+        "toughest"
+      ],
+      "flags": [
+        "Bloodless",
+        "SkullRangerBefriendOnly"
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Ruinbound",
+          "effect": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation."
+        },
+        {
+          "name": "Royal Tomb-Ward",
+          "effect": "Once per game: choose one Ruin or Ancient Structure terrain within 12\". Until end of round, enemies treat that terrain as Hazardous."
+        },
+        {
+          "name": "Dust Command",
+          "effect": "Once per round, when a friendly Bloodless unit within 8\" fails a Morale test, it may reroll."
+        }
+      ]
+    }
+  ],
+  "upgrades": [
+    {
+      "name": "Brutal Fear",
+      "cost": 8,
+      "effect": "This unit gains Brutal Fear."
+    },
+    {
+      "name": "Toughest",
+      "cost": 12,
+      "effect": "This unit gains Toughest."
+    },
+    {
+      "name": "Thyr Frenzy",
+      "cost": 10,
+      "effect": "This unit gains Thyr Devourer and Thyr Frenzy. If this would increase its Quality above 6, it remains 6."
+    }
+  ]
+}
