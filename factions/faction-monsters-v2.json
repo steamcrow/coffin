@@ -208,3 +208,88 @@
 
   "units": []
 }
+{
+  "name": "Bête Herdbeast",
+  "faction": "Monsters",
+  "type": "Tank",
+  "cost": 177,
+  "quality": 6,
+  "defense": 3,
+  "move": 6,
+  "range": 0,
+  "weapon": "Horns, Bulk & Trample",
+  "weapon_properties": [],
+  "abilities": [
+    "tougher",
+    "brutal_impact",
+    "fear"
+  ],
+  "lore": "Huge, shaggy horned beasts that smell faintly of candy. Bêtes are dream-made giants—often gentle—yet terrifying when startled.",
+  "tactics": "Anchor the center. Use its footprint to block lanes and protect Thyr. Avoid unnecessary fights; win by surviving, holding ground, or being Escorted.",
+  "temperament": "Friendly",
+  "flags": [
+    "CanBeBefriended",
+    "EscortEligible",
+    "Large"
+  ],
+
+  "supplemental_abilities": [
+    {
+      "name": "Gentle Giant",
+      "effect": "Will not declare attacks against Monster Rangers unless attacked first."
+    },
+    {
+      "name": "Stampede",
+      "effect": "If this unit fails a Morale test it immediately moves up to its Move in a straight line. It may pass through smaller models, applying Impact normally."
+    }
+  ],
+
+  "variants": [
+    {
+      "name": "Baby Bête",
+      "cost": 120,
+      "quality": 5,
+      "defense": 2,
+      "move": 7,
+      "abilities": [
+        "fear"
+      ]
+    },
+    {
+      "name": "Mama Bête",
+      "cost": 210,
+      "quality": 6,
+      "defense": 4,
+      "move": 5,
+      "abilities": [
+        "toughest",
+        "brutal_impact",
+        "brutal_fear"
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Pack Protector",
+          "effect": "When a Baby Bête within 6\" is targeted by an attack, Mama Bête may immediately move up to 4\" toward the attacker. This movement ignores engagement but must end closer to the attacker."
+        }
+      ]
+    }
+  ],
+
+  "upgrades": [
+    {
+      "name": "Thick Hide",
+      "cost": 10,
+      "effect": "This unit gains Toughest."
+    },
+    {
+      "name": "Terrifying Bulk",
+      "cost": 8,
+      "effect": "This unit gains Brutal Fear."
+    },
+    {
+      "name": "Thyr Sated",
+      "cost": 6,
+      "effect": "This unit gains Thyr Sated."
+    }
+  ]
+}
