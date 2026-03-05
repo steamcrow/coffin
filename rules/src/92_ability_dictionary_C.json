@@ -241,6 +241,12 @@
       "short": "Morale shockwave on firing.",
       "long": "Passive. When this unit fires its weapon: ALL units (friendly AND enemy) within 12\" must test Morale."
     },
+    "spare_parts_drop": {
+  "_id": "R-ABIL-C-SPARE-PARTS-DROP",
+  "timing": "passive",
+  "short": "Drops Spare Parts when destroyed.",
+  "long": "Passive. When this unit is reduced to 0 Quality, place one Spare Parts token in base contact with its base before removing the model."
+}
 
     "choking_dust": {
       "_id": "R-ABIL-C-CHOKING-DUST",
