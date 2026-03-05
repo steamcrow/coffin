@@ -10,6 +10,29 @@
     "long": "Passive. Each time this unit destroys a Human model, it gains +1 Blood Feast die. Blood Feast dice persist. At the start of this unit's activation, it may add all Blood Feast dice to ONE chosen pool for that activation: attack, defense, or interaction."
     }
 
+  {
+  "klowna_spawn": {
+    "_id": "R-ABIL-I-KLOWNA-SPAWN",
+    "timing": "passive",
+    "short": "Spawns from the wreck, not normal deployment.",
+    "long": "Passive. Does not deploy normally. At the start of Round 2 (or scenario-defined), place this unit in base contact with the Clown Car/Wagon Wreck marker."
+
+  },
+  "twin_maw": {
+    "_id": "R-ABIL-I-TWIN-MAW",
+    "timing": "passive",
+    "short": "Split melee between two targets.",
+    "long": "Passive. When this unit makes a melee attack, it may split its attack between up to two targets in base contact (declare split before rolling)."
+
+  },
+  "two_heads": {
+    "_id": "R-ABIL-I-TWO-HEADS",
+    "timing": "passive",
+    "short": "Unstable behavior each activation.",
+    "long": "Passive. At the start of each activation, roll 1d6: 1-2 Frenzy (must Charge nearest unit), 3-4 Normal, 5-6 Mockery (all enemies within 6\" must test Morale)."
+  }
+}
+    
     "thyr_devourer": {
       "_id": "R-ABIL-I-THYR-DEVOURER",
       "timing": "main_action",
