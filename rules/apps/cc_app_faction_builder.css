@@ -364,7 +364,16 @@
   color: #888;
   text-transform: uppercase;
   margin-bottom: 0.5rem;
-  letter-spacing: .04em;
+}
+
+.grid-item-version {
+  font-size: 0.72rem;
+  color: var(--cc-primary);
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cc-roster-grid-item .grid-item-delete {
