@@ -1315,3 +1315,77 @@
     }
   ]
 }
+{
+  "name": "Owlbear",
+  "faction": "Monsters",
+  "type": "Brute",
+  "cost": 148,
+  "quality": 4,
+  "defense": 4,
+  "move": 8,
+  "range": 0,
+  "weapon": "Talons & Beak",
+  "weapon_properties": [],
+  "abilities": [
+    "impact",
+    "brutal_blow"
+  ],
+  "lore": "A hulking canyon predator with the body of a bear and the eyes of a hunting owl. When it screeches across the gulch walls, even seasoned Rangers remember they are prey.",
+  "tactics": "Shock predator. Charge into exposed enemies and break lines with Impact and brutal melee.",
+  "upgrades": [
+    {
+      "name": "Iron-Breaking Talons",
+      "cost": 14,
+      "abilities": [
+        "pierce"
+      ],
+      "effect": "The Owlbear's claws are capable of tearing through armor and wagon plating."
+    },
+    {
+      "name": "Blood Scent",
+      "cost": 12,
+      "abilities": [
+        "furious"
+      ],
+      "effect": "Once wounded, the Owlbear becomes even more dangerous."
+    }
+  ],
+  "composition_limit": "300",
+  "temperament": "Territorial",
+  "flags": [
+    "CannotBeBefriended",
+    "Beast",
+    "Large"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Mama Owlbear",
+      "cost": 25,
+      "quality": 4,
+      "defense": 5,
+      "abilities": [
+        "impact",
+        "brutal_blow",
+        "furious"
+      ],
+      "effect": "A territorial mother defending her young. Gains +1 Quality and +1 Defense."
+    },
+    {
+      "name": "Baby Owlbear",
+      "cost": -60,
+      "quality": 2,
+      "defense": 1,
+      "move": 6,
+      "abilities": [
+        "skittish"
+      ],
+      "flags": [
+        "CanBeBefriended",
+        "EscortEligible",
+        "Small",
+        "Beast"
+      ],
+      "effect": "A young and unpredictable owlbear cub. Fast, loud, and prone to panic."
+    }
+  ]
+}
