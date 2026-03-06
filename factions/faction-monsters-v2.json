@@ -1058,3 +1058,55 @@
     }
   ]
 }
+{
+  "name": "Jackalope",
+  "faction": "Monsters",
+  "type": "Rogue",
+  "cost": 76,
+  "quality": 3,
+  "defense": 2,
+  "move": 12,
+  "range": 0,
+  "weapon": "Antlers & Teeth",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 200
+  },
+  "abilities": [
+    "fast",
+    "wild_ricochet",
+    "disengage"
+  ],
+  "lore": "CThe jackalope is the most famous lie ever told in the canyon—and somehow it keeps proving itself real. Horned rabbits ricochet across the desert floor faster than bullets, leaving only dust and disbelief behind.",
+  "tactics": "Objective thief and battlefield chaos agent. Use speed and ricochet movement to contest objectives and escape danger.",
+  "upgrades": [
+    {
+      "name": "Thyr-Touched Antlers",
+      "cost": 15,
+      "effect": "Jackalope gains Fear. Its antlers glow faintly with Thyr energy."
+    },
+    {
+      "name": "Dust Mirage",
+      "cost": 12,
+      "effect": "Once per round when this unit is targeted by a ranged attack, it may move 3\" before the attack is resolved."
+    }
+  ],
+  "temperament": "Skittish",
+  "flags": [
+    "CanBeBefriended",
+    "EscortEligible",
+    "Small"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Alpha Jackalope",
+      "cost": 25,
+      "quality": 4,
+      "abilities": [
+        "fear",
+        "impact"
+      ],
+      "effect": "A massive horned jackalope rumored to lead desert herds. When it charges, it hits like a flying spear."
+    }
+  ]
+}
