@@ -350,6 +350,119 @@
     },
 
     {
+  "name": "Canyon Skeleton",
+  "faction": "Monsters",
+  "type": "Standard",
+  "cost": 90,
+  "quality": 2,
+  "defense": 2,
+  "move": 5,
+  "range": 0,
+  "weapon": "Rusted Blade & Bone Grip",
+  "weapon_properties": [],
+  "composition": { "per_points": 150 },
+
+  "abilities": [
+    "Bloodless",
+    "Fearless",
+    "Relentless"
+  ],
+
+  "lore": "No one buried them right, and now the canyon is their business. Canyon Skeletons rise from collapsed mine shafts, dry riverbeds, and unmarked graves wherever the ground has been disturbed enough to let something out. They carry whatever they died with—rusty blades, old pickaxes, shards of glass tied to sticks—and they move with a horrible, clicking purpose. They don't tire. They don't flinch. They just walk toward you until one of you stops.",
+
+  "tactics": "Pressure through persistence. Canyon Skeletons are not fast and not tough on their own — but they keep coming. Relentless means every kill earns a free 2\" surge, and Fearless means no Morale test ever slows them down. Field them in pairs or small clusters so Rattling Horde fires consistently. Send them at objectives and make enemies spend resources removing them.",
+
+  "temperament": "Stalwart",
+
+  "flags": [
+    "Bloodless",
+    "SkullRangerBefriendOnly"
+  ],
+
+  "unit_tags": [
+    "undead",
+    "bloodless",
+    "horde",
+    "persistent",
+    "melee"
+  ],
+
+  "terrain_preferences": [
+    "ruins",
+    "mines",
+    "tombs",
+    "ancient_structures"
+  ],
+
+  "objective_keywords": [
+    "hold",
+    "attrition",
+    "pressure",
+    "territory"
+  ],
+
+  "state_advantages": {
+    "good_in": ["Haunted", "Poisoned", "Strangewild"],
+    "bad_in": ["Liberated", "Rusted"]
+  },
+
+  "special_mechanics": {
+    "rattling_horde": "While within 3\" of two or more other friendly Canyon Skeletons, this unit gains +1 die on melee attacks. The bones click and clatter together in a terrible rhythm that only gets louder."
+  },
+
+  "supplemental_abilities": [
+    {
+      "name": "Skeleton Archer",
+      "cost": 85,
+      "stat_modifiers": { "quality": 2, "defense": 2, "move": 5, "range": 12 },
+      "weapon": "Ancient Bow & Bone Arrow",
+      "weapon_properties": [],
+      "abilities": ["Bloodless", "Fearless"],
+      "flags": ["Bloodless", "SkullRangerBefriendOnly"],
+      "effect": "Some skeletons rose mid-draw and never put the bow down. Skeleton Archers lose the melee surge of Relentless but gain a 12\" ranged attack — haunting back-line pressure that never retreats and never runs dry."
+    },
+    {
+      "name": "Skeleton Champion",
+      "type": "Hero",
+      "cost": 160,
+      "stat_modifiers": { "quality": 3, "defense": 3, "move": 5 },
+      "weapon": "Ancient Commander's Blade",
+      "weapon_properties": [],
+      "abilities": ["Bloodless", "Fearless", "Fear", "Relentless", "Tougher"],
+      "composition": { "per_points": 500 },
+      "flags": ["Bloodless", "SkullRangerBefriendOnly"],
+      "special_mechanics": {
+        "dead_generals_will": "Once per round, while within 6\" of two or more friendly Canyon Skeletons, this unit may direct one of them to move 3\" — even if it has already activated this round. The click of its sword against its ribcage is the only order they need."
+      },
+      "effect": "An old officer that went into the ground with its rank still on. The Skeleton Champion is tougher, more frightening, and holds nearby skeletons in a loose and terrible formation. It is the one you deal with first — or the one that costs you dearly for not doing so."
+    }
+  ],
+
+  "optional_upgrades": [
+    {
+      "name": "Ancient Blade",
+      "cost": 10,
+      "effect": "This unit gains Pierce. The blade pre-dates most of the armor it encounters."
+    },
+    {
+      "name": "Buckler Shield",
+      "cost": 8,
+      "effect": "Once per round, when this unit is hit by a melee attack, it may reduce the damage by 1 (to a minimum of 0). A skeleton with a shield is a worse problem than a skeleton without one."
+    },
+    {
+      "name": "Dread Rattling",
+      "cost": 12,
+      "effect": "This unit gains Fear. The sound it makes — all that grinding bone and scraping metal — is something the brain rejects before the eyes finish processing it."
+    },
+    {
+      "name": "Canyon Dirt Armor",
+      "cost": 8,
+      "effect": "This unit gains Tough. Centuries of compressed canyon sediment have filled every joint and sealed every crack. It is denser than it looks."
+    }
+  ]
+},
+    
+    {
       "name": "Dog Spider",
       "faction": "Monsters",
       "type": "Rogue",
