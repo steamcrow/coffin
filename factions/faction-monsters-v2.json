@@ -834,7 +834,7 @@
         {
           "name": "Mama Owlbear",
           "cost": 25,
-          "stat_modifiers": { "quality": 4, "defense": 5 },
+          "stat_modifiers": { "quality": 0, "defense": 1 },
           "abilities": ["Impact", "Brutal Blow", "Furious"],
           "effect": "A territorial mother defending her young. Gains +1 Defense and Furious."
         },
