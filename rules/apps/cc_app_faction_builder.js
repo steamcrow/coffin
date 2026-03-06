@@ -489,6 +489,38 @@ window.CC_APP = {
     // ================================
     // STAT BADGES
     // ================================
+function getEffectiveStats(baseItem, config) {
+      const stats = {
+        quality: baseItem.quality || 0,
+        defense: baseItem.defense || 0,
+        move:    baseItem.move    || 0,
+        range:   baseItem.range   || 0
+      };
+      if (config && config.optionalUpgrades) {
+        config.optionalUpgrades.forEach(upgrade => {
+          if (upgrade.stat_modifiers) {
+            Object.entries(upgrade.stat_modifiers).forEach(([stat, val]) => {
+              if (stats[stat] !== undefined) stats[stat] += val;
+            });
+          }
+        });
+      }
+      if (config && config.supplemental) {
+        const mods = config.supplemental.stat_modifiers || (() => {
+          const out = {};
+          if (config.supplemental.quality != null) out.quality = config.supplemental.quality;
+          if (config.supplemental.defense != null) out.defense = config.supplemental.defense;
+          if (config.supplemental.move    != null) out.move    = config.supplemental.move;
+          if (config.supplemental.range   != null) out.range   = config.supplemental.range;
+          return out;
+        })();
+        Object.entries(mods).forEach(([stat, val]) => {
+          if (stats[stat] !== undefined) stats[stat] += val;
+        });
+      }
+      return stats;
+    }
+    
     function buildStatBadges(unit, config, compact = false) {
       const base = { q: unit.quality || 4, d: unit.defense || 2, m: unit.move || 5, r: unit.range || 0 };
       const mods = { q: 0, d: 0, m: 0, r: 0 };
@@ -580,6 +612,9 @@ window.CC_APP = {
               <div class="roster-list-header">
                 <div>
                   <div class="roster-list-name">${esc(item.name)}</div>
+                  ${item.config && item.config.supplemental
+                    ? `<div class="grid-item-version">${esc(item.config.supplemental.name)}</div>`
+                    : ''}
                   <div class="roster-list-type">${esc(item.type)}</div>
                 </div>
                 <div class="roster-list-cost">${item.totalCost} ₤</div>
@@ -614,6 +649,9 @@ window.CC_APP = {
                   <i class="fa fa-trash"></i>
                 </button>
                 <div class="grid-item-name">${esc(item.name)}</div>
+                ${item.config && item.config.supplemental
+                  ? `<div class="grid-item-version">${esc(item.config.supplemental.name)}</div>`
+                  : ''}
                 <div class="grid-item-type">${esc(item.type)}</div>
                 ${buildStatBadges(item, item.config, true)}
                 ${abilities.length > 0 ? `
@@ -1057,16 +1095,18 @@ window.CC_APP = {
   <div class="unit-list">
     ${state.roster.map(function(item) {
       var abilities = item.abilities || [];
-      return '<div class="unit">' +
+      var ps = getEffectiveStats(item, item.config);
+    return '<div class="unit">' +
         '<div class="unit-left">' +
           '<div class="unit-name">' + esc(item.name) + '</div>' +
+          ((item.config && item.config.supplemental) ? '<div style="font-size:10px;color:#ff7518;font-weight:600;margin-bottom:3px;">' + esc(item.config.supplemental.name) + '</div>' : '') +
           '<div class="unit-type">' + esc(item.type) + '</div>' +
           (item.lore ? '<div class="lore">\"' + esc(item.lore) + '\"</div>' : '') +
           '<div class="stat-badges">' +
-            '<span class="stat-badge">Q ' + item.quality + '+</span> ' +
-            '<span class="stat-badge">D ' + item.defense + '+</span> ' +
-            '<span class="stat-badge">M ' + item.move + '\"</span> ' +
-            '<span class="stat-badge">R ' + (item.range === 0 ? '\u2013' : item.range + '\"') + '</span>' +
+            '<span class="stat-badge">Q ' + ps.quality + '+</span> ' +
+            '<span class="stat-badge">D ' + ps.defense + '+</span> ' +
+            '<span class="stat-badge">M ' + ps.move + '\"</span> ' +
+            '<span class="stat-badge">R ' + (ps.range === 0 ? '\u2013' : ps.range + '\"') + '</span>' +
           '</div>' +
           (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
           ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="upgrades"><strong>Upgrades:</strong> ' + item.config.optionalUpgrades.map(function(u){ return esc(u.name); }).join(', ') + '</div>' : '') +
