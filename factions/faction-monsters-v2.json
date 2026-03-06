@@ -1,14 +1,15 @@
 {
+  "faction": "Monsters",
+  "version": "2.0",
+  "lastUpdated": "2026-03-05",
+
   "introduction": {
     "title": "Monsters: The Canyon Bites Back",
     "tagline": "Not a faction. An ecology with teeth.",
     "description": "The canyon was here first. Monsters are not an army—they are the reason Coffin Canyon exists. Native inhabitants who react to intruders with instinct, territory, and survival.",
     "philosophy": "The canyon is older than your plans. Monsters do not agree to your rules. Some can be understood. Some only want you gone.",
-    "history": "After the Catastrophe, the canyon’s hidden layers woke up. Tainted ground drew hungry things. Haunted ground gathered the bloodless. Strangewild growth fed predators. Every extraction, every fire, every desperate camp—another invitation. The Monsters faction represents what happens when the canyon gets a vote."
+    "history": "After the Catastrophe, the canyon's hidden layers woke up. Tainted ground drew hungry things. Haunted ground gathered the bloodless. Strangewild growth fed predators. Every extraction, every fire, every desperate camp—another invitation. The Monsters faction represents what happens when the canyon gets a vote."
   },
-
-  "faction": "Monsters",
-  "version": "1.9",
 
   "faction_identity": {
     "core_values": [
@@ -18,7 +19,6 @@
       "Curse",
       "Backlash"
     ],
-
     "what_they_fight_for": [
       "Dominance of hunting grounds",
       "Protection of nests, warrens, and lairs",
@@ -26,7 +26,6 @@
       "Spreading taint, fear, and disruption",
       "Punishing intrusion"
     ],
-
     "what_they_fight_against": [
       "Containment and eradication",
       "Industrial control of the canyon",
@@ -49,7 +48,7 @@
     "strengths": [
       "Wide spread of roles and stat profiles",
       "Excellent disruption and board pressure",
-      "Strong morale/fear play",
+      "Strong morale and fear play",
       "High ceiling with ambush and terrain play",
       "Titans and large threats can swing games"
     ],
@@ -57,53 +56,25 @@
       "Not an organized combined-arms doctrine",
       "Many units are CannotBeBefriended (no diplomacy angle)",
       "Can struggle vs disciplined ranged gunlines",
-      "Some units are fragile and rely on timing/cover",
+      "Some units are fragile and rely on timing and cover",
       "Faction identity is threat-based, not objective-based by default"
     ]
   },
 
-  "universal_upgrades_available": false,
-  "universal_upgrades_note": "Monsters typically do not use equipment upgrades. They are wild creatures, not soldiers. However, individual Monsters may have scenario-specific upgrades, mutations, or escalations."
-
-  ,
   "canyon_state_relationships": {
     "preferred_states": [
-      {
-        "state": "Strangewild",
-        "reason": "Predators thrive, nests multiply, and the canyon grows teeth."
-      },
-      {
-        "state": "Haunted",
-        "reason": "Bloodless and spirits become common, and the living make worse decisions."
-      },
-      {
-        "state": "Poisoned",
-        "reason": "Toxic weather and tainted ground favor the things that were built for it."
-      }
+      { "state": "Strangewild", "reason": "Predators thrive, nests multiply, and the canyon grows teeth." },
+      { "state": "Haunted",     "reason": "Bloodless and spirits become common, and the living make worse decisions." },
+      { "state": "Poisoned",    "reason": "Toxic weather and tainted ground favor the things that were built for it." }
     ],
     "neutral_states": [
-      {
-        "state": "Lawless",
-        "reason": "Chaos invites monsters, but chaos also brings more guns."
-      },
-      {
-        "state": "Held",
-        "reason": "Containment reduces roaming threats, but lairs still exist."
-      }
+      { "state": "Lawless", "reason": "Chaos invites monsters, but chaos also brings more guns." },
+      { "state": "Held",    "reason": "Containment reduces roaming threats, but lairs still exist." }
     ],
     "opposed_states": [
-      {
-        "state": "Liberated",
-        "reason": "Order, suppression, and industrial discipline reduce monster roaming and leverage."
-      },
-      {
-        "state": "Extracted",
-        "reason": "Strip-mined wastelands remove the ecosystem—some monsters starve out, others escalate into pure violence."
-      },
-      {
-        "state": "Rusted",
-        "reason": "Machine dominance and dead zones reduce living ecology (Bloodless may remain, but beasts suffer)."
-      }
+      { "state": "Liberated", "reason": "Order, suppression, and industrial discipline reduce monster roaming and leverage." },
+      { "state": "Extracted", "reason": "Strip-mined wastelands remove the ecosystem—some monsters starve out, others escalate into pure violence." },
+      { "state": "Rusted",    "reason": "Machine dominance and dead zones reduce living ecology (Bloodless may remain, but beasts suffer)." }
     ]
   },
 
@@ -125,16 +96,19 @@
       "Objective disruption and denial",
       "Escort/redirect/calm monster scenarios",
       "Ambush and night operations",
-      "Territory control with lairs/nests",
+      "Territory control with lairs and nests",
       "Multi-threat chaos scenarios"
     ],
     "challenging_scenarios": [
       "Disciplined gunline attrition",
       "Long-range open-field fights",
-      "Hard containment / purification missions",
+      "Hard containment and purification missions",
       "Highly coordinated command-and-control opponents"
     ]
   },
+
+  "universal_upgrades_available": false,
+  "universal_upgrades_note": "Monsters typically do not use equipment upgrades. They are wild creatures, not soldiers. Individual Monsters may have scenario-specific upgrades, mutations, or escalations.",
 
   "faction_features": [
     {
@@ -206,1186 +180,1028 @@
     "titan_rule": "Titans are scenario events, not standard units. When a Titan enters play, all factions must reassess priorities."
   },
 
-  "weapons_note": "Monster costs assume natural weapons and profile abilities. Weapon properties are listed when relevant (Thrown, Poisoned, etc.). Monster abilities should reference the defined ability dictionaries wherever possible.",
+  "weapons_note": "Monster costs assume natural weapons and profile abilities. Weapon properties are listed when relevant. Monster abilities reference the defined ability dictionaries wherever possible.",
 
-  "units": []
-}
-{
-  "name": "Bête Herdbeast",
-  "faction": "Monsters",
-  "type": "Tank",
-  "cost": 177,
-  "quality": 6,
-  "defense": 3,
-  "move": 6,
-  "range": 0,
-  "weapon": "Horns, Bulk & Trample",
-  "weapon_properties": [],
-  "abilities": [
-    "tougher",
-    "brutal_impact",
-    "fear"
-  ],
-  "lore": "Huge, shaggy horned beasts that smell faintly of candy. Bêtes are dream-made giants—often gentle—yet terrifying when startled.",
-  "tactics": "Anchor the center. Use its footprint to block lanes and protect Thyr. Avoid unnecessary fights; win by surviving, holding ground, or being Escorted.",
-  "temperament": "Friendly",
-  "flags": [
-    "CanBeBefriended",
-    "EscortEligible",
-    "Large"
-  ],
+  "units": [
 
-  "supplemental_abilities": [
     {
-      "name": "Gentle Giant",
-      "effect": "Will not declare attacks against Monster Rangers unless attacked first."
-    },
-    {
-      "name": "Stampede",
-      "effect": "If this unit fails a Morale test it immediately moves up to its Move in a straight line. It may pass through smaller models, applying Impact normally."
-    }
-  ],
-
-  "variants": [
-    {
-      "name": "Baby Bête",
-      "cost": -100,
-      "quality": 2,
-      "defense": 2,
-      "move": 5,
-      "abilities": [
-        "fear"
-      ]
-    },
-    {
-      "name": "Mama Bête",
-      "cost": -50,
-      "quality": 4,
-      "defense": 4,
-      "move": 5,
-      "abilities": [
-        "toughest",
-        "brutal_impact",
-        "brutal_fear"
-      ],
-      "supplemental_abilities": [
-        {
-          "name": "Pack Protector",
-          "effect": "When a Baby Bête within 6\" is targeted by an attack, Mama Bête may immediately move up to 4\" toward the attacker. This movement ignores engagement but must end closer to the attacker."
-        }
-      ]
-    }
-  ],
-
-  "upgrades": [
-    {
-      "name": "Thick Hide",
-      "cost": 10,
-      "effect": "This unit gains Toughest."
-    },
-    {
-      "name": "Terrifying Bulk",
-      "cost": 8,
-      "effect": "This unit gains Brutal Fear."
-    },
-    {
-      "name": "Thyr Sated",
-      "cost": 6,
-      "effect": "This unit gains Thyr Sated."
-    }
-  ]
-}
-{
-  "name": "Dust King",
-  "faction": "Monsters",
-  "type": "Brute",
-  "cost": 162,
-  "quality": 5,
-  "defense": 4,
-  "move": 4,
-  "range": 0,
-  "weapon": "Black-Tarnished Silver Sword",
-  "weapon_properties": [
-    "pierce"
-  ],
-  "composition": {
-    "per_points": 200
-  },
-  "abilities": [
-    "fear",
-    "relentless",
-    "tougher"
-  ],
-  "lore": "Ancient bandaged dead-men, risen from forbidden chemical ruins. Dust Kings wander out of collapsed tombs and sunken chambers, chewing fresh flesh when they find it.",
-  "tactics": "Slow, durable melee pressure. Park them in ruins or choke points and force enemies to deal with Fear and grinding attacks.",
-  "temperament": "Vengeful",
-  "flags": [
-    "Bloodless",
-    "SkullRangerBefriendOnly"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Ruinbound",
-      "effect": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation."
-    }
-  ],
-  "variants": [
-    {
-      "name": "Dust King Revenant",
-      "cost": 195,
-      "quality": 6,
-      "defense": 4,
-      "move": 4,
-      "range": 0,
-      "weapon_properties": [
-        "brutal_pierce"
-      ],
-      "composition": {
-        "per_points": 500
-      },
-      "abilities": [
-        "brutal_fear",
-        "relentless",
-        "tougher"
-      ],
-      "supplemental_abilities": [
-        {
-          "name": "Ruinbound",
-          "effect": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation."
-        },
-        {
-          "name": "Tomb-Curse",
-          "effect": "When an enemy ends its activation engaged with this unit, that enemy must test Morale."
-        }
-      ]
-    },
-    {
-      "name": "Dust Emperor",
-      "type": "Hero",
-      "cost": 260,
-      "quality": 6,
-      "defense": 5,
-      "move": 4,
-      "range": 0,
-      "weapon_properties": [
-        "brutal_pierce"
-      ],
-      "composition": {
-        "per_points": 2000
-      },
-      "abilities": [
-        "savage_fear",
-        "relentless",
-        "toughest"
-      ],
-      "flags": [
-        "Bloodless",
-        "SkullRangerBefriendOnly"
-      ],
-      "supplemental_abilities": [
-        {
-          "name": "Ruinbound",
-          "effect": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation."
-        },
-        {
-          "name": "Royal Tomb-Ward",
-          "effect": "Once per game: choose one Ruin or Ancient Structure terrain within 12\". Until end of round, enemies treat that terrain as Hazardous."
-        },
-        {
-          "name": "Dust Command",
-          "effect": "Once per round, when a friendly Bloodless unit within 8\" fails a Morale test, it may reroll."
-        }
-      ]
-    }
-  ],
-  "upgrades": [
-    {
-      "name": "Brutal Fear",
-      "cost": 8,
-      "effect": "This unit gains Brutal Fear."
-    },
-    {
-      "name": "Toughest",
-      "cost": 12,
-      "effect": "This unit gains Toughest."
-    },
-    {
-      "name": "Thyr Frenzy",
-      "cost": 10,
-      "effect": "This unit gains Thyr Devourer and Thyr Frenzy. If this would increase its Quality above 6, it remains 6."
-    }
-  ]
-}
-{
-  "name": "Halloween Golem",
-  "faction": "Monsters",
-  "type": "Tank",
-  "cost": 155,
-  "quality": 3,
-  "defense": 3,
-  "move": 5,
-  "range": 0,
-  "weapon": "Woodcutter Axe",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 0
-  },
-  "abilities": [
-    "toughest",
-    "spare_parts_drop"
-  ],
-  "lore": "Obsolete mechanical pumpkin-headed men built to bring order to the wilderness — cutting trees and tending farms. Now they wander about looking for trees to accost, and Thyr.",
-  "tactics": "Reliable blockers that grind forward and absorb punishment while leaving salvage behind.",
-  "temperament": "Stalwart",
-  "flags": [
-    "Mechan",
-    "HeavyArmor"
-  ],
-
-  "supplemental_abilities": [
-    {
-      "name": "Rusty Halloween Golem",
-      "cost": -50,
-      "quality": 2,
-      "defense":2,
-      "move": 3,
-      "effect": "Rusting piece of trash."
-    }
-  ],
-
-  "upgrades": [
-    {
-      "name": "Keen Axe",
-      "cost": 6,
-      "effect": "This unit gains Pierce."
-    }
-  ]
-}
-{
-  "name": "Patchwork Wonder",
-  "faction": "Monsters",
-  "type": "Brute",
-  "cost": 144,
-  "quality": 5,
-  "defense": 3,
-  "move": 5,
-  "range": 2,
-  "weapon": "Stitched Limbs & Aethyr Surge",
-  "weapon_properties": [
-    "Thrown 6\""
-  ],
-  "composition": {
-    "per_points": 0
-  },
-  "abilities": [
-    "relentless",
-    "fear",
-    "brutal_blow",
-    "furious"
-  ],
-  "lore": "A creature of many parts, sewn together with string and wire and sparked to life by aethyr. Sometimes cloth. Sometimes muscle and gristle. Always strange.",
-  "tactics": "Close in fast, hit hard, and keep pressure. Patchwork thrives in messy fights and punishes anyone who tries to bully monsters off objectives.",
-  "temperament": "Vengeful",
-  "flags": [
-    "CannotBeBefriended"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Sackcloth Patchwork",
-      "cost": -40,
-      "quality": 4,
-      "defense": 2,
-      "effect": "A cheap and unstable cloth-stuffed construct."
-    }
-  ],
-  "upgrades": [
-    {
-      "name": "Aethyr Surge",
-      "cost": 8,
-      "effect": "This unit gains Hex."
-    },
-    {
-      "name": "Heavy Limbs",
-      "cost": 6,
-      "effect": "This unit gains Brutal Blow."
-    }
-  ]
-}
-{
-  "name": "Lionvulture",
-  "faction": "Monsters",
-  "type": "Cavalry",
-  "cost": 122,
-  "quality": 4,
-  "defense": 3,
-  "move": 10,
-  "range": 0,
-  "weapon": "Raking Talons & Pounce",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 200
-  },
-  "abilities": [
-    "fast",
-    "thyr_guardian"
-  ],
-  "lore": "A four-legged wild beast—more animal than intellect—nesting near Thyr outcroppings where it can guard and feed.",
-  "tactics": "Flank, pounce, and retreat. Use speed to contest Thyr and punish isolated models. Avoid prolonged brawls.",
-  "temperament": "Territorial",
-  "flags": [
-    "Beast"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Alpha Lionvulture",
-      "cost": 30,
-      "quality": 5,
-      "effect": "Dominant territorial predator.",
-      "abilities": ["fear"]
-    }
-  ],
-  "upgrades": [
-    {
-      "name": "Savage Pounce",
-      "cost": 6,
-      "effect": "This unit gains Impact."
-    },
-    {
-      "name": "Blood Scent",
-      "cost": 6,
-      "effect": "This unit gains Blood in the Air."
-    }
-  ]
-}
-{
-  "name": "Kelpie",
-  "faction": "Monsters",
-  "type": "Cavalry",
-  "cost": 121,
-  "quality": 4,
-  "defense": 3,
-  "move": 9,
-  "range": 0,
-  "weapon": "Drowning Drag",
-  "weapon_properties": [
-    "grapple"
-  ],
-  "composition": {
-    "per_points": 150
-  },
-  "abilities": [
-    "fear",
-    "amphibious",
-    "water_lurker",
-    "dry_desperation"
-  ],
-  "lore": "A damp horse-beast out of place in the dry canyon. Desperate, thirsty, and dangerous—pulling prey into shade, mud, or deeper trouble.",
-  "tactics": "Hit-and-run controller. Grapple key targets off objectives or into danger zones. Works best near water terrain.",
-  "temperament": "Skittish",
-  "flags": [
-    "Beast"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "River Kelpie",
+      "name": "Canyon Goblin",
+      "faction": "Monsters",
+      "type": "Frail",
       "cost": 25,
-      "defense": 4,
-      "abilities": ["fast"],
-      "effect": "A strong river hunter."
+      "quality": 1,
+      "defense": 1,
+      "move": 5,
+      "range": 2,
+      "weapon": "Rust Blade & Rock Tossing",
+      "weapon_properties": ["Thrown 6\""],
+      "composition": { "per_points": 100 },
+      "abilities": ["Skittish"],
+      "lore": "Canyon goblins scavenge old rails, broken wagons, and ruined camps. They know every crack in the stone, every shade line at noon, and every hiding place worth having.",
+      "tactics": "Objective nuisance. Use them to screen, contest, and flee. They are not fighters.",
+      "temperament": "Skittish",
+      "flags": ["CanBeBefriended", "EscortEligible", "Small"],
+      "unit_tags": ["nuisance", "objective", "cheap", "screen"],
+      "terrain_preferences": ["ruins", "shadows", "tunnels"],
+      "objective_keywords": ["contest", "screen", "escape", "salvage"],
+      "state_advantages": {
+        "good_in": ["Lawless", "Strangewild"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Red Goblin",
+          "cost": 67,
+          "quality": 2,
+          "defense": 2,
+          "move": 6,
+          "abilities": ["Stealth", "Backstab", "Poison", "Iron Shoes"],
+          "flags": ["CannotBeBefriended"],
+          "effect": "Circus goblins wear the red hat like a brand and iron shoes like a sentence. Fast, cruel, and difficult to pin down."
+        }
+      ],
+      "optional_upgrades": []
     },
+
     {
-      "name": "Starved Kelpie",
-      "cost": -25,
+      "name": "Jackalope",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 125,
       "quality": 3,
-      "abilities": ["furious"],
-      "effect": "A desperate desert wanderer."
-    }
-  ],
-  "upgrades": [
-    {
-      "name": "Deepwater Pull",
-      "cost": 8,
-      "effect": "This unit gains Impact."
-    },
-    {
-      "name": "Bog Hunter",
-      "cost": 6,
-      "effect": "This unit gains Blood in the Air."
-    }
-  ]
-}
-{
-  "name": "Feratu",
-  "faction": "Monsters",
-  "type": "Rogue",
-  "cost": 110,
-  "quality": 4,
-  "defense": 3,
-  "move": 7,
-  "range": 0,
-  "weapon": "Fangs & Blade",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 200
-  },
-  "abilities": [
-    "stealth",
-    "fear",
-    "blood_feast"
-  ],
-  "lore": "Tall, pale blood drinkers hiding behind civility and shadow. In Coffin Canyon they hunt selectively, feeding on the living and growing bolder with every kill.",
-  "tactics": "A scaling predator. Early game: isolate Rabble and wounded targets. Late game: Blood Feast dice turn it into a nightmare if unchecked.",
-  "temperament": "Cunning",
-  "flags": [
-    "Bloodless"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Feratu Stalker",
-      "cost": 10,
-      "move": 8,
-      "abilities": [
-        "fast"
-      ],
-      "flags": [
-        "CannotBeBefriended"
-      ],
-      "effect": "A feral night-hunter that abandons all civility. Even Skull Rangers cannot befriend it."
-    },
-    {
-      "name": "Feratu Bride",
-      "cost": 15,
       "defense": 2,
-      "abilities": [
-        "brutal_fear"
+      "move": 12,
+      "range": 0,
+      "weapon": "Antlers & Teeth",
+      "weapon_properties": [],
+      "composition": { "per_points": 200 },
+      "abilities": ["Fast", "Wild Ricochet", "Disengage"],
+      "lore": "The jackalope is the most famous lie ever told in the canyon—and somehow it keeps proving itself real. Horned rabbits ricochet across the desert floor faster than bullets, leaving only dust and disbelief behind.",
+      "tactics": "Objective thief and battlefield chaos agent. Use speed and ricochet movement to contest objectives and escape danger.",
+      "temperament": "Skittish",
+      "flags": ["CanBeBefriended", "EscortEligible", "Small"],
+      "unit_tags": ["fast", "objective", "skirmisher", "chaos"],
+      "terrain_preferences": ["open", "desert", "flats"],
+      "objective_keywords": ["contest", "theft", "escape", "escort"],
+      "state_advantages": {
+        "good_in": ["Strangewild", "Lawless"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Alpha Jackalope",
+          "cost": 25,
+          "quality": 4,
+          "abilities": ["Fear", "Impact"],
+          "effect": "A massive horned jackalope rumored to lead desert herds. When it charges, it hits like a flying spear."
+        }
       ],
-      "effect": "A charming predator that draws victims close before feeding."
+      "optional_upgrades": [
+        {
+          "name": "Thyr-Touched Antlers",
+          "cost": 15,
+          "effect": "Jackalope gains Fear. Its antlers glow faintly with Thyr energy."
+        },
+        {
+          "name": "Dust Mirage",
+          "cost": 12,
+          "effect": "Once per round when this unit is targeted by a ranged attack, it may move 3\" before the attack is resolved."
+        }
+      ]
     },
+
     {
-      "name": "Feratu Gentleman",
-      "cost": 20,
-      "quality": 5,
-      "abilities": [
-        "mark_target"
+      "name": "Canyon Harpy",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 120,
+      "quality": 2,
+      "defense": 2,
+      "move": 8,
+      "range": 6,
+      "weapon": "Filthy Claws & Screech",
+      "weapon_properties": [],
+      "composition": { "per_points": 200 },
+      "abilities": ["Flying", "Sonic", "Venom", "Disengage"],
+      "lore": "Canyon harpies roost in the high red cliffs, building nests of bones, broken bottles, and stolen jewelry. Their feathers stink of rot and carrion, and their claws carry the sickness of everything they have eaten.",
+      "tactics": "Fast harassment predator. Fly over screens, strike weak targets, and retreat before heavier units can respond.",
+      "temperament": "Skittish",
+      "flags": ["CannotBeBefriended", "Beast", "Flying"],
+      "unit_tags": ["flying", "harasser", "fast", "venom"],
+      "terrain_preferences": ["vertical", "cliffs", "elevated"],
+      "objective_keywords": ["harassment", "disruption", "aerial"],
+      "state_advantages": {
+        "good_in": ["Strangewild", "Haunted"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Rotwing Harpy",
+          "cost": 30,
+          "quality": 4,
+          "abilities": ["Fear", "Venom", "Choking Dust"],
+          "effect": "A diseased canyon harpy whose wings are mottled with rot and parasites. Its claws drip infection and its breath carries the stench of shallow graves."
+        }
       ],
-      "effect": "An aristocratic hunter who studies prey before striking. Quality cannot exceed 6."
-    }
-  ],
-  "upgrades": [
-    {
-      "name": "Piercing Bite",
-      "cost": 10,
-      "effect": "This unit gains Pierce."
+      "optional_upgrades": []
     },
+
     {
-      "name": "Brutal Blow",
-      "cost": 15,
-      "effect": "This unit gains Brutal Blow."
-    },
-    {
-      "name": "Thyr Frenzy",
-      "cost": 20,
-      "effect": "This unit gains Thyr Devourer and Thyr Frenzy. If this would increase its Quality above 6, it remains 6."
-    }
-  ]
-}
-{
-  "name": "Klowna",
-  "faction": "Monsters",
-  "type": "Titan",
-  "cost": 257,
-  "quality": 6,
-  "defense": 5,
-  "move": 7,
-  "range": 0,
-  "weapon": "Titan Talons, Twin Maw & Triple-Leg Lunge",
-  "weapon_properties": [
-    "brutal_pierce"
-  ],
-  "composition": {
-    "per_points": 1000
-  },
-  "abilities": [
-    "savage_fear",
-    "toughest",
-    "down_the_hatch",
-    "klowna_spawn",
-    "twin_maw",
-    "two_heads"
-  ],
-  "lore": "A towering chitinous horror—nearly 14 feet tall—with two heads, three legs, and enormous talons. It crawls out of an old wreck like a bad joke that refuses to end.",
-  "tactics": "A shared catastrophe. Spawn it mid-game to spike tension. Force everyone to decide: keep scoring, or deal with the Titan before it eats the canyon.",
-  "temperament": "Vengeful",
-  "flags": [
-    "Titan",
-    "CannotBeBefriended"
-  ],
-  "upgrades": []
-}
-{
-  "name": "Canyon Goblin",
-  "faction": "Monsters",
-  "type": "Frail",
-  "cost": 29,
-  "quality": 1,
-  "defense": 1,
-  "move": 5,
-  "range": 2,
-  "weapon": "Rust Blade & Rock Tossing",
-  "weapon_properties": [
-    "thrown"
-  ],
-  "composition": {
-    "per_points": 100
-  },
-  "abilities": [
-    "skittish"
-  ],
-  "lore": "Canyon goblins scavenge old rails, broken wagons, and ruined camps. They know every crack in the stone, every shade line at noon, and every hiding place worth having.",
-  "tactics": "Objective nuisance. Use them to screen, contest, and flee. They are not fighters.",
-  "temperament": "Skittish",
-  "flags": [
-    "CanBeBefriended",
-    "EscortEligible",
-    "Small"
-  ],
-  "upgrades": [],
-  "supplemental_abilities": [
-    {
-      "name": "Red Goblin",
-      "cost": 67,
+      "name": "Ridge Satyr",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 100,
       "quality": 2,
       "defense": 2,
       "move": 6,
-      "abilities": [
-        "stealth",
-        "backstab",
-        "poison",
-        "iron_shoes"
+      "range": 6,
+      "weapon": "Pan Pipes & Knife",
+      "weapon_properties": [],
+      "composition": { "per_points": 200 },
+      "abilities": ["Hex", "Sonic", "Disengage"],
+      "lore": "Ridge satyrs haunt the dry groves and hidden springs of Coffin Canyon. With cracked pan pipes and crooked smiles, they play tunes that slip into the bones and make good sense wander off somewhere else. They are not cruel creatures—but they are terrible influences.",
+      "tactics": "Control rogue. Hex dangerous enemies and disrupt formations with pipe-song. Avoid direct combat; satyrs win by mischief rather than strength.",
+      "temperament": "Cunning",
+      "flags": ["CanBeBefriended", "EscortEligible"],
+      "unit_tags": ["control", "debuff", "sonic", "trickster"],
+      "terrain_preferences": ["groves", "springs", "hidden_paths"],
+      "objective_keywords": ["disruption", "escort", "mischief"],
+      "state_advantages": {
+        "good_in": ["Strangewild", "Haunted", "Lawless"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Moonridge Satyr",
+          "cost": 18,
+          "quality": 3,
+          "abilities": ["Fear"],
+          "effect": "A pale satyr that wanders the canyon by moonlight. Its pipe-song chills the heart and unsettles even hardened gunslingers."
+        }
       ],
-      "flags": [
-        "CannotBeBefriended"
-      ],
-      "effect": "Circus goblins wear the red hat like a brand and iron shoes like a sentence. Fast, cruel, and difficult to pin down."
-    }
-  ]
-}
-{
-  "name": "Golem",
-  "faction": "Monsters",
-  "type": "Tank",
-  "cost": 120,
-  "quality": 3,
-  "defense": 3,
-  "move": 4,
-  "range": 0,
-  "weapon": "Heavy Construct Fists",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 300
-  },
-  "abilities": [
-    "fearless",
-    "bloodless",
-    "tough"
-  ],
-  "lore": "Constructs stitched, sculpted, or forged into life by the strange sciences of Coffin Canyon. Some are academic experiments, others relics of industry, and some simply refuse to stop moving.",
-  "tactics": "Durable front-line anchor. Choose a material variant to define how the Golem behaves on the battlefield.",
-  "temperament": "Stalwart",
-  "flags": [
-    "CannotBeBefriended",
-    "Mechan"
-  ],
-  "upgrades": [],
-  "supplemental_abilities": [
+      "optional_upgrades": [
+        {
+          "name": "Brass Bow",
+          "cost": 15,
+          "stat_modifiers": { "range": 18 },
+          "effect": "Add a Brass Bow (Range 18\"). A strange mechanical bow of brass limbs and tension springs that hums faintly when drawn."
+        }
+      ]
+    },
+
     {
-      "name": "Flesh Golem",
-      "cost": 35,
+      "name": "Dog Spider",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 115,
+      "quality": 3,
+      "defense": 2,
+      "move": 8,
+      "range": 0,
+      "weapon": "Fangs & Skittering Claws",
+      "weapon_properties": [],
+      "composition": { "per_points": 200 },
+      "abilities": ["Fast", "Venom", "Disengage"],
+      "lore": "Dog spiders are canyon ambush predators the size of wolves. They skitter across rocks and wagon trails alike, striking from shadows before retreating into cracks in the stone.",
+      "tactics": "Fast ambusher. Strike isolated targets and retreat before heavy units can respond.",
+      "temperament": "Predatory",
+      "flags": ["CannotBeBefriended", "Beast"],
+      "unit_tags": ["ambush", "fast", "venom", "predator"],
+      "terrain_preferences": ["ruins", "rocky", "crevices"],
+      "objective_keywords": ["assassination", "isolation", "disruption"],
+      "state_advantages": {
+        "good_in": ["Strangewild", "Lawless"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Thyrfang Spider",
+          "cost": 25,
+          "quality": 4,
+          "abilities": ["Fear", "Venom", "Furious"],
+          "effect": "A Dog Spider warped by feeding on Thyr crystals. Its fangs glow faintly and its attacks grow more savage the more blood it spills."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Web Spitter",
+          "cost": 10,
+          "stat_modifiers": { "range": 6 },
+          "effect": "Gain a web spit attack (Range 6\"). On a successful hit the target becomes Pinned."
+        },
+        {
+          "name": "Burrower",
+          "cost": 15,
+          "effect": "Once per game, this model may emerge anywhere within 8\" of its starting position that is not within 3\" of an enemy."
+        }
+      ]
+    },
+
+    {
+      "name": "Feratu",
+      "faction": "Monsters",
+      "type": "Rogue",
+      "cost": 145,
+      "quality": 4,
+      "defense": 3,
+      "move": 7,
+      "range": 0,
+      "weapon": "Fangs & Blade",
+      "weapon_properties": [],
+      "composition": { "per_points": 200 },
+      "abilities": ["Stealth", "Fear", "Blood Feast"],
+      "lore": "Tall, pale blood drinkers hiding behind civility and shadow. In Coffin Canyon they hunt selectively, feeding on the living and growing bolder with every kill.",
+      "tactics": "A scaling predator. Early game: isolate Rabble and wounded targets. Late game: Blood Feast dice turn it into a nightmare if unchecked.",
+      "temperament": "Cunning",
+      "flags": ["Bloodless"],
+      "unit_tags": ["predator", "stealth", "scaling", "bloodless"],
+      "terrain_preferences": ["shadows", "ruins", "night"],
+      "objective_keywords": ["assassination", "isolation", "hunting"],
+      "state_advantages": {
+        "good_in": ["Haunted", "Strangewild"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Feratu Stalker",
+          "cost": 10,
+          "stat_modifiers": { "move": 8 },
+          "abilities": ["Fast"],
+          "flags": ["CannotBeBefriended"],
+          "effect": "A feral night-hunter that abandons all civility. Even Skull Rangers cannot befriend it."
+        },
+        {
+          "name": "Feratu Bride",
+          "cost": 15,
+          "stat_modifiers": { "defense": 2 },
+          "abilities": ["Brutal Fear"],
+          "effect": "A charming predator that draws victims close before feeding."
+        },
+        {
+          "name": "Feratu Gentleman",
+          "cost": 20,
+          "stat_modifiers": { "quality": 5 },
+          "abilities": ["Mark Target"],
+          "effect": "An aristocratic hunter who studies prey before striking. Quality cannot exceed 6."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Piercing Bite",
+          "cost": 10,
+          "effect": "This unit gains Pierce."
+        },
+        {
+          "name": "Brutal Blow",
+          "cost": 15,
+          "effect": "This unit gains Brutal Blow."
+        },
+        {
+          "name": "Thyr Frenzy",
+          "cost": 20,
+          "effect": "This unit gains Thyr Devourer and Thyr Frenzy. Quality cannot exceed 6."
+        }
+      ]
+    },
+
+    {
+      "name": "Golem",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 115,
       "quality": 3,
       "defense": 3,
-      "abilities": [
-        "relentless",
-        "fear"
+      "move": 4,
+      "range": 0,
+      "weapon": "Heavy Construct Fists",
+      "weapon_properties": [],
+      "composition": { "per_points": 300 },
+      "abilities": ["Fearless", "Bloodless", "Tough"],
+      "lore": "Constructs stitched, sculpted, or forged into life by the strange sciences of Coffin Canyon. Some are academic experiments, others relics of industry, and some simply refuse to stop moving.",
+      "tactics": "Durable front-line anchor. Choose a material variant to define how the Golem behaves on the battlefield.",
+      "temperament": "Stalwart",
+      "flags": ["CannotBeBefriended", "Mechan"],
+      "unit_tags": ["construct", "anchor", "durable", "fearless"],
+      "terrain_preferences": ["ruins", "industrial", "open"],
+      "objective_keywords": ["hold", "anchor", "control"],
+      "state_advantages": {
+        "good_in": ["Rusted", "Extracted"],
+        "bad_in": ["Strangewild"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Flesh Golem",
+          "cost": 35,
+          "quality": 3,
+          "defense": 3,
+          "abilities": ["Relentless", "Fear"],
+          "effect": "A grotesque monsterologist construct stitched from grave-rotted remains. Flesh golems stagger forward with stubborn determination."
+        },
+        {
+          "name": "Clay Golem",
+          "cost": 60,
+          "quality": 4,
+          "defense": 4,
+          "abilities": ["Tougher", "Fearless"],
+          "effect": "Shaped from canyon clay and kiln-fired mud, these silent guardians once watched over forgotten shrines and camps."
+        },
+        {
+          "name": "Iron Golem",
+          "cost": 85,
+          "quality": 5,
+          "defense": 5,
+          "abilities": ["Toughest", "Fearless", "Spare Parts Drop"],
+          "effect": "A brutal iron construct of forgotten industry. When destroyed, it leaves behind scattered Spare Parts."
+        }
       ],
-      "effect": "A grotesque monsterologist construct stitched from grave-rotted remains. Flesh golems stagger forward with stubborn determination."
+      "optional_upgrades": []
     },
+
     {
-      "name": "Clay Golem",
-      "cost": 60,
+      "name": "Halloween Golem",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 130,
+      "quality": 3,
+      "defense": 3,
+      "move": 5,
+      "range": 0,
+      "weapon": "Woodcutter Axe",
+      "weapon_properties": [],
+      "composition": { "per_points": 0 },
+      "abilities": ["Toughest", "Spare Parts Drop"],
+      "lore": "Obsolete mechanical pumpkin-headed men built to bring order to the wilderness — cutting trees and tending farms. Now they wander about looking for trees to accost, and Thyr.",
+      "tactics": "Reliable blockers that grind forward and absorb punishment while leaving salvage behind.",
+      "temperament": "Stalwart",
+      "flags": ["Mechan", "HeavyArmor"],
+      "unit_tags": ["construct", "blocker", "slow", "salvage"],
+      "terrain_preferences": ["open", "ruins", "industrial"],
+      "objective_keywords": ["hold", "block", "salvage"],
+      "state_advantages": {
+        "good_in": ["Rusted", "Extracted"],
+        "bad_in": ["Strangewild"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Rusty Halloween Golem",
+          "cost": -50,
+          "stat_modifiers": { "quality": 2, "defense": 2, "move": 3 },
+          "effect": "A rusting piece of trash held together by habit and hope."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Keen Axe",
+          "cost": 6,
+          "effect": "This unit gains Pierce."
+        }
+      ]
+    },
+
+    {
+      "name": "Crag Thrallo",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 125,
       "quality": 4,
       "defense": 4,
-      "abilities": [
-        "tougher",
-        "fearless"
+      "move": 5,
+      "range": 0,
+      "weapon": "Scrap Hammer & Iron Grip",
+      "weapon_properties": [],
+      "composition": { "per_points": 300 },
+      "abilities": ["Impact", "Tough"],
+      "lore": "Once forced to haul stone, iron, and scrap for cruel masters, Thrallos eventually learned that chains break easier than bones. Now they roam junkyards and gravel pits, smashing machines apart and drinking whatever strange brew they find in rusted barrels.",
+      "tactics": "Forward bruiser. Thrallo thrives in messy brawls and tight terrain. Charge into the center, absorb punishment, and smash anything fragile.",
+      "temperament": "Vengeful",
+      "flags": ["Large"],
+      "unit_tags": ["brute", "brawler", "impact", "tough"],
+      "terrain_preferences": ["industrial", "ruins", "chokepoints"],
+      "objective_keywords": ["control", "brawl", "hold"],
+      "state_advantages": {
+        "good_in": ["Rusted", "Lawless"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Doomshine Thrallo",
+          "cost": 15,
+          "stat_modifiers": { "quality": 5 },
+          "abilities": ["Furious"],
+          "effect": "Fueled by stolen Doomshine. Gains +1 Quality but must move toward the nearest enemy each activation if able."
+        }
       ],
-      "effect": "Shaped from canyon clay and kiln-fired mud, these silent guardians once watched over forgotten shrines and camps."
+      "optional_upgrades": [
+        {
+          "name": "Rebar Club",
+          "cost": 10,
+          "effect": "This unit gains Brutal Blow. A length of twisted construction steel makes every hit devastating."
+        },
+        {
+          "name": "Scrap Armor",
+          "cost": 12,
+          "stat_modifiers": { "defense": 5 },
+          "effect": "Bolted plates, wagon doors, and furnace lids form crude protection."
+        }
+      ]
     },
-    {
-      "name": "Iron Golem",
-      "cost": 85,
-      "quality": 5,
-      "defense": 5,
-      "abilities": [
-        "toughest",
-        "fearless",
-        "spare_parts_drop"
-      ],
-      "effect": "A brutal iron construct of forgotten industry. When destroyed, it leaves behind scattered Spare Parts."
-    }
-  ]
-}
 
-{
-  "name": "Canyon Harpy",
-  "faction": "Monsters",
-  "type": "Rogue",
-  "cost": 95,
-  "quality": 2,
-  "defense": 2,
-  "move": 8,
-  "range": 6,
-  "weapon": "Filthy Claws & Screech",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 200
-  },
-  "abilities": [
-    "flying",
-    "sonic",
-    "venom",
-    "disengage"
-  ],
-  "lore": "Canyon harpies roost in the high red cliffs, building nests of bones, broken bottles, and stolen jewelry. Their feathers stink of rot and carrion, and their claws carry the sickness of everything they have eaten.",
-  "tactics": "Fast harassment predator. Fly over screens, strike weak targets, and retreat before heavier units can respond.",
-  "temperament": "Skittish",
-  "flags": [
-    "CannotBeBefriended",
-    "Beast",
-    "Flying"
-  ],
-  "upgrades": [],
-  "supplemental_abilities": [
     {
-      "name": "Rotwing Harpy",
-      "cost": 30,
+      "name": "Gulch Minotaur",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 125,
       "quality": 4,
-      "abilities": [
-        "fear",
-        "venom",
-        "choking_dust"
+      "defense": 3,
+      "move": 6,
+      "range": 0,
+      "weapon": "Horn Gore",
+      "weapon_properties": [],
+      "composition": { "per_points": 300 },
+      "abilities": ["Brutal Impact", "Brutal Blow"],
+      "lore": "A bull-headed ruin-dweller that knows every corridor in the old stoneworks. If it charges, it's because you're already lost.",
+      "tactics": "Charge specialist. Use terrain density to set up devastating Impact lines through corridors and ruins.",
+      "temperament": "Territorial",
+      "flags": ["CannotBeBefriended", "Large"],
+      "unit_tags": ["charge", "brute", "impact", "ruin_dweller"],
+      "terrain_preferences": ["ruins", "corridors", "stoneworks"],
+      "objective_keywords": ["territory", "charge", "hold"],
+      "state_advantages": {
+        "good_in": ["Haunted", "Strangewild"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Labyrinth Bull",
+          "cost": 10,
+          "abilities": ["Relentless"],
+          "effect": "Years of stalking ruins have honed its instincts. After destroying an enemy in melee, the Minotaur may immediately move 2\"."
+        }
       ],
-      "effect": "A diseased canyon harpy whose wings are mottled with rot and parasites. Its claws drip infection and its breath carries the stench of shallow graves."
-    }
-  ]
-}
-{
-  "name": "Ridge Satyr",
-  "faction": "Monsters",
-  "type": "Rogue",
-  "cost": 97,
-  "quality": 2,
-  "defense": 2,
-  "move": 6,
-  "range": 6,
-  "weapon": "Pan Pipes & Knife",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 200
-  },
-  "abilities": [
-    "hex",
-    "sonic",
-    "disengage"
-  ],
-  "lore": "Ridge satyrs haunt the dry groves and hidden springs of Coffin Canyon. With cracked pan pipes and crooked smiles, they play tunes that slip into the bones and make good sense wander off somewhere else. They are not cruel creatures—but they are terrible influences.",
-  "tactics": "Control rogue. Hex dangerous enemies and disrupt formations with pipe-song. Avoid direct combat; satyrs win by mischief rather than strength.",
-  "upgrades": [
+      "optional_upgrades": [
+        {
+          "name": "Huge Battle Axe",
+          "cost": 15,
+          "effect": "The Minotaur carries a massive rusted executioner's axe. Gains Pierce."
+        }
+      ]
+    },
+
     {
-      "name": "Brass Bow",
-      "cost": 15,
-      "range": 18,
-      "effect": "Add a Brass Bow (Range 18\"). A strange mechanical bow of brass limbs and tension springs that hums faintly when drawn."
-    }
-  ],
-  "temperament": "Cunning",
-  "flags": [
-    "CanBeBefriended",
-    "EscortEligible"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Moonridge Satyr",
-      "cost": 18,
-      "quality": 3,
-      "abilities": [
-        "fear"
-      ],
-      "effect": "A pale satyr that wanders the canyon by moonlight. Its pipe-song chills the heart and unsettles even hardened gunslingers."
-    }
-  ]
-}
-{
-  "name": "Valley Centaur",
-  "faction": "Monsters",
-  "type": "Cavalry",
-  "cost": 136,
-  "quality": 4,
-  "defense": 3,
-  "move": 9,
-  "range": 6,
-  "weapon": "Bow & Hooves",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 200
-  },
-  "abilities": [
-    "fast",
-    "suppression"
-  ],
-  "lore": "Nomads of the high mesas, valley centaurs roam the broken trails and wind-cut ridges of Coffin Canyon. Some will bargain for water, salt, or news. Most prefer to run strangers off with a warning arrow.",
-  "tactics": "Mobile skirmisher. Suppress dangerous enemies from range, then reposition quickly to stay out of melee.",
-  "upgrades": [
-    {
-      "name": "Longbow",
-      "cost": 15,
-      "range": 18,
-      "effect": "Replace this unit's weapon with a Longbow (Range 18\"). Valley centaurs are legendary canyon archers, able to strike from surprising distances."
-    }
-  ],
-  "temperament": "Cunning",
-  "flags": [
-    "CanBeBefriended",
-    "EscortEligible",
-    "Large"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Bloodhoof Centaur",
-      "cost": 40,
+      "name": "Patchwork Wonder",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 160,
       "quality": 5,
+      "defense": 3,
+      "move": 5,
+      "range": 2,
+      "weapon": "Stitched Limbs & Aethyr Surge",
+      "weapon_properties": ["Thrown 6\""],
+      "composition": { "per_points": 0 },
+      "abilities": ["Relentless", "Fear", "Brutal Blow", "Furious"],
+      "lore": "A creature of many parts, sewn together with string and wire and sparked to life by aethyr. Sometimes cloth. Sometimes muscle and gristle. Always strange.",
+      "tactics": "Close in fast, hit hard, and keep pressure. Patchwork thrives in messy fights and punishes anyone who tries to bully monsters off objectives.",
+      "temperament": "Vengeful",
+      "flags": ["CannotBeBefriended"],
+      "unit_tags": ["brute", "relentless", "brawler", "construct"],
+      "terrain_preferences": ["ruins", "chokepoints", "dense_cover"],
+      "objective_keywords": ["brawl", "hold", "disruption"],
+      "state_advantages": {
+        "good_in": ["Haunted", "Strangewild"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Sackcloth Patchwork",
+          "cost": -40,
+          "stat_modifiers": { "quality": 4, "defense": 2 },
+          "effect": "A cheap and unstable cloth-stuffed construct."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Aethyr Surge",
+          "cost": 8,
+          "effect": "This unit gains Hex."
+        },
+        {
+          "name": "Heavy Limbs",
+          "cost": 6,
+          "effect": "This unit gains an additional Brutal Blow die."
+        }
+      ]
+    },
+
+    {
+      "name": "Owlbear",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 130,
+      "quality": 4,
+      "defense": 4,
+      "move": 8,
+      "range": 0,
+      "weapon": "Talons & Beak",
+      "weapon_properties": [],
+      "composition": { "per_points": 300 },
+      "abilities": ["Impact", "Brutal Blow"],
+      "lore": "A hulking canyon predator with the body of a bear and the eyes of a hunting owl. When it screeches across the gulch walls, even seasoned Rangers remember they are prey.",
+      "tactics": "Shock predator. Charge into exposed enemies and break lines with Impact and brutal melee.",
+      "temperament": "Territorial",
+      "flags": ["CannotBeBefriended", "Beast", "Large"],
+      "unit_tags": ["predator", "charge", "shock", "beast"],
+      "terrain_preferences": ["forest", "rocky", "open"],
+      "objective_keywords": ["charge", "territory", "hunt"],
+      "state_advantages": {
+        "good_in": ["Strangewild"],
+        "bad_in": ["Rusted", "Extracted"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Mama Owlbear",
+          "cost": 25,
+          "stat_modifiers": { "quality": 4, "defense": 5 },
+          "abilities": ["Impact", "Brutal Blow", "Furious"],
+          "effect": "A territorial mother defending her young. Gains +1 Defense and Furious."
+        },
+        {
+          "name": "Baby Owlbear",
+          "cost": -60,
+          "stat_modifiers": { "quality": 2, "defense": 1, "move": 6 },
+          "abilities": ["Skittish"],
+          "flags": ["CanBeBefriended", "EscortEligible", "Small", "Beast"],
+          "effect": "A young and unpredictable owlbear cub. Fast, loud, and prone to panic."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Iron-Breaking Talons",
+          "cost": 14,
+          "effect": "This unit gains Pierce."
+        },
+        {
+          "name": "Blood Scent",
+          "cost": 12,
+          "effect": "This unit gains Furious."
+        }
+      ]
+    },
+
+    {
+      "name": "Chimera",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 170,
+      "quality": 6,
       "defense": 4,
       "move": 7,
       "range": 0,
-      "composition": {
-      "per_points": 550
-      "abilities": [
-        "fear",
-        "brutal_impact",
-        "relentless"
+      "weapon": "Triple Maw",
+      "weapon_properties": [],
+      "composition": { "per_points": 300 },
+      "abilities": ["Fear", "Brutal Blow", "Furious"],
+      "lore": "A stitched-together legend that shouldn't survive in the dry valley—lion muscle, goat stubbornness, and serpent spite. Yet it prowls Coffin Canyon anyway, breathing dust and eating regrets.",
+      "tactics": "Centerpiece brute. Push it into the center of the fight where Furious can trigger repeatedly. Chimera thrives in chaotic multi-unit engagements.",
+      "temperament": "Vengeful",
+      "flags": ["CannotBeBefriended", "Beast", "Large"],
+      "unit_tags": ["centerpiece", "brute", "fear", "apex_predator"],
+      "terrain_preferences": ["open", "ruins", "chokepoints"],
+      "objective_keywords": ["brawl", "disruption", "territory"],
+      "state_advantages": {
+        "good_in": ["Strangewild", "Lawless"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Alpha Chimera",
+          "cost": 25,
+          "stat_modifiers": { "defense": 5 },
+          "abilities": ["Fear", "Furious"],
+          "effect": "An ancient canyon apex predator whose hide is scarred from countless battles."
+        }
       ],
-      "effect": "No one knows where the Bloodhoof Centaurs came from. These enormous ogre-centaurs appeared in Coffin Canyon only recently—towering, scarred, and violently territorial. They charge like living avalanches, crushing bone and stone beneath their hooves."
-    }
-  ]
-}
-{
-  "name": "Medusa",
-  "faction": "Monsters",
-  "type": "Mystic",
-  "cost": 134,
-  "quality": 5,
-  "defense": 3,
-  "move": 5,
-  "range": 8,
-  "weapon": "Cursed Gaze",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 400
-  },
-  "abilities": [
-    "hex",
-    "fear",
-    "petrify"
-  ],
-  "lore": "A ruin-queen who wanders the shattered temples and dry river shrines of Coffin Canyon. Her gaze does not kill outright—it turns courage into hesitation and flesh slowly into stone. The canyon is littered with statues that once had names.",
-  "tactics": "Debuff controller. Keep distance and maintain line of sight while weakening enemies with petrifying gaze.",
-  "upgrades": [],
-  "temperament": "Cunning",
-  "flags": [
-    "CannotBeBefriended",
-    "Large"
-  ]
-}
-{
-  "name": "Dog Spider",
-  "faction": "Monsters",
-  "type": "Rogue",
-  "cost": 88,
-  "quality": 3,
-  "defense": 2,
-  "move": 8,
-  "range": 0,
-  "weapon": "Fangs & Skittering Claws",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 200
-  },
-  "abilities": [
-    "fast",
-    "venom",
-    "disengage"
-  ],
-  "lore": "Dog spiders are canyon ambush predators the size of wolves. They skitter across rocks and wagon trails alike, striking from shadows before retreating into cracks in the stone.",
-  "tactics": "Fast ambusher. Strike isolated targets and retreat before heavy units can respond.",
-  "upgrades": [
+      "optional_upgrades": [
+        {
+          "name": "Serpent Tail",
+          "cost": 15,
+          "effect": "This unit gains Poison. A venomous serpent head lashes from the creature's tail."
+        },
+        {
+          "name": "Infernal Breath",
+          "cost": 18,
+          "effect": "This unit gains Hell Spray. The lion head exhales a cone of burning aethyr."
+        }
+      ]
+    },
+
     {
-      "name": "Web Spitter",
-      "cost": 10,
+      "name": "Dust King",
+      "faction": "Monsters",
+      "type": "Brute",
+      "cost": 185,
+      "quality": 5,
+      "defense": 4,
+      "move": 4,
+      "range": 0,
+      "weapon": "Black-Tarnished Silver Sword",
+      "weapon_properties": ["Pierce"],
+      "composition": { "per_points": 200 },
+      "abilities": ["Fear", "Relentless", "Tougher"],
+      "lore": "Ancient bandaged dead-men, risen from forbidden chemical ruins. Dust Kings wander out of collapsed tombs and sunken chambers, chewing fresh flesh when they find it.",
+      "tactics": "Slow, durable melee pressure. Park them in ruins or choke points and force enemies to deal with Fear and grinding attacks.",
+      "temperament": "Vengeful",
+      "flags": ["Bloodless", "SkullRangerBefriendOnly"],
+      "unit_tags": ["undead", "durable", "bloodless", "ruin_dweller"],
+      "terrain_preferences": ["ruins", "ancient_structures", "tombs"],
+      "objective_keywords": ["hold", "territory", "attrition"],
+      "state_advantages": {
+        "good_in": ["Haunted", "Poisoned"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Ruinbound",
+          "effect": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation."
+        },
+        {
+          "name": "Dust King Revenant",
+          "cost": 220,
+          "stat_modifiers": { "quality": 6, "defense": 4, "move": 4 },
+          "abilities": ["Brutal Fear", "Relentless", "Tougher"],
+          "composition": { "per_points": 500 },
+          "special_mechanics": {
+            "ruinbound": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation.",
+            "tomb_curse": "When an enemy ends its activation engaged with this unit, that enemy must test Morale."
+          },
+          "effect": "A more powerful risen form. Tomb-Curse forces Morale tests on engaged enemies."
+        },
+        {
+          "name": "Dust Emperor",
+          "type": "Hero",
+          "cost": 275,
+          "stat_modifiers": { "quality": 6, "defense": 5, "move": 4 },
+          "abilities": ["Savage Fear", "Relentless", "Toughest"],
+          "composition": { "per_points": 2000 },
+          "flags": ["Bloodless", "SkullRangerBefriendOnly"],
+          "special_mechanics": {
+            "ruinbound": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation.",
+            "royal_tomb_ward": "Once per game: choose one Ruin or Ancient Structure terrain within 12\". Until end of round, enemies treat that terrain as Hazardous.",
+            "dust_command": "Once per round, when a friendly Bloodless unit within 8\" fails a Morale test, it may reroll."
+          },
+          "effect": "The apex Bloodless commander. Royal Tomb-Ward and Dust Command make it a force multiplier for undead warbands."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Brutal Fear",
+          "cost": 8,
+          "effect": "This unit upgrades Fear to Brutal Fear."
+        },
+        {
+          "name": "Toughest",
+          "cost": 12,
+          "effect": "This unit upgrades Tougher to Toughest."
+        },
+        {
+          "name": "Thyr Frenzy",
+          "cost": 10,
+          "effect": "This unit gains Thyr Devourer and Thyr Frenzy. Quality cannot exceed 6."
+        }
+      ]
+    },
+
+    {
+      "name": "Kelpie",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 140,
+      "quality": 4,
+      "defense": 3,
+      "move": 9,
+      "range": 0,
+      "weapon": "Drowning Drag",
+      "weapon_properties": ["Grapple"],
+      "composition": { "per_points": 150 },
+      "abilities": ["Fear", "Amphibious", "Water Lurker", "Dry Desperation"],
+      "lore": "A damp horse-beast out of place in the dry canyon. Desperate, thirsty, and dangerous—pulling prey into shade, mud, or deeper trouble.",
+      "tactics": "Hit-and-run controller. Grapple key targets off objectives or into danger zones. Works best near water terrain.",
+      "temperament": "Skittish",
+      "flags": ["Beast"],
+      "unit_tags": ["control", "grapple", "cavalry", "water"],
+      "terrain_preferences": ["water", "mud", "shade"],
+      "objective_keywords": ["disruption", "grapple", "denial"],
+      "state_advantages": {
+        "good_in": ["Strangewild", "Poisoned"],
+        "bad_in": ["Extracted", "Rusted"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "River Kelpie",
+          "cost": 25,
+          "stat_modifiers": { "defense": 4 },
+          "abilities": ["Fast"],
+          "effect": "A strong river hunter with greater endurance."
+        },
+        {
+          "name": "Starved Kelpie",
+          "cost": -25,
+          "stat_modifiers": { "quality": 3 },
+          "abilities": ["Furious"],
+          "effect": "A desperate desert wanderer running on instinct and spite."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Deepwater Pull",
+          "cost": 8,
+          "effect": "This unit gains Impact."
+        },
+        {
+          "name": "Bog Hunter",
+          "cost": 6,
+          "effect": "This unit gains Blood in the Air."
+        }
+      ]
+    },
+
+    {
+      "name": "Lionvulture",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 135,
+      "quality": 4,
+      "defense": 3,
+      "move": 10,
+      "range": 0,
+      "weapon": "Raking Talons & Pounce",
+      "weapon_properties": [],
+      "composition": { "per_points": 200 },
+      "abilities": ["Fast", "Thyr Guardian"],
+      "lore": "A four-legged wild beast—more animal than intellect—nesting near Thyr outcroppings where it can guard and feed.",
+      "tactics": "Flank, pounce, and retreat. Use speed to contest Thyr and punish isolated models. Avoid prolonged brawls.",
+      "temperament": "Territorial",
+      "flags": ["Beast"],
+      "unit_tags": ["fast", "cavalry", "thyr", "predator"],
+      "terrain_preferences": ["open", "thyr_outcroppings", "high_ground"],
+      "objective_keywords": ["thyr_control", "flanking", "territory"],
+      "state_advantages": {
+        "good_in": ["Strangewild"],
+        "bad_in": ["Extracted", "Rusted"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Alpha Lionvulture",
+          "cost": 30,
+          "stat_modifiers": { "quality": 5 },
+          "abilities": ["Fear"],
+          "effect": "Dominant territorial predator leading the pack."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Savage Pounce",
+          "cost": 6,
+          "effect": "This unit gains Impact."
+        },
+        {
+          "name": "Blood Scent",
+          "cost": 6,
+          "effect": "This unit gains Blood in the Air."
+        }
+      ]
+    },
+
+    {
+      "name": "Valley Centaur",
+      "faction": "Monsters",
+      "type": "Cavalry",
+      "cost": 135,
+      "quality": 4,
+      "defense": 3,
+      "move": 9,
       "range": 6,
-      "effect": "Gain a web spit attack (Range 6\"). On a successful hit the target becomes Pinned."
+      "weapon": "Bow & Hooves",
+      "weapon_properties": [],
+      "composition": { "per_points": 200 },
+      "abilities": ["Fast", "Suppression"],
+      "lore": "Nomads of the high mesas, valley centaurs roam the broken trails and wind-cut ridges of Coffin Canyon. Some will bargain for water, salt, or news. Most prefer to run strangers off with a warning arrow.",
+      "tactics": "Mobile skirmisher. Suppress dangerous enemies from range, then reposition quickly to stay out of melee.",
+      "temperament": "Cunning",
+      "flags": ["CanBeBefriended", "EscortEligible", "Large"],
+      "unit_tags": ["skirmisher", "mobile", "suppression", "archer"],
+      "terrain_preferences": ["mesas", "ridges", "open"],
+      "objective_keywords": ["suppression", "escort", "flanking"],
+      "state_advantages": {
+        "good_in": ["Strangewild", "Lawless"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Bloodhoof Centaur",
+          "cost": 40,
+          "stat_modifiers": { "quality": 5, "defense": 4, "move": 7 },
+          "composition": { "per_points": 550 },
+          "abilities": ["Fear", "Brutal Impact", "Relentless"],
+          "effect": "No one knows where the Bloodhoof Centaurs came from. These enormous ogre-centaurs charge like living avalanches, crushing bone and stone beneath their hooves."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Longbow",
+          "cost": 15,
+          "stat_modifiers": { "range": 18 },
+          "effect": "Replace this unit's weapon with a Longbow (Range 18\"). Valley centaurs are legendary canyon archers."
+        }
+      ]
     },
+
     {
-      "name": "Burrower",
-      "cost": 15,
-      "effect": "Once per game, this model may emerge anywhere within 8\" of its starting position that is not within 3\" of an enemy."
-    }
-  ],
-  "temperament": "Predatory",
-  "flags": [
-    "CannotBeBefriended",
-    "Beast"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Thyrfang Spider",
-      "cost": 25,
+      "name": "Lamia",
+      "faction": "Monsters",
+      "type": "Mystic",
+      "cost": 135,
       "quality": 4,
-      "abilities": [
-        "fear",
-        "venom",
-        "furious"
-      ],
-      "effect": "A Dog Spider warped by feeding on Thyr crystals. Its fangs glow faintly and its attacks grow more savage the more blood it spills."
-    }
-  ]
-}
-{
-  "name": "Jackalope",
-  "faction": "Monsters",
-  "type": "Rogue",
-  "cost": 76,
-  "quality": 3,
-  "defense": 2,
-  "move": 12,
-  "range": 0,
-  "weapon": "Antlers & Teeth",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 200
-  },
-  "abilities": [
-    "fast",
-    "wild_ricochet",
-    "disengage"
-  ],
-  "lore": "CThe jackalope is the most famous lie ever told in the canyon—and somehow it keeps proving itself real. Horned rabbits ricochet across the desert floor faster than bullets, leaving only dust and disbelief behind.",
-  "tactics": "Objective thief and battlefield chaos agent. Use speed and ricochet movement to contest objectives and escape danger.",
-  "upgrades": [
-    {
-      "name": "Thyr-Touched Antlers",
-      "cost": 15,
-      "effect": "Jackalope gains Fear. Its antlers glow faintly with Thyr energy."
-    },
-    {
-      "name": "Dust Mirage",
-      "cost": 12,
-      "effect": "Once per round when this unit is targeted by a ranged attack, it may move 3\" before the attack is resolved."
-    }
-  ],
-  "temperament": "Skittish",
-  "flags": [
-    "CanBeBefriended",
-    "EscortEligible",
-    "Small"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Alpha Jackalope",
-      "cost": 25,
-      "quality": 4,
-      "abilities": [
-        "fear",
-        "impact"
-      ],
-      "effect": "A massive horned jackalope rumored to lead desert herds. When it charges, it hits like a flying spear."
-    }
-  ]
-}
-{
-  "name": "Lamia",
-  "faction": "Monsters",
-  "type": "Mystic",
-  "cost": 135,
-  "quality": 4,
-  "defense": 3,
-  "move": 6,
-  "range": 8,
-  "weapon": "Desert Enchantment",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 300
-  },
-  "abilities": [
-    "hex",
-    "brain_bloom"
-  ],
-  "lore": "A mirage given teeth. Lamias haunt the dry places where trails fade and water rumors begin. Travelers who follow their laughter often vanish into the heat shimmer.",
-  "tactics": "Control and attrition. Hex dangerous enemies, fracture morale with psychic attacks, and finish off weakened prey.",
-  "upgrades": [
-    {
-      "name": "Mirage Veil",
-      "cost": 12,
-      "effect": "Once per round when this unit is targeted by a ranged attack, it may move 3\"."
-    },
-    {
-      "name": "Hypnotic Eyes",
-      "cost": 15,
-      "abilities": [
-        "fear"
-      ],
-      "effect": "The Lamia's gaze unsettles the minds of those who meet it."
-    }
-  ],
-  "temperament": "Cunning",
-  "flags": [
-    "CannotBeBefriended",
-    "Large"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Dune Lamia",
-      "cost": 20,
-      "quality": 5,
-      "abilities": [
-        "fear",
-        "hex"
-      ],
-      "effect": "An ancient Lamia that has ruled the dunes for decades. Its whispers carry further, and its magic cuts deeper."
-    }
-  ]
-}
-{
-  "name": "Crag Thrallo",
-  "faction": "Monsters",
-  "type": "Brute",
-  "cost": 128,
-  "quality": 4,
-  "defense": 4,
-  "move": 5,
-  "range": null,
-  "weapon": "Scrap Hammer & Iron Grip",
-  "weapon_properties": [],
-  "composition": {
-    "per_points": 300
-  },
-  "abilities": [
-    "impact",
-    "tough"
-  ],
-  "lore": "Once forced to haul stone, iron, and scrap for cruel masters, Thrallos eventually learned that chains break easier than bones. Now they roam junkyards and gravel pits, smashing machines apart and drinking whatever strange brew they find in rusted barrels.",
-  "tactics": "Forward bruiser. Thrallo thrives in messy brawls and tight terrain. Charge into the center, absorb punishment, and smash anything fragile.",
-  "upgrades": [
-    {
-      "name": "Rebar Club",
-      "cost": 10,
-      "abilities": [
-        "brutal_blow"
-      ],
-      "effect": "A length of twisted construction steel makes every hit devastating."
-    },
-    {
-      "name": "Scrap Armor",
-      "cost": 12,
-      "defense": 5,
-      "effect": "Bolted plates, wagon doors, and furnace lids form crude protection."
-    }
-  ],
-  "temperament": "Vengeful",
-  "flags": [
-    "Large"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Doomshine Thrallo",
-      "cost": 15,
-      "quality": 5,
-      "abilities": [
-        "furious"
-      ],
-      "effect": "Fueled by stolen Doomshine. Gains +1 Quality but must move toward the nearest enemy each activation if able."
-    }
-  ]
-}
-{
-  "name": "Gulch Minotaur",
-  "faction": "Monsters",
-  "type": "Brute",
-  "cost": 140,
-  "quality": 4,
-  "defense": 3,
-  "move": 6,
-  "range": null,
-  "weapon": "Horn Gore",
-  "weapon_properties": [],
-  "abilities": [
-    "brutal_impact",
-    "brutal_blow"
-  ],
-  "lore": "A bull-headed ruin-dweller that knows every corridor in the old stoneworks. If it charges, it’s because you’re already lost.",
-  "tactics": "Charge specialist. Use terrain density to set up devastating Impact lines through corridors and ruins.",
-  "upgrades": [
-    {
-      "name": "Huge Battle Axe",
-      "cost": 15,
-      "abilities": [
-        "pierce"
-      ],
-      "effect": "The Minotaur carries a massive rusted executioner's axe capable of cleaving armor and bone."
-    }
-  ],
-  "composition_limit": "",
-  "temperament": "Territorial",
-  "flags": [
-    "CannotBeBefriended",
-    "Large"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Labyrinth Bull",
-      "cost": 10,
-      "abilities": [
-        "relentless"
-      ],
-      "effect": "Years of stalking ruins have honed its instincts. After destroying an enemy in melee, the Minotaur may immediately move 2\"."
-    }
-  ]
-}
-{
-  "name": "Chimera",
-  "faction": "Monsters",
-  "type": "Brute",
-  "cost": 173,
-  "quality": 6,
-  "defense": 4,
-  "move": 7,
-  "range": null,
-  "weapon": "Triple Maw",
-  "weapon_properties": [],
-  "abilities": [
-    "fear",
-    "brutal_blow",
-    "furious"
-  ],
-  "lore": "A stitched-together legend that shouldn't survive in the dry valley—lion muscle, goat stubbornness, and serpent spite. Yet it prowls Coffin Canyon anyway, breathing dust and eating regrets.",
-  "tactics": "Centerpiece brute. Push it into the center of the fight where Furious can trigger repeatedly. Chimera thrives in chaotic multi-unit engagements.",
-  "upgrades": [
-    {
-      "name": "Serpent Tail",
-      "cost": 15,
-      "abilities": [
-        "poison"
-      ],
-      "effect": "A venomous serpent head lashes from the creature's tail."
-    },
-    {
-      "name": "Infernal Breath",
-      "cost": 18,
-      "abilities": [
-        "hell_spray"
-      ],
-      "effect": "The lion head exhales a cone of burning aethyr."
-    }
-  ],
-  "composition_limit": "300",
-  "temperament": "Vengeful",
-  "flags": [
-    "CannotBeBefriended",
-    "Beast",
-    "Large"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Alpha Chimera",
-      "cost": 25,
-      "defense": 5,
-      "abilities": [
-        "fear",
-        "furious"
-      ],
-      "effect": "An ancient canyon apex predator whose hide is scarred from countless battles."
-    }
-  ]
-}
-{
-  "name": "Owlbear",
-  "faction": "Monsters",
-  "type": "Brute",
-  "cost": 148,
-  "quality": 4,
-  "defense": 4,
-  "move": 8,
-  "range": 0,
-  "weapon": "Talons & Beak",
-  "weapon_properties": [],
-  "abilities": [
-    "impact",
-    "brutal_blow"
-  ],
-  "lore": "A hulking canyon predator with the body of a bear and the eyes of a hunting owl. When it screeches across the gulch walls, even seasoned Rangers remember they are prey.",
-  "tactics": "Shock predator. Charge into exposed enemies and break lines with Impact and brutal melee.",
-  "upgrades": [
-    {
-      "name": "Iron-Breaking Talons",
-      "cost": 14,
-      "abilities": [
-        "pierce"
-      ],
-      "effect": "The Owlbear's claws are capable of tearing through armor and wagon plating."
-    },
-    {
-      "name": "Blood Scent",
-      "cost": 12,
-      "abilities": [
-        "furious"
-      ],
-      "effect": "Once wounded, the Owlbear becomes even more dangerous."
-    }
-  ],
-  "composition_limit": "300",
-  "temperament": "Territorial",
-  "flags": [
-    "CannotBeBefriended",
-    "Beast",
-    "Large"
-  ],
-  "supplemental_abilities": [
-    {
-      "name": "Mama Owlbear",
-      "cost": 25,
-      "quality": 4,
-      "defense": 5,
-      "abilities": [
-        "impact",
-        "brutal_blow",
-        "furious"
-      ],
-      "effect": "A territorial mother defending her young. Gains +1 Quality and +1 Defense."
-    },
-    {
-      "name": "Baby Owlbear",
-      "cost": -60,
-      "quality": 2,
-      "defense": 1,
+      "defense": 3,
       "move": 6,
+      "range": 8,
+      "weapon": "Desert Enchantment",
+      "weapon_properties": [],
+      "composition": { "per_points": 300 },
+      "abilities": ["Hex", "Brain Bloom"],
+      "lore": "A mirage given teeth. Lamias haunt the dry places where trails fade and water rumors begin. Travelers who follow their laughter often vanish into the heat shimmer.",
+      "tactics": "Control and attrition. Hex dangerous enemies, fracture morale with psychic attacks, and finish off weakened prey.",
+      "temperament": "Cunning",
+      "flags": ["CannotBeBefriended", "Large"],
+      "unit_tags": ["mystic", "control", "hex", "psychic"],
+      "terrain_preferences": ["desert", "mirages", "ruins"],
+      "objective_keywords": ["disruption", "control", "denial"],
+      "state_advantages": {
+        "good_in": ["Haunted", "Strangewild"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Dune Lamia",
+          "cost": 20,
+          "stat_modifiers": { "quality": 5 },
+          "abilities": ["Fear", "Hex"],
+          "effect": "An ancient Lamia that has ruled the dunes for decades. Its whispers carry further, and its magic cuts deeper."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Mirage Veil",
+          "cost": 12,
+          "effect": "Once per round when this unit is targeted by a ranged attack, it may move 3\"."
+        },
+        {
+          "name": "Hypnotic Eyes",
+          "cost": 15,
+          "effect": "This unit gains Fear."
+        }
+      ]
+    },
+
+    {
+      "name": "Medusa",
+      "faction": "Monsters",
+      "type": "Mystic",
+      "cost": 165,
+      "quality": 5,
+      "defense": 3,
+      "move": 5,
+      "range": 8,
+      "weapon": "Cursed Gaze",
+      "weapon_properties": [],
+      "composition": { "per_points": 400 },
+      "abilities": ["Hex", "Fear", "Petrify"],
+      "lore": "A ruin-queen who wanders the shattered temples and dry river shrines of Coffin Canyon. Her gaze does not kill outright—it turns courage into hesitation and flesh slowly into stone. The canyon is littered with statues that once had names.",
+      "tactics": "Debuff controller. Keep distance and maintain line of sight while weakening enemies with petrifying gaze.",
+      "temperament": "Cunning",
+      "flags": ["CannotBeBefriended", "Large"],
+      "unit_tags": ["mystic", "control", "petrify", "debuffer"],
+      "terrain_preferences": ["ruins", "shrines", "elevated"],
+      "objective_keywords": ["control", "denial", "disruption"],
+      "state_advantages": {
+        "good_in": ["Haunted", "Strangewild"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [],
+      "optional_upgrades": []
+    },
+
+    {
+      "name": "Bête Herdbeast",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 180,
+      "quality": 6,
+      "defense": 3,
+      "move": 6,
+      "range": 0,
+      "weapon": "Horns, Bulk & Trample",
+      "weapon_properties": [],
+      "composition": { "per_points": 0 },
+      "abilities": ["Tougher", "Brutal Impact", "Fear"],
+      "lore": "Huge, shaggy horned beasts that smell faintly of candy. Bêtes are dream-made giants—often gentle—yet terrifying when startled.",
+      "tactics": "Anchor the center. Use its footprint to block lanes and protect Thyr. Avoid unnecessary fights; win by surviving, holding ground, or being Escorted.",
+      "temperament": "Friendly",
+      "flags": ["CanBeBefriended", "EscortEligible", "Large"],
+      "unit_tags": ["tank", "anchor", "escort", "gentle_giant"],
+      "terrain_preferences": ["open", "thyr_outcroppings", "grassland"],
+      "objective_keywords": ["escort", "hold", "thyr_control"],
+      "state_advantages": {
+        "good_in": ["Strangewild", "Held"],
+        "bad_in": ["Extracted"]
+      },
+      "supplemental_abilities": [
+        {
+          "name": "Gentle Giant",
+          "effect": "Will not declare attacks against Monster Rangers unless attacked first."
+        },
+        {
+          "name": "Stampede",
+          "effect": "If this unit fails a Morale test it immediately moves up to its Move in a straight line. It may pass through smaller models, applying Impact normally."
+        },
+        {
+          "name": "Baby Bête",
+          "cost": -115,
+          "stat_modifiers": { "quality": 2, "defense": 2, "move": 5 },
+          "abilities": ["Fear"],
+          "effect": "A small, skittish Bête calf still learning the world is dangerous."
+        },
+        {
+          "name": "Mama Bête",
+          "cost": -10,
+          "stat_modifiers": { "quality": 4, "defense": 4, "move": 5 },
+          "abilities": ["Toughest", "Brutal Impact", "Brutal Fear"],
+          "special_mechanics": {
+            "pack_protector": "When a Baby Bête within 6\" is targeted by an attack, Mama Bête may immediately move up to 4\" toward the attacker."
+          },
+          "effect": "A fierce mother whose patience ends the moment her calf is threatened."
+        }
+      ],
+      "optional_upgrades": [
+        {
+          "name": "Thick Hide",
+          "cost": 10,
+          "effect": "This unit gains Toughest."
+        },
+        {
+          "name": "Terrifying Bulk",
+          "cost": 8,
+          "effect": "This unit gains Brutal Fear."
+        },
+        {
+          "name": "Thyr Sated",
+          "cost": 6,
+          "effect": "This unit gains Thyr Sated."
+        }
+      ]
+    },
+
+    {
+      "name": "Klowna",
+      "faction": "Monsters",
+      "type": "Titan",
+      "cost": 300,
+      "quality": 6,
+      "defense": 5,
+      "move": 7,
+      "range": 0,
+      "weapon": "Titan Talons, Twin Maw & Triple-Leg Lunge",
+      "weapon_properties": ["Brutal Pierce"],
+      "composition": { "per_points": 1000 },
       "abilities": [
-        "skittish"
+        "Savage Fear",
+        "Toughest",
+        "Down the Hatch",
+        "Klowna Spawn",
+        "Twin Maw",
+        "Two Heads"
       ],
-      "flags": [
-        "CanBeBefriended",
-        "EscortEligible",
-        "Small",
-        "Beast"
-      ],
-      "effect": "A young and unpredictable owlbear cub. Fast, loud, and prone to panic."
+      "lore": "A towering chitinous horror—nearly 14 feet tall—with two heads, three legs, and enormous talons. It crawls out of an old wreck like a bad joke that refuses to end.",
+      "tactics": "A shared catastrophe. Spawn it mid-game to spike tension. Force everyone to decide: keep scoring, or deal with the Titan before it eats the canyon.",
+      "temperament": "Vengeful",
+      "flags": ["Titan", "CannotBeBefriended"],
+      "unit_tags": ["titan", "catastrophe", "fear", "spawn"],
+      "terrain_preferences": ["open", "ruins", "wreckage"],
+      "objective_keywords": ["disruption", "titan_threat", "scenario_event"],
+      "state_advantages": {
+        "good_in": ["Strangewild", "Lawless", "Poisoned"],
+        "bad_in": ["Liberated"]
+      },
+      "supplemental_abilities": [],
+      "optional_upgrades": []
     }
+
+  ],
+
+  "notes": [
+    "Befriending Restriction (Optional Rule): Undead and Incorporeal monsters marked 'SkullRangerBefriendOnly' may only be Befriended by the Monster Rangers' Skull Ranger branch.",
+    "Titan Rule: Titans are scenario events. When a Titan enters play, all factions must reassess priorities.",
+    "Temperament is used by the scenario engine to determine monster AI behavior when uncontrolled.",
+    "Bloodless monsters are immune to Poison and Blood in the Air effects."
   ]
 }
