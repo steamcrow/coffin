@@ -1110,3 +1110,56 @@
     }
   ]
 }
+{
+  "name": "Lamia",
+  "faction": "Monsters",
+  "type": "Mystic",
+  "cost": 135,
+  "quality": 4,
+  "defense": 3,
+  "move": 6,
+  "range": 8,
+  "weapon": "Desert Enchantment",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 300
+  },
+  "abilities": [
+    "hex",
+    "brain_bloom"
+  ],
+  "lore": "A mirage given teeth. Lamias haunt the dry places where trails fade and water rumors begin. Travelers who follow their laughter often vanish into the heat shimmer.",
+  "tactics": "Control and attrition. Hex dangerous enemies, fracture morale with psychic attacks, and finish off weakened prey.",
+  "upgrades": [
+    {
+      "name": "Mirage Veil",
+      "cost": 12,
+      "effect": "Once per round when this unit is targeted by a ranged attack, it may move 3\"."
+    },
+    {
+      "name": "Hypnotic Eyes",
+      "cost": 15,
+      "abilities": [
+        "fear"
+      ],
+      "effect": "The Lamia's gaze unsettles the minds of those who meet it."
+    }
+  ],
+  "temperament": "Cunning",
+  "flags": [
+    "CannotBeBefriended",
+    "Large"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Dune Lamia",
+      "cost": 20,
+      "quality": 5,
+      "abilities": [
+        "fear",
+        "hex"
+      ],
+      "effect": "An ancient Lamia that has ruled the dunes for decades. Its whispers carry further, and its magic cuts deeper."
+    }
+  ]
+}
