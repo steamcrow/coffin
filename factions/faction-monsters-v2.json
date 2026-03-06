@@ -841,7 +841,7 @@
         {
           "name": "Baby Owlbear",
           "cost": -60,
-          "stat_modifiers": { "quality": 2, "defense": 1, "move": 6 },
+          "stat_modifiers": { "quality": -3, "defense": -2, "move": 1 },
           "abilities": ["Skittish"],
           "flags": ["CanBeBefriended", "EscortEligible", "Small", "Beast"],
           "effect": "A young and unpredictable owlbear cub. Fast, loud, and prone to panic."
