@@ -1163,3 +1163,155 @@
     }
   ]
 }
+{
+  "name": "Crag Thrallo",
+  "faction": "Monsters",
+  "type": "Brute",
+  "cost": 128,
+  "quality": 4,
+  "defense": 4,
+  "move": 5,
+  "range": null,
+  "weapon": "Scrap Hammer & Iron Grip",
+  "weapon_properties": [],
+  "composition": {
+    "per_points": 300
+  },
+  "abilities": [
+    "impact",
+    "tough"
+  ],
+  "lore": "Once forced to haul stone, iron, and scrap for cruel masters, Thrallos eventually learned that chains break easier than bones. Now they roam junkyards and gravel pits, smashing machines apart and drinking whatever strange brew they find in rusted barrels.",
+  "tactics": "Forward bruiser. Thrallo thrives in messy brawls and tight terrain. Charge into the center, absorb punishment, and smash anything fragile.",
+  "upgrades": [
+    {
+      "name": "Rebar Club",
+      "cost": 10,
+      "abilities": [
+        "brutal_blow"
+      ],
+      "effect": "A length of twisted construction steel makes every hit devastating."
+    },
+    {
+      "name": "Scrap Armor",
+      "cost": 12,
+      "defense": 5,
+      "effect": "Bolted plates, wagon doors, and furnace lids form crude protection."
+    }
+  ],
+  "temperament": "Vengeful",
+  "flags": [
+    "Large"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Doomshine Thrallo",
+      "cost": 15,
+      "quality": 5,
+      "abilities": [
+        "furious"
+      ],
+      "effect": "Fueled by stolen Doomshine. Gains +1 Quality but must move toward the nearest enemy each activation if able."
+    }
+  ]
+}
+{
+  "name": "Gulch Minotaur",
+  "faction": "Monsters",
+  "type": "Brute",
+  "cost": 140,
+  "quality": 4,
+  "defense": 3,
+  "move": 6,
+  "range": null,
+  "weapon": "Horn Gore",
+  "weapon_properties": [],
+  "abilities": [
+    "brutal_impact",
+    "brutal_blow"
+  ],
+  "lore": "A bull-headed ruin-dweller that knows every corridor in the old stoneworks. If it charges, it’s because you’re already lost.",
+  "tactics": "Charge specialist. Use terrain density to set up devastating Impact lines through corridors and ruins.",
+  "upgrades": [
+    {
+      "name": "Huge Battle Axe",
+      "cost": 15,
+      "abilities": [
+        "pierce"
+      ],
+      "effect": "The Minotaur carries a massive rusted executioner's axe capable of cleaving armor and bone."
+    }
+  ],
+  "composition_limit": "",
+  "temperament": "Territorial",
+  "flags": [
+    "CannotBeBefriended",
+    "Large"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Labyrinth Bull",
+      "cost": 10,
+      "abilities": [
+        "relentless"
+      ],
+      "effect": "Years of stalking ruins have honed its instincts. After destroying an enemy in melee, the Minotaur may immediately move 2\"."
+    }
+  ]
+}
+{
+  "name": "Chimera",
+  "faction": "Monsters",
+  "type": "Brute",
+  "cost": 173,
+  "quality": 6,
+  "defense": 4,
+  "move": 7,
+  "range": null,
+  "weapon": "Triple Maw",
+  "weapon_properties": [],
+  "abilities": [
+    "fear",
+    "brutal_blow",
+    "furious"
+  ],
+  "lore": "A stitched-together legend that shouldn't survive in the dry valley—lion muscle, goat stubbornness, and serpent spite. Yet it prowls Coffin Canyon anyway, breathing dust and eating regrets.",
+  "tactics": "Centerpiece brute. Push it into the center of the fight where Furious can trigger repeatedly. Chimera thrives in chaotic multi-unit engagements.",
+  "upgrades": [
+    {
+      "name": "Serpent Tail",
+      "cost": 15,
+      "abilities": [
+        "poison"
+      ],
+      "effect": "A venomous serpent head lashes from the creature's tail."
+    },
+    {
+      "name": "Infernal Breath",
+      "cost": 18,
+      "abilities": [
+        "hell_spray"
+      ],
+      "effect": "The lion head exhales a cone of burning aethyr."
+    }
+  ],
+  "composition_limit": "300",
+  "temperament": "Vengeful",
+  "flags": [
+    "CannotBeBefriended",
+    "Beast",
+    "Large"
+  ],
+  "supplemental_abilities": [
+    {
+      "name": "Alpha Chimera",
+      "cost": 25,
+      "defense": 5,
+      "abilities": [
+        "fear",
+        "furious"
+      ],
+      "effect": "An ancient canyon apex predator whose hide is scarred from countless battles."
+    }
+  ]
+}
