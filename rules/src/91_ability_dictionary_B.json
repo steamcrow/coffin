@@ -158,6 +158,13 @@
       "long": "Passive. At the start of its activation, this unit must move at least 6\". If it cannot, or chooses not to, it must pass a Quality test or immediately Crash Land."
     },
 
+    "wild_ricochet": {
+    "_id": "R-ABIL-B-WILD-RICOCHET",
+    "timing": "passive",
+    "short": "Bounces through the battlefield.",
+    "long": "Passive. When this unit Moves, it may pass through enemy bases. After finishing movement, it may immediately move an additional 3\" in a new direction. If this move contacts another model, it may ricochet again once."
+    },
+    
     "crash_landing": {
       "_id": "R-ABIL-B-CRASH-LANDING",
       "timing": "passive",
