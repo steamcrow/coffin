@@ -10,7 +10,7 @@
       "defense": 0,
       "move": 5,
       "range": 12,
-      "cost": 86,
+      "cost": 95,
       "abilities": [
         "Interact",
         "Quick Draw"
@@ -29,7 +29,7 @@
       "defense": 0,
       "move": 8,
       "range": 6,
-      "cost": 110,
+      "cost": 115,
       "abilities": [
         "Fast",
         "Runner",
@@ -49,7 +49,7 @@
       "defense": 2,
       "move": 4,
       "range": 18,
-      "cost": 103,
+      "cost": 115,
       "abilities": [
         "Anchor",
         "Suppression",
@@ -69,7 +69,7 @@
       "defense": 1,
       "move": 6,
       "range": 12,
-      "cost": 102,
+      "cost": 125,
       "abilities": [
         "Demolition",
         "Fearless"
@@ -90,7 +90,7 @@
       "defense": 1,
       "move": 6,
       "range": 12,
-      "cost": 106,
+      "cost": 130,
       "abilities": [
         "Hex",
         "Stealth"
@@ -113,7 +113,7 @@
       "defense": 1,
       "move": 6,
       "range": 12,
-      "cost": 142,
+      "cost": 175,
       "abilities": [
         "Authority",
         "Inspire",
@@ -136,7 +136,7 @@
       "defense": 0,
       "move": 6,
       "range": 6,
-      "cost": 101,
+      "cost": 115,
       "abilities": [
         "Steal",
         "Interact"
@@ -156,7 +156,7 @@
       "defense": 0,
       "move": 6,
       "range": 6,
-      "cost": 96,
+      "cost": 105,
       "abilities": [
         "Interact",
         "Demolition"
@@ -178,7 +178,7 @@
       "defense": 1,
       "move": 8,
       "range": 12,
-      "cost": 117,
+      "cost": 130,
       "abilities": [
         "Scout",
         "Suppression"
@@ -199,7 +199,7 @@
       "defense": 3,
       "move": 5,
       "range": 18,
-      "cost": 146,
+      "cost": 155,
       "abilities": [
         "Brace",
         "Anchor",
@@ -286,5 +286,7 @@
     ]
   },
   "universal_upgrades_available": true,
-  "universal_upgrades_note": "Shine Riders may purchase universal upgrades from core rules (Gas Mask, Spare Parts, vehicle upgrades) where appropriate."
+  "universal_upgrades_note": "Shine Riders may purchase universal upgrades from core rules (Gas Mask, Spare Parts, vehicle upgrades) where appropriate.",
+  "_point_formula_version": "3.0",
+  "_recalculated": "2026-03-07"
 }
