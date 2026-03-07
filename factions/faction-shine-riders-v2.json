@@ -3,32 +3,25 @@
   "faction": "Shine Riders",
   "version": "3.0",
   "status": "Complete",
-
-  "description": "Canyon bandits and silver thieves who infest Coffin Canyon, stripping buildings, salting claims, and stealing whatever isn't nailed down. Shine Riders don't hold ground or fight fair — they grab fast, leave traps behind, and vanish into the choking dust before consequences arrive.",
-
-  "summary": "The Shine Riders are Coffin Canyon's most opportunistic faction. They win not by destroying their enemies but by taking everything worth having and leaving before the bill comes due. Every unit is built around speed, theft, extraction, or denial — often all four at once.",
-
+  "description": "Canyon bandits and silver thieves who infest Coffin Canyon, stripping buildings, salting claims, and stealing whatever isn't nailed down. Shine Riders don't hold ground or fight fair \u2014 they grab fast, leave traps behind, and vanish into the choking dust before consequences arrive.",
+  "summary": "The Shine Riders are Coffin Canyon's most opportunistic faction. They win not by destroying their enemies but by taking everything worth having and leaving before the bill comes due. Every unit is built around speed, theft, extraction, or denial \u2014 often all four at once.",
   "lore": "Nobody knows where the Shine Riders started. Some say they were a Silver Rush crew that never stopped running. Others say they're what happens when a boomtown loses its boom and the people stay anyway. What's clear is this: they know every back route in the canyon, they have an arrangement with at least three claims brokers in Diablo, and if something valuable goes missing during a firefight, it was probably them.",
-
   "playstyle": "Pure aggression built around Interact actions, not combat. Shine Riders score by extracting Thyr, turning buildings into Silver mines, salting claims with Bootboomers, and getting off the table before the enemy catches them. They field fast cheap units as disposable tools, use Suppression to waste enemy activations, and treat their own retreat as a scoring event. Every decision should be asking: what am I taking, and how do I leave with it?",
-
   "strengths": [
     "Fastest objective interaction in the game",
     "Suppression denies enemy activations without requiring kills",
     "Claim markers punish aggressive enemies passively",
     "Shard Runners and Ash Slingers among the fastest units in the canyon",
     "Rattle Cart provides Titan-level distraction at non-Titan cost",
-    "Shine Boss aura rewards retreating — unique in the game"
+    "Shine Boss aura rewards retreating \u2014 unique in the game"
   ],
-
   "weaknesses": [
-    "Extremely fragile — most units are D0 or D1",
+    "Extremely fragile \u2014 most units are D0 or D1",
     "No staying power; losing mobility means losing the game",
     "Dependent on Interact actions, which enemies can contest",
     "Low damage output in sustained fights",
     "Rattle Cart's Windmill Drive is unpredictable and occasionally catastrophic"
   ],
-
   "canyon_state_relationships": {
     "preferred_states": [
       {
@@ -69,7 +62,6 @@
       }
     ]
   },
-
   "faction_tags": [
     "extraction",
     "speed",
@@ -82,7 +74,6 @@
     "opportunist",
     "greedy"
   ],
-
   "scenario_preferences": {
     "ideal_scenarios": [
       "Thyr extraction races against the clock",
@@ -98,40 +89,55 @@
       "Scenarios that punish unit loss heavily"
     ]
   },
-
   "weapons_note": "Unit costs include standard-issue weapons. Weapon names are flavour; their mechanical effects are defined by weapon_properties and abilities in core rules.",
-
   "faction_features": [
     {
       "name": "Extraction Specialists",
       "cost": 0,
       "required": true,
       "effect": "Shine Riders units gain +1 die when performing Interact actions to extract Thyr or turn buildings into Silver mines.",
-      "keywords": ["extraction", "interact", "thyr", "silver"]
+      "keywords": [
+        "extraction",
+        "interact",
+        "thyr",
+        "silver"
+      ]
     },
     {
       "name": "Quick Exit",
       "cost": 0,
       "required": true,
-      "effect": "Shine Riders units within 6\" of a table edge gain +1 to Disengage rolls. Retreating is never shameful — it is the plan.",
-      "keywords": ["disengage", "escape", "mobility"]
+      "effect": "Shine Riders units within 6\" of a table edge gain +1 to Disengage rolls. Retreating is never shameful \u2014 it is the plan.",
+      "keywords": [
+        "disengage",
+        "escape",
+        "mobility"
+      ]
     },
     {
       "name": "Silver Rush",
       "cost": 0,
       "required": false,
       "effect": "Earn bonus Silver for each building successfully turned and held until end of game. Represents successful resource extraction converted to campaign currency.",
-      "keywords": ["silver", "buildings", "campaign"]
+      "keywords": [
+        "silver",
+        "buildings",
+        "campaign"
+      ]
     },
     {
       "name": "Claim Salting",
       "cost": 0,
       "required": false,
       "effect": "Bootboomers may place Claim Markers on Thyr Crystals or Buildings instead of extracting them. Claim Markers trigger on first enemy contact: 1 automatic hit + Suppressed.",
-      "keywords": ["trap", "claim", "sabotage", "denial"]
+      "keywords": [
+        "trap",
+        "claim",
+        "sabotage",
+        "denial"
+      ]
     }
   ],
-
   "units": [
     {
       "name": "Glowhands",
@@ -143,7 +149,9 @@
       "move": 5,
       "range": 12,
       "weapon": "Thyr Extractor & Sidearm",
-      "weapon_properties": ["Light"],
+      "weapon_properties": [
+        "Light"
+      ],
       "composition": {
         "per_points": 150
       },
@@ -173,8 +181,15 @@
         "harvest"
       ],
       "state_advantages": {
-        "good_in": ["Extracted", "Booming", "Lawless"],
-        "bad_in": ["Liberated", "Haunted"]
+        "good_in": [
+          "Extracted",
+          "Booming",
+          "Lawless"
+        ],
+        "bad_in": [
+          "Liberated",
+          "Haunted"
+        ]
       },
       "special_scenarios": [
         "thyr_extraction",
@@ -187,21 +202,32 @@
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
+        },
+        {
+          "name": "Mounted",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Gain the Mounted ability: +3\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "stat_modifiers": {
+            "move": 3
+          },
+          "grants_ability": "Mounted"
         }
       ]
     },
-
     {
       "name": "Shard Runners",
       "faction": "Shine Riders",
-      "type": "Frail",
+      "type": "Grunt",
       "cost": 110,
       "quality": 5,
       "defense": 0,
       "move": 8,
       "range": 6,
       "weapon": "Dust Sling & Belt Pistol",
-      "weapon_properties": ["Light"],
+      "weapon_properties": [
+        "Light"
+      ],
       "composition": {
         "per_points": 200
       },
@@ -232,8 +258,15 @@
         "speed_score"
       ],
       "state_advantages": {
-        "good_in": ["Booming", "Lawless", "Extracted"],
-        "bad_in": ["Strangewild", "Haunted"]
+        "good_in": [
+          "Booming",
+          "Lawless",
+          "Extracted"
+        ],
+        "bad_in": [
+          "Strangewild",
+          "Haunted"
+        ]
       },
       "special_scenarios": [
         "objective_race",
@@ -246,21 +279,32 @@
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
+        },
+        {
+          "name": "Mounted",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Gain the Mounted ability: +3\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "stat_modifiers": {
+            "move": 3
+          },
+          "grants_ability": "Mounted"
         }
       ]
     },
-
     {
       "name": "Bootboomers",
       "faction": "Shine Riders",
-      "type": "Frail",
+      "type": "Grunt",
       "cost": 96,
       "quality": 5,
       "defense": 0,
       "move": 6,
       "range": 6,
       "weapon": "Hidden Charges & Boot Pistol",
-      "weapon_properties": ["Light"],
+      "weapon_properties": [
+        "Light"
+      ],
       "composition": {
         "per_points": 200
       },
@@ -269,7 +313,7 @@
         "Demolition"
       ],
       "lore": "They 'mine' claims the old-fashioned way: by hiding charges in them and walking away. The Bootboomer's favourite phrase is 'their problem now.'",
-      "tactics": "Interact with Thyr Crystals or Buildings to place Claim Markers instead of extracting — poisoning the well for enemies. Send them forward early, salt multiple objectives, then abandon them. The traps do the rest.",
+      "tactics": "Interact with Thyr Crystals or Buildings to place Claim Markers instead of extracting \u2014 poisoning the well for enemies. Send them forward early, salt multiple objectives, then abandon them. The traps do the rest.",
       "unit_tags": [
         "trap",
         "interact",
@@ -290,8 +334,14 @@
         "sabotage"
       ],
       "state_advantages": {
-        "good_in": ["Lawless", "Extracted", "Booming"],
-        "bad_in": ["Liberated"]
+        "good_in": [
+          "Lawless",
+          "Extracted",
+          "Booming"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
       },
       "special_scenarios": [
         "denial_mission",
@@ -307,10 +357,19 @@
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
+        },
+        {
+          "name": "Mounted",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Gain the Mounted ability: +3\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "stat_modifiers": {
+            "move": 3
+          },
+          "grants_ability": "Mounted"
         }
       ]
     },
-
     {
       "name": "Scrapjack Looters",
       "faction": "Shine Riders",
@@ -321,7 +380,10 @@
       "move": 6,
       "range": 6,
       "weapon": "Hookblade Poles & Magnet Hooks",
-      "weapon_properties": ["Melee", "Light"],
+      "weapon_properties": [
+        "Melee",
+        "Light"
+      ],
       "composition": {
         "per_points": 300
       },
@@ -330,7 +392,7 @@
         "Interact"
       ],
       "lore": "Specialists in ripping value off living targets. Hookblades strip weapons. Magnet hooks pull supplies. Crowbars handle everything else. They have never met a thing they couldn't remove from someone who wanted to keep it.",
-      "tactics": "Target high-value enemy units — Leaders, Specialists, anything with expensive upgrades. A successful Steal destroys the upgrade rather than transferring it, which is usually enough. Keep one Scrapjack near the Shine Boss for the re-roll support.",
+      "tactics": "Target high-value enemy units \u2014 Leaders, Specialists, anything with expensive upgrades. A successful Steal destroys the upgrade rather than transferring it, which is usually enough. Keep one Scrapjack near the Shine Boss for the re-roll support.",
       "unit_tags": [
         "steal",
         "disrupt",
@@ -349,8 +411,14 @@
         "upgrade_denial"
       ],
       "state_advantages": {
-        "good_in": ["Booming", "Lawless"],
-        "bad_in": ["Liberated", "Haunted"]
+        "good_in": [
+          "Booming",
+          "Lawless"
+        ],
+        "bad_in": [
+          "Liberated",
+          "Haunted"
+        ]
       },
       "special_scenarios": [
         "theft_mission",
@@ -366,10 +434,19 @@
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
+        },
+        {
+          "name": "Mounted",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Gain the Mounted ability: +3\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "stat_modifiers": {
+            "move": 3
+          },
+          "grants_ability": "Mounted"
         }
       ]
     },
-
     {
       "name": "Ash Slingers",
       "faction": "Shine Riders",
@@ -380,7 +457,10 @@
       "move": 8,
       "range": 12,
       "weapon": "Canyon Dust Slings & Short Carbine",
-      "weapon_properties": ["Light", "Suppression"],
+      "weapon_properties": [
+        "Light",
+        "Suppression"
+      ],
       "composition": {
         "per_points": 300
       },
@@ -389,7 +469,7 @@
         "Suppression"
       ],
       "lore": "Mounted dust-throwers who learned that the canyon's worst weapon is its air. They fill leather pouches with alkali dust, ride in fast, and throw the canyon itself into your eyes.",
-      "tactics": "Deploy via Scout to apply Suppression on Turn 1 before the enemy can react. Hit the unit most likely to contest your extractors and waste their activations. Keep riding — Cavalry Disengage means you can never be pinned. Gas Masks make them immune to their own dust.",
+      "tactics": "Deploy via Scout to apply Suppression on Turn 1 before the enemy can react. Hit the unit most likely to contest your extractors and waste their activations. Keep riding \u2014 Cavalry Disengage means you can never be pinned. Gas Masks make them immune to their own dust.",
       "unit_tags": [
         "cavalry",
         "scout",
@@ -410,8 +490,15 @@
         "scouting"
       ],
       "state_advantages": {
-        "good_in": ["Lawless", "Extracted", "Poisoned"],
-        "bad_in": ["Haunted", "Strangewild"]
+        "good_in": [
+          "Lawless",
+          "Extracted",
+          "Poisoned"
+        ],
+        "bad_in": [
+          "Haunted",
+          "Strangewild"
+        ]
       },
       "special_scenarios": [
         "denial_mission",
@@ -431,7 +518,6 @@
         }
       ]
     },
-
     {
       "name": "Blast Jack",
       "faction": "Shine Riders",
@@ -442,7 +528,10 @@
       "move": 6,
       "range": 12,
       "weapon": "Dynamite Bundles & Pistol",
-      "weapon_properties": ["Blast", "Light"],
+      "weapon_properties": [
+        "Blast",
+        "Light"
+      ],
       "composition": {
         "per_points": 300
       },
@@ -451,7 +540,7 @@
         "Fearless"
       ],
       "lore": "Blast Jack carries more dynamite than sense. The Shine Riders love him for it. Everyone else has learned to keep their distance when he starts smiling.",
-      "tactics": "Use Demolition to destroy cover, open walls for extraction paths, and panic Monster units with Scare Tactics. Position behind cover — Volatile Cargo makes his death dangerous for both sides, which enemies will remember.",
+      "tactics": "Use Demolition to destroy cover, open walls for extraction paths, and panic Monster units with Scare Tactics. Position behind cover \u2014 Volatile Cargo makes his death dangerous for both sides, which enemies will remember.",
       "unit_tags": [
         "demolition",
         "explosive",
@@ -471,8 +560,14 @@
         "monster_disruption"
       ],
       "state_advantages": {
-        "good_in": ["Booming", "Extracted", "Lawless"],
-        "bad_in": ["Strangewild"]
+        "good_in": [
+          "Booming",
+          "Extracted",
+          "Lawless"
+        ],
+        "bad_in": [
+          "Strangewild"
+        ]
       },
       "special_scenarios": [
         "demolition_mission",
@@ -489,10 +584,19 @@
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
+        },
+        {
+          "name": "Mounted",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Gain the Mounted ability: +3\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "stat_modifiers": {
+            "move": 3
+          },
+          "grants_ability": "Mounted"
         }
       ]
     },
-
     {
       "name": "Wagon Gat Gunner",
       "faction": "Shine Riders",
@@ -503,7 +607,10 @@
       "move": 4,
       "range": 18,
       "weapon": "Wagon-Mounted Gatling Gun",
-      "weapon_properties": ["Suppression", "Heavy"],
+      "weapon_properties": [
+        "Suppression",
+        "Heavy"
+      ],
       "composition": {
         "per_points": 400
       },
@@ -513,7 +620,7 @@
         "Immobile"
       ],
       "lore": "A gatling gun welded to a wagon frame and pointed at whatever is approaching the extraction team. It does not move quickly. It does not need to.",
-      "tactics": "Deploy in the second rank covering your extractors' flank. Anchor early and Suppress anything that tries to contest your Glowhands. Immobile means placement is everything — think before you commit. A well-placed Wagon Gat buys multiple turns of free Interact actions.",
+      "tactics": "Deploy in the second rank covering your extractors' flank. Anchor early and Suppress anything that tries to contest your Glowhands. Immobile means placement is everything \u2014 think before you commit. A well-placed Wagon Gat buys multiple turns of free Interact actions.",
       "unit_tags": [
         "tank",
         "suppression",
@@ -534,8 +641,15 @@
         "flank_cover"
       ],
       "state_advantages": {
-        "good_in": ["Lawless", "Booming", "Extracted"],
-        "bad_in": ["Strangewild", "Haunted"]
+        "good_in": [
+          "Lawless",
+          "Booming",
+          "Extracted"
+        ],
+        "bad_in": [
+          "Strangewild",
+          "Haunted"
+        ]
       },
       "special_scenarios": [
         "extraction_cover",
@@ -557,7 +671,6 @@
         }
       ]
     },
-
     {
       "name": "Crystal Whisperer",
       "faction": "Shine Riders",
@@ -568,7 +681,9 @@
       "move": 6,
       "range": 12,
       "weapon": "Thyr Staff & Pocket Revolver",
-      "weapon_properties": ["Light"],
+      "weapon_properties": [
+        "Light"
+      ],
       "composition": {
         "per_points": 400
       },
@@ -578,7 +693,7 @@
         "Unleashed Power"
       ],
       "lore": "Nobody hired her for the Thyr magic. She came with the canyon. She seems to find the caches before anyone else does, which makes her useful and unsettling in equal measure.",
-      "tactics": "Hex the enemy unit most likely to contest your extraction — -1 Quality is devastating on a Leader or high-Q fighter. Use Stealth to stay alive. Wild Magic Table is a last resort; the results are chaotic but occasionally faction-changing. Limit 0-1 per force.",
+      "tactics": "Hex the enemy unit most likely to contest your extraction \u2014 -1 Quality is devastating on a Leader or high-Q fighter. Use Stealth to stay alive. Wild Magic Table is a last resort; the results are chaotic but occasionally faction-changing. Limit 0-1 per force.",
       "unique": true,
       "max_count": 1,
       "unit_tags": [
@@ -602,8 +717,14 @@
         "wild_magic"
       ],
       "state_advantages": {
-        "good_in": ["Strangewild", "Extracted", "Haunted"],
-        "bad_in": ["Liberated"]
+        "good_in": [
+          "Strangewild",
+          "Extracted",
+          "Haunted"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
       },
       "special_scenarios": [
         "mystic_site",
@@ -620,10 +741,19 @@
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
+        },
+        {
+          "name": "Mounted",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Gain the Mounted ability: +3\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "stat_modifiers": {
+            "move": 3
+          },
+          "grants_ability": "Mounted"
         }
       ]
     },
-
     {
       "name": "Shine Boss",
       "faction": "Shine Riders",
@@ -634,7 +764,9 @@
       "move": 6,
       "range": 12,
       "weapon": "Ornate Revolver & Riding Crop",
-      "weapon_properties": ["Light"],
+      "weapon_properties": [
+        "Light"
+      ],
       "composition": {
         "per_points": 400
       },
@@ -644,7 +776,7 @@
         "Fearless"
       ],
       "lore": "Every Shine Riders crew runs on one person's nerve and everyone else's fear of disappointing them. The Shine Boss is that person. They do not stay to fight. They stay until every unit with something valuable has made it to the edge. Then they leave.",
-      "tactics": "Keep the Shine Boss central to your extraction cluster and within 6\" of as many units as possible. The aura rewards retreating — use it deliberately. Inspire adds dice when you need a critical Interact or attack to succeed. Authority keeps panicking units functional.",
+      "tactics": "Keep the Shine Boss central to your extraction cluster and within 6\" of as many units as possible. The aura rewards retreating \u2014 use it deliberately. Inspire adds dice when you need a critical Interact or attack to succeed. Authority keeps panicking units functional.",
       "unit_tags": [
         "leader",
         "inspire",
@@ -665,8 +797,12 @@
         "inspire"
       ],
       "state_advantages": {
-        "good_in": ["any"],
-        "bad_in": ["Liberated"]
+        "good_in": [
+          "any"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
       },
       "special_scenarios": [
         "leadership",
@@ -688,10 +824,19 @@
           "cost": 8,
           "type": "Gear",
           "effect": "Once per game, when this unit would be destroyed, roll 1d6. On 4+, it survives with Q1 instead."
+        },
+        {
+          "name": "Mounted",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Gain the Mounted ability: +3\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "stat_modifiers": {
+            "move": 3
+          },
+          "grants_ability": "Mounted"
         }
       ]
     },
-
     {
       "name": "Rattle Cart",
       "faction": "Shine Riders",
@@ -702,7 +847,10 @@
       "move": 5,
       "range": 18,
       "weapon": "Wagon Gat & Trojan Facade",
-      "weapon_properties": ["Suppression", "Heavy"],
+      "weapon_properties": [
+        "Suppression",
+        "Heavy"
+      ],
       "composition": {
         "per_points": 500
       },
@@ -711,8 +859,8 @@
         "Anchor",
         "Suppression"
       ],
-      "lore": "A roaming Trojan wagon — windmill-driven, loud as sin, dressed up like a monster to bait the canyon's horrors. Nobody inside. Nothing to lose. The Shine Riders built it to be feared, chased, and survived by anyone who isn't standing next to it when something wrong happens.",
-      "tactics": "Two modes: roaming Monster Bait (keep unanchored, use Windmill Drive to draw monsters and fire away from your real plan) or Sniper Tower (Anchor early, gain +6\" Range, count as Cover). Never use it as a front-line fighter — it is a distraction tool with Titan durability. Windmill Drive is mandatory when unanchored; plan your deployment accordingly.",
+      "lore": "A roaming Trojan wagon \u2014 windmill-driven, loud as sin, dressed up like a monster to bait the canyon's horrors. Nobody inside. Nothing to lose. The Shine Riders built it to be feared, chased, and survived by anyone who isn't standing next to it when something wrong happens.",
+      "tactics": "Two modes: roaming Monster Bait (keep unanchored, use Windmill Drive to draw monsters and fire away from your real plan) or Sniper Tower (Anchor early, gain +6\" Range, count as Cover). Never use it as a front-line fighter \u2014 it is a distraction tool with Titan durability. Windmill Drive is mandatory when unanchored; plan your deployment accordingly.",
       "unique": false,
       "unit_tags": [
         "titan",
@@ -735,8 +883,14 @@
         "area_denial"
       ],
       "state_advantages": {
-        "good_in": ["Strangewild", "Lawless", "Booming"],
-        "bad_in": ["Haunted"]
+        "good_in": [
+          "Strangewild",
+          "Lawless",
+          "Booming"
+        ],
+        "bad_in": [
+          "Haunted"
+        ]
       },
       "special_scenarios": [
         "monster_distraction",
@@ -765,7 +919,6 @@
       ]
     }
   ],
-
   "victory_objectives": [
     {
       "type": "Thyr Extracted",
@@ -788,12 +941,11 @@
       "description": "Score VP for contesting objectives and escaping before heavy resistance arrives. Speed over combat."
     }
   ],
-
   "tactics": {
     "overview": "Shine Riders win by speed, denial, and leaving early. They avoid fair fights, focus on Interact actions over damage, and treat retreat as a core tactic rather than a failure. Every turn spent extracting or stealing is a winning turn.",
     "doctrine": [
-      "Prioritize Interact actions over attacks — extraction beats combat every time.",
-      "Use Rabble units aggressively — Glowhands and Bootboomers are tools, not investments.",
+      "Prioritize Interact actions over attacks \u2014 extraction beats combat every time.",
+      "Use Rabble units aggressively \u2014 Glowhands and Bootboomers are tools, not investments.",
       "Salt claims and objectives early with Bootboomers to slow or punish enemy advances.",
       "Engage only long enough to Suppress or delay. Prolonged combat favors your opponents.",
       "Always maintain an exit route toward a table edge. The Shine Boss aura rewards using it."
@@ -802,7 +954,7 @@
       "Deploy Shard Runners or Glowhands forward on Turn 1 to force enemy responses.",
       "Use Ash Slingers to Suppress key enemy units and waste their activations before your Interact actions.",
       "Deploy the Rattle Cart or Wagon Gat to draw attention while extraction teams work elsewhere.",
-      "Abandon objectives once value is secured — VP is scored by leaving, not holding."
+      "Abandon objectives once value is secured \u2014 VP is scored by leaving, not holding."
     ],
     "weaknesses": [
       "Low durability and poor performance in sustained fights.",
@@ -810,7 +962,6 @@
       "Key extraction units become helpless if cut off from table edges."
     ]
   },
-
   "universal_upgrades_available": true,
   "universal_upgrades_note": "Shine Riders may purchase Gas Mask and Spare Parts upgrades from core rules where appropriate. Vehicle units (Wagon Gat, Rattle Cart) may also access vehicle repair upgrades."
 }
