@@ -38,7 +38,6 @@
     { "id": "R-ABIL-H-VEILED-WHISPERS", "file": "97_ability_dictionary_H.json", "path": "abilities.veiled_whispers", "parent": "ability_dict_H" },
     { "id": "R-ABIL-H-RITUAL-COMFORT", "file": "97_ability_dictionary_H.json", "path": "abilities.ritual_comfort", "parent": "ability_dict_H" },
     { "id": "R-ABIL-H-DEPLOY-DEMESNE-MARKER", "file": "97_ability_dictionary_H.json", "path": "abilities.deploy_demesne_marker", "parent": "ability_dict_H" },
-    { "id": "location_vault_97", "title": "Location Vault (97)", "path": "rules_master.location_vault_97", "type": "vault", "file": "97_location_vault.json" },
     { "id": "weapon_properties", "title": "Weapon Properties", "path": "rules_master.weapon_properties", "type": "system", "file": "100_weapon_properties.json" },
     { "id": "wild_magic", "title": "Wild Magic Table", "path": "rules_master.wild_magic_table", "type": "system", "file": "100_wild_magic_table.json" },
     { "id": "terrain_vault", "title": "Terrain Vault", "path": "rules_master.terrain_vault", "type": "vault", "file": "120_terrain_vault.json" },
