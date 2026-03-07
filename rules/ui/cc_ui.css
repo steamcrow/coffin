@@ -271,10 +271,12 @@ button, .btn {
   font-size: 12px;
 }
 
+.cc-list-item:nth-child(odd)  { background: var(--cc-bg); }
+.cc-list-item:nth-child(even) { background: var(--cc-bg-soft); }
+
 .cc-list-item:hover {
   border-color: var(--cc-text-dim);
-  background: var(--cc-bg-soft);
-}
+  background: var(--cc-bg-mid) !important;
 
 .cc-list-item.active {
   border-color: var(--cc-primary);
