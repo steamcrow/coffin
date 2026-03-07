@@ -24,8 +24,8 @@
 
       "guidelines": [
         { "value": 1, "description": "Basic trained human / small monster / civilian" },
-        { "value": 2, "description": "Veteran military unit / human-sized monster" },
-        { "value": 3, "description": "Elite unit / large monster / har   { "value": 4, "description": "Leader unit / low hero / powerful monster" },
+        { "value": 3, "description": "Elite unit / large monster / hard-to-kill beast" },
+        { "value": 4, "description": "Leader unit / low hero / powerful monster" },
         { "value": 5, "description": "High hero / very large or mystically powerful monster" },
         { "value": 6, "description": "Epic supernatural kaiju, titan, or super-heavy mechanical unit" }
       ]
