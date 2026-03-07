@@ -7,6 +7,7 @@
   },
   "index": [
     { "id": "philosophy", "title": "Philosophy & Design", "path": "rules_master.sections.philosophy", "type": "meta" },
+    { "id": "quickstart", "title": "Quickstart", "path": "rules_master.quickstart", "type": "core", "file": "05_quickstart.json" }
     { "id": "core_mechanics", "title": "Core Mechanics", "path": "rules_master.core_mechanics", "type": "core", "file": "10_core_mechanics.json" },
     { "id": "core_quality", "title": "Quality System", "path": "rules_master.core_mechanics.quality_definition", "parent": "core_mechanics", "file": "10_core_mechanics.json" },
     { "id": "core_rolls", "title": "The Roll", "path": "rules_master.core_mechanics.the_roll", "parent": "core_mechanics", "file": "10_core_mechanics.json" },
