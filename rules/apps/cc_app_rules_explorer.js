@@ -810,7 +810,13 @@ window.CC_APP = {
       const favs = getFavorites();
 
       // Build flat item list (unchanged logic from original — this drives filteredIndex for prev/next)
-      let allItems = index.filter(it => !EXCLUDED_IDS.includes(it.id));
+      // Filter out sub-entries (items with a parent) and raw _id entries — these are
+      // deep-link anchors only and should never appear as top-level sidebar items.
+      let allItems = index.filter(it =>
+        !EXCLUDED_IDS.includes(it.id) &&
+        !it.parent &&
+        !String(it.id).match(/^R-[A-Z0-9-]+$/)
+      );
 
       if (currentFilter === 'favorites') {
         const indexFavorites = allItems.filter(it => favs.includes(it.id));
