@@ -1,23 +1,24 @@
 {
   "_id": "R-CAMPAIGN",
-  "type": "rules_master",
   "title": "Campaigns in Coffin Canyon",
-
-  "text": {
+  "type": "rules_master",
+  "philosophy": {
     "_id": "R-CAMPAIGN-00",
+    "title": "Philosophy",
+    "short": "A Campaign is a series of linked scenarios fought over the broken regions of Coffin Canyon",
     "long": "A Campaign is a series of linked scenarios fought over the broken regions of Coffin Canyon. Factions quarrel over boomtown ruins, poisoned rivers, feral biomes, industrial scars, and storm-ridden badlands—each battle reshaping the land itself. Coffin Canyon is not a neutral battlefield. It is an injured place, and every action leaves a mark."
   },
-
   "sections": {
     "green_storm": {
       "_id": "R-CAMPAIGN-01",
       "title": "The Canyon and the Green Storm",
+      "short": "The Canyon was torn open by reckless mining and Thyr extraction",
       "long": "The Canyon was torn open by reckless mining and Thyr extraction. Rivers were poisoned, soil corrupted, and the air fractured. These wounds culminated in the Green Storm Catastrophe—toxic storms, spore-clouds, and harmonic backlash that still surge across the land. The Canyon did not heal. Instead, it entered a cycle of States—environmental conditions that define what can survive, what resources exist, and how difficult it is for men and monsters to endure. A Campaign tracks these changes."
     },
-
     "territories": {
       "_id": "R-CAMPAIGN-02",
       "title": "Territories",
+      "short": "A Territory represents a defined region of Coffin Canyon",
       "long": "A Territory represents a defined region of Coffin Canyon. Each Territory always exists in one Canyon State.",
       "examples": [
         "Boomtown ruin or mining settlement",
@@ -26,12 +27,11 @@
         "Storm-dominated badland"
       ]
     },
-
     "canyon_states": {
       "_id": "30_campaign_system",
       "title": "Canyon States",
+      "short": "Canyon States are environmental conditions, not just ownership",
       "long": "Canyon States are environmental conditions, not just ownership. They define terrain, storms, morale, and resource flow.",
-
       "states": {
         "poisoned": {
           "_id": "R-CAMPAIGN-03A",
@@ -54,7 +54,6 @@
             "Automat function normally"
           ]
         },
-
         "lawless": {
           "_id": "R-CAMPAIGN-03B",
           "name": "Lawless",
@@ -78,7 +77,6 @@
             "Storms occur unpredictably"
           ]
         },
-
         "haunted": {
           "_id": "R-CAMPAIGN-03C",
           "name": "Haunted",
@@ -97,7 +95,6 @@
             "Manlings suffer morale and fear penalties"
           ]
         },
-
         "strangewild": {
           "_id": "R-CAMPAIGN-03D",
           "name": "Strangewild",
@@ -118,7 +115,6 @@
             "Structures degrade rapidly"
           ]
         },
-
         "exalted": {
           "_id": "R-CAMPAIGN-03E",
           "name": "Exalted",
@@ -139,7 +135,6 @@
             "Destroying Obelisks weakens the State"
           ]
         },
-
         "rusted": {
           "_id": "R-CAMPAIGN-03F",
           "name": "Rusted",
@@ -157,7 +152,6 @@
             "Beasts avoid prolonged exposure"
           ]
         },
-
         "liberated": {
           "_id": "R-CAMPAIGN-03G",
           "name": "Liberated",
@@ -174,7 +168,6 @@
             "Storms suppressed or redirected"
           ]
         },
-
         "extracted": {
           "_id": "R-CAMPAIGN-03H",
           "name": "Extracted",
@@ -192,7 +185,6 @@
             "Storm activity reduced but unstable"
           ]
         },
-
         "held": {
           "_id": "R-CAMPAIGN-03I",
           "name": "Held",
@@ -211,10 +203,12 @@
         }
       }
     },
-
     "state_shifts": {
       "_id": "R-CAMPAIGN-04",
       "title": "State Shifts",
+      "short": "",
+      "long": "",
+      "notes": "Some States resist change. Some victories only damage a State rather than replace it.",
       "process": [
         "Total Victory Points",
         "Highest VP faction is Dominant Influence",
@@ -224,13 +218,13 @@
         "Terrain added or removed",
         "Storm behavior changes",
         "Resource availability changes"
-      ],
-      "notes": "Some States resist change. Some victories only damage a State rather than replace it."
+      ]
     },
-
     "campaign_flow": {
       "_id": "R-CAMPAIGN-05",
       "title": "Campaign Flow",
+      "short": "",
+      "long": "",
       "steps": [
         "Choose a Territory and note its State",
         "Play a Scenario",
@@ -241,10 +235,11 @@
         "Proceed to the next scenario"
       ]
     },
-
     "death_and_restocking": {
       "_id": "R-CAMPAIGN-06",
       "title": "Death & Restocking",
+      "short": "",
+      "long": "",
       "income": {
         "victory_points": "5 credits per VP",
         "thyr_crystals": "10 credits per crystal sold"
@@ -256,10 +251,11 @@
         "No long injury trees by default"
       ]
     },
-
     "resources": {
       "_id": "R-CAMPAIGN-07",
       "title": "Resources & Base Costs",
+      "short": "",
+      "long": "",
       "base_costs": {
         "coal": 5,
         "feed": 4,
@@ -272,32 +268,49 @@
         "special_gear": 12
       }
     },
-
     "state_modifiers": {
       "_id": "R-CAMPAIGN-08",
       "title": "State Modifiers",
+      "short": "",
+      "long": "",
       "modifiers": {
-        "liberated": { "feed": "½ cost", "monster_bait": "×2 cost" },
-        "strangewild": { "monster_bait": "½ cost", "food": "×2 cost" },
-        "rusted": { "spare_parts": "½ cost", "water": "×2 cost" },
-        "extracted": { "weapons": "½ cost", "special_gear": "×2 cost" },
-        "held": { "note": "No cost modifiers; storms reduced" }
+        "liberated": {
+          "feed": "½ cost",
+          "monster_bait": "×2 cost"
+        },
+        "strangewild": {
+          "monster_bait": "½ cost",
+          "food": "×2 cost"
+        },
+        "rusted": {
+          "spare_parts": "½ cost",
+          "water": "×2 cost"
+        },
+        "extracted": {
+          "weapons": "½ cost",
+          "special_gear": "×2 cost"
+        },
+        "held": {
+          "note": "No cost modifiers; storms reduced"
+        }
       }
     },
-
     "friendly_territories": {
       "_id": "R-CAMPAIGN-09",
       "title": "Friendly Territories",
+      "short": "",
+      "long": "",
       "benefits": [
         "Reinforcement costs reduced by 1 credit per unit",
         "Gain one free basic resource after the battle",
         "Optional scenario advantages such as cover, deployment, or intel"
       ]
     },
-
     "campaign_end": {
       "_id": "R-CAMPAIGN-10",
       "title": "Ending a Campaign",
+      "short": "",
+      "long": "",
       "condition": "A Campaign ends when one faction controls two-thirds or more of all Territories.",
       "epilogue": "The Canyon does not recover. It simply remembers who broke it last."
     }
