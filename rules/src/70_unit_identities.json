@@ -1,17 +1,14 @@
 {
   "_id": "R-UNIT",
   "title": "Unit Identities",
-
   "philosophy": {
     "_id": "R-UNIT-00",
+    "title": "Philosophy",
     "short": "Roles define behavior under pressure, not balance.",
     "long": "Unit Types explain what kind of threat a model represents and how it behaves under pressure. Roles matter more than raw stats.",
-    "design_intent": "Asymmetry over symmetry. Balance is found in consequence, not equal numbers."
+    "notes": "Asymmetry over symmetry. Balance is found in consequence, not equal numbers."
   },
-
   "archetype_vault": {
-    "_id": "R-UNIT-01",
-
     "grunt": {
       "_id": "R-UNIT-GRUNT",
       "identity": "Fragile / Standard.",
@@ -23,7 +20,6 @@
         "Escalated Panic results"
       ]
     },
-
     "brute": {
       "_id": "R-UNIT-BRUTE",
       "identity": "Hard to stop shock unit.",
@@ -35,7 +31,6 @@
         "Reduced flexibility"
       ]
     },
-
     "mystic": {
       "_id": "R-UNIT-MYSTIC",
       "identity": "High-risk power source.",
@@ -47,29 +42,27 @@
         "Backlash and escalation risk"
       ]
     },
-
     "shooter": {
       "_id": "R-UNIT-SHOOTER",
       "identity": "Ranged control unit.",
-      "type_rules": ["Fire Superiority", "Suppression Fragility"],
-
+      "type_rules": [
+        "Fire Superiority",
+        "Suppression Fragility"
+      ],
       "fire_superiority": {
         "_id": "R-UNIT-SHOOTER-FIRE",
         "effect": "If this unit did not move this activation, it may split its attack dice between up to two valid targets."
       },
-
       "suppression_fragility": {
         "_id": "R-UNIT-SHOOTER-SUPPRESS",
         "effect": "If this unit is Pinned or Grappled, it may not use Critical Damage abilities this activation."
       },
-
       "logic_triggers": [
         "Cover bonuses",
         "Melee engagement penalties",
         "Line-of-sight dependency"
       ]
     },
-
     "cavalry": {
       "_id": "R-UNIT-CAVALRY",
       "identity": "Momentum-based mobile unit.",
@@ -81,7 +74,6 @@
         "Unstable terrain interaction"
       ]
     },
-
     "rogue": {
       "_id": "R-UNIT-ROGUE",
       "identity": "Fast infiltrator.",
@@ -93,7 +85,6 @@
         "Fragility in direct combat"
       ]
     },
-
     "specialist": {
       "_id": "R-UNIT-SPECIALIST",
       "identity": "Technical expert.",
@@ -103,7 +94,6 @@
         "Device and terrain manipulation"
       ]
     },
-
     "tank": {
       "_id": "R-UNIT-TANK",
       "identity": "Durable front-line unit.",
@@ -115,34 +105,32 @@
         "Slow movement"
       ]
     },
-
     "leader": {
       "_id": "R-UNIT-LEADER",
       "identity": "Command and cohesion unit.",
-      "type_rules": ["Rally", "Command Presence", "High-Value Target"],
-
+      "type_rules": [
+        "Rally",
+        "Command Presence",
+        "High-Value Target"
+      ],
       "rally": {
         "_id": "R-UNIT-LEADER-RALLY",
         "effect": "Once per round, grant an ally within 12\" +1 die on their next Morale test."
       },
-
       "command_presence": {
         "_id": "R-UNIT-LEADER-COMMAND",
         "effect": "Friendly units within 6\" may use this unit's Quality for Morale tests instead of their own, if higher."
       },
-
       "high_value_target": {
         "_id": "R-UNIT-LEADER-HVT",
         "effect": "If this unit is destroyed, the enemy gains +2 VP."
       },
-
       "logic_triggers": [
         "Morale auras",
         "Ignore Shaken (limited)",
         "Death-triggered Morale cascades"
       ]
     },
-
     "hero": {
       "_id": "R-UNIT-HERO",
       "identity": "Exceptional named unit.",
@@ -153,21 +141,13 @@
         "High impact, low balance expectation"
       ]
     },
-
     "titan": {
       "_id": "R-UNIT-TITAN",
       "identity": "Battlefield-shaping entity.",
       "type_rule": "Unstoppable",
-      "effect": "Ignores difficult terrain. Cannot be Grappled or Pinned by units smaller than Brute.",
-      "rules": {
-        "_id": "R-UNIT-TITAN-RULES",
-        "terrain_interaction": "Re-roll 1 terrain Quality test per round. Causes terrain damage through movement.",
-        "demolition_test": "Attacking buildings requires a Quality test. Failure = 1 damage; Critical Failure = 1 damage + escalation.",
-        "morale": "Rarely affected by Morale."
-      }
+      "effect": "Ignores difficult terrain. Cannot be Grappled or Pinned by units smaller than Brute."
     }
   },
-
   "logic_notes": {
     "_id": "R-UNIT-99",
     "hybrid_units": "Units may have multiple types. All effects apply simultaneously.",
