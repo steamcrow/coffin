@@ -6,7 +6,7 @@
 console.log("📘 Rules Explorer app loaded");
 
 window.CC_APP = {
-  init({ root, ctx }) {
+  async init({ root, ctx }) {
     console.log("🚀 Rules Explorer init", ctx);
 
     // ---- INJECT CRITICAL LAYOUT CSS IMMEDIATELY (synchronous, no flicker) ----
