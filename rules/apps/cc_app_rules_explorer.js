@@ -322,33 +322,27 @@ window.CC_APP = {
     // Groups use a match() function so they work with any index IDs.
     const NAV_GROUPS = [
       {
-        id: 'core', label: '⚔️ Core Rules',
-        match: (it) => ['core_mechanics', 'turn_structure'].includes(it.id),
+        id: 'rules', label: 'Rules',
+        match: (it) => ['core_mechanics', 'turn_structure',
+                        'visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault',
+                        'unit_identities', 'ability_engine'].includes(it.id),
       },
       {
-        id: 'vaults', label: '📖 Vaults',
-        match: (it) => ['visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault'].includes(it.id),
-      },
-      {
-        id: 'systems', label: '⚙️ Systems',
-        match: (it) => ['unit_identities', 'ability_engine'].includes(it.id),
-      },
-      {
-        id: 'abilities', label: '✨ Ability Dictionary',
+        id: 'abilities', label: 'Ability Dictionary',
         match: (it) => Boolean(it.id?.startsWith('ability_dict_')),
       },
       {
-        id: 'factions', label: '🏴 Factions',
+        id: 'factions', label: 'Factions',
         match: (it) => Boolean(it.id?.startsWith('faction_')),
       },
       {
-        id: 'campaign', label: '🗺️ Campaign',
+        id: 'campaign', label: 'Campaign',
         match: (it) => it.id === 'campaign_system',
       },
     ];
 
-    // Core and Vaults open by default; others start collapsed.
-    let openGroups = new Set(['core', 'vaults']);
+    // Rules open by default; others start collapsed.
+    let openGroups = new Set(['rules']);
 
     // ---- LOAD FACTIONS ----
     async function loadFactions() {
@@ -798,10 +792,7 @@ window.CC_APP = {
       return `
         <button class="cc-list-item ${active}" data-id="${esc(it.id)}">
           <div class="d-flex justify-content-between align-items-center w-100">
-            <div class="flex-grow-1">
-              <div class="cc-list-title">${esc(it.title || it.id)}</div>
-              <div class="cc-list-sub">${esc(it.type || "rule")}</div>
-            </div>
+            <div class="cc-list-title flex-grow-1">${esc(it.title || it.id)}</div>
             <span class="cc-star-btn" data-star-id="${esc(it.id)}"
               style="cursor: pointer; padding: 4px 8px; font-size: 14px;" title="Star/Unstar">
               ${starred ? '★' : '☆'}
@@ -904,10 +895,9 @@ window.CC_APP = {
     // ============================================
 
     const PROSE_FIELDS = [
-      'philosophy', 'text', 'long', 'short', 'effect', 'description',
-      'design_intent', 'definition', 'pool', 'logic', 'resolution',
-      'trigger', 'thematic_reason', 'golden_rule', 'fast_resolution',
-      'action_cost', 'completion', 'format',
+      'long', 'text', 'effect', 'description',
+      'golden_rule', 'fast_resolution', 'action_cost', 'completion', 'format',
+      'pool', 'logic',
     ];
 
     const LIST_FIELDS = [
@@ -1145,12 +1135,7 @@ window.CC_APP = {
                   </button>
                 </div>
               </div>
-              ${a.short       ? `<div class="fw-semibold mb-1">${esc(a.short)}</div>` : ''}
-              ${a.long        ? `<div>${esc(a.long)}</div>` : ''}
-              ${a.effect      ? `<div>${esc(a.effect)}</div>` : ''}
-              ${a.trigger     ? `<div class="mt-1"><strong>Trigger:</strong> ${esc(a.trigger)}</div>` : ''}
-              ${a.restriction ? `<div class="cc-muted small mt-1">${esc(a.restriction)}</div>` : ''}
-              ${a.restrictions ? `<div class="cc-muted small mt-1">${esc(Array.isArray(a.restrictions) ? a.restrictions.join(' • ') : a.restrictions)}</div>` : ''}
+              ${a.long        ? `<div>${esc(a.long)}</div>` : a.effect ? `<div>${esc(a.effect)}</div>` : ''}
             </div>
           `;
         })
@@ -1485,11 +1470,20 @@ window.CC_APP = {
 
       let designIntentText = null;
       if (resolvedContent && typeof resolvedContent === 'object') {
-        if      (resolvedContent.design_intent)                          designIntentText = resolvedContent.design_intent;
-        else if (resolvedContent.meta?.design_intent)                    designIntentText = resolvedContent.meta.design_intent;
+        if      (resolvedContent.notes)                                  designIntentText = resolvedContent.notes;
+        else if (resolvedContent.design_intent)                          designIntentText = resolvedContent.design_intent;
         else if (resolvedContent.designer_notes)                         designIntentText = resolvedContent.designer_notes;
+        else if (resolvedContent.meta?.design_intent)                    designIntentText = resolvedContent.meta.design_intent;
         else if (resolvedContent.description?.design_intent)             designIntentText = resolvedContent.description.design_intent;
         else if (resolvedContent.philosophy?.design_intent)              designIntentText = resolvedContent.philosophy.design_intent;
+        else if (resolvedContent.philosophy?.notes)                      designIntentText = resolvedContent.philosophy.notes;
+      }
+      // Also collect notes from individual ability entries when viewing an ability dict section
+      const abilityNotes = [];
+      if (resolvedContent?.abilities && typeof resolvedContent.abilities === 'object') {
+        for (const [key, ability] of Object.entries(resolvedContent.abilities)) {
+          if (ability?.notes) abilityNotes.push({ label: titleize(key), text: ability.notes });
+        }
       }
 
       if (designIntentText) {
@@ -1576,6 +1570,19 @@ window.CC_APP = {
       if (contextHtml) {
         contextPanelEl.style.display = 'block';
         ctxEl.innerHTML = contextHtml;
+      } else if (abilityNotes.length) {
+        contextPanelEl.style.display = 'block';
+        ctxEl.innerHTML = `
+          <div class="mb-3">
+            <div class="fw-bold small text-uppercase mb-2" style="color:#ff7518;">Notes</div>
+            ${abilityNotes.map(n => `
+              <div class="mb-3">
+                <div class="fw-semibold small mb-1" style="color:#e8e8e8;">${esc(n.label)}</div>
+                <p class="small mb-0" style="color:#aaa;line-height:1.5;">${esc(n.text)}</p>
+              </div>
+            `).join('')}
+          </div>
+        `;
       } else {
         contextPanelEl.style.display = 'none';
       }
