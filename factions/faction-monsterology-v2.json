@@ -23,15 +23,19 @@
       "name": "Squab",
       "faction": "Monsterology",
       "type": "Grunt",
-      "cost": 21,
+      "cost": 15,
       "quality": 1,
       "defense": 1,
       "move": 5,
       "range": 3,
       "weapon": "Thrown Bottles, Rusty Razor",
       "weapon_properties": [],
-      "composition": { "per_points": 100 },
-      "abilities": ["skittish"],
+      "composition": {
+        "per_points": 100
+      },
+      "abilities": [
+        "skittish"
+      ],
       "lore": "Disposable wannabe Plugs, shifty booze cultists, and debt prisoners armed with trash and desperation. Squab are chemically compromised and barely coherent.",
       "tactics": "Objective cloggers, panic spreaders, and mobile hazards. Squab die easily, but can disrupt morale, terrain, and positioning.",
       "optional_upgrades": [
@@ -59,15 +63,23 @@
       "name": "Chemist Lackey",
       "faction": "Monsterology",
       "type": "Specialist",
-      "cost": 56,
+      "cost": 80,
       "quality": 2,
       "defense": 1,
       "move": 5,
       "range": 6,
       "weapon": "Chemical Sprayer",
-      "weapon_properties": ["Blinding"],
-      "composition": { "per_points": 200 },
-      "abilities": ["assistant", "smoke screen", "gas mask"],
+      "weapon_properties": [
+        "Blinding"
+      ],
+      "composition": {
+        "per_points": 200
+      },
+      "abilities": [
+        "assistant",
+        "smoke screen",
+        "gas mask"
+      ],
       "lore": "Lab assistants equipped with unstable chemical sprayers, monster pheromones, and sealed breathing rigs. Chemist Lackeys reshape the battlefield through gas, toxins, and behavioral manipulation.",
       "tactics": "Board control specialists. Use smoke to block clarity, split formations, and enable monster traps. Supports Scientists and ritual units while denying space to the enemy.",
       "optional_upgrades": [
@@ -95,14 +107,16 @@
       "name": "Devourer Adept",
       "faction": "Monsterology",
       "type": "Specialist",
-      "cost": 41,
+      "cost": 85,
       "quality": 2,
       "defense": 1,
       "move": 6,
       "range": 0,
       "weapon": "Ritual Eating Utensils",
       "weapon_properties": [],
-      "composition": { "per_points": 200 },
+      "composition": {
+        "per_points": 200
+      },
       "abilities": [
         "load and carry",
         "ritual",
@@ -154,15 +168,21 @@
       "name": "Plugugly",
       "faction": "Monsterology",
       "type": "Brute",
-      "cost": 134,
+      "cost": 135,
       "quality": 5,
       "defense": 2,
       "move": 6,
       "range": 0,
       "weapon": "Iron Baton / Axe / Knuckles",
       "weapon_properties": [],
-      "composition": { "per_points": 300 },
-      "abilities": ["brutal_blow", "tough", "sonderbar_injection"],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "brutal_blow",
+        "tough",
+        "sonderbar_injection"
+      ],
       "lore": "Hulking enhanced shock troops addicted to Sonderbar injections.",
       "tactics": "Frontline melee bruiser.",
       "optional_upgrades": [
@@ -178,15 +198,22 @@
       "name": "Scientist",
       "faction": "Monsterology",
       "type": "Mystic",
-      "cost": 94,
+      "cost": 100,
       "quality": 3,
       "defense": 2,
       "move": 5,
       "range": 0,
       "weapon": "Mechanical Hand, Syringe",
-      "weapon_properties": ["Brutal Blow"],
-      "composition": { "per_points": 200 },
-      "abilities": ["sonderbar_injection", "hex"],
+      "weapon_properties": [
+        "Brutal Blow"
+      ],
+      "composition": {
+        "per_points": 200
+      },
+      "abilities": [
+        "sonderbar_injection",
+        "hex"
+      ],
       "lore": "Academy scholars and mad inventors.",
       "tactics": "Support unit enabling injections and Electromagik.",
       "optional_upgrades": [
@@ -195,7 +222,9 @@
           "cost": 4,
           "type": "Gear",
           "effect": "+1 Defense.",
-          "stat_modifiers": { "defense": 1 }
+          "stat_modifiers": {
+            "defense": 1
+          }
         }
       ]
     },
@@ -203,35 +232,60 @@
       "name": "Hexan",
       "faction": "Monsterology",
       "type": "Mystic",
-      "cost": 129,
+      "cost": 130,
       "quality": 4,
       "defense": 3,
       "move": 4,
       "range": 18,
       "weapon": "Electromajik Wand",
-      "weapon_properties": ["Pinning Shot"],
-      "composition": { "per_points": 300 },
-      "abilities": ["fear", "mobile_dynamo"],
+      "weapon_properties": [
+        "Pinning Shot"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "fear",
+        "mobile_dynamo"
+      ],
       "lore": "Electromajik Magician cultist.",
       "tactics": "Mid-range caster tied to Dynamo equipment.",
       "optional_upgrades": [
-        { "name": "Chain Lightning", "cost": 3, "type": "Upgrade", "effect": "Adds Blast." },
-        { "name": "Levitation", "cost": 2, "type": "Upgrade", "effect": "Gain Flying." }
+        {
+          "name": "Chain Lightning",
+          "cost": 3,
+          "type": "Upgrade",
+          "effect": "Adds Blast."
+        },
+        {
+          "name": "Levitation",
+          "cost": 2,
+          "type": "Upgrade",
+          "effect": "Gain Flying."
+        }
       ]
     },
     {
       "name": "Jäger",
       "faction": "Monsterology",
       "type": "Shooter",
-      "cost": 157,
+      "cost": 170,
       "quality": 5,
       "defense": 2,
       "move": 5,
       "range": 24,
       "weapon": "Engraved Electro-Musket",
-      "weapon_properties": ["AP(2)", "Pinning Shot"],
-      "composition": { "per_points": 300 },
-      "abilities": ["pierce", "mobile_dynamo"],
+      "weapon_properties": [
+        "AP(2)",
+        "Pinning Shot"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "pierce",
+        "mobile_dynamo"
+      ],
       "lore": "Elite field commanders and hunters.",
       "tactics": "Sniper-leader with aura support.",
       "optional_upgrades": [
@@ -247,15 +301,24 @@
       "name": "Plugugly Velocipede",
       "faction": "Monsterology",
       "type": "Cavalry",
-      "cost": 162,
+      "cost": 175,
       "quality": 5,
       "defense": 2,
       "move": 10,
       "range": 12,
       "weapon": "Harpoon Launcher",
-      "weapon_properties": ["Pinning Shot", "Grapple"],
-      "composition": { "per_points": 300 },
-      "abilities": ["fast", "brutal_impact", "boardwalk_blitzer"],
+      "weapon_properties": [
+        "Pinning Shot",
+        "Grapple"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "fast",
+        "brutal_impact",
+        "boardwalk_blitzer"
+      ],
       "lore": "Steam-powered harpoon bikes.",
       "tactics": "High-speed monster capture.",
       "optional_upgrades": [
@@ -264,7 +327,10 @@
           "cost": 3,
           "type": "Upgrade",
           "effect": "+1 Defense, -1 Move.",
-          "stat_modifiers": { "defense": 1, "move": -1 }
+          "stat_modifiers": {
+            "defense": 1,
+            "move": -1
+          }
         }
       ]
     },
@@ -272,15 +338,21 @@
       "name": "House Elder",
       "faction": "Monsterology",
       "type": "Leader",
-      "cost": 123,
+      "cost": 105,
       "quality": 3,
       "defense": 2,
       "move": 3,
       "range": 0,
       "weapon": "Ceremonial Scepter",
       "weapon_properties": [],
-      "composition": { "per_points": 400 },
-      "abilities": ["rally", "command_presence", "fearless"],
+      "composition": {
+        "per_points": 400
+      },
+      "abilities": [
+        "rally",
+        "command_presence",
+        "fearless"
+      ],
       "lore": "Patriarch of a Monsterology House.",
       "tactics": "Faction-wide buff engine.",
       "optional_upgrades": [
@@ -289,7 +361,9 @@
           "cost": 4,
           "type": "Gear",
           "effect": "+1 Defense.",
-          "stat_modifiers": { "defense": 1 }
+          "stat_modifiers": {
+            "defense": 1
+          }
         }
       ]
     },
@@ -297,18 +371,27 @@
       "name": "Feast Bishop",
       "faction": "Monsterology",
       "type": "Leader",
-      "cost": 121,
+      "cost": 115,
       "quality": 3,
       "defense": 4,
       "move": 0,
       "range": 0,
       "weapon": "Ceremonial Implements",
       "weapon_properties": [],
-      "composition": { "per_points": 400 },
-      "abilities": ["great_working", "fearless", "command_presence", "immobile"],
+      "composition": {
+        "per_points": 400
+      },
+      "abilities": [
+        "great_working",
+        "fearless",
+        "command_presence",
+        "immobile"
+      ],
       "lore": "Sanctioned ingestive ritual authority.",
       "tactics": "Ritual VP engine.",
       "optional_upgrades": []
     }
-  ]
+  ],
+  "_point_formula_version": "3.0",
+  "_recalculated": "2026-03-07"
 }
