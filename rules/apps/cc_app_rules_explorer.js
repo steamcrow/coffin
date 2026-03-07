@@ -72,16 +72,32 @@ window.CC_APP = {
           .cc-rules-context { display: none; }
         }
         @media print {
-          .cc-rules-sidebar, .cc-rules-context, .cc-panel-head, .cc-rule-nav, .cc-app-header, button { display: none !important; }
-          .cc-rules-explorer { display: block; padding: 0; }
-          .cc-rules-main { max-width: 100%; overflow: visible; }
-          .cc-rule-reader { padding: 0; max-width: 100%; }
-          body { font-size: 11pt; background: white !important; color: black !important; }
-          .cc-rule-title { color: black !important; font-size: 18pt; }
-          .cc-section-title { color: black !important; font-size: 14pt; }
-          .cc-ability-card { border: 1px solid #ccc !important; background: #f9f9f9 !important; page-break-inside: avoid; }
-          .cc-field-label { color: #555 !important; }
-          p, li { color: black !important; }
+          /* Hide all UI chrome */
+          .cc-rules-sidebar, .cc-rules-context, .cc-panel-head, .cc-rule-nav,
+          .cc-app-header, .cc-rules-actions, button, .cc-nav-group { display: none !important; }
+          /* Full-width single column */
+          .cc-rules-explorer { display: block !important; padding: 0 !important; }
+          .cc-rules-main { max-width: 100% !important; overflow: visible !important; height: auto !important; }
+          .cc-rule-reader { padding: 0.25in 0 !important; max-width: 100% !important; font-size: 10pt !important; line-height: 1.45 !important; }
+          /* Page setup — tight margins */
+          @page { margin: 0.6in 0.65in; }
+          /* Typography */
+          body, p, li, td { color: #000 !important; background: #fff !important; font-size: 10pt !important; }
+          .cc-rule-title { color: #000 !important; font-size: 16pt !important; margin-bottom: 8pt !important; border-bottom: 1.5pt solid #000; padding-bottom: 4pt; }
+          .cc-section-title { color: #000 !important; font-size: 12pt !important; margin-top: 10pt !important; margin-bottom: 4pt !important; }
+          .cc-field-label { color: #444 !important; font-size: 8pt !important; margin-bottom: 2pt !important; letter-spacing: 0.08em; }
+          /* Compact ability cards — two per row on paper */
+          .cc-ability-card { border: 0.75pt solid #999 !important; background: #fff !important;
+            padding: 5pt 7pt !important; margin-bottom: 5pt !important;
+            page-break-inside: avoid; break-inside: avoid; }
+          .cc-ability-card strong { font-size: 9.5pt !important; color: #000 !important; }
+          .cc-ability-card p, .cc-ability-card span { font-size: 9pt !important; color: #222 !important; }
+          .cc-badge { border: 0.5pt solid #aaa !important; background: #f5f5f5 !important; color: #000 !important; font-size: 7.5pt !important; }
+          /* Suppress orphans */
+          p, li { orphans: 3; widows: 3; }
+          h2,h3,h4,h5,h6 { page-break-after: avoid; }
+          /* Remove link underlines */
+          a { text-decoration: none !important; color: #000 !important; }
         }
       `;
       document.head.appendChild(critical);
@@ -113,6 +129,19 @@ window.CC_APP = {
           console.log('✅ Rules Explorer CSS applied!');
         })
         .catch(err => console.error('❌ App CSS load failed:', err));
+    }
+
+    if (!document.getElementById('cc-print-styles')) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_print.css?t=' + Date.now())
+        .then(res => res.text())
+        .then(css => {
+          const style = document.createElement('style');
+          style.id = 'cc-print-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Print CSS applied!');
+        })
+        .catch(() => console.warn('⚠️ cc_print.css not found — using inline print styles'));
     }
 
     // ---- HELPERS (robust injection + adapter) ----
@@ -685,11 +714,12 @@ window.CC_APP = {
           C: 'Offense Damage',     D: 'Defense Survival',
           E: 'Morale Fear',        F: 'Terrain Environment',
           G: 'Thyr Ritual',        H: 'Interaction Support',
+          I: 'Monster Interactions',
         };
         return letterMap[str] ? `Abilities: ${letterMap[str]}` : `Abilities: ${str}`;
       }
 
-      if (str.match(/^[A-H]_/)) {
+      if (str.match(/^[A-I]_/)) {
         const topic = str.substring(2).replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
         return `Abilities: ${topic}`;
       }
@@ -1127,12 +1157,112 @@ window.CC_APP = {
         .join('');
     }
 
+    // ---- ARCHETYPE VAULT RENDERER ----
+    // Handles the shape in 70_unit_identities.json:
+    // { identity, type_rule, type_rules[], effect, logic_triggers[], sub-rule objects }
+    function isArchetypeEntry(obj) {
+      return obj && typeof obj === 'object' && !Array.isArray(obj) &&
+        (obj.type_rule || obj.type_rules || obj.identity) &&
+        !obj.timing; // don't confuse with ability dict entries
+    }
+
+    function renderArchetypeVault(vault) {
+      let html = '';
+      for (const [key, archetype] of Object.entries(vault)) {
+        if (key.startsWith('_') || !isArchetypeEntry(archetype)) continue;
+
+        const name = titleize(key);
+        const identity = archetype.identity || '';
+
+        // Collect all type rules (may be a single string or an array)
+        const typeRules = archetype.type_rules
+          ? archetype.type_rules
+          : archetype.type_rule
+            ? [archetype.type_rule]
+            : [];
+
+        // Collect sub-rule effect objects (e.g. fire_superiority, command_presence)
+        const subRuleKeys = Object.keys(archetype).filter(k =>
+          !['_id','identity','type_rule','type_rules','effect','logic_triggers'].includes(k) &&
+          !k.startsWith('_') &&
+          typeof archetype[k] === 'object' && archetype[k] !== null && !Array.isArray(archetype[k])
+        );
+
+        html += `
+          <div class="cc-ability-card mb-4 p-3" style="border-radius:8px;">
+            <h4 style="color:#ff7518;font-size:1.1rem;font-weight:700;margin:0 0 0.25rem 0;">${esc(name)}</h4>
+            ${identity ? `<p style="color:#aaa;font-size:0.85rem;font-style:italic;margin:0 0 0.75rem 0;">${esc(identity)}</p>` : ''}
+
+            ${typeRules.map(rule => `
+              <div style="margin-bottom:0.75rem;">
+                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
+                            color:rgba(255,117,24,0.7);margin-bottom:0.25rem;">Type Rule</div>
+                <div style="font-weight:700;color:#e8e8e8;font-size:0.95rem;">${esc(rule)}</div>
+              </div>
+            `).join('')}
+
+            ${archetype.effect ? `
+              <div class="mb-2">
+                <div class="cc-field-label">Effect</div>
+                <p style="margin:0;line-height:1.6;">${esc(archetype.effect)}</p>
+              </div>
+            ` : ''}
+
+            ${subRuleKeys.map(k => {
+              const sub = archetype[k];
+              return sub.effect ? `
+                <div class="mb-2" style="padding-left:0.75rem;border-left:2px solid rgba(255,117,24,0.3);">
+                  <div style="font-weight:700;color:#e8e8e8;font-size:0.85rem;margin-bottom:0.2rem;">${esc(titleize(k))}</div>
+                  <p style="margin:0;font-size:0.9rem;color:#ccc;line-height:1.5;">${esc(sub.effect)}</p>
+                </div>
+              ` : '';
+            }).join('')}
+
+            ${Array.isArray(archetype.logic_triggers) && archetype.logic_triggers.length ? `
+              <div class="mt-2">
+                <div class="cc-field-label">Logic Triggers</div>
+                <ul style="margin:0.25rem 0 0 1.25rem;padding:0;">
+                  ${archetype.logic_triggers.map(t => `<li style="color:#aaa;font-size:0.875rem;">${esc(t)}</li>`).join('')}
+                </ul>
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+      return html;
+    }
+
     function renderContentSmart(meta, content) {
       if (content === undefined || content === null) {
         return `<div class="cc-muted">No content available.</div>`;
       }
       if (typeof content === 'string') return `<p>${esc(content)}</p>`;
       if (typeof content !== 'object') return `<p>${esc(String(content))}</p>`;
+
+      // Unit identities: top-level object with archetype_vault
+      if (content.archetype_vault && typeof content.archetype_vault === 'object') {
+        let html = '';
+        if (content.philosophy) {
+          const p = content.philosophy;
+          html += `<div class="cc-callout mb-4"><p style="margin:0;font-style:italic;">${esc(p.long || p.short || '')}</p></div>`;
+        }
+        html += renderArchetypeVault(content.archetype_vault);
+        if (content.logic_notes) {
+          html += `<div class="mt-3"><div class="cc-field-label">Logic Notes</div>`;
+          for (const [k, v] of Object.entries(content.logic_notes)) {
+            if (k.startsWith('_')) continue;
+            html += `<p><strong>${esc(titleize(k))}:</strong> ${esc(typeof v === 'string' ? v : JSON.stringify(v))}</p>`;
+          }
+          html += `</div>`;
+        }
+        return html;
+      }
+
+      // Direct archetype vault (if content IS the vault)
+      const archetypeValues = Object.values(content).filter(v => isArchetypeEntry(v));
+      if (archetypeValues.length >= 3) {
+        return renderArchetypeVault(content);
+      }
 
       if (content.abilities && typeof content.abilities === 'object') {
         return renderAbilityDictionary(content.abilities);
@@ -1641,7 +1771,7 @@ window.CC_APP = {
       if (item.id?.startsWith('ability_dict_') && item.path) {
         const parts    = item.path.split('.');
         const lastPart = parts[parts.length - 1];
-        if (lastPart?.match(/^[A-H]_/)) {
+        if (lastPart?.match(/^[A-I]_/)) {
           item.title = `Abilities: ${lastPart.substring(2).replace(/_/g, ' ').replace(/\b\w/g, m => m.toUpperCase())}`;
         }
       }
