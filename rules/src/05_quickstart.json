@@ -1,0 +1,104 @@
+{
+  "_id": "R-QS",
+  "title": "Quickstart",
+
+  "philosophy": {
+    "_id": "R-QS-00",
+    "short": "Everything you need to play your first game of Coffin Canyon.",
+    "long": "Coffin Canyon is a skirmish game about bad ground, bad choices, and things that do not stay dead. This primer covers everything two players need to sit down and play. When in doubt, choose the option that creates more risk and keep moving.",
+    "notes": "Quickstart rules deliberately omit advanced systems such as Morale cascades, terrain escalation, campaign progression, and faction-specific abilities. Play a few games here first. The full rules are waiting when you're ready."
+  },
+
+  "sections": {
+
+    "what_you_need": {
+      "_id": "R-QS-01",
+      "title": "What You Need to Play",
+      "long": "A pile of six-sided dice (d6s) — the more the better. A miniature or a counter to represent each unit on the table. Markers to represent Thyr Crystal Caches and other objectives: rocks, bottle caps, coins, or anything you can distinguish at a glance. Something to measure inches — a ruler or measuring tape. A flat surface roughly 3' × 3' or larger. Two players.",
+      "notes": "You do not need painted miniatures, a special board, or any specific tokens to play. Coffin Canyon is designed to run on whatever is at hand."
+    },
+
+    "the_stats": {
+      "_id": "R-QS-02",
+      "title": "The Four Stats",
+      "long": "Every unit in Coffin Canyon has four stats printed on its card. Quality (Q) is how many dice you roll for almost everything — attacks, morale, abilities. It also tracks how much punishment a unit can take. Defense (D) is a passive number representing armor, cover, positioning, and nerve. It does not move and is not rolled. Move (M) is how many inches a unit can travel per action, measured from the base. The default is 6 inches. Range (R) is the maximum distance in inches for ranged attacks. Units without a Range stat fight in melee only.",
+      "notes": "Quality does two jobs at once: it is your dice pool AND your health. When a unit takes damage, its Quality goes down — and that makes everything harder. This is called the Death Spiral, and it is intentional."
+    },
+
+    "quality_in_depth": {
+      "_id": "R-QS-03",
+      "title": "Quality — What the Numbers Mean",
+      "long": "Quality 1: A basic trained human, a small monster, or a civilian pressed into service. Quality 2: A veteran soldier or a human-sized monster. This is the standard for most units. Quality 3: An elite unit, a large beast, or something very hard to kill. Quality 4: A leader, a powerful monster, or a low-level hero. Quality 5: A high hero or a very large, mystically powerful creature. Quality 6: A Titan — a kaiju, a massive machine, or something barely comprehensible. Track Quality openly using a spare d6 placed behind the model, face up showing current value. Never roll this die. Rotate it immediately when a unit takes damage. When Quality reaches 0, remove the model from play.",
+      "notes": "Seeing a model's Quality at a glance should immediately tell you how dangerous it is and how close it is to collapse."
+    },
+
+    "the_roll": {
+      "_id": "R-QS-04",
+      "title": "Rolling Dice",
+      "long": "To attempt any action — attack, use an ability, test morale — roll a number of d6s equal to the unit's current Quality. Every die showing a 4, 5, or 6 is one Success. One or more Successes usually means the action works. Some rules scale with total Successes. If every die shows a 1, the action fails and the unit becomes Shaken: it rolls one fewer die on its next action.",
+      "notes": "Success is always 4+. No ability changes this threshold. Bonuses and penalties add or remove dice from the pool before you roll."
+    },
+
+    "defense_and_damage": {
+      "_id": "R-QS-05",
+      "title": "Defense and Damage",
+      "long": "When a unit attacks, count its Successes. Compare that number to the target's Defense. If Successes are equal to or less than Defense, the attack does nothing. If Successes exceed Defense, the attack hits. Each Success beyond Defense deals 1 point of damage. Damage reduces the target's Quality by that amount immediately. Defense does not apply to terrain damage, environmental effects, or abilities that deal automatic damage.",
+      "notes": "Example: An attacker rolls 3 Successes against a target with Defense 2. The attack hits. Three minus two equals one — so the target loses 1 Quality."
+    },
+
+    "movement": {
+      "_id": "R-QS-06",
+      "title": "Movement",
+      "long": "Measure movement in inches from the model's base edge. A unit may move up to its Move value per Move action. The default Move is 6 inches. Movement may be split across actions in a single activation — for example, a unit may move 3 inches, attack, then move the remaining 3 inches. Terrain affects movement. Sand and difficult terrain (rubble, steep slopes, deep mud, thick debris) halves movement, rounding down. Impassable terrain (solid cliff faces, sealed walls, deep chasms) cannot be entered at all. Units may not move through enemy models. Units may move through friendly models if bases do not overlap when movement ends.",
+      "notes": "Movement decides fights. Where you stand matters more than how hard you hit. Standing still is dangerous."
+    },
+
+    "line_of_sight": {
+      "_id": "R-QS-07",
+      "title": "Line of Sight",
+      "long": "Ranged attacks require a clear, believable line between the attacker and the target. If you are not sure, assume the shot is blocked — or give the target Cover instead. Cover adds +1 to the target's Defense against that attack. Cover is granted by partial obstruction: rubble, fences, boardwalks, windows, light vegetation. Solid walls, cliff faces, large rocks, and intact buildings block Line of Sight entirely. Melee attacks do not require Line of Sight.",
+      "notes": "When in doubt about Line of Sight: blocked or Cover. Either keeps the game moving."
+    },
+
+    "activation_cycle": {
+      "_id": "R-QS-08",
+      "title": "The Activation Cycle",
+      "long": "The game is played in Rounds. At the start of each Round, the Monster faction (or the player using monsters, or the player who won a 1d6 roll-off if neither is a Monster faction) activates first. Players then alternate, each activating one unit at a time, until every unit on both sides has activated once. That ends the Round. Begin the next Round immediately. Each unit gets two Actions per activation. Actions may be the same or different, in any order. Common actions are: Move, Attack, Interact (with an objective or terrain), Special Ability, and Withdraw. Models cannot activate twice in a round unless an ability explicitly allows it.",
+      "notes": "Monsters activate first. The canyon favors monsters and the unnatural pressure they bring."
+    },
+
+    "unit_identities": {
+      "_id": "R-QS-09",
+      "title": "Unit Identities",
+      "long": "Every unit has a Type that defines how it behaves under pressure. Grunt: The expendable rank-and-file. Grunts do not grant Victory Points when destroyed and do not generate Morale penalties when they die. They can contest objectives but never control them. Brute: A hard-to-stop shock unit. After dealing melee damage, a Brute may immediately move up to 2 inches — no reactions triggered. Shooter: A ranged control unit. If a Shooter did not move this activation, it may split its attack dice between two valid targets. Cavalry: A momentum-based mobile unit. After resolving an attack, Cavalry may disengage from melee without penalty. Rogue: A fast infiltrator. When charging or being charged, the Rogue attacks first. If both units have this rule, they resolve simultaneously. Tank: A durable front-liner. May intercept melee attacks targeting an adjacent friendly unit. Leader: A command unit. Once per round, may grant an ally within 12 inches +1 die on their next Morale test. Friendly units within 6 inches may use the Leader's Quality for Morale instead of their own. If destroyed, the enemy gains +2 Victory Points. Titan: A battlefield-shaping entity. Ignores difficult terrain. Cannot be Grappled or moved by smaller units.",
+      "notes": "Roles matter more than raw stats. Asymmetry is the point."
+    },
+
+    "table_setup": {
+      "_id": "R-QS-10",
+      "title": "Setting Up the Table",
+      "long": "Place terrain across the board before choosing deployment zones. A good starting layout for two players: a 3 × 3 foot area with at least four or five terrain features — some providing cover, some impassable, at least one area of difficult terrain. Place two or three objective markers in the centre of the board. A Thyr Crystal Cache marker counts as a special objective (see Victory Conditions below). Players then choose opposite deployment zones along the short edges of the table, at least 8 inches from the board center. Each player places all of their units within their deployment zone before the first Round begins. Monsters deploy after all terrain is placed but before other factions.",
+      "notes": "Agree on what terrain does before the game begins. If a piece of terrain is ambiguous, decide quickly and stick to it."
+    },
+
+    "victory_conditions": {
+      "_id": "R-QS-11",
+      "title": "Victory Conditions",
+      "long": "Each faction scores Victory Points (VP) during the game. The player who reaches the target VP total first wins, or the player with the most VP at the end of the final round. Controlling an Objective: A unit controls an objective marker if it is within 1 inch of the marker and no enemy unit is within 1 inch. Score 1 VP per controlled objective at the end of each Round. Thyr Crystal Cache: If a unit ends its activation in base contact with a Thyr Crystal Cache marker, it may claim it. Score 2 VP when claimed. Destroying a Leader or Hero: Score 2 VP for each Leader destroyed. Score 3 VP for each Hero destroyed. Destroying other units: Grunts score no VP. All other units score 1 VP when destroyed. A standard first game should be played to 8 VP, or for 5 Rounds — whichever comes first. The player with the most VP at that point wins.",
+      "notes": "Pressure the objectives. Units that stand back and do nothing will lose on VP even if they never take a wound."
+    },
+
+    "factions": {
+      "_id": "R-QS-12",
+      "title": "The Factions",
+      "long": "There are six factions in Coffin Canyon. Each has a distinct philosophy and playstyle. Monster Rangers protect the canyon and the creatures in it. They Befriend monsters rather than killing them, and their objectives often center on preservation, escort, and containment. They are defensive and cooperative — slower to score but hard to break. Liberty Corps enforces federal order through overwhelming presence and firepower. They want to control and hold territory, and they are best at static positions and area denial. They score well when locked down on objectives. Monsterology is a predatory scientific institution that extracts, harvests, and weaponizes the canyon's creatures and resources. They score by taking specimens and materials, and they are willing to lose units to get what they came for. Shine Riders are opportunist outlaws. They hit hard, move fast, and leave before anyone can catch them. They score best by extracting resources early and staying mobile. Do not stand still. Crow Queen is a faction of displaced aristocracy enforcing ritual dominance over the canyon. They convert territory and monsters alike into Consecrated Ground, and they score by claiming and holding space for multiple rounds. They play for the long game. Monsters are not a standard faction — they are canyon forces that appear in scenarios. They do not follow army composition rules. Their victory conditions are set by the scenario itself: protect territory, feed, survive, or drive intruders out."
+    },
+
+    "quick_reference": {
+      "_id": "R-QS-13",
+      "title": "Quick Reference",
+      "long": "Roll dice equal to current Quality. Success on 4, 5, or 6. If Successes exceed Defense, the attack hits. Damage dealt equals Successes minus Defense. Damage reduces Quality. At Quality 0, the model is removed. Default Move is 6 inches. Sand and difficult terrain halves movement. Each unit gets 2 Actions per activation. Players alternate activating one model at a time. Monsters activate first each Round. Grunts grant no VP and generate no Morale loss when destroyed. Leaders grant +2 VP to the enemy when destroyed. If every die shows a 1, the action fails and the model becomes Shaken (minus 1 die on its next action). If in doubt about terrain, choose the interpretation that creates more risk and move on."
+    }
+
+  }
+}
