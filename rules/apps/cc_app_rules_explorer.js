@@ -1140,7 +1140,14 @@ window.CC_APP = {
       // ---- FACTION ----
       if (id.startsWith('faction_')) {
         const factionId = id.replace('faction_', '');
-        const faction   = factionsData[factionId];
+
+        // If factions haven't loaded yet, wait for them now
+        if (!factionsData[factionId]) {
+          detailEl.innerHTML = `<div class="cc-muted" style="padding:2rem">Loading faction data…</div>`;
+          await loadFactions();
+        }
+
+        const faction = factionsData[factionId];
 
         if (faction) {
           selectedId = id;
@@ -1165,6 +1172,9 @@ window.CC_APP = {
           if (ci < filteredIndex.length - 1) nextBtnEl.onclick = () => selectRule(filteredIndex[ci + 1].id);
 
           return;
+        } else {
+          detailEl.innerHTML = `<div class="cc-muted" style="padding:2rem">⚠️ Could not load faction: ${esc(factionId)}</div>`;
+          return;
         }
       }
 
@@ -1186,13 +1196,37 @@ window.CC_APP = {
 
       // ---- NORMAL RULE ----
       selectedId = id;
-      detailEl.innerHTML = `<div class="cc-muted">Loading...</div>`;
-      ctxEl.innerHTML    = `<div class="cc-muted">Loading...</div>`;
+      detailEl.innerHTML = `<div class="cc-muted" style="padding:2rem">Loading…</div>`;
+      ctxEl.innerHTML    = `<div class="cc-muted">Loading…</div>`;
 
-      const section = await helpers.getRuleSection(id);
+      const raw = await helpers.getRuleSection(id);
+      console.log('📦 getRuleSection raw result for', id, '→', raw);
+
+      // Normalise: the helper may return { meta, content } OR just the meta/section object
+      let section = null;
+      if (raw && raw.meta) {
+        // Expected shape: { meta: {...}, content: {...} }
+        section = raw;
+      } else if (raw && (raw.id || raw.title || raw.path)) {
+        // Helper returned the meta object directly — wrap it
+        section = { meta: raw, content: raw.content || raw.data || null };
+      } else if (raw && typeof raw === 'object') {
+        // Unknown shape — salvage using index entry as meta
+        const metaFromIndex = index.find(it => it.id === id);
+        section = { meta: metaFromIndex || { id, title: id }, content: raw };
+        console.warn('⚠️ Unexpected getRuleSection shape — salvaged:', section);
+      }
 
       if (!section || !section.meta) {
-        detailEl.innerHTML = `<div class="text-danger">Failed to load rule.</div>`;
+        console.error('❌ Could not load rule:', id, '— raw:', raw);
+        detailEl.innerHTML = `
+          <div style="padding:2rem">
+            <p style="color:#ff7518;font-weight:700">Could not load: ${esc(id)}</p>
+            <p style="color:#888;font-size:0.85rem">
+              Check the browser console (F12) for details.<br>
+              <code>getRuleSection</code> returned: <code>${esc(JSON.stringify(raw)?.slice(0, 200) ?? 'null')}</code>
+            </p>
+          </div>`;
         ctxEl.innerHTML    = `<div class="cc-muted">—</div>`;
         navEl.classList.add('d-none');
         favoriteBtn.classList.add('d-none');
