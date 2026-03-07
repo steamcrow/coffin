@@ -1247,14 +1247,7 @@ window.CC_APP = {
           html += `<div class="cc-callout mb-4"><p style="margin:0;font-style:italic;">${esc(p.long || p.short || '')}</p></div>`;
         }
         html += renderArchetypeVault(content.archetype_vault);
-        if (content.logic_notes) {
-          html += `<div class="mt-3"><div class="cc-field-label">Logic Notes</div>`;
-          for (const [k, v] of Object.entries(content.logic_notes)) {
-            if (k.startsWith('_')) continue;
-            html += `<p><strong>${esc(titleize(k))}:</strong> ${esc(typeof v === 'string' ? v : JSON.stringify(v))}</p>`;
-          }
-          html += `</div>`;
-        }
+        // logic_notes intentionally omitted here — rendered in the right context panel instead
         return html;
       }
 
@@ -1496,6 +1489,7 @@ window.CC_APP = {
         else if (resolvedContent.meta?.design_intent)                    designIntentText = resolvedContent.meta.design_intent;
         else if (resolvedContent.designer_notes)                         designIntentText = resolvedContent.designer_notes;
         else if (resolvedContent.description?.design_intent)             designIntentText = resolvedContent.description.design_intent;
+        else if (resolvedContent.philosophy?.design_intent)              designIntentText = resolvedContent.philosophy.design_intent;
       }
 
       if (designIntentText) {
@@ -1510,6 +1504,54 @@ window.CC_APP = {
           <div class="cc-callout mb-3">
             <div class="fw-bold small text-uppercase mb-2" style="color: #ff7518;">Designer Notes</div>
             <div class="small">${esc(String(designIntentText))}</div>
+          </div>
+        `;
+      }
+
+      // ---- LOGIC NOTES → right panel ----
+      // Collect logic_notes from the content or from each archetype
+      const logicNoteEntries = [];
+
+      if (resolvedContent && typeof resolvedContent === 'object') {
+        // Top-level logic_notes object
+        const ln = resolvedContent.logic_notes || resolvedContent.archetype_vault?.logic_notes;
+        if (ln && typeof ln === 'object') {
+          for (const [k, v] of Object.entries(ln)) {
+            if (k.startsWith('_')) continue;
+            logicNoteEntries.push({ label: titleize(k), text: typeof v === 'string' ? v : JSON.stringify(v) });
+          }
+        }
+        // Per-archetype logic_triggers collected as a summary
+        if (resolvedContent.archetype_vault) {
+          for (const [archetypeName, archetype] of Object.entries(resolvedContent.archetype_vault)) {
+            if (archetypeName.startsWith('_') || !isArchetypeEntry(archetype)) continue;
+            if (Array.isArray(archetype.logic_triggers) && archetype.logic_triggers.length) {
+              logicNoteEntries.push({
+                label: titleize(archetypeName),
+                triggers: archetype.logic_triggers
+              });
+            }
+          }
+        }
+      }
+
+      if (logicNoteEntries.length) {
+        contextHtml += `
+          <div class="mb-3">
+            <div class="fw-bold small text-uppercase mb-2" style="color:#ff7518;">Notes</div>
+            ${logicNoteEntries.map(entry => `
+              <div class="mb-3">
+                <div class="fw-semibold small mb-1" style="color:#e8e8e8;">${esc(entry.label)}</div>
+                ${entry.text
+                  ? `<p class="small mb-0" style="color:#aaa;line-height:1.5;">${esc(entry.text)}</p>`
+                  : entry.triggers
+                    ? `<ul class="small mb-0" style="margin:0 0 0 1rem;padding:0;color:#aaa;">
+                        ${entry.triggers.map(t => `<li>${esc(t)}</li>`).join('')}
+                       </ul>`
+                    : ''
+                }
+              </div>
+            `).join('')}
           </div>
         `;
       }
