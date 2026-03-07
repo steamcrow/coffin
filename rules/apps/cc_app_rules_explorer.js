@@ -112,22 +112,30 @@ window.CC_APP = {
     }
 
     // ---- HELPERS (robust injection + adapter) ----
-    const helpersCandidate =
-      ctx?.helpers ||
-      window.CC_RULES_HELPERS ||
-      window.rules_helpers ||
-      window.RULES_HELPERS ||
-      window.CC_HELPERS ||
-      null;
+    // The loader calls window.createRulesHelpers but rules_helpers.js exports
+    // window.CC_RULES_HELPERS.createRulesHelpers — name mismatch means the
+    // loader gets an empty helpers object and falls back to getById(rulesBase.rules[id])
+    // which fails because rulesBase isn't keyed that way.
+    // Fix: call createRulesHelpers ourselves with the rulesBase from ctx.
 
-    const helpersRaw =
-      (helpersCandidate && helpersCandidate.rules) ? helpersCandidate.rules :
-      (helpersCandidate && helpersCandidate.api)   ? helpersCandidate.api   :
-      helpersCandidate || {};
+    let helpersRaw = ctx?.helpers || {};
 
+    if (window.CC_RULES_HELPERS?.createRulesHelpers) {
+      const rulesBase = ctx?.rulesBase || {};
+      try {
+        const freshHelpers = window.CC_RULES_HELPERS.createRulesHelpers(rulesBase);
+        if (typeof freshHelpers?.getRuleSection === 'function') {
+          helpersRaw = freshHelpers;
+          console.log('✅ Helpers bootstrapped via CC_RULES_HELPERS.createRulesHelpers');
+        }
+      } catch (e) {
+        console.warn('⚠️ createRulesHelpers failed:', e);
+      }
+    }
+
+    // Normalise function names across loader versions
     const helpers = {
       ...helpersRaw,
-
       getRuleSection:
         (typeof helpersRaw.getRuleSection === 'function' && helpersRaw.getRuleSection) ||
         (typeof helpersRaw.getById        === 'function' && helpersRaw.getById)        ||
@@ -136,7 +144,6 @@ window.CC_APP = {
         (typeof helpersRaw.getRuleData    === 'function' && helpersRaw.getRuleData)    ||
         (typeof helpersRaw.fetchSection   === 'function' && helpersRaw.fetchSection)   ||
         null,
-
       getChildren:
         (typeof helpersRaw.getChildren    === 'function' && helpersRaw.getChildren)    ||
         (typeof helpersRaw.childrenOf     === 'function' && helpersRaw.childrenOf)     ||
@@ -145,13 +152,64 @@ window.CC_APP = {
     };
 
     try {
-      console.log("🧰 helpers candidate:", helpersCandidate);
       console.log("🧰 helpersRaw keys:", Object.keys(helpersRaw || {}));
       console.log("🧰 getRuleSection:", helpers.getRuleSection ? "OK" : "MISSING");
       console.log("🧰 getChildren:",    helpers.getChildren    ? "OK" : "MISSING");
     } catch (e) {}
 
-    const index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
+    const RULES_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
+
+    // Load index from GitHub if ctx didn't provide it
+    let index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
+    if (index.length === 0) {
+      try {
+        const idxRes  = await fetch(RULES_BASE_URL + 'rules_base.json?t=' + Date.now());
+        const idxData = await idxRes.json();
+        index = Array.isArray(idxData) ? idxData
+              : Array.isArray(idxData?.index) ? idxData.index
+              : Array.isArray(idxData?.rules) ? idxData.rules
+              : [];
+        console.log('✅ Index loaded from GitHub:', index.length, 'entries');
+      } catch (e) {
+        console.error('❌ Could not load rules_base.json from GitHub:', e);
+      }
+    } else {
+      console.log('✅ Index from ctx:', index.length, 'entries');
+    }
+
+    // Cache for directly-fetched rule files (so we don't re-fetch on every click)
+    const directFileCache = {};
+
+    // Fetch a rule's JSON file directly from GitHub using its index entry
+    async function fetchRuleDirectly(id) {
+      if (directFileCache[id]) return directFileCache[id];
+      const meta = index.find(it => it.id === id);
+      if (!meta) { console.warn('⚠️ No index entry for:', id); return null; }
+
+      // Try the file field first (e.g. "src/010_core_mechanics.json")
+      const filePaths = [
+        meta.file                                   && (RULES_BASE_URL + 'src/' + meta.file.replace(/^src\//, '')),
+        meta.file                                   && (RULES_BASE_URL + meta.file),
+        meta.path && meta.path.includes('/')        && (RULES_BASE_URL + 'src/' + meta.path.split('.')[0] + '.json'),
+      ].filter(Boolean);
+
+      for (const url of filePaths) {
+        try {
+          console.log('📥 Trying direct fetch:', url);
+          const res = await fetch(url + '?t=' + Date.now());
+          if (!res.ok) continue;
+          const data = await res.json();
+          const result = { meta, content: data };
+          directFileCache[id] = result;
+          console.log('✅ Direct fetch success:', id, url);
+          return result;
+        } catch (e) {
+          console.warn('⚠️ Direct fetch failed for:', url, e.message);
+        }
+      }
+      console.error('❌ All direct fetch paths failed for:', id, filePaths);
+      return null;
+    }
 
     // ---- SAFETY CHECK ----
     if (typeof helpers.getRuleSection !== "function" || typeof helpers.getChildren !== "function") {
@@ -1205,16 +1263,20 @@ window.CC_APP = {
       // Normalise: the helper may return { meta, content } OR just the meta/section object
       let section = null;
       if (raw && raw.meta) {
-        // Expected shape: { meta: {...}, content: {...} }
         section = raw;
       } else if (raw && (raw.id || raw.title || raw.path)) {
-        // Helper returned the meta object directly — wrap it
         section = { meta: raw, content: raw.content || raw.data || null };
       } else if (raw && typeof raw === 'object') {
-        // Unknown shape — salvage using index entry as meta
         const metaFromIndex = index.find(it => it.id === id);
         section = { meta: metaFromIndex || { id, title: id }, content: raw };
         console.warn('⚠️ Unexpected getRuleSection shape — salvaged:', section);
+      }
+
+      // ---- DIRECT FETCH FALLBACK ----
+      // If helpers returned nothing useful, fetch the file straight from GitHub
+      if (!section || !section.meta) {
+        console.warn('⚠️ getRuleSection gave nothing — trying direct GitHub fetch for:', id);
+        section = await fetchRuleDirectly(id);
       }
 
       if (!section || !section.meta) {
