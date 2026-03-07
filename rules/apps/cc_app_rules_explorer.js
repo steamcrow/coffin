@@ -9,9 +9,83 @@ window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Rules Explorer init", ctx);
 
-    // ---- LOAD CSS (Core + App-specific) ----
+    // ---- INJECT CRITICAL LAYOUT CSS IMMEDIATELY (synchronous, no flicker) ----
+    // This guarantees the 3-column grid and key layout classes work instantly,
+    // even before the async GitHub CSS has arrived.
+    if (!document.getElementById('cc-rules-critical-styles')) {
+      const critical = document.createElement('style');
+      critical.id = 'cc-rules-critical-styles';
+      critical.textContent = `
+        /* Critical layout — renders immediately without waiting for GitHub */
+        .cc-app-shell { background: #0f0f0f; color: #e0e0e0; display: flex; flex-direction: column; height: 100%; font-family: sans-serif; }
+        .cc-app-shell.cc-premium { background: radial-gradient(1200px 600px at 20% 0%, rgba(255,117,24,.10), transparent 60%), linear-gradient(180deg,#141414,#0f0f0f); }
+        .cc-app-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; gap: 0.5rem; }
+        .cc-app-title { font-size: 1.5rem; color: #ff7518; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        .cc-app-subtitle { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.15em; }
+        .cc-rules-explorer { display: grid; grid-template-columns: 280px 1fr 240px; gap: 1rem; height: calc(100% - 60px); padding: 1rem; box-sizing: border-box; }
+        .cc-rules-explorer.focus-mode { grid-template-columns: 0 1fr 0; gap: 0; }
+        .cc-rules-explorer.focus-mode .cc-rules-sidebar,
+        .cc-rules-explorer.focus-mode .cc-rules-context { display: none; }
+        .cc-rules-sidebar, .cc-rules-main, .cc-rules-context { min-width: 0; overflow: hidden; }
+        .cc-rules-main { overflow-y: auto; }
+        .cc-panel { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+        .cc-panel-head { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
+        .cc-panel-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,0.5); margin: 0; }
+        .cc-body { padding: 12px; overflow-y: auto; flex: 1; }
+        .cc-list { display: flex; flex-direction: column; gap: 4px; padding: 8px; overflow-y: auto; flex: 1; }
+        .cc-list-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 6px; padding: 8px 10px; cursor: pointer; color: #e0e0e0; font-size: 0.85rem; text-align: left; width: 100%; transition: background 0.15s; }
+        .cc-list-item:hover { background: rgba(255,117,24,0.08); border-color: rgba(255,117,24,0.3); }
+        .cc-list-item.active { background: rgba(255,117,24,0.15); border-color: rgba(255,117,24,0.5); }
+        .cc-list-title { font-weight: 600; line-height: 1.3; }
+        .cc-list-sub { font-size: 0.72rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
+        .cc-rule-reader { padding: 2rem; line-height: 1.7; font-size: 16px; }
+        .cc-rule-article { max-width: 700px; }
+        .cc-rule-title { font-size: 2rem; font-weight: 700; color: #ff7518; margin-bottom: 1.5rem; }
+        .cc-section-title { font-size: 1.2rem; font-weight: 600; color: #e8e8e8; margin: 2rem 0 1rem; }
+        .cc-field-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 0.4rem; }
+        .cc-muted { color: rgba(255,255,255,0.4); font-style: italic; padding: 0.5rem 0; }
+        .cc-kv { display: flex; gap: 0.75rem; }
+        .cc-k { font-weight: 600; color: #aaa; min-width: 120px; }
+        .cc-v { color: #e0e0e0; }
+        .cc-ability-card { background: rgba(255,117,24,0.05); border: 1px solid rgba(255,117,24,0.15); border-radius: 6px; transition: border-color 0.2s; }
+        .cc-badge { background: rgba(255,117,24,0.12); color: #ff9147; border-radius: 4px; font-size: 0.75rem; padding: 2px 8px; }
+        .cc-callout { background: rgba(255,117,24,0.08); border-left: 3px solid #ff7518; border-radius: 4px; padding: 0.75rem 1rem; }
+        .cc-rule-nav { display: flex; justify-content: space-between; padding: 1rem 2rem; border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
+        .cc-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #e0e0e0; padding: 0.35rem 0.6rem; width: 100%; font-size: 0.85rem; }
+        .cc-input::placeholder { color: rgba(255,255,255,0.3); }
+        .cc-breadcrumb-link { background: none; border: none; color: #ff7518; cursor: pointer; font-size: inherit; padding: 0; text-decoration: underline; }
+        .cc-breadcrumb-current { color: #e8e8e8; }
+        .cc-stat-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.07); border-radius: 4px; padding: 2px 8px; }
+        .cc-stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
+        .cc-stat-value { font-weight: 700; }
+        .stat-q { color: #4ade80; } .stat-q-border { border: 1px solid rgba(74,222,128,0.3); }
+        .stat-d { color: #60a5fa; } .stat-d-border { border: 1px solid rgba(96,165,250,0.3); }
+        .stat-m { color: #f59e0b; } .stat-m-border { border: 1px solid rgba(245,158,11,0.3); }
+        .stat-r { color: #f87171; } .stat-r-border { border: 1px solid rgba(248,113,113,0.3); }
+        .cc-nav-group button[data-toggle-group]:hover { background: rgba(255,255,255,0.08) !important; }
+        @media (max-width: 992px) {
+          .cc-rules-explorer { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; }
+          .cc-rules-context { display: none; }
+        }
+        @media print {
+          .cc-rules-sidebar, .cc-rules-context, .cc-panel-head, .cc-rule-nav, .cc-app-header, button { display: none !important; }
+          .cc-rules-explorer { display: block; padding: 0; }
+          .cc-rules-main { max-width: 100%; overflow: visible; }
+          .cc-rule-reader { padding: 0; max-width: 100%; }
+          body { font-size: 11pt; background: white !important; color: black !important; }
+          .cc-rule-title { color: black !important; font-size: 18pt; }
+          .cc-section-title { color: black !important; font-size: 14pt; }
+          .cc-ability-card { border: 1px solid #ccc !important; background: #f9f9f9 !important; page-break-inside: avoid; }
+          .cc-field-label { color: #555 !important; }
+          p, li { color: black !important; }
+        }
+      `;
+      document.head.appendChild(critical);
+      console.log('✅ Critical layout CSS injected immediately');
+    }
+
+    // ---- LOAD FULL CSS FROM GITHUB (enhances everything above) ----
     if (!document.getElementById('cc-core-ui-styles')) {
-      console.log('🎨 Loading Core UI CSS...');
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
@@ -25,7 +99,6 @@ window.CC_APP = {
     }
 
     if (!document.getElementById('cc-rules-explorer-styles')) {
-      console.log('🎨 Loading Rules Explorer CSS...');
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_rules_explorer.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
@@ -363,9 +436,14 @@ window.CC_APP = {
             <h1 class="cc-app-title">Rules Explorer</h1>
             <div class="cc-app-subtitle">Interactive Coffin Canyon Rules Reference</div>
           </div>
-          <button id="cc-print-btn" class="btn btn-sm btn-outline-secondary" title="Print rulebook">
-            🖨️ Print
-          </button>
+          <div style="display:flex;gap:0.5rem;align-items:center;">
+            <button id="cc-focus-btn" class="btn btn-sm btn-outline-secondary" title="Focus mode — hides sidebars for reading">
+              📖 Focus
+            </button>
+            <button id="cc-print-btn" class="btn btn-sm btn-outline-secondary" title="Print or save as PDF">
+              🖨️ PDF
+            </button>
+          </div>
         </div>
 
         <div class="cc-rules-explorer">
@@ -520,6 +598,8 @@ window.CC_APP = {
     const nextBtnEl      = root.querySelector("#cc-next-btn");
     const favoriteBtn    = root.querySelector("#cc-favorite-btn");
     const printBtn       = root.querySelector("#cc-print-btn");
+    const focusBtn       = root.querySelector("#cc-focus-btn");
+    const explorerEl     = root.querySelector(".cc-rules-explorer");
 
     let selectedId    = null;
     let currentFilter = 'all';
@@ -1244,8 +1324,23 @@ window.CC_APP = {
       if (ci < filteredIndex.length - 1) nextBtnEl.onclick = () => selectRule(filteredIndex[ci + 1].id);
     }
 
-    // ---- PRINT ----
-    printBtn.addEventListener('click', () => { window.print(); });
+    // ---- FOCUS MODE ----
+    focusBtn.addEventListener('click', () => {
+      const isActive = explorerEl.classList.toggle('focus-mode');
+      focusBtn.textContent = isActive ? '⬅️ Panels' : '📖 Focus';
+      focusBtn.title = isActive ? 'Show sidebars' : 'Focus mode — hides sidebars for reading';
+    });
+
+    // ---- PRINT / PDF ----
+    printBtn.addEventListener('click', () => {
+      // Auto-enter focus mode for clean print, then restore
+      const wasFocused = explorerEl.classList.contains('focus-mode');
+      if (!wasFocused) explorerEl.classList.add('focus-mode');
+      setTimeout(() => {
+        window.print();
+        if (!wasFocused) explorerEl.classList.remove('focus-mode');
+      }, 150);
+    });
 
     // ---- EVENTS: SIDEBAR LIST ----
     listEl.addEventListener("click", async (e) => {
