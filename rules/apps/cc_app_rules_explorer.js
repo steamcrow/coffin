@@ -39,6 +39,10 @@ window.CC_APP = {
         .cc-list-title { font-weight: 600; line-height: 1.3; }
         .cc-list-sub { font-size: 0.72rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
         .cc-rule-reader { padding: 2rem; line-height: 1.7; font-size: 16px; }
+        .cc-rule-reader ul, .cc-rule-reader ol { margin-left: 1.5rem; margin-bottom: 1rem; text-align: left !important; }
+        .cc-rule-reader li { margin-bottom: 0.4rem; text-align: left !important; }
+        .cc-rule-content ul, .cc-rule-content ol { margin-left: 1.5rem; margin-bottom: 1rem; text-align: left !important; }
+        .cc-rule-content li { margin-bottom: 0.4rem; text-align: left !important; }
         .cc-rule-article { max-width: 700px; }
         .cc-rule-title { font-size: 2rem; font-weight: 700; color: #ff7518; margin-bottom: 1.5rem; }
         .cc-section-title { font-size: 1.2rem; font-weight: 600; color: #e8e8e8; margin: 2rem 0 1rem; }
