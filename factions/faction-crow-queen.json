@@ -54,16 +54,34 @@
   },
   "canyon_state_relationships": {
     "preferred_states": [
-      { "state": "Exalted", "reason": "Ritual power is at its peak and the land itself obeys her." },
-      { "state": "Held", "reason": "The Queen respects territory that has a clear, established master." }
+      {
+        "state": "Exalted",
+        "reason": "Ritual power is at its peak and the land itself obeys her."
+      },
+      {
+        "state": "Held",
+        "reason": "The Queen respects territory that has a clear, established master."
+      }
     ],
     "neutral_states": [
-      { "state": "Haunted", "reason": "She understands the dead, though she finds them less useful than living laborers." },
-      { "state": "Lawless", "reason": "Distasteful chaos, but it provides opportunities to impose new laws." }
+      {
+        "state": "Haunted",
+        "reason": "She understands the dead, though she finds them less useful than living laborers."
+      },
+      {
+        "state": "Lawless",
+        "reason": "Distasteful chaos, but it provides opportunities to impose new laws."
+      }
     ],
     "opposed_states": [
-      { "state": "Liberated", "reason": "A land without masters is an affront to her very existence." },
-      { "state": "Strangewild", "reason": "Feral monsters that refuse to accept the collar." }
+      {
+        "state": "Liberated",
+        "reason": "A land without masters is an affront to her very existence."
+      },
+      {
+        "state": "Strangewild",
+        "reason": "Feral monsters that refuse to accept the collar."
+      }
     ]
   },
   "faction_features": [
@@ -72,14 +90,22 @@
       "cost": 0,
       "required": true,
       "effect": "Friendly units within Consecrated Ground gain +1 to Quality checks and ignore the 'Shaken' status.",
-      "keywords": ["aura", "morale", "law"]
+      "keywords": [
+        "aura",
+        "morale",
+        "law"
+      ]
     },
     {
       "name": "Consecration Engine",
       "cost": 0,
       "required": true,
       "effect": "Specific units generate a 12\" radius of Consecrated Ground. This terrain type overwrites all other environmental effects for enemies.",
-      "keywords": ["territory", "magic", "control"]
+      "keywords": [
+        "territory",
+        "magic",
+        "control"
+      ]
     }
   ],
   "units": [
@@ -87,47 +113,123 @@
       "name": "The Regent Black",
       "faction": "The Crow Queen",
       "type": "Hero",
-      "cost": 220,
+      "cost": 215,
       "quality": 4,
       "defense": 3,
       "move": 6,
       "range": 0,
       "weapon": "Crownbound Talons",
-      "weapon_properties": ["Melee", "Rending", "Symbolic"],
-      "composition": { "per_points": 0 },
-      "abilities": ["Sovereign Presence", "Unquestioned Rule", "Hierarchy of Flesh", "Immune to Shaken and Broken", "Crown of Unanswered Law"],
+      "weapon_properties": [
+        "Melee",
+        "Rending",
+        "Symbolic"
+      ],
+      "composition": {
+        "per_points": 0
+      },
+      "abilities": [
+        "Sovereign Presence",
+        "Unquestioned Rule",
+        "Hierarchy of Flesh",
+        "Immune to Shaken and Broken",
+        "Crown of Unanswered Law"
+      ],
       "lore": "The Crow Queen herself—calm, immaculate, and absolute. She does not fight so much as she corrects reality.",
       "tactics": "The central anchor of the army. Use her to project Consecrated Ground and keep the 'Ladies' safe while they plant markers.",
-      "unit_tags": ["leader", "court", "consecration_engine", "tyrant"],
-      "terrain_preferences": ["ritual_sites", "ruins", "open"],
-      "objective_keywords": ["domination", "ritual", "control"],
-      "state_advantages": { "good_in": ["Exalted"], "bad_in": ["Liberated"] },
+      "unit_tags": [
+        "leader",
+        "court",
+        "consecration_engine",
+        "tyrant"
+      ],
+      "terrain_preferences": [
+        "ritual_sites",
+        "ruins",
+        "open"
+      ],
+      "objective_keywords": [
+        "domination",
+        "ritual",
+        "control"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Exalted"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
+      },
       "optional_upgrades": [
-        { "name": "Throne of Lies", "cost": 20, "type": "Relic", "effect": "The Regent is always considered to be within Consecrated Ground for her own abilities, regardless of markers." },
-        { "name": "Lead-Lined Vestments", "cost": 25, "type": "Gear", "effect": "Immune to Spellcraft." }
+        {
+          "name": "Throne of Lies",
+          "cost": 20,
+          "type": "Relic",
+          "effect": "The Regent is always considered to be within Consecrated Ground for her own abilities, regardless of markers."
+        },
+        {
+          "name": "Lead-Lined Vestments",
+          "cost": 25,
+          "type": "Gear",
+          "effect": "Immune to Spellcraft."
+        }
       ]
     },
     {
       "name": "The Black Bailiff",
       "faction": "The Crow Queen",
       "type": "Titan",
-      "cost": 420,
+      "cost": 265,
       "quality": 5,
       "defense": 6,
       "move": 5,
       "range": 12,
       "weapon": "Iron Talons & Mustard Dispersion Cannons",
-      "weapon_properties": ["Melee", "Area", "Gas", "Crushing"],
-      "composition": { "per_points": 1 },
-      "abilities": ["Walking Writ of Law", "Mustard Exhalation", "Iron Inevitability", "Attention of the Crown"],
+      "weapon_properties": [
+        "Melee",
+        "Area",
+        "Gas",
+        "Crushing"
+      ],
+      "composition": {
+        "per_points": 1
+      },
+      "abilities": [
+        "Walking Writ of Law",
+        "Mustard Exhalation",
+        "Iron Inevitability",
+        "Attention of the Crown"
+      ],
       "lore": "The Queen’s sentence, made iron. A hulking monstrosity bound in a legal contract of eternal service.",
       "tactics": "Draw fire and crush morale. Use 'Attention of the Crown' to protect the fragile casters in the court.",
-      "unit_tags": ["titan", "terror", "distraction"],
-      "terrain_preferences": ["open", "industrial"],
-      "objective_keywords": ["deny", "control"],
-      "state_advantages": { "good_in": ["Exalted"], "bad_in": ["Strangewild"] },
+      "unit_tags": [
+        "titan",
+        "terror",
+        "distraction"
+      ],
+      "terrain_preferences": [
+        "open",
+        "industrial"
+      ],
+      "objective_keywords": [
+        "deny",
+        "control"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Exalted"
+        ],
+        "bad_in": [
+          "Strangewild"
+        ]
+      },
       "optional_upgrades": [
-        { "name": "Expanded Gas Reservoirs", "cost": 20, "type": "Upgrade", "effect": "Mustard Exhalation may be used twice per round." }
+        {
+          "name": "Expanded Gas Reservoirs",
+          "cost": 20,
+          "type": "Upgrade",
+          "effect": "Mustard Exhalation may be used twice per round."
+        }
       ]
     },
     {
@@ -140,112 +242,297 @@
       "move": 5,
       "range": 0,
       "weapon": "The Royal Ledger",
-      "weapon_properties": ["Melee", "Crushing", "Reach"],
-      "composition": { "per_points": 400 },
-      "abilities": ["Terrifying Presence", "Executioner’s Tithe", "Relentless Sentence", "Fearless"],
+      "weapon_properties": [
+        "Melee",
+        "Crushing",
+        "Reach"
+      ],
+      "composition": {
+        "per_points": 400
+      },
+      "abilities": [
+        "Terrifying Presence",
+        "Executioner’s Tithe",
+        "Relentless Sentence",
+        "Fearless"
+      ],
       "lore": "The Queen's silent finality. He carries the Royal Ledger—an axe inscribed with the names of every monster that rose up against the throne in Monstru.",
       "tactics": "A massive pressure piece. Within Consecrated Ground, his Executioner’s Tithe allows him to regain a Quality point whenever he eliminates a model.",
-      "unit_tags": ["brute", "executioner", "terror", "melee_specialist"],
-      "terrain_preferences": ["ruins", "urban", "choke_points"],
-      "objective_keywords": ["assassination", "denial", "intimidation"],
-      "state_advantages": { "good_in": ["Held", "Exalted"], "bad_in": ["Liberated"] },
+      "unit_tags": [
+        "brute",
+        "executioner",
+        "terror",
+        "melee_specialist"
+      ],
+      "terrain_preferences": [
+        "ruins",
+        "urban",
+        "choke_points"
+      ],
+      "objective_keywords": [
+        "assassination",
+        "denial",
+        "intimidation"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Held",
+          "Exalted"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
+      },
       "optional_upgrades": [
-        { "name": "Hood of the Anonymous", "cost": 8, "type": "Gear", "effect": "Gain Stealth while in ruins or shadows." }
+        {
+          "name": "Hood of the Anonymous",
+          "cost": 8,
+          "type": "Gear",
+          "effect": "Gain Stealth while in ruins or shadows."
+        }
       ]
     },
     {
       "name": "The High Huntsman",
       "faction": "The Crow Queen",
       "type": "Specialist",
-      "cost": 145,
+      "cost": 105,
       "quality": 3,
       "defense": 2,
       "move": 7,
       "range": 18,
       "weapon": "Regal Longbow",
-      "weapon_properties": ["Ranged", "Pierce"],
-      "composition": { "per_points": 300 },
-      "abilities": ["Monster Tracker", "The Queen's Mark", "Master of the Hounds"],
+      "weapon_properties": [
+        "Ranged",
+        "Pierce"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Monster Tracker",
+        "The Queen's Mark",
+        "Master of the Hounds"
+      ],
       "lore": "The aristocratic hunter of the Court. He views the monsters of the Canyon not as living beings, but as escaped property to be cataloged and culled.",
       "tactics": "Ranged harasser. The Queen's Mark grants all friendly units +1 to hit against a specific target within his line of sight.",
-      "unit_tags": ["scout", "ranged", "specialist", "monster_hunter"],
-      "terrain_preferences": ["woods", "vertical", "elevated"],
-      "objective_keywords": ["recon", "assassination", "tracking"],
-      "state_advantages": { "good_in": ["Strangewild", "Lawless"], "bad_in": ["Rusted"] },
+      "unit_tags": [
+        "scout",
+        "ranged",
+        "specialist",
+        "monster_hunter"
+      ],
+      "terrain_preferences": [
+        "woods",
+        "vertical",
+        "elevated"
+      ],
+      "objective_keywords": [
+        "recon",
+        "assassination",
+        "tracking"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Strangewild",
+          "Lawless"
+        ],
+        "bad_in": [
+          "Rusted"
+        ]
+      },
       "optional_upgrades": [
-        { "name": "The Queen's Arrow", "cost": 10, "type": "Weapon", "effect": "High Huntsman gains +2 to hit against a target with The Queen's Mark." },
-        { "name": "Brass Bow", "cost": 15, "type": "Weapon", "effect": "Range increased to 24\"." }
+        {
+          "name": "The Queen's Arrow",
+          "cost": 10,
+          "type": "Weapon",
+          "effect": "High Huntsman gains +2 to hit against a target with The Queen's Mark."
+        },
+        {
+          "name": "Brass Bow",
+          "cost": 15,
+          "type": "Weapon",
+          "effect": "Range increased to 24\"."
+        }
       ]
     },
     {
       "name": "The Court Jester",
       "faction": "The Crow Queen",
       "type": "Rogue",
-      "cost": 110,
+      "cost": 120,
       "quality": 3,
       "defense": 2,
       "move": 8,
       "range": 6,
       "weapon": "Barbed Marotte",
-      "weapon_properties": ["Melee", "Hidden", "Agile"],
-      "composition": { "per_points": 300 },
-      "abilities": ["Maddening Mimicry", "Acrobatic Leap", "Cruel Jest", "Stealth"],
+      "weapon_properties": [
+        "Melee",
+        "Hidden",
+        "Agile"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Maddening Mimicry",
+        "Acrobatic Leap",
+        "Cruel Jest",
+        "Stealth"
+      ],
       "lore": "A twisted performer whose jokes always end in blood. He mocks the freedom of the Canyon dwellers until they descend into a mindless rage.",
       "tactics": "Disruption specialist. Cruel Jest forces an enemy unit to make a Quality check or be forced to move toward the Jester.",
-      "unit_tags": ["rogue", "disruption", "stealth", "fast"],
-      "terrain_preferences": ["dense_cover", "ruins", "urban"],
-      "objective_keywords": ["sabotage", "distraction", "infiltration"],
-      "state_advantages": { "good_in": ["Lawless", "Haunted"], "bad_in": ["Held"] },
+      "unit_tags": [
+        "rogue",
+        "disruption",
+        "stealth",
+        "fast"
+      ],
+      "terrain_preferences": [
+        "dense_cover",
+        "ruins",
+        "urban"
+      ],
+      "objective_keywords": [
+        "sabotage",
+        "distraction",
+        "infiltration"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Lawless",
+          "Haunted"
+        ],
+        "bad_in": [
+          "Held"
+        ]
+      },
       "optional_upgrades": [
-        { "name": "The King's Humiliation", "cost": 10, "type": "Relic", "effect": "Once per game, the Jester can force an enemy Hero to lose 1 Quality point for one turn." }
+        {
+          "name": "The King's Humiliation",
+          "cost": 10,
+          "type": "Relic",
+          "effect": "Once per game, the Jester can force an enemy Hero to lose 1 Quality point for one turn."
+        }
       ]
     },
     {
       "name": "The Dark Skald",
       "faction": "The Crow Queen",
       "type": "Mystic",
-      "cost": 135,
+      "cost": 140,
       "quality": 3,
       "defense": 2,
       "move": 6,
       "range": 12,
       "weapon": "Echoing Lute",
-      "weapon_properties": ["Melee", "Sonic"],
-      "composition": { "per_points": 300 },
-      "abilities": ["Dirge of the Fallen Empire", "Shattering Chord", "Courtly Inspiration"],
+      "weapon_properties": [
+        "Melee",
+        "Sonic"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Dirge of the Fallen Empire",
+        "Shattering Chord",
+        "Courtly Inspiration"
+      ],
       "lore": "The historian of Monstru's glory. His music vibrates with the weight of thousands of years of tradition.",
       "tactics": "Support mystic. Use Dirge of the Fallen Empire to force a Morale check on all enemies within 8\" of a Consecrated Ground marker.",
-      "unit_tags": ["mystic", "support", "bard", "aoe"],
-      "terrain_preferences": ["backline", "elevated", "ritual_sites"],
-      "objective_keywords": ["morale", "defense", "area_denial"],
-      "state_advantages": { "good_in": ["Exalted", "Haunted"], "bad_in": ["Poisoned"] },
+      "unit_tags": [
+        "mystic",
+        "support",
+        "bard",
+        "aoe"
+      ],
+      "terrain_preferences": [
+        "backline",
+        "elevated",
+        "ritual_sites"
+      ],
+      "objective_keywords": [
+        "morale",
+        "defense",
+        "area_denial"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Exalted",
+          "Haunted"
+        ],
+        "bad_in": [
+          "Poisoned"
+        ]
+      },
       "optional_upgrades": [
-        { "name": "Witch-Stitched Silks", "cost": 10, "type": "Upgrade", "effect": "+1 Defense sewn into the courtly finery." }
+        {
+          "name": "Witch-Stitched Silks",
+          "cost": 10,
+          "type": "Upgrade",
+          "effect": "+1 Defense sewn into the courtly finery."
+        }
       ]
     },
     {
       "name": "Ladies in Waiting",
       "faction": "The Crow Queen",
       "type": "Grunt",
-      "cost": 45,
+      "cost": 70,
       "quality": 2,
       "defense": 1,
       "move": 6,
       "range": 0,
       "weapon": "Ceremonial Knives",
-      "weapon_properties": ["Melee", "Light"],
-      "composition": { "per_points": 2 },
-      "abilities": ["Deploy Demesne Marker", "Ritual Comfort", "Veiled Whispers"],
+      "weapon_properties": [
+        "Melee",
+        "Light"
+      ],
+      "composition": {
+        "per_points": 2
+      },
+      "abilities": [
+        "Deploy Demesne Marker",
+        "Ritual Comfort",
+        "Veiled Whispers"
+      ],
       "lore": "Silent court attendants bearing banners and poison. They are the heralds of the Queen's new kingdom.",
       "tactics": "Expansion. Their main job is placing markers to extend the reach of the Queen's abilities.",
-      "unit_tags": ["support", "ritual", "court"],
-      "terrain_preferences": ["settlements", "ritual_sites"],
-      "objective_keywords": ["setup", "control"],
-      "state_advantages": { "good_in": ["Held"], "bad_in": [] },
+      "unit_tags": [
+        "support",
+        "ritual",
+        "court"
+      ],
+      "terrain_preferences": [
+        "settlements",
+        "ritual_sites"
+      ],
+      "objective_keywords": [
+        "setup",
+        "control"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Held"
+        ],
+        "bad_in": []
+      },
       "optional_upgrades": [
-        { "name": "Armored Corset", "cost": 5, "type": "Armor", "effect": "+1 Defense" },
-        { "name": "Sweet Cakes", "cost": 5, "type": "Gear", "effect": "Once per game: Remove Shaken within 6\"" }
+        {
+          "name": "Armored Corset",
+          "cost": 5,
+          "type": "Armor",
+          "effect": "+1 Defense"
+        },
+        {
+          "name": "Sweet Cakes",
+          "cost": 5,
+          "type": "Gear",
+          "effect": "Once per game: Remove Shaken within 6\""
+        }
       ]
     }
-  ]
+  ],
+  "_point_formula_version": "3.0",
+  "_recalculated": "2026-03-07"
 }
