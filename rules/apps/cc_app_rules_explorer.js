@@ -323,7 +323,7 @@ window.CC_APP = {
     const NAV_GROUPS = [
       {
         id: 'rules', label: 'Rules',
-        match: (it) => ['core_mechanics', 'turn_structure',
+        match: (it) => ['quickstart', 'core_mechanics', 'turn_structure',
                         'visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault',
                         'unit_identities', 'ability_engine'].includes(it.id),
       },
