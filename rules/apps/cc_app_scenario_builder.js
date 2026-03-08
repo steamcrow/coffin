@@ -411,6 +411,8 @@ window.CC_APP = {
     let scenarioNamesData  = null;
     let campaignSystemData = null;   // 30_campaign_system.json — location states + effects
     let plotEngineData     = null;   // 190_plot_engine_schema.json — design philosophy + vectors
+    let objectiveVault240  = null;   // 240_objective_vault.json — detailed objective rules
+    var vault240Map        = {};     // flat lookup: objective_id -> full entry
     let factionDataMap     = {};
 
     async function loadGameData() {
@@ -418,7 +420,7 @@ window.CC_APP = {
         const base = 'https://raw.githubusercontent.com/steamcrow/coffin/main';
         const t    = '?t=' + Date.now();
 
-        const [plotRes, twistRes, locRes, locTypesRes, monstersRes, vaultRes, namesRes, campRes, engineRes] = await Promise.all([
+        const [plotRes, twistRes, locRes, locTypesRes, monstersRes, vaultRes, namesRes, campRes, engineRes, vault240Res] = await Promise.all([
           fetch(`${base}/rules/src/200_plot_families.json${t}`),
           fetch(`${base}/rules/src/210_twist_tables.json${t}`),
           fetch(`${base}/rules/src/170_named_locations.json${t}`),
@@ -427,7 +429,8 @@ window.CC_APP = {
           fetch(`${base}/rules/src/180_scenario_vault.json${t}`),
           fetch(`${base}/rules/src/230_scenario_names.json${t}`),
           fetch(`${base}/rules/src/30_campaign_system.json${t}`),
-          fetch(`${base}/rules/src/190_plot_engine_schema.json${t}`)
+          fetch(`${base}/rules/src/190_plot_engine_schema.json${t}`),
+          fetch(`${base}/rules/src/240_objective_vault.json${t}`)
         ]);
 
         plotFamiliesData   = await plotRes.json();
@@ -441,6 +444,17 @@ window.CC_APP = {
         try { campaignSystemData = await campRes.json(); } catch (e) { campaignSystemData = null; }
         try { plotEngineData     = await engineRes.json(); } catch (e) { plotEngineData = null; }
         if (plotEngineData) console.log('🗺️  Plot engine schema loaded');
+        try {
+          objectiveVault240 = await vault240Res.json();
+          // Flatten categories > objectives into a quick-lookup map
+          var cats240 = objectiveVault240.categories || objectiveVault240.objective_categories || [];
+          cats240.forEach(function(cat) {
+            (cat.objectives || []).forEach(function(obj) {
+              vault240Map[obj.objective_id] = obj;
+            });
+          });
+          console.log('📋 240 Objective Vault loaded —', Object.keys(vault240Map).length, 'entries');
+        } catch (e) { objectiveVault240 = null; }
 
         const PLAYER_FACTIONS = [
           { id: 'monster_rangers', file: 'faction-monster-rangers-v5.json' },
@@ -638,6 +652,170 @@ window.CC_APP = {
       };
     }
 
+
+
+    // ── getVault240Details — read 240 objective vault for this objective type ────────
+    //   Returns { actions, vp_formula, test_line, action_cost } for display on cards.
+    function getVault240Details(objectiveType) {
+      var entry = vault240Map[objectiveType];
+      if (!entry) return null;
+      var details = {};
+
+      // Actions from the interaction block
+      var inter = entry.interaction || {};
+      var actions = [];
+      if (inter.action_type)   actions.push(inter.action_type.replace(/_/g, ' ').toUpperCase());
+      // Also pull method keys for sabotage-style entries
+      if (!inter.action_type && inter.method_1) actions.push('ATTACK');
+      if (!inter.action_type && inter.method_2) actions.push('SABOTAGE');
+      details.actions = actions.length ? actions : null;
+      details.action_cost = inter.action_cost || null;
+
+      // Test requirement
+      if (inter.test_required) {
+        var testStr = 'Test: ' + (inter.test_type || 'Quality').replace(/_/g, ' ');
+        if (inter.test_modifier) testStr += ' (' + inter.test_modifier + ')';
+        details.test_line = testStr;
+        details.success   = inter.success || null;
+        details.failure   = inter.failure || null;
+      } else {
+        details.test_line = null;
+      }
+
+      // VP formula
+      if (entry.vp_value && entry.vp_per) {
+        details.vp_formula = '+' + entry.vp_value + ' VP per ' + String(entry.vp_per).replace(/_/g, ' ');
+        if (entry.danger_scaling) details.vp_formula += ' (scales with danger)';
+      }
+
+      return details;
+    }
+
+    // ── getObjectiveKeyResources — find location resources tied to this objective ────
+    function getObjectiveKeyResources(objectiveType, locProfile) {
+      var r = (locProfile && locProfile.effectiveResources) ? locProfile.effectiveResources : {};
+      var matches = [];
+      var aff = RESOURCE_OBJECTIVE_AFFINITY || {};
+      Object.keys(aff).forEach(function(res) {
+        if (aff[res].indexOf(objectiveType) >= 0 && (r[res] || 0) > 0) {
+          matches.push(res.replace(/_/g, ' '));
+        }
+      });
+      return matches.slice(0, 2);
+    }
+
+    // ── getPlotFamilyObjectiveBias — return default_objectives from the plot family ──
+    function getPlotFamilyObjectiveBias(plotFamily) {
+      return (plotFamily && plotFamily.default_objectives) ? plotFamily.default_objectives : [];
+    }
+
+    // ── getFactionFileData — safely read factionDataMap for a faction id ─────────────
+    function getFactionFileData(factionId) {
+      return factionDataMap[factionId] || null;
+    }
+
+    // ── getFactionVictoryGoal — read faction file's victory_objectives[0] ────────────
+    //   Returns the best matching victory objective type string, or null.
+    function getFactionVictoryGoal(factionId, boardObjectiveType) {
+      var fd = getFactionFileData(factionId);
+      if (!fd || !fd.victory_objectives || !fd.victory_objectives.length) return null;
+
+      // Try to find a victory objective that matches the board objective type
+      var vos = fd.victory_objectives;
+      var typeWords = boardObjectiveType ? boardObjectiveType.replace(/_/g, ' ').toLowerCase() : '';
+
+      // Score each victory_objective by keyword overlap with board objective type
+      var best = null;
+      var bestScore = -1;
+      vos.forEach(function(vo) {
+        var voText = ((vo.type || '') + ' ' + (vo.description || '')).toLowerCase();
+        var score = 0;
+        typeWords.split(' ').forEach(function(w) {
+          if (w.length > 2 && voText.indexOf(w) >= 0) score++;
+        });
+        if (score > bestScore) { bestScore = score; best = vo; }
+      });
+
+      // If no keyword match, just return first
+      return (best || vos[0]);
+    }
+
+    // ── getFactionTacticLine — read faction file's tactics.doctrine[0] ───────────────
+    function getFactionTacticLine(factionId) {
+      var fd = getFactionFileData(factionId);
+      if (!fd) return null;
+      var tactics = fd.tactics || fd.faction_tactics || {};
+      if (tactics.doctrine && tactics.doctrine.length) return tactics.doctrine[0];
+      if (tactics.overview) return tactics.overview.split('.')[0] + '.';
+      return null;
+    }
+
+    // ── getPlotEngineCanonicalMotive — read 190 schema canonical_motivations ─────────
+    function getPlotEngineCanonicalMotive(factionId) {
+      if (!plotEngineData) return null;
+      var claimants = (plotEngineData.vectors && plotEngineData.vectors.claimants)
+        ? plotEngineData.vectors.claimants : {};
+      var motives = claimants.canonical_motivations || {};
+      // Keys in 190 are like 'monsterologists' but we use 'monsterology' — try both
+      var val = motives[factionId]
+        || motives[factionId.replace(/_/g, ' ')]
+        || motives[factionId.replace('monsterology', 'monsterologists')]
+        || motives[factionId.replace('monster_rangers', 'monster rangers')];
+      if (!val) return null;
+      return val.replace(/_and_/g, ' and ').replace(/_/g, ' ');
+    }
+
+    // ── buildRichObjectiveCard — combines all data sources into one card object ──────
+    //   This is the single source of truth for what goes into a faction victory card.
+    function buildRichObjectiveCard(factionId, boardObj, locProfile, dangerRating, roleIndex) {
+      var conflictMap  = FACTION_CONFLICT_TABLE[factionId] || FACTION_CONFLICT_TABLE.monsters;
+      var approach     = FACTION_APPROACH[factionId]       || FACTION_APPROACH.monsters;
+      var flavorMap    = FACTION_OBJECTIVE_FLAVOR[factionId] || {};
+
+      var conflict = conflictMap[boardObj.type] || conflictMap['default'];
+
+      // 1. Name and goal text from conflict table
+      var cardName = conflict.name;
+      var cardDesc = flavorMap[boardObj.type]
+        || approach.verbs[roleIndex % approach.verbs.length] + ' the ' + boardObj.name + '.';
+
+      // 2. VP formula: prefer 240 vault, fall back to conflict table
+      var vault240 = getVault240Details(boardObj.type);
+      var cardVP   = (vault240 && vault240.vp_formula) ? vault240.vp_formula : conflict.vp;
+
+      // 3. Tactic: prefer faction file doctrine, fall back to approach tactic
+      var fileTactic = getFactionTacticLine(factionId);
+      var cardTactic = fileTactic || approach.tactic;
+
+      // 4. Resource: what location resource is tied to this objective
+      var resources = getObjectiveKeyResources(boardObj.type, locProfile);
+
+      // 5. Allowed actions from OBJECTIVE_MARKER_TABLE
+      var markerData = OBJECTIVE_MARKER_TABLE[boardObj.type] || {};
+      var actions    = (markerData.interactions || []).map(function(a) { return a.toLowerCase(); });
+
+      // 6. Test info from 240 vault
+      var testLine = vault240 ? vault240.test_line : null;
+      var successLine = vault240 ? vault240.success : null;
+      var failureLine = vault240 ? vault240.failure : null;
+
+      // 7. Faction-specific victory objective type from faction file
+      var factionWinObj = getFactionVictoryGoal(factionId, boardObj.type);
+
+      return {
+        name:        cardName,
+        desc:        cardDesc,
+        vp:          cardVP,
+        tactic:      cardTactic,
+        resources:   resources,          // e.g. ['mechanical parts', 'spare parts']
+        actions:     actions,            // e.g. ['salvage', 'control', 'sabotage']
+        test_line:   testLine,           // e.g. 'Test: Quality (-1 die)'
+        success:     successLine,        // e.g. 'Extract 1 crystal'
+        failure:     failureLine,        // e.g. 'Take 2 damage'
+        faction_win_type:  factionWinObj ? (factionWinObj.type || null) : null,
+        faction_win_vp:    factionWinObj ? (factionWinObj.vp   || null) : null
+      };
+    }
 
     // ── selectPlotFamily — score-based selection using 190_plot_engine_schema.json ─
     //
@@ -1816,31 +1994,20 @@ window.CC_APP = {
         var pickedObjectives = [];
 
         if (vaultEntry) {
-          // Vault has specific text for this faction — use it verbatim as the primary objective
-          pickedObjectives.push({
-            name:   (conflictMap[primaryType] || conflictMap['default']).name,
-            desc:   typeof vaultEntry === 'string' ? vaultEntry
-                    : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || JSON.stringify(vaultEntry)),
-            vp:     (conflictMap[primaryType] || conflictMap['default']).vp,
-            tactic: approach.tactic
-          });
-          // Add a secondary from the conflict table for a 2nd objective if present
+          // Vault has specific text for this faction — use it verbatim as the primary desc
+          var primaryCard = buildRichObjectiveCard(faction.id, objectives[0] || { type: primaryType, name: primaryType }, locProfile, state.dangerRating, 0);
+          primaryCard.desc = typeof vaultEntry === 'string' ? vaultEntry
+            : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || primaryCard.desc);
+          pickedObjectives.push(primaryCard);
+          // Secondary from rich builder if board has 2 objectives
           if (objectives[1]) {
-            var c2 = conflictMap[objectives[1].type] || conflictMap['default'];
-            pickedObjectives.push({ name: c2.name, desc: approach.verbs[1 % approach.verbs.length] + ' ' + objectives[1].name + '.', vp: c2.vp, tactic: approach.tactic });
+            pickedObjectives.push(buildRichObjectiveCard(faction.id, objectives[1], locProfile, state.dangerRating, 1));
           }
         } else {
-          // Faction not explicitly in vault — generate from conflict table
+          // Faction not explicitly in vault — use rich builder for all
           objectives.forEach(function(obj, i) {
             if (i > 1) return;
-            var conflict = conflictMap[obj.type] || conflictMap['default'];
-            var flavorMap = FACTION_OBJECTIVE_FLAVOR[faction.id] || {};
-            pickedObjectives.push({
-              name:   conflict.name,
-              desc:   flavorMap[obj.type] || approach.verbs[i % approach.verbs.length] + ' the ' + obj.name + '.',
-              vp:     conflict.vp,
-              tactic: approach.tactic
-            });
+            pickedObjectives.push(buildRichObjectiveCard(faction.id, obj, locProfile, state.dangerRating, i));
           });
         }
 
@@ -1848,7 +2015,9 @@ window.CC_APP = {
         var aftermath = buildFactionAftermath(faction.id, plotFamily);
         var isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
 
-        // Use vault's primary/secondary VC text as the motive line if available
+        // Enrich motive with 190 canonical motivation, then vault primary if available
+        var canonicalMotive = getPlotEngineCanonicalMotive(faction.id);
+        if (canonicalMotive) motive = canonicalMotive;
         if (vaultVC.primary) motive = vaultVC.primary;
 
         conditions[faction.id] = {
@@ -2741,24 +2910,56 @@ window.CC_APP = {
         var factionId = entry[0];
         var vc        = entry[1];
         var id  = FACTION_IDENTITY[factionId] || { color: '#ff7518', border: '#7c2d12', logo: null, tag: '' };
+
         var logoHtml = id.logo
-          ? '<img src="' + LOGO_BASE + id.logo + '" alt="' + vc.faction_name + '" style="height:2.2rem;width:auto;filter:drop-shadow(0 0 4px ' + id.color + '88);">'
-          : '<i class="fa fa-flag" style="color:' + id.color + ';font-size:2rem;"></i>';
+          ? '<img src="' + LOGO_BASE + id.logo + '" alt="' + vc.faction_name + '" style="height:3.5rem;width:auto;filter:drop-shadow(0 0 6px ' + id.color + 'aa);flex-shrink:0;">'
+          : '<i class="fa fa-flag" style="color:' + id.color + ';font-size:2.6rem;flex-shrink:0;"></i>';
 
         var objectivesHtml = (vc.objectives || []).map(function(obj, i) {
-          var roleLabel = OBJ_ROLE_LABELS[i] || ('Objective ' + (i + 1));
-          var isPrimary = i === 0;
-          return '<div class="cc-vc-obj" style="border-left: 2px solid ' + (isPrimary ? id.color : id.border) + '; margin-bottom:0.6rem;">'
-            + '<div class="cc-vc-obj-label" style="color:' + (isPrimary ? id.color : 'rgba(255,255,255,0.45)') + ';">'
-            + (isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>') + ' ' + roleLabel
-            + '</div>'
-            + '<div class="cc-vc-obj-name"><i class="fa fa-crosshairs" style="color:' + id.color + ';"></i> ' + obj.name + '</div>'
-            + '<p class="cc-vc-obj-desc">' + obj.desc + '</p>'
-            + '<div class="cc-vc-obj-meta">'
-            + '<span class="cc-vp-line"><i class="fa fa-star" style="color:' + id.color + ';"></i> ' + obj.vp + '</span>'
-            + '<span class="cc-tactic-line"><i class="fa fa-book"></i> ' + obj.tactic + '</span>'
-            + '</div>'
-            + '</div>';
+          var roleLabel   = OBJ_ROLE_LABELS[i] || ('Objective ' + (i + 1));
+          var isPrimary   = i === 0;
+          var borderColor = isPrimary ? id.color : id.border;
+          var labelColor  = isPrimary ? id.color : 'rgba(255,255,255,0.45)';
+          var roleIcon    = isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>';
+
+          var resHtml = (obj.resources && obj.resources.length)
+            ? '<div style="font-size:0.72rem;color:' + labelColor + ';margin:0.25rem 0 0.1rem;">'
+              + '<i class="fa fa-cube"></i> Resource: ' + obj.resources.join(' &middot; ') + '</div>'
+            : '';
+
+          var actHtml = (obj.actions && obj.actions.length)
+            ? '<div style="font-size:0.72rem;color:rgba(255,255,255,0.5);margin-bottom:0.25rem;">'
+              + '<i class="fa fa-hand-o-right"></i> Actions: ' + obj.actions.join(' &middot; ') + '</div>'
+            : '';
+
+          var testHtml = '';
+          if (obj.test_line) {
+            testHtml = '<div style="font-size:0.72rem;color:rgba(255,255,255,0.45);margin-bottom:0.25rem;">'
+              + '<i class="fa fa-flask"></i> ' + obj.test_line;
+            if (obj.success) testHtml += ' — <span style="color:#4ade80;">' + obj.success + '</span>';
+            if (obj.failure) testHtml += ' / <span style="color:#ef4444;">' + obj.failure + '</span>';
+            testHtml += '</div>';
+          }
+
+          var winTypeHtml = (obj.faction_win_type)
+            ? '<div style="font-size:0.7rem;color:' + labelColor + ';margin-top:0.2rem;font-style:italic;">'
+              + '<i class="fa fa-trophy"></i> Win type: ' + obj.faction_win_type
+              + (obj.faction_win_vp ? ' — ' + obj.faction_win_vp : '') + '</div>'
+            : '';
+
+          return '<div class="cc-vc-obj" style="border-left:2px solid ' + borderColor + ';margin-bottom:0.75rem;padding-left:0.75rem;">'
+            + '<div class="cc-vc-obj-label" style="color:' + labelColor + ';margin-bottom:0.2rem;">'
+            + roleIcon + ' ' + roleLabel + '</div>'
+            + '<div class="cc-vc-obj-name" style="font-size:1rem;font-weight:700;margin-bottom:0.3rem;">'
+            + '<i class="fa fa-crosshairs" style="color:' + id.color + ';margin-right:0.3rem;"></i>' + obj.name + '</div>'
+            + '<p class="cc-vc-obj-desc" style="font-size:0.87rem;margin:0 0 0.35rem;">' + obj.desc + '</p>'
+            + resHtml + actHtml + testHtml + winTypeHtml
+            + '<div class="cc-vc-obj-meta" style="margin-top:0.4rem;display:flex;flex-wrap:wrap;gap:0.5rem;">'
+            + '<span class="cc-vp-line" style="font-size:0.8rem;">'
+            + '<i class="fa fa-star" style="color:' + id.color + ';"></i> ' + obj.vp + '</span>'
+            + '<span class="cc-tactic-line" style="font-size:0.78rem;color:rgba(255,255,255,0.5);">'
+            + '<i class="fa fa-book"></i> ' + obj.tactic + '</span>'
+            + '</div></div>';
         }).join('');
 
         var motiveHtml = vc.motive
@@ -2772,11 +2973,11 @@ window.CC_APP = {
           : '';
 
         return '<div class="cc-victory-card" style="border-left:4px solid ' + id.color + ';background:linear-gradient(135deg,rgba(0,0,0,0.4) 0%,color-mix(in srgb,' + id.color + ' 6%,transparent) 100%);">'
-          + '<div class="cc-vc-header" style="border-bottom:1px solid ' + id.border + ';padding-bottom:0.5rem;margin-bottom:0.75rem;">'
-          + '<div style="display:flex;align-items:center;gap:0.75rem;">'
+          + '<div class="cc-vc-header" style="border-bottom:1px solid ' + id.border + ';padding-bottom:0.6rem;margin-bottom:0.85rem;">'
+          + '<div style="display:flex;align-items:center;gap:0.85rem;">'
           + logoHtml
-          + '<div>'
-          + '<h5 style="color:' + id.color + ';margin:0;">' + vc.faction_name + (vc.is_npc ? ' <span class=\"cc-npc-tag\">NPC</span>' : '') + '</h5>'
+          + '<div style="flex:1;">'
+          + '<h5 style="color:' + id.color + ';margin:0;font-size:1.1rem;">' + vc.faction_name + (vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : '') + '</h5>'
           + (id.tag ? '<div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:2px;">' + id.tag + '</div>' : '')
           + '</div></div>'
           + motiveHtml
@@ -2784,17 +2985,17 @@ window.CC_APP = {
           + '<div class="cc-vc-objectives">' + objectivesHtml + '</div>'
           + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
           + '<div class="cc-vc-finale">'
-          + '<div class="cc-vc-obj-label">Finale — Round 6</div>'
-          + '<div class="cc-vc-obj-name"><i class="fa fa-bolt" style="color:' + id.color + ';"></i> ' + vc.finale.name + '</div>'
-          + '<p>' + vc.finale.desc + '</p>'
-          + '<p class="cc-vp-line"><i class="fa fa-star" style="color:' + id.color + ';"></i> ' + vc.finale.vp + '</p>'
+          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:' + id.color + ';margin-bottom:0.25rem;">Finale — Round 6</div>'
+          + '<div class="cc-vc-obj-name" style="font-weight:700;"><i class="fa fa-bolt" style="color:' + id.color + ';"></i> ' + vc.finale.name + '</div>'
+          + '<p style="font-size:0.87rem;margin:0.25rem 0;">' + vc.finale.desc + '</p>'
+          + '<p class="cc-vp-line" style="font-size:0.82rem;"><i class="fa fa-star" style="color:' + id.color + ';"></i> ' + vc.finale.vp + '</p>'
           + '</div>'
           + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
           + '<div class="cc-vc-aftermath">'
-          + '<div class="cc-vc-obj-label">If ' + vc.faction_name + ' Wins</div>'
-          + '<p><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
-          + '<p><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
-          + '<p><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
+          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.4);margin-bottom:0.25rem;">If ' + vc.faction_name + ' Wins</div>'
+          + '<p style="font-size:0.87rem;margin:0.2rem 0;"><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
+          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
+          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
           + quoteHtml
           + '</div>'
           + '</div>';
