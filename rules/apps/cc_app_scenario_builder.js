@@ -387,7 +387,8 @@ window.CC_APP = {
       generated: false,
       scenario: null,
       currentStep: 1,
-      completedSteps: []
+      completedSteps: [],
+      vaultScenario: null
     };
 
     // ── Faction registry — all six factions; used for dropdowns, NPC injection, display ──
@@ -633,10 +634,25 @@ window.CC_APP = {
       };
     }
 
-    // ── matchVaultScenario — scores pre-written vault scenarios against the current setup ─
-    function matchVaultScenario(plotFamily, locProfile, contextTags) {
+    // ── matchVaultScenario — scores pre-written vault scenarios against setup ──
+    //
+    // SCORING WEIGHTS:
+    //   +5  per matching spotlight_faction (selected faction in scenario's list)
+    //   +4  danger_rating exact match; +2 within ±1; -10 if diff > 2
+    //   +3  per matching allowed_location_type
+    //   +3  if selectedLocation matches allowed_named_locations
+    //   +2  per matching tag (generic overlap)
+    //  -10  if archetype in excluded_location_types (hard block)
+    //
+    // THRESHOLD: 6 (old system used 2 — near-random matches)
+    //
+    function matchVaultScenario(plotFamily, locProfile, contextTags,
+                                selectedFactions = [], selectedDanger = 3,
+                                locationType = '', selectedLocation = '') {
+
       if (!scenarioVaultData?.scenarios?.length) return { scenario: null, score: 0 };
 
+      // Build tag context for generic overlap scoring
       const allTags = [
         ...(plotFamily.tags || []),
         ...(locProfile.tags || []),
@@ -644,19 +660,84 @@ window.CC_APP = {
         locProfile.archetype
       ].filter(Boolean).map(t => t.toLowerCase());
 
+      // Normalised faction IDs from the current selection
+      const factionIds = selectedFactions.map(f =>
+        (f.id || f.name || '').toLowerCase().replace(/\s+/g, '_')
+      );
+
+      // Alias map so both "monster rangers" and "monster_rangers" match vault entries
+      const FACTION_NAME_MAP = {
+        'monster_rangers': ['monster rangers', 'monster_rangers'],
+        'liberty_corps':   ['liberty corps',   'liberty_corps'],
+        'monsterology':    ['monsterologists',  'monsterology'],
+        'shine_riders':    ['shine riders',     'shine_riders'],
+        'crow_queen':      ['crow queen',       'crow_queen'],
+        'monsters':        ['monsters']
+      };
+
       let best      = null;
-      let bestScore = 0;
+      let bestScore = -Infinity;
 
       for (const s of scenarioVaultData.scenarios) {
+        let score = 0;
+
+        // ── FACTION MATCH (highest weight) ──────────────────────────────────
+        const spotlightRaw = (s.spotlight_factions || []).map(f => f.toLowerCase());
+        factionIds.forEach(fid => {
+          const aliases = FACTION_NAME_MAP[fid] || [fid];
+          if (aliases.some(alias => spotlightRaw.some(sp => sp.includes(alias)))) {
+            score += 5;
+          }
+        });
+
+        // ── DANGER RATING MATCH ─────────────────────────────────────────────
+        const scenarioDanger = s.danger_rating || 3;
+        const dangerDiff = Math.abs(scenarioDanger - selectedDanger);
+        if (dangerDiff === 0)      score += 4;
+        else if (dangerDiff === 1) score += 2;
+        else if (dangerDiff > 2)   score -= 10;
+
+        // ── LOCATION TYPE MATCH ─────────────────────────────────────────────
+        const allowedTypes = (s.location_rules?.allowed_location_types || []).map(t => t.toLowerCase());
+        if (allowedTypes.length > 0 && locProfile.archetype) {
+          const arch = locProfile.archetype.toLowerCase();
+          if (allowedTypes.some(t => arch.includes(t) || t.includes(arch))) {
+            score += 3;
+          }
+        }
+
+        // ── NAMED LOCATION MATCH ────────────────────────────────────────────
+        if (selectedLocation && locationType === 'named') {
+          const locName = locationData?.locations
+            ?.find(l => l.id === selectedLocation)?.name?.toLowerCase() || '';
+          const allowedNamed = (s.location_rules?.allowed_named_locations || [])
+            .map(n => n.toLowerCase());
+          if (allowedNamed.length > 0 && allowedNamed.some(n => locName.includes(n) || n.includes(locName))) {
+            score += 3;
+          }
+        }
+
+        // ── EXCLUDED LOCATION TYPES (hard block) ────────────────────────────
+        const excludedTypes = (s.location_rules?.excluded_location_types || []).map(t => t.toLowerCase());
+        if (excludedTypes.length > 0 && locProfile.archetype) {
+          const arch = locProfile.archetype.toLowerCase();
+          if (excludedTypes.some(t => arch.includes(t) || t.includes(arch))) {
+            score -= 10;
+          }
+        }
+
+        // ── TAG OVERLAP (generic, lowest weight) ────────────────────────────
         const sTags = (s.tags || []).map(t => t.toLowerCase());
-        const score = sTags.filter(t => allTags.includes(t)).length;
+        score += sTags.filter(t => allTags.includes(t)).length * 2;
+
         if (score > bestScore) {
           best      = s;
           bestScore = score;
         }
       }
 
-      return { scenario: bestScore >= 2 ? best : null, score: bestScore };
+      console.log(`📚 Vault best match: "${best?.name}" (score=${bestScore})`);
+      return { scenario: bestScore >= 6 ? best : null, score: bestScore };
     }
 
     // ── buildResourceSummary — intentionally empty; resources drive logic, not display ─
@@ -1800,7 +1881,12 @@ window.CC_APP = {
       const plotFamily = randomChoice(families);
       console.log('📖 Plot family:', plotFamily.name);
 
-      const { scenario: vaultScenario, score: maxMatchScore } = matchVaultScenario(plotFamily, locProfile, contextTags);
+      const { scenario: vaultScenario, score: maxMatchScore } = matchVaultScenario(
+        plotFamily, locProfile, contextTags,
+        state.factions, state.dangerRating,
+        state.locationType, state.selectedLocation
+      );
+      state.vaultScenario = vaultScenario;   // save for rendering
       if (vaultScenario) console.log(`📚 Vault match: ${vaultScenario.name} (${maxMatchScore} tags)`);
 
       // Objectives are generated first so the name and hook can reference their real names.
@@ -2272,6 +2358,165 @@ window.CC_APP = {
       return renderScenarioOutput();
     }
 
+    // ── VAULT RENDER HELPERS ─────────────────────────────────────────────────────
+    //   Called from renderScenarioOutput() when a vault scenario matched.
+
+    // Renders faction-specific victory conditions from the vault.
+    function renderVaultVictoryConditions(vaultScenario) {
+      const vc = vaultScenario.victory_conditions || {};
+      const factionKeys = Object.keys(vc).filter(k => k !== 'primary' && k !== 'secondary');
+
+      const FACTION_IDENTITY = {
+        monster_rangers: { color: '#4ade80', icon: 'fa-paw'    },
+        liberty_corps:   { color: '#60a5fa', icon: 'fa-shield' },
+        monsterology:    { color: '#a78bfa', icon: 'fa-flask'  },
+        monsters:        { color: '#ef4444', icon: 'fa-skull'  },
+        shine_riders:    { color: '#fbbf24', icon: 'fa-bolt'   },
+        crow_queen:      { color: '#c084fc', icon: 'fa-eye'    },
+      };
+
+      if (factionKeys.length === 0) {
+        return `
+          <div class="cc-vc-block">
+            <div class="cc-vc-primary">${vc.primary || 'Resolve the conflict.'}</div>
+            ${vc.secondary ? `<div class="cc-vc-secondary"><em>${vc.secondary}</em></div>` : ''}
+          </div>`;
+      }
+
+      const rows = factionKeys.map(k => {
+        const id    = FACTION_IDENTITY[k] || { color: '#ff7518', icon: 'fa-flag' };
+        const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        return `
+          <div style="border-left:3px solid ${id.color};padding:0.5rem 0.75rem;margin-bottom:0.5rem;
+                      background:rgba(0,0,0,0.25);border-radius:2px;">
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;
+                        color:${id.color};margin-bottom:0.2rem;">
+              <i class="fa ${id.icon}"></i> ${label}
+            </div>
+            <div style="font-size:0.88rem;line-height:1.45;">${vc[k]}</div>
+          </div>`;
+      }).join('');
+
+      return `
+        ${vc.primary ? `<div style="margin-bottom:0.75rem;padding:0.5rem 0.6rem;
+                         background:rgba(0,0,0,0.3);border-radius:3px;font-size:0.88rem;">
+                         <strong>Primary:</strong> ${vc.primary}</div>` : ''}
+        ${rows}
+        ${vc.secondary ? `<div style="margin-top:0.5rem;font-size:0.82rem;
+                           color:rgba(255,255,255,0.55);font-style:italic;">
+                           Secondary: ${vc.secondary}</div>` : ''}`;
+    }
+
+    // Renders monster pressure spawn info from the vault.
+    function renderVaultMonsterPressure(vaultScenario) {
+      const mp = vaultScenario.monster_pressure;
+      if (!mp || !mp.enabled) return '';
+      const bias  = (mp.spawn_bias || mp.bias || []).join(', ') || '—';
+      const round = mp.trigger_round ? `Arrives Round ${mp.trigger_round}` : 'Active from Round 1';
+      const notes = mp.notes || '';
+      return `
+        <div class="cc-scenario-section">
+          <h4><i class="fa fa-paw"></i> Monster Pressure</h4>
+          <p><strong>${round}</strong> &mdash; Bias: ${bias}</p>
+          ${notes ? `<p style="font-style:italic;color:rgba(255,255,255,0.6);font-size:0.85rem;">${notes}</p>` : ''}
+        </div>`;
+    }
+
+    // Renders Coffin Cough triggers from the vault.
+    function renderVaultCoffinCoughTriggers(vaultScenario) {
+      const triggers = vaultScenario.coffin_cough_triggers || [];
+      if (!triggers.length) return '';
+      const items = triggers.map(t =>
+        `<li>${t.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</li>`
+      ).join('');
+      return `
+        <div class="cc-scenario-section" style="border-left:3px solid #ef4444;">
+          <h4 style="color:#ef4444;"><i class="fa fa-exclamation-circle"></i> Coffin Cough Triggers</h4>
+          <ul style="padding-left:1.2rem;margin:0;font-size:0.87rem;line-height:1.8;">${items}</ul>
+        </div>`;
+    }
+
+    // Renders aftermath effects table from the vault.
+    function renderVaultAftermath(vaultScenario) {
+      const ae = vaultScenario.aftermath_effects || {};
+      if (!Object.keys(ae).length) return '';
+      const rows = Object.entries(ae).map(([key, val]) => {
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        let valStr;
+        if (typeof val === 'string')        valStr = val.replace(/_/g, ' ');
+        else if (Array.isArray(val))        valStr = val.join(', ');
+        else if (val && typeof val === 'object')
+          valStr = Object.entries(val)
+            .map(([k, v]) => `<em>${k.replace(/_/g,'·')}:</em> ${String(v).replace(/_/g,' ')}`)
+            .join(' &nbsp;|&nbsp; ');
+        else valStr = String(val);
+        return `<tr>
+          <td style="padding:5px 8px;font-size:0.72rem;text-transform:uppercase;
+                     letter-spacing:.05em;color:rgba(255,255,255,0.45);
+                     white-space:nowrap;vertical-align:top;">${label}</td>
+          <td style="padding:5px 8px;font-size:0.85rem;">${valStr}</td>
+        </tr>`;
+      }).join('');
+      return `
+        <div class="cc-scenario-section">
+          <h4><i class="fa fa-scroll"></i> Aftermath</h4>
+          <table style="border-collapse:collapse;width:100%;"><tbody>${rows}</tbody></table>
+        </div>`;
+    }
+
+    // Renders solo play block from the vault.
+    function renderVaultSoloPlay(vaultScenario) {
+      const sp = vaultScenario.solo_play;
+      if (!sp) return '';
+      return `
+        <div class="cc-scenario-section" style="border-left:3px solid #fbbf24;">
+          <h4 style="color:#fbbf24;"><i class="fa fa-user"></i> Solo Play</h4>
+          <p><strong>You play:</strong> ${sp.player_role}</p>
+          <p><strong>Opposition:</strong> ${sp.opposition}</p>
+          <p><strong>Win:</strong> ${sp.win_condition}</p>
+        </div>`;
+    }
+
+    // Renders vault objectives with their notes[] displayed.
+    function renderVaultObjectives(vaultScenario, locProfile) {
+      const objs = vaultScenario.objectives || [];
+      if (!objs.length) return '';
+      const items = objs.map((obj, i) => {
+        const type     = obj.id || obj.type || 'objective';
+        const resolved = makeObjectiveName(type, locProfile);
+        const roleLabel = i === 0 ? 'Primary Objective' : i === 1 ? 'Secondary Objective' : 'Objective';
+        const isPrimary = i === 0;
+        const notes     = (obj.notes || []).map(n => `<li>${n}</li>`).join('');
+        const interactions = (obj.interactions || []).length
+          ? `<div style="margin-top:0.3rem;font-size:0.78rem;color:rgba(255,255,255,0.45);">
+               Actions: ${obj.interactions.join(' · ')}
+             </div>` : '';
+        return `
+          <div class="cc-objective-card" style="${isPrimary ? 'border-left-width:3px;' : ''}">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+              <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;
+                           color:${isPrimary ? 'var(--cc-primary)' : 'rgba(255,255,255,0.35)'};">
+                ${isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>'} ${roleLabel}
+              </span>
+            </div>
+            <strong>${resolved}</strong>
+            ${obj.resource ? `<p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:0.2rem 0;">
+                               Resource: ${obj.resource.replace(/_/g, ' ')}</p>` : ''}
+            ${obj.count    ? `<p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:0.2rem 0;">
+                               Count: ${obj.count}</p>` : ''}
+            ${interactions}
+            ${notes ? `<ul style="margin:0.4rem 0 0 1rem;font-size:0.84rem;line-height:1.55;">${notes}</ul>` : ''}
+          </div>`;
+      }).join('');
+      return `
+        <div class="cc-scenario-section">
+          <h4><i class="fa fa-crosshairs"></i> Objectives</h4>
+          ${items}
+        </div>`;
+    }
+
+    // ── END VAULT RENDER HELPERS ─────────────────────────────────────────────────
+
     // ── renderScenarioOutput — full scenario card; shown after generation ──────────
     function renderScenarioOutput() {
       const s = state.scenario;
@@ -2338,32 +2583,35 @@ window.CC_APP = {
           </div>
 
           <!-- OBJECTIVES -->
+          ${state.vaultScenario
+            ? renderVaultObjectives(state.vaultScenario, s.loc_profile)
+            : `
           <div class="cc-scenario-section">
             <h4><i class="fa fa-crosshairs"></i> Objectives</h4>
             ${s.objectives.map((obj, i) => {
               const ROLE_LABELS = { primary: 'Primary Objective', secondary: 'Secondary Objective', standalone: 'Objective' };
-              const roleLabel   = ROLE_LABELS[obj.role] || `Objective ${i + 1}`;
+              const roleLabel   = ROLE_LABELS[obj.role] || \`Objective \${i + 1}\`;
               const isPrimary   = obj.role === 'primary';
-              return `
-              <div class="cc-objective-card" style="${isPrimary ? 'border-left-width:3px;' : ''}">
+              return \`
+              <div class="cc-objective-card" style="\${isPrimary ? 'border-left-width:3px;' : ''}">
                 <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
-                  <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:${isPrimary ? 'var(--cc-primary)' : 'rgba(255,255,255,0.35)'};">
-                    ${isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>'} ${roleLabel}
+                  <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:\${isPrimary ? 'var(--cc-primary)' : 'rgba(255,255,255,0.35)'};">
+                    \${isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>'} \${roleLabel}
                   </span>
                 </div>
-                <strong>${obj.name}</strong>
-                <p>${obj.description}</p>
-                <p class="cc-vp-line"><i class="fa fa-star"></i> ${obj.vp_base} VP base</p>
-                ${obj.chain_link ? `
+                <strong>\${obj.name}</strong>
+                <p>\${obj.description}</p>
+                <p class="cc-vp-line"><i class="fa fa-star"></i> \${obj.vp_base} VP base</p>
+                \${obj.chain_link ? \`
                   <div style="margin-top:0.5rem;padding:0.4rem 0.6rem;background:rgba(255,117,24,0.08);border-left:2px solid var(--cc-primary);border-radius:2px;font-size:0.82rem;">
                     <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--cc-primary);margin-bottom:0.2rem;"><i class="fa fa-link"></i> Tactical Link</div>
-                    ${obj.chain_link_intro ? `<div style="color:rgba(255,255,255,0.5);font-size:0.78rem;margin-bottom:0.15rem;font-style:italic;">${obj.chain_link_intro}</div>` : ''}
-                    <div>${obj.chain_link}</div>
-                  </div>` : ''}
-                ${obj.special ? `<p><em><i class="fa fa-exclamation-triangle"></i> Special: ${obj.special}</em></p>` : ''}
-              </div>`;
+                    \${obj.chain_link_intro ? \`<div style="color:rgba(255,255,255,0.5);font-size:0.78rem;margin-bottom:0.15rem;font-style:italic;">\${obj.chain_link_intro}</div>\` : ''}
+                    <div>\${obj.chain_link}</div>
+                  </div>\` : ''}
+                \${obj.special ? \`<p><em><i class="fa fa-exclamation-triangle"></i> Special: \${obj.special}</em></p>\` : ''}
+              </div>\`;
             }).join('')}
-          </div>
+          </div>`}
 
           <!-- BOARD SETUP TABLE -->
           ${s.objective_markers?.length ? `
@@ -2397,12 +2645,16 @@ window.CC_APP = {
             </div>
           ` : ''}
 
-          <!-- MONSTER PRESSURE: data kept in save for Turn Counter app, not shown here -->
+          <!-- MONSTER PRESSURE -->
+          ${state.vaultScenario ? renderVaultMonsterPressure(state.vaultScenario) : ''}
+          ${state.vaultScenario ? renderVaultCoffinCoughTriggers(state.vaultScenario) : ''}
 
           <!-- VICTORY CONDITIONS -->
           <div class="cc-scenario-section">
             <h4><i class="fa fa-trophy"></i> Victory Conditions</h4>
-            ${Object.entries(s.victory_conditions).map(([factionId, vc]) => {
+            ${state.vaultScenario && Object.keys(state.vaultScenario.victory_conditions || {}).length > 0
+              ? renderVaultVictoryConditions(state.vaultScenario)
+              : Object.entries(s.victory_conditions).map(([factionId, vc]) => {
 
               const FACTION_IDENTITY = {
                 monster_rangers: { color: '#4ade80', border: '#166534', icon: 'fa-paw',        tag: 'Protectors of the Canyon' },
@@ -2466,15 +2718,21 @@ window.CC_APP = {
                 </div>
               </div>`;
             }).join('')}
+            }
           </div>
 
           <!-- AFTERMATH -->
-          ${s.aftermath ? `
+          ${state.vaultScenario && Object.keys(state.vaultScenario.aftermath_effects || {}).length > 0
+            ? renderVaultAftermath(state.vaultScenario)
+            : s.aftermath ? `
             <div class="cc-scenario-section">
               <h4><i class="fa fa-scroll"></i> Aftermath</h4>
               <p>${s.aftermath}</p>
             </div>
           ` : ''}
+
+          <!-- SOLO PLAY (vault only, solo mode only) -->
+          ${state.gameMode === 'solo' && state.vaultScenario ? renderVaultSoloPlay(state.vaultScenario) : ''}
 
           ${s.vault_source ? `
             <div class="cc-scenario-section">
@@ -2675,6 +2933,7 @@ window.CC_APP = {
     window.setLocationType = function(type) {
       state.locationType     = type;
       state.selectedLocation = null;
+      state.vaultScenario    = null;
       render();
     };
 
