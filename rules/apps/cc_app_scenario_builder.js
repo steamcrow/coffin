@@ -3553,8 +3553,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       }, holdFor);
     });
 
-  } // end init()
-}; // end window.CC_APP
-}
+} // This closes the init() function
+  } // This closes the window.CC_APP object
 };
 console.log("✅ CC_APP defined and ready");
