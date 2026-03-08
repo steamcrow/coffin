@@ -157,7 +157,8 @@
       },
       "abilities": [
         "Interact",
-        "Quick Draw"
+        "Quick Draw",
+        "Gas Mask"
       ],
       "lore": "Expendable Thyr harvesters. They wear thick gloves because the crystals burn bare skin, and they learned that lesson the hard way. Most of them are missing at least one finger.",
       "tactics": "Your primary Interact engine. Rush them forward behind faster units and spend every action extracting. They are tools, not fighters. Do not expect them to survive.",
@@ -198,10 +199,11 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
         },
         {
           "name": "Mounted",
@@ -234,7 +236,8 @@
       "abilities": [
         "Fast",
         "Runner",
-        "Boardwalk Blitzer"
+        "Boardwalk Blitzer",
+        "Gas Mask"
       ],
       "lore": "Half courier, half gambler. Shard Runners bet their lives on being faster than bullets. Most of the time they are right. The ones who aren't don't come back to argue about it.",
       "tactics": "Fastest objective grabbers in the faction. Deploy wide, hit the closest objective, and immediately angle toward the table edge. Boardwalk Blitzer makes them terrifying on urban boards. Never trade shots.",
@@ -275,10 +278,11 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
         },
         {
           "name": "Mounted",
@@ -310,7 +314,8 @@
       },
       "abilities": [
         "Interact",
-        "Demolition"
+        "Demolition",
+        "Gas Mask"
       ],
       "lore": "They 'mine' claims the old-fashioned way: by hiding charges in them and walking away. The Bootboomer's favourite phrase is 'their problem now.'",
       "tactics": "Interact with Thyr Crystals or Buildings to place Claim Markers instead of extracting \u2014 poisoning the well for enemies. Send them forward early, salt multiple objectives, then abandon them. The traps do the rest.",
@@ -353,10 +358,11 @@
       },
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
         },
         {
           "name": "Mounted",
@@ -389,7 +395,8 @@
       },
       "abilities": [
         "Steal",
-        "Interact"
+        "Interact",
+        "Gas Mask"
       ],
       "lore": "Specialists in ripping value off living targets. Hookblades strip weapons. Magnet hooks pull supplies. Crowbars handle everything else. They have never met a thing they couldn't remove from someone who wanted to keep it.",
       "tactics": "Target high-value enemy units \u2014 Leaders, Specialists, anything with expensive upgrades. A successful Steal destroys the upgrade rather than transferring it, which is usually enough. Keep one Scrapjack near the Shine Boss for the re-roll support.",
@@ -430,10 +437,11 @@
       },
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
         },
         {
           "name": "Mounted",
@@ -466,7 +474,8 @@
       },
       "abilities": [
         "Scout",
-        "Suppression"
+        "Suppression",
+        "Gas Mask"
       ],
       "lore": "Mounted dust-throwers who learned that the canyon's worst weapon is its air. They fill leather pouches with alkali dust, ride in fast, and throw the canyon itself into your eyes.",
       "tactics": "Deploy via Scout to apply Suppression on Turn 1 before the enemy can react. Hit the unit most likely to contest your extractors and waste their activations. Keep riding \u2014 Cavalry Disengage means you can never be pinned. Gas Masks make them immune to their own dust.",
@@ -511,10 +520,11 @@
       },
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough, Blinding, and Choking Dust effects."
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
         }
       ]
     },
@@ -537,7 +547,8 @@
       },
       "abilities": [
         "Demolition",
-        "Fearless"
+        "Fearless",
+        "Gas Mask"
       ],
       "lore": "Blast Jack carries more dynamite than sense. The Shine Riders love him for it. Everyone else has learned to keep their distance when he starts smiling.",
       "tactics": "Use Demolition to destroy cover, open walls for extraction paths, and panic Monster units with Scare Tactics. Position behind cover \u2014 Volatile Cargo makes his death dangerous for both sides, which enemies will remember.",
@@ -580,10 +591,11 @@
       },
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
         },
         {
           "name": "Mounted",
@@ -617,7 +629,8 @@
       "abilities": [
         "Anchor",
         "Suppression",
-        "Immobile"
+        "Immobile",
+        "Gas Mask"
       ],
       "lore": "A gatling gun welded to a wagon frame and pointed at whatever is approaching the extraction team. It does not move quickly. It does not need to.",
       "tactics": "Deploy in the second rank covering your extractors' flank. Anchor early and Suppress anything that tries to contest your Glowhands. Immobile means placement is everything \u2014 think before you commit. A well-placed Wagon Gat buys multiple turns of free Interact actions.",
@@ -658,10 +671,11 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
         },
         {
           "name": "Spare Parts",
@@ -690,7 +704,8 @@
       "abilities": [
         "Hex",
         "Stealth",
-        "Unleashed Power"
+        "Unleashed Power",
+        "Gas Mask"
       ],
       "lore": "Nobody hired her for the Thyr magic. She came with the canyon. She seems to find the caches before anyone else does, which makes her useful and unsettling in equal measure.",
       "tactics": "Hex the enemy unit most likely to contest your extraction \u2014 -1 Quality is devastating on a Leader or high-Q fighter. Use Stealth to stay alive. Wild Magic Table is a last resort; the results are chaotic but occasionally faction-changing. Limit 0-1 per force.",
@@ -737,10 +752,93 @@
       },
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
+        },
+        {
+          "name": "Mounted",
+          "cost": 8,
+          "type": "Upgrade",
+          "effect": "Gain the Mounted ability: +3\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "stat_modifiers": {
+            "move": 3
+          },
+          "grants_ability": "Mounted"
+        }
+      ]
+    },
+    {
+      "name": "Canyon Jackals",
+      "faction": "Shine Riders",
+      "type": "Rogue",
+      "cost": 108,
+      "quality": 3,
+      "defense": 1,
+      "move": 7,
+      "range": 4,
+      "weapon": "Switchblade & Boot Pistol",
+      "weapon_properties": [
+        "Melee",
+        "Light"
+      ],
+      "composition": {
+        "per_points": 300
+      },
+      "abilities": [
+        "Stealth",
+        "Gas Mask"
+      ],
+      "lore": "The ones you do not see coming. Canyon Jackals run light, fight dirty, and live by one rule: never be the second one to draw. They pick isolated targets, close fast, and are usually gone before their victim hits the ground.",
+      "tactics": "Deploy wide to threaten isolated enemy units \u2014 a Leader caught alone, an extractor out of support range. First Strike means you always attack before a charge resolves against you. Use Stealth to close distance without return fire. Backstab punishes enemies who thought they had numbers. Not a brawler \u2014 a scalpel.",
+      "unit_tags": [
+        "rogue",
+        "melee",
+        "stealth",
+        "first_strike",
+        "assassin",
+        "fast"
+      ],
+      "terrain_preferences": [
+        "cover",
+        "ruins",
+        "chokepoints",
+        "urban",
+        "dense_shadows"
+      ],
+      "objective_keywords": [
+        "assassination",
+        "isolation",
+        "disruption",
+        "flanking"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Lawless",
+          "Haunted",
+          "Strangewild"
+        ],
+        "bad_in": [
+          "Liberated"
+        ]
+      },
+      "special_scenarios": [
+        "assassination",
+        "ambush",
+        "disruption"
+      ],
+      "special_mechanics": {
+        "backstab": "If this unit attacks a target that has not yet activated this round, it gains +1 die on the attack roll. If the target is also Suppressed, gain +2 dice instead."
+      },
+      "optional_upgrades": [
+        {
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
         },
         {
           "name": "Mounted",
@@ -773,7 +871,8 @@
       "abilities": [
         "Authority",
         "Inspire",
-        "Fearless"
+        "Fearless",
+        "Gas Mask"
       ],
       "lore": "Every Shine Riders crew runs on one person's nerve and everyone else's fear of disappointing them. The Shine Boss is that person. They do not stay to fight. They stay until every unit with something valuable has made it to the edge. Then they leave.",
       "tactics": "Keep the Shine Boss central to your extraction cluster and within 6\" of as many units as possible. The aura rewards retreating \u2014 use it deliberately. Inspire adds dice when you need a critical Interact or attack to succeed. Authority keeps panicking units functional.",
@@ -814,12 +913,6 @@
       },
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
-        },
-        {
           "name": "Spare Horse",
           "cost": 8,
           "type": "Gear",
@@ -857,7 +950,8 @@
       "abilities": [
         "Brace",
         "Anchor",
-        "Suppression"
+        "Suppression",
+        "Gas Mask"
       ],
       "lore": "A roaming Trojan wagon \u2014 windmill-driven, loud as sin, dressed up like a monster to bait the canyon's horrors. Nobody inside. Nothing to lose. The Shine Riders built it to be feared, chased, and survived by anyone who isn't standing next to it when something wrong happens.",
       "tactics": "Two modes: roaming Monster Bait (keep unanchored, use Windmill Drive to draw monsters and fire away from your real plan) or Sniper Tower (Anchor early, gain +6\" Range, count as Cover). Never use it as a front-line fighter \u2014 it is a distraction tool with Titan durability. Windmill Drive is mandatory when unanchored; plan your deployment accordingly.",
@@ -905,10 +999,11 @@
       },
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
-          "cost": 3,
-          "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects. Applied to the Cart's crew slot."
+          "name": "Sixguns",
+          "cost": 7,
+          "type": "Weapon",
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
+          "stat_modifiers": {}
         },
         {
           "name": "Spare Parts",
