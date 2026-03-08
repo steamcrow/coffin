@@ -475,8 +475,8 @@
     {
       "name": "Warrant Officer",
       "faction": "Liberty Corps",
-      "type": "Elite",
-      "cost": 180,
+      "type": "Leader",
+      "cost": 190,
       "quality": 5,
       "defense": 3,
       "move": 7,
@@ -488,7 +488,7 @@
       "weapon_effects": [
         {
           "name": "Restraint Rig",
-          "effect": "Built to convert contact into containment—best used immediately after a successful Grapple."
+          "effect": "Built to convert contact into containment — best used immediately after a successful Grapple."
         }
       ],
       "composition": {
@@ -521,7 +521,7 @@
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
-          "cost": 3,
+          "cost": 5,
           "type": "Gear",
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
@@ -967,7 +967,7 @@
         }
       ],
       "composition": {
-        "per_points": 800
+        "per_points": 5000
       },
       "abilities": [
         {
@@ -1036,5 +1036,5 @@
   ],
   "optional_upgrades_note": "Federal Gas Mask is intentionally priced and worded to match the Monster Rangers Gas Mask option (3 points) while mapping to your D-dictionary protections (gas_mask + built_in_goggles). Cold-Iron restraint rules are written to be actionable without inventing new core subsystems.",
   "_point_formula_version": "3.0",
-  "_recalculated": "2026-03-07"
+  "_recalculated": "2026-03-08"
 }
