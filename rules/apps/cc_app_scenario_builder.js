@@ -947,7 +947,8 @@ window.CC_APP = {
     //   +2  per matching tag (generic overlap)
     //  -10  if archetype in excluded_location_types (hard block)
     //
-    // THRESHOLD: 6 (old system used 2 — near-random matches)
+    // THRESHOLD: 14 — requires faction + danger match + meaningful tag overlap.
+    // A score of 5 (faction only) or 4 (danger only) won't trigger vault.
     //
     function matchVaultScenario(plotFamily, locProfile, contextTags,
                                 selectedFactions = [], selectedDanger = 3,
@@ -1040,7 +1041,7 @@ window.CC_APP = {
       }
 
       console.log(`📚 Vault best match: "${best?.name}" (score=${bestScore})`);
-      return { scenario: bestScore >= 6 ? best : null, score: bestScore };
+      return { scenario: bestScore >= 14 ? best : null, score: bestScore };
     }
 
     // ── buildResourceSummary — intentionally empty; resources drive logic, not display ─
@@ -3273,10 +3274,8 @@ window.CC_APP = {
             ${renderLocationMapEmbed()}
           </div>
 
-          <!-- OBJECTIVES -->
-          ${state.vaultScenario
-            ? renderVaultObjectives(state.vaultScenario, s.loc_profile)
-            : renderObjectivesSection(s.objectives)}
+          <!-- OBJECTIVES — always use the rich objective renderer -->
+          ${renderObjectivesSection(s.objectives)}
 
           <!-- BOARD SETUP TABLE -->
           ${s.objective_markers?.length ? `
@@ -3313,12 +3312,10 @@ window.CC_APP = {
           <!-- MONSTER PRESSURE -->
           <!-- Monster Pressure and Coffin Cough data is used by Turn Counter app only -->
 
-          <!-- VICTORY CONDITIONS -->
+          <!-- VICTORY CONDITIONS — always use per-faction card renderer -->
           <div class="cc-scenario-section">
             <h4><i class="fa fa-trophy"></i> Victory Conditions</h4>
-            ${state.vaultScenario && Object.keys(state.vaultScenario.victory_conditions || {}).length > 0
-              ? renderVaultVictoryConditions(state.vaultScenario)
-              : renderVictoryConditions(s.victory_conditions)}
+            ${renderVictoryConditions(s.victory_conditions)}
           </div>
 
           <!-- AFTERMATH -->
