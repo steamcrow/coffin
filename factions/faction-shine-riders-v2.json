@@ -885,9 +885,6 @@
         "Hex",
         "Pierce"
       ],
-      "composition": {
-        "per_points":
-      },
       "unique": true,
       "max_count": 1,
       "abilities": [
