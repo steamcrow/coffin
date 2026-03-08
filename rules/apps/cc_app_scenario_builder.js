@@ -2893,7 +2893,7 @@ window.CC_APP = {
     // ── VICTORY CONDITIONS RENDERER ──────────────────────────────────────────────
     //   Renders per-faction victory cards with SVG logos, Primary/Secondary labels.
 
-    var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/coffin_rules_apps/';
+    var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/';
 
     var FACTION_IDENTITY = {
       monster_rangers: { color: '#4ade80', border: '#166534', logo: 'monster_rangers_logo.svg', tag: 'Protectors of the Canyon' },
