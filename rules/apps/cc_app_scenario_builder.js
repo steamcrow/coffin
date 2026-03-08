@@ -3552,8 +3552,6 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         }
 }, holdFor);
     });
-
   } // 1. This closes the init() function
 }; // 2. This closes the window.CC_APP object
-
 console.log("✅ CC_APP defined and ready");
