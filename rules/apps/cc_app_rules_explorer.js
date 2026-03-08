@@ -1,110 +1,46 @@
-// ================================
-// Rules Explorer App
-// File: steamcrow/rules/apps/cc_app_rules_explorer.js
-// ================================
+// ── cc_app_scenario_builder.js ──────────────────────────────────────────────
+// Coffin Canyon · Scenario Builder
+// Loaded by cc_loader_core.js and mounted as window.CC_APP.
+//
+// SECTION MAP
+//   ~   8  Init, CSS loading, inline styles (pulse / mini-map / print)
+//   ~ 347  App state + faction registry
+//   ~ 376  Data loading (JSON files + faction data from GitHub)
+//   ~ 441  Map embed URLs and Leaflet helper functions
+//   ~ 508  Utilities  (randomChoice, randomInt, getDangerDescription)
+//   ~ 532  Small helpers  (cargo name, campaign state lookup)
+//   ~ 558  buildLocationProfile
+//   ~ 651  buildResourceSummary  (intentionally empty)
+//   ~ 660  generateNarrativeHook
+//   ~ 732  generateScenarioNameFromTags
+//   ~ 784  generateMonsterPressure  (data only — not displayed; feeds Turn Counter)
+//   ~ 834  generateAftermath
+//   ~ 851  Objective engine  (scoring, names, descriptions, VP)
+//   ~1273  Objective marker table + generateObjectiveMarkers
+//   ~1337  Victory condition tables  (approaches, flavor text, motives)
+//   ~1564  Tactical Link  (chain verbs, intros, generateObjectiveChain)
+//   ~1603  generateVictoryConditions + buildFactionFinale / buildFactionAftermath
+//   ~1809  window.generateScenario  — main generation entry point
+//   ~1905  Location map embed  (two-panel Leaflet view)
+//   ~2090  Accordion step wrapper
+//   ~2108  Step renders  (renderStep1 – renderStep4)
+//   ~2337  renderScenarioOutput
+//   ~2559  renderSummaryPanel
+//   ~2603  render()  — master render dispatcher
+//   ~2677  Event handlers  (setGameMode, toggleFaction, openStep, etc.)
+//   ~2788  window.printScenario  — opens a clean standalone print window
+//   ~3141  Save / Load  (CC_STORAGE, cloud sync, slide panel)
+//   ~3341  Boot  (splash screen, loadGameData, fade transition)
+// ─────────────────────────────────────────────────────────────────────────────
 
-console.log("📘 Rules Explorer app loaded");
+
+console.log("🎲 Scenario Builder app loaded");
 
 window.CC_APP = {
-  async init({ root, ctx }) {
-    console.log("🚀 Rules Explorer init", ctx);
+  init({ root, ctx }) {
+    console.log("🚀 Scenario Builder init", ctx);
 
-    // ---- INJECT CRITICAL LAYOUT CSS IMMEDIATELY (synchronous, no flicker) ----
-    // This guarantees the 3-column grid and key layout classes work instantly,
-    // even before the async GitHub CSS has arrived.
-    if (!document.getElementById('cc-rules-critical-styles')) {
-      const critical = document.createElement('style');
-      critical.id = 'cc-rules-critical-styles';
-      critical.textContent = `
-        /* Critical layout — renders immediately without waiting for GitHub */
-        .cc-app-shell { background: #0f0f0f; color: #e0e0e0; display: flex; flex-direction: column; height: 100%; font-family: sans-serif; }
-        .cc-app-shell.cc-premium { background: radial-gradient(1200px 600px at 20% 0%, rgba(255,117,24,.10), transparent 60%), linear-gradient(180deg,#141414,#0f0f0f); }
-        .cc-app-header { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); flex-wrap: wrap; gap: 0.5rem; }
-        .cc-app-title { font-size: 1.5rem; color: #ff7518; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; }
-        .cc-app-subtitle { font-size: 0.75rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.15em; }
-        .cc-rules-explorer { display: grid; grid-template-columns: 280px 1fr 240px; gap: 1rem; height: calc(100% - 60px); padding: 1rem; box-sizing: border-box; }
-        .cc-rules-explorer.focus-mode { grid-template-columns: 0 1fr 0; gap: 0; }
-        .cc-rules-explorer.focus-mode .cc-rules-sidebar,
-        .cc-rules-explorer.focus-mode .cc-rules-context { display: none; }
-        .cc-rules-sidebar, .cc-rules-main, .cc-rules-context { min-width: 0; overflow: hidden; }
-        .cc-rules-main { overflow-y: auto; }
-        .cc-panel { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
-        .cc-panel-head { padding: 10px 14px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
-        .cc-panel-title { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: rgba(255,255,255,0.5); margin: 0; }
-        .cc-body { padding: 12px; overflow-y: auto; flex: 1; }
-        .cc-list { display: flex; flex-direction: column; gap: 4px; padding: 8px; overflow-y: auto; flex: 1; }
-        .cc-list-item { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07); border-radius: 6px; padding: 8px 10px; cursor: pointer; color: #e0e0e0; font-size: 0.85rem; text-align: left; width: 100%; transition: background 0.15s; }
-        .cc-list-item:hover { background: rgba(255,117,24,0.08); border-color: rgba(255,117,24,0.3); }
-        .cc-list-item.active { background: rgba(255,117,24,0.15); border-color: rgba(255,117,24,0.5); }
-        .cc-list-title { font-weight: 600; line-height: 1.3; }
-        .cc-list-sub { font-size: 0.72rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1px; }
-        .cc-rule-reader { padding: 2rem; line-height: 1.7; font-size: 16px; }
-        .cc-rule-reader ul, .cc-rule-reader ol { margin-left: 1.5rem; margin-bottom: 1rem; text-align: left !important; }
-        .cc-rule-reader li { margin-bottom: 0.4rem; text-align: left !important; }
-        .cc-rule-content ul, .cc-rule-content ol { margin-left: 1.5rem; margin-bottom: 1rem; text-align: left !important; }
-        .cc-rule-content li { margin-bottom: 0.4rem; text-align: left !important; }
-        .cc-rule-article { max-width: 700px; }
-        .cc-rule-title { font-size: 2rem; font-weight: 700; color: #ff7518; margin-bottom: 1.5rem; }
-        .cc-section-title { font-size: 1.2rem; font-weight: 600; color: #e8e8e8; margin: 2rem 0 1rem; }
-        .cc-field-label { font-size: 0.8rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #888; margin-bottom: 0.4rem; }
-        .cc-muted { color: rgba(255,255,255,0.4); font-style: italic; padding: 0.5rem 0; }
-        .cc-kv { display: flex; gap: 0.75rem; }
-        .cc-k { font-weight: 600; color: #aaa; min-width: 120px; }
-        .cc-v { color: #e0e0e0; }
-        .cc-ability-card { background: rgba(255,117,24,0.05); border: 1px solid rgba(255,117,24,0.15); border-radius: 6px; transition: border-color 0.2s; }
-        .cc-badge { background: rgba(255,117,24,0.12); color: #ff9147; border-radius: 4px; font-size: 0.75rem; padding: 2px 8px; }
-        .cc-callout { background: rgba(255,117,24,0.08); border-left: 3px solid #ff7518; border-radius: 4px; padding: 0.75rem 1rem; }
-        .cc-rule-nav { display: flex; justify-content: space-between; padding: 1rem 2rem; border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
-        .cc-input { background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); border-radius: 6px; color: #e0e0e0; padding: 0.35rem 0.6rem; width: 100%; font-size: 0.85rem; }
-        .cc-input::placeholder { color: rgba(255,255,255,0.3); }
-        .cc-breadcrumb-link { background: none; border: none; color: #ff7518; cursor: pointer; font-size: inherit; padding: 0; text-decoration: underline; }
-        .cc-breadcrumb-current { color: #e8e8e8; }
-        .cc-stat-badge { display: inline-flex; align-items: center; gap: 4px; background: rgba(255,255,255,0.07); border-radius: 4px; padding: 2px 8px; }
-        .cc-stat-label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; opacity: 0.7; }
-        .cc-stat-value { font-weight: 700; }
-        .stat-q { color: #4ade80; } .stat-q-border { border: 1px solid rgba(74,222,128,0.3); }
-        .stat-d { color: #60a5fa; } .stat-d-border { border: 1px solid rgba(96,165,250,0.3); }
-        .stat-m { color: #f59e0b; } .stat-m-border { border: 1px solid rgba(245,158,11,0.3); }
-        .stat-r { color: #f87171; } .stat-r-border { border: 1px solid rgba(248,113,113,0.3); }
-        .cc-nav-group button[data-toggle-group]:hover { background: rgba(255,255,255,0.08) !important; }
-        @media (max-width: 992px) {
-          .cc-rules-explorer { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: auto; }
-          .cc-rules-context { display: none; }
-        }
-        @media print {
-          /* Hide all UI chrome */
-          .cc-rules-sidebar, .cc-rules-context, .cc-panel-head, .cc-rule-nav,
-          .cc-app-header, .cc-rules-actions, button, .cc-nav-group { display: none !important; }
-          /* Full-width single column */
-          .cc-rules-explorer { display: block !important; padding: 0 !important; }
-          .cc-rules-main { max-width: 100% !important; overflow: visible !important; height: auto !important; }
-          .cc-rule-reader { padding: 0.25in 0 !important; max-width: 100% !important; font-size: 10pt !important; line-height: 1.45 !important; }
-          /* Page setup — tight margins */
-          @page { margin: 0.6in 0.65in; }
-          /* Typography */
-          body, p, li, td { color: #000 !important; background: #fff !important; font-size: 10pt !important; }
-          .cc-rule-title { color: #000 !important; font-size: 16pt !important; margin-bottom: 8pt !important; border-bottom: 1.5pt solid #000; padding-bottom: 4pt; }
-          .cc-section-title { color: #000 !important; font-size: 12pt !important; margin-top: 10pt !important; margin-bottom: 4pt !important; }
-          .cc-field-label { color: #444 !important; font-size: 8pt !important; margin-bottom: 2pt !important; letter-spacing: 0.08em; }
-          /* Compact ability cards — two per row on paper */
-          .cc-ability-card { border: 0.75pt solid #999 !important; background: #fff !important;
-            padding: 5pt 7pt !important; margin-bottom: 5pt !important;
-            page-break-inside: avoid; break-inside: avoid; }
-          .cc-ability-card strong { font-size: 9.5pt !important; color: #000 !important; }
-          .cc-ability-card p, .cc-ability-card span { font-size: 9pt !important; color: #222 !important; }
-          .cc-badge { border: 0.5pt solid #aaa !important; background: #f5f5f5 !important; color: #000 !important; font-size: 7.5pt !important; }
-          /* Suppress orphans */
-          p, li { orphans: 3; widows: 3; }
-          h2,h3,h4,h5,h6 { page-break-after: avoid; }
-          /* Remove link underlines */
-          a { text-decoration: none !important; color: #000 !important; }
-        }
-      `;
-      document.head.appendChild(critical);
-      console.log('✅ Critical layout CSS injected immediately');
-    }
-
-    // ---- LOAD FULL CSS FROM GITHUB (enhances everything above) ----
+    // Load shared UI CSS and app-specific CSS from GitHub raw URLs.
     if (!document.getElementById('cc-core-ui-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
         .then(res => res.text())
@@ -118,19 +54,294 @@ window.CC_APP = {
         .catch(err => console.error('❌ Core CSS load failed:', err));
     }
 
-    if (!document.getElementById('cc-rules-explorer-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_rules_explorer.css?t=' + Date.now())
+    if (!document.getElementById('cc-scenario-builder-styles')) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_scenario_builder.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
-          style.id = 'cc-rules-explorer-styles';
+          style.id = 'cc-scenario-builder-styles';
           style.textContent = css;
           document.head.appendChild(style);
-          console.log('✅ Rules Explorer CSS applied!');
+          console.log('✅ Scenario Builder CSS applied!');
         })
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
+    // Inline styles: splash logo pulse, mini-map double border, and print rules.
+    if (!document.getElementById('cc-scenario-inline-styles')) {
+      const style = document.createElement('style');
+      style.id = 'cc-scenario-inline-styles';
+      style.textContent = `
+        /* ---- State badges ---- */
+        .cc-state-def {
+          font-size: 0.78rem;
+          color: rgba(255,255,255,0.45);
+          font-style: italic;
+        }
+        .cc-state-badge {
+          display: inline-block;
+          vertical-align: middle;
+        }
+
+        /* ---- Splash logo pulse ---- */
+        @keyframes cc-logo-pulse {
+          0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
+          50%  { filter: drop-shadow(0 0 48px rgba(255,117,24,0.85)); transform: scale(1.03); }
+          100% { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
+        }
+        .cc-splash-logo {
+          animation: cc-logo-pulse 2.4s ease-in-out infinite;
+        }
+
+        /* ---- Mini-map left panel double-border ---- */
+        #cc-scenario-map-overview {
+          outline: 2px solid rgba(255,117,24,0.55);
+          outline-offset: -1px;
+          box-shadow:
+            inset 0 0 0 4px rgba(0,0,0,0.7),
+            0 0 0 3px rgba(255,117,24,0.18),
+            0 0 18px rgba(255,117,24,0.25);
+        }
+
+        /* ============================================================
+           PRINT STYLES
+           Loads cc_print.css via JS (below) then these rules override
+           anything specific to the scenario builder output.
+           ============================================================ */
+        @media print {
+
+          /* Hide everything that isn't the scenario output */
+          body > *:not(#cc-print-root),
+          .cc-app-header,
+          .cc-scenario-sidebar,
+          .cc-scenario-builder-layout,
+          .cc-summary-sidebar,
+          .cc-form-actions,
+          .cc-accordion-header,
+          #cc-splash-screen,
+          nav, header, footer,
+          .cc-btn,
+          button,
+          [onclick] { display: none !important; }
+
+          /* Show only the scenario output card */
+          .cc-scenario-result,
+          .cc-scenario-full-layout { display: block !important; }
+
+          /* Base page */
+          html, body, div, p, h1, h2, h3, h4, h5, span, ul, li, table, tr, td, th {
+            -webkit-print-color-adjust: exact; print-color-adjust: exact;
+          }
+          html, body {
+            background: #fff !important;
+            color: #111 !important;
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 11pt;
+            line-height: 1.55;
+            margin: 0;
+            padding: 0;
+          }
+
+          /* Outer wrapper — full width, no chrome */
+          .cc-scenario-result {
+            width: 100% !important;
+            max-width: 100% !important;
+            background: #fff !important;
+            color: #111 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            border: none !important;
+          }
+
+          /* Title */
+          .cc-scenario-result h3 {
+            font-size: 22pt !important;
+            font-weight: 700 !important;
+            color: #111 !important;
+            border-bottom: 2.5pt solid #111 !important;
+            padding-bottom: 6pt !important;
+            margin-bottom: 10pt !important;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            page-break-after: avoid;
+          }
+
+          /* Narrative hook */
+          .cc-scenario-hook {
+            font-style: italic !important;
+            font-size: 11pt !important;
+            color: #333 !important;
+            background: none !important;
+            border-left: 3pt solid #555 !important;
+            padding: 6pt 10pt !important;
+            margin-bottom: 14pt !important;
+            border-radius: 0 !important;
+          }
+
+          /* Section headers */
+          .cc-scenario-section { page-break-inside: avoid; margin-bottom: 14pt !important; }
+          .cc-scenario-section h4 {
+            font-size: 12pt !important;
+            font-weight: 700 !important;
+            color: #111 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.08em !important;
+            border-bottom: 1pt solid #999 !important;
+            padding-bottom: 3pt !important;
+            margin-bottom: 8pt !important;
+          }
+          .cc-scenario-section h4 i { display: none !important; }
+
+          /* Location state block */
+          .cc-state-block { margin-bottom: 8pt !important; }
+          .cc-state-badge {
+            font-weight: 700 !important;
+            font-size: 10pt !important;
+            color: #111 !important;
+            background: #eee !important;
+            border: 1pt solid #999 !important;
+            border-radius: 2pt !important;
+            padding: 1pt 5pt !important;
+          }
+          .cc-state-def { color: #555 !important; font-size: 9.5pt !important; }
+
+          /* Objectives */
+          .cc-objective-card {
+            background: none !important;
+            border: 1pt solid #ccc !important;
+            border-left: 3pt solid #555 !important;
+            border-radius: 0 !important;
+            padding: 6pt 8pt !important;
+            margin-bottom: 6pt !important;
+            page-break-inside: avoid;
+          }
+          .cc-objective-card strong { font-size: 11pt !important; color: #111 !important; }
+          .cc-objective-card p      { font-size: 10pt !important; color: #333 !important; margin: 3pt 0 !important; }
+          .cc-vp-line               { font-size: 9.5pt !important; color: #555 !important; }
+          .cc-vp-line i             { display: none !important; }
+
+          /* Chain link box */
+          .cc-objective-card p[style*="fa-link"] {
+            background: #f5f5f5 !important;
+            border-left: 2pt solid #555 !important;
+            color: #333 !important;
+            font-size: 9.5pt !important;
+          }
+
+          /* Board setup table */
+          .cc-marker-table {
+            width: 100% !important;
+            font-size: 9.5pt !important;
+            border-collapse: collapse !important;
+          }
+          .cc-marker-table th {
+            background: #222 !important;
+            color: #fff !important;
+            padding: 4pt 6pt !important;
+            text-align: left !important;
+            font-size: 8.5pt !important;
+          }
+          .cc-marker-table td {
+            border-bottom: 0.5pt solid #ddd !important;
+            padding: 4pt 6pt !important;
+            color: #111 !important;
+            vertical-align: top !important;
+          }
+          .cc-marker-token   { font-size: 8.5pt !important; color: #555 !important; }
+          .cc-marker-action  {
+            display: inline-block;
+            font-size: 7.5pt !important;
+            background: #eee !important;
+            color: #333 !important;
+            padding: 0 3pt !important;
+            margin: 1pt !important;
+            border-radius: 1pt !important;
+          }
+          .cc-markers-intro  { font-size: 9.5pt !important; color: #555 !important; }
+
+          /* Monster pressure table */
+          #cc-scenario-map-wrap,
+          #cc-scenario-map-embed { display: none !important; }
+
+          /* Victory cards */
+          .cc-victory-card {
+            background: none !important;
+            border: 1pt solid #ccc !important;
+            border-left: 4pt solid #333 !important;
+            border-radius: 0 !important;
+            padding: 6pt 8pt !important;
+            margin-bottom: 8pt !important;
+            page-break-inside: avoid;
+          }
+          .cc-vc-header { border-bottom: 1pt solid #ccc !important; padding-bottom: 4pt !important; margin-bottom: 6pt !important; }
+          .cc-vc-header h5 { font-size: 11pt !important; color: #111 !important; margin: 0 !important; }
+          .cc-vc-header h5 i { display: none !important; }
+          .cc-npc-tag {
+            font-size: 7.5pt !important;
+            background: #eee !important;
+            color: #555 !important;
+            padding: 0 3pt !important;
+            border-radius: 1pt !important;
+          }
+
+          /* Motive block */
+          .cc-victory-card div[style*="fa-bullseye"] {
+            background: #f5f5f5 !important;
+            border-left: 2pt solid #555 !important;
+            color: #333 !important;
+            font-size: 9.5pt !important;
+            margin-top: 4pt !important;
+          }
+
+          .cc-vc-obj {
+            border-left: 1.5pt solid #bbb !important;
+            padding: 4pt 6pt !important;
+            margin-bottom: 4pt !important;
+          }
+          .cc-vc-obj-label { font-size: 7.5pt !important; color: #888 !important; text-transform: uppercase !important; letter-spacing: 0.08em !important; }
+          .cc-vc-obj-name  { font-size: 10pt !important; font-weight: 700 !important; color: #111 !important; }
+          .cc-vc-obj-name  i { display: none !important; }
+          .cc-vc-obj-desc  { font-size: 9.5pt !important; color: #333 !important; margin: 2pt 0 !important; }
+          .cc-vc-obj-meta  { font-size: 8.5pt !important; color: #666 !important; }
+          .cc-tactic-line  i { display: none !important; }
+          .cc-vc-divider { border-color: #ddd !important; margin: 6pt 0 !important; }
+
+          .cc-vc-finale   { page-break-inside: avoid; }
+          .cc-vc-aftermath{ page-break-inside: avoid; }
+          .cc-vc-finale .cc-vc-obj-name i,
+          .cc-vc-aftermath i { display: none !important; }
+
+          /* Quotes */
+          .cc-quote {
+            border-left: 2pt solid #999 !important;
+            color: #555 !important;
+            font-style: italic !important;
+            font-size: 9.5pt !important;
+            padding: 3pt 8pt !important;
+            background: none !important;
+          }
+
+          /* Aftermath section */
+          .cc-scenario-section p i { display: none !important; }
+
+          /* Hide the logo everywhere in print */
+          img[alt="Coffin Canyon"],
+          img[src*="coffin_canyon_logo"],
+          img[src*="logo"] { display: none !important; }
+
+          /* Help text */
+          .cc-help-text { font-size: 9pt !important; color: #888 !important; }
+
+          /* Page breaks between major sections */
+          .cc-markers-section  { page-break-before: auto; }
+          .cc-scenario-section + .cc-scenario-section { margin-top: 10pt !important; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    // Load cc_print.css from GitHub if it exists; the inline @media print block above is the fallback.
     if (!document.getElementById('cc-print-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_print.css?t=' + Date.now())
         .then(res => res.text())
@@ -141,1716 +352,3184 @@ window.CC_APP = {
           document.head.appendChild(style);
           console.log('✅ Print CSS applied!');
         })
-        .catch(() => console.warn('⚠️ cc_print.css not found — using inline print styles'));
+        .catch(() => console.warn('⚠️ cc_print.css not found — using inline print styles only'));
     }
 
-    // ---- HELPERS (robust injection + adapter) ----
-    // The loader calls window.createRulesHelpers but rules_helpers.js exports
-    // window.CC_RULES_HELPERS.createRulesHelpers — name mismatch means the
-    // loader gets an empty helpers object and falls back to getById(rulesBase.rules[id])
-    // which fails because rulesBase isn't keyed that way.
-    // Fix: call createRulesHelpers ourselves with the rulesBase from ctx.
-
-    let helpersRaw = ctx?.helpers || {};
-
-    if (window.CC_RULES_HELPERS?.createRulesHelpers) {
-      const rulesBase = ctx?.rulesBase || {};
-      try {
-        const freshHelpers = window.CC_RULES_HELPERS.createRulesHelpers(rulesBase);
-        if (typeof freshHelpers?.getRuleSection === 'function') {
-          helpersRaw = freshHelpers;
-          console.log('✅ Helpers bootstrapped via CC_RULES_HELPERS.createRulesHelpers');
-        }
-      } catch (e) {
-        console.warn('⚠️ createRulesHelpers failed:', e);
-      }
+    // Load CC_STORAGE helper (cloud save/load) via blob script.
+    if (!window.CC_STORAGE) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
+        .then(res => res.text())
+        .then(code => {
+          const script = document.createElement('script');
+          script.textContent = code;
+          document.head.appendChild(script);
+          console.log('✅ Storage Helpers loaded!');
+        })
+        .catch(err => console.error('❌ Storage Helpers load failed:', err));
     }
 
-    // Normalise function names across loader versions
-    const helpers = {
-      ...helpersRaw,
-      getRuleSection:
-        (typeof helpersRaw.getRuleSection === 'function' && helpersRaw.getRuleSection) ||
-        (typeof helpersRaw.getById        === 'function' && helpersRaw.getById)        ||
-        (typeof helpersRaw.getSection     === 'function' && helpersRaw.getSection)     ||
-        (typeof helpersRaw.getRule        === 'function' && helpersRaw.getRule)        ||
-        (typeof helpersRaw.getRuleData    === 'function' && helpersRaw.getRuleData)    ||
-        (typeof helpersRaw.fetchSection   === 'function' && helpersRaw.fetchSection)   ||
-        null,
-      getChildren:
-        (typeof helpersRaw.getChildren    === 'function' && helpersRaw.getChildren)    ||
-        (typeof helpersRaw.childrenOf     === 'function' && helpersRaw.childrenOf)     ||
-        (typeof helpersRaw.getSubsections === 'function' && helpersRaw.getSubsections) ||
-        null,
-    };
+    const helpers = ctx?.helpers;
 
-    try {
-      console.log("🧰 helpersRaw keys:", Object.keys(helpersRaw || {}));
-      console.log("🧰 getRuleSection:", helpers.getRuleSection ? "OK" : "MISSING");
-      console.log("🧰 getChildren:",    helpers.getChildren    ? "OK" : "MISSING");
-    } catch (e) {}
-
-    const RULES_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
-
-    // Load index from GitHub if ctx didn't provide it
-    let index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
-    if (index.length === 0) {
-      try {
-        const idxRes  = await fetch(RULES_BASE_URL + 'rules_base.json?t=' + Date.now());
-        const idxData = await idxRes.json();
-        index = Array.isArray(idxData) ? idxData
-              : Array.isArray(idxData?.index) ? idxData.index
-              : Array.isArray(idxData?.rules) ? idxData.rules
-              : [];
-        console.log('✅ Index loaded from GitHub:', index.length, 'entries');
-      } catch (e) {
-        console.error('❌ Could not load rules_base.json from GitHub:', e);
-      }
-    } else {
-      console.log('✅ Index from ctx:', index.length, 'entries');
-    }
-
-    // Cache for directly-fetched rule files (so we don't re-fetch on every click)
-    const directFileCache = {};
-
-    // Fetch a rule's JSON file directly from GitHub using its index entry
-    async function fetchRuleDirectly(id) {
-      if (directFileCache[id]) return directFileCache[id];
-      const meta = index.find(it => it.id === id);
-      if (!meta) { console.warn('⚠️ No index entry for:', id); return null; }
-
-      // Try the file field first (e.g. "src/010_core_mechanics.json")
-      const filePaths = [
-        meta.file                                   && (RULES_BASE_URL + 'src/' + meta.file.replace(/^src\//, '')),
-        meta.file                                   && (RULES_BASE_URL + meta.file),
-        meta.path && meta.path.includes('/')        && (RULES_BASE_URL + 'src/' + meta.path.split('.')[0] + '.json'),
-      ].filter(Boolean);
-
-      for (const url of filePaths) {
-        try {
-          console.log('📥 Trying direct fetch:', url);
-          const res = await fetch(url + '?t=' + Date.now());
-          if (!res.ok) continue;
-          const data = await res.json();
-          const result = { meta, content: data };
-          directFileCache[id] = result;
-          console.log('✅ Direct fetch success:', id, url);
-          return result;
-        } catch (e) {
-          console.warn('⚠️ Direct fetch failed for:', url, e.message);
-        }
-      }
-      console.error('❌ All direct fetch paths failed for:', id, filePaths);
-      return null;
-    }
-
-    // ---- SAFETY CHECK ----
-    if (typeof helpers.getRuleSection !== "function" || typeof helpers.getChildren !== "function") {
-      const found   = Object.keys(helpersRaw || {}).join(", ");
-      const globals = [
-        ["window.CC_RULES_HELPERS", window.CC_RULES_HELPERS],
-        ["window.rules_helpers",    window.rules_helpers],
-        ["window.RULES_HELPERS",    window.RULES_HELPERS],
-        ["window.CC_HELPERS",       window.CC_HELPERS],
-      ]
-        .filter(([, v]) => !!v)
-        .map(([k, v]) => `${k} (${Object.keys((v.rules || v.api || v) || {}).length} keys)`)
-        .join(" • ");
-
-      root.innerHTML = `
-        <div class="cc-app-shell h-100">
-          <div class="container py-5 text-danger">
-            <h4>Rules helpers not available (or missing required functions)</h4>
-            <p><strong>Need:</strong> getRuleSection() and getChildren()</p>
-            <p><strong>Found keys:</strong> ${found || "(none)"}</p>
-            <p><strong>Globals seen:</strong> ${globals || "(none)"}</p>
-            <hr/>
-            <p class="mb-0">Your loader injected helpers, but the function names don't match what the app expects.</p>
-          </div>
-        </div>
-      `;
+    if (!helpers) {
+      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Helpers not available</h4></div></div>`;
       return;
     }
 
-    // ---- FAVORITES SYSTEM ----
-    const STORAGE_KEY = 'cc_rules_favorites';
-
-    function getFavorites() {
-      try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [];
-      } catch (e) { return []; }
-    }
-
-    function saveFavorites(favorites) {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
-      } catch (e) { console.error('Could not save favorites', e); }
-    }
-
-    function isFavorite(id) { return getFavorites().includes(id); }
-
-    function toggleFavorite(id) {
-      const favorites = getFavorites();
-      const i = favorites.indexOf(id);
-      if (i > -1) { favorites.splice(i, 1); } else { favorites.push(id); }
-      saveFavorites(favorites);
-    }
-
-    // ---- FACTIONS DATA ----
-    // NOTE: Crow Queen added here — was missing from original
-    const FACTION_FILES = [
-      { id: 'monster_rangers', title: 'Monster Rangers', emoji: '🐾', file: 'faction-monster-rangers-v5.json' },
-      { id: 'liberty_corps',   title: 'Liberty Corps',   emoji: '⚙️', file: 'faction-liberty-corps-v2.json'  },
-      { id: 'monsterology',    title: 'Monsterology',    emoji: '🔬', file: 'faction-monsterology-v2.json'   },
-      { id: 'monsters',        title: 'Monsters',        emoji: '👾', file: 'faction-monsters-v2.json'       },
-      { id: 'shine_riders',    title: 'Shine Riders',    emoji: '✨', file: 'faction-shine-riders-v2.json'   },
-      { id: 'crow_queen',      title: 'Crow Queen',      emoji: '🐦', file: 'faction-crow-queen.json'        },
-    ];
-
-    // ---- CAMPAIGN SYSTEM DATA ----
-    const CAMPAIGN_FILE = {
-      id:    'campaign_system',
-      title: 'Campaign System',
-      file:  'src/30_campaign_system.json',
+    // ── App state ─────────────────────────────────────────────────────────────
+    const state = {
+      gameMode: null,
+      pointValue: 500,
+      dangerRating: 3,
+      gameWarden: null,
+      factions: [],
+      locationType: null,
+      selectedLocation: null,
+      generated: false,
+      scenario: null,
+      currentStep: 1,
+      completedSteps: [],
+      vaultScenario: null
     };
 
-    let factionsData = {};
-    let campaignData = null;
-
-    // ---- GROUPED SIDEBAR NAVIGATION ----
-    // Groups use a match() function so they work with any index IDs.
-    const NAV_GROUPS = [
-      {
-        id: 'rules', label: 'Rules',
-        match: (it) => ['quickstart', 'core_mechanics', 'turn_structure',
-                        'visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault',
-                        'unit_identities', 'ability_engine'].includes(it.id),
-      },
-      {
-        id: 'abilities', label: 'Ability Dictionary',
-        match: (it) => Boolean(it.id?.startsWith('ability_dict_')),
-      },
-      {
-        id: 'factions', label: 'Factions',
-        match: (it) => Boolean(it.id?.startsWith('faction_')),
-      },
-      {
-        id: 'campaign', label: 'Campaign',
-        match: (it) => it.id === 'campaign_system',
-      },
+    // ── Faction registry — all six factions; used for dropdowns, NPC injection, display ──
+    const FACTIONS = [
+      { id: 'monster_rangers', name: 'Monster Rangers', file: 'faction-monster-rangers-v5.json' },
+      { id: 'liberty_corps',   name: 'Liberty Corps',   file: 'faction-liberty-corps-v2.json'  },
+      { id: 'monsterology',    name: 'Monsterology',    file: 'faction-monsterology-v2.json'   },
+      { id: 'monsters',        name: 'Monsters',        file: 'faction-monsters-v2.json'       },
+      { id: 'shine_riders',    name: 'Shine Riders',    file: 'faction-shine-riders-v2.json'   },
+      { id: 'crow_queen',      name: 'Crow Queen',      file: 'faction-crow-queen.json'        }
     ];
 
-    // Rules open by default; others start collapsed.
-    let openGroups = new Set(['rules']);
+    // ── Data loading — all JSON files fetched in parallel at boot ───────────────────
+    let plotFamiliesData   = null;
+    let twistTablesData    = null;
+    let locationData       = null;
+    let locationTypesData  = null;
+    let monsterFactionData = null;
+    let scenarioVaultData  = null;
+    let scenarioNamesData  = null;
+    let campaignSystemData = null;   // 30_campaign_system.json — location states + effects
+    let factionDataMap     = {};
 
-    // ---- LOAD FACTIONS ----
-    async function loadFactions() {
-      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+    async function loadGameData() {
       try {
-        const promises = FACTION_FILES.map(async (f) => {
-          const response = await fetch(baseUrl + f.file + '?t=' + Date.now());
-          const data = await response.json();
-          return { id: f.id, title: f.title, data };
+        const base = 'https://raw.githubusercontent.com/steamcrow/coffin/main';
+        const t    = '?t=' + Date.now();
+
+        const [plotRes, twistRes, locRes, locTypesRes, monstersRes, vaultRes, namesRes, campRes] = await Promise.all([
+          fetch(`${base}/rules/src/200_plot_families.json${t}`),
+          fetch(`${base}/rules/src/210_twist_tables.json${t}`),
+          fetch(`${base}/rules/src/170_named_locations.json${t}`),
+          fetch(`${base}/rules/src/150_location_types.json${t}`),
+          fetch(`${base}/factions/faction-monsters-v2.json${t}`),
+          fetch(`${base}/rules/src/180_scenario_vault.json${t}`),
+          fetch(`${base}/rules/src/230_scenario_names.json${t}`),
+          fetch(`${base}/rules/src/30_campaign_system.json${t}`)
+        ]);
+
+        plotFamiliesData   = await plotRes.json();
+        twistTablesData    = await twistRes.json();
+        locationData       = await locRes.json();
+        locationTypesData  = await locTypesRes.json();
+        monsterFactionData = await monstersRes.json();
+        scenarioVaultData  = await vaultRes.json();
+        scenarioNamesData  = await namesRes.json();
+        // Campaign system is optional — don't fail if the file isn't there yet
+        try { campaignSystemData = await campRes.json(); } catch { campaignSystemData = null; }
+
+        const PLAYER_FACTIONS = [
+          { id: 'monster_rangers', file: 'faction-monster-rangers-v5.json' },
+          { id: 'liberty_corps',   file: 'faction-liberty-corps-v2.json'  },
+          { id: 'monsterology',    file: 'faction-monsterology-v2.json'   },
+          { id: 'shine_riders',    file: 'faction-shine-riders-v2.json'   },
+          { id: 'crow_queen',      file: 'faction-crow-queen.json'        }
+        ];
+        factionDataMap = {};
+        await Promise.all(PLAYER_FACTIONS.map(async ({ id, file }) => {
+          try {
+            const res = await fetch(`${base}/factions/${file}${t}`);
+            factionDataMap[id] = await res.json();
+            console.log(`✅ Faction loaded: ${id}`);
+          } catch (e) {
+            console.warn(`⚠️ Could not load faction: ${id}`, e);
+            factionDataMap[id] = null;
+          }
+        }));
+
+        console.log('✅ All game data loaded');
+      } catch (err) {
+        console.error('❌ Failed to load game data:', err);
+        alert('Failed to load scenario data. Please refresh the page.');
+      }
+    }
+
+    // ── Map embed — remote URLs and Leaflet instance cache ─────────────────────────────
+    const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map_app.js';
+    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json';
+    const LEAFLET_CSS_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css';
+    const LEAFLET_JS_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js';
+
+    let _mapData      = null;   // cached canyon_map.json
+    let _leafletReady = false;  // have we loaded Leaflet yet?
+    let _scenarioMap  = null;   // active Leaflet instance in the embed (so we can destroy it on re-render)
+
+    // Fetch a remote JS file and execute it as a blob script.
+    function loadScriptDynamic(url) {
+      return fetch(url + '?t=' + Date.now())
+        .then(r => r.text())
+        .then(code => new Promise((resolve, reject) => {
+          const blob = new Blob([code], { type: 'text/javascript' });
+          const src  = URL.createObjectURL(blob);
+          const s    = document.createElement('script');
+          s.src      = src;
+          s.onload   = () => { URL.revokeObjectURL(src); resolve(); };
+          s.onerror  = () => { URL.revokeObjectURL(src); reject(new Error('Script load failed: ' + url)); };
+          document.head.appendChild(s);
+        }));
+    }
+
+    // Fetch a remote CSS file and inject it as an inline <style> tag.
+    function loadStyleDynamic(url, id) {
+      if (document.getElementById(id)) return Promise.resolve();
+      return fetch(url + '?t=' + Date.now())
+        .then(r => r.text())
+        .then(css => {
+          const s = document.createElement('style');
+          s.id    = id;
+          s.textContent = css;
+          document.head.appendChild(s);
         });
-        const results = await Promise.all(promises);
-        results.forEach(r => { factionsData[r.id] = { title: r.title, data: r.data }; });
-        console.log('✅ Factions loaded:', Object.keys(factionsData));
-        return true;
-      } catch (e) {
-        console.error('❌ Failed to load factions:', e);
-        return false;
-      }
     }
 
-    // ---- LOAD CAMPAIGN ----
-    async function loadCampaign() {
-      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
+    // Load Leaflet CSS + JS if not already present. Safe to call multiple times.
+    async function ensureLeaflet() {
+      if (_leafletReady && window.L) return;
+      await loadStyleDynamic(LEAFLET_CSS_URL, 'cc-leaflet-css');
+      if (!window.L) await loadScriptDynamic(LEAFLET_JS_URL);
+      _leafletReady = true;
+    }
+
+    // Load the canyon map app to get CC_HITBOXES (location bounding boxes). Safe to call multiple times.
+    async function ensureHitboxes() {
+      if (window.CC_HITBOXES) return window.CC_HITBOXES;
       try {
-        const response = await fetch(baseUrl + CAMPAIGN_FILE.file + '?t=' + Date.now());
-        const data = await response.json();
-        campaignData = { title: CAMPAIGN_FILE.title, data };
-        console.log('✅ Campaign system loaded');
-        return true;
+        await loadScriptDynamic(MAP_APP_URL);
       } catch (e) {
-        console.error('❌ Failed to load campaign system:', e);
-        return false;
+        console.warn('⚠️ Could not load map app for hitboxes:', e);
       }
+      return window.CC_HITBOXES || {};
     }
 
-    // ---- RENDER FACTION ----
-    function renderFaction(factionId) {
-      const faction = factionsData[factionId];
-      if (!faction) return '<div class="cc-muted">Faction not found</div>';
+    // Fetch and cache the canyon map JSON (image dimensions + location bounds).
+    async function fetchMapData() {
+      if (_mapData) return _mapData;
+      const res = await fetch(MAP_DATA_URL + '?t=' + Date.now());
+      _mapData = await res.json();
+      return _mapData;
+    }
 
-      const data = faction.data;
-      let html = '';
+    // ── Utilities ─────────────────────────────────────────────────────────────────
+    function randomChoice(arr) {
+      if (!arr || arr.length === 0) return null;
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
 
-      if (data.summary) {
-        html += `<div class="cc-callout mb-4">${esc(data.summary)}</div>`;
+    function randomInt(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function getDangerDescription(rating) {
+      const map = {
+        1: 'Skirmish — light danger',
+        2: 'Tense — expect resistance',
+        3: 'Hostile — expect casualties',
+        4: 'Dangerous — expect losses',
+        5: 'Deadly — expect to mourn',
+        6: 'Lethal — survival unlikely'
+      };
+      return map[rating] || 'Unknown danger level';
+    }
+
+    // ── getCargoVehicleName — "Cargo Tiger Truck" when Monster Rangers are playing ────
+    function getCargoVehicleName() {
+      const hasRangers = state.factions.some(f => f.id === 'monster_rangers');
+      return hasRangers ? 'Cargo Tiger Truck' : 'Cargo Vehicle';
+    }
+
+    // ── getCampaignStateDef — looks up environment/terrain/effects from campaign JSON ──
+    function getCampaignStateDef(stateId) {
+      if (!campaignSystemData) return null;
+      // Try common structures: location_states array, or states array, or direct object
+      const pool = campaignSystemData.location_states
+                || campaignSystemData.states
+                || (Array.isArray(campaignSystemData) ? campaignSystemData : null);
+      if (!pool) return null;
+      return pool.find(s => s.id === stateId || s.name?.toLowerCase() === stateId?.toLowerCase()) || null;
+    }
+
+    // Pool of atmospheric states rolled when a location has no defined state.
+    const RANDOM_STATES = ['poisoned', 'haunted', 'strangewild'];
+
+    // ── buildLocationProfile — merges location data, type defaults, and rolls a state ──
+    function buildLocationProfile(locationType, selectedLocationId) {
+      let location = null;
+
+      if (locationType === 'named' && selectedLocationId && locationData) {
+        location = locationData.locations.find(l => l.id === selectedLocationId);
       }
-      if (data.lore) {
-        html += `<div class="mb-4"><p>${esc(data.lore)}</p></div>`;
+
+      if (!location && locationData?.locations?.length) {
+        location = randomChoice(locationData.locations);
       }
 
-      if (data.units && Array.isArray(data.units)) {
-        html += `<h3 style="color: #ff7518; margin-top: 2rem; margin-bottom: 1.5rem;">Units</h3>`;
+      if (!location) {
+        return {
+          id:               'unknown',
+          name:             'Unknown Territory',
+          emoji:            '❓',
+          archetype:        'frontier',
+          state:            randomChoice(RANDOM_STATES),
+          features:         [],
+          effectiveDanger:  state.dangerRating,
+          effectiveResources: {},
+          monster_seeds:    [],
+          tags:             [],
+          notes:            [],
+          description:      '',
+          atmosphere:       ''
+        };
+      }
 
-        data.units.forEach(unit => {
-          html += `
-            <div class="cc-ability-card p-3 mb-4" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+      let typeDefaults = {};
+      if (locationTypesData?.location_types && location.type_ref) {
+        typeDefaults = locationTypesData.location_types.find(t => t.id === location.type_ref) || {};
+      }
 
-              <div class="d-flex justify-content-between align-items-baseline mb-1">
-                <h4 class="fw-bold mb-0" style="color: #fff; font-size: 1.25rem;">${esc(unit.name)}</h4>
-                <div class="fw-bold" style="color: #ff7518; font-size: 1.3rem;">${unit.cost}₤</div>
-              </div>
+      const effectiveResources = Object.assign({}, typeDefaults.base_resources || {}, location.resources || {});
+      const effectiveDanger    = location.danger ?? state.dangerRating;
 
-              <div class="small text-uppercase mb-2" style="color: #ff7518; font-weight: 700; letter-spacing: 0.05em;">${esc(unit.type || 'Unit')}</div>
+      // Locations with no defined state (or the generic "alive") get a random atmospheric state.
+      const rawState = location.state || '';
+      const resolvedState = (!rawState || rawState === 'alive')
+        ? randomChoice(RANDOM_STATES)
+        : rawState;
 
-              ${unit.lore ? `
-                <div class="mb-3" style="font-style: italic; opacity: 0.85; font-size: 0.95rem; line-height: 1.5;">${esc(unit.lore)}</div>
-              ` : ''}
+      return {
+        id:               location.id,
+        name:             location.name,
+        emoji:            location.emoji || '📍',
+        archetype:        location.archetype || 'unknown',
+        state:            resolvedState,
+        features:         location.features || [],
+        effectiveDanger,
+        effectiveResources,
+        monster_seeds:    location.monster_seeds || [],
+        tags:             location.tags || [],
+        notes:            location.notes || [],
+        description:      location.description || '',
+        atmosphere:       location.atmosphere || '',
+        terrain_flavor:   location.terrain_flavor || [],
+        rumors:           location.rumors || []
+      };
+    }
 
-              <div class="d-flex gap-2 mb-3" style="flex-wrap: wrap;">
-                <div class="cc-stat-badge stat-q-border">
-                  <div class="cc-stat-label stat-q">Q</div>
-                  <div class="cc-stat-value">${unit.quality}</div>
-                </div>
-                <div class="cc-stat-badge stat-d-border">
-                  <div class="cc-stat-label stat-d">D</div>
-                  <div class="cc-stat-value">${unit.defense}</div>
-                </div>
-                <div class="cc-stat-badge stat-m-border">
-                  <div class="cc-stat-label stat-m">M</div>
-                  <div class="cc-stat-value">${unit.move}"</div>
-                </div>
-                ${unit.range ? `
-                  <div class="cc-stat-badge stat-r-border">
-                    <div class="cc-stat-label stat-r">R</div>
-                    <div class="cc-stat-value">${unit.range}"</div>
-                  </div>
-                ` : ''}
-              </div>
+    // ── matchVaultScenario — scores pre-written vault scenarios against setup ──
+    //
+    // SCORING WEIGHTS:
+    //   +5  per matching spotlight_faction (selected faction in scenario's list)
+    //   +4  danger_rating exact match; +2 within ±1; -10 if diff > 2
+    //   +3  per matching allowed_location_type
+    //   +3  if selectedLocation matches allowed_named_locations
+    //   +2  per matching tag (generic overlap)
+    //  -10  if archetype in excluded_location_types (hard block)
+    //
+    // THRESHOLD: 6 (old system used 2 — near-random matches)
+    //
+    function matchVaultScenario(plotFamily, locProfile, contextTags,
+                                selectedFactions = [], selectedDanger = 3,
+                                locationType = '', selectedLocation = '') {
 
-              ${unit.weapon ? `
-                <div class="mb-2">
-                  <span class="fw-bold small" style="color: #ff7518;">Weapon:</span>
-                  <span style="font-weight: 600;">${esc(unit.weapon)}</span>
-                  ${unit.weapon_properties && unit.weapon_properties.length > 0
-                    ? ` <span style="opacity: 0.7;">(${unit.weapon_properties.map(p => esc(typeof p === 'string' ? p : p.name || '')).join(', ')})</span>`
-                    : ''}
-                </div>
-              ` : ''}
+      if (!scenarioVaultData?.scenarios?.length) return { scenario: null, score: 0 };
 
-              ${unit.abilities && unit.abilities.length > 0 ? `
-                <div class="mb-3">
-                  <div class="fw-bold small mb-1" style="color: #ff7518;">Abilities:</div>
-                  <div class="d-flex gap-1" style="flex-wrap: wrap;">
-                    ${unit.abilities.map(ability => {
-                      let abilityName   = '';
-                      let abilityEffect = '';
-                      if (typeof ability === 'string') {
-                        abilityName = ability;
-                        try {
-                          const rulesRoot = getRulesRoot();
-                          if (rulesRoot && rulesRoot.ability_dictionary) {
-                            for (const section in rulesRoot.ability_dictionary) {
-                              if (rulesRoot.ability_dictionary[section]?.[abilityName]) {
-                                const d = rulesRoot.ability_dictionary[section][abilityName];
-                                abilityEffect = d.short || d.effect || d.long || '';
-                                break;
-                              }
-                            }
-                          }
-                        } catch (e) {}
-                      } else if (ability && typeof ability === 'object') {
-                        abilityName   = ability.name   || '';
-                        abilityEffect = ability.effect || ability.short || '';
-                      }
-                      const tooltipText = abilityEffect || abilityName;
-                      const titleAttr   = ` title="${tooltipText.replace(/"/g, '&quot;')}"`;
-                      return `<span class="cc-badge" style="cursor: help;"${titleAttr}>${esc(abilityName)}</span>`;
-                    }).join(' ')}
-                  </div>
-                </div>
-              ` : ''}
+      // Build tag context for generic overlap scoring
+      const allTags = [
+        ...(plotFamily.tags || []),
+        ...(locProfile.tags || []),
+        ...contextTags,
+        locProfile.archetype
+      ].filter(Boolean).map(t => t.toLowerCase());
 
-              ${unit.tactics ? `
-                <div class="mt-3 pt-2" style="border-top: 1px solid rgba(255,255,255,0.1);">
-                  <div class="fw-bold small mb-1" style="color: #ff7518;">Tactics:</div>
-                  <div class="small" style="line-height: 1.5;">${esc(unit.tactics)}</div>
-                </div>
-              ` : ''}
+      // Normalised faction IDs from the current selection
+      const factionIds = selectedFactions.map(f =>
+        (f.id || f.name || '').toLowerCase().replace(/\s+/g, '_')
+      );
 
+      // Alias map so both "monster rangers" and "monster_rangers" match vault entries
+      const FACTION_NAME_MAP = {
+        'monster_rangers': ['monster rangers', 'monster_rangers'],
+        'liberty_corps':   ['liberty corps',   'liberty_corps'],
+        'monsterology':    ['monsterologists',  'monsterology'],
+        'shine_riders':    ['shine riders',     'shine_riders'],
+        'crow_queen':      ['crow queen',       'crow_queen'],
+        'monsters':        ['monsters']
+      };
+
+      let best      = null;
+      let bestScore = -Infinity;
+
+      for (const s of scenarioVaultData.scenarios) {
+        let score = 0;
+
+        // ── FACTION MATCH (highest weight) ──────────────────────────────────
+        const spotlightRaw = (s.spotlight_factions || []).map(f => f.toLowerCase());
+        factionIds.forEach(fid => {
+          const aliases = FACTION_NAME_MAP[fid] || [fid];
+          if (aliases.some(alias => spotlightRaw.some(sp => sp.includes(alias)))) {
+            score += 5;
+          }
+        });
+
+        // ── DANGER RATING MATCH ─────────────────────────────────────────────
+        const scenarioDanger = s.danger_rating || 3;
+        const dangerDiff = Math.abs(scenarioDanger - selectedDanger);
+        if (dangerDiff === 0)      score += 4;
+        else if (dangerDiff === 1) score += 2;
+        else if (dangerDiff > 2)   score -= 10;
+
+        // ── LOCATION TYPE MATCH ─────────────────────────────────────────────
+        const allowedTypes = (s.location_rules?.allowed_location_types || []).map(t => t.toLowerCase());
+        if (allowedTypes.length > 0 && locProfile.archetype) {
+          const arch = locProfile.archetype.toLowerCase();
+          if (allowedTypes.some(t => arch.includes(t) || t.includes(arch))) {
+            score += 3;
+          }
+        }
+
+        // ── NAMED LOCATION MATCH ────────────────────────────────────────────
+        if (selectedLocation && locationType === 'named') {
+          const locName = locationData?.locations
+            ?.find(l => l.id === selectedLocation)?.name?.toLowerCase() || '';
+          const allowedNamed = (s.location_rules?.allowed_named_locations || [])
+            .map(n => n.toLowerCase());
+          if (allowedNamed.length > 0 && allowedNamed.some(n => locName.includes(n) || n.includes(locName))) {
+            score += 3;
+          }
+        }
+
+        // ── EXCLUDED LOCATION TYPES (hard block) ────────────────────────────
+        const excludedTypes = (s.location_rules?.excluded_location_types || []).map(t => t.toLowerCase());
+        if (excludedTypes.length > 0 && locProfile.archetype) {
+          const arch = locProfile.archetype.toLowerCase();
+          if (excludedTypes.some(t => arch.includes(t) || t.includes(arch))) {
+            score -= 10;
+          }
+        }
+
+        // ── TAG OVERLAP (generic, lowest weight) ────────────────────────────
+        const sTags = (s.tags || []).map(t => t.toLowerCase());
+        score += sTags.filter(t => allTags.includes(t)).length * 2;
+
+        if (score > bestScore) {
+          best      = s;
+          bestScore = score;
+        }
+      }
+
+      console.log(`📚 Vault best match: "${best?.name}" (score=${bestScore})`);
+      return { scenario: bestScore >= 6 ? best : null, score: bestScore };
+    }
+
+    // ── buildResourceSummary — intentionally empty; resources drive logic, not display ─
+    function buildResourceSummary(resources) {
+      return ''; // Intentionally hidden — resources drive logic, not display
+    }
+
+    // ── generateNarrativeHook — scenario flavour opener, woven from objectives + location
+    function generateNarrativeHook(plotFamily, location, objectives) {
+      const locName  = location.name;
+      const atmo     = location.atmosphere || '';
+      const desc     = location.description ? location.description.split('.')[0] : '';
+
+      // Use the actual plot family description, but replace any generic "asset" language
+      // with the real objective name if a cargo vehicle is in play.
+      let plotDesc = (plotFamily.description || '').replace(/\.$/, '');
+
+      const cargoObj = objectives?.find(o => o.type === 'cargo_vehicle');
+      if (cargoObj) {
+        const cargoName = cargoObj.name; // "Cargo Tiger Truck" or "Cargo Vehicle"
+        // Replace any version of "a fragile or vital asset" / "an asset" / "the asset"
+        plotDesc = plotDesc.replace(
+          /a fragile or vital asset|an asset|the asset|a fragile asset|a vital asset/gi,
+          `the ${cargoName}`
+        );
+      }
+
+      const thyrObj     = objectives?.find(o => o.type === 'thyr_cache' || o.type === 'ritual_site');
+      const supplyObj   = objectives?.find(o => o.type === 'stored_supplies' || o.type === 'scattered_crates');
+      const ritualObj   = objectives?.find(o => o.type === 'ritual_components' || o.type === 'ritual_circle');
+
+      // Build a one-sentence situation summary keyed to the most important objective type.
+      let situationLine = '';
+      if (cargoObj) {
+        situationLine = `The ${cargoObj.name} needs to cross ${locName} intact — that's already the hard part.`;
+      } else if (thyrObj) {
+        situationLine = `The Thyr at ${locName} is active. That means someone already knows about it.`;
+      } else if (ritualObj) {
+        situationLine = `${locName} is the only place the ritual can be completed. Everyone is racing to get there.`;
+      } else if (supplyObj) {
+        situationLine = `The caches at ${locName} are the kind of find that changes who survives the season.`;
+      }
+
+      // Pick a voiced hook from the appropriate pool.
+      const pools = [
+        `Nobody who left ${locName} told the same story. ${plotDesc}. The only way to know is to go in.`,
+        `Three factions picked up the same rumour about ${locName} within 48 hours. That's not coincidence. ${plotDesc}.`,
+        `${locName} was supposed to be a clean job. The Canyon had other ideas. ${plotDesc}.`,
+        `${desc ? desc + '. ' : ''}${plotDesc}. The factions arrive at the same time. That's the problem.`,
+        `The window at ${locName} is closing. ${plotDesc}. Whoever moves first may be the only one who leaves with anything.`,
+        `Something at ${locName} drew too much attention. ${plotDesc}. Now everyone is reacting and nobody is thinking.`,
+        `${plotDesc} at ${locName}. The smart money said don't get involved. The smart money wasn't enough.`,
+        `The last group through ${locName} didn't come back whole. ${plotDesc}. That didn't stop the next group.`,
+        `The Canyon doesn't warn you. At ${locName}, it just changes the terms. ${plotDesc}.`,
+        `${locName}. ${atmo ? '"' + atmo + '"' : 'Whatever it was, it isn\'t that anymore.'}. ${plotDesc}.`,
+        `${plotDesc}. ${locName} is where it ends — or where it gets worse.`,
+        `Word reached ${locName} before anyone expected. ${plotDesc}. By the time boots hit the ground, it was already complicated.`,
+      ];
+
+      // Specific situation line goes first; a canyon-voice hook follows as the second sentence.
+      if (situationLine) {
+        return situationLine + ' ' + randomChoice(pools.slice(6)); // use a canyon-voice hook as the second sentence
+      }
+
+      // Fall back to a plot-family hook if available, then a generic pool pick.
+      if (plotFamily?.hook)   return plotFamily.hook;
+      if (plotFamily?.flavor) return `${plotFamily.flavor} ${plotDesc} at ${locName}.`;
+
+      return randomChoice(pools);
+    }
+
+    // ── generateScenarioNameFromTags — title builder; location name appears exactly once ─
+    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
+      contextTags = contextTags || [];
+      const locName = (location || { name: 'Unknown' }).name;
+
+      let prefix = 'Bloody';
+      let suffix = 'Reckoning';
+
+      if (scenarioNamesData) {
+        const prefixes = scenarioNamesData.prefixes || [];
+        const suffixes = scenarioNamesData.suffixes || [];
+
+        const taggedPrefixes = prefixes.filter(p =>
+          Array.isArray(p.tags) && p.tags.some(t => contextTags.includes(t))
+        );
+        prefix = taggedPrefixes.length
+          ? (randomChoice(taggedPrefixes)?.text || randomChoice(prefixes)?.text || 'Bloody')
+          : (randomChoice(prefixes)?.text || 'Bloody');
+
+        suffix = randomChoice(suffixes)?.text || 'Reckoning';
+      } else {
+        const fallbackPrefixes = ['Bloody', 'Burning', 'Broken', 'Cursed', 'Forsaken', 'Iron'];
+        const fallbackSuffixes = ['Reckoning', 'Standoff', 'Collapse', 'Ruin', 'Harvest', 'Judgment'];
+        prefix = randomChoice(fallbackPrefixes);
+        suffix = randomChoice(fallbackSuffixes);
+      }
+
+      // Several templates ensure the location name reads naturally in all cases.
+      const templates = [
+        () => `${prefix} at ${locName}`,                     // "Black Night at Fool Boot"
+        () => `${prefix} at ${locName} — ${suffix}`,         // "Black Night at Fool Boot — Reckoning"
+        () => `${prefix} ${locName} — ${suffix}`,            // "Bloody Lost Yots — Reckoning" (classic)
+        () => `${locName} — ${suffix}`,                      // "Lost Yots — Shadow and Flame"
+        () => `${suffix} at ${locName}`,                     // "Reckoning at Lost Yots"
+        () => `The ${suffix} of ${locName}`,                 // "The Reckoning of Lost Yots"
+      ];
+
+      // Adjective prefixes (Bloody, Burning…) favour the classic "Adjective Location — Noun" form.
+      const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
+      const pick = isAdjectivePrefix
+        ? randomChoice([templates[1], templates[2], templates[2], templates[3]])   // adjective: prefer classic
+        : randomChoice([templates[0], templates[0], templates[1], templates[4]]);  // noun/phrase: prefer "at"
+
+      return pick();
+    }
+
+    // ── generateMonsterPressure — builds monster roster for this scenario ────────────
+    //    Stored in the save file for the upcoming Turn Counter app.
+    //    Nothing from this section is shown in the scenario output.
+    function generateMonsterPressure(plotFamily, dangerRating, locProfile) {
+      const enabled = Math.random() > 0.3;
+      if (!enabled || !monsterFactionData) return { enabled: false };
+
+      const budgetPercent    = 0.2 + (dangerRating / 6) * 0.2;
+      const monsterBudget    = Math.floor(state.pointValue * budgetPercent);
+      const selectedMonsters = [];
+      let remainingBudget    = monsterBudget;
+      let seedBased          = false;
+
+      if (locProfile?.monster_seeds?.length > 0) {
+        let attempts = 0;
+        while (remainingBudget > 100 && attempts < 10) {
+          const seed = randomChoice(locProfile.monster_seeds);
+          const unit = monsterFactionData.units?.find(u => u.name === seed.name);
+          if (!unit || unit.cost > remainingBudget) { attempts++; continue; }
+          selectedMonsters.push(unit);
+          remainingBudget -= unit.cost;
+          seedBased = true;
+          attempts++;
+        }
+      }
+
+      if (selectedMonsters.length === 0 && monsterFactionData.units) {
+        const available = monsterFactionData.units.filter(u => u.cost <= monsterBudget);
+        let budget = monsterBudget;
+        while (budget > 0 && available.length > 0) {
+          const valid   = available.filter(m => m.cost <= budget);
+          if (valid.length === 0) break;
+          const monster = randomChoice(valid);
+          selectedMonsters.push(monster);
+          budget -= monster.cost;
+        }
+      }
+
+      const escalationNote = plotFamily.escalation_bias
+        ? `Escalation: ${randomChoice(plotFamily.escalation_bias).replace(/_/g, ' ')}`
+        : null;
+
+      return {
+        enabled:    true,
+        monsters:   selectedMonsters,
+        seed_based: seedBased,
+        notes:      escalationNote
+      };
+    }
+
+    // ── generateAftermath — one sentence describing what changes after the game ─────
+    function generateAftermath(plotFamily) {
+      const options = plotFamily.aftermath_bias || ['location_state_change', 'resource_depletion_or_corruption'];
+      const type    = randomChoice(options);
+      const descriptions = {
+        location_state_change:            'This location will be permanently altered by the outcome.',
+        resource_depletion_or_corruption: 'Resources here will be depleted or corrupted.',
+        new_landmark_created:             'A new landmark will mark what happened here.',
+        faction_ownership:                'The victor will claim lasting control.',
+        mystical_claim:                   'Mystical forces will remember this event.',
+        monster_bias_shift:               'Monster behaviour in this region will change.'
+      };
+      return descriptions[type] || 'The Canyon will remember what happened here.';
+    }
+
+    // ── Objective engine ─────────────────────────────────────────────────────────────
+    //    RESOURCE_OBJECTIVE_AFFINITY maps location resources to likely objective types.
+    //    generateObjectives scores all objective types, gates rail/supply/ritual as needed,
+    //    then picks the top 2–3. makeObjectiveName resolves the most specific possible
+    //    name for each type based on location features and archetype.
+
+    const RESOURCE_OBJECTIVE_AFFINITY = {
+      supplies:         ['stored_supplies', 'scattered_crates'],
+      food_good:        ['stored_supplies', 'scattered_crates'],
+      food_foul:        ['fouled_resource', 'tainted_ground'],
+      water_clean:      ['stored_supplies'],
+      water_foul:       ['fouled_resource', 'tainted_ground'],
+      thyr:             ['thyr_cache', 'ritual_site', 'ritual_circle'],
+      tzul_silver:      ['artifact', 'ritual_site', 'sacrificial_focus'],
+      silver:           ['land_marker', 'command_structure'],
+      lead:             ['land_marker', 'wrecked_engine'],
+      mechanical_parts: ['wrecked_engine', 'unstable_structure'],
+      spare_parts:      ['wrecked_engine', 'unstable_structure'],
+      livestock:        ['pack_animals', 'cargo_vehicle'],
+      medicine:         ['stored_supplies', 'scattered_crates'],
+      weapons:          ['fortified_position', 'command_structure', 'barricades'],
+      moonshine:        ['scattered_crates', 'cargo_vehicle'],
+      rotgut:           ['fouled_resource', 'scattered_crates'],
+      gildren:          ['land_marker', 'command_structure']
+    };
+
+    const ALL_OBJECTIVE_TYPES = [
+      'wrecked_engine', 'scattered_crates', 'derailed_cars',
+      'cargo_vehicle', 'pack_animals', 'ritual_components',
+      'ritual_site', 'land_marker', 'command_structure',
+      'thyr_cache', 'artifact', 'captive_entity',
+      'fortified_position', 'barricades', 'stored_supplies',
+      'ritual_circle', 'tainted_ground', 'sacrificial_focus',
+      'collapsing_route', 'fouled_resource', 'unstable_structure',
+      'evacuation_point'
+    ];
+
+    function makeObjectiveName(type, locProfile) {
+      const r        = locProfile?.effectiveResources || {};
+      const features = locProfile?.features || [];
+
+      if (type === 'cargo_vehicle') {
+        return getCargoVehicleName();
+      }
+
+      if (type === 'fouled_resource') {
+        if ((r.water_foul || 0) >= 1 && (r.rotgut || 0) >= 1)
+          return 'Fouled Water & Rotgut Cache';
+        if ((r.water_foul || 0) >= 1)
+          return 'Tainted Water Supply';
+        if ((r.rotgut || 0) >= 1)
+          return 'Spoiled Rotgut Barrels';
+        if ((r.food_foul || 0) >= 1)
+          return 'Contaminated Ration Store';
+        return 'Fouled Resource Cache';
+      }
+
+      if (type === 'unstable_structure') {
+        const arch = locProfile?.archetype || '';
+        if (features.includes('GlassShards') || features.includes('KnifeRocks'))
+          return 'Glass-Wall Overhang';
+        if (features.includes('BrakeScars'))
+          return 'Collapsed Brake House';
+        if (features.includes('RailTerminus') || features.includes('RailYard'))
+          return 'Failing Rail Depot';
+        if (features.includes('RailGrade') || features.includes('RailSpur'))
+          return 'Failing Trestle Section';
+        if (features.includes('Trestle'))
+          return 'Crumbling Canyon Trestle';
+        if (features.includes('RockfallChutes'))
+          return 'Rockfall Chute';
+        if (features.includes('NarrowPass'))
+          return 'Crumbling Canyon Shelf';
+        if (features.includes('OldFort') || features.includes('Fort'))
+          return 'Collapsed Fort Wall';
+        if (features.includes('WaterTower'))
+          return 'Leaning Water Tower';
+        if (features.includes('GranarySilo') || features.includes('Silo'))
+          return 'Cracked Grain Silo';
+        if (features.includes('Ruins'))
+          return randomChoice(['Crumbling Ruin', 'Unstable Ruin Wall', 'Collapsed Settlement Remnant']);
+        if (features.includes('Jailhouse'))
+          return 'Condemned Jailhouse';
+        if (features.includes('CompanyOffice'))
+          return 'Condemned Company Office';
+        if (features.includes('Hotel'))
+          return 'Condemned Hotel';
+        if (features.includes('Saloon') || features.includes('BrewHouse'))
+          return 'Collapsing Saloon';
+        if (features.includes('Church'))
+          return 'Crumbling Canyon Church';
+        if (features.includes('Barn') || features.includes('Stable') || features.includes('Corral'))
+          return 'Failing Livestock Barn';
+        if (features.includes('Mineshaft') || features.includes('Mine'))
+          return 'Collapsing Mineshaft Entrance';
+        if (arch === 'arroyo')          return 'Eroded Canyon Wall';
+        if (arch === 'rail_grade'
+         || arch === 'rail_terminus'
+         || arch === 'rail_depot')      return 'Failing Trestle';
+        if (arch === 'boomtown')
+          return randomChoice(['Condemned Boomtown Building', 'Collapsing Storefront', 'Leaning Boomtown Tower']);
+        if (arch === 'ruins')
+          return randomChoice(['Crumbling Ruin', 'Collapsed Settlement Wall', 'Unstable Stone Tower']);
+        if (arch === 'outpost')         return 'Condemned Outpost Watchtower';
+        if (arch === 'settlement')      return 'Failing Settlement Hall';
+        if (arch === 'mine')            return 'Collapsing Mineshaft Entrance';
+        if (arch === 'wilderness')      return 'Unstable Rocky Overhang';
+        if (arch === 'canyon')          return 'Eroded Canyon Ledge';
+        if (arch === 'frontier')        return 'Condemned Frontier Shack';
+        return randomChoice([
+          'Condemned Building',
+          'Failing Outpost Wall',
+          'Crumbling Stone Remnant',
+          'Unstable Frontier Structure'
+        ]);
+      }
+
+      // hasRangers must be declared here so the names table below can reference it.
+      const hasRangers = state.factions.some(f => f.id === 'monster_rangers');
+
+      const names = {
+        wrecked_engine:     'Wrecked Engine',
+        scattered_crates:   'Scattered Supply Crates',
+        derailed_cars:      'Derailed Cars',
+        pack_animals:       'Pack Animals',
+        ritual_components:  'Ritual Components',
+        ritual_site:        hasRangers ? 'Monster Sanctuary Site' : 'Ritual Site',
+        land_marker:        (() => {
+          const arch = locProfile?.archetype || '';
+          const feats = features;
+          if (feats.includes('RailTerminus'))  return 'Rail Terminus Boundary Post';
+          if (feats.includes('RailGrade') || feats.includes('RailSpur')) return 'Rail Right-of-Way Stake';
+          if (feats.includes('BrakeScars'))    return 'Grade Survey Stake';
+          if (feats.includes('AuctionYard'))   return 'Auction Yard Deed Notice';
+          if (feats.includes('GunsmithRow'))   return 'Street Boundary Sign';
+          if (feats.includes('Jailhouse'))     return 'Jurisdiction Notice Post';
+          if (feats.includes('Ruins') || feats.includes('OldFort')) return 'Salvage Claim Stake';
+          if (feats.includes('Hotel'))         return 'Deed Notice Board';
+          if (feats.includes('CompanyOffice')) return 'Company Land Claim Notice';
+          if (feats.includes('Saloon'))        return 'Block Claim Sign';
+          if (feats.includes('Church'))        return 'Parish Boundary Marker';
+          if (feats.includes('Mineshaft') || feats.includes('Mine')) return 'Mine Claim Stake';
+          if (feats.includes('Stockyard'))     return 'Stockyard Brand Post';
+          if (feats.includes('WaterTower'))    return 'Water Rights Notice';
+          if (feats.includes('Corral') || feats.includes('Barn')) return 'Grazing Rights Post';
+          if (arch === 'boomtown')   return randomChoice(['Town Sign', 'Block Claim Board', 'Boomtown Deed Post']);
+          if (arch === 'arroyo')     return randomChoice(['Canyon Survey Stake', 'Trail Claim Cairn', 'Canyon Boundary Post']);
+          if (arch === 'rail_grade') return 'Rail Right-of-Way Stake';
+          if (arch === 'rail_terminus' || arch === 'rail_depot') return 'Station Boundary Post';
+          if (arch === 'ruins')      return randomChoice(['Salvage Claim Stake', 'Ruins Survey Post', 'Rubble Claim Marker']);
+          if (arch === 'mine')       return randomChoice(['Mine Claim Stake', 'Assay Notice Post', 'Mineral Rights Stake']);
+          if (arch === 'settlement') return randomChoice(['Town Sign', 'Settlement Charter Post', 'Boundary Marker']);
+          if (arch === 'outpost')    return 'Outpost Boundary Sign';
+          if (arch === 'wilderness') return randomChoice(['Survey Stake', 'Pioneer Claim Post', 'Boundary Cairn']);
+          if (arch === 'canyon')     return randomChoice(['Canyon Survey Post', 'Trail Claim Cairn', 'Boundary Stone']);
+          if (arch === 'frontier')   return randomChoice(['Frontier Claim Stake', 'Pioneer Survey Post', 'Homestead Sign']);
+          return randomChoice(['Claim Stake', 'Survey Post', 'Boundary Sign', 'Deed Notice Board']);
+        })(),
+        command_structure:  (() => {
+          const arch = locProfile?.archetype || '';
+          const feats = features;
+          if (feats.includes('Fort') || feats.includes('OldFort')) return 'Command Fortress';
+          if (feats.includes('Hotel'))       return 'Command Post (Hotel)';
+          if (feats.includes('CompanyOffice')) return 'Command Office';
+          if (feats.includes('Jailhouse'))   return 'Command Post (Jailhouse)';
+          if (feats.includes('Ruins'))       return 'Ruined Command Post';
+          if (arch === 'wilderness' || arch === 'arroyo') return 'Field Command Tent';
+          if (arch === 'boomtown')   return 'Command Tower';
+          if (arch === 'rail_grade') return 'Rail Command Car';
+          return randomChoice(['Command Tower', 'Command Tent', 'Field Command Post']);
+        })(),
+        thyr_cache:         'Thyr Crystal Cache',
+        artifact:           'Ancient Artifact',
+        captive_entity:     hasRangers ? 'Injured Monster Friend' : 'Captive Entity',
+        fortified_position: 'Fortified Position',
+        barricades:         'Barricades',
+        stored_supplies:    hasRangers ? 'Crate of VitaGood' : 'Stored Supplies',
+        ritual_circle:      hasRangers ? 'Purification Circle' : 'Ritual Circle',
+        tainted_ground:     'Tainted Ground',
+        sacrificial_focus:  'Sacrificial Focus',
+        collapsing_route:   'Collapsing Route',
+        evacuation_point:   'Evacuation Point'
+      };
+      return names[type] || 'Contested Objective';
+    }
+
+    function makeObjectiveDescription(type, locProfile) {
+      const r = locProfile?.effectiveResources || {};
+      const cargoName = getCargoVehicleName();
+
+      const descriptions = {
+        wrecked_engine:     'Salvage mechanical parts or prevent others from claiming them. Each salvage increases Coffin Cough risk.',
+        scattered_crates:   'Collect and extract scattered food, water, and supplies before others claim them.',
+        derailed_cars:      "Search the wreckage for valuable cargo before it's lost or claimed.",
+          cargo_vehicle:      `Escort the ${cargoName} safely across the board. The sweet scent may attract monsters.`,
+        pack_animals:       'Control or escort the animals. They may panic under fire.',
+        ritual_components:  'Gather mystical components scattered across the battlefield.',
+        ritual_site:        'Control this location to complete rituals or disrupt enemy mysticism.',
+        land_marker:        'Claim and hold these marked positions. Whoever controls them at game end controls the ground.',
+        command_structure:  'Control this position to coordinate forces and establish leadership.',
+        thyr_cache:         'Extract or corrupt the glowing Thyr crystals. Handling Thyr is always dangerous.',
+        artifact:           'Recover the ancient artifact. Its true nature may be hidden.',
+        captive_entity:     'Free, capture, or control the entity. May not be what it appears.',
+        fortified_position: 'Hold this defensible position against all comers.',
+        barricades:         'Control the chokepoint to restrict enemy movement.',
+        stored_supplies:    'Secure stockpiled resources before they are depleted.',
+        ritual_circle:      'Control the circle to empower rituals or prevent enemy mysticism.',
+        tainted_ground:     'Interact at your own risk. Corruption spreads.',
+        sacrificial_focus:  'Control or destroy this dark altar.',
+        collapsing_route:   'The passage is deteriorating. Hold it open or let it collapse to trap the enemy.',
+        fouled_resource:    'Contaminated supplies that are worse than nothing — unless you know what to do with them.',
+        unstable_structure: 'The building will not survive the battle. Get what you need from it before it comes down.',
+        evacuation_point:   'Reach this location to escape the escalating danger.'
+      };
+
+      let base = descriptions[type] || 'Control this objective to score victory points.';
+
+      if (locProfile) {
+        if (type === 'stored_supplies'  && (r.supplies   || 0) >= 4)
+          base = `These caches hold enough to shift the balance — food, medicine, kit. ${base}`;
+        if (type === 'scattered_crates' && (r.food_good  || 0) >= 3)
+          base = `The crates are scattered but what's inside is worth the risk. ${base}`;
+        if (type === 'thyr_cache'       && (r.thyr       || 0) >= 4)
+          base = `The crystals are warm to the touch and getting warmer. ${base}`;
+        if (type === 'fouled_resource'  && (r.water_foul || 0) >= 2)
+          base = `The water here is wrong. Something got in. ${base}`;
+        if (type === 'fouled_resource'  && (r.rotgut     || 0) >= 2)
+          base = `The barrels are marked safe but the smell says otherwise. ${base}`;
+      }
+      return base;
+    }
+
+    function makeObjectiveSpecial(type, locProfile) {
+      // 40% chance of a "Guarded" special — names a real monster from location seeds or faction data.
+      if (Math.random() < 0.4) {
+        const seeds = locProfile?.monster_seeds || [];
+        if (seeds.length > 0) {
+          const seed = randomChoice(seeds);
+          return `Guarded — ${seed.name} nearby`;
+        }
+        if (monsterFactionData?.units?.length) {
+          const genericMonster = randomChoice(monsterFactionData.units);
+          if (genericMonster) return `Guarded — ${genericMonster.name} nearby`;
+        }
+      }
+
+      const specials = [
+        'Unstable — may collapse if damaged',
+        'Tainted — triggers morale tests',
+        'Valuable — worth extra VP',
+        'Corrupted — alters nearby terrain',
+        'Hot — every faction already knows about it'
+      ];
+      return randomChoice(specials);
+    }
+
+    function calcObjectiveVP(type, locProfile) {
+      const r = locProfile?.effectiveResources || {};
+      const table = {
+        stored_supplies:    Math.max(2, Math.ceil((r.supplies    || 2) / 2)),
+        scattered_crates:   Math.max(2, Math.ceil(((r.food_good || 1) + (r.supplies || 1)) / 3)),
+        thyr_cache:         Math.max(3, r.thyr    || 3),
+        ritual_site:        Math.max(3, Math.ceil((r.thyr || 2) * 0.8)),
+        ritual_circle:      Math.max(3, Math.ceil((r.thyr || 2) * 0.8)),
+        land_marker:        Math.max(2, Math.ceil((r.silver || 2) / 2)),
+        wrecked_engine:     Math.max(2, Math.ceil((r.spare_parts || 2) / 2)),
+        pack_animals:       Math.max(2, Math.ceil((r.livestock || 2) / 2)),
+        artifact:           4,
+        sacrificial_focus:  4,
+        captive_entity:     4,
+        ritual_components:  3,
+        fortified_position: 3,
+        command_structure:  3,
+        cargo_vehicle:      3,
+        collapsing_route:   3,
+        fouled_resource:    2,
+        tainted_ground:     3,
+        barricades:         2,
+        unstable_structure: 2,
+        evacuation_point:   3,
+        derailed_cars:      2
+      };
+      return table[type] || 2;
+    }
+
+    function generateObjectives(plotFamily, locProfile) {
+      const scores = {};
+      ALL_OBJECTIVE_TYPES.forEach(t => scores[t] = 0);
+
+      // Thyr Cache gets a baseline score so it appears in most scenarios;
+      // the canyon always has Thyr somewhere.
+      scores['thyr_cache'] += 2;
+
+      (plotFamily.default_objectives || []).forEach(t => {
+        if (scores[t] !== undefined) scores[t] += 3;
+      });
+
+      if (locProfile?.effectiveResources) {
+        const r = locProfile.effectiveResources;
+        for (const [key, val] of Object.entries(r)) {
+          if (typeof val === 'number' && val >= 1) {
+            // Weight: high-value resources (3+) get doubled contribution.
+            const weight = val >= 3 ? val * 2 : val >= 2 ? val + 2 : val + 1;
+            (RESOURCE_OBJECTIVE_AFFINITY[key] || []).forEach(t => {
+              if (scores[t] !== undefined) scores[t] += weight;
+            });
+          }
+        }
+
+        if ((r.water_clean || 0) < 1 && (r.water_foul || 0) < 1 && (r.rotgut || 0) < 1 && (r.food_foul || 0) < 1)
+          scores['fouled_resource'] = Math.max(0, scores['fouled_resource'] - 4);
+        if ((r.thyr || 0) < 1) {
+          scores['thyr_cache']    = Math.max(0, scores['thyr_cache']    - 2);
+          scores['ritual_circle'] = Math.max(0, scores['ritual_circle'] - 2);
+        }
+        if ((r.spare_parts || 0) < 2)
+          scores['wrecked_engine'] = Math.max(0, scores['wrecked_engine'] - 3);
+        if ((r.livestock || 0) < 2)
+          scores['pack_animals'] = 0;
+        if ((r.tzul_silver || 0) < 3)
+          scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 2);
+      }
+
+      // ---- RAIL GATE ----
+      // Rail objectives are gated: only score if the location has rail features or a rail archetype.
+      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'rail', 'Rail'];
+      const RAIL_ARCHETYPES = ['rail_grade', 'rail_terminus', 'rail_depot'];
+      const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
+                   || RAIL_ARCHETYPES.includes(locProfile?.archetype || '');
+      if (!hasRail) {
+        scores['wrecked_engine'] = 0;
+        scores['derailed_cars']  = 0;
+      }
+
+      const sorted = Object.entries(scores)
+        .filter(([, s]) => s > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      console.log('🎯 Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
+
+      const numObjectives = randomInt(2, 3);
+      const objectives    = [];
+      const used          = new Set();
+
+      const EXCLUSIVE_GROUPS = {
+        taint_group:   ['tainted_ground', 'fouled_resource'],
+        ritual_group:  ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'ritual_components'],
+        salvage_group: ['wrecked_engine', 'derailed_cars', 'unstable_structure'],
+        supply_group:  ['stored_supplies', 'scattered_crates']
+      };
+      const usedGroups = new Set();
+
+      function getGroup(type) {
+        for (const [grp, types] of Object.entries(EXCLUSIVE_GROUPS)) {
+          if (types.includes(type)) return grp;
+        }
+        return null;
+      }
+
+      for (const [type] of sorted) {
+        if (objectives.length >= numObjectives) break;
+        if (used.has(type)) continue;
+        const grp = getGroup(type);
+        if (grp && usedGroups.has(grp)) continue;
+        used.add(type);
+        if (grp) usedGroups.add(grp);
+        objectives.push({
+          name:        makeObjectiveName(type, locProfile),
+          description: makeObjectiveDescription(type, locProfile),
+          type,
+          vp_base:     calcObjectiveVP(type, locProfile),
+          special:     Math.random() < 0.2 ? makeObjectiveSpecial(type, locProfile) : null
+        });
+      }
+
+      if (objectives.length === 0) {
+        objectives.push({
+          name:        'Contested Ground',
+          description: 'Hold this position.',
+          type:        'land_marker',
+          vp_base:     3,
+          special:     null
+        });
+      }
+
+      return objectives;
+    }
+
+    function generateObjectivesFromVault(vaultScenario, locProfile) {
+      const objectives = [];
+      if (vaultScenario.objectives && Array.isArray(vaultScenario.objectives)) {
+        vaultScenario.objectives.forEach(vo => {
+          const type = vo.id || vo.type;
+          objectives.push({
+            name:        makeObjectiveName(type, locProfile),
+            description: vo.notes ? vo.notes[0] : makeObjectiveDescription(type, locProfile),
+            type,
+            vp_base:     3,
+            special:     vo.special ? vo.special.join(', ') : null
+          });
+        });
+      }
+      if (objectives.length < 2) {
+        objectives.push({
+          name:        'Contested Objective',
+          description: 'Control this location to score victory points.',
+          type:        'land_marker',
+          vp_base:     2,
+          special:     null
+        });
+      }
+      return objectives;
+    }
+
+    // ── Objective marker table — token counts, placement, and allowed interactions ───
+    const OBJECTIVE_MARKER_TABLE = {
+      wrecked_engine:     { count: '1',    placement: 'Center board',              token: 'Wreck token or large model',    interactions: ['SALVAGE', 'CONTROL', 'SABOTAGE'] },
+      scattered_crates:   { count: 'd6', placement: 'Scattered across board',    token: 'Supply crate tokens',            interactions: ['COLLECT', 'EXTRACT'] },
+      stored_supplies:    { count: 'd6', placement: 'Within 6″ of center',       token: 'Supply crate tokens',           interactions: ['CLAIM', 'EXTRACT'] },
+      derailed_cars:      { count: 'd6', placement: 'Scattered near wreck',      token: 'Rail car tokens',               interactions: ['SEARCH', 'EXTRACT'] },
+      // Cargo placement is computed at marker time (factions are finalised by then).
+      cargo_vehicle:      { count: '1',    placement: '__CARGO_PLACEMENT__',    token: 'Vehicle model',                 interactions: ['BOARD', 'ESCORT', 'DISABLE'] },
+      pack_animals:       { count: 'd6',   placement: 'Center board',              token: 'Animal tokens',                 interactions: ['CONTROL', 'ESCORT'] },
+      ritual_components:  { count: 'd6', placement: 'Scattered across board',    token: 'Component tokens',              interactions: ['GATHER', 'CORRUPT'] },
+      ritual_site:        { count: '1',    placement: 'Center board',              token: 'Ritual marker (3″ radius)',     interactions: ['ACTIVATE', 'DISRUPT', 'CORRUPT'] },
+      ritual_circle:      { count: '1',    placement: 'Center board',              token: 'Circle marker (3″ radius)',     interactions: ['ACTIVATE', 'DISRUPT', 'CONTROL'] },
+      land_marker:        { count: '3',    placement: 'Spread across board',       token: 'Claim stake / survey post / deed notice (3 per set)', interactions: ['CLAIM', 'CONTROL'] },
+      command_structure:  { count: '1',    placement: 'Strategic position',        token: 'Command post marker',           interactions: ['CONTROL', 'HOLD', 'DESTROY'] },
+      thyr_cache:         { count: '1',    placement: 'Center board',              token: 'Glowing crystal token',         interactions: ['EXTRACT', 'CORRUPT', 'DESTROY'] },
+      artifact:           { count: '1',    placement: 'Center board',              token: 'Artifact token',                interactions: ['RECOVER', 'EXAMINE', 'DESTROY'] },
+      captive_entity:     { count: '1',    placement: 'Random mid-board',          token: 'Entity marker or model',        interactions: ['FREE', 'CAPTURE', 'CONTROL'] },
+      fortified_position: { count: '1',    placement: 'Defensible terrain',        token: 'Fortification marker',          interactions: ['HOLD', 'ASSAULT', 'REINFORCE'] },
+      barricades:         { count: '1',    placement: 'Chokepoint / lane center',  token: 'Barricade tokens',              interactions: ['HOLD', 'DESTROY', 'BYPASS'] },
+      tainted_ground:     { count: '1',    placement: 'Dangerous central area',    token: 'Taint marker (6″ radius)',      interactions: ['CLEANSE', 'CORRUPT', 'AVOID'] },
+      sacrificial_focus:  { count: '1',    placement: 'Center board',              token: 'Altar token',                   interactions: ['CONTROL', 'DESTROY', 'ACTIVATE'] },
+      unstable_structure: { count: '1',    placement: 'Random mid-board',          token: 'Structure marker',              interactions: ['SALVAGE', 'CONTROL', 'COLLAPSE'] },
+      collapsing_route:   { count: '1',    placement: 'Divides board in half',     token: 'Route markers at each end',     interactions: ['CROSS', 'BLOCK', 'REINFORCE'] },
+      evacuation_point:   { count: '1',    placement: 'Far table edge, center',    token: 'Exit marker',                   interactions: ['REACH', 'ESCAPE'] },
+      fouled_resource:    { count: '2',    placement: 'Scatter near center',       token: 'Contaminated supply tokens',    interactions: ['CONTROL', 'PURGE', 'WEAPONIZE'] }
+    };
+
+    function generateObjectiveMarkers(objectives, vaultScenario) {
+      const markers = [];
+      objectives.forEach(obj => {
+        let vaultObj = null;
+        if (vaultScenario?.objectives) {
+          vaultObj = vaultScenario.objectives.find(vo => vo.id === obj.type || vo.type === obj.type);
+        }
+        const defaults = OBJECTIVE_MARKER_TABLE[obj.type] || {
+          count:        '1',
+          placement:    'Board center',
+          token:        'Objective token',
+          interactions: []
+        };
+        // Cargo vehicle placement is faction-aware: Rangers get the escort-from-edge version.
+        let resolvedPlacement = defaults.placement;
+        if (obj.type === 'cargo_vehicle') {
+          const hasRangers = state.factions.some(f => f.id === 'monster_rangers');
+          resolvedPlacement = hasRangers
+            ? 'Monster Rangers deployment edge, center — must be escorted across the full board'
+            : 'One table edge, center — must be escorted to the opposite edge';
+        }
+        markers.push({
+          name:         obj.name,
+          type:         obj.type,
+          count:        vaultObj?.count       || defaults.count,
+          placement:    resolvedPlacement,
+          token:        defaults.token,
+          interactions: vaultObj?.interactions?.length ? vaultObj.interactions : defaults.interactions,
+          notes:        vaultObj?.notes ? vaultObj.notes[0] : null
+        });
+      });
+      return markers;
+    }
+
+    // ── Victory condition tables ──────────────────────────────────────────────────
+    //    FACTION_APPROACH   — verbs, VP style, tactic line, faction quote
+    //    FACTION_OBJECTIVE_FLAVOR — per-faction flavor text keyed by objective type
+    //    FACTION_MOTIVES    — the specific WHY each faction is at each objective type
+
+    const FACTION_APPROACH = {
+      monster_rangers: {
+        verbs:    ['Secure', 'Protect', 'Stabilize', 'Guard', 'Preserve'],
+        vp_style: 'per_round',
+        bonus:    'Bonus VP if no casualties.',
+        tactic:   'Defensive positioning. +1 die when protecting objectives.',
+        quote:    'Not all protectors carry badges.'
+      },
+      monsterology: {
+        verbs:    ['Extract', 'Harvest', 'Acquire', 'Catalogue', 'Weaponize'],
+        vp_style: 'per_extraction',
+        bonus:    'Can convert extracted resources to VP.',
+        tactic:   'Surgical extraction. Ignore collateral damage.',
+        quote:    'Progress has a price, paid in full by the land.'
+      },
+      liberty_corps: {
+        verbs:    ['Seize', 'Lock Down', 'Control', 'Claim', 'Arrest'],
+        vp_style: 'area_control',
+        bonus:    'Bonus VP for arrests over kills.',
+        tactic:   'Hold the line. +1 die from controlled positions.',
+        quote:    'Order will be maintained.'
+      },
+      shine_riders: {
+        verbs:    ['Hit', 'Grab', 'Flip', 'Salt', 'Extract'],
+        vp_style: 'hit_and_run',
+        bonus:    'Bonus VP if Shine Boss exits with resources.',
+        tactic:   'Speed over combat. Extract early, stay mobile.',
+        quote:    'Everything has a price. We just set it.'
+      },
+      crow_queen: {
+        verbs:    ['Claim', 'Convert', 'Subjugate', 'Consecrate', 'Crown'],
+        vp_style: 'per_round',
+        bonus:    'Bonus VP for each monster converted to a Subject.',
+        tactic:   'Dominance through will. Obelisk presence amplifies control.',
+        quote:    'Everything in the canyon kneels. Eventually.'
+      },
+      monsters: {
+        verbs:    ['Claim', 'Guard', 'Hold', 'Escape', 'Feed'],
+        vp_style: 'survival',
+        bonus:    'Bonus VP per model alive at end.',
+        tactic:   'Territorial. Protect the ground or flee to exits.',
+        quote:    'The canyon was here first.'
+      }
+    };
+
+    const FACTION_OBJECTIVE_FLAVOR = {
+      monster_rangers: {
+        monsters_befriendable: "There's a creature out there that doesn't want to fight. Reach it before the others do — use your Pocket Snacks. Walk it off the board alive.",
+        monsters_hostile:      "The monster is cornered or terrified. Don't put it down — get between it and the factions that will. Escort it to an exit.",
+        stored_supplies:       "These caches belong to the canyon's people. Every crate we hold is someone who doesn't go hungry.",
+        scattered_crates:      "Gather what's left. Supplies belong to survivors, not scavengers.",
+        fouled_resource:       "Contaminated doesn't mean worthless. We can purify it. Others will weaponize it.",
+        unstable_structure:    "Get what's salvageable out before it comes down. Then let it fall.",
+        collapsing_route:      "We need this route. Hold it open long enough to get what matters through.",
+        thyr_cache:            "Don't extract the Thyr — monitor it. Mark the cluster and get out.",
+        land_marker:           "This territory needs to be witnessed and recorded. Not conquered.",
+        command_structure:     "Control the structure. Use it to call in support, not to fortify.",
+        cargo_vehicle:         "Get the Cargo Tiger Truck through. Whatever's in it matters — that's the job."
+      },
+      monsterology: {
+        monsters_befriendable: "Unclassified specimen. Mobile, possibly sapient, definitely valuable. Capture it intact — no kill shots until a live capture is confirmed impossible.",
+        monsters_hostile:      "Threat-class specimen. If live capture is impossible, harvest what you can on the way out. The Institute pays by weight.",
+        stored_supplies:       "Survey the caches. Record contents. Extract anything with research value.",
+        scattered_crates:      "Scattered materials mean a field opportunity. Collect everything, sort later.",
+        fouled_resource:       "Contaminated supplies are a sample set. The Institute wants the contaminant, not the supplies.",
+        unstable_structure:    "Structural analysis while it's still standing. Extract data before it collapses.",
+        collapsing_route:      "Geological event in real-time. Document it. Extract before it seals.",
+        thyr_cache:            "Active Thyr cluster. Extract maximum yield. Radiation protocols in effect.",
+        land_marker:           "Survey marker. Record coordinates and resource density. File the claim.",
+        command_structure:     "This installation has records. Extract them.",
+        cargo_vehicle:         "The vehicle is the specimen. Analyse its contents. Extract samples."
+      },
+      liberty_corps: {
+        monsters_befriendable: "Unlicensed biological entity. Subdue and contain for formal classification.",
+        monsters_hostile:      "Active threat to personnel. Engage and neutralize. File the report afterward.",
+        stored_supplies:       "Unsecured federal property. Lock it down. Anyone else touching it is a thief.",
+        scattered_crates:      "Contraband until proven otherwise. Collect and tag for inspection.",
+        fouled_resource:       "Biohazard. Cordon the area. Decontamination is Corps jurisdiction.",
+        unstable_structure:    "Condemned. Hold the perimeter. Nobody goes in without clearance.",
+        collapsing_route:      "Critical infrastructure. Hold or reroute. The Corps controls movement here.",
+        thyr_cache:            "Unregulated Thyr extraction is a federal crime. Secure the site.",
+        land_marker:           "Territory is Corps jurisdiction. Plant the flag. Hold it.",
+        command_structure:     "Command post. Secure it first. Everything else flows from here.",
+        cargo_vehicle:         "Intercept the vehicle. Inspect its cargo. Impound if necessary."
+      },
+      shine_riders: {
+        monsters_befriendable: "Chaos costs nothing. If the creature goes left, we go right. Use it.",
+        monsters_hostile:      "Distraction. While it's eating whoever's dumbest, we hit the real target.",
+        stored_supplies:       "Full caches. Best haul in the canyon if we move before anyone else notices.",
+        scattered_crates:      "Grab what you can carry. Leave the rest for the fire.",
+        fouled_resource:       "Contaminated supplies that are worse than nothing — unless you know what to do with them.",
+        unstable_structure:    "Quick grab before it comes down. We've done worse.",
+        collapsing_route:      "The chaos at the route is our window. Hit the real objective while they watch it fall.",
+        thyr_cache:            "Hot cargo but the buyer doesn't ask questions. Extract fast.",
+        land_marker:           "Nobody owns this canyon. But if we plant the marker, we collect the fee.",
+        command_structure:     "Hit the command post. Take what's valuable. Make it look like someone else.",
+        cargo_vehicle:         "Whatever that truck is carrying is worth more than the truck. Get it and go."
+      },
+      crow_queen: {
+        monsters_befriendable: "These creatures are subjects who have not yet pledged. Convert them. Gently if possible.",
+        monsters_hostile:      "They resist the Crown's call. Break them or convert them. There is no third option.",
+        stored_supplies:       "The canyon's resources flow to the Crown. Claim the cache. Consecrate it.",
+        scattered_crates:      "Scattered tribute. Gather it in the Crown's name.",
+        fouled_resource:       "What others call contamination, the Crown calls potential. Claim and convert it.",
+        unstable_structure:    "The canyon reshapes itself for her. Claim what's within before it transforms.",
+        collapsing_route:      "Patience is dominance. Hold the route long enough to demonstrate who commands this ground.",
+        thyr_cache:            "The crystals already answer to the Crown. Claim them formally.",
+        land_marker:           "The canyon was always hers. This marker is a reminder.",
+        command_structure:     "There is one command in this canyon. Replace whatever was here with an Obelisk.",
+        cargo_vehicle:         "The vehicle carries something useful. Crown it. Then drive it where you need it."
+      }
+    };
+
+    // ── FACTION_MOTIVES — 6 factions × 15 objective types = 90 specific mission lines ──
+    //    Rolled at generation time based on the primary objective type.
+    const FACTION_MOTIVES = {
+      monster_rangers: {
+        ritual_site:        'Sanctify this site before another faction can corrupt or weaponize it.',
+        ritual_circle:      'Sanctify the circle. Close whatever opened it.',
+        thyr_cache:         'Monitor the Thyr cluster — record it and leave it intact.',
+        land_marker:        'Witness this territory. Record it. Let the canyon remember it was seen.',
+        command_structure:  'Secure the structure to co-ordinate canyon protection from it.',
+        stored_supplies:    'These supplies belong to canyon survivors. Get them out.',
+        scattered_crates:   'Scavengers will come for these. Get there first.',
+        cargo_vehicle:      'Escort whatever is in this vehicle to safety. That is the job.',
+        artifact:           'Recover the artifact before it falls into dangerous hands.',
+        tainted_ground:     'The taint spreads. Contain it before the contamination is permanent.',
+        fouled_resource:    'Purify what can be saved. Destroy what cannot.',
+        captive_entity:     'Whatever is held here did not ask to be held. Free it.',
+        wrecked_engine:     'Salvage what the canyon can use. Leave the rest.',
+        pack_animals:       'These animals are not weapons. Get them out of the line of fire.',
+        default:            'Protect what the canyon cannot protect for itself.'
+      },
+      monsterology: {
+        ritual_site:        'Conduct a Society ritual using the site\'s residual power.',
+        ritual_circle:      'Activate the circle for Institute research. Record every reading.',
+        thyr_cache:         'Extract maximum Thyr yield. Radiation protocols are in effect.',
+        land_marker:        'File a resource survey claim in the Society\'s name.',
+        command_structure:  'This installation has records. Extract them all.',
+        stored_supplies:    'Survey the caches. Extract anything with research value.',
+        scattered_crates:   'Field sample opportunity. Collect everything — sort it later.',
+        cargo_vehicle:      'The vehicle is the specimen. Analyse contents, extract samples.',
+        artifact:           'Unclassified object of significant power. Acquire at any cost.',
+        tainted_ground:     'The contaminant is the find. The Institute wants the source, not the land.',
+        fouled_resource:    'Contaminated supplies are a sample set. Extract the contaminant.',
+        captive_entity:     'Unclassified specimen. Capture intact if possible.',
+        wrecked_engine:     'Mechanical failure analysis. Extract components for reverse engineering.',
+        pack_animals:       'Biological specimens. Catalogue and tag before others destroy them.',
+        default:            'Extract. Catalogue. Report. Leave nothing of value behind.'
+      },
+      liberty_corps: {
+        ritual_site:        'Unlicensed ritual activity is a federal offence. Shut it down.',
+        ritual_circle:      'Cordon the site. No unauthorised use of federal territory.',
+        thyr_cache:         'Unregulated Thyr extraction is illegal. Secure the site.',
+        land_marker:        'This territory is Corps jurisdiction. Plant the flag. Hold it.',
+        command_structure:  'Seize the command post. Everything else flows from here.',
+        stored_supplies:    'Unsecured federal property. Lock it down. Anyone else touching it is a thief.',
+        scattered_crates:   'Contraband until proven otherwise. Collect, tag, and impound.',
+        cargo_vehicle:      'Intercept the vehicle. Inspect its cargo. Impound if necessary.',
+        artifact:           'Seized under federal authority. No further questions.',
+        tainted_ground:     'Biohazard. This is Corps jurisdiction. Decontamination begins now.',
+        fouled_resource:    'Cordon the area. No-one goes near it without clearance.',
+        captive_entity:     'Unlicensed biological entity. Subdue and contain for classification.',
+        wrecked_engine:     'Wreck site secured. No salvage without Corps permit.',
+        pack_animals:       'Unlicensed livestock in a federal zone. Impound the lot.',
+        default:            'Order will be maintained. By any means the Corps sees fit.'
+      },
+      shine_riders: {
+        ritual_site:        'The soil here is worth more than the ritual. Steal it and sell it.',
+        ritual_circle:      'Someone built this. Someone will pay us to destroy it. Or to use it.',
+        thyr_cache:         'Hot cargo but the buyer doesn\'t ask questions. Extract fast, exit faster.',
+        land_marker:        'Nobody owns the canyon. But if we plant the marker, we collect the fee.',
+        command_structure:  'Hit the command post. Take what\'s valuable. Make it look like someone else.',
+        stored_supplies:    'Full caches. Best haul in the canyon if we move before anyone notices.',
+        scattered_crates:   'Grab what you can carry. Leave the rest for whoever\'s dumb enough to linger.',
+        cargo_vehicle:      'Whatever that vehicle is carrying is worth more than the vehicle. Take it and go.',
+        artifact:           'One buyer. Very high offer. No questions asked — perfect.',
+        tainted_ground:     'Contaminated supplies are worse than nothing — unless you know the right chemist.',
+        fouled_resource:    'The chaos from the contamination is our window. Hit the real objective now.',
+        captive_entity:     'Chaos costs nothing. Release it. Let it eat whoever\'s slowest.',
+        wrecked_engine:     'Quick salvage before it comes down. We\'ve worked in worse.',
+        pack_animals:       'Animals are cargo. Cargo has a price. Price beats sentiment every time.',
+        default:            'Everything in the canyon has a price. We just set it.'
+      },
+      crow_queen: {
+        ritual_site:        'These sites already answer to the Crown. Claim them formally.',
+        ritual_circle:      'The circle was built for her. Activate it in the Crown\'s name.',
+        thyr_cache:         'The crystals already answer to the Crown. Make it official.',
+        land_marker:        'The canyon was always hers. This marker is a formality.',
+        command_structure:  'There is one command in this canyon. Replace whatever is here with an Obelisk.',
+        stored_supplies:    'The canyon\'s resources flow to the Crown. Consecrate the cache.',
+        scattered_crates:   'Scattered tribute. Gather it in the Crown\'s name.',
+        cargo_vehicle:      'The vehicle carries something useful. Crown it. Then redirect it.',
+        artifact:           'Old power belongs to the oldest power. Claim it.',
+        tainted_ground:     'What others call poison, the Crown calls potential. Claim and convert.',
+        fouled_resource:    'Contamination is opportunity for those who understand the canyon\'s will.',
+        captive_entity:     'These creatures are subjects who have not yet pledged. Convert them.',
+        wrecked_engine:     'The canyon reshapes itself for her. Claim what\'s within before it transforms.',
+        pack_animals:       'Canyon animals are not livestock. They are subjects. Treat them accordingly.',
+        default:            'Everything in the canyon kneels. Eventually.'
+      },
+      monsters: {
+        ritual_site:        'This place is sacred ground. Others must not be allowed to corrupt it.',
+        ritual_circle:      'Nesting ground. Defend it.',
+        thyr_cache:         'The crystals are part of the canyon\'s body. Guard them.',
+        land_marker:        'This territory is feeding ground. Drive off the intruders.',
+        command_structure:  'Strange structure. Dangerous smells. Tear it down or drive them out.',
+        stored_supplies:    'The caches contain food. Feed. Defend the food.',
+        scattered_crates:   'Unfamiliar objects on known ground. Investigate. Destroy if threatening.',
+        cargo_vehicle:      'Loud, smelly machine. A threat or a meal. Find out which.',
+        artifact:           'This object hums with wrong energy. Guard it or destroy it.',
+        tainted_ground:     'The water is wrong. The herd knows. Something must be done.',
+        fouled_resource:    'The food is wrong. Attack whatever caused this.',
+        captive_entity:     'One of the herd is trapped. Free it. Kill who trapped it.',
+        wrecked_engine:     'Dead machine on sacred ground. Investigate. Nest if safe.',
+        pack_animals:       'Territory boundary contested. Hold the ground.',
+        default:            'The canyon was here first. Act accordingly.'
+      }
+    };
+
+    // ── Tactical Link — assigns Primary/Secondary roles and a mechanical chain bonus ──
+    const CHAIN_LINK_VERBS = [
+      'grants +1 die when interacting with',
+      'opens a supply line to',
+      'reveals the hidden approach to',
+      'provides cover fire for operations at',
+      'unlocks a shortcut toward',
+      'draws defenders away from'
+    ];
+
+    // Human-readable intros for the chain link — shown before the mechanical bonus
+    const CHAIN_LINK_INTROS = [
+      'These objectives are connected.',
+      'Control flows between these points.',
+      'Holding one makes the other easier.',
+      'The order of operations matters here.',
+      'One unlocks the other.',
+      'Sequence counts on this board.'
+    ];
+
+    function generateObjectiveChain(objectives) {
+      if (objectives.length < 2) {
+        if (objectives.length === 1) objectives[0].role = 'primary';
+        return;
+      }
+      objectives[0].role = 'primary';
+      objectives[1].role = 'secondary';
+      const linkVerb  = randomChoice(CHAIN_LINK_VERBS);
+      const linkIntro = randomChoice(CHAIN_LINK_INTROS);
+      objectives[0].chain_link       = `Controlling ${objectives[0].name} ${linkVerb} ${objectives[1].name}.`;
+      objectives[0].chain_link_intro = linkIntro;
+      // Any third objective is standalone
+      if (objectives[2]) objectives[2].role = 'standalone';
+    }
+
+    // ── Victory condition tables ──────────────────────────────────────────────────
+    //    FACTION_APPROACH   — verbs, VP style, tactic line, faction quote
+    //    FACTION_OBJECTIVE_FLAVOR — per-faction flavor text keyed by objective type
+    //    FACTION_MOTIVES    — the specific WHY each faction is at each objective type
+    function generateVictoryConditions(plotFamily, objectives, locProfile) {
+      const conditions = {};
+
+      const hasMonsterPressure = objectives.some(o => o.type === 'captive_entity');
+      const injectMonsterObjective = hasMonsterPressure ||
+        state.factions.some(f => f.id === 'monsters');
+
+      state.factions.forEach(faction => {
+        const approach    = FACTION_APPROACH[faction.id] || FACTION_APPROACH.monsters;
+        const flavorMap   = FACTION_OBJECTIVE_FLAVOR[faction.id] || {};
+        const motivesMap  = FACTION_MOTIVES[faction.id] || FACTION_MOTIVES.monsters;
+
+        const primaryObjType = objectives[0]?.type || 'default';
+        const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
+
+        const candidatePool = [];
+
+        if (injectMonsterObjective && faction.id !== 'monsters') {
+          const isFriendly  = faction.id === 'monster_rangers' || faction.id === 'crow_queen';
+          const flavorKey   = isFriendly ? 'monsters_befriendable' : 'monsters_hostile';
+          const monsterDesc = flavorMap[flavorKey] || "Deal with the monsters on the board.";
+          const monsterVP   = {
+            monster_rangers: '+3 VP per monster safely escorted off board. +5 VP if befriended and fighting alongside you.',
+            monsterology:    '+4 VP per monster harvested and extracted off board. +2 VP per live capture.',
+            liberty_corps:   '+3 VP per monster captured. +2 VP per monster eliminated.',
+            shine_riders:    '+3 VP if you redirect a monster into an enemy faction this game. +1 VP per round you avoid monster contact.',
+            crow_queen:      '+4 VP per monster converted to a Crown Subject. +2 VP per round a converted monster fights for you.'
+          };
+          candidatePool.push({
+            name:   'Monsters on the Board',
+            desc:   monsterDesc,
+            vp:     monsterVP[faction.id] || '+2 VP per monster interaction.',
+            tactic: approach.tactic
+          });
+        }
+
+        objectives.forEach(obj => {
+          const flavorKey = obj.type;
+          const desc      = flavorMap[flavorKey]
+            || `${randomChoice(approach.verbs)} the ${obj.name}.`;
+          const vp        = `+${obj.vp_base} VP base`;
+
+          candidatePool.push({
+            name:   `${randomChoice(approach.verbs)} — ${obj.name}`,
+            desc,
+            vp,
+            tactic: approach.tactic
+          });
+        });
+
+        const shuffled         = candidatePool.sort(() => Math.random() - 0.5);
+        const pickedObjectives = shuffled.slice(0, 2);
+
+        const finale   = buildFactionFinale(faction.id, objectives, state.dangerRating, locProfile);
+        const aftermath = buildFactionAftermath(faction.id, plotFamily);
+        const isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
+
+        conditions[faction.id] = {
+          faction_name: faction.name,
+          is_npc:       isNPC,
+          motive,
+          objectives:   pickedObjectives,
+          finale,
+          aftermath,
+          quote:        approach.quote
+        };
+      });
+
+      return conditions;
+    }
+
+    function buildFactionFinale(factionId, objectives, dangerRating, locProfile) {
+      const danger = dangerRating || 3;
+
+      const finales = {
+        monster_rangers: {
+          name: 'The Canyon Holds',
+          desc: 'Preserve what matters. Leave the canyon better than you found it.',
+          vp:   `${danger * 2} VP if no permanent terrain is destroyed by your faction`
+        },
+        liberty_corps: {
+          name: 'Full Occupation',
+          desc: 'Hold all contested objectives simultaneously for one full round.',
+          vp:   `${danger * 3} VP if you hold all objectives at round end`
+        },
+        monsterology: {
+          name: 'Total Extraction Protocol',
+          desc: 'Extract from every objective on the board. Leave nothing.',
+          vp:   `${danger * 3} VP if all objectives extracted`
+        },
+        shine_riders: {
+          name: 'The Getaway',
+          desc: 'Extract the highest-value objective and get your Boss off the board.',
+          vp:   `${danger * 3} VP if Boss exits with extracted resource before Round 4`
+        },
+        crow_queen: {
+          name: 'Canyon Remembers',
+          desc: 'Patience is dominance. Hold. Hold. Hold.',
+          vp:   `15 VP if Crown holds center objective for 3+ rounds`
+        },
+        monsters: {
+          name: 'Herd Intact',
+          desc: 'Survive. That is the win condition.',
+          vp:   `15 VP if 3+ monster units alive at game end`
+        }
+      };
+
+      return finales[factionId] || {
+        name: 'Last Stand',
+        desc: 'Hold the line.',
+        vp:   `${danger * 2} VP`
+      };
+    }
+
+    function buildFactionAftermath(factionId, plotFamily) {
+      const immediates = {
+        monster_rangers: [
+          'The Rangers restore balance.',
+          'The canyon breathes again.',
+          'What was taken is returned.'
+        ],
+        monsterology: [
+          'Specimen crates loaded.',
+          'The survey is complete.',
+          'Progress continues. The site is stripped bare.'
+        ],
+        liberty_corps: [
+          'The area is secured.',
+          'Jurisdiction established.',
+          'Federal flags rise. The law holds.'
+        ],
+        shine_riders: [
+          'The Riders are gone before anyone organises a pursuit.',
+          'The haul is counted. Nobody left empty-handed.',
+          'Some resources are missing. No one is sure who took them.'
+        ],
+        crow_queen: [
+          "The Crown's marks appear on every surface. The canyon feels different here.",
+          'New subjects kneel. The canyon shifts in her favour.',
+          'The Obelisk pulses once and goes dark. Something lingers.'
+        ],
+        monsters: [
+          'The canyon reclaims it.',
+          'The predators scatter — and regroup elsewhere.',
+          'Silence returns. A hungry kind.'
+        ]
+      };
+
+      const longTerms = {
+        monster_rangers: [
+          'Monster populations stabilize. The Wild remains wild.',
+          'Something was preserved today. The canyon remembers.',
+          'The canyon is not safe. But it is kept.'
+        ],
+        monsterology: [
+          'Progress has a price, paid in full by the land.',
+          'The specimens will be studied.',
+          'Nothing grows here because everything useful is gone.'
+        ],
+        liberty_corps: [
+          'Liberated land is clean. And very quiet.',
+          'Trade routes secured, but tension rises.',
+          'Order will be maintained. The Corps will return.'
+        ],
+        shine_riders: [
+          'Word spreads that the Shine Riders hit this location. Defenders get nervous everywhere.',
+          'Crime and opportunity intertwine.',
+          "They'll be back when the heat dies down."
+        ],
+        crow_queen: [
+          "The Regent's influence expands. The canyon shifts in her favour.",
+          'Old stone remembers old names.',
+          'The subjects multiply.'
+        ],
+        monsters: [
+          'They were here before the people came.',
+          'Monsters use this area as a feeding ground and nesting site.',
+          'The canyon is older than all of them.'
+        ]
+      };
+
+      const canyonStates = {
+        monster_rangers: 'Held',
+        monsterology:    'Extracted',
+        liberty_corps:   'Liberated',
+        shine_riders:    'Lawless',
+        crow_queen:      'Exalted',
+        monsters:        'Strangewild'
+      };
+
+      return {
+        immediate:    randomChoice(immediates[factionId]  || immediates.monsters),
+        canyon_state: canyonStates[factionId] || 'Contested',
+        long_term:    randomChoice(longTerms[factionId]   || longTerms.monsters)
+      };
+    }
+
+    // ── window.generateScenario — main generation entry point ──────────────────────
+    window.generateScenario = function() {
+      console.log('🎲 Generating scenario...', state);
+
+      if (!plotFamiliesData || !twistTablesData || !monsterFactionData) {
+        alert('Game data not loaded yet. Please wait a moment and try again.');
+        return;
+      }
+
+      // Inject Monsters as an NPC faction with 85% probability if not already chosen.
+      const hasMonsters = state.factions.some(f => f.id === 'monsters');
+      if (!hasMonsters && Math.random() < 0.85) {
+        state.factions.push({ id: 'monsters', name: 'Monsters', player: 'NPC', isNPC: true });
+      }
+
+      const dangerRating = state.dangerRating || 3;
+      const contextTags  = [];
+
+      const locProfile = buildLocationProfile(state.locationType, state.selectedLocation);
+      console.log('📍 Location profile:', locProfile);
+
+      const families   = plotFamiliesData.plot_families || [];
+      const plotFamily = randomChoice(families);
+      console.log('📖 Plot family:', plotFamily.name);
+
+      const { scenario: vaultScenario, score: maxMatchScore } = matchVaultScenario(
+        plotFamily, locProfile, contextTags,
+        state.factions, state.dangerRating,
+        state.locationType, state.selectedLocation
+      );
+      state.vaultScenario = vaultScenario;   // save for rendering
+      if (vaultScenario) console.log(`📚 Vault match: ${vaultScenario.name} (${maxMatchScore} tags)`);
+
+      // Objectives are generated first so the name and hook can reference their real names.
+      const objectives = vaultScenario
+        ? generateObjectivesFromVault(vaultScenario, locProfile)
+        : generateObjectives(plotFamily, locProfile);
+
+      generateObjectiveChain(objectives);
+
+      const monsterPressure = generateMonsterPressure(plotFamily, dangerRating, locProfile);
+
+      let twist = null;
+      if (Math.random() < 0.3) {
+        const eligible = (twistTablesData.twists || []).filter(t =>
+          t.danger_floor <= dangerRating && t.danger_ceiling >= dangerRating
+        );
+        if (eligible.length > 0) {
+          const td = randomChoice(eligible);
+          twist = {
+            name:        td.name,
+            description: td.description,
+            example:     randomChoice(td.example_outcomes || [])
+          };
+        }
+      }
+
+      const objectiveMarkers  = generateObjectiveMarkers(objectives, vaultScenario);
+      const victoryConditions = generateVictoryConditions(plotFamily, objectives, locProfile);
+      const aftermath         = generateAftermath(plotFamily);
+
+      const nameContextTags = [...contextTags];
+      if (vaultScenario?.tags) {
+        vaultScenario.tags.forEach(t => { if (!nameContextTags.includes(t)) nameContextTags.push(t); });
+      }
+
+      const scenarioName = generateScenarioNameFromTags(plotFamily, locProfile, objectives, twist, dangerRating, nameContextTags);
+
+      const narrative_hook = vaultScenario?.narrative_hook
+        ? vaultScenario.narrative_hook
+        : generateNarrativeHook(plotFamily, locProfile, objectives);
+
+      state.scenario = {
+        name:               scenarioName,
+        narrative_hook,
+        location:           locProfile,
+        danger_rating:      dangerRating,
+        danger_description: getDangerDescription(dangerRating),
+        plot_family:        plotFamily.name,
+        objectives,
+        monster_pressure:   monsterPressure,
+        twist,
+        victory_conditions: victoryConditions,
+        aftermath,
+        factions:           state.factions,
+        pointValue:         state.pointValue,
+        gameMode:           state.gameMode,
+        loc_profile:        locProfile,
+        objective_markers:  objectiveMarkers,
+        vault_source:       vaultScenario ? vaultScenario.name : null,
+        vault_match_score:  vaultScenario ? maxMatchScore : 0
+      };
+
+      state.generated = true;
+      render();
+    };
+
+    // ── Location map embed ────────────────────────────────────────────────────────
+    //    Left panel:  static canyon overview with orange highlight box.
+    //    Right panel: zoomed Leaflet map, gold star at location centre.
+
+    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/map_coffin_canyon_tiny.jpg';
+
+    function renderLocationMapEmbed() {
+      return `
+        <div id="cc-scenario-map-wrap"
+             style="display:flex;gap:6px;
+                    margin:0.5rem 0 0.75rem 0;
+                    border-radius:8px;overflow:hidden;
+                    border:1px solid rgba(255,117,24,0.3);
+                    align-items:stretch;">
+
+          <!-- LEFT: static overview — double-border via CSS class -->
+          <div style="flex:0 0 33%;padding:3px;background:rgba(255,117,24,0.18);
+                      box-shadow:0 0 0 1px rgba(255,117,24,0.55);
+                      border-right:2px solid rgba(255,117,24,0.5);">
+            <div id="cc-scenario-map-overview"
+                 style="position:relative;overflow:hidden;background:#0a0a0a;height:100%;
+                        border:1px solid rgba(255,117,24,0.4);border-radius:2px;">
+
+              <!-- Label at TOP -->
+              <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                          padding:6px 8px;
+                          background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
+                          font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
+                          text-transform:uppercase;color:rgba(255,255,255,0.7);
+                          text-align:center;">Canyon Overview</div>
+
+              <img id="cc-scenario-map-tiny"
+                   src="${TINY_MAP_URL}"
+                   alt="Canyon overview"
+                   style="width:100%;height:auto;display:block;opacity:0.85;">
+
+              <div id="cc-scenario-map-highlight"
+                   style="display:none;position:absolute;
+                          border:2px solid #ff7518;
+                          background:rgba(255,117,24,0.25);
+                          box-shadow:0 0 0 1px rgba(0,0,0,0.6),
+                                     0 0 12px rgba(255,117,24,0.5);
+                          pointer-events:none;"></div>
             </div>
-          `;
-        });
+          </div>
+
+          <!-- RIGHT: zoomed Leaflet map -->
+          <div id="cc-scenario-map-embed"
+               style="flex:1;position:relative;background:#111;min-height:320px;">
+            <div style="position:absolute;inset:0;display:flex;align-items:center;
+                        justify-content:center;color:rgba(255,255,255,0.25);
+                        font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;">
+              Loading map&hellip;
+            </div>
+          </div>
+
+        </div>`;
+    }
+
+    async function initLocationMapEmbed(locProfile) {
+      const leafletContainer = document.getElementById('cc-scenario-map-embed');
+      const highlightEl      = document.getElementById('cc-scenario-map-highlight');
+      if (!leafletContainer) return;
+
+      if (_scenarioMap) {
+        try { _scenarioMap.remove(); } catch (e) {}
+        _scenarioMap = null;
       }
 
-      return html;
+      try {
+        const [hitboxes, mapData] = await Promise.all([
+          ensureHitboxes(),
+          fetchMapData(),
+          ensureLeaflet()
+        ]);
+
+        const px   = mapData.map.background.image_pixel_size;
+        const bbox = hitboxes[locProfile.id];
+
+        // Position the highlight box on the overview image.
+        // Leaflet CRS.Simple has lat=0 at the BOTTOM; CSS top=0 is the TOP — flip Y.
+        if (bbox && highlightEl) {
+          const minLat = bbox[0], maxLat = bbox[2];
+          const minLng = bbox[1], maxLng = bbox[3];
+
+          const cssTop    = (1 - maxLat / px.h) * 100;
+          const cssLeft   = (minLng / px.w) * 100;
+          const cssHeight = Math.max((maxLat - minLat) / px.h * 100, 0.8);
+          const cssWidth  = Math.max((maxLng - minLng) / px.w * 100, 1.5);
+
+          highlightEl.style.top     = cssTop  + '%';
+          highlightEl.style.left    = cssLeft + '%';
+          highlightEl.style.width   = cssWidth  + '%';
+          highlightEl.style.height  = cssHeight + '%';
+          highlightEl.style.display = 'block';
+        }
+
+        const bounds  = [[0, 0], [px.h, px.w]];
+        let centerLat = px.h / 2;
+        let centerLng = px.w / 2;
+        if (bbox) {
+          centerLat = (bbox[0] + bbox[2]) / 2;
+          centerLng = (bbox[1] + bbox[3]) / 2;
+        }
+
+        leafletContainer.innerHTML = '';
+
+        const L = window.L;
+        _scenarioMap = L.map(leafletContainer, {
+          crs:                L.CRS.Simple,
+          minZoom:            -5,
+          maxZoom:            0,
+          zoomControl:        false,
+          attributionControl: false,
+          dragging:           false,
+          scrollWheelZoom:    false,
+          doubleClickZoom:    false,
+          touchZoom:          false,
+          keyboard:           false
+        });
+
+        L.imageOverlay(mapData.map.background.image_key, bounds).addTo(_scenarioMap);
+
+        if (bbox) {
+          L.rectangle(
+            [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+            {
+              color:       'rgba(255,117,24,0.9)',
+              fillColor:   'rgba(255,117,24,0.18)',
+              fillOpacity: 1,
+              weight:      2,
+              interactive: false
+            }
+          ).addTo(_scenarioMap);
+
+          L.marker([centerLat, centerLng], {
+            icon: L.divIcon({
+              className: '',
+              html: `<i class="fa fa-star"
+                        style="color:#ffd700;font-size:1.5rem;
+                               text-shadow:0 0 10px rgba(0,0,0,0.9),0 0 4px #000;
+                               display:block;line-height:1;"></i>`,
+              iconSize:   [20, 20],
+              iconAnchor: [10, 10]
+            }),
+            interactive: false
+          }).addTo(_scenarioMap);
+        }
+
+        requestAnimationFrame(() => {
+          try {
+            _scenarioMap.invalidateSize({ animate: false });
+            if (bbox) {
+              _scenarioMap.fitBounds(
+                [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+                { padding: [60, 80], animate: false, maxZoom: -1 }
+              );
+            } else {
+              _scenarioMap.fitBounds(bounds, { padding: [20, 20], animate: false });
+            }
+          } catch (e) {}
+        });
+
+      } catch (err) {
+        console.warn('⚠️ Location map embed failed:', err);
+        if (leafletContainer) {
+          leafletContainer.innerHTML = `<div style="padding:1rem;color:rgba(255,255,255,0.25);
+                                                    font-size:0.8rem;text-align:center;">
+                                          Map unavailable
+                                        </div>`;
+        }
+      }
     }
 
-    // ---- RENDER CAMPAIGN ----
-    function renderCampaign() {
-      if (!campaignData) return '<div class="cc-muted">Campaign system not loaded</div>';
-      return renderNestedSection('', campaignData.data, 0);
-    }
-
-    // ---- EXCLUDED IDS ----
-    const EXCLUDED_IDS = [
-      'sections_philosophy',
-      'philosophy',
-      'philosophy_design',
-      'philosophy_and_design',
-      'quality_system',
-      'the_roll',
-      'defense_damage',
-      'location_vault',
-      'location_types',
-      'scenario_vault',
-      'objective_vault',
-    ];
-
-    // ---- APP SHELL ----
-    // cc-premium adds the radial gradient depth from cc_ui.css
-    root.innerHTML = `
-      <div class="cc-app-shell cc-premium h-100">
-
-        <div class="cc-app-header">
-          <div>
-            <h1 class="cc-app-title">Rules Explorer</h1>
-            <div class="cc-app-subtitle">Interactive Coffin Canyon Rules Reference</div>
+    // ── renderAccordionStep — shared wrapper for all four setup steps ──────────────
+    function renderAccordionStep(stepNum, title, icon, content, isActive, isComplete) {
+      return `
+        <div class="cc-accordion-item ${isActive ? 'active' : ''} ${isComplete ? 'complete' : ''}">
+          <div class="cc-accordion-header" onclick="openStep(${stepNum})">
+            <div class="cc-step-icon">${icon}</div>
+            <div class="cc-step-title">${title}</div>
+            <div class="cc-step-status">${isComplete ? '<i class="fa fa-check"></i>' : ''}</div>
           </div>
-          <div style="display:flex;gap:0.5rem;align-items:center;">
-            <button id="cc-focus-btn" class="btn btn-sm btn-outline-secondary" title="Focus mode — hides sidebars for reading">
-              📖 Focus
-            </button>
-            <button id="cc-print-btn" class="btn btn-sm btn-outline-secondary" title="Print or save as PDF">
-              🖨️ PDF
-            </button>
+          <div class="cc-accordion-body" style="display: ${isActive ? 'block' : 'none'}">
+            ${content}
+          </div>
+        </div>
+      `;
+    }
+
+    // ── renderStep1_GameSetup ────────────────────────────────────────────────────
+    function renderStep1_GameSetup() {
+      return `
+        <div class="cc-form-section">
+          <label class="cc-label">Game Mode</label>
+          <div class="cc-button-group">
+            <button class="cc-btn ${state.gameMode === 'solo' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
+                    onclick="setGameMode('solo')">Solo Play</button>
+            <button class="cc-btn ${state.gameMode === 'multiplayer' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
+                    onclick="setGameMode('multiplayer')">Multiplayer</button>
           </div>
         </div>
 
-        <div class="cc-rules-explorer">
+        <div class="cc-form-section">
+          <label class="cc-label">Point Value</label>
+          <select class="cc-input" onchange="setPointValue(this.value)">
+            <option value="500"  ${state.pointValue === 500  ? 'selected' : ''}>500 ₤</option>
+            <option value="1000" ${state.pointValue === 1000 ? 'selected' : ''}>1000 ₤</option>
+            <option value="1500" ${state.pointValue === 1500 ? 'selected' : ''}>1500 ₤</option>
+            <option value="2000" ${state.pointValue === 2000 ? 'selected' : ''}>2000 ₤</option>
+          </select>
+        </div>
 
-          <!-- Sidebar (Grouped Table of Contents) -->
-          <aside class="cc-rules-sidebar" id="cc-rules-sidebar">
-            <div class="cc-panel h-100">
-              <div class="cc-panel-head">
-                <div class="cc-panel-title mb-3">Rules</div>
+        <div class="cc-form-section">
+          <label class="cc-label">Danger Rating</label>
+          <select class="cc-input" onchange="setDangerRating(this.value)">
+            <option value="1" ${state.dangerRating === 1 ? 'selected' : ''}>&#9733;&#9734;&#9734;&#9734;&#9734;&#9734; &mdash; Controlled</option>
+            <option value="2" ${state.dangerRating === 2 ? 'selected' : ''}>&#9733;&#9733;&#9734;&#9734;&#9734;&#9734; &mdash; Frontier Risk</option>
+            <option value="3" ${state.dangerRating === 3 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9734;&#9734;&#9734; &mdash; Hostile</option>
+            <option value="4" ${state.dangerRating === 4 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9734;&#9734; &mdash; Dangerous</option>
+            <option value="5" ${state.dangerRating === 5 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9733;&#9734; &mdash; Extreme</option>
+            <option value="6" ${state.dangerRating === 6 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9733;&#9733; &mdash; Catastrophic</option>
+          </select>
+        </div>
 
-                <div class="btn-group btn-group-sm w-100 mb-3" role="group">
-                  <button type="button" class="btn btn-outline-secondary active" data-filter="all">All</button>
-                  <button type="button" class="btn btn-outline-secondary" data-filter="favorites">★ Starred</button>
+        <div class="cc-form-section">
+          <label class="cc-label">Game Warden</label>
+          <select class="cc-input" onchange="setGameWarden(this.value)">
+            <option value="none"      ${!state.gameWarden               ? 'selected' : ''}>No Warden</option>
+            <option value="observing" ${state.gameWarden === 'observing' ? 'selected' : ''}>Observing</option>
+            <option value="npc"       ${state.gameWarden === 'npc'       ? 'selected' : ''}>Running NPC</option>
+          </select>
+        </div>
+
+        ${state.gameMode ? `
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
+            <button class="cc-btn cc-btn-primary" onclick="completeStep(1)">Next: Factions &rarr;</button>
+          </div>
+        ` : `
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
+          </div>
+        `}
+      `;
+    }
+
+    // ── renderStep2_Factions ─────────────────────────────────────────────────────
+    function renderStep2_Factions() {
+      if (!state.gameMode) {
+        return `<div class="cc-info-box"><p>Complete Step 1 first.</p></div>`;
+      }
+
+      if (state.gameMode === 'solo') {
+        const playerFaction = state.factions.find(f => !f.isNPC);
+
+        // Most factions cannot oppose themselves. Shine Riders and Monsters can.
+        const CANNOT_SELF_OPPOSE = ['monster_rangers', 'monsterology', 'liberty_corps', 'crow_queen'];
+        const playerCanSelfOppose = !playerFaction || !CANNOT_SELF_OPPOSE.includes(playerFaction.id);
+
+        return `
+          <div class="cc-form-section">
+            <label class="cc-label">Your Faction</label>
+            <select class="cc-input" onchange="setPlayerFaction(this.value)">
+              <option value="">Choose your faction&hellip;</option>
+              ${FACTIONS.map(f => `
+                <option value="${f.id}" ${playerFaction?.id === f.id ? 'selected' : ''}>${f.name}</option>
+              `).join('')}
+            </select>
+          </div>
+
+          <div class="cc-form-section">
+            <label class="cc-label">NPC Opponents</label>
+            <p class="cc-help-text">Choose which factions you'll be playing against.</p>
+            ${FACTIONS.map(f => {
+              const isNPC     = state.factions.some(sf => sf.id === f.id && sf.isNPC);
+                const isSelf    = playerFaction?.id === f.id;
+              const disabled  = isSelf && CANNOT_SELF_OPPOSE.includes(f.id);
+              return `
+                <div class="cc-faction-row" style="${disabled ? 'opacity:0.4;' : ''}">
+                  <label class="cc-checkbox-label">
+                    <input type="checkbox" ${isNPC ? 'checked' : ''} ${disabled ? 'disabled' : ''}
+                      onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)">
+                    ${f.name}
+                  </label>
+                  <span class="cc-help-text" style="margin:0">${disabled ? '(same faction)' : '(NPC)'}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
+            <button class="cc-btn cc-btn-primary" onclick="completeStep(2)"
+              ${!playerFaction ? 'disabled' : ''}>Next: Location &rarr;</button>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="cc-form-section">
+          <label class="cc-label">Factions Playing</label>
+          <p class="cc-help-text">Select each faction in this game. Mark NPCs where needed.</p>
+          ${FACTIONS.map(f => {
+            const inGame = state.factions.find(sf => sf.id === f.id);
+            return `
+              <div class="cc-faction-row">
+                <label class="cc-checkbox-label">
+                  <input type="checkbox" ${inGame ? 'checked' : ''}
+                    onchange="toggleFaction('${f.id}', '${f.name}', this.checked)">
+                  ${f.name}
+                </label>
+                ${inGame ? `
+                  <input type="text" class="cc-input cc-player-name"
+                    placeholder="Player name..."
+                    value="${inGame.player || ''}"
+                    onchange="setFactionPlayer('${f.id}', this.value)">
+                  <label class="cc-checkbox-label" style="flex:0 0 auto">
+                    <input type="checkbox" ${inGame.isNPC ? 'checked' : ''}
+                      onchange="toggleFactionNPC('${f.id}', this.checked)">
+                    NPC
+                  </label>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <div class="cc-form-actions">
+          <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
+          <button class="cc-btn cc-btn-primary" onclick="completeStep(2)"
+            ${state.factions.length < 2 ? 'disabled' : ''}>Next: Location &rarr;</button>
+        </div>
+      `;
+    }
+
+    // ── renderStep3_Location ─────────────────────────────────────────────────────
+    function renderStep3_Location() {
+      const namedLocations = locationData?.locations || [];
+
+      return `
+        <div class="cc-form-section">
+          <label class="cc-label">Location Type</label>
+          <div class="cc-button-group">
+            <button class="cc-btn ${state.locationType === 'random_any' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
+                    onclick="setLocationType('random_any')">Random</button>
+            <button class="cc-btn ${state.locationType === 'named' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
+                    onclick="setLocationType('named')">Named Location</button>
+          </div>
+        </div>
+
+        ${state.locationType === 'named' ? `
+          <div class="cc-form-section">
+            <label class="cc-label">Choose Location</label>
+            <select class="cc-input" onchange="setSelectedLocation(this.value)">
+              <option value="">&mdash; Select a location &mdash;</option>
+              ${namedLocations.map(loc => `
+                <option value="${loc.id}" ${state.selectedLocation === loc.id ? 'selected' : ''}>
+                  ${loc.name} (Danger ${loc.danger || '?'})
+                </option>
+              `).join('')}
+            </select>
+          </div>
+        ` : ''}
+
+        ${state.locationType === 'random_any' ? `
+          <div class="cc-info-box"><p><i class="fa fa-info-circle"></i> A random location will be chosen when you generate.</p></div>
+        ` : ''}
+
+        <div class="cc-form-actions">
+          <button class="cc-btn cc-btn-ghost" onclick="openStep(2)">&larr; Back</button>
+          <button class="cc-btn cc-btn-primary" onclick="completeStep(3)"
+            ${(state.locationType === 'named' && !state.selectedLocation) || !state.locationType ? 'disabled' : ''}>
+            Next: Generate Scenario &rarr;
+          </button>
+        </div>
+      `;
+    }
+
+    // ── renderStep4_Generate ─────────────────────────────────────────────────────
+    function renderStep4_Generate() {
+      if (!state.generated) {
+        const locName = state.locationType === 'named'
+          ? locationData?.locations.find(l => l.id === state.selectedLocation)?.name || 'Named'
+          : 'Random';
+        return `
+          <div class="cc-generate-section">
+            <p class="cc-help-text">Ready to generate your scenario based on:</p>
+            <ul class="cc-summary-list">
+              <li><strong>Mode:</strong> ${state.gameMode === 'solo' ? 'Solo Play' : 'Multiplayer'}</li>
+              <li><strong>Points:</strong> ${state.pointValue} &#8356;</li>
+              <li><strong>Danger:</strong> ${'&#9733;'.repeat(state.dangerRating)}${'&#9734;'.repeat(6 - state.dangerRating)}</li>
+              <li><strong>Factions:</strong> ${state.factions.map(f => f.name + (f.isNPC ? ' (NPC)' : '')).join(', ') || '—'}</li>
+              <li><strong>Location:</strong> ${locName}</li>
+            </ul>
+            <div class="cc-form-actions">
+              <button class="cc-btn cc-btn-ghost" onclick="openStep(3)">&larr; Back</button>
+              <button class="cc-btn cc-btn-primary" onclick="generateScenario()"><i class="fa fa-dice"></i> Generate Scenario</button>
+            </div>
+          </div>
+        `;
+      }
+      return renderScenarioOutput();
+    }
+
+    // ── VAULT RENDER HELPERS ─────────────────────────────────────────────────────
+    //   Called from renderScenarioOutput() when a vault scenario matched.
+
+    // Renders faction-specific victory conditions from the vault.
+    function renderVaultVictoryConditions(vaultScenario) {
+      const vc = vaultScenario.victory_conditions || {};
+      const factionKeys = Object.keys(vc).filter(k => k !== 'primary' && k !== 'secondary');
+
+      const FACTION_IDENTITY = {
+        monster_rangers: { color: '#4ade80', icon: 'fa-paw'    },
+        liberty_corps:   { color: '#60a5fa', icon: 'fa-shield' },
+        monsterology:    { color: '#a78bfa', icon: 'fa-flask'  },
+        monsters:        { color: '#ef4444', icon: 'fa-skull'  },
+        shine_riders:    { color: '#fbbf24', icon: 'fa-bolt'   },
+        crow_queen:      { color: '#c084fc', icon: 'fa-eye'    },
+      };
+
+      if (factionKeys.length === 0) {
+        return `
+          <div class="cc-vc-block">
+            <div class="cc-vc-primary">${vc.primary || 'Resolve the conflict.'}</div>
+            ${vc.secondary ? `<div class="cc-vc-secondary"><em>${vc.secondary}</em></div>` : ''}
+          </div>`;
+      }
+
+      const rows = factionKeys.map(k => {
+        const id    = FACTION_IDENTITY[k] || { color: '#ff7518', icon: 'fa-flag' };
+        const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        return `
+          <div style="border-left:3px solid ${id.color};padding:0.5rem 0.75rem;margin-bottom:0.5rem;
+                      background:rgba(0,0,0,0.25);border-radius:2px;">
+            <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;
+                        color:${id.color};margin-bottom:0.2rem;">
+              <i class="fa ${id.icon}"></i> ${label}
+            </div>
+            <div style="font-size:0.88rem;line-height:1.45;">${vc[k]}</div>
+          </div>`;
+      }).join('');
+
+      return `
+        ${vc.primary ? `<div style="margin-bottom:0.75rem;padding:0.5rem 0.6rem;
+                         background:rgba(0,0,0,0.3);border-radius:3px;font-size:0.88rem;">
+                         <strong>Primary:</strong> ${vc.primary}</div>` : ''}
+        ${rows}
+        ${vc.secondary ? `<div style="margin-top:0.5rem;font-size:0.82rem;
+                           color:rgba(255,255,255,0.55);font-style:italic;">
+                           Secondary: ${vc.secondary}</div>` : ''}`;
+    }
+
+    // Renders monster pressure spawn info from the vault.
+    function renderVaultMonsterPressure(vaultScenario) {
+      const mp = vaultScenario.monster_pressure;
+      if (!mp || !mp.enabled) return '';
+      const bias  = (mp.spawn_bias || mp.bias || []).join(', ') || '—';
+      const round = mp.trigger_round ? `Arrives Round ${mp.trigger_round}` : 'Active from Round 1';
+      const notes = mp.notes || '';
+      return `
+        <div class="cc-scenario-section">
+          <h4><i class="fa fa-paw"></i> Monster Pressure</h4>
+          <p><strong>${round}</strong> &mdash; Bias: ${bias}</p>
+          ${notes ? `<p style="font-style:italic;color:rgba(255,255,255,0.6);font-size:0.85rem;">${notes}</p>` : ''}
+        </div>`;
+    }
+
+    // Renders Coffin Cough triggers from the vault.
+    function renderVaultCoffinCoughTriggers(vaultScenario) {
+      const triggers = vaultScenario.coffin_cough_triggers || [];
+      if (!triggers.length) return '';
+      const items = triggers.map(t =>
+        `<li>${t.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</li>`
+      ).join('');
+      return `
+        <div class="cc-scenario-section" style="border-left:3px solid #ef4444;">
+          <h4 style="color:#ef4444;"><i class="fa fa-exclamation-circle"></i> Coffin Cough Triggers</h4>
+          <ul style="padding-left:1.2rem;margin:0;font-size:0.87rem;line-height:1.8;">${items}</ul>
+        </div>`;
+    }
+
+    // Renders aftermath effects table from the vault.
+    function renderVaultAftermath(vaultScenario) {
+      const ae = vaultScenario.aftermath_effects || {};
+      if (!Object.keys(ae).length) return '';
+      const rows = Object.entries(ae).map(([key, val]) => {
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        let valStr;
+        if (typeof val === 'string')        valStr = val.replace(/_/g, ' ');
+        else if (Array.isArray(val))        valStr = val.join(', ');
+        else if (val && typeof val === 'object')
+          valStr = Object.entries(val)
+            .map(([k, v]) => `<em>${k.replace(/_/g,'·')}:</em> ${String(v).replace(/_/g,' ')}`)
+            .join(' &nbsp;|&nbsp; ');
+        else valStr = String(val);
+        return `<tr>
+          <td style="padding:5px 8px;font-size:0.72rem;text-transform:uppercase;
+                     letter-spacing:.05em;color:rgba(255,255,255,0.45);
+                     white-space:nowrap;vertical-align:top;">${label}</td>
+          <td style="padding:5px 8px;font-size:0.85rem;">${valStr}</td>
+        </tr>`;
+      }).join('');
+      return `
+        <div class="cc-scenario-section">
+          <h4><i class="fa fa-scroll"></i> Aftermath</h4>
+          <table style="border-collapse:collapse;width:100%;"><tbody>${rows}</tbody></table>
+        </div>`;
+    }
+
+    // Renders solo play block from the vault.
+    function renderVaultSoloPlay(vaultScenario) {
+      const sp = vaultScenario.solo_play;
+      if (!sp) return '';
+      return `
+        <div class="cc-scenario-section" style="border-left:3px solid #fbbf24;">
+          <h4 style="color:#fbbf24;"><i class="fa fa-user"></i> Solo Play</h4>
+          <p><strong>You play:</strong> ${sp.player_role}</p>
+          <p><strong>Opposition:</strong> ${sp.opposition}</p>
+          <p><strong>Win:</strong> ${sp.win_condition}</p>
+        </div>`;
+    }
+
+    // Renders vault objectives with their notes[] displayed.
+    function renderVaultObjectives(vaultScenario, locProfile) {
+      const objs = vaultScenario.objectives || [];
+      if (!objs.length) return '';
+      const items = objs.map((obj, i) => {
+        const type     = obj.id || obj.type || 'objective';
+        const resolved = makeObjectiveName(type, locProfile);
+        const roleLabel = i === 0 ? 'Primary Objective' : i === 1 ? 'Secondary Objective' : 'Objective';
+        const isPrimary = i === 0;
+        const notes     = (obj.notes || []).map(n => `<li>${n}</li>`).join('');
+        const interactions = (obj.interactions || []).length
+          ? `<div style="margin-top:0.3rem;font-size:0.78rem;color:rgba(255,255,255,0.45);">
+               Actions: ${obj.interactions.join(' · ')}
+             </div>` : '';
+        return `
+          <div class="cc-objective-card" style="${isPrimary ? 'border-left-width:3px;' : ''}">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
+              <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;
+                           color:${isPrimary ? 'var(--cc-primary)' : 'rgba(255,255,255,0.35)'};">
+                ${isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>'} ${roleLabel}
+              </span>
+            </div>
+            <strong>${resolved}</strong>
+            ${obj.resource ? `<p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:0.2rem 0;">
+                               Resource: ${obj.resource.replace(/_/g, ' ')}</p>` : ''}
+            ${obj.count    ? `<p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:0.2rem 0;">
+                               Count: ${obj.count}</p>` : ''}
+            ${interactions}
+            ${notes ? `<ul style="margin:0.4rem 0 0 1rem;font-size:0.84rem;line-height:1.55;">${notes}</ul>` : ''}
+          </div>`;
+      }).join('');
+      return `
+        <div class="cc-scenario-section">
+          <h4><i class="fa fa-crosshairs"></i> Objectives</h4>
+          ${items}
+        </div>`;
+    }
+
+    // ── END VAULT RENDER HELPERS ─────────────────────────────────────────────────
+
+    // ── renderScenarioOutput — full scenario card; shown after generation ──────────
+    function renderScenarioOutput() {
+      const s = state.scenario;
+      if (!s) return '';
+
+      return `
+        <div class="cc-scenario-result">
+
+          <h3>${s.name}</h3>
+          <div class="cc-scenario-hook">${s.narrative_hook}</div>
+
+          <!-- LOCATION -->
+          <div class="cc-scenario-section">
+            <h4><i class="fa fa-map-marker"></i> Location</h4>
+            <p>
+              <strong>${s.location.name}</strong>
+              &nbsp;Danger ${s.danger_rating} &mdash; ${s.danger_description}
+            </p>
+            ${(() => {
+              const raw = s.location.state || '';
+              if (!raw || raw === 'alive') return '';
+
+                const FALLBACKS = {
+                booming:      { label: 'Booming',     def: 'Active, loud, and growing fast. Resources flow here.' },
+                thriving:     { label: 'Thriving',    def: 'Stable enough that people are building things to last.' },
+                stable:       { label: 'Stable',      def: 'Not safe — just predictable. Factions have settled into position.' },
+                troubled:     { label: 'Troubled',    def: 'Something is wrong here. People feel it even if they can\'t name it.' },
+                contested:    { label: 'Contested',   def: 'Multiple factions are actively fighting for control.' },
+                dangerous:    { label: 'Dangerous',   def: 'Expect violence. Anyone here is either desperate or armed.' },
+                lawless:      { label: 'Lawless',     def: 'No authority holds. Rules are made by whoever is strongest today.' },
+                strangewild:  { label: 'Strangewild', def: 'Monster activity is high. The canyon is reclaiming this place.' },
+                ruined:       { label: 'Ruined',      def: 'What was here is gone. The bones are all that remain.' },
+                abandoned:    { label: 'Abandoned',   def: 'Everyone left. The question is why.' },
+                exalted:      { label: 'Exalted',     def: 'The Crow Queen\'s influence is strong here. The canyon obeys.' },
+                held:         { label: 'Held',        def: 'A faction has established real control. Recognised, if not welcome.' },
+                haunted:      { label: 'Haunted',     def: 'The dead don\'t rest here. Something unresolved keeps them.' },
+                barely_alive: { label: 'Haunted',     def: 'The dead don\'t rest here. Something unresolved keeps them.' },
+                poisoned:     { label: 'Poisoned',    def: 'The ground or water is tainted. Everything that stays too long suffers.' },
+                liberated:    { label: 'Liberated',   def: 'Recently taken by a formal authority. Control is thin and contested.' },
+              };
+
+              const camp  = getCampaignStateDef(raw);
+              const fb    = FALLBACKS[raw] || {};
+              const label = camp?.name  || fb.label || raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+              const def   = camp?.description || fb.def || '';
+
+              const rows = [];
+              const TD_KEY = 'style="color:rgba(255,255,255,0.45);padding-right:1rem;white-space:nowrap;font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;vertical-align:top;"';
+              const TD_VAL = 'style="font-size:0.82rem;line-height:1.5;"';
+              if (camp?.environment) rows.push(`<tr><td ${TD_KEY}>Environment</td><td ${TD_VAL}>${camp.environment}</td></tr>`);
+              if (camp?.terrain)     rows.push(`<tr><td ${TD_KEY}>Terrain</td><td ${TD_VAL}>${camp.terrain}</td></tr>`);
+              if (camp?.effects)     rows.push(`<tr><td ${TD_KEY}>Effects</td><td ${TD_VAL}>${camp.effects}</td></tr>`);
+
+              return `
+                <div class="cc-state-block" style="margin:0.4rem 0 0.75rem 0;">
+                  <span class="cc-state-badge cc-state-${raw}">${label}</span>
+                  ${def ? `<span class="cc-state-def"> — <em>${def}</em></span>` : ''}
+                  ${rows.length ? `<table style="margin-top:0.5rem;border-collapse:collapse;">${rows.join('')}</table>` : ''}
+                </div>`;
+            })()}
+            ${s.location.description ? `<p><em>${s.location.description}</em></p>` : ''}
+            ${s.location.atmosphere  ? `<p class="cc-quote">"${s.location.atmosphere}"</p>` : ''}
+            ${renderLocationMapEmbed()}
+          </div>
+
+          <!-- OBJECTIVES -->
+          ${state.vaultScenario
+            ? renderVaultObjectives(state.vaultScenario, s.loc_profile)
+            : renderObjectivesSection(s.objectives)}
+
+          <!-- BOARD SETUP TABLE -->
+          ${s.objective_markers?.length ? `
+            <div class="cc-scenario-section cc-markers-section">
+              <h4><i class="fa fa-thumb-tack"></i> Board Setup &mdash; Objective Markers</h4>
+              <p class="cc-markers-intro">Before the game begins, place these tokens on the board as described.</p>
+              <table class="cc-marker-table">
+                <thead>
+                  <tr>
+                    <th>MARKER</th>
+                    <th>COUNT</th>
+                    <th>PLACEMENT</th>
+                    <th>ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${s.objective_markers.map(m => `
+                    <tr>
+                      <td>
+                        <strong>${m.name}</strong><br>
+                        <span class="cc-marker-token">${m.token}</span>
+                      </td>
+                      <td class="cc-marker-count">${m.count}</td>
+                      <td>${m.placement}</td>
+                      <td>${(m.interactions || []).map(i => `<span class="cc-marker-action">${i}</span>`).join(' ')}</td>
+                    </tr>
+                    ${m.notes ? `<tr class="cc-marker-note-row"><td colspan="4"><em><i class="fa fa-info-circle"></i> ${m.notes}</em></td></tr>` : ''}
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+
+          <!-- MONSTER PRESSURE -->
+          ${state.vaultScenario ? renderVaultMonsterPressure(state.vaultScenario) : ''}
+          ${state.vaultScenario ? renderVaultCoffinCoughTriggers(state.vaultScenario) : ''}
+
+          <!-- VICTORY CONDITIONS -->
+          <div class="cc-scenario-section">
+            <h4><i class="fa fa-trophy"></i> Victory Conditions</h4>
+            ${state.vaultScenario && Object.keys(state.vaultScenario.victory_conditions || {}).length > 0
+              ? renderVaultVictoryConditions(state.vaultScenario)
+              : Object.entries(s.victory_conditions).map(([factionId, vc]) => {
+
+              const FACTION_IDENTITY = {
+                monster_rangers: { color: '#4ade80', border: '#166534', icon: 'fa-paw',        tag: 'Protectors of the Canyon' },
+                liberty_corps:   { color: '#60a5fa', border: '#1e3a5f', icon: 'fa-shield',     tag: 'Federal Authority' },
+                monsterology:    { color: '#a78bfa', border: '#3b1f6e', icon: 'fa-flask',      tag: 'The Society' },
+                monsters:        { color: '#ef4444', border: '#7f1d1d', icon: 'fa-skull',      tag: 'Canyon Predators' },
+                shine_riders:    { color: '#fbbf24', border: '#78350f', icon: 'fa-bolt',       tag: 'Fast Money, Faster Exit' },
+                crow_queen:      { color: '#c084fc', border: '#581c87', icon: 'fa-eye',        tag: 'The Crown Remembers' },
+              };
+              const id = FACTION_IDENTITY[factionId] || { color: '#ff7518', border: '#7c2d12', icon: 'fa-flag', tag: '' };
+
+              return `
+              <div class="cc-victory-card" style="
+                border-left: 4px solid ${id.color};
+                background: linear-gradient(135deg,
+                  rgba(0,0,0,0.4) 0%,
+                  color-mix(in srgb, ${id.color} 6%, transparent) 100%);
+              ">
+                <div class="cc-vc-header" style="border-bottom: 1px solid ${id.border}; padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
+                  <div style="display:flex; align-items:center; gap:0.6rem;">
+                    <i class="fa ${id.icon}" style="color:${id.color}; font-size:1.1rem;"></i>
+                    <h5 style="color:${id.color}; margin:0;">${vc.faction_name}${vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : ''}</h5>
+                  </div>
+                  ${id.tag ? `<div style="font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-top:2px; padding-left:1.7rem;">${id.tag}</div>` : ''}
+                  ${vc.motive ? `
+                    <div style="margin-top:0.6rem;padding:0.5rem 0.6rem;background:rgba(0,0,0,0.3);border-left:2px solid ${id.color};border-radius:2px;font-size:0.83rem;line-height:1.45;color:rgba(255,255,255,0.75);">
+                      <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:${id.color};display:block;margin-bottom:0.2rem;"><i class="fa fa-bullseye"></i> Mission</span>
+                      ${vc.motive}
+                    </div>` : ''}
                 </div>
 
-                <input
-                  id="cc-rule-search"
-                  class="form-control form-control-sm cc-input w-100"
-                  placeholder="Search rules..."
-                />
+                <div class="cc-vc-objectives">
+                  ${(vc.objectives || []).map((obj, i) => `
+                    <div class="cc-vc-obj" style="border-left: 2px solid ${id.border};">
+                      <div class="cc-vc-obj-label">Objective ${i + 1}</div>
+                      <div class="cc-vc-obj-name"><i class="fa fa-crosshairs" style="color:${id.color};"></i> ${obj.name}</div>
+                      <p class="cc-vc-obj-desc">${obj.desc}</p>
+                      <div class="cc-vc-obj-meta">
+                        <span class="cc-vp-line"><i class="fa fa-star" style="color:${id.color};"></i> ${obj.vp}</span>
+                        <span class="cc-tactic-line"><i class="fa fa-book"></i> ${obj.tactic}</span>
+                      </div>
+                    </div>
+                  `).join('')}
+                </div>
+
+                <hr class="cc-vc-divider" style="border-color:${id.border};" />
+                <div class="cc-vc-finale">
+                  <div class="cc-vc-obj-label">Finale</div>
+                  <div class="cc-vc-obj-name"><i class="fa fa-bolt" style="color:${id.color};"></i> ${vc.finale.name}</div>
+                  <p>${vc.finale.desc}</p>
+                  <p class="cc-vp-line"><i class="fa fa-star" style="color:${id.color};"></i> ${vc.finale.vp}</p>
+                </div>
+
+                <hr class="cc-vc-divider" style="border-color:${id.border};" />
+                <div class="cc-vc-aftermath">
+                  <div class="cc-vc-obj-label">If ${vc.faction_name} Wins</div>
+                  <p><i class="fa fa-chevron-right" style="color:${id.color};"></i> ${vc.aftermath.immediate}</p>
+                  <p><i class="fa fa-university"></i> Territory becomes <strong style="color:${id.color};">${vc.aftermath.canyon_state}</strong>.</p>
+                  <p><i class="fa fa-calendar"></i> ${vc.aftermath.long_term}</p>
+                  ${vc.quote ? `<p class="cc-quote" style="border-left-color:${id.color};">"${vc.quote}"</p>` : ''}
+                </div>
+              </div>`;
+            }).join('')}
+            }
+          </div>
+
+          <!-- AFTERMATH -->
+          ${state.vaultScenario && Object.keys(state.vaultScenario.aftermath_effects || {}).length > 0
+            ? renderVaultAftermath(state.vaultScenario)
+            : s.aftermath ? `
+            <div class="cc-scenario-section">
+              <h4><i class="fa fa-scroll"></i> Aftermath</h4>
+              <p>${s.aftermath}</p>
+            </div>
+          ` : ''}
+
+          <!-- SOLO PLAY (vault only, solo mode only) -->
+          ${state.gameMode === 'solo' && state.vaultScenario ? renderVaultSoloPlay(state.vaultScenario) : ''}
+
+          ${s.vault_source ? `
+            <div class="cc-scenario-section">
+              <p class="cc-help-text"><em><i class="fa fa-book"></i> Based on vault scenario: "${s.vault_source}" (${s.vault_match_score} tag matches)</em></p>
+            </div>
+          ` : ''}
+
+          <div class="cc-form-actions" style="padding-top:1rem;">
+            <button class="cc-btn cc-btn-ghost"     onclick="resetScenario()"><i class="fa fa-refresh"></i> Start Over</button>
+            <button class="cc-btn cc-btn-secondary" onclick="rollAgain()"><i class="fa fa-random"></i> The Canyon Shifts</button>
+            <button class="cc-btn cc-btn-primary"   onclick="printScenario()"><i class="fa fa-print"></i> Print</button>
+          </div>
+
+        </div>
+      `;
+    }
+
+    // ── renderSummaryPanel — progress tracker shown during setup ───────────────────
+    function renderSummaryPanel() {
+      const steps = [
+        { num: 1, title: 'Game Setup', complete: state.completedSteps.includes(1) },
+        { num: 2, title: 'Factions',   complete: state.completedSteps.includes(2) },
+        { num: 3, title: 'Location',   complete: state.completedSteps.includes(3) },
+        { num: 4, title: 'Generate',   complete: state.generated }
+      ];
+
+      return `
+        <div class="cc-summary-header"><h3>Scenario Progress</h3></div>
+        <div class="cc-summary-steps">
+          ${steps.map(step => `
+            <div class="cc-summary-step ${step.complete ? 'complete' : ''} ${state.currentStep === step.num ? 'active' : ''}"
+                 onclick="openStep(${step.num})">
+              <div class="cc-summary-step-number">${step.num}</div>
+              <div class="cc-summary-step-title">${step.title}</div>
+              ${step.complete ? '<div class="cc-summary-step-check"><i class="fa fa-check"></i></div>' : ''}
+            </div>
+          `).join('')}
+        </div>
+
+        ${state.completedSteps.length > 0 ? `
+          <div class="cc-summary-details">
+            <h4>Current Setup</h4>
+            ${state.gameMode    ? `<p><strong>Mode:</strong> ${state.gameMode === 'solo' ? 'Solo' : 'Multiplayer'}</p>` : ''}
+            ${state.pointValue  ? `<p><strong>Points:</strong> ${state.pointValue} &#8356;</p>` : ''}
+            ${state.dangerRating ? `<p><strong>Danger:</strong> ${'&#9733;'.repeat(state.dangerRating)}${'&#9734;'.repeat(6 - state.dangerRating)}</p>` : ''}
+            ${state.factions.length ? `<p><strong>Factions:</strong> ${state.factions.map(f => f.name).join(', ')}</p>` : ''}
+            ${state.selectedLocation || state.locationType === 'random_any'
+              ? `<p><strong>Location:</strong> ${state.locationType === 'named' ? '&#10003; Named' : 'Random'}</p>`
+              : ''}
+          </div>
+        ` : ''}
+
+        <div class="cc-summary-details" style="margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.1);">
+          <button class="cc-btn cc-btn-ghost" style="width:100%;"
+                  onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
+        </div>
+      `;
+    }
+
+    // ── render() — master dispatcher; shows splash → setup wizard → scenario output ─
+    function render() {
+      if (state.generated && state.scenario) {
+        const html = `
+          <div class="cc-app-header">
+            <div>
+              <h1 class="cc-app-title">Coffin Canyon</h1>
+              <div class="cc-app-subtitle">Scenario Builder</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <button class="btn btn-sm btn-outline-secondary" onclick="printScenario()"   title="Print Scenario"><i class="fa fa-print"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="resetScenario()"   title="Start Over"><i class="fa fa-refresh"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()"   title="Load Scenario"><i class="fa fa-cloud-download"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="saveScenario()"    title="Save Scenario"><i class="fa fa-cloud-upload"></i></button>
+              <button class="btn btn-sm btn-outline-secondary" onclick="rollAgain()"       title="The Canyon Shifts"><i class="fa fa-random"></i></button>
+            </div>
+          </div>
+          <div class="cc-scenario-full-layout">
+            ${renderScenarioOutput()}
+          </div>
+        `;
+        root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
+
+        // Boot the location map embed after the DOM is updated
+        // (requestAnimationFrame lets the browser paint the placeholder first)
+        requestAnimationFrame(() => {
+          initLocationMapEmbed(state.scenario.location);
+        });
+        return;
+      }
+
+      const html = `
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Coffin Canyon</h1>
+            <div class="cc-app-subtitle">Scenario Builder</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()" title="Load Scenario"><i class="fa fa-cloud-download"></i></button>
+          </div>
+        </div>
+
+        <div class="cc-scenario-builder-layout">
+          <aside class="cc-scenario-sidebar">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div class="cc-panel-title">Build Scenario</div>
               </div>
-              <div id="cc-rule-list" class="cc-list" style="overflow-y: auto; flex: 1;"></div>
+              <div class="cc-body cc-accordion">
+                ${renderAccordionStep(1, 'Game Setup',        '<i class="fa fa-cog"></i>',    renderStep1_GameSetup(), state.currentStep === 1, state.completedSteps.includes(1))}
+                ${renderAccordionStep(2, 'Factions & Forces', '<i class="fa fa-users"></i>',  renderStep2_Factions(),  state.currentStep === 2, state.completedSteps.includes(2))}
+                ${renderAccordionStep(3, 'Location',          '<i class="fa fa-map"></i>',    renderStep3_Location(),  state.currentStep === 3, state.completedSteps.includes(3))}
+                ${renderAccordionStep(4, 'Generate Scenario', '<i class="fa fa-dice"></i>',   renderStep4_Generate(),  state.currentStep === 4, state.generated)}
+              </div>
             </div>
           </aside>
 
-          <!-- Main content area -->
-          <main class="cc-rules-main">
+          <main class="cc-scenario-main">
             <div class="cc-panel h-100">
-              <div class="cc-panel-head d-flex justify-content-between align-items-center">
-                <div class="cc-panel-title">Rule Text</div>
-                <div class="cc-rules-actions">
-                  <button id="cc-favorite-btn" class="btn btn-sm btn-link d-none" title="Star this rule">
-                    <span class="cc-star">☆</span>
-                  </button>
-                </div>
+              <div class="cc-panel-head">
+                <div class="cc-panel-title">Summary</div>
               </div>
-
-              <div id="cc-rule-detail" class="cc-body cc-rule-reader">
-                <div class="mb-4">
-                  <h2 class="cc-rule-title" style="font-size: 2.5rem; margin-bottom: 1rem;">COFFIN CANYON</h2>
-
-                  <div style="background: rgba(255,117,24,0.1); border-left: 4px solid #ff7518; padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
-                    <h3 style="color: #ff7518; margin-top: 0;">What This Game Is</h3>
-                    <p style="font-size: 1.1rem; line-height: 1.8;">
-                      Coffin Canyon is a skirmish game about bad ground, bad choices, and things that do not stay dead.
-                      It is set in a poisoned canyon where industry, monsters, and desperate people collide.
-                      Victory comes from pressure, positioning, and knowing when to run — not from perfect plans.
-                    </p>
-                    <p style="font-size: 1.1rem; font-style: italic; color: #ff7518; margin-bottom: 0;">This is a game of escalation.</p>
-                  </div>
-
-                  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
-                    <h3 style="color: #ff7518; margin-top: 0;">Player Agency Over Optimization</h3>
-                    <p>Coffin Canyon rewards:</p>
-                    <ul>
-                      <li>Positioning</li>
-                      <li>Timing</li>
-                      <li>Risk assessment</li>
-                      <li>Knowing when to retreat</li>
-                    </ul>
-                    <p>It does not reward:</p>
-                    <ul>
-                      <li>Perfect list building</li>
-                      <li>Static gunlines</li>
-                      <li>Passive play</li>
-                    </ul>
-                    <p style="font-style: italic; color: #ff7518;">If you stand still too long, the Canyon will notice.</p>
-                  </div>
-
-                  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
-                    <h3 style="color: #ff7518; margin-top: 0;">The Role of the Game Warden (Optional)</h3>
-                    <p>Coffin Canyon does not require a Game Warden. Some games will include one. Some will not.</p>
-                    <p>When present, the Game Warden's role is:</p>
-                    <ul>
-                      <li>Escalation</li>
-                      <li>Consequence</li>
-                      <li>Rules judgements</li>
-                      <li>Atmosphere</li>
-                      <li>Running NPC units</li>
-                    </ul>
-                    <p>They do not override rules. They do not "balance" the game.</p>
-                    <p style="font-style: italic;">They reveal what the Canyon has been waiting to do.</p>
-                  </div>
-
-                  <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
-                    <h3 style="color: #ff7518; margin-top: 0;">What the Rules Assume</h3>
-                    <p>The rules assume:</p>
-                    <ul>
-                      <li>Players agree on terrain intent during setup</li>
-                      <li>Scenarios define objectives and pressure</li>
-                      <li>Ambiguity is resolved quickly and fairly</li>
-                    </ul>
-                    <p>If a situation is unclear:</p>
-                    <ul>
-                      <li>Follow the scenario</li>
-                      <li>Then follow the terrain</li>
-                      <li>Then roll a die and move on</li>
-                    </ul>
-                    <p style="font-style: italic;">Momentum matters more than precision.</p>
-                  </div>
-
-                  <div style="background: rgba(255,117,24,0.1); border-left: 4px solid #ff7518; padding: 1.5rem; margin-bottom: 2rem; border-radius: 8px;">
-                    <h3 style="color: #ff7518; margin-top: 0;">One Final Truth</h3>
-                    <p style="font-size: 1.1rem; line-height: 1.8;">
-                      Coffin Canyon is not about winning clean. It is about getting out alive, stealing everything not nailed down,
-                      or hunting for monster mort.
-                    </p>
-                    <p style="font-size: 1.1rem; font-style: italic;">(Depending on your Faction, of course.)</p>
-                  </div>
-
-                  <h3 style="color: #ff7518; margin-top: 2rem;">How to Use This Tool</h3>
-                  <p><strong>Navigate:</strong> Click any rule in the sidebar to view it in the center panel.</p>
-                  <p><strong>Star Favorites:</strong> Click the ☆ icon to save rules, subsections, or abilities you reference often. Find them all in the "★ Starred" filter.</p>
-                  <p><strong>Search:</strong> Use the search box to quickly find any rule by name or keyword.</p>
-                  <p style="margin-bottom: 2rem;"><strong>Print:</strong> Click the Print button in the header to generate a clean, formatted rulebook.</p>
-                  <p style="font-size: 1.1rem;"><strong>Ready to start?</strong> Click "Core Mechanics" in the sidebar to begin!</p>
-                </div>
-              </div>
-
-              <div id="cc-rule-nav" class="cc-rule-nav d-none">
-                <button id="cc-prev-btn" class="btn btn-outline-secondary">‹ Previous</button>
-                <button id="cc-next-btn" class="btn btn-outline-secondary">Next ›</button>
+              <div class="cc-body">
+                ${renderSummaryPanel()}
               </div>
             </div>
           </main>
+        </div>
+      `;
+      root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
+    }
 
-          <!-- Context sidebar -->
-          <aside class="cc-rules-context" id="cc-rules-context">
-            <div class="cc-panel h-100">
-              <div class="cc-panel-head">
-                <div class="cc-panel-title">Subsections</div>
+    // ── Event handlers — all window.* functions called from HTML onclick attrs ────
+    window.setGameMode = function(mode) {
+      state.gameMode = mode;
+      state.factions = [];
+      render();
+    };
+
+    window.setPointValue = function(value) {
+      state.pointValue = parseInt(value);
+    };
+
+    window.setDangerRating = function(value) {
+      state.dangerRating = parseInt(value);
+      render();
+    };
+
+    window.setGameWarden = function(value) {
+      state.gameWarden = (value === 'none') ? null : value;
+    };
+
+    window.setPlayerFaction = function(factionId) {
+      const CANNOT_SELF_OPPOSE = ['monster_rangers', 'monsterology', 'liberty_corps', 'crow_queen'];
+      state.factions = state.factions.filter(f => f.isNPC);
+      if (factionId) {
+        const faction = FACTIONS.find(f => f.id === factionId);
+        if (faction) state.factions.unshift({ id: faction.id, name: faction.name, player: '', isNPC: false });
+        if (CANNOT_SELF_OPPOSE.includes(factionId)) {
+          state.factions = state.factions.filter(f => !(f.id === factionId && f.isNPC));
+        }
+      }
+      render();
+    };
+
+    window.toggleNPCFaction = function(id, name, checked) {
+      if (checked) {
+        if (!state.factions.some(f => f.id === id && f.isNPC)) {
+          state.factions.push({ id, name, player: 'NPC', isNPC: true });
+        }
+      } else {
+        state.factions = state.factions.filter(f => !(f.id === id && f.isNPC));
+      }
+      render();
+    };
+
+    window.toggleFaction = function(id, name, checked) {
+      if (checked) {
+        if (!state.factions.some(f => f.id === id)) {
+          state.factions.push({ id, name, player: '', isNPC: false });
+        }
+      } else {
+        state.factions = state.factions.filter(f => f.id !== id);
+      }
+      render();
+    };
+
+    window.toggleFactionNPC = function(id, isNPC) {
+      const f = state.factions.find(f => f.id === id);
+      if (f) { f.isNPC = isNPC; f.player = isNPC ? 'NPC' : ''; }
+      render();
+    };
+
+    window.setFactionPlayer = function(factionId, playerName) {
+      const f = state.factions.find(f => f.id === factionId);
+      if (f) f.player = playerName;
+    };
+
+    window.setLocationType = function(type) {
+      state.locationType     = type;
+      state.selectedLocation = null;
+      state.vaultScenario    = null;
+      render();
+    };
+
+    window.setSelectedLocation = function(id) {
+      state.selectedLocation = id || null;
+      render();
+    };
+
+    window.openStep     = function(n) { state.currentStep = n; render(); };
+    window.goToStep     = function(n) { state.currentStep = n; render(); };
+    window.completeStep = function(n) {
+      if (!state.completedSteps.includes(n)) state.completedSteps.push(n);
+      state.currentStep = n + 1;
+      render();
+    };
+
+    window.resetScenario = function() {
+      state.generated        = false;
+      state.scenario         = null;
+      state.currentStep      = 1;
+      state.completedSteps   = [];
+      state.factions         = [];
+      state.locationType     = null;
+      state.selectedLocation = null;
+      render();
+    };
+
+    window.rollAgain = function() {
+      if (state.factions.length >= 2) {
+        state.generated = false;
+        state.scenario  = null;
+        window.generateScenario();
+      } else {
+        alert('Please complete setup first (Steps 1–3).');
+      }
+    };
+
+    window.printScenario = function() {
+      if (!state.scenario) return;
+      const s = state.scenario;
+
+      function printFactionCards() {
+        return Object.entries(s.victory_conditions || {}).map(([fid, vc]) => {
+          const objs = (vc.objectives || []).map((o, i) => `
+            <div class="print-vc-obj">
+              <div class="print-obj-label">Objective ${i + 1}</div>
+              <div class="print-obj-name">${o.name}</div>
+              <p>${o.desc}</p>
+              <div class="print-obj-vp">${o.vp}</div>
+            </div>`).join('');
+          return `
+            <div class="print-faction-card">
+              <div class="print-faction-header">
+                <strong>${vc.faction_name}</strong>${vc.is_npc ? ' <span class="print-npc">NPC</span>' : ''}
               </div>
-              <div id="cc-rule-context" class="cc-body">
-                <div class="cc-muted">Nothing selected.</div>
+              ${vc.motive ? `<div class="print-motive"><span class="print-motive-label">Mission</span>${vc.motive}</div>` : ''}
+              ${objs}
+              <div class="print-finale">
+                <div class="print-obj-label">Finale — ${vc.finale?.name || ''}</div>
+                <p>${vc.finale?.desc || ''}</p>
+                <div class="print-obj-vp">${vc.finale?.vp || ''}</div>
+              </div>
+              <div class="print-aftermath">
+                <div class="print-obj-label">If ${vc.faction_name} Wins</div>
+                <p>${vc.aftermath?.immediate || ''} Territory becomes <strong>${vc.aftermath?.canyon_state || ''}</strong>. ${vc.aftermath?.long_term || ''}</p>
+              </div>
+              ${vc.quote ? `<div class="print-quote">"${vc.quote}"</div>` : ''}
+            </div>`;
+        }).join('');
+      }
+
+      function printObjectiveCards() {
+        return (s.objectives || []).map((obj, i) => {
+          const ROLE_LABELS = { primary: 'Primary Objective', secondary: 'Secondary Objective', standalone: 'Objective' };
+          const roleLabel = ROLE_LABELS[obj.role] || `Objective ${i + 1}`;
+          return `
+            <div class="print-obj-card${obj.role === 'primary' ? ' print-obj-primary' : ''}">
+              <div class="print-obj-role">${roleLabel}</div>
+              <strong>${obj.name}</strong>
+              <p>${obj.description}</p>
+              <div class="print-obj-vp">${obj.vp_base} VP base</div>
+              ${obj.chain_link ? `<div class="print-chain"><span class="print-chain-label">Tactical Link</span>${obj.chain_link_intro ? `<span class="print-chain-intro">${obj.chain_link_intro} </span>` : ''}${obj.chain_link}</div>` : ''}
+              ${obj.special ? `<div class="print-special">Special: ${obj.special}</div>` : ''}
+            </div>`;
+        }).join('');
+      }
+
+      function printMarkersTable() {
+        if (!s.objective_markers?.length) return '';
+        const rows = s.objective_markers.map(m => `
+          <tr>
+            <td><strong>${m.name}</strong><br><span class="print-token">${m.token}</span></td>
+            <td class="print-count">${m.count}</td>
+            <td>${m.placement}</td>
+            <td>${(m.interactions || []).join(', ')}</td>
+          </tr>`).join('');
+        return `
+          <div class="print-section">
+            <h4>Board Setup — Objective Markers</h4>
+            <table class="print-table">
+              <thead><tr><th>Marker</th><th>Count</th><th>Placement</th><th>Actions</th></tr></thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>`;
+      }
+
+      function printMonsterPressure() {
+        return ''; // Data lives in the save; displayed by the Turn Counter app.
+      }
+
+      const locationState = (() => {
+        const raw = s.location?.state || '';
+        if (!raw || raw === 'alive') return '';
+        const labels = {
+          strangewild:'Strangewild',haunted:'Haunted',poisoned:'Poisoned',
+          ruined:'Ruined',abandoned:'Abandoned',contested:'Contested',
+          dangerous:'Dangerous',lawless:'Lawless',held:'Held',exalted:'Exalted',
+          troubled:'Troubled',stable:'Stable',thriving:'Thriving',booming:'Booming',
+          liberated:'Liberated',barely_alive:'Haunted'
+        };
+        return `<div class="print-state">${labels[raw] || raw}</div>`;
+      })();
+
+      const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>${s.name}</title>
+<style>
+  body, div, p, h1, h2, h3, h4, strong, em, span, ul, li, table, tr, td, th {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  body {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 10.5pt;
+    line-height: 1.5;
+    color: #111;
+    background: #fff;
+    padding: 18mm 16mm;
+  }
+  h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 2.5pt solid #111;
+    padding-bottom: 5pt;
+    margin-bottom: 10pt;
+    page-break-after: avoid;
+  }
+  h4 {
+    font-size: 10pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    border-bottom: 0.75pt solid #aaa;
+    padding-bottom: 2pt;
+    margin-bottom: 7pt;
+    color: #222;
+    page-break-after: avoid;
+  }
+  p { margin-bottom: 4pt; }
+
+  .print-hook {
+    font-style: italic;
+    border-left: 3pt solid #555;
+    padding: 5pt 10pt;
+    margin-bottom: 14pt;
+    color: #333;
+    font-size: 10pt;
+  }
+
+  /* Location */
+  .print-location-line { margin-bottom: 3pt; font-size: 10pt; }
+  .print-state {
+    display: inline-block;
+    font-weight: 700;
+    font-size: 9pt;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: #222;
+    color: #fff;
+    padding: 1pt 6pt;
+    border-radius: 2pt;
+    margin: 3pt 0 5pt 0;
+  }
+  .print-atmo { font-style: italic; color: #555; font-size: 9.5pt; }
+
+  /* Sections */
+  .print-section {
+    margin-bottom: 14pt;
+    page-break-inside: avoid;
+  }
+
+  /* Objectives */
+  .print-obj-card {
+    border: 0.75pt solid #ccc;
+    border-left: 3pt solid #888;
+    padding: 5pt 8pt;
+    margin-bottom: 5pt;
+    page-break-inside: avoid;
+  }
+  .print-obj-primary { border-left-color: #111; }
+  .print-obj-role {
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: #888;
+    margin-bottom: 2pt;
+  }
+  .print-obj-card strong { font-size: 11pt; display: block; margin-bottom: 2pt; }
+  .print-obj-card p { font-size: 9.5pt; color: #333; }
+  .print-obj-vp { font-size: 9pt; color: #555; margin-top: 3pt; }
+  .print-chain {
+    margin-top: 4pt;
+    padding: 3pt 7pt;
+    background: #f4f4f4;
+    border-left: 2pt solid #555;
+    font-size: 9pt;
+  }
+  .print-chain-label {
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #555;
+    display: block;
+    margin-bottom: 1pt;
+  }
+  .print-chain-intro { color: #777; font-style: italic; }
+  .print-special { font-size: 9pt; color: #555; font-style: italic; margin-top: 3pt; }
+
+  /* Board setup table */
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+  }
+  .print-table th {
+    background: #222;
+    color: #fff;
+    padding: 3pt 6pt;
+    text-align: left;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+  }
+  .print-table td {
+    border-bottom: 0.5pt solid #ddd;
+    padding: 4pt 6pt;
+    vertical-align: top;
+  }
+  .print-count { text-align: center; font-weight: 700; }
+  .print-token { font-size: 8.5pt; color: #666; }
+
+  /* Faction victory cards — two columns */
+  .print-faction-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8pt;
+    margin-bottom: 14pt;
+  }
+  .print-faction-card {
+    border: 0.75pt solid #bbb;
+    border-top: 3pt solid #333;
+    padding: 6pt 8pt;
+    page-break-inside: avoid;
+    font-size: 9pt;
+  }
+  .print-faction-header {
+    font-size: 10.5pt;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    margin-bottom: 4pt;
+    border-bottom: 0.5pt solid #ddd;
+    padding-bottom: 3pt;
+  }
+  .print-npc {
+    font-size: 7pt;
+    background: #eee;
+    color: #666;
+    padding: 0 3pt;
+    border-radius: 2pt;
+    font-weight: normal;
+    vertical-align: middle;
+  }
+  .print-motive {
+    background: #f5f5f5;
+    border-left: 2pt solid #555;
+    padding: 3pt 6pt;
+    margin: 4pt 0;
+    font-size: 9pt;
+    line-height: 1.4;
+  }
+  .print-motive-label {
+    font-size: 7pt;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
+    color: #777;
+    display: block;
+    margin-bottom: 1pt;
+  }
+  .print-vc-obj {
+    border-left: 1.5pt solid #ccc;
+    padding: 3pt 6pt;
+    margin-bottom: 3pt;
+  }
+  .print-obj-label {
+    font-size: 7.5pt;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #999;
+  }
+  .print-obj-name { font-weight: 700; margin: 1pt 0; }
+  .print-finale {
+    border-top: 0.5pt solid #ddd;
+    margin-top: 5pt;
+    padding-top: 4pt;
+  }
+  .print-aftermath { margin-top: 4pt; font-size: 8.5pt; color: #555; }
+  .print-quote {
+    font-style: italic;
+    color: #777;
+    border-left: 1.5pt solid #bbb;
+    padding: 2pt 6pt;
+    margin-top: 4pt;
+    font-size: 8.5pt;
+  }
+
+  @media print {
+    body { padding: 10mm 12mm; }
+    .print-faction-grid { page-break-inside: auto; }
+    .print-faction-card { page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<h1>${s.name}</h1>
+<div class="print-hook">${s.narrative_hook || ''}</div>
+
+<div class="print-section">
+  <h4>Location</h4>
+  <div class="print-location-line">
+    <strong>${s.location?.name || ''}</strong> &mdash;
+    Danger ${s.danger_rating} &mdash; ${s.danger_description}
+  </div>
+  ${locationState}
+  ${s.location?.description ? `<p>${s.location.description}</p>` : ''}
+  ${s.location?.atmosphere ? `<div class="print-atmo">"${s.location.atmosphere}"</div>` : ''}
+</div>
+
+<div class="print-section">
+  <h4>Objectives</h4>
+  ${printObjectiveCards()}
+</div>
+
+${printMarkersTable()}
+
+${printMonsterPressure()}
+
+<div class="print-section">
+  <h4>Victory Conditions</h4>
+  <div class="print-faction-grid">
+    ${printFactionCards()}
+  </div>
+</div>
+
+${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}</p></div>` : ''}
+
+</body>
+</html>`;
+
+      const win = window.open('', '_blank', 'width=900,height=700');
+      if (!win) { alert('Pop-up blocked. Please allow pop-ups for this site.'); return; }
+      win.document.write(html);
+      win.document.close();
+      win.focus();
+      setTimeout(() => { win.print(); }, 500);
+    };
+
+    // ── Save / Load — uses CC_STORAGE; folder 90 = scenario saves ──────────────────
+    const SCENARIO_FOLDER = 90;
+
+    window.saveScenario = async function() {
+      if (!state.scenario) return;
+      if (!window.CC_STORAGE) {
+        alert('Storage helper not loaded yet. Please wait a moment.');
+        return;
+      }
+
+      const slug = (state.scenario.name || 'scenario')
+        .replace(/[^a-zA-Z0-9 \-]/g, '')
+        .replace(/\s+/g, '_')
+        .substring(0, 50);
+      const docName = `SCN_${slug}_${Date.now()}`;
+
+      const data = JSON.stringify({
+        version:   '1.0',
+        name:      state.scenario.name,
+        location:  state.scenario.location?.name,
+        danger:    state.scenario.danger_rating,
+        factions:  state.factions.map(f => ({ id: f.id, npc: f.isNPC || false })),
+        gameMode:  state.gameMode,
+        pts:       state.pointValue,
+        scenario:  state.scenario,
+        timestamp: new Date().toISOString()
+      });
+
+      try {
+        await window.CC_STORAGE.saveDocument(docName, data, SCENARIO_FOLDER);
+        const btn = document.querySelector('[onclick="saveScenario()"]');
+        if (btn) {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<i class="fa fa-check"></i>';
+          btn.style.color = '#4ade80';
+          setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1800);
+        }
+      } catch (err) {
+        console.error('Save failed:', err);
+        alert('Save failed: ' + err.message + '\n\nAre you logged in?');
+      }
+    };
+
+    // Slide panel — animates in/out for the saved-scenario list.
+    window.closeScenarioPanel = function() {
+      const panel = document.getElementById('cc-scenario-load-panel');
+      if (panel) {
+        panel.classList.remove('cc-slide-panel-open');
+        setTimeout(() => panel.remove(), 300);
+      }
+    };
+
+    function showScenarioList(scenarios) {
+      window.closeScenarioPanel();
+
+      const FACTION_NAMES = {
+        monster_rangers: 'Monster Rangers', liberty_corps: 'Liberty Corps',
+        monsterology: 'Monsterology',       monsters:      'Monsters',
+        shine_riders: 'Shine Riders',       crow_queen:    'Crow Queen'
+      };
+
+      const panel = document.createElement('div');
+      panel.id    = 'cc-scenario-load-panel';
+      panel.className = 'cc-slide-panel';
+
+      panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+          <h2><i class="fa fa-cloud"></i> SAVED SCENARIOS</h2>
+          <button onclick="closeScenarioPanel()" class="cc-panel-close-btn">
+            <i class="fa fa-times"></i>
+          </button>
+        </div>
+        <div class="cc-roster-list">
+          ${scenarios.length === 0
+            ? '<p style="padding:1.5rem;color:#888;">No saved scenarios found.</p>'
+            : scenarios.map(s => `
+            <div class="cc-saved-roster-item">
+              <div class="cc-saved-roster-header">
+                <span class="cc-faction-type">
+                  ${(s.factions || []).map(f => FACTION_NAMES[f.id] || f.name).join(' · ') || 'Scenario'}
+                </span>
+              </div>
+              <div class="cc-saved-roster-name">${s.scenarioName || s.docName}</div>
+              <div class="cc-saved-roster-meta">
+                <i class="fa fa-map-marker"></i> ${s.locationName || '—'} &nbsp;·&nbsp;
+                Danger ${s.dangerRating || '?'} &nbsp;·&nbsp;
+                ${s.savedAt ? new Date(s.savedAt).toLocaleDateString() : ''}
+              </div>
+              <div class="cc-saved-roster-actions">
+                <button onclick="loadScenarioById(${s.docId})" class="btn btn-sm btn-warning">
+                  <i class="fa fa-folder-open"></i> LOAD
+                </button>
+                <button onclick="deleteScenario(${s.docId})" class="btn btn-sm btn-danger">
+                  <i class="fa fa-trash"></i>
+                </button>
               </div>
             </div>
-          </aside>
+          `).join('')}
+        </div>
+      `;
 
+      document.body.appendChild(panel);
+      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    }
+
+    window.loadFromCloud = async function() {
+      if (!window.CC_STORAGE) {
+        alert('Storage helper not loaded yet. Please wait a moment.');
+        return;
+      }
+      try {
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (!auth.loggedIn) {
+          alert('You need to be logged in to load saved scenarios.');
+          return;
+        }
+
+        const docs = await window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER);
+        const saves = docs.filter(d => d.name.startsWith('SCN_'));
+
+        const enriched = await Promise.all(saves.map(async (doc) => {
+          try {
+            const { json } = await window.CC_STORAGE.loadDocument(doc.id);
+            const parsed   = JSON.parse(json);
+            return {
+              docId:        doc.id,
+              docName:      doc.name.replace('.json', ''),
+              scenarioName: parsed.scenario?.name || null,
+              locationName: parsed.scenario?.location?.name || null,
+              dangerRating: parsed.scenario?.danger_rating || null,
+              factions:     parsed.setup?.factions || [],
+              savedAt:      parsed.savedAt || doc.write_date
+            };
+          } catch {
+            return {
+              docId:        doc.id,
+              docName:      doc.name.replace('.json', ''),
+              scenarioName: null,
+              locationName: null,
+              dangerRating: null,
+              factions:     [],
+              savedAt:      doc.write_date
+            };
+          }
+        }));
+
+        showScenarioList(enriched);
+      } catch (err) {
+        console.error('Load failed:', err);
+        alert('Load failed: ' + err.message);
+      }
+    };
+
+    window.loadScenarioById = async function(docId) {
+      try {
+        const { json } = await window.CC_STORAGE.loadDocument(docId);
+        const saved = JSON.parse(json);
+
+        // Handle both v1.0 compact format and any older verbose saves.
+        state.scenario         = saved.scenario;
+        state.gameMode         = saved.gameMode   || saved.setup?.gameMode         || state.gameMode;
+        state.pointValue       = saved.pts        || saved.setup?.pointValue       || state.pointValue;
+        state.dangerRating     = saved.danger     || saved.setup?.dangerRating     || state.dangerRating;
+        state.factions         = saved.factions?.map(f => ({
+                                   id: f.id, name: f.id, player: f.npc ? 'NPC' : '', isNPC: f.npc || false
+                                 })) || saved.setup?.factions || state.factions;
+        state.locationType     = saved.setup?.locationType     || state.locationType;
+        state.selectedLocation = saved.setup?.selectedLocation || state.selectedLocation;
+        state.generated        = true;
+        state.completedSteps   = [1, 2, 3];
+        state.currentStep      = 4;
+        window.closeScenarioPanel();
+        render();
+      } catch (err) {
+        console.error('Load failed:', err);
+        window.closeScenarioPanel();
+        alert('Load failed: ' + err.message);
+      }
+    };
+
+    window.deleteScenario = async function(docId) {
+      if (!confirm('Delete this saved scenario? This cannot be undone.')) return;
+      try {
+        await window.CC_STORAGE.deleteDocument(docId);
+        window.closeScenarioPanel();
+        setTimeout(() => window.loadFromCloud(), 350);
+      } catch (err) {
+        console.error('Delete failed:', err);
+        alert('Delete failed: ' + err.message);
+      }
+    };
+
+    // ── Boot — splash screen, data load, 5-second minimum hold, then render() ──────
+    const _bootStart = Date.now();
+
+    root.innerHTML = `
+      <div class="cc-app-shell h-100">
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Coffin Canyon</h1>
+            <div class="cc-app-subtitle">Scenario Builder</div>
+          </div>
+        </div>
+        <div id="cc-splash-screen" class="cc-loading-container" style="transition:opacity 0.6s ease;">
+          <img
+            src="https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png"
+            alt="Coffin Canyon"
+            class="cc-splash-logo"
+            style="width:320px;max-width:80vw;margin-bottom:2rem;"
+          />
+          <div class="cc-loading-bar">
+            <div class="cc-loading-progress"></div>
+          </div>
+          <div class="cc-loading-text">Loading scenario data&hellip;</div>
         </div>
       </div>
     `;
 
-    // ---- DOM HOOKS ----
-    const sidebarEl      = root.querySelector("#cc-rules-sidebar");
-    const listEl         = root.querySelector("#cc-rule-list");
-    const detailEl       = root.querySelector("#cc-rule-detail");
-    const ctxEl          = root.querySelector("#cc-rule-context");
-    const contextPanelEl = root.querySelector("#cc-rules-context");
-    const searchEl       = root.querySelector("#cc-rule-search");
-    const navEl          = root.querySelector("#cc-rule-nav");
-    const prevBtnEl      = root.querySelector("#cc-prev-btn");
-    const nextBtnEl      = root.querySelector("#cc-next-btn");
-    const favoriteBtn    = root.querySelector("#cc-favorite-btn");
-    const printBtn       = root.querySelector("#cc-print-btn");
-    const focusBtn       = root.querySelector("#cc-focus-btn");
-    const explorerEl     = root.querySelector(".cc-rules-explorer");
+    // Hold splash for at least 5 seconds regardless of how fast data loads.
+    const MIN_SPLASH_MS = 5000;
 
-    let selectedId    = null;
-    let currentFilter = 'all';
-    let filteredIndex = [];
+    loadGameData().then(() => {
+      console.log('✅ Game data ready');
+      const elapsed  = Date.now() - _bootStart;
+      const holdFor  = Math.max(0, MIN_SPLASH_MS - elapsed);
 
-    // ---- SMALL UTILS ----
-    const esc = (s) =>
-      String(s ?? "")
-        .replace(/&/g,  "&amp;")
-        .replace(/</g,  "&lt;")
-        .replace(/>/g,  "&gt;")
-        .replace(/"/g,  "&quot;")
-        .replace(/'/g,  "&#39;");
-
-    const titleize = (k) => {
-      const str = String(k || "");
-
-      if (str.match(/^[A-H]$/)) {
-        const letterMap = {
-          A: 'Deployment Timing',  B: 'Movement Positioning',
-          C: 'Offense Damage',     D: 'Defense Survival',
-          E: 'Morale Fear',        F: 'Terrain Environment',
-          G: 'Thyr Ritual',        H: 'Interaction Support',
-          I: 'Monster Interactions',
-        };
-        return letterMap[str] ? `Abilities: ${letterMap[str]}` : `Abilities: ${str}`;
-      }
-
-      if (str.match(/^[A-I]_/)) {
-        const topic = str.substring(2).replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
-        return `Abilities: ${topic}`;
-      }
-
-      if (str.includes('_abilities') || str.includes('_ability')) {
-        return str.replace(/_abilities?/, '').replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase()) + ' Abilities';
-      }
-
-      if (str.includes('_dictionary')) {
-        return str.replace(/_dictionary/, '').replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase()) + ' Dictionary';
-      }
-
-      return str.replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
-    };
-
-    function getRulesRoot() {
-      return (
-        ctx?.rulesBase?.data  ||
-        ctx?.rulesBase?.root  ||
-        ctx?.rulesBase?.rules ||
-        ctx?.rulesBase?.json  ||
-        ctx?.rulesBase        ||
-        ctx?.rules            ||
-        {}
-      );
-    }
-
-    function resolvePath(obj, path) {
-      if (!obj || !path) return undefined;
-      const parts = String(path).split(".");
-      let cur = obj;
-      for (const p of parts) {
-        if (cur && typeof cur === "object" && p in cur) cur = cur[p];
-        else return undefined;
-      }
-      return cur;
-    }
-
-    function candidatePaths(metaPath) {
-      const p   = String(metaPath || "");
-      const out = [p];
-      out.push(p.replace(".quality_definition",    ".sections.quality"));
-      out.push(p.replace(".the_roll",               ".sections.the_roll"));
-      out.push(p.replace(".defense_and_damage",     ".sections.defense_and_damage"));
-      out.push(p.replace(".six_based_effects",      ".sections.six_based_effects"));
-      out.push(p.replace(".critical_failure",       ".sections.critical_failure"));
-      out.push(p.replace(".quality_tracking",       ".sections.quality_tracking"));
-      out.push(p.replace("rules_master.philosophy", "rules_master.sections.philosophy"));
-      return Array.from(new Set(out)).filter(Boolean);
-    }
-
-    function pickBestResolvedContent(meta, sectionContent) {
-      if (sectionContent !== undefined && sectionContent !== null) return sectionContent;
-      const rootObj = getRulesRoot();
-      for (const path of candidatePaths(meta?.path)) {
-        const val = resolvePath(rootObj, path);
-        if (val !== undefined) return val;
-      }
-      return sectionContent;
-    }
-
-    // ---- FILTER SYSTEM ----
-    root.querySelectorAll('[data-filter]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        root.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        currentFilter = btn.dataset.filter;
-        renderList(searchEl.value);
-      });
-    });
-
-    // ---- RENDER A SINGLE SIDEBAR ITEM ----
-    function renderListItem(it) {
-      const active  = it.id === selectedId ? "active" : "";
-      const starred = isFavorite(it.id);
-      return `
-        <button class="cc-list-item ${active}" data-id="${esc(it.id)}">
-          <div class="d-flex justify-content-between align-items-center w-100">
-            <div class="cc-list-title flex-grow-1">${esc(it.title || it.id)}</div>
-            <span class="cc-star-btn" data-star-id="${esc(it.id)}"
-              style="cursor: pointer; padding: 4px 8px; font-size: 14px;" title="Star/Unstar">
-              ${starred ? '★' : '☆'}
-            </span>
-          </div>
-        </button>
-      `;
-    }
-
-    // ---- LIST RENDER ----
-    // Renders grouped navigation by default.
-    // Falls back to a flat list during search or when Starred filter is active.
-    function renderList(filter = "") {
-      const f    = filter.trim().toLowerCase();
-      const favs = getFavorites();
-
-      // Build flat item list (unchanged logic from original — this drives filteredIndex for prev/next)
-      // Filter out sub-entries (items with a parent) and raw _id entries — these are
-      // deep-link anchors only and should never appear as top-level sidebar items.
-      let allItems = index.filter(it =>
-        !EXCLUDED_IDS.includes(it.id) &&
-        !it.parent &&
-        !String(it.id).match(/^R-[A-Z0-9-]+$/)
-      );
-
-      if (currentFilter === 'favorites') {
-        const indexFavorites = allItems.filter(it => favs.includes(it.id));
-        const abilityFavorites = favs
-          .filter(fav => fav.startsWith('ability-'))
-          .map(fav => ({
-            id:    fav,
-            title: titleize(fav.replace('ability-', '').replace(/-/g, ' ')),
-            type:  'ability',
-          }));
-        allItems = [...indexFavorites, ...abilityFavorites];
-      }
-
-      // Original soft-filter (kept as-is)
-      allItems = allItems.filter(it => {
-        if (currentFilter === 'favorites') return true;
-        const children = helpers.getChildren(it.id);
-        if (children && children.length > 0) return true;
-        return true;
-      });
-
-      if (f) {
-        allItems = allItems.filter(it => {
-          const hay = `${it.title || ""} ${it.id || ""} ${it.type || ""}`.toLowerCase();
-          return hay.includes(f);
-        });
-      }
-
-      filteredIndex = allItems;
-
-      if (!allItems.length) {
-        listEl.innerHTML = `<div class="cc-muted p-2">No matches.</div>`;
-        return;
-      }
-
-      // ---- FLAT LIST: search mode or favorites mode ----
-      if (f || currentFilter === 'favorites') {
-        listEl.innerHTML = allItems.map(it => renderListItem(it)).join('');
-        return;
-      }
-
-      // ---- GROUPED LIST: default view ----
-      let html    = '';
-      const claimed = new Set();
-
-      NAV_GROUPS.forEach(group => {
-        const groupItems = allItems.filter(it => group.match(it));
-        if (!groupItems.length) return;
-        groupItems.forEach(it => claimed.add(it.id));
-
-        const isOpen = openGroups.has(group.id);
-        html += `
-          <div class="cc-nav-group" style="margin-bottom: 4px;">
-            <button data-toggle-group="${esc(group.id)}"
-              style="width: 100%; text-align: left;
-                     background: rgba(255,255,255,0.05); border: none; border-radius: 6px;
-                     padding: 5px 10px; cursor: pointer;
-                     display: flex; justify-content: space-between; align-items: center;
-                     color: #e8e8e8; font-size: 0.78rem; font-weight: 600;
-                     letter-spacing: 0.03em; margin-bottom: 2px;">
-              <span>${esc(group.label)}</span>
-              <span style="opacity: 0.5; font-size: 0.7rem;">${isOpen ? '▲' : '▼'}</span>
-            </button>
-            <div style="display: ${isOpen ? 'block' : 'none'}; padding-left: 4px;">
-              ${groupItems.map(it => renderListItem(it)).join('')}
-            </div>
-          </div>
-        `;
-      });
-
-      // Anything not matched by a group falls through as ungrouped (future-proofing)
-      const ungrouped = allItems.filter(it => !claimed.has(it.id));
-      if (ungrouped.length) {
-        html += ungrouped.map(it => renderListItem(it)).join('');
-      }
-
-      listEl.innerHTML = html || `<div class="cc-muted p-2">No results.</div>`;
-    }
-
-    // ============================================
-    // IMPROVED RENDERING SYSTEM
-    // ============================================
-
-    const PROSE_FIELDS = [
-      'long', 'text', 'effect', 'description',
-      'golden_rule', 'fast_resolution', 'action_cost', 'completion', 'format',
-      'pool', 'logic',
-    ];
-
-    const LIST_FIELDS = [
-      'usage', 'guidelines', 'modifiers', 'restrictions', 'choices',
-      'process', 'sources', 'examples', 'effects', 'penalties',
-      'recovery', 'blockers', 'non_blockers', 'absolute',
-      'negation_triggers', 'terrain_trait_interactions',
-      'flexibility', 'common_actions_list', 'maintenance_steps',
-      'rules', 'logic_triggers', 'type_rules',
-    ];
-
-    const NESTED_FIELDS = [
-      'sections', 'mechanics', 'options', 'melee_rules', 'ranged_rules',
-      'rules_hooks', 'outcomes', 'status_conditions', 'attack_fundamentals',
-      'damage_resolution', 'the_morale_test', 'six_based_effects',
-      'cover_mechanics', 'movement_basics', 'terrain_penalties',
-      'model_interaction', 'engagement_and_pressure', 'verticality',
-      'trait_priority', 'activation_cycle', 'the_activation',
-      'round_definition', 'action_summaries', 'line_of_sight',
-      'initiative_logic',
-    ];
-
-    function renderProseField(label, value) {
-      if (!value) return '';
-      if (label === 'short' || label === 'text') return '';
-
-      const lowerLabel = label.toLowerCase();
-      if (lowerLabel.includes('id') || lowerLabel === 'ref' || lowerLabel === 'reference') return '';
-
-      let text = '';
-      if (typeof value === 'string') {
-        text = value;
-      } else if (value && typeof value === 'object') {
-        text = value.text || value.long || value.description || value.short || '';
-      }
-      if (!text) return '';
-      if (typeof text === 'string' && text.trim().match(/^R-[A-Z0-9-]+$/i)) return '';
-
-      if (label === 'long' || label === 'text') {
-        return `<p class="mb-3">${esc(text)}</p>`;
-      }
-
-      const className = label.toLowerCase().includes('philosophy') ? 'fw-semibold' : '';
-      return `
-        <div class="mb-3">
-          <div class="cc-field-label">${esc(titleize(label))}</div>
-          <p class="${className} mb-0">${esc(text)}</p>
-        </div>
-      `;
-    }
-
-    function renderList_Content(label, arr) {
-      if (!Array.isArray(arr) || !arr.length) return '';
-
-      const items = arr.map(item => {
-        if (typeof item === 'string') {
-          return `<li>${esc(item)}</li>`;
-        } else if (item && typeof item === 'object') {
-          if (item.name && (item.effect || item.description)) {
-            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.effect || item.description)}</li>`;
-          } else if (item.value && item.description) {
-            return `<li><strong>${esc(item.value)}:</strong> ${esc(item.description)}</li>`;
-          } else if (item.trait && item.result) {
-            return `<li><strong>${esc(item.trait)}:</strong> ${esc(item.result)}</li>`;
-          } else if (item.id && (item.name || item.effect)) {
-            return `<li><strong>${esc(item.name || item.id)}:</strong> ${esc(item.effect || '')}</li>`;
-          } else {
-            const parts = Object.entries(item)
-              .filter(([k]) => !k.startsWith('_'))
-              .map(([k, v]) => `<strong>${esc(titleize(k))}:</strong> ${esc(v)}`)
-              .join(' • ');
-            return `<li>${parts}</li>`;
-          }
-        }
-        return '';
-      }).filter(Boolean).join('');
-
-      if (!items) return '';
-
-      return `
-        <div class="mb-3">
-          <div class="cc-field-label">${esc(titleize(label))}</div>
-          <ul>${items}</ul>
-        </div>
-      `;
-    }
-
-    function renderNestedSection(label, obj, depth = 0) {
-      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return '';
-      if (depth >= 5) return '';
-
-      let html = '';
-
-      const isAbilityDict = Object.values(obj).every(v =>
-        typeof v === 'string' || (v && typeof v === 'object' && (v.effect || v.short || v.long))
-      );
-
-      if (isAbilityDict) {
-        html += `
-          <div class="mb-4">
-            <div class="cc-field-label">${esc(titleize(label))}</div>
-            ${renderAbilityDictionary(obj)}
-          </div>
-        `;
-        return html;
-      }
-
-      const hasTitle    = obj.title || obj.name;
-      const headerTag   = depth === 0 ? 'h5' : depth === 1 ? 'h6' : 'div';
-      const headerClass = depth <= 1 ? 'cc-section-title' : 'cc-field-label';
-
-      if (hasTitle) {
-        const displayTitle = obj.title || obj.name || titleize(label);
-        const labelTitle   = titleize(label);
-        if (displayTitle && displayTitle.match(/^R-[A-Z0-9-]+$/i)) {
-          // skip ID-looking titles
-        } else if (displayTitle.toLowerCase() === labelTitle.toLowerCase()) {
-          // skip duplicates
-        } else if (depth > 0) {
-          html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
-        }
-      }
-
-      for (const field of PROSE_FIELDS)  if (obj[field]) html += renderProseField(field, obj[field]);
-      for (const field of LIST_FIELDS)   if (obj[field]) html += renderList_Content(field, obj[field]);
-
-      for (const field of NESTED_FIELDS) {
-        if (obj[field] && typeof obj[field] === 'object') {
-          if (Array.isArray(obj[field])) {
-            html += renderList_Content(field, obj[field]);
-          } else {
-            const nestedKeys = Object.keys(obj[field]).filter(k => !k.startsWith('_'));
-            for (const nestedKey of nestedKeys) {
-              html += renderNestedSection(nestedKey, obj[field][nestedKey], depth + 1);
-            }
-          }
-        }
-      }
-
-      const processedFields = new Set([
-        ...PROSE_FIELDS, ...LIST_FIELDS, ...NESTED_FIELDS,
-        'title', 'Title', 'name', 'Name', '_id', 'id', 'Id', 'ID',
-        'type', 'design_intent', 'designer_notes',
-        'effect', 'Effect', 'restriction', 'Restriction', 'trigger', 'Trigger',
-        'short', 'Short',
-      ]);
-
-      const remainingFields = Object.entries(obj).filter(([k, v]) => {
-        if (processedFields.has(k))  return false;
-        if (k.startsWith('_'))       return false;
-        const lowerKey = k.toLowerCase();
-        if (lowerKey.includes('id') || lowerKey.includes('ref')) return false;
-        if (v === undefined || v === null || v === '')            return false;
-        if (typeof v === 'string') {
-          const t = v.trim();
-          if (t.match(/^R-[A-Za-z0-9-]+$/))  return false;
-          if (t.match(/^[A-Z0-9]{8,}-/))      return false;
-          if (t.length < 3)                   return false;
-        }
-        return true;
-      });
-
-      if (remainingFields.length > 0) {
-        html += '<div class="mb-3">';
-        for (const [key, value] of remainingFields) {
-          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-            html += `
-              <div class="cc-kv mb-1">
-                <div class="cc-k">${esc(titleize(key))}</div>
-                <div class="cc-v">${esc(value)}</div>
-              </div>
-            `;
-          } else if (Array.isArray(value)) {
-            html += renderList_Content(key, value);
-          } else if (value && typeof value === 'object') {
-            html += renderNestedSection(key, value, depth + 1);
-          }
-        }
-        html += '</div>';
-      }
-
-      if (html) return `<div class="cc-section mb-4">${html}</div>`;
-      return '';
-    }
-
-    function renderAbilityDictionary(dict) {
-      const currentSectionId = selectedId;
-
-      return Object.entries(dict || {})
-        .filter(([key, value]) => {
-          if (['id', '_id', 'ID', 'Id'].includes(key)) return false;
-          if (typeof value === 'string' && value.match(/^R-[A-Z0-9-]+$/i)) return false;
-          const standaloneFields = ['name', 'Name', 'effect', 'Effect', 'restriction', 'Restriction'];
-          if (standaloneFields.includes(key) && typeof value === 'string') return false;
-          return true;
-        })
-        .map(([key, ability]) => {
-          const abilityId = `ability-${key}`;
-          const starred   = isFavorite(abilityId);
-
-          // Store section mapping so the deep-link system can find this ability later
-          if (currentSectionId) {
-            try {
-              const abilityMap = JSON.parse(localStorage.getItem('cc_ability_sections') || '{}');
-              abilityMap[abilityId] = currentSectionId;
-              localStorage.setItem('cc_ability_sections', JSON.stringify(abilityMap));
-            } catch (e) {
-              console.warn('Could not store ability section mapping', e);
-            }
-          }
-
-          if (typeof ability === 'string') {
-            return `
-              <div class="cc-ability-card p-3 mb-2">
-                <div class="d-flex justify-content-between align-items-baseline mb-1">
-                  <div class="fw-bold flex-grow-1">${esc(titleize(key))}</div>
-                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
-                    <span class="cc-star">${starred ? '★' : '☆'}</span>
-                  </button>
-                </div>
-                <div>${esc(ability)}</div>
-              </div>
-            `;
-          }
-
-          const a = ability || {};
-          return `
-            <div class="cc-ability-card p-3 mb-2">
-              <div class="d-flex justify-content-between align-items-baseline mb-1">
-                <div class="fw-bold flex-grow-1">${esc(a.name || titleize(key))}</div>
-                <div class="d-flex align-items-center gap-2">
-                  ${a.timing ? `<div class="cc-muted small text-uppercase">${esc(a.timing)}</div>` : ''}
-                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
-                    <span class="cc-star">${starred ? '★' : '☆'}</span>
-                  </button>
-                </div>
-              </div>
-              ${a.long        ? `<div>${esc(a.long)}</div>` : a.effect ? `<div>${esc(a.effect)}</div>` : ''}
-            </div>
-          `;
-        })
-        .join('');
-    }
-
-    // ---- ARCHETYPE VAULT RENDERER ----
-    // Handles the shape in 70_unit_identities.json:
-    // { identity, type_rule, type_rules[], effect, logic_triggers[], sub-rule objects }
-    function isArchetypeEntry(obj) {
-      return obj && typeof obj === 'object' && !Array.isArray(obj) &&
-        (obj.type_rule || obj.type_rules || obj.identity) &&
-        !obj.timing; // don't confuse with ability dict entries
-    }
-
-    function renderArchetypeVault(vault) {
-      let html = '';
-      for (const [key, archetype] of Object.entries(vault)) {
-        if (key.startsWith('_') || !isArchetypeEntry(archetype)) continue;
-
-        const name = titleize(key);
-        const identity = archetype.identity || '';
-
-        // Collect all type rules (may be a single string or an array)
-        const typeRules = archetype.type_rules
-          ? archetype.type_rules
-          : archetype.type_rule
-            ? [archetype.type_rule]
-            : [];
-
-        // Collect sub-rule effect objects (e.g. fire_superiority, command_presence)
-        const subRuleKeys = Object.keys(archetype).filter(k =>
-          !['_id','identity','type_rule','type_rules','effect','logic_triggers'].includes(k) &&
-          !k.startsWith('_') &&
-          typeof archetype[k] === 'object' && archetype[k] !== null && !Array.isArray(archetype[k])
-        );
-
-        html += `
-          <div class="cc-ability-card mb-4 p-3" style="border-radius:8px;">
-            <h4 style="color:#ff7518;font-size:1.1rem;font-weight:700;margin:0 0 0.25rem 0;">${esc(name)}</h4>
-            ${identity ? `<p style="color:#aaa;font-size:0.85rem;font-style:italic;margin:0 0 0.75rem 0;">${esc(identity)}</p>` : ''}
-
-            ${typeRules.map(rule => `
-              <div style="margin-bottom:0.75rem;">
-                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;
-                            color:rgba(255,117,24,0.7);margin-bottom:0.25rem;">Type Rule</div>
-                <div style="font-weight:700;color:#e8e8e8;font-size:0.95rem;">${esc(rule)}</div>
-              </div>
-            `).join('')}
-
-            ${archetype.effect ? `
-              <div class="mb-2">
-                <div class="cc-field-label">Effect</div>
-                <p style="margin:0;line-height:1.6;">${esc(archetype.effect)}</p>
-              </div>
-            ` : ''}
-
-            ${subRuleKeys.map(k => {
-              const sub = archetype[k];
-              return sub.effect ? `
-                <div class="mb-2" style="padding-left:0.75rem;border-left:2px solid rgba(255,117,24,0.3);">
-                  <div style="font-weight:700;color:#e8e8e8;font-size:0.85rem;margin-bottom:0.2rem;">${esc(titleize(k))}</div>
-                  <p style="margin:0;font-size:0.9rem;color:#ccc;line-height:1.5;">${esc(sub.effect)}</p>
-                </div>
-              ` : '';
-            }).join('')}
-
-            ${Array.isArray(archetype.logic_triggers) && archetype.logic_triggers.length ? `
-              <div class="mt-2">
-                <div class="cc-field-label">Logic Triggers</div>
-                <ul style="margin:0.25rem 0 0 1.25rem;padding:0;">
-                  ${archetype.logic_triggers.map(t => `<li style="color:#aaa;font-size:0.875rem;">${esc(t)}</li>`).join('')}
-                </ul>
-              </div>
-            ` : ''}
-          </div>
-        `;
-      }
-      return html;
-    }
-
-    function renderContentSmart(meta, content) {
-      if (content === undefined || content === null) {
-        return `<div class="cc-muted">No content available.</div>`;
-      }
-      if (typeof content === 'string') return `<p>${esc(content)}</p>`;
-      if (typeof content !== 'object') return `<p>${esc(String(content))}</p>`;
-
-      // Unit identities: top-level object with archetype_vault
-      if (content.archetype_vault && typeof content.archetype_vault === 'object') {
-        let html = '';
-        if (content.philosophy) {
-          const p = content.philosophy;
-          html += `<div class="cc-callout mb-4"><p style="margin:0;font-style:italic;">${esc(p.long || p.short || '')}</p></div>`;
-        }
-        html += renderArchetypeVault(content.archetype_vault);
-        // logic_notes intentionally omitted here — rendered in the right context panel instead
-        return html;
-      }
-
-      // Direct archetype vault (if content IS the vault)
-      const archetypeValues = Object.values(content).filter(v => isArchetypeEntry(v));
-      if (archetypeValues.length >= 3) {
-        return renderArchetypeVault(content);
-      }
-
-      if (content.abilities && typeof content.abilities === 'object') {
-        return renderAbilityDictionary(content.abilities);
-      }
-      if (content.properties && typeof content.properties === 'object') {
-        return renderAbilityDictionary(content.properties);
-      }
-
-      const isFlatAbilityDict = Object.values(content).every(v =>
-        typeof v === 'string' ||
-        (v && typeof v === 'object' && !Array.isArray(v) && (v.effect || v.short || v.long || v.description))
-      );
-      if (isFlatAbilityDict && !content.sections && !content.text) {
-        return renderAbilityDictionary(content);
-      }
-
-      return renderNestedSection('', content, 0) || `<div class="cc-muted">No renderable content found.</div>`;
-    }
-
-    // ---- BREADCRUMB ----
-    // NOTE: renderBreadcrumb was defined in original but never called. Now it's used.
-    function renderBreadcrumb(meta) {
-      if (!meta) return '';
-
-      const parts = [];
-      let current = meta;
-      while (current) {
-        parts.unshift(current);
-        current = current.parent ? index.find(it => it.id === current.parent) : null;
-      }
-
-      if (parts.length <= 1) return '';
-
-      return parts.map((p, i) => {
-        const isLast = i === parts.length - 1;
-        if (isLast) {
-          return `<span class="cc-breadcrumb-current">${esc(p.title || p.id)}</span>`;
-        } else {
-          return `<button class="cc-breadcrumb-link" data-id="${esc(p.id)}">${esc(p.title || p.id)}</button>`;
-        }
-      }).join(' › ');
-    }
-
-    // ---- SELECT RULE ----
-    async function selectRule(id) {
-
-      // ---- CAMPAIGN ----
-      if (id === 'campaign_system') {
-        selectedId = id;
-        renderList(searchEl.value);
-
-        favoriteBtn.classList.remove('d-none');
-        favoriteBtn.querySelector('.cc-star').textContent = isFavorite(id) ? '★' : '☆';
-
-        detailEl.innerHTML = `
-          <article class="cc-rule-article">
-            <h2 class="cc-rule-title">${esc(CAMPAIGN_FILE.title)}</h2>
-            <div class="cc-rule-content">${renderCampaign()}</div>
-          </article>
-        `;
-        contextPanelEl.style.display = 'none';
-        navEl.classList.remove('d-none');
-        updateNavigation();
-        return;
-      }
-
-      // ---- FACTION ----
-      if (id.startsWith('faction_')) {
-        const factionId = id.replace('faction_', '');
-
-        // If factions haven't loaded yet, wait for them now
-        if (!factionsData[factionId]) {
-          detailEl.innerHTML = `<div class="cc-muted" style="padding:2rem">Loading faction data…</div>`;
-          await loadFactions();
-        }
-
-        const faction = factionsData[factionId];
-
-        if (faction) {
-          selectedId = id;
-          renderList(searchEl.value);
-
-          favoriteBtn.classList.remove('d-none');
-          favoriteBtn.querySelector('.cc-star').textContent = isFavorite(id) ? '★' : '☆';
-
-          detailEl.innerHTML = `
-            <article class="cc-rule-article">
-              <h2 class="cc-rule-title">${esc(faction.title)}</h2>
-              <div class="cc-rule-content">${renderFaction(factionId)}</div>
-            </article>
-          `;
-          contextPanelEl.style.display = 'none';
-          navEl.classList.remove('d-none');
-
-          const ci = filteredIndex.findIndex(it => it.id === selectedId);
-          prevBtnEl.disabled = ci <= 0;
-          nextBtnEl.disabled = ci >= filteredIndex.length - 1;
-          if (ci > 0)                        prevBtnEl.onclick = () => selectRule(filteredIndex[ci - 1].id);
-          if (ci < filteredIndex.length - 1) nextBtnEl.onclick = () => selectRule(filteredIndex[ci + 1].id);
-
-          return;
-        } else {
-          detailEl.innerHTML = `<div class="cc-muted" style="padding:2rem">⚠️ Could not load faction: ${esc(factionId)}</div>`;
-          return;
-        }
-      }
-
-      // ---- SUBSECTION SCROLL (if already on parent) ----
-      if (selectedId) {
-        const children         = helpers.getChildren(selectedId);
-        const isChildOfCurrent = children.some(c => c.id === id);
-
-        if (isChildOfCurrent) {
-          const targetSection = detailEl.querySelector(`#section-${id}`);
-          if (targetSection) {
-            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            targetSection.style.color = '#ff7518';
-            setTimeout(() => { targetSection.style.color = ''; }, 2000);
-            return;
-          }
-        }
-      }
-
-      // ---- NORMAL RULE ----
-      selectedId = id;
-      detailEl.innerHTML = `<div class="cc-muted" style="padding:2rem">Loading…</div>`;
-      ctxEl.innerHTML    = `<div class="cc-muted">Loading…</div>`;
-
-      const raw = await helpers.getRuleSection(id);
-      console.log('📦 getRuleSection raw result for', id, '→', raw);
-
-      // Normalise: the helper may return { meta, content } OR just the meta/section object
-      let section = null;
-      if (raw && raw.meta) {
-        section = raw;
-      } else if (raw && (raw.id || raw.title || raw.path)) {
-        section = { meta: raw, content: raw.content || raw.data || null };
-      } else if (raw && typeof raw === 'object') {
-        const metaFromIndex = index.find(it => it.id === id);
-        section = { meta: metaFromIndex || { id, title: id }, content: raw };
-        console.warn('⚠️ Unexpected getRuleSection shape — salvaged:', section);
-      }
-
-      // ---- DIRECT FETCH FALLBACK ----
-      // If helpers returned nothing useful, fetch the file straight from GitHub
-      if (!section || !section.meta) {
-        console.warn('⚠️ getRuleSection gave nothing — trying direct GitHub fetch for:', id);
-        section = await fetchRuleDirectly(id);
-      }
-
-      if (!section || !section.meta) {
-        console.error('❌ Could not load rule:', id, '— raw:', raw);
-        detailEl.innerHTML = `
-          <div style="padding:2rem">
-            <p style="color:#ff7518;font-weight:700">Could not load: ${esc(id)}</p>
-            <p style="color:#888;font-size:0.85rem">
-              Check the browser console (F12) for details.<br>
-              <code>getRuleSection</code> returned: <code>${esc(JSON.stringify(raw)?.slice(0, 200) ?? 'null')}</code>
-            </p>
-          </div>`;
-        ctxEl.innerHTML    = `<div class="cc-muted">—</div>`;
-        navEl.classList.add('d-none');
-        favoriteBtn.classList.add('d-none');
-        return;
-      }
-
-      const meta     = section.meta;
-      const children = helpers.getChildren(id);
-
-      const resolvedContent = pickBestResolvedContent(meta, section.content);
-
-      const hasRealContent = resolvedContent && (
-        typeof resolvedContent === 'string' ||
-        (typeof resolvedContent === 'object' && Object.keys(resolvedContent).some(k =>
-          !k.startsWith('_') && k !== 'id' && k !== 'title' && resolvedContent[k]
-        ))
-      );
-
-      if (!hasRealContent) {
-        detailEl.innerHTML = `<div class="cc-muted">This section has no content yet.</div>`;
-        navEl.classList.add('d-none');
-        favoriteBtn.classList.add('d-none');
-        contextPanelEl.style.display = 'none';
-        renderList(searchEl.value);
-        return;
-      }
-
-      // Special title handling for ability dictionary sections
-      let displayTitle = meta.title || "";
-      if (meta.type === 'abilities' || meta.id.includes('ability_dict')) {
-        if (resolvedContent && typeof resolvedContent === 'object') {
-          const firstKey = Object.keys(resolvedContent)[0];
-          if (firstKey && firstKey.match(/^[A-H]$/)) {
-            displayTitle = titleize(firstKey);
-          }
-        }
-      }
-
-      const formattedContent = renderContentSmart(meta, resolvedContent);
-      const breadcrumb       = renderBreadcrumb(meta);
-
-      // ---- FAVORITE BUTTON ----
-      favoriteBtn.classList.remove('d-none');
-      favoriteBtn.querySelector('.cc-star').textContent = isFavorite(id) ? '★' : '☆';
-
-      // ---- MAIN CONTENT ----
-      detailEl.innerHTML = `
-        <article class="cc-rule-article">
-          ${breadcrumb ? `<div style="font-size: 0.75rem; color: #888; margin-bottom: 0.5rem;">${breadcrumb}</div>` : ''}
-          <h2 class="cc-rule-title">${esc(displayTitle)}</h2>
-          <div class="cc-rule-content">${formattedContent}</div>
-        </article>
-      `;
-
-      // Anchor IDs for subsection scroll
-      if (children.length > 0) {
-        children.forEach(child => {
-          const el = detailEl.querySelector('h2, h3, h4, h5, h6');
-          if (el && el.textContent.trim() === child.title) {
-            el.id = `section-${child.id}`;
-          }
-        });
-      }
-
-      // ---- CONTEXT PANEL ----
-      let contextHtml = '';
-
-      let designIntentText = null;
-      if (resolvedContent && typeof resolvedContent === 'object') {
-        if      (resolvedContent.notes)                                  designIntentText = resolvedContent.notes;
-        else if (resolvedContent.design_intent)                          designIntentText = resolvedContent.design_intent;
-        else if (resolvedContent.designer_notes)                         designIntentText = resolvedContent.designer_notes;
-        else if (resolvedContent.meta?.design_intent)                    designIntentText = resolvedContent.meta.design_intent;
-        else if (resolvedContent.description?.design_intent)             designIntentText = resolvedContent.description.design_intent;
-        else if (resolvedContent.philosophy?.design_intent)              designIntentText = resolvedContent.philosophy.design_intent;
-        else if (resolvedContent.philosophy?.notes)                      designIntentText = resolvedContent.philosophy.notes;
-      }
-      // Also collect notes from individual ability entries when viewing an ability dict section
-      const abilityNotes = [];
-      if (resolvedContent?.abilities && typeof resolvedContent.abilities === 'object') {
-        for (const [key, ability] of Object.entries(resolvedContent.abilities)) {
-          if (ability?.notes) abilityNotes.push({ label: titleize(key), text: ability.notes });
-        }
-      }
-
-      if (designIntentText) {
-        if (typeof designIntentText === 'object') {
-          designIntentText = designIntentText.text        ||
-                             designIntentText.description ||
-                             designIntentText.note        ||
-                             designIntentText.content     ||
-                             JSON.stringify(designIntentText, null, 2);
-        }
-        contextHtml += `
-          <div class="cc-callout mb-3">
-            <div class="fw-bold small text-uppercase mb-2" style="color: #ff7518;">Designer Notes</div>
-            <div class="small">${esc(String(designIntentText))}</div>
-          </div>
-        `;
-      }
-
-      // ---- LOGIC NOTES → right panel ----
-      // Collect logic_notes from the content or from each archetype
-      const logicNoteEntries = [];
-
-      if (resolvedContent && typeof resolvedContent === 'object') {
-        // Top-level logic_notes object
-        const ln = resolvedContent.logic_notes || resolvedContent.archetype_vault?.logic_notes;
-        if (ln && typeof ln === 'object') {
-          for (const [k, v] of Object.entries(ln)) {
-            if (k.startsWith('_')) continue;
-            logicNoteEntries.push({ label: titleize(k), text: typeof v === 'string' ? v : JSON.stringify(v) });
-          }
-        }
-        // Per-archetype logic_triggers collected as a summary
-        if (resolvedContent.archetype_vault) {
-          for (const [archetypeName, archetype] of Object.entries(resolvedContent.archetype_vault)) {
-            if (archetypeName.startsWith('_') || !isArchetypeEntry(archetype)) continue;
-            if (Array.isArray(archetype.logic_triggers) && archetype.logic_triggers.length) {
-              logicNoteEntries.push({
-                label: titleize(archetypeName),
-                triggers: archetype.logic_triggers
-              });
-            }
-          }
-        }
-      }
-
-      if (logicNoteEntries.length) {
-        contextHtml += `
-          <div class="mb-3">
-            <div class="fw-bold small text-uppercase mb-2" style="color:#ff7518;">Notes</div>
-            ${logicNoteEntries.map(entry => `
-              <div class="mb-3">
-                <div class="fw-semibold small mb-1" style="color:#e8e8e8;">${esc(entry.label)}</div>
-                ${entry.text
-                  ? `<p class="small mb-0" style="color:#aaa;line-height:1.5;">${esc(entry.text)}</p>`
-                  : entry.triggers
-                    ? `<ul class="small mb-0" style="margin:0 0 0 1rem;padding:0;color:#aaa;">
-                        ${entry.triggers.map(t => `<li>${esc(t)}</li>`).join('')}
-                       </ul>`
-                    : ''
-                }
-              </div>
-            `).join('')}
-          </div>
-        `;
-      }
-
-      if (children.length > 0) {
-        contextHtml += `
-          <div class="fw-bold small text-uppercase mb-2" style="color: #ff7518;">Subsections</div>
-          <ul class="list-unstyled">
-            ${children.map(c => `
-              <li class="mb-2 d-flex justify-content-between align-items-center">
-                <button class="btn btn-link p-0 text-start flex-grow-1" data-id="${esc(c.id)}">
-                  ${esc(c.title)}
-                </button>
-                <button class="btn btn-link p-0 cc-context-star" data-star-id="${esc(c.id)}" title="Star this rule">
-                  <span class="cc-star">${isFavorite(c.id) ? '★' : '☆'}</span>
-                </button>
-              </li>`).join('')}
-          </ul>
-        `;
-      }
-
-      if (contextHtml) {
-        contextPanelEl.style.display = 'block';
-        ctxEl.innerHTML = contextHtml;
-      } else if (abilityNotes.length) {
-        contextPanelEl.style.display = 'block';
-        ctxEl.innerHTML = `
-          <div class="mb-3">
-            <div class="fw-bold small text-uppercase mb-2" style="color:#ff7518;">Notes</div>
-            ${abilityNotes.map(n => `
-              <div class="mb-3">
-                <div class="fw-semibold small mb-1" style="color:#e8e8e8;">${esc(n.label)}</div>
-                <p class="small mb-0" style="color:#aaa;line-height:1.5;">${esc(n.text)}</p>
-              </div>
-            `).join('')}
-          </div>
-        `;
-      } else {
-        contextPanelEl.style.display = 'none';
-      }
-
-      updateNavigation();
-      renderList(searchEl.value);
-    }
-
-    // ---- NAVIGATION ----
-    function updateNavigation() {
-      const ci = filteredIndex.findIndex(it => it.id === selectedId);
-      if (ci === -1) { navEl.classList.add('d-none'); return; }
-
-      navEl.classList.remove('d-none');
-      prevBtnEl.disabled = ci === 0;
-      nextBtnEl.disabled = ci === filteredIndex.length - 1;
-      if (ci > 0)                        prevBtnEl.onclick = () => selectRule(filteredIndex[ci - 1].id);
-      if (ci < filteredIndex.length - 1) nextBtnEl.onclick = () => selectRule(filteredIndex[ci + 1].id);
-    }
-
-    // ---- FOCUS MODE ----
-    focusBtn.addEventListener('click', () => {
-      const isActive = explorerEl.classList.toggle('focus-mode');
-      focusBtn.textContent = isActive ? '⬅️ Panels' : '📖 Focus';
-      focusBtn.title = isActive ? 'Show sidebars' : 'Focus mode — hides sidebars for reading';
-    });
-
-    // ---- PRINT / PDF ----
-    printBtn.addEventListener('click', () => {
-      // Auto-enter focus mode for clean print, then restore
-      const wasFocused = explorerEl.classList.contains('focus-mode');
-      if (!wasFocused) explorerEl.classList.add('focus-mode');
       setTimeout(() => {
-        window.print();
-        if (!wasFocused) explorerEl.classList.remove('focus-mode');
-      }, 150);
-    });
-
-    // ---- EVENTS: SIDEBAR LIST ----
-    listEl.addEventListener("click", async (e) => {
-
-      // Group header toggle
-      const toggleBtn = e.target.closest('[data-toggle-group]');
-      if (toggleBtn) {
-        const gid = toggleBtn.dataset.toggleGroup;
-        openGroups.has(gid) ? openGroups.delete(gid) : openGroups.add(gid);
-        renderList(searchEl.value);
-        return;
-      }
-
-      // Sidebar star toggle
-      if (e.target.closest('.cc-star-btn')) {
-        const starBtn = e.target.closest('.cc-star-btn');
-        const itemId  = starBtn.dataset.starId;
-        if (itemId) {
-          toggleFavorite(itemId);
-          renderList(searchEl.value);
-          if (selectedId === itemId) {
-            favoriteBtn.querySelector('.cc-star').textContent = isFavorite(itemId) ? '★' : '☆';
-          }
-        }
-        e.stopPropagation();
-        return;
-      }
-
-      const btn = e.target.closest("button[data-id]");
-      if (!btn) return;
-
-      const clickedId = btn.dataset.id;
-      console.log('📍 Clicked item:', clickedId);
-
-      // ---- ABILITY DEEP-LINK ----
-      // When a starred ability is clicked, find which section it lives in,
-      // load that section, then scroll + highlight the specific ability card.
-      if (clickedId.startsWith('ability-')) {
-        const abilityId          = clickedId.replace('ability-', '');
-        const abilityNameDisplay = titleize(abilityId.replace(/_/g, ' ').replace(/-/g, ' '));
-
-        console.log('🔍 Looking for starred ability:', clickedId);
-
-        let foundSection = null;
-        try {
-          const abilityMap = JSON.parse(localStorage.getItem('cc_ability_sections') || '{}');
-          foundSection = abilityMap[clickedId];
-          if (foundSection) console.log('✅ Found stored section:', foundSection);
-        } catch (e) {
-          console.warn('Could not load ability section mapping', e);
-        }
-
-        if (!foundSection) {
-          console.log('⚠️ No stored section, searching all sections...');
-          const normalizedSearch = abilityId.toLowerCase().replace(/[^a-z0-9]/g, '');
-          console.log('Normalized search term:', normalizedSearch);
-
-          for (const item of index) {
-            try {
-              const section = await helpers.getRuleSection(item.id);
-              if (section && section.content) {
-                for (const key of Object.keys(section.content)) {
-                  const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
-                  if (normalizedKey === normalizedSearch ||
-                      normalizedKey.includes(normalizedSearch) ||
-                      normalizedSearch.includes(normalizedKey)) {
-                    foundSection = item.id;
-                    console.log('✅ Found ability', key, 'in section', item.id, item.title);
-                    break;
-                  }
-                }
-                if (foundSection) break;
-              }
-            } catch (e) {
-              console.error('Error loading section', item.id, e);
-              continue;
-            }
-          }
-
-          if (!foundSection) console.error('❌ Searched all', index.length, 'sections, could not find:', abilityId);
-        }
-
-        if (foundSection) {
-          await selectRule(foundSection);
-
+        const splash = document.getElementById('cc-splash-screen');
+        if (splash) {
+          splash.style.opacity = '0';
           setTimeout(() => {
-            const abilityCards = detailEl.querySelectorAll('.cc-ability-card');
-            let targetCard = null;
-
-            for (const card of abilityCards) {
-              const cardTitle = card.querySelector('.fw-bold');
-              if (cardTitle) {
-                const titleText  = cardTitle.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const searchText = abilityId.toLowerCase().replace(/[^a-z0-9]/g, '');
-                if (titleText.includes(searchText) || searchText.includes(titleText)) {
-                  targetCard = card;
-                  break;
-                }
-              }
-            }
-
-            if (targetCard) {
-              targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              targetCard.style.borderColor = '#ff7518';
-              targetCard.style.boxShadow   = '0 0 0 2px rgba(255,117,24,0.3)';
-              setTimeout(() => {
-                targetCard.style.borderColor = '';
-                targetCard.style.boxShadow   = '';
-              }, 2000);
-              console.log('✅ Scrolled to ability');
-            } else {
-              console.warn('⚠️ Loaded section but could not find ability card');
-            }
-          }, 500);
-
+            console.log('✅ Rendering app');
+            render();
+          }, 650); // wait for CSS fade-out to finish
         } else {
-          console.error('❌ Could not find section');
-          detailEl.innerHTML = `
-            <div class="cc-muted p-4">
-              <h4 style="color: #ff7518;">Could not locate "${esc(abilityNameDisplay)}"</h4>
-              <p>The ability may have been moved or renamed in the rules.</p>
-              <p><strong>Try this:</strong> Use the search box to find it manually, then star it again.</p>
-            </div>
-          `;
+          render();
         }
-        return;
-      }
-
-      // Normal rule click
-      await selectRule(clickedId);
+      }, holdFor);
     });
 
-    // ---- EVENTS: CONTEXT PANEL ----
-    ctxEl.addEventListener("click", (e) => {
-      const navBtn = e.target.closest("button[data-id]");
-      if (navBtn) { selectRule(navBtn.dataset.id); return; }
-
-      const starBtn = e.target.closest("button[data-star-id]");
-      if (starBtn) {
-        const starId = starBtn.dataset.starId;
-        toggleFavorite(starId);
-        starBtn.querySelector('.cc-star').textContent = isFavorite(starId) ? '★' : '☆';
-        renderList(searchEl.value);
-        e.stopPropagation();
-      }
-    });
-
-    // ---- EVENTS: DETAIL PANEL ----
-    detailEl.addEventListener('click', (e) => {
-      // Breadcrumb navigation (renderBreadcrumb was defined but never wired up before)
-      const breadcrumbLink = e.target.closest('.cc-breadcrumb-link');
-      if (breadcrumbLink?.dataset.id) {
-        selectRule(breadcrumbLink.dataset.id);
-        return;
-      }
-
-      // Per-ability star toggle
-      const starBtn = e.target.closest("button.cc-ability-star");
-      if (starBtn) {
-        const starId = starBtn.dataset.starId;
-        toggleFavorite(starId);
-        starBtn.querySelector('.cc-star').textContent = isFavorite(starId) ? '★' : '☆';
-        renderList(searchEl.value);
-        e.stopPropagation();
-      }
-    });
-
-    // ---- EVENTS: SEARCH ----
-    searchEl.addEventListener("input", () => {
-      // Open all groups when the user starts typing so every match is visible
-      if (searchEl.value.trim()) {
-        NAV_GROUPS.forEach(g => openGroups.add(g.id));
-      }
-      renderList(searchEl.value);
-    });
-
-    // ---- EVENTS: MAIN FAVOURITE BUTTON ----
-    favoriteBtn.addEventListener('click', () => {
-      if (!selectedId) return;
-      toggleFavorite(selectedId);
-      favoriteBtn.querySelector('.cc-star').textContent = isFavorite(selectedId) ? '★' : '☆';
-      renderList(searchEl.value);
-
-      if (currentFilter === 'favorites' && !isFavorite(selectedId)) {
-        if (filteredIndex.length === 0) {
-          detailEl.innerHTML = `<div class="cc-muted">No starred rules yet. Click the ☆ icon on any rule to star it!</div>`;
-          contextPanelEl.style.display = 'none';
-          navEl.classList.add('d-none');
-          favoriteBtn.classList.add('d-none');
-        }
-      }
-    });
-
-    // ---- INIT ----
-
-    // Improve ability dictionary titles from path data
-    index.forEach(item => {
-      if (item.id?.startsWith('ability_dict_') && item.path) {
-        const parts    = item.path.split('.');
-        const lastPart = parts[parts.length - 1];
-        if (lastPart?.match(/^[A-I]_/)) {
-          item.title = `Abilities: ${lastPart.substring(2).replace(/_/g, ' ').replace(/\b\w/g, m => m.toUpperCase())}`;
-        }
-      }
-    });
-
-    renderList();
-
-    // Background-load campaign → add to index → refresh sidebar
-    loadCampaign().then(() => {
-      if (!index.find(it => it.id === CAMPAIGN_FILE.id)) {
-        index.push({ id: CAMPAIGN_FILE.id, title: CAMPAIGN_FILE.title, type: 'campaign' });
-      }
-      renderList(searchEl.value);
-    });
-
-    // Background-load factions → add to index → refresh sidebar
-    loadFactions().then(() => {
-      FACTION_FILES.forEach(f => {
-        const fid = 'faction_' + f.id;
-        if (!index.find(it => it.id === fid)) {
-          index.push({ id: fid, title: f.title, type: 'faction' });
-        }
-      });
-      renderList(searchEl.value);
-    });
-  },
-};
+  } // end init()
+}; // end window.CC_APP
