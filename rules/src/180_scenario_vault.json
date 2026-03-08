@@ -1,20 +1,18 @@
 {
   "file": "180_scenario_vault.json",
-  "version": "1.1",
+  "version": "1.2",
   "design_intent": [
     "Scenarios create lasting change to Coffin Canyon.",
     "Objectives outweigh body count.",
     "Violence accelerates escalation.",
     "Resources matter beyond the current game."
   ],
-
   "global_tags": [
     "solo_compatible",
     "campaign_impact",
     "resource_driven",
     "coffin_cough_enabled"
   ],
-
   "scenario_danger_scaling": {
     "1": "Tutorial / low escalation",
     "2": "Frontier skirmish",
@@ -23,9 +21,7 @@
     "5": "Escalation guaranteed",
     "6": "Catastrostorm risk / Titan possible"
   },
-
   "scenarios": [
-
     {
       "id": "ambush_crashed_supply_train",
       "name": "Ambush at the Crashed Supply Train",
@@ -57,8 +53,15 @@
         "Monsterologists"
       ],
       "location_rules": {
-        "allowed_named_locations": ["Fort Plunder", "Fortune", "Huck"],
-        "allowed_location_types": ["boomtown_riverbase", "debris_field"],
+        "allowed_named_locations": [
+          "Fort Plunder",
+          "Fortune",
+          "Huck"
+        ],
+        "allowed_location_types": [
+          "boomtown_riverbase",
+          "debris_field"
+        ],
         "random_between_locations": true
       },
       "danger_rating": 4,
@@ -69,7 +72,11 @@
           "type": "device",
           "resource": "mechanical_parts",
           "rating": 2,
-          "interactions": ["salvage", "control", "sabotage"],
+          "interactions": [
+            "salvage",
+            "control",
+            "sabotage"
+          ],
           "notes": [
             "Salvage produces Spare Parts.",
             "Spare Parts may be spent to repair or heal Automats.",
@@ -79,7 +86,11 @@
         {
           "id": "scattered_supply_crates",
           "type": "extraction",
-          "resources": ["food_good", "water_clean", "supplies"],
+          "resources": [
+            "food_good",
+            "water_clean",
+            "supplies"
+          ],
           "count": "d3+2"
         }
       ],
@@ -90,7 +101,10 @@
       "monster_pressure": {
         "enabled": true,
         "trigger_round": 3,
-        "bias": ["Carrion", "Opportunistic"],
+        "bias": [
+          "Carrion",
+          "Opportunistic"
+        ],
         "notes": "Monsters are drawn by blood, noise, and food."
       },
       "coffin_cough_triggers": [
@@ -119,10 +133,9 @@
         "win_condition": "Extract before Catastrostorm"
       }
     },
-
     {
       "id": "tigers_milk",
-      "name": "Tiger’s Milk",
+      "name": "Tiger's Milk",
       "tags": [
         "plot_escort",
         "objective_vehicle",
@@ -142,7 +155,11 @@
         "Monsterologists"
       ],
       "location_rules": {
-        "allowed_location_types": ["boomtown_mesa", "outpost", "wasteland"]
+        "allowed_location_types": [
+          "boomtown_mesa",
+          "outpost",
+          "wasteland"
+        ]
       },
       "danger_rating": 3,
       "narrative_hook": "A Cargo Tiger truck carries life-saving syrups to Camp Coffin. The land does not want it to pass.",
@@ -151,7 +168,10 @@
           "id": "cargo_tiger_truck",
           "type": "transport",
           "resource": "supplies",
-          "special": ["sweet_scent", "monster_lure"]
+          "special": [
+            "sweet_scent",
+            "monster_lure"
+          ]
         }
       ],
       "victory_conditions": {
@@ -160,7 +180,9 @@
       },
       "monster_pressure": {
         "enabled": true,
-        "spawn_bias": ["Predators"],
+        "spawn_bias": [
+          "Predators"
+        ],
         "notes": "Monsters appear closer to the truck each round."
       },
       "aftermath_effects": {
@@ -174,7 +196,6 @@
         "opposition": "Monster waves + terrain pressure"
       }
     },
-
     {
       "id": "brass_bronco",
       "name": "The Brass Bronco",
@@ -197,7 +218,10 @@
         "Monsterologists"
       ],
       "location_rules": {
-        "allowed_location_types": ["boomtown_spire_stilts", "ruins"]
+        "allowed_location_types": [
+          "boomtown_spire_stilts",
+          "ruins"
+        ]
       },
       "danger_rating": 4,
       "narrative_hook": "A legendary horse has been taken. Honor demands blood. The Canyon prepares something worse.",
@@ -205,7 +229,9 @@
         {
           "id": "legendary_steed",
           "type": "control",
-          "special": ["morale_anchor"]
+          "special": [
+            "morale_anchor"
+          ]
         }
       ],
       "midgame_twist": {
@@ -220,7 +246,6 @@
         "location": "monster_pressure_increase"
       }
     },
-
     {
       "id": "thyr_harvester",
       "name": "The Thyr Harvester",
@@ -246,7 +271,10 @@
         "Crow Queen"
       ],
       "location_rules": {
-        "allowed_location_types": ["thyr_field", "ruins"]
+        "allowed_location_types": [
+          "thyr_field",
+          "ruins"
+        ]
       },
       "danger_rating": 5,
       "narrative_hook": "A machine that eats the Canyon is nearly ready.",
@@ -256,7 +284,11 @@
           "type": "device",
           "resource": "thyr",
           "activation": {
-            "requirements": ["3 scientists", "1 coal", "2 turns"]
+            "requirements": [
+              "3 scientists",
+              "1 coal",
+              "2 turns"
+            ]
           }
         }
       ],
@@ -279,7 +311,6 @@
         "opposition": "Automated defenses + escalation"
       }
     },
-
     {
       "id": "the_black_water_claim",
       "name": "The Black Water Claim",
@@ -305,7 +336,11 @@
         "Monsters"
       ],
       "location_rules": {
-        "allowed_location_types": ["boomtown_riverbase", "wasteland", "ruins"],
+        "allowed_location_types": [
+          "boomtown_riverbase",
+          "wasteland",
+          "ruins"
+        ],
         "random_between_locations": true
       },
       "danger_rating": 3,
@@ -315,12 +350,19 @@
           "id": "tainted_well",
           "type": "control",
           "resource": "water_foul",
-          "interactions": ["purify", "extract", "corrupt"]
+          "interactions": [
+            "purify",
+            "extract",
+            "corrupt"
+          ]
         }
       ],
       "monster_pressure": {
         "enabled": true,
-        "spawn_bias": ["Amphibious", "Hunger"]
+        "spawn_bias": [
+          "Amphibious",
+          "Hunger"
+        ]
       },
       "victory_conditions": {
         "primary": "Control or neutralize the well."
@@ -334,10 +376,9 @@
         "location_state": "cursed_or_reclaimed"
       }
     },
-
     {
       "id": "dead_mans_signal",
-      "name": "Dead Man’s Signal",
+      "name": "Dead Man's Signal",
       "tags": [
         "plot_disaster",
         "objective_marker",
@@ -354,7 +395,11 @@
         "Liberty Corps"
       ],
       "location_rules": {
-        "allowed_location_types": ["signal_tower", "mesa", "ruins"]
+        "allowed_location_types": [
+          "signal_tower",
+          "mesa",
+          "ruins"
+        ]
       },
       "danger_rating": 2,
       "narrative_hook": "A heliograph tower is flashing at night. The man who built it died last winter.",
@@ -362,18 +407,21 @@
         {
           "id": "signal_tower",
           "type": "device",
-          "interactions": ["activate", "disable", "misalign"]
+          "interactions": [
+            "activate",
+            "disable",
+            "misalign"
+          ]
         }
       ],
       "victory_conditions": {
-        "primary": "Determine the signal’s fate."
+        "primary": "Determine the signal's fate."
       },
       "aftermath_effects": {
         "regional_awareness": "increase_or_misdirect",
         "liberty_corps": "reinforcement_delay_or_acceleration"
       }
     },
-
     {
       "id": "meat_for_the_canyon",
       "name": "Meat for the Canyon",
@@ -394,7 +442,10 @@
         "Monsters"
       ],
       "location_rules": {
-        "allowed_location_types": ["wasteland", "bone_field"]
+        "allowed_location_types": [
+          "wasteland",
+          "bone_field"
+        ]
       },
       "danger_rating": 4,
       "narrative_hook": "A herd has gone missing. Something large is feeding. Something larger is waiting.",
@@ -408,7 +459,10 @@
       ],
       "monster_pressure": {
         "enabled": true,
-        "spawn_bias": ["Carrion", "Pack"]
+        "spawn_bias": [
+          "Carrion",
+          "Pack"
+        ]
       },
       "victory_conditions": {
         "primary": "Secure or destroy all carcass sites."
@@ -418,7 +472,6 @@
         "monster_activity": "increase"
       }
     },
-
     {
       "id": "the_buried_badge",
       "name": "The Buried Badge",
@@ -439,7 +492,10 @@
         "Liberty Corps"
       ],
       "location_rules": {
-        "allowed_location_types": ["graveyard", "ruins"]
+        "allowed_location_types": [
+          "graveyard",
+          "ruins"
+        ]
       },
       "danger_rating": 3,
       "narrative_hook": "A Ranger badge has been found nailed to a coffin. The Ranger is still listed as active.",
@@ -447,18 +503,20 @@
         {
           "id": "marked_grave",
           "type": "control",
-          "special": ["haunted", "honor_bound"]
+          "special": [
+            "haunted",
+            "honor_bound"
+          ]
         }
       ],
       "victory_conditions": {
-        "primary": "Resolve the badge’s claim."
+        "primary": "Resolve the badge's claim."
       },
       "aftermath_effects": {
         "monster_rangers": "morale_shift",
         "location": "haunted_or_quieted"
       }
     },
-
     {
       "id": "coal_and_blood",
       "name": "Coal & Blood",
@@ -481,7 +539,10 @@
         "Monsters"
       ],
       "location_rules": {
-        "allowed_location_types": ["mine", "thyr_field"]
+        "allowed_location_types": [
+          "mine",
+          "thyr_field"
+        ]
       },
       "danger_rating": 5,
       "narrative_hook": "A coal seam has been opened through something alive.",
@@ -490,16 +551,21 @@
           "id": "open_seam",
           "type": "device",
           "resource": "coal",
-          "interactions": ["extract", "seal"]
+          "interactions": [
+            "extract",
+            "seal"
+          ]
         }
       ],
       "monster_pressure": {
         "enabled": true,
         "trigger_round": 2,
-        "spawn_bias": ["Burrowers"]
+        "spawn_bias": [
+          "Burrowers"
+        ]
       },
       "victory_conditions": {
-        "primary": "Control the seam’s fate."
+        "primary": "Control the seam's fate."
       },
       "coffin_cough_triggers": [
         "deep_mining",
@@ -510,7 +576,6 @@
         "thyr": -1
       }
     },
-
     {
       "id": "the_runaway_engine",
       "name": "The Runaway Engine",
@@ -531,7 +596,10 @@
         "Monster Rangers"
       ],
       "location_rules": {
-        "allowed_location_types": ["rail_line", "mesa"]
+        "allowed_location_types": [
+          "rail_line",
+          "mesa"
+        ]
       },
       "danger_rating": 4,
       "narrative_hook": "An unmanned engine screams down the line. The whistle does not stop.",
@@ -539,7 +607,11 @@
         {
           "id": "runaway_engine",
           "type": "transport",
-          "interactions": ["board", "halt", "derail"]
+          "interactions": [
+            "board",
+            "halt",
+            "derail"
+          ]
         }
       ],
       "victory_conditions": {
@@ -549,7 +621,6 @@
         "rail_network": "damaged_or_secured"
       }
     },
-
     {
       "id": "saints_of_gunmetal",
       "name": "Saints of Gunmetal",
@@ -570,7 +641,10 @@
         "Monster Rangers"
       ],
       "location_rules": {
-        "allowed_location_types": ["chapel_ruin", "boomtown"]
+        "allowed_location_types": [
+          "chapel_ruin",
+          "boomtown"
+        ]
       },
       "danger_rating": 3,
       "narrative_hook": "Statues of soldiers weep oil. The Corps calls it morale.",
@@ -588,7 +662,6 @@
         "liberty_corps": "propaganda_boost_or_scandal"
       }
     },
-
     {
       "id": "the_long_night_ride",
       "name": "The Long Night Ride",
@@ -609,7 +682,10 @@
         "Monsters"
       ],
       "location_rules": {
-        "allowed_location_types": ["wasteland", "storm_front"]
+        "allowed_location_types": [
+          "wasteland",
+          "storm_front"
+        ]
       },
       "danger_rating": 5,
       "narrative_hook": "The Riders ride to keep the sun from setting too long.",
@@ -622,7 +698,9 @@
       ],
       "monster_pressure": {
         "enabled": true,
-        "spawn_bias": ["Nightbound"]
+        "spawn_bias": [
+          "Nightbound"
+        ]
       },
       "victory_conditions": {
         "primary": "Reach the far edge before total dark."
@@ -631,7 +709,6 @@
         "regional_time_anomaly": "stabilized_or_worsened"
       }
     },
-
     {
       "id": "bones_of_the_titan",
       "name": "Bones of the Titan",
@@ -656,7 +733,10 @@
         "Monster Rangers"
       ],
       "location_rules": {
-        "allowed_location_types": ["colossal_remains", "thyr_field"]
+        "allowed_location_types": [
+          "colossal_remains",
+          "thyr_field"
+        ]
       },
       "danger_rating": 6,
       "narrative_hook": "Something massive died here. The Canyon has not finished digesting it.",
@@ -671,7 +751,10 @@
       "monster_pressure": {
         "enabled": true,
         "trigger_round": 1,
-        "spawn_bias": ["Titanic", "Territorial"]
+        "spawn_bias": [
+          "Titanic",
+          "Territorial"
+        ]
       },
       "victory_conditions": {
         "primary": "Extract or consecrate the remains."
@@ -681,290 +764,631 @@
         "region": "scarred"
       }
     },
-
-{
-  "id": "ooze_in_the_river",
-  "name": "Ooze in the River",
-  "tags": [
-    "plot_disaster",
-    "objective_device",
-    "objective_marker",
-    "resource_water",
-    "resource_occult",
-    "danger_4",
-    "horror",
-    "grim",
-    "boomtown",
-    "wasteland",
-    "monster_corrupted",
-    "monsterology",
-    "monsters",
-    "escalation_coffin_cough"
-  ],
-  "spotlight_factions": ["Monsterologists", "Monster Rangers", "Monsters"],
-  "location_rules": {
-    "allowed_location_types": ["boomtown_riverbase", "outpost", "wasteland"],
-    "river_runs_through_map": true
-  },
-  "danger_rating": 4,
-  "narrative_hook": "A Monsterologist pop-up factory is leaking chemical waste into the river. Now the water itself hunts the living.",
-  "objectives": [
     {
-      "id": "factory_module",
-      "type": "device",
-      "interactions": ["operate", "sabotage", "overload"],
-      "notes": [
-        "Operating produces resources but spawns additional Ooze units.",
-        "Sabotage reduces pollution but escalates Monsterologist response.",
-        "Overload forces immediate escalation checks."
-      ]
+      "id": "ooze_in_the_river",
+      "name": "Ooze in the River",
+      "tags": [
+        "plot_disaster",
+        "objective_device",
+        "objective_marker",
+        "resource_water",
+        "resource_occult",
+        "danger_4",
+        "horror",
+        "grim",
+        "boomtown",
+        "wasteland",
+        "monster_corrupted",
+        "monsterology",
+        "monsters",
+        "escalation_coffin_cough"
+      ],
+      "spotlight_factions": [
+        "Monsterologists",
+        "Monster Rangers",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "boomtown_riverbase",
+          "outpost",
+          "wasteland"
+        ],
+        "river_runs_through_map": true
+      },
+      "danger_rating": 4,
+      "narrative_hook": "A Monsterologist pop-up factory is leaking chemical waste into the river. Now the water itself hunts the living.",
+      "objectives": [
+        {
+          "id": "factory_module",
+          "type": "device",
+          "interactions": [
+            "operate",
+            "sabotage",
+            "overload"
+          ],
+          "notes": [
+            "Operating produces resources but spawns additional Ooze units.",
+            "Sabotage reduces pollution but escalates Monsterologist response.",
+            "Overload forces immediate escalation checks."
+          ]
+        },
+        {
+          "id": "polluted_river_zones",
+          "type": "marker",
+          "count": "d3+1",
+          "notes": [
+            "Oozes may emerge from these zones.",
+            "Units ending activations here risk corruption."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "monsterologists": "Extract resources and keep the factory operational.",
+        "monster_rangers": "Shut down or cleanse the river before escalation peaks.",
+        "monsters": "Maintain at least one polluted river zone at game end."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 2,
+        "spawn_bias": [
+          "Corrosive",
+          "Amorphous"
+        ]
+      },
+      "aftermath_effects": {
+        "river": "purified_or_dead",
+        "monster_activity": "increase",
+        "monsterology": "profit_or_scandal"
+      }
     },
     {
-      "id": "polluted_river_zones",
-      "type": "marker",
-      "count": "d3+1",
-      "notes": [
-        "Oozes may emerge from these zones.",
-        "Units ending activations here risk corruption."
-      ]
-    }
-  ],
-  "victory_conditions": {
-    "monsterologists": "Extract resources and keep the factory operational.",
-    "monster_rangers": "Shut down or cleanse the river before escalation peaks.",
-    "monsters": "Maintain at least one polluted river zone at game end."
-  },
-  "monster_pressure": {
-    "enabled": true,
-    "trigger_round": 2,
-    "spawn_bias": ["Corrosive", "Amorphous"]
-  },
-  "aftermath_effects": {
-    "river": "purified_or_dead",
-    "monster_activity": "increase",
-    "monsterology": "profit_or_scandal"
-  }
-},
-
-{
-  "id": "the_golem_that_remembers",
-  "name": "The Golem That Remembers",
-  "tags": [
-    "plot_claim",
-    "objective_marker",
-    "resource_metal",
-    "resource_occult",
-    "danger_3",
-    "grim",
-    "mystical",
-    "boomtown",
-    "ruins",
-    "monster_elite",
-    "monsters",
-    "liberty_corps"
-  ],
-  "spotlight_factions": ["Liberty Corps", "Monster Rangers", "Monsters"],
-  "location_rules": {
-    "allowed_location_types": ["boomtown", "ruins"],
-    "key_landmark_present": "Foundry Hall"
-  },
-  "danger_rating": 3,
-  "narrative_hook": "An ancient Halloween Golem has activated an ownership charter older than the Canyon itself.",
-  "objectives": [
-    {
-      "id": "charter_core",
-      "type": "control",
-      "notes": [
-        "Represents the legal-industrial soul bound into the Golem.",
-        "Cannot be moved while the Golem lives."
-      ]
+      "id": "the_golem_that_remembers",
+      "name": "The Golem That Remembers",
+      "tags": [
+        "plot_claim",
+        "objective_marker",
+        "resource_metal",
+        "resource_occult",
+        "danger_3",
+        "grim",
+        "mystical",
+        "boomtown",
+        "ruins",
+        "monster_elite",
+        "monsters",
+        "liberty_corps"
+      ],
+      "spotlight_factions": [
+        "Liberty Corps",
+        "Monster Rangers",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "boomtown",
+          "ruins"
+        ],
+        "key_landmark_present": "Foundry Hall"
+      },
+      "danger_rating": 3,
+      "narrative_hook": "An ancient Halloween Golem has activated an ownership charter older than the Canyon itself.",
+      "objectives": [
+        {
+          "id": "charter_core",
+          "type": "control",
+          "notes": [
+            "Represents the legal-industrial soul bound into the Golem.",
+            "Cannot be moved while the Golem lives."
+          ]
+        },
+        {
+          "id": "foundry_hall",
+          "type": "marker",
+          "resource": "mechanical_parts"
+        }
+      ],
+      "victory_conditions": {
+        "liberty_corps": "Seize the charter and enforce modern claim law.",
+        "monster_rangers": "Nullify the charter without destroying the Golem.",
+        "monsters": "Ensure the Golem retains control of Foundry Hall."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "bias": [
+          "Stalwart"
+        ]
+      },
+      "aftermath_effects": {
+        "boomtown": "revived_or_scrapped",
+        "golem": "pacified_or_exiled"
+      }
     },
     {
-      "id": "foundry_hall",
-      "type": "marker",
-      "resource": "mechanical_parts"
-    }
-  ],
-  "victory_conditions": {
-    "liberty_corps": "Seize the charter and enforce modern claim law.",
-    "monster_rangers": "Nullify the charter without destroying the Golem.",
-    "monsters": "Ensure the Golem retains control of Foundry Hall."
-  },
-  "monster_pressure": {
-    "enabled": true,
-    "bias": ["Stalwart"]
-  },
-  "aftermath_effects": {
-    "boomtown": "revived_or_scrapped",
-    "golem": "pacified_or_exiled"
-  }
-},
-
-{
-  "id": "the_coffin_crawler_job",
-  "name": "The Coffin Crawler Job",
-  "tags": [
-    "plot_extraction",
-    "objective_cargo",
-    "danger_3",
-    "tense",
-    "grim",
-    "ruins",
-    "graveyard",
-    "monster_predator",
-    "monsters"
-  ],
-  "spotlight_factions": ["Monster Rangers", "Monsters"],
-  "location_rules": {
-    "allowed_location_types": ["graveyard", "ruins"]
-  },
-  "danger_rating": 3,
-  "narrative_hook": "Coffins are going missing. Whatever’s taking them doesn’t want the bodies — it wants the names.",
-  "objectives": [
+      "id": "the_coffin_crawler_job",
+      "name": "The Coffin Crawler Job",
+      "tags": [
+        "plot_extraction",
+        "objective_cargo",
+        "danger_3",
+        "tense",
+        "grim",
+        "ruins",
+        "graveyard",
+        "monster_predator",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "graveyard",
+          "ruins"
+        ]
+      },
+      "danger_rating": 3,
+      "narrative_hook": "Coffins are going missing. Whatever's taking them doesn't want the bodies \u2014 it wants the names.",
+      "objectives": [
+        {
+          "id": "marked_coffins",
+          "type": "extraction",
+          "count": "d3",
+          "notes": [
+            "Removing a coffin angers the Coffin Crawler.",
+            "Destroying coffins prevents escalation but loses VP."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "monster_rangers": "Recover the coffins intact.",
+        "monsters": "Prevent removal and complete the Crawl."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "spawn_bias": [
+          "Ambush"
+        ]
+      },
+      "aftermath_effects": {
+        "graveyard": "quieted_or_hungry"
+      }
+    },
     {
-      "id": "marked_coffins",
-      "type": "extraction",
-      "count": "d3",
-      "notes": [
-        "Removing a coffin angers the Coffin Crawler.",
-        "Destroying coffins prevents escalation but loses VP."
-      ]
-    }
-  ],
-  "victory_conditions": {
-    "monster_rangers": "Recover the coffins intact.",
-    "monsters": "Prevent removal and complete the Crawl."
-  },
-  "monster_pressure": {
-    "enabled": true,
-    "spawn_bias": ["Ambush"]
-  },
-  "aftermath_effects": {
-    "graveyard": "quieted_or_hungry"
-  }
-},
-
-{
-  "id": "steam_wretch_uprising",
-  "name": "Steam Wretch Uprising",
-  "tags": [
-    "plot_siege",
-    "objective_marker",
-    "resource_metal",
-    "danger_4",
-    "grim",
-    "combat",
-    "boomtown",
-    "monster_corrupted",
-    "monsterology",
-    "monsters"
-  ],
-  "spotlight_factions": ["Monsterologists", "Monsters"],
-  "location_rules": {
-    "allowed_location_types": ["factory_district", "boomtown"]
-  },
-  "danger_rating": 4,
-  "narrative_hook": "Steam Wretches have seized their factory. The valves won’t stop screaming.",
-  "objectives": [
+      "id": "steam_wretch_uprising",
+      "name": "Steam Wretch Uprising",
+      "tags": [
+        "plot_siege",
+        "objective_marker",
+        "resource_metal",
+        "danger_4",
+        "grim",
+        "combat",
+        "boomtown",
+        "monster_corrupted",
+        "monsterology",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Monsterologists",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "factory_district",
+          "boomtown"
+        ]
+      },
+      "danger_rating": 4,
+      "narrative_hook": "Steam Wretches have seized their factory. The valves won't stop screaming.",
+      "objectives": [
+        {
+          "id": "pressure_valves",
+          "type": "control",
+          "count": 3,
+          "notes": [
+            "Each valve increases global pressure.",
+            "At max pressure, catastrophic rupture occurs."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "monsterologists": "Regain control and stabilize production.",
+        "monsters": "Force a full rupture or hold all valves."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "bias": [
+          "Mechan",
+          "Corrupted"
+        ]
+      },
+      "aftermath_effects": {
+        "boomtown": "industrial_collapse_or_expansion"
+      }
+    },
     {
-      "id": "pressure_valves",
-      "type": "control",
-      "count": 3,
-      "notes": [
-        "Each valve increases global pressure.",
-        "At max pressure, catastrophic rupture occurs."
-      ]
-    }
-  ],
-  "victory_conditions": {
-    "monsterologists": "Regain control and stabilize production.",
-    "monsters": "Force a full rupture or hold all valves."
-  },
-  "monster_pressure": {
-    "enabled": true,
-    "bias": ["Mechan", "Corrupted"]
-  },
-  "aftermath_effects": {
-    "boomtown": "industrial_collapse_or_expansion"
-  }
-},
-
-{
-  "id": "the_grave_mule_run",
-  "name": "The Grave Mule Run",
-  "tags": [
-    "plot_escort",
-    "objective_vehicle",
-    "resource_food",
-    "danger_2",
-    "tense",
-    "wilderness",
-    "monster_predator",
-    "monsters",
-    "monster_rangers"
-  ],
-  "spotlight_factions": ["Monster Rangers", "Monsters"],
-  "location_rules": {
-    "allowed_location_types": ["wilderness", "trail"]
-  },
-  "danger_rating": 2,
-  "narrative_hook": "Grave Mules haul food through monster territory. Everyone is hungry.",
-  "objectives": [
+      "id": "the_grave_mule_run",
+      "name": "The Grave Mule Run",
+      "tags": [
+        "plot_escort",
+        "objective_vehicle",
+        "resource_food",
+        "danger_2",
+        "tense",
+        "wilderness",
+        "monster_predator",
+        "monsters",
+        "monster_rangers"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "wilderness",
+          "trail"
+        ]
+      },
+      "danger_rating": 2,
+      "narrative_hook": "Grave Mules haul food through monster territory. Everyone is hungry.",
+      "objectives": [
+        {
+          "id": "mule_train",
+          "type": "transport",
+          "resource": "food_good"
+        }
+      ],
+      "victory_conditions": {
+        "monster_rangers": "Escort the mules safely off-map.",
+        "monsters": "Force the mules to flee or be consumed."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "spawn_bias": [
+          "Pack"
+        ]
+      },
+      "aftermath_effects": {
+        "food": "shortage_or_relief"
+      }
+    },
     {
-      "id": "mule_train",
-      "type": "transport",
-      "resource": "food_good"
-    }
-  ],
-  "victory_conditions": {
-    "monster_rangers": "Escort the mules safely off-map.",
-    "monsters": "Force the mules to flee or be consumed."
-  },
-  "monster_pressure": {
-    "enabled": true,
-    "spawn_bias": ["Pack"]
-  },
-  "aftermath_effects": {
-    "food": "shortage_or_relief"
-  }
-},
-
-{
-  "id": "the_bell_that_bleeds",
-  "name": "The Bell That Bleeds",
-  "tags": [
-    "plot_ritual",
-    "objective_marker",
-    "resource_occult",
-    "danger_3",
-    "horror",
-    "grim",
-    "boomtown",
-    "ruins",
-    "monster_undead",
-    "monsters"
-  ],
-  "spotlight_factions": ["Monster Rangers", "Monsters"],
-  "location_rules": {
-    "allowed_location_types": ["chapel_ruin", "boomtown"]
-  },
-  "danger_rating": 3,
-  "narrative_hook": "Each time the bell rings, someone dies. No one remembers pulling the rope.",
-  "objectives": [
+      "id": "the_bell_that_bleeds",
+      "name": "The Bell That Bleeds",
+      "tags": [
+        "plot_ritual",
+        "objective_marker",
+        "resource_occult",
+        "danger_3",
+        "horror",
+        "grim",
+        "boomtown",
+        "ruins",
+        "monster_undead",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "chapel_ruin",
+          "boomtown"
+        ]
+      },
+      "danger_rating": 3,
+      "narrative_hook": "Each time the bell rings, someone dies. No one remembers pulling the rope.",
+      "objectives": [
+        {
+          "id": "bleeding_bell",
+          "type": "control",
+          "interactions": [
+            "silence",
+            "ring",
+            "consecrate"
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "monster_rangers": "Consecrate or silence the bell.",
+        "monsters": "Ring the bell three times."
+      },
+      "aftermath_effects": {
+        "chapel": "holy_or_cursed"
+      }
+    },
     {
-      "id": "bleeding_bell",
-      "type": "control",
-      "interactions": ["silence", "ring", "consecrate"]
+      "id": "dead_mans_doomshine",
+      "name": "Dead Man's Doomshine",
+      "tags": [
+        "plot_extraction",
+        "objective_cargo",
+        "resource_doomshine",
+        "danger_3",
+        "tense",
+        "grim",
+        "wilderness",
+        "monster_predator",
+        "shine_riders",
+        "monsterology",
+        "monsters",
+        "doomshine"
+      ],
+      "spotlight_factions": [
+        "Shine Riders",
+        "Monsterologists",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "wasteland",
+          "wilderness",
+          "outpost"
+        ],
+        "excluded_location_types": [
+          "boomtown"
+        ],
+        "notes": "Must be a remote location \u2014 this cache was hidden deliberately."
+      },
+      "danger_rating": 3,
+      "narrative_hook": "A cache of Doomshine kegs has been uncovered in a dry canyon hollow \u2014 nobody knows how many, nobody knows whose they were, and nobody who went to check has come back yet. Thrallo can smell it from three ridges away. The Shine Riders heard the same thing everyone else did: free Doomshine. The Monsterologists need it for their Squabs and Pluguglies, who won't eat without it. First one there keeps it. The Thrallo don't negotiate.",
+      "objectives": [
+        {
+          "id": "doomshine_cache",
+          "type": "extraction",
+          "resource": "doomshine",
+          "count": "danger_rating + 1",
+          "notes": [
+            "Each keg weighs enough to Encumber non-Shine Riders (-1 inch Move while carrying).",
+            "Shine Riders carry kegs without penalty.",
+            "Any unsecured keg within 12 inches forces Thrallo Morale tests each activation.",
+            "On a Thrallo Morale failure, it moves its full Move toward the nearest unsecured keg instead of activating normally.",
+            "When a Shine Riders unit carrying a keg is destroyed, place the keg marker at death location."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Extract the most Doomshine kegs off a table edge.",
+        "shine_riders": "Extract 3+ kegs. Bonus VP if the Shine Boss carries one off personally.",
+        "monsterologists": "Secure 2+ kegs before end of Round 4 to satisfy the Squabs.",
+        "monsters": "Ensure at least 2 kegs remain unsecured on the board at game end \u2014 the Thrallo will find them eventually."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 1,
+        "spawn_bias": [
+          "Thrallo",
+          "Predator"
+        ],
+        "notes": "Thrallo arrive Turn 1 from the board edges nearest to the cache. They prioritize unsecured kegs over all other targets unless attacked."
+      },
+      "coffin_cough_triggers": [
+        "unit_drinks_doomshine_voluntarily",
+        "keg_destroyed_in_combat"
+      ],
+      "aftermath_effects": {
+        "doomshine": "conditional_shift",
+        "thrallo_activity": "increase_if_kegs_remain",
+        "monsterology": "squab_fed_or_starved",
+        "shine_riders": "doomshine_stockpile_if_success"
+      },
+      "solo_play": {
+        "player_role": "Shine Riders extraction crew",
+        "opposition": "Thrallo waves + rival Monsterologist automated response",
+        "win_condition": "Extract 3 kegs before Thrallo overwhelm the cache"
+      }
+    },
+    {
+      "id": "the_doomshine_seizure",
+      "name": "The Doomshine Seizure",
+      "tags": [
+        "plot_escort",
+        "objective_vehicle",
+        "objective_cargo",
+        "resource_doomshine",
+        "danger_4",
+        "tense",
+        "combat",
+        "rail",
+        "wilderness",
+        "shine_riders",
+        "liberty_corps",
+        "doomshine"
+      ],
+      "spotlight_factions": [
+        "Liberty Corps",
+        "Shine Riders"
+      ],
+      "location_rules": {
+        "allowed_named_locations": [
+          "Bandit Buck",
+          "Grade Grind",
+          "Gore Mule Drop"
+        ],
+        "allowed_location_types": [
+          "rail_line",
+          "rail_stop",
+          "rail_infrastructure"
+        ],
+        "notes": "The train must have a track to run on and at least one blind turn or choke point."
+      },
+      "danger_rating": 4,
+      "narrative_hook": "The Liberty Corps has seized a shipment of Doomshine from Bayou City \u2014 contraband under Provision 9, they say, public hazard, they say. The Shine Riders say: that's ours. The kegs are loaded on a flatbed car and it's already moving. The Riders have one window before it reaches Fort Plunder and they lose it forever.",
+      "objectives": [
+        {
+          "id": "doomshine_flatcar",
+          "type": "transport",
+          "resource": "doomshine",
+          "movement": {
+            "automatic": true,
+            "speed": 4,
+            "per_round": true,
+            "direction": "toward_far_board_edge",
+            "notes": "The flatcar moves 4 inches at the end of each round toward the Liberty Corps exit edge. Liberty Corps units in base contact may spend an action to push it an additional 2 inches."
+          },
+          "durability": {
+            "quality": "4+",
+            "defense": 2,
+            "notes": "If reduced to 0 HP, the flatcar derails. Scatter all keg markers d6 inches in random directions."
+          },
+          "keg_count": "danger_rating",
+          "notes": [
+            "Shine Riders may board the flatcar by moving into base contact.",
+            "A boarded Shine Rider may spend an action to throw a keg \u2014 it scatters d3 inches and may be retrieved.",
+            "Liberty Corps may push boarders off with a standard combat roll."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Control the flatcar's destination.",
+        "shine_riders": "Stop the flatcar and recover 3+ kegs before it exits. Bonus VP if the flatcar is derailed.",
+        "liberty_corps": "Get the flatcar off the far board edge with at least 2 kegs intact. Bonus VP if no Shine Rider boards the car.",
+        "secondary": "Any keg recovered by a non-Shine Rider faction scores 1 VP per keg."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 3,
+        "spawn_bias": [
+          "Thrallo",
+          "Opportunistic"
+        ],
+        "notes": "Thrallo are attracted by the smell of Doomshine in transit. They emerge from the wilderness flanks and interfere with both sides equally."
+      },
+      "coffin_cough_triggers": [
+        "flatcar_derailed_with_models_adjacent",
+        "keg_destroyed"
+      ],
+      "aftermath_effects": {
+        "doomshine": {
+          "if_corps_success": "doomshine_confiscated_destroyed",
+          "if_riders_success": "doomshine_recovered_stockpile"
+        },
+        "liberty_corps": {
+          "if_success": "provision_9_enforced_regional_effect",
+          "if_failure": "corps_credibility_damaged"
+        },
+        "rail_network": "damaged_or_intact",
+        "shine_riders": {
+          "if_success": "doomshine_pipeline_open",
+          "if_failure": "supply_route_severed"
+        }
+      },
+      "solo_play": {
+        "player_role": "Shine Riders intercept crew",
+        "opposition": "Liberty Corps escort + automated flatcar movement",
+        "win_condition": "Stop the flatcar and recover the kegs before it exits"
+      }
+    },
+    {
+      "id": "last_call_at_ratsville",
+      "name": "Last Call at Ratsville",
+      "tags": [
+        "plot_claim",
+        "objective_marker",
+        "objective_cargo",
+        "resource_doomshine",
+        "danger_4",
+        "combat",
+        "grim",
+        "boomtown",
+        "ruins",
+        "monster_predator",
+        "shine_riders",
+        "liberty_corps",
+        "monsters",
+        "doomshine"
+      ],
+      "spotlight_factions": [
+        "Shine Riders",
+        "Liberty Corps",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_named_locations": [
+          "Ratsville",
+          "Dustbuck",
+          "Fortune"
+        ],
+        "allowed_location_types": [
+          "boomtown_dryriver",
+          "shantytown",
+          "ruins"
+        ],
+        "notes": "A failing or lawless boomtown. The still must be present as a landmark."
+      },
+      "danger_rating": 4,
+      "narrative_hook": "Ratsville's legendary Doomshine still \u2014 the one nobody admits exists \u2014 has been working double shifts. There are forty kegs in the back room of a collapsed warehouse, the Wererats who run the operation are missing, and the Liberty Corps is already staging outside town to seize the equipment under weapons-manufacturing law. The Shine Riders got here first. The Thrallo smelled the kegs three hours ago. Everyone is about to arrive at once.",
+      "objectives": [
+        {
+          "id": "doomshine_still",
+          "type": "device",
+          "resource": "doomshine",
+          "interactions": [
+            "operate",
+            "destroy",
+            "sabotage"
+          ],
+          "notes": [
+            "Operating the still produces 1 doomshine keg per activation \u2014 but increases Thrallo attraction radius by 4 inches.",
+            "Destroying the still denies the resource but scores 2 VP for Liberty Corps.",
+            "Sabotage causes the still to vent \u2014 all units within 6 inches must pass Quality test or gain Doomshine Drunk status for the rest of the game."
+          ]
+        },
+        {
+          "id": "doomshine_kegs",
+          "type": "extraction",
+          "resource": "doomshine",
+          "count": "danger_rating + 2",
+          "notes": [
+            "Kegs are scattered through the collapsed warehouse \u2014 treat as difficult terrain.",
+            "Shine Riders carry without penalty. All others Encumbered.",
+            "Each keg carried off a table edge scores VP per faction victory conditions."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Control or deny the most Doomshine by game end.",
+        "shine_riders": "Extract 4+ kegs and keep the still intact. Bonus VP if the still is operational at game end.",
+        "liberty_corps": "Destroy the still and confiscate 3+ kegs. Bonus VP if the warehouse is cleared.",
+        "monsters": "Ensure the Thrallo consume at least 2 kegs and the still produces at least once.",
+        "secondary": "Last faction with a model inside the warehouse at game end scores 2 bonus VP."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 2,
+        "spawn_bias": [
+          "Thrallo",
+          "Pack",
+          "Opportunistic"
+        ],
+        "notes": "Thrallo arrive in force from Round 2. Each keg operated from the still adds 1 Thrallo to the next spawn. At 6+ Thrallo on the board simultaneously, they stop targeting kegs and start targeting everything."
+      },
+      "coffin_cough_triggers": [
+        "still_vented",
+        "keg_destroyed_indoors",
+        "thrallo_surge_triggered"
+      ],
+      "aftermath_effects": {
+        "doomshine": {
+          "if_riders_success": "ratsville_pipeline_controlled",
+          "if_corps_success": "doomshine_supply_disrupted_regionwide",
+          "if_monsters_succeed": "thrallo_activity_surge_local"
+        },
+        "ratsville": {
+          "if_still_intact": "production_continues_underground",
+          "if_still_destroyed": "ratsville_loses_primary_income"
+        },
+        "regional_doomshine_supply": "conditional_shift"
+      },
+      "solo_play": {
+        "player_role": "Shine Riders holding the warehouse",
+        "opposition": "Liberty Corps siege + Thrallo escalation waves",
+        "win_condition": "Hold the still and extract 4 kegs before the Corps breaks through"
+      }
     }
-  ],
-  "victory_conditions": {
-    "monster_rangers": "Consecrate or silence the bell.",
-    "monsters": "Ring the bell three times."
-  },
-  "aftermath_effects": {
-    "chapel": "holy_or_cursed"
-  }
-}
-
   ]
 }
