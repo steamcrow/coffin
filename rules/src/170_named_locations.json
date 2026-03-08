@@ -1,12 +1,13 @@
 {
   "file": "170_named_locations.json",
-  "version": "2.0",
+  "version": "2.1",
   "notes": [
     "All 36 canonical map locations plus Camp Coffin.",
     "key_resources lists 2-5 resources that define the location and drive scenario objectives.",
     "resources object only contains non-zero values for those key resources.",
     "Sub-locations (Red Lantern Cantina, Automat, Monte Haul) removed \u2014 they appear IN locations, not as locations.",
-    "glasswind-mesa removed \u2014 it is a terrain type template, not a canonical named place."
+    "glasswind-mesa removed \u2014 it is a terrain type template, not a canonical named place.",
+    "doomshine is the canonical spirit resource (v2.1)."
   ],
   "locations": [
     {
@@ -22,13 +23,15 @@
         "supplies",
         "silver",
         "weapons",
-        "food_good"
+        "food_good",
+        "doomshine"
       ],
       "resources": {
         "supplies": 5,
         "silver": 3,
         "weapons": 3,
-        "food_good": 4
+        "food_good": 4,
+        "doomshine": 3
       },
       "features": [
         "RailTerminus",
@@ -192,12 +195,14 @@
       "key_resources": [
         "silver",
         "gildren",
-        "thyr"
+        "thyr",
+        "doomshine"
       ],
       "resources": {
         "silver": 4,
         "gildren": 3,
-        "thyr": 2
+        "thyr": 2,
+        "doomshine": 2
       },
       "features": [
         "AssayOffice",
@@ -251,13 +256,15 @@
         "water_clean",
         "food_good",
         "supplies",
-        "silver"
+        "silver",
+        "doomshine"
       ],
       "resources": {
         "water_clean": 4,
         "food_good": 4,
         "supplies": 4,
-        "silver": 2
+        "silver": 2,
+        "doomshine": 2
       },
       "features": [
         "Docks",
@@ -310,12 +317,12 @@
       "key_resources": [
         "food_good",
         "water_foul",
-        "moonshine"
+        "doomshine"
       ],
       "resources": {
         "food_good": 3,
         "water_foul": 3,
-        "moonshine": 4
+        "doomshine": 4
       },
       "features": [
         "StiltHouses",
@@ -348,12 +355,12 @@
         "Mud flats"
       ],
       "rumors": [
-        "The best moonshine in the canyon comes from here. Several people have died proving it.",
+        "The best Doomshine in the canyon comes from here. Several people have died proving it.",
         "There is a Kelpie in the main channel who has a name and a regular schedule.",
         "The bayou contains ruins nobody has reached the bottom of."
       ],
       "notes": [
-        "Moonshine trade node. Wet terrain. Crocodile pressure."
+        "Doomshine trade node. Wet terrain. Crocodile pressure."
       ]
     },
     {
@@ -425,13 +432,13 @@
       "population": 4,
       "key_resources": [
         "gildren",
-        "moonshine",
+        "doomshine",
         "silver"
       ],
       "resources": {
         "gildren": 4,
-        "moonshine": 4,
-        "silver": 2
+        "silver": 2,
+        "doomshine": 4
       },
       "features": [
         "GamblingHalls",
@@ -482,14 +489,14 @@
       "danger": 4,
       "population": 3,
       "key_resources": [
-        "moonshine",
+        "doomshine",
         "lead",
         "food_foul"
       ],
       "resources": {
-        "moonshine": 3,
         "lead": 3,
-        "food_foul": 3
+        "food_foul": 3,
+        "doomshine": 3
       },
       "features": [
         "CollapsedWarehouses",
@@ -652,14 +659,14 @@
       "danger": 3,
       "population": 2,
       "key_resources": [
-        "moonshine",
+        "doomshine",
         "supplies",
         "food_foul"
       ],
       "resources": {
-        "moonshine": 3,
         "supplies": 2,
-        "food_foul": 2
+        "food_foul": 2,
+        "doomshine": 3
       },
       "features": [
         "TravelersInn",
