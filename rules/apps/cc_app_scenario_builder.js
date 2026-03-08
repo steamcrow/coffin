@@ -3557,3 +3557,6 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
 
   } // end init()
 }; // end window.CC_APP
+}
+};
+console.log("✅ CC_APP defined and ready");
