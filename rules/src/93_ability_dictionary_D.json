@@ -14,6 +14,18 @@
       "short": "Cancel 1 Success per activation.",
       "long": "Passive. Once per activation, cancel 1 Success from an incoming attack. Disabled while Shaken."
     },
+    "demolition": {
+       "_id": "R-ABIL-D-DEMOLITION",
+       "timing": "active",
+       "short": "Destroy cover and terrain features in base contact.",
+      "long": "Active. This unit may spend a full activation in base contact with a terrain feature, barricade, or wall section to destroy it. The feature is removed at the end of the round. Does not require a test. Some structures (noted in scenario setup) require 2 Demolition actions to destroy."
+    },
+    "doomshine_drunk": {
+      "_id": "R-ABIL-D-DOOMSHINE-DRUNK",
+      "timing": "passive",
+      "short": "Immune to Fear and Morale tests. Natural 1s cause a drunken stumble.",
+     "long": "Passive. This unit automatically passes all Fear tests and Morale tests — nothing scares them, because they cannot feel fear (or much else). Trade-off: whenever this unit rolls a natural 1 on any die during its own activation, it must immediately move 1\" directly toward the nearest enemy unit, friend or foe. They drank before the fight. It helps. Mostly."
+    },    
     "shield_wall": {
       "_id": "R-ABIL-D-SHIELD-WALL",
       "timing": "passive",
