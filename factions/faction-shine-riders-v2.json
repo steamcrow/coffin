@@ -3,8 +3,8 @@
   "faction": "Shine Riders",
   "version": "3.0",
   "status": "Complete",
-  "description": "Canyon bandits and silver thieves who infest Coffin Canyon, stripping buildings, salting claims, and stealing whatever isn't nailed down. Shine Riders don't hold ground or fight fair — they grab fast, leave traps behind, and vanish into the choking dust before consequences arrive.",
-  "summary": "The Shine Riders are Coffin Canyon's most opportunistic faction. They win not by destroying their enemies but by taking everything worth having and leaving before the bill comes due. Every unit is built around speed, theft, extraction, or denial — often all four at once.",
+  "description": "Canyon bandits and silver thieves who infest Coffin Canyon, stripping buildings, salting claims, and stealing whatever isn't nailed down. Shine Riders don't hold ground or fight fair \u2014 they grab fast, leave traps behind, and vanish into the choking dust before consequences arrive.",
+  "summary": "The Shine Riders are Coffin Canyon's most opportunistic faction. They win not by destroying their enemies but by taking everything worth having and leaving before the bill comes due. Every unit is built around speed, theft, extraction, or denial \u2014 often all four at once.",
   "lore": "Nobody knows where the Shine Riders started. Some say they were a Silver Rush crew that never stopped running. Others say they're what happens when a boomtown loses its boom and the people stay anyway. What's clear is this: they know every back route in the canyon, they have an arrangement with at least three claims brokers in Diablo, and if something valuable goes missing during a firefight, it was probably them.",
   "playstyle": "Pure aggression built around Interact actions, not combat. Shine Riders score by extracting Thyr, turning buildings into Silver mines, salting claims with Bootboomers, and getting off the table before the enemy catches them. They field fast cheap units as disposable tools, use Suppression to waste enemy activations, and treat their own retreat as a scoring event. Every decision should be asking: what am I taking, and how do I leave with it?",
   "strengths": [
@@ -13,10 +13,10 @@
     "Claim markers punish aggressive enemies passively",
     "Shard Runners and Ash Slingers among the fastest units in the canyon",
     "Rattle Cart provides Titan-level distraction at non-Titan cost",
-    "Shine Boss aura rewards retreating — unique in the game"
+    "Shine Boss aura rewards retreating \u2014 unique in the game"
   ],
   "weaknesses": [
-    "Extremely fragile — most units are D0 or D1",
+    "Extremely fragile \u2014 most units are D0 or D1",
     "No staying power; losing mobility means losing the game",
     "Dependent on Interact actions, which enemies can contest",
     "Low damage output in sustained fights",
@@ -107,7 +107,7 @@
       "name": "Quick Exit",
       "cost": 0,
       "required": true,
-      "effect": "Shine Riders units within 6\" of a table edge gain +1 to Disengage rolls. Retreating is never shameful — it is the plan.",
+      "effect": "Shine Riders units within 6\" of a table edge gain +1 to Disengage rolls. Retreating is never shameful \u2014 it is the plan.",
       "keywords": [
         "disengage",
         "escape",
@@ -143,7 +143,7 @@
       "name": "Glowhands",
       "faction": "Shine Riders",
       "type": "Grunt",
-      "cost": 95,
+      "cost": 86,
       "quality": 5,
       "defense": 0,
       "move": 5,
@@ -202,8 +202,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         },
         {
           "name": "Mounted",
@@ -221,7 +223,7 @@
       "name": "Shard Runners",
       "faction": "Shine Riders",
       "type": "Grunt",
-      "cost": 115,
+      "cost": 110,
       "quality": 5,
       "defense": 0,
       "move": 8,
@@ -281,8 +283,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         },
         {
           "name": "Mounted",
@@ -300,7 +304,7 @@
       "name": "Bootboomers",
       "faction": "Shine Riders",
       "type": "Grunt",
-      "cost": 105,
+      "cost": 96,
       "quality": 5,
       "defense": 0,
       "move": 6,
@@ -318,7 +322,7 @@
         "Gas Mask"
       ],
       "lore": "They 'mine' claims the old-fashioned way: by hiding charges in them and walking away. The Bootboomer's favourite phrase is 'their problem now.'",
-      "tactics": "Interact with Thyr Crystals or Buildings to place Claim Markers instead of extracting — poisoning the well for enemies. Send them forward early, salt multiple objectives, then abandon them. The traps do the rest.",
+      "tactics": "Interact with Thyr Crystals or Buildings to place Claim Markers instead of extracting \u2014 poisoning the well for enemies. Send them forward early, salt multiple objectives, then abandon them. The traps do the rest.",
       "unit_tags": [
         "trap",
         "interact",
@@ -361,8 +365,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         },
         {
           "name": "Mounted",
@@ -380,7 +386,7 @@
       "name": "Scrapjack Looters",
       "faction": "Shine Riders",
       "type": "Specialist",
-      "cost": 115,
+      "cost": 101,
       "quality": 5,
       "defense": 0,
       "move": 6,
@@ -399,7 +405,7 @@
         "Gas Mask"
       ],
       "lore": "Specialists in ripping value off living targets. Hookblades strip weapons. Magnet hooks pull supplies. Crowbars handle everything else. They have never met a thing they couldn't remove from someone who wanted to keep it.",
-      "tactics": "Target high-value enemy units — Leaders, Specialists, anything with expensive upgrades. A successful Steal destroys the upgrade rather than transferring it, which is usually enough. Keep one Scrapjack near the Shine Boss for the re-roll support.",
+      "tactics": "Target high-value enemy units \u2014 Leaders, Specialists, anything with expensive upgrades. A successful Steal destroys the upgrade rather than transferring it, which is usually enough. Keep one Scrapjack near the Shine Boss for the re-roll support.",
       "unit_tags": [
         "steal",
         "disrupt",
@@ -440,8 +446,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         },
         {
           "name": "Mounted",
@@ -459,7 +467,7 @@
       "name": "Ash Slingers",
       "faction": "Shine Riders",
       "type": "Cavalry",
-      "cost": 130,
+      "cost": 117,
       "quality": 4,
       "defense": 1,
       "move": 8,
@@ -478,7 +486,7 @@
         "Gas Mask"
       ],
       "lore": "Mounted dust-throwers who learned that the canyon's worst weapon is its air. They fill leather pouches with alkali dust, ride in fast, and throw the canyon itself into your eyes.",
-      "tactics": "Deploy via Scout to apply Suppression on Turn 1 before the enemy can react. Hit the unit most likely to contest your extractors and waste their activations. Keep riding — Cavalry Disengage means you can never be pinned. Gas Masks make them immune to their own dust.",
+      "tactics": "Deploy via Scout to apply Suppression on Turn 1 before the enemy can react. Hit the unit most likely to contest your extractors and waste their activations. Keep riding \u2014 Cavalry Disengage means you can never be pinned. Gas Masks make them immune to their own dust.",
       "unit_tags": [
         "cavalry",
         "scout",
@@ -523,8 +531,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         }
       ]
     },
@@ -532,7 +542,7 @@
       "name": "Blast Jack",
       "faction": "Shine Riders",
       "type": "Specialist",
-      "cost": 135,
+      "cost": 102,
       "quality": 4,
       "defense": 1,
       "move": 6,
@@ -551,7 +561,7 @@
         "Gas Mask"
       ],
       "lore": "Blast Jack carries more dynamite than sense. The Shine Riders love him for it. Everyone else has learned to keep their distance when he starts smiling.",
-      "tactics": "Use Demolition to destroy cover, open walls for extraction paths, and panic Monster units with Scare Tactics. Position behind cover — Volatile Cargo makes his death dangerous for both sides, which enemies will remember.",
+      "tactics": "Use Demolition to destroy cover, open walls for extraction paths, and panic Monster units with Scare Tactics. Position behind cover \u2014 Volatile Cargo makes his death dangerous for both sides, which enemies will remember.",
       "unit_tags": [
         "demolition",
         "explosive",
@@ -594,8 +604,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         },
         {
           "name": "Mounted",
@@ -613,7 +625,7 @@
       "name": "Wagon Gat Gunner",
       "faction": "Shine Riders",
       "type": "Tank",
-      "cost": 120,
+      "cost": 103,
       "quality": 4,
       "defense": 2,
       "move": 4,
@@ -633,7 +645,7 @@
         "Gas Mask"
       ],
       "lore": "A gatling gun welded to a wagon frame and pointed at whatever is approaching the extraction team. It does not move quickly. It does not need to.",
-      "tactics": "Deploy in the second rank covering your extractors' flank. Anchor early and Suppress anything that tries to contest your Glowhands. Immobile means placement is everything — think before you commit. A well-placed Wagon Gat buys multiple turns of free Interact actions.",
+      "tactics": "Deploy in the second rank covering your extractors' flank. Anchor early and Suppress anything that tries to contest your Glowhands. Immobile means placement is everything \u2014 think before you commit. A well-placed Wagon Gat buys multiple turns of free Interact actions.",
       "unit_tags": [
         "tank",
         "suppression",
@@ -674,8 +686,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         },
         {
           "name": "Spare Parts",
@@ -689,7 +703,7 @@
       "name": "Crystal Whisperer",
       "faction": "Shine Riders",
       "type": "Mystic",
-      "cost": 135,
+      "cost": 106,
       "quality": 4,
       "defense": 1,
       "move": 6,
@@ -708,7 +722,7 @@
         "Gas Mask"
       ],
       "lore": "Nobody hired her for the Thyr magic. She came with the canyon. She seems to find the caches before anyone else does, which makes her useful and unsettling in equal measure.",
-      "tactics": "Hex the enemy unit most likely to contest your extraction — -1 Quality is devastating on a Leader or high-Q fighter. Use Stealth to stay alive. Wild Magic Table is a last resort; the results are chaotic but occasionally faction-changing. Limit 0-1 per force.",
+      "tactics": "Hex the enemy unit most likely to contest your extraction \u2014 -1 Quality is devastating on a Leader or high-Q fighter. Use Stealth to stay alive. Wild Magic Table is a last resort; the results are chaotic but occasionally faction-changing. Limit 0-1 per force.",
       "unique": true,
       "max_count": 1,
       "unit_tags": [
@@ -755,8 +769,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         },
         {
           "name": "Mounted",
@@ -774,7 +790,7 @@
       "name": "Canyon Jackals",
       "faction": "Shine Riders",
       "type": "Rogue",
-      "cost": 95,
+      "cost": 108,
       "quality": 3,
       "defense": 1,
       "move": 7,
@@ -792,7 +808,7 @@
         "Gas Mask"
       ],
       "lore": "The ones you do not see coming. Canyon Jackals run light, fight dirty, and live by one rule: never be the second one to draw. They pick isolated targets, close fast, and are usually gone before their victim hits the ground.",
-      "tactics": "Deploy wide to threaten isolated enemy units — a Leader caught alone, an extractor out of support range. First Strike means you always attack before a charge resolves against you. Use Stealth to close distance without return fire. Backstab punishes enemies who thought they had numbers. Not a brawler — a scalpel.",
+      "tactics": "Deploy wide to threaten isolated enemy units \u2014 a Leader caught alone, an extractor out of support range. First Strike means you always attack before a charge resolves against you. Use Stealth to close distance without return fire. Backstab punishes enemies who thought they had numbers. Not a brawler \u2014 a scalpel.",
       "unit_tags": [
         "rogue",
         "melee",
@@ -837,8 +853,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         },
         {
           "name": "Mounted",
@@ -856,7 +874,7 @@
       "name": "Shine Boss",
       "faction": "Shine Riders",
       "type": "Leader",
-      "cost": 175,
+      "cost": 142,
       "quality": 5,
       "defense": 1,
       "move": 6,
@@ -875,7 +893,7 @@
         "Gas Mask"
       ],
       "lore": "Every Shine Riders crew runs on one person's nerve and everyone else's fear of disappointing them. The Shine Boss is that person. They do not stay to fight. They stay until every unit with something valuable has made it to the edge. Then they leave.",
-      "tactics": "Keep the Shine Boss central to your extraction cluster and within 6\" of as many units as possible. The aura rewards retreating — use it deliberately. Inspire adds dice when you need a critical Interact or attack to succeed. Authority keeps panicking units functional.",
+      "tactics": "Keep the Shine Boss central to your extraction cluster and within 6\" of as many units as possible. The aura rewards retreating \u2014 use it deliberately. Inspire adds dice when you need a critical Interact or attack to succeed. Authority keeps panicking units functional.",
       "unit_tags": [
         "leader",
         "inspire",
@@ -934,7 +952,7 @@
       "name": "Rattle Cart",
       "faction": "Shine Riders",
       "type": "Titan",
-      "cost": 160,
+      "cost": 146,
       "quality": 4,
       "defense": 3,
       "move": 5,
@@ -953,8 +971,8 @@
         "Suppression",
         "Gas Mask"
       ],
-      "lore": "A roaming Trojan wagon — windmill-driven, loud as sin, dressed up like a monster to bait the canyon's horrors. Nobody inside. Nothing to lose. The Shine Riders built it to be feared, chased, and survived by anyone who isn't standing next to it when something wrong happens.",
-      "tactics": "Two modes: roaming Monster Bait (keep unanchored, use Windmill Drive to draw monsters and fire away from your real plan) or Sniper Tower (Anchor early, gain +6\" Range, count as Cover). Never use it as a front-line fighter — it is a distraction tool with Titan durability. Windmill Drive is mandatory when unanchored; plan your deployment accordingly.",
+      "lore": "A roaming Trojan wagon \u2014 windmill-driven, loud as sin, dressed up like a monster to bait the canyon's horrors. Nobody inside. Nothing to lose. The Shine Riders built it to be feared, chased, and survived by anyone who isn't standing next to it when something wrong happens.",
+      "tactics": "Two modes: roaming Monster Bait (keep unanchored, use Windmill Drive to draw monsters and fire away from your real plan) or Sniper Tower (Anchor early, gain +6\" Range, count as Cover). Never use it as a front-line fighter \u2014 it is a distraction tool with Titan durability. Windmill Drive is mandatory when unanchored; plan your deployment accordingly.",
       "unique": false,
       "unit_tags": [
         "titan",
@@ -1002,8 +1020,10 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\". Once per game, may fire both guns in one action: make two separate ranged attacks at the same or different targets within 8\".",
-          "stat_modifiers": {}
+          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": {
+            "range": 8
+          }
         },
         {
           "name": "Spare Parts",
@@ -1039,8 +1059,8 @@
   "tactics": {
     "overview": "Shine Riders win by speed, denial, and leaving early. They avoid fair fights, focus on Interact actions over damage, and treat retreat as a core tactic rather than a failure. Every turn spent extracting or stealing is a winning turn.",
     "doctrine": [
-      "Prioritize Interact actions over attacks — extraction beats combat every time.",
-      "Use Rabble units aggressively — Glowhands and Bootboomers are tools, not investments.",
+      "Prioritize Interact actions over attacks \u2014 extraction beats combat every time.",
+      "Use Rabble units aggressively \u2014 Glowhands and Bootboomers are tools, not investments.",
       "Salt claims and objectives early with Bootboomers to slow or punish enemy advances.",
       "Engage only long enough to Suppress or delay. Prolonged combat favors your opponents.",
       "Always maintain an exit route toward a table edge. The Shine Boss aura rewards using it."
@@ -1049,7 +1069,7 @@
       "Deploy Shard Runners or Glowhands forward on Turn 1 to force enemy responses.",
       "Use Ash Slingers to Suppress key enemy units and waste their activations before your Interact actions.",
       "Deploy the Rattle Cart or Wagon Gat to draw attention while extraction teams work elsewhere.",
-      "Abandon objectives once value is secured — VP is scored by leaving, not holding."
+      "Abandon objectives once value is secured \u2014 VP is scored by leaving, not holding."
     ],
     "weaknesses": [
       "Low durability and poor performance in sustained fights.",
@@ -1058,7 +1078,5 @@
     ]
   },
   "universal_upgrades_available": true,
-  "universal_upgrades_note": "Shine Riders may purchase Gas Mask and Spare Parts upgrades from core rules where appropriate. Vehicle units (Wagon Gat, Rattle Cart) may also access vehicle repair upgrades.",
-  "_point_formula_version": "3.0",
-  "_recalculated": "2026-03-08"
+  "universal_upgrades_note": "Shine Riders may purchase Gas Mask and Spare Parts upgrades from core rules where appropriate. Vehicle units (Wagon Gat, Rattle Cart) may also access vehicle repair upgrades."
 }
