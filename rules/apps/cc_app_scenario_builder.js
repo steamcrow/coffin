@@ -854,7 +854,7 @@ const pick = isAdjectivePrefix
   : randomChoice([templates[0], templates[0], templates[1], templates[4]]); // noun/phrase: prefer "at"
 
 return pick();
-    }
+}
 
     // ── generateMonsterPressure — builds monster roster for this scenario ────────────
     //    Stored in the save file for the upcoming Turn Counter app.
