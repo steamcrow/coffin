@@ -846,13 +846,14 @@ window.CC_APP = {
         () => `The ${suffix} of ${locName}`,                 // "The Reckoning of Lost Yots"
       ];
 
-      // Adjective prefixes (Bloody, Burning…) favour the classic "Adjective Location — Noun" form.
-      const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
-      const pick = isAdjectivePrefix
-        ? randomChoice([templates[1], templates[2], templates[2], templates[3]])   // adjective: prefer classic
-        : randomChoice([templates[0], templates[0], templates[1], templates[4]]);  // noun/phrase: prefer "at"
+    // Adjective prefixes (Bloody, Burning…) favour the classic "Adjective Location — Noun" form.
+const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
 
-      return pick();
+const pick = isAdjectivePrefix 
+  ? randomChoice([templates[1], templates[2], templates[2], templates[3]]) // adjective: prefer classic 
+  : randomChoice([templates[0], templates[0], templates[1], templates[4]]); // noun/phrase: prefer "at"
+
+return pick();
     }
 
     // ── generateMonsterPressure — builds monster roster for this scenario ────────────
