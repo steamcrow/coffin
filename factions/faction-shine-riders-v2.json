@@ -1006,8 +1006,8 @@
       "special_mechanics": {
         "lingering_hex": "Each successful hit from the Hexed Sixguns places a Hex Marker on the target. Hex Markers persist until the end of the target's next activation \u2014 they are not removed at end of round. Each Hex Marker reduces the target's attack and Quality dice by 1 (minimum 1 die). A target may carry a maximum of 3 Hex Markers at once.",
         "hexed_sixguns": "The Hexed Sixguns count as both a ranged weapon (12\") and a Mystic casting tool. Their attacks may target abilities directly: declare a named ability on the target \u2014 on a successful hit, that ability is silenced until the target's next activation ends.",
-        "smoke_and_spite": "Enemy units that target the Gun Witch with a ranged attack suffer -1 die if they already carry a Hex Marker. She is difficult to focus on while her curse is in the air.",
-        "high_value_target": "If the Gun Witch is destroyed, the enemy gains +3 VP."
+        "smoke_and_spite": "Enemy units that target the Sixgun Bruja with a ranged attack suffer -1 die if they already carry a Hex Marker. She is difficult to focus on while her curse is in the air.",
+        "high_value_target": "If the Sixgun Bruja is destroyed, the enemy gains +3 VP."
       },
       "optional_upgrades": [
         {
