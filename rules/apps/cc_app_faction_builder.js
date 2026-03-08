@@ -373,9 +373,23 @@ window.CC_APP = {
     }
 
     function getMaxAllowed(unit) {
-      if (!unit.composition || !unit.composition.per_points) return Infinity;
-      if (state.budget <= 0) return Infinity;
-      return Math.floor(state.budget / unit.composition.per_points);
+      const comp = unit.composition || {};
+
+      // Hard cap: unit.unique OR composition.max_count  → use that number, period.
+      // This is for heroes, named characters, etc. Budget size is irrelevant.
+      if (unit.unique === true)          return comp.max_count || 1;
+      if (comp.max_count != null)        return comp.max_count;
+
+      // Scaling limit: 1 per X points of budget.
+      // e.g. per_points:150 at 500 pt budget → floor(500/150) = 3 max.
+      // Guard: if per_points is somehow bigger than the budget,
+      // that still means "1" — not "0" (which would wrongly block purchase).
+      if (comp.per_points) {
+        if (state.budget <= 0) return Infinity;
+        return Math.max(1, Math.floor(state.budget / comp.per_points));
+      }
+
+      return Infinity;
     }
 
     function countInRoster(unitName) {
@@ -942,7 +956,7 @@ window.CC_APP = {
           ${wouldExceedLimit ? `
             <div class="cc-warning-bar">
               ⚠️ Roster limit reached! At <strong>${state.budget} ₤</strong>, this unit type is capped at <strong>${maxAllowed}</strong>
-              (1 per ${unit.composition.per_points} ₤). Raise your budget to add more.
+              ${unit.unique || (unit.composition && unit.composition.max_count) ? `${unit.name} is a unique character — only ${maxAllowed} per roster.` : `(1 per ${unit.composition.per_points} ₤). Raise your budget to add more.`}
             </div>` : ''}
 
           ${state.builderMode === 'library' ? `
@@ -1104,7 +1118,10 @@ window.CC_APP = {
       const maxAllowed = getMaxAllowed(unit);
       const inRoster   = countInRoster(unit.name);
       if (maxAllowed !== Infinity && inRoster >= maxAllowed) {
-        alert(`⚠️ Unit limit reached!\n\nAt ${state.budget} ₤ you can only field ${maxAllowed} × ${unit.name} (1 per ${unit.composition.per_points} ₤).\n\nRaise your budget to add more.`);
+        const limitReason = (unit.unique || (unit.composition && unit.composition.max_count))
+          ? `${unit.name} is unique — only ${maxAllowed} per roster.`
+          : `At ${state.budget} ₤ you can field ${maxAllowed} × ${unit.name} ${unit.unique || (unit.composition && unit.composition.max_count) ? `${unit.name} is a unique character — only ${maxAllowed} per roster.` : `(1 per ${unit.composition.per_points} ₤). Raise your budget to add more.`}`;
+        alert('⚠️ Roster limit reached!\n\n' + limitReason);
         return;
       }
 
