@@ -1,7 +1,8 @@
 {
   "file": "190_plot_engine_schema.json",
-  "version": "1.0",
+  "version": "1.1",
   "genre": "occult_pulp_weird_west",
+  "changelog": "v1.1 — Added doomshine resource category, substance_attraction escalation trigger, compelled monster plot role, contraband_cache_revealed inciting pressure. Updated shine_riders canonical motivation to include doomshine.",
 
   "design_philosophy": {
     "core_statement": "Coffin Canyon scenarios generate pressure, not plots.",
@@ -36,13 +37,18 @@
         "ritual_misuse",
         "failed_extraction",
         "broken_agreement",
-        "forgotten_boundary_crossed"
+        "forgotten_boundary_crossed",
+        "contraband_cache_revealed"
       ],
+      "source_definitions": {
+        "contraband_cache_revealed": "A hidden stockpile of a prohibited or dangerous substance has been discovered. Its value — and the danger of its presence — draws every faction at once. Nobody admits knowing it was there. Nobody is willing to walk away from it."
+      },
       "notes": [
         "monsters_may_be_the_cause_not_merely_a_response",
         "inciting_pressure_is_never_neutral",
         "pressure_often_originates_from_prior_scenarios",
-        "the_canyon_frequently_reacts_late_not_immediately"
+        "the_canyon_frequently_reacts_late_not_immediately",
+        "contraband_cache_revealed_is_appropriate_when_a_resource_is_both_valuable_and_actively_dangerous_to_possess"
       ]
     },
 
@@ -56,11 +62,12 @@
       ],
       "canonical_motivations": {
         "monster_rangers": "preserve_monsters_mysticism_and_balance",
-        "shine_riders": "profit_fame_and_spectacle",
+        "shine_riders": "profit_fame_spectacle_and_doomshine_control",
         "monsterologists": "control_extraction_and_weaponization",
         "liberty_corps": "order_territory_and_exclusion_of_rivals",
         "crow_queen": "mystical_dominion_and_symbolic_ownership",
         "monsters": "territory_feeding_grounds_silence_or_migration",
+        "thrallo": "compelled_attraction_to_doomshine_overrides_all_other_drives",
         "local_settlers": "survival_claims_and_fear_driven_defense",
         "cult_orders": "belief_validation_and_ritual_completion",
         "industrial_interests": "throughput_control_and_resource_monopoly"
@@ -105,18 +112,29 @@
           "symbolic_control",
           "flags_markers_and_shrines",
           "stories_that_spread"
+        ],
+        "contraband": [
+          "doomshine",
+          "black_thyr",
+          "unlicensed_weapons",
+          "controlled_monster_compounds"
         ]
+      },
+      "resource_notes": {
+        "doomshine": "A powerful and mysterious alcohol of unknown origin. Loved in Diablo, Santos Grin, and canyon saloons. Acts as a creature lure — Thrallo are irresistibly drawn to it and will deviate from all other behaviour to reach an unsecured keg. Liberty Corps classifies it as a controlled substance under Provision 9. Shine Riders carry it freely with no movement penalty; all others are Encumbered. Keg destroyed in combat triggers a Coffin Cough check. On death of a carrier, roll 1d6 — on a 4+ the keg drops at the death location.",
+        "black_thyr": "Thyr that has been exposed to foul water or corrupted ritual sites. Unstable. Burns hotter, lasts shorter, leaves residue."
       },
       "rules": [
         "resources_must_be_movable_destructible_corruptible_or_exhaustible",
         "static_resources_should_escalate_if_ignored",
         "resource_control_invites_additional_claimants",
-        "excess_extraction_triggers_escalation"
+        "excess_extraction_triggers_escalation",
+        "contraband_resources_draw_authority_attention_when_visible_in_quantity"
       ]
     },
 
     "escalation": {
-      "description": "reactive_pressure_caused_by_violence_delay_or_misuse",
+      "description": "reactive_pressure_caused_by_violence_delay_misuse_or_substance_proximity",
       "triggers": [
         "mass_casualties",
         "monster_slaughter",
@@ -126,8 +144,12 @@
         "objective_overburn",
         "resource_contamination",
         "panic_events",
-        "authority_signal_detected"
+        "authority_signal_detected",
+        "substance_attraction_active"
       ],
+      "trigger_definitions": {
+        "substance_attraction_active": "A passive escalation trigger. When a Doomshine keg (or equivalent lure substance) is unsecured on the board, certain creature types — particularly Thrallo — are compelled toward it each activation. This escalation does not require violence. The more kegs present, the wider the attraction radius and the larger the spawn response."
+      },
       "effects": [
         "environmental_hazards",
         "visibility_loss",
@@ -136,12 +158,17 @@
         "panic_and_morale_failure",
         "infrastructure_shutdown",
         "loss_of_safe_routes",
-        "uncontrolled_crowds_or_stampedes"
+        "uncontrolled_crowds_or_stampedes",
+        "thrallo_surge"
       ],
+      "effect_definitions": {
+        "thrallo_surge": "When 6 or more Thrallo are simultaneously on the board, they cease targeting kegs or objectives and begin attacking all non-Thrallo models indiscriminately. This surge does not reset until the Thrallo population drops below 4."
+      },
       "notes": [
         "escalation_is_optional_but_encouraged",
         "escalation_should_feel_inevitable_not_fair",
-        "escalation_should_complicate_success_not_undo_it"
+        "escalation_should_complicate_success_not_undo_it",
+        "substance_attraction_escalation_is_unique_because_it_is_caused_by_the_resource_itself_not_by_player_actions"
       ]
     },
 
@@ -157,8 +184,12 @@
         "location_awakens_or_rejects_control",
         "extraction_was_the_trigger",
         "authority_intervention_changes_the_game",
-        "the_real_resource_is_people_or_belief"
+        "the_real_resource_is_people_or_belief",
+        "the_substance_was_never_what_anyone_thought"
       ],
+      "twist_definitions": {
+        "the_substance_was_never_what_anyone_thought": "The Doomshine (or equivalent contraband) is revealed mid-game to have unexpected properties — it is bait placed by an unknown party, or it contains something living, or its source is more dangerous than anyone realised. Objectives may shift or invert."
+      },
       "rules": [
         "twists_reframe_player_decisions_not_invalidate_them",
         "twists_force_reassessment_not_reset",
@@ -176,21 +207,29 @@
         "mystical_claim",
         "new_landmark_created",
         "area_becomes_avoided_or_feared",
-        "authority_attention_flagged"
+        "authority_attention_flagged",
+        "thrallo_activity_increase",
+        "doomshine_supply_shift"
       ],
+      "mutation_definitions": {
+        "thrallo_activity_increase": "If unsecured Doomshine kegs remain on the board at game end, the Thrallo population in that region increases for subsequent scenarios. This is tracked as a regional pressure modifier.",
+        "doomshine_supply_shift": "Outcome of the scenario affects the regional availability of Doomshine. Shine Riders control means supply opens. Liberty Corps success means supply contracts or goes deeper underground."
+      },
       "ownership": {
         "types": [
           "political",
           "territorial",
           "mystical",
-          "economic"
+          "economic",
+          "contraband"
         ],
         "persistence": "carries_into_future_scenarios_unless_displaced"
       },
       "notes": [
         "every_scenario_must_define_aftermath_outcomes",
         "the_canyon_remembers_violence_and_neglect",
-        "absence_of_action_is_also_a_choice_with_consequences"
+        "absence_of_action_is_also_a_choice_with_consequences",
+        "doomshine_scenarios_always_affect_thrallo_regional_pressure_in_aftermath"
       ]
     }
   },
@@ -202,7 +241,12 @@
     "corruptor": "alters_resources_or_objectives",
     "silent_judge": "punishes_specific_player_behaviors",
     "warden": "maintains_balance_until_disturbed",
-    "harbinger": "signals_future_catastrophe"
+    "harbinger": "signals_future_catastrophe",
+    "compelled": "overrides_normal_behaviour_in_response_to_a_substance_or_signal — does_not_choose_to_be_present_and_cannot_be_reasoned_with_while_compelled"
+  },
+
+  "monster_role_notes": {
+    "compelled": "Thrallo in Doomshine scenarios operate under the compelled role. They are not territorial, not retaliating, not escalating in response to violence — they are following an irresistible chemical signal. They move toward the nearest unsecured keg each activation, regardless of what is between them and it. If attacked while compelled, they retaliate for one activation then return to compelled behaviour. The compelled role is mechanically distinct from all others and must be declared in the scenario setup so players understand the threat logic."
   },
 
   "solo_play_support": {
@@ -211,7 +255,8 @@
       "escalation_triggers_more_aggressively",
       "aftermath_effects_skew_harsher",
       "twists_trigger_earlier_and_more_often",
-      "authority_intervention_is_more_likely"
+      "authority_intervention_is_more_likely",
+      "substance_attraction_escalation_ramps_faster_in_solo_play"
     ]
   }
 }
