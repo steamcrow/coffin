@@ -1103,7 +1103,16 @@ window.CC_APP = {
         collapsing_route:   'Collapsing Route',
         evacuation_point:   'Evacuation Point'
       };
-      return names[type] || 'Contested Objective';
+      // Smarter fallback — use location context if available
+      if (names[type]) return names[type];
+      const locName = (locProfile && locProfile.name) ? locProfile.name : '';
+      const fallbacks = [
+        'Disputed Ground', 'The Flashpoint', 'The Prize',
+        'Contested Site', 'The Crossing', 'Key Position'
+      ];
+      // Pick consistently based on type string hash so same type = same label
+      const hash = type ? type.split('').reduce(function(a,c){ return a + c.charCodeAt(0); }, 0) : 0;
+      return fallbacks[hash % fallbacks.length];
     }
 
     function makeObjectiveDescription(type, locProfile) {
@@ -1324,8 +1333,8 @@ window.CC_APP = {
       }
       if (objectives.length < 2) {
         objectives.push({
-          name:        'Contested Objective',
-          description: 'Control this location to score victory points.',
+          name:        makeObjectiveName('land_marker', locProfile),
+          description: 'Claim and hold these marked positions. Whoever controls them at game end controls the ground.',
           type:        'land_marker',
           vp_base:     2,
           special:     null
@@ -1659,58 +1668,176 @@ window.CC_APP = {
     //    FACTION_APPROACH   — verbs, VP style, tactic line, faction quote
     //    FACTION_OBJECTIVE_FLAVOR — per-faction flavor text keyed by objective type
     //    FACTION_MOTIVES    — the specific WHY each faction is at each objective type
+    // ── Per-faction CONFLICT TABLE — same objective, opposing goals ──────────────
+    //   Each faction has a distinct action + VP formula for every objective type.
+    //   This makes faction cards feel hand-crafted and genuinely opposed.
+    const FACTION_CONFLICT_TABLE = {
+      monster_rangers: {
+        wrecked_engine:     { name: 'Secure the Wreck',            vp: '+3 VP — prevent the engine being stripped or destroyed' },
+        scattered_crates:   { name: 'Recover Abandoned Supplies',  vp: '+2 VP per crate recovered and sealed' },
+        derailed_cars:      { name: 'Contain the Wreckage',        vp: '+3 VP if no cargo destroyed by game end' },
+        cargo_vehicle:      { name: 'Protect the Cargo',           vp: '+4 VP if vehicle exits undamaged' },
+        pack_animals:       { name: 'Escort the Animals to Safety',vp: '+3 VP per animal safely off board' },
+        ritual_site:        { name: 'Purify the Site',             vp: '+4 VP if site uncorrupted at game end' },
+        ritual_circle:      { name: 'Seal the Circle',             vp: '+3 VP — prevent ritual activation' },
+        thyr_cache:         { name: 'Contain the Thyr',            vp: '+3 VP — seal cache, prevent extraction' },
+        land_marker:        { name: 'Hold the Territory',          vp: '+2 VP per marker held at game end' },
+        command_structure:  { name: 'Defend the Position',         vp: '+4 VP if structure intact at game end' },
+        stored_supplies:    { name: 'Distribute the Supplies',     vp: '+3 VP if supplies distributed, not hoarded' },
+        artifact:           { name: 'Safeguard the Artifact',      vp: '+4 VP if artifact secured and intact' },
+        captive_entity:     { name: 'Free the Captive',            vp: '+4 VP if entity freed and alive' },
+        fortified_position: { name: 'Hold the High Ground',        vp: '+3 VP if position held for 2+ rounds' },
+        tainted_ground:     { name: 'Cleanse the Taint',           vp: '+4 VP if taint token removed by game end' },
+        evacuation_point:   { name: 'Secure the Exit',             vp: '+3 VP if exit held for 2+ rounds' },
+        default:            { name: 'Protect What Matters',        vp: '+3 VP — preserve the objective intact' },
+      },
+      liberty_corps: {
+        wrecked_engine:     { name: 'Claim Federal Salvage Rights',vp: '+4 VP — hold engine for 2 consecutive rounds' },
+        scattered_crates:   { name: 'Seize Contraband Supplies',   vp: '+2 VP per crate claimed and tagged' },
+        derailed_cars:      { name: 'Secure the Crash Site',       vp: '+3 VP — hold crash zone at game end' },
+        cargo_vehicle:      { name: 'Commandeer the Vehicle',      vp: '+4 VP if vehicle exits under Corps control' },
+        pack_animals:       { name: 'Impound the Animals',         vp: '+2 VP per animal impounded' },
+        ritual_site:        { name: 'Shut Down the Site',          vp: '+3 VP — deny enemy use for 3+ rounds' },
+        ritual_circle:      { name: 'Destroy or Confiscate',       vp: '+4 VP if circle destroyed or held' },
+        thyr_cache:         { name: 'Secure Thyr for the Corps',   vp: '+3 VP per Thyr crystal extracted' },
+        land_marker:        { name: 'Plant the Federal Flag',      vp: '+3 VP per marker replaced with Corps post' },
+        command_structure:  { name: 'Occupy the Command Post',     vp: '+4 VP if held uncontested for 2 rounds' },
+        stored_supplies:    { name: 'Requisition All Supplies',    vp: '+2 VP per supply cache under Corps control' },
+        artifact:           { name: 'Confiscate the Artifact',     vp: '+4 VP — artifact must leave in Corps custody' },
+        captive_entity:     { name: 'Take It Into Custody',        vp: '+4 VP if entity captured alive' },
+        fortified_position: { name: 'Establish a Forward Base',    vp: '+4 VP if held for 3 rounds' },
+        tainted_ground:     { name: 'Quarantine the Zone',         vp: '+3 VP — cordon established, no enemy within 6"' },
+        evacuation_point:   { name: 'Control the Evacuation',      vp: '+3 VP — deny enemy use of exit' },
+        default:            { name: 'Establish Corps Authority',   vp: '+3 VP — hold position at game end' },
+      },
+      monsterology: {
+        wrecked_engine:     { name: 'Extract Mechanical Specimens', vp: '+3 VP per parts extracted for study' },
+        scattered_crates:   { name: 'Catalogue the Contents',      vp: '+2 VP per crate opened and documented' },
+        derailed_cars:      { name: 'Survey the Wreckage',         vp: '+3 VP — survey all cars before game end' },
+        cargo_vehicle:      { name: 'Examine the Cargo',           vp: '+4 VP if vehicle boarded and contents catalogued' },
+        pack_animals:       { name: 'Capture for Study',           vp: '+3 VP per animal captured alive' },
+        ritual_site:        { name: 'Document the Phenomenon',     vp: '+4 VP — uninterrupted study for 2 rounds' },
+        ritual_circle:      { name: 'Record the Ritual',           vp: '+3 VP — observation complete, circle intact' },
+        thyr_cache:         { name: 'Extract and Analyse Thyr',    vp: '+4 VP per crystal extracted and bagged' },
+        land_marker:        { name: 'Survey and Map the Area',     vp: '+2 VP per marker surveyed' },
+        command_structure:  { name: 'Establish a Research Outpost',vp: '+4 VP if held and used for 2 rounds' },
+        stored_supplies:    { name: 'Inventory the Cache',         vp: '+3 VP — full inventory completed' },
+        artifact:           { name: 'Recover Artifact for Study',  vp: '+5 VP if artifact extracted intact' },
+        captive_entity:     { name: 'Capture Alive for Study',     vp: '+5 VP — live capture only' },
+        fortified_position: { name: 'Occupy as Forward Lab',       vp: '+3 VP if held for 2 rounds' },
+        tainted_ground:     { name: 'Sample the Contamination',    vp: '+4 VP — samples taken, source identified' },
+        evacuation_point:   { name: 'Exit with Specimens',         vp: '+3 VP per specimen exiting the board' },
+        default:            { name: 'Gather Research Data',        vp: '+3 VP — objective studied and documented' },
+      },
+      shine_riders: {
+        wrecked_engine:     { name: 'Strip and Bolt',              vp: '+4 VP if Boss exits with parts before Round 4' },
+        scattered_crates:   { name: 'Grab the Best, Leave the Rest',vp: '+3 VP per high-value crate extracted fast' },
+        derailed_cars:      { name: 'Loot the Wreck First',        vp: '+2 VP per car looted before others arrive' },
+        cargo_vehicle:      { name: 'Take the Wheel',              vp: '+5 VP if vehicle hijacked and off board' },
+        pack_animals:       { name: 'Sell the Herd',               vp: '+2 VP per animal extracted off board' },
+        ritual_site:        { name: 'Loot the Valuables',          vp: '+3 VP — grab anything worth selling, exit fast' },
+        ritual_circle:      { name: 'Smash and Grab',              vp: '+3 VP — loot the site and leave' },
+        thyr_cache:         { name: 'Move the Thyr Fast',          vp: '+4 VP if Thyr extracted before Round 3' },
+        land_marker:        { name: 'Sell the Deed',               vp: '+3 VP — claim marker and exit with it' },
+        command_structure:  { name: 'Strip the Post',              vp: '+3 VP — loot the structure and run' },
+        stored_supplies:    { name: 'Empty the Cache',             vp: '+2 VP per supply cache looted' },
+        artifact:           { name: 'Fence the Artifact',          vp: '+5 VP if artifact off board before Round 4' },
+        captive_entity:     { name: 'Sell the Captive',            vp: '+4 VP if entity extracted alive' },
+        fortified_position: { name: 'Use It Then Lose It',         vp: '+2 VP while held, +3 VP if abandoned intact' },
+        tainted_ground:     { name: 'Exploit the Chaos',           vp: '+3 VP — use taint zone to flush enemies' },
+        evacuation_point:   { name: 'First One Out',               vp: '+4 VP if first faction to exit' },
+        default:            { name: 'Fast Money, Faster Exit',     vp: '+3 VP — extract highest-value item and run' },
+      },
+      crow_queen: {
+        wrecked_engine:     { name: 'Crown the Wreck',             vp: '+3 VP — declare Crown salvage, hold for 2 rounds' },
+        scattered_crates:   { name: 'Consecrate the Tribute',      vp: '+2 VP per crate claimed in Crown name' },
+        derailed_cars:      { name: 'Claim the Wreck for the Crown',vp: '+3 VP if wreck held at game end' },
+        cargo_vehicle:      { name: 'Redirect to the Crown',       vp: '+4 VP if vehicle rerouted to Crown territory' },
+        pack_animals:       { name: 'Induct Canyon Subjects',      vp: '+2 VP per animal converted and controlled' },
+        ritual_site:        { name: 'Consecrate in Crown Name',    vp: '+4 VP — site activated for Crown, intact' },
+        ritual_circle:      { name: 'Claim the Circle',            vp: '+4 VP — circle held and activated for Crown' },
+        thyr_cache:         { name: 'The Crystals Belong to Her',  vp: '+4 VP — all Thyr under Crown control' },
+        land_marker:        { name: 'The Canyon Was Always Hers',  vp: '+3 VP per marker converted to Crown post' },
+        command_structure:  { name: 'Replace with an Obelisk',     vp: '+5 VP if command post replaced by Round 5' },
+        stored_supplies:    { name: 'Canyon Resources Flow to Crown',vp: '+3 VP — cache consecrated, guarded' },
+        artifact:           { name: 'Old Power for the Oldest Power',vp: '+5 VP if artifact in Crown hands at end' },
+        captive_entity:     { name: 'Convert, Not Capture',        vp: '+4 VP per entity converted to Crown Subject' },
+        fortified_position: { name: 'Hold and Hold and Hold',      vp: '+2 VP per round held, max 10 VP' },
+        tainted_ground:     { name: 'Taint as Potential',          vp: '+3 VP — convert taint zone to Crown territory' },
+        evacuation_point:   { name: 'The Crown Does Not Flee',     vp: '+4 VP if exit denied to enemies for 3 rounds' },
+        default:            { name: 'Everything Kneels Eventually', vp: '+3 VP — hold objective at game end' },
+      },
+      monsters: {
+        wrecked_engine:     { name: 'Drive Off the Scavengers',    vp: '+2 VP per enemy model driven from wreck zone' },
+        scattered_crates:   { name: 'Investigate and Destroy',     vp: '+2 VP per unfamiliar object destroyed' },
+        derailed_cars:      { name: 'Reclaim the Ground',          vp: '+3 VP — wreck zone clear of enemies at end' },
+        cargo_vehicle:      { name: 'Disable the Threat',          vp: '+4 VP if vehicle destroyed or immobilised' },
+        pack_animals:       { name: 'Defend the Territory',        vp: '+2 VP per round zone held uncontested' },
+        ritual_site:        { name: 'Sacred Ground — Drive Them Out',vp: '+4 VP — site cleared by Round 4' },
+        ritual_circle:      { name: 'Nesting Ground — Hold It',    vp: '+3 VP per round circle uncontested' },
+        thyr_cache:         { name: 'Guard the Canyon Body',       vp: '+3 VP — Thyr undisturbed at game end' },
+        land_marker:        { name: 'Feeding Ground — No Trespass',vp: '+2 VP per enemy driven off marker zone' },
+        command_structure:  { name: 'Tear It Down',                vp: '+4 VP if structure destroyed' },
+        stored_supplies:    { name: 'Feast or Deny',               vp: '+3 VP — consume or destroy all supplies' },
+        artifact:           { name: 'Wrong Energy — Guard or Destroy',vp: '+3 VP if artifact destroyed or surrounded' },
+        captive_entity:     { name: 'Free the Herd Member',        vp: '+4 VP if captive freed and escorts depart' },
+        fortified_position: { name: 'Deny the High Ground',        vp: '+3 VP — position held by monsters for 2 rounds' },
+        tainted_ground:     { name: 'The Water Is Wrong — Attack', vp: '+3 VP per enemy model downed near taint zone' },
+        evacuation_point:   { name: 'Block the Exit',              vp: '+3 VP — exit denied to enemies for 3 rounds' },
+        default:            { name: 'The Canyon Was Here First',   vp: '+2 VP per round territory held' },
+      },
+    };
+
     function generateVictoryConditions(plotFamily, objectives, locProfile) {
       const conditions = {};
 
-      const hasMonsterPressure = objectives.some(o => o.type === 'captive_entity');
-      const injectMonsterObjective = hasMonsterPressure ||
-        state.factions.some(f => f.id === 'monsters');
+      const hasMonsters = state.factions.some(function(f) { return f.id === 'monsters'; });
+      const injectMonsterObjective = hasMonsters
+        || objectives.some(function(o) { return o.type === 'captive_entity'; });
 
-      state.factions.forEach(faction => {
-        const approach    = FACTION_APPROACH[faction.id] || FACTION_APPROACH.monsters;
-        const flavorMap   = FACTION_OBJECTIVE_FLAVOR[faction.id] || {};
-        const motivesMap  = FACTION_MOTIVES[faction.id] || FACTION_MOTIVES.monsters;
+      state.factions.forEach(function(faction) {
+        const approach    = FACTION_APPROACH[faction.id]   || FACTION_APPROACH.monsters;
+        const motivesMap  = FACTION_MOTIVES[faction.id]    || FACTION_MOTIVES.monsters;
+        const conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
 
-        const primaryObjType = objectives[0]?.type || 'default';
+        const primaryObjType = objectives[0] ? objectives[0].type : 'default';
         const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
 
-        const candidatePool = [];
+        // Build two conflicting objectives per faction:
+        // Obj 1 (Primary)   — faction's specific action on the primary board objective
+        // Obj 2 (Secondary) — faction's specific action on the secondary board objective
+        //                     OR their monster-handling goal if monsters are present
+        const pickedObjectives = [];
 
-        if (injectMonsterObjective && faction.id !== 'monsters') {
-          const isFriendly  = faction.id === 'monster_rangers' || faction.id === 'crow_queen';
-          const flavorKey   = isFriendly ? 'monsters_befriendable' : 'monsters_hostile';
-          const monsterDesc = flavorMap[flavorKey] || "Deal with the monsters on the board.";
-          const monsterVP   = {
-            monster_rangers: '+3 VP per monster safely escorted off board. +5 VP if befriended and fighting alongside you.',
-            monsterology:    '+4 VP per monster harvested and extracted off board. +2 VP per live capture.',
-            liberty_corps:   '+3 VP per monster captured. +2 VP per monster eliminated.',
-            shine_riders:    '+3 VP if you redirect a monster into an enemy faction this game. +1 VP per round you avoid monster contact.',
-            crow_queen:      '+4 VP per monster converted to a Crown Subject. +2 VP per round a converted monster fights for you.'
-          };
-          candidatePool.push({
-            name:   'Monsters on the Board',
-            desc:   monsterDesc,
-            vp:     monsterVP[faction.id] || '+2 VP per monster interaction.',
-            tactic: approach.tactic
-          });
-        }
-
-        objectives.forEach(obj => {
-          const flavorKey = obj.type;
-          const desc      = flavorMap[flavorKey]
-            || `${randomChoice(approach.verbs)} the ${obj.name}.`;
-          const vp        = `+${obj.vp_base} VP base`;
-
-          candidatePool.push({
-            name:   `${randomChoice(approach.verbs)} — ${obj.name}`,
-            desc,
-            vp,
+        objectives.forEach(function(obj, i) {
+          if (i > 1) return; // max two
+          const conflict = conflictMap[obj.type] || conflictMap['default'];
+          pickedObjectives.push({
+            name:   conflict.name,
+            desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})[obj.type]
+                    || approach.verbs[i % approach.verbs.length] + ' the ' + obj.name + '.',
+            vp:     conflict.vp,
             tactic: approach.tactic
           });
         });
 
-        const shuffled         = candidatePool.sort(() => Math.random() - 0.5);
-        const pickedObjectives = shuffled.slice(0, 2);
+        // If we only have 1 objective and monsters are present, add monster goal as secondary
+        if (pickedObjectives.length < 2 && injectMonsterObjective && faction.id !== 'monsters') {
+          const monsterVP = {
+            monster_rangers: '+3 VP per monster safely escorted off board. +5 VP if befriended.',
+            monsterology:    '+4 VP per monster harvested. +2 VP per live capture.',
+            liberty_corps:   '+3 VP per monster captured. +2 VP per monster eliminated.',
+            shine_riders:    '+3 VP if you redirect a monster into an enemy faction. +1 VP per round avoiding contact.',
+            crow_queen:      '+4 VP per monster converted to a Crown Subject.'
+          };
+          pickedObjectives.push({
+            name:   'Monsters on the Board',
+            desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})['monsters_hostile']
+                    || "Deal with the monsters before they become everyone's problem.",
+            vp:     monsterVP[faction.id] || '+2 VP per monster interaction.',
+            tactic: approach.tactic
+          });
+        }
 
         const finale   = buildFactionFinale(faction.id, objectives, state.dangerRating, locProfile);
         const aftermath = buildFactionAftermath(faction.id, plotFamily);
@@ -2748,8 +2875,7 @@ window.CC_APP = {
           ` : ''}
 
           <!-- MONSTER PRESSURE -->
-          ${state.vaultScenario ? renderVaultMonsterPressure(state.vaultScenario) : ''}
-          ${state.vaultScenario ? renderVaultCoffinCoughTriggers(state.vaultScenario) : ''}
+          <!-- Monster Pressure and Coffin Cough data is used by Turn Counter app only -->
 
           <!-- VICTORY CONDITIONS -->
           <div class="cc-scenario-section">
@@ -2772,11 +2898,7 @@ window.CC_APP = {
           <!-- SOLO PLAY (vault only, solo mode only) -->
           ${state.gameMode === 'solo' && state.vaultScenario ? renderVaultSoloPlay(state.vaultScenario) : ''}
 
-          ${s.vault_source ? `
-            <div class="cc-scenario-section">
-              <p class="cc-help-text"><em><i class="fa fa-book"></i> Based on vault scenario: "${s.vault_source}" (${s.vault_match_score} tag matches)</em></p>
-            </div>
-          ` : ''}
+          <!-- vault_source kept in data for debugging only -->
 
           <div class="cc-form-actions" style="padding-top:1rem;">
             <button class="cc-btn cc-btn-ghost"     onclick="resetScenario()"><i class="fa fa-refresh"></i> Start Over</button>
