@@ -36,6 +36,68 @@ window.CC_APP = {
   init({ root, ctx }) {
     console.log("🚀 Faction Builder init", ctx);
 
+    // ---- SLIDE PANEL CSS — injected synchronously so panels work immediately
+    //      regardless of whether cc_ui.css has finished loading from GitHub.
+    if (!document.getElementById('cc-fb-panel-styles')) {
+      const panelStyle = document.createElement('style');
+      panelStyle.id = 'cc-fb-panel-styles';
+      panelStyle.textContent = `
+        .cc-slide-panel {
+          position: fixed !important;
+          top: 0 !important;
+          right: -520px !important;
+          width: 460px;
+          max-width: 92vw;
+          height: 100vh;
+          background: #111 !important;
+          border-left: 3px solid #ff7518;
+          box-shadow: -10px 0 50px rgba(0,0,0,0.85);
+          z-index: 9999 !important;
+          transition: right 0.32s ease-in-out !important;
+          overflow-y: auto;
+          padding: 22px;
+          box-sizing: border-box;
+        }
+        .cc-slide-panel-open {
+          right: 0 !important;
+        }
+        .cc-slide-panel-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+          border-bottom: 2px solid #ff7518;
+        }
+        .cc-slide-panel-header h2 {
+          color: #ff7518;
+          margin: 0;
+          font-size: 17px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+        }
+        .cc-panel-close-btn {
+          background: transparent;
+          border: 1px solid #ff7518;
+          color: #ff7518;
+          padding: 4px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+          line-height: 1;
+        }
+        .cc-panel-close-btn:hover {
+          background: #ff7518;
+          color: #000;
+        }
+        @media (max-width: 768px) {
+          .cc-slide-panel { width: 100vw !important; right: -100vw !important; }
+        }
+      `;
+      document.head.appendChild(panelStyle);
+    }
+
     // ---- LOAD CSS ----
     if (!document.getElementById('cc-core-ui-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
@@ -119,7 +181,7 @@ window.CC_APP = {
       { id: 'liberty_corps',   title: 'Liberty Corps',   file: 'faction-liberty-corps-v2.json'   },
       { id: 'monsterology',    title: 'Monsterology',     file: 'faction-monsterology-v2.json'    },
       { id: 'monsters',        title: 'Monsters',         file: 'faction-monsters-v2.json'        },
-      { id: 'shine_riders',    title: 'Shine Riders',     file: 'faction-shine-riders-v2.json'    },
+      { id: 'shine_riders',    title: 'Shine Riders',     file: 'faction-shine-riders-v3.json'    },
       { id: 'crow_queen',      title: 'Crow Queen',       file: 'faction-crow-queen.json'         }
     ];
 
