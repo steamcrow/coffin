@@ -2358,6 +2358,53 @@ window.CC_APP = {
       return renderScenarioOutput();
     }
 
+    // ── OBJECTIVES SECTION RENDERER ──────────────────────────────────────────────
+    //   Used when no vault scenario is matched — renders the generated objectives.
+
+    function renderObjectivesSection(objectives) {
+      var ROLE_LABELS = { primary: 'Primary Objective', secondary: 'Secondary Objective', standalone: 'Objective' };
+      var cards = (objectives || []).map(function(obj, i) {
+        var roleLabel = ROLE_LABELS[obj.role] || ('Objective ' + (i + 1));
+        var isPrimary = obj.role === 'primary';
+        var borderStyle = isPrimary ? 'border-left-width:3px;' : '';
+        var labelColor  = isPrimary ? 'var(--cc-primary)' : 'rgba(255,255,255,0.35)';
+        var icon        = isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>';
+
+        var chainHtml = '';
+        if (obj.chain_link) {
+          var introHtml = obj.chain_link_intro
+            ? '<div style="color:rgba(255,255,255,0.5);font-size:0.78rem;margin-bottom:0.15rem;font-style:italic;">' + obj.chain_link_intro + '</div>'
+            : '';
+          chainHtml = '<div style="margin-top:0.5rem;padding:0.4rem 0.6rem;background:rgba(255,117,24,0.08);border-left:2px solid var(--cc-primary);border-radius:2px;font-size:0.82rem;">'
+            + '<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--cc-primary);margin-bottom:0.2rem;"><i class="fa fa-link"></i> Tactical Link</div>'
+            + introHtml
+            + '<div>' + obj.chain_link + '</div>'
+            + '</div>';
+        }
+
+        var specialHtml = obj.special
+          ? '<p><em><i class="fa fa-exclamation-triangle"></i> Special: ' + obj.special + '</em></p>'
+          : '';
+
+        return '<div class="cc-objective-card" style="' + borderStyle + '">'
+          + '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">'
+          + '<span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:' + labelColor + ';">'
+          + icon + ' ' + roleLabel
+          + '</span></div>'
+          + '<strong>' + obj.name + '</strong>'
+          + '<p>' + obj.description + '</p>'
+          + '<p class="cc-vp-line"><i class="fa fa-star"></i> ' + obj.vp_base + ' VP base</p>'
+          + chainHtml
+          + specialHtml
+          + '</div>';
+      }).join('');
+
+      return '<div class="cc-scenario-section">'
+        + '<h4><i class="fa fa-crosshairs"></i> Objectives</h4>'
+        + cards
+        + '</div>';
+    }
+
     // ── VAULT RENDER HELPERS ─────────────────────────────────────────────────────
     //   Called from renderScenarioOutput() when a vault scenario matched.
 
@@ -3509,8 +3556,8 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       </div>
     `;
 
-    // Hold splash for at least 5 seconds regardless of how fast data loads.
-    const MIN_SPLASH_MS = 5000;
+    // Hold splash for at least 3 seconds regardless of how fast data loads.
+    const MIN_SPLASH_MS = 3000;
 
     loadGameData().then(() => {
       console.log('✅ Game data ready');
