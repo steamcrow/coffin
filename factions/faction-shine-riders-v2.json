@@ -886,7 +886,7 @@
         "Pierce"
       ],
       "composition": {
-        "per_points": 5000
+        "per_points":
       },
       "unique": true,
       "max_count": 1,
@@ -896,7 +896,7 @@
         "Fearless",
         "Lingering Hex"
       ],
-      "lore": "Nobody knows if she was a witch who found the guns or a gunfighter who found the witch. What the canyon knows is this: her bullets do not stop hurting when they miss. The smoke they leave behind smells like regret and burnt hair, and whatever she shoots at starts falling apart — slowly, methodically, like something important has been quietly removed.",
+      "lore": "Nobody knows if she was a witch who found the guns or a gunfighter who found the witchcraft. What the canyon knows is this: her bullets do not stop hurting when they miss. The smoke they leave behind smells like regret and burnt hair, and whatever she shoots at starts falling apart — slowly, methodically, like something important has been quietly removed.",
       "tactics": "She is not here to kill. She is here to make killing easier for everyone else. Ride her into medium range and start stacking Hexes on the highest-Quality enemy unit — a Leader, a Hero, a Mystic. Each Hex reduces their dice pool, and Lingering Hex means they cannot shake it until she lets them. Pair with Canyon Jackals (who gain bonus dice against debuffed targets) and Ash Slingers (who stack Suppression on top). Keep her mobile — D1 means she cannot take a sustained fight. As a Hero, her death costs you +3 VP, so do not be reckless. She is a scalpel, not a shield.",
       "unit_tags": [
         "hero",
