@@ -410,6 +410,7 @@ window.CC_APP = {
     let scenarioVaultData  = null;
     let scenarioNamesData  = null;
     let campaignSystemData = null;   // 30_campaign_system.json — location states + effects
+    let plotEngineData     = null;   // 190_plot_engine_schema.json — design philosophy + vectors
     let factionDataMap     = {};
 
     async function loadGameData() {
@@ -417,7 +418,7 @@ window.CC_APP = {
         const base = 'https://raw.githubusercontent.com/steamcrow/coffin/main';
         const t    = '?t=' + Date.now();
 
-        const [plotRes, twistRes, locRes, locTypesRes, monstersRes, vaultRes, namesRes, campRes] = await Promise.all([
+        const [plotRes, twistRes, locRes, locTypesRes, monstersRes, vaultRes, namesRes, campRes, engineRes] = await Promise.all([
           fetch(`${base}/rules/src/200_plot_families.json${t}`),
           fetch(`${base}/rules/src/210_twist_tables.json${t}`),
           fetch(`${base}/rules/src/170_named_locations.json${t}`),
@@ -425,7 +426,8 @@ window.CC_APP = {
           fetch(`${base}/factions/faction-monsters-v2.json${t}`),
           fetch(`${base}/rules/src/180_scenario_vault.json${t}`),
           fetch(`${base}/rules/src/230_scenario_names.json${t}`),
-          fetch(`${base}/rules/src/30_campaign_system.json${t}`)
+          fetch(`${base}/rules/src/30_campaign_system.json${t}`),
+          fetch(`${base}/rules/src/190_plot_engine_schema.json${t}`)
         ]);
 
         plotFamiliesData   = await plotRes.json();
@@ -436,7 +438,9 @@ window.CC_APP = {
         scenarioVaultData  = await vaultRes.json();
         scenarioNamesData  = await namesRes.json();
         // Campaign system is optional — don't fail if the file isn't there yet
-        try { campaignSystemData = await campRes.json(); } catch { campaignSystemData = null; }
+        try { campaignSystemData = await campRes.json(); } catch (e) { campaignSystemData = null; }
+        try { plotEngineData     = await engineRes.json(); } catch (e) { plotEngineData = null; }
+        if (plotEngineData) console.log('🗺️  Plot engine schema loaded');
 
         const PLAYER_FACTIONS = [
           { id: 'monster_rangers', file: 'faction-monster-rangers-v5.json' },
@@ -632,6 +636,127 @@ window.CC_APP = {
         terrain_flavor:   location.terrain_flavor || [],
         rumors:           location.rumors || []
       };
+    }
+
+
+    // ── selectPlotFamily — score-based selection using 190_plot_engine_schema.json ─
+    //
+    // Scoring:
+    //  +4 per faction whose canonical motivation matches a plot family's primary_resources or emphasized_vectors
+    //  +3 if location archetype matches a plot family's common_inciting_pressures (via resource type overlap)
+    //  +2 per faction motivation keyword that appears in the plot family id or default_objectives
+    //  +1 per emphasized_vector shared between the plot family and what the schema says about active factions
+    //  Danger bonus: +2 if danger >= 4 and plot family has escalation_bias with 3+ entries
+    //
+    // Falls back to randomChoice if schema is unavailable.
+    //
+    function selectPlotFamily(families, selectedFactions, locProfile, dangerRating) {
+      if (!families || families.length === 0) return { id: 'claim_and_hold', name: 'Claim and Hold', description: 'Control territory' };
+
+      // Canonical motivation → resource/vector keyword mapping (from 190_plot_engine_schema.json)
+      var MOTIVATION_KEYWORDS = {
+        monster_rangers: ['survival', 'belief', 'occult', 'preserve', 'purify', 'escort'],
+        liberty_corps:   ['control', 'supplies_tools', 'riches', 'territory', 'occupation', 'claim'],
+        monsterology:    ['occult', 'riches', 'extraction', 'heist', 'study', 'capture'],
+        shine_riders:    ['riches', 'supplies_tools', 'heist', 'extraction', 'ambush', 'sabotage'],
+        crow_queen:      ['belief', 'occult', 'claim', 'ritual', 'mystical', 'siege'],
+        monsters:        ['survival', 'territory', 'siege', 'standoff', 'disaster']
+      };
+
+      // Schema resource type → plot family primary_resources overlap mapping
+      var RESOURCE_FAMILY_BIAS = {
+        riches:         ['ambush_derailment', 'extraction_heist', 'sabotage_strike'],
+        supplies_tools: ['ambush_derailment', 'escort_run', 'sabotage_strike'],
+        survival:       ['disaster_retreat', 'escort_run', 'siege_standoff'],
+        occult:         ['claim_and_hold', 'extraction_heist', 'siege_standoff'],
+        belief:         ['claim_and_hold', 'siege_standoff', 'sabotage_strike']
+      };
+
+      // Location archetype → inciting pressure affinity
+      var ARCHETYPE_PRESSURE_BIAS = {
+        town:            ['power_vacuum', 'broken_agreement', 'territorial_dispute'],
+        outpost:         ['territorial_dispute', 'failed_extraction', 'survival_shortage'],
+        wilderness:      ['monster_action', 'environmental_rupture', 'forgotten_boundary_crossed'],
+        industrial:      ['infrastructure_failure', 'human_overreach', 'retaliation'],
+        sacred:          ['ritual_misuse', 'mystical_claim', 'monster_action'],
+        crossroads:      ['power_vacuum', 'broken_agreement', 'ambush'],
+        canyon:          ['environmental_rupture', 'monster_action', 'territorial_dispute']
+      };
+
+      // Inciting pressure → plot family affinity
+      var PRESSURE_FAMILY_BIAS = {
+        monster_action:             ['ambush_derailment', 'siege_standoff', 'disaster_retreat'],
+        human_overreach:            ['extraction_heist', 'sabotage_strike', 'ambush_derailment'],
+        infrastructure_failure:     ['ambush_derailment', 'disaster_retreat', 'escort_run'],
+        power_vacuum:               ['claim_and_hold', 'siege_standoff', 'sabotage_strike'],
+        environmental_rupture:      ['disaster_retreat', 'siege_standoff', 'claim_and_hold'],
+        ritual_misuse:              ['extraction_heist', 'claim_and_hold', 'siege_standoff'],
+        territorial_dispute:        ['claim_and_hold', 'siege_standoff', 'sabotage_strike'],
+        failed_extraction:          ['extraction_heist', 'ambush_derailment', 'disaster_retreat'],
+        broken_agreement:           ['ambush_derailment', 'sabotage_strike', 'siege_standoff'],
+        survival_shortage:          ['escort_run', 'disaster_retreat', 'claim_and_hold']
+      };
+
+      var scores = {};
+      families.forEach(function(fam) { scores[fam.id] = 0; });
+
+      // Score from faction motivations
+      selectedFactions.forEach(function(faction) {
+        var keywords = MOTIVATION_KEYWORDS[faction.id] || [];
+        families.forEach(function(fam) {
+          keywords.forEach(function(kw) {
+            if (fam.id && fam.id.indexOf(kw) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 2;
+            if (fam.primary_resources && fam.primary_resources.indexOf(kw) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 3;
+            if (fam.emphasized_vectors && fam.emphasized_vectors.indexOf(kw) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 1;
+          });
+          // Resource-family bias from schema
+          keywords.forEach(function(kw) {
+            var biasedFams = RESOURCE_FAMILY_BIAS[kw] || [];
+            if (biasedFams.indexOf(fam.id) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 2;
+          });
+        });
+      });
+
+      // Score from location archetype → inciting pressure → plot family
+      var arch = (locProfile && locProfile.archetype) ? locProfile.archetype.toLowerCase() : 'canyon';
+      var archKey = null;
+      Object.keys(ARCHETYPE_PRESSURE_BIAS).forEach(function(k) {
+        if (arch.indexOf(k) >= 0) archKey = k;
+      });
+      if (archKey) {
+        var pressures = ARCHETYPE_PRESSURE_BIAS[archKey];
+        pressures.forEach(function(pressure) {
+          var biasedFams = PRESSURE_FAMILY_BIAS[pressure] || [];
+          biasedFams.forEach(function(famId) {
+            scores[famId] = (scores[famId] || 0) + 2;
+          });
+        });
+      }
+
+      // Danger bonus: high-danger favours escalation-heavy families
+      if (dangerRating >= 4) {
+        families.forEach(function(fam) {
+          if (fam.escalation_bias && fam.escalation_bias.length >= 3) {
+            scores[fam.id] = (scores[fam.id] || 0) + 2;
+          }
+        });
+      }
+
+      // Add mild random noise so identical setups don't always pick same family
+      families.forEach(function(fam) {
+        scores[fam.id] = (scores[fam.id] || 0) + (Math.random() * 2);
+      });
+
+      // Pick highest scoring family
+      var best = families[0];
+      var bestScore = -Infinity;
+      families.forEach(function(fam) {
+        var s = scores[fam.id] || 0;
+        if (s > bestScore) { bestScore = s; best = fam; }
+      });
+
+      console.log('📊 Plot family scores:', scores, '→ picked:', best.id, '(score='+bestScore.toFixed(1)+')');
+      return best;
     }
 
     // ── matchVaultScenario — scores pre-written vault scenarios against setup ──
@@ -1668,6 +1793,93 @@ window.CC_APP = {
     //    FACTION_APPROACH   — verbs, VP style, tactic line, faction quote
     //    FACTION_OBJECTIVE_FLAVOR — per-faction flavor text keyed by objective type
     //    FACTION_MOTIVES    — the specific WHY each faction is at each objective type
+
+    // ── buildVictoryConditionsFromVault ─────────────────────────────────────────
+    //   Converts a vault scenario's flat victory_conditions object into the same
+    //   rich per-faction card format that renderVictoryConditions() expects.
+    //   Factions present in the game but NOT listed in the vault get cards generated
+    //   from the FACTION_CONFLICT_TABLE so no faction is left card-less.
+    function buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily) {
+      var conditions = {};
+      var vaultVC    = vaultScenario.victory_conditions || {};
+
+      state.factions.forEach(function(faction) {
+        var approach    = FACTION_APPROACH[faction.id]    || FACTION_APPROACH.monsters;
+        var motivesMap  = FACTION_MOTIVES[faction.id]     || FACTION_MOTIVES.monsters;
+        var conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
+        var primaryType = objectives[0] ? objectives[0].type : 'default';
+        var motive      = motivesMap[primaryType] || motivesMap['default'] || approach.quote;
+
+        // Check if vault explicitly lists this faction
+        var vaultEntry = vaultVC[faction.id] || vaultVC[faction.id.replace(/_/g, ' ')];
+
+        var pickedObjectives = [];
+
+        if (vaultEntry) {
+          // Vault has specific text for this faction — use it verbatim as the primary objective
+          pickedObjectives.push({
+            name:   (conflictMap[primaryType] || conflictMap['default']).name,
+            desc:   typeof vaultEntry === 'string' ? vaultEntry
+                    : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || JSON.stringify(vaultEntry)),
+            vp:     (conflictMap[primaryType] || conflictMap['default']).vp,
+            tactic: approach.tactic
+          });
+          // Add a secondary from the conflict table for a 2nd objective if present
+          if (objectives[1]) {
+            var c2 = conflictMap[objectives[1].type] || conflictMap['default'];
+            pickedObjectives.push({ name: c2.name, desc: approach.verbs[1 % approach.verbs.length] + ' ' + objectives[1].name + '.', vp: c2.vp, tactic: approach.tactic });
+          }
+        } else {
+          // Faction not explicitly in vault — generate from conflict table
+          objectives.forEach(function(obj, i) {
+            if (i > 1) return;
+            var conflict = conflictMap[obj.type] || conflictMap['default'];
+            var flavorMap = FACTION_OBJECTIVE_FLAVOR[faction.id] || {};
+            pickedObjectives.push({
+              name:   conflict.name,
+              desc:   flavorMap[obj.type] || approach.verbs[i % approach.verbs.length] + ' the ' + obj.name + '.',
+              vp:     conflict.vp,
+              tactic: approach.tactic
+            });
+          });
+        }
+
+        var finale   = buildFactionFinale(faction.id, objectives, state.dangerRating, locProfile);
+        var aftermath = buildFactionAftermath(faction.id, plotFamily);
+        var isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
+
+        // Use vault's primary/secondary VC text as the motive line if available
+        if (vaultVC.primary) motive = vaultVC.primary;
+
+        conditions[faction.id] = {
+          faction_name: faction.name,
+          is_npc:       isNPC,
+          motive:       motive,
+          objectives:   pickedObjectives,
+          finale:       finale,
+          aftermath:    aftermath,
+          quote:        approach.quote
+        };
+      });
+
+      return conditions;
+    }
+
+    // ── buildAftermathSummaryFromVault ───────────────────────────────────────────
+    //   Converts vault aftermath_effects (keyed object) into a single prose string
+    //   for print and fallback display.
+    function buildAftermathSummaryFromVault(ae) {
+      var parts = [];
+      if (ae.location_state)    parts.push('Location: ' + ae.location_state);
+      if (ae.resource_shift)    parts.push('Resources: ' + ae.resource_shift);
+      if (ae.persistent_landmark) parts.push('Landmark: ' + ae.persistent_landmark);
+      if (parts.length === 0) {
+        var vals = Object.values(ae);
+        if (vals.length > 0) parts.push(String(vals[0]));
+      }
+      return parts.join(' | ');
+    }
+
     // ── Per-faction CONFLICT TABLE — same objective, opposing goals ──────────────
     //   Each faction has a distinct action + VP formula for every objective type.
     //   This makes faction cards feel hand-crafted and genuinely opposed.
@@ -2005,8 +2217,8 @@ window.CC_APP = {
       console.log('📍 Location profile:', locProfile);
 
       const families   = plotFamiliesData.plot_families || [];
-      const plotFamily = randomChoice(families);
-      console.log('📖 Plot family:', plotFamily.name);
+      const plotFamily = selectPlotFamily(families, state.factions, locProfile, state.dangerRating);
+      console.log('📖 Plot family (scored):', plotFamily.name);
 
       const { scenario: vaultScenario, score: maxMatchScore } = matchVaultScenario(
         plotFamily, locProfile, contextTags,
@@ -2041,8 +2253,31 @@ window.CC_APP = {
       }
 
       const objectiveMarkers  = generateObjectiveMarkers(objectives, vaultScenario);
-      const victoryConditions = generateVictoryConditions(plotFamily, objectives, locProfile);
-      const aftermath         = generateAftermath(plotFamily);
+
+      // TIER 3: Use vault victory conditions + aftermath directly when vault matched.
+      // Only fall back to generation when there's no vault match or the vault data is empty.
+      var victoryConditions;
+      if (vaultScenario && vaultScenario.victory_conditions
+          && Object.keys(vaultScenario.victory_conditions).length > 0) {
+        // Vault has its own per-faction VC — use them. Enrich with conflict table for any
+        // factions that aren't explicitly listed in the vault VC block.
+        victoryConditions = buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily);
+        console.log('📚 Using vault victory conditions');
+      } else {
+        victoryConditions = generateVictoryConditions(plotFamily, objectives, locProfile);
+        console.log('⚙️  Generated victory conditions');
+      }
+
+      var aftermath;
+      if (vaultScenario && vaultScenario.aftermath_effects
+          && Object.keys(vaultScenario.aftermath_effects).length > 0) {
+        // Vault aftermath is rendered directly by renderVaultAftermath — store the raw vault
+        // so the renderer can use it; also store a plain-text summary for print.
+        aftermath = buildAftermathSummaryFromVault(vaultScenario.aftermath_effects);
+        console.log('📚 Using vault aftermath');
+      } else {
+        aftermath = generateAftermath(plotFamily);
+      }
 
       const nameContextTags = [...contextTags];
       if (vaultScenario?.tags) {
