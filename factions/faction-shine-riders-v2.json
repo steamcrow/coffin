@@ -886,7 +886,7 @@
         "Pierce"
       ],
       "composition": {
-        "per_points": 500
+        "per_points": 5000
       },
       "unique": true,
       "max_count": 1,
