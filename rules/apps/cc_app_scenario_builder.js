@@ -809,7 +809,8 @@ window.CC_APP = {
       return randomChoice(pools);
     }
 
-   function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
+    // ── generateScenarioNameFromTags — title builder; location name appears exactly once ─
+    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
       contextTags = contextTags || [];
       const locName = (location || { name: 'Unknown' }).name;
 
@@ -835,20 +836,23 @@ window.CC_APP = {
         suffix = randomChoice(fallbackSuffixes);
       }
 
+      // Several templates ensure the location name reads naturally in all cases.
       const templates = [
-        () => `${prefix} at ${locName}`,
-        () => `${prefix} at ${locName} — ${suffix}`,
-        () => `${prefix} ${locName} — ${suffix}`,
-        () => `${locName} — ${suffix}`
+        () => `${prefix} at ${locName}`,                     // "Black Night at Fool Boot"
+        () => `${prefix} at ${locName} — ${suffix}`,         // "Black Night at Fool Boot — Reckoning"
+        () => `${prefix} ${locName} — ${suffix}`,            // "Bloody Lost Yots — Reckoning" (classic)
+        () => `${locName} — ${suffix}`,                      // "Lost Yots — Shadow and Flame"
+        () => `${suffix} at ${locName}`,                     // "Reckoning at Lost Yots"
+        () => `The ${suffix} of ${locName}`,                 // "The Reckoning of Lost Yots"
       ];
 
+      // Adjective prefixes (Bloody, Burning…) favour the classic "Adjective Location — Noun" form.
       const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
+      const pick = isAdjectivePrefix
+        ? randomChoice([templates[1], templates[2], templates[2], templates[3]])   // adjective: prefer classic
+        : randomChoice([templates[0], templates[0], templates[1], templates[4]]);  // noun/phrase: prefer "at"
 
-      const pick = isAdjectivePrefix 
-        ? randomChoice([templates[1], templates[2], templates[2], templates[3]]) 
-        : randomChoice([templates[0], templates[0], templates[1], templates[4]]);
-
-      return pick ? pick() : `${prefix} ${locName}`;
+      return pick();
     }
 
     // ── generateMonsterPressure — builds monster roster for this scenario ────────────
@@ -2581,33 +2585,7 @@ window.CC_APP = {
           <!-- OBJECTIVES -->
           ${state.vaultScenario
             ? renderVaultObjectives(state.vaultScenario, s.loc_profile)
-            : `
-          <div class="cc-scenario-section">
-            <h4><i class="fa fa-crosshairs"></i> Objectives</h4>
-            ${s.objectives.map((obj, i) => {
-              const ROLE_LABELS = { primary: 'Primary Objective', secondary: 'Secondary Objective', standalone: 'Objective' };
-              const roleLabel   = ROLE_LABELS[obj.role] || \`Objective \${i + 1}\`;
-              const isPrimary   = obj.role === 'primary';
-              return \`
-              <div class="cc-objective-card" style="\${isPrimary ? 'border-left-width:3px;' : ''}">
-                <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">
-                  <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:\${isPrimary ? 'var(--cc-primary)' : 'rgba(255,255,255,0.35)'};">
-                    \${isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>'} \${roleLabel}
-                  </span>
-                </div>
-                <strong>\${obj.name}</strong>
-                <p>\${obj.description}</p>
-                <p class="cc-vp-line"><i class="fa fa-star"></i> \${obj.vp_base} VP base</p>
-                \${obj.chain_link ? \`
-                  <div style="margin-top:0.5rem;padding:0.4rem 0.6rem;background:rgba(255,117,24,0.08);border-left:2px solid var(--cc-primary);border-radius:2px;font-size:0.82rem;">
-                    <div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:var(--cc-primary);margin-bottom:0.2rem;"><i class="fa fa-link"></i> Tactical Link</div>
-                    \${obj.chain_link_intro ? \`<div style="color:rgba(255,255,255,0.5);font-size:0.78rem;margin-bottom:0.15rem;font-style:italic;">\${obj.chain_link_intro}</div>\` : ''}
-                    <div>\${obj.chain_link}</div>
-                  </div>\` : ''}
-                \${obj.special ? \`<p><em><i class="fa fa-exclamation-triangle"></i> Special: \${obj.special}</em></p>\` : ''}
-              </div>\`;
-            }).join('')}
-          </div>`}
+            : renderObjectivesSection(s.objectives)}
 
           <!-- BOARD SETUP TABLE -->
           ${s.objective_markers?.length ? `
@@ -3531,8 +3509,8 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       </div>
     `;
 
-    // Hold splash for at least 3 seconds regardless of how fast data loads.
-    const MIN_SPLASH_MS = 3000;
+    // Hold splash for at least 5 seconds regardless of how fast data loads.
+    const MIN_SPLASH_MS = 5000;
 
     loadGameData().then(() => {
       console.log('✅ Game data ready');
@@ -3550,8 +3528,8 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         } else {
           render();
         }
-}, holdFor);
+      }, holdFor);
     });
-  } // 1. This closes the init() function
-}; // 2. This closes the window.CC_APP object
-console.log("✅ CC_APP defined and ready");
+
+  } // end init()
+}; // end window.CC_APP
