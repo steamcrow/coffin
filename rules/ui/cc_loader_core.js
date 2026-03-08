@@ -137,7 +137,7 @@ window.addEventListener('error', function(e) {
       title:       'Scenario Builder',
       icon:        'fa-map-signs',
       description: 'Generate scenarios',
-      file:        'cc_app_scenario_builder.js?v=3',
+      file:        'cc_app_scenario_builder.js?v=4',
       helpTitle:   'Scenario Builder',
       helpBody: [
         'Generate a full game scenario: location, objectives, monster pressure, noise threshold, and a narrative hook to set the scene.',
@@ -597,7 +597,7 @@ window.addEventListener('error', function(e) {
 
   // ── Preloader ─────────────────────────────────────────────────────────────
   var LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png';
-  var MIN_PRELOAD_MS = 2000;
+  var MIN_PRELOAD_MS = 1000;
 
   function showPreloader() {
     var root = document.getElementById('cc-master-shell-root');
