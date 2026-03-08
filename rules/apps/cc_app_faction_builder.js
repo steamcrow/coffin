@@ -6,8 +6,6 @@
 console.log("⚔️ Faction Builder app loaded");
 
 // ── Bootstrap Dropdown null-autoClose patch ──────────────────────────────
-// Odoo's HoverableDropdown passes autoClose:null which crashes Bootstrap 5.
-// We patch the Dropdown constructor once to coerce null → true (the default).
 (function() {
   function patchDropdown() {
     if (!window.bootstrap || !window.bootstrap.Dropdown) return false;
@@ -16,7 +14,6 @@ console.log("⚔️ Faction Builder app loaded");
       if (config && config.autoClose === null) config.autoClose = true;
       return new OrigDropdown(el, config);
     }
-    // Copy all static methods (getOrCreateInstance, getInstance, etc.)
     Object.keys(OrigDropdown).forEach(function(k) {
       PatchedDropdown[k] = typeof OrigDropdown[k] === 'function'
         ? function() { return OrigDropdown[k].apply(OrigDropdown, arguments); }
@@ -27,7 +24,6 @@ console.log("⚔️ Faction Builder app loaded");
     console.log("✅ Bootstrap Dropdown autoClose patch applied");
     return true;
   }
-  // Try immediately, then retry until bootstrap is ready
   if (!patchDropdown()) {
     var _tries = 0;
     var _iv = setInterval(function() {
@@ -67,7 +63,6 @@ window.CC_APP = {
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
 
-    // FIX 5 ── Load print CSS from the shared print helper
     if (!document.getElementById('cc-print-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_print.css?t=' + Date.now())
         .then(res => res.text())
@@ -78,7 +73,7 @@ window.CC_APP = {
           document.head.appendChild(style);
           console.log('✅ Print CSS applied!');
         })
-        .catch(() => console.warn('⚠️ cc_print.css not found — using inline print styles only'));
+        .catch(() => console.warn('⚠️ cc_print.css not found'));
     }
 
     // ---- LOAD STORAGE HELPERS ----
@@ -124,7 +119,7 @@ window.CC_APP = {
       { id: 'liberty_corps',   title: 'Liberty Corps',   file: 'faction-liberty-corps-v2.json'   },
       { id: 'monsterology',    title: 'Monsterology',     file: 'faction-monsterology-v2.json'    },
       { id: 'monsters',        title: 'Monsters',         file: 'faction-monsters-v2.json'        },
-      { id: 'shine_riders',    title: 'Shine Riders',     file: 'faction-shine-riders-v2.json'    },
+      { id: 'shine_riders',    title: 'Shine Riders',     file: 'faction-shine-riders-v3.json'    },
       { id: 'crow_queen',      title: 'Crow Queen',       file: 'faction-crow-queen.json'         }
     ];
 
@@ -166,9 +161,8 @@ window.CC_APP = {
     }
 
     // ================================
-    // FIX 2 ── ABILITY DICTIONARY SYSTEM
-    // Loads all 8 ability dictionary files from GitHub in the background.
-    // Clicking an ability tag opens a proper slide panel with timing + rules text.
+    // ABILITY DICTIONARY SYSTEM
+    // FIX A: added 98_ability_dictionary_I.json to the list
     // ================================
     const ABILITY_FILES = [
       '90_ability_dictionary_A.json',
@@ -179,6 +173,7 @@ window.CC_APP = {
       '95_ability_dictionary_F.json',
       '96_ability_dictionary_G.json',
       '97_ability_dictionary_H.json',
+      '98_ability_dictionary_I.json',
     ];
     const ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/';
 
@@ -247,10 +242,10 @@ window.CC_APP = {
     }
 
     // ================================
-    // FIX 4 ── SLIDE PANEL MANAGEMENT
-    // One backdrop, one open panel at a time. Clicking anywhere outside closes.
+    // SLIDE PANEL MANAGEMENT
+    // fb-stat-panel added to the panel ID list
     // ================================
-    const FB_PANEL_IDS = ['fb-ability-panel', 'fb-cloud-roster-panel'];
+    const FB_PANEL_IDS = ['fb-ability-panel', 'fb-stat-panel', 'fb-cloud-roster-panel'];
 
     function closeAllSlidePanels() {
       FB_PANEL_IDS.forEach(id => {
@@ -301,11 +296,9 @@ window.CC_APP = {
       return cost;
     }
 
-    // FIX 6 ── Composition limit: 1 of this unit type per composition.per_points ₤
-    // Example: per_points: 150, budget: 500 → floor(500/150) = 3 max
     function getMaxAllowed(unit) {
       if (!unit.composition || !unit.composition.per_points) return Infinity;
-      if (state.budget <= 0) return Infinity; // unlimited budget = unlimited units
+      if (state.budget <= 0) return Infinity;
       return Math.floor(state.budget / unit.composition.per_points);
     }
 
@@ -378,9 +371,9 @@ window.CC_APP = {
     }
 
     // ================================
-    // ABILITY TOOLTIP & PANEL
-    // FIX 2: real dictionary lookup
-    // FIX 4: no stacking — uses shared backdrop
+    // ABILITY PANEL
+    // FIX B: panel.style.zIndex = '9999' so it always sits above the backdrop
+    //        regardless of what cc_ui.css says about .cc-slide-panel
     // ================================
     window.showAbilityTooltip = function(abilityName, event) {
       const tooltip = document.getElementById('ability-tooltip');
@@ -397,16 +390,16 @@ window.CC_APP = {
     };
 
     window.showAbilityPanel = function(abilityName) {
-      loadAbilityDictionaries(); // no-op if already loaded/loading
+      loadAbilityDictionaries();
       closeAllSlidePanels();
       installPanelBackdrop();
 
       const panel = document.createElement('div');
       panel.id = 'fb-ability-panel';
       panel.className = 'cc-slide-panel';
+      panel.style.zIndex = '9999'; // FIX B: explicit z-index beats the backdrop at 9998
       panel.addEventListener('click', e => e.stopPropagation());
 
-      // Still loading — show spinner, retry when done
       if (_abilityFetching && !_abilityFetched) {
         panel.innerHTML = `
           <div class="cc-slide-panel-header">
@@ -460,7 +453,7 @@ window.CC_APP = {
             </div><br>` : ''}
           ${entry.short ? `<p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(entry.short)}</p>` : ''}
           ${entry.long  ? `<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(entry.long)}</p>` : ''}
-          ${entry.id    ? `<div style="margin-top:1.5rem;font-size:.68rem;color:#333;font-family:monospace;">${esc(entry.id)}</div>` : ''}`;
+          ${entry.id    ? `<div style="margin-top:1.5rem;font-size:.68rem;color:#444;font-family:monospace;">${esc(entry.id)}</div>` : ''}`;
       } else {
         bodyHtml = `
           <p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">
@@ -487,9 +480,74 @@ window.CC_APP = {
     };
 
     // ================================
-    // STAT BADGES
+    // STAT BADGE PANEL
+    // FIX C: new function — clicking Q/D/M/R opens a definition panel
     // ================================
-function getEffectiveStats(baseItem, config) {
+    const STAT_DEFINITIONS = {
+      Q: {
+        label: 'Quality',
+        color: '#2c5282',
+        short: 'How capable this unit is at everything it does.',
+        long:  'Quality (Q) is the core dice stat. When this unit attacks, uses abilities, or tests Morale, it rolls dice equal to its Quality score. Higher Q means more dice, more consistent results. Q also sets the threshold for critical failures and special ability triggers. The + suffix is a reminder that Quality dice are rolled as a pool, not compared to a fixed number.'
+      },
+      D: {
+        label: 'Defense',
+        color: '#9b2c2c',
+        short: 'How hard this unit is to damage.',
+        long:  'Defense (D) sets how many dice the target rolls when an attack lands. Each die that rolls 5 or higher cancels one hit. A unit with D2 rolls 2 dice per hit — on average one hit is cancelled. D0 means no defense dice at all: every hit lands. The + suffix is a reminder that defense dice are added to the cancel pool.'
+      },
+      M: {
+        label: 'Move',
+        color: '#276749',
+        short: 'How far this unit can travel per Move action.',
+        long:  'Move (M) is the distance in inches this unit can travel when it takes a Move action. A unit gets two actions per activation — it can move twice, attack twice, or split them. Move is also used to calculate charge range, Disengage distances, and some ability triggers. Terrain may reduce effective Move.'
+      },
+      R: {
+        label: 'Range',
+        color: '#744210',
+        short: 'Maximum distance for ranged attacks.',
+        long:  'Range (R) is the maximum distance in inches for this unit\'s ranged attack. A dash (—) means the unit has no ranged attack and must fight in melee. Range is measured from base edge to base edge. Some abilities modify effective range. Line of Sight is always required unless an ability states otherwise.'
+      }
+    };
+
+    window.showStatPanel = function(statKey) {
+      closeAllSlidePanels();
+      installPanelBackdrop();
+
+      const def = STAT_DEFINITIONS[statKey];
+      if (!def) return;
+
+      const panel = document.createElement('div');
+      panel.id = 'fb-stat-panel';
+      panel.className = 'cc-slide-panel';
+      panel.style.zIndex = '9999'; // FIX B: same fix applied here
+      panel.addEventListener('click', e => e.stopPropagation());
+
+      panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+          <h2>
+            <span style="display:inline-flex;align-items:center;gap:.6rem;">
+              <span style="background:${def.color};color:#fff;font-size:.85rem;font-weight:900;
+                           padding:3px 9px;border-radius:3px;letter-spacing:.05em;">${statKey}</span>
+              ${esc(def.label).toUpperCase()}
+            </span>
+          </h2>
+          <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
+        </div>
+        <div style="padding:1.5rem;">
+          <p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(def.short)}</p>
+          <p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(def.long)}</p>
+        </div>`;
+
+      document.body.appendChild(panel);
+      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    };
+
+    // ================================
+    // STAT BADGES
+    // FIX C: onclick="showStatPanel(...)" and cursor:pointer added to every badge
+    // ================================
+    function getEffectiveStats(baseItem, config) {
       const stats = {
         quality: baseItem.quality || 0,
         defense: baseItem.defense || 0,
@@ -505,24 +563,16 @@ function getEffectiveStats(baseItem, config) {
           }
         });
       }
-      if (config && config.supplemental) {
-        const mods = config.supplemental.stat_modifiers || (() => {
-          const out = {};
-          if (config.supplemental.quality != null) out.quality = config.supplemental.quality;
-          if (config.supplemental.defense != null) out.defense = config.supplemental.defense;
-          if (config.supplemental.move    != null) out.move    = config.supplemental.move;
-          if (config.supplemental.range   != null) out.range   = config.supplemental.range;
-          return out;
-        })();
-        Object.entries(mods).forEach(([stat, val]) => {
+      if (config && config.supplemental && config.supplemental.stat_modifiers) {
+        Object.entries(config.supplemental.stat_modifiers).forEach(([stat, val]) => {
           if (stats[stat] !== undefined) stats[stat] += val;
         });
       }
       return stats;
     }
-    
+
     function buildStatBadges(unit, config, compact = false) {
-      const base = { q: unit.quality || 4, d: unit.defense || 2, m: unit.move || 5, r: unit.range || 0 };
+      const base = { q: unit.quality || 0, d: unit.defense || 0, m: unit.move || 0, r: unit.range || 0 };
       const mods = { q: 0, d: 0, m: 0, r: 0 };
 
       ((config && config.optionalUpgrades) || []).forEach(u => {
@@ -542,13 +592,17 @@ function getEffectiveStats(baseItem, config) {
 
       const mod = { q: base.q + mods.q, d: base.d + mods.d, m: base.m + mods.m, r: base.r + mods.r };
 
-      const badge = (label, val, baseVal, cls) => {
+      const badge = (label, val, baseVal, cls, statKey) => {
         const modified   = val !== baseVal;
         const suffix     = (label === 'Q' || label === 'D') ? '+' : '"';
         const displayVal = (val === 0 && label === 'R') ? '-' : val;
         const sizeClass  = compact ? 'compact' : '';
+        // FIX C: onclick + cursor:pointer on every badge
         return `
-          <div class="cc-stat-badge stat-${cls}-border ${modified ? 'stat-modified' : ''} ${sizeClass}">
+          <div class="cc-stat-badge stat-${cls}-border ${modified ? 'stat-modified' : ''} ${sizeClass}"
+               onclick="event.stopPropagation(); showStatPanel('${statKey}')"
+               style="cursor:pointer;"
+               title="Click to see ${label} rules">
             <span class="cc-stat-label stat-${cls}">${label}</span>
             <span class="cc-stat-value">${displayVal}${suffix}</span>
           </div>`;
@@ -556,10 +610,10 @@ function getEffectiveStats(baseItem, config) {
 
       return `
         <div class="stat-badge-flex ${compact ? 'compact' : ''}">
-          ${badge('Q', mod.q, base.q, 'q')}
-          ${badge('D', mod.d, base.d, 'd')}
-          ${badge('M', mod.m, base.m, 'm')}
-          ${badge('R', mod.r, base.r, 'r')}
+          ${badge('Q', mod.q, base.q, 'q', 'Q')}
+          ${badge('D', mod.d, base.d, 'd', 'D')}
+          ${badge('M', mod.m, base.m, 'm', 'M')}
+          ${badge('R', mod.r, base.r, 'r', 'R')}
         </div>`;
     }
 
@@ -580,7 +634,6 @@ function getEffectiveStats(baseItem, config) {
         const inRoster   = countInRoster(unit.name);
         const atLimit    = maxAllowed !== Infinity && inRoster >= maxAllowed;
 
-        // Show count badge: "2/3" next to the name
         const limitHint = maxAllowed !== Infinity
           ? `<span style="font-size:0.72rem;font-weight:600;margin-left:4px;color:${atLimit ? '#ff4444' : '#888'};">(${inRoster}/${maxAllowed})</span>`
           : '';
@@ -627,7 +680,8 @@ function getEffectiveStats(baseItem, config) {
                     return `<span class="ability-tag"
                       onmouseover="showAbilityTooltip('${esc(n)}', event)"
                       onmouseout="hideAbilityTooltip()"
-                      onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')">${esc(n)}</span>`;
+                      onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
+                      style="cursor:pointer;">${esc(n)}</span>`;
                   }).join('')}
                 </div>` : ''}
               <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
@@ -661,7 +715,8 @@ function getEffectiveStats(baseItem, config) {
                       return `<span class="ability-tag-small"
                         onmouseover="showAbilityTooltip('${esc(n)}', event)"
                         onmouseout="hideAbilityTooltip()"
-                        onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')">${esc(n)}</span>`;
+                        onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
+                        style="cursor:pointer;">${esc(n)}</span>`;
                     }).join('')}
                     ${abilities.length > 3 ? `<span class="ability-tag-small" style="opacity:0.6">+${abilities.length - 3}</span>` : ''}
                   </div>` : ''}
@@ -717,7 +772,6 @@ function getEffectiveStats(baseItem, config) {
       if (!unit.optional_upgrades || !unit.optional_upgrades.length) return '';
       var rows = unit.optional_upgrades.map(function(upg, idx) {
         var isSelected = (config.optionalUpgrades && config.optionalUpgrades.some(function(u){ return u.name === upg.name; }));
-        // Use data-upg-idx so upgrade names with apostrophes never break onclick JS strings
         return '<div class="cc-upgrade-row' + (isSelected ? ' selected' : '') + '" ' +
                'data-upg-idx="' + idx + '" onclick="toggleOptionalUpgrade(this)">' +
                '<div class="cc-upgrade-check">' + (isSelected ? '&#10003;' : '') + '</div>' +
@@ -761,7 +815,6 @@ function getEffectiveStats(baseItem, config) {
       const maxAllowed   = getMaxAllowed(unit);
       const inRoster     = countInRoster(unit.name);
 
-      // FIX 3: compute warning messages
       const wouldExceedBudget = state.budget > 0 && state.builderMode === 'library' && (currentTotal + previewCost > state.budget);
       const wouldExceedLimit  = maxAllowed !== Infinity && state.builderMode === 'library' && inRoster >= maxAllowed;
       const canAdd            = !wouldExceedBudget && !wouldExceedLimit;
@@ -796,7 +849,8 @@ function getEffectiveStats(baseItem, config) {
                 return `<div class="mb-1">• <strong class="ability-link"
                   onmouseover="showAbilityTooltip('${esc(n)}', event)"
                   onmouseout="hideAbilityTooltip()"
-                  onclick="showAbilityPanel('${esc(n)}')">${esc(n)}</strong></div>`;
+                  onclick="showAbilityPanel('${esc(n)}')"
+                  style="cursor:pointer;">${esc(n)}</strong></div>`;
               }).join('')}
             </div>` : ''}
 
@@ -827,7 +881,6 @@ function getEffectiveStats(baseItem, config) {
     }
 
     function render() {
-      // Faction selector icon
       const selectorIconEl = document.getElementById('cc-faction-selector-icon');
       if (selectorIconEl) {
         if (state.currentFaction) {
@@ -839,7 +892,6 @@ function getEffectiveStats(baseItem, config) {
         }
       }
 
-      // Library panel title
       const libraryTitleEl = document.getElementById('cc-library-panel-title');
       if (libraryTitleEl) {
         libraryTitleEl.innerHTML = state.currentFaction
@@ -847,7 +899,6 @@ function getEffectiveStats(baseItem, config) {
           : '<span>Unit Library</span>';
       }
 
-      // Roster panel title
       const rosterTitleEl = document.getElementById('cc-roster-panel-title');
       if (rosterTitleEl) {
         rosterTitleEl.innerHTML = state.currentFaction
@@ -864,7 +915,6 @@ function getEffectiveStats(baseItem, config) {
       if (builderTargetEl) builderTargetEl.innerHTML = renderBuilder();
       if (rosterListEl)    rosterListEl.innerHTML    = renderRoster();
 
-      // Apply list-mode class to layout container
       var builderLayout = root.querySelector('.cc-faction-builder');
       if (builderLayout) {
         if (state.rosterViewMode === 'list') {
@@ -885,8 +935,8 @@ function getEffectiveStats(baseItem, config) {
     // ================================
     // USER ACTIONS
     // ================================
-    window.changeFaction   = function(factionId) { switchFaction(factionId); };
-    window.changeBudget    = function(val) { state.budget = parseInt(val) || 0; render(); };
+    window.changeFaction    = function(factionId) { switchFaction(factionId); };
+    window.changeBudget     = function(val) { state.budget = parseInt(val) || 0; render(); };
     window.updateRosterName = function(val) { state.rosterName = val; };
 
     window.selectLibraryUnit = function(unitName) {
@@ -920,14 +970,11 @@ function getEffectiveStats(baseItem, config) {
     };
 
     window.toggleOptionalUpgrade = function(el) {
-      // el is the clicked .cc-upgrade-row element; read index from data attribute
       var upgIdx = parseInt(el.getAttribute('data-upg-idx'), 10);
-
       var config = getActiveConfig();
       if (!config) return;
       if (!config.optionalUpgrades) config.optionalUpgrades = [];
 
-      // Get the unit so we can find the upgrade by index
       var faction = state.factionData[state.currentFaction];
       if (!faction) return;
       var unitName = state.builderMode === 'library'
@@ -948,7 +995,6 @@ function getEffectiveStats(baseItem, config) {
       var upg = unit.optional_upgrades[upgIdx];
       if (!upg) return;
 
-      // Toggle: if already selected, remove it; otherwise add it
       var existingIdx = -1;
       for (var i = 0; i < config.optionalUpgrades.length; i++) {
         if (config.optionalUpgrades[i].name === upg.name) { existingIdx = i; break; }
@@ -962,7 +1008,6 @@ function getEffectiveStats(baseItem, config) {
       render();
     };
 
-    // FIX 3 & 6 ── Block add if over budget or at composition limit
     window.addUnitToRoster = function() {
       if (!state.currentFaction || !state.builderTarget) return;
       const faction = state.factionData[state.currentFaction];
@@ -972,7 +1017,6 @@ function getEffectiveStats(baseItem, config) {
       const config    = JSON.parse(JSON.stringify(state.builderConfig));
       const totalCost = calculateUnitCost(unit, config);
 
-      // Budget check
       if (state.budget > 0) {
         const currentTotal = calculateTotalCost();
         if (currentTotal + totalCost > state.budget) {
@@ -981,7 +1025,6 @@ function getEffectiveStats(baseItem, config) {
         }
       }
 
-      // Composition limit check
       const maxAllowed = getMaxAllowed(unit);
       const inRoster   = countInRoster(unit.name);
       if (maxAllowed !== Infinity && inRoster >= maxAllowed) {
@@ -1041,7 +1084,6 @@ function getEffectiveStats(baseItem, config) {
       render();
     };
 
-    // FIX 5 ── Print view uses cc_print.css logic in the popup window
     window.printRoster = function() {
       if (state.roster.length === 0) { alert('No units in roster to print!'); return; }
       const total       = calculateTotalCost();
@@ -1053,7 +1095,6 @@ function getEffectiveStats(baseItem, config) {
   <title>${esc(state.rosterName)} – ${factionName}</title>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Source+Sans+3:wght@400;600;700&display=swap">
   <style>
-    /* cc_print.css logic applied inline for popup window */
     :root { --cc-primary: #000; }
     body { font-family: "Source Sans 3", Arial, sans-serif; padding: 20px; background: #fff; color: #000; margin: 0; }
     h1 { font-family: 'Bungee', sans-serif; font-size: 22pt; border-bottom: 2px solid #000; margin-bottom: 16px; padding-bottom: 8px; }
@@ -1063,28 +1104,24 @@ function getEffectiveStats(baseItem, config) {
     .unit:last-child { border-bottom: none; }
     .unit-left { flex: 1; min-width: 0; }
     .unit-right { min-width: 60px; text-align: right; }
-    .unit-name { font-size: 11pt; font-weight: 700; color: #000; }
-    .unit-cost { font-weight: 700; font-size: 11pt; color: #000; white-space: nowrap; }
+    .unit-name { font-size: 11pt; font-weight: 700; }
+    .unit-cost { font-weight: 700; font-size: 11pt; white-space: nowrap; }
     .unit-type { color: #555; font-size: 8pt; text-transform: uppercase; margin-bottom: 4px; letter-spacing: .05em; }
     .lore { font-style: italic; color: #666; font-size: 8pt; margin: 3px 0; border-left: 2px solid #ccc; padding-left: 5px; }
-    .stat-badges { display: flex; gap: 4px; margin: 4px 0; flex-wrap: nowrap; }
+    .stat-badges { display: flex; gap: 4px; margin: 4px 0; }
     .stat-badge { border: 1px solid #000; padding: 1px 4px; border-radius: 3px; font-size: 8pt; font-weight: 700; }
     .abilities { margin-top: 4px; }
-    .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; color: #000; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 7.5pt; }
+    .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 7.5pt; }
     .upgrades { margin-top: 4px; font-size: 8pt; color: #444; }
-    .cc-app-title-print { display: block; }
     .ability-defs-section { margin-top: 28px; border-top: 2px solid #000; padding-top: 14px; }
     .ability-defs-section h2 { font-family: 'Bungee', sans-serif; font-size: 14pt; margin-bottom: 10px; }
     .ability-def { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd; break-inside: avoid; }
     .ability-def:last-child { border-bottom: none; }
     .ability-def-name { font-weight: 700; font-size: 10pt; margin-bottom: 2px; }
-    .ability-def-timing { background: #222; color: #fff; font-size: 7.5pt; padding: 1px 5px; border-radius: 3px; margin-right: 5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; vertical-align: middle; }
+    .ability-def-timing { background: #222; color: #fff; font-size: 7.5pt; padding: 1px 5px; border-radius: 3px; margin-right: 5px; font-weight: 600; text-transform: uppercase; }
     .ability-def-short { font-style: italic; color: #555; font-size: 8.5pt; margin-bottom: 3px; }
     .ability-def-long { font-size: 9pt; color: #222; line-height: 1.5; }
-    @media print {
-      .unit { page-break-inside: avoid; }
-      .ability-def { page-break-inside: avoid; }
-    }
+    @media print { .unit, .ability-def { page-break-inside: avoid; } }
   </style>
 </head>
 <body>
@@ -1096,61 +1133,43 @@ function getEffectiveStats(baseItem, config) {
     ${state.roster.map(function(item) {
       var abilities = item.abilities || [];
       var ps = getEffectiveStats(item, item.config);
-    return '<div class="unit">' +
+      return '<div class="unit">' +
         '<div class="unit-left">' +
           '<div class="unit-name">' + esc(item.name) + '</div>' +
           ((item.config && item.config.supplemental) ? '<div style="font-size:10px;color:#ff7518;font-weight:600;margin-bottom:3px;">' + esc(item.config.supplemental.name) + '</div>' : '') +
           '<div class="unit-type">' + esc(item.type) + '</div>' +
-          (item.lore ? '<div class="lore">\"' + esc(item.lore) + '\"</div>' : '') +
+          (item.lore ? '<div class="lore">"' + esc(item.lore) + '"</div>' : '') +
           '<div class="stat-badges">' +
             '<span class="stat-badge">Q ' + ps.quality + '+</span> ' +
             '<span class="stat-badge">D ' + ps.defense + '+</span> ' +
-            '<span class="stat-badge">M ' + ps.move + '\"</span> ' +
-            '<span class="stat-badge">R ' + (ps.range === 0 ? '\u2013' : ps.range + '\"') + '</span>' +
+            '<span class="stat-badge">M ' + ps.move + '"</span> ' +
+            '<span class="stat-badge">R ' + (ps.range === 0 ? '\u2013' : ps.range + '"') + '</span>' +
           '</div>' +
           (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
           ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="upgrades"><strong>Upgrades:</strong> ' + item.config.optionalUpgrades.map(function(u){ return esc(u.name); }).join(', ') + '</div>' : '') +
-          ((item.config && item.config.supplemental) ? '<div class="upgrades"><strong>Supplemental:</strong> ' + esc(item.config.supplemental.name) + '</div>' : '') +
         '</div>' +
         '<div class="unit-right"><span class="unit-cost">' + item.totalCost + ' ₤</span></div>' +
       '</div>';
     }).join('')}
   </div>
 
-
   ${(function() {
-    // Collect all unique ability names across entire roster
     var seen = {};
     var allAbilityNames = [];
     state.roster.forEach(function(item) {
-      var abilities = item.abilities || [];
-      abilities.forEach(function(a) {
+      (item.abilities || []).forEach(function(a) {
         var name = typeof a === 'string' ? a : (a.name || '');
         if (name && !seen[name]) { seen[name] = true; allAbilityNames.push(name); }
       });
-      // Also include supplemental and upgrade abilities if they have descriptions
-      if (item.config && item.config.supplemental && item.config.supplemental.name) {
-        var sName = item.config.supplemental.name;
-        if (!seen[sName]) { seen[sName] = true; allAbilityNames.push(sName); }
-      }
     });
-
-    // Look up each ability in the cache
     var defs = [];
     allAbilityNames.forEach(function(name) {
       var entry = lookupAbility(name);
-      if (entry && (entry.long || entry.short)) {
-        defs.push({ name: name, entry: entry });
-      }
+      if (entry && (entry.long || entry.short)) defs.push({ name: name, entry: entry });
     });
-
     if (!defs.length) return '';
-
-    // Sort alphabetically
     defs.sort(function(a, b) { return a.name.localeCompare(b.name); });
-
-    return '<div class="ability-defs-section">' +
-      '<h2>Ability Definitions</h2>' +
+    return '<div class="ability-defs-section"><h2>Ability Definitions</h2>' +
       defs.map(function(d) {
         var timing = d.entry.timing ? '<span class="ability-def-timing">' + esc(d.entry.timing.replace(/_/g,' ')) + '</span> ' : '';
         return '<div class="ability-def">' +
@@ -1158,8 +1177,7 @@ function getEffectiveStats(baseItem, config) {
           (d.entry.short ? '<div class="ability-def-short">' + esc(d.entry.short) + '</div>' : '') +
           (d.entry.long  ? '<div class="ability-def-long">'  + esc(d.entry.long)  + '</div>' : '') +
         '</div>';
-      }).join('') +
-    '</div>';
+      }).join('') + '</div>';
   }())}
 </body>
 </html>`;
@@ -1231,7 +1249,6 @@ function getEffectiveStats(baseItem, config) {
         const auth = await window.CC_STORAGE.checkAuth();
         if (!auth.loggedIn) { alert("Please sign in to save rosters to the cloud!"); return; }
         if (!(state.rosterName && state.rosterName.trim())) { alert("Please give your roster a name first!"); return; }
-
         const exportData = {
           name:      state.rosterName,
           faction:   state.currentFaction,
@@ -1254,11 +1271,8 @@ function getEffectiveStats(baseItem, config) {
         if (!window.CC_STORAGE) { alert("Cloud storage not available."); return; }
         const auth = await window.CC_STORAGE.checkAuth();
         if (!auth.loggedIn) { alert("Please sign in to load rosters!"); return; }
-
         const docs = await window.CC_STORAGE.loadDocumentList();
         if (!(docs && docs.length)) { alert("No saved rosters found."); return; }
-
-        // Only show roster saves — not SCN_ scenario saves
         const rosterDocs = docs.filter(d => !(d.name && d.name.startsWith('SCN_')));
         if (!rosterDocs.length) { alert("No roster saves found."); return; }
 
@@ -1268,6 +1282,7 @@ function getEffectiveStats(baseItem, config) {
         const panel = document.createElement('div');
         panel.id = 'fb-cloud-roster-panel';
         panel.className = 'cc-slide-panel';
+        panel.style.zIndex = '9999'; // FIX B: same fix applied here too
         panel.addEventListener('click', e => e.stopPropagation());
         panel.innerHTML = `
           <div class="cc-slide-panel-header">
@@ -1299,40 +1314,28 @@ function getEffectiveStats(baseItem, config) {
     window.loadCloudRoster = async function(docId) {
       try {
         if (!window.CC_STORAGE) return;
-        const doc    = await window.CC_STORAGE.loadDocument(docId);
+        const doc = await window.CC_STORAGE.loadDocument(docId);
         if (!doc) { alert('Roster not found!'); return; }
-        // CC_STORAGE can return many shapes — try each until we find one with .faction
+
         function tryParse(val) {
           if (!val) return null;
-          if (typeof val === 'string') {
-            try { return JSON.parse(val); } catch(e) { return null; }
-          }
+          if (typeof val === 'string') { try { return JSON.parse(val); } catch(e) { return null; } }
           if (typeof val === 'object') return val;
           return null;
         }
 
         var parsed = null;
-        var candidates = [
-          doc.json,
-          doc,
-          doc.content,
-          doc.value,
-          doc.data,
-          (doc.content && doc.content.content),
-          (doc.value   && doc.value.content)
-        ];
+        var candidates = [doc.json, doc, doc.content, doc.value, doc.data,
+          (doc.content && doc.content.content), (doc.value && doc.value.content)];
         for (var _ci = 0; _ci < candidates.length; _ci++) {
           var attempt = tryParse(candidates[_ci]);
           if (attempt && attempt.faction) { parsed = attempt; break; }
         }
         if (!parsed) {
-          // Last resort: log the whole doc so we can see its shape
           console.error('[FB] loadCloudRoster — could not find faction in doc:', JSON.stringify(doc));
           throw new Error('Could not find roster data in cloud response. Check console for details.');
         }
         closeAllSlidePanels();
-        // Load faction data WITHOUT calling switchFaction (which resets roster).
-        // We load the faction data silently, then restore all state at once.
         var loadedFaction = await loadFaction(parsed.faction);
         if (!loadedFaction) { alert('Could not load faction data for this roster.'); return; }
 
@@ -1397,7 +1400,6 @@ function getEffectiveStats(baseItem, config) {
 
     // ================================
     // APP SHELL HTML
-    // FIX 1: taller layout — min-height is set in CSS via cc_app_faction_builder.css
     // ================================
     root.innerHTML = `
       <div class="cc-app-shell h-100">
@@ -1512,7 +1514,7 @@ function getEffectiveStats(baseItem, config) {
     checkSharedRoster();
     render();
     setTimeout(() => updateLoginStatus(), 500);
-    loadAbilityDictionaries(); // pre-load in background so ability panels are instant
+    loadAbilityDictionaries();
     console.log("✅ Faction Builder mounted");
   }
 };
