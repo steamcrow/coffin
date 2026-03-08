@@ -836,25 +836,22 @@ window.CC_APP = {
         suffix = randomChoice(fallbackSuffixes);
       }
 
-      // Several templates ensure the location name reads naturally in all cases.
       const templates = [
-        () => `${prefix} at ${locName}`,                     // "Black Night at Fool Boot"
-        () => `${prefix} at ${locName} — ${suffix}`,         // "Black Night at Fool Boot — Reckoning"
-        () => `${prefix} ${locName} — ${suffix}`,            // "Bloody Lost Yots — Reckoning" (classic)
-        () => `${locName} — ${suffix}`,                      // "Lost Yots — Shadow and Flame"
-        () => `${suffix} at ${locName}`,                     // "Reckoning at Lost Yots"
-        () => `The ${suffix} of ${locName}`,                 // "The Reckoning of Lost Yots"
+        () => `${prefix} at ${locName}`,
+        () => `${prefix} at ${locName} — ${suffix}`,
+        () => `${prefix} ${locName} — ${suffix}`,
+        () => `${locName} — ${suffix}`
       ];
 
-    // Adjective prefixes (Bloody, Burning…) favour the classic "Adjective Location — Noun" form.
-const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
+      // Adjective prefixes favour the classic form.
+      const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
 
-const pick = isAdjectivePrefix 
-  ? randomChoice([templates[1], templates[2], templates[2], templates[3]]) // adjective: prefer classic 
-  : randomChoice([templates[0], templates[0], templates[1], templates[4]]); // noun/phrase: prefer "at"
+      const pick = isAdjectivePrefix 
+        ? randomChoice([templates[1], templates[2], templates[2], templates[3]]) 
+        : randomChoice([templates[0], templates[0], templates[1], templates[4]]);
 
-return pick();
-}
+      return pick ? pick() : `${prefix} ${locName}`;
+    }
 
     // ── generateMonsterPressure — builds monster roster for this scenario ────────────
     //    Stored in the save file for the upcoming Turn Counter app.
