@@ -2358,6 +2358,87 @@ window.CC_APP = {
       return renderScenarioOutput();
     }
 
+    // ── VICTORY CONDITIONS RENDERER ──────────────────────────────────────────────
+    //   Renders per-faction victory cards with SVG logos, Primary/Secondary labels.
+
+    var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/coffin_rules_apps/';
+
+    var FACTION_IDENTITY = {
+      monster_rangers: { color: '#4ade80', border: '#166534', logo: 'monster_rangers_logo.svg', tag: 'Protectors of the Canyon' },
+      liberty_corps:   { color: '#60a5fa', border: '#1e3a5f', logo: 'liberty_corps_logo.svg',   tag: 'Federal Authority' },
+      monsterology:    { color: '#a78bfa', border: '#3b1f6e', logo: 'monsterology_logo.svg',     tag: 'The Society' },
+      monsters:        { color: '#ef4444', border: '#7f1d1d', logo: 'monsters_logo.svg',         tag: 'Canyon Predators' },
+      shine_riders:    { color: '#fbbf24', border: '#78350f', logo: 'shine_riders_logo.svg',     tag: 'Fast Money, Faster Exit' },
+      crow_queen:      { color: '#c084fc', border: '#581c87', logo: 'crow_queen_logo.svg',       tag: 'The Crown Remembers' },
+    };
+
+    var OBJ_ROLE_LABELS = ['Primary Objective', 'Secondary Objective'];
+
+    function renderVictoryConditions(victoryConditions) {
+      return Object.entries(victoryConditions || {}).map(function(entry) {
+        var factionId = entry[0];
+        var vc        = entry[1];
+        var id  = FACTION_IDENTITY[factionId] || { color: '#ff7518', border: '#7c2d12', logo: null, tag: '' };
+        var logoHtml = id.logo
+          ? '<img src="' + LOGO_BASE + id.logo + '" alt="' + vc.faction_name + '" style="height:2.2rem;width:auto;filter:drop-shadow(0 0 4px ' + id.color + '88);">'
+          : '<i class="fa fa-flag" style="color:' + id.color + ';font-size:2rem;"></i>';
+
+        var objectivesHtml = (vc.objectives || []).map(function(obj, i) {
+          var roleLabel = OBJ_ROLE_LABELS[i] || ('Objective ' + (i + 1));
+          var isPrimary = i === 0;
+          return '<div class="cc-vc-obj" style="border-left: 2px solid ' + (isPrimary ? id.color : id.border) + '; margin-bottom:0.6rem;">'
+            + '<div class="cc-vc-obj-label" style="color:' + (isPrimary ? id.color : 'rgba(255,255,255,0.45)') + ';">'
+            + (isPrimary ? '<i class="fa fa-star"></i>' : '<i class="fa fa-circle-o"></i>') + ' ' + roleLabel
+            + '</div>'
+            + '<div class="cc-vc-obj-name"><i class="fa fa-crosshairs" style="color:' + id.color + ';"></i> ' + obj.name + '</div>'
+            + '<p class="cc-vc-obj-desc">' + obj.desc + '</p>'
+            + '<div class="cc-vc-obj-meta">'
+            + '<span class="cc-vp-line"><i class="fa fa-star" style="color:' + id.color + ';"></i> ' + obj.vp + '</span>'
+            + '<span class="cc-tactic-line"><i class="fa fa-book"></i> ' + obj.tactic + '</span>'
+            + '</div>'
+            + '</div>';
+        }).join('');
+
+        var motiveHtml = vc.motive
+          ? '<div style="margin-top:0.6rem;padding:0.5rem 0.6rem;background:rgba(0,0,0,0.3);border-left:2px solid ' + id.color + ';border-radius:2px;font-size:0.83rem;line-height:1.45;color:rgba(255,255,255,0.75);">'
+            + '<span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:' + id.color + ';display:block;margin-bottom:0.2rem;"><i class="fa fa-bullseye"></i> Mission</span>'
+            + vc.motive + '</div>'
+          : '';
+
+        var quoteHtml = vc.quote
+          ? '<p class="cc-quote" style="border-left-color:' + id.color + ';">&ldquo;' + vc.quote + '&rdquo;</p>'
+          : '';
+
+        return '<div class="cc-victory-card" style="border-left:4px solid ' + id.color + ';background:linear-gradient(135deg,rgba(0,0,0,0.4) 0%,color-mix(in srgb,' + id.color + ' 6%,transparent) 100%);">'
+          + '<div class="cc-vc-header" style="border-bottom:1px solid ' + id.border + ';padding-bottom:0.5rem;margin-bottom:0.75rem;">'
+          + '<div style="display:flex;align-items:center;gap:0.75rem;">'
+          + logoHtml
+          + '<div>'
+          + '<h5 style="color:' + id.color + ';margin:0;">' + vc.faction_name + (vc.is_npc ? ' <span class=\"cc-npc-tag\">NPC</span>' : '') + '</h5>'
+          + (id.tag ? '<div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:2px;">' + id.tag + '</div>' : '')
+          + '</div></div>'
+          + motiveHtml
+          + '</div>'
+          + '<div class="cc-vc-objectives">' + objectivesHtml + '</div>'
+          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
+          + '<div class="cc-vc-finale">'
+          + '<div class="cc-vc-obj-label">Finale — Round 6</div>'
+          + '<div class="cc-vc-obj-name"><i class="fa fa-bolt" style="color:' + id.color + ';"></i> ' + vc.finale.name + '</div>'
+          + '<p>' + vc.finale.desc + '</p>'
+          + '<p class="cc-vp-line"><i class="fa fa-star" style="color:' + id.color + ';"></i> ' + vc.finale.vp + '</p>'
+          + '</div>'
+          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
+          + '<div class="cc-vc-aftermath">'
+          + '<div class="cc-vc-obj-label">If ' + vc.faction_name + ' Wins</div>'
+          + '<p><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
+          + '<p><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
+          + '<p><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
+          + quoteHtml
+          + '</div>'
+          + '</div>';
+      }).join('');
+    }
+
     // ── OBJECTIVES SECTION RENDERER ──────────────────────────────────────────────
     //   Used when no vault scenario is matched — renders the generated objectives.
 
@@ -2675,71 +2756,7 @@ window.CC_APP = {
             <h4><i class="fa fa-trophy"></i> Victory Conditions</h4>
             ${state.vaultScenario && Object.keys(state.vaultScenario.victory_conditions || {}).length > 0
               ? renderVaultVictoryConditions(state.vaultScenario)
-              : Object.entries(s.victory_conditions).map(([factionId, vc]) => {
-
-              const FACTION_IDENTITY = {
-                monster_rangers: { color: '#4ade80', border: '#166534', icon: 'fa-paw',        tag: 'Protectors of the Canyon' },
-                liberty_corps:   { color: '#60a5fa', border: '#1e3a5f', icon: 'fa-shield',     tag: 'Federal Authority' },
-                monsterology:    { color: '#a78bfa', border: '#3b1f6e', icon: 'fa-flask',      tag: 'The Society' },
-                monsters:        { color: '#ef4444', border: '#7f1d1d', icon: 'fa-skull',      tag: 'Canyon Predators' },
-                shine_riders:    { color: '#fbbf24', border: '#78350f', icon: 'fa-bolt',       tag: 'Fast Money, Faster Exit' },
-                crow_queen:      { color: '#c084fc', border: '#581c87', icon: 'fa-eye',        tag: 'The Crown Remembers' },
-              };
-              const id = FACTION_IDENTITY[factionId] || { color: '#ff7518', border: '#7c2d12', icon: 'fa-flag', tag: '' };
-
-              return `
-              <div class="cc-victory-card" style="
-                border-left: 4px solid ${id.color};
-                background: linear-gradient(135deg,
-                  rgba(0,0,0,0.4) 0%,
-                  color-mix(in srgb, ${id.color} 6%, transparent) 100%);
-              ">
-                <div class="cc-vc-header" style="border-bottom: 1px solid ${id.border}; padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
-                  <div style="display:flex; align-items:center; gap:0.6rem;">
-                    <i class="fa ${id.icon}" style="color:${id.color}; font-size:1.1rem;"></i>
-                    <h5 style="color:${id.color}; margin:0;">${vc.faction_name}${vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : ''}</h5>
-                  </div>
-                  ${id.tag ? `<div style="font-size:0.65rem; letter-spacing:0.1em; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-top:2px; padding-left:1.7rem;">${id.tag}</div>` : ''}
-                  ${vc.motive ? `
-                    <div style="margin-top:0.6rem;padding:0.5rem 0.6rem;background:rgba(0,0,0,0.3);border-left:2px solid ${id.color};border-radius:2px;font-size:0.83rem;line-height:1.45;color:rgba(255,255,255,0.75);">
-                      <span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:${id.color};display:block;margin-bottom:0.2rem;"><i class="fa fa-bullseye"></i> Mission</span>
-                      ${vc.motive}
-                    </div>` : ''}
-                </div>
-
-                <div class="cc-vc-objectives">
-                  ${(vc.objectives || []).map((obj, i) => `
-                    <div class="cc-vc-obj" style="border-left: 2px solid ${id.border};">
-                      <div class="cc-vc-obj-label">Objective ${i + 1}</div>
-                      <div class="cc-vc-obj-name"><i class="fa fa-crosshairs" style="color:${id.color};"></i> ${obj.name}</div>
-                      <p class="cc-vc-obj-desc">${obj.desc}</p>
-                      <div class="cc-vc-obj-meta">
-                        <span class="cc-vp-line"><i class="fa fa-star" style="color:${id.color};"></i> ${obj.vp}</span>
-                        <span class="cc-tactic-line"><i class="fa fa-book"></i> ${obj.tactic}</span>
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-
-                <hr class="cc-vc-divider" style="border-color:${id.border};" />
-                <div class="cc-vc-finale">
-                  <div class="cc-vc-obj-label">Finale</div>
-                  <div class="cc-vc-obj-name"><i class="fa fa-bolt" style="color:${id.color};"></i> ${vc.finale.name}</div>
-                  <p>${vc.finale.desc}</p>
-                  <p class="cc-vp-line"><i class="fa fa-star" style="color:${id.color};"></i> ${vc.finale.vp}</p>
-                </div>
-
-                <hr class="cc-vc-divider" style="border-color:${id.border};" />
-                <div class="cc-vc-aftermath">
-                  <div class="cc-vc-obj-label">If ${vc.faction_name} Wins</div>
-                  <p><i class="fa fa-chevron-right" style="color:${id.color};"></i> ${vc.aftermath.immediate}</p>
-                  <p><i class="fa fa-university"></i> Territory becomes <strong style="color:${id.color};">${vc.aftermath.canyon_state}</strong>.</p>
-                  <p><i class="fa fa-calendar"></i> ${vc.aftermath.long_term}</p>
-                  ${vc.quote ? `<p class="cc-quote" style="border-left-color:${id.color};">"${vc.quote}"</p>` : ''}
-                </div>
-              </div>`;
-            }).join('')}
-            }
+              : renderVictoryConditions(s.victory_conditions)}
           </div>
 
           <!-- AFTERMATH -->
@@ -3556,8 +3573,8 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       </div>
     `;
 
-    // Hold splash for at least 3 seconds regardless of how fast data loads.
-    const MIN_SPLASH_MS = 3000;
+    // Hold splash for at least 5 seconds regardless of how fast data loads.
+    const MIN_SPLASH_MS = 5000;
 
     loadGameData().then(() => {
       console.log('✅ Game data ready');
