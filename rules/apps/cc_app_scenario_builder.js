@@ -3531,8 +3531,8 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       </div>
     `;
 
-    // Hold splash for at least 5 seconds regardless of how fast data loads.
-    const MIN_SPLASH_MS = 5000;
+    // Hold splash for at least 3 seconds regardless of how fast data loads.
+    const MIN_SPLASH_MS = 3000;
 
     loadGameData().then(() => {
       console.log('✅ Game data ready');
@@ -3550,10 +3550,10 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         } else {
           render();
         }
-      }, holdFor);
+}, holdFor);
     });
 
-} // This closes the init() function
-  } // This closes the window.CC_APP object
-};
+  } // 1. This closes the init() function
+}; // 2. This closes the window.CC_APP object
+
 console.log("✅ CC_APP defined and ready");
