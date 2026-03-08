@@ -267,6 +267,20 @@ window.CC_APP = {
       return timing.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
 
+    // displayName: converts slug or raw ability names to human-readable labels.
+    // "load_and_carry" -> "Load and Carry"   "GAS_MASK" -> "Gas Mask"
+    const _LC_WORDS = new Set(['and','or','of','the','a','an','in','on','at','to','for','with','by']);
+    function displayName(raw) {
+      if (!raw) return '';
+      const words = String(raw).replace(/_/g, ' ').trim().split(/\s+/);
+      return words.map((w, i) => {
+        const lower = w.toLowerCase();
+        return (i === 0 || !_LC_WORDS.has(lower))
+          ? lower.charAt(0).toUpperCase() + lower.slice(1)
+          : lower;
+      }).join(' ');
+    }
+
     function loadAbilityDictionaries() {
       if (_abilityFetched || _abilityFetching) return;
       _abilityFetching = true;
@@ -440,7 +454,7 @@ window.CC_APP = {
     window.showAbilityTooltip = function(abilityName, event) {
       const tooltip = document.getElementById('ability-tooltip');
       if (!tooltip) return;
-      tooltip.textContent = `Click to view: ${abilityName}`;
+      tooltip.textContent = `Click to view: ${displayName(abilityName)}`;
       tooltip.style.display = 'block';
       tooltip.style.left = event.pageX + 12 + 'px';
       tooltip.style.top  = event.pageY + 12 + 'px';
@@ -465,7 +479,7 @@ window.CC_APP = {
       if (_abilityFetching && !_abilityFetched) {
         panel.innerHTML = `
           <div class="cc-slide-panel-header">
-            <h2><i class="fa fa-book"></i> ${esc(abilityName).toUpperCase()}</h2>
+            <h2><i class="fa fa-book"></i> ${esc(displayName(abilityName)).toUpperCase()}</h2>
             <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
           </div>
           <div style="padding:2rem;text-align:center;color:#888;">
@@ -519,7 +533,7 @@ window.CC_APP = {
       } else {
         bodyHtml = `
           <p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">
-            No rule entry found for <em style="color:#bbb;">${esc(abilityName)}</em>.
+            No rule entry found for <em style="color:#bbb;">${esc(displayName(abilityName))}</em>.
           </p>
           <p style="color:#555;font-size:.82rem;line-height:1.5;margin:0;">
             Open the Rules Explorer and search for <em>${esc(abilityName.split(' ')[0])}</em>.
@@ -528,7 +542,7 @@ window.CC_APP = {
 
       panel.innerHTML = `
         <div class="cc-slide-panel-header">
-          <h2><i class="fa fa-book"></i> ${esc(abilityName).toUpperCase()}</h2>
+          <h2><i class="fa fa-book"></i> ${esc(displayName(abilityName)).toUpperCase()}</h2>
           <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
         </div>
         <div style="padding:1.5rem;">${bodyHtml}</div>`;
@@ -743,7 +757,7 @@ window.CC_APP = {
                       onmouseover="showAbilityTooltip('${esc(n)}', event)"
                       onmouseout="hideAbilityTooltip()"
                       onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
-                      style="cursor:pointer;">${esc(n)}</span>`;
+                      style="cursor:pointer;">${esc(displayName(n))}</span>`;
                   }).join('')}
                 </div>` : ''}
               <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
@@ -778,7 +792,7 @@ window.CC_APP = {
                         onmouseover="showAbilityTooltip('${esc(n)}', event)"
                         onmouseout="hideAbilityTooltip()"
                         onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
-                        style="cursor:pointer;">${esc(n)}</span>`;
+                        style="cursor:pointer;">${esc(displayName(n))}</span>`;
                     }).join('')}
                     ${abilities.length > 3 ? `<span class="ability-tag-small" style="opacity:0.6">+${abilities.length - 3}</span>` : ''}
                   </div>` : ''}
@@ -912,7 +926,7 @@ window.CC_APP = {
                   onmouseover="showAbilityTooltip('${esc(n)}', event)"
                   onmouseout="hideAbilityTooltip()"
                   onclick="showAbilityPanel('${esc(n)}')"
-                  style="cursor:pointer;">${esc(n)}</strong></div>`;
+                  style="cursor:pointer;">${esc(displayName(n))}</strong></div>`;
               }).join('')}
             </div>` : ''}
 
