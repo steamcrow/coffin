@@ -809,8 +809,7 @@ window.CC_APP = {
       return randomChoice(pools);
     }
 
-    // ── generateScenarioNameFromTags — title builder; location name appears exactly once ─
-    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
+   function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
       contextTags = contextTags || [];
       const locName = (location || { name: 'Unknown' }).name;
 
@@ -843,7 +842,6 @@ window.CC_APP = {
         () => `${locName} — ${suffix}`
       ];
 
-      // Adjective prefixes favour the classic form.
       const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
 
       const pick = isAdjectivePrefix 
