@@ -1,0 +1,217 @@
+{
+  "project": "Coffin Canyon",
+  "version": "draft-1",
+  "generated_from": "live public repo structure and current runtime wiring",
+  "root": ".",
+  "canonical_roots": {
+    "apps": "apps/",
+    "ui": "ui/",
+    "data": "data/",
+    "vendor": "vendor/",
+    "rules": "rules/"
+  },
+  "shared": {
+    "ui": {
+      "loader": "ui/cc_loader_core.js",
+      "components": "ui/cc_components.js",
+      "core_css": "ui/cc_ui.css",
+      "print_css": "ui/cc_print.css"
+    },
+    "data": {
+      "rules_src": "data/src/",
+      "factions": "data/factions/",
+      "map_data": "data/map_data/",
+      "schemas": "data/schemas/"
+    },
+    "vendor": {
+      "leaflet": "vendor/leaflet/"
+    },
+    "legacy": {
+      "rules_index": "rules/rules_base.json"
+    }
+  },
+  "apps": {
+    "faction_builder": {
+      "title": "Faction Builder",
+      "directory": "apps/app_faction_builder/",
+      "entry": {
+        "js": "apps/app_faction_builder/cc_app_faction_builder.js",
+        "css": "apps/app_faction_builder/cc_app_faction_builder.css"
+      },
+      "canonical_dependencies": {
+        "ui": [
+          "ui/cc_ui.css",
+          "ui/cc_components.js"
+        ],
+        "data": [
+          "data/factions/",
+          "data/src/"
+        ]
+      },
+      "legacy_runtime_paths": [
+        "factions/",
+        "rules/src/"
+      ],
+      "notes": [
+        "Currently still fetches factions from top-level factions/ in runtime code.",
+        "Ability dictionary and helper lookups still reference rules/src/ in runtime code."
+      ]
+    },
+    "rules_explorer": {
+      "title": "Rules Explorer",
+      "directory": "apps/app_rules_explorer/",
+      "entry": {
+        "js": "apps/app_rules_explorer/cc_app_rules_explorer.js",
+        "css": "apps/app_rules_explorer/cc_app_rules_explorer.css"
+      },
+      "canonical_dependencies": {
+        "ui": [
+          "ui/cc_ui.css",
+          "ui/cc_print.css",
+          "ui/cc_components.js"
+        ],
+        "data": [
+          "data/src/",
+          "rules/rules_base.json"
+        ]
+      },
+      "legacy_runtime_paths": [
+        "rules/ui/",
+        "rules/src/"
+      ]
+    },
+    "scenario_builder": {
+      "title": "Scenario Builder",
+      "directory": "apps/app_scenario_builder/",
+      "entry": {
+        "js": "apps/app_scenario_builder/cc_app_scenario_builder.js",
+        "css": "apps/app_scenario_builder/cc_app_scenario_builder.css"
+      },
+      "supporting_files": [
+        "apps/app_scenario_builder/brain_constants.js",
+        "apps/app_scenario_builder/brain_core.js",
+        "apps/app_scenario_builder/scenario_brain.js"
+      ],
+      "canonical_dependencies": {
+        "ui": [
+          "ui/cc_ui.css",
+          "ui/cc_components.js"
+        ],
+        "data": [
+          "data/src/",
+          "data/factions/",
+          "data/map_data/"
+        ],
+        "vendor": [
+          "vendor/leaflet/"
+        ],
+        "related_apps": [
+          "apps/app_canyon_map/"
+        ]
+      },
+      "legacy_runtime_paths": [
+        "rules/ui/",
+        "rules/apps/",
+        "rules/src/",
+        "rules/vendor/",
+        "factions/"
+      ],
+      "notes": [
+        "Current runtime still fetches multiple JSON files from rules/src/.",
+        "Current runtime still fetches faction files from factions/.",
+        "Current runtime still points map embed assets to rules/apps/canyon_map/ and rules/vendor/leaflet/."
+      ]
+    },
+    "canyon_map": {
+      "title": "Canyon Map",
+      "directory": "apps/app_canyon_map/",
+      "entry": {
+        "js": "apps/app_canyon_map/cc_canyon_map_app.js",
+        "alternate_js": [
+          "apps/app_canyon_map/cc_app_canyon_map.js"
+        ],
+        "css": "apps/app_canyon_map/cc_canyon_map.css"
+      },
+      "data": {
+        "local_app_data_dir": "apps/app_canyon_map/data/",
+        "canonical_map_data_dir": "data/map_data/"
+      },
+      "canonical_dependencies": {
+        "ui": [
+          "ui/cc_ui.css",
+          "ui/cc_components.js"
+        ],
+        "data": [
+          "data/map_data/",
+          "data/src/"
+        ]
+      },
+      "notes": [
+        "There are two map JS filenames in the app directory; choose one as canonical during cleanup."
+      ]
+    },
+    "turn_counter": {
+      "title": "Turn Counter",
+      "directory": "apps/app_turn_counter/",
+      "entry": {
+        "js": "apps/app_turn_counter/cc_app_turn_counter.js"
+      },
+      "canonical_dependencies": {
+        "ui": [
+          "ui/cc_ui.css",
+          "ui/cc_components.js"
+        ],
+        "data": [
+          "data/factions/",
+          "data/src/"
+        ]
+      },
+      "legacy_runtime_paths": [
+        "factions/",
+        "rules/src/"
+      ]
+    },
+    "studio_builder": {
+      "title": "Studio Builder",
+      "directory": "apps/app_studio_builder/",
+      "entry": {
+        "js": "apps/app_studio_builder/studio_builder.js",
+        "css": "apps/app_studio_builder/studio_builder.css"
+      },
+      "docs": [
+        "apps/app_studio_builder/read_me.md"
+      ],
+      "canonical_dependencies": {
+        "ui": [
+          "ui/cc_ui.css"
+        ]
+      },
+      "notes": [
+        "Treat as internal tooling rather than a public gameplay app."
+      ]
+    }
+  },
+  "loader_registry": {
+    "canonical_loader": "ui/cc_loader_core.js",
+    "live_loader_still_points_to": {
+      "components_js": "rules/ui/cc_components.js",
+      "rules_helpers": "rules/src/rules_helpers.js",
+      "rules_base": "rules/rules_base.json",
+      "apps_base": "rules/apps/"
+    }
+  },
+  "migration_policy": {
+    "source_of_truth": {
+      "ui": "ui/",
+      "rules_data": "data/src/",
+      "factions": "data/factions/",
+      "map_data": "data/map_data/",
+      "schemas": "data/schemas/"
+    },
+    "compatibility_layers": [
+      "rules/",
+      "factions/"
+    ],
+    "design_rule": "Keep design separated from function wherever possible. Reusable design belongs in ui/cc_ui.css."
+  }
+}
