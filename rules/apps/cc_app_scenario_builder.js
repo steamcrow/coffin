@@ -2462,24 +2462,24 @@ window.CC_APP = {
       generate(selections) {
         const { factions, dangerRating, locationType, selectedLocation, gameMode, pointValue } = selections;
 
-        const locProfile = buildLocationProfile(locationType, selectedLocation);
+        const locProfile = this.buildLocationProfile(locationType, selectedLocation, dangerRating);
         console.log('📍 Location profile:', locProfile);
 
         const families   = this._data.getPlotFamilies();
-        const plotFamily = selectPlotFamily(families, factions, locProfile, dangerRating);
+        const plotFamily = this.selectPlotFamily(families, factions, locProfile, dangerRating);
         console.log('📖 Plot family (scored):', plotFamily.name);
 
-        const { scenario: vaultScenario, score: matchScore } = matchVaultScenario(
+        const { scenario: vaultScenario, score: matchScore } = this.matchVaultScenario(
           plotFamily, locProfile, [], factions, dangerRating, locationType, selectedLocation
         );
         if (vaultScenario) console.log('📚 Vault match:', vaultScenario.name, '(' + matchScore + ')');
 
         const objectives = vaultScenario
-          ? generateObjectivesFromVault(vaultScenario, locProfile)
-          : generateObjectives(plotFamily, locProfile);
-        generateObjectiveChain(objectives);
+          ? this.generateObjectivesFromVault(vaultScenario, locProfile)
+          : this.generateObjectives(plotFamily, locProfile, factions);
+        this.generateObjectiveChain(objectives);
 
-        const monsterPressure = generateMonsterPressure(plotFamily, dangerRating, locProfile);
+        const monsterPressure = this.generateMonsterPressure(plotFamily, dangerRating, locProfile, pointValue);
 
         let twist = null;
         if (Math.random() < 0.3) {
@@ -2492,23 +2492,23 @@ window.CC_APP = {
           }
         }
 
-        const objectiveMarkers = generateObjectiveMarkers(objectives, vaultScenario);
+        const objectiveMarkers = this.generateObjectiveMarkers(objectives, vaultScenario, factions);
 
         let victoryConditions;
         if (vaultScenario && vaultScenario.victory_conditions && Object.keys(vaultScenario.victory_conditions).length > 0) {
-          victoryConditions = buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily);
+          victoryConditions = this.buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily, factions, dangerRating);
           console.log('📚 Using vault victory conditions');
         } else {
-          victoryConditions = generateVictoryConditions(plotFamily, objectives, locProfile);
+          victoryConditions = this.generateVictoryConditions(plotFamily, objectives, locProfile, factions, dangerRating);
           console.log('⚙️  Generated victory conditions');
         }
 
         let aftermath;
         if (vaultScenario && vaultScenario.aftermath_effects && Object.keys(vaultScenario.aftermath_effects).length > 0) {
-          aftermath = buildAftermathSummaryFromVault(vaultScenario.aftermath_effects);
+          aftermath = this.buildAftermathSummaryFromVault(vaultScenario.aftermath_effects);
           console.log('📚 Using vault aftermath');
         } else {
-          aftermath = generateAftermath(plotFamily);
+          aftermath = this.generateAftermath(plotFamily);
         }
 
         const nameContextTags = [];
@@ -2516,10 +2516,10 @@ window.CC_APP = {
           vaultScenario.tags.forEach(function(t) { if (nameContextTags.indexOf(t) < 0) nameContextTags.push(t); });
         }
 
-        const scenarioName   = generateScenarioNameFromTags(plotFamily, locProfile, objectives, twist, dangerRating, nameContextTags);
+        const scenarioName   = this.generateScenarioNameFromTags(plotFamily, locProfile, objectives, twist, dangerRating, nameContextTags);
         const narrative_hook = (vaultScenario && vaultScenario.narrative_hook)
           ? vaultScenario.narrative_hook
-          : generateNarrativeHook(plotFamily, locProfile, objectives);
+          : this.generateNarrativeHook(plotFamily, locProfile, objectives);
 
         // Return the full ScenarioResult.
         // _vault is a private field — caller extracts it into state.vaultScenario.
