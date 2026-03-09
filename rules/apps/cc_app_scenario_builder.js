@@ -1110,8 +1110,8 @@ window.CC_APP = {
       }
 
 
-    getCargoVehicleName(factions) {
-      const hasRangers = (factions || []).some(f => f.id === 'monster_rangers');
+    getCargoVehicleName() {
+      const hasRangers = (this._factions || []).some(function(f) { return f.id === 'monster_rangers'; });
       return hasRangers ? 'Cargo Tiger Truck' : 'Cargo Vehicle';
     }
 
@@ -1818,7 +1818,7 @@ window.CC_APP = {
       }
 
       // hasRangers must be declared here so the names table below can reference it.
-      const hasRangers = (factions || []).some(f => f.id === 'monster_rangers');
+      const hasRangers = (this._factions || []).some(function(f) { return f.id === 'monster_rangers'; });
 
       const names = {
         wrecked_engine:     'Wrecked Engine',
@@ -2461,6 +2461,10 @@ window.CC_APP = {
       // ──────────────────────────────────────────────────────────────────────────
       generate(selections) {
         const { factions, dangerRating, locationType, selectedLocation, gameMode, pointValue } = selections;
+
+        // Store on instance so helpers deep in the call chain can read it
+        // without needing factions threaded through every parameter list.
+        this._factions = factions;
 
         const locProfile = this.buildLocationProfile(locationType, selectedLocation, dangerRating);
         console.log('📍 Location profile:', locProfile);
@@ -4247,8 +4251,8 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       </div>
     `;
 
-    // Hold splash for at least 3 seconds regardless of how fast data loads.
-    const MIN_SPLASH_MS = 3000;
+    // Hold splash for at least 5 seconds regardless of how fast data loads.
+    const MIN_SPLASH_MS = 5000;
 
     gameData.loadAll().then(() => {
       console.log('✅ Game data ready');
