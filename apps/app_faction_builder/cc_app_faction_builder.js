@@ -1,6 +1,6 @@
 // ================================
 // Faction Builder App
-// File: coffin/rules/apps/cc_app_faction_builder.js
+// File: coffin/apps/app_faction_builder/cc_app_faction_builder.js
 // ================================
 
 console.log("⚔️ Faction Builder app loaded");
@@ -99,8 +99,9 @@ window.CC_APP = {
     }
 
     // ---- LOAD CSS ----
+    // FIX: paths updated from rules/ui/ → ui/ and rules/apps/ → apps/app_faction_builder/
     if (!document.getElementById('cc-core-ui-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
@@ -113,7 +114,7 @@ window.CC_APP = {
     }
 
     if (!document.getElementById('cc-faction-builder-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_faction_builder.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_faction_builder/cc_app_faction_builder.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
@@ -126,7 +127,7 @@ window.CC_APP = {
     }
 
     if (!document.getElementById('cc-print-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_print.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_print.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
@@ -139,8 +140,9 @@ window.CC_APP = {
     }
 
     // ---- LOAD STORAGE HELPERS ----
+    // FIX: path updated from rules/src/ → data/src/
     if (!window.CC_STORAGE) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/storage_helpers.js?t=' + Date.now())
         .then(res => res.text())
         .then(code => {
           const script = document.createElement('script');
@@ -206,7 +208,8 @@ window.CC_APP = {
       crow_queen:      '#00bcd4'
     };
 
-    const FACTION_ICON_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/';
+    // FIX: icon base path updated from rules/apps/ → apps/app_faction_builder/
+    const FACTION_ICON_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_faction_builder/';
 
     function factionIconHtml(factionId, size = 32) {
       if (!factionId) return '';
@@ -224,7 +227,6 @@ window.CC_APP = {
 
     // ================================
     // ABILITY DICTIONARY SYSTEM
-    // FIX A: added 98_ability_dictionary_I.json to the list
     // ================================
     const ABILITY_FILES = [
       '90_ability_dictionary_A.json',
@@ -237,7 +239,8 @@ window.CC_APP = {
       '97_ability_dictionary_H.json',
       '98_ability_dictionary_I.json',
     ];
-    const ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/';
+    // FIX: ability base path updated from rules/src/ → data/src/
+    const ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/';
 
     let _abilityCache    = {};
     let _abilityFetched  = false;
@@ -319,7 +322,6 @@ window.CC_APP = {
 
     // ================================
     // SLIDE PANEL MANAGEMENT
-    // fb-stat-panel added to the panel ID list
     // ================================
     const FB_PANEL_IDS = ['fb-ability-panel', 'fb-stat-panel', 'fb-cloud-roster-panel'];
 
@@ -398,8 +400,9 @@ window.CC_APP = {
 
     // ================================
     // DATA LOADING
+    // FIX: faction base URL updated from factions/ → data/factions/
     // ================================
-    const FACTION_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+    const FACTION_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/';
 
     async function loadFaction(factionId) {
       if (state.factionData[factionId]) return state.factionData[factionId];
@@ -462,8 +465,6 @@ window.CC_APP = {
 
     // ================================
     // ABILITY PANEL
-    // FIX B: panel.style.zIndex = '9999' so it always sits above the backdrop
-    //        regardless of what cc_ui.css says about .cc-slide-panel
     // ================================
     window.showAbilityTooltip = function(abilityName, event) {
       const tooltip = document.getElementById('ability-tooltip');
@@ -487,7 +488,7 @@ window.CC_APP = {
       const panel = document.createElement('div');
       panel.id = 'fb-ability-panel';
       panel.className = 'cc-slide-panel';
-      panel.style.zIndex = '9999'; // FIX B: explicit z-index beats the backdrop at 9998
+      panel.style.zIndex = '9999';
       panel.addEventListener('click', e => e.stopPropagation());
 
       if (_abilityFetching && !_abilityFetched) {
@@ -571,7 +572,6 @@ window.CC_APP = {
 
     // ================================
     // STAT BADGE PANEL
-    // FIX C: new function — clicking Q/D/M/R opens a definition panel
     // ================================
     const STAT_DEFINITIONS = {
       Q: {
@@ -610,7 +610,7 @@ window.CC_APP = {
       const panel = document.createElement('div');
       panel.id = 'fb-stat-panel';
       panel.className = 'cc-slide-panel';
-      panel.style.zIndex = '9999'; // FIX B: same fix applied here
+      panel.style.zIndex = '9999';
       panel.addEventListener('click', e => e.stopPropagation());
 
       panel.innerHTML = `
@@ -635,7 +635,6 @@ window.CC_APP = {
 
     // ================================
     // STAT BADGES
-    // FIX C: onclick="showStatPanel(...)" and cursor:pointer added to every badge
     // ================================
     function getEffectiveStats(baseItem, config) {
       const stats = {
@@ -687,7 +686,6 @@ window.CC_APP = {
         const suffix     = (label === 'Q' || label === 'D') ? '+' : '"';
         const displayVal = (val === 0 && label === 'R') ? '-' : val;
         const sizeClass  = compact ? 'compact' : '';
-        // FIX C: onclick + cursor:pointer on every badge
         return `
           <div class="cc-stat-badge stat-${cls}-border ${modified ? 'stat-modified' : ''} ${sizeClass}"
                onclick="event.stopPropagation(); showStatPanel('${statKey}')"
@@ -1375,7 +1373,7 @@ window.CC_APP = {
         const panel = document.createElement('div');
         panel.id = 'fb-cloud-roster-panel';
         panel.className = 'cc-slide-panel';
-        panel.style.zIndex = '9999'; // FIX B: same fix applied here too
+        panel.style.zIndex = '9999';
         panel.addEventListener('click', e => e.stopPropagation());
         panel.innerHTML = `
           <div class="cc-slide-panel-header">
