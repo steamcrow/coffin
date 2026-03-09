@@ -4247,8 +4247,8 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       </div>
     `;
 
-    // Hold splash for at least 5 seconds regardless of how fast data loads.
-    const MIN_SPLASH_MS = 5000;
+    // Hold splash for at least 3 seconds regardless of how fast data loads.
+    const MIN_SPLASH_MS = 3000;
 
     gameData.loadAll().then(() => {
       console.log('✅ Game data ready');
