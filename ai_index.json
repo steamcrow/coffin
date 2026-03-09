@@ -1,0 +1,77 @@
+{
+  "project": "Coffin Canyon",
+  "type": "tabletop skirmish game + browser app ecosystem",
+  "primary_language": "JavaScript",
+  "data_model": "JSON-driven",
+
+  "directories": {
+    "rules": {
+      "description": "Primary modern rules and application system",
+      "subsystems": {
+        "apps": "Browser-based tools (faction builder, map, scenario builder, rules explorer)",
+        "src": "Modular rules source files",
+        "map": "Terrain and map data",
+        "ui": "Shared UI system",
+        "tools": "Build tools for assembling rule indexes",
+        "vendor": "Third-party libraries (Leaflet)"
+      }
+    },
+
+    "factions": {
+      "description": "Playable faction definitions",
+      "format": "JSON",
+      "examples": [
+        "faction-monster-rangers-v5.json",
+        "faction-liberty-corps-v2.json",
+        "faction-monsterology-v2.json",
+        "faction-monsters-v2.json",
+        "faction-shine-riders-v2.json"
+      ]
+    },
+
+    "assets": {
+      "description": "Static art assets used by the apps",
+      "terrain": "terrain imagery"
+    },
+
+    "studio": {
+      "description": "Internal development tools"
+    },
+
+    "future": {
+      "description": "Planning documents and experimental designs"
+    },
+
+    "scripts": {
+      "status": "legacy",
+      "description": "Older prototype systems kept for reference"
+    }
+  },
+
+  "rules_system": {
+    "modular_source": "rules/src",
+    "compiled_index": "rules/rules_base.json",
+    "legacy_rules": "factions/rules.json"
+  },
+
+  "apps": {
+    "faction_builder": "rules/apps/cc_app_faction_builder.js",
+    "rules_explorer": "rules/apps/cc_app_rules_explorer.js",
+    "scenario_builder": "rules/apps/cc_app_scenario_builder.js",
+    "canyon_map": "rules/apps/cc_app_canyon_map.js",
+    "turn_counter": "rules/apps/cc_app_turn_counter.js"
+  },
+
+  "ui_system": {
+    "core_css": "rules/ui/cc_ui.css",
+    "components": "rules/ui/cc_components.js",
+    "loader": "rules/ui/cc_loader_core.js"
+  },
+
+  "design_constraints": [
+    "mobile friendly",
+    "vanilla javascript preferred",
+    "minimal dependencies",
+    "json-driven architecture"
+  ]
+}
