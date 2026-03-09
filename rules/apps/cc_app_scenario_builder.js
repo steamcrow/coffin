@@ -5,11 +5,12 @@
 // SECTION MAP
 //   ~   8  Init, CSS loading, inline styles (pulse / mini-map / print)
 //   ~ 347  App state + faction registry
-//   ~ 376  GameDataManager class  (replaces 11 globals + loadGameData)
-//   ~ 500  Map embed + utilities
-//   ~ 560  Data tables + helper functions
-//   ~ 820  ScenarioGenerator class  (generate pipeline entry point)
-//   ~ 870  window.generateScenario  — thin wrapper
+//   ~ 376  GameDataManager class  (all fetch/cache logic)
+//   ~ 530  Map embed + Leaflet helpers
+//   ~ 590  Utilities  (randomChoice, randomInt)
+//   ~ 610  Constant tables  (FACTION_APPROACH, FACTION_CONFLICT_TABLE, etc.)
+//   ~ 620  ScenarioGenerator class  (ALL generation logic as class methods)
+//   ~2450  module-level wrappers + window.generateScenario thin shell
 //   ~ 441  Map embed URLs and Leaflet helper functions
 //   ~ 508  Utilities  (randomChoice, randomInt, getDangerDescription)
 //   ~ 532  Small helpers  (cargo name, campaign state lookup)
@@ -600,267 +601,25 @@ window.CC_APP = {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    function getDangerDescription(rating) {
-      const map = {
-        1: 'Skirmish — light danger',
-        2: 'Tense — expect resistance',
-        3: 'Hostile — expect casualties',
-        4: 'Dangerous — expect losses',
-        5: 'Deadly — expect to mourn',
-        6: 'Lethal — survival unlikely'
-      };
-      return map[rating] || 'Unknown danger level';
-    }
+
 
     // ── getCargoVehicleName — "Cargo Tiger Truck" when Monster Rangers are playing ────
-    function getCargoVehicleName() {
-      const hasRangers = state.factions.some(f => f.id === 'monster_rangers');
-      return hasRangers ? 'Cargo Tiger Truck' : 'Cargo Vehicle';
-    }
-
     // ── getCampaignStateDef — looks up environment/terrain/effects from campaign JSON ──
-    function getCampaignStateDef(stateId) {
-      if (!gameData.getCampaignSystem()) return null;
-      // Try common structures: location_states array, or states array, or direct object
-      const _cs  = gameData.getCampaignSystem();
-      const pool = _cs.location_states
-                || _cs.states
-                || (Array.isArray(_cs) ? _cs : null);
-      if (!pool) return null;
-      return pool.find(s => s.id === stateId || s.name?.toLowerCase() === stateId?.toLowerCase()) || null;
-    }
-
     // Pool of atmospheric states rolled when a location has no defined state.
     const RANDOM_STATES = ['poisoned', 'haunted', 'strangewild'];
 
     // ── buildLocationProfile — merges location data, type defaults, and rolls a state ──
-    function buildLocationProfile(locationType, selectedLocationId) {
-      let location = null;
-
-      if (locationType === 'named' && selectedLocationId) {
-        location = gameData.getLocations().locations.find(l => l.id === selectedLocationId) || null;
-      }
-
-      if (!location && gameData.getLocations().locations.length) {
-        location = randomChoice(gameData.getLocations().locations);
-      }
-
-      if (!location) {
-        return {
-          id:               'unknown',
-          name:             'Unknown Territory',
-          emoji:            '❓',
-          archetype:        'frontier',
-          state:            randomChoice(RANDOM_STATES),
-          features:         [],
-          effectiveDanger:  state.dangerRating,
-          effectiveResources: {},
-          monster_seeds:    [],
-          tags:             [],
-          notes:            [],
-          description:      '',
-          atmosphere:       ''
-        };
-      }
-
-      let typeDefaults = {};
-      if (gameData.getLocationTypes().location_types && location.type_ref) {
-        typeDefaults = gameData.getLocationTypes().location_types.find(t => t.id === location.type_ref) || {};
-      }
-
-      const effectiveResources = Object.assign({}, typeDefaults.base_resources || {}, location.resources || {});
-      const effectiveDanger    = location.danger ?? state.dangerRating;
-
-      // Locations with no defined state (or the generic "alive") get a random atmospheric state.
-      const rawState = location.state || '';
-      const resolvedState = (!rawState || rawState === 'alive')
-        ? randomChoice(RANDOM_STATES)
-        : rawState;
-
-      return {
-        id:               location.id,
-        name:             location.name,
-        emoji:            location.emoji || '📍',
-        archetype:        location.archetype || 'unknown',
-        state:            resolvedState,
-        features:         location.features || [],
-        effectiveDanger,
-        effectiveResources,
-        monster_seeds:    location.monster_seeds || [],
-        tags:             location.tags || [],
-        notes:            location.notes || [],
-        description:      location.description || '',
-        atmosphere:       location.atmosphere || '',
-        terrain_flavor:   location.terrain_flavor || [],
-        rumors:           location.rumors || []
-      };
-    }
-
-
-
     // ── getVault240Details — read 240 objective vault for this objective type ────────
     //   Returns { actions, vp_formula, test_line, action_cost } for display on cards.
-    function getVault240Details(objectiveType) {
-      var entry = gameData.getVault240Map()[objectiveType];
-      if (!entry) return null;
-      var details = {};
-
-      // Actions from the interaction block
-      var inter = entry.interaction || {};
-      var actions = [];
-      if (inter.action_type)   actions.push(inter.action_type.replace(/_/g, ' ').toUpperCase());
-      // Also pull method keys for sabotage-style entries
-      if (!inter.action_type && inter.method_1) actions.push('ATTACK');
-      if (!inter.action_type && inter.method_2) actions.push('SABOTAGE');
-      details.actions = actions.length ? actions : null;
-      details.action_cost = inter.action_cost || null;
-
-      // Test requirement
-      if (inter.test_required) {
-        var testStr = 'Test: ' + (inter.test_type || 'Quality').replace(/_/g, ' ');
-        if (inter.test_modifier) testStr += ' (' + inter.test_modifier + ')';
-        details.test_line = testStr;
-        details.success   = inter.success || null;
-        details.failure   = inter.failure || null;
-      } else {
-        details.test_line = null;
-      }
-
-      // VP formula
-      if (entry.vp_value && entry.vp_per) {
-        details.vp_formula = '+' + entry.vp_value + ' VP per ' + String(entry.vp_per).replace(/_/g, ' ');
-        if (entry.danger_scaling) details.vp_formula += ' (scales with danger)';
-      }
-
-      return details;
-    }
-
     // ── getObjectiveKeyResources — find location resources tied to this objective ────
-    function getObjectiveKeyResources(objectiveType, locProfile) {
-      var r = (locProfile && locProfile.effectiveResources) ? locProfile.effectiveResources : {};
-      var matches = [];
-      var aff = RESOURCE_OBJECTIVE_AFFINITY || {};
-      Object.keys(aff).forEach(function(res) {
-        if (aff[res].indexOf(objectiveType) >= 0 && (r[res] || 0) > 0) {
-          matches.push(res.replace(/_/g, ' '));
-        }
-      });
-      return matches.slice(0, 2);
-    }
-
     // ── getPlotFamilyObjectiveBias — return default_objectives from the plot family ──
-    function getPlotFamilyObjectiveBias(plotFamily) {
-      return (plotFamily && plotFamily.default_objectives) ? plotFamily.default_objectives : [];
-    }
-
     // ── getFactionFileData — safely read factionDataMap for a faction id ─────────────
-    function getFactionFileData(factionId) {
-      return gameData.getFaction(factionId);
-    }
-
     // ── getFactionVictoryGoal — read faction file's victory_objectives[0] ────────────
     //   Returns the best matching victory objective type string, or null.
-    function getFactionVictoryGoal(factionId, boardObjectiveType) {
-      var fd = getFactionFileData(factionId);
-      if (!fd || !fd.victory_objectives || !fd.victory_objectives.length) return null;
-
-      // Try to find a victory objective that matches the board objective type
-      var vos = fd.victory_objectives;
-      var typeWords = boardObjectiveType ? boardObjectiveType.replace(/_/g, ' ').toLowerCase() : '';
-
-      // Score each victory_objective by keyword overlap with board objective type
-      var best = null;
-      var bestScore = -1;
-      vos.forEach(function(vo) {
-        var voText = ((vo.type || '') + ' ' + (vo.description || '')).toLowerCase();
-        var score = 0;
-        typeWords.split(' ').forEach(function(w) {
-          if (w.length > 2 && voText.indexOf(w) >= 0) score++;
-        });
-        if (score > bestScore) { bestScore = score; best = vo; }
-      });
-
-      // If no keyword match, just return first
-      return (best || vos[0]);
-    }
-
     // ── getFactionTacticLine — read faction file's tactics.doctrine[0] ───────────────
-    function getFactionTacticLine(factionId) {
-      var fd = getFactionFileData(factionId);
-      if (!fd) return null;
-      var tactics = fd.tactics || fd.faction_tactics || {};
-      if (tactics.doctrine && tactics.doctrine.length) return tactics.doctrine[0];
-      if (tactics.overview) return tactics.overview.split('.')[0] + '.';
-      return null;
-    }
-
     // ── getPlotEngineCanonicalMotive — read 190 schema canonical_motivations ─────────
-    function getPlotEngineCanonicalMotive(factionId) {
-      var _pe = gameData.getPlotEngine();
-      if (!_pe) return null;
-      var claimants = (_pe.vectors && _pe.vectors.claimants) ? _pe.vectors.claimants : {};
-      var motives = claimants.canonical_motivations || {};
-      // Keys in 190 are like 'monsterologists' but we use 'monsterology' — try both
-      var val = motives[factionId]
-        || motives[factionId.replace(/_/g, ' ')]
-        || motives[factionId.replace('monsterology', 'monsterologists')]
-        || motives[factionId.replace('monster_rangers', 'monster rangers')];
-      if (!val) return null;
-      return val.replace(/_and_/g, ' and ').replace(/_/g, ' ');
-    }
-
     // ── buildRichObjectiveCard — combines all data sources into one card object ──────
     //   This is the single source of truth for what goes into a faction victory card.
-    function buildRichObjectiveCard(factionId, boardObj, locProfile, dangerRating, roleIndex) {
-      var conflictMap  = FACTION_CONFLICT_TABLE[factionId] || FACTION_CONFLICT_TABLE.monsters;
-      var approach     = FACTION_APPROACH[factionId]       || FACTION_APPROACH.monsters;
-      var flavorMap    = FACTION_OBJECTIVE_FLAVOR[factionId] || {};
-
-      var conflict = conflictMap[boardObj.type] || conflictMap['default'];
-
-      // 1. Name and goal text from conflict table
-      var cardName = conflict.name;
-      var cardDesc = flavorMap[boardObj.type]
-        || approach.verbs[roleIndex % approach.verbs.length] + ' the ' + boardObj.name + '.';
-
-      // 2. VP formula: prefer 240 vault, fall back to conflict table
-      var vault240 = getVault240Details(boardObj.type);
-      var cardVP   = (vault240 && vault240.vp_formula) ? vault240.vp_formula : conflict.vp;
-
-      // 3. Tactic: prefer faction file doctrine, fall back to approach tactic
-      var fileTactic = getFactionTacticLine(factionId);
-      var cardTactic = fileTactic || approach.tactic;
-
-      // 4. Resource: what location resource is tied to this objective
-      var resources = getObjectiveKeyResources(boardObj.type, locProfile);
-
-      // 5. Allowed actions from OBJECTIVE_MARKER_TABLE
-      var markerData = OBJECTIVE_MARKER_TABLE[boardObj.type] || {};
-      var actions    = (markerData.interactions || []).map(function(a) { return a.toLowerCase(); });
-
-      // 6. Test info from 240 vault
-      var testLine = vault240 ? vault240.test_line : null;
-      var successLine = vault240 ? vault240.success : null;
-      var failureLine = vault240 ? vault240.failure : null;
-
-      // 7. Faction-specific victory objective type from faction file
-      var factionWinObj = getFactionVictoryGoal(factionId, boardObj.type);
-
-      return {
-        name:        cardName,
-        desc:        cardDesc,
-        vp:          cardVP,
-        tactic:      cardTactic,
-        resources:   resources,          // e.g. ['mechanical parts', 'spare parts']
-        actions:     actions,            // e.g. ['salvage', 'control', 'sabotage']
-        test_line:   testLine,           // e.g. 'Test: Quality (-1 die)'
-        success:     successLine,        // e.g. 'Extract 1 crystal'
-        failure:     failureLine,        // e.g. 'Take 2 damage'
-        faction_win_type:  factionWinObj ? (factionWinObj.type || null) : null,
-        faction_win_vp:    factionWinObj ? (factionWinObj.vp   || null) : null
-      };
-    }
-
     // ── selectPlotFamily — score-based selection using 190_plot_engine_schema.json ─
     //
     // Scoring:
@@ -872,115 +631,6 @@ window.CC_APP = {
     //
     // Falls back to randomChoice if schema is unavailable.
     //
-    function selectPlotFamily(families, selectedFactions, locProfile, dangerRating) {
-      if (!families || families.length === 0) return { id: 'claim_and_hold', name: 'Claim and Hold', description: 'Control territory' };
-
-      // Canonical motivation → resource/vector keyword mapping (from 190_plot_engine_schema.json)
-      var MOTIVATION_KEYWORDS = {
-        monster_rangers: ['survival', 'belief', 'occult', 'preserve', 'purify', 'escort'],
-        liberty_corps:   ['control', 'supplies_tools', 'riches', 'territory', 'occupation', 'claim'],
-        monsterology:    ['occult', 'riches', 'extraction', 'heist', 'study', 'capture'],
-        shine_riders:    ['riches', 'supplies_tools', 'heist', 'extraction', 'ambush', 'sabotage'],
-        crow_queen:      ['belief', 'occult', 'claim', 'ritual', 'mystical', 'siege'],
-        monsters:        ['survival', 'territory', 'siege', 'standoff', 'disaster']
-      };
-
-      // Schema resource type → plot family primary_resources overlap mapping
-      var RESOURCE_FAMILY_BIAS = {
-        riches:         ['ambush_derailment', 'extraction_heist', 'sabotage_strike'],
-        supplies_tools: ['ambush_derailment', 'escort_run', 'sabotage_strike'],
-        survival:       ['disaster_retreat', 'escort_run', 'siege_standoff'],
-        occult:         ['claim_and_hold', 'extraction_heist', 'siege_standoff'],
-        belief:         ['claim_and_hold', 'siege_standoff', 'sabotage_strike']
-      };
-
-      // Location archetype → inciting pressure affinity
-      var ARCHETYPE_PRESSURE_BIAS = {
-        town:            ['power_vacuum', 'broken_agreement', 'territorial_dispute'],
-        outpost:         ['territorial_dispute', 'failed_extraction', 'survival_shortage'],
-        wilderness:      ['monster_action', 'environmental_rupture', 'forgotten_boundary_crossed'],
-        industrial:      ['infrastructure_failure', 'human_overreach', 'retaliation'],
-        sacred:          ['ritual_misuse', 'mystical_claim', 'monster_action'],
-        crossroads:      ['power_vacuum', 'broken_agreement', 'ambush'],
-        canyon:          ['environmental_rupture', 'monster_action', 'territorial_dispute']
-      };
-
-      // Inciting pressure → plot family affinity
-      var PRESSURE_FAMILY_BIAS = {
-        monster_action:             ['ambush_derailment', 'siege_standoff', 'disaster_retreat'],
-        human_overreach:            ['extraction_heist', 'sabotage_strike', 'ambush_derailment'],
-        infrastructure_failure:     ['ambush_derailment', 'disaster_retreat', 'escort_run'],
-        power_vacuum:               ['claim_and_hold', 'siege_standoff', 'sabotage_strike'],
-        environmental_rupture:      ['disaster_retreat', 'siege_standoff', 'claim_and_hold'],
-        ritual_misuse:              ['extraction_heist', 'claim_and_hold', 'siege_standoff'],
-        territorial_dispute:        ['claim_and_hold', 'siege_standoff', 'sabotage_strike'],
-        failed_extraction:          ['extraction_heist', 'ambush_derailment', 'disaster_retreat'],
-        broken_agreement:           ['ambush_derailment', 'sabotage_strike', 'siege_standoff'],
-        survival_shortage:          ['escort_run', 'disaster_retreat', 'claim_and_hold']
-      };
-
-      var scores = {};
-      families.forEach(function(fam) { scores[fam.id] = 0; });
-
-      // Score from faction motivations
-      selectedFactions.forEach(function(faction) {
-        var keywords = MOTIVATION_KEYWORDS[faction.id] || [];
-        families.forEach(function(fam) {
-          keywords.forEach(function(kw) {
-            if (fam.id && fam.id.indexOf(kw) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 2;
-            if (fam.primary_resources && fam.primary_resources.indexOf(kw) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 3;
-            if (fam.emphasized_vectors && fam.emphasized_vectors.indexOf(kw) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 1;
-          });
-          // Resource-family bias from schema
-          keywords.forEach(function(kw) {
-            var biasedFams = RESOURCE_FAMILY_BIAS[kw] || [];
-            if (biasedFams.indexOf(fam.id) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 2;
-          });
-        });
-      });
-
-      // Score from location archetype → inciting pressure → plot family
-      var arch = (locProfile && locProfile.archetype) ? locProfile.archetype.toLowerCase() : 'canyon';
-      var archKey = null;
-      Object.keys(ARCHETYPE_PRESSURE_BIAS).forEach(function(k) {
-        if (arch.indexOf(k) >= 0) archKey = k;
-      });
-      if (archKey) {
-        var pressures = ARCHETYPE_PRESSURE_BIAS[archKey];
-        pressures.forEach(function(pressure) {
-          var biasedFams = PRESSURE_FAMILY_BIAS[pressure] || [];
-          biasedFams.forEach(function(famId) {
-            scores[famId] = (scores[famId] || 0) + 2;
-          });
-        });
-      }
-
-      // Danger bonus: high-danger favours escalation-heavy families
-      if (dangerRating >= 4) {
-        families.forEach(function(fam) {
-          if (fam.escalation_bias && fam.escalation_bias.length >= 3) {
-            scores[fam.id] = (scores[fam.id] || 0) + 2;
-          }
-        });
-      }
-
-      // Add mild random noise so identical setups don't always pick same family
-      families.forEach(function(fam) {
-        scores[fam.id] = (scores[fam.id] || 0) + (Math.random() * 2);
-      });
-
-      // Pick highest scoring family
-      var best = families[0];
-      var bestScore = -Infinity;
-      families.forEach(function(fam) {
-        var s = scores[fam.id] || 0;
-        if (s > bestScore) { bestScore = s; best = fam; }
-      });
-
-      console.log('📊 Plot family scores:', scores, '→ picked:', best.id, '(score='+bestScore.toFixed(1)+')');
-      return best;
-    }
-
     // ── matchVaultScenario — scores pre-written vault scenarios against setup ──
     //
     // SCORING WEIGHTS:
@@ -994,281 +644,13 @@ window.CC_APP = {
     // THRESHOLD: 14 — requires faction + danger match + meaningful tag overlap.
     // A score of 5 (faction only) or 4 (danger only) won't trigger vault.
     //
-    function matchVaultScenario(plotFamily, locProfile, contextTags,
-                                selectedFactions = [], selectedDanger = 3,
-                                locationType = '', selectedLocation = '') {
-
-      if (!gameData.getScenarioVault().scenarios || !gameData.getScenarioVault().scenarios.length) return { scenario: null, score: 0 };
-
-      // Build tag context for generic overlap scoring
-      const allTags = [
-        ...(plotFamily.tags || []),
-        ...(locProfile.tags || []),
-        ...contextTags,
-        locProfile.archetype
-      ].filter(Boolean).map(t => t.toLowerCase());
-
-      // Normalised faction IDs from the current selection
-      const factionIds = selectedFactions.map(f =>
-        (f.id || f.name || '').toLowerCase().replace(/\s+/g, '_')
-      );
-
-      // Alias map so both "monster rangers" and "monster_rangers" match vault entries
-      const FACTION_NAME_MAP = {
-        'monster_rangers': ['monster rangers', 'monster_rangers'],
-        'liberty_corps':   ['liberty corps',   'liberty_corps'],
-        'monsterology':    ['monsterologists',  'monsterology'],
-        'shine_riders':    ['shine riders',     'shine_riders'],
-        'crow_queen':      ['crow queen',       'crow_queen'],
-        'monsters':        ['monsters']
-      };
-
-      let best      = null;
-      let bestScore = -Infinity;
-
-      for (const s of gameData.getScenarioVault().scenarios) {
-        let score = 0;
-
-        // ── FACTION MATCH (highest weight) ──────────────────────────────────
-        const spotlightRaw = (s.spotlight_factions || []).map(f => f.toLowerCase());
-        factionIds.forEach(fid => {
-          const aliases = FACTION_NAME_MAP[fid] || [fid];
-          if (aliases.some(alias => spotlightRaw.some(sp => sp.includes(alias)))) {
-            score += 5;
-          }
-        });
-
-        // ── DANGER RATING MATCH ─────────────────────────────────────────────
-        const scenarioDanger = s.danger_rating || 3;
-        const dangerDiff = Math.abs(scenarioDanger - selectedDanger);
-        if (dangerDiff === 0)      score += 4;
-        else if (dangerDiff === 1) score += 2;
-        else if (dangerDiff > 2)   score -= 10;
-
-        // ── LOCATION TYPE MATCH ─────────────────────────────────────────────
-        const allowedTypes = (s.location_rules?.allowed_location_types || []).map(t => t.toLowerCase());
-        if (allowedTypes.length > 0 && locProfile.archetype) {
-          const arch = locProfile.archetype.toLowerCase();
-          if (allowedTypes.some(t => arch.includes(t) || t.includes(arch))) {
-            score += 3;
-          }
-        }
-
-        // ── NAMED LOCATION MATCH ────────────────────────────────────────────
-        if (selectedLocation && locationType === 'named') {
-          const locName = gameData.getLocations().locations
-            ?.find(l => l.id === selectedLocation)?.name?.toLowerCase() || '';
-          const allowedNamed = (s.location_rules?.allowed_named_locations || [])
-            .map(n => n.toLowerCase());
-          if (allowedNamed.length > 0 && allowedNamed.some(n => locName.includes(n) || n.includes(locName))) {
-            score += 3;
-          }
-        }
-
-        // ── EXCLUDED LOCATION TYPES (hard block) ────────────────────────────
-        const excludedTypes = (s.location_rules?.excluded_location_types || []).map(t => t.toLowerCase());
-        if (excludedTypes.length > 0 && locProfile.archetype) {
-          const arch = locProfile.archetype.toLowerCase();
-          if (excludedTypes.some(t => arch.includes(t) || t.includes(arch))) {
-            score -= 10;
-          }
-        }
-
-        // ── TAG OVERLAP (generic, lowest weight) ────────────────────────────
-        const sTags = (s.tags || []).map(t => t.toLowerCase());
-        score += sTags.filter(t => allTags.includes(t)).length * 2;
-
-        if (score > bestScore) {
-          best      = s;
-          bestScore = score;
-        }
-      }
-
-      console.log(`📚 Vault best match: "${best?.name}" (score=${bestScore})`);
-      return { scenario: bestScore >= 14 ? best : null, score: bestScore };
-    }
-
     // ── buildResourceSummary — intentionally empty; resources drive logic, not display ─
-    function buildResourceSummary(resources) {
-      return ''; // Intentionally hidden — resources drive logic, not display
-    }
-
     // ── generateNarrativeHook — scenario flavour opener, woven from objectives + location
-    function generateNarrativeHook(plotFamily, location, objectives) {
-      const locName  = location.name;
-      const atmo     = location.atmosphere || '';
-      const desc     = location.description ? location.description.split('.')[0] : '';
-
-      // Use the actual plot family description, but replace any generic "asset" language
-      // with the real objective name if a cargo vehicle is in play.
-      let plotDesc = (plotFamily.description || '').replace(/\.$/, '');
-
-      const cargoObj = objectives?.find(o => o.type === 'cargo_vehicle');
-      if (cargoObj) {
-        const cargoName = cargoObj.name; // "Cargo Tiger Truck" or "Cargo Vehicle"
-        // Replace any version of "a fragile or vital asset" / "an asset" / "the asset"
-        plotDesc = plotDesc.replace(
-          /a fragile or vital asset|an asset|the asset|a fragile asset|a vital asset/gi,
-          `the ${cargoName}`
-        );
-      }
-
-      const thyrObj     = objectives?.find(o => o.type === 'thyr_cache' || o.type === 'ritual_site');
-      const supplyObj   = objectives?.find(o => o.type === 'stored_supplies' || o.type === 'scattered_crates');
-      const ritualObj   = objectives?.find(o => o.type === 'ritual_components' || o.type === 'ritual_circle');
-
-      // Build a one-sentence situation summary keyed to the most important objective type.
-      let situationLine = '';
-      if (cargoObj) {
-        situationLine = `The ${cargoObj.name} needs to cross ${locName} intact — that's already the hard part.`;
-      } else if (thyrObj) {
-        situationLine = `The Thyr at ${locName} is active. That means someone already knows about it.`;
-      } else if (ritualObj) {
-        situationLine = `${locName} is the only place the ritual can be completed. Everyone is racing to get there.`;
-      } else if (supplyObj) {
-        situationLine = `The caches at ${locName} are the kind of find that changes who survives the season.`;
-      }
-
-      // Pick a voiced hook from the appropriate pool.
-      const pools = [
-        `Nobody who left ${locName} told the same story. ${plotDesc}. The only way to know is to go in.`,
-        `Three factions picked up the same rumour about ${locName} within 48 hours. That's not coincidence. ${plotDesc}.`,
-        `${locName} was supposed to be a clean job. The Canyon had other ideas. ${plotDesc}.`,
-        `${desc ? desc + '. ' : ''}${plotDesc}. The factions arrive at the same time. That's the problem.`,
-        `The window at ${locName} is closing. ${plotDesc}. Whoever moves first may be the only one who leaves with anything.`,
-        `Something at ${locName} drew too much attention. ${plotDesc}. Now everyone is reacting and nobody is thinking.`,
-        `${plotDesc} at ${locName}. The smart money said don't get involved. The smart money wasn't enough.`,
-        `The last group through ${locName} didn't come back whole. ${plotDesc}. That didn't stop the next group.`,
-        `The Canyon doesn't warn you. At ${locName}, it just changes the terms. ${plotDesc}.`,
-        `${locName}. ${atmo ? '"' + atmo + '"' : 'Whatever it was, it isn\'t that anymore.'}. ${plotDesc}.`,
-        `${plotDesc}. ${locName} is where it ends — or where it gets worse.`,
-        `Word reached ${locName} before anyone expected. ${plotDesc}. By the time boots hit the ground, it was already complicated.`,
-      ];
-
-      // Specific situation line goes first; a canyon-voice hook follows as the second sentence.
-      if (situationLine) {
-        return situationLine + ' ' + randomChoice(pools.slice(6)); // use a canyon-voice hook as the second sentence
-      }
-
-      // Fall back to a plot-family hook if available, then a generic pool pick.
-      if (plotFamily?.hook)   return plotFamily.hook;
-      if (plotFamily?.flavor) return `${plotFamily.flavor} ${plotDesc} at ${locName}.`;
-
-      return randomChoice(pools);
-    }
-
     // ── generateScenarioNameFromTags — title builder; location name appears exactly once ─
-    function generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
-      contextTags = contextTags || [];
-      const locName = (location || { name: 'Unknown' }).name;
-
-      let prefix = 'Bloody';
-      let suffix = 'Reckoning';
-
-      const _sn = gameData.getScenarioNames();
-      if (_sn && Object.keys(_sn).length) {
-        const prefixes = _sn.prefixes || [];
-        const suffixes = _sn.suffixes || [];
-
-        const taggedPrefixes = prefixes.filter(p =>
-          Array.isArray(p.tags) && p.tags.some(t => contextTags.includes(t))
-        );
-        prefix = taggedPrefixes.length
-          ? (randomChoice(taggedPrefixes)?.text || randomChoice(prefixes)?.text || 'Bloody')
-          : (randomChoice(prefixes)?.text || 'Bloody');
-
-        suffix = randomChoice(suffixes)?.text || 'Reckoning';
-      } else {
-        const fallbackPrefixes = ['Bloody', 'Burning', 'Broken', 'Cursed', 'Forsaken', 'Iron'];
-        const fallbackSuffixes = ['Reckoning', 'Standoff', 'Collapse', 'Ruin', 'Harvest', 'Judgment'];
-        prefix = randomChoice(fallbackPrefixes);
-        suffix = randomChoice(fallbackSuffixes);
-      }
-
-      // Several templates ensure the location name reads naturally in all cases.
-      const templates = [
-        () => `${prefix} at ${locName}`,                     // "Black Night at Fool Boot"
-        () => `${prefix} at ${locName} — ${suffix}`,         // "Black Night at Fool Boot — Reckoning"
-        () => `${prefix} ${locName} — ${suffix}`,            // "Bloody Lost Yots — Reckoning" (classic)
-        () => `${locName} — ${suffix}`,                      // "Lost Yots — Shadow and Flame"
-        () => `${suffix} at ${locName}`,                     // "Reckoning at Lost Yots"
-        () => `The ${suffix} of ${locName}`,                 // "The Reckoning of Lost Yots"
-      ];
-
-      // Adjective prefixes (Bloody, Burning…) favour the classic "Adjective Location — Noun" form.
-      const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
-      const pick = isAdjectivePrefix
-        ? randomChoice([templates[1], templates[2], templates[2], templates[3]])   // adjective: prefer classic
-        : randomChoice([templates[0], templates[0], templates[1], templates[4]]);  // noun/phrase: prefer "at"
-
-      return pick();
-    }
-
     // ── generateMonsterPressure — builds monster roster for this scenario ────────────
     //    Stored in the save file for the upcoming Turn Counter app.
     //    Nothing from this section is shown in the scenario output.
-    function generateMonsterPressure(plotFamily, dangerRating, locProfile) {
-      const enabled = Math.random() > 0.3;
-      if (!enabled || !gameData.getMonsterFaction().units) return { enabled: false };
-
-      const budgetPercent    = 0.2 + (dangerRating / 6) * 0.2;
-      const monsterBudget    = Math.floor(state.pointValue * budgetPercent);
-      const selectedMonsters = [];
-      let remainingBudget    = monsterBudget;
-      let seedBased          = false;
-
-      if (locProfile?.monster_seeds?.length > 0) {
-        let attempts = 0;
-        while (remainingBudget > 100 && attempts < 10) {
-          const seed = randomChoice(locProfile.monster_seeds);
-          const unit = (gameData.getMonsterFaction().units || []).find(u => u.name === seed.name);
-          if (!unit || unit.cost > remainingBudget) { attempts++; continue; }
-          selectedMonsters.push(unit);
-          remainingBudget -= unit.cost;
-          seedBased = true;
-          attempts++;
-        }
-      }
-
-      if (selectedMonsters.length === 0 && gameData.getMonsterFaction().units) {
-        const available = gameData.getMonsterFaction().units.filter(u => u.cost <= monsterBudget);
-        let budget = monsterBudget;
-        while (budget > 0 && available.length > 0) {
-          const valid   = available.filter(m => m.cost <= budget);
-          if (valid.length === 0) break;
-          const monster = randomChoice(valid);
-          selectedMonsters.push(monster);
-          budget -= monster.cost;
-        }
-      }
-
-      const escalationNote = plotFamily.escalation_bias
-        ? `Escalation: ${randomChoice(plotFamily.escalation_bias).replace(/_/g, ' ')}`
-        : null;
-
-      return {
-        enabled:    true,
-        monsters:   selectedMonsters,
-        seed_based: seedBased,
-        notes:      escalationNote
-      };
-    }
-
     // ── generateAftermath — one sentence describing what changes after the game ─────
-    function generateAftermath(plotFamily) {
-      const options = plotFamily.aftermath_bias || ['location_state_change', 'resource_depletion_or_corruption'];
-      const type    = randomChoice(options);
-      const descriptions = {
-        location_state_change:            'This location will be permanently altered by the outcome.',
-        resource_depletion_or_corruption: 'Resources here will be depleted or corrupted.',
-        new_landmark_created:             'A new landmark will mark what happened here.',
-        faction_ownership:                'The victor will claim lasting control.',
-        mystical_claim:                   'Mystical forces will remember this event.',
-        monster_bias_shift:               'Monster behaviour in this region will change.'
-      };
-      return descriptions[type] || 'The Canyon will remember what happened here.';
-    }
-
     // ── Objective engine ─────────────────────────────────────────────────────────────
     //    RESOURCE_OBJECTIVE_AFFINITY maps location resources to likely objective types.
     //    generateObjectives scores all objective types, gates rail/supply/ritual as needed,
@@ -1306,392 +688,6 @@ window.CC_APP = {
       'evacuation_point'
     ];
 
-    function makeObjectiveName(type, locProfile) {
-      const r        = locProfile?.effectiveResources || {};
-      const features = locProfile?.features || [];
-
-      if (type === 'cargo_vehicle') {
-        return getCargoVehicleName();
-      }
-
-      if (type === 'fouled_resource') {
-        if ((r.water_foul || 0) >= 1 && (r.rotgut || 0) >= 1)
-          return 'Fouled Water & Rotgut Cache';
-        if ((r.water_foul || 0) >= 1)
-          return 'Tainted Water Supply';
-        if ((r.rotgut || 0) >= 1)
-          return 'Spoiled Rotgut Barrels';
-        if ((r.food_foul || 0) >= 1)
-          return 'Contaminated Ration Store';
-        return 'Fouled Resource Cache';
-      }
-
-      if (type === 'unstable_structure') {
-        const arch = locProfile?.archetype || '';
-        if (features.includes('GlassShards') || features.includes('KnifeRocks'))
-          return 'Glass-Wall Overhang';
-        if (features.includes('BrakeScars'))
-          return 'Collapsed Brake House';
-        if (features.includes('RailTerminus') || features.includes('RailYard'))
-          return 'Failing Rail Depot';
-        if (features.includes('RailGrade') || features.includes('RailSpur'))
-          return 'Failing Trestle Section';
-        if (features.includes('Trestle'))
-          return 'Crumbling Canyon Trestle';
-        if (features.includes('RockfallChutes'))
-          return 'Rockfall Chute';
-        if (features.includes('NarrowPass'))
-          return 'Crumbling Canyon Shelf';
-        if (features.includes('OldFort') || features.includes('Fort'))
-          return 'Collapsed Fort Wall';
-        if (features.includes('WaterTower'))
-          return 'Leaning Water Tower';
-        if (features.includes('GranarySilo') || features.includes('Silo'))
-          return 'Cracked Grain Silo';
-        if (features.includes('Ruins'))
-          return randomChoice(['Crumbling Ruin', 'Unstable Ruin Wall', 'Collapsed Settlement Remnant']);
-        if (features.includes('Jailhouse'))
-          return 'Condemned Jailhouse';
-        if (features.includes('CompanyOffice'))
-          return 'Condemned Company Office';
-        if (features.includes('Hotel'))
-          return 'Condemned Hotel';
-        if (features.includes('Saloon') || features.includes('BrewHouse'))
-          return 'Collapsing Saloon';
-        if (features.includes('Church'))
-          return 'Crumbling Canyon Church';
-        if (features.includes('Barn') || features.includes('Stable') || features.includes('Corral'))
-          return 'Failing Livestock Barn';
-        if (features.includes('Mineshaft') || features.includes('Mine'))
-          return 'Collapsing Mineshaft Entrance';
-        if (arch === 'arroyo')          return 'Eroded Canyon Wall';
-        if (arch === 'rail_grade'
-         || arch === 'rail_terminus'
-         || arch === 'rail_depot')      return 'Failing Trestle';
-        if (arch === 'boomtown')
-          return randomChoice(['Condemned Boomtown Building', 'Collapsing Storefront', 'Leaning Boomtown Tower']);
-        if (arch === 'ruins')
-          return randomChoice(['Crumbling Ruin', 'Collapsed Settlement Wall', 'Unstable Stone Tower']);
-        if (arch === 'outpost')         return 'Condemned Outpost Watchtower';
-        if (arch === 'settlement')      return 'Failing Settlement Hall';
-        if (arch === 'mine')            return 'Collapsing Mineshaft Entrance';
-        if (arch === 'wilderness')      return 'Unstable Rocky Overhang';
-        if (arch === 'canyon')          return 'Eroded Canyon Ledge';
-        if (arch === 'frontier')        return 'Condemned Frontier Shack';
-        return randomChoice([
-          'Condemned Building',
-          'Failing Outpost Wall',
-          'Crumbling Stone Remnant',
-          'Unstable Frontier Structure'
-        ]);
-      }
-
-      // hasRangers must be declared here so the names table below can reference it.
-      const hasRangers = state.factions.some(f => f.id === 'monster_rangers');
-
-      const names = {
-        wrecked_engine:     'Wrecked Engine',
-        scattered_crates:   'Scattered Supply Crates',
-        derailed_cars:      'Derailed Cars',
-        pack_animals:       'Pack Animals',
-        ritual_components:  'Ritual Components',
-        ritual_site:        hasRangers ? 'Monster Sanctuary Site' : 'Ritual Site',
-        land_marker:        (() => {
-          const arch = locProfile?.archetype || '';
-          const feats = features;
-          if (feats.includes('RailTerminus'))  return 'Rail Terminus Boundary Post';
-          if (feats.includes('RailGrade') || feats.includes('RailSpur')) return 'Rail Right-of-Way Stake';
-          if (feats.includes('BrakeScars'))    return 'Grade Survey Stake';
-          if (feats.includes('AuctionYard'))   return 'Auction Yard Deed Notice';
-          if (feats.includes('GunsmithRow'))   return 'Street Boundary Sign';
-          if (feats.includes('Jailhouse'))     return 'Jurisdiction Notice Post';
-          if (feats.includes('Ruins') || feats.includes('OldFort')) return 'Salvage Claim Stake';
-          if (feats.includes('Hotel'))         return 'Deed Notice Board';
-          if (feats.includes('CompanyOffice')) return 'Company Land Claim Notice';
-          if (feats.includes('Saloon'))        return 'Block Claim Sign';
-          if (feats.includes('Church'))        return 'Parish Boundary Marker';
-          if (feats.includes('Mineshaft') || feats.includes('Mine')) return 'Mine Claim Stake';
-          if (feats.includes('Stockyard'))     return 'Stockyard Brand Post';
-          if (feats.includes('WaterTower'))    return 'Water Rights Notice';
-          if (feats.includes('Corral') || feats.includes('Barn')) return 'Grazing Rights Post';
-          if (arch === 'boomtown')   return randomChoice(['Town Sign', 'Block Claim Board', 'Boomtown Deed Post']);
-          if (arch === 'arroyo')     return randomChoice(['Canyon Survey Stake', 'Trail Claim Cairn', 'Canyon Boundary Post']);
-          if (arch === 'rail_grade') return 'Rail Right-of-Way Stake';
-          if (arch === 'rail_terminus' || arch === 'rail_depot') return 'Station Boundary Post';
-          if (arch === 'ruins')      return randomChoice(['Salvage Claim Stake', 'Ruins Survey Post', 'Rubble Claim Marker']);
-          if (arch === 'mine')       return randomChoice(['Mine Claim Stake', 'Assay Notice Post', 'Mineral Rights Stake']);
-          if (arch === 'settlement') return randomChoice(['Town Sign', 'Settlement Charter Post', 'Boundary Marker']);
-          if (arch === 'outpost')    return 'Outpost Boundary Sign';
-          if (arch === 'wilderness') return randomChoice(['Survey Stake', 'Pioneer Claim Post', 'Boundary Cairn']);
-          if (arch === 'canyon')     return randomChoice(['Canyon Survey Post', 'Trail Claim Cairn', 'Boundary Stone']);
-          if (arch === 'frontier')   return randomChoice(['Frontier Claim Stake', 'Pioneer Survey Post', 'Homestead Sign']);
-          return randomChoice(['Claim Stake', 'Survey Post', 'Boundary Sign', 'Deed Notice Board']);
-        })(),
-        command_structure:  (() => {
-          const arch = locProfile?.archetype || '';
-          const feats = features;
-          if (feats.includes('Fort') || feats.includes('OldFort')) return 'Command Fortress';
-          if (feats.includes('Hotel'))       return 'Command Post (Hotel)';
-          if (feats.includes('CompanyOffice')) return 'Command Office';
-          if (feats.includes('Jailhouse'))   return 'Command Post (Jailhouse)';
-          if (feats.includes('Ruins'))       return 'Ruined Command Post';
-          if (arch === 'wilderness' || arch === 'arroyo') return 'Field Command Tent';
-          if (arch === 'boomtown')   return 'Command Tower';
-          if (arch === 'rail_grade') return 'Rail Command Car';
-          return randomChoice(['Command Tower', 'Command Tent', 'Field Command Post']);
-        })(),
-        thyr_cache:         'Thyr Crystal Cache',
-        artifact:           'Ancient Artifact',
-        captive_entity:     hasRangers ? 'Injured Monster Friend' : 'Captive Entity',
-        fortified_position: 'Fortified Position',
-        barricades:         'Barricades',
-        stored_supplies:    hasRangers ? 'Crate of VitaGood' : 'Stored Supplies',
-        ritual_circle:      hasRangers ? 'Purification Circle' : 'Ritual Circle',
-        tainted_ground:     'Tainted Ground',
-        sacrificial_focus:  'Sacrificial Focus',
-        collapsing_route:   'Collapsing Route',
-        evacuation_point:   'Evacuation Point'
-      };
-      // Smarter fallback — use location context if available
-      if (names[type]) return names[type];
-      const locName = (locProfile && locProfile.name) ? locProfile.name : '';
-      const fallbacks = [
-        'Disputed Ground', 'The Flashpoint', 'The Prize',
-        'Contested Site', 'The Crossing', 'Key Position'
-      ];
-      // Pick consistently based on type string hash so same type = same label
-      const hash = type ? type.split('').reduce(function(a,c){ return a + c.charCodeAt(0); }, 0) : 0;
-      return fallbacks[hash % fallbacks.length];
-    }
-
-    function makeObjectiveDescription(type, locProfile) {
-      const r = locProfile?.effectiveResources || {};
-      const cargoName = getCargoVehicleName();
-
-      const descriptions = {
-        wrecked_engine:     'Salvage mechanical parts or prevent others from claiming them. Each salvage increases Coffin Cough risk.',
-        scattered_crates:   'Collect and extract scattered food, water, and supplies before others claim them.',
-        derailed_cars:      "Search the wreckage for valuable cargo before it's lost or claimed.",
-          cargo_vehicle:      `Escort the ${cargoName} safely across the board. The sweet scent may attract monsters.`,
-        pack_animals:       'Control or escort the animals. They may panic under fire.',
-        ritual_components:  'Gather mystical components scattered across the battlefield.',
-        ritual_site:        'Control this location to complete rituals or disrupt enemy mysticism.',
-        land_marker:        'Claim and hold these marked positions. Whoever controls them at game end controls the ground.',
-        command_structure:  'Control this position to coordinate forces and establish leadership.',
-        thyr_cache:         'Extract or corrupt the glowing Thyr crystals. Handling Thyr is always dangerous.',
-        artifact:           'Recover the ancient artifact. Its true nature may be hidden.',
-        captive_entity:     'Free, capture, or control the entity. May not be what it appears.',
-        fortified_position: 'Hold this defensible position against all comers.',
-        barricades:         'Control the chokepoint to restrict enemy movement.',
-        stored_supplies:    'Secure stockpiled resources before they are depleted.',
-        ritual_circle:      'Control the circle to empower rituals or prevent enemy mysticism.',
-        tainted_ground:     'Interact at your own risk. Corruption spreads.',
-        sacrificial_focus:  'Control or destroy this dark altar.',
-        collapsing_route:   'The passage is deteriorating. Hold it open or let it collapse to trap the enemy.',
-        fouled_resource:    'Contaminated supplies that are worse than nothing — unless you know what to do with them.',
-        unstable_structure: 'The building will not survive the battle. Get what you need from it before it comes down.',
-        evacuation_point:   'Reach this location to escape the escalating danger.'
-      };
-
-      let base = descriptions[type] || 'Control this objective to score victory points.';
-
-      if (locProfile) {
-        if (type === 'stored_supplies'  && (r.supplies   || 0) >= 4)
-          base = `These caches hold enough to shift the balance — food, medicine, kit. ${base}`;
-        if (type === 'scattered_crates' && (r.food_good  || 0) >= 3)
-          base = `The crates are scattered but what's inside is worth the risk. ${base}`;
-        if (type === 'thyr_cache'       && (r.thyr       || 0) >= 4)
-          base = `The crystals are warm to the touch and getting warmer. ${base}`;
-        if (type === 'fouled_resource'  && (r.water_foul || 0) >= 2)
-          base = `The water here is wrong. Something got in. ${base}`;
-        if (type === 'fouled_resource'  && (r.rotgut     || 0) >= 2)
-          base = `The barrels are marked safe but the smell says otherwise. ${base}`;
-      }
-      return base;
-    }
-
-    function makeObjectiveSpecial(type, locProfile) {
-      // 40% chance of a "Guarded" special — names a real monster from location seeds or faction data.
-      if (Math.random() < 0.4) {
-        const seeds = locProfile?.monster_seeds || [];
-        if (seeds.length > 0) {
-          const seed = randomChoice(seeds);
-          return `Guarded — ${seed.name} nearby`;
-        }
-        if (gameData.getMonsterFaction().units && gameData.getMonsterFaction().units.length) {
-          const genericMonster = randomChoice(gameData.getMonsterFaction().units);
-          if (genericMonster) return `Guarded — ${genericMonster.name} nearby`;
-        }
-      }
-
-      const specials = [
-        'Unstable — may collapse if damaged',
-        'Tainted — triggers morale tests',
-        'Valuable — worth extra VP',
-        'Corrupted — alters nearby terrain',
-        'Hot — every faction already knows about it'
-      ];
-      return randomChoice(specials);
-    }
-
-    function calcObjectiveVP(type, locProfile) {
-      const r = locProfile?.effectiveResources || {};
-      const table = {
-        stored_supplies:    Math.max(2, Math.ceil((r.supplies    || 2) / 2)),
-        scattered_crates:   Math.max(2, Math.ceil(((r.food_good || 1) + (r.supplies || 1)) / 3)),
-        thyr_cache:         Math.max(3, r.thyr    || 3),
-        ritual_site:        Math.max(3, Math.ceil((r.thyr || 2) * 0.8)),
-        ritual_circle:      Math.max(3, Math.ceil((r.thyr || 2) * 0.8)),
-        land_marker:        Math.max(2, Math.ceil((r.silver || 2) / 2)),
-        wrecked_engine:     Math.max(2, Math.ceil((r.spare_parts || 2) / 2)),
-        pack_animals:       Math.max(2, Math.ceil((r.livestock || 2) / 2)),
-        artifact:           4,
-        sacrificial_focus:  4,
-        captive_entity:     4,
-        ritual_components:  3,
-        fortified_position: 3,
-        command_structure:  3,
-        cargo_vehicle:      3,
-        collapsing_route:   3,
-        fouled_resource:    2,
-        tainted_ground:     3,
-        barricades:         2,
-        unstable_structure: 2,
-        evacuation_point:   3,
-        derailed_cars:      2
-      };
-      return table[type] || 2;
-    }
-
-    function generateObjectives(plotFamily, locProfile) {
-      const scores = {};
-      ALL_OBJECTIVE_TYPES.forEach(t => scores[t] = 0);
-
-      // Thyr Cache gets a baseline score so it appears in most scenarios;
-      // the canyon always has Thyr somewhere.
-      scores['thyr_cache'] += 2;
-
-      (plotFamily.default_objectives || []).forEach(t => {
-        if (scores[t] !== undefined) scores[t] += 3;
-      });
-
-      if (locProfile?.effectiveResources) {
-        const r = locProfile.effectiveResources;
-        for (const [key, val] of Object.entries(r)) {
-          if (typeof val === 'number' && val >= 1) {
-            // Weight: high-value resources (3+) get doubled contribution.
-            const weight = val >= 3 ? val * 2 : val >= 2 ? val + 2 : val + 1;
-            (RESOURCE_OBJECTIVE_AFFINITY[key] || []).forEach(t => {
-              if (scores[t] !== undefined) scores[t] += weight;
-            });
-          }
-        }
-
-        if ((r.water_clean || 0) < 1 && (r.water_foul || 0) < 1 && (r.rotgut || 0) < 1 && (r.food_foul || 0) < 1)
-          scores['fouled_resource'] = Math.max(0, scores['fouled_resource'] - 4);
-        if ((r.thyr || 0) < 1) {
-          scores['thyr_cache']    = Math.max(0, scores['thyr_cache']    - 2);
-          scores['ritual_circle'] = Math.max(0, scores['ritual_circle'] - 2);
-        }
-        if ((r.spare_parts || 0) < 2)
-          scores['wrecked_engine'] = Math.max(0, scores['wrecked_engine'] - 3);
-        if ((r.livestock || 0) < 2)
-          scores['pack_animals'] = 0;
-        if ((r.tzul_silver || 0) < 3)
-          scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 2);
-      }
-
-      // ---- RAIL GATE ----
-      // Rail objectives are gated: only score if the location has rail features or a rail archetype.
-      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'rail', 'Rail'];
-      const RAIL_ARCHETYPES = ['rail_grade', 'rail_terminus', 'rail_depot'];
-      const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
-                   || RAIL_ARCHETYPES.includes(locProfile?.archetype || '');
-      if (!hasRail) {
-        scores['wrecked_engine'] = 0;
-        scores['derailed_cars']  = 0;
-      }
-
-      const sorted = Object.entries(scores)
-        .filter(([, s]) => s > 0)
-        .sort((a, b) => b[1] - a[1]);
-
-      console.log('🎯 Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
-
-      const numObjectives = randomInt(2, 3);
-      const objectives    = [];
-      const used          = new Set();
-
-      const EXCLUSIVE_GROUPS = {
-        taint_group:   ['tainted_ground', 'fouled_resource'],
-        ritual_group:  ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'ritual_components'],
-        salvage_group: ['wrecked_engine', 'derailed_cars', 'unstable_structure'],
-        supply_group:  ['stored_supplies', 'scattered_crates']
-      };
-      const usedGroups = new Set();
-
-      function getGroup(type) {
-        for (const [grp, types] of Object.entries(EXCLUSIVE_GROUPS)) {
-          if (types.includes(type)) return grp;
-        }
-        return null;
-      }
-
-      for (const [type] of sorted) {
-        if (objectives.length >= numObjectives) break;
-        if (used.has(type)) continue;
-        const grp = getGroup(type);
-        if (grp && usedGroups.has(grp)) continue;
-        used.add(type);
-        if (grp) usedGroups.add(grp);
-        objectives.push({
-          name:        makeObjectiveName(type, locProfile),
-          description: makeObjectiveDescription(type, locProfile),
-          type,
-          vp_base:     calcObjectiveVP(type, locProfile),
-          special:     Math.random() < 0.2 ? makeObjectiveSpecial(type, locProfile) : null
-        });
-      }
-
-      if (objectives.length === 0) {
-        objectives.push({
-          name:        'Contested Ground',
-          description: 'Hold this position.',
-          type:        'land_marker',
-          vp_base:     3,
-          special:     null
-        });
-      }
-
-      return objectives;
-    }
-
-    function generateObjectivesFromVault(vaultScenario, locProfile) {
-      const objectives = [];
-      if (vaultScenario.objectives && Array.isArray(vaultScenario.objectives)) {
-        vaultScenario.objectives.forEach(vo => {
-          const type = vo.id || vo.type;
-          objectives.push({
-            name:        makeObjectiveName(type, locProfile),
-            description: vo.notes ? vo.notes[0] : makeObjectiveDescription(type, locProfile),
-            type,
-            vp_base:     3,
-            special:     vo.special ? vo.special.join(', ') : null
-          });
-        });
-      }
-      if (objectives.length < 2) {
-        objectives.push({
-          name:        makeObjectiveName('land_marker', locProfile),
-          description: 'Claim and hold these marked positions. Whoever controls them at game end controls the ground.',
-          type:        'land_marker',
-          vp_base:     2,
-          special:     null
-        });
-      }
-      return objectives;
-    }
-
     // ── Objective marker table — token counts, placement, and allowed interactions ───
     const OBJECTIVE_MARKER_TABLE = {
       wrecked_engine:     { count: '1',    placement: 'Center board',              token: 'Wreck token or large model',    interactions: ['SALVAGE', 'CONTROL', 'SABOTAGE'] },
@@ -1718,40 +714,6 @@ window.CC_APP = {
       evacuation_point:   { count: '1',    placement: 'Far table edge, center',    token: 'Exit marker',                   interactions: ['REACH', 'ESCAPE'] },
       fouled_resource:    { count: '2',    placement: 'Scatter near center',       token: 'Contaminated supply tokens',    interactions: ['CONTROL', 'PURGE', 'WEAPONIZE'] }
     };
-
-    function generateObjectiveMarkers(objectives, vaultScenario) {
-      const markers = [];
-      objectives.forEach(obj => {
-        let vaultObj = null;
-        if (vaultScenario?.objectives) {
-          vaultObj = vaultScenario.objectives.find(vo => vo.id === obj.type || vo.type === obj.type);
-        }
-        const defaults = OBJECTIVE_MARKER_TABLE[obj.type] || {
-          count:        '1',
-          placement:    'Board center',
-          token:        'Objective token',
-          interactions: []
-        };
-        // Cargo vehicle placement is faction-aware: Rangers get the escort-from-edge version.
-        let resolvedPlacement = defaults.placement;
-        if (obj.type === 'cargo_vehicle') {
-          const hasRangers = state.factions.some(f => f.id === 'monster_rangers');
-          resolvedPlacement = hasRangers
-            ? 'Monster Rangers deployment edge, center — must be escorted across the full board'
-            : 'One table edge, center — must be escorted to the opposite edge';
-        }
-        markers.push({
-          name:         obj.name,
-          type:         obj.type,
-          count:        vaultObj?.count       || defaults.count,
-          placement:    resolvedPlacement,
-          token:        defaults.token,
-          interactions: vaultObj?.interactions?.length ? vaultObj.interactions : defaults.interactions,
-          notes:        vaultObj?.notes ? vaultObj.notes[0] : null
-        });
-      });
-      return markers;
-    }
 
     // ── Victory condition tables ──────────────────────────────────────────────────
     //    FACTION_APPROACH   — verbs, VP style, tactic line, faction quote
@@ -1998,21 +960,6 @@ window.CC_APP = {
       'Sequence counts on this board.'
     ];
 
-    function generateObjectiveChain(objectives) {
-      if (objectives.length < 2) {
-        if (objectives.length === 1) objectives[0].role = 'primary';
-        return;
-      }
-      objectives[0].role = 'primary';
-      objectives[1].role = 'secondary';
-      const linkVerb  = randomChoice(CHAIN_LINK_VERBS);
-      const linkIntro = randomChoice(CHAIN_LINK_INTROS);
-      objectives[0].chain_link       = `Controlling ${objectives[0].name} ${linkVerb} ${objectives[1].name}.`;
-      objectives[0].chain_link_intro = linkIntro;
-      // Any third objective is standalone
-      if (objectives[2]) objectives[2].role = 'standalone';
-    }
-
     // ── Victory condition tables ──────────────────────────────────────────────────
     //    FACTION_APPROACH   — verbs, VP style, tactic line, faction quote
     //    FACTION_OBJECTIVE_FLAVOR — per-faction flavor text keyed by objective type
@@ -2023,78 +970,9 @@ window.CC_APP = {
     //   rich per-faction card format that renderVictoryConditions() expects.
     //   Factions present in the game but NOT listed in the vault get cards generated
     //   from the FACTION_CONFLICT_TABLE so no faction is left card-less.
-    function buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily) {
-      var conditions = {};
-      var vaultVC    = vaultScenario.victory_conditions || {};
-
-      state.factions.forEach(function(faction) {
-        var approach    = FACTION_APPROACH[faction.id]    || FACTION_APPROACH.monsters;
-        var motivesMap  = FACTION_MOTIVES[faction.id]     || FACTION_MOTIVES.monsters;
-        var conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
-        var primaryType = objectives[0] ? objectives[0].type : 'default';
-        var motive      = motivesMap[primaryType] || motivesMap['default'] || approach.quote;
-
-        // Check if vault explicitly lists this faction
-        var vaultEntry = vaultVC[faction.id] || vaultVC[faction.id.replace(/_/g, ' ')];
-
-        var pickedObjectives = [];
-
-        if (vaultEntry) {
-          // Vault has specific text for this faction — use it verbatim as the primary desc
-          var primaryCard = buildRichObjectiveCard(faction.id, objectives[0] || { type: primaryType, name: primaryType }, locProfile, state.dangerRating, 0);
-          primaryCard.desc = typeof vaultEntry === 'string' ? vaultEntry
-            : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || primaryCard.desc);
-          pickedObjectives.push(primaryCard);
-          // Secondary from rich builder if board has 2 objectives
-          if (objectives[1]) {
-            pickedObjectives.push(buildRichObjectiveCard(faction.id, objectives[1], locProfile, state.dangerRating, 1));
-          }
-        } else {
-          // Faction not explicitly in vault — use rich builder for all
-          objectives.forEach(function(obj, i) {
-            if (i > 1) return;
-            pickedObjectives.push(buildRichObjectiveCard(faction.id, obj, locProfile, state.dangerRating, i));
-          });
-        }
-
-        var finale   = buildFactionFinale(faction.id, objectives, state.dangerRating, locProfile);
-        var aftermath = buildFactionAftermath(faction.id, plotFamily);
-        var isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
-
-        // Enrich motive with 190 canonical motivation, then vault primary if available
-        var canonicalMotive = getPlotEngineCanonicalMotive(faction.id);
-        if (canonicalMotive) motive = canonicalMotive;
-        if (vaultVC.primary) motive = vaultVC.primary;
-
-        conditions[faction.id] = {
-          faction_name: faction.name,
-          is_npc:       isNPC,
-          motive:       motive,
-          objectives:   pickedObjectives,
-          finale:       finale,
-          aftermath:    aftermath,
-          quote:        approach.quote
-        };
-      });
-
-      return conditions;
-    }
-
     // ── buildAftermathSummaryFromVault ───────────────────────────────────────────
     //   Converts vault aftermath_effects (keyed object) into a single prose string
     //   for print and fallback display.
-    function buildAftermathSummaryFromVault(ae) {
-      var parts = [];
-      if (ae.location_state)    parts.push('Location: ' + ae.location_state);
-      if (ae.resource_shift)    parts.push('Resources: ' + ae.resource_shift);
-      if (ae.persistent_landmark) parts.push('Landmark: ' + ae.persistent_landmark);
-      if (parts.length === 0) {
-        var vals = Object.values(ae);
-        if (vals.length > 0) parts.push(String(vals[0]));
-      }
-      return parts.join(' | ');
-    }
-
     // ── Per-faction CONFLICT TABLE — same objective, opposing goals ──────────────
     //   Each faction has a distinct action + VP formula for every objective type.
     //   This makes faction cards feel hand-crafted and genuinely opposed.
@@ -2215,14 +1093,1172 @@ window.CC_APP = {
       },
     };
 
-    function generateVictoryConditions(plotFamily, objectives, locProfile) {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ScenarioGenerator — Phase 1/2 refactor
+    // ───────────────────────────────────────────────────────────────────────────
+    // Single class that owns the generation pipeline.
+    // generate(selections) is STATELESS — it reads from gameData and the
+    // module-level lookup tables, and returns a ScenarioResult object.
+    // It does NOT read or write state.  That is the caller's responsibility.
+    //
+    // Phase 3 will move the generation sub-functions INSIDE this class.
+    // For now they remain as module-level functions that generate() calls.
+    // ═══════════════════════════════════════════════════════════════════════════
+    class ScenarioGenerator {
+      constructor(gameData) {
+        this._data = gameData;
+      }
+
+
+    getCargoVehicleName(factions) {
+      const hasRangers = (factions || []).some(f => f.id === 'monster_rangers');
+      return hasRangers ? 'Cargo Tiger Truck' : 'Cargo Vehicle';
+    }
+
+
+    getCampaignStateDef(stateId) {
+      if (!gameData.getCampaignSystem()) return null;
+      // Try common structures: location_states array, or states array, or direct object
+      const _cs  = gameData.getCampaignSystem();
+      const pool = _cs.location_states
+                || _cs.states
+                || (Array.isArray(_cs) ? _cs : null);
+      if (!pool) return null;
+      return pool.find(s => s.id === stateId || s.name?.toLowerCase() === stateId?.toLowerCase()) || null;
+    }
+
+
+    buildLocationProfile(locationType, selectedLocationId, dangerRating) {
+      let location = null;
+
+      if (locationType === 'named' && selectedLocationId) {
+        location = gameData.getLocations().locations.find(l => l.id === selectedLocationId) || null;
+      }
+
+      if (!location && gameData.getLocations().locations.length) {
+        location = randomChoice(gameData.getLocations().locations);
+      }
+
+      if (!location) {
+        return {
+          id:               'unknown',
+          name:             'Unknown Territory',
+          emoji:            '❓',
+          archetype:        'frontier',
+          state:            randomChoice(RANDOM_STATES),
+          features:         [],
+          effectiveDanger:  dangerRating,
+          effectiveResources: {},
+          monster_seeds:    [],
+          tags:             [],
+          notes:            [],
+          description:      '',
+          atmosphere:       ''
+        };
+      }
+
+      let typeDefaults = {};
+      if (gameData.getLocationTypes().location_types && location.type_ref) {
+        typeDefaults = gameData.getLocationTypes().location_types.find(t => t.id === location.type_ref) || {};
+      }
+
+      const effectiveResources = Object.assign({}, typeDefaults.base_resources || {}, location.resources || {});
+      const effectiveDanger    = (location.danger !== undefined && location.danger !== null) ? location.danger : dangerRating;
+
+      // Locations with no defined state (or the generic "alive") get a random atmospheric state.
+      const rawState = location.state || '';
+      const resolvedState = (!rawState || rawState === 'alive')
+        ? randomChoice(RANDOM_STATES)
+        : rawState;
+
+      return {
+        id:               location.id,
+        name:             location.name,
+        emoji:            location.emoji || '📍',
+        archetype:        location.archetype || 'unknown',
+        state:            resolvedState,
+        features:         location.features || [],
+        effectiveDanger,
+        effectiveResources,
+        monster_seeds:    location.monster_seeds || [],
+        tags:             location.tags || [],
+        notes:            location.notes || [],
+        description:      location.description || '',
+        atmosphere:       location.atmosphere || '',
+        terrain_flavor:   location.terrain_flavor || [],
+        rumors:           location.rumors || []
+      };
+    }
+
+
+
+
+    getVault240Details(objectiveType) {
+      var entry = gameData.getVault240Map()[objectiveType];
+      if (!entry) return null;
+      var details = {};
+
+      // Actions from the interaction block
+      var inter = entry.interaction || {};
+      var actions = [];
+      if (inter.action_type)   actions.push(inter.action_type.replace(/_/g, ' ').toUpperCase());
+      // Also pull method keys for sabotage-style entries
+      if (!inter.action_type && inter.method_1) actions.push('ATTACK');
+      if (!inter.action_type && inter.method_2) actions.push('SABOTAGE');
+      details.actions = actions.length ? actions : null;
+      details.action_cost = inter.action_cost || null;
+
+      // Test requirement
+      if (inter.test_required) {
+        var testStr = 'Test: ' + (inter.test_type || 'Quality').replace(/_/g, ' ');
+        if (inter.test_modifier) testStr += ' (' + inter.test_modifier + ')';
+        details.test_line = testStr;
+        details.success   = inter.success || null;
+        details.failure   = inter.failure || null;
+      } else {
+        details.test_line = null;
+      }
+
+      // VP formula
+      if (entry.vp_value && entry.vp_per) {
+        details.vp_formula = '+' + entry.vp_value + ' VP per ' + String(entry.vp_per).replace(/_/g, ' ');
+        if (entry.danger_scaling) details.vp_formula += ' (scales with danger)';
+      }
+
+      return details;
+    }
+
+
+    getObjectiveKeyResources(objectiveType, locProfile) {
+      var r = (locProfile && locProfile.effectiveResources) ? locProfile.effectiveResources : {};
+      var matches = [];
+      var aff = RESOURCE_OBJECTIVE_AFFINITY || {};
+      Object.keys(aff).forEach(function(res) {
+        if (aff[res].indexOf(objectiveType) >= 0 && (r[res] || 0) > 0) {
+          matches.push(res.replace(/_/g, ' '));
+        }
+      });
+      return matches.slice(0, 2);
+    }
+
+
+    getPlotFamilyObjectiveBias(plotFamily) {
+      return (plotFamily && plotFamily.default_objectives) ? plotFamily.default_objectives : [];
+    }
+
+
+    getFactionFileData(factionId) {
+      return gameData.getFaction(factionId);
+    }
+
+
+    getFactionVictoryGoal(factionId, boardObjectiveType) {
+      var fd = this.getFactionFileData(factionId);
+      if (!fd || !fd.victory_objectives || !fd.victory_objectives.length) return null;
+
+      // Try to find a victory objective that matches the board objective type
+      var vos = fd.victory_objectives;
+      var typeWords = boardObjectiveType ? boardObjectiveType.replace(/_/g, ' ').toLowerCase() : '';
+
+      // Score each victory_objective by keyword overlap with board objective type
+      var best = null;
+      var bestScore = -1;
+      vos.forEach(function(vo) {
+        var voText = ((vo.type || '') + ' ' + (vo.description || '')).toLowerCase();
+        var score = 0;
+        typeWords.split(' ').forEach(function(w) {
+          if (w.length > 2 && voText.indexOf(w) >= 0) score++;
+        });
+        if (score > bestScore) { bestScore = score; best = vo; }
+      });
+
+      // If no keyword match, just return first
+      return (best || vos[0]);
+    }
+
+
+    getFactionTacticLine(factionId) {
+      var fd = this.getFactionFileData(factionId);
+      if (!fd) return null;
+      var tactics = fd.tactics || fd.faction_tactics || {};
+      if (tactics.doctrine && tactics.doctrine.length) return tactics.doctrine[0];
+      if (tactics.overview) return tactics.overview.split('.')[0] + '.';
+      return null;
+    }
+
+
+    getPlotEngineCanonicalMotive(factionId) {
+      var _pe = gameData.getPlotEngine();
+      if (!_pe) return null;
+      var claimants = (_pe.vectors && _pe.vectors.claimants) ? _pe.vectors.claimants : {};
+      var motives = claimants.canonical_motivations || {};
+      // Keys in 190 are like 'monsterologists' but we use 'monsterology' — try both
+      var val = motives[factionId]
+        || motives[factionId.replace(/_/g, ' ')]
+        || motives[factionId.replace('monsterology', 'monsterologists')]
+        || motives[factionId.replace('monster_rangers', 'monster rangers')];
+      if (!val) return null;
+      return val.replace(/_and_/g, ' and ').replace(/_/g, ' ');
+    }
+
+
+    buildRichObjectiveCard(factionId, boardObj, locProfile, dangerRating, roleIndex) {
+      var conflictMap  = FACTION_CONFLICT_TABLE[factionId] || FACTION_CONFLICT_TABLE.monsters;
+      var approach     = FACTION_APPROACH[factionId]       || FACTION_APPROACH.monsters;
+      var flavorMap    = FACTION_OBJECTIVE_FLAVOR[factionId] || {};
+
+      var conflict = conflictMap[boardObj.type] || conflictMap['default'];
+
+      // 1. Name and goal text from conflict table
+      var cardName = conflict.name;
+      var cardDesc = flavorMap[boardObj.type]
+        || approach.verbs[roleIndex % approach.verbs.length] + ' the ' + boardObj.name + '.';
+
+      // 2. VP formula: prefer 240 vault, fall back to conflict table
+      var vault240 = this.getVault240Details(boardObj.type);
+      var cardVP   = (vault240 && vault240.vp_formula) ? vault240.vp_formula : conflict.vp;
+
+      // 3. Tactic: prefer faction file doctrine, fall back to approach tactic
+      var fileTactic = this.getFactionTacticLine(factionId);
+      var cardTactic = fileTactic || approach.tactic;
+
+      // 4. Resource: what location resource is tied to this objective
+      var resources = this.getObjectiveKeyResources(boardObj.type, locProfile);
+
+      // 5. Allowed actions from OBJECTIVE_MARKER_TABLE
+      var markerData = OBJECTIVE_MARKER_TABLE[boardObj.type] || {};
+      var actions    = (markerData.interactions || []).map(function(a) { return a.toLowerCase(); });
+
+      // 6. Test info from 240 vault
+      var testLine = vault240 ? vault240.test_line : null;
+      var successLine = vault240 ? vault240.success : null;
+      var failureLine = vault240 ? vault240.failure : null;
+
+      // 7. Faction-specific victory objective type from faction file
+      var factionWinObj = this.getFactionVictoryGoal(factionId, boardObj.type);
+
+      return {
+        name:        cardName,
+        desc:        cardDesc,
+        vp:          cardVP,
+        tactic:      cardTactic,
+        resources:   resources,          // e.g. ['mechanical parts', 'spare parts']
+        actions:     actions,            // e.g. ['salvage', 'control', 'sabotage']
+        test_line:   testLine,           // e.g. 'Test: Quality (-1 die)'
+        success:     successLine,        // e.g. 'Extract 1 crystal'
+        failure:     failureLine,        // e.g. 'Take 2 damage'
+        faction_win_type:  factionWinObj ? (factionWinObj.type || null) : null,
+        faction_win_vp:    factionWinObj ? (factionWinObj.vp   || null) : null
+      };
+    }
+
+
+    selectPlotFamily(families, selectedFactions, locProfile, dangerRating) {
+      if (!families || families.length === 0) return { id: 'claim_and_hold', name: 'Claim and Hold', description: 'Control territory' };
+
+      // Canonical motivation → resource/vector keyword mapping (from 190_plot_engine_schema.json)
+      var MOTIVATION_KEYWORDS = {
+        monster_rangers: ['survival', 'belief', 'occult', 'preserve', 'purify', 'escort'],
+        liberty_corps:   ['control', 'supplies_tools', 'riches', 'territory', 'occupation', 'claim'],
+        monsterology:    ['occult', 'riches', 'extraction', 'heist', 'study', 'capture'],
+        shine_riders:    ['riches', 'supplies_tools', 'heist', 'extraction', 'ambush', 'sabotage'],
+        crow_queen:      ['belief', 'occult', 'claim', 'ritual', 'mystical', 'siege'],
+        monsters:        ['survival', 'territory', 'siege', 'standoff', 'disaster']
+      };
+
+      // Schema resource type → plot family primary_resources overlap mapping
+      var RESOURCE_FAMILY_BIAS = {
+        riches:         ['ambush_derailment', 'extraction_heist', 'sabotage_strike'],
+        supplies_tools: ['ambush_derailment', 'escort_run', 'sabotage_strike'],
+        survival:       ['disaster_retreat', 'escort_run', 'siege_standoff'],
+        occult:         ['claim_and_hold', 'extraction_heist', 'siege_standoff'],
+        belief:         ['claim_and_hold', 'siege_standoff', 'sabotage_strike']
+      };
+
+      // Location archetype → inciting pressure affinity
+      var ARCHETYPE_PRESSURE_BIAS = {
+        town:            ['power_vacuum', 'broken_agreement', 'territorial_dispute'],
+        outpost:         ['territorial_dispute', 'failed_extraction', 'survival_shortage'],
+        wilderness:      ['monster_action', 'environmental_rupture', 'forgotten_boundary_crossed'],
+        industrial:      ['infrastructure_failure', 'human_overreach', 'retaliation'],
+        sacred:          ['ritual_misuse', 'mystical_claim', 'monster_action'],
+        crossroads:      ['power_vacuum', 'broken_agreement', 'ambush'],
+        canyon:          ['environmental_rupture', 'monster_action', 'territorial_dispute']
+      };
+
+      // Inciting pressure → plot family affinity
+      var PRESSURE_FAMILY_BIAS = {
+        monster_action:             ['ambush_derailment', 'siege_standoff', 'disaster_retreat'],
+        human_overreach:            ['extraction_heist', 'sabotage_strike', 'ambush_derailment'],
+        infrastructure_failure:     ['ambush_derailment', 'disaster_retreat', 'escort_run'],
+        power_vacuum:               ['claim_and_hold', 'siege_standoff', 'sabotage_strike'],
+        environmental_rupture:      ['disaster_retreat', 'siege_standoff', 'claim_and_hold'],
+        ritual_misuse:              ['extraction_heist', 'claim_and_hold', 'siege_standoff'],
+        territorial_dispute:        ['claim_and_hold', 'siege_standoff', 'sabotage_strike'],
+        failed_extraction:          ['extraction_heist', 'ambush_derailment', 'disaster_retreat'],
+        broken_agreement:           ['ambush_derailment', 'sabotage_strike', 'siege_standoff'],
+        survival_shortage:          ['escort_run', 'disaster_retreat', 'claim_and_hold']
+      };
+
+      var scores = {};
+      families.forEach(function(fam) { scores[fam.id] = 0; });
+
+      // Score from faction motivations
+      selectedFactions.forEach(function(faction) {
+        var keywords = MOTIVATION_KEYWORDS[faction.id] || [];
+        families.forEach(function(fam) {
+          keywords.forEach(function(kw) {
+            if (fam.id && fam.id.indexOf(kw) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 2;
+            if (fam.primary_resources && fam.primary_resources.indexOf(kw) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 3;
+            if (fam.emphasized_vectors && fam.emphasized_vectors.indexOf(kw) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 1;
+          });
+          // Resource-family bias from schema
+          keywords.forEach(function(kw) {
+            var biasedFams = RESOURCE_FAMILY_BIAS[kw] || [];
+            if (biasedFams.indexOf(fam.id) >= 0) scores[fam.id] = (scores[fam.id] || 0) + 2;
+          });
+        });
+      });
+
+      // Score from location archetype → inciting pressure → plot family
+      var arch = (locProfile && locProfile.archetype) ? locProfile.archetype.toLowerCase() : 'canyon';
+      var archKey = null;
+      Object.keys(ARCHETYPE_PRESSURE_BIAS).forEach(function(k) {
+        if (arch.indexOf(k) >= 0) archKey = k;
+      });
+      if (archKey) {
+        var pressures = ARCHETYPE_PRESSURE_BIAS[archKey];
+        pressures.forEach(function(pressure) {
+          var biasedFams = PRESSURE_FAMILY_BIAS[pressure] || [];
+          biasedFams.forEach(function(famId) {
+            scores[famId] = (scores[famId] || 0) + 2;
+          });
+        });
+      }
+
+      // Danger bonus: high-danger favours escalation-heavy families
+      if (dangerRating >= 4) {
+        families.forEach(function(fam) {
+          if (fam.escalation_bias && fam.escalation_bias.length >= 3) {
+            scores[fam.id] = (scores[fam.id] || 0) + 2;
+          }
+        });
+      }
+
+      // Add mild random noise so identical setups don't always pick same family
+      families.forEach(function(fam) {
+        scores[fam.id] = (scores[fam.id] || 0) + (Math.random() * 2);
+      });
+
+      // Pick highest scoring family
+      var best = families[0];
+      var bestScore = -Infinity;
+      families.forEach(function(fam) {
+        var s = scores[fam.id] || 0;
+        if (s > bestScore) { bestScore = s; best = fam; }
+      });
+
+      console.log('📊 Plot family scores:', scores, '→ picked:', best.id, '(score='+bestScore.toFixed(1)+')');
+      return best;
+    }
+
+
+    matchVaultScenario(plotFamily, locProfile, contextTags,
+                                selectedFactions = [], selectedDanger = 3,
+                                locationType = '', selectedLocation = '') {
+
+      if (!gameData.getScenarioVault().scenarios || !gameData.getScenarioVault().scenarios.length) return { scenario: null, score: 0 };
+
+      // Build tag context for generic overlap scoring
+      const allTags = [
+        ...(plotFamily.tags || []),
+        ...(locProfile.tags || []),
+        ...contextTags,
+        locProfile.archetype
+      ].filter(Boolean).map(t => t.toLowerCase());
+
+      // Normalised faction IDs from the current selection
+      const factionIds = selectedFactions.map(f =>
+        (f.id || f.name || '').toLowerCase().replace(/\s+/g, '_')
+      );
+
+      // Alias map so both "monster rangers" and "monster_rangers" match vault entries
+      const FACTION_NAME_MAP = {
+        'monster_rangers': ['monster rangers', 'monster_rangers'],
+        'liberty_corps':   ['liberty corps',   'liberty_corps'],
+        'monsterology':    ['monsterologists',  'monsterology'],
+        'shine_riders':    ['shine riders',     'shine_riders'],
+        'crow_queen':      ['crow queen',       'crow_queen'],
+        'monsters':        ['monsters']
+      };
+
+      let best      = null;
+      let bestScore = -Infinity;
+
+      for (const s of gameData.getScenarioVault().scenarios) {
+        let score = 0;
+
+        // ── FACTION MATCH (highest weight) ──────────────────────────────────
+        const spotlightRaw = (s.spotlight_factions || []).map(f => f.toLowerCase());
+        factionIds.forEach(fid => {
+          const aliases = FACTION_NAME_MAP[fid] || [fid];
+          if (aliases.some(alias => spotlightRaw.some(sp => sp.includes(alias)))) {
+            score += 5;
+          }
+        });
+
+        // ── DANGER RATING MATCH ─────────────────────────────────────────────
+        const scenarioDanger = s.danger_rating || 3;
+        const dangerDiff = Math.abs(scenarioDanger - selectedDanger);
+        if (dangerDiff === 0)      score += 4;
+        else if (dangerDiff === 1) score += 2;
+        else if (dangerDiff > 2)   score -= 10;
+
+        // ── LOCATION TYPE MATCH ─────────────────────────────────────────────
+        const allowedTypes = (s.location_rules?.allowed_location_types || []).map(t => t.toLowerCase());
+        if (allowedTypes.length > 0 && locProfile.archetype) {
+          const arch = locProfile.archetype.toLowerCase();
+          if (allowedTypes.some(t => arch.includes(t) || t.includes(arch))) {
+            score += 3;
+          }
+        }
+
+        // ── NAMED LOCATION MATCH ────────────────────────────────────────────
+        if (selectedLocation && locationType === 'named') {
+          const locName = gameData.getLocations().locations
+            ?.find(l => l.id === selectedLocation)?.name?.toLowerCase() || '';
+          const allowedNamed = (s.location_rules?.allowed_named_locations || [])
+            .map(n => n.toLowerCase());
+          if (allowedNamed.length > 0 && allowedNamed.some(n => locName.includes(n) || n.includes(locName))) {
+            score += 3;
+          }
+        }
+
+        // ── EXCLUDED LOCATION TYPES (hard block) ────────────────────────────
+        const excludedTypes = (s.location_rules?.excluded_location_types || []).map(t => t.toLowerCase());
+        if (excludedTypes.length > 0 && locProfile.archetype) {
+          const arch = locProfile.archetype.toLowerCase();
+          if (excludedTypes.some(t => arch.includes(t) || t.includes(arch))) {
+            score -= 10;
+          }
+        }
+
+        // ── TAG OVERLAP (generic, lowest weight) ────────────────────────────
+        const sTags = (s.tags || []).map(t => t.toLowerCase());
+        score += sTags.filter(t => allTags.includes(t)).length * 2;
+
+        if (score > bestScore) {
+          best      = s;
+          bestScore = score;
+        }
+      }
+
+      console.log(`📚 Vault best match: "${best?.name}" (score=${bestScore})`);
+      return { scenario: bestScore >= 14 ? best : null, score: bestScore };
+    }
+
+
+    buildResourceSummary(resources) {
+      return ''; // Intentionally hidden — resources drive logic, not display
+    }
+
+
+    generateNarrativeHook(plotFamily, location, objectives) {
+      const locName  = location.name;
+      const atmo     = location.atmosphere || '';
+      const desc     = location.description ? location.description.split('.')[0] : '';
+
+      // Use the actual plot family description, but replace any generic "asset" language
+      // with the real objective name if a cargo vehicle is in play.
+      let plotDesc = (plotFamily.description || '').replace(/\.$/, '');
+
+      const cargoObj = objectives?.find(o => o.type === 'cargo_vehicle');
+      if (cargoObj) {
+        const cargoName = cargoObj.name; // "Cargo Tiger Truck" or "Cargo Vehicle"
+        // Replace any version of "a fragile or vital asset" / "an asset" / "the asset"
+        plotDesc = plotDesc.replace(
+          /a fragile or vital asset|an asset|the asset|a fragile asset|a vital asset/gi,
+          `the ${cargoName}`
+        );
+      }
+
+      const thyrObj     = objectives?.find(o => o.type === 'thyr_cache' || o.type === 'ritual_site');
+      const supplyObj   = objectives?.find(o => o.type === 'stored_supplies' || o.type === 'scattered_crates');
+      const ritualObj   = objectives?.find(o => o.type === 'ritual_components' || o.type === 'ritual_circle');
+
+      // Build a one-sentence situation summary keyed to the most important objective type.
+      let situationLine = '';
+      if (cargoObj) {
+        situationLine = `The ${cargoObj.name} needs to cross ${locName} intact — that's already the hard part.`;
+      } else if (thyrObj) {
+        situationLine = `The Thyr at ${locName} is active. That means someone already knows about it.`;
+      } else if (ritualObj) {
+        situationLine = `${locName} is the only place the ritual can be completed. Everyone is racing to get there.`;
+      } else if (supplyObj) {
+        situationLine = `The caches at ${locName} are the kind of find that changes who survives the season.`;
+      }
+
+      // Pick a voiced hook from the appropriate pool.
+      const pools = [
+        `Nobody who left ${locName} told the same story. ${plotDesc}. The only way to know is to go in.`,
+        `Three factions picked up the same rumour about ${locName} within 48 hours. That's not coincidence. ${plotDesc}.`,
+        `${locName} was supposed to be a clean job. The Canyon had other ideas. ${plotDesc}.`,
+        `${desc ? desc + '. ' : ''}${plotDesc}. The factions arrive at the same time. That's the problem.`,
+        `The window at ${locName} is closing. ${plotDesc}. Whoever moves first may be the only one who leaves with anything.`,
+        `Something at ${locName} drew too much attention. ${plotDesc}. Now everyone is reacting and nobody is thinking.`,
+        `${plotDesc} at ${locName}. The smart money said don't get involved. The smart money wasn't enough.`,
+        `The last group through ${locName} didn't come back whole. ${plotDesc}. That didn't stop the next group.`,
+        `The Canyon doesn't warn you. At ${locName}, it just changes the terms. ${plotDesc}.`,
+        `${locName}. ${atmo ? '"' + atmo + '"' : 'Whatever it was, it isn\'t that anymore.'}. ${plotDesc}.`,
+        `${plotDesc}. ${locName} is where it ends — or where it gets worse.`,
+        `Word reached ${locName} before anyone expected. ${plotDesc}. By the time boots hit the ground, it was already complicated.`,
+      ];
+
+      // Specific situation line goes first; a canyon-voice hook follows as the second sentence.
+      if (situationLine) {
+        return situationLine + ' ' + randomChoice(pools.slice(6)); // use a canyon-voice hook as the second sentence
+      }
+
+      // Fall back to a plot-family hook if available, then a generic pool pick.
+      if (plotFamily?.hook)   return plotFamily.hook;
+      if (plotFamily?.flavor) return `${plotFamily.flavor} ${plotDesc} at ${locName}.`;
+
+      return randomChoice(pools);
+    }
+
+
+    generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
+      contextTags = contextTags || [];
+      const locName = (location || { name: 'Unknown' }).name;
+
+      let prefix = 'Bloody';
+      let suffix = 'Reckoning';
+
+      const _sn = gameData.getScenarioNames();
+      if (_sn && Object.keys(_sn).length) {
+        const prefixes = _sn.prefixes || [];
+        const suffixes = _sn.suffixes || [];
+
+        const taggedPrefixes = prefixes.filter(p =>
+          Array.isArray(p.tags) && p.tags.some(t => contextTags.includes(t))
+        );
+        prefix = taggedPrefixes.length
+          ? (randomChoice(taggedPrefixes)?.text || randomChoice(prefixes)?.text || 'Bloody')
+          : (randomChoice(prefixes)?.text || 'Bloody');
+
+        suffix = randomChoice(suffixes)?.text || 'Reckoning';
+      } else {
+        const fallbackPrefixes = ['Bloody', 'Burning', 'Broken', 'Cursed', 'Forsaken', 'Iron'];
+        const fallbackSuffixes = ['Reckoning', 'Standoff', 'Collapse', 'Ruin', 'Harvest', 'Judgment'];
+        prefix = randomChoice(fallbackPrefixes);
+        suffix = randomChoice(fallbackSuffixes);
+      }
+
+      // Several templates ensure the location name reads naturally in all cases.
+      const templates = [
+        () => `${prefix} at ${locName}`,                     // "Black Night at Fool Boot"
+        () => `${prefix} at ${locName} — ${suffix}`,         // "Black Night at Fool Boot — Reckoning"
+        () => `${prefix} ${locName} — ${suffix}`,            // "Bloody Lost Yots — Reckoning" (classic)
+        () => `${locName} — ${suffix}`,                      // "Lost Yots — Shadow and Flame"
+        () => `${suffix} at ${locName}`,                     // "Reckoning at Lost Yots"
+        () => `The ${suffix} of ${locName}`,                 // "The Reckoning of Lost Yots"
+      ];
+
+      // Adjective prefixes (Bloody, Burning…) favour the classic "Adjective Location — Noun" form.
+      const isAdjectivePrefix = /^(Bloody|Burning|Broken|Cursed|Forsaken|Iron|Black|Red|Dead|Lost|Pale|Dark|Hollow|Bitter|Silent|Grim|Wild|Ruined|Rusted|Scarred|Blighted|Howling|Crumbling|Forgotten|Bleak|Grave|Dread|Gallow|Shattered)/i.test(prefix);
+      const pick = isAdjectivePrefix
+        ? randomChoice([templates[1], templates[2], templates[2], templates[3]])   // adjective: prefer classic
+        : randomChoice([templates[0], templates[0], templates[1], templates[4]]);  // noun/phrase: prefer "at"
+
+      return pick();
+    }
+
+
+    generateMonsterPressure(plotFamily, dangerRating, locProfile, pointValue) {
+      const enabled = Math.random() > 0.3;
+      if (!enabled || !gameData.getMonsterFaction().units) return { enabled: false };
+
+      const budgetPercent    = 0.2 + (dangerRating / 6) * 0.2;
+      const monsterBudget    = Math.floor((pointValue || 500) * budgetPercent);
+      const selectedMonsters = [];
+      let remainingBudget    = monsterBudget;
+      let seedBased          = false;
+
+      if (locProfile?.monster_seeds?.length > 0) {
+        let attempts = 0;
+        while (remainingBudget > 100 && attempts < 10) {
+          const seed = randomChoice(locProfile.monster_seeds);
+          const unit = (gameData.getMonsterFaction().units || []).find(u => u.name === seed.name);
+          if (!unit || unit.cost > remainingBudget) { attempts++; continue; }
+          selectedMonsters.push(unit);
+          remainingBudget -= unit.cost;
+          seedBased = true;
+          attempts++;
+        }
+      }
+
+      if (selectedMonsters.length === 0 && gameData.getMonsterFaction().units) {
+        const available = gameData.getMonsterFaction().units.filter(u => u.cost <= monsterBudget);
+        let budget = monsterBudget;
+        while (budget > 0 && available.length > 0) {
+          const valid   = available.filter(m => m.cost <= budget);
+          if (valid.length === 0) break;
+          const monster = randomChoice(valid);
+          selectedMonsters.push(monster);
+          budget -= monster.cost;
+        }
+      }
+
+      const escalationNote = plotFamily.escalation_bias
+        ? `Escalation: ${randomChoice(plotFamily.escalation_bias).replace(/_/g, ' ')}`
+        : null;
+
+      return {
+        enabled:    true,
+        monsters:   selectedMonsters,
+        seed_based: seedBased,
+        notes:      escalationNote
+      };
+    }
+
+
+    generateAftermath(plotFamily) {
+      const options = plotFamily.aftermath_bias || ['location_state_change', 'resource_depletion_or_corruption'];
+      const type    = randomChoice(options);
+      const descriptions = {
+        location_state_change:            'This location will be permanently altered by the outcome.',
+        resource_depletion_or_corruption: 'Resources here will be depleted or corrupted.',
+        new_landmark_created:             'A new landmark will mark what happened here.',
+        faction_ownership:                'The victor will claim lasting control.',
+        mystical_claim:                   'Mystical forces will remember this event.',
+        monster_bias_shift:               'Monster behaviour in this region will change.'
+      };
+      return descriptions[type] || 'The Canyon will remember what happened here.';
+    }
+
+
+    makeObjectiveName(type, locProfile) {
+      const r        = locProfile?.effectiveResources || {};
+      const features = locProfile?.features || [];
+
+      if (type === 'cargo_vehicle') {
+        return this.getCargoVehicleName();
+      }
+
+      if (type === 'fouled_resource') {
+        if ((r.water_foul || 0) >= 1 && (r.rotgut || 0) >= 1)
+          return 'Fouled Water & Rotgut Cache';
+        if ((r.water_foul || 0) >= 1)
+          return 'Tainted Water Supply';
+        if ((r.rotgut || 0) >= 1)
+          return 'Spoiled Rotgut Barrels';
+        if ((r.food_foul || 0) >= 1)
+          return 'Contaminated Ration Store';
+        return 'Fouled Resource Cache';
+      }
+
+      if (type === 'unstable_structure') {
+        const arch = locProfile?.archetype || '';
+        if (features.includes('GlassShards') || features.includes('KnifeRocks'))
+          return 'Glass-Wall Overhang';
+        if (features.includes('BrakeScars'))
+          return 'Collapsed Brake House';
+        if (features.includes('RailTerminus') || features.includes('RailYard'))
+          return 'Failing Rail Depot';
+        if (features.includes('RailGrade') || features.includes('RailSpur'))
+          return 'Failing Trestle Section';
+        if (features.includes('Trestle'))
+          return 'Crumbling Canyon Trestle';
+        if (features.includes('RockfallChutes'))
+          return 'Rockfall Chute';
+        if (features.includes('NarrowPass'))
+          return 'Crumbling Canyon Shelf';
+        if (features.includes('OldFort') || features.includes('Fort'))
+          return 'Collapsed Fort Wall';
+        if (features.includes('WaterTower'))
+          return 'Leaning Water Tower';
+        if (features.includes('GranarySilo') || features.includes('Silo'))
+          return 'Cracked Grain Silo';
+        if (features.includes('Ruins'))
+          return randomChoice(['Crumbling Ruin', 'Unstable Ruin Wall', 'Collapsed Settlement Remnant']);
+        if (features.includes('Jailhouse'))
+          return 'Condemned Jailhouse';
+        if (features.includes('CompanyOffice'))
+          return 'Condemned Company Office';
+        if (features.includes('Hotel'))
+          return 'Condemned Hotel';
+        if (features.includes('Saloon') || features.includes('BrewHouse'))
+          return 'Collapsing Saloon';
+        if (features.includes('Church'))
+          return 'Crumbling Canyon Church';
+        if (features.includes('Barn') || features.includes('Stable') || features.includes('Corral'))
+          return 'Failing Livestock Barn';
+        if (features.includes('Mineshaft') || features.includes('Mine'))
+          return 'Collapsing Mineshaft Entrance';
+        if (arch === 'arroyo')          return 'Eroded Canyon Wall';
+        if (arch === 'rail_grade'
+         || arch === 'rail_terminus'
+         || arch === 'rail_depot')      return 'Failing Trestle';
+        if (arch === 'boomtown')
+          return randomChoice(['Condemned Boomtown Building', 'Collapsing Storefront', 'Leaning Boomtown Tower']);
+        if (arch === 'ruins')
+          return randomChoice(['Crumbling Ruin', 'Collapsed Settlement Wall', 'Unstable Stone Tower']);
+        if (arch === 'outpost')         return 'Condemned Outpost Watchtower';
+        if (arch === 'settlement')      return 'Failing Settlement Hall';
+        if (arch === 'mine')            return 'Collapsing Mineshaft Entrance';
+        if (arch === 'wilderness')      return 'Unstable Rocky Overhang';
+        if (arch === 'canyon')          return 'Eroded Canyon Ledge';
+        if (arch === 'frontier')        return 'Condemned Frontier Shack';
+        return randomChoice([
+          'Condemned Building',
+          'Failing Outpost Wall',
+          'Crumbling Stone Remnant',
+          'Unstable Frontier Structure'
+        ]);
+      }
+
+      // hasRangers must be declared here so the names table below can reference it.
+      const hasRangers = (factions || []).some(f => f.id === 'monster_rangers');
+
+      const names = {
+        wrecked_engine:     'Wrecked Engine',
+        scattered_crates:   'Scattered Supply Crates',
+        derailed_cars:      'Derailed Cars',
+        pack_animals:       'Pack Animals',
+        ritual_components:  'Ritual Components',
+        ritual_site:        hasRangers ? 'Monster Sanctuary Site' : 'Ritual Site',
+        land_marker:        (() => {
+          const arch = locProfile?.archetype || '';
+          const feats = features;
+          if (feats.includes('RailTerminus'))  return 'Rail Terminus Boundary Post';
+          if (feats.includes('RailGrade') || feats.includes('RailSpur')) return 'Rail Right-of-Way Stake';
+          if (feats.includes('BrakeScars'))    return 'Grade Survey Stake';
+          if (feats.includes('AuctionYard'))   return 'Auction Yard Deed Notice';
+          if (feats.includes('GunsmithRow'))   return 'Street Boundary Sign';
+          if (feats.includes('Jailhouse'))     return 'Jurisdiction Notice Post';
+          if (feats.includes('Ruins') || feats.includes('OldFort')) return 'Salvage Claim Stake';
+          if (feats.includes('Hotel'))         return 'Deed Notice Board';
+          if (feats.includes('CompanyOffice')) return 'Company Land Claim Notice';
+          if (feats.includes('Saloon'))        return 'Block Claim Sign';
+          if (feats.includes('Church'))        return 'Parish Boundary Marker';
+          if (feats.includes('Mineshaft') || feats.includes('Mine')) return 'Mine Claim Stake';
+          if (feats.includes('Stockyard'))     return 'Stockyard Brand Post';
+          if (feats.includes('WaterTower'))    return 'Water Rights Notice';
+          if (feats.includes('Corral') || feats.includes('Barn')) return 'Grazing Rights Post';
+          if (arch === 'boomtown')   return randomChoice(['Town Sign', 'Block Claim Board', 'Boomtown Deed Post']);
+          if (arch === 'arroyo')     return randomChoice(['Canyon Survey Stake', 'Trail Claim Cairn', 'Canyon Boundary Post']);
+          if (arch === 'rail_grade') return 'Rail Right-of-Way Stake';
+          if (arch === 'rail_terminus' || arch === 'rail_depot') return 'Station Boundary Post';
+          if (arch === 'ruins')      return randomChoice(['Salvage Claim Stake', 'Ruins Survey Post', 'Rubble Claim Marker']);
+          if (arch === 'mine')       return randomChoice(['Mine Claim Stake', 'Assay Notice Post', 'Mineral Rights Stake']);
+          if (arch === 'settlement') return randomChoice(['Town Sign', 'Settlement Charter Post', 'Boundary Marker']);
+          if (arch === 'outpost')    return 'Outpost Boundary Sign';
+          if (arch === 'wilderness') return randomChoice(['Survey Stake', 'Pioneer Claim Post', 'Boundary Cairn']);
+          if (arch === 'canyon')     return randomChoice(['Canyon Survey Post', 'Trail Claim Cairn', 'Boundary Stone']);
+          if (arch === 'frontier')   return randomChoice(['Frontier Claim Stake', 'Pioneer Survey Post', 'Homestead Sign']);
+          return randomChoice(['Claim Stake', 'Survey Post', 'Boundary Sign', 'Deed Notice Board']);
+        })(),
+        command_structure:  (() => {
+          const arch = locProfile?.archetype || '';
+          const feats = features;
+          if (feats.includes('Fort') || feats.includes('OldFort')) return 'Command Fortress';
+          if (feats.includes('Hotel'))       return 'Command Post (Hotel)';
+          if (feats.includes('CompanyOffice')) return 'Command Office';
+          if (feats.includes('Jailhouse'))   return 'Command Post (Jailhouse)';
+          if (feats.includes('Ruins'))       return 'Ruined Command Post';
+          if (arch === 'wilderness' || arch === 'arroyo') return 'Field Command Tent';
+          if (arch === 'boomtown')   return 'Command Tower';
+          if (arch === 'rail_grade') return 'Rail Command Car';
+          return randomChoice(['Command Tower', 'Command Tent', 'Field Command Post']);
+        })(),
+        thyr_cache:         'Thyr Crystal Cache',
+        artifact:           'Ancient Artifact',
+        captive_entity:     hasRangers ? 'Injured Monster Friend' : 'Captive Entity',
+        fortified_position: 'Fortified Position',
+        barricades:         'Barricades',
+        stored_supplies:    hasRangers ? 'Crate of VitaGood' : 'Stored Supplies',
+        ritual_circle:      hasRangers ? 'Purification Circle' : 'Ritual Circle',
+        tainted_ground:     'Tainted Ground',
+        sacrificial_focus:  'Sacrificial Focus',
+        collapsing_route:   'Collapsing Route',
+        evacuation_point:   'Evacuation Point'
+      };
+      // Smarter fallback — use location context if available
+      if (names[type]) return names[type];
+      const locName = (locProfile && locProfile.name) ? locProfile.name : '';
+      const fallbacks = [
+        'Disputed Ground', 'The Flashpoint', 'The Prize',
+        'Contested Site', 'The Crossing', 'Key Position'
+      ];
+      // Pick consistently based on type string hash so same type = same label
+      const hash = type ? type.split('').reduce(function(a,c){ return a + c.charCodeAt(0); }, 0) : 0;
+      return fallbacks[hash % fallbacks.length];
+    }
+
+
+    makeObjectiveDescription(type, locProfile) {
+      const r = locProfile?.effectiveResources || {};
+      const cargoName = this.getCargoVehicleName();
+
+      const descriptions = {
+        wrecked_engine:     'Salvage mechanical parts or prevent others from claiming them. Each salvage increases Coffin Cough risk.',
+        scattered_crates:   'Collect and extract scattered food, water, and supplies before others claim them.',
+        derailed_cars:      "Search the wreckage for valuable cargo before it's lost or claimed.",
+          cargo_vehicle:      `Escort the ${cargoName} safely across the board. The sweet scent may attract monsters.`,
+        pack_animals:       'Control or escort the animals. They may panic under fire.',
+        ritual_components:  'Gather mystical components scattered across the battlefield.',
+        ritual_site:        'Control this location to complete rituals or disrupt enemy mysticism.',
+        land_marker:        'Claim and hold these marked positions. Whoever controls them at game end controls the ground.',
+        command_structure:  'Control this position to coordinate forces and establish leadership.',
+        thyr_cache:         'Extract or corrupt the glowing Thyr crystals. Handling Thyr is always dangerous.',
+        artifact:           'Recover the ancient artifact. Its true nature may be hidden.',
+        captive_entity:     'Free, capture, or control the entity. May not be what it appears.',
+        fortified_position: 'Hold this defensible position against all comers.',
+        barricades:         'Control the chokepoint to restrict enemy movement.',
+        stored_supplies:    'Secure stockpiled resources before they are depleted.',
+        ritual_circle:      'Control the circle to empower rituals or prevent enemy mysticism.',
+        tainted_ground:     'Interact at your own risk. Corruption spreads.',
+        sacrificial_focus:  'Control or destroy this dark altar.',
+        collapsing_route:   'The passage is deteriorating. Hold it open or let it collapse to trap the enemy.',
+        fouled_resource:    'Contaminated supplies that are worse than nothing — unless you know what to do with them.',
+        unstable_structure: 'The building will not survive the battle. Get what you need from it before it comes down.',
+        evacuation_point:   'Reach this location to escape the escalating danger.'
+      };
+
+      let base = descriptions[type] || 'Control this objective to score victory points.';
+
+      if (locProfile) {
+        if (type === 'stored_supplies'  && (r.supplies   || 0) >= 4)
+          base = `These caches hold enough to shift the balance — food, medicine, kit. ${base}`;
+        if (type === 'scattered_crates' && (r.food_good  || 0) >= 3)
+          base = `The crates are scattered but what's inside is worth the risk. ${base}`;
+        if (type === 'thyr_cache'       && (r.thyr       || 0) >= 4)
+          base = `The crystals are warm to the touch and getting warmer. ${base}`;
+        if (type === 'fouled_resource'  && (r.water_foul || 0) >= 2)
+          base = `The water here is wrong. Something got in. ${base}`;
+        if (type === 'fouled_resource'  && (r.rotgut     || 0) >= 2)
+          base = `The barrels are marked safe but the smell says otherwise. ${base}`;
+      }
+      return base;
+    }
+
+
+    makeObjectiveSpecial(type, locProfile) {
+      // 40% chance of a "Guarded" special — names a real monster from location seeds or faction data.
+      if (Math.random() < 0.4) {
+        const seeds = locProfile?.monster_seeds || [];
+        if (seeds.length > 0) {
+          const seed = randomChoice(seeds);
+          return `Guarded — ${seed.name} nearby`;
+        }
+        if (gameData.getMonsterFaction().units && gameData.getMonsterFaction().units.length) {
+          const genericMonster = randomChoice(gameData.getMonsterFaction().units);
+          if (genericMonster) return `Guarded — ${genericMonster.name} nearby`;
+        }
+      }
+
+      const specials = [
+        'Unstable — may collapse if damaged',
+        'Tainted — triggers morale tests',
+        'Valuable — worth extra VP',
+        'Corrupted — alters nearby terrain',
+        'Hot — every faction already knows about it'
+      ];
+      return randomChoice(specials);
+    }
+
+
+    calcObjectiveVP(type, locProfile) {
+      const r = locProfile?.effectiveResources || {};
+      const table = {
+        stored_supplies:    Math.max(2, Math.ceil((r.supplies    || 2) / 2)),
+        scattered_crates:   Math.max(2, Math.ceil(((r.food_good || 1) + (r.supplies || 1)) / 3)),
+        thyr_cache:         Math.max(3, r.thyr    || 3),
+        ritual_site:        Math.max(3, Math.ceil((r.thyr || 2) * 0.8)),
+        ritual_circle:      Math.max(3, Math.ceil((r.thyr || 2) * 0.8)),
+        land_marker:        Math.max(2, Math.ceil((r.silver || 2) / 2)),
+        wrecked_engine:     Math.max(2, Math.ceil((r.spare_parts || 2) / 2)),
+        pack_animals:       Math.max(2, Math.ceil((r.livestock || 2) / 2)),
+        artifact:           4,
+        sacrificial_focus:  4,
+        captive_entity:     4,
+        ritual_components:  3,
+        fortified_position: 3,
+        command_structure:  3,
+        cargo_vehicle:      3,
+        collapsing_route:   3,
+        fouled_resource:    2,
+        tainted_ground:     3,
+        barricades:         2,
+        unstable_structure: 2,
+        evacuation_point:   3,
+        derailed_cars:      2
+      };
+      return table[type] || 2;
+    }
+
+
+    generateObjectives(plotFamily, locProfile, factions) {
+      const scores = {};
+      ALL_OBJECTIVE_TYPES.forEach(t => scores[t] = 0);
+
+      // Thyr Cache gets a baseline score so it appears in most scenarios;
+      // the canyon always has Thyr somewhere.
+      scores['thyr_cache'] += 2;
+
+      (plotFamily.default_objectives || []).forEach(t => {
+        if (scores[t] !== undefined) scores[t] += 3;
+      });
+
+      if (locProfile?.effectiveResources) {
+        const r = locProfile.effectiveResources;
+        for (const [key, val] of Object.entries(r)) {
+          if (typeof val === 'number' && val >= 1) {
+            // Weight: high-value resources (3+) get doubled contribution.
+            const weight = val >= 3 ? val * 2 : val >= 2 ? val + 2 : val + 1;
+            (RESOURCE_OBJECTIVE_AFFINITY[key] || []).forEach(t => {
+              if (scores[t] !== undefined) scores[t] += weight;
+            });
+          }
+        }
+
+        if ((r.water_clean || 0) < 1 && (r.water_foul || 0) < 1 && (r.rotgut || 0) < 1 && (r.food_foul || 0) < 1)
+          scores['fouled_resource'] = Math.max(0, scores['fouled_resource'] - 4);
+        if ((r.thyr || 0) < 1) {
+          scores['thyr_cache']    = Math.max(0, scores['thyr_cache']    - 2);
+          scores['ritual_circle'] = Math.max(0, scores['ritual_circle'] - 2);
+        }
+        if ((r.spare_parts || 0) < 2)
+          scores['wrecked_engine'] = Math.max(0, scores['wrecked_engine'] - 3);
+        if ((r.livestock || 0) < 2)
+          scores['pack_animals'] = 0;
+        if ((r.tzul_silver || 0) < 3)
+          scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 2);
+      }
+
+      // ---- RAIL GATE ----
+      // Rail objectives are gated: only score if the location has rail features or a rail archetype.
+      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'rail', 'Rail'];
+      const RAIL_ARCHETYPES = ['rail_grade', 'rail_terminus', 'rail_depot'];
+      const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
+                   || RAIL_ARCHETYPES.includes(locProfile?.archetype || '');
+      if (!hasRail) {
+        scores['wrecked_engine'] = 0;
+        scores['derailed_cars']  = 0;
+      }
+
+      const sorted = Object.entries(scores)
+        .filter(([, s]) => s > 0)
+        .sort((a, b) => b[1] - a[1]);
+
+      console.log('🎯 Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
+
+      const numObjectives = randomInt(2, 3);
+      const objectives    = [];
+      const used          = new Set();
+
+      const EXCLUSIVE_GROUPS = {
+        taint_group:   ['tainted_ground', 'fouled_resource'],
+        ritual_group:  ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'ritual_components'],
+        salvage_group: ['wrecked_engine', 'derailed_cars', 'unstable_structure'],
+        supply_group:  ['stored_supplies', 'scattered_crates']
+      };
+      const usedGroups = new Set();
+
+      function getGroup(type) {
+        for (const [grp, types] of Object.entries(EXCLUSIVE_GROUPS)) {
+          if (types.includes(type)) return grp;
+        }
+        return null;
+      }
+
+      for (const [type] of sorted) {
+        if (objectives.length >= numObjectives) break;
+        if (used.has(type)) continue;
+        const grp = getGroup(type);
+        if (grp && usedGroups.has(grp)) continue;
+        used.add(type);
+        if (grp) usedGroups.add(grp);
+        objectives.push({
+          name:        this.makeObjectiveName(type, locProfile),
+          description: this.makeObjectiveDescription(type, locProfile),
+          type,
+          vp_base:     this.calcObjectiveVP(type, locProfile),
+          special:     Math.random() < 0.2 ? this.makeObjectiveSpecial(type, locProfile) : null
+        });
+      }
+
+      if (objectives.length === 0) {
+        objectives.push({
+          name:        'Contested Ground',
+          description: 'Hold this position.',
+          type:        'land_marker',
+          vp_base:     3,
+          special:     null
+        });
+      }
+
+      return objectives;
+    }
+
+
+    generateObjectivesFromVault(vaultScenario, locProfile) {
+      const objectives = [];
+      if (vaultScenario.objectives && Array.isArray(vaultScenario.objectives)) {
+        vaultScenario.objectives.forEach(vo => {
+          const type = vo.id || vo.type;
+          objectives.push({
+            name:        this.makeObjectiveName(type, locProfile),
+            description: vo.notes ? vo.notes[0] : this.makeObjectiveDescription(type, locProfile),
+            type,
+            vp_base:     3,
+            special:     vo.special ? vo.special.join(', ') : null
+          });
+        });
+      }
+      if (objectives.length < 2) {
+        objectives.push({
+          name:        this.makeObjectiveName('land_marker', locProfile),
+          description: 'Claim and hold these marked positions. Whoever controls them at game end controls the ground.',
+          type:        'land_marker',
+          vp_base:     2,
+          special:     null
+        });
+      }
+      return objectives;
+    }
+
+
+    generateObjectiveMarkers(objectives, vaultScenario, factions) {
+      const markers = [];
+      objectives.forEach(obj => {
+        let vaultObj = null;
+        if (vaultScenario?.objectives) {
+          vaultObj = vaultScenario.objectives.find(vo => vo.id === obj.type || vo.type === obj.type);
+        }
+        const defaults = OBJECTIVE_MARKER_TABLE[obj.type] || {
+          count:        '1',
+          placement:    'Board center',
+          token:        'Objective token',
+          interactions: []
+        };
+        // Cargo vehicle placement is faction-aware: Rangers get the escort-from-edge version.
+        let resolvedPlacement = defaults.placement;
+        if (obj.type === 'cargo_vehicle') {
+          const hasRangers = (factions || []).some(f => f.id === 'monster_rangers');
+          resolvedPlacement = hasRangers
+            ? 'Monster Rangers deployment edge, center — must be escorted across the full board'
+            : 'One table edge, center — must be escorted to the opposite edge';
+        }
+        markers.push({
+          name:         obj.name,
+          type:         obj.type,
+          count:        vaultObj?.count       || defaults.count,
+          placement:    resolvedPlacement,
+          token:        defaults.token,
+          interactions: vaultObj?.interactions?.length ? vaultObj.interactions : defaults.interactions,
+          notes:        vaultObj?.notes ? vaultObj.notes[0] : null
+        });
+      });
+      return markers;
+    }
+
+
+    generateObjectiveChain(objectives) {
+      if (objectives.length < 2) {
+        if (objectives.length === 1) objectives[0].role = 'primary';
+        return;
+      }
+      objectives[0].role = 'primary';
+      objectives[1].role = 'secondary';
+      const linkVerb  = randomChoice(CHAIN_LINK_VERBS);
+      const linkIntro = randomChoice(CHAIN_LINK_INTROS);
+      objectives[0].chain_link       = `Controlling ${objectives[0].name} ${linkVerb} ${objectives[1].name}.`;
+      objectives[0].chain_link_intro = linkIntro;
+      // Any third objective is standalone
+      if (objectives[2]) objectives[2].role = 'standalone';
+    }
+
+
+    buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily, factions, dangerRating) {
+      var conditions = {};
+      var vaultVC    = vaultScenario.victory_conditions || {};
+
+      factions.forEach(function(faction) {
+        var approach    = FACTION_APPROACH[faction.id]    || FACTION_APPROACH.monsters;
+        var motivesMap  = FACTION_MOTIVES[faction.id]     || FACTION_MOTIVES.monsters;
+        var conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
+        var primaryType = objectives[0] ? objectives[0].type : 'default';
+        var motive      = motivesMap[primaryType] || motivesMap['default'] || approach.quote;
+
+        // Check if vault explicitly lists this faction
+        var vaultEntry = vaultVC[faction.id] || vaultVC[faction.id.replace(/_/g, ' ')];
+
+        var pickedObjectives = [];
+
+        if (vaultEntry) {
+          // Vault has specific text for this faction — use it verbatim as the primary desc
+          var primaryCard = this.buildRichObjectiveCard(faction.id, objectives[0] || { type: primaryType, name: primaryType }, locProfile, dangerRating, 0);
+          primaryCard.desc = typeof vaultEntry === 'string' ? vaultEntry
+            : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || primaryCard.desc);
+          pickedObjectives.push(primaryCard);
+          // Secondary from rich builder if board has 2 objectives
+          if (objectives[1]) {
+            pickedObjectives.push(this.buildRichObjectiveCard(faction.id, objectives[1], locProfile, dangerRating, 1));
+          }
+        } else {
+          // Faction not explicitly in vault — use rich builder for all
+          objectives.forEach(function(obj, i) {
+            if (i > 1) return;
+            pickedObjectives.push(this.buildRichObjectiveCard(faction.id, obj, locProfile, dangerRating, i));
+          });
+        }
+
+        var finale   = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
+        var aftermath = this.buildFactionAftermath(faction.id, plotFamily);
+        var isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
+
+        // Enrich motive with 190 canonical motivation, then vault primary if available
+        var canonicalMotive = this.getPlotEngineCanonicalMotive(faction.id);
+        if (canonicalMotive) motive = canonicalMotive;
+        if (vaultVC.primary) motive = vaultVC.primary;
+
+        conditions[faction.id] = {
+          faction_name: faction.name,
+          is_npc:       isNPC,
+          motive:       motive,
+          objectives:   pickedObjectives,
+          finale:       finale,
+          aftermath:    aftermath,
+          quote:        approach.quote
+        };
+      });
+
+      return conditions;
+    }
+
+
+    buildAftermathSummaryFromVault(ae) {
+      var parts = [];
+      if (ae.location_state)    parts.push('Location: ' + ae.location_state);
+      if (ae.resource_shift)    parts.push('Resources: ' + ae.resource_shift);
+      if (ae.persistent_landmark) parts.push('Landmark: ' + ae.persistent_landmark);
+      if (parts.length === 0) {
+        var vals = Object.values(ae);
+        if (vals.length > 0) parts.push(String(vals[0]));
+      }
+      return parts.join(' | ');
+    }
+
+
+    generateVictoryConditions(plotFamily, objectives, locProfile, factions, dangerRating) {
       const conditions = {};
 
-      const hasMonsters = state.factions.some(function(f) { return f.id === 'monsters'; });
+      const hasMonsters = factions.some(function(f) { return f.id === 'monsters'; });
       const injectMonsterObjective = hasMonsters
         || objectives.some(function(o) { return o.type === 'captive_entity'; });
 
-      state.factions.forEach(function(faction) {
+      factions.forEach(function(faction) {
         const approach    = FACTION_APPROACH[faction.id]   || FACTION_APPROACH.monsters;
         const motivesMap  = FACTION_MOTIVES[faction.id]    || FACTION_MOTIVES.monsters;
         const conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
@@ -2266,8 +2302,8 @@ window.CC_APP = {
           });
         }
 
-        const finale   = buildFactionFinale(faction.id, objectives, state.dangerRating, locProfile);
-        const aftermath = buildFactionAftermath(faction.id, plotFamily);
+        const finale   = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
+        const aftermath = this.buildFactionAftermath(faction.id, plotFamily);
         const isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
 
         conditions[faction.id] = {
@@ -2284,7 +2320,8 @@ window.CC_APP = {
       return conditions;
     }
 
-    function buildFactionFinale(factionId, objectives, dangerRating, locProfile) {
+
+    buildFactionFinale(factionId, objectives, dangerRating, locProfile) {
       const danger = dangerRating || 3;
 
       const finales = {
@@ -2327,7 +2364,8 @@ window.CC_APP = {
       };
     }
 
-    function buildFactionAftermath(factionId, plotFamily) {
+
+    buildFactionAftermath(factionId, plotFamily) {
       const immediates = {
         monster_rangers: [
           'The Rangers restore balance.',
@@ -2410,29 +2448,13 @@ window.CC_APP = {
       };
     }
 
-    // ═══════════════════════════════════════════════════════════════════════════
-    // ScenarioGenerator — Phase 1/2 refactor
-    // ───────────────────────────────────────────────────────────────────────────
-    // Single class that owns the generation pipeline.
-    // generate(selections) is STATELESS — it reads from gameData and the
-    // module-level lookup tables, and returns a ScenarioResult object.
-    // It does NOT read or write state.  That is the caller's responsibility.
-    //
-    // Phase 3 will move the generation sub-functions INSIDE this class.
-    // For now they remain as module-level functions that generate() calls.
-    // ═══════════════════════════════════════════════════════════════════════════
-    class ScenarioGenerator {
-      constructor(gameData) {
-        this._data = gameData;
-      }
 
-      // ── generate(selections) ──────────────────────────────────────────────────
+          // ── generate(selections) ──────────────────────────────────────────────────
       // selections: { factions, dangerRating, locationType, selectedLocation,
       //               gameMode, pointValue }
       //
-      // Note: factions array is expected to ALREADY include any injected NPC
-      // monsters — the caller (window.generateScenario) handles injection so
-      // that module-level sub-functions which read state.factions see it.
+      // All generation sub-functions receive factions + dangerRating as explicit
+      // parameters — no reads of module-level state anywhere in this pipeline.
       //
       // Returns a ScenarioResult object, plus a private `_vault` field that
       // the caller should extract into state.vaultScenario and then delete.
@@ -2527,6 +2549,27 @@ window.CC_APP = {
 
     // ── Create the single ScenarioGenerator instance ─────────────────────────
     const generator = new ScenarioGenerator(gameData);
+
+
+    // ── Module-level wrappers — render functions call these directly ─────────────
+    // These delegate to generator instance so render code doesn't need updating.
+    function makeObjectiveName(type, locProfile) {
+      return generator.makeObjectiveName(type, locProfile);
+    }
+    function getCampaignStateDef(stateId) {
+      return generator.getCampaignStateDef(stateId);
+    }
+    function getDangerDescription(rating) {
+      const map = {
+        1: 'Skirmish — light danger',
+        2: 'Tense — expect resistance',
+        3: 'Hostile — expect casualties',
+        4: 'Dangerous — expect losses',
+        5: 'Deadly — expect to mourn',
+        6: 'Lethal — survival unlikely'
+      };
+      return map[rating] || 'Unknown danger level';
+    }
 
     // ── window.generateScenario — thin wrapper around ScenarioGenerator ────────
     window.generateScenario = function() {
