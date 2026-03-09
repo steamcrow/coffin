@@ -1,77 +1,76 @@
 {
   "project": "Coffin Canyon",
-  "type": "tabletop skirmish game + browser app ecosystem",
-  "primary_language": "JavaScript",
-  "data_model": "JSON-driven",
+  "maintainer": "Daniel Davis / Steam Crow",
+  "description": "Browser-based app ecosystem and rule system for the Coffin Canyon game.",
 
-  "directories": {
-    "rules": {
-      "description": "Primary modern rules and application system",
-      "subsystems": {
-        "apps": "Browser-based tools (faction builder, map, scenario builder, rules explorer)",
-        "src": "Modular rules source files",
-        "map": "Terrain and map data",
-        "ui": "Shared UI system",
-        "tools": "Build tools for assembling rule indexes",
-        "vendor": "Third-party libraries (Leaflet)"
-      }
+  "structure": {
+    "apps": {
+      "path": "apps/",
+      "description": "Interactive browser applications such as Scenario Builder, Faction Builder, Canyon Map, Rules Explorer, and Turn Counter."
     },
 
-    "factions": {
-      "description": "Playable faction definitions",
-      "format": "JSON",
-      "examples": [
-        "faction-monster-rangers-v5.json",
-        "faction-liberty-corps-v2.json",
-        "faction-monsterology-v2.json",
-        "faction-monsters-v2.json",
-        "faction-shine-riders-v2.json"
+    "ui": {
+      "path": "ui/",
+      "description": "Shared UI framework used by all apps including loader, reusable components, and shared styles.",
+      "files": [
+        "cc_loader_core.js",
+        "cc_components.js",
+        "cc_ui.css",
+        "cc_print.css"
       ]
     },
 
-    "assets": {
-      "description": "Static art assets used by the apps",
-      "terrain": "terrain imagery"
+    "data": {
+      "path": "data/",
+      "description": "Canonical structured data used by the system.",
+      "subdirectories": {
+        "src": "Modular rules content",
+        "factions": "Faction definitions",
+        "map_data": "Terrain and map data",
+        "schemas": "JSON schema validation files"
+      }
     },
 
-    "studio": {
-      "description": "Internal development tools"
+    "assets": {
+      "path": "assets/",
+      "description": "Visual assets including terrain imagery and icons."
+    },
+
+    "vendor": {
+      "path": "vendor/",
+      "description": "External libraries such as Leaflet."
+    },
+
+    "archive": {
+      "path": "archive/",
+      "description": "Legacy systems retained for reference."
     },
 
     "future": {
-      "description": "Planning documents and experimental designs"
+      "path": "future/",
+      "description": "Planning documents for future systems."
     },
 
-    "scripts": {
-      "status": "legacy",
-      "description": "Older prototype systems kept for reference"
+    "rules": {
+      "path": "rules/",
+      "description": "Compatibility artifacts from older architecture including rules_base.json."
     }
   },
 
-  "rules_system": {
-    "modular_source": "rules/src",
-    "compiled_index": "rules/rules_base.json",
-    "legacy_rules": "factions/rules.json"
-  },
+  "design_rules": [
+    "Separate design from functionality wherever possible.",
+    "Reusable styles should live in ui/cc_ui.css.",
+    "Reusable UI components should live in ui/cc_components.js.",
+    "Apps should avoid embedding large CSS blocks in JavaScript."
+  ],
 
-  "apps": {
-    "faction_builder": "rules/apps/cc_app_faction_builder.js",
-    "rules_explorer": "rules/apps/cc_app_rules_explorer.js",
-    "scenario_builder": "rules/apps/cc_app_scenario_builder.js",
-    "canyon_map": "rules/apps/cc_app_canyon_map.js",
-    "turn_counter": "rules/apps/cc_app_turn_counter.js"
-  },
-
-  "ui_system": {
-    "core_css": "rules/ui/cc_ui.css",
-    "components": "rules/ui/cc_components.js",
-    "loader": "rules/ui/cc_loader_core.js"
-  },
-
-  "design_constraints": [
-    "mobile friendly",
-    "vanilla javascript preferred",
-    "minimal dependencies",
-    "json-driven architecture"
-  ]
+  "architecture": {
+    "data_driven": true,
+    "frameworks": "minimal",
+    "preferred_stack": [
+      "Vanilla JavaScript",
+      "JSON data structures",
+      "Lightweight CSS"
+    ]
+  }
 }
