@@ -34,234 +34,316 @@ The system emphasizes:
 • lightweight JavaScript  
 • JSON-driven content  
 • mobile-friendly UI  
-• minimal dependencies
+• minimal dependencies  
 
 ------------------------------------------------------------
 
 # 2. Repository Structure
 
-The repository is organized into several major areas.
+The repository root is the Coffin Canyon project root.
 
-## /rules/
+Major directories include:
 
-Primary modern system for rules and apps.
-
+/
+apps/
+archive/
+assets/
+data/
+future/
 rules/
-  apps/        browser app entry points
-  map/         terrain + map JSON
-  src/         modular rules source files
-  tools/       build tools
-  ui/          shared UI system
-  vendor/      external libraries (Leaflet)
-  rules_base.json
+ui/
+vendor/
 
-This directory represents the new organized architecture of the project.
+ai_index.json  
+assistant_contract.json  
+claude.md
+
+Earlier versions of the project organized most systems under `/rules/`.  
+The modern architecture separates **apps, UI, and structured data** into their own top-level directories.
 
 ------------------------------------------------------------
 
-## /factions/
+# 3. Core Directory Roles
 
-Faction data files used by the game.
+## /apps/
+
+Contains browser-based Coffin Canyon applications.
+
+Examples include:
+
+• Canyon Map  
+• Scenario Builder  
+• Faction Builder  
+• Rules Explorer  
+• Turn Counter  
+
+Typical structure:
+
+app_name/
+  app_script.js
+  app_style.css
+  data/
+
+Apps should contain **application logic only**.
+
+They should not contain reusable UI styling or shared framework components.
+
+------------------------------------------------------------
+
+## /ui/
+
+Shared UI system used across all apps.
+
+Important files include:
+
+cc_loader_core.js  
+cc_components.js  
+cc_ui.css  
+cc_print.css  
+
+Responsibilities:
+
+• shared UI components  
+• reusable UI styling  
+• common loaders  
+• global interface utilities  
+
+### Design Rule
+
+Design should be separated from functionality whenever possible.
+
+Apps should avoid embedding styling directly inside JavaScript.
+
+Reusable design elements should be placed in:
+
+ui/cc_ui.css
+
+Reusable UI components should be placed in:
+
+ui/cc_components.js
+
+Apps should import and reuse these resources.
+
+------------------------------------------------------------
+
+## /data/
+
+Canonical structured data used by the system.
+
+data/
+  factions/
+  map_data/
+  schemas/
+  src/
+
+### data/src/
+
+Primary modular rule content.
 
 Examples:
 
-faction-monster-rangers-v5.json  
-faction-liberty-corps-v2.json  
-faction-monsterology-v2.json  
-faction-monsters-v2.json  
-faction-shine-riders-v2.json  
+05_quickstart.json  
+10_core_mechanics.json  
+20_turn_structure.json  
+120_terrain_vault.json  
+130_objective_vault.json  
+140_scenario_vault.json  
+150_location_types.json  
+170_named_locations.json  
+
+These files define the modular rule system.
+
+------------------------------------------------------------
+
+### data/factions/
+
+Faction definitions used by gameplay apps.
+
+Example files:
+
+faction-monster-rangers.json  
+faction-liberty-corps.json  
+faction-monsters.json  
+faction-shine-riders.json  
 faction-crow-queen.json  
 
-Also includes:
+Faction data should remain pure JSON configuration.
 
-rules.json  
-rules_progress.json  
+No application logic should appear in these files.
 
-These may represent older consolidated rule artifacts.
+------------------------------------------------------------
+
+### data/map_data/
+
+Terrain and map data used by the Canyon Map and Scenario Builder.
+
+Examples may include:
+
+terrain_catalog.json  
+terrain_instances.json  
+
+------------------------------------------------------------
+
+### data/schemas/
+
+JSON schema definitions used to validate game data.
+
+These define expected structures for:
+
+• factions  
+• units  
+• terrain  
+• abilities  
+• scenarios  
 
 ------------------------------------------------------------
 
 ## /assets/
 
-Visual assets used by apps.
+Visual art and supporting imagery.
 
-assets/terrain/
+Examples include:
 
-Contains terrain imagery and supporting files.
+assets/terrain/  
+assets/icons/
+
+These are referenced by apps but contain no logic.
 
 ------------------------------------------------------------
 
-## /studio/
+## /vendor/
 
-Internal design tools such as the Studio Builder.
+External libraries.
 
 Example:
 
-studio_builder.js  
-studio_builder.css  
+vendor/leaflet/
 
-These tools are used during development rather than gameplay.
+Rules:
+
+• do not modify vendor libraries directly  
+• update by replacing with official releases  
+
+------------------------------------------------------------
+
+## /archive/
+
+Legacy files retained for reference.
+
+These may include:
+
+• older rule systems  
+• deprecated app prototypes  
+• experimental tools  
+
+Do not delete files here unless instructed.
 
 ------------------------------------------------------------
 
 ## /future/
 
-Planning documents for future features.
+Planning documents for upcoming features.
 
 Examples:
 
 coffin_canyon_app_suite_plan.json  
 community_event_scenario_plan.json  
 
-These files describe planned systems but may not yet be active.
+These files describe ideas and may not correspond to active systems.
 
 ------------------------------------------------------------
 
-## /scripts/ (Legacy)
+## /rules/
 
-Older experimental or legacy code.
-
-This directory is not the primary system but is retained as reference.
-
-It may contain:
-
-• early app shells  
-• prototype loaders  
-• older storage systems  
-• rule viewer prototypes  
-
-This directory may eventually move to:
-
-archive/scripts_legacy
-
-Do not delete or modify legacy files unless explicitly instructed.
-
-------------------------------------------------------------
-
-# 3. Rules Architecture
-
-The rules engine currently exists in two forms.
-
-## Consolidated Rules Artifact
+This directory may contain compatibility artifacts from earlier versions of the system.
 
 Example:
 
-factions/rules.json
+rules_base.json
 
-This is a large unified rules structure.
+It may serve as a compatibility layer for legacy loaders.
 
-------------------------------------------------------------
+The modern architecture primarily relies on:
 
-## Modular Rules System
-
-Located in:
-
-rules/src/
-
-Examples include:
-
-05_quickstart.json  
-10_core_mechanics.json  
-100_weapon_properties.json  
-120_terrain_vault.json  
-130_objective_vault.json  
-140_scenario_vault.json  
-150_location_types.json  
-
-These files are assembled through the rules tools system.
-
-Example:
-
-rules/tools/build_rules_index.js
-
-The modular system is the preferred long-term direction.
+data/  
+apps/  
+ui/  
 
 ------------------------------------------------------------
 
-# 4. App Architecture
+# 4. Rules Architecture
 
-Apps live primarily in:
+The Coffin Canyon rules system is JSON-driven.
 
-rules/apps/
+The modular rules live in:
 
-Current apps include:
+data/src/
 
-Canyon Map  
-cc_app_canyon_map.js
+These files represent rule sections that can be assembled or referenced by apps.
 
-Faction Builder  
-cc_app_faction_builder.js
+This modular structure allows:
 
-Rules Explorer  
-cc_app_rules_explorer.js
-
-Scenario Builder  
-cc_app_scenario_builder.js
-
-Turn Counter  
-cc_app_turn_counter.js
+• rule browsing  
+• scenario validation  
+• rule search  
+• AI-assisted rule interpretation  
 
 ------------------------------------------------------------
 
-# 5. UI System
+# 5. App Architecture
 
-Shared UI components live in:
+Apps should follow these principles:
 
-rules/ui/
+• lightweight JavaScript  
+• minimal dependencies  
+• JSON-driven data  
+• mobile-friendly layouts  
 
-Important files:
+Apps should consume data from `/data/` rather than embedding rules directly.
 
-cc_ui.css  
-cc_print.css  
-cc_components.js  
-cc_loader_core.js  
+Apps should reuse shared UI elements from `/ui/`.
 
-Design style:
+------------------------------------------------------------
+
+# 6. UI Design Philosophy
+
+Coffin Canyon apps use a shared design language.
+
+Design goals:
 
 • dark interface  
 • brass / industrial aesthetic  
 • orange accent color  
+• mobile friendly layout  
 
-Avoid introducing additional UI frameworks.
+### Design Separation Rule
 
-------------------------------------------------------------
+Whenever possible:
 
-# 6. Map System
+Design should be separated from functionality.
 
-Terrain and map systems live under:
+Do NOT embed large style blocks in JavaScript.
 
-rules/map/
+Reusable styles should live in:
 
-Key files:
+ui/cc_ui.css
 
-terrain_catalog.json  
-terrain_instances.json  
-
-Terrain imagery lives under:
-
-assets/terrain/
-
-Maintain stable IDs and file names.
+App-specific styling should live in the app’s CSS file.
 
 ------------------------------------------------------------
 
 # 7. Persistence and Odoo Integration
 
-Some apps interact with Odoo SaaS portals.
+Some apps integrate with Odoo SaaS portals.
 
-Examples include:
+Possible behaviors include:
 
-• session lookup  
+• portal session lookup  
 • JSON-RPC calls  
 • storage via documents.document  
+• shareable URL state  
 
-Apps may support:
-
-• shareable URL data  
-• portal user saves  
-• JSON payloads  
-
-Do not introduce server-side dependencies unless explicitly requested.
+Apps must remain functional as standalone browser tools whenever possible.
 
 ------------------------------------------------------------
 
@@ -269,13 +351,17 @@ Do not introduce server-side dependencies unless explicitly requested.
 
 Coffin Canyon tools follow these principles:
 
-• mobile friendly  
 • simple architecture  
 • JSON-driven systems  
+• reusable UI components  
 • minimal frameworks  
-• readable code
+• readable code  
 
-Avoid heavy frameworks like React, Vue, or Angular.
+Avoid introducing heavy frameworks such as:
+
+React  
+Vue  
+Angular  
 
 ------------------------------------------------------------
 
@@ -283,12 +369,13 @@ Avoid heavy frameworks like React, Vue, or Angular.
 
 When modifying code:
 
-1. Make the smallest safe change.
-2. Preserve file structure.
-3. Do not rename JSON schema fields.
-4. Do not break existing apps.
-5. Prefer improving existing systems rather than replacing them.
-6. Provide full updated files when code is modified.
+1. Make the smallest safe change.  
+2. Preserve file structure.  
+3. Do not rename JSON schema fields.  
+4. Do not break existing apps.  
+5. Prefer improving existing systems rather than replacing them.  
+6. Keep design and functionality separated whenever possible.  
+7. Reuse UI components and styles from `/ui/`.
 
 ------------------------------------------------------------
 
@@ -314,7 +401,7 @@ The repository owner prefers:
 • clear headings  
 • dyslexia-friendly formatting  
 • full code examples when code is requested  
-• minimal filler text
+• minimal filler text  
 
 ------------------------------------------------------------
 
