@@ -5,7 +5,11 @@
 // SECTION MAP
 //   ~   8  Init, CSS loading, inline styles (pulse / mini-map / print)
 //   ~ 347  App state + faction registry
-//   ~ 376  Data loading (JSON files + faction data from GitHub)
+//   ~ 376  GameDataManager class  (replaces 11 globals + loadGameData)
+//   ~ 500  Map embed + utilities
+//   ~ 560  Data tables + helper functions
+//   ~ 820  ScenarioGenerator class  (generate pipeline entry point)
+//   ~ 870  window.generateScenario  — thin wrapper
 //   ~ 441  Map embed URLs and Leaflet helper functions
 //   ~ 508  Utilities  (randomChoice, randomInt, getDangerDescription)
 //   ~ 532  Small helpers  (cargo name, campaign state lookup)
@@ -401,86 +405,125 @@ window.CC_APP = {
       { id: 'crow_queen',      name: 'Crow Queen',      file: 'faction-crow-queen.json'        }
     ];
 
-    // ── Data loading — all JSON files fetched in parallel at boot ───────────────────
-    let plotFamiliesData   = null;
-    let twistTablesData    = null;
-    let locationData       = null;
-    let locationTypesData  = null;
-    let monsterFactionData = null;
-    let scenarioVaultData  = null;
-    let scenarioNamesData  = null;
-    let campaignSystemData = null;   // 30_campaign_system.json — location states + effects
-    let plotEngineData     = null;   // 190_plot_engine_schema.json — design philosophy + vectors
-    let objectiveVault240  = null;   // 240_objective_vault.json — detailed objective rules
-    var vault240Map        = {};     // flat lookup: objective_id -> full entry
-    let factionDataMap     = {};
+    // ═══════════════════════════════════════════════════════════════════════════
+    // GameDataManager — Phase 1/2 refactor
+    // ───────────────────────────────────────────────────────────────────────────
+    // Single class that owns ALL fetch/cache logic.
+    // Every other function reads data through gameData.getX() methods.
+    // Previously this was 11 scattered `let` globals + async loadGameData().
+    // ═══════════════════════════════════════════════════════════════════════════
+    class GameDataManager {
+      constructor() {
+        const BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main';
+        this._base    = BASE;
+        this._loaded  = false;
 
-    async function loadGameData() {
-      try {
-        const base = 'https://raw.githubusercontent.com/steamcrow/coffin/main';
-        const t    = '?t=' + Date.now();
+        this._plotFamilies   = null;
+        this._twists         = null;
+        this._locations      = null;
+        this._locationTypes  = null;
+        this._monsterFaction = null;
+        this._scenarioVault  = null;
+        this._scenarioNames  = null;
+        this._campaignSystem = null;
+        this._plotEngine     = null;
+        this._objVault240    = null;
+        this._vault240Map    = {};
+        this._factions       = {};
+      }
 
-        const [plotRes, twistRes, locRes, locTypesRes, monstersRes, vaultRes, namesRes, campRes, engineRes, vault240Res] = await Promise.all([
-          fetch(`${base}/rules/src/200_plot_families.json${t}`),
-          fetch(`${base}/rules/src/210_twist_tables.json${t}`),
-          fetch(`${base}/rules/src/170_named_locations.json${t}`),
-          fetch(`${base}/rules/src/150_location_types.json${t}`),
-          fetch(`${base}/factions/faction-monsters-v2.json${t}`),
-          fetch(`${base}/rules/src/180_scenario_vault.json${t}`),
-          fetch(`${base}/rules/src/230_scenario_names.json${t}`),
-          fetch(`${base}/rules/src/30_campaign_system.json${t}`),
-          fetch(`${base}/rules/src/190_plot_engine_schema.json${t}`),
-          fetch(`${base}/rules/src/240_objective_vault.json${t}`)
-        ]);
+      // ── State ─────────────────────────────────────────────────────────────────
+      isLoaded() { return this._loaded; }
 
-        plotFamiliesData   = await plotRes.json();
-        twistTablesData    = await twistRes.json();
-        locationData       = await locRes.json();
-        locationTypesData  = await locTypesRes.json();
-        monsterFactionData = await monstersRes.json();
-        scenarioVaultData  = await vaultRes.json();
-        scenarioNamesData  = await namesRes.json();
-        // Campaign system is optional — don't fail if the file isn't there yet
-        try { campaignSystemData = await campRes.json(); } catch (e) { campaignSystemData = null; }
-        try { plotEngineData     = await engineRes.json(); } catch (e) { plotEngineData = null; }
-        if (plotEngineData) console.log('🗺️  Plot engine schema loaded');
+      // ── Accessors ─────────────────────────────────────────────────────────────
+      // Each returns a safe default so callers never need to null-check.
+      getPlotFamilies()   { return (this._plotFamilies  && this._plotFamilies.plot_families)  || []; }
+      getTwists()         { return (this._twists         && this._twists.twists)               || []; }
+      getLocations()      { return this._locations       || { locations: [] }; }
+      getLocationTypes()  { return this._locationTypes   || { location_types: [] }; }
+      getMonsterFaction() { return this._monsterFaction  || {}; }
+      getScenarioVault()  { return this._scenarioVault   || { scenarios: [] }; }
+      getScenarioNames()  { return this._scenarioNames   || {}; }
+      getCampaignSystem() { return this._campaignSystem; }
+      getPlotEngine()     { return this._plotEngine; }
+      getVault240Map()    { return this._vault240Map; }
+
+      // getFaction(id) — returns the loaded faction JSON, or null.
+      getFaction(id)      { return this._factions[id] || null; }
+
+      // ── loadAll() — replaces loadGameData() ───────────────────────────────────
+      async loadAll() {
         try {
-          objectiveVault240 = await vault240Res.json();
-          // Flatten categories > objectives into a quick-lookup map
-          var cats240 = objectiveVault240.categories || objectiveVault240.objective_categories || [];
-          cats240.forEach(function(cat) {
-            (cat.objectives || []).forEach(function(obj) {
-              vault240Map[obj.objective_id] = obj;
-            });
-          });
-          console.log('📋 240 Objective Vault loaded —', Object.keys(vault240Map).length, 'entries');
-        } catch (e) { objectiveVault240 = null; }
+          const b = this._base;
+          const t = '?t=' + Date.now();
 
-        const PLAYER_FACTIONS = [
-          { id: 'monster_rangers', file: 'faction-monster-rangers-v5.json' },
-          { id: 'liberty_corps',   file: 'faction-liberty-corps-v2.json'  },
-          { id: 'monsterology',    file: 'faction-monsterology-v2.json'   },
-          { id: 'shine_riders',    file: 'faction-shine-riders-v2.json'   },
-          { id: 'crow_queen',      file: 'faction-crow-queen.json'        }
-        ];
-        factionDataMap = {};
-        await Promise.all(PLAYER_FACTIONS.map(async ({ id, file }) => {
+          const [plotRes, twistRes, locRes, locTypesRes, monstersRes,
+                 vaultRes, namesRes, campRes, engineRes, vault240Res] = await Promise.all([
+            fetch(`${b}/rules/src/200_plot_families.json${t}`),
+            fetch(`${b}/rules/src/210_twist_tables.json${t}`),
+            fetch(`${b}/rules/src/170_named_locations.json${t}`),
+            fetch(`${b}/rules/src/150_location_types.json${t}`),
+            fetch(`${b}/factions/faction-monsters-v2.json${t}`),
+            fetch(`${b}/rules/src/180_scenario_vault.json${t}`),
+            fetch(`${b}/rules/src/230_scenario_names.json${t}`),
+            fetch(`${b}/rules/src/30_campaign_system.json${t}`),
+            fetch(`${b}/rules/src/190_plot_engine_schema.json${t}`),
+            fetch(`${b}/rules/src/240_objective_vault.json${t}`)
+          ]);
+
+          this._plotFamilies   = await plotRes.json();
+          this._twists         = await twistRes.json();
+          this._locations      = await locRes.json();
+          this._locationTypes  = await locTypesRes.json();
+          this._monsterFaction = await monstersRes.json();
+          this._scenarioVault  = await vaultRes.json();
+          this._scenarioNames  = await namesRes.json();
+
+          try { this._campaignSystem = await campRes.json();   } catch (e) { this._campaignSystem = null; }
+          try { this._plotEngine     = await engineRes.json(); } catch (e) { this._plotEngine = null; }
+          if (this._plotEngine) console.log('🗺️  Plot engine schema loaded');
+
           try {
-            const res = await fetch(`${base}/factions/${file}${t}`);
-            factionDataMap[id] = await res.json();
-            console.log(`✅ Faction loaded: ${id}`);
-          } catch (e) {
-            console.warn(`⚠️ Could not load faction: ${id}`, e);
-            factionDataMap[id] = null;
-          }
-        }));
+            this._objVault240 = await vault240Res.json();
+            var cats = this._objVault240.categories || this._objVault240.objective_categories || [];
+            cats.forEach(function(cat) {
+              (cat.objectives || []).forEach(function(obj) {
+                this._vault240Map[obj.objective_id] = obj;
+              }, this);
+            }, this);
+            console.log('📋 240 Objective Vault loaded —', Object.keys(this._vault240Map).length, 'entries');
+          } catch (e) { this._objVault240 = null; }
 
-        console.log('✅ All game data loaded');
-      } catch (err) {
-        console.error('❌ Failed to load game data:', err);
-        alert('Failed to load scenario data. Please refresh the page.');
+          // Faction JSON files — loaded in parallel, stored by id
+          const PLAYER_FACTIONS = [
+            { id: 'monster_rangers', file: 'faction-monster-rangers-v5.json' },
+            { id: 'liberty_corps',   file: 'faction-liberty-corps-v2.json'  },
+            { id: 'monsterology',    file: 'faction-monsterology-v2.json'   },
+            { id: 'shine_riders',    file: 'faction-shine-riders-v2.json'   },
+            { id: 'crow_queen',      file: 'faction-crow-queen.json'        }
+          ];
+          await Promise.all(PLAYER_FACTIONS.map(async ({ id, file }) => {
+            try {
+              const res = await fetch(`${b}/factions/${file}${t}`);
+              this._factions[id] = await res.json();
+              console.log(`✅ Faction loaded: ${id}`);
+            } catch (e) {
+              console.warn(`⚠️ Could not load faction: ${id}`, e);
+              this._factions[id] = null;
+            }
+          }));
+
+          this._loaded = true;
+          console.log('✅ All game data loaded');
+        } catch (err) {
+          console.error('❌ Failed to load game data:', err);
+          alert('Failed to load scenario data. Please refresh the page.');
+        }
       }
     }
+
+    // ── Create the single GameDataManager instance ────────────────────────────
+    const gameData = new GameDataManager();
 
     // ── Map embed — remote URLs and Leaflet instance cache ─────────────────────────────
     const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map_app.js';
@@ -577,11 +620,12 @@ window.CC_APP = {
 
     // ── getCampaignStateDef — looks up environment/terrain/effects from campaign JSON ──
     function getCampaignStateDef(stateId) {
-      if (!campaignSystemData) return null;
+      if (!gameData.getCampaignSystem()) return null;
       // Try common structures: location_states array, or states array, or direct object
-      const pool = campaignSystemData.location_states
-                || campaignSystemData.states
-                || (Array.isArray(campaignSystemData) ? campaignSystemData : null);
+      const _cs  = gameData.getCampaignSystem();
+      const pool = _cs.location_states
+                || _cs.states
+                || (Array.isArray(_cs) ? _cs : null);
       if (!pool) return null;
       return pool.find(s => s.id === stateId || s.name?.toLowerCase() === stateId?.toLowerCase()) || null;
     }
@@ -593,12 +637,12 @@ window.CC_APP = {
     function buildLocationProfile(locationType, selectedLocationId) {
       let location = null;
 
-      if (locationType === 'named' && selectedLocationId && locationData) {
-        location = locationData.locations.find(l => l.id === selectedLocationId);
+      if (locationType === 'named' && selectedLocationId) {
+        location = gameData.getLocations().locations.find(l => l.id === selectedLocationId) || null;
       }
 
-      if (!location && locationData?.locations?.length) {
-        location = randomChoice(locationData.locations);
+      if (!location && gameData.getLocations().locations.length) {
+        location = randomChoice(gameData.getLocations().locations);
       }
 
       if (!location) {
@@ -620,8 +664,8 @@ window.CC_APP = {
       }
 
       let typeDefaults = {};
-      if (locationTypesData?.location_types && location.type_ref) {
-        typeDefaults = locationTypesData.location_types.find(t => t.id === location.type_ref) || {};
+      if (gameData.getLocationTypes().location_types && location.type_ref) {
+        typeDefaults = gameData.getLocationTypes().location_types.find(t => t.id === location.type_ref) || {};
       }
 
       const effectiveResources = Object.assign({}, typeDefaults.base_resources || {}, location.resources || {});
@@ -657,7 +701,7 @@ window.CC_APP = {
     // ── getVault240Details — read 240 objective vault for this objective type ────────
     //   Returns { actions, vp_formula, test_line, action_cost } for display on cards.
     function getVault240Details(objectiveType) {
-      var entry = vault240Map[objectiveType];
+      var entry = gameData.getVault240Map()[objectiveType];
       if (!entry) return null;
       var details = {};
 
@@ -711,7 +755,7 @@ window.CC_APP = {
 
     // ── getFactionFileData — safely read factionDataMap for a faction id ─────────────
     function getFactionFileData(factionId) {
-      return factionDataMap[factionId] || null;
+      return gameData.getFaction(factionId);
     }
 
     // ── getFactionVictoryGoal — read faction file's victory_objectives[0] ────────────
@@ -752,9 +796,9 @@ window.CC_APP = {
 
     // ── getPlotEngineCanonicalMotive — read 190 schema canonical_motivations ─────────
     function getPlotEngineCanonicalMotive(factionId) {
-      if (!plotEngineData) return null;
-      var claimants = (plotEngineData.vectors && plotEngineData.vectors.claimants)
-        ? plotEngineData.vectors.claimants : {};
+      var _pe = gameData.getPlotEngine();
+      if (!_pe) return null;
+      var claimants = (_pe.vectors && _pe.vectors.claimants) ? _pe.vectors.claimants : {};
       var motives = claimants.canonical_motivations || {};
       // Keys in 190 are like 'monsterologists' but we use 'monsterology' — try both
       var val = motives[factionId]
@@ -954,7 +998,7 @@ window.CC_APP = {
                                 selectedFactions = [], selectedDanger = 3,
                                 locationType = '', selectedLocation = '') {
 
-      if (!scenarioVaultData?.scenarios?.length) return { scenario: null, score: 0 };
+      if (!gameData.getScenarioVault().scenarios || !gameData.getScenarioVault().scenarios.length) return { scenario: null, score: 0 };
 
       // Build tag context for generic overlap scoring
       const allTags = [
@@ -982,7 +1026,7 @@ window.CC_APP = {
       let best      = null;
       let bestScore = -Infinity;
 
-      for (const s of scenarioVaultData.scenarios) {
+      for (const s of gameData.getScenarioVault().scenarios) {
         let score = 0;
 
         // ── FACTION MATCH (highest weight) ──────────────────────────────────
@@ -1012,7 +1056,7 @@ window.CC_APP = {
 
         // ── NAMED LOCATION MATCH ────────────────────────────────────────────
         if (selectedLocation && locationType === 'named') {
-          const locName = locationData?.locations
+          const locName = gameData.getLocations().locations
             ?.find(l => l.id === selectedLocation)?.name?.toLowerCase() || '';
           const allowedNamed = (s.location_rules?.allowed_named_locations || [])
             .map(n => n.toLowerCase());
@@ -1121,9 +1165,10 @@ window.CC_APP = {
       let prefix = 'Bloody';
       let suffix = 'Reckoning';
 
-      if (scenarioNamesData) {
-        const prefixes = scenarioNamesData.prefixes || [];
-        const suffixes = scenarioNamesData.suffixes || [];
+      const _sn = gameData.getScenarioNames();
+      if (_sn && Object.keys(_sn).length) {
+        const prefixes = _sn.prefixes || [];
+        const suffixes = _sn.suffixes || [];
 
         const taggedPrefixes = prefixes.filter(p =>
           Array.isArray(p.tags) && p.tags.some(t => contextTags.includes(t))
@@ -1164,7 +1209,7 @@ window.CC_APP = {
     //    Nothing from this section is shown in the scenario output.
     function generateMonsterPressure(plotFamily, dangerRating, locProfile) {
       const enabled = Math.random() > 0.3;
-      if (!enabled || !monsterFactionData) return { enabled: false };
+      if (!enabled || !gameData.getMonsterFaction().units) return { enabled: false };
 
       const budgetPercent    = 0.2 + (dangerRating / 6) * 0.2;
       const monsterBudget    = Math.floor(state.pointValue * budgetPercent);
@@ -1176,7 +1221,7 @@ window.CC_APP = {
         let attempts = 0;
         while (remainingBudget > 100 && attempts < 10) {
           const seed = randomChoice(locProfile.monster_seeds);
-          const unit = monsterFactionData.units?.find(u => u.name === seed.name);
+          const unit = (gameData.getMonsterFaction().units || []).find(u => u.name === seed.name);
           if (!unit || unit.cost > remainingBudget) { attempts++; continue; }
           selectedMonsters.push(unit);
           remainingBudget -= unit.cost;
@@ -1185,8 +1230,8 @@ window.CC_APP = {
         }
       }
 
-      if (selectedMonsters.length === 0 && monsterFactionData.units) {
-        const available = monsterFactionData.units.filter(u => u.cost <= monsterBudget);
+      if (selectedMonsters.length === 0 && gameData.getMonsterFaction().units) {
+        const available = gameData.getMonsterFaction().units.filter(u => u.cost <= monsterBudget);
         let budget = monsterBudget;
         while (budget > 0 && available.length > 0) {
           const valid   = available.filter(m => m.cost <= budget);
@@ -1473,8 +1518,8 @@ window.CC_APP = {
           const seed = randomChoice(seeds);
           return `Guarded — ${seed.name} nearby`;
         }
-        if (monsterFactionData?.units?.length) {
-          const genericMonster = randomChoice(monsterFactionData.units);
+        if (gameData.getMonsterFaction().units && gameData.getMonsterFaction().units.length) {
+          const genericMonster = randomChoice(gameData.getMonsterFaction().units);
           if (genericMonster) return `Guarded — ${genericMonster.name} nearby`;
         }
       }
@@ -2365,122 +2410,153 @@ window.CC_APP = {
       };
     }
 
-    // ── window.generateScenario — main generation entry point ──────────────────────
+    // ═══════════════════════════════════════════════════════════════════════════
+    // ScenarioGenerator — Phase 1/2 refactor
+    // ───────────────────────────────────────────────────────────────────────────
+    // Single class that owns the generation pipeline.
+    // generate(selections) is STATELESS — it reads from gameData and the
+    // module-level lookup tables, and returns a ScenarioResult object.
+    // It does NOT read or write state.  That is the caller's responsibility.
+    //
+    // Phase 3 will move the generation sub-functions INSIDE this class.
+    // For now they remain as module-level functions that generate() calls.
+    // ═══════════════════════════════════════════════════════════════════════════
+    class ScenarioGenerator {
+      constructor(gameData) {
+        this._data = gameData;
+      }
+
+      // ── generate(selections) ──────────────────────────────────────────────────
+      // selections: { factions, dangerRating, locationType, selectedLocation,
+      //               gameMode, pointValue }
+      //
+      // Note: factions array is expected to ALREADY include any injected NPC
+      // monsters — the caller (window.generateScenario) handles injection so
+      // that module-level sub-functions which read state.factions see it.
+      //
+      // Returns a ScenarioResult object, plus a private `_vault` field that
+      // the caller should extract into state.vaultScenario and then delete.
+      // ──────────────────────────────────────────────────────────────────────────
+      generate(selections) {
+        const { factions, dangerRating, locationType, selectedLocation, gameMode, pointValue } = selections;
+
+        const locProfile = buildLocationProfile(locationType, selectedLocation);
+        console.log('📍 Location profile:', locProfile);
+
+        const families   = this._data.getPlotFamilies();
+        const plotFamily = selectPlotFamily(families, factions, locProfile, dangerRating);
+        console.log('📖 Plot family (scored):', plotFamily.name);
+
+        const { scenario: vaultScenario, score: matchScore } = matchVaultScenario(
+          plotFamily, locProfile, [], factions, dangerRating, locationType, selectedLocation
+        );
+        if (vaultScenario) console.log('📚 Vault match:', vaultScenario.name, '(' + matchScore + ')');
+
+        const objectives = vaultScenario
+          ? generateObjectivesFromVault(vaultScenario, locProfile)
+          : generateObjectives(plotFamily, locProfile);
+        generateObjectiveChain(objectives);
+
+        const monsterPressure = generateMonsterPressure(plotFamily, dangerRating, locProfile);
+
+        let twist = null;
+        if (Math.random() < 0.3) {
+          const eligible = this._data.getTwists().filter(function(t) {
+            return t.danger_floor <= dangerRating && t.danger_ceiling >= dangerRating;
+          });
+          if (eligible.length > 0) {
+            const td = randomChoice(eligible);
+            twist = { name: td.name, description: td.description, example: randomChoice(td.example_outcomes || []) };
+          }
+        }
+
+        const objectiveMarkers = generateObjectiveMarkers(objectives, vaultScenario);
+
+        let victoryConditions;
+        if (vaultScenario && vaultScenario.victory_conditions && Object.keys(vaultScenario.victory_conditions).length > 0) {
+          victoryConditions = buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily);
+          console.log('📚 Using vault victory conditions');
+        } else {
+          victoryConditions = generateVictoryConditions(plotFamily, objectives, locProfile);
+          console.log('⚙️  Generated victory conditions');
+        }
+
+        let aftermath;
+        if (vaultScenario && vaultScenario.aftermath_effects && Object.keys(vaultScenario.aftermath_effects).length > 0) {
+          aftermath = buildAftermathSummaryFromVault(vaultScenario.aftermath_effects);
+          console.log('📚 Using vault aftermath');
+        } else {
+          aftermath = generateAftermath(plotFamily);
+        }
+
+        const nameContextTags = [];
+        if (vaultScenario && vaultScenario.tags) {
+          vaultScenario.tags.forEach(function(t) { if (nameContextTags.indexOf(t) < 0) nameContextTags.push(t); });
+        }
+
+        const scenarioName   = generateScenarioNameFromTags(plotFamily, locProfile, objectives, twist, dangerRating, nameContextTags);
+        const narrative_hook = (vaultScenario && vaultScenario.narrative_hook)
+          ? vaultScenario.narrative_hook
+          : generateNarrativeHook(plotFamily, locProfile, objectives);
+
+        // Return the full ScenarioResult.
+        // _vault is a private field — caller extracts it into state.vaultScenario.
+        return {
+          name:               scenarioName,
+          narrative_hook,
+          location:           locProfile,
+          danger_rating:      dangerRating,
+          danger_description: getDangerDescription(dangerRating),
+          plot_family:        plotFamily.name,
+          objectives,
+          monster_pressure:   monsterPressure,
+          twist,
+          victory_conditions: victoryConditions,
+          aftermath,
+          factions,
+          pointValue,
+          gameMode,
+          loc_profile:        locProfile,
+          objective_markers:  objectiveMarkers,
+          vault_source:       vaultScenario ? vaultScenario.name  : null,
+          vault_match_score:  vaultScenario ? matchScore           : 0,
+          _vault:             vaultScenario   // extracted by window.generateScenario
+        };
+      }
+    }
+
+    // ── Create the single ScenarioGenerator instance ─────────────────────────
+    const generator = new ScenarioGenerator(gameData);
+
+    // ── window.generateScenario — thin wrapper around ScenarioGenerator ────────
     window.generateScenario = function() {
       console.log('🎲 Generating scenario...', state);
 
-      if (!plotFamiliesData || !twistTablesData || !monsterFactionData) {
+      if (!gameData.isLoaded()) {
         alert('Game data not loaded yet. Please wait a moment and try again.');
         return;
       }
 
-      // Inject Monsters as an NPC faction with 85% probability if not already chosen.
-      const hasMonsters = state.factions.some(f => f.id === 'monsters');
-      if (!hasMonsters && Math.random() < 0.85) {
+      // Inject Monsters as an NPC with 85% probability before generate() is called
+      // so that sub-functions that read state.factions directly see the full list.
+      if (!state.factions.some(function(f) { return f.id === 'monsters'; }) && Math.random() < 0.85) {
         state.factions.push({ id: 'monsters', name: 'Monsters', player: 'NPC', isNPC: true });
       }
 
-      const dangerRating = state.dangerRating || 3;
-      const contextTags  = [];
+      const result = generator.generate({
+        factions:         state.factions,
+        dangerRating:     state.dangerRating,
+        locationType:     state.locationType,
+        selectedLocation: state.selectedLocation,
+        gameMode:         state.gameMode,
+        pointValue:       state.pointValue
+      });
 
-      const locProfile = buildLocationProfile(state.locationType, state.selectedLocation);
-      console.log('📍 Location profile:', locProfile);
+      // Extract _vault into its own state slot, then clean it from the scenario
+      state.vaultScenario = result._vault;
+      delete result._vault;
 
-      const families   = plotFamiliesData.plot_families || [];
-      const plotFamily = selectPlotFamily(families, state.factions, locProfile, state.dangerRating);
-      console.log('📖 Plot family (scored):', plotFamily.name);
-
-      const { scenario: vaultScenario, score: maxMatchScore } = matchVaultScenario(
-        plotFamily, locProfile, contextTags,
-        state.factions, state.dangerRating,
-        state.locationType, state.selectedLocation
-      );
-      state.vaultScenario = vaultScenario;   // save for rendering
-      if (vaultScenario) console.log(`📚 Vault match: ${vaultScenario.name} (${maxMatchScore} tags)`);
-
-      // Objectives are generated first so the name and hook can reference their real names.
-      const objectives = vaultScenario
-        ? generateObjectivesFromVault(vaultScenario, locProfile)
-        : generateObjectives(plotFamily, locProfile);
-
-      generateObjectiveChain(objectives);
-
-      const monsterPressure = generateMonsterPressure(plotFamily, dangerRating, locProfile);
-
-      let twist = null;
-      if (Math.random() < 0.3) {
-        const eligible = (twistTablesData.twists || []).filter(t =>
-          t.danger_floor <= dangerRating && t.danger_ceiling >= dangerRating
-        );
-        if (eligible.length > 0) {
-          const td = randomChoice(eligible);
-          twist = {
-            name:        td.name,
-            description: td.description,
-            example:     randomChoice(td.example_outcomes || [])
-          };
-        }
-      }
-
-      const objectiveMarkers  = generateObjectiveMarkers(objectives, vaultScenario);
-
-      // TIER 3: Use vault victory conditions + aftermath directly when vault matched.
-      // Only fall back to generation when there's no vault match or the vault data is empty.
-      var victoryConditions;
-      if (vaultScenario && vaultScenario.victory_conditions
-          && Object.keys(vaultScenario.victory_conditions).length > 0) {
-        // Vault has its own per-faction VC — use them. Enrich with conflict table for any
-        // factions that aren't explicitly listed in the vault VC block.
-        victoryConditions = buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily);
-        console.log('📚 Using vault victory conditions');
-      } else {
-        victoryConditions = generateVictoryConditions(plotFamily, objectives, locProfile);
-        console.log('⚙️  Generated victory conditions');
-      }
-
-      var aftermath;
-      if (vaultScenario && vaultScenario.aftermath_effects
-          && Object.keys(vaultScenario.aftermath_effects).length > 0) {
-        // Vault aftermath is rendered directly by renderVaultAftermath — store the raw vault
-        // so the renderer can use it; also store a plain-text summary for print.
-        aftermath = buildAftermathSummaryFromVault(vaultScenario.aftermath_effects);
-        console.log('📚 Using vault aftermath');
-      } else {
-        aftermath = generateAftermath(plotFamily);
-      }
-
-      const nameContextTags = [...contextTags];
-      if (vaultScenario?.tags) {
-        vaultScenario.tags.forEach(t => { if (!nameContextTags.includes(t)) nameContextTags.push(t); });
-      }
-
-      const scenarioName = generateScenarioNameFromTags(plotFamily, locProfile, objectives, twist, dangerRating, nameContextTags);
-
-      const narrative_hook = vaultScenario?.narrative_hook
-        ? vaultScenario.narrative_hook
-        : generateNarrativeHook(plotFamily, locProfile, objectives);
-
-      state.scenario = {
-        name:               scenarioName,
-        narrative_hook,
-        location:           locProfile,
-        danger_rating:      dangerRating,
-        danger_description: getDangerDescription(dangerRating),
-        plot_family:        plotFamily.name,
-        objectives,
-        monster_pressure:   monsterPressure,
-        twist,
-        victory_conditions: victoryConditions,
-        aftermath,
-        factions:           state.factions,
-        pointValue:         state.pointValue,
-        gameMode:           state.gameMode,
-        loc_profile:        locProfile,
-        objective_markers:  objectiveMarkers,
-        vault_source:       vaultScenario ? vaultScenario.name : null,
-        vault_match_score:  vaultScenario ? maxMatchScore : 0
-      };
-
+      state.scenario  = result;
       state.generated = true;
       render();
     };
@@ -2823,7 +2899,7 @@ window.CC_APP = {
 
     // ── renderStep3_Location ─────────────────────────────────────────────────────
     function renderStep3_Location() {
-      const namedLocations = locationData?.locations || [];
+      const namedLocations = gameData.getLocations().locations || [];
 
       return `
         <div class="cc-form-section">
@@ -2868,7 +2944,7 @@ window.CC_APP = {
     function renderStep4_Generate() {
       if (!state.generated) {
         const locName = state.locationType === 'named'
-          ? locationData?.locations.find(l => l.id === state.selectedLocation)?.name || 'Named'
+          ? (gameData.getLocations().locations.find(l => l.id === state.selectedLocation) || {}).name || 'Named'
           : 'Random';
         return `
           <div class="cc-generate-section">
@@ -2893,7 +2969,7 @@ window.CC_APP = {
     // ── VICTORY CONDITIONS RENDERER ──────────────────────────────────────────────
     //   Renders per-faction victory cards with SVG logos, Primary/Secondary labels.
 
-    var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/';
+    var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/';
 
     var FACTION_IDENTITY = {
       monster_rangers: { color: '#4ade80', border: '#166534', logo: 'monster_rangers_logo.svg', tag: 'Protectors of the Canyon' },
@@ -4131,7 +4207,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
     // Hold splash for at least 5 seconds regardless of how fast data loads.
     const MIN_SPLASH_MS = 5000;
 
-    loadGameData().then(() => {
+    gameData.loadAll().then(() => {
       console.log('✅ Game data ready');
       const elapsed  = Date.now() - _bootStart;
       const holdFor  = Math.max(0, MIN_SPLASH_MS - elapsed);
