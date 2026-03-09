@@ -42,7 +42,7 @@ window.CC_APP = {
 
     // Load shared UI CSS and app-specific CSS from GitHub raw URLs.
     if (!document.getElementById('cc-core-ui-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
@@ -55,7 +55,7 @@ window.CC_APP = {
     }
 
     if (!document.getElementById('cc-scenario-builder-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_scenario_builder.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_scenario_builder/cc_app_scenario_builder.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
@@ -343,7 +343,7 @@ window.CC_APP = {
 
     // Load cc_print.css from GitHub if it exists; the inline @media print block above is the fallback.
     if (!document.getElementById('cc-print-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_print.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_print.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
@@ -357,7 +357,7 @@ window.CC_APP = {
 
     // Load CC_STORAGE helper (cloud save/load) via blob script.
     if (!window.CC_STORAGE) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/storage_helpers.js?t=' + Date.now())
         .then(res => res.text())
         .then(code => {
           const script = document.createElement('script');
@@ -418,14 +418,14 @@ window.CC_APP = {
         const t    = '?t=' + Date.now();
 
         const [plotRes, twistRes, locRes, locTypesRes, monstersRes, vaultRes, namesRes, campRes] = await Promise.all([
-          fetch(`${base}/rules/src/200_plot_families.json${t}`),
-          fetch(`${base}/rules/src/210_twist_tables.json${t}`),
-          fetch(`${base}/rules/src/170_named_locations.json${t}`),
-          fetch(`${base}/rules/src/150_location_types.json${t}`),
-          fetch(`${base}/factions/faction-monsters-v2.json${t}`),
-          fetch(`${base}/rules/src/180_scenario_vault.json${t}`),
-          fetch(`${base}/rules/src/230_scenario_names.json${t}`),
-          fetch(`${base}/rules/src/30_campaign_system.json${t}`)
+          fetch(`${base}/data/src/200_plot_families.json${t}`),
+          fetch(`${base}/data/src/210_twist_tables.json${t}`),
+          fetch(`${base}/data/src/170_named_locations.json${t}`),
+          fetch(`${base}/data/src/150_location_types.json${t}`),
+          fetch(`${base}/data/factions/faction-monsters-v2.json${t}`),
+          fetch(`${base}/data/src/180_scenario_vault.json${t}`),
+          fetch(`${base}/data/src/230_scenario_names.json${t}`),
+          fetch(`${base}/data/src/30_campaign_system.json${t}`)
         ]);
 
         plotFamiliesData   = await plotRes.json();
@@ -465,10 +465,10 @@ window.CC_APP = {
     }
 
     // ── Map embed — remote URLs and Leaflet instance cache ─────────────────────────────
-    const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map_app.js';
-    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json';
-    const LEAFLET_CSS_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css';
-    const LEAFLET_JS_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js';
+    const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map_app.js';
+    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/canyon_map.json';
+    const LEAFLET_CSS_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css';
+    const LEAFLET_JS_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js';
 
     let _mapData      = null;   // cached canyon_map.json
     let _leafletReady = false;  // have we loaded Leaflet yet?
@@ -1957,7 +1957,7 @@ window.CC_APP = {
     //    Left panel:  static canyon overview with orange highlight box.
     //    Right panel: zoomed Leaflet map, gold star at location centre.
 
-    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/map_coffin_canyon_tiny.jpg';
+    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/map_coffin_canyon_tiny.jpg';
 
     function renderLocationMapEmbed() {
       return `
@@ -3496,7 +3496,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         </div>
         <div id="cc-splash-screen" class="cc-loading-container" style="transition:opacity 0.6s ease;">
           <img
-            src="https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png"
+            src="https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/coffin_canyon_logo.png"
             alt="Coffin Canyon"
             class="cc-splash-logo"
             style="width:320px;max-width:80vw;margin-bottom:2rem;"
