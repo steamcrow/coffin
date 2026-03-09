@@ -1,76 +1,150 @@
 {
   "project": "Coffin Canyon",
-  "maintainer": "Daniel Davis / Steam Crow",
-  "description": "Browser-based app ecosystem and rule system for the Coffin Canyon game.",
-
-  "structure": {
+  "type": "tabletop skirmish game + browser app ecosystem",
+  "primary_language": "JavaScript",
+  "data_model": "JSON-driven",
+  "repo_root": ".",
+  "canonical_architecture": {
+    "apps_root": "apps/",
+    "ui_root": "ui/",
+    "data_root": "data/",
+    "vendor_root": "vendor/",
+    "rules_root": "rules/"
+  },
+  "directories": {
     "apps": {
-      "path": "apps/",
-      "description": "Interactive browser applications such as Scenario Builder, Faction Builder, Canyon Map, Rules Explorer, and Turn Counter."
-    },
-
-    "ui": {
-      "path": "ui/",
-      "description": "Shared UI framework used by all apps including loader, reusable components, and shared styles.",
-      "files": [
+      "description": "Primary application directory for browser-based Coffin Canyon apps.",
+      "subdirectories": {
+        "app_canyon_map": "Interactive canyon map app.",
+        "app_faction_builder": "Faction and roster builder.",
+        "app_rules_explorer": "Rules browsing and lookup app.",
+        "app_scenario_builder": "Scenario generation app.",
+        "app_studio_builder": "Internal studio/design builder tools.",
+        "app_turn_counter": "Session and turn tracking app.",
+        "tools": "App-related tools and helpers."
+      },
+      "notable_root_files": [
+        "cc_app_canyon_map.js",
         "cc_loader_core.js",
-        "cc_components.js",
-        "cc_ui.css",
-        "cc_print.css"
+        "storage_helpers.js",
+        "brain_generators.js",
+        "app_shell_backup.html"
       ]
     },
-
     "data": {
-      "path": "data/",
-      "description": "Canonical structured data used by the system.",
+      "description": "Canonical structured data layer for the project.",
       "subdirectories": {
-        "src": "Modular rules content",
-        "factions": "Faction definitions",
-        "map_data": "Terrain and map data",
-        "schemas": "JSON schema validation files"
+        "src": "Primary modular rules content and supporting JSON datasets.",
+        "factions": "Faction definitions and faction-related data.",
+        "map_data": "Map, terrain, and location data.",
+        "schemas": "JSON schema definitions and validation structures."
       }
     },
-
-    "assets": {
-      "path": "assets/",
-      "description": "Visual assets including terrain imagery and icons."
+    "ui": {
+      "description": "Shared UI layer used across apps.",
+      "files": {
+        "cc_loader_core.js": "Main loader/bootstrap layer.",
+        "cc_components.js": "Reusable UI components.",
+        "cc_ui.css": "Core reusable design system styles.",
+        "cc_print.css": "Print styling."
+      }
     },
-
     "vendor": {
-      "path": "vendor/",
-      "description": "External libraries such as Leaflet."
+      "description": "Third-party libraries such as Leaflet."
     },
-
-    "archive": {
-      "path": "archive/",
-      "description": "Legacy systems retained for reference."
-    },
-
-    "future": {
-      "path": "future/",
-      "description": "Planning documents for future systems."
-    },
-
     "rules": {
-      "path": "rules/",
-      "description": "Compatibility artifacts from older architecture including rules_base.json."
+      "description": "Legacy compatibility directory currently containing rules_base.json.",
+      "files": [
+        "rules_base.json"
+      ]
+    },
+    "archive": {
+      "description": "Legacy and reference material retained for safety and historical context."
+    },
+    "assets": {
+      "description": "Static visual assets such as terrain and related imagery."
+    },
+    "future": {
+      "description": "Planning and future-facing design documents."
     }
   },
-
   "design_rules": [
     "Separate design from functionality wherever possible.",
-    "Reusable styles should live in ui/cc_ui.css.",
-    "Reusable UI components should live in ui/cc_components.js.",
-    "Apps should avoid embedding large CSS blocks in JavaScript."
+    "Reusable design should live in ui/cc_ui.css.",
+    "Reusable interface components should live in ui/cc_components.js.",
+    "Avoid embedding large CSS blocks in JavaScript unless there is no practical alternative.",
+    "App-specific styles should stay in each app's CSS file."
   ],
-
-  "architecture": {
-    "data_driven": true,
-    "frameworks": "minimal",
-    "preferred_stack": [
-      "Vanilla JavaScript",
-      "JSON data structures",
-      "Lightweight CSS"
+  "rules_system": {
+    "canonical_modular_source": "data/src/",
+    "canonical_factions": "data/factions/",
+    "canonical_map_data": "data/map_data/",
+    "canonical_schemas": "data/schemas/",
+    "legacy_compiled_index": "rules/rules_base.json"
+  },
+  "runtime_notes": {
+    "status": "mixed-transition",
+    "summary": "The repository structure has been modernized into top-level apps/ui/data directories, but runtime code still contains legacy fetch paths under rules/ and factions/.",
+    "legacy_runtime_paths": [
+      "rules/ui/...",
+      "rules/src/...",
+      "rules/apps/...",
+      "rules/vendor/...",
+      "factions/..."
     ]
-  }
+  },
+  "apps": {
+    "faction_builder": {
+      "directory": "apps/app_faction_builder/",
+      "entry_js": "apps/app_faction_builder/cc_app_faction_builder.js",
+      "entry_css": "apps/app_faction_builder/cc_app_faction_builder.css"
+    },
+    "rules_explorer": {
+      "directory": "apps/app_rules_explorer/",
+      "entry_js": "apps/app_rules_explorer/cc_app_rules_explorer.js",
+      "entry_css": "apps/app_rules_explorer/cc_app_rules_explorer.css"
+    },
+    "scenario_builder": {
+      "directory": "apps/app_scenario_builder/",
+      "entry_js": "apps/app_scenario_builder/cc_app_scenario_builder.js",
+      "entry_css": "apps/app_scenario_builder/cc_app_scenario_builder.css",
+      "supporting_files": [
+        "apps/app_scenario_builder/brain_constants.js",
+        "apps/app_scenario_builder/brain_core.js",
+        "apps/app_scenario_builder/scenario_brain.js"
+      ]
+    },
+    "canyon_map": {
+      "directory": "apps/app_canyon_map/",
+      "entry_js": "apps/app_canyon_map/cc_canyon_map_app.js",
+      "alternate_js": [
+        "apps/app_canyon_map/cc_app_canyon_map.js"
+      ],
+      "entry_css": "apps/app_canyon_map/cc_canyon_map.css",
+      "data_directory": "apps/app_canyon_map/data/"
+    },
+    "turn_counter": {
+      "directory": "apps/app_turn_counter/",
+      "entry_js": "apps/app_turn_counter/cc_app_turn_counter.js"
+    },
+    "studio_builder": {
+      "directory": "apps/app_studio_builder/",
+      "entry_js": "apps/app_studio_builder/studio_builder.js",
+      "entry_css": "apps/app_studio_builder/studio_builder.css",
+      "notes": "Internal development/studio tooling."
+    }
+  },
+  "ui_system": {
+    "core_css": "ui/cc_ui.css",
+    "print_css": "ui/cc_print.css",
+    "components": "ui/cc_components.js",
+    "loader": "ui/cc_loader_core.js"
+  },
+  "assistant_guidance": [
+    "Treat data/ as the canonical source of truth for rules, factions, schemas, and map data.",
+    "Treat ui/ as the canonical source of reusable presentation and shared components.",
+    "Treat rules/ as a compatibility layer unless explicitly re-expanded.",
+    "Do not assume legacy rules/... fetch paths are canonical just because runtime code still references them.",
+    "When updating apps, prefer moving runtime dependencies toward apps/, ui/, data/, and vendor/."
+  ]
 }
