@@ -115,7 +115,7 @@ window.addEventListener('error', function(e) {
   }
 });
   // ── App registry ──────────────────────────────────────────────────────────
-  var COMPONENTS_JS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_components.js';
+  var COMPONENTS_JS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_components.js';
   var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/tools/rules_helpers.js';
   var RULES_BASE    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/rules_base.json';
   var APPS_BASE     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/';
