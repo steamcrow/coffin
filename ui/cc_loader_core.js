@@ -596,7 +596,7 @@ window.addEventListener('error', function(e) {
   }
 
   // ── Preloader ─────────────────────────────────────────────────────────────
-  var LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/coffin_canyon_logo.png';
+  var LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
   var MIN_PRELOAD_MS = 1000;
 
   function showPreloader() {
