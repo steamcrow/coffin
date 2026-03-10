@@ -1,10 +1,11 @@
 /* ================================
-   Faction Builder - App-Specific Styles
-   File: coffin/rules/apps/cc_app_faction_builder.css
+   Faction Builder — App-Specific Styles
+   File: coffin/apps/app_faction_builder/cc_app_faction_builder.css
 
-   Core styles from: coffin/rules/ui/cc_ui.css
-   Print styles from: coffin/rules/ui/cc_print.css
-   Layout utilities: Bootstrap (Odoo default)
+   Relies on:
+     ui/cc_ui.css — :root variables, shell, header, panels, inputs,
+                    buttons, lists, stat badges, stat colors,
+                    field-label, slide panel, loading, print base
    ================================ */
 
 /* ===== Faction Controls Bar ===== */
@@ -17,19 +18,19 @@
 
 .cc-faction-controls select,
 .cc-faction-controls input {
-  background: #101010;
-  border: 1px solid rgba(255,255,255,.12);
-  color: #e8e8e8;
+  background: var(--cc-bg);
+  border: 1px solid var(--cc-border);
+  color: var(--cc-text);
   padding: 0.5rem;
-  border-radius: 6px;
+  border-radius: var(--cc-radius-lg);
   font-family: var(--cc-font-body);
 }
 
 .cc-faction-controls select:focus,
 .cc-faction-controls input:focus {
   outline: none;
-  border-color: #ff7518;
-  box-shadow: 0 0 0 1px rgba(255,117,24,.35);
+  border-color: var(--cc-primary);
+  box-shadow: 0 0 0 1px var(--cc-primary-dim);
 }
 
 .cc-faction-controls input#cc-roster-name {
@@ -49,9 +50,7 @@
   flex: 0 0 auto;
 }
 
-.cc-faction-selector-wrap select#cc-faction-selector {
-  flex: 0 0 220px;
-}
+.cc-faction-selector-wrap select#cc-faction-selector { flex: 0 0 220px; }
 
 .cc-faction-selector-icon {
   display: flex;
@@ -60,11 +59,11 @@
   flex-shrink: 0;
 }
 
-/* ===== Faction Icon (shared) ===== */
+/* ===== Faction Icon ===== */
 .cc-faction-icon {
   object-fit: contain;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 5px var(--faction-color, #ff751888))
+  filter: drop-shadow(0 0 5px var(--faction-color, rgba(212,130,42,0.5)))
           brightness(1.1);
   transition: filter 0.2s;
 }
@@ -87,13 +86,11 @@
   gap: 6px;
 }
 
-/* ===== FIX 1: Three-Column Layout — TALLER ===== */
-/* Uses viewport height so the app fills the screen properly */
+/* ===== Three-Column Layout ===== */
 .cc-faction-builder {
   display: grid;
   grid-template-columns: 300px 1fr 300px;
   gap: 1rem;
-  /* FIX: was min-height 600px + 700px max on columns — now fills available viewport */
   height: calc(100vh - 210px);
   min-height: 560px;
   padding: 0 1rem 1rem 1rem;
@@ -103,13 +100,11 @@
 .cc-faction-main,
 .cc-faction-roster {
   min-width: 0;
-  /* FIX: columns now stretch to fill the full builder height */
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-/* Ensure panels inside each column fill the full height */
 .cc-faction-sidebar  .cc-panel,
 .cc-faction-main     .cc-panel,
 .cc-faction-roster   .cc-panel {
@@ -123,23 +118,21 @@
 .cc-faction-roster   .cc-body {
   flex: 1;
   overflow-y: auto;
-  min-height: 0; /* critical for flex children that scroll */
+  min-height: 0;
 }
 
-/* ===== Unit Detail Wrapper ===== */
-.cc-unit-detail {
-  padding: 1.25rem;
-}
+/* ===== Unit Detail ===== */
+.cc-unit-detail { padding: 1.25rem; }
 
 .cc-detail-title {
   font-size: 1.25rem;
   font-weight: 800;
-  color: #e8e8e8;
+  color: var(--cc-text);
 }
 
 .cc-detail-sub {
   font-size: 0.8rem;
-  color: #888;
+  color: var(--cc-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
@@ -153,7 +146,7 @@
 
 .u-lore {
   font-style: italic;
-  color: var(--cc-text-muted, #888);
+  color: var(--cc-text-muted);
   padding: 0.75rem 1rem;
   background: rgba(255,255,255,0.03);
   border-left: 3px solid var(--cc-primary);
@@ -162,13 +155,12 @@
   font-size: 0.9rem;
 }
 
-/* ===== FIX 3 & 6: Warning Bar ===== */
-/* Shown when a unit would exceed budget or composition limit */
+/* ===== Warning Bar ===== */
 .cc-warning-bar {
-  background: #7b1414;
-  border: 1px solid #ff4444;
-  border-left: 5px solid #ff1a1a;
-  border-radius: 6px;
+  background: rgba(196,68,68,0.15);
+  border: 1px solid var(--cc-red);
+  border-left: 5px solid var(--cc-red);
+  border-radius: var(--cc-radius-lg);
   color: #ffe0e0;
   padding: 0.75rem 1rem;
   font-size: 0.85rem;
@@ -176,12 +168,9 @@
   margin-top: 1rem;
 }
 
-.cc-warning-bar strong {
-  color: #ffb3b3;
-}
+.cc-warning-bar strong { color: #ffb3b3; }
 
-/* ===== FIX 6: At-limit library items ===== */
-/* Dims units that are already at their composition cap */
+/* ===== At-limit library items ===== */
 .cc-list-item-at-limit {
   opacity: 0.5;
   cursor: default !important;
@@ -189,10 +178,13 @@
 
 .cc-list-item-at-limit:hover {
   background: inherit !important;
-  border-color: rgba(255,255,255,.07) !important;
+  border-color: var(--cc-border) !important;
 }
 
 /* ===== Stat Badges ===== */
+/* NOTE: .cc-stat-badge, .cc-stat-label, .cc-stat-value,
+   .stat-q/d/m/r and -border variants are all in cc_ui.css. */
+
 .stat-badge-flex {
   display: flex;
   gap: 6px;
@@ -201,61 +193,18 @@
   overflow-x: auto;
 }
 
-.stat-badge-flex.compact {
-  gap: 4px;
-  margin: 6px 0;
-}
+.stat-badge-flex.compact { gap: 4px; margin: 6px 0; }
 
-.cc-stat-badge {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-width: 42px;
-  border-radius: 5px;
-  overflow: hidden;
-  border: 1px solid;
-}
-
-.cc-stat-badge.compact {
-  min-width: 34px;
-}
-
-.cc-stat-label {
-  font-size: 0.6rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 4px 0;
-  background: rgba(0,0,0,.3);
-  width: 100%;
-  text-align: center;
-}
-
-.cc-stat-value {
-  font-size: 0.9rem;
-  font-weight: 900;
-  padding: 2px 4px 3px;
-  font-family: var(--cc-font-mono, monospace);
-}
-
+/* Compact size overrides */
+.cc-stat-badge.compact { min-width: 34px; }
 .cc-stat-badge.compact .cc-stat-value { font-size: 0.75rem; }
 
-/* Stat colour families */
-.stat-q-border { border-color: #42a5f5; }
-.stat-q { color: #42a5f5; }
-.stat-d-border { border-color: #ef5350; }
-.stat-d { color: #ef5350; }
-.stat-m-border { border-color: #66bb6a; }
-.stat-m { color: #66bb6a; }
-.stat-r-border { border-color: #ffd600; }
-.stat-r { color: #ffd600; }
-
 .stat-modified {
-  box-shadow: 0 0 6px rgba(255,215,0,.5);
-  border-color: #ffd700 !important;
+  box-shadow: 0 0 6px rgba(201,162,39,0.5);
+  border-color: var(--cc-gold) !important;
 }
 
+/* ===== Ability Links ===== */
 .ability-link {
   cursor: pointer;
   color: var(--cc-primary);
@@ -264,18 +213,9 @@
   transition: color 0.15s;
 }
 
-.ability-link:hover { color: #ff9147; }
+.ability-link:hover { color: var(--cc-primary-hover); }
 
-/* ===== Field Labels ===== */
-.cc-field-label {
-  font-size: 0.72rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--cc-primary);
-  margin-bottom: 0.4rem;
-  margin-top: 0.9rem;
-}
+/* NOTE: .cc-field-label is in cc_ui.css */
 
 /* ===== Upgrade Rows ===== */
 .cc-upgrade-row {
@@ -286,8 +226,8 @@
   padding: 0.65rem 0.75rem;
   margin-bottom: 0.4rem;
   background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 6px;
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-lg);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -298,7 +238,7 @@
 }
 
 .cc-upgrade-row.selected {
-  background: rgba(255, 117, 24, 0.15);
+  background: var(--cc-primary-dim);
   border-color: var(--cc-primary);
 }
 
@@ -306,8 +246,8 @@
   width: 18px;
   height: 18px;
   min-width: 18px;
-  border: 2px solid rgba(255,255,255,0.25);
-  border-radius: 4px;
+  border: 2px solid var(--cc-border);
+  border-radius: var(--cc-radius);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -320,7 +260,7 @@
 
 .cc-upgrade-row.selected .cc-upgrade-check {
   border-color: var(--cc-primary);
-  background: rgba(255,117,24,0.2);
+  background: var(--cc-primary-dim);
 }
 
 /* ===== Roster Grid View ===== */
@@ -333,8 +273,8 @@
 
 .cc-roster-grid-item {
   background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 6px;
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-lg);
   padding: 0.75rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -347,7 +287,7 @@
 }
 
 .cc-roster-grid-item.active {
-  background: rgba(255, 117, 24, 0.18);
+  background: var(--cc-primary-dim);
   border-color: var(--cc-primary);
 }
 
@@ -355,13 +295,13 @@
   font-weight: 700;
   font-size: 0.88rem;
   margin-bottom: 0.2rem;
-  color: #e8e8e8;
-  padding-right: 22px; /* avoid overlap with delete btn */
+  color: var(--cc-text);
+  padding-right: 22px;
 }
 
 .cc-roster-grid-item .grid-item-type {
   font-size: 0.7rem;
-  color: #888;
+  color: var(--cc-text-muted);
   text-transform: uppercase;
   margin-bottom: 0.5rem;
 }
@@ -380,11 +320,11 @@
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  background: rgba(255, 77, 77, 0.8);
+  background: rgba(196,68,68,0.8);
   border: none;
   color: #fff;
   padding: 2px 5px;
-  border-radius: 3px;
+  border-radius: var(--cc-radius);
   cursor: pointer;
   font-size: 0.7rem;
   opacity: 0;
@@ -406,14 +346,14 @@
   flex-direction: column;
   gap: 0.4rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid var(--cc-border);
   cursor: pointer;
   transition: background 0.15s;
   position: relative;
 }
 
 .cc-roster-list-item:hover  { background: rgba(255,255,255,0.05); }
-.cc-roster-list-item.active { background: rgba(255,117,24,0.12); }
+.cc-roster-list-item.active { background: var(--cc-primary-dim); }
 
 .roster-list-header {
   display: flex;
@@ -421,25 +361,9 @@
   align-items: flex-start;
 }
 
-.roster-list-name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: #e8e8e8;
-}
-
-.roster-list-type {
-  font-size: 0.7rem;
-  color: #888;
-  text-transform: uppercase;
-  letter-spacing: .04em;
-}
-
-.roster-list-cost {
-  font-weight: 700;
-  color: var(--cc-primary);
-  font-size: 1rem;
-  white-space: nowrap;
-}
+.roster-list-name  { font-weight: 700; font-size: 0.95rem; color: var(--cc-text); }
+.roster-list-type  { font-size: 0.7rem; color: var(--cc-text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.roster-list-cost  { font-weight: 700; color: var(--cc-primary); font-size: 1rem; white-space: nowrap; }
 
 .roster-list-abilities {
   display: flex;
@@ -452,11 +376,11 @@
   position: absolute;
   top: 0.6rem;
   right: 0.6rem;
-  background: rgba(255,77,77,0.7);
+  background: rgba(196,68,68,0.7);
   border: none;
   color: #fff;
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: var(--cc-radius);
   cursor: pointer;
   font-size: 0.7rem;
   opacity: 0;
@@ -468,9 +392,9 @@
 /* ===== Ability Tags ===== */
 .ability-tag {
   display: inline-block;
-  background: rgba(255,117,24,.12);
-  border: 1px solid rgba(255,117,24,.3);
-  color: #ff9147;
+  background: var(--cc-primary-dim);
+  border: 1px solid rgba(212,130,42,0.3);
+  color: var(--cc-primary-hover);
   padding: 2px 7px;
   border-radius: 999px;
   font-size: 0.72rem;
@@ -481,16 +405,16 @@
 }
 
 .ability-tag:hover {
-  background: rgba(255,117,24,.25);
+  background: rgba(212,130,42,0.25);
   border-color: var(--cc-primary);
-  color: #fff;
+  color: var(--cc-text);
 }
 
 .ability-tag-small {
   display: inline-block;
-  background: rgba(255,117,24,.1);
-  border: 1px solid rgba(255,117,24,.25);
-  color: #ff9147;
+  background: rgba(212,130,42,0.1);
+  border: 1px solid rgba(212,130,42,0.25);
+  color: var(--cc-primary-hover);
   padding: 1px 5px;
   border-radius: 999px;
   font-size: 0.65rem;
@@ -501,7 +425,7 @@
 }
 
 .ability-tag-small:hover {
-  background: rgba(255,117,24,.2);
+  background: rgba(212,130,42,0.2);
   border-color: var(--cc-primary);
 }
 
@@ -511,22 +435,23 @@
   padding: 5px 12px;
   margin: 0 1rem 0.5rem;
   background: rgba(0,0,0,0.4);
-  border: 1px solid var(--cc-border, rgba(255,255,255,.1));
-  border-radius: 4px;
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius);
   font-size: 11px;
-  color: #888;
+  color: var(--cc-text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
+  font-family: var(--cc-font-mono);
 }
 
 .cc-login-status.logged-in {
-  color: #4caf50;
-  border-color: rgba(76,175,80,.3);
+  color: var(--cc-green);
+  border-color: rgba(90,158,90,0.3);
 }
 
 .cc-login-status.logged-out {
-  color: #ff9800;
-  border-color: rgba(255,152,0,.3);
+  color: var(--cc-gold);
+  border-color: rgba(201,162,39,0.3);
 }
 
 /* ===== Roster View Toggle ===== */
@@ -535,16 +460,16 @@
   gap: 0.25rem;
   padding: 0.2rem;
   background: rgba(0,0,0,0.3);
-  border-radius: 4px;
+  border-radius: var(--cc-radius);
 }
 
 .cc-roster-view-toggle button {
   background: transparent;
   border: none;
-  color: #888;
+  color: var(--cc-text-muted);
   padding: 4px 8px;
   cursor: pointer;
-  border-radius: 3px;
+  border-radius: var(--cc-radius);
   transition: all 0.15s;
 }
 
@@ -552,14 +477,12 @@
 
 .cc-roster-view-toggle button.active {
   background: var(--cc-primary);
-  color: #000;
+  color: var(--cc-bg);
 }
 
 /* ===== Responsive ===== */
 @media (max-width: 1200px) {
-  .cc-faction-builder {
-    grid-template-columns: 250px 1fr 250px;
-  }
+  .cc-faction-builder { grid-template-columns: 250px 1fr 250px; }
 }
 
 @media (max-width: 992px) {
@@ -579,9 +502,7 @@
 }
 
 @media (max-width: 768px) {
-  .cc-faction-controls {
-    flex-direction: column;
-  }
+  .cc-faction-controls { flex-direction: column; }
 
   .cc-faction-controls select,
   .cc-faction-controls input,
@@ -595,27 +516,16 @@
     width: 100%;
   }
 
-  .cc-roster-grid {
-    grid-template-columns: 1fr;
-  }
+  .cc-roster-grid { grid-template-columns: 1fr; }
 }
 
-/* ===== Print: roster card grid ===== */
-/* The @media print block from cc_print.css handles the global resets.
-   These classes are used inside the printRoster() popup window. */
+/* ===== Print ===== */
+/* NOTE: Global print reset is in cc_print.css.
+   Only faction-builder-specific print overrides here. */
 @media print {
   .cc-faction-controls,
-  .cc-app-header,
   .cc-login-status,
-  .cc-roster-view-toggle,
-  .cc-slide-panel,
-  .cc-panel-close-btn,
-  .btn,
-  .grid-item-delete,
-  .roster-list-delete,
-  #ability-tooltip {
-    display: none !important;
-  }
+  .cc-roster-view-toggle { display: none !important; }
 
   .cc-faction-builder {
     display: block !important;
@@ -623,9 +533,7 @@
   }
 
   .cc-faction-sidebar,
-  .cc-faction-roster {
-    display: none !important;
-  }
+  .cc-faction-roster { display: none !important; }
 
   .cc-faction-main {
     display: block !important;
@@ -633,31 +541,9 @@
     max-height: none !important;
     overflow: visible !important;
   }
-
-  .cc-panel {
-    border: 1px solid #000 !important;
-    margin-bottom: 1rem;
-    page-break-inside: avoid;
-    height: auto !important;
-    overflow: visible !important;
-  }
-
-  .cc-stat-badge {
-    border: 1px solid #000 !important;
-    box-shadow: none !important;
-  }
-
-  .ability-tag,
-  .ability-tag-small {
-    border: 1px solid #ccc !important;
-    background: #f9f9f9 !important;
-    color: #000 !important;
-  }
 }
 
-/* ===== LIST MODE: single-column layout ===== */
-/* The layout is display:grid, so we override to a 1-column grid.
-   CSS grid items don't use order, so we use grid-row to place them. */
+/* ===== List Mode (single-column layout) ===== */
 .cc-faction-builder.cc-list-mode {
   display: grid;
   grid-template-columns: 1fr;
@@ -666,7 +552,6 @@
   min-height: 0;
 }
 
-/* Roster goes to row 1 (top) */
 .cc-faction-builder.cc-list-mode .cc-faction-roster {
   grid-row: 1;
   grid-column: 1;
@@ -675,7 +560,6 @@
   overflow-y: visible;
 }
 
-/* Builder goes to row 2 */
 .cc-faction-builder.cc-list-mode .cc-faction-main {
   grid-row: 2;
   grid-column: 1;
@@ -683,7 +567,6 @@
   overflow-y: visible;
 }
 
-/* Library goes to row 3 (bottom) */
 .cc-faction-builder.cc-list-mode .cc-faction-sidebar {
   grid-row: 3;
   grid-column: 1;
@@ -691,11 +574,5 @@
   overflow-y: visible;
 }
 
-.cc-faction-builder.cc-list-mode .cc-panel {
-  height: auto !important;
-}
-
-.cc-faction-builder.cc-list-mode .cc-body {
-  max-height: none !important;
-  overflow-y: visible !important;
-}
+.cc-faction-builder.cc-list-mode .cc-panel { height: auto !important; }
+.cc-faction-builder.cc-list-mode .cc-body  { max-height: none !important; overflow-y: visible !important; }
