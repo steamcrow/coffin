@@ -277,6 +277,7 @@ button, .btn {
 .cc-list-item:hover {
   border-color: var(--cc-text-dim);
   background: var(--cc-bg-mid) !important;
+}
 
 .cc-list-item.active {
   border-color: var(--cc-primary);
@@ -563,20 +564,97 @@ code, pre, kbd, samp {
   .cc-slide-panel { width: 100vw; right: -100vw; }
 }
 
-/* ===== LOADING ANIMATION ===== */
-.cc-loading-container {
+/* ===== UNIFIED PRELOADER ===== */
+/*
+  Usage:
+    <div class="cc-preloader">
+      <img class="cc-preloader-logo" src="[REPO]/assets/logos/[faction]_logo.svg" />
+      <p class="cc-preloader-title">Faction Builder</p>
+      <div class="cc-loading-bar"><div class="cc-loading-progress"></div></div>
+      <p class="cc-loading-text">Loading...</p>
+    </div>
+
+  To dismiss: add class cc-preloader--hidden (fades out, then remove from DOM)
+
+  Faction logo paths (REPO = https://raw.githubusercontent.com/steamcrow/coffin/main/):
+    assets/logos/coffin_canyon_logo.png      -- default / shell
+    assets/logos/monster_rangers_logo.svg    -- Monster Rangers    --faction-color: #e05c1a
+    assets/logos/crow_queen_logo.svg         -- Crow Queen         --faction-color: #9b30c8
+    assets/logos/shine_riders_logo.svg       -- Shine Riders       --faction-color: #d4b020
+    assets/logos/liberty_corps_logo.svg      -- Liberty Corps      --faction-color: #2a80c8
+    assets/logos/monsters_logo.svg           -- Monsters           --faction-color: #3aaa50
+    assets/logos/monsterology_logo.svg       -- Monsterology       --faction-color: #c82828
+*/
+
+/* ---- Preloader: full-container overlay ---- */
+.cc-preloader {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 4rem 2rem;
-  min-height: 300px;
+  gap: 1.25rem;
+  background: var(--cc-bg);
+  z-index: 9000;
+  padding: 2rem;
+  transition: opacity 0.45s ease;
 }
 
+/* Page-level variant (covers the whole viewport) */
+.cc-preloader.cc-preloader--page {
+  position: fixed;
+}
+
+/* Fade-out: JS adds this class, then removes the element after transition */
+.cc-preloader.cc-preloader--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- Logo ---- */
+.cc-preloader-logo {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  /* --faction-color can be set inline on the parent .cc-preloader */
+  filter:
+    drop-shadow(0 0 10px var(--faction-color, rgba(212,130,42,0.5)))
+    brightness(1.05);
+  animation: cc-logo-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes cc-logo-pulse {
+  0%, 100% {
+    filter:
+      drop-shadow(0 0 8px var(--faction-color, rgba(212,130,42,0.35)))
+      brightness(1.0);
+    transform: scale(1);
+  }
+  50% {
+    filter:
+      drop-shadow(0 0 22px var(--faction-color, rgba(212,130,42,0.8)))
+      brightness(1.2);
+    transform: scale(1.05);
+  }
+}
+
+/* ---- App title under the logo ---- */
+.cc-preloader-title {
+  font-family: var(--cc-font-title);
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--cc-primary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ---- Loading bar ---- */
 .cc-loading-bar {
   width: 100%;
-  max-width: 500px;
-  height: 8px;
+  max-width: 320px;
+  height: 6px;
   background: var(--cc-bg-mid);
   border-radius: var(--cc-radius);
   overflow: hidden;
@@ -587,32 +665,47 @@ code, pre, kbd, samp {
   height: 100%;
   background: linear-gradient(90deg,
     var(--cc-primary) 0%,
-    var(--cc-gold) 50%,
+    var(--cc-gold)    50%,
     var(--cc-primary) 100%);
   width: 0%;
-  animation: cc-loading-fill 5s ease-in-out forwards;
-  box-shadow: 0 0 12px rgba(212,130,42,.5);
+  animation: cc-loading-fill 4s ease-in-out forwards;
+  box-shadow: 0 0 10px rgba(212,130,42,0.5);
 }
 
+/* JS can also set width directly for real progress:
+   document.querySelector('.cc-loading-progress').style.width = '60%'; */
 @keyframes cc-loading-fill {
-  0%   { width: 0%; }
-  50%  { width: 75%; }
+  0%   { width: 0%;  }
+  40%  { width: 65%; }
+  80%  { width: 88%; }
   100% { width: 95%; }
 }
 
+/* ---- Status text ---- */
 .cc-loading-text {
-  margin-top: 1.25rem;
   color: var(--cc-text-muted);
-  font-size: 11px;
+  font-size: 10px;
   font-family: var(--cc-font-mono);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  animation: cc-pulse-text 1.5s ease-in-out infinite;
+  letter-spacing: 0.12em;
+  margin: 0;
+  animation: cc-pulse-text 1.6s ease-in-out infinite;
 }
 
 @keyframes cc-pulse-text {
-  0%, 100% { opacity: 0.6; }
-  50%       { opacity: 1; }
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1;   }
+}
+
+/* ---- Legacy alias: .cc-loading-container still works ---- */
+.cc-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  min-height: 300px;
+  gap: 1.25rem;
 }
 
 /* ===== SHELL / PAGE / STEPS (additive helpers) ===== */
