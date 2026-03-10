@@ -199,7 +199,7 @@ window.CC_APP = {
 
     // ── Load shared UI CSS ────────────────────────────────────────────────────
     if (!document.getElementById('cc-core-ui-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now())
         .then(r => r.text())
         .then(css => {
           const s = document.createElement('style');
@@ -212,7 +212,7 @@ window.CC_APP = {
 
     // ── Load CC_STORAGE helper ────────────────────────────────────────────────
     if (!window.CC_STORAGE) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/storage_helpers.js?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/storage_helpers.js?t=' + Date.now())
         .then(r => r.text())
         .then(code => {
           return new Promise(function(resolve) {

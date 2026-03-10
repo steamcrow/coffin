@@ -1,103 +1,59 @@
-/* File: rules/apps/canyon_map/cc_canyon_map.css
-   COFFIN CANYON — CANYON MAP (Ultimate Design)
-   Full CSS (no omissions)
-*/
+/* ================================================================
+   COFFIN CANYON — CANYON MAP
+   File: coffin/apps/app_canyon_map/cc_canyon_map.css
 
-:root{
-  /* ============================================
-     FRAME & LAYOUT DIMENSIONS
-     Adjust these to change overall size
-     ============================================ */
-  --frame-width: 1000px;
-  --frame-ratio: 1.5;
+   Relies on:
+     ui/cc_ui.css — :root variables, .cc-muted
+   Note: The map app is largely self-contained due to its
+         canvas/lens rendering system. It uses its own .cc-btn
+         (not to be confused with cc_ui.css's .btn) and .cc-cm-*
+         namespace throughout.
+   ================================================================ */
 
-  /* ============================================
-     LENS SIZE ADJUSTMENT
-     Must fill frame's iron window completely
-     so edges are hidden by metal frame overlay
-     ============================================ */
+:root {
+  /* ============ FRAME & LAYOUT DIMENSIONS ============ */
+  --frame-width:  1000px;
+  --frame-ratio:  1.5;
+
+  /* ============ LENS SIZE ============ */
   --lens-w: 760px;
   --lens-h: 520px;
-  
-  /* ============================================
-     MAP ZOOM LEVELS
-     Controlled in JavaScript DEFAULTS:
-     - lensZoomOffset: How much more zoomed the lens is
-       0 = see MOST of map (same as background)
-       0.5 = minimal zoom (lots of area but less crisp)
-       0.75 = good balance (CURRENT - crisp detail + good area)
-       1 = moderately zoomed (crisp detail)
-       2 = close-up detail
-       3 = very close-up
-     ============================================ */
 
-  /* ============================================
-     LENS OVERSCAN
-     Extra pixels to prevent edge gaps
-     ============================================ */
+  /* ============ LENS OVERSCAN ============ */
   --lens-overscan-x: 80px;
   --lens-overscan-y: 80px;
 
+  /* Map-specific colours */
   --cc-map-border: #4a3728;
 
-  /* ============================================
-     BASE MAP APPEARANCE
-     Background layer styling
-     
-  --bg-opacity: 0.38;
-  --bg-blur: 2px;
-  --bg-sepia: 0.25;
-============================================ */
-  /* ============================================
-     LENS APPEARANCE & DISTORTION
-     Adjust clarity and edge effects
-     ============================================ */
-  --lens-radius: 100px;
-  --lens-contrast: 2;  /* Increased for maximum sharpness */
-  --lens-distortion-scale: 400;  /* EXTREME (for testing) - adjust down to 100-200 for subtle, 300-400 for strong */
+  /* ============ LENS APPEARANCE ============ */
+  --lens-radius:            100px;
+  --lens-contrast:          2;
+  --lens-distortion-scale:  400;
 
-  /* ============================================
-     LENS HIGHLIGHT/GLARE
-     Visible reflection effect
-     ============================================ */
+  /* ============ LENS HIGHLIGHT ============ */
   --lens-highlight-opacity: 0.35;
-  --lens-highlight-size: 40%;
+  --lens-highlight-size:    40%;
 
   /* Frame glow */
-  --frame-glow-a: rgba(70, 220, 255, 0.20);
-  --frame-glow-b: rgba(255, 210, 120, 0.12);
+  --frame-glow-a: rgba(70,220,255,0.20);
+  --frame-glow-b: rgba(255,210,120,0.12);
 
-  /* ============================================
-     SCROLLER GEOMETRY
-     Position and size of knobs/tracks
-     ============================================ */
-  --scroll-v-h: 440px;
-  --scroll-v-w: 90px;
+  /* ============ SCROLLER GEOMETRY ============ */
+  --scroll-v-h:        440px;
+  --scroll-v-w:        90px;
   --scroll-v-offset-x: 343px;
 
-  --scroll-h-h: 90px;
-  --scroll-h-w: 640px;
-  --scroll-h-offset-y: 305px;  /* Raised 15px from 320px */
+  --scroll-h-h:        90px;
+  --scroll-h-w:        640px;
+  --scroll-h-offset-y: 305px;
 
-  /* ============================================
-     KNOB SIZING & EASING
-     Momentum scroll parameters (in JavaScript)
-     ============================================ */
-  --knob-w: 92px;
-  --knob-h: 150px;
-  --knob-horiz-w: 92px;
-  --knob-horiz-h: 150px;
+  /* ============ KNOB SIZING ============ */
+  --knob-w:        92px;
+  --knob-h:        150px;
+  --knob-horiz-w:  92px;
+  --knob-horiz-h:  150px;
   --knob-offset-x: 9px;
-  
-  /* Momentum physics (controlled in JavaScript):
-     - Friction: 0.88 (HEAVY - stops much sooner with gradual curve)
-     - Min velocity: 0.02 (higher = stops sooner)
-     - Trigger threshold: 0.2 (easy to trigger)
-     - Movement multiplier: 18 (smooth controlled motion)
-     - Velocity capture: 1.2x (better fling response)
-     
-     Effect: Fling the knob → gradual deceleration → stops sooner
-  */
 
   /* Shadows */
   --shadow-inset: inset 0 0 60px #000;
@@ -105,23 +61,20 @@
 }
 
 /* ================================================================
-   APP WRAPPER + BASICS
+   APP WRAPPER
    ================================================================ */
-.cc-canyon-map{
+.cc-canyon-map {
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  color: rgba(255,255,255,0.9);
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
-  
-  /* Prevent mobile browser interference */
+  color: var(--cc-text);
+  font-family: var(--cc-font-body);
   touch-action: pan-x pan-y;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
 }
 
-/* Prevent pull-to-refresh and overscroll */
 .cc-cm-mapwrap,
 .cc-scroll-vertical,
 .cc-scroll-horizontal {
@@ -129,15 +82,15 @@
   -webkit-overflow-scrolling: touch;
 }
 
-.cc-muted{ opacity: 0.7; }
+/* NOTE: .cc-muted is in cc_ui.css */
 
-.cc-block{ margin-bottom: 10px; }
-.cc-h{ font-weight: 800; margin-bottom: 4px; }
+.cc-block { margin-bottom: 10px; }
+.cc-h     { font-weight: 800; margin-bottom: 4px; }
 
 /* ================================================================
    HEADER
    ================================================================ */
-.cc-cm-header{
+.cc-cm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -145,28 +98,32 @@
   padding: 10px 12px;
 }
 
-.cc-cm-title{
+.cc-cm-title {
+  font-family: var(--cc-font-title);
   font-weight: 800;
-  letter-spacing: 0.2px;
+  letter-spacing: 0.04em;
 }
 
-.cc-cm-actions{ display: flex; gap: 8px; }
+.cc-cm-actions { display: flex; gap: 8px; }
 
-.cc-btn{
+/* Map-specific button (separate from cc_ui.css .btn — do not merge) */
+.cc-btn {
   appearance: none;
-  border: 1px solid rgba(255,255,255,0.25);
+  border: 1px solid var(--cc-border-bright);
   background: rgba(0,0,0,0.35);
-  color: rgba(255,255,255,0.9);
+  color: var(--cc-text);
   padding: 6px 10px;
-  border-radius: 8px;
+  border-radius: var(--cc-radius-lg);
+  font-family: var(--cc-font-mono);
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s;
 }
 
-.cc-btn:hover{ background: rgba(255,255,255,0.08); }
-.cc-btn:active{ transform: translateY(1px); }
+.cc-btn:hover  { background: rgba(255,255,255,0.08); }
+.cc-btn:active { transform: translateY(1px); }
 
-.cc-btn.cc-btn-x{
+.cc-btn.cc-btn-x {
   width: 34px;
   height: 34px;
   padding: 0;
@@ -178,86 +135,69 @@
 /* ================================================================
    BODY
    ================================================================ */
-.cc-cm-body{
-  position: relative;
-  width: 100%;
-  display: block;
-}
-
-.cc-cm-body--lens{ padding: 10px 12px 18px; }
+.cc-cm-body { position: relative; width: 100%; display: block; }
+.cc-cm-body--lens { padding: 10px 12px 18px; }
 
 /* ================================================================
    OUTER MAP CONTAINER
    ================================================================ */
-.cc-cm-mapwrap{
+.cc-cm-mapwrap {
   position: relative !important;
   width: 100%;
   height: 85vh !important;
   min-height: 750px !important;
   overflow: hidden !important;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   background: #000;
   border: 10px solid var(--cc-map-border);
-  border-radius: 12px;
+  border-radius: var(--cc-radius-lg);
   box-shadow: var(--shadow-inset), var(--shadow-outer);
 }
 
 /* ================================================================
-   BACKGROUND MAP (Leaflet container fills mapwrap)
+   BACKGROUND MAP
    ================================================================ */
-#cc-cm-map{
+#cc-cm-map {
   position: absolute !important;
   inset: 0 !important;
   width: 100% !important;
   height: 100% !important;
-
   z-index: 1 !important;
   opacity: var(--bg-opacity);
-
-  /* Bottom map should be mostly blur/sepia, minimal distortion */
   filter: blur(var(--bg-blur)) sepia(var(--bg-sepia));
   pointer-events: none;
-
-  /* Helps smooth compositing */
   will-change: transform;
 }
 
-#cc-cm-map .leaflet-control-container{ display: none !important; }
+#cc-cm-map .leaflet-control-container { display: none !important; }
 
-/* Ensure Leaflet's internal containers fill the map div */
 #cc-cm-map .leaflet-container,
 #cc-cm-map .leaflet-pane,
-#cc-cm-map .leaflet-map-pane{
+#cc-cm-map .leaflet-map-pane {
   width: 100% !important;
   height: 100% !important;
 }
 
 /* ================================================================
-   LENS (MASK + OVERSCAN)
+   LENS
    ================================================================ */
-.cc-lens{
+.cc-lens {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-
+  transform: translate(-50%,-50%) !important;
   width: var(--lens-w) !important;
   height: var(--lens-h) !important;
-
   z-index: 30 !important;
   overflow: hidden !important;
   border-radius: var(--lens-radius);
-
   box-shadow:
     inset 0 0 0 2px rgba(255,255,255,0.06),
     inset 0 0 30px rgba(0,0,0,0.25);
 }
 
-/* The warped glass content */
 .cc-lens-inner {
   position: absolute;
   inset: 8px;
@@ -266,7 +206,6 @@
   filter: url(#ccLensWarp);
 }
 
-/* Vignette — corners go dark like the lens is eating light at the edges */
 .cc-lens-inner::after {
   content: '';
   position: absolute;
@@ -274,14 +213,12 @@
   border-radius: 14px;
   background: radial-gradient(ellipse at center,
     transparent 38%,
-    rgba(0, 0, 0, 0.20) 65%,
-    rgba(0, 0, 0, 0.55) 100%
-  );
+    rgba(0,0,0,0.20) 65%,
+    rgba(0,0,0,0.55) 100%);
   pointer-events: none;
   z-index: 10;
 }
 
-/* Chromatic fringe — colours split at the rim like cheap old glass */
 .cc-lens-chromatic {
   position: absolute;
   inset: 8px;
@@ -289,169 +226,36 @@
   pointer-events: none;
   z-index: 20;
   box-shadow:
-    inset 0 0 28px rgba(220, 80, 20, 0.18),   /* warm red-orange fringe */
-    inset 0 0 55px rgba(30, 60, 200, 0.10);   /* cool blue fringe opposite */
+    inset 0 0 28px rgba(220,80,20,0.18),
+    inset 0 0 55px rgba(30,60,200,0.10);
   mix-blend-mode: screen;
 }
 
-/* Overscan wrapper (bigger than mask to hide edges under frame) */
-.cc-lens-overscan{
+.cc-lens-overscan {
   position: absolute !important;
-  left: calc(var(--lens-overscan-x) * -1) !important;
-  top:  calc(var(--lens-overscan-y) * -1) !important;
+  left:  calc(var(--lens-overscan-x) * -1) !important;
+  top:   calc(var(--lens-overscan-y) * -1) !important;
   width: calc(100% + (var(--lens-overscan-x) * 2)) !important;
-  height: calc(100% + (var(--lens-overscan-y) * 2)) !important;
-  
-  /* CSS-BASED LENS DISTORTION - fisheye/barrel effect */
+  height:calc(100% + (var(--lens-overscan-y) * 2)) !important;
   transform: perspective(600px) rotateX(0deg);
   filter: contrast(var(--lens-contrast)) saturate(1.1) brightness(1.02);
-  
-  /* Subtle vignette/edge darkening for glass lens effect */
-  box-shadow: inset 0 0 80px rgba(0,0,0,0.15);
-}
-
-/* Add subtle barrel distortion to lens content */
-#cc-lens-map .leaflet-tile-pane{
-  transform: scale(1.02);
-  filter: blur(0px);  /* Keep crisp, no blur */
-}
-
-/* Leaflet lens container */
-#cc-lens-map{
-  position: absolute !important;
-  inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* Lens is CLEAR (filter applied to .cc-lens-overscan wrapper above) */
-#cc-lens-map .leaflet-container,
-#cc-lens-map{
-  /* Filter moved to .cc-lens-overscan */
-}
-
-/* Location hitbox markers - ensure they're clickable */
-.cc-location-hitbox{
-  z-index: 1000 !important;
-  pointer-events: auto !important;
-}
-
-.cc-location-hitbox div{
-  pointer-events: auto !important;
-}
-
-#cc-lens-map .leaflet-control-container{ display: none !important; }
-#cc-lens-map .leaflet-container,
-#cc-lens-map .leaflet-pane,
-#cc-lens-map .leaflet-map-pane{
-  width: 100% !important;
-  height: 100% !important;
-}
-#cc-lens-map .leaflet-tile-pane,
-#cc-lens-map .leaflet-overlay-pane{
-  will-change: transform;
-}
-
-/* Lens glare - MORE VISIBLE */
-.cc-lens-glare{
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(var(--lens-highlight-size) var(--lens-highlight-size) at 35% 25%, 
-      rgba(255,255,255,0.45), 
-      rgba(255,255,255,0.15) 40%, 
-      rgba(255,255,255,0) 60%),
-    radial-gradient(25% 20% at 65% 60%, 
-      rgba(255,255,255,0.25), 
-      rgba(255,255,255,0) 50%);
-  mix-blend-mode: screen;
-  opacity: var(--lens-highlight-opacity);
-  border-radius: var(--lens-radius);
-}
-
-.cc-lens::after{
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(120% 90% at 28% 18%, rgba(255,255,255,0.10), rgba(255,255,255,0) 55%),
-    radial-gradient(110% 90% at 74% 72%, rgba(255,255,255,0.06), rgba(255,255,255,0) 55%);
-  mix-blend-mode: screen;
-  opacity: 0.7;
 }
 
 /* ================================================================
-   FRAME OVERLAY (PNG) + GLOW (NO SHADOW)
+   VERTICAL SCROLLER
    ================================================================ */
-.cc-frame-overlay{
+.cc-scroll-vertical {
   position: absolute !important;
   left: 50% !important;
   top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-
-  width: var(--frame-width) !important;
-  height: calc(var(--frame-width) / var(--frame-ratio)) !important;
-
-  z-index: 35 !important;
-
-  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/mag_frame.png") !important;
-  background-size: contain;
-  background-position: center;
-  background-repeat: no-repeat;
-
-  pointer-events: none !important;
-
-  /* Glow instead of shadow */
-  filter:
-    drop-shadow(0 0 14px var(--frame-glow-a))
-    drop-shadow(0 0 28px var(--frame-glow-b));
-}
-
-/* ================================================================
-   VERTICAL SCROLLER (RIGHT SIDE)
-   ================================================================ */
-.cc-scroll-vertical{
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-
-  margin-left: var(--scroll-v-offset-x) !important;
-  transform: translateY(-50%) !important;
-
-  height: var(--scroll-v-h) !important;
+  transform: translate(calc(-50% + var(--scroll-v-offset-x)), -50%) !important;
   width: var(--scroll-v-w) !important;
-
+  height: var(--scroll-v-h) !important;
   z-index: 60 !important;
   pointer-events: auto !important;
 }
 
-.cc-scroll-vertical .cc-scroll-track{
-  position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  background: rgba(0,0,0,0.0);
-}
-
-/* ================================================================
-   HORIZONTAL SCROLLER (BOTTOM)
-   ================================================================ */
-.cc-scroll-horizontal{
-  position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
-
-  transform: translate(-50%, calc(-50% + var(--scroll-h-offset-y))) !important;
-
-  width: var(--scroll-h-w) !important;
-  height: var(--scroll-h-h) !important;
-
-  z-index: 60 !important;
-  pointer-events: auto !important;
-}
-
-.cc-scroll-horizontal .cc-scroll-track{
+.cc-scroll-vertical .cc-scroll-track {
   position: absolute;
   inset: 0;
   border-radius: 18px;
@@ -459,19 +263,37 @@
 }
 
 /* ================================================================
-   SHARED KNOB (BLAPPO) + ACTIVE STATES
+   HORIZONTAL SCROLLER
    ================================================================ */
-.cc-scroll-knob{
+.cc-scroll-horizontal {
+  position: absolute !important;
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, calc(-50% + var(--scroll-h-offset-y))) !important;
+  width: var(--scroll-h-w) !important;
+  height: var(--scroll-h-h) !important;
+  z-index: 60 !important;
+  pointer-events: auto !important;
+}
+
+.cc-scroll-horizontal .cc-scroll-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: rgba(0,0,0,0.0);
+}
+
+/* ================================================================
+   KNOB
+   ================================================================ */
+.cc-scroll-knob {
   position: absolute;
   background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-
   cursor: grab;
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));  /* Lighter base shadow */
-  
-  /* NO transition here - JavaScript controls smooth movement */
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));
   transition: filter 140ms ease;
   will-change: top, left;
   touch-action: none;
@@ -479,226 +301,89 @@
   -webkit-user-select: none;
 }
 
-.cc-scroll-knob:hover{
-  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)) brightness(1.05);
-}
+.cc-scroll-knob:hover   { filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)) brightness(1.05); }
+.cc-scroll-knob.is-active { cursor: grabbing !important; filter: drop-shadow(0 8px 12px rgba(0,0,0,0.65)) brightness(1.08); }
 
-.cc-scroll-knob.is-active{
-  cursor: grabbing !important;
-  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.65)) brightness(1.08);
-}
-
-/* Vertical knob positioning (JS controls top dynamically) */
-#cc-scroll-knob-v{
+#cc-scroll-knob-v {
   width: var(--knob-w) !important;
   height: var(--knob-h) !important;
-
   left: calc(50% + var(--knob-offset-x)) !important;
-  top: 50%;  /* JS overrides - removed !important */
-
+  top: 50%;
   transform: translateX(-50%) translateY(-50%) !important;
 }
-#cc-scroll-knob-v.is-active{ transform: translateX(-50%) translateY(-50%) scale(1.05) !important; }
-#cc-scroll-knob-v:hover{ transform: translateX(-50%) translateY(-50%) scale(1.03) !important; }
 
-/* Horizontal knob positioning (JS controls left dynamically) */
-#cc-scroll-knob-h{
+#cc-scroll-knob-v.is-active { transform: translateX(-50%) translateY(-50%) scale(1.05) !important; }
+#cc-scroll-knob-v:hover     { transform: translateX(-50%) translateY(-50%) scale(1.03) !important; }
+
+#cc-scroll-knob-h {
   width: var(--knob-horiz-w) !important;
   height: var(--knob-horiz-h) !important;
-
-  left: 50%;  /* JS overrides - removed !important */
+  left: 50%;
   top: 50% !important;
-
-  /* NO rotation - knob faces same way as vertical */
   transform: translateX(-50%) translateY(-50%) !important;
 }
-#cc-scroll-knob-h:hover{ 
-  transform: translateX(-50%) translateY(-50%) scale(1.03) !important; 
-  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)) brightness(1.05);
-}
-#cc-scroll-knob-h.is-active{ 
-  transform: translateX(-50%) translateY(-50%) scale(1.05) !important; 
-  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.65)) brightness(1.08);
-}
+
+#cc-scroll-knob-h:hover    { transform: translateX(-50%) translateY(-50%) scale(1.03) !important; filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)) brightness(1.05); }
+#cc-scroll-knob-h.is-active{ transform: translateX(-50%) translateY(-50%) scale(1.05) !important; filter: drop-shadow(0 8px 12px rgba(0,0,0,0.65)) brightness(1.08); }
 
 /* ================================================================
-   DRAWER (SLIDES FROM RIGHT SIDE)
+   DRAWER (slides from right — matches cc_ui.css .cc-slide-panel pattern)
    ================================================================ */
-.cc-cm-drawer{
+.cc-cm-drawer {
   position: fixed;
   top: 0;
   right: -450px;
   width: 400px;
   height: 100vh;
-  
-  background: #111;
-  border-left: 3px solid #ff7518;
+  background: var(--cc-bg-soft);
+  border-left: 3px solid var(--cc-primary);
   box-shadow: -10px 0 50px rgba(0,0,0,0.8);
-  
   overflow-y: auto;
   z-index: 9999;
-  
   transition: right 0.3s ease-in-out;
 }
 
-.cc-cm-drawer.open{ 
-  right: 0;
-}
+.cc-cm-drawer.open { right: 0; }
 
-.cc-cm-drawer-head{
+.cc-cm-drawer-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
   padding: 10px 12px;
-  border-bottom: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid var(--cc-border);
 }
 
-.cc-cm-drawer-title{ font-weight: 900; }
-.cc-cm-drawer-content{ padding: 10px 12px 14px; }
-
-/* Mobile slide panel */
-@media (max-width: 768px) {
-  .cc-cm-drawer {
-    width: 100vw;
-    right: -100vw;
-  }
-  
-  /* Make map container better for mobile */
-  .cc-cm-mapwrap {
-    min-height: 400px !important;
-    height: 60vh !important;
-  }
-  
-  /* Make scrollers larger for touch */
-  .cc-scroll-knob {
-    width: 70px !important;
-    height: 120px !important;
-    touch-action: none;
-  }
-  
-  #cc-scroll-knob-h {
-    width: 120px !important;
-    height: 70px !important;
-    touch-action: none;
-  }
-  
-  /* Adjust frame for smaller screens */
-  :root {
-    --frame-width: 95vw;
-    --lens-w: 65vw;
-    --lens-h: 35vh;
-  }
-  
-  /* More compact header */
-  .cc-cm-header {
-    padding: 8px;
-  }
-  
-  .cc-cm-title {
-    font-size: 14px;
-  }
-  
-  .cc-btn {
-    font-size: 12px;
-    padding: 6px 12px;
-  }
+.cc-cm-drawer-title {
+  font-family: var(--cc-font-title);
+  font-weight: 900;
+  color: var(--cc-primary);
 }
 
-@media (max-width: 480px) {
-  .cc-cm-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  
-  .cc-cm-actions {
-    width: 100%;
-    justify-content: stretch;
-  }
-  
-  .cc-cm-actions .cc-btn {
-    flex: 1;
-  }
-  
-  /* Even larger touch targets on small phones */
-  .cc-scroll-knob {
-    width: 70px !important;
-    height: 110px !important;
-  }
-  
-  #cc-scroll-knob-h {
-    width: 110px !important;
-    height: 70px !important;
-  }
-}
-
-/* ================================================================
-   RESPONSIVE
-   ================================================================ */
-@media (max-width: 980px){
-  :root{
-    --frame-width: 920px;
-    --scroll-v-offset-x: 315px;
-    --scroll-h-w: 600px;
-  }
-}
-
-@media (max-width: 820px){
-  :root{
-    --frame-width: 860px;
-    --lens-w: 576px;  /* 720 * 0.8 */
-    --lens-h: 400px;  /* 500 * 0.8 */
-    --scroll-v-offset-x: 295px;
-    --scroll-h-w: 560px;
-  }
-}
-
-@media (max-width: 700px){
-  .cc-cm-mapwrap{
-    min-height: 640px !important;
-    height: 80vh !important;
-  }
-  :root{
-    --frame-width: 760px;
-    --lens-w: 528px;  /* 660 * 0.8 */
-    --lens-h: 368px;  /* 460 * 0.8 */
-    --scroll-v-offset-x: 255px;
-
-    --scroll-v-h: 420px;
-
-    --scroll-h-w: 520px;
-    --scroll-h-offset-y: 290px;
-
-    --knob-h: 138px;
-  }
-}
+.cc-cm-drawer-content { padding: 10px 12px 14px; }
 
 /* ================================================================
    iOS SHARPNESS FALLBACK
-   - If warp rasterizes mushy on iPad, we disable SVG filter there.
-   (JS adds .cc-ios automatically.)
    ================================================================ */
 .cc-ios #cc-lens-map,
-.cc-ios #cc-lens-map .leaflet-container{
+.cc-ios #cc-lens-map .leaflet-container {
   filter: contrast(var(--lens-contrast)) saturate(1.08) !important;
 }
 
-/* DEV: Hitbox edit mode */
+/* ================================================================
+   DEV: HITBOX EDIT MODE
+   ================================================================ */
 .cc-canyon-map.cc-hitbox-edit .cc-lens,
 .cc-canyon-map.cc-hitbox-edit .cc-frame-overlay,
 .cc-canyon-map.cc-hitbox-edit .cc-scroll-vertical,
-.cc-canyon-map.cc-hitbox-edit .cc-scroll-horizontal {
-  display: none !important;
-}
+.cc-canyon-map.cc-hitbox-edit .cc-scroll-horizontal { display: none !important; }
 
-/* Make the background map take the full stage while editing */
 .cc-canyon-map.cc-hitbox-edit #cc-cm-map {
   position: absolute;
   inset: 0;
   z-index: 50;
 }
 
-/* Editor overlay */
 #cc-hitbox-editor {
   position: absolute;
   inset: 0;
@@ -710,7 +395,7 @@
   position: absolute;
   outline: 2px solid rgba(0,0,0,.7);
   background: rgba(255,255,0,.18);
-  border-radius: 6px;
+  border-radius: var(--cc-radius-lg);
   box-sizing: border-box;
   cursor: grab;
   user-select: none;
@@ -723,10 +408,10 @@
   left: 0;
   top: -18px;
   padding: 2px 6px;
-  border-radius: 6px;
+  border-radius: var(--cc-radius-lg);
   background: rgba(0,0,0,.75);
-  color: #fff;
-  font: 12px/1 system-ui, sans-serif;
+  color: var(--cc-text);
+  font: 12px/1 var(--cc-font-mono);
   white-space: nowrap;
   pointer-events: none;
 }
@@ -738,6 +423,50 @@
   right: -6px;
   bottom: -6px;
   background: rgba(0,0,0,.85);
-  border-radius: 3px;
+  border-radius: var(--cc-radius);
   cursor: nwse-resize;
+}
+
+/* ================================================================
+   RESPONSIVE
+   ================================================================ */
+@media (max-width: 768px) {
+  .cc-cm-drawer { width: 100vw; right: -100vw; }
+  .cc-cm-mapwrap { min-height: 400px !important; height: 60vh !important; }
+  .cc-scroll-knob { width: 70px !important; height: 120px !important; touch-action: none; }
+  #cc-scroll-knob-h { width: 120px !important; height: 70px !important; touch-action: none; }
+  :root { --frame-width: 95vw; --lens-w: 65vw; --lens-h: 35vh; }
+  .cc-cm-header { padding: 8px; }
+  .cc-cm-title  { font-size: 14px; }
+  .cc-btn       { font-size: 12px; padding: 6px 12px; }
+}
+
+@media (max-width: 480px) {
+  .cc-cm-header  { flex-direction: column; align-items: stretch; }
+  .cc-cm-actions { width: 100%; justify-content: stretch; }
+  .cc-cm-actions .cc-btn { flex: 1; }
+  .cc-scroll-knob { width: 70px !important; height: 110px !important; }
+  #cc-scroll-knob-h { width: 110px !important; height: 70px !important; }
+}
+
+@media (max-width: 980px) {
+  :root { --frame-width: 920px; --scroll-v-offset-x: 315px; --scroll-h-w: 600px; }
+}
+
+@media (max-width: 820px) {
+  :root { --frame-width: 860px; --lens-w: 576px; --lens-h: 400px; --scroll-v-offset-x: 295px; --scroll-h-w: 560px; }
+}
+
+@media (max-width: 700px) {
+  .cc-cm-mapwrap { min-height: 640px !important; height: 80vh !important; }
+  :root {
+    --frame-width: 760px;
+    --lens-w: 528px;
+    --lens-h: 368px;
+    --scroll-v-offset-x: 255px;
+    --scroll-v-h: 420px;
+    --scroll-h-w: 520px;
+    --scroll-h-offset-y: 290px;
+    --knob-h: 138px;
+  }
 }

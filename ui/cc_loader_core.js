@@ -115,17 +115,17 @@ window.addEventListener('error', function(e) {
   }
 });
   // ── App registry ──────────────────────────────────────────────────────────
-  var COMPONENTS_JS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_components.js';
-  var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/rules_helpers.js';
+  var COMPONENTS_JS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_components.js';
+  var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/tools/rules_helpers.js';
   var RULES_BASE    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/rules_base.json';
-  var APPS_BASE     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/';
+  var APPS_BASE     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/';
 
   var APPS = {
     faction_builder:  {
       title:       'Faction Builder',
       icon:        'fa-shield',
       description: 'Build your roster',
-      file:        'cc_app_faction_builder.js',
+      file:        'app_faction_builder/cc_app_faction_builder.js',
       helpTitle:   'Faction Builder',
       helpBody: [
         'Build the roster you bring to every game. Choose your faction, add units one at a time, and customise each with abilities and upgrades.',
@@ -137,7 +137,7 @@ window.addEventListener('error', function(e) {
       title:       'Scenario Builder',
       icon:        'fa-map-signs',
       description: 'Generate scenarios',
-      file:        'cc_app_scenario_builder.js?v=17',
+      file:        'app_scenario_builder/cc_app_scenario_builder.js',
       helpTitle:   'Scenario Builder',
       helpBody: [
         'Generate a full game scenario: location, objectives, monster pressure, noise threshold, and a narrative hook to set the scene.',
@@ -149,7 +149,7 @@ window.addEventListener('error', function(e) {
       title:       'Rules Explorer',
       icon:        'fa-book',
       description: 'Browse game rules',
-      file:        'cc_app_rules_explorer.js',
+      file:        'app_rules_explorer/cc_app_rules_explorer.js',
       helpTitle:   'Rules Explorer',
       helpBody: [
         'Browse and search the complete Coffin Canyon rulebook. The left sidebar shows the table of contents — tap any section to read it in the centre panel.',
@@ -161,7 +161,7 @@ window.addEventListener('error', function(e) {
       title:       'Canyon Map',
       icon:        'fa-map',
       description: 'Interactive map',
-      file:        'cc_app_canyon_map.js',
+      file:        'app_canyon_map/cc_app_canyon_map.js',
       helpTitle:   'Canyon Map',
       helpBody: [
         'An interactive map of Coffin Canyon showing all named locations, faction territories, and points of interest.',
@@ -173,7 +173,7 @@ window.addEventListener('error', function(e) {
       title:       'Turn Counter',
       icon:        'fa-hourglass-half',
       description: 'Run your game',
-      file:        'cc_app_turn_counter.js',
+      file:        'app_turn_counter/cc_app_turn_counter.js',
       helpTitle:   'Turn Counter',
       helpBody: [
         'Your session companion. Load a saved scenario and your faction rosters, then the app tracks everything: activation order, Quality levels, noise, monster encounters, and canyon events.',
@@ -596,7 +596,7 @@ window.addEventListener('error', function(e) {
   }
 
   // ── Preloader ─────────────────────────────────────────────────────────────
-  var LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png';
+  var LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
   var MIN_PRELOAD_MS = 1000;
 
   function showPreloader() {

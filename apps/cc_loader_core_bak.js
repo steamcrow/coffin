@@ -1,6 +1,7 @@
 // ================================
+// DUPLICATE - THERE IS ANOTHER VERSION IN THE UI FOLDER
 // CC Loader Core — Reusable Preloader
-// File: coffin/rules/src/cc_loader_core.js
+// File: coffin/apps/cc_loader_core.js
 //
 // Usage (any app):
 //   CC_LOADER.show(root, 'Loading game data…');

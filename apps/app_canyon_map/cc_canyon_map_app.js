@@ -1,4 +1,4 @@
-/* File: rules/apps/canyon_map/cc_canyon_map_app.js
+/* File: apps/app_canyon_map/cc_canyon_map_app.js
    Coffin Canyon — Canyon Map
    ═══════════════════════════════════════════════════════════════
 
@@ -86,13 +86,13 @@
   // ═══════════════════════════════════════════════════════════════
   var DEFAULTS = {
     title:         "Coffin Canyon — Canyon Map",
-    mapUrl:        "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_map.json",
+    mapUrl:        "https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/canyon_map.json",
     stateUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/canyon_state.json",
-    locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json",
+    locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
     appCssUrl:     "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map.css",
-    leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.css",
-    leafletJsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/vendor/leaflet/leaflet.js",
-    logoUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/coffin_canyon_logo.png",
+    leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
+    leafletJsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
+    logoUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/coffin_canyon_logo.png",
     lensZoomOffset: 0.2  // lens zoom = BG_ZOOM + this. Higher = more magnification.
   };
 
@@ -1031,5 +1031,4 @@
   window.CC_CanyonMap = { mount: mount };
   window.CC_HITBOXES = HITBOXES;
 
-})();  
-   
+})();
