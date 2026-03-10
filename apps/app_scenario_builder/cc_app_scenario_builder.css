@@ -1,54 +1,14 @@
 /* ================================
-   Scenario Builder - App-Specific Styles
-   File: coffin/rules/apps/cc_app_scenario_builder.css
+   Scenario Builder — App-Specific Styles
+   File: coffin/apps/app_scenario_builder/cc_app_scenario_builder.css
 
-   Core styles come from: coffin/rules/ui/cc_ui.css
-   Bootstrap utilities used throughout.
+   Relies on:
+     ui/cc_ui.css   — shell, header, panel, inputs, buttons, markers,
+                      vc-obj/finale/header/aftermath, loading, print base
+     Bootstrap      — grid utilities
    ================================ */
 
-/* ===== App Shell ===== */
-.cc-app-shell {
-  min-height: 100%;
-  background: var(--cc-bg, #0d0d0d);
-  color: var(--cc-text, #e0e0e0);
-}
-
-/* ===== App Header ===== */
-.cc-app-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 1rem 0.6rem 1rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.cc-app-title {
-  font-family: var(--cc-font-title, sans-serif);
-  font-size: 1.5rem;
-  color: var(--cc-primary, #ff7518);
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.cc-app-subtitle {
-  font-size: 0.75rem;
-  color: rgba(255,255,255,0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.15em;
-  font-family: var(--cc-font-mono, monospace);
-}
-
-.cc-app-header-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-/* ===== Builder Two-Column Layout ===== */
+/* ===== Two-Column Builder Layout ===== */
 .cc-scenario-builder-layout {
   display: grid;
   grid-template-columns: 550px 1fr;
@@ -59,21 +19,20 @@
   align-items: start;
 }
 
-/* ===== Full-Width Result Layout ===== */
+/* Full-width result view */
 .cc-scenario-full-layout {
   padding: 0.75rem 1rem 1.5rem 1rem;
   max-width: 920px;
   margin: 0 auto;
 }
 
-/* Sidebar: allow the panel inside to grow and scroll naturally */
+/* Sidebar column */
 .cc-scenario-sidebar {
   min-width: 0;
   overflow-y: visible;
   overflow-x: hidden;
 }
 
-/* Sidebar panel: do NOT clip overflow — let accordion expand */
 .cc-scenario-sidebar .cc-panel {
   overflow: visible;
   height: auto;
@@ -82,7 +41,6 @@
   flex-direction: column;
 }
 
-/* The scrollable body inside the sidebar panel */
 .cc-scenario-sidebar .cc-body {
   overflow-y: auto;
   flex: 1;
@@ -106,20 +64,20 @@
 }
 
 .cc-accordion-item {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-lg);
   overflow: visible;
   transition: all 0.2s ease;
 }
 
 .cc-accordion-item.active {
   border-color: var(--cc-primary);
-  box-shadow: 0 0 12px rgba(255, 117, 24, 0.2);
+  box-shadow: 0 0 12px var(--cc-primary-dim);
 }
 
 .cc-accordion-item.complete .cc-step-status {
-  color: #4ade80;
+  color: var(--cc-green);
   font-weight: 700;
 }
 
@@ -131,16 +89,16 @@
   cursor: pointer;
   user-select: none;
   transition: background 0.2s ease;
-  border-radius: 8px;
+  border-radius: var(--cc-radius-lg);
 }
 
 .cc-accordion-header:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255,255,255,0.05);
 }
 
 .cc-step-icon {
   font-size: 1.1rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--cc-text-muted);
   width: 1.5rem;
   text-align: center;
   flex-shrink: 0;
@@ -154,19 +112,19 @@
   flex: 1;
   font-weight: 600;
   font-size: 1rem;
-  color: #e8e8e8;
+  color: var(--cc-text);
 }
 
 .cc-step-status {
   font-size: 1rem;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--cc-text-dim);
   min-width: 1.5rem;
   text-align: center;
 }
 
 .cc-accordion-body {
   padding: 1rem 1.25rem 1.25rem 1.25rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--cc-border);
   animation: slideDown 0.25s ease;
   overflow: visible;
 }
@@ -177,9 +135,9 @@
 }
 
 /* ===== Form Elements ===== */
-.cc-form-section {
-  margin-bottom: 1rem;
-}
+/* NOTE: .cc-input, .cc-field-label are in cc_ui.css */
+
+.cc-form-section { margin-bottom: 1rem; }
 
 .cc-label {
   display: block;
@@ -189,11 +147,12 @@
   font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
+  font-family: var(--cc-font-mono);
 }
 
 .cc-help-text {
   font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--cc-text-muted);
   margin-bottom: 0.65rem;
 }
 
@@ -204,55 +163,55 @@
 }
 
 /* ===== Buttons ===== */
+/* NOTE: Base .btn is in cc_ui.css.
+   These cc-btn variants are used by the scenario builder JS — do not remove.
+   Future: rename HTML to use .btn from cc_ui.css. */
 .cc-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--cc-radius-lg);
+  border: 1px solid var(--cc-border);
   font-weight: 600;
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s ease;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  font-family: var(--cc-font-mono, monospace);
+  font-family: var(--cc-font-mono);
   background: transparent;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--cc-text-muted);
 }
 
-.cc-btn:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-}
+.cc-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 
 .cc-btn-primary {
   background: var(--cc-primary);
   border-color: var(--cc-primary);
-  color: #000;
+  color: var(--cc-bg);
 }
 
 .cc-btn-primary:hover:not(:disabled) {
-  background: #e06800;
-  border-color: #e06800;
+  background: var(--cc-primary-hover);
+  border-color: var(--cc-primary-hover);
 }
 
 .cc-btn-ghost {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.7);
+  border-color: var(--cc-border);
+  color: var(--cc-text-muted);
 }
 
 .cc-btn-ghost:hover:not(:disabled) {
-  border-color: rgba(255, 255, 255, 0.4);
-  color: #fff;
+  border-color: var(--cc-border-bright);
+  color: var(--cc-text);
 }
 
 .cc-btn-secondary {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  color: rgba(255, 255, 255, 0.85);
+  background: rgba(255,255,255,0.08);
+  border-color: var(--cc-border);
+  color: var(--cc-text);
 }
 
 .cc-form-actions {
@@ -261,18 +220,18 @@
   justify-content: flex-end;
   margin-top: 1rem;
   padding-top: 0.75rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--cc-border);
   flex-wrap: wrap;
 }
 
 /* ===== Info box ===== */
 .cc-info-box {
-  background: rgba(255, 117, 24, 0.08);
-  border: 1px solid rgba(255, 117, 24, 0.2);
-  border-radius: 6px;
+  background: var(--cc-primary-dim);
+  border: 1px solid rgba(212,130,42,0.2);
+  border-radius: var(--cc-radius-lg);
   padding: 0.65rem 0.875rem;
   margin-bottom: 0.875rem;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--cc-text-muted);
   font-size: 0.875rem;
 }
 
@@ -284,7 +243,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.4rem 0;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--cc-border);
 }
 
 .cc-checkbox-label {
@@ -294,7 +253,7 @@
   cursor: pointer;
   font-size: 0.9rem;
   flex: 1;
-  color: rgba(255,255,255,0.8);
+  color: var(--cc-text);
 }
 
 .cc-player-name {
@@ -304,7 +263,7 @@
 
 /* ===== Summary Sidebar ===== */
 .cc-summary-header h3 {
-  font-family: var(--cc-font-title, sans-serif);
+  font-family: var(--cc-font-title);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--cc-primary);
@@ -324,32 +283,30 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.55rem 0.65rem;
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 6px;
+  background: rgba(0,0,0,0.3);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-lg);
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .cc-summary-step:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.04);
+  border-color: var(--cc-border-bright);
 }
 
 .cc-summary-step.active {
   border-color: var(--cc-primary);
-  background: rgba(255, 117, 24, 0.1);
+  background: var(--cc-primary-dim);
 }
 
-.cc-summary-step.complete {
-  border-color: #4ade80;
-}
+.cc-summary-step.complete { border-color: var(--cc-green); }
 
 .cc-summary-step-number {
   width: 24px;
   height: 24px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255,255,255,0.08);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -360,29 +317,29 @@
 
 .cc-summary-step.active .cc-summary-step-number {
   background: var(--cc-primary);
-  color: #000;
+  color: var(--cc-bg);
 }
 
 .cc-summary-step.complete .cc-summary-step-number {
-  background: #4ade80;
-  color: #000;
+  background: var(--cc-green);
+  color: var(--cc-bg);
 }
 
 .cc-summary-step-title {
   flex: 1;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--cc-text-muted);
   font-size: 0.875rem;
 }
 
 .cc-summary-step-check {
-  color: #4ade80;
+  color: var(--cc-green);
   font-weight: 700;
 }
 
 .cc-summary-details {
   padding: 0.75rem 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid var(--cc-border);
 }
 
 .cc-summary-details h4 {
@@ -395,7 +352,7 @@
 
 .cc-summary-details p {
   margin: 0.25rem 0;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--cc-text-muted);
   font-size: 0.85rem;
 }
 
@@ -407,19 +364,14 @@
 
 .cc-summary-list li {
   padding: 0.25rem 0;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--cc-text);
   font-size: 0.875rem;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid var(--cc-border);
 }
 
 /* ===== Generated Scenario Output ===== */
-.cc-generate-section {
-  padding: 0.75rem 0;
-}
-
-.cc-scenario-result {
-  padding: 0;
-}
+.cc-generate-section { padding: 0.75rem 0; }
+.cc-scenario-result  { padding: 0; }
 
 .cc-scenario-result h3 {
   margin: 0 0 0.6rem 0;
@@ -432,24 +384,22 @@
 .cc-scenario-hook {
   font-size: 0.95rem;
   font-style: italic;
-  color: rgba(255, 255, 255, 0.9);
+  color: var(--cc-text);
   margin-bottom: 1rem;
   padding: 0.75rem 1rem;
-  background: rgba(255, 117, 24, 0.08);
+  background: var(--cc-primary-dim);
   border-left: 3px solid var(--cc-primary);
-  border-radius: 0 6px 6px 0;
+  border-radius: 0 var(--cc-radius-lg) var(--cc-radius-lg) 0;
 }
 
-/* ── Section blocks ── */
+/* Scenario sections */
 .cc-scenario-section {
   margin-bottom: 1rem;
   padding-bottom: 0.875rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  border-bottom: 1px solid var(--cc-border);
 }
 
-.cc-scenario-section:last-of-type {
-  border-bottom: none;
-}
+.cc-scenario-section:last-of-type { border-bottom: none; }
 
 .cc-scenario-section h4 {
   margin: 0 0 0.5rem 0;
@@ -464,7 +414,7 @@
 
 .cc-scenario-section p {
   margin: 0.3rem 0;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--cc-text);
   line-height: 1.55;
   font-size: 0.9rem;
 }
@@ -472,7 +422,7 @@
 .cc-scenario-section ul {
   margin: 0.5rem 0;
   padding-left: 1.25rem;
-  color: rgba(255, 255, 255, 0.8);
+  color: var(--cc-text);
 }
 
 .cc-scenario-section li {
@@ -480,12 +430,12 @@
   font-size: 0.9rem;
 }
 
-/* ── Objective Cards ── */
+/* Objective Cards */
 .cc-objective-card {
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--cc-bg);
   padding: 0.6rem 0.75rem;
   margin-bottom: 0.4rem;
-  border-radius: 6px;
+  border-radius: var(--cc-radius-lg);
   border-left: 3px solid var(--cc-primary);
 }
 
@@ -498,225 +448,62 @@
 
 .cc-objective-card p {
   margin: 0.25rem 0;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--cc-text-muted);
   font-size: 0.85rem;
   line-height: 1.45;
 }
 
 .cc-vp-line {
-  color: #ffd700 !important;
+  color: var(--cc-gold) !important;
   font-size: 0.82rem !important;
   margin: 0.2rem 0 !important;
 }
 
-/* ── Twist Section ── */
+/* Twist section */
 .cc-twist {
-  background: rgba(139, 0, 139, 0.08);
-  border-radius: 8px;
+  background: rgba(139,0,139,0.08);
+  border-radius: var(--cc-radius-lg);
   padding: 0.75rem 1rem;
 }
 
-.cc-twist h4 {
-  color: #c77dff !important;
-}
+.cc-twist h4 { color: #c77dff !important; }
 
-/* ── Victory Condition Cards ── */
-.cc-victory-card {
-  background: rgba(255, 215, 0, 0.04);
-  padding: 0.65rem 0.875rem;
-  margin-bottom: 0.5rem;
-  border-radius: 8px;
-  border-left: 3px solid #ffd700;
-}
-
-.cc-victory-card h5 {
-  color: #ffd700;
-  margin: 0 0 0.6rem 0;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-}
-
-.cc-vc-header {
-  border-bottom: 2px solid var(--cc-primary);
-  padding-bottom: 0.4rem;
-  margin-bottom: 0.6rem;
-}
-
-.cc-vc-header h5 {
-  margin: 0;
-  font-size: 0.95rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.cc-vc-objectives {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  margin-bottom: 0.5rem;
-}
-
-.cc-vc-obj {
-  background: rgba(0, 0, 0, 0.25);
-  border-left: 3px solid var(--cc-primary);
-  border-radius: 4px;
-  padding: 0.5rem 0.65rem;
-  margin-bottom: 0.35rem;
-}
-
-.cc-vc-obj-label {
-  font-size: 0.6rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  opacity: 0.45;
-  margin-bottom: 0.15rem;
-}
-
-.cc-vc-obj-name {
-  font-weight: bold;
-  margin-bottom: 0.2rem;
-  font-size: 0.875rem;
-}
-
-.cc-vc-obj-desc {
-  font-size: 0.845rem;
-  margin: 0.2rem 0 0.3rem 0;
-  opacity: 0.9;
-  line-height: 1.45;
-}
-
-.cc-vc-obj-meta {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  font-size: 0.77rem;
-  opacity: 0.75;
-}
+/* NOTE: .cc-victory-card, .cc-vc-header, .cc-vc-obj, .cc-vc-finale,
+   .cc-vc-aftermath are all provided by cc_ui.css */
 
 .cc-tactic-line {
-  color: rgba(255, 255, 255, 0.55) !important;
+  color: var(--cc-text-dim) !important;
   font-size: 0.78rem !important;
   font-style: italic;
   margin: 0.15rem 0 !important;
 }
 
-.cc-vc-divider {
-  border: none;
-  border-top: 1px solid rgba(255,255,255,0.1);
-  margin: 0.5rem 0;
-}
-
-.cc-vc-finale {
-  background: rgba(255, 215, 0, 0.07);
-  border-left: 3px solid #c9a227;
-  border-radius: 4px;
-  padding: 0.5rem 0.65rem;
-  margin-bottom: 0.4rem;
-}
-
-.cc-vc-aftermath {
-  font-size: 0.845rem;
-  padding: 0.2rem 0;
-}
-
-.cc-vc-aftermath p {
-  margin: 0.2rem 0;
-  color: rgba(255, 255, 255, 0.7);
-}
-
 .cc-quote {
-  color: rgba(255, 215, 0, 0.6) !important;
+  color: rgba(201,162,39,0.6) !important;
   font-style: italic;
   margin-top: 0.4rem !important;
 }
 
 .cc-npc-tag {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius);
   padding: 0 0.35rem;
   font-size: 0.65rem;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--cc-text-muted);
   vertical-align: middle;
 }
 
-/* ===== Objective Markers Setup Table ===== */
-.cc-markers-section { margin-top: 0; }
-.cc-markers-intro {
-  font-size: 0.82rem;
-  opacity: 0.65;
-  margin-bottom: 0.5rem;
-  text-align: center;
-}
+/* NOTE: .cc-markers-section, .cc-markers-intro, .cc-marker-table,
+   .cc-marker-token, .cc-marker-count, .cc-marker-action, .cc-marker-note-row
+   are all provided by cc_ui.css */
 
-.cc-marker-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.82rem;
-}
-
-.cc-marker-table th {
-  background: var(--cc-primary, #ff7518);
-  color: #000;
-  padding: 0.35rem 0.5rem;
-  text-align: left;
-  font-size: 0.7rem;
-  letter-spacing: 0.07em;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.cc-marker-table td {
-  padding: 0.4rem 0.5rem;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
-  vertical-align: top;
-  font-size: 0.82rem;
-  color: rgba(255,255,255,0.8);
-}
-
-.cc-marker-table tr:nth-child(even) td {
-  background: rgba(255,255,255,0.025);
-}
-
-.cc-marker-token {
-  font-size: 0.72rem;
-  opacity: 0.5;
-  font-style: italic;
-  display: block;
-  margin-top: 0.1rem;
-}
-
-.cc-marker-count {
-  text-align: center;
-  font-weight: bold;
-  font-size: 0.95rem;
-}
-
-.cc-marker-action {
-  display: inline-block;
-  background: var(--cc-primary, #ff7518);
-  color: #000;
-  font-size: 0.6rem;
-  font-weight: 700;
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px;
-  margin: 0.1rem 0.1rem 0.1rem 0;
-  letter-spacing: 0.04em;
-}
-
-.cc-marker-note-row td {
-  font-size: 0.75rem;
-  opacity: 0.6;
-  padding-top: 0.15rem;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
-}
-
-/* ===== State Badge ===== */
+/* ===== State Badges ===== */
 .cc-state-badge {
   display: inline-block;
   font-size: 0.7rem;
   padding: 0.1rem 0.4rem;
-  border-radius: 3px;
+  border-radius: var(--cc-radius);
   margin-left: 0.35rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -724,29 +511,25 @@
   vertical-align: middle;
 }
 
-.cc-state-alive       { background: rgba(74,222,128,0.15); color: #4ade80; }
-.cc-state-ruined      { background: rgba(255,100,100,0.15); color: #ff6464; }
+.cc-state-alive       { background: rgba(90,158,90,0.15);  color: var(--cc-green); }
+.cc-state-ruined      { background: rgba(196,68,68,0.15);  color: var(--cc-red); }
 .cc-state-poisoned    { background: rgba(100,200,100,0.15); color: #64c864; }
-.cc-state-abandoned   { background: rgba(200,200,200,0.1);  color: #aaa; }
+.cc-state-abandoned   { background: rgba(200,200,200,0.1); color: var(--cc-text-muted); }
 .cc-state-strangewild { background: rgba(180,100,255,0.15); color: #b464ff; }
 
 /* ===== Resource highlights ===== */
-.cc-resource-high   { color: #4ade80; font-weight: 600; margin-right: 0.5rem; }
-.cc-resource-absent { color: #ff6464; font-weight: 600; margin-right: 0.5rem; }
+.cc-resource-high   { color: var(--cc-green); font-weight: 600; margin-right: 0.5rem; }
+.cc-resource-absent { color: var(--cc-red);   font-weight: 600; margin-right: 0.5rem; }
 
-/* ===== Print Styles ===== */
+/* ===== Print ===== */
+/* NOTE: Global print reset is in cc_print.css.
+   Only scenario-specific print overrides live here. */
 @media print {
-  .cc-app-header,
   .cc-scenario-sidebar,
   .cc-form-actions,
-  .cc-summary-steps {
-    display: none !important;
-  }
+  .cc-summary-steps { display: none !important; }
 
-  .cc-scenario-full-layout {
-    padding: 0;
-    max-width: 100%;
-  }
+  .cc-scenario-full-layout { padding: 0; max-width: 100%; }
 
   .cc-scenario-section {
     page-break-inside: avoid;
@@ -754,33 +537,19 @@
     padding-bottom: 0.5rem;
   }
 
-  body {
-    background: white !important;
-    color: black !important;
-  }
-
   .cc-scenario-result h3,
   .cc-scenario-section h4,
-  .cc-objective-card strong {
-    color: black !important;
-  }
+  .cc-objective-card strong { color: #000 !important; }
 
   .cc-scenario-hook,
   .cc-scenario-section p,
-  .cc-objective-card p {
-    color: #333 !important;
-  }
+  .cc-objective-card p { color: #333 !important; }
 
   .cc-scenario-hook,
   .cc-objective-card,
   .cc-twist {
     background: #f0f0f0 !important;
     border-color: #999 !important;
-  }
-
-  .cc-marker-table th {
-    background: #333 !important;
-    color: white !important;
   }
 }
 
@@ -792,21 +561,10 @@
   }
 
   .cc-scenario-sidebar,
-  .cc-scenario-main {
-    overflow-y: visible;
-  }
+  .cc-scenario-main { overflow-y: visible; }
 }
 
 @media (max-width: 768px) {
-  .cc-scenario-full-layout {
-    padding: 0.5rem 0.75rem 1rem 0.75rem;
-  }
-
-  .cc-scenario-result h3 {
-    font-size: 1.2rem;
-  }
-
-  .cc-marker-table {
-    font-size: 0.75rem;
-  }
+  .cc-scenario-full-layout { padding: 0.5rem 0.75rem 1rem; }
+  .cc-scenario-result h3 { font-size: 1.2rem; }
 }
