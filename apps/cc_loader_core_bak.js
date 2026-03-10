@@ -1,4 +1,5 @@
 // ================================
+// DUPLICATE - THERE IS ANOTHER VERSION IN THE UI FOLDER
 // CC Loader Core — Reusable Preloader
 // File: coffin/apps/cc_loader_core.js
 //
