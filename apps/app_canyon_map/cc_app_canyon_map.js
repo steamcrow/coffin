@@ -9,7 +9,7 @@
     app_id: "canyon_map",
     init: async function init(rootEl, opts) {
       const APP_MAIN =
-        "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/cc_canyon_map_app.js";
+        "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map_app.js";
 
       async function loadScriptViaBlob(url) {
         const res = await fetch(url + "?t=" + Date.now());
