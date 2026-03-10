@@ -114,7 +114,8 @@ window.CC_STORAGE = {
 
       if (!response.ok) throw new Error('Update failed');
       const data = await response.json();
-      if (data.error) throw new Error(data.error.data?.message || 'Update failed');
+      // FIXED: was data.error.data?.message
+      if (data.error) throw new Error((data.error.data && data.error.data.message) || 'Update failed');
       
       return { success: true, action: 'updated', id: existing.id };
     } else {
@@ -142,7 +143,8 @@ window.CC_STORAGE = {
 
       if (!response.ok) throw new Error('Save failed');
       const data = await response.json();
-      if (data.error) throw new Error(data.error.data?.message || 'Save failed');
+      // FIXED: was data.error.data?.message
+      if (data.error) throw new Error((data.error.data && data.error.data.message) || 'Save failed');
       
       return { success: true, action: 'created', id: data.result };
     }
@@ -178,7 +180,8 @@ window.CC_STORAGE = {
 
     if (!response.ok) throw new Error('Load failed');
     const data = await response.json();
-    if (data.error) throw new Error(data.error.data?.message || 'Load failed');
+    // FIXED: was data.error.data?.message
+    if (data.error) throw new Error((data.error.data && data.error.data.message) || 'Load failed');
     
     return data.result || [];
   },
@@ -202,7 +205,8 @@ window.CC_STORAGE = {
 
     if (!response.ok) throw new Error('Load failed');
     const data = await response.json();
-    if (data.error) throw new Error(data.error.data?.message || 'Load failed');
+    // FIXED: was data.error.data?.message
+    if (data.error) throw new Error((data.error.data && data.error.data.message) || 'Load failed');
     
     const doc = data.result[0];
     if (!doc || !doc.datas) throw new Error('No data in document');
@@ -230,7 +234,8 @@ window.CC_STORAGE = {
 
     if (!response.ok) throw new Error('Delete failed');
     const data = await response.json();
-    if (data.error) throw new Error(data.error.data?.message || 'Delete failed');
+    // FIXED: was data.error.data?.message
+    if (data.error) throw new Error((data.error.data && data.error.data.message) || 'Delete failed');
     
     return { success: true };
   },
