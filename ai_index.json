@@ -24,11 +24,11 @@
         "tools": "App-related tools and helpers."
       },
       "notable_root_files": [
-        "cc_app_canyon_map.js",
-        "cc_loader_core.js",
-        "storage_helpers.js",
-        "brain_generators.js",
-        "app_shell_backup.html"
+        "apps/app_canyon_map/cc_app_canyon_map.js",
+        "apps/cc_loader_core.js",
+        "apps/storage_helpers.js",
+        "apps/brain_generators.js",
+        "apps/app_shell_backup.html"
       ]
     },
     "data": {
