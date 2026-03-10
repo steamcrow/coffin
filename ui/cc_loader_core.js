@@ -137,7 +137,7 @@ window.addEventListener('error', function(e) {
       title:       'Scenario Builder',
       icon:        'fa-map-signs',
       description: 'Generate scenarios',
-      file:        'app_scenario_builder/cc_app_scenario_builder.js?v=17',
+      file:        'app_scenario_builder/cc_app_scenario_builder.js',
       helpTitle:   'Scenario Builder',
       helpBody: [
         'Generate a full game scenario: location, objectives, monster pressure, noise threshold, and a narrative hook to set the scene.',
