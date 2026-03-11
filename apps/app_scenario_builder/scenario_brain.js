@@ -1306,26 +1306,125 @@ const FACTION_THEMES = {
 };
 
 class ScenarioBrain {
-  
-  constructor() {
-    this.data = {
-      scenarios: null,
-      scenarioVault140: null,
-      names: null,
-      locations: null,
-      locationArchetypes: null,      // 97 - Rules-facing location types
-      locationTypes: null,
-      plotFamilies: null,
-      plotEngine: null,               // 190 - Design philosophy
-      objectiveVault: null,           // 160 - Complete objective rules
-      twists: null,
-      turnStructure: null,
-      unitIdentities: null,
-      canyonStates: null,
-      factions: {}
-    };
-    this.loaded = false;
+
+  constructor(constants) {
+    this.constants = constants || {};
   }
+
+  generateCompleteScenario(locationData, factionA, factionB, dangerRating) {
+    const objectives = this.generateObjectives(locationData, [factionA, factionB], dangerRating);
+
+    const timeline_events = [];
+    objectives.forEach(obj => {
+      if (obj.tactical_link) {
+        timeline_events.push({
+          trigger_turn: obj.tactical_link.trigger_turn,
+          effect: obj.tactical_link.effect,
+          objective_id: obj.id
+        });
+      }
+    });
+
+    const traitName = objectives.length > 0 ? objectives[0].trait : "Strange";
+
+    return {
+      scenario_name: `The ${traitName} Objective at ${locationData.name}`,
+      location: locationData.name,
+      objectives: objectives,
+      timeline_events: timeline_events
+    };
+  }
+
+  generateObjectives(locationData, factions, dangerRating) {
+
+    const objectiveVault = this.constants.OBJECTIVE_VAULT || [];
+    const scored = [];
+
+    objectiveVault.forEach(objective => {
+
+      let score = 1.0;
+
+      if (objective.required_resource && locationData.resources) {
+        if (locationData.resources.includes(objective.required_resource)) {
+          score += 2.0;
+        }
+      }
+
+      factions.forEach(faction => {
+        if (faction && faction.philosophy && objective.tags) {
+          if (objective.tags.includes(faction.philosophy)) {
+            score += 3.0;
+          }
+        }
+      });
+
+      if (locationData.tags && objective.exclude_tags) {
+        const blocked = objective.exclude_tags.some(tag => locationData.tags.includes(tag));
+        if (blocked) return;
+      }
+
+      scored.push({
+        objective: objective,
+        score: score
+      });
+
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+
+    const chosen = scored.slice(0, 3).map((entry, index) => {
+      const trait = this.getObjectiveTrait();
+
+      const baseVP = entry.objective.base_vp || 2;
+      const vp = baseVP + Math.floor(dangerRating / 2) + trait.vp_modifier;
+
+      const trigger = this.generateTriggerEvent(index + 2);
+
+      return {
+        id: `obj_${index + 1}`,
+        name: entry.objective.name,
+        trait: trait.name,
+        vp_value: vp,
+        description: entry.objective.description,
+        tactical_link: trigger
+      };
+    });
+
+    return chosen;
+  }
+
+  getObjectiveTrait() {
+
+    const traits = [
+      { name: "Volatile", vp_modifier: 1 },
+      { name: "Hardened", vp_modifier: 1 },
+      { name: "Obscured", vp_modifier: 0 },
+      { name: "Booby-trapped", vp_modifier: 1 },
+      { name: "Unstable", vp_modifier: 2 }
+    ];
+
+    const index = Math.floor(Math.random() * traits.length);
+    return traits[index];
+  }
+
+  generateTriggerEvent(turn) {
+
+    const effects = [
+      "Area_Blast_3in",
+      "Danger_Test_3in",
+      "Spawn_Monster",
+      "Pulse_Shockwave"
+    ];
+
+    const effect = effects[Math.floor(Math.random() * effects.length)];
+
+    return {
+      trigger_turn: turn,
+      effect: effect
+    };
+  }
+
+}
   
   async loadAllData() {
     console.log("📚 Loading all data files...");
