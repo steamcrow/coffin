@@ -1,22 +1,18 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP (v2.2 - THE GREAT RECOVERY)
+   COFFIN CANYON — CANYON MAP (v2.3 - Visibility & Editor Update)
    ================================================================ */
 
 :root {
   --cc-primary: #d48e4d;
   --cc-text: #e0d7c6;
   --cc-bg-soft: #1a1614;
-  --cc-border: #3a2e26;
-  --cc-font-title: "Crimson Text", serif;
-  --cc-radius-lg: 12px;
   --device-scale: 1;
 
-  /* --- GEOMETRY --- */
-  /* The "Visual Aperture" (The big section we want under the frame) */
+  /* GEOMETRY - Oversized for under-frame edges */
   --lens-w-base: 1300; 
   --lens-h-base: 900;
 
-  /* The "Mechanical Tracks" (The area the knobs actually travel on) */
+  /* MECHANICAL TRACKS */
   --scroll-v-h-base: 500;
   --scroll-v-w-base: 90;
   --scroll-v-offset-x-base: 480;
@@ -28,7 +24,7 @@
   --knob-h-base: 150;
   --knob-offset-x-base: 9;
 
-  /* --- SCALED VALUES --- */
+  /* SCALED VALUES */
   --lens-w: calc(var(--lens-w-base) * 1px * var(--device-scale));
   --lens-h: calc(var(--lens-h-base) * 1px * var(--device-scale));
   --scroll-v-h: calc(var(--scroll-v-h-base) * 1px * var(--device-scale));
@@ -42,29 +38,26 @@
   --knob-offset-x: calc(var(--knob-offset-x-base) * 1px * var(--device-scale));
 }
 
-.cc-canyon-map {
-  position: relative;
-  width: 100%;
-  overflow: hidden;
-  isolation: isolate;
-}
-
+/* --- VISIBILITY RECOVERY --- */
 .cc-cm-mapwrap {
   position: relative !important;
   width: 100%;
   height: 85vh !important;
   min-height: 750px !important;
   background: #0d0b0a;
-  border: 12px solid #4a3728;
-  border-radius: var(--cc-radius-lg);
-  box-shadow: inset 0 0 60px #000, 0 15px 40px rgba(0,0,0,0.9);
+  border-radius: 12px;
   overflow: hidden !important;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* --- THE MAGNIFIED SECTION (The Lens) --- */
+#cc-cm-map, #cc-lens-map {
+  background: #111 !important; /* Prevent white flash */
+  height: 100% !important;
+  width: 100% !important;
+}
+
 .cc-lens {
   position: absolute !important;
   left: 50% !important;
@@ -73,20 +66,77 @@
   width: var(--lens-w) !important;
   height: var(--lens-h) !important;
   z-index: 10;
-  pointer-events: none; /* Clicks pass through to knobs */
+  pointer-events: none;
 }
 
 .cc-lens-inner {
   position: absolute;
   inset: 0;
-  pointer-events: auto; /* Map inside is clickable */
+  pointer-events: auto;
+  border-radius: 40px; /* Slight softening for the aperture */
+  overflow: hidden;
 }
 
-/* --- THE METAL FRAME --- */
+/* --- KNOB ROTATION --- */
+.cc-scroll-knob {
+  position: absolute;
+  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: grab;
+  z-index: 100;
+}
+
+#cc-scroll-knob-v {
+  width: var(--knob-w) !important;
+  height: var(--knob-h) !important;
+  left: calc(50% + var(--knob-offset-x)) !important;
+}
+
+#cc-scroll-knob-h {
+  width: var(--knob-w) !important;
+  height: var(--knob-h) !important;
+  top: 50%;
+  /* Rotated 90 degrees to the right */
+  transform: translate(-50%, -50%) rotate(90deg) !important;
+}
+
+/* --- RE-ENGINEERED HITBOX EDITOR --- */
+.cc-canyon-map.cc-hitbox-edit .cc-hb-box {
+  outline: 2px solid #00ff00 !important;
+  background: rgba(0, 255, 0, 0.25) !important;
+  box-shadow: 0 0 15px rgba(0, 255, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(2px);
+  border-radius: 2px;
+}
+
+.cc-canyon-map.cc-hitbox-edit .cc-hb-label {
+  background: #00ff00 !important;
+  color: #000 !important;
+  font-weight: 900 !important;
+  font-family: var(--cc-font-mono) !important;
+  text-transform: uppercase;
+  font-size: 10px !important;
+  top: -20px !important;
+  border-radius: 2px 2px 0 0;
+}
+
+.cc-canyon-map.cc-hitbox-edit .cc-hb-handle {
+  width: 16px !important;
+  height: 16px !important;
+  background: #fff !important;
+  border: 2px solid #00ff00 !important;
+  right: -8px !important;
+  bottom: -8px !important;
+  box-shadow: 0 0 10px #000;
+}
+
+/* --- FRAME & LAYERS --- */
 .cc-frame-overlay {
   position: absolute;
   inset: 0;
-  z-index: 50; 
+  z-index: 50;
   pointer-events: none;
 }
 
@@ -96,81 +146,4 @@
   top: 50%;
   width: min(96%, calc(1200px * var(--device-scale)));
   transform: translate(-50%, -46%);
-}
-
-/* --- THE BLAPPO KNOBS & TRACKS --- */
-
-/* Vertical Track */
-.cc-scroll-vertical {
-  position: absolute !important;
-  z-index: 100 !important;
-  left: 50% !important;
-  top: 50% !important;
-  width: var(--scroll-v-w) !important;
-  height: var(--scroll-v-h) !important;
-  transform: translate(calc(-50% + var(--scroll-v-offset-x)), -50%) !important;
-  pointer-events: auto !important;
-  /* background: rgba(255,0,0,0.1); */ /* Debug: Uncomment to see the track */
-}
-
-/* Horizontal Track */
-.cc-scroll-horizontal {
-  position: absolute !important;
-  z-index: 100 !important;
-  left: 50% !important;
-  top: 50% !important;
-  width: var(--scroll-h-w) !important;
-  height: var(--scroll-h-h) !important;
-  transform: translate(-50%, calc(-50% + var(--scroll-h-offset-y))) !important;
-  pointer-events: auto !important;
-}
-
-.cc-scroll-knob {
-  position: absolute;
-  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  cursor: grab;
-  filter: drop-shadow(0 6px 12px rgba(0,0,0,0.7));
-  will-change: top, left, transform;
-}
-
-#cc-scroll-knob-v {
-  width: var(--knob-w) !important;
-  height: var(--knob-h) !important;
-  left: calc(50% + var(--knob-offset-x)) !important;
-  /* The JS will handle the top % position */
-}
-
-#cc-scroll-knob-h {
-  width: var(--knob-w) !important; /* Vertical knob rotated/scaled */
-  height: var(--knob-h) !important;
-  top: 50%;
-  transform: translate(-50%, -50%) rotate(-90deg) !important;
-  /* The JS will handle the left % position */
-}
-
-.cc-scroll-knob:active { cursor: grabbing; scale: 1.05; }
-
-/* --- DRAWER (FIXED) --- */
-.cc-cm-drawer {
-  position: fixed;
-  top: 0;
-  right: -450px;
-  width: 400px;
-  max-width: 90vw;
-  height: 100vh;
-  background: var(--cc-bg-soft);
-  border-left: 3px solid var(--cc-primary);
-  box-shadow: -15px 0 60px #000;
-  z-index: 10000;
-  transition: transform 0.3s ease;
-}
-
-.cc-cm-drawer.open { transform: translateX(-450px); }
-
-@media (max-width: 768px) {
-  .cc-cm-drawer { width: 100%; right: -100%; }
-  .cc-cm-drawer.open { transform: translateX(-100%); }
 }
