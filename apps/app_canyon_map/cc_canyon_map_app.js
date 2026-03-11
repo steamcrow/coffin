@@ -93,7 +93,7 @@ var DEFAULTS = {
   leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
   leafletJsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
   logoUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
-  frameUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame.png",
+  frameUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame2.png",
   lensZoomOffset: 0.2
 };
 
