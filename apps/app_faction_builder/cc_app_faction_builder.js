@@ -208,8 +208,8 @@ window.CC_APP = {
       crow_queen:      '#00bcd4'
     };
 
-    // FIX: icon base path updated from rules/apps/ → apps/app_faction_builder/
-    const FACTION_ICON_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_faction_builder/';
+
+    const FACTION_ICON_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
 
     function factionIconHtml(factionId, size = 32) {
       if (!factionId) return '';
