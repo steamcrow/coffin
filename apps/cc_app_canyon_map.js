@@ -54,7 +54,7 @@
         ctx,
 
         mapUrl:
-          "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/data/canyon_map.json",
+          "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
         stateUrl:
           "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_state.json",
         appCssUrl:
