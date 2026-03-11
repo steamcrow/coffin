@@ -7,16 +7,16 @@
 
   /* ============================================================
      MASTER DEVICE SCALE
-     JS adjusts this based on map width.
-     Everything in the brass device scales from here.
+     JS adjusts this from the available map width.
+     Everything in the brass device scales from this variable.
      ============================================================ */
-
   --device-scale: 1;
 
   /* ============================================================
-     DESIGN GEOMETRY (BASE VALUES)
+     DESIGN GEOMETRY (BASE VALUES, UNITLESS)
+     These are your “master blueprint” measurements.
+     JS/CSS scale them into real px values below.
      ============================================================ */
-
   --lens-w-base: 920;
   --lens-h-base: 550;
 
@@ -39,8 +39,8 @@
 
   /* ============================================================
      SCALED GEOMETRY
+     Everything below is what the app actually uses.
      ============================================================ */
-
   --lens-w: calc(var(--lens-w-base) * 1px * var(--device-scale));
   --lens-h: calc(var(--lens-h-base) * 1px * var(--device-scale));
 
@@ -64,11 +64,9 @@
   /* ============================================================
      APPEARANCE
      ============================================================ */
-
   --cc-map-border: #4a3728;
-
   --lens-radius: 90px;
-  --lens-contrast: .85;
+  --lens-contrast: 0.85;
 
   --shadow-inset: inset 0 0 60px #000;
   --shadow-outer: 0 10px 30px rgba(0,0,0,0.8);
@@ -85,16 +83,25 @@
   color: var(--cc-text);
   font-family: var(--cc-font-body);
   touch-action: pan-x pan-y;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .cc-cm-mapwrap,
 .cc-scroll-vertical,
 .cc-scroll-horizontal {
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
+.cc-block { margin-bottom: 10px; }
+.cc-h { font-weight: 800; margin-bottom: 4px; }
+
 /* ================================================================
-   LOADING STATE
+   LOADING / READY STATE
+   Hide the whole map device until it is fully ready so the frame
+   does not flash or pop before the loader fades out.
    ================================================================ */
 
 .cc-canyon-map.cc-loading .cc-lens,
@@ -115,6 +122,14 @@
   visibility: visible;
 }
 
+.cc-lens,
+.cc-frame-overlay,
+.cc-scroll-vertical,
+.cc-scroll-horizontal,
+#cc-cm-map {
+  transition: opacity 180ms ease, visibility 180ms ease;
+}
+
 /* ================================================================
    HEADER
    ================================================================ */
@@ -130,11 +145,13 @@
 .cc-cm-title {
   font-family: var(--cc-font-title);
   font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 .cc-cm-actions {
   display: flex;
   gap: 8px;
+  flex-wrap: wrap;
 }
 
 .cc-btn {
@@ -147,42 +164,33 @@
   font-family: var(--cc-font-mono);
   font-weight: 700;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
 }
 
 .cc-btn:hover { background: rgba(255,255,255,0.08); }
+.cc-btn:active { transform: translateY(1px); }
 
 .cc-btn.cc-btn-x {
   width: 34px;
   height: 34px;
   padding: 0;
+  line-height: 32px;
+  text-align: center;
+  border-radius: 10px;
 }
 
 /* ================================================================
    BODY
    ================================================================ */
 
-.cc-cm-body { position: relative; width: 100%; }
-
-.cc-cm-body--lens { padding: 10px 12px 18px; }
-
-/* ================================================================
-   METAL FRAME
-   ================================================================ */
-
-.cc-frame-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  pointer-events: none;
+.cc-cm-body {
+  position: relative;
+  width: 100%;
+  display: block;
 }
 
-.cc-frame-image {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 90%;
-  height: auto;
-  transform: translate(-50%, -46%);
+.cc-cm-body--lens {
+  padding: 10px 12px 18px;
 }
 
 /* ================================================================
@@ -202,6 +210,7 @@
   border: 10px solid var(--cc-map-border);
   border-radius: var(--cc-radius-lg);
   box-shadow: var(--shadow-inset), var(--shadow-outer);
+  isolation: isolate;
 }
 
 /* ================================================================
@@ -215,6 +224,24 @@
   height: 100% !important;
   z-index: 1 !important;
   pointer-events: none;
+  will-change: transform;
+}
+
+#cc-cm-map .leaflet-control-container {
+  display: none !important;
+}
+
+#cc-cm-map .leaflet-container,
+#cc-cm-map .leaflet-pane,
+#cc-cm-map .leaflet-map-pane {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Make absolutely sure wheel / touchpad / pinch zoom do nothing visually */
+#cc-cm-map .leaflet-container,
+#cc-lens-map .leaflet-container {
+  touch-action: none !important;
 }
 
 /* ================================================================
@@ -231,6 +258,10 @@
   z-index: 30 !important;
   overflow: hidden !important;
   border-radius: var(--lens-radius);
+  pointer-events: none;
+  box-shadow:
+    inset 0 0 0 2px rgba(255,255,255,0.06),
+    inset 0 0 30px rgba(0,0,0,0.25);
 }
 
 .cc-lens-inner {
@@ -238,6 +269,46 @@
   inset: 8px;
   border-radius: 14px;
   overflow: hidden;
+  pointer-events: auto;
+}
+
+.cc-lens-inner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 38%,
+    rgba(0,0,0,0.20) 65%,
+    rgba(0,0,0,0.55) 100%
+  );
+  pointer-events: none;
+  z-index: 10;
+}
+
+.cc-lens-chromatic {
+  position: absolute;
+  inset: 8px;
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 20;
+  box-shadow:
+    inset 0 0 28px rgba(220,80,20,0.18),
+    inset 0 0 55px rgba(30,60,200,0.10);
+  mix-blend-mode: screen;
+}
+
+.cc-lens-glare {
+  position: absolute;
+  inset: 8px;
+  border-radius: 14px;
+  pointer-events: none;
+  z-index: 21;
+  background:
+    radial-gradient(circle at 24% 20%, rgba(255,255,255,0.16), transparent 22%),
+    linear-gradient(135deg, rgba(255,255,255,0.08), transparent 35%);
+  mix-blend-mode: screen;
 }
 
 .cc-lens-overscan {
@@ -246,6 +317,33 @@
   top: calc(var(--lens-overscan-y) * -1) !important;
   width: calc(100% + (var(--lens-overscan-x) * 2)) !important;
   height: calc(100% + (var(--lens-overscan-y) * 2)) !important;
+  filter: contrast(var(--lens-contrast)) saturate(1.1) brightness(1.02);
+  transform: perspective(600px) rotateX(0deg);
+}
+
+/* ================================================================
+   METAL FRAME
+   Frame sits above the lens and knobs visually, but does not block input.
+   ================================================================ */
+
+.cc-frame-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.cc-frame-image {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: min(96%, calc(1200px * var(--device-scale)));
+  max-width: none;
+  height: auto;
+  transform: translate(-50%, -46%);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* ================================================================
@@ -260,6 +358,14 @@
   width: var(--scroll-v-w) !important;
   height: var(--scroll-v-h) !important;
   z-index: 60 !important;
+  pointer-events: auto !important;
+}
+
+.cc-scroll-vertical .cc-scroll-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: rgba(0,0,0,0);
 }
 
 /* ================================================================
@@ -274,6 +380,14 @@
   width: var(--scroll-h-w) !important;
   height: var(--scroll-h-h) !important;
   z-index: 60 !important;
+  pointer-events: auto !important;
+}
+
+.cc-scroll-horizontal .cc-scroll-track {
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: rgba(0,0,0,0);
 }
 
 /* ================================================================
@@ -287,22 +401,53 @@
   background-repeat: no-repeat;
   background-position: center;
   cursor: grab;
+  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));
+  transition: filter 140ms ease, transform 140ms ease;
+  will-change: top, left;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.cc-scroll-knob:hover {
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)) brightness(1.05);
+}
+
+.cc-scroll-knob.is-active {
+  cursor: grabbing !important;
+  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.65)) brightness(1.08);
 }
 
 #cc-scroll-knob-v {
-  width: var(--knob-w);
-  height: var(--knob-h);
-  left: calc(50% + var(--knob-offset-x));
+  width: var(--knob-w) !important;
+  height: var(--knob-h) !important;
+  left: calc(50% + var(--knob-offset-x)) !important;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) !important;
+}
+
+#cc-scroll-knob-v:hover {
+  transform: translate(-50%, -50%) scale(1.03) !important;
+}
+
+#cc-scroll-knob-v.is-active {
+  transform: translate(-50%, -50%) scale(1.05) !important;
 }
 
 #cc-scroll-knob-h {
-  width: var(--knob-horiz-w);
-  height: var(--knob-horiz-h);
+  width: var(--knob-horiz-w) !important;
+  height: var(--knob-horiz-h) !important;
   left: 50%;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%) !important;
+}
+
+#cc-scroll-knob-h:hover {
+  transform: translate(-50%, -50%) scale(1.03) !important;
+}
+
+#cc-scroll-knob-h.is-active {
+  transform: translate(-50%, -50%) scale(1.05) !important;
 }
 
 /* ================================================================
@@ -323,12 +468,15 @@
   transition: right 0.3s ease-in-out;
 }
 
-.cc-cm-drawer.open { right: 0; }
+.cc-cm-drawer.open {
+  right: 0;
+}
 
 .cc-cm-drawer-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 10px;
   padding: 10px 12px;
   border-bottom: 1px solid var(--cc-border);
 }
@@ -339,33 +487,120 @@
   color: var(--cc-primary);
 }
 
-.cc-cm-drawer-content { padding: 10px 12px 14px; }
+.cc-cm-drawer-content {
+  padding: 10px 12px 14px;
+}
+
+/* ================================================================
+   iOS / MOBILE SHARPNESS FALLBACK
+   ================================================================ */
+
+.cc-ios #cc-lens-map,
+.cc-ios #cc-lens-map .leaflet-container {
+  filter: contrast(var(--lens-contrast)) saturate(1.08) !important;
+}
+
+/* ================================================================
+   DEV: HITBOX EDIT MODE
+   ================================================================ */
+
+.cc-canyon-map.cc-hitbox-edit .cc-lens,
+.cc-canyon-map.cc-hitbox-edit .cc-frame-overlay,
+.cc-canyon-map.cc-hitbox-edit .cc-scroll-vertical,
+.cc-canyon-map.cc-hitbox-edit .cc-scroll-horizontal {
+  display: none !important;
+}
+
+.cc-canyon-map.cc-hitbox-edit #cc-cm-map {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+#cc-hitbox-editor {
+  position: absolute;
+  inset: 0;
+  z-index: 999999;
+  pointer-events: auto;
+}
+
+.cc-hb-box {
+  position: absolute;
+  outline: 2px solid rgba(0,0,0,.7);
+  background: rgba(255,255,0,.18);
+  border-radius: var(--cc-radius-lg);
+  box-sizing: border-box;
+  cursor: grab;
+  user-select: none;
+}
+
+.cc-hb-box:active {
+  cursor: grabbing;
+}
+
+.cc-hb-label {
+  position: absolute;
+  left: 0;
+  top: -18px;
+  padding: 2px 6px;
+  border-radius: var(--cc-radius-lg);
+  background: rgba(0,0,0,.75);
+  color: var(--cc-text);
+  font: 12px/1 var(--cc-font-mono);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.cc-hb-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  right: -6px;
+  bottom: -6px;
+  background: rgba(0,0,0,.85);
+  border-radius: var(--cc-radius);
+  cursor: nwse-resize;
+}
 
 /* ================================================================
    RESPONSIVE
+   Most device scaling is now handled by --device-scale in JS.
+   These breakpoints only adjust the outer app chrome.
    ================================================================ */
 
 @media (max-width: 768px) {
-
   .cc-cm-drawer {
     width: 100vw;
     right: -100vw;
   }
 
   .cc-cm-mapwrap {
-    min-height: 400px !important;
-    height: 60vh !important;
+    min-height: 420px !important;
+    height: 68vh !important;
   }
 
   .cc-frame-image {
-    width: 96%;
+    width: min(98%, calc(1220px * var(--device-scale)));
     transform: translate(-50%, -45%);
   }
 
+  .cc-cm-header {
+    padding: 8px;
+  }
+
+  .cc-cm-title {
+    font-size: 14px;
+  }
+
+  .cc-btn {
+    font-size: 12px;
+    padding: 6px 12px;
+  }
 }
 
 @media (max-width: 480px) {
-
   .cc-cm-header {
     flex-direction: column;
     align-items: stretch;
@@ -373,10 +608,15 @@
 
   .cc-cm-actions {
     width: 100%;
+    justify-content: stretch;
   }
 
   .cc-cm-actions .cc-btn {
     flex: 1;
   }
 
+  .cc-cm-mapwrap {
+    min-height: 360px !important;
+    height: 62vh !important;
+  }
 }
