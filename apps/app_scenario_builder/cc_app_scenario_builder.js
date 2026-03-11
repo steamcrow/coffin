@@ -362,7 +362,7 @@ window.CC_APP = {
 
     // Load CC_STORAGE helper (cloud save/load) via blob script.
     if (!window.CC_STORAGE) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/storage_helpers.js?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/storage_helpers.js?t=' + Date.now())
         .then(res => res.text())
         .then(code => {
           const script = document.createElement('script');
@@ -720,50 +720,98 @@ window.CC_APP = {
     //    FACTION_OBJECTIVE_FLAVOR — per-faction flavor text keyed by objective type
     //    FACTION_MOTIVES    — the specific WHY each faction is at each objective type
 
-    const FACTION_APPROACH = {
-      monster_rangers: {
-        verbs:    ['Secure', 'Protect', 'Stabilize', 'Guard', 'Preserve'],
-        vp_style: 'per_round',
-        bonus:    'Bonus VP if no casualties.',
-        tactic:   'Defensive positioning. +1 die when protecting objectives.',
-        quote:    'Not all protectors carry badges.'
-      },
-      monsterology: {
-        verbs:    ['Extract', 'Harvest', 'Acquire', 'Catalogue', 'Weaponize'],
-        vp_style: 'per_extraction',
-        bonus:    'Can convert extracted resources to VP.',
-        tactic:   'Surgical extraction. Ignore collateral damage.',
-        quote:    'Progress has a price, paid in full by the land.'
-      },
-      liberty_corps: {
-        verbs:    ['Seize', 'Lock Down', 'Control', 'Claim', 'Arrest'],
-        vp_style: 'area_control',
-        bonus:    'Bonus VP for arrests over kills.',
-        tactic:   'Hold the line. +1 die from controlled positions.',
-        quote:    'Order will be maintained.'
-      },
-      shine_riders: {
-        verbs:    ['Hit', 'Grab', 'Flip', 'Salt', 'Extract'],
-        vp_style: 'hit_and_run',
-        bonus:    'Bonus VP if Shine Boss exits with resources.',
-        tactic:   'Speed over combat. Extract early, stay mobile.',
-        quote:    'Everything has a price. We just set it.'
-      },
-      crow_queen: {
-        verbs:    ['Claim', 'Convert', 'Subjugate', 'Consecrate', 'Crown'],
-        vp_style: 'per_round',
-        bonus:    'Bonus VP for each monster converted to a Subject.',
-        tactic:   'Dominance through will. Obelisk presence amplifies control.',
-        quote:    'Everything in the canyon kneels. Eventually.'
-      },
-      monsters: {
-        verbs:    ['Claim', 'Guard', 'Hold', 'Escape', 'Feed'],
-        vp_style: 'survival',
-        bonus:    'Bonus VP per model alive at end.',
-        tactic:   'Territorial. Protect the ground or flee to exits.',
-        quote:    'The canyon was here first.'
-      }
-    };
+   const FACTION_APPROACH = {
+  monster_rangers: {
+    verbs: ["Secure", "Protect", "Stabilize", "Guard", "Preserve"],
+    vp_style: "per_round",
+    bonus: "Bonus VP if no casualties.",
+    tactic: "Defensive positioning. +1 die when protecting objectives.",
+    quote: "Not all protectors carry badges.",
+    objective_preferences: [
+      "escort",
+      "preserve",
+      "defend",
+      "cleanse",
+      "rescue",
+      "stabilize"
+    ]
+  },
+  monsterology: {
+    verbs: ["Extract", "Harvest", "Acquire", "Hunt", "Weaponize"],
+    vp_style: "per_extraction",
+    bonus: "Can convert extracted resources to VP.",
+    tactic: "Surgical extraction. Ignore collateral damage.",
+    quote: "Progress has a price, paid in full by the land.",
+    objective_preferences: [
+      "extract",
+      "capture",
+      "devour",
+      "artifact",
+      "thyr",
+      "kill"
+    ]
+  },
+  liberty_corps: {
+    verbs: ["Seize", "Lock Down", "Control", "Claim", "Arrest"],
+    vp_style: "area_control",
+    bonus: "Bonus VP for arrests over kills.",
+    tactic: "Hold the line. +1 die from controlled positions.",
+    quote: "Order will be maintained.",
+    objective_preferences: [
+      "control",
+      "secure",
+      "occupy",
+      "command",
+      "confiscate",
+      "contain"
+    ]
+  },
+  shine_riders: {
+    verbs: ["Hit", "Grab", "Flip", "Salt", "Steal"],
+    vp_style: "hit_and_run",
+    bonus: "Bonus VP if Shine Boss exits with resources.",
+    tactic: "Speed over combat. Extract early, stay mobile.",
+    quote: "Everything has a price. We just set it.",
+    objective_preferences: [
+      "loot",
+      "steal",
+      "extract",
+      "raid",
+      "sabotage",
+      "escape"
+    ]
+  },
+  crow_queen: {
+    verbs: ["Claim", "Convert", "Subjugate", "Consecrate", "Crown"],
+    vp_style: "per_round",
+    bonus: "Bonus VP for each monster converted to a Subject.",
+    tactic: "Dominance through will. Obelisk presence amplifies control.",
+    quote: "Everything in the canyon kneels. Eventually.",
+    objective_preferences: [
+      "consecrate",
+      "convert",
+      "claim",
+      "ritual",
+      "dominate",
+      "subjugate"
+    ]
+  },
+  monsters: {
+    verbs: ["Claim", "Guard", "Hold", "Escape", "Feed"],
+    vp_style: "survival",
+    bonus: "Bonus VP per model alive at end.",
+    tactic: "Territorial. Protect the ground or flee to exits.",
+    quote: "The canyon was here first.",
+    objective_preferences: [
+      "territory",
+      "feed",
+      "nest",
+      "survive",
+      "disrupt",
+      "escape"
+    ]
+  }
+};
 
     const FACTION_OBJECTIVE_FLAVOR = {
       monster_rangers: {
@@ -2180,62 +2228,69 @@ window.CC_APP = {
     }
 
 
-    buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily, factions, dangerRating) {
-      var conditions = {};
-      var vaultVC    = vaultScenario.victory_conditions || {};
+   buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily, factions, dangerRating) {
+  var conditions = {};
+  var vaultVC = vaultScenario.victory_conditions || {};
 
-      factions.forEach(function(faction) {
-        var approach    = FACTION_APPROACH[faction.id]    || FACTION_APPROACH.monsters;
-        var motivesMap  = FACTION_MOTIVES[faction.id]     || FACTION_MOTIVES.monsters;
-        var conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
-        var primaryType = objectives[0] ? objectives[0].type : 'default';
-        var motive      = motivesMap[primaryType] || motivesMap['default'] || approach.quote;
+  factions.forEach((faction) => {
+    var approach = FACTION_APPROACH[faction.id] || FACTION_APPROACH.monsters;
+    var motivesMap = FACTION_MOTIVES[faction.id] || FACTION_MOTIVES.monsters;
+    var primaryType = objectives[0] ? objectives[0].type : 'default';
+    var motive = motivesMap[primaryType] || motivesMap['default'] || approach.quote;
 
-        // Check if vault explicitly lists this faction
-        var vaultEntry = vaultVC[faction.id] || vaultVC[faction.id.replace(/_/g, ' ')];
+    var vaultEntry = vaultVC[faction.id] || vaultVC[faction.id.replace(/_/g, ' ')];
+    var pickedObjectives = [];
 
-        var pickedObjectives = [];
+    if (vaultEntry) {
+      var primaryCard = this.buildRichObjectiveCard(
+        faction.id,
+        objectives[0] || { type: primaryType, name: primaryType },
+        locProfile,
+        dangerRating,
+        0
+      );
 
-        if (vaultEntry) {
-          // Vault has specific text for this faction — use it verbatim as the primary desc
-          var primaryCard = this.buildRichObjectiveCard(faction.id, objectives[0] || { type: primaryType, name: primaryType }, locProfile, dangerRating, 0);
-          primaryCard.desc = typeof vaultEntry === 'string' ? vaultEntry
-            : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || primaryCard.desc);
-          pickedObjectives.push(primaryCard);
-          // Secondary from rich builder if board has 2 objectives
-          if (objectives[1]) {
-            pickedObjectives.push(this.buildRichObjectiveCard(faction.id, objectives[1], locProfile, dangerRating, 1));
-          }
-        } else {
-          // Faction not explicitly in vault — use rich builder for all
-          objectives.forEach(function(obj, i) {
-            if (i > 1) return;
-            pickedObjectives.push(this.buildRichObjectiveCard(faction.id, obj, locProfile, dangerRating, i));
-          });
-        }
+      primaryCard.desc = typeof vaultEntry === 'string'
+        ? vaultEntry
+        : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || primaryCard.desc);
 
-        var finale   = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
-        var aftermath = this.buildFactionAftermath(faction.id, plotFamily);
-        var isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
+      pickedObjectives.push(primaryCard);
 
-        // Enrich motive with 190 canonical motivation, then vault primary if available
-        var canonicalMotive = this.getPlotEngineCanonicalMotive(faction.id);
-        if (canonicalMotive) motive = canonicalMotive;
-        if (vaultVC.primary) motive = vaultVC.primary;
-
-        conditions[faction.id] = {
-          faction_name: faction.name,
-          is_npc:       isNPC,
-          motive:       motive,
-          objectives:   pickedObjectives,
-          finale:       finale,
-          aftermath:    aftermath,
-          quote:        approach.quote
-        };
+      if (objectives[1]) {
+        pickedObjectives.push(
+          this.buildRichObjectiveCard(faction.id, objectives[1], locProfile, dangerRating, 1)
+        );
+      }
+    } else {
+      objectives.forEach((obj, i) => {
+        if (i > 1) return;
+        pickedObjectives.push(
+          this.buildRichObjectiveCard(faction.id, obj, locProfile, dangerRating, i)
+        );
       });
-
-      return conditions;
     }
+
+    var finale = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
+    var aftermath = this.buildFactionAftermath(faction.id, plotFamily);
+    var isNPC = faction.id === 'monsters' || faction.id === 'crow_queen';
+
+    var canonicalMotive = this.getPlotEngineCanonicalMotive(faction.id);
+    if (canonicalMotive) motive = canonicalMotive;
+    if (vaultVC.primary) motive = vaultVC.primary;
+
+    conditions[faction.id] = {
+      faction_name: faction.name,
+      is_npc: isNPC,
+      motive: motive,
+      objectives: pickedObjectives,
+      finale: finale,
+      aftermath: aftermath,
+      quote: approach.quote
+    };
+  });
+
+  return conditions;
+}
 
 
     buildAftermathSummaryFromVault(ae) {
@@ -3016,15 +3071,15 @@ window.CC_APP = {
     // ── VICTORY CONDITIONS RENDERER ──────────────────────────────────────────────
     //   Renders per-faction victory cards with SVG logos, Primary/Secondary labels.
 
-    var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/';
+    var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
 
     var FACTION_IDENTITY = {
       monster_rangers: { color: '#4ade80', border: '#166534', logo: 'monster_rangers_logo.svg', tag: 'Protectors of the Canyon' },
       liberty_corps:   { color: '#60a5fa', border: '#1e3a5f', logo: 'liberty_corps_logo.svg',   tag: 'Federal Authority' },
-      monsterology:    { color: '#a78bfa', border: '#3b1f6e', logo: 'monsterology_logo.svg',     tag: 'The Society' },
-      monsters:        { color: '#ef4444', border: '#7f1d1d', logo: 'monsters_logo.svg',         tag: 'Canyon Predators' },
-      shine_riders:    { color: '#fbbf24', border: '#78350f', logo: 'shine_riders_logo.svg',     tag: 'Fast Money, Faster Exit' },
-      crow_queen:      { color: '#c084fc', border: '#581c87', logo: 'crow_queen_logo.svg',       tag: 'The Crown Remembers' },
+      monsterology:    { color: '#a78bfa', border: '#3b1f6e', logo: 'monsterology_logo.svg',     tag: 'The Aristocratic Cult' },
+      monsters:        { color: '#ef4444', border: '#7f1d1d', logo: 'monsters_logo.svg',         tag: 'Canyon Cryptids' },
+      shine_riders:    { color: '#fbbf24', border: '#78350f', logo: 'shine_riders_logo.svg',     tag: 'Fast Cash, Faster Exit' },
+      crow_queen:      { color: '#c084fc', border: '#581c87', logo: 'crow_queen_logo.svg',       tag: 'The Crown Demands' },
     };
 
     var OBJ_ROLE_LABELS = ['Primary Objective', 'Secondary Objective'];
@@ -4238,7 +4293,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         </div>
         <div id="cc-splash-screen" class="cc-loading-container" style="transition:opacity 0.6s ease;">
           <img
-            src="https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/coffin_canyon_logo.png"
+            src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
             alt="Coffin Canyon"
             class="cc-splash-logo"
             style="width:320px;max-width:80vw;margin-bottom:2rem;"

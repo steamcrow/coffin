@@ -20,7 +20,7 @@
     "data": {
       "rules_src": "data/src/",
       "factions": "data/factions/",
-      "map_data": "data/map_data/",
+      "map_data": "apps/app_canyon_map/data/",
       "schemas": "data/schemas/"
     },
     "vendor": {
@@ -205,7 +205,7 @@
       "ui": "ui/",
       "rules_data": "data/src/",
       "factions": "data/factions/",
-      "map_data": "data/map_data/",
+      "map_data": "apps/app_canyon_map/data/",
       "schemas": "data/schemas/"
     },
     "compatibility_layers": [

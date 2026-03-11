@@ -1,6 +1,6 @@
 // ================================
 // Storage Helpers - Reusable Cloud Storage
-// File: coffin/data/src/storage_helpers.js
+// File: coffin/apps/storage_helpers.js
 // ================================
 
 console.log("💾 storage_helpers.js loaded");

@@ -208,8 +208,8 @@ window.CC_APP = {
       crow_queen:      '#00bcd4'
     };
 
-    // FIX: icon base path updated from rules/apps/ → apps/app_faction_builder/
-    const FACTION_ICON_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_faction_builder/';
+
+    const FACTION_ICON_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
 
     function factionIconHtml(factionId, size = 32) {
       if (!factionId) return '';
@@ -750,16 +750,19 @@ window.CC_APP = {
           const abilities  = item.abilities || [];
           return `
             <div class="cc-roster-list-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
-              <div class="roster-list-header">
-                <div>
-                  <div class="roster-list-name">${esc(item.name)}</div>
-                  ${item.config && item.config.supplemental
-                    ? `<div class="grid-item-version">${esc(item.config.supplemental.name)}</div>`
-                    : ''}
-                  <div class="roster-list-type">${esc(item.type)}</div>
-                </div>
-                <div class="roster-list-cost">${item.totalCost} ₤</div>
-              </div>
+             <div class="roster-list-header">
+              <div>
+              <div class="roster-list-name">${esc(item.name)}</div>
+              ${item.config && item.config.supplemental
+              ? `<div class="grid-item-version">${esc(item.config.supplemental.name)}</div>`
+              : ''}
+    <div class="roster-list-type">${esc(item.type)}</div>
+  </div>
+  <div class="cc-detail-cost">
+    <i class="fa-solid fa-tag"></i>
+    <span class="cost-value">${item.totalCost} ₤</span>
+  </div>
+</div>
               ${buildStatBadges(item, item.config, true)}
               ${abilities.length > 0 ? `
                 <div class="roster-list-abilities">

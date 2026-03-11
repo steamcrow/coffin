@@ -8,7 +8,7 @@ window.CC_RULES_HELPERS = {
   createRulesHelpers(rulesBase) {
     console.log("🧠 createRulesHelpers called");
     
-    const RULES_SRC_BASE = "https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/";
+    const RULES_SRC_BASE = "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/";
     
     const index = Array.isArray(rulesBase?.index) ? rulesBase.index : [];
     

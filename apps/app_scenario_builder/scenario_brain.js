@@ -1306,57 +1306,156 @@ const FACTION_THEMES = {
 };
 
 class ScenarioBrain {
-  
-  constructor() {
-    this.data = {
-      scenarios: null,
-      scenarioVault140: null,
-      names: null,
-      locations: null,
-      locationArchetypes: null,      // 97 - Rules-facing location types
-      locationTypes: null,
-      plotFamilies: null,
-      plotEngine: null,               // 190 - Design philosophy
-      objectiveVault: null,           // 160 - Complete objective rules
-      twists: null,
-      turnStructure: null,
-      unitIdentities: null,
-      canyonStates: null,
-      factions: {}
-    };
-    this.loaded = false;
+
+  constructor(constants) {
+    this.constants = constants || {};
   }
+
+  generateCompleteScenario(locationData, factionA, factionB, dangerRating) {
+    const objectives = this.generateObjectives(locationData, [factionA, factionB], dangerRating);
+
+    const timeline_events = [];
+    objectives.forEach(obj => {
+      if (obj.tactical_link) {
+        timeline_events.push({
+          trigger_turn: obj.tactical_link.trigger_turn,
+          effect: obj.tactical_link.effect,
+          objective_id: obj.id
+        });
+      }
+    });
+
+    const traitName = objectives.length > 0 ? objectives[0].trait : "Strange";
+
+    return {
+      scenario_name: `The ${traitName} Objective at ${locationData.name}`,
+      location: locationData.name,
+      objectives: objectives,
+      timeline_events: timeline_events
+    };
+  }
+
+  generateObjectives(locationData, factions, dangerRating) {
+
+    const objectiveVault = this.constants.OBJECTIVE_VAULT || [];
+    const scored = [];
+
+    objectiveVault.forEach(objective => {
+
+      let score = 1.0;
+
+      if (objective.required_resource && locationData.resources) {
+        if (locationData.resources.includes(objective.required_resource)) {
+          score += 2.0;
+        }
+      }
+
+      factions.forEach(faction => {
+        if (faction && faction.philosophy && objective.tags) {
+          if (objective.tags.includes(faction.philosophy)) {
+            score += 3.0;
+          }
+        }
+      });
+
+      if (locationData.tags && objective.exclude_tags) {
+        const blocked = objective.exclude_tags.some(tag => locationData.tags.includes(tag));
+        if (blocked) return;
+      }
+
+      scored.push({
+        objective: objective,
+        score: score
+      });
+
+    });
+
+    scored.sort((a, b) => b.score - a.score);
+
+    const chosen = scored.slice(0, 3).map((entry, index) => {
+      const trait = this.getObjectiveTrait();
+
+      const baseVP = entry.objective.base_vp || 2;
+      const vp = baseVP + Math.floor(dangerRating / 2) + trait.vp_modifier;
+
+      const trigger = this.generateTriggerEvent(index + 2);
+
+      return {
+        id: `obj_${index + 1}`,
+        name: entry.objective.name,
+        trait: trait.name,
+        vp_value: vp,
+        description: entry.objective.description,
+        tactical_link: trigger
+      };
+    });
+
+    return chosen;
+  }
+
+  getObjectiveTrait() {
+
+    const traits = [
+      { name: "Volatile", vp_modifier: 1 },
+      { name: "Hardened", vp_modifier: 1 },
+      { name: "Obscured", vp_modifier: 0 },
+      { name: "Booby-trapped", vp_modifier: 1 },
+      { name: "Unstable", vp_modifier: 2 }
+    ];
+
+    const index = Math.floor(Math.random() * traits.length);
+    return traits[index];
+  }
+
+  generateTriggerEvent(turn) {
+
+    const effects = [
+      "Area_Blast_3in",
+      "Danger_Test_3in",
+      "Spawn_Monster",
+      "Pulse_Shockwave"
+    ];
+
+    const effect = effects[Math.floor(Math.random() * effects.length)];
+
+    return {
+      trigger_turn: turn,
+      effect: effect
+    };
+  }
+
+}
   
   async loadAllData() {
     console.log("📚 Loading all data files...");
     
     const files = [
       // Core scenario data
-      { key: 'scenarios',          url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/180_scenario_vault.json' },
-      { key: 'scenarioVault140',   url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/140_scenario_vault.json' },
-      { key: 'names',              url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/230_scenario_names.json' },
+      { key: 'scenarios',          url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/180_scenario_vault.json' },
+      { key: 'scenarioVault140',   url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/140_scenario_vault.json' },
+      { key: 'names',              url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/230_scenario_names.json' },
       
       // Location data
-      { key: 'locations',          url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/170_named_locations.json' },
-      { key: 'locationArchetypes', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/97_location_vault.json' },      // Location archetypes (boomtown, mine, etc.)
-      { key: 'locationTypes',      url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/150_location_types.json' },
+      { key: 'locations',          url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json' },
+      { key: 'locationArchetypes', url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/97_location_vault.json' },      // Location archetypes (boomtown, mine, etc.)
+      { key: 'locationTypes',      url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/150_location_types.json' },
       
       // Plot and objectives
-      { key: 'plotFamilies',       url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/200_plot_families.json' },
-      { key: 'plotEngine',         url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/190_plot_engine_schema.json' },  // Design philosophy
-      { key: 'objectiveVault',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/240_objective_vault.json' },     // CORRECT FILE - Complete objective rules
+      { key: 'plotFamilies',       url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/200_plot_families.json' },
+      { key: 'plotEngine',         url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/190_plot_engine_schema.json' },  // Design philosophy
+      { key: 'objectiveVault',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/240_objective_vault.json' },     // CORRECT FILE - Complete objective rules
       
       // Game mechanics data
-      { key: 'twists',             url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/210_twist_tables.json' },
-      { key: 'turnStructure',      url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/20_turn_structure.json' },
-      { key: 'unitIdentities',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/70_unit_identities.json' },      // Unit flavor
-      { key: 'canyonStates',       url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/src/30_campaign_system.json' },
-      { key: 'monsterRangers',   url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monster-rangers-v5.json',  faction: 'monster_rangers' },
-      { key: 'libertyCorps',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-liberty-corps-v2.json',   faction: 'liberty_corps' },
-      { key: 'monsterology',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsterology-v2.json',    faction: 'monsterology' },
-      { key: 'monsters',         url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-monsters-v2.json',        faction: 'monsters' },
-      { key: 'shineRiders',      url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-shine-riders-v2.json',   faction: 'shine_riders' },
-      { key: 'crowQueen',        url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/faction-crow-queen.json',        faction: 'crow_queen' }
+      { key: 'twists',             url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/210_twist_tables.json' },
+      { key: 'turnStructure',      url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/20_turn_structure.json' },
+      { key: 'unitIdentities',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/70_unit_identities.json' },      // Unit flavor
+      { key: 'canyonStates',       url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/30_campaign_system.json' },
+      { key: 'monsterRangers',   url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/faction-monster-rangers-v5.json',  faction: 'monster_rangers' },
+      { key: 'libertyCorps',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/faction-liberty-corps-v2.json',   faction: 'liberty_corps' },
+      { key: 'monsterology',     url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/faction-monsterology-v2.json',    faction: 'monsterology' },
+      { key: 'monsters',         url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/faction-monsters-v2.json',        faction: 'monsters' },
+      { key: 'shineRiders',      url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/faction-shine-riders-v2.json',   faction: 'shine_riders' },
+      { key: 'crowQueen',        url: 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/faction-crow-queen.json',        faction: 'crow_queen' }
     ];
 
     for (const file of files) {
