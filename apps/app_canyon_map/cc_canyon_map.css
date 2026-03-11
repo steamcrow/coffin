@@ -25,7 +25,7 @@
      LENS OPENING SIZE
      ============================================================ */
 
-  --lens-w: 900px;
+  --lens-w: 920px;
   /* Width of the visible magnifier glass area.
      Bigger = lens reaches farther left/right under the frame.
      Smaller = more of the metal frame overlaps the lens edges.
@@ -42,7 +42,7 @@
      LENS OVERSCAN
      ============================================================ */
 
-  --lens-overscan-x: 80px;
+  --lens-overscan-x: 90px;
   /* Extra hidden width added around the lens map image.
      Prevents visual gaps when the lens warps or shifts.
      Bigger = more hidden map beyond left/right lens edge.
