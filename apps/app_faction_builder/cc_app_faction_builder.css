@@ -125,7 +125,7 @@
 .cc-unit-detail { 
   padding: 1.25rem; 
   /* Added Parchment Background */
-  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/bg_warm_tile.png');
+  background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/bg_dark_tile.png');
   background-repeat: repeat;
   background-position: center;
   /* Optional: Ensure a dark border/radius matches the app style */
