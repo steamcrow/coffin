@@ -32,13 +32,13 @@
      LENS OPENING SIZE
      ============================================================ */
 
-  --lens-w: 890px;
+  --lens-w: 860px;
   /* Width of the visible magnifier glass area.
      Bigger = lens reaches farther left/right under the frame.
      Smaller = more of the metal frame overlaps the lens edges.
      If map is peeking too close to side edges, LOWER this. */
 
-  --lens-h: 590px;
+  --lens-h: 570px;
   /* Height of the visible magnifier glass area.
      Bigger = lens reaches farther up/down.
      Smaller = more of the metal frame overlaps top/bottom edges.
@@ -70,18 +70,17 @@
   /* Border color of the outer map container behind everything.
      Cosmetic only. Does not affect geometry. */
 
-
   /* ============================================================
      LENS GLASS SHAPE & EFFECT
      ============================================================ */
 
-  --lens-radius: 100px;
+  --lens-radius: 90px;
   /* Corner roundness of the magnifier viewport.
      Bigger = rounder corners.
      Smaller = squarer corners.
      Match this to the metal frame's inner opening shape. */
 
-  --lens-contrast: 2;
+  --lens-contrast: 3;
   /* Contrast boost applied to the magnified image.
      Bigger = punchier / more dramatic.
      Smaller = flatter / softer.
@@ -134,7 +133,7 @@
      Bigger = more horizontal room for the vertical knob.
      Usually leave close to knob size unless alignment is off. */
 
-  --scroll-v-offset-x: 400px;
+  --scroll-v-offset-x: 480px;
   /* Horizontal placement of the vertical track relative to the frame center.
      Bigger = move the whole vertical track farther RIGHT.
      Smaller = move it LEFT.
@@ -150,13 +149,13 @@
      Bigger = more vertical room for the bottom knob.
      Usually minor adjustment only. */
 
-  --scroll-h-w: 660px;
+  --scroll-h-w: 790px;
   /* Width of the horizontal knob track.
      Bigger = knob can travel farther left/right.
      Smaller = shorter left/right travel range.
      If the bottom knob overreaches the slot ends, LOWER this. */
 
-  --scroll-h-offset-y: 330px;
+  --scroll-h-offset-y: 345px;
   /* Vertical placement of the horizontal track relative to frame center.
      Bigger = move the whole horizontal track DOWN.
      Smaller = move it UP.
