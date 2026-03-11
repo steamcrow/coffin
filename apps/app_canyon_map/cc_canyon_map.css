@@ -288,7 +288,7 @@
    ================================================================ */
 .cc-scroll-knob {
   position: absolute;
-  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/canyon_map/data/blappo_knob.png");
+  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/canyon_map/data/blappo_knob.png");
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
