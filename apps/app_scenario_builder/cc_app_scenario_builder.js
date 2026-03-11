@@ -3071,15 +3071,15 @@ window.CC_APP = {
     // ── VICTORY CONDITIONS RENDERER ──────────────────────────────────────────────
     //   Renders per-faction victory cards with SVG logos, Primary/Secondary labels.
 
-    var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/';
+    var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
 
     var FACTION_IDENTITY = {
       monster_rangers: { color: '#4ade80', border: '#166534', logo: 'monster_rangers_logo.svg', tag: 'Protectors of the Canyon' },
       liberty_corps:   { color: '#60a5fa', border: '#1e3a5f', logo: 'liberty_corps_logo.svg',   tag: 'Federal Authority' },
-      monsterology:    { color: '#a78bfa', border: '#3b1f6e', logo: 'monsterology_logo.svg',     tag: 'The Society' },
-      monsters:        { color: '#ef4444', border: '#7f1d1d', logo: 'monsters_logo.svg',         tag: 'Canyon Predators' },
-      shine_riders:    { color: '#fbbf24', border: '#78350f', logo: 'shine_riders_logo.svg',     tag: 'Fast Money, Faster Exit' },
-      crow_queen:      { color: '#c084fc', border: '#581c87', logo: 'crow_queen_logo.svg',       tag: 'The Crown Remembers' },
+      monsterology:    { color: '#a78bfa', border: '#3b1f6e', logo: 'monsterology_logo.svg',     tag: 'The Aristocratic Cult' },
+      monsters:        { color: '#ef4444', border: '#7f1d1d', logo: 'monsters_logo.svg',         tag: 'Canyon Cryptids' },
+      shine_riders:    { color: '#fbbf24', border: '#78350f', logo: 'shine_riders_logo.svg',     tag: 'Fast Cash, Faster Exit' },
+      crow_queen:      { color: '#c084fc', border: '#581c87', logo: 'crow_queen_logo.svg',       tag: 'The Crown Demands' },
     };
 
     var OBJ_ROLE_LABELS = ['Primary Objective', 'Secondary Objective'];
