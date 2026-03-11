@@ -144,11 +144,13 @@
 
 .cc-frame-overlay {
   position: absolute;
-  inset: 5% 7%;
+  inset: 0;
   background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame.png");
   background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100% 100%;
+  background-position: center center;
+  background-size: contain;
+  transform: translateY(3.5%);
+  transform-origin: center center;
   z-index: 40;
   pointer-events: none;
 }
