@@ -1,4 +1,3 @@
-```javascript
 /* File: apps/app_canyon_map/cc_canyon_map_app.js
    Coffin Canyon — Canyon Map
 */
