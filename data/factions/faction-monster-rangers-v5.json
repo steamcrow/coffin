@@ -562,7 +562,7 @@
         },
         {
           "name": "Roluun's Boots",
-          "effect": "These old iron boots make you sprint FAST!"
+          "effect": "These old iron boots make you sprint FAST!",
           "stat_modifiers": {
             "move": 4,
             "cost": 10
