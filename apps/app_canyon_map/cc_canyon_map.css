@@ -1,18 +1,17 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP (v2.3 - Visibility & Editor Update)
+   COFFIN CANYON — CANYON MAP (v2.4 - MASTER RECOVERY)
    ================================================================ */
 
 :root {
   --cc-primary: #d48e4d;
-  --cc-text: #e0d7c6;
   --cc-bg-soft: #1a1614;
   --device-scale: 1;
 
-  /* GEOMETRY - Oversized for under-frame edges */
+  /* GEOMETRY - The Oversized Aperture */
   --lens-w-base: 1300; 
   --lens-h-base: 900;
 
-  /* MECHANICAL TRACKS */
+  /* MECHANICAL TRACKS (Fixed to frame dimensions) */
   --scroll-v-h-base: 500;
   --scroll-v-w-base: 90;
   --scroll-v-offset-x-base: 480;
@@ -24,7 +23,7 @@
   --knob-h-base: 150;
   --knob-offset-x-base: 9;
 
-  /* SCALED VALUES */
+  /* SCALED CALCS */
   --lens-w: calc(var(--lens-w-base) * 1px * var(--device-scale));
   --lens-h: calc(var(--lens-h-base) * 1px * var(--device-scale));
   --scroll-v-h: calc(var(--scroll-v-h-base) * 1px * var(--device-scale));
@@ -38,26 +37,34 @@
   --knob-offset-x: calc(var(--knob-offset-x-base) * 1px * var(--device-scale));
 }
 
-/* --- VISIBILITY RECOVERY --- */
+.cc-canyon-map {
+  position: relative;
+  width: 100%;
+  background: #000;
+}
+
+/* THE MAIN STAGE */
 .cc-cm-mapwrap {
   position: relative !important;
   width: 100%;
   height: 85vh !important;
   min-height: 750px !important;
   background: #0d0b0a;
-  border-radius: 12px;
-  overflow: hidden !important;
+  overflow: hidden !important; /* Clips the oversized lens */
   display: flex;
   align-items: center;
   justify-content: center;
+  border: 1px solid #333;
 }
 
-#cc-cm-map, #cc-lens-map {
-  background: #111 !important; /* Prevent white flash */
-  height: 100% !important;
-  width: 100% !important;
+/* LAYER 1: THE BACKGROUND MAP */
+#cc-cm-map {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 1;
 }
 
+/* LAYER 2: THE MAGNIFIED LENS */
 .cc-lens {
   position: absolute !important;
   left: 50% !important;
@@ -73,11 +80,46 @@
   position: absolute;
   inset: 0;
   pointer-events: auto;
-  border-radius: 40px; /* Slight softening for the aperture */
-  overflow: hidden;
 }
 
-/* --- KNOB ROTATION --- */
+/* LAYER 3: THE METAL FRAME OVERLAY */
+.cc-frame-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 50 !important;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cc-frame-image {
+  width: min(96%, calc(1200px * var(--device-scale)));
+  height: auto;
+  pointer-events: none;
+}
+
+/* LAYER 4: THE KNOBS (INTERACTIVE) */
+.cc-scroll-vertical, .cc-scroll-horizontal {
+  position: absolute !important;
+  z-index: 100 !important;
+  pointer-events: auto !important;
+}
+
+.cc-scroll-vertical {
+  left: 50%; top: 50%;
+  width: var(--scroll-v-w);
+  height: var(--scroll-v-h);
+  transform: translate(calc(-50% + var(--scroll-v-offset-x)), -50%);
+}
+
+.cc-scroll-horizontal {
+  left: 50%; top: 50%;
+  width: var(--scroll-h-w);
+  height: var(--scroll-h-h);
+  transform: translate(-50%, calc(-50% + var(--scroll-h-offset-y)));
+}
+
 .cc-scroll-knob {
   position: absolute;
   background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png");
@@ -85,65 +127,29 @@
   background-repeat: no-repeat;
   background-position: center;
   cursor: grab;
-  z-index: 100;
 }
 
 #cc-scroll-knob-v {
   width: var(--knob-w) !important;
   height: var(--knob-h) !important;
   left: calc(50% + var(--knob-offset-x)) !important;
+  top: 50%;
+  transform: translate(-50%, -50%) !important;
 }
 
 #cc-scroll-knob-h {
   width: var(--knob-w) !important;
   height: var(--knob-h) !important;
+  left: 50%;
   top: 50%;
-  /* Rotated 90 degrees to the right */
+  /* Rotated 90 degrees Right */
   transform: translate(-50%, -50%) rotate(90deg) !important;
 }
 
-/* --- RE-ENGINEERED HITBOX EDITOR --- */
-.cc-canyon-map.cc-hitbox-edit .cc-hb-box {
-  outline: 2px solid #00ff00 !important;
-  background: rgba(0, 255, 0, 0.25) !important;
-  box-shadow: 0 0 15px rgba(0, 255, 0, 0.5), inset 0 0 10px rgba(255, 255, 255, 0.3);
-  backdrop-filter: blur(2px);
-  border-radius: 2px;
-}
-
-.cc-canyon-map.cc-hitbox-edit .cc-hb-label {
-  background: #00ff00 !important;
-  color: #000 !important;
-  font-weight: 900 !important;
-  font-family: var(--cc-font-mono) !important;
-  text-transform: uppercase;
-  font-size: 10px !important;
-  top: -20px !important;
-  border-radius: 2px 2px 0 0;
-}
-
-.cc-canyon-map.cc-hitbox-edit .cc-hb-handle {
-  width: 16px !important;
-  height: 16px !important;
-  background: #fff !important;
-  border: 2px solid #00ff00 !important;
-  right: -8px !important;
-  bottom: -8px !important;
-  box-shadow: 0 0 10px #000;
-}
-
-/* --- FRAME & LAYERS --- */
-.cc-frame-overlay {
+/* HITBOX EDITOR (NEON MODE) */
+.cc-hitbox-edit .cc-hb-box {
   position: absolute;
-  inset: 0;
-  z-index: 50;
-  pointer-events: none;
-}
-
-.cc-frame-image {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(96%, calc(1200px * var(--device-scale)));
-  transform: translate(-50%, -46%);
+  outline: 3px solid #0f0;
+  background: rgba(0, 255, 0, 0.2);
+  z-index: 9999;
 }
