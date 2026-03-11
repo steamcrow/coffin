@@ -32,7 +32,7 @@
      LENS OPENING SIZE
      ============================================================ */
 
-  --lens-w: 880px;
+  --lens-w: 900px;
   /* Width of the visible magnifier glass area.
      Bigger = lens reaches farther left/right under the frame.
      Smaller = more of the metal frame overlaps the lens edges.
