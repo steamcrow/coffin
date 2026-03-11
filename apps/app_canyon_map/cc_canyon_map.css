@@ -21,13 +21,6 @@
      Smaller number = smaller whole frame.
      Use this only if you want the ENTIRE frame/lens assembly bigger or smaller. */
 
-  --frame-ratio: 2.2;
-  /* Width-to-height ratio of the frame wrapper.
-     Higher = wider / flatter.
-     Lower = taller / squarer.
-     Change carefully — this affects the whole composition. */
-
-
   /* ============================================================
      LENS OPENING SIZE
      ============================================================ */
