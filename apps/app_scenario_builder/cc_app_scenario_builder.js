@@ -362,7 +362,7 @@ window.CC_APP = {
 
     // Load CC_STORAGE helper (cloud save/load) via blob script.
     if (!window.CC_STORAGE) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/storage_helpers.js?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/storage_helpers.js?t=' + Date.now())
         .then(res => res.text())
         .then(code => {
           const script = document.createElement('script');
