@@ -212,7 +212,7 @@ window.CC_APP = {
 
     // ── Load CC_STORAGE helper ────────────────────────────────────────────────
     if (!window.CC_STORAGE) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/storage_helpers.js?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/storage_helpers.js?t=' + Date.now())
         .then(r => r.text())
         .then(code => {
           return new Promise(function(resolve) {
