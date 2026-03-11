@@ -21,7 +21,7 @@
      Smaller number = smaller whole frame.
      Use this only if you want the ENTIRE frame/lens assembly bigger or smaller. */
 
-  --frame-ratio: 1.9;
+  --frame-ratio: 2.2;
   /* Width-to-height ratio of the frame wrapper.
      Higher = wider / flatter.
      Lower = taller / squarer.
@@ -80,13 +80,13 @@
      Smaller = squarer corners.
      Match this to the metal frame's inner opening shape. */
 
-  --lens-contrast: .75;
+  --lens-contrast: .85;
   /* Contrast boost applied to the magnified image.
      Bigger = punchier / more dramatic.
      Smaller = flatter / softer.
      Purely visual. */
 
-  --lens-distortion-scale: 300;
+  --lens-distortion-scale: 200;
   /* Intended strength/tuning variable for lens distortion feel.
      Bigger = more dramatic optical weirdness, if wired into filter logic.
      Smaller = subtler distortion.
