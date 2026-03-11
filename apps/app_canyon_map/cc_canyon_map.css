@@ -155,13 +155,20 @@
 
 .cc-frame-image {
   display: block;
-  width: 100%;
+  width: 82%;
   height: auto;
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
-  transform: translateY(3.8%);
+  transform: translateY(4%);
   transform-origin: center center;
+}
+
+@media (max-width: 768px) {
+  .cc-frame-image {
+    width: 96%;
+    transform: translateY(4.5%);
+  }
 }
 
 /* ================================================================
