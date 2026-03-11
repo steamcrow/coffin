@@ -21,7 +21,7 @@
      Smaller number = smaller whole frame.
      Use this only if you want the ENTIRE frame/lens assembly bigger or smaller. */
 
-  --frame-ratio: 1.8;
+  --frame-ratio: 1.9;
   /* Width-to-height ratio of the frame wrapper.
      Higher = wider / flatter.
      Lower = taller / squarer.
@@ -38,7 +38,7 @@
      Smaller = more of the metal frame overlaps the lens edges.
      If map is peeking too close to side edges, LOWER this. */
 
-  --lens-h: 560px;
+  --lens-h: 550px;
   /* Height of the visible magnifier glass area.
      Bigger = lens reaches farther up/down.
      Smaller = more of the metal frame overlaps top/bottom edges.
@@ -80,13 +80,13 @@
      Smaller = squarer corners.
      Match this to the metal frame's inner opening shape. */
 
-  --lens-contrast: 1.22;
+  --lens-contrast: .75;
   /* Contrast boost applied to the magnified image.
      Bigger = punchier / more dramatic.
      Smaller = flatter / softer.
      Purely visual. */
 
-  --lens-distortion-scale: 400;
+  --lens-distortion-scale: 300;
   /* Intended strength/tuning variable for lens distortion feel.
      Bigger = more dramatic optical weirdness, if wired into filter logic.
      Smaller = subtler distortion.
