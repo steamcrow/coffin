@@ -17,7 +17,7 @@
       if (!ctx) throw new Error("CC_APP.init: missing {ctx}");
 
       const APP_MAIN =
-        "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/rules/apps/canyon_map/cc_canyon_map_app.js";
+        "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/apps/app_canyon_map/cc_canyon_map_app.js";
 
       async function loadScriptViaBlob(url) {
         const res = await fetch(url + "?t=" + Date.now());
@@ -54,16 +54,16 @@
         ctx,
 
         mapUrl:
-          "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/rules/apps/canyon_map/data/canyon_map.json",
+          "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/data/map_data/canyon_map.json",
         stateUrl:
           "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/rules/apps/canyon_map/data/canyon_state.json",
         appCssUrl:
           "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/rules/apps/canyon_map/cc_canyon_map.css",
 
         leafletCssUrl:
-          "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/rules/vendor/leaflet/leaflet.css",
+          "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/vendor/leaflet/leaflet.css",
         leafletJsUrl:
-          "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/rules/vendor/leaflet/leaflet.js"
+          "https://raw.githubusercontent.com/steamcrow/coffin/refs/heads/main/vendor/leaflet/leaflet.js"
       });
 
       return api;
