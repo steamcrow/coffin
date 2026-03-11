@@ -720,50 +720,98 @@ window.CC_APP = {
     //    FACTION_OBJECTIVE_FLAVOR — per-faction flavor text keyed by objective type
     //    FACTION_MOTIVES    — the specific WHY each faction is at each objective type
 
-    const FACTION_APPROACH = {
-      monster_rangers: {
-        verbs:    ['Secure', 'Protect', 'Stabilize', 'Guard', 'Preserve'],
-        vp_style: 'per_round',
-        bonus:    'Bonus VP if no casualties.',
-        tactic:   'Defensive positioning. +1 die when protecting objectives.',
-        quote:    'Not all protectors carry badges.'
-      },
-      monsterology: {
-        verbs:    ['Extract', 'Harvest', 'Acquire', 'Catalogue', 'Weaponize'],
-        vp_style: 'per_extraction',
-        bonus:    'Can convert extracted resources to VP.',
-        tactic:   'Surgical extraction. Ignore collateral damage.',
-        quote:    'Progress has a price, paid in full by the land.'
-      },
-      liberty_corps: {
-        verbs:    ['Seize', 'Lock Down', 'Control', 'Claim', 'Arrest'],
-        vp_style: 'area_control',
-        bonus:    'Bonus VP for arrests over kills.',
-        tactic:   'Hold the line. +1 die from controlled positions.',
-        quote:    'Order will be maintained.'
-      },
-      shine_riders: {
-        verbs:    ['Hit', 'Grab', 'Flip', 'Salt', 'Extract'],
-        vp_style: 'hit_and_run',
-        bonus:    'Bonus VP if Shine Boss exits with resources.',
-        tactic:   'Speed over combat. Extract early, stay mobile.',
-        quote:    'Everything has a price. We just set it.'
-      },
-      crow_queen: {
-        verbs:    ['Claim', 'Convert', 'Subjugate', 'Consecrate', 'Crown'],
-        vp_style: 'per_round',
-        bonus:    'Bonus VP for each monster converted to a Subject.',
-        tactic:   'Dominance through will. Obelisk presence amplifies control.',
-        quote:    'Everything in the canyon kneels. Eventually.'
-      },
-      monsters: {
-        verbs:    ['Claim', 'Guard', 'Hold', 'Escape', 'Feed'],
-        vp_style: 'survival',
-        bonus:    'Bonus VP per model alive at end.',
-        tactic:   'Territorial. Protect the ground or flee to exits.',
-        quote:    'The canyon was here first.'
-      }
-    };
+   const FACTION_APPROACH = {
+  monster_rangers: {
+    verbs: ["Secure", "Protect", "Stabilize", "Guard", "Preserve"],
+    vp_style: "per_round",
+    bonus: "Bonus VP if no casualties.",
+    tactic: "Defensive positioning. +1 die when protecting objectives.",
+    quote: "Not all protectors carry badges.",
+    objective_preferences: [
+      "escort",
+      "preserve",
+      "defend",
+      "cleanse",
+      "rescue",
+      "stabilize"
+    ]
+  },
+  monsterology: {
+    verbs: ["Extract", "Harvest", "Acquire", "Hunt", "Weaponize"],
+    vp_style: "per_extraction",
+    bonus: "Can convert extracted resources to VP.",
+    tactic: "Surgical extraction. Ignore collateral damage.",
+    quote: "Progress has a price, paid in full by the land.",
+    objective_preferences: [
+      "extract",
+      "capture",
+      "devour",
+      "artifact",
+      "thyr",
+      "kill"
+    ]
+  },
+  liberty_corps: {
+    verbs: ["Seize", "Lock Down", "Control", "Claim", "Arrest"],
+    vp_style: "area_control",
+    bonus: "Bonus VP for arrests over kills.",
+    tactic: "Hold the line. +1 die from controlled positions.",
+    quote: "Order will be maintained.",
+    objective_preferences: [
+      "control",
+      "secure",
+      "occupy",
+      "command",
+      "confiscate",
+      "contain"
+    ]
+  },
+  shine_riders: {
+    verbs: ["Hit", "Grab", "Flip", "Salt", "Steal"],
+    vp_style: "hit_and_run",
+    bonus: "Bonus VP if Shine Boss exits with resources.",
+    tactic: "Speed over combat. Extract early, stay mobile.",
+    quote: "Everything has a price. We just set it.",
+    objective_preferences: [
+      "loot",
+      "steal",
+      "extract",
+      "raid",
+      "sabotage",
+      "escape"
+    ]
+  },
+  crow_queen: {
+    verbs: ["Claim", "Convert", "Subjugate", "Consecrate", "Crown"],
+    vp_style: "per_round",
+    bonus: "Bonus VP for each monster converted to a Subject.",
+    tactic: "Dominance through will. Obelisk presence amplifies control.",
+    quote: "Everything in the canyon kneels. Eventually.",
+    objective_preferences: [
+      "consecrate",
+      "convert",
+      "claim",
+      "ritual",
+      "dominate",
+      "subjugate"
+    ]
+  },
+  monsters: {
+    verbs: ["Claim", "Guard", "Hold", "Escape", "Feed"],
+    vp_style: "survival",
+    bonus: "Bonus VP per model alive at end.",
+    tactic: "Territorial. Protect the ground or flee to exits.",
+    quote: "The canyon was here first.",
+    objective_preferences: [
+      "territory",
+      "feed",
+      "nest",
+      "survive",
+      "disrupt",
+      "escape"
+    ]
+  }
+};
 
     const FACTION_OBJECTIVE_FLAVOR = {
       monster_rangers: {
