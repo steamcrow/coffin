@@ -48,7 +48,7 @@
      Bigger = more hidden map beyond left/right lens edge.
      Usually leave this alone unless you see empty edges. */
 
-  --lens-overscan-y: 80px;
+  --lens-overscan-y: 85px;
   /* Extra hidden height added around the lens map image.
      Prevents blank space at top/bottom during distortion or motion.
      Bigger = more hidden map beyond top/bottom lens edge.
@@ -73,13 +73,13 @@
      Smaller = squarer corners.
      Match this to the metal frame's inner opening shape. */
 
-  --lens-contrast: .85;
+  --lens-contrast: .95;
   /* Contrast boost applied to the magnified image.
      Bigger = punchier / more dramatic.
      Smaller = flatter / softer.
      Purely visual. */
 
-  --lens-distortion-scale: 200;
+  --lens-distortion-scale: 275;
   /* Intended strength/tuning variable for lens distortion feel.
      Bigger = more dramatic optical weirdness, if wired into filter logic.
      Smaller = subtler distortion.
