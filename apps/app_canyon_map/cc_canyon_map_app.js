@@ -88,7 +88,7 @@
     title:         "Coffin Canyon — Canyon Map",
     mapUrl:        "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
     stateUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_state.json",
-    locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/src/170_named_locations.json",
+    locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
     appCssUrl:     "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
     leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
     leafletJsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
