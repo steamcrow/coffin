@@ -120,7 +120,12 @@
   overflow-y: auto;
   min-height: 0;
 }
-
+.cc-unit-header-row {
+  display: flex;
+  justify-content: space-between; /* Pushes title left, cost right */
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
 /* ===== Unit Detail ===== */
 .cc-unit-detail { 
   padding: 1.25rem; 
@@ -133,11 +138,11 @@
 }
 
 .cc-detail-title {
-  font-size: 1.25rem;
+  font-size: 1.5rem; /* Increased slightly for impact */
   font-weight: 800;
   color: var(--cc-text);
-  /* Optional: Text shadow helps legibility on textured backgrounds */
   text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+  line-height: 1.1;
 }
 .cc-detail-sub {
   font-size: 0.8rem;
@@ -146,13 +151,34 @@
   letter-spacing: 0.08em;
 }
 
+/* The Price Tag Container */
 .cc-detail-cost {
-  font-size: 1.6rem;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000; /* Dark text for contrast on the tag */
+  font-size: 1.2rem;
   font-weight: 900;
-  color: var(--cc-primary);
-  margin: 0.5rem 0;
 }
 
+/* The FontAwesome Tag Background */
+.cc-detail-cost i {
+  font-size: 3.5rem; /* Large enough to act as a background */
+  color: var(--cc-primary); /* The color of your tag */
+  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+}
+
+/* Positioning the text ON the tag */
+.cc-detail-cost .cost-value {
+  position: absolute;
+  /* Adjust these to center the text on the wide part of the tag */
+  top: 55%; 
+  left: 50%;
+  transform: translate(-40%, -50%); 
+  pointer-events: none;
+  white-space: nowrap;
+   
 .u-lore {
   font-style: italic;
   color: var(--cc-text-muted);
