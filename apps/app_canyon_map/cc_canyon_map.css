@@ -14,8 +14,8 @@
   --frame-width: 1000px;
   --frame-ratio: 1.5;
 
-  --lens-w: 820px;
-  --lens-h: 520px;
+  --lens-w: 920px;
+  --lens-h: 620px;
 
   --lens-overscan-x: 80px;
   --lens-overscan-y: 80px;
@@ -32,9 +32,9 @@
   --frame-glow-a: rgba(70,220,255,0.20);
   --frame-glow-b: rgba(255,210,120,0.12);
 
-  --scroll-v-h: 390px;
+  --scroll-v-h: 500px;
   --scroll-v-w: 90px;
-  --scroll-v-offset-x: 356px;
+  --scroll-v-offset-x: 400px;
 
   --scroll-h-h: 90px;
   --scroll-h-w: 560px;
