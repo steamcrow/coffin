@@ -1,5 +1,5 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP (v2.1 - Control Recovery Fix)
+   COFFIN CANYON — CANYON MAP (v2.2 - THE GREAT RECOVERY)
    ================================================================ */
 
 :root {
@@ -8,19 +8,15 @@
   --cc-bg-soft: #1a1614;
   --cc-border: #3a2e26;
   --cc-font-title: "Crimson Text", serif;
-  --cc-font-mono: "Courier New", monospace;
   --cc-radius-lg: 12px;
-
   --device-scale: 1;
 
-  /* LENS DIMENSIONS: Oversized to stay tucked under frame edges */
+  /* --- GEOMETRY --- */
+  /* The "Visual Aperture" (The big section we want under the frame) */
   --lens-w-base: 1300; 
   --lens-h-base: 900;
-  
-  --lens-overscan-x-base: 100;
-  --lens-overscan-y-base: 100;
 
-  /* SCROLL GEOMETRY */
+  /* The "Mechanical Tracks" (The area the knobs actually travel on) */
   --scroll-v-h-base: 500;
   --scroll-v-w-base: 90;
   --scroll-v-offset-x-base: 480;
@@ -30,11 +26,9 @@
 
   --knob-w-base: 92;
   --knob-h-base: 150;
-  --knob-horiz-w-base: 92;
-  --knob-horiz-h-base: 150;
   --knob-offset-x-base: 9;
 
-  /* SCALED VALUES */
+  /* --- SCALED VALUES --- */
   --lens-w: calc(var(--lens-w-base) * 1px * var(--device-scale));
   --lens-h: calc(var(--lens-h-base) * 1px * var(--device-scale));
   --scroll-v-h: calc(var(--scroll-v-h-base) * 1px * var(--device-scale));
@@ -45,20 +39,12 @@
   --scroll-h-offset-y: calc(var(--scroll-h-offset-y-base) * 1px * var(--device-scale));
   --knob-w: calc(var(--knob-w-base) * 1px * var(--device-scale));
   --knob-h: calc(var(--knob-h-base) * 1px * var(--device-scale));
-  --knob-horiz-w: calc(var(--knob-horiz-w-base) * 1px * var(--device-scale));
-  --knob-horiz-h: calc(var(--knob-horiz-h-base) * 1px * var(--device-scale));
   --knob-offset-x: calc(var(--knob-offset-x-base) * 1px * var(--device-scale));
-
-  --cc-map-border: #4a3728;
-  --shadow-inset: inset 0 0 60px #000;
-  --shadow-outer: 0 15px 40px rgba(0,0,0,0.9);
 }
 
 .cc-canyon-map {
   position: relative;
   width: 100%;
-  box-sizing: border-box;
-  font-family: var(--cc-font-body, sans-serif);
   overflow: hidden;
   isolation: isolate;
 }
@@ -68,26 +54,17 @@
   width: 100%;
   height: 85vh !important;
   min-height: 750px !important;
+  background: #0d0b0a;
+  border: 12px solid #4a3728;
+  border-radius: var(--cc-radius-lg);
+  box-shadow: inset 0 0 60px #000, 0 15px 40px rgba(0,0,0,0.9);
   overflow: hidden !important;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0d0b0a;
-  border: 12px solid var(--cc-map-border);
-  background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("https://www.transparenttextures.com/patterns/brushed-alum.png");
-  border-radius: var(--cc-radius-lg);
-  box-shadow: var(--shadow-inset), var(--shadow-outer);
 }
 
-/* --- STACKING CONTEXT RECOVERY --- */
-
-#cc-cm-map {
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 1; /* Lowest */
-  pointer-events: none;
-}
-
+/* --- THE MAGNIFIED SECTION (The Lens) --- */
 .cc-lens {
   position: absolute !important;
   left: 50% !important;
@@ -95,21 +72,21 @@
   transform: translate(-50%, -50%) !important;
   width: var(--lens-w) !important;
   height: var(--lens-h) !important;
-  z-index: 10; /* Lowered so knobs can sit on top */
-  overflow: hidden;
-  pointer-events: none; /* Crucial: clicks must pass through to tracks */
+  z-index: 10;
+  pointer-events: none; /* Clicks pass through to knobs */
 }
 
 .cc-lens-inner {
   position: absolute;
   inset: 0;
-  pointer-events: auto; /* Re-enables hit detection within the aperture */
+  pointer-events: auto; /* Map inside is clickable */
 }
 
+/* --- THE METAL FRAME --- */
 .cc-frame-overlay {
   position: absolute;
   inset: 0;
-  z-index: 50; /* Above lens, below knobs */
+  z-index: 50; 
   pointer-events: none;
 }
 
@@ -119,32 +96,33 @@
   top: 50%;
   width: min(96%, calc(1200px * var(--device-scale)));
   transform: translate(-50%, -46%);
-  pointer-events: none;
 }
 
-/* --- THE BLAPPO KNOBS (RECOVERED) --- */
+/* --- THE BLAPPO KNOBS & TRACKS --- */
 
-.cc-scroll-vertical,
-.cc-scroll-horizontal {
-  position: absolute !important;
-  z-index: 100 !important; /* Forces knobs to the very top */
-  pointer-events: auto !important;
-}
-
+/* Vertical Track */
 .cc-scroll-vertical {
+  position: absolute !important;
+  z-index: 100 !important;
   left: 50% !important;
   top: 50% !important;
-  transform: translate(calc(-50% + var(--scroll-v-offset-x)), -50%) !important;
   width: var(--scroll-v-w) !important;
   height: var(--scroll-v-h) !important;
+  transform: translate(calc(-50% + var(--scroll-v-offset-x)), -50%) !important;
+  pointer-events: auto !important;
+  /* background: rgba(255,0,0,0.1); */ /* Debug: Uncomment to see the track */
 }
 
+/* Horizontal Track */
 .cc-scroll-horizontal {
+  position: absolute !important;
+  z-index: 100 !important;
   left: 50% !important;
   top: 50% !important;
-  transform: translate(-50%, calc(-50% + var(--scroll-h-offset-y))) !important;
   width: var(--scroll-h-w) !important;
   height: var(--scroll-h-h) !important;
+  transform: translate(-50%, calc(-50% + var(--scroll-h-offset-y))) !important;
+  pointer-events: auto !important;
 }
 
 .cc-scroll-knob {
@@ -162,20 +140,20 @@
   width: var(--knob-w) !important;
   height: var(--knob-h) !important;
   left: calc(50% + var(--knob-offset-x)) !important;
-  top: 50%;
-  transform: translate(-50%, -50%) !important;
+  /* The JS will handle the top % position */
 }
 
 #cc-scroll-knob-h {
-  width: var(--knob-horiz-w) !important;
-  height: var(--knob-horiz-h) !important;
-  left: 50%;
+  width: var(--knob-w) !important; /* Vertical knob rotated/scaled */
+  height: var(--knob-h) !important;
   top: 50%;
-  transform: translate(-50%, -50%) !important;
+  transform: translate(-50%, -50%) rotate(-90deg) !important;
+  /* The JS will handle the left % position */
 }
 
-/* --- DRAWER & UTILS --- */
+.cc-scroll-knob:active { cursor: grabbing; scale: 1.05; }
 
+/* --- DRAWER (FIXED) --- */
 .cc-cm-drawer {
   position: fixed;
   top: 0;
@@ -185,14 +163,14 @@
   height: 100vh;
   background: var(--cc-bg-soft);
   border-left: 3px solid var(--cc-primary);
-  box-shadow: -15px 0 60px rgba(0,0,0,1);
+  box-shadow: -15px 0 60px #000;
   z-index: 10000;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.3s ease;
 }
 
 .cc-cm-drawer.open { transform: translateX(-450px); }
 
 @media (max-width: 768px) {
-  .cc-cm-drawer { width: 100%; max-width: 100%; right: -100%; }
+  .cc-cm-drawer { width: 100%; right: -100%; }
   .cc-cm-drawer.open { transform: translateX(-100%); }
 }
