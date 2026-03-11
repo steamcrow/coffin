@@ -4238,7 +4238,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         </div>
         <div id="cc-splash-screen" class="cc-loading-container" style="transition:opacity 0.6s ease;">
           <img
-            src="https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/coffin_canyon_logo.png"
+            src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
             alt="Coffin Canyon"
             class="cc-splash-logo"
             style="width:320px;max-width:80vw;margin-bottom:2rem;"
