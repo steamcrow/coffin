@@ -1,11 +1,9 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP (v2.0 - Frame Integration)
-   File: coffin/apps/app_canyon_map/cc_canyon_map.css
+   COFFIN CANYON — CANYON MAP (v2.1 - Control Recovery Fix)
    ================================================================ */
 
 :root {
-  /* --- FALLBACK THEME VARIABLES --- */
-  --cc-primary: #d48e4d; /* Brass/Copper */
+  --cc-primary: #d48e4d;
   --cc-text: #e0d7c6;
   --cc-bg-soft: #1a1614;
   --cc-border: #3a2e26;
@@ -13,33 +11,32 @@
   --cc-font-mono: "Courier New", monospace;
   --cc-radius-lg: 12px;
 
-  /* --- MASTER DEVICE SCALE --- */
   --device-scale: 1;
 
-  /* --- DESIGN GEOMETRY (BASE VALUES) --- */
-  /* [MODIFIED] Large values to make the center section fill the aperture */
+  /* LENS DIMENSIONS: Oversized to stay tucked under frame edges */
   --lens-w-base: 1300; 
   --lens-h-base: 900;
   
   --lens-overscan-x-base: 100;
   --lens-overscan-y-base: 100;
+
+  /* SCROLL GEOMETRY */
   --scroll-v-h-base: 500;
   --scroll-v-w-base: 90;
   --scroll-v-offset-x-base: 480;
   --scroll-h-h-base: 90;
   --scroll-h-w-base: 830;
   --scroll-h-offset-y-base: 341;
+
   --knob-w-base: 92;
   --knob-h-base: 150;
   --knob-horiz-w-base: 92;
   --knob-horiz-h-base: 150;
   --knob-offset-x-base: 9;
 
-  /* --- SCALED GEOMETRY --- */
+  /* SCALED VALUES */
   --lens-w: calc(var(--lens-w-base) * 1px * var(--device-scale));
   --lens-h: calc(var(--lens-h-base) * 1px * var(--device-scale));
-  --lens-overscan-x: calc(var(--lens-overscan-x-base) * 1px * var(--device-scale));
-  --lens-overscan-y: calc(var(--lens-overscan-y-base) * 1px * var(--device-scale));
   --scroll-v-h: calc(var(--scroll-v-h-base) * 1px * var(--device-scale));
   --scroll-v-w: calc(var(--scroll-v-w-base) * 1px * var(--device-scale));
   --scroll-v-offset-x: calc(var(--scroll-v-offset-x-base) * 1px * var(--device-scale));
@@ -52,29 +49,18 @@
   --knob-horiz-h: calc(var(--knob-horiz-h-base) * 1px * var(--device-scale));
   --knob-offset-x: calc(var(--knob-offset-x-base) * 1px * var(--device-scale));
 
-  /* --- APPEARANCE --- */
   --cc-map-border: #4a3728;
-  --lens-radius: 20px; /* Small radius now just to keep content within bounds */
-  --lens-contrast: 0.85;
   --shadow-inset: inset 0 0 60px #000;
   --shadow-outer: 0 15px 40px rgba(0,0,0,0.9);
 }
-
-/* ================================================================
-   APP WRAPPER
-   ================================================================ */
 
 .cc-canyon-map {
   position: relative;
   width: 100%;
   box-sizing: border-box;
-  color: var(--cc-text);
   font-family: var(--cc-font-body, sans-serif);
-  touch-action: pan-x pan-y;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  overflow: hidden; /* Prevents drawer from causing horizontal scroll */
+  overflow: hidden;
+  isolation: isolate;
 }
 
 .cc-cm-mapwrap {
@@ -88,43 +74,18 @@
   justify-content: center;
   background: #0d0b0a;
   border: 12px solid var(--cc-map-border);
-  /* Submerged Brass Texture Overlay */
-  background-image: 
-    linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)),
-    url("https://www.transparenttextures.com/patterns/brushed-alum.png");
+  background-image: linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url("https://www.transparenttextures.com/patterns/brushed-alum.png");
   border-radius: var(--cc-radius-lg);
   box-shadow: var(--shadow-inset), var(--shadow-outer);
-  isolation: isolate;
 }
 
-/* ================================================================
-   LOADING / READY STATES
-   ================================================================ */
-
-.cc-canyon-map.cc-loading .cc-lens,
-.cc-canyon-map.cc-loading .cc-frame-overlay,
-.cc-canyon-map.cc-loading [class*="cc-scroll-"] {
-  opacity: 0;
-  pointer-events: none;
-}
-
-.cc-canyon-map.cc-ready .cc-lens,
-.cc-canyon-map.cc-ready .cc-frame-overlay,
-.cc-canyon-map.cc-ready [class*="cc-scroll-"] {
-  opacity: 1;
-  transition: opacity 0.4s ease-out;
-}
-
-/* ================================================================
-   MAP LAYERS
-   ================================================================ */
+/* --- STACKING CONTEXT RECOVERY --- */
 
 #cc-cm-map {
   position: absolute !important;
   inset: 0 !important;
-  z-index: 1;
+  z-index: 1; /* Lowest */
   pointer-events: none;
-  filter: sepia(0.2) brightness(0.8);
 }
 
 .cc-lens {
@@ -134,69 +95,57 @@
   transform: translate(-50%, -50%) !important;
   width: var(--lens-w) !important;
   height: var(--lens-h) !important;
-  z-index: 30;
+  z-index: 10; /* Lowered so knobs can sit on top */
   overflow: hidden;
-  border-radius: var(--lens-radius);
-  pointer-events: none;
-  box-shadow: inset 0 0 50px #000;
+  pointer-events: none; /* Crucial: clicks must pass through to tracks */
 }
 
 .cc-lens-inner {
   position: absolute;
-  /* [MODIFIED] Removed standard inset to maximize area */
-  inset: 0; 
-  border-radius: var(--cc-radius); /* Use smaller standard radius */
-  overflow: hidden;
-  pointer-events: auto; /* Re-enable clicks for hitbox detection */
-}
-
-/* [ADDED] Ensure the map within the lens map has pointer events */
-#cc-lens-map {
-  pointer-events: auto !important;
-}
-
-/* [ADDED] Ensure any inner Leaflet containers also have pointer events */
-#cc-lens-map .leaflet-container {
-  pointer-events: auto !important;
-}
-
-/* Preserve structure for JS FE-Filter (Chromatic Aberration) */
-.cc-lens-chromatic {
-  position: absolute;
   inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  z-index: 20;
+  pointer-events: auto; /* Re-enables hit detection within the aperture */
 }
-
-/* ================================================================
-   METAL FRAME INTEGRATION
-   ================================================================ */
 
 .cc-frame-overlay {
   position: absolute;
   inset: 0;
-  z-index: 40; /* Sit above the lens and knobs */
-  pointer-events: none; /* Let clicks pass through to the knobs/map */
+  z-index: 50; /* Above lens, below knobs */
+  pointer-events: none;
 }
 
 .cc-frame-image {
   position: absolute;
   left: 50%;
   top: 50%;
-  /* [MODIFIED] Maintain width but adjust vertical translation for better aperture centering */
   width: min(96%, calc(1200px * var(--device-scale)));
-  max-width: none;
-  height: auto;
   transform: translate(-50%, -46%);
   pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
 }
 
-/* ================================================================
-   KNOBS & SCROLLERS
-   ================================================================ */
+/* --- THE BLAPPO KNOBS (RECOVERED) --- */
+
+.cc-scroll-vertical,
+.cc-scroll-horizontal {
+  position: absolute !important;
+  z-index: 100 !important; /* Forces knobs to the very top */
+  pointer-events: auto !important;
+}
+
+.cc-scroll-vertical {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(calc(-50% + var(--scroll-v-offset-x)), -50%) !important;
+  width: var(--scroll-v-w) !important;
+  height: var(--scroll-v-h) !important;
+}
+
+.cc-scroll-horizontal {
+  left: 50% !important;
+  top: 50% !important;
+  transform: translate(-50%, calc(-50% + var(--scroll-h-offset-y))) !important;
+  width: var(--scroll-h-w) !important;
+  height: var(--scroll-h-h) !important;
+}
 
 .cc-scroll-knob {
   position: absolute;
@@ -205,71 +154,45 @@
   background-repeat: no-repeat;
   background-position: center;
   cursor: grab;
-  z-index: 60; /* Top-most interactive layer */
   filter: drop-shadow(0 6px 12px rgba(0,0,0,0.7));
   will-change: top, left, transform;
 }
 
-.cc-scroll-knob.is-active { cursor: grabbing !important; scale: 1.05; }
+#cc-scroll-knob-v {
+  width: var(--knob-w) !important;
+  height: var(--knob-h) !important;
+  left: calc(50% + var(--knob-offset-x)) !important;
+  top: 50%;
+  transform: translate(-50%, -50%) !important;
+}
 
-/* ================================================================
-   THE DRAWER (MOBILE OPTIMIZED)
-   ================================================================ */
+#cc-scroll-knob-h {
+  width: var(--knob-horiz-w) !important;
+  height: var(--knob-horiz-h) !important;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* --- DRAWER & UTILS --- */
 
 .cc-cm-drawer {
   position: fixed;
   top: 0;
   right: -450px;
   width: 400px;
-  max-width: 90vw; /* Ensures it never wider than screen on tiny devices */
+  max-width: 90vw;
   height: 100vh;
   background: var(--cc-bg-soft);
   border-left: 3px solid var(--cc-primary);
   box-shadow: -15px 0 60px rgba(0,0,0,1);
-  overflow-y: auto;
-  z-index: 10000; /* Over everything */
+  z-index: 10000;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.cc-cm-drawer.open {
-  transform: translateX(-450px); /* Move into view */
-}
-
-/* ================================================================
-   RESPONSIVE OVERRIDES
-   ================================================================ */
-
-@media (max-width: 1024px) {
-  .cc-cm-mapwrap { min-height: 600px !important; }
-}
+.cc-cm-drawer.open { transform: translateX(-450px); }
 
 @media (max-width: 768px) {
-  /* On mobile, drawer slides in to cover most of the screen */
-  .cc-cm-drawer {
-    width: 100%;
-    max-width: 100%;
-    right: -100%;
-    border-left: none;
-  }
-  
-  .cc-cm-drawer.open {
-    transform: translateX(-100%);
-  }
-
-  .cc-cm-mapwrap {
-    min-height: 450px !important;
-    height: 70vh !important;
-    border-width: 6px;
-  }
-
-  /* Make header buttons easier to tap */
-  .cc-btn {
-    padding: 10px 14px;
-    font-size: 14px;
-  }
-}
-
-/* DEV MODE SAFETY: Prevent drawer interference during editing */
-.cc-hitbox-edit .cc-cm-drawer {
-  display: none !important;
+  .cc-cm-drawer { width: 100%; max-width: 100%; right: -100%; }
+  .cc-cm-drawer.open { transform: translateX(-100%); }
 }
