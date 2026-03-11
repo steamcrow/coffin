@@ -1,155 +1,73 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP (v2.4 - MASTER RECOVERY)
+   COFFIN CANYON — MAP STAGE RECOVERY (Force-Render v2.5)
    ================================================================ */
 
-:root {
-  --cc-primary: #d48e4d;
-  --cc-bg-soft: #1a1614;
-  --device-scale: 1;
-
-  /* GEOMETRY - The Oversized Aperture */
-  --lens-w-base: 1300; 
-  --lens-h-base: 900;
-
-  /* MECHANICAL TRACKS (Fixed to frame dimensions) */
-  --scroll-v-h-base: 500;
-  --scroll-v-w-base: 90;
-  --scroll-v-offset-x-base: 480;
-  --scroll-h-h-base: 90;
-  --scroll-h-w-base: 830;
-  --scroll-h-offset-y-base: 341;
-
-  --knob-w-base: 92;
-  --knob-h-base: 150;
-  --knob-offset-x-base: 9;
-
-  /* SCALED CALCS */
-  --lens-w: calc(var(--lens-w-base) * 1px * var(--device-scale));
-  --lens-h: calc(var(--lens-h-base) * 1px * var(--device-scale));
-  --scroll-v-h: calc(var(--scroll-v-h-base) * 1px * var(--device-scale));
-  --scroll-v-w: calc(var(--scroll-v-w-base) * 1px * var(--device-scale));
-  --scroll-v-offset-x: calc(var(--scroll-v-offset-x-base) * 1px * var(--device-scale));
-  --scroll-h-h: calc(var(--scroll-h-h-base) * 1px * var(--device-scale));
-  --scroll-h-w: calc(var(--scroll-h-w-base) * 1px * var(--device-scale));
-  --scroll-h-offset-y: calc(var(--scroll-h-offset-y-base) * 1px * var(--device-scale));
-  --knob-w: calc(var(--knob-w-base) * 1px * var(--device-scale));
-  --knob-h: calc(var(--knob-h-base) * 1px * var(--device-scale));
-  --knob-offset-x: calc(var(--knob-offset-x-base) * 1px * var(--device-scale));
-}
-
-.cc-canyon-map {
-  position: relative;
-  width: 100%;
-  background: #000;
-}
-
-/* THE MAIN STAGE */
+/* Force the container to actually take up space */
 .cc-cm-mapwrap {
   position: relative !important;
-  width: 100%;
+  width: 100% !important;
   height: 85vh !important;
   min-height: 750px !important;
-  background: #0d0b0a;
-  overflow: hidden !important; /* Clips the oversized lens */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid #333;
+  background: #0d0b0a !important;
+  border: 12px solid #4a3728 !important;
+  border-radius: 12px !important;
+  overflow: visible !important; /* Allow elements to sit inside the frame */
+  display: block !important;    /* Reset from flex to prevent collapse */
 }
 
-/* LAYER 1: THE BACKGROUND MAP */
-#cc-cm-map {
+/* Ensure the Map Layers actually have dimensions */
+#cc-cm-map, #cc-lens-map {
   position: absolute !important;
-  inset: 0 !important;
-  z-index: 1;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
-/* LAYER 2: THE MAGNIFIED LENS */
+/* Force the Magnified Lens to sit on top of the map */
 .cc-lens {
   position: absolute !important;
-  left: 50% !important;
   top: 50% !important;
-  transform: translate(-50%, -50%) !important;
+  left: 50% !important;
   width: var(--lens-w) !important;
   height: var(--lens-h) !important;
-  z-index: 10;
+  transform: translate(-50%, -50%) !important;
+  z-index: 10 !important;
   pointer-events: none;
+  border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-.cc-lens-inner {
-  position: absolute;
-  inset: 0;
-  pointer-events: auto;
-}
-
-/* LAYER 3: THE METAL FRAME OVERLAY */
+/* Force the Frame Overlay to sit above everything */
 .cc-frame-overlay {
   position: absolute !important;
-  inset: 0 !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
   z-index: 50 !important;
   pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .cc-frame-image {
-  width: min(96%, calc(1200px * var(--device-scale)));
-  height: auto;
-  pointer-events: none;
+  max-width: 100% !important;
+  height: auto !important;
+  z-index: 51 !important;
 }
 
-/* LAYER 4: THE KNOBS (INTERACTIVE) */
+/* Force the Knobs into existence */
 .cc-scroll-vertical, .cc-scroll-horizontal {
   position: absolute !important;
   z-index: 100 !important;
+  display: block !important;
   pointer-events: auto !important;
 }
 
-.cc-scroll-vertical {
-  left: 50%; top: 50%;
-  width: var(--scroll-v-w);
-  height: var(--scroll-v-h);
-  transform: translate(calc(-50% + var(--scroll-v-offset-x)), -50%);
-}
-
-.cc-scroll-horizontal {
-  left: 50%; top: 50%;
-  width: var(--scroll-h-w);
-  height: var(--scroll-h-h);
-  transform: translate(-50%, calc(-50% + var(--scroll-h-offset-y)));
-}
-
-.cc-scroll-knob {
-  position: absolute;
-  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  cursor: grab;
-}
-
-#cc-scroll-knob-v {
+#cc-scroll-knob-v, #cc-scroll-knob-h {
+  display: block !important;
   width: var(--knob-w) !important;
   height: var(--knob-h) !important;
-  left: calc(50% + var(--knob-offset-x)) !important;
-  top: 50%;
-  transform: translate(-50%, -50%) !important;
-}
-
-#cc-scroll-knob-h {
-  width: var(--knob-w) !important;
-  height: var(--knob-h) !important;
-  left: 50%;
-  top: 50%;
-  /* Rotated 90 degrees Right */
-  transform: translate(-50%, -50%) rotate(90deg) !important;
-}
-
-/* HITBOX EDITOR (NEON MODE) */
-.cc-hitbox-edit .cc-hb-box {
-  position: absolute;
-  outline: 3px solid #0f0;
-  background: rgba(0, 255, 0, 0.2);
-  z-index: 9999;
+  background-color: transparent !important;
 }
