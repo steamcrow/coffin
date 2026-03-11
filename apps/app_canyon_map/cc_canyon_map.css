@@ -139,20 +139,29 @@
 .cc-cm-body--lens { padding: 10px 12px 18px; }
 
 /* ================================================================
-   METAL FRAME
+   FRAME
    ================================================================ */
 
 .cc-frame-overlay {
   position: absolute;
   inset: 0;
-  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame.png");
-  background-repeat: no-repeat;
-  background-position: center center;
-  background-size: contain;
-  transform: translateY(3.5%);
-  transform-origin: center center;
   z-index: 40;
   pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.cc-frame-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  transform: translateY(3.8%);
+  transform-origin: center center;
 }
 
 /* ================================================================
