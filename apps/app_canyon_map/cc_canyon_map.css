@@ -139,7 +139,7 @@
 .cc-cm-body--lens { padding: 10px 12px 18px; }
 
 /* ================================================================
-   FRAME
+   METAL FRAME
    ================================================================ */
 
 .cc-frame-overlay {
@@ -155,7 +155,7 @@
 
 .cc-frame-image {
   display: block;
-  width: 82%;
+  width: 62%;
   height: auto;
   pointer-events: none;
   user-select: none;
