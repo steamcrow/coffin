@@ -1,5 +1,5 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP
+   COFFIN CANYON — CANYON MAP (v2.0 - Frame Integration)
    File: coffin/apps/app_canyon_map/cc_canyon_map.css
    ================================================================ */
 
@@ -17,10 +17,12 @@
   --device-scale: 1;
 
   /* --- DESIGN GEOMETRY (BASE VALUES) --- */
-  --lens-w-base: 920;
-  --lens-h-base: 550;
-  --lens-overscan-x-base: 90;
-  --lens-overscan-y-base: 80;
+  /* [MODIFIED] Large values to make the center section fill the aperture */
+  --lens-w-base: 1300; 
+  --lens-h-base: 900;
+  
+  --lens-overscan-x-base: 100;
+  --lens-overscan-y-base: 100;
   --scroll-v-h-base: 500;
   --scroll-v-w-base: 90;
   --scroll-v-offset-x-base: 480;
@@ -52,7 +54,7 @@
 
   /* --- APPEARANCE --- */
   --cc-map-border: #4a3728;
-  --lens-radius: 90px;
+  --lens-radius: 20px; /* Small radius now just to keep content within bounds */
   --lens-contrast: 0.85;
   --shadow-inset: inset 0 0 60px #000;
   --shadow-outer: 0 15px 40px rgba(0,0,0,0.9);
@@ -141,10 +143,55 @@
 
 .cc-lens-inner {
   position: absolute;
-  inset: 8px;
-  border-radius: 14px;
+  /* [MODIFIED] Removed standard inset to maximize area */
+  inset: 0; 
+  border-radius: var(--cc-radius); /* Use smaller standard radius */
   overflow: hidden;
   pointer-events: auto; /* Re-enable clicks for hitbox detection */
+}
+
+/* [ADDED] Ensure the map within the lens map has pointer events */
+#cc-lens-map {
+  pointer-events: auto !important;
+}
+
+/* [ADDED] Ensure any inner Leaflet containers also have pointer events */
+#cc-lens-map .leaflet-container {
+  pointer-events: auto !important;
+}
+
+/* Preserve structure for JS FE-Filter (Chromatic Aberration) */
+.cc-lens-chromatic {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  z-index: 20;
+}
+
+/* ================================================================
+   METAL FRAME INTEGRATION
+   ================================================================ */
+
+.cc-frame-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40; /* Sit above the lens and knobs */
+  pointer-events: none; /* Let clicks pass through to the knobs/map */
+}
+
+.cc-frame-image {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  /* [MODIFIED] Maintain width but adjust vertical translation for better aperture centering */
+  width: min(96%, calc(1200px * var(--device-scale)));
+  max-width: none;
+  height: auto;
+  transform: translate(-50%, -46%);
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* ================================================================
@@ -158,7 +205,7 @@
   background-repeat: no-repeat;
   background-position: center;
   cursor: grab;
-  z-index: 60;
+  z-index: 60; /* Top-most interactive layer */
   filter: drop-shadow(0 6px 12px rgba(0,0,0,0.7));
   will-change: top, left, transform;
 }
