@@ -11,43 +11,200 @@
    ================================================================ */
 
 :root {
-  --frame-width: 1000px;
-  --frame-ratio: 1.5;
+  /* ============================================================
+     FRAME SIZE
+     ============================================================ */
 
-  --lens-w: 920px;
-  --lens-h: 620px;
+  --frame-width: 1000px;
+  /* Overall visual width target for the metal frame system.
+     Bigger number = larger whole frame on screen.
+     Smaller number = smaller whole frame.
+     Use this only if you want the ENTIRE frame/lens assembly bigger or smaller. */
+
+  --frame-ratio: 1.7;
+  /* Width-to-height ratio of the frame wrapper.
+     Higher = wider / flatter.
+     Lower = taller / squarer.
+     Change carefully — this affects the whole composition. */
+
+
+  /* ============================================================
+     LENS OPENING SIZE
+     ============================================================ */
+
+  --lens-w: 890px;
+  /* Width of the visible magnifier glass area.
+     Bigger = lens reaches farther left/right under the frame.
+     Smaller = more of the metal frame overlaps the lens edges.
+     If map is peeking too close to side edges, LOWER this. */
+
+  --lens-h: 590px;
+  /* Height of the visible magnifier glass area.
+     Bigger = lens reaches farther up/down.
+     Smaller = more of the metal frame overlaps top/bottom edges.
+     If map is showing too much near top/bottom metal, LOWER this. */
+
+
+  /* ============================================================
+     LENS OVERSCAN
+     ============================================================ */
 
   --lens-overscan-x: 80px;
+  /* Extra hidden width added around the lens map image.
+     Prevents visual gaps when the lens warps or shifts.
+     Bigger = more hidden map beyond left/right lens edge.
+     Usually leave this alone unless you see empty edges. */
+
   --lens-overscan-y: 80px;
+  /* Extra hidden height added around the lens map image.
+     Prevents blank space at top/bottom during distortion or motion.
+     Bigger = more hidden map beyond top/bottom lens edge.
+     Usually leave this alone unless you see gaps. */
+
+
+  /* ============================================================
+     OUTER CONTAINER COLOUR
+     ============================================================ */
 
   --cc-map-border: #4a3728;
+  /* Border color of the outer map container behind everything.
+     Cosmetic only. Does not affect geometry. */
+
+
+  /* ============================================================
+     LENS GLASS SHAPE & EFFECT
+     ============================================================ */
 
   --lens-radius: 100px;
+  /* Corner roundness of the magnifier viewport.
+     Bigger = rounder corners.
+     Smaller = squarer corners.
+     Match this to the metal frame's inner opening shape. */
+
   --lens-contrast: 2;
+  /* Contrast boost applied to the magnified image.
+     Bigger = punchier / more dramatic.
+     Smaller = flatter / softer.
+     Purely visual. */
+
   --lens-distortion-scale: 400;
+  /* Intended strength/tuning variable for lens distortion feel.
+     Bigger = more dramatic optical weirdness, if wired into filter logic.
+     Smaller = subtler distortion.
+     If not visibly changing anything, it may not currently be in active use. */
+
+
+  /* ============================================================
+     LENS HIGHLIGHT / GLARE
+     ============================================================ */
 
   --lens-highlight-opacity: 0.35;
+  /* Strength of the reflective highlight on the glass.
+     Bigger = shinier / stronger glare.
+     Smaller = more subtle glass. */
+
   --lens-highlight-size: 40%;
+  /* Size/spread of the highlight zone.
+     Bigger = broader reflection.
+     Smaller = tighter reflection. */
+
+
+  /* ============================================================
+     FRAME GLOW
+     ============================================================ */
 
   --frame-glow-a: rgba(70,220,255,0.20);
   --frame-glow-b: rgba(255,210,120,0.12);
+  /* Accent glows around frame/lens effects.
+     Cosmetic only. Change color or opacity for mood. */
+
+
+  /* ============================================================
+     VERTICAL SCROLLER TRACK GEOMETRY
+     ============================================================ */
 
   --scroll-v-h: 500px;
+  /* Height of the vertical knob track.
+     Bigger = knob can travel farther up/down.
+     Smaller = shorter vertical travel range.
+     If the knob goes too high or low compared to the slot, LOWER this. */
+
   --scroll-v-w: 90px;
+  /* Width of the invisible vertical track container.
+     Bigger = more horizontal room for the vertical knob.
+     Usually leave close to knob size unless alignment is off. */
+
   --scroll-v-offset-x: 400px;
+  /* Horizontal placement of the vertical track relative to the frame center.
+     Bigger = move the whole vertical track farther RIGHT.
+     Smaller = move it LEFT.
+     This is one of the main alignment controls for the right Blappo knob. */
+
+
+  /* ============================================================
+     HORIZONTAL SCROLLER TRACK GEOMETRY
+     ============================================================ */
 
   --scroll-h-h: 90px;
-  --scroll-h-w: 560px;
+  /* Height of the horizontal track container.
+     Bigger = more vertical room for the bottom knob.
+     Usually minor adjustment only. */
+
+  --scroll-h-w: 660px;
+  /* Width of the horizontal knob track.
+     Bigger = knob can travel farther left/right.
+     Smaller = shorter left/right travel range.
+     If the bottom knob overreaches the slot ends, LOWER this. */
+
   --scroll-h-offset-y: 330px;
+  /* Vertical placement of the horizontal track relative to frame center.
+     Bigger = move the whole horizontal track DOWN.
+     Smaller = move it UP.
+     This is the main alignment control for the bottom Blappo knob. */
+
+
+  /* ============================================================
+     KNOB SIZE
+     ============================================================ */
 
   --knob-w: 92px;
+  /* Width of the vertical knob art.
+     Bigger = larger right-side knob.
+     Smaller = smaller right-side knob. */
+
   --knob-h: 150px;
+  /* Height of the vertical knob art.
+     Bigger = taller right-side knob.
+     Smaller = shorter right-side knob. */
+
   --knob-horiz-w: 92px;
+  /* Width of the horizontal knob art.
+     Bigger = wider bottom knob.
+     Smaller = narrower bottom knob. */
+
   --knob-horiz-h: 150px;
+  /* Height of the horizontal knob art.
+     Bigger = taller bottom knob art.
+     Smaller = shorter bottom knob art. */
+
   --knob-offset-x: 9px;
+  /* Small horizontal nudge applied to the vertical knob inside its track.
+     Bigger = shifts the right-side knob slightly RIGHT.
+     Smaller = shifts it LEFT.
+     Fine-tuning only. */
+
+
+  /* ============================================================
+     SHADOWS
+     ============================================================ */
 
   --shadow-inset: inset 0 0 60px #000;
+  /* Inner darkening inside the map wrapper.
+     Stronger value = deeper vignette / tunnel effect. */
+
   --shadow-outer: 0 10px 30px rgba(0,0,0,0.8);
+  /* Outer drop shadow around the whole assembly.
+     Cosmetic only. */
 }
 
 /* ================================================================
