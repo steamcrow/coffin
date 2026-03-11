@@ -11,7 +11,7 @@ window.CC_APP = {
 
     // ---- LOAD CSS FROM GITHUB ----
     if (!document.getElementById('cc-core-ui-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_ui.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
@@ -24,7 +24,7 @@ window.CC_APP = {
     }
 
     if (!document.getElementById('cc-rules-explorer-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/cc_app_rules_explorer.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_rules_explorer/cc_app_rules_explorer.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
@@ -37,7 +37,7 @@ window.CC_APP = {
     }
 
     if (!document.getElementById('cc-print-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/rules/ui/cc_print.css?t=' + Date.now())
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_print.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
