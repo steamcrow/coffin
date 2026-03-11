@@ -459,21 +459,34 @@ var DEFAULTS = {
     ]);
 
     var drawer = el("div", { class:"cc-cm-drawer" }, [
-      el("div", { class:"cc-cm-drawer-head" }, [
-        el("div",    { class:"cc-cm-drawer-title" }, ["Location"]),
-        el("button", { class:"cc-btn cc-btn-x", id:"close-dr" }, ["\u00d7"])
-      ]),
-      el("div", { class:"cc-cm-drawer-content" })
-    ]);
+  el("div", { class:"cc-cm-drawer-head" }, [
+    el("div", { class:"cc-cm-drawer-title" }, ["Location"]),
+    el("button", { class:"cc-btn cc-btn-x", id:"close-dr" }, ["\u00d7"])
+  ]),
+  el("div", { class:"cc-cm-drawer-content" })
+]);
 
-    var body = el("div", { class:"cc-cm-body cc-cm-body--lens" }, [
-      el("div", { class:"cc-cm-mapwrap" }, [
-        mapEl, lensEl, loaderEl,
-        el("div", { class:"cc-frame-overlay", style:"pointer-events:none;" }),
-        el("div", { class:"cc-scroll-vertical"   }, [el("div", { class:"cc-scroll-knob", id:"cc-scroll-knob-v" })]),
-        el("div", { class:"cc-scroll-horizontal" }, [el("div", { class:"cc-scroll-knob", id:"cc-scroll-knob-h" })])
-      ])
-    ]);
+var body = el("div", { class:"cc-cm-body cc-cm-body--lens" }, [
+  el("div", { class:"cc-cm-mapwrap" }, [
+    mapEl,
+    lensEl,
+    loaderEl,
+    el("div", { class:"cc-frame-overlay", style:"pointer-events:none;" }, [
+      el("img", {
+        class: "cc-frame-image",
+        src: opts.frameUrl,
+        alt: "",
+        draggable: "false"
+      })
+    ]),
+    el("div", { class:"cc-scroll-vertical" }, [
+      el("div", { class:"cc-scroll-knob", id:"cc-scroll-knob-v" })
+    ]),
+    el("div", { class:"cc-scroll-horizontal" }, [
+      el("div", { class:"cc-scroll-knob", id:"cc-scroll-knob-h" })
+    ])
+  ])
+]);
 
     root.appendChild(header);
     root.appendChild(body);
