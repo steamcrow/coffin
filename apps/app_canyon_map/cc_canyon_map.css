@@ -147,21 +147,18 @@
   inset: 0;
   z-index: 40;
   pointer-events: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: visible;
 }
 
 .cc-frame-image {
-  display: block;
-  width: 62%;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 90%;
   height: auto;
+  transform: translate(-50%, -46%);
   pointer-events: none;
   user-select: none;
   -webkit-user-drag: none;
-  transform: translateY(4%);
-  transform-origin: center center;
 }
 
 @media (max-width: 768px) {
