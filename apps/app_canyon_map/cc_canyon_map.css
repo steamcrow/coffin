@@ -11,51 +11,41 @@
    ================================================================ */
 
 :root {
-  /* ============ FRAME & LAYOUT DIMENSIONS ============ */
-  --frame-width:  1000px;
-  --frame-ratio:  1.5;
+  --frame-width: 1000px;
+  --frame-ratio: 1.5;
 
-  /* ============ LENS SIZE ============ */
-  --lens-w: 760px;
-  --lens-h: 520px;
+  --lens-w: 720px;
+  --lens-h: 485px;
 
-  /* ============ LENS OVERSCAN ============ */
   --lens-overscan-x: 80px;
   --lens-overscan-y: 80px;
 
-  /* Map-specific colours */
   --cc-map-border: #4a3728;
 
-  /* ============ LENS APPEARANCE ============ */
-  --lens-radius:            100px;
-  --lens-contrast:          2;
-  --lens-distortion-scale:  400;
+  --lens-radius: 100px;
+  --lens-contrast: 2;
+  --lens-distortion-scale: 400;
 
-  /* ============ LENS HIGHLIGHT ============ */
   --lens-highlight-opacity: 0.35;
-  --lens-highlight-size:    40%;
+  --lens-highlight-size: 40%;
 
-  /* Frame glow */
   --frame-glow-a: rgba(70,220,255,0.20);
   --frame-glow-b: rgba(255,210,120,0.12);
 
-  /* ============ SCROLLER GEOMETRY ============ */
-  --scroll-v-h:        440px;
-  --scroll-v-w:        90px;
-  --scroll-v-offset-x: 343px;
+  --scroll-v-h: 390px;
+  --scroll-v-w: 90px;
+  --scroll-v-offset-x: 356px;
 
-  --scroll-h-h:        90px;
-  --scroll-h-w:        640px;
-  --scroll-h-offset-y: 305px;
+  --scroll-h-h: 90px;
+  --scroll-h-w: 560px;
+  --scroll-h-offset-y: 330px;
 
-  /* ============ KNOB SIZING ============ */
-  --knob-w:        92px;
-  --knob-h:        150px;
-  --knob-horiz-w:  92px;
-  --knob-horiz-h:  150px;
+  --knob-w: 92px;
+  --knob-h: 150px;
+  --knob-horiz-w: 92px;
+  --knob-horiz-h: 150px;
   --knob-offset-x: 9px;
 
-  /* Shadows */
   --shadow-inset: inset 0 0 60px #000;
   --shadow-outer: 0 10px 30px rgba(0,0,0,0.8);
 }
@@ -164,10 +154,10 @@
 @media (max-width: 768px) {
   .cc-frame-image {
     width: 96%;
-    transform: translateY(4.5%);
+    height: auto;
+    transform: translate(-50%, -45%);
   }
 }
-
 /* ================================================================
    OUTER MAP CONTAINER
    ================================================================ */
