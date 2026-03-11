@@ -2229,61 +2229,75 @@ window.CC_APP = {
 
 
     buildVictoryConditionsFromVault(vaultScenario, objectives, locProfile, plotFamily, factions, dangerRating) {
-      var conditions = {};
-      var vaultVC    = vaultScenario.victory_conditions || {};
+  var conditions = {};
+  var vaultVC = vaultScenario.victory_conditions || {};
 
-      factions.forEach(function(faction) {
-        var approach    = FACTION_APPROACH[faction.id]    || FACTION_APPROACH.monsters;
-        var motivesMap  = FACTION_MOTIVES[faction.id]     || FACTION_MOTIVES.monsters;
-        var conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
-        var primaryType = objectives[0] ? objectives[0].type : 'default';
-        var motive      = motivesMap[primaryType] || motivesMap['default'] || approach.quote;
+  factions.forEach((faction) => {
+    var approach = FACTION_APPROACH[faction.id] || FACTION_APPROACH.monsters;
+    var motivesMap = FACTION_MOTIVES[faction.id] || FACTION_MOTIVES.monsters;
+    var conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
+    var primaryType = objectives[0] ? objectives[0].type : 'default';
+    var motive = motivesMap[primaryType] || motivesMap['default'] || approach.quote;
 
-        // Check if vault explicitly lists this faction
-        var vaultEntry = vaultVC[faction.id] || vaultVC[faction.id.replace(/_/g, ' ')];
+    // Check if vault explicitly lists this faction
+    var vaultEntry = vaultVC[faction.id] || vaultVC[faction.id.replace(/_/g, ' ')];
 
-        var pickedObjectives = [];
+    var pickedObjectives = [];
 
-        if (vaultEntry) {
-          // Vault has specific text for this faction — use it verbatim as the primary desc
-          var primaryCard = this.buildRichObjectiveCard(faction.id, objectives[0] || { type: primaryType, name: primaryType }, locProfile, dangerRating, 0);
-          primaryCard.desc = typeof vaultEntry === 'string' ? vaultEntry
-            : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || primaryCard.desc);
-          pickedObjectives.push(primaryCard);
-          // Secondary from rich builder if board has 2 objectives
-          if (objectives[1]) {
-            pickedObjectives.push(this.buildRichObjectiveCard(faction.id, objectives[1], locProfile, dangerRating, 1));
-          }
-        } else {
-          // Faction not explicitly in vault — use rich builder for all
-          objectives.forEach(function(obj, i) {
-            if (i > 1) return;
-            pickedObjectives.push(this.buildRichObjectiveCard(faction.id, obj, locProfile, dangerRating, i));
-          });
-        }
+    if (vaultEntry) {
+      // Vault has specific text for this faction — use it verbatim as the primary desc
+      var primaryCard = this.buildRichObjectiveCard(
+        faction.id,
+        objectives[0] || { type: primaryType, name: primaryType },
+        locProfile,
+        dangerRating,
+        0
+      );
 
-        var finale   = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
-        var aftermath = this.buildFactionAftermath(faction.id, plotFamily);
-        var isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
+      primaryCard.desc = typeof vaultEntry === 'string'
+        ? vaultEntry
+        : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || primaryCard.desc);
 
-        // Enrich motive with 190 canonical motivation, then vault primary if available
-        var canonicalMotive = this.getPlotEngineCanonicalMotive(faction.id);
-        if (canonicalMotive) motive = canonicalMotive;
-        if (vaultVC.primary) motive = vaultVC.primary;
+      pickedObjectives.push(primaryCard);
 
-        conditions[faction.id] = {
-          faction_name: faction.name,
-          is_npc:       isNPC,
-          motive:       motive,
-          objectives:   pickedObjectives,
-          finale:       finale,
-          aftermath:    aftermath,
-          quote:        approach.quote
-        };
+      // Secondary from rich builder if board has 2 objectives
+      if (objectives[1]) {
+        pickedObjectives.push(
+          this.buildRichObjectiveCard(faction.id, objectives[1], locProfile, dangerRating, 1)
+        );
+      }
+    } else {
+      // Faction not explicitly in vault — use rich builder for all
+      objectives.forEach((obj, i) => {
+        if (i > 1) return;
+        pickedObjectives.push(
+          this.buildRichObjectiveCard(faction.id, obj, locProfile, dangerRating, i)
+        );
       });
-
-      return conditions;
     }
+
+    var finale = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
+    var aftermath = this.buildFactionAftermath(faction.id, plotFamily);
+    var isNPC = faction.id === 'monsters' || faction.id === 'crow_queen';
+
+    // Enrich motive with 190 canonical motivation, then vault primary if available
+    var canonicalMotive = this.getPlotEngineCanonicalMotive(faction.id);
+    if (canonicalMotive) motive = canonicalMotive;
+    if (vaultVC.primary) motive = vaultVC.primary;
+
+    conditions[faction.id] = {
+      faction_name: faction.name,
+      is_npc: isNPC,
+      motive: motive,
+      objectives: pickedObjectives,
+      finale: finale,
+      aftermath: aftermath,
+      quote: approach.quote
+    };
+  });
+
+  return conditions;
+}
 
 
     buildAftermathSummaryFromVault(ae) {
