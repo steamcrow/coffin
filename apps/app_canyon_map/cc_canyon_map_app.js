@@ -515,10 +515,6 @@
         knobV.style.left = "50%";
         knobV.style.top = "50%";
         knobV.style.transform = "translate(-50%, -50%)";
-        knobV.style.zIndex = "61";
-        knobV.style.display = "block";
-        knobV.style.pointerEvents = "auto";
-        knobV.style.cursor = "grab";
       }
 
       if (knobH) {
@@ -528,10 +524,6 @@
         knobH.style.left = "50%";
         knobH.style.top = "50%";
         knobH.style.transform = "translate(-50%, -50%) rotate(90deg)";
-        knobH.style.zIndex = "61";
-        knobH.style.display = "block";
-        knobH.style.pointerEvents = "auto";
-        knobH.style.cursor = "grab";
       }
 
       Array.prototype.forEach.call(knobImgs, function (img) {
@@ -969,20 +961,26 @@
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
           locationsData.locations.forEach(function (loc) {
-            var bbox = HITBOXES[loc.id];
-            if (!bbox) return;
+           var bbox = HITBOXES[loc.id];
+           if (!bbox) return;
 
-            window.L.rectangle(
-              [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-              {
-                color: "rgba(255,117,24,0.8)",
-                fillOpacity: 0.25,
-                weight: 2,
-                interactive: false
-              }
-            ).addTo(lensMap);
-          });
+           var rect = window.L.rectangle(
+          [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+          {
+            color: "#ff7518",
+            fillOpacity: 0.12,
+            weight: 2,
+            interactive: false
+          }
+        ).addTo(lensMap);
 
+  rect.bindTooltip(loc.name || loc.id, {
+    permanent: true,
+    direction: "center",
+    className: "cc-map-hitbox-label",
+    opacity: 0.95
+  });
+});
           ui.lensMapEl.onclick = function (e) {
             if (!lensMap) return;
             var rect = ui.lensMapEl.getBoundingClientRect();
