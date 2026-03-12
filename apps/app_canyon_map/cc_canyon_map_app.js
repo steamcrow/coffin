@@ -1026,46 +1026,61 @@
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
           locationsData.locations.forEach(function (loc) {
-            var bbox = HITBOXES[loc.id];
-            if (!bbox) {
-              console.warn("Missing hitbox for:", loc.id, loc.name);
-              return;
-            }
+  var bbox = HITBOXES[loc.id];
+  if (!bbox) {
+    console.warn("Missing hitbox for:", loc.id, loc.name);
+    return;
+  }
 
-            var rect = window.L.rectangle(
-              [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-              {
-                color: "#ff7518",
-                fillOpacity: 0.10,
-                weight: 2,
-                interactive: true,
-                bubblingMouseEvents: false
-              }
-            ).addTo(lensMap);
+  function openLocationDrawer() {
+    renderDrawer(ui, loc);
+    ui.drawerEl.classList.add("open");
+  }
 
-            rect.bindTooltip(loc.name || loc.id, {
-              permanent: true,
-              direction: "center",
-              className: "cc-map-hitbox-label",
-              opacity: 0.95
-            });
+  var rect = window.L.rectangle(
+    [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+    {
+      color: "#ff7518",
+      fillColor: "#ff7518",
+      fillOpacity: 0.08,
+      weight: 2,
+      interactive: true,
+      bubblingMouseEvents: false
+    }
+  ).addTo(lensMap);
 
-            rect.on("mousedown", function (e) {
-              if (window.L && window.L.DomEvent) window.L.DomEvent.stop(e);
-            });
+  rect.bringToFront();
 
-            rect.on("click", function (e) {
-              if (window.L && window.L.DomEvent) window.L.DomEvent.stop(e);
-              renderDrawer(ui, loc);
-              ui.drawerEl.classList.add("open");
-            });
+  rect.bindTooltip(loc.name || loc.id, {
+    permanent: true,
+    direction: "center",
+    className: "cc-map-hitbox-label",
+    opacity: 1
+  });
 
-            rect.on("touchstart", function (e) {
-              if (window.L && window.L.DomEvent) window.L.DomEvent.stop(e);
-              renderDrawer(ui, loc);
-              ui.drawerEl.classList.add("open");
-            });
-          });
+  rect.on("mousedown", function (e) {
+    if (window.L && window.L.DomEvent) {
+      if (e && e.originalEvent) window.L.DomEvent.stop(e.originalEvent);
+      window.L.DomEvent.preventDefault(e);
+    }
+  });
+
+  rect.on("click", function (e) {
+    if (window.L && window.L.DomEvent) {
+      if (e && e.originalEvent) window.L.DomEvent.stop(e.originalEvent);
+      window.L.DomEvent.preventDefault(e);
+    }
+    openLocationDrawer();
+  });
+
+  rect.on("touchstart", function (e) {
+    if (window.L && window.L.DomEvent) {
+      if (e && e.originalEvent) window.L.DomEvent.stop(e.originalEvent);
+      window.L.DomEvent.preventDefault(e);
+    }
+    openLocationDrawer();
+  });
+});
 
           bindKnobs(px);
           primeKnobs();
