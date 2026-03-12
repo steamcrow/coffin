@@ -800,7 +800,7 @@
       }));
     }
 
-    function init() {
+  function init() {
       root.classList.remove("cc-ready");
       root.classList.add("cc-loading");
 
@@ -830,118 +830,60 @@
 
           mainMap = window.L.map(ui.mapEl, {
             crs: window.L.CRS.Simple,
-            minZoom: -3,
-            maxZoom: 2,
-            dragging: false,
-            zoomControl: false,
-            attributionControl: false,
-            scrollWheelZoom: false,
-            doubleClickZoom: false,
-            touchZoom: false,
-            boxZoom: false,
-            keyboard: false
+            minZoom: -3, maxZoom: 2, dragging: false, zoomControl: false,
+            attributionControl: false, scrollWheelZoom: false, doubleClickZoom: false,
+            touchZoom: false, boxZoom: false, keyboard: false
           });
           window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
           mainMap.setView([px.h / 2, px.w / 2], BG_ZOOM, { animate: false });
 
           if (ui._hbEditor) ui._hbEditor.attach(mainMap, px);
 
-          var lensUrl = (mapDoc.map.lens && mapDoc.map.lens.image_key)
-            ? mapDoc.map.lens.image_key
-            : mapDoc.map.background.image_key;
-
+          var lensUrl = (mapDoc.map.lens && mapDoc.map.lens.image_key) ? mapDoc.map.lens.image_key : mapDoc.map.background.image_key;
           lensMap = window.L.map(ui.lensMapEl, {
             crs: window.L.CRS.Simple,
-            dragging: false,
-            zoomControl: false,
-            attributionControl: false,
-            scrollWheelZoom: false,
-            doubleClickZoom: false,
-            touchZoom: false,
-            boxZoom: false,
-            keyboard: false
+            dragging: false, zoomControl: false, attributionControl: false,
+            scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false,
+            boxZoom: false, keyboard: false
           });
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
-
-          ui.lensMapEl.addEventListener("dragstart", function (e) { e.preventDefault(); });
-          ui.lensMapEl.style.userSelect = "none";
-          ui.lensMapEl.style.webkitUserSelect = "none";
-          ui.lensMapEl.style.pointerEvents = "auto";
-
-          var lensContainer = ui.lensMapEl.querySelector(".leaflet-container");
-          if (lensContainer) lensContainer.style.pointerEvents = "auto";
 
           locationsData.locations.forEach(function (loc) {
             var bbox = HITBOXES[loc.id];
             if (!bbox) return;
-
-            window.L.rectangle(
-              [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-              { color: "rgba(255,117,24,0.8)", fillOpacity: 0.25, weight: 2, interactive: false }
-            ).addTo(lensMap);
-
-            window.L.marker(
-              [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2],
-              {
-                icon: window.L.divIcon({
-                  className: "cc-location-label",
-                  html: '<div style="color:#fff;font-weight:800;white-space:nowrap;text-shadow:0 2px 4px #000;pointer-events:none;">' +
-                    (loc.emoji || "📍") + " " + loc.name + "</div>"
-                }),
-                interactive: false
-              }
-            ).addTo(lensMap);
+            window.L.rectangle([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { color: "rgba(255,117,24,0.8)", fillOpacity: 0.25, weight: 2, interactive: false }).addTo(lensMap);
           });
 
           ui.lensMapEl.onclick = function (e) {
             if (!lensMap) return;
-
             var rect = ui.lensMapEl.getBoundingClientRect();
-            var pixelX = e.clientX - rect.left;
-            var pixelY = e.clientY - rect.top;
-            var latlng = lensMap.containerPointToLatLng(window.L.point(pixelX, pixelY));
-            var clickLat = latlng.lat;
-            var clickLng = latlng.lng;
-
-            var hit = null;
-            locationsData.locations.forEach(function (loc) {
-              if (hit) return;
-              var bbox = HITBOXES[loc.id];
-              if (!bbox) return;
-              if (clickLat >= bbox[0] && clickLat <= bbox[2] &&
-                  clickLng >= bbox[1] && clickLng <= bbox[3]) {
-                hit = loc;
-              }
-            });
-
-            if (hit) {
-              e.stopPropagation();
-              renderDrawer(ui, hit);
-              ui.drawerEl.classList.add("open");
-            }
+            var x = (e.clientX - rect.left) / rect.width;
+            var y = (e.clientY - rect.top) / rect.height;
+            applyT(y, px); applyTx(x, px);
           };
 
           bindKnobs(px);
-          
-          // --- FORCE RENDER FIX ---
+
+          // Force-Render Fix
           setTimeout(function() {
             var frame = document.querySelector(".cc-frame-overlay");
             var knobs = document.querySelectorAll(".cc-scroll-knob");
             var lens = document.querySelector(".cc-lens");
-            
-            if (frame) {
-                frame.style.zIndex = "9999";
-                frame.style.display = "flex";
-            }
+            if (frame) { frame.style.zIndex = "9999"; frame.style.display = "flex"; }
             if (lens) lens.style.display = "block";
-            knobs.forEach(function(k) { 
-                k.style.display = "block"; 
-                k.style.zIndex = "10000";
-            });
+            knobs.forEach(function(k) { k.style.display = "block"; k.style.zIndex = "10000"; });
             console.log("UI elements forced to display.");
           }, 1000);
 
-          hideLoader();
+          return nextFrame().then(function () {
+             mainMap.invalidateSize({ animate: false });
+             lensMap.invalidateSize({ animate: false });
+             var elapsed = Date.now() - loadStart;
+             return delay(Math.max(0, MIN_LOADER_MS - elapsed));
+          });
+        })
+        .then(function() {
+            hideLoader();
         })
         .catch(function(err) {
           console.error("Initialization failed:", err);
