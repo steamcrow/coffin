@@ -32,8 +32,8 @@
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
-  width: 950px !important;
-  height: 575px !important;
+  width: calc(760px * var(--device-scale, 1)) !important;
+  height: calc(500px * var(--device-scale, 1)) !important;
   transform: translate(-50%, -50%) !important;
   z-index: 10 !important;
   pointer-events: none !important;
@@ -84,7 +84,7 @@
 }
 
 .cc-frame-image {
-  width: min(92%, 1180px) !important;
+  width: calc(1180px * var(--device-scale, 1)) !important;
   height: auto !important;
   display: block !important;
   pointer-events: none !important;
