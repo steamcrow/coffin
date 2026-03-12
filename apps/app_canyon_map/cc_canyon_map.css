@@ -59,32 +59,23 @@
   z-index: 11 !important;
 }
 
-.leaflet-tooltip.cc-map-hitbox-label {
-  background: rgba(20, 12, 8, 0.82) !important;
+.cc-map-hitbox-label {
+  background: rgba(20, 12, 8, 0.78) !important;
   border: 1px solid rgba(255, 117, 24, 0.55) !important;
   color: #f5d7a2 !important;
   font-family: inherit !important;
-  font-size: 10px !important;
+  font-size: 11px !important;
   font-weight: 700 !important;
-  line-height: 1.05 !important;
-  letter-spacing: 0.01em !important;
+  line-height: 1.1 !important;
+  letter-spacing: 0.02em !important;
   text-align: center !important;
-
   padding: 2px 5px !important;
   border-radius: 6px !important;
   box-shadow: 0 2px 6px rgba(0,0,0,0.35) !important;
-
-  max-width: 92px !important;
-  min-width: 0 !important;
+  max-width: 110px !important;
   white-space: normal !important;
   word-break: break-word !important;
-
   pointer-events: none !important;
-  margin: 0 !important;
-}
-
-.leaflet-tooltip.cc-map-hitbox-label:before {
-  display: none !important;
 }
 
 .cc-map-hitbox-label:before {
@@ -154,7 +145,6 @@
 .cc-scroll-knob:active {
   cursor: grabbing !important;
 }
-
 /* IMPORTANT:
    do NOT lock top/left here with !important
    JS needs to move them
