@@ -1006,27 +1006,35 @@
             });
 
             rect.on("click", function (e) {
-              if (window.L && window.L.DomEvent && e && e.originalEvent) {
-                window.L.DomEvent.stop(e.originalEvent);
-              }
-              renderDrawer(ui, loc);
-              ui.drawerEl.classList.add("open");
+              if (window.L && window.L.DomEvent) {
+             window.L.DomEvent.stopPropagation(e);
+          if (e && e.originalEvent) window.L.DomEvent.stop(e.originalEvent);
+        }
+
+        renderDrawer(ui, loc);
+        ui.drawerEl.classList.add("open");
+         });
+          });
+
+          lensMap.on("click", function (e) {
+           if (!lensMap) return;
+
+           var original = e && e.originalEvent ? e.originalEvent : null;
+           var target = original ? original.target : null;
+
+           if (target && (target.closest(".leaflet-interactive") || target.closest(".leaflet-tooltip"))) {
+             return;
+           }
+
+           var pt = lensMap.mouseEventToContainerPoint(original);
+           var size = lensMap.getSize();
+
+           var x = size.x ? (pt.x / size.x) : 0.5;
+           var y = size.y ? (pt.y / size.y) : 0.5;
+
+           applyT(y, px);
+           applyTx(x, px);
             });
-          });
-
-          ui.lensMapEl.addEventListener("click", function (e) {
-            var target = e.target;
-            if (target && (target.closest(".leaflet-interactive") || target.closest(".leaflet-tooltip"))) {
-              return;
-            }
-            if (!lensMap) return;
-
-            var rect = ui.lensMapEl.getBoundingClientRect();
-            var x = (e.clientX - rect.left) / rect.width;
-            var y = (e.clientY - rect.top) / rect.height;
-            applyT(y, px);
-            applyTx(x, px);
-          });
 
           bindKnobs(px);
           primeKnobs();
