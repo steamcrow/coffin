@@ -509,22 +509,24 @@
       }
 
       if (knobV) {
-        knobV.style.position = "absolute";
-        knobV.style.width = "72px";
-        knobV.style.height = "72px";
-        knobV.style.left = "50%";
-        knobV.style.top = "50%";
-        knobV.style.transform = "translate(-50%, -50%)";
-      }
+  knobV.style.position = "absolute";
+  knobV.style.width = "92px";
+  knobV.style.height = "92px";
+  knobV.style.zIndex = "61";
+  knobV.style.display = "block";
+  knobV.style.pointerEvents = "auto";
+  knobV.style.cursor = "grab";
+}
 
-      if (knobH) {
-        knobH.style.position = "absolute";
-        knobH.style.width = "72px";
-        knobH.style.height = "72px";
-        knobH.style.left = "50%";
-        knobH.style.top = "50%";
-        knobH.style.transform = "translate(-50%, -50%) rotate(90deg)";
-      }
+if (knobH) {
+  knobH.style.position = "absolute";
+  knobH.style.width = "92px";
+  knobH.style.height = "92px";
+  knobH.style.zIndex = "61";
+  knobH.style.display = "block";
+  knobH.style.pointerEvents = "auto";
+  knobH.style.cursor = "grab";
+}
 
       Array.prototype.forEach.call(knobImgs, function (img) {
         img.style.display = "block";
@@ -795,7 +797,10 @@
       );
 
       ui.knobV.style.top = (t * 100) + "%";
+      ui.knobV.style.left = "calc(50% - 40px)";
+
       ui.knobH.style.left = (tx * 100) + "%";
+      ui.knobH.style.top = "calc(50% - 175px)";
     }
 
     function applyTx(tx, px) {
