@@ -32,8 +32,8 @@
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
-  width: var(--lens-w, 920px) !important;
-  height: var(--lens-h, 560px) !important;
+  width: 760px !important;
+  height: 500px !important;
   transform: translate(-50%, -50%) !important;
   z-index: 10 !important;
   pointer-events: none !important;
@@ -75,10 +75,7 @@
 /* --- THE METAL FRAME --- */
 .cc-frame-overlay {
   position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
+  inset: 0 !important;
   z-index: 50 !important;
   pointer-events: none !important;
   display: flex !important;
@@ -87,11 +84,11 @@
 }
 
 .cc-frame-image {
-  max-width: 100% !important;
+  width: min(92%, 1180px) !important;
   height: auto !important;
+  display: block !important;
   pointer-events: none !important;
   z-index: 51 !important;
-  display: block !important;
 }
 
 /* --- KNOB TRACKS --- */
@@ -150,7 +147,7 @@
 
 #cc-scroll-knob-h {
   top: 50%;
-  transform: translate(-50%, -50%) rotate(-90deg);
+  transform: translate(-50%, -50%);
 }
 
 /* --- KNOB IMAGES --- */
