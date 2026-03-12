@@ -768,52 +768,53 @@ if (knobH) {
     }
 
     function applyT(t, px) {
-      if (!mainMap || !lensMap || !px) return;
-      t = clamp(t, 0, 1);
-      currentT = t;
+  if (!mainMap || !lensMap || !px) return;
+  t = clamp(t, 0, 1);
+  currentT = t;
 
-      var lensZoom = BG_ZOOM + opts.lensZoomOffset;
-      var tx = currentTx;
+  var lensZoom = BG_ZOOM + opts.lensZoomOffset;
+  var tx = currentTx;
 
-      var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
-      var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
-      mainMap.panTo(
-        [
-          bgRy.min + t * (bgRy.max - bgRy.min),
-          bgRx.min + tx * (bgRx.max - bgRx.min)
-        ],
-        { animate: false }
-      );
+  var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
+  var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
+  mainMap.panTo(
+    [
+      bgRy.min + t * (bgRy.max - bgRy.min),
+      bgRx.min + tx * (bgRx.max - bgRx.min)
+    ],
+    { animate: false }
+  );
 
-      var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
-      var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
-      lensMap.setView(
-        [
-          lnRy.min + t * (lnRy.max - lnRy.min),
-          lnRx.min + tx * (lnRx.max - lnRx.min)
-        ],
-        lensZoom,
-        { animate: false }
-      );
+  var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
+  var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
+  lensMap.setView(
+    [
+      lnRy.min + t * (lnRy.max - lnRy.min),
+      lnRx.min + tx * (lnRx.max - lnRx.min)
+    ],
+    lensZoom,
+    { animate: false }
+  );
 
-      var V_MIN = 19;   // percent
-      var V_MAX = 81;   // percent
-      var H_MIN = 18;   // percent
-      var H_MAX = 82;   // percent
+  var V_MIN = 19;   // percent
+  var V_MAX = 81;   // percent
+  var H_MIN = 18;   // percent
+  var H_MAX = 82;   // percent
 
-      var knobVTop = V_MIN + t * (V_MAX - V_MIN);
-      var knobHLeft = H_MIN + tx * (H_MAX - H_MIN);
+  var knobVTop = V_MIN + t * (V_MAX - V_MIN);
+  var knobHLeft = H_MIN + tx * (H_MAX - H_MIN);
 
-      ui.knobV.style.top = knobVTop + "%";
-      ui.knobV.style.left = "calc(50% - 40px)";
+  ui.knobV.style.top = knobVTop + "%";
+  ui.knobV.style.left = "calc(50% - 40px)";
 
-      ui.knobH.style.left = knobHLeft + "%";
-      ui.knobH.style.top = "calc(50% - 175px)";
+  ui.knobH.style.left = knobHLeft + "%";
+  ui.knobH.style.top = "calc(50% - 175px)";
+}
 
-    function applyTx(tx, px) {
-      currentTx = clamp(tx, 0, 1);
-      applyT(currentT, px);
-    }
+function applyTx(tx, px) {
+  currentTx = clamp(tx, 0, 1);
+  applyT(currentT, px);
+}
 
     var knobbsBound = false;
 
