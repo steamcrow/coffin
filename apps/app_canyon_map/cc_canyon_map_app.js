@@ -1016,26 +1016,6 @@
          });
           });
 
-          lensMap.on("click", function (e) {
-           if (!lensMap) return;
-
-           var original = e && e.originalEvent ? e.originalEvent : null;
-           var target = original ? original.target : null;
-
-           if (target && (target.closest(".leaflet-interactive") || target.closest(".leaflet-tooltip"))) {
-             return;
-           }
-
-           var pt = lensMap.mouseEventToContainerPoint(original);
-           var size = lensMap.getSize();
-
-           var x = size.x ? (pt.x / size.x) : 0.5;
-           var y = size.y ? (pt.y / size.y) : 0.5;
-
-           applyT(y, px);
-           applyTx(x, px);
-            });
-
           bindKnobs(px);
           primeKnobs();
 
