@@ -1027,7 +1027,8 @@
 
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
-          locationsData.locations.forEach(function (loc) {
+         locationsData.locations.forEach(function (loc) {
+
   var bbox = HITBOXES[loc.id];
   if (!bbox) {
     console.warn("Missing hitbox for:", loc.id, loc.name);
@@ -1058,15 +1059,16 @@
     renderDrawer(ui, loc);
     ui.drawerEl.classList.add("open");
   });
-});
 
   rect.on("touchstart", function (e) {
     if (window.L && window.L.DomEvent) {
       if (e && e.originalEvent) window.L.DomEvent.stop(e.originalEvent);
       window.L.DomEvent.preventDefault(e);
     }
-    openLocationDrawer();
+    renderDrawer(ui, loc);
+    ui.drawerEl.classList.add("open");
   });
+
 });
 
           bindKnobs(px);
