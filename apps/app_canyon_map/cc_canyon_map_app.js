@@ -252,18 +252,20 @@
   }
 
   function renderDrawer(ui, loc) {
-    ui.drawerTitleEl.textContent = loc.name || loc.id || "Location";
-    ui.drawerContentEl.innerHTML =
-      '<div class="cc-block"><div class="cc-h">Description</div><p>' + (loc.description || "No description.") + '</p></div>' +
-      '<div class="cc-block"><div class="cc-h">Danger</div>' + meterBar(loc.danger || 0, 6, "#ff4444") + '</div>' +
-      '<div class="cc-block"><div class="cc-h">Population</div>' + meterBar(loc.population || 0, 6, "#4caf50") + '</div>' +
-      (loc.atmosphere ? '<div class="cc-block"><div class="cc-h">Atmosphere</div><p style="font-style:italic;color:#aaa">"' + loc.atmosphere + '"</p></div>' : '') +
-      '<div style="display:flex;flex-wrap:wrap;gap:.5rem">' +
-      (loc.features || []).map(function (f) {
-        return '<span style="padding:4px 10px;background:rgba(255,117,24,.2);border:1px solid rgba(255,117,24,.4);border-radius:4px;font-size:.85rem">' + f + '</span>';
-      }).join("") +
-      "</div>";
-  }
+  ui.drawerTitleEl.textContent = loc.name || loc.id || "Location";
+  ui.drawerContentEl.innerHTML =
+    '<div class="cc-block"><div class="cc-h">Description</div><p>' + (loc.description || "No description.") + '</p></div>' +
+    '<div class="cc-block"><div class="cc-h">Danger</div>' + meterBar(loc.danger || 0, 6, "#ff4444") + '</div>' +
+    '<div class="cc-block"><div class="cc-h">Population</div>' + meterBar(loc.population || 0, 6, "#4caf50") + '</div>' +
+    (loc.atmosphere ? '<div class="cc-block"><div class="cc-h">Atmosphere</div><p style="font-style:italic;color:#aaa">"' + loc.atmosphere + '"</p></div>' : '') +
+    '<div style="display:flex;flex-wrap:wrap;gap:.5rem">' +
+    (loc.features || []).map(function (f) {
+      return '<span style="padding:4px 10px;background:rgba(255,117,24,.2);border:1px solid rgba(255,117,24,.4);border-radius:4px;font-size:.85rem">' + f + '</span>';
+    }).join("") +
+    "</div>";
+
+  ui.drawerEl.scrollTop = 0;
+}
 
   // ═══════════════════════════════════════════════════════════════
   // SAFE RANGE MATH
