@@ -1034,46 +1034,31 @@
     return;
   }
 
-  function openLocationDrawer() {
-    renderDrawer(ui, loc);
-    ui.drawerEl.classList.add("open");
-  }
-
   var rect = window.L.rectangle(
     [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
     {
       color: "#ff7518",
-      fillColor: "#ff7518",
-      fillOpacity: 0.08,
+      fillOpacity: 0.12,
       weight: 2,
-      interactive: true,
-      bubblingMouseEvents: false
+      interactive: true
     }
   ).addTo(lensMap);
-
-  rect.bringToFront();
 
   rect.bindTooltip(loc.name || loc.id, {
     permanent: true,
     direction: "center",
     className: "cc-map-hitbox-label",
-    opacity: 1
-  });
-
-  rect.on("mousedown", function (e) {
-    if (window.L && window.L.DomEvent) {
-      if (e && e.originalEvent) window.L.DomEvent.stop(e.originalEvent);
-      window.L.DomEvent.preventDefault(e);
-    }
+    opacity: 0.95
   });
 
   rect.on("click", function (e) {
     if (window.L && window.L.DomEvent) {
-      if (e && e.originalEvent) window.L.DomEvent.stop(e.originalEvent);
-      window.L.DomEvent.preventDefault(e);
+      window.L.DomEvent.stop(e);
     }
-    openLocationDrawer();
+    renderDrawer(ui, loc);
+    ui.drawerEl.classList.add("open");
   });
+});
 
   rect.on("touchstart", function (e) {
     if (window.L && window.L.DomEvent) {
