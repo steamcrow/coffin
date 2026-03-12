@@ -411,11 +411,25 @@
             draggable: "false"
           })
         ]),
-        el("div", { class: "cc-scroll-vertical" }, [
-          el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" })
+        el("div", { class: "cc-scroll-vertical", id: "cc-scroll-track-v" }, [
+          el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" }, [
+            el("img", {
+              src: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png",
+              alt: "",
+              draggable: "false",
+              class: "cc-scroll-knob-img"
+            })
+          ])
         ]),
-        el("div", { class: "cc-scroll-horizontal" }, [
-          el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" })
+        el("div", { class: "cc-scroll-horizontal", id: "cc-scroll-track-h" }, [
+          el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" }, [
+            el("img", {
+              src: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png",
+              alt: "",
+              draggable: "false",
+              class: "cc-scroll-knob-img"
+            })
+          ])
         ])
       ])
     ]);
@@ -445,8 +459,94 @@
       drawerContentEl: drawer.querySelector(".cc-cm-drawer-content"),
       knobV: root.querySelector("#cc-scroll-knob-v"),
       knobH: root.querySelector("#cc-scroll-knob-h"),
+      trackV: root.querySelector("#cc-scroll-track-v"),
+      trackH: root.querySelector("#cc-scroll-track-h"),
       _hbEditor: null
     };
+
+    function primeKnobs() {
+      var wrap = root.querySelector(".cc-cm-mapwrap");
+      var frame = root.querySelector(".cc-frame-overlay");
+      var trackV = ui.trackV;
+      var trackH = ui.trackH;
+      var knobV = ui.knobV;
+      var knobH = ui.knobH;
+      var knobImgs = root.querySelectorAll(".cc-scroll-knob-img");
+
+      if (wrap) {
+        wrap.style.position = "relative";
+        wrap.style.overflow = "hidden";
+      }
+
+      if (frame) {
+        frame.style.position = "absolute";
+        frame.style.inset = "0";
+        frame.style.zIndex = "50";
+        frame.style.pointerEvents = "none";
+        frame.style.display = "flex";
+      }
+
+      if (trackV) {
+        trackV.style.position = "absolute";
+        trackV.style.top = "0";
+        trackV.style.right = "0";
+        trackV.style.width = "88px";
+        trackV.style.height = "100%";
+        trackV.style.zIndex = "60";
+        trackV.style.pointerEvents = "auto";
+        trackV.style.display = "block";
+      }
+
+      if (trackH) {
+        trackH.style.position = "absolute";
+        trackH.style.left = "0";
+        trackH.style.bottom = "0";
+        trackH.style.width = "100%";
+        trackH.style.height = "88px";
+        trackH.style.zIndex = "60";
+        trackH.style.pointerEvents = "auto";
+        trackH.style.display = "block";
+      }
+
+      if (knobV) {
+        knobV.style.position = "absolute";
+        knobV.style.width = "72px";
+        knobV.style.height = "72px";
+        knobV.style.left = "50%";
+        knobV.style.top = "50%";
+        knobV.style.transform = "translate(-50%, -50%)";
+        knobV.style.zIndex = "61";
+        knobV.style.display = "block";
+        knobV.style.pointerEvents = "auto";
+        knobV.style.cursor = "grab";
+      }
+
+      if (knobH) {
+        knobH.style.position = "absolute";
+        knobH.style.width = "72px";
+        knobH.style.height = "72px";
+        knobH.style.left = "50%";
+        knobH.style.top = "50%";
+        knobH.style.transform = "translate(-50%, -50%) rotate(90deg)";
+        knobH.style.zIndex = "61";
+        knobH.style.display = "block";
+        knobH.style.pointerEvents = "auto";
+        knobH.style.cursor = "grab";
+      }
+
+      Array.prototype.forEach.call(knobImgs, function (img) {
+        img.style.display = "block";
+        img.style.width = "100%";
+        img.style.height = "100%";
+        img.style.objectFit = "contain";
+        img.style.pointerEvents = "none";
+        img.style.userSelect = "none";
+        img.style.webkitUserDrag = "none";
+        img.style.filter = "drop-shadow(0 4px 8px rgba(0,0,0,0.6))";
+      });
+    }
+
+    primeKnobs();
 
     function blockWheelZoom(el) {
       el.addEventListener("wheel", function (e) {
@@ -797,162 +897,152 @@
         try { if (mainMap) mainMap.invalidateSize({ animate: false }); } catch (e) {}
         try { if (lensMap) lensMap.invalidateSize({ animate: false }); } catch (e) {}
         if (mapDoc) applyT(currentT, mapDoc.map.background.image_pixel_size);
+        primeKnobs();
       }));
     }
 
-  function init() {
-  root.classList.remove("cc-ready");
-  root.classList.add("cc-loading");
+    function init() {
+      root.classList.remove("cc-ready");
+      root.classList.add("cc-loading");
 
-  showLoader();
-  var loadStart = Date.now();
-  var signal = newSession();
+      showLoader();
+      var loadStart = Date.now();
+      var signal = newSession();
 
-  return depsReady
-    .then(function () {
-      return Promise.all([
-        fetchJson(opts.mapUrl, signal),
-        fetchJson(opts.stateUrl, signal),
-        fetchJson(opts.locationsUrl, signal)
-      ]);
-    })
-    .then(function (results) {
-      mapDoc = results[0];
-      locationsData = results[2];
-
-      try { if (mainMap) mainMap.remove(); } catch (e) {}
-      try { if (lensMap) lensMap.remove(); } catch (e) {}
-
-      updateResponsiveScale();
-
-      var px = mapDoc.map.background.image_pixel_size;
-      var bounds = [[0, 0], [px.h, px.w]];
-
-      mainMap = window.L.map(ui.mapEl, {
-        crs: window.L.CRS.Simple,
-        minZoom: -3,
-        maxZoom: 2,
-        dragging: false,
-        zoomControl: false,
-        attributionControl: false,
-        scrollWheelZoom: false,
-        doubleClickZoom: false,
-        touchZoom: false,
-        boxZoom: false,
-        keyboard: false
-      });
-
-      window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
-      mainMap.setView([px.h / 2, px.w / 2], BG_ZOOM, { animate: false });
-
-      if (ui._hbEditor) ui._hbEditor.attach(mainMap, px);
-
-      var lensUrl =
-        (mapDoc.map.lens && mapDoc.map.lens.image_key)
-          ? mapDoc.map.lens.image_key
-          : mapDoc.map.background.image_key;
-
-      lensMap = window.L.map(ui.lensMapEl, {
-        crs: window.L.CRS.Simple,
-        dragging: false,
-        zoomControl: false,
-        attributionControl: false,
-        scrollWheelZoom: false,
-        doubleClickZoom: false,
-        touchZoom: false,
-        boxZoom: false,
-        keyboard: false
-      });
-
-      window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
-
-      locationsData.locations.forEach(function (loc) {
-        var bbox = HITBOXES[loc.id];
-        if (!bbox) return;
-
-        window.L.rectangle(
-          [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-          {
-            color: "rgba(255,117,24,0.8)",
-            fillOpacity: 0.25,
-            weight: 2,
-            interactive: false
-          }
-        ).addTo(lensMap);
-      });
-
-      ui.lensMapEl.onclick = function (e) {
-        if (!lensMap) return;
-        var rect = ui.lensMapEl.getBoundingClientRect();
-        var x = (e.clientX - rect.left) / rect.width;
-        var y = (e.clientY - rect.top) / rect.height;
-        applyT(y, px);
-        applyTx(x, px);
-      };
-
-      bindKnobs(px);
-
-      setTimeout(function () {
-        var frame = document.querySelector(".cc-frame-overlay");
-        var knobs = document.querySelectorAll(".cc-scroll-knob");
-        var lens = document.querySelector(".cc-lens");
-
-        if (frame) {
-          frame.style.zIndex = "9999";
-          frame.style.display = "flex";
-          frame.style.pointerEvents = "none";
-        }
-
-        if (lens) lens.style.display = "block";
-
-        knobs.forEach(function (k) {
-          k.style.display = "block";
-          k.style.zIndex = "10000";
-        });
-
-        console.log("UI elements forced to display.");
-      }, 1000);
-
-      return nextFrame()
+      return depsReady
         .then(function () {
-          try { mainMap.invalidateSize({ animate: false }); } catch (e) {}
-          try { lensMap.invalidateSize({ animate: false }); } catch (e) {}
-          return nextFrame();
+          return Promise.all([
+            fetchJson(opts.mapUrl, signal),
+            fetchJson(opts.stateUrl, signal),
+            fetchJson(opts.locationsUrl, signal)
+          ]);
+        })
+        .then(function (results) {
+          mapDoc = results[0];
+          locationsData = results[2];
+
+          try { if (mainMap) mainMap.remove(); } catch (e) {}
+          try { if (lensMap) lensMap.remove(); } catch (e) {}
+
+          updateResponsiveScale();
+          primeKnobs();
+
+          var px = mapDoc.map.background.image_pixel_size;
+          var bounds = [[0, 0], [px.h, px.w]];
+
+          mainMap = window.L.map(ui.mapEl, {
+            crs: window.L.CRS.Simple,
+            minZoom: -3,
+            maxZoom: 2,
+            dragging: false,
+            zoomControl: false,
+            attributionControl: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false,
+            boxZoom: false,
+            keyboard: false
+          });
+
+          window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
+          mainMap.setView([px.h / 2, px.w / 2], BG_ZOOM, { animate: false });
+
+          if (ui._hbEditor) ui._hbEditor.attach(mainMap, px);
+
+          var lensUrl =
+            (mapDoc.map.lens && mapDoc.map.lens.image_key)
+              ? mapDoc.map.lens.image_key
+              : mapDoc.map.background.image_key;
+
+          lensMap = window.L.map(ui.lensMapEl, {
+            crs: window.L.CRS.Simple,
+            dragging: false,
+            zoomControl: false,
+            attributionControl: false,
+            scrollWheelZoom: false,
+            doubleClickZoom: false,
+            touchZoom: false,
+            boxZoom: false,
+            keyboard: false
+          });
+
+          window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
+
+          locationsData.locations.forEach(function (loc) {
+            var bbox = HITBOXES[loc.id];
+            if (!bbox) return;
+
+            window.L.rectangle(
+              [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+              {
+                color: "rgba(255,117,24,0.8)",
+                fillOpacity: 0.25,
+                weight: 2,
+                interactive: false
+              }
+            ).addTo(lensMap);
+          });
+
+          ui.lensMapEl.onclick = function (e) {
+            if (!lensMap) return;
+            var rect = ui.lensMapEl.getBoundingClientRect();
+            var x = (e.clientX - rect.left) / rect.width;
+            var y = (e.clientY - rect.top) / rect.height;
+            applyT(y, px);
+            applyTx(x, px);
+          };
+
+          bindKnobs(px);
+          primeKnobs();
+
+          setTimeout(function () {
+            primeKnobs();
+            console.log("Knobs primed.", ui.knobV, ui.knobH);
+          }, 1000);
+
+          return nextFrame()
+            .then(function () {
+              try { mainMap.invalidateSize({ animate: false }); } catch (e) {}
+              try { lensMap.invalidateSize({ animate: false }); } catch (e) {}
+              return nextFrame();
+            })
+            .then(function () {
+              try { mainMap.invalidateSize({ animate: false }); } catch (e) {}
+              try { lensMap.invalidateSize({ animate: false }); } catch (e) {}
+
+              currentT = 0.5;
+              currentTx = 0.5;
+              applyT(0.5, px);
+
+              ui.lensMapEl.style.pointerEvents = "auto";
+
+              var lc = ui.lensMapEl.querySelector(".leaflet-container");
+              if (lc) lc.style.pointerEvents = "auto";
+
+              var inner = ui.lensMapEl.closest(".cc-lens-inner");
+              if (inner) inner.style.pointerEvents = "auto";
+
+              primeKnobs();
+
+              var elapsed = Date.now() - loadStart;
+              return delay(Math.max(0, MIN_LOADER_MS - elapsed));
+            });
         })
         .then(function () {
-          try { mainMap.invalidateSize({ animate: false }); } catch (e) {}
-          try { lensMap.invalidateSize({ animate: false }); } catch (e) {}
-
-          currentT = 0.5;
-          currentTx = 0.5;
-          applyT(0.5, px);
-
-          ui.lensMapEl.style.pointerEvents = "auto";
-
-          var lc = ui.lensMapEl.querySelector(".leaflet-container");
-          if (lc) lc.style.pointerEvents = "auto";
-
-          var inner = ui.lensMapEl.closest(".cc-lens-inner");
-          if (inner) inner.style.pointerEvents = "auto";
-
-          var elapsed = Date.now() - loadStart;
-          return delay(Math.max(0, MIN_LOADER_MS - elapsed));
+          hideLoader();
+          primeKnobs();
+        })
+        .catch(function (err) {
+          if (err && err.name === "AbortError") return;
+          console.error("Canyon Map init failed:", err);
+          hideLoader();
+          ui.drawerContentEl.innerHTML =
+            '<div style="color:#f55;padding:1rem">Load failed: ' +
+            (err && err.message) +
+            '</div>';
+          ui.drawerEl.classList.add("open");
         });
-    })
-    .then(function () {
-      hideLoader();
-    })
-    .catch(function (err) {
-      if (err && err.name === "AbortError") return;
-      console.error("Canyon Map init failed:", err);
-      hideLoader();
-      ui.drawerContentEl.innerHTML =
-        '<div style="color:#f55;padding:1rem">Load failed: ' +
-        (err && err.message) +
-        '</div>';
-      ui.drawerEl.classList.add("open");
-    });
-}
+    }
 
     root.querySelector("#cc-cm-reload").onclick = function () { init(); };
     root.querySelector("#close-dr").onclick = function () { ui.drawerEl.classList.remove("open"); };
@@ -960,6 +1050,7 @@
       if (mapDoc) {
         currentTx = 0.5;
         applyT(0.5, mapDoc.map.background.image_pixel_size);
+        primeKnobs();
       }
     };
     root.querySelector("#cc-cm-edit").onclick = function () {
