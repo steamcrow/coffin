@@ -55,6 +55,23 @@
   z-index: 11 !important;
 }
 
+.cc-map-hitbox-label {
+  background: rgba(20, 12, 8, 0.78) !important;
+  border: 1px solid rgba(255, 117, 24, 0.55) !important;
+  color: #f5d7a2 !important;
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.04em !important;
+  padding: 3px 6px !important;
+  border-radius: 6px !important;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35) !important;
+}
+
+.cc-map-hitbox-label:before {
+  display: none !important;
+}
+
 /* --- THE METAL FRAME --- */
 .cc-frame-overlay {
   position: absolute !important;
