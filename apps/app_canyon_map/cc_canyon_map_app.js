@@ -461,80 +461,78 @@
     };
 
     function primeKnobs() {
-      var wrap = root.querySelector(".cc-cm-mapwrap");
-      var frame = root.querySelector(".cc-frame-overlay");
-      var trackV = ui.trackV;
-      var trackH = ui.trackH;
-      var knobV = ui.knobV;
-      var knobH = ui.knobH;
-      var knobImgs = root.querySelectorAll(".cc-scroll-knob-img");
+  var wrap = root.querySelector(".cc-cm-mapwrap");
+  var frame = root.querySelector(".cc-frame-overlay");
+  var trackV = ui.trackV;
+  var trackH = ui.trackH;
+  var knobV = ui.knobV;
+  var knobH = ui.knobH;
+  var knobImgs = root.querySelectorAll(".cc-scroll-knob-img");
 
-      if (wrap) {
-        wrap.style.position = "relative";
-        wrap.style.overflow = "hidden";
-      }
+  if (wrap) {
+    wrap.style.position = "relative";
+    wrap.style.overflow = "hidden";
+  }
 
-      if (frame) {
-        frame.style.position = "absolute";
-        frame.style.inset = "0";
-        frame.style.zIndex = "50";
-        frame.style.pointerEvents = "none";
-        frame.style.display = "flex";
-      }
+  if (frame) {
+    frame.style.position = "absolute";
+    frame.style.inset = "0";
+    frame.style.zIndex = "50";
+    frame.style.pointerEvents = "none";
+    frame.style.display = "flex";
+  }
 
-      if (trackV) {
-        trackV.style.position = "absolute";
-        trackV.style.top = "0";
-        trackV.style.right = "0";
-        trackV.style.width = "88px";
-        trackV.style.height = "100%";
-        trackV.style.zIndex = "60";
-        trackV.style.pointerEvents = "auto";
-        trackV.style.display = "block";
-      }
+  if (trackV) {
+    trackV.style.position = "absolute";
+    trackV.style.top = "0";
+    trackV.style.right = "0";
+    trackV.style.width = "calc(88px * var(--device-scale, 1))";
+    trackV.style.height = "100%";
+    trackV.style.zIndex = "60";
+    trackV.style.pointerEvents = "auto";
+    trackV.style.display = "block";
+  }
 
-      if (trackH) {
-        trackH.style.position = "absolute";
-        trackH.style.left = "0";
-        trackH.style.bottom = "0";
-        trackH.style.width = "100%";
-        trackH.style.height = "88px";
-        trackH.style.zIndex = "60";
-        trackH.style.pointerEvents = "auto";
-        trackH.style.display = "block";
-      }
+  if (trackH) {
+    trackH.style.position = "absolute";
+    trackH.style.left = "0";
+    trackH.style.bottom = "0";
+    trackH.style.width = "100%";
+    trackH.style.height = "calc(88px * var(--device-scale, 1))";
+    trackH.style.zIndex = "60";
+    trackH.style.pointerEvents = "auto";
+    trackH.style.display = "block";
+  }
 
-      if (knobV) {
-        knobV.style.position = "absolute";
-        knobV.style.width = "112px";
-        knobV.style.height = "112px";
-        knobV.style.zIndex = "61";
-        knobV.style.display = "block";
-        knobV.style.pointerEvents = "auto";
-        knobV.style.cursor = "grab";
-      }
+  if (knobV) {
+    knobV.style.position = "absolute";
+    knobV.style.zIndex = "61";
+    knobV.style.display = "block";
+    knobV.style.pointerEvents = "auto";
+    knobV.style.cursor = "grab";
+    knobV.style.touchAction = "none";
+  }
 
-      if (knobH) {
-        knobH.style.position = "absolute";
-        knobH.style.width = "112px";
-        knobH.style.height = "112px";
-        knobH.style.zIndex = "61";
-        knobH.style.display = "block";
-        knobH.style.pointerEvents = "auto";
-        knobH.style.cursor = "grab";
-      }
+  if (knobH) {
+    knobH.style.position = "absolute";
+    knobH.style.zIndex = "61";
+    knobH.style.display = "block";
+    knobH.style.pointerEvents = "auto";
+    knobH.style.cursor = "grab";
+    knobH.style.touchAction = "none";
+  }
 
-      Array.prototype.forEach.call(knobImgs, function (img) {
-        img.style.display = "block";
-        img.style.width = "100%";
-        img.style.height = "100%";
-        img.style.objectFit = "contain";
-        img.style.pointerEvents = "none";
-        img.style.userSelect = "none";
-        img.style.webkitUserDrag = "none";
-        img.style.filter = "drop-shadow(0 4px 8px rgba(0,0,0,0.6))";
-      });
-    }
+  Array.prototype.forEach.call(knobImgs, function (img) {
+    img.style.display = "block";
+    img.style.width = "100%";
+    img.style.height = "100%";
+    img.style.objectFit = "contain";
+    img.style.pointerEvents = "none";
+    img.style.userSelect = "none";
+    img.style.webkitUserDrag = "none";
+    img.style.filter = "drop-shadow(0 4px 8px rgba(0,0,0,0.6))";
+  });
+}
 
     primeKnobs();
 
@@ -771,48 +769,48 @@
     }
 
     function applyT(t, px) {
-      if (!mainMap || !lensMap || !px) return;
-      t = clamp(t, 0, 1);
-      currentT = t;
+  if (!mainMap || !lensMap || !px) return;
+  t = clamp(t, 0, 1);
+  currentT = t;
 
-      var lensZoom = BG_ZOOM + opts.lensZoomOffset;
-      var tx = currentTx;
+  var lensZoom = BG_ZOOM + opts.lensZoomOffset;
+  var tx = currentTx;
 
-      var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
-      var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
-      mainMap.panTo(
-        [
-          bgRy.min + t * (bgRy.max - bgRy.min),
-          bgRx.min + tx * (bgRx.max - bgRx.min)
-        ],
-        { animate: false }
-      );
+  var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
+  var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
+  mainMap.panTo(
+    [
+      bgRy.min + t * (bgRy.max - bgRy.min),
+      bgRx.min + tx * (bgRx.max - bgRx.min)
+    ],
+    { animate: false }
+  );
 
-      var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
-      var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
-      lensMap.setView(
-        [
-          lnRy.min + t * (lnRy.max - lnRy.min),
-          lnRx.min + tx * (lnRx.max - lnRx.min)
-        ],
-        lensZoom,
-        { animate: false }
-      );
+  var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
+  var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
+  lensMap.setView(
+    [
+      lnRy.min + t * (lnRy.max - lnRy.min),
+      lnRx.min + tx * (lnRx.max - lnRx.min)
+    ],
+    lensZoom,
+    { animate: false }
+  );
 
-      var V_MIN = 30;
-      var V_MAX = 70;
-      var H_MIN = 16;
-      var H_MAX = 84;
+  var V_MIN = 30;
+  var V_MAX = 70;
+  var H_MIN = 16;
+  var H_MAX = 84;
 
-      var knobVTop = V_MIN + t * (V_MAX - V_MIN);
-      var knobHLeft = H_MIN + tx * (H_MAX - H_MIN);
+  var knobVTop = V_MIN + t * (V_MAX - V_MIN);
+  var knobHLeft = H_MIN + tx * (H_MAX - H_MIN);
 
-      ui.knobV.style.top = knobVTop + "%";
-      ui.knobV.style.left = "calc(50% - 64px)";
+  ui.knobV.style.top = knobVTop + "%";
+  ui.knobV.style.left = "calc(50% - (64px * var(--device-scale, 1)))";
 
-      ui.knobH.style.left = knobHLeft + "%";
-      ui.knobH.style.top = "calc(50% - 185px)";
-    }
+  ui.knobH.style.left = knobHLeft + "%";
+  ui.knobH.style.top = "calc(50% - (185px * var(--device-scale, 1)))";
+}
 
     function applyTx(tx, px) {
       currentTx = clamp(tx, 0, 1);
@@ -822,98 +820,142 @@
     var knobbsBound = false;
 
     function bindKnobs(px) {
-      if (knobbsBound) return;
-      knobbsBound = true;
+  if (knobbsBound) return;
+  knobbsBound = true;
 
-      function bindKnob(knobEl, axis) {
-        var dragging = false;
-        var lastClient = 0;
-        var lastTime = 0;
-        var velocity = 0;
-        var rafId = null;
+  function bindKnob(knobEl, axis) {
+    var dragging = false;
+    var lastPos = 0;
+    var lastTime = 0;
+    var velocity = 0;
+    var rafId = null;
+    var grabOffset = 0;
 
-        function getClient(e) {
-          var src = e.touches ? e.touches[0] : e;
-          return axis === "v" ? src.clientY : src.clientX;
-        }
+    function getClient(e) {
+      var src = e.touches ? e.touches[0] : e;
+      return axis === "v" ? src.clientY : src.clientX;
+    }
 
-        function trackPx() {
-          var r = knobEl.parentElement.getBoundingClientRect();
-          return (axis === "v" ? r.height : r.width) || 1;
-        }
+    function getTrackRect() {
+      return knobEl.parentElement.getBoundingClientRect();
+    }
 
-        function pxTodt(pxDelta) {
-          return pxDelta / trackPx();
-        }
+    function getKnobRect() {
+      return knobEl.getBoundingClientRect();
+    }
 
-        function momentumLoop() {
-          if (Math.abs(velocity) < MIN_VEL) {
-            rafId = null;
-            return;
-          }
-          if (axis === "v") applyT(currentT + velocity, px);
-          else applyTx(currentTx + velocity, px);
-          velocity *= FRICTION;
-          rafId = requestAnimationFrame(momentumLoop);
-        }
+    function trackPx() {
+      var r = getTrackRect();
+      return (axis === "v" ? r.height : r.width) || 1;
+    }
 
-        function onDown(e) {
-          if (rafId) {
-            cancelAnimationFrame(rafId);
-            rafId = null;
-          }
-          dragging = true;
-          velocity = 0;
-          lastClient = getClient(e);
-          lastTime = performance.now();
-          knobEl.classList.add("is-active");
-          e.stopPropagation();
-          e.preventDefault();
-        }
+    function rangeForAxis() {
+      if (axis === "v") return { min: 30, max: 70 };
+      return { min: 16, max: 84 };
+    }
 
-        function onMove(e) {
-          if (!dragging) return;
-          var now = performance.now();
-          var client = getClient(e);
-          var pxDelta = client - lastClient;
-          var dt = Math.max(now - lastTime, 1);
-          var dT = pxTodt(pxDelta);
+    function posToNormalized(trackPosPx) {
+      var range = rangeForAxis();
+      var pct = (trackPosPx / trackPx()) * 100;
+      var n = (pct - range.min) / (range.max - range.min);
+      return clamp(n, 0, 1);
+    }
 
-          if (axis === "v") applyT(currentT + dT, px);
-          else applyTx(currentTx + dT, px);
+    function momentumLoop() {
+      if (Math.abs(velocity) < MIN_VEL) {
+        rafId = null;
+        return;
+      }
+      if (axis === "v") applyT(currentT + velocity, px);
+      else applyTx(currentTx + velocity, px);
+      velocity *= FRICTION;
+      rafId = requestAnimationFrame(momentumLoop);
+    }
 
-          velocity = dT / dt * 16;
-          lastClient = client;
-          lastTime = now;
-          e.preventDefault();
-        }
-
-        function onUp() {
-          if (!dragging) return;
-          dragging = false;
-          knobEl.classList.remove("is-active");
-          rafId = requestAnimationFrame(momentumLoop);
-        }
-
-        knobEl.addEventListener("mousedown", onDown);
-        knobEl.addEventListener("touchstart", onDown, { passive: false });
-        window.addEventListener("mousemove", onMove);
-        window.addEventListener("touchmove", onMove, { passive: false });
-        window.addEventListener("mouseup", onUp);
-        window.addEventListener("touchend", onUp);
+    function onDown(e) {
+      if (rafId) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
       }
 
-      bindKnob(ui.knobV, "v");
-      bindKnob(ui.knobH, "h");
+      var trackRect = getTrackRect();
+      var knobRect = getKnobRect();
+      var client = getClient(e);
 
-      window.addEventListener("resize", rafThrottle(function () {
-        updateResponsiveScale();
-        try { if (mainMap) mainMap.invalidateSize({ animate: false }); } catch (e) {}
-        try { if (lensMap) lensMap.invalidateSize({ animate: false }); } catch (e) {}
-        if (mapDoc) applyT(currentT, mapDoc.map.background.image_pixel_size);
-        primeKnobs();
-      }));
+      dragging = true;
+      velocity = 0;
+      lastTime = performance.now();
+
+      if (axis === "v") {
+        grabOffset = client - knobRect.top;
+        lastPos = client - trackRect.top - grabOffset;
+      } else {
+        grabOffset = client - knobRect.left;
+        lastPos = client - trackRect.left - grabOffset;
+      }
+
+      knobEl.classList.add("is-active");
+      knobEl.style.cursor = "grabbing";
+
+      e.stopPropagation();
+      e.preventDefault();
     }
+
+    function onMove(e) {
+      if (!dragging) return;
+
+      var now = performance.now();
+      var trackRect = getTrackRect();
+      var client = getClient(e);
+      var trackPos;
+
+      if (axis === "v") {
+        trackPos = client - trackRect.top - grabOffset;
+      } else {
+        trackPos = client - trackRect.left - grabOffset;
+      }
+
+      var nextNormalized = posToNormalized(trackPos);
+      var prevNormalized = axis === "v" ? currentT : currentTx;
+      var dt = Math.max(now - lastTime, 1);
+      var dT = nextNormalized - prevNormalized;
+
+      if (axis === "v") applyT(nextNormalized, px);
+      else applyTx(nextNormalized, px);
+
+      velocity = dT / dt * 16;
+      lastPos = trackPos;
+      lastTime = now;
+      e.preventDefault();
+    }
+
+    function onUp() {
+      if (!dragging) return;
+      dragging = false;
+      knobEl.classList.remove("is-active");
+      knobEl.style.cursor = "grab";
+      rafId = requestAnimationFrame(momentumLoop);
+    }
+
+    knobEl.addEventListener("mousedown", onDown);
+    knobEl.addEventListener("touchstart", onDown, { passive: false });
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("touchmove", onMove, { passive: false });
+    window.addEventListener("mouseup", onUp);
+    window.addEventListener("touchend", onUp);
+  }
+
+  bindKnob(ui.knobV, "v");
+  bindKnob(ui.knobH, "h");
+
+  window.addEventListener("resize", rafThrottle(function () {
+    updateResponsiveScale();
+    try { if (mainMap) mainMap.invalidateSize({ animate: false }); } catch (e) {}
+    try { if (lensMap) lensMap.invalidateSize({ animate: false }); } catch (e) {}
+    if (mapDoc) applyT(currentT, mapDoc.map.background.image_pixel_size);
+    primeKnobs();
+  }));
+}
 
     function init() {
       root.classList.remove("cc-ready");
@@ -957,7 +999,13 @@
             boxZoom: false,
             keyboard: false
           });
-
+         
+         lensMap.dragging.disable();
+         lensMap.doubleClickZoom.disable();
+         lensMap.scrollWheelZoom.disable();
+         lensMap.boxZoom.disable();
+         lensMap.keyboard.disable();
+           
           window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
           mainMap.setView([px.h / 2, px.w / 2], BG_ZOOM, { animate: false });
 
