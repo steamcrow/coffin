@@ -974,29 +974,33 @@ function applyTx(tx, px) {
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
           locationsData.locations.forEach(function (loc) {
-           var bbox = HITBOXES[loc.id];
-           if (!bbox) return;
-
-           var rect = window.L.rectangle(
-  [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-  {
-    color: "#ff7518",
-    fillOpacity: 0.12,
-    weight: 2,
-    interactive: true
+  var bbox = HITBOXES[loc.id];
+  if (!bbox) {
+    console.warn("Missing hitbox for:", loc.id, loc.name);
+    return;
   }
-).addTo(lensMap);
 
-rect.bindTooltip(loc.name || loc.id, {
-  permanent: true,
-  direction: "center",
-  className: "cc-map-hitbox-label",
-  opacity: 0.95
-});
+  var rect = window.L.rectangle(
+    [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+    {
+      color: "#ff7518",
+      fillOpacity: 0.12,
+      weight: 2,
+      interactive: true
+    }
+  ).addTo(lensMap);
 
-rect.on("click", function () {
-  renderDrawer(ui, loc);
-  ui.drawerEl.classList.add("open");
+  rect.bindTooltip(loc.name || loc.id, {
+    permanent: true,
+    direction: "center",
+    className: "cc-map-hitbox-label",
+    opacity: 0.95
+  });
+
+  rect.on("click", function () {
+    renderDrawer(ui, loc);
+    ui.drawerEl.classList.add("open");
+  });
 });
           ui.lensMapEl.onclick = function (e) {
             if (!lensMap) return;
