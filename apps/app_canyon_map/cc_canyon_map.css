@@ -121,18 +121,19 @@
   cursor: grabbing !important;
 }
 
-/* Vertical knob */
+/* IMPORTANT:
+   do NOT lock top/left here with !important
+   JS needs to move them
+*/
+
 #cc-scroll-knob-v {
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
-/* Horizontal knob */
 #cc-scroll-knob-h {
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) rotate(90deg) !important;
+  top: 50%;
+  transform: translate(-50%, -50%) rotate(-90deg);
 }
 
 /* --- KNOB IMAGES --- */
