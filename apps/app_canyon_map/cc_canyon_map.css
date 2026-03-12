@@ -30,9 +30,9 @@
 /* --- THE MAGNIFIED LENS --- */
 .cc-lens {
   position: absolute !important;
-  top: 50% !important;
+  top: 35% !important;
   left: 50% !important;
-  width: calc(760px * var(--device-scale, 1)) !important;
+  width: calc(912px * var(--device-scale, 1)) !important;
   height: calc(500px * var(--device-scale, 1)) !important;
   transform: translate(-50%, -50%) !important;
   z-index: 10 !important;
@@ -117,8 +117,8 @@
 /* --- KNOBS --- */
 .cc-scroll-knob {
   position: absolute !important;
-  width: 72px !important;
-  height: 72px !important;
+  width: 112px !important;
+  height: 112px !important;
   display: block !important;
   z-index: 61 !important;
   pointer-events: auto !important;
