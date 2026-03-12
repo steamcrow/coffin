@@ -3,7 +3,6 @@
 */
 
 (function () {
-
   // ═══════════════════════════════════════════════════════════════
   // TUNEABLE CONSTANTS
   // ═══════════════════════════════════════════════════════════════
@@ -21,15 +20,15 @@
   // DEFAULT DATA URLS
   // ═══════════════════════════════════════════════════════════════
   var DEFAULTS = {
-    title:         "Coffin Canyon — Canyon Map",
-    mapUrl:        "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
-    stateUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_state.json",
-    locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
-    appCssUrl:     "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
+    title: "Coffin Canyon — Canyon Map",
+    mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
+    stateUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_state.json",
+    locationsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
+    appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
     leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
-    leafletJsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
-    logoUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
-    frameUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame2.png",
+    leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
+    logoUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
+    frameUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame2.png",
     lensZoomOffset: 0.2
   };
 
@@ -38,41 +37,41 @@
   // [minY, minX, maxY, maxX] in image pixels
   // ═══════════════════════════════════════════════════════════════
   var HITBOXES = {
-    "bandit-buck": [1550,956,1668,1160],
-    "bayou-city": [1175,2501,1386,2767],
-    "cowtown": [2172,2112,2332,2396],
-    "crackpits": [2628,1628,2816,1968],
-    "deerhoof": [3112,2130,3329,2412],
-    "diablo": [505,1432,716,1698],
-    "dustbuck": [1986,2286,2156,2522],
-    "fool-boot": [2408,1132,2512,1224],
-    "fort-plunder": [3348,1209,3631,1427],
-    "fortune": [2887,1284,3121,1567],
-    "ghost-mountain": [2597,205,2849,489],
-    "gore-mule-drop": [2872,1600,3092,2076],
-    "grade-grind": [2486,1432,2598,1548],
-    "heckweed": [2312,1824,2440,1944],
-    "huck": [3332,2569,3550,2749],
-    "kraise": [1995,1270,2193,1527],
-    "little-rica": [2964,500,3182,784],
-    "lost-yots": [1576,1266,1958,1586],
-    "martygrail": [2392,1620,2520,1748],
-    "mindshaft": [3112,804,3388,1164],
-    "pallor": [1616,1824,1996,1924],
-    "plata": [2513,916,2765,1089],
-    "quinne-jimmy": [1694,801,1852,1157],
-    "ratsville": [1452,1968,1644,2194],
-    "rey": [19,1883,230,2046],
-    "river-city": [1068,1595,1279,1861],
-    "sangr": [1105,1172,1315,1573],
-    "santos-grin": [1185,1898,1396,2176],
-    "silverpit": [2128,1548,2294,1762],
-    "skull-water": [1609,492,1841,701],
-    "splitglass-arroyo": [2605,1138,2859,1427],
-    "tin-flats": [1374,1258,1512,1608],
-    "tzulto": [2229,1334,2447,1526],
-    "widowflow": [1316,1630,2078,1798],
-    "witches-roost": [3767,2130,3965,2495]
+    "bandit-buck": [1550, 956, 1668, 1160],
+    "bayou-city": [1175, 2501, 1386, 2767],
+    "cowtown": [2172, 2112, 2332, 2396],
+    "crackpits": [2628, 1628, 2816, 1968],
+    "deerhoof": [3112, 2130, 3329, 2412],
+    "diablo": [505, 1432, 716, 1698],
+    "dustbuck": [1986, 2286, 2156, 2522],
+    "fool-boot": [2408, 1132, 2512, 1224],
+    "fort-plunder": [3348, 1209, 3631, 1427],
+    "fortune": [2887, 1284, 3121, 1567],
+    "ghost-mountain": [2597, 205, 2849, 489],
+    "gore-mule-drop": [2872, 1600, 3092, 2076],
+    "grade-grind": [2486, 1432, 2598, 1548],
+    "heckweed": [2312, 1824, 2440, 1944],
+    "huck": [3332, 2569, 3550, 2749],
+    "kraise": [1995, 1270, 2193, 1527],
+    "little-rica": [2964, 500, 3182, 784],
+    "lost-yots": [1576, 1266, 1958, 1586],
+    "martygrail": [2392, 1620, 2520, 1748],
+    "mindshaft": [3112, 804, 3388, 1164],
+    "pallor": [1616, 1824, 1996, 1924],
+    "plata": [2513, 916, 2765, 1089],
+    "quinne-jimmy": [1694, 801, 1852, 1157],
+    "ratsville": [1452, 1968, 1644, 2194],
+    "rey": [19, 1883, 230, 2046],
+    "river-city": [1068, 1595, 1279, 1861],
+    "sangr": [1105, 1172, 1315, 1573],
+    "santos-grin": [1185, 1898, 1396, 2176],
+    "silverpit": [2128, 1548, 2294, 1762],
+    "skull-water": [1609, 492, 1841, 701],
+    "splitglass-arroyo": [2605, 1138, 2859, 1427],
+    "tin-flats": [1374, 1258, 1512, 1608],
+    "tzulto": [2229, 1334, 2447, 1526],
+    "widowflow": [1316, 1630, 2078, 1798],
+    "witches-roost": [3767, 2130, 3965, 2495]
   };
 
   // ═══════════════════════════════════════════════════════════════
@@ -103,7 +102,8 @@
   }
 
   function rafThrottle(fn) {
-    var pending = false, lastArgs;
+    var pending = false;
+    var lastArgs;
     return function () {
       lastArgs = arguments;
       if (pending) return;
@@ -133,10 +133,7 @@
     var ns = "http://www.w3.org/2000/svg";
     var svg = document.createElementNS(ns, "svg");
     svg.id = "cc-lens-warp-svg";
-    svg.setAttribute(
-      "style",
-      "position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden"
-    );
+    svg.setAttribute("style", "position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden");
     svg.setAttribute("aria-hidden", "true");
     svg.setAttribute("xmlns", ns);
 
@@ -265,7 +262,7 @@
       (loc.features || []).map(function (f) {
         return '<span style="padding:4px 10px;background:rgba(255,117,24,.2);border:1px solid rgba(255,117,24,.4);border-radius:4px;font-size:.85rem">' + f + '</span>';
       }).join("") +
-      '</div>';
+      "</div>";
   }
 
   // ═══════════════════════════════════════════════════════════════
@@ -438,15 +435,14 @@
     root.appendChild(body);
     root.appendChild(drawer);
 
-   function updateResponsiveScale() {
-  var wrap = root.querySelector(".cc-cm-mapwrap");
-  if (!wrap) return;
-
-  var designWidth = 1280;
-  var currentWidth = wrap.getBoundingClientRect().width || wrap.offsetWidth || designWidth;
-  var scale = Math.max(0.62, Math.min(1, currentWidth / designWidth));
-  root.style.setProperty("--device-scale", scale.toFixed(4));
-}
+    function updateResponsiveScale() {
+      var wrap = root.querySelector(".cc-cm-mapwrap");
+      if (!wrap) return;
+      var designWidth = 1280;
+      var currentWidth = wrap.getBoundingClientRect().width || wrap.offsetWidth || designWidth;
+      var scale = Math.max(0.62, Math.min(1, currentWidth / designWidth));
+      root.style.setProperty("--device-scale", scale.toFixed(4));
+    }
 
     updateResponsiveScale();
 
@@ -508,25 +504,25 @@
         trackH.style.display = "block";
       }
 
-     if (knobV) {
-  knobV.style.position = "absolute";
-  knobV.style.width = "112px";
-  knobV.style.height = "112px";
-  knobV.style.zIndex = "61";
-  knobV.style.display = "block";
-  knobV.style.pointerEvents = "auto";
-  knobV.style.cursor = "grab";
-}
+      if (knobV) {
+        knobV.style.position = "absolute";
+        knobV.style.width = "112px";
+        knobV.style.height = "112px";
+        knobV.style.zIndex = "61";
+        knobV.style.display = "block";
+        knobV.style.pointerEvents = "auto";
+        knobV.style.cursor = "grab";
+      }
 
-if (knobH) {
-  knobH.style.position = "absolute";
-  knobH.style.width = "112px";
-  knobH.style.height = "112px";
-  knobH.style.zIndex = "61";
-  knobH.style.display = "block";
-  knobH.style.pointerEvents = "auto";
-  knobH.style.cursor = "grab";
-}
+      if (knobH) {
+        knobH.style.position = "absolute";
+        knobH.style.width = "112px";
+        knobH.style.height = "112px";
+        knobH.style.zIndex = "61";
+        knobH.style.display = "block";
+        knobH.style.pointerEvents = "auto";
+        knobH.style.cursor = "grab";
+      }
 
       Array.prototype.forEach.call(knobImgs, function (img) {
         img.style.display = "block";
@@ -542,8 +538,8 @@ if (knobH) {
 
     primeKnobs();
 
-    function blockWheelZoom(el) {
-      el.addEventListener("wheel", function (e) {
+    function blockWheelZoom(targetEl) {
+      targetEl.addEventListener("wheel", function (e) {
         e.preventDefault();
       }, { passive: false });
     }
@@ -551,7 +547,7 @@ if (knobH) {
     blockWheelZoom(ui.mapEl);
     blockWheelZoom(ui.lensMapEl);
 
-    function createHitboxEditor(root, ui) {
+    function createHitboxEditor(rootEl, uiObj) {
       var state = {
         editing: false,
         editorEl: null,
@@ -565,12 +561,17 @@ if (knobH) {
         if (state.editorEl) return state.editorEl;
         state.editorEl = document.createElement("div");
         state.editorEl.id = "cc-hitbox-editor";
-        ui.mapEl.appendChild(state.editorEl);
+        uiObj.mapEl.appendChild(state.editorEl);
         return state.editorEl;
       }
 
-      function rectFromHitbox(b) { return { y1: b[0], x1: b[1], y2: b[2], x2: b[3] }; }
-      function hitboxFromRect(r) { return [Math.round(r.y1), Math.round(r.x1), Math.round(r.y2), Math.round(r.x2)]; }
+      function rectFromHitbox(b) {
+        return { y1: b[0], x1: b[1], y2: b[2], x2: b[3] };
+      }
+
+      function hitboxFromRect(r) {
+        return [Math.round(r.y1), Math.round(r.x1), Math.round(r.y2), Math.round(r.x2)];
+      }
 
       function latLngToPx(lat, lng) {
         var pt = state.mainMap.latLngToContainerPoint(window.L.latLng(lat, lng));
@@ -696,7 +697,7 @@ if (knobH) {
 
       function setEditing(on) {
         state.editing = on;
-        root.classList.toggle("cc-hitbox-edit", on);
+        rootEl.classList.toggle("cc-hitbox-edit", on);
 
         if (!on) {
           if (state.editorEl) state.editorEl.style.display = "none";
@@ -716,7 +717,7 @@ if (knobH) {
       function bindOnce() {
         if (state.bound) return;
         state.bound = true;
-        ui.mapEl.addEventListener("pointerdown", onPointerDown);
+        uiObj.mapEl.addEventListener("pointerdown", onPointerDown);
         window.addEventListener("pointermove", onPointerMove, { passive: false });
         window.addEventListener("pointerup", onPointerUp);
       }
@@ -724,8 +725,8 @@ if (knobH) {
       bindOnce();
 
       return {
-        attach: function (mainMap, px) {
-          state.mainMap = mainMap;
+        attach: function (mainMapInstance, px) {
+          state.mainMap = mainMapInstance;
           state.px = px;
           if (state.editing) setEditing(true);
         },
@@ -754,8 +755,10 @@ if (knobH) {
       .then(function () { return loadScriptOnce(opts.leafletJsUrl, "leaflet_js"); })
       .then(function () { return loadCssOnce(opts.appCssUrl, "app_css"); });
 
-    var mainMap = null, lensMap = null;
-    var mapDoc = null, locationsData = null;
+    var mainMap = null;
+    var lensMap = null;
+    var mapDoc = null;
+    var locationsData = null;
     var currentT = 0.5;
     var currentTx = 0.5;
 
@@ -767,54 +770,54 @@ if (knobH) {
       return { min: half, max: imageW - half };
     }
 
-   function applyT(t, px) {
-  if (!mainMap || !lensMap || !px) return;
-  t = clamp(t, 0, 1);
-  currentT = t;
+    function applyT(t, px) {
+      if (!mainMap || !lensMap || !px) return;
+      t = clamp(t, 0, 1);
+      currentT = t;
 
-  var lensZoom = BG_ZOOM + opts.lensZoomOffset;
-  var tx = currentTx;
+      var lensZoom = BG_ZOOM + opts.lensZoomOffset;
+      var tx = currentTx;
 
-  var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
-  var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
-  mainMap.panTo(
-    [
-      bgRy.min + t * (bgRy.max - bgRy.min),
-      bgRx.min + tx * (bgRx.max - bgRx.min)
-    ],
-    { animate: false }
-  );
+      var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
+      var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
+      mainMap.panTo(
+        [
+          bgRy.min + t * (bgRy.max - bgRy.min),
+          bgRx.min + tx * (bgRx.max - bgRx.min)
+        ],
+        { animate: false }
+      );
 
-  var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
-  var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
-  lensMap.setView(
-    [
-      lnRy.min + t * (lnRy.max - lnRy.min),
-      lnRx.min + tx * (lnRx.max - lnRx.min)
-    ],
-    lensZoom,
-    { animate: false }
-  );
+      var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
+      var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
+      lensMap.setView(
+        [
+          lnRy.min + t * (lnRy.max - lnRy.min),
+          lnRx.min + tx * (lnRx.max - lnRx.min)
+        ],
+        lensZoom,
+        { animate: false }
+      );
 
-  var V_MIN = 30;
-  var V_MAX = 70;
-  var H_MIN = 16;
-  var H_MAX = 84;
+      var V_MIN = 30;
+      var V_MAX = 70;
+      var H_MIN = 16;
+      var H_MAX = 84;
 
-  var knobVTop = V_MIN + t * (V_MAX - V_MIN);
-  var knobHLeft = H_MIN + tx * (H_MAX - H_MIN);
+      var knobVTop = V_MIN + t * (V_MAX - V_MIN);
+      var knobHLeft = H_MIN + tx * (H_MAX - H_MIN);
 
-  ui.knobV.style.top = knobVTop + "%";
-  ui.knobV.style.left = "calc(50% - 64px)";
+      ui.knobV.style.top = knobVTop + "%";
+      ui.knobV.style.left = "calc(50% - 64px)";
 
-  ui.knobH.style.left = knobHLeft + "%";
-  ui.knobH.style.top = "calc(50% - 185px)";
-}
+      ui.knobH.style.left = knobHLeft + "%";
+      ui.knobH.style.top = "calc(50% - 185px)";
+    }
 
-function applyTx(tx, px) {
-  currentTx = clamp(tx, 0, 1);
-  applyT(currentT, px);
-}
+    function applyTx(tx, px) {
+      currentTx = clamp(tx, 0, 1);
+      applyT(currentT, px);
+    }
 
     var knobbsBound = false;
 
@@ -844,7 +847,10 @@ function applyTx(tx, px) {
         }
 
         function momentumLoop() {
-          if (Math.abs(velocity) < MIN_VEL) { rafId = null; return; }
+          if (Math.abs(velocity) < MIN_VEL) {
+            rafId = null;
+            return;
+          }
           if (axis === "v") applyT(currentT + velocity, px);
           else applyTx(currentTx + velocity, px);
           velocity *= FRICTION;
@@ -852,7 +858,10 @@ function applyTx(tx, px) {
         }
 
         function onDown(e) {
-          if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+          if (rafId) {
+            cancelAnimationFrame(rafId);
+            rafId = null;
+          }
           dragging = true;
           velocity = 0;
           lastClient = getClient(e);
@@ -954,10 +963,9 @@ function applyTx(tx, px) {
 
           if (ui._hbEditor) ui._hbEditor.attach(mainMap, px);
 
-          var lensUrl =
-            (mapDoc.map.lens && mapDoc.map.lens.image_key)
-              ? mapDoc.map.lens.image_key
-              : mapDoc.map.background.image_key;
+          var lensUrl = (mapDoc.map.lens && mapDoc.map.lens.image_key)
+            ? mapDoc.map.lens.image_key
+            : mapDoc.map.background.image_key;
 
           lensMap = window.L.map(ui.lensMapEl, {
             crs: window.L.CRS.Simple,
@@ -974,42 +982,51 @@ function applyTx(tx, px) {
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
           locationsData.locations.forEach(function (loc) {
-  var bbox = HITBOXES[loc.id];
-  if (!bbox) {
-    console.warn("Missing hitbox for:", loc.id, loc.name);
-    return;
-  }
+            var bbox = HITBOXES[loc.id];
+            if (!bbox) {
+              console.warn("Missing hitbox for:", loc.id, loc.name);
+              return;
+            }
 
-  var rect = window.L.rectangle(
-    [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-    {
-      color: "#ff7518",
-      fillOpacity: 0.12,
-      weight: 2,
-      interactive: true
-    }
-  ).addTo(lensMap);
+            var rect = window.L.rectangle(
+              [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+              {
+                color: "#ff7518",
+                fillOpacity: 0.12,
+                weight: 2,
+                interactive: true
+              }
+            ).addTo(lensMap);
 
-  rect.bindTooltip(loc.name || loc.id, {
-    permanent: true,
-    direction: "center",
-    className: "cc-map-hitbox-label",
-    opacity: 0.95
-  });
+            rect.bindTooltip(loc.name || loc.id, {
+              permanent: true,
+              direction: "center",
+              className: "cc-map-hitbox-label",
+              opacity: 0.95
+            });
 
-  rect.on("click", function () {
-    renderDrawer(ui, loc);
-    ui.drawerEl.classList.add("open");
-  });
-});
-          ui.lensMapEl.onclick = function (e) {
+            rect.on("click", function (e) {
+              if (window.L && window.L.DomEvent && e && e.originalEvent) {
+                window.L.DomEvent.stop(e.originalEvent);
+              }
+              renderDrawer(ui, loc);
+              ui.drawerEl.classList.add("open");
+            });
+          });
+
+          ui.lensMapEl.addEventListener("click", function (e) {
+            var target = e.target;
+            if (target && (target.closest(".leaflet-interactive") || target.closest(".leaflet-tooltip"))) {
+              return;
+            }
             if (!lensMap) return;
+
             var rect = ui.lensMapEl.getBoundingClientRect();
             var x = (e.clientX - rect.left) / rect.width;
             var y = (e.clientY - rect.top) / rect.height;
             applyT(y, px);
             applyTx(x, px);
-          };
+          });
 
           bindKnobs(px);
           primeKnobs();
@@ -1058,7 +1075,7 @@ function applyTx(tx, px) {
           ui.drawerContentEl.innerHTML =
             '<div style="color:#f55;padding:1rem">Load failed: ' +
             (err && err.message) +
-            '</div>';
+            "</div>";
           ui.drawerEl.classList.add("open");
         });
     }
@@ -1082,6 +1099,7 @@ function applyTx(tx, px) {
     root.addEventListener("click", function (e) {
       if (!ui.drawerEl.classList.contains("open")) return;
       if (ui.drawerEl.contains(e.target)) return;
+      if (e.target && (e.target.closest(".leaflet-interactive") || e.target.closest(".leaflet-tooltip"))) return;
       ui.drawerEl.classList.remove("open");
     });
 
@@ -1090,5 +1108,4 @@ function applyTx(tx, px) {
 
   window.CC_CanyonMap = { mount: mount };
   window.CC_HITBOXES = HITBOXES;
-
 })();
