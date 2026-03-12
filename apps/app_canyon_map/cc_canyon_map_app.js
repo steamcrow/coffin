@@ -922,6 +922,31 @@
           };
 
           bindKnobs(px);
+          
+          // --- FORCE RENDER FIX ---
+          setTimeout(function() {
+            var frame = document.querySelector(".cc-frame-overlay");
+            var knobs = document.querySelectorAll(".cc-scroll-knob");
+            var lens = document.querySelector(".cc-lens");
+            
+            if (frame) {
+                frame.style.zIndex = "9999";
+                frame.style.display = "flex";
+            }
+            if (lens) lens.style.display = "block";
+            knobs.forEach(function(k) { 
+                k.style.display = "block"; 
+                k.style.zIndex = "10000";
+            });
+            console.log("UI elements forced to display.");
+          }, 1000);
+
+          hideLoader();
+        })
+        .catch(function(err) {
+          console.error("Initialization failed:", err);
+        });
+    }
 
           return nextFrame()
             .then(function () {
