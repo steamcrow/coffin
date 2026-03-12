@@ -69,11 +69,9 @@
   line-height: 1.1 !important;
   letter-spacing: 0.02em !important;
   text-align: center !important;
-
   padding: 2px 5px !important;
   border-radius: 6px !important;
   box-shadow: 0 2px 6px rgba(0,0,0,0.35) !important;
-
   max-width: 110px !important;
   white-space: normal !important;
   word-break: break-word !important;
@@ -129,23 +127,22 @@
 /* --- KNOBS --- */
 .cc-scroll-knob {
   position: absolute !important;
-  width: 128px !important;
-  height: 128px !important;
-
+  width: calc(112px * var(--device-scale, 1)) !important;
+  height: calc(112px * var(--device-scale, 1)) !important;
   display: block !important;
   z-index: 61 !important;
-
   pointer-events: auto !important;
   cursor: grab !important;
-
   background: none !important;
   border: 0 !important;
   padding: 0 !important;
   margin: 0 !important;
+  box-sizing: border-box !important;
+  touch-action: none !important;
 }
 
-.cc-scroll-knob:active,
-.cc-scroll-knob.is-active {
+.cc-scroll-knob.is-active,
+.cc-scroll-knob:active {
   cursor: grabbing !important;
 }
 
