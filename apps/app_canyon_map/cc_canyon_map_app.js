@@ -767,7 +767,7 @@ if (knobH) {
       return { min: half, max: imageW - half };
     }
 
-    function applyT(t, px) {
+   function applyT(t, px) {
   if (!mainMap || !lensMap || !px) return;
   t = clamp(t, 0, 1);
   currentT = t;
@@ -809,7 +809,7 @@ if (knobH) {
 
   ui.knobH.style.left = knobHLeft + "%";
   ui.knobH.style.top = "calc(50% - 195px)";
-  }
+}
 
 function applyTx(tx, px) {
   currentTx = clamp(tx, 0, 1);
