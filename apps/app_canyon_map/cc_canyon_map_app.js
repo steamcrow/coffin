@@ -805,10 +805,10 @@ if (knobH) {
   var knobHLeft = H_MIN + tx * (H_MAX - H_MIN);
 
   ui.knobV.style.top = knobVTop + "%";
-  ui.knobV.style.left = "calc(50% - 54px)";
+  ui.knobV.style.left = "calc(50% - 64px)";
 
   ui.knobH.style.left = knobHLeft + "%";
-  ui.knobH.style.top = "calc(50% - 195px)";
+  ui.knobH.style.top = "calc(50% - 185px)";
 }
 
 function applyTx(tx, px) {
@@ -978,21 +978,25 @@ function applyTx(tx, px) {
            if (!bbox) return;
 
            var rect = window.L.rectangle(
-          [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-          {
-            color: "#ff7518",
-            fillOpacity: 0.12,
-            weight: 2,
-            interactive: false
-          }
-        ).addTo(lensMap);
+  [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+  {
+    color: "#ff7518",
+    fillOpacity: 0.12,
+    weight: 2,
+    interactive: true
+  }
+).addTo(lensMap);
 
-  rect.bindTooltip(loc.name || loc.id, {
-    permanent: true,
-    direction: "center",
-    className: "cc-map-hitbox-label",
-    opacity: 0.95
-  });
+rect.bindTooltip(loc.name || loc.id, {
+  permanent: true,
+  direction: "center",
+  className: "cc-map-hitbox-label",
+  opacity: 0.95
+});
+
+rect.on("click", function () {
+  renderDrawer(ui, loc);
+  ui.drawerEl.classList.add("open");
 });
           ui.lensMapEl.onclick = function (e) {
             if (!lensMap) return;
