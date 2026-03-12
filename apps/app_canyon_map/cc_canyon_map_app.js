@@ -438,15 +438,15 @@
     root.appendChild(body);
     root.appendChild(drawer);
 
-    function updateResponsiveScale() {
-      var wrap = root.querySelector(".cc-cm-mapwrap");
-      if (!wrap) return;
+   function updateResponsiveScale() {
+  var wrap = root.querySelector(".cc-cm-mapwrap");
+  if (!wrap) return;
 
-      var designWidth = 1000;
-      var currentWidth = wrap.getBoundingClientRect().width || wrap.offsetWidth || designWidth;
-      var scale = Math.max(0.45, Math.min(1, currentWidth / designWidth));
-      root.style.setProperty("--device-scale", scale.toFixed(4));
-    }
+  var designWidth = 1280;
+  var currentWidth = wrap.getBoundingClientRect().width || wrap.offsetWidth || designWidth;
+  var scale = Math.max(0.62, Math.min(1, currentWidth / designWidth));
+  root.style.setProperty("--device-scale", scale.toFixed(4));
+}
 
     updateResponsiveScale();
 
