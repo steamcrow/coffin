@@ -95,32 +95,29 @@
   pointer-events: auto !important;
 }
 
-/* --- THE KNOBS --- */
 .cc-scroll-knob {
   position: absolute !important;
   display: block !important;
+  width: 64px !important;
+  height: 64px !important;
   background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png");
   background-size: contain !important;
   background-repeat: no-repeat !important;
   background-position: center !important;
-  cursor: grab;
   z-index: 101 !important;
   pointer-events: auto !important;
+  cursor: grab !important;
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.6));
 }
 
 #cc-scroll-knob-v {
-  width: var(--knob-w) !important;
-  height: var(--knob-h) !important;
-  left: calc(50% + var(--knob-offset-x)) !important;
-  top: 0 !important;
+  left: 50% !important;
+  top: 50% !important;
   transform: translate(-50%, -50%) !important;
 }
 
 #cc-scroll-knob-h {
-  width: var(--knob-w) !important;
-  height: var(--knob-h) !important;
+  left: 50% !important;
   top: 50% !important;
-  left: 0 !important;
   transform: translate(-50%, -50%) rotate(90deg) !important;
 }
