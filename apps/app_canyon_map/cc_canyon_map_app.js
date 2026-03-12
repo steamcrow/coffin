@@ -951,6 +951,14 @@
         })
         .then(function () {
           hideLoader();
+        // --- STACKING FORTRESS FIX ---
+                  setTimeout(function() {
+                      var frame = document.querySelector(".cc-frame-overlay");
+                      if (frame) {
+                          frame.style.zIndex = "9999";
+                          frame.style.pointerEvents = "none";
+                      }
+                  }, 1000);   
         })
         .catch(function (err) {
           if (err && err.name === "AbortError") return;
