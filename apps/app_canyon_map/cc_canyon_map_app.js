@@ -801,141 +801,158 @@
     }
 
   function init() {
-      root.classList.remove("cc-ready");
-      root.classList.add("cc-loading");
+  root.classList.remove("cc-ready");
+  root.classList.add("cc-loading");
 
-      showLoader();
-      var loadStart = Date.now();
-      var signal = newSession();
+  showLoader();
+  var loadStart = Date.now();
+  var signal = newSession();
 
-      return depsReady
-        .then(function () {
-          return Promise.all([
-            fetchJson(opts.mapUrl, signal),
-            fetchJson(opts.stateUrl, signal),
-            fetchJson(opts.locationsUrl, signal)
-          ]);
-        })
-        .then(function (results) {
-          mapDoc = results[0];
-          locationsData = results[2];
+  return depsReady
+    .then(function () {
+      return Promise.all([
+        fetchJson(opts.mapUrl, signal),
+        fetchJson(opts.stateUrl, signal),
+        fetchJson(opts.locationsUrl, signal)
+      ]);
+    })
+    .then(function (results) {
+      mapDoc = results[0];
+      locationsData = results[2];
 
-          try { if (mainMap) mainMap.remove(); } catch (e) {}
-          try { if (lensMap) lensMap.remove(); } catch (e) {}
+      try { if (mainMap) mainMap.remove(); } catch (e) {}
+      try { if (lensMap) lensMap.remove(); } catch (e) {}
 
-          updateResponsiveScale();
+      updateResponsiveScale();
 
-          var px = mapDoc.map.background.image_pixel_size;
-          var bounds = [[0, 0], [px.h, px.w]];
+      var px = mapDoc.map.background.image_pixel_size;
+      var bounds = [[0, 0], [px.h, px.w]];
 
-          mainMap = window.L.map(ui.mapEl, {
-            crs: window.L.CRS.Simple,
-            minZoom: -3, maxZoom: 2, dragging: false, zoomControl: false,
-            attributionControl: false, scrollWheelZoom: false, doubleClickZoom: false,
-            touchZoom: false, boxZoom: false, keyboard: false
-          });
-          window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
-          mainMap.setView([px.h / 2, px.w / 2], BG_ZOOM, { animate: false });
+      mainMap = window.L.map(ui.mapEl, {
+        crs: window.L.CRS.Simple,
+        minZoom: -3,
+        maxZoom: 2,
+        dragging: false,
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        touchZoom: false,
+        boxZoom: false,
+        keyboard: false
+      });
 
-          if (ui._hbEditor) ui._hbEditor.attach(mainMap, px);
+      window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(mainMap);
+      mainMap.setView([px.h / 2, px.w / 2], BG_ZOOM, { animate: false });
 
-          var lensUrl = (mapDoc.map.lens && mapDoc.map.lens.image_key) ? mapDoc.map.lens.image_key : mapDoc.map.background.image_key;
-          lensMap = window.L.map(ui.lensMapEl, {
-            crs: window.L.CRS.Simple,
-            dragging: false, zoomControl: false, attributionControl: false,
-            scrollWheelZoom: false, doubleClickZoom: false, touchZoom: false,
-            boxZoom: false, keyboard: false
-          });
-          window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
+      if (ui._hbEditor) ui._hbEditor.attach(mainMap, px);
 
-          locationsData.locations.forEach(function (loc) {
-            var bbox = HITBOXES[loc.id];
-            if (!bbox) return;
-            window.L.rectangle([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { color: "rgba(255,117,24,0.8)", fillOpacity: 0.25, weight: 2, interactive: false }).addTo(lensMap);
-          });
+      var lensUrl =
+        (mapDoc.map.lens && mapDoc.map.lens.image_key)
+          ? mapDoc.map.lens.image_key
+          : mapDoc.map.background.image_key;
 
-          ui.lensMapEl.onclick = function (e) {
-            if (!lensMap) return;
-            var rect = ui.lensMapEl.getBoundingClientRect();
-            var x = (e.clientX - rect.left) / rect.width;
-            var y = (e.clientY - rect.top) / rect.height;
-            applyT(y, px); applyTx(x, px);
-          };
+      lensMap = window.L.map(ui.lensMapEl, {
+        crs: window.L.CRS.Simple,
+        dragging: false,
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: false,
+        doubleClickZoom: false,
+        touchZoom: false,
+        boxZoom: false,
+        keyboard: false
+      });
 
-          bindKnobs(px);
+      window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
-          // Force-Render Fix
-          setTimeout(function() {
-            var frame = document.querySelector(".cc-frame-overlay");
-            var knobs = document.querySelectorAll(".cc-scroll-knob");
-            var lens = document.querySelector(".cc-lens");
-            if (frame) { frame.style.zIndex = "9999"; frame.style.display = "flex"; }
-            if (lens) lens.style.display = "block";
-            knobs.forEach(function(k) { k.style.display = "block"; k.style.zIndex = "10000"; });
-            console.log("UI elements forced to display.");
-          }, 1000);
+      locationsData.locations.forEach(function (loc) {
+        var bbox = HITBOXES[loc.id];
+        if (!bbox) return;
 
-          return nextFrame().then(function () {
-             mainMap.invalidateSize({ animate: false });
-             lensMap.invalidateSize({ animate: false });
-             var elapsed = Date.now() - loadStart;
-             return delay(Math.max(0, MIN_LOADER_MS - elapsed));
-          });
-        })
-        .then(function() {
-            hideLoader();
-        })
-        .catch(function(err) {
-          console.error("Initialization failed:", err);
+        window.L.rectangle(
+          [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+          {
+            color: "rgba(255,117,24,0.8)",
+            fillOpacity: 0.25,
+            weight: 2,
+            interactive: false
+          }
+        ).addTo(lensMap);
+      });
+
+      ui.lensMapEl.onclick = function (e) {
+        if (!lensMap) return;
+        var rect = ui.lensMapEl.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width;
+        var y = (e.clientY - rect.top) / rect.height;
+        applyT(y, px);
+        applyTx(x, px);
+      };
+
+      bindKnobs(px);
+
+      setTimeout(function () {
+        var frame = document.querySelector(".cc-frame-overlay");
+        var knobs = document.querySelectorAll(".cc-scroll-knob");
+        var lens = document.querySelector(".cc-lens");
+
+        if (frame) {
+          frame.style.zIndex = "9999";
+          frame.style.display = "flex";
+          frame.style.pointerEvents = "none";
+        }
+
+        if (lens) lens.style.display = "block";
+
+        knobs.forEach(function (k) {
+          k.style.display = "block";
+          k.style.zIndex = "10000";
         });
-    }
 
-          return nextFrame()
-            .then(function () {
-              try { mainMap.invalidateSize({ animate: false }); } catch (e) {}
-              try { lensMap.invalidateSize({ animate: false }); } catch (e) {}
-              return nextFrame();
-            })
-            .then(function () {
-              try { mainMap.invalidateSize({ animate: false }); } catch (e) {}
-              try { lensMap.invalidateSize({ animate: false }); } catch (e) {}
+        console.log("UI elements forced to display.");
+      }, 1000);
 
-              currentT = 0.5;
-              currentTx = 0.5;
-              applyT(0.5, px);
-
-              ui.lensMapEl.style.pointerEvents = "auto";
-              var lc = ui.lensMapEl.querySelector(".leaflet-container");
-              if (lc) lc.style.pointerEvents = "auto";
-              var inner = ui.lensMapEl.closest(".cc-lens-inner");
-              if (inner) inner.style.pointerEvents = "auto";
-            })
-            .then(function () {
-              var elapsed = Date.now() - loadStart;
-              var remaining = Math.max(0, MIN_LOADER_MS - elapsed);
-              return delay(remaining);
-            });
+      return nextFrame()
+        .then(function () {
+          try { mainMap.invalidateSize({ animate: false }); } catch (e) {}
+          try { lensMap.invalidateSize({ animate: false }); } catch (e) {}
+          return nextFrame();
         })
         .then(function () {
-          hideLoader();
-        // --- STACKING FORTRESS FIX ---
-                  setTimeout(function() {
-                      var frame = document.querySelector(".cc-frame-overlay");
-                      if (frame) {
-                          frame.style.zIndex = "9999";
-                          frame.style.pointerEvents = "none";
-                      }
-                  }, 1000);   
-        })
-        .catch(function (err) {
-          if (err && err.name === "AbortError") return;
-          console.error("Canyon Map init failed:", err);
-          hideLoader();
-          ui.drawerContentEl.innerHTML =
-            '<div style="color:#f55;padding:1rem">Load failed: ' + (err && err.message) + '</div>';
-          ui.drawerEl.classList.add("open");
+          try { mainMap.invalidateSize({ animate: false }); } catch (e) {}
+          try { lensMap.invalidateSize({ animate: false }); } catch (e) {}
+
+          currentT = 0.5;
+          currentTx = 0.5;
+          applyT(0.5, px);
+
+          ui.lensMapEl.style.pointerEvents = "auto";
+
+          var lc = ui.lensMapEl.querySelector(".leaflet-container");
+          if (lc) lc.style.pointerEvents = "auto";
+
+          var inner = ui.lensMapEl.closest(".cc-lens-inner");
+          if (inner) inner.style.pointerEvents = "auto";
+
+          var elapsed = Date.now() - loadStart;
+          return delay(Math.max(0, MIN_LOADER_MS - elapsed));
         });
-    }
+    })
+    .then(function () {
+      hideLoader();
+    })
+    .catch(function (err) {
+      if (err && err.name === "AbortError") return;
+      console.error("Canyon Map init failed:", err);
+      hideLoader();
+      ui.drawerContentEl.innerHTML =
+        '<div style="color:#f55;padding:1rem">Load failed: ' +
+        (err && err.message) +
+        '</div>';
+      ui.drawerEl.classList.add("open");
+    });
+}
 
     root.querySelector("#cc-cm-reload").onclick = function () { init(); };
     root.querySelector("#close-dr").onclick = function () { ui.drawerEl.classList.remove("open"); };
