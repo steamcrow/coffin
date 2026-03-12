@@ -30,11 +30,15 @@
 /* --- THE MAGNIFIED LENS --- */
 .cc-lens {
   position: absolute !important;
-  top: 45% !important;
-  left: 45% !important;
-  width: calc(912px * var(--device-scale, 1)) !important;
-  height: calc(500px * var(--device-scale, 1)) !important;
+
+  top: 46% !important;     /* was 35% */
+  left: 53% !important;    /* was 50% */
+
+  width: calc(1020px * var(--device-scale, 1)) !important;
+  height: calc(620px * var(--device-scale, 1)) !important;
+
   transform: translate(-50%, -50%) !important;
+
   z-index: 10 !important;
   pointer-events: none !important;
   overflow: hidden !important;
