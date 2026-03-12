@@ -1,5 +1,5 @@
 /* ================================================================
-   COFFIN CANYON — FULL RESTORATION (v2.7)
+   COFFIN CANYON — FULL RESTORATION (v2.8)
    ================================================================ */
 
 /* --- CORE CONTAINERS --- */
@@ -13,11 +13,12 @@
   border-radius: 12px !important;
   overflow: hidden !important;
   display: block !important;
-  isolation: isolate; /* Lock context */
+  isolation: isolate !important;
 }
 
 /* --- THE MAP LAYERS --- */
-#cc-cm-map, #cc-lens-map {
+#cc-cm-map,
+#cc-lens-map {
   position: absolute !important;
   top: 0 !important;
   left: 0 !important;
@@ -26,34 +27,35 @@
   z-index: 1 !important;
 }
 
-/* --- THE MAGNIFIED LENS (RESTORING VISUALS) --- */
+/* --- THE MAGNIFIED LENS --- */
 .cc-lens {
   position: absolute !important;
   top: 50% !important;
   left: 50% !important;
-  width: var(--lens-w) !important;
-  height: var(--lens-h) !important;
+  width: var(--lens-w, 540px) !important;
+  height: var(--lens-h, 540px) !important;
   transform: translate(-50%, -50%) !important;
   z-index: 10 !important;
-  pointer-events: none; /* Let clicks pass to map */
-  overflow: hidden;
+  pointer-events: none !important;
+  overflow: hidden !important;
 }
 
 .cc-lens-inner {
-  position: absolute;
-  inset: 0;
-  pointer-events: auto; /* Re-enable interaction inside */
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: auto !important;
   filter: url(#ccLensWarp);
 }
 
-.cc-lens-chromatic, .cc-lens-glare {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 11;
+.cc-lens-chromatic,
+.cc-lens-glare {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 11 !important;
 }
 
-/* --- THE METAL FRAME (RESTORING VISUALS) --- */
+/* --- THE METAL FRAME --- */
 .cc-frame-overlay {
   position: absolute !important;
   top: 0 !important;
@@ -61,7 +63,7 @@
   width: 100% !important;
   height: 100% !important;
   z-index: 50 !important;
-  pointer-events: none;
+  pointer-events: none !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -70,44 +72,79 @@
 .cc-frame-image {
   max-width: 100% !important;
   height: auto !important;
-  pointer-events: none;
+  pointer-events: none !important;
   z-index: 51 !important;
+  display: block !important;
 }
 
-/* --- THE KNOB TRACKS --- */
-.cc-scroll-vertical {
+/* --- KNOB TRACKS --- */
+.cc-scroll-vertical,
+.cc-scroll-horizontal {
   position: absolute !important;
+  z-index: 60 !important;
+  pointer-events: auto !important;
+  display: block !important;
+}
+
+.cc-scroll-vertical {
   top: 0 !important;
   right: 0 !important;
-  width: 80px !important;
+  width: 88px !important;
   height: 100% !important;
-  z-index: 100 !important;
-  pointer-events: auto !important;
 }
 
 .cc-scroll-horizontal {
-  position: absolute !important;
   left: 0 !important;
   bottom: 0 !important;
   width: 100% !important;
-  height: 80px !important;
-  z-index: 100 !important;
-  pointer-events: auto !important;
+  height: 88px !important;
 }
 
+/* --- KNOBS --- */
 .cc-scroll-knob {
-  width: var(--knob-w, 64px) !important;
-  height: var(--knob-h, 64px) !important;
+  position: absolute !important;
+  width: 72px !important;
+  height: 72px !important;
+  display: block !important;
+  z-index: 61 !important;
+  pointer-events: auto !important;
+  cursor: grab !important;
+  background: none !important;
+  border: 0 !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  box-sizing: border-box !important;
 }
 
+.cc-scroll-knob:active,
+.cc-scroll-knob.is-active {
+  cursor: grabbing !important;
+}
+
+/* Vertical knob */
 #cc-scroll-knob-v {
-  left: calc(50% + var(--knob-offset-x, 0px)) !important;
+  left: 50% !important;
   top: 50% !important;
   transform: translate(-50%, -50%) !important;
 }
 
+/* Horizontal knob */
 #cc-scroll-knob-h {
   left: 50% !important;
-  top: calc(50% + var(--knob-offset-y, 0px)) !important;
+  top: 50% !important;
   transform: translate(-50%, -50%) rotate(90deg) !important;
+}
+
+/* --- KNOB IMAGES --- */
+.cc-scroll-knob-img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: contain !important;
+  pointer-events: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none !important;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) !important;
 }
