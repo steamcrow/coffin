@@ -510,8 +510,8 @@
 
      if (knobV) {
   knobV.style.position = "absolute";
-  knobV.style.width = "150px";
-  knobV.style.height = "150px";
+  knobV.style.width = "112px";
+  knobV.style.height = "112px";
   knobV.style.zIndex = "61";
   knobV.style.display = "block";
   knobV.style.pointerEvents = "auto";
@@ -520,8 +520,8 @@
 
 if (knobH) {
   knobH.style.position = "absolute";
-  knobH.style.width = "150px";
-  knobH.style.height = "150px";
+  knobH.style.width = "112px";
+  knobH.style.height = "112px";
   knobH.style.zIndex = "61";
   knobH.style.display = "block";
   knobH.style.pointerEvents = "auto";
@@ -796,20 +796,20 @@ if (knobH) {
     { animate: false }
   );
 
-  var V_MIN = 19;   // percent
-  var V_MAX = 81;   // percent
-  var H_MIN = 18;   // percent
-  var H_MAX = 82;   // percent
+  var V_MIN = 30;
+  var V_MAX = 70;
+  var H_MIN = 16;
+  var H_MAX = 84;
 
   var knobVTop = V_MIN + t * (V_MAX - V_MIN);
   var knobHLeft = H_MIN + tx * (H_MAX - H_MIN);
 
   ui.knobV.style.top = knobVTop + "%";
-  ui.knobV.style.left = "calc(50% - 40px)";
+  ui.knobV.style.left = "calc(50% - 54px)";
 
   ui.knobH.style.left = knobHLeft + "%";
-  ui.knobH.style.top = "calc(50% - 175px)";
-}
+  ui.knobH.style.top = "calc(50% - 195px)";
+  }
 
 function applyTx(tx, px) {
   currentTx = clamp(tx, 0, 1);
