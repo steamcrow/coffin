@@ -716,7 +716,10 @@
 
         if (!state.mainMap || !state.px) return;
 
-        state.mainMap.setView([state.px.h / 2, state.px.w / 2], 0, { animate: false });
+        state.mainMap.fitBounds([[0, 0], [state.px.h, state.px.w]], {
+        animate: false,
+        padding: [20, 20]
+         });
 
         ensureEditorLayer().style.display = "block";
         drawBoxes();
@@ -1029,7 +1032,6 @@
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
          locationsData.locations.forEach(function (loc) {
-
   var bbox = HITBOXES[loc.id];
   if (!bbox) {
     console.warn("Missing hitbox for:", loc.id, loc.name);
@@ -1063,13 +1065,11 @@
 
   rect.on("touchstart", function (e) {
     if (window.L && window.L.DomEvent) {
-      if (e && e.originalEvent) window.L.DomEvent.stop(e.originalEvent);
-      window.L.DomEvent.preventDefault(e);
+      window.L.DomEvent.stop(e);
     }
     renderDrawer(ui, loc);
     ui.drawerEl.classList.add("open");
   });
-
 });
 
           bindKnobs(px);
