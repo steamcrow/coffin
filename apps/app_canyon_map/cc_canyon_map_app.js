@@ -113,30 +113,6 @@
     };
   }
 
-  function meterBar(value, max, color) {
-    var pct = Math.round(clamp(value || 0, 0, max) / max * 100);
-    return '<div style="width:100%;height:22px;background:rgba(255,255,255,.08);border-radius:11px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.12)">' +
-      '<div style="height:100%;width:' + pct + '%;background:' + color + ';transition:width .25s"></div>' +
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem">' + (value || 0) + ' / ' + max + '</div></div>';
-  }
-
-  function renderDrawer(ui, loc) {
-    ui.drawerTitleEl.textContent = loc.name || loc.id || "Location";
-    ui.drawerContentEl.innerHTML =
-      '<div class="cc-block"><div class="cc-h">Description</div><p>' + (loc.description || "No description.") + '</p></div>' +
-      '<div class="cc-block"><div class="cc-h">Danger</div>' + meterBar(loc.danger || 0, 6, "#ff4444") + '</div>' +
-      '<div class="cc-block"><div class="cc-h">Population</div>' + meterBar(loc.population || 0, 6, "#4caf50") + '</div>' +
-      (loc.atmosphere ? '<div class="cc-block"><div class="cc-h">Atmosphere</div><p style="font-style:italic;color:#aaa">' + loc.atmosphere + '</p></div>' : '') +
-      '<div style="display:flex;flex-wrap:wrap;gap:.5rem">' +
-      (loc.features || []).map(function (f) {
-        return '<span style="padding:4px 10px;background:rgba(255,117,24,.2);border:1px solid rgba(255,117,24,.4);border-radius:4px;font-size:.85rem">' + f + '</span>';
-      }).join("") +
-      '</div>';
-
-    ui.drawerEl.classList.add("cc-slide-panel-open");
-    ui.drawerEl.scrollTop = 0;
-  }
-
   function fetchText(url) {
     var u = url + (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
     return fetch(u).then(function (r) {
@@ -166,6 +142,7 @@
 
   function loadScriptOnce(url, key) {
     if (_loaded.js[key]) return Promise.resolve();
+
     return fetchText(url).then(function (code) {
       var blob = new Blob([code], { type: "text/javascript" });
       var blobUrl = URL.createObjectURL(blob);
@@ -191,6 +168,30 @@
     return loadCssOnce(opts.leafletCssUrl, "leaflet_css")
       .then(function () { return loadScriptOnce(opts.leafletJsUrl, "leaflet_js"); })
       .then(function () { return loadCssOnce(opts.appCssUrl, "app_css"); });
+  }
+
+  function meterBar(value, max, color) {
+    var pct = Math.round(clamp(value || 0, 0, max) / max * 100);
+    return '<div style="width:100%;height:22px;background:rgba(255,255,255,.08);border-radius:11px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.12)">' +
+      '<div style="height:100%;width:' + pct + '%;background:' + color + ';transition:width .25s"></div>' +
+      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem">' + (value || 0) + ' / ' + max + '</div></div>';
+  }
+
+  function renderDrawer(ui, loc) {
+    ui.drawerTitleEl.textContent = loc.name || loc.id || "Location";
+    ui.drawerContentEl.innerHTML =
+      '<div class="cc-block"><div class="cc-h">Description</div><p>' + (loc.description || "No description.") + '</p></div>' +
+      '<div class="cc-block"><div class="cc-h">Danger</div>' + meterBar(loc.danger || 0, 6, "#ff4444") + '</div>' +
+      '<div class="cc-block"><div class="cc-h">Population</div>' + meterBar(loc.population || 0, 6, "#4caf50") + '</div>' +
+      (loc.atmosphere ? '<div class="cc-block"><div class="cc-h">Atmosphere</div><p style="font-style:italic;color:#aaa">' + loc.atmosphere + '</p></div>' : '') +
+      '<div style="display:flex;flex-wrap:wrap;gap:.5rem">' +
+      (loc.features || []).map(function (f) {
+        return '<span style="padding:4px 10px;background:rgba(255,117,24,.2);border:1px solid rgba(255,117,24,.4);border-radius:4px;font-size:.85rem">' + f + '</span>';
+      }).join("") +
+      '</div>';
+
+    ui.drawerEl.classList.add("cc-slide-panel-open");
+    ui.drawerEl.scrollTop = 0;
   }
 
   function safeRange(containerEl, zoom, imageH) {
@@ -243,7 +244,6 @@
 
     function draw() {
       if (!state.editing || !state.map || !state.px) return;
-
       var layer = ensureLayer();
       layer.innerHTML = "";
 
@@ -296,7 +296,7 @@
       });
     }
 
-    function onPointerDown(e) {
+    function onMouseDown(e) {
       if (!state.editing) return;
 
       var box = e.target.closest(".cc-hb-box");
@@ -315,33 +315,35 @@
         height: parseFloat(box.style.height)
       };
 
-      try { box.setPointerCapture(e.pointerId); } catch (err) {}
       e.preventDefault();
       e.stopPropagation();
-    }
 
-    function onPointerMove(e) {
-      if (!state.editing || !state.active) return;
+      function onMove(ev) {
+        if (!state.active) return;
 
-      var dx = e.clientX - state.active.startX;
-      var dy = e.clientY - state.active.startY;
+        var dx = ev.clientX - state.active.startX;
+        var dy = ev.clientY - state.active.startY;
 
-      if (state.active.mode === "move") {
-        state.active.box.style.left = Math.round(state.active.left + dx) + "px";
-        state.active.box.style.top = Math.round(state.active.top + dy) + "px";
-      } else {
-        state.active.box.style.width = Math.max(8, Math.round(state.active.width + dx)) + "px";
-        state.active.box.style.height = Math.max(8, Math.round(state.active.height + dy)) + "px";
+        if (state.active.mode === "move") {
+          state.active.box.style.left = Math.round(state.active.left + dx) + "px";
+          state.active.box.style.top = Math.round(state.active.top + dy) + "px";
+        } else {
+          state.active.box.style.width = Math.max(8, Math.round(state.active.width + dx)) + "px";
+          state.active.box.style.height = Math.max(8, Math.round(state.active.height + dy)) + "px";
+        }
+
+        updateFromBox(state.active.box);
+        ev.preventDefault();
       }
 
-      updateFromBox(state.active.box);
-      e.preventDefault();
-    }
+      function onUp() {
+        state.active = null;
+        window.removeEventListener("mousemove", onMove);
+        window.removeEventListener("mouseup", onUp);
+      }
 
-    function onPointerUp(e) {
-      if (!state.editing || !state.active) return;
-      try { state.active.box.releasePointerCapture(e.pointerId); } catch (err) {}
-      state.active = null;
+      window.addEventListener("mousemove", onMove, { passive: false });
+      window.addEventListener("mouseup", onUp);
     }
 
     function exportJSON() {
@@ -372,15 +374,12 @@
       state.map.on("move zoom resize", draw);
     }
 
-    window.addEventListener("pointermove", onPointerMove, { passive: false });
-    window.addEventListener("pointerup", onPointerUp);
-
     return {
       attach: function (map, px, bounds) {
         state.map = map;
         state.px = px;
         state.bounds = bounds;
-        ensureLayer().addEventListener("pointerdown", onPointerDown);
+        ensureLayer().addEventListener("mousedown", onMouseDown);
       },
       toggle: function () { setEditing(!state.editing); },
       exportJSON: exportJSON,
@@ -534,7 +533,6 @@
 
       var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
       var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
-
       var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
       var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
 
@@ -553,8 +551,11 @@
     }
 
     function bindKnob(knobEl, axis, px) {
-      function getClient(e) {
-        return axis === "v" ? e.clientY : e.clientX;
+      function getClient(ev) {
+        if (ev.touches && ev.touches.length) {
+          return axis === "v" ? ev.touches[0].clientY : ev.touches[0].clientX;
+        }
+        return axis === "v" ? ev.clientY : ev.clientX;
       }
 
       function getTrackRect() {
@@ -574,8 +575,9 @@
         return clamp((pct - min) / (max - min), 0, 1);
       }
 
-      function onPointerDown(e) {
+      function onStart(e) {
         if (editor && editor.isEditing()) return;
+
         e.preventDefault();
         e.stopPropagation();
 
@@ -585,9 +587,8 @@
           : (getClient(e) - knobRect.left);
 
         knobEl.classList.add("is-active");
-        try { knobEl.setPointerCapture(e.pointerId); } catch (err) {}
 
-        function onPointerMove(ev) {
+        function onMove(ev) {
           var trackRect = getTrackRect();
           var trackPos = axis === "v"
             ? (getClient(ev) - trackRect.top - grabOffset)
@@ -601,20 +602,22 @@
           ev.preventDefault();
         }
 
-        function onPointerUp(ev) {
+        function onEnd() {
           knobEl.classList.remove("is-active");
-          knobEl.removeEventListener("pointermove", onPointerMove);
-          knobEl.removeEventListener("pointerup", onPointerUp);
-          knobEl.removeEventListener("pointercancel", onPointerUp);
-          try { knobEl.releasePointerCapture(ev.pointerId); } catch (err) {}
+          window.removeEventListener("mousemove", onMove);
+          window.removeEventListener("mouseup", onEnd);
+          window.removeEventListener("touchmove", onMove);
+          window.removeEventListener("touchend", onEnd);
         }
 
-        knobEl.addEventListener("pointermove", onPointerMove);
-        knobEl.addEventListener("pointerup", onPointerUp);
-        knobEl.addEventListener("pointercancel", onPointerUp);
+        window.addEventListener("mousemove", onMove, { passive: false });
+        window.addEventListener("mouseup", onEnd);
+        window.addEventListener("touchmove", onMove, { passive: false });
+        window.addEventListener("touchend", onEnd);
       }
 
-      knobEl.addEventListener("pointerdown", onPointerDown);
+      knobEl.addEventListener("mousedown", onStart);
+      knobEl.addEventListener("touchstart", onStart, { passive: false });
     }
 
     function bindKnobs(px) {
@@ -657,21 +660,41 @@
           opacity: 0.95
         });
 
-        rect.on("mousedown", function (e) {
-          if (window.L && window.L.DomEvent) window.L.DomEvent.stop(e);
-        });
-
-        rect.on("click", function (e) {
-          if (window.L && window.L.DomEvent) window.L.DomEvent.stop(e);
+        function openLoc(ev) {
+          if (window.L && window.L.DomEvent) window.L.DomEvent.stop(ev);
           renderDrawer(ui, loc);
-        });
+        }
 
-        rect.on("touchstart", function (e) {
-          if (window.L && window.L.DomEvent) window.L.DomEvent.stop(e);
-          renderDrawer(ui, loc);
-        });
+        rect.on("mousedown", openLoc);
+        rect.on("click", openLoc);
+        rect.on("touchstart", openLoc);
 
         hitboxLayers.push(rect);
+
+        setTimeout(function () {
+          var path = rect._path;
+          if (!path) return;
+
+          path.style.pointerEvents = "auto";
+
+          path.addEventListener("click", function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            renderDrawer(ui, loc);
+          });
+
+          path.addEventListener("mousedown", function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            renderDrawer(ui, loc);
+          });
+
+          path.addEventListener("touchstart", function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            renderDrawer(ui, loc);
+          }, { passive: false });
+        }, 0);
       });
     }
 
