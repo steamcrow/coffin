@@ -127,7 +127,10 @@
     style.textContent = [
       ".cc-loader{position:absolute;inset:0;display:flex;",
       "align-items:center;justify-content:center;background:#000;z-index:999;}",
-      ".cc-loader img{width:280px;height:auto;}"
+      ".cc-loader img{width:280px;height:auto;}",
+      // Ensure Leaflet containers always have a size regardless of external CSS.
+      // background-color:#1a1a1a makes a grey box visible if the image fails to load.
+      "#cc-bg-map,#cc-lens-map{width:100%;height:100%;background-color:#1a1a1a;}"
     ].join("");
     document.head.appendChild(style);
 
@@ -202,13 +205,21 @@
         return;
       }
 
-      var bounds = [[0, 0], [1, 1]];
+      var w = mapData.map.background.image_pixel_size.w;
+      var h = mapData.map.background.image_pixel_size.h;
+
+      // In CRS.Simple, Leaflet maps [lat, lng] → [y, x].
+      // So bounds go from the top-left [0,0] to the bottom-right [h, w].
+      var bounds = [[0, 0], [h, w]];
+
+      // Center is the middle of the image in pixel space.
+      var center = [h / 2, w / 2];
 
       var bgOverlay   = L.imageOverlay(bgUrl,   bounds).addTo(mapBG);
       var lensOverlay = L.imageOverlay(lensUrl, bounds).addTo(mapLens);
 
-      mapBG.setView([0.5, 0.5],  BG_ZOOM);
-      mapLens.setView([0.5, 0.5], BG_ZOOM + LENS_ZOOM_OFFSET);
+      mapBG.setView(center,  BG_ZOOM);
+      mapLens.setView(center, BG_ZOOM + LENS_ZOOM_OFFSET);
 
       mapBG.setZoom(BG_ZOOM);
       mapLens.setZoom(BG_ZOOM + LENS_ZOOM_OFFSET);
@@ -223,8 +234,14 @@
   // ── View sync ───────────────────────────────────────────────────────────
   function applyView() {
     var rect  = root.getBoundingClientRect();
+
+    // Convert knob percentage position to a pixel point in the container,
+    // then ask Leaflet to translate that screen point into map coordinates.
     var x     = rect.width  * (state.h / 100);
     var y     = rect.height * (state.v / 100);
+
+    // containerPointToLatLng works correctly with CRS.Simple —
+    // it returns [pixelY, pixelX] in image space.
     var point = mapBG.containerPointToLatLng([x, y]);
 
     mapBG.panTo(point,   { animate: false });
