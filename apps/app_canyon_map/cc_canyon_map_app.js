@@ -267,7 +267,6 @@
 
   ui.drawerEl.scrollTop = 0;
 }
-
   // ═══════════════════════════════════════════════════════════════
   // SAFE RANGE MATH
   // ═══════════════════════════════════════════════════════════════
@@ -398,14 +397,13 @@
       ])
     ]);
 
-    var drawer = el("div", { class: "cc-cm-drawer" }, [
-      el("div", { class: "cc-cm-drawer-head" }, [
-        el("div", { class: "cc-cm-drawer-title" }, ["Location"]),
-        el("button", { class: "cc-btn cc-btn-x", id: "close-dr" }, ["×"])
-      ]),
-      el("div", { class: "cc-cm-drawer-content" })
-    ]);
-
+    var drawer = el("div", { class: "cc-slide-panel", id: "cc-location-panel" }, [
+  el("div", { class: "cc-slide-panel-header" }, [
+    el("h2", { class: "cc-cm-drawer-title" }, ["Location"]),
+    el("button", { class: "cc-panel-close-btn", id: "close-dr", type: "button" }, ["×"])
+  ]),
+  el("div", { class: "cc-cm-drawer-content" })
+]);
     var body = el("div", { class: "cc-cm-body cc-cm-body--lens" }, [
       el("div", { class: "cc-cm-mapwrap" }, [
         mapEl,
@@ -689,19 +687,15 @@
       }
 
       function exportHitboxes() {
-        var keys = Object.keys(HITBOXES).sort();
-        var lines = keys.map(function (k) {
-          return '  "' + k + '": [' + HITBOXES[k].join(",") + '],';
-        });
-        var text = "var HITBOXES = {\n" + lines.join("\n") + "\n};";
+  var keys = Object.keys(HITBOXES).sort();
+  var lines = keys.map(function (k) {
+    return '  "' + k + '": [' + HITBOXES[k].join(", ") + ']';
+  });
 
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText(text).catch(function () {
-            window.prompt("Copy HITBOXES:", text);
-          });
-        } else {
-          window.prompt("Copy HITBOXES:", text);
-        }
+  var text = "var HITBOXES = {\n" + lines.join(",\n") + "\n};";
+
+  window.prompt("Copy HITBOXES:", text);
+}
       }
 
       function setEditing(on) {
@@ -1060,7 +1054,7 @@
       window.L.DomEvent.stop(e);
     }
     renderDrawer(ui, loc);
-    ui.drawerEl.classList.add("open");
+    ui.drawerEl.classList.add("cc-slide-panel-open");
   });
 
   rect.on("touchstart", function (e) {
@@ -1068,7 +1062,7 @@
       window.L.DomEvent.stop(e);
     }
     renderDrawer(ui, loc);
-    ui.drawerEl.classList.add("open");
+    ui.drawerEl.classList.add("cc-slide-panel-open");
   });
 });
 
@@ -1120,12 +1114,12 @@
             '<div style="color:#f55;padding:1rem">Load failed: ' +
             (err && err.message) +
             "</div>";
-          ui.drawerEl.classList.add("open");
+          ui.drawerEl.classList.add("cc-slide-panel-open");
         });
     }
 
     root.querySelector("#cc-cm-reload").onclick = function () { init(); };
-    root.querySelector("#close-dr").onclick = function () { ui.drawerEl.classList.remove("open"); };
+    root.querySelector("#close-dr").onclick = function () { ui.drawerEl.classList.remove("cc-slide-panel-open"); };
     root.querySelector("#cc-cm-fit").onclick = function () {
       if (mapDoc) {
         currentTx = 0.5;
@@ -1140,12 +1134,12 @@
       if (ui._hbEditor) ui._hbEditor.export();
     };
 
-    root.addEventListener("click", function (e) {
-      if (!ui.drawerEl.classList.contains("open")) return;
-      if (ui.drawerEl.contains(e.target)) return;
-      if (e.target && (e.target.closest(".leaflet-interactive") || e.target.closest(".leaflet-tooltip"))) return;
-      ui.drawerEl.classList.remove("open");
-    });
+   root.addEventListener("click", function (e) {
+  if (!ui.drawerEl.classList.contains("cc-slide-panel-open")) return;
+  if (ui.drawerEl.contains(e.target)) return;
+  if (e.target && (e.target.closest(".leaflet-interactive") || e.target.closest(".leaflet-tooltip"))) return;
+  ui.drawerEl.classList.remove("cc-slide-panel-open");
+});
 
     return init().then(function () { return {}; });
   }
