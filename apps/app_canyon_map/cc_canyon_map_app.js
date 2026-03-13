@@ -157,22 +157,36 @@ var DEFAULTS = {
 
   function createOverlays(mapData) {
 
-    var bounds = [[0,0],[mapData.height,mapData.width]];
+  return new Promise(function(resolve, reject) {
 
-    var bgOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapBG);
-    var lensOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapLens);
+    var img = new Image();
 
-    mapBG.fitBounds(bounds);
-    mapLens.fitBounds(bounds);
+    img.onload = function () {
 
-    mapBG.setZoom(BG_ZOOM);
-    mapLens.setZoom(BG_ZOOM + LENS_ZOOM_OFFSET);
+      var bounds = [[0,0],[img.height,img.width]];
 
-    return Promise.all([
-      new Promise(r => bgOverlay.once("load", r)),
-      new Promise(r => lensOverlay.once("load", r))
-    ]);
-  }
+      var bgOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapBG);
+      var lensOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapLens);
+
+      mapBG.fitBounds(bounds);
+      mapLens.fitBounds(bounds);
+
+      mapBG.setZoom(BG_ZOOM);
+      mapLens.setZoom(BG_ZOOM + LENS_ZOOM_OFFSET);
+
+      Promise.all([
+        new Promise(r => bgOverlay.once("load", r)),
+        new Promise(r => lensOverlay.once("load", r))
+      ]).then(resolve);
+
+    };
+
+    img.onerror = reject;
+    img.src = mapData.image;
+
+  });
+
+}
 
 function applyView() {
 
