@@ -87,11 +87,10 @@ display:none!important;
 position:absolute;
 width:48px;
 height:48px;
-border-radius:50%;
-background:#ff7518;
-box-shadow:0 4px 10px rgba(0,0,0,.7);
 z-index:60;
 pointer-events:none;
+background:url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png") center/contain no-repeat;
+filter:drop-shadow(0 4px 10px rgba(0,0,0,.7));
 }
 
 /* vertical knob */
