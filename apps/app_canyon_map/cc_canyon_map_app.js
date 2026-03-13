@@ -159,7 +159,7 @@ var DEFAULTS = {
 
   return new Promise(function(resolve, reject) {
 
-    if (!mapData.map_image) {
+    if (!mapData.image) {
       reject("Map JSON missing map_image");
       return;
     }
@@ -187,7 +187,7 @@ var DEFAULTS = {
     };
 
     img.onerror = reject;
-    img.src = mapData.map_image;
+    L.imageOverlay(mapData.image, bounds)
 
   });
 
