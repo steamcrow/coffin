@@ -208,37 +208,45 @@ function applyView() {
 
   function bindKnobs() {
 
-    function dragStart(e, axis) {
+  function dragStart(e, axis) {
 
-      e.preventDefault();
+    e.preventDefault();
 
-      function move(ev) {
+    var rect = root.getBoundingClientRect();
 
-        if (axis === "h") {
-          var x = ev.clientX / root.clientWidth * 100;
-          state.h = Math.min(H_MAX, Math.max(H_MIN, x));
-        }
+    function move(ev) {
 
-        if (axis === "v") {
-          var y = ev.clientY / root.clientHeight * 100;
-          state.v = Math.min(V_MAX, Math.max(V_MIN, y));
-        }
+      if (axis === "h") {
 
-        applyView();
+        var x = (ev.clientX - rect.left) / rect.width * 100;
+        state.h = Math.min(H_MAX, Math.max(H_MIN, x));
+
       }
 
-      function up() {
-        window.removeEventListener("pointermove", move);
-        window.removeEventListener("pointerup", up);
+      if (axis === "v") {
+
+        var y = (ev.clientY - rect.top) / rect.height * 100;
+        state.v = Math.min(V_MAX, Math.max(V_MIN, y));
+
       }
 
-      window.addEventListener("pointermove", move);
-      window.addEventListener("pointerup", up);
+      applyView();
     }
 
-    knobH.addEventListener("pointerdown", e => dragStart(e,"h"));
-    knobV.addEventListener("pointerdown", e => dragStart(e,"v"));
+    function up() {
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", up);
+    }
+
+    window.addEventListener("pointermove", move);
+    window.addEventListener("pointerup", up);
+
   }
+
+  knobH.addEventListener("pointerdown", e => dragStart(e,"h"));
+  knobV.addEventListener("pointerdown", e => dragStart(e,"v"));
+
+}
 
   function mount(el,opts){
 
