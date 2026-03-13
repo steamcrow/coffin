@@ -2,7 +2,6 @@
    COFFIN CANYON — CANYON MAP (LENS + KNOBS VERSION)
    ================================================================ */
 
-/* --- CORE WRAP --- */
 .cc-canyon-map {
   position: relative !important;
 }
@@ -32,7 +31,6 @@
   flex-wrap: wrap !important;
 }
 
-/* --- MAP WRAP --- */
 .cc-cm-mapwrap {
   position: relative !important;
   width: 100% !important;
@@ -45,14 +43,12 @@
   isolation: isolate !important;
 }
 
-/* --- BACKGROUND MAP --- */
 .cc-cm-map {
   position: absolute !important;
   inset: 0 !important;
   z-index: 1 !important;
 }
 
-/* --- LENS --- */
 .cc-lens {
   position: absolute !important;
   top: 46% !important;
@@ -92,7 +88,6 @@
   z-index: 11 !important;
 }
 
-/* --- FRAME --- */
 .cc-frame-overlay {
   position: absolute !important;
   inset: 0 !important;
@@ -111,7 +106,6 @@
   pointer-events: none !important;
 }
 
-/* --- KNOB TRACKS --- */
 .cc-scroll-vertical,
 .cc-scroll-horizontal {
   position: absolute !important;
@@ -133,7 +127,6 @@
   height: calc(104px * var(--device-scale, 1)) !important;
 }
 
-/* --- KNOBS --- */
 .cc-scroll-knob {
   position: absolute !important;
   width: calc(144px * var(--device-scale, 1)) !important;
@@ -163,7 +156,7 @@
 
 #cc-scroll-knob-h {
   top: calc(50% - 34px) !important;
-  transform: translate(-50%, -50%) rotate(-90deg) !important;
+  transform: translate(-50%, -50%) !important;
 }
 
 .cc-scroll-knob-img {
@@ -177,7 +170,6 @@
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.7)) !important;
 }
 
-/* --- LOADER --- */
 .cc-cm-loader {
   position: absolute !important;
   inset: 0 !important;
@@ -210,7 +202,6 @@
   to { transform: rotate(360deg); }
 }
 
-/* --- HITBOX LABELS --- */
 .cc-map-hitbox-label {
   background: rgba(0,0,0,.82) !important;
   border: 1px solid rgba(255,117,24,.72) !important;
@@ -232,11 +223,10 @@
   display: none !important;
 }
 
-/* --- HITBOX EDITOR --- */
 .cc-hitbox-editor-layer {
   position: absolute !important;
   inset: 0 !important;
-  z-index: 70 !important;
+  z-index: 999 !important;
   pointer-events: auto !important;
 }
 
@@ -244,7 +234,7 @@
   position: absolute !important;
   left: 10px !important;
   bottom: 10px !important;
-  z-index: 71 !important;
+  z-index: 1000 !important;
   background: rgba(0,0,0,.72) !important;
   color: #fff !important;
   padding: 6px 10px !important;
@@ -292,7 +282,6 @@
   cursor: nwse-resize !important;
 }
 
-/* --- EDIT MODE --- */
 .cc-canyon-map.cc-hitbox-edit .cc-lens,
 .cc-canyon-map.cc-hitbox-edit .cc-frame-overlay,
 .cc-canyon-map.cc-hitbox-edit .cc-scroll-vertical,
@@ -300,7 +289,6 @@
   display: none !important;
 }
 
-/* --- MOBILE --- */
 @media (max-width: 900px) {
   .cc-cm-mapwrap {
     height: 72vh !important;
