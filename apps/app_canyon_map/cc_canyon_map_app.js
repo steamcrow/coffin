@@ -15,15 +15,17 @@
   //  LENS_ZOOM_EXTRA > 0 → MUCH more zoomed in than fill (detail view)
   //
   var BG_ZOOM_OFFSET  = -0.2;  // BG: full-map overview, slightly outside fill
-  var LENS_ZOOM_EXTRA =  2.2;  // Lens: zoomed in by this much relative to BG
+  var LENS_ZOOM_EXTRA =  1.9;  // Lens: zoomed in by this much relative to BG (~20% less than before)
 
   var MIN_LOADER_MS = 700;
 
   // ── Knob travel limits within their tracks (%) ─────────────────────────
   var V_MIN = 8;
   var V_MAX = 92;
-  var H_MIN = 8;
-  var H_MAX = 92;
+  // Horizontal track is 900px wide at full scale.
+  // Shift left by 60px (60/900*100 ≈ 6.7%) and right by 20px (≈2.2%)
+  var H_MIN = 1;
+  var H_MAX = 94;
 
   // ── Location hitboxes [y1, x1, y2, x2] in image pixel coords ───────────
   var HITBOXES = {
@@ -567,6 +569,7 @@
       lensMapEl:      lensMapEl,
       lensEl:         lensEl,
       mapWrap:        mapWrap,
+      frameEl:        frameOverlay,
       drawerEl:       drawer,
       drawerTitleEl:  drawer.querySelector(".cc-cm-drawer-title"),
       drawerContentEl:drawer.querySelector(".cc-panel-body"),
@@ -676,35 +679,38 @@
 
     // ── Knob drag with momentum ───────────────────────────────────────────
     function bindKnob(knobEl, axis) {
+      // Track which pointer is currently driving this knob.
+      // Prevents a second finger from hijacking or double-highlighting it.
+      var activePointerId = null;
+
       knobEl.addEventListener("pointerdown", function (e) {
         if (editor && editor.isEditing()) return;
-        e.preventDefault();
-        // Don't stopPropagation — it isn't needed and can mask other handlers.
+        // Ignore secondary fingers if already dragging
+        if (activePointerId !== null) return;
 
+        e.preventDefault();
+
+        activePointerId = e.pointerId;
         var mom = axis === "v" ? momV : momH;
         mom.stop();
 
-        var trackRect  = knobEl.parentElement.getBoundingClientRect();
-        var knobRect   = knobEl.getBoundingClientRect();
-        var grabOffset = axis === "v"
-          ? (e.clientY - knobRect.top)
-          : (e.clientX - knobRect.left);
+        var trackRect = knobEl.parentElement.getBoundingClientRect();
 
         knobEl.classList.add("is-active");
 
-        // setPointerCapture routes all subsequent pointer events for this
-        // pointer ID to knobEl.  We therefore listen on knobEl, not window,
-        // so the events are guaranteed to arrive here even in host environments
-        // (like Odoo's iframe) that call stopImmediatePropagation on window.
+        // Pointer capture routes all subsequent events for this pointer to
+        // knobEl — reliable even inside Odoo's iframe.
         knobEl.setPointerCapture(e.pointerId);
 
         var history = [];
 
+        // No grabOffset: the knob centre snaps directly to the pointer
+        // position so the knob never appears to "jump" sideways on grab.
         function getN(ev) {
           var size = axis === "v" ? trackRect.height : trackRect.width;
           var pos  = axis === "v"
-            ? (ev.clientY - trackRect.top  - grabOffset)
-            : (ev.clientX - trackRect.left - grabOffset);
+            ? (ev.clientY - trackRect.top)
+            : (ev.clientX - trackRect.left);
           var pct = (pos / size) * 100;
           var min = axis === "v" ? V_MIN : H_MIN;
           var max = axis === "v" ? V_MAX : H_MAX;
@@ -712,7 +718,7 @@
         }
 
         function onMove(ev) {
-          if (ev.pointerId !== e.pointerId) return;
+          if (ev.pointerId !== activePointerId) return;
           var n   = getN(ev);
           var now = performance.now();
           history.push({ v: n, t: now });
@@ -724,17 +730,25 @@
         }
 
         function onEnd(ev) {
-          if (ev.pointerId !== e.pointerId) return;
-          knobEl.classList.remove("is-active");
-          knobEl.removeEventListener("pointermove",   onMove);
-          knobEl.removeEventListener("pointerup",     onEnd);
-          knobEl.removeEventListener("pointercancel", onEnd);
+          if (ev.pointerId !== activePointerId) return;
+          finish();
+        }
 
+        function finish() {
+          activePointerId = null;
+          knobEl.classList.remove("is-active");
+          knobEl.removeEventListener("pointermove",      onMove);
+          knobEl.removeEventListener("pointerup",        onEnd);
+          knobEl.removeEventListener("pointercancel",    onEnd);
+          knobEl.removeEventListener("lostpointercapture", onEnd);
+
+          // Clamp fling velocity so a brief accidental flick doesn't
+          // send the knob flying.  Max 3 normalised-units/second.
           var vel = 0;
           if (history.length >= 2) {
             var span = history[history.length - 1].t - history[0].t;
             var dist = history[history.length - 1].v - history[0].v;
-            if (span > 8) vel = dist / (span * 0.001);
+            if (span > 8) vel = clamp(dist / (span * 0.001), -3, 3);
           }
 
           var lastVal = history.length
@@ -747,10 +761,12 @@
           });
         }
 
-        // Listen on knobEl — captured events are delivered here first, then bubble.
-        knobEl.addEventListener("pointermove",   onMove, { passive: false });
-        knobEl.addEventListener("pointerup",     onEnd);
-        knobEl.addEventListener("pointercancel", onEnd);
+        knobEl.addEventListener("pointermove",        onMove, { passive: false });
+        knobEl.addEventListener("pointerup",          onEnd);
+        knobEl.addEventListener("pointercancel",      onEnd);
+        // lostpointercapture fires when the OS steals capture (e.g. phone
+        // call, notification) — guarantees the knob is always de-activated.
+        knobEl.addEventListener("lostpointercapture", onEnd);
       }, { passive: false });
     }
 
@@ -856,8 +872,10 @@
 
           // Hide until applyView fires — prevents the Leaflet "jump" where
           // the map briefly renders at the wrong position before CSS settles.
-          ui.mapEl.style.visibility    = "hidden";
+          // Frame is hidden too so it doesn't pop in before the map is ready.
+          ui.mapEl.style.visibility     = "hidden";
           ui.lensMapEl.style.visibility = "hidden";
+          ui.frameEl.style.visibility   = "hidden";
 
           lockMaps();
           buildHitboxes();
@@ -892,8 +910,9 @@
         .then(function () {
           applyView(0.5, 0.5);
           // Reveal now that Leaflet has positioned correctly — no jump visible.
-          ui.mapEl.style.visibility    = "";
+          ui.mapEl.style.visibility     = "";
           ui.lensMapEl.style.visibility = "";
+          ui.frameEl.style.visibility   = "";
           return delay(Math.max(0, MIN_LOADER_MS - (Date.now() - loadStart)));
         })
         .then(function () {
@@ -930,7 +949,12 @@
     window.addEventListener("resize", onResize);
 
     // ── Button wiring ─────────────────────────────────────────────────────
-    header.querySelector("#cc-cm-reload").onclick = function () { init(); };
+    header.querySelector("#cc-cm-reload").onclick = function () {
+      // Stop any coasting momentum and reset position back to centre
+      momV.stop(); momH.stop();
+      currentT = 0.5; currentTx = 0.5;
+      init();
+    };
     header.querySelector("#cc-cm-fit"   ).onclick = function () { if (px) applyView(0.5, 0.5); };
     header.querySelector("#cc-cm-edit"  ).onclick = function () { if (editor) editor.toggle(); };
     header.querySelector("#cc-cm-export").onclick = function () { if (editor) editor.exportJSON(); };
