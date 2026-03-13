@@ -159,14 +159,19 @@ var DEFAULTS = {
 
   return new Promise(function(resolve, reject) {
 
+    if (!mapData.map_image) {
+      reject("Map JSON missing map_image");
+      return;
+    }
+
     var img = new Image();
 
     img.onload = function () {
 
       var bounds = [[0,0],[img.height,img.width]];
 
-      var bgOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapBG);
-      var lensOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapLens);
+      var bgOverlay = L.imageOverlay(mapData.map_image, bounds).addTo(mapBG);
+      var lensOverlay = L.imageOverlay(mapData.map_image, bounds).addTo(mapLens);
 
       mapBG.fitBounds(bounds);
       mapLens.fitBounds(bounds);
@@ -182,7 +187,7 @@ var DEFAULTS = {
     };
 
     img.onerror = reject;
-    img.src = mapData.image;
+    img.src = mapData.map_image;
 
   });
 
@@ -190,23 +195,22 @@ var DEFAULTS = {
 
 function applyView() {
 
-  var w = root.clientWidth;
-  var h = root.clientHeight;
+  var rect = root.getBoundingClientRect();
 
-  var x = (state.h / 100) * w;
-  var y = (state.v / 100) * h;
+  var x = rect.width * (state.h / 100);
+  var y = rect.height * (state.v / 100);
 
   var point = mapBG.containerPointToLatLng([x, y]);
 
-  mapBG.panTo(point, { animate:false });
-  mapLens.panTo(point, { animate:false });
+  mapBG.panTo(point, {animate:false});
+  mapLens.panTo(point, {animate:false});
 
   knobH.style.left = state.h + "%";
   knobV.style.top = state.v + "%";
 
 }
 
-  function bindKnobs() {
+ function bindKnobs() {
 
   function dragStart(e, axis) {
 
