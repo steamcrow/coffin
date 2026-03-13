@@ -1,6 +1,7 @@
 /* ================================================================
    COFFIN CANYON — CANYON MAP (cc_app_canyon_map.js)
    ================================================================ */
+console.log("DEBUG: cc_app_canyon_map.js IS RUNNING");
 
 (function () {
   var BG_ZOOM = -1;
