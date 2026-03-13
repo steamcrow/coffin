@@ -4,13 +4,13 @@
 
 (function () {
   var BG_ZOOM = -1;
-  var LENS_ZOOM_OFFSET = 0.95;
+  var LENS_ZOOM_OFFSET = 1.15;
   var MIN_LOADER_MS = 700;
 
-  var V_MIN = 24;
-  var V_MAX = 76;
-  var H_MIN = 18;
-  var H_MAX = 82;
+  var V_MIN = 14;
+  var V_MAX = 86;
+  var H_MIN = 12;
+  var H_MAX = 88;
 
   var DEFAULTS = {
     title: "Coffin Canyon — Canyon Map",
@@ -63,7 +63,7 @@
     "witches-roost": [3767, 2130, 3965, 2495]
   };
 
-  var _loaded = { css: {}, js: {} };
+  var _loaded = { css: {}, js: {}, stylePatch: false };
 
   function el(tag, attrs, children) {
     attrs = attrs || {};
@@ -114,19 +114,41 @@
     };
   }
 
+  function bust(url) {
+    return url + (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
+  }
+
   function fetchText(url) {
-    var u = url + (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
-    return fetch(u).then(function (r) {
+    return fetch(bust(url)).then(function (r) {
       if (!r.ok) throw new Error("HTTP " + r.status + ": " + url);
       return r.text();
     });
   }
 
   function fetchJson(url) {
-    var u = url + (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
-    return fetch(u).then(function (r) {
+    return fetch(bust(url)).then(function (r) {
       if (!r.ok) throw new Error("HTTP " + r.status + ": " + url);
       return r.json();
+    });
+  }
+
+  function preloadImage(url, tries) {
+    tries = typeof tries === "number" ? tries : 2;
+    return new Promise(function (resolve, reject) {
+      function attempt(left) {
+        var img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = function () { resolve(url); };
+        img.onerror = function () {
+          if (left > 0) {
+            setTimeout(function () { attempt(left - 1); }, 250);
+          } else {
+            reject(new Error("Image failed to load: " + url));
+          }
+        };
+        img.src = bust(url);
+      }
+      attempt(tries);
     });
   }
 
@@ -172,7 +194,31 @@
     if (!window.L) {
       p = p.then(function () { return loadScriptOnce(opts.leafletJsUrl, "leaflet_js"); });
     }
+    p = p.then(ensureRuntimeStylePatch);
     return p;
+  }
+
+  function ensureRuntimeStylePatch() {
+    if (_loaded.stylePatch) return Promise.resolve();
+    var s = document.createElement("style");
+    s.setAttribute("data-cc-style", "cc-canyon-map-runtime-patch");
+    s.textContent = [
+      ".cc-canyon-map.cc-hitbox-edit .cc-lens{display:block!important;top:0!important;left:0!important;width:100%!important;height:100%!important;transform:none!important;mask-image:none!important;-webkit-mask-image:none!important;filter:none!important;pointer-events:auto!important;z-index:20!important;}",
+      ".cc-canyon-map.cc-hitbox-edit .cc-frame-overlay,.cc-canyon-map.cc-hitbox-edit .cc-scroll-vertical,.cc-canyon-map.cc-hitbox-edit .cc-scroll-horizontal{display:none!important;}",
+      ".cc-canyon-map.cc-hitbox-edit .cc-cm-map{opacity:0!important;pointer-events:none!important;}",
+      ".cc-canyon-map.cc-hitbox-edit .cc-lens-chromatic,.cc-canyon-map.cc-hitbox-edit .cc-lens-glare{display:none!important;}",
+      ".cc-canyon-map.cc-hitbox-edit .cc-lens-overscan,.cc-canyon-map.cc-hitbox-edit .cc-lens-map{inset:0!important;}",
+      ".cc-hitbox-editor-layer{position:absolute!important;inset:0!important;z-index:999!important;pointer-events:auto!important;}",
+      ".cc-hb-box{position:absolute!important;outline:2px solid rgba(0,255,255,.95)!important;background:rgba(0,255,255,.12)!important;border-radius:6px!important;box-sizing:border-box!important;cursor:grab!important;pointer-events:auto!important;}",
+      ".cc-hb-box:active{cursor:grabbing!important;}",
+      ".cc-hb-label{position:absolute!important;left:0!important;top:-18px!important;padding:2px 6px!important;border-radius:6px!important;background:rgba(0,0,0,.78)!important;color:#fff!important;font:12px/1 system-ui,sans-serif!important;white-space:nowrap!important;pointer-events:none!important;}",
+      ".cc-hb-handle{position:absolute!important;width:12px!important;height:12px!important;right:-6px!important;bottom:-6px!important;background:rgba(0,255,255,.95)!important;border-radius:3px!important;cursor:nwse-resize!important;}",
+      ".cc-scroll-vertical,.cc-scroll-horizontal,.cc-scroll-knob{pointer-events:auto!important;touch-action:none!important;}",
+      ".cc-scroll-knob{user-select:none!important;-webkit-user-select:none!important;}"
+    ].join("");
+    document.head.appendChild(s);
+    _loaded.stylePatch = true;
+    return Promise.resolve();
   }
 
   function meterBar(value, max, color) {
@@ -222,7 +268,9 @@
       active: null,
       map: null,
       bounds: null,
-      layerEl: null
+      layerEl: null,
+      attached: false,
+      refreshView: null
     };
 
     function ensureLayer() {
@@ -230,7 +278,7 @@
       state.layerEl = document.createElement("div");
       state.layerEl.className = "cc-hitbox-editor-layer";
       state.layerEl.id = "cc-hitbox-editor";
-      ui.mapEl.appendChild(state.layerEl);
+      ui.lensMapEl.appendChild(state.layerEl);
       return state.layerEl;
     }
 
@@ -261,13 +309,18 @@
         var p1 = latLngToPx(r.y1, r.x1);
         var p2 = latLngToPx(r.y2, r.x2);
 
+        var left = Math.min(p1.x, p2.x);
+        var top = Math.min(p1.y, p2.y);
+        var width = Math.max(8, Math.abs(p2.x - p1.x));
+        var height = Math.max(8, Math.abs(p2.y - p1.y));
+
         var box = document.createElement("div");
         box.className = "cc-hb-box";
         box.dataset.id = id;
-        box.style.left = Math.min(p1.x, p2.x) + "px";
-        box.style.top = Math.min(p1.y, p2.y) + "px";
-        box.style.width = Math.abs(p2.x - p1.x) + "px";
-        box.style.height = Math.abs(p2.y - p1.y) + "px";
+        box.style.left = left + "px";
+        box.style.top = top + "px";
+        box.style.width = width + "px";
+        box.style.height = height + "px";
 
         var label = document.createElement("div");
         label.className = "cc-hb-label";
@@ -302,30 +355,41 @@
       });
     }
 
-    function onMouseDown(e) {
-      if (!state.editing) return;
+    function attachPointerHandlers() {
+      if (state.attached) return;
+      state.attached = true;
 
-      var box = e.target.closest(".cc-hb-box");
-      if (!box) return;
+      ensureLayer().addEventListener("pointerdown", function (e) {
+        if (!state.editing) return;
 
-      var isHandle = e.target.classList.contains("cc-hb-handle");
+        var box = e.target.closest(".cc-hb-box");
+        if (!box) return;
 
-      state.active = {
-        box: box,
-        mode: isHandle ? "resize" : "move",
-        startX: e.clientX,
-        startY: e.clientY,
-        left: parseFloat(box.style.left),
-        top: parseFloat(box.style.top),
-        width: parseFloat(box.style.width),
-        height: parseFloat(box.style.height)
-      };
+        var isHandle = e.target.classList.contains("cc-hb-handle");
 
-      e.preventDefault();
-      e.stopPropagation();
+        state.active = {
+          box: box,
+          mode: isHandle ? "resize" : "move",
+          pointerId: e.pointerId,
+          startX: e.clientX,
+          startY: e.clientY,
+          left: parseFloat(box.style.left),
+          top: parseFloat(box.style.top),
+          width: parseFloat(box.style.width),
+          height: parseFloat(box.style.height)
+        };
 
-      function onMove(ev) {
+        try {
+          box.setPointerCapture(e.pointerId);
+        } catch (err) {}
+
+        e.preventDefault();
+        e.stopPropagation();
+      });
+
+      window.addEventListener("pointermove", function (ev) {
         if (!state.active) return;
+        if (typeof state.active.pointerId === "number" && ev.pointerId !== state.active.pointerId) return;
 
         var dx = ev.clientX - state.active.startX;
         var dy = ev.clientY - state.active.startY;
@@ -340,16 +404,16 @@
 
         updateFromBox(state.active.box);
         ev.preventDefault();
-      }
+      }, { passive: false });
 
-      function onUp() {
+      function endPointer(ev) {
+        if (!state.active) return;
+        if (typeof state.active.pointerId === "number" && ev.pointerId !== state.active.pointerId) return;
         state.active = null;
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
       }
 
-      window.addEventListener("mousemove", onMove, { passive: false });
-      window.addEventListener("mouseup", onUp);
+      window.addEventListener("pointerup", endPointer);
+      window.addEventListener("pointercancel", endPointer);
     }
 
     function exportJSON() {
@@ -371,119 +435,43 @@
         if (state.layerEl) state.layerEl.style.display = "none";
         ui.editorBadgeEl.style.display = "none";
         state.map.off("move zoom resize", draw);
+        if (typeof state.refreshView === "function") {
+          nextFrame().then(function () {
+            state.refreshView();
+          });
+        }
         return;
       }
 
-      state.map.fitBounds(state.bounds, { animate: false, padding: [24, 24] });
-      ensureLayer().style.display = "block";
-      draw();
-      state.map.on("move zoom resize", draw);
+      nextFrame()
+        .then(function () {
+          state.map.invalidateSize({ animate: false });
+          state.map.fitBounds(state.bounds, { animate: false, padding: [24, 24] });
+          ensureLayer().style.display = "block";
+          draw();
+          state.map.on("move zoom resize", draw);
+        });
     }
 
     return {
-      attach: function (map, bounds) {
+      attach: function (map, bounds, refreshViewFn) {
         state.map = map;
         state.bounds = bounds;
-        ensureLayer().addEventListener("mousedown", onMouseDown);
+        state.refreshView = refreshViewFn || null;
+        attachPointerHandlers();
       },
       toggle: function () { setEditing(!state.editing); },
       exportJSON: exportJSON,
-      isEditing: function () { return state.editing; }
+      isEditing: function () { return state.editing; },
+      redraw: draw
     };
   }
 
   function mount(root, userOpts) {
     var opts = Object.assign({}, DEFAULTS, userOpts || {});
+    var destroyed = false;
 
-    root.innerHTML = "";
-    root.classList.remove("cc-ready");
-    root.classList.add("cc-loading");
-    root.classList.add("cc-canyon-map");
-
-    var shell = el("div", { class: "cc-cm-shell" });
-
-    var header = el("div", { class: "cc-cm-header cc-app-header" }, [
-      el("div", { class: "cc-cm-title" }, [opts.title]),
-      el("div", { class: "cc-cm-actions" }, [
-        el("button", { class: "cc-btn", id: "cc-cm-reload", type: "button" }, ["Reload"]),
-        el("button", { class: "cc-btn", id: "cc-cm-fit", type: "button" }, ["Fit"]),
-        el("button", { class: "cc-btn", id: "cc-cm-edit", type: "button" }, ["Edit Hitboxes"]),
-        el("button", { class: "cc-btn", id: "cc-cm-export", type: "button" }, ["Export"])
-      ])
-    ]);
-
-    var mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
-    var lensMapEl = el("div", { id: "cc-lens-map", class: "cc-lens-map" });
-
-    var lensInner = el("div", { class: "cc-lens-inner" }, [
-      el("div", { class: "cc-lens-overscan" }, [lensMapEl])
-    ]);
-
-    var lensEl = el("div", { class: "cc-lens" }, [
-      lensInner,
-      el("div", { class: "cc-lens-chromatic" }),
-      el("div", { class: "cc-lens-glare" })
-    ]);
-
-    var frameOverlay = el("div", { class: "cc-frame-overlay" }, [
-      el("img", { class: "cc-frame-image", src: opts.frameUrl, alt: "", draggable: "false" })
-    ]);
-
-    var knobV = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" }, [
-      el("img", { class: "cc-scroll-knob-img", src: opts.knobUrl, alt: "", draggable: "false" })
-    ]);
-
-    var knobH = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" }, [
-      el("img", { class: "cc-scroll-knob-img", src: opts.knobUrl, alt: "", draggable: "false" })
-    ]);
-
-    var trackV = el("div", { class: "cc-scroll-vertical", id: "cc-scroll-track-v" }, [knobV]);
-    var trackH = el("div", { class: "cc-scroll-horizontal", id: "cc-scroll-track-h" }, [knobH]);
-
-    var loaderEl = el("div", { class: "cc-cm-loader", id: "cc-map-loader" }, [
-      el("img", { src: opts.logoUrl, alt: "Coffin Canyon" }),
-      el("div", { class: "cc-cm-loader-spin" }),
-      el("div", { style: "color:#ff7518;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase" }, ["Loading"])
-    ]);
-
-    var editorBadgeEl = el("div", { class: "cc-hitbox-editor-badge", style: "display:none" }, [
-      "Hitbox edit mode active — drag or resize cyan boxes, then click Export."
-    ]);
-
-    var mapWrap = el("div", { class: "cc-cm-mapwrap" }, [
-      mapEl,
-      lensEl,
-      frameOverlay,
-      trackV,
-      trackH,
-      loaderEl,
-      editorBadgeEl
-    ]);
-
-    var drawer = el("div", { class: "cc-slide-panel", id: "cc-location-panel" }, [
-      el("div", { class: "cc-slide-panel-header" }, [
-        el("h2", { class: "cc-panel-title cc-cm-drawer-title" }, ["Location"]),
-        el("button", { class: "cc-panel-close-btn", id: "close-dr", type: "button" }, ["×"])
-      ]),
-      el("div", { class: "cc-panel-body cc-cm-drawer-content" })
-    ]);
-
-    shell.appendChild(header);
-    shell.appendChild(mapWrap);
-    root.appendChild(shell);
-    root.appendChild(drawer);
-
-    var ui = {
-      mapEl: mapEl,
-      lensMapEl: lensMapEl,
-      drawerEl: drawer,
-      drawerTitleEl: drawer.querySelector(".cc-cm-drawer-title"),
-      drawerContentEl: drawer.querySelector(".cc-cm-drawer-content"),
-      knobV: knobV,
-      knobH: knobH,
-      editorBadgeEl: editorBadgeEl
-    };
-
+    var ui = null;
     var bgMap = null;
     var lensMap = null;
     var mapDoc = null;
@@ -496,22 +484,191 @@
     var currentT = 0.5;
     var currentTx = 0.5;
 
+    function destroyMaps() {
+      try { if (bgMap) bgMap.remove(); } catch (e) {}
+      try { if (lensMap) lensMap.remove(); } catch (e) {}
+      bgMap = null;
+      lensMap = null;
+    }
+
+    function renderLoaderOnly() {
+      root.innerHTML = "";
+      root.className = "cc-canyon-map cc-loading";
+      root.style.minHeight = "100vh";
+
+      var shell = el("div", { class: "cc-cm-shell" }, [
+        el("div", { class: "cc-cm-mapwrap", style: "min-height:520px;position:relative;" }, [
+          el("div", {
+            class: "cc-cm-loader",
+            id: "cc-map-loader",
+            style: "display:flex;opacity:1;"
+          }, [
+            el("img", { src: opts.logoUrl, alt: "Coffin Canyon" }),
+            el("div", { class: "cc-cm-loader-spin" }),
+            el("div", {
+              style: "color:#ff7518;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase"
+            }, ["Loading"])
+          ])
+        ])
+      ]);
+
+      root.appendChild(shell);
+    }
+
+    function buildUI() {
+      root.innerHTML = "";
+      root.className = "cc-canyon-map cc-loading";
+
+      var shell = el("div", { class: "cc-cm-shell" });
+
+      var header = el("div", { class: "cc-cm-header cc-app-header" }, [
+        el("div", { class: "cc-cm-title" }, [opts.title]),
+        el("div", { class: "cc-cm-actions" }, [
+          el("button", { class: "cc-btn", id: "cc-cm-reload", type: "button" }, ["Reload"]),
+          el("button", { class: "cc-btn", id: "cc-cm-fit", type: "button" }, ["Fit"]),
+          el("button", { class: "cc-btn", id: "cc-cm-edit", type: "button" }, ["Edit Hitboxes"]),
+          el("button", { class: "cc-btn", id: "cc-cm-export", type: "button" }, ["Export"])
+        ])
+      ]);
+
+      var mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
+      var lensMapEl = el("div", { id: "cc-lens-map", class: "cc-lens-map" });
+
+      var lensInner = el("div", { class: "cc-lens-inner" }, [
+        el("div", { class: "cc-lens-overscan" }, [lensMapEl])
+      ]);
+
+      var lensEl = el("div", { class: "cc-lens" }, [
+        lensInner,
+        el("div", { class: "cc-lens-chromatic" }),
+        el("div", { class: "cc-lens-glare" })
+      ]);
+
+      var frameOverlay = el("div", { class: "cc-frame-overlay" }, [
+        el("img", { class: "cc-frame-image", src: opts.frameUrl, alt: "", draggable: "false" })
+      ]);
+
+      var knobV = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" }, [
+        el("img", { class: "cc-scroll-knob-img", src: opts.knobUrl, alt: "", draggable: "false" })
+      ]);
+
+      var knobH = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" }, [
+        el("img", { class: "cc-scroll-knob-img", src: opts.knobUrl, alt: "", draggable: "false" })
+      ]);
+
+      var trackV = el("div", { class: "cc-scroll-vertical", id: "cc-scroll-track-v" }, [knobV]);
+      var trackH = el("div", { class: "cc-scroll-horizontal", id: "cc-scroll-track-h" }, [knobH]);
+
+      var loaderEl = el("div", { class: "cc-cm-loader", id: "cc-map-loader", style: "display:flex;opacity:1;" }, [
+        el("img", { src: opts.logoUrl, alt: "Coffin Canyon" }),
+        el("div", { class: "cc-cm-loader-spin" }),
+        el("div", { style: "color:#ff7518;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase" }, ["Loading"])
+      ]);
+
+      var editorBadgeEl = el("div", {
+        class: "cc-hitbox-editor-badge",
+        style: "display:none"
+      }, ["Hitbox edit mode active — drag or resize cyan boxes, then click Export."]);
+
+      var mapWrap = el("div", { class: "cc-cm-mapwrap" }, [
+        mapEl,
+        lensEl,
+        frameOverlay,
+        trackV,
+        trackH,
+        loaderEl,
+        editorBadgeEl
+      ]);
+
+      var drawer = el("div", { class: "cc-slide-panel", id: "cc-location-panel" }, [
+        el("div", { class: "cc-slide-panel-header" }, [
+          el("h2", { class: "cc-panel-title cc-cm-drawer-title" }, ["Location"]),
+          el("button", { class: "cc-panel-close-btn", id: "close-dr", type: "button" }, ["×"])
+        ]),
+        el("div", { class: "cc-panel-body cc-cm-drawer-content" })
+      ]);
+
+      shell.appendChild(header);
+      shell.appendChild(mapWrap);
+      root.appendChild(shell);
+      root.appendChild(drawer);
+
+      ui = {
+        shell: shell,
+        header: header,
+        mapEl: mapEl,
+        lensMapEl: lensMapEl,
+        lensEl: lensEl,
+        mapWrap: mapWrap,
+        drawerEl: drawer,
+        drawerTitleEl: drawer.querySelector(".cc-cm-drawer-title"),
+        drawerContentEl: drawer.querySelector(".cc-cm-drawer-content"),
+        knobV: knobV,
+        knobH: knobH,
+        trackV: trackV,
+        trackH: trackH,
+        frameOverlay: frameOverlay,
+        loaderEl: loaderEl,
+        editorBadgeEl: editorBadgeEl
+      };
+
+      bindUIEvents();
+      updateResponsiveScale();
+      patchTrackGeometry();
+    }
+
     function updateResponsiveScale() {
+      if (!ui || !ui.mapWrap) return;
       var designWidth = 1280;
-      var currentWidth = mapWrap.getBoundingClientRect().width || mapWrap.offsetWidth || designWidth;
-      var scale = Math.max(0.62, Math.min(1, currentWidth / designWidth));
+      var currentWidth = ui.mapWrap.getBoundingClientRect().width || ui.mapWrap.offsetWidth || designWidth;
+      var scale = Math.max(0.56, Math.min(1, currentWidth / designWidth));
       root.style.setProperty("--device-scale", scale.toFixed(4));
     }
 
+    function patchTrackGeometry() {
+      if (!ui) return;
+      var scale = parseFloat(getComputedStyle(root).getPropertyValue("--device-scale")) || 1;
+
+      ui.trackV.style.position = "absolute";
+      ui.trackV.style.zIndex = "60";
+      ui.trackV.style.pointerEvents = "auto";
+      ui.trackV.style.width = "56px";
+      ui.trackV.style.height = (560 * scale) + "px";
+      ui.trackV.style.left = "calc(50% + " + (470 * scale) + "px)";
+      ui.trackV.style.top = "46%";
+      ui.trackV.style.transform = "translate(-50%, -50%)";
+
+      ui.trackH.style.position = "absolute";
+      ui.trackH.style.zIndex = "60";
+      ui.trackH.style.pointerEvents = "auto";
+      ui.trackH.style.width = (900 * scale) + "px";
+      ui.trackH.style.height = "56px";
+      ui.trackH.style.left = "53%";
+      ui.trackH.style.top = "calc(50% + " + (335 * scale) + "px)";
+      ui.trackH.style.transform = "translate(-50%, -50%)";
+
+      ui.knobV.style.zIndex = "61";
+      ui.knobH.style.zIndex = "61";
+      ui.knobV.style.pointerEvents = "auto";
+      ui.knobH.style.pointerEvents = "auto";
+      ui.knobV.style.touchAction = "none";
+      ui.knobH.style.touchAction = "none";
+    }
+
     function showLoader() {
-      loaderEl.style.display = "flex";
-      loaderEl.style.opacity = "1";
+      if (!ui || !ui.loaderEl) return;
+      ui.loaderEl.style.display = "flex";
+      ui.loaderEl.style.opacity = "1";
+      root.classList.add("cc-loading");
+      root.classList.remove("cc-ready");
     }
 
     function hideLoader() {
-      loaderEl.style.opacity = "0";
+      if (!ui || !ui.loaderEl) return;
+      ui.loaderEl.style.opacity = "0";
       setTimeout(function () {
-        loaderEl.style.display = "none";
+        if (!ui || !ui.loaderEl) return;
+        ui.loaderEl.style.display = "none";
         root.classList.remove("cc-loading");
         root.classList.add("cc-ready");
       }, 320);
@@ -527,11 +684,12 @@
         m.touchZoom.disable();
         m.boxZoom.disable();
         m.keyboard.disable();
+        if (m.tap) m.tap.disable();
       });
     }
 
     function applyView(t, tx) {
-      if (!bgMap || !lensMap || !px) return;
+      if (!bgMap || !lensMap || !px || !ui) return;
 
       currentT = clamp(typeof t === "number" ? t : currentT, 0, 1);
       currentTx = clamp(typeof tx === "number" ? tx : currentTx, 0, 1);
@@ -559,9 +717,6 @@
 
     function bindKnob(knobEl, axis) {
       function getClient(ev) {
-        if (ev.touches && ev.touches.length) {
-          return axis === "v" ? ev.touches[0].clientY : ev.touches[0].clientX;
-        }
         return axis === "v" ? ev.clientY : ev.clientX;
       }
 
@@ -569,39 +724,39 @@
         return knobEl.parentElement.getBoundingClientRect();
       }
 
-      function getKnobRect() {
-        return knobEl.getBoundingClientRect();
-      }
-
-      function posToNormalized(trackPosPx) {
-        var rect = getTrackRect();
-        var size = axis === "v" ? rect.height : rect.width;
-        var pct = (trackPosPx / size) * 100;
-        var min = axis === "v" ? V_MIN : H_MIN;
-        var max = axis === "v" ? V_MAX : H_MAX;
-        return clamp((pct - min) / (max - min), 0, 1);
-      }
-
-      function onStart(e) {
+      knobEl.addEventListener("pointerdown", function (e) {
         if (editor && editor.isEditing()) return;
 
         e.preventDefault();
         e.stopPropagation();
 
-        var knobRect = getKnobRect();
+        var trackRect = getTrackRect();
+        var knobRect = knobEl.getBoundingClientRect();
         var grabOffset = axis === "v"
           ? (getClient(e) - knobRect.top)
           : (getClient(e) - knobRect.left);
 
         knobEl.classList.add("is-active");
 
-        function onMove(ev) {
-          var trackRect = getTrackRect();
-          var trackPos = axis === "v"
-            ? (getClient(ev) - trackRect.top - grabOffset)
-            : (getClient(ev) - trackRect.left - grabOffset);
+        try {
+          knobEl.setPointerCapture(e.pointerId);
+        } catch (err) {}
 
-          var n = posToNormalized(trackPos);
+        function onMove(ev) {
+          var rect = getTrackRect();
+          var trackSize = axis === "v" ? rect.height : rect.width;
+          var knobSize = axis === "v" ? knobRect.height : knobRect.width;
+
+          var raw = axis === "v"
+            ? (getClient(ev) - rect.top - grabOffset)
+            : (getClient(ev) - rect.left - grabOffset);
+
+          var minPx = (axis === "v" ? V_MIN : H_MIN) / 100 * trackSize;
+          var maxPx = (axis === "v" ? V_MAX : H_MAX) / 100 * trackSize;
+          var clampedPx = clamp(raw + knobSize / 2, minPx, maxPx);
+
+          var n = clamp((clampedPx - minPx) / Math.max(1, (maxPx - minPx)), 0, 1);
+
           if (axis === "v") applyView(n, currentTx);
           else applyView(currentT, n);
 
@@ -610,24 +765,19 @@
 
         function onEnd() {
           knobEl.classList.remove("is-active");
-          window.removeEventListener("mousemove", onMove);
-          window.removeEventListener("mouseup", onEnd);
-          window.removeEventListener("touchmove", onMove);
-          window.removeEventListener("touchend", onEnd);
+          window.removeEventListener("pointermove", onMove);
+          window.removeEventListener("pointerup", onEnd);
+          window.removeEventListener("pointercancel", onEnd);
         }
 
-        window.addEventListener("mousemove", onMove, { passive: false });
-        window.addEventListener("mouseup", onEnd);
-        window.addEventListener("touchmove", onMove, { passive: false });
-        window.addEventListener("touchend", onEnd);
-      }
-
-      knobEl.addEventListener("mousedown", onStart);
-      knobEl.addEventListener("touchstart", onStart, { passive: false });
+        window.addEventListener("pointermove", onMove, { passive: false });
+        window.addEventListener("pointerup", onEnd);
+        window.addEventListener("pointercancel", onEnd);
+      }, { passive: false });
     }
 
     function bindKnobs() {
-      if (knobsBound) return;
+      if (knobsBound || !ui) return;
       knobsBound = true;
       bindKnob(ui.knobV, "v");
       bindKnob(ui.knobH, "h");
@@ -667,6 +817,7 @@
         });
 
         function openLoc(ev) {
+          if (editor && editor.isEditing()) return;
           if (window.L && window.L.DomEvent) window.L.DomEvent.stop(ev);
           renderDrawer(ui, loc);
         }
@@ -679,12 +830,46 @@
       });
     }
 
-    function init() {
+    function bindUIEvents() {
+      if (!ui) return;
+
+      ui.header.querySelector("#cc-cm-reload").onclick = function () {
+        initMaps();
+      };
+
+      ui.header.querySelector("#cc-cm-fit").onclick = function () {
+        if (px) applyView(0.5, 0.5);
+      };
+
+      ui.header.querySelector("#cc-cm-edit").onclick = function () {
+        if (editor) editor.toggle();
+      };
+
+      ui.header.querySelector("#cc-cm-export").onclick = function () {
+        if (editor) editor.exportJSON();
+      };
+
+      ui.drawerEl.querySelector("#close-dr").onclick = function () {
+        ui.drawerEl.classList.remove("cc-slide-panel-open");
+      };
+
+      root.addEventListener("click", function (e) {
+        if (!ui || !ui.drawerEl.classList.contains("cc-slide-panel-open")) return;
+        if (ui.drawerEl.contains(e.target)) return;
+        if (e.target && (e.target.closest(".leaflet-interactive") || e.target.closest(".leaflet-tooltip"))) return;
+        ui.drawerEl.classList.remove("cc-slide-panel-open");
+      });
+    }
+
+    function initMaps() {
+      if (!ui) return Promise.resolve();
       showLoader();
       updateResponsiveScale();
+      patchTrackGeometry();
+
       var loadStart = Date.now();
 
-      return ensureDeps(opts)
+      return Promise.resolve()
         .then(function () {
           return Promise.all([
             fetchJson(opts.mapUrl),
@@ -697,38 +882,58 @@
           px = mapDoc.map.background.image_pixel_size;
           bounds = [[0, 0], [px.h, px.w]];
 
-          try { if (bgMap) bgMap.remove(); } catch (e) {}
-          try { if (lensMap) lensMap.remove(); } catch (e) {}
+          var bgUrl = mapDoc.map.background.image_key;
+          var lensUrl = (mapDoc.map.lens && mapDoc.map.lens.image_key)
+            ? mapDoc.map.lens.image_key
+            : mapDoc.map.background.image_key;
+
+          return Promise.all([
+            preloadImage(bgUrl, 2),
+            preloadImage(lensUrl, 2)
+          ]).then(function () {
+            return {
+              bgUrl: bgUrl,
+              lensUrl: lensUrl
+            };
+          });
+        })
+        .then(function (urls) {
+          destroyMaps();
 
           bgMap = window.L.map(ui.mapEl, {
             crs: window.L.CRS.Simple,
             minZoom: -3,
             maxZoom: 2,
+            zoomSnap: 0,
+            zoomDelta: 0.25,
             zoomControl: false,
             attributionControl: false
           });
 
-          window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(bgMap);
-
-          var lensUrl = (mapDoc.map.lens && mapDoc.map.lens.image_key)
-            ? mapDoc.map.lens.image_key
-            : mapDoc.map.background.image_key;
+          window.L.imageOverlay(bust(urls.bgUrl), bounds).addTo(bgMap);
 
           lensMap = window.L.map(ui.lensMapEl, {
             crs: window.L.CRS.Simple,
             minZoom: -3,
-            maxZoom: 3,
+            maxZoom: 4,
+            zoomSnap: 0,
+            zoomDelta: 0.25,
             zoomControl: false,
             attributionControl: false
           });
 
-          window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
+          window.L.imageOverlay(bust(urls.lensUrl), bounds).addTo(lensMap);
 
           lockMaps();
           buildHitboxes();
 
           editor = createHitboxEditor(root, ui);
-          editor.attach(bgMap, bounds);
+          editor.attach(lensMap, bounds, function () {
+            lensMap.invalidateSize({ animate: false });
+            bgMap.invalidateSize({ animate: false });
+            applyView(currentT, currentTx);
+            editor.redraw();
+          });
 
           bindKnobs();
 
@@ -752,51 +957,47 @@
         })
         .catch(function (err) {
           hideLoader();
-          ui.drawerTitleEl.textContent = "Load failed";
-          ui.drawerContentEl.innerHTML =
-            '<div style="color:#f55;padding:1rem">Load failed: ' +
-            (err && err.message ? err.message : err) +
-            "</div>";
-          ui.drawerEl.classList.add("cc-slide-panel-open");
+          if (ui) {
+            ui.drawerTitleEl.textContent = "Load failed";
+            ui.drawerContentEl.innerHTML =
+              '<div style="color:#f55;padding:1rem">Load failed: ' +
+              (err && err.message ? err.message : err) +
+              "</div>";
+            ui.drawerEl.classList.add("cc-slide-panel-open");
+          }
           throw err;
         });
     }
 
-    window.addEventListener("resize", rafThrottle(function () {
+    var onResize = rafThrottle(function () {
+      if (destroyed) return;
       updateResponsiveScale();
+      patchTrackGeometry();
+
       if (bgMap) bgMap.invalidateSize({ animate: false });
       if (lensMap) lensMap.invalidateSize({ animate: false });
-      if (px) applyView(currentT, currentTx);
-    }));
 
-    header.querySelector("#cc-cm-reload").onclick = function () {
-      init();
-    };
-
-    header.querySelector("#cc-cm-fit").onclick = function () {
-      if (px) applyView(0.5, 0.5);
-    };
-
-    header.querySelector("#cc-cm-edit").onclick = function () {
-      if (editor) editor.toggle();
-    };
-
-    header.querySelector("#cc-cm-export").onclick = function () {
-      if (editor) editor.exportJSON();
-    };
-
-    drawer.querySelector("#close-dr").onclick = function () {
-      ui.drawerEl.classList.remove("cc-slide-panel-open");
-    };
-
-    root.addEventListener("click", function (e) {
-      if (!ui.drawerEl.classList.contains("cc-slide-panel-open")) return;
-      if (ui.drawerEl.contains(e.target)) return;
-      if (e.target && (e.target.closest(".leaflet-interactive") || e.target.closest(".leaflet-tooltip"))) return;
-      ui.drawerEl.classList.remove("cc-slide-panel-open");
+      if (px) {
+        if (editor && editor.isEditing()) {
+          lensMap.fitBounds(bounds, { animate: false, padding: [24, 24] });
+          editor.redraw();
+        } else {
+          applyView(currentT, currentTx);
+        }
+      }
     });
 
-    return init().then(function () { return {}; });
+    window.addEventListener("resize", onResize);
+
+    renderLoaderOnly();
+
+    return ensureDeps(opts)
+      .then(function () {
+        if (destroyed) return {};
+        buildUI();
+        return initMaps();
+      })
+      .then(function () { return {}; });
   }
 
   window.CC_CanyonMap = { mount: mount };
