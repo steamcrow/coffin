@@ -1,14 +1,18 @@
+/* Coffin Canyon Map — V2 */
+
 (function(){
 
-const DEFAULTS={
+const DEFAULTS = {
 title:"Coffin Canyon — Canyon Map",
 mapUrl:"https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
-locationsUrl:"https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json"
+locationsUrl:"https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
+frameUrl:"https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame2.png"
 };
 
 function el(tag,attrs,children){
 attrs=attrs||{};
 children=children||[];
+
 const n=document.createElement(tag);
 
 Object.keys(attrs).forEach(k=>{
@@ -25,42 +29,40 @@ return n;
 
 function renderDrawer(ui,loc){
 
-ui.title.textContent=loc.name||loc.id;
+ui.title.textContent = loc.name || loc.id;
 
-ui.body.innerHTML=
+ui.body.innerHTML =
+'<div class="cc-block">'+
+'<div class="cc-h">Description</div>'+
+'<p>'+(loc.description||"No description.")+'</p>'+
+'</div>'+
 
-`<div class="cc-block">
-<div class="cc-h">Description</div>
-<p>${loc.description||"No description."}</p>
-</div>
+'<div class="cc-block">'+
+'<div class="cc-h">Danger</div>'+
+(loc.danger||0)+
+'</div>'+
 
-<div class="cc-block">
-<div class="cc-h">Danger</div>
-${loc.danger||0}
-</div>
-
-<div class="cc-block">
-<div class="cc-h">Population</div>
-${loc.population||0}
-</div>`;
+'<div class="cc-block">'+
+'<div class="cc-h">Population</div>'+
+(loc.population||0)+
+'</div>';
 
 ui.panel.classList.add("cc-slide-panel-open");
 
 }
-
 function buildHitboxes(map,locations,ui){
 
 locations.forEach(loc=>{
 
-const box=window.CC_HITBOXES?.[loc.id];
+const box = window.CC_HITBOXES?.[loc.id];
 if(!box) return;
 
-const rect=L.rectangle(
+const rect = L.rectangle(
 [[box[0],box[1]],[box[2],box[3]]],
 {
 color:"#ff7518",
 weight:2,
-fillOpacity:0.15
+fillOpacity:.15
 }).addTo(map);
 
 rect.bindTooltip(loc.name,{
@@ -77,14 +79,44 @@ renderDrawer(ui,loc);
 
 }
 
+function attachKnobs(map,frame){
+
+const knobV = frame.querySelector(".cc-knob-v");
+const knobH = frame.querySelector(".cc-knob-h");
+
+map.on("move",()=>{
+
+const center = map.getCenter();
+const zoom = map.getZoom();
+
+const p = map.project(center,zoom);
+
+const v = (p.y/4000)*100;
+const h = (p.x/4000)*100;
+
+knobV.style.top = v+"%";
+knobH.style.left = h+"%";
+
+});
+
+}
 async function mount(root,userOpts){
 
-const opts=Object.assign({},DEFAULTS,userOpts||{});
+const opts = Object.assign({},DEFAULTS,userOpts||{});
 
 root.innerHTML="";
 
-const mapEl=el("div",{class:"cc-map-root"});
-const panel=el("div",{class:"cc-slide-panel"},[
+const mapWrap = el("div",{class:"cc-map-wrap"});
+
+const mapEl = el("div",{class:"cc-map-root"});
+
+const frame = el("div",{class:"cc-map-frame"},[
+el("img",{class:"cc-map-frame-img",src:opts.frameUrl}),
+el("div",{class:"cc-knob-v"}),
+el("div",{class:"cc-knob-h"})
+]);
+
+const panel = el("div",{class:"cc-slide-panel"},[
 el("div",{class:"cc-slide-panel-header"},[
 el("h2",{class:"cc-panel-title"}),
 el("button",{class:"cc-panel-close-btn",id:"cc-panel-close"},["×"])
@@ -92,7 +124,10 @@ el("button",{class:"cc-panel-close-btn",id:"cc-panel-close"},["×"])
 el("div",{class:"cc-panel-body"})
 ]);
 
-root.appendChild(mapEl);
+mapWrap.appendChild(mapEl);
+mapWrap.appendChild(frame);
+
+root.appendChild(mapWrap);
 root.appendChild(panel);
 
 const ui={
@@ -105,14 +140,14 @@ panel.querySelector("#cc-panel-close").onclick=()=>{
 panel.classList.remove("cc-slide-panel-open");
 };
 
-const [mapDoc,locDoc]=await Promise.all([
+const [mapDoc,locDoc] = await Promise.all([
 fetch(opts.mapUrl).then(r=>r.json()),
 fetch(opts.locationsUrl).then(r=>r.json())
 ]);
 
-const px=mapDoc.map.background.image_pixel_size;
+const px = mapDoc.map.background.image_pixel_size;
 
-const map=L.map(mapEl,{
+const map = L.map(mapEl,{
 crs:L.CRS.Simple,
 minZoom:-2,
 maxZoom:2
@@ -120,11 +155,22 @@ maxZoom:2
 
 const bounds=[[0,0],[px.h,px.w]];
 
-L.imageOverlay(mapDoc.map.background.image_key,bounds).addTo(map);
+L.imageOverlay(
+mapDoc.map.background.image_key,
+bounds
+).addTo(map);
 
 map.fitBounds(bounds);
 
 buildHitboxes(map,locDoc.locations,ui);
+
+attachKnobs(map,frame);
+
+if(window.CC_HitboxEditor){
+window.editor = CC_HitboxEditor(map,window.CC_HITBOXES);
+}
+
+return map;
 
 }
 
