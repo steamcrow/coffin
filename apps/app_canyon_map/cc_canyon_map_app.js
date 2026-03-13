@@ -50,33 +50,123 @@ ui.body.innerHTML =
 ui.panel.classList.add("cc-slide-panel-open");
 
 }
-function buildHitboxes(map,locations,ui){
+function buildHitboxes(map, locations, ui) {
 
-locations.forEach(loc=>{
+let activeRect = null;
+let activeTooltipEl = null;
 
-const box = window.CC_HITBOXES?.[loc.id];
-if(!box) return;
+function clearActive() {
+  if (activeRect) {
+    activeRect.setStyle({
+      color: "#ff7518",
+      weight: 2,
+      fillOpacity: 0.15
+    });
+    if (activeRect._path) {
+      activeRect._path.classList.remove("cc-hitbox-active");
+    }
+  }
 
-const rect = L.rectangle(
-[[box[0],box[1]],[box[2],box[3]]],
-{
-color:"#ff7518",
-weight:2,
-fillOpacity:.15
-}).addTo(map);
+  if (activeTooltipEl) {
+    activeTooltipEl.classList.remove("cc-label-active");
+  }
 
-rect.bindTooltip(loc.name,{
-permanent:true,
-direction:"center",
-className:"cc-map-hitbox-label"
+  activeRect = null;
+  activeTooltipEl = null;
+}
+
+function setHover(rect, on) {
+  if (!rect || !rect._path) return;
+  rect._path.classList.toggle("cc-hitbox-hover", !!on);
+
+  var tooltipEl = rect.getTooltip() && rect.getTooltip().getElement
+    ? rect.getTooltip().getElement()
+    : null;
+
+  if (tooltipEl) {
+    tooltipEl.classList.toggle("cc-label-hover", !!on);
+  }
+}
+
+function setActive(rect) {
+  clearActive();
+
+  activeRect = rect;
+  rect.setStyle({
+    color: "#fff0c2",
+    weight: 3,
+    fillOpacity: 0.26
+  });
+
+  if (rect._path) {
+    rect._path.classList.add("cc-hitbox-active");
+  }
+
+  var tooltipEl = rect.getTooltip() && rect.getTooltip().getElement
+    ? rect.getTooltip().getElement()
+    : null;
+
+  if (tooltipEl) {
+    tooltipEl.classList.add("cc-label-active");
+    activeTooltipEl = tooltipEl;
+  }
+
+  if (ui && ui.mapWrapEl) {
+    ui.mapWrapEl.classList.add("cc-map-focus");
+  }
+}
+
+locations.forEach(function (loc) {
+  const box = window.CC_HITBOXES && window.CC_HITBOXES[loc.id];
+  if (!box) return;
+
+  const rect = L.rectangle(
+    [[box[0], box[1]], [box[2], box[3]]],
+    {
+      color: "#ff7518",
+      weight: 2,
+      fillOpacity: 0.15
+    }
+  ).addTo(map);
+
+  rect.bindTooltip(loc.name, {
+    permanent: true,
+    direction: "center",
+    className: "cc-map-hitbox-label"
+  });
+
+  rect.on("mouseover", function () {
+    setHover(rect, true);
+  });
+
+  rect.on("mouseout", function () {
+    if (rect !== activeRect) {
+      setHover(rect, false);
+    }
+  });
+
+  rect.on("click", function () {
+    renderDrawer(ui, loc);
+    setActive(rect);
+  });
+
+  rect.on("touchstart", function () {
+    renderDrawer(ui, loc);
+    setActive(rect);
+  });
 });
 
-rect.on("click",()=>{
-renderDrawer(ui,loc);
-});
-
-});
-
+if (ui && ui.panel) {
+  const closeBtn = ui.panel.querySelector("#cc-panel-close");
+  if (closeBtn) {
+    closeBtn.addEventListener("click", function () {
+      clearActive();
+      if (ui.mapWrapEl) {
+        ui.mapWrapEl.classList.remove("cc-map-focus");
+      }
+    });
+  }
+}
 }
 
 function attachKnobs(map,frame){
@@ -130,10 +220,11 @@ mapWrap.appendChild(frame);
 root.appendChild(mapWrap);
 root.appendChild(panel);
 
-const ui={
-panel:panel,
-title:panel.querySelector(".cc-panel-title"),
-body:panel.querySelector(".cc-panel-body")
+const ui = {
+panel: panel,
+title: panel.querySelector(".cc-panel-title"),
+body: panel.querySelector(".cc-panel-body"),
+mapWrapEl: mapWrap
 };
 
 panel.querySelector("#cc-panel-close").onclick=()=>{
