@@ -1,5 +1,5 @@
 /* File: apps/app_canyon_map/cc_canyon_map_app.js
-   Coffin Canyon — Canyon Map (stability rebuild)
+   Coffin Canyon — Canyon Map
 */
 
 (function () {
@@ -21,25 +21,20 @@
     leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
     leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
     logoUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
-    frameUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame3.png",
     knobUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
-  };
-
-  var HITBOXES = window.CC_HITBOXES || {};
-
-  var state = {
-    h: 50,
-    v: 50
   };
 
   var root;
   var mapBG;
   var mapLens;
-  var lensOverlay;
-  var bgOverlay;
 
   var knobH;
   var knobV;
+
+  var state = {
+    h: 50,
+    v: 50
+  };
 
   var loaderStart;
 
@@ -59,18 +54,34 @@
   }
 
   function loadCSS(url) {
-    return fetch(url).then(r => r.text()).then(css => {
-      var s = document.createElement("style");
-      s.textContent = css;
-      document.head.appendChild(s);
-    });
+    return fetch(url)
+      .then(r => r.text())
+      .then(css => {
+        var s = document.createElement("style");
+        s.textContent = css;
+        document.head.appendChild(s);
+      });
   }
 
   function loadScript(url) {
-    return new Promise(function (resolve) {
+    return new Promise(function (resolve, reject) {
+
+      if (window.L) {
+        resolve();
+        return;
+      }
+
       var s = document.createElement("script");
       s.src = url;
-      s.onload = resolve;
+      s.async = false;
+
+      s.onload = function () {
+        if (window.L) resolve();
+        else reject("Leaflet failed to initialize");
+      };
+
+      s.onerror = reject;
+
       document.head.appendChild(s);
     });
   }
@@ -113,6 +124,10 @@
 
   function createLayout() {
 
+    if (!window.L) {
+      throw new Error("Leaflet did not load.");
+    }
+
     var bg = el("div", { id: "cc-bg-map" });
     var lens = el("div", { id: "cc-lens-map" });
 
@@ -143,8 +158,8 @@
 
     var bounds = [[0,0],[mapData.height,mapData.width]];
 
-    bgOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapBG);
-    lensOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapLens);
+    var bgOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapBG);
+    var lensOverlay = L.imageOverlay(mapData.image, bounds).addTo(mapLens);
 
     mapBG.fitBounds(bounds);
     mapLens.fitBounds(bounds);
@@ -206,60 +221,6 @@
     knobV.addEventListener("pointerdown", e => dragStart(e,"v"));
   }
 
-  function buildHitboxes() {
-
-    var layer = el("div", { class:"cc-hitbox-layer" });
-
-    Object.keys(HITBOXES).forEach(function(id){
-
-      var b = HITBOXES[id];
-
-      var box = el("div",{ class:"cc-hitbox" });
-
-      box.style.left = b[0]+"px";
-      box.style.top = b[1]+"px";
-      box.style.width = (b[2]-b[0])+"px";
-      box.style.height = (b[3]-b[1])+"px";
-
-      makeDraggable(box);
-
-      layer.appendChild(box);
-
-    });
-
-    root.appendChild(layer);
-  }
-
-  function makeDraggable(elm) {
-
-    elm.addEventListener("pointerdown",function(e){
-
-      var startX = e.clientX;
-      var startY = e.clientY;
-
-      var rect = elm.getBoundingClientRect();
-
-      function move(ev){
-
-        var dx = ev.clientX - startX;
-        var dy = ev.clientY - startY;
-
-        elm.style.left = rect.left + dx + "px";
-        elm.style.top = rect.top + dy + "px";
-      }
-
-      function up(){
-        window.removeEventListener("pointermove",move);
-        window.removeEventListener("pointerup",up);
-      }
-
-      window.addEventListener("pointermove",move);
-      window.addEventListener("pointerup",up);
-
-    });
-
-  }
-
   function mount(el,opts){
 
     root = el;
@@ -289,7 +250,6 @@
     .then(function(){
 
       bindKnobs();
-      buildHitboxes();
       applyView();
 
       hideLoader(loader);
