@@ -14,7 +14,7 @@
   //  BG_ZOOM_OFFSET  < 0 → slightly MORE zoomed out than fill (shows full map)
   //  LENS_ZOOM_EXTRA > 0 → MUCH more zoomed in than fill (detail view)
   //
-  var BG_ZOOM_OFFSET  = -0.2;  // BG: full-map overview, slightly outside fill
+  var BG_ZOOM_OFFSET  = -0.15;  // BG: full-map overview, slightly outside fill
   var LENS_ZOOM_EXTRA =  1.5;  // Lens: zoomed in by this much relative to BG (~20% less than before)
 
   var MIN_LOADER_MS = 700;
