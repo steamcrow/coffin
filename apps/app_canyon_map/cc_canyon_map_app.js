@@ -67,7 +67,7 @@
     leafletJsUrl:  "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
     logoUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
     knobUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png",
-    frameUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame3.png"
+    frameUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map_frame.png"
   };
 
   // ── Module-level refs ───────────────────────────────────────────────────
@@ -81,6 +81,8 @@
   var loaderStart;
 
   var state = { h: 50, v: 50 };
+  var imgW  = 0;   // image pixel width  — set in createOverlays
+  var imgH  = 0;   // image pixel height — set in createOverlays
 
   // ── Tiny DOM helper ─────────────────────────────────────────────────────
   function el(tag, attrs, children) {
@@ -218,6 +220,9 @@
       var w       = mapData.map.background.image_pixel_size.w;
       var h       = mapData.map.background.image_pixel_size.h;
 
+      imgW = w;
+      imgH = h;
+
       if (!bgUrl || !lensUrl) {
         reject("Map JSON missing image_key fields"); return;
       }
@@ -244,16 +249,21 @@
 
   // ── Sync both maps + knob positions to current state ───────────────────
   function applyView() {
-    var rect  = mapWrap.getBoundingClientRect();
-    var x     = rect.width  * (state.h / 100);
-    var y     = rect.height * (state.v / 100);
+    // Compute the target image-space coordinate directly from state.
+    // In CRS.Simple, Leaflet's [lat,lng] maps to [y,x] in pixel space.
+    // state.h/v are percentages across the full image, so multiply by
+    // the stored image dimensions to get the exact pixel to centre on.
+    //
+    // DO NOT use containerPointToLatLng here — that asks "what pixel is
+    // currently visible at screen pos X,Y?" which changes every time the
+    // map pans, creating a feedback loop that makes the map float away.
+    var targetLat = imgH * (state.v / 100);
+    var targetLng = imgW * (state.h / 100);
 
-    // With CRS.Simple, containerPointToLatLng returns image-space [y,x]
-    var point = mapBG.containerPointToLatLng([x, y]);
-    mapBG.panTo(point,   { animate: false });
-    mapLens.panTo(point, { animate: false });
+    mapBG.panTo([targetLat, targetLng],   { animate: false });
+    mapLens.panTo([targetLat, targetLng], { animate: false });
 
-    // Map state percentage range → 0–100% within knob tracks
+    // Map state range (V_MIN–V_MAX, H_MIN–H_MAX) → 0–100% within track
     var vPct = (state.v - V_MIN) / (V_MAX - V_MIN) * 100;
     var hPct = (state.h - H_MIN) / (H_MAX - H_MIN) * 100;
 
@@ -321,6 +331,8 @@
     knobV   = null;
     knobH   = null;
     state   = { h: 50, v: 50 };
+    imgW    = 0;
+    imgH    = 0;
 
     var o = Object.assign({}, DEFAULTS, opts || {});
     loaderStart = performance.now();
