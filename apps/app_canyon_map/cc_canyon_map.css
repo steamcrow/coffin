@@ -314,4 +314,24 @@
     font-size: 9px !important;
     max-width: 72px !important;
   }
+  /* =========================================
+   HITBOX EDIT MODE — allow pointer control
+   ========================================= */
+
+.cc-canyon-map.cc-hitbox-edit .leaflet-pane,
+.cc-canyon-map.cc-hitbox-edit .leaflet-container,
+.cc-canyon-map.cc-hitbox-edit .leaflet-overlay-pane,
+.cc-canyon-map.cc-hitbox-edit .leaflet-marker-pane,
+.cc-canyon-map.cc-hitbox-edit .leaflet-shadow-pane,
+.cc-canyon-map.cc-hitbox-edit .leaflet-tile-pane,
+.cc-canyon-map.cc-hitbox-edit .leaflet-control-container {
+  pointer-events: none !important;
+}
+
+/* editor boxes must still receive input */
+.cc-canyon-map.cc-hitbox-edit .cc-hitbox-editor-layer,
+.cc-canyon-map.cc-hitbox-edit .cc-hb-box,
+.cc-canyon-map.cc-hitbox-edit .cc-hb-handle {
+  pointer-events: auto !important;
+} 
 }
