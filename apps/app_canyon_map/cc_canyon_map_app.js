@@ -5,14 +5,19 @@
 
 (function () {
 
-  // ── Zoom constants ──────────────────────────────────────────────────────
-  // BG_ZOOM: more negative = more zoomed out = shows more of the full map.
-  // LENS_ZOOM_OFFSET: added to BG_ZOOM to get the lens (detail) zoom level.
-  // Both maps always pan to a coordinate derived from the same 0–1 t-value,
-  // but each uses safeRange() so they both hit their image edge simultaneously.
-  var BG_ZOOM          = -3;    // overview — very zoomed out
-  var LENS_ZOOM_OFFSET = 2.5;   // lens = BG_ZOOM + this = -0.5 (15% tighter than before)
-  var MIN_LOADER_MS    = 700;
+  // ── Zoom offsets (applied to the dynamically computed fill zoom) ────────
+  //
+  //  After loading the image we measure the actual container sizes and compute
+  //  the "fill zoom" — the Leaflet zoom level at which the image exactly covers
+  //  the BG container.  These offsets are applied on top of that:
+  //
+  //  BG_ZOOM_OFFSET  < 0 → slightly MORE zoomed out than fill (shows full map)
+  //  LENS_ZOOM_EXTRA > 0 → MUCH more zoomed in than fill (detail view)
+  //
+  var BG_ZOOM_OFFSET  = -0.2;  // BG: full-map overview, slightly outside fill
+  var LENS_ZOOM_EXTRA =  2.2;  // Lens: zoomed in by this much relative to BG
+
+  var MIN_LOADER_MS = 700;
 
   // ── Knob travel limits within their tracks (%) ─────────────────────────
   var V_MIN = 8;
@@ -64,37 +69,33 @@
 
   // ── Asset URLs ──────────────────────────────────────────────────────────
   var DEFAULTS = {
-    title:        "Coffin Canyon — Canyon Map",
-    mapUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
-    locationsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
-    appCssUrl:    "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
-    leafletCssUrl:"https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
-    leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
-    logoUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
-    frameUrl:     "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame3.png",
-    knobUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
+    title:         "Coffin Canyon — Canyon Map",
+    mapUrl:        "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
+    locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
+    appCssUrl:     "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
+    leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
+    leafletJsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
+    logoUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
+    frameUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame3.png",
+    knobUrl:       "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
   };
 
   // ── Loaded-once cache ───────────────────────────────────────────────────
-  var _loaded = { css: {}, js: {} };
-
-  // ── For CC_APP.destroy cleanup ──────────────────────────────────────────
+  var _loaded  = { css: {}, js: {} };
   var _destroyFn = null;
 
-  // ── Utility: tiny DOM builder ───────────────────────────────────────────
+  // ── Tiny DOM builder ────────────────────────────────────────────────────
   function el(tag, attrs, children) {
     attrs    = attrs    || {};
     children = children || [];
     var n = document.createElement(tag);
     Object.keys(attrs).forEach(function (k) {
       var v = attrs[k];
-      if (k === "class") n.className = v;
-      else if (k === "style") n.setAttribute("style", v);
-      else if (k.indexOf("on") === 0 && typeof v === "function") {
-        n.addEventListener(k.slice(2).toLowerCase(), v);
-      } else {
-        n.setAttribute(k, v);
-      }
+      if      (k === "class")                              n.className = v;
+      else if (k === "style")                              n.setAttribute("style", v);
+      else if (k.indexOf("on") === 0 && typeof v === "function")
+                                                           n.addEventListener(k.slice(2).toLowerCase(), v);
+      else                                                 n.setAttribute(k, v);
     });
     children.forEach(function (c) {
       n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
@@ -118,10 +119,7 @@
       lastArgs = arguments;
       if (pending) return;
       pending = true;
-      requestAnimationFrame(function () {
-        pending = false;
-        fn.apply(null, lastArgs);
-      });
+      requestAnimationFrame(function () { pending = false; fn.apply(null, lastArgs); });
     };
   }
 
@@ -158,17 +156,10 @@
       var blob    = new Blob([code], { type: "text/javascript" });
       var blobUrl = URL.createObjectURL(blob);
       return new Promise(function (resolve, reject) {
-        var s    = document.createElement("script");
-        s.src    = blobUrl;
-        s.onload = function () {
-          URL.revokeObjectURL(blobUrl);
-          _loaded.js[key] = true;
-          resolve();
-        };
-        s.onerror = function () {
-          URL.revokeObjectURL(blobUrl);
-          reject(new Error("Script load failed: " + url));
-        };
+        var s     = document.createElement("script");
+        s.src     = blobUrl;
+        s.onload  = function () { URL.revokeObjectURL(blobUrl); _loaded.js[key] = true; resolve(); };
+        s.onerror = function () { URL.revokeObjectURL(blobUrl); reject(new Error("Script load failed: " + url)); };
         document.head.appendChild(s);
       });
     });
@@ -184,20 +175,37 @@
     return p;
   }
 
-  // ── safeRange: compute how far a map can pan without hitting white space ─
+  // ── computeFillZoom ─────────────────────────────────────────────────────
   //
-  //  At zoom z with CRS.Simple, 1 image pixel = 2^z screen pixels.
-  //  The container of size S shows (S / 2^z) image pixels.
-  //  The centre point can range from (visible/2) to (imageDim - visible/2).
-  //  If the image is smaller than the container, lock to the midpoint.
+  //  Returns the Leaflet zoom level at which the image FILLS the container
+  //  (both dimensions covered — image may be slightly cropped).
+  //
+  //  In CRS.Simple:  screen_pixels = image_pixels * 2^zoom
+  //  So:             zoom = log2(screen_size / image_size)
+  //
+  //  "fill" uses the LARGER zoom (the axis that needs more zoom to cover).
+  //
+  function computeFillZoom(containerEl, imgW, imgH) {
+    var r  = containerEl.getBoundingClientRect();
+    var cW = r.width  || containerEl.offsetWidth  || 1200;
+    var cH = r.height || containerEl.offsetHeight || 800;
+    var zW = Math.log2(cW / imgW);
+    var zH = Math.log2(cH / imgH);
+    return Math.max(zW, zH);
+  }
+
+  // ── safeRange ───────────────────────────────────────────────────────────
+  //
+  //  Compute how far the centre of a map can travel without showing white
+  //  space.  If the image is fully contained in the viewport, returns a
+  //  locked midpoint (no panning possible).
   //
   function safeRange(containerEl, zoom, imageDim, isWidth) {
-    var rect    = containerEl.getBoundingClientRect();
-    var size    = isWidth
-      ? (rect.width  || containerEl.offsetWidth  || 800)
-      : (rect.height || containerEl.offsetHeight || 600);
-    var scale   = Math.pow(2, zoom);
-    var visible = size / scale;
+    var r    = containerEl.getBoundingClientRect();
+    var size = isWidth
+      ? (r.width  || containerEl.offsetWidth  || 800)
+      : (r.height || containerEl.offsetHeight || 600);
+    var visible = size / Math.pow(2, zoom);
     var half    = visible / 2;
     if (half >= imageDim / 2) {
       return { min: imageDim / 2, max: imageDim / 2 };
@@ -205,7 +213,7 @@
     return { min: half, max: imageDim - half };
   }
 
-  // ── Drawer / info panel ─────────────────────────────────────────────────
+  // ── Drawer ──────────────────────────────────────────────────────────────
   function meterBar(value, max, color) {
     var pct = Math.round(clamp(value || 0, 0, max) / max * 100);
     return '<div style="width:100%;height:22px;background:rgba(255,255,255,.08);border-radius:11px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.12)">' +
@@ -223,15 +231,14 @@
       '<div style="display:flex;flex-wrap:wrap;gap:.5rem">' +
       (loc.features || []).map(function (f) {
         return '<span style="padding:4px 10px;background:rgba(255,117,24,.2);border:1px solid rgba(255,117,24,.4);border-radius:4px;font-size:.85rem">' + f + "</span>";
-      }).join("") +
-      "</div>";
+      }).join("") + "</div>";
     ui.drawerEl.classList.add("cc-slide-panel-open");
     ui.drawerEl.scrollTop = 0;
   }
 
   // ── Hitbox editor ───────────────────────────────────────────────────────
-  function createHitboxEditor(root, ui) {
-    var state = {
+  function createHitboxEditor(rootEl, ui) {
+    var s = {
       editing:     false,
       active:      null,
       map:         null,
@@ -242,46 +249,43 @@
     };
 
     function ensureLayer() {
-      if (state.layerEl) return state.layerEl;
-      state.layerEl           = document.createElement("div");
-      state.layerEl.className = "cc-hitbox-editor-layer";
-      state.layerEl.id        = "cc-hitbox-editor";
-      ui.lensMapEl.appendChild(state.layerEl);
-      return state.layerEl;
+      if (s.layerEl) return s.layerEl;
+      s.layerEl           = document.createElement("div");
+      s.layerEl.className = "cc-hitbox-editor-layer";
+      s.layerEl.id        = "cc-hitbox-editor";
+      ui.lensMapEl.appendChild(s.layerEl);
+      return s.layerEl;
     }
 
     function latLngToPx(lat, lng) {
-      var pt = state.map.latLngToContainerPoint(window.L.latLng(lat, lng));
+      var pt = s.map.latLngToContainerPoint(window.L.latLng(lat, lng));
       return { x: pt.x, y: pt.y };
     }
 
     function draw() {
-      if (!state.editing || !state.map) return;
+      if (!s.editing || !s.map) return;
       var layer = ensureLayer();
       layer.innerHTML = "";
 
       Object.keys(HITBOXES).sort().forEach(function (id) {
         var b = HITBOXES[id];
         if (!b) return;
-        var p1 = latLngToPx(b[0], b[1]);
-        var p2 = latLngToPx(b[2], b[3]);
-        var left   = Math.min(p1.x, p2.x);
-        var top    = Math.min(p1.y, p2.y);
-        var width  = Math.abs(p2.x - p1.x);
-        var height = Math.abs(p2.y - p1.y);
+        var p1   = latLngToPx(b[0], b[1]);
+        var p2   = latLngToPx(b[2], b[3]);
+        var left = Math.min(p1.x, p2.x);
+        var top  = Math.min(p1.y, p2.y);
+        var w    = Math.abs(p2.x - p1.x);
+        var h    = Math.abs(p2.y - p1.y);
 
         var box       = document.createElement("div");
         box.className = "cc-hb-box";
         box.dataset.id = id;
-        box.style.left   = left   + "px";
-        box.style.top    = top    + "px";
-        box.style.width  = width  + "px";
-        box.style.height = height + "px";
+        box.style.cssText = "left:" + left + "px;top:" + top + "px;width:" + w + "px;height:" + h + "px;";
 
-        var label       = document.createElement("div");
-        label.className = "cc-hb-label";
-        label.textContent = id;
-        box.appendChild(label);
+        var lbl       = document.createElement("div");
+        lbl.className = "cc-hb-label";
+        lbl.textContent = id;
+        box.appendChild(lbl);
 
         var handle       = document.createElement("div");
         handle.className = "cc-hb-handle";
@@ -294,10 +298,13 @@
     }
 
     function updateFromBox(box) {
-      var id  = box.dataset.id;
-      var p1  = state.map.containerPointToLatLng(window.L.point(parseFloat(box.style.left), parseFloat(box.style.top)));
-      var p2  = state.map.containerPointToLatLng(window.L.point(parseFloat(box.style.left) + parseFloat(box.style.width), parseFloat(box.style.top) + parseFloat(box.style.height)));
-      HITBOXES[id] = [
+      var left = parseFloat(box.style.left);
+      var top  = parseFloat(box.style.top);
+      var bw   = parseFloat(box.style.width);
+      var bh   = parseFloat(box.style.height);
+      var p1   = s.map.containerPointToLatLng(window.L.point(left,      top     ));
+      var p2   = s.map.containerPointToLatLng(window.L.point(left + bw, top + bh));
+      HITBOXES[box.dataset.id] = [
         Math.round(Math.min(p1.lat, p2.lat)),
         Math.round(Math.min(p1.lng, p2.lng)),
         Math.round(Math.max(p1.lat, p2.lat)),
@@ -306,45 +313,46 @@
     }
 
     function attachPointerHandlers() {
-      if (state.attached) return;
-      state.attached = true;
+      if (s.attached) return;
+      s.attached = true;
 
       ensureLayer().addEventListener("pointerdown", function (e) {
-        if (!state.editing) return;
+        if (!s.editing) return;
         var box = e.target.closest(".cc-hb-box");
         if (!box) return;
-        var isHandle = e.target.classList.contains("cc-hb-handle");
-        state.active = {
-          box: box, mode: isHandle ? "resize" : "move",
+
+        s.active = {
+          box:       box,
+          mode:      e.target.classList.contains("cc-hb-handle") ? "resize" : "move",
           pointerId: e.pointerId,
-          startX: e.clientX, startY: e.clientY,
-          left:   parseFloat(box.style.left),   top:    parseFloat(box.style.top),
-          width:  parseFloat(box.style.width),  height: parseFloat(box.style.height)
+          startX:    e.clientX, startY:  e.clientY,
+          left:      parseFloat(box.style.left),   top:    parseFloat(box.style.top),
+          width:     parseFloat(box.style.width),  height: parseFloat(box.style.height)
         };
+
         try { box.setPointerCapture(e.pointerId); } catch (_) {}
         e.preventDefault();
         e.stopPropagation();
       });
 
       window.addEventListener("pointermove", function (ev) {
-        if (!state.active) return;
-        if (ev.pointerId !== state.active.pointerId) return;
-        var dx = ev.clientX - state.active.startX;
-        var dy = ev.clientY - state.active.startY;
-        if (state.active.mode === "move") {
-          state.active.box.style.left = Math.round(state.active.left + dx) + "px";
-          state.active.box.style.top  = Math.round(state.active.top  + dy) + "px";
+        if (!s.active || ev.pointerId !== s.active.pointerId) return;
+        var dx = ev.clientX - s.active.startX;
+        var dy = ev.clientY - s.active.startY;
+        if (s.active.mode === "move") {
+          s.active.box.style.left = Math.round(s.active.left + dx) + "px";
+          s.active.box.style.top  = Math.round(s.active.top  + dy) + "px";
         } else {
-          state.active.box.style.width  = Math.max(8, Math.round(state.active.width  + dx)) + "px";
-          state.active.box.style.height = Math.max(8, Math.round(state.active.height + dy)) + "px";
+          s.active.box.style.width  = Math.max(8, Math.round(s.active.width  + dx)) + "px";
+          s.active.box.style.height = Math.max(8, Math.round(s.active.height + dy)) + "px";
         }
-        updateFromBox(state.active.box);
+        updateFromBox(s.active.box);
         ev.preventDefault();
       }, { passive: false });
 
       function endPointer(ev) {
-        if (!state.active || ev.pointerId !== state.active.pointerId) return;
-        state.active = null;
+        if (!s.active || ev.pointerId !== s.active.pointerId) return;
+        s.active = null;
       }
       window.addEventListener("pointerup",     endPointer);
       window.addEventListener("pointercancel", endPointer);
@@ -358,57 +366,50 @@
     }
 
     function setEditing(on) {
-      state.editing = on;
-      root.classList.toggle("cc-hitbox-edit", on);
-      if (!state.map || !state.bounds) return;
+      s.editing = on;
+      rootEl.classList.toggle("cc-hitbox-edit", on);
+      if (!s.map || !s.bounds) return;
+
       if (!on) {
-        if (state.layerEl) state.layerEl.style.display = "none";
+        if (s.layerEl) s.layerEl.style.display = "none";
         ui.editorBadgeEl.style.display = "none";
-        state.map.off("move zoom resize", draw);
-        if (typeof state.refreshView === "function") {
-          nextFrame().then(function () { state.refreshView(); });
+        s.map.off("move zoom resize", draw);
+        if (typeof s.refreshView === "function") {
+          // Give CSS a frame to revert the lens layout before re-applying view
+          nextFrame().then(function () { s.refreshView(); });
         }
         return;
       }
-      nextFrame().then(function () {
-        state.map.invalidateSize({ animate: false });
-        state.map.fitBounds(state.bounds, { animate: false, padding: [24, 24] });
+
+      // CSS transition expands the lens to full-screen; wait for it to finish
+      // before calling invalidateSize + fitBounds, otherwise Leaflet measures
+      // the OLD (small) size and renders tiles at the wrong scale.
+      delay(150).then(function () {
+        s.map.invalidateSize({ animate: false });
+        s.map.fitBounds(s.bounds, { animate: false, padding: [24, 24] });
         ensureLayer().style.display = "block";
         draw();
-        state.map.on("move zoom resize", draw);
+        s.map.on("move zoom resize", draw);
       });
     }
 
     return {
-      attach:     function (map, bounds, refreshViewFn) {
-        state.map = map; state.bounds = bounds; state.refreshView = refreshViewFn || null;
+      attach: function (map, bounds, refreshViewFn) {
+        s.map = map; s.bounds = bounds; s.refreshView = refreshViewFn || null;
         attachPointerHandlers();
       },
-      toggle:     function () { setEditing(!state.editing); },
+      toggle:     function ()  { setEditing(!s.editing); },
       exportJSON: exportJSON,
-      isEditing:  function () { return state.editing; },
+      isEditing:  function ()  { return s.editing; },
       redraw:     draw
     };
   }
 
   // ── Momentum physics ────────────────────────────────────────────────────
-  //
-  //  Creates a lightweight per-axis momentum object.
-  //  On pointer release, call .fling(value, velocity, callback).
-  //  Each RAF frame: value += velocity * dt; velocity decays exponentially.
-  //  Stops when velocity is negligible.
-  //
-  //  FRICTION: decay constant. vel *= exp(-FRICTION * dt).
-  //  Higher = stops faster.  3 = pleasant "heavy" weight.
-  //
-  var MOMENTUM_FRICTION = 3.0;
+  var MOMENTUM_FRICTION = 3.0;   // higher = stops faster; 3 = heavy and satisfying
 
   function makeMomentum() {
-    var val   = 0.5;
-    var vel   = 0;
-    var rafId = null;
-    var lastT = 0;
-    var cb    = null;
+    var val = 0.5, vel = 0, rafId = null, lastT = 0, cb = null;
 
     function tick(now) {
       var dt = Math.min((now - lastT) * 0.001, 0.05);
@@ -419,34 +420,22 @@
       if (Math.abs(vel) > 0.003) {
         rafId = requestAnimationFrame(tick);
       } else {
-        rafId = null;
-        vel   = 0;
+        rafId = null; vel = 0;
       }
     }
 
     return {
-      // Set value immediately (during drag) — stops any coasting
       set: function (v) {
         val = clamp(v, 0, 1);
         if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
         vel = 0;
       },
-      // Release with velocity — starts the coast
       fling: function (v, velocity, callback) {
-        val  = clamp(v, 0, 1);
-        vel  = velocity;
-        cb   = callback;
-        lastT = performance.now();
+        val = clamp(v, 0, 1); vel = velocity; cb = callback; lastT = performance.now();
         if (rafId) cancelAnimationFrame(rafId);
-        if (Math.abs(vel) > 0.003) {
-          rafId = requestAnimationFrame(tick);
-        }
+        if (Math.abs(vel) > 0.003) rafId = requestAnimationFrame(tick);
       },
-      stop:  function () {
-        if (rafId) cancelAnimationFrame(rafId);
-        rafId = null;
-        vel   = 0;
-      },
+      stop:  function () { if (rafId) cancelAnimationFrame(rafId); rafId = null; vel = 0; },
       value: function () { return val; }
     };
   }
@@ -459,36 +448,29 @@
     rootEl.classList.remove("cc-ready");
     rootEl.classList.add("cc-loading", "cc-canyon-map");
 
-    // ── Inject inline styles ──────────────────────────────────────────────
-    //  1. Dark Leaflet container background — eliminates the white/grey glow
-    //     at image edges.  Scoped to our two map IDs.
-    //  2. Knob glow + scale on grab.
-    //  3. Dynamic knob position tag (created later in applyView).
+    // ── Inline base styles ────────────────────────────────────────────────
+    // Injected once globally — safe to re-mount multiple times.
     if (!document.getElementById("cc-cm-base-styles")) {
       var baseStyle = document.createElement("style");
       baseStyle.id  = "cc-cm-base-styles";
-      baseStyle.textContent = [
-        // Dark container background — kills white edge glow
-        "#cc-bg-map.leaflet-container,",
-        "#cc-lens-map.leaflet-container{",
-        "  background:#0d0b0a !important;",
-        "  box-shadow:none !important;",
-        "}",
-        // Knob idle transition
-        ".cc-scroll-knob-img{",
-        "  transition:filter .15s ease,transform .15s ease !important;",
-        "}",
-        // Knob grabbed: glow + grow
-        ".cc-scroll-knob.is-active .cc-scroll-knob-img{",
-        "  filter:drop-shadow(0 4px 10px rgba(0,0,0,.7))",
-        "         drop-shadow(0 0 20px rgba(255,117,24,.9)) !important;",
-        "  transform:scale(1.22) !important;",
-        "}"
-      ].join("");
+      baseStyle.textContent =
+        // Kill Leaflet's grey/white container glow
+        "#cc-bg-map.leaflet-container," +
+        "#cc-lens-map.leaflet-container{background:#0d0b0a!important;box-shadow:none!important;}" +
+        // Knob transition
+        ".cc-scroll-knob-img{transition:filter .15s ease,transform .15s ease!important;}" +
+        // Knob grabbed: orange glow + grow
+        ".cc-scroll-knob.is-active .cc-scroll-knob-img{" +
+        "  filter:drop-shadow(0 4px 10px rgba(0,0,0,.7)) drop-shadow(0 0 20px rgba(255,117,24,.9))!important;" +
+        "  transform:scale(1.22)!important;" +
+        "}";
       document.head.appendChild(baseStyle);
     }
 
-    // Dynamic position tag — always last in <head> so it beats all !important
+    // knobStyleEl is a dynamic <style> tag used to override !important knob
+    // position rules from the app CSS.  It MUST be the last style tag in
+    // <head> — later stylesheets beat earlier ones at equal specificity.
+    // We create it here but re-append it AFTER CSS loads (see ensureDeps chain).
     var knobStyleEl = document.getElementById("cc-knob-dyn");
     if (!knobStyleEl) {
       knobStyleEl    = document.createElement("style");
@@ -540,17 +522,19 @@
     ]);
 
     var editorBadgeEl = el("div", { class: "cc-hitbox-editor-badge", style: "display:none" }, [
-      "Hitbox edit mode — drag cyan boxes, resize via bottom-right handle, then Export."
+      "Hitbox edit mode — drag cyan boxes, resize via handle, then Export."
     ]);
 
     var mapWrap = el("div", { class: "cc-cm-mapwrap" }, [
       mapEl, lensEl, frameOverlay, trackV, trackH, loaderEl, editorBadgeEl
     ]);
 
+    // Drawer: position:fixed so it escapes the map clip.
+    // Appended directly to <body> so no parent transform can trap it.
     var drawer = el("div", { class: "cc-slide-panel", id: "cc-location-panel" }, [
       el("div", { class: "cc-slide-panel-header" }, [
-        el("h2",    { class: "cc-panel-title cc-cm-drawer-title" }, ["Location"]),
-        el("button",{ class: "cc-panel-close-btn", id: "close-dr", type: "button" }, ["×"])
+        el("h2",     { class: "cc-panel-title cc-cm-drawer-title"   }, ["Location"]),
+        el("button", { class: "cc-panel-close-btn", id: "close-dr", type: "button" }, ["×"])
       ]),
       el("div", { class: "cc-panel-body cc-cm-drawer-content" })
     ]);
@@ -558,7 +542,9 @@
     shell.appendChild(header);
     shell.appendChild(mapWrap);
     rootEl.appendChild(shell);
-    rootEl.appendChild(drawer);
+    // Append drawer to body so position:fixed always works regardless of
+    // any parent transform/isolation/overflow on the Odoo host.
+    document.body.appendChild(drawer);
 
     var ui = {
       mapEl:          mapEl,
@@ -574,36 +560,32 @@
     };
 
     // ── App state ─────────────────────────────────────────────────────────
-    var bgMap       = null;
-    var lensMap     = null;
-    var mapDoc      = null;
-    var locationsDoc= null;
-    var editor      = null;
-    var hitboxLayers= [];
-    var knobsBound  = false;
-    var px          = null;       // { w, h } image pixel dimensions
-    var bounds      = null;       // [[0,0],[h,w]]
-    var currentT    = 0.5;        // vertical   0–1
-    var currentTx   = 0.5;        // horizontal 0–1
+    var bgMap        = null;
+    var lensMap      = null;
+    var mapDoc       = null;
+    var locationsDoc = null;
+    var editor       = null;
+    var hitboxLayers = [];
+    var knobsBound   = false;
+    var px           = null;    // { w, h } from JSON
+    var bounds       = null;    // [[0,0],[h,w]]
+    var bgZoom       = -1;      // computed after layout
+    var lensZoom     = 0;       // computed after layout
+    var currentT     = 0.5;
+    var currentTx    = 0.5;
 
-    // Per-axis momentum objects
     var momV = makeMomentum();
     var momH = makeMomentum();
 
     // ── Responsive scale ──────────────────────────────────────────────────
     function updateResponsiveScale() {
-      var designWidth  = 1280;
-      var currentWidth = mapWrap.getBoundingClientRect().width || mapWrap.offsetWidth || designWidth;
-      var scale        = Math.max(0.56, Math.min(1, currentWidth / designWidth));
+      var dw    = 1280;
+      var cw    = mapWrap.getBoundingClientRect().width || mapWrap.offsetWidth || dw;
+      var scale = Math.max(0.56, Math.min(1, cw / dw));
       rootEl.style.setProperty("--device-scale", scale.toFixed(4));
     }
 
-    // ── Loader ────────────────────────────────────────────────────────────
-    function showLoader() {
-      loaderEl.style.display  = "flex";
-      loaderEl.style.opacity  = "1";
-    }
-
+    function showLoader() { loaderEl.style.display = "flex"; loaderEl.style.opacity = "1"; }
     function hideLoader() {
       loaderEl.style.opacity = "0";
       setTimeout(function () {
@@ -613,7 +595,6 @@
       }, 320);
     }
 
-    // ── Lock all map interactions (we control pan via knobs) ──────────────
     function lockMaps() {
       [bgMap, lensMap].forEach(function (m) {
         if (!m) return;
@@ -627,17 +608,17 @@
       });
     }
 
-    // ── applyView: the core sync function ─────────────────────────────────
+    // ── applyView ─────────────────────────────────────────────────────────
     //
-    //  t  = vertical   0–1 (0 = image top,  1 = image bottom)
-    //  tx = horizontal 0–1 (0 = image left, 1 = image right)
+    //  t  = vertical   0–1   (0 = image top,  1 = image bottom)
+    //  tx = horizontal 0–1   (0 = image left, 1 = image right)
     //
     //  safeRange() computes each map's pannable coordinate range given its
-    //  zoom level and container size, so both maps hit their image edge at
-    //  the same t-value regardless of zoom or container size difference.
+    //  zoom + container size.  Both maps interpolate across their own range
+    //  using the same t-values, so they reach their image edge simultaneously.
     //
-    //  The knob positions are written to a dynamic <style> tag that is always
-    //  last in <head>, making it beat the app stylesheet's !important rules.
+    //  knobStyleEl is always re-appended to <head> here, guaranteeing it is
+    //  the last style sheet and therefore beats all !important declarations.
     //
     function applyView(t, tx) {
       if (!bgMap || !lensMap || !px) return;
@@ -645,24 +626,26 @@
       currentT  = clamp(typeof t  === "number" ? t  : currentT,  0, 1);
       currentTx = clamp(typeof tx === "number" ? tx : currentTx, 0, 1);
 
-      var lensZoom = BG_ZOOM + LENS_ZOOM_OFFSET;
-
-      var bgRy = safeRange(ui.mapEl,     BG_ZOOM,  px.h, false);
-      var bgRx = safeRange(ui.mapEl,     BG_ZOOM,  px.w, true);
+      var bgRy = safeRange(ui.mapEl,     bgZoom,   px.h, false);
+      var bgRx = safeRange(ui.mapEl,     bgZoom,   px.w, true);
       var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h, false);
       var lnRx = safeRange(ui.lensMapEl, lensZoom, px.w, true);
 
       bgMap.setView([
         bgRy.min + currentT  * (bgRy.max - bgRy.min),
         bgRx.min + currentTx * (bgRx.max - bgRx.min)
-      ], BG_ZOOM,  { animate: false });
+      ], bgZoom,   { animate: false });
 
       lensMap.setView([
         lnRy.min + currentT  * (lnRy.max - lnRy.min),
         lnRx.min + currentTx * (lnRx.max - lnRx.min)
       ], lensZoom, { animate: false });
 
-      // Dynamic style tag beats any !important in the external stylesheet.
+      // Re-append knobStyleEl to <head> so it is ALWAYS the last style tag.
+      // This is the only reliable way to override external !important rules —
+      // a later stylesheet wins over earlier ones at identical specificity.
+      document.head.appendChild(knobStyleEl);
+
       var vPct = (V_MIN + currentT  * (V_MAX - V_MIN)).toFixed(3);
       var hPct = (H_MIN + currentTx * (H_MAX - H_MIN)).toFixed(3);
       knobStyleEl.textContent =
@@ -670,19 +653,18 @@
         "#cc-scroll-knob-h{left:" + hPct + "%!important;}";
     }
 
-    // ── Knob binding with momentum ────────────────────────────────────────
+    // ── Knob drag with momentum ───────────────────────────────────────────
     function bindKnob(knobEl, axis) {
       knobEl.addEventListener("pointerdown", function (e) {
         if (editor && editor.isEditing()) return;
         e.preventDefault();
         e.stopPropagation();
 
-        var mom  = axis === "v" ? momV : momH;
+        var mom = axis === "v" ? momV : momH;
         mom.stop();
 
         var trackRect  = knobEl.parentElement.getBoundingClientRect();
         var knobRect   = knobEl.getBoundingClientRect();
-        // grabOffset keeps knob from snapping to pointer centre on first move
         var grabOffset = axis === "v"
           ? (e.clientY - knobRect.top)
           : (e.clientX - knobRect.left);
@@ -690,17 +672,16 @@
         knobEl.classList.add("is-active");
         try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
 
-        // Velocity history for fling detection
         var history = [];
 
         function getN(ev) {
-          var trackSize = axis === "v" ? trackRect.height : trackRect.width;
-          var trackPos  = axis === "v"
+          var size = axis === "v" ? trackRect.height : trackRect.width;
+          var pos  = axis === "v"
             ? (ev.clientY - trackRect.top  - grabOffset)
             : (ev.clientX - trackRect.left - grabOffset);
+          var pct = (pos / size) * 100;
           var min = axis === "v" ? V_MIN : H_MIN;
           var max = axis === "v" ? V_MAX : H_MAX;
-          var pct = (trackPos / trackSize) * 100;
           return clamp((pct - min) / (max - min), 0, 1);
         }
 
@@ -709,22 +690,18 @@
           var now = performance.now();
           history.push({ v: n, t: now });
           if (history.length > 8) history.shift();
-
           mom.set(n);
           if (axis === "v") applyView(n,        currentTx);
           else              applyView(currentT, n);
-
           ev.preventDefault();
         }
 
-        function onEnd(ev) {
+        function onEnd() {
           knobEl.classList.remove("is-active");
           window.removeEventListener("pointermove",   onMove);
           window.removeEventListener("pointerup",     onEnd);
           window.removeEventListener("pointercancel", onEnd);
 
-          // Compute fling velocity from recent history
-          // Units: normalized-units per second  (0–1 scale)
           var vel = 0;
           if (history.length >= 2) {
             var span = history[history.length - 1].t - history[0].t;
@@ -755,7 +732,7 @@
       bindKnob(ui.knobH, "h");
     }
 
-    // ── Hitbox rectangles on the lens map ─────────────────────────────────
+    // ── Hitbox rectangles ─────────────────────────────────────────────────
     function clearHitboxes() {
       hitboxLayers.forEach(function (l) { try { l.remove(); } catch (_) {} });
       hitboxLayers = [];
@@ -780,21 +757,23 @@
           className: "cc-map-hitbox-label", opacity: 0.95
         });
 
-        function openLoc(ev) {
+        // BUG FIX: ev here is a Leaflet event object, not a raw DOM event.
+        // L.DomEvent.stop(ev) expects a DOM event — pass ev.originalEvent.
+        // Only keep the "click" handler; redundant mousedown/touchstart
+        // listeners were interfering with normal pointer flow.
+        rect.on("click", function (ev) {
           if (editor && editor.isEditing()) return;
-          if (window.L && window.L.DomEvent) window.L.DomEvent.stop(ev);
+          try {
+            if (ev && ev.originalEvent) ev.originalEvent.stopPropagation();
+          } catch (_) {}
           renderDrawer(ui, loc);
-        }
-
-        rect.on("click",      openLoc);
-        rect.on("mousedown",  openLoc);
-        rect.on("touchstart", openLoc);
+        });
 
         hitboxLayers.push(rect);
       });
     }
 
-    // ── Initialise / load ─────────────────────────────────────────────────
+    // ── Init / load ───────────────────────────────────────────────────────
     function init() {
       showLoader();
       updateResponsiveScale();
@@ -802,6 +781,12 @@
 
       return ensureDeps(opts)
         .then(function () {
+          // ── KNOB STYLE FIX ─────────────────────────────────────────────
+          // CSS files have just been appended to <head>.  Re-append
+          // knobStyleEl now so it is the LAST style tag, guaranteeing its
+          // !important declarations beat those in the external stylesheets.
+          document.head.appendChild(knobStyleEl);
+
           return Promise.all([
             fetchJson(opts.mapUrl),
             fetchJson(opts.locationsUrl)
@@ -849,26 +834,34 @@
 
           bindKnobs();
 
-          return nextFrame()
-            .then(function () {
-              bgMap.invalidateSize({ animate: false });
-              lensMap.invalidateSize({ animate: false });
-              return nextFrame();
-            })
-            .then(function () {
-              bgMap.invalidateSize({ animate: false });
-              lensMap.invalidateSize({ animate: false });
-              applyView(0.5, 0.5);
-              return delay(Math.max(0, MIN_LOADER_MS - (Date.now() - loadStart)));
-            })
-            .then(function () {
-              hideLoader();
-            });
+          // Two frames: let CSS apply and containers reach their final sizes
+          return nextFrame().then(nextFrame);
+        })
+        .then(function () {
+          bgMap.invalidateSize({ animate: false });
+          lensMap.invalidateSize({ animate: false });
+
+          // ── DYNAMIC ZOOM ───────────────────────────────────────────────
+          // Compute the zoom that makes the image FILL the BG container.
+          // BG gets a small negative offset to show slightly more of the map.
+          // Lens gets a large positive offset for a nice zoomed-in detail view.
+          var fillZoom = computeFillZoom(ui.mapEl, px.w, px.h);
+          bgZoom   = fillZoom + BG_ZOOM_OFFSET;
+          lensZoom = fillZoom + BG_ZOOM_OFFSET + LENS_ZOOM_EXTRA;
+
+          return nextFrame();
+        })
+        .then(function () {
+          applyView(0.5, 0.5);
+          return delay(Math.max(0, MIN_LOADER_MS - (Date.now() - loadStart)));
+        })
+        .then(function () {
+          hideLoader();
         })
         .catch(function (err) {
           hideLoader();
-          ui.drawerTitleEl.textContent     = "Load failed";
-          ui.drawerContentEl.innerHTML =
+          ui.drawerTitleEl.textContent  = "Load failed";
+          ui.drawerContentEl.innerHTML  =
             '<div style="color:#f55;padding:1rem">Load failed: ' +
             (err && err.message ? err.message : String(err)) + "</div>";
           ui.drawerEl.classList.add("cc-slide-panel-open");
@@ -876,15 +869,19 @@
         });
     }
 
-    // ── Resize handler ────────────────────────────────────────────────────
+    // ── Resize ────────────────────────────────────────────────────────────
     var onResize = rafThrottle(function () {
       updateResponsiveScale();
       if (bgMap)   bgMap.invalidateSize({ animate: false });
       if (lensMap) lensMap.invalidateSize({ animate: false });
       if (!px) return;
+      // Recompute fill zoom on resize — container dimensions changed
+      var fillZoom = computeFillZoom(ui.mapEl, px.w, px.h);
+      bgZoom   = fillZoom + BG_ZOOM_OFFSET;
+      lensZoom = fillZoom + BG_ZOOM_OFFSET + LENS_ZOOM_EXTRA;
       if (editor && editor.isEditing()) {
-        if (lensMap) lensMap.fitBounds(bounds, { animate: false, padding: [24, 24] });
-        if (editor)  editor.redraw();
+        lensMap.fitBounds(bounds, { animate: false, padding: [24, 24] });
+        editor.redraw();
       } else {
         applyView(currentT, currentTx);
       }
@@ -898,22 +895,24 @@
     header.querySelector("#cc-cm-export").onclick = function () { if (editor) editor.exportJSON(); };
     drawer.querySelector("#close-dr"    ).onclick = function () { ui.drawerEl.classList.remove("cc-slide-panel-open"); };
 
-    rootEl.addEventListener("click", function (e) {
+    // Close drawer when clicking outside it
+    document.addEventListener("click", function (e) {
       if (!ui.drawerEl.classList.contains("cc-slide-panel-open")) return;
       if (ui.drawerEl.contains(e.target)) return;
       if (e.target && (e.target.closest(".leaflet-interactive") || e.target.closest(".leaflet-tooltip"))) return;
       ui.drawerEl.classList.remove("cc-slide-panel-open");
     });
 
-    // ── Return destroy function ───────────────────────────────────────────
+    // ── Destroy ───────────────────────────────────────────────────────────
     _destroyFn = function () {
       window.removeEventListener("resize", onResize);
       momV.stop();
       momH.stop();
       try { if (bgMap)   bgMap.remove();   } catch (_) {}
       try { if (lensMap) lensMap.remove(); } catch (_) {}
-      bgMap   = null;
-      lensMap = null;
+      bgMap = null; lensMap = null;
+      // Remove the drawer from body on destroy
+      try { if (drawer.parentNode) drawer.parentNode.removeChild(drawer); } catch (_) {}
     };
 
     return init().then(function () { return {}; });
@@ -926,16 +925,11 @@
       mount(options.root, {});
     },
     destroy: function () {
-      if (typeof _destroyFn === "function") {
-        _destroyFn();
-        _destroyFn = null;
-      }
+      if (typeof _destroyFn === "function") { _destroyFn(); _destroyFn = null; }
     }
   };
 
-  // Legacy direct-mount path
   window.CC_CanyonMap = { mount: mount };
-
   console.log("🗺️ Canyon Map app loaded");
 
 })();
