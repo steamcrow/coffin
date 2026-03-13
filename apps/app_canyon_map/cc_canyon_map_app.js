@@ -123,8 +123,14 @@
 
   function createLayout(){
 
-    var bg=el("div",{id:"cc-bg-map"});
-    var lens=el("div",{id:"cc-lens-map"});
+   var bg = el("div",{id:"cc-bg-map"});
+   var lens = el("div",{id:"cc-lens-map"});
+
+   bg.style.position = "absolute";
+   bg.style.inset = "0";
+
+   lens.style.position = "absolute";
+   lens.style.inset = "0";
 
     knobH=el("img",{class:"cc-knob-h",src:DEFAULTS.knobUrl});
     knobV=el("img",{class:"cc-knob-v",src:DEFAULTS.knobUrl});
@@ -248,8 +254,13 @@
 
   function mount(el,opts){
 
-    root=el;
-    var o=Object.assign({},DEFAULTS,opts||{});
+  root=el;
+
+  root.style.position = "relative";
+  root.style.width = "100%";
+  root.style.height = "100vh";
+
+  var o=Object.assign({},DEFAULTS,opts||{});
 
     loaderStart=performance.now();
     var loader=buildLoader();
