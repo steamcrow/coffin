@@ -177,13 +177,13 @@
       return;
     }
 
-    var bounds = [[0,0],[h,w]];
+    var bounds = [[0,0],[1,1]];
 
     var bgOverlay = L.imageOverlay(bgUrl, bounds).addTo(mapBG);
     var lensOverlay = L.imageOverlay(lensUrl, bounds).addTo(mapLens);
 
-    mapBG.fitBounds(bounds);
-    mapLens.fitBounds(bounds);
+    mapBG.setView([0.5,0.5], BG_ZOOM);
+    mapLens.setView([0.5,0.5], BG_ZOOM + LENS_ZOOM_OFFSET);
 
     mapBG.setZoom(BG_ZOOM);
     mapLens.setZoom(BG_ZOOM + LENS_ZOOM_OFFSET);
