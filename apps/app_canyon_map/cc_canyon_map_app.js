@@ -148,5 +148,7 @@
 
     init();
   }
-  window.CC_APP = { init: init, mount: mount };
+  window.CC_CanyonMap = {
+    mount: mount
+  };
 })();
