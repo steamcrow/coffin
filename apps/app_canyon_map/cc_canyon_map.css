@@ -135,8 +135,8 @@
 }
 
 .cc-scroll-vertical {
-  top: 46% !important;
-  left: 50% !important;
+  top: 50% !important;
+  left: 55% !important;
   width: calc(60px * var(--device-scale, 1)) !important;
   height: calc(560px * var(--device-scale, 1)) !important;
   transform: translate(-50%, -50%) translateX(calc(470px * var(--device-scale, 1))) !important;
