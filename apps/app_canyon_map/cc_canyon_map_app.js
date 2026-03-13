@@ -1,9 +1,8 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP (COMPLETE INTEGRATED BUILD)
+   COFFIN CANYON — CANYON MAP (cc_app_canyon_map.js)
    ================================================================ */
 
 (function () {
-  // 1. CONFIGURATION & COORDINATES
   var BG_ZOOM = -1;
   var LENS_ZOOM_OFFSET = 0.95;
   var MIN_LOADER_MS = 1200;
@@ -53,7 +52,7 @@
   }; 
 
   var DEFAULTS = {
-    title: "COFFIN CANYON — MAP SYSTEM",
+    title: "COFFIN CANYON — CANYON MAP",
     mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
     locationsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
     logoUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
@@ -61,7 +60,6 @@
     knobUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
   };
 
-  // --- UTILITY: ELEMENT BUILDER ---
   function el(tag, attrs, children) {
     var n = document.createElement(tag);
     Object.keys(attrs || {}).forEach(function (k) {
@@ -77,21 +75,16 @@
     return n;
   }
 
-  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-
-  // --- MAIN APP MOUNT ---
   function mount(root, userOpts) {
     var opts = Object.assign({}, DEFAULTS, userOpts || {});
     root.innerHTML = ""; 
     root.classList.add("cc-canyon-map", "cc-loading");
 
-    // UI ELEMENTS
+    // UI Structure
     var loader = el("div", { class: "cc-cm-loader" }, [
-      el("img", { src: opts.logoUrl }),
-      el("div", { class: "cc-cm-loader-spin" }),
-      el("div", { style: "color:#ff7518; font-weight:bold; margin-top:10px;" }, ["CALIBRATING LENS..."])
+        el("img", { src: opts.logoUrl }),
+        el("div", { class: "cc-cm-loader-spin" })
     ]);
-
     var mapEl = el("div", { class: "cc-cm-map" });
     var lensMapEl = el("div", { class: "cc-lens-map" });
     var knobV = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" }, [el("img", { src: opts.knobUrl, class: "cc-scroll-knob-img" })]);
@@ -99,79 +92,37 @@
 
     var mapWrap = el("div", { class: "cc-cm-mapwrap" }, [
       mapEl,
-      el("div", { class: "cc-lens" }, [
-        el("div", { class: "cc-lens-inner" }, [lensMapEl]),
-        el("div", { class: "cc-lens-chromatic" }),
-        el("div", { class: "cc-lens-glare" })
-      ]),
+      el("div", { class: "cc-lens" }, [el("div", { class: "cc-lens-inner" }, [lensMapEl]), el("div", { class: "cc-lens-chromatic" }), el("div", { class: "cc-lens-glare" })]),
       el("div", { class: "cc-frame-overlay" }, [el("img", { src: opts.frameUrl, class: "cc-frame-image" })]),
       el("div", { class: "cc-scroll-vertical" }, [knobV]),
       el("div", { class: "cc-scroll-horizontal" }, [knobH]),
       loader
     ]);
 
-    var header = el("div", { class: "cc-cm-header" }, [
-      el("div", { class: "cc-cm-title" }, [opts.title]),
-      el("div", { class: "cc-cm-actions" }, [
-        el("button", { class: "cc-btn", onclick: function() { location.reload(); } }, ["Reset"]),
-        el("button", { class: "cc-btn", id: "cc-edit-toggle" }, ["Toggle Editor"])
-      ])
-    ]);
-
-    root.appendChild(header);
     root.appendChild(mapWrap);
 
     var bgMap, lensMap, px;
-    var currentT = 0.5;
-    var currentTx = 0.5;
+    var currentT = 0.5, currentTx = 0.5;
 
     function applyView() {
       if (!bgMap || !lensMap || !px) return;
       var zoomL = BG_ZOOM + LENS_ZOOM_OFFSET;
       var y = (px.h * 0.1) + (currentT * (px.h * 0.8));
       var x = (px.w * 0.1) + (currentTx * (px.w * 0.8));
-
       bgMap.setView([y, x], BG_ZOOM, { animate: false });
       lensMap.setView([y, x], zoomL, { animate: false });
-
       knobV.style.top = (V_MIN + currentT * (V_MAX - V_MIN)) + "%";
       knobH.style.left = (H_MIN + currentTx * (H_MAX - H_MIN)) + "%";
     }
 
-    function bindKnob(knob, axis) {
-      function onMove(e) {
-        var rect = knob.parentElement.getBoundingClientRect();
-        var clientPos = (e.touches ? e.touches[0] : e)[axis === 'v' ? 'clientY' : 'clientX'];
-        var val = clamp((clientPos - rect[axis === 'v' ? 'top' : 'left']) / rect[axis === 'v' ? 'height' : 'width'], 0, 1);
-        if (axis === 'v') currentT = val; else currentTx = val;
-        applyView();
-      }
-      knob.onmousedown = knob.ontouchstart = function (e) {
-        e.preventDefault();
-        knob.classList.add("is-active");
-        window.addEventListener("mousemove", onMove);
-        window.addEventListener("touchmove", onMove);
-        window.onmouseup = window.ontouchend = function() {
-          knob.classList.remove("is-active");
-          window.removeEventListener("mousemove", onMove);
-          window.removeEventListener("touchmove", onMove);
-        };
-      };
-    }
-
     function init() {
-      // FIX: Wait for Leaflet (L) to be defined before starting
-      if (typeof L === 'undefined') {
-        setTimeout(init, 100);
-        return;
-      }
+      if (typeof L === 'undefined') { setTimeout(init, 100); return; }
 
       Promise.all([
         fetch(opts.mapUrl + "?t=" + Date.now()).then(function(r){ return r.json(); }),
         fetch(opts.locationsUrl + "?t=" + Date.now()).then(function(r){ return r.json(); })
       ]).then(function (res) {
-        var mapDoc = res[0];
-        var locDoc = res[1];
+        var mapDoc = res[0], locDoc = res[1];
         px = mapDoc.map.background.image_pixel_size;
         var bounds = [[0, 0], [px.h, px.w]];
 
@@ -182,33 +133,20 @@
         var lensImg = (mapDoc.map.lens && mapDoc.map.lens.image_key) ? mapDoc.map.lens.image_key : mapDoc.map.background.image_key;
         L.imageOverlay(lensImg, bounds).addTo(lensMap);
 
-        // Add Hitboxes using the local HITBOXES variable
         locDoc.locations.forEach(function (loc) {
           var hb = HITBOXES[loc.id];
           if (!hb) return;
           L.rectangle([[hb[0], hb[1]], [hb[2], hb[3]]], { color: "#ff7518", weight: 1, fillOpacity: 0, interactive: true })
            .addTo(lensMap)
-           .on('click', function() { alert("LOCATION: " + loc.name + "\n\n" + loc.description); });
+           .on('click', function() { alert(loc.name); });
         });
 
-        bindKnob(knobV, 'v');
-        bindKnob(knobH, 'h');
         applyView();
-
-        setTimeout(function() {
-          loader.style.opacity = "0";
-          setTimeout(function() { loader.style.display = "none"; root.classList.remove("cc-loading"); }, 300);
-        }, MIN_LOADER_MS);
-      }).catch(function(err) { console.error("Canyon Map Init Error:", err); });
+        setTimeout(function() { loader.style.display = "none"; root.classList.remove("cc-loading"); }, MIN_LOADER_MS);
+      }).catch(function(err) { console.error(err); loader.style.display = "none"; });
     }
 
-    document.getElementById("cc-edit-toggle").onclick = function() {
-      root.classList.toggle("cc-hitbox-edit");
-    };
-
     init();
-    window.addEventListener('resize', applyView);
   }
-
-  window.CC_CanyonMap = { mount: mount };
+  window.CC_APP = { init: init, mount: mount };
 })();
