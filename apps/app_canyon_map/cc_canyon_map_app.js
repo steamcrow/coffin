@@ -147,12 +147,13 @@ var DEFAULTS = {
     });
 
     mapLens = L.map(lens, {
-      zoomControl: false,
-      attributionControl: false,
-      dragging: false,
-      scrollWheelZoom: false
+    zoomControl: false,
+    attributionControl: false,
+    dragging: false,
+    scrollWheelZoom: false,
+    zoomSnap: 0
     });
-  }
+    }
 
   function createOverlays(mapData) {
 
@@ -173,19 +174,23 @@ var DEFAULTS = {
     ]);
   }
 
-  function applyView() {
+function applyView() {
 
-    var w = root.clientWidth;
-    var h = root.clientHeight;
+  var w = root.clientWidth;
+  var h = root.clientHeight;
 
-    var lat = (state.v / 100) * h;
-    var lng = (state.h / 100) * w;
+  var x = (state.h / 100) * w;
+  var y = (state.v / 100) * h;
 
-    mapLens.panTo([lat,lng], { animate:false });
+  var point = mapBG.containerPointToLatLng([x, y]);
 
-    knobH.style.left = state.h + "%";
-    knobV.style.top = state.v + "%";
-  }
+  mapBG.panTo(point, { animate:false });
+  mapLens.panTo(point, { animate:false });
+
+  knobH.style.left = state.h + "%";
+  knobV.style.top = state.v + "%";
+
+}
 
   function bindKnobs() {
 
