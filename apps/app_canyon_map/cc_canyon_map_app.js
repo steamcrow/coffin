@@ -213,6 +213,7 @@
     function dragStart(e,axis){
 
       e.preventDefault();
+      e.target.setPointerCapture(e.pointerId); 
       var rect=root.getBoundingClientRect();
 
       function move(ev){
@@ -271,11 +272,14 @@
     })
     .then(function(){
 
-      bindKnobs();
-      applyView();
-      hideLoader(loader);
+     mapBG.invalidateSize();
+     mapLens.invalidateSize();
 
-    })
+     bindKnobs();
+     applyView();
+     hideLoader(loader);
+
+   })
     .catch(function(err){
 
       console.error("Canyon Map load error:",err);
