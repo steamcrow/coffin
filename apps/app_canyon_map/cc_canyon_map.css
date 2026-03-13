@@ -53,18 +53,60 @@
   position: absolute !important;
   top: 46% !important;
   left: 53% !important;
+  /* Uses your scale variable for responsiveness */
   width: calc(1020px * var(--device-scale, 1)) !important;
   height: calc(620px * var(--device-scale, 1)) !important;
   transform: translate(-50%, -50%) !important;
   z-index: 10 !important;
   overflow: hidden !important;
   pointer-events: none !important;
+  
+  /* Safari-friendly masking to round the lens view */
+  -webkit-mask-image: radial-gradient(circle, black 65%, transparent 98%);
+  mask-image: radial-gradient(circle, black 65%, transparent 98%);
+  
+  /* Adds a subtle "lift" from the background map */
+  filter: drop-shadow(0 0 25px rgba(0,0,0,0.6));
 }
 
 .cc-lens-inner {
   position: absolute !important;
   inset: 0 !important;
   pointer-events: auto !important;
+  background: #000; /* Prevents background bleed-through */
+}
+
+/* Simulated Chromatic Aberration (Color Fringe) */
+.cc-lens-chromatic {
+  position: absolute !important;
+  inset: -5px !important;
+  z-index: 11 !important;
+  pointer-events: none !important;
+  border-radius: 50%;
+  
+  /* This creates the red/blue color bleed on the edges */
+  box-shadow: 
+    inset 10px 0 15px rgba(255, 0, 0, 0.15), 
+    inset -10px 0 15px rgba(0, 0, 255, 0.15);
+  
+  /* A slight white rim to simulate the edge of the glass */
+  border: 2px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Glass Glare & Reflection */
+.cc-lens-glare {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 12 !important;
+  pointer-events: none !important;
+  
+  /* Diagonal light sweep */
+  background: linear-gradient(
+    135deg, 
+    rgba(255, 255, 255, 0.12) 0%, 
+    rgba(255, 255, 255, 0) 40%, 
+    rgba(0, 0, 0, 0.05) 100%
+  ) !important;
 }
 
 .cc-lens-overscan {
@@ -74,19 +116,12 @@
   pointer-events: auto !important;
 }
 
+/* Ensure the Leaflet maps inside the lens are interactive */
 .cc-lens-map {
   position: absolute !important;
   inset: 0 !important;
   z-index: 10 !important;
   pointer-events: auto !important;
-}
-
-.cc-lens-chromatic,
-.cc-lens-glare {
-  position: absolute !important;
-  inset: 0 !important;
-  pointer-events: none !important;
-  z-index: 11 !important;
 }
 
 .cc-frame-overlay {
@@ -166,9 +201,15 @@
   display: block !important;
   object-fit: contain !important;
   pointer-events: none !important;
-  user-select: none !important;
-  -webkit-user-drag: none !important;
-  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.7)) !important;
+  
+  /* Adds weight to the Blappo knobs */
+  filter: drop-shadow(0 10px 12px rgba(0, 0, 0, 0.8)) !important;
+  transition: transform 0.1s ease;
+}
+
+.cc-scroll-knob.is-active .cc-scroll-knob-img {
+  transform: scale(0.95); /* Tactile click feel */
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.9)) brightness(1.1) !important;
 }
 
 .cc-cm-loader {
