@@ -155,8 +155,14 @@
 
     return new Promise(function(resolve,reject){
 
-      if(!mapData.image){
-        reject("Map JSON missing image field");
+      var mapImage =
+        mapData.image ||
+        mapData.map_image ||
+        mapData.map ||
+        mapData.mapUrl;
+
+      if(!mapImage){
+        reject("Map JSON missing map image field");
         return;
       }
 
@@ -166,8 +172,8 @@
 
         var bounds=[[0,0],[img.height,img.width]];
 
-        var bgOverlay=L.imageOverlay(mapData.image,bounds).addTo(mapBG);
-        var lensOverlay=L.imageOverlay(mapData.image,bounds).addTo(mapLens);
+        var bgOverlay=L.imageOverlay(mapImage,bounds).addTo(mapBG);
+        var lensOverlay=L.imageOverlay(mapImage,bounds).addTo(mapLens);
 
         mapBG.fitBounds(bounds);
         mapLens.fitBounds(bounds);
@@ -183,7 +189,7 @@
       };
 
       img.onerror=reject;
-      img.src=mapData.image;
+      img.src = mapImage;
 
     });
 
