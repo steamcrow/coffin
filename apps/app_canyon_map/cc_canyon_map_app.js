@@ -14,8 +14,8 @@
   //  BG_ZOOM_OFFSET  < 0 → slightly MORE zoomed out than fill (shows full map)
   //  LENS_ZOOM_EXTRA > 0 → MUCH more zoomed in than fill (detail view)
   //
-  var BG_ZOOM_OFFSET  = -0.15;  // BG: full-map overview, slightly outside fill
-  var LENS_ZOOM_EXTRA =  1.5;  // Lens: zoomed in by this much relative to BG (~20% less than before)
+  var BG_ZOOM_OFFSET  = -0.2;  // BG: full-map overview, slightly outside fill
+  var LENS_ZOOM_EXTRA =  1.9;  // Lens: zoomed in by this much relative to BG (~20% less than before)
 
   var MIN_LOADER_MS = 700;
 
@@ -248,7 +248,8 @@
       bounds:      null,
       layerEl:     null,
       attached:    false,
-      refreshView: null
+      refreshView: null,
+      onEnter:     null
     };
 
     function ensureLayer() {
@@ -322,8 +323,7 @@
       var layer = ensureLayer();
 
       layer.addEventListener("pointerdown", function (e) {
-        // Always prevent default on the editor layer — this stops the browser
-        // from initiating a native image-drag ghost before we can handle it.
+        // Always prevent default — stops native image-drag ghost
         e.preventDefault();
 
         if (!s.editing) return;
@@ -339,19 +339,16 @@
           width:     parseFloat(box.style.width),  height: parseFloat(box.style.height)
         };
 
-        // Capture on the LAYER element so all subsequent pointer events for
-        // this pointer are delivered here, even if the pointer leaves the box.
-        // Capturing on `box` risks losing events to Leaflet's internal handlers.
+        // Capture on layer so captured events route here first.
+        // Belt-and-suspenders: we also listen on window below so we still
+        // get events even if capture is silently dropped by the host.
         try { layer.setPointerCapture(e.pointerId); } catch (_) {}
-        e.preventDefault();
         e.stopPropagation();
       });
 
-      // pointermove on the layer (not window) — Leaflet calls
-      // stopImmediatePropagation on window-level pointer events during its
-      // internal drag handling, which silently kills window listeners.
-      layer.addEventListener("pointermove", function (ev) {
+      function onEditorMove(ev) {
         if (!s.active || ev.pointerId !== s.active.pointerId) return;
+        ev.preventDefault();
         var dx = ev.clientX - s.active.startX;
         var dy = ev.clientY - s.active.startY;
         if (s.active.mode === "move") {
@@ -362,15 +359,22 @@
           s.active.box.style.height = Math.max(8, Math.round(s.active.height + dy)) + "px";
         }
         updateFromBox(s.active.box);
-        ev.preventDefault();
-      }, { passive: false });
+      }
 
-      function endPointer(ev) {
+      function onEditorEnd(ev) {
         if (!s.active || ev.pointerId !== s.active.pointerId) return;
         s.active = null;
       }
-      layer.addEventListener("pointerup",     endPointer);
-      layer.addEventListener("pointercancel", endPointer);
+
+      // Listen on both layer (for captured events) and window (fallback).
+      layer.addEventListener("pointermove", onEditorMove, { passive: false });
+      layer.addEventListener("pointerup",          onEditorEnd);
+      layer.addEventListener("pointercancel",      onEditorEnd);
+      layer.addEventListener("lostpointercapture", onEditorEnd);
+
+      window.addEventListener("pointermove", onEditorMove, { passive: false });
+      window.addEventListener("pointerup",          onEditorEnd);
+      window.addEventListener("pointercancel",      onEditorEnd);
     }
 
     function exportJSON() {
@@ -399,6 +403,7 @@
       // CSS transition expands the lens to full-screen; wait for it to finish
       // before calling invalidateSize + fitBounds, otherwise Leaflet measures
       // the OLD (small) size and renders tiles at the wrong scale.
+      if (typeof s.onEnter === "function") s.onEnter();
       delay(150).then(function () {
         s.map.invalidateSize({ animate: false });
         s.map.fitBounds(s.bounds, { animate: false, padding: [24, 24] });
@@ -409,8 +414,10 @@
     }
 
     return {
-      attach: function (map, bounds, refreshViewFn) {
-        s.map = map; s.bounds = bounds; s.refreshView = refreshViewFn || null;
+      attach: function (map, bounds, refreshViewFn, onEnterFn) {
+        s.map = map; s.bounds = bounds;
+        s.refreshView = refreshViewFn || null;
+        s.onEnter     = onEnterFn     || null;
         attachPointerHandlers();
       },
       toggle:     function ()  { setEditing(!s.editing); },
@@ -523,6 +530,8 @@
     var frameOverlay = el("div", { class: "cc-frame-overlay" }, [
       el("img", { class: "cc-frame-image", src: opts.frameUrl, alt: "", draggable: "false" })
     ]);
+    // Hide immediately — revealed only after applyView() so it never pops in early
+    frameOverlay.style.visibility = "hidden";
 
     var knobV  = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" }, [
       el("img", { class: "cc-scroll-knob-img", src: opts.knobUrl, alt: "", draggable: "false" })
@@ -783,6 +792,24 @@
       hitboxLayers = [];
     }
 
+    function hideHitboxLayers() {
+      hitboxLayers.forEach(function (l) {
+        try {
+          var el = l.getElement();
+          if (el) el.style.display = "none";
+        } catch (_) {}
+      });
+    }
+
+    function showHitboxLayers() {
+      hitboxLayers.forEach(function (l) {
+        try {
+          var el = l.getElement();
+          if (el) el.style.display = "";
+        } catch (_) {}
+      });
+    }
+
     function buildHitboxes() {
       clearHitboxes();
       if (!locationsDoc || !locationsDoc.locations || !lensMap) return;
@@ -802,20 +829,21 @@
           className: "cc-map-hitbox-label", opacity: 0.95
         });
 
-        // Native DOM pointerdown on the Leaflet SVG path element.
-        // This bypasses Leaflet's own click/drag-end event dispatch, which
-        // would silently swallow the event if a drag had just ended.
-        // We capture the loc variable via closure so each listener opens the
-        // correct location regardless of iteration order.
+        // Set pointer-events:all on the SVG path so the ENTIRE bounding box
+        // is hit-testable — not just the 2px stroke or the 10%-opacity fill.
+        // Without this, clicks on the (nearly transparent) interior miss.
+        var domEl = rect.getElement();
+        if (domEl) domEl.style.pointerEvents = "all";
+
+        // Use Leaflet's own click event (fires after full click sequence).
+        // L.DomEvent.stop prevents the event from bubbling to the map and
+        // prevents the document-level close handler from firing.
         (function (capturedLoc) {
-          var domEl = rect.getElement();
-          if (domEl) {
-            domEl.addEventListener("pointerdown", function (e) {
-              if (editor && editor.isEditing()) return;
-              e.stopPropagation();
-              renderDrawer(ui, capturedLoc);
-            });
-          }
+          rect.on("click", function (e) {
+            if (editor && editor.isEditing()) return;
+            window.L.DomEvent.stop(e);
+            renderDrawer(ui, capturedLoc);
+          });
         }(loc));
 
         hitboxLayers.push(rect);
@@ -824,6 +852,13 @@
 
     // ── Init / load ───────────────────────────────────────────────────────
     function init() {
+      // Re-hide everything synchronously before any async work.
+      // On first load the frame is already hidden (set at DOM build time).
+      // On reload it was revealed by the previous run, so we must re-hide.
+      ui.mapEl.style.visibility    = "hidden";
+      ui.lensMapEl.style.visibility = "hidden";
+      ui.frameEl.style.visibility  = "hidden";
+
       showLoader();
       updateResponsiveScale();
       var loadStart = Date.now();
@@ -870,23 +905,22 @@
           });
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
-          // Hide until applyView fires — prevents the Leaflet "jump" where
-          // the map briefly renders at the wrong position before CSS settles.
-          // Frame is hidden too so it doesn't pop in before the map is ready.
-          ui.mapEl.style.visibility     = "hidden";
-          ui.lensMapEl.style.visibility = "hidden";
-          ui.frameEl.style.visibility   = "hidden";
-
           lockMaps();
           buildHitboxes();
 
           editor = createHitboxEditor(rootEl, ui);
-          editor.attach(lensMap, bounds, function () {
-            lensMap.invalidateSize({ animate: false });
-            bgMap.invalidateSize({ animate: false });
-            applyView(currentT, currentTx);
-            if (editor) editor.redraw();
-          });
+          editor.attach(lensMap, bounds,
+            function () {                          // onExitEdit (refresh view)
+              showHitboxLayers();
+              lensMap.invalidateSize({ animate: false });
+              bgMap.invalidateSize({ animate: false });
+              applyView(currentT, currentTx);
+              if (editor) editor.redraw();
+            },
+            function () {                          // onEnterEdit (hide orange rects)
+              hideHitboxLayers();
+            }
+          );
 
           bindKnobs();
 
@@ -964,7 +998,9 @@
     document.addEventListener("click", function (e) {
       if (!ui.drawerEl.classList.contains("cc-slide-panel-open")) return;
       if (ui.drawerEl.contains(e.target)) return;
-      if (e.target && (e.target.closest(".leaflet-interactive") || e.target.closest(".leaflet-tooltip"))) return;
+      // Don't close when the click was on or inside the Leaflet map area
+      if (e.target && e.target.closest &&
+          e.target.closest(".leaflet-container, .leaflet-interactive, .leaflet-tooltip")) return;
       ui.drawerEl.classList.remove("cc-slide-panel-open");
     });
 
