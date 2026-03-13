@@ -13,29 +13,23 @@
   var H_MIN = 18;
   var H_MAX = 82;
 
-var DEFAULTS = {
-  title: "Coffin Canyon — Canyon Map",
-  mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
-  locationsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
-  appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
-  leafletCssUrl: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
-  leafletJsUrl: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
-  logoUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
-  knobUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
-};
+  var DEFAULTS = {
+    title: "Coffin Canyon — Canyon Map",
+    mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
+    appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
+    leafletCssUrl: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
+    leafletJsUrl: "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js",
+    logoUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
+    knobUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
+  };
 
   var root;
   var mapBG;
   var mapLens;
-
   var knobH;
   var knobV;
 
-  var state = {
-    h: 50,
-    v: 50
-  };
-
+  var state = { h:50, v:50 };
   var loaderStart;
 
   function el(tag, attrs, children) {
@@ -55,42 +49,43 @@ var DEFAULTS = {
 
   function loadCSS(url) {
     return fetch(url)
-      .then(r => r.text())
-      .then(css => {
-        var s = document.createElement("style");
-        s.textContent = css;
+      .then(r=>r.text())
+      .then(css=>{
+        var s=document.createElement("style");
+        s.textContent=css;
         document.head.appendChild(s);
       });
   }
 
-  function loadScript(url) {
-    return new Promise(function (resolve, reject) {
+  function loadScript(url){
+    return new Promise(function(resolve,reject){
 
-      if (window.L) {
+      if(window.L){
         resolve();
         return;
       }
 
-      var s = document.createElement("script");
-      s.src = url;
-      s.async = false;
+      var s=document.createElement("script");
+      s.src=url;
+      s.async=false;
 
-      s.onload = function () {
-        if (window.L) resolve();
+      s.onload=function(){
+        if(window.L) resolve();
         else reject("Leaflet failed to initialize");
       };
 
-      s.onerror = reject;
+      s.onerror=reject;
 
       document.head.appendChild(s);
+
     });
   }
 
-  function buildLoader() {
+  function buildLoader(){
 
-    var style = document.createElement("style");
-    style.textContent = `
-      .cc-loader {
+    var style=document.createElement("style");
+    style.textContent=`
+      .cc-loader{
         position:absolute;
         inset:0;
         display:flex;
@@ -99,167 +94,162 @@ var DEFAULTS = {
         background:#000;
         z-index:999;
       }
-      .cc-loader img {
+      .cc-loader img{
         width:280px;
         height:auto;
       }
     `;
     document.head.appendChild(style);
 
-    var loader = el("div", { class: "cc-loader" }, [
-      el("img", { src: DEFAULTS.logoUrl })
+    var loader=el("div",{class:"cc-loader"},[
+      el("img",{src:DEFAULTS.logoUrl})
     ]);
 
     root.appendChild(loader);
     return loader;
+
   }
 
-  function hideLoader(loader) {
-    var elapsed = performance.now() - loaderStart;
-    var wait = Math.max(0, MIN_LOADER_MS - elapsed);
-    setTimeout(function () {
+  function hideLoader(loader){
+
+    var elapsed=performance.now()-loaderStart;
+    var wait=Math.max(0,MIN_LOADER_MS-elapsed);
+
+    setTimeout(function(){
       loader.remove();
-    }, wait);
+    },wait);
+
   }
 
-  function createLayout() {
+  function createLayout(){
 
-    if (!window.L) {
-      throw new Error("Leaflet did not load.");
-    }
+    var bg=el("div",{id:"cc-bg-map"});
+    var lens=el("div",{id:"cc-lens-map"});
 
-    var bg = el("div", { id: "cc-bg-map" });
-    var lens = el("div", { id: "cc-lens-map" });
-
-    knobH = el("img", { class: "cc-knob-h", src: DEFAULTS.knobUrl });
-    knobV = el("img", { class: "cc-knob-v", src: DEFAULTS.knobUrl });
+    knobH=el("img",{class:"cc-knob-h",src:DEFAULTS.knobUrl});
+    knobV=el("img",{class:"cc-knob-v",src:DEFAULTS.knobUrl});
 
     root.appendChild(bg);
     root.appendChild(lens);
     root.appendChild(knobH);
     root.appendChild(knobV);
 
-    mapBG = L.map(bg, {
-      zoomControl: false,
-      attributionControl: false,
-      dragging: false,
-      scrollWheelZoom: false
+    mapBG=L.map(bg,{
+      zoomControl:false,
+      attributionControl:false,
+      dragging:false,
+      scrollWheelZoom:false
     });
 
-    mapLens = L.map(lens, {
-    zoomControl: false,
-    attributionControl: false,
-    dragging: false,
-    scrollWheelZoom: false,
-    zoomSnap: 0
+    mapLens=L.map(lens,{
+      zoomControl:false,
+      attributionControl:false,
+      dragging:false,
+      scrollWheelZoom:false,
+      zoomSnap:0
     });
-    }
-
-  function createOverlays(mapData) {
-
-  return new Promise(function(resolve, reject) {
-
-    if (!mapData.image) {
-      reject("Map JSON missing map_image");
-      return;
-    }
-
-    var img = new Image();
-
-    img.onload = function () {
-
-      var bounds = [[0,0],[img.height,img.width]];
-
-      var bgOverlay = L.imageOverlay(mapData.map_image, bounds).addTo(mapBG);
-      var lensOverlay = L.imageOverlay(mapData.map_image, bounds).addTo(mapLens);
-
-      mapBG.fitBounds(bounds);
-      mapLens.fitBounds(bounds);
-
-      mapBG.setZoom(BG_ZOOM);
-      mapLens.setZoom(BG_ZOOM + LENS_ZOOM_OFFSET);
-
-      Promise.all([
-        new Promise(r => bgOverlay.once("load", r)),
-        new Promise(r => lensOverlay.once("load", r))
-      ]).then(resolve);
-
-    };
-
-    img.onerror = reject;
-    L.imageOverlay(mapData.image, bounds)
-
-  });
-
-}
-
-function applyView() {
-
-  var rect = root.getBoundingClientRect();
-
-  var x = rect.width * (state.h / 100);
-  var y = rect.height * (state.v / 100);
-
-  var point = mapBG.containerPointToLatLng([x, y]);
-
-  mapBG.panTo(point, {animate:false});
-  mapLens.panTo(point, {animate:false});
-
-  knobH.style.left = state.h + "%";
-  knobV.style.top = state.v + "%";
-
-}
-
- function bindKnobs() {
-
-  function dragStart(e, axis) {
-
-    e.preventDefault();
-
-    var rect = root.getBoundingClientRect();
-
-    function move(ev) {
-
-      if (axis === "h") {
-
-        var x = (ev.clientX - rect.left) / rect.width * 100;
-        state.h = Math.min(H_MAX, Math.max(H_MIN, x));
-
-      }
-
-      if (axis === "v") {
-
-        var y = (ev.clientY - rect.top) / rect.height * 100;
-        state.v = Math.min(V_MAX, Math.max(V_MIN, y));
-
-      }
-
-      applyView();
-    }
-
-    function up() {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-    }
-
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
 
   }
 
-  knobH.addEventListener("pointerdown", e => dragStart(e,"h"));
-  knobV.addEventListener("pointerdown", e => dragStart(e,"v"));
+  function createOverlays(mapData){
 
-}
+    return new Promise(function(resolve,reject){
+
+      if(!mapData.image){
+        reject("Map JSON missing image field");
+        return;
+      }
+
+      var img=new Image();
+
+      img.onload=function(){
+
+        var bounds=[[0,0],[img.height,img.width]];
+
+        var bgOverlay=L.imageOverlay(mapData.image,bounds).addTo(mapBG);
+        var lensOverlay=L.imageOverlay(mapData.image,bounds).addTo(mapLens);
+
+        mapBG.fitBounds(bounds);
+        mapLens.fitBounds(bounds);
+
+        mapBG.setZoom(BG_ZOOM);
+        mapLens.setZoom(BG_ZOOM+LENS_ZOOM_OFFSET);
+
+        Promise.all([
+          new Promise(r=>bgOverlay.once("load",r)),
+          new Promise(r=>lensOverlay.once("load",r))
+        ]).then(resolve);
+
+      };
+
+      img.onerror=reject;
+      img.src=mapData.image;
+
+    });
+
+  }
+
+  function applyView(){
+
+    var rect=root.getBoundingClientRect();
+
+    var x=rect.width*(state.h/100);
+    var y=rect.height*(state.v/100);
+
+    var point=mapBG.containerPointToLatLng([x,y]);
+
+    mapBG.panTo(point,{animate:false});
+    mapLens.panTo(point,{animate:false});
+
+    knobH.style.left=state.h+"%";
+    knobV.style.top=state.v+"%";
+
+  }
+
+  function bindKnobs(){
+
+    function dragStart(e,axis){
+
+      e.preventDefault();
+      var rect=root.getBoundingClientRect();
+
+      function move(ev){
+
+        if(axis==="h"){
+          var x=(ev.clientX-rect.left)/rect.width*100;
+          state.h=Math.min(H_MAX,Math.max(H_MIN,x));
+        }
+
+        if(axis==="v"){
+          var y=(ev.clientY-rect.top)/rect.height*100;
+          state.v=Math.min(V_MAX,Math.max(V_MIN,y));
+        }
+
+        applyView();
+      }
+
+      function up(){
+        window.removeEventListener("pointermove",move);
+        window.removeEventListener("pointerup",up);
+      }
+
+      window.addEventListener("pointermove",move);
+      window.addEventListener("pointerup",up);
+
+    }
+
+    knobH.addEventListener("pointerdown",e=>dragStart(e,"h"));
+    knobV.addEventListener("pointerdown",e=>dragStart(e,"v"));
+
+  }
 
   function mount(el,opts){
 
-    root = el;
+    root=el;
+    var o=Object.assign({},DEFAULTS,opts||{});
 
-    var o = Object.assign({},DEFAULTS,opts||{});
-
-    loaderStart = performance.now();
-    var loader = buildLoader();
+    loaderStart=performance.now();
+    var loader=buildLoader();
 
     Promise.all([
       loadCSS(o.leafletCssUrl),
@@ -269,7 +259,6 @@ function applyView() {
     .then(function(){
 
       createLayout();
-
       return fetch(o.mapUrl).then(r=>r.json());
 
     })
@@ -280,22 +269,20 @@ function applyView() {
     })
     .then(function(){
 
-    bindKnobs();
-    applyView();
+      bindKnobs();
+      applyView();
+      hideLoader(loader);
 
-    hideLoader(loader);
+    })
+    .catch(function(err){
 
-   })
-.catch(function(err){
+      console.error("Canyon Map load error:",err);
+      hideLoader(loader);
 
-  console.error("Canyon Map load error:", err);
-
-  hideLoader(loader);
-
-});
+    });
 
   }
 
-  window.CC_CanyonMap = { mount: mount };
+  window.CC_CanyonMap={mount:mount};
 
 })();
