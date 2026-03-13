@@ -24,21 +24,10 @@
     knobUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
   };
 
- var DEFAULTS = {
-    title: "Coffin Canyon — Canyon Map",
-    mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
-    locationsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
-    appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
-    leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
-    leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
-    logoUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
-    frameUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame3.png",
-    knobUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
-  };
-
-  var HITBOXES = {
+   var HITBOXES = {
     "bandit-buck": [1550, 956, 1668, 1160],
     "bayou-city": [1175, 2501, 1386, 2767],
+    "camp-coffin": [2000, 1200, 1300, 2400],  
     "cowtown": [2172, 2112, 2332, 2396],
     "crackpits": [2628, 1628, 2816, 1968],
     "deerhoof": [3112, 2130, 3329, 2412],
@@ -73,7 +62,6 @@
     "widowflow": [1316, 1630, 2078, 1798],
     "witches-roost": [3767, 2130, 3965, 2495]
   };
-
 
   var _loaded = { css: {}, js: {} };
 
