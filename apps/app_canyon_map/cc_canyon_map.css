@@ -1,5 +1,5 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP (LENS + KNOBS VERSION)
+   COFFIN CANYON — CANYON MAP (WORKING REBUILD)
    ================================================================ */
 
 .cc-canyon-map {
@@ -58,7 +58,7 @@
   transform: translate(-50%, -50%) !important;
   z-index: 10 !important;
   overflow: hidden !important;
-  pointer-events: none !important;
+  pointer-events: auto !important;
 }
 
 .cc-lens-inner {
@@ -71,6 +71,7 @@
   position: absolute !important;
   inset: 0 !important;
   overflow: hidden !important;
+  pointer-events: auto !important;
 }
 
 .cc-lens-map {
@@ -110,7 +111,7 @@
 .cc-scroll-horizontal {
   position: absolute !important;
   z-index: 60 !important;
-  pointer-events: auto !important;
+  pointer-events: none !important;
 }
 
 .cc-scroll-vertical {
