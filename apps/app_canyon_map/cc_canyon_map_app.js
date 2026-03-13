@@ -5,7 +5,7 @@
 (function () {
   var BG_ZOOM = -1;
   var LENS_ZOOM_OFFSET = 0.95;
-  var MIN_LOADER_MS = 800;
+  var MIN_LOADER_MS = 600;
 
   var V_MIN = 24;
   var V_MAX = 76;
@@ -68,6 +68,7 @@
     attrs = attrs || {};
     children = children || [];
     var n = document.createElement(tag);
+
     Object.keys(attrs).forEach(function (k) {
       var v = attrs[k];
       if (k === "class") n.className = v;
@@ -78,9 +79,11 @@
         n.setAttribute(k, v);
       }
     });
+
     children.forEach(function (c) {
       n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
     });
+
     return n;
   }
 
@@ -131,7 +134,7 @@
       '</div>';
 
     ui.drawerEl.classList.add("cc-slide-panel-open");
-    ui.drawerContentEl.scrollTop = 0;
+    ui.drawerEl.scrollTop = 0;
   }
 
   function fetchText(url) {
@@ -166,6 +169,7 @@
     return fetchText(url).then(function (code) {
       var blob = new Blob([code], { type: "text/javascript" });
       var blobUrl = URL.createObjectURL(blob);
+
       return new Promise(function (resolve, reject) {
         var s = document.createElement("script");
         s.src = blobUrl;
@@ -224,11 +228,11 @@
       return state.layerEl;
     }
 
-    function toRect(b) {
+    function rectFromHitbox(b) {
       return { y1: b[0], x1: b[1], y2: b[2], x2: b[3] };
     }
 
-    function fromRect(r) {
+    function hitboxFromRect(r) {
       return [Math.round(r.y1), Math.round(r.x1), Math.round(r.y2), Math.round(r.x2)];
     }
 
@@ -239,6 +243,7 @@
 
     function draw() {
       if (!state.editing || !state.map || !state.px) return;
+
       var layer = ensureLayer();
       layer.innerHTML = "";
 
@@ -246,7 +251,7 @@
         var b = HITBOXES[id];
         if (!b) return;
 
-        var r = toRect(b);
+        var r = rectFromHitbox(b);
         var p1 = latLngToPx(r.y1, r.x1);
         var p2 = latLngToPx(r.y2, r.x2);
 
@@ -283,7 +288,7 @@
       var p1 = state.map.containerPointToLatLng(window.L.point(left, top));
       var p2 = state.map.containerPointToLatLng(window.L.point(left + width, top + height));
 
-      HITBOXES[id] = fromRect({
+      HITBOXES[id] = hitboxFromRect({
         y1: Math.min(p1.lat, p2.lat),
         x1: Math.min(p1.lng, p2.lng),
         y2: Math.max(p1.lat, p2.lat),
@@ -293,10 +298,12 @@
 
     function onPointerDown(e) {
       if (!state.editing) return;
+
       var box = e.target.closest(".cc-hb-box");
       if (!box) return;
 
       var isHandle = e.target.classList.contains("cc-hb-handle");
+
       state.active = {
         box: box,
         mode: isHandle ? "resize" : "move",
@@ -404,9 +411,11 @@
     var mapWrap = el("div", { class: "cc-cm-mapwrap" });
     var mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
     var lensMapEl = el("div", { id: "cc-lens-map", class: "cc-lens-map" });
+
     var lensInner = el("div", { class: "cc-lens-inner" }, [
       el("div", { class: "cc-lens-overscan" }, [lensMapEl])
     ]);
+
     var lensEl = el("div", { class: "cc-lens" }, [
       lensInner,
       el("div", { class: "cc-lens-chromatic" }),
@@ -462,14 +471,11 @@
     var ui = {
       mapEl: mapEl,
       lensMapEl: lensMapEl,
-      lensEl: lensEl,
       drawerEl: drawer,
       drawerTitleEl: drawer.querySelector(".cc-cm-drawer-title"),
       drawerContentEl: drawer.querySelector(".cc-cm-drawer-content"),
       knobV: knobV,
       knobH: knobH,
-      trackV: trackV,
-      trackH: trackH,
       editorBadgeEl: editorBadgeEl
     };
 
@@ -480,9 +486,9 @@
     var currentT = 0.5;
     var currentTx = 0.5;
     var editor = null;
-    var bounds = null;
     var hitboxLayers = [];
     var knobsBound = false;
+    var bounds = null;
 
     function updateResponsiveScale() {
       var designWidth = 1280;
@@ -507,6 +513,7 @@
 
     function lockMaps() {
       if (!bgMap || !lensMap) return;
+
       [bgMap, lensMap].forEach(function (m) {
         m.dragging.disable();
         m.doubleClickZoom.disable();
@@ -527,6 +534,7 @@
 
       var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
       var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
+
       var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
       var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
 
@@ -545,12 +553,8 @@
     }
 
     function bindKnob(knobEl, axis, px) {
-      var dragging = false;
-      var grabOffset = 0;
-
       function getClient(e) {
-        var src = e.touches ? e.touches[0] : e;
-        return axis === "v" ? src.clientY : src.clientX;
+        return axis === "v" ? e.clientY : e.clientX;
       }
 
       function getTrackRect() {
@@ -570,48 +574,47 @@
         return clamp((pct - min) / (max - min), 0, 1);
       }
 
-      function onDown(e) {
+      function onPointerDown(e) {
         if (editor && editor.isEditing()) return;
-        dragging = true;
-
-        var knobRect = getKnobRect();
-        var client = getClient(e);
-        grabOffset = axis === "v" ? (client - knobRect.top) : (client - knobRect.left);
-
-        knobEl.classList.add("is-active");
         e.preventDefault();
         e.stopPropagation();
+
+        var knobRect = getKnobRect();
+        var grabOffset = axis === "v"
+          ? (getClient(e) - knobRect.top)
+          : (getClient(e) - knobRect.left);
+
+        knobEl.classList.add("is-active");
+        try { knobEl.setPointerCapture(e.pointerId); } catch (err) {}
+
+        function onPointerMove(ev) {
+          var trackRect = getTrackRect();
+          var trackPos = axis === "v"
+            ? (getClient(ev) - trackRect.top - grabOffset)
+            : (getClient(ev) - trackRect.left - grabOffset);
+
+          var n = posToNormalized(trackPos);
+
+          if (axis === "v") applyView(n, currentTx, px);
+          else applyView(currentT, n, px);
+
+          ev.preventDefault();
+        }
+
+        function onPointerUp(ev) {
+          knobEl.classList.remove("is-active");
+          knobEl.removeEventListener("pointermove", onPointerMove);
+          knobEl.removeEventListener("pointerup", onPointerUp);
+          knobEl.removeEventListener("pointercancel", onPointerUp);
+          try { knobEl.releasePointerCapture(ev.pointerId); } catch (err) {}
+        }
+
+        knobEl.addEventListener("pointermove", onPointerMove);
+        knobEl.addEventListener("pointerup", onPointerUp);
+        knobEl.addEventListener("pointercancel", onPointerUp);
       }
 
-      function onMove(e) {
-        if (!dragging) return;
-
-        var trackRect = getTrackRect();
-        var client = getClient(e);
-        var trackPos = axis === "v"
-          ? (client - trackRect.top - grabOffset)
-          : (client - trackRect.left - grabOffset);
-
-        var n = posToNormalized(trackPos);
-
-        if (axis === "v") applyView(n, currentTx, px);
-        else applyView(currentT, n, px);
-
-        e.preventDefault();
-      }
-
-      function onUp() {
-        if (!dragging) return;
-        dragging = false;
-        knobEl.classList.remove("is-active");
-      }
-
-      knobEl.addEventListener("mousedown", onDown);
-      knobEl.addEventListener("touchstart", onDown, { passive: false });
-      window.addEventListener("mousemove", onMove);
-      window.addEventListener("touchmove", onMove, { passive: false });
-      window.addEventListener("mouseup", onUp);
-      window.addEventListener("touchend", onUp);
+      knobEl.addEventListener("pointerdown", onPointerDown);
     }
 
     function bindKnobs(px) {
@@ -642,7 +645,8 @@
             color: "#ff7518",
             weight: 2,
             fillOpacity: 0.14,
-            interactive: true
+            interactive: true,
+            bubblingMouseEvents: false
           }
         ).addTo(lensMap);
 
@@ -651,6 +655,10 @@
           direction: "center",
           className: "cc-map-hitbox-label",
           opacity: 0.95
+        });
+
+        rect.on("mousedown", function (e) {
+          if (window.L && window.L.DomEvent) window.L.DomEvent.stop(e);
         });
 
         rect.on("click", function (e) {
@@ -721,24 +729,22 @@
 
           bindKnobs(px);
 
-          return nextFrame()
-            .then(function () {
-              bgMap.invalidateSize({ animate: false });
-              lensMap.invalidateSize({ animate: false });
-              applyView(0.5, 0.5, px);
+          return nextFrame().then(function () {
+            bgMap.invalidateSize({ animate: false });
+            lensMap.invalidateSize({ animate: false });
+            applyView(0.5, 0.5, px);
 
-              var elapsed = Date.now() - loadStart;
-              return delay(Math.max(0, MIN_LOADER_MS - elapsed));
-            })
-            .then(function () {
-              hideLoader();
-            });
+            var elapsed = Date.now() - loadStart;
+            return delay(Math.max(0, MIN_LOADER_MS - elapsed));
+          }).then(function () {
+            hideLoader();
+          });
         })
         .catch(function (err) {
           hideLoader();
           ui.drawerTitleEl.textContent = "Load failed";
           ui.drawerContentEl.innerHTML =
-            '<div style="color:#f55;padding:1rem">Load failed: ' + (err && err.message ? err.message : err) + "</div>";
+            '<div style="color:#f55;padding:1rem">Load failed: ' + (err && err.message ? err.message : err) + '</div>';
           ui.drawerEl.classList.add("cc-slide-panel-open");
           throw err;
         });
