@@ -93,7 +93,7 @@
   box-shadow:
     inset 4px 0 8px rgba(255,0,0,.18),
     inset -4px 0 8px rgba(0,110,255,.18);
-  border: 1px solid rgba(255,255,255,.08);
+  border: 0px solid rgba(255,255,255,.08);
 }
 
 .cc-lens-glare {
