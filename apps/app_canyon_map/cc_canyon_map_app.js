@@ -6,15 +6,17 @@
 (function () {
 
   // ── Zoom constants ──────────────────────────────────────────────────────
-  var BG_ZOOM          = -1;
-  var LENS_ZOOM_OFFSET = 0.95;
-  var MIN_LOADER_MS    = 700;
+  // BG_ZOOM: more negative = more zoomed out = shows more of the image at once.
+  // LENS_ZOOM: higher = more zoomed in = the magnified detail view.
+  // Both maps always pan to the same image coordinate.  Because the bg is
+  // more zoomed out, the image appears to travel faster on screen per knob
+  // unit — it covers more ground to cross the same pixel distance.
+  var BG_ZOOM       = -2;   // overview — tune more negative to zoom out further
+  var LENS_ZOOM     =  0;   // detail — tune positive to zoom in further
+  var MIN_LOADER_MS = 700;
 
-  // ── Pan limits (% of image) ─────────────────────────────────────────────
-  var V_MIN = 24;
-  var V_MAX = 76;
-  var H_MIN = 18;
-  var H_MAX = 82;
+  // (No V_MIN / H_MIN limits — state.h and state.v run 0–100 across the full
+  //  image range, and Leaflet's maxBounds prevents overshooting the image edge.)
 
   // ── Location hitboxes — pixel bounding boxes [x1,y1,x2,y2] ────────────
   var HITBOXES = {
@@ -79,6 +81,7 @@
   var knobH;
   var loaderEl;
   var loaderStart;
+  var knobStyleEl;  // dynamic <style> tag — only way to beat !important in stylesheet
 
   var state = { h: 50, v: 50 };
   var imgW  = 0;   // image pixel width  — set in createOverlays
@@ -189,23 +192,32 @@
 
   // ── Leaflet map instances ───────────────────────────────────────────────
   function createMaps(bgDiv, lensMapDiv) {
-    // CRS.Simple = plain pixel coords, not geographic lat/lng
+    // CRS.Simple = plain pixel coords, not geographic lat/lng.
     mapBG = L.map(bgDiv, {
-      crs:               L.CRS.Simple,
-      zoomControl:       false,
+      crs:                L.CRS.Simple,
+      zoomControl:        false,
       attributionControl: false,
-      dragging:          false,
-      scrollWheelZoom:   false
+      dragging:           false,
+      scrollWheelZoom:    false
     });
 
     mapLens = L.map(lensMapDiv, {
-      crs:               L.CRS.Simple,
-      zoomControl:       false,
+      crs:                L.CRS.Simple,
+      zoomControl:        false,
       attributionControl: false,
-      dragging:          false,
-      scrollWheelZoom:   false,
-      zoomSnap:          0
+      dragging:           false,
+      scrollWheelZoom:    false,
+      zoomSnap:           0
     });
+
+    // Override Leaflet's default grey (#ddd) tile background so the area
+    // outside the image is dark, not white.  Do this via a scoped style tag
+    // so it survives Leaflet's own stylesheet being loaded later.
+    var bgStyle = document.createElement("style");
+    bgStyle.textContent =
+      "#cc-bg-map.leaflet-container," +
+      "#cc-lens-map.leaflet-container{background:#0d0b0a !important;}";
+    document.head.appendChild(bgStyle);
   }
 
   // ── Image overlays ──────────────────────────────────────────────────────
@@ -234,11 +246,16 @@
       var bgOverlay   = L.imageOverlay(bgUrl,   bounds).addTo(mapBG);
       var lensOverlay = L.imageOverlay(lensUrl, bounds).addTo(mapLens);
 
-      mapBG.setView(center,  BG_ZOOM);
-      mapLens.setView(center, BG_ZOOM + LENS_ZOOM_OFFSET);
+      // maxBounds locks each map to the image edges — prevents panning to white.
+      // maxBoundsViscosity:1 makes it a hard wall, not a rubber-band.
+      mapBG.setMaxBounds(bounds);
+      mapBG.options.maxBoundsViscosity = 1;
+      mapLens.setMaxBounds(bounds);
+      mapLens.options.maxBoundsViscosity = 1;
 
-      mapBG.setZoom(BG_ZOOM);
-      mapLens.setZoom(BG_ZOOM + LENS_ZOOM_OFFSET);
+      var center = [h / 2, w / 2];
+      mapBG.setView(center,   BG_ZOOM);
+      mapLens.setView(center, LENS_ZOOM);
 
       Promise.all([
         new Promise(function (r) { bgOverlay.once("load",   r); }),
@@ -247,64 +264,40 @@
     });
   }
 
-  // ── Compute each map's pannable range in image-pixel space ─────────────
-  //
-  //  At zoom z with CRS.Simple, 1 image pixel = 2^z screen pixels.
-  //  A container of width C shows (C / 2^z) image pixels across it.
-  //  The centre can pan between (viewW/2) and (imgW - viewW/2).
-  //
-  //  The BG spans the full mapwrap; the lens is a smaller inset div.
-  //  By computing each map's range separately and mapping the same
-  //  t-value (0–1) onto each, both reach their image edge simultaneously.
-  //
-  function computeViewRanges() {
-    var bgScale = Math.pow(2, mapBG.getZoom());
-    var lsScale = Math.pow(2, mapLens.getZoom());
-
-    var bgW = mapWrap.offsetWidth;
-    var bgH = mapWrap.offsetHeight;
-
-    var lensEl = document.getElementById("cc-lens-map");
-    var lsW    = lensEl ? lensEl.offsetWidth  : bgW;
-    var lsH    = lensEl ? lensEl.offsetHeight : bgH;
-
-    var bgViewW = bgW / bgScale;
-    var bgViewH = bgH / bgScale;
-    var lsViewW = lsW / lsScale;
-    var lsViewH = lsH / lsScale;
-
-    return {
-      bgMinX: Math.max(0,    bgViewW / 2),
-      bgMaxX: Math.min(imgW, imgW - bgViewW / 2),
-      bgMinY: Math.max(0,    bgViewH / 2),
-      bgMaxY: Math.min(imgH, imgH - bgViewH / 2),
-      lsMinX: Math.max(0,    lsViewW / 2),
-      lsMaxX: Math.min(imgW, imgW - lsViewW / 2),
-      lsMinY: Math.max(0,    lsViewH / 2),
-      lsMaxY: Math.min(imgH, imgH - lsViewH / 2)
-    };
-  }
-
   // ── Sync both maps + knob positions to current state ───────────────────
   //
-  //  state.h / state.v are 0–100 (0 = left/top image edge, 100 = right/bottom).
-  //  Each map gets panned to its own coordinate so both hit their image
-  //  boundary at the exact same knob position.
+  //  state.h / state.v are 0–100.  Both maps pan to the exact same image
+  //  coordinate.  Because the BG is more zoomed out, it covers the same
+  //  image distance but in fewer screen pixels — so it appears to scroll
+  //  faster and show more context as the knob moves.
+  //
+  //  Knob positioning uses a dynamic <style> tag inserted after the app CSS.
+  //  This is the only reliable way to override !important rules in an external
+  //  stylesheet — a later stylesheet always wins at equal specificity.
   //
   function applyView() {
+    if (!imgW || !imgH) return;
+
     var t_h = clamp01(state.h / 100);
     var t_v = clamp01(state.v / 100);
 
-    var r = computeViewRanges();
+    // Image-space coordinate — same for both maps
+    var lat = imgH * t_v;
+    var lng = imgW * t_h;
 
-    mapBG.panTo(  [r.bgMinY + t_v * (r.bgMaxY - r.bgMinY),
-                   r.bgMinX + t_h * (r.bgMaxX - r.bgMinX)], { animate: false });
-    mapLens.panTo([r.lsMinY + t_v * (r.lsMaxY - r.lsMinY),
-                   r.lsMinX + t_h * (r.lsMaxX - r.lsMinX)], { animate: false });
+    mapBG.panTo(  [lat, lng], { animate: false });
+    mapLens.panTo([lat, lng], { animate: false });
 
-    // CSS uses !important on knob positions — must use setProperty to override.
-    knobV.style.setProperty("top",  (t_v * 100) + "%", "important");
-    knobH.style.setProperty("left", (t_h * 100) + "%", "important");
+    // Inject / update a <style> tag that is always last in <head>.
+    // It beats the app stylesheet's !important rules because it comes after.
+    if (!knobStyleEl) {
+      knobStyleEl = document.createElement("style");
+      knobStyleEl.id = "cc-knob-dyn";
+      document.head.appendChild(knobStyleEl);
+    }
+    knobStyleEl.textContent =
+      "#cc-scroll-knob-v{top:"  + (t_v * 100).toFixed(2) + "%!important;}" +
+      "#cc-scroll-knob-h{left:" + (t_h * 100).toFixed(2) + "%!important;}";
   }
 
   // ── Update --device-scale so frame/lens/knobs resize with container ─────
@@ -376,14 +369,15 @@
 
   // ── Mount ───────────────────────────────────────────────────────────────
   function mount(rootEl, opts) {
-    root    = rootEl;
-    mapBG   = null;
-    mapLens = null;
-    knobV   = null;
-    knobH   = null;
-    state   = { h: 50, v: 50 };
-    imgW    = 0;
-    imgH    = 0;
+    root        = rootEl;
+    mapBG       = null;
+    mapLens     = null;
+    knobV       = null;
+    knobH       = null;
+    knobStyleEl = null;
+    state       = { h: 50, v: 50 };
+    imgW        = 0;
+    imgH        = 0;
 
     var o = Object.assign({}, DEFAULTS, opts || {});
     loaderStart = performance.now();
