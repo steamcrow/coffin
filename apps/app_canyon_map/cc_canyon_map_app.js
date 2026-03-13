@@ -3,22 +3,15 @@
 */
 
 (function () {
-  // ═══════════════════════════════════════════════════════════════
-  // TUNEABLE CONSTANTS
-  // ═══════════════════════════════════════════════════════════════
   var BG_ZOOM = -1;
   var LENS_ZOOM_OFFSET = 0.95;
-  var MIN_LOADER_MS = 1000;
+  var MIN_LOADER_MS = 800;
 
-  // knob travel ranges as percentages of track size
   var V_MIN = 24;
   var V_MAX = 76;
   var H_MIN = 18;
   var H_MAX = 82;
 
-  // ═══════════════════════════════════════════════════════════════
-  // DEFAULTS
-  // ═══════════════════════════════════════════════════════════════
   var DEFAULTS = {
     title: "Coffin Canyon — Canyon Map",
     mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
@@ -31,10 +24,6 @@
     knobUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
   };
 
-  // ═══════════════════════════════════════════════════════════════
-  // LOCATION HITBOXES
-  // [minY, minX, maxY, maxX] in image pixels
-  // ═══════════════════════════════════════════════════════════════
   var HITBOXES = {
     "bandit-buck": [1550, 956, 1668, 1160],
     "bayou-city": [1175, 2501, 1386, 2767],
@@ -73,14 +62,12 @@
     "witches-roost": [3767, 2130, 3965, 2495]
   };
 
-  // ═══════════════════════════════════════════════════════════════
-  // UTILITIES
-  // ═══════════════════════════════════════════════════════════════
+  var _loaded = { css: {}, js: {} };
+
   function el(tag, attrs, children) {
     attrs = attrs || {};
     children = children || [];
     var n = document.createElement(tag);
-
     Object.keys(attrs).forEach(function (k) {
       var v = attrs[k];
       if (k === "class") n.className = v;
@@ -91,11 +78,9 @@
         n.setAttribute(k, v);
       }
     });
-
     children.forEach(function (c) {
       n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
     });
-
     return n;
   }
 
@@ -149,11 +134,6 @@
     ui.drawerContentEl.scrollTop = 0;
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // NETWORK / LOADER HELPERS
-  // ═══════════════════════════════════════════════════════════════
-  var _loaded = { css: {}, js: {} };
-
   function fetchText(url) {
     var u = url + (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
     return fetch(u).then(function (r) {
@@ -183,11 +163,9 @@
 
   function loadScriptOnce(url, key) {
     if (_loaded.js[key]) return Promise.resolve();
-
     return fetchText(url).then(function (code) {
       var blob = new Blob([code], { type: "text/javascript" });
       var blobUrl = URL.createObjectURL(blob);
-
       return new Promise(function (resolve, reject) {
         var s = document.createElement("script");
         s.src = blobUrl;
@@ -211,16 +189,11 @@
       .then(function () { return loadCssOnce(opts.appCssUrl, "app_css"); });
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // RANGE MATH
-  // ═══════════════════════════════════════════════════════════════
   function safeRange(containerEl, zoom, imageH) {
     var h = containerEl.getBoundingClientRect().height || containerEl.offsetHeight || 360;
     var visible = h / Math.pow(2, zoom);
     var half = visible / 2;
-    if (half >= imageH / 2) {
-      return { min: imageH / 2, max: imageH / 2 };
-    }
+    if (half >= imageH / 2) return { min: imageH / 2, max: imageH / 2 };
     return { min: half, max: imageH - half };
   }
 
@@ -228,55 +201,44 @@
     var w = containerEl.getBoundingClientRect().width || containerEl.offsetWidth || 600;
     var visible = w / Math.pow(2, zoom);
     var half = visible / 2;
-    if (half >= imageW / 2) {
-      return { min: imageW / 2, max: imageW / 2 };
-    }
+    if (half >= imageW / 2) return { min: imageW / 2, max: imageW / 2 };
     return { min: half, max: imageW - half };
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // HITBOX EDITOR
-  // ═══════════════════════════════════════════════════════════════
   function createHitboxEditor(root, ui) {
     var state = {
       editing: false,
       active: null,
-      mainMap: null,
+      map: null,
       px: null,
-      layerEl: null,
-      bounds: null
+      bounds: null,
+      layerEl: null
     };
 
     function ensureLayer() {
       if (state.layerEl) return state.layerEl;
       state.layerEl = document.createElement("div");
-      state.layerEl.className = "cc-hitbox-editor-layer";
       state.layerEl.id = "cc-hitbox-editor";
+      state.layerEl.className = "cc-hitbox-editor-layer";
       ui.mapEl.appendChild(state.layerEl);
       return state.layerEl;
     }
 
-    function rectFromHitbox(b) {
+    function toRect(b) {
       return { y1: b[0], x1: b[1], y2: b[2], x2: b[3] };
     }
 
-    function hitboxFromRect(r) {
-      return [
-        Math.round(r.y1),
-        Math.round(r.x1),
-        Math.round(r.y2),
-        Math.round(r.x2)
-      ];
+    function fromRect(r) {
+      return [Math.round(r.y1), Math.round(r.x1), Math.round(r.y2), Math.round(r.x2)];
     }
 
     function latLngToPx(lat, lng) {
-      var pt = state.mainMap.latLngToContainerPoint(window.L.latLng(lat, lng));
+      var pt = state.map.latLngToContainerPoint(window.L.latLng(lat, lng));
       return { x: pt.x, y: pt.y };
     }
 
-    function drawBoxes() {
-      if (!state.editing || !state.mainMap || !state.px) return;
-
+    function draw() {
+      if (!state.editing || !state.map || !state.px) return;
       var layer = ensureLayer();
       layer.innerHTML = "";
 
@@ -284,7 +246,7 @@
         var b = HITBOXES[id];
         if (!b) return;
 
-        var r = rectFromHitbox(b);
+        var r = toRect(b);
         var p1 = latLngToPx(r.y1, r.x1);
         var p2 = latLngToPx(r.y2, r.x2);
 
@@ -303,7 +265,6 @@
 
         var handle = document.createElement("div");
         handle.className = "cc-hb-handle";
-        handle.title = "Drag to resize";
         box.appendChild(handle);
 
         layer.appendChild(box);
@@ -312,17 +273,17 @@
       ui.editorBadgeEl.style.display = "block";
     }
 
-    function updateHitboxFromBox(box) {
+    function updateFromBox(box) {
       var id = box.dataset.id;
       var left = parseFloat(box.style.left);
       var top = parseFloat(box.style.top);
       var width = parseFloat(box.style.width);
       var height = parseFloat(box.style.height);
 
-      var p1 = state.mainMap.containerPointToLatLng(window.L.point(left, top));
-      var p2 = state.mainMap.containerPointToLatLng(window.L.point(left + width, top + height));
+      var p1 = state.map.containerPointToLatLng(window.L.point(left, top));
+      var p2 = state.map.containerPointToLatLng(window.L.point(left + width, top + height));
 
-      HITBOXES[id] = hitboxFromRect({
+      HITBOXES[id] = fromRect({
         y1: Math.min(p1.lat, p2.lat),
         x1: Math.min(p1.lng, p2.lng),
         y2: Math.max(p1.lat, p2.lat),
@@ -332,12 +293,10 @@
 
     function onPointerDown(e) {
       if (!state.editing) return;
-
       var box = e.target.closest(".cc-hb-box");
       if (!box) return;
 
       var isHandle = e.target.classList.contains("cc-hb-handle");
-
       state.active = {
         box: box,
         mode: isHandle ? "resize" : "move",
@@ -350,7 +309,6 @@
       };
 
       try { box.setPointerCapture(e.pointerId); } catch (err) {}
-
       e.preventDefault();
       e.stopPropagation();
     }
@@ -369,7 +327,7 @@
         state.active.box.style.height = Math.max(8, Math.round(state.active.height + dy)) + "px";
       }
 
-      updateHitboxFromBox(state.active.box);
+      updateFromBox(state.active.box);
       e.preventDefault();
     }
 
@@ -379,7 +337,7 @@
       state.active = null;
     }
 
-    function exportHitboxes() {
+    function exportJSON() {
       var keys = Object.keys(HITBOXES).sort();
       var lines = keys.map(function (k) {
         return '  "' + k + '": [' + HITBOXES[k].map(function (n) { return Math.round(n); }).join(", ") + ']';
@@ -392,59 +350,37 @@
       state.editing = on;
       root.classList.toggle("cc-hitbox-edit", on);
 
-      if (!state.mainMap || !state.bounds) return;
+      if (!state.map || !state.bounds) return;
 
       if (!on) {
         if (state.layerEl) state.layerEl.style.display = "none";
         ui.editorBadgeEl.style.display = "none";
-
-        state.mainMap.dragging.disable();
-        state.mainMap.doubleClickZoom.disable();
-        state.mainMap.scrollWheelZoom.disable();
-        state.mainMap.touchZoom.disable();
-        state.mainMap.boxZoom.disable();
-        state.mainMap.keyboard.disable();
-
-        state.mainMap.off("move zoom resize", drawBoxes);
+        state.map.off("move zoom resize", draw);
         return;
       }
 
-      state.mainMap.fitBounds(state.bounds, {
-        animate: false,
-        padding: [24, 24]
-      });
-
-      state.mainMap.dragging.enable();
-      state.mainMap.doubleClickZoom.enable();
-      state.mainMap.scrollWheelZoom.enable();
-      state.mainMap.touchZoom.enable();
-      state.mainMap.boxZoom.enable();
-      state.mainMap.keyboard.enable();
-
+      state.map.fitBounds(state.bounds, { animate: false, padding: [24, 24] });
       ensureLayer().style.display = "block";
-      drawBoxes();
-      state.mainMap.on("move zoom resize", drawBoxes);
+      draw();
+      state.map.on("move zoom resize", draw);
     }
 
     window.addEventListener("pointermove", onPointerMove, { passive: false });
     window.addEventListener("pointerup", onPointerUp);
 
     return {
-      attach: function (mainMap, px, bounds) {
-        state.mainMap = mainMap;
+      attach: function (map, px, bounds) {
+        state.map = map;
         state.px = px;
         state.bounds = bounds;
         ensureLayer().addEventListener("pointerdown", onPointerDown);
       },
       toggle: function () { setEditing(!state.editing); },
-      exportJSON: exportHitboxes,
+      exportJSON: exportJSON,
       isEditing: function () { return state.editing; }
     };
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // MOUNT
-  // ═══════════════════════════════════════════════════════════════
   function mount(root, userOpts) {
     var opts = Object.assign({}, DEFAULTS, userOpts || {});
 
@@ -466,15 +402,11 @@
     ]);
 
     var mapWrap = el("div", { class: "cc-cm-mapwrap" });
-
     var mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
-
     var lensMapEl = el("div", { id: "cc-lens-map", class: "cc-lens-map" });
-
     var lensInner = el("div", { class: "cc-lens-inner" }, [
       el("div", { class: "cc-lens-overscan" }, [lensMapEl])
     ]);
-
     var lensEl = el("div", { class: "cc-lens" }, [
       lensInner,
       el("div", { class: "cc-lens-chromatic" }),
@@ -482,30 +414,15 @@
     ]);
 
     var frameOverlay = el("div", { class: "cc-frame-overlay" }, [
-      el("img", {
-        class: "cc-frame-image",
-        src: opts.frameUrl,
-        alt: "",
-        draggable: "false"
-      })
+      el("img", { class: "cc-frame-image", src: opts.frameUrl, alt: "", draggable: "false" })
     ]);
 
     var knobV = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" }, [
-      el("img", {
-        class: "cc-scroll-knob-img",
-        src: opts.knobUrl,
-        alt: "",
-        draggable: "false"
-      })
+      el("img", { class: "cc-scroll-knob-img", src: opts.knobUrl, alt: "", draggable: "false" })
     ]);
 
     var knobH = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" }, [
-      el("img", {
-        class: "cc-scroll-knob-img",
-        src: opts.knobUrl,
-        alt: "",
-        draggable: "false"
-      })
+      el("img", { class: "cc-scroll-knob-img", src: opts.knobUrl, alt: "", draggable: "false" })
     ]);
 
     var trackV = el("div", { class: "cc-scroll-vertical", id: "cc-scroll-track-v" }, [knobV]);
@@ -565,11 +482,11 @@
     var editor = null;
     var bounds = null;
     var hitboxLayers = [];
+    var knobsBound = false;
 
     function updateResponsiveScale() {
-      var wrap = mapWrap;
       var designWidth = 1280;
-      var currentWidth = wrap.getBoundingClientRect().width || wrap.offsetWidth || designWidth;
+      var currentWidth = mapWrap.getBoundingClientRect().width || mapWrap.offsetWidth || designWidth;
       var scale = Math.max(0.62, Math.min(1, currentWidth / designWidth));
       root.style.setProperty("--device-scale", scale.toFixed(4));
     }
@@ -588,13 +505,9 @@
       }, 320);
     }
 
-    function disableNormalMapInteraction() {
+    function lockMaps() {
       if (!bgMap || !lensMap) return;
-
-      [
-        bgMap,
-        lensMap
-      ].forEach(function (m) {
+      [bgMap, lensMap].forEach(function (m) {
         m.dragging.disable();
         m.doubleClickZoom.disable();
         m.scrollWheelZoom.disable();
@@ -614,33 +527,21 @@
 
       var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
       var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
-
       var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
       var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
 
-      bgMap.setView(
-        [
-          bgRy.min + currentT * (bgRy.max - bgRy.min),
-          bgRx.min + currentTx * (bgRx.max - bgRx.min)
-        ],
-        BG_ZOOM,
-        { animate: false }
-      );
+      bgMap.setView([
+        bgRy.min + currentT * (bgRy.max - bgRy.min),
+        bgRx.min + currentTx * (bgRx.max - bgRx.min)
+      ], BG_ZOOM, { animate: false });
 
-      lensMap.setView(
-        [
-          lnRy.min + currentT * (lnRy.max - lnRy.min),
-          lnRx.min + currentTx * (lnRx.max - lnRx.min)
-        ],
-        lensZoom,
-        { animate: false }
-      );
+      lensMap.setView([
+        lnRy.min + currentT * (lnRy.max - lnRy.min),
+        lnRx.min + currentTx * (lnRx.max - lnRx.min)
+      ], lensZoom, { animate: false });
 
-      var knobVTop = V_MIN + currentT * (V_MAX - V_MIN);
-      var knobHLeft = H_MIN + currentTx * (H_MAX - H_MIN);
-
-      ui.knobV.style.top = knobVTop + "%";
-      ui.knobH.style.left = knobHLeft + "%";
+      ui.knobV.style.top = (V_MIN + currentT * (V_MAX - V_MIN)) + "%";
+      ui.knobH.style.left = (H_MIN + currentTx * (H_MAX - H_MIN)) + "%";
     }
 
     function bindKnob(knobEl, axis, px) {
@@ -671,13 +572,11 @@
 
       function onDown(e) {
         if (editor && editor.isEditing()) return;
-
         dragging = true;
+
         var knobRect = getKnobRect();
         var client = getClient(e);
-
-        if (axis === "v") grabOffset = client - knobRect.top;
-        else grabOffset = client - knobRect.left;
+        grabOffset = axis === "v" ? (client - knobRect.top) : (client - knobRect.left);
 
         knobEl.classList.add("is-active");
         e.preventDefault();
@@ -689,10 +588,9 @@
 
         var trackRect = getTrackRect();
         var client = getClient(e);
-        var trackPos;
-
-        if (axis === "v") trackPos = client - trackRect.top - grabOffset;
-        else trackPos = client - trackRect.left - grabOffset;
+        var trackPos = axis === "v"
+          ? (client - trackRect.top - grabOffset)
+          : (client - trackRect.left - grabOffset);
 
         var n = posToNormalized(trackPos);
 
@@ -716,6 +614,13 @@
       window.addEventListener("touchend", onUp);
     }
 
+    function bindKnobs(px) {
+      if (knobsBound) return;
+      knobsBound = true;
+      bindKnob(ui.knobV, "v", px);
+      bindKnob(ui.knobH, "h", px);
+    }
+
     function clearHitboxes() {
       hitboxLayers.forEach(function (l) {
         try { l.remove(); } catch (e) {}
@@ -725,7 +630,6 @@
 
     function buildHitboxes() {
       clearHitboxes();
-
       if (!locationsDoc || !locationsDoc.locations || !lensMap) return;
 
       locationsDoc.locations.forEach(function (loc) {
@@ -809,27 +713,26 @@
 
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
-          disableNormalMapInteraction();
-
+          lockMaps();
           buildHitboxes();
 
           editor = createHitboxEditor(root, ui);
           editor.attach(bgMap, px, bounds);
 
-          bindKnob(ui.knobV, "v", px);
-          bindKnob(ui.knobH, "h", px);
+          bindKnobs(px);
 
-          return nextFrame().then(function () {
-            bgMap.invalidateSize({ animate: false });
-            lensMap.invalidateSize({ animate: false });
-            applyView(0.5, 0.5, px);
+          return nextFrame()
+            .then(function () {
+              bgMap.invalidateSize({ animate: false });
+              lensMap.invalidateSize({ animate: false });
+              applyView(0.5, 0.5, px);
 
-            var elapsed = Date.now() - loadStart;
-            return delay(Math.max(0, MIN_LOADER_MS - elapsed));
-          });
-        })
-        .then(function () {
-          hideLoader();
+              var elapsed = Date.now() - loadStart;
+              return delay(Math.max(0, MIN_LOADER_MS - elapsed));
+            })
+            .then(function () {
+              hideLoader();
+            });
         })
         .catch(function (err) {
           hideLoader();
@@ -845,7 +748,6 @@
       updateResponsiveScale();
       if (bgMap) bgMap.invalidateSize({ animate: false });
       if (lensMap) lensMap.invalidateSize({ animate: false });
-
       if (mapDoc && mapDoc.map && mapDoc.map.background && mapDoc.map.background.image_pixel_size) {
         applyView(currentT, currentTx, mapDoc.map.background.image_pixel_size);
       }
@@ -857,8 +759,6 @@
 
     header.querySelector("#cc-cm-fit").onclick = function () {
       if (mapDoc && mapDoc.map && mapDoc.map.background && mapDoc.map.background.image_pixel_size) {
-        currentT = 0.5;
-        currentTx = 0.5;
         applyView(0.5, 0.5, mapDoc.map.background.image_pixel_size);
       }
     };
