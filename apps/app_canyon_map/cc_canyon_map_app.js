@@ -153,47 +153,43 @@
 
   function createOverlays(mapData){
 
-    return new Promise(function(resolve,reject){
+  return new Promise(function(resolve,reject){
 
-      var mapImage =
-        mapData.image ||
-        mapData.map_image ||
-        mapData.map ||
-        mapData.mapUrl;
+    if(!mapData.map || !mapData.map.background || !mapData.map.lens){
+      reject("Map JSON missing map.background or map.lens");
+      return;
+    }
 
-      if(!mapImage){
-        reject("Map JSON missing map image field");
-        return;
-      }
+    var bgUrl = mapData.map.background.image_key;
+    var lensUrl = mapData.map.lens.image_key;
 
-      var img=new Image();
+    var w = mapData.map.background.image_pixel_size.w;
+    var h = mapData.map.background.image_pixel_size.h;
 
-      img.onload=function(){
+    if(!bgUrl || !lensUrl){
+      reject("Map JSON missing image_key fields");
+      return;
+    }
 
-        var bounds=[[0,0],[img.height,img.width]];
+    var bounds = [[0,0],[h,w]];
 
-        var bgOverlay=L.imageOverlay(mapImage,bounds).addTo(mapBG);
-        var lensOverlay=L.imageOverlay(mapImage,bounds).addTo(mapLens);
+    var bgOverlay = L.imageOverlay(bgUrl, bounds).addTo(mapBG);
+    var lensOverlay = L.imageOverlay(lensUrl, bounds).addTo(mapLens);
 
-        mapBG.fitBounds(bounds);
-        mapLens.fitBounds(bounds);
+    mapBG.fitBounds(bounds);
+    mapLens.fitBounds(bounds);
 
-        mapBG.setZoom(BG_ZOOM);
-        mapLens.setZoom(BG_ZOOM+LENS_ZOOM_OFFSET);
+    mapBG.setZoom(BG_ZOOM);
+    mapLens.setZoom(BG_ZOOM + LENS_ZOOM_OFFSET);
 
-        Promise.all([
-          new Promise(r=>bgOverlay.once("load",r)),
-          new Promise(r=>lensOverlay.once("load",r))
-        ]).then(resolve);
+    Promise.all([
+      new Promise(r => bgOverlay.once("load", r)),
+      new Promise(r => lensOverlay.once("load", r))
+    ]).then(resolve);
 
-      };
+  });
 
-      img.onerror=reject;
-      img.src = mapImage;
-
-    });
-
-  }
+}
 
   function applyView(){
 
