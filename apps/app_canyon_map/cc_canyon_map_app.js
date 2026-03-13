@@ -191,7 +191,8 @@
     var cH = r.height || containerEl.offsetHeight || 800;
     var zW = Math.log2(cW / imgW);
     var zH = Math.log2(cH / imgH);
-    return Math.max(zW, zH);
+    // +0.4 shows ~40% more detail than bare fill — image slightly larger than container
+    return Math.max(zW, zH) + 0.4;
   }
 
   // ── safeRange ───────────────────────────────────────────────────────────
@@ -316,7 +317,9 @@
       if (s.attached) return;
       s.attached = true;
 
-      ensureLayer().addEventListener("pointerdown", function (e) {
+      var layer = ensureLayer();
+
+      layer.addEventListener("pointerdown", function (e) {
         if (!s.editing) return;
         var box = e.target.closest(".cc-hb-box");
         if (!box) return;
@@ -330,12 +333,18 @@
           width:     parseFloat(box.style.width),  height: parseFloat(box.style.height)
         };
 
-        try { box.setPointerCapture(e.pointerId); } catch (_) {}
+        // Capture on the LAYER element so all subsequent pointer events for
+        // this pointer are delivered here, even if the pointer leaves the box.
+        // Capturing on `box` risks losing events to Leaflet's internal handlers.
+        try { layer.setPointerCapture(e.pointerId); } catch (_) {}
         e.preventDefault();
         e.stopPropagation();
       });
 
-      window.addEventListener("pointermove", function (ev) {
+      // pointermove on the layer (not window) — Leaflet calls
+      // stopImmediatePropagation on window-level pointer events during its
+      // internal drag handling, which silently kills window listeners.
+      layer.addEventListener("pointermove", function (ev) {
         if (!s.active || ev.pointerId !== s.active.pointerId) return;
         var dx = ev.clientX - s.active.startX;
         var dy = ev.clientY - s.active.startY;
@@ -354,8 +363,8 @@
         if (!s.active || ev.pointerId !== s.active.pointerId) return;
         s.active = null;
       }
-      window.addEventListener("pointerup",     endPointer);
-      window.addEventListener("pointercancel", endPointer);
+      layer.addEventListener("pointerup",     endPointer);
+      layer.addEventListener("pointercancel", endPointer);
     }
 
     function exportJSON() {
@@ -457,12 +466,16 @@
         // Kill Leaflet's grey/white container glow
         "#cc-bg-map.leaflet-container," +
         "#cc-lens-map.leaflet-container{background:#0d0b0a!important;box-shadow:none!important;}" +
-        // Knob transition
-        ".cc-scroll-knob-img{transition:filter .15s ease,transform .15s ease!important;}" +
+        // Guarantee knobs are always above Leaflet panes and receive pointer events.
+        // z-index 600 safely exceeds Leaflet's internal pane stack (~400).
+        ".cc-scroll-vertical,.cc-scroll-horizontal{pointer-events:auto!important;z-index:600!important;}" +
+        ".cc-scroll-knob{pointer-events:auto!important;z-index:601!important;touch-action:none!important;}" +
+        // img inside knob should be non-interactive so clicks hit the parent div
+        ".cc-scroll-knob-img{transition:filter .15s ease,transform .15s ease!important;pointer-events:none!important;}" +
         // Knob grabbed: orange glow + grow
         ".cc-scroll-knob.is-active .cc-scroll-knob-img{" +
-        "  filter:drop-shadow(0 4px 10px rgba(0,0,0,.7)) drop-shadow(0 0 20px rgba(255,117,24,.9))!important;" +
-        "  transform:scale(1.22)!important;" +
+        "filter:drop-shadow(0 4px 10px rgba(0,0,0,.7)) drop-shadow(0 0 20px rgba(255,117,24,.9))!important;" +
+        "transform:scale(1.22)!important;" +
         "}";
       document.head.appendChild(baseStyle);
     }
@@ -757,17 +770,21 @@
           className: "cc-map-hitbox-label", opacity: 0.95
         });
 
-        // BUG FIX: ev here is a Leaflet event object, not a raw DOM event.
-        // L.DomEvent.stop(ev) expects a DOM event — pass ev.originalEvent.
-        // Only keep the "click" handler; redundant mousedown/touchstart
-        // listeners were interfering with normal pointer flow.
-        rect.on("click", function (ev) {
-          if (editor && editor.isEditing()) return;
-          try {
-            if (ev && ev.originalEvent) ev.originalEvent.stopPropagation();
-          } catch (_) {}
-          renderDrawer(ui, loc);
-        });
+        // Native DOM pointerdown on the Leaflet SVG path element.
+        // This bypasses Leaflet's own click/drag-end event dispatch, which
+        // would silently swallow the event if a drag had just ended.
+        // We capture the loc variable via closure so each listener opens the
+        // correct location regardless of iteration order.
+        (function (capturedLoc) {
+          var domEl = rect.getElement();
+          if (domEl) {
+            domEl.addEventListener("pointerdown", function (e) {
+              if (editor && editor.isEditing()) return;
+              e.stopPropagation();
+              renderDrawer(ui, capturedLoc);
+            });
+          }
+        }(loc));
 
         hitboxLayers.push(rect);
       });
@@ -821,6 +838,11 @@
           });
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
+          // Hide until applyView fires — prevents the Leaflet "jump" where
+          // the map briefly renders at the wrong position before CSS settles.
+          ui.mapEl.style.visibility    = "hidden";
+          ui.lensMapEl.style.visibility = "hidden";
+
           lockMaps();
           buildHitboxes();
 
@@ -853,6 +875,9 @@
         })
         .then(function () {
           applyView(0.5, 0.5);
+          // Reveal now that Leaflet has positioned correctly — no jump visible.
+          ui.mapEl.style.visibility    = "";
+          ui.lensMapEl.style.visibility = "";
           return delay(Math.max(0, MIN_LOADER_MS - (Date.now() - loadStart)));
         })
         .then(function () {
