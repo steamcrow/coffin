@@ -1,63 +1,64 @@
 /* ================================================================
-   COFFIN CANYON — FULL RESTORATION (v2.8)
+   COFFIN CANYON MAP — V2 CLEAN BUILD
    ================================================================ */
 
-/* --- CORE CONTAINERS --- */
-.cc-cm-mapwrap {
-  position: relative !important;
-  width: 100% !important;
-  height: 85vh !important;
-  min-height: 750px !important;
-  background: #0d0b0a !important;
-  border: 12px solid #4a3728 !important;
-  border-radius: 12px !important;
-  overflow: hidden !important;
-  display: block !important;
-  isolation: isolate !important;
+
+/* ------------------------------------------------
+   MAP CONTAINER
+------------------------------------------------ */
+
+.cc-map-wrap{
+position:relative;
+width:100%;
+height:85vh;
+min-height:720px;
+background:#0d0b0a;
+border:12px solid #4a3728;
+border-radius:12px;
+overflow:hidden;
+isolation:isolate;
 }
 
-/* --- THE MAP LAYERS --- */
-#cc-cm-map,
-#cc-lens-map {
-  position: absolute !important;
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  z-index: 1 !important;
+
+/* ------------------------------------------------
+   LEAFLET MAP
+------------------------------------------------ */
+
+.cc-map-root{
+position:absolute;
+inset:0;
+width:100%;
+height:100%;
+z-index:1;
 }
 
-/* --- THE MAGNIFIED LENS --- */
-.cc-lens {
-  position: absolute !important;
 
-  top: 46% !important;     /* was 35% */
-  left: 53% !important;    /* was 50% */
+/* ------------------------------------------------
+   LENS FRAME
+------------------------------------------------ */
 
-  width: calc(1020px * var(--device-scale, 1)) !important;
-  height: calc(620px * var(--device-scale, 1)) !important;
-
-  transform: translate(-50%, -50%) !important;
-
-  z-index: 10 !important;
-  pointer-events: none !important;
-  overflow: hidden !important;
+.cc-map-frame{
+position:absolute;
+inset:0;
+pointer-events:none;
+z-index:50;
+display:flex;
+align-items:center;
+justify-content:center;
 }
 
-.cc-lens-inner {
-  position: absolute !important;
-  inset: 0 !important;
-  pointer-events: auto !important;
-  filter: url(#ccLensWarp);
+.cc-map-frame-img{
+width:1180px;
+max-width:100%;
+height:auto;
+display:block;
+pointer-events:none;
 }
 
-.cc-lens-chromatic,
-.cc-lens-glare {
-  position: absolute !important;
-  inset: 0 !important;
-  pointer-events: none !important;
-  z-index: 11 !important;
-}
+
+/* ------------------------------------------------
+   HITBOX LABELS
+------------------------------------------------ */
 
 .cc-map-hitbox-label{
 background:rgba(0,0,0,.8);
@@ -72,98 +73,168 @@ max-width:90px;
 white-space:normal;
 }
 
-.cc-map-hitbox-label:before {
-  display: none !important;
+.cc-map-hitbox-label:before{
+display:none!important;
 }
 
-/* --- THE METAL FRAME --- */
-.cc-frame-overlay {
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 50 !important;
-  pointer-events: none !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+
+/* ------------------------------------------------
+   KNOBS
+------------------------------------------------ */
+
+.cc-knob-v,
+.cc-knob-h{
+position:absolute;
+width:48px;
+height:48px;
+border-radius:50%;
+background:#ff7518;
+box-shadow:0 4px 10px rgba(0,0,0,.7);
+z-index:60;
+pointer-events:none;
 }
 
-.cc-frame-image {
-  width: calc(1180px * var(--device-scale, 1)) !important;
-  height: auto !important;
-  display: block !important;
-  pointer-events: none !important;
-  z-index: 51 !important;
+/* vertical knob */
+
+.cc-knob-v{
+right:18px;
+top:50%;
+transform:translateY(-50%);
 }
 
-/* --- KNOB TRACKS --- */
-.cc-scroll-vertical,
-.cc-scroll-horizontal {
-  position: absolute !important;
-  z-index: 60 !important;
-  pointer-events: auto !important;
-  display: block !important;
+/* horizontal knob */
+
+.cc-knob-h{
+bottom:18px;
+left:50%;
+transform:translateX(-50%);
 }
 
-.cc-scroll-vertical {
-  top: 0 !important;
-  right: 0 !important;
-  width: 88px !important;
-  height: 100% !important;
+
+/* ------------------------------------------------
+   MOBILE OPTIMIZATION
+------------------------------------------------ */
+
+@media (max-width:900px){
+
+.cc-map-wrap{
+height:70vh;
+min-height:520px;
 }
 
-.cc-scroll-horizontal {
-  left: 0 !important;
-  bottom: 0 !important;
-  width: 100% !important;
-  height: 88px !important;
+.cc-knob-v,
+.cc-knob-h{
+background:url("/apps/app_canyon_map/data/blappo_knob.png") center/contain no-repeat;
+background-color:transparent;
 }
 
-/* --- KNOBS --- */
-.cc-scroll-knob {
-  position: absolute !important;
-  width: calc(112px * var(--device-scale, 1)) !important;
-  height: calc(112px * var(--device-scale, 1)) !important;
-  display: block !important;
-  z-index: 61 !important;
-  pointer-events: auto !important;
-  cursor: grab !important;
-  background: none !important;
-  border: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-  touch-action: none !important;
+.cc-map-hitbox-label{
+font-size:10px;
 }
 
-.cc-scroll-knob.is-active,
-.cc-scroll-knob:active {
-  cursor: grabbing !important;
-}
-/* IMPORTANT:
-   do NOT lock top/left here with !important
-   JS needs to move them
-*/
-
-#cc-scroll-knob-v {
-  left: 50%;
-  transform: translate(-50%, -50%);
 }
 
-#cc-scroll-knob-h {
-  top: 50%;
-  transform: translate(-50%, -50%);
+
+/* ------------------------------------------------
+   SMALL PHONES
+------------------------------------------------ */
+
+@media (max-width:520px){
+
+.cc-map-wrap{
+height:65vh;
+min-height:420px;
 }
 
-/* --- KNOB IMAGES --- */
-.cc-scroll-knob-img {
-  display: block !important;
-  width: 100% !important;
-  height: 100% !important;
-  max-width: none !important;
-  max-height: none !important;
-  object-fit: contain !important;
-  pointer-events: none !important;
-  user-select: none !important;
-  -webkit-user-drag: none !important;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.6)) !important;
+.cc-map-hitbox-label{
+font-size:9px;
+padding:2px 4px;
+}
+/* ================================================================
+   CANYON MAP V2.2 — CINEMATIC POLISH
+   ================================================================ */
+
+@keyframes cc-hitbox-pulse {
+  0% { box-shadow: 0 0 0 rgba(255,117,24,0.00); }
+  50% { box-shadow: 0 0 18px rgba(255,117,24,0.35); }
+  100% { box-shadow: 0 0 0 rgba(255,117,24,0.00); }
+}
+
+@keyframes cc-label-glow {
+  0% { text-shadow: 0 0 0 rgba(255,255,255,0); }
+  50% { text-shadow: 0 0 10px rgba(255,210,140,0.55); }
+  100% { text-shadow: 0 0 0 rgba(255,255,255,0); }
+}
+
+/* smoother hitbox transitions */
+.leaflet-interactive {
+  transition:
+    stroke 0.18s ease,
+    stroke-width 0.18s ease,
+    fill-opacity 0.18s ease,
+    opacity 0.18s ease,
+    filter 0.18s ease;
+}
+
+/* hover / focus state */
+.cc-hitbox-hover {
+  stroke: #ffd28c !important;
+  stroke-width: 3 !important;
+  fill-opacity: 0.22 !important;
+  filter: drop-shadow(0 0 8px rgba(255,117,24,0.65));
+}
+
+/* active selected state */
+.cc-hitbox-active {
+  stroke: #fff0c2 !important;
+  stroke-width: 3 !important;
+  fill-opacity: 0.26 !important;
+  filter: drop-shadow(0 0 10px rgba(255,180,80,0.75));
+  animation: cc-hitbox-pulse 1.8s ease-in-out infinite;
+}
+
+/* default labels */
+.cc-map-hitbox-label {
+  transition:
+    transform 0.18s ease,
+    opacity 0.18s ease,
+    filter 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+/* hovered label */
+.cc-map-hitbox-label.cc-label-hover {
+  background: rgba(30,20,10,0.92) !important;
+  border-color: rgba(255,210,140,0.95) !important;
+  color: #fff7e6 !important;
+  transform: scale(1.04);
+  animation: cc-label-glow 1.5s ease-in-out infinite;
+}
+
+/* selected label */
+.cc-map-hitbox-label.cc-label-active {
+  background: rgba(40,24,10,0.96) !important;
+  border-color: rgba(255,220,150,1) !important;
+  color: #fff !important;
+  transform: scale(1.05);
+  animation: cc-label-glow 1.25s ease-in-out infinite;
+}
+
+/* subtle frame breathing */
+.cc-map-frame-img {
+  transition: transform 0.22s ease, filter 0.22s ease;
+}
+
+.cc-map-wrap.cc-map-focus .cc-map-frame-img {
+  transform: scale(1.01);
+  filter: drop-shadow(0 0 12px rgba(255,117,24,0.18));
+}
+
+/* knobs also feel more alive when focused */
+.cc-map-wrap.cc-map-focus .cc-knob-v,
+.cc-map-wrap.cc-map-focus .cc-knob-h {
+  box-shadow: 0 0 12px rgba(255,117,24,0.35), 0 4px 10px rgba(0,0,0,.7);
+}
+   
 }
