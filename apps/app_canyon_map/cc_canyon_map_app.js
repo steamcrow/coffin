@@ -1,5 +1,5 @@
 /* File: apps/app_canyon_map/cc_canyon_map_app.js
-   Coffin Canyon — Canyon Map
+   Coffin Canyon — Canyon Map (Rebuilt for Stability)
 */
 
 (function () {
@@ -13,6 +13,18 @@
   var H_MAX = 82;
 
   var DEFAULTS = {
+    title: "Coffin Canyon — Canyon Map",
+    mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
+    locationsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
+    appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
+    leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
+    leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
+    logoUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png",
+    frameUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/mag_frame3.png",
+    knobUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png"
+  };
+
+ var DEFAULTS = {
     title: "Coffin Canyon — Canyon Map",
     mapUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
     locationsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
@@ -62,758 +74,188 @@
     "witches-roost": [3767, 2130, 3965, 2495]
   };
 
+
   var _loaded = { css: {}, js: {} };
 
+  // --- UTILS ---
   function el(tag, attrs, children) {
-    attrs = attrs || {};
-    children = children || [];
     var n = document.createElement(tag);
-
-    Object.keys(attrs).forEach(function (k) {
-      var v = attrs[k];
-      if (k === "class") n.className = v;
-      else if (k === "style") n.setAttribute("style", v);
-      else if (k.indexOf("on") === 0 && typeof v === "function") {
-        n.addEventListener(k.slice(2).toLowerCase(), v);
-      } else {
-        n.setAttribute(k, v);
-      }
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === "class") n.className = attrs[k];
+      else if (k === "style") n.setAttribute("style", attrs[k]);
+      else if (k.indexOf("on") === 0) n.addEventListener(k.slice(2).toLowerCase(), attrs[k]);
+      else n.setAttribute(k, attrs[k]);
     });
-
-    children.forEach(function (c) {
+    (children || []).forEach(function (c) {
       n.appendChild(typeof c === "string" ? document.createTextNode(c) : c);
     });
-
     return n;
   }
 
-  function clamp(v, lo, hi) {
-    return Math.max(lo, Math.min(hi, v));
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  function safeRange(containerEl, zoom, imageDim, isWidth) {
+    var rect = containerEl.getBoundingClientRect();
+    var size = isWidth ? (rect.width || 800) : (rect.height || 600);
+    var scale = Math.pow(2, zoom);
+    var visibleInMapUnits = size / scale;
+    var half = visibleInMapUnits / 2;
+    if (half >= imageDim / 2) return { min: imageDim / 2, max: imageDim / 2 };
+    return { min: half, max: imageDim - half };
   }
 
-  function delay(ms) {
-    return new Promise(function (r) { setTimeout(r, ms); });
-  }
-
-  function nextFrame() {
-    return new Promise(function (r) { requestAnimationFrame(r); });
-  }
-
-  function rafThrottle(fn) {
-    var pending = false;
-    var lastArgs;
-    return function () {
-      lastArgs = arguments;
-      if (pending) return;
-      pending = true;
-      requestAnimationFrame(function () {
-        pending = false;
-        fn.apply(null, lastArgs);
-      });
-    };
-  }
-
-  function fetchText(url) {
-    var u = url + (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
-    return fetch(u).then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status + ": " + url);
-      return r.text();
-    });
-  }
-
+  // --- CORE LOADERS ---
   function fetchJson(url) {
-    var u = url + (url.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now();
-    return fetch(u).then(function (r) {
-      if (!r.ok) throw new Error("HTTP " + r.status + ": " + url);
-      return r.json();
-    });
-  }
-
-  function loadCssOnce(url, key) {
-    if (_loaded.css[key]) return Promise.resolve();
-    return fetchText(url).then(function (css) {
-      var s = document.createElement("style");
-      s.setAttribute("data-cc-style", key);
-      s.textContent = css;
-      document.head.appendChild(s);
-      _loaded.css[key] = true;
-    });
-  }
-
-  function loadScriptOnce(url, key) {
-    if (_loaded.js[key]) return Promise.resolve();
-
-    return fetchText(url).then(function (code) {
-      var blob = new Blob([code], { type: "text/javascript" });
-      var blobUrl = URL.createObjectURL(blob);
-
-      return new Promise(function (resolve, reject) {
-        var s = document.createElement("script");
-        s.src = blobUrl;
-        s.onload = function () {
-          URL.revokeObjectURL(blobUrl);
-          _loaded.js[key] = true;
-          resolve();
-        };
-        s.onerror = function () {
-          URL.revokeObjectURL(blobUrl);
-          reject(new Error("Script load failed: " + url));
-        };
-        document.head.appendChild(s);
-      });
-    });
+    return fetch(url + "?t=" + Date.now()).then(function (r) { return r.json(); });
   }
 
   function ensureDeps(opts) {
-    return loadCssOnce(opts.leafletCssUrl, "leaflet_css")
-      .then(function () { return loadScriptOnce(opts.leafletJsUrl, "leaflet_js"); })
-      .then(function () { return loadCssOnce(opts.appCssUrl, "app_css"); });
+    return Promise.all([
+        loadResource(opts.leafletCssUrl, "css"),
+        loadResource(opts.appCssUrl, "css"),
+        loadResource(opts.leafletJsUrl, "js")
+    ]);
   }
 
-  function meterBar(value, max, color) {
-    var pct = Math.round(clamp(value || 0, 0, max) / max * 100);
-    return '<div style="width:100%;height:22px;background:rgba(255,255,255,.08);border-radius:11px;overflow:hidden;position:relative;border:1px solid rgba(255,255,255,.12)">' +
-      '<div style="height:100%;width:' + pct + '%;background:' + color + ';transition:width .25s"></div>' +
-      '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem">' + (value || 0) + ' / ' + max + '</div></div>';
+  function loadResource(url, type) {
+    if (_loaded[type][url]) return Promise.resolve();
+    return fetch(url).then(function(r) { return r.text(); }).then(function(t) {
+        var tag = type === "css" ? el("style", {}, [t]) : el("script", {}, [t]);
+        document.head.appendChild(tag);
+        _loaded[type][url] = true;
+    });
   }
 
+  // --- UI RENDER ---
   function renderDrawer(ui, loc) {
-    ui.drawerTitleEl.textContent = loc.name || loc.id || "Location";
-    ui.drawerContentEl.innerHTML =
-      '<div class="cc-block"><div class="cc-h">Description</div><p>' + (loc.description || "No description.") + '</p></div>' +
-      '<div class="cc-block"><div class="cc-h">Danger</div>' + meterBar(loc.danger || 0, 6, "#ff4444") + '</div>' +
-      '<div class="cc-block"><div class="cc-h">Population</div>' + meterBar(loc.population || 0, 6, "#4caf50") + '</div>' +
-      (loc.atmosphere ? '<div class="cc-block"><div class="cc-h">Atmosphere</div><p style="font-style:italic;color:#aaa">' + loc.atmosphere + '</p></div>' : '') +
-      '<div style="display:flex;flex-wrap:wrap;gap:.5rem">' +
-      (loc.features || []).map(function (f) {
-        return '<span style="padding:4px 10px;background:rgba(255,117,24,.2);border:1px solid rgba(255,117,24,.4);border-radius:4px;font-size:.85rem">' + f + '</span>';
-      }).join("") +
-      '</div>';
-
+    ui.drawerTitleEl.textContent = loc.name || loc.id;
+    ui.drawerContentEl.innerHTML = `
+        <div class="cc-block"><div class="cc-h">Description</div><p>${loc.description || "Unknown territory."}</p></div>
+        <div class="cc-block"><div class="cc-h">Atmosphere</div><p><em>${loc.atmosphere || "Normal"}</em></p></div>
+    `;
     ui.drawerEl.classList.add("cc-slide-panel-open");
-    ui.drawerEl.scrollTop = 0;
   }
 
-  function safeRange(containerEl, zoom, imageH) {
-    var h = containerEl.getBoundingClientRect().height || containerEl.offsetHeight || 360;
-    var visible = h / Math.pow(2, zoom);
-    var half = visible / 2;
-    if (half >= imageH / 2) return { min: imageH / 2, max: imageH / 2 };
-    return { min: half, max: imageH - half };
-  }
-
-  function safeRangeX(containerEl, zoom, imageW) {
-    var w = containerEl.getBoundingClientRect().width || containerEl.offsetWidth || 600;
-    var visible = w / Math.pow(2, zoom);
-    var half = visible / 2;
-    if (half >= imageW / 2) return { min: imageW / 2, max: imageW / 2 };
-    return { min: half, max: imageW - half };
-  }
-
-  function createHitboxEditor(root, ui) {
-    var state = {
-      editing: false,
-      active: null,
-      map: null,
-      px: null,
-      bounds: null,
-      layerEl: null
-    };
-
-    function ensureLayer() {
-      if (state.layerEl) return state.layerEl;
-      state.layerEl = document.createElement("div");
-      state.layerEl.id = "cc-hitbox-editor";
-      state.layerEl.className = "cc-hitbox-editor-layer";
-      ui.mapEl.appendChild(state.layerEl);
-      return state.layerEl;
-    }
-
-    function rectFromHitbox(b) {
-      return { y1: b[0], x1: b[1], y2: b[2], x2: b[3] };
-    }
-
-    function hitboxFromRect(r) {
-      return [Math.round(r.y1), Math.round(r.x1), Math.round(r.y2), Math.round(r.x2)];
-    }
-
-    function latLngToPx(lat, lng) {
-      var pt = state.map.latLngToContainerPoint(window.L.latLng(lat, lng));
-      return { x: pt.x, y: pt.y };
-    }
-
-    function draw() {
-      if (!state.editing || !state.map || !state.px) return;
-      var layer = ensureLayer();
-      layer.innerHTML = "";
-
-      Object.keys(HITBOXES).sort().forEach(function (id) {
-        var b = HITBOXES[id];
-        if (!b) return;
-
-        var r = rectFromHitbox(b);
-        var p1 = latLngToPx(r.y1, r.x1);
-        var p2 = latLngToPx(r.y2, r.x2);
-
-        var box = document.createElement("div");
-        box.className = "cc-hb-box";
-        box.dataset.id = id;
-        box.style.left = Math.min(p1.x, p2.x) + "px";
-        box.style.top = Math.min(p1.y, p2.y) + "px";
-        box.style.width = Math.abs(p2.x - p1.x) + "px";
-        box.style.height = Math.abs(p2.y - p1.y) + "px";
-
-        var label = document.createElement("div");
-        label.className = "cc-hb-label";
-        label.textContent = id;
-        box.appendChild(label);
-
-        var handle = document.createElement("div");
-        handle.className = "cc-hb-handle";
-        box.appendChild(handle);
-
-        layer.appendChild(box);
-      });
-
-      ui.editorBadgeEl.style.display = "block";
-    }
-
-    function updateFromBox(box) {
-      var id = box.dataset.id;
-      var left = parseFloat(box.style.left);
-      var top = parseFloat(box.style.top);
-      var width = parseFloat(box.style.width);
-      var height = parseFloat(box.style.height);
-
-      var p1 = state.map.containerPointToLatLng(window.L.point(left, top));
-      var p2 = state.map.containerPointToLatLng(window.L.point(left + width, top + height));
-
-      HITBOXES[id] = hitboxFromRect({
-        y1: Math.min(p1.lat, p2.lat),
-        x1: Math.min(p1.lng, p2.lng),
-        y2: Math.max(p1.lat, p2.lat),
-        x2: Math.max(p1.lng, p2.lng)
-      });
-    }
-
-    function onMouseDown(e) {
-      if (!state.editing) return;
-
-      var box = e.target.closest(".cc-hb-box");
-      if (!box) return;
-
-      var isHandle = e.target.classList.contains("cc-hb-handle");
-
-      state.active = {
-        box: box,
-        mode: isHandle ? "resize" : "move",
-        startX: e.clientX,
-        startY: e.clientY,
-        left: parseFloat(box.style.left),
-        top: parseFloat(box.style.top),
-        width: parseFloat(box.style.width),
-        height: parseFloat(box.style.height)
-      };
-
-      e.preventDefault();
-      e.stopPropagation();
-
-      function onMove(ev) {
-        if (!state.active) return;
-
-        var dx = ev.clientX - state.active.startX;
-        var dy = ev.clientY - state.active.startY;
-
-        if (state.active.mode === "move") {
-          state.active.box.style.left = Math.round(state.active.left + dx) + "px";
-          state.active.box.style.top = Math.round(state.active.top + dy) + "px";
-        } else {
-          state.active.box.style.width = Math.max(8, Math.round(state.active.width + dx)) + "px";
-          state.active.box.style.height = Math.max(8, Math.round(state.active.height + dy)) + "px";
-        }
-
-        updateFromBox(state.active.box);
-        ev.preventDefault();
-      }
-
-      function onUp() {
-        state.active = null;
-        window.removeEventListener("mousemove", onMove);
-        window.removeEventListener("mouseup", onUp);
-      }
-
-      window.addEventListener("mousemove", onMove, { passive: false });
-      window.addEventListener("mouseup", onUp);
-    }
-
-    function exportJSON() {
-      var keys = Object.keys(HITBOXES).sort();
-      var lines = keys.map(function (k) {
-        return '  "' + k + '": [' + HITBOXES[k].map(function (n) { return Math.round(n); }).join(", ") + ']';
-      });
-      var text = "var HITBOXES = {\n" + lines.join(",\n") + "\n};";
-      window.prompt("Copy HITBOXES:", text);
-    }
-
-    function setEditing(on) {
-      state.editing = on;
-      root.classList.toggle("cc-hitbox-edit", on);
-
-      if (!state.map || !state.bounds) return;
-
-      if (!on) {
-        if (state.layerEl) state.layerEl.style.display = "none";
-        ui.editorBadgeEl.style.display = "none";
-        state.map.off("move zoom resize", draw);
-        return;
-      }
-
-      state.map.fitBounds(state.bounds, { animate: false, padding: [24, 24] });
-      ensureLayer().style.display = "block";
-      draw();
-      state.map.on("move zoom resize", draw);
-    }
-
-    return {
-      attach: function (map, px, bounds) {
-        state.map = map;
-        state.px = px;
-        state.bounds = bounds;
-        ensureLayer().addEventListener("mousedown", onMouseDown);
-      },
-      toggle: function () { setEditing(!state.editing); },
-      exportJSON: exportJSON,
-      isEditing: function () { return state.editing; }
-    };
-  }
-
+  // --- MOUNT ---
   function mount(root, userOpts) {
     var opts = Object.assign({}, DEFAULTS, userOpts || {});
+    root.classList.add("cc-loading", "cc-canyon-map");
 
-    root.innerHTML = "";
-    root.classList.remove("cc-ready");
-    root.classList.add("cc-loading");
-    root.classList.add("cc-canyon-map");
-
-    var shell = el("div", { class: "cc-cm-shell" });
-
-    var header = el("div", { class: "cc-cm-header cc-app-header" }, [
-      el("div", { class: "cc-cm-title" }, [opts.title]),
-      el("div", { class: "cc-cm-actions" }, [
-        el("button", { class: "cc-btn", id: "cc-cm-reload", type: "button" }, ["Reload"]),
-        el("button", { class: "cc-btn", id: "cc-cm-fit", type: "button" }, ["Fit"]),
-        el("button", { class: "cc-btn", id: "cc-cm-edit", type: "button" }, ["Edit Hitboxes"]),
-        el("button", { class: "cc-btn", id: "cc-cm-export", type: "button" }, ["Export"])
-      ])
-    ]);
-
-    var mapWrap = el("div", { class: "cc-cm-mapwrap" });
+    // Build UI Structure
     var mapEl = el("div", { id: "cc-cm-map", class: "cc-cm-map" });
     var lensMapEl = el("div", { id: "cc-lens-map", class: "cc-lens-map" });
-
-    var lensInner = el("div", { class: "cc-lens-inner" }, [
-      el("div", { class: "cc-lens-overscan" }, [lensMapEl])
+    var knobV = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" }, [el("img", { src: opts.knobUrl })]);
+    var knobH = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" }, [el("img", { src: opts.knobUrl })]);
+    var drawer = el("div", { class: "cc-slide-panel" }, [
+        el("div", { class: "cc-slide-panel-header" }, [
+            el("h2", { class: "cc-cm-drawer-title" }, ["Location"]),
+            el("button", { onclick: function() { drawer.classList.remove("cc-slide-panel-open"); } }, ["×"])
+        ]),
+        el("div", { class: "cc-cm-drawer-content cc-panel-body" })
     ]);
 
-    var lensEl = el("div", { class: "cc-lens" }, [
-      lensInner,
-      el("div", { class: "cc-lens-chromatic" }),
-      el("div", { class: "cc-lens-glare" })
+    var mapWrap = el("div", { class: "cc-cm-mapwrap" }, [
+        mapEl,
+        el("div", { class: "cc-lens" }, [
+            el("div", { class: "cc-lens-inner" }, [lensMapEl]),
+            el("div", { class: "cc-lens-chromatic" }),
+            el("div", { class: "cc-lens-glare" })
+        ]),
+        el("div", { class: "cc-frame-overlay" }, [el("img", { src: opts.frameUrl, class: "cc-frame-image" })]),
+        el("div", { class: "cc-scroll-vertical" }, [knobV]),
+        el("div", { class: "cc-scroll-horizontal" }, [knobH])
     ]);
 
-    var frameOverlay = el("div", { class: "cc-frame-overlay" }, [
-      el("img", { class: "cc-frame-image", src: opts.frameUrl, alt: "", draggable: "false" })
-    ]);
-
-    var knobV = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-v" }, [
-      el("img", { class: "cc-scroll-knob-img", src: opts.knobUrl, alt: "", draggable: "false" })
-    ]);
-
-    var knobH = el("div", { class: "cc-scroll-knob", id: "cc-scroll-knob-h" }, [
-      el("img", { class: "cc-scroll-knob-img", src: opts.knobUrl, alt: "", draggable: "false" })
-    ]);
-
-    var trackV = el("div", { class: "cc-scroll-vertical", id: "cc-scroll-track-v" }, [knobV]);
-    var trackH = el("div", { class: "cc-scroll-horizontal", id: "cc-scroll-track-h" }, [knobH]);
-
-    var loaderEl = el("div", { class: "cc-cm-loader", id: "cc-map-loader" }, [
-      el("img", { src: opts.logoUrl, alt: "Coffin Canyon" }),
-      el("div", { class: "cc-cm-loader-spin" }),
-      el("div", { style: "color:#ff7518;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase" }, ["Loading"])
-    ]);
-
-    var editorBadgeEl = el("div", { class: "cc-hitbox-editor-badge", style: "display:none" }, [
-      "Hitbox edit mode active — drag or resize cyan boxes, then click Export."
-    ]);
-
-    mapWrap.appendChild(mapEl);
-    mapWrap.appendChild(lensEl);
-    mapWrap.appendChild(frameOverlay);
-    mapWrap.appendChild(trackV);
-    mapWrap.appendChild(trackH);
-    mapWrap.appendChild(loaderEl);
-    mapWrap.appendChild(editorBadgeEl);
-
-    var drawer = el("div", { class: "cc-slide-panel", id: "cc-location-panel" }, [
-      el("div", { class: "cc-slide-panel-header" }, [
-        el("h2", { class: "cc-panel-title cc-cm-drawer-title" }, ["Location"]),
-        el("button", { class: "cc-panel-close-btn", id: "close-dr", type: "button" }, ["×"])
-      ]),
-      el("div", { class: "cc-panel-body cc-cm-drawer-content" })
-    ]);
-
-    shell.appendChild(header);
-    shell.appendChild(mapWrap);
-    root.appendChild(shell);
+    root.appendChild(mapWrap);
     root.appendChild(drawer);
 
-    var ui = {
-      mapEl: mapEl,
-      lensMapEl: lensMapEl,
-      drawerEl: drawer,
-      drawerTitleEl: drawer.querySelector(".cc-cm-drawer-title"),
-      drawerContentEl: drawer.querySelector(".cc-cm-drawer-content"),
-      knobV: knobV,
-      knobH: knobH,
-      editorBadgeEl: editorBadgeEl
+    var ui = { 
+        mapEl: mapEl, lensMapEl: lensMapEl, drawerEl: drawer, 
+        drawerTitleEl: drawer.querySelector(".cc-cm-drawer-title"),
+        drawerContentEl: drawer.querySelector(".cc-cm-drawer-content"),
+        knobV: knobV, knobH: knobH 
     };
 
-    var bgMap = null;
-    var lensMap = null;
-    var mapDoc = null;
-    var locationsDoc = null;
-    var currentT = 0.5;
-    var currentTx = 0.5;
-    var editor = null;
-    var hitboxLayers = [];
-    var knobsBound = false;
-    var bounds = null;
+    var bgMap, lensMap, px;
+    var currentT = 0.5, currentTx = 0.5;
 
-    function updateResponsiveScale() {
-      var designWidth = 1280;
-      var currentWidth = mapWrap.getBoundingClientRect().width || mapWrap.offsetWidth || designWidth;
-      var scale = Math.max(0.62, Math.min(1, currentWidth / designWidth));
-      root.style.setProperty("--device-scale", scale.toFixed(4));
-    }
-
-    function showLoader() {
-      loaderEl.style.display = "flex";
-      loaderEl.style.opacity = "1";
-    }
-
-    function hideLoader() {
-      loaderEl.style.opacity = "0";
-      setTimeout(function () {
-        loaderEl.style.display = "none";
-        root.classList.remove("cc-loading");
-        root.classList.add("cc-ready");
-      }, 320);
-    }
-
-    function lockMaps() {
-      if (!bgMap || !lensMap) return;
-
-      [bgMap, lensMap].forEach(function (m) {
-        m.dragging.disable();
-        m.doubleClickZoom.disable();
-        m.scrollWheelZoom.disable();
-        m.touchZoom.disable();
-        m.boxZoom.disable();
-        m.keyboard.disable();
-      });
-    }
-
-    function applyView(t, tx, px) {
-      if (!bgMap || !lensMap || !px) return;
-
-      currentT = clamp(t, 0, 1);
-      currentTx = clamp(tx, 0, 1);
-
+    function applyView() {
+      if (!bgMap || !px) return;
       var lensZoom = BG_ZOOM + LENS_ZOOM_OFFSET;
 
-      var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h);
-      var bgRx = safeRangeX(ui.mapEl, BG_ZOOM, px.w);
-      var lnRy = safeRange(ui.lensMapEl, lensZoom, px.h);
-      var lnRx = safeRangeX(ui.lensMapEl, lensZoom, px.w);
+      var bgRy = safeRange(ui.mapEl, BG_ZOOM, px.h, false);
+      var bgRx = safeRange(ui.mapEl, BG_ZOOM, px.w, true);
+      
+      var targetY = bgRy.min + currentT * (bgRy.max - bgRy.min);
+      var targetX = bgRx.min + currentTx * (bgRx.max - bgRx.min);
 
-      bgMap.setView([
-        bgRy.min + currentT * (bgRy.max - bgRy.min),
-        bgRx.min + currentTx * (bgRx.max - bgRx.min)
-      ], BG_ZOOM, { animate: false });
-
-      lensMap.setView([
-        lnRy.min + currentT * (lnRy.max - lnRy.min),
-        lnRx.min + currentTx * (lnRx.max - lnRx.min)
-      ], lensZoom, { animate: false });
+      bgMap.setView([targetY, targetX], BG_ZOOM, { animate: false });
+      lensMap.setView([targetY, targetX], lensZoom, { animate: false });
 
       ui.knobV.style.top = (V_MIN + currentT * (V_MAX - V_MIN)) + "%";
       ui.knobH.style.left = (H_MIN + currentTx * (H_MAX - H_MIN)) + "%";
     }
 
-    function bindKnob(knobEl, axis, px) {
-      function getClient(ev) {
-        if (ev.touches && ev.touches.length) {
-          return axis === "v" ? ev.touches[0].clientY : ev.touches[0].clientX;
-        }
-        return axis === "v" ? ev.clientY : ev.clientX;
+    function bindKnob(knob, axis) {
+      function onMove(e) {
+        var rect = knob.parentElement.getBoundingClientRect();
+        var client = (e.touches ? e.touches[0] : e)[axis === 'v' ? 'clientY' : 'clientX'];
+        var pos = client - rect[axis === 'v' ? 'top' : 'left'];
+        var size = rect[axis === 'v' ? 'height' : 'width'];
+        var n = clamp((pos / size * 100 - (axis === 'v' ? V_MIN : H_MIN)) / ((axis === 'v' ? V_MAX : V_MIN) || 50), 0, 1);
+        
+        if (axis === 'v') currentT = n; else currentTx = n;
+        applyView();
       }
-
-      function getTrackRect() {
-        return knobEl.parentElement.getBoundingClientRect();
-      }
-
-      function getKnobRect() {
-        return knobEl.getBoundingClientRect();
-      }
-
-      function posToNormalized(trackPosPx) {
-        var trackRect = getTrackRect();
-        var size = axis === "v" ? trackRect.height : trackRect.width;
-        var pct = (trackPosPx / size) * 100;
-        var min = axis === "v" ? V_MIN : H_MIN;
-        var max = axis === "v" ? V_MAX : H_MAX;
-        return clamp((pct - min) / (max - min), 0, 1);
-      }
-
-      function onStart(e) {
-        if (editor && editor.isEditing()) return;
-
+      function stop() { window.removeEventListener("mousemove", onMove); window.removeEventListener("touchmove", onMove); }
+      knob.onmousedown = knob.ontouchstart = function(e) {
         e.preventDefault();
-        e.stopPropagation();
-
-        var knobRect = getKnobRect();
-        var grabOffset = axis === "v"
-          ? (getClient(e) - knobRect.top)
-          : (getClient(e) - knobRect.left);
-
-        knobEl.classList.add("is-active");
-
-        function onMove(ev) {
-          var trackRect = getTrackRect();
-          var trackPos = axis === "v"
-            ? (getClient(ev) - trackRect.top - grabOffset)
-            : (getClient(ev) - trackRect.left - grabOffset);
-
-          var n = posToNormalized(trackPos);
-
-          if (axis === "v") applyView(n, currentTx, px);
-          else applyView(currentT, n, px);
-
-          ev.preventDefault();
-        }
-
-        function onEnd() {
-          knobEl.classList.remove("is-active");
-          window.removeEventListener("mousemove", onMove);
-          window.removeEventListener("mouseup", onEnd);
-          window.removeEventListener("touchmove", onMove);
-          window.removeEventListener("touchend", onEnd);
-        }
-
-        window.addEventListener("mousemove", onMove, { passive: false });
-        window.addEventListener("mouseup", onEnd);
-        window.addEventListener("touchmove", onMove, { passive: false });
-        window.addEventListener("touchend", onEnd);
-      }
-
-      knobEl.addEventListener("mousedown", onStart);
-      knobEl.addEventListener("touchstart", onStart, { passive: false });
+        window.addEventListener("mousemove", onMove);
+        window.addEventListener("touchmove", onMove);
+        window.addEventListener("mouseup", stop);
+        window.addEventListener("touchend", stop);
+      };
     }
 
-    function bindKnobs(px) {
-      if (knobsBound) return;
-      knobsBound = true;
-      bindKnob(ui.knobV, "v", px);
-      bindKnob(ui.knobH, "h", px);
-    }
-
-    function clearHitboxes() {
-      hitboxLayers.forEach(function (l) {
-        try { l.remove(); } catch (e) {}
-      });
-      hitboxLayers = [];
-    }
-
-    function buildHitboxes() {
-      clearHitboxes();
-      if (!locationsDoc || !locationsDoc.locations || !lensMap) return;
-
-      locationsDoc.locations.forEach(function (loc) {
-        var bbox = HITBOXES[loc.id];
-        if (!bbox) return;
-
-        var rect = window.L.rectangle(
-          [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-          {
-            color: "#ff7518",
-            weight: 2,
-            fillOpacity: 0.14,
-            interactive: true,
-            bubblingMouseEvents: false
-          }
-        ).addTo(lensMap);
-
-        rect.bindTooltip(loc.name || loc.id, {
-          permanent: true,
-          direction: "center",
-          className: "cc-map-hitbox-label",
-          opacity: 0.95
+    function buildHitboxes(locations) {
+      locations.forEach(function(loc) {
+        var b = HITBOXES[loc.id];
+        if (!b) return;
+        var r = L.rectangle([[b[0], b[1]], [b[2], b[3]]], { 
+            color: "transparent", fillOpacity: 0, interactive: true 
+        }).addTo(lensMap);
+        r.on("click mousedown", function(e) { 
+            L.DomEvent.stopPropagation(e);
+            renderDrawer(ui, loc); 
         });
-
-        function openLoc(ev) {
-          if (window.L && window.L.DomEvent) window.L.DomEvent.stop(ev);
-          renderDrawer(ui, loc);
-        }
-
-        rect.on("mousedown", openLoc);
-        rect.on("click", openLoc);
-        rect.on("touchstart", openLoc);
-
-        hitboxLayers.push(rect);
-
-        setTimeout(function () {
-          var path = rect._path;
-          if (!path) return;
-
-          path.style.pointerEvents = "auto";
-
-          path.addEventListener("click", function (ev) {
-            ev.preventDefault();
-            ev.stopPropagation();
-            renderDrawer(ui, loc);
-          });
-
-          path.addEventListener("mousedown", function (ev) {
-            ev.preventDefault();
-            ev.stopPropagation();
-            renderDrawer(ui, loc);
-          });
-
-          path.addEventListener("touchstart", function (ev) {
-            ev.preventDefault();
-            ev.stopPropagation();
-            renderDrawer(ui, loc);
-          }, { passive: false });
-        }, 0);
       });
     }
 
     function init() {
-      showLoader();
-      updateResponsiveScale();
-      var loadStart = Date.now();
+      ensureDeps(opts).then(function() {
+        return Promise.all([fetchJson(opts.mapUrl), fetchJson(opts.locationsUrl)]);
+      }).then(function(res) {
+        px = res[0].map.background.image_pixel_size;
+        var bounds = [[0, 0], [px.h, px.w]];
 
-      return ensureDeps(opts)
-        .then(function () {
-          return Promise.all([
-            fetchJson(opts.mapUrl),
-            fetchJson(opts.locationsUrl)
-          ]);
-        })
-        .then(function (results) {
-          mapDoc = results[0];
-          locationsDoc = results[1];
+        bgMap = L.map(ui.mapEl, { crs: L.CRS.Simple, zoomControl: false, dragging: false });
+        L.imageOverlay(res[0].map.background.image_key, bounds).addTo(bgMap);
 
-          var px = mapDoc.map.background.image_pixel_size;
-          bounds = [[0, 0], [px.h, px.w]];
+        lensMap = L.map(ui.lensMapEl, { crs: L.CRS.Simple, zoomControl: false, dragging: false });
+        L.imageOverlay(res[0].map.background.image_key, bounds).addTo(lensMap);
 
-          try { if (bgMap) bgMap.remove(); } catch (e) {}
-          try { if (lensMap) lensMap.remove(); } catch (e) {}
-
-          bgMap = window.L.map(ui.mapEl, {
-            crs: window.L.CRS.Simple,
-            minZoom: -3,
-            maxZoom: 2,
-            zoomControl: false,
-            attributionControl: false
-          });
-
-          window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(bgMap);
-
-          var lensUrl = (mapDoc.map.lens && mapDoc.map.lens.image_key)
-            ? mapDoc.map.lens.image_key
-            : mapDoc.map.background.image_key;
-
-          lensMap = window.L.map(ui.lensMapEl, {
-            crs: window.L.CRS.Simple,
-            minZoom: -3,
-            maxZoom: 3,
-            zoomControl: false,
-            attributionControl: false
-          });
-
-          window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
-
-          lockMaps();
-          buildHitboxes();
-
-          editor = createHitboxEditor(root, ui);
-          editor.attach(bgMap, px, bounds);
-
-          bindKnobs(px);
-
-          return nextFrame().then(function () {
-            bgMap.invalidateSize({ animate: false });
-            lensMap.invalidateSize({ animate: false });
-            applyView(0.5, 0.5, px);
-
-            var elapsed = Date.now() - loadStart;
-            return delay(Math.max(0, MIN_LOADER_MS - elapsed));
-          }).then(function () {
-            hideLoader();
-          });
-        })
-        .catch(function (err) {
-          hideLoader();
-          ui.drawerTitleEl.textContent = "Load failed";
-          ui.drawerContentEl.innerHTML =
-            '<div style="color:#f55;padding:1rem">Load failed: ' + (err && err.message ? err.message : err) + '</div>';
-          ui.drawerEl.classList.add("cc-slide-panel-open");
-          throw err;
-        });
+        buildHitboxes(res[1].locations);
+        bindKnob(ui.knobV, 'v');
+        bindKnob(ui.knobH, 'h');
+        
+        applyView();
+        root.classList.remove("cc-loading");
+      });
     }
 
-    window.addEventListener("resize", rafThrottle(function () {
-      updateResponsiveScale();
-      if (bgMap) bgMap.invalidateSize({ animate: false });
-      if (lensMap) lensMap.invalidateSize({ animate: false });
-      if (mapDoc && mapDoc.map && mapDoc.map.background && mapDoc.map.background.image_pixel_size) {
-        applyView(currentT, currentTx, mapDoc.map.background.image_pixel_size);
-      }
-    }));
-
-    header.querySelector("#cc-cm-reload").onclick = function () {
-      init();
-    };
-
-    header.querySelector("#cc-cm-fit").onclick = function () {
-      if (mapDoc && mapDoc.map && mapDoc.map.background && mapDoc.map.background.image_pixel_size) {
-        applyView(0.5, 0.5, mapDoc.map.background.image_pixel_size);
-      }
-    };
-
-    header.querySelector("#cc-cm-edit").onclick = function () {
-      if (editor) editor.toggle();
-    };
-
-    header.querySelector("#cc-cm-export").onclick = function () {
-      if (editor) editor.exportJSON();
-    };
-
-    drawer.querySelector("#close-dr").onclick = function () {
-      ui.drawerEl.classList.remove("cc-slide-panel-open");
-    };
-
-    root.addEventListener("click", function (e) {
-      if (!ui.drawerEl.classList.contains("cc-slide-panel-open")) return;
-      if (ui.drawerEl.contains(e.target)) return;
-      if (e.target && (e.target.closest(".leaflet-interactive") || e.target.closest(".leaflet-tooltip"))) return;
-      ui.drawerEl.classList.remove("cc-slide-panel-open");
-    });
-
-    return init().then(function () { return {}; });
+    init();
+    return { applyView: applyView };
   }
 
   window.CC_CanyonMap = { mount: mount };
-  window.CC_HITBOXES = HITBOXES;
 })();
