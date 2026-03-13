@@ -254,12 +254,19 @@ function applyView() {
     })
     .then(function(){
 
-      bindKnobs();
-      applyView();
+    bindKnobs();
+    applyView();
 
-      hideLoader(loader);
+    hideLoader(loader);
 
-    });
+   })
+.catch(function(err){
+
+  console.error("Canyon Map load error:", err);
+
+  hideLoader(loader);
+
+});
 
   }
 
