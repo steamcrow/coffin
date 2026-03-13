@@ -247,28 +247,75 @@
     });
   }
 
+  // ── Compute each map's pannable range in image-pixel space ─────────────
+  //
+  //  At zoom z with CRS.Simple, 1 image pixel = 2^z screen pixels.
+  //  A container of width C shows (C / 2^z) image pixels across it.
+  //  The centre can pan between (viewW/2) and (imgW - viewW/2).
+  //
+  //  The BG spans the full mapwrap; the lens is a smaller inset div.
+  //  By computing each map's range separately and mapping the same
+  //  t-value (0–1) onto each, both reach their image edge simultaneously.
+  //
+  function computeViewRanges() {
+    var bgScale = Math.pow(2, mapBG.getZoom());
+    var lsScale = Math.pow(2, mapLens.getZoom());
+
+    var bgW = mapWrap.offsetWidth;
+    var bgH = mapWrap.offsetHeight;
+
+    var lensEl = document.getElementById("cc-lens-map");
+    var lsW    = lensEl ? lensEl.offsetWidth  : bgW;
+    var lsH    = lensEl ? lensEl.offsetHeight : bgH;
+
+    var bgViewW = bgW / bgScale;
+    var bgViewH = bgH / bgScale;
+    var lsViewW = lsW / lsScale;
+    var lsViewH = lsH / lsScale;
+
+    return {
+      bgMinX: Math.max(0,    bgViewW / 2),
+      bgMaxX: Math.min(imgW, imgW - bgViewW / 2),
+      bgMinY: Math.max(0,    bgViewH / 2),
+      bgMaxY: Math.min(imgH, imgH - bgViewH / 2),
+      lsMinX: Math.max(0,    lsViewW / 2),
+      lsMaxX: Math.min(imgW, imgW - lsViewW / 2),
+      lsMinY: Math.max(0,    lsViewH / 2),
+      lsMaxY: Math.min(imgH, imgH - lsViewH / 2)
+    };
+  }
+
   // ── Sync both maps + knob positions to current state ───────────────────
+  //
+  //  state.h / state.v are 0–100 (0 = left/top image edge, 100 = right/bottom).
+  //  Each map gets panned to its own coordinate so both hit their image
+  //  boundary at the exact same knob position.
+  //
   function applyView() {
-    // Compute the target image-space coordinate directly from state.
-    // In CRS.Simple, Leaflet's [lat,lng] maps to [y,x] in pixel space.
-    // state.h/v are percentages across the full image, so multiply by
-    // the stored image dimensions to get the exact pixel to centre on.
-    //
-    // DO NOT use containerPointToLatLng here — that asks "what pixel is
-    // currently visible at screen pos X,Y?" which changes every time the
-    // map pans, creating a feedback loop that makes the map float away.
-    var targetLat = imgH * (state.v / 100);
-    var targetLng = imgW * (state.h / 100);
+    var t_h = clamp01(state.h / 100);
+    var t_v = clamp01(state.v / 100);
 
-    mapBG.panTo([targetLat, targetLng],   { animate: false });
-    mapLens.panTo([targetLat, targetLng], { animate: false });
+    var r = computeViewRanges();
 
-    // Map state range (V_MIN–V_MAX, H_MIN–H_MAX) → 0–100% within track
-    var vPct = (state.v - V_MIN) / (V_MAX - V_MIN) * 100;
-    var hPct = (state.h - H_MIN) / (H_MAX - H_MIN) * 100;
+    mapBG.panTo(  [r.bgMinY + t_v * (r.bgMaxY - r.bgMinY),
+                   r.bgMinX + t_h * (r.bgMaxX - r.bgMinX)], { animate: false });
+    mapLens.panTo([r.lsMinY + t_v * (r.lsMaxY - r.lsMinY),
+                   r.lsMinX + t_h * (r.lsMaxX - r.lsMinX)], { animate: false });
 
-    knobV.style.top  = vPct + "%";
-    knobH.style.left = hPct + "%";
+    // CSS uses !important on knob positions — must use setProperty to override.
+    knobV.style.setProperty("top",  (t_v * 100) + "%", "important");
+    knobH.style.setProperty("left", (t_h * 100) + "%", "important");
+  }
+
+  // ── Update --device-scale so frame/lens/knobs resize with container ─────
+  function updateDeviceScale() {
+    if (!mapWrap) return;
+    // 1200px is the design reference width; clamp at 1 so we never scale up
+    var scale = Math.min(1, mapWrap.offsetWidth / 1200);
+    mapWrap.style.setProperty("--device-scale", scale.toString());
+    if (mapBG)   mapBG.invalidateSize();
+    if (mapLens) mapLens.invalidateSize();
+    applyView();
   }
 
   // ── Drag handling for both scroll knobs ─────────────────────────────────
@@ -279,18 +326,14 @@
       e.currentTarget.setPointerCapture(e.pointerId);
       e.currentTarget.classList.add("is-active");
 
-      // Measure the track (parent div), not the knob itself
       var track = e.currentTarget.parentElement;
       var rect  = track.getBoundingClientRect();
 
       function onMove(ev) {
-        var pct;
         if (axis === "v") {
-          pct     = (ev.clientY - rect.top)  / rect.height * 100;
-          state.v = V_MIN + clamp01(pct / 100) * (V_MAX - V_MIN);
+          state.v = clamp01((ev.clientY - rect.top)  / rect.height) * 100;
         } else {
-          pct     = (ev.clientX - rect.left) / rect.width  * 100;
-          state.h = H_MIN + clamp01(pct / 100) * (H_MAX - H_MIN);
+          state.h = clamp01((ev.clientX - rect.left) / rect.width)  * 100;
         }
         applyView();
       }
@@ -308,6 +351,14 @@
 
     knobV.addEventListener("pointerdown", function (e) { startDrag(e, "v"); });
     knobH.addEventListener("pointerdown", function (e) { startDrag(e, "h"); });
+
+    // Resize: recalculate scale + re-sync maps when the container changes size
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(function () { updateDeviceScale(); });
+      ro.observe(mapWrap);
+    } else {
+      window.addEventListener("resize", updateDeviceScale);
+    }
   }
 
   function clamp01(v) { return Math.min(1, Math.max(0, v)); }
@@ -353,8 +404,8 @@
     .then(function () {
       mapBG.invalidateSize();
       mapLens.invalidateSize();
+      updateDeviceScale();   // sets --device-scale + calls applyView
       bindKnobs();
-      applyView();
       hideLoader();
     })
     .catch(function (err) {
