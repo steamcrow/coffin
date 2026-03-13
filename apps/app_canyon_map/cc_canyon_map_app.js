@@ -320,6 +320,10 @@
       var layer = ensureLayer();
 
       layer.addEventListener("pointerdown", function (e) {
+        // Always prevent default on the editor layer — this stops the browser
+        // from initiating a native image-drag ghost before we can handle it.
+        e.preventDefault();
+
         if (!s.editing) return;
         var box = e.target.closest(".cc-hb-box");
         if (!box) return;
@@ -466,10 +470,9 @@
         // Kill Leaflet's grey/white container glow
         "#cc-bg-map.leaflet-container," +
         "#cc-lens-map.leaflet-container{background:#0d0b0a!important;box-shadow:none!important;}" +
-        // Guarantee knobs are always above Leaflet panes and receive pointer events.
-        // z-index 600 safely exceeds Leaflet's internal pane stack (~400).
-        ".cc-scroll-vertical,.cc-scroll-horizontal{pointer-events:auto!important;z-index:600!important;}" +
-        ".cc-scroll-knob{pointer-events:auto!important;z-index:601!important;touch-action:none!important;}" +
+        // Prevent native browser image-drag ghost from any img inside the map
+        ".cc-cm-mapwrap img{-webkit-user-drag:none!important;user-drag:none!important;" +
+        "user-select:none!important;-webkit-user-select:none!important;pointer-events:none!important;}" +
         // img inside knob should be non-interactive so clicks hit the parent div
         ".cc-scroll-knob-img{transition:filter .15s ease,transform .15s ease!important;pointer-events:none!important;}" +
         // Knob grabbed: orange glow + grow
@@ -529,7 +532,7 @@
     var trackH = el("div", { class: "cc-scroll-horizontal", id: "cc-scroll-track-h" }, [knobH]);
 
     var loaderEl = el("div", { class: "cc-cm-loader", id: "cc-map-loader" }, [
-      el("img", { src: opts.logoUrl, alt: "Coffin Canyon" }),
+      el("img", { src: opts.logoUrl, alt: "Coffin Canyon", draggable: "false" }),
       el("div", { class: "cc-cm-loader-spin" }),
       el("div", { style: "color:#ff7518;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase" }, ["Loading"])
     ]);
@@ -662,8 +665,13 @@
       var vPct = (V_MIN + currentT  * (V_MAX - V_MIN)).toFixed(3);
       var hPct = (H_MIN + currentTx * (H_MAX - H_MIN)).toFixed(3);
       knobStyleEl.textContent =
+        // Position rules (override the static 50% defaults)
         "#cc-scroll-knob-v{top:"  + vPct + "%!important;}" +
-        "#cc-scroll-knob-h{left:" + hPct + "%!important;}";
+        "#cc-scroll-knob-h{left:" + hPct + "%!important;}" +
+        // pointer-events and z-index here so they are ALWAYS last in <head>
+        // and beat the app CSS !important rules regardless of load order.
+        ".cc-scroll-vertical,.cc-scroll-horizontal{pointer-events:auto!important;z-index:600!important;}" +
+        ".cc-scroll-knob{pointer-events:auto!important;z-index:601!important;touch-action:none!important;}";
     }
 
     // ── Knob drag with momentum ───────────────────────────────────────────
@@ -671,7 +679,7 @@
       knobEl.addEventListener("pointerdown", function (e) {
         if (editor && editor.isEditing()) return;
         e.preventDefault();
-        e.stopPropagation();
+        // Don't stopPropagation — it isn't needed and can mask other handlers.
 
         var mom = axis === "v" ? momV : momH;
         mom.stop();
@@ -683,7 +691,12 @@
           : (e.clientX - knobRect.left);
 
         knobEl.classList.add("is-active");
-        try { knobEl.setPointerCapture(e.pointerId); } catch (_) {}
+
+        // setPointerCapture routes all subsequent pointer events for this
+        // pointer ID to knobEl.  We therefore listen on knobEl, not window,
+        // so the events are guaranteed to arrive here even in host environments
+        // (like Odoo's iframe) that call stopImmediatePropagation on window.
+        knobEl.setPointerCapture(e.pointerId);
 
         var history = [];
 
@@ -699,6 +712,7 @@
         }
 
         function onMove(ev) {
+          if (ev.pointerId !== e.pointerId) return;
           var n   = getN(ev);
           var now = performance.now();
           history.push({ v: n, t: now });
@@ -709,11 +723,12 @@
           ev.preventDefault();
         }
 
-        function onEnd() {
+        function onEnd(ev) {
+          if (ev.pointerId !== e.pointerId) return;
           knobEl.classList.remove("is-active");
-          window.removeEventListener("pointermove",   onMove);
-          window.removeEventListener("pointerup",     onEnd);
-          window.removeEventListener("pointercancel", onEnd);
+          knobEl.removeEventListener("pointermove",   onMove);
+          knobEl.removeEventListener("pointerup",     onEnd);
+          knobEl.removeEventListener("pointercancel", onEnd);
 
           var vel = 0;
           if (history.length >= 2) {
@@ -732,9 +747,10 @@
           });
         }
 
-        window.addEventListener("pointermove",   onMove, { passive: false });
-        window.addEventListener("pointerup",     onEnd);
-        window.addEventListener("pointercancel", onEnd);
+        // Listen on knobEl — captured events are delivered here first, then bubble.
+        knobEl.addEventListener("pointermove",   onMove, { passive: false });
+        knobEl.addEventListener("pointerup",     onEnd);
+        knobEl.addEventListener("pointercancel", onEnd);
       }, { passive: false });
     }
 
