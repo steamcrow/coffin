@@ -1,15 +1,16 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP
+   COFFIN CANYON — CANYON MAP (ALIGNED UI)
    ================================================================ */
 
 .cc-canyon-map {
   position: relative !important;
+  font-family: var(--cc-font-body) !important;
 }
 
 .cc-cm-shell {
   display: flex !important;
   flex-direction: column !important;
-  gap: 12px !important;
+  gap: 16px !important;
 }
 
 .cc-cm-header {
@@ -18,11 +19,16 @@
   align-items: center !important;
   gap: 12px !important;
   flex-wrap: wrap !important;
+  border-bottom: 1px solid var(--cc-border);
+  padding-bottom: 12px;
 }
 
 .cc-cm-title {
-  font-weight: 700 !important;
-  letter-spacing: .02em !important;
+  font-family: var(--cc-font-title) !important; /* Cinzel */
+  font-size: 1.5rem !important;
+  color: var(--cc-primary) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em !important;
 }
 
 .cc-cm-actions {
@@ -31,16 +37,18 @@
   flex-wrap: wrap !important;
 }
 
+/* Map Container Aligned to cc-panel style */
 .cc-cm-mapwrap {
   position: relative !important;
   width: 100% !important;
   height: 85vh !important;
   min-height: 720px !important;
-  background: #0d0b0a !important;
-  border: 12px solid #4a3728 !important;
-  border-radius: 12px !important;
+  background: var(--cc-bg-darker) !important;
+  border: 2px solid var(--cc-border) !important; /* Thinner, tech-style border */
+  border-radius: var(--cc-radius-lg) !important;
   overflow: hidden !important;
   isolation: isolate !important;
+  box-shadow: var(--cc-shadow);
 }
 
 .cc-cm-map {
@@ -49,6 +57,7 @@
   z-index: 1 !important;
 }
 
+/* --- THE LENS & OPTICS --- */
 .cc-lens {
   position: absolute !important;
   top: 46% !important;
@@ -61,27 +70,7 @@
   pointer-events: none !important;
   mask-image: radial-gradient(circle, black 64%, transparent 96%);
   -webkit-mask-image: -webkit-radial-gradient(circle, black 64%, transparent 96%);
-  filter: drop-shadow(0 0 15px rgba(0,0,0,.45));
-}
-
-.cc-lens-inner {
-  position: absolute !important;
-  inset: 0 !important;
-  pointer-events: auto !important;
-}
-
-.cc-lens-overscan {
-  position: absolute !important;
-  inset: 0 !important;
-  overflow: hidden !important;
-  pointer-events: auto !important;
-}
-
-.cc-lens-map {
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 10 !important;
-  pointer-events: auto !important;
+  filter: drop-shadow(0 0 25px rgba(0,0,0,.6));
 }
 
 .cc-lens-chromatic {
@@ -90,291 +79,58 @@
   z-index: 11 !important;
   pointer-events: none !important;
   border-radius: 50% !important;
-  box-shadow:
-    inset 4px 0 8px rgba(255,0,0,.18),
-    inset -4px 0 8px rgba(0,110,255,.18);
-  border: 0px solid rgba(255,255,255,.08);
+  box-shadow: 
+    inset 4px 0 12px rgba(212, 130, 42, 0.1), /* Changed to Amber */
+    inset -4px 0 12px rgba(201, 162, 39, 0.1); /* Changed to Gold */
 }
 
-.cc-lens-glare {
-  position: absolute !important;
-  inset: 0 !important;
-  pointer-events: none !important;
-  z-index: 12 !important;
-  background: linear-gradient(
-    135deg,
-    rgba(255,255,255,.14) 0%,
-    rgba(255,255,255,0) 52%,
-    rgba(0,0,0,.08) 100%
-  ) !important;
-}
-
-.cc-frame-overlay {
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 50 !important;
-  pointer-events: none !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.cc-frame-image {
-  width: calc(1180px * var(--device-scale, 1)) !important;
-  max-width: 100% !important;
-  height: auto !important;
-  display: block !important;
-  pointer-events: none !important;
-}
-
-.cc-scroll-vertical,
-.cc-scroll-horizontal {
-  position: absolute !important;
-  z-index: 60 !important;
-  pointer-events: auto !important;
-}
-
-.cc-scroll-vertical {
-  top: 50% !important;
-  left: 55% !important;
-  width: calc(60px * var(--device-scale, 1)) !important;
-  height: calc(560px * var(--device-scale, 1)) !important;
-  transform: translate(-50%, -50%) translateX(calc(470px * var(--device-scale, 1))) !important;
-}
-
-.cc-scroll-horizontal {
-  top: 50% !important;
-  left: 53% !important;
-  width: calc(900px * var(--device-scale, 1)) !important;
-  height: calc(60px * var(--device-scale, 1)) !important;
-  transform: translate(-50%, -50%) translateY(calc(335px * var(--device-scale, 1))) !important;
-}
-
-.cc-scroll-knob {
-  position: absolute !important;
-  width: calc(144px * var(--device-scale, 1)) !important;
-  height: calc(144px * var(--device-scale, 1)) !important;
-  display: block !important;
-  z-index: 61 !important;
-  pointer-events: auto !important;
-  cursor: grab !important;
-  background: none !important;
-  border: 0 !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  box-sizing: border-box !important;
-  touch-action: none !important;
-  user-select: none !important;
-}
-
-.cc-scroll-knob.is-active,
-.cc-scroll-knob:active {
-  cursor: grabbing !important;
-}
-
-#cc-scroll-knob-v {
-  left: 48% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
-
-#cc-scroll-knob-h {
-  left: 50% !important;
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
-}
-
+/* --- THE KNOBS & CONTROLS --- */
 .cc-scroll-knob-img {
   width: 100% !important;
   height: 100% !important;
-  display: block !important;
-  object-fit: contain !important;
-  pointer-events: none !important;
-  user-select: none !important;
-  -webkit-user-drag: none !important;
-  filter: drop-shadow(0 4px 10px rgba(0,0,0,.7)) !important;
+  filter: sepia(0.5) saturate(1.5) hue-rotate(-10deg) drop-shadow(0 4px 12px rgba(0,0,0,0.8)) !important;
 }
 
-.cc-cm-loader {
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 80 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-direction: column !important;
-  gap: 14px !important;
-  background: rgba(0,0,0,.88) !important;
-  transition: opacity .3s ease !important;
-}
-
-.cc-cm-loader img {
-  width: 280px !important;
-  max-width: 72vw !important;
-  filter: drop-shadow(0 0 22px rgba(255,117,24,.35)) !important;
-}
-
-.cc-cm-loader-spin {
-  width: 42px !important;
-  height: 42px !important;
-  border: 4px solid rgba(255,117,24,.2) !important;
-  border-top-color: #ff7518 !important;
-  border-radius: 50% !important;
-  animation: cc-cm-spin 1s linear infinite !important;
-}
-
-@keyframes cc-cm-spin {
-  to { transform: rotate(360deg); }
-}
-
+/* --- UI ELEMENTS: HITBOXES & LABELS --- */
 .cc-map-hitbox-label {
-  background: rgba(0,0,0,.82) !important;
-  border: 1px solid rgba(255,117,24,.72) !important;
-  color: #fff !important;
+  background: var(--cc-bg-mid) !important;
+  border: 1px solid var(--cc-primary) !important;
+  color: var(--cc-text) !important;
+  font-family: var(--cc-font-mono) !important; /* Space Mono */
   font-size: 10px !important;
-  font-weight: 700 !important;
-  line-height: 1.05 !important;
-  padding: 2px 5px !important;
-  border-radius: 4px !important;
-  text-align: center !important;
-  max-width: 88px !important;
-  white-space: normal !important;
-  word-break: break-word !important;
-  pointer-events: none !important;
-  box-shadow: 0 1px 4px rgba(0,0,0,.4) !important;
-}
-
-.cc-map-hitbox-label:before {
-  display: none !important;
-}
-
-.cc-hitbox-editor-layer {
-  position: absolute !important;
-  inset: 0 !important;
-  z-index: 999 !important;
-  pointer-events: auto !important;
+  text-transform: uppercase;
+  padding: 4px 8px !important;
+  border-radius: 2px !important;
+  box-shadow: var(--cc-shadow-sm) !important;
 }
 
 .cc-hitbox-editor-badge {
-  position: absolute !important;
-  left: 10px !important;
-  bottom: 10px !important;
-  z-index: 1000 !important;
-  background: rgba(0,0,0,.72) !important;
-  color: #fff !important;
-  padding: 6px 10px !important;
-  border-radius: 6px !important;
-  font-size: 12px !important;
-  pointer-events: none !important;
+  font-family: var(--cc-font-mono) !important;
+  background: var(--cc-bg-darker) !important;
+  border: 1px solid var(--cc-gold) !important;
+  color: var(--cc-gold) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
+/* --- PRELOADER OVERRIDE --- */
+/* We remove the old .cc-cm-loader (the orange spinner) 
+   so the universal .cc-preloader from ui.css works instead.
+*/
+.cc-cm-loader {
+  display: none !important;
+}
+
+/* --- EDITOR TOOLS --- */
 .cc-hb-box {
-  position: absolute !important;
-  outline: 2px solid rgba(0,255,255,.95) !important;
-  background: rgba(0,255,255,.12) !important;
-  border-radius: 6px !important;
-  box-sizing: border-box !important;
-  cursor: grab !important;
-  user-select: none !important;
-  pointer-events: auto !important;
-}
-
-.cc-hb-box:active {
-  cursor: grabbing !important;
+  outline: 1px solid var(--cc-gold) !important;
+  background: rgba(201, 162, 39, 0.1) !important;
 }
 
 .cc-hb-label {
-  position: absolute !important;
-  left: 0 !important;
-  top: -18px !important;
-  padding: 2px 6px !important;
-  border-radius: 6px !important;
-  background: rgba(0,0,0,.78) !important;
-  color: #fff !important;
-  font: 12px/1 system-ui, sans-serif !important;
-  white-space: nowrap !important;
-  pointer-events: none !important;
-}
-
-.cc-hb-handle {
-  position: absolute !important;
-  width: 12px !important;
-  height: 12px !important;
-  right: -6px !important;
-  bottom: -6px !important;
-  background: rgba(0,255,255,.95) !important;
-  border-radius: 3px !important;
-  cursor: nwse-resize !important;
-}
-
-.cc-canyon-map.cc-hitbox-edit .cc-cm-map {
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-.cc-canyon-map.cc-hitbox-edit .cc-frame-overlay,
-.cc-canyon-map.cc-hitbox-edit .cc-scroll-vertical,
-.cc-canyon-map.cc-hitbox-edit .cc-scroll-horizontal {
-  display: none !important;
-}
-
-.cc-canyon-map.cc-hitbox-edit .cc-lens {
-  top: 0 !important;
-  left: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
-  transform: none !important;
-  z-index: 20 !important;
-  pointer-events: auto !important;
-  mask-image: none !important;
-  -webkit-mask-image: none !important;
-  filter: none !important;
-}
-
-.cc-canyon-map.cc-hitbox-edit .cc-lens-chromatic,
-.cc-canyon-map.cc-hitbox-edit .cc-lens-glare {
-  display: none !important;
-}
-
-.cc-canyon-map.cc-hitbox-edit .cc-lens-overscan,
-.cc-canyon-map.cc-hitbox-edit .cc-lens-map {
-  inset: 0 !important;
-}
-
-@media (max-width: 900px) {
-  .cc-cm-mapwrap {
-    height: 72vh !important;
-    min-height: 420px !important;
-  }
-
-  .cc-lens {
-    width: calc(840px * var(--device-scale, 1)) !important;
-    height: calc(520px * var(--device-scale, 1)) !important;
-  }
-
-  .cc-frame-image {
-    width: calc(980px * var(--device-scale, 1)) !important;
-  }
-
-  .cc-scroll-vertical {
-    width: calc(52px * var(--device-scale, 1)) !important;
-    height: calc(470px * var(--device-scale, 1)) !important;
-    transform: translate(-50%, -50%) translateX(calc(390px * var(--device-scale, 1))) !important;
-  }
-
-  .cc-scroll-horizontal {
-    width: calc(760px * var(--device-scale, 1)) !important;
-    height: calc(52px * var(--device-scale, 1)) !important;
-    transform: translate(-50%, -50%) translateY(calc(282px * var(--device-scale, 1))) !important;
-  }
-
-  .cc-scroll-knob {
-    width: calc(112px * var(--device-scale, 1)) !important;
-    height: calc(112px * var(--device-scale, 1)) !important;
-  }
-
-  .cc-map-hitbox-label {
-    font-size: 9px !important;
-    max-width: 72px !important;
-  }
+  font-family: var(--cc-font-mono) !important;
+  background: var(--cc-gold) !important;
+  color: var(--cc-bg-darker) !important;
+  text-transform: uppercase;
+  font-size: 9px !important;
 }
