@@ -547,6 +547,10 @@
     ]);
     var trackV = el("div", { class: "cc-scroll-vertical",   id: "cc-scroll-track-v" }, [knobV]);
     var trackH = el("div", { class: "cc-scroll-horizontal", id: "cc-scroll-track-h" }, [knobH]);
+    // Inline style beats every stylesheet !important rule.
+    // Tracks are positioning containers only — knob buttons inside still get events.
+    trackV.style.pointerEvents = "none";
+    trackH.style.pointerEvents = "none";
 
     var loaderEl = el("div", { class: "cc-cm-loader", id: "cc-map-loader" }, [
       el("img", { src: opts.logoUrl, alt: "Coffin Canyon", draggable: "false" }),
@@ -683,15 +687,8 @@
       var vPct = (V_MIN + currentT  * (V_MAX - V_MIN)).toFixed(3);
       var hPct = (H_MIN + currentTx * (H_MAX - H_MIN)).toFixed(3);
       knobStyleEl.textContent =
-        // knobStyleEl is re-appended to the END of <head> on every applyView,
-        // so it permanently beats app_css which loads once earlier.
-        // app_css has .cc-scroll-vertical { pointer-events:auto!important } which
-        // would otherwise override our none rule — this tag wins because it's last.
         "#cc-scroll-knob-v{top:"  + vPct + "%!important;}" +
         "#cc-scroll-knob-h{left:" + hPct + "%!important;}" +
-        // Tracks: click-through so pointer events reach the Leaflet layer below
-        ".cc-scroll-vertical,.cc-scroll-horizontal{pointer-events:none!important;}" +
-        // Knobs: interactive
         ".cc-scroll-knob{pointer-events:auto!important;z-index:601!important;touch-action:none!important;}";
     }
 
@@ -934,11 +931,14 @@
 
           bindKnobs();
 
-          // ── DIAGNOSTIC: confirms whether any pointer events reach the lens ──
+          // ── DIAGNOSTIC: capture-phase on mapWrap fires before any stopPropagation.
+          // Logs the exact topmost element receiving the click.
           // Remove once hitboxes are confirmed working.
-          ui.lensMapEl.addEventListener("pointerdown", function (e) {
-            console.log("LENS POINTERDOWN — target:", e.target.tagName, e.target.className || e.target.nodeName);
-          });
+          ui.mapWrap.addEventListener("pointerdown", function (e) {
+            console.log("MAPWRAP CAPTURE — tag:", e.target.tagName,
+              "| id:", e.target.id || "(none)",
+              "| class:", e.target.className || "(none)");
+          }, true); // true = capture phase
 
           // Two frames: let CSS apply and containers reach their final sizes
           return nextFrame().then(nextFrame);
