@@ -5,15 +5,15 @@
     "All 36 canonical map locations plus Camp Coffin.",
     "key_resources lists 2-5 resources that define the location and drive scenario objectives.",
     "resources object only contains non-zero values for those key resources.",
-    "Sub-locations (Red Lantern Cantina, Automat, Monte Haul) removed \u2014 they appear IN locations, not as locations.",
-    "glasswind-mesa removed \u2014 it is a terrain type template, not a canonical named place.",
+    "Sub-locations (Red Lantern Cantina, Automat, Monte Haul) removed — they appear IN locations, not as locations.",
+    "glasswind-mesa removed — it is a terrain type template, not a canonical named place.",
     "doomshine is the canonical spirit resource (v2.1)."
   ],
   "locations": [
     {
       "id": "diablo",
       "name": "Diablo",
-      "emoji": "\ud83d\udc80",
+      "emoji": "💀",
       "type_ref": "diablo_booming_hub",
       "archetype": "boomtown",
       "state": "booming",
@@ -29,9 +29,10 @@
       "resources": {
         "supplies": 5,
         "silver": 3,
-        "weapons": 3,
+        "weapons": 4,
         "food_good": 4,
-        "doomshine": 3
+        "doomshine": 3,
+        "livestock": 4
       },
       "features": [
         "RailTerminus",
@@ -66,18 +67,18 @@
         "Packed streets"
       ],
       "rumors": [
-        "The Company bought the sheriff's badge and the man wearing it.",
+        "The Doomshine here is spiked with an addictive substance.",
         "A sealed auction lot contains something that screams at night.",
-        "Three factions have a truce here. Nobody trusts it."
+        "The Crass Boys gang is tougher than they sound."
       ],
       "notes": [
-        "Primary boomtown. Everything and everyone passes through Diablo."
+        "The biggest boomtown in the Canyon. Every vile soul passes through Diablo, if they're lucky."
       ]
     },
     {
       "id": "camp-coffin",
       "name": "Camp Coffin",
-      "emoji": "\ud83e\udd85",
+      "emoji": "🦅",
       "type_ref": "camp_coffin_hq",
       "archetype": "headquarters",
       "state": "alive",
@@ -132,7 +133,7 @@
     {
       "id": "fort-plunder",
       "name": "Fort Plunder",
-      "emoji": "\ud83c\udff0",
+      "emoji": "🏰",
       "type_ref": "liberty_corps_fortress",
       "archetype": "fortress",
       "state": "alive",
@@ -187,7 +188,7 @@
     {
       "id": "fortune",
       "name": "Fortune",
-      "emoji": "\ud83d\udcb0",
+      "emoji": "💰",
       "type_ref": "boomtown_mesa",
       "archetype": "boomtown",
       "state": "barely_alive",
@@ -237,7 +238,7 @@
         "Fight pit"
       ],
       "rumors": [
-        "The last good vein is still there \u2014 three men died over a map to it.",
+        "The last good vein is still there — three men died over a map to it.",
         "The assay office is bribing surveyors to underreport.",
         "Fortune will be a ghost town in a year. Everyone is already stealing everything."
       ],
@@ -248,7 +249,7 @@
     {
       "id": "river-city",
       "name": "River City",
-      "emoji": "\ud83c\udf0a",
+      "emoji": "🌊",
       "type_ref": "boomtown_riverside",
       "archetype": "boomtown",
       "state": "alive",
@@ -311,7 +312,7 @@
     {
       "id": "bayou-city",
       "name": "Bayou City",
-      "emoji": "\ud83d\udc0a",
+      "emoji": "🐊",
       "type_ref": "boomtown_riverside",
       "archetype": "bayou",
       "state": "alive",
@@ -369,7 +370,7 @@
     {
       "id": "cowtown",
       "name": "Cowtown",
-      "emoji": "\ud83d\udc04",
+      "emoji": "🐄",
       "type_ref": "boomtown_riverbase",
       "archetype": "ranch",
       "state": "alive",
@@ -428,7 +429,7 @@
     {
       "id": "santos-grin",
       "name": "Santos Grin",
-      "emoji": "\ud83c\udccf",
+      "emoji": "🃏",
       "type_ref": "boomtown_riverbase",
       "archetype": "trade_town",
       "state": "alive",
@@ -484,12 +485,12 @@
       ]
     },
     {
-      "id": "yults-arch",
+      "id": "yults-n",
       "name": "Yult's Arch",
       "emoji": "",
-      "type_ref": "boomtown_riverbase",
+      "type_ref": "landmark",
       "archetype": "landmark",
-      "state": "alive",
+      "state": "haunted",
       "danger": 3,
       "population": 1,
       "key_resources": [
@@ -523,8 +524,8 @@
           "weight": 1
         }
       ],
-      "description": "A trade town that runs on money and secrets. Santos Grin smiles because it knows something you don't.",
-      "atmosphere": "The smell of money and the sound of dice",
+      "description": "A strange stone arch where the outlaw Yult is believed to have hung 100 men.",
+      "atmosphere": "It smells like death.",
       "coffinCoughChance": 0.14,
       "terrain_flavor": [
         "Gambling halls",
@@ -544,7 +545,7 @@
     {
       "id": "ratsville",
       "name": "Ratsville",
-      "emoji": "\ud83d\udc00",
+      "emoji": "🐀",
       "type_ref": "boomtown_dryriver",
       "archetype": "shantytown",
       "state": "barely_alive",
@@ -602,7 +603,7 @@
     {
       "id": "quinne-jimmy",
       "name": "Quinne Jimmy",
-      "emoji": "\ud83d\udd27",
+      "emoji": "🔧",
       "type_ref": "boomtown_dryriver",
       "archetype": "outpost",
       "state": "barely_alive",
@@ -656,7 +657,7 @@
     {
       "id": "dustbuck",
       "name": "Dustbuck",
-      "emoji": "\ud83d\udca8",
+      "emoji": "💨",
       "type_ref": "boomtown_dryriver",
       "archetype": "dying_town",
       "state": "ruins",
@@ -714,7 +715,7 @@
     {
       "id": "fool-boot",
       "name": "Fool Boot",
-      "emoji": "\ud83d\udc62",
+      "emoji": "👢",
       "type_ref": "boomtown_spire_stilts",
       "archetype": "waystation",
       "state": "barely_alive",
@@ -768,7 +769,7 @@
     {
       "id": "deerhoof",
       "name": "Deerhoof",
-      "emoji": "\ud83e\udd8c",
+      "emoji": "🦌",
       "type_ref": "boomtown_riverbase",
       "archetype": "frontier_settlement",
       "state": "alive",
@@ -826,7 +827,7 @@
     {
       "id": "huck",
       "name": "Huck",
-      "emoji": "\ud83e\udea8",
+      "emoji": "🪨",
       "type_ref": "boomtown_dryriver",
       "archetype": "outpost",
       "state": "alive",
@@ -884,7 +885,7 @@
     {
       "id": "little-rica",
       "name": "Little Rica",
-      "emoji": "\u2728",
+      "emoji": "✨",
       "type_ref": "boomtown_mesa",
       "archetype": "mining_camp",
       "state": "barely_alive",
@@ -942,7 +943,7 @@
     {
       "id": "plata",
       "name": "Plata",
-      "emoji": "\ud83e\udd48",
+      "emoji": "🥈",
       "type_ref": "boomtown_mesa",
       "archetype": "mining_town",
       "state": "alive",
@@ -1000,7 +1001,7 @@
     {
       "id": "silverpit",
       "name": "Silverpit",
-      "emoji": "\u26cf\ufe0f",
+      "emoji": "⛏️",
       "type_ref": "boomtown_mesa",
       "archetype": "mine_settlement",
       "state": "barely_alive",
@@ -1058,7 +1059,7 @@
     {
       "id": "mindshaft",
       "name": "Mindshaft",
-      "emoji": "\ud83d\udd73\ufe0f",
+      "emoji": "🕳️",
       "type_ref": "boomtown_mesa",
       "archetype": "deep_mine",
       "state": "ruins",
@@ -1120,7 +1121,7 @@
     {
       "id": "crackpits",
       "name": "Crackpits",
-      "emoji": "\ud83e\udea8",
+      "emoji": "🪨",
       "type_ref": "region_mesa_thyr",
       "archetype": "mining_ruins",
       "state": "ruins",
@@ -1182,9 +1183,9 @@
     {
       "id": "gore-mule-drop",
       "name": "Gore Mule Drop",
-      "emoji": "\ud83e\ude78",
+      "emoji": "🩸",
       "type_ref": "region_rail_grade_cursed",
-      "archetype": "rail_grade",
+      "archetype": "rail_infrastructure",
       "state": "alive",
       "danger": 4,
       "population": 1,
@@ -1240,7 +1241,7 @@
     {
       "id": "bandit-buck",
       "name": "Bandit Buck",
-      "emoji": "\ud83d\ude82",
+      "emoji": "🚂",
       "type_ref": "region_rail_stop_unsafe",
       "archetype": "rail_stop",
       "state": "alive",
@@ -1288,7 +1289,7 @@
       ],
       "rumors": [
         "The stop was named after a man who robbed the same train twice.",
-        "A ghost freight passes through without stopping \u2014 unless it sees you.",
+        "A ghost freight passes through without stopping — unless it sees you.",
         "Someone here sells keys that open locks you don't own."
       ],
       "notes": [
@@ -1298,7 +1299,7 @@
     {
       "id": "grade-grind",
       "name": "Grade Grind",
-      "emoji": "\ud83d\udee4\ufe0f",
+      "emoji": "🛤️",
       "type_ref": "region_rail_grade_cursed",
       "archetype": "rail_infrastructure",
       "state": "barely_alive",
@@ -1352,7 +1353,7 @@
     {
       "id": "ghost-mountain",
       "name": "Ghost Mountain",
-      "emoji": "\ud83d\udc7b",
+      "emoji": "👻",
       "type_ref": "region_mesa_thyr",
       "archetype": "haunted_peak",
       "state": "ruins",
@@ -1412,7 +1413,7 @@
     {
       "id": "heckweed",
       "name": "Heckweed",
-      "emoji": "\ud83c\udf3f",
+      "emoji": "🌿",
       "type_ref": "region_claim_old_name",
       "archetype": "cursed_scrubland",
       "state": "barely_alive",
@@ -1461,7 +1462,7 @@
       "rumors": [
         "The heckweed itself is mildly toxic if burned. Locals do it anyway.",
         "There's a Thyr crystal cluster under the scrub that nobody can find twice.",
-        "Animals born near Heckweed come out wrong. Not dangerously \u2014 just wrong."
+        "Animals born near Heckweed come out wrong. Not dangerously — just wrong."
       ],
       "notes": [
         "Corrupted terrain. Tainted ground and fouled resource objectives."
@@ -1470,7 +1471,7 @@
     {
       "id": "kraise",
       "name": "Kraise",
-      "emoji": "\ud83d\udcdc",
+      "emoji": "📜",
       "type_ref": "region_claim_old_name",
       "archetype": "claim",
       "state": "barely_alive",
@@ -1517,7 +1518,7 @@
       "rumors": [
         "The original Kraise is buried somewhere in the markers, still holding the first deed.",
         "If you steal here, your footprints appear ahead of you.",
-        "A perfect vein is rumored \u2014 always one shovel deeper than anyone digs."
+        "A perfect vein is rumored — always one shovel deeper than anyone digs."
       ],
       "notes": [
         "Legal conflict zone. Claim jumping and debt scenarios."
@@ -1526,7 +1527,7 @@
     {
       "id": "lost-yots",
       "name": "Lost Yots",
-      "emoji": "\ud83d\udc80",
+      "emoji": "💀",
       "type_ref": "region_tzul_ruins",
       "archetype": "ruins",
       "state": "ruins",
@@ -1588,7 +1589,7 @@
     {
       "id": "martygrail",
       "name": "Martygrail",
-      "emoji": "\u26ea",
+      "emoji": "⛪",
       "type_ref": "region_tzul_ruins",
       "archetype": "religious_site",
       "state": "barely_alive",
@@ -1650,7 +1651,7 @@
     {
       "id": "pallor",
       "name": "Pallor",
-      "emoji": "\ud83c\udf2b\ufe0f",
+      "emoji": "🌫️",
       "type_ref": "region_claim_old_name",
       "archetype": "badlands",
       "state": "barely_alive",
@@ -1712,7 +1713,7 @@
     {
       "id": "rey",
       "name": "Rey",
-      "emoji": "\ud83c\udf05",
+      "emoji": "🌅",
       "type_ref": "region_mesa_thyr",
       "archetype": "remote_post",
       "state": "barely_alive",
@@ -1770,7 +1771,7 @@
     {
       "id": "sangr",
       "name": "Sangr",
-      "emoji": "\ud83e\ude78",
+      "emoji": "🩸",
       "type_ref": "region_tzul_ruins",
       "archetype": "blood_ground",
       "state": "ruins",
@@ -1832,7 +1833,7 @@
     {
       "id": "skull-water",
       "name": "Skull Water",
-      "emoji": "\ud83d\udc80",
+      "emoji": "💀",
       "type_ref": "region_claim_old_name",
       "archetype": "contaminated_source",
       "state": "ruins",
@@ -1894,7 +1895,7 @@
     {
       "id": "splitglass-arroyo",
       "name": "Splitglass Arroyo",
-      "emoji": "\ud83e\ude9f",
+      "emoji": "🪟",
       "type_ref": "region_rail_grade_cursed",
       "archetype": "glass_canyon",
       "state": "alive",
@@ -1952,7 +1953,7 @@
     {
       "id": "tin-flats",
       "name": "Tin Flats",
-      "emoji": "\ud83d\udfeb",
+      "emoji": "🟫",
       "type_ref": "region_claim_old_name",
       "archetype": "wasteland",
       "state": "ruins",
@@ -2010,7 +2011,7 @@
     {
       "id": "tzulto",
       "name": "Tzulto",
-      "emoji": "\ud83c\udfdb\ufe0f",
+      "emoji": "🏛️",
       "type_ref": "region_tzul_ruins",
       "archetype": "major_ruin",
       "state": "ruins",
@@ -2055,7 +2056,7 @@
           "weight": 1
         }
       ],
-      "description": "The largest Tzul ruin in the canyon. The crater wasn't formed by impact \u2014 it was removed. The air feels held, as if the place is still listening.",
+      "description": "The largest Tzul ruin in the canyon. The crater wasn't formed by impact — it was removed. The air feels held, as if the place is still listening.",
       "atmosphere": "Ancient patience, modern fear",
       "coffinCoughChance": 0.3,
       "terrain_flavor": [
@@ -2065,7 +2066,7 @@
         "Wrong silence"
       ],
       "rumors": [
-        "The crater wasn't formed by impact \u2014 it was removed.",
+        "The crater wasn't formed by impact — it was removed.",
         "Certain words spoken here come out in a different voice.",
         "Monsterology has a map of this place they refuse to share."
       ],
@@ -2076,7 +2077,7 @@
     {
       "id": "widowflow",
       "name": "Widowflow",
-      "emoji": "\ud83c\udf0a",
+      "emoji": "🌊",
       "type_ref": "region_rail_grade_cursed",
       "archetype": "dangerous_river",
       "state": "alive",
@@ -2134,7 +2135,7 @@
     {
       "id": "witches-roost",
       "name": "Witches Roost",
-      "emoji": "\ud83e\udd87",
+      "emoji": "🦇",
       "type_ref": "region_mesa_thyr",
       "archetype": "occult_territory",
       "state": "ruins",
