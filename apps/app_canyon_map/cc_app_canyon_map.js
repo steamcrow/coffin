@@ -994,19 +994,20 @@
     header.querySelector("#cc-cm-export").onclick = function () { if (editor) editor.exportJSON(); };
     drawer.querySelector("#close-dr"    ).onclick = function () { ui.drawerEl.classList.remove("cc-slide-panel-open"); };
 
-    // Close drawer when clicking outside it
-    document.addEventListener("click", function (e) {
+    var onDocClick = function (e) {
       if (!ui.drawerEl.classList.contains("cc-slide-panel-open")) return;
       if (ui.drawerEl.contains(e.target)) return;
-      // Don't close when the click was on or inside the Leaflet map area
       if (e.target && e.target.closest &&
           e.target.closest(".leaflet-container, .leaflet-interactive, .leaflet-tooltip")) return;
       ui.drawerEl.classList.remove("cc-slide-panel-open");
-    });
+    };
+
+    document.addEventListener("click", onDocClick);
 
     // ── Destroy ───────────────────────────────────────────────────────────
     _destroyFn = function () {
       window.removeEventListener("resize", onResize);
+      document.removeEventListener("click", onDocClick);
       momV.stop();
       momH.stop();
       try { if (bgMap)   bgMap.remove();   } catch (_) {}
