@@ -96,7 +96,8 @@
     "tin-flats":         [1374, 1258, 1512, 1608],
     "tzulto":            [2229, 1334, 2447, 1526],
     "widowflow":         [1316, 1630, 2078, 1798],
-    "witches-roost":     [3767, 2130, 3965, 2495]
+    "witches-roost":     [3767, 2130, 3965, 2495],
+    "yults-arch":     [2233, 550, 2500, 1800]
   };
 
   window.CC_HITBOXES = HITBOXES;
