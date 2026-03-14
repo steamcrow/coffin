@@ -479,6 +479,9 @@
         // Kill Leaflet's grey/white container glow
         "#cc-bg-map.leaflet-container," +
         "#cc-lens-map.leaflet-container{background:#0d0b0a!important;box-shadow:none!important;}" +
+        // Decorative overlay layers must NEVER intercept pointer events —
+        // if they do, clicks on the Leaflet rectangles underneath are swallowed.
+        ".cc-lens-chromatic,.cc-lens-glare,.cc-frame-overlay,.cc-frame-image{pointer-events:none!important;}" +
         // Prevent native browser image-drag ghost from any img inside the map
         ".cc-cm-mapwrap img{-webkit-user-drag:none!important;user-drag:none!important;" +
         "user-select:none!important;-webkit-user-select:none!important;pointer-events:none!important;}" +
@@ -842,6 +845,7 @@
           rect.on("click", function (e) {
             if (editor && editor.isEditing()) return;
             if (window.L && window.L.DomEvent) window.L.DomEvent.stop(e);
+            console.log("HITBOX CLICK:", capturedLoc.id);
             renderDrawer(ui, capturedLoc);
           });
         }(loc));
