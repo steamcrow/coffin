@@ -1,13 +1,7 @@
-/* ================================
+/* ================================================================
    Rules Explorer — App-Specific Styles
-   File: coffin/apps/app_rules_explorer/cc_app_rules_explorer.css
-
-   Relies on:
-     ui/cc_ui.css   — :root variables, shell, header, panels, lists,
-                      inputs, buttons, badges, callout, kv, stat badges,
-                      section-label, ability-card, field-label, muted
-     ui/cc_print.css — global print reset
-   ================================ */
+   Full Logic Preservation + UI Alignment
+   ================================================================ */
 
 /* ===== Three-Column Explorer Layout ===== */
 .cc-rules-explorer {
@@ -39,20 +33,19 @@
   padding: 2rem;
   line-height: 1.7;
   font-size: 16px;
+  color: var(--cc-text);
+  font-family: var(--cc-font-body);
 }
 
-/* Force left-align on lists inside rule content (overrides Odoo text-align: center) */
-.cc-rule-reader ul,
-.cc-rule-reader ol,
-.cc-rule-content ul,
-.cc-rule-content ol {
+/* Force left-align on lists inside rule content */
+.cc-rule-reader ul, .cc-rule-reader ol,
+.cc-rule-content ul, .cc-rule-content ol {
   margin-left: 1.5rem;
   margin-bottom: 1rem;
   text-align: left !important;
 }
 
-.cc-rule-reader li,
-.cc-rule-content li {
+.cc-rule-reader li, .cc-rule-content li {
   margin-bottom: 0.4rem;
   text-align: left !important;
 }
@@ -66,23 +59,24 @@
   padding: 1rem 2rem;
   border-top: 1px solid var(--cc-border);
   flex-shrink: 0;
+  background: var(--cc-bg-darker);
 }
 
-/* ===== Header Action Buttons ===== */
+/* ===== Header & Breadcrumb ===== */
 .cc-header-actions {
   display: flex;
   gap: 0.5rem;
   align-items: center;
 }
 
-/* ===== Breadcrumb ===== */
 .cc-breadcrumb {
+  font-family: var(--cc-font-mono);
   font-size: 0.75rem;
-  color: var(--cc-text-dim);
+  color: var(--cc-text-muted);
   margin-bottom: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-
-/* NOTE: .cc-breadcrumb-link and .cc-breadcrumb-current are from cc_ui.css */
 
 /* ===== Sidebar Nav Groups ===== */
 .cc-nav-group { margin-bottom: 4px; }
@@ -90,10 +84,10 @@
 .cc-nav-group-btn {
   width: 100%;
   text-align: left;
-  background: rgba(255,255,255,0.05);
-  border: none;
+  background: var(--cc-bg-soft);
+  border: 1px solid transparent;
   border-radius: var(--cc-radius-lg);
-  padding: 5px 10px;
+  padding: 6px 12px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -104,16 +98,15 @@
   font-weight: 600;
   letter-spacing: 0.03em;
   margin-bottom: 2px;
-  transition: background 0.15s;
+  transition: all 0.15s;
 }
 
-.cc-nav-group-btn:hover { background: rgba(255,255,255,0.08) !important; }
-
-.cc-nav-group-chevron {
-  opacity: 0.5;
-  font-size: 0.7rem;
+.cc-nav-group-btn:hover { 
+  background: var(--cc-primary-dim) !important; 
+  border-color: var(--cc-primary-dim);
 }
 
+.cc-nav-group-chevron { opacity: 0.5; font-size: 0.7rem; }
 .cc-nav-group-items { padding-left: 4px; }
 
 /* ===== Star button in list items ===== */
@@ -125,12 +118,11 @@
   border: none;
   color: var(--cc-text-muted);
   flex-shrink: 0;
+  transition: color 0.15s;
 }
-
 .cc-star-btn:hover { color: var(--cc-gold); }
 
-/* ===== Intro / Welcome Page ===== */
-/* Primary-tinted callout block (used for intro sections) */
+/* ===== Intro / Welcome Page Blocks ===== */
 .cc-intro-callout {
   background: var(--cc-primary-dim);
   border-left: 4px solid var(--cc-primary);
@@ -139,28 +131,29 @@
   border-radius: var(--cc-radius-lg);
 }
 
-/* Neutral dark block (used for intro sections) */
 .cc-intro-block {
-  background: rgba(255,255,255,0.03);
+  background: var(--cc-bg-soft);
   border: 1px solid var(--cc-border);
   padding: 1.5rem;
   margin-bottom: 2rem;
   border-radius: var(--cc-radius-lg);
 }
 
-/* h3 inside intro blocks */
-.cc-intro-block h3,
-.cc-intro-callout h3 {
+.cc-intro-block h3, .cc-intro-callout h3 {
   color: var(--cc-primary);
   margin-top: 0;
   font-family: var(--cc-font-title);
+  text-transform: uppercase;
 }
 
-.cc-intro-text {
-  font-size: 1.1rem;
-  line-height: 1.8;
+.cc-intro-title {
+  font-family: var(--cc-font-title);
+  color: var(--cc-primary);
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
 }
 
+.cc-intro-text { font-size: 1.1rem; line-height: 1.8; }
 .cc-intro-tagline {
   font-size: 1.1rem;
   font-style: italic;
@@ -176,17 +169,25 @@
   margin-bottom: 1.5rem;
 }
 
-/* Unit card header row (name + cost) */
+.cc-unit-card {
+  background: var(--cc-bg-soft);
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
 .cc-unit-name {
+  font-family: var(--cc-font-title);
   color: var(--cc-text);
   font-size: 1.25rem;
 }
 
 .cc-unit-cost-display {
   color: var(--cc-primary);
+  font-family: var(--cc-font-title);
   font-weight: 900;
   font-size: 1.3rem;
-  white-space: nowrap;
 }
 
 .cc-unit-type-label {
@@ -196,7 +197,6 @@
   color: var(--cc-primary);
   font-weight: 700;
   letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
 }
 
 .cc-unit-lore {
@@ -206,125 +206,23 @@
   line-height: 1.5;
 }
 
-/* Stat badge row inside unit cards */
-.cc-stat-row {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+/* ===== Labels & Accents ===== */
+.cc-accent-label, .cc-context-label {
+  color: var(--cc-primary);
+  font-family: var(--cc-font-mono);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Weapon properties dim text */
-.cc-weapon-props { opacity: 0.7; }
-
-/* Unit tactics block */
-.cc-unit-tactics {
-  margin-top: 0.75rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--cc-border);
-}
-
-.cc-tactics-text {
+.cc-tactics-text, .cc-error-detail {
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--cc-text-muted);
 }
 
-/* Ability badge with tooltip cursor */
 .cc-badge-help { cursor: help; }
-
-/* ===== Accent Labels (Weapon:, Abilities:, Tactics:, etc.) ===== */
-/* For small orange inline labels inside unit cards and context panels */
-.cc-accent-label {
-  color: var(--cc-primary);
-  font-weight: 700;
-  font-size: 0.8rem;
-}
-
-/* For section headers inside the context sidebar (Designer Notes, Subsections) */
-.cc-context-label {
-  color: var(--cc-primary);
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.5rem;
-}
-
-/* Intro page: larger version of cc-rule-title for the welcome screen */
-.cc-intro-title {
-  font-size: 2.5rem;
-  margin-bottom: 1rem;
-}
-
-/* Unit cards inside faction view (slightly lighter background than cc-ability-card) */
-.cc-unit-card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: var(--cc-radius-lg);
-}
-
-/* ===== Error / Status States ===== */
-.cc-status-message {
-  padding: 2rem;
-  color: var(--cc-text-muted);
-}
-
-.cc-error-state { padding: 2rem; }
-
-.cc-error-title {
-  color: var(--cc-primary);
-  font-weight: 700;
-}
-
-.cc-error-detail {
-  color: var(--cc-text-muted);
-  font-size: 0.85rem;
-}
-
-/* ===== Print ===== */
-/* NOTE: Global reset is in cc_print.css.
-   Only rules-explorer-specific print overrides here. */
-@media print {
-  .cc-rules-sidebar,
-  .cc-rules-context,
-  .cc-panel-head,
-  .cc-rule-nav,
-  .cc-rules-actions,
-  button,
-  .cc-nav-group { display: none !important; }
-
-  .cc-rules-explorer {
-    display: block !important;
-    padding: 0 !important;
-  }
-
-  .cc-rules-main {
-    max-width: 100% !important;
-    overflow: visible !important;
-    height: auto !important;
-  }
-
-  .cc-rule-reader {
-    padding: 0.25in 0 !important;
-    max-width: 100% !important;
-    font-size: 10pt !important;
-    line-height: 1.45 !important;
-  }
-
-  @page { margin: 0.6in 0.65in; }
-
-  .cc-rule-reader,
-  .cc-rule-reader p,
-  .cc-rule-reader li,
-  .cc-rule-reader td { color: #000 !important; font-size: 10pt !important; }
-
-  .cc-intro-callout,
-  .cc-intro-block { background: #f5f5f5 !important; border-color: #999 !important; }
-
-  p, li { orphans: 3; widows: 3; }
-  h2, h3, h4, h5, h6 { page-break-after: avoid; }
-  a { text-decoration: none !important; color: #000 !important; }
-}
 
 /* ===== Responsive ===== */
 @media (max-width: 992px) {
@@ -333,6 +231,33 @@
     grid-template-rows: auto 1fr;
     height: auto;
   }
-
   .cc-rules-context { display: none; }
+}
+
+/* ===== Print (Aligned with global cc_print.css logic) ===== */
+@media print {
+  .cc-rules-sidebar, .cc-rules-context, .cc-panel-head, .cc-rule-nav, 
+  .cc-rules-actions, button, .cc-nav-group { display: none !important; }
+
+  .cc-rules-explorer { display: block !important; padding: 0 !important; }
+
+  .cc-rules-main {
+    max-width: 100% !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .cc-rule-reader {
+    padding: 0 !important;
+    max-width: 100% !important;
+    font-size: 10pt !important;
+    line-height: 1.45 !important;
+    color: #000 !important;
+  }
+
+  .cc-intro-callout, .cc-intro-block { 
+    background: #f5f5f5 !important; 
+    border: 1px solid #999 !important; 
+    color: #000 !important;
+  }
 }
