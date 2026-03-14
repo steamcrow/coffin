@@ -1,33 +1,65 @@
 /* File: apps/app_canyon_map/cc_app_canyon_map.js
    Coffin Canyon — Canyon Map
    Loaded by cc_loader_core.js — exposes window.CC_APP.init()
+
+   ══════════════════════════════════════════════════════════════════
+   QUICK-TUNE GUIDE — things you can safely change without breaking
+   anything. Search for "── TUNE:" to jump to each one.
+
+   1.  BG_ZOOM_OFFSET     — how far the background map zooms out
+   2.  LENS_ZOOM_EXTRA    — how zoomed-in the lens detail view is
+   3.  MIN_LOADER_MS      — minimum milliseconds the loader is shown
+   4.  V_MIN / V_MAX      — vertical knob travel range (%)
+   5.  H_MIN / H_MAX      — horizontal knob travel range (%)
+   6.  MOMENTUM_FRICTION  — how quickly the knobs coast to a stop
+   7.  HITBOXES           — pixel bounding boxes for each location
+   8.  DEFAULTS.title     — the header title text
+   9.  Label tab colours  — orange background + dark brown text
+   10. Lens window size   — 80% of design base (816×496px)
+   11. Sidebar label offset — pushes tooltip tab flush to box top
+   ══════════════════════════════════════════════════════════════════
 */
 
 (function () {
 
-  // ── Zoom offsets (applied to the dynamically computed fill zoom) ────────
+  // ── TUNE 1 & 2: Zoom levels ─────────────────────────────────────────────
   //
-  //  After loading the image we measure the actual container sizes and compute
-  //  the "fill zoom" — the Leaflet zoom level at which the image exactly covers
-  //  the BG container.  These offsets are applied on top of that:
+  //  The app measures the actual BG container size and finds the "fill zoom"
+  //  — the Leaflet zoom where the image exactly covers the container.
+  //  These offsets are then applied on top of that baseline.
   //
-  //  BG_ZOOM_OFFSET  < 0 → slightly MORE zoomed out than fill (shows full map)
-  //  LENS_ZOOM_EXTRA > 0 → MUCH more zoomed in than fill (detail view)
+  //  BG_ZOOM_OFFSET:   negative = more zoomed OUT (shows more of the full map)
+  //                    positive = more zoomed IN  (image larger than container)
   //
-  var BG_ZOOM_OFFSET  = -0.2;  // BG: full-map overview, slightly outside fill
-  var LENS_ZOOM_EXTRA =  1.9;  // Lens: zoomed in by this much relative to BG (~20% less than before)
+  //  LENS_ZOOM_EXTRA:  how many extra zoom levels the lens adds on top of BG.
+  //                    Higher = more detail in the magnifier.
+  //                    Lower  = lens looks more like the BG (less magnification).
+  //
+  var BG_ZOOM_OFFSET  = -0.2;  // ── TUNE 1: BG overview zoom (-0.5 = very zoomed out, 0 = fill)
+  var LENS_ZOOM_EXTRA =  1.9;  // ── TUNE 2: Lens detail zoom offset (1.0 = mild, 3.0 = strong)
 
-  var MIN_LOADER_MS = 700;
+  var MIN_LOADER_MS = 700;     // ── TUNE 3: Loader minimum display time in milliseconds
 
-  // ── Knob travel limits within their tracks (%) ─────────────────────────
-  var V_MIN = 8;
-  var V_MAX = 92;
-  // Horizontal track is 900px wide at full scale.
-  // Shift left by 60px (60/900*100 ≈ 6.7%) and right by 20px (≈2.2%)
-  var H_MIN = 1;
-  var H_MAX = 94;
+  // ── TUNE 4 & 5: Knob travel limits ─────────────────────────────────────
+  //
+  //  These are percentages within the knob's track div.
+  //  0 = track start, 100 = track end.
+  //  Tighten the range to keep knobs away from track edges.
+  //
+  var V_MIN = 8;   // ── TUNE 4a: Vertical knob — top limit (%)
+  var V_MAX = 92;  // ── TUNE 4b: Vertical knob — bottom limit (%)
+  var H_MIN = 1;   // ── TUNE 5a: Horizontal knob — left limit (%)
+  var H_MAX = 94;  // ── TUNE 5b: Horizontal knob — right limit (%)
 
-  // ── Location hitboxes [y1, x1, y2, x2] in image pixel coords ───────────
+  // ── TUNE 7: Location hitboxes ───────────────────────────────────────────
+  //
+  //  Each entry maps a location ID to its bounding box on the map image.
+  //  Format: [y1, x1, y2, x2]  (top-left corner → bottom-right corner)
+  //  Units:  image pixels in CRS.Simple coordinate space.
+  //
+  //  To adjust a box: use the "Edit Hitboxes" button in the app header,
+  //  drag/resize the cyan overlays, then click Export to get new values.
+  //
   var HITBOXES = {
     "bandit-buck":       [1550, 956,  1668, 1160],
     "bayou-city":        [1175, 2501, 1386, 2767],
@@ -69,9 +101,9 @@
 
   window.CC_HITBOXES = HITBOXES;
 
-  // ── Asset URLs ──────────────────────────────────────────────────────────
+  // ── Asset URLs and app settings ─────────────────────────────────────────
   var DEFAULTS = {
-    title:         "Coffin Canyon — Canyon Map",
+    title:         "Coffin Canyon — Canyon Map",  // ── TUNE 8: Header title text
     mapUrl:        "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
     locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
     uiCssUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css",
@@ -532,7 +564,16 @@
   }
 
   // ── Momentum physics ────────────────────────────────────────────────────
-  var MOMENTUM_FRICTION = 3.0;   // higher = stops faster; 3 = heavy and satisfying
+  // ── TUNE 6: Knob momentum friction ─────────────────────────────────────
+  //
+  //  Controls how quickly the knobs decelerate after a fling gesture.
+  //  Uses exponential decay: velocity *= e^(-FRICTION * deltaTime)
+  //
+  //  1.0 = very slow coast (icy)
+  //  3.0 = satisfying heavy feel  ← current
+  //  6.0 = stops almost instantly
+  //
+  var MOMENTUM_FRICTION = 3.0;
 
   function makeMomentum() {
     var val = 0.5, vel = 0, rafId = null, lastT = 0, cb = null;
@@ -623,8 +664,13 @@
         "  text-transform:uppercase!important;letter-spacing:.1em!important;" +
         "  color:#d4822a!important;margin-bottom:6px!important;" +
         "}" +
-        // Map location labels — orange tab sitting on top edge of the box.
-        // Must force writing-mode and max-width or Leaflet collapses the text vertically.
+        // Map location labels — orange tab flush on the top edge of each rectangle.
+        // These are Leaflet tooltips with direction:"top" and a positive Y offset
+        // so the label bottom edge lands right on the box's top border.
+        //
+        // ── TUNE: label colours ──────────────────────────────────────────────
+        // background: the orange fill of the tab
+        // color:      the text colour (dark brown for contrast)
         ".cc-map-hitbox-label," +
         ".leaflet-tooltip.cc-map-hitbox-label{" +
         "background:#c85a00!important;" +
@@ -646,14 +692,26 @@
         "box-shadow:none!important;" +
         "margin-bottom:0!important;" +
         "}" +
-        // Remove Leaflet's default tooltip tip arrow completely
+        // Remove Leaflet's default tooltip tip arrow
         ".cc-map-hitbox-label::before," +
         ".leaflet-tooltip.cc-map-hitbox-label::before{display:none!important;}" +
+        // In edit mode, hide the orange location labels (both tooltip and divIcon variants)
+        ".cc-canyon-map.cc-hitbox-edit .leaflet-tooltip{display:none!important;}" +
+        ".cc-canyon-map.cc-hitbox-edit .cc-map-hitbox-label{display:none!important;}" +
+        // ── TUNE: lens size — 80% of the base design dimensions (1020×620).
+        // Increase to make the magnified window larger; decrease to shrink it.
+        // The media query below overrides this on narrow screens.
+        ".cc-lens{" +
+        "width:calc(816px * var(--device-scale,1))!important;" +
+        "height:calc(496px * var(--device-scale,1))!important;" +
+        "}" +
+        "@media(max-width:900px){.cc-lens{" +
+        "width:calc(672px * var(--device-scale,1))!important;" +
+        "height:calc(416px * var(--device-scale,1))!important;" +
+        "}}" +
         // Leaflet image overlays render as <img> tags in the overlayPane,
         // which sits ABOVE the vectorPane where SVG rectangles live.
         "#cc-lens-map .leaflet-image-layer{pointer-events:none!important;}" +
-        // In edit mode, hide the orange location name labels
-        ".cc-canyon-map.cc-hitbox-edit .leaflet-tooltip{display:none!important;}" +
         "user-select:none!important;-webkit-user-select:none!important;pointer-events:none!important;}" +
         // img inside knob should be non-interactive so clicks hit the parent div
         ".cc-scroll-knob-img{transition:filter .15s ease,transform .15s ease!important;pointer-events:none!important;}" +
@@ -1011,7 +1069,10 @@
           permanent:   true,
           direction:   "top",
           className:   "cc-map-hitbox-label",
-          opacity:     1
+          opacity:     1,
+          // ── TUNE: offset pushes label down so it sits flush on the box top edge.
+          // Increase the Y value if the label floats above; decrease if it overlaps inside.
+          offset:      window.L.point(0, 14)
         });
 
         // Set pointer-events:all on the SVG path so the ENTIRE bounding box
