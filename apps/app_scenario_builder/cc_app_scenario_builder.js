@@ -568,7 +568,12 @@ window.CC_APP = {
     async function ensureLeaflet() {
       if (_leafletReady && window.L) return;
       await loadStyleDynamic(LEAFLET_CSS_URL, 'cc-leaflet-css');
-      if (!window.L) await loadScriptDynamic(LEAFLET_JS_URL);
+      if (!window.L) {
+        const code = await fetch(LEAFLET_JS_URL + '?t=' + Date.now()).then(r => r.text());
+        const s = document.createElement('script');
+        s.textContent = code;
+        document.head.appendChild(s);
+      }
       _leafletReady = true;
     }
 
