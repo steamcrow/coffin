@@ -29,43 +29,43 @@
 
   // ── Location hitboxes [y1, x1, y2, x2] in image pixel coords ───────────
   var HITBOXES = {
-  "bandit-buck": [1550, 956, 1668, 1160],
-  "bayou-city": [1175, 2501, 1386, 2767],
-  "camp-coffin": [2727, 2028, 2834, 2131],
-  "cowtown": [2172, 2112, 2332, 2396],
-  "crackpits": [2628, 1628, 2816, 1968],
-  "deerhoof": [3112, 2130, 3329, 2412],
-  "diablo": [505, 1432, 716, 1698],
-  "dustbuck": [1986, 2286, 2156, 2522],
-  "fool-boot": [2408, 1132, 2512, 1224],
-  "fort-plunder": [3348, 1209, 3631, 1427],
-  "fortune": [2887, 1284, 3121, 1567],
-  "ghost-mountain": [2597, 205, 2849, 489],
-  "gore-mule-drop": [2872, 1600, 3092, 2076],
-  "grade-grind": [2486, 1432, 2598, 1548],
-  "heckweed": [2312, 1824, 2440, 1944],
-  "huck": [3332, 2569, 3550, 2749],
-  "kraise": [1995, 1270, 2193, 1527],
-  "little-rica": [2964, 500, 3182, 784],
-  "lost-yots": [1576, 1266, 1958, 1586],
-  "martygrail": [2392, 1620, 2520, 1748],
-  "mindshaft": [3112, 804, 3388, 1164],
-  "pallor": [1616, 1824, 1996, 1924],
-  "plata": [2513, 916, 2765, 1089],
-  "quinne-jimmy": [1694, 801, 1852, 1157],
-  "ratsville": [1452, 1968, 1644, 2194],
-  "rey": [19, 1883, 230, 2046],
-  "river-city": [1068, 1595, 1279, 1861],
-  "sangr": [1105, 1172, 1315, 1573],
-  "santos-grin": [1185, 1898, 1396, 2176],
-  "silverpit": [2128, 1548, 2294, 1762],
-  "skull-water": [1609, 492, 1841, 701],
-  "splitglass-arroyo": [2605, 1138, 2859, 1427],
-  "tin-flats": [1374, 1258, 1512, 1608],
-  "tzulto": [2229, 1334, 2447, 1526],
-  "widowflow": [1316, 1630, 2078, 1798],
-  "witches-roost": [3767, 2130, 3965, 2495]
-};
+    "bandit-buck":       [1550, 956,  1668, 1160],
+    "bayou-city":        [1175, 2501, 1386, 2767],
+    "camp-coffin":       [2000, 1200, 2300, 1400],
+    "cowtown":           [2172, 2112, 2332, 2396],
+    "crackpits":         [2628, 1628, 2816, 1968],
+    "deerhoof":          [3112, 2130, 3329, 2412],
+    "diablo":            [505,  1432, 716,  1698],
+    "dustbuck":          [1986, 2286, 2156, 2522],
+    "fool-boot":         [2408, 1132, 2512, 1224],
+    "fort-plunder":      [3348, 1209, 3631, 1427],
+    "fortune":           [2887, 1284, 3121, 1567],
+    "ghost-mountain":    [2597, 205,  2849, 489 ],
+    "gore-mule-drop":    [2872, 1600, 3092, 2076],
+    "grade-grind":       [2486, 1432, 2598, 1548],
+    "heckweed":          [2312, 1824, 2440, 1944],
+    "huck":              [3332, 2569, 3550, 2749],
+    "kraise":            [1995, 1270, 2193, 1527],
+    "little-rica":       [2964, 500,  3182, 784 ],
+    "lost-yots":         [1576, 1266, 1958, 1586],
+    "martygrail":        [2392, 1620, 2520, 1748],
+    "mindshaft":         [3112, 804,  3388, 1164],
+    "pallor":            [1616, 1824, 1996, 1924],
+    "plata":             [2513, 916,  2765, 1089],
+    "quinne-jimmy":      [1694, 801,  1852, 1157],
+    "ratsville":         [1452, 1968, 1644, 2194],
+    "rey":               [19,   1883, 230,  2046],
+    "river-city":        [1068, 1595, 1279, 1861],
+    "sangr":             [1105, 1172, 1315, 1573],
+    "santos-grin":       [1185, 1898, 1396, 2176],
+    "silverpit":         [2128, 1548, 2294, 1762],
+    "skull-water":       [1609, 492,  1841, 701 ],
+    "splitglass-arroyo": [2605, 1138, 2859, 1427],
+    "tin-flats":         [1374, 1258, 1512, 1608],
+    "tzulto":            [2229, 1334, 2447, 1526],
+    "widowflow":         [1316, 1630, 2078, 1798],
+    "witches-roost":     [3767, 2130, 3965, 2495]
+  };
 
   window.CC_HITBOXES = HITBOXES;
 
@@ -501,9 +501,42 @@
         // without this the logo renders at natural pixel size before CSS arrives.
         ".cc-cm-loader img{width:280px!important;max-width:72vw!important;" +
         "filter:drop-shadow(0 0 22px rgba(255,117,24,.35))!important;}" +
+        // ── Slide panel (location drawer) — critical layout rules ──────────
+        // cc_ui.css provides these but we duplicate them here so the drawer
+        // works even if the external fetch is slow or unavailable in Odoo.
+        "#cc-location-panel{" +
+        "  position:fixed!important;top:0!important;right:-520px!important;" +
+        "  width:450px!important;max-width:90vw!important;height:100vh!important;" +
+        "  background:#16130e!important;border-left:2px solid #d4822a!important;" +
+        "  box-shadow:-8px 0 40px rgba(0,0,0,.8)!important;" +
+        "  z-index:99999!important;transition:right .3s ease-in-out!important;" +
+        "  overflow-y:auto!important;padding:20px!important;" +
+        "  color:#e8d9c4!important;font-family:'Space Mono',monospace!important;" +
+        "}" +
+        "#cc-location-panel.cc-slide-panel-open{right:0!important;}" +
+        "#cc-location-panel .cc-slide-panel-header{" +
+        "  display:flex!important;justify-content:space-between!important;" +
+        "  align-items:center!important;margin-bottom:20px!important;" +
+        "  padding-bottom:12px!important;border-bottom:1px solid #2e2820!important;" +
+        "}" +
+        "#cc-location-panel .cc-panel-close-btn{" +
+        "  background:transparent!important;border:1px solid #4a3e2e!important;" +
+        "  color:#9e8e78!important;padding:4px 10px!important;" +
+        "  border-radius:4px!important;cursor:pointer!important;" +
+        "  font-size:16px!important;line-height:1!important;" +
+        "}" +
+        "#cc-location-panel .cc-panel-title{" +
+        "  font-size:1.2rem!important;color:#d4822a!important;margin:0!important;" +
+        "}" +
+        "#cc-location-panel .cc-panel-body{padding:0!important;}" +
+        "#cc-location-panel .cc-block{margin-bottom:1rem!important;}" +
+        "#cc-location-panel .cc-h{" +
+        "  font-size:9px!important;font-weight:700!important;" +
+        "  text-transform:uppercase!important;letter-spacing:.1em!important;" +
+        "  color:#d4822a!important;margin-bottom:6px!important;" +
+        "}" +
         // Leaflet image overlays render as <img> tags in the overlayPane,
         // which sits ABOVE the vectorPane where SVG rectangles live.
-        // Without this, the map image eats every click before the hitboxes see it.
         "#cc-lens-map .leaflet-image-layer{pointer-events:none!important;}" +
         // In edit mode, hide the orange location name labels
         ".cc-canyon-map.cc-hitbox-edit .leaflet-tooltip{display:none!important;}" +
@@ -943,7 +976,6 @@
           window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
           lockMaps();
-          buildHitboxes();
 
           // Destroy previous editor and remove its DOM layer before creating
           // a new one — otherwise each reload adds another layer to lensMapEl.
@@ -996,6 +1028,9 @@
         })
         .then(function () {
           applyView(0.5, 0.5);
+          // Build hitboxes AFTER applyView — Leaflet positions permanent tooltips
+          // at bind time, so the map must have a view set or they all stack at [0,0].
+          buildHitboxes();
           // Reveal now that Leaflet has positioned correctly — no jump visible.
           ui.mapEl.style.visibility     = "";
           ui.lensMapEl.style.visibility = "";
