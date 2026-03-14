@@ -479,15 +479,12 @@
         // Kill Leaflet's grey/white container glow
         "#cc-bg-map.leaflet-container," +
         "#cc-lens-map.leaflet-container{background:#0d0b0a!important;box-shadow:none!important;}" +
-        // Decorative overlay layers must NEVER intercept pointer events —
-        // if they do, clicks on the Leaflet rectangles underneath are swallowed.
+        // Decorative overlay layers must NEVER intercept pointer events
         ".cc-lens-chromatic,.cc-lens-glare,.cc-frame-overlay,.cc-frame-image{pointer-events:none!important;}" +
-        // THE CRITICAL FIX: scroll track divs are 900px wide / 560px tall and
-        // physically cover the lens area at z-index 60.  The tracks themselves
-        // don't need to receive pointer events — only the knob buttons inside
-        // them do.  Making tracks click-through lets Leaflet see all clicks.
-        ".cc-scroll-vertical,.cc-scroll-horizontal{pointer-events:none!important;}" +
-        ".cc-scroll-knob{pointer-events:auto!important;z-index:601!important;touch-action:none!important;}" +
+        // Constrain the loader logo size inline — app_css loads async so
+        // without this the logo renders at natural pixel size before CSS arrives.
+        ".cc-cm-loader img{width:280px!important;max-width:72vw!important;" +
+        "filter:drop-shadow(0 0 22px rgba(255,117,24,.35))!important;}" +
         // Prevent native browser image-drag ghost from any img inside the map
         ".cc-cm-mapwrap img{-webkit-user-drag:none!important;user-drag:none!important;" +
         "user-select:none!important;-webkit-user-select:none!important;pointer-events:none!important;}" +
@@ -686,11 +683,15 @@
       var vPct = (V_MIN + currentT  * (V_MAX - V_MIN)).toFixed(3);
       var hPct = (H_MIN + currentTx * (H_MAX - H_MIN)).toFixed(3);
       knobStyleEl.textContent =
-        // Position rules only — pointer-events and z-index live in baseStyle.
-        // The tracks (.cc-scroll-vertical/horizontal) must stay pointer-events:none
-        // so clicks pass through to the Leaflet layer underneath.
+        // knobStyleEl is re-appended to the END of <head> on every applyView,
+        // so it permanently beats app_css which loads once earlier.
+        // app_css has .cc-scroll-vertical { pointer-events:auto!important } which
+        // would otherwise override our none rule — this tag wins because it's last.
         "#cc-scroll-knob-v{top:"  + vPct + "%!important;}" +
         "#cc-scroll-knob-h{left:" + hPct + "%!important;}" +
+        // Tracks: click-through so pointer events reach the Leaflet layer below
+        ".cc-scroll-vertical,.cc-scroll-horizontal{pointer-events:none!important;}" +
+        // Knobs: interactive
         ".cc-scroll-knob{pointer-events:auto!important;z-index:601!important;touch-action:none!important;}";
     }
 
