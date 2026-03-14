@@ -240,31 +240,32 @@
   }
 
   function renderDrawer(ui, loc) {
-    var emoji   = loc.emoji ? loc.emoji + " " : "";
-    var state   = loc.state ? loc.state.charAt(0).toUpperCase() + loc.state.slice(1) : null;
+    var state     = loc.state ? loc.state.charAt(0).toUpperCase() + loc.state.slice(1) : null;
     var archetype = loc.archetype
       ? loc.archetype.replace(/_/g, " ").replace(/\b\w/g, function(c){ return c.toUpperCase(); })
       : null;
 
-    // ── Header ──────────────────────────────────────────────────────────────
-    ui.drawerTitleEl.textContent = emoji + (loc.name || loc.id || "Location");
+    // ── Header — no emoji ────────────────────────────────────────────────────
+    ui.drawerTitleEl.textContent = loc.name || loc.id || "Location";
 
     var html = "";
 
-    // Meta row: archetype + state + cough chance
+    // Meta row: archetype + state
     var metaParts = [];
-    if (archetype)            metaParts.push(archetype);
-    if (state)                metaParts.push("State: " + state);
-    if (loc.coffinCoughChance != null)
-      metaParts.push("Coffin Cough: " + Math.round(loc.coffinCoughChance * 100) + "%");
+    if (archetype) metaParts.push(archetype);
+    if (state)     metaParts.push("State: " + state);
     if (metaParts.length) {
       html += '<div style="font-size:10px;color:#9e8e78;margin-bottom:12px;' +
         'letter-spacing:.05em;">' + metaParts.join("  ·  ") + "</div>";
     }
 
-    // Danger + Population bars
-    html += section("Danger",     meterBar(loc.danger     || 0, 6, "#c44"));
-    html += section("Population", meterBar(loc.population || 0, 6, "#5a9e5a"));
+    // Danger (red), Population (desaturated blue), Coffin Cough (green)
+    html += section("Danger",     meterBar(loc.danger     || 0, 6, "#b03030"));
+    html += section("Population", meterBar(loc.population || 0, 6, "#4a6e8a"));
+    if (loc.coffinCoughChance != null) {
+      html += section("Coffin Cough",
+        meterBar(Math.round(loc.coffinCoughChance * 6), 6, "#3a7a4a"));
+    }
 
     // Description
     if (loc.description) {
@@ -289,15 +290,7 @@
       }).join(""));
     }
 
-    // Features
-    var features = loc.features || [];
-    if (features.length) {
-      html += section("Features", features.map(function(f){
-        return tag(f.replace(/_/g," "));
-      }).join(""));
-    }
-
-    // Terrain flavour
+    // Terrain flavour (Features omitted — redundant with Terrain)
     var terrain = loc.terrain_flavor || [];
     if (terrain.length) {
       html += section("Terrain", terrain.map(tag).join(""));
@@ -630,6 +623,16 @@
         "  text-transform:uppercase!important;letter-spacing:.1em!important;" +
         "  color:#d4822a!important;margin-bottom:6px!important;" +
         "}" +
+        // Map location labels — sharp corners, above box, no arrow, monospace
+        ".cc-map-hitbox-label{" +
+        "background:rgba(0,0,0,.82)!important;border:1px solid rgba(255,117,24,.8)!important;" +
+        "border-radius:0!important;color:#fff!important;font-size:10px!important;" +
+        "font-weight:700!important;font-family:'Space Mono',monospace!important;" +
+        "letter-spacing:.04em!important;padding:2px 5px!important;" +
+        "white-space:nowrap!important;pointer-events:none!important;box-shadow:none!important;}" +
+        ".cc-map-hitbox-label::before{display:none!important;}" +
+        ".leaflet-tooltip.cc-map-hitbox-label{background:rgba(0,0,0,.82)!important;" +
+        "border:1px solid rgba(255,117,24,.8)!important;border-radius:0!important;box-shadow:none!important;}" +
         // Leaflet image overlays render as <img> tags in the overlayPane,
         // which sits ABOVE the vectorPane where SVG rectangles live.
         "#cc-lens-map .leaflet-image-layer{pointer-events:none!important;}" +
@@ -989,8 +992,10 @@
         ).addTo(lensMap);
 
         rect.bindTooltip(loc.name || loc.id, {
-          permanent: true, direction: "center",
-          className: "cc-map-hitbox-label", opacity: 0.95
+          permanent:   true,
+          direction:   "top",
+          className:   "cc-map-hitbox-label",
+          opacity:     1
         });
 
         // Set pointer-events:all on the SVG path so the ENTIRE bounding box
