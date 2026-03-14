@@ -149,6 +149,7 @@
         "supplies": 3
       },
       "features": [
+        "Rail",
         "Ramparts",
         "Gatehouse",
         "ArmoryRow",
@@ -205,6 +206,7 @@
         "doomshine": 2
       },
       "features": [
+        "Rail",
         "AssayOffice",
         "ClaimStakes",
         "PickAxeRow",
@@ -267,6 +269,7 @@
         "doomshine": 2
       },
       "features": [
+        "Rail",
         "Docks",
         "MarketRow",
         "Ferryline",
@@ -383,6 +386,7 @@
         "supplies": 2
       },
       "features": [
+        "Rail",
         "StockYards",
         "BrandingPen",
         "FeedStorage",
@@ -430,6 +434,64 @@
       "state": "alive",
       "danger": 3,
       "population": 4,
+      "key_resources": [
+        "gildren",
+        "doomshine",
+        "silver"
+      ],
+      "resources": {
+        "gildren": 4,
+        "silver": 2,
+        "doomshine": 4
+      },
+      "features": [
+        "GamblingHalls",
+        "PrivateVaults",
+        "GuardTowers",
+        "TradeYard",
+        "BackAlleyMarket"
+      ],
+      "monster_seeds": [
+        {
+          "name": "Wererat",
+          "weight": 2
+        },
+        {
+          "name": "Imp",
+          "weight": 2
+        },
+        {
+          "name": "Red Goblin",
+          "weight": 1
+        }
+      ],
+      "description": "A trade town that runs on money and secrets. Santos Grin smiles because it knows something you don't.",
+      "atmosphere": "The smell of money and the sound of dice",
+      "coffinCoughChance": 0.14,
+      "terrain_flavor": [
+        "Gambling halls",
+        "Private vaults",
+        "Trade yard",
+        "Back alley market"
+      ],
+      "rumors": [
+        "Three major faction debts are held by the same lender here.",
+        "The private vaults contain one item that every faction would kill for.",
+        "Santos Grin's tax collector is never robbed. Nobody asks why."
+      ],
+      "notes": [
+        "Finance and gambling hub. Gildren and covert objectives."
+      ]
+    },
+    {
+      "id": "yults-arch",
+      "name": "Yult's Arch",
+      "emoji": "",
+      "type_ref": "boomtown_riverbase",
+      "archetype": "landmark",
+      "state": "alive",
+      "danger": 3,
+      "population": 1,
       "key_resources": [
         "gildren",
         "doomshine",
