@@ -2,6 +2,166 @@
    COFFIN CANYON — CANYON MAP (COMPLETE ALIGNED VERSION)
    ================================================================ */
 
+/* ── Canyon Map Base Styles ───────────────────────────────────────────── */
+
+/* Kill Leaflet's grey/white container glow */
+#cc-bg-map.leaflet-container,
+#cc-lens-map.leaflet-container {
+    background: #0d0b0a !important;
+    box-shadow: none !important;
+}
+
+/* Decorative overlay layers must NEVER intercept pointer events */
+.cc-lens-chromatic,
+.cc-lens-glare,
+.cc-frame-overlay,
+.cc-frame-image {
+    pointer-events: none !important;
+}
+
+/* Constrain the loader logo size */
+.cc-cm-loader img {
+    width: 280px !important;
+    max-width: 72vw !important;
+    filter: drop-shadow(0 0 22px rgba(255,117,24,.35)) !important;
+}
+
+/* ── Slide panel (location drawer) ────────────────────────────────────── */
+#cc-location-panel {
+    position: fixed !important;
+    top: 0 !important;
+    right: -520px !important;
+    width: 450px !important;
+    max-width: 90vw !important;
+    height: 100vh !important;
+    background: #16130e !important;
+    border-left: 2px solid #d4822a !important;
+    box-shadow: -8px 0 40px rgba(0,0,0,.8) !important;
+    z-index: 99999 !important;
+    transition: right .3s ease-in-out !important;
+    overflow-y: auto !important;
+    padding: 20px !important;
+    color: #e8d9c4 !important;
+    font-family: 'Space Mono', monospace !important;
+}
+
+#cc-location-panel.cc-slide-panel-open { right: 0 !important; }
+
+#cc-location-panel .cc-slide-panel-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid #2e2820 !important;
+}
+
+#cc-location-panel .cc-panel-close-btn {
+    background: transparent !important;
+    border: 1px solid #4a3e2e !important;
+    color: #9e8e78 !important;
+    padding: 4px 10px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+}
+
+#cc-location-panel .cc-panel-title {
+    font-size: 1.2rem !important;
+    color: #d4822a !important;
+    margin: 0 !important;
+}
+
+#cc-location-panel .cc-panel-body { padding: 0 !important; }
+#cc-location-panel .cc-block { margin-bottom: 1rem !important; }
+#cc-location-panel .cc-h {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .1em !important;
+    color: #d4822a !important;
+    margin-bottom: 6px !important;
+}
+
+/* ── Map location labels ─────────────────────────────────────────────── */
+.cc-map-hitbox-label {
+    display: inline-block !important;
+    background: #c85a00 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    font-family: 'Space Mono', monospace !important;
+    letter-spacing: .06em !important;
+    text-transform: uppercase !important;
+    padding: 2px 6px !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+}
+
+.leaflet-div-icon:has(.cc-map-hitbox-label) {
+    background: none !important;
+    border: none !important;
+}
+
+.cc-canyon-map.cc-hitbox-edit .cc-map-hitbox-label { display: none !important; }
+
+/* ── Lens sizing ─────────────────────────────────────────────────────── */
+.cc-lens {
+    width: calc(816px * var(--device-scale, 1)) !important;
+    height: calc(496px * var(--device-scale, 1)) !important;
+}
+
+@media(max-width: 900px) {
+    .cc-lens {
+        width: calc(672px * var(--device-scale, 1)) !important;
+        height: calc(416px * var(--device-scale, 1)) !important;
+    }
+}
+
+/* ── Mobile adjustments ──────────────────────────────────────────────── */
+@media(max-width: 600px) {
+    .cc-scroll-vertical {
+        left: auto !important;
+        right: 2% !important;
+        top: 50% !important;
+        transform: translate(0, -50%) !important;
+        width: calc(44px * var(--device-scale, 1)) !important;
+        height: min(calc(400px * var(--device-scale, 1)), 70%) !important;
+    }
+    .cc-scroll-horizontal {
+        left: 50% !important;
+        bottom: 2% !important;
+        top: auto !important;
+        transform: translate(-50%, 0) !important;
+        width: min(calc(700px * var(--device-scale, 1)), 88%) !important;
+        height: calc(44px * var(--device-scale, 1)) !important;
+    }
+    .cc-frame-image {
+        width: min(calc(980px * var(--device-scale, 1)), 98%) !important;
+    }
+}
+
+/* ── Interactions and States ─────────────────────────────────────────── */
+#cc-lens-map .leaflet-image-layer { pointer-events: none !important; }
+.cc-canyon-map {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    pointer-events: none !important;
+}
+.cc-scroll-knob-img {
+    transition: filter .15s ease, transform .15s ease !important;
+    pointer-events: none !important;
+}
+.cc-scroll-knob.is-active .cc-scroll-knob-img {
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,.7)) drop-shadow(0 0 20px rgba(255,117,24,.9)) !important;
+    transform: scale(1.22) !important;
+}
+
+
 .cc-canyon-map {
   position: relative !important;
   font-family: var(--cc-font-body) !important;
