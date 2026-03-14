@@ -339,14 +339,13 @@
       html += section("Monster Pressure", seedHtml);
     }
 
-    // Rumors
+    // One random rumor — pick fresh each time the drawer opens
     var rumors = loc.rumors || [];
     if (rumors.length) {
-      var rumorHtml = rumors.map(function(r){
-        return '<div style="padding:6px 0 6px 10px;border-left:2px solid rgba(212,130,42,.4);' +
-          'color:#9e8e78;font-style:italic;font-size:12px;margin-bottom:6px;">' + r + "</div>";
-      }).join("");
-      html += section("Rumors", rumorHtml);
+      var rumor = rumors[Math.floor(Math.random() * rumors.length)];
+      html += section("Rumor",
+        '<div style="padding:6px 0 6px 10px;border-left:2px solid rgba(212,130,42,.4);' +
+        'color:#9e8e78;font-style:italic;font-size:12px;">' + rumor + "</div>");
     }
 
     // Notes
@@ -664,39 +663,35 @@
         "  text-transform:uppercase!important;letter-spacing:.1em!important;" +
         "  color:#d4822a!important;margin-bottom:6px!important;" +
         "}" +
-        // Map location labels — orange tab flush on the top edge of each rectangle.
-        // These are Leaflet tooltips with direction:"top" and a positive Y offset
-        // so the label bottom edge lands right on the box's top border.
+        // Map location labels — orange tab anchored to the top-left of each box.
+        // These are L.divIcon markers, NOT tooltips, so no Leaflet arrow/offset.
+        // The .leaflet-div-icon wrapper must be stripped of its default white box.
         //
-        // ── TUNE: label colours ──────────────────────────────────────────────
-        // background: the orange fill of the tab
-        // color:      the text colour (dark brown for contrast)
-        ".cc-map-hitbox-label," +
-        ".leaflet-tooltip.cc-map-hitbox-label{" +
-        "background:#c85a00!important;" +
+        // ── TUNE 9a: tab background colour
+        // ── TUNE 9b: tab text colour
+        // ── TUNE 11: iconAnchor Y value in buildHitboxes() — controls vertical position
+        ".cc-map-hitbox-label{" +
+        "background:#c85a00!important;" +           // ── TUNE 9a: tab fill colour
         "border:none!important;" +
         "border-radius:0!important;" +
-        "color:#1a0d00!important;" +
-        "font-size:9px!important;" +
+        "color:#ffffff!important;" +                // ── TUNE 9b: text colour (white)
+        "font-size:11px!important;" +               // 9px × 1.2 ≈ 11px
         "font-weight:700!important;" +
         "font-family:'Space Mono',monospace!important;" +
         "letter-spacing:.06em!important;" +
         "text-transform:uppercase!important;" +
         "padding:2px 6px!important;" +
         "white-space:nowrap!important;" +
-        "max-width:none!important;" +
-        "width:auto!important;" +
-        "writing-mode:horizontal-tb!important;" +
-        "text-orientation:mixed!important;" +
         "pointer-events:none!important;" +
         "box-shadow:none!important;" +
-        "margin-bottom:0!important;" +
+        "position:absolute!important;" +            // sits inside the zero-size divIcon
+        "bottom:0!important;" +                     // bottom-left aligns with iconAnchor point
+        "left:0!important;" +
         "}" +
-        // Remove Leaflet's default tooltip tip arrow
-        ".cc-map-hitbox-label::before," +
-        ".leaflet-tooltip.cc-map-hitbox-label::before{display:none!important;}" +
-        // In edit mode, hide the orange location labels (both tooltip and divIcon variants)
-        ".cc-canyon-map.cc-hitbox-edit .leaflet-tooltip{display:none!important;}" +
+        // Strip Leaflet's default white-box style from the divIcon wrapper
+        ".leaflet-div-icon:has(.cc-map-hitbox-label){" +
+        "background:none!important;border:none!important;}" +
+        // Hide labels in hitbox edit mode
         ".cc-canyon-map.cc-hitbox-edit .cc-map-hitbox-label{display:none!important;}" +
         // ── TUNE: lens size — 80% of the base design dimensions (1020×620).
         // Increase to make the magnified window larger; decrease to shrink it.
@@ -1065,25 +1060,27 @@
             interactive: true, bubblingMouseEvents: false }
         ).addTo(lensMap);
 
-        rect.bindTooltip(loc.name || loc.id, {
-          permanent:   true,
-          direction:   "top",
-          className:   "cc-map-hitbox-label",
-          opacity:     1,
-          // ── TUNE: offset pushes label down so it sits flush on the box top edge.
-          // Increase the Y value if the label floats above; decrease if it overlaps inside.
-          offset:      window.L.point(0, 14)
-        });
+        // ── Label: L.marker with divIcon anchored at the box's top-left corner.
+        // This matches the cyan editor method exactly — the label's bottom-left
+        // is pinned to [b[0], b[1]] so it always sits flush on the box top edge
+        // regardless of zoom or pan.  bindTooltip() is NOT used because Leaflet
+        // calculates tooltip anchors from the bounding-box centroid, not the
+        // corner, causing labels to drift away from their boxes.
+        var labelMarker = window.L.marker([b[0], b[1]], {
+          icon: window.L.divIcon({
+            className:  "",           // no default leaflet white-box styles
+            html:       '<div class="cc-map-hitbox-label">' + (loc.name || loc.id) + "</div>",
+            iconSize:   [0, 0],       // zero-size anchor point
+            iconAnchor: [0, 18]       // bottom-left of label at the marker point
+          }),
+          interactive: false,
+          keyboard:    false
+        }).addTo(lensMap);
 
-        // Set pointer-events:all on the SVG path so the ENTIRE bounding box
-        // is hit-testable — not just the 2px stroke or the 10%-opacity fill.
-        // Without this, clicks on the (nearly transparent) interior miss.
+        // Full bounding box is hit-testable, not just the 2px stroke
         var domEl = rect.getElement();
         if (domEl) domEl.style.pointerEvents = "all";
 
-        // Use Leaflet's own click event (fires after full click sequence).
-        // L.DomEvent.stop prevents the event from bubbling to the map and
-        // prevents the document-level close handler from firing.
         (function (capturedLoc) {
           rect.on("click", function (e) {
             if (editor && editor.isEditing()) return;
@@ -1094,6 +1091,7 @@
         }(loc));
 
         hitboxLayers.push(rect);
+        hitboxLayers.push(labelMarker);
       });
     }
 
