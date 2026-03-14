@@ -674,7 +674,6 @@
         // ── TUNE 11: iconAnchor Y in buildHitboxes() — vertical alignment
         ".cc-map-hitbox-label{" +
         "display:inline-block!important;" +
-        "transform:translateX(-100%)!important;" +  // slide left so right edge = anchor
         "background:#c85a00!important;" +           // ── TUNE 9a
         "border:none!important;" +
         "border-radius:0!important;" +
@@ -695,8 +694,6 @@
         // Hide labels in hitbox edit mode
         ".cc-canyon-map.cc-hitbox-edit .cc-map-hitbox-label{display:none!important;}" +
         // ── TUNE: lens size — 80% of the base design dimensions (1020×620).
-        // Increase to make the magnified window larger; decrease to shrink it.
-        // The media query below overrides this on narrow screens.
         ".cc-lens{" +
         "width:calc(816px * var(--device-scale,1))!important;" +
         "height:calc(496px * var(--device-scale,1))!important;" +
@@ -705,6 +702,27 @@
         "width:calc(672px * var(--device-scale,1))!important;" +
         "height:calc(416px * var(--device-scale,1))!important;" +
         "}}" +
+        // ── Mobile: clamp track sizes and offsets so knobs stay on-screen.
+        // On narrow phones the fixed-pixel translateX values push tracks off-screen.
+        // We override them to use min() so they never exceed the container width/height.
+        "@media(max-width:600px){" +
+        // Vertical track: keep it inside right 10% of the container
+        ".cc-scroll-vertical{" +
+        "  left:auto!important;right:2%!important;top:50%!important;" +
+        "  transform:translate(0,-50%)!important;" +
+        "  width:calc(44px * var(--device-scale,1))!important;" +
+        "  height:min(calc(400px * var(--device-scale,1)),70%)!important;" +
+        "}" +
+        // Horizontal track: stretch across 90% of container width, centred low
+        ".cc-scroll-horizontal{" +
+        "  left:50%!important;bottom:2%!important;top:auto!important;" +
+        "  transform:translate(-50%,0)!important;" +
+        "  width:min(calc(700px * var(--device-scale,1)),88%)!important;" +
+        "  height:calc(44px * var(--device-scale,1))!important;" +
+        "}" +
+        // Frame image: fit inside the container on small screens
+        ".cc-frame-image{width:min(calc(980px * var(--device-scale,1)),98%)!important;}" +
+        "}" +
         // Leaflet image overlays render as <img> tags in the overlayPane,
         // which sits ABOVE the vectorPane where SVG rectangles live.
         "#cc-lens-map .leaflet-image-layer{pointer-events:none!important;}" +
@@ -1061,11 +1079,12 @@
             interactive: true, bubblingMouseEvents: false }
         ).addTo(lensMap);
 
-        // ── Label: divIcon at TOP-RIGHT corner [b[0], b[3]].
-        // iconAnchor:[0,18] puts the bottom-left of the zero-size icon at that point.
-        // CSS transform:translateX(-100%) then slides the label left by its own width,
-        // landing the bottom-RIGHT flush on the top-right corner of the box — like a tab.
-        var labelMarker = window.L.marker([b[0], b[3]], {
+        // ── Label: divIcon at SCREEN TOP-LEFT corner.
+        // In CRS.Simple lat increases upward, so b[2] (larger Y) = top of screen,
+        // b[1] (smaller X) = left side.  Top-left = [b[2], b[1]].
+        // iconAnchor:[0,18] puts bottom-left of the label at that point,
+        // so the label sits flush above the top-left corner of the box.
+        var labelMarker = window.L.marker([b[2], b[1]], {
           icon: window.L.divIcon({
             className:  "",
             html:       '<div class="cc-map-hitbox-label">' + (loc.name || loc.id) + "</div>",
