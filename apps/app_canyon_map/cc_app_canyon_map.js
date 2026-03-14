@@ -257,6 +257,10 @@
       s.layerEl           = document.createElement("div");
       s.layerEl.className = "cc-hitbox-editor-layer";
       s.layerEl.id        = "cc-hitbox-editor";
+      // MUST start hidden and pointer-events:none — otherwise this z-index:999
+      // div sits invisibly over the entire lens and eats every click.
+      s.layerEl.style.display       = "none";
+      s.layerEl.style.pointerEvents = "none";
       ui.lensMapEl.appendChild(s.layerEl);
       return s.layerEl;
     }
@@ -323,10 +327,12 @@
       var layer = ensureLayer();
 
       layer.addEventListener("pointerdown", function (e) {
-        // Always prevent default — stops native image-drag ghost
-        e.preventDefault();
-
+        // Only intercept events when in edit mode — in normal mode this layer
+        // must be display:none/pointer-events:none so it never blocks the map.
         if (!s.editing) return;
+        e.preventDefault();
+        e.stopPropagation();
+
         var box = e.target.closest(".cc-hb-box");
         if (!box) return;
 
@@ -390,24 +396,25 @@
       if (!s.map || !s.bounds) return;
 
       if (!on) {
-        if (s.layerEl) s.layerEl.style.display = "none";
+        if (s.layerEl) {
+          s.layerEl.style.display       = "none";
+          s.layerEl.style.pointerEvents = "none";
+        }
         ui.editorBadgeEl.style.display = "none";
         s.map.off("move zoom resize", draw);
         if (typeof s.refreshView === "function") {
-          // Give CSS a frame to revert the lens layout before re-applying view
           nextFrame().then(function () { s.refreshView(); });
         }
         return;
       }
 
-      // CSS transition expands the lens to full-screen; wait for it to finish
-      // before calling invalidateSize + fitBounds, otherwise Leaflet measures
-      // the OLD (small) size and renders tiles at the wrong scale.
       if (typeof s.onEnter === "function") s.onEnter();
       delay(150).then(function () {
         s.map.invalidateSize({ animate: false });
         s.map.fitBounds(s.bounds, { animate: false, padding: [24, 24] });
-        ensureLayer().style.display = "block";
+        var layer = ensureLayer();
+        layer.style.display       = "block";
+        layer.style.pointerEvents = "auto";
         draw();
         s.map.on("move zoom resize", draw);
       });
@@ -942,13 +949,14 @@
           bindKnobs();
 
           // ── DIAGNOSTIC: capture-phase on mapWrap fires before any stopPropagation.
-          // Logs the exact topmost element receiving the click.
           // Remove once hitboxes are confirmed working.
           ui.mapWrap.addEventListener("pointerdown", function (e) {
+            var cs = window.getComputedStyle(e.target).pointerEvents;
             console.log("MAPWRAP CAPTURE — tag:", e.target.tagName,
               "| id:", e.target.id || "(none)",
-              "| class:", e.target.className || "(none)");
-          }, true); // true = capture phase
+              "| class:", (e.target.className && e.target.className.toString()) || "(none)",
+              "| computed pointer-events:", cs);
+          }, true);
 
           // Two frames: let CSS apply and containers reach their final sizes
           return nextFrame().then(nextFrame);
