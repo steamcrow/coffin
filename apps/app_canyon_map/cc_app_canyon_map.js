@@ -29,43 +29,43 @@
 
   // ── Location hitboxes [y1, x1, y2, x2] in image pixel coords ───────────
   var HITBOXES = {
-  "bandit-buck": [1550, 956, 1668, 1160],
-  "bayou-city": [1175, 2501, 1386, 2767],
-  "camp-coffin": [2724, 2040, 2830, 2142],
-  "cowtown": [2180, 2123, 2332, 2370],
-  "crackpits": [2628, 1628, 2816, 1968],
-  "deerhoof": [3112, 2130, 3329, 2412],
-  "diablo": [505, 1432, 716, 1698],
-  "dustbuck": [2002, 2294, 2165, 2522],
-  "fool-boot": [2408, 1132, 2512, 1224],
-  "fort-plunder": [3348, 1209, 3631, 1427],
-  "fortune": [2887, 1284, 3121, 1567],
-  "ghost-mountain": [2597, 205, 2849, 489],
-  "gore-mule-drop": [2872, 1600, 3092, 2076],
-  "grade-grind": [2486, 1432, 2598, 1548],
-  "heckweed": [2312, 1824, 2440, 1944],
-  "huck": [3332, 2569, 3550, 2749],
-  "kraise": [1995, 1270, 2193, 1527],
-  "little-rica": [2964, 500, 3182, 784],
-  "lost-yots": [1576, 1266, 1958, 1586],
-  "martygrail": [2392, 1620, 2520, 1748],
-  "mindshaft": [3112, 804, 3388, 1164],
-  "pallor": [1616, 1824, 1996, 1924],
-  "plata": [2513, 916, 2765, 1089],
-  "quinne-jimmy": [1694, 801, 1852, 1157],
-  "ratsville": [1452, 1968, 1644, 2194],
-  "rey": [19, 1883, 230, 2046],
-  "river-city": [1068, 1595, 1279, 1861],
-  "sangr": [1098, 1174, 1314, 1538],
-  "santos-grin": [1185, 1898, 1396, 2176],
-  "silverpit": [2128, 1548, 2294, 1762],
-  "skull-water": [1609, 492, 1841, 701],
-  "splitglass-arroyo": [2605, 1138, 2859, 1427],
-  "tin-flats": [1402, 1246, 1508, 1595],
-  "tzulto": [2229, 1334, 2447, 1526],
-  "widowflow": [1316, 1630, 2078, 1798],
-  "witches-roost": [3767, 2130, 3965, 2495]
-};
+    "bandit-buck":       [1550, 956,  1668, 1160],
+    "bayou-city":        [1175, 2501, 1386, 2767],
+    "camp-coffin":       [2000, 1200, 2300, 1400],
+    "cowtown":           [2172, 2112, 2332, 2396],
+    "crackpits":         [2628, 1628, 2816, 1968],
+    "deerhoof":          [3112, 2130, 3329, 2412],
+    "diablo":            [505,  1432, 716,  1698],
+    "dustbuck":          [1986, 2286, 2156, 2522],
+    "fool-boot":         [2408, 1132, 2512, 1224],
+    "fort-plunder":      [3348, 1209, 3631, 1427],
+    "fortune":           [2887, 1284, 3121, 1567],
+    "ghost-mountain":    [2597, 205,  2849, 489 ],
+    "gore-mule-drop":    [2872, 1600, 3092, 2076],
+    "grade-grind":       [2486, 1432, 2598, 1548],
+    "heckweed":          [2312, 1824, 2440, 1944],
+    "huck":              [3332, 2569, 3550, 2749],
+    "kraise":            [1995, 1270, 2193, 1527],
+    "little-rica":       [2964, 500,  3182, 784 ],
+    "lost-yots":         [1576, 1266, 1958, 1586],
+    "martygrail":        [2392, 1620, 2520, 1748],
+    "mindshaft":         [3112, 804,  3388, 1164],
+    "pallor":            [1616, 1824, 1996, 1924],
+    "plata":             [2513, 916,  2765, 1089],
+    "quinne-jimmy":      [1694, 801,  1852, 1157],
+    "ratsville":         [1452, 1968, 1644, 2194],
+    "rey":               [19,   1883, 230,  2046],
+    "river-city":        [1068, 1595, 1279, 1861],
+    "sangr":             [1105, 1172, 1315, 1573],
+    "santos-grin":       [1185, 1898, 1396, 2176],
+    "silverpit":         [2128, 1548, 2294, 1762],
+    "skull-water":       [1609, 492,  1841, 701 ],
+    "splitglass-arroyo": [2605, 1138, 2859, 1427],
+    "tin-flats":         [1374, 1258, 1512, 1608],
+    "tzulto":            [2229, 1334, 2447, 1526],
+    "widowflow":         [1316, 1630, 2078, 1798],
+    "witches-roost":     [3767, 2130, 3965, 2495]
+  };
 
   window.CC_HITBOXES = HITBOXES;
 
@@ -501,8 +501,11 @@
         // without this the logo renders at natural pixel size before CSS arrives.
         ".cc-cm-loader img{width:280px!important;max-width:72vw!important;" +
         "filter:drop-shadow(0 0 22px rgba(255,117,24,.35))!important;}" +
-        // In edit mode, hide the orange location name labels — they clutter
-        // the hitbox editor and sit above the cyan boxes.
+        // Leaflet image overlays render as <img> tags in the overlayPane,
+        // which sits ABOVE the vectorPane where SVG rectangles live.
+        // Without this, the map image eats every click before the hitboxes see it.
+        "#cc-lens-map .leaflet-image-layer{pointer-events:none!important;}" +
+        // In edit mode, hide the orange location name labels
         ".cc-canyon-map.cc-hitbox-edit .leaflet-tooltip{display:none!important;}" +
         "user-select:none!important;-webkit-user-select:none!important;pointer-events:none!important;}" +
         // img inside knob should be non-interactive so clicks hit the parent div
