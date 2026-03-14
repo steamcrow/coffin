@@ -615,8 +615,6 @@
     rootEl.classList.remove("cc-ready");
     rootEl.classList.add("cc-loading", "cc-canyon-map");
 
-    }
-
     // knobStyleEl is a dynamic <style> tag used to override !important knob
     // position rules from the app CSS.  It MUST be the last style tag in
     // <head> — later stylesheets beat earlier ones at equal specificity.
