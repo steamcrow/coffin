@@ -74,6 +74,7 @@
     title:         "Coffin Canyon — Canyon Map",
     mapUrl:        "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json",
     locationsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
+    uiCssUrl:      "https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css",
     appCssUrl:     "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map.css",
     leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
     leafletJsUrl:  "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
@@ -169,6 +170,7 @@
 
   function ensureDeps(opts) {
     var p = Promise.resolve();
+    p = p.then(function () { return loadCssOnce(opts.uiCssUrl,      "cc_ui_css");   });
     p = p.then(function () { return loadCssOnce(opts.leafletCssUrl, "leaflet_css"); });
     p = p.then(function () { return loadCssOnce(opts.appCssUrl,     "app_css");     });
     if (!window.L) {
@@ -430,7 +432,14 @@
       toggle:     function ()  { setEditing(!s.editing); },
       exportJSON: exportJSON,
       isEditing:  function ()  { return s.editing; },
-      redraw:     draw
+      redraw:     draw,
+      destroy:    function ()  {
+        setEditing(false);
+        if (s.layerEl && s.layerEl.parentNode) s.layerEl.parentNode.removeChild(s.layerEl);
+        s.layerEl  = null;
+        s.attached = false;
+        s.active   = null;
+      }
     };
   }
 
@@ -492,8 +501,9 @@
         // without this the logo renders at natural pixel size before CSS arrives.
         ".cc-cm-loader img{width:280px!important;max-width:72vw!important;" +
         "filter:drop-shadow(0 0 22px rgba(255,117,24,.35))!important;}" +
-        // Prevent native browser image-drag ghost from any img inside the map
-        ".cc-cm-mapwrap img{-webkit-user-drag:none!important;user-drag:none!important;" +
+        // In edit mode, hide the orange location name labels — they clutter
+        // the hitbox editor and sit above the cyan boxes.
+        ".cc-canyon-map.cc-hitbox-edit .leaflet-tooltip{display:none!important;}" +
         "user-select:none!important;-webkit-user-select:none!important;pointer-events:none!important;}" +
         // img inside knob should be non-interactive so clicks hit the parent div
         ".cc-scroll-knob-img{transition:filter .15s ease,transform .15s ease!important;pointer-events:none!important;}" +
@@ -932,6 +942,12 @@
           lockMaps();
           buildHitboxes();
 
+          // Destroy previous editor and remove its DOM layer before creating
+          // a new one — otherwise each reload adds another layer to lensMapEl.
+          if (editor && typeof editor.destroy === "function") editor.destroy();
+          var oldLayer = document.getElementById("cc-hitbox-editor");
+          if (oldLayer && oldLayer.parentNode) oldLayer.parentNode.removeChild(oldLayer);
+
           editor = createHitboxEditor(rootEl, ui);
           editor.attach(lensMap, bounds,
             function () {                          // onExitEdit (refresh view)
@@ -1018,7 +1034,8 @@
 
     // ── Button wiring ─────────────────────────────────────────────────────
     header.querySelector("#cc-cm-reload").onclick = function () {
-      // Stop any coasting momentum and reset position back to centre
+      // Full reset — exit edit mode, stop momentum, return to centre
+      if (editor && editor.isEditing()) editor.toggle();
       momV.stop(); momH.stop();
       currentT = 0.5; currentTx = 0.5;
       init();
