@@ -485,7 +485,7 @@
       ]
     },
     {
-      "id": "yults-n",
+      "id": "yults-arch",
       "name": "Yult's Arch",
       "emoji": "",
       "type_ref": "landmark",
@@ -528,10 +528,10 @@
       "atmosphere": "It smells like death.",
       "coffinCoughChance": 0.14,
       "terrain_flavor": [
-        "Gambling halls",
-        "Private vaults",
-        "Trade yard",
-        "Back alley market"
+        "Hot dusty winds",
+        "Howling nights",
+        "Bones and old ghosts",
+        "Chipped teeth"
       ],
       "rumors": [
         "Three major faction debts are held by the same lender here.",
