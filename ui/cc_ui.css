@@ -49,37 +49,47 @@
   --cc-shadow:    0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-/* Shared Loading Component Aesthetic */
-.cc-loading-overlay {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  min-height: 100vh;
-  background: var(--cc-bg);
+/* Unified Coffin Canyon Loader */
+.cc-loader-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    min-height: 100vh;
+    background: #0a0a0a;
 }
 
-.cc-loading-brand {
-  width: 260px;
-  filter: drop-shadow(0 0 28px rgba(var(--cc-primary-rgb), 0.5));
-  animation: cc-pulse 2s ease-in-out infinite;
+.cc-loader-brand {
+    width: 260px;
+    max-width: 70vw;
+    filter: drop-shadow(0 0 28px rgba(var(--cc-primary-rgb, 255, 117, 24), 0.5));
+    animation: cc-pulse 2s ease-in-out infinite;
 }
 
-.cc-loading-track {
-  width: 260px;
-  height: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
-  overflow: hidden;
+.cc-loader-track {
+    width: 260px;
+    max-width: 70vw;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
 }
 
-.cc-loading-bar {
-  height: 100%;
-  width: 0%;
-  background: var(--cc-primary);
-  border-radius: 2px;
-  transition: width 0.3s ease;
+.cc-loader-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--cc-primary, #ff7518);
+    border-radius: 2px;
+    transition: width 0.3s linear;
+}
+
+.cc-loader-text {
+    color: var(--cc-primary, #ff7518);
+    font-size: 0.7rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    animation: cc-pulse 1.5s ease-in-out infinite;
 }
 
 /* ===== BASE ===== */
