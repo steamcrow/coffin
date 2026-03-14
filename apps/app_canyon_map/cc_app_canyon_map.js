@@ -557,6 +557,9 @@
       el("div", { class: "cc-cm-loader-spin" }),
       el("div", { style: "color:#ff7518;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase" }, ["Loading"])
     ]);
+    // Start with pointer-events off — showLoader() turns them on, hideLoader() kills them.
+    // This prevents the loader from blocking map interaction at any point.
+    loaderEl.style.pointerEvents = "none";
 
     var editorBadgeEl = el("div", { class: "cc-hitbox-editor-badge", style: "display:none" }, [
       "Hitbox edit mode — drag cyan boxes, resize via handle, then Export."
@@ -623,9 +626,16 @@
       rootEl.style.setProperty("--device-scale", scale.toFixed(4));
     }
 
-    function showLoader() { loaderEl.style.display = "flex"; loaderEl.style.opacity = "1"; }
+    function showLoader() {
+      loaderEl.style.display        = "flex";
+      loaderEl.style.opacity        = "1";
+      loaderEl.style.pointerEvents  = "auto";
+    }
     function hideLoader() {
-      loaderEl.style.opacity = "0";
+      // Kill pointer events IMMEDIATELY so the loader never blocks map interaction
+      // even during the opacity fade — this was eating all clicks on the mapwrap.
+      loaderEl.style.pointerEvents  = "none";
+      loaderEl.style.opacity        = "0";
       setTimeout(function () {
         loaderEl.style.display = "none";
         rootEl.classList.remove("cc-loading");
