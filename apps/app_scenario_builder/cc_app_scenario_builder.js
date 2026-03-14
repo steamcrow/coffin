@@ -1516,12 +1516,9 @@ window.CC_APP = {
         });
       }
      // ---- RAIL PLOT FAMILY GATE ----
-      // ambush_derailment mentions trains in its description — blocks it at non-rail locations.
-      var RAIL_ARCH_KEYS = ['rail_stop', 'rail_infrastructure', 'rail_grade', 'rail'];
-      var RAIL_FEAT_KEYS = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur'];
       var featsForGate = (locProfile && locProfile.features) ? locProfile.features : [];
-      var locHasRailForPlot = RAIL_ARCH_KEYS.some(function(r) { return arch.indexOf(r) >= 0; })
-                           || featsForGate.some(function(f) { return RAIL_FEAT_KEYS.indexOf(f) >= 0; });
+      var locHasRailForPlot = ['rail_stop','rail_infrastructure','rail_grade','rail'].some(function(r) { return arch.indexOf(r) >= 0; })
+                           || featsForGate.some(function(f) { return ['RailTerminus','RailGrade','BrakeScars','RailYard','Trestle','RailSpur'].indexOf(f) >= 0; });
       if (!locHasRailForPlot && scores['ambush_derailment'] !== undefined) {
         scores['ambush_derailment'] = -20;
       }
