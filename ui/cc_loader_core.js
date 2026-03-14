@@ -654,3 +654,5 @@ window.addEventListener('error', function(e) {
   boot();
 
 }());
+
+}());
