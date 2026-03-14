@@ -1,5 +1,5 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP (ALIGNED UI)
+   COFFIN CANYON — CANYON MAP (COMPLETE ALIGNED VERSION)
    ================================================================ */
 
 .cc-canyon-map {
@@ -10,7 +10,7 @@
 .cc-cm-shell {
   display: flex !important;
   flex-direction: column !important;
-  gap: 16px !important;
+  gap: 12px !important;
 }
 
 .cc-cm-header {
@@ -19,16 +19,14 @@
   align-items: center !important;
   gap: 12px !important;
   flex-wrap: wrap !important;
-  border-bottom: 1px solid var(--cc-border);
-  padding-bottom: 12px;
 }
 
 .cc-cm-title {
   font-family: var(--cc-font-title) !important; /* Cinzel */
-  font-size: 1.5rem !important;
+  font-weight: 900 !important;
+  letter-spacing: .05em !important;
   color: var(--cc-primary) !important;
   text-transform: uppercase;
-  letter-spacing: 0.05em !important;
 }
 
 .cc-cm-actions {
@@ -37,15 +35,14 @@
   flex-wrap: wrap !important;
 }
 
-/* Map Container Aligned to cc-panel style */
 .cc-cm-mapwrap {
   position: relative !important;
   width: 100% !important;
   height: 85vh !important;
   min-height: 720px !important;
   background: var(--cc-bg-darker) !important;
-  border: 2px solid var(--cc-border) !important; /* Thinner, tech-style border */
-  border-radius: var(--cc-radius-lg) !important;
+  border: 12px solid var(--cc-border) !important; /* Kept your thick border, but using brand brown */
+  border-radius: 12px !important;
   overflow: hidden !important;
   isolation: isolate !important;
   box-shadow: var(--cc-shadow);
@@ -57,7 +54,7 @@
   z-index: 1 !important;
 }
 
-/* --- THE LENS & OPTICS --- */
+/* --- THE LENS SYSTEM --- */
 .cc-lens {
   position: absolute !important;
   top: 46% !important;
@@ -70,8 +67,16 @@
   pointer-events: none !important;
   mask-image: radial-gradient(circle, black 64%, transparent 96%);
   -webkit-mask-image: -webkit-radial-gradient(circle, black 64%, transparent 96%);
-  filter: drop-shadow(0 0 25px rgba(0,0,0,.6));
+  filter: drop-shadow(0 0 15px rgba(0,0,0,.45));
 }
+
+.cc-lens-inner, .cc-lens-overscan, .cc-lens-map {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: auto !important;
+}
+
+.cc-lens-map { z-index: 10 !important; }
 
 .cc-lens-chromatic {
   position: absolute !important;
@@ -79,58 +84,187 @@
   z-index: 11 !important;
   pointer-events: none !important;
   border-radius: 50% !important;
-  box-shadow: 
-    inset 4px 0 12px rgba(212, 130, 42, 0.1), /* Changed to Amber */
-    inset -4px 0 12px rgba(201, 162, 39, 0.1); /* Changed to Gold */
+  box-shadow:
+    inset 4px 0 8px rgba(212, 130, 42, 0.15),
+    inset -4px 0 8px rgba(201, 162, 39, 0.15);
 }
 
-/* --- THE KNOBS & CONTROLS --- */
+.cc-lens-glare {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 12 !important;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,.14) 0%,
+    rgba(255,255,255,0) 52%,
+    rgba(0,0,0,.08) 100%
+  ) !important;
+}
+
+/* --- OVERLAYS & CONTROLS --- */
+.cc-frame-overlay {
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 50 !important;
+  pointer-events: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.cc-frame-image {
+  width: calc(1180px * var(--device-scale, 1)) !important;
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  pointer-events: none !important;
+}
+
+.cc-scroll-vertical, .cc-scroll-horizontal {
+  position: absolute !important;
+  z-index: 60 !important;
+  pointer-events: auto !important;
+}
+
+.cc-scroll-vertical {
+  top: 50% !important;
+  left: 55% !important;
+  width: calc(60px * var(--device-scale, 1)) !important;
+  height: calc(560px * var(--device-scale, 1)) !important;
+  transform: translate(-50%, -50%) translateX(calc(470px * var(--device-scale, 1))) !important;
+}
+
+.cc-scroll-horizontal {
+  top: 50% !important;
+  left: 53% !important;
+  width: calc(900px * var(--device-scale, 1)) !important;
+  height: calc(60px * var(--device-scale, 1)) !important;
+  transform: translate(-50%, -50%) translateY(calc(335px * var(--device-scale, 1))) !important;
+}
+
+.cc-scroll-knob {
+  position: absolute !important;
+  width: calc(144px * var(--device-scale, 1)) !important;
+  height: calc(144px * var(--device-scale, 1)) !important;
+  z-index: 61 !important;
+  cursor: grab !important;
+  touch-action: none !important;
+  user-select: none !important;
+}
+
+.cc-scroll-knob.is-active, .cc-scroll-knob:active { cursor: grabbing !important; }
+
+#cc-scroll-knob-v { left: 48% !important; top: 50% !important; transform: translate(-50%, -50%) !important; }
+#cc-scroll-knob-h { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; }
+
 .cc-scroll-knob-img {
   width: 100% !important;
   height: 100% !important;
-  filter: sepia(0.5) saturate(1.5) hue-rotate(-10deg) drop-shadow(0 4px 12px rgba(0,0,0,0.8)) !important;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.7)) sepia(0.3) !important;
 }
 
-/* --- UI ELEMENTS: HITBOXES & LABELS --- */
+/* --- PRELOADER (DEFERRED TO UI.CSS) --- */
+.cc-cm-loader { display: none !important; }
+
+/* --- LABELS & HITBOXES --- */
 .cc-map-hitbox-label {
-  background: var(--cc-bg-mid) !important;
+  background: var(--cc-bg-soft) !important;
   border: 1px solid var(--cc-primary) !important;
   color: var(--cc-text) !important;
-  font-family: var(--cc-font-mono) !important; /* Space Mono */
-  font-size: 10px !important;
-  text-transform: uppercase;
-  padding: 4px 8px !important;
-  border-radius: 2px !important;
-  box-shadow: var(--cc-shadow-sm) !important;
-}
-
-.cc-hitbox-editor-badge {
   font-family: var(--cc-font-mono) !important;
-  background: var(--cc-bg-darker) !important;
-  border: 1px solid var(--cc-gold) !important;
-  color: var(--cc-gold) !important;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-/* --- PRELOADER OVERRIDE --- */
-/* We remove the old .cc-cm-loader (the orange spinner) 
-   so the universal .cc-preloader from ui.css works instead.
-*/
-.cc-cm-loader {
-  display: none !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 2px 5px !important;
+  border-radius: 4px !important;
+  text-align: center !important;
+  max-width: 88px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.4) !important;
 }
 
 /* --- EDITOR TOOLS --- */
+.cc-hitbox-editor-layer { position: absolute !important; inset: 0 !important; z-index: 999 !important; }
+.cc-hitbox-editor-badge {
+  position: absolute !important;
+  left: 10px !important;
+  bottom: 10px !important;
+  z-index: 1000 !important;
+  background: var(--cc-bg-darker) !important;
+  color: var(--cc-gold) !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  font-family: var(--cc-font-mono) !important;
+  font-size: 12px !important;
+}
+
 .cc-hb-box {
-  outline: 1px solid var(--cc-gold) !important;
-  background: rgba(201, 162, 39, 0.1) !important;
+  position: absolute !important;
+  outline: 2px solid var(--cc-gold) !important;
+  background: rgba(201, 162, 39, 0.15) !important;
+  border-radius: 6px !important;
+  cursor: grab !important;
 }
 
 .cc-hb-label {
-  font-family: var(--cc-font-mono) !important;
+  position: absolute !important;
+  left: 0 !important;
+  top: -18px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
   background: var(--cc-gold) !important;
   color: var(--cc-bg-darker) !important;
-  text-transform: uppercase;
-  font-size: 9px !important;
+  font-family: var(--cc-font-mono) !important;
+  font-size: 10px !important;
+  white-space: nowrap !important;
+}
+
+.cc-hb-handle {
+  position: absolute !important;
+  width: 12px !important;
+  height: 12px !important;
+  right: -6px !important;
+  bottom: -6px !important;
+  background: var(--cc-gold) !important;
+  border-radius: 3px !important;
+  cursor: nwse-resize !important;
+}
+
+/* --- EDITOR MODE STATE --- */
+.cc-canyon-map.cc-hitbox-edit .cc-cm-map { opacity: 0 !important; pointer-events: none !important; }
+.cc-canyon-map.cc-hitbox-edit .cc-frame-overlay,
+.cc-canyon-map.cc-hitbox-edit .cc-scroll-vertical,
+.cc-canyon-map.cc-hitbox-edit .cc-scroll-horizontal { display: none !important; }
+
+.cc-canyon-map.cc-hitbox-edit .cc-lens {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+  z-index: 20 !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  filter: none !important;
+}
+
+/* --- RESPONSIVE MOBILE ADJUSTMENTS --- */
+@media (max-width: 900px) {
+  .cc-cm-mapwrap { height: 72vh !important; min-height: 420px !important; }
+  .cc-lens {
+    width: calc(840px * var(--device-scale, 1)) !important;
+    height: calc(520px * var(--device-scale, 1)) !important;
+  }
+  .cc-frame-image { width: calc(980px * var(--device-scale, 1)) !important; }
+  .cc-scroll-vertical {
+    width: calc(52px * var(--device-scale, 1)) !important;
+    height: calc(470px * var(--device-scale, 1)) !important;
+    transform: translate(-50%, -50%) translateX(calc(390px * var(--device-scale, 1))) !important;
+  }
+  .cc-scroll-horizontal {
+    width: calc(760px * var(--device-scale, 1)) !important;
+    height: calc(52px * var(--device-scale, 1)) !important;
+    transform: translate(-50%, -50%) translateY(calc(282px * var(--device-scale, 1))) !important;
+  }
+  .cc-scroll-knob { width: calc(112px * var(--device-scale, 1)) !important; height: calc(112px * var(--device-scale, 1)) !important; }
+  .cc-map-hitbox-label { font-size: 9px !important; max-width: 72px !important; }
 }
