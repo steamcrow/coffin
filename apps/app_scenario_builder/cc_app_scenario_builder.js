@@ -579,25 +579,45 @@ window.CC_APP = {
 
     // HITBOXES embedded directly — avoids blob: scripts blocked by CSP.
     const EMBEDDED_HITBOXES = {
-      'bandit-buck':[1550,956,1668,1160],'bayou-city':[1175,2501,1386,2767],
-      'camp-coffin':[2727,2051,2822,2142],'cowtown':[2172,2112,2332,2396],
-      'crackpits':[2628,1628,2816,1968],'deerhoof':[3112,2130,3329,2412],
-      'diablo':[505,1432,716,1698],'dustbuck':[1986,2286,2156,2522],
-      'fool-boot':[2408,1132,2512,1224],'fort-plunder':[3348,1209,3631,1427],
-      'fortune':[2887,1284,3121,1567],'ghost-mountain':[2597,205,2849,489],
-      'gore-mule-drop':[2872,1600,3092,2076],'grade-grind':[2486,1432,2598,1548],
-      'heckweed':[2312,1824,2440,1944],'huck':[3332,2569,3550,2749],
-      'kraise':[1995,1270,2193,1527],'little-rica':[2964,500,3182,784],
-      'lost-yots':[1576,1266,1958,1586],'martygrail':[2392,1620,2520,1748],
-      'mindshaft':[3112,804,3388,1164],'pallor':[1616,1824,1996,1924],
-      'plata':[2513,916,2765,1089],'quinne-jimmy':[1694,801,1852,1157],
-      'ratsville':[1452,1968,1644,2194],'rey':[34,1899,163,2028],
-      'river-city':[1102,1607,1280,1854],'sangr':[1086,1219,1257,1527],
-      'santos-grin':[1185,1898,1396,2176],'silverpit':[2128,1548,2294,1762],
-      'skull-water':[1609,492,1841,701],'splitglass-arroyo':[2605,1138,2859,1427],
-      'tin-flats':[1374,1258,1512,1608],'tzulto':[2229,1334,2447,1526],
-      'widowflow':[1316,1630,2078,1798],'witches-roost':[3767,2130,3965,2495]
-    };
+      var HITBOXES = {
+      "bandit-buck": [1550, 956, 1668, 1160],
+      "bayou-city": [1175, 2501, 1386, 2767],
+      "camp-coffin": [2727, 2051, 2822, 2142],
+      "cowtown": [2172, 2112, 2332, 2396],
+      "crackpits": [2628, 1628, 2816, 1968],
+      "deerhoof": [3112, 2130, 3329, 2412],
+      "diablo": [505, 1432, 716, 1698],
+      "dustbuck": [1986, 2286, 2156, 2522],
+      "fool-boot": [2408, 1132, 2512, 1224],
+      "fort-plunder": [3348, 1209, 3631, 1427],
+      "fortune": [2887, 1284, 3121, 1567],
+      "ghost-mountain": [2597, 205, 2849, 489],
+      "gore-mule-drop": [2872, 1600, 3092, 2076],
+      "grade-grind": [2486, 1432, 2598, 1548],
+      "heckweed": [2312, 1824, 2440, 1944],
+      "huck": [3332, 2569, 3550, 2749],
+      "kraise": [1995, 1270, 2193, 1527],
+      "little-rica": [2964, 500, 3182, 784],
+      "lost-yots": [1576, 1266, 1958, 1586],
+      "martygrail": [2392, 1620, 2520, 1748],
+      "mindshaft": [3112, 804, 3388, 1164],
+      "pallor": [1616, 1824, 1996, 1924],
+      "plata": [2513, 916, 2765, 1089],
+      "quinine-jimmy": [1694, 801, 1852, 1157],
+      "ratsville": [1452, 1968, 1644, 2194],
+      "rey": [34, 1899, 163, 2028],
+      "river-city": [1102, 1607, 1280, 1854],
+      "sangr": [1086, 1219, 1257, 1527],
+      "santos-grin": [1185, 1898, 1396, 2176],
+      "silverpit": [2128, 1548, 2294, 1762],
+      "skull-water": [1609, 492, 1841, 701],
+      "splitglass-arroyo": [2605, 1138, 2859, 1427],
+      "tin-flats": [1374, 1258, 1512, 1608],
+      "tzulto": [2229, 1334, 2447, 1526],
+      "widowflow": [1316, 1630, 2078, 1798],
+      "witches-roost": [3767, 2130, 3965, 2495],
+      "yults-arch": [934, 1504, 1026, 1592]
+      };
 
     async function ensureHitboxes() {
       if (window.CC_HITBOXES) return window.CC_HITBOXES;
@@ -1631,9 +1651,23 @@ window.CC_APP = {
           }
         }
 
-        // ── TAG OVERLAP (generic, lowest weight) ────────────────────────────
-        const sTags = (s.tags || []).map(t => t.toLowerCase());
-        score += sTags.filter(t => allTags.includes(t)).length * 2;
+        / ── REQUIRED LOCATION TYPE GATE ─────────────────────────────────────
+        // Hard block: if the vault scenario requires a rail location and this
+        // location has no rail archetype/features, apply -10 penalty.
+        if (allowedTypes.length > 0 && locProfile.archetype) {
+        const archLower = locProfile.archetype.toLowerCase();
+        const featLower = (locProfile.features || []).map(function(f) { return f.toLowerCase(); });
+        const RAIL_NEEDED  = ['rail_stop','rail_infrastructure','rail_grade','rail_line','rail'];
+        const RAIL_FEATS   = ['railterminus','railgrade','brakescars','railyard','trestle','railspur','railstop','railbridge'];
+        const railRequired = allowedTypes.some(function(t) { return RAIL_NEEDED.indexOf(t) >= 0; });
+        const locHasRail   = RAIL_NEEDED.some(function(r) { return archLower.indexOf(r) >= 0; })
+        || featLower.some(function(f) { return RAIL_FEATS.some(function(r) { return f.indexOf(r) >= 0; }); });
+        if (railRequired && !locHasRail) {
+        score -= 10; // Hard block: rail scenario at non-rail location
+        } else if (!allowedTypes.some(function(t) { return archLower.indexOf(t) >= 0 || t.indexOf(archLower) >= 0; })) {
+        score -= 4;  // Soft penalty: type mismatch
+        }
+        }
 
         if (score > bestScore) {
           best      = s;
