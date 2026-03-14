@@ -663,19 +663,23 @@
         "  text-transform:uppercase!important;letter-spacing:.1em!important;" +
         "  color:#d4822a!important;margin-bottom:6px!important;" +
         "}" +
-        // Map location labels — orange tab anchored to the top-left of each box.
-        // These are L.divIcon markers, NOT tooltips, so no Leaflet arrow/offset.
-        // The .leaflet-div-icon wrapper must be stripped of its default white box.
+        // Map location labels — orange tab on the TOP-RIGHT of each box.
+        // display:inline-block keeps text horizontal (position:absolute inside
+        // a zero-size parent was causing vertical collapse).
+        // transform:translateX(-100%) slides the label left by its own width so
+        // the right edge sits at the top-right corner of the box.
         //
         // ── TUNE 9a: tab background colour
         // ── TUNE 9b: tab text colour
-        // ── TUNE 11: iconAnchor Y value in buildHitboxes() — controls vertical position
+        // ── TUNE 11: iconAnchor Y in buildHitboxes() — vertical alignment
         ".cc-map-hitbox-label{" +
-        "background:#c85a00!important;" +           // ── TUNE 9a: tab fill colour
+        "display:inline-block!important;" +
+        "transform:translateX(-100%)!important;" +  // slide left so right edge = anchor
+        "background:#c85a00!important;" +           // ── TUNE 9a
         "border:none!important;" +
         "border-radius:0!important;" +
-        "color:#ffffff!important;" +                // ── TUNE 9b: text colour (white)
-        "font-size:11px!important;" +               // 9px × 1.2 ≈ 11px
+        "color:#ffffff!important;" +                // ── TUNE 9b
+        "font-size:11px!important;" +
         "font-weight:700!important;" +
         "font-family:'Space Mono',monospace!important;" +
         "letter-spacing:.06em!important;" +
@@ -684,9 +688,6 @@
         "white-space:nowrap!important;" +
         "pointer-events:none!important;" +
         "box-shadow:none!important;" +
-        "position:absolute!important;" +            // sits inside the zero-size divIcon
-        "bottom:0!important;" +                     // bottom-left aligns with iconAnchor point
-        "left:0!important;" +
         "}" +
         // Strip Leaflet's default white-box style from the divIcon wrapper
         ".leaflet-div-icon:has(.cc-map-hitbox-label){" +
@@ -1060,18 +1061,16 @@
             interactive: true, bubblingMouseEvents: false }
         ).addTo(lensMap);
 
-        // ── Label: L.marker with divIcon anchored at the box's top-left corner.
-        // This matches the cyan editor method exactly — the label's bottom-left
-        // is pinned to [b[0], b[1]] so it always sits flush on the box top edge
-        // regardless of zoom or pan.  bindTooltip() is NOT used because Leaflet
-        // calculates tooltip anchors from the bounding-box centroid, not the
-        // corner, causing labels to drift away from their boxes.
-        var labelMarker = window.L.marker([b[0], b[1]], {
+        // ── Label: divIcon at TOP-RIGHT corner [b[0], b[3]].
+        // iconAnchor:[0,18] puts the bottom-left of the zero-size icon at that point.
+        // CSS transform:translateX(-100%) then slides the label left by its own width,
+        // landing the bottom-RIGHT flush on the top-right corner of the box — like a tab.
+        var labelMarker = window.L.marker([b[0], b[3]], {
           icon: window.L.divIcon({
-            className:  "",           // no default leaflet white-box styles
+            className:  "",
             html:       '<div class="cc-map-hitbox-label">' + (loc.name || loc.id) + "</div>",
-            iconSize:   [0, 0],       // zero-size anchor point
-            iconAnchor: [0, 18]       // bottom-left of label at the marker point
+            iconSize:   [0, 0],
+            iconAnchor: [0, 18]
           }),
           interactive: false,
           keyboard:    false
