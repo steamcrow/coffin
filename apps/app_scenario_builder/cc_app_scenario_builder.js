@@ -527,7 +527,7 @@ window.CC_APP = {
     const gameData = new GameDataManager();
 
     // ── Map embed — remote URLs and Leaflet instance cache ─────────────────────────────
-    const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map_app.js';
+    const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_app_canyon_map.js';
     const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/canyon_map.json';
     const LEAFLET_CSS_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css';
     const LEAFLET_JS_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js';
