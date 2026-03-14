@@ -29,43 +29,43 @@
 
   // ── Location hitboxes [y1, x1, y2, x2] in image pixel coords ───────────
   var HITBOXES = {
-  "bandit-buck": [1550, 956, 1668, 1160],
-  "bayou-city": [1175, 2501, 1386, 2767],
-  "camp-coffin": [2727, 2051, 2822, 2142],
-  "cowtown": [2172, 2112, 2332, 2396],
-  "crackpits": [2628, 1628, 2816, 1968],
-  "deerhoof": [3112, 2130, 3329, 2412],
-  "diablo": [505, 1432, 716, 1698],
-  "dustbuck": [1986, 2286, 2156, 2522],
-  "fool-boot": [2408, 1132, 2512, 1224],
-  "fort-plunder": [3348, 1209, 3631, 1427],
-  "fortune": [2887, 1284, 3121, 1567],
-  "ghost-mountain": [2597, 205, 2849, 489],
-  "gore-mule-drop": [2872, 1600, 3092, 2076],
-  "grade-grind": [2486, 1432, 2598, 1548],
-  "heckweed": [2312, 1824, 2440, 1944],
-  "huck": [3332, 2569, 3550, 2749],
-  "kraise": [1995, 1270, 2193, 1527],
-  "little-rica": [2964, 500, 3182, 784],
-  "lost-yots": [1576, 1266, 1958, 1586],
-  "martygrail": [2392, 1620, 2520, 1748],
-  "mindshaft": [3112, 804, 3388, 1164],
-  "pallor": [1616, 1824, 1996, 1924],
-  "plata": [2513, 916, 2765, 1089],
-  "quinne-jimmy": [1694, 801, 1852, 1157],
-  "ratsville": [1452, 1968, 1644, 2194],
-  "rey": [34, 1899, 163, 2028],
-  "river-city": [1102, 1607, 1280, 1854],
-  "sangr": [1086, 1219, 1257, 1527],
-  "santos-grin": [1185, 1898, 1396, 2176],
-  "silverpit": [2128, 1548, 2294, 1762],
-  "skull-water": [1609, 492, 1841, 701],
-  "splitglass-arroyo": [2605, 1138, 2859, 1427],
-  "tin-flats": [1374, 1258, 1512, 1608],
-  "tzulto": [2229, 1334, 2447, 1526],
-  "widowflow": [1316, 1630, 2078, 1798],
-  "witches-roost": [3767, 2130, 3965, 2495]
-};
+    "bandit-buck":       [1550, 956,  1668, 1160],
+    "bayou-city":        [1175, 2501, 1386, 2767],
+    "camp-coffin":       [2727, 2051, 2822, 2142],
+    "cowtown":           [2172, 2112, 2332, 2396],
+    "crackpits":         [2628, 1628, 2816, 1968],
+    "deerhoof":          [3112, 2130, 3329, 2412],
+    "diablo":            [505,  1432, 716,  1698],
+    "dustbuck":          [1986, 2286, 2156, 2522],
+    "fool-boot":         [2408, 1132, 2512, 1224],
+    "fort-plunder":      [3348, 1209, 3631, 1427],
+    "fortune":           [2887, 1284, 3121, 1567],
+    "ghost-mountain":    [2597, 205,  2849, 489 ],
+    "gore-mule-drop":    [2872, 1600, 3092, 2076],
+    "grade-grind":       [2486, 1432, 2598, 1548],
+    "heckweed":          [2312, 1824, 2440, 1944],
+    "huck":              [3332, 2569, 3550, 2749],
+    "kraise":            [1995, 1270, 2193, 1527],
+    "little-rica":       [2964, 500,  3182, 784 ],
+    "lost-yots":         [1576, 1266, 1958, 1586],
+    "martygrail":        [2392, 1620, 2520, 1748],
+    "mindshaft":         [3112, 804,  3388, 1164],
+    "pallor":            [1616, 1824, 1996, 1924],
+    "plata":             [2513, 916,  2765, 1089],
+    "quinne-jimmy":      [1694, 801,  1852, 1157],
+    "ratsville":         [1452, 1968, 1644, 2194],
+    "rey":               [34,   1899, 163,  2028],
+    "river-city":        [1102, 1607, 1280, 1854],
+    "sangr":             [1086, 1219, 1257, 1527],
+    "santos-grin":       [1185, 1898, 1396, 2176],
+    "silverpit":         [2128, 1548, 2294, 1762],
+    "skull-water":       [1609, 492,  1841, 701 ],
+    "splitglass-arroyo": [2605, 1138, 2859, 1427],
+    "tin-flats":         [1374, 1258, 1512, 1608],
+    "tzulto":            [2229, 1334, 2447, 1526],
+    "widowflow":         [1316, 1630, 2078, 1798],
+    "witches-roost":     [3767, 2130, 3965, 2495]
+  };
 
   window.CC_HITBOXES = HITBOXES;
 
@@ -226,17 +226,112 @@
       '<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:.8rem">' + (value || 0) + " / " + max + "</div></div>";
   }
 
+  function tag(text) {
+    return '<span style="display:inline-block;padding:2px 8px;margin:2px 2px 2px 0;' +
+      'background:rgba(212,130,42,.15);border:1px solid rgba(212,130,42,.4);' +
+      'border-radius:3px;font-size:11px;color:#e8d9c4;">' + text + "</span>";
+  }
+
+  function section(label, content) {
+    return '<div class="cc-block" style="margin-bottom:1rem;">' +
+      '<div class="cc-h" style="font-size:9px;font-weight:700;text-transform:uppercase;' +
+      'letter-spacing:.1em;color:#d4822a;margin-bottom:6px;">' + label + "</div>" +
+      content + "</div>";
+  }
+
   function renderDrawer(ui, loc) {
-    ui.drawerTitleEl.textContent = loc.name || loc.id || "Location";
-    ui.drawerContentEl.innerHTML =
-      '<div class="cc-block"><div class="cc-h">Description</div><p>' + (loc.description || "Unknown territory.") + "</p></div>" +
-      '<div class="cc-block"><div class="cc-h">Danger</div>'     + meterBar(loc.danger     || 0, 6, "#ff4444") + "</div>" +
-      '<div class="cc-block"><div class="cc-h">Population</div>' + meterBar(loc.population || 0, 6, "#4caf50") + "</div>" +
-      (loc.atmosphere ? '<div class="cc-block"><div class="cc-h">Atmosphere</div><p><em>' + loc.atmosphere + "</em></p></div>" : "") +
-      '<div style="display:flex;flex-wrap:wrap;gap:.5rem">' +
-      (loc.features || []).map(function (f) {
-        return '<span style="padding:4px 10px;background:rgba(255,117,24,.2);border:1px solid rgba(255,117,24,.4);border-radius:4px;font-size:.85rem">' + f + "</span>";
-      }).join("") + "</div>";
+    var emoji   = loc.emoji ? loc.emoji + " " : "";
+    var state   = loc.state ? loc.state.charAt(0).toUpperCase() + loc.state.slice(1) : null;
+    var archetype = loc.archetype
+      ? loc.archetype.replace(/_/g, " ").replace(/\b\w/g, function(c){ return c.toUpperCase(); })
+      : null;
+
+    // ── Header ──────────────────────────────────────────────────────────────
+    ui.drawerTitleEl.textContent = emoji + (loc.name || loc.id || "Location");
+
+    var html = "";
+
+    // Meta row: archetype + state + cough chance
+    var metaParts = [];
+    if (archetype)            metaParts.push(archetype);
+    if (state)                metaParts.push("State: " + state);
+    if (loc.coffinCoughChance != null)
+      metaParts.push("Coffin Cough: " + Math.round(loc.coffinCoughChance * 100) + "%");
+    if (metaParts.length) {
+      html += '<div style="font-size:10px;color:#9e8e78;margin-bottom:12px;' +
+        'letter-spacing:.05em;">' + metaParts.join("  ·  ") + "</div>";
+    }
+
+    // Danger + Population bars
+    html += section("Danger",     meterBar(loc.danger     || 0, 6, "#c44"));
+    html += section("Population", meterBar(loc.population || 0, 6, "#5a9e5a"));
+
+    // Description
+    if (loc.description) {
+      html += section("Description",
+        '<p style="margin:0;line-height:1.6;color:#e8d9c4;">' + loc.description + "</p>");
+    }
+
+    // Atmosphere
+    var atmosphere = Array.isArray(loc.atmosphere)
+      ? loc.atmosphere.join(" · ")
+      : loc.atmosphere || null;
+    if (atmosphere) {
+      html += section("Atmosphere",
+        '<p style="margin:0;font-style:italic;color:#9e8e78;">' + atmosphere + "</p>");
+    }
+
+    // Key resources
+    var keyRes = loc.key_resources || [];
+    if (keyRes.length) {
+      html += section("Key Resources", keyRes.map(function(r){
+        return tag(r.replace(/_/g," "));
+      }).join(""));
+    }
+
+    // Features
+    var features = loc.features || [];
+    if (features.length) {
+      html += section("Features", features.map(function(f){
+        return tag(f.replace(/_/g," "));
+      }).join(""));
+    }
+
+    // Terrain flavour
+    var terrain = loc.terrain_flavor || [];
+    if (terrain.length) {
+      html += section("Terrain", terrain.map(tag).join(""));
+    }
+
+    // Monster seeds
+    var seeds = loc.monster_seeds || [];
+    if (seeds.length) {
+      var seedHtml = seeds.map(function(s){
+        var name   = typeof s === "string" ? s : (s.name || "?");
+        var weight = typeof s === "object" && s.weight != null ? " ×" + s.weight : "";
+        return tag(name + weight);
+      }).join("");
+      html += section("Monster Pressure", seedHtml);
+    }
+
+    // Rumors
+    var rumors = loc.rumors || [];
+    if (rumors.length) {
+      var rumorHtml = rumors.map(function(r){
+        return '<div style="padding:6px 0 6px 10px;border-left:2px solid rgba(212,130,42,.4);' +
+          'color:#9e8e78;font-style:italic;font-size:12px;margin-bottom:6px;">' + r + "</div>";
+      }).join("");
+      html += section("Rumors", rumorHtml);
+    }
+
+    // Notes
+    var notes = loc.notes || [];
+    if (notes.length) {
+      html += section("Notes",
+        '<p style="margin:0;font-size:11px;color:#6b5f4a;">' + notes.join(" ") + "</p>");
+    }
+
+    ui.drawerContentEl.innerHTML = html;
     ui.drawerEl.classList.add("cc-slide-panel-open");
     ui.drawerEl.scrollTop = 0;
   }
@@ -1086,8 +1181,8 @@
     var onDocClick = function (e) {
       if (!ui.drawerEl.classList.contains("cc-slide-panel-open")) return;
       if (ui.drawerEl.contains(e.target)) return;
-      if (e.target && e.target.closest &&
-          e.target.closest(".leaflet-container, .leaflet-interactive, .leaflet-tooltip")) return;
+      // Don't close when clicking a hitbox rectangle — that will open a new location
+      if (e.target && e.target.closest && e.target.closest(".leaflet-interactive")) return;
       ui.drawerEl.classList.remove("cc-slide-panel-open");
     };
 
