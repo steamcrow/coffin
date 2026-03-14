@@ -167,6 +167,54 @@
         "Enemy success triggers reinforcement pressure",
         "Loss of HQ carries narrative consequences"
       ]
-    }
+    },
+    ,
+"landmark": {
+  "terrain_profile": {
+    "default_traits": ["Difficult"],
+    "common_traits": ["Haunted"],
+    "rare_traits": ["Tainted", "Hazardous"]
+  },
+  "objective_patterns": {
+    "primary": ["Control", "Ritual Site"],
+    "secondary": ["Artifact", "Sabotage"]
+  },
+  "escalation_logic": [
+    "Contesting a landmark draws additional factions",
+    "Thyr activity near landmark increases each round"
+  ]
+},
+
+"bayou": {
+  "terrain_profile": {
+    "default_traits": ["Hazardous"],
+    "common_traits": ["Choking"],
+    "rare_traits": ["Tainted"]
+  },
+  "objective_patterns": {
+    "primary": ["Extraction", "Control"],
+    "secondary": ["Crossing", "Supply Cache"]
+  },
+  "escalation_logic": [
+    "Wet terrain slows movement and spreads Coffin Cough",
+    "Crocodile and Kelpie pressure increases after Round 3"
+  ]
+},
+
+"rail": {
+  "terrain_profile": {
+    "default_traits": ["Difficult"],
+    "common_traits": ["Hazardous"],
+    "rare_traits": ["Unstable"]
+  },
+  "objective_patterns": {
+    "primary": ["Sabotage", "Control"],
+    "secondary": ["Extraction", "Ambush"]
+  },
+  "escalation_logic": [
+    "Timed arrivals compress the action window",
+    "Structural failure cascades if sabotage goes unchecked"
+  ]
+}
   }
 }
