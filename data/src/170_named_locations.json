@@ -485,7 +485,7 @@
       ]
     },
     {
-      "id": "yults-arch",
+      "id": "yults-n",
       "name": "Yult's Arch",
       "emoji": "",
       "type_ref": "landmark",
@@ -528,10 +528,10 @@
       "atmosphere": "It smells like death.",
       "coffinCoughChance": 0.14,
       "terrain_flavor": [
-        "Hot dusty winds",
-        "Howling nights",
-        "Bones and old ghosts",
-        "Chipped teeth"
+        "Gambling halls",
+        "Private vaults",
+        "Trade yard",
+        "Back alley market"
       ],
       "rumors": [
         "Three major faction debts are held by the same lender here.",
@@ -601,7 +601,7 @@
       ]
     },
     {
-      "id": "quinne-jimmy",
+      "id": "quinine-jimmy",
       "name": "Quinne Jimmy",
       "emoji": "🔧",
       "type_ref": "boomtown_dryriver",
@@ -946,9 +946,9 @@
       "emoji": "🥈",
       "type_ref": "boomtown_mesa",
       "archetype": "mining_town",
-      "state": "alive",
+      "state": "prospering",
       "danger": 4,
-      "population": 4,
+      "population": 3,
       "key_resources": [
         "silver",
         "lead",
@@ -964,7 +964,8 @@
         "RefiningSheds",
         "AssayHouse",
         "WeightedScales",
-        "ArmedVaults"
+        "ArmedVaults",
+        "RailTerminus"
       ],
       "monster_seeds": [
         {
@@ -990,9 +991,11 @@
         "Armed vaults"
       ],
       "rumors": [
-        "The assay house runs a second set of books. The first set is for the authorities.",
+        "The assay house runs a second set of books.",
         "Plata's lead supply comes from somewhere that nobody in town will name.",
-        "A vault shipment is moving in three days. Multiple parties know the route."
+        "A vault shipment is moving in three days. Multiple parties know the route.",
+        "An ex-Shine Rider rules Plata County with a silver fist.",
+        ""
       ],
       "notes": [
         "Silver trade town. High-value extraction and control objectives."
@@ -1073,7 +1076,8 @@
       "resources": {
         "silver": 3,
         "thyr": 4,
-        "spare_parts": 2
+        "spare_parts": 2,
+        "supplies": 1
       },
       "features": [
         "DeepShafts",
@@ -1100,8 +1104,8 @@
           "weight": 1
         }
       ],
-      "description": "Mindshaft went too deep and found something that wasn't ore. The mine is officially closed. People still go in. Most come back.",
-      "atmosphere": "Wrong echoes and crystal light from the wrong direction",
+      "description": "Mindshaft went too deep and found something that wasn't ore. The mine is officially closed. People still go in. Some even come back.",
+      "atmosphere": "Wrong echoes and weird light from the wrong direction",
       "coffinCoughChance": 0.35,
       "terrain_flavor": [
         "Deep shafts",
@@ -1111,8 +1115,9 @@
       ],
       "rumors": [
         "The collapse at level seven was not structural. Something pushed it from below.",
-        "Thyr crystals grow faster in Mindshaft than anywhere else in the canyon.",
-        "The last crew to survey level nine communicated in a dialect nobody recognized."
+        "Thyr crystals grow faster in Mindshaft County than anywhere else in the canyon.",
+        "The last crew to survey level nine came back all wet and burnt up.",
+        "There are headless dogs about."
       ],
       "notes": [
         "Dangerous deep mine. Thyr-heavy. Ritual and horror objectives."
@@ -1185,7 +1190,7 @@
       "name": "Gore Mule Drop",
       "emoji": "🩸",
       "type_ref": "region_rail_grade_cursed",
-      "archetype": "rail_infrastructure",
+      "archetype": "rail_grade",
       "state": "alive",
       "danger": 4,
       "population": 1,
@@ -2020,12 +2025,14 @@
       "key_resources": [
         "tzul_silver",
         "thyr",
-        "silver"
+        "silver",
+        "water_foul"
       ],
       "resources": {
         "tzul_silver": 5,
         "thyr": 4,
-        "silver": 1
+        "silver": 1,
+        "water_foul": 2
       },
       "features": [
         "CraterTemple",
@@ -2054,9 +2061,21 @@
         {
           "name": "Devil",
           "weight": 1
+        },
+        {
+          "name": "Dust King",
+          "weight": 4
+        },
+        {
+          "name": "Golem",
+          "weight": 2
+        },
+        {
+          "name": "Ghost",
+          "weight": 3
         }
       ],
-      "description": "The largest Tzul ruin in the canyon. The crater wasn't formed by impact — it was removed. The air feels held, as if the place is still listening.",
+      "description": "The largest Tzul ruin in the Country. The crater wasn't formed by impact — it was removed. The air feels held, as if the place is still listening.",
       "atmosphere": "Ancient patience, modern fear",
       "coffinCoughChance": 0.3,
       "terrain_flavor": [
@@ -2068,7 +2087,9 @@
       "rumors": [
         "The crater wasn't formed by impact — it was removed.",
         "Certain words spoken here come out in a different voice.",
-        "Monsterology has a map of this place they refuse to share."
+        "The ruins are tricky. Some say they're all filled with bones.",
+        "Some say that the Liberty Corps is slowly mining an entrance into the largest pyramid.",
+        "Prospectors love the black Tzul Silver that comes from this region."
       ],
       "notes": [
         "High danger Tzul landmark. Lore anchor. Ritual and artifact objectives."
