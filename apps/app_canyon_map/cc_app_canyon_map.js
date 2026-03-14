@@ -286,7 +286,7 @@
     var keyRes = loc.key_resources || [];
     if (keyRes.length) {
       html += section("Key Resources", keyRes.map(function(r){
-        return tag(r.replace(/_/g," "));
+        return tag(r.replace(/_/g," ").replace(/\b\w/g, function(c){ return c.toUpperCase(); }));
       }).join(""));
     }
 
@@ -623,16 +623,32 @@
         "  text-transform:uppercase!important;letter-spacing:.1em!important;" +
         "  color:#d4822a!important;margin-bottom:6px!important;" +
         "}" +
-        // Map location labels — sharp corners, above box, no arrow, monospace
-        ".cc-map-hitbox-label{" +
-        "background:rgba(0,0,0,.82)!important;border:1px solid rgba(255,117,24,.8)!important;" +
-        "border-radius:0!important;color:#fff!important;font-size:10px!important;" +
-        "font-weight:700!important;font-family:'Space Mono',monospace!important;" +
-        "letter-spacing:.04em!important;padding:2px 5px!important;" +
-        "white-space:nowrap!important;pointer-events:none!important;box-shadow:none!important;}" +
-        ".cc-map-hitbox-label::before{display:none!important;}" +
-        ".leaflet-tooltip.cc-map-hitbox-label{background:rgba(0,0,0,.82)!important;" +
-        "border:1px solid rgba(255,117,24,.8)!important;border-radius:0!important;box-shadow:none!important;}" +
+        // Map location labels — orange tab sitting on top edge of the box.
+        // Must force writing-mode and max-width or Leaflet collapses the text vertically.
+        ".cc-map-hitbox-label," +
+        ".leaflet-tooltip.cc-map-hitbox-label{" +
+        "background:#c85a00!important;" +
+        "border:none!important;" +
+        "border-radius:0!important;" +
+        "color:#1a0d00!important;" +
+        "font-size:9px!important;" +
+        "font-weight:700!important;" +
+        "font-family:'Space Mono',monospace!important;" +
+        "letter-spacing:.06em!important;" +
+        "text-transform:uppercase!important;" +
+        "padding:2px 6px!important;" +
+        "white-space:nowrap!important;" +
+        "max-width:none!important;" +
+        "width:auto!important;" +
+        "writing-mode:horizontal-tb!important;" +
+        "text-orientation:mixed!important;" +
+        "pointer-events:none!important;" +
+        "box-shadow:none!important;" +
+        "margin-bottom:0!important;" +
+        "}" +
+        // Remove Leaflet's default tooltip tip arrow completely
+        ".cc-map-hitbox-label::before," +
+        ".leaflet-tooltip.cc-map-hitbox-label::before{display:none!important;}" +
         // Leaflet image overlays render as <img> tags in the overlayPane,
         // which sits ABOVE the vectorPane where SVG rectangles live.
         "#cc-lens-map .leaflet-image-layer{pointer-events:none!important;}" +
