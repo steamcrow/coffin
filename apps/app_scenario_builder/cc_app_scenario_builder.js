@@ -2387,67 +2387,62 @@ window.CC_APP = {
 
 
     generateVictoryConditions(plotFamily, objectives, locProfile, factions, dangerRating) {
-      const conditions = {};
+  const conditions = {};
 
-      const hasMonsters = factions.some(function(f) { return f.id === 'monsters'; });
-      const injectMonsterObjective = hasMonsters
-        || objectives.some(function(o) { return o.type === 'captive_entity'; });
+  const hasMonsters = factions.some(function(f) { return f.id === 'monsters'; });
+  const injectMonsterObjective = hasMonsters
+    || objectives.some(function(o) { return o.type === 'captive_entity'; });
 
-      factions.forEach(function(faction) {
-        const approach    = FACTION_APPROACH[faction.id]   || FACTION_APPROACH.monsters;
-        const motivesMap  = FACTION_MOTIVES[faction.id]    || FACTION_MOTIVES.monsters;
-        const conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
+  factions.forEach((faction) => {
+    const approach    = FACTION_APPROACH[faction.id]   || FACTION_APPROACH.monsters;
+    const motivesMap  = FACTION_MOTIVES[faction.id]    || FACTION_MOTIVES.monsters;
+    const conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
 
-        const primaryObjType = objectives[0] ? objectives[0].type : 'default';
-        const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
+    const primaryObjType = objectives[0] ? objectives[0].type : 'default';
+    const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
 
-        // Build two conflicting objectives per faction:
-        // Obj 1 (Primary)   — faction's specific action on the primary board objective
-        // Obj 2 (Secondary) — faction's specific action on the secondary board objective
-        //                     OR their monster-handling goal if monsters are present
-        const pickedObjectives = [];
+    const pickedObjectives = [];
 
-        objectives.forEach(function(obj, i) {
-          if (i > 1) return; // max two
-          const conflict = conflictMap[obj.type] || conflictMap['default'];
-          pickedObjectives.push({
-            name:   conflict.name,
-            desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})[obj.type]
-                    || approach.verbs[i % approach.verbs.length] + ' the ' + obj.name + '.',
-            vp:     conflict.vp,
-            tactic: approach.tactic
-          });
-        });
+    objectives.forEach(function(obj, i) {
+      if (i > 1) return;
+      const conflict = conflictMap[obj.type] || conflictMap['default'];
+      pickedObjectives.push({
+        name:   conflict.name,
+        desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})[obj.type]
+                || approach.verbs[i % approach.verbs.length] + ' the ' + obj.name + '.',
+        vp:     conflict.vp,
+        tactic: approach.tactic
+      });
+    });
 
-        // If we only have 1 objective and monsters are present, add monster goal as secondary
-        if (pickedObjectives.length < 2 && injectMonsterObjective && faction.id !== 'monsters') {
-          const monsterVP = {
-            monster_rangers: '+3 VP per monster safely escorted off board. +5 VP if befriended.',
-            monsterology:    '+4 VP per monster harvested. +2 VP per live capture.',
-            liberty_corps:   '+3 VP per monster captured. +2 VP per monster eliminated.',
-            shine_riders:    '+3 VP if you redirect a monster into an enemy faction. +1 VP per round avoiding contact.',
-            crow_queen:      '+4 VP per monster converted to a Crown Subject.'
-          };
-          pickedObjectives.push({
-            name:   'Monsters on the Board',
-            desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})['monsters_hostile']
-                    || "Deal with the monsters before they become everyone's problem.",
-            vp:     monsterVP[faction.id] || '+2 VP per monster interaction.',
-            tactic: approach.tactic
-          });
-        }
+    if (pickedObjectives.length < 2 && injectMonsterObjective && faction.id !== 'monsters') {
+      const monsterVP = {
+        monster_rangers: '+3 VP per monster safely escorted off board. +5 VP if befriended.',
+        monsterology:    '+4 VP per monster harvested. +2 VP per live capture.',
+        liberty_corps:   '+3 VP per monster captured. +2 VP per monster eliminated.',
+        shine_riders:    '+3 VP if you redirect a monster into an enemy faction. +1 VP per round avoiding contact.',
+        crow_queen:      '+4 VP per monster converted to a Crown Subject.'
+      };
+      pickedObjectives.push({
+        name:   'Monsters on the Board',
+        desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})['monsters_hostile']
+                || "Deal with the monsters before they become everyone's problem.",
+        vp:     monsterVP[faction.id] || '+2 VP per monster interaction.',
+        tactic: approach.tactic
+      });
+    }
 
-        const finale   = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
-        const aftermath = this.buildFactionAftermath(faction.id, plotFamily);
-        const isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
+    const finale    = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
+    const aftermath = this.buildFactionAftermath(faction.id, plotFamily);
+    const isNPC     = faction.id === 'monsters' || faction.id === 'crow_queen';
 
-        conditions[faction.id] = {
-          faction_name: faction.name,
-          is_npc:       isNPC,
-          motive,
-          objectives:   pickedObjectives,
-          finale,
-          aftermath,
+    conditions[faction.id] = {
+      faction_name: faction.name,
+      is_npc:       isNPC,
+      motive,
+      objectives:   pickedObjectives,
+      finale,
+      aftermath,
           quote:        approach.quote
         };
       });
