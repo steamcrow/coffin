@@ -623,9 +623,9 @@
     // We create it here but re-append it AFTER CSS loads (see ensureDeps chain).
     var knobStyleEl = document.getElementById("cc-knob-dyn");
     if (!knobStyleEl) {
-      knobStyleEl    = document.createElement("style");
-      knobStyleEl.id = "cc-knob-dyn";
-      document.head.appendChild(knobStyleEl);
+        knobStyleEl = document.createElement("style");
+        knobStyleEl.id = "cc-knob-dyn";
+        document.head.appendChild(knobStyleEl);
     }
 
     // ── Build DOM ─────────────────────────────────────────────────────────
@@ -701,8 +701,6 @@
     shell.appendChild(header);
     shell.appendChild(mapWrap);
     rootEl.appendChild(shell);
-    // Append drawer to body so position:fixed always works regardless of
-    // any parent transform/isolation/overflow on the Odoo host.
     document.body.appendChild(drawer);
 
     var ui = {
@@ -1006,8 +1004,7 @@
       updateResponsiveScale();
       var loadStart = Date.now();
 
-      return ensureDeps(opts)
-        .then(function () {
+      ensureDeps(opts).then(function() {
           // ── KNOB STYLE FIX ─────────────────────────────────────────────
           // CSS files have just been appended to <head>.  Re-append
           // knobStyleEl now so it is the LAST style tag, guaranteeing its
@@ -1179,13 +1176,12 @@
       try { if (drawer.parentNode) drawer.parentNode.removeChild(drawer); } catch (_) {}
     };
 
-    return init().then(function () { return {}; });
+    return init().then(function () { return {}; }); 
   }
 
   // ── Standard CC_APP interface ───────────────────────────────────────────
-  window.CC_APP = {
+ window.CC_APP = {
     init: function (options) {
-      console.log("🗺️ Canyon Map init");
       mount(options.root, {});
     },
     destroy: function () {
@@ -1194,6 +1190,4 @@
   };
 
   window.CC_CanyonMap = { mount: mount };
-  console.log("🗺️ Canyon Map app loaded");
-
 })();
