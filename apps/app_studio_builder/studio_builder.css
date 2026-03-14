@@ -1,72 +1,23 @@
-/* =========================================================
-   COFFIN CANYON FACTION STUDIO — App-Specific Styles
-   File: coffin/apps/app_faction_studio/studio_builder.css
+/* ================================================================
+   Faction Studio — App-Specific Styles
+   Full Logic Preservation + UI Alignment
+   ================================================================ */
 
-   Relies on:
-     ui/cc_ui.css — :root variables, panels, stat badges,
-                    slide panel, inputs, section-label, stat colors
-   NOTE: The studio uses class names like .cc-panel, .cc-stat-badge,
-         .cc-slide-panel, .cc-input — all from cc_ui.css.
-         Only studio-specific overrides and unique classes live here.
-   ========================================================= */
+#faction-studio-app { padding: 20px; color: var(--cc-text); background: var(--cc-bg); }
 
-/* =========================================================
-   ROOT CONTAINER
-   ========================================================= */
-#faction-studio-app {
-  padding: 20px;
-  color: var(--cc-text);
-  background: var(--cc-bg);
-}
+/* ===== Header ===== */
+.studio-header { text-align: center; margin-bottom: 30px; }
+.studio-title { font-family: var(--cc-font-title); font-weight: 900; letter-spacing: 3px; color: var(--cc-text); margin: 0; font-size: 2rem; }
+.studio-subtitle { color: var(--cc-primary); font-family: var(--cc-font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-top: 8px; }
 
-/* =========================================================
-   HEADER
-   ========================================================= */
-.studio-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.studio-title {
-  font-family: var(--cc-font-title);
-  font-weight: 900;
-  letter-spacing: 3px;
-  color: var(--cc-text);
-  margin: 0;
-  font-size: 2rem;
-}
-
-.studio-subtitle {
-  color: var(--cc-primary);
-  font-family: var(--cc-font-mono);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  margin-top: 8px;
-}
-
-/* =========================================================
-   GRID LAYOUT
-   ========================================================= */
-.fb-grid {
-  display: grid;
-  grid-template-columns: 0.9fr 1.3fr 1fr;
-  gap: 20px;
-  align-items: start;
-  margin-top: 20px;
-}
-
-.no-unit .fb-grid {
-  grid-template-columns: 1fr;
-  max-width: 600px;
-  margin: 0 auto;
-}
+/* ===== Grid Layout ===== */
+.fb-grid { display: grid; grid-template-columns: 0.9fr 1.3fr 1fr; gap: 20px; align-items: start; margin-top: 20px; }
+.no-unit .fb-grid { grid-template-columns: 1fr; max-width: 600px; margin: 0 auto; }
 
 @media (max-width: 1200px) {
   .fb-grid { grid-template-columns: 1fr 1.4fr; }
   #unit-card { grid-column: span 2; }
 }
-
 @media (max-width: 768px) {
   #faction-studio-app { padding: 10px; }
   .studio-title { font-size: 1.5rem; }
@@ -74,12 +25,7 @@
   #unit-card { grid-column: span 1 !important; }
 }
 
-/* =========================================================
-   PANELS
-   NOTE: .cc-panel is from cc_ui.css.
-   .cc-panel-header maps to .cc-panel-head from cc_ui.css —
-   future HTML pass should rename, but this alias keeps it working.
-   ========================================================= */
+/* ===== Panels ===== */
 .cc-panel-header {
   background: var(--cc-bg-mid);
   padding: 12px 15px;
@@ -91,193 +37,28 @@
   letter-spacing: 1px;
   color: var(--cc-primary);
 }
-
 .panel-content { padding: 15px; }
 
-/* =========================================================
-   BUILDER STEPS
-   ========================================================= */
-.builder-step {
-  border: 1px solid var(--cc-border);
-  border-radius: var(--cc-radius-lg);
-  margin-bottom: 10px;
-  background: rgba(255,255,255,0.02);
-  transition: all 0.2s;
-}
-
-.step-header {
-  padding: 12px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  user-select: none;
-}
-
+/* ===== Builder Steps ===== */
+.builder-step { border: 1px solid var(--cc-border); border-radius: var(--cc-radius-lg); margin-bottom: 10px; background: rgba(255,255,255,0.02); transition: all 0.2s; }
+.step-header { padding: 12px; cursor: pointer; display: flex; align-items: center; gap: 10px; user-select: none; }
 .step-header:hover { background: rgba(255,255,255,0.05); }
 
 .step-number {
-  width: 24px;
-  height: 24px;
-  background: var(--cc-bg-mid);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  font-weight: 900;
-  flex-shrink: 0;
-  transition: all 0.2s;
+  width: 24px; height: 24px; background: var(--cc-bg-mid); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900;
+  flex-shrink: 0; transition: all 0.2s;
 }
 
-.step-title {
-  flex: 1;
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: 12px;
-  font-family: var(--cc-font-mono);
-}
-
-.step-active {
-  border-left: 4px solid var(--cc-primary);
-  background: var(--cc-primary-dim);
-}
-
-.step-active .step-number {
-  background: var(--cc-primary);
-  color: var(--cc-bg);
-}
-
+.step-title { flex: 1; font-weight: 700; text-transform: uppercase; font-size: 12px; font-family: var(--cc-font-mono); }
+.step-active { border-left: 4px solid var(--cc-primary); background: var(--cc-primary-dim); }
+.step-active .step-number { background: var(--cc-primary); color: var(--cc-bg); }
 .step-complete .step-number { background: var(--cc-border-bright); }
 .step-locked { opacity: 0.5; }
+.step-content { padding: 15px; border-top: 1px solid var(--cc-border); }
 
-.step-content {
-  padding: 15px;
-  border-top: 1px solid var(--cc-border);
-}
-
-/* =========================================================
-   TYPE RULE DISPLAY (Step 1)
-   ========================================================= */
-.type-rule-display {
-  background: var(--cc-primary-dim);
-  border: 1px solid rgba(212,130,42,0.3);
-  border-left: 3px solid var(--cc-primary);
-  padding: 10px;
-  margin-top: 10px;
-  border-radius: var(--cc-radius);
-  font-size: 11px;
-  color: var(--cc-text-muted);
-}
-
-.type-rule-display i {
-  color: var(--cc-primary);
-  margin-right: 5px;
-}
-
-/* =========================================================
-   STATS GRID (Step 2)
-   ========================================================= */
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-@media (max-width: 480px) {
-  .stats-grid { grid-template-columns: 1fr; }
-}
-
-/* =========================================================
-   ABILITIES DISPLAY (Steps 3-4)
-   ========================================================= */
-.abilities-display {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--cc-border);
-  border-radius: var(--cc-radius);
-  padding: 12px;
-  margin-top: 15px;
-}
-
-.abilities-label {
-  font-size: 10px;
-  font-weight: 900;
-  color: var(--cc-primary);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 8px;
-  font-family: var(--cc-font-mono);
-}
-
-.abilities-list { min-height: 40px; }
-
-.no-items {
-  font-size: 11px;
-  color: var(--cc-text-muted);
-  font-style: italic;
-}
-
-/* =========================================================
-   STEP HINT
-   ========================================================= */
-.step-hint {
-  font-size: 11px;
-  color: var(--cc-text-muted);
-  margin-bottom: 15px;
-  line-height: 1.5;
-}
-
-/* =========================================================
-   SUPPLEMENTAL ABILITIES FORM (Step 5)
-   ========================================================= */
-.supplemental-form {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid var(--cc-border);
-  border-radius: var(--cc-radius);
-  padding: 15px;
-  margin-bottom: 15px;
-}
-
-.stat-modifier-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  font-size: 11px;
-}
-
-.stat-modifier-grid label {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  text-transform: none;
-  font-weight: normal;
-}
-
-.stat-modifier-grid input[type="checkbox"] {
-  width: auto;
-  margin: 0;
-}
-
-.cc-input-tiny {
-  width: 50px !important;
-  padding: 4px !important;
-  font-size: 11px !important;
-  display: inline-block;
-}
-
-.cc-select-tiny {
-  width: 70px !important;
-  padding: 4px 2px !important;
-  font-size: 11px !important;
-  display: inline-block;
-  background: var(--cc-bg);
-  border: 1px solid var(--cc-border);
-  color: var(--cc-text);
-  border-radius: var(--cc-radius);
-}
-
-.supplemental-item {
+/* ===== Ability & Supplemental Systems ===== */
+.supplemental-item, .ability-item {
   background: rgba(255,255,255,0.05);
   border: 1px solid var(--cc-border);
   border-left: 3px solid var(--cc-primary);
@@ -286,15 +67,9 @@
   margin-bottom: 8px;
   cursor: pointer;
   transition: 0.2s;
-  position: relative;
 }
 
-.supplemental-item:hover {
-  background: rgba(255,255,255,0.1);
-  border-left-color: var(--cc-red);
-}
-
-.supp-type-badge {
+.supp-type-badge, .property-badge {
   display: inline-block;
   background: var(--cc-primary-dim);
   color: var(--cc-primary);
@@ -304,423 +79,35 @@
   font-size: 9px;
   text-transform: uppercase;
   font-weight: 700;
-  margin-left: 5px;
 }
 
-.supp-effect {
-  font-size: 11px;
-  color: var(--cc-text-muted);
-  margin-top: 5px;
-  line-height: 1.4;
-}
+/* ===== Unit Card Preview ===== */
+.unit-card-name { font-family: var(--cc-font-title); font-size: 24px; font-weight: 900; text-transform: uppercase; color: var(--cc-text); margin-bottom: 5px; }
+.unit-card-type { font-family: var(--cc-font-mono); font-size: 12px; color: var(--cc-primary); letter-spacing: 2px; text-transform: uppercase; }
+.unit-card-cost { text-align: center; padding: 10px; border-radius: var(--cc-radius); margin: 10px 0; border: 1px solid var(--cc-border); }
 
-.supp-mods {
-  font-size: 10px;
-  color: var(--cc-primary);
-  margin-top: 5px;
-  font-family: var(--cc-font-mono);
-}
-
-.remove-badge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: var(--cc-red);
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: var(--cc-radius);
-  font-size: 10px;
-  font-weight: 700;
-  opacity: 0;
-  transition: 0.2s;
-}
-
-.supplemental-item:hover .remove-badge { opacity: 1; }
-
-/* =========================================================
-   SUPPLEMENTAL ABILITIES DISPLAY (Unit Card)
-   ========================================================= */
-.supplemental-card {
-  background: var(--cc-primary-dim);
-  border: 1px solid rgba(212,130,42,0.3);
-  border-left: 3px solid var(--cc-primary);
-  padding: 10px;
-  border-radius: var(--cc-radius);
-  margin-bottom: 8px;
-}
-
-.supplemental-card-header {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-bottom: 5px;
-}
-
-.supplemental-card-header strong { color: var(--cc-primary); font-size: 12px; }
-.supp-cost { color: var(--cc-primary); font-size: 11px; font-weight: 700; }
-
-.supplemental-card-effect {
-  font-size: 11px;
-  color: var(--cc-text-muted);
-  line-height: 1.4;
-  margin-top: 5px;
-}
-
-.supplemental-card-mods {
-  font-size: 10px;
-  color: var(--cc-primary);
-  margin-top: 5px;
-  font-weight: 700;
-}
-
-.supplemental-card-mods i { margin-right: 3px; }
-
-/* =========================================================
-   STAT BADGES
-   NOTE: .cc-stat-badge, .cc-stat-label, .cc-stat-value,
-         .stat-q/d/m/r and their -border variants are in cc_ui.css.
-   Only studio layout overrides below.
-   ========================================================= */
-.stat-badge-flex {
-  display: flex;
-  gap: 10px;
-  margin: 15px 0;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-/* =========================================================
-   UNIT CARD PREVIEW
-   ========================================================= */
-.unit-card-preview { color: var(--cc-text); }
-
-.unit-card-header {
-  text-align: center;
-  margin-bottom: 15px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid var(--cc-border);
-}
-
-.unit-card-name {
-  font-family: var(--cc-font-title);
-  font-size: 24px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: var(--cc-text);
-  margin-bottom: 5px;
-}
-
-.unit-card-type {
-  font-family: var(--cc-font-mono);
-  font-size: 12px;
-  color: var(--cc-primary);
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.unit-card-cost {
-  text-align: center;
-  padding: 10px;
-  border-radius: var(--cc-radius);
-  margin: 10px 0;
-  border: 1px solid var(--cc-border);
-}
-
-.cost-label {
-  font-size: 9px;
-  opacity: 0.6;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-family: var(--cc-font-mono);
-}
-
-.cost-value {
-  font-size: 20px;
-  font-weight: 900;
-  color: var(--cc-primary);
-  margin-top: 5px;
-}
-
-.unit-card-section {
-  margin-top: 15px;
-  padding-top: 15px;
-  border-top: 1px solid var(--cc-border);
-}
-
-/* NOTE: .section-label is in cc_ui.css */
-
-.lore-text {
-  font-style: italic;
-  font-size: 12px;
-  color: var(--cc-text-muted);
-  line-height: 1.6;
-  text-align: center;
-  padding: 10px;
-}
-
-.ability-effect {
-  font-size: 11px;
-  color: var(--cc-text-muted);
-  margin-top: 5px;
-  line-height: 1.4;
-}
-
-/* =========================================================
-   SLIDE PANEL
-   NOTE: .cc-slide-panel, .cc-slide-panel-open, .cc-slide-panel-header,
-         .cc-panel-close-btn are all in cc_ui.css.
-   Only studio-specific text color fix below.
-   ========================================================= */
-.cc-slide-panel,
-.cc-slide-panel * { color: var(--cc-text); }
-
-.cc-modal-content { padding: 0; }
-
-/* =========================================================
-   ABILITY CARDS & GRID
-   ========================================================= */
-.ability-grid {
-  display: grid;
-  gap: 10px;
-}
-
-.ability-card {
-  background: var(--cc-bg-soft);
-  border: 1px solid var(--cc-border);
-  padding: 12px;
-  border-radius: var(--cc-radius);
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.ability-card:hover {
-  border-color: var(--cc-primary);
-  background: var(--cc-bg-mid);
-  transform: translateX(4px);
-}
-
-.ability-card-name {
-  font-weight: 900;
-  color: var(--cc-primary);
-  font-size: 12px;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-  font-family: var(--cc-font-mono);
-}
-
-.ability-card-effect {
-  font-size: 11px;
-  color: var(--cc-text-muted);
-  line-height: 1.4;
-}
-
-.category-header {
-  font-size: 11px;
-  font-weight: 900;
-  color: var(--cc-primary);
-  text-transform: uppercase;
-  margin: 15px 0 8px 0;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--cc-border);
-  letter-spacing: 1px;
-  font-family: var(--cc-font-mono);
-}
-
-/* =========================================================
-   FORMS
-   NOTE: .cc-input is in cc_ui.css.
-   .cc-select not in cc_ui.css — kept here.
-   ========================================================= */
+/* ===== Forms & Inputs ===== */
 .cc-select {
-  background: var(--cc-bg);
-  border: 1px solid var(--cc-border);
-  color: var(--cc-text);
-  padding: 10px;
-  border-radius: var(--cc-radius);
-  font-size: 13px;
-  width: 100%;
-  font-family: var(--cc-font-mono);
+  background: var(--cc-bg); border: 1px solid var(--cc-border); color: var(--cc-text);
+  padding: 10px; border-radius: var(--cc-radius); font-size: 13px; width: 100%; font-family: var(--cc-font-mono);
+}
+.cc-input-tiny { width: 50px !important; padding: 4px !important; font-size: 11px !important; display: inline-block; }
+
+label, .small {
+  font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--cc-text-muted);
+  display: block; margin-bottom: 5px; letter-spacing: 1px; font-family: var(--cc-font-mono);
 }
 
-.cc-select:focus {
-  outline: none;
-  border-color: var(--cc-primary);
-}
-
-.import-textarea { min-height: 80px; resize: vertical; }
-.form-group { margin-bottom: 15px; }
-
-label,
-.small {
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--cc-text-muted);
-  display: block;
-  margin-bottom: 5px;
-  letter-spacing: 1px;
-  font-family: var(--cc-font-mono);
-}
-
-/* =========================================================
-   BUTTONS
-   NOTE: Base .btn is in cc_ui.css.
-   These studio-specific variants extend it.
-   ========================================================= */
+/* ===== Buttons ===== */
 .btn-add-small {
-  background: transparent;
-  border: 2px solid var(--cc-primary);
-  color: var(--cc-primary);
-  padding: 12px 20px;
-  border-radius: var(--cc-radius);
-  cursor: pointer;
-  font-weight: 900;
-  font-family: var(--cc-font-mono);
-  text-transform: uppercase;
-  transition: 0.2s;
-  width: 100%;
-  font-size: 12px;
-  letter-spacing: 1px;
+  background: transparent; border: 2px solid var(--cc-primary); color: var(--cc-primary);
+  padding: 12px 20px; border-radius: var(--cc-radius); cursor: pointer;
+  font-weight: 900; font-family: var(--cc-font-mono); text-transform: uppercase;
+  width: 100%; font-size: 12px; letter-spacing: 1px;
 }
+.btn-add-small:hover { background: var(--cc-primary); color: var(--cc-bg); box-shadow: 0 0 15px rgba(212,130,42,0.5); }
 
-.btn-add-small:hover {
-  background: var(--cc-primary);
-  color: var(--cc-bg);
-  box-shadow: 0 0 15px rgba(212,130,42,0.5);
-}
-
-.button-group {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.btn-success {
-  background: var(--cc-green);
-  color: var(--cc-bg);
-  border-color: var(--cc-green);
-}
-
-.btn-success:hover {
-  filter: brightness(1.15);
-  box-shadow: 0 0 15px rgba(90,158,90,0.5);
-}
-
-.btn-danger {
-  background: transparent;
-  border-color: var(--cc-red);
-  color: var(--cc-red);
-}
-
-.btn-danger:hover {
-  background: var(--cc-red);
-  color: #fff;
-  box-shadow: 0 0 15px rgba(196,68,68,0.5);
-}
-
-/* =========================================================
-   ROSTER ITEMS
-   ========================================================= */
-.unit-list { margin: 15px 0; }
-
-.cc-roster-item {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-  padding: 15px;
-  cursor: pointer;
-  transition: 0.2s;
-  border-bottom: 1px solid var(--cc-border);
-  position: relative;
-}
-
-.cc-roster-item:hover {
-  background: var(--cc-primary-dim);
-  border-left: 3px solid var(--cc-primary);
-}
-
-.cc-roster-item:nth-child(even) { background: rgba(255,255,255,0.02); }
-
-.cc-item-selected {
-  background: rgba(212,130,42,0.2) !important;
-  border-left: 4px solid var(--cc-primary) !important;
-  box-shadow: 0 0 15px var(--cc-primary-dim);
-}
-
-.u-name   { font-weight: 700; margin-bottom: 5px; }
-.u-type   { font-size: 10px; color: var(--cc-primary); text-transform: uppercase; letter-spacing: 1px; }
-.unit-cost { font-weight: 900; color: var(--cc-primary); font-size: 14px; }
-
-.import-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--cc-border);
-}
-
-/* =========================================================
-   PROPERTY BADGES
-   ========================================================= */
-.property-badge {
-  display: inline-block;
-  background: var(--cc-primary-dim);
-  color: var(--cc-primary);
-  border: 1px solid var(--cc-primary);
-  padding: 4px 8px;
-  border-radius: var(--cc-radius);
-  font-size: 11px;
-  margin: 2px;
-  text-transform: uppercase;
-  font-weight: 700;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.property-badge:hover {
-  background: var(--cc-primary);
-  color: var(--cc-bg);
-}
-
-.weapon-properties { margin-top: 8px; }
-
-/* =========================================================
-   ABILITY ITEMS
-   ========================================================= */
-.ability-item {
-  background: rgba(255,255,255,0.05);
-  padding: 10px;
-  border-radius: var(--cc-radius);
-  margin-bottom: 5px;
-  font-size: 12px;
-  border-left: 2px solid var(--cc-primary);
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.ability-item:hover { background: rgba(255,255,255,0.1); }
-
-.ability-name {
-  font-weight: 900;
-  color: var(--cc-primary);
-  margin-bottom: 3px;
-  font-family: var(--cc-font-mono);
-}
-
-/* =========================================================
-   EMPTY STATE
-   ========================================================= */
-.cc-empty-state {
-  text-align: center;
-  padding: 60px 20px;
-  opacity: 0.6;
-  color: var(--cc-text-muted);
-}
-
-.cc-empty-state i {
-  font-size: 48px;
-  opacity: 0.3;
-  margin-bottom: 15px;
-  display: block;
-}
+/* ===== Roster Items ===== */
+.cc-roster-item { display: flex; flex-direction: column; padding: 15px; cursor: pointer; border-bottom: 1px solid var(--cc-border); }
+.cc-roster-item:hover { background: var(--cc-primary-dim); border-left: 3px solid var(--cc-primary); }
+.cc-item-selected { background: rgba(212,130,42,0.2) !important; border-left: 4px solid var(--cc-primary) !important; }
