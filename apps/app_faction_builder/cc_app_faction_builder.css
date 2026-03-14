@@ -1,12 +1,7 @@
-/* ================================
+/* ================================================================
    Faction Builder — App-Specific Styles
-   File: coffin/apps/app_faction_builder/cc_app_faction_builder.css
-
-   Relies on:
-     ui/cc_ui.css — :root variables, shell, header, panels, inputs,
-                    buttons, lists, stat badges, stat colors,
-                    field-label, slide panel, loading, print base
-   ================================ */
+   Full Logic Preservation + UI Alignment
+   ================================================================ */
 
 /* ===== Faction Controls Bar ===== */
 .cc-faction-controls {
@@ -23,7 +18,7 @@
   color: var(--cc-text);
   padding: 0.5rem;
   border-radius: var(--cc-radius-lg);
-  font-family: var(--cc-font-body);
+  font-family: var(--cc-font-mono); /* Space Mono for tactical input */
 }
 
 .cc-faction-controls select:focus,
@@ -42,7 +37,7 @@
   flex: 0 0 140px;
 }
 
-/* ===== Faction Selector with Icon ===== */
+/* ===== Faction Selector & Icons ===== */
 .cc-faction-selector-wrap {
   display: flex;
   align-items: center;
@@ -59,34 +54,20 @@
   flex-shrink: 0;
 }
 
-/* ===== Faction Icon ===== */
 .cc-faction-icon {
   object-fit: contain;
   flex-shrink: 0;
-  filter: drop-shadow(0 0 5px var(--faction-color, rgba(212,130,42,0.5)))
-          brightness(1.1);
+  filter: drop-shadow(0 0 5px var(--faction-color, rgba(212,130,42,0.5))) brightness(1.1);
   transition: filter 0.2s;
 }
 
-.cc-panel-title-with-icon {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.detail-header-left {
+.cc-panel-title-with-icon, .detail-header-left, .cc-saved-roster-faction-badge {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
-.cc-saved-roster-faction-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-/* ===== Three-Column Layout ===== */
+/* ===== Three-Column Layout Mechanics ===== */
 .cc-faction-builder {
   display: grid;
   grid-template-columns: 300px 1fr 300px;
@@ -96,89 +77,85 @@
   padding: 0 1rem 1rem 1rem;
 }
 
-.cc-faction-sidebar,
-.cc-faction-main,
-.cc-faction-roster {
+.cc-faction-sidebar, .cc-faction-main, .cc-faction-roster {
   min-width: 0;
   height: 100%;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-.cc-faction-sidebar  .cc-panel,
-.cc-faction-main     .cc-panel,
-.cc-faction-roster   .cc-panel {
+.cc-faction-sidebar .cc-panel, .cc-faction-main .cc-panel, .cc-faction-roster .cc-panel {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
 
-.cc-faction-sidebar  .cc-body,
-.cc-faction-main     .cc-body,
-.cc-faction-roster   .cc-body {
+.cc-faction-sidebar .cc-body, .cc-faction-main .cc-body, .cc-faction-roster .cc-body {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
 }
+
+/* ===== Unit Detail & Price Tag ===== */
 .cc-unit-header-row {
   display: flex;
-  justify-content: space-between; /* Pushes title left, cost right */
+  justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 1rem;
 }
-/* ===== Unit Detail ===== */
+
 .cc-unit-detail { 
   padding: 1.25rem; 
-  /* Added Parchment Background */
   background-image: url('https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/bg_dark_tile.png');
   background-repeat: repeat;
   background-position: center;
-  /* Optional: Ensure a dark border/radius matches the app style */
   border-radius: var(--cc-radius-lg);
+  border: 1px solid var(--cc-border);
 }
 
 .cc-detail-title {
-  font-size: 1.5rem; /* Increased slightly for impact */
+  font-family: var(--cc-font-title); /* Cinzel */
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--cc-text);
   text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
   line-height: 1.1;
 }
+
 .cc-detail-sub {
+  font-family: var(--cc-font-mono);
   font-size: 0.8rem;
   color: var(--cc-text-muted);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
-/* The Price Tag Container */
 .cc-detail-cost {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000; /* Dark text for contrast on the tag */
+  color: #000;
   font-size: 1.2rem;
   font-weight: 900;
 }
 
-/* The FontAwesome Tag Background */
 .cc-detail-cost i {
-  font-size: 3.5rem; /* Large enough to act as a background */
-  color: var(--cc-primary); /* The color of your tag */
+  font-size: 3.5rem;
+  color: var(--cc-primary);
   filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
 }
 
-/* Positioning the text ON the tag */
 .cc-detail-cost .cost-value {
   position: absolute;
-  /* Adjust these to center the text on the wide part of the tag */
   top: 55%; 
   left: 50%;
   transform: translate(-40%, -50%); 
   pointer-events: none;
   white-space: nowrap;
-   
+  font-family: var(--cc-font-title);
+}
+
 .u-lore {
   font-style: italic;
   color: var(--cc-text-muted);
@@ -202,57 +179,22 @@
   line-height: 1.5;
   margin-top: 1rem;
 }
-
 .cc-warning-bar strong { color: #ffb3b3; }
 
-/* ===== At-limit library items ===== */
-.cc-list-item-at-limit {
-  opacity: 0.5;
-  cursor: default !important;
-}
+/* ===== Interactive Lists & States ===== */
+.cc-list-item-at-limit { opacity: 0.5; cursor: default !important; }
+.cc-list-item-at-limit:hover { background: inherit !important; border-color: var(--cc-border) !important; }
 
-.cc-list-item-at-limit:hover {
-  background: inherit !important;
-  border-color: var(--cc-border) !important;
-}
-
-/* ===== Stat Badges ===== */
-/* NOTE: .cc-stat-badge, .cc-stat-label, .cc-stat-value,
-   .stat-q/d/m/r and -border variants are all in cc_ui.css. */
-
-.stat-badge-flex {
-  display: flex;
-  gap: 6px;
-  flex-wrap: nowrap;
-  margin: 12px 0;
-  overflow-x: auto;
-}
-
+.stat-badge-flex { display: flex; gap: 6px; flex-wrap: nowrap; margin: 12px 0; overflow-x: auto; }
 .stat-badge-flex.compact { gap: 4px; margin: 6px 0; }
-
-/* Compact size overrides */
 .cc-stat-badge.compact { min-width: 34px; }
 .cc-stat-badge.compact .cc-stat-value { font-size: 0.75rem; }
+.stat-modified { box-shadow: 0 0 6px rgba(201,162,39,0.5); border-color: var(--cc-gold) !important; }
 
-.stat-modified {
-  box-shadow: 0 0 6px rgba(201,162,39,0.5);
-  border-color: var(--cc-gold) !important;
-}
-
-/* ===== Ability Links ===== */
-.ability-link {
-  cursor: pointer;
-  color: var(--cc-primary);
-  text-decoration: underline dotted;
-  text-underline-offset: 2px;
-  transition: color 0.15s;
-}
-
+.ability-link { cursor: pointer; color: var(--cc-primary); text-decoration: underline dotted; text-underline-offset: 2px; }
 .ability-link:hover { color: var(--cc-primary-hover); }
 
-/* NOTE: .cc-field-label is in cc_ui.css */
-
-/* ===== Upgrade Rows ===== */
+/* Upgrade Rows */
 .cc-upgrade-row {
   display: flex;
   justify-content: space-between;
@@ -267,347 +209,81 @@
   transition: all 0.15s;
 }
 
-.cc-upgrade-row:hover {
-  background: rgba(255,255,255,0.07);
-  border-color: var(--cc-primary);
-}
-
-.cc-upgrade-row.selected {
-  background: var(--cc-primary-dim);
-  border-color: var(--cc-primary);
-}
+.cc-upgrade-row:hover { background: rgba(255,255,255,0.07); border-color: var(--cc-primary); }
+.cc-upgrade-row.selected { background: var(--cc-primary-dim); border-color: var(--cc-primary); }
 
 .cc-upgrade-check {
-  width: 18px;
-  height: 18px;
-  min-width: 18px;
+  width: 18px; height: 18px; min-width: 18px;
   border: 2px solid var(--cc-border);
   border-radius: var(--cc-radius);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 13px;
-  color: var(--cc-primary);
-  margin-right: 0.5rem;
-  background: rgba(255,255,255,0.04);
-  transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--cc-primary);
+  margin-right: 0.5rem; background: rgba(255,255,255,0.04);
 }
 
-.cc-upgrade-row.selected .cc-upgrade-check {
-  border-color: var(--cc-primary);
-  background: var(--cc-primary-dim);
-}
-
-/* ===== Roster Grid View ===== */
-.cc-roster-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 0.75rem;
-  padding: 0.5rem;
-}
-
+/* ===== Grid & List Views ===== */
+.cc-roster-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.75rem; padding: 0.5rem; }
 .cc-roster-grid-item {
   background: rgba(255,255,255,0.03);
   border: 1px solid var(--cc-border);
   border-radius: var(--cc-radius-lg);
-  padding: 0.75rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
+  padding: 0.75rem; cursor: pointer; position: relative;
 }
+.cc-roster-grid-item:hover { background: rgba(255,255,255,0.08); border-color: var(--cc-primary); }
+.cc-roster-grid-item.active { background: var(--cc-primary-dim); border-color: var(--cc-primary); }
 
-.cc-roster-grid-item:hover {
-  background: rgba(255,255,255,0.08);
-  border-color: var(--cc-primary);
-}
-
-.cc-roster-grid-item.active {
-  background: var(--cc-primary-dim);
-  border-color: var(--cc-primary);
-}
-
-.cc-roster-grid-item .grid-item-name {
-  font-weight: 700;
-  font-size: 0.88rem;
-  margin-bottom: 0.2rem;
-  color: var(--cc-text);
-  padding-right: 22px;
-}
-
-.cc-roster-grid-item .grid-item-type {
-  font-size: 0.7rem;
-  color: var(--cc-text-muted);
-  text-transform: uppercase;
-  margin-bottom: 0.5rem;
-}
-
-.grid-item-version {
-  font-size: 0.72rem;
-  color: var(--cc-primary);
-  font-weight: 600;
-  margin-bottom: 0.2rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cc-roster-grid-item .grid-item-delete {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: rgba(196,68,68,0.8);
-  border: none;
-  color: #fff;
-  padding: 2px 5px;
-  border-radius: var(--cc-radius);
-  cursor: pointer;
-  font-size: 0.7rem;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.cc-roster-grid-item:hover .grid-item-delete { opacity: 1; }
-
-.cc-roster-grid-item .grid-item-abilities {
-  margin-top: 0.5rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-}
-
-/* ===== Roster List View ===== */
 .cc-roster-list-item {
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--cc-border);
-  cursor: pointer;
-  transition: background 0.15s;
-  position: relative;
+  display: flex; flex-direction: column; gap: 0.4rem; padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--cc-border); cursor: pointer; position: relative;
 }
-
-.cc-roster-list-item:hover  { background: rgba(255,255,255,0.05); }
+.cc-roster-list-item:hover { background: rgba(255,255,255,0.05); }
 .cc-roster-list-item.active { background: var(--cc-primary-dim); }
 
-.roster-list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+/* Shared Roster Items */
+.grid-item-name, .roster-list-name { font-weight: 700; color: var(--cc-text); }
+.grid-item-type, .roster-list-type { font-size: 0.7rem; color: var(--cc-text-muted); text-transform: uppercase; }
+.roster-list-cost { font-weight: 700; color: var(--cc-primary); }
+
+.grid-item-delete, .roster-list-delete {
+  position: absolute; background: rgba(196,68,68,0.8);
+  border: none; color: #fff; padding: 2px 6px; border-radius: var(--cc-radius);
+  cursor: pointer; font-size: 0.7rem; opacity: 0; transition: opacity 0.2s;
+}
+.cc-roster-grid-item:hover .grid-item-delete, .cc-roster-list-item:hover .roster-list-delete { opacity: 1; }
+
+/* ===== Tags & Status ===== */
+.ability-tag, .ability-tag-small {
+  display: inline-block; background: var(--cc-primary-dim);
+  border: 1px solid rgba(212,130,42,0.3); color: var(--cc-primary-hover);
+  padding: 2px 7px; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
 }
 
-.roster-list-name  { font-weight: 700; font-size: 0.95rem; color: var(--cc-text); }
-.roster-list-type  { font-size: 0.7rem; color: var(--cc-text-muted); text-transform: uppercase; letter-spacing: .04em; }
-.roster-list-cost  { font-weight: 700; color: var(--cc-primary); font-size: 1rem; white-space: nowrap; }
-
-.roster-list-abilities {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  margin-top: 2px;
-}
-
-.roster-list-delete {
-  position: absolute;
-  top: 0.6rem;
-  right: 0.6rem;
-  background: rgba(196,68,68,0.7);
-  border: none;
-  color: #fff;
-  padding: 2px 6px;
-  border-radius: var(--cc-radius);
-  cursor: pointer;
-  font-size: 0.7rem;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.cc-roster-list-item:hover .roster-list-delete { opacity: 1; }
-
-/* ===== Ability Tags ===== */
-.ability-tag {
-  display: inline-block;
-  background: var(--cc-primary-dim);
-  border: 1px solid rgba(212,130,42,0.3);
-  color: var(--cc-primary-hover);
-  padding: 2px 7px;
-  border-radius: 999px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  line-height: 1.4;
-}
-
-.ability-tag:hover {
-  background: rgba(212,130,42,0.25);
-  border-color: var(--cc-primary);
-  color: var(--cc-text);
-}
-
-.ability-tag-small {
-  display: inline-block;
-  background: rgba(212,130,42,0.1);
-  border: 1px solid rgba(212,130,42,0.25);
-  color: var(--cc-primary-hover);
-  padding: 1px 5px;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.15s;
-  line-height: 1.4;
-}
-
-.ability-tag-small:hover {
-  background: rgba(212,130,42,0.2);
-  border-color: var(--cc-primary);
-}
-
-/* ===== Login Status Bar ===== */
 .cc-login-status {
-  text-align: center;
-  padding: 5px 12px;
-  margin: 0 1rem 0.5rem;
-  background: rgba(0,0,0,0.4);
-  border: 1px solid var(--cc-border);
-  border-radius: var(--cc-radius);
-  font-size: 11px;
-  color: var(--cc-text-muted);
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-family: var(--cc-font-mono);
+  text-align: center; padding: 5px 12px; margin: 0 1rem 0.5rem;
+  background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius); font-size: 11px; color: var(--cc-text-muted);
+  text-transform: uppercase; font-family: var(--cc-font-mono);
 }
 
-.cc-login-status.logged-in {
-  color: var(--cc-green);
-  border-color: rgba(90,158,90,0.3);
-}
+.cc-roster-view-toggle { display: flex; gap: 0.25rem; padding: 0.2rem; background: rgba(0,0,0,0.3); border-radius: var(--cc-radius); }
+.cc-roster-view-toggle button { background: transparent; border: none; color: var(--cc-text-muted); cursor: pointer; padding: 4px 8px; }
+.cc-roster-view-toggle button.active { background: var(--cc-primary); color: var(--cc-bg); }
 
-.cc-login-status.logged-out {
-  color: var(--cc-gold);
-  border-color: rgba(201,162,39,0.3);
-}
-
-/* ===== Roster View Toggle ===== */
-.cc-roster-view-toggle {
-  display: flex;
-  gap: 0.25rem;
-  padding: 0.2rem;
-  background: rgba(0,0,0,0.3);
-  border-radius: var(--cc-radius);
-}
-
-.cc-roster-view-toggle button {
-  background: transparent;
-  border: none;
-  color: var(--cc-text-muted);
-  padding: 4px 8px;
-  cursor: pointer;
-  border-radius: var(--cc-radius);
-  transition: all 0.15s;
-}
-
-.cc-roster-view-toggle button:hover { color: var(--cc-primary); }
-
-.cc-roster-view-toggle button.active {
-  background: var(--cc-primary);
-  color: var(--cc-bg);
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 1200px) {
-  .cc-faction-builder { grid-template-columns: 250px 1fr 250px; }
-}
-
+/* ===== Responsive & List Mode Logic ===== */
 @media (max-width: 992px) {
-  .cc-faction-builder {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto auto;
-    height: auto;
-    min-height: 0;
-  }
-
-  .cc-faction-sidebar,
-  .cc-faction-main,
-  .cc-faction-roster {
-    height: auto;
-    max-height: 60vh;
-  }
+  .cc-faction-builder { grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto; }
+  .cc-faction-sidebar, .cc-faction-main, .cc-faction-roster { height: auto; max-height: 60vh; }
 }
 
-@media (max-width: 768px) {
-  .cc-faction-controls { flex-direction: column; }
-
-  .cc-faction-controls select,
-  .cc-faction-controls input,
-  .cc-faction-selector-wrap {
-    width: 100%;
-    flex: 1 1 auto !important;
-  }
-
-  .cc-faction-selector-wrap select#cc-faction-selector {
-    flex: 1 1 auto;
-    width: 100%;
-  }
-
-  .cc-roster-grid { grid-template-columns: 1fr; }
-}
-
-/* ===== Print ===== */
-/* NOTE: Global print reset is in cc_print.css.
-   Only faction-builder-specific print overrides here. */
-@media print {
-  .cc-faction-controls,
-  .cc-login-status,
-  .cc-roster-view-toggle { display: none !important; }
-
-  .cc-faction-builder {
-    display: block !important;
-    height: auto !important;
-  }
-
-  .cc-faction-sidebar,
-  .cc-faction-roster { display: none !important; }
-
-  .cc-faction-main {
-    display: block !important;
-    width: 100% !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-}
-
-/* ===== List Mode (single-column layout) ===== */
-.cc-faction-builder.cc-list-mode {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto auto;
-  height: auto !important;
-  min-height: 0;
-}
-
-.cc-faction-builder.cc-list-mode .cc-faction-roster {
-  grid-row: 1;
-  grid-column: 1;
-  height: auto;
-  min-height: 120px;
-  overflow-y: visible;
-}
-
-.cc-faction-builder.cc-list-mode .cc-faction-main {
-  grid-row: 2;
-  grid-column: 1;
-  height: auto;
-  overflow-y: visible;
-}
-
-.cc-faction-builder.cc-list-mode .cc-faction-sidebar {
-  grid-row: 3;
-  grid-column: 1;
-  height: auto;
-  overflow-y: visible;
-}
-
+.cc-faction-builder.cc-list-mode { display: grid; grid-template-columns: 1fr; grid-template-rows: auto auto auto; height: auto !important; }
+.cc-faction-builder.cc-list-mode .cc-faction-roster { grid-row: 1; }
+.cc-faction-builder.cc-list-mode .cc-faction-main { grid-row: 2; }
+.cc-faction-builder.cc-list-mode .cc-faction-sidebar { grid-row: 3; }
 .cc-faction-builder.cc-list-mode .cc-panel { height: auto !important; }
-.cc-faction-builder.cc-list-mode .cc-body  { max-height: none !important; overflow-y: visible !important; }
+.cc-faction-builder.cc-list-mode .cc-body { max-height: none !important; overflow-y: visible !important; }
+
+@media print {
+  .cc-faction-controls, .cc-login-status, .cc-roster-view-toggle { display: none !important; }
+  .cc-faction-builder { display: block !important; height: auto !important; }
+  .cc-faction-sidebar, .cc-faction-roster { display: none !important; }
+}
