@@ -482,6 +482,12 @@
         // Decorative overlay layers must NEVER intercept pointer events —
         // if they do, clicks on the Leaflet rectangles underneath are swallowed.
         ".cc-lens-chromatic,.cc-lens-glare,.cc-frame-overlay,.cc-frame-image{pointer-events:none!important;}" +
+        // THE CRITICAL FIX: scroll track divs are 900px wide / 560px tall and
+        // physically cover the lens area at z-index 60.  The tracks themselves
+        // don't need to receive pointer events — only the knob buttons inside
+        // them do.  Making tracks click-through lets Leaflet see all clicks.
+        ".cc-scroll-vertical,.cc-scroll-horizontal{pointer-events:none!important;}" +
+        ".cc-scroll-knob{pointer-events:auto!important;z-index:601!important;touch-action:none!important;}" +
         // Prevent native browser image-drag ghost from any img inside the map
         ".cc-cm-mapwrap img{-webkit-user-drag:none!important;user-drag:none!important;" +
         "user-select:none!important;-webkit-user-select:none!important;pointer-events:none!important;}" +
@@ -927,6 +933,12 @@
           );
 
           bindKnobs();
+
+          // ── DIAGNOSTIC: confirms whether any pointer events reach the lens ──
+          // Remove once hitboxes are confirmed working.
+          ui.lensMapEl.addEventListener("pointerdown", function (e) {
+            console.log("LENS POINTERDOWN — target:", e.target.tagName, e.target.className || e.target.nodeName);
+          });
 
           // Two frames: let CSS apply and containers reach their final sizes
           return nextFrame().then(nextFrame);
