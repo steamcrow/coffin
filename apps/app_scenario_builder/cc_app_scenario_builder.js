@@ -572,15 +572,32 @@ window.CC_APP = {
       _leafletReady = true;
     }
 
-    // Load the canyon map app to get CC_HITBOXES (location bounding boxes). Safe to call multiple times.
+    // HITBOXES embedded directly — avoids blob: scripts blocked by CSP.
+    const EMBEDDED_HITBOXES = {
+      'bandit-buck':[1550,956,1668,1160],'bayou-city':[1175,2501,1386,2767],
+      'camp-coffin':[2727,2051,2822,2142],'cowtown':[2172,2112,2332,2396],
+      'crackpits':[2628,1628,2816,1968],'deerhoof':[3112,2130,3329,2412],
+      'diablo':[505,1432,716,1698],'dustbuck':[1986,2286,2156,2522],
+      'fool-boot':[2408,1132,2512,1224],'fort-plunder':[3348,1209,3631,1427],
+      'fortune':[2887,1284,3121,1567],'ghost-mountain':[2597,205,2849,489],
+      'gore-mule-drop':[2872,1600,3092,2076],'grade-grind':[2486,1432,2598,1548],
+      'heckweed':[2312,1824,2440,1944],'huck':[3332,2569,3550,2749],
+      'kraise':[1995,1270,2193,1527],'little-rica':[2964,500,3182,784],
+      'lost-yots':[1576,1266,1958,1586],'martygrail':[2392,1620,2520,1748],
+      'mindshaft':[3112,804,3388,1164],'pallor':[1616,1824,1996,1924],
+      'plata':[2513,916,2765,1089],'quinne-jimmy':[1694,801,1852,1157],
+      'ratsville':[1452,1968,1644,2194],'rey':[34,1899,163,2028],
+      'river-city':[1102,1607,1280,1854],'sangr':[1086,1219,1257,1527],
+      'santos-grin':[1185,1898,1396,2176],'silverpit':[2128,1548,2294,1762],
+      'skull-water':[1609,492,1841,701],'splitglass-arroyo':[2605,1138,2859,1427],
+      'tin-flats':[1374,1258,1512,1608],'tzulto':[2229,1334,2447,1526],
+      'widowflow':[1316,1630,2078,1798],'witches-roost':[3767,2130,3965,2495]
+    };
+
     async function ensureHitboxes() {
       if (window.CC_HITBOXES) return window.CC_HITBOXES;
-      try {
-        await loadScriptDynamic(MAP_APP_URL);
-      } catch (e) {
-        console.warn('⚠️ Could not load map app for hitboxes:', e);
-      }
-      return window.CC_HITBOXES || {};
+      window.CC_HITBOXES = EMBEDDED_HITBOXES;
+      return EMBEDDED_HITBOXES;
     }
 
     // Fetch and cache the canyon map JSON (image dimensions + location bounds).
@@ -1591,6 +1608,24 @@ window.CC_APP = {
           }
         }
 
+        // ── REQUIRED LOCATION TYPE GATE ─────────────────────────────────────
+        // Hard block: if the vault scenario requires a rail location and this
+        // location has no rail archetype/features, apply -10 penalty.
+        if (allowedTypes.length > 0 && locProfile.archetype) {
+          const archLower = locProfile.archetype.toLowerCase();
+          const featLower = (locProfile.features || []).map(function(f) { return f.toLowerCase(); });
+          const RAIL_NEEDED  = ['rail_stop','rail_infrastructure','rail_grade','rail_line','rail'];
+          const RAIL_FEATS   = ['railterminus','railgrade','brakescars','railyard','trestle','railspur','railstop','railbridge'];
+          const railRequired = allowedTypes.some(function(t) { return RAIL_NEEDED.indexOf(t) >= 0; });
+          const locHasRail   = RAIL_NEEDED.some(function(r) { return archLower.indexOf(r) >= 0; })
+                           || featLower.some(function(f) { return RAIL_FEATS.some(function(r) { return f.indexOf(r) >= 0; }); });
+          if (railRequired && !locHasRail) {
+            score -= 10; // Hard block: rail scenario at non-rail location
+          } else if (!allowedTypes.some(function(t) { return archLower.indexOf(t) >= 0 || t.indexOf(archLower) >= 0; })) {
+            score -= 4;  // Soft penalty: type mismatch
+          }
+        }
+
         // ── TAG OVERLAP (generic, lowest weight) ────────────────────────────
         const sTags = (s.tags || []).map(t => t.toLowerCase());
         score += sTags.filter(t => allTags.includes(t)).length * 2;
@@ -1843,20 +1878,32 @@ window.CC_APP = {
           return 'Failing Livestock Barn';
         if (features.includes('Mineshaft') || features.includes('Mine'))
           return 'Collapsing Mineshaft Entrance';
-        if (arch === 'arroyo')          return 'Eroded Canyon Wall';
-        if (arch === 'rail_grade'
-         || arch === 'rail_terminus'
-         || arch === 'rail_depot')      return 'Failing Trestle';
-        if (arch === 'boomtown')
+        if (arch === 'glass_canyon')    return 'Eroded Glass Canyon Wall';
+        if (arch === 'rail_grade' || arch === 'rail_infrastructure' || arch === 'rail_stop' || arch === 'rail')
+                                        return 'Failing Trestle';
+        if (arch === 'boomtown' || arch === 'trade_town' || arch === 'shantytown' || arch === 'bayou')
           return randomChoice(['Condemned Boomtown Building', 'Collapsing Storefront', 'Leaning Boomtown Tower']);
-        if (arch === 'ruins')
+        if (arch === 'ruins' || arch === 'tzul_ruins')
           return randomChoice(['Crumbling Ruin', 'Collapsed Settlement Wall', 'Unstable Stone Tower']);
-        if (arch === 'outpost')         return 'Condemned Outpost Watchtower';
-        if (arch === 'settlement')      return 'Failing Settlement Hall';
-        if (arch === 'mine')            return 'Collapsing Mineshaft Entrance';
-        if (arch === 'wilderness')      return 'Unstable Rocky Overhang';
-        if (arch === 'canyon')          return 'Eroded Canyon Ledge';
-        if (arch === 'frontier')        return 'Condemned Frontier Shack';
+        if (arch === 'outpost' || arch === 'remote_post')
+                                        return 'Condemned Outpost Watchtower';
+        if (arch === 'fortress')        return 'Collapsed Fort Wall';
+        if (arch === 'headquarters')    return 'Damaged Command Structure';
+        if (arch === 'frontier_settlement' || arch === 'ranch')
+                                        return 'Failing Settlement Hall';
+        if (arch === 'mine' || arch === 'mine_settlement')
+                                        return 'Collapsing Mineshaft Entrance';
+        if (arch === 'wasteland' || arch === 'badlands' || arch === 'claim')
+                                        return 'Unstable Rocky Overhang';
+        if (arch === 'frontier' || arch === 'waystation')
+                                        return 'Condemned Frontier Shack';
+        if (arch === 'haunted_peak')    return 'Crumbling Peak Formation';
+        if (arch === 'occult_territory' || arch === 'cursed_scrubland')
+                                        return 'Unstable Ritual Structure';
+        if (arch === 'thyr_field')      return 'Crumbling Thyr Formation';
+        if (arch === 'dangerous_river') return 'Collapsing River Crossing';
+        if (arch === 'landmark')        return 'Crumbling Historic Structure';
+        if (arch === 'religious_site')  return 'Collapsing Chapel Ruin';
         return randomChoice([
           'Condemned Building',
           'Failing Outpost Wall',
@@ -1893,17 +1940,38 @@ window.CC_APP = {
           if (feats.includes('Stockyard'))     return 'Stockyard Brand Post';
           if (feats.includes('WaterTower'))    return 'Water Rights Notice';
           if (feats.includes('Corral') || feats.includes('Barn')) return 'Grazing Rights Post';
-          if (arch === 'boomtown')   return randomChoice(['Town Sign', 'Block Claim Board', 'Boomtown Deed Post']);
-          if (arch === 'arroyo')     return randomChoice(['Canyon Survey Stake', 'Trail Claim Cairn', 'Canyon Boundary Post']);
-          if (arch === 'rail_grade') return 'Rail Right-of-Way Stake';
-          if (arch === 'rail_terminus' || arch === 'rail_depot') return 'Station Boundary Post';
-          if (arch === 'ruins')      return randomChoice(['Salvage Claim Stake', 'Ruins Survey Post', 'Rubble Claim Marker']);
-          if (arch === 'mine')       return randomChoice(['Mine Claim Stake', 'Assay Notice Post', 'Mineral Rights Stake']);
-          if (arch === 'settlement') return randomChoice(['Town Sign', 'Settlement Charter Post', 'Boundary Marker']);
-          if (arch === 'outpost')    return 'Outpost Boundary Sign';
-          if (arch === 'wilderness') return randomChoice(['Survey Stake', 'Pioneer Claim Post', 'Boundary Cairn']);
-          if (arch === 'canyon')     return randomChoice(['Canyon Survey Post', 'Trail Claim Cairn', 'Boundary Stone']);
-          if (arch === 'frontier')   return randomChoice(['Frontier Claim Stake', 'Pioneer Survey Post', 'Homestead Sign']);
+          if (arch === 'boomtown' || arch === 'trade_town' || arch === 'shantytown' || arch === 'bayou')
+            return randomChoice(['Town Sign', 'Block Claim Board', 'Boomtown Deed Post']);
+          if (arch === 'rail_grade' || arch === 'rail_infrastructure')
+            return 'Rail Right-of-Way Stake';
+          if (arch === 'rail_stop')
+            return 'Station Boundary Post';
+          if (arch === 'rail')
+            return randomChoice(['Rail Right-of-Way Stake', 'Station Boundary Post', 'Grade Survey Stake']);
+          if (arch === 'frontier_settlement' || arch === 'ranch')
+            return randomChoice(['Town Sign', 'Settlement Charter Post', 'Boundary Marker']);
+          if (arch === 'frontier' || arch === 'waystation')
+            return randomChoice(['Frontier Claim Stake', 'Pioneer Survey Post', 'Homestead Sign']);
+          if (arch === 'outpost' || arch === 'fortress' || arch === 'headquarters' || arch === 'remote_post')
+            return 'Outpost Boundary Sign';
+          if (arch === 'mine' || arch === 'mine_settlement')
+            return randomChoice(['Mine Claim Stake', 'Assay Notice Post', 'Mineral Rights Stake']);
+          if (arch === 'wasteland' || arch === 'badlands' || arch === 'claim')
+            return randomChoice(['Survey Stake', 'Pioneer Claim Post', 'Boundary Cairn']);
+          if (arch === 'glass_canyon')
+            return randomChoice(['Canyon Survey Stake', 'Trail Claim Cairn', 'Glass Canyon Boundary Post']);
+          if (arch === 'dangerous_river')
+            return randomChoice(['River Right-of-Way Stake', 'Crossing Marker', 'Water Claim Post']);
+          if (arch === 'occult_territory' || arch === 'cursed_scrubland' || arch === 'haunted_peak')
+            return randomChoice(['Ritual Boundary Marker', 'Sacred Ground Notice', 'Warning Post']);
+          if (arch === 'religious_site')
+            return randomChoice(['Sacred Ground Notice', 'Parish Boundary Marker', 'Faction Altar Claim']);
+          if (arch === 'thyr_field')
+            return randomChoice(['Hazard Notice Post', 'Thyr Warning Stake', 'Danger Marker']);
+          if (arch === 'ruins' || arch === 'tzul_ruins')
+            return randomChoice(['Salvage Claim Stake', 'Ruins Survey Post', 'Rubble Claim Marker']);
+          if (arch === 'landmark')
+            return randomChoice(['Historic Marker', 'Canyon Survey Monument', 'Lore Anchor Stone']);
           return randomChoice(['Claim Stake', 'Survey Post', 'Boundary Sign', 'Deed Notice Board']);
         })(),
         command_structure:  (() => {
@@ -1914,9 +1982,19 @@ window.CC_APP = {
           if (feats.includes('CompanyOffice')) return 'Command Office';
           if (feats.includes('Jailhouse'))   return 'Command Post (Jailhouse)';
           if (feats.includes('Ruins'))       return 'Ruined Command Post';
-          if (arch === 'wilderness' || arch === 'arroyo') return 'Field Command Tent';
-          if (arch === 'boomtown')   return 'Command Tower';
-          if (arch === 'rail_grade') return 'Rail Command Car';
+          if (arch === 'wasteland' || arch === 'badlands' || arch === 'glass_canyon' || arch === 'claim')
+            return 'Field Command Tent';
+          if (arch === 'frontier' || arch === 'frontier_settlement' || arch === 'ranch' || arch === 'waystation')
+            return 'Field Command Tent';
+          if (arch === 'dangerous_river') return 'Field Command Tent';
+          if (arch === 'boomtown' || arch === 'trade_town' || arch === 'shantytown' || arch === 'bayou')
+            return 'Command Tower';
+          if (arch === 'headquarters') return 'Ranger HQ Command Centre';
+          if (arch === 'fortress')     return 'Command Fortress';
+          if (arch === 'rail_grade' || arch === 'rail_infrastructure') return 'Rail Command Car';
+          if (arch === 'rail_stop' || arch === 'rail')                 return 'Rail Command Car';
+          if (arch === 'haunted_peak' || arch === 'occult_territory')  return 'Ruined Command Post';
+          if (arch === 'religious_site' || arch === 'landmark')        return 'Ruined Command Post';
           return randomChoice(['Command Tower', 'Command Tent', 'Field Command Post']);
         })(),
         thyr_cache:         'Thyr Crystal Cache',
@@ -2087,7 +2165,9 @@ window.CC_APP = {
       // ---- RAIL GATE ----
       // Rail objectives are gated: only score if the location has rail features or a rail archetype.
       const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'rail', 'Rail'];
-      const RAIL_ARCHETYPES = ['rail_grade', 'rail_terminus', 'rail_depot'];
+      // Updated: matched to 170_named_locations.json archetypes
+      // rail_grade kept temporarily — gore-mule-drop uses it until 170 is updated
+      const RAIL_ARCHETYPES = ['rail_stop', 'rail_infrastructure', 'rail_grade', 'rail'];
       const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
                    || RAIL_ARCHETYPES.includes(locProfile?.archetype || '');
       if (!hasRail) {
