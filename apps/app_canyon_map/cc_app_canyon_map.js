@@ -686,12 +686,11 @@
       var vPct = (V_MIN + currentT  * (V_MAX - V_MIN)).toFixed(3);
       var hPct = (H_MIN + currentTx * (H_MAX - H_MIN)).toFixed(3);
       knobStyleEl.textContent =
-        // Position rules (override the static 50% defaults)
+        // Position rules only — pointer-events and z-index live in baseStyle.
+        // The tracks (.cc-scroll-vertical/horizontal) must stay pointer-events:none
+        // so clicks pass through to the Leaflet layer underneath.
         "#cc-scroll-knob-v{top:"  + vPct + "%!important;}" +
         "#cc-scroll-knob-h{left:" + hPct + "%!important;}" +
-        // pointer-events and z-index here so they are ALWAYS last in <head>
-        // and beat the app CSS !important rules regardless of load order.
-        ".cc-scroll-vertical,.cc-scroll-horizontal{pointer-events:auto!important;z-index:600!important;}" +
         ".cc-scroll-knob{pointer-events:auto!important;z-index:601!important;touch-action:none!important;}";
     }
 
