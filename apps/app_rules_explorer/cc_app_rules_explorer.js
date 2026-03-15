@@ -5,8 +5,11 @@
 
 console.log("📘 Rules Explorer app loaded");
 
-window.CC_APP = {
-  async init({ root, ctx }) {
+(function () {
+  var _destroyFn = null;
+
+  async function mount(rootEl, ctx) {
+    var root = rootEl;
     console.log("🚀 Rules Explorer init", ctx);
 
     // ---- LOAD CSS FROM GITHUB ----
@@ -1572,5 +1575,16 @@ window.CC_APP = {
       });
       renderList(searchEl.value);
     });
-  },
-};
+
+    return Promise.resolve();
+  } // end mount()
+
+  window.CC_APP = {
+    init: function (options) {
+      return mount(options.root, options.ctx || {});
+    },
+    destroy: function () {
+      if (typeof _destroyFn === 'function') { _destroyFn(); }
+    }
+  };
+})();
