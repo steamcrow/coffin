@@ -1180,7 +1180,7 @@
   // ── Standard CC_APP interface ───────────────────────────────────────────
  window.CC_APP = {
     init: function (options) {
-      mount(options.root, {});
+      return mount(options.root, {});
     },
     destroy: function () {
       if (typeof _destroyFn === "function") { _destroyFn(); _destroyFn = null; }
