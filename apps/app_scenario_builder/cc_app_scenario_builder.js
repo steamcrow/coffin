@@ -693,7 +693,9 @@ console.log("🎲 Scenario Builder app loaded");
       weapons:          ['fortified_position', 'command_structure', 'barricades'],
       moonshine:        ['scattered_crates', 'cargo_vehicle'],
       rotgut:           ['fouled_resource', 'scattered_crates'],
-      gildren:          ['land_marker', 'command_structure']
+      gildren:          ['land_marker', 'command_structure'],
+      doomshine:        ['dark_ritual', 'tainted_ground', 'profane_altar'],
+      thyr:             ['dark_ritual', 'ritual_site', 'soul_vessel']
     };
 
     const ALL_OBJECTIVE_TYPES = [
@@ -704,7 +706,7 @@ console.log("🎲 Scenario Builder app loaded");
       'fortified_position', 'barricades', 'stored_supplies',
       'ritual_circle', 'tainted_ground', 'sacrificial_focus',
       'collapsing_route', 'fouled_resource', 'unstable_structure',
-      'evacuation_point'
+      'evacuation_point', 'dark_ritual', 'profane_altar', 'soul_vessel'
     ];
 
     // ── Objective marker table — token counts, placement, and allowed interactions ───
@@ -731,7 +733,10 @@ console.log("🎲 Scenario Builder app loaded");
       unstable_structure: { count: '1',    placement: 'Random mid-board',          token: 'Structure marker',              interactions: ['SALVAGE', 'CONTROL', 'COLLAPSE'] },
       collapsing_route:   { count: '1',    placement: 'Divides board in half',     token: 'Route markers at each end',     interactions: ['CROSS', 'BLOCK', 'REINFORCE'] },
       evacuation_point:   { count: '1',    placement: 'Far table edge, center',    token: 'Exit marker',                   interactions: ['REACH', 'ESCAPE'] },
-      fouled_resource:    { count: '2',    placement: 'Scatter near center',       token: 'Contaminated supply tokens',    interactions: ['CONTROL', 'PURGE', 'WEAPONIZE'] }
+      fouled_resource:    { count: '2',    placement: 'Scatter near center',       token: 'Contaminated supply tokens',    interactions: ['CONTROL', 'PURGE', 'WEAPONIZE'] },
+      dark_ritual:        { count: '1',    placement: 'Center board or occult terrain', token: 'Ritual circle marker (5″ radius)', interactions: ['DISRUPT', 'COMPLETE', 'CORRUPT'] },
+      profane_altar:      { count: '1',    placement: 'Elevated or secluded terrain',   token: 'Altar token (large)',             interactions: ['DESTROY', 'ACTIVATE', 'CONTROL'] },
+      soul_vessel:        { count: 'd3',   placement: 'Scattered across board',          token: 'Soul token (glowing)',            interactions: ['CAPTURE', 'RELEASE', 'DESTROY'] }
     };
 
     // ── Victory condition tables ──────────────────────────────────────────────────
@@ -2029,6 +2034,9 @@ console.log("🎲 Scenario Builder app loaded");
         tainted_ground:     'Tainted Ground',
         sacrificial_focus:  'Sacrificial Focus',
         collapsing_route:   'Collapsing Route',
+        dark_ritual:        'The Dark Rite',
+        profane_altar:      'The Profane Altar',
+        soul_vessel:        'Soul Vessels',
         evacuation_point:   'Evacuation Point'
       };
       // Smarter fallback — use location context if available
@@ -2068,6 +2076,9 @@ console.log("🎲 Scenario Builder app loaded");
         tainted_ground:     'Interact at your own risk. Corruption spreads.',
         sacrificial_focus:  'Control or destroy this dark altar.',
         collapsing_route:   'The passage is deteriorating. Hold it open or let it collapse to trap the enemy.',
+        dark_ritual:        'Something is being summoned. Disrupt the rite before completion — or ensure it finishes.',
+        profane_altar:      'An altar to something old and hungry. Destroy it, claim it, or feed it.',
+        soul_vessel:        'Glowing containers drift through the board. Something is trapped inside. Free it or harvest it.',
         fouled_resource:    'Contaminated supplies that are worse than nothing — unless you know what to do with them.',
         unstable_structure: 'The building will not survive the battle. Get what you need from it before it comes down.',
         evacuation_point:   'Reach this location to escape the escalating danger.'
@@ -2135,6 +2146,9 @@ console.log("🎲 Scenario Builder app loaded");
         command_structure:  3,
         cargo_vehicle:      3,
         collapsing_route:   3,
+        dark_ritual:        4,
+        profane_altar:      3,
+        soul_vessel:        3,
         fouled_resource:    2,
         tainted_ground:     3,
         barricades:         2,
@@ -2161,6 +2175,8 @@ console.log("🎲 Scenario Builder app loaded");
 
       // Baseline: Thyr Cache always has a small head-start
       scores['thyr_cache'] += 1.0;
+      // Collapsing Route needs specific context — penalise baseline so it doesn't appear generically
+      scores['collapsing_route'] -= 2.0;
 
       // Plot family default objectives — strong signal
       (plotFamily.default_objectives || []).forEach(t => {
@@ -2213,9 +2229,9 @@ console.log("🎲 Scenario Builder app loaded");
         loot:        ['scattered_crates', 'stored_supplies', 'derailed_cars'],
         steal:       ['cargo_vehicle', 'artifact'],
         raid:        ['scattered_crates', 'stored_supplies'],
-        sabotage:    ['wrecked_engine', 'collapsing_route', 'unstable_structure'],
+        sabotage:    ['wrecked_engine', 'unstable_structure', 'barricades'],
         escape:      ['evacuation_point', 'collapsing_route'],
-        consecrate:  ['ritual_site', 'ritual_circle', 'sacrificial_focus'],
+        consecrate:  ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'dark_ritual', 'profane_altar'],
         convert:     ['captive_entity', 'ritual_components'],
         claim:       ['land_marker', 'artifact'],
         ritual:      ['ritual_site', 'ritual_circle', 'ritual_components', 'sacrificial_focus'],
@@ -2224,8 +2240,8 @@ console.log("🎲 Scenario Builder app loaded");
         territory:   ['land_marker', 'fortified_position'],
         feed:        ['pack_animals', 'captive_entity'],
         nest:        ['land_marker', 'tainted_ground'],
-        survive:     ['evacuation_point', 'collapsing_route'],
-        disrupt:     ['collapsing_route', 'wrecked_engine', 'barricades'],
+        survive:     ['evacuation_point', 'unstable_structure'],
+        disrupt:     ['wrecked_engine', 'barricades', 'unstable_structure'],
       };
 
       (factions || []).forEach(faction => {
@@ -2248,21 +2264,21 @@ console.log("🎲 Scenario Builder app loaded");
         survival:         ['evacuation_point', 'stored_supplies', 'scattered_crates'],
         harmony:          ['captive_entity', 'land_marker'],
         monster_protectors: ['captive_entity', 'pack_animals', 'evacuation_point'],
-        adaptive:         ['collapsing_route', 'unstable_structure'],
+        adaptive:         ['unstable_structure', 'barricades'],
         specialists:      ['artifact', 'ritual_components'],
         ranger:           ['land_marker', 'fortified_position', 'stored_supplies'],
         extraction:       ['scattered_crates', 'stored_supplies', 'thyr_cache', 'derailed_cars'],
         scientific:       ['artifact', 'ritual_components', 'captive_entity'],
         aggressive:       ['command_structure', 'fortified_position', 'wrecked_engine'],
         mercenary:        ['cargo_vehicle', 'stored_supplies', 'artifact'],
-        occult:           ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'thyr_cache'],
+        occult:           ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'thyr_cache', 'dark_ritual', 'profane_altar', 'soul_vessel'],
         territorial:      ['land_marker', 'command_structure', 'fortified_position'],
         opportunist:      ['scattered_crates', 'cargo_vehicle', 'artifact'],
         mobile:           ['evacuation_point', 'collapsing_route', 'cargo_vehicle'],
         corrupting:       ['tainted_ground', 'ritual_circle', 'sacrificial_focus'],
         industrial:       ['wrecked_engine', 'derailed_cars', 'stored_supplies'],
         lawful:           ['command_structure', 'fortified_position', 'barricades'],
-        spiritual:        ['ritual_site', 'ritual_circle', 'thyr_cache'],
+        spiritual:        ['ritual_site', 'ritual_circle', 'thyr_cache', 'dark_ritual', 'soul_vessel'],
         predatory:        ['pack_animals', 'captive_entity', 'land_marker'],
         scavenger:        ['scattered_crates', 'unstable_structure', 'wrecked_engine'],
       };
@@ -3475,7 +3491,11 @@ console.log("🎲 Scenario Builder app loaded");
               + (obj.faction_win_vp ? ' — ' + obj.faction_win_vp : '') + '</div>'
             : '';
 
-          return '<div class="cc-vc-obj" style="border-left:2px solid ' + borderColor + ';margin-bottom:0.75rem;padding-left:0.75rem;">'
+          return '<div class="cc-vc-obj" style="margin-bottom:0.75rem;padding:0.5rem 0.6rem;'
+            + 'background:' + (isPrimary ? 'rgba(255,255,255,0.04)' : 'transparent') + ';'
+            + 'border-radius:3px;'
+            + 'border:1px solid ' + (isPrimary ? id.border : 'transparent') + ';'
+            + '">'
             + '<div class="cc-vc-obj-label" style="color:' + labelColor + ';margin-bottom:0.2rem;">'
             + roleIcon + ' ' + roleLabel + '</div>'
             + '<div class="cc-vc-obj-name" style="font-size:1rem;font-weight:700;margin-bottom:0.3rem;">'
@@ -3500,30 +3520,57 @@ console.log("🎲 Scenario Builder app loaded");
           ? '<p class="cc-quote" style="border-left-color:' + id.color + ';">&ldquo;' + vc.quote + '&rdquo;</p>'
           : '';
 
-        return '<div class="cc-victory-card" style="border-left:4px solid ' + id.color + ';background:linear-gradient(135deg,rgba(0,0,0,0.4) 0%,color-mix(in srgb,' + id.color + ' 6%,transparent) 100%);">'
-          + '<div class="cc-vc-header" style="border-bottom:1px solid ' + id.border + ';padding-bottom:0.6rem;margin-bottom:0.85rem;">'
-          + '<div style="display:flex;align-items:center;gap:0.85rem;">'
+        // Military brief card — top color bar, faction header, objective rows
+        return '<div class="cc-victory-card" style="'
+          + 'border:1px solid ' + id.border + ';'
+          + 'border-top:3px solid ' + id.color + ';'
+          + 'background:rgba(10,8,5,0.85);'
+          + 'border-radius:4px;overflow:hidden;'
+          + 'box-shadow:0 2px 12px rgba(0,0,0,0.5);'
+          + '">'
+          // ── Header band
+          + '<div style="'
+          + 'display:flex;align-items:center;gap:0.85rem;'
+          + 'padding:0.75rem 1rem;'
+          + 'background:linear-gradient(90deg,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.2) 100%);'
+          + 'border-bottom:1px solid ' + id.border + ';'
+          + '">'
           + logoHtml
-          + '<div style="flex:1;">'
-          + '<h5 style="color:' + id.color + ';margin:0;font-size:1.1rem;">' + vc.faction_name + (vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : '') + '</h5>'
-          + (id.tag ? '<div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:2px;">' + id.tag + '</div>' : '')
-          + '</div></div>'
-          + motiveHtml
+          + '<div style="flex:1;min-width:0;">'
+          + '<h5 style="color:' + id.color + ';margin:0;font-size:1.05rem;font-weight:900;letter-spacing:.04em;">'
+          + vc.faction_name + (vc.is_npc ? ' <span class="cc-npc-tag" style="font-size:0.6rem;vertical-align:middle;">NPC</span>' : '') + '</h5>'
+          + (id.tag ? '<div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:1px;">' + id.tag + '</div>' : '')
           + '</div>'
-          + '<div class="cc-vc-objectives">' + objectivesHtml + '</div>'
-          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
-          + '<div class="cc-vc-finale">'
-          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:' + id.color + ';margin-bottom:0.25rem;">Finale — Round 6</div>'
-          + '<div class="cc-vc-obj-name" style="font-weight:700;"><i class="fa fa-bolt" style="color:' + id.color + ';"></i> ' + vc.finale.name + '</div>'
-          + '<p style="font-size:0.87rem;margin:0.25rem 0;">' + vc.finale.desc + '</p>'
-          + '<p class="cc-vp-line" style="font-size:0.82rem;"><i class="fa fa-star" style="color:' + id.color + ';"></i> ' + vc.finale.vp + '</p>'
+          // Classification stamp top-right
+          + '<div style="flex-shrink:0;font-size:0.55rem;letter-spacing:.12em;text-transform:uppercase;'
+          + 'color:' + id.color + ';border:1px solid ' + id.color + ';padding:2px 6px;opacity:.5;">FIELD ORDER</div>'
           + '</div>'
-          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
-          + '<div class="cc-vc-aftermath">'
-          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.4);margin-bottom:0.25rem;">If ' + vc.faction_name + ' Wins</div>'
-          + '<p style="font-size:0.87rem;margin:0.2rem 0;"><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
-          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
-          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
+          // ── Mission brief
+          + (motiveHtml ? '<div style="padding:0.6rem 1rem 0;">' + motiveHtml + '</div>' : '')
+          // ── Objectives
+          + '<div class="cc-vc-objectives" style="padding:0.75rem 1rem 0;">'
+          + objectivesHtml
+          + '</div>'
+          // ── Finale
+          + '<div style="margin:0 1rem;padding:0.65rem 0.75rem;'
+          + 'background:rgba(0,0,0,0.3);border:1px solid ' + id.border + ';border-radius:3px;margin-bottom:0.75rem;">'
+          + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.1em;color:' + id.color + ';margin-bottom:0.3rem;">'
+          + '<i class="fa fa-bolt"></i> Finale — Round 6</div>'
+          + '<div style="font-weight:700;font-size:0.95rem;margin-bottom:0.2rem;">' + vc.finale.name + '</div>'
+          + '<p style="font-size:0.85rem;margin:0 0 0.3rem;color:rgba(255,255,255,0.75);">' + vc.finale.desc + '</p>'
+          + '<span style="font-size:0.8rem;color:' + id.color + ';"><i class="fa fa-star"></i> ' + vc.finale.vp + '</span>'
+          + '</div>'
+          // ── Aftermath footer band
+          + '<div style="'
+          + 'padding:0.65rem 1rem;'
+          + 'background:rgba(0,0,0,0.4);'
+          + 'border-top:1px solid ' + id.border + ';'
+          + '">'
+          + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,0.35);margin-bottom:0.35rem;">'
+          + 'If ' + vc.faction_name + ' Wins</div>'
+          + '<p style="font-size:0.85rem;margin:0.15rem 0;"><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
+          + '<p style="font-size:0.83rem;margin:0.15rem 0;color:rgba(255,255,255,0.6);"><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
+          + '<p style="font-size:0.83rem;margin:0.15rem 0;color:rgba(255,255,255,0.6);"><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
           + quoteHtml
           + '</div>'
           + '</div>';
@@ -3836,9 +3883,6 @@ console.log("🎲 Scenario Builder app loaded");
 
           <!-- OBJECTIVES — always use the rich objective renderer -->
           ${renderObjectivesSection(s.objectives)}
-
-          <!-- TIMELINE EVENTS — Turn Counter export -->
-          ${renderTimelineEvents(s)}
 
           <!-- BOARD SETUP TABLE -->
           ${s.objective_markers?.length ? `
