@@ -427,13 +427,13 @@ window.addEventListener('error', function(e) {
     if (floating && floating.style.position === 'fixed') floating.remove();
   }
 
-  function loadApp(appId) {
-    showPreloader();
-    var appInfo = APPS[appId];
-    if (!appInfo) {
-      console.error('Unknown app:', appId);
-      return;
-    }
+  var appInfo = APPS[appId];
+  if (!appInfo) {
+  console.error('Unknown app:', appId);
+  renderLauncher();
+  return;
+}
+showPreloader();
 
     closeHelpPanel();
 
@@ -505,12 +505,13 @@ window.addEventListener('error', function(e) {
       try { window.CC_APP.destroy(); } catch (_) {}
     }
     currentApp = null;
+
     var appRoot = document.getElementById('cc-app-root');
     if (appRoot) {
-      appRoot.innerHTML = '';
-      appRoot.removeAttribute('data-cc-app');
-      delete appRoot.dataset.ccMounted;
-    }
+    appRoot.innerHTML = '';
+    appRoot.removeAttribute('data-cc-app');
+    appRoot.removeAttribute('data-cc-mounted');
+}
     if (window._scenarioMap) {
       try { window._scenarioMap.remove(); } catch (e) {}
       window._scenarioMap = null;
@@ -546,7 +547,7 @@ window.addEventListener('error', function(e) {
       '#cc-shell-home-btn{transition:opacity .2s ease;}',
       '#cc-shell-home-btn:hover{opacity:1!important;}',
       '.cc-help-btn:hover{color:rgba(255,255,255,.9)!important;border-color:var(--cc-primary,#ff7518)!important;}',
-      '@media(max-width:768px){.app-grid{grid-template-columns:1fr!important;}.cc-app-header{flex-direction:column!important;align-items:flex-start!important;}.cc-app-header button{width:100%;}.#cc-shell-home-btn{width:auto!important;margin-left:0!important;margin-top:.5rem;}}'
+      '@media(max-width:768px){.app-grid{grid-template-columns:1fr!important;}.cc-app-header{flex-direction:column!important;align-items:flex-start!important;}.cc-app-header button{width:100%;}#cc-shell-home-btn{width:auto!important;margin-left:0!important;margin-top:.5rem;}}'
     ].join('');
     document.head.appendChild(style);
   }
@@ -598,7 +599,7 @@ window.addEventListener('error', function(e) {
     if (isBooting) return;
     isBooting = true;
 
-    console.log('cc_loader_core boot()');
+    console.log('🚀 cc_loader_core boot()');
     showPreloader();
 
     setTimeout(function () {
