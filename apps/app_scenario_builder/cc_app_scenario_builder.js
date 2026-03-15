@@ -1523,6 +1523,31 @@ console.log("🎲 Scenario Builder app loaded");
       if (!locHasRailForPlot && scores['ambush_derailment'] !== undefined) {
         scores['ambush_derailment'] = -20;
       }
+      // ── scenario_preferences boost — read ideal_scenarios from faction JSON files ──
+      // Each faction file has scenario_preferences.ideal_scenarios (string array).
+      // We keyword-match these against the plot family name + tags for a soft boost.
+      (factions || []).forEach(function(faction) {
+        var factionFile = gameData.getFaction(faction.id);
+        if (!factionFile || !factionFile.scenario_preferences) return;
+        var ideals = factionFile.scenario_preferences.ideal_scenarios || [];
+        ideals.forEach(function(idealStr) {
+          // Tokenise the ideal scenario string into keywords
+          var keywords = idealStr.toLowerCase()
+            .replace(/[^a-z0-9\s]/g, '')
+            .split(/\s+/)
+            .filter(function(w) { return w.length > 3; });
+          var familyText = (
+            (plotFamily.name || '') + ' ' +
+            (plotFamily.tags || []).join(' ') + ' ' +
+            (plotFamily.default_objectives || []).join(' ')
+          ).toLowerCase();
+          var matchCount = keywords.filter(function(kw) {
+            return familyText.indexOf(kw) >= 0;
+          }).length;
+          if (matchCount >= 2) scores[plotFamily.name] = (scores[plotFamily.name] || 0) + matchCount * 1.5;
+        });
+      });
+
       // Add mild random noise so identical setups don't always pick same family
       families.forEach(function(fam) {
         scores[fam.id] = (scores[fam.id] || 0) + (Math.random() * 2);
@@ -1740,6 +1765,17 @@ console.log("🎲 Scenario Builder app loaded");
     generateScenarioNameFromTags(plotFamily, location, objectives, twist, dangerRating, contextTags) {
       contextTags = contextTags || [];
       const locName = (location || { name: 'Unknown' }).name;
+
+      // ── Spec format: "The [Trait] [Objective] at [Location]" ─────────────
+      // Use this ~30% of the time when a trait exists on the primary objective
+      const primaryObj = objectives && objectives[0];
+      if (primaryObj && primaryObj.trait && Math.random() < 0.30) {
+        const traitName = primaryObj.trait.name;
+        const objName   = primaryObj.name;
+        // Strip leading "The " from objective name to avoid "The The X"
+        const objClean  = objName.replace(/^The\s+/i, '');
+        return `The ${traitName} ${objClean} at ${locName}`;
+      }
 
       let prefix = 'Bloody';
       let suffix = 'Reckoning';
@@ -2308,6 +2344,45 @@ console.log("🎲 Scenario Builder app loaded");
       const locked = ARCHETYPE_LOCKS[arch] || [];
       locked.forEach(t => { scores[t] = 0; });
 
+      // ── Layer A4: Location Type Affinity (150_location_types.json) ────────────
+      // If this location has a type_ref, look up its entry in 150 and apply
+      // preferred/excluded objective type hints from the type definition.
+      const locTypeData = gameData.getLocationTypes().location_types || [];
+      const typeRef     = locProfile?.type_ref || locProfile?.typeRef || null;
+      if (typeRef) {
+        const typeDef = locTypeData.find(function(t) { return t.id === typeRef; });
+        if (typeDef) {
+          // preferred_objectives: types this location type naturally favours
+          (typeDef.preferred_objectives || []).forEach(function(t) {
+            if (scores[t] !== undefined) scores[t] += 2.5;
+          });
+          // excluded_objectives: types that make no sense here
+          (typeDef.excluded_objectives || []).forEach(function(t) {
+            scores[t] = 0;
+          });
+          // tags on the type definition map to objective families
+          const TYPE_TAG_OBJECTIVE_MAP = {
+            urban:        ['command_structure', 'fortified_position', 'barricades', 'land_marker'],
+            rural:        ['pack_animals', 'stored_supplies', 'land_marker'],
+            industrial:   ['wrecked_engine', 'stored_supplies', 'unstable_structure'],
+            occult:       ['ritual_site', 'ritual_circle', 'dark_ritual', 'profane_altar', 'soul_vessel'],
+            wilderness:   ['pack_animals', 'land_marker', 'evacuation_point', 'tainted_ground'],
+            underground:  ['unstable_structure', 'artifact', 'tainted_ground', 'collapsing_route'],
+            rail:         ['wrecked_engine', 'derailed_cars', 'cargo_vehicle', 'collapsing_route'],
+            water:        ['fouled_resource', 'evacuation_point', 'scattered_crates'],
+            sacred:       ['ritual_site', 'artifact', 'sacrificial_focus', 'dark_ritual'],
+            military:     ['fortified_position', 'command_structure', 'barricades', 'stored_supplies'],
+            trade:        ['cargo_vehicle', 'scattered_crates', 'stored_supplies', 'land_marker'],
+            ruins:        ['artifact', 'unstable_structure', 'tainted_ground', 'collapsing_route'],
+          };
+          (typeDef.tags || []).forEach(function(tag) {
+            (TYPE_TAG_OBJECTIVE_MAP[tag] || []).forEach(function(t) {
+              if (scores[t] !== undefined) scores[t] += 1.5;
+            });
+          });
+        }
+      }
+
       // ── Rail Gate — objective types that require rail context ────────────────
       const RAIL_FEATURES   = ['RailTerminus','RailGrade','BrakeScars','RailYard','Trestle','RailSpur','rail','Rail'];
       const RAIL_ARCHETYPES = ['rail_stop','rail_infrastructure','rail_grade','rail'];
@@ -2670,7 +2745,16 @@ console.log("🎲 Scenario Builder app loaded");
     const conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
 
     const primaryObjType = objectives[0] ? objectives[0].type : 'default';
-    const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
+    // Start with the hardcoded motive table, then upgrade with 190 canonical motive if available
+    let motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
+    const canonMotive = this.getPlotEngineCanonicalMotive(faction.id);
+    if (canonMotive) {
+      // Blend: canonical motive sets the "why", primary obj motive sets the "what"
+      const objMotive = motivesMap[primaryObjType];
+      motive = objMotive
+        ? canonMotive.charAt(0).toUpperCase() + canonMotive.slice(1) + '. ' + objMotive
+        : canonMotive.charAt(0).toUpperCase() + canonMotive.slice(1) + '.';
+    }
 
     const pickedObjectives = [];
 
