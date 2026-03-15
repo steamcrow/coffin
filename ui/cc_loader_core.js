@@ -631,32 +631,30 @@ window.addEventListener('error', function(e) {
     });
   }
 
-  var isBooting = false; 
+  var isBooting = false;
 
-  var preloader = document.getElementById('cc-preloader');
+  function boot(onComplete) {
+    if (isBooting) return;
+    isBooting = true;
+    
+    console.log('🚀 cc_loader_core boot()');
+    showPreloader();
+    
+    setTimeout(function () {
+      var preloader = document.getElementById('cc-preloader');
       if (preloader) {
         preloader.style.transition = 'opacity .4s ease';
         preloader.style.opacity = '0';
-        setTimeout(renderLauncher, 400);
+        setTimeout(function() { 
+            preloader.style.display = 'none'; 
+            if (onComplete) onComplete(); 
+        }, 400);
       } else {
-        renderLauncher();
+        if (onComplete) onComplete();
       }
     }, MIN_PRELOAD_MS);
   }
-
-  if (document.getElementById('cc-master-shell-root')) {
-      boot();
-  } else {
-      var observer = new MutationObserver(function(mutations, obs) {
-          if (document.getElementById('cc-master-shell-root')) {
-              boot();
-              obs.disconnect();
-          }
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
-  }
-}());
-
+  // Initial site load trigger
   if (document.getElementById('cc-master-shell-root')) {
       boot(renderLauncher);
   } else {
@@ -668,4 +666,5 @@ window.addEventListener('error', function(e) {
       });
       observer.observe(document.body, { childList: true, subtree: true });
   }
-}());
+
+}()); // <-- This is the one and only closing tag for the main IIFE
