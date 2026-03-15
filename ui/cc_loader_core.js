@@ -609,24 +609,29 @@ showPreloader();
         preloader.style.opacity = '0';
         setTimeout(function () {
           preloader.style.display = 'none';
-          if (onComplete) onComplete();
+          if (typeof onComplete === 'function') onComplete();
         }, 400);
-      } else {
-        if (onComplete) onComplete();
+      } else if (typeof onComplete === 'function') {
+        onComplete();
       }
     }, MIN_PRELOAD_MS);
   }
 
-  if (document.getElementById('cc-master-shell-root')) {
-    boot(renderLauncher);
-  } else {
-    var observer = new MutationObserver(function (mutations, obs) {
-      if (document.getElementById('cc-master-shell-root')) {
-        boot(renderLauncher);
-        obs.disconnect();
-      }
-    });
-    observer.observe(document.body, { childList: true, subtree: true });
+  // Ensure DOM is ready or wait for it
+  function initOrObserve() {
+    if (document.getElementById('cc-master-shell-root')) {
+      boot(renderLauncher);
+    } else {
+      var observer = new MutationObserver(function (mutations, obs) {
+        if (document.getElementById('cc-master-shell-root')) {
+          boot(renderLauncher);
+          obs.disconnect();
+        }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    }
   }
 
-}());
+  initOrObserve();
+
+}()); // This closes the IIFE started at the top of your file
