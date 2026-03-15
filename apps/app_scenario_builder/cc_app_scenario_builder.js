@@ -41,8 +41,11 @@
 
 console.log("🎲 Scenario Builder app loaded");
 
-window.CC_APP = {
-  init({ root, ctx }) {
+(function () {
+  var _destroyFn = null;
+
+  function mount(rootEl, ctx) {
+    var root = rootEl;
     console.log("🚀 Scenario Builder init", ctx);
 
     // Load shared UI CSS and app-specific CSS from GitHub raw URLs.
@@ -4410,7 +4413,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
     // Hold splash for at least 5 seconds regardless of how fast data loads.
     const MIN_SPLASH_MS = 5000;
 
-    gameData.loadAll().then(() => {
+    return gameData.loadAll().then(() => {
       console.log('✅ Game data ready');
       const elapsed  = Date.now() - _bootStart;
       const holdFor  = Math.max(0, MIN_SPLASH_MS - elapsed);
@@ -4429,5 +4432,14 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       }, holdFor);
     });
 
-  } // end init()
-}; // end window.CC_APP
+  } // end mount()
+
+  window.CC_APP = {
+    init: function (options) {
+      mount(options.root, options.ctx || {});
+    },
+    destroy: function () {
+      if (typeof _destroyFn === 'function') { _destroyFn(); }
+    }
+  };
+})();
