@@ -711,7 +711,7 @@ console.log("🎲 Scenario Builder app loaded");
 
     // ── Objective marker table — token counts, placement, and allowed interactions ───
     const OBJECTIVE_MARKER_TABLE = {
-      wrecked_engine:     { count: '1',    placement: 'Center board',              token: 'Wreck token or large model',    interactions: ['SALVAGE', 'CONTROL', 'SABOTAGE'] },
+      wrecked_engine:     { count: '1',    placement: 'Center board',              token: 'Wreck token or large model',    interactions: ['SALVAGE', 'CONTROL', 'SABOTAGE'], notes: 'Each SALVAGE yields 1 Spare Part token. Up to 3 Spare Parts available. Each attempt: pass Quality test = gain part; fail = 1 Coffin Cough hit, no part.' },
       scattered_crates:   { count: 'd6', placement: 'Scattered across board',    token: 'Supply crate tokens',            interactions: ['COLLECT', 'EXTRACT'] },
       stored_supplies:    { count: 'd6', placement: 'Within 6″ of center',       token: 'Supply crate tokens',           interactions: ['CLAIM', 'EXTRACT'] },
       derailed_cars:      { count: 'd6', placement: 'Scattered near wreck',      token: 'Rail car tokens',               interactions: ['SEARCH', 'EXTRACT'] },
@@ -1006,7 +1006,7 @@ console.log("🎲 Scenario Builder app loaded");
         tainted_ground:     'The water is wrong. The herd knows. Something must be done.',
         fouled_resource:    'The food is wrong. Attack whatever caused this.',
         captive_entity:     'One of the herd is trapped. Free it. Kill who trapped it.',
-        wrecked_engine:     'Dead machine on sacred ground. Investigate. Nest if safe.',
+        wrecked_engine:     'Hot metal. Strange smell. Drive off the ones picking at it — then nest inside or tear it apart entirely. Either way, it belongs to the canyon now.',
         pack_animals:       'Territory boundary contested. Hold the ground.',
         default:            'The canyon was here first. Act accordingly.'
       }
@@ -1145,7 +1145,7 @@ console.log("🎲 Scenario Builder app loaded");
         default:            { name: 'Everything Kneels Eventually', vp: '+3 VP — hold objective at game end' },
       },
       monsters: {
-        wrecked_engine:     { name: 'Drive Off the Scavengers',    vp: '+2 VP per enemy model driven from wreck zone' },
+        wrecked_engine:     { name: 'Claim the Wreck',    vp: '+2 VP per enemy driven off + 3 VP if wreck uncontested at Round 4' },
         scattered_crates:   { name: 'Investigate and Destroy',     vp: '+2 VP per unfamiliar object destroyed' },
         derailed_cars:      { name: 'Reclaim the Ground',          vp: '+3 VP — wreck zone clear of enemies at end' },
         cargo_vehicle:      { name: 'Disable the Threat',          vp: '+4 VP if vehicle destroyed or immobilised' },
@@ -1804,10 +1804,11 @@ console.log("🎲 Scenario Builder app loaded");
       const templates = [
         () => `${prefix} at ${locName}`,                     // "Black Night at Fool Boot"
         () => `${prefix} at ${locName} — ${suffix}`,         // "Black Night at Fool Boot — Reckoning"
-        () => `${prefix} ${locName} — ${suffix}`,            // "Bloody Lost Yots — Reckoning" (classic)
+        () => `${prefix} ${locName}`,                        // "Bloody Lost Yots" (tight classic)
         () => `${locName} — ${suffix}`,                      // "Lost Yots — Shadow and Flame"
         () => `${suffix} at ${locName}`,                     // "Reckoning at Lost Yots"
         () => `The ${suffix} of ${locName}`,                 // "The Reckoning of Lost Yots"
+        () => `${prefix} Night at ${locName}`,               // "Burning Night at Witches Roost"
       ];
 
       // Adjective prefixes (Bloody, Burning…) favour the classic "Adjective Location — Noun" form.
@@ -2093,7 +2094,7 @@ console.log("🎲 Scenario Builder app loaded");
       const cargoName = this.getCargoVehicleName();
 
       const descriptions = {
-        wrecked_engine:     'Salvage mechanical parts or prevent others from claiming them. Each salvage increases Coffin Cough risk.',
+        wrecked_engine:     'Each SALVAGE action yields one Spare Part. The part is the objective — hold it, extract it, or deny it. Each attempt risks Coffin Cough.',
         scattered_crates:   'Collect and extract scattered food, water, and supplies before others claim them.',
         derailed_cars:      "Search the wreckage for valuable cargo before it's lost or claimed.",
           cargo_vehicle:      `Escort the ${cargoName} safely across the board. The sweet scent may attract monsters.`,
@@ -2316,6 +2317,13 @@ console.log("🎲 Scenario Builder app loaded");
         lawful:           ['command_structure', 'fortified_position', 'barricades'],
         spiritual:        ['ritual_site', 'ritual_circle', 'thyr_cache', 'dark_ritual', 'soul_vessel'],
         predatory:        ['pack_animals', 'captive_entity', 'land_marker'],
+        terrain_pressure: ['land_marker', 'fortified_position', 'tainted_ground', 'collapsing_route'],
+        disruption:       ['collapsing_route', 'wrecked_engine', 'unstable_structure', 'dark_ritual'],
+        ambush:           ['land_marker', 'captive_entity', 'evacuation_point'],
+        ecosystem:        ['tainted_ground', 'fouled_resource', 'pack_animals', 'land_marker'],
+        beasts:           ['pack_animals', 'captive_entity', 'land_marker'],
+        titans:           ['fortified_position', 'command_structure', 'unstable_structure'],
+        unpredictable:    ['dark_ritual', 'collapsing_route', 'unstable_structure'],
         scavenger:        ['scattered_crates', 'unstable_structure', 'wrecked_engine'],
       };
 
@@ -3972,7 +3980,13 @@ console.log("🎲 Scenario Builder app loaded");
           ${s.objective_markers?.length ? `
             <div class="cc-scenario-section cc-markers-section">
               <h4><i class="fa fa-thumb-tack"></i> Board Setup &mdash; Objective Markers</h4>
-              <p class="cc-markers-intro">Before the game begins, place these tokens on the board as described.</p>
+              <div style="background:rgba(212,130,42,.08);border:1px solid rgba(212,130,42,.3);border-radius:4px;padding:0.6rem 0.85rem;margin-bottom:0.75rem;font-size:0.82rem;line-height:1.6;">
+                <strong style="color:#d4822a;"><i class="fa fa-road"></i> Boardwalks</strong> &mdash;
+                Place <strong>3–18</strong> Boardwalk sections before the game (agree on the count before setup).
+                Starting with the first player, each faction alternates placing one Boardwalk section until all are placed.
+                Boardwalks and Thyr Crystals are always available regardless of scenario.
+              </div>
+              <p class="cc-markers-intro">Then place these objective tokens as described.</p>
               <table class="cc-marker-table">
                 <thead>
                   <tr>
