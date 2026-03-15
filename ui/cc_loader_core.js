@@ -667,4 +667,4 @@ window.addEventListener('error', function(e) {
       observer.observe(document.body, { childList: true, subtree: true });
   }
 
-}()); // <-- This is the one and only closing tag for the main IIFE
+}());
