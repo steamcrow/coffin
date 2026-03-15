@@ -550,8 +550,12 @@
         s.map.invalidateSize({ animate: false });
         s.map.fitBounds(s.bounds, { animate: false, padding: [24, 24] });
         var layer = ensureLayer();
-        layer.style.display       = "block";
-        layer.style.pointerEvents = "auto";
+        // Ensure the Leaflet container has a positioning context for our absolute layer
+        var lensContainer = ui.lensMapEl;
+        if (lensContainer && window.getComputedStyle(lensContainer).position === "static") {
+          lensContainer.style.position = "relative";
+        }
+        layer.style.cssText = "position:absolute;inset:0;z-index:1000;display:block;pointer-events:auto;";
         draw();
         s.map.on("move zoom resize", draw);
       });
@@ -641,6 +645,26 @@
         document.head.appendChild(knobStyleEl);
     }
 
+    // ── Inline layout CSS — guarantees header is never covered by mapwrap ──
+    if (!document.getElementById("cc-cm-layout-styles")) {
+      var _layoutStyle = document.createElement("style");
+      _layoutStyle.id = "cc-cm-layout-styles";
+      _layoutStyle.textContent = [
+        ".cc-canyon-map{display:flex;flex-direction:column;height:100%;}",
+        ".cc-cm-shell{display:flex;flex-direction:column;height:100%;min-height:100vh;position:relative;}",
+        ".cc-cm-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#0a0a0a;border-bottom:1px solid #222;z-index:10;position:relative;pointer-events:auto!important;}",
+        ".cc-cm-actions{display:flex;gap:6px;flex-wrap:wrap;}",
+        ".cc-cm-mapwrap{flex:1;position:relative;overflow:hidden;min-height:0;}",
+        ".cc-cm-map{position:absolute;inset:0;z-index:1;}",
+        ".cc-lens{position:absolute;z-index:5;pointer-events:auto;}",
+        ".cc-frame-overlay{position:absolute;inset:0;z-index:6;pointer-events:none;}",
+        ".cc-scroll-vertical,.cc-scroll-horizontal{position:absolute;z-index:7;}",
+        ".cc-cm-loader{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;}",
+        ".cc-hitbox-editor-badge{z-index:8;}"
+      ].join("");
+      document.head.appendChild(_layoutStyle);
+    }
+
     // ── Build DOM ─────────────────────────────────────────────────────────
     var shell = el("div", { class: "cc-cm-shell" });
 
@@ -711,6 +735,11 @@
       ]),
       el("div", { class: "cc-panel-body cc-cm-drawer-content" })
     ]);
+
+    // Critical inline styles — inline style always beats external CSS, even !important
+    shell.style.cssText       = "display:flex;flex-direction:column;height:100%;min-height:100vh;position:relative;";
+    header.style.cssText      = "flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#0a0a0a;border-bottom:1px solid #2a2318;z-index:100;position:relative;pointer-events:auto;";
+    mapWrap.style.cssText     = "flex:1;position:relative;overflow:hidden;min-height:0;";
 
     shell.appendChild(header);
     shell.appendChild(mapWrap);
