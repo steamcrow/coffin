@@ -2237,6 +2237,47 @@ console.log("🎲 Scenario Builder app loaded");
         });
       });
 
+      // ── Layer A2b: Faction Tag Match — read faction_tags from loaded JSON (+2 each) ──
+      //  faction_tags live in the faction JSON files (e.g. 'defensive', 'mystical').
+      //  This is a second affinity layer on top of the hardcoded preference mapping above.
+      const FACTION_TAG_TO_OBJECTIVE = {
+        defensive:        ['fortified_position', 'barricades', 'command_structure'],
+        befriend:         ['captive_entity', 'pack_animals'],
+        mystical:         ['ritual_site', 'ritual_circle', 'thyr_cache', 'sacrificial_focus'],
+        environmental:    ['land_marker', 'tainted_ground', 'fouled_resource'],
+        survival:         ['evacuation_point', 'stored_supplies', 'scattered_crates'],
+        harmony:          ['captive_entity', 'land_marker'],
+        monster_protectors: ['captive_entity', 'pack_animals', 'evacuation_point'],
+        adaptive:         ['collapsing_route', 'unstable_structure'],
+        specialists:      ['artifact', 'ritual_components'],
+        ranger:           ['land_marker', 'fortified_position', 'stored_supplies'],
+        extraction:       ['scattered_crates', 'stored_supplies', 'thyr_cache', 'derailed_cars'],
+        scientific:       ['artifact', 'ritual_components', 'captive_entity'],
+        aggressive:       ['command_structure', 'fortified_position', 'wrecked_engine'],
+        mercenary:        ['cargo_vehicle', 'stored_supplies', 'artifact'],
+        occult:           ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'thyr_cache'],
+        territorial:      ['land_marker', 'command_structure', 'fortified_position'],
+        opportunist:      ['scattered_crates', 'cargo_vehicle', 'artifact'],
+        mobile:           ['evacuation_point', 'collapsing_route', 'cargo_vehicle'],
+        corrupting:       ['tainted_ground', 'ritual_circle', 'sacrificial_focus'],
+        industrial:       ['wrecked_engine', 'derailed_cars', 'stored_supplies'],
+        lawful:           ['command_structure', 'fortified_position', 'barricades'],
+        spiritual:        ['ritual_site', 'ritual_circle', 'thyr_cache'],
+        predatory:        ['pack_animals', 'captive_entity', 'land_marker'],
+        scavenger:        ['scattered_crates', 'unstable_structure', 'wrecked_engine'],
+      };
+
+      (factions || []).forEach(faction => {
+        const factionFile = gameData.getFaction(faction.id);
+        if (!factionFile) return;
+        const tags = factionFile.faction_tags || [];
+        tags.forEach(tag => {
+          (FACTION_TAG_TO_OBJECTIVE[tag] || []).forEach(t => {
+            if (scores[t] !== undefined) scores[t] += 2.0;
+          });
+        });
+      });
+
       // ── Layer A3: Archetype Lock — exclude contextually nonsensical types ────
       const arch = (locProfile?.archetype || '').toLowerCase();
       const ARCHETYPE_LOCKS = {
