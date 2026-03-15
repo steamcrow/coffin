@@ -91,12 +91,6 @@ console.log("🎲 Scenario Builder app loaded");
           vertical-align: middle;
         }
 
-        /* ---- Fade-in for staged step reveals ---- */
-        @keyframes cc-fade-in {
-          from { opacity: 0; transform: translateY(4px); }
-          to   { opacity: 1; transform: translateY(0);   }
-        }
-
         /* ---- Splash logo pulse ---- */
         @keyframes cc-logo-pulse {
           0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
@@ -530,14 +524,13 @@ console.log("🎲 Scenario Builder app loaded");
 
     // ── Map embed — remote URLs and Leaflet instance cache ─────────────────────────────
     const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_app_canyon_map.js';
-    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json';
+    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/canyon_map.json';
     const LEAFLET_CSS_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css';
     const LEAFLET_JS_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js';
 
     let _mapData      = null;   // cached canyon_map.json
     let _leafletReady = false;  // have we loaded Leaflet yet?
     let _scenarioMap  = null;   // active Leaflet instance in the embed (so we can destroy it on re-render)
-    let _scenarioOverviewMap = null; // second Leaflet instance — full canyon overview
 
     // Fetch a remote JS file and execute it as a blob script.
     function loadScriptDynamic(url) {
@@ -593,7 +586,7 @@ console.log("🎲 Scenario Builder app loaded");
       'kraise':[1995,1270,2193,1527],'little-rica':[2964,500,3182,784],
       'lost-yots':[1576,1266,1958,1586],'martygrail':[2392,1620,2520,1748],
       'mindshaft':[3112,804,3388,1164],'pallor':[1616,1824,1996,1924],
-      'plata':[2513,916,2765,1089],'quinine-jimmy':[1694,801,1852,1157],
+      'plata':[2513,916,2765,1089],'quinne-jimmy':[1694,801,1852,1157],
       'ratsville':[1452,1968,1644,2194],'rey':[34,1899,163,2028],
       'river-city':[1102,1607,1280,1854],'sangr':[1086,1219,1257,1527],
       'santos-grin':[1185,1898,1396,2176],'silverpit':[2128,1548,2294,1762],
@@ -689,7 +682,7 @@ console.log("🎲 Scenario Builder app loaded");
       food_foul:        ['fouled_resource', 'tainted_ground'],
       water_clean:      ['stored_supplies'],
       water_foul:       ['fouled_resource', 'tainted_ground'],
-      thyr:             ['thyr_cache', 'ritual_site', 'ritual_circle', 'dark_ritual', 'soul_vessel'],
+      thyr:             ['thyr_cache', 'ritual_site', 'ritual_circle'],
       tzul_silver:      ['artifact', 'ritual_site', 'sacrificial_focus'],
       silver:           ['land_marker', 'command_structure'],
       lead:             ['land_marker', 'wrecked_engine'],
@@ -700,8 +693,7 @@ console.log("🎲 Scenario Builder app loaded");
       weapons:          ['fortified_position', 'command_structure', 'barricades'],
       moonshine:        ['scattered_crates', 'cargo_vehicle'],
       rotgut:           ['fouled_resource', 'scattered_crates'],
-      gildren:          ['land_marker', 'command_structure'],
-      doomshine:        ['dark_ritual', 'tainted_ground']  // profane_altar via cultist_group only
+      gildren:          ['land_marker', 'command_structure']
     };
 
     const ALL_OBJECTIVE_TYPES = [
@@ -739,7 +731,10 @@ console.log("🎲 Scenario Builder app loaded");
       unstable_structure: { count: '1',    placement: 'Random mid-board',          token: 'Structure marker',              interactions: ['SALVAGE', 'CONTROL', 'COLLAPSE'] },
       collapsing_route:   { count: '1',    placement: 'Divides board in half',     token: 'Route markers at each end',     interactions: ['CROSS', 'BLOCK', 'REINFORCE'] },
       evacuation_point:   { count: '1',    placement: 'Far table edge, center',    token: 'Exit marker',                   interactions: ['REACH', 'ESCAPE'] },
-      fouled_resource:    { count: '2',    placement: 'Scatter near center',       token: 'Contaminated supply tokens',    interactions: ['CONTROL', 'PURGE', 'WEAPONIZE'] }
+      fouled_resource:    { count: '2',    placement: 'Scatter near center',       token: 'Contaminated supply tokens',    interactions: ['CONTROL', 'PURGE', 'WEAPONIZE'] },
+      dark_ritual:        { count: '1',    placement: 'Center board',              token: 'Operating Still Model',         interactions: ['CONTROL', 'SABOTAGE', 'CORRUPT'] },
+      profane_altar:      { count: '1',    placement: 'Center board',              token: 'Altar token',                   interactions: ['CONTROL', 'DESTROY', 'ACTIVATE'] },
+      soul_vessel:        { count: 'd3',   placement: 'Scattered mid-board',       token: 'Glowing vessel tokens',         interactions: ['COLLECT', 'CORRUPT', 'DESTROY'] }
     };
 
     // ── Victory condition tables ──────────────────────────────────────────────────
@@ -847,9 +842,6 @@ console.log("🎲 Scenario Builder app loaded");
         stored_supplies:       "These caches belong to the canyon's people. Every crate we hold is someone who doesn't go hungry.",
         scattered_crates:      "Gather what's left. Supplies belong to survivors, not scavengers.",
         fouled_resource:       "Contaminated doesn't mean worthless. We can purify it. Others will weaponize it.",
-        dark_ritual:           "Something bad is being called here. Stop it. Whatever power the ritual holds is not one the canyon should carry.",
-        profane_altar:         "This altar feeds something old. Destroy it before it feeds further.",
-        soul_vessel:           "Whatever is trapped in these is suffering. Free them.",
         unstable_structure:    "Get what's salvageable out before it comes down. Then let it fall.",
         collapsing_route:      "We need this route. Hold it open long enough to get what matters through.",
         thyr_cache:            "Don't extract the Thyr — monitor it. Mark the cluster and get out.",
@@ -863,9 +855,6 @@ console.log("🎲 Scenario Builder app loaded");
         stored_supplies:       "Survey the caches. Record contents. Extract anything with research value.",
         scattered_crates:      "Scattered materials mean a field opportunity. Collect everything, sort later.",
         fouled_resource:       "Contaminated supplies are a sample set. The Institute wants the contaminant, not the supplies.",
-        dark_ritual:           "Active summoning in progress. Document the ritual methodology. Extract specimens if the summoning succeeds.",
-        profane_altar:         "Pre-scientific instrument of considerable power. Disassemble and catalogue. The Institute pays well for working altars.",
-        soul_vessel:           "Contained biological or spiritual energy. High research value. Extract carefully.",
         unstable_structure:    "Structural analysis while it's still standing. Extract data before it collapses.",
         collapsing_route:      "Geological event in real-time. Document it. Extract before it seals.",
         thyr_cache:            "Active Thyr cluster. Extract maximum yield. Radiation protocols in effect.",
@@ -879,9 +868,6 @@ console.log("🎲 Scenario Builder app loaded");
         stored_supplies:       "Unsecured federal property. Lock it down. Anyone else touching it is a thief.",
         scattered_crates:      "Contraband until proven otherwise. Collect and tag for inspection.",
         fouled_resource:       "Biohazard. Cordon the area. Decontamination is Corps jurisdiction.",
-        dark_ritual:           "Unlicensed ritual activity. Shut it down. Arrest anyone still holding candles.",
-        profane_altar:         "Federal property now. Nobody touches this without a Corps permit.",
-        soul_vessel:           "Unidentified containment units. Impound. Do not open.",
         unstable_structure:    "Condemned. Hold the perimeter. Nobody goes in without clearance.",
         collapsing_route:      "Critical infrastructure. Hold or reroute. The Corps controls movement here.",
         thyr_cache:            "Unregulated Thyr extraction is a federal crime. Secure the site.",
@@ -900,10 +886,7 @@ console.log("🎲 Scenario Builder app loaded");
         thyr_cache:            "Hot cargo but the buyer doesn't ask questions. Extract fast.",
         land_marker:           "Nobody owns this canyon. But if we plant the marker, we collect the fee.",
         command_structure:     "Hit the command post. Take what's valuable. Make it look like someone else.",
-        cargo_vehicle:         "Whatever that truck is carrying is worth more than the truck. Get it and go.",
-        dark_ritual:           "The doomshine drawn to this ritual is worth more than whatever they're summoning. Hit the cultists, take the barrels, be in Santos Grin before anyone notices the rite went wrong.",
-        profane_altar:         "Strip the altar. The Thirsty Mule in Diablo needs restocking and the cult won't miss whatever we take if we move fast enough.",
-        soul_vessel:           "Glowing cargo sells well. Fence the vessels in Bandit Buck — they don't ask questions at a good party."
+        cargo_vehicle:         "Whatever that truck is carrying is worth more than the truck. Get it and go."
       },
       crow_queen: {
         monsters_befriendable: "These creatures are subjects who have not yet pledged. Convert them. Gently if possible.",
@@ -977,9 +960,6 @@ console.log("🎲 Scenario Builder app loaded");
       shine_riders: {
         ritual_site:        'The soil here is worth more than the ritual. Steal it and sell it.',
         ritual_circle:      'Someone built this. Someone will pay us to destroy it. Or to use it.',
-        dark_ritual:        'The doomshine at this ritual site is worth more than the ritual. Steal the barrels, leave the cult arguing about who let them walk.',
-        profane_altar:      'Strip the altar. Whatever it was made of, someone in Diablo will pay good gildren for it no questions asked.',
-        soul_vessel:        'Fence the vessels. Glow like that means somebody desperate is already looking for them.',
         thyr_cache:         'Hot cargo but the buyer doesn\'t ask questions. Extract fast, exit faster.',
         land_marker:        'Nobody owns the canyon. But if we plant the marker, we collect the fee.',
         command_structure:  'Hit the command post. Take what\'s valuable. Make it look like someone else.',
@@ -1024,10 +1004,7 @@ console.log("🎲 Scenario Builder app loaded");
         tainted_ground:     'The water is wrong. The herd knows. Something must be done.',
         fouled_resource:    'The food is wrong. Attack whatever caused this.',
         captive_entity:     'One of the herd is trapped. Free it. Kill who trapped it.',
-        wrecked_engine:     'This metal carcass makes good nesting. Drive off the scavengers. Claim it.',
-        dark_ritual:        'Something calls to the herd. The doomshine pulls them. They drink. They grow. Drive off whoever tries to stop it.',
-        profane_altar:      'Old hunger. The altar feeds something ancient. The herd gathers and feeds in turn.',
-        soul_vessel:        'The vessels hum with something alive. Smash them open. Consume what spills.',
+        wrecked_engine:     'Dead machine on sacred ground. Investigate. Nest if safe.',
         pack_animals:       'Territory boundary contested. Hold the ground.',
         default:            'The canyon was here first. Act accordingly.'
       }
@@ -1087,9 +1064,6 @@ console.log("🎲 Scenario Builder app loaded");
         fortified_position: { name: 'Hold the High Ground',        vp: '+3 VP if position held for 2+ rounds' },
         tainted_ground:     { name: 'Cleanse the Taint',           vp: '+4 VP if taint token removed by game end' },
         evacuation_point:   { name: 'Secure the Exit',             vp: '+3 VP if exit held for 2+ rounds' },
-        dark_ritual:        { name: 'Seal the Rite',               vp: '+4 VP if ritual disrupted and site preserved' },
-        profane_altar:      { name: 'Cleanse the Altar',             vp: '+4 VP if altar destroyed or purified' },
-        soul_vessel:        { name: 'Free the Trapped',              vp: '+3 VP per vessel released, not harvested' },
         default:            { name: 'Protect What Matters',        vp: '+3 VP — preserve the objective intact' },
       },
       liberty_corps: {
@@ -1109,9 +1083,6 @@ console.log("🎲 Scenario Builder app loaded");
         fortified_position: { name: 'Establish a Forward Base',    vp: '+4 VP if held for 3 rounds' },
         tainted_ground:     { name: 'Quarantine the Zone',         vp: '+3 VP — cordon established, no enemy within 6"' },
         evacuation_point:   { name: 'Control the Evacuation',      vp: '+3 VP — deny enemy use of exit' },
-        dark_ritual:        { name: 'Shut Down the Rite',          vp: '+3 VP — ritual disrupted before completion' },
-        profane_altar:      { name: 'Destroy or Confiscate',        vp: '+3 VP — altar destroyed or under Corps custody' },
-        soul_vessel:        { name: 'Contain the Anomaly',          vp: '+2 VP per vessel secured by Corps' },
         default:            { name: 'Establish Corps Authority',   vp: '+3 VP — hold position at game end' },
       },
       monsterology: {
@@ -1131,9 +1102,6 @@ console.log("🎲 Scenario Builder app loaded");
         fortified_position: { name: 'Occupy as Forward Lab',       vp: '+3 VP if held for 2 rounds' },
         tainted_ground:     { name: 'Sample the Contamination',    vp: '+4 VP — samples taken, source identified' },
         evacuation_point:   { name: 'Exit with Specimens',         vp: '+3 VP per specimen exiting the board' },
-        dark_ritual:        { name: 'Study the Summoning',         vp: '+4 VP — ritual observed and documented intact' },
-        profane_altar:      { name: 'Acquire the Altar',             vp: '+5 VP if altar extracted to Institute' },
-        soul_vessel:        { name: 'Harvest the Vessels',           vp: '+3 VP per vessel captured for study' },
         default:            { name: 'Gather Research Data',        vp: '+3 VP — objective studied and documented' },
       },
       shine_riders: {
@@ -1153,10 +1121,6 @@ console.log("🎲 Scenario Builder app loaded");
         fortified_position: { name: 'Use It Then Lose It',         vp: '+2 VP while held, +3 VP if abandoned intact' },
         tainted_ground:     { name: 'Exploit the Chaos',           vp: '+3 VP — use taint zone to flush enemies' },
         evacuation_point:   { name: 'First One Out',               vp: '+4 VP if first faction to exit' },
-        dark_ritual:        { name: 'Sell the Secret',              vp: '+4 VP if ritual disrupted and cult blamed on someone else' },
-        doomshine_run:      { name: 'The Doomshine Run',            vp: '+4 VP if doomshine cargo exits with Shine Boss' },
-        profane_altar:      { name: 'Strip the Altar',              vp: '+3 VP — loot the altar and run before it wakes up' },
-        soul_vessel:        { name: 'Fence the Vessels',            vp: '+3 VP per vessel extracted off board' },
         default:            { name: 'Fast Money, Faster Exit',     vp: '+3 VP — extract highest-value item and run' },
       },
       crow_queen: {
@@ -1176,9 +1140,6 @@ console.log("🎲 Scenario Builder app loaded");
         fortified_position: { name: 'Hold and Hold and Hold',      vp: '+2 VP per round held, max 10 VP' },
         tainted_ground:     { name: 'Taint as Potential',          vp: '+3 VP — convert taint zone to Crown territory' },
         evacuation_point:   { name: 'The Crown Does Not Flee',     vp: '+4 VP if exit denied to enemies for 3 rounds' },
-        dark_ritual:        { name: 'Complete the Rite',            vp: '+5 VP if ritual completed in Crown name' },
-        profane_altar:      { name: 'Consecrate to the Crown',      vp: '+4 VP — altar converted to Crown obelisk' },
-        soul_vessel:        { name: 'Claim the Vessel Souls',       vp: '+3 VP per soul vessel converted to Crown subjects' },
         default:            { name: 'Everything Kneels Eventually', vp: '+3 VP — hold objective at game end' },
       },
       monsters: {
@@ -1198,9 +1159,6 @@ console.log("🎲 Scenario Builder app loaded");
         fortified_position: { name: 'Deny the High Ground',        vp: '+3 VP — position held by monsters for 2 rounds' },
         tainted_ground:     { name: 'The Water Is Wrong — Attack', vp: '+3 VP per enemy model downed near taint zone' },
         evacuation_point:   { name: 'Block the Exit',              vp: '+3 VP — exit denied to enemies for 3 rounds' },
-        dark_ritual:        { name: 'Drink the Dark',               vp: '+3 VP if ritual disrupted or completed in monsters\' favour' },
-        profane_altar:      { name: 'Claim the Altar',               vp: '+3 VP — altar held uncontested at game end' },
-        soul_vessel:        { name: 'Consume the Vessels',           vp: '+2 VP per soul vessel destroyed or consumed' },
         default:            { name: 'The Canyon Was Here First',   vp: '+2 VP per round territory held' },
       },
     };
@@ -1563,9 +1521,9 @@ console.log("🎲 Scenario Builder app loaded");
       if (!locHasRailForPlot && scores['ambush_derailment'] !== undefined) {
         scores['ambush_derailment'] = -20;
       }
-      // Add mild random noise so identical setups don't always pick same family
+      // Add random noise — wider range (0–5) so identical setups vary more.
       families.forEach(function(fam) {
-        scores[fam.id] = (scores[fam.id] || 0) + (Math.random() * 2);
+        scores[fam.id] = (scores[fam.id] || 0) + (Math.random() * 5);
       });
 
       // Pick highest scoring family
@@ -2080,8 +2038,8 @@ console.log("🎲 Scenario Builder app loaded");
       if (names[type]) return names[type];
       const locName = (locProfile && locProfile.name) ? locProfile.name : '';
       const fallbacks = [
-        'Disputed Ground', 'The Cache', 'The Prize',
-        'Contested Site', 'The Objective', 'Key Position'
+        'Disputed Ground', 'The Flashpoint', 'The Prize',
+        'Contested Site', 'The Crossing', 'Key Position'
       ];
       // Pick consistently based on type string hash so same type = same label
       const hash = type ? type.split('').reduce(function(a,c){ return a + c.charCodeAt(0); }, 0) : 0;
@@ -2242,6 +2200,11 @@ console.log("🎲 Scenario Builder app loaded");
         scores['derailed_cars']  = 0;
       }
 
+      // Add gentle noise to objective scoring so same location varies each run.
+      Object.keys(scores).forEach(function(t) {
+        if (scores[t] > 0) scores[t] += Math.random() * 2;
+      });
+
       const sorted = Object.entries(scores)
         .filter(([, s]) => s > 0)
         .sort((a, b) => b[1] - a[1]);
@@ -2255,7 +2218,6 @@ console.log("🎲 Scenario Builder app loaded");
       const EXCLUSIVE_GROUPS = {
         taint_group:   ['tainted_ground', 'fouled_resource'],
         ritual_group:  ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'ritual_components'],
-        cultist_group: ['dark_ritual', 'profane_altar', 'soul_vessel'],
         salvage_group: ['wrecked_engine', 'derailed_cars', 'unstable_structure'],
         supply_group:  ['stored_supplies', 'scattered_crates']
       };
@@ -2338,6 +2300,13 @@ console.log("🎲 Scenario Builder app loaded");
           token:        'Objective token',
           interactions: []
         };
+        // dark_ritual (Operating Still) gets a randomised doomshine keg count note.
+        let resolvedNotes = vaultObj?.notes ? vaultObj.notes[0] : null;
+        if (obj.type === 'dark_ritual' && !resolvedNotes) {
+          const kegs = randomInt(2, 12); // 2d6
+          resolvedNotes = `Place ${kegs} Doomshine Keg tokens scattered within 6″ of the Still. Kegs can be collected (EXTRACT action). Consuming a keg grants +1 die — and triggers a Coffin Cough test.`;
+        }
+
         // Cargo vehicle placement is faction-aware: Rangers get the escort-from-edge version.
         let resolvedPlacement = defaults.placement;
         if (obj.type === 'cargo_vehicle') {
@@ -2353,7 +2322,7 @@ console.log("🎲 Scenario Builder app loaded");
           placement:    resolvedPlacement,
           token:        defaults.token,
           interactions: vaultObj?.interactions?.length ? vaultObj.interactions : defaults.interactions,
-          notes:        vaultObj?.notes ? vaultObj.notes[0] : null
+          notes:        resolvedNotes
         });
       });
       return markers;
@@ -2423,15 +2392,7 @@ console.log("🎲 Scenario Builder app loaded");
     var isNPC = faction.id === 'monsters' || faction.id === 'crow_queen';
 
     var canonicalMotive = this.getPlotEngineCanonicalMotive(faction.id);
-    if (canonicalMotive) {
-      var GENERIC_PHRASES_V = ['extract the most total resource value',
-        'survive and control territory', 'claim and hold resources',
-        'achieve primary objectives', 'secure key resources'];
-      var isGenericV = GENERIC_PHRASES_V.some(function(g) {
-        return canonicalMotive.toLowerCase().indexOf(g) >= 0;
-      });
-      if (!isGenericV) motive = canonicalMotive;
-    }
+    if (canonicalMotive) motive = canonicalMotive;
     if (vaultVC.primary) motive = vaultVC.primary;
 
     conditions[faction.id] = {
@@ -2782,50 +2743,6 @@ console.log("🎲 Scenario Builder app loaded");
     }
 
     // ── window.generateScenario — thin wrapper around ScenarioGenerator ────────
-    // ── window.generateFromLocation ─────────────────────────────────────────────
-    // Called from Step 3 NEXT.  Marks step 3 complete, shows a preloader overlay,
-    // then triggers generateScenario() — skipping the old Step 4 form entirely.
-    window.generateFromLocation = function() {
-      if (!state.locationType || (state.locationType === 'named' && !state.selectedLocation)) return;
-      if (!state.completedSteps.includes(3)) state.completedSteps.push(3);
-      state.currentStep = 4;
-
-      // Build a full-screen preloader overlay
-      const overlay = document.createElement('div');
-      overlay.id = 'cc-generate-preloader';
-      overlay.style.cssText = [
-        'position:fixed;inset:0;z-index:9999',
-        'background:rgba(0,0,0,0.93)',
-        'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem',
-        'transition:opacity 0.4s ease'
-      ].join(';');
-      overlay.innerHTML = `
-        <img src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
-             alt="Coffin Canyon"
-             class="cc-splash-logo"
-             style="width:200px;max-width:70vw;opacity:0.92;">
-        <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
-          <div class="cc-loading-progress"></div>
-        </div>
-        <div style="color:rgba(255,255,255,0.45);font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;">
-          Assembling scenario&hellip;
-        </div>
-      `;
-      document.body.appendChild(overlay);
-
-      // Short hold so the user sees the preloader, then generate and fade out
-      setTimeout(function() {
-        window.generateScenario();
-        // Fade out overlay after render completes
-        requestAnimationFrame(function() {
-          overlay.style.opacity = '0';
-          setTimeout(function() {
-            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-          }, 450);
-        });
-      }, 900);
-    };
-
     window.generateScenario = function() {
       console.log('🎲 Generating scenario...', state);
 
@@ -2862,8 +2779,7 @@ console.log("🎲 Scenario Builder app loaded");
     //    Left panel:  static canyon overview with orange highlight box.
     //    Right panel: zoomed Leaflet map, gold star at location centre.
 
-    const TINY_MAP_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/map_coffin_canyon_tiny.jpg';
-    const LARGE_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/map_coffin_canyon_large.jpg';
+    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/map_coffin_canyon_tiny.jpg';
 
     function renderLocationMapEmbed() {
       return `
@@ -2872,35 +2788,39 @@ console.log("🎲 Scenario Builder app loaded");
                     margin:0.5rem 0 0.75rem 0;
                     border-radius:8px;overflow:hidden;
                     border:1px solid rgba(255,117,24,0.3);
-                    align-items:stretch;height:340px;">
+                    align-items:stretch;height:320px;">
 
-          <!-- LEFT: full canyon overview — zoomed out to show whole map -->
-          <div style="flex:0 0 35%;position:relative;border-right:2px solid rgba(255,117,24,0.3);height:340px;">
-            <div style="position:absolute;top:0;left:0;right:0;z-index:10;
-                        padding:5px 8px;
-                        background:linear-gradient(180deg,rgba(0,0,0,0.8),transparent);
-                        font-size:0.6rem;font-weight:700;letter-spacing:0.14em;
-                        text-transform:uppercase;color:rgba(255,255,255,0.6);
-                        pointer-events:none;">Canyon Overview</div>
+          <!-- LEFT: overview — object-fit:cover fills the box, no black bars -->
+          <div style="flex:0 0 33%;position:relative;border-right:2px solid rgba(255,117,24,0.4);">
             <div id="cc-scenario-map-overview"
-                 style="position:absolute;inset:0;background:#0a0a0a;">
-              <div style="position:absolute;inset:0;display:flex;align-items:center;
-                          justify-content:center;color:rgba(255,255,255,0.2);
-                          font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;">
-                Loading&hellip;
-              </div>
+                 style="position:absolute;inset:0;overflow:hidden;background:#0a0a0a;">
+
+              <!-- Label -->
+              <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                          padding:6px 8px;
+                          background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
+                          font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
+                          text-transform:uppercase;color:rgba(255,255,255,0.7);
+                          text-align:center;">Canyon Overview</div>
+
+              <img id="cc-scenario-map-tiny"
+                   src="${TINY_MAP_URL}"
+                   alt="Canyon overview"
+                   style="width:100%;height:100%;object-fit:cover;display:block;opacity:0.88;">
+
+              <div id="cc-scenario-map-highlight"
+                   style="display:none;position:absolute;
+                          border:2px solid #ff7518;
+                          background:rgba(255,117,24,0.25);
+                          box-shadow:0 0 0 1px rgba(0,0,0,0.6),
+                                     0 0 12px rgba(255,117,24,0.5);
+                          pointer-events:none;"></div>
             </div>
           </div>
 
-          <!-- RIGHT: detail map zoomed tight on the location -->
+          <!-- RIGHT: zoomed Leaflet map -->
           <div id="cc-scenario-map-embed"
-               style="flex:1;position:relative;background:#111;height:340px;">
-            <div style="position:absolute;top:0;left:0;right:0;z-index:10;
-                        padding:5px 8px;
-                        background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
-                        font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
-                        text-transform:uppercase;color:rgba(255,255,255,0.7);
-                        pointer-events:none;">Location Detail</div>
+               style="flex:1;position:relative;background:#111;height:320px;">
             <div style="position:absolute;inset:0;display:flex;align-items:center;
                         justify-content:center;color:rgba(255,255,255,0.25);
                         font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;">
@@ -2912,17 +2832,13 @@ console.log("🎲 Scenario Builder app loaded");
     }
 
     async function initLocationMapEmbed(locProfile) {
-      const leafletContainer  = document.getElementById('cc-scenario-map-embed');
-      const overviewContainer = document.getElementById('cc-scenario-map-overview');
+      const leafletContainer = document.getElementById('cc-scenario-map-embed');
+      const highlightEl      = document.getElementById('cc-scenario-map-highlight');
       if (!leafletContainer) return;
 
       if (_scenarioMap) {
         try { _scenarioMap.remove(); } catch (e) {}
         _scenarioMap = null;
-      }
-      if (_scenarioOverviewMap) {
-        try { _scenarioOverviewMap.remove(); } catch (e) {}
-        _scenarioOverviewMap = null;
       }
 
       try {
@@ -2932,10 +2848,28 @@ console.log("🎲 Scenario Builder app loaded");
           ensureLeaflet()
         ]);
 
-        const px     = mapData.map.background.image_pixel_size;
-        const bbox   = hitboxes[locProfile.id];
-        const bounds = [[0, 0], [px.h, px.w]];
+        const px   = mapData.map.background.image_pixel_size;
+        const bbox = hitboxes[locProfile.id];
 
+        // Position the highlight box on the overview image.
+        // Leaflet CRS.Simple has lat=0 at the BOTTOM; CSS top=0 is the TOP — flip Y.
+        if (bbox && highlightEl) {
+          const minLat = bbox[0], maxLat = bbox[2];
+          const minLng = bbox[1], maxLng = bbox[3];
+
+          const cssTop    = (1 - maxLat / px.h) * 100;
+          const cssLeft   = (minLng / px.w) * 100;
+          const cssHeight = Math.max((maxLat - minLat) / px.h * 100, 0.8);
+          const cssWidth  = Math.max((maxLng - minLng) / px.w * 100, 1.5);
+
+          highlightEl.style.top     = cssTop  + '%';
+          highlightEl.style.left    = cssLeft + '%';
+          highlightEl.style.width   = cssWidth  + '%';
+          highlightEl.style.height  = cssHeight + '%';
+          highlightEl.style.display = 'block';
+        }
+
+        const bounds  = [[0, 0], [px.h, px.w]];
         let centerLat = px.h / 2;
         let centerLng = px.w / 2;
         if (bbox) {
@@ -2943,70 +2877,71 @@ console.log("🎲 Scenario Builder app loaded");
           centerLng = (bbox[1] + bbox[3]) / 2;
         }
 
-        const L = window.L;
-
-        // ── LEFT: detail map zoomed into the location ─────────────────────
         leafletContainer.innerHTML = '';
+
+        const L = window.L;
         _scenarioMap = L.map(leafletContainer, {
-          crs: L.CRS.Simple, minZoom: -5, maxZoom: 0,
-          zoomControl: false, attributionControl: false,
-          dragging: false, scrollWheelZoom: false,
-          doubleClickZoom: false, touchZoom: false, keyboard: false
+          crs:                L.CRS.Simple,
+          minZoom:            -5,
+          maxZoom:            0,
+          zoomControl:        false,
+          attributionControl: false,
+          dragging:           false,
+          scrollWheelZoom:    false,
+          doubleClickZoom:    false,
+          touchZoom:          false,
+          keyboard:           false
         });
-        L.imageOverlay(LARGE_MAP_URL, bounds).addTo(_scenarioMap);
+
+        L.imageOverlay(mapData.map.background.image_key, bounds).addTo(_scenarioMap);
+
         if (bbox) {
-          L.rectangle([[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-            { color: 'rgba(255,117,24,0.9)', fillColor: 'rgba(255,117,24,0.18)',
-              fillOpacity: 1, weight: 2, interactive: false }
+          L.rectangle(
+            [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+            {
+              color:       'rgba(255,117,24,0.9)',
+              fillColor:   'rgba(255,117,24,0.18)',
+              fillOpacity: 1,
+              weight:      2,
+              interactive: false
+            }
           ).addTo(_scenarioMap);
+
           L.marker([centerLat, centerLng], {
             icon: L.divIcon({
               className: '',
-              html: '<i class="fa fa-star" style="color:#ffd700;font-size:1.5rem;text-shadow:0 0 10px rgba(0,0,0,0.9),0 0 4px #000;display:block;line-height:1;"></i>',
-              iconSize: [20, 20], iconAnchor: [10, 10]
-            }), interactive: false
+              html: `<i class="fa fa-star"
+                        style="color:#ffd700;font-size:1.5rem;
+                               text-shadow:0 0 10px rgba(0,0,0,0.9),0 0 4px #000;
+                               display:block;line-height:1;"></i>`,
+              iconSize:   [20, 20],
+              iconAnchor: [10, 10]
+            }),
+            interactive: false
           }).addTo(_scenarioMap);
         }
+
         requestAnimationFrame(() => {
           try {
             _scenarioMap.invalidateSize({ animate: false });
             if (bbox) {
-              _scenarioMap.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-                { padding: [60, 80], animate: false, maxZoom: -1 });
+              _scenarioMap.fitBounds(
+                [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+                { padding: [60, 80], animate: false, maxZoom: -1 }
+              );
             } else {
               _scenarioMap.fitBounds(bounds, { padding: [20, 20], animate: false });
             }
           } catch (e) {}
         });
 
-        // ── RIGHT: overview map showing full canyon ───────────────────────
-        if (overviewContainer) {
-          overviewContainer.innerHTML = '';
-          _scenarioOverviewMap = L.map(overviewContainer, {
-            crs: L.CRS.Simple, minZoom: -5, maxZoom: 2,
-            zoomControl: false, attributionControl: false,
-            dragging: false, scrollWheelZoom: false,
-            doubleClickZoom: false, touchZoom: false, keyboard: false
-          });
-          L.imageOverlay(LARGE_MAP_URL, bounds).addTo(_scenarioOverviewMap);
-          if (bbox) {
-            L.rectangle([[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-              { color: '#ff7518', weight: 2, fillColor: 'rgba(255,117,24,0.25)',
-                fillOpacity: 1, interactive: false }
-            ).addTo(_scenarioOverviewMap);
-          }
-          requestAnimationFrame(() => {
-            try {
-              _scenarioOverviewMap.invalidateSize({ animate: false });
-              _scenarioOverviewMap.fitBounds(bounds, { padding: [8, 8], animate: false });
-            } catch (e) {}
-          });
-        }
-
       } catch (err) {
         console.warn('⚠️ Location map embed failed:', err);
         if (leafletContainer) {
-          leafletContainer.innerHTML = '<div style="padding:1rem;color:rgba(255,255,255,0.25);font-size:0.8rem;text-align:center;">Map unavailable</div>';
+          leafletContainer.innerHTML = `<div style="padding:1rem;color:rgba(255,255,255,0.25);
+                                                    font-size:0.8rem;text-align:center;">
+                                          Map unavailable
+                                        </div>`;
         }
       }
     }
@@ -3095,9 +3030,9 @@ console.log("🎲 Scenario Builder app loaded");
 
         // Most factions cannot oppose themselves. Shine Riders and Monsters can.
         const CANNOT_SELF_OPPOSE = ['monster_rangers', 'monsterology', 'liberty_corps', 'crow_queen'];
+        const playerCanSelfOppose = !playerFaction || !CANNOT_SELF_OPPOSE.includes(playerFaction.id);
 
         return `
-          <!-- 2a: Your Faction — always shown in solo -->
           <div class="cc-form-section">
             <label class="cc-label">Your Faction</label>
             <select class="cc-input" onchange="setPlayerFaction(this.value)">
@@ -3108,40 +3043,31 @@ console.log("🎲 Scenario Builder app loaded");
             </select>
           </div>
 
-          <!-- 2b: NPC Opponents — revealed only after player faction chosen -->
-          ${playerFaction ? `
-            <div class="cc-form-section" style="animation:cc-fade-in 0.25s ease;">
-              <label class="cc-label">NPC Opponents</label>
-              <p class="cc-help-text">Choose which factions you'll be playing against.</p>
-              ${FACTIONS.map(f => {
-                const isNPC    = state.factions.some(sf => sf.id === f.id && sf.isNPC);
-                const isSelf   = playerFaction?.id === f.id;
-                const disabled = isSelf && CANNOT_SELF_OPPOSE.includes(f.id);
-                return `
-                  <div class="cc-faction-row" style="${disabled ? 'opacity:0.4;' : ''}">
-                    <label class="cc-checkbox-label">
-                      <input type="checkbox" ${isNPC ? 'checked' : ''} ${disabled ? 'disabled' : ''}
-                        onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)">
-                      ${f.name}
-                    </label>
-                    <span class="cc-help-text" style="margin:0">${disabled ? '(same faction)' : '(NPC)'}</span>
-                  </div>
-                `;
-              }).join('')}
-            </div>
+          <div class="cc-form-section">
+            <label class="cc-label">NPC Opponents</label>
+            <p class="cc-help-text">Choose which factions you'll be playing against.</p>
+            ${FACTIONS.map(f => {
+              const isNPC     = state.factions.some(sf => sf.id === f.id && sf.isNPC);
+                const isSelf    = playerFaction?.id === f.id;
+              const disabled  = isSelf && CANNOT_SELF_OPPOSE.includes(f.id);
+              return `
+                <div class="cc-faction-row" style="${disabled ? 'opacity:0.4;' : ''}">
+                  <label class="cc-checkbox-label">
+                    <input type="checkbox" ${isNPC ? 'checked' : ''} ${disabled ? 'disabled' : ''}
+                      onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)">
+                    ${f.name}
+                  </label>
+                  <span class="cc-help-text" style="margin:0">${disabled ? '(same faction)' : '(NPC)'}</span>
+                </div>
+              `;
+            }).join('')}
+          </div>
 
-            <div class="cc-form-actions">
-              <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
-              <button class="cc-btn cc-btn-primary" onclick="completeStep(2)">Next: Location &rarr;</button>
-            </div>
-          ` : `
-            <div class="cc-step-hint" style="padding:0.6rem 0.25rem;color:rgba(255,255,255,0.35);font-size:0.78rem;font-style:italic;">
-              Select your faction to reveal NPC opponents.
-            </div>
-            <div class="cc-form-actions">
-              <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
-            </div>
-          `}
+          <div class="cc-form-actions">
+            <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
+            <button class="cc-btn cc-btn-primary" onclick="completeStep(2)"
+              ${!playerFaction ? 'disabled' : ''}>Next: Location &rarr;</button>
+          </div>
         `;
       }
 
@@ -3217,9 +3143,9 @@ console.log("🎲 Scenario Builder app loaded");
 
         <div class="cc-form-actions">
           <button class="cc-btn cc-btn-ghost" onclick="openStep(2)">&larr; Back</button>
-          <button class="cc-btn cc-btn-primary" onclick="generateFromLocation()"
+          <button class="cc-btn cc-btn-primary" onclick="completeStep(3)"
             ${(state.locationType === 'named' && !state.selectedLocation) || !state.locationType ? 'disabled' : ''}>
-            <i class="fa fa-dice"></i> Generate Scenario
+            Next: Generate Scenario &rarr;
           </button>
         </div>
       `;
@@ -3309,10 +3235,7 @@ console.log("🎲 Scenario Builder app loaded");
               + (obj.faction_win_vp ? ' — ' + obj.faction_win_vp : '') + '</div>'
             : '';
 
-          return '<div class="cc-vc-obj" style="margin-bottom:0.75rem;padding:0.5rem 0.6rem;'
-            + 'background:' + (isPrimary ? 'rgba(255,255,255,0.04)' : 'transparent') + ';'
-            + 'border-radius:3px;border:1px solid ' + (isPrimary ? id.border : 'transparent') + ';'
-            + '">'
+          return '<div class="cc-vc-obj" style="border-left:2px solid ' + borderColor + ';margin-bottom:0.75rem;padding-left:0.75rem;">'
             + '<div class="cc-vc-obj-label" style="color:' + labelColor + ';margin-bottom:0.2rem;">'
             + roleIcon + ' ' + roleLabel + '</div>'
             + '<div class="cc-vc-obj-name" style="font-size:1rem;font-weight:700;margin-bottom:0.3rem;">'
@@ -3337,52 +3260,30 @@ console.log("🎲 Scenario Builder app loaded");
           ? '<p class="cc-quote" style="border-left-color:' + id.color + ';">&ldquo;' + vc.quote + '&rdquo;</p>'
           : '';
 
-        // ── Field Order military brief card ──────────────────────────────────
-        return '<div class="cc-victory-card" style="'
-          + 'border:1px solid ' + id.border + ';'
-          + 'border-top:3px solid ' + id.color + ';'
-          + 'background:rgba(10,8,5,0.85);'
-          + 'border-radius:4px;overflow:hidden;'
-          + 'box-shadow:0 2px 12px rgba(0,0,0,0.5);'
-          + '">'
-          // ── Header band
-          + '<div style="'
-          + 'display:flex;align-items:center;gap:0.85rem;'
-          + 'padding:0.75rem 1rem;'
-          + 'background:linear-gradient(90deg,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.2) 100%);'
-          + 'border-bottom:1px solid ' + id.border + ';'
-          + '">'
+        return '<div class="cc-victory-card" style="border-left:4px solid ' + id.color + ';background:linear-gradient(135deg,rgba(0,0,0,0.4) 0%,color-mix(in srgb,' + id.color + ' 6%,transparent) 100%);">'
+          + '<div class="cc-vc-header" style="border-bottom:1px solid ' + id.border + ';padding-bottom:0.6rem;margin-bottom:0.85rem;">'
+          + '<div style="display:flex;align-items:center;gap:0.85rem;">'
           + logoHtml
-          + '<div style="flex:1;min-width:0;">'
-          + '<h5 style="color:' + id.color + ';margin:0;font-size:1.05rem;font-weight:900;letter-spacing:.04em;">'
-          + vc.faction_name + (vc.is_npc ? ' <span class="cc-npc-tag" style="font-size:0.6rem;vertical-align:middle;">NPC</span>' : '') + '</h5>'
-          + (id.tag ? '<div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:1px;">' + id.tag + '</div>' : '')
+          + '<div style="flex:1;">'
+          + '<h5 style="color:' + id.color + ';margin:0;font-size:1.1rem;">' + vc.faction_name + (vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : '') + '</h5>'
+          + (id.tag ? '<div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:2px;">' + id.tag + '</div>' : '')
+          + '</div></div>'
+          + motiveHtml
           + '</div>'
-          + '<div style="flex-shrink:0;font-size:0.55rem;letter-spacing:.12em;text-transform:uppercase;'
-          + 'color:' + id.color + ';border:1px solid ' + id.color + ';padding:2px 6px;opacity:.5;">FIELD ORDER</div>'
+          + '<div class="cc-vc-objectives">' + objectivesHtml + '</div>'
+          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
+          + '<div class="cc-vc-finale">'
+          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:' + id.color + ';margin-bottom:0.25rem;">Finale — Round 6</div>'
+          + '<div class="cc-vc-obj-name" style="font-weight:700;"><i class="fa fa-bolt" style="color:' + id.color + ';"></i> ' + vc.finale.name + '</div>'
+          + '<p style="font-size:0.87rem;margin:0.25rem 0;">' + vc.finale.desc + '</p>'
+          + '<p class="cc-vp-line" style="font-size:0.82rem;"><i class="fa fa-star" style="color:' + id.color + ';"></i> ' + vc.finale.vp + '</p>'
           + '</div>'
-          // ── Mission brief
-          + (motiveHtml ? '<div style="padding:0.6rem 1rem 0;">' + motiveHtml + '</div>' : '')
-          // ── Objectives
-          + '<div class="cc-vc-objectives" style="padding:0.75rem 1rem 0;">'
-          + objectivesHtml
-          + '</div>'
-          // ── Finale block
-          + '<div style="margin:0 1rem 0.75rem;padding:0.65rem 0.75rem;'
-          + 'background:rgba(0,0,0,0.3);border:1px solid ' + id.border + ';border-radius:3px;">'
-          + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.1em;color:' + id.color + ';margin-bottom:0.3rem;">'
-          + '<i class="fa fa-bolt"></i> Finale — Round 6</div>'
-          + '<div style="font-weight:700;font-size:0.95rem;margin-bottom:0.2rem;">' + vc.finale.name + '</div>'
-          + '<p style="font-size:0.85rem;margin:0 0 0.3rem;color:rgba(255,255,255,0.75);">' + vc.finale.desc + '</p>'
-          + '<span style="font-size:0.8rem;color:' + id.color + ';"><i class="fa fa-star"></i> ' + vc.finale.vp + '</span>'
-          + '</div>'
-          // ── Aftermath footer
-          + '<div style="padding:0.65rem 1rem;background:rgba(0,0,0,0.4);border-top:1px solid ' + id.border + ';">'
-          + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,0.35);margin-bottom:0.35rem;">'
-          + 'If ' + vc.faction_name + ' Wins</div>'
-          + '<p style="font-size:0.85rem;margin:0.15rem 0;"><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
-          + '<p style="font-size:0.83rem;margin:0.15rem 0;color:rgba(255,255,255,0.6);"><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
-          + '<p style="font-size:0.83rem;margin:0.15rem 0;color:rgba(255,255,255,0.6);"><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
+          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
+          + '<div class="cc-vc-aftermath">'
+          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.4);margin-bottom:0.25rem;">If ' + vc.faction_name + ' Wins</div>'
+          + '<p style="font-size:0.87rem;margin:0.2rem 0;"><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
+          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
+          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
           + quoteHtml
           + '</div>'
           + '</div>';
@@ -3546,40 +3447,13 @@ console.log("🎲 Scenario Builder app loaded");
     function renderVaultSoloPlay(vaultScenario) {
       const sp = vaultScenario.solo_play;
       if (!sp) return '';
-      // Style like a Field Order card
-      return '<div class="cc-victory-card" style="'
-        + 'border:1px solid #78350f;'
-        + 'border-top:3px solid #fbbf24;'
-        + 'background:rgba(10,8,5,0.85);'
-        + 'border-radius:4px;overflow:hidden;'
-        + 'box-shadow:0 2px 12px rgba(0,0,0,0.5);'
-        + '">'
-        + '<div style="display:flex;align-items:center;gap:0.85rem;padding:0.75rem 1rem;'
-        + 'background:linear-gradient(90deg,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.2) 100%);'
-        + 'border-bottom:1px solid #78350f;">'
-        + '<i class="fa fa-user" style="font-size:2.4rem;color:#fbbf24;flex-shrink:0;"></i>'
-        + '<div style="flex:1;">'
-        + '<h5 style="color:#fbbf24;margin:0;font-size:1.05rem;font-weight:900;letter-spacing:.04em;">Solo Play</h5>'
-        + '<div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:1px;">Your Orders</div>'
-        + '</div>'
-        + '<div style="flex-shrink:0;font-size:0.55rem;letter-spacing:.12em;text-transform:uppercase;'
-        + 'color:#fbbf24;border:1px solid #fbbf24;padding:2px 6px;opacity:.5;">FIELD ORDER</div>'
-        + '</div>'
-        + '<div style="padding:0.75rem 1rem;">'
-        + '<div style="margin-bottom:0.6rem;padding:0.5rem 0.6rem;background:rgba(0,0,0,0.3);border-left:2px solid #fbbf24;border-radius:2px;">'
-        + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.07em;color:#fbbf24;margin-bottom:0.2rem;"><i class="fa fa-bullseye"></i> Mission</div>'
-        + '<div style="font-size:0.87rem;color:rgba(255,255,255,0.85);">' + sp.player_role + '</div>'
-        + '</div>'
-        + '<div style="margin-bottom:0.5rem;padding:0.45rem 0.6rem;background:rgba(255,255,255,0.03);border-radius:3px;">'
-        + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,0.4);margin-bottom:0.15rem;">Opposition</div>'
-        + '<div style="font-size:0.85rem;">' + sp.opposition + '</div>'
-        + '</div>'
-        + '<div style="padding:0.45rem 0.6rem;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.25);border-radius:3px;">'
-        + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.07em;color:#fbbf24;margin-bottom:0.15rem;"><i class="fa fa-star"></i> Win Condition</div>'
-        + '<div style="font-size:0.85rem;font-weight:600;">' + sp.win_condition + '</div>'
-        + '</div>'
-        + '</div>'
-        + '</div>';
+      return `
+        <div class="cc-scenario-section" style="border-left:3px solid #fbbf24;">
+          <h4 style="color:#fbbf24;"><i class="fa fa-user"></i> Solo Play</h4>
+          <p><strong>You play:</strong> ${sp.player_role}</p>
+          <p><strong>Opposition:</strong> ${sp.opposition}</p>
+          <p><strong>Win:</strong> ${sp.win_condition}</p>
+        </div>`;
     }
 
     // Renders vault objectives with their notes[] displayed.
@@ -3830,22 +3704,6 @@ console.log("🎲 Scenario Builder app loaded");
       }
 
       const html = `
-        <div id="cc-sb-login-bar" style="
-          display:flex;align-items:center;justify-content:space-between;
-          padding:0.35rem 1rem;
-          background:rgba(0,0,0,0.55);
-          border-bottom:1px solid rgba(255,117,24,0.2);
-          font-size:0.75rem;
-          letter-spacing:0.04em;
-          min-height:34px;">
-          <span style="color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;">
-            <i class="fa fa-map" style="color:rgba(255,117,24,0.6);margin-right:0.4rem;"></i>Coffin Canyon
-          </span>
-          <span id="cc-sb-login-status" style="color:rgba(255,255,255,0.35);">
-            <i class="fa fa-circle-o-notch fa-spin" style="font-size:0.7rem;margin-right:0.3rem;"></i>Checking&hellip;
-          </span>
-        </div>
-
         <div class="cc-app-header">
           <div>
             <h1 class="cc-app-title">Coffin Canyon</h1>
@@ -3884,27 +3742,6 @@ console.log("🎲 Scenario Builder app loaded");
         </div>
       `;
       root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
-
-      // Auth check for login bar — runs 500ms after DOM is in place
-      setTimeout(function() {
-        const statusEl = document.getElementById('cc-sb-login-status');
-        if (!statusEl) return;
-        if (!window.CC_STORAGE) {
-          statusEl.innerHTML = '<a href="/web/login" style="color:rgba(255,117,24,0.7);text-decoration:none;"><i class="fa fa-sign-in" style="margin-right:0.3rem;"></i>Sign in</a>';
-          return;
-        }
-        window.CC_STORAGE.checkAuth().then(function(auth) {
-          if (!statusEl) return;
-          if (auth && auth.loggedIn) {
-            const name = auth.name || auth.username || 'Signed in';
-            statusEl.innerHTML = '<i class="fa fa-check-circle" style="color:#4ade80;margin-right:0.3rem;"></i><span style="color:rgba(255,255,255,0.55);">' + name + '</span>';
-          } else {
-            statusEl.innerHTML = '<a href="/web/login" style="color:rgba(255,117,24,0.7);text-decoration:none;"><i class="fa fa-sign-in" style="margin-right:0.3rem;"></i>Sign in to save</a>';
-          }
-        }).catch(function() {
-          if (statusEl) statusEl.innerHTML = '<a href="/web/login" style="color:rgba(255,117,24,0.7);text-decoration:none;"><i class="fa fa-sign-in" style="margin-right:0.3rem;"></i>Sign in</a>';
-        });
-      }, 500);
     }
 
     // ── Event handlers — all window.* functions called from HTML onclick attrs ────
