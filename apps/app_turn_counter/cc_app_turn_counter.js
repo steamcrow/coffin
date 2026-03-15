@@ -107,8 +107,11 @@ console.log("⏱️ Turn Counter loaded");
 }());
 
 // ═════════════════════════════════════════════════════════════════════════════
-window.CC_APP = {
-  init({ root, ctx }) {
+(function () {
+  var _destroyFn = null;
+
+  function mount(rootEl, ctx) {
+    var root = rootEl;
     console.log("🚀 Turn Counter init", ctx);
     window.CC_TC = {};
 
@@ -1951,8 +1954,19 @@ window.CC_APP = {
       state.phase = 'round_end'; render();
     }
 
-    state.phase = 'setup';
+   state.phase = 'setup';
     render();
 
-  } // end init()
-}; // end window.CC_APP
+    return Promise.resolve();
+
+  } // end mount()
+
+  window.CC_APP = {
+    init: function (options) {
+      return mount(options.root, options.ctx || {});
+    },
+    destroy: function () {
+      if (typeof _destroyFn === 'function') { _destroyFn(); }
+    }
+  };
+})();
