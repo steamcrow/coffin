@@ -35,7 +35,7 @@
   //                    Higher = more detail in the magnifier.
   //                    Lower  = lens looks more like the BG (less magnification).
   //
-  var BG_ZOOM_OFFSET  = -0.2;  // ── TUNE 1: BG overview zoom (-0.5 = very zoomed out, 0 = fill)
+  var BG_ZOOM_OFFSET  = -1.5;  // ── TUNE 1: BG overview zoom (-0.5 = very zoomed out, 0 = fill)
   var LENS_ZOOM_EXTRA =  1.9;  // ── TUNE 2: Lens detail zoom offset (1.0 = mild, 3.0 = strong)
 
   var MIN_LOADER_MS = 700;     // ── TUNE 3: Loader minimum display time in milliseconds
