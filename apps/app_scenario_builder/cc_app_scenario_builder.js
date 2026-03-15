@@ -3135,44 +3135,44 @@ console.log("🎲 Scenario Builder app loaded");
                     border:1px solid rgba(255,117,24,0.3);
                     align-items:stretch;">
 
-          <!-- LEFT: static overview — double-border via CSS class -->
-          <div style="flex:0 0 33%;padding:3px;background:rgba(255,117,24,0.18);
-                      box-shadow:0 0 0 1px rgba(255,117,24,0.55);
-                      border-right:2px solid rgba(255,117,24,0.5);">
-            <div id="cc-scenario-map-overview"
-                 style="position:relative;overflow:hidden;background:#0a0a0a;height:100%;
-                        border:1px solid rgba(255,117,24,0.4);border-radius:2px;">
-
-              <!-- Label at TOP -->
-              <div style="position:absolute;top:0;left:0;right:0;z-index:10;
-                          padding:6px 8px;
-                          background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
-                          font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
-                          text-transform:uppercase;color:rgba(255,255,255,0.7);
-                          text-align:center;">Canyon Overview</div>
-
-              <img id="cc-scenario-map-tiny"
-                   src="${TINY_MAP_URL}"
-                   alt="Canyon overview"
-                   style="width:100%;height:auto;display:block;opacity:0.85;">
-
-              <div id="cc-scenario-map-highlight"
-                   style="display:none;position:absolute;
-                          border:2px solid #ff7518;
-                          background:rgba(255,117,24,0.25);
-                          box-shadow:0 0 0 1px rgba(0,0,0,0.6),
-                                     0 0 12px rgba(255,117,24,0.5);
-                          pointer-events:none;"></div>
-            </div>
-          </div>
-
-          <!-- RIGHT: zoomed Leaflet map -->
+          <!-- LEFT: full-colour Leaflet detail map (dominant) -->
           <div id="cc-scenario-map-embed"
-               style="flex:1;position:relative;background:#111;min-height:320px;">
+               style="flex:1;position:relative;background:#111;min-height:340px;">
+            <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                        padding:5px 8px;
+                        background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
+                        font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
+                        text-transform:uppercase;color:rgba(255,255,255,0.7);">
+              Location Detail
+            </div>
             <div style="position:absolute;inset:0;display:flex;align-items:center;
                         justify-content:center;color:rgba(255,255,255,0.25);
                         font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;">
               Loading map&hellip;
+            </div>
+          </div>
+
+          <!-- RIGHT: b/w overview thumbnail with highlight box -->
+          <div style="flex:0 0 28%;padding:3px;background:rgba(0,0,0,0.4);
+                      border-left:2px solid rgba(255,117,24,0.3);">
+            <div id="cc-scenario-map-overview"
+                 style="position:relative;overflow:hidden;background:#0a0a0a;height:100%;">
+              <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                          padding:5px 6px;
+                          background:linear-gradient(180deg,rgba(0,0,0,0.8),transparent);
+                          font-size:0.6rem;font-weight:700;letter-spacing:0.14em;
+                          text-transform:uppercase;color:rgba(255,255,255,0.5);
+                          text-align:center;">Canyon Overview</div>
+              <img id="cc-scenario-map-tiny"
+                   src="${TINY_MAP_URL}"
+                   alt="Canyon overview"
+                   style="width:100%;height:auto;display:block;filter:grayscale(100%);opacity:0.7;">
+              <div id="cc-scenario-map-highlight"
+                   style="display:none;position:absolute;
+                          border:2px solid #ff7518;
+                          background:rgba(255,117,24,0.3);
+                          box-shadow:0 0 8px rgba(255,117,24,0.6);
+                          pointer-events:none;"></div>
             </div>
           </div>
 
