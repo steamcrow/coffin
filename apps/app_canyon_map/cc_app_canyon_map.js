@@ -35,7 +35,7 @@
   //                    Higher = more detail in the magnifier.
   //                    Lower  = lens looks more like the BG (less magnification).
   //
-  var BG_ZOOM_OFFSET  = -1.5;  // ── TUNE 1: BG overview zoom (-0.5 = very zoomed out, 0 = fill)
+  var BG_ZOOM_OFFSET  = -0.2;  // ── TUNE 1: BG overview zoom (-0.5 = very zoomed out, 0 = fill)
   var LENS_ZOOM_EXTRA =  1.9;  // ── TUNE 2: Lens detail zoom offset (1.0 = mild, 3.0 = strong)
 
   var MIN_LOADER_MS = 700;     // ── TUNE 3: Loader minimum display time in milliseconds
@@ -553,6 +553,8 @@
         }
         ui.editorBadgeEl.style.display = "none";
         s.map.off("move zoom resize", draw);
+        // Restore background map to normal zoom when leaving edit mode
+        if (typeof s.onZoomRestore === "function") s.onZoomRestore();
         if (typeof s.refreshView === "function") {
           nextFrame().then(function () { s.refreshView(); });
         }
@@ -563,6 +565,8 @@
       delay(150).then(function () {
         s.map.invalidateSize({ animate: false });
         s.map.fitBounds(s.bounds, { animate: false, padding: [24, 24] });
+        // Also zoom out the background map so the full canyon is visible in edit mode
+        if (typeof s.onZoomOut === "function") s.onZoomOut();
         var layer = ensureLayer();
         // Ensure the Leaflet container has a positioning context for our absolute layer
         var lensContainer = ui.lensMapEl;
@@ -576,10 +580,12 @@
     }
 
     return {
-      attach: function (map, bounds, refreshViewFn, onEnterFn) {
+      attach: function (map, bounds, refreshViewFn, onEnterFn, onZoomOutFn, onZoomRestoreFn) {
         s.map = map; s.bounds = bounds;
-        s.refreshView = refreshViewFn || null;
-        s.onEnter     = onEnterFn     || null;
+        s.refreshView  = refreshViewFn   || null;
+        s.onEnter      = onEnterFn       || null;
+        s.onZoomOut    = onZoomOutFn     || null;
+        s.onZoomRestore= onZoomRestoreFn || null;
         attachPointerHandlers();
       },
       toggle:     function ()  { setEditing(!s.editing); },
@@ -1130,6 +1136,17 @@
             },
             function () {                          // onEnterEdit (hide orange rects)
               hideHitboxLayers();
+            },
+            function () {                          // onZoomOut — fit full map in bg
+              if (bgMap && bounds) {
+                bgMap.fitBounds(bounds, { animate: false, padding: [16, 16] });
+              }
+            },
+            function () {                          // onZoomRestore — back to normal zoom
+              if (bgMap && px) {
+                var fillZoom = computeFillZoom(ui.mapEl, px.w, px.h);
+                bgMap.setView([px.h / 2, px.w / 2], fillZoom + BG_ZOOM_OFFSET, { animate: false });
+              }
             }
           );
 
