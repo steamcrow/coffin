@@ -603,8 +603,7 @@ window.addEventListener('error', function(e) {
     console.log('DEBUG: Preloader root found:', document.getElementById('cc-master-shell-root'));
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
-    var root = document.getElementById('cc-master-shell-root');
-    if (!root) return;
+    
     root.innerHTML = '<div id="cc-preloader" style="' +
       'min-height:100vh;display:flex;flex-direction:column;' +
       'align-items:center;justify-content:center;' +
@@ -639,7 +638,12 @@ window.addEventListener('error', function(e) {
     });
   }
 
+  var isBooting = false; 
+
   function boot() {
+    if (isBooting) return;
+    isBooting = true;
+    
     console.log('🚀 cc_loader_core boot()');
     showPreloader();
     setTimeout(function () {
@@ -654,6 +658,15 @@ window.addEventListener('error', function(e) {
     }, MIN_PRELOAD_MS);
   }
 
-  boot();
-
+  if (document.getElementById('cc-master-shell-root')) {
+      boot();
+  } else {
+      var observer = new MutationObserver(function(mutations, obs) {
+          if (document.getElementById('cc-master-shell-root')) {
+              boot();
+              obs.disconnect();
+          }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+  }
 }());
