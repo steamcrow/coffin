@@ -385,6 +385,20 @@
       // div sits invisibly over the entire lens and eats every click.
       s.layerEl.style.cssText = "position:absolute;inset:0;z-index:1000;display:none;pointer-events:none;";
       ui.lensMapEl.appendChild(s.layerEl);
+      // Inject editor CSS inline so it works even if cc_canyon_map.css is missing/incomplete
+      if (!document.getElementById("cc-hb-editor-styles")) {
+        var _hbStyle = document.createElement("style");
+        _hbStyle.id = "cc-hb-editor-styles";
+        _hbStyle.textContent = [
+          ".cc-hitbox-editor-layer{position:absolute;inset:0;z-index:1000;}",
+          ".cc-hb-box{position:absolute;border:2px solid #00e5ff;box-sizing:border-box;cursor:move;}",
+          ".cc-hb-box:hover{background:rgba(0,229,255,.15);}",
+          ".cc-hb-label{position:absolute;top:-18px;left:0;background:#00e5ff;color:#000;font:700 9px/16px monospace;padding:0 5px;white-space:nowrap;pointer-events:none;}",
+          ".cc-hb-handle{position:absolute;bottom:0;right:0;width:14px;height:14px;background:#00e5ff;cursor:se-resize;}",
+          ".cc-hitbox-editor-badge{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.85);color:#00e5ff;font:700 10px/1 monospace;padding:6px 14px;border:1px solid #00e5ff;border-radius:4px;z-index:1001;pointer-events:none;white-space:nowrap;}"
+        ].join("");
+        document.head.appendChild(_hbStyle);
+      }
       return s.layerEl;
     }
 
