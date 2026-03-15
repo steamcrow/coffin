@@ -57,7 +57,7 @@
           "weight": 1
         }
       ],
-      "description": "Diablo booms by decree, greed, and violence. The rail line used to keep it fed. The guns keep it profitable.",
+      "description": "I’ve seen Diablo squatting at the south end of the canyon like a festering wound—smoke, refuse, brothels, Thyr dealers, death-cult preachers and all the rest of it choking the streets—kept alive only because every outlaw and Shine Rider in the canyon needs one place where the law won’t reach, though plenty of fools have bled out trying to claim it.",
       "atmosphere": "Noise, commerce, and a crook under every counter",
       "coffinCoughChance": 0.15,
       "terrain_flavor": [
@@ -349,7 +349,7 @@
           "weight": 2
         }
       ],
-      "description": "Built on stilts over black water. The food is good, the spirits are better, and the crocodiles are unavoidable.",
+      "description": "Bayou City stands on crooked stilts over black swamp water where the food’s worth the journey, the rum’s stronger than good sense, and the Voodoo women trade in charms, curses, and quiet talk with the dead—though if you ask me, a man’s just as likely to lose his purse to a gambler or his leg to one of those swamp crocodiles drifting under the boards.",
       "atmosphere": "Damp, loud, and very well-armed",
       "coffinCoughChance": 0.17,
       "terrain_flavor": [
@@ -1271,31 +1271,31 @@
       ],
       "monster_seeds": [
         {
-          "name": "Red Goblin",
+          "name": "Canyon Harpy",
+          "weight": 3
+        },
+        {
+          "name": "Feratu Stalker",
           "weight": 2
         },
         {
-          "name": "Will-o'-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Ruster",
-          "weight": 1
+          "name": "Bête Herdbeast",
+          "weight": 2
         }
       ],
-      "description": "A half-legit rail stop where freight slows and trouble speeds up. Bandits, deputies, and monsters all know the schedule.",
+      "description": "Bandit Buck squats along the crooked trail to Quinine Jimmy’s, a miserable little camp of lean-tos and watchful thieves who like to lighten a traveler’s pockets before he reaches the medicine man, and if you ask me the place ain’t worth the dust it sits on—what with folks whispering about a buried strongbox, a ghost rider passing through some nights, and something in the gulch that occasionally drags a bandit off where no one bothers to follow.",
       "atmosphere": "Steam, gun oil, bad timing",
-      "coffinCoughChance": 0.18,
+      "coffinCoughChance": 0.24,
       "terrain_flavor": [
         "Rail stop",
         "Signal arm",
-        "Coal shed",
-        "Blind turns"
+        "Ragged tents",
+        "Shifting sands"
       ],
       "rumors": [
-        "The stop was named after a man who robbed the same train twice.",
-        "A ghost freight passes through without stopping — unless it sees you.",
-        "Someone here sells keys that open locks you don't own."
+        "Some say the bandits buried a strongbox nearby.",
+        "Others claim a dead man rides through camp some nights.",
+        "And a few swear something in the gulch occasionally carries a bandit off."
       ],
       "notes": [
         "Scenario ignition point. Timed arrivals, heists, and standoffs."
