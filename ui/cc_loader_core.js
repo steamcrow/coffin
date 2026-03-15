@@ -7,113 +7,110 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 
 (function () {
 
-  // ── Bootstrap dropdown autoClose:null patch ────────────────────────────────
-(function patchBootstrapDropdownAutoClose() {
-  if (window._ccDropdownPatchInstalled) return;
-  window._ccDropdownPatchInstalled = true;
+  // ── Bootstrap dropdown autoClose:null patch ───────────────────────────────
+  (function patchBootstrapDropdownAutoClose() {
+    if (window._ccDropdownPatchInstalled) return;
+    window._ccDropdownPatchInstalled = true;
 
-  function fixEl(el) {
-    if (!el || !el.getAttribute) return;
-    var v = el.getAttribute('data-bs-auto-close');
-    if (v === 'null' || v === null || v === '') {
-      el.setAttribute('data-bs-auto-close', 'true');
+    function fixEl(el) {
+      if (!el || !el.getAttribute) return;
+      var v = el.getAttribute('data-bs-auto-close');
+      if (v === 'null' || v === null || v === '') {
+        el.setAttribute('data-bs-auto-close', 'true');
+      }
     }
-  }
 
-  function fixDOM() {
-    document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
-  }
+    function fixDOM() {
+      document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
+    }
 
-  function patchPrototype() {
-    var BS = window.bootstrap;
-    if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
-    var proto = BS.Dropdown.prototype;
-    if (proto._ccAutoClosePatch) return true;
-    proto._ccAutoClosePatch = true;
+    function patchPrototype() {
+      var BS = window.bootstrap;
+      if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
+      var proto = BS.Dropdown.prototype;
+      if (proto._ccAutoClosePatch) return true;
+      proto._ccAutoClosePatch = true;
 
-    var origGetConfig = proto._getConfig;
-    proto._getConfig = function (config) {
-      if (this._element) fixEl(this._element);
-      if (config && config.autoClose == null) config.autoClose = true;
-      return origGetConfig.call(this, config);
-    };
-
-    var BaseProto = Object.getPrototypeOf(proto);
-    if (BaseProto && typeof BaseProto._typeCheckConfig === 'function' && !BaseProto._ccTypeCheckPatch) {
-      BaseProto._ccTypeCheckPatch = true;
-      var origTypeCheck = BaseProto._typeCheckConfig;
-      BaseProto._typeCheckConfig = function (config) {
+      var origGetConfig = proto._getConfig;
+      proto._getConfig = function (config) {
+        if (this._element) fixEl(this._element);
         if (config && config.autoClose == null) config.autoClose = true;
-        return origTypeCheck.call(this, config);
+        return origGetConfig.call(this, config);
       };
+
+      var BaseProto = Object.getPrototypeOf(proto);
+      if (BaseProto && typeof BaseProto._typeCheckConfig === 'function' && !BaseProto._ccTypeCheckPatch) {
+        BaseProto._ccTypeCheckPatch = true;
+        var origTypeCheck = BaseProto._typeCheckConfig;
+        BaseProto._typeCheckConfig = function (config) {
+          if (config && config.autoClose == null) config.autoClose = true;
+          return origTypeCheck.call(this, config);
+        };
+      }
+      return true;
     }
 
-    return true;
-  }
-
-  fixDOM();
-
-  if (!patchPrototype()) {
-    var _att = 0;
-    var _iv = setInterval(function () {
-      _att++;
-      fixDOM();
-      if (patchPrototype() || _att > 40) clearInterval(_iv);
-    }, 150);
-  }
-
-  if (window.MutationObserver) {
-    new MutationObserver(function (mutations) {
-      mutations.forEach(function (m) {
-        m.addedNodes.forEach(function (node) {
-          if (node.nodeType !== 1) return;
-          fixEl(node);
-          if (node.querySelectorAll) node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
-        });
-      });
-      patchPrototype();
-    }).observe(document.documentElement, { childList: true, subtree: true });
-  }
-
-  setInterval(function () {
     fixDOM();
-    var BS = window.bootstrap;
-    if (BS && BS.Dropdown && BS.Dropdown.prototype && !BS.Dropdown.prototype._ccAutoClosePatch) {
-      console.log('[CC] Bootstrap replaced — re-patching Dropdown');
-      patchPrototype();
+
+    if (!patchPrototype()) {
+      var _att = 0;
+      var _iv = setInterval(function () {
+        _att++;
+        fixDOM();
+        if (patchPrototype() || _att > 40) clearInterval(_iv);
+      }, 150);
     }
-  }, 30000);
-}());
 
-window.addEventListener('unhandledrejection', function(e) {
-  var msg = e.reason && (e.reason.message || String(e.reason));
-  if (msg && msg.indexOf('DROPDOWN') !== -1 && msg.indexOf('autoClose') !== -1) {
-    e.preventDefault();
-    console.warn('[CC] Suppressed Odoo Bootstrap nav conflict:', msg);
-  }
-});
+    if (window.MutationObserver) {
+      new MutationObserver(function (mutations) {
+        mutations.forEach(function (m) {
+          m.addedNodes.forEach(function (node) {
+            if (node.nodeType !== 1) return;
+            fixEl(node);
+            if (node.querySelectorAll) node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
+          });
+        });
+        patchPrototype();
+      }).observe(document.documentElement, { childList: true, subtree: true });
+    }
 
-window.addEventListener('error', function(e) {
-  var msg = e.message || '';
-  if (msg.indexOf('DROPDOWN') !== -1 && msg.indexOf('autoClose') !== -1) {
-    e.preventDefault();
-    console.warn('[CC] Suppressed Odoo Bootstrap nav conflict:', msg);
-    return true;
-  }
-});
+    setInterval(function () {
+      fixDOM();
+      var BS = window.bootstrap;
+      if (BS && BS.Dropdown && BS.Dropdown.prototype && !BS.Dropdown.prototype._ccAutoClosePatch) {
+        console.log('[CC] Bootstrap replaced — re-patching Dropdown');
+        patchPrototype();
+      }
+    }, 30000);
+  }());
 
-  var COMPONENTS_JS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_components.js';
+  window.addEventListener('unhandledrejection', function (e) {
+    var msg = e.reason && (e.reason.message || String(e.reason));
+    if (msg && msg.indexOf('DROPDOWN') !== -1 && msg.indexOf('autoClose') !== -1) {
+      e.preventDefault();
+      console.warn('[CC] Suppressed Odoo Bootstrap nav conflict:', msg);
+    }
+  });
+
+  window.addEventListener('error', function (e) {
+    var msg = e.message || '';
+    if (msg.indexOf('DROPDOWN') !== -1 && msg.indexOf('autoClose') !== -1) {
+      e.preventDefault();
+      console.warn('[CC] Suppressed Odoo Bootstrap nav conflict:', msg);
+      return true;
+    }
+  });
+
+  // ── App registry ──────────────────────────────────────────────────────────
   var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/tools/rules_helpers.js';
   var RULES_BASE    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/rules_base.json';
   var APPS_BASE     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/';
 
   var APPS = {
-    faction_builder:  {
-      title:       'Faction Builder',
-      icon:        'fa-shield',
-      description: 'Build your roster',
-      file:        'app_faction_builder/cc_app_faction_builder.js',
-      helpTitle:   'Faction Builder',
+    faction_builder: {
+      title: 'Faction Builder', icon: 'fa-shield', description: 'Build your roster',
+      file: 'app_faction_builder/cc_app_faction_builder.js',
+      helpTitle: 'Faction Builder',
       helpBody: [
         'Build the roster you bring to every game. Choose your faction, add units one at a time, and customise each with abilities and upgrades.',
         'When you\'re happy with your list, save it to the cloud. Your saved roster shows up automatically in the Turn Counter when you start a game.',
@@ -121,47 +118,39 @@ window.addEventListener('error', function(e) {
       ]
     },
     scenario_builder: {
-      title:       'Scenario Builder',
-      icon:        'fa-map-signs',
-      description: 'Generate scenarios',
-      file:        'app_scenario_builder/cc_app_scenario_builder.js',
-      helpTitle:   'Scenario Builder',
+      title: 'Scenario Builder', icon: 'fa-map-signs', description: 'Generate scenarios',
+      file: 'app_scenario_builder/cc_app_scenario_builder.js',
+      helpTitle: 'Scenario Builder',
       helpBody: [
         'Generate a full game scenario: location, objectives, monster pressure, noise threshold, and a narrative hook to set the scene.',
         'Save the scenario to the cloud. The Turn Counter can then load it at the start of a session to drive NPC directives, monster encounters, and the board setup automatically.',
         '<strong>Tips:</strong> Higher danger ratings push the noise threshold lower, so monsters arrive sooner. Use lower ratings for learning games.',
       ]
     },
-    rules_explorer:   {
-      title:       'Rules Explorer',
-      icon:        'fa-book',
-      description: 'Browse game rules',
-      file:        'app_rules_explorer/cc_app_rules_explorer.js',
-      helpTitle:   'Rules Explorer',
+    rules_explorer: {
+      title: 'Rules Explorer', icon: 'fa-book', description: 'Browse game rules',
+      file: 'app_rules_explorer/cc_app_rules_explorer.js',
+      helpTitle: 'Rules Explorer',
       helpBody: [
         'Browse and search the complete Coffin Canyon rulebook. The left sidebar shows the table of contents — tap any section to read it in the centre panel.',
         'Ability keywords link through to their full definitions. The right panel shows related rules and context for whatever you\'re reading.',
         '<strong>Tips:</strong> During a game, the Turn Counter shows ability names as tappable chips. Tapping one opens its rule in a slideout — you rarely need to leave the Turn Counter to look something up.',
       ]
     },
-    canyon_map:       {
-      title:       'Canyon Map',
-      icon:        'fa-map',
-      description: 'Interactive map',
-      file:        'app_canyon_map/cc_app_canyon_map.js',
-      helpTitle:   'Canyon Map',
+    canyon_map: {
+      title: 'Canyon Map', icon: 'fa-map', description: 'Interactive map',
+      file: 'app_canyon_map/cc_app_canyon_map.js',
+      helpTitle: 'Canyon Map',
       helpBody: [
         'An interactive map of Coffin Canyon showing all named locations, faction territories, and points of interest.',
         'Tap any location to read its description, see which factions are active there, and find out what kind of terrain and objectives you\'d expect in a game set there.',
         '<strong>Tips:</strong> When building a scenario, check the map first. The location you choose shapes the monster roster, terrain pool, and narrative hook the Scenario Builder will generate.',
       ]
     },
-    turn_counter:     {
-      title:       'Turn Counter',
-      icon:        'fa-hourglass-half',
-      description: 'Run your game',
-      file:        'app_turn_counter/cc_app_turn_counter.js',
-      helpTitle:   'Turn Counter',
+    turn_counter: {
+      title: 'Turn Counter', icon: 'fa-hourglass-half', description: 'Run your game',
+      file: 'app_turn_counter/cc_app_turn_counter.js',
+      helpTitle: 'Turn Counter',
       helpBody: [
         'Your session companion. Load a saved scenario and your faction rosters, then the app tracks everything: activation order, Quality levels, noise, monster encounters, and canyon events.',
         'Each activation shows the active unit\'s full card — lore, stats, abilities, and upgrades. Tap any stat badge for its rule definition. Tap any ability chip to look it up. NPC factions get a directive telling you exactly what to do.',
@@ -174,6 +163,7 @@ window.addEventListener('error', function(e) {
 
   var currentApp = null;
 
+  // ── Help hidden state ─────────────────────────────────────────────────────
   function helpHideKey(appId) { return 'cc_hide_help_' + appId; }
   function isHelpHidden(appId) {
     try { return localStorage.getItem(helpHideKey(appId)) === '1'; } catch (_) { return false; }
@@ -182,6 +172,7 @@ window.addEventListener('error', function(e) {
     try { localStorage.setItem(helpHideKey(appId), hidden ? '1' : '0'); } catch (_) {}
   }
 
+  // ── Blob loader ───────────────────────────────────────────────────────────
   function loadScriptViaBlob(url) {
     return fetch(url + '?t=' + Date.now())
       .then(function (r) {
@@ -201,6 +192,7 @@ window.addEventListener('error', function(e) {
       });
   }
 
+  // ── Login status ──────────────────────────────────────────────────────────
   function checkLoginStatus() {
     var bar = document.getElementById('cc-shell-login-bar');
     if (!bar) return;
@@ -217,10 +209,10 @@ window.addEventListener('error', function(e) {
         if (data.result && data.result.uid) {
           bar2.className = 'cc-login-status logged-in';
           bar2.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as '
-            + (data.result.name || 'User') + ' — cloud saves enabled';
+            + (data.result.name || 'User') + ' \u2014 cloud saves enabled';
         } else {
           bar2.className = 'cc-login-status logged-out';
-          bar2.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in — '
+          bar2.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in \u2014 '
             + '<a href="/web/login" style="color:var(--cc-primary);">log in</a> to use cloud saves';
         }
       })
@@ -233,10 +225,10 @@ window.addEventListener('error', function(e) {
       });
   }
 
+  // ── Help panel ────────────────────────────────────────────────────────────
   function openHelpPanel(appId) {
     var app = APPS[appId];
     if (!app) return;
-
     closeHelpPanel();
 
     var backdrop = document.createElement('div');
@@ -250,7 +242,6 @@ window.addEventListener('error', function(e) {
     }).join('');
 
     var hidden = isHelpHidden(appId);
-
     var panel = document.createElement('div');
     panel.id = 'cc-help-panel';
     panel.className = 'cc-slide-panel';
@@ -265,14 +256,12 @@ window.addEventListener('error', function(e) {
       '<div style="padding:1.5rem;">' +
       bodyHtml +
       '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:1.25rem 0;">' +
-      '<label style="display:flex;align-items:center;gap:.6rem;cursor:pointer;' +
-      'font-size:.82rem;color:#888;">' +
+      '<label style="display:flex;align-items:center;gap:.6rem;cursor:pointer;font-size:.82rem;color:#888;">' +
       '<input type="checkbox" id="cc-help-hide-cb"' + (hidden ? ' checked' : '') +
       ' onchange="window.CC_MASTER.setHelpHidden(\'' + appId + '\', this.checked)"' +
       ' style="width:16px;height:16px;cursor:pointer;">' +
       "Don't show this again for " + (app.title || appId) +
-      '</label>' +
-      '</div>';
+      '</label></div>';
 
     document.body.appendChild(panel);
     setTimeout(function () { panel.classList.add('cc-slide-panel-open'); }, 10);
@@ -288,6 +277,7 @@ window.addEventListener('error', function(e) {
     if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
   }
 
+  // ── Launcher ──────────────────────────────────────────────────────────────
   function renderLauncher() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
@@ -299,15 +289,12 @@ window.addEventListener('error', function(e) {
         '<div style="font-size:3rem;margin-bottom:1rem;color:var(--cc-primary);"><i class="fa ' + app.icon + '"></i></div>' +
         '<h3 style="color:var(--cc-primary);margin:0 0 .5rem;font-size:1.3rem;">' + app.title + '</h3>' +
         '<p style="color:var(--cc-text-muted);margin:0 0 1.5rem;">' + app.description + '</p>' +
-        '<button class="cc-btn cc-btn-block cc-launch-btn" data-app-id="' + id + '">Launch →</button>' +
+        '<button class="cc-btn cc-btn-block cc-launch-btn" data-app-id="' + id + '">Launch \u2192</button>' +
         '</div>' +
-        '<button class="cc-help-btn" data-help-id="' + id + '" ' +
-        'title="How to use ' + app.title + '" ' +
-        'style="position:absolute;bottom:.6rem;right:.6rem;' +
-        'background:none;border:1px solid rgba(255,255,255,.15);border-radius:50%;' +
-        'width:26px;height:26px;display:flex;align-items:center;justify-content:center;' +
-        'cursor:pointer;color:rgba(255,255,255,.4);font-size:.75rem;' +
-        'transition:color .2s,border-color .2s;">' +
+        '<button class="cc-help-btn" data-help-id="' + id + '" title="How to use ' + app.title + '" ' +
+        'style="position:absolute;bottom:.6rem;right:.6rem;background:none;border:1px solid rgba(255,255,255,.15);border-radius:50%;' +
+        'width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;' +
+        'color:rgba(255,255,255,.4);font-size:.75rem;transition:color .2s,border-color .2s;">' +
         '<i class="fa fa-question"></i></button>' +
         '</div>';
     }).join('');
@@ -318,41 +305,32 @@ window.addEventListener('error', function(e) {
       '<h1 class="cc-app-title" style="font-size:clamp(2rem,5vw,3.5rem);margin-bottom:.5rem;">Coffin Canyon</h1>' +
       '<p class="cc-app-subtitle" style="font-size:1.2rem;">Choose an app to launch</p>' +
       '</div>' +
-      '<div id="cc-shell-login-bar" class="cc-login-status logged-out"' +
-      ' style="max-width:1200px;margin:0 auto 1.5rem;border-radius:6px;">' +
-      '<i class="fa fa-spinner fa-spin"></i> Checking login&hellip;</div>' +
+      '<div id="cc-shell-login-bar" class="cc-login-status logged-out" style="max-width:1200px;margin:0 auto 1.5rem;border-radius:6px;">' +
+      '<i class="fa fa-spinner fa-spin"></i> Checking login\u2026</div>' +
       '<div class="app-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem;">' +
       cards +
       '</div>' +
       '<div style="text-align:center;padding-top:2rem;border-top:1px solid var(--cc-border);color:var(--cc-text-dim);font-size:.85rem;">' +
-      '<p style="margin:0;">Coffin Canyon App Shell — tap <i class="fa fa-question"></i> on any card for instructions</p></div>' +
-      '</div></div>';
+      '<p style="margin:0;">Coffin Canyon App Shell \u2014 tap <i class="fa fa-question"></i> on any card for instructions</p>' +
+      '</div></div></div>';
 
     setTimeout(checkLoginStatus, 100);
 
     document.querySelectorAll('.cc-launch-btn').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        loadApp(btn.dataset.appId);
-      });
+      btn.addEventListener('click', function (e) { e.stopPropagation(); loadApp(btn.dataset.appId); });
     });
-
     document.querySelectorAll('.cc-help-btn').forEach(function (btn) {
-      btn.addEventListener('click', function (e) {
-        e.stopPropagation();
-        openHelpPanel(btn.dataset.helpId);
-      });
+      btn.addEventListener('click', function (e) { e.stopPropagation(); openHelpPanel(btn.dataset.helpId); });
     });
-
     document.querySelectorAll('.app-card').forEach(function (card) {
       card.addEventListener('mouseenter', function () {
-        card.style.transform   = 'translateY(-4px)';
+        card.style.transform = 'translateY(-4px)';
         card.style.borderColor = 'var(--cc-primary)';
         var hb = card.querySelector('.cc-help-btn');
         if (hb) { hb.style.color = 'rgba(255,255,255,.7)'; hb.style.borderColor = 'rgba(255,255,255,.35)'; }
       });
       card.addEventListener('mouseleave', function () {
-        card.style.transform   = 'translateY(0)';
+        card.style.transform = 'translateY(0)';
         card.style.borderColor = '';
         var hb = card.querySelector('.cc-help-btn');
         if (hb) { hb.style.color = 'rgba(255,255,255,.4)'; hb.style.borderColor = 'rgba(255,255,255,.15)'; }
@@ -364,6 +342,7 @@ window.addEventListener('error', function(e) {
     });
   }
 
+  // ── Home button ───────────────────────────────────────────────────────────
   var _homeObserver = null;
 
   function injectHomeButton() {
@@ -391,10 +370,9 @@ window.addEventListener('error', function(e) {
     homeBtn.id        = 'cc-shell-home-btn';
     homeBtn.className = 'cc-btn cc-btn-ghost';
     homeBtn.style.cssText = 'font-size:.8rem;padding:.35rem .75rem;opacity:.75;';
-    homeBtn.innerHTML = '← Home';
+    homeBtn.innerHTML = '\u2190 Home';
     homeBtn.addEventListener('click', backToLauncher);
     wrap.appendChild(homeBtn);
-
     header.appendChild(wrap);
   }
 
@@ -404,7 +382,7 @@ window.addEventListener('error', function(e) {
     btn.id        = 'cc-shell-home-btn';
     btn.className = 'cc-btn cc-btn-ghost';
     btn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:99999;font-size:.8rem;padding:.35rem .75rem;opacity:.8;box-shadow:0 2px 8px rgba(0,0,0,.5);';
-    btn.innerHTML = '← Home';
+    btn.innerHTML = '\u2190 Home';
     btn.addEventListener('click', backToLauncher);
     document.body.appendChild(btn);
   }
@@ -427,19 +405,20 @@ window.addEventListener('error', function(e) {
     if (floating && floating.style.position === 'fixed') floating.remove();
   }
 
-  var appInfo = APPS[appId];
-  if (!appInfo) {
-  console.error('Unknown app:', appId);
-  renderLauncher();
-  return;
-}
-showPreloader();
+  // ── App loader ────────────────────────────────────────────────────────────
+  function loadApp(appId) {
+    var appInfo = APPS[appId];
+    if (!appInfo) {
+      console.error('Unknown app:', appId);
+      renderLauncher();
+      return;
+    }
 
+    showPreloader();
     closeHelpPanel();
-
     currentApp = appId;
-    var root = document.getElementById('cc-master-shell-root');
 
+    var root = document.getElementById('cc-master-shell-root');
     root.innerHTML = '<div class="cc-app-shell" style="min-height:100vh;">' +
       '<div id="cc-app-root" data-cc-app="' + appId + '" style="min-height:100vh;"></div>' +
       '</div>';
@@ -450,7 +429,7 @@ showPreloader();
       setTimeout(function () { openHelpPanel(appId); }, 800);
     }
 
-    console.log('📦 Loading rules helpers');
+    console.log('\ud83d\udce6 Loading rules helpers');
     loadScriptViaBlob(RULES_HELPERS)
       .then(function () {
         return fetch(RULES_BASE + '?t=' + Date.now())
@@ -479,7 +458,6 @@ showPreloader();
         }
         var appRoot = document.getElementById('cc-app-root');
         if (!appRoot) throw new Error('cc-app-root missing');
-
         var appUrl = APPS_BASE + appInfo.file;
         return loadScriptViaBlob(appUrl).then(function () {
           return { rulesBase: rulesBase, appRoot: document.getElementById('cc-app-root') };
@@ -487,10 +465,10 @@ showPreloader();
       })
       .then(function (ctx) {
         if (!window.CC_APP || !window.CC_APP.init) throw new Error('CC_APP.init missing');
-        window.CC_APP.init({ root: ctx.appRoot, ctx: { app: appId, rulesBase: ctx.rulesBase } });
+        return window.CC_APP.init({ root: ctx.appRoot, ctx: { app: appId, rulesBase: ctx.rulesBase } });
       })
       .catch(function (err) {
-        console.error('❌ Loader failed:', err);
+        console.error('\u274c Loader failed:', err);
         var appRoot = document.getElementById('cc-app-root');
         if (appRoot) {
           appRoot.innerHTML = '<div class="cc-panel">Failed to Load App: ' + err.message + '</div>';
@@ -498,6 +476,7 @@ showPreloader();
       });
   }  // end loadApp
 
+  // ── Back to launcher ──────────────────────────────────────────────────────
   function backToLauncher() {
     closeHelpPanel();
     stopHomeButtonObserver();
@@ -505,13 +484,12 @@ showPreloader();
       try { window.CC_APP.destroy(); } catch (_) {}
     }
     currentApp = null;
-
     var appRoot = document.getElementById('cc-app-root');
     if (appRoot) {
-    appRoot.innerHTML = '';
-    appRoot.removeAttribute('data-cc-app');
-    appRoot.removeAttribute('data-cc-mounted');
-}
+      appRoot.innerHTML = '';
+      appRoot.removeAttribute('data-cc-app');
+      appRoot.removeAttribute('data-cc-mounted');
+    }
     if (window._scenarioMap) {
       try { window._scenarioMap.remove(); } catch (e) {}
       window._scenarioMap = null;
@@ -519,6 +497,7 @@ showPreloader();
     renderLauncher();
   }
 
+  // ── Global API ────────────────────────────────────────────────────────────
   window.CC_MASTER = {
     loadApp:        loadApp,
     backToLauncher: backToLauncher,
@@ -528,6 +507,7 @@ showPreloader();
     setHelpHidden:  setHelpHidden,
   };
 
+  // ── Shell CSS ─────────────────────────────────────────────────────────────
   if (!document.getElementById('cc-shell-styles')) {
     var style = document.createElement('style');
     style.id = 'cc-shell-styles';
@@ -552,30 +532,23 @@ showPreloader();
     document.head.appendChild(style);
   }
 
+  // ── Preloader ─────────────────────────────────────────────────────────────
   var LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
   var MIN_PRELOAD_MS = 1000;
 
   function showPreloader() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
-
     root.innerHTML = '<div id="cc-preloader" style="' +
       'min-height:100vh;display:flex;flex-direction:column;' +
-      'align-items:center;justify-content:center;' +
-      'background:#0a0a0a;gap:2rem;">' +
-      '<img src="' + LOGO_URL + '" alt="Coffin Canyon"' +
-      ' style="width:260px;max-width:70vw;' +
-      'filter:drop-shadow(0 0 28px rgba(255,117,24,.5));' +
-      'animation:cc-pulse 2s ease-in-out infinite;"/>' +
-      '<div style="width:260px;max-width:70vw;height:4px;' +
-      'background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;">' +
-      '<div id="cc-preload-bar" style="height:100%;width:0%;' +
-      'background:#ff7518;border-radius:2px;' +
-      'transition:width ' + (MIN_PRELOAD_MS / 1000) + 's linear;"></div>' +
-      '</div>' +
-      '<div style="color:#ff7518;font-size:.7rem;letter-spacing:.28em;' +
-      'text-transform:uppercase;animation:cc-pulse 1.5s ease-in-out infinite;">' +
-      'Loading\u2026</div>' +
+      'align-items:center;justify-content:center;background:#0a0a0a;gap:2rem;">' +
+      '<img src="' + LOGO_URL + '" alt="Coffin Canyon" style="width:260px;max-width:70vw;' +
+      'filter:drop-shadow(0 0 28px rgba(255,117,24,.5));animation:cc-pulse 2s ease-in-out infinite;"/>' +
+      '<div style="width:260px;max-width:70vw;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;">' +
+      '<div id="cc-preload-bar" style="height:100%;width:0%;background:#ff7518;border-radius:2px;' +
+      'transition:width ' + (MIN_PRELOAD_MS / 1000) + 's linear;"></div></div>' +
+      '<div style="color:#ff7518;font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;' +
+      'animation:cc-pulse 1.5s ease-in-out infinite;">Loading\u2026</div>' +
       '</div>';
 
     if (!document.getElementById('cc-preloader-keyframes')) {
@@ -584,7 +557,6 @@ showPreloader();
       s.textContent = '@keyframes cc-pulse{0%,100%{opacity:.55}50%{opacity:1}}';
       document.head.appendChild(s);
     }
-
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {
         var bar = document.getElementById('cc-preload-bar');
@@ -593,15 +565,14 @@ showPreloader();
     });
   }
 
+  // ── Boot ──────────────────────────────────────────────────────────────────
   var isBooting = false;
 
   function boot(onComplete) {
     if (isBooting) return;
     isBooting = true;
-
-    console.log('🚀 cc_loader_core boot()');
+    console.log('\ud83d\ude80 cc_loader_core boot()');
     showPreloader();
-
     setTimeout(function () {
       var preloader = document.getElementById('cc-preloader');
       if (preloader) {
@@ -617,7 +588,6 @@ showPreloader();
     }, MIN_PRELOAD_MS);
   }
 
-  // Ensure DOM is ready or wait for it
   function initOrObserve() {
     if (document.getElementById('cc-master-shell-root')) {
       boot(renderLauncher);
@@ -634,4 +604,4 @@ showPreloader();
 
   initOrObserve();
 
-}()); // This closes the IIFE started at the top of your file
+}());
