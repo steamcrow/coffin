@@ -91,6 +91,12 @@ console.log("🎲 Scenario Builder app loaded");
           vertical-align: middle;
         }
 
+        /* ---- Fade-in for staged step reveals ---- */
+        @keyframes cc-fade-in {
+          from { opacity: 0; transform: translateY(4px); }
+          to   { opacity: 1; transform: translateY(0);   }
+        }
+
         /* ---- Splash logo pulse ---- */
         @keyframes cc-logo-pulse {
           0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
@@ -2776,6 +2782,50 @@ console.log("🎲 Scenario Builder app loaded");
     }
 
     // ── window.generateScenario — thin wrapper around ScenarioGenerator ────────
+    // ── window.generateFromLocation ─────────────────────────────────────────────
+    // Called from Step 3 NEXT.  Marks step 3 complete, shows a preloader overlay,
+    // then triggers generateScenario() — skipping the old Step 4 form entirely.
+    window.generateFromLocation = function() {
+      if (!state.locationType || (state.locationType === 'named' && !state.selectedLocation)) return;
+      if (!state.completedSteps.includes(3)) state.completedSteps.push(3);
+      state.currentStep = 4;
+
+      // Build a full-screen preloader overlay
+      const overlay = document.createElement('div');
+      overlay.id = 'cc-generate-preloader';
+      overlay.style.cssText = [
+        'position:fixed;inset:0;z-index:9999',
+        'background:rgba(0,0,0,0.93)',
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem',
+        'transition:opacity 0.4s ease'
+      ].join(';');
+      overlay.innerHTML = `
+        <img src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+             alt="Coffin Canyon"
+             class="cc-splash-logo"
+             style="width:200px;max-width:70vw;opacity:0.92;">
+        <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+          <div class="cc-loading-progress"></div>
+        </div>
+        <div style="color:rgba(255,255,255,0.45);font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;">
+          Assembling scenario&hellip;
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      // Short hold so the user sees the preloader, then generate and fade out
+      setTimeout(function() {
+        window.generateScenario();
+        // Fade out overlay after render completes
+        requestAnimationFrame(function() {
+          overlay.style.opacity = '0';
+          setTimeout(function() {
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+          }, 450);
+        });
+      }, 900);
+    };
+
     window.generateScenario = function() {
       console.log('🎲 Generating scenario...', state);
 
@@ -3045,9 +3095,9 @@ console.log("🎲 Scenario Builder app loaded");
 
         // Most factions cannot oppose themselves. Shine Riders and Monsters can.
         const CANNOT_SELF_OPPOSE = ['monster_rangers', 'monsterology', 'liberty_corps', 'crow_queen'];
-        const playerCanSelfOppose = !playerFaction || !CANNOT_SELF_OPPOSE.includes(playerFaction.id);
 
         return `
+          <!-- 2a: Your Faction — always shown in solo -->
           <div class="cc-form-section">
             <label class="cc-label">Your Faction</label>
             <select class="cc-input" onchange="setPlayerFaction(this.value)">
@@ -3058,31 +3108,40 @@ console.log("🎲 Scenario Builder app loaded");
             </select>
           </div>
 
-          <div class="cc-form-section">
-            <label class="cc-label">NPC Opponents</label>
-            <p class="cc-help-text">Choose which factions you'll be playing against.</p>
-            ${FACTIONS.map(f => {
-              const isNPC     = state.factions.some(sf => sf.id === f.id && sf.isNPC);
-                const isSelf    = playerFaction?.id === f.id;
-              const disabled  = isSelf && CANNOT_SELF_OPPOSE.includes(f.id);
-              return `
-                <div class="cc-faction-row" style="${disabled ? 'opacity:0.4;' : ''}">
-                  <label class="cc-checkbox-label">
-                    <input type="checkbox" ${isNPC ? 'checked' : ''} ${disabled ? 'disabled' : ''}
-                      onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)">
-                    ${f.name}
-                  </label>
-                  <span class="cc-help-text" style="margin:0">${disabled ? '(same faction)' : '(NPC)'}</span>
-                </div>
-              `;
-            }).join('')}
-          </div>
+          <!-- 2b: NPC Opponents — revealed only after player faction chosen -->
+          ${playerFaction ? `
+            <div class="cc-form-section" style="animation:cc-fade-in 0.25s ease;">
+              <label class="cc-label">NPC Opponents</label>
+              <p class="cc-help-text">Choose which factions you'll be playing against.</p>
+              ${FACTIONS.map(f => {
+                const isNPC    = state.factions.some(sf => sf.id === f.id && sf.isNPC);
+                const isSelf   = playerFaction?.id === f.id;
+                const disabled = isSelf && CANNOT_SELF_OPPOSE.includes(f.id);
+                return `
+                  <div class="cc-faction-row" style="${disabled ? 'opacity:0.4;' : ''}">
+                    <label class="cc-checkbox-label">
+                      <input type="checkbox" ${isNPC ? 'checked' : ''} ${disabled ? 'disabled' : ''}
+                        onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)">
+                      ${f.name}
+                    </label>
+                    <span class="cc-help-text" style="margin:0">${disabled ? '(same faction)' : '(NPC)'}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
 
-          <div class="cc-form-actions">
-            <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
-            <button class="cc-btn cc-btn-primary" onclick="completeStep(2)"
-              ${!playerFaction ? 'disabled' : ''}>Next: Location &rarr;</button>
-          </div>
+            <div class="cc-form-actions">
+              <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
+              <button class="cc-btn cc-btn-primary" onclick="completeStep(2)">Next: Location &rarr;</button>
+            </div>
+          ` : `
+            <div class="cc-step-hint" style="padding:0.6rem 0.25rem;color:rgba(255,255,255,0.35);font-size:0.78rem;font-style:italic;">
+              Select your faction to reveal NPC opponents.
+            </div>
+            <div class="cc-form-actions">
+              <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
+            </div>
+          `}
         `;
       }
 
@@ -3158,9 +3217,9 @@ console.log("🎲 Scenario Builder app loaded");
 
         <div class="cc-form-actions">
           <button class="cc-btn cc-btn-ghost" onclick="openStep(2)">&larr; Back</button>
-          <button class="cc-btn cc-btn-primary" onclick="completeStep(3)"
+          <button class="cc-btn cc-btn-primary" onclick="generateFromLocation()"
             ${(state.locationType === 'named' && !state.selectedLocation) || !state.locationType ? 'disabled' : ''}>
-            Next: Generate Scenario &rarr;
+            <i class="fa fa-dice"></i> Generate Scenario
           </button>
         </div>
       `;
@@ -3771,6 +3830,22 @@ console.log("🎲 Scenario Builder app loaded");
       }
 
       const html = `
+        <div id="cc-sb-login-bar" style="
+          display:flex;align-items:center;justify-content:space-between;
+          padding:0.35rem 1rem;
+          background:rgba(0,0,0,0.55);
+          border-bottom:1px solid rgba(255,117,24,0.2);
+          font-size:0.75rem;
+          letter-spacing:0.04em;
+          min-height:34px;">
+          <span style="color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;">
+            <i class="fa fa-map" style="color:rgba(255,117,24,0.6);margin-right:0.4rem;"></i>Coffin Canyon
+          </span>
+          <span id="cc-sb-login-status" style="color:rgba(255,255,255,0.35);">
+            <i class="fa fa-circle-o-notch fa-spin" style="font-size:0.7rem;margin-right:0.3rem;"></i>Checking&hellip;
+          </span>
+        </div>
+
         <div class="cc-app-header">
           <div>
             <h1 class="cc-app-title">Coffin Canyon</h1>
@@ -3809,6 +3884,27 @@ console.log("🎲 Scenario Builder app loaded");
         </div>
       `;
       root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
+
+      // Auth check for login bar — runs 500ms after DOM is in place
+      setTimeout(function() {
+        const statusEl = document.getElementById('cc-sb-login-status');
+        if (!statusEl) return;
+        if (!window.CC_STORAGE) {
+          statusEl.innerHTML = '<a href="/web/login" style="color:rgba(255,117,24,0.7);text-decoration:none;"><i class="fa fa-sign-in" style="margin-right:0.3rem;"></i>Sign in</a>';
+          return;
+        }
+        window.CC_STORAGE.checkAuth().then(function(auth) {
+          if (!statusEl) return;
+          if (auth && auth.loggedIn) {
+            const name = auth.name || auth.username || 'Signed in';
+            statusEl.innerHTML = '<i class="fa fa-check-circle" style="color:#4ade80;margin-right:0.3rem;"></i><span style="color:rgba(255,255,255,0.55);">' + name + '</span>';
+          } else {
+            statusEl.innerHTML = '<a href="/web/login" style="color:rgba(255,117,24,0.7);text-decoration:none;"><i class="fa fa-sign-in" style="margin-right:0.3rem;"></i>Sign in to save</a>';
+          }
+        }).catch(function() {
+          if (statusEl) statusEl.innerHTML = '<a href="/web/login" style="color:rgba(255,117,24,0.7);text-decoration:none;"><i class="fa fa-sign-in" style="margin-right:0.3rem;"></i>Sign in</a>';
+        });
+      }, 500);
     }
 
     // ── Event handlers — all window.* functions called from HTML onclick attrs ────
