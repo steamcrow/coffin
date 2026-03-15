@@ -460,9 +460,12 @@ window.addEventListener('error', function(e) {
 
   // ── App loader ────────────────────────────────────────────────────────────
   function loadApp(appId) {
-    console.log('📦 Loading app: ' + appId);
+    showPreloader();
     var appInfo = APPS[appId];
-    if (!appInfo) return console.error('Unknown app:', appId);
+    if (!appInfo) {
+      console.error('Unknown app:', appId);
+      return;
+    }
 
     // Close any open help panel before launching
     closeHelpPanel();
@@ -484,20 +487,16 @@ window.addEventListener('error', function(e) {
     console.log('📦 Loading rules helpers');
     loadScriptViaBlob(RULES_HELPERS)
       .then(function () {
-        console.log('📦 Loading rules_base.json (optional)');
         return fetch(RULES_BASE + '?t=' + Date.now())
           .then(function (r) {
-            if (!r.ok) { console.warn('rules_base.json not found — continuing without it'); return {}; }
+            if (!r.ok) return {};
             return r.text().then(function (t) {
-              try { return JSON.parse(t); } catch (e) { console.warn('rules_base.json parse failed:', e.message); return {}; }
+              try { return JSON.parse(t); } catch (e) { return {}; }
             });
           })
           .catch(function () { return {}; });
       })
       .then(function (rulesBase) {
-        var helpers = window.createRulesHelpers ? window.createRulesHelpers(rulesBase) : {};
-
-        if (!helpers.getChildren) {
           helpers.getChildren = function (parentId) {
             if (!rulesBase || !rulesBase.rules) return [];
             return Object.values(rulesBase.rules).filter(function (item) {
@@ -515,28 +514,22 @@ window.addEventListener('error', function(e) {
         if (!appRoot) throw new Error('cc-app-root missing');
 
         var appUrl = APPS_BASE + appInfo.file;
-        console.log('📦 Loading app file: ' + appUrl);
         return loadScriptViaBlob(appUrl).then(function () {
-          return { rulesBase: rulesBase, helpers: helpers, appRoot: appRoot };
+          return { rulesBase: rulesBase, appRoot: document.getElementById('cc-app-root') };
         });
       })
       .then(function (ctx) {
         if (!window.CC_APP || !window.CC_APP.init) throw new Error('CC_APP.init missing');
-        window.CC_APP.init({ root: ctx.appRoot, ctx: { app: appId, rulesBase: ctx.rulesBase, helpers: ctx.helpers } });
-        console.log('✅ App mounted: ' + appId);
+        window.CC_APP.init({ root: ctx.appRoot, ctx: { app: appId, rulesBase: ctx.rulesBase } });
       })
       .catch(function (err) {
         console.error('❌ Loader failed:', err);
         var appRoot = document.getElementById('cc-app-root');
         if (appRoot) {
-          appRoot.innerHTML = '<div class="cc-panel" style="margin:2rem auto;max-width:600px;">' +
-            '<div class="cc-panel-header"><h3 style="color:#ef5350;margin:0;">Failed to Load App</h3></div>' +
-            '<div class="cc-panel-body"><p style="color:var(--cc-text);">' + (err.message || String(err)) + '</p>' +
-            '<button class="cc-btn cc-btn-block" onclick="window.CC_MASTER.backToLauncher()">← Home</button>' +
-            '</div></div>';
+          appRoot.innerHTML = '<div class="cc-panel">Failed to Load App: ' + err.message + '</div>';
         }
-      });
-  }
+      })
+      .finally(function() {
 
   // ── Back to launcher ──────────────────────────────────────────────────────
   function backToLauncher() {
@@ -640,14 +633,7 @@ window.addEventListener('error', function(e) {
 
   var isBooting = false; 
 
-  function boot() {
-    if (isBooting) return;
-    isBooting = true;
-    
-    console.log('🚀 cc_loader_core boot()');
-    showPreloader();
-    setTimeout(function () {
-      var preloader = document.getElementById('cc-preloader');
+  var preloader = document.getElementById('cc-preloader');
       if (preloader) {
         preloader.style.transition = 'opacity .4s ease';
         preloader.style.opacity = '0';
@@ -664,6 +650,19 @@ window.addEventListener('error', function(e) {
       var observer = new MutationObserver(function(mutations, obs) {
           if (document.getElementById('cc-master-shell-root')) {
               boot();
+              obs.disconnect();
+          }
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+  }
+}());
+
+  if (document.getElementById('cc-master-shell-root')) {
+      boot(renderLauncher);
+  } else {
+      var observer = new MutationObserver(function(mutations, obs) {
+          if (document.getElementById('cc-master-shell-root')) {
+              boot(renderLauncher);
               obs.disconnect();
           }
       });
