@@ -60,6 +60,10 @@
   //  To adjust a box: use the "Edit Hitboxes" button in the app header,
   //  drag/resize the cyan overlays, then click Export to get new values.
   //
+  // ── TUNE 7: Fallback hitboxes ─────────────────────────────────────────────
+  // These are used only if a location in 170_named_locations.json has no
+  // "hitbox" field yet. Add hitbox:[y1,x1,y2,x2] to each location entry
+  // in the JSON to move ownership there permanently.
   var HITBOXES = {
   "bandit-buck": [1486, 1005, 1605, 1206],
   "bayou-city": [1175, 2501, 1386, 2767],
@@ -521,10 +525,20 @@
     }
 
     function exportJSON() {
-      var lines = Object.keys(HITBOXES).sort().map(function (k) {
-        return '  "' + k + '": [' + HITBOXES[k].map(function (n) { return Math.round(n); }).join(", ") + "]";
+      // Output two formats:
+      // 1. The JS fallback block (paste into cc_app_canyon_map.js)
+      // 2. A list of "hitbox" fields to add to 170_named_locations.json entries
+      var jsLines = Object.keys(HITBOXES).sort().map(function (k) {
+        return '  "' + k + '": [' + HITBOXES[k].map(function (n) { return Math.round(n); }).join(', ') + ']';
       });
-      window.prompt("Copy HITBOXES:", "var HITBOXES = {\n" + lines.join(",\n") + "\n};");
+      var jsonLines = Object.keys(HITBOXES).sort().map(function (k) {
+        return '"' + k + '":  "hitbox": [' + HITBOXES[k].map(function (n) { return Math.round(n); }).join(', ') + ']';
+      });
+      var out = '// ── Paste into cc_app_canyon_map.js HITBOXES block:\n' +
+        'var HITBOXES = {\n' + jsLines.join(',\n') + '\n};' +
+        '\n\n// ── Add to each location in 170_named_locations.json:\n' +
+        jsonLines.join('\n');
+      window.prompt("Copy hitbox data:", out);
     }
 
     function setEditing(on) {
@@ -1064,6 +1078,15 @@
           locationsDoc = results[1];
           px           = mapDoc.map.background.image_pixel_size;
           bounds       = [[0, 0], [px.h, px.w]];
+
+          // Merge hitboxes from the locations JSON into HITBOXES.
+          // Any location with a "hitbox" field in the JSON takes priority
+          // over the hardcoded fallback values above.
+          (locationsDoc.locations || []).forEach(function (loc) {
+            if (loc.hitbox && Array.isArray(loc.hitbox) && loc.hitbox.length === 4) {
+              HITBOXES[loc.id] = loc.hitbox;
+            }
+          });
 
           try { if (bgMap)   bgMap.remove();   } catch (_) {}
           try { if (lensMap) lensMap.remove(); } catch (_) {}
