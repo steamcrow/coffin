@@ -497,13 +497,12 @@ window.addEventListener('error', function(e) {
           .catch(function () { return {}; });
       })
       .then(function (rulesBase) {
-          helpers.getChildren = function (parentId) {
+          hhelpers.getChildren = function (parentId) {
             if (!rulesBase || !rulesBase.rules) return [];
             return Object.values(rulesBase.rules).filter(function (item) {
               return item && item.parent_id === parentId;
             });
           };
-        }
         if (!helpers.getById) {
           helpers.getById = function (id) {
             if (!rulesBase || !rulesBase.rules) return null;
@@ -530,6 +529,7 @@ window.addEventListener('error', function(e) {
         }
       })
       .finally(function() {
+      });
 
   // ── Back to launcher ──────────────────────────────────────────────────────
   function backToLauncher() {
