@@ -1002,7 +1002,7 @@
       updateResponsiveScale();
       var loadStart = Date.now();
 
-      ensureDeps(opts).then(function() {
+      return ensureDeps(opts).then(function() {
           // ── KNOB STYLE FIX ─────────────────────────────────────────────
           // CSS files have just been appended to <head>.  Re-append
           // knobStyleEl now so it is the LAST style tag, guaranteeing its
