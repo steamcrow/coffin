@@ -2146,62 +2146,219 @@ console.log("🎲 Scenario Builder app loaded");
     }
 
 
-    generateObjectives(plotFamily, locProfile, factions) {
+    // ── calculateWeightedAffinity ────────────────────────────────────────────────
+    //  Layer A of the Triple-Filter model.
+    //  Returns a scored map of { objectiveType → relevanceScore }.
+    //  Scoring:
+    //    1.0  base per type
+    //   +2.0  per resource match (more for high-value resources)
+    //   +3.0  per faction philosophy keyword match
+    //   +3.0  per plot-family default objective
+    //    0    archetype-locked types removed entirely
+    calculateWeightedAffinity(plotFamily, locProfile, factions) {
       const scores = {};
-      ALL_OBJECTIVE_TYPES.forEach(t => scores[t] = 0);
+      ALL_OBJECTIVE_TYPES.forEach(t => { scores[t] = 1.0; });
 
-      // Thyr Cache gets a baseline score so it appears in most scenarios;
-      // the canyon always has Thyr somewhere.
-      scores['thyr_cache'] += 2;
+      // Baseline: Thyr Cache always has a small head-start
+      scores['thyr_cache'] += 1.0;
 
+      // Plot family default objectives — strong signal
       (plotFamily.default_objectives || []).forEach(t => {
-        if (scores[t] !== undefined) scores[t] += 3;
+        if (scores[t] !== undefined) scores[t] += 3.0;
       });
 
+      // ── Layer A1: Resource Match (+2 per matching resource, scaled by value) ──
       if (locProfile?.effectiveResources) {
         const r = locProfile.effectiveResources;
         for (const [key, val] of Object.entries(r)) {
           if (typeof val === 'number' && val >= 1) {
-            // Weight: high-value resources (3+) get doubled contribution.
-            const weight = val >= 3 ? val * 2 : val >= 2 ? val + 2 : val + 1;
+            const weight = val >= 3 ? 4.0 : val >= 2 ? 3.0 : 2.0;
             (RESOURCE_OBJECTIVE_AFFINITY[key] || []).forEach(t => {
               if (scores[t] !== undefined) scores[t] += weight;
             });
           }
         }
-
-        if ((r.water_clean || 0) < 1 && (r.water_foul || 0) < 1 && (r.rotgut || 0) < 1 && (r.food_foul || 0) < 1)
+        // Penalise types whose required resource is missing
+        if ((r.water_clean || 0) < 1 && (r.water_foul || 0) < 1 && (r.food_foul || 0) < 1)
           scores['fouled_resource'] = Math.max(0, scores['fouled_resource'] - 4);
         if ((r.thyr || 0) < 1) {
           scores['thyr_cache']    = Math.max(0, scores['thyr_cache']    - 2);
           scores['ritual_circle'] = Math.max(0, scores['ritual_circle'] - 2);
         }
-        if ((r.spare_parts || 0) < 2)
-          scores['wrecked_engine'] = Math.max(0, scores['wrecked_engine'] - 3);
-        if ((r.livestock || 0) < 2)
-          scores['pack_animals'] = 0;
-        if ((r.tzul_silver || 0) < 3)
-          scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 2);
+        if ((r.spare_parts || 0) < 2) scores['wrecked_engine']    = Math.max(0, scores['wrecked_engine'] - 3);
+        if ((r.livestock   || 0) < 2) scores['pack_animals']       = 0;
+        if ((r.tzul_silver || 0) < 3) scores['sacrificial_focus']  = Math.max(0, scores['sacrificial_focus'] - 2);
       }
 
-      // ---- RAIL GATE ----
-      // Rail objectives are gated: only score if the location has rail features or a rail archetype.
-      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'rail', 'Rail'];
-      // Updated: matched to 170_named_locations.json archetypes
-      // rail_grade kept temporarily — gore-mule-drop uses it until 170 is updated
-      const RAIL_ARCHETYPES = ['rail_stop', 'rail_infrastructure', 'rail_grade', 'rail'];
+      // ── Layer A2: Faction Philosophy Match (+3 per faction preference keyword) ──
+      const PREF_TO_OBJECTIVE = {
+        escort:      ['captive_entity', 'cargo_vehicle', 'pack_animals'],
+        preserve:    ['land_marker', 'fortified_position'],
+        defend:      ['fortified_position', 'command_structure', 'barricades'],
+        cleanse:     ['tainted_ground', 'fouled_resource', 'ritual_circle'],
+        rescue:      ['captive_entity', 'evacuation_point'],
+        stabilize:   ['collapsing_route', 'unstable_structure'],
+        extract:     ['scattered_crates', 'stored_supplies', 'thyr_cache', 'derailed_cars'],
+        capture:     ['captive_entity', 'cargo_vehicle'],
+        devour:      ['pack_animals', 'captive_entity'],
+        artifact:    ['artifact', 'ritual_components'],
+        thyr:        ['thyr_cache', 'ritual_circle', 'ritual_site'],
+        kill:        ['command_structure', 'fortified_position'],
+        control:     ['land_marker', 'command_structure', 'fortified_position'],
+        secure:      ['fortified_position', 'barricades', 'command_structure'],
+        occupy:      ['land_marker', 'command_structure'],
+        command:     ['command_structure'],
+        confiscate:  ['cargo_vehicle', 'stored_supplies', 'scattered_crates'],
+        contain:     ['captive_entity', 'tainted_ground'],
+        loot:        ['scattered_crates', 'stored_supplies', 'derailed_cars'],
+        steal:       ['cargo_vehicle', 'artifact'],
+        raid:        ['scattered_crates', 'stored_supplies'],
+        sabotage:    ['wrecked_engine', 'collapsing_route', 'unstable_structure'],
+        escape:      ['evacuation_point', 'collapsing_route'],
+        consecrate:  ['ritual_site', 'ritual_circle', 'sacrificial_focus'],
+        convert:     ['captive_entity', 'ritual_components'],
+        claim:       ['land_marker', 'artifact'],
+        ritual:      ['ritual_site', 'ritual_circle', 'ritual_components', 'sacrificial_focus'],
+        dominate:    ['command_structure', 'fortified_position', 'land_marker'],
+        subjugate:   ['captive_entity', 'command_structure'],
+        territory:   ['land_marker', 'fortified_position'],
+        feed:        ['pack_animals', 'captive_entity'],
+        nest:        ['land_marker', 'tainted_ground'],
+        survive:     ['evacuation_point', 'collapsing_route'],
+        disrupt:     ['collapsing_route', 'wrecked_engine', 'barricades'],
+      };
+
+      (factions || []).forEach(faction => {
+        const approach = FACTION_APPROACH[faction.id] || FACTION_APPROACH.monsters;
+        (approach.objective_preferences || []).forEach(pref => {
+          (PREF_TO_OBJECTIVE[pref] || []).forEach(t => {
+            if (scores[t] !== undefined) scores[t] += 3.0;
+          });
+        });
+      });
+
+      // ── Layer A3: Archetype Lock — exclude contextually nonsensical types ────
+      const arch = (locProfile?.archetype || '').toLowerCase();
+      const ARCHETYPE_LOCKS = {
+        natural:    ['wrecked_engine', 'derailed_cars', 'command_structure', 'barricades'],
+        ruins:      ['pack_animals'],
+        wasteland:  ['stored_supplies', 'pack_animals'],
+        bayou:      ['wrecked_engine', 'derailed_cars'],
+        rail:       [],
+        rail_stop:  [],
+        mine:       ['cargo_vehicle', 'evacuation_point'],
+      };
+      const locked = ARCHETYPE_LOCKS[arch] || [];
+      locked.forEach(t => { scores[t] = 0; });
+
+      // ── Rail Gate — objective types that require rail context ────────────────
+      const RAIL_FEATURES   = ['RailTerminus','RailGrade','BrakeScars','RailYard','Trestle','RailSpur','rail','Rail'];
+      const RAIL_ARCHETYPES = ['rail_stop','rail_infrastructure','rail_grade','rail'];
       const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
                    || RAIL_ARCHETYPES.includes(locProfile?.archetype || '');
-      if (!hasRail) {
-        scores['wrecked_engine'] = 0;
-        scores['derailed_cars']  = 0;
+      if (!hasRail) { scores['wrecked_engine'] = 0; scores['derailed_cars'] = 0; }
+
+      return scores;
+    }
+
+    // ── getObjectiveTraits ────────────────────────────────────────────────────────
+    //  Layer B: Wildcard Trait System.
+    //  Returns a trait object { name, type, vp_modifier, description, trigger? }
+    //  25% chance of no trait (clean objective).
+    getObjectiveTraits(type, locProfile, dangerRating) {
+      if (Math.random() < 0.25) return null;
+
+      const TRAITS = {
+        Environmental: [
+          { name: 'Unstable',    vp_modifier: +1, description: 'Collapses on a D6 roll of 1 at the start of each round. Units within 3" take a Danger Test.' },
+          { name: 'Flooded',     vp_modifier: 0,  description: 'Counts as difficult terrain. Units interacting must pass a Move test or lose their action.' },
+          { name: 'Obscured',    vp_modifier: +1, description: 'Cannot be interacted with while an enemy unit is within 6".' },
+          { name: 'Scorched',    vp_modifier: 0,  description: 'Units that interact take 1 automatic hit. Armour applies.' },
+          { name: 'Volatile',    vp_modifier: +2, description: 'If destroyed or damaged, all units within 3" take a Danger Test (D6).' },
+          { name: 'Tainted',     vp_modifier: +1, description: 'Units within 3" must pass a Morale test at the start of their activation.' },
+        ],
+        Mechanical: [
+          { name: 'Hardened',    vp_modifier: +1, description: 'Requires a Strength test to interact. Failure wastes the action.' },
+          { name: 'Booby-Trapped', vp_modifier: +1, description: 'First failed interaction triggers 1 automatic hit on the interacting unit.' },
+          { name: 'Contested',   vp_modifier: +1, description: 'Both factions may interact simultaneously. Each interaction attempt is opposed.' },
+          { name: 'Locked',      vp_modifier: +1, description: 'Requires a specific item or ability to interact. Without it, all interaction attempts automatically fail.' },
+          { name: 'Overloaded',  vp_modifier: +2, description: 'Grants +1 VP when captured but triggers a Danger Test (D6) on the capturing unit immediately.' },
+        ],
+        Narrative: [
+          { name: 'Legendary',   vp_modifier: +2, description: 'Word has spread — every faction knows exactly where it is. No Scouting phase for this objective.' },
+          { name: 'Cursed',      vp_modifier: +1, description: 'The first unit to interact must immediately make a Morale test. On a fail, they cannot interact with it again this game.' },
+          { name: 'Disputed',    vp_modifier: 0,  description: 'Two factions both have prior claim. VP for this objective are doubled but split on a tie.' },
+          { name: 'Hot',         vp_modifier: 0,  description: 'A third party wants this badly. If unclaimed by Round 3, a monster activates toward it.' },
+        ],
+      };
+
+      // Weight trait type toward danger rating — high danger = more Mechanical/Environmental
+      const rand = Math.random();
+      const dangerBias = Math.min(1, (dangerRating || 3) / 6);
+      let traitType;
+      if (rand < 0.15 + dangerBias * 0.15) traitType = 'Narrative';
+      else if (rand < 0.45 + dangerBias * 0.2) traitType = 'Mechanical';
+      else traitType = 'Environmental';
+
+      const pool = TRAITS[traitType];
+      const trait = pool[Math.floor(Math.random() * pool.length)];
+      return { ...trait, type: traitType };
+    }
+
+    // ── generateTimelineEvent ─────────────────────────────────────────────────────
+    //  Layer C: Tactical Trigger.
+    //  Returns a timeline_event object for the Turn Counter to consume.
+    generateTimelineEvent(objective, objIndex, dangerRating) {
+      const TURN_TRIGGERS = {
+        thyr_cache:         { trigger_turn: 3, effect: 'thyr_pulse',       description: 'The Thyr cache pulses — all units within 3" take a Danger Test.' },
+        ritual_site:        { trigger_turn: 2, effect: 'ritual_escalation',description: 'The ritual intensifies — Monster Pressure increases by +1.' },
+        ritual_circle:      { trigger_turn: 2, effect: 'ritual_escalation',description: 'The circle activates — Monster Pressure increases by +1.' },
+        sacrificial_focus:  { trigger_turn: 3, effect: 'dark_call',        description: 'A dark call goes out — one random monster activates toward the focus.' },
+        unstable_structure: { trigger_turn: randomInt(2,4), effect: 'collapse_warning', description: 'The structure groans — units inside must vacate or take 1 hit next round.' },
+        collapsing_route:   { trigger_turn: 3, effect: 'route_collapse',   description: 'The route begins to give way — crossing costs 2 Move actions from this point.' },
+        tainted_ground:     { trigger_turn: 2, effect: 'taint_spread',     description: 'The taint spreads — radius increases by 2" until cleansed.' },
+        wrecked_engine:     { trigger_turn: randomInt(3,5), effect: 'engine_blast', description: 'Residual pressure vents — all units within 4" take a Danger Test.' },
+        cargo_vehicle:      { trigger_turn: randomInt(3,4), effect: 'cargo_shift',  description: 'The cargo shifts — vehicle moves D6" in a random direction.' },
+        captive_entity:     { trigger_turn: 2, effect: 'entity_stirs',     description: 'The entity stirs — it activates once as a Neutral unit this round.' },
+        volatile_trait:     { trigger_turn: randomInt(3,5), effect: 'explosion',    description: 'The Volatile objective detonates — all units within 3" take 1 hit.' },
+      };
+
+      // If objective has a Volatile trait, override with explosion trigger
+      if (objective.trait?.name === 'Volatile') {
+        const t = TURNS_TRIGGER_volatile_trait || TURN_TRIGGERS['volatile_trait'];
+        return {
+          objective_id:   objective.id || `obj_${objIndex + 1}`,
+          objective_name: objective.name,
+          trigger_type:   'turn_based',
+          trigger_turn:   randomInt(3, Math.min(5, 3 + dangerRating)),
+          effect:         'explosion',
+          description:    `${objective.name} detonates — all units within 3" take 1 automatic hit.`,
+        };
       }
+
+      const base = TURN_TRIGGERS[objective.type];
+      if (!base) return null;
+
+      return {
+        objective_id:   objective.id || `obj_${objIndex + 1}`,
+        objective_name: objective.name,
+        trigger_type:   'turn_based',
+        trigger_turn:   base.trigger_turn,
+        effect:         base.effect,
+        description:    base.description,
+      };
+    }
+
+    // ── generateObjectives — refactored to use Triple-Filter model ────────────────
+    generateObjectives(plotFamily, locProfile, factions, dangerRating) {
+      // Layer A: weighted affinity scoring
+      const scores = this.calculateWeightedAffinity(plotFamily, locProfile, factions);
 
       const sorted = Object.entries(scores)
         .filter(([, s]) => s > 0)
         .sort((a, b) => b[1] - a[1]);
 
-      console.log('🎯 Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
+      console.log('🎯 Affinity scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s.toFixed(1)}`).join(', '));
 
       const numObjectives = randomInt(2, 3);
       const objectives    = [];
@@ -2211,7 +2368,7 @@ console.log("🎲 Scenario Builder app loaded");
         taint_group:   ['tainted_ground', 'fouled_resource'],
         ritual_group:  ['ritual_site', 'ritual_circle', 'sacrificial_focus', 'ritual_components'],
         salvage_group: ['wrecked_engine', 'derailed_cars', 'unstable_structure'],
-        supply_group:  ['stored_supplies', 'scattered_crates']
+        supply_group:  ['stored_supplies', 'scattered_crates'],
       };
       const usedGroups = new Set();
 
@@ -2222,29 +2379,64 @@ console.log("🎲 Scenario Builder app loaded");
         return null;
       }
 
+      // ── Sense Check: ensure selected objective types are narratively valid ───
+      function senseCheck(type, loc, r) {
+        if (type === 'pack_animals'      && (r.livestock   || 0) < 1) return false;
+        if (type === 'wrecked_engine'    && (r.spare_parts || 0) < 1) return false;
+        if (type === 'sacrificial_focus' && (r.tzul_silver || 0) < 1 && (r.thyr || 0) < 1) return false;
+        return true;
+      }
+
+      const r = locProfile?.effectiveResources || {};
+      let objIndex = 0;
+
       for (const [type] of sorted) {
         if (objectives.length >= numObjectives) break;
         if (used.has(type)) continue;
+        if (!senseCheck(type, locProfile, r)) continue;
         const grp = getGroup(type);
         if (grp && usedGroups.has(grp)) continue;
         used.add(type);
         if (grp) usedGroups.add(grp);
-        objectives.push({
+
+        // Layer B: roll a trait for this objective
+        const trait = this.getObjectiveTraits(type, locProfile, dangerRating);
+
+        // VP Scaling: BaseVP + (DangerRating / 2) + TraitModifier
+        const baseVP     = this.calcObjectiveVP(type, locProfile);
+        const traitMod   = trait ? (trait.vp_modifier || 0) : 0;
+        const scaledVP   = Math.round(baseVP + ((dangerRating || 3) / 2) + traitMod);
+
+        // Flavor text: "The [Location] is [Trait], making the [Objective] much more dangerous than reported"
+        const traitFlavor = trait
+          ? `The ${locProfile?.name || 'location'} is ${trait.name.toLowerCase()} here, making this objective much more dangerous than reported.`
+          : null;
+
+        const obj = {
+          id:          `obj_${String(objIndex + 1).padStart(2, '0')}`,
           name:        this.makeObjectiveName(type, locProfile),
           description: this.makeObjectiveDescription(type, locProfile),
           type,
-          vp_base:     this.calcObjectiveVP(type, locProfile),
-          special:     Math.random() < 0.2 ? this.makeObjectiveSpecial(type, locProfile) : null
-        });
+          vp_base:     scaledVP,
+          trait:       trait || null,
+          trait_flavor:traitFlavor,
+          special:     (!trait && Math.random() < 0.2) ? this.makeObjectiveSpecial(type, locProfile) : null,
+        };
+
+        objectives.push(obj);
+        objIndex++;
       }
 
       if (objectives.length === 0) {
         objectives.push({
+          id:          'obj_01',
           name:        'Contested Ground',
           description: 'Hold this position.',
           type:        'land_marker',
-          vp_base:     3,
-          special:     null
+          vp_base:     Math.round(3 + ((dangerRating || 3) / 2)),
+          trait:       null,
+          trait_flavor:null,
+          special:     null,
         });
       }
 
@@ -2632,7 +2824,7 @@ console.log("🎲 Scenario Builder app loaded");
 
         const objectives = vaultScenario
           ? this.generateObjectivesFromVault(vaultScenario, locProfile)
-          : this.generateObjectives(plotFamily, locProfile, factions);
+          : this.generateObjectives(plotFamily, locProfile, factions, dangerRating);
         this.generateObjectiveChain(objectives);
 
         const monsterPressure = this.generateMonsterPressure(plotFamily, dangerRating, locProfile, pointValue);
@@ -2677,6 +2869,24 @@ console.log("🎲 Scenario Builder app loaded");
           ? vaultScenario.narrative_hook
           : this.generateNarrativeHook(plotFamily, locProfile, objectives);
 
+        // ── Layer C: Tactical Triggers — build timeline_events for Turn Counter ──
+        const timeline_events = [];
+        objectives.forEach((obj, idx) => {
+          const evt = this.generateTimelineEvent(obj, idx, dangerRating);
+          if (evt) timeline_events.push(evt);
+        });
+        // State-based event: when any objective is captured, Monster Pressure may spike
+        if (dangerRating >= 4) {
+          timeline_events.push({
+            objective_id:   'any',
+            objective_name: 'Any Objective',
+            trigger_type:   'state_based',
+            trigger_turn:   null,
+            effect:         'pressure_spike',
+            description:    'When any objective is captured, Monster Pressure increases by +2.',
+          });
+        }
+
         // Return the full ScenarioResult.
         // _vault is a private field — caller extracts it into state.vaultScenario.
         return {
@@ -2687,6 +2897,7 @@ console.log("🎲 Scenario Builder app loaded");
           danger_description: getDangerDescription(dangerRating),
           plot_family:        plotFamily.name,
           objectives,
+          timeline_events,
           monster_pressure:   monsterPressure,
           twist,
           victory_conditions: victoryConditions,
@@ -3306,6 +3517,25 @@ console.log("🎲 Scenario Builder app loaded");
           ? '<p><em><i class="fa fa-exclamation-triangle"></i> Special: ' + obj.special + '</em></p>'
           : '';
 
+        var TRAIT_TYPE_COLORS = { Environmental: '#4a6e8a', Mechanical: '#b03030', Narrative: '#7a5a2a' };
+        var traitHtml = '';
+        if (obj.trait) {
+          var tc = TRAIT_TYPE_COLORS[obj.trait.type] || '#555';
+          traitHtml = '<div style="margin:0.4rem 0;display:flex;align-items:flex-start;gap:0.4rem;">'
+            + '<span style="flex-shrink:0;font-size:0.6rem;text-transform:uppercase;letter-spacing:.08em;'
+            + 'padding:2px 7px;border:1px solid ' + tc + ';color:' + tc + ';border-radius:3px;white-space:nowrap;">'
+            + obj.trait.type + '</span>'
+            + '<span style="font-size:0.75rem;font-weight:700;color:#e8d9c4;">'
+            + obj.trait.name
+            + (obj.trait.vp_modifier > 0 ? ' <span style="color:#d4822a">+' + obj.trait.vp_modifier + ' VP</span>' : '')
+            + '</span>'
+            + '</div>'
+            + '<p style="font-size:0.8rem;color:#9e8e78;font-style:italic;margin:0 0 0.3rem;">' + obj.trait.description + '</p>';
+          if (obj.trait_flavor) {
+            traitHtml += '<p style="font-size:0.75rem;color:#6b5f4a;margin:0 0 0.3rem;">' + obj.trait_flavor + '</p>';
+          }
+        }
+
         return '<div class="cc-objective-card" style="' + borderStyle + '">'
           + '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">'
           + '<span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:' + labelColor + ';">'
@@ -3313,7 +3543,8 @@ console.log("🎲 Scenario Builder app loaded");
           + '</span></div>'
           + '<strong>' + obj.name + '</strong>'
           + '<p>' + obj.description + '</p>'
-          + '<p class="cc-vp-line"><i class="fa fa-star"></i> ' + obj.vp_base + ' VP base</p>'
+          + traitHtml
+          + '<p class="cc-vp-line"><i class="fa fa-star"></i> ' + obj.vp_base + ' VP</p>'
           + chainHtml
           + specialHtml
           + '</div>';
@@ -3323,6 +3554,19 @@ console.log("🎲 Scenario Builder app loaded");
         + '<h4><i class="fa fa-crosshairs"></i> Objectives</h4>'
         + cards
         + '</div>';
+    }
+
+    // ── renderTimelineEvents — Turn Counter export section ─────────────────────
+    function renderTimelineEvents(scenario) {
+      var events = scenario.timeline_events;
+      if (!events || !events.length) return '';
+      var rows = events.map(function(e) {
+        var turnLabel = e.trigger_type === 'state_based'
+          ? '<span style="color:#9e8e78;font-size:0.75rem;">On Capture</span>'
+          : '<span style="color:#d4822a;font-weight:700;">Turn ' + e.trigger_turn + '</span>';
+        return '<div style="display:flex;gap:0.75rem;align-items:flex-start;padding:0.5rem 0;border-bottom:1px solid rgba(255,255,255,.06);">'          + '<div style="flex-shrink:0;min-width:70px;">' + turnLabel + '</div>'          + '<div>'          + '<div style="font-size:0.8rem;font-weight:600;color:#e8d9c4;">' + e.objective_name + '</div>'          + '<div style="font-size:0.75rem;color:#9e8e78;">' + e.description + '</div>'          + '</div>'          + '</div>';
+      }).join('');
+      return '<div class="cc-scenario-section">'        + '<h4><i class="fa fa-clock-o"></i> Timeline Events <span style="font-size:0.7rem;color:#6b5f4a;font-weight:400;">(for Turn Counter)</span></h4>'        + rows        + '</div>';
     }
 
     // ── VAULT RENDER HELPERS ─────────────────────────────────────────────────────
@@ -3551,6 +3795,9 @@ console.log("🎲 Scenario Builder app loaded");
 
           <!-- OBJECTIVES — always use the rich objective renderer -->
           ${renderObjectivesSection(s.objectives)}
+
+          <!-- TIMELINE EVENTS — Turn Counter export -->
+          ${renderTimelineEvents(s)}
 
           <!-- BOARD SETUP TABLE -->
           ${s.objective_markers?.length ? `
