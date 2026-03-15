@@ -1641,7 +1641,7 @@ console.log("🎲 Scenario Builder app loaded");
           }
         }
 
-        / ── REQUIRED LOCATION TYPE GATE ─────────────────────────────────────
+        // ── REQUIRED LOCATION TYPE GATE ─────────────────────────────────────
         // Hard block: if the vault scenario requires a rail location and this
         // location has no rail archetype/features, apply -10 penalty.
         if (allowedTypes.length > 0 && locProfile.archetype) {
