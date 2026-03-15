@@ -164,8 +164,8 @@ console.log("⏱️ Turn Counter loaded");
       crow_queen:      { name: 'Crow Queen',       color: '#00bcd4', isMonster: false, file: 'faction-crow-queen.json'        }
     };
 
-    const LOGO_BASE           = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/';
-    const FACTION_LOADER_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+    const LOGO_BASE           = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
+    const FACTION_LOADER_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/';
     const SCENARIO_FOLDER     = 90;
     const FACTION_SAVE_FOLDER = 90;
     const TURN_SAVE_FOLDER    = 91;
