@@ -2216,6 +2216,102 @@
       "notes": [
         "Extreme danger. Maximum Thyr density. Only the most desperate scenarios run here."
       ]
+    },
+    {
+      "id": "needlewood",
+      "name": "Needlewood",
+      "type_ref": "debris_field",
+      "archetype": "frontier",
+      "state": "alive",
+      "danger": 4,
+      "population": 0,
+      "coffinCoughChance": 0.41,
+      "key_resources": [],
+      "resources": {
+        "supplies": 2
+      },
+      "features": [
+        "BonePile",
+        "SupplyCrates",
+        "Cactus"
+      ],
+      "monster_seeds": [
+        {
+          "name": "Banshee",
+          "weight": 2
+        },
+        {
+          "name": "Skeleton",
+          "weight": 3
+        },
+        {
+          "name": "Harpy",
+          "weight": 2
+        }
+      ],
+      "description": "The Needlewood’s a cursed forest of saguaros and leaping cholla where every step draws blood and makes enough racket to wake the dead, so if you’re fool enough to cross it you can bet someone—or something—is already waiting for the smell of you.",
+      "atmosphere": "Stabbing needles from every direction.",
+      "terrain_flavor": [
+        "Horrible maze of cacti living and dead. Horrible to travel through."
+      ],
+      "rumors": [
+        "Shine Rider gangs hide supplies here, due to the difficulty of the terrain."
+      ],
+      "notes": [
+        "A very bad place."
+      ]
+    },
+    {
+      "id": "hoodoo_maze",
+      "name": "Hoodoo Maze",
+      "type_ref": "rock_outcroppings",
+      "archetype": "landmark",
+      "state": "alive",
+      "danger": 2,
+      "population": 1,
+      "coffinCoughChance": 0.49,
+      "key_resources": [],
+      "resources": {
+        "thyr": 2,
+        "silver": 1
+      },
+      "features": [
+        "BlindTurns",
+        "FloodMarks",
+        "TwistingPaths"
+      ],
+      "monster_seeds": [
+        {
+          "name": "Gulch Minotaur",
+          "weight": 3
+        },
+        {
+          "name": "Ridge Satyr",
+          "weight": 4
+        },
+        {
+          "name": "Medusa",
+          "weight": 1
+        },
+        {
+          "name": "",
+          "weight": 2
+        }
+      ],
+      "description": "The Hoodoo Maze is a cursed tangle of stone spires folks call the Standing Dead, where the paths lie, the shadows play tricks, and a man can walk all day to end up where he started, which is why smugglers, bandits, and hard-headed prospectors keep fighting over it: some chasing secret trails through the rocks, some hunting a silver vein under the tallest hoodoo, and a few fools swearing the stone giants move when nobody’s watching",
+      "atmosphere": "Haunted rock outcroppings",
+      "terrain_flavor": [
+        "Spooky and strange rocks. Weird paths. Dead ends."
+      ],
+      "rumors": [
+        "Some say there’s a secret trail through the Maze that lets smugglers cross half the canyon unseen.",
+        "A rich silver vein runs under the tallest spire.",
+        "A few swear the stone figures move when no one’s looking.",
+        ""
+      ],
+      "notes": [
+        "A great place for fools to get lost."
+      ]
     }
   ]
 }
