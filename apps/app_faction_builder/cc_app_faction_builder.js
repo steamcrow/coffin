@@ -32,8 +32,11 @@ console.log("⚔️ Faction Builder app loaded");
   }
 }());
 
-window.CC_APP = {
-  init({ root, ctx }) {
+(function () {
+  var _destroyFn = null;
+
+  function mount(rootEl, ctx) {
+    var root = rootEl;
     console.log("🚀 Faction Builder init", ctx);
 
     // ---- SLIDE PANEL CSS — injected synchronously so panels work immediately
@@ -1605,10 +1608,22 @@ window.CC_APP = {
     // ================================
     // BOOT
     // ================================
-    checkSharedRoster();
+   checkSharedRoster();
     render();
     setTimeout(() => updateLoginStatus(), 500);
     loadAbilityDictionaries();
     console.log("✅ Faction Builder mounted");
-  }
-};
+
+    return Promise.resolve();
+
+  } // end mount()
+
+  window.CC_APP = {
+    init: function (options) {
+      return mount(options.root, options.ctx || {});
+    },
+    destroy: function () {
+      if (typeof _destroyFn === 'function') { _destroyFn(); }
+    }
+  };
+})();
