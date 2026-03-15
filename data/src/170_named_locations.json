@@ -73,6 +73,12 @@
       ],
       "notes": [
         "The biggest boomtown in the Canyon. Every vile soul passes through Diablo, if they're lucky."
+      ],
+      "hitbox": [
+        505,
+        1432,
+        716,
+        1698
       ]
     },
     {
@@ -128,6 +134,12 @@
       ],
       "notes": [
         "Monster Rangers faction hub. Medical and supply anchor."
+      ],
+      "hitbox": [
+        2727,
+        2051,
+        2822,
+        2142
       ]
     },
     {
@@ -183,6 +195,12 @@
       ],
       "notes": [
         "Liberty Corps stronghold. High weapons density. Combat-ready location."
+      ],
+      "hitbox": [
+        3380,
+        1203,
+        3601,
+        1411
       ]
     },
     {
@@ -244,6 +262,12 @@
       ],
       "notes": [
         "Silver boom town going bust. Claim-jumping and extraction conflict."
+      ],
+      "hitbox": [
+        2887,
+        1284,
+        3121,
+        1567
       ]
     },
     {
@@ -307,6 +331,12 @@
       ],
       "notes": [
         "Trade hub. Water and food drive objectives here."
+      ],
+      "hitbox": [
+        1102,
+        1607,
+        1280,
+        1854
       ]
     },
     {
@@ -365,6 +395,12 @@
       ],
       "notes": [
         "Doomshine trade node. Wet terrain. Crocodile pressure."
+      ],
+      "hitbox": [
+        1175,
+        2501,
+        1386,
+        2767
       ]
     },
     {
@@ -424,6 +460,12 @@
       ],
       "notes": [
         "Primary livestock location. Pack animal objectives natural here."
+      ],
+      "hitbox": [
+        2172,
+        2112,
+        2332,
+        2396
       ]
     },
     {
@@ -482,6 +524,12 @@
       ],
       "notes": [
         "Finance and gambling hub. Gildren and covert objectives."
+      ],
+      "hitbox": [
+        1185,
+        1898,
+        1396,
+        2176
       ]
     },
     {
@@ -540,6 +588,12 @@
       ],
       "notes": [
         "Finance and gambling hub. Gildren and covert objectives."
+      ],
+      "hitbox": [
+        934,
+        1504,
+        1026,
+        1592
       ]
     },
     {
@@ -598,6 +652,12 @@
       ],
       "notes": [
         "Lawless zone. Contraband and ammunition objectives."
+      ],
+      "hitbox": [
+        1452,
+        1968,
+        1644,
+        2194
       ]
     },
     {
@@ -652,6 +712,12 @@
       ],
       "notes": [
         "Salvage and repair node. Spare parts objectives."
+      ],
+      "hitbox": [
+        1694,
+        801,
+        1852,
+        1157
       ]
     },
     {
@@ -710,6 +776,12 @@
       ],
       "notes": [
         "Ruined town. Fouled resource and abandoned objective focus."
+      ],
+      "hitbox": [
+        1986,
+        2286,
+        2156,
+        2522
       ]
     },
     {
@@ -764,6 +836,12 @@
       ],
       "notes": [
         "Minor waystation. Liminal location with strange reputation."
+      ],
+      "hitbox": [
+        2408,
+        1132,
+        2512,
+        1224
       ]
     },
     {
@@ -822,6 +900,12 @@
       ],
       "notes": [
         "Frontier farmland. Livestock and food-driven scenarios."
+      ],
+      "hitbox": [
+        3112,
+        2130,
+        3329,
+        2412
       ]
     },
     {
@@ -880,6 +964,12 @@
       ],
       "notes": [
         "Small outpost with Thyr discovery. Extraction conflict potential."
+      ],
+      "hitbox": [
+        3353,
+        2562,
+        3523,
+        2739
       ]
     },
     {
@@ -938,6 +1028,12 @@
       ],
       "notes": [
         "High-value extraction target. Silver and Thyr objectives."
+      ],
+      "hitbox": [
+        2964,
+        500,
+        3182,
+        784
       ]
     },
     {
@@ -999,6 +1095,12 @@
       ],
       "notes": [
         "Silver trade town. High-value extraction and control objectives."
+      ],
+      "hitbox": [
+        2513,
+        916,
+        2765,
+        1089
       ]
     },
     {
@@ -1057,6 +1159,12 @@
       ],
       "notes": [
         "Working mine. Salvage and mechanical objectives."
+      ],
+      "hitbox": [
+        2128,
+        1548,
+        2294,
+        1762
       ]
     },
     {
@@ -1121,6 +1229,12 @@
       ],
       "notes": [
         "Dangerous deep mine. Thyr-heavy. Ritual and horror objectives."
+      ],
+      "hitbox": [
+        3230,
+        804,
+        3387,
+        1162
       ]
     },
     {
@@ -1183,6 +1297,12 @@
       ],
       "notes": [
         "Highly dangerous. Thyr and ritual objectives dominate here."
+      ],
+      "hitbox": [
+        2628,
+        1628,
+        2816,
+        1968
       ]
     },
     {
@@ -1241,6 +1361,12 @@
       ],
       "notes": [
         "Travel choke point. Escalation-ready ambush terrain."
+      ],
+      "hitbox": [
+        2872,
+        1600,
+        3092,
+        2076
       ]
     },
     {
@@ -1299,6 +1425,12 @@
       ],
       "notes": [
         "Scenario ignition point. Timed arrivals, heists, and standoffs."
+      ],
+      "hitbox": [
+        1486,
+        1005,
+        1605,
+        1206
       ]
     },
     {
@@ -1353,6 +1485,12 @@
       ],
       "notes": [
         "Critical infrastructure. Sabotage and control objectives."
+      ],
+      "hitbox": [
+        2486,
+        1432,
+        2598,
+        1548
       ]
     },
     {
@@ -1413,6 +1551,12 @@
       ],
       "notes": [
         "High-danger occult location. Ritual and artifact objectives."
+      ],
+      "hitbox": [
+        2597,
+        205,
+        2849,
+        489
       ]
     },
     {
@@ -1471,6 +1615,12 @@
       ],
       "notes": [
         "Corrupted terrain. Tainted ground and fouled resource objectives."
+      ],
+      "hitbox": [
+        2312,
+        1824,
+        2440,
+        1944
       ]
     },
     {
@@ -1527,6 +1677,12 @@
       ],
       "notes": [
         "Legal conflict zone. Claim jumping and debt scenarios."
+      ],
+      "hitbox": [
+        1995,
+        1270,
+        2193,
+        1527
       ]
     },
     {
@@ -1589,6 +1745,12 @@
       ],
       "notes": [
         "Tzul ruins. Undead pressure. Ritual and artifact scenarios."
+      ],
+      "hitbox": [
+        1576,
+        1266,
+        1958,
+        1586
       ]
     },
     {
@@ -1651,6 +1813,12 @@
       ],
       "notes": [
         "Contested sacred site. Ritual and faction ownership objectives."
+      ],
+      "hitbox": [
+        2392,
+        1620,
+        2520,
+        1748
       ]
     },
     {
@@ -1713,6 +1881,12 @@
       ],
       "notes": [
         "Desolation zone. Fouled resource and survival scenarios."
+      ],
+      "hitbox": [
+        1616,
+        1824,
+        1996,
+        1924
       ]
     },
     {
@@ -1771,6 +1945,12 @@
       ],
       "notes": [
         "Remote location. Thyr-heavy. Isolation and escalation scenarios."
+      ],
+      "hitbox": [
+        34,
+        1899,
+        163,
+        2028
       ]
     },
     {
@@ -1833,6 +2013,12 @@
       ],
       "notes": [
         "Extreme danger occult site. Ritual and sacrificial focus objectives."
+      ],
+      "hitbox": [
+        1086,
+        1219,
+        1257,
+        1527
       ]
     },
     {
@@ -1895,6 +2081,12 @@
       ],
       "notes": [
         "Critical contaminated water source. Fouled resource and purge objectives."
+      ],
+      "hitbox": [
+        1609,
+        492,
+        1841,
+        701
       ]
     },
     {
@@ -1953,6 +2145,12 @@
       ],
       "notes": [
         "Ambush terrain. Echo and sound mechanics encouraged."
+      ],
+      "hitbox": [
+        2605,
+        1138,
+        2859,
+        1427
       ]
     },
     {
@@ -2011,6 +2209,12 @@
       ],
       "notes": [
         "Ruster territory. Salvage and wrecked engine objectives."
+      ],
+      "hitbox": [
+        1374,
+        1258,
+        1512,
+        1608
       ]
     },
     {
@@ -2093,6 +2297,12 @@
       ],
       "notes": [
         "High danger Tzul landmark. Lore anchor. Ritual and artifact objectives."
+      ],
+      "hitbox": [
+        2229,
+        1334,
+        2447,
+        1526
       ]
     },
     {
@@ -2151,6 +2361,12 @@
       ],
       "notes": [
         "River crossing hazard. Water and fouled resource objectives."
+      ],
+      "hitbox": [
+        1316,
+        1630,
+        2078,
+        1798
       ]
     },
     {
@@ -2215,6 +2431,12 @@
       ],
       "notes": [
         "Extreme danger. Maximum Thyr density. Only the most desperate scenarios run here."
+      ],
+      "hitbox": [
+        3767,
+        2130,
+        3965,
+        2495
       ]
     },
     {
@@ -2259,6 +2481,12 @@
       ],
       "notes": [
         "A very bad place."
+      ],
+      "hitbox": [
+        3002,
+        831,
+        3189,
+        1233
       ]
     },
     {
@@ -2311,6 +2539,12 @@
       ],
       "notes": [
         "A great place for fools to get lost."
+      ],
+      "hitbox": [
+        2433,
+        2003,
+        2712,
+        2286
       ]
     }
   ]
