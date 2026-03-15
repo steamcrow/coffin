@@ -1063,7 +1063,7 @@
           "name": "Firework Bombs",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "Once per game: Shoot firework bomb with Blast and Fear. Spectacular explosive!"
+          "effect": "Once per game: Shoot firework bomb with Blast and Fear. Spectacular explosive!",
           "stat_modifiers": {
             "range": 12
           }
