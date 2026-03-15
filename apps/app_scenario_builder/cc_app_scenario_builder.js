@@ -1372,9 +1372,45 @@ console.log("🎲 Scenario Builder app loaded");
     }
 
 
+    // ── getEffectiveApproach ─────────────────────────────────────────────────
+    // Returns FACTION_APPROACH[factionId], overriding:
+    //   - verbs           from faction JSON tactics.objective_preferences or similar
+    //   - tactic          from faction JSON tactics.doctrine[0]
+    //   - quote           from faction JSON identity.quote or description
+    // Falls back to static table values for anything not in the JSON.
+    getEffectiveApproach(factionId) {
+      const base  = Object.assign({}, FACTION_APPROACH[factionId] || FACTION_APPROACH.monsters);
+      const fd    = gameData.getFaction(factionId);
+      if (!fd) return base;
+
+      // Override verbs from faction JSON objective_preferences or action_words
+      const prefs = (fd.tactics && fd.tactics.objective_preferences)
+                 || (fd.faction_tactics && fd.faction_tactics.objective_preferences)
+                 || null;
+      if (prefs && prefs.length >= 2) {
+        // Capitalise first letter of each preference as a verb
+        base.verbs = prefs.slice(0, 5).map(function(p) {
+          return p.charAt(0).toUpperCase() + p.slice(1);
+        });
+      }
+
+      // Override tactic from faction JSON
+      const tactics = fd.tactics || fd.faction_tactics || {};
+      if (tactics.doctrine && tactics.doctrine[0]) base.tactic = tactics.doctrine[0];
+
+      // Override quote from faction JSON identity block
+      const quote = (fd.identity && fd.identity.quote)
+                 || (fd.description && fd.description.split('.')[0] + '.')
+                 || null;
+      if (quote) base.quote = quote;
+
+      return base;
+    }
+
+
     buildRichObjectiveCard(factionId, boardObj, locProfile, dangerRating, roleIndex) {
       var conflictMap  = FACTION_CONFLICT_TABLE[factionId] || FACTION_CONFLICT_TABLE.monsters;
-      var approach     = FACTION_APPROACH[factionId]       || FACTION_APPROACH.monsters;
+      var approach     = this.getEffectiveApproach(factionId);
       var flavorMap    = FACTION_OBJECTIVE_FLAVOR[factionId] || {};
 
       var conflict = conflictMap[boardObj.type] || conflictMap['default'];
@@ -1514,6 +1550,38 @@ console.log("🎲 Scenario Builder app loaded");
           }
         });
       }
+      // ── Asymmetric Philosophy Conflict Bonus ────────────────────────────────
+      // If we have both a Conservation-aligned and Exploitation-aligned faction,
+      // boost plot families whose objectives create shared-but-opposed goals.
+      var CONSERVATION_FACTIONS = ['monster_rangers'];
+      var EXPLOITATION_FACTIONS = ['monsterology', 'shine_riders'];
+      var CONTROL_FACTIONS      = ['liberty_corps'];
+      var OCCULT_FACTIONS       = ['crow_queen', 'monsters'];
+
+      var hasConservation = selectedFactions.some(function(f) { return CONSERVATION_FACTIONS.indexOf(f.id) >= 0; });
+      var hasExploitation = selectedFactions.some(function(f) { return EXPLOITATION_FACTIONS.indexOf(f.id) >= 0; });
+      var hasControl      = selectedFactions.some(function(f) { return CONTROL_FACTIONS.indexOf(f.id) >= 0; });
+      var hasOccult       = selectedFactions.some(function(f) { return OCCULT_FACTIONS.indexOf(f.id) >= 0; });
+
+      // Conservation vs Exploitation → boost extraction/heist families (contested resource)
+      if (hasConservation && hasExploitation) {
+        families.forEach(function(fam) {
+          if (['extraction_heist','escort_run'].indexOf(fam.id) >= 0) {
+            scores[fam.id] = (scores[fam.id] || 0) + 3;
+          }
+        });
+        console.log('⚔️  Philosophy conflict: Conservation vs Exploitation (+3 extraction/escort)');
+      }
+      // Control vs Occult → boost siege/claim families
+      if (hasControl && hasOccult) {
+        families.forEach(function(fam) {
+          if (['claim_and_hold','siege_standoff'].indexOf(fam.id) >= 0) {
+            scores[fam.id] = (scores[fam.id] || 0) + 3;
+          }
+        });
+        console.log('⚔️  Philosophy conflict: Control vs Occult (+3 siege/claim)');
+      }
+
      // ---- RAIL PLOT FAMILY GATE ----
       var featsForGate = (locProfile && locProfile.features) ? locProfile.features : [];
       var locHasRailForPlot = ['rail_stop','rail_infrastructure','rail_grade','rail'].some(function(r) { return arch.indexOf(r) >= 0; })
@@ -1676,6 +1744,12 @@ console.log("🎲 Scenario Builder app loaded");
       const atmo     = location.atmosphere || '';
       const desc     = location.description ? location.description.split('.')[0] : '';
 
+      // ── Black Swan prefix ─────────────────────────────────────────────────
+      const blackSwanObj = (objectives || []).find(function(o) { return o.black_swan; });
+      const blackSwanPrefix = blackSwanObj
+        ? `Nobody expected factions to converge on ${blackSwanObj.name} at ${locName}. The scouts called it a Black Swan Event — wrong place, wrong time, and somehow the only thing that matters now. `
+        : '';
+
       // Use the actual plot family description, but replace any generic "asset" language
       // with the real objective name if a cargo vehicle is in play.
       let plotDesc = (plotFamily.description || '').replace(/\.$/, '');
@@ -1724,14 +1798,14 @@ console.log("🎲 Scenario Builder app loaded");
 
       // Specific situation line goes first; a canyon-voice hook follows as the second sentence.
       if (situationLine) {
-        return situationLine + ' ' + randomChoice(pools.slice(6)); // use a canyon-voice hook as the second sentence
+        return blackSwanPrefix + situationLine + ' ' + randomChoice(pools.slice(6)); // use a canyon-voice hook as the second sentence
       }
 
       // Fall back to a plot-family hook if available, then a generic pool pick.
       if (plotFamily?.hook)   return plotFamily.hook;
       if (plotFamily?.flavor) return `${plotFamily.flavor} ${plotDesc} at ${locName}.`;
 
-      return randomChoice(pools);
+      return blackSwanPrefix + randomChoice(pools);
     }
 
 
@@ -1842,6 +1916,85 @@ console.log("🎲 Scenario Builder app loaded");
         monster_bias_shift:               'Monster behaviour in this region will change.'
       };
       return descriptions[type] || 'The Canyon will remember what happened here.';
+    }
+
+
+    // ── generateTimelineEvents ───────────────────────────────────────────────
+    // Produces a structured timeline for the Turn Counter app.
+    // Each event follows the schema:
+    //   { turn: N, type: 'Tactical|Narrative|Environmental', effect_id, auto_resolve, label, description }
+    generateTimelineEvents(objectives, plotFamily, dangerRating, monsterPressure) {
+      const events = [];
+
+      // Turn 1 — always: scenario begins
+      events.push({
+        turn:         1,
+        type:         'Narrative',
+        effect_id:    'scenario_start',
+        auto_resolve: true,
+        label:        'The Canyon Opens',
+        description:  'Factions deploy. First activation begins.'
+      });
+
+      // Turns 2–3 — monster pressure arrival (if enabled)
+      if (monsterPressure && monsterPressure.enabled) {
+        const arrivalTurn = dangerRating >= 4 ? 2 : 3;
+        events.push({
+          turn:         arrivalTurn,
+          type:         'Environmental',
+          effect_id:    'monster_pressure_arrival',
+          auto_resolve: false,
+          label:        'Monster Pressure',
+          description:  monsterPressure.notes
+                          ? monsterPressure.notes
+                          : 'Monster units appear. Place per scenario rules.'
+        });
+      }
+
+      // Objective-specific events
+      objectives.forEach(function(obj) {
+        // Volatile objectives pulse on interaction (mirrors env_hazard)
+        if (obj.env_hazard) {
+          events.push({
+            turn:         0,           // 0 = "on event", not a fixed turn
+            type:         'Environmental',
+            effect_id:    'env_hazard_' + obj.type,
+            auto_resolve: false,
+            label:        obj.env_hazard.label + ': ' + obj.name,
+            description:  obj.env_hazard.trigger + ' — ' + obj.env_hazard.effect
+          });
+        }
+        // Thyr / dark ritual cause escalating danger
+        if (['thyr_cache','dark_ritual','profane_altar'].includes(obj.type)) {
+          events.push({
+            turn:         Math.max(3, dangerRating),
+            type:         'Tactical',
+            effect_id:    'danger_escalation_' + obj.type,
+            auto_resolve: true,
+            label:        'Danger Escalates',
+            description:  'Danger Rating increases by 1 at the start of this turn.'
+          });
+        }
+      });
+
+      // Finale at turn 6
+      events.push({
+        turn:         6,
+        type:         'Tactical',
+        effect_id:    'finale',
+        auto_resolve: false,
+        label:        'Final Round',
+        description:  'Score all objectives. Faction finales resolve.'
+      });
+
+      // Sort by turn (0-events last)
+      events.sort(function(a, b) {
+        if (a.turn === 0) return 1;
+        if (b.turn === 0) return -1;
+        return a.turn - b.turn;
+      });
+
+      return events;
     }
 
 
@@ -2205,11 +2358,21 @@ console.log("🎲 Scenario Builder app loaded");
         if (scores[t] > 0) scores[t] += Math.random() * 2;
       });
 
+      // ── 10% Black Swan Anomaly roll ───────────────────────────────────────
+      // Picks the LOWEST-scoring objective instead of highest.
+      // Flags it on the returned objectives so generateNarrativeHook can label it.
+      const _anomalyTriggered = Math.random() < 0.10;
+
       const sorted = Object.entries(scores)
         .filter(([, s]) => s > 0)
-        .sort((a, b) => b[1] - a[1]);
+        .sort((a, b) => _anomalyTriggered ? a[1] - b[1] : b[1] - a[1]); // reversed if anomaly
 
-      console.log('🎯 Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
+      if (_anomalyTriggered) {
+        console.log('🃏 BLACK SWAN ANOMALY — lowest-relevance objective selected');
+      } else {
+        console.log('🎯 Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
+      }
+      this._anomalyTriggered = _anomalyTriggered;
 
       const numObjectives = randomInt(2, 3);
       const objectives    = [];
@@ -2242,7 +2405,8 @@ console.log("🎲 Scenario Builder app loaded");
           description: this.makeObjectiveDescription(type, locProfile),
           type,
           vp_base:     this.calcObjectiveVP(type, locProfile),
-          special:     Math.random() < 0.2 ? this.makeObjectiveSpecial(type, locProfile) : null
+          special:     Math.random() < 0.2 ? this.makeObjectiveSpecial(type, locProfile) : null,
+          black_swan:  _anomalyTriggered && objectives.length === 0  // tag the first (primary) pick
         });
       }
 
@@ -2329,7 +2493,7 @@ console.log("🎲 Scenario Builder app loaded");
     }
 
 
-    generateObjectiveChain(objectives) {
+    generateObjectiveChain(objectives, locProfile) {
       if (objectives.length < 2) {
         if (objectives.length === 1) objectives[0].role = 'primary';
         return;
@@ -2342,6 +2506,27 @@ console.log("🎲 Scenario Builder app loaded");
       objectives[0].chain_link_intro = linkIntro;
       // Any third objective is standalone
       if (objectives[2]) objectives[2].role = 'standalone';
+
+      // ── Environmental Hazard synergy ──────────────────────────────────────
+      // If the primary objective is volatile (tainted, ritual, doomshine)
+      // and the location is hazardous, inject a 2″ pulse note.
+      const VOLATILE_TYPES = ['thyr_cache','tainted_ground','dark_ritual','profane_altar',
+                              'ritual_site','ritual_circle','soul_vessel','fouled_resource'];
+      const r = (locProfile && locProfile.effectiveResources) || {};
+      const isThyrRich  = (r.thyr || 0) >= 3;
+      const isDoomshine = (r.doomshine || 0) >= 1;
+      const hasTags     = (locProfile && locProfile.tags || []).some(
+        t => ['cursed','toxic','volatile','occult','haunted'].includes(t)
+      );
+      const primaryIsVolatile = VOLATILE_TYPES.includes(objectives[0].type);
+      if (primaryIsVolatile && (isThyrRich || isDoomshine || hasTags)) {
+        objectives[0].env_hazard = {
+          trigger:     'On any INTERACT action at this objective',
+          effect:      '2″ pulse — every unit within 2″ takes 1 automatic hit (no save)',
+          label:       'Environmental Hazard'
+        };
+        console.log('⚡ Env hazard attached to:', objectives[0].type);
+      }
     }
 
 
@@ -2431,7 +2616,7 @@ console.log("🎲 Scenario Builder app loaded");
     || objectives.some(function(o) { return o.type === 'captive_entity'; });
 
   factions.forEach((faction) => {
-    const approach    = FACTION_APPROACH[faction.id]   || FACTION_APPROACH.monsters;
+    const approach    = this.getEffectiveApproach(faction.id);
     const motivesMap  = FACTION_MOTIVES[faction.id]    || FACTION_MOTIVES.monsters;
     const conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
 
@@ -2631,7 +2816,9 @@ console.log("🎲 Scenario Builder app loaded");
 
         // Store on instance so helpers deep in the call chain can read it
         // without needing factions threaded through every parameter list.
-        this._factions = factions;
+        this._factions     = factions;
+        this._pointValue   = pointValue;
+        this._dangerRating = dangerRating;
 
         const locProfile = this.buildLocationProfile(locationType, selectedLocation, dangerRating);
         console.log('📍 Location profile:', locProfile);
@@ -2648,7 +2835,7 @@ console.log("🎲 Scenario Builder app loaded");
         const objectives = vaultScenario
           ? this.generateObjectivesFromVault(vaultScenario, locProfile)
           : this.generateObjectives(plotFamily, locProfile, factions);
-        this.generateObjectiveChain(objectives);
+        this.generateObjectiveChain(objectives, locProfile);
 
         const monsterPressure = this.generateMonsterPressure(plotFamily, dangerRating, locProfile, pointValue);
 
@@ -2694,6 +2881,10 @@ console.log("🎲 Scenario Builder app loaded");
 
         // Return the full ScenarioResult.
         // _vault is a private field — caller extracts it into state.vaultScenario.
+        const timeline_events = this.generateTimelineEvents(
+          objectives, plotFamily, dangerRating, monsterPressure
+        );
+
         return {
           name:               scenarioName,
           narrative_hook,
@@ -2703,6 +2894,7 @@ console.log("🎲 Scenario Builder app loaded");
           plot_family:        plotFamily.name,
           objectives,
           monster_pressure:   monsterPressure,
+          timeline_events,
           twist,
           victory_conditions: victoryConditions,
           aftermath,
@@ -3318,6 +3510,17 @@ console.log("🎲 Scenario Builder app loaded");
           ? '<p><em><i class="fa fa-exclamation-triangle"></i> Special: ' + obj.special + '</em></p>'
           : '';
 
+        var hazardHtml = '';
+        if (obj.env_hazard) {
+          hazardHtml = '<div style="margin-top:0.5rem;padding:0.4rem 0.6rem;'
+            + 'background:rgba(239,68,68,0.08);border-left:2px solid #ef4444;border-radius:2px;font-size:0.82rem;">'
+            + '<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:#ef4444;margin-bottom:0.2rem;">'
+            + '<i class="fa fa-bolt"></i> ' + obj.env_hazard.label + '</div>'
+            + '<div style="color:rgba(255,255,255,0.6);font-size:0.78rem;margin-bottom:0.1rem;">' + obj.env_hazard.trigger + '</div>'
+            + '<div style="font-weight:600;">' + obj.env_hazard.effect + '</div>'
+            + '</div>';
+        }
+
         return '<div class="cc-objective-card" style="' + borderStyle + '">'
           + '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">'
           + '<span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:' + labelColor + ';">'
@@ -3327,6 +3530,7 @@ console.log("🎲 Scenario Builder app loaded");
           + '<p>' + obj.description + '</p>'
           + '<p class="cc-vp-line"><i class="fa fa-star"></i> ' + obj.vp_base + ' VP base</p>'
           + chainHtml
+          + hazardHtml
           + specialHtml
           + '</div>';
       }).join('');
