@@ -4436,7 +4436,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
 
   window.CC_APP = {
     init: function (options) {
-      mount(options.root, options.ctx || {});
+      return mount(options.root, options.ctx || {});
     },
     destroy: function () {
       if (typeof _destroyFn === 'function') { _destroyFn(); }
