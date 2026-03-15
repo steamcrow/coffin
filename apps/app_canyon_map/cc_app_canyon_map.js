@@ -97,7 +97,9 @@
   "tzulto": [2229, 1334, 2447, 1526],
   "widowflow": [1316, 1630, 2078, 1798],
   "witches-roost": [3767, 2130, 3965, 2495],
-  "yults-arch": [934, 1504, 1026, 1592]
+  "yults-arch": [934, 1504, 1026, 1592],
+  "needlewood":  [600, 2200, 780, 2500],
+  "hoodoo-maze":  [1800, 600, 1980, 820]
 };
 
   window.CC_HITBOXES = HITBOXES;
@@ -381,8 +383,7 @@
       s.layerEl.id        = "cc-hitbox-editor";
       // MUST start hidden and pointer-events:none — otherwise this z-index:999
       // div sits invisibly over the entire lens and eats every click.
-      s.layerEl.style.display       = "none";
-      s.layerEl.style.pointerEvents = "none";
+      s.layerEl.style.cssText = "position:absolute;inset:0;z-index:1000;display:none;pointer-events:none;";
       ui.lensMapEl.appendChild(s.layerEl);
       return s.layerEl;
     }
@@ -635,7 +636,8 @@
         el("button", { class: "cc-btn", id: "cc-cm-reload", type: "button" }, ["Reload"]),
         el("button", { class: "cc-btn", id: "cc-cm-fit",    type: "button" }, ["Fit"]),
         el("button", { class: "cc-btn", id: "cc-cm-edit",   type: "button" }, ["Edit Hitboxes"]),
-        el("button", { class: "cc-btn", id: "cc-cm-export", type: "button" }, ["Export"])
+        el("button", { class: "cc-btn", id: "cc-cm-export", type: "button" }, ["Export"]),
+        el("button", { class: "cc-btn", id: "cc-cm-home",   type: "button" }, ["← Home"])
       ])
     ]);
 
@@ -1067,15 +1069,7 @@
 
           bindKnobs();
 
-          // ── DIAGNOSTIC: capture-phase on mapWrap fires before any stopPropagation.
-          // Remove once hitboxes are confirmed working.
-          ui.mapWrap.addEventListener("pointerdown", function (e) {
-            var cs = window.getComputedStyle(e.target).pointerEvents;
-            console.log("MAPWRAP CAPTURE — tag:", e.target.tagName,
-              "| id:", e.target.id || "(none)",
-              "| class:", (e.target.className && e.target.className.toString()) || "(none)",
-              "| computed pointer-events:", cs);
-          }, true);
+
 
           // Two frames: let CSS apply and containers reach their final sizes
           return nextFrame().then(nextFrame);
@@ -1149,6 +1143,11 @@
     header.querySelector("#cc-cm-fit"   ).onclick = function () { if (px) applyView(0.5, 0.5); };
     header.querySelector("#cc-cm-edit"  ).onclick = function () { if (editor) editor.toggle(); };
     header.querySelector("#cc-cm-export").onclick = function () { if (editor) editor.exportJSON(); };
+    header.querySelector("#cc-cm-home"  ).onclick = function () {
+      if (window.CC_MASTER && typeof window.CC_MASTER.backToLauncher === 'function') {
+        window.CC_MASTER.backToLauncher();
+      }
+    };
     drawer.querySelector("#close-dr"    ).onclick = function () { ui.drawerEl.classList.remove("cc-slide-panel-open"); };
 
     var onDocClick = function (e) {
