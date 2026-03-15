@@ -2822,10 +2822,10 @@ console.log("🎲 Scenario Builder app loaded");
                     margin:0.5rem 0 0.75rem 0;
                     border-radius:8px;overflow:hidden;
                     border:1px solid rgba(255,117,24,0.3);
-                    align-items:stretch;min-height:340px;">
+                    align-items:stretch;height:340px;">
 
           <!-- LEFT: full canyon overview — zoomed out to show whole map -->
-          <div style="flex:0 0 35%;position:relative;border-right:2px solid rgba(255,117,24,0.3);">
+          <div style="flex:0 0 35%;position:relative;border-right:2px solid rgba(255,117,24,0.3);height:340px;">
             <div style="position:absolute;top:0;left:0;right:0;z-index:10;
                         padding:5px 8px;
                         background:linear-gradient(180deg,rgba(0,0,0,0.8),transparent);
@@ -2833,7 +2833,7 @@ console.log("🎲 Scenario Builder app loaded");
                         text-transform:uppercase;color:rgba(255,255,255,0.6);
                         pointer-events:none;">Canyon Overview</div>
             <div id="cc-scenario-map-overview"
-                 style="width:100%;height:100%;min-height:340px;background:#0a0a0a;">
+                 style="position:absolute;inset:0;background:#0a0a0a;">
               <div style="position:absolute;inset:0;display:flex;align-items:center;
                           justify-content:center;color:rgba(255,255,255,0.2);
                           font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;">
@@ -2844,7 +2844,7 @@ console.log("🎲 Scenario Builder app loaded");
 
           <!-- RIGHT: detail map zoomed tight on the location -->
           <div id="cc-scenario-map-embed"
-               style="flex:1;position:relative;background:#111;min-height:340px;">
+               style="flex:1;position:relative;background:#111;height:340px;">
             <div style="position:absolute;top:0;left:0;right:0;z-index:10;
                         padding:5px 8px;
                         background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
