@@ -258,7 +258,7 @@ console.log("📘 Rules Explorer app loaded");
 
     // ---- LOAD FACTIONS ----
     async function loadFactions() {
-      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/';
       try {
         const promises = FACTION_FILES.map(async (f) => {
           const response = await fetch(baseUrl + f.file + '?t=' + Date.now());
@@ -277,7 +277,7 @@ console.log("📘 Rules Explorer app loaded");
 
     // ---- LOAD CAMPAIGN ----
     async function loadCampaign() {
-      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
+      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/';
       try {
         const response = await fetch(baseUrl + CAMPAIGN_FILE.file + '?t=' + Date.now());
         const data = await response.json();
