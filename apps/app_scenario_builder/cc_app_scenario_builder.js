@@ -524,13 +524,14 @@ console.log("🎲 Scenario Builder app loaded");
 
     // ── Map embed — remote URLs and Leaflet instance cache ─────────────────────────────
     const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_app_canyon_map.js';
-    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/canyon_map.json';
+    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json';
     const LEAFLET_CSS_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css';
     const LEAFLET_JS_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js';
 
     let _mapData      = null;   // cached canyon_map.json
     let _leafletReady = false;  // have we loaded Leaflet yet?
     let _scenarioMap  = null;   // active Leaflet instance in the embed (so we can destroy it on re-render)
+    let _scenarioOverviewMap = null; // second Leaflet instance — full canyon overview
 
     // Fetch a remote JS file and execute it as a blob script.
     function loadScriptDynamic(url) {
@@ -694,7 +695,7 @@ console.log("🎲 Scenario Builder app loaded");
       moonshine:        ['scattered_crates', 'cargo_vehicle'],
       rotgut:           ['fouled_resource', 'scattered_crates'],
       gildren:          ['land_marker', 'command_structure'],
-      doomshine:        ['dark_ritual', 'tainted_ground', 'profane_altar']
+      doomshine:        ['dark_ritual', 'tainted_ground']  // profane_altar via cultist_group only
     };
 
     const ALL_OBJECTIVE_TYPES = [
@@ -840,6 +841,9 @@ console.log("🎲 Scenario Builder app loaded");
         stored_supplies:       "These caches belong to the canyon's people. Every crate we hold is someone who doesn't go hungry.",
         scattered_crates:      "Gather what's left. Supplies belong to survivors, not scavengers.",
         fouled_resource:       "Contaminated doesn't mean worthless. We can purify it. Others will weaponize it.",
+        dark_ritual:           "Something bad is being called here. Stop it. Whatever power the ritual holds is not one the canyon should carry.",
+        profane_altar:         "This altar feeds something old. Destroy it before it feeds further.",
+        soul_vessel:           "Whatever is trapped in these is suffering. Free them.",
         unstable_structure:    "Get what's salvageable out before it comes down. Then let it fall.",
         collapsing_route:      "We need this route. Hold it open long enough to get what matters through.",
         thyr_cache:            "Don't extract the Thyr — monitor it. Mark the cluster and get out.",
@@ -853,6 +857,9 @@ console.log("🎲 Scenario Builder app loaded");
         stored_supplies:       "Survey the caches. Record contents. Extract anything with research value.",
         scattered_crates:      "Scattered materials mean a field opportunity. Collect everything, sort later.",
         fouled_resource:       "Contaminated supplies are a sample set. The Institute wants the contaminant, not the supplies.",
+        dark_ritual:           "Active summoning in progress. Document the ritual methodology. Extract specimens if the summoning succeeds.",
+        profane_altar:         "Pre-scientific instrument of considerable power. Disassemble and catalogue. The Institute pays well for working altars.",
+        soul_vessel:           "Contained biological or spiritual energy. High research value. Extract carefully.",
         unstable_structure:    "Structural analysis while it's still standing. Extract data before it collapses.",
         collapsing_route:      "Geological event in real-time. Document it. Extract before it seals.",
         thyr_cache:            "Active Thyr cluster. Extract maximum yield. Radiation protocols in effect.",
@@ -866,6 +873,9 @@ console.log("🎲 Scenario Builder app loaded");
         stored_supplies:       "Unsecured federal property. Lock it down. Anyone else touching it is a thief.",
         scattered_crates:      "Contraband until proven otherwise. Collect and tag for inspection.",
         fouled_resource:       "Biohazard. Cordon the area. Decontamination is Corps jurisdiction.",
+        dark_ritual:           "Unlicensed ritual activity. Shut it down. Arrest anyone still holding candles.",
+        profane_altar:         "Federal property now. Nobody touches this without a Corps permit.",
+        soul_vessel:           "Unidentified containment units. Impound. Do not open.",
         unstable_structure:    "Condemned. Hold the perimeter. Nobody goes in without clearance.",
         collapsing_route:      "Critical infrastructure. Hold or reroute. The Corps controls movement here.",
         thyr_cache:            "Unregulated Thyr extraction is a federal crime. Secure the site.",
@@ -884,7 +894,10 @@ console.log("🎲 Scenario Builder app loaded");
         thyr_cache:            "Hot cargo but the buyer doesn't ask questions. Extract fast.",
         land_marker:           "Nobody owns this canyon. But if we plant the marker, we collect the fee.",
         command_structure:     "Hit the command post. Take what's valuable. Make it look like someone else.",
-        cargo_vehicle:         "Whatever that truck is carrying is worth more than the truck. Get it and go."
+        cargo_vehicle:         "Whatever that truck is carrying is worth more than the truck. Get it and go.",
+        dark_ritual:           "The doomshine drawn to this ritual is worth more than whatever they're summoning. Hit the cultists, take the barrels, be in Santos Grin before anyone notices the rite went wrong.",
+        profane_altar:         "Strip the altar. The Thirsty Mule in Diablo needs restocking and the cult won't miss whatever we take if we move fast enough.",
+        soul_vessel:           "Glowing cargo sells well. Fence the vessels in Bandit Buck — they don't ask questions at a good party."
       },
       crow_queen: {
         monsters_befriendable: "These creatures are subjects who have not yet pledged. Convert them. Gently if possible.",
@@ -958,6 +971,9 @@ console.log("🎲 Scenario Builder app loaded");
       shine_riders: {
         ritual_site:        'The soil here is worth more than the ritual. Steal it and sell it.',
         ritual_circle:      'Someone built this. Someone will pay us to destroy it. Or to use it.',
+        dark_ritual:        'The doomshine at this ritual site is worth more than the ritual. Steal the barrels, leave the cult arguing about who let them walk.',
+        profane_altar:      'Strip the altar. Whatever it was made of, someone in Diablo will pay good gildren for it no questions asked.',
+        soul_vessel:        'Fence the vessels. Glow like that means somebody desperate is already looking for them.',
         thyr_cache:         'Hot cargo but the buyer doesn\'t ask questions. Extract fast, exit faster.',
         land_marker:        'Nobody owns the canyon. But if we plant the marker, we collect the fee.',
         command_structure:  'Hit the command post. Take what\'s valuable. Make it look like someone else.',
@@ -1132,6 +1148,7 @@ console.log("🎲 Scenario Builder app loaded");
         tainted_ground:     { name: 'Exploit the Chaos',           vp: '+3 VP — use taint zone to flush enemies' },
         evacuation_point:   { name: 'First One Out',               vp: '+4 VP if first faction to exit' },
         dark_ritual:        { name: 'Sell the Secret',              vp: '+4 VP if ritual disrupted and cult blamed on someone else' },
+        doomshine_run:      { name: 'The Doomshine Run',            vp: '+4 VP if doomshine cargo exits with Shine Boss' },
         profane_altar:      { name: 'Strip the Altar',              vp: '+3 VP — loot the altar and run before it wakes up' },
         soul_vessel:        { name: 'Fence the Vessels',            vp: '+3 VP per vessel extracted off board' },
         default:            { name: 'Fast Money, Faster Exit',     vp: '+3 VP — extract highest-value item and run' },
@@ -2400,7 +2417,15 @@ console.log("🎲 Scenario Builder app loaded");
     var isNPC = faction.id === 'monsters' || faction.id === 'crow_queen';
 
     var canonicalMotive = this.getPlotEngineCanonicalMotive(faction.id);
-    if (canonicalMotive) motive = canonicalMotive;
+    if (canonicalMotive) {
+      var GENERIC_PHRASES_V = ['extract the most total resource value',
+        'survive and control territory', 'claim and hold resources',
+        'achieve primary objectives', 'secure key resources'];
+      var isGenericV = GENERIC_PHRASES_V.some(function(g) {
+        return canonicalMotive.toLowerCase().indexOf(g) >= 0;
+      });
+      if (!isGenericV) motive = canonicalMotive;
+    }
     if (vaultVC.primary) motive = vaultVC.primary;
 
     conditions[faction.id] = {
@@ -2787,51 +2812,26 @@ console.log("🎲 Scenario Builder app loaded");
     //    Left panel:  static canyon overview with orange highlight box.
     //    Right panel: zoomed Leaflet map, gold star at location centre.
 
-    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/map_coffin_canyon_tiny.jpg';
+    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/map_coffin_canyon_tiny.jpg';
 
     function renderLocationMapEmbed() {
       return `
         <div id="cc-scenario-map-wrap"
-             style="display:flex;gap:6px;
+             style="display:flex;gap:0;
                     margin:0.5rem 0 0.75rem 0;
                     border-radius:8px;overflow:hidden;
                     border:1px solid rgba(255,117,24,0.3);
-                    align-items:stretch;">
+                    align-items:stretch;min-height:320px;">
 
-          <!-- LEFT: static overview — double-border via CSS class -->
-          <div style="flex:0 0 33%;padding:3px;background:rgba(255,117,24,0.18);
-                      box-shadow:0 0 0 1px rgba(255,117,24,0.55);
-                      border-right:2px solid rgba(255,117,24,0.5);">
-            <div id="cc-scenario-map-overview"
-                 style="position:relative;overflow:hidden;background:#0a0a0a;height:100%;
-                        border:1px solid rgba(255,117,24,0.4);border-radius:2px;">
-
-              <!-- Label at TOP -->
-              <div style="position:absolute;top:0;left:0;right:0;z-index:10;
-                          padding:6px 8px;
-                          background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
-                          font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
-                          text-transform:uppercase;color:rgba(255,255,255,0.7);
-                          text-align:center;">Canyon Overview</div>
-
-              <img id="cc-scenario-map-tiny"
-                   src="${TINY_MAP_URL}"
-                   alt="Canyon overview"
-                   style="width:100%;height:auto;display:block;opacity:0.85;">
-
-              <div id="cc-scenario-map-highlight"
-                   style="display:none;position:absolute;
-                          border:2px solid #ff7518;
-                          background:rgba(255,117,24,0.25);
-                          box-shadow:0 0 0 1px rgba(0,0,0,0.6),
-                                     0 0 12px rgba(255,117,24,0.5);
-                          pointer-events:none;"></div>
-            </div>
-          </div>
-
-          <!-- RIGHT: zoomed Leaflet map -->
+          <!-- LEFT: full-colour Leaflet detail map (dominant) -->
           <div id="cc-scenario-map-embed"
                style="flex:1;position:relative;background:#111;min-height:320px;">
+            <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                        padding:5px 8px;
+                        background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
+                        font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
+                        text-transform:uppercase;color:rgba(255,255,255,0.7);
+                        pointer-events:none;">Location Detail</div>
             <div style="position:absolute;inset:0;display:flex;align-items:center;
                         justify-content:center;color:rgba(255,255,255,0.25);
                         font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;">
@@ -2839,17 +2839,39 @@ console.log("🎲 Scenario Builder app loaded");
             </div>
           </div>
 
+          <!-- RIGHT: full-colour Leaflet overview — full canyon, location highlighted -->
+          <div style="flex:0 0 32%;border-left:2px solid rgba(255,117,24,0.3);position:relative;min-height:320px;">
+            <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                        padding:5px 8px;
+                        background:linear-gradient(180deg,rgba(0,0,0,0.8),transparent);
+                        font-size:0.6rem;font-weight:700;letter-spacing:0.14em;
+                        text-transform:uppercase;color:rgba(255,255,255,0.55);
+                        pointer-events:none;">Canyon Overview</div>
+            <div id="cc-scenario-map-overview"
+                 style="width:100%;height:100%;min-height:320px;background:#0a0a0a;">
+              <div style="position:absolute;inset:0;display:flex;align-items:center;
+                          justify-content:center;color:rgba(255,255,255,0.2);
+                          font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;">
+                Loading&hellip;
+              </div>
+            </div>
+          </div>
+
         </div>`;
     }
 
     async function initLocationMapEmbed(locProfile) {
-      const leafletContainer = document.getElementById('cc-scenario-map-embed');
-      const highlightEl      = document.getElementById('cc-scenario-map-highlight');
+      const leafletContainer  = document.getElementById('cc-scenario-map-embed');
+      const overviewContainer = document.getElementById('cc-scenario-map-overview');
       if (!leafletContainer) return;
 
       if (_scenarioMap) {
         try { _scenarioMap.remove(); } catch (e) {}
         _scenarioMap = null;
+      }
+      if (_scenarioOverviewMap) {
+        try { _scenarioOverviewMap.remove(); } catch (e) {}
+        _scenarioOverviewMap = null;
       }
 
       try {
@@ -2859,28 +2881,10 @@ console.log("🎲 Scenario Builder app loaded");
           ensureLeaflet()
         ]);
 
-        const px   = mapData.map.background.image_pixel_size;
-        const bbox = hitboxes[locProfile.id];
+        const px     = mapData.map.background.image_pixel_size;
+        const bbox   = hitboxes[locProfile.id];
+        const bounds = [[0, 0], [px.h, px.w]];
 
-        // Position the highlight box on the overview image.
-        // Leaflet CRS.Simple has lat=0 at the BOTTOM; CSS top=0 is the TOP — flip Y.
-        if (bbox && highlightEl) {
-          const minLat = bbox[0], maxLat = bbox[2];
-          const minLng = bbox[1], maxLng = bbox[3];
-
-          const cssTop    = (1 - maxLat / px.h) * 100;
-          const cssLeft   = (minLng / px.w) * 100;
-          const cssHeight = Math.max((maxLat - minLat) / px.h * 100, 0.8);
-          const cssWidth  = Math.max((maxLng - minLng) / px.w * 100, 1.5);
-
-          highlightEl.style.top     = cssTop  + '%';
-          highlightEl.style.left    = cssLeft + '%';
-          highlightEl.style.width   = cssWidth  + '%';
-          highlightEl.style.height  = cssHeight + '%';
-          highlightEl.style.display = 'block';
-        }
-
-        const bounds  = [[0, 0], [px.h, px.w]];
         let centerLat = px.h / 2;
         let centerLng = px.w / 2;
         if (bbox) {
@@ -2888,71 +2892,70 @@ console.log("🎲 Scenario Builder app loaded");
           centerLng = (bbox[1] + bbox[3]) / 2;
         }
 
-        leafletContainer.innerHTML = '';
-
         const L = window.L;
+
+        // ── LEFT: detail map zoomed into the location ─────────────────────
+        leafletContainer.innerHTML = '';
         _scenarioMap = L.map(leafletContainer, {
-          crs:                L.CRS.Simple,
-          minZoom:            -5,
-          maxZoom:            0,
-          zoomControl:        false,
-          attributionControl: false,
-          dragging:           false,
-          scrollWheelZoom:    false,
-          doubleClickZoom:    false,
-          touchZoom:          false,
-          keyboard:           false
+          crs: L.CRS.Simple, minZoom: -5, maxZoom: 0,
+          zoomControl: false, attributionControl: false,
+          dragging: false, scrollWheelZoom: false,
+          doubleClickZoom: false, touchZoom: false, keyboard: false
         });
-
         L.imageOverlay(mapData.map.background.image_key, bounds).addTo(_scenarioMap);
-
         if (bbox) {
-          L.rectangle(
-            [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-            {
-              color:       'rgba(255,117,24,0.9)',
-              fillColor:   'rgba(255,117,24,0.18)',
-              fillOpacity: 1,
-              weight:      2,
-              interactive: false
-            }
+          L.rectangle([[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+            { color: 'rgba(255,117,24,0.9)', fillColor: 'rgba(255,117,24,0.18)',
+              fillOpacity: 1, weight: 2, interactive: false }
           ).addTo(_scenarioMap);
-
           L.marker([centerLat, centerLng], {
             icon: L.divIcon({
               className: '',
-              html: `<i class="fa fa-star"
-                        style="color:#ffd700;font-size:1.5rem;
-                               text-shadow:0 0 10px rgba(0,0,0,0.9),0 0 4px #000;
-                               display:block;line-height:1;"></i>`,
-              iconSize:   [20, 20],
-              iconAnchor: [10, 10]
-            }),
-            interactive: false
+              html: '<i class="fa fa-star" style="color:#ffd700;font-size:1.5rem;text-shadow:0 0 10px rgba(0,0,0,0.9),0 0 4px #000;display:block;line-height:1;"></i>',
+              iconSize: [20, 20], iconAnchor: [10, 10]
+            }), interactive: false
           }).addTo(_scenarioMap);
         }
-
         requestAnimationFrame(() => {
           try {
             _scenarioMap.invalidateSize({ animate: false });
             if (bbox) {
-              _scenarioMap.fitBounds(
-                [[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
-                { padding: [60, 80], animate: false, maxZoom: -1 }
-              );
+              _scenarioMap.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+                { padding: [60, 80], animate: false, maxZoom: -1 });
             } else {
               _scenarioMap.fitBounds(bounds, { padding: [20, 20], animate: false });
             }
           } catch (e) {}
         });
 
+        // ── RIGHT: overview map showing full canyon ───────────────────────
+        if (overviewContainer) {
+          overviewContainer.innerHTML = '';
+          _scenarioOverviewMap = L.map(overviewContainer, {
+            crs: L.CRS.Simple, minZoom: -5, maxZoom: 2,
+            zoomControl: false, attributionControl: false,
+            dragging: false, scrollWheelZoom: false,
+            doubleClickZoom: false, touchZoom: false, keyboard: false
+          });
+          L.imageOverlay(mapData.map.background.image_key, bounds).addTo(_scenarioOverviewMap);
+          if (bbox) {
+            L.rectangle([[bbox[0], bbox[1]], [bbox[2], bbox[3]]],
+              { color: '#ff7518', weight: 2, fillColor: 'rgba(255,117,24,0.25)',
+                fillOpacity: 1, interactive: false }
+            ).addTo(_scenarioOverviewMap);
+          }
+          requestAnimationFrame(() => {
+            try {
+              _scenarioOverviewMap.invalidateSize({ animate: false });
+              _scenarioOverviewMap.fitBounds(bounds, { padding: [8, 8], animate: false });
+            } catch (e) {}
+          });
+        }
+
       } catch (err) {
         console.warn('⚠️ Location map embed failed:', err);
         if (leafletContainer) {
-          leafletContainer.innerHTML = `<div style="padding:1rem;color:rgba(255,255,255,0.25);
-                                                    font-size:0.8rem;text-align:center;">
-                                          Map unavailable
-                                        </div>`;
+          leafletContainer.innerHTML = '<div style="padding:1rem;color:rgba(255,255,255,0.25);font-size:0.8rem;text-align:center;">Map unavailable</div>';
         }
       }
     }
