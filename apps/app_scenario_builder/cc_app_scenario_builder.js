@@ -1526,7 +1526,7 @@ console.log("🎲 Scenario Builder app loaded");
       // ── scenario_preferences boost — read ideal_scenarios from faction JSON files ──
       // Each faction file has scenario_preferences.ideal_scenarios (string array).
       // We keyword-match these against the plot family name + tags for a soft boost.
-      (factions || []).forEach(function(faction) {
+      (selectedFactions || []).forEach(function(faction) {
         var factionFile = gameData.getFaction(faction.id);
         if (!factionFile || !factionFile.scenario_preferences) return;
         var ideals = factionFile.scenario_preferences.ideal_scenarios || [];
