@@ -527,9 +527,8 @@ window.addEventListener('error', function(e) {
         if (appRoot) {
           appRoot.innerHTML = '<div class="cc-panel">Failed to Load App: ' + err.message + '</div>';
         }
-      })
-      .finally(function() {
-      });
+     });
+  }  // end loadApp
 
   // ── Back to launcher ──────────────────────────────────────────────────────
   function backToLauncher() {
