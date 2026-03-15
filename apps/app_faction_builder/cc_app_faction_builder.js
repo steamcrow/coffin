@@ -156,12 +156,6 @@ console.log("⚔️ Faction Builder app loaded");
         .catch(err => console.error('❌ Storage Helpers load failed:', err));
     }
 
-    const helpers = ctx && ctx.helpers;
-    if (!helpers) {
-      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Helpers not available</h4></div></div>`;
-      return;
-    }
-
     // ================================
     // STATE
     // ================================
