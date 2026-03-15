@@ -524,7 +524,7 @@ console.log("🎲 Scenario Builder app loaded");
 
     // ── Map embed — remote URLs and Leaflet instance cache ─────────────────────────────
     const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_app_canyon_map.js';
-    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/canyon_map.json';
+    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json';
     const LEAFLET_CSS_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css';
     const LEAFLET_JS_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js';
 
@@ -3032,7 +3032,7 @@ console.log("🎲 Scenario Builder app loaded");
     //    Left panel:  static canyon overview with orange highlight box.
     //    Right panel: zoomed Leaflet map, gold star at location centre.
 
-    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/map_coffin_canyon_tiny.jpg';
+    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/map_coffin_canyon_tiny.jpg';
 
     function renderLocationMapEmbed() {
       return `
@@ -3996,7 +3996,11 @@ console.log("🎲 Scenario Builder app loaded");
     function render() {
       if (state.generated && state.scenario) {
         const html = `
-          <div class="cc-app-header">
+          <div id="cc-sb-login-bar" class="cc-login-status logged-out"
+           style="margin:0;border-radius:0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.8rem;padding:6px 1rem;">
+        <i class="fa fa-spinner fa-spin"></i> Checking login&hellip;
+      </div>
+      <div class="cc-app-header">
             <div>
               <h1 class="cc-app-title">Coffin Canyon</h1>
               <div class="cc-app-subtitle">Scenario Builder</div>
@@ -4750,6 +4754,26 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
           setTimeout(() => {
             console.log('✅ Rendering app');
             render();
+            // Check login status for cloud save indicator
+            setTimeout(async function() {
+              var bar = document.getElementById('cc-sb-login-bar');
+              if (!bar) return;
+              try {
+                if (!window.CC_STORAGE) throw new Error('not loaded');
+                var auth = await window.CC_STORAGE.checkAuth();
+                bar.className = auth.loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out';
+                bar.style.cssText = 'margin:0;border-radius:0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.8rem;padding:6px 1rem;';
+                bar.innerHTML = auth.loggedIn
+                  ? '<i class="fa fa-check-circle"></i> Signed in as ' + auth.userName + ' — cloud saves enabled'
+                  : '<i class="fa fa-exclamation-circle"></i> Not signed in — <a href="/web/login" style="color:var(--cc-primary);">log in</a> to use cloud saves';
+              } catch(e) {
+                if (bar) {
+                  bar.className = 'cc-login-status logged-out';
+                  bar.style.cssText = 'margin:0;border-radius:0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.8rem;padding:6px 1rem;';
+                  bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in — <a href="/web/login" style="color:var(--cc-primary);">log in</a> to use cloud saves';
+                }
+              }
+            }, 600);
           }, 650); // wait for CSS fade-out to finish
         } else {
           render();
