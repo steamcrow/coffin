@@ -8,10 +8,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 (function () {
 
   // ── Bootstrap dropdown autoClose:null patch ────────────────────────────────
-  // Odoo's navbar renders dropdown toggles with data-bs-auto-close="null".
-  // Bootstrap 5 JSON-parses that string → JS null → _typeCheckConfig throws.
-  // This patch must live in the LOADER (not inside any app) so it runs on
-  // every page load regardless of which app is open.
 (function patchBootstrapDropdownAutoClose() {
   if (window._ccDropdownPatchInstalled) return;
   window._ccDropdownPatchInstalled = true;
@@ -35,7 +31,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     if (proto._ccAutoClosePatch) return true;
     proto._ccAutoClosePatch = true;
 
-    // ── Layer 1: fix the DOM attribute and config object in _getConfig ────────
     var origGetConfig = proto._getConfig;
     proto._getConfig = function (config) {
       if (this._element) fixEl(this._element);
@@ -43,9 +38,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       return origGetConfig.call(this, config);
     };
 
-    // ── Layer 2: patch _typeCheckConfig on BaseComponent.prototype ────────────
-    // This is the method that actually throws. Even if the config was re-built
-    // from raw data attributes after our _getConfig fix, this catches it last.
     var BaseProto = Object.getPrototypeOf(proto);
     if (BaseProto && typeof BaseProto._typeCheckConfig === 'function' && !BaseProto._ccTypeCheckPatch) {
       BaseProto._ccTypeCheckPatch = true;
@@ -70,7 +62,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     }, 150);
   }
 
-  // Re-patch on every DOM mutation — Odoo's lazy loader can replace Bootstrap
   if (window.MutationObserver) {
     new MutationObserver(function (mutations) {
       mutations.forEach(function (m) {
@@ -80,12 +71,10 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
           if (node.querySelectorAll) node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
         });
       });
-      // Re-check prototype every batch — covers Bootstrap hot-replacements
       patchPrototype();
     }).observe(document.documentElement, { childList: true, subtree: true });
   }
 
-  // 30-second heartbeat for long idle sessions
   setInterval(function () {
     fixDOM();
     var BS = window.bootstrap;
@@ -95,9 +84,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     }
   }, 30000);
 }());
-// ── Global safety net for Odoo Bootstrap conflicts ─────────────────────────
-// Even if the Dropdown patch above fires too late, this stops the unhandled
-// rejection from crashing the page. Only suppresses the specific known error.
+
 window.addEventListener('unhandledrejection', function(e) {
   var msg = e.reason && (e.reason.message || String(e.reason));
   if (msg && msg.indexOf('DROPDOWN') !== -1 && msg.indexOf('autoClose') !== -1) {
@@ -114,7 +101,7 @@ window.addEventListener('error', function(e) {
     return true;
   }
 });
-  // ── App registry ──────────────────────────────────────────────────────────
+
   var COMPONENTS_JS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_components.js';
   var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/tools/rules_helpers.js';
   var RULES_BASE    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/rules_base.json';
@@ -187,9 +174,6 @@ window.addEventListener('error', function(e) {
 
   var currentApp = null;
 
-  // ── Help content storage key ──────────────────────────────────────────────
-  // We store "hide help for app X" as a localStorage flag so it persists
-  // across sessions without needing a login.
   function helpHideKey(appId) { return 'cc_hide_help_' + appId; }
   function isHelpHidden(appId) {
     try { return localStorage.getItem(helpHideKey(appId)) === '1'; } catch (_) { return false; }
@@ -198,7 +182,6 @@ window.addEventListener('error', function(e) {
     try { localStorage.setItem(helpHideKey(appId), hidden ? '1' : '0'); } catch (_) {}
   }
 
-  // ── Blob loader ───────────────────────────────────────────────────────────
   function loadScriptViaBlob(url) {
     return fetch(url + '?t=' + Date.now())
       .then(function (r) {
@@ -218,7 +201,6 @@ window.addEventListener('error', function(e) {
       });
   }
 
-  // ── Login status ──────────────────────────────────────────────────────────
   function checkLoginStatus() {
     var bar = document.getElementById('cc-shell-login-bar');
     if (!bar) return;
@@ -251,22 +233,18 @@ window.addEventListener('error', function(e) {
       });
   }
 
-  // ── Help slide panel ──────────────────────────────────────────────────────
   function openHelpPanel(appId) {
     var app = APPS[appId];
     if (!app) return;
 
-    // Remove existing
     closeHelpPanel();
 
-    // Backdrop — clicking it closes the panel
     var backdrop = document.createElement('div');
     backdrop.id = 'cc-help-backdrop';
     backdrop.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
     backdrop.addEventListener('click', closeHelpPanel);
     document.body.appendChild(backdrop);
 
-    // Build body paragraphs
     var bodyHtml = (app.helpBody || []).map(function (p) {
       return '<p style="color:#ccc;font-size:.92rem;line-height:1.7;margin:0 0 .9rem;">' + p + '</p>';
     }).join('');
@@ -277,7 +255,6 @@ window.addEventListener('error', function(e) {
     panel.id = 'cc-help-panel';
     panel.className = 'cc-slide-panel';
     panel.style.zIndex = '9999';
-    // Stop clicks inside the panel from bubbling to the backdrop
     panel.addEventListener('click', function (e) { e.stopPropagation(); });
 
     panel.innerHTML =
@@ -311,7 +288,6 @@ window.addEventListener('error', function(e) {
     if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
   }
 
-  // ── Launcher ──────────────────────────────────────────────────────────────
   function renderLauncher() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
@@ -325,7 +301,6 @@ window.addEventListener('error', function(e) {
         '<p style="color:var(--cc-text-muted);margin:0 0 1.5rem;">' + app.description + '</p>' +
         '<button class="cc-btn cc-btn-block cc-launch-btn" data-app-id="' + id + '">Launch →</button>' +
         '</div>' +
-        // Help button — bottom right of card
         '<button class="cc-help-btn" data-help-id="' + id + '" ' +
         'title="How to use ' + app.title + '" ' +
         'style="position:absolute;bottom:.6rem;right:.6rem;' +
@@ -355,7 +330,6 @@ window.addEventListener('error', function(e) {
 
     setTimeout(checkLoginStatus, 100);
 
-    // Launch buttons
     document.querySelectorAll('.cc-launch-btn').forEach(function (btn) {
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
@@ -363,7 +337,6 @@ window.addEventListener('error', function(e) {
       });
     });
 
-    // Help buttons
     document.querySelectorAll('.cc-help-btn').forEach(function (btn) {
       btn.addEventListener('click', function (e) {
         e.stopPropagation();
@@ -371,7 +344,6 @@ window.addEventListener('error', function(e) {
       });
     });
 
-    // Card hover — exclude help button area
     document.querySelectorAll('.app-card').forEach(function (card) {
       card.addEventListener('mouseenter', function () {
         card.style.transform   = 'translateY(-4px)';
@@ -385,7 +357,6 @@ window.addEventListener('error', function(e) {
         var hb = card.querySelector('.cc-help-btn');
         if (hb) { hb.style.color = 'rgba(255,255,255,.4)'; hb.style.borderColor = 'rgba(255,255,255,.15)'; }
       });
-      // Clicking the card body (not a button) also launches
       card.addEventListener('click', function (e) {
         if (e.target.closest('button')) return;
         loadApp(card.dataset.appId);
@@ -393,7 +364,6 @@ window.addEventListener('error', function(e) {
     });
   }
 
-  // ── Home button observer ──────────────────────────────────────────────────
   var _homeObserver = null;
 
   function injectHomeButton() {
@@ -407,7 +377,6 @@ window.addEventListener('error', function(e) {
     var wrap = document.createElement('div');
     wrap.style.cssText = 'display:flex;align-items:center;gap:.4rem;margin-left:auto;flex-shrink:0;';
 
-    // Help button for the current app
     if (currentApp && APPS[currentApp]) {
       var helpBtn = document.createElement('button');
       helpBtn.className = 'cc-btn cc-btn-ghost';
@@ -458,7 +427,6 @@ window.addEventListener('error', function(e) {
     if (floating && floating.style.position === 'fixed') floating.remove();
   }
 
-  // ── App loader ────────────────────────────────────────────────────────────
   function loadApp(appId) {
     showPreloader();
     var appInfo = APPS[appId];
@@ -467,7 +435,6 @@ window.addEventListener('error', function(e) {
       return;
     }
 
-    // Close any open help panel before launching
     closeHelpPanel();
 
     currentApp = appId;
@@ -479,7 +446,6 @@ window.addEventListener('error', function(e) {
 
     startHomeButtonObserver();
 
-    // Show help automatically unless the user has opted out
     if (!isHelpHidden(appId)) {
       setTimeout(function () { openHelpPanel(appId); }, 800);
     }
@@ -497,17 +463,19 @@ window.addEventListener('error', function(e) {
           .catch(function () { return {}; });
       })
       .then(function (rulesBase) {
-          hhelpers.getChildren = function (parentId) {
+        if (typeof helpers !== 'undefined' && helpers) {
+          helpers.getChildren = function (parentId) {
             if (!rulesBase || !rulesBase.rules) return [];
             return Object.values(rulesBase.rules).filter(function (item) {
               return item && item.parent_id === parentId;
             });
           };
-        if (!helpers.getById) {
-          helpers.getById = function (id) {
-            if (!rulesBase || !rulesBase.rules) return null;
-            return rulesBase.rules[id] || null;
-          };
+          if (!helpers.getById) {
+            helpers.getById = function (id) {
+              if (!rulesBase || !rulesBase.rules) return null;
+              return rulesBase.rules[id] || null;
+            };
+          }
         }
         var appRoot = document.getElementById('cc-app-root');
         if (!appRoot) throw new Error('cc-app-root missing');
@@ -527,10 +495,9 @@ window.addEventListener('error', function(e) {
         if (appRoot) {
           appRoot.innerHTML = '<div class="cc-panel">Failed to Load App: ' + err.message + '</div>';
         }
-     });
+      });
   }  // end loadApp
 
-  // ── Back to launcher ──────────────────────────────────────────────────────
   function backToLauncher() {
     closeHelpPanel();
     stopHomeButtonObserver();
@@ -551,7 +518,6 @@ window.addEventListener('error', function(e) {
     renderLauncher();
   }
 
-  // ── Global API ────────────────────────────────────────────────────────────
   window.CC_MASTER = {
     loadApp:        loadApp,
     backToLauncher: backToLauncher,
@@ -561,7 +527,6 @@ window.addEventListener('error', function(e) {
     setHelpHidden:  setHelpHidden,
   };
 
-  // ── Shell CSS ─────────────────────────────────────────────────────────────
   if (!document.getElementById('cc-shell-styles')) {
     var style = document.createElement('style');
     style.id = 'cc-shell-styles';
@@ -580,22 +545,19 @@ window.addEventListener('error', function(e) {
       '@keyframes cc-fade-in{from{opacity:0}to{opacity:1}}',
       '#cc-shell-home-btn{transition:opacity .2s ease;}',
       '#cc-shell-home-btn:hover{opacity:1!important;}',
-      // Help panel close button inherits from cc_ui.css cc-panel-close-btn
       '.cc-help-btn:hover{color:rgba(255,255,255,.9)!important;border-color:var(--cc-primary,#ff7518)!important;}',
       '@media(max-width:768px){.app-grid{grid-template-columns:1fr!important;}.cc-app-header{flex-direction:column!important;align-items:flex-start!important;}.cc-app-header button{width:100%;}.#cc-shell-home-btn{width:auto!important;margin-left:0!important;margin-top:.5rem;}}'
     ].join('');
     document.head.appendChild(style);
   }
 
-  // ── Preloader ─────────────────────────────────────────────────────────────
   var LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
   var MIN_PRELOAD_MS = 1000;
 
   function showPreloader() {
-    console.log('DEBUG: Preloader root found:', document.getElementById('cc-master-shell-root'));
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
-    
+
     root.innerHTML = '<div id="cc-preloader" style="' +
       'min-height:100vh;display:flex;flex-direction:column;' +
       'align-items:center;justify-content:center;' +
@@ -612,7 +574,7 @@ window.addEventListener('error', function(e) {
       '</div>' +
       '<div style="color:#ff7518;font-size:.7rem;letter-spacing:.28em;' +
       'text-transform:uppercase;animation:cc-pulse 1.5s ease-in-out infinite;">' +
-      'Loading…</div>' +
+      'Loading\u2026</div>' +
       '</div>';
 
     if (!document.getElementById('cc-preloader-keyframes')) {
@@ -635,35 +597,35 @@ window.addEventListener('error', function(e) {
   function boot(onComplete) {
     if (isBooting) return;
     isBooting = true;
-    
-    console.log('🚀 cc_loader_core boot()');
+
+    console.log('cc_loader_core boot()');
     showPreloader();
-    
+
     setTimeout(function () {
       var preloader = document.getElementById('cc-preloader');
       if (preloader) {
         preloader.style.transition = 'opacity .4s ease';
         preloader.style.opacity = '0';
-        setTimeout(function() { 
-            preloader.style.display = 'none'; 
-            if (onComplete) onComplete(); 
+        setTimeout(function () {
+          preloader.style.display = 'none';
+          if (onComplete) onComplete();
         }, 400);
       } else {
         if (onComplete) onComplete();
       }
     }, MIN_PRELOAD_MS);
   }
-  // Initial site load trigger
+
   if (document.getElementById('cc-master-shell-root')) {
-      boot(renderLauncher);
+    boot(renderLauncher);
   } else {
-      var observer = new MutationObserver(function(mutations, obs) {
-          if (document.getElementById('cc-master-shell-root')) {
-              boot(renderLauncher);
-              obs.disconnect();
-          }
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
+    var observer = new MutationObserver(function (mutations, obs) {
+      if (document.getElementById('cc-master-shell-root')) {
+        boot(renderLauncher);
+        obs.disconnect();
+      }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 
 }());
