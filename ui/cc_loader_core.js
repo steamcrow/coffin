@@ -600,6 +600,9 @@ window.addEventListener('error', function(e) {
   var MIN_PRELOAD_MS = 1000;
 
   function showPreloader() {
+    console.log('DEBUG: Preloader root found:', document.getElementById('cc-master-shell-root'));
+    var root = document.getElementById('cc-master-shell-root');
+    if (!root) return;
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
     root.innerHTML = '<div id="cc-preloader" style="' +
