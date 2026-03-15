@@ -2457,7 +2457,7 @@ console.log("🎲 Scenario Builder app loaded");
 
       // If objective has a Volatile trait, override with explosion trigger
       if (objective.trait?.name === 'Volatile') {
-        const t = TURNS_TRIGGER_volatile_trait || TURN_TRIGGERS['volatile_trait'];
+        const t = TURN_TRIGGERS['volatile_trait'];
         return {
           objective_id:   objective.id || `obj_${objIndex + 1}`,
           objective_name: objective.name,
