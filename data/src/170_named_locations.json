@@ -2,7 +2,7 @@
   "file": "170_named_locations.json",
   "version": "2.1",
   "notes": [
-    "All 36 canonical map locations plus Camp Coffin.",
+    "All 40 canonical map locations plus Camp Coffin.",
     "key_resources lists 2-5 resources that define the location and drive scenario objectives.",
     "resources object only contains non-zero values for those key resources.",
     "Sub-locations (Red Lantern Cantina, Automat, Monte Haul) removed — they appear IN locations, not as locations.",
@@ -662,10 +662,10 @@
     },
     {
       "id": "quinine-jimmy",
-      "name": "Quinne Jimmy",
+      "name": "Quinine Jimmy",
       "emoji": "🔧",
       "type_ref": "boomtown_dryriver",
-      "archetype": "outpost",
+      "archetype": "trade_town",
       "state": "barely_alive",
       "danger": 3,
       "population": 2,
@@ -689,10 +689,18 @@
       "monster_seeds": [
         {
           "name": "Ruster",
+          "weight": 2
+        },
+        {
+          "name": "Will-o'-Wisp",
           "weight": 3
         },
         {
-          "name": "Canyon Goblin",
+          "name": "Wolf",
+          "weight": 2
+        },
+        {
+          "name": "",
           "weight": 2
         }
       ],
@@ -976,7 +984,7 @@
       "id": "little-rica",
       "name": "Little Rica",
       "emoji": "✨",
-      "type_ref": "boomtown_mesa",
+      "type_ref": "boomtown_dryriver",
       "archetype": "mining_camp",
       "state": "barely_alive",
       "danger": 4,
@@ -995,21 +1003,25 @@
         "ShallowMines",
         "AssayTent",
         "ClaimMarkers",
-        "OverlookPlatform",
-        "GuardCamp"
+        "RailTerminus",
+        "CollapseZones"
       ],
       "monster_seeds": [
         {
-          "name": "Canyon Goblin",
+          "name": "Chimera",
           "weight": 2
         },
         {
-          "name": "Ruster",
-          "weight": 2
-        },
-        {
-          "name": "Harpy",
+          "name": "Imp",
           "weight": 1
+        },
+        {
+          "name": "Valley Centaur",
+          "weight": 3
+        },
+        {
+          "name": "",
+          "weight": 2
         }
       ],
       "description": "Little Rica has the ore. It has always had the ore. The problem is everyone else also knows it has the ore.",
@@ -1019,7 +1031,7 @@
         "Shallow mines",
         "Assay tent",
         "Claim markers",
-        "Guard camp"
+        "Mining camps"
       ],
       "rumors": [
         "A survey team found a second seam below the main mine and hasn't reported it officially.",
@@ -1757,18 +1769,18 @@
       "id": "martygrail",
       "name": "Martygrail",
       "emoji": "⛪",
-      "type_ref": "region_tzul_ruins",
+      "type_ref": "cultist_revival_tents",
       "archetype": "religious_site",
-      "state": "barely_alive",
+      "state": "booming",
       "danger": 4,
-      "population": 1,
+      "population": 3,
       "key_resources": [
         "tzul_silver",
         "thyr",
         "gildren"
       ],
       "resources": {
-        "tzul_silver": 3,
+        "tzul_silver": 2,
         "thyr": 3,
         "gildren": 2
       },
@@ -1777,39 +1789,43 @@
         "UndergroundCrypt",
         "RitualCircle",
         "DonationVault",
-        "FactionAltars"
+        "FactionAltars",
+        "RailStop"
       ],
       "monster_seeds": [
         {
-          "name": "Ghost",
+          "name": "Dire Wolf",
+          "weight": 2
+        },
+        {
+          "name": "Gnoll",
+          "weight": 1
+        },
+        {
+          "name": "Patchwork Wonder",
           "weight": 3
         },
         {
-          "name": "Skeleton",
+          "name": "",
           "weight": 2
-        },
-        {
-          "name": "Devil",
-          "weight": 2
-        },
-        {
-          "name": "Banshee",
-          "weight": 1
         }
       ],
-      "description": "A site of contested religious significance where multiple factions insist the sacred ground belongs to them. The ground itself seems to be keeping score.",
-      "atmosphere": "Competing prayers in a space that listens to all of them",
+      "description": "Martygrail’s what you get when somebody digs up a pile of old monster bones beside a missionary church and every preacher, prophet, and candle-waving cultist in the territory comes running to claim the dirt for their own, pitching revival tents around the rail stop and arguing over whose god owns the ground—though if you ask me, that soil’s got its own temper and it don’t much care for folks getting too certain about it.",
+      "atmosphere": "This place attracts the weirdos like none other.",
       "coffinCoughChance": 0.27,
       "terrain_flavor": [
         "Collapsing chapel",
         "Underground crypt",
         "Ritual circle",
-        "Faction altars"
+        "Faction altars",
+        "Rail stop",
+        ""
       ],
       "rumors": [
-        "Three different factions claim Martygrail as holy ground. The space agrees with whichever faction is currently winning.",
-        "The donation vault has been empty for years. Something still guards it.",
-        "The ritual circle preemptively activates before any faction can attempt it."
+        "A traveling prophet once tried to bless the ground and burst into flames before finishing the prayer.",
+        "A drunk swore he heard the bones breathing through the church eaves.",
+        "Somebody keeps stacking rocks as some sort of primitive shrines.",
+        ""
       ],
       "notes": [
         "Contested sacred site. Ritual and faction ownership objectives."
@@ -2455,7 +2471,8 @@
       "features": [
         "BonePile",
         "SupplyCrates",
-        "Cactus"
+        "Cactus",
+        "Rail"
       ],
       "monster_seeds": [
         {
@@ -2545,6 +2562,76 @@
         2003,
         2712,
         2286
+      ]
+    },
+    {
+      "id": "laboratorium",
+      "name": "Laboratorium",
+      "type_ref": "monsterologist_town_active",
+      "archetype": "headquarters",
+      "state": "prospering",
+      "danger": 3,
+      "population": 3,
+      "coffinCoughChance": 0.05,
+      "key_resources": [],
+      "resources": {
+        "mechanical_parts": 2,
+        "supplies": 3,
+        "water_clean": 3,
+        "weapons": 2
+      },
+      "features": [
+        "CageWagons",
+        "CoalShed",
+        "CompanyOffice",
+        "BrandingPen",
+        "ExecutionYard",
+        "SupplyCrates",
+        "GuardTowers",
+        "HuntingLodge",
+        "Factory"
+      ],
+      "monster_seeds": [
+        {
+          "name": "Owlbear",
+          "weight": 2
+        },
+        {
+          "name": "Harpy",
+          "weight": 2
+        },
+        {
+          "name": "Crag Thrallo",
+          "weight": 2
+        },
+        {
+          "name": "",
+          "weight": 2
+        }
+      ],
+      "description": "The Laboratorium’s Monsterology’s glass-domed butcher shop out in the canyon—a cursed place of cages, Mort vats, and humming engines where they carve monsters down into power under hexed panes like some mad cathedral, and if you ask me the whole valley would sleep easier if the thing burned to the ground, though folks whisper there’s something thinking down in the lowest level and the place was built atop ruins older than any man.",
+      "atmosphere": "Monster cages, barracks, and rose scented smoke gasping smoke.",
+      "terrain_flavor": [
+        "Enchanted Dome",
+        "Factory Smokestacks",
+        "Fancy Victorian Home",
+        "PlugUgly Shacks",
+        "Company Store",
+        ""
+      ],
+      "rumors": [
+        "The whole complex sits atop ruins older than the canyon itself.",
+        "The engines under the dome occasionally start running even when no one’s there to start them.",
+        "They've got an entire monster zoo hidden in there."
+      ],
+      "notes": [
+        "HQ of Monsterology in the Canyon"
+      ],
+      "hitbox": [
+        500,
+        500,
+        500,
+        500
       ]
     }
   ]
