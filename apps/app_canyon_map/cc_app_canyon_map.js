@@ -38,7 +38,7 @@
   var BG_ZOOM_OFFSET  = -0.2;  // ── TUNE 1: BG overview zoom (-0.5 = very zoomed out, 0 = fill)
   var LENS_ZOOM_EXTRA =  1.9;  // ── TUNE 2: Lens detail zoom offset (1.0 = mild, 3.0 = strong)
 
-  var MIN_LOADER_MS = 700;     // ── TUNE 3: Loader minimum display time in milliseconds
+  var MIN_LOADER_MS = 1500;    // ── TUNE 3: Loader minimum display time in milliseconds
 
   // ── TUNE 4 & 5: Knob travel limits ─────────────────────────────────────
   //
@@ -679,7 +679,7 @@
         ".cc-lens{position:absolute;z-index:5;pointer-events:auto;}",
         ".cc-frame-overlay{position:absolute;inset:0;z-index:6;pointer-events:none;}",
         ".cc-scroll-vertical,.cc-scroll-horizontal{position:absolute;z-index:7;}",
-        ".cc-cm-loader{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.25rem;background:#0a0a0a;padding:2rem;transition:opacity 0.45s ease;}",".cc-cm-loader-bar{width:260px;max-width:80vw;height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}",".cc-cm-loader-fill{height:100%;background:linear-gradient(90deg,#d4822a,#ffd700,#d4822a);animation:cc-loading-fill 4s ease-in-out forwards;box-shadow:0 0 10px rgba(212,130,42,0.5);}",".cc-cm-loader-logo{width:200px;max-width:70vw;object-fit:contain;animation:cc-logo-pulse 2.2s ease-in-out infinite;}",".cc-cm-loader-title{font-size:1rem;font-weight:900;color:#d4822a;letter-spacing:0.06em;text-transform:uppercase;margin:0;}",".cc-cm-loader-text{color:rgba(255,255,255,0.4);font-size:10px;letter-spacing:0.12em;text-transform:uppercase;margin:0;animation:cc-pulse-text 1.6s ease-in-out infinite;}","@keyframes cc-logo-pulse{0%,100%{filter:drop-shadow(0 0 8px rgba(212,130,42,0.35)) brightness(1);transform:scale(1)}50%{filter:drop-shadow(0 0 22px rgba(212,130,42,0.8)) brightness(1.2);transform:scale(1.05)}}","@keyframes cc-loading-fill{0%{width:0%}40%{width:65%}80%{width:88%}100%{width:95%}}","@keyframes cc-pulse-text{0%,100%{opacity:.5}50%{opacity:1}}",
+        ".cc-cm-loader{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0a0a0a;}",
         ".cc-hitbox-editor-badge{z-index:8;}"
       ].join("");
       document.head.appendChild(_layoutStyle);
@@ -730,12 +730,9 @@
     trackH.style.pointerEvents = "none";
 
     var loaderEl = el("div", { class: "cc-cm-loader", id: "cc-map-loader" }, [
-      el("img", { src: opts.logoUrl, alt: "Coffin Canyon", draggable: "false", class: "cc-cm-loader-logo" }),
-      el("p",   { class: "cc-cm-loader-title" }, ["Canyon Map"]),
-      el("div", { class: "cc-cm-loader-bar" }, [
-        el("div", { class: "cc-cm-loader-fill" })
-      ]),
-      el("p",   { class: "cc-cm-loader-text" }, ["Loading map data…"])
+      el("img", { src: opts.logoUrl, alt: "Coffin Canyon", draggable: "false" }),
+      el("div", { class: "cc-cm-loader-spin" }),
+      el("div", { style: "color:#ff7518;font-size:.8rem;letter-spacing:.2em;text-transform:uppercase" }, ["Loading"])
     ]);
     // Start with pointer-events off — showLoader() turns them on, hideLoader() kills them.
     // This prevents the loader from blocking map interaction at any point.
@@ -1106,7 +1103,7 @@
             zoomSnap: 0, zoomDelta: 0.25,
             zoomControl: false, attributionControl: false
           });
-          window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(bgMap);
+          var bgOverlay = window.L.imageOverlay(mapDoc.map.background.image_key, bounds).addTo(bgMap);
 
           var lensUrl = (mapDoc.map.lens && mapDoc.map.lens.image_key)
             ? mapDoc.map.lens.image_key
@@ -1118,7 +1115,7 @@
             zoomSnap: 0, zoomDelta: 0.25,
             zoomControl: false, attributionControl: false
           });
-          window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
+          var lensOverlay = window.L.imageOverlay(lensUrl, bounds).addTo(lensMap);
 
           lockMaps();
 
@@ -1179,13 +1176,45 @@
           // Build hitboxes AFTER applyView — Leaflet positions permanent tooltips
           // at bind time, so the map must have a view set or they all stack at [0,0].
           buildHitboxes();
-          // Reveal now that Leaflet has positioned correctly — no jump visible.
+
+          // ── Wait for all images to actually finish downloading ────────
+          // Leaflet fires a 'load' event on the imageOverlay once its <img>
+          // has decoded.  We also wait for the frame PNG and the minimum
+          // loader display time.  Only when all three are done do we reveal
+          // the maps and dismiss the preloader — no more pop-in.
+
+          function overlayLoaded(overlay) {
+            return new Promise(function(resolve) {
+              // If the underlying img is already complete, resolve immediately
+              var imgEl = overlay.getElement ? overlay.getElement() : null;
+              if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+                resolve(); return;
+              }
+              overlay.once('load',  resolve);
+              overlay.once('error', resolve); // don't stall on a broken image
+            });
+          }
+
+          function frameLoaded() {
+            return new Promise(function(resolve) {
+              var imgEl = ui.frameEl.querySelector('img');
+              if (!imgEl) { resolve(); return; }
+              if (imgEl.complete && imgEl.naturalWidth > 0) { resolve(); return; }
+              imgEl.addEventListener('load',  resolve, { once: true });
+              imgEl.addEventListener('error', resolve, { once: true });
+            });
+          }
+
+          var minWait   = delay(Math.max(0, MIN_LOADER_MS - (Date.now() - loadStart)));
+          var allImages = Promise.all([overlayLoaded(bgOverlay), overlayLoaded(lensOverlay), frameLoaded()]);
+
+          return Promise.all([minWait, allImages]);
+        })
+        .then(function () {
+          // Everything is ready — reveal maps and dismiss loader together
           ui.mapEl.style.visibility     = "";
           ui.lensMapEl.style.visibility = "";
           ui.frameEl.style.visibility   = "";
-          return delay(Math.max(0, MIN_LOADER_MS - (Date.now() - loadStart)));
-        })
-        .then(function () {
           hideLoader();
         })
         .catch(function (err) {
