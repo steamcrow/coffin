@@ -2,7 +2,7 @@
   "file": "170_named_locations.json",
   "version": "2.1",
   "notes": [
-    "All 40 canonical map locations plus Camp Coffin.",
+    "All 36 canonical map locations plus Camp Coffin.",
     "key_resources lists 2-5 resources that define the location and drive scenario objectives.",
     "resources object only contains non-zero values for those key resources.",
     "Sub-locations (Red Lantern Cantina, Automat, Monte Haul) removed — they appear IN locations, not as locations.",
@@ -1662,16 +1662,20 @@
       ],
       "monster_seeds": [
         {
-          "name": "Will-o'-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Ghost",
-          "weight": 1
-        },
-        {
           "name": "Rat Swarm",
           "weight": 1
+        },
+        {
+          "name": "Ghoul",
+          "weight": 2
+        },
+        {
+          "name": "Skeleton",
+          "weight": 2
+        },
+        {
+          "name": "",
+          "weight": 2
         }
       ],
       "description": "An old claim district named from a misspelled surname that nobody corrects. Deeds change hands, but the ground doesn't care.",
@@ -1702,19 +1706,16 @@
       "name": "Lost Yots",
       "emoji": "💀",
       "type_ref": "region_tzul_ruins",
-      "archetype": "ruins",
-      "state": "ruins",
+      "archetype": "haunted_peak",
+      "state": "strangewild",
       "danger": 4,
       "population": 0,
       "key_resources": [
-        "tzul_silver",
-        "thyr",
-        "spare_parts"
+        "thyr"
       ],
       "resources": {
-        "tzul_silver": 3,
-        "thyr": 2,
-        "spare_parts": 1
+        "thyr": 1,
+        "silver": 2
       },
       "features": [
         "CollapsedStructures",
@@ -1725,38 +1726,37 @@
       ],
       "monster_seeds": [
         {
-          "name": "Skeleton",
-          "weight": 3
+          "name": "Harpy",
+          "weight": 4
         },
         {
-          "name": "Ghoul",
+          "name": "Wyvern",
           "weight": 2
         },
         {
-          "name": "Ghost",
-          "weight": 2
+          "name": "Banshee",
+          "weight": 1
         },
         {
-          "name": "Zombie",
+          "name": "",
           "weight": 2
         }
       ],
-      "description": "Lost Yots was a settlement once. Now it is a ruin that is getting larger, not smaller. The walls grow back differently than they fell.",
-      "atmosphere": "Wrongly rebuilt, badly occupied",
+      "description": "Lost Yots is the biggest mesa in the whole canyon, its base riddled with stubborn old mine shafts while the top’s punched full of wind holes where vultures and harpies roost, and prospectors keep crawling back to it like fools because the deeper tunnels turn up strange bones and older stonework that make a man think the mesa’s been swallowing secrets longer than anyone’s been digging.",
+      "atmosphere": "Windswept haunted Mesa",
       "coffinCoughChance": 0.3,
       "terrain_flavor": [
-        "Collapsed structures",
-        "Tzul glyphs",
-        "Corrupted ground",
-        "Deep cellar"
+        "Weird nests",
+        "High windswept mesa",
+        "Mine holes "
       ],
       "rumors": [
-        "The ruin follows a floor plan that doesn't match any architectural tradition.",
-        "Expedition teams keep finding their own abandoned campsites from trips they didn't take.",
-        "There are lights in Lost Yots at night. They move with purpose."
+        "The mesa is hollow all the way through.",
+        "Harpies drop bones down the summit holes to mark their territory.",
+        "A lost mining crew broke into a cavern full of ancient skeletons and sealed the tunnel behind them."
       ],
       "notes": [
-        "Tzul ruins. Undead pressure. Ritual and artifact scenarios."
+        "Haunted mesa"
       ],
       "hitbox": [
         1576,
