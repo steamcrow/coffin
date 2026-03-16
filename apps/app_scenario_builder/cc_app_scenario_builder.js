@@ -4691,51 +4691,45 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       }
     };
 
-    // ── Boot — splash screen, data load, 5-second minimum hold, then render() ──────
+    // ── Boot — canonical .cc-preloader overlay, 5s minimum, then render ────────
     const _bootStart = Date.now();
+    const MIN_SPLASH_MS = 3000;
 
-    root.innerHTML = `
-      <div class="cc-app-shell h-100">
-        <div class="cc-app-header">
-          <div>
-            <h1 class="cc-app-title">Coffin Canyon</h1>
-            <div class="cc-app-subtitle">Scenario Builder</div>
-          </div>
-        </div>
-        <div id="cc-splash-screen" class="cc-loading-container" style="transition:opacity 0.6s ease;">
-          <img
-            src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
-            alt="Coffin Canyon"
-            class="cc-splash-logo"
-            style="width:320px;max-width:80vw;margin-bottom:2rem;"
-          />
-          <div class="cc-loading-bar">
-            <div class="cc-loading-progress"></div>
-          </div>
-          <div class="cc-loading-text">Loading scenario data&hellip;</div>
-        </div>
+    // Write a minimal shell so root is never empty, then overlay the preloader
+    root.innerHTML = '<div class="cc-app-shell h-100" id="cc-sb-shell"></div>';
+
+    const _sbPreloader = document.createElement('div');
+    _sbPreloader.id = 'cc-sb-preloader';
+    _sbPreloader.className = 'cc-preloader cc-preloader--page';
+    _sbPreloader.innerHTML = `
+      <img class="cc-preloader-logo"
+           src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+           alt="Coffin Canyon"
+           style="width:200px;max-width:70vw;">
+      <p class="cc-preloader-title">Scenario Builder</p>
+      <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+        <div class="cc-loading-progress"></div>
       </div>
+      <p class="cc-loading-text">Loading scenario data&hellip;</p>
     `;
+    document.body.appendChild(_sbPreloader);
 
-    // Hold splash for at least 5 seconds regardless of how fast data loads.
-    const MIN_SPLASH_MS = 5000;
-
-    return gameData.loadAll().then(() => {
+    return gameData.loadAll().then(function() {
       console.log('✅ Game data ready');
-      const elapsed  = Date.now() - _bootStart;
-      const holdFor  = Math.max(0, MIN_SPLASH_MS - elapsed);
+      const elapsed = Date.now() - _bootStart;
+      const holdFor = Math.max(0, MIN_SPLASH_MS - elapsed);
 
-      setTimeout(() => {
-        const splash = document.getElementById('cc-splash-screen');
-        if (splash) {
-          splash.style.opacity = '0';
-          setTimeout(() => {
-            console.log('✅ Rendering app');
-            render();
-          }, 650); // wait for CSS fade-out to finish
-        } else {
-          render();
-        }
+      setTimeout(function() {
+        // render() writes the full app UI into root
+        render();
+        // Fade out the preloader overlay after render
+        requestAnimationFrame(function() {
+          _sbPreloader.classList.add('cc-preloader--hidden');
+          setTimeout(function() {
+            if (_sbPreloader.parentNode) _sbPreloader.parentNode.removeChild(_sbPreloader);
+            console.log('✅ Scenario Builder ready');
+          }, 480);
+        });
       }, holdFor);
     });
 
