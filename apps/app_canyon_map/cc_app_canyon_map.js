@@ -691,11 +691,7 @@
     var header = el("div", { class: "cc-cm-header cc-app-header" }, [
       el("div", { class: "cc-cm-title" }, [opts.title]),
       el("div", { class: "cc-cm-actions" }, [
-        el("button", { class: "cc-btn", id: "cc-cm-reload", type: "button" }, ["Reload"]),
-        el("button", { class: "cc-btn", id: "cc-cm-fit",    type: "button" }, ["Fit"]),
-        el("button", { class: "cc-btn", id: "cc-cm-edit",   type: "button" }, ["Edit Hitboxes"]),
-        el("button", { class: "cc-btn", id: "cc-cm-export", type: "button" }, ["Export"]),
-        el("button", { class: "cc-btn", id: "cc-cm-home",   type: "button" }, ["← Home"])
+        el("button", { class: "cc-btn", id: "cc-cm-home", type: "button" }, ["← Home"])
       ])
     ]);
 
@@ -1251,17 +1247,7 @@
     window.addEventListener("resize", onResize);
 
     // ── Button wiring ─────────────────────────────────────────────────────
-    header.querySelector("#cc-cm-reload").onclick = function () {
-      // Full reset — exit edit mode, stop momentum, return to centre
-      if (editor && editor.isEditing()) editor.toggle();
-      momV.stop(); momH.stop();
-      currentT = 0.5; currentTx = 0.5;
-      init();
-    };
-    header.querySelector("#cc-cm-fit"   ).onclick = function () { if (px) applyView(0.5, 0.5); };
-    header.querySelector("#cc-cm-edit"  ).onclick = function () { if (editor) editor.toggle(); };
-    header.querySelector("#cc-cm-export").onclick = function () { if (editor) editor.exportJSON(); };
-    header.querySelector("#cc-cm-home"  ).onclick = function () {
+    header.querySelector("#cc-cm-home").onclick = function () {
       if (window.CC_MASTER && typeof window.CC_MASTER.backToLauncher === 'function') {
         window.CC_MASTER.backToLauncher();
       }
