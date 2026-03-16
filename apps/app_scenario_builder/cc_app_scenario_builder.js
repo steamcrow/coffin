@@ -129,14 +129,9 @@ console.log("🎲 Scenario Builder app loaded");
           animation: cc-logo-pulse 2.4s ease-in-out infinite;
         }
 
-        /* ---- Mini-map left panel double-border ---- */
+        /* ---- Mini-map left panel — match right panel's clean look ---- */
         #cc-scenario-map-overview {
-          outline: 2px solid rgba(255,117,24,0.55);
-          outline-offset: -1px;
-          box-shadow:
-            inset 0 0 0 4px rgba(0,0,0,0.7),
-            0 0 0 3px rgba(255,117,24,0.18),
-            0 0 18px rgba(255,117,24,0.25);
+          /* No extra borders — the shared outer wrap border handles it */
         }
 
         /* ============================================================
@@ -3084,7 +3079,7 @@ console.log("🎲 Scenario Builder app loaded");
                     align-items:stretch;height:320px;">
 
           <!-- LEFT: overview — object-fit:cover fills the box, no black bars -->
-          <div style="flex:0 0 33%;position:relative;border-right:2px solid rgba(255,117,24,0.4);">
+          <div style="flex:0 0 33%;position:relative;height:320px;overflow:hidden;border-right:2px solid rgba(255,117,24,0.4);">
             <div id="cc-scenario-map-overview"
                  style="position:absolute;inset:0;overflow:hidden;background:#0a0a0a;">
 
