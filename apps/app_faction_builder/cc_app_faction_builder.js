@@ -1648,57 +1648,46 @@ console.log("⚔️ Faction Builder app loaded");
     `;
 
     // ================================
-    // BOOT — splash screen, then render
+    // BOOT — overlay preloader, render underneath, then reveal
     // ================================
-    const _fbBootStart = Date.now();
-    const FB_MIN_SPLASH_MS = 2000;  // 2-second minimum (no heavy JSON to wait for)
+    // The app shell is already in root.innerHTML above.
+    // We overlay a .cc-preloader on top of it so render() can run against
+    // the real DOM immediately, hidden behind the preloader.
 
-    // Show splash immediately into the root element
-    root.innerHTML = `
-      <div class="cc-app-shell h-100" style="display:flex;flex-direction:column;">
-        <div class="cc-app-header">
-          <div>
-            <h1 class="cc-app-title">Coffin Canyon</h1>
-            <div class="cc-app-subtitle">Faction Builder</div>
-          </div>
-        </div>
-        <div id="cc-fb-splash" class="cc-loading-container" style="transition:opacity 0.6s ease;">
-          <img
-            src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
-            alt="Coffin Canyon"
-            class="cc-splash-logo"
-            style="width:320px;max-width:80vw;margin-bottom:2rem;"
-          />
-          <div class="cc-loading-bar">
-            <div class="cc-loading-progress"></div>
-          </div>
-          <div class="cc-loading-text">Loading faction data&hellip;</div>
-        </div>
+    const _fbBootStart   = Date.now();
+    const FB_MIN_SPLASH  = 2000; // 2s minimum — no heavy JSON to wait for
+
+    // Build the overlay preloader and append to root (not replace it)
+    const _fbPreloader = document.createElement('div');
+    _fbPreloader.id = 'cc-fb-preloader';
+    _fbPreloader.className = 'cc-preloader cc-preloader--page';
+    _fbPreloader.innerHTML = `
+      <img class="cc-preloader-logo"
+           src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+           alt="Coffin Canyon"
+           style="width:200px;max-width:70vw;">
+      <p class="cc-preloader-title">Faction Builder</p>
+      <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+        <div class="cc-loading-progress"></div>
       </div>
+      <p class="cc-loading-text">Loading faction data&hellip;</p>
     `;
+    root.appendChild(_fbPreloader);
 
-    // Kick off background tasks while splash is showing
+    // Run all startup tasks against the real (overlaid) shell immediately
     checkSharedRoster();
+    render();
     loadAbilityDictionaries();
 
-    // Hold splash for minimum time, then fade out and render
-    const _fbElapsed = Date.now() - _fbBootStart;
-    const _fbHoldFor = Math.max(0, FB_MIN_SPLASH_MS - _fbElapsed);
-
-    setTimeout(() => {
-      const splash = document.getElementById('cc-fb-splash');
-      if (splash) {
-        splash.style.opacity = '0';
-        setTimeout(() => {
-          console.log('✅ Faction Builder rendering');
-          render();
-          setTimeout(() => updateLoginStatus(), 500);
-        }, 650); // wait for CSS fade-out
-      } else {
-        render();
-        setTimeout(() => updateLoginStatus(), 500);
-      }
-    }, _fbHoldFor);
+    // After minimum hold, fade out and remove preloader, then update login
+    const _fbHold = Math.max(0, FB_MIN_SPLASH - (Date.now() - _fbBootStart));
+    setTimeout(function() {
+      _fbPreloader.classList.add('cc-preloader--hidden');
+      setTimeout(function() {
+        if (_fbPreloader.parentNode) _fbPreloader.parentNode.removeChild(_fbPreloader);
+        updateLoginStatus();
+      }, 480); // matches cc_ui.css transition: 0.45s
+    }, _fbHold);
 
     console.log("✅ Faction Builder mounted");
     return Promise.resolve();
