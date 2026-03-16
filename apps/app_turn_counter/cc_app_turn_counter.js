@@ -1948,8 +1948,32 @@ console.log("⏱️ Turn Counter loaded");
       state.phase = 'round_end'; render();
     }
 
-   state.phase = 'setup';
+    // ── Boot — canonical preloader overlay, short hold then dismiss ─────────
+    const _tcPreloader = document.createElement('div');
+    _tcPreloader.id = 'cc-tc-preloader';
+    _tcPreloader.className = 'cc-preloader cc-preloader--page';
+    _tcPreloader.innerHTML = `
+      <img class="cc-preloader-logo"
+           src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+           alt="Coffin Canyon"
+           style="width:200px;max-width:70vw;">
+      <p class="cc-preloader-title">Turn Counter</p>
+      <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+        <div class="cc-loading-progress"></div>
+      </div>
+      <p class="cc-loading-text">Assembling the canyon…</p>
+    `;
+    root.appendChild(_tcPreloader);
+
+    state.phase = 'setup';
     render();
+
+    setTimeout(function() {
+      _tcPreloader.classList.add('cc-preloader--hidden');
+      setTimeout(function() {
+        if (_tcPreloader.parentNode) _tcPreloader.parentNode.removeChild(_tcPreloader);
+      }, 480);
+    }, 1500);
 
     return Promise.resolve();
 
