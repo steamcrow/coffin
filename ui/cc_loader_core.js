@@ -8,10 +8,21 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 (function () {
 
   // ── Bootstrap dropdown autoClose:null patch ───────────────────────────────
+  // Odoo's HoverableDropdown calls Dropdown.getOrCreateInstance() on mouse
+  // events, which hits _typeCheckConfig before our _getConfig wrapper runs.
+  // Fix: patch _typeCheckConfig on BOTH Dropdown.prototype AND its base class,
+  // AND intercept getOrCreateInstance to coerce null before Bootstrap sees it.
   (function patchBootstrapDropdownAutoClose() {
     if (window._ccDropdownPatchInstalled) return;
     window._ccDropdownPatchInstalled = true;
 
+    // Coerce any config object — strips null from autoClose
+    function coerceConfig(config) {
+      if (config && config.autoClose == null) config.autoClose = true;
+      return config;
+    }
+
+    // Fix a single DOM element's data-bs-auto-close attribute
     function fixEl(el) {
       if (!el || !el.getAttribute) return;
       var v = el.getAttribute('data-bs-auto-close');
@@ -21,7 +32,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     }
 
     function fixDOM() {
-      document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
+      document.querySelectorAll('[data-bs-toggle="dropdown"],[data-bs-auto-close]').forEach(fixEl);
     }
 
     function patchPrototype() {
@@ -31,22 +42,47 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       if (proto._ccAutoClosePatch) return true;
       proto._ccAutoClosePatch = true;
 
+      // 1. Patch _getConfig on Dropdown.prototype (runs on new instance)
       var origGetConfig = proto._getConfig;
       proto._getConfig = function (config) {
         if (this._element) fixEl(this._element);
-        if (config && config.autoClose == null) config.autoClose = true;
+        coerceConfig(config);
         return origGetConfig.call(this, config);
       };
 
+      // 2. Patch _typeCheckConfig on Dropdown.prototype directly
+      //    (Dropdown has its own override — BaseProto is not enough)
+      if (typeof proto._typeCheckConfig === 'function' && !proto._ccTypeCheckOwnPatch) {
+        proto._ccTypeCheckOwnPatch = true;
+        var origOwnTypeCheck = proto._typeCheckConfig;
+        proto._typeCheckConfig = function (config) {
+          coerceConfig(config);
+          return origOwnTypeCheck.call(this, config);
+        };
+      }
+
+      // 3. Patch _typeCheckConfig on BaseComponent prototype as well
       var BaseProto = Object.getPrototypeOf(proto);
       if (BaseProto && typeof BaseProto._typeCheckConfig === 'function' && !BaseProto._ccTypeCheckPatch) {
         BaseProto._ccTypeCheckPatch = true;
-        var origTypeCheck = BaseProto._typeCheckConfig;
+        var origBaseTypeCheck = BaseProto._typeCheckConfig;
         BaseProto._typeCheckConfig = function (config) {
-          if (config && config.autoClose == null) config.autoClose = true;
-          return origTypeCheck.call(this, config);
+          coerceConfig(config);
+          return origBaseTypeCheck.call(this, config);
         };
       }
+
+      // 4. Intercept getOrCreateInstance so config is clean before new Dropdown()
+      if (typeof BS.Dropdown.getOrCreateInstance === 'function' && !BS.Dropdown._ccGoCI) {
+        BS.Dropdown._ccGoCI = true;
+        var origGoCI = BS.Dropdown.getOrCreateInstance;
+        BS.Dropdown.getOrCreateInstance = function (el, config) {
+          if (el) fixEl(el);
+          coerceConfig(config);
+          return origGoCI.call(this, el, config);
+        };
+      }
+
       return true;
     }
 
@@ -61,19 +97,21 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       }, 150);
     }
 
+    // Re-fix DOM as Odoo injects nav nodes late
     if (window.MutationObserver) {
       new MutationObserver(function (mutations) {
         mutations.forEach(function (m) {
           m.addedNodes.forEach(function (node) {
             if (node.nodeType !== 1) return;
             fixEl(node);
-            if (node.querySelectorAll) node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
+            if (node.querySelectorAll) node.querySelectorAll('[data-bs-toggle="dropdown"],[data-bs-auto-close]').forEach(fixEl);
           });
         });
         patchPrototype();
       }).observe(document.documentElement, { childList: true, subtree: true });
     }
 
+    // Long-poll in case Odoo replaces Bootstrap after our patch
     setInterval(function () {
       fixDOM();
       var BS = window.bootstrap;
@@ -84,22 +122,23 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     }, 30000);
   }());
 
+  // Suppress any autoClose errors that slip through (belt + suspenders)
   window.addEventListener('unhandledrejection', function (e) {
     var msg = e.reason && (e.reason.message || String(e.reason));
-    if (msg && msg.indexOf('DROPDOWN') !== -1 && msg.indexOf('autoClose') !== -1) {
+    if (msg && msg.indexOf('autoClose') !== -1) {
       e.preventDefault();
-      console.warn('[CC] Suppressed Odoo Bootstrap nav conflict:', msg);
+      console.warn('[CC] Suppressed Bootstrap autoClose conflict:', msg);
     }
   });
 
   window.addEventListener('error', function (e) {
     var msg = e.message || '';
-    if (msg.indexOf('DROPDOWN') !== -1 && msg.indexOf('autoClose') !== -1) {
+    if (msg.indexOf('autoClose') !== -1) {
       e.preventDefault();
-      console.warn('[CC] Suppressed Odoo Bootstrap nav conflict:', msg);
+      console.warn('[CC] Suppressed Bootstrap autoClose conflict:', msg);
       return true;
     }
-  });
+  }, true);
 
   // ── App registry ──────────────────────────────────────────────────────────
   var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/tools/rules_helpers.js';
