@@ -141,6 +141,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   }, true);
 
   // ── App registry ──────────────────────────────────────────────────────────
+  var UI_CSS_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css';
   var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/tools/rules_helpers.js';
   var RULES_BASE    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/rules_base.json';
   var APPS_BASE     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/';
@@ -546,29 +547,22 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     setHelpHidden:  setHelpHidden,
   };
 
-  // ── Shell CSS ─────────────────────────────────────────────────────────────
-  if (!document.getElementById('cc-shell-styles')) {
-    var style = document.createElement('style');
-    style.id = 'cc-shell-styles';
-    style.textContent = [
-      '.cc-panel{background:var(--cc-panel-bg,#1a1a1a);border:1px solid var(--cc-border,rgba(255,255,255,.12));border-radius:8px;overflow:hidden;}',
-      '.cc-panel-body{padding:1.5rem;}',
-      '.cc-panel-header{padding:1rem 1.5rem;border-bottom:1px solid var(--cc-border,rgba(255,255,255,.12));}',
-      '.cc-btn{display:inline-flex;align-items:center;justify-content:center;padding:.75rem 1.5rem;font-weight:600;font-size:.9rem;text-transform:uppercase;letter-spacing:.5px;border:none;border-radius:6px;cursor:pointer;transition:all .2s ease;background:var(--cc-primary,#ff7518);color:#000;}',
-      '.cc-btn:hover{background:#ff8c3d;}',
-      '.cc-btn-secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);}',
-      '.cc-btn-secondary:hover{background:rgba(255,255,255,.15);}',
-      '.cc-btn-ghost{background:transparent;color:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.15);}',
-      '.cc-btn-ghost:hover{background:rgba(255,255,255,.08);color:#fff;border-color:rgba(255,255,255,.3);}',
-      '.cc-btn-block{width:100%;}',
-      '.cc-app-shell{animation:cc-fade-in .3s ease;}',
-      '@keyframes cc-fade-in{from{opacity:0}to{opacity:1}}',
-      '#cc-shell-home-btn{transition:opacity .2s ease;}',
-      '#cc-shell-home-btn:hover{opacity:1!important;}',
-      '.cc-help-btn:hover{color:rgba(255,255,255,.9)!important;border-color:var(--cc-primary,#ff7518)!important;}',
-      '@media(max-width:768px){.app-grid{grid-template-columns:1fr!important;}.cc-app-header{flex-direction:column!important;align-items:flex-start!important;}.cc-app-header button{width:100%;}#cc-shell-home-btn{width:auto!important;margin-left:0!important;margin-top:.5rem;}}'
-    ].join('');
-    document.head.appendChild(style);
+  // ── Shell CSS — loaded from cc_ui.css, not duplicated inline ────────────
+  // Fetch runs immediately at script load time so styles arrive before
+  // renderLauncher() fires. Safe to call multiple times (guard on id).
+  if (!document.getElementById('cc-core-ui-styles')) {
+    fetch(UI_CSS_URL + '?t=' + Date.now())
+      .then(function(r) { return r.ok ? r.text() : Promise.reject(r.status); })
+      .then(function(css) {
+        var s = document.createElement('style');
+        s.id = 'cc-core-ui-styles';
+        s.textContent = css;
+        document.head.appendChild(s);
+        console.log('[CC] cc_ui.css loaded into shell');
+      })
+      .catch(function(err) {
+        console.warn('[CC] cc_ui.css fetch failed — shell may be unstyled:', err);
+      });
   }
 
   // ── Preloader — matches .cc-preloader in cc_ui.css ──────────────────────
