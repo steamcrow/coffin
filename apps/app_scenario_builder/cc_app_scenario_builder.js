@@ -2341,10 +2341,9 @@ console.log("🎲 Scenario Builder app loaded");
       }
 
       // ---- RAIL GATE ----
-      // Rail objectives are gated: only score if the location has rail features or a rail archetype.
-      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'rail', 'Rail'];
-      // Updated: matched to 170_named_locations.json archetypes
-      // rail_grade kept temporarily — gore-mule-drop uses it until 170 is updated
+      // Rail objectives only appear at locations that have rail infrastructure.
+      // Named feature tags (exact match only — no generic 'rail' string that could false-positive).
+      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'RailSpur', 'RailBridge', 'RailStop'];
       const RAIL_ARCHETYPES = ['rail_stop', 'rail_infrastructure', 'rail_grade', 'rail'];
       const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
                    || RAIL_ARCHETYPES.includes(locProfile?.archetype || '');
@@ -2363,8 +2362,10 @@ console.log("🎲 Scenario Builder app loaded");
       // Flags it on the returned objectives so generateNarrativeHook can label it.
       const _anomalyTriggered = Math.random() < 0.10;
 
+      const RAIL_BLOCKED = hasRail ? [] : ['wrecked_engine', 'derailed_cars'];
+
       const sorted = Object.entries(scores)
-        .filter(([, s]) => s > 0)
+        .filter(([t, s]) => s > 0 && !RAIL_BLOCKED.includes(t))  // hard rail block
         .sort((a, b) => _anomalyTriggered ? a[1] - b[1] : b[1] - a[1]); // reversed if anomaly
 
       if (_anomalyTriggered) {
@@ -2374,7 +2375,19 @@ console.log("🎲 Scenario Builder app loaded");
       }
       this._anomalyTriggered = _anomalyTriggered;
 
-      const numObjectives = randomInt(2, 3);
+      // ── Dynamic Objective Scaling ────────────────────────────────────────────
+      //   500 pts  → 2 objectives (tight board, focused)
+      //   1000 pts → 3 objectives
+      //   1500+ pts → 4 objectives (big game, spread movement)
+      //   Danger 5+ adds one extra (max 4)
+      const _pts = this._pointValue || 500;
+      let numObjectives;
+      if (_pts >= 1500)      numObjectives = 4;
+      else if (_pts >= 1000) numObjectives = 3;
+      else                   numObjectives = 2;
+      if ((this._dangerRating || 3) >= 5 && numObjectives < 4) numObjectives++;
+      numObjectives = Math.min(numObjectives, sorted.length);
+      console.log('📐 Objective count:', numObjectives, '(pts=' + _pts + ', danger=' + (this._dangerRating||3) + ')');
       const objectives    = [];
       const used          = new Set();
 
@@ -3037,7 +3050,7 @@ console.log("🎲 Scenario Builder app loaded");
                           text-align:center;">Canyon Overview</div>
 
               <img id="cc-scenario-map-tiny"
-                   src="${TINY_MAP_URL}"
+                   src="${LARGE_MAP_URL}"
                    alt="Canyon overview"
                    style="width:100%;height:100%;object-fit:cover;display:block;opacity:0.88;">
 
