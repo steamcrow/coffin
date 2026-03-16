@@ -2628,10 +2628,10 @@
         "HQ of Monsterology in the Canyon"
       ],
       "hitbox": [
-        500,
-        500,
-        500,
-        500
+        1952,
+        1135,
+        2055,
+        1230
       ]
     }
   ]
