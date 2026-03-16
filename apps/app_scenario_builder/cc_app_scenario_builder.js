@@ -2631,23 +2631,17 @@ console.log("🎲 Scenario Builder app loaded");
   factions.forEach((faction) => {
     const approach    = this.getEffectiveApproach(faction.id);
     const motivesMap  = FACTION_MOTIVES[faction.id]    || FACTION_MOTIVES.monsters;
-    const conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
 
     const primaryObjType = objectives[0] ? objectives[0].type : 'default';
     const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
 
     const pickedObjectives = [];
 
-    objectives.forEach(function(obj, i) {
+    // Use buildRichObjectiveCard for full resource/action/test/VP detail
+    objectives.forEach((obj, i) => {
       if (i > 1) return;
-      const conflict = conflictMap[obj.type] || conflictMap['default'];
-      pickedObjectives.push({
-        name:   conflict.name,
-        desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})[obj.type]
-                || approach.verbs[i % approach.verbs.length] + ' the ' + obj.name + '.',
-        vp:     conflict.vp,
-        tactic: approach.tactic
-      });
+      const richCard = this.buildRichObjectiveCard(faction.id, obj, locProfile, dangerRating, i);
+      pickedObjectives.push(richCard);
     });
 
     if (pickedObjectives.length < 2 && injectMonsterObjective && faction.id !== 'monsters') {
@@ -3490,7 +3484,11 @@ console.log("🎲 Scenario Builder app loaded");
               + (obj.faction_win_vp ? ' — ' + obj.faction_win_vp : '') + '</div>'
             : '';
 
-          return '<div class="cc-vc-obj" style="border-left:2px solid ' + borderColor + ';margin-bottom:0.75rem;padding-left:0.75rem;">'
+          return '<div class="cc-vc-obj" style="margin-bottom:0.75rem;padding:0.5rem 0.6rem;'
+            + 'background:' + (isPrimary ? 'rgba(255,255,255,0.04)' : 'transparent') + ';'
+            + 'border-radius:3px;border:1px solid ' + (isPrimary ? id.border : 'transparent') + ';'
+            + '">'
+
             + '<div class="cc-vc-obj-label" style="color:' + labelColor + ';margin-bottom:0.2rem;">'
             + roleIcon + ' ' + roleLabel + '</div>'
             + '<div class="cc-vc-obj-name" style="font-size:1rem;font-weight:700;margin-bottom:0.3rem;">'
@@ -3515,30 +3513,46 @@ console.log("🎲 Scenario Builder app loaded");
           ? '<p class="cc-quote" style="border-left-color:' + id.color + ';">&ldquo;' + vc.quote + '&rdquo;</p>'
           : '';
 
-        return '<div class="cc-victory-card" style="border-left:4px solid ' + id.color + ';background:linear-gradient(135deg,rgba(0,0,0,0.4) 0%,color-mix(in srgb,' + id.color + ' 6%,transparent) 100%);">'
-          + '<div class="cc-vc-header" style="border-bottom:1px solid ' + id.border + ';padding-bottom:0.6rem;margin-bottom:0.85rem;">'
-          + '<div style="display:flex;align-items:center;gap:0.85rem;">'
+        // ── Field Order military brief card ──
+        return '<div class="cc-victory-card" style="'
+          + 'border:1px solid ' + id.border + ';'
+          + 'border-top:3px solid ' + id.color + ';'
+          + 'background:rgba(10,8,5,0.85);'
+          + 'border-radius:4px;overflow:hidden;'
+          + 'box-shadow:0 2px 12px rgba(0,0,0,0.5);'
+          + '">' 
+          + '<div style="display:flex;align-items:center;gap:0.85rem;'
+          + 'padding:0.75rem 1rem;'
+          + 'background:linear-gradient(90deg,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.2) 100%);'
+          + 'border-bottom:1px solid ' + id.border + ';'
+          + '">'
           + logoHtml
-          + '<div style="flex:1;">'
-          + '<h5 style="color:' + id.color + ';margin:0;font-size:1.1rem;">' + vc.faction_name + (vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : '') + '</h5>'
-          + (id.tag ? '<div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:2px;">' + id.tag + '</div>' : '')
-          + '</div></div>'
-          + motiveHtml
+          + '<div style="flex:1;min-width:0;">'
+          + '<h5 style="color:' + id.color + ';margin:0;font-size:1.05rem;font-weight:900;letter-spacing:.04em;">'
+          + vc.faction_name + (vc.is_npc ? ' <span class="cc-npc-tag" style="font-size:0.6rem;vertical-align:middle;">NPC</span>' : '') + '</h5>'
+          + (id.tag ? '<div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:1px;">' + id.tag + '</div>' : '')
           + '</div>'
-          + '<div class="cc-vc-objectives">' + objectivesHtml + '</div>'
-          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
-          + '<div class="cc-vc-finale">'
-          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:' + id.color + ';margin-bottom:0.25rem;">Finale — Round 6</div>'
-          + '<div class="cc-vc-obj-name" style="font-weight:700;"><i class="fa fa-bolt" style="color:' + id.color + ';"></i> ' + vc.finale.name + '</div>'
-          + '<p style="font-size:0.87rem;margin:0.25rem 0;">' + vc.finale.desc + '</p>'
-          + '<p class="cc-vp-line" style="font-size:0.82rem;"><i class="fa fa-star" style="color:' + id.color + ';"></i> ' + vc.finale.vp + '</p>'
+          + '<div style="flex-shrink:0;font-size:0.55rem;letter-spacing:.12em;text-transform:uppercase;'
+          + 'color:' + id.color + ';border:1px solid ' + id.color + ';padding:2px 6px;opacity:.5;">FIELD ORDER</div>'
           + '</div>'
-          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
-          + '<div class="cc-vc-aftermath">'
-          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.4);margin-bottom:0.25rem;">If ' + vc.faction_name + ' Wins</div>'
-          + '<p style="font-size:0.87rem;margin:0.2rem 0;"><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
-          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
-          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
+          + (motiveHtml ? '<div style="padding:0.6rem 1rem 0;">' + motiveHtml + '</div>' : '')
+          + '<div class="cc-vc-objectives" style="padding:0.75rem 1rem 0;">'
+          + objectivesHtml
+          + '</div>'
+          + '<div style="margin:0 1rem 0.75rem;padding:0.65rem 0.75rem;'
+          + 'background:rgba(0,0,0,0.3);border:1px solid ' + id.border + ';border-radius:3px;">'
+          + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.1em;color:' + id.color + ';margin-bottom:0.3rem;">'
+          + '<i class="fa fa-bolt"></i> Finale — Round 6</div>'
+          + '<div style="font-weight:700;font-size:0.95rem;margin-bottom:0.2rem;">' + vc.finale.name + '</div>'
+          + '<p style="font-size:0.85rem;margin:0 0 0.3rem;color:rgba(255,255,255,0.75);">' + vc.finale.desc + '</p>'
+          + '<span style="font-size:0.8rem;color:' + id.color + ';"><i class="fa fa-star"></i> ' + vc.finale.vp + '</span>'
+          + '</div>'
+          + '<div style="padding:0.65rem 1rem;background:rgba(0,0,0,0.4);border-top:1px solid ' + id.border + ';">'
+          + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,0.35);margin-bottom:0.35rem;">'
+          + 'If ' + vc.faction_name + ' Wins</div>'
+          + '<p style="font-size:0.85rem;margin:0.15rem 0;"><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
+          + '<p style="font-size:0.83rem;margin:0.15rem 0;color:rgba(255,255,255,0.6);"><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
+          + '<p style="font-size:0.83rem;margin:0.15rem 0;color:rgba(255,255,255,0.6);"><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
           + quoteHtml
           + '</div>'
           + '</div>';
@@ -4693,7 +4707,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
 
     // ── Boot — canonical .cc-preloader overlay, 5s minimum, then render ────────
     const _bootStart = Date.now();
-    const MIN_SPLASH_MS = 3000;
+    const MIN_SPLASH_MS = 5000;
 
     // Write a minimal shell so root is never empty, then overlay the preloader
     root.innerHTML = '<div class="cc-app-shell h-100" id="cc-sb-shell"></div>';
