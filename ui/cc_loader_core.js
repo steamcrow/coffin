@@ -532,37 +532,52 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     document.head.appendChild(style);
   }
 
-  // ── Preloader ─────────────────────────────────────────────────────────────
-  var LOGO_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
-  var MIN_PRELOAD_MS = 1000;
+  // ── Preloader — matches .cc-preloader in cc_ui.css ──────────────────────
+  // Inline styles needed here because cc_ui.css hasn't loaded yet.
+  var LOGO_URL       = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
+  var MIN_PRELOAD_MS = 1500;
 
   function showPreloader() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
-    root.innerHTML = '<div id="cc-preloader" style="' +
-      'min-height:100vh;display:flex;flex-direction:column;' +
-      'align-items:center;justify-content:center;background:#0a0a0a;gap:2rem;">' +
-      '<img src="' + LOGO_URL + '" alt="Coffin Canyon" style="width:260px;max-width:70vw;' +
-      'filter:drop-shadow(0 0 28px rgba(255,117,24,.5));animation:cc-pulse 2s ease-in-out infinite;"/>' +
-      '<div style="width:260px;max-width:70vw;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;">' +
-      '<div id="cc-preload-bar" style="height:100%;width:0%;background:#ff7518;border-radius:2px;' +
-      'transition:width ' + (MIN_PRELOAD_MS / 1000) + 's linear;"></div></div>' +
-      '<div style="color:#ff7518;font-size:.7rem;letter-spacing:.28em;text-transform:uppercase;' +
-      'animation:cc-pulse 1.5s ease-in-out infinite;">Loading\u2026</div>' +
-      '</div>';
 
+    // Inject keyframes once
     if (!document.getElementById('cc-preloader-keyframes')) {
-      var s = document.createElement('style');
-      s.id = 'cc-preloader-keyframes';
-      s.textContent = '@keyframes cc-pulse{0%,100%{opacity:.55}50%{opacity:1}}';
-      document.head.appendChild(s);
+      var ks = document.createElement('style');
+      ks.id = 'cc-preloader-keyframes';
+      ks.textContent = [
+        '@keyframes cc-logo-pulse{',
+          '0%,100%{filter:drop-shadow(0 0 8px rgba(212,130,42,0.35)) brightness(1);transform:scale(1)}',
+          '50%{filter:drop-shadow(0 0 22px rgba(212,130,42,0.8)) brightness(1.2);transform:scale(1.05)}',
+        '}',
+        '@keyframes cc-loading-fill{0%{width:0%}40%{width:65%}80%{width:88%}100%{width:95%}}',
+        '@keyframes cc-pulse-text{0%,100%{opacity:.5}50%{opacity:1}}'
+      ].join('');
+      document.head.appendChild(ks);
     }
-    requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        var bar = document.getElementById('cc-preload-bar');
-        if (bar) bar.style.width = '100%';
-      });
-    });
+
+    root.innerHTML =
+      '<div id="cc-preloader" style="' +
+        'position:fixed;inset:0;display:flex;flex-direction:column;' +
+        'align-items:center;justify-content:center;gap:1.25rem;' +
+        'background:#0a0a0a;z-index:9000;padding:2rem;transition:opacity 0.45s ease;">' +
+        '<img src="' + LOGO_URL + '" alt="Coffin Canyon" style="' +
+          'width:200px;max-width:70vw;object-fit:contain;' +
+          'animation:cc-logo-pulse 2.2s ease-in-out infinite;"/>' +
+        '<p style="font-size:1rem;font-weight:900;color:#d4822a;' +
+          'letter-spacing:0.06em;text-transform:uppercase;margin:0;">Coffin Canyon</p>' +
+        '<div style="width:260px;max-width:80vw;height:6px;' +
+          'background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;' +
+          'border:1px solid rgba(255,255,255,0.06);">' +
+          '<div id="cc-preload-bar" style="height:100%;' +
+            'background:linear-gradient(90deg,#d4822a,#ffd700,#d4822a);width:0%;' +
+            'animation:cc-loading-fill ' + (MIN_PRELOAD_MS / 1000) + 's ease-in-out forwards;' +
+            'box-shadow:0 0 10px rgba(212,130,42,0.5);"></div>' +
+        '</div>' +
+        '<p style="color:rgba(255,255,255,0.4);font-size:10px;' +
+          'letter-spacing:0.12em;text-transform:uppercase;margin:0;' +
+          'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading…</p>' +
+      '</div>';
   }
 
   // ── Boot ──────────────────────────────────────────────────────────────────
@@ -576,12 +591,11 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     setTimeout(function () {
       var preloader = document.getElementById('cc-preloader');
       if (preloader) {
-        preloader.style.transition = 'opacity .4s ease';
         preloader.style.opacity = '0';
         setTimeout(function () {
-          preloader.style.display = 'none';
+          if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
           if (typeof onComplete === 'function') onComplete();
-        }, 400);
+        }, 480);
       } else if (typeof onComplete === 'function') {
         onComplete();
       }
