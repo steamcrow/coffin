@@ -1372,7 +1372,7 @@ console.log("⏱️ Turn Counter loaded");
             <div class="cc-tc-faction-row-head">
               <img src="${LOGO_BASE + pf.id}_logo.svg" alt="${fname}"
                 class="cc-faction-logo cc-tc-faction-logo--sm"
-                style="filter:drop-shadow(0 0 3px ${color}88)${isSkipped ? ' grayscale(1)' : ''};"
+                style="width:28px;height:28px;flex-shrink:0;object-fit:contain;filter:drop-shadow(0 0 3px ${color}88)${isSkipped ? ' grayscale(1)' : ''};"
                 onerror="this.onerror=null;this.outerHTML='<div style=\\'width:28px;height:28px;border-radius:50%;background:${color}22;border:2px solid ${color};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.75rem;color:${color};flex-shrink:0;\\'>${fname[0]}</div>'" />
               <strong style="flex:1;color:${isSkipped ? '#555' : color};font-size:.9rem;">
                 ${fname}${isSkipped ? ` <span class="cc-tc-faction-name-skipped">(skipped)</span>` : ''}
@@ -1411,7 +1411,7 @@ console.log("⏱️ Turn Counter loaded");
               <div class="cc-tc-faction-row-head">
                 <img src="${LOGO_BASE + pf.id}_logo.svg" alt="${fname}"
                   class="cc-faction-logo cc-tc-faction-logo--lg"
-                  style="filter:drop-shadow(0 0 4px ${color}88);"
+                  style="width:44px;height:44px;flex-shrink:0;object-fit:contain;filter:drop-shadow(0 0 4px ${color}88);"
                   onerror="this.onerror=null;this.outerHTML='<div style=\\'width:44px;height:44px;border-radius:50%;background:${color}22;border:2px solid ${color};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:${color};flex-shrink:0;\\'>${fname[0]}</div>'" />
                 <span style="color:${color};font-size:.8rem;font-weight:700;flex:1;">${fname}</span>
                 <button onclick="window.CC_TC.clearFactionSave('${pf.id}')"
