@@ -97,6 +97,54 @@ console.log("⚔️ Faction Builder app loaded");
         @media (max-width: 768px) {
           .cc-slide-panel { width: 100vw !important; right: -100vw !important; }
         }
+
+        /* ---- Splash / preloader ---- */
+        .cc-loading-container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          background: #0a0806;
+        }
+        .cc-loading-text {
+          color: rgba(255,255,255,0.4);
+          font-size: 0.8rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          margin-top: 1rem;
+        }
+        .cc-loading-bar {
+          width: 260px;
+          max-width: 80vw;
+          height: 3px;
+          background: rgba(255,117,24,0.15);
+          border-radius: 2px;
+          overflow: hidden;
+          position: relative;
+        }
+        .cc-loading-progress {
+          position: absolute;
+          top: 0; left: 0; bottom: 0;
+          width: 40%;
+          background: #ff7518;
+          border-radius: 2px;
+          animation: cc-bar-slide 1.4s ease-in-out infinite;
+        }
+        @keyframes cc-bar-slide {
+          0%   { left: -40%; width: 40%; }
+          50%  { left: 30%;  width: 50%; }
+          100% { left: 110%; width: 40%; }
+        }
+        @keyframes cc-logo-pulse {
+          0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
+          50%  { filter: drop-shadow(0 0 48px rgba(255,117,24,0.85)); transform: scale(1.03); }
+          100% { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
+        }
+        .cc-splash-logo {
+          animation: cc-logo-pulse 2.4s ease-in-out infinite;
+        }
       `;
       document.head.appendChild(panelStyle);
     }
@@ -1600,14 +1648,59 @@ console.log("⚔️ Faction Builder app loaded");
     `;
 
     // ================================
-    // BOOT
+    // BOOT — splash screen, then render
     // ================================
-   checkSharedRoster();
-    render();
-    setTimeout(() => updateLoginStatus(), 500);
-    loadAbilityDictionaries();
-    console.log("✅ Faction Builder mounted");
+    const _fbBootStart = Date.now();
+    const FB_MIN_SPLASH_MS = 2000;  // 2-second minimum (no heavy JSON to wait for)
 
+    // Show splash immediately into the root element
+    root.innerHTML = `
+      <div class="cc-app-shell h-100" style="display:flex;flex-direction:column;">
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Coffin Canyon</h1>
+            <div class="cc-app-subtitle">Faction Builder</div>
+          </div>
+        </div>
+        <div id="cc-fb-splash" class="cc-loading-container" style="transition:opacity 0.6s ease;">
+          <img
+            src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+            alt="Coffin Canyon"
+            class="cc-splash-logo"
+            style="width:320px;max-width:80vw;margin-bottom:2rem;"
+          />
+          <div class="cc-loading-bar">
+            <div class="cc-loading-progress"></div>
+          </div>
+          <div class="cc-loading-text">Loading faction data&hellip;</div>
+        </div>
+      </div>
+    `;
+
+    // Kick off background tasks while splash is showing
+    checkSharedRoster();
+    loadAbilityDictionaries();
+
+    // Hold splash for minimum time, then fade out and render
+    const _fbElapsed = Date.now() - _fbBootStart;
+    const _fbHoldFor = Math.max(0, FB_MIN_SPLASH_MS - _fbElapsed);
+
+    setTimeout(() => {
+      const splash = document.getElementById('cc-fb-splash');
+      if (splash) {
+        splash.style.opacity = '0';
+        setTimeout(() => {
+          console.log('✅ Faction Builder rendering');
+          render();
+          setTimeout(() => updateLoginStatus(), 500);
+        }, 650); // wait for CSS fade-out
+      } else {
+        render();
+        setTimeout(() => updateLoginStatus(), 500);
+      }
+    }, _fbHoldFor);
+
+    console.log("✅ Faction Builder mounted");
     return Promise.resolve();
 
   } // end mount()
