@@ -91,6 +91,34 @@ console.log("🎲 Scenario Builder app loaded");
           vertical-align: middle;
         }
 
+        /* ---- Login status bar (matches Faction Builder pattern) ---- */
+        .cc-login-status {
+          padding: 0.45rem 1rem;
+          font-size: 0.78rem;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          min-height: 34px;
+          transition: background 0.2s ease, color 0.2s ease;
+        }
+        .cc-login-status.logged-in {
+          background: rgba(74,222,128,0.08);
+          color: #4ade80;
+          border-bottom-color: rgba(74,222,128,0.2);
+        }
+        .cc-login-status.logged-out {
+          background: rgba(0,0,0,0.4);
+          color: rgba(255,255,255,0.4);
+        }
+        .cc-login-status a {
+          color: rgba(255,117,24,0.85);
+          text-decoration: none;
+        }
+        .cc-login-status a:hover { color: #ff7518; }
+
         /* ---- Splash logo pulse ---- */
         @keyframes cc-logo-pulse {
           0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
@@ -2941,6 +2969,31 @@ console.log("🎲 Scenario Builder app loaded");
       return map[rating] || 'Unknown danger level';
     }
 
+    // ── updateLoginStatus — mirrors Faction Builder pattern ───────────────────
+    async function updateLoginStatus() {
+      const bar = document.getElementById('cc-login-status');
+      if (!bar) return;
+      if (!window.CC_STORAGE) {
+        bar.className = 'cc-login-status logged-out';
+        bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> <a href="/web/login">Sign in to save scenarios</a>';
+        return;
+      }
+      try {
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (auth && auth.loggedIn) {
+          const name = auth.userName || auth.name || auth.username || 'Signed in';
+          bar.className = 'cc-login-status logged-in';
+          bar.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as ' + name;
+        } else {
+          bar.className = 'cc-login-status logged-out';
+          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> <a href="/web/login">Sign in to save and load scenarios</a>';
+        }
+      } catch (e) {
+        bar.className = 'cc-login-status logged-out';
+        bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> <a href="/web/login">Sign in to save and load scenarios</a>';
+      }
+    }
+
     // ── window.generateScenario — thin wrapper around ScenarioGenerator ────────
     // ── generateFromLocation ─────────────────────────────────────────────────
     // Step 3 NEXT calls this. Shows a preloader overlay, fires generateScenario(),
@@ -3985,20 +4038,6 @@ console.log("🎲 Scenario Builder app loaded");
       }
 
       const html = `
-        <div id="cc-sb-login-bar" style="
-          display:flex;align-items:center;justify-content:space-between;
-          padding:0.35rem 1rem;
-          background:rgba(0,0,0,0.55);
-          border-bottom:1px solid rgba(255,117,24,0.2);
-          font-size:0.75rem;letter-spacing:0.04em;min-height:34px;">
-          <span style="color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.08em;">
-            <i class="fa fa-map" style="color:rgba(255,117,24,0.6);margin-right:0.4rem;"></i>Coffin Canyon
-          </span>
-          <span id="cc-sb-login-status" style="color:rgba(255,255,255,0.35);">
-            <i class="fa fa-circle-o-notch fa-spin" style="font-size:0.7rem;margin-right:0.3rem;"></i>Checking&hellip;
-          </span>
-        </div>
-
         <div class="cc-app-header">
           <div>
             <h1 class="cc-app-title">Coffin Canyon</h1>
@@ -4007,6 +4046,10 @@ console.log("🎲 Scenario Builder app loaded");
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()" title="Load Scenario"><i class="fa fa-cloud-download"></i></button>
           </div>
+        </div>
+
+        <div id="cc-login-status" class="cc-login-status logged-out">
+          <i class="fa fa-circle-o-notch fa-spin" style="font-size:0.75rem;"></i> Checking&hellip;
         </div>
 
         <div class="cc-scenario-builder-layout">
@@ -4038,26 +4081,7 @@ console.log("🎲 Scenario Builder app loaded");
       `;
       root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
 
-      // Auth check for login bar — 500ms after DOM is in place
-      setTimeout(function() {
-        const statusEl = document.getElementById('cc-sb-login-status');
-        if (!statusEl) return;
-        if (!window.CC_STORAGE) {
-          statusEl.innerHTML = '<a href="/web/login" style="color:rgba(255,117,24,0.7);text-decoration:none;"><i class="fa fa-sign-in" style="margin-right:0.3rem;"></i>Sign in</a>';
-          return;
-        }
-        window.CC_STORAGE.checkAuth().then(function(auth) {
-          if (!statusEl) return;
-          if (auth && auth.loggedIn) {
-            const name = auth.name || auth.username || 'Signed in';
-            statusEl.innerHTML = '<i class="fa fa-check-circle" style="color:#4ade80;margin-right:0.3rem;"></i><span style="color:rgba(255,255,255,0.55);">' + name + '</span>';
-          } else {
-            statusEl.innerHTML = '<a href="/web/login" style="color:rgba(255,117,24,0.7);text-decoration:none;"><i class="fa fa-sign-in" style="margin-right:0.3rem;"></i>Sign in to save</a>';
-          }
-        }).catch(function() {
-          if (statusEl) statusEl.innerHTML = '<a href="/web/login" style="color:rgba(255,117,24,0.7);text-decoration:none;"><i class="fa fa-sign-in" style="margin-right:0.3rem;"></i>Sign in</a>';
-        });
-      }, 500);
+      setTimeout(updateLoginStatus, 500);
     }
 
     // ── Event handlers — all window.* functions called from HTML onclick attrs ────
