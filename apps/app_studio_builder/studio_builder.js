@@ -165,7 +165,7 @@ window.CCFB_FACTORY = {
                 var btn = document.createElement('button');
                 btn.textContent = '↺ Retry';
                 btn.style.cssText = 'padding:8px 16px;cursor:pointer;margin-top:8px';
-                btn.onclick = function() { CCFB_FACTORY.init(); };
+                btn.onclick = function() { window.CCFB_FACTORY.init(); };
                 wrap.appendChild(heading);
                 wrap.appendChild(msg);
                 wrap.appendChild(btn);
@@ -226,7 +226,7 @@ window.CCFB_FACTORY = {
         var self = this;
         var unitsHtml = this.state.currentFaction.units.map(function(u, i) {
             var selected = self.state.selectedUnit === i ? 'cc-item-selected' : '';
-            return '<div class="cc-roster-item ' + selected + '" onclick="CCFB_FACTORY.selectUnit(' + i + ')">' +
+            return '<div class="cc-roster-item ' + selected + '" onclick="window.CCFB_FACTORY.selectUnit(' + i + ')">' +
                 '<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">' +
                     '<div>' +
                         '<div class="u-name">' + u.name + '</div>' +
@@ -248,13 +248,13 @@ window.CCFB_FACTORY = {
                         '<label class="small">FACTION NAME</label>' +
                         '<input type="text" class="cc-input w-100" value="' + this.state.currentFaction.faction + '" ' +
                             'onfocus="if(this.value===\'New Faction\')this.value=\'\'" ' +
-                            'onchange="CCFB_FACTORY.updateFaction(this.value)">' +
+                            'onchange="window.CCFB_FACTORY.updateFaction(this.value)">' +
                     '</div>' +
                     '<div class="unit-list">' + unitsListHtml + '</div>' +
-                    '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
+                    '<button class="btn-add-small w-100 mt-3" onclick="window.CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
                     '<div class="import-section">' +
                         '<label class="small">LOAD FROM REPO</label>' +
-                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.loadFactionFromGitHub(this.value);this.value=\'\'">' +
+                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.loadFactionFromGitHub(this.value);this.value=\'\'">' +
                             '<option value="">— Select a faction file —</option>' +
                             (this.state.factionFiles.length > 0
                                 ? this.state.factionFiles.map(function(f) {
@@ -264,8 +264,8 @@ window.CCFB_FACTORY = {
                             ) +
                         '</select>' +
                         '<label class="small" style="margin-top:10px">OR PASTE JSON</label>' +
-                        '<textarea class="cc-input w-100 import-textarea" onchange="CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
-                        '<button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
+                        '<textarea class="cc-input w-100 import-textarea" onchange="window.CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
+                        '<button class="btn-add-small w-100 mt-2" onclick="window.CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
                     '</div>' +
                 '</div>' +
             '</div>';
@@ -292,7 +292,7 @@ window.CCFB_FACTORY = {
             if (!isFocused && num > self.state.activeStep) stepClass += ' step-locked';
             
             return '<div class="' + stepClass + '">' +
-                '<div class="step-header" onclick="CCFB_FACTORY.setStep(' + num + ')">' +
+                '<div class="step-header" onclick="window.CCFB_FACTORY.setStep(' + num + ')">' +
                     '<div class="step-number">' + num + '</div>' +
                     '<div class="step-title">' + title + '</div>' +
                 '</div>' +
@@ -331,12 +331,12 @@ window.CCFB_FACTORY = {
 
         var weaponPropsHtml = u.weapon_properties.length > 0 ? 
             u.weapon_properties.map(function(p, i) {
-                return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + p + ' ✕</span>';
+                return '<span class="property-badge" onclick="window.CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + p + ' ✕</span>';
             }).join('') : '<span class="no-items">None added</span>';
 
         var abilitiesHtml = u.abilities.length > 0 ?
             u.abilities.map(function(a, i) {
-                return '<div class="ability-item" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + a + ' ✕</div>';
+                return '<div class="ability-item" onclick="window.CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + a + ' ✕</div>';
             }).join('') : '<span class="no-items">None added</span>';
 
         target.innerHTML = '<div class="cc-panel">' +
@@ -347,11 +347,11 @@ window.CCFB_FACTORY = {
                     '<label class="small">UNIT NAME</label>' +
                     '<input type="text" class="cc-input w-100" value="' + u.name + '" ' +
                         'onfocus="if(this.value===\'New Unit\')this.value=\'\'" ' +
-                        'onchange="CCFB_FACTORY.updateUnit(\'name\', this.value)">' +
+                        'onchange="window.CCFB_FACTORY.updateUnit(\'name\', this.value)">' +
                 '</div>' +
                 '<div class="form-group">' +
                     '<label class="small">UNIT TYPE (ARCHETYPE)</label>' +
-                    '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'type\', this.value)">' +
+                    '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'type\', this.value)">' +
                         typeOptions +
                     '</select>' +
                 '</div>' +
@@ -359,44 +359,44 @@ window.CCFB_FACTORY = {
                     '<i class="fa fa-info-circle"></i> ' +
                     (archVault[u.type] ? archVault[u.type].identity : 'Select a type') +
                 '</div>' +
-                '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.setStep(2)">CONFIRM TYPE →</button>'
+                '<button class="btn-add-small w-100 mt-3" onclick="window.CCFB_FACTORY.setStep(2)">CONFIRM TYPE →</button>'
             ) +
             step(2, "ATTRIBUTES",
                 '<div class="stats-grid">' +
                     '<div class="form-group">' +
                         '<label class="small">QUALITY</label>' +
-                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'quality\', this.value)">' + qualityOptions + '</select>' +
+                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'quality\', this.value)">' + qualityOptions + '</select>' +
                     '</div>' +
                     '<div class="form-group">' +
                         '<label class="small">DEFENSE</label>' +
-                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'defense\', this.value)">' + defenseOptions + '</select>' +
+                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'defense\', this.value)">' + defenseOptions + '</select>' +
                     '</div>' +
                     '<div class="form-group">' +
                         '<label class="small">MOVE</label>' +
-                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'move\', this.value)">' + moveOptions + '</select>' +
+                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'move\', this.value)">' + moveOptions + '</select>' +
                     '</div>' +
                     '<div class="form-group">' +
                         '<label class="small">RANGE</label>' +
-                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.updateUnit(\'range\', this.value)">' + rangeOptions + '</select>' +
+                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'range\', this.value)">' + rangeOptions + '</select>' +
                     '</div>' +
                 '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(3)">CONFIRM STATS →</button>'
+                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(3)">CONFIRM STATS →</button>'
             ) +
             step(3, "WEAPON POWERS",
-                '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.openSlidePanel(\'weapon\')">+ ADD WEAPON POWER</button>' +
+                '<button class="btn-add-small w-100" onclick="window.CCFB_FACTORY.openSlidePanel(\'weapon\')">+ ADD WEAPON POWER</button>' +
                 '<div class="abilities-display">' +
                     '<div class="abilities-label">CURRENT POWERS:</div>' +
                     '<div class="abilities-list">' + weaponPropsHtml + '</div>' +
                 '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(4)">CONTINUE →</button>'
+                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(4)">CONTINUE →</button>'
             ) +
             step(4, "UNIT ABILITIES",
-                '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.openSlidePanel(\'ability\')">+ ADD UNIT ABILITY</button>' +
+                '<button class="btn-add-small w-100" onclick="window.CCFB_FACTORY.openSlidePanel(\'ability\')">+ ADD UNIT ABILITY</button>' +
                 '<div class="abilities-display">' +
                     '<div class="abilities-label">CURRENT ABILITIES:</div>' +
                     '<div class="abilities-list">' + abilitiesHtml + '</div>' +
                 '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(5)">CONTINUE →</button>'
+                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(5)">CONTINUE →</button>'
             ) +
             step(5, "SUPPLEMENTAL ABILITIES (OPTIONAL)",
                 '<p class="step-hint">Add gear, alternate versions, or special upgrades. Examples: Witch-Stitched Armor, Baby variant, Relic options.</p>' +
@@ -447,14 +447,14 @@ window.CCFB_FACTORY = {
                             '</label>' +
                         '</div>' +
                     '</div>' +
-                    '<button class="btn-add-small w-100" onclick="CCFB_FACTORY.addSupplemental()">+ ADD SUPPLEMENTAL ABILITY</button>' +
+                    '<button class="btn-add-small w-100" onclick="window.CCFB_FACTORY.addSupplemental()">+ ADD SUPPLEMENTAL ABILITY</button>' +
                 '</div>' +
                 '<div class="abilities-display mt-3">' +
                     '<div class="abilities-label">CURRENT SUPPLEMENTAL ABILITIES:</div>' +
                     '<div class="abilities-list">' + 
                         (u.supplemental_abilities.length > 0 ? 
                             u.supplemental_abilities.map(function(s, i) {
-                                return '<div class="supplemental-item" onclick="CCFB_FACTORY.removeSupplemental(' + i + ')">' +
+                                return '<div class="supplemental-item" onclick="window.CCFB_FACTORY.removeSupplemental(' + i + ')">' +
                                     '<strong>' + s.name + '</strong>' + (s.cost > 0 ? ' (' + s.cost + '₤)' : '') + ' <span class="supp-type-badge">' + s.type + '</span>' +
                                     '<div class="supp-effect">' + s.effect + '</div>' +
                                     (s.stat_modifiers ? '<div class="supp-mods">Modifiers: ' + JSON.stringify(s.stat_modifiers) + '</div>' : '') +
@@ -464,16 +464,16 @@ window.CCFB_FACTORY = {
                         : '<span class="no-items">None added</span>') +
                     '</div>' +
                 '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="CCFB_FACTORY.setStep(6)">CONTINUE →</button>'
+                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(6)">CONTINUE →</button>'
             ) +
             step(6, "LORE & FINALIZE",
                 '<div class="form-group">' +
                     '<label class="small">UNIT LORE (OPTIONAL)</label>' +
-                    '<textarea class="cc-input w-100" rows="4" placeholder="A brief description of this unit..." onchange="CCFB_FACTORY.updateUnit(\'lore\', this.value)">' + u.lore + '</textarea>' +
+                    '<textarea class="cc-input w-100" rows="4" placeholder="A brief description of this unit..." onchange="window.CCFB_FACTORY.updateUnit(\'lore\', this.value)">' + u.lore + '</textarea>' +
                 '</div>' +
                 '<div class="button-group">' +
-                    '<button class="btn-add-small btn-success" onclick="CCFB_FACTORY.saveAndNew()">✓ SAVE UNIT</button>' +
-                    '<button class="btn-add-small btn-danger" onclick="CCFB_FACTORY.delUnit()">DELETE</button>' +
+                    '<button class="btn-add-small btn-success" onclick="window.CCFB_FACTORY.saveAndNew()">✓ SAVE UNIT</button>' +
+                    '<button class="btn-add-small btn-danger" onclick="window.CCFB_FACTORY.delUnit()">DELETE</button>' +
                 '</div>'
             ) +
             '</div>' +
@@ -497,7 +497,7 @@ window.CCFB_FACTORY = {
                 '<div class="section-label"><i class="fa fa-crosshairs"></i> WEAPON POWERS</div>' +
                 '<div class="weapon-properties">' +
                     u.weapon_properties.map(function(p, i) {
-                        return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + p + ' ✕</span>';
+                        return '<span class="property-badge" onclick="window.CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + p + ' ✕</span>';
                     }).join('') +
                 '</div>' +
             '</div>' : '';
@@ -508,7 +508,7 @@ window.CCFB_FACTORY = {
                 '<div class="weapon-properties">' +
                     u.abilities.map(function(a, i) {
                         var displayName = a.replace(/_/g, ' ').toUpperCase();
-                        return '<span class="property-badge" onclick="CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + displayName + ' ✕</span>';
+                        return '<span class="property-badge" onclick="window.CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + displayName + ' ✕</span>';
                     }).join('') +
                 '</div>' +
             '</div>' : '';
@@ -623,7 +623,7 @@ window.CCFB_FACTORY = {
                 var displayName = item.name || key.replace(/_/g, ' ').toUpperCase();
                 var displayEffect = item.effect || 'No description available';
                 
-                cardsHtml += '<div class="ability-card" onclick="CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')">' +
+                cardsHtml += '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')">' +
                     '<div class="ability-card-name">' + displayName + '</div>' +
                     '<div class="ability-card-effect">' + displayEffect + '</div>' +
                 '</div>';
@@ -647,7 +647,7 @@ window.CCFB_FACTORY = {
                         displayEffect = item;
                     }
                     
-                    cardsHtml += '<div class="ability-card" onclick="CCFB_FACTORY.addItem(\'abilities\', \'' + key + '\')">' +
+                    cardsHtml += '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'abilities\', \'' + key + '\')">' +
                         '<div class="ability-card-name">' + displayName + '</div>' +
                         '<div class="ability-card-effect">' + displayEffect + '</div>' +
                     '</div>';
@@ -659,7 +659,7 @@ window.CCFB_FACTORY = {
             '<div class="cc-slide-panel cc-slide-panel-open">' +
                 '<div class="cc-slide-panel-header">' +
                     '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
-                    '<button onclick="CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
+                    '<button onclick="window.CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
                 '</div>' +
                 '<div class="cc-modal-content">' +
                     '<div class="ability-grid">' + cardsHtml + '</div>' +
@@ -817,7 +817,7 @@ window.CCFB_FACTORY = {
             var j = JSON.parse(str);
             this.state.currentFaction.faction = j.faction || "Imported Faction";
             this.state.currentFaction.units = (j.units || []).map(function(u) {
-                return CCFB_FACTORY.sanitizeUnit(u);
+                return window.CCFB_FACTORY.sanitizeUnit(u);
             });
             this.state.selectedUnit = 0; 
             this.state.isPasted = true; 
@@ -840,7 +840,7 @@ window.CCFB_FACTORY = {
             .then(function(j) {
                 self.state.currentFaction.faction = j.faction || "Imported Faction";
                 self.state.currentFaction.units   = (j.units || []).map(function(u) {
-                    return CCFB_FACTORY.sanitizeUnit(u);
+                    return window.CCFB_FACTORY.sanitizeUnit(u);
                 });
                 self.state.selectedUnit = self.state.currentFaction.units.length > 0 ? 0 : null;
                 self.state.isPasted     = true;
@@ -865,8 +865,8 @@ window.CCFB_FACTORY = {
 // Auto-initialize when loaded
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
-        CCFB_FACTORY.init();
+        window.CCFB_FACTORY.init();
     });
 } else {
-    CCFB_FACTORY.init();
+    window.CCFB_FACTORY.init();
 }
