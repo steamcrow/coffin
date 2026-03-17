@@ -39,35 +39,99 @@ window.CCFB_FACTORY = {
 
     init: function() {
         console.log("🎬 Faction Studio initializing...");
-        
+
         var self = this;
-        
-        // Load CSS (following skeleton.js pattern)
+        var BASE = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/';
+        var t    = '?t=' + Date.now();
+
+        // ── Load CSS ──────────────────────────────────────────────────────
         if (!document.getElementById('faction-studio-styles')) {
-            console.log('🎨 Loading Faction Studio CSS...');
-            fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/studio/studio_builder.css?t=' + Date.now())
-                .then(function(res) { return res.text(); })
+            fetch(BASE + 'apps/app_studio_builder/studio_builder.css' + t)
+                .then(function(r) { return r.text(); })
                 .then(function(css) {
-                    var style = document.createElement('style');
-                    style.id = 'faction-studio-styles';
-                    style.textContent = css;
-                    document.head.appendChild(style);
-                    console.log('✅ Faction Studio CSS applied!');
+                    var s = document.createElement('style');
+                    s.id = 'faction-studio-styles';
+                    s.textContent = css;
+                    document.head.appendChild(s);
+                    console.log('✅ Faction Studio CSS applied');
                 })
                 .catch(function(err) { console.error('❌ CSS load failed:', err); });
         }
 
-        // Load rules
-        fetch("https://raw.githubusercontent.com/steamcrow/coffin/main/factions/rules.json?t=" + Date.now())
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
-                self.state.rules = data;
-                console.log("✅ Rules loaded");
+        // ── Fetch all rule files in parallel ──────────────────────────────
+        // Rules are now split across individual files in data/src/.
+        // We fetch only the three sections the Studio actually uses and
+        // stitch them into the rules_master shape the rest of the code expects.
+
+        var SRC = BASE + 'data/src/';
+
+        var abilityFiles = [
+            { key: 'A_deployment_timing',    file: '90_ability_dictionary_A.json'  },
+            { key: 'B_movement_positioning', file: '91_ability_dictionary_B.json'  },
+            { key: 'C_offense_damage',       file: '92_ability_dictionary_C.json'  },
+            { key: 'D_defense_survival',     file: '93_ability_dictionary_D.json'  },
+            { key: 'E_morale_fear',          file: '94_ability_dictionary_E.json'  },
+            { key: 'F_terrain_environment',  file: '95_ability_dictionary_F.json'  },
+            { key: 'G_thyr_ritual',          file: '96_ability_dictionary_G.json'  },
+            { key: 'H_interaction_support',  file: '97_ability_dictionary_H.json'  },
+            { key: 'I_faction_special',      file: '98_ability_dictionary_I.json'  }
+        ];
+
+        var fetchJson = function(url) {
+            return fetch(url + t).then(function(r) {
+                if (!r.ok) throw new Error('Fetch failed: ' + url);
+                return r.json();
+            });
+        };
+
+        var identitiesPromise  = fetchJson(SRC + '70_unit_identities.json');
+        var weaponPropsPromise = fetchJson(SRC + '100_weapon_properties.json');
+        var abilityPromises    = abilityFiles.map(function(af) {
+            return fetchJson(SRC + af.file)
+                .then(function(data) { return { key: af.key, data: data }; })
+                .catch(function(err) {
+                    console.warn('⚠️ Ability file skipped:', af.file, err.message);
+                    return { key: af.key, data: {} };
+                });
+        });
+
+        Promise.all([identitiesPromise, weaponPropsPromise, Promise.all(abilityPromises)])
+            .then(function(results) {
+                var identitiesData  = results[0];
+                var weaponPropsData = results[1];
+                var abilityResults  = results[2];
+
+                // Assemble ability_dictionary from all fetched sections
+                var abilityDict = {};
+                abilityResults.forEach(function(ar) {
+                    var payload = ar.data[ar.key] || ar.data.abilities || ar.data;
+                    if (payload && typeof payload === 'object') {
+                        abilityDict[ar.key] = payload;
+                    }
+                });
+
+                // Build the rules_master shape the Studio expects
+                self.state.rules = {
+                    rules_master: {
+                        unit_identities: identitiesData.rules_master
+                            ? identitiesData.rules_master.unit_identities
+                            : (identitiesData.unit_identities || identitiesData),
+                        weapon_properties: weaponPropsData.rules_master
+                            ? weaponPropsData.rules_master.weapon_properties
+                            : (weaponPropsData.weapon_properties || weaponPropsData),
+                        ability_dictionary: abilityDict
+                    }
+                };
+
+                console.log('✅ Rules assembled from', 2 + abilityFiles.length, 'files');
                 self.refresh();
             })
-            .catch(function(e) { 
-                console.error("❌ Rules failed to load:", e);
-                alert("Failed to load game rules. Please refresh the page.");
+            .catch(function(e) {
+                console.error('❌ Rules failed to load:', e);
+                var root = document.getElementById('faction-studio-root');
+                if (root) root.innerHTML = '<div style="padding:2rem;color:#c44;font-family:monospace;background:#0e0c09">' +
+                    '<strong>Failed to load game rules.</strong><br><small>' + e.message + '</small><br><br>' +
+                    '<button onclick="CCFB_FACTORY.init()" style="padding:8px 16px;cursor:pointer">&#8635; Retry</button></div>';
             });
     },
 
