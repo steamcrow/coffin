@@ -11,7 +11,8 @@ window.CCFB_FACTORY = {
         selectedUnit: null,
         activeModal: null,
         activeStep: 1,
-        isPasted: false 
+        isPasted: false,
+        factionFiles: []   // populated from GitHub Contents API on init
     },
 
     sanitizeUnit: function(u) {
@@ -41,8 +42,9 @@ window.CCFB_FACTORY = {
         console.log("🎬 Faction Studio initializing...");
 
         var self = this;
-        var BASE = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/';
-        var t    = '?t=' + Date.now();
+        var BASE     = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/';
+        var RAW      = 'https://raw.githubusercontent.com/steamcrow/coffin/main/';
+        var t        = '?t=' + Date.now();
 
         // ── Load CSS ──────────────────────────────────────────────────────
         if (!document.getElementById('faction-studio-styles')) {
@@ -50,39 +52,53 @@ window.CCFB_FACTORY = {
                 .then(function(r) { return r.text(); })
                 .then(function(css) {
                     var s = document.createElement('style');
-                    s.id = 'faction-studio-styles';
+                    s.id  = 'faction-studio-styles';
                     s.textContent = css;
                     document.head.appendChild(s);
-                    console.log('✅ Faction Studio CSS applied');
+                    console.log('✅ CSS applied');
                 })
                 .catch(function(err) { console.error('❌ CSS load failed:', err); });
         }
 
-        // ── Fetch all rule files in parallel ──────────────────────────────
-        // Rules are now split across individual files in data/src/.
-        // We fetch only the three sections the Studio actually uses and
-        // stitch them into the rules_master shape the rest of the code expects.
+        // ── Fetch faction file list ────────────────────────────────────────
+        fetch('https://api.github.com/repos/steamcrow/coffin/contents/data/factions')
+            .then(function(r) { return r.json(); })
+            .then(function(files) {
+                self.state.factionFiles = files
+                    .filter(function(f) { return f.name.endsWith('.json'); })
+                    .map(function(f) { return { name: f.name, url: f.download_url }; })
+                    .sort(function(a, b) { return a.name.localeCompare(b.name); });
+                console.log('✅ Found', self.state.factionFiles.length, 'faction files');
+                if (self.state.rules) self.renderRoster();
+            })
+            .catch(function(err) {
+                console.warn('⚠️ Could not load faction list:', err.message);
+            });
 
-        var SRC = BASE + 'data/src/';
-
-        var abilityFiles = [
-            { key: 'A_deployment_timing',    file: '90_ability_dictionary_A.json'  },
-            { key: 'B_movement_positioning', file: '91_ability_dictionary_B.json'  },
-            { key: 'C_offense_damage',       file: '92_ability_dictionary_C.json'  },
-            { key: 'D_defense_survival',     file: '93_ability_dictionary_D.json'  },
-            { key: 'E_morale_fear',          file: '94_ability_dictionary_E.json'  },
-            { key: 'F_terrain_environment',  file: '95_ability_dictionary_F.json'  },
-            { key: 'G_thyr_ritual',          file: '96_ability_dictionary_G.json'  },
-            { key: 'H_interaction_support',  file: '97_ability_dictionary_H.json'  },
-            { key: 'I_faction_special',      file: '98_ability_dictionary_I.json'  }
-        ];
+        // ── Fetch rule files direct from raw.githubusercontent.com ─────────
+        // Paths confirmed from rules_base.json index.
+        // Ability dictionaries A–I fetched individually; any missing file is
+        // skipped gracefully so a new dictionary doesn't break the whole app.
+        var SRC = RAW + 'data/src/';
 
         var fetchJson = function(url) {
             return fetch(url + t).then(function(r) {
-                if (!r.ok) throw new Error('Fetch failed: ' + url);
+                if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + url);
                 return r.json();
             });
         };
+
+        var abilityFiles = [
+            { key: 'A_deployment_timing',    file: '90_ability_dictionary_A.json' },
+            { key: 'B_movement_positioning', file: '91_ability_dictionary_B.json' },
+            { key: 'C_offense_damage',       file: '92_ability_dictionary_C.json' },
+            { key: 'D_defense_survival',     file: '93_ability_dictionary_D.json' },
+            { key: 'E_morale_fear',          file: '94_ability_dictionary_E.json' },
+            { key: 'F_terrain_environment',  file: '95_ability_dictionary_F.json' },
+            { key: 'G_thyr_ritual',          file: '96_ability_dictionary_G.json' },
+            { key: 'H_interaction_support',  file: '97_ability_dictionary_H.json' },
+            { key: 'I_faction_special',      file: '98_ability_dictionary_I.json' }
+        ];
 
         var identitiesPromise  = fetchJson(SRC + '70_unit_identities.json');
         var weaponPropsPromise = fetchJson(SRC + '100_weapon_properties.json');
@@ -90,7 +106,7 @@ window.CCFB_FACTORY = {
             return fetchJson(SRC + af.file)
                 .then(function(data) { return { key: af.key, data: data }; })
                 .catch(function(err) {
-                    console.warn('⚠️ Ability file skipped:', af.file, err.message);
+                    console.warn('⚠️ Skipped', af.file, '—', err.message);
                     return { key: af.key, data: {} };
                 });
         });
@@ -101,37 +117,59 @@ window.CCFB_FACTORY = {
                 var weaponPropsData = results[1];
                 var abilityResults  = results[2];
 
-                // Assemble ability_dictionary from all fetched sections
+                // Each ability file merges all its top-level keys into abilityDict
                 var abilityDict = {};
                 abilityResults.forEach(function(ar) {
-                    var payload = ar.data[ar.key] || ar.data.abilities || ar.data;
-                    if (payload && typeof payload === 'object') {
-                        abilityDict[ar.key] = payload;
-                    }
+                    Object.keys(ar.data).forEach(function(k) {
+                        if (k !== 'schema_version' && k !== 'build' &&
+                            typeof ar.data[k] === 'object') {
+                            abilityDict[k] = ar.data[k];
+                        }
+                    });
                 });
 
-                // Build the rules_master shape the Studio expects
+                // Each file may wrap its section under rules_master or expose at root
+                var dig = function(obj, key) {
+                    if (obj.rules_master && obj.rules_master[key]) return obj.rules_master[key];
+                    if (obj[key]) return obj[key];
+                    return obj;
+                };
+
                 self.state.rules = {
                     rules_master: {
-                        unit_identities: identitiesData.rules_master
-                            ? identitiesData.rules_master.unit_identities
-                            : (identitiesData.unit_identities || identitiesData),
-                        weapon_properties: weaponPropsData.rules_master
-                            ? weaponPropsData.rules_master.weapon_properties
-                            : (weaponPropsData.weapon_properties || weaponPropsData),
+                        unit_identities:    dig(identitiesData,  'unit_identities'),
+                        weapon_properties:  dig(weaponPropsData, 'weapon_properties'),
                         ability_dictionary: abilityDict
                     }
                 };
 
-                console.log('✅ Rules assembled from', 2 + abilityFiles.length, 'files');
+                var archetypes = Object.keys(
+                    self.state.rules.rules_master.unit_identities.archetype_vault || {}
+                );
+                console.log('✅ Rules ready. Archetypes:', archetypes.join(', '));
                 self.refresh();
             })
             .catch(function(e) {
                 console.error('❌ Rules failed to load:', e);
+                // Use DOM methods — avoids Odoo HTML sanitization mangling innerHTML
                 var root = document.getElementById('faction-studio-root');
-                if (root) root.innerHTML = '<div style="padding:2rem;color:#c44;font-family:monospace;background:#0e0c09">' +
-                    '<strong>Failed to load game rules.</strong><br><small>' + e.message + '</small><br><br>' +
-                    '<button onclick="CCFB_FACTORY.init()" style="padding:8px 16px;cursor:pointer">&#8635; Retry</button></div>';
+                if (!root) return;
+                root.innerHTML = '';
+                var wrap = document.createElement('div');
+                wrap.style.cssText = 'padding:2rem;color:#c44;font-family:monospace;background:#0e0c09;text-align:center';
+                var heading = document.createElement('strong');
+                heading.textContent = 'Failed to load game rules.';
+                var msg = document.createElement('pre');
+                msg.style.cssText = 'font-size:11px;color:#d4822a;margin:8px 0';
+                msg.textContent = e.message;
+                var btn = document.createElement('button');
+                btn.textContent = '↺ Retry';
+                btn.style.cssText = 'padding:8px 16px;cursor:pointer;margin-top:8px';
+                btn.onclick = function() { CCFB_FACTORY.init(); };
+                wrap.appendChild(heading);
+                wrap.appendChild(msg);
+                wrap.appendChild(btn);
+                root.appendChild(wrap);
             });
     },
 
@@ -215,7 +253,17 @@ window.CCFB_FACTORY = {
                     '<div class="unit-list">' + unitsListHtml + '</div>' +
                     '<button class="btn-add-small w-100 mt-3" onclick="CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
                     '<div class="import-section">' +
-                        '<label class="small">IMPORT FROM JSON</label>' +
+                        '<label class="small">LOAD FROM REPO</label>' +
+                        '<select class="cc-select w-100" onchange="CCFB_FACTORY.loadFactionFromGitHub(this.value);this.value=\'\'">' +
+                            '<option value="">— Select a faction file —</option>' +
+                            (this.state.factionFiles.length > 0
+                                ? this.state.factionFiles.map(function(f) {
+                                    return '<option value="' + f.url + '">' + f.name.replace('.json','').replace(/-/g,' ').replace(/_/g,' ') + '</option>';
+                                  }).join('')
+                                : '<option disabled>Loading list…</option>'
+                            ) +
+                        '</select>' +
+                        '<label class="small" style="margin-top:10px">OR PASTE JSON</label>' +
                         '<textarea class="cc-input w-100 import-textarea" onchange="CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
                         '<button class="btn-add-small w-100 mt-2" onclick="CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
                     '</div>' +
@@ -779,6 +827,30 @@ window.CCFB_FACTORY = {
             console.error("JSON parse error:", e);
             alert("Invalid JSON format. Please check your input."); 
         }
+    },
+
+    loadFactionFromGitHub: function(url) {
+        if (!url) return;
+        var self = this;
+        fetch(url + '?t=' + Date.now())
+            .then(function(r) {
+                if (!r.ok) throw new Error('Fetch failed: ' + url);
+                return r.json();
+            })
+            .then(function(j) {
+                self.state.currentFaction.faction = j.faction || "Imported Faction";
+                self.state.currentFaction.units   = (j.units || []).map(function(u) {
+                    return CCFB_FACTORY.sanitizeUnit(u);
+                });
+                self.state.selectedUnit = self.state.currentFaction.units.length > 0 ? 0 : null;
+                self.state.isPasted     = true;
+                self.refresh();
+                console.log('✅ Loaded faction:', self.state.currentFaction.faction);
+            })
+            .catch(function(e) {
+                console.error('❌ Faction load failed:', e);
+                alert('Could not load faction file: ' + e.message);
+            });
     },
 
     download: function() {
