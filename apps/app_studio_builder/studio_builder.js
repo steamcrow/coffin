@@ -7,12 +7,34 @@
 window.CCFB_FACTORY = {
     state: {
         rules: null,
-        currentFaction: { faction: "New Faction", units: [] },
+        currentFaction: {
+            faction: "New Faction",
+            introduction: { title: '', tagline: '', description: '', philosophy: '', history: '' },
+            faction_identity: {
+                core_values: [],
+                what_they_fight_for: [],
+                what_they_fight_against: [],
+                reputation: { allies_see_them_as: '', enemies_see_them_as: '', monsters_see_them_as: '', the_canyon_sees_them_as: '' }
+            },
+            faction_mechanics: {
+                signature_ability: '',
+                signature_ability_description: '',
+                playstyle: '',
+                strengths: [],
+                weaknesses: []
+            },
+            canyon_state_relationships: { preferred_states: [], neutral_states: [], opposed_states: [] },
+            faction_tags: [],
+            scenario_preferences: { ideal_scenarios: [], challenging_scenarios: [] },
+            faction_features: [],
+            units: []
+        },
         selectedUnit: null,
         activeModal: null,
         activeStep: 1,
+        activeFactionTab: 'roster', // 'roster' or 'info'
         isPasted: false,
-        factionFiles: []   // populated from GitHub Contents API on init
+        factionFiles: []
     },
 
     sanitizeUnit: function(u) {
@@ -27,6 +49,59 @@ window.CCFB_FACTORY = {
             abilities: Array.isArray(u.abilities) ? u.abilities : [],
             supplemental_abilities: Array.isArray(u.supplemental_abilities) ? u.supplemental_abilities : [],
             lore: u.lore || ""
+        };
+    },
+
+    sanitizeFaction: function(j) {
+        var strArr = function(v) { return Array.isArray(v) ? v : []; };
+        var str    = function(v) { return (typeof v === 'string') ? v : ''; };
+        var intro  = j.introduction || {};
+        var ident  = j.faction_identity || {};
+        var rep    = ident.reputation || {};
+        var mech   = j.faction_mechanics || {};
+        var csr    = j.canyon_state_relationships || {};
+        var scen   = j.scenario_preferences || {};
+        return {
+            faction: j.faction || j.name || "New Faction",
+            introduction: {
+                title:       str(intro.title),
+                tagline:     str(intro.tagline),
+                description: str(intro.description),
+                philosophy:  str(intro.philosophy),
+                history:     str(intro.history)
+            },
+            faction_identity: {
+                core_values:           strArr(ident.core_values),
+                what_they_fight_for:   strArr(ident.what_they_fight_for),
+                what_they_fight_against: strArr(ident.what_they_fight_against),
+                reputation: {
+                    allies_see_them_as:    str(rep.allies_see_them_as),
+                    enemies_see_them_as:   str(rep.enemies_see_them_as),
+                    monsters_see_them_as:  str(rep.monsters_see_them_as),
+                    the_canyon_sees_them_as: str(rep.the_canyon_sees_them_as)
+                }
+            },
+            faction_mechanics: {
+                signature_ability:             str(mech.signature_ability),
+                signature_ability_description: str(mech.signature_ability_description),
+                playstyle:  str(mech.playstyle),
+                strengths:  strArr(mech.strengths),
+                weaknesses: strArr(mech.weaknesses)
+            },
+            canyon_state_relationships: {
+                preferred_states: strArr(csr.preferred_states),
+                neutral_states:   strArr(csr.neutral_states),
+                opposed_states:   strArr(csr.opposed_states)
+            },
+            faction_tags: strArr(j.faction_tags),
+            scenario_preferences: {
+                ideal_scenarios:      strArr(scen.ideal_scenarios),
+                challenging_scenarios: strArr(scen.challenging_scenarios)
+            },
+            faction_features: strArr(j.faction_features).filter(function(f) {
+                return f.name !== 'Branch System'; // removed per design decision
+            }),
+            units: strArr(j.units).map(function(u) { return window.CCFB_FACTORY.sanitizeUnit(u); })
         };
     },
 
@@ -60,15 +135,31 @@ window.CCFB_FACTORY = {
                 .catch(function(err) { console.error('❌ CSS load failed:', err); });
         }
 
-        // ── Fetch faction file list ────────────────────────────────────────
-        fetch('https://api.github.com/repos/steamcrow/coffin/contents/data/factions')
-            .then(function(r) { return r.json(); })
-            .then(function(files) {
-                self.state.factionFiles = files
-                    .filter(function(f) { return f.name.endsWith('.json'); })
-                    .map(function(f) { return { name: f.name, url: f.download_url }; })
+        // ── Fetch faction file list via jsDelivr package API ─────────────
+        // jsDelivr has its own file listing endpoint — more reliable than the
+        // GitHub Contents API which has a 60 req/hour unauthenticated rate limit.
+        fetch('https://data.jsdelivr.com/v1/packages/gh/steamcrow/coffin@main/flat')
+            .then(function(r) {
+                if (!r.ok) throw new Error('jsDelivr listing failed: ' + r.status);
+                return r.json();
+            })
+            .then(function(pkg) {
+                var files = (pkg.files || [])
+                    .filter(function(f) {
+                        return f.name.indexOf('/data/factions/') !== -1
+                            && f.name.endsWith('.json');
+                    })
+                    .map(function(f) {
+                        var fileName = f.name.split('/').pop();
+                        return {
+                            name: fileName,
+                            url:  'https://raw.githubusercontent.com/steamcrow/coffin/main' + f.name
+                        };
+                    })
                     .sort(function(a, b) { return a.name.localeCompare(b.name); });
-                console.log('✅ Found', self.state.factionFiles.length, 'faction files');
+
+                self.state.factionFiles = files;
+                console.log('✅ Found', files.length, 'faction files:', files.map(function(f){ return f.name; }).join(', '));
                 if (self.state.rules) self.renderRoster();
             })
             .catch(function(err) {
@@ -152,7 +243,7 @@ window.CCFB_FACTORY = {
             .catch(function(e) {
                 console.error('❌ Rules failed to load:', e);
                 // Use DOM methods — avoids Odoo HTML sanitization mangling innerHTML
-                var root = document.getElementById('faction-studio-root');
+                var root = window.CCFB_FACTORY._rootEl || document.getElementById('faction-studio-root');
                 if (!root) return;
                 root.innerHTML = '';
                 var wrap = document.createElement('div');
@@ -174,7 +265,7 @@ window.CCFB_FACTORY = {
     },
 
     refresh: function() {
-        var root = document.getElementById('faction-studio-root');
+        var root = window.CCFB_FACTORY._rootEl || document.getElementById('faction-studio-root');
         if (!root) {
             console.error("❌ faction-studio-root not found");
             return;
@@ -285,18 +376,27 @@ window.CCFB_FACTORY = {
         var self = this;
 
         var step = function(num, title, content) {
-            var isFocused = self.state.activeStep === num || self.state.isPasted;
+            var isActive    = self.state.activeStep === num;
+            var isComplete  = num < self.state.activeStep;
+            var isFuture    = num > self.state.activeStep;
+            // When isPasted all steps are accessible
+            if (self.state.isPasted) { isActive = true; isFuture = false; }
+
+            // Future steps are hidden entirely
+            if (isFuture && !self.state.isPasted) return '';
+
             var stepClass = 'builder-step';
-            if (isFocused) stepClass += ' step-active';
-            if (!isFocused && num < self.state.activeStep) stepClass += ' step-complete';
-            if (!isFocused && num > self.state.activeStep) stepClass += ' step-locked';
-            
+            if (isActive)   stepClass += ' step-active';
+            if (isComplete) stepClass += ' step-complete';
+
+            var checkmark = isComplete ? ' ✓' : '';
+
             return '<div class="' + stepClass + '">' +
                 '<div class="step-header" onclick="window.CCFB_FACTORY.setStep(' + num + ')">' +
                     '<div class="step-number">' + num + '</div>' +
-                    '<div class="step-title">' + title + '</div>' +
+                    '<div class="step-title">' + title + checkmark + '</div>' +
                 '</div>' +
-                '<div class="step-content" style="display:' + (isFocused ? 'block' : 'none') + '">' +
+                '<div class="step-content" style="display:' + (isActive ? 'block' : 'none') + '">' +
                     content +
                 '</div>' +
             '</div>';
@@ -812,20 +912,16 @@ window.CCFB_FACTORY = {
 
     pasteLoad: function(str) {
         if (!str || str.trim() === '') return;
-        
         try {
             var j = JSON.parse(str);
-            this.state.currentFaction.faction = j.faction || "Imported Faction";
-            this.state.currentFaction.units = (j.units || []).map(function(u) {
-                return window.CCFB_FACTORY.sanitizeUnit(u);
-            });
-            this.state.selectedUnit = 0; 
-            this.state.isPasted = true; 
+            this.state.currentFaction = this.sanitizeFaction(j);
+            this.state.selectedUnit   = this.state.currentFaction.units.length > 0 ? 0 : null;
+            this.state.isPasted       = true;
             this.refresh();
             alert("✓ Faction loaded successfully!");
-        } catch(e) { 
+        } catch(e) {
             console.error("JSON parse error:", e);
-            alert("Invalid JSON format. Please check your input."); 
+            alert("Invalid JSON format. Please check your input.");
         }
     },
 
@@ -838,12 +934,9 @@ window.CCFB_FACTORY = {
                 return r.json();
             })
             .then(function(j) {
-                self.state.currentFaction.faction = j.faction || "Imported Faction";
-                self.state.currentFaction.units   = (j.units || []).map(function(u) {
-                    return window.CCFB_FACTORY.sanitizeUnit(u);
-                });
-                self.state.selectedUnit = self.state.currentFaction.units.length > 0 ? 0 : null;
-                self.state.isPasted     = true;
+                self.state.currentFaction = self.sanitizeFaction(j);
+                self.state.selectedUnit   = self.state.currentFaction.units.length > 0 ? 0 : null;
+                self.state.isPasted       = true;
                 self.refresh();
                 console.log('✅ Loaded faction:', self.state.currentFaction.faction);
             })
@@ -862,11 +955,15 @@ window.CCFB_FACTORY = {
     }
 };
 
-// Auto-initialize when loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
+// ── Expose via CC_APP so the Odoo embed can call us explicitly ────────────
+// The embed calls CC_APP.init({ root: el }) after the blob finishes loading.
+// No auto-initialization — Odoo needs to control when we mount.
+window.CC_APP = {
+    init: function(options) {
+        var rootEl = (options && options.root) ? options.root : document.getElementById('faction-studio-root');
+        if (!rootEl) { console.error('❌ Faction Studio: no root element found'); return; }
+        // Point CCFB_FACTORY at the correct root before initializing
+        window.CCFB_FACTORY._rootEl = rootEl;
         window.CCFB_FACTORY.init();
-    });
-} else {
-    window.CCFB_FACTORY.init();
-}
+    }
+};
