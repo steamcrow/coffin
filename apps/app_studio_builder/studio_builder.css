@@ -111,3 +111,12 @@ label, .small {
 .cc-roster-item { display: flex; flex-direction: column; padding: 15px; cursor: pointer; border-bottom: 1px solid var(--cc-border); }
 .cc-roster-item:hover { background: var(--cc-primary-dim); border-left: 3px solid var(--cc-primary); }
 .cc-item-selected { background: rgba(212,130,42,0.2) !important; border-left: 4px solid var(--cc-primary) !important; }
+
+/* ===== Faction Info Tabs ===== */
+.cc-tab-btn {
+  flex: 1; background: none; border: none; border-bottom: 2px solid transparent;
+  color: var(--cc-text-muted); cursor: pointer; font: 700 10px/1 var(--cc-font-mono);
+  letter-spacing: .1em; text-transform: uppercase; padding: 10px 12px; white-space: nowrap;
+}
+.cc-tab-btn:hover { color: var(--cc-text); }
+.cc-tab-active { border-bottom-color: var(--cc-primary) !important; color: var(--cc-primary) !important; }
