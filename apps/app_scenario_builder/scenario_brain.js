@@ -3136,7 +3136,45 @@ class ScenarioBrain {
       chance_that_was_rolled: parseFloat(finalChance.toFixed(2))
     };
   }
-  
+  generateWanderingNPCs(location, danger) {
+    const npcs = [];
+ 
+    // ── Vendomat ─────────────────────────────────────────────
+    // 30% base, +4% per danger above 2. Appears anywhere Danger 1+.
+    const vendomat_chance = Math.min(0.80, 0.30 + Math.max(0, (danger - 2)) * 0.04);
+    console.log(`  Vendomat check: chance=${vendomat_chance.toFixed(2)}`);
+    if (Math.random() < vendomat_chance) {
+      npcs.push({
+        id:        'vendomat',
+        name:      'The Vendomat',
+        emoji:     '🎃',
+        placement: 'random_board_quarter',
+        note:      'Place in any board quarter. It moves d6" in a random direction at the start of each round.',
+        warning:   'Explodes on death — every model within 10" takes 1 automatic hit.'
+      });
+      console.log('  🎃 VENDOMAT IS HERE');
+    }
+ 
+    // ── Monte Haul ───────────────────────────────────────────
+    // 20% base, +5% per danger above 2. Does not appear at Danger 1.
+    if (danger >= 2) {
+      const monte_chance = Math.min(0.70, 0.20 + Math.max(0, (danger - 2)) * 0.05);
+      console.log(`  Monte Haul check: chance=${monte_chance.toFixed(2)}`);
+      if (Math.random() < monte_chance) {
+        npcs.push({
+          id:        'monte_haul',
+          name:      'Monte Haul',
+          emoji:     '⚙️',
+          placement: 'board_center_or_nearest_open',
+          note:      'Place at board center. He cannot move — ever. Sells weapons, venom, and special gear for 4 Gildren.',
+          warning:   'Attacking Monte Haul costs your faction 2 VP. His brass fists push back 3" and Stagger. Goes into Lockdown at Quality 2.'
+        });
+        console.log('  ⚙️ MONTE HAUL IS HERE');
+      }
+    }
+ 
+    return npcs.length > 0 ? npcs : null;
+  }
   // Generate descriptive text for what the pressure looks/feels like
   generatePressureDescription(pressureTrack, cult, location) {
     const descriptions = {
@@ -3182,6 +3220,10 @@ class ScenarioBrain {
       { name: 'Canyon Remembers',      effects: ['All Tainted terrain immediately escalates to Haunted.'] }
     ];
     
+    // STEP 11: Wandering NPCs
+    console.log("\n🤖 STEP 11: WANDERING NPCs");
+    const wanderingNPCs = this.generateWanderingNPCs(location, userSelections.dangerRating);
+    console.log("✓ Wandering NPCs:", wanderingNPCs ? wanderingNPCs.map(n => n.name).join(', ') : 'None this game');
     // Pick one — this is fully resolved for the players
     const picked = this.randomChoice(effects);
     
