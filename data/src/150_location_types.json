@@ -7,7 +7,7 @@
     "Resource ratings use 0–6 where 0 = absent.",
     "Danger 6 implies catastrophic zones (Titans possible/active, or dominant-immune threat such as Klowna).",
     "Population is 'human population presence' (settled humans, not counting monsters).",
-    "Additional node-stock resources (moonshine, medicine, spare_parts, weapons) are included for local supply pressure.",
+    "Additional node-stock resources ("doomshine": 0,         "vitagood": 0,, medicine, spare_parts, weapons) are included for local supply pressure.",
     "Tzul Silver (tzul_silver) is not naturally found; it should only appear in Tzul Ruins-type locations."
   ],
   "rating_legend": {
@@ -80,7 +80,7 @@
     "food_foul",
     "water_clean",
     "water_foul",
-    "doomshine",
+    "doomshine": 0,         "vitagood": 0,",
     "rotgut",
     "medicine",
     "thyr"
@@ -106,7 +106,7 @@
         "water_clean": 3,
         "water_foul": 2,
         "thyr": 1,
-        "moonshine": 0,
+        "doomshine": 0,         "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -141,7 +141,7 @@
         "water_clean": 1,
         "water_foul": 2,
         "thyr": 2,
-        "moonshine": 0,
+        "doomshine": 0,         "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -175,7 +175,7 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
-        "moonshine": 0,
+        "doomshine": 0,         "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -209,7 +209,7 @@
         "water_clean": 2,
         "water_foul": 3,
         "thyr": 1,
-        "moonshine": 0,
+        "doomshine": 0,         "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -243,7 +243,7 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
-        "moonshine": 0,
+        "doomshine": 0,         "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -277,7 +277,7 @@
         "water_clean": 3,
         "water_foul": 1,
         "thyr": 2,
-        "moonshine": 2,
+        "doomshine": 0,         "vitagood": 0,": 2,
         "medicine": 2,
         "spare_parts": 3,
         "weapons": 3
@@ -315,7 +315,7 @@
         "water_clean": 2,
         "water_foul": 1,
         "thyr": 1,
-        "moonshine": 1,
+        "doomshine": 0,         "vitagood": 0,": 1,
         "medicine": 3,
         "spare_parts": 2,
         "weapons": 2
@@ -348,7 +348,7 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
-        "moonshine": 0,
+        "doomshine": 0,         "vitagood": 0,
         "medicine": 0,
         "spare_parts": 1,
         "weapons": 0
@@ -383,7 +383,7 @@
         "water_clean": 1,
         "water_foul": 2,
         "thyr": 2,
-        "moonshine": 1,
+        "doomshine": 0,         "vitagood": 0,": 1,
         "medicine": 1,
         "spare_parts": 2,
         "weapons": 2
@@ -416,7 +416,7 @@
         "water_clean": 0,
         "water_foul": 3,
         "thyr": 3,
-        "moonshine": 0,
+        "doomshine": 0,         "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -451,7 +451,7 @@
         "water_clean": 2,
         "water_foul": 3,
         "thyr": 1,
-        "moonshine": 0,
+        "doomshine": 0,         "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -484,7 +484,9 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -517,7 +519,8 @@
         "water_clean": 0,
         "water_foul": 1,
         "thyr": 1,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -550,7 +553,8 @@
         "water_clean": 0,
         "water_foul": 1,
         "thyr": 2,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -584,7 +588,8 @@
         "water_clean": 0,
         "water_foul": 1,
         "thyr": 2,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -617,7 +622,8 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -651,7 +657,8 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -684,7 +691,8 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 2,
         "weapons": 1
@@ -718,7 +726,8 @@
         "water_clean": 0,
         "water_foul": 1,
         "thyr": 5,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -752,7 +761,8 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 6,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -786,7 +796,8 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -820,7 +831,8 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 2,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -854,7 +866,8 @@
         "water_clean": 1,
         "water_foul": 2,
         "thyr": 3,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 2,
         "spare_parts": 2,
         "weapons": 2
@@ -888,7 +901,8 @@
         "water_clean": 0,
         "water_foul": 3,
         "thyr": 2,
-        "moonshine": 1,
+        "doomshine": 0, 
+        "vitagood": 0,": 1,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 1
@@ -926,7 +940,8 @@
         "water_clean": 1,
         "water_foul": 2,
         "thyr": 0,
-        "moonshine": 5,
+        "doomshine": 0, 
+        "vitagood": 0,": 5,
         "medicine": 0,
         "spare_parts": 1,
         "weapons": 1
@@ -963,7 +978,8 @@
         "water_clean": 2,
         "water_foul": 1,
         "thyr": 0,
-        "moonshine": 0,
+        "doomshine": 0, 
+        "vitagood": 0,
         "medicine": 5,
         "spare_parts": 1,
         "weapons": 1
@@ -999,7 +1015,8 @@
         "water_clean": 3,
         "water_foul": 1,
         "thyr": 0,
-        "moonshine": 2,
+        "doomshine": 0,
+        "vitagood": 0,": 2,
         "medicine": 3,
         "spare_parts": 2,
         "weapons": 2
@@ -1036,7 +1053,8 @@
         "water_clean": 2,
         "water_foul": 1,
         "thyr": 0,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 1,
         "spare_parts": 1,
         "weapons": 2
@@ -1072,7 +1090,8 @@
         "water_clean": 0,
         "water_foul": 1,
         "thyr": "ROLL:1d6",
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -1109,7 +1128,8 @@
         "water_clean": 0,
         "water_foul": 3,
         "thyr": 2,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
@@ -1146,7 +1166,8 @@
         "water_clean": 0,
         "water_foul": 2,
         "thyr": 1,
-        "moonshine": 0,
+        "doomshine": 0,
+        "vitagood": 0,
         "medicine": 0,
         "spare_parts": 0,
         "weapons": 0
