@@ -152,6 +152,13 @@
     .cc-le-row-flex input[type=text]{flex:1}
     .cc-le-row-flex input[type=number]{width:52px}
     .cc-le-row-flex select{flex:1}
+
+    /* Wandering NPC toggles */
+    .cc-le-npc-group{margin-top:12px;padding-top:10px;border-top:1px solid rgba(212,130,42,.25)}
+    .cc-le-npc-group-label{color:#d4822a;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .cc-le-npc-toggle{display:flex;align-items:flex-start;gap:8px;margin-bottom:8px;cursor:pointer;font-size:10px;line-height:1.5}
+    .cc-le-npc-toggle input[type=checkbox]{margin-top:2px;flex-shrink:0;accent-color:#d4822a;width:auto}
+    .cc-le-npc-warn{color:#ef5350;font-size:9px;margin-top:2px}
   `;
   document.head.appendChild(style);
 
@@ -227,7 +234,7 @@
   // ═══════════════════════════════════════════════════════════════════════
   // STEP 3 — DATA & STATE
   // ═══════════════════════════════════════════════════════════════════════
-  var ccLeData    = null;   // full parsed locations JSON
+  var ccLeData    = null;
   var ccLeSelId   = null;
   var ccLeCurTab  = 'edit';
   var ccLeMapInfo = null;
@@ -246,8 +253,15 @@
     'haunted_peak','occult_territory','cursed_scrubland','religious_site',
     'thyr_field','tzul_ruins','ruins','landmark'
   ];
+
   var CC_LE_STATES = ['alive','booming','barely_alive','ruins','prospering','dying','haunted','poisoned','strangewild'];
-  var CC_LE_ALL_RES = ['silver','tzul_silver','lead','mechanical_parts','livestock','supplies','gildren','food_good','food_foul','water_clean','water_foul','thyr','doomshine','moonshine','medicine','spare_parts','weapons'];
+
+  // ── UPDATED: vitagood added to resource catalog ─────────────────────────
+  var CC_LE_ALL_RES = [
+    'silver','tzul_silver','lead','mechanical_parts','livestock','supplies',
+    'gildren','food_good','food_foul','water_clean','water_foul','thyr',
+    'doomshine','moonshine','medicine','spare_parts','weapons','vitagood'
+  ];
 
   var CC_LE_MONSTERS = [
     'Banshee','Canyon Goblin','Chimera','Crocodile','Devil','Dire Wolf',
@@ -305,7 +319,7 @@
     'WatchLine','WatchTowers','WaterTower','WhiteDustFlats','WhistlePosts','Workshop'
   ];
 
-  // Kick off background fetches for map and type refs immediately
+  // Kick off background fetches for map and type refs
   fetch(CC_LE_MAP_URL + '?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(d){ ccLeMapInfo = d; }).catch(function(){});
   fetch(CC_LE_TYPES_URL + '?t=' + Date.now()).then(function(r){ return r.json(); }).then(function(d){
     ccLeTypeRefs = (d.location_types || []).map(function(t){ return t.id; }).filter(Boolean).sort();
@@ -322,9 +336,9 @@
     var loadingEl = document.getElementById('cc-le-loading');
     var shellEl   = document.getElementById('cc-le-shell');
 
-    statusEl.textContent   = 'Loading data from GitHub…';
-    errEl.style.display    = 'none';
-    fallback.style.display = 'none';
+    statusEl.textContent    = 'Loading data from GitHub…';
+    errEl.style.display     = 'none';
+    fallback.style.display  = 'none';
     loadingEl.style.display = 'flex';
     shellEl.style.display   = 'none';
 
@@ -355,9 +369,9 @@
 
     } catch (e) {
       console.error('[CC-LE] Auto-load failed:', e);
-      statusEl.textContent  = '⚠ Auto-load failed — paste the JSON below instead.';
-      errEl.textContent     = e.message;
-      errEl.style.display   = 'block';
+      statusEl.textContent   = '⚠ Auto-load failed — paste the JSON below instead.';
+      errEl.textContent      = e.message;
+      errEl.style.display    = 'block';
       fallback.style.display = 'block';
       if (hintEl) hintEl.textContent = 'All edits stay in this browser tab.';
     }
@@ -367,14 +381,14 @@
   // MANUAL PASTE FALLBACK
   // ═══════════════════════════════════════════════════════════════════════
   window.ccLeLoadFile = function() {
-    var txt    = (document.getElementById('cc-le-paste-input') || {}).value || '';
-    var errEl  = document.getElementById('cc-le-error');
+    var txt   = (document.getElementById('cc-le-paste-input') || {}).value || '';
+    var errEl = document.getElementById('cc-le-error');
     try {
       var parsed = JSON.parse(txt.trim());
       if (!parsed.locations) throw new Error("No 'locations' array found.");
       ccLeData  = parsed;
       ccLeSelId = ccLeData.locations[0] ? ccLeData.locations[0].id : null;
-      var mTxt = (document.getElementById('cc-le-paste-monsters') || {}).value || '';
+      var mTxt  = (document.getElementById('cc-le-paste-monsters') || {}).value || '';
       if (mTxt.trim()) ccLeLoadMonsterFaction(mTxt.trim());
       document.getElementById('cc-le-loading').style.display = 'none';
       document.getElementById('cc-le-shell').style.display   = 'flex';
@@ -397,7 +411,7 @@
     if (!txt || !txt.trim()) return 0;
     try {
       var parsed = JSON.parse(txt.trim());
-      var units = parsed.units || parsed.monsters || [];
+      var units  = parsed.units || parsed.monsters || [];
       if (!units.length && parsed.factions) {
         parsed.factions.forEach(function(f){ units = units.concat(f.units || f.monsters || []); });
       }
@@ -619,6 +633,7 @@
 
     ccLeSec('Resources', true, ccLeBuildResourceGrid(loc)) +
     ccLeSec('Features', false, ccLeBuildFeatureSection(loc)) +
+    ccLeSec('Wandering NPCs', false, ccLeBuildWanderingNPCSection(loc)) +
     ccLeSec('Monster Pressure', true, ccLeBuildMonsterTable(loc)) +
     ccLeSec('Terrain Flavor', false, ccLeBuildStringList(loc, 'terrain_flavor', 'e.g. Rail spur')) +
     ccLeSec('Rumors', true, ccLeBuildStringList(loc, 'rumors', 'A rumor heard around the fire…')) +
@@ -641,8 +656,8 @@
     var el  = document.getElementById(uid);
     var tog = document.getElementById('ccletog_'+uid);
     var open = el.style.display !== 'none';
-    el.style.display  = open ? 'none' : 'block';
-    tog.textContent   = open ? '▼' : '▲';
+    el.style.display = open ? 'none' : 'block';
+    tog.textContent  = open ? '▼' : '▲';
   };
 
   // ─── Resources ───────────────────────────────────────────────────────────
@@ -697,7 +712,7 @@
   };
   window.ccLeToggleKeyRes = function(res, makeKey) {
     var loc = ccLeGetLoc(); if (!loc) return;
-    var kr = (loc.key_resources||[]).slice();
+    var kr  = (loc.key_resources||[]).slice();
     if (makeKey && kr.indexOf(res)===-1) kr.push(res);
     if (!makeKey) kr = kr.filter(function(x){ return x!==res; });
     ccLeSetField('key_resources', kr);
@@ -762,7 +777,7 @@
     ccLeRefreshFeatures();
   };
   function ccLeRefreshFeatures() {
-    var loc = ccLeGetLoc(); if (!loc) return;
+    var loc   = ccLeGetLoc(); if (!loc) return;
     var items = loc.features||[];
     var el    = document.getElementById('cc-le-chips-features');
     if (el) el.innerHTML = items.map(function(f){
@@ -776,10 +791,36 @@
     }
   }
 
+  // ─── Wandering NPCs ────────────────────────────────────────────────────────
+  // Stored as boolean flags on the location: loc.npc_vendomat, loc.npc_monte_haul
+  // The scenario builder rolls independently; these flags raise the base chance.
+  function ccLeBuildWanderingNPCSection(loc) {
+    var hasVendomat  = !!loc.npc_vendomat;
+    var hasMonteHaul = !!loc.npc_monte_haul;
+    return '<div style="color:#6b5f4a;font-size:9px;line-height:1.7;margin-bottom:10px">' +
+        'These NPCs appear randomly in scenarios (like Coffin Cough). Enabling them here raises their base appearance chance for this location.' +
+      '</div>' +
+      '<label class="cc-le-npc-toggle">' +
+        '<input type="checkbox" ' + (hasVendomat?'checked':'') + ' onchange="ccLeSetField(\'npc_vendomat\',this.checked)">' +
+        '<span>' +
+          '<strong style="color:#d4822a">🎃 Vendomat</strong> — wandering brass automaton vendor. ' +
+          'Moves d6" each round. Sells VitaGood, Spare Parts, and Food for 2 Gildren each.' +
+          '<div class="cc-le-npc-warn">Explodes on death — every model within 10" takes 1 automatic hit.</div>' +
+        '</span>' +
+      '</label>' +
+      '<label class="cc-le-npc-toggle">' +
+        '<input type="checkbox" ' + (hasMonteHaul?'checked':'') + ' onchange="ccLeSetField(\'npc_monte_haul\',this.checked)">' +
+        '<span>' +
+          '<strong style="color:#d4822a">⚙️ Monte Haul</strong> — brass golem black market merchant. ' +
+          'Fixed to board center. Cannot move. Sells weapons, venom, and special gear for 4 Gildren.' +
+          '<div class="cc-le-npc-warn">Goes into Lockdown at low health. Attacking costs your faction 2 VP.</div>' +
+        '</span>' +
+      '</label>';
+  }
+
   // ─── Monster table ────────────────────────────────────────────────────────
   function ccLeBuildMonsterTable(loc) {
     var seeds = loc.monster_seeds||[];
-    var opts  = CC_LE_MONSTERS.map(function(m){ return '<option value="'+ccLeEsc(m)+'">'+ccLeEsc(m)+'</option>'; }).join('');
     return '<div id="cc-le-monster-rows">' +
       seeds.map(function(s,i){
         return '<div class="cc-le-row-flex" data-idx="'+i+'">' +
@@ -797,7 +838,7 @@
   }
 
   function ccLeRefreshMonsterTable() {
-    var loc = ccLeGetLoc(); if (!loc) return;
+    var loc   = ccLeGetLoc(); if (!loc) return;
     var seeds = loc.monster_seeds||[];
     var el    = document.getElementById('cc-le-monster-rows');
     if (!el) return;
@@ -842,7 +883,7 @@
     if (el) { var tas = el.querySelectorAll('textarea'); if (tas.length) tas[tas.length-1].focus(); }
   };
   function ccLeRefreshStrList(field) {
-    var loc = ccLeGetLoc(); if (!loc) return;
+    var loc   = ccLeGetLoc(); if (!loc) return;
     var items = loc[field]||[];
     var el    = document.getElementById('cc-le-slist-'+field);
     if (!el) return;
@@ -881,8 +922,8 @@
   function ccLeBuildMapView() {
     var loc = ccLeGetLoc();
     if (!ccLeMapInfo) return '<div class="cc-le-map-empty">Loading map from GitHub… try again in a moment.</div>';
-    var imgW = ccLeMapInfo.map.background.image_pixel_size.w;
-    var imgH = ccLeMapInfo.map.background.image_pixel_size.h;
+    var imgW   = ccLeMapInfo.map.background.image_pixel_size.w;
+    var imgH   = ccLeMapInfo.map.background.image_pixel_size.h;
     var imgUrl = ccLeMapInfo.map.background.image_key;
     var banner = loc
       ? '<div class="cc-le-map-banner"><strong>'+ccLeEsc(loc.name)+'</strong><span style="color:#9e8e78">'+ccLeEsc(loc.archetype||'')+' · Danger '+(loc.danger!=null?loc.danger:'?')+' · Pop '+(loc.population!=null?loc.population:'?')+'</span><span style="color:#6b5f4a;margin-left:auto;font-size:9px">Click any box to switch location</span></div>'
@@ -931,12 +972,12 @@
   };
 
   // ═══════════════════════════════════════════════════════════════════════
-  // EVENT DELEGATION (on root — avoids conflicts with Odoo global listeners)
+  // EVENT DELEGATION
   // ═══════════════════════════════════════════════════════════════════════
   root.addEventListener('change', function(e) {
     if (e.target.classList.contains('cc-le-mon-sel')) {
-      var idx  = +e.target.dataset.idx;
-      var loc  = ccLeGetLoc(); if (!loc) return;
+      var idx   = +e.target.dataset.idx;
+      var loc   = ccLeGetLoc(); if (!loc) return;
       var seeds = (loc.monster_seeds||[]).slice();
       seeds[idx] = Object.assign({}, seeds[idx]||{}, { name: e.target.value });
       var row = e.target.closest('[data-idx]');
