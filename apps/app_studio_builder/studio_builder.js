@@ -40,7 +40,7 @@ window.CCFB_FACTORY = {
     sanitizeUnit: function(u) {
         return {
             name: u.name || "New Unit",
-            type: u.type || "grunt",
+            type: (u.type || "grunt").toLowerCase(),
             quality: parseInt(u.quality) || 4,
             defense: parseInt(u.defense) || 4,
             move: parseInt(u.move) || 6,
@@ -331,35 +331,286 @@ window.CCFB_FACTORY = {
         var unitsListHtml = this.state.currentFaction.units.length > 0 ? unitsHtml : 
             '<div class="cc-empty-state" style="padding: 20px;">No units yet. Click "+ NEW UNIT" to start.</div>';
         
-        target.innerHTML = 
+        var isRoster = (this.state.activeFactionTab !== 'info');
+
+        target.innerHTML =
             '<div class="cc-panel">' +
-                '<div class="cc-panel-header">FACTION ROSTER</div>' +
-                '<div class="panel-content">' +
-                    '<div class="form-group">' +
-                        '<label class="small">FACTION NAME</label>' +
-                        '<input type="text" class="cc-input w-100" value="' + this.state.currentFaction.faction + '" ' +
-                            'onfocus="if(this.value===\'New Faction\')this.value=\'\'" ' +
-                            'onchange="window.CCFB_FACTORY.updateFaction(this.value)">' +
-                    '</div>' +
-                    '<div class="unit-list">' + unitsListHtml + '</div>' +
-                    '<button class="btn-add-small w-100 mt-3" onclick="window.CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
-                    '<div class="import-section">' +
-                        '<label class="small">LOAD FROM REPO</label>' +
-                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.loadFactionFromGitHub(this.value);this.value=\'\'">' +
-                            '<option value="">— Select a faction file —</option>' +
-                            (this.state.factionFiles.length > 0
-                                ? this.state.factionFiles.map(function(f) {
-                                    return '<option value="' + f.url + '">' + f.name.replace('.json','').replace(/-/g,' ').replace(/_/g,' ') + '</option>';
-                                  }).join('')
-                                : '<option disabled>Loading list…</option>'
-                            ) +
-                        '</select>' +
-                        '<label class="small" style="margin-top:10px">OR PASTE JSON</label>' +
-                        '<textarea class="cc-input w-100 import-textarea" onchange="window.CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
-                        '<button class="btn-add-small w-100 mt-2" onclick="window.CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
+                '<div class="cc-panel-header" style="padding:0">' +
+                    '<div style="display:flex">' +
+                        '<button class="cc-tab-btn' + (isRoster ? ' cc-tab-active' : '') + '" onclick="window.CCFB_FACTORY.setFactionTab(\'roster\')">ROSTER</button>' +
+                        '<button class="cc-tab-btn' + (!isRoster ? ' cc-tab-active' : '') + '" onclick="window.CCFB_FACTORY.setFactionTab(\'info\')">FACTION INFO</button>' +
                     '</div>' +
                 '</div>' +
+                '<div class="panel-content">' +
+                    (isRoster
+                        ? '<div class="form-group">' +
+                              '<label class="small">FACTION NAME</label>' +
+                              '<input type="text" class="cc-input w-100" value="' + this.state.currentFaction.faction + '" ' +
+                                  'onfocus="if(this.value===\'New Faction\')this.value=\'\'" ' +
+                                  'onchange="window.CCFB_FACTORY.updateFaction(this.value)">' +
+                          '</div>' +
+                          '<div class="unit-list">' + unitsListHtml + '</div>' +
+                          '<button class="btn-add-small w-100 mt-3" onclick="window.CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
+                          '<div class="import-section">' +
+                              '<label class="small">LOAD FROM REPO</label>' +
+                              '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.loadFactionFromGitHub(this.value);this.value=\'\'">' +
+                                  '<option value="">— Select a faction file —</option>' +
+                                  (this.state.factionFiles.length > 0
+                                      ? this.state.factionFiles.map(function(f) {
+                                          return '<option value="' + f.url + '">' + f.name.replace('.json','').replace(/-/g,' ').replace(/_/g,' ') + '</option>';
+                                        }).join('')
+                                      : '<option disabled>Loading list…</option>'
+                                  ) +
+                              '</select>' +
+                              '<label class="small" style="margin-top:10px">OR PASTE JSON</label>' +
+                              '<textarea class="cc-input w-100 import-textarea" onchange="window.CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
+                              '<button class="btn-add-small w-100 mt-2" onclick="window.CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
+                          '</div>'
+                        : this.renderFactionInfo()
+                    ) +
+                '</div>' +
             '</div>';
+    },
+
+    setFactionTab: function(tab) {
+        this.state.activeFactionTab = tab;
+        this.renderRoster();
+    },
+
+    renderFactionInfo: function() {
+        var f    = this.state.currentFaction;
+        var intro = f.introduction || {};
+        var ident = f.faction_identity || {};
+        var rep   = ident.reputation || {};
+        var mech  = f.faction_mechanics || {};
+        var csr   = f.canyon_state_relationships || {};
+        var scen  = f.scenario_preferences || {};
+
+        var esc = function(v) {
+            return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        };
+        var textarea = function(path, val, rows) {
+            rows = rows || 2;
+            return '<textarea class="cc-input w-100" rows="' + rows + '" ' +
+                'onchange="window.CCFB_FACTORY.updateFactionField(\'' + path + '\',this.value)">' +
+                esc(val) + '</textarea>';
+        };
+        var textinput = function(path, val) {
+            return '<input type="text" class="cc-input w-100" value="' + esc(val) + '" ' +
+                'onchange="window.CCFB_FACTORY.updateFactionField(\'' + path + '\',this.value)">';
+        };
+        var listEditor = function(path, items) {
+            var rows = (items||[]).map(function(item, i) {
+                return '<div style="display:flex;gap:4px;margin-bottom:4px">' +
+                    '<input type="text" class="cc-input" style="flex:1" value="' + esc(item) + '" ' +
+                        'onchange="window.CCFB_FACTORY.updateFactionListItem(\'' + path + '\',' + i + ',this.value)">' +
+                    '<button class="btn-add-small" style="padding:4px 8px;width:auto" ' +
+                        'onclick="window.CCFB_FACTORY.removeFactionListItem(\'' + path + '\',' + i + ')">✕</button>' +
+                    '</div>';
+            }).join('');
+            return rows + '<button class="btn-add-small w-100" style="margin-top:4px" ' +
+                'onclick="window.CCFB_FACTORY.addFactionListItem(\'' + path + '\')">+ Add</button>';
+        };
+        var fg = function(label, content) {
+            return '<div class="form-group"><label class="small">' + label + '</label>' + content + '</div>';
+        };
+        var infoSec = function(id, title, body) {
+            return '<div style="border:1px solid var(--cc-border);margin-bottom:8px">' +
+                '<div style="padding:8px 10px;background:var(--cc-bg-mid);cursor:pointer;display:flex;justify-content:space-between" ' +
+                    'onclick="window.CCFB_FACTORY.toggleInfoSec(\'' + id + '\')">' +
+                    '<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--cc-primary)">' + title + '</span>' +
+                    '<span id="fis-tog-' + id + '">▼</span>' +
+                '</div>' +
+                '<div id="fis-' + id + '" style="display:none;padding:12px">' + body + '</div>' +
+            '</div>';
+        };
+
+        // Canyon state relationship editor
+        var ALL_STATES = ['Held','Strangewild','Poisoned','Haunted','Exalted','Lawless','Liberated','Extracted','Rusted'];
+        var findReason = function(arr, state) {
+            var match = (arr||[]).find(function(s){ return s.state === state; });
+            return match ? (match.reason||'') : '';
+        };
+        var PREF = (csr.preferred_states||[]).map(function(s){ return s.state; });
+        var NEUT = (csr.neutral_states||[]).map(function(s){ return s.state; });
+        var OPP  = (csr.opposed_states||[]).map(function(s){ return s.state; });
+        var stateRows = ALL_STATES.map(function(state) {
+            var cur = PREF.indexOf(state) !== -1 ? 'preferred'
+                    : NEUT.indexOf(state) !== -1 ? 'neutral'
+                    : OPP.indexOf(state)  !== -1 ? 'opposed' : 'none';
+            var reason = cur === 'preferred' ? findReason(csr.preferred_states, state)
+                       : cur === 'neutral'   ? findReason(csr.neutral_states, state)
+                       : cur === 'opposed'   ? findReason(csr.opposed_states, state) : '';
+            var OPTS = [
+                { val:'preferred', color:'#3a7a4a' },
+                { val:'neutral',   color:'#4a6e8a' },
+                { val:'opposed',   color:'#b03030' },
+                { val:'none',      color:'#555'    }
+            ];
+            return '<div style="margin-bottom:8px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--cc-border)">' +
+                '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">' +
+                    '<span style="font-weight:700;font-size:11px;min-width:80px">' + state + '</span>' +
+                    OPTS.map(function(o) {
+                        var isActive = cur === o.val;
+                        return '<button class="btn-add-small" style="padding:3px 8px;width:auto;font-size:9px;' +
+                            (isActive ? 'background:'+o.color+';color:#fff;border-color:'+o.color+';' : '') + '" ' +
+                            'onclick="window.CCFB_FACTORY.setCanyonState(\'' + state + '\',\'' + o.val + '\')">' +
+                            o.val.toUpperCase() + '</button>';
+                    }).join('') +
+                '</div>' +
+                (cur !== 'none'
+                    ? '<input type="text" class="cc-input w-100" placeholder="Reason…" value="' + esc(reason) + '" ' +
+                        'style="font-size:10px" onchange="window.CCFB_FACTORY.setCanyonStateReason(\'' + state + '\',this.value)">'
+                    : '') +
+            '</div>';
+        }).join('');
+
+        // Faction tags editor
+        var COMMON_TAGS = ['adaptive','aggressive','befriend','cavalry','defensive','elite','environmental',
+            'harmony','heavy','infiltrators','lawless','light','melee','military','mystical',
+            'protectors','ranged','ritual','scholars','specialists','stealth','support','survival',
+            'swift','tech','undead','versatile'];
+        var currentTags = f.faction_tags || [];
+        var tagChips = currentTags.map(function(tag, i) {
+            return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--cc-primary-dim);border:1px solid var(--cc-primary);padding:2px 8px;font-size:9px;margin:2px">' +
+                tag + '<span style="cursor:pointer" onclick="window.CCFB_FACTORY.removeFactionTag(' + i + ')">✕</span></span>';
+        }).join('');
+        var unusedTags = COMMON_TAGS.filter(function(t){ return currentTags.indexOf(t) === -1; });
+        var tagEditor =
+            '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">' + (tagChips || '<span style="color:var(--cc-text-muted);font-size:10px">No tags yet</span>') + '</div>' +
+            '<div style="display:flex;gap:4px">' +
+                '<select id="fs-tag-sel" class="cc-select" style="flex:1">' +
+                    '<option value="">— Common tags —</option>' +
+                    unusedTags.map(function(t){ return '<option value="'+t+'">'+t+'</option>'; }).join('') +
+                '</select>' +
+                '<button class="btn-add-small" style="width:auto;padding:4px 10px" onclick="window.CCFB_FACTORY.addFactionTagFromSel()">Add</button>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;margin-top:4px">' +
+                '<input type="text" id="fs-tag-custom" class="cc-input" style="flex:1" placeholder="Custom tag…">' +
+                '<button class="btn-add-small" style="width:auto;padding:4px 10px" onclick="window.CCFB_FACTORY.addFactionTagCustom()">+</button>' +
+            '</div>';
+
+        return infoSec('intro', 'Introduction',
+            fg('Title',       textinput('introduction.title',       intro.title)) +
+            fg('Tagline',     textinput('introduction.tagline',     intro.tagline)) +
+            fg('Description', textarea('introduction.description',  intro.description, 4)) +
+            fg('Philosophy',  textarea('introduction.philosophy',   intro.philosophy, 3)) +
+            fg('History',     textarea('introduction.history',      intro.history, 4))
+        ) +
+        infoSec('ident', 'Faction Identity',
+            fg('Core Values',             listEditor('faction_identity.core_values',             ident.core_values)) +
+            fg('What They Fight For',     listEditor('faction_identity.what_they_fight_for',     ident.what_they_fight_for)) +
+            fg('What They Fight Against', listEditor('faction_identity.what_they_fight_against', ident.what_they_fight_against)) +
+            fg('Allies See Them As',      textinput('faction_identity.reputation.allies_see_them_as',      rep.allies_see_them_as)) +
+            fg('Enemies See Them As',     textinput('faction_identity.reputation.enemies_see_them_as',     rep.enemies_see_them_as)) +
+            fg('Monsters See Them As',    textinput('faction_identity.reputation.monsters_see_them_as',    rep.monsters_see_them_as)) +
+            fg('The Canyon Sees Them As', textinput('faction_identity.reputation.the_canyon_sees_them_as', rep.the_canyon_sees_them_as))
+        ) +
+        infoSec('mech', 'Faction Mechanics',
+            fg('Signature Ability',      textinput('faction_mechanics.signature_ability',             mech.signature_ability)) +
+            fg('Signature Description',  textarea('faction_mechanics.signature_ability_description',  mech.signature_ability_description, 3)) +
+            fg('Playstyle',              textarea('faction_mechanics.playstyle',                      mech.playstyle, 3)) +
+            fg('Strengths',              listEditor('faction_mechanics.strengths',  mech.strengths)) +
+            fg('Weaknesses',             listEditor('faction_mechanics.weaknesses', mech.weaknesses))
+        ) +
+        infoSec('csr', 'Canyon State Relationships', stateRows) +
+        infoSec('tags', 'Faction Tags', tagEditor) +
+        infoSec('scen', 'Scenario Preferences',
+            fg('Ideal Scenarios',       listEditor('scenario_preferences.ideal_scenarios',       scen.ideal_scenarios)) +
+            fg('Challenging Scenarios', listEditor('scenario_preferences.challenging_scenarios', scen.challenging_scenarios))
+        );
+    },
+
+    toggleInfoSec: function(id) {
+        var el  = document.getElementById('fis-' + id);
+        var tog = document.getElementById('fis-tog-' + id);
+        if (!el) return;
+        var isOpen = el.style.display !== 'none';
+        el.style.display = isOpen ? 'none' : 'block';
+        tog.textContent  = isOpen ? '▼' : '▲';
+    },
+
+    updateFactionField: function(path, value) {
+        var parts = path.split('.');
+        var obj = this.state.currentFaction;
+        for (var i = 0; i < parts.length - 1; i++) {
+            if (!obj[parts[i]]) obj[parts[i]] = {};
+            obj = obj[parts[i]];
+        }
+        obj[parts[parts.length - 1]] = value;
+    },
+
+    updateFactionListItem: function(path, idx, value) {
+        var parts = path.split('.');
+        var obj = this.state.currentFaction;
+        for (var i = 0; i < parts.length - 1; i++) { obj = (obj[parts[i]] || {}); }
+        var arr = obj[parts[parts.length - 1]];
+        if (Array.isArray(arr)) arr[idx] = value;
+    },
+
+    addFactionListItem: function(path) {
+        var parts = path.split('.');
+        var obj = this.state.currentFaction;
+        for (var i = 0; i < parts.length - 1; i++) {
+            if (!obj[parts[i]]) obj[parts[i]] = {};
+            obj = obj[parts[i]];
+        }
+        var key = parts[parts.length - 1];
+        if (!Array.isArray(obj[key])) obj[key] = [];
+        obj[key].push('');
+        this.renderRoster();
+    },
+
+    removeFactionListItem: function(path, idx) {
+        var parts = path.split('.');
+        var obj = this.state.currentFaction;
+        for (var i = 0; i < parts.length - 1; i++) { obj = (obj[parts[i]] || {}); }
+        var arr = obj[parts[parts.length - 1]];
+        if (Array.isArray(arr)) { arr.splice(idx, 1); this.renderRoster(); }
+    },
+
+    setCanyonState: function(state, relationship) {
+        var csr = this.state.currentFaction.canyon_state_relationships;
+        if (!csr) { csr = { preferred_states: [], neutral_states: [], opposed_states: [] }; this.state.currentFaction.canyon_state_relationships = csr; }
+        ['preferred_states','neutral_states','opposed_states'].forEach(function(key) {
+            csr[key] = (csr[key]||[]).filter(function(s){ return s.state !== state; });
+        });
+        if (relationship === 'preferred') csr.preferred_states.push({ state: state, reason: '' });
+        if (relationship === 'neutral')   csr.neutral_states.push({ state: state, reason: '' });
+        if (relationship === 'opposed')   csr.opposed_states.push({ state: state, reason: '' });
+        this.renderRoster();
+    },
+
+    setCanyonStateReason: function(state, reason) {
+        var csr = this.state.currentFaction.canyon_state_relationships || {};
+        ['preferred_states','neutral_states','opposed_states'].forEach(function(key) {
+            (csr[key]||[]).forEach(function(s){ if (s.state === state) s.reason = reason; });
+        });
+    },
+
+    addFactionTagFromSel: function() {
+        var sel = document.getElementById('fs-tag-sel');
+        if (!sel || !sel.value) return;
+        var tags = this.state.currentFaction.faction_tags || [];
+        if (tags.indexOf(sel.value) === -1) tags.push(sel.value);
+        this.state.currentFaction.faction_tags = tags;
+        this.renderRoster();
+    },
+
+    addFactionTagCustom: function() {
+        var inp = document.getElementById('fs-tag-custom');
+        if (!inp || !inp.value.trim()) return;
+        var tag  = inp.value.trim().toLowerCase().replace(/\s+/g, '_');
+        var tags = this.state.currentFaction.faction_tags || [];
+        if (tags.indexOf(tag) === -1) tags.push(tag);
+        this.state.currentFaction.faction_tags = tags;
+        inp.value = '';
+        this.renderRoster();
+    },
+
+    removeFactionTag: function(idx) {
+        (this.state.currentFaction.faction_tags || []).splice(idx, 1);
+        this.renderRoster();
     },
 
     renderBuilder: function() {
