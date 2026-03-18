@@ -135,31 +135,18 @@ window.CCFB_FACTORY = {
                 .catch(function(err) { console.error('❌ CSS load failed:', err); });
         }
 
-        // ── Fetch faction file list via jsDelivr package API ─────────────
-        // jsDelivr has its own file listing endpoint — more reliable than the
-        // GitHub Contents API which has a 60 req/hour unauthenticated rate limit.
-        fetch('https://data.jsdelivr.com/v1/packages/gh/steamcrow/coffin@main/flat')
+        // ── Fetch faction file list from GitHub Contents API ──────────────
+        fetch('https://api.github.com/repos/steamcrow/coffin/contents/data/factions')
             .then(function(r) {
-                if (!r.ok) throw new Error('jsDelivr listing failed: ' + r.status);
+                if (!r.ok) throw new Error('GitHub API failed: ' + r.status);
                 return r.json();
             })
-            .then(function(pkg) {
-                var files = (pkg.files || [])
-                    .filter(function(f) {
-                        return f.name.indexOf('/data/factions/') !== -1
-                            && f.name.endsWith('.json');
-                    })
-                    .map(function(f) {
-                        var fileName = f.name.split('/').pop();
-                        return {
-                            name: fileName,
-                            url:  'https://raw.githubusercontent.com/steamcrow/coffin/main' + f.name
-                        };
-                    })
+            .then(function(files) {
+                self.state.factionFiles = files
+                    .filter(function(f) { return f.name.endsWith('.json'); })
+                    .map(function(f) { return { name: f.name, url: f.download_url }; })
                     .sort(function(a, b) { return a.name.localeCompare(b.name); });
-
-                self.state.factionFiles = files;
-                console.log('✅ Found', files.length, 'faction files:', files.map(function(f){ return f.name; }).join(', '));
+                console.log('✅ Found', self.state.factionFiles.length, 'faction files:', self.state.factionFiles.map(function(f){ return f.name; }).join(', '));
                 if (self.state.rules) self.renderRoster();
             })
             .catch(function(err) {
