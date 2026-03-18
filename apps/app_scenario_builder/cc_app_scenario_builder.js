@@ -3825,6 +3825,30 @@ console.log("🎲 Scenario Builder app loaded");
 
     // ── END VAULT RENDER HELPERS ─────────────────────────────────────────────────
 
+    // Renders wandering NPCs (Vendomat + Monte Haul) if they rolled in.
+    function renderWanderingNPCs(npcs) {
+      if (!npcs || !npcs.length) return '';
+      const rows = npcs.map(npc => `
+        <div style="border-left:3px solid #d4822a;padding:0.5rem 0.75rem;
+                    margin-bottom:0.5rem;background:rgba(0,0,0,0.25);border-radius:2px;">
+          <div style="font-size:0.75rem;font-weight:700;color:#d4822a;margin-bottom:0.25rem;">
+            ${npc.emoji} ${npc.name}
+          </div>
+          <div style="font-size:0.85rem;margin-bottom:0.25rem;">${npc.note}</div>
+          <div style="font-size:0.8rem;color:#ef5350;">
+            <i class="fa fa-exclamation-triangle"></i> ${npc.warning}
+          </div>
+          <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:0.2rem;">
+            Placement: ${npc.placement.replace(/_/g, ' ')}
+          </div>
+        </div>`).join('');
+      return `
+        <div class="cc-scenario-section" style="border-left:3px solid #d4822a;">
+          <h4 style="color:#d4822a;"><i class="fa fa-cog"></i> Wandering NPCs</h4>
+          ${rows}
+        </div>`;
+    }
+
     // ── renderScenarioOutput — full scenario card; shown after generation ──────────
     function renderScenarioOutput() {
       const s = state.scenario;
@@ -3927,6 +3951,9 @@ console.log("🎲 Scenario Builder app loaded");
 
           <!-- MONSTER PRESSURE -->
           <!-- Monster Pressure and Coffin Cough data is used by Turn Counter app only -->
+
+          <!-- WANDERING NPCs -->
+          ${renderWanderingNPCs(s.wandering_npcs)}
 
           <!-- VICTORY CONDITIONS — always use per-faction card renderer -->
           <div class="cc-scenario-section">
