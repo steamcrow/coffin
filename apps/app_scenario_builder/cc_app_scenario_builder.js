@@ -524,7 +524,7 @@ console.log("🎲 Scenario Builder app loaded");
           ];
           await Promise.all(PLAYER_FACTIONS.map(async ({ id, file }) => {
             try {
-              const res = await fetch(`${b}/factions/${file}${t}`);
+              const res = await fetch(`${b}/data/factions/${file}${t}`);
               this._factions[id] = await res.json();
               console.log(`✅ Faction loaded: ${id}`);
             } catch (e) {
