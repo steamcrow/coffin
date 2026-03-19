@@ -506,7 +506,11 @@ console.log("🎲 Scenario Builder app loaded");
           try {
             this._objVault240 = await vault240Res.json();
             var cats = this._objVault240.categories || this._objVault240.objective_categories || [];
-            cats.forEach(function(cat)
+            cats.forEach(cat => {
+              (cat.objectives || []).forEach(obj => {
+                this._vault240Map[obj.objective_id] = obj;
+              });
+            });
             console.log('📋 240 Objective Vault loaded —', Object.keys(this._vault240Map).length, 'entries');
           } catch (e) { this._objVault240 = null; }
 
