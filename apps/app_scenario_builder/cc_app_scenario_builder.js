@@ -524,7 +524,7 @@ console.log("🎲 Scenario Builder app loaded");
           ];
           await Promise.all(PLAYER_FACTIONS.map(async ({ id, file }) => {
             try {
-              const res = await fetch(`${b}/data/factions/${file}${t}`);
+              const res = await fetch(`${b}/factions/${file}${t}`);
               this._factions[id] = await res.json();
               console.log(`✅ Faction loaded: ${id}`);
             } catch (e) {
@@ -2363,6 +2363,22 @@ console.log("🎲 Scenario Builder app loaded");
           scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 2);
       }
 
+      // ---- ARCHETYPE GATES ----
+      // Headquarters / HQ locations should feel like a base defence, not a treasure hunt.
+      const arch = (locProfile?.archetype || '').toLowerCase();
+      if (arch === 'headquarters') {
+        // Boost defend-the-base objectives heavily
+        scores['fortified_position'] = (scores['fortified_position'] || 0) + 8;
+        scores['command_structure']  = (scores['command_structure']  || 0) + 6;
+        scores['land_marker']        = (scores['land_marker']        || 0) + 4;
+        // Hard-suppress objectives that make no sense at a staffed HQ
+        scores['artifact']           = 0;
+        scores['sacrificial_focus']  = 0;
+        scores['ritual_site']        = 0;
+        scores['ritual_circle']      = 0;
+        scores['tainted_ground']     = Math.max(0, (scores['tainted_ground'] || 0) - 4);
+      }
+
       // ---- RAIL GATE ----
       // Rail objectives only appear at locations that have rail infrastructure.
       // Named feature tags (exact match only — no generic 'rail' string that could false-positive).
@@ -3076,12 +3092,12 @@ console.log("🎲 Scenario Builder app loaded");
                     margin:0.5rem 0 0.75rem 0;
                     border-radius:8px;overflow:hidden;
                     border:1px solid rgba(255,117,24,0.3);
-                    align-items:stretch;height:320px;">
+                    align-items:stretch;">
 
-          <!-- LEFT: overview — object-fit:cover fills the box, no black bars -->
-          <div style="flex:0 0 33%;position:relative;height:320px;overflow:hidden;border-right:2px solid rgba(255,117,24,0.4);">
+          <!-- LEFT: overview — natural aspect ratio preserved, fixed width -->
+          <div style="flex:0 0 220px;position:relative;overflow:hidden;border-right:2px solid rgba(255,117,24,0.4);">
             <div id="cc-scenario-map-overview"
-                 style="position:absolute;inset:0;overflow:hidden;background:#0a0a0a;">
+                 style="position:relative;width:100%;background:#0a0a0a;">
 
               <!-- Label -->
               <div style="position:absolute;top:0;left:0;right:0;z-index:10;
@@ -3094,7 +3110,7 @@ console.log("🎲 Scenario Builder app loaded");
               <img id="cc-scenario-map-tiny"
                    src="${LARGE_MAP_URL}"
                    alt="Canyon overview"
-                   style="width:100%;height:100%;object-fit:cover;display:block;opacity:0.88;">
+                   style="width:100%;height:auto;display:block;opacity:0.88;">
 
               <div id="cc-scenario-map-highlight"
                    style="display:none;position:absolute;
@@ -3106,9 +3122,9 @@ console.log("🎲 Scenario Builder app loaded");
             </div>
           </div>
 
-          <!-- RIGHT: zoomed Leaflet map -->
+          <!-- RIGHT: zoomed Leaflet map — takes remaining space, fixed height -->
           <div id="cc-scenario-map-embed"
-               style="flex:1;position:relative;background:#111;height:320px;">
+               style="flex:1;position:relative;background:#111;height:420px;min-height:320px;">
             <div style="position:absolute;inset:0;display:flex;align-items:center;
                         justify-content:center;color:rgba(255,255,255,0.25);
                         font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;">
