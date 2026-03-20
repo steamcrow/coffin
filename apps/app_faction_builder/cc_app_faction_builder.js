@@ -350,12 +350,20 @@ window.CCFB_FACTORY = {
                 });
 
                 self.state.rules = {
-                    rules_master: {
-                        unit_identities:   dig(identitiesData, 'unit_identities'),
-                        weapon_properties: self.normalizeWeaponProperties(weaponPropsData),
-                        ability_dictionary: abilityDict
-                    }
-                };
+    rules_master: {
+        unit_identities: dig(identitiesData, 'unit_identities'),
+        weapon_properties: (function() {
+            if (weaponPropsData.rules_master && weaponPropsData.rules_master.weapon_properties) {
+                return weaponPropsData.rules_master.weapon_properties;
+            }
+            if (weaponPropsData.weapon_properties) {
+                return weaponPropsData.weapon_properties;
+            }
+            return weaponPropsData;
+        })(),
+        ability_dictionary: abilityDict
+    }
+};
 
                 var archetypes = Object.keys(
                     (self.state.rules.rules_master.unit_identities && self.state.rules.rules_master.unit_identities.archetype_vault) || {}
