@@ -345,6 +345,7 @@ window.CCFB_FACTORY = {
                 };
 
                 // ── Normalize ability dictionaries correctly ─────────────────────────────
+// ── Normalize ability dictionaries correctly ─────────────────────────────
 var abilityDict = {};
 
 abilityResults.forEach(function(ar) {
@@ -370,6 +371,39 @@ abilityResults.forEach(function(ar) {
         abilities: data
     };
 });
+
+// ── Normalize weapon properties correctly ────────────────────────────────
+var normalizeWeaponProperties = function(data) {
+    if (data.rules_master && data.rules_master.weapon_properties) {
+        return data.rules_master.weapon_properties;
+    }
+    if (data.weapon_properties) {
+        return data.weapon_properties;
+    }
+    if (data.properties) {
+        return data.properties;
+    }
+    return data;
+};
+
+// ── Safe dig helper ──────────────────────────────────────────────────────
+var dig = function(obj, key) {
+    if (obj.rules_master && obj.rules_master[key]) return obj.rules_master[key];
+    if (obj[key]) return obj[key];
+    return obj;
+};
+
+// ── FINAL RULES OBJECT ────────────────────────────────────────────────────
+self.state.rules = {
+    rules_master: {
+        unit_identities:    dig(identitiesData, 'unit_identities'),
+        weapon_properties:  normalizeWeaponProperties(weaponPropsData),
+        ability_dictionary: abilityDict
+    }
+};
+
+console.log('✅ Weapon props loaded:', Object.keys(self.state.rules.rules_master.weapon_properties || {}).length);
+console.log('✅ Ability categories:', Object.keys(self.state.rules.rules_master.ability_dictionary || {}));
 
 // ── Normalize weapon properties correctly ────────────────────────────────
 var normalizeWeaponProperties = function(data) {
