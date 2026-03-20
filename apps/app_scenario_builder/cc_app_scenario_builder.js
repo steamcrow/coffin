@@ -2980,7 +2980,20 @@ console.log("🎲 Scenario Builder app loaded");
       return map[rating] || 'Unknown danger level';
     }
 
-    // ── updateLoginStatus — mirrors Faction Builder pattern ───────────────────
+    // ── updateLoginStatus — auth result cached after first check, no repeated network calls ──
+    let _authCache = null;
+
+    async function getAuth() {
+      if (_authCache) return _authCache;
+      if (!window.CC_STORAGE) return { loggedIn: false };
+      try {
+        _authCache = await window.CC_STORAGE.checkAuth();
+        return _authCache;
+      } catch (e) {
+        return { loggedIn: false };
+      }
+    }
+
     async function updateLoginStatus() {
       const bar = document.getElementById('cc-login-status');
       if (!bar) return;
@@ -2989,17 +3002,12 @@ console.log("🎲 Scenario Builder app loaded");
         bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> <a href="/web/login">Sign in to save scenarios</a>';
         return;
       }
-      try {
-        const auth = await window.CC_STORAGE.checkAuth();
-        if (auth && auth.loggedIn) {
-          const name = auth.userName || auth.name || auth.username || 'Signed in';
-          bar.className = 'cc-login-status logged-in';
-          bar.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as ' + name;
-        } else {
-          bar.className = 'cc-login-status logged-out';
-          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> <a href="/web/login">Sign in to save and load scenarios</a>';
-        }
-      } catch (e) {
+      const auth = await getAuth();
+      if (auth && auth.loggedIn) {
+        const name = auth.userName || auth.name || auth.username || 'Signed in';
+        bar.className = 'cc-login-status logged-in';
+        bar.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as ' + name;
+      } else {
         bar.className = 'cc-login-status logged-out';
         bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> <a href="/web/login">Sign in to save and load scenarios</a>';
       }
@@ -4686,7 +4694,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         return;
       }
       try {
-        const auth = await window.CC_STORAGE.checkAuth();
+        const auth = await getAuth();
         if (!auth.loggedIn) {
           alert('You need to be logged in to load saved scenarios.');
           return;
