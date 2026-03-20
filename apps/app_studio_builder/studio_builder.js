@@ -167,15 +167,15 @@ window.CCFB_FACTORY = {
         };
 
         var abilityFiles = [
-            { key: 'A_deployment_timing',    file: '90_ability_dictionary_A.json' },
-            { key: 'B_movement_positioning', file: '91_ability_dictionary_B.json' },
-            { key: 'C_offense_damage',       file: '92_ability_dictionary_C.json' },
-            { key: 'D_defense_survival',     file: '93_ability_dictionary_D.json' },
-            { key: 'E_morale_fear',          file: '94_ability_dictionary_E.json' },
-            { key: 'F_terrain_environment',  file: '95_ability_dictionary_F.json' },
-            { key: 'G_thyr_ritual',          file: '96_ability_dictionary_G.json' },
-            { key: 'H_interaction_support',  file: '97_ability_dictionary_H.json' },
-            { key: 'I_faction_special',      file: '98_ability_dictionary_I.json' }
+            { key: 'A_deployment_timing',    file: '90_ability_dictionary_A.json', title: 'Deployment & Timing' },
+            { key: 'B_movement_positioning', file: '91_ability_dictionary_B.json', title: 'Movement & Positioning' },
+            { key: 'C_offense_damage',       file: '92_ability_dictionary_C.json', title: 'Offense & Damage' },
+            { key: 'D_defense_survival',     file: '93_ability_dictionary_D.json', title: 'Defense & Survival' },
+            { key: 'E_morale_fear',          file: '94_ability_dictionary_E.json', title: 'Morale & Fear' },
+            { key: 'F_terrain_environment',  file: '95_ability_dictionary_F.json', title: 'Terrain & Environment' },
+            { key: 'G_thyr_ritual',          file: '96_ability_dictionary_G.json', title: 'Thyr & Ritual' },
+            { key: 'H_interaction_support',  file: '97_ability_dictionary_H.json', title: 'Interaction & Support' },
+            { key: 'I_faction_special',      file: '98_ability_dictionary_I.json', title: 'Faction Special' }
         ];
 
         var identitiesPromise  = fetchJson(SRC + '70_unit_identities.json');
@@ -195,15 +195,16 @@ window.CCFB_FACTORY = {
                 var weaponPropsData = results[1];
                 var abilityResults  = results[2];
 
-                // Each ability file merges all its top-level keys into abilityDict
+                // Each ability file stores its content under its own category key.
+                // Previously this used ar.data[k] where k was always "abilities",
+                // causing every file to overwrite the last. Now we key by ar.key.
                 var abilityDict = {};
                 abilityResults.forEach(function(ar) {
-                    Object.keys(ar.data).forEach(function(k) {
-                        if (k !== 'schema_version' && k !== 'build' &&
-                            typeof ar.data[k] === 'object') {
-                            abilityDict[k] = ar.data[k];
-                        }
-                    });
+                    // Files may expose abilities at root "abilities" key or directly
+                    var entries = ar.data.abilities || ar.data;
+                    if (entries && typeof entries === 'object') {
+                        abilityDict[ar.key] = entries;
+                    }
                 });
 
                 // Each file may wrap its section under rules_master or expose at root
@@ -213,11 +214,16 @@ window.CCFB_FACTORY = {
                     return obj;
                 };
 
+                // Build a title lookup so renderSlidePanel can show proper section names
+                var abilityTitles = {};
+                abilityFiles.forEach(function(af) { abilityTitles[af.key] = af.title; });
+
                 self.state.rules = {
                     rules_master: {
                         unit_identities:    dig(identitiesData,  'unit_identities'),
                         weapon_properties:  dig(weaponPropsData, 'weapon_properties'),
-                        ability_dictionary: abilityDict
+                        ability_dictionary: abilityDict,
+                        ability_titles:     abilityTitles
                     }
                 };
 
@@ -952,6 +958,7 @@ window.CCFB_FACTORY = {
         var isWeapon = this.state.activeModal === 'weapon';
         var weaponProps = this.state.rules.rules_master.weapon_properties || {};
         var abilityDict = this.state.rules.rules_master.ability_dictionary || {};
+        var abilityTitles = this.state.rules.rules_master.ability_titles || {};
         
         var cardsHtml = '';
         
@@ -968,7 +975,7 @@ window.CCFB_FACTORY = {
             }
         } else {
             for (var cat in abilityDict) {
-                var categoryName = cat.replace(/^[A-Z]_/, '').replace(/_/g, ' ').toUpperCase();
+                var categoryName = abilityTitles[cat] || cat.replace(/^[A-Z]_/, '').replace(/_/g, ' ').toUpperCase();
                 cardsHtml += '<div class="category-header">' + categoryName + '</div>';
                 
                 for (var key in abilityDict[cat]) {
