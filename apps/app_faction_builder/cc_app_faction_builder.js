@@ -489,23 +489,28 @@ console.log("⚔️ Faction Builder app loaded");
     // ================================
     // LOGIN STATUS
     // ================================
+    // Auth result cached after first check — no repeated network calls per interaction.
+    let _authCache = null;
+
+    async function getAuth() {
+      if (_authCache) return _authCache;
+      if (!window.CC_STORAGE) return { loggedIn: false };
+      try {
+        _authCache = await window.CC_STORAGE.checkAuth();
+        return _authCache;
+      } catch (e) {
+        return { loggedIn: false };
+      }
+    }
+
     async function updateLoginStatus() {
-      if (!window.CC_STORAGE) return;
       const statusBar = document.getElementById('cc-login-status');
       if (!statusBar) return;
-      try {
-        const auth = await window.CC_STORAGE.checkAuth();
-        statusBar.className = auth.loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out';
-        statusBar.innerHTML = auth.loggedIn
-          ? `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`
-          : `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
-      } catch (e) {
-        const bar = document.getElementById('cc-login-status');
-        if (bar) {
-          bar.className = 'cc-login-status logged-out';
-          bar.innerHTML = `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
-        }
-      }
+      const auth = await getAuth();
+      statusBar.className = auth.loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out';
+      statusBar.innerHTML = auth.loggedIn
+        ? `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`
+        : `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
     }
 
     // ================================
@@ -1385,7 +1390,7 @@ console.log("⚔️ Faction Builder app loaded");
     window.saveToCloud = async function() {
       try {
         if (!window.CC_STORAGE) { alert("Cloud storage not available. Please refresh the page."); return; }
-        const auth = await window.CC_STORAGE.checkAuth();
+        const auth = await getAuth();
         if (!auth.loggedIn) { alert("Please sign in to save rosters to the cloud!"); return; }
         if (!(state.rosterName && state.rosterName.trim())) { alert("Please give your roster a name first!"); return; }
         const exportData = {
@@ -1408,7 +1413,7 @@ console.log("⚔️ Faction Builder app loaded");
     window.loadFromCloud = async function() {
       try {
         if (!window.CC_STORAGE) { alert("Cloud storage not available."); return; }
-        const auth = await window.CC_STORAGE.checkAuth();
+        const auth = await getAuth();
         if (!auth.loggedIn) { alert("Please sign in to load rosters!"); return; }
         const docs = await window.CC_STORAGE.loadDocumentList();
         if (!(docs && docs.length)) { alert("No saved rosters found."); return; }
