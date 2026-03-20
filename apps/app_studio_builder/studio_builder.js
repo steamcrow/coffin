@@ -221,7 +221,7 @@ window.CCFB_FACTORY = {
                 self.state.rules = {
                     rules_master: {
                         unit_identities:    dig(identitiesData,  'unit_identities'),
-                        weapon_properties:  dig(weaponPropsData, 'weapon_properties'),
+                        weapon_properties:  (dig(weaponPropsData, 'weapon_properties') || {}).properties || dig(weaponPropsData, 'weapon_properties'),
                         ability_dictionary: abilityDict,
                         ability_titles:     abilityTitles
                     }
@@ -965,9 +965,10 @@ window.CCFB_FACTORY = {
         if (isWeapon) {
             for (var key in weaponProps) {
                 var item = weaponProps[key];
-                var displayName = item.name || key.replace(/_/g, ' ').toUpperCase();
-                var displayEffect = item.effect || 'No description available';
-                
+                if (!item || typeof item !== 'object') continue; // skip _id, title, short, long strings
+                var displayName = item.name || item.title || key.replace(/_/g, ' ').replace(/\b\w/g, function(c){return c.toUpperCase();});
+                var displayEffect = item.short || item.effect || item.long || 'No description available';
+
                 cardsHtml += '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')">' +
                     '<div class="ability-card-name">' + displayName + '</div>' +
                     '<div class="ability-card-effect">' + displayEffect + '</div>' +
