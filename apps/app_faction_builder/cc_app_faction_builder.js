@@ -1,1461 +1,1705 @@
-/**
- * COFFIN CANYON FACTION STUDIO - COMPLETE VERSION
- * Following skeleton.js pattern + ALL original functionality
- * ZERO OMISSIONS
- */
+// ================================
+// Faction Builder App
+// File: coffin/apps/app_faction_builder/cc_app_faction_builder.js
+// ================================
 
-window.CCFB_FACTORY = {
-    state: {
-        rules: null,
-        currentFaction: {
-            faction: "New Faction",
-            introduction: { title: '', tagline: '', description: '', philosophy: '', history: '' },
-            faction_identity: {
-                core_values: [],
-                what_they_fight_for: [],
-                what_they_fight_against: [],
-                reputation: { allies_see_them_as: '', enemies_see_them_as: '', monsters_see_them_as: '', the_canyon_sees_them_as: '' }
-            },
-            faction_mechanics: {
-                signature_ability: '',
-                signature_ability_description: '',
-                playstyle: '',
-                strengths: [],
-                weaknesses: []
-            },
-            canyon_state_relationships: { preferred_states: [], neutral_states: [], opposed_states: [] },
-            faction_tags: [],
-            scenario_preferences: { ideal_scenarios: [], challenging_scenarios: [] },
-            faction_features: [],
-            units: []
-        },
-        selectedUnit: null,
-        activeModal: null,
-        activeStep: 1,
-        activeFactionTab: 'roster', // 'roster' or 'info'
-        isPasted: false,
-        factionFiles: []
-    },
+console.log("⚔️ Faction Builder app loaded");
 
-    sanitizeUnit: function(u) {
-        return {
-            name: u.name || "New Unit",
-            type: (u.type || "grunt").toLowerCase(),
-            quality: parseInt(u.quality, 10) || 4,
-            defense: parseInt(u.defense, 10) || 4,
-            move: parseInt(u.move, 10) || 6,
-            range: parseInt(u.range, 10) || 0,
-            weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
-            abilities: Array.isArray(u.abilities) ? u.abilities : [],
-            supplemental_abilities: Array.isArray(u.supplemental_abilities) ? u.supplemental_abilities : [],
-            lore: u.lore || ""
-        };
-    },
+// ── Bootstrap Dropdown null-autoClose patch ──────────────────────────────
+(function() {
+  function patchDropdown() {
+    if (!window.bootstrap || !window.bootstrap.Dropdown) return false;
+    var OrigDropdown = window.bootstrap.Dropdown;
+    function PatchedDropdown(el, config) {
+      if (config && config.autoClose === null) config.autoClose = true;
+      return new OrigDropdown(el, config);
+    }
+    Object.keys(OrigDropdown).forEach(function(k) {
+      PatchedDropdown[k] = typeof OrigDropdown[k] === 'function'
+        ? function() { return OrigDropdown[k].apply(OrigDropdown, arguments); }
+        : OrigDropdown[k];
+    });
+    PatchedDropdown.prototype = OrigDropdown.prototype;
+    window.bootstrap.Dropdown = PatchedDropdown;
+    console.log("✅ Bootstrap Dropdown autoClose patch applied");
+    return true;
+  }
+  if (!patchDropdown()) {
+    var _tries = 0;
+    var _iv = setInterval(function() {
+      if (patchDropdown() || _tries++ > 20) clearInterval(_iv);
+    }, 100);
+  }
+}());
 
-    sanitizeFaction: function(j) {
-        var strArr = function(v) { return Array.isArray(v) ? v : []; };
-        var str    = function(v) { return (typeof v === 'string') ? v : ''; };
-        var intro  = j.introduction || {};
-        var ident  = j.faction_identity || {};
-        var rep    = ident.reputation || {};
-        var mech   = j.faction_mechanics || {};
-        var csr    = j.canyon_state_relationships || {};
-        var scen   = j.scenario_preferences || {};
-        return {
-            faction: j.faction || j.name || "New Faction",
-            introduction: {
-                title:       str(intro.title),
-                tagline:     str(intro.tagline),
-                description: str(intro.description),
-                philosophy:  str(intro.philosophy),
-                history:     str(intro.history)
-            },
-            faction_identity: {
-                core_values:             strArr(ident.core_values),
-                what_they_fight_for:     strArr(ident.what_they_fight_for),
-                what_they_fight_against: strArr(ident.what_they_fight_against),
-                reputation: {
-                    allies_see_them_as:       str(rep.allies_see_them_as),
-                    enemies_see_them_as:      str(rep.enemies_see_them_as),
-                    monsters_see_them_as:     str(rep.monsters_see_them_as),
-                    the_canyon_sees_them_as:  str(rep.the_canyon_sees_them_as)
-                }
-            },
-            faction_mechanics: {
-                signature_ability:             str(mech.signature_ability),
-                signature_ability_description: str(mech.signature_ability_description),
-                playstyle:  str(mech.playstyle),
-                strengths:  strArr(mech.strengths),
-                weaknesses: strArr(mech.weaknesses)
-            },
-            canyon_state_relationships: {
-                preferred_states: strArr(csr.preferred_states),
-                neutral_states:   strArr(csr.neutral_states),
-                opposed_states:   strArr(csr.opposed_states)
-            },
-            faction_tags: strArr(j.faction_tags),
-            scenario_preferences: {
-                ideal_scenarios:       strArr(scen.ideal_scenarios),
-                challenging_scenarios: strArr(scen.challenging_scenarios)
-            },
-            faction_features: strArr(j.faction_features).filter(function(f) {
-                return !f || f.name !== 'Branch System';
-            }),
-            units: strArr(j.units).map(function(u) { return window.CCFB_FACTORY.sanitizeUnit(u); })
-        };
-    },
+(function () {
+  var _destroyFn = null;
 
-    calculateUnitCost: function(u) {
-        if (!u || !this.state.rules) return 0;
-        var total = (7 - u.quality) * 15 + (7 - u.defense) * 10 + (u.move - 6) * 5;
-        if (u.range > 0) total += (u.range / 6) * 10;
-        total += (u.weapon_properties.length * 10) + (u.abilities.length * 15);
-        return Math.max(10, Math.ceil(total / 5) * 5);
-    },
+  function mount(rootEl, ctx) {
+    var root = rootEl;
+    console.log("🚀 Faction Builder init", ctx);
 
-    prettifyKey: function(key) {
-        return String(key || '')
-            .replace(/_/g, ' ')
-            .replace(/\b\w/g, function(m) { return m.toUpperCase(); });
-    },
-
-    escapeAttr: function(v) {
-        return String(v == null ? '' : v)
-            .replace(/&/g, '&amp;')
-            .replace(/"/g, '&quot;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
-    },
-
-    escapeJsString: function(v) {
-        return String(v == null ? '' : v)
-            .replace(/\\/g, '\\\\')
-            .replace(/'/g, "\\'")
-            .replace(/\r/g, '\\r')
-            .replace(/\n/g, '\\n');
-    },
-
-    isMetaKey: function(key) {
-        return key === '_id' || key === 'title' || key === 'short' || key === 'long' || key === 'build' || key === 'schema_version' || key === 'version';
-    },
-
-    normalizeWeaponProperties: function(data) {
-        var src = {};
-        if (data && data.rules_master && data.rules_master.weapon_properties) {
-            src = data.rules_master.weapon_properties;
-        } else if (data && data.weapon_properties) {
-            src = data.weapon_properties;
-        } else if (data && data.properties) {
-            src = data.properties;
-        } else {
-            src = data || {};
+    // ---- SLIDE PANEL CSS — injected synchronously so panels work immediately
+    //      regardless of whether cc_ui.css has finished loading from GitHub.
+    if (!document.getElementById('cc-fb-panel-styles')) {
+      const panelStyle = document.createElement('style');
+      panelStyle.id = 'cc-fb-panel-styles';
+      panelStyle.textContent = `
+        .cc-slide-panel {
+          position: fixed !important;
+          top: 0 !important;
+          right: -520px !important;
+          width: 460px;
+          max-width: 92vw;
+          height: 100vh;
+          background: #111 !important;
+          border-left: 3px solid #ff7518;
+          box-shadow: -10px 0 50px rgba(0,0,0,0.85);
+          z-index: 9999 !important;
+          transition: right 0.32s ease-in-out !important;
+          overflow-y: auto;
+          padding: 22px;
+          box-sizing: border-box;
+        }
+        .cc-slide-panel-open {
+          right: 0 !important;
+        }
+        .cc-slide-panel-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+          padding-bottom: 15px;
+          border-bottom: 2px solid #ff7518;
+        }
+        .cc-slide-panel-header h2 {
+          color: #ff7518;
+          margin: 0;
+          font-size: 17px;
+          font-weight: 900;
+          text-transform: uppercase;
+          letter-spacing: .06em;
+        }
+        .cc-panel-close-btn {
+          background: transparent;
+          border: 1px solid #ff7518;
+          color: #ff7518;
+          padding: 4px 10px;
+          border-radius: 4px;
+          cursor: pointer;
+          font-size: 16px;
+          line-height: 1;
+        }
+        .cc-panel-close-btn:hover {
+          background: #ff7518;
+          color: #000;
+        }
+        @media (max-width: 768px) {
+          .cc-slide-panel { width: 100vw !important; right: -100vw !important; }
         }
 
-        var out = {};
-        for (var key in src) {
-            if (!Object.prototype.hasOwnProperty.call(src, key)) continue;
-            if (this.isMetaKey(key)) continue;
-
-            var item = src[key];
-            if (!item || typeof item !== 'object') continue;
-
-            out[key] = {
-                key: key,
-                name: item.name || item.title || this.prettifyKey(key),
-                short: item.short || '',
-                long: item.long || item.effect || item.description || item.short || '',
-                _id: item._id || ''
-            };
+        /* ---- Splash / preloader ---- */
+        .cc-loading-container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          background: #0a0806;
         }
-        return out;
-    },
-
-    normalizeAbilityCategoryObject: function(rawCategory) {
-        var out = {};
-        for (var key in rawCategory) {
-            if (!Object.prototype.hasOwnProperty.call(rawCategory, key)) continue;
-            if (this.isMetaKey(key)) continue;
-
-            var item = rawCategory[key];
-            if (typeof item === 'string') {
-                out[key] = {
-                    key: key,
-                    name: this.prettifyKey(key),
-                    short: item,
-                    long: item
-                };
-            } else if (item && typeof item === 'object') {
-                out[key] = {
-                    key: key,
-                    name: item.name || item.title || this.prettifyKey(key),
-                    short: item.short || '',
-                    long: item.long || item.effect || item.description || item.short || '',
-                    timing: item.timing || '',
-                    _id: item._id || ''
-                };
-            }
+        .cc-loading-text {
+          color: rgba(255,255,255,0.4);
+          font-size: 0.8rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          margin-top: 1rem;
         }
-        return out;
-    },
-
-    normalizeAbilityFile: function(fileData, categoryKey, fallbackTitle) {
-        var out = {
-            key: categoryKey,
-            title: fallbackTitle || this.prettifyKey(categoryKey),
-            abilities: {}
-        };
-
-        if (!fileData || typeof fileData !== 'object') return out;
-
-        // New modular format: { title, abilities: { ... } }
-        if (fileData.abilities && typeof fileData.abilities === 'object') {
-            out.title = fileData.title || fallbackTitle || this.prettifyKey(categoryKey);
-            out.abilities = this.normalizeAbilityCategoryObject(fileData.abilities);
-            return out;
+        .cc-loading-bar {
+          width: 260px;
+          max-width: 80vw;
+          height: 3px;
+          background: rgba(255,117,24,0.15);
+          border-radius: 2px;
+          overflow: hidden;
+          position: relative;
         }
-
-        // Old compiled format possibility:
-        // { rules_master: { ability_dictionary: { category: {...} } } }
-        if (fileData.rules_master && fileData.rules_master.ability_dictionary) {
-            var compiled = fileData.rules_master.ability_dictionary;
-            if (compiled[categoryKey]) {
-                out.abilities = this.normalizeAbilityCategoryObject(compiled[categoryKey]);
-                return out;
-            }
+        .cc-loading-progress {
+          position: absolute;
+          top: 0; left: 0; bottom: 0;
+          width: 40%;
+          background: #ff7518;
+          border-radius: 2px;
+          animation: cc-bar-slide 1.4s ease-in-out infinite;
         }
-
-        // Old direct category object
-        out.abilities = this.normalizeAbilityCategoryObject(fileData);
-        return out;
-    },
-
-    getAbilityCatalog: function() {
-        return (this.state.rules && this.state.rules.rules_master && this.state.rules.rules_master.ability_dictionary) || {};
-    },
-
-    getWeaponCatalog: function() {
-        return (this.state.rules && this.state.rules.rules_master && this.state.rules.rules_master.weapon_properties) || {};
-    },
-
-    getAbilityMeta: function(key) {
-        var dict = this.getAbilityCatalog();
-        for (var cat in dict) {
-            if (!Object.prototype.hasOwnProperty.call(dict, cat)) continue;
-            var bucket = dict[cat] && dict[cat].abilities ? dict[cat].abilities : dict[cat];
-            if (bucket && bucket[key]) return bucket[key];
+        @keyframes cc-bar-slide {
+          0%   { left: -40%; width: 40%; }
+          50%  { left: 30%;  width: 50%; }
+          100% { left: 110%; width: 40%; }
         }
-        return null;
-    },
-
-    getWeaponMeta: function(key) {
-        var props = this.getWeaponCatalog();
-        return props[key] || null;
-    },
-
-    init: function() {
-        console.log("🎬 Faction Studio initializing...");
-
-        var self = this;
-        var BASE = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/';
-        var RAW  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/';
-        var t    = '?t=' + Date.now();
-
-        if (!document.getElementById('faction-studio-styles')) {
-            fetch(BASE + 'apps/app_studio_builder/studio_builder.css' + t)
-                .then(function(r) { return r.text(); })
-                .then(function(css) {
-                    var s = document.createElement('style');
-                    s.id = 'faction-studio-styles';
-                    s.textContent = css;
-                    document.head.appendChild(s);
-                    console.log('✅ CSS applied');
-                })
-                .catch(function(err) { console.error('❌ CSS load failed:', err); });
+        @keyframes cc-logo-pulse {
+          0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
+          50%  { filter: drop-shadow(0 0 48px rgba(255,117,24,0.85)); transform: scale(1.03); }
+          100% { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
         }
-
-        fetch('https://api.github.com/repos/steamcrow/coffin/contents/data/factions')
-            .then(function(r) {
-                if (!r.ok) throw new Error('GitHub API failed: ' + r.status);
-                return r.json();
-            })
-            .then(function(files) {
-                self.state.factionFiles = files
-                    .filter(function(f) { return f.name.endsWith('.json'); })
-                    .map(function(f) { return { name: f.name, url: f.download_url }; })
-                    .sort(function(a, b) { return a.name.localeCompare(b.name); });
-                console.log('✅ Found', self.state.factionFiles.length, 'faction files:', self.state.factionFiles.map(function(f){ return f.name; }).join(', '));
-                if (self.state.rules) self.renderRoster();
-            })
-            .catch(function(err) {
-                console.warn('⚠️ Could not load faction list:', err.message);
-            });
-
-        var SRC = RAW + 'data/src/';
-
-        var fetchJson = function(url) {
-            return fetch(url + t).then(function(r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + url);
-                return r.json();
-            });
-        };
-
-        var abilityFiles = [
-            { key: 'A_deployment_timing',    file: '90_ability_dictionary_A.json', title: 'Deployment & Timing' },
-            { key: 'B_movement_positioning', file: '91_ability_dictionary_B.json', title: 'Movement & Positioning' },
-            { key: 'C_offense_damage',       file: '92_ability_dictionary_C.json', title: 'Offense & Damage' },
-            { key: 'D_defense_survival',     file: '93_ability_dictionary_D.json', title: 'Defense & Survival' },
-            { key: 'E_morale_fear',          file: '94_ability_dictionary_E.json', title: 'Morale & Fear' },
-            { key: 'F_terrain_environment',  file: '95_ability_dictionary_F.json', title: 'Terrain & Environment' },
-            { key: 'G_thyr_ritual',          file: '96_ability_dictionary_G.json', title: 'Thyr & Ritual' },
-            { key: 'H_interaction_support',  file: '97_ability_dictionary_H.json', title: 'Interaction & Support' },
-            { key: 'I_faction_special',      file: '98_ability_dictionary_I.json', title: 'Faction Special' }
-        ];
-
-        var identitiesPromise  = fetchJson(SRC + '70_unit_identities.json');
-        var weaponPropsPromise = fetchJson(SRC + '100_weapon_properties.json');
-        var abilityPromises    = abilityFiles.map(function(af) {
-            return fetchJson(SRC + af.file)
-                .then(function(data) {
-                    return {
-                        key: af.key,
-                        title: af.title,
-                        data: data
-                    };
-                })
-                .catch(function(err) {
-                    console.warn('⚠️ Skipped', af.file, '—', err.message);
-                    return {
-                        key: af.key,
-                        title: af.title,
-                        data: {}
-                    };
-                });
-        });
-
-        Promise.all([identitiesPromise, weaponPropsPromise, Promise.all(abilityPromises)])
-            .then(function(results) {
-                var identitiesData  = results[0];
-                var weaponPropsData = results[1];
-                var abilityResults  = results[2];
-
-                var dig = function(obj, key) {
-                    if (obj && obj.rules_master && obj.rules_master[key]) return obj.rules_master[key];
-                    if (obj && obj[key]) return obj[key];
-                    return obj;
-                };
-
-                // ── Normalize ability dictionaries correctly ─────────────────────────────
-// ── Normalize ability dictionaries correctly ─────────────────────────────
-var abilityDict = {};
-
-abilityResults.forEach(function(ar) {
-    var data = ar.data;
-
-    // Handle wrapped format
-    if (data.rules_master && data.rules_master.ability_dictionary) {
-        data = data.rules_master.ability_dictionary;
+        .cc-splash-logo {
+          animation: cc-logo-pulse 2.4s ease-in-out infinite;
+        }
+      `;
+      document.head.appendChild(panelStyle);
     }
 
-    // Handle modular format: { title, abilities }
-    if (data.abilities && typeof data.abilities === 'object') {
-        abilityDict[ar.key] = {
-            title: data.title || ar.key,
-            abilities: data.abilities
-        };
-        return;
+    // ---- LOAD CSS ----
+    // FIX: paths updated from rules/ui/ → ui/ and rules/apps/ → apps/app_faction_builder/
+    if (!document.getElementById('cc-core-ui-styles')) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now())
+        .then(res => res.text())
+        .then(css => {
+          const style = document.createElement('style');
+          style.id = 'cc-core-ui-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Core UI CSS applied!');
+        })
+        .catch(err => console.error('❌ Core CSS load failed:', err));
     }
 
-    // Fallback: raw category object
-    abilityDict[ar.key] = {
-        title: ar.key,
-        abilities: data
+    if (!document.getElementById('cc-faction-builder-styles')) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_faction_builder/cc_app_faction_builder.css?t=' + Date.now())
+        .then(res => res.text())
+        .then(css => {
+          const style = document.createElement('style');
+          style.id = 'cc-faction-builder-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Faction Builder CSS applied!');
+        })
+        .catch(err => console.error('❌ App CSS load failed:', err));
+    }
+
+    if (!document.getElementById('cc-print-styles')) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_print.css?t=' + Date.now())
+        .then(res => res.text())
+        .then(css => {
+          const style = document.createElement('style');
+          style.id = 'cc-print-styles';
+          style.textContent = css;
+          document.head.appendChild(style);
+          console.log('✅ Print CSS applied!');
+        })
+        .catch(() => console.warn('⚠️ cc_print.css not found'));
+    }
+
+    // ---- LOAD STORAGE HELPERS ----
+    // FIX: path updated from rules/src/ → data/src/
+    if (!window.CC_STORAGE) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/storage_helpers.js?t=' + Date.now())
+        .then(res => res.text())
+        .then(code => {
+          const script = document.createElement('script');
+          script.textContent = code;
+          document.head.appendChild(script);
+          console.log('✅ Storage Helpers loaded!');
+        })
+        .catch(err => console.error('❌ Storage Helpers load failed:', err));
+    }
+
+    // ================================
+    // STATE
+    // ================================
+    const state = {
+      currentFaction: null,
+      factionData: {},
+      roster: [],
+      rosterName: 'Unnamed Roster',
+      budget: 500,
+      selectedUnitId: null,
+      builderMode: null,
+      builderTarget: null,
+      builderConfig: { optionalUpgrades: [], supplemental: null },
+      rosterViewMode: 'grid'
     };
-});
 
-// ── Normalize weapon properties correctly ────────────────────────────────
-var normalizeWeaponProperties = function(data) {
-    if (data.rules_master && data.rules_master.weapon_properties) {
-        return data.rules_master.weapon_properties;
+    // ================================
+    // FACTION DATA
+    // ================================
+    const FACTION_FILES = [
+      { id: 'monster_rangers', title: 'Monster Rangers', file: 'faction-monster-rangers-v5.json' },
+      { id: 'liberty_corps',   title: 'Liberty Corps',   file: 'faction-liberty-corps-v2.json'   },
+      { id: 'monsterology',    title: 'Monsterology',     file: 'faction-monsterology-v2.json'    },
+      { id: 'monsters',        title: 'Monsters',         file: 'faction-monsters-v2.json'        },
+      { id: 'shine_riders',    title: 'Shine Riders',     file: 'faction-shine-riders-v2.json'    },
+      { id: 'crow_queen',      title: 'Crow Queen',       file: 'faction-crow-queen.json'         }
+    ];
+
+    const FACTION_TITLES = {
+      monster_rangers: 'Monster Rangers',
+      liberty_corps:   'Liberty Corps',
+      monsterology:    'Monsterology',
+      monsters:        'Monsters',
+      shine_riders:    'Shine Riders',
+      crow_queen:      'Crow Queen'
+    };
+
+    // ================================
+    // FACTION ICON SYSTEM
+    // ================================
+    const FACTION_COLORS = {
+      monster_rangers: '#4caf50',
+      liberty_corps:   '#ef5350',
+      monsterology:    '#9c27b0',
+      monsters:        '#ff7518',
+      shine_riders:    '#ffd600',
+      crow_queen:      '#00bcd4'
+    };
+
+
+    const FACTION_ICON_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
+
+    function factionIconHtml(factionId, size = 32) {
+      if (!factionId) return '';
+      const color = FACTION_COLORS[factionId] || '#ff7518';
+      const src   = `${FACTION_ICON_BASE}${factionId}_logo.svg`;
+      const label = (FACTION_TITLES[factionId] || '?').charAt(0);
+      return `<img
+        src="${src}"
+        class="cc-faction-icon"
+        style="width:${size}px;height:${size}px;--faction-color:${color};"
+        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
+        alt="${esc(factionId)}"
+      /><div style="display:none;width:${size}px;height:${size}px;background:${color}22;border:1px solid ${color};border-radius:50%;align-items:center;justify-content:center;font-size:${Math.round(size * 0.45)}px;font-weight:900;color:${color};">${label}</div>`;
     }
-    if (data.weapon_properties) {
-        return data.weapon_properties;
+
+    // ================================
+    // ABILITY DICTIONARY SYSTEM
+    // ================================
+    const ABILITY_FILES = [
+      '90_ability_dictionary_A.json',
+      '91_ability_dictionary_B.json',
+      '92_ability_dictionary_C.json',
+      '93_ability_dictionary_D.json',
+      '94_ability_dictionary_E.json',
+      '95_ability_dictionary_F.json',
+      '96_ability_dictionary_G.json',
+      '97_ability_dictionary_H.json',
+      '98_ability_dictionary_I.json',
+    ];
+    // FIX: ability base path updated from rules/src/ → data/src/
+    const ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/';
+
+    let _abilityCache    = {};
+    let _abilityFetched  = false;
+    let _abilityFetching = false;
+
+    function ingestAbilityFile(data) {
+      if (!data || typeof data.abilities !== 'object') return;
+      Object.keys(data.abilities).forEach(slug => {
+        const entry = data.abilities[slug];
+        if (!entry || typeof entry !== 'object') return;
+        _abilityCache[slug] = {
+          name:   slugToName(slug),
+          id:     entry._id    || '',
+          timing: entry.timing || '',
+          short:  entry.short  || '',
+          long:   entry.long   || '',
+        };
+      });
     }
-    if (data.properties) {
-        return data.properties;
+
+    function slugToName(slug) {
+      return slug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
-    return data;
-};
 
-// ── Safe dig helper ──────────────────────────────────────────────────────
-var dig = function(obj, key) {
-    if (obj.rules_master && obj.rules_master[key]) return obj.rules_master[key];
-    if (obj[key]) return obj[key];
-    return obj;
-};
-
-// ── FINAL RULES OBJECT ────────────────────────────────────────────────────
-self.state.rules = {
-    rules_master: {
-        unit_identities:    dig(identitiesData, 'unit_identities'),
-        weapon_properties:  normalizeWeaponProperties(weaponPropsData),
-        ability_dictionary: abilityDict
+    function formatTiming(timing) {
+      if (!timing) return '';
+      return timing.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
-};
 
-console.log('✅ Weapon props loaded:', Object.keys(self.state.rules.rules_master.weapon_properties || {}).length);
-console.log('✅ Ability categories:', Object.keys(self.state.rules.rules_master.ability_dictionary || {}));
-
-// ── Normalize weapon properties correctly ────────────────────────────────
-var normalizeWeaponProperties = function(data) {
-    if (data.rules_master && data.rules_master.weapon_properties) {
-        return data.rules_master.weapon_properties;
+    // displayName: converts slug or raw ability names to human-readable labels.
+    // "load_and_carry" -> "Load and Carry"   "GAS_MASK" -> "Gas Mask"
+    const _LC_WORDS = new Set(['and','or','of','the','a','an','in','on','at','to','for','with','by']);
+    function displayName(raw) {
+      if (!raw) return '';
+      const words = String(raw).replace(/_/g, ' ').trim().split(/\s+/);
+      return words.map((w, i) => {
+        const lower = w.toLowerCase();
+        return (i === 0 || !_LC_WORDS.has(lower))
+          ? lower.charAt(0).toUpperCase() + lower.slice(1)
+          : lower;
+      }).join(' ');
     }
-    if (data.weapon_properties) {
-        return data.weapon_properties;
+
+    function loadAbilityDictionaries() {
+      if (_abilityFetched || _abilityFetching) return;
+      _abilityFetching = true;
+      const promises = ABILITY_FILES.map(filename =>
+        fetch(ABILITY_BASE + filename + '?t=' + Date.now())
+          .then(r => r.ok ? r.json() : null)
+          .then(data => { if (data) ingestAbilityFile(data); })
+          .catch(e => console.warn('⚠️ Ability file failed:', filename, e))
+      );
+      Promise.all(promises).then(() => {
+        _abilityFetched  = true;
+        _abilityFetching = false;
+        console.log('[FB] Abilities loaded —', Object.keys(_abilityCache).length, 'entries');
+      });
     }
-    if (data.properties) {
-        return data.properties;
+
+    function lookupAbility(displayName) {
+      if (!displayName) return null;
+      const slug = String(displayName).trim().toLowerCase().replace(/\s+/g, '_');
+      if (_abilityCache[slug]) return _abilityCache[slug];
+      const base = slug.replace(/_\d+$/, '');
+      if (_abilityCache[base]) return _abilityCache[base];
+      const flat = slug.replace(/_/g, '');
+      const keys = Object.keys(_abilityCache);
+      for (const k of keys) {
+        if (k.replace(/_/g, '') === flat) return _abilityCache[k];
+      }
+      const firstWord = slug.split('_')[0];
+      if (firstWord.length >= 4) {
+        for (const k of keys) {
+          if (k === firstWord || k.startsWith(firstWord + '_')) return _abilityCache[k];
+        }
+      }
+      return null;
     }
-    return data;
-};
 
-// ── Safe dig helper ──────────────────────────────────────────────────────
-var dig = function(obj, key) {
-    if (obj.rules_master && obj.rules_master[key]) return obj.rules_master[key];
-    if (obj[key]) return obj[key];
-    return obj;
-};
+    // ================================
+    // SLIDE PANEL MANAGEMENT
+    // ================================
+    const FB_PANEL_IDS = ['fb-ability-panel', 'fb-stat-panel', 'fb-cloud-roster-panel'];
 
-// ── FINAL RULES OBJECT ────────────────────────────────────────────────────
-self.state.rules = {
-    rules_master: {
-        unit_identities:    dig(identitiesData, 'unit_identities'),
-        weapon_properties:  normalizeWeaponProperties(weaponPropsData),
-        ability_dictionary: abilityDict
+    function closeAllSlidePanels() {
+      FB_PANEL_IDS.forEach(id => {
+        const p = document.getElementById(id);
+        if (p) {
+          p.classList.remove('cc-slide-panel-open');
+          setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 300);
+        }
+      });
+      const bd = document.getElementById('fb-panel-backdrop');
+      if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
     }
-};
 
-console.log('✅ Weapon props loaded:', Object.keys(self.state.rules.rules_master.weapon_properties || {}).length);
-console.log('✅ Ability categories:', Object.keys(self.state.rules.rules_master.ability_dictionary || {}));
-                
-                var archetypes = Object.keys(
-                    (self.state.rules.rules_master.unit_identities && self.state.rules.rules_master.unit_identities.archetype_vault) || {}
-                );
-                console.log('✅ Rules ready. Archetypes:', archetypes.join(', '));
-                console.log('✅ Weapon properties loaded:', Object.keys(self.state.rules.rules_master.weapon_properties).length);
-                console.log('✅ Ability categories loaded:', Object.keys(self.state.rules.rules_master.ability_dictionary).join(', '));
+    function installPanelBackdrop() {
+      if (document.getElementById('fb-panel-backdrop')) return;
+      const bd = document.createElement('div');
+      bd.id = 'fb-panel-backdrop';
+      bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
+      bd.addEventListener('click', closeAllSlidePanels);
+      document.body.appendChild(bd);
+    }
 
-                self.refresh();
-            })
-            .catch(function(e) {
-                console.error('❌ Rules failed to load:', e);
-                var root = window.CCFB_FACTORY._rootEl || document.getElementById('faction-studio-root');
-                if (!root) return;
-                root.innerHTML = '';
-                var wrap = document.createElement('div');
-                wrap.style.cssText = 'padding:2rem;color:#c44;font-family:monospace;background:#0e0c09;text-align:center';
-                var heading = document.createElement('strong');
-                heading.textContent = 'Failed to load game rules.';
-                var msg = document.createElement('pre');
-                msg.style.cssText = 'font-size:11px;color:#d4822a;margin:8px 0';
-                msg.textContent = e.message;
-                var btn = document.createElement('button');
-                btn.textContent = '↺ Retry';
-                btn.style.cssText = 'padding:8px 16px;cursor:pointer;margin-top:8px';
-                btn.onclick = function() { window.CCFB_FACTORY.init(); };
-                wrap.appendChild(heading);
-                wrap.appendChild(msg);
-                wrap.appendChild(btn);
-                root.appendChild(wrap);
+    // ================================
+    // UTILITIES
+    // ================================
+    function esc(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function generateId() {
+      return 'u_' + Math.random().toString(36).substr(2, 9);
+    }
+
+    function calculateTotalCost() {
+      return state.roster.reduce((sum, item) => sum + (item.totalCost || 0), 0);
+    }
+
+    function calculateUnitCost(baseUnit, config) {
+      let cost = baseUnit.cost || 0;
+      (config.optionalUpgrades || []).forEach(u => { cost += u.cost || 0; });
+      if (config.supplemental) cost += config.supplemental.cost || 0;
+      return cost;
+    }
+
+    function getMaxAllowed(unit) {
+      const comp = unit.composition || {};
+
+      // Hard cap: unit.unique OR composition.max_count  → use that number, period.
+      // This is for heroes, named characters, etc. Budget size is irrelevant.
+      if (unit.unique === true)          return comp.max_count || 1;
+      if (comp.max_count != null)        return comp.max_count;
+
+      // Scaling limit: 1 per X points of budget.
+      // e.g. per_points:150 at 500 pt budget → floor(500/150) = 3 max.
+      // Guard: if per_points is somehow bigger than the budget,
+      // that still means "1" — not "0" (which would wrongly block purchase).
+      if (comp.per_points) {
+        if (state.budget <= 0) return Infinity;
+        return Math.max(1, Math.floor(state.budget / comp.per_points));
+      }
+
+      return Infinity;
+    }
+
+    function countInRoster(unitName) {
+      return state.roster.filter(r => r.unitName === unitName).length;
+    }
+
+    // ================================
+    // DATA LOADING
+    // FIX: faction base URL updated from factions/ → data/factions/
+    // ================================
+    const FACTION_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/';
+
+    async function loadFaction(factionId) {
+      if (state.factionData[factionId]) return state.factionData[factionId];
+      const factionFile = FACTION_FILES.find(f => f.id === factionId);
+      if (!factionFile) throw new Error(`Unknown faction: ${factionId}`);
+      try {
+        const response = await fetch(`${FACTION_BASE_URL}${factionFile.file}?t=${Date.now()}`);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        state.factionData[factionId] = data;
+        console.log('✅ Faction loaded:', factionId);
+        return data;
+      } catch (e) {
+        console.error('❌ Failed to load faction:', e);
+        alert(`Failed to load faction: ${e.message}`);
+        return null;
+      }
+    }
+
+    async function switchFaction(factionId) {
+      if (!factionId) return;
+      try {
+        const data = await loadFaction(factionId);
+        if (data) {
+          state.currentFaction = factionId;
+          state.roster         = [];
+          state.selectedUnitId = null;
+          state.builderMode    = null;
+          state.builderTarget  = null;
+          state.builderConfig  = { optionalUpgrades: [], supplemental: null };
+          render();
+        }
+      } catch (e) {
+        console.error('❌ Failed to switch faction:', e);
+        alert(`Failed to switch faction: ${e.message}`);
+      }
+    }
+
+    // ================================
+    // LOGIN STATUS
+    // ================================
+    async function updateLoginStatus() {
+      if (!window.CC_STORAGE) return;
+      const statusBar = document.getElementById('cc-login-status');
+      if (!statusBar) return;
+      try {
+        const auth = await window.CC_STORAGE.checkAuth();
+        statusBar.className = auth.loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out';
+        statusBar.innerHTML = auth.loggedIn
+          ? `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`
+          : `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
+      } catch (e) {
+        const bar = document.getElementById('cc-login-status');
+        if (bar) {
+          bar.className = 'cc-login-status logged-out';
+          bar.innerHTML = `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
+        }
+      }
+    }
+
+    // ================================
+    // ABILITY PANEL
+    // ================================
+    window.showAbilityTooltip = function(abilityName, event) {
+      const tooltip = document.getElementById('ability-tooltip');
+      if (!tooltip) return;
+      tooltip.textContent = `Click to view: ${displayName(abilityName)}`;
+      tooltip.style.display = 'block';
+      tooltip.style.left = event.pageX + 12 + 'px';
+      tooltip.style.top  = event.pageY + 12 + 'px';
+    };
+
+    window.hideAbilityTooltip = function() {
+      const tooltip = document.getElementById('ability-tooltip');
+      if (tooltip) tooltip.style.display = 'none';
+    };
+
+    window.showAbilityPanel = function(abilityName) {
+      loadAbilityDictionaries();
+      closeAllSlidePanels();
+      installPanelBackdrop();
+
+      const panel = document.createElement('div');
+      panel.id = 'fb-ability-panel';
+      panel.className = 'cc-slide-panel';
+      panel.style.zIndex = '9999';
+      panel.addEventListener('click', e => e.stopPropagation());
+
+      if (_abilityFetching && !_abilityFetched) {
+        panel.innerHTML = `
+          <div class="cc-slide-panel-header">
+            <h2><i class="fa fa-book"></i> ${esc(displayName(abilityName)).toUpperCase()}</h2>
+            <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
+          </div>
+          <div style="padding:2rem;text-align:center;color:#888;">
+            <div style="font-size:2rem;animation:cc-spin 1s linear infinite;display:inline-block;margin-bottom:.75rem;">⟳</div><br>
+            Loading ability dictionary…
+          </div>`;
+        document.body.appendChild(panel);
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+
+        let retries = 0;
+        const poll = setInterval(() => {
+          retries++;
+          if (_abilityFetched || retries > 26) {
+            clearInterval(poll);
+            const old = document.getElementById('fb-ability-panel');
+            if (old) { old.classList.remove('cc-slide-panel-open'); setTimeout(() => old.remove(), 300); }
+            const bd = document.getElementById('fb-panel-backdrop');
+            if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
+            if (_abilityFetched) window.showAbilityPanel(abilityName);
+          }
+        }, 300);
+        return;
+      }
+
+      const entry = lookupAbility(abilityName);
+
+      const TIMING_COLORS = {
+        'Passive':             '#90a4ae',
+        'Main Action':         '#42a5f5',
+        'Once Per Activation': '#ffd600',
+        'Once Per Round':      '#ff9800',
+        'Once Per Game':       '#ef5350',
+        'Deployment':          '#9c27b0',
+        'Reaction':            '#4caf50',
+      };
+      const timingLabel = entry ? formatTiming(entry.timing) : '';
+      const timingColor = TIMING_COLORS[timingLabel] || '#888';
+
+      let bodyHtml;
+      if (entry) {
+        bodyHtml = `
+          ${timingLabel ? `
+            <div style="display:inline-block;margin-bottom:1.25rem;padding:3px 12px;border-radius:999px;
+                        border:1px solid ${timingColor};color:${timingColor};
+                        font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;">
+              ${timingLabel}
+            </div><br>` : ''}
+          ${entry.short ? `<p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(entry.short)}</p>` : ''}
+          ${entry.long  ? `<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(entry.long)}</p>` : ''}
+          ${entry.id    ? `<div style="margin-top:1.5rem;font-size:.68rem;color:#444;font-family:monospace;">${esc(entry.id)}</div>` : ''}`;
+      } else {
+        bodyHtml = `
+          <p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">
+            No rule entry found for <em style="color:#bbb;">${esc(displayName(abilityName))}</em>.
+          </p>
+          <p style="color:#555;font-size:.82rem;line-height:1.5;margin:0;">
+            Open the Rules Explorer and search for <em>${esc(abilityName.split(' ')[0])}</em>.
+          </p>`;
+      }
+
+      panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+          <h2><i class="fa fa-book"></i> ${esc(displayName(abilityName)).toUpperCase()}</h2>
+          <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
+        </div>
+        <div style="padding:1.5rem;">${bodyHtml}</div>`;
+
+      document.body.appendChild(panel);
+      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    };
+
+    window.closeAbilityPanel = function() {
+      closeAllSlidePanels();
+    };
+
+    // ================================
+    // STAT BADGE PANEL
+    // ================================
+    const STAT_DEFINITIONS = {
+      Q: {
+        label: 'Quality',
+        color: '#2c5282',
+        short: 'How capable this unit is at everything it does.',
+        long:  'Quality (Q) is the core dice stat. When this unit attacks, uses abilities, or tests Morale, it rolls dice equal to its Quality score. Higher Q means more dice, more consistent results. Q also sets the threshold for critical failures and special ability triggers. The + suffix is a reminder that Quality dice are rolled as a pool, not compared to a fixed number.'
+      },
+      D: {
+        label: 'Defense',
+        color: '#9b2c2c',
+        short: 'How hard this unit is to damage.',
+        long:  'Defense (D) sets how many dice the target rolls when an attack lands. Each die that rolls 5 or higher cancels one hit. A unit with D2 rolls 2 dice per hit — on average one hit is cancelled. D0 means no defense dice at all: every hit lands. The + suffix is a reminder that defense dice are added to the cancel pool.'
+      },
+      M: {
+        label: 'Move',
+        color: '#276749',
+        short: 'How far this unit can travel per Move action.',
+        long:  'Move (M) is the distance in inches this unit can travel when it takes a Move action. A unit gets two actions per activation — it can move twice, attack twice, or split them. Move is also used to calculate charge range, Disengage distances, and some ability triggers. Terrain may reduce effective Move.'
+      },
+      R: {
+        label: 'Range',
+        color: '#744210',
+        short: 'Maximum distance for ranged attacks.',
+        long:  'Range (R) is the maximum distance in inches for this unit\'s ranged attack. A dash (—) means the unit has no ranged attack and must fight in melee. Range is measured from base edge to base edge. Some abilities modify effective range. Line of Sight is always required unless an ability states otherwise.'
+      }
+    };
+
+    window.showStatPanel = function(statKey) {
+      closeAllSlidePanels();
+      installPanelBackdrop();
+
+      const def = STAT_DEFINITIONS[statKey];
+      if (!def) return;
+
+      const panel = document.createElement('div');
+      panel.id = 'fb-stat-panel';
+      panel.className = 'cc-slide-panel';
+      panel.style.zIndex = '9999';
+      panel.addEventListener('click', e => e.stopPropagation());
+
+      panel.innerHTML = `
+        <div class="cc-slide-panel-header">
+          <h2>
+            <span style="display:inline-flex;align-items:center;gap:.6rem;">
+              <span style="background:${def.color};color:#fff;font-size:.85rem;font-weight:900;
+                           padding:3px 9px;border-radius:3px;letter-spacing:.05em;">${statKey}</span>
+              ${esc(def.label).toUpperCase()}
+            </span>
+          </h2>
+          <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
+        </div>
+        <div style="padding:1.5rem;">
+          <p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(def.short)}</p>
+          <p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(def.long)}</p>
+        </div>`;
+
+      document.body.appendChild(panel);
+      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+    };
+
+    // ================================
+    // STAT BADGES
+    // ================================
+    function getEffectiveStats(baseItem, config) {
+      const stats = {
+        quality: baseItem.quality || 0,
+        defense: baseItem.defense || 0,
+        move:    baseItem.move    || 0,
+        range:   baseItem.range   || 0
+      };
+      if (config && config.optionalUpgrades) {
+        config.optionalUpgrades.forEach(upgrade => {
+          if (upgrade.stat_modifiers) {
+            Object.entries(upgrade.stat_modifiers).forEach(([stat, val]) => {
+              if (stats[stat] !== undefined) stats[stat] += val;
             });
-    },
+          }
+        });
+      }
+      if (config && config.supplemental && config.supplemental.stat_modifiers) {
+        Object.entries(config.supplemental.stat_modifiers).forEach(([stat, val]) => {
+          if (stats[stat] !== undefined) stats[stat] += val;
+        });
+      }
+      return stats;
+    }
 
-    refresh: function() {
-        var root = window.CCFB_FACTORY._rootEl || document.getElementById('faction-studio-root');
-        if (!root) {
-            console.error("❌ faction-studio-root not found");
-            return;
-        }
+    function buildStatBadges(unit, config, compact = false) {
+      const base = { q: unit.quality || 0, d: unit.defense || 0, m: unit.move || 0, r: unit.range || 0 };
+      const mods = { q: 0, d: 0, m: 0, r: 0 };
 
-        if (!this.state.rules) {
-            console.warn("⚠️ Rules not loaded yet");
-            root.innerHTML = '<div id="faction-studio-app"><div class="cc-empty-state">Loading rules...</div></div>';
-            return;
-        }
+      ((config && config.optionalUpgrades) || []).forEach(u => {
+        const sm = u.stat_modifiers || {};
+        if (sm.quality) mods.q += sm.quality;
+        if (sm.defense) mods.d += sm.defense;
+        if (sm.move)    mods.m += sm.move;
+        if (sm.range)   mods.r += sm.range;
+      });
+      if (config && config.supplemental && config.supplemental.stat_modifiers) {
+        const sm = config.supplemental.stat_modifiers;
+        if (sm.quality) mods.q += sm.quality;
+        if (sm.defense) mods.d += sm.defense;
+        if (sm.move)    mods.m += sm.move;
+        if (sm.range)   mods.r += sm.range;
+      }
 
-        if (!document.getElementById('faction-studio-app')) {
-            root.innerHTML =
-                '<div id="faction-studio-app">' +
-                    '<div class="studio-header">' +
-                        '<h1 class="studio-title">FACTION STUDIO</h1>' +
-                        '<p class="studio-subtitle">A Faction Creation Tool for Coffin Canyon</p>' +
-                    '</div>' +
-                    '<div id="studio-container" class="fb-grid">' +
-                        '<div id="faction-overview"></div>' +
-                        '<div id="unit-builder"></div>' +
-                        '<div id="unit-card"></div>' +
-                    '</div>' +
-                    '<div id="slide-panel-container"></div>' +
-                '</div>';
-        }
+      const mod = { q: base.q + mods.q, d: base.d + mods.d, m: base.m + mods.m, r: base.r + mods.r };
 
-        var app = document.getElementById('faction-studio-app');
-        if (this.state.selectedUnit === null) {
-            app.classList.add("no-unit");
-            app.classList.remove("has-unit");
+      const badge = (label, val, baseVal, cls, statKey) => {
+        const modified   = val !== baseVal;
+        const suffix     = (label === 'Q' || label === 'D') ? '+' : '"';
+        const displayVal = (val === 0 && label === 'R') ? '-' : val;
+        const sizeClass  = compact ? 'compact' : '';
+        return `
+          <div class="cc-stat-badge stat-${cls}-border ${modified ? 'stat-modified' : ''} ${sizeClass}"
+               onclick="event.stopPropagation(); showStatPanel('${statKey}')"
+               style="cursor:pointer;"
+               title="Click to see ${label} rules">
+            <span class="cc-stat-label stat-${cls}">${label}</span>
+            <span class="cc-stat-value">${displayVal}${suffix}</span>
+          </div>`;
+      };
+
+      return `
+        <div class="stat-badge-flex ${compact ? 'compact' : ''}">
+          ${badge('Q', mod.q, base.q, 'q', 'Q')}
+          ${badge('D', mod.d, base.d, 'd', 'D')}
+          ${badge('M', mod.m, base.m, 'm', 'M')}
+          ${badge('R', mod.r, base.r, 'r', 'R')}
+        </div>`;
+    }
+
+    // ================================
+    // RENDERING
+    // ================================
+    function renderLibrary() {
+      if (!state.currentFaction) {
+        return '<div class="cc-muted p-3">Select a faction to see units</div>';
+      }
+      const faction = state.factionData[state.currentFaction];
+      if (!faction || !faction.units) {
+        return '<div class="cc-muted p-3">No units available</div>';
+      }
+
+      return faction.units.map(unit => {
+        const maxAllowed = getMaxAllowed(unit);
+        const inRoster   = countInRoster(unit.name);
+        const atLimit    = maxAllowed !== Infinity && inRoster >= maxAllowed;
+
+        const limitHint = maxAllowed !== Infinity
+          ? `<span style="font-size:0.72rem;font-weight:600;margin-left:4px;color:${atLimit ? '#ff4444' : '#888'};">(${inRoster}/${maxAllowed})</span>`
+          : '';
+
+        return `
+          <div class="cc-list-item${atLimit ? ' cc-list-item-at-limit' : ''}" onclick="selectLibraryUnit('${esc(unit.name)}')">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="cc-list-title">${esc(unit.name)}${limitHint}</div>
+                <div class="cc-list-sub">${esc(unit.type)}</div>
+              </div>
+              <div class="fw-bold" style="color: var(--cc-primary)">${unit.cost} ₤</div>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function renderRoster() {
+      if (state.roster.length === 0) {
+        return '<div class="cc-muted p-3">No units in roster</div>';
+      }
+
+      if (state.rosterViewMode === 'list') {
+        return state.roster.map(item => {
+          const isSelected = state.selectedUnitId === item.id;
+          const abilities  = item.abilities || [];
+          return `
+            <div class="cc-roster-list-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
+             <div class="roster-list-header">
+              <div>
+              <div class="roster-list-name">${esc(item.name)}</div>
+              ${item.config && item.config.supplemental
+              ? `<div class="grid-item-version">${esc(item.config.supplemental.name)}</div>`
+              : ''}
+    <div class="roster-list-type">${esc(item.type)}</div>
+  </div>
+  <div class="cc-detail-cost">
+    <i class="fa-solid fa-tag"></i>
+    <span class="cost-value">${item.totalCost} ₤</span>
+  </div>
+</div>
+              ${buildStatBadges(item, item.config, true)}
+              ${abilities.length > 0 ? `
+                <div class="roster-list-abilities">
+                  ${abilities.map(a => {
+                    const n = typeof a === 'string' ? a : (a.name || '');
+                    return `<span class="ability-tag"
+                      onmouseover="showAbilityTooltip('${esc(n)}', event)"
+                      onmouseout="hideAbilityTooltip()"
+                      onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
+                      style="cursor:pointer;">${esc(displayName(n))}</span>`;
+                  }).join('')}
+                </div>` : ''}
+              <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
+                <i class="fa fa-trash"></i>
+              </button>
+            </div>`;
+        }).join('');
+      }
+
+      // Grid view
+      return `
+        <div class="cc-roster-grid">
+          ${state.roster.map(item => {
+            const isSelected = state.selectedUnitId === item.id;
+            const abilities  = item.abilities || [];
+            return `
+              <div class="cc-roster-grid-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
+                <button class="grid-item-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
+                  <i class="fa fa-trash"></i>
+                </button>
+                <div class="grid-item-name">${esc(item.name)}</div>
+                ${item.config && item.config.supplemental
+                  ? `<div class="grid-item-version">${esc(item.config.supplemental.name)}</div>`
+                  : ''}
+                <div class="grid-item-type">${esc(item.type)}</div>
+                ${buildStatBadges(item, item.config, true)}
+                ${abilities.length > 0 ? `
+                  <div class="grid-item-abilities">
+                    ${abilities.slice(0, 3).map(a => {
+                      const n = typeof a === 'string' ? a : (a.name || '');
+                      return `<span class="ability-tag-small"
+                        onmouseover="showAbilityTooltip('${esc(n)}', event)"
+                        onmouseout="hideAbilityTooltip()"
+                        onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
+                        style="cursor:pointer;">${esc(displayName(n))}</span>`;
+                    }).join('')}
+                    ${abilities.length > 3 ? `<span class="ability-tag-small" style="opacity:0.6">+${abilities.length - 3}</span>` : ''}
+                  </div>` : ''}
+              </div>`;
+          }).join('')}
+        </div>`;
+    }
+
+    function getActiveConfig() {
+      if (state.builderMode === 'library') return state.builderConfig;
+      if (state.builderMode === 'roster') {
+        const item = state.roster.find(r => r.id === state.builderTarget);
+        return item ? item.config : null;
+      }
+      return null;
+    }
+
+    function updateRosterCost() {
+      if (state.builderMode !== 'roster') return;
+      const item = state.roster.find(r => r.id === state.builderTarget);
+      if (!item) return;
+      const faction  = state.factionData[state.currentFaction];
+      const baseUnit = faction && faction.units && faction.units.find(function(u) { return u.name === item.unitName; });
+      if (!baseUnit) return;
+      item.totalCost = calculateUnitCost(baseUnit, item.config);
+    }
+
+    function renderSupplemental(unit, config) {
+      if (!unit.supplemental_abilities || !unit.supplemental_abilities.length) return '';
+      const selected = config.supplemental;
+      return `
+        <div class="mt-3">
+          <div class="cc-field-label">Supplemental (Choose Version)</div>
+          <select class="form-select cc-input" onchange="selectSupplemental(this.value)">
+            <option value="">-- Select Version --</option>
+            ${unit.supplemental_abilities.map(supp => `
+              <option value="${esc(supp.name)}" ${(selected && selected.name === supp.name) ? 'selected' : ''}>
+                ${esc(supp.name)} ${supp.cost ? `(+${supp.cost}₤)` : ''}
+              </option>`).join('')}
+          </select>
+          ${selected ? `
+            <div class="mt-2 p-2" style="background:rgba(255,117,24,.1);border-left:3px solid var(--cc-primary);border-radius:4px;">
+              <div class="small">${esc(selected.effect || '')}</div>
+              ${selected.stat_modifiers ? `
+                <div class="small mt-1" style="color:var(--cc-primary);font-weight:600;">
+                  Modifiers: ${Object.entries(selected.stat_modifiers).map(([k,v]) => `${k.toUpperCase()} ${v > 0 ? '+' : ''}${v}`).join(', ')}
+                </div>` : ''}
+            </div>` : ''}
+        </div>`;
+    }
+
+    function renderOptionalUpgrades(unit, config) {
+      if (!unit.optional_upgrades || !unit.optional_upgrades.length) return '';
+      var rows = unit.optional_upgrades.map(function(upg, idx) {
+        var isSelected = (config.optionalUpgrades && config.optionalUpgrades.some(function(u){ return u.name === upg.name; }));
+        return '<div class="cc-upgrade-row' + (isSelected ? ' selected' : '') + '" ' +
+               'data-upg-idx="' + idx + '" onclick="toggleOptionalUpgrade(this)">' +
+               '<div class="cc-upgrade-check">' + (isSelected ? '&#10003;' : '') + '</div>' +
+               '<div style="flex:1;">' +
+               '<div class="fw-bold" style="font-size:.9rem;">' + esc(upg.name) + '</div>' +
+               (upg.effect ? '<div class="small cc-muted">' + esc(upg.effect) + '</div>' : '') +
+               '</div>' +
+               '<div style="color:var(--cc-primary);font-weight:700;">' + (upg.cost ? '+' + upg.cost + ' ₤' : 'Free') + '</div>' +
+               '</div>';
+      });
+      return '<div class="mt-3">' +
+             '<div class="cc-field-label">Optional Upgrades</div>' +
+             rows.join('') +
+             '</div>';
+    }
+
+    function renderBuilder() {
+      if (!state.builderMode || !state.builderTarget) {
+        return `<div class="cc-muted p-3">${state.currentFaction
+          ? 'Select a unit from the library to build, or click an existing roster unit to edit.'
+          : 'Select a faction first.'}</div>`;
+      }
+
+      const faction = state.factionData[state.currentFaction];
+      if (!faction) return '<div class="cc-muted p-3">Loading faction data…</div>';
+
+      let unit, config;
+      if (state.builderMode === 'library') {
+        unit   = (faction.units && faction.units.find(function(u){ return u.name === state.builderTarget; }));
+        config = state.builderConfig;
+      } else {
+        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
+        if (!rosterItem) return '<div class="cc-muted p-3">Unit not found</div>';
+        unit   = (faction.units && faction.units.find(function(u){ return u.name === rosterItem.unitName; }));
+        config = rosterItem.config;
+      }
+      if (!unit) return '<div class="cc-muted p-3">Unit not found in faction data</div>';
+
+      const previewCost  = calculateUnitCost(unit, config);
+      const currentTotal = calculateTotalCost();
+      const maxAllowed   = getMaxAllowed(unit);
+      const inRoster     = countInRoster(unit.name);
+
+      const wouldExceedBudget = state.budget > 0 && state.builderMode === 'library' && (currentTotal + previewCost > state.budget);
+      const wouldExceedLimit  = maxAllowed !== Infinity && state.builderMode === 'library' && inRoster >= maxAllowed;
+      const canAdd            = !wouldExceedBudget && !wouldExceedLimit;
+
+      return `
+        <div class="cc-unit-detail">
+          <div class="detail-header-left">
+            ${factionIconHtml(state.currentFaction, 28)}
+            <div>
+              <div class="cc-detail-title">${esc(unit.name)}</div>
+              <div class="cc-detail-sub">${esc(unit.type)}</div>
+            </div>
+          </div>
+          <div class="cc-detail-cost">${previewCost} ₤</div>
+
+          ${buildStatBadges(unit, config)}
+
+          ${unit.lore ? `<div class="u-lore">"${esc(unit.lore)}"</div>` : ''}
+
+          ${unit.weapon ? `
+            <div class="mt-3">
+              <div class="cc-field-label">Weapon</div>
+              <div><strong>${esc(unit.weapon)}</strong>${(unit.weapon_properties && unit.weapon_properties.length)
+                ? ` — ${unit.weapon_properties.map(p => esc(p)).join(', ')}` : ''}</div>
+            </div>` : ''}
+
+          ${(unit.abilities && unit.abilities.length > 0) ? `
+            <div class="mt-3">
+              <div class="cc-field-label">Abilities</div>
+              ${unit.abilities.map(a => {
+                const n = typeof a === 'string' ? a : (a.name || '');
+                return `<div class="mb-1">• <strong class="ability-link"
+                  onmouseover="showAbilityTooltip('${esc(n)}', event)"
+                  onmouseout="hideAbilityTooltip()"
+                  onclick="showAbilityPanel('${esc(n)}')"
+                  style="cursor:pointer;">${esc(displayName(n))}</strong></div>`;
+              }).join('')}
+            </div>` : ''}
+
+          ${renderSupplemental(unit, config)}
+          ${renderOptionalUpgrades(unit, config)}
+
+          ${wouldExceedBudget ? `
+            <div class="cc-warning-bar">
+              ⚠️ Adding this unit would exceed your <strong>${state.budget} ₤</strong> budget!
+              This unit costs <strong>${previewCost} ₤</strong> and you only have <strong>${state.budget - currentTotal} ₤</strong> left.
+            </div>` : ''}
+
+          ${wouldExceedLimit ? `
+            <div class="cc-warning-bar">
+              ⚠️ Roster limit reached! At <strong>${state.budget} ₤</strong>, this unit type is capped at <strong>${maxAllowed}</strong>
+              ${unit.unique || (unit.composition && unit.composition.max_count) ? `${unit.name} is a unique character — only ${maxAllowed} per roster.` : `(1 per ${unit.composition.per_points} ₤). Raise your budget to add more.`}
+            </div>` : ''}
+
+          ${state.builderMode === 'library' ? `
+            <button class="btn btn-primary w-100 mt-4" onclick="addUnitToRoster()"
+              ${!canAdd ? 'disabled style="opacity:0.45;cursor:not-allowed;"' : ''}>
+              <i class="fa fa-plus"></i> ADD TO ROSTER
+            </button>` : `
+            <button class="btn btn-success w-100 mt-4" onclick="saveRosterUnit()">
+              <i class="fa fa-save"></i> SAVE CHANGES
+            </button>`}
+        </div>`;
+    }
+
+    function render() {
+      const selectorIconEl = document.getElementById('cc-faction-selector-icon');
+      if (selectorIconEl) {
+        if (state.currentFaction) {
+          selectorIconEl.innerHTML = factionIconHtml(state.currentFaction, 28);
+          selectorIconEl.style.display = 'flex';
         } else {
-            app.classList.add("has-unit");
-            app.classList.remove("no-unit");
+          selectorIconEl.innerHTML = '';
+          selectorIconEl.style.display = 'none';
         }
+      }
 
-        this.renderRoster();
-        this.renderBuilder();
-        this.renderCard();
-        this.renderSlidePanel();
-    },
+      const libraryTitleEl = document.getElementById('cc-library-panel-title');
+      if (libraryTitleEl) {
+        libraryTitleEl.innerHTML = state.currentFaction
+          ? `<div class="cc-panel-title-with-icon">${factionIconHtml(state.currentFaction, 22)}<span>${esc(FACTION_TITLES[state.currentFaction])} · Units</span></div>`
+          : '<span>Unit Library</span>';
+      }
 
-    renderRoster: function() {
-        var target = document.getElementById('faction-overview');
-        if (!target) return;
+      const rosterTitleEl = document.getElementById('cc-roster-panel-title');
+      if (rosterTitleEl) {
+        rosterTitleEl.innerHTML = state.currentFaction
+          ? `<div class="cc-panel-title-with-icon">${factionIconHtml(state.currentFaction, 22)}<span>Your Roster</span></div>`
+          : '<span>Your Roster</span>';
+      }
 
-        var self = this;
-        var unitsHtml = this.state.currentFaction.units.map(function(u, i) {
-            var selected = self.state.selectedUnit === i ? 'cc-item-selected' : '';
-            return '<div class="cc-roster-item ' + selected + '" onclick="window.CCFB_FACTORY.selectUnit(' + i + ')">' +
-                '<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">' +
-                    '<div>' +
-                        '<div class="u-name">' + self.escapeAttr(u.name) + '</div>' +
-                        '<div class="u-type">' + self.escapeAttr(String(u.type).toUpperCase()) + '</div>' +
-                    '</div>' +
-                    '<div class="unit-cost">' + self.calculateUnitCost(u) + '₤</div>' +
-                '</div>' +
-            '</div>';
-        }).join('');
+      const libraryListEl   = document.getElementById('cc-library-list');
+      const builderTargetEl = document.getElementById('cc-builder-target');
+      const rosterListEl    = document.getElementById('cc-roster-list');
+      const budgetEl        = document.getElementById('cc-budget-display');
 
-        var unitsListHtml = this.state.currentFaction.units.length > 0 ? unitsHtml :
-            '<div class="cc-empty-state" style="padding: 20px;">No units yet. Click "+ NEW UNIT" to start.</div>';
+      if (libraryListEl)   libraryListEl.innerHTML   = renderLibrary();
+      if (builderTargetEl) builderTargetEl.innerHTML = renderBuilder();
+      if (rosterListEl)    rosterListEl.innerHTML    = renderRoster();
 
-        var isRoster = (this.state.activeFactionTab !== 'info');
-
-        target.innerHTML =
-            '<div class="cc-panel">' +
-                '<div class="cc-panel-header" style="padding:0">' +
-                    '<div style="display:flex">' +
-                        '<button class="cc-tab-btn' + (isRoster ? ' cc-tab-active' : '') + '" onclick="window.CCFB_FACTORY.setFactionTab(\'roster\')">ROSTER</button>' +
-                        '<button class="cc-tab-btn' + (!isRoster ? ' cc-tab-active' : '') + '" onclick="window.CCFB_FACTORY.setFactionTab(\'info\')">FACTION INFO</button>' +
-                    '</div>' +
-                '</div>' +
-                '<div class="panel-content">' +
-                    (isRoster
-                        ? '<div class="form-group">' +
-                              '<label class="small">FACTION NAME</label>' +
-                              '<input type="text" class="cc-input w-100" value="' + this.escapeAttr(this.state.currentFaction.faction) + '" ' +
-                                  'onfocus="if(this.value===\'New Faction\')this.value=\'\'" ' +
-                                  'onchange="window.CCFB_FACTORY.updateFaction(this.value)">' +
-                          '</div>' +
-                          '<div class="unit-list">' + unitsListHtml + '</div>' +
-                          '<button class="btn-add-small w-100 mt-3" onclick="window.CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
-                          '<div class="import-section">' +
-                              '<label class="small">LOAD FROM REPO</label>' +
-                              '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.loadFactionFromGitHub(this.value);this.value=\'\'">' +
-                                  '<option value="">— Select a faction file —</option>' +
-                                  (this.state.factionFiles.length > 0
-                                      ? this.state.factionFiles.map(function(f) {
-                                          return '<option value="' + self.escapeAttr(f.url) + '">' + self.escapeAttr(f.name.replace('.json','').replace(/-/g,' ').replace(/_/g,' ')) + '</option>';
-                                        }).join('')
-                                      : '<option disabled>Loading list…</option>'
-                                  ) +
-                              '</select>' +
-                              '<label class="small" style="margin-top:10px">OR PASTE JSON</label>' +
-                              '<textarea class="cc-input w-100 import-textarea" onchange="window.CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
-                              '<button class="btn-add-small w-100 mt-2" onclick="window.CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
-                          '</div>'
-                        : this.renderFactionInfo()
-                    ) +
-                '</div>' +
-            '</div>';
-    },
-
-    setFactionTab: function(tab) {
-        this.state.activeFactionTab = tab;
-        this.renderRoster();
-    },
-
-    renderFactionInfo: function() {
-        var f    = this.state.currentFaction;
-        var intro = f.introduction || {};
-        var ident = f.faction_identity || {};
-        var rep   = ident.reputation || {};
-        var mech  = f.faction_mechanics || {};
-        var csr   = f.canyon_state_relationships || {};
-        var scen  = f.scenario_preferences || {};
-
-        var esc = function(v) {
-            return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        };
-        var textarea = function(path, val, rows) {
-            rows = rows || 2;
-            return '<textarea class="cc-input w-100" rows="' + rows + '" onchange="window.CCFB_FACTORY.updateFactionField(\'' + path + '\',this.value)">' +
-                esc(val) + '</textarea>';
-        };
-        var textinput = function(path, val) {
-            return '<input type="text" class="cc-input w-100" value="' + esc(val) + '" onchange="window.CCFB_FACTORY.updateFactionField(\'' + path + '\',this.value)">';
-        };
-        var listEditor = function(path, items) {
-            var rows = (items || []).map(function(item, i) {
-                return '<div style="display:flex;gap:4px;margin-bottom:4px">' +
-                    '<input type="text" class="cc-input" style="flex:1" value="' + esc(item) + '" onchange="window.CCFB_FACTORY.updateFactionListItem(\'' + path + '\',' + i + ',this.value)">' +
-                    '<button class="btn-add-small" style="padding:4px 8px;width:auto" onclick="window.CCFB_FACTORY.removeFactionListItem(\'' + path + '\',' + i + ')">✕</button>' +
-                '</div>';
-            }).join('');
-            return rows + '<button class="btn-add-small w-100" style="margin-top:4px" onclick="window.CCFB_FACTORY.addFactionListItem(\'' + path + '\')">+ Add</button>';
-        };
-        var fg = function(label, content) {
-            return '<div class="form-group"><label class="small">' + label + '</label>' + content + '</div>';
-        };
-        var infoSec = function(id, title, body) {
-            return '<div style="border:1px solid var(--cc-border);margin-bottom:8px">' +
-                '<div style="padding:8px 10px;background:var(--cc-bg-mid);cursor:pointer;display:flex;justify-content:space-between" onclick="window.CCFB_FACTORY.toggleInfoSec(\'' + id + '\')">' +
-                    '<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--cc-primary)">' + title + '</span>' +
-                    '<span id="fis-tog-' + id + '">▼</span>' +
-                '</div>' +
-                '<div id="fis-' + id + '" style="display:none;padding:12px">' + body + '</div>' +
-            '</div>';
-        };
-
-        var ALL_STATES = ['Held','Strangewild','Poisoned','Haunted','Exalted','Lawless','Liberated','Extracted','Rusted'];
-        var findReason = function(arr, state) {
-            var match = (arr || []).find(function(s){ return s.state === state; });
-            return match ? (match.reason || '') : '';
-        };
-        var PREF = (csr.preferred_states || []).map(function(s){ return s.state; });
-        var NEUT = (csr.neutral_states || []).map(function(s){ return s.state; });
-        var OPP  = (csr.opposed_states || []).map(function(s){ return s.state; });
-
-        var stateRows = ALL_STATES.map(function(state) {
-            var cur = PREF.indexOf(state) !== -1 ? 'preferred'
-                : NEUT.indexOf(state) !== -1 ? 'neutral'
-                : OPP.indexOf(state)  !== -1 ? 'opposed' : 'none';
-            var reason = cur === 'preferred' ? findReason(csr.preferred_states, state)
-                : cur === 'neutral' ? findReason(csr.neutral_states, state)
-                : cur === 'opposed' ? findReason(csr.opposed_states, state) : '';
-            var OPTS = [
-                { val:'preferred', color:'#3a7a4a' },
-                { val:'neutral',   color:'#4a6e8a' },
-                { val:'opposed',   color:'#b03030' },
-                { val:'none',      color:'#555' }
-            ];
-            return '<div style="margin-bottom:8px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--cc-border)">' +
-                '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">' +
-                    '<span style="font-weight:700;font-size:11px;min-width:80px">' + state + '</span>' +
-                    OPTS.map(function(o) {
-                        var isActive = cur === o.val;
-                        return '<button class="btn-add-small" style="padding:3px 8px;width:auto;font-size:9px;' +
-                            (isActive ? 'background:'+o.color+';color:#fff;border-color:'+o.color+';' : '') + '" onclick="window.CCFB_FACTORY.setCanyonState(\'' + state + '\',\'' + o.val + '\')">' +
-                            o.val.toUpperCase() + '</button>';
-                    }).join('') +
-                '</div>' +
-                (cur !== 'none'
-                    ? '<input type="text" class="cc-input w-100" placeholder="Reason…" value="' + esc(reason) + '" style="font-size:10px" onchange="window.CCFB_FACTORY.setCanyonStateReason(\'' + state + '\',this.value)">'
-                    : '') +
-            '</div>';
-        }).join('');
-
-        var COMMON_TAGS = ['adaptive','aggressive','befriend','cavalry','defensive','elite','environmental',
-            'harmony','heavy','infiltrators','lawless','light','melee','military','mystical',
-            'protectors','ranged','ritual','scholars','specialists','stealth','support','survival',
-            'swift','tech','undead','versatile'];
-        var currentTags = f.faction_tags || [];
-        var tagChips = currentTags.map(function(tag, i) {
-            return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--cc-primary-dim);border:1px solid var(--cc-primary);padding:2px 8px;font-size:9px;margin:2px">' +
-                esc(tag) + '<span style="cursor:pointer" onclick="window.CCFB_FACTORY.removeFactionTag(' + i + ')">✕</span></span>';
-        }).join('');
-        var unusedTags = COMMON_TAGS.filter(function(t){ return currentTags.indexOf(t) === -1; });
-        var tagEditor =
-            '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">' + (tagChips || '<span style="color:var(--cc-text-muted);font-size:10px">No tags yet</span>') + '</div>' +
-            '<div style="display:flex;gap:4px">' +
-                '<select id="fs-tag-sel" class="cc-select" style="flex:1">' +
-                    '<option value="">— Common tags —</option>' +
-                    unusedTags.map(function(t){ return '<option value="'+esc(t)+'">'+esc(t)+'</option>'; }).join('') +
-                '</select>' +
-                '<button class="btn-add-small" style="width:auto;padding:4px 10px" onclick="window.CCFB_FACTORY.addFactionTagFromSel()">Add</button>' +
-            '</div>' +
-            '<div style="display:flex;gap:4px;margin-top:4px">' +
-                '<input type="text" id="fs-tag-custom" class="cc-input" style="flex:1" placeholder="Custom tag…">' +
-                '<button class="btn-add-small" style="width:auto;padding:4px 10px" onclick="window.CCFB_FACTORY.addFactionTagCustom()">+</button>' +
-            '</div>';
-
-        return infoSec('intro', 'Introduction',
-            fg('Title',       textinput('introduction.title',       intro.title)) +
-            fg('Tagline',     textinput('introduction.tagline',     intro.tagline)) +
-            fg('Description', textarea('introduction.description',  intro.description, 4)) +
-            fg('Philosophy',  textarea('introduction.philosophy',   intro.philosophy, 3)) +
-            fg('History',     textarea('introduction.history',      intro.history, 4))
-        ) +
-        infoSec('ident', 'Faction Identity',
-            fg('Core Values',             listEditor('faction_identity.core_values',             ident.core_values)) +
-            fg('What They Fight For',     listEditor('faction_identity.what_they_fight_for',     ident.what_they_fight_for)) +
-            fg('What They Fight Against', listEditor('faction_identity.what_they_fight_against', ident.what_they_fight_against)) +
-            fg('Allies See Them As',      textinput('faction_identity.reputation.allies_see_them_as',      rep.allies_see_them_as)) +
-            fg('Enemies See Them As',     textinput('faction_identity.reputation.enemies_see_them_as',     rep.enemies_see_them_as)) +
-            fg('Monsters See Them As',    textinput('faction_identity.reputation.monsters_see_them_as',    rep.monsters_see_them_as)) +
-            fg('The Canyon Sees Them As', textinput('faction_identity.reputation.the_canyon_sees_them_as', rep.the_canyon_sees_them_as))
-        ) +
-        infoSec('mech', 'Faction Mechanics',
-            fg('Signature Ability',      textinput('faction_mechanics.signature_ability',             mech.signature_ability)) +
-            fg('Signature Description',  textarea('faction_mechanics.signature_ability_description',  mech.signature_ability_description, 3)) +
-            fg('Playstyle',              textarea('faction_mechanics.playstyle',                      mech.playstyle, 3)) +
-            fg('Strengths',              listEditor('faction_mechanics.strengths',  mech.strengths)) +
-            fg('Weaknesses',             listEditor('faction_mechanics.weaknesses', mech.weaknesses))
-        ) +
-        infoSec('csr', 'Canyon State Relationships', stateRows) +
-        infoSec('tags', 'Faction Tags', tagEditor) +
-        infoSec('scen', 'Scenario Preferences',
-            fg('Ideal Scenarios',       listEditor('scenario_preferences.ideal_scenarios',       scen.ideal_scenarios)) +
-            fg('Challenging Scenarios', listEditor('scenario_preferences.challenging_scenarios', scen.challenging_scenarios))
-        );
-    },
-
-    toggleInfoSec: function(id) {
-        var el  = document.getElementById('fis-' + id);
-        var tog = document.getElementById('fis-tog-' + id);
-        if (!el) return;
-        var isOpen = el.style.display !== 'none';
-        el.style.display = isOpen ? 'none' : 'block';
-        if (tog) tog.textContent = isOpen ? '▼' : '▲';
-    },
-
-    updateFactionField: function(path, value) {
-        var parts = path.split('.');
-        var obj = this.state.currentFaction;
-        for (var i = 0; i < parts.length - 1; i++) {
-            if (!obj[parts[i]]) obj[parts[i]] = {};
-            obj = obj[parts[i]];
+      var builderLayout = root.querySelector('.cc-faction-builder');
+      if (builderLayout) {
+        if (state.rosterViewMode === 'list') {
+          builderLayout.classList.add('cc-list-mode');
+        } else {
+          builderLayout.classList.remove('cc-list-mode');
         }
-        obj[parts[parts.length - 1]] = value;
-    },
+      }
 
-    updateFactionListItem: function(path, idx, value) {
-        var parts = path.split('.');
-        var obj = this.state.currentFaction;
-        for (var i = 0; i < parts.length - 1; i++) {
-            obj = (obj[parts[i]] || {});
-        }
-        var arr = obj[parts[parts.length - 1]];
-        if (Array.isArray(arr)) arr[idx] = value;
-    },
+      if (budgetEl) {
+        const total      = calculateTotalCost();
+        const overBudget = state.budget > 0 && total > state.budget;
+        budgetEl.innerHTML   = state.budget > 0 ? `${total} / ${state.budget} ₤` : `${total} ₤`;
+        budgetEl.style.color = overBudget ? '#ff4444' : 'var(--cc-primary)';
+      }
+    }
 
-    addFactionListItem: function(path) {
-        var parts = path.split('.');
-        var obj = this.state.currentFaction;
-        for (var i = 0; i < parts.length - 1; i++) {
-            if (!obj[parts[i]]) obj[parts[i]] = {};
-            obj = obj[parts[i]];
-        }
-        var key = parts[parts.length - 1];
-        if (!Array.isArray(obj[key])) obj[key] = [];
-        obj[key].push('');
-        this.renderRoster();
-    },
+    // ================================
+    // USER ACTIONS
+    // ================================
+    window.changeFaction    = function(factionId) { switchFaction(factionId); };
+    window.changeBudget     = function(val) { state.budget = parseInt(val) || 0; render(); };
+    window.updateRosterName = function(val) { state.rosterName = val; };
 
-    removeFactionListItem: function(path, idx) {
-        var parts = path.split('.');
-        var obj = this.state.currentFaction;
-        for (var i = 0; i < parts.length - 1; i++) {
-            obj = (obj[parts[i]] || {});
-        }
-        var arr = obj[parts[parts.length - 1]];
-        if (Array.isArray(arr)) {
-            arr.splice(idx, 1);
-            this.renderRoster();
-        }
-    },
+    window.selectLibraryUnit = function(unitName) {
+      state.builderMode    = 'library';
+      state.builderTarget  = unitName;
+      state.selectedUnitId = null;
+      state.builderConfig  = { optionalUpgrades: [], supplemental: null };
+      render();
+    };
 
-    setCanyonState: function(state, relationship) {
-        var csr = this.state.currentFaction.canyon_state_relationships;
-        if (!csr) {
-            csr = { preferred_states: [], neutral_states: [], opposed_states: [] };
-            this.state.currentFaction.canyon_state_relationships = csr;
-        }
-        ['preferred_states','neutral_states','opposed_states'].forEach(function(key) {
-            csr[key] = (csr[key] || []).filter(function(s){ return s.state !== state; });
-        });
-        if (relationship === 'preferred') csr.preferred_states.push({ state: state, reason: '' });
-        if (relationship === 'neutral')   csr.neutral_states.push({ state: state, reason: '' });
-        if (relationship === 'opposed')   csr.opposed_states.push({ state: state, reason: '' });
-        this.renderRoster();
-    },
+    window.selectRosterUnit = function(rosterId) {
+      state.builderMode    = 'roster';
+      state.builderTarget  = rosterId;
+      state.selectedUnitId = rosterId;
+      render();
+    };
 
-    setCanyonStateReason: function(state, reason) {
-        var csr = this.state.currentFaction.canyon_state_relationships || {};
-        ['preferred_states','neutral_states','opposed_states'].forEach(function(key) {
-            (csr[key] || []).forEach(function(s){
-                if (s.state === state) s.reason = reason;
-            });
-        });
-    },
+    window.selectSupplemental = function(suppName) {
+      const config = getActiveConfig();
+      if (!config) return;
+      const faction = state.factionData[state.currentFaction];
+      const target  = state.builderMode === 'library'
+        ? state.builderTarget
+        : (function(){ var _r = state.roster.find(function(r){ return r.id === state.builderTarget; }); return _r && _r.unitName; }());
+      const unit = (faction && faction.units && faction.units.find(function(u){ return u.name === target; }));
+      if (!unit || !unit.supplemental_abilities) return;
+      config.supplemental = suppName === '' ? null
+        : Object.assign({}, unit.supplemental_abilities.find(function(s){ return s.name === suppName; }));
+      updateRosterCost();
+      render();
+    };
 
-    addFactionTagFromSel: function() {
-        var sel = document.getElementById('fs-tag-sel');
-        if (!sel || !sel.value) return;
-        var tags = this.state.currentFaction.faction_tags || [];
-        if (tags.indexOf(sel.value) === -1) tags.push(sel.value);
-        this.state.currentFaction.faction_tags = tags;
-        this.renderRoster();
-    },
+    window.toggleOptionalUpgrade = function(el) {
+      var upgIdx = parseInt(el.getAttribute('data-upg-idx'), 10);
+      var config = getActiveConfig();
+      if (!config) return;
+      if (!config.optionalUpgrades) config.optionalUpgrades = [];
 
-    addFactionTagCustom: function() {
-        var inp = document.getElementById('fs-tag-custom');
-        if (!inp || !inp.value.trim()) return;
-        var tag  = inp.value.trim().toLowerCase().replace(/\s+/g, '_');
-        var tags = this.state.currentFaction.faction_tags || [];
-        if (tags.indexOf(tag) === -1) tags.push(tag);
-        this.state.currentFaction.faction_tags = tags;
-        inp.value = '';
-        this.renderRoster();
-    },
-
-    removeFactionTag: function(idx) {
-        (this.state.currentFaction.faction_tags || []).splice(idx, 1);
-        this.renderRoster();
-    },
-
-    renderBuilder: function() {
-        var target = document.getElementById('unit-builder');
-        if (!target) return;
-
-        if (this.state.selectedUnit === null) {
-            target.innerHTML = '<div class="cc-panel"><div class="cc-empty-state"><i class="fa fa-crosshairs"></i> CHOOSE A UNIT TO BEGIN</div></div>';
-            return;
-        }
-
-        var u = this.state.currentFaction.units[this.state.selectedUnit];
-        var archVault = ((this.state.rules || {}).rules_master || {}).unit_identities.archetype_vault || {};
-        var self = this;
-
-        var step = function(num, title, content) {
-            var isActive   = self.state.activeStep === num;
-            var isComplete = num < self.state.activeStep;
-            var isFuture   = num > self.state.activeStep;
-
-            if (self.state.isPasted) {
-                isActive = true;
-                isFuture = false;
+      var faction = state.factionData[state.currentFaction];
+      if (!faction) return;
+      var unitName = state.builderMode === 'library'
+        ? state.builderTarget
+        : (function() {
+            for (var j = 0; j < state.roster.length; j++) {
+              if (state.roster[j].id === state.builderTarget) return state.roster[j].unitName;
             }
-
-            if (isFuture && !self.state.isPasted) return '';
-
-            var stepClass = 'builder-step';
-            if (isActive)   stepClass += ' step-active';
-            if (isComplete) stepClass += ' step-complete';
-
-            var checkmark = isComplete ? ' ✓' : '';
-
-            return '<div class="' + stepClass + '">' +
-                '<div class="step-header" onclick="window.CCFB_FACTORY.setStep(' + num + ')">' +
-                    '<div class="step-number">' + num + '</div>' +
-                    '<div class="step-title">' + title + checkmark + '</div>' +
-                '</div>' +
-                '<div class="step-content" style="display:' + (isActive ? 'block' : 'none') + '">' +
-                    content +
-                '</div>' +
-            '</div>';
-        };
-
-        var typeOptions = Object.keys(archVault).map(function(k) {
-            var selected = u.type === k ? 'selected' : '';
-            return '<option value="' + self.escapeAttr(k) + '" ' + selected + '>' + self.escapeAttr(k.toUpperCase()) + '</option>';
-        }).join('');
-
-        var qualityOptions = [1,2,3,4,5,6].map(function(n) {
-            var selected = parseInt(u.quality, 10) === n ? 'selected' : '';
-            return '<option value="' + n + '" ' + selected + '>' + n + '+</option>';
-        }).join('');
-
-        var defenseOptions = [1,2,3,4,5,6].map(function(n) {
-            var selected = parseInt(u.defense, 10) === n ? 'selected' : '';
-            return '<option value="' + n + '" ' + selected + '>' + n + '+</option>';
-        }).join('');
-
-        var moveOptions = '';
-        for (var i = 1; i <= 24; i++) {
-            var selected = parseInt(u.move, 10) === i ? 'selected' : '';
-            moveOptions += '<option value="' + i + '" ' + selected + '>' + i + '"</option>';
+            return null;
+          }());
+      var unit = null;
+      if (faction.units) {
+        for (var k = 0; k < faction.units.length; k++) {
+          if (faction.units[k].name === unitName) { unit = faction.units[k]; break; }
         }
+      }
+      if (!unit || !unit.optional_upgrades) return;
+      var upg = unit.optional_upgrades[upgIdx];
+      if (!upg) return;
 
-        var rangeOptions = [0,3,6,12,18,24].map(function(n) {
-            var selected = parseInt(u.range, 10) === n ? 'selected' : '';
-            var label = n === 0 ? 'Melee' : n + '"';
-            return '<option value="' + n + '" ' + selected + '>' + label + '</option>';
-        }).join('');
+      var existingIdx = -1;
+      for (var i = 0; i < config.optionalUpgrades.length; i++) {
+        if (config.optionalUpgrades[i].name === upg.name) { existingIdx = i; break; }
+      }
+      if (existingIdx > -1) {
+        config.optionalUpgrades.splice(existingIdx, 1);
+      } else {
+        config.optionalUpgrades.push(Object.assign({}, upg));
+      }
+      updateRosterCost();
+      render();
+    };
 
-        var weaponPropsHtml = u.weapon_properties.length > 0 ?
-            u.weapon_properties.map(function(p, i) {
-                var meta = self.getWeaponMeta(p);
-                var label = meta ? meta.name : self.prettifyKey(p);
-                return '<span class="property-badge" title="' + self.escapeAttr(meta ? (meta.long || meta.short || '') : '') + '" onclick="window.CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + self.escapeAttr(label) + ' ✕</span>';
-            }).join('') :
-            '<span class="no-items">None added</span>';
+    window.addUnitToRoster = function() {
+      if (!state.currentFaction || !state.builderTarget) return;
+      const faction = state.factionData[state.currentFaction];
+      const unit    = (faction && faction.units && faction.units.find(function(u){ return u.name === state.builderTarget; }));
+      if (!unit) return;
 
-        var abilitiesHtml = u.abilities.length > 0 ?
-            u.abilities.map(function(a, i) {
-                var meta = self.getAbilityMeta(a);
-                var label = meta ? meta.name : self.prettifyKey(a);
-                return '<div class="ability-item" title="' + self.escapeAttr(meta ? (meta.long || meta.short || '') : '') + '" onclick="window.CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + self.escapeAttr(label) + ' ✕</div>';
-            }).join('') :
-            '<span class="no-items">None added</span>';
+      const config    = JSON.parse(JSON.stringify(state.builderConfig));
+      const totalCost = calculateUnitCost(unit, config);
 
-        target.innerHTML = '<div class="cc-panel">' +
-            '<div class="cc-panel-header">UNIT BUILDER</div>' +
-            '<div class="panel-content">' +
-            step(1, "IDENTITY & TYPE",
-                '<div class="form-group">' +
-                    '<label class="small">UNIT NAME</label>' +
-                    '<input type="text" class="cc-input w-100" value="' + this.escapeAttr(u.name) + '" onfocus="if(this.value===\'New Unit\')this.value=\'\'" onchange="window.CCFB_FACTORY.updateUnit(\'name\', this.value)">' +
-                '</div>' +
-                '<div class="form-group">' +
-                    '<label class="small">UNIT TYPE (ARCHETYPE)</label>' +
-                    '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'type\', this.value)">' +
-                        typeOptions +
-                    '</select>' +
-                '</div>' +
-                '<div class="type-rule-display">' +
-                    '<i class="fa fa-info-circle"></i> ' +
-                    this.escapeAttr(archVault[u.type] ? archVault[u.type].identity : 'Select a type') +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-3" onclick="window.CCFB_FACTORY.setStep(2)">CONFIRM TYPE →</button>'
-            ) +
-            step(2, "ATTRIBUTES",
-                '<div class="stats-grid">' +
-                    '<div class="form-group">' +
-                        '<label class="small">QUALITY</label>' +
-                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'quality\', this.value)">' + qualityOptions + '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">DEFENSE</label>' +
-                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'defense\', this.value)">' + defenseOptions + '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">MOVE</label>' +
-                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'move\', this.value)">' + moveOptions + '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">RANGE</label>' +
-                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'range\', this.value)">' + rangeOptions + '</select>' +
-                    '</div>' +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(3)">CONFIRM STATS →</button>'
-            ) +
-            step(3, "WEAPON POWERS",
-                '<button class="btn-add-small w-100" onclick="window.CCFB_FACTORY.openSlidePanel(\'weapon\')">+ ADD WEAPON POWER</button>' +
-                '<div class="abilities-display">' +
-                    '<div class="abilities-label">CURRENT POWERS:</div>' +
-                    '<div class="abilities-list">' + weaponPropsHtml + '</div>' +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(4)">CONTINUE →</button>'
-            ) +
-            step(4, "UNIT ABILITIES",
-                '<button class="btn-add-small w-100" onclick="window.CCFB_FACTORY.openSlidePanel(\'ability\')">+ ADD UNIT ABILITY</button>' +
-                '<div class="abilities-display">' +
-                    '<div class="abilities-label">CURRENT ABILITIES:</div>' +
-                    '<div class="abilities-list">' + abilitiesHtml + '</div>' +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(5)">CONTINUE →</button>'
-            ) +
-            step(5, "SUPPLEMENTAL ABILITIES (OPTIONAL)",
-                '<p class="step-hint">Add gear, alternate versions, or special upgrades. Examples: Witch-Stitched Armor, Baby variant, Relic options.</p>' +
-                '<div class="supplemental-form">' +
-                    '<div class="form-group">' +
-                        '<label class="small">NAME</label>' +
-                        '<input type="text" id="supp-name" class="cc-input w-100" placeholder="e.g. Witch-Stitched Armor">' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">TYPE</label>' +
-                        '<select id="supp-type" class="cc-select w-100">' +
-                            '<option value="Gear">Gear</option>' +
-                            '<option value="Type">Type</option>' +
-                            '<option value="Relic">Relic</option>' +
-                            '<option value="Upgrade">Upgrade</option>' +
-                        '</select>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">EFFECT</label>' +
-                        '<textarea id="supp-effect" class="cc-input w-100" rows="2" placeholder="Describe what this does..."></textarea>' +
-                    '</div>' +
-                    '<div class="form-group">' +
-                        '<label class="small">STAT MODIFIERS (optional)</label>' +
-                        '<div class="stat-modifier-grid">' +
-                            '<label><input type="checkbox" id="mod-quality"> Quality ' +
-                                '<select id="mod-quality-val" class="cc-select-tiny">' +
-                                    '<option value="2">+2</option><option value="1" selected>+1</option>' +
-                                    '<option value="-1">-1</option><option value="-2">-2</option>' +
-                                '</select>' +
-                            '</label>' +
-                            '<label><input type="checkbox" id="mod-defense"> Defense ' +
-                                '<select id="mod-defense-val" class="cc-select-tiny">' +
-                                    '<option value="2">+2</option><option value="1" selected>+1</option>' +
-                                    '<option value="-1">-1</option><option value="-2">-2</option>' +
-                                '</select>' +
-                            '</label>' +
-                            '<label><input type="checkbox" id="mod-move"> Move ' +
-                                '<select id="mod-move-val" class="cc-select-tiny">' +
-                                    '<option value="6">+6</option><option value="4">+4</option><option value="2" selected>+2</option>' +
-                                    '<option value="-2">-2</option><option value="-4">-4</option><option value="-6">-6</option>' +
-                                '</select>' +
-                            '</label>' +
-                            '<label><input type="checkbox" id="mod-range"> Range ' +
-                                '<select id="mod-range-val" class="cc-select-tiny">' +
-                                    '<option value="12">+12</option><option value="6" selected>+6</option>' +
-                                    '<option value="-6">-6</option><option value="-12">-12</option>' +
-                                '</select>' +
-                            '</label>' +
-                        '</div>' +
-                    '</div>' +
-                    '<button class="btn-add-small w-100" onclick="window.CCFB_FACTORY.addSupplemental()">+ ADD SUPPLEMENTAL ABILITY</button>' +
-                '</div>' +
-                '<div class="abilities-display mt-3">' +
-                    '<div class="abilities-label">CURRENT SUPPLEMENTAL ABILITIES:</div>' +
-                    '<div class="abilities-list">' +
-                        (u.supplemental_abilities.length > 0 ?
-                            u.supplemental_abilities.map(function(s, i) {
-                                return '<div class="supplemental-item" onclick="window.CCFB_FACTORY.removeSupplemental(' + i + ')">' +
-                                    '<strong>' + self.escapeAttr(s.name) + '</strong>' + (s.cost > 0 ? ' (' + s.cost + '₤)' : '') + ' <span class="supp-type-badge">' + self.escapeAttr(s.type) + '</span>' +
-                                    '<div class="supp-effect">' + self.escapeAttr(s.effect) + '</div>' +
-                                    (s.stat_modifiers ? '<div class="supp-mods">Modifiers: ' + self.escapeAttr(JSON.stringify(s.stat_modifiers)) + '</div>' : '') +
-                                    '<span class="remove-badge">✕ Remove</span>' +
-                                '</div>';
-                            }).join('')
-                        : '<span class="no-items">None added</span>') +
-                    '</div>' +
-                '</div>' +
-                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(6)">CONTINUE →</button>'
-            ) +
-            step(6, "LORE & FINALIZE",
-                '<div class="form-group">' +
-                    '<label class="small">UNIT LORE (OPTIONAL)</label>' +
-                    '<textarea class="cc-input w-100" rows="4" placeholder="A brief description of this unit..." onchange="window.CCFB_FACTORY.updateUnit(\'lore\', this.value)">' + this.escapeAttr(u.lore) + '</textarea>' +
-                '</div>' +
-                '<div class="button-group">' +
-                    '<button class="btn-add-small btn-success" onclick="window.CCFB_FACTORY.saveAndNew()">✓ SAVE UNIT</button>' +
-                    '<button class="btn-add-small btn-danger" onclick="window.CCFB_FACTORY.delUnit()">DELETE</button>' +
-                '</div>'
-            ) +
-            '</div>' +
+      if (state.budget > 0) {
+        const currentTotal = calculateTotalCost();
+        if (currentTotal + totalCost > state.budget) {
+          alert(`⚠️ Budget exceeded!\n\n${unit.name} costs ${totalCost} ₤.\nYou have ${state.budget - currentTotal} ₤ remaining.\n\nRaise your budget or remove a unit first.`);
+          return;
+        }
+      }
+
+      const maxAllowed = getMaxAllowed(unit);
+      const inRoster   = countInRoster(unit.name);
+      if (maxAllowed !== Infinity && inRoster >= maxAllowed) {
+        const limitReason = (unit.unique || (unit.composition && unit.composition.max_count))
+          ? `${unit.name} is unique — only ${maxAllowed} per roster.`
+          : `At ${state.budget} ₤ you can field ${maxAllowed} × ${unit.name} ${unit.unique || (unit.composition && unit.composition.max_count) ? `${unit.name} is a unique character — only ${maxAllowed} per roster.` : `(1 per ${unit.composition.per_points} ₤). Raise your budget to add more.`}`;
+        alert('⚠️ Roster limit reached!\n\n' + limitReason);
+        return;
+      }
+
+      const rosterItem = {
+        id:        generateId(),
+        unitName:  unit.name,
+        name:      unit.name,
+        type:      unit.type,
+        quality:   unit.quality,
+        defense:   unit.defense,
+        move:      unit.move,
+        range:     unit.range,
+        weapon:    unit.weapon,
+        lore:      unit.lore || '',
+        abilities: unit.abilities || [],
+        config,
+        totalCost
+      };
+
+      state.roster.push(rosterItem);
+      state.builderMode    = 'roster';
+      state.builderTarget  = rosterItem.id;
+      state.selectedUnitId = rosterItem.id;
+      state.builderConfig  = { optionalUpgrades: [], supplemental: null };
+      render();
+    };
+
+    window.saveRosterUnit = function() { render(); };
+
+    window.removeRosterUnit = function(rosterId) {
+      state.roster = state.roster.filter(r => r.id !== rosterId);
+      if (state.selectedUnitId === rosterId) {
+        state.builderMode    = null;
+        state.builderTarget  = null;
+        state.selectedUnitId = null;
+        state.builderConfig  = { optionalUpgrades: [], supplemental: null };
+      }
+      render();
+    };
+
+    window.clearRoster = function() {
+      if (!confirm('Are you sure you want to clear your entire roster?')) return;
+      state.roster         = [];
+      state.builderMode    = null;
+      state.builderTarget  = null;
+      state.selectedUnitId = null;
+      state.builderConfig  = { optionalUpgrades: [], supplemental: null };
+      render();
+    };
+
+    window.toggleRosterView = function(mode) {
+      state.rosterViewMode = mode;
+      render();
+    };
+
+    window.printRoster = function() {
+      if (state.roster.length === 0) { alert('No units in roster to print!'); return; }
+      const total       = calculateTotalCost();
+      const factionName = FACTION_TITLES[state.currentFaction] || state.currentFaction || 'Unknown';
+
+      const printContent = `<!DOCTYPE html>
+<html>
+<head>
+  <title>${esc(state.rosterName)} – ${factionName}</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Source+Sans+3:wght@400;600;700&display=swap">
+  <style>
+    :root { --cc-primary: #000; }
+    body { font-family: "Source Sans 3", Arial, sans-serif; padding: 20px; background: #fff; color: #000; margin: 0; }
+    h1 { font-family: 'Bungee', sans-serif; font-size: 22pt; border-bottom: 2px solid #000; margin-bottom: 16px; padding-bottom: 8px; }
+    .roster-meta { font-size: 10pt; color: #444; margin-bottom: 3px; }
+    .unit-list { margin-top: 16px; }
+    .unit { display: flex; align-items: flex-start; gap: 14px; border-bottom: 1px solid #ccc; padding: 10px 0; page-break-inside: avoid; }
+    .unit:last-child { border-bottom: none; }
+    .unit-left { flex: 1; min-width: 0; }
+    .unit-right { min-width: 60px; text-align: right; }
+    .unit-name { font-size: 11pt; font-weight: 700; }
+    .unit-cost { font-weight: 700; font-size: 11pt; white-space: nowrap; }
+    .unit-type { color: #555; font-size: 8pt; text-transform: uppercase; margin-bottom: 4px; letter-spacing: .05em; }
+    .lore { font-style: italic; color: #666; font-size: 8pt; margin: 3px 0; border-left: 2px solid #ccc; padding-left: 5px; }
+    .stat-badges { display: flex; gap: 4px; margin: 4px 0; }
+    .stat-badge { border: 1px solid #000; padding: 1px 4px; border-radius: 3px; font-size: 8pt; font-weight: 700; }
+    .abilities { margin-top: 4px; }
+    .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 7.5pt; }
+    .upgrades { margin-top: 4px; font-size: 8pt; color: #444; }
+    .ability-defs-section { margin-top: 28px; border-top: 2px solid #000; padding-top: 14px; }
+    .ability-defs-section h2 { font-family: 'Bungee', sans-serif; font-size: 14pt; margin-bottom: 10px; }
+    .ability-def { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd; break-inside: avoid; }
+    .ability-def:last-child { border-bottom: none; }
+    .ability-def-name { font-weight: 700; font-size: 10pt; margin-bottom: 2px; }
+    .ability-def-timing { background: #222; color: #fff; font-size: 7.5pt; padding: 1px 5px; border-radius: 3px; margin-right: 5px; font-weight: 600; text-transform: uppercase; }
+    .ability-def-short { font-style: italic; color: #555; font-size: 8.5pt; margin-bottom: 3px; }
+    .ability-def-long { font-size: 9pt; color: #222; line-height: 1.5; }
+    @media print { .unit, .ability-def { page-break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <h1>${esc(state.rosterName)}</h1>
+  <div class="roster-meta"><strong>Faction:</strong> ${factionName}</div>
+  <div class="roster-meta"><strong>Total:</strong> ${total} ₤${state.budget > 0 ? ` / ${state.budget} ₤` : ' (Unlimited)'}</div>
+  <div class="roster-meta"><strong>Units:</strong> ${state.roster.length}</div>
+  <div class="unit-list">
+    ${state.roster.map(function(item) {
+      var abilities = item.abilities || [];
+      var ps = getEffectiveStats(item, item.config);
+      return '<div class="unit">' +
+        '<div class="unit-left">' +
+          '<div class="unit-name">' + esc(item.name) + '</div>' +
+          ((item.config && item.config.supplemental) ? '<div style="font-size:10px;color:#ff7518;font-weight:600;margin-bottom:3px;">' + esc(item.config.supplemental.name) + '</div>' : '') +
+          '<div class="unit-type">' + esc(item.type) + '</div>' +
+          (item.lore ? '<div class="lore">"' + esc(item.lore) + '"</div>' : '') +
+          '<div class="stat-badges">' +
+            '<span class="stat-badge">Q ' + ps.quality + '+</span> ' +
+            '<span class="stat-badge">D ' + ps.defense + '+</span> ' +
+            '<span class="stat-badge">M ' + ps.move + '"</span> ' +
+            '<span class="stat-badge">R ' + (ps.range === 0 ? '\u2013' : ps.range + '"') + '</span>' +
+          '</div>' +
+          (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
+          ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="upgrades"><strong>Upgrades:</strong> ' + item.config.optionalUpgrades.map(function(u){ return esc(u.name); }).join(', ') + '</div>' : '') +
+        '</div>' +
+        '<div class="unit-right"><span class="unit-cost">' + item.totalCost + ' ₤</span></div>' +
+      '</div>';
+    }).join('')}
+  </div>
+
+  ${(function() {
+    var seen = {};
+    var allAbilityNames = [];
+    state.roster.forEach(function(item) {
+      (item.abilities || []).forEach(function(a) {
+        var name = typeof a === 'string' ? a : (a.name || '');
+        if (name && !seen[name]) { seen[name] = true; allAbilityNames.push(name); }
+      });
+    });
+    var defs = [];
+    allAbilityNames.forEach(function(name) {
+      var entry = lookupAbility(name);
+      if (entry && (entry.long || entry.short)) defs.push({ name: name, entry: entry });
+    });
+    if (!defs.length) return '';
+    defs.sort(function(a, b) { return a.name.localeCompare(b.name); });
+    return '<div class="ability-defs-section"><h2>Ability Definitions</h2>' +
+      defs.map(function(d) {
+        var timing = d.entry.timing ? '<span class="ability-def-timing">' + esc(d.entry.timing.replace(/_/g,' ')) + '</span> ' : '';
+        return '<div class="ability-def">' +
+          '<div class="ability-def-name">' + timing + esc(d.name) + '</div>' +
+          (d.entry.short ? '<div class="ability-def-short">' + esc(d.entry.short) + '</div>' : '') +
+          (d.entry.long  ? '<div class="ability-def-long">'  + esc(d.entry.long)  + '</div>' : '') +
         '</div>';
-    },
+      }).join('') + '</div>';
+  }())}
+</body>
+</html>`;
 
-    renderCard: function() {
-        var target = document.getElementById('unit-card');
-        if (!target) return;
+      const pw = window.open('', '_blank');
+      pw.document.write(printContent);
+      pw.document.close();
+      pw.focus();
+      setTimeout(() => pw.print(), 500);
+    };
 
-        if (this.state.selectedUnit === null) {
-            target.innerHTML = "";
-            return;
-        }
+    // ================================
+    // IMPORT / EXPORT
+    // ================================
+    window.exportRoster = function() {
+      const exportData = {
+        name:      state.rosterName,
+        faction:   state.currentFaction,
+        budget:    state.budget,
+        roster:    state.roster,
+        totalCost: calculateTotalCost(),
+        savedAt:   new Date().toISOString()
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = (state.rosterName || 'roster').replace(/\s+/g, '_') + '.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    };
 
-        var self = this;
-        var u = this.state.currentFaction.units[this.state.selectedUnit];
-        var arch = (((this.state.rules || {}).rules_master || {}).unit_identities.archetype_vault || {})[u.type] || {};
-
-        var weaponPropsHtml = u.weapon_properties.length > 0 ?
-            '<div class="unit-card-section">' +
-                '<div class="section-label"><i class="fa fa-crosshairs"></i> WEAPON POWERS</div>' +
-                '<div class="weapon-properties">' +
-                    u.weapon_properties.map(function(p, i) {
-                        var meta = self.getWeaponMeta(p);
-                        var label = meta ? meta.name : self.prettifyKey(p);
-                        return '<span class="property-badge" title="' + self.escapeAttr(meta ? (meta.long || meta.short || '') : '') + '" onclick="window.CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + self.escapeAttr(label) + ' ✕</span>';
-                    }).join('') +
-                '</div>' +
-            '</div>' : '';
-
-        var abilitiesHtml = u.abilities.length > 0 ?
-            '<div class="unit-card-section">' +
-                '<div class="section-label"><i class="fa fa-bolt"></i> ABILITIES</div>' +
-                '<div class="weapon-properties">' +
-                    u.abilities.map(function(a, i) {
-                        var meta = self.getAbilityMeta(a);
-                        var label = meta ? meta.name : self.prettifyKey(a);
-                        return '<span class="property-badge" title="' + self.escapeAttr(meta ? (meta.long || meta.short || '') : '') + '" onclick="window.CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + self.escapeAttr(label) + ' ✕</span>';
-                    }).join('') +
-                '</div>' +
-            '</div>' : '';
-
-        var loreHtml = u.lore ?
-            '<div class="unit-card-section">' +
-                '<div class="lore-text">"' + this.escapeAttr(u.lore) + '"</div>' +
-            '</div>' : '';
-
-        var supplementalHtml = u.supplemental_abilities.length > 0 ?
-            '<div class="unit-card-section">' +
-                '<div class="section-label"><i class="fa fa-star"></i> SUPPLEMENTAL ABILITIES</div>' +
-                u.supplemental_abilities.map(function(s) {
-                    var modsDisplay = '';
-                    if (s.stat_modifiers) {
-                        modsDisplay = '<div class="supplemental-card-mods"><i class="fa fa-chart-line"></i> ';
-                        var modParts = [];
-                        if (s.stat_modifiers.quality) {
-                            var newQ = u.quality + s.stat_modifiers.quality;
-                            modParts.push('Q: ' + u.quality + '+ → ' + newQ + '+');
-                        }
-                        if (s.stat_modifiers.defense) {
-                            var newD = u.defense + s.stat_modifiers.defense;
-                            modParts.push('D: ' + u.defense + '+ → ' + newD + '+');
-                        }
-                        if (s.stat_modifiers.move) {
-                            var newM = u.move + s.stat_modifiers.move;
-                            modParts.push('M: ' + u.move + '" → ' + newM + '"');
-                        }
-                        if (s.stat_modifiers.range) {
-                            var newR = u.range + s.stat_modifiers.range;
-                            modParts.push('R: ' + (u.range === 0 ? 'M' : u.range + '"') + ' → ' + (newR === 0 ? 'M' : newR + '"'));
-                        }
-                        modsDisplay += self.escapeAttr(modParts.join(' | ')) + '</div>';
-                    }
-
-                    return '<div class="supplemental-card">' +
-                        '<div class="supplemental-card-header">' +
-                            '<strong>' + self.escapeAttr(s.name) + '</strong>' +
-                            (s.cost > 0 ? ' <span class="supp-cost">(+' + s.cost + '₤)</span>' : '') +
-                            ' <span class="supp-type-badge">' + self.escapeAttr(s.type) + '</span>' +
-                        '</div>' +
-                        '<div class="supplemental-card-effect">' + self.escapeAttr(s.effect) + '</div>' +
-                        modsDisplay +
-                    '</div>';
-                }).join('') +
-            '</div>' : '';
-
-        target.innerHTML =
-            '<div class="cc-panel">' +
-                '<div class="cc-panel-header">UNIT PREVIEW</div>' +
-                '<div class="panel-content">' +
-                    '<div class="unit-card-preview">' +
-                        '<div class="unit-card-header">' +
-                            '<div class="unit-card-name">' + this.escapeAttr(u.name) + '</div>' +
-                            '<div class="unit-card-type">' + this.escapeAttr(String(u.type).toUpperCase()) + '</div>' +
-                        '</div>' +
-                        '<div class="unit-card-cost">' +
-                            '<div class="cost-label">ESTIMATED COST</div>' +
-                            '<div class="cost-value">' + this.calculateUnitCost(u) + '₤</div>' +
-                        '</div>' +
-                        '<div class="stat-badge-flex">' +
-                            '<div class="cc-stat-badge stat-q-border">' +
-                                '<span class="cc-stat-label stat-q">Q</span>' +
-                                '<span class="cc-stat-value">' + u.quality + '+</span>' +
-                            '</div>' +
-                            '<div class="cc-stat-badge stat-d-border">' +
-                                '<span class="cc-stat-label stat-d">D</span>' +
-                                '<span class="cc-stat-value">' + u.defense + '+</span>' +
-                            '</div>' +
-                            '<div class="cc-stat-badge stat-m-border">' +
-                                '<span class="cc-stat-label stat-m">M</span>' +
-                                '<span class="cc-stat-value">' + u.move + '"</span>' +
-                            '</div>' +
-                            '<div class="cc-stat-badge stat-r-border">' +
-                                '<span class="cc-stat-label stat-r">R</span>' +
-                                '<span class="cc-stat-value">' + (u.range === 0 ? 'M' : u.range + '"') + '</span>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="unit-card-section">' +
-                            '<div class="section-label"><i class="fa fa-shield"></i> TYPE RULE</div>' +
-                            '<strong>' + this.escapeAttr(arch.type_rule || 'Innate') + '</strong>' +
-                            '<div class="ability-effect">' + this.escapeAttr(arch.effect || 'No special type effect') + '</div>' +
-                        '</div>' +
-                        weaponPropsHtml +
-                        abilitiesHtml +
-                        supplementalHtml +
-                        loreHtml +
-                    '</div>' +
-                '</div>' +
-            '</div>';
-    },
-
-    renderSlidePanel: function() {
-        var target = document.getElementById('slide-panel-container');
-        if (!target) return;
-
-        if (!this.state.activeModal) {
-            target.innerHTML = "";
-            return;
-        }
-
-        var isWeapon = this.state.activeModal === 'weapon';
-        var weaponProps = this.getWeaponCatalog();
-        var abilityDict = this.getAbilityCatalog();
-
-        var cardsHtml = '';
-
-        if (isWeapon) {
-            var weaponKeys = Object.keys(weaponProps).sort(function(a, b) {
-                var an = (weaponProps[a].name || a).toLowerCase();
-                var bn = (weaponProps[b].name || b).toLowerCase();
-                return an.localeCompare(bn);
-            });
-
-            cardsHtml = weaponKeys.map(function(key) {
-                var item = weaponProps[key] || {};
-                var displayName = item.name || window.CCFB_FACTORY.prettifyKey(key);
-                var displayEffect = item.long || item.short || 'No description available';
-
-                return '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\', \'' + window.CCFB_FACTORY.escapeJsString(key) + '\')">' +
-                    '<div class="ability-card-name">' + window.CCFB_FACTORY.escapeAttr(displayName) + '</div>' +
-                    '<div class="ability-card-effect">' + window.CCFB_FACTORY.escapeAttr(displayEffect) + '</div>' +
-                '</div>';
-            }).join('');
-        } else {
-            for (var cat in abilityDict) {
-                if (!Object.prototype.hasOwnProperty.call(abilityDict, cat)) continue;
-
-                var category = abilityDict[cat] || {};
-                var categoryTitle = category.title || this.prettifyKey(cat);
-                var bucket = category.abilities || {};
-
-                cardsHtml += '<div class="category-header">' + this.escapeAttr(categoryTitle) + '</div>';
-
-                var keys = Object.keys(bucket).sort(function(a, b) {
-                    var an = (bucket[a].name || a).toLowerCase();
-                    var bn = (bucket[b].name || b).toLowerCase();
-                    return an.localeCompare(bn);
-                });
-
-                for (var i = 0; i < keys.length; i++) {
-                    var key = keys[i];
-                    var item = bucket[key] || {};
-                    var displayName = item.name || this.prettifyKey(key);
-                    var displayEffect = item.long || item.short || 'No description available';
-
-                    cardsHtml += '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'abilities\', \'' + this.escapeJsString(key) + '\')">' +
-                        '<div class="ability-card-name">' + this.escapeAttr(displayName) + '</div>' +
-                        '<div class="ability-card-effect">' + this.escapeAttr(displayEffect) + '</div>' +
-                    '</div>';
-                }
-            }
-        }
-
-        target.innerHTML =
-            '<div class="cc-slide-panel cc-slide-panel-open">' +
-                '<div class="cc-slide-panel-header">' +
-                    '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
-                    '<button onclick="window.CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
-                '</div>' +
-                '<div class="cc-modal-content">' +
-                    '<div class="ability-grid">' + cardsHtml + '</div>' +
-                '</div>' +
-            '</div>';
-    },
-
-    setStep: function(n) {
-        this.state.activeStep = n;
-        this.renderBuilder();
-    },
-
-    selectUnit: function(i) {
-        this.state.selectedUnit = i;
-        this.state.activeStep = 1;
-        this.state.isPasted = false;
-        this.refresh();
-    },
-
-    addUnit: function() {
-        var u = this.sanitizeUnit({});
-        this.state.currentFaction.units.push(u);
-        this.state.selectedUnit = this.state.currentFaction.units.length - 1;
-        this.state.activeStep = 1;
-        this.state.isPasted = false;
-        this.refresh();
-    },
-
-    updateUnit: function(field, value) {
-        if (this.state.selectedUnit === null) return;
-
-        if (field === 'quality' || field === 'defense' || field === 'move' || field === 'range') {
-            value = parseInt(value, 10) || 0;
-        }
-        if (field === 'type') {
-            value = String(value || '').toLowerCase();
-        }
-
-        this.state.currentFaction.units[this.state.selectedUnit][field] = value;
-        this.refresh();
-    },
-
-    updateFaction: function(v) {
-        this.state.currentFaction.faction = v;
-        this.renderRoster();
-    },
-
-    saveAndNew: function() {
-        this.state.selectedUnit = null;
-        this.state.activeStep = 1;
-        this.refresh();
-    },
-
-    delUnit: function() {
-        if (!confirm("Delete this unit?")) return;
-        this.state.currentFaction.units.splice(this.state.selectedUnit, 1);
-        this.state.selectedUnit = null;
-        this.state.activeStep = 1;
-        this.refresh();
-    },
-
-    openSlidePanel: function(panelType) {
-        this.state.activeModal = panelType;
-        this.renderSlidePanel();
-    },
-
-    closeSlidePanel: function() {
-        this.state.activeModal = null;
-        this.renderSlidePanel();
-    },
-
-    addItem: function(type, key) {
-        if (this.state.selectedUnit === null) return;
-        var arr = this.state.currentFaction.units[this.state.selectedUnit][type];
-        if (!Array.isArray(arr)) {
-            arr = [];
-            this.state.currentFaction.units[this.state.selectedUnit][type] = arr;
-        }
-        if (arr.indexOf(key) === -1) {
-            arr.push(key);
-        }
-        this.state.activeModal = null;
-        this.refresh();
-    },
-
-    removeItem: function(type, index) {
-        if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit][type].splice(index, 1);
-        this.refresh();
-    },
-
-    addSupplemental: function() {
-        if (this.state.selectedUnit === null) return;
-
-        var nameEl = document.getElementById('supp-name');
-        var typeEl = document.getElementById('supp-type');
-        var effectEl = document.getElementById('supp-effect');
-
-        if (!nameEl || !typeEl || !effectEl) return;
-
-        var name = nameEl.value.trim();
-        var type = typeEl.value;
-        var effect = effectEl.value.trim();
-
-        if (!name || !effect) {
-            alert('Please enter a name and effect.');
-            return;
-        }
-
-        var statMods = {};
-        var calculatedCost = 0;
-
-        if (document.getElementById('mod-quality').checked) {
-            var qVal = parseInt(document.getElementById('mod-quality-val').value, 10) || 0;
-            statMods.quality = qVal;
-            calculatedCost += (qVal * -15);
-        }
-        if (document.getElementById('mod-defense').checked) {
-            var dVal = parseInt(document.getElementById('mod-defense-val').value, 10) || 0;
-            statMods.defense = dVal;
-            calculatedCost += (dVal * 10);
-        }
-        if (document.getElementById('mod-move').checked) {
-            var mVal = parseInt(document.getElementById('mod-move-val').value, 10) || 0;
-            statMods.move = mVal;
-            calculatedCost += (mVal * 2.5);
-        }
-        if (document.getElementById('mod-range').checked) {
-            var rVal = parseInt(document.getElementById('mod-range-val').value, 10) || 0;
-            statMods.range = rVal;
-            calculatedCost += (rVal * 1.67);
-        }
-
-        calculatedCost = Math.max(0, Math.round(calculatedCost / 5) * 5);
-
-        var supplemental = {
-            name: name,
-            type: type,
-            effect: effect
-        };
-
-        if (calculatedCost > 0) {
-            supplemental.cost = calculatedCost;
-        }
-        if (Object.keys(statMods).length > 0) {
-            supplemental.stat_modifiers = statMods;
-        }
-
-        this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.push(supplemental);
-
-        nameEl.value = '';
-        effectEl.value = '';
-        document.getElementById('mod-quality').checked = false;
-        document.getElementById('mod-defense').checked = false;
-        document.getElementById('mod-move').checked = false;
-        document.getElementById('mod-range').checked = false;
-
-        this.refresh();
-    },
-
-    removeSupplemental: function(index) {
-        if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
-        this.refresh();
-    },
-
-    pasteLoad: function(str) {
-        if (!str || str.trim() === '') return;
+    window.importRoster = function(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
         try {
-            var j = JSON.parse(str);
-            this.state.currentFaction = this.sanitizeFaction(j);
-            this.state.selectedUnit   = this.state.currentFaction.units.length > 0 ? 0 : null;
-            this.state.isPasted       = true;
-            this.refresh();
-            alert("✓ Faction loaded successfully!");
-        } catch (e) {
-            console.error("JSON parse error:", e);
-            alert("Invalid JSON format. Please check your input.");
+          const parsed = JSON.parse(e.target.result);
+          switchFaction(parsed.faction).then(() => {
+            state.rosterName = parsed.name || 'Imported Roster';
+            state.budget     = parsed.budget || 500;
+            state.roster     = parsed.roster || [];
+            const nameInput    = document.getElementById('cc-roster-name');
+            const budgetSelect = document.getElementById('cc-budget-selector');
+            const factionSel   = document.getElementById('cc-faction-selector');
+            if (nameInput)    nameInput.value    = state.rosterName;
+            if (budgetSelect) budgetSelect.value = state.budget;
+            if (factionSel)   factionSel.value   = parsed.faction;
+            render();
+            alert('✓ Roster imported!');
+          });
+        } catch (err) {
+          console.error('Import failed:', err);
+          alert('Failed to import roster: ' + (err.message || 'Check file format'));
         }
-    },
+      };
+      reader.onerror = () => alert('Failed to read file');
+      reader.readAsText(file);
+      event.target.value = '';
+    };
 
-    loadFactionFromGitHub: function(url) {
-        if (!url) return;
-        var self = this;
-        fetch(url + '?t=' + Date.now())
-            .then(function(r) {
-                if (!r.ok) throw new Error('Fetch failed: ' + url);
-                return r.json();
-            })
-            .then(function(j) {
-                self.state.currentFaction = self.sanitizeFaction(j);
-                self.state.selectedUnit   = self.state.currentFaction.units.length > 0 ? 0 : null;
-                self.state.isPasted       = true;
-                self.refresh();
-                console.log('✅ Loaded faction:', self.state.currentFaction.faction);
-            })
-            .catch(function(e) {
-                console.error('❌ Faction load failed:', e);
-                alert('Could not load faction file: ' + e.message);
-            });
-    },
-
-    download: function() {
-        var blob = new Blob([JSON.stringify(this.state.currentFaction, null, 2)], { type: "application/json" });
-        var a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = this.state.currentFaction.faction.replace(/\s+/g, '-').toLowerCase() + ".json";
-        a.click();
-    }
-};
-
-window.CC_APP = {
-    init: function(options) {
-        var rootEl = (options && options.root) ? options.root : document.getElementById('faction-studio-root');
-        if (!rootEl) {
-            console.error('❌ Faction Studio: no root element found');
-            return;
+    // ================================
+    // CLOUD STORAGE
+    // ================================
+    window.saveToCloud = async function() {
+      try {
+        if (!window.CC_STORAGE) { alert("Cloud storage not available. Please refresh the page."); return; }
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (!auth.loggedIn) { alert("Please sign in to save rosters to the cloud!"); return; }
+        if (!(state.rosterName && state.rosterName.trim())) { alert("Please give your roster a name first!"); return; }
+        const exportData = {
+          name:      state.rosterName,
+          faction:   state.currentFaction,
+          budget:    state.budget,
+          roster:    state.roster,
+          totalCost: calculateTotalCost(),
+          savedAt:   new Date().toISOString()
+        };
+        const result = await window.CC_STORAGE.saveDocument(state.rosterName, JSON.stringify(exportData, null, 2));
+        if (result.success) {
+          alert(`✓ Roster "${state.rosterName}" ${result.action === 'created' ? 'saved' : 'updated'} to cloud!`);
         }
-        window.CCFB_FACTORY._rootEl = rootEl;
-        window.CCFB_FACTORY.init();
+      } catch (error) {
+        alert(error.message === 'Not logged in' ? 'Please sign in to save rosters!' : 'Error saving: ' + error.message);
+      }
+    };
+
+    window.loadFromCloud = async function() {
+      try {
+        if (!window.CC_STORAGE) { alert("Cloud storage not available."); return; }
+        const auth = await window.CC_STORAGE.checkAuth();
+        if (!auth.loggedIn) { alert("Please sign in to load rosters!"); return; }
+        const docs = await window.CC_STORAGE.loadDocumentList();
+        if (!(docs && docs.length)) { alert("No saved rosters found."); return; }
+        const rosterDocs = docs.filter(d => !(d.name && d.name.startsWith('SCN_')));
+        if (!rosterDocs.length) { alert("No roster saves found."); return; }
+
+        closeAllSlidePanels();
+        installPanelBackdrop();
+
+        const panel = document.createElement('div');
+        panel.id = 'fb-cloud-roster-panel';
+        panel.className = 'cc-slide-panel';
+        panel.style.zIndex = '9999';
+        panel.addEventListener('click', e => e.stopPropagation());
+        panel.innerHTML = `
+          <div class="cc-slide-panel-header">
+            <h2><i class="fa fa-cloud-download"></i> LOAD ROSTER</h2>
+            <button onclick="closeCloudRosterList()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
+          </div>
+          <div class="cc-roster-list">
+            ${rosterDocs.map(r => `
+              <div class="cc-saved-roster-item">
+                <div class="cc-saved-roster-name">${esc(r.name)}</div>
+                <div class="cc-saved-roster-meta">${r.write_date ? new Date(r.write_date).toLocaleDateString() : ''}</div>
+                <div class="cc-saved-roster-actions">
+                  <button onclick="loadCloudRoster(${r.id})" class="btn btn-sm btn-warning">
+                    <i class="fa fa-folder-open"></i> LOAD
+                  </button>
+                  <button onclick="deleteCloudRoster(${r.id})" class="btn btn-sm btn-danger">
+                    <i class="fa fa-trash"></i>
+                  </button>
+                </div>
+              </div>`).join('')}
+          </div>`;
+        document.body.appendChild(panel);
+        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+      } catch (error) {
+        alert('Error loading rosters: ' + error.message);
+      }
+    };
+
+    window.loadCloudRoster = async function(docId) {
+      try {
+        if (!window.CC_STORAGE) return;
+        const doc = await window.CC_STORAGE.loadDocument(docId);
+        if (!doc) { alert('Roster not found!'); return; }
+
+        function tryParse(val) {
+          if (!val) return null;
+          if (typeof val === 'string') { try { return JSON.parse(val); } catch(e) { return null; } }
+          if (typeof val === 'object') return val;
+          return null;
+        }
+
+        var parsed = null;
+        var candidates = [doc.json, doc, doc.content, doc.value, doc.data,
+          (doc.content && doc.content.content), (doc.value && doc.value.content)];
+        for (var _ci = 0; _ci < candidates.length; _ci++) {
+          var attempt = tryParse(candidates[_ci]);
+          if (attempt && attempt.faction) { parsed = attempt; break; }
+        }
+        if (!parsed) {
+          console.error('[FB] loadCloudRoster — could not find faction in doc:', JSON.stringify(doc));
+          throw new Error('Could not find roster data in cloud response. Check console for details.');
+        }
+        closeAllSlidePanels();
+        var loadedFaction = await loadFaction(parsed.faction);
+        if (!loadedFaction) { alert('Could not load faction data for this roster.'); return; }
+
+        state.currentFaction = parsed.faction;
+        state.rosterName     = parsed.name   || 'Loaded Roster';
+        state.budget         = parsed.budget || 500;
+        state.roster         = parsed.roster || [];
+        state.builderMode    = null;
+        state.builderTarget  = null;
+        state.selectedUnitId = null;
+        state.builderConfig  = { optionalUpgrades: [], supplemental: null };
+
+        var nameInput    = document.getElementById('cc-roster-name');
+        var budgetSelect = document.getElementById('cc-budget-selector');
+        var factionSel   = document.getElementById('cc-faction-selector');
+        if (nameInput)    nameInput.value    = state.rosterName;
+        if (budgetSelect) budgetSelect.value = state.budget;
+        if (factionSel)   factionSel.value   = parsed.faction;
+        render();
+        alert('✓ Roster "' + state.rosterName + '" loaded!');
+      } catch (err) {
+        alert('Failed to load roster: ' + err.message);
+      }
+    };
+
+    window.deleteCloudRoster = async function(docId) {
+      if (!confirm('Delete this roster? This cannot be undone.')) return;
+      try {
+        await (window.CC_STORAGE && window.CC_STORAGE.deleteDocument(docId));
+        closeAllSlidePanels();
+        alert('Roster deleted.');
+      } catch (err) {
+        alert('Failed to delete: ' + err.message);
+      }
+    };
+
+    window.closeCloudRosterList = function() { closeAllSlidePanels(); };
+
+    function checkSharedRoster() {
+      if (!window.CC_STORAGE) return;
+      const sharedData = (window.CC_STORAGE.getSharedData ? window.CC_STORAGE.getSharedData() : null);
+      if (!sharedData) return;
+      try {
+        const parsed = JSON.parse(sharedData);
+        switchFaction(parsed.faction).then(() => {
+          state.rosterName = parsed.name || 'Shared Roster';
+          state.budget     = parsed.budget || 500;
+          state.roster     = parsed.roster || [];
+          const nameInput    = document.getElementById('cc-roster-name');
+          const budgetSelect = document.getElementById('cc-budget-selector');
+          const factionSel   = document.getElementById('cc-faction-selector');
+          if (nameInput)    nameInput.value    = state.rosterName;
+          if (budgetSelect) budgetSelect.value = state.budget;
+          if (factionSel)   factionSel.value   = parsed.faction;
+          render();
+          alert('✓ Loaded shared roster!');
+        });
+      } catch (e) {
+        console.error('Failed to parse shared roster:', e);
+      }
     }
-};
+
+    // ================================
+    // APP SHELL HTML
+    // ================================
+    root.innerHTML = `
+      <div class="cc-app-shell h-100">
+
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Faction Builder</h1>
+            <div class="cc-app-subtitle">Build Your Coffin Canyon Roster</div>
+          </div>
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <div id="cc-budget-display" style="font-size:1.5rem;font-weight:700;">0 ₤</div>
+            <div class="cc-roster-view-toggle">
+              <button onclick="toggleRosterView('grid')" class="${state.rosterViewMode === 'grid' ? 'active' : ''}">
+                <i class="fa fa-th"></i>
+              </button>
+              <button onclick="toggleRosterView('list')" class="${state.rosterViewMode === 'list' ? 'active' : ''}">
+                <i class="fa fa-list"></i>
+              </button>
+            </div>
+            <button class="btn btn-sm btn-outline-secondary" onclick="saveToCloud()" title="Save Roster to Cloud">
+              <i class="fa fa-cloud-upload"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()" title="Load Roster from Cloud">
+              <i class="fa fa-cloud-download"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportRoster()" title="Export JSON">
+              <i class="fa fa-download"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('roster-import').click()" title="Import JSON">
+              <i class="fa fa-upload"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="clearRoster()" title="Clear Roster">
+              <i class="fa fa-trash"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="printRoster()" title="Print Roster">
+              <i class="fa fa-print"></i>
+            </button>
+          </div>
+        </div>
+
+        <div id="cc-login-status" class="cc-login-status logged-out">
+          <i class="fa fa-exclamation-circle"></i> Checking login status…
+        </div>
+
+        <div class="cc-faction-controls">
+          <div class="cc-faction-selector-wrap">
+            <div id="cc-faction-selector-icon" class="cc-faction-selector-icon" style="display:none;"></div>
+            <select id="cc-faction-selector" class="form-select" onchange="changeFaction(this.value)">
+              <option value="">SELECT FACTION…</option>
+              ${FACTION_FILES.map(f => `<option value="${f.id}">${f.title}</option>`).join('')}
+            </select>
+          </div>
+
+          <input
+            id="cc-roster-name"
+            type="text"
+            class="form-control cc-input"
+            placeholder="Roster Name…"
+            value="${esc(state.rosterName)}"
+            onchange="updateRosterName(this.value)"
+          />
+
+          <select id="cc-budget-selector" class="form-select" onchange="changeBudget(this.value)">
+            <option value="0">UNLIMITED ₤</option>
+            <option value="500" selected>500 ₤</option>
+            <option value="1000">1000 ₤</option>
+            <option value="1500">1500 ₤</option>
+            <option value="2000">2000 ₤</option>
+          </select>
+        </div>
+
+        <input type="file" id="roster-import" accept=".json" style="display:none;" onchange="importRoster(event)">
+
+        <div class="cc-faction-builder">
+
+          <aside class="cc-faction-sidebar">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div id="cc-library-panel-title" class="cc-panel-title">Unit Library</div>
+              </div>
+              <div id="cc-library-list" class="cc-body"></div>
+            </div>
+          </aside>
+
+          <main class="cc-faction-main">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div class="cc-panel-title">Unit Builder</div>
+              </div>
+              <div id="cc-builder-target" class="cc-body"></div>
+            </div>
+          </main>
+
+          <aside class="cc-faction-roster">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div id="cc-roster-panel-title" class="cc-panel-title">Your Roster</div>
+              </div>
+              <div id="cc-roster-list" class="cc-body"></div>
+            </div>
+          </aside>
+
+        </div>
+
+        <div id="ability-tooltip" style="display:none;position:fixed;background:#000;color:#fff;padding:7px 11px;border-radius:4px;font-size:12px;z-index:10000;pointer-events:none;border:1px solid var(--cc-primary);max-width:220px;line-height:1.4;"></div>
+      </div>
+    `;
+
+    // ================================
+    // BOOT — overlay preloader, render underneath, then reveal
+    // ================================
+    // The app shell is already in root.innerHTML above.
+    // We overlay a .cc-preloader on top of it so render() can run against
+    // the real DOM immediately, hidden behind the preloader.
+
+    const _fbBootStart   = Date.now();
+    const FB_MIN_SPLASH  = 2000; // 2s minimum — no heavy JSON to wait for
+
+    // Build the overlay preloader and append to root (not replace it)
+    const _fbPreloader = document.createElement('div');
+    _fbPreloader.id = 'cc-fb-preloader';
+    _fbPreloader.className = 'cc-preloader cc-preloader--page';
+    _fbPreloader.innerHTML = `
+      <img class="cc-preloader-logo"
+           src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+           alt="Coffin Canyon"
+           style="width:200px;max-width:70vw;">
+      <p class="cc-preloader-title">Faction Builder</p>
+      <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+        <div class="cc-loading-progress"></div>
+      </div>
+      <p class="cc-loading-text">Loading faction data&hellip;</p>
+    `;
+    root.appendChild(_fbPreloader);
+
+    // Run all startup tasks against the real (overlaid) shell immediately
+    checkSharedRoster();
+    render();
+    loadAbilityDictionaries();
+
+    // After minimum hold, fade out and remove preloader, then update login
+    const _fbHold = Math.max(0, FB_MIN_SPLASH - (Date.now() - _fbBootStart));
+    setTimeout(function() {
+      _fbPreloader.classList.add('cc-preloader--hidden');
+      setTimeout(function() {
+        if (_fbPreloader.parentNode) _fbPreloader.parentNode.removeChild(_fbPreloader);
+        updateLoginStatus();
+      }, 480); // matches cc_ui.css transition: 0.45s
+    }, _fbHold);
+
+    console.log("✅ Faction Builder mounted");
+    return Promise.resolve();
+
+  } // end mount()
+
+  window.CC_APP = {
+    init: function (options) {
+      return mount(options.root, options.ctx || {});
+    },
+    destroy: function () {
+      if (typeof _destroyFn === 'function') { _destroyFn(); }
+    }
+  };
+})();
