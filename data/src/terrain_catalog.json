@@ -976,7 +976,7 @@
         "difficult_terrain_on": ["interior"],
         "climb": { "allowed": true, "mode": "stairs", "min_level_access": 1, "max_level_access": 2, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } }
       },
-      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_two_story_01", "name": "Search the Building", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Loot token and 1 Intel token.", "on_fail": "Someone heard you: nearest enemy gains +1 die vs this model’s next defense." }] },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_two_story_01", "name": "Search the Building", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Loot token and 1 Intel token.", "on_fail": "Someone heard you: nearest enemy gains +1 die vs this model's next defense." }] },
       "slots": [{ "slot_id": "two_story_01_roof", "slot_kind": "objective", "label": "Roof Objective", "level": 2, "position_hint": "center", "notes": ["Good dramatic rooftop point."] }],
       "destructibility": { "destructible": true, "structure_rating": 8, "breakpoints": [{ "at_damage": 4, "effect": "Upper windows shattered: upper-level cover reduced." }, { "at_damage": 8, "effect": "Collapse: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } },
       "editor_defaults": { "scale": 1, "rotation_snap_deg": 15, "layer": "terrain_structures" }
@@ -1186,7 +1186,7 @@
         "difficult_terrain_on": ["interior"],
         "climb": { "allowed": true, "mode": "stairs", "min_level_access": 1, "max_level_access": 2, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } }
       },
-      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_hotel_like_13", "name": "Search the Hotel", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Loot token and 1 Intel or Supply token.", "on_fail": "Ruckus: nearest enemy gains +1 die vs this model’s next defense." }] },
+      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_hotel_like_13", "name": "Search the Hotel", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Loot token and 1 Intel or Supply token.", "on_fail": "Ruckus: nearest enemy gains +1 die vs this model's next defense." }] },
       "slots": [{ "slot_id": "hotel_like_13_roof", "slot_kind": "objective", "label": "Roof Objective", "level": 2, "position_hint": "center_roof", "notes": ["High-profile rooftop objective."] }],
       "destructibility": { "destructible": true, "structure_rating": 9, "breakpoints": [{ "at_damage": 5, "effect": "Windows and balcony cover reduced." }, { "at_damage": 9, "effect": "Collapse: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } },
       "editor_defaults": { "scale": 1, "rotation_snap_deg": 15, "layer": "terrain_structures", "notes": ["Provisional hotel ID; confirm in editor."] }
