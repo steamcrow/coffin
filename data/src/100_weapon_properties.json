@@ -27,24 +27,27 @@
       "long": "Ignore 3 points of Defense.",
       "name": "Savage Pierce"
     },
-   "blast": {
-  "_id": "R-WPN-BLAST",
-  "title": "Blast",
-  "short": "3\" area attack.",
-  "long": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally."
-},
-"brutal_blast": {
-  "_id": "R-WPN-BRUTAL-BLAST",
-  "title": "Brutal Blast",
-  "short": "6\" area attack.",
-  "long": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally."
-},
-"savage_blast": {
-  "_id": "R-WPN-SAVAGE-BLAST",
-  "title": "Savage Blast",
-  "short": "9\" area attack.",
-  "long": "9\" radius area of effect. Roll separately for each model in area. Cover applies normally."
-},
+    "blast": {
+      "_id": "R-WPN-BLAST",
+      "title": "Blast",
+      "short": "3\" area attack.",
+      "long": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+      "name": "Blast"
+    },
+    "brutal_blast": {
+      "_id": "R-WPN-BRUTAL-BLAST",
+      "title": "Brutal Blast",
+      "short": "6\" area attack.",
+      "long": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+      "name": "Brutal Blast"
+    },
+    "savage_blast": {
+      "_id": "R-WPN-SAVAGE-BLAST",
+      "title": "Savage Blast",
+      "short": "9\" area attack.",
+      "long": "9\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+      "name": "Savage Blast"
+    },
     "blinding": {
       "_id": "R-WPN-BLINDING",
       "title": "Blinding",
@@ -60,10 +63,10 @@
       "name": "Grapple"
     },
     "rending": {
-  "_id": "R-WPN-RENDING",
-  "title": "Rending",
-  "short": "Extra damage on strong hits.",
-  "long": "If this attack exceeds Defense by 2 or more, it deals +1 additional damage.",
+      "_id": "R-WPN-RENDING",
+      "title": "Rending",
+      "short": "Extra damage on strong hits.",
+      "long": "If this attack exceeds Defense by 2 or more, it deals +1 additional damage.",
       "name": "Rending"
     },
     "ignores_cover": {
@@ -74,12 +77,12 @@
       "name": "Ignores Cover"
     },
     "unstable": {
-  "_id": "R-WPN-UNSTABLE",
-  "name": "Unstable",
-  "title": "Unstable",
-  "short": "Risk of backlash.",
-  "long": "On a Critical Failure, this weapon deals 1 damage to the attacker."
-},
+      "_id": "R-WPN-UNSTABLE",
+      "name": "Unstable",
+      "title": "Unstable",
+      "short": "Risk of backlash.",
+      "long": "On a Critical Failure, this weapon deals 1 damage to the attacker."
+    },
     "pinning_shot": {
       "_id": "R-WPN-PINNING-SHOT",
       "title": "Pinning Shot",
@@ -112,21 +115,21 @@
       "_id": "R-WPN-SHATTER",
       "title": "Shatter",
       "short": "-1 Defense (temporary).",
-      "long": "If this attack deals damage, the target suffers -1 Defense until the end of its next activation."
-      "name": "Shatter",
+      "long": "If this attack deals damage, the target suffers -1 Defense until the end of its next activation.",
+      "name": "Shatter"
     },
     "sunder": {
       "_id": "R-WPN-SUNDER",
       "title": "Sunder",
       "short": "Permanent Defense loss.",
-      "long": "If this weapon deals damage, the target suffers -1 Defense for the rest of the game. This effect does not stack."
-      "name": "Sunder",
+      "long": "If this weapon deals damage, the target suffers -1 Defense for the rest of the game. This effect does not stack.",
+      "name": "Sunder"
     },
     "filthy": {
       "_id": "R-WPN-FILTHY",
       "title": "Filthy",
       "short": "On hit: -1 die next action.",
-      "long": "If this attack hits (even if no damage is dealt), the target rolls -1 die on its next action."
+      "long": "If this attack hits (even if no damage is dealt), the target rolls -1 die on its next action.",
       "name": "Filthy"
     },
     "melee": {
