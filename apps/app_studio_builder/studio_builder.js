@@ -1095,7 +1095,12 @@ window.CCFB_FACTORY = {
 
     addItem: function(type, key) {
         if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit][type].push(key);
+        var arr = this.state.currentFaction.units[this.state.selectedUnit][type];
+        if (arr.indexOf(key) !== -1) {
+            this.closeSlidePanel();
+            return; // already has it — silently ignore
+        }
+        arr.push(key);
         this.closeSlidePanel();
         this.refresh();
     },
