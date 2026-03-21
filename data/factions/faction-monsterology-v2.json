@@ -157,7 +157,7 @@
           "effect": "Passive. Once per round, when this model would lose 1 Quality, roll 1d6. On a 5+, ignore the damage."
         },
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 1,
           "type": "Upgrade",
           "effect": "Passive. This unit ignores Coffin Cough, Choking Dust, and other environmental gas or smoke effects."
