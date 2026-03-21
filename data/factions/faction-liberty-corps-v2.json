@@ -201,14 +201,13 @@
       ],
       "lore": "Cheap bodies in cheap uniforms—pressed into service, promised glory, issued a whistle and a pair of cuffs.",
       "tactics": "Flood lanes, contest objectives, and enable arrests. Trade lives for time and position.",
-      "optional_upgrades": [
+       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -272,14 +271,13 @@
       ],
       "lore": "Uniformed enforcers in wool coats and iron helmets. Steam packs drive piston-fists built for arrests, not duels.",
       "tactics": "Frontline control. Grapple and Shield Wall make lanes sticky, enabling arrests and denying breakthroughs.",
-      "optional_upgrades": [
+       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -357,14 +355,13 @@
       ],
       "lore": "Cable-haulers and wrench-hands who keep Liberty Corps machinery alive in places it was never meant to operate.",
       "tactics": "Support backbone. Keep vehicles and control pieces functioning; strip debuffs at key moments.",
-      "optional_upgrades": [
+       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -402,7 +399,7 @@
       "defense": 2,
       "move": 6,
       "range": 12,
-      "weapon": "Liberty Revolver",
+      "weapon": "Liberty Service Pistol",
       "weapon_properties": [
         "ranged"
       ],
@@ -435,14 +432,13 @@
       ],
       "lore": "Plain clothes, keen eyes, documented everything. The warrant is already drafted—signed, stamped, inevitable.",
       "tactics": "Priority marking and lane control. Use pinning to set up arrests and prevent escapes.",
-      "optional_upgrades": [
+       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -518,14 +514,13 @@
       ],
       "lore": "The best at what they do: steam-assisted reflexes, reinforced armor, and a perfect arrest record.",
       "tactics": "Mobile arrest specialist. Fast + Grapple + Binding Rig is the Corps’ cleanest capture package.",
-      "optional_upgrades": [
+       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
-          "cost": 5,
+          "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -592,14 +587,13 @@
       ],
       "lore": "Contract shooters attached to enforcement columns. Their job isn’t justice—it’s results, recorded and delivered.",
       "tactics": "Delete or cripple key pieces. Mark targets to concentrate fire and force compliance.",
-      "optional_upgrades": [
+       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -667,14 +661,13 @@
       ],
       "lore": "A brass-backed crowd-control officer. Used for signaling, dispersal, and breaking resolve with weaponized sound.",
       "tactics": "Area denial + morale pressure. Best behind the line, shaping movement and punishing clustered units.",
-      "optional_upgrades": [
+       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -748,14 +741,13 @@
       ],
       "lore": "In Liberty Corps jurisdiction, Judges hold executive power in the field. They prosecute, sentence, and enforce—cleanly, publicly, and without appeal.",
       "tactics": "Command anchor. Keeps the line steady and selects one enemy to become the example.",
-      "optional_upgrades": [
+       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -825,14 +817,13 @@
       ],
       "lore": "A steam-powered armored prison wagon. It doesn’t bring help. It brings jurisdiction.",
       "tactics": "Scoring engine and denial piece. Collect, transport, and secure removals—protect it or your captures spill back into the fight.",
-      "optional_upgrades": [
+       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -912,12 +903,13 @@
       "tactics": "Deterrence through escalation. Every shot reshapes morale; protect it until it has done its work.",
       "optional_upgrades": [
         {
-          "name": "Federal Gas Mask (Crew Issue)",
+       "optional_upgrades": [
+        {
+          "name": "Liberty Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask (for attached crew). Practical effect: this unit ignores Coffin Cough / gas & smoke visual/lung penalties where scenarios would apply them to crewed assets.",
+          "effect": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
@@ -999,12 +991,11 @@
       },
       "optional_upgrades": [
         {
-          "name": "Federal Gas Mask (Symbolic)",
+          "name": "Antique Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Same as Monster Rangers Gas Mask. Practical effect: ignores Coffin Cough / gas & smoke visual/lung penalties (scenario-defined).",
+          "effect": "An old and ratty gas mask, in Red, White, and Brass. Ignores Coffin Cough, and other air-borne dangers.",
           "grants_abilities": [
-            "gas_mask",
             "gas_mask"
           ]
         },
