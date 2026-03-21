@@ -957,6 +957,54 @@ window.CCFB_FACTORY = {
             '</div>';
     },
 
+    // === STATE MANAGEMENT FUNCTIONS ===
+
+    setStep: function(n) {
+        this.state.activeStep = n;
+        this.renderBuilder();
+    },
+
+    selectUnit: function(i) {
+        this.state.selectedUnit = i;
+        this.state.activeStep = 1;
+        this.state.isPasted = false;
+        this.refresh();
+    },
+
+    addUnit: function() {
+        var u = this.sanitizeUnit({});
+        this.state.currentFaction.units.push(u);
+        this.state.selectedUnit = this.state.currentFaction.units.length - 1;
+        this.state.activeStep = 1;
+        this.state.isPasted = false;
+        this.refresh();
+    },
+
+    updateUnit: function(field, value) {
+        if (this.state.selectedUnit === null) return;
+        this.state.currentFaction.units[this.state.selectedUnit][field] = value;
+        this.refresh();
+    },
+
+    updateFaction: function(v) {
+        this.state.currentFaction.faction = v;
+        this.renderRoster();
+    },
+
+    saveAndNew: function() {
+        this.state.selectedUnit = null;
+        this.state.activeStep = 1;
+        this.refresh();
+    },
+
+    delUnit: function() {
+        if (!confirm("Delete this unit?")) return;
+        this.state.currentFaction.units.splice(this.state.selectedUnit, 1);
+        this.state.selectedUnit = null;
+        this.state.activeStep = 1;
+        this.refresh();
+    },
+
     renderSlidePanel: function() {
         // No-op — panel management now handled by openSlidePanel/closeSlidePanel
         if (!this.state.activeModal) this.closeSlidePanel();
