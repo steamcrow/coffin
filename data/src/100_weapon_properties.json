@@ -31,21 +31,21 @@
       "_id": "R-WPN-BLAST",
       "title": "Blast",
       "short": "3\" area attack.",
-      "long": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+      "long": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally.",
       "name": "Blast"
     },
     "brutal_blast": {
       "_id": "R-WPN-BRUTAL-BLAST",
       "title": "Brutal Blast",
       "short": "6\" area attack.",
-      "long": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+      "long": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally.",
       "name": "Brutal Blast"
     },
     "savage_blast": {
       "_id": "R-WPN-SAVAGE-BLAST",
       "title": "Savage Blast",
       "short": "9\" area attack.",
-      "long": "9\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+      "long": "9\" radius area of effect. Roll separately for each model in area. Cover applies normally.",
       "name": "Savage Blast"
     },
     "blinding": {
