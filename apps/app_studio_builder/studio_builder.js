@@ -1029,7 +1029,8 @@ window.CCFB_FACTORY = {
         }
 
         target.innerHTML =
-            '<div class="cc-slide-panel cc-slide-panel-open">' +
+            '<div onclick="window.CCFB_FACTORY.closeSlidePanel()" style="position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,0.35);"></div>' +
+            '<div class="cc-slide-panel cc-slide-panel-open" onclick="event.stopPropagation()" style="z-index:9998;">' +
                 '<div class="cc-slide-panel-header">' +
                     '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
                     '<button onclick="window.CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
@@ -1091,26 +1092,11 @@ window.CCFB_FACTORY = {
     openSlidePanel: function(panelType) {
         this.state.activeModal = panelType;
         this.renderSlidePanel();
-        // Close when clicking outside the panel
-        var self = this;
-        setTimeout(function() {
-            self._panelDismissHandler = function(e) {
-                var panel = document.querySelector('.cc-slide-panel-open');
-                if (panel && !panel.contains(e.target)) {
-                    self.closeSlidePanel();
-                }
-            };
-            document.addEventListener('click', self._panelDismissHandler);
-        }, 0);
     },
 
     closeSlidePanel: function() {
         this.state.activeModal = null;
         this.renderSlidePanel();
-        if (this._panelDismissHandler) {
-            document.removeEventListener('click', this._panelDismissHandler);
-            this._panelDismissHandler = null;
-        }
     },
 
     addItem: function(type, key) {
