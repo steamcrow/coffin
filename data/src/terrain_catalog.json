@@ -996,16 +996,16 @@
       "elevation": { "system": "levels", "level_unit_in": 2.0, "max_level": 1, "levels": [{ "level": 0, "name": "Ground Floor", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Interior rooms."] }, { "level": 1, "name": "Upper Balcony", "surface_kind": "balcony", "walkable": true, "railings_cover": "light", "notes": ["Upper firing lane."] }] },
       "movement": {
         "is_passable": false,
-        "is_walkable_on_top": false,
+        "is_walkable_on_top": true,
         "difficult_terrain_on": ["interior"],
         "climb": { "allowed": true, "mode": "stairs", "min_level_access": 1, "max_level_access": 1, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } }
       },
-      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_two_story_02", "name": "Search the Building", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 4, "on_success": "Gain 1 Loot token.", "on_fail": "Empty." }] },
+      "interaction": { "interactable": false, "interactions": [] },
       "slots": [],
-      "destructibility": { "destructible": true, "structure_rating": 7, "breakpoints": [{ "at_damage": 7, "effect": "Collapse: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } },
+      "destructibility": { "destructible": false },
       "editor_defaults": { "scale": 1, "rotation_snap_deg": 15, "layer": "terrain_structures" }
     },
-    {
+   {
       "terrain_type_id": "building_town_civic_01",
       "asset_file": "westtown_normal_07.png",
       "name": "Civic Town Building",
@@ -1024,9 +1024,27 @@
         "difficult_terrain_on": ["interior"],
         "climb": { "allowed": false, "mode": "none", "min_level_access": 0, "max_level_access": 0, "test": { "required": false, "type": "quality", "difficulty": 0, "on_fail": "No effect" } }
       },
-      "interaction": { "interactable": true, "interactions": [{ "interaction_id": "search_civic_01", "name": "Search the Building", "action_type": "interact", "action_cost": 1, "test_required": true, "test_type": "quality", "difficulty": 3, "on_success": "Gain 1 Intel token or 1 Lore token.", "on_fail": "Bad records and dust." }] },
+      "interaction": { 
+        "interactable": true, 
+        "interactions": [{ 
+          "interaction_id": "search_civic_01", 
+          "name": "Search the Building", 
+          "action_type": "interact", 
+          "action_cost": 1, 
+          "test_required": true, 
+          "test_type": "quality", 
+          "difficulty": 3, 
+          "on_success": "Gain 1 Intel token or 1 Lore token.", 
+          "on_fail": "Bad records and dust." 
+        }] 
+      },
       "slots": [{ "slot_id": "civic_01_story", "slot_kind": "story_anchor", "label": "Public Records", "level": 0, "position_hint": "rear_room", "notes": ["Use for clues or authority objectives."] }],
-      "destructibility": { "destructible": true, "structure_rating": 7, "breakpoints": [{ "at_damage": 7, "effect": "Collapse: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } },
+      "destructibility": { 
+        "destructible": true, 
+        "structure_rating": 7, 
+        "breakpoints": [{ "at_damage": 7, "effect": "Collapse: replace with large rubble." }], 
+        "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } 
+      },
       "editor_defaults": { "scale": 1, "rotation_snap_deg": 15, "layer": "terrain_structures" }
     },
     {
