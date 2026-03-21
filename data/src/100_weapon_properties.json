@@ -27,20 +27,24 @@
       "long": "Ignore 3 points of Defense.",
       "name": "Savage Pierce"
     },
-    "blast": {
-      "_id": "R-WPN-BLAST",
-      "title": "Blast",
-      "short": "3\" area attack.",
-      "long": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally.",
-      "name": "Blast"
-    },
-    "massive_blast": {
-      "_id": "R-WPN-MASSIVE-BLAST",
-      "title": "Massive Blast",
-      "short": "6\" area attack.",
-      "long": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally.",
-      "name": "Massive Blast"
-    },
+   "blast": {
+  "_id": "R-WPN-BLAST",
+  "title": "Blast",
+  "short": "3\" area attack.",
+  "long": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+},
+"brutal_blast": {
+  "_id": "R-WPN-BRUTAL-BLAST",
+  "title": "Brutal Blast",
+  "short": "6\" area attack.",
+  "long": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+},
+"savage_blast": {
+  "_id": "R-WPN-SAVAGE-BLAST",
+  "title": "Savage Blast",
+  "short": "9\" area attack.",
+  "long": "9\" radius area of effect. Roll separately for each model in area. Cover applies normally."
+},
     "blinding": {
       "_id": "R-WPN-BLINDING",
       "title": "Blinding",
@@ -55,6 +59,13 @@
       "long": "On hit, pull target 3\" toward this unit. Target may not move next activation.",
       "name": "Grapple"
     },
+    "rending": {
+  "_id": "R-WPN-RENDING",
+  "title": "Rending",
+  "short": "Extra damage on strong hits.",
+  "long": "If this attack exceeds Defense by 2 or more, it deals +1 additional damage.",
+      "name": "Rending"
+    },
     "ignores_cover": {
       "_id": "R-WPN-IGNORES-COVER",
       "title": "Ignores Cover",
@@ -62,6 +73,13 @@
       "long": "Attacks from this weapon ignore cover bonuses to Defense.",
       "name": "Ignores Cover"
     },
+    "unstable": {
+  "_id": "R-WPN-UNSTABLE",
+  "name": "Unstable",
+  "title": "Unstable",
+  "short": "Risk of backlash.",
+  "long": "On a Critical Failure, this weapon deals 1 damage to the attacker."
+},
     "pinning_shot": {
       "_id": "R-WPN-PINNING-SHOT",
       "title": "Pinning Shot",
@@ -90,6 +108,27 @@
       "long": "Ignores Heavy Armor bonus. Ignores cover bonuses to Defense. If at least 1 damage dealt, target tests Morale.",
       "name": "Sonic"
     },
+    "shatter": {
+      "_id": "R-WPN-SHATTER",
+      "title": "Shatter",
+      "short": "Weakens armor.",
+      "long": "If this attack deals damage, the target suffers -1 Defense until the end of its next activation."
+      "name": "Shatter",
+    },
+    "sunder": {
+      "_id": "R-WPN-SUNDER",
+      "title": "Sunder",
+      "short": "Permanent Defense loss.",
+      "long": "If this weapon deals damage, the target suffers -1 Defense for the rest of the game. This effect does not stack."
+      "name": "Sunder",
+    },
+    "filthy": {
+      "_id": "R-WPN-FILTHY",
+      "title": "Filthy",
+      "short": "On hit: -1 die next action.",
+      "long": "If this attack hits (even if no damage is dealt), the target rolls -1 die on its next action."
+      "name": "Filthy"
+    },
     "melee": {
       "_id": "R-WPN-MELEE",
       "title": "Melee",
@@ -97,12 +136,12 @@
       "long": "Can be used in close combat. Does not require Line of Sight.",
       "name": "Melee"
     },
-    "prybar": {
-      "_id": "R-WPN-PRYBAR",
-      "title": "Prybar",
+    "breach": {
+      "_id": "R-WPN-BREACH",
+      "title": "Breach",
       "short": "Bonus to Interact.",
-      "long": "Gain +1 die when attempting Interact actions on locked or sealed objectives.",
-      "name": "Prybar"
+      "long": "Gain +1 Quality die when attempting Interact actions on locked or sealed objectives.",
+      "name": "Breach"
     }
   }
 }
