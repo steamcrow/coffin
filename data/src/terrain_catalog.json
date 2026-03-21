@@ -1221,7 +1221,6 @@
       "destructibility": { "destructible": true, "structure_rating": 8, "breakpoints": [{ "at_damage": 8, "effect": "Collapse: replace with large rubble." }], "rubble_result": { "spawns_terrain_type_id": "scatter_rubble_large", "notes": ["Replace with large rubble."] } },
       "editor_defaults": { "scale": 1, "rotation_snap_deg": 15, "layer": "terrain_structures", "notes": ["Placeholder until visual identity is confirmed."] }
     },
-
     {
       "terrain_type_id": "feature_passenger_car",
       "asset_file": "westtrains_normal_03.png",
@@ -1268,7 +1267,6 @@
       "destructibility": { "destructible": false },
       "editor_defaults": { "scale": 1, "rotation_snap_deg": 15, "layer": "terrain_features", "notes": ["Confirm whether this is caboose, tender, buffer, or utility feature."] }
     },
-
     {
       "terrain_type_id": "obstacle_rock_spire_01",
       "asset_file": "wildmountain_normal_02.png",
@@ -1498,9 +1496,7 @@
       "slots": [{ "slot_id": "ridge_11_story", "slot_kind": "story_anchor", "label": "Ridge Ambush Point", "level": 0, "position_hint": "high_side", "notes": ["Use for lookout, snipers, or hidden caches."] }],
       "destructibility": { "destructible": false },
       "editor_defaults": { "scale": 1, "rotation_snap_deg": 15, "layer": "terrain_landforms", "notes": ["Confirm exact landform in editor."] }
-    }
-  ]
-},  
+    }, 
     {
       "terrain_type_id": "feature_water_tower_wooden",
       "asset_file": "westtower_normal_01.png",
