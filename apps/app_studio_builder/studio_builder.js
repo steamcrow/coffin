@@ -775,8 +775,8 @@ window.CCFB_FACTORY = {
                         '</select>' +
                     '</div>' +
                     '<div class="form-group">' +
-                        '<label class="small">EFFECT</label>' +
-                        '<textarea id="supp-effect" class="cc-input w-100" rows="2" placeholder="Describe what this does..."></textarea>' +
+                        '<label class="small">DESCRIPTION</label>' +
+                        '<textarea id="supp-effect" class="cc-input w-100" rows="5" placeholder="Describe what this does..."></textarea>' +
                     '</div>' +
                     '<div class="form-group">' +
                         '<label class="small">STAT MODIFIERS (optional)</label>' +
@@ -1091,30 +1091,32 @@ window.CCFB_FACTORY = {
     openSlidePanel: function(panelType) {
         this.state.activeModal = panelType;
         this.renderSlidePanel();
-        // Add backdrop — clicking it closes the panel
-        if (!document.getElementById('ccfb-panel-backdrop')) {
-            var bd = document.createElement('div');
-            bd.id = 'ccfb-panel-backdrop';
-            bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.45);';
-            bd.addEventListener('click', function() { window.CCFB_FACTORY.closeSlidePanel(); });
-            document.body.appendChild(bd);
-        }
+        // Close when clicking outside the panel
+        var self = this;
+        setTimeout(function() {
+            self._panelDismissHandler = function(e) {
+                var panel = document.querySelector('.cc-slide-panel-open');
+                if (panel && !panel.contains(e.target)) {
+                    self.closeSlidePanel();
+                }
+            };
+            document.addEventListener('click', self._panelDismissHandler);
+        }, 0);
     },
 
     closeSlidePanel: function() {
         this.state.activeModal = null;
         this.renderSlidePanel();
-        // Remove backdrop
-        var bd = document.getElementById('ccfb-panel-backdrop');
-        if (bd) bd.parentNode.removeChild(bd);
+        if (this._panelDismissHandler) {
+            document.removeEventListener('click', this._panelDismissHandler);
+            this._panelDismissHandler = null;
+        }
     },
 
     addItem: function(type, key) {
         if (this.state.selectedUnit === null) return;
         this.state.currentFaction.units[this.state.selectedUnit][type].push(key);
-        this.state.activeModal = null;
-        var bd = document.getElementById('ccfb-panel-backdrop');
-        if (bd) bd.parentNode.removeChild(bd);
+        this.closeSlidePanel();
         this.refresh();
     },
 
