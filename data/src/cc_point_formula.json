@@ -1,6 +1,6 @@
 {
   "_description": "Coffin Canyon point formula \u2014 all values used by cc_point_calculator and the Faction Studio. Edit this file to tune the formula; the apps load it at runtime.",
-  "_version": "3.1",
+  "_version": "3.2",
   "_last_updated": "2026-03-21",
   "base_stats": {
     "quality_multiplier": 18,
@@ -40,8 +40,6 @@
   },
   "type_modifiers": {
     "grunt": -10,
-    "frail": -12,
-    "standard": 0,
     "rogue": 10,
     "brute": 10,
     "mystic": 8,
