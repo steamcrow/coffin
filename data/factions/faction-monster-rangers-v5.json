@@ -210,7 +210,7 @@
       },
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
@@ -289,7 +289,7 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
@@ -370,7 +370,7 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
@@ -452,7 +452,7 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
@@ -580,7 +580,7 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
@@ -666,7 +666,7 @@
           "effect": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster."
         },
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
@@ -745,7 +745,7 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Immune to Coffin Cough and Blinding effects."
@@ -787,7 +787,7 @@
         "blood_transfusion",
         "venom",
         "vitagood_brew",
-        "built_in_respirator"
+        "gas_mask"
       ],
       "lore": "Treat Monster and Manling alike. Med Kits contain as many poisons as medicines. Brew VitaGood, perform blood transfusions. Wear field Plague Doctor masks.",
       "tactics": "Each turn: Blood Transfusion (base contact, sacrifice 1Q to heal 1Q, or 2Q for monsters - RISKY!) OR Venom (6\" poison). VitaGood tokens (2) for recovery or emergency heal.",
@@ -894,7 +894,7 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."
@@ -974,7 +974,7 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."
@@ -1015,7 +1015,7 @@
         "barely_controlled",
         "flechette_drop",
         "crash_landing",
-        "built_in_goggles"
+        "gas_mask"
       ],
       "lore": "Blappo invention - canvas wings, firework propulsion, daredevil pilots. They only land... or crash. Erratic flight makes hard to hit (D3 from speed). Glorious death trap!",
       "tactics": "High-speed bomber. Fly over enemies dropping flechettes (automatic hits!). MUST move 6\"+ or risk crash. When destroyed, crashes spectacularly (AoE damage).",
@@ -1097,7 +1097,7 @@
         "fearless",
         "brutal_blow",
         "silent",
-        "built_in_respirator"
+        "gas_mask"
       ],
       "lore": "Secret police of Monster Rangers. Masked enforcers. Fixers, advisors who 'deal with' problems. Invite-only. Know 100 ways to make you cry with steel batons. Metal Mask built-in.",
       "tactics": "Pressure engine (Brute role). Stealth + Fear creates board denial. Commits to combat, grinds enemies down. Makes bad decisions unavoidable.",
@@ -1169,7 +1169,7 @@
         "tougher",
         "fearless",
         "pressure_sealed",
-        "built_in_respirator"
+        "gas_mask"
       ],
       "lore": "Deep sea divers in heavy pressure suits. The suit is their temple - rarely removed. Sea Rangers adapted to deep pressure. Electro-tridents crackle with Pierce energy.",
       "tactics": "Front-line tank. D5 + Tougher = roll 2 dice per damage (5+ ignores). Pierce cuts armor. Slow (4\") but unstoppable. Park on objectives.",
@@ -1274,7 +1274,7 @@
       ],
       "optional_upgrades": [
         {
-          "name": "Gas Mask",
+          "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
           "effect": "Protective eyewear and respirator. Immune to environmental penalties."
