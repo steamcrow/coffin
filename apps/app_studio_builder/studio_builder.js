@@ -195,22 +195,17 @@ window.CCFB_FACTORY = {
                 var weaponPropsData = results[1];
                 var abilityResults  = results[2];
 
-                // ── Weapon properties ─────────────────────────────────────────
-                // Structure: { weapon_properties: { _id, title, properties: { blast:{…}, … } } }
+                // Weapon props: unwrap .properties to get the actual entries
                 var wpRaw     = weaponPropsData.weapon_properties || weaponPropsData;
                 var wpEntries = (wpRaw && typeof wpRaw.properties === 'object') ? wpRaw.properties : wpRaw;
                 var cleanWeaponProps = {};
                 Object.keys(wpEntries).forEach(function(k) {
                     var v = wpEntries[k];
-                    if (v && typeof v === 'object' && (v.name || v.title || v.short)) {
-                        cleanWeaponProps[k] = v;
-                    }
+                    if (v && typeof v === 'object' && (v.name || v.title || v.short)) cleanWeaponProps[k] = v;
                 });
-                console.log('⚔️ Weapon properties loaded:', Object.keys(cleanWeaponProps).join(', '));
+                console.log('⚔️ Weapon props:', Object.keys(cleanWeaponProps).join(', '));
 
-                // ── Ability dictionary ────────────────────────────────────────
-                // Each file exposes abilities under a top-level "abilities" key.
-                // Store under the category key so files never overwrite each other.
+                // Ability dict: store each file under its own category key
                 var abilityDict   = {};
                 var abilityTitles = {};
                 abilityResults.forEach(function(ar) {
@@ -220,16 +215,13 @@ window.CCFB_FACTORY = {
                         var clean = {};
                         Object.keys(entries).forEach(function(k) {
                             var v = entries[k];
-                            if (v && typeof v === 'object' && (v.name || v.short || v.long)) {
-                                clean[k] = v;
-                            }
+                            if (v && typeof v === 'object' && (v.name || v.short || v.long)) clean[k] = v;
                         });
                         if (Object.keys(clean).length > 0) abilityDict[ar.key] = clean;
                     }
                 });
-                console.log('📖 Ability categories loaded:', Object.keys(abilityDict).join(', '));
+                console.log('📖 Ability categories:', Object.keys(abilityDict).join(', '));
 
-                // ── Unit identities ───────────────────────────────────────────
                 var identities = identitiesData.rules_master
                     ? identitiesData.rules_master.unit_identities
                     : (identitiesData.unit_identities || identitiesData);
@@ -819,7 +811,7 @@ window.CCFB_FACTORY = {
                                         '<strong>' + s.name + '</strong> <span class="supp-type-badge">' + s.type + '</span>' +
                                         (s.cost > 0 ? ' <span style="font-size:0.75rem;color:var(--cc-primary);">(' + s.cost + '₤)</span>' : '') +
                                         '<div class="supp-effect">' + s.effect + '</div>' +
-                                        (s.stat_modifiers ? '<div class="supp-mods" style="font-size:0.72rem;color:rgba(255,255,255,0.45);">Mods: ' + JSON.stringify(s.stat_modifiers) + '</div>' : '') +
+                                        (s.stat_modifiers ? '<div style="font-size:0.72rem;color:rgba(255,255,255,0.45);">Mods: ' + JSON.stringify(s.stat_modifiers) + '</div>' : '') +
                                     '</div>' +
                                     '<button onclick="window.CCFB_FACTORY.removeSupplemental(' + i + ')" style="flex:0 0 auto;background:none;border:1px solid rgba(255,80,80,0.4);border-radius:3px;color:#ef5350;padding:2px 7px;cursor:pointer;font-size:0.75rem;margin-top:2px;" title="Delete">✕</button>' +
                                 '</div>';
@@ -966,25 +958,23 @@ window.CCFB_FACTORY = {
     },
 
     renderSlidePanel: function() {
-        var target = document.getElementById('slide-panel-container');
-        if (!target) return;
-        
-        if (!this.state.activeModal) { 
-            target.innerHTML = ""; 
-            return; 
-        }
-        
-        var isWeapon = this.state.activeModal === 'weapon';
+        // No-op — panel management now handled by openSlidePanel/closeSlidePanel
+        if (!this.state.activeModal) this.closeSlidePanel();
+    },
+
+    openSlidePanel: function(panelType) {
+        var self = this;
+        this.state.activeModal = panelType;
+        this.closeSlidePanel(); // clear any existing panel first
+
+        var isWeapon    = panelType === 'weapon';
         var weaponProps  = this.state.rules.rules_master.weapon_properties  || {};
         var abilityDict  = this.state.rules.rules_master.ability_dictionary || {};
         var abilityTitles = this.state.rules.rules_master.ability_titles    || {};
 
-        // Shared row styles — mimics cc-list-item alternating + hover pattern
-        var rowBase  = 'display:block;width:100%;text-align:left;border:none;border-bottom:1px solid var(--cc-border);padding:10px 14px;cursor:pointer;transition:background .12s;';
-        var rowOdd   = rowBase + 'background:var(--cc-bg);';
-        var rowEven  = rowBase + 'background:var(--cc-bg-soft);';
-        var nameStyle = 'display:block;font-family:var(--cc-font-title);font-weight:700;font-size:0.95rem;color:var(--cc-primary);margin-bottom:3px;';
-        var descStyle = 'display:block;font-size:0.82rem;color:var(--cc-text-muted);line-height:1.55;';
+        var rowBase  = 'display:block;width:100%;text-align:left;border:none;border-bottom:1px solid rgba(255,255,255,0.07);padding:10px 14px;cursor:pointer;transition:background .12s;';
+        var nameStyle = 'display:block;font-family:var(--cc-font-title,serif);font-weight:700;font-size:0.95rem;color:#ff7518;margin-bottom:3px;';
+        var descStyle = 'display:block;font-size:0.82rem;color:rgba(255,255,255,0.55);line-height:1.55;';
 
         var rowIndex = 0;
         var listHtml = '';
@@ -993,110 +983,66 @@ window.CCFB_FACTORY = {
             Object.keys(weaponProps).forEach(function(key) {
                 var item = weaponProps[key];
                 if (!item || typeof item !== 'object') return;
-                var wName   = item.name  || item.title || key.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-                var wEffect = item.long  || item.short || item.effect || '';
-                var bg = (rowIndex % 2 === 0) ? rowOdd : rowEven;
-                rowIndex++;
-                listHtml += '<button style="' + bg + '" ' +
-                    'onmouseover="this.style.background=\'var(--cc-bg-mid)\'" ' +
-                    'onmouseout="this.style.background=\'' + (rowIndex % 2 === 0 ? 'var(--cc-bg-soft)' : 'var(--cc-bg)') + '\'" ' +
-                    'onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')">' +
+                var wName = item.name || item.title || key.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+                var wDesc = item.long || item.short || item.effect || '';
+                var bg = (rowIndex++ % 2 === 0) ? '#111' : '#161412';
+                listHtml += '<button style="' + rowBase + 'background:' + bg + '" onmouseover="this.style.background=\'#2a1f12\'" onmouseout="this.style.background=\'' + bg + '\'" onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\',\'' + key + '\')">' +
                     '<span style="' + nameStyle + '">' + wName + '</span>' +
-                    (wEffect ? '<span style="' + descStyle + '">' + wEffect + '</span>' : '') +
+                    (wDesc ? '<span style="' + descStyle + '">' + wDesc + '</span>' : '') +
                 '</button>';
             });
         } else {
             Object.keys(abilityDict).forEach(function(cat) {
-                var catLabel = abilityTitles[cat] || cat.replace(/^[A-Z]_/, '').replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-                listHtml += '<div style="padding:8px 14px 4px;font-family:var(--cc-font-mono);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--cc-primary);background:var(--cc-bg-mid);border-bottom:1px solid var(--cc-border);border-top:1px solid var(--cc-border);margin-top:4px;">' + catLabel + '</div>';
-                rowIndex = 0; // reset alternation per category
+                var catLabel = abilityTitles[cat] || cat.replace(/^[A-Z]_/,'').replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+                listHtml += '<div style="padding:6px 14px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#ff7518;background:#0e0c09;border-bottom:1px solid rgba(255,117,24,0.2);border-top:1px solid rgba(255,117,24,0.15);margin-top:4px;">' + catLabel + '</div>';
+                rowIndex = 0;
                 Object.keys(abilityDict[cat]).forEach(function(aKey) {
                     var aItem = abilityDict[cat][aKey];
                     if (!aItem || typeof aItem !== 'object') return;
-                    var aName   = aItem.name  || aKey.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-                    var aEffect = aItem.long  || aItem.short || aItem.effect || '';
-                    var bg = (rowIndex % 2 === 0) ? rowOdd : rowEven;
-                    rowIndex++;
-                    listHtml += '<button style="' + bg + '" ' +
-                        'onmouseover="this.style.background=\'var(--cc-bg-mid)\'" ' +
-                        'onmouseout="this.style.background=\'' + (rowIndex % 2 === 0 ? 'var(--cc-bg-soft)' : 'var(--cc-bg)') + '\'" ' +
-                        'onclick="window.CCFB_FACTORY.addItem(\'abilities\', \'' + aKey + '\')">' +
+                    var aName = aItem.name || aKey.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
+                    var aDesc = aItem.long || aItem.short || aItem.effect || '';
+                    var bg = (rowIndex++ % 2 === 0) ? '#111' : '#161412';
+                    listHtml += '<button style="' + rowBase + 'background:' + bg + '" onmouseover="this.style.background=\'#2a1f12\'" onmouseout="this.style.background=\'' + bg + '\'" onclick="window.CCFB_FACTORY.addItem(\'abilities\',\'' + aKey + '\')">' +
                         '<span style="' + nameStyle + '">' + aName + '</span>' +
-                        (aEffect ? '<span style="' + descStyle + '">' + aEffect + '</span>' : '') +
+                        (aDesc ? '<span style="' + descStyle + '">' + aDesc + '</span>' : '') +
                     '</button>';
                 });
             });
         }
 
-        target.innerHTML =
-            '<div onclick="window.CCFB_FACTORY.closeSlidePanel()" style="position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,0.35);"></div>' +
-            '<div class="cc-slide-panel cc-slide-panel-open" onclick="event.stopPropagation()" style="z-index:9998;">' +
-                '<div class="cc-slide-panel-header">' +
-                    '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
-                    '<button onclick="window.CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
-                '</div>' +
-                '<div style="overflow-y:auto;padding:0;">' +
-                    listHtml +
-                '</div>' +
+        // Transparent backdrop on body — click closes panel
+        var bd = document.createElement('div');
+        bd.id = 'ccfb-studio-backdrop';
+        bd.style.cssText = 'position:fixed;inset:0;z-index:9997;background:rgba(0,0,0,0.4);';
+        bd.addEventListener('click', function() { self.closeSlidePanel(); });
+        document.body.appendChild(bd);
+
+        // Panel on body — stopPropagation keeps clicks inside from hitting backdrop
+        var panel = document.createElement('div');
+        panel.id = 'ccfb-studio-panel';
+        panel.className = 'cc-slide-panel';
+        panel.style.zIndex = '9999';
+        panel.addEventListener('click', function(e) { e.stopPropagation(); });
+        panel.innerHTML =
+            '<div class="cc-slide-panel-header">' +
+                '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
+                '<button onclick="window.CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
+            '</div>' +
+            '<div style="overflow-y:auto;padding:0;height:calc(100vh - 80px);">' +
+                listHtml +
             '</div>';
-    },
+        document.body.appendChild(panel);
 
-    // === STATE MANAGEMENT FUNCTIONS ===
-
-    setStep: function(n) {
-        this.state.activeStep = n;
-        this.renderBuilder();
-    },
-
-    selectUnit: function(i) { 
-        this.state.selectedUnit = i; 
-        this.state.activeStep = 1; 
-        this.state.isPasted = false; 
-        this.refresh(); 
-    },
-
-    addUnit: function() {
-        var u = this.sanitizeUnit({});
-        this.state.currentFaction.units.push(u);
-        this.state.selectedUnit = this.state.currentFaction.units.length - 1;
-        this.state.activeStep = 1;
-        this.state.isPasted = false;
-        this.refresh();
-    },
-
-    updateUnit: function(field, value) { 
-        if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit][field] = value; 
-        this.refresh(); 
-    },
-
-    updateFaction: function(v) { 
-        this.state.currentFaction.faction = v; 
-        this.renderRoster(); 
-    },
-
-    saveAndNew: function() { 
-        this.state.selectedUnit = null; 
-        this.state.activeStep = 1;
-        this.refresh(); 
-    },
-
-    delUnit: function() { 
-        if (!confirm("Delete this unit?")) return;
-        this.state.currentFaction.units.splice(this.state.selectedUnit, 1); 
-        this.state.selectedUnit = null; 
-        this.state.activeStep = 1;
-        this.refresh(); 
-    },
-
-    openSlidePanel: function(panelType) {
-        this.state.activeModal = panelType;
-        this.renderSlidePanel();
+        // Trigger CSS transition
+        requestAnimationFrame(function() { panel.classList.add('cc-slide-panel-open'); });
     },
 
     closeSlidePanel: function() {
         this.state.activeModal = null;
-        this.renderSlidePanel();
+        var panel = document.getElementById('ccfb-studio-panel');
+        var bd    = document.getElementById('ccfb-studio-backdrop');
+        if (panel) panel.parentNode.removeChild(panel);
+        if (bd)    bd.parentNode.removeChild(bd);
     },
 
     addItem: function(type, key) {
@@ -1188,22 +1134,21 @@ window.CCFB_FACTORY = {
         if (this.state.selectedUnit === null) return;
         var s = this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities[index];
         if (!s) return;
-        // Snapshot, remove old entry, store pending edit in state
-        this.state._pendingSupplementalEdit = JSON.parse(JSON.stringify(s));
+        var snap = JSON.parse(JSON.stringify(s));
+        // Remove old entry and force step 5 open
         this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
         this.state.activeStep = 5;
         this.refresh();
-        // Populate after DOM has settled - use double rAF for reliability
-        var snap = this.state._pendingSupplementalEdit;
+        // Populate form after DOM rebuilds
         requestAnimationFrame(function() {
             requestAnimationFrame(function() {
                 var nameEl   = document.getElementById('supp-name');
                 var typeEl   = document.getElementById('supp-type');
                 var effectEl = document.getElementById('supp-effect');
-                if (!nameEl) return; // step not in DOM yet - shouldn't happen
+                if (!nameEl) return;
                 nameEl.value   = snap.name   || '';
-                typeEl.value   = snap.type   || 'Gear';
-                effectEl.value = snap.effect || '';
+                if (typeEl)   typeEl.value   = snap.type   || 'Gear';
+                if (effectEl) effectEl.value = snap.effect || '';
                 var mods = snap.stat_modifiers || {};
                 ['quality','defense','move','range'].forEach(function(stat) {
                     var cb  = document.getElementById('mod-' + stat);
