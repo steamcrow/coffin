@@ -209,7 +209,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -280,7 +280,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -365,7 +365,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -443,7 +443,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -526,7 +526,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -600,7 +600,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -675,7 +675,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -756,7 +756,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -833,7 +833,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Gain Gas Mask and Built-In Goggles protections: ignore Coffin Cough / gas & smoke lung/eye effects; immune to Blinding/visual hazard effects (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -918,7 +918,7 @@
           "effect": "Same as Monster Rangers Gas Mask (for attached crew). Practical effect: this unit ignores Coffin Cough / gas & smoke visual/lung penalties where scenarios would apply them to crewed assets.",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
@@ -1005,7 +1005,7 @@
           "effect": "Same as Monster Rangers Gas Mask. Practical effect: ignores Coffin Cough / gas & smoke visual/lung penalties (scenario-defined).",
           "grants_abilities": [
             "gas_mask",
-            "built_in_goggles"
+            "gas_mask"
           ]
         },
         {
