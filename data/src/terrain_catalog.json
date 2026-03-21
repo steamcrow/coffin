@@ -993,7 +993,7 @@
       "footprint": { "shape": "rect", "size_in": { "w": 7, "d": 5 }, "base_height_in": 4.0 },
       "visibility": { "los_profile": "blocks", "blocks_los_when": "Blocks line of sight through structure body; balcony and windows are partial", "window_los": "partial" },
       "cover": { "default_cover": "light", "edges_cover": "heavy", "interior_cover": "light" },
-      "elevation": { "system": "levels", "level_unit_in": 2.0, "max_level": 1, "levels": [{ "level": 0, "name": "Ground Floor", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Interior rooms."] }, { "level": 1, "name": "Upper Balcony", "surface_kind": "balcony", "walkable": true, "railings_cover": "light", "notes": ["Upper firing lane."] }] },
+      "elevation": { "system": "levels", "level_unit_in": 2.0, "max_level": 1, "levels": [{ "level": 0, "name": "Ground Floor", "surface_kind": "interior", "walkable": true, "blocks_los_from_outside": true, "notes": ["Interior rooms."] }, { "level": 1, "name": "Upper Balcony", "surface_kind": "balcony", "walkable": true, "railings_cover": "light", "notes": ["Upper story lane."] }] },
       "movement": {
         "is_passable": false,
         "is_walkable_on_top": true,
@@ -1005,7 +1005,7 @@
       "destructibility": { "destructible": false },
       "editor_defaults": { "scale": 1, "rotation_snap_deg": 15, "layer": "terrain_structures" }
     },
-   {
+    {
       "terrain_type_id": "building_town_civic_01",
       "asset_file": "westtown_normal_07.png",
       "name": "Civic Town Building",
