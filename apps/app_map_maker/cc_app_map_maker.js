@@ -819,15 +819,15 @@
     });
   }
 
-  function mount(root, userOpts) {
+    function mount(root, userOpts) {
     if (!root) throw new Error("Map Maker mount root is required.");
 
     state.opts = mergeOpts(userOpts || {});
 
-    return ensureCss(state.opts.leafletCssUrl)
-      .then(function () { return ensureCss(state.opts.appCssUrl); })
-      .then(function () { return ensureScript(state.opts.leafletJsUrl); })
-      .then(function () { return initData(); })
+    return Promise.resolve()
+      .then(function () {
+        return initData();
+      })
       .then(function () {
         buildLayout(root);
         initLeaflet();
