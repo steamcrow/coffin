@@ -1109,11 +1109,13 @@ window.CCFB_FACTORY = {
         if (bd) bd.parentNode.removeChild(bd);
     },
 
-    addItem: function(type, key) { 
+    addItem: function(type, key) {
         if (this.state.selectedUnit === null) return;
-        this.state.currentFaction.units[this.state.selectedUnit][type].push(key); 
-        this.state.activeModal = null; 
-        this.refresh(); 
+        this.state.currentFaction.units[this.state.selectedUnit][type].push(key);
+        this.state.activeModal = null;
+        var bd = document.getElementById('ccfb-panel-backdrop');
+        if (bd) bd.parentNode.removeChild(bd);
+        this.refresh();
     },
 
     removeItem: function(type, index) { 
@@ -1198,29 +1200,33 @@ window.CCFB_FACTORY = {
         if (this.state.selectedUnit === null) return;
         var s = this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities[index];
         if (!s) return;
-        // Snapshot before removing
-        var snap = JSON.parse(JSON.stringify(s));
-        // Remove old entry, force step 5 open so the form is visible, then re-render
+        // Snapshot, remove old entry, store pending edit in state
+        this.state._pendingSupplementalEdit = JSON.parse(JSON.stringify(s));
         this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
         this.state.activeStep = 5;
         this.refresh();
-        // Populate form fields AFTER refresh has rebuilt the DOM
-        setTimeout(function() {
-            var nameEl   = document.getElementById('supp-name');
-            var typeEl   = document.getElementById('supp-type');
-            var effectEl = document.getElementById('supp-effect');
-            if (nameEl)   nameEl.value   = snap.name   || '';
-            if (typeEl)   typeEl.value   = snap.type   || 'Gear';
-            if (effectEl) effectEl.value = snap.effect || '';
-            var mods = snap.stat_modifiers || {};
-            ['quality','defense','move','range'].forEach(function(stat) {
-                var cb  = document.getElementById('mod-' + stat);
-                var sel = document.getElementById('mod-' + stat + '-val');
-                if (cb)  cb.checked = (mods[stat] !== undefined);
-                if (sel && mods[stat] !== undefined) sel.value = String(mods[stat]);
+        // Populate after DOM has settled - use double rAF for reliability
+        var snap = this.state._pendingSupplementalEdit;
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                var nameEl   = document.getElementById('supp-name');
+                var typeEl   = document.getElementById('supp-type');
+                var effectEl = document.getElementById('supp-effect');
+                if (!nameEl) return; // step not in DOM yet - shouldn't happen
+                nameEl.value   = snap.name   || '';
+                typeEl.value   = snap.type   || 'Gear';
+                effectEl.value = snap.effect || '';
+                var mods = snap.stat_modifiers || {};
+                ['quality','defense','move','range'].forEach(function(stat) {
+                    var cb  = document.getElementById('mod-' + stat);
+                    var sel = document.getElementById('mod-' + stat + '-val');
+                    if (cb)  cb.checked = (mods[stat] !== undefined);
+                    if (sel && mods[stat] !== undefined) sel.value = String(mods[stat]);
+                });
+                nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                nameEl.focus();
             });
-            if (nameEl) { nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); nameEl.focus(); }
-        }, 50);
+        });
     },
 
     pasteLoad: function(str) {
