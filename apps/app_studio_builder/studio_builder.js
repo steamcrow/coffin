@@ -182,10 +182,10 @@ window.CCFB_FACTORY = {
         var weaponPropsPromise = fetchJson(SRC + '100_weapon_properties.json');
         var abilityPromises    = abilityFiles.map(function(af) {
             return fetchJson(SRC + af.file)
-                .then(function(data) { return { key: af.key, data: data }; })
+                .then(function(data) { return { key: af.key, title: af.title, data: data }; })
                 .catch(function(err) {
                     console.warn('⚠️ Skipped', af.file, '—', err.message);
-                    return { key: af.key, data: {} };
+                    return { key: af.key, title: af.title, data: {} };
                 });
         });
 
@@ -195,30 +195,55 @@ window.CCFB_FACTORY = {
                 var weaponPropsData = results[1];
                 var abilityResults  = results[2];
 
-                // Each ability file stored under its own category key — not "abilities"
-                // which would overwrite every previous file.
-                var abilityDict = {};
-                var abilityTitles = {};
-                abilityFiles.forEach(function(af) { abilityTitles[af.key] = af.title; });
-                abilityResults.forEach(function(ar) {
-                    var entries = ar.data.abilities || ar.data;
-                    if (entries && typeof entries === 'object') {
-                        abilityDict[ar.key] = entries;
+                // ── Weapon properties ──────────────────────────────────────────
+                // 100_weapon_properties.json structure:
+                //   { weapon_properties: { _id, title, properties: { blast: {…}, … } } }
+                // We need to reach the inner .properties object.
+                var wpRaw = weaponPropsData.weapon_properties || weaponPropsData;
+                // Drill one level deeper if entries are wrapped under .properties
+                var wpEntries = (wpRaw && typeof wpRaw.properties === 'object') ? wpRaw.properties : wpRaw;
+                // Keep only real weapon objects — skip _id/title/etc string fields
+                var cleanWeaponProps = {};
+                Object.keys(wpEntries).forEach(function(k) {
+                    var v = wpEntries[k];
+                    if (v && typeof v === 'object' && (v.name || v.title || v.short)) {
+                        cleanWeaponProps[k] = v;
                     }
                 });
+                console.log('⚔️ Weapon properties loaded:', Object.keys(cleanWeaponProps).join(', '));
 
-                // Each file may wrap its section under rules_master or expose at root
-                var dig = function(obj, key) {
-                    if (obj.rules_master && obj.rules_master[key]) return obj.rules_master[key];
-                    if (obj[key]) return obj[key];
-                    return obj;
-                };
+                // ── Ability dictionary ─────────────────────────────────────────
+                // Each file exposes its abilities under a top-level "abilities" key.
+                // We store them under the category key so files don't overwrite each other.
+                var abilityDict   = {};
+                var abilityTitles = {};
+                abilityResults.forEach(function(ar) {
+                    abilityTitles[ar.key] = ar.title;
+                    // Abilities are under .abilities at root of each file
+                    var entries = ar.data.abilities || ar.data;
+                    if (entries && typeof entries === 'object') {
+                        // Only keep real ability objects, skip metadata keys
+                        var clean = {};
+                        Object.keys(entries).forEach(function(k) {
+                            var v = entries[k];
+                            if (v && typeof v === 'object' && (v.name || v.short || v.long)) {
+                                clean[k] = v;
+                            }
+                        });
+                        if (Object.keys(clean).length > 0) abilityDict[ar.key] = clean;
+                    }
+                });
+                console.log('📖 Ability categories loaded:', Object.keys(abilityDict).join(', '));
 
-                var rawWeaponProps = dig(weaponPropsData, 'weapon_properties');
+                // ── Unit identities ────────────────────────────────────────────
+                var identities = identitiesData.rules_master
+                    ? identitiesData.rules_master.unit_identities
+                    : (identitiesData.unit_identities || identitiesData);
+
                 self.state.rules = {
                     rules_master: {
-                        unit_identities:    dig(identitiesData, 'unit_identities'),
-                        weapon_properties:  (rawWeaponProps && rawWeaponProps.properties) ? rawWeaponProps.properties : rawWeaponProps,
+                        unit_identities:    identities,
+                        weapon_properties:  cleanWeaponProps,
                         ability_dictionary: abilityDict,
                         ability_titles:     abilityTitles
                     }
@@ -796,13 +821,13 @@ window.CCFB_FACTORY = {
                         (u.supplemental_abilities.length > 0 ? 
                             u.supplemental_abilities.map(function(s, i) {
                                 return '<div class="supplemental-item" style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;">' +
-                                    '<div style="flex:1;cursor:pointer;" onclick="window.CCFB_FACTORY.editSupplemental(' + i + ')" title="Click to load into editor above">' +
+                                    '<div style="flex:1;cursor:pointer;" onclick="window.CCFB_FACTORY.editSupplemental(' + i + ')" title="Click to edit">' +
                                         '<strong>' + s.name + '</strong> <span class="supp-type-badge">' + s.type + '</span>' +
                                         (s.cost > 0 ? ' <span style="font-size:0.75rem;color:var(--cc-primary);">(' + s.cost + '₤)</span>' : '') +
                                         '<div class="supp-effect">' + s.effect + '</div>' +
-                                        (s.stat_modifiers ? '<div class="supp-mods" style="font-size:0.72rem;color:rgba(255,255,255,0.45);">Modifiers: ' + JSON.stringify(s.stat_modifiers) + '</div>' : '') +
+                                        (s.stat_modifiers ? '<div class="supp-mods" style="font-size:0.72rem;color:rgba(255,255,255,0.45);">Mods: ' + JSON.stringify(s.stat_modifiers) + '</div>' : '') +
                                     '</div>' +
-                                    '<button onclick="window.CCFB_FACTORY.removeSupplemental(' + i + ')" style="flex:0 0 auto;background:none;border:1px solid rgba(255,80,80,0.4);border-radius:3px;color:#ef5350;padding:2px 7px;cursor:pointer;font-size:0.75rem;margin-top:2px;">✕</button>' +
+                                    '<button onclick="window.CCFB_FACTORY.removeSupplemental(' + i + ')" style="flex:0 0 auto;background:none;border:1px solid rgba(255,80,80,0.4);border-radius:3px;color:#ef5350;padding:2px 7px;cursor:pointer;font-size:0.75rem;margin-top:2px;" title="Delete">✕</button>' +
                                 '</div>';
                             }).join('') 
                         : '<span class="no-items">None added</span>') +
@@ -963,31 +988,31 @@ window.CCFB_FACTORY = {
         var cardsHtml = '';
         
         if (isWeapon) {
-            for (var key in weaponProps) {
+            Object.keys(weaponProps).forEach(function(key) {
                 var item = weaponProps[key];
-                if (!item || typeof item !== 'object') continue;
+                if (!item || typeof item !== 'object') return;
                 var wName   = item.name || item.title || key.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-                var wEffect = item.short || item.effect || item.long || 'No description available';
+                var wEffect = item.short || item.effect || item.long || '';
                 cardsHtml += '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')">' +
                     '<div class="ability-card-name">' + wName + '</div>' +
-                    '<div class="ability-card-effect">' + wEffect + '</div>' +
+                    (wEffect ? '<div class="ability-card-effect">' + wEffect + '</div>' : '') +
                 '</div>';
-            }
+            });
         } else {
-            for (var cat in abilityDict) {
-                var categoryName = abilityTitles[cat] || cat.replace(/^[A-Z]_/, '').replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-                cardsHtml += '<div class="category-header">' + categoryName + '</div>';
-                for (var aKey in abilityDict[cat]) {
+            Object.keys(abilityDict).forEach(function(cat) {
+                var catLabel = abilityTitles[cat] || cat.replace(/^[A-Z]_/, '').replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+                cardsHtml += '<div class="category-header">' + catLabel + '</div>';
+                Object.keys(abilityDict[cat]).forEach(function(aKey) {
                     var aItem = abilityDict[cat][aKey];
-                    if (!aItem || typeof aItem !== 'object') continue;
+                    if (!aItem || typeof aItem !== 'object') return;
                     var aName   = aItem.name || aKey.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-                    var aEffect = aItem.short || aItem.effect || aItem.long || 'No description available';
+                    var aEffect = aItem.short || aItem.effect || aItem.long || '';
                     cardsHtml += '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'abilities\', \'' + aKey + '\')">' +
                         '<div class="ability-card-name">' + aName + '</div>' +
-                        '<div class="ability-card-effect">' + aEffect + '</div>' +
+                        (aEffect ? '<div class="ability-card-effect">' + aEffect + '</div>' : '') +
                     '</div>';
-                }
-            }
+                });
+            });
         }
         
         target.innerHTML = 
@@ -1149,31 +1174,29 @@ window.CCFB_FACTORY = {
         if (this.state.selectedUnit === null) return;
         var s = this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities[index];
         if (!s) return;
-
-        // Populate form fields with existing values
+        // Populate form fields
         var nameEl   = document.getElementById('supp-name');
         var typeEl   = document.getElementById('supp-type');
         var effectEl = document.getElementById('supp-effect');
         if (nameEl)   nameEl.value   = s.name   || '';
         if (typeEl)   typeEl.value   = s.type   || 'Gear';
         if (effectEl) effectEl.value = s.effect || '';
-
         // Restore stat modifier checkboxes
         var mods = s.stat_modifiers || {};
         ['quality','defense','move','range'].forEach(function(stat) {
             var cb  = document.getElementById('mod-' + stat);
             var sel = document.getElementById('mod-' + stat + '-val');
-            if (cb)  cb.checked  = (mods[stat] !== undefined);
-            if (sel && mods[stat] !== undefined) sel.value = mods[stat];
+            if (cb)  cb.checked = (mods[stat] !== undefined);
+            if (sel && mods[stat] !== undefined) sel.value = String(mods[stat]);
         });
-
-        // Remove old entry so saving via + ADD writes a fresh one
+        // Remove old entry — saving via + ADD will write the updated one
         this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
         this.refresh();
-
         // Scroll form into view
-        var formEl = document.getElementById('supp-name');
-        if (formEl) formEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(function() {
+            var el = document.getElementById('supp-name');
+            if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+        }, 50);
     },
 
     pasteLoad: function(str) {
