@@ -195,14 +195,10 @@ window.CCFB_FACTORY = {
                 var weaponPropsData = results[1];
                 var abilityResults  = results[2];
 
-                // ── Weapon properties ──────────────────────────────────────────
-                // 100_weapon_properties.json structure:
-                //   { weapon_properties: { _id, title, properties: { blast: {…}, … } } }
-                // We need to reach the inner .properties object.
-                var wpRaw = weaponPropsData.weapon_properties || weaponPropsData;
-                // Drill one level deeper if entries are wrapped under .properties
+                // ── Weapon properties ─────────────────────────────────────────
+                // Structure: { weapon_properties: { _id, title, properties: { blast:{…}, … } } }
+                var wpRaw     = weaponPropsData.weapon_properties || weaponPropsData;
                 var wpEntries = (wpRaw && typeof wpRaw.properties === 'object') ? wpRaw.properties : wpRaw;
-                // Keep only real weapon objects — skip _id/title/etc string fields
                 var cleanWeaponProps = {};
                 Object.keys(wpEntries).forEach(function(k) {
                     var v = wpEntries[k];
@@ -212,17 +208,15 @@ window.CCFB_FACTORY = {
                 });
                 console.log('⚔️ Weapon properties loaded:', Object.keys(cleanWeaponProps).join(', '));
 
-                // ── Ability dictionary ─────────────────────────────────────────
-                // Each file exposes its abilities under a top-level "abilities" key.
-                // We store them under the category key so files don't overwrite each other.
+                // ── Ability dictionary ────────────────────────────────────────
+                // Each file exposes abilities under a top-level "abilities" key.
+                // Store under the category key so files never overwrite each other.
                 var abilityDict   = {};
                 var abilityTitles = {};
                 abilityResults.forEach(function(ar) {
                     abilityTitles[ar.key] = ar.title;
-                    // Abilities are under .abilities at root of each file
                     var entries = ar.data.abilities || ar.data;
                     if (entries && typeof entries === 'object') {
-                        // Only keep real ability objects, skip metadata keys
                         var clean = {};
                         Object.keys(entries).forEach(function(k) {
                             var v = entries[k];
@@ -235,7 +229,7 @@ window.CCFB_FACTORY = {
                 });
                 console.log('📖 Ability categories loaded:', Object.keys(abilityDict).join(', '));
 
-                // ── Unit identities ────────────────────────────────────────────
+                // ── Unit identities ───────────────────────────────────────────
                 var identities = identitiesData.rules_master
                     ? identitiesData.rules_master.unit_identities
                     : (identitiesData.unit_identities || identitiesData);
@@ -981,48 +975,67 @@ window.CCFB_FACTORY = {
         }
         
         var isWeapon = this.state.activeModal === 'weapon';
-        var weaponProps = this.state.rules.rules_master.weapon_properties || {};
-        var abilityDict = this.state.rules.rules_master.ability_dictionary || {};
-        var abilityTitles = this.state.rules.rules_master.ability_titles || {};
-        
-        var cardsHtml = '';
-        
+        var weaponProps  = this.state.rules.rules_master.weapon_properties  || {};
+        var abilityDict  = this.state.rules.rules_master.ability_dictionary || {};
+        var abilityTitles = this.state.rules.rules_master.ability_titles    || {};
+
+        // Shared row styles — mimics cc-list-item alternating + hover pattern
+        var rowBase  = 'display:block;width:100%;text-align:left;border:none;border-bottom:1px solid var(--cc-border);padding:10px 14px;cursor:pointer;transition:background .12s;';
+        var rowOdd   = rowBase + 'background:var(--cc-bg);';
+        var rowEven  = rowBase + 'background:var(--cc-bg-soft);';
+        var nameStyle = 'display:block;font-family:var(--cc-font-title);font-weight:700;font-size:0.95rem;color:var(--cc-primary);margin-bottom:3px;';
+        var descStyle = 'display:block;font-size:0.82rem;color:var(--cc-text-muted);line-height:1.55;';
+
+        var rowIndex = 0;
+        var listHtml = '';
+
         if (isWeapon) {
             Object.keys(weaponProps).forEach(function(key) {
                 var item = weaponProps[key];
                 if (!item || typeof item !== 'object') return;
-                var wName   = item.name || item.title || key.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-                var wEffect = item.short || item.effect || item.long || '';
-                cardsHtml += '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')">' +
-                    '<div class="ability-card-name">' + wName + '</div>' +
-                    (wEffect ? '<div class="ability-card-effect">' + wEffect + '</div>' : '') +
-                '</div>';
+                var wName   = item.name  || item.title || key.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+                var wEffect = item.long  || item.short || item.effect || '';
+                var bg = (rowIndex % 2 === 0) ? rowOdd : rowEven;
+                rowIndex++;
+                listHtml += '<button style="' + bg + '" ' +
+                    'onmouseover="this.style.background=\'var(--cc-bg-mid)\'" ' +
+                    'onmouseout="this.style.background=\'' + (rowIndex % 2 === 0 ? 'var(--cc-bg-soft)' : 'var(--cc-bg)') + '\'" ' +
+                    'onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\', \'' + key + '\')">' +
+                    '<span style="' + nameStyle + '">' + wName + '</span>' +
+                    (wEffect ? '<span style="' + descStyle + '">' + wEffect + '</span>' : '') +
+                '</button>';
             });
         } else {
             Object.keys(abilityDict).forEach(function(cat) {
                 var catLabel = abilityTitles[cat] || cat.replace(/^[A-Z]_/, '').replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-                cardsHtml += '<div class="category-header">' + catLabel + '</div>';
+                listHtml += '<div style="padding:8px 14px 4px;font-family:var(--cc-font-mono);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--cc-primary);background:var(--cc-bg-mid);border-bottom:1px solid var(--cc-border);border-top:1px solid var(--cc-border);margin-top:4px;">' + catLabel + '</div>';
+                rowIndex = 0; // reset alternation per category
                 Object.keys(abilityDict[cat]).forEach(function(aKey) {
                     var aItem = abilityDict[cat][aKey];
                     if (!aItem || typeof aItem !== 'object') return;
-                    var aName   = aItem.name || aKey.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
-                    var aEffect = aItem.short || aItem.effect || aItem.long || '';
-                    cardsHtml += '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'abilities\', \'' + aKey + '\')">' +
-                        '<div class="ability-card-name">' + aName + '</div>' +
-                        (aEffect ? '<div class="ability-card-effect">' + aEffect + '</div>' : '') +
-                    '</div>';
+                    var aName   = aItem.name  || aKey.replace(/_/g, ' ').replace(/\b\w/g, function(c){ return c.toUpperCase(); });
+                    var aEffect = aItem.long  || aItem.short || aItem.effect || '';
+                    var bg = (rowIndex % 2 === 0) ? rowOdd : rowEven;
+                    rowIndex++;
+                    listHtml += '<button style="' + bg + '" ' +
+                        'onmouseover="this.style.background=\'var(--cc-bg-mid)\'" ' +
+                        'onmouseout="this.style.background=\'' + (rowIndex % 2 === 0 ? 'var(--cc-bg-soft)' : 'var(--cc-bg)') + '\'" ' +
+                        'onclick="window.CCFB_FACTORY.addItem(\'abilities\', \'' + aKey + '\')">' +
+                        '<span style="' + nameStyle + '">' + aName + '</span>' +
+                        (aEffect ? '<span style="' + descStyle + '">' + aEffect + '</span>' : '') +
+                    '</button>';
                 });
             });
         }
-        
-        target.innerHTML = 
+
+        target.innerHTML =
             '<div class="cc-slide-panel cc-slide-panel-open">' +
                 '<div class="cc-slide-panel-header">' +
                     '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
                     '<button onclick="window.CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
                 '</div>' +
-                '<div class="cc-modal-content">' +
-                    '<div class="ability-grid">' + cardsHtml + '</div>' +
+                '<div style="overflow-y:auto;padding:0;">' +
+                    listHtml +
                 '</div>' +
             '</div>';
     },
@@ -1174,14 +1187,12 @@ window.CCFB_FACTORY = {
         if (this.state.selectedUnit === null) return;
         var s = this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities[index];
         if (!s) return;
-        // Populate form fields
         var nameEl   = document.getElementById('supp-name');
         var typeEl   = document.getElementById('supp-type');
         var effectEl = document.getElementById('supp-effect');
         if (nameEl)   nameEl.value   = s.name   || '';
         if (typeEl)   typeEl.value   = s.type   || 'Gear';
         if (effectEl) effectEl.value = s.effect || '';
-        // Restore stat modifier checkboxes
         var mods = s.stat_modifiers || {};
         ['quality','defense','move','range'].forEach(function(stat) {
             var cb  = document.getElementById('mod-' + stat);
@@ -1189,10 +1200,8 @@ window.CCFB_FACTORY = {
             if (cb)  cb.checked = (mods[stat] !== undefined);
             if (sel && mods[stat] !== undefined) sel.value = String(mods[stat]);
         });
-        // Remove old entry — saving via + ADD will write the updated one
         this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
         this.refresh();
-        // Scroll form into view
         setTimeout(function() {
             var el = document.getElementById('supp-name');
             if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
