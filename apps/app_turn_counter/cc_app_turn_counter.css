@@ -1,468 +1,97 @@
-/* ================================
+/* ================================================================
    Turn Counter — App-Specific Styles
-   File: coffin/apps/app_turn_counter/cc_app_turn_counter.css
-
-   Relies on:
-     ui/cc_ui.css — :root variables, shell, header, panels, lists,
-                    inputs, buttons, badges, slide panels, roster items
-   ================================ */
+   Full Logic Preservation + UI Alignment
+   ================================================================ */
 
 /* ===== Keyframe Animations ===== */
-@keyframes cc-spin    { 0%   { transform: rotate(0deg)   } 100% { transform: rotate(360deg) } }
-@keyframes cc-pulse   { 0%, 100% { opacity: 0.6 } 50% { opacity: 1 } }
-@keyframes cc-fade-in { from { opacity: 0 } to   { opacity: 1 } }
+@keyframes cc-spin { 0% { transform: rotate(0deg) } 100% { transform: rotate(360deg) } }
+@keyframes cc-pulse { 0%, 100% { opacity: 0.6 } 50% { opacity: 1 } }
+@keyframes cc-fade-in { from { opacity: 0 } to { opacity: 1 } }
 
 /* ===== Panel Variants ===== */
-/* NOTE: turn counter uses .cc-panel-header/.cc-panel-body
-   cc_ui.css uses .cc-panel-head — reconcile in a future HTML pass */
 .cc-panel-header {
   padding: 10px 14px;
   border-bottom: 1px solid var(--cc-border);
   flex-shrink: 0;
+  font-family: var(--cc-font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  color: var(--cc-text-dim);
 }
-
 .cc-panel-body { padding: 12px; }
 
-/* ===== Buttons ===== */
-/* cc_ui.css has .btn/.btn-outline-secondary (Bootstrap-style).
-   Turn counter uses .cc-btn/.cc-btn-secondary (app-scoped). */
+/* ===== Buttons (App-Scoped) ===== */
 .cc-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: var(--cc-primary);
-  color: #000;
+  color: var(--cc-bg);
   border: none;
   border-radius: var(--cc-radius-lg);
-  padding: .5rem 1rem;
-  font-size: .85rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: .06em;
+  letter-spacing: 0.06em;
   cursor: pointer;
-  transition: background .15s, opacity .15s;
+  transition: all 0.15s;
 }
-
-.cc-btn:hover    { background: var(--cc-primary-hover); }
-.cc-btn:disabled { opacity: .4; cursor: not-allowed; }
+.cc-btn:hover { background: var(--cc-primary-hover); }
 
 .cc-btn-secondary {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--cc-bg-soft);
   color: var(--cc-text);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid var(--cc-border);
 }
+.cc-btn-secondary:hover { background: var(--cc-bg-mid); }
 
-.cc-btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
-
-/* ===== Login Status Bar ===== */
+/* ===== Status Bars & Loading ===== */
 .cc-login-status {
-  padding: .45rem 1rem;
-  font-size: .82rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
   display: flex;
   align-items: center;
-  gap: .5rem;
+  gap: 0.5rem;
   border-bottom: 1px solid transparent;
-  flex-shrink: 0;
 }
+.cc-login-status.logged-in { background: rgba(76, 175, 80, 0.08); color: var(--cc-green); }
+.cc-login-status.logged-out { background: rgba(239, 83, 80, 0.08); color: var(--cc-red); }
 
-.cc-login-status.logged-in {
-  background: rgba(76, 175, 80, 0.08);
-  color: #81c784;
-  border-bottom-color: rgba(76, 175, 80, 0.2);
-}
+.cc-tc-loading-icon { animation: cc-spin 1s linear infinite; display: block; font-size: 2rem; }
 
-.cc-login-status.logged-out {
-  background: rgba(239, 83, 80, 0.08);
-  color: #ef9a9a;
-  border-bottom-color: rgba(239, 83, 80, 0.2);
-}
-
-/* ===== Centered Content Columns ===== */
-.cc-tc-content {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 1.5rem;
-}
-
-.cc-tc-content-scroll {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 1rem;
-  overflow-y: auto;
-  flex: 1;
-  box-sizing: border-box;
-}
-
-/* ===== Loading Spinner ===== */
-.cc-tc-loading { text-align: center; padding: 3rem; }
-
-.cc-tc-loading-icon {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-  display: block;
-  animation: cc-spin 1s linear infinite;
-}
-
-.cc-tc-loading-text { color: var(--cc-text-muted); }
-
-/* ===== Start Screen ===== */
-.cc-start-option {
-  text-align: left;
-  display: flex;
-  align-items: center;
-}
-
-.cc-start-option-note {
-  margin-left: auto;
-  font-size: .75rem;
-  color: var(--cc-text-muted);
-  text-transform: none;
-  font-weight: 400;
-  letter-spacing: 0;
-  flex-shrink: 0;
-}
-
-.cc-no-storage-msg {
-  padding: .75rem;
-  border: 1px solid var(--cc-border);
-  border-radius: var(--cc-radius-lg);
-  color: var(--cc-text-dim);
-  font-size: .85rem;
-}
-
-/* ===== Quick Setup Faction Rows ===== */
-.cc-quick-faction-row {
-  display: flex;
-  align-items: center;
-  gap: .75rem;
-  padding: .75rem;
-  border: 1px solid var(--cc-border);
-  border-radius: var(--cc-radius-lg);
-  cursor: pointer;
-  transition: border-color .2s ease;
-}
-
-.cc-quick-faction-dot {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  font-size: .9rem;
-  flex-shrink: 0;
-}
-
-.cc-quick-npc-select {
-  background: #222;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: var(--cc-text-muted);
-  border-radius: var(--cc-radius);
-  padding: 2px 6px;
-  font-size: .8rem;
-}
-
-/* ===== Round Banner ===== */
-.cc-round-banner {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-}
-
-.cc-round-banner-inner {
-  text-align: center;
-  padding: 1.5rem;
-  max-width: 440px;
-  width: 100%;
-}
-
-.cc-round-eyebrow {
-  color: var(--cc-primary);
-  font-size: .8rem;
-  text-transform: uppercase;
-  letter-spacing: .2em;
-  margin-bottom: .5rem;
-  font-family: var(--cc-font-mono);
-}
-
+/* ===== Round & Activation UI ===== */
 .cc-round-number {
   font-size: clamp(3rem, 10vw, 5rem);
-  margin: 0;
   color: var(--cc-text);
   line-height: 1;
 }
 
-.cc-round-meta { color: var(--cc-text-muted); margin: .5rem 0 1.25rem; }
-
-.cc-activation-order         { margin-bottom: 1.25rem; }
-.cc-activation-order-caption {
-  font-size: .7rem;
-  color: var(--cc-text-dim);
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  margin-bottom: .4rem;
-}
-
-.cc-activation-order-list { display: flex; flex-direction: column; gap: .3rem; }
-
-.cc-activation-order-item {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  padding: .4rem .6rem;
-  border-radius: var(--cc-radius-lg);
-}
-
-.cc-activation-order-rank {
-  color: var(--cc-text-dim);
-  font-size: .7rem;
-  font-weight: 700;
-  min-width: 1rem;
-}
-
-.cc-activation-order-info { text-align: left; flex: 1; }
-.cc-activation-order-name { font-size: .75rem; font-weight: 700; }
-.cc-activation-order-meta { color: var(--cc-text-dim); font-size: .65rem; }
-
-.cc-activation-first-badge {
-  font-size: .65rem;
-  font-weight: 700;
-  margin-left: .25rem;
-  color: var(--cc-primary);
-}
-
-/* ===== Noise & Cough Bars ===== */
-.cc-noise-bar { margin: .5rem 0; }
-.cc-cough-bar { margin: .3rem 0; }
-
-.cc-bar-header { display: flex; justify-content: space-between; margin-bottom: 3px; }
-
-.cc-bar-label {
-  font-size: .7rem;
-  color: var(--cc-text-dim);
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
-.cc-bar-value { font-size: .7rem; font-weight: 700; }
-
-.cc-noise-track {
-  height: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.cc-noise-fill  { height: 100%; border-radius: 3px; transition: width .3s ease; }
-
-.cc-cough-track {
-  height: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.cc-cough-fill  { height: 100%; border-radius: 2px; }
-
-/* ===== Faction Logo ===== */
-.cc-faction-logo { object-fit: contain; flex-shrink: 0; }
-
-.cc-faction-logo-fallback {
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
-/* ===== Activation Screen ===== */
-.cc-activation-header-info { display: flex; align-items: center; gap: .75rem; }
-
-.cc-activation-faction-name {
-  font-size: .75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-}
-
-.cc-activation-round-meta { color: var(--cc-text-muted); font-size: .7rem; }
-.cc-activation-controls   { display: flex; align-items: center; gap: .5rem; }
-
-.cc-timer { color: var(--cc-text-muted); font-size: .8rem; font-family: var(--cc-font-mono); }
-
 .cc-activation-footer {
   padding: 1rem;
   border-top: 1px solid var(--cc-border);
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--cc-bg-darker);
   display: flex;
-  gap: .75rem;
-  max-width: 600px;
-  width: 100%;
+  gap: 0.75rem;
   margin: 0 auto;
-  box-sizing: border-box;
-  flex-shrink: 0;
 }
 
-.cc-unit-heading {
-  font-size: clamp(1.8rem, 6vw, 2.6rem);
-  margin: 0;
-  color: var(--cc-text);
-  line-height: 1.1;
-}
-
-.cc-titan-badge {
-  color: var(--cc-gold);
-  font-size: .75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-}
-
-.cc-unit-lore {
-  color: var(--cc-text-muted);
-  font-size: .88rem;
-  font-style: italic;
-  margin: .4rem 0 0;
-  line-height: 1.5;
-}
-
-/* ===== Quality Track ===== */
-.cc-quality-track { display: flex; flex-direction: column; gap: 8px; }
-
-.cc-quality-dots { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-
-.cc-quality-q-label {
-  font-size: .7rem;
-  text-transform: uppercase;
-  letter-spacing: .08em;
-  margin-right: 2px;
-  flex-shrink: 0;
-  opacity: .7;
-}
-
-.cc-quality-dot-row { display: flex; flex-wrap: wrap; gap: 2px; }
-
-.cc-q-dot {
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  border: 2px solid;
-  cursor: pointer;
-  transition: all .15s ease, transform .1s ease;
-  margin: 2px;
-  flex-shrink: 0;
-}
-
-.cc-q-dot:active { transform: scale(.85); }
-
-.cc-quality-current {
-  font-weight: 900;
-  font-size: 1.1rem;
-  margin-left: 4px;
-  flex-shrink: 0;
-}
-
-/* ===== Stat Badges (turn counter — different colors from cc_ui.css stat-q/d/m/r) ===== */
+/* ===== Stat Trackers ===== */
 .cc-tc-stat {
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   border-radius: var(--cc-radius-lg);
-  font-size: .85rem;
-  padding: .25rem .5rem;
+  padding: 0.25rem 0.5rem;
   min-width: 44px;
-  gap: 1px;
-  transition: background .15s, border-color .15s;
 }
 
-.cc-tc-stat[title] { cursor: pointer; }
+.cc-tc-stat-move { background: rgba(66, 165, 245, 0.13); border: 1px solid rgba(66, 165, 245, 0.4); color: #42a5f5; }
+.cc-tc-stat-defense { background: rgba(239, 83, 80, 0.13); border: 1px solid rgba(239, 83, 80, 0.4); color: #ef5350; }
+.cc-tc-stat-range { background: rgba(255, 214, 0, 0.13); border: 1px solid rgba(255, 214, 0, 0.4); color: #ffd600; }
 
-.cc-tc-stat-val { font-weight: 900; line-height: 1; }
-
-.cc-tc-stat-key {
-  font-size: .65rem;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  line-height: 1;
-  opacity: .7;
-}
-
-.cc-tc-stat-move    { background: rgba(66, 165, 245, 0.13);  border: 1px solid rgba(66, 165, 245, 0.4); }
-.cc-tc-stat-move    .cc-tc-stat-val,
-.cc-tc-stat-move    .cc-tc-stat-key { color: #42a5f5; }
-
-.cc-tc-stat-defense { background: rgba(239, 83, 80, 0.13);   border: 1px solid rgba(239, 83, 80, 0.4); }
-.cc-tc-stat-defense .cc-tc-stat-val,
-.cc-tc-stat-defense .cc-tc-stat-key { color: #ef5350; }
-
-.cc-tc-stat-range   { background: rgba(255, 214, 0, 0.13);   border: 1px solid rgba(255, 214, 0, 0.4); }
-.cc-tc-stat-range   .cc-tc-stat-val,
-.cc-tc-stat-range   .cc-tc-stat-key { color: #ffd600; }
-
-/* ===== Ability Tags ===== */
-.cc-ability-tags { display: flex; flex-wrap: wrap; gap: .4rem; }
-
-.cc-ability-tag {
-  padding: 5px 11px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: var(--cc-radius);
-  font-size: .78rem;
-  color: var(--cc-text-muted);
-  cursor: pointer;
-  transition: border-color .15s, color .15s;
-}
-
-/* Sub-section label above ability/upgrade rows */
-.cc-tc-sub-label {
-  font-size: .68rem;
-  color: var(--cc-text-dim);
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  margin-bottom: .4rem;
-  display: block;
-}
-
-.cc-tc-sub-hint {
-  font-style: italic;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: 0;
-  color: var(--cc-text-dim);
-  font-size: .65rem;
-}
-
-/* ===== NPC Directive Panel ===== */
-/* border/background applied inline — faction color */
-.cc-tc-directive      { margin: 1rem 0; }
-.cc-tc-directive-label {
-  font-size: .7rem;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  margin-bottom: .35rem;
-  font-family: var(--cc-font-mono);
-}
-
-.cc-tc-directive-priority { margin-bottom: .5rem; }
-.cc-tc-directive-meta { color: var(--cc-text-muted); font-size: .82rem; margin-bottom: .25rem; }
-
-/* ===== Upgrade Tags ===== */
-.cc-upgrade-tag {
-  padding: 5px 10px;
-  background: rgba(255, 215, 0, 0.06);
-  border: 1px solid rgba(255, 215, 0, 0.25);
-  border-radius: var(--cc-radius);
-  font-size: .78rem;
-  color: var(--cc-gold);
-}
-
-.cc-upgrade-note { color: var(--cc-text-muted); font-size: .72rem; margin-left: .4rem; }
-
-/* ===== Roll Overlay ===== */
-.cc-roll-overlay {
+/* ===== Overlays (Rolls & Alerts) ===== */
+.cc-roll-overlay, .cc-monster-alert {
   position: fixed;
   inset: 0;
   z-index: 10000;
@@ -470,268 +99,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: cc-fade-in .2s ease;
 }
 
-.cc-roll-dialog {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 12px;
-  padding: 1.5rem;
-  max-width: 400px;
-  width: 92%;
-  text-align: center;
-}
-
-.cc-roll-label {
-  font-size: .7rem;
-  color: var(--cc-text-dim);
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  margin-bottom: .25rem;
-}
-
-.cc-roll-review-note { font-size: .72rem; color: var(--cc-text-dim); margin-bottom: .5rem; }
-
-.cc-roll-dice { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; margin: .75rem 0; }
-
-.cc-roll-die {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.4rem;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
-.cc-roll-legend    { font-size: .68rem; color: var(--cc-text-dim); margin-bottom: .75rem; }
-.cc-roll-successes { font-size: 2.2rem; font-weight: 900; line-height: 1; }
-.cc-roll-result-label { font-size: .78rem; margin-bottom: .25rem; }
-.cc-roll-dice-count   { font-size: .72rem; color: var(--cc-text-dim); }
-
-/* Special result blocks */
-.cc-roll-lucky {
-  background: rgba(255, 214, 0, 0.13);
-  border: 2px solid #ffd600;
-  border-radius: 8px;
-  padding: .85rem;
-  margin: .75rem 0 0;
-  text-align: left;
-}
-
-.cc-roll-lucky-title  { color: #ffd600; font-weight: 900; font-size: 1rem; margin-bottom: .4rem; }
-.cc-roll-lucky-intro  { color: var(--cc-text); font-size: .82rem; line-height: 1.5; margin-bottom: .5rem; }
-.cc-roll-lucky-option { font-size: .82rem; color: #ffe082; margin-bottom: .25rem; }
-.cc-roll-lucky-fine   { font-size: .72rem; color: var(--cc-text-dim); margin-top: .5rem; }
-
-.cc-roll-all-ones {
-  background: rgba(239, 83, 80, 0.13);
-  border: 2px solid #ef5350;
-  border-radius: 8px;
-  padding: .75rem;
-  margin: .75rem 0 0;
-}
-
-.cc-roll-all-ones-title { color: #ef5350; font-weight: 900; font-size: 1rem; }
-
-.cc-roll-natural-six {
-  background: rgba(255, 214, 0, 0.07);
-  border: 1px solid rgba(255, 214, 0, 0.4);
-  border-radius: 6px;
-  padding: .5rem .75rem;
-  margin: .75rem 0 0;
-  font-size: .78rem;
-  color: #ffe082;
-}
-
-/* ===== Monster Alert Overlay ===== */
-.cc-monster-alert {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.9);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: cc-fade-in .3s ease;
-  padding: 1rem;
-  box-sizing: border-box;
-}
-
-.cc-monster-dialog {
-  text-align: center;
-  padding: 1.5rem;
-  max-width: 380px;
-  width: 100%;
-  background: #1a1a1a;
-  border-radius: 12px;
-  border: 2px solid; /* color applied inline */
-}
-
-.cc-monster-icon   { font-size: 2.5rem; margin-bottom: .5rem; animation: cc-pulse 1s ease infinite; }
-.cc-monster-title  { margin: 0 0 .25rem; font-size: 1.5rem; }
-.cc-monster-intro  { font-size: 1rem; margin: .25rem 0 .75rem; color: #ffcdd2; }
-
-.cc-monster-lore {
-  color: var(--cc-text-dim);
-  font-size: .82rem;
-  font-style: italic;
-  margin: 0 0 .75rem;
-  line-height: 1.5;
-}
-
-.cc-monster-stats    { display: flex; flex-wrap: wrap; gap: .35rem; justify-content: center; margin-bottom: .5rem; }
-
-.cc-monster-stat-tag { border-radius: 4px; padding: 2px 8px; font-size: .82rem; font-weight: 700; }
-
-.cc-monster-specials { margin-top: .5rem; display: flex; flex-wrap: wrap; gap: .3rem; justify-content: center; }
-
-.cc-monster-special-tag {
-  padding: 2px 7px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
-  font-size: .75rem;
-  color: var(--cc-text-muted);
-}
-
-.cc-monster-queue-notice {
-  margin: .85rem 0 .5rem;
-  padding: .6rem;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 6px;
-  font-size: .82rem;
-  color: var(--cc-text-muted);
+.cc-roll-dialog, .cc-monster-dialog {
+  background: var(--cc-bg-darker);
   border: 1px solid var(--cc-border);
-}
-
-/* ===== Scenario Info Strip ===== */
-.cc-scenario-info {
-  padding: .6rem 1rem;
-  background: var(--cc-primary-dim);
-  border: 1px solid rgba(255, 117, 24, 0.2);
   border-radius: var(--cc-radius-lg);
-  font-size: .82rem;
-  color: var(--cc-text-muted);
-  margin-bottom: 1rem;
-}
-
-/* ===== Stat Definition Pill (slide panel) ===== */
-.cc-stat-type-pill {
-  display: inline-block;
-  margin-bottom: 1.25rem;
-  padding: 3px 12px;
-  border-radius: 999px;
-  font-size: .75rem;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  /* border + color applied inline — stat-specific */
-}
-
-/* ===== Faction Setup Screen ===== */
-.cc-faction-setup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; align-items: start; }
-
-.cc-faction-row { border-radius: 8px; padding: .7rem; background: rgba(0, 0, 0, 0.25); transition: opacity .2s; }
-
-.cc-faction-row-logo    { width: 48px; height: 48px; object-fit: contain; flex-shrink: 0; }
-.cc-faction-row-logo-lg { width: 74px; height: 74px; object-fit: contain; flex-shrink: 0; }
-
-.cc-faction-npc-label {
-  display: flex;
-  align-items: center;
-  gap: .3rem;
-  font-size: .75rem;
-  color: var(--cc-text-muted);
-  cursor: pointer;
-  flex-shrink: 0;
-}
-
-.cc-assigned-name {
-  font-size: .78rem;
-  color: var(--cc-text);
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.cc-assigned-meta { font-size: .7rem; color: var(--cc-text-muted); margin-top: .2rem; }
-
-.cc-unassigned-placeholder {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 72px;
-  border: 1px dashed var(--cc-border);
-  border-radius: 8px;
-  padding: .7rem;
-}
-
-/* ===== Save Picker Overlay ===== */
-.cc-save-picker-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.cc-save-picker-dialog {
-  background: #1a1a1a;
-  border: 1px solid rgba(255, 117, 24, 0.4);
-  border-radius: 8px;
   padding: 1.5rem;
-  max-width: 500px;
-  width: 90%;
-  max-height: 80vh;
-  overflow-y: auto;
-}
-
-/* ===== Round End Summary ===== */
-.cc-unit-status-table           { width: 100%; border-collapse: collapse; }
-.cc-unit-status-table thead tr  { border-bottom: 1px solid var(--cc-border); }
-.cc-unit-status-table th        { padding: .35rem .5rem; text-align: left; color: var(--cc-text-dim); font-size: .75rem; font-weight: 600; }
-.cc-unit-status-table td        { padding: .35rem .5rem; }
-
-.cc-round-log-list    { margin: 0; padding-left: 1rem; }
-.cc-round-log-list li { color: var(--cc-text-muted); font-size: .85rem; margin: .2rem 0; }
-.cc-round-log-empty   { color: var(--cc-text-dim); font-size: .85rem; }
-
-/* ===== Terrain Setup ===== */
-.cc-terrain-btn {
-  text-align: left;
-  display: flex;
-  align-items: center;
-  gap: .6rem;
-  padding: .5rem .75rem;
-}
-
-.cc-terrain-icon { flex-shrink: 0; width: 1.2rem; text-align: center; }
-.cc-terrain-note { color: var(--cc-text-dim); font-size: .78rem; }
-
-.cc-terrain-log    { list-style: none; margin: 0; padding: 0; }
-.cc-terrain-log li { color: var(--cc-text-muted); font-size: .82rem; padding: .25rem 0; border-bottom: 1px solid rgba(255,255,255,.04); }
-
-/* NPC terrain directive box — border/background applied inline (faction color) */
-.cc-npc-directive-box    { border-radius: 8px; padding: 1rem; }
-.cc-npc-directive-eyebrow {
-  font-size: .7rem;
-  text-transform: uppercase;
-  letter-spacing: .1em;
-  margin-bottom: .35rem;
-  font-family: var(--cc-font-mono);
-}
-
-.cc-npc-directive-title { font-size: 1rem; font-weight: 700; color: var(--cc-text); margin-bottom: .25rem; }
-
-/* ===== Responsive ===== */
-@media (max-width: 640px) {
-  .cc-faction-setup-grid { grid-template-columns: 1fr; }
-  .cc-activation-footer  { padding: .75rem; }
-  .cc-tc-content         { padding: 1rem; }
 }

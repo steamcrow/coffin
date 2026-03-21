@@ -5,8 +5,11 @@
 
 console.log("📘 Rules Explorer app loaded");
 
-window.CC_APP = {
-  async init({ root, ctx }) {
+(function () {
+  var _destroyFn = null;
+
+  async function mount(rootEl, ctx) {
+    var root = rootEl;
     console.log("🚀 Rules Explorer init", ctx);
 
     // ---- LOAD CSS FROM GITHUB ----
@@ -255,7 +258,7 @@ window.CC_APP = {
 
     // ---- LOAD FACTIONS ----
     async function loadFactions() {
-      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/';
       try {
         const promises = FACTION_FILES.map(async (f) => {
           const response = await fetch(baseUrl + f.file + '?t=' + Date.now());
@@ -274,7 +277,7 @@ window.CC_APP = {
 
     // ---- LOAD CAMPAIGN ----
     async function loadCampaign() {
-      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
+      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/';
       try {
         const response = await fetch(baseUrl + CAMPAIGN_FILE.file + '?t=' + Date.now());
         const data = await response.json();
@@ -1554,23 +1557,59 @@ window.CC_APP = {
       }
     });
 
+    // ── Boot — canonical preloader overlay, dismiss when data resolves ─────
+    const _rePreloader = document.createElement('div');
+    _rePreloader.id = 'cc-re-preloader';
+    _rePreloader.className = 'cc-preloader cc-preloader--page';
+    _rePreloader.innerHTML = `
+      <img class="cc-preloader-logo"
+           src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+           alt="Coffin Canyon"
+           style="width:200px;max-width:70vw;">
+      <p class="cc-preloader-title">Rules Explorer</p>
+      <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+        <div class="cc-loading-progress"></div>
+      </div>
+      <p class="cc-loading-text">Loading rules data…</p>
+    `;
+    root.appendChild(_rePreloader);
+
+    function _reDismissPreloader() {
+      _rePreloader.classList.add('cc-preloader--hidden');
+      setTimeout(function() {
+        if (_rePreloader.parentNode) _rePreloader.parentNode.removeChild(_rePreloader);
+      }, 480);
+    }
+
     renderList();
 
-    loadCampaign().then(() => {
-      if (!index.find(it => it.id === CAMPAIGN_FILE.id)) {
-        index.push({ id: CAMPAIGN_FILE.id, title: CAMPAIGN_FILE.title, type: 'campaign' });
-      }
-      renderList(searchEl.value);
-    });
-
-    loadFactions().then(() => {
-      FACTION_FILES.forEach(f => {
-        const fid = 'faction_' + f.id;
-        if (!index.find(it => it.id === fid)) {
-          index.push({ id: fid, title: f.title, type: 'faction' });
+    Promise.all([
+      loadCampaign().then(() => {
+        if (!index.find(it => it.id === CAMPAIGN_FILE.id)) {
+          index.push({ id: CAMPAIGN_FILE.id, title: CAMPAIGN_FILE.title, type: 'campaign' });
         }
-      });
-      renderList(searchEl.value);
-    });
-  },
-};
+        renderList(searchEl.value);
+      }),
+      loadFactions().then(() => {
+        FACTION_FILES.forEach(f => {
+          const fid = 'faction_' + f.id;
+          if (!index.find(it => it.id === fid)) {
+            index.push({ id: fid, title: f.title, type: 'faction' });
+          }
+        });
+        renderList(searchEl.value);
+      })
+    ]).then(_reDismissPreloader).catch(_reDismissPreloader);
+
+    return Promise.resolve();
+  } // end mount()
+
+  window.CC_APP = {
+    init: function (options) {
+      return mount(options.root, options.ctx || {});
+    },
+    destroy: function () {
+      if (typeof _destroyFn === 'function') { _destroyFn(); }
+    }
+  };
+})();

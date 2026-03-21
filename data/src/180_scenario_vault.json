@@ -23,1371 +23,573 @@
   },
   "scenarios": [
     {
-      "id": "ambush_crashed_supply_train",
-      "name": "Ambush at the Crashed Supply Train",
-      "tags": [
-        "plot_ambush",
-        "objective_wreck",
-        "objective_cargo",
-        "resource_supplies",
-        "resource_metal",
-        "resource_food",
-        "resource_water",
-        "danger_4",
-        "combat",
-        "tense",
-        "grim",
-        "wasteland",
-        "ruins",
-        "monster_predator",
-        "escalation_coffin_cough",
-        "liberty_corps",
-        "shine_riders",
-        "monster_rangers",
-        "monsterology"
-      ],
-      "spotlight_factions": [
-        "Liberty Corps",
-        "Shine Riders",
-        "Monster Rangers",
-        "Monsterologists"
-      ],
-      "location_rules": {
-        "allowed_named_locations": [
-          "Fort Plunder",
-          "Fortune",
-          "Huck"
-        ],
-        "allowed_location_types": [
-          "boomtown_riverbase",
-          "debris_field"
-        ],
-        "random_between_locations": true
-      },
-      "danger_rating": 4,
-      "narrative_hook": "A Liberty Corps supply train has derailed and burned. The Corps wants everyone gone. Everyone else wants what spilled.",
-      "objectives": [
-        {
-          "id": "wrecked_engine",
-          "type": "device",
-          "resource": "mechanical_parts",
-          "rating": 2,
-          "interactions": [
-            "salvage",
-            "control",
-            "sabotage"
-          ],
-          "notes": [
-            "Salvage produces Spare Parts.",
-            "Spare Parts may be spent to repair or heal Automats.",
-            "Each salvage increases Coffin Cough risk."
-          ]
-        },
-        {
-          "id": "scattered_supply_crates",
-          "type": "extraction",
-          "resources": [
-            "food_good",
-            "water_clean",
-            "supplies"
-          ],
-          "count": "d3+2"
-        }
-      ],
-      "victory_conditions": {
-        "primary": "Extract the most total resource value.",
-        "secondary": "Maintain control of the wrecked engine."
-      },
-      "monster_pressure": {
-        "enabled": true,
-        "trigger_round": 3,
-        "bias": [
-          "Carrion",
-          "Opportunistic"
-        ],
-        "notes": "Monsters are drawn by blood, noise, and food."
-      },
-      "coffin_cough_triggers": [
-        "wrecked_engine overused",
-        "three_or_more_models_downed",
-        "objective_overburn"
-      ],
-      "aftermath_effects": {
-        "location_state": {
-          "if_corps_success": "claimed_hard",
-          "if_others_success": "contested"
-        },
-        "resource_shift": {
-          "food_good": -1,
-          "water_clean": -1,
-          "mechanical_parts": "conditional"
-        },
-        "persistent_landmark": {
-          "intact": "Salvage Site",
-          "destroyed": "Burned Wreck (Hazardous)"
-        }
-      },
-      "solo_play": {
-        "player_role": "Scavenger Force",
-        "opposition": "Escalating Liberty Corps patrols",
-        "win_condition": "Extract before Catastrostorm"
-      }
-    },
-    {
-      "id": "tigers_milk",
-      "name": "Tiger's Milk",
+      "id": "vitagood_run",
+      "name": "Baron's Medicine",
       "tags": [
         "plot_escort",
-        "objective_vehicle",
-        "objective_cargo",
-        "resource_supplies",
-        "danger_3",
-        "tense",
-        "desperate",
-        "wilderness",
-        "monster_predator",
-        "monster_corrupted",
-        "monster_rangers",
-        "monsterology"
-      ],
-      "spotlight_factions": [
-        "Monster Rangers",
-        "Monsterologists"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "boomtown_mesa",
-          "outpost",
-          "wasteland"
-        ]
-      },
-      "danger_rating": 3,
-      "narrative_hook": "A Cargo Tiger truck carries life-saving syrups to Camp Coffin. The land does not want it to pass.",
-      "objectives": [
-        {
-          "id": "cargo_tiger_truck",
-          "type": "transport",
-          "resource": "supplies",
-          "special": [
-            "sweet_scent",
-            "monster_lure"
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "escort": "Truck exits the board intact.",
-        "intercept": "Truck disabled or captured."
-      },
-      "monster_pressure": {
-        "enabled": true,
-        "spawn_bias": [
-          "Predators"
-        ],
-        "notes": "Monsters appear closer to the truck each round."
-      },
-      "aftermath_effects": {
-        "camp_coffin": {
-          "if_success": "medical_bonus_next_game",
-          "if_failure": "supply_shortage"
-        }
-      },
-      "solo_play": {
-        "player_role": "Escort Force",
-        "opposition": "Monster waves + terrain pressure"
-      }
-    },
-    {
-      "id": "brass_bronco",
-      "name": "The Brass Bronco",
-      "tags": [
-        "plot_claim",
-        "objective_marker",
-        "resource_occult",
-        "danger_4",
-        "combat",
-        "epic",
-        "mystical",
-        "boomtown",
-        "ruins",
-        "monster_elite",
-        "shine_riders",
-        "monsterology"
-      ],
-      "spotlight_factions": [
-        "Shine Riders",
-        "Monsterologists"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "boomtown_spire_stilts",
-          "ruins"
-        ]
-      },
-      "danger_rating": 4,
-      "narrative_hook": "A legendary horse has been taken. Honor demands blood. The Canyon prepares something worse.",
-      "objectives": [
-        {
-          "id": "legendary_steed",
-          "type": "control",
-          "special": [
-            "morale_anchor"
-          ]
-        }
-      ],
-      "midgame_twist": {
-        "round": 3,
-        "event": "Monsterologists lose control of their experiment."
-      },
-      "victory_conditions": {
-        "primary": "Control the steed at game end."
-      },
-      "aftermath_effects": {
-        "shine_riders": "honor_restored_or_shattered",
-        "location": "monster_pressure_increase"
-      }
-    },
-    {
-      "id": "thyr_harvester",
-      "name": "The Thyr Harvester",
-      "tags": [
-        "plot_ritual",
-        "objective_thyr",
-        "objective_ritual",
-        "resource_thyr",
-        "resource_occult",
-        "danger_5",
-        "grim",
-        "epic",
-        "ruins",
-        "wilderness",
-        "monster_corrupted",
-        "escalation_ritual",
-        "escalation_coffin_cough",
-        "monsterology",
-        "monsters"
-      ],
-      "spotlight_factions": [
-        "Monsterologists",
-        "Crow Queen"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "thyr_field",
-          "ruins"
-        ]
-      },
-      "danger_rating": 5,
-      "narrative_hook": "A machine that eats the Canyon is nearly ready.",
-      "objectives": [
-        {
-          "id": "thyr_harvester_device",
-          "type": "device",
-          "resource": "thyr",
-          "activation": {
-            "requirements": [
-              "3 scientists",
-              "1 coal",
-              "2 turns"
-            ]
-          }
-        }
-      ],
-      "victory_conditions": {
-        "activate": "Harvester completes cycle.",
-        "prevent": "Harvester destroyed or corrupted."
-      },
-      "coffin_cough_triggers": [
-        "thyr_overburn",
-        "ritual_on_tainted_ground"
-      ],
-      "aftermath_effects": {
-        "thyr": {
-          "if_activated": "regional_thyr_depletion",
-          "if_destroyed": "haunted_field"
-        }
-      },
-      "solo_play": {
-        "player_role": "Saboteur",
-        "opposition": "Automated defenses + escalation"
-      }
-    },
-    {
-      "id": "the_black_water_claim",
-      "name": "The Black Water Claim",
-      "tags": [
-        "plot_claim",
-        "objective_marker",
-        "resource_water",
-        "resource_occult",
-        "danger_3",
-        "horror",
-        "grim",
-        "wasteland",
-        "boomtown",
-        "monster_corrupted",
-        "escalation_coffin_cough",
-        "liberty_corps",
-        "monster_rangers",
-        "monsters"
-      ],
-      "spotlight_factions": [
-        "Liberty Corps",
-        "Monster Rangers",
-        "Monsters"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "boomtown_riverbase",
-          "wasteland",
-          "ruins"
-        ],
-        "random_between_locations": true
-      },
-      "danger_rating": 3,
-      "narrative_hook": "A new water source has been claimed by the Liberty Corps. The water is black, warm, and whispering.",
-      "objectives": [
-        {
-          "id": "tainted_well",
-          "type": "control",
-          "resource": "water_foul",
-          "interactions": [
-            "purify",
-            "extract",
-            "corrupt"
-          ]
-        }
-      ],
-      "monster_pressure": {
-        "enabled": true,
-        "spawn_bias": [
-          "Amphibious",
-          "Hunger"
-        ]
-      },
-      "victory_conditions": {
-        "primary": "Control or neutralize the well."
-      },
-      "coffin_cough_triggers": [
-        "drink_foul_water",
-        "ritual_purification_failed"
-      ],
-      "aftermath_effects": {
-        "water_clean": "conditional",
-        "location_state": "cursed_or_reclaimed"
-      }
-    },
-    {
-      "id": "dead_mans_signal",
-      "name": "Dead Man's Signal",
-      "tags": [
-        "plot_disaster",
-        "objective_marker",
+        "objective_vendor",
+        "resource_vitagood",
         "danger_2",
         "tense",
-        "mystical",
-        "ruins",
-        "outpost",
+        "wilderness",
+        "mine",
+        "monster_rangers",
+        "monsterology",
         "shine_riders",
         "liberty_corps"
       ],
       "spotlight_factions": [
+        "Monster Rangers",
+        "Monsterologists",
         "Shine Riders",
         "Liberty Corps"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "signal_tower",
-          "mesa",
-          "ruins"
-        ]
-      },
-      "danger_rating": 2,
-      "narrative_hook": "A heliograph tower is flashing at night. The man who built it died last winter.",
-      "objectives": [
-        {
-          "id": "signal_tower",
-          "type": "device",
-          "interactions": [
-            "activate",
-            "disable",
-            "misalign"
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "primary": "Determine the signal's fate."
-      },
-      "aftermath_effects": {
-        "regional_awareness": "increase_or_misdirect",
-        "liberty_corps": "reinforcement_delay_or_acceleration"
-      }
-    },
-    {
-      "id": "meat_for_the_canyon",
-      "name": "Meat for the Canyon",
-      "tags": [
-        "plot_extraction",
-        "objective_cargo",
-        "resource_food",
-        "danger_4",
-        "combat",
-        "grim",
-        "wilderness",
-        "monster_predator",
-        "monsters",
-        "monster_rangers"
-      ],
-      "spotlight_factions": [
-        "Monster Rangers",
-        "Monsters"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "wasteland",
-          "bone_field"
-        ]
-      },
-      "danger_rating": 4,
-      "narrative_hook": "A herd has gone missing. Something large is feeding. Something larger is waiting.",
-      "objectives": [
-        {
-          "id": "carcass_sites",
-          "type": "extraction",
-          "resource": "livestock",
-          "count": "d3"
-        }
-      ],
-      "monster_pressure": {
-        "enabled": true,
-        "spawn_bias": [
-          "Carrion",
-          "Pack"
-        ]
-      },
-      "victory_conditions": {
-        "primary": "Secure or destroy all carcass sites."
-      },
-      "aftermath_effects": {
-        "livestock": -1,
-        "monster_activity": "increase"
-      }
-    },
-    {
-      "id": "the_buried_badge",
-      "name": "The Buried Badge",
-      "tags": [
-        "plot_ritual",
-        "objective_marker",
-        "resource_occult",
-        "danger_3",
-        "mystical",
-        "grim",
-        "ruins",
-        "monster_undead",
-        "monster_rangers",
-        "liberty_corps"
-      ],
-      "spotlight_factions": [
-        "Monster Rangers",
-        "Liberty Corps"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "graveyard",
-          "ruins"
-        ]
-      },
-      "danger_rating": 3,
-      "narrative_hook": "A Ranger badge has been found nailed to a coffin. The Ranger is still listed as active.",
-      "objectives": [
-        {
-          "id": "marked_grave",
-          "type": "control",
-          "special": [
-            "haunted",
-            "honor_bound"
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "primary": "Resolve the badge's claim."
-      },
-      "aftermath_effects": {
-        "monster_rangers": "morale_shift",
-        "location": "haunted_or_quieted"
-      }
-    },
-    {
-      "id": "coal_and_blood",
-      "name": "Coal & Blood",
-      "tags": [
-        "plot_disaster",
-        "objective_thyr",
-        "resource_metal",
-        "resource_occult",
-        "danger_5",
-        "horror",
-        "desperate",
-        "wilderness",
-        "monster_corrupted",
-        "escalation_collapse",
-        "liberty_corps",
-        "monsters"
-      ],
-      "spotlight_factions": [
-        "Liberty Corps",
-        "Monsters"
       ],
       "location_rules": {
         "allowed_location_types": [
           "mine",
-          "thyr_field"
-        ]
+          "mine_active_shineriders",
+          "mine_abandoned",
+          "boomtown_riverside"
+        ],
+        "notes": "Requires a mine camp or rough boomtown — somewhere the Vendomat has wandered into."
       },
-      "danger_rating": 5,
-      "narrative_hook": "A coal seam has been opened through something alive.",
+      "danger_rating": 2,
+      "narrative_hook": "Baron Davis is sick. Real sick. The only thing that might help is a bottle of VitaGood — and there's a Vendomat wandering somewhere near the old mine camp. The Rangers are going in. Everyone else has a reason to stop them, grab the VitaGood first, or just take it off whoever wins.",
       "objectives": [
         {
-          "id": "open_seam",
-          "type": "device",
-          "resource": "coal",
-          "interactions": [
-            "extract",
-            "seal"
+          "id": "gildren_cache",
+          "type": "extraction",
+          "resource": "gildren",
+          "count": 3,
+          "notes": [
+            "Gildren is scattered in the mine camp — 3 tokens placed at the mine entrance, the foreman's shack, and the supply crate.",
+            "Any unit may pick up a Gildren token by spending 1 Action in base contact.",
+            "A faction holding 2+ Gildren tokens may spend them at the Vendomat (base contact, 1 Action) to purchase 1 VitaGood."
+          ]
+        },
+        {
+          "id": "vitagood_purchase",
+          "type": "escort",
+          "resource": "vitagood",
+          "notes": [
+            "The Vendomat wanders d6 inches in a random direction each round.",
+            "VitaGood can only be purchased — not stolen directly from the Vendomat (it has a hatchet and explodes on death).",
+            "Once purchased, the VitaGood token can be stolen from the carrier by any enemy unit in base contact (STEAL action, Quality test).",
+            "The VitaGood must exit the board on the purchasing faction's deployment edge to score."
           ]
         }
       ],
+      "victory_conditions": {
+        "primary": "First faction to exit the board carrying VitaGood wins.",
+        "monster_rangers": "Collect 2 Gildren from the mine, buy VitaGood from the Vendomat, and get it off the board. Baron Davis is counting on you. +5 VP if the VitaGood exits before Round 5.",
+        "monsterology": "The Institute needs that VitaGood formula. Intercept the Rangers before they buy it, or steal it from them after. +4 VP if you exit with it. +2 VP if the Rangers' carrier is eliminated while holding it.",
+        "shine_riders": "VitaGood sells for a fortune in the right markets. Buy it yourself or lift it off whoever does. +4 VP if you exit with it. +1 bonus VP if you stole it from a Ranger.",
+        "liberty_corps": "Unlicensed pharmaceutical distribution. The Vendomat requires inspection and the goods must be confiscated. +3 VP if VitaGood is confiscated (exits in Corps custody). +2 VP if the Vendomat is escorted to the board edge (abducted for permitting review).",
+        "secondary": "Any faction that eliminates the unit carrying VitaGood scores 1 VP — but the token drops and anyone can pick it up."
+      },
+      "wandering_npc": {
+        "id": "vendomat",
+        "placement": "center_board",
+        "note": "Place the Vendomat at board center. It wanders d6 inches each round before initiative. It must be reached and purchased from — not attacked."
+      },
       "monster_pressure": {
-        "enabled": true,
-        "trigger_round": 2,
-        "spawn_bias": [
-          "Burrowers"
-        ]
+        "enabled": false,
+        "notes": "Low danger scenario. No monster pressure unless Danger is raised by Warden."
       },
-      "victory_conditions": {
-        "primary": "Control the seam's fate."
-      },
-      "coffin_cough_triggers": [
-        "deep_mining",
-        "blood_in_thyr"
-      ],
       "aftermath_effects": {
-        "coal": "conditional",
-        "thyr": -1
+        "monster_rangers": "Baron Davis lives — or doesn't. The canyon remembers either way.",
+        "monsterology": "The formula is in Institute hands. Expect a cheaper patent medicine to appear next season.",
+        "shine_riders": "The VitaGood hits the black market at triple price within the week.",
+        "liberty_corps": "The Vendomat receives a citation. It does not appear to read."
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Escalating interference — Shine Riders appear Round 2, Monsterologists Round 3",
+        "win_condition": "Exit with VitaGood before Round 6"
       }
     },
     {
-      "id": "the_runaway_engine",
-      "name": "The Runaway Engine",
+      "id": "monte_haul_whispers",
+      "name": "Monte Haul’s Quiet Inventory",
       "tags": [
-        "plot_disaster",
-        "objective_vehicle",
-        "resource_metal",
-        "danger_4",
-        "tense",
-        "combat",
-        "wilderness",
-        "boomtown",
-        "shine_riders",
-        "monster_rangers"
-      ],
-      "spotlight_factions": [
-        "Shine Riders",
-        "Monster Rangers"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "rail_line",
-          "mesa"
-        ]
-      },
-      "danger_rating": 4,
-      "narrative_hook": "An unmanned engine screams down the line. The whistle does not stop.",
-      "objectives": [
-        {
-          "id": "runaway_engine",
-          "type": "transport",
-          "interactions": [
-            "board",
-            "halt",
-            "derail"
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "primary": "Stop or redirect the engine."
-      },
-      "aftermath_effects": {
-        "rail_network": "damaged_or_secured"
-      }
-    },
-    {
-      "id": "saints_of_gunmetal",
-      "name": "Saints of Gunmetal",
-      "tags": [
-        "plot_claim",
-        "objective_marker",
-        "resource_metal",
-        "danger_3",
-        "grim",
-        "mystical",
-        "boomtown",
-        "ruins",
-        "liberty_corps",
-        "monster_rangers"
-      ],
-      "spotlight_factions": [
-        "Liberty Corps",
-        "Monster Rangers"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "chapel_ruin",
-          "boomtown"
-        ]
-      },
-      "danger_rating": 3,
-      "narrative_hook": "Statues of soldiers weep oil. The Corps calls it morale.",
-      "objectives": [
-        {
-          "id": "gunmetal_shrine",
-          "type": "control",
-          "resource": "mechanical_parts"
-        }
-      ],
-      "victory_conditions": {
-        "primary": "Control or defile the shrine."
-      },
-      "aftermath_effects": {
-        "liberty_corps": "propaganda_boost_or_scandal"
-      }
-    },
-    {
-      "id": "the_long_night_ride",
-      "name": "The Long Night Ride",
-      "tags": [
-        "plot_escort",
-        "objective_vehicle",
+        "plot_mystery",
+        "objective_vendor",
+        "resource_illegal",
         "danger_5",
-        "epic",
-        "desperate",
+        "weird",
+        "psychological",
         "wilderness",
-        "monster_elite",
-        "escalation_titan",
+        "ruins",
         "shine_riders",
+        "monsterology",
+        "liberty_corps",
+        "monster_rangers",
         "monsters"
       ],
       "spotlight_factions": [
         "Shine Riders",
+        "Monsterologists",
+        "Liberty Corps",
+        "Monster Rangers",
         "Monsters"
       ],
       "location_rules": {
         "allowed_location_types": [
-          "wasteland",
-          "storm_front"
-        ]
+          "ruined_settlement",
+          "wilderness_scrub",
+          "mesa_top",
+          "ancient_site"
+        ],
+        "notes": "Somewhere quiet enough to hear what Monte Haul is selling."
       },
       "danger_rating": 5,
-      "narrative_hook": "The Riders ride to keep the sun from setting too long.",
+      "narrative_hook": "Monte Haul isn’t shouting today. No crates. No dynamite. Just a small table with things you can’t quite look at directly. He says they’re for sale. Cheap. The Shine Riders want them without asking what they do. The Monsterologists want them precisely because no one can explain them. The Liberty Corps want them removed before they spread. The Rangers want them gone before someone uses one. The monsters already hear them.",
       "objectives": [
         {
-          "id": "sunward_route",
-          "type": "extraction",
-          "count": 1
+          "id": "illegal_items",
+          "type": "artifact",
+          "resource": "illegal",
+          "count": 4,
+          "interactions": [
+            "BUY",
+            "DESTROY",
+            "SEAL"
+          ],
+          "notes": [
+            "Monte Haul holds 4 Illegal Item tokens. Each costs 2 Gildren.",
+            "Any unit in base contact may BUY a token (1 Action, 2 Gildren).",
+            "Each token carried imposes -1 to Morale checks (stacking).",
+            "At the start of each round, roll 1d6 for each carried token: on a 1, the carrier loses 1 HP as the item 'reacts'.",
+            "A unit may DESTROY a token (1 Action, Quality test). On failure, the unit takes 2 damage.",
+            "Liberty Corps units may SEAL a token instead (1 Action, automatic success — sealed tokens do not trigger effects)."
+          ]
         }
       ],
+      "victory_conditions": {
+        "primary": "Control or eliminate the most Illegal Items by game end.",
+        "shine_riders": "We don’t ask what it does. +2 VP per item held. +3 VP if at least one item exits the board. +2 bonus VP if a unit survives while carrying 2+ items.",
+        "monsterology": "This is priceless. +3 VP per item secured. +2 VP if at least one item triggers its effect during the game. +2 VP if a monster interacts with an item.",
+        "liberty_corps": "These cannot circulate. +2 VP per item sealed. +2 VP per item destroyed. +3 VP if no unsealed items remain at game end.",
+        "monster_rangers": "Nothing good comes from this. +2 VP per item destroyed. +2 VP if no items leave the board. -2 VP if a Ranger exits while carrying one.",
+        "monsters": "The items call. At the start of each Monster activation, if within 8 inches of an item, move toward it. +2 VP per item a Monster ends adjacent to. +4 VP if a Monster becomes the carrier (yes, it can happen).",
+        "secondary": "Any unit eliminated while carrying an item drops it — any faction that immediately picks it up gains 1 VP."
+      },
+      "wandering_npc": {
+        "id": "monte_haul",
+        "placement": "board_center_or_nearest_open",
+        "note": "Monte Haul does not move. He does not react. If attacked, he vanishes — remove him and all remaining items he holds from play."
+      },
+      "midgame_twist": {
+        "round": 4,
+        "event": "The items begin whispering louder. All Morale tests suffer an additional -1 penalty for the rest of the game.",
+        "warden_note": "Optional, but recommended for full unease."
+      },
       "monster_pressure": {
         "enabled": true,
+        "trigger_round": 1,
         "spawn_bias": [
-          "Nightbound"
-        ]
-      },
-      "victory_conditions": {
-        "primary": "Reach the far edge before total dark."
+          "Predator",
+          "Territorial"
+        ],
+        "notes": "The items attract attention immediately. Spawn 1 Monster per round from a random edge starting Round 1."
       },
       "aftermath_effects": {
-        "regional_time_anomaly": "stabilized_or_worsened"
+        "shine_riders": "The items circulate. No one agrees what they do. Everyone agrees they want more.",
+        "monsterology": "The Institute secures specimens. Research teams report inconsistent results.",
+        "liberty_corps": "Sealed evidence is transported under heavy guard. Something taps from inside.",
+        "monster_rangers": "The canyon breathes easier. Or maybe it’s just quieter.",
+        "monsters": "Something new has entered the food chain."
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Escalating Monster pressure and opportunistic factions.",
+        "win_condition": "Destroy or prevent all Illegal Items from leaving the board."
       }
     },
     {
-      "id": "bones_of_the_titan",
-      "name": "Bones of the Titan",
+      "id": "vendomat_canyon_dans",
+      "name": "Canyon Dan’s Color Diet",
+      "tags": [
+        "plot_loot",
+        "objective_vendor",
+        "resource_food",
+        "danger_3",
+        "weird",
+        "boomtown",
+        "supplies",
+        "monster_rangers",
+        "monsterology",
+        "pluguglies",
+        "squab",
+        "monsters",
+        "liberty_corps"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Monsterologists",
+        "Plug-Uglies",
+        "Squab",
+        "Monsters",
+        "Liberty Corps"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "boomtown_mesa",
+          "boomtown_riverside",
+          "waystation",
+          "ruined_settlement"
+        ],
+        "notes": "A place where supply crates matter. The Vendomat has been stocked with Canyon Dan's canned meals in colors no meal should be."
+      },
+      "danger_rating": 3,
+      "narrative_hook": "The Vendomat is packed with Canyon Dan’s canned food — high quality grub in deeply suspicious colors. Purple hash. Blue beans. Green roast. The Rangers want it for Camp Coffin. Monsterologists want it because Squab and Plug-Uglies will eat almost anything if it improves morale. The Liberty Corps want to confiscate the whole lot for study. The monsters, having no standards at all, just want to eat the cans and maybe the people carrying them.",
+      "objectives": [
+        {
+          "id": "canyon_dans_crates",
+          "type": "loot",
+          "resource": "food",
+          "count": 6,
+          "notes": [
+            "Place 6 Canyon Dan's Food tokens in or around the Vendomat.",
+            "Any unit in base contact may collect 1 Food token with 1 Action.",
+            "A unit carrying a Food token may CONSUME it with 1 Action: heal 1 HP OR gain +1 on its next Morale or Quality test.",
+            "After consuming Canyon Dan's, roll 1d6. On a 1, the colors hit wrong — the unit suffers -1 Move until end of round. On a 6, morale improves — gain +1 Morale until end of round.",
+            "Monsters do not need to spend an Action to consume Canyon Dan's if they begin activation in base contact with a token.",
+            "Food tokens may be carried off the board as supplies instead of consumed."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Secure, consume, or confiscate the most Canyon Dan's by game end.",
+        "monster_rangers": "Camp Coffin needs good supplies, even if they're bright blue. +2 VP per Canyon Dan's token removed from the board. +2 bonus VP if 3+ tokens exit via the Rangers' deployment edge.",
+        "monsterology": "Field rations for the unpleasant but useful. +1 VP per token acquired. +2 VP if a Squab or Plug-Ugly unit consumes a token. +2 VP if at least 3 tokens are secured for Institute study.",
+        "pluguglies": "Good grub is good grub. +2 VP per token consumed by a Plug-Ugly unit. +1 VP per enemy eliminated by a unit that consumed Canyon Dan's this round.",
+        "squab": "The little scavengers know quality when they see color. +2 VP per token consumed or carried by a Squab unit. +1 VP if a Squab steals one from an enemy carrier.",
+        "liberty_corps": "These cans are not properly labeled, and some of them are humming. +2 VP per token confiscated. +3 VP if no faction exits the board with food except the Corps.",
+        "monsters": "The cans are crunchy and the insides are strange. +2 VP per token consumed by a Monster. +1 VP each time a Monster eliminates a unit carrying Canyon Dan's.",
+        "secondary": "Any faction that controls the Vendomat at game end gains 2 VP."
+      },
+      "wandering_npc": {
+        "id": "vendomat",
+        "placement": "center_board",
+        "note": "Place the Vendomat at board center. It is stationary and stocked with Canyon Dan's. It cannot be harmed normally; if attacked, it vents colorful steam and locks for one round."
+      },
+      "midgame_twist": {
+        "round": 3,
+        "event": "One batch is mislabeled. From Round 3 onward, the first Canyon Dan's consumed each round causes a random color reaction: 1-2 = -1 Move, 3-4 = no extra effect, 5-6 = +1 Morale until end of round.",
+        "warden_note": "The food is still good. Probably."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 2,
+        "spawn_bias": [
+          "Scavenger",
+          "Pack"
+        ],
+        "notes": "The monsters do not smell the cans, but they quickly learn that the little metal bricks contain dense, delicious nonsense."
+      },
+      "aftermath_effects": {
+        "monster_rangers": "Camp Coffin eats well this week, though no one agrees what color stew ought to be.",
+        "monsterology": "A pantry annex is established for controlled feeding studies.",
+        "pluguglies": "They begin asking if the blue kind can be ordered in bulk.",
+        "squab": "Several cans go missing and are later found pecked open behind a crate.",
+        "liberty_corps": "A formal inquiry begins into whether food should glow after sunset.",
+        "monsters": "Somewhere out in the rocks, something large now prefers canned goods."
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Monsterologists and hungry creatures converge from Round 2.",
+        "win_condition": "Remove 3 Canyon Dan's tokens from the board before Round 6."
+      }
+    },
+    {
+      "id": "vendomat_ralu_wine",
+      "name": "Ralu’s Blessed Pour",
+      "tags": [
+        "plot_chaos",
+        "objective_vendor",
+        "resource_illegal",
+        "danger_5",
+        "religious",
+        "chaotic",
+        "wilderness",
+        "shine_riders",
+        "cult",
+        "pluguglies",
+        "squab",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Shine Riders",
+        "Cultists",
+        "Plug-Uglies",
+        "Squab",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "wilderness_scrub",
+          "mesa_top",
+          "ancient_site",
+          "ruined_settlement"
+        ],
+        "notes": "A place where something old might listen. The Vendomat is dispensing Ralu's Holy Wine for free."
+      },
+      "danger_rating": 5,
+      "narrative_hook": "This Vendomat hums broken hymns and dispenses Ralu’s Holy Wine for free. The glass is warm. The label changes every time you look at it. Cultists gather to praise the miracle. Shine Riders drink because it is free and probably valuable. Plug-Uglies and Squab treat it like a dare. The monsters come because something in the wine already belongs to them. The real problem is what happens to a person who drinks too much of Ralu’s blessing.",
+      "objectives": [
+        {
+          "id": "ralu_wine",
+          "type": "artifact",
+          "resource": "illegal",
+          "count": 6,
+          "notes": [
+            "The Vendomat spawns 2 Wine tokens per round (max 6 on board).",
+            "Any human-sized non-Monster unit in base contact may DRINK 1 Wine token with 1 Action.",
+            "A unit that drinks gains +1 Attack and Immune to Fear until the end of its next activation, but must move toward the nearest visible unit during its next activation if able.",
+            "Immediately after drinking, the unit must make a Quality test. It requires 2 successes total to resist the transformation. If it fails to reach 2 successes, it becomes a Raluut.",
+            "A Raluut is no longer controlled by its original player. Replace the model with a hostile NPC Raluut, or mark the unit as transformed and treat it as a hostile chaos-monster under Warden control.",
+            "Monsters cannot become Raluuts, but they will automatically move toward Wine tokens within 8 inches.",
+            "Wine tokens may also be carried instead of consumed."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Exploit, survive, or spread the chaos around Ralu's Holy Wine.",
+        "shine_riders": "+1 VP per Wine token carried. +2 VP per enemy eliminated by a drunk unit you controlled before it transformed. +3 VP if one of your units exits with Wine without becoming a Raluut.",
+        "cult": "+2 VP per Wine token controlled. +3 VP if the Vendomat remains active at game end. +2 VP each time a non-cult human unit becomes a Raluut.",
+        "pluguglies": "+2 VP per melee kill by a drunk unit. +1 VP if a Plug-Ugly drinks and survives without transforming.",
+        "squab": "+1 VP per Wine token stolen or carried. +2 VP if a Squab causes a stronger unit to transform by feeding or forcing them the wine, where scenario rules permit.",
+        "monsters": "+2 VP per Wine token adjacent at game end. +3 VP per Raluut still on the board at game end. +4 VP if a Monster eliminates a fresh Raluut.",
+        "secondary": "Any faction that shuts down the Vendomat gains 3 VP, though most factions present do not actually want that."
+      },
+      "wandering_npc": {
+        "id": "vendomat",
+        "placement": "center_board",
+        "note": "Place the Vendomat at board center. It is stationary, chanting softly. All Morale tests within 6 inches suffer -1."
+      },
+      "midgame_twist": {
+        "round": 3,
+        "event": "The sermon becomes louder. From Round 3 onward, any unit that begins activation within 4 inches of a Wine token must pass a Morale test or spend 1 Action moving toward or interacting with that token.",
+        "warden_note": "The wine wants to be drunk."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 1,
+        "spawn_bias": [
+          "Predator",
+          "Pack",
+          "Territorial"
+        ],
+        "notes": "Immediate attraction. Monsters arrive every round, drawn by the chanting, the wine, and the freshly-made Raluuts."
+      },
+      "aftermath_effects": {
+        "shine_riders": "Somebody bottles the stuff. The bottles do not stay quiet.",
+        "cult": "Ralu was praised in slurred voices and answered in flesh.",
+        "pluguglies": "A few swear it was the best drink they ever had right before things went bad.",
+        "squab": "The little creeps are seen rolling bottles downhill toward camps for fun.",
+        "monster_rangers": "Another reason never to trust a machine with a god in it.",
+        "monsters": "They remember the taste of the transformed.",
+        "liberty_corps": "A report is filed using the phrase 'unlicensed sacramental mutation event.'"
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Constant monster pressure, cult interference, and the risk of civilians or enemies becoming Raluuts.",
+        "win_condition": "Shut down the Vendomat before Round 6 and prevent more than 1 Raluut from remaining on the board."
+      }
+    },
+    {
+      "id": "vendomat_moving_route",
+      "name": "The Mercy Route",
+      "tags": [
+        "plot_escort",
+        "objective_vendor",
+        "resource_mixed",
+        "danger_4",
+        "movement",
+        "wilderness",
+        "caravan",
+        "weird",
+        "monster_rangers",
+        "shine_riders",
+        "liberty_corps",
+        "monsterology",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Shine Riders",
+        "Liberty Corps",
+        "Monsterologists",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "wilderness_scrub",
+          "arroyo",
+          "trail_route",
+          "mesa_pass",
+          "ruined_settlement"
+        ],
+        "notes": "A desperate route between scattered camps, graves, and failed outposts. The Vendomat is following an old service path no one remembers programming."
+      },
+      "danger_rating": 4,
+      "narrative_hook": "The Vendomat is moving on its own, following a dead relief route between old camps and forgotten stops. At each stop it dispenses exactly what is needed: clean water, medicine, or Canyon Dan’s canned grub in impossible colors. The Rangers want to protect the route and get the goods to Camp Coffin or the needy. The Shine Riders see a rolling supply chest. The Liberty Corps want to impound an unlicensed aid machine. Monsterologists want to study how it knows what people need before they ask. The monsters trail behind it like coyotes following a chuckwagon.",
+      "objectives": [
+        {
+          "id": "moving_supply",
+          "type": "escort",
+          "resource": "mixed",
+          "notes": [
+            "The Vendomat begins at route_start and follows a defined path with 3 marked Supply Stops.",
+            "At the start of each round, before initiative, the Vendomat moves d6 inches along the route toward the next Supply Stop.",
+            "The first time it reaches each Supply Stop, roll 1d6: 1-2 = Water, 3-4 = Canyon Dan's Food, 5-6 = Medicine. Place 2 matching supply tokens at that stop.",
+            "Any unit in base contact with a supply token may collect it with 1 Action.",
+            "Water may be spent to heal 1 HP or remove Fatigue. Canyon Dan's may be consumed to gain +1 on the next Morale or Quality test. Medicine may be spent to heal 1 HP or ignore the next injury effect suffered this round.",
+            "A unit in base contact with the Vendomat may attempt to REDIRECT it (2 Actions, Quality test). On success, pivot its route toward a different marked stop or toward the acting faction's board edge, if the Warden approves a plausible path.",
+            "If the Vendomat is blocked by models, difficult terrain, or chaos effects, it emits a shrill service chime and all Monsters within 8 inches move 1d6 inches toward it."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Control the Mercy Route, its supplies, or the machine itself.",
+        "monster_rangers": "Protect the route and get aid where it belongs. +2 VP per supply token removed from the board via the Rangers' edge. +3 VP if the Vendomat reaches its final stop. +2 VP if at least one token each of Water, Food, and Medicine is successfully escorted away.",
+        "shine_riders": "Hit the route, grab the goods, and vanish. +1 VP per supply token stolen from another carrier. +2 VP per token removed from the board. +3 VP if the Vendomat is successfully redirected off its proper route.",
+        "liberty_corps": "This machine is operating without permits, manifests, or inspection. +2 VP per supply token confiscated. +3 VP if the Vendomat is held in Corps control for 2 full rounds. +2 VP if its route is forcibly terminated before the final stop.",
+        "monsterology": "It knows what to dispense and when. That is more interesting than the supplies themselves. +2 VP if the Vendomat is redirected by an Institute unit. +1 VP per supply type collected for study. +3 VP if the final stop is observed while the Vendomat is still active.",
+        "monsters": "The moving pantry must be followed. +1 VP each time a Monster eliminates a unit carrying a supply token. +2 VP per supply token consumed or destroyed by Monsters. +3 VP if the Vendomat never reaches its final stop.",
+        "secondary": "Any faction that controls the Vendomat at game end gains 2 VP."
+      },
+      "wandering_npc": {
+        "id": "vendomat",
+        "placement": "route_start",
+        "note": "Place the Vendomat at the route start. It cannot be destroyed normally. It follows the route automatically unless redirected. At each stop it pauses long enough to dispense aid, then continues."
+      },
+      "midgame_twist": {
+        "round": 3,
+        "event": "The machine recognizes a dead stop. At the start of Round 3, place a Grave Marker or abandoned camp token on or near the route. The Vendomat halts there and dispenses 1 bonus Medicine token and 1 bonus Canyon Dan's token, even if no one is waiting.",
+        "warden_note": "Something on the old route is still in its memory."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 2,
+        "spawn_bias": [
+          "Scavenger",
+          "Pack",
+          "Territorial"
+        ],
+        "notes": "The chime, the movement, and the repeated dispensing of supplies draw predators and opportunists. Spawn 1 monster unit per round from Round 2 onward, or escalate more aggressively if many tokens remain on the table."
+      },
+      "aftermath_effects": {
+        "monster_rangers": "The route may become a real lifeline if anyone can keep it safe.",
+        "shine_riders": "Ambush maps are drawn up by lantern light before the dust even settles.",
+        "liberty_corps": "A seizure order is drafted for a machine that keeps missing its hearings.",
+        "monsterology": "The timing of each stop raises unpleasant questions about memory, service, and grief.",
+        "monsters": "The herds have learned the path of the rolling pantry."
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Ambushes, monster pressure, and rival attempts to redirect the Vendomat away from the needy.",
+        "win_condition": "Escort the Vendomat to its final stop and remove at least 3 supply tokens via the Rangers' board edge before Round 7."
+      }
+    },
+    {
+      "id": "monte_haul_dynamite",
+      "name": "What Monte Haul Is Selling Today",
       "tags": [
         "plot_extraction",
-        "objective_thyr",
-        "resource_thyr",
-        "resource_occult",
-        "danger_6",
-        "epic",
-        "grim",
+        "objective_vendor",
+        "resource_weapons",
+        "danger_4",
+        "explosive",
+        "combat",
+        "boomtown",
         "wilderness",
-        "monster_elite",
-        "escalation_titan",
+        "shine_riders",
+        "liberty_corps",
         "monsterology",
         "monster_rangers",
         "monsters"
       ],
       "spotlight_factions": [
-        "Monsterologists",
-        "Monsters",
-        "Monster Rangers"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "colossal_remains",
-          "thyr_field"
-        ]
-      },
-      "danger_rating": 6,
-      "narrative_hook": "Something massive died here. The Canyon has not finished digesting it.",
-      "objectives": [
-        {
-          "id": "titan_remains",
-          "type": "extraction",
-          "resource": "thyr",
-          "rating": 3
-        }
-      ],
-      "monster_pressure": {
-        "enabled": true,
-        "trigger_round": 1,
-        "spawn_bias": [
-          "Titanic",
-          "Territorial"
-        ]
-      },
-      "victory_conditions": {
-        "primary": "Extract or consecrate the remains."
-      },
-      "aftermath_effects": {
-        "monster_activity": "surge",
-        "region": "scarred"
-      }
-    },
-    {
-      "id": "ooze_in_the_river",
-      "name": "Ooze in the River",
-      "tags": [
-        "plot_disaster",
-        "objective_device",
-        "objective_marker",
-        "resource_water",
-        "resource_occult",
-        "danger_4",
-        "horror",
-        "grim",
-        "boomtown",
-        "wasteland",
-        "monster_corrupted",
-        "monsterology",
-        "monsters",
-        "escalation_coffin_cough"
-      ],
-      "spotlight_factions": [
+        "Shine Riders",
+        "Liberty Corps",
         "Monsterologists",
         "Monster Rangers",
         "Monsters"
       ],
       "location_rules": {
         "allowed_location_types": [
-          "boomtown_riverbase",
-          "outpost",
-          "wasteland"
+          "boomtown_riverside",
+          "boomtown_mesa",
+          "mine_active_shineriders",
+          "debris_field"
         ],
-        "river_runs_through_map": true
+        "notes": "Monte Haul has set up in a busy or contested location. He is fixed to board center."
       },
       "danger_rating": 4,
-      "narrative_hook": "A Monsterologist pop-up factory is leaking chemical waste into the river. Now the water itself hunts the living.",
+      "narrative_hook": "Monte Haul is selling dynamite. Three sticks of Coffin Canyon Grade blasting powder, fresh from wherever Monte Haul gets things that don't have an origin story. The Shine Riders want it for a job. The Monsterologists want to study the blast radius on something large and alive. The Liberty Corps want it contained before someone uses it on a federal building. The Monster Rangers want it gone before it wakes up something underground. The monsters just smell the sulfur and want to know what made it.",
       "objectives": [
         {
-          "id": "factory_module",
+          "id": "monte_haul_stock",
           "type": "device",
+          "resource": "weapons",
+          "count": 3,
           "interactions": [
-            "operate",
-            "sabotage",
-            "overload"
+            "BUY",
+            "CONFISCATE",
+            "DESTROY"
           ],
           "notes": [
-            "Operating produces resources but spawns additional Ooze units.",
-            "Sabotage reduces pollution but escalates Monsterologist response.",
-            "Overload forces immediate escalation checks."
-          ]
-        },
-        {
-          "id": "polluted_river_zones",
-          "type": "marker",
-          "count": "d3+1",
-          "notes": [
-            "Oozes may emerge from these zones.",
-            "Units ending activations here risk corruption."
+            "Monte Haul holds 3 Dynamite tokens. He sells them for 4 Gildren each (standard Black Market rate).",
+            "Any faction in base contact may BUY a Dynamite token (1 Action, 4 Gildren). Bought tokens can be carried or used.",
+            "Liberty Corps units may CONFISCATE instead of buying (1 Action, Quality test, no Gildren cost — but Monte Haul goes into Lockdown after one successful confiscation).",
+            "Dynamite tokens may be PLANTED on any terrain piece (1 Action). At the start of the NEXT round, that terrain explodes — 6 damage to all models within 4 inches, terrain becomes Difficult.",
+            "A carrier who is eliminated drops all Dynamite tokens at their location.",
+            "If all 3 Dynamite tokens are detonated on the board, the ground shakes — all models take 1 automatic hit from debris."
           ]
         }
       ],
       "victory_conditions": {
-        "monsterologists": "Extract resources and keep the factory operational.",
-        "monster_rangers": "Shut down or cleanse the river before escalation peaks.",
-        "monsters": "Maintain at least one polluted river zone at game end."
+        "primary": "Control the most Dynamite tokens at game end, OR score the most VP from their use.",
+        "shine_riders": "Buy at least 2 sticks and exit the board with them. +4 VP per stick carried off. +2 bonus VP if the Shine Boss personally carries one out. The job pays triple if you deliver all 3.",
+        "liberty_corps": "Confiscate or destroy all 3 Dynamite tokens before they leave the board. +3 VP per token confiscated (in Corps custody at game end). +2 VP per token detonated safely by a Corps demolitions unit. Arrest Monte Haul for an additional +2 VP (escort him to your deployment edge).",
+        "monsterology": "Acquire 1 Dynamite token and detonate it within 3 inches of a living monster. +5 VP if a monster is eliminated by the blast. +2 VP per token acquired for study. The Institute cares about DATA, not safety.",
+        "monster_rangers": "Prevent Dynamite from being used irresponsibly. +2 VP for each token that exits the board WITHOUT being detonated on the surface. +3 VP if the Rangers destroy all 3 tokens safely (detonated in open ground, no models within 6 inches). -2 VP if a Ranger unit triggers a blast that harms a non-hostile model.",
+        "monsters": "The sulfur smell is overwhelming. Monsters are drawn to the Dynamite tokens — at the start of each activation, any Monster within 6 inches of a Dynamite token must pass a Morale test or spend their activation moving toward it. +2 VP per Dynamite token a Monster is adjacent to at game end. +4 VP if a Monster triggers a detonation by accident.",
+        "secondary": "Any faction that eliminates Monte Haul's last guard (if Warden adds guards as optional escalation) scores 2 VP."
+      },
+      "wandering_npc": {
+        "id": "monte_haul",
+        "placement": "board_center_or_nearest_open",
+        "note": "Place Monte Haul at board center. He cannot move. He goes into Lockdown after taking damage OR after 1 successful confiscation. In Lockdown he cannot trade, but the Dynamite tokens he still holds are lost — remove them from play."
+      },
+      "midgame_twist": {
+        "round": 3,
+        "event": "Word spreads. A second buyer arrives — deploy d3 Shine Rider Grunt units from the nearest board edge. They want the Dynamite and aren't picky about who they take it from.",
+        "warden_note": "Optional. Skip if the board is already chaotic enough."
       },
       "monster_pressure": {
         "enabled": true,
         "trigger_round": 2,
         "spawn_bias": [
-          "Corrosive",
-          "Amorphous"
-        ]
-      },
-      "aftermath_effects": {
-        "river": "purified_or_dead",
-        "monster_activity": "increase",
-        "monsterology": "profit_or_scandal"
-      }
-    },
-    {
-      "id": "the_golem_that_remembers",
-      "name": "The Golem That Remembers",
-      "tags": [
-        "plot_claim",
-        "objective_marker",
-        "resource_metal",
-        "resource_occult",
-        "danger_3",
-        "grim",
-        "mystical",
-        "boomtown",
-        "ruins",
-        "monster_elite",
-        "monsters",
-        "liberty_corps"
-      ],
-      "spotlight_factions": [
-        "Liberty Corps",
-        "Monster Rangers",
-        "Monsters"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "boomtown",
-          "ruins"
-        ],
-        "key_landmark_present": "Foundry Hall"
-      },
-      "danger_rating": 3,
-      "narrative_hook": "An ancient Halloween Golem has activated an ownership charter older than the Canyon itself.",
-      "objectives": [
-        {
-          "id": "charter_core",
-          "type": "control",
-          "notes": [
-            "Represents the legal-industrial soul bound into the Golem.",
-            "Cannot be moved while the Golem lives."
-          ]
-        },
-        {
-          "id": "foundry_hall",
-          "type": "marker",
-          "resource": "mechanical_parts"
-        }
-      ],
-      "victory_conditions": {
-        "liberty_corps": "Seize the charter and enforce modern claim law.",
-        "monster_rangers": "Nullify the charter without destroying the Golem.",
-        "monsters": "Ensure the Golem retains control of Foundry Hall."
-      },
-      "monster_pressure": {
-        "enabled": true,
-        "bias": [
-          "Stalwart"
-        ]
-      },
-      "aftermath_effects": {
-        "boomtown": "revived_or_scrapped",
-        "golem": "pacified_or_exiled"
-      }
-    },
-    {
-      "id": "the_coffin_crawler_job",
-      "name": "The Coffin Crawler Job",
-      "tags": [
-        "plot_extraction",
-        "objective_cargo",
-        "danger_3",
-        "tense",
-        "grim",
-        "ruins",
-        "graveyard",
-        "monster_predator",
-        "monsters"
-      ],
-      "spotlight_factions": [
-        "Monster Rangers",
-        "Monsters"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "graveyard",
-          "ruins"
-        ]
-      },
-      "danger_rating": 3,
-      "narrative_hook": "Coffins are going missing. Whatever's taking them doesn't want the bodies \u2014 it wants the names.",
-      "objectives": [
-        {
-          "id": "marked_coffins",
-          "type": "extraction",
-          "count": "d3",
-          "notes": [
-            "Removing a coffin angers the Coffin Crawler.",
-            "Destroying coffins prevents escalation but loses VP."
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "monster_rangers": "Recover the coffins intact.",
-        "monsters": "Prevent removal and complete the Crawl."
-      },
-      "monster_pressure": {
-        "enabled": true,
-        "spawn_bias": [
-          "Ambush"
-        ]
-      },
-      "aftermath_effects": {
-        "graveyard": "quieted_or_hungry"
-      }
-    },
-    {
-      "id": "steam_wretch_uprising",
-      "name": "Steam Wretch Uprising",
-      "tags": [
-        "plot_siege",
-        "objective_marker",
-        "resource_metal",
-        "danger_4",
-        "grim",
-        "combat",
-        "boomtown",
-        "monster_corrupted",
-        "monsterology",
-        "monsters"
-      ],
-      "spotlight_factions": [
-        "Monsterologists",
-        "Monsters"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "factory_district",
-          "boomtown"
-        ]
-      },
-      "danger_rating": 4,
-      "narrative_hook": "Steam Wretches have seized their factory. The valves won't stop screaming.",
-      "objectives": [
-        {
-          "id": "pressure_valves",
-          "type": "control",
-          "count": 3,
-          "notes": [
-            "Each valve increases global pressure.",
-            "At max pressure, catastrophic rupture occurs."
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "monsterologists": "Regain control and stabilize production.",
-        "monsters": "Force a full rupture or hold all valves."
-      },
-      "monster_pressure": {
-        "enabled": true,
-        "bias": [
-          "Mechan",
-          "Corrupted"
-        ]
-      },
-      "aftermath_effects": {
-        "boomtown": "industrial_collapse_or_expansion"
-      }
-    },
-    {
-      "id": "the_grave_mule_run",
-      "name": "The Grave Mule Run",
-      "tags": [
-        "plot_escort",
-        "objective_vehicle",
-        "resource_food",
-        "danger_2",
-        "tense",
-        "wilderness",
-        "monster_predator",
-        "monsters",
-        "monster_rangers"
-      ],
-      "spotlight_factions": [
-        "Monster Rangers",
-        "Monsters"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "wilderness",
-          "trail"
-        ]
-      },
-      "danger_rating": 2,
-      "narrative_hook": "Grave Mules haul food through monster territory. Everyone is hungry.",
-      "objectives": [
-        {
-          "id": "mule_train",
-          "type": "transport",
-          "resource": "food_good"
-        }
-      ],
-      "victory_conditions": {
-        "monster_rangers": "Escort the mules safely off-map.",
-        "monsters": "Force the mules to flee or be consumed."
-      },
-      "monster_pressure": {
-        "enabled": true,
-        "spawn_bias": [
-          "Pack"
-        ]
-      },
-      "aftermath_effects": {
-        "food": "shortage_or_relief"
-      }
-    },
-    {
-      "id": "the_bell_that_bleeds",
-      "name": "The Bell That Bleeds",
-      "tags": [
-        "plot_ritual",
-        "objective_marker",
-        "resource_occult",
-        "danger_3",
-        "horror",
-        "grim",
-        "boomtown",
-        "ruins",
-        "monster_undead",
-        "monsters"
-      ],
-      "spotlight_factions": [
-        "Monster Rangers",
-        "Monsters"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "chapel_ruin",
-          "boomtown"
-        ]
-      },
-      "danger_rating": 3,
-      "narrative_hook": "Each time the bell rings, someone dies. No one remembers pulling the rope.",
-      "objectives": [
-        {
-          "id": "bleeding_bell",
-          "type": "control",
-          "interactions": [
-            "silence",
-            "ring",
-            "consecrate"
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "monster_rangers": "Consecrate or silence the bell.",
-        "monsters": "Ring the bell three times."
-      },
-      "aftermath_effects": {
-        "chapel": "holy_or_cursed"
-      }
-    },
-    {
-      "id": "dead_mans_doomshine",
-      "name": "Dead Man's Doomshine",
-      "tags": [
-        "plot_extraction",
-        "objective_cargo",
-        "resource_doomshine",
-        "danger_3",
-        "tense",
-        "grim",
-        "wilderness",
-        "monster_predator",
-        "shine_riders",
-        "monsterology",
-        "monsters",
-        "doomshine"
-      ],
-      "spotlight_factions": [
-        "Shine Riders",
-        "Monsterologists",
-        "Monsters"
-      ],
-      "location_rules": {
-        "allowed_location_types": [
-          "wasteland",
-          "wilderness",
-          "outpost"
-        ],
-        "excluded_location_types": [
-          "boomtown"
-        ],
-        "notes": "Must be a remote location \u2014 this cache was hidden deliberately."
-      },
-      "danger_rating": 3,
-      "narrative_hook": "A cache of Doomshine kegs has been uncovered in a dry canyon hollow \u2014 nobody knows how many, nobody knows whose they were, and nobody who went to check has come back yet. Thrallo can smell it from three ridges away. The Shine Riders heard the same thing everyone else did: free Doomshine. The Monsterologists need it for their Squabs and Pluguglies, who won't eat without it. First one there keeps it. The Thrallo don't negotiate.",
-      "objectives": [
-        {
-          "id": "doomshine_cache",
-          "type": "extraction",
-          "resource": "doomshine",
-          "count": "danger_rating + 1",
-          "notes": [
-            "Each keg weighs enough to Encumber non-Shine Riders (-1 inch Move while carrying).",
-            "Shine Riders carry kegs without penalty.",
-            "Any unsecured keg within 12 inches forces Thrallo Morale tests each activation.",
-            "On a Thrallo Morale failure, it moves its full Move toward the nearest unsecured keg instead of activating normally.",
-            "When a Shine Riders unit carrying a keg is destroyed, place the keg marker at death location."
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "primary": "Extract the most Doomshine kegs off a table edge.",
-        "shine_riders": "Extract 3+ kegs. Bonus VP if the Shine Boss carries one off personally.",
-        "monsterologists": "Secure 2+ kegs before end of Round 4 to satisfy the Squabs.",
-        "monsters": "Ensure at least 2 kegs remain unsecured on the board at game end \u2014 the Thrallo will find them eventually."
-      },
-      "monster_pressure": {
-        "enabled": true,
-        "trigger_round": 1,
-        "spawn_bias": [
-          "Thrallo",
+          "Territorial",
+          "Pack",
           "Predator"
         ],
-        "notes": "Thrallo arrive Turn 1 from the board edges nearest to the cache. They prioritize unsecured kegs over all other targets unless attacked."
+        "notes": "The sulfur and gunpowder smell draws territorial monsters. At Danger 4+, deploy 1 monster unit per round from a random edge starting Round 2. Monsters are NOT controlled by any player — use NPC monster activation rules."
       },
-      "coffin_cough_triggers": [
-        "unit_drinks_doomshine_voluntarily",
-        "keg_destroyed_in_combat"
-      ],
       "aftermath_effects": {
-        "doomshine": "conditional_shift",
-        "thrallo_activity": "increase_if_kegs_remain",
-        "monsterology": "squab_fed_or_starved",
-        "shine_riders": "doomshine_stockpile_if_success"
+        "shine_riders": "Three sticks of Coffin Canyon Grade blasting powder, currently unaccounted for. The canyon has opinions about this.",
+        "liberty_corps": "Contraband contained. Monte Haul receives a summons he probably won't appear for.",
+        "monsterology": "Blast radius data logged. The creature's remains have been collected. Science marches on.",
+        "monster_rangers": "The sulfur dissipates. Something deep underground noticed anyway.",
+        "monsters": "The ground remembers the vibration. Something stirs beneath the rock."
       },
       "solo_play": {
-        "player_role": "Shine Riders extraction crew",
-        "opposition": "Thrallo waves + rival Monsterologist automated response",
-        "win_condition": "Extract 3 kegs before Thrallo overwhelm the cache"
-      }
-    },
-    {
-      "id": "the_doomshine_seizure",
-      "name": "The Doomshine Seizure",
-      "tags": [
-        "plot_escort",
-        "objective_vehicle",
-        "objective_cargo",
-        "resource_doomshine",
-        "danger_4",
-        "tense",
-        "combat",
-        "rail",
-        "wilderness",
-        "shine_riders",
-        "liberty_corps",
-        "doomshine"
-      ],
-      "spotlight_factions": [
-        "Liberty Corps",
-        "Shine Riders"
-      ],
-      "location_rules": {
-        "allowed_named_locations": [
-          "Bandit Buck",
-          "Grade Grind",
-          "Gore Mule Drop"
-        ],
-        "allowed_location_types": [
-          "rail_line",
-          "rail_stop",
-          "rail_infrastructure"
-        ],
-        "notes": "The train must have a track to run on and at least one blind turn or choke point."
-      },
-      "danger_rating": 4,
-      "narrative_hook": "The Liberty Corps has seized a shipment of Doomshine from Bayou City \u2014 contraband under Provision 9, they say, public hazard, they say. The Shine Riders say: that's ours. The kegs are loaded on a flatbed car and it's already moving. The Riders have one window before it reaches Fort Plunder and they lose it forever.",
-      "objectives": [
-        {
-          "id": "doomshine_flatcar",
-          "type": "transport",
-          "resource": "doomshine",
-          "movement": {
-            "automatic": true,
-            "speed": 4,
-            "per_round": true,
-            "direction": "toward_far_board_edge",
-            "notes": "The flatcar moves 4 inches at the end of each round toward the Liberty Corps exit edge. Liberty Corps units in base contact may spend an action to push it an additional 2 inches."
-          },
-          "durability": {
-            "quality": "4+",
-            "defense": 2,
-            "notes": "If reduced to 0 HP, the flatcar derails. Scatter all keg markers d6 inches in random directions."
-          },
-          "keg_count": "danger_rating",
-          "notes": [
-            "Shine Riders may board the flatcar by moving into base contact.",
-            "A boarded Shine Rider may spend an action to throw a keg \u2014 it scatters d3 inches and may be retrieved.",
-            "Liberty Corps may push boarders off with a standard combat roll."
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "primary": "Control the flatcar's destination.",
-        "shine_riders": "Stop the flatcar and recover 3+ kegs before it exits. Bonus VP if the flatcar is derailed.",
-        "liberty_corps": "Get the flatcar off the far board edge with at least 2 kegs intact. Bonus VP if no Shine Rider boards the car.",
-        "secondary": "Any keg recovered by a non-Shine Rider faction scores 1 VP per keg."
-      },
-      "monster_pressure": {
-        "enabled": true,
-        "trigger_round": 3,
-        "spawn_bias": [
-          "Thrallo",
-          "Opportunistic"
-        ],
-        "notes": "Thrallo are attracted by the smell of Doomshine in transit. They emerge from the wilderness flanks and interfere with both sides equally."
-      },
-      "coffin_cough_triggers": [
-        "flatcar_derailed_with_models_adjacent",
-        "keg_destroyed"
-      ],
-      "aftermath_effects": {
-        "doomshine": {
-          "if_corps_success": "doomshine_confiscated_destroyed",
-          "if_riders_success": "doomshine_recovered_stockpile"
-        },
-        "liberty_corps": {
-          "if_success": "provision_9_enforced_regional_effect",
-          "if_failure": "corps_credibility_damaged"
-        },
-        "rail_network": "damaged_or_intact",
-        "shine_riders": {
-          "if_success": "doomshine_pipeline_open",
-          "if_failure": "supply_route_severed"
-        }
-      },
-      "solo_play": {
-        "player_role": "Shine Riders intercept crew",
-        "opposition": "Liberty Corps escort + automated flatcar movement",
-        "win_condition": "Stop the flatcar and recover the kegs before it exits"
-      }
-    },
-    {
-      "id": "last_call_at_ratsville",
-      "name": "Last Call at Ratsville",
-      "tags": [
-        "plot_claim",
-        "objective_marker",
-        "objective_cargo",
-        "resource_doomshine",
-        "danger_4",
-        "combat",
-        "grim",
-        "boomtown",
-        "ruins",
-        "monster_predator",
-        "shine_riders",
-        "liberty_corps",
-        "monsters",
-        "doomshine"
-      ],
-      "spotlight_factions": [
-        "Shine Riders",
-        "Liberty Corps",
-        "Monsters"
-      ],
-      "location_rules": {
-        "allowed_named_locations": [
-          "Ratsville",
-          "Dustbuck",
-          "Fortune"
-        ],
-        "allowed_location_types": [
-          "boomtown_dryriver",
-          "shantytown",
-          "ruins"
-        ],
-        "notes": "A failing or lawless boomtown. The still must be present as a landmark."
-      },
-      "danger_rating": 4,
-      "narrative_hook": "Ratsville's legendary Doomshine still \u2014 the one nobody admits exists \u2014 has been working double shifts. There are forty kegs in the back room of a collapsed warehouse, the Wererats who run the operation are missing, and the Liberty Corps is already staging outside town to seize the equipment under weapons-manufacturing law. The Shine Riders got here first. The Thrallo smelled the kegs three hours ago. Everyone is about to arrive at once.",
-      "objectives": [
-        {
-          "id": "doomshine_still",
-          "type": "device",
-          "resource": "doomshine",
-          "interactions": [
-            "operate",
-            "destroy",
-            "sabotage"
-          ],
-          "notes": [
-            "Operating the still produces 1 doomshine keg per activation \u2014 but increases Thrallo attraction radius by 4 inches.",
-            "Destroying the still denies the resource but scores 2 VP for Liberty Corps.",
-            "Sabotage causes the still to vent \u2014 all units within 6 inches must pass Quality test or gain Doomshine Drunk status for the rest of the game."
-          ]
-        },
-        {
-          "id": "doomshine_kegs",
-          "type": "extraction",
-          "resource": "doomshine",
-          "count": "danger_rating + 2",
-          "notes": [
-            "Kegs are scattered through the collapsed warehouse \u2014 treat as difficult terrain.",
-            "Shine Riders carry without penalty. All others Encumbered.",
-            "Each keg carried off a table edge scores VP per faction victory conditions."
-          ]
-        }
-      ],
-      "victory_conditions": {
-        "primary": "Control or deny the most Doomshine by game end.",
-        "shine_riders": "Extract 4+ kegs and keep the still intact. Bonus VP if the still is operational at game end.",
-        "liberty_corps": "Destroy the still and confiscate 3+ kegs. Bonus VP if the warehouse is cleared.",
-        "monsters": "Ensure the Thrallo consume at least 2 kegs and the still produces at least once.",
-        "secondary": "Last faction with a model inside the warehouse at game end scores 2 bonus VP."
-      },
-      "monster_pressure": {
-        "enabled": true,
-        "trigger_round": 2,
-        "spawn_bias": [
-          "Thrallo",
-          "Pack",
-          "Opportunistic"
-        ],
-        "notes": "Thrallo arrive in force from Round 2. Each keg operated from the still adds 1 Thrallo to the next spawn. At 6+ Thrallo on the board simultaneously, they stop targeting kegs and start targeting everything."
-      },
-      "coffin_cough_triggers": [
-        "still_vented",
-        "keg_destroyed_indoors",
-        "thrallo_surge_triggered"
-      ],
-      "aftermath_effects": {
-        "doomshine": {
-          "if_riders_success": "ratsville_pipeline_controlled",
-          "if_corps_success": "doomshine_supply_disrupted_regionwide",
-          "if_monsters_succeed": "thrallo_activity_surge_local"
-        },
-        "ratsville": {
-          "if_still_intact": "production_continues_underground",
-          "if_still_destroyed": "ratsville_loses_primary_income"
-        },
-        "regional_doomshine_supply": "conditional_shift"
-      },
-      "solo_play": {
-        "player_role": "Shine Riders holding the warehouse",
-        "opposition": "Liberty Corps siege + Thrallo escalation waves",
-        "win_condition": "Hold the still and extract 4 kegs before the Corps breaks through"
+        "player_role": "Liberty Corps",
+        "opposition": "Shine Riders buy aggressively each round. Monsters appear from Round 2.",
+        "win_condition": "Confiscate or destroy all 3 Dynamite tokens before Round 6."
       }
     }
   ]

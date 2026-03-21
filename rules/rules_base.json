@@ -41,7 +41,7 @@
     { "id": "weapon_properties", "title": "Weapon Properties", "path": "rules_master.weapon_properties", "type": "system", "file": "100_weapon_properties.json" },
     { "id": "wild_magic", "title": "Wild Magic Table", "path": "rules_master.wild_magic_table", "type": "system", "file": "100_wild_magic_table.json" },
     { "id": "terrain_vault", "title": "Terrain Vault", "path": "rules_master.terrain_vault", "type": "vault", "file": "120_terrain_vault.json" },
-    { "id": "objective_vault", "title": "Objective Vault", "path": "rules_master.objective_vault", "type": "vault", "file": "130_objective_vault.json" },
+    { "id": "objective_vault", "title": "Objective Vault", "path": "rules_master.objective_vault", "type": "vault", "file": "240_objective_vault.json" },
     { "id": "scenario_vault", "title": "Scenario Vault", "path": "rules_master.scenario_vault", "type": "vault", "file": "140_scenario_vault.json" },
     { "id": "location_types", "title": "Location Types", "path": "rules_master.location_types", "type": "system", "file": "150_location_types.json" },
     { "id": "location_vault", "title": "Location Vault", "path": "rules_master.location_vault", "type": "vault", "file": "150_location_vault.json" },

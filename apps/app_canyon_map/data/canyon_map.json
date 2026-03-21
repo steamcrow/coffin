@@ -11,7 +11,7 @@
   ],
   "map": {
     "background": {
-      "image_key": "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/map_coffin_canyon_small.jpg",
+      "image_key": "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/map_coffin_canyon_small2.jpg",
       "image_pixel_size": { "w": 2824, "h": 4000 },
       "coord_system": "image_px",
       "opacity": 1

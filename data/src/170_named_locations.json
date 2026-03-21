@@ -5,15 +5,15 @@
     "All 36 canonical map locations plus Camp Coffin.",
     "key_resources lists 2-5 resources that define the location and drive scenario objectives.",
     "resources object only contains non-zero values for those key resources.",
-    "Sub-locations (Red Lantern Cantina, Automat, Monte Haul) removed \u2014 they appear IN locations, not as locations.",
-    "glasswind-mesa removed \u2014 it is a terrain type template, not a canonical named place.",
+    "Sub-locations (Red Lantern Cantina, Automat, Monte Haul) removed — they appear IN locations, not as locations.",
+    "glasswind-mesa removed — it is a terrain type template, not a canonical named place.",
     "doomshine is the canonical spirit resource (v2.1)."
   ],
   "locations": [
     {
       "id": "diablo",
       "name": "Diablo",
-      "emoji": "\ud83d\udc80",
+      "emoji": "💀",
       "type_ref": "diablo_booming_hub",
       "archetype": "boomtown",
       "state": "booming",
@@ -29,9 +29,10 @@
       "resources": {
         "supplies": 5,
         "silver": 3,
-        "weapons": 3,
+        "weapons": 4,
         "food_good": 4,
-        "doomshine": 3
+        "doomshine": 3,
+        "livestock": 4
       },
       "features": [
         "RailTerminus",
@@ -56,7 +57,7 @@
           "weight": 1
         }
       ],
-      "description": "Diablo booms by decree, greed, and violence. The rail line used to keep it fed. The guns keep it profitable.",
+      "description": "I’ve seen Diablo squatting at the south end of the canyon like a festering wound—smoke, refuse, brothels, Thyr dealers, death-cult preachers and all the rest of it choking the streets—kept alive only because every outlaw and Shine Rider in the canyon needs one place where the law won’t reach, though plenty of fools have bled out trying to claim it.",
       "atmosphere": "Noise, commerce, and a crook under every counter",
       "coffinCoughChance": 0.15,
       "terrain_flavor": [
@@ -66,18 +67,24 @@
         "Packed streets"
       ],
       "rumors": [
-        "The Company bought the sheriff's badge and the man wearing it.",
+        "The Doomshine here is spiked with an addictive substance.",
         "A sealed auction lot contains something that screams at night.",
-        "Three factions have a truce here. Nobody trusts it."
+        "The Crass Boys gang is tougher than they sound."
       ],
       "notes": [
-        "Primary boomtown. Everything and everyone passes through Diablo."
+        "The biggest boomtown in the Canyon. Every vile soul passes through Diablo, if they're lucky."
+      ],
+      "hitbox": [
+        505,
+        1432,
+        716,
+        1698
       ]
     },
     {
       "id": "camp-coffin",
       "name": "Camp Coffin",
-      "emoji": "\ud83e\udd85",
+      "emoji": "🦅",
       "type_ref": "camp_coffin_hq",
       "archetype": "headquarters",
       "state": "alive",
@@ -111,7 +118,7 @@
           "weight": 2
         }
       ],
-      "description": "Monster Rangers HQ. Canvas tents, campfires, and corrals where monsters and humans find uneasy peace.",
+      "description": "Camp Coffin sits where some forgotten Tejas town used to be, the Monster Rangers patching together old adobe walls, tents, and watch posts into a stubborn little stronghold where they treat monsters more like neighbors than quarry, though the place is always short on coin and long on trouble, with folks whispering that Thyr acts strange inside the walls, that an old monster gives the Rangers quiet counsel, and that Monsterology’s tried three times to wipe the camp off the canyon and failed every single time.",
       "atmosphere": "The one place where everyone watches the same horizon",
       "coffinCoughChance": 0.1,
       "terrain_flavor": [
@@ -127,12 +134,18 @@
       ],
       "notes": [
         "Monster Rangers faction hub. Medical and supply anchor."
+      ],
+      "hitbox": [
+        2727,
+        2051,
+        2822,
+        2142
       ]
     },
     {
       "id": "fort-plunder",
       "name": "Fort Plunder",
-      "emoji": "\ud83c\udff0",
+      "emoji": "🏰",
       "type_ref": "liberty_corps_fortress",
       "archetype": "fortress",
       "state": "alive",
@@ -149,6 +162,7 @@
         "supplies": 3
       },
       "features": [
+        "Rail",
         "Ramparts",
         "Gatehouse",
         "ArmoryRow",
@@ -181,12 +195,18 @@
       ],
       "notes": [
         "Liberty Corps stronghold. High weapons density. Combat-ready location."
+      ],
+      "hitbox": [
+        3380,
+        1203,
+        3601,
+        1411
       ]
     },
     {
       "id": "fortune",
       "name": "Fortune",
-      "emoji": "\ud83d\udcb0",
+      "emoji": "💰",
       "type_ref": "boomtown_mesa",
       "archetype": "boomtown",
       "state": "barely_alive",
@@ -205,6 +225,7 @@
         "doomshine": 2
       },
       "features": [
+        "Rail",
         "AssayOffice",
         "ClaimStakes",
         "PickAxeRow",
@@ -235,18 +256,24 @@
         "Fight pit"
       ],
       "rumors": [
-        "The last good vein is still there \u2014 three men died over a map to it.",
+        "The last good vein is still there — three men died over a map to it.",
         "The assay office is bribing surveyors to underreport.",
         "Fortune will be a ghost town in a year. Everyone is already stealing everything."
       ],
       "notes": [
         "Silver boom town going bust. Claim-jumping and extraction conflict."
+      ],
+      "hitbox": [
+        2887,
+        1284,
+        3121,
+        1567
       ]
     },
     {
       "id": "river-city",
       "name": "River City",
-      "emoji": "\ud83c\udf0a",
+      "emoji": "🌊",
       "type_ref": "boomtown_riverside",
       "archetype": "boomtown",
       "state": "alive",
@@ -267,6 +294,7 @@
         "doomshine": 2
       },
       "features": [
+        "Rail",
         "Docks",
         "MarketRow",
         "Ferryline",
@@ -303,12 +331,18 @@
       ],
       "notes": [
         "Trade hub. Water and food drive objectives here."
+      ],
+      "hitbox": [
+        1102,
+        1607,
+        1280,
+        1854
       ]
     },
     {
       "id": "bayou-city",
       "name": "Bayou City",
-      "emoji": "\ud83d\udc0a",
+      "emoji": "🐊",
       "type_ref": "boomtown_riverside",
       "archetype": "bayou",
       "state": "alive",
@@ -345,7 +379,7 @@
           "weight": 2
         }
       ],
-      "description": "Built on stilts over black water. The food is good, the spirits are better, and the crocodiles are unavoidable.",
+      "description": "Bayou City stands on crooked stilts over black swamp water where the food’s worth the journey, the rum’s stronger than good sense, and the Voodoo women trade in charms, curses, and quiet talk with the dead—though if you ask me, a man’s just as likely to lose his purse to a gambler or his leg to one of those swamp crocodiles drifting under the boards.",
       "atmosphere": "Damp, loud, and very well-armed",
       "coffinCoughChance": 0.17,
       "terrain_flavor": [
@@ -361,12 +395,18 @@
       ],
       "notes": [
         "Doomshine trade node. Wet terrain. Crocodile pressure."
+      ],
+      "hitbox": [
+        1175,
+        2501,
+        1386,
+        2767
       ]
     },
     {
       "id": "cowtown",
       "name": "Cowtown",
-      "emoji": "\ud83d\udc04",
+      "emoji": "🐄",
       "type_ref": "boomtown_riverbase",
       "archetype": "ranch",
       "state": "alive",
@@ -383,6 +423,7 @@
         "supplies": 2
       },
       "features": [
+        "Rail",
         "StockYards",
         "BrandingPen",
         "FeedStorage",
@@ -419,12 +460,18 @@
       ],
       "notes": [
         "Primary livestock location. Pack animal objectives natural here."
+      ],
+      "hitbox": [
+        2172,
+        2112,
+        2332,
+        2396
       ]
     },
     {
       "id": "santos-grin",
       "name": "Santos Grin",
-      "emoji": "\ud83c\udccf",
+      "emoji": "🃏",
       "type_ref": "boomtown_riverbase",
       "archetype": "trade_town",
       "state": "alive",
@@ -477,12 +524,82 @@
       ],
       "notes": [
         "Finance and gambling hub. Gildren and covert objectives."
+      ],
+      "hitbox": [
+        1185,
+        1898,
+        1396,
+        2176
+      ]
+    },
+    {
+      "id": "yults-arch",
+      "name": "Yult's Arch",
+      "emoji": "",
+      "type_ref": "landmark",
+      "archetype": "landmark",
+      "state": "haunted",
+      "danger": 3,
+      "population": 1,
+      "key_resources": [
+        "gildren",
+        "doomshine",
+        "silver"
+      ],
+      "resources": {
+        "gildren": 4,
+        "silver": 2,
+        "doomshine": 4
+      },
+      "features": [
+        "GamblingHalls",
+        "PrivateVaults",
+        "GuardTowers",
+        "TradeYard",
+        "BackAlleyMarket"
+      ],
+      "monster_seeds": [
+        {
+          "name": "Wererat",
+          "weight": 2
+        },
+        {
+          "name": "Imp",
+          "weight": 2
+        },
+        {
+          "name": "Red Goblin",
+          "weight": 1
+        }
+      ],
+      "description": "A strange stone arch where the outlaw Yult is believed to have hung 100 men.",
+      "atmosphere": "It smells like death.",
+      "coffinCoughChance": 0.14,
+      "terrain_flavor": [
+        "Gambling halls",
+        "Private vaults",
+        "Trade yard",
+        "Back alley market"
+      ],
+      "rumors": [
+        "Three major faction debts are held by the same lender here.",
+        "The private vaults contain one item that every faction would kill for.",
+        "Santos Grin's tax collector is never robbed. Nobody asks why."
+      ],
+      "notes": [
+        "Finance and gambling hub. Gildren and covert objectives."
+      ],
+      "hitbox": [
+        934,
+        1504,
+        1026,
+        1592
       ]
     },
     {
       "id": "ratsville",
       "name": "Ratsville",
-      "emoji": "\ud83d\udc00",
+      "emoji": "🐀",
       "type_ref": "boomtown_dryriver",
       "archetype": "shantytown",
       "state": "barely_alive",
@@ -535,14 +652,20 @@
       ],
       "notes": [
         "Lawless zone. Contraband and ammunition objectives."
+      ],
+      "hitbox": [
+        1452,
+        1968,
+        1644,
+        2194
       ]
     },
     {
-      "id": "quinne-jimmy",
-      "name": "Quinne Jimmy",
-      "emoji": "\ud83d\udd27",
+      "id": "quinine-jimmy",
+      "name": "Quinine Jimmy",
+      "emoji": "🔧",
       "type_ref": "boomtown_dryriver",
-      "archetype": "outpost",
+      "archetype": "trade_town",
       "state": "barely_alive",
       "danger": 3,
       "population": 2,
@@ -566,10 +689,18 @@
       "monster_seeds": [
         {
           "name": "Ruster",
+          "weight": 2
+        },
+        {
+          "name": "Will-o'-Wisp",
           "weight": 3
         },
         {
-          "name": "Canyon Goblin",
+          "name": "Wolf",
+          "weight": 2
+        },
+        {
+          "name": "",
           "weight": 2
         }
       ],
@@ -589,12 +720,18 @@
       ],
       "notes": [
         "Salvage and repair node. Spare parts objectives."
+      ],
+      "hitbox": [
+        1694,
+        801,
+        1852,
+        1157
       ]
     },
     {
       "id": "dustbuck",
       "name": "Dustbuck",
-      "emoji": "\ud83d\udca8",
+      "emoji": "💨",
       "type_ref": "boomtown_dryriver",
       "archetype": "dying_town",
       "state": "ruins",
@@ -647,12 +784,18 @@
       ],
       "notes": [
         "Ruined town. Fouled resource and abandoned objective focus."
+      ],
+      "hitbox": [
+        1986,
+        2286,
+        2156,
+        2522
       ]
     },
     {
       "id": "fool-boot",
       "name": "Fool Boot",
-      "emoji": "\ud83d\udc62",
+      "emoji": "👢",
       "type_ref": "boomtown_spire_stilts",
       "archetype": "waystation",
       "state": "barely_alive",
@@ -701,12 +844,18 @@
       ],
       "notes": [
         "Minor waystation. Liminal location with strange reputation."
+      ],
+      "hitbox": [
+        2408,
+        1132,
+        2512,
+        1224
       ]
     },
     {
       "id": "deerhoof",
       "name": "Deerhoof",
-      "emoji": "\ud83e\udd8c",
+      "emoji": "🦌",
       "type_ref": "boomtown_riverbase",
       "archetype": "frontier_settlement",
       "state": "alive",
@@ -759,12 +908,18 @@
       ],
       "notes": [
         "Frontier farmland. Livestock and food-driven scenarios."
+      ],
+      "hitbox": [
+        3112,
+        2130,
+        3329,
+        2412
       ]
     },
     {
       "id": "huck",
       "name": "Huck",
-      "emoji": "\ud83e\udea8",
+      "emoji": "🪨",
       "type_ref": "boomtown_dryriver",
       "archetype": "outpost",
       "state": "alive",
@@ -817,13 +972,19 @@
       ],
       "notes": [
         "Small outpost with Thyr discovery. Extraction conflict potential."
+      ],
+      "hitbox": [
+        3353,
+        2562,
+        3523,
+        2739
       ]
     },
     {
       "id": "little-rica",
       "name": "Little Rica",
-      "emoji": "\u2728",
-      "type_ref": "boomtown_mesa",
+      "emoji": "✨",
+      "type_ref": "boomtown_dryriver",
       "archetype": "mining_camp",
       "state": "barely_alive",
       "danger": 4,
@@ -842,21 +1003,25 @@
         "ShallowMines",
         "AssayTent",
         "ClaimMarkers",
-        "OverlookPlatform",
-        "GuardCamp"
+        "RailTerminus",
+        "CollapseZones"
       ],
       "monster_seeds": [
         {
-          "name": "Canyon Goblin",
+          "name": "Chimera",
           "weight": 2
         },
         {
-          "name": "Ruster",
-          "weight": 2
-        },
-        {
-          "name": "Harpy",
+          "name": "Imp",
           "weight": 1
+        },
+        {
+          "name": "Valley Centaur",
+          "weight": 3
+        },
+        {
+          "name": "",
+          "weight": 2
         }
       ],
       "description": "Little Rica has the ore. It has always had the ore. The problem is everyone else also knows it has the ore.",
@@ -866,7 +1031,7 @@
         "Shallow mines",
         "Assay tent",
         "Claim markers",
-        "Guard camp"
+        "Mining camps"
       ],
       "rumors": [
         "A survey team found a second seam below the main mine and hasn't reported it officially.",
@@ -875,17 +1040,23 @@
       ],
       "notes": [
         "High-value extraction target. Silver and Thyr objectives."
+      ],
+      "hitbox": [
+        2964,
+        500,
+        3182,
+        784
       ]
     },
     {
       "id": "plata",
       "name": "Plata",
-      "emoji": "\ud83e\udd48",
+      "emoji": "🥈",
       "type_ref": "boomtown_mesa",
       "archetype": "mining_town",
-      "state": "alive",
+      "state": "prospering",
       "danger": 4,
-      "population": 4,
+      "population": 3,
       "key_resources": [
         "silver",
         "lead",
@@ -901,7 +1072,8 @@
         "RefiningSheds",
         "AssayHouse",
         "WeightedScales",
-        "ArmedVaults"
+        "ArmedVaults",
+        "RailTerminus"
       ],
       "monster_seeds": [
         {
@@ -927,18 +1099,26 @@
         "Armed vaults"
       ],
       "rumors": [
-        "The assay house runs a second set of books. The first set is for the authorities.",
+        "The assay house runs a second set of books.",
         "Plata's lead supply comes from somewhere that nobody in town will name.",
-        "A vault shipment is moving in three days. Multiple parties know the route."
+        "A vault shipment is moving in three days. Multiple parties know the route.",
+        "An ex-Shine Rider rules Plata County with a silver fist.",
+        ""
       ],
       "notes": [
         "Silver trade town. High-value extraction and control objectives."
+      ],
+      "hitbox": [
+        2513,
+        916,
+        2765,
+        1089
       ]
     },
     {
       "id": "silverpit",
       "name": "Silverpit",
-      "emoji": "\u26cf\ufe0f",
+      "emoji": "⛏️",
       "type_ref": "boomtown_mesa",
       "archetype": "mine_settlement",
       "state": "barely_alive",
@@ -991,12 +1171,18 @@
       ],
       "notes": [
         "Working mine. Salvage and mechanical objectives."
+      ],
+      "hitbox": [
+        2128,
+        1548,
+        2294,
+        1762
       ]
     },
     {
       "id": "mindshaft",
       "name": "Mindshaft",
-      "emoji": "\ud83d\udd73\ufe0f",
+      "emoji": "🕳️",
       "type_ref": "boomtown_mesa",
       "archetype": "deep_mine",
       "state": "ruins",
@@ -1010,7 +1196,8 @@
       "resources": {
         "silver": 3,
         "thyr": 4,
-        "spare_parts": 2
+        "spare_parts": 2,
+        "supplies": 1
       },
       "features": [
         "DeepShafts",
@@ -1037,8 +1224,8 @@
           "weight": 1
         }
       ],
-      "description": "Mindshaft went too deep and found something that wasn't ore. The mine is officially closed. People still go in. Most come back.",
-      "atmosphere": "Wrong echoes and crystal light from the wrong direction",
+      "description": "Mindshaft went too deep and found something that wasn't ore. The mine is officially closed. People still go in. Some even come back.",
+      "atmosphere": "Wrong echoes and weird light from the wrong direction",
       "coffinCoughChance": 0.35,
       "terrain_flavor": [
         "Deep shafts",
@@ -1048,17 +1235,24 @@
       ],
       "rumors": [
         "The collapse at level seven was not structural. Something pushed it from below.",
-        "Thyr crystals grow faster in Mindshaft than anywhere else in the canyon.",
-        "The last crew to survey level nine communicated in a dialect nobody recognized."
+        "Thyr crystals grow faster in Mindshaft County than anywhere else in the canyon.",
+        "The last crew to survey level nine came back all wet and burnt up.",
+        "There are headless dogs about."
       ],
       "notes": [
         "Dangerous deep mine. Thyr-heavy. Ritual and horror objectives."
+      ],
+      "hitbox": [
+        3230,
+        804,
+        3387,
+        1162
       ]
     },
     {
       "id": "crackpits",
       "name": "Crackpits",
-      "emoji": "\ud83e\udea8",
+      "emoji": "🪨",
       "type_ref": "region_mesa_thyr",
       "archetype": "mining_ruins",
       "state": "ruins",
@@ -1115,12 +1309,18 @@
       ],
       "notes": [
         "Highly dangerous. Thyr and ritual objectives dominate here."
+      ],
+      "hitbox": [
+        2628,
+        1628,
+        2816,
+        1968
       ]
     },
     {
       "id": "gore-mule-drop",
       "name": "Gore Mule Drop",
-      "emoji": "\ud83e\ude78",
+      "emoji": "🩸",
       "type_ref": "region_rail_grade_cursed",
       "archetype": "rail_grade",
       "state": "alive",
@@ -1173,12 +1373,18 @@
       ],
       "notes": [
         "Travel choke point. Escalation-ready ambush terrain."
+      ],
+      "hitbox": [
+        2872,
+        1600,
+        3092,
+        2076
       ]
     },
     {
       "id": "bandit-buck",
       "name": "Bandit Buck",
-      "emoji": "\ud83d\ude82",
+      "emoji": "🚂",
       "type_ref": "region_rail_stop_unsafe",
       "archetype": "rail_stop",
       "state": "alive",
@@ -1203,40 +1409,46 @@
       ],
       "monster_seeds": [
         {
-          "name": "Red Goblin",
+          "name": "Canyon Harpy",
+          "weight": 3
+        },
+        {
+          "name": "Feratu Stalker",
           "weight": 2
         },
         {
-          "name": "Will-o'-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Ruster",
-          "weight": 1
+          "name": "Bête Herdbeast",
+          "weight": 2
         }
       ],
-      "description": "A half-legit rail stop where freight slows and trouble speeds up. Bandits, deputies, and monsters all know the schedule.",
+      "description": "Bandit Buck squats along the crooked trail to Quinine Jimmy’s, a miserable little camp of lean-tos and watchful thieves who like to lighten a traveler’s pockets before he reaches the medicine man, and if you ask me the place ain’t worth the dust it sits on—what with folks whispering about a buried strongbox, a ghost rider passing through some nights, and something in the gulch that occasionally drags a bandit off where no one bothers to follow.",
       "atmosphere": "Steam, gun oil, bad timing",
-      "coffinCoughChance": 0.18,
+      "coffinCoughChance": 0.24,
       "terrain_flavor": [
         "Rail stop",
         "Signal arm",
-        "Coal shed",
-        "Blind turns"
+        "Ragged tents",
+        "Shifting sands"
       ],
       "rumors": [
-        "The stop was named after a man who robbed the same train twice.",
-        "A ghost freight passes through without stopping \u2014 unless it sees you.",
-        "Someone here sells keys that open locks you don't own."
+        "Some say the bandits buried a strongbox nearby.",
+        "Others claim a dead man rides through camp some nights.",
+        "And a few swear something in the gulch occasionally carries a bandit off."
       ],
       "notes": [
         "Scenario ignition point. Timed arrivals, heists, and standoffs."
+      ],
+      "hitbox": [
+        1486,
+        1005,
+        1605,
+        1206
       ]
     },
     {
       "id": "grade-grind",
       "name": "Grade Grind",
-      "emoji": "\ud83d\udee4\ufe0f",
+      "emoji": "🛤️",
       "type_ref": "region_rail_grade_cursed",
       "archetype": "rail_infrastructure",
       "state": "barely_alive",
@@ -1285,12 +1497,18 @@
       ],
       "notes": [
         "Critical infrastructure. Sabotage and control objectives."
+      ],
+      "hitbox": [
+        2486,
+        1432,
+        2598,
+        1548
       ]
     },
     {
       "id": "ghost-mountain",
       "name": "Ghost Mountain",
-      "emoji": "\ud83d\udc7b",
+      "emoji": "👻",
       "type_ref": "region_mesa_thyr",
       "archetype": "haunted_peak",
       "state": "ruins",
@@ -1345,12 +1563,18 @@
       ],
       "notes": [
         "High-danger occult location. Ritual and artifact objectives."
+      ],
+      "hitbox": [
+        2597,
+        205,
+        2849,
+        489
       ]
     },
     {
       "id": "heckweed",
       "name": "Heckweed",
-      "emoji": "\ud83c\udf3f",
+      "emoji": "🌿",
       "type_ref": "region_claim_old_name",
       "archetype": "cursed_scrubland",
       "state": "barely_alive",
@@ -1399,16 +1623,22 @@
       "rumors": [
         "The heckweed itself is mildly toxic if burned. Locals do it anyway.",
         "There's a Thyr crystal cluster under the scrub that nobody can find twice.",
-        "Animals born near Heckweed come out wrong. Not dangerously \u2014 just wrong."
+        "Animals born near Heckweed come out wrong. Not dangerously — just wrong."
       ],
       "notes": [
         "Corrupted terrain. Tainted ground and fouled resource objectives."
+      ],
+      "hitbox": [
+        2312,
+        1824,
+        2440,
+        1944
       ]
     },
     {
       "id": "kraise",
       "name": "Kraise",
-      "emoji": "\ud83d\udcdc",
+      "emoji": "📜",
       "type_ref": "region_claim_old_name",
       "archetype": "claim",
       "state": "barely_alive",
@@ -1432,16 +1662,20 @@
       ],
       "monster_seeds": [
         {
-          "name": "Will-o'-Wisp",
-          "weight": 1
-        },
-        {
-          "name": "Ghost",
-          "weight": 1
-        },
-        {
           "name": "Rat Swarm",
           "weight": 1
+        },
+        {
+          "name": "Ghoul",
+          "weight": 2
+        },
+        {
+          "name": "Skeleton",
+          "weight": 2
+        },
+        {
+          "name": "",
+          "weight": 2
         }
       ],
       "description": "An old claim district named from a misspelled surname that nobody corrects. Deeds change hands, but the ground doesn't care.",
@@ -1455,30 +1689,33 @@
       "rumors": [
         "The original Kraise is buried somewhere in the markers, still holding the first deed.",
         "If you steal here, your footprints appear ahead of you.",
-        "A perfect vein is rumored \u2014 always one shovel deeper than anyone digs."
+        "A perfect vein is rumored — always one shovel deeper than anyone digs."
       ],
       "notes": [
         "Legal conflict zone. Claim jumping and debt scenarios."
+      ],
+      "hitbox": [
+        1995,
+        1270,
+        2193,
+        1527
       ]
     },
     {
       "id": "lost-yots",
       "name": "Lost Yots",
-      "emoji": "\ud83d\udc80",
+      "emoji": "💀",
       "type_ref": "region_tzul_ruins",
-      "archetype": "ruins",
-      "state": "ruins",
+      "archetype": "haunted_peak",
+      "state": "strangewild",
       "danger": 4,
       "population": 0,
       "key_resources": [
-        "tzul_silver",
-        "thyr",
-        "spare_parts"
+        "thyr"
       ],
       "resources": {
-        "tzul_silver": 3,
-        "thyr": 2,
-        "spare_parts": 1
+        "thyr": 1,
+        "silver": 2
       },
       "features": [
         "CollapsedStructures",
@@ -1489,56 +1726,61 @@
       ],
       "monster_seeds": [
         {
-          "name": "Skeleton",
-          "weight": 3
+          "name": "Harpy",
+          "weight": 4
         },
         {
-          "name": "Ghoul",
+          "name": "Wyvern",
           "weight": 2
         },
         {
-          "name": "Ghost",
-          "weight": 2
+          "name": "Banshee",
+          "weight": 1
         },
         {
-          "name": "Zombie",
+          "name": "",
           "weight": 2
         }
       ],
-      "description": "Lost Yots was a settlement once. Now it is a ruin that is getting larger, not smaller. The walls grow back differently than they fell.",
-      "atmosphere": "Wrongly rebuilt, badly occupied",
+      "description": "Lost Yots is the biggest mesa in the whole canyon, its base riddled with stubborn old mine shafts while the top’s punched full of wind holes where vultures and harpies roost, and prospectors keep crawling back to it like fools because the deeper tunnels turn up strange bones and older stonework that make a man think the mesa’s been swallowing secrets longer than anyone’s been digging.",
+      "atmosphere": "Windswept haunted Mesa",
       "coffinCoughChance": 0.3,
       "terrain_flavor": [
-        "Collapsed structures",
-        "Tzul glyphs",
-        "Corrupted ground",
-        "Deep cellar"
+        "Weird nests",
+        "High windswept mesa",
+        "Mine holes "
       ],
       "rumors": [
-        "The ruin follows a floor plan that doesn't match any architectural tradition.",
-        "Expedition teams keep finding their own abandoned campsites from trips they didn't take.",
-        "There are lights in Lost Yots at night. They move with purpose."
+        "The mesa is hollow all the way through.",
+        "Harpies drop bones down the summit holes to mark their territory.",
+        "A lost mining crew broke into a cavern full of ancient skeletons and sealed the tunnel behind them."
       ],
       "notes": [
-        "Tzul ruins. Undead pressure. Ritual and artifact scenarios."
+        "Haunted mesa"
+      ],
+      "hitbox": [
+        1576,
+        1266,
+        1958,
+        1586
       ]
     },
     {
       "id": "martygrail",
       "name": "Martygrail",
-      "emoji": "\u26ea",
-      "type_ref": "region_tzul_ruins",
+      "emoji": "⛪",
+      "type_ref": "cultist_revival_tents",
       "archetype": "religious_site",
-      "state": "barely_alive",
+      "state": "booming",
       "danger": 4,
-      "population": 1,
+      "population": 3,
       "key_resources": [
         "tzul_silver",
         "thyr",
         "gildren"
       ],
       "resources": {
-        "tzul_silver": 3,
+        "tzul_silver": 2,
         "thyr": 3,
         "gildren": 2
       },
@@ -1547,48 +1789,58 @@
         "UndergroundCrypt",
         "RitualCircle",
         "DonationVault",
-        "FactionAltars"
+        "FactionAltars",
+        "RailStop"
       ],
       "monster_seeds": [
         {
-          "name": "Ghost",
+          "name": "Dire Wolf",
+          "weight": 2
+        },
+        {
+          "name": "Gnoll",
+          "weight": 1
+        },
+        {
+          "name": "Patchwork Wonder",
           "weight": 3
         },
         {
-          "name": "Skeleton",
+          "name": "",
           "weight": 2
-        },
-        {
-          "name": "Devil",
-          "weight": 2
-        },
-        {
-          "name": "Banshee",
-          "weight": 1
         }
       ],
-      "description": "A site of contested religious significance where multiple factions insist the sacred ground belongs to them. The ground itself seems to be keeping score.",
-      "atmosphere": "Competing prayers in a space that listens to all of them",
+      "description": "Martygrail’s what you get when somebody digs up a pile of old monster bones beside a missionary church and every preacher, prophet, and candle-waving cultist in the territory comes running to claim the dirt for their own, pitching revival tents around the rail stop and arguing over whose god owns the ground—though if you ask me, that soil’s got its own temper and it don’t much care for folks getting too certain about it.",
+      "atmosphere": "This place attracts the weirdos like none other.",
       "coffinCoughChance": 0.27,
       "terrain_flavor": [
         "Collapsing chapel",
         "Underground crypt",
         "Ritual circle",
-        "Faction altars"
+        "Faction altars",
+        "Rail stop",
+        ""
       ],
       "rumors": [
-        "Three different factions claim Martygrail as holy ground. The space agrees with whichever faction is currently winning.",
-        "The donation vault has been empty for years. Something still guards it.",
-        "The ritual circle preemptively activates before any faction can attempt it."
+        "A traveling prophet once tried to bless the ground and burst into flames before finishing the prayer.",
+        "A drunk swore he heard the bones breathing through the church eaves.",
+        "Somebody keeps stacking rocks as some sort of primitive shrines.",
+        ""
       ],
       "notes": [
         "Contested sacred site. Ritual and faction ownership objectives."
+      ],
+      "hitbox": [
+        2392,
+        1620,
+        2520,
+        1748
       ]
     },
     {
       "id": "pallor",
       "name": "Pallor",
-      "emoji": "\ud83c\udf2b\ufe0f",
+      "emoji": "🌫️",
       "type_ref": "region_claim_old_name",
       "archetype": "badlands",
       "state": "barely_alive",
@@ -1645,12 +1897,18 @@
       ],
       "notes": [
         "Desolation zone. Fouled resource and survival scenarios."
+      ],
+      "hitbox": [
+        1616,
+        1824,
+        1996,
+        1924
       ]
     },
     {
       "id": "rey",
       "name": "Rey",
-      "emoji": "\ud83c\udf05",
+      "emoji": "🌅",
       "type_ref": "region_mesa_thyr",
       "archetype": "remote_post",
       "state": "barely_alive",
@@ -1703,12 +1961,18 @@
       ],
       "notes": [
         "Remote location. Thyr-heavy. Isolation and escalation scenarios."
+      ],
+      "hitbox": [
+        34,
+        1899,
+        163,
+        2028
       ]
     },
     {
       "id": "sangr",
       "name": "Sangr",
-      "emoji": "\ud83e\ude78",
+      "emoji": "🩸",
       "type_ref": "region_tzul_ruins",
       "archetype": "blood_ground",
       "state": "ruins",
@@ -1765,12 +2029,18 @@
       ],
       "notes": [
         "Extreme danger occult site. Ritual and sacrificial focus objectives."
+      ],
+      "hitbox": [
+        1086,
+        1219,
+        1257,
+        1527
       ]
     },
     {
       "id": "skull-water",
       "name": "Skull Water",
-      "emoji": "\ud83d\udc80",
+      "emoji": "💀",
       "type_ref": "region_claim_old_name",
       "archetype": "contaminated_source",
       "state": "ruins",
@@ -1827,12 +2097,18 @@
       ],
       "notes": [
         "Critical contaminated water source. Fouled resource and purge objectives."
+      ],
+      "hitbox": [
+        1609,
+        492,
+        1841,
+        701
       ]
     },
     {
       "id": "splitglass-arroyo",
       "name": "Splitglass Arroyo",
-      "emoji": "\ud83e\ude9f",
+      "emoji": "🪟",
       "type_ref": "region_rail_grade_cursed",
       "archetype": "glass_canyon",
       "state": "alive",
@@ -1885,12 +2161,18 @@
       ],
       "notes": [
         "Ambush terrain. Echo and sound mechanics encouraged."
+      ],
+      "hitbox": [
+        2605,
+        1138,
+        2859,
+        1427
       ]
     },
     {
       "id": "tin-flats",
       "name": "Tin Flats",
-      "emoji": "\ud83d\udfeb",
+      "emoji": "🟫",
       "type_ref": "region_claim_old_name",
       "archetype": "wasteland",
       "state": "ruins",
@@ -1943,12 +2225,18 @@
       ],
       "notes": [
         "Ruster territory. Salvage and wrecked engine objectives."
+      ],
+      "hitbox": [
+        1374,
+        1258,
+        1512,
+        1608
       ]
     },
     {
       "id": "tzulto",
       "name": "Tzulto",
-      "emoji": "\ud83c\udfdb\ufe0f",
+      "emoji": "🏛️",
       "type_ref": "region_tzul_ruins",
       "archetype": "major_ruin",
       "state": "ruins",
@@ -1957,12 +2245,14 @@
       "key_resources": [
         "tzul_silver",
         "thyr",
-        "silver"
+        "silver",
+        "water_foul"
       ],
       "resources": {
         "tzul_silver": 5,
         "thyr": 4,
-        "silver": 1
+        "silver": 1,
+        "water_foul": 2
       },
       "features": [
         "CraterTemple",
@@ -1991,9 +2281,21 @@
         {
           "name": "Devil",
           "weight": 1
+        },
+        {
+          "name": "Dust King",
+          "weight": 4
+        },
+        {
+          "name": "Golem",
+          "weight": 2
+        },
+        {
+          "name": "Ghost",
+          "weight": 3
         }
       ],
-      "description": "The largest Tzul ruin in the canyon. The crater wasn't formed by impact \u2014 it was removed. The air feels held, as if the place is still listening.",
+      "description": "The largest Tzul ruin in the Country. The crater wasn't formed by impact — it was removed. The air feels held, as if the place is still listening.",
       "atmosphere": "Ancient patience, modern fear",
       "coffinCoughChance": 0.3,
       "terrain_flavor": [
@@ -2003,18 +2305,26 @@
         "Wrong silence"
       ],
       "rumors": [
-        "The crater wasn't formed by impact \u2014 it was removed.",
+        "The crater wasn't formed by impact — it was removed.",
         "Certain words spoken here come out in a different voice.",
-        "Monsterology has a map of this place they refuse to share."
+        "The ruins are tricky. Some say they're all filled with bones.",
+        "Some say that the Liberty Corps is slowly mining an entrance into the largest pyramid.",
+        "Prospectors love the black Tzul Silver that comes from this region."
       ],
       "notes": [
         "High danger Tzul landmark. Lore anchor. Ritual and artifact objectives."
+      ],
+      "hitbox": [
+        2229,
+        1334,
+        2447,
+        1526
       ]
     },
     {
       "id": "widowflow",
       "name": "Widowflow",
-      "emoji": "\ud83c\udf0a",
+      "emoji": "🌊",
       "type_ref": "region_rail_grade_cursed",
       "archetype": "dangerous_river",
       "state": "alive",
@@ -2067,12 +2377,18 @@
       ],
       "notes": [
         "River crossing hazard. Water and fouled resource objectives."
+      ],
+      "hitbox": [
+        1316,
+        1630,
+        2078,
+        1798
       ]
     },
     {
       "id": "witches-roost",
       "name": "Witches Roost",
-      "emoji": "\ud83e\udd87",
+      "emoji": "🦇",
       "type_ref": "region_mesa_thyr",
       "archetype": "occult_territory",
       "state": "ruins",
@@ -2131,6 +2447,191 @@
       ],
       "notes": [
         "Extreme danger. Maximum Thyr density. Only the most desperate scenarios run here."
+      ],
+      "hitbox": [
+        3767,
+        2130,
+        3965,
+        2495
+      ]
+    },
+    {
+      "id": "needlewood",
+      "name": "Needlewood",
+      "type_ref": "debris_field",
+      "archetype": "frontier",
+      "state": "alive",
+      "danger": 4,
+      "population": 0,
+      "coffinCoughChance": 0.41,
+      "key_resources": [],
+      "resources": {
+        "supplies": 2
+      },
+      "features": [
+        "BonePile",
+        "SupplyCrates",
+        "Cactus",
+        "Rail"
+      ],
+      "monster_seeds": [
+        {
+          "name": "Banshee",
+          "weight": 2
+        },
+        {
+          "name": "Skeleton",
+          "weight": 3
+        },
+        {
+          "name": "Harpy",
+          "weight": 2
+        }
+      ],
+      "description": "The Needlewood’s a cursed forest of saguaros and leaping cholla where every step draws blood and makes enough racket to wake the dead, so if you’re fool enough to cross it you can bet someone—or something—is already waiting for the smell of you.",
+      "atmosphere": "Stabbing needles from every direction.",
+      "terrain_flavor": [
+        "Horrible maze of cacti living and dead. Horrible to travel through."
+      ],
+      "rumors": [
+        "Shine Rider gangs hide supplies here, due to the difficulty of the terrain."
+      ],
+      "notes": [
+        "A very bad place."
+      ],
+      "hitbox": [
+        3002,
+        831,
+        3189,
+        1233
+      ]
+    },
+    {
+      "id": "hoodoo_maze",
+      "name": "Hoodoo Maze",
+      "type_ref": "rock_outcroppings",
+      "archetype": "landmark",
+      "state": "alive",
+      "danger": 2,
+      "population": 1,
+      "coffinCoughChance": 0.49,
+      "key_resources": [],
+      "resources": {
+        "thyr": 2,
+        "silver": 1
+      },
+      "features": [
+        "BlindTurns",
+        "FloodMarks",
+        "TwistingPaths"
+      ],
+      "monster_seeds": [
+        {
+          "name": "Gulch Minotaur",
+          "weight": 3
+        },
+        {
+          "name": "Ridge Satyr",
+          "weight": 4
+        },
+        {
+          "name": "Medusa",
+          "weight": 1
+        },
+        {
+          "name": "",
+          "weight": 2
+        }
+      ],
+      "description": "The Hoodoo Maze is a cursed tangle of stone spires folks call the Standing Dead, where the paths lie, the shadows play tricks, and a man can walk all day to end up where he started, which is why smugglers, bandits, and hard-headed prospectors keep fighting over it: some chasing secret trails through the rocks, some hunting a silver vein under the tallest hoodoo, and a few fools swearing the stone giants move when nobody’s watching",
+      "atmosphere": "Haunted rock outcroppings",
+      "terrain_flavor": [
+        "Spooky and strange rocks. Weird paths. Dead ends."
+      ],
+      "rumors": [
+        "Some say there’s a secret trail through the Maze that lets smugglers cross half the canyon unseen.",
+        "A rich silver vein runs under the tallest spire.",
+        "A few swear the stone figures move when no one’s looking.",
+        ""
+      ],
+      "notes": [
+        "A great place for fools to get lost."
+      ],
+      "hitbox": [
+        2433,
+        2003,
+        2712,
+        2286
+      ]
+    },
+    {
+      "id": "laboratorium",
+      "name": "Laboratorium",
+      "type_ref": "monsterologist_town_active",
+      "archetype": "headquarters",
+      "state": "prospering",
+      "danger": 3,
+      "population": 3,
+      "coffinCoughChance": 0.05,
+      "key_resources": [],
+      "resources": {
+        "mechanical_parts": 2,
+        "supplies": 3,
+        "water_clean": 3,
+        "weapons": 2
+      },
+      "features": [
+        "CageWagons",
+        "CoalShed",
+        "CompanyOffice",
+        "BrandingPen",
+        "ExecutionYard",
+        "SupplyCrates",
+        "GuardTowers",
+        "HuntingLodge",
+        "Factory"
+      ],
+      "monster_seeds": [
+        {
+          "name": "Owlbear",
+          "weight": 2
+        },
+        {
+          "name": "Harpy",
+          "weight": 2
+        },
+        {
+          "name": "Crag Thrallo",
+          "weight": 2
+        },
+        {
+          "name": "",
+          "weight": 2
+        }
+      ],
+      "description": "The Laboratorium’s Monsterology’s glass-domed butcher shop out in the canyon—a cursed place of cages, Mort vats, and humming engines where they carve monsters down into power under hexed panes like some mad cathedral, and if you ask me the whole valley would sleep easier if the thing burned to the ground, though folks whisper there’s something thinking down in the lowest level and the place was built atop ruins older than any man.",
+      "atmosphere": "Monster cages, barracks, and rose scented smoke gasping smoke.",
+      "terrain_flavor": [
+        "Enchanted Dome",
+        "Factory Smokestacks",
+        "Fancy Victorian Home",
+        "PlugUgly Shacks",
+        "Company Store",
+        ""
+      ],
+      "rumors": [
+        "The whole complex sits atop ruins older than the canyon itself.",
+        "The engines under the dome occasionally start running even when no one’s there to start them.",
+        "They've got an entire monster zoo hidden in there."
+      ],
+      "notes": [
+        "HQ of Monsterology in the Canyon"
+      ],
+      "hitbox": [
+        1952,
+        1135,
+        2055,
+        1230
       ]
     }
   ]

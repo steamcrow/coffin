@@ -41,8 +41,11 @@
 
 console.log("🎲 Scenario Builder app loaded");
 
-window.CC_APP = {
-  init({ root, ctx }) {
+(function () {
+  var _destroyFn = null;
+
+  function mount(rootEl, ctx) {
+    var root = rootEl;
     console.log("🚀 Scenario Builder init", ctx);
 
     // Load shared UI CSS and app-specific CSS from GitHub raw URLs.
@@ -88,6 +91,34 @@ window.CC_APP = {
           vertical-align: middle;
         }
 
+        /* ---- Login status bar (matches Faction Builder pattern) ---- */
+        .cc-login-status {
+          padding: 0.45rem 1rem;
+          font-size: 0.78rem;
+          font-weight: 600;
+          letter-spacing: 0.04em;
+          border-bottom: 1px solid rgba(255,255,255,0.06);
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          min-height: 34px;
+          transition: background 0.2s ease, color 0.2s ease;
+        }
+        .cc-login-status.logged-in {
+          background: rgba(74,222,128,0.08);
+          color: #4ade80;
+          border-bottom-color: rgba(74,222,128,0.2);
+        }
+        .cc-login-status.logged-out {
+          background: rgba(0,0,0,0.4);
+          color: rgba(255,255,255,0.4);
+        }
+        .cc-login-status a {
+          color: rgba(255,117,24,0.85);
+          text-decoration: none;
+        }
+        .cc-login-status a:hover { color: #ff7518; }
+
         /* ---- Splash logo pulse ---- */
         @keyframes cc-logo-pulse {
           0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
@@ -98,14 +129,9 @@ window.CC_APP = {
           animation: cc-logo-pulse 2.4s ease-in-out infinite;
         }
 
-        /* ---- Mini-map left panel double-border ---- */
+        /* ---- Mini-map left panel — match right panel's clean look ---- */
         #cc-scenario-map-overview {
-          outline: 2px solid rgba(255,117,24,0.55);
-          outline-offset: -1px;
-          box-shadow:
-            inset 0 0 0 4px rgba(0,0,0,0.7),
-            0 0 0 3px rgba(255,117,24,0.18),
-            0 0 18px rgba(255,117,24,0.25);
+          /* No extra borders — the shared outer wrap border handles it */
         }
 
         /* ============================================================
@@ -373,13 +399,6 @@ window.CC_APP = {
         .catch(err => console.error('❌ Storage Helpers load failed:', err));
     }
 
-    const helpers = ctx?.helpers;
-
-    if (!helpers) {
-      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Helpers not available</h4></div></div>`;
-      return;
-    }
-
     // ── App state ─────────────────────────────────────────────────────────────
     const state = {
       gameMode: null,
@@ -487,11 +506,11 @@ window.CC_APP = {
           try {
             this._objVault240 = await vault240Res.json();
             var cats = this._objVault240.categories || this._objVault240.objective_categories || [];
-            cats.forEach(function(cat) {
-              (cat.objectives || []).forEach(function(obj) {
+            cats.forEach(cat => {
+              (cat.objectives || []).forEach(obj => {
                 this._vault240Map[obj.objective_id] = obj;
-              }, this);
-            }, this);
+              });
+            });
             console.log('📋 240 Objective Vault loaded —', Object.keys(this._vault240Map).length, 'entries');
           } catch (e) { this._objVault240 = null; }
 
@@ -527,8 +546,8 @@ window.CC_APP = {
     const gameData = new GameDataManager();
 
     // ── Map embed — remote URLs and Leaflet instance cache ─────────────────────────────
-    const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_canyon_map_app.js';
-    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/canyon_map.json';
+    const MAP_APP_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/cc_app_canyon_map.js';
+    const MAP_DATA_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/canyon_map.json';
     const LEAFLET_CSS_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css';
     const LEAFLET_JS_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js';
 
@@ -568,19 +587,42 @@ window.CC_APP = {
     async function ensureLeaflet() {
       if (_leafletReady && window.L) return;
       await loadStyleDynamic(LEAFLET_CSS_URL, 'cc-leaflet-css');
-      if (!window.L) await loadScriptDynamic(LEAFLET_JS_URL);
+      if (!window.L) {
+        const code = await fetch(LEAFLET_JS_URL + '?t=' + Date.now()).then(r => r.text());
+        const s = document.createElement('script');
+        s.textContent = code;
+        document.head.appendChild(s);
+      }
       _leafletReady = true;
     }
 
-    // Load the canyon map app to get CC_HITBOXES (location bounding boxes). Safe to call multiple times.
+    // HITBOXES embedded directly — avoids blob: scripts blocked by CSP.
+    const EMBEDDED_HITBOXES = {
+      'bandit-buck':[1550,956,1668,1160],'bayou-city':[1175,2501,1386,2767],
+      'camp-coffin':[2727,2051,2822,2142],'cowtown':[2172,2112,2332,2396],
+      'crackpits':[2628,1628,2816,1968],'deerhoof':[3112,2130,3329,2412],
+      'diablo':[505,1432,716,1698],'dustbuck':[1986,2286,2156,2522],
+      'fool-boot':[2408,1132,2512,1224],'fort-plunder':[3348,1209,3631,1427],
+      'fortune':[2887,1284,3121,1567],'ghost-mountain':[2597,205,2849,489],
+      'gore-mule-drop':[2872,1600,3092,2076],'grade-grind':[2486,1432,2598,1548],
+      'heckweed':[2312,1824,2440,1944],'huck':[3332,2569,3550,2749],
+      'kraise':[1995,1270,2193,1527],'little-rica':[2964,500,3182,784],
+      'lost-yots':[1576,1266,1958,1586],'martygrail':[2392,1620,2520,1748],
+      'mindshaft':[3112,804,3388,1164],'pallor':[1616,1824,1996,1924],
+      'plata':[2513,916,2765,1089],'quinne-jimmy':[1694,801,1852,1157],
+      'ratsville':[1452,1968,1644,2194],'rey':[34,1899,163,2028],
+      'river-city':[1102,1607,1280,1854],'sangr':[1086,1219,1257,1527],
+      'santos-grin':[1185,1898,1396,2176],'silverpit':[2128,1548,2294,1762],
+      'skull-water':[1609,492,1841,701],'splitglass-arroyo':[2605,1138,2859,1427],
+      'tin-flats':[1374,1258,1512,1608],'tzulto':[2229,1334,2447,1526],
+      'widowflow':[1316,1630,2078,1798],'witches-roost':[3767,2130,3965,2495],
+      'yults-arch':[934,1504,1026,1592]
+    };
+
     async function ensureHitboxes() {
       if (window.CC_HITBOXES) return window.CC_HITBOXES;
-      try {
-        await loadScriptDynamic(MAP_APP_URL);
-      } catch (e) {
-        console.warn('⚠️ Could not load map app for hitboxes:', e);
-      }
-      return window.CC_HITBOXES || {};
+      window.CC_HITBOXES = EMBEDDED_HITBOXES;
+      return EMBEDDED_HITBOXES;
     }
 
     // Fetch and cache the canyon map JSON (image dimensions + location bounds).
@@ -712,7 +754,10 @@ window.CC_APP = {
       unstable_structure: { count: '1',    placement: 'Random mid-board',          token: 'Structure marker',              interactions: ['SALVAGE', 'CONTROL', 'COLLAPSE'] },
       collapsing_route:   { count: '1',    placement: 'Divides board in half',     token: 'Route markers at each end',     interactions: ['CROSS', 'BLOCK', 'REINFORCE'] },
       evacuation_point:   { count: '1',    placement: 'Far table edge, center',    token: 'Exit marker',                   interactions: ['REACH', 'ESCAPE'] },
-      fouled_resource:    { count: '2',    placement: 'Scatter near center',       token: 'Contaminated supply tokens',    interactions: ['CONTROL', 'PURGE', 'WEAPONIZE'] }
+      fouled_resource:    { count: '2',    placement: 'Scatter near center',       token: 'Contaminated supply tokens',    interactions: ['CONTROL', 'PURGE', 'WEAPONIZE'] },
+      dark_ritual:        { count: '1',    placement: 'Center board',              token: 'Operating Still Model',         interactions: ['CONTROL', 'SABOTAGE', 'CORRUPT'] },
+      profane_altar:      { count: '1',    placement: 'Center board',              token: 'Altar token',                   interactions: ['CONTROL', 'DESTROY', 'ACTIVATE'] },
+      soul_vessel:        { count: 'd3',   placement: 'Scattered mid-board',       token: 'Glowing vessel tokens',         interactions: ['COLLECT', 'CORRUPT', 'DESTROY'] }
     };
 
     // ── Victory condition tables ──────────────────────────────────────────────────
@@ -1350,9 +1395,45 @@ window.CC_APP = {
     }
 
 
+    // ── getEffectiveApproach ─────────────────────────────────────────────────
+    // Returns FACTION_APPROACH[factionId], overriding:
+    //   - verbs           from faction JSON tactics.objective_preferences or similar
+    //   - tactic          from faction JSON tactics.doctrine[0]
+    //   - quote           from faction JSON identity.quote or description
+    // Falls back to static table values for anything not in the JSON.
+    getEffectiveApproach(factionId) {
+      const base  = Object.assign({}, FACTION_APPROACH[factionId] || FACTION_APPROACH.monsters);
+      const fd    = gameData.getFaction(factionId);
+      if (!fd) return base;
+
+      // Override verbs from faction JSON objective_preferences or action_words
+      const prefs = (fd.tactics && fd.tactics.objective_preferences)
+                 || (fd.faction_tactics && fd.faction_tactics.objective_preferences)
+                 || null;
+      if (prefs && prefs.length >= 2) {
+        // Capitalise first letter of each preference as a verb
+        base.verbs = prefs.slice(0, 5).map(function(p) {
+          return p.charAt(0).toUpperCase() + p.slice(1);
+        });
+      }
+
+      // Override tactic from faction JSON
+      const tactics = fd.tactics || fd.faction_tactics || {};
+      if (tactics.doctrine && tactics.doctrine[0]) base.tactic = tactics.doctrine[0];
+
+      // Override quote from faction JSON identity block
+      const quote = (fd.identity && fd.identity.quote)
+                 || (fd.description && fd.description.split('.')[0] + '.')
+                 || null;
+      if (quote) base.quote = quote;
+
+      return base;
+    }
+
+
     buildRichObjectiveCard(factionId, boardObj, locProfile, dangerRating, roleIndex) {
       var conflictMap  = FACTION_CONFLICT_TABLE[factionId] || FACTION_CONFLICT_TABLE.monsters;
-      var approach     = FACTION_APPROACH[factionId]       || FACTION_APPROACH.monsters;
+      var approach     = this.getEffectiveApproach(factionId);
       var flavorMap    = FACTION_OBJECTIVE_FLAVOR[factionId] || {};
 
       var conflict = conflictMap[boardObj.type] || conflictMap['default'];
@@ -1492,10 +1573,48 @@ window.CC_APP = {
           }
         });
       }
+      // ── Asymmetric Philosophy Conflict Bonus ────────────────────────────────
+      // If we have both a Conservation-aligned and Exploitation-aligned faction,
+      // boost plot families whose objectives create shared-but-opposed goals.
+      var CONSERVATION_FACTIONS = ['monster_rangers'];
+      var EXPLOITATION_FACTIONS = ['monsterology', 'shine_riders'];
+      var CONTROL_FACTIONS      = ['liberty_corps'];
+      var OCCULT_FACTIONS       = ['crow_queen', 'monsters'];
 
-      // Add mild random noise so identical setups don't always pick same family
+      var hasConservation = selectedFactions.some(function(f) { return CONSERVATION_FACTIONS.indexOf(f.id) >= 0; });
+      var hasExploitation = selectedFactions.some(function(f) { return EXPLOITATION_FACTIONS.indexOf(f.id) >= 0; });
+      var hasControl      = selectedFactions.some(function(f) { return CONTROL_FACTIONS.indexOf(f.id) >= 0; });
+      var hasOccult       = selectedFactions.some(function(f) { return OCCULT_FACTIONS.indexOf(f.id) >= 0; });
+
+      // Conservation vs Exploitation → boost extraction/heist families (contested resource)
+      if (hasConservation && hasExploitation) {
+        families.forEach(function(fam) {
+          if (['extraction_heist','escort_run'].indexOf(fam.id) >= 0) {
+            scores[fam.id] = (scores[fam.id] || 0) + 3;
+          }
+        });
+        console.log('⚔️  Philosophy conflict: Conservation vs Exploitation (+3 extraction/escort)');
+      }
+      // Control vs Occult → boost siege/claim families
+      if (hasControl && hasOccult) {
+        families.forEach(function(fam) {
+          if (['claim_and_hold','siege_standoff'].indexOf(fam.id) >= 0) {
+            scores[fam.id] = (scores[fam.id] || 0) + 3;
+          }
+        });
+        console.log('⚔️  Philosophy conflict: Control vs Occult (+3 siege/claim)');
+      }
+
+     // ---- RAIL PLOT FAMILY GATE ----
+      var featsForGate = (locProfile && locProfile.features) ? locProfile.features : [];
+      var locHasRailForPlot = ['rail_stop','rail_infrastructure','rail_grade','rail'].some(function(r) { return arch.indexOf(r) >= 0; })
+                           || featsForGate.some(function(f) { return ['RailTerminus','RailGrade','BrakeScars','RailYard','Trestle','RailSpur'].indexOf(f) >= 0; });
+      if (!locHasRailForPlot && scores['ambush_derailment'] !== undefined) {
+        scores['ambush_derailment'] = -20;
+      }
+      // Add random noise — wider range (0–5) so identical setups vary more.
       families.forEach(function(fam) {
-        scores[fam.id] = (scores[fam.id] || 0) + (Math.random() * 2);
+        scores[fam.id] = (scores[fam.id] || 0) + (Math.random() * 5);
       });
 
       // Pick highest scoring family
@@ -1591,9 +1710,41 @@ window.CC_APP = {
           }
         }
 
-        // ── TAG OVERLAP (generic, lowest weight) ────────────────────────────
-        const sTags = (s.tags || []).map(t => t.toLowerCase());
-        score += sTags.filter(t => allTags.includes(t)).length * 2;
+        // ── REQUIRED LOCATION TYPE GATE ─────────────────────────────────────
+        // Hard block: if the vault scenario requires a rail location and this
+        // location has no rail archetype/features, apply -10 penalty.
+        if (allowedTypes.length > 0 && locProfile.archetype) {
+          const archLower = locProfile.archetype.toLowerCase();
+          const featLower = (locProfile.features || []).map(function(f) { return f.toLowerCase(); });
+          const RAIL_NEEDED  = ['rail_stop','rail_infrastructure','rail_grade','rail_line','rail'];
+          const RAIL_FEATS   = ['railterminus','railgrade','brakescars','railyard','trestle','railspur','railstop','railbridge'];
+          const railRequired = allowedTypes.some(function(t) { return RAIL_NEEDED.indexOf(t) >= 0; });
+          const locHasRail   = RAIL_NEEDED.some(function(r) { return archLower.indexOf(r) >= 0; })
+                           || featLower.some(function(f) { return RAIL_FEATS.some(function(r) { return f.indexOf(r) >= 0; }); });
+          if (railRequired && !locHasRail) {
+            score -= 10; // Hard block: rail scenario at non-rail location
+          } else if (!allowedTypes.some(function(t) { return archLower.indexOf(t) >= 0 || t.indexOf(archLower) >= 0; })) {
+            score -= 4;  // Soft penalty: type mismatch
+          }
+        }
+
+        // ── REQUIRED LOCATION TYPE GATE ─────────────────────────────────────
+        // Hard block: if the vault scenario requires a rail location and this
+        // location has no rail archetype/features, apply -10 penalty.
+        if (allowedTypes.length > 0 && locProfile.archetype) {
+        const archLower = locProfile.archetype.toLowerCase();
+        const featLower = (locProfile.features || []).map(function(f) { return f.toLowerCase(); });
+        const RAIL_NEEDED  = ['rail_stop','rail_infrastructure','rail_grade','rail_line','rail'];
+        const RAIL_FEATS   = ['railterminus','railgrade','brakescars','railyard','trestle','railspur','railstop','railbridge'];
+        const railRequired = allowedTypes.some(function(t) { return RAIL_NEEDED.indexOf(t) >= 0; });
+        const locHasRail   = RAIL_NEEDED.some(function(r) { return archLower.indexOf(r) >= 0; })
+        || featLower.some(function(f) { return RAIL_FEATS.some(function(r) { return f.indexOf(r) >= 0; }); });
+        if (railRequired && !locHasRail) {
+        score -= 10; // Hard block: rail scenario at non-rail location
+        } else if (!allowedTypes.some(function(t) { return archLower.indexOf(t) >= 0 || t.indexOf(archLower) >= 0; })) {
+        score -= 4;  // Soft penalty: type mismatch
+        }
+        }
 
         if (score > bestScore) {
           best      = s;
@@ -1615,6 +1766,12 @@ window.CC_APP = {
       const locName  = location.name;
       const atmo     = location.atmosphere || '';
       const desc     = location.description ? location.description.split('.')[0] : '';
+
+      // ── Black Swan prefix ─────────────────────────────────────────────────
+      const blackSwanObj = (objectives || []).find(function(o) { return o.black_swan; });
+      const blackSwanPrefix = blackSwanObj
+        ? `Nobody expected factions to converge on ${blackSwanObj.name} at ${locName}. The scouts called it a Black Swan Event — wrong place, wrong time, and somehow the only thing that matters now. `
+        : '';
 
       // Use the actual plot family description, but replace any generic "asset" language
       // with the real objective name if a cargo vehicle is in play.
@@ -1664,14 +1821,14 @@ window.CC_APP = {
 
       // Specific situation line goes first; a canyon-voice hook follows as the second sentence.
       if (situationLine) {
-        return situationLine + ' ' + randomChoice(pools.slice(6)); // use a canyon-voice hook as the second sentence
+        return blackSwanPrefix + situationLine + ' ' + randomChoice(pools.slice(6)); // use a canyon-voice hook as the second sentence
       }
 
       // Fall back to a plot-family hook if available, then a generic pool pick.
       if (plotFamily?.hook)   return plotFamily.hook;
       if (plotFamily?.flavor) return `${plotFamily.flavor} ${plotDesc} at ${locName}.`;
 
-      return randomChoice(pools);
+      return blackSwanPrefix + randomChoice(pools);
     }
 
 
@@ -1785,6 +1942,85 @@ window.CC_APP = {
     }
 
 
+    // ── generateTimelineEvents ───────────────────────────────────────────────
+    // Produces a structured timeline for the Turn Counter app.
+    // Each event follows the schema:
+    //   { turn: N, type: 'Tactical|Narrative|Environmental', effect_id, auto_resolve, label, description }
+    generateTimelineEvents(objectives, plotFamily, dangerRating, monsterPressure) {
+      const events = [];
+
+      // Turn 1 — always: scenario begins
+      events.push({
+        turn:         1,
+        type:         'Narrative',
+        effect_id:    'scenario_start',
+        auto_resolve: true,
+        label:        'The Canyon Opens',
+        description:  'Factions deploy. First activation begins.'
+      });
+
+      // Turns 2–3 — monster pressure arrival (if enabled)
+      if (monsterPressure && monsterPressure.enabled) {
+        const arrivalTurn = dangerRating >= 4 ? 2 : 3;
+        events.push({
+          turn:         arrivalTurn,
+          type:         'Environmental',
+          effect_id:    'monster_pressure_arrival',
+          auto_resolve: false,
+          label:        'Monster Pressure',
+          description:  monsterPressure.notes
+                          ? monsterPressure.notes
+                          : 'Monster units appear. Place per scenario rules.'
+        });
+      }
+
+      // Objective-specific events
+      objectives.forEach(function(obj) {
+        // Volatile objectives pulse on interaction (mirrors env_hazard)
+        if (obj.env_hazard) {
+          events.push({
+            turn:         0,           // 0 = "on event", not a fixed turn
+            type:         'Environmental',
+            effect_id:    'env_hazard_' + obj.type,
+            auto_resolve: false,
+            label:        obj.env_hazard.label + ': ' + obj.name,
+            description:  obj.env_hazard.trigger + ' — ' + obj.env_hazard.effect
+          });
+        }
+        // Thyr / dark ritual cause escalating danger
+        if (['thyr_cache','dark_ritual','profane_altar'].includes(obj.type)) {
+          events.push({
+            turn:         Math.max(3, dangerRating),
+            type:         'Tactical',
+            effect_id:    'danger_escalation_' + obj.type,
+            auto_resolve: true,
+            label:        'Danger Escalates',
+            description:  'Danger Rating increases by 1 at the start of this turn.'
+          });
+        }
+      });
+
+      // Finale at turn 6
+      events.push({
+        turn:         6,
+        type:         'Tactical',
+        effect_id:    'finale',
+        auto_resolve: false,
+        label:        'Final Round',
+        description:  'Score all objectives. Faction finales resolve.'
+      });
+
+      // Sort by turn (0-events last)
+      events.sort(function(a, b) {
+        if (a.turn === 0) return 1;
+        if (b.turn === 0) return -1;
+        return a.turn - b.turn;
+      });
+
+      return events;
+    }
+
+
     makeObjectiveName(type, locProfile) {
       const r        = locProfile?.effectiveResources || {};
       const features = locProfile?.features || [];
@@ -1843,20 +2079,32 @@ window.CC_APP = {
           return 'Failing Livestock Barn';
         if (features.includes('Mineshaft') || features.includes('Mine'))
           return 'Collapsing Mineshaft Entrance';
-        if (arch === 'arroyo')          return 'Eroded Canyon Wall';
-        if (arch === 'rail_grade'
-         || arch === 'rail_terminus'
-         || arch === 'rail_depot')      return 'Failing Trestle';
-        if (arch === 'boomtown')
+        if (arch === 'glass_canyon')    return 'Eroded Glass Canyon Wall';
+        if (arch === 'rail_grade' || arch === 'rail_infrastructure' || arch === 'rail_stop' || arch === 'rail')
+                                        return 'Failing Trestle';
+        if (arch === 'boomtown' || arch === 'trade_town' || arch === 'shantytown' || arch === 'bayou')
           return randomChoice(['Condemned Boomtown Building', 'Collapsing Storefront', 'Leaning Boomtown Tower']);
-        if (arch === 'ruins')
+        if (arch === 'ruins' || arch === 'tzul_ruins')
           return randomChoice(['Crumbling Ruin', 'Collapsed Settlement Wall', 'Unstable Stone Tower']);
-        if (arch === 'outpost')         return 'Condemned Outpost Watchtower';
-        if (arch === 'settlement')      return 'Failing Settlement Hall';
-        if (arch === 'mine')            return 'Collapsing Mineshaft Entrance';
-        if (arch === 'wilderness')      return 'Unstable Rocky Overhang';
-        if (arch === 'canyon')          return 'Eroded Canyon Ledge';
-        if (arch === 'frontier')        return 'Condemned Frontier Shack';
+        if (arch === 'outpost' || arch === 'remote_post')
+                                        return 'Condemned Outpost Watchtower';
+        if (arch === 'fortress')        return 'Collapsed Fort Wall';
+        if (arch === 'headquarters')    return 'Damaged Command Structure';
+        if (arch === 'frontier_settlement' || arch === 'ranch')
+                                        return 'Failing Settlement Hall';
+        if (arch === 'mine' || arch === 'mine_settlement')
+                                        return 'Collapsing Mineshaft Entrance';
+        if (arch === 'wasteland' || arch === 'badlands' || arch === 'claim')
+                                        return 'Unstable Rocky Overhang';
+        if (arch === 'frontier' || arch === 'waystation')
+                                        return 'Condemned Frontier Shack';
+        if (arch === 'haunted_peak')    return 'Crumbling Peak Formation';
+        if (arch === 'occult_territory' || arch === 'cursed_scrubland')
+                                        return 'Unstable Ritual Structure';
+        if (arch === 'thyr_field')      return 'Crumbling Thyr Formation';
+        if (arch === 'dangerous_river') return 'Collapsing River Crossing';
+        if (arch === 'landmark')        return 'Crumbling Historic Structure';
+        if (arch === 'religious_site')  return 'Collapsing Chapel Ruin';
         return randomChoice([
           'Condemned Building',
           'Failing Outpost Wall',
@@ -1893,17 +2141,38 @@ window.CC_APP = {
           if (feats.includes('Stockyard'))     return 'Stockyard Brand Post';
           if (feats.includes('WaterTower'))    return 'Water Rights Notice';
           if (feats.includes('Corral') || feats.includes('Barn')) return 'Grazing Rights Post';
-          if (arch === 'boomtown')   return randomChoice(['Town Sign', 'Block Claim Board', 'Boomtown Deed Post']);
-          if (arch === 'arroyo')     return randomChoice(['Canyon Survey Stake', 'Trail Claim Cairn', 'Canyon Boundary Post']);
-          if (arch === 'rail_grade') return 'Rail Right-of-Way Stake';
-          if (arch === 'rail_terminus' || arch === 'rail_depot') return 'Station Boundary Post';
-          if (arch === 'ruins')      return randomChoice(['Salvage Claim Stake', 'Ruins Survey Post', 'Rubble Claim Marker']);
-          if (arch === 'mine')       return randomChoice(['Mine Claim Stake', 'Assay Notice Post', 'Mineral Rights Stake']);
-          if (arch === 'settlement') return randomChoice(['Town Sign', 'Settlement Charter Post', 'Boundary Marker']);
-          if (arch === 'outpost')    return 'Outpost Boundary Sign';
-          if (arch === 'wilderness') return randomChoice(['Survey Stake', 'Pioneer Claim Post', 'Boundary Cairn']);
-          if (arch === 'canyon')     return randomChoice(['Canyon Survey Post', 'Trail Claim Cairn', 'Boundary Stone']);
-          if (arch === 'frontier')   return randomChoice(['Frontier Claim Stake', 'Pioneer Survey Post', 'Homestead Sign']);
+          if (arch === 'boomtown' || arch === 'trade_town' || arch === 'shantytown' || arch === 'bayou')
+            return randomChoice(['Town Sign', 'Block Claim Board', 'Boomtown Deed Post']);
+          if (arch === 'rail_grade' || arch === 'rail_infrastructure')
+            return 'Rail Right-of-Way Stake';
+          if (arch === 'rail_stop')
+            return 'Station Boundary Post';
+          if (arch === 'rail')
+            return randomChoice(['Rail Right-of-Way Stake', 'Station Boundary Post', 'Grade Survey Stake']);
+          if (arch === 'frontier_settlement' || arch === 'ranch')
+            return randomChoice(['Town Sign', 'Settlement Charter Post', 'Boundary Marker']);
+          if (arch === 'frontier' || arch === 'waystation')
+            return randomChoice(['Frontier Claim Stake', 'Pioneer Survey Post', 'Homestead Sign']);
+          if (arch === 'outpost' || arch === 'fortress' || arch === 'headquarters' || arch === 'remote_post')
+            return 'Outpost Boundary Sign';
+          if (arch === 'mine' || arch === 'mine_settlement')
+            return randomChoice(['Mine Claim Stake', 'Assay Notice Post', 'Mineral Rights Stake']);
+          if (arch === 'wasteland' || arch === 'badlands' || arch === 'claim')
+            return randomChoice(['Survey Stake', 'Pioneer Claim Post', 'Boundary Cairn']);
+          if (arch === 'glass_canyon')
+            return randomChoice(['Canyon Survey Stake', 'Trail Claim Cairn', 'Glass Canyon Boundary Post']);
+          if (arch === 'dangerous_river')
+            return randomChoice(['River Right-of-Way Stake', 'Crossing Marker', 'Water Claim Post']);
+          if (arch === 'occult_territory' || arch === 'cursed_scrubland' || arch === 'haunted_peak')
+            return randomChoice(['Ritual Boundary Marker', 'Sacred Ground Notice', 'Warning Post']);
+          if (arch === 'religious_site')
+            return randomChoice(['Sacred Ground Notice', 'Parish Boundary Marker', 'Faction Altar Claim']);
+          if (arch === 'thyr_field')
+            return randomChoice(['Hazard Notice Post', 'Thyr Warning Stake', 'Danger Marker']);
+          if (arch === 'ruins' || arch === 'tzul_ruins')
+            return randomChoice(['Salvage Claim Stake', 'Ruins Survey Post', 'Rubble Claim Marker']);
+          if (arch === 'landmark')
+            return randomChoice(['Historic Marker', 'Canyon Survey Monument', 'Lore Anchor Stone']);
           return randomChoice(['Claim Stake', 'Survey Post', 'Boundary Sign', 'Deed Notice Board']);
         })(),
         command_structure:  (() => {
@@ -1914,9 +2183,19 @@ window.CC_APP = {
           if (feats.includes('CompanyOffice')) return 'Command Office';
           if (feats.includes('Jailhouse'))   return 'Command Post (Jailhouse)';
           if (feats.includes('Ruins'))       return 'Ruined Command Post';
-          if (arch === 'wilderness' || arch === 'arroyo') return 'Field Command Tent';
-          if (arch === 'boomtown')   return 'Command Tower';
-          if (arch === 'rail_grade') return 'Rail Command Car';
+          if (arch === 'wasteland' || arch === 'badlands' || arch === 'glass_canyon' || arch === 'claim')
+            return 'Field Command Tent';
+          if (arch === 'frontier' || arch === 'frontier_settlement' || arch === 'ranch' || arch === 'waystation')
+            return 'Field Command Tent';
+          if (arch === 'dangerous_river') return 'Field Command Tent';
+          if (arch === 'boomtown' || arch === 'trade_town' || arch === 'shantytown' || arch === 'bayou')
+            return 'Command Tower';
+          if (arch === 'headquarters') return 'Ranger HQ Command Centre';
+          if (arch === 'fortress')     return 'Command Fortress';
+          if (arch === 'rail_grade' || arch === 'rail_infrastructure') return 'Rail Command Car';
+          if (arch === 'rail_stop' || arch === 'rail')                 return 'Rail Command Car';
+          if (arch === 'haunted_peak' || arch === 'occult_territory')  return 'Ruined Command Post';
+          if (arch === 'religious_site' || arch === 'landmark')        return 'Ruined Command Post';
           return randomChoice(['Command Tower', 'Command Tent', 'Field Command Post']);
         })(),
         thyr_cache:         'Thyr Crystal Cache',
@@ -2084,10 +2363,27 @@ window.CC_APP = {
           scores['sacrificial_focus'] = Math.max(0, scores['sacrificial_focus'] - 2);
       }
 
+      // ---- ARCHETYPE GATES ----
+      // Headquarters / HQ locations should feel like a base defence, not a treasure hunt.
+      const arch = (locProfile?.archetype || '').toLowerCase();
+      if (arch === 'headquarters') {
+        // Boost defend-the-base objectives heavily
+        scores['fortified_position'] = (scores['fortified_position'] || 0) + 8;
+        scores['command_structure']  = (scores['command_structure']  || 0) + 6;
+        scores['land_marker']        = (scores['land_marker']        || 0) + 4;
+        // Hard-suppress objectives that make no sense at a staffed HQ
+        scores['artifact']           = 0;
+        scores['sacrificial_focus']  = 0;
+        scores['ritual_site']        = 0;
+        scores['ritual_circle']      = 0;
+        scores['tainted_ground']     = Math.max(0, (scores['tainted_ground'] || 0) - 4);
+      }
+
       // ---- RAIL GATE ----
-      // Rail objectives are gated: only score if the location has rail features or a rail archetype.
-      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'rail', 'Rail'];
-      const RAIL_ARCHETYPES = ['rail_grade', 'rail_terminus', 'rail_depot'];
+      // Rail objectives only appear at locations that have rail infrastructure.
+      // Named feature tags (exact match only — no generic 'rail' string that could false-positive).
+      const RAIL_FEATURES   = ['RailTerminus', 'RailGrade', 'BrakeScars', 'RailYard', 'Trestle', 'RailSpur', 'RailSpur', 'RailBridge', 'RailStop'];
+      const RAIL_ARCHETYPES = ['rail_stop', 'rail_infrastructure', 'rail_grade', 'rail'];
       const hasRail = (locProfile?.features || []).some(f => RAIL_FEATURES.includes(f))
                    || RAIL_ARCHETYPES.includes(locProfile?.archetype || '');
       if (!hasRail) {
@@ -2095,13 +2391,42 @@ window.CC_APP = {
         scores['derailed_cars']  = 0;
       }
 
+      // Add gentle noise to objective scoring so same location varies each run.
+      Object.keys(scores).forEach(function(t) {
+        if (scores[t] > 0) scores[t] += Math.random() * 2;
+      });
+
+      // ── 10% Black Swan Anomaly roll ───────────────────────────────────────
+      // Picks the LOWEST-scoring objective instead of highest.
+      // Flags it on the returned objectives so generateNarrativeHook can label it.
+      const _anomalyTriggered = Math.random() < 0.10;
+
+      const RAIL_BLOCKED = hasRail ? [] : ['wrecked_engine', 'derailed_cars'];
+
       const sorted = Object.entries(scores)
-        .filter(([, s]) => s > 0)
-        .sort((a, b) => b[1] - a[1]);
+        .filter(([t, s]) => s > 0 && !RAIL_BLOCKED.includes(t))  // hard rail block
+        .sort((a, b) => _anomalyTriggered ? a[1] - b[1] : b[1] - a[1]); // reversed if anomaly
 
-      console.log('🎯 Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
+      if (_anomalyTriggered) {
+        console.log('🃏 BLACK SWAN ANOMALY — lowest-relevance objective selected');
+      } else {
+        console.log('🎯 Objective scores (top 6):', sorted.slice(0, 6).map(([t, s]) => `${t}:${s}`).join(', '));
+      }
+      this._anomalyTriggered = _anomalyTriggered;
 
-      const numObjectives = randomInt(2, 3);
+      // ── Dynamic Objective Scaling ────────────────────────────────────────────
+      //   500 pts  → 2 objectives (tight board, focused)
+      //   1000 pts → 3 objectives
+      //   1500+ pts → 4 objectives (big game, spread movement)
+      //   Danger 5+ adds one extra (max 4)
+      const _pts = this._pointValue || 500;
+      let numObjectives;
+      if (_pts >= 1500)      numObjectives = 4;
+      else if (_pts >= 1000) numObjectives = 3;
+      else                   numObjectives = 2;
+      if ((this._dangerRating || 3) >= 5 && numObjectives < 4) numObjectives++;
+      numObjectives = Math.min(numObjectives, sorted.length);
+      console.log('📐 Objective count:', numObjectives, '(pts=' + _pts + ', danger=' + (this._dangerRating||3) + ')');
       const objectives    = [];
       const used          = new Set();
 
@@ -2132,7 +2457,8 @@ window.CC_APP = {
           description: this.makeObjectiveDescription(type, locProfile),
           type,
           vp_base:     this.calcObjectiveVP(type, locProfile),
-          special:     Math.random() < 0.2 ? this.makeObjectiveSpecial(type, locProfile) : null
+          special:     Math.random() < 0.2 ? this.makeObjectiveSpecial(type, locProfile) : null,
+          black_swan:  _anomalyTriggered && objectives.length === 0  // tag the first (primary) pick
         });
       }
 
@@ -2190,6 +2516,13 @@ window.CC_APP = {
           token:        'Objective token',
           interactions: []
         };
+        // dark_ritual (Operating Still) gets a randomised doomshine keg count note.
+        let resolvedNotes = vaultObj?.notes ? vaultObj.notes[0] : null;
+        if (obj.type === 'dark_ritual' && !resolvedNotes) {
+          const kegs = randomInt(2, 12); // 2d6
+          resolvedNotes = `Place ${kegs} Doomshine Keg tokens scattered within 6″ of the Still. Kegs can be collected (EXTRACT action). Consuming a keg grants +1 die — and triggers a Coffin Cough test.`;
+        }
+
         // Cargo vehicle placement is faction-aware: Rangers get the escort-from-edge version.
         let resolvedPlacement = defaults.placement;
         if (obj.type === 'cargo_vehicle') {
@@ -2205,14 +2538,14 @@ window.CC_APP = {
           placement:    resolvedPlacement,
           token:        defaults.token,
           interactions: vaultObj?.interactions?.length ? vaultObj.interactions : defaults.interactions,
-          notes:        vaultObj?.notes ? vaultObj.notes[0] : null
+          notes:        resolvedNotes
         });
       });
       return markers;
     }
 
 
-    generateObjectiveChain(objectives) {
+    generateObjectiveChain(objectives, locProfile) {
       if (objectives.length < 2) {
         if (objectives.length === 1) objectives[0].role = 'primary';
         return;
@@ -2225,6 +2558,27 @@ window.CC_APP = {
       objectives[0].chain_link_intro = linkIntro;
       // Any third objective is standalone
       if (objectives[2]) objectives[2].role = 'standalone';
+
+      // ── Environmental Hazard synergy ──────────────────────────────────────
+      // If the primary objective is volatile (tainted, ritual, doomshine)
+      // and the location is hazardous, inject a 2″ pulse note.
+      const VOLATILE_TYPES = ['thyr_cache','tainted_ground','dark_ritual','profane_altar',
+                              'ritual_site','ritual_circle','soul_vessel','fouled_resource'];
+      const r = (locProfile && locProfile.effectiveResources) || {};
+      const isThyrRich  = (r.thyr || 0) >= 3;
+      const isDoomshine = (r.doomshine || 0) >= 1;
+      const hasTags     = (locProfile && locProfile.tags || []).some(
+        t => ['cursed','toxic','volatile','occult','haunted'].includes(t)
+      );
+      const primaryIsVolatile = VOLATILE_TYPES.includes(objectives[0].type);
+      if (primaryIsVolatile && (isThyrRich || isDoomshine || hasTags)) {
+        objectives[0].env_hazard = {
+          trigger:     'On any INTERACT action at this objective',
+          effect:      '2″ pulse — every unit within 2″ takes 1 automatic hit (no save)',
+          label:       'Environmental Hazard'
+        };
+        console.log('⚡ Env hazard attached to:', objectives[0].type);
+      }
     }
 
 
@@ -2307,67 +2661,56 @@ window.CC_APP = {
 
 
     generateVictoryConditions(plotFamily, objectives, locProfile, factions, dangerRating) {
-      const conditions = {};
+  const conditions = {};
 
-      const hasMonsters = factions.some(function(f) { return f.id === 'monsters'; });
-      const injectMonsterObjective = hasMonsters
-        || objectives.some(function(o) { return o.type === 'captive_entity'; });
+  const hasMonsters = factions.some(function(f) { return f.id === 'monsters'; });
+  const injectMonsterObjective = hasMonsters
+    || objectives.some(function(o) { return o.type === 'captive_entity'; });
 
-      factions.forEach(function(faction) {
-        const approach    = FACTION_APPROACH[faction.id]   || FACTION_APPROACH.monsters;
-        const motivesMap  = FACTION_MOTIVES[faction.id]    || FACTION_MOTIVES.monsters;
-        const conflictMap = FACTION_CONFLICT_TABLE[faction.id] || FACTION_CONFLICT_TABLE.monsters;
+  factions.forEach((faction) => {
+    const approach    = this.getEffectiveApproach(faction.id);
+    const motivesMap  = FACTION_MOTIVES[faction.id]    || FACTION_MOTIVES.monsters;
 
-        const primaryObjType = objectives[0] ? objectives[0].type : 'default';
-        const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
+    const primaryObjType = objectives[0] ? objectives[0].type : 'default';
+    const motive = motivesMap[primaryObjType] || motivesMap['default'] || approach.quote;
 
-        // Build two conflicting objectives per faction:
-        // Obj 1 (Primary)   — faction's specific action on the primary board objective
-        // Obj 2 (Secondary) — faction's specific action on the secondary board objective
-        //                     OR their monster-handling goal if monsters are present
-        const pickedObjectives = [];
+    const pickedObjectives = [];
 
-        objectives.forEach(function(obj, i) {
-          if (i > 1) return; // max two
-          const conflict = conflictMap[obj.type] || conflictMap['default'];
-          pickedObjectives.push({
-            name:   conflict.name,
-            desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})[obj.type]
-                    || approach.verbs[i % approach.verbs.length] + ' the ' + obj.name + '.',
-            vp:     conflict.vp,
-            tactic: approach.tactic
-          });
-        });
+    // Use buildRichObjectiveCard for full resource/action/test/VP detail
+    objectives.forEach((obj, i) => {
+      if (i > 1) return;
+      const richCard = this.buildRichObjectiveCard(faction.id, obj, locProfile, dangerRating, i);
+      pickedObjectives.push(richCard);
+    });
 
-        // If we only have 1 objective and monsters are present, add monster goal as secondary
-        if (pickedObjectives.length < 2 && injectMonsterObjective && faction.id !== 'monsters') {
-          const monsterVP = {
-            monster_rangers: '+3 VP per monster safely escorted off board. +5 VP if befriended.',
-            monsterology:    '+4 VP per monster harvested. +2 VP per live capture.',
-            liberty_corps:   '+3 VP per monster captured. +2 VP per monster eliminated.',
-            shine_riders:    '+3 VP if you redirect a monster into an enemy faction. +1 VP per round avoiding contact.',
-            crow_queen:      '+4 VP per monster converted to a Crown Subject.'
-          };
-          pickedObjectives.push({
-            name:   'Monsters on the Board',
-            desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})['monsters_hostile']
-                    || "Deal with the monsters before they become everyone's problem.",
-            vp:     monsterVP[faction.id] || '+2 VP per monster interaction.',
-            tactic: approach.tactic
-          });
-        }
+    if (pickedObjectives.length < 2 && injectMonsterObjective && faction.id !== 'monsters') {
+      const monsterVP = {
+        monster_rangers: '+3 VP per monster safely escorted off board. +5 VP if befriended.',
+        monsterology:    '+4 VP per monster harvested. +2 VP per live capture.',
+        liberty_corps:   '+3 VP per monster captured. +2 VP per monster eliminated.',
+        shine_riders:    '+3 VP if you redirect a monster into an enemy faction. +1 VP per round avoiding contact.',
+        crow_queen:      '+4 VP per monster converted to a Crown Subject.'
+      };
+      pickedObjectives.push({
+        name:   'Monsters on the Board',
+        desc:   (FACTION_OBJECTIVE_FLAVOR[faction.id] || {})['monsters_hostile']
+                || "Deal with the monsters before they become everyone's problem.",
+        vp:     monsterVP[faction.id] || '+2 VP per monster interaction.',
+        tactic: approach.tactic
+      });
+    }
 
-        const finale   = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
-        const aftermath = this.buildFactionAftermath(faction.id, plotFamily);
-        const isNPC    = faction.id === 'monsters' || faction.id === 'crow_queen';
+    const finale    = this.buildFactionFinale(faction.id, objectives, dangerRating, locProfile);
+    const aftermath = this.buildFactionAftermath(faction.id, plotFamily);
+    const isNPC     = faction.id === 'monsters' || faction.id === 'crow_queen';
 
-        conditions[faction.id] = {
-          faction_name: faction.name,
-          is_npc:       isNPC,
-          motive,
-          objectives:   pickedObjectives,
-          finale,
-          aftermath,
+    conditions[faction.id] = {
+      faction_name: faction.name,
+      is_npc:       isNPC,
+      motive,
+      objectives:   pickedObjectives,
+      finale,
+      aftermath,
           quote:        approach.quote
         };
       });
@@ -2519,7 +2862,9 @@ window.CC_APP = {
 
         // Store on instance so helpers deep in the call chain can read it
         // without needing factions threaded through every parameter list.
-        this._factions = factions;
+        this._factions     = factions;
+        this._pointValue   = pointValue;
+        this._dangerRating = dangerRating;
 
         const locProfile = this.buildLocationProfile(locationType, selectedLocation, dangerRating);
         console.log('📍 Location profile:', locProfile);
@@ -2536,7 +2881,7 @@ window.CC_APP = {
         const objectives = vaultScenario
           ? this.generateObjectivesFromVault(vaultScenario, locProfile)
           : this.generateObjectives(plotFamily, locProfile, factions);
-        this.generateObjectiveChain(objectives);
+        this.generateObjectiveChain(objectives, locProfile);
 
         const monsterPressure = this.generateMonsterPressure(plotFamily, dangerRating, locProfile, pointValue);
 
@@ -2582,6 +2927,10 @@ window.CC_APP = {
 
         // Return the full ScenarioResult.
         // _vault is a private field — caller extracts it into state.vaultScenario.
+        const timeline_events = this.generateTimelineEvents(
+          objectives, plotFamily, dangerRating, monsterPressure
+        );
+
         return {
           name:               scenarioName,
           narrative_hook,
@@ -2591,6 +2940,7 @@ window.CC_APP = {
           plot_family:        plotFamily.name,
           objectives,
           monster_pressure:   monsterPressure,
+          timeline_events,
           twist,
           victory_conditions: victoryConditions,
           aftermath,
@@ -2630,7 +2980,80 @@ window.CC_APP = {
       return map[rating] || 'Unknown danger level';
     }
 
+    // ── updateLoginStatus — auth result cached after first check, no repeated network calls ──
+    let _authCache = null;
+
+    async function getAuth() {
+      if (_authCache) return _authCache;
+      if (!window.CC_STORAGE) return { loggedIn: false };
+      try {
+        _authCache = await window.CC_STORAGE.checkAuth();
+        return _authCache;
+      } catch (e) {
+        return { loggedIn: false };
+      }
+    }
+
+    async function updateLoginStatus() {
+      const bar = document.getElementById('cc-login-status');
+      if (!bar) return;
+      if (!window.CC_STORAGE) {
+        bar.className = 'cc-login-status logged-out';
+        bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> <a href="/web/login">Sign in to save scenarios</a>';
+        return;
+      }
+      const auth = await getAuth();
+      if (auth && auth.loggedIn) {
+        const name = auth.userName || auth.name || auth.username || 'Signed in';
+        bar.className = 'cc-login-status logged-in';
+        bar.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as ' + name;
+      } else {
+        bar.className = 'cc-login-status logged-out';
+        bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> <a href="/web/login">Sign in to save and load scenarios</a>';
+      }
+    }
+
     // ── window.generateScenario — thin wrapper around ScenarioGenerator ────────
+    // ── generateFromLocation ─────────────────────────────────────────────────
+    // Step 3 NEXT calls this. Shows a preloader overlay, fires generateScenario(),
+    // then fades the overlay out — skipping the old Step 4 summary form entirely.
+    window.generateFromLocation = function() {
+      if (!state.locationType || (state.locationType === 'named' && !state.selectedLocation)) return;
+      if (!state.completedSteps.includes(3)) state.completedSteps.push(3);
+      state.currentStep = 4;
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cc-generate-preloader';
+      overlay.style.cssText = [
+        'position:fixed;inset:0;z-index:9999',
+        'background:rgba(0,0,0,0.93)',
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem',
+        'transition:opacity 0.4s ease'
+      ].join(';');
+      overlay.innerHTML = `
+        <img src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+             alt="Coffin Canyon" class="cc-splash-logo"
+             style="width:200px;max-width:70vw;opacity:0.92;">
+        <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+          <div class="cc-loading-progress"></div>
+        </div>
+        <div style="color:rgba(255,255,255,0.45);font-size:0.8rem;letter-spacing:0.12em;text-transform:uppercase;">
+          Assembling scenario&hellip;
+        </div>
+      `;
+      document.body.appendChild(overlay);
+
+      setTimeout(function() {
+        window.generateScenario();
+        requestAnimationFrame(function() {
+          overlay.style.opacity = '0';
+          setTimeout(function() {
+            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
+          }, 450);
+        });
+      }, 900);
+    };
+
     window.generateScenario = function() {
       console.log('🎲 Generating scenario...', state);
 
@@ -2667,51 +3090,49 @@ window.CC_APP = {
     //    Left panel:  static canyon overview with orange highlight box.
     //    Right panel: zoomed Leaflet map, gold star at location centre.
 
-    const TINY_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/map_coffin_canyon_tiny.jpg';
+    const TINY_MAP_URL  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/map_data/map_coffin_canyon_tiny.jpg';
+    const LARGE_MAP_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/map_coffin_canyon_large.jpg';
 
     function renderLocationMapEmbed() {
       return `
         <div id="cc-scenario-map-wrap"
-             style="display:flex;gap:6px;
+             style="display:flex;gap:0;
                     margin:0.5rem 0 0.75rem 0;
                     border-radius:8px;overflow:hidden;
                     border:1px solid rgba(255,117,24,0.3);
                     align-items:stretch;">
 
-          <!-- LEFT: static overview — double-border via CSS class -->
-          <div style="flex:0 0 33%;padding:3px;background:rgba(255,117,24,0.18);
-                      box-shadow:0 0 0 1px rgba(255,117,24,0.55);
-                      border-right:2px solid rgba(255,117,24,0.5);">
-            <div id="cc-scenario-map-overview"
-                 style="position:relative;overflow:hidden;background:#0a0a0a;height:100%;
-                        border:1px solid rgba(255,117,24,0.4);border-radius:2px;">
+          <!-- LEFT: overview — 310px wide, image at natural aspect ratio, no cropping -->
+          <div id="cc-scenario-map-overview"
+               style="flex:0 0 310px;position:relative;
+                      border-right:2px solid rgba(255,117,24,0.4);
+                      background:#0a0a0a;">
 
-              <!-- Label at TOP -->
-              <div style="position:absolute;top:0;left:0;right:0;z-index:10;
-                          padding:6px 8px;
-                          background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
-                          font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
-                          text-transform:uppercase;color:rgba(255,255,255,0.7);
-                          text-align:center;">Canyon Overview</div>
+            <!-- Label -->
+            <div style="position:absolute;top:0;left:0;right:0;z-index:10;
+                        padding:6px 8px;
+                        background:linear-gradient(180deg,rgba(0,0,0,0.75),transparent);
+                        font-size:0.65rem;font-weight:700;letter-spacing:0.14em;
+                        text-transform:uppercase;color:rgba(255,255,255,0.7);
+                        text-align:center;">Canyon Overview</div>
 
-              <img id="cc-scenario-map-tiny"
-                   src="${TINY_MAP_URL}"
-                   alt="Canyon overview"
-                   style="width:100%;height:auto;display:block;opacity:0.85;">
+            <img id="cc-scenario-map-tiny"
+                 src="${LARGE_MAP_URL}"
+                 alt="Canyon overview"
+                 style="width:100%;height:auto;display:block;opacity:0.88;">
 
-              <div id="cc-scenario-map-highlight"
-                   style="display:none;position:absolute;
-                          border:2px solid #ff7518;
-                          background:rgba(255,117,24,0.25);
-                          box-shadow:0 0 0 1px rgba(0,0,0,0.6),
-                                     0 0 12px rgba(255,117,24,0.5);
-                          pointer-events:none;"></div>
-            </div>
+            <div id="cc-scenario-map-highlight"
+                 style="display:none;position:absolute;
+                        border:2px solid #ff7518;
+                        background:rgba(255,117,24,0.25);
+                        box-shadow:0 0 0 1px rgba(0,0,0,0.6),
+                                   0 0 12px rgba(255,117,24,0.5);
+                        pointer-events:none;"></div>
           </div>
 
-          <!-- RIGHT: zoomed Leaflet map -->
+          <!-- RIGHT: zoomed Leaflet map — takes all remaining space, stretches to left height -->
           <div id="cc-scenario-map-embed"
-               style="flex:1;position:relative;background:#111;min-height:320px;">
+               style="flex:1;position:relative;background:#111;min-height:400px;">
             <div style="position:absolute;inset:0;display:flex;align-items:center;
                         justify-content:center;color:rgba(255,255,255,0.25);
                         font-size:0.8rem;letter-spacing:0.1em;text-transform:uppercase;">
@@ -2784,7 +3205,7 @@ window.CC_APP = {
           keyboard:           false
         });
 
-        L.imageOverlay(mapData.map.background.image_key, bounds).addTo(_scenarioMap);
+        L.imageOverlay(LARGE_MAP_URL, bounds).addTo(_scenarioMap);
 
         if (bbox) {
           L.rectangle(
@@ -2854,57 +3275,60 @@ window.CC_APP = {
     }
 
     // ── renderStep1_GameSetup ────────────────────────────────────────────────────
+    // Step 1a: mode buttons always visible. Step 1b: settings fade in after mode chosen.
     function renderStep1_GameSetup() {
       return `
+        <!-- 1a: Game Mode — always visible -->
         <div class="cc-form-section">
           <label class="cc-label">Game Mode</label>
           <div class="cc-button-group">
             <button class="cc-btn ${state.gameMode === 'solo' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
-                    onclick="setGameMode('solo')">Solo Play</button>
+                    onclick="setGameMode('solo')"><i class="fa fa-user"></i> Solo</button>
             <button class="cc-btn ${state.gameMode === 'multiplayer' ? 'cc-btn-primary' : 'cc-btn-ghost'}"
-                    onclick="setGameMode('multiplayer')">Multiplayer</button>
+                    onclick="setGameMode('multiplayer')"><i class="fa fa-users"></i> Multiplayer</button>
+            <button class="cc-btn cc-btn-ghost"
+                    onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved</button>
           </div>
         </div>
 
-        <div class="cc-form-section">
-          <label class="cc-label">Point Value</label>
-          <select class="cc-input" onchange="setPointValue(this.value)">
-            <option value="500"  ${state.pointValue === 500  ? 'selected' : ''}>500 ₤</option>
-            <option value="1000" ${state.pointValue === 1000 ? 'selected' : ''}>1000 ₤</option>
-            <option value="1500" ${state.pointValue === 1500 ? 'selected' : ''}>1500 ₤</option>
-            <option value="2000" ${state.pointValue === 2000 ? 'selected' : ''}>2000 ₤</option>
-          </select>
-        </div>
-
-        <div class="cc-form-section">
-          <label class="cc-label">Danger Rating</label>
-          <select class="cc-input" onchange="setDangerRating(this.value)">
-            <option value="1" ${state.dangerRating === 1 ? 'selected' : ''}>&#9733;&#9734;&#9734;&#9734;&#9734;&#9734; &mdash; Controlled</option>
-            <option value="2" ${state.dangerRating === 2 ? 'selected' : ''}>&#9733;&#9733;&#9734;&#9734;&#9734;&#9734; &mdash; Frontier Risk</option>
-            <option value="3" ${state.dangerRating === 3 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9734;&#9734;&#9734; &mdash; Hostile</option>
-            <option value="4" ${state.dangerRating === 4 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9734;&#9734; &mdash; Dangerous</option>
-            <option value="5" ${state.dangerRating === 5 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9733;&#9734; &mdash; Extreme</option>
-            <option value="6" ${state.dangerRating === 6 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9733;&#9733; &mdash; Catastrophic</option>
-          </select>
-        </div>
-
-        <div class="cc-form-section">
-          <label class="cc-label">Game Warden</label>
-          <select class="cc-input" onchange="setGameWarden(this.value)">
-            <option value="none"      ${!state.gameWarden               ? 'selected' : ''}>No Warden</option>
-            <option value="observing" ${state.gameWarden === 'observing' ? 'selected' : ''}>Observing</option>
-            <option value="npc"       ${state.gameWarden === 'npc'       ? 'selected' : ''}>Running NPC</option>
-          </select>
-        </div>
-
+        <!-- 1b: Settings revealed after mode chosen -->
         ${state.gameMode ? `
-          <div class="cc-form-actions">
-            <button class="cc-btn cc-btn-ghost" onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
-            <button class="cc-btn cc-btn-primary" onclick="completeStep(1)">Next: Factions &rarr;</button>
+          <div style="animation:cc-fade-in 0.25s ease;">
+            <div class="cc-form-section">
+              <label class="cc-label">Point Value</label>
+              <select class="cc-input" onchange="setPointValue(this.value)">
+                <option value="500"  ${state.pointValue === 500  ? 'selected' : ''}>500 ₤</option>
+                <option value="1000" ${state.pointValue === 1000 ? 'selected' : ''}>1000 ₤</option>
+                <option value="1500" ${state.pointValue === 1500 ? 'selected' : ''}>1500 ₤</option>
+                <option value="2000" ${state.pointValue === 2000 ? 'selected' : ''}>2000 ₤</option>
+              </select>
+            </div>
+            <div class="cc-form-section">
+              <label class="cc-label">Danger Rating</label>
+              <select class="cc-input" onchange="setDangerRating(this.value)">
+                <option value="1" ${state.dangerRating === 1 ? 'selected' : ''}>&#9733;&#9734;&#9734;&#9734;&#9734;&#9734; &mdash; Controlled</option>
+                <option value="2" ${state.dangerRating === 2 ? 'selected' : ''}>&#9733;&#9733;&#9734;&#9734;&#9734;&#9734; &mdash; Frontier Risk</option>
+                <option value="3" ${state.dangerRating === 3 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9734;&#9734;&#9734; &mdash; Hostile</option>
+                <option value="4" ${state.dangerRating === 4 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9734;&#9734; &mdash; Dangerous</option>
+                <option value="5" ${state.dangerRating === 5 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9733;&#9734; &mdash; Extreme</option>
+                <option value="6" ${state.dangerRating === 6 ? 'selected' : ''}>&#9733;&#9733;&#9733;&#9733;&#9733;&#9733; &mdash; Catastrophic</option>
+              </select>
+            </div>
+            <div class="cc-form-section">
+              <label class="cc-label">Game Warden</label>
+              <select class="cc-input" onchange="setGameWarden(this.value)">
+                <option value="none"      ${!state.gameWarden               ? 'selected' : ''}>No Warden</option>
+                <option value="observing" ${state.gameWarden === 'observing' ? 'selected' : ''}>Observing</option>
+                <option value="npc"       ${state.gameWarden === 'npc'       ? 'selected' : ''}>Running NPC</option>
+              </select>
+            </div>
+            <div class="cc-form-actions">
+              <button class="cc-btn cc-btn-primary" onclick="completeStep(1)">Next: Factions &rarr;</button>
+            </div>
           </div>
         ` : `
-          <div class="cc-form-actions">
-            <button class="cc-btn cc-btn-ghost" onclick="loadFromCloud()"><i class="fa fa-folder-open"></i> Load Saved Scenario</button>
+          <div class="cc-step-hint" style="padding:0.6rem 0.25rem;color:rgba(255,255,255,0.35);font-size:0.78rem;font-style:italic;">
+            Choose a game mode to continue.
           </div>
         `}
       `;
@@ -2918,12 +3342,10 @@ window.CC_APP = {
 
       if (state.gameMode === 'solo') {
         const playerFaction = state.factions.find(f => !f.isNPC);
-
-        // Most factions cannot oppose themselves. Shine Riders and Monsters can.
         const CANNOT_SELF_OPPOSE = ['monster_rangers', 'monsterology', 'liberty_corps', 'crow_queen'];
-        const playerCanSelfOppose = !playerFaction || !CANNOT_SELF_OPPOSE.includes(playerFaction.id);
 
         return `
+          <!-- 2a: Your Faction — always shown -->
           <div class="cc-form-section">
             <label class="cc-label">Your Faction</label>
             <select class="cc-input" onchange="setPlayerFaction(this.value)">
@@ -2934,31 +3356,39 @@ window.CC_APP = {
             </select>
           </div>
 
-          <div class="cc-form-section">
-            <label class="cc-label">NPC Opponents</label>
-            <p class="cc-help-text">Choose which factions you'll be playing against.</p>
-            ${FACTIONS.map(f => {
-              const isNPC     = state.factions.some(sf => sf.id === f.id && sf.isNPC);
-                const isSelf    = playerFaction?.id === f.id;
-              const disabled  = isSelf && CANNOT_SELF_OPPOSE.includes(f.id);
-              return `
-                <div class="cc-faction-row" style="${disabled ? 'opacity:0.4;' : ''}">
-                  <label class="cc-checkbox-label">
-                    <input type="checkbox" ${isNPC ? 'checked' : ''} ${disabled ? 'disabled' : ''}
-                      onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)">
-                    ${f.name}
-                  </label>
-                  <span class="cc-help-text" style="margin:0">${disabled ? '(same faction)' : '(NPC)'}</span>
-                </div>
-              `;
-            }).join('')}
-          </div>
-
-          <div class="cc-form-actions">
-            <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
-            <button class="cc-btn cc-btn-primary" onclick="completeStep(2)"
-              ${!playerFaction ? 'disabled' : ''}>Next: Location &rarr;</button>
-          </div>
+          <!-- 2b: NPC Opponents — revealed only after player faction chosen -->
+          ${playerFaction ? `
+            <div class="cc-form-section" style="animation:cc-fade-in 0.25s ease;">
+              <label class="cc-label">NPC Opponents</label>
+              <p class="cc-help-text">Choose which factions you'll be playing against.</p>
+              ${FACTIONS.map(f => {
+                const isNPC    = state.factions.some(sf => sf.id === f.id && sf.isNPC);
+                const isSelf   = playerFaction?.id === f.id;
+                const disabled = isSelf && CANNOT_SELF_OPPOSE.includes(f.id);
+                return `
+                  <div class="cc-faction-row" style="${disabled ? 'opacity:0.4;' : ''}">
+                    <label class="cc-checkbox-label">
+                      <input type="checkbox" ${isNPC ? 'checked' : ''} ${disabled ? 'disabled' : ''}
+                        onchange="toggleNPCFaction('${f.id}', '${f.name}', this.checked)">
+                      ${f.name}
+                    </label>
+                    <span class="cc-help-text" style="margin:0">${disabled ? '(same faction)' : '(NPC)'}</span>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+            <div class="cc-form-actions">
+              <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
+              <button class="cc-btn cc-btn-primary" onclick="completeStep(2)">Next: Location &rarr;</button>
+            </div>
+          ` : `
+            <div class="cc-step-hint" style="padding:0.6rem 0.25rem;color:rgba(255,255,255,0.35);font-size:0.78rem;font-style:italic;">
+              Select your faction to reveal NPC opponents.
+            </div>
+            <div class="cc-form-actions">
+              <button class="cc-btn cc-btn-ghost" onclick="openStep(1)">&larr; Back</button>
+            </div>
+          `}
         `;
       }
 
@@ -3034,9 +3464,9 @@ window.CC_APP = {
 
         <div class="cc-form-actions">
           <button class="cc-btn cc-btn-ghost" onclick="openStep(2)">&larr; Back</button>
-          <button class="cc-btn cc-btn-primary" onclick="completeStep(3)"
+          <button class="cc-btn cc-btn-primary" onclick="generateFromLocation()"
             ${(state.locationType === 'named' && !state.selectedLocation) || !state.locationType ? 'disabled' : ''}>
-            Next: Generate Scenario &rarr;
+            <i class="fa fa-dice"></i> Generate Scenario
           </button>
         </div>
       `;
@@ -3126,7 +3556,11 @@ window.CC_APP = {
               + (obj.faction_win_vp ? ' — ' + obj.faction_win_vp : '') + '</div>'
             : '';
 
-          return '<div class="cc-vc-obj" style="border-left:2px solid ' + borderColor + ';margin-bottom:0.75rem;padding-left:0.75rem;">'
+          return '<div class="cc-vc-obj" style="margin-bottom:0.75rem;padding:0.5rem 0.6rem;'
+            + 'background:' + (isPrimary ? 'rgba(255,255,255,0.04)' : 'transparent') + ';'
+            + 'border-radius:3px;border:1px solid ' + (isPrimary ? id.border : 'transparent') + ';'
+            + '">'
+
             + '<div class="cc-vc-obj-label" style="color:' + labelColor + ';margin-bottom:0.2rem;">'
             + roleIcon + ' ' + roleLabel + '</div>'
             + '<div class="cc-vc-obj-name" style="font-size:1rem;font-weight:700;margin-bottom:0.3rem;">'
@@ -3151,30 +3585,46 @@ window.CC_APP = {
           ? '<p class="cc-quote" style="border-left-color:' + id.color + ';">&ldquo;' + vc.quote + '&rdquo;</p>'
           : '';
 
-        return '<div class="cc-victory-card" style="border-left:4px solid ' + id.color + ';background:linear-gradient(135deg,rgba(0,0,0,0.4) 0%,color-mix(in srgb,' + id.color + ' 6%,transparent) 100%);">'
-          + '<div class="cc-vc-header" style="border-bottom:1px solid ' + id.border + ';padding-bottom:0.6rem;margin-bottom:0.85rem;">'
-          + '<div style="display:flex;align-items:center;gap:0.85rem;">'
+        // ── Field Order military brief card ──
+        return '<div class="cc-victory-card" style="'
+          + 'border:1px solid ' + id.border + ';'
+          + 'border-top:3px solid ' + id.color + ';'
+          + 'background:rgba(10,8,5,0.85);'
+          + 'border-radius:4px;overflow:hidden;'
+          + 'box-shadow:0 2px 12px rgba(0,0,0,0.5);'
+          + '">' 
+          + '<div style="display:flex;align-items:center;gap:0.85rem;'
+          + 'padding:0.75rem 1rem;'
+          + 'background:linear-gradient(90deg,rgba(0,0,0,0.6) 0%,rgba(0,0,0,0.2) 100%);'
+          + 'border-bottom:1px solid ' + id.border + ';'
+          + '">'
           + logoHtml
-          + '<div style="flex:1;">'
-          + '<h5 style="color:' + id.color + ';margin:0;font-size:1.1rem;">' + vc.faction_name + (vc.is_npc ? ' <span class="cc-npc-tag">NPC</span>' : '') + '</h5>'
-          + (id.tag ? '<div style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-top:2px;">' + id.tag + '</div>' : '')
-          + '</div></div>'
-          + motiveHtml
+          + '<div style="flex:1;min-width:0;">'
+          + '<h5 style="color:' + id.color + ';margin:0;font-size:1.05rem;font-weight:900;letter-spacing:.04em;">'
+          + vc.faction_name + (vc.is_npc ? ' <span class="cc-npc-tag" style="font-size:0.6rem;vertical-align:middle;">NPC</span>' : '') + '</h5>'
+          + (id.tag ? '<div style="font-size:0.6rem;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-top:1px;">' + id.tag + '</div>' : '')
           + '</div>'
-          + '<div class="cc-vc-objectives">' + objectivesHtml + '</div>'
-          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
-          + '<div class="cc-vc-finale">'
-          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:' + id.color + ';margin-bottom:0.25rem;">Finale — Round 6</div>'
-          + '<div class="cc-vc-obj-name" style="font-weight:700;"><i class="fa fa-bolt" style="color:' + id.color + ';"></i> ' + vc.finale.name + '</div>'
-          + '<p style="font-size:0.87rem;margin:0.25rem 0;">' + vc.finale.desc + '</p>'
-          + '<p class="cc-vp-line" style="font-size:0.82rem;"><i class="fa fa-star" style="color:' + id.color + ';"></i> ' + vc.finale.vp + '</p>'
+          + '<div style="flex-shrink:0;font-size:0.55rem;letter-spacing:.12em;text-transform:uppercase;'
+          + 'color:' + id.color + ';border:1px solid ' + id.color + ';padding:2px 6px;opacity:.5;">FIELD ORDER</div>'
           + '</div>'
-          + '<hr class="cc-vc-divider" style="border-color:' + id.border + ';">'
-          + '<div class="cc-vc-aftermath">'
-          + '<div class="cc-vc-obj-label" style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.4);margin-bottom:0.25rem;">If ' + vc.faction_name + ' Wins</div>'
-          + '<p style="font-size:0.87rem;margin:0.2rem 0;"><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
-          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
-          + '<p style="font-size:0.85rem;margin:0.2rem 0;"><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
+          + (motiveHtml ? '<div style="padding:0.6rem 1rem 0;">' + motiveHtml + '</div>' : '')
+          + '<div class="cc-vc-objectives" style="padding:0.75rem 1rem 0;">'
+          + objectivesHtml
+          + '</div>'
+          + '<div style="margin:0 1rem 0.75rem;padding:0.65rem 0.75rem;'
+          + 'background:rgba(0,0,0,0.3);border:1px solid ' + id.border + ';border-radius:3px;">'
+          + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.1em;color:' + id.color + ';margin-bottom:0.3rem;">'
+          + '<i class="fa fa-bolt"></i> Finale — Round 6</div>'
+          + '<div style="font-weight:700;font-size:0.95rem;margin-bottom:0.2rem;">' + vc.finale.name + '</div>'
+          + '<p style="font-size:0.85rem;margin:0 0 0.3rem;color:rgba(255,255,255,0.75);">' + vc.finale.desc + '</p>'
+          + '<span style="font-size:0.8rem;color:' + id.color + ';"><i class="fa fa-star"></i> ' + vc.finale.vp + '</span>'
+          + '</div>'
+          + '<div style="padding:0.65rem 1rem;background:rgba(0,0,0,0.4);border-top:1px solid ' + id.border + ';">'
+          + '<div style="font-size:0.6rem;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,0.35);margin-bottom:0.35rem;">'
+          + 'If ' + vc.faction_name + ' Wins</div>'
+          + '<p style="font-size:0.85rem;margin:0.15rem 0;"><i class="fa fa-chevron-right" style="color:' + id.color + ';"></i> ' + vc.aftermath.immediate + '</p>'
+          + '<p style="font-size:0.83rem;margin:0.15rem 0;color:rgba(255,255,255,0.6);"><i class="fa fa-university"></i> Territory becomes <strong style="color:' + id.color + ';">' + vc.aftermath.canyon_state + '</strong>.</p>'
+          + '<p style="font-size:0.83rem;margin:0.15rem 0;color:rgba(255,255,255,0.6);"><i class="fa fa-calendar"></i> ' + vc.aftermath.long_term + '</p>'
           + quoteHtml
           + '</div>'
           + '</div>';
@@ -3209,6 +3659,17 @@ window.CC_APP = {
           ? '<p><em><i class="fa fa-exclamation-triangle"></i> Special: ' + obj.special + '</em></p>'
           : '';
 
+        var hazardHtml = '';
+        if (obj.env_hazard) {
+          hazardHtml = '<div style="margin-top:0.5rem;padding:0.4rem 0.6rem;'
+            + 'background:rgba(239,68,68,0.08);border-left:2px solid #ef4444;border-radius:2px;font-size:0.82rem;">'
+            + '<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:#ef4444;margin-bottom:0.2rem;">'
+            + '<i class="fa fa-bolt"></i> ' + obj.env_hazard.label + '</div>'
+            + '<div style="color:rgba(255,255,255,0.6);font-size:0.78rem;margin-bottom:0.1rem;">' + obj.env_hazard.trigger + '</div>'
+            + '<div style="font-weight:600;">' + obj.env_hazard.effect + '</div>'
+            + '</div>';
+        }
+
         return '<div class="cc-objective-card" style="' + borderStyle + '">'
           + '<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.35rem;">'
           + '<span style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.08em;color:' + labelColor + ';">'
@@ -3218,6 +3679,7 @@ window.CC_APP = {
           + '<p>' + obj.description + '</p>'
           + '<p class="cc-vp-line"><i class="fa fa-star"></i> ' + obj.vp_base + ' VP base</p>'
           + chainHtml
+          + hazardHtml
           + specialHtml
           + '</div>';
       }).join('');
@@ -3387,6 +3849,30 @@ window.CC_APP = {
 
     // ── END VAULT RENDER HELPERS ─────────────────────────────────────────────────
 
+    // Renders wandering NPCs (Vendomat + Monte Haul) if they rolled in.
+    function renderWanderingNPCs(npcs) {
+      if (!npcs || !npcs.length) return '';
+      const rows = npcs.map(npc => `
+        <div style="border-left:3px solid #d4822a;padding:0.5rem 0.75rem;
+                    margin-bottom:0.5rem;background:rgba(0,0,0,0.25);border-radius:2px;">
+          <div style="font-size:0.75rem;font-weight:700;color:#d4822a;margin-bottom:0.25rem;">
+            ${npc.emoji} ${npc.name}
+          </div>
+          <div style="font-size:0.85rem;margin-bottom:0.25rem;">${npc.note}</div>
+          <div style="font-size:0.8rem;color:#ef5350;">
+            <i class="fa fa-exclamation-triangle"></i> ${npc.warning}
+          </div>
+          <div style="font-size:0.75rem;color:rgba(255,255,255,0.4);margin-top:0.2rem;">
+            Placement: ${npc.placement.replace(/_/g, ' ')}
+          </div>
+        </div>`).join('');
+      return `
+        <div class="cc-scenario-section" style="border-left:3px solid #d4822a;">
+          <h4 style="color:#d4822a;"><i class="fa fa-cog"></i> Wandering NPCs</h4>
+          ${rows}
+        </div>`;
+    }
+
     // ── renderScenarioOutput — full scenario card; shown after generation ──────────
     function renderScenarioOutput() {
       const s = state.scenario;
@@ -3489,6 +3975,9 @@ window.CC_APP = {
 
           <!-- MONSTER PRESSURE -->
           <!-- Monster Pressure and Coffin Cough data is used by Turn Counter app only -->
+
+          <!-- WANDERING NPCs -->
+          ${renderWanderingNPCs(s.wandering_npcs)}
 
           <!-- VICTORY CONDITIONS — always use per-faction card renderer -->
           <div class="cc-scenario-section">
@@ -3605,6 +4094,10 @@ window.CC_APP = {
           </div>
         </div>
 
+        <div id="cc-login-status" class="cc-login-status logged-out">
+          <i class="fa fa-circle-o-notch fa-spin" style="font-size:0.75rem;"></i> Checking&hellip;
+        </div>
+
         <div class="cc-scenario-builder-layout">
           <aside class="cc-scenario-sidebar">
             <div class="cc-panel h-100">
@@ -3633,6 +4126,8 @@ window.CC_APP = {
         </div>
       `;
       root.innerHTML = `<div class="cc-app-shell h-100">${html}</div>`;
+
+      setTimeout(updateLoginStatus, 500);
     }
 
     // ── Event handlers — all window.* functions called from HTML onclick attrs ────
@@ -4199,7 +4694,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         return;
       }
       try {
-        const auth = await window.CC_STORAGE.checkAuth();
+        const auth = await getAuth();
         if (!auth.loggedIn) {
           alert('You need to be logged in to load saved scenarios.');
           return;
@@ -4280,53 +4775,56 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       }
     };
 
-    // ── Boot — splash screen, data load, 5-second minimum hold, then render() ──────
+    // ── Boot — canonical .cc-preloader overlay, 5s minimum, then render ────────
     const _bootStart = Date.now();
-
-    root.innerHTML = `
-      <div class="cc-app-shell h-100">
-        <div class="cc-app-header">
-          <div>
-            <h1 class="cc-app-title">Coffin Canyon</h1>
-            <div class="cc-app-subtitle">Scenario Builder</div>
-          </div>
-        </div>
-        <div id="cc-splash-screen" class="cc-loading-container" style="transition:opacity 0.6s ease;">
-          <img
-            src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
-            alt="Coffin Canyon"
-            class="cc-splash-logo"
-            style="width:320px;max-width:80vw;margin-bottom:2rem;"
-          />
-          <div class="cc-loading-bar">
-            <div class="cc-loading-progress"></div>
-          </div>
-          <div class="cc-loading-text">Loading scenario data&hellip;</div>
-        </div>
-      </div>
-    `;
-
-    // Hold splash for at least 5 seconds regardless of how fast data loads.
     const MIN_SPLASH_MS = 5000;
 
-    gameData.loadAll().then(() => {
-      console.log('✅ Game data ready');
-      const elapsed  = Date.now() - _bootStart;
-      const holdFor  = Math.max(0, MIN_SPLASH_MS - elapsed);
+    // Write a minimal shell so root is never empty, then overlay the preloader
+    root.innerHTML = '<div class="cc-app-shell h-100" id="cc-sb-shell"></div>';
 
-      setTimeout(() => {
-        const splash = document.getElementById('cc-splash-screen');
-        if (splash) {
-          splash.style.opacity = '0';
-          setTimeout(() => {
-            console.log('✅ Rendering app');
-            render();
-          }, 650); // wait for CSS fade-out to finish
-        } else {
-          render();
-        }
+    const _sbPreloader = document.createElement('div');
+    _sbPreloader.id = 'cc-sb-preloader';
+    _sbPreloader.className = 'cc-preloader cc-preloader--page';
+    _sbPreloader.innerHTML = `
+      <img class="cc-preloader-logo"
+           src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+           alt="Coffin Canyon"
+           style="width:200px;max-width:70vw;">
+      <p class="cc-preloader-title">Scenario Builder</p>
+      <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+        <div class="cc-loading-progress"></div>
+      </div>
+      <p class="cc-loading-text">Loading scenario data&hellip;</p>
+    `;
+    document.body.appendChild(_sbPreloader);
+
+    return gameData.loadAll().then(function() {
+      console.log('✅ Game data ready');
+      const elapsed = Date.now() - _bootStart;
+      const holdFor = Math.max(0, MIN_SPLASH_MS - elapsed);
+
+      setTimeout(function() {
+        // render() writes the full app UI into root
+        render();
+        // Fade out the preloader overlay after render
+        requestAnimationFrame(function() {
+          _sbPreloader.classList.add('cc-preloader--hidden');
+          setTimeout(function() {
+            if (_sbPreloader.parentNode) _sbPreloader.parentNode.removeChild(_sbPreloader);
+            console.log('✅ Scenario Builder ready');
+          }, 480);
+        });
       }, holdFor);
     });
 
-  } // end init()
-}; // end window.CC_APP
+  } // end mount()
+
+  window.CC_APP = {
+    init: function (options) {
+      return mount(options.root, options.ctx || {});
+    },
+    destroy: function () {
+      if (typeof _destroyFn === 'function') { _destroyFn(); }
+    }
+  };
+})();

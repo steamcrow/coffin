@@ -126,9 +126,7 @@
       "title": "Canyon Map",
       "directory": "apps/app_canyon_map/",
       "entry": {
-        "js": "apps/app_canyon_map/cc_canyon_map_app.js",
-        "alternate_js": [
-          "apps/app_canyon_map/cc_app_canyon_map.js"
+        "js": "apps/app_canyon_map/cc_app_canyon_map.js",
         ],
         "css": "apps/app_canyon_map/cc_canyon_map.css"
       },
@@ -146,9 +144,6 @@
           "data/src/"
         ]
       },
-      "notes": [
-        "There are two map JS filenames in the app directory; choose one as canonical during cleanup."
-      ]
     },
     "turn_counter": {
       "title": "Turn Counter",

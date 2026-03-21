@@ -5,7 +5,7 @@
    ========================================================= */
 
 /* ===== GOOGLE FONTS IMPORT ===== */
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Space+Mono:wght@400;700&display=swap');
 
 /* ===== CSS VARIABLES ===== */
 :root {
@@ -38,7 +38,7 @@
   --cc-red:   #c44;
 
   /* Typography */
-  --cc-font-title: 'Playfair Display', Georgia, serif;
+  --cc-font-title: 'Cinzel', serif; /* Updated to Cinzel */
   --cc-font-body:  'Space Mono', 'Courier New', monospace;
   --cc-font-mono:  'Space Mono', 'Courier New', monospace;
 
@@ -47,6 +47,49 @@
   --cc-radius-lg: 6px;
   --cc-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.5);
   --cc-shadow:    0 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* Unified Coffin Canyon Loader */
+.cc-loader-overlay {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    min-height: 100vh;
+    background: #0e0c09
+}
+
+.cc-loader-brand {
+    width: 260px;
+    max-width: 70vw;
+    filter: drop-shadow(0 0 28px rgba(var(--cc-primary-rgb, 255, 117, 24), 0.5));
+    animation: cc-pulse 2s ease-in-out infinite;
+}
+
+.cc-loader-track {
+    width: 260px;
+    max-width: 70vw;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.cc-loader-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--cc-primary, #ff7518);
+    border-radius: 2px;
+    transition: width 0.3s linear;
+}
+
+.cc-loader-text {
+    color: var(--cc-primary, #ff7518);
+    font-size: 0.7rem;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    animation: cc-pulse 1.5s ease-in-out infinite;
 }
 
 /* ===== BASE ===== */

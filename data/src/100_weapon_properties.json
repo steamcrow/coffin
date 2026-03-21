@@ -2,107 +2,125 @@
   "_id": "R-WEAPONS",
   "title": "Weapon Properties",
   "properties": {
-    "_id": "",
-    "title": "Properties",
-    "short": "",
-    "long": "",
     "pierce": {
       "_id": "R-WPN-PIERCE",
-      "title": "Pierce",
       "short": "Ignore 1 Defense.",
       "long": "Ignore 1 point of Defense.",
       "name": "Pierce"
     },
     "brutal_pierce": {
       "_id": "R-WPN-BRUTAL-PIERCE",
-      "title": "Brutal Pierce",
       "short": "Ignore 2 Defense.",
       "long": "Ignore 2 points of Defense.",
       "name": "Brutal Pierce"
     },
     "savage_pierce": {
       "_id": "R-WPN-SAVAGE-PIERCE",
-      "title": "Savage Pierce",
       "short": "Ignore 3 Defense.",
       "long": "Ignore 3 points of Defense.",
       "name": "Savage Pierce"
     },
     "blast": {
       "_id": "R-WPN-BLAST",
-      "title": "Blast",
       "short": "3\" area attack.",
       "long": "3\" radius area of effect. Roll separately for each model in area. Cover applies normally.",
       "name": "Blast"
     },
-    "massive_blast": {
-      "_id": "R-WPN-MASSIVE-BLAST",
-      "title": "Massive Blast",
+    "brutal_blast": {
+      "_id": "R-WPN-BRUTAL-BLAST",
       "short": "6\" area attack.",
       "long": "6\" radius area of effect. Roll separately for each model in area. Cover applies normally.",
-      "name": "Massive Blast"
+      "name": "Brutal Blast"
+    },
+    "savage_blast": {
+      "_id": "R-WPN-SAVAGE-BLAST",
+      "short": "9\" area attack.",
+      "long": "9\" radius area of effect. Roll separately for each model in area. Cover applies normally.",
+      "name": "Savage Blast"
     },
     "blinding": {
       "_id": "R-WPN-BLINDING",
-      "title": "Blinding",
       "short": "Inflicts Blinded.",
       "long": "On hit: target is Blinded until end of its next activation. While Blinded: cannot make ranged attacks, -2 dice on melee attacks, cannot use abilities requiring line of sight, move at half speed. An adjacent ally may use an action to clean ink/flash from a Blinded unit (removes Blinded status). Rain or water terrain immediately removes Blinded.",
       "name": "Blinding"
     },
     "grapple": {
       "_id": "R-WPN-GRAPPLE",
-      "title": "Grapple",
       "short": "Pull target; root next turn.",
       "long": "On hit, pull target 3\" toward this unit. Target may not move next activation.",
       "name": "Grapple"
     },
+    "rending": {
+      "_id": "R-WPN-RENDING",
+      "short": "Extra damage on strong hits.",
+      "long": "If this attack exceeds Defense by 2 or more, it deals +1 additional damage.",
+      "name": "Rending"
+    },
     "ignores_cover": {
       "_id": "R-WPN-IGNORES-COVER",
-      "title": "Ignores Cover",
       "short": "Cover does not apply.",
       "long": "Attacks from this weapon ignore cover bonuses to Defense.",
       "name": "Ignores Cover"
     },
+    "unstable": {
+      "_id": "R-WPN-UNSTABLE",
+      "name": "Unstable",
+      "short": "Risk of backlash.",
+      "long": "On a Critical Failure, this weapon deals 1 damage to the attacker."
+    },
     "pinning_shot": {
       "_id": "R-WPN-PINNING-SHOT",
-      "title": "Pinning Shot",
       "short": "Prevents movement.",
       "long": "Target hit may not move next activation.",
       "name": "Pinning Shot"
     },
     "quake": {
       "_id": "R-WPN-QUAKE",
-      "title": "Quake",
       "short": "Area pin effect.",
       "long": "All models within 6\" must pass Quality test or become Pinned.",
       "name": "Quake"
     },
     "rapid_fire": {
       "_id": "R-WPN-RAPID-FIRE",
-      "title": "Rapid Fire",
       "short": "Split attacks.",
       "long": "May split attack dice between multiple targets within range. Used by Jager marksmen.",
       "name": "Rapid Fire"
     },
     "sonic": {
       "_id": "R-WPN-SONIC",
-      "title": "Sonic",
       "short": "Ignores armor and cover.",
       "long": "Ignores Heavy Armor bonus. Ignores cover bonuses to Defense. If at least 1 damage dealt, target tests Morale.",
       "name": "Sonic"
     },
+    "shatter": {
+      "_id": "R-WPN-SHATTER",
+      "short": "-1 Defense (temporary).",
+      "long": "If this attack deals damage, the target suffers -1 Defense until the end of its next activation.",
+      "name": "Shatter"
+    },
+    "sunder": {
+      "_id": "R-WPN-SUNDER",
+      "short": "Permanent Defense loss.",
+      "long": "If this weapon deals damage, the target suffers -1 Defense for the rest of the game. This effect does not stack.",
+      "name": "Sunder"
+    },
+    "filthy": {
+      "_id": "R-WPN-FILTHY",
+      "short": "On hit: -1 die next action.",
+      "long": "If this attack hits (even if no damage is dealt), the target rolls -1 die on its next action.",
+      "name": "Filthy"
+    },
     "melee": {
       "_id": "R-WPN-MELEE",
-      "title": "Melee",
       "short": "Close combat weapon.",
       "long": "Can be used in close combat. Does not require Line of Sight.",
       "name": "Melee"
     },
-    "prybar": {
-      "_id": "R-WPN-PRYBAR",
-      "title": "Prybar",
+    "breach": {
+      "_id": "R-WPN-BREACH",
       "short": "Bonus to Interact.",
-      "long": "Gain +1 die when attempting Interact actions on locked or sealed objectives.",
-      "name": "Prybar"
+      "long": "Gain +1 Quality die when attempting Interact actions on locked or sealed objectives.",
+      "name": "Breach"
     }
   }
 }

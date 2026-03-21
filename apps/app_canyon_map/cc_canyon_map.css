@@ -1,622 +1,430 @@
 /* ================================================================
-   COFFIN CANYON — CANYON MAP
-   File: coffin/apps/app_canyon_map/cc_canyon_map.css
+   COFFIN CANYON — CANYON MAP (COMPLETE ALIGNED VERSION)
    ================================================================ */
 
-:root {
+/* ── Canyon Map Base Styles ───────────────────────────────────────────── */
 
-  /* ============================================================
-     MASTER DEVICE SCALE
-     JS adjusts this from the available map width.
-     Everything in the brass device scales from this variable.
-     ============================================================ */
-  --device-scale: 1;
-
-  /* ============================================================
-     DESIGN GEOMETRY (BASE VALUES, UNITLESS)
-     These are your “master blueprint” measurements.
-     JS/CSS scale them into real px values below.
-     ============================================================ */
-  --lens-w-base: 920;
-  --lens-h-base: 550;
-
-  --lens-overscan-x-base: 90;
-  --lens-overscan-y-base: 80;
-
-  --scroll-v-h-base: 500;
-  --scroll-v-w-base: 90;
-  --scroll-v-offset-x-base: 480;
-
-  --scroll-h-h-base: 90;
-  --scroll-h-w-base: 830;
-  --scroll-h-offset-y-base: 341;
-
-  --knob-w-base: 92;
-  --knob-h-base: 150;
-  --knob-horiz-w-base: 92;
-  --knob-horiz-h-base: 150;
-  --knob-offset-x-base: 9;
-
-  /* ============================================================
-     SCALED GEOMETRY
-     Everything below is what the app actually uses.
-     ============================================================ */
-  --lens-w: calc(var(--lens-w-base) * 1px * var(--device-scale));
-  --lens-h: calc(var(--lens-h-base) * 1px * var(--device-scale));
-
-  --lens-overscan-x: calc(var(--lens-overscan-x-base) * 1px * var(--device-scale));
-  --lens-overscan-y: calc(var(--lens-overscan-y-base) * 1px * var(--device-scale));
-
-  --scroll-v-h: calc(var(--scroll-v-h-base) * 1px * var(--device-scale));
-  --scroll-v-w: calc(var(--scroll-v-w-base) * 1px * var(--device-scale));
-  --scroll-v-offset-x: calc(var(--scroll-v-offset-x-base) * 1px * var(--device-scale));
-
-  --scroll-h-h: calc(var(--scroll-h-h-base) * 1px * var(--device-scale));
-  --scroll-h-w: calc(var(--scroll-h-w-base) * 1px * var(--device-scale));
-  --scroll-h-offset-y: calc(var(--scroll-h-offset-y-base) * 1px * var(--device-scale));
-
-  --knob-w: calc(var(--knob-w-base) * 1px * var(--device-scale));
-  --knob-h: calc(var(--knob-h-base) * 1px * var(--device-scale));
-  --knob-horiz-w: calc(var(--knob-horiz-w-base) * 1px * var(--device-scale));
-  --knob-horiz-h: calc(var(--knob-horiz-h-base) * 1px * var(--device-scale));
-  --knob-offset-x: calc(var(--knob-offset-x-base) * 1px * var(--device-scale));
-
-  /* ============================================================
-     APPEARANCE
-     ============================================================ */
-  --cc-map-border: #4a3728;
-  --lens-radius: 90px;
-  --lens-contrast: 0.85;
-
-  --shadow-inset: inset 0 0 60px #000;
-  --shadow-outer: 0 10px 30px rgba(0,0,0,0.8);
+/* Kill Leaflet's grey/white container glow */
+#cc-bg-map.leaflet-container,
+#cc-lens-map.leaflet-container {
+    background: #0d0b0a !important;
+    box-shadow: none !important;
 }
 
-/* ================================================================
-   APP WRAPPER
-   ================================================================ */
+/* Decorative overlay layers must NEVER intercept pointer events */
+.cc-lens-chromatic,
+.cc-lens-glare,
+.cc-frame-overlay,
+.cc-frame-image {
+    pointer-events: none !important;
+}
+
+/* Constrain the loader logo size */
+.cc-cm-loader img {
+    width: 280px !important;
+    max-width: 72vw !important;
+    filter: drop-shadow(0 0 22px rgba(255,117,24,.35)) !important;
+}
+
+/* ── Slide panel (location drawer) ────────────────────────────────────── */
+#cc-location-panel {
+    position: fixed !important;
+    top: 0 !important;
+    right: -520px !important;
+    width: 450px !important;
+    max-width: 90vw !important;
+    height: 100vh !important;
+    background: #16130e !important;
+    border-left: 2px solid #d4822a !important;
+    box-shadow: -8px 0 40px rgba(0,0,0,.8) !important;
+    z-index: 99999 !important;
+    transition: right .3s ease-in-out !important;
+    overflow-y: auto !important;
+    padding: 20px !important;
+    color: #e8d9c4 !important;
+    font-family: 'Space Mono', monospace !important;
+}
+
+#cc-location-panel.cc-slide-panel-open { right: 0 !important; }
+
+#cc-location-panel .cc-slide-panel-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 20px !important;
+    padding-bottom: 12px !important;
+    border-bottom: 1px solid #2e2820 !important;
+}
+
+#cc-location-panel .cc-panel-close-btn {
+    background: transparent !important;
+    border: 1px solid #4a3e2e !important;
+    color: #9e8e78 !important;
+    padding: 4px 10px !important;
+    border-radius: 4px !important;
+    cursor: pointer !important;
+    font-size: 16px !important;
+    line-height: 1 !important;
+}
+
+#cc-location-panel .cc-panel-title {
+    font-size: 1.2rem !important;
+    color: #d4822a !important;
+    margin: 0 !important;
+}
+
+#cc-location-panel .cc-panel-body { padding: 0 !important; }
+#cc-location-panel .cc-block { margin-bottom: 1rem !important; }
+#cc-location-panel .cc-h {
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: .1em !important;
+    color: #d4822a !important;
+    margin-bottom: 6px !important;
+}
+
+/* ── Map location labels ─────────────────────────────────────────────── */
+.cc-map-hitbox-label {
+    display: inline-block !important;
+    background: #c85a00 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    font-family: 'Space Mono', monospace !important;
+    letter-spacing: .06em !important;
+    text-transform: uppercase !important;
+    padding: 2px 6px !important;
+    white-space: nowrap !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+}
+
+.leaflet-div-icon:has(.cc-map-hitbox-label) {
+    background: none !important;
+    border: none !important;
+}
+
+.cc-canyon-map.cc-hitbox-edit .cc-map-hitbox-label { display: none !important; }
+
+/* ── Lens sizing ─────────────────────────────────────────────────────── */
+.cc-lens {
+    width: calc(816px * var(--device-scale, 1)) !important;
+    height: calc(496px * var(--device-scale, 1)) !important;
+}
+
+@media(max-width: 900px) {
+    .cc-lens {
+        width: calc(672px * var(--device-scale, 1)) !important;
+        height: calc(416px * var(--device-scale, 1)) !important;
+    }
+}
+
+/* ── Mobile adjustments ──────────────────────────────────────────────── */
+@media(max-width: 600px) {
+    .cc-scroll-vertical {
+        left: auto !important;
+        right: 2% !important;
+        top: 50% !important;
+        transform: translate(0, -50%) !important;
+        width: calc(44px * var(--device-scale, 1)) !important;
+        height: min(calc(400px * var(--device-scale, 1)), 70%) !important;
+    }
+    .cc-scroll-horizontal {
+        left: 50% !important;
+        bottom: 2% !important;
+        top: auto !important;
+        transform: translate(-50%, 0) !important;
+        width: min(calc(700px * var(--device-scale, 1)), 88%) !important;
+        height: calc(44px * var(--device-scale, 1)) !important;
+    }
+    .cc-frame-image {
+        width: min(calc(980px * var(--device-scale, 1)), 98%) !important;
+    }
+}
+
+/* ── Interactions and States ─────────────────────────────────────────── */
+#cc-lens-map .leaflet-image-layer { pointer-events: none !important; }
+.cc-canyon-map {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    pointer-events: none !important;
+}
+.cc-scroll-knob-img {
+    transition: filter .15s ease, transform .15s ease !important;
+    pointer-events: none !important;
+}
+.cc-scroll-knob.is-active .cc-scroll-knob-img {
+    filter: drop-shadow(0 4px 10px rgba(0,0,0,.7)) drop-shadow(0 0 20px rgba(255,117,24,.9)) !important;
+    transform: scale(1.22) !important;
+}
+
 
 .cc-canyon-map {
-  position: relative;
-  width: 100%;
-  box-sizing: border-box;
-  color: var(--cc-text);
-  font-family: var(--cc-font-body);
-  touch-action: pan-x pan-y;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
+  position: relative !important;
+  font-family: var(--cc-font-body) !important;
 }
 
-.cc-cm-mapwrap,
-.cc-scroll-vertical,
-.cc-scroll-horizontal {
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
+.cc-cm-shell {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 12px !important;
 }
-
-.cc-block { margin-bottom: 10px; }
-.cc-h { font-weight: 800; margin-bottom: 4px; }
-
-/* ================================================================
-   LOADING / READY STATE
-   Hide the whole map device until it is fully ready so the frame
-   does not flash or pop before the loader fades out.
-   ================================================================ */
-
-.cc-canyon-map.cc-loading .cc-lens,
-.cc-canyon-map.cc-loading .cc-frame-overlay,
-.cc-canyon-map.cc-loading .cc-scroll-vertical,
-.cc-canyon-map.cc-loading .cc-scroll-horizontal,
-.cc-canyon-map.cc-loading #cc-cm-map {
-  opacity: 0;
-  visibility: hidden;
-}
-
-.cc-canyon-map.cc-ready .cc-lens,
-.cc-canyon-map.cc-ready .cc-frame-overlay,
-.cc-canyon-map.cc-ready .cc-scroll-vertical,
-.cc-canyon-map.cc-ready .cc-scroll-horizontal,
-.cc-canyon-map.cc-ready #cc-cm-map {
-  opacity: 1;
-  visibility: visible;
-}
-
-.cc-lens,
-.cc-frame-overlay,
-.cc-scroll-vertical,
-.cc-scroll-horizontal,
-#cc-cm-map {
-  transition: opacity 180ms ease, visibility 180ms ease;
-}
-
-/* ================================================================
-   HEADER
-   ================================================================ */
 
 .cc-cm-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 12px;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 12px !important;
+  flex-wrap: wrap !important;
 }
 
 .cc-cm-title {
-  font-family: var(--cc-font-title);
-  font-weight: 800;
-  letter-spacing: 0.04em;
+  font-family: var(--cc-font-title) !important; /* Cinzel */
+  font-weight: 900 !important;
+  letter-spacing: .05em !important;
+  color: var(--cc-primary) !important;
+  text-transform: uppercase;
 }
 
 .cc-cm-actions {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  display: flex !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
 }
-
-.cc-btn {
-  appearance: none;
-  border: 1px solid var(--cc-border-bright);
-  background: rgba(0,0,0,0.35);
-  color: var(--cc-text);
-  padding: 6px 10px;
-  border-radius: var(--cc-radius-lg);
-  font-family: var(--cc-font-mono);
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.cc-btn:hover { background: rgba(255,255,255,0.08); }
-.cc-btn:active { transform: translateY(1px); }
-
-.cc-btn.cc-btn-x {
-  width: 34px;
-  height: 34px;
-  padding: 0;
-  line-height: 32px;
-  text-align: center;
-  border-radius: 10px;
-}
-
-/* ================================================================
-   BODY
-   ================================================================ */
-
-.cc-cm-body {
-  position: relative;
-  width: 100%;
-  display: block;
-}
-
-.cc-cm-body--lens {
-  padding: 10px 12px 18px;
-}
-
-/* ================================================================
-   MAP CONTAINER
-   ================================================================ */
 
 .cc-cm-mapwrap {
   position: relative !important;
-  width: 100%;
+  width: 100% !important;
   height: 85vh !important;
-  min-height: 750px !important;
+  min-height: 720px !important;
+  background: var(--cc-bg-darker) !important;
+  border: 12px solid var(--cc-border) !important; /* Kept your thick border, but using brand brown */
+  border-radius: 12px !important;
   overflow: hidden !important;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #000;
-  border: 10px solid var(--cc-map-border);
-  border-radius: var(--cc-radius-lg);
-  box-shadow: var(--shadow-inset), var(--shadow-outer);
-  isolation: isolate;
+  isolation: isolate !important;
+  box-shadow: var(--cc-shadow);
 }
 
-/* ================================================================
-   BACKGROUND MAP
-   ================================================================ */
-
-#cc-cm-map {
+.cc-cm-map {
   position: absolute !important;
   inset: 0 !important;
-  width: 100% !important;
-  height: 100% !important;
   z-index: 1 !important;
-  pointer-events: none;
-  will-change: transform;
 }
 
-#cc-cm-map .leaflet-control-container {
-  display: none !important;
-}
-
-#cc-cm-map .leaflet-container,
-#cc-cm-map .leaflet-pane,
-#cc-cm-map .leaflet-map-pane {
-  width: 100% !important;
-  height: 100% !important;
-}
-
-/* Make absolutely sure wheel / touchpad / pinch zoom do nothing visually */
-#cc-cm-map .leaflet-container,
-#cc-lens-map .leaflet-container {
-  touch-action: none !important;
-}
-
-/* ================================================================
-   LENS
-   ================================================================ */
-
+/* --- THE LENS SYSTEM --- */
 .cc-lens {
   position: absolute !important;
-  left: 50% !important;
-  top: 50% !important;
+  top: 46% !important;
+  left: 53% !important;
+  width: calc(1020px * var(--device-scale, 1)) !important;
+  height: calc(620px * var(--device-scale, 1)) !important;
   transform: translate(-50%, -50%) !important;
-  width: var(--lens-w) !important;
-  height: var(--lens-h) !important;
-  z-index: 30 !important;
+  z-index: 10 !important;
   overflow: hidden !important;
-  border-radius: var(--lens-radius);
-  pointer-events: none;
-  box-shadow:
-    inset 0 0 0 2px rgba(255,255,255,0.06),
-    inset 0 0 30px rgba(0,0,0,0.25);
+  pointer-events: none !important;
+  mask-image: radial-gradient(circle, black 64%, transparent 96%);
+  -webkit-mask-image: -webkit-radial-gradient(circle, black 64%, transparent 96%);
+  filter: drop-shadow(0 0 15px rgba(0,0,0,.45));
 }
 
-.cc-lens-inner {
-  position: absolute;
-  inset: 8px;
-  border-radius: 14px;
-  overflow: hidden;
-  pointer-events: auto;
+.cc-lens-inner, .cc-lens-overscan, .cc-lens-map {
+  position: absolute !important;
+  inset: 0 !important;
+  pointer-events: auto !important;
 }
 
-.cc-lens-inner::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 14px;
-  background: radial-gradient(
-    ellipse at center,
-    transparent 38%,
-    rgba(0,0,0,0.20) 65%,
-    rgba(0,0,0,0.55) 100%
-  );
-  pointer-events: none;
-  z-index: 10;
-}
+.cc-lens-map { z-index: 10 !important; }
 
 .cc-lens-chromatic {
-  position: absolute;
-  inset: 8px;
-  border-radius: 14px;
-  pointer-events: none;
-  z-index: 20;
+  position: absolute !important;
+  inset: -2px !important;
+  z-index: 11 !important;
+  pointer-events: none !important;
+  border-radius: 50% !important;
   box-shadow:
-    inset 0 0 28px rgba(220,80,20,0.18),
-    inset 0 0 55px rgba(30,60,200,0.10);
-  mix-blend-mode: screen;
+    inset 4px 0 8px rgba(212, 130, 42, 0.15),
+    inset -4px 0 8px rgba(201, 162, 39, 0.15);
 }
 
 .cc-lens-glare {
-  position: absolute;
-  inset: 8px;
-  border-radius: 14px;
-  pointer-events: none;
-  z-index: 21;
-  background:
-    radial-gradient(circle at 24% 20%, rgba(255,255,255,0.16), transparent 22%),
-    linear-gradient(135deg, rgba(255,255,255,0.08), transparent 35%);
-  mix-blend-mode: screen;
-}
-
-.cc-lens-overscan {
   position: absolute !important;
-  left: calc(var(--lens-overscan-x) * -1) !important;
-  top: calc(var(--lens-overscan-y) * -1) !important;
-  width: calc(100% + (var(--lens-overscan-x) * 2)) !important;
-  height: calc(100% + (var(--lens-overscan-y) * 2)) !important;
-  filter: contrast(var(--lens-contrast)) saturate(1.1) brightness(1.02);
-  transform: perspective(600px) rotateX(0deg);
+  inset: 0 !important;
+  pointer-events: none !important;
+  z-index: 12 !important;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,.14) 0%,
+    rgba(255,255,255,0) 52%,
+    rgba(0,0,0,.08) 100%
+  ) !important;
 }
 
-/* ================================================================
-   METAL FRAME
-   Frame sits above the lens and knobs visually, but does not block input.
-   ================================================================ */
-
+/* --- OVERLAYS & CONTROLS --- */
 .cc-frame-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  pointer-events: none;
+  position: absolute !important;
+  inset: 0 !important;
+  z-index: 50 !important;
+  pointer-events: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .cc-frame-image {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: min(96%, calc(1200px * var(--device-scale)));
-  max-width: none;
-  height: auto;
-  transform: translate(-50%, -46%);
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-drag: none;
+  width: calc(1180px * var(--device-scale, 1)) !important;
+  max-width: 100% !important;
+  height: auto !important;
+  display: block !important;
+  pointer-events: none !important;
 }
 
-/* ================================================================
-   VERTICAL SCROLLER
-   ================================================================ */
+.cc-scroll-vertical, .cc-scroll-horizontal {
+  position: absolute !important;
+  z-index: 60 !important;
+  pointer-events: auto !important;
+}
 
 .cc-scroll-vertical {
-  position: absolute !important;
-  left: 50% !important;
   top: 50% !important;
-  transform: translate(calc(-50% + var(--scroll-v-offset-x)), -50%) !important;
-  width: var(--scroll-v-w) !important;
-  height: var(--scroll-v-h) !important;
-  z-index: 60 !important;
-  pointer-events: auto !important;
+  left: 55% !important;
+  width: calc(60px * var(--device-scale, 1)) !important;
+  height: calc(560px * var(--device-scale, 1)) !important;
+  transform: translate(-50%, -50%) translateX(calc(470px * var(--device-scale, 1))) !important;
 }
-
-.cc-scroll-vertical .cc-scroll-track {
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  background: rgba(0,0,0,0);
-}
-
-/* ================================================================
-   HORIZONTAL SCROLLER
-   ================================================================ */
 
 .cc-scroll-horizontal {
-  position: absolute !important;
-  left: 50% !important;
   top: 50% !important;
-  transform: translate(-50%, calc(-50% + var(--scroll-h-offset-y))) !important;
-  width: var(--scroll-h-w) !important;
-  height: var(--scroll-h-h) !important;
-  z-index: 60 !important;
-  pointer-events: auto !important;
+  left: 53% !important;
+  width: calc(900px * var(--device-scale, 1)) !important;
+  height: calc(60px * var(--device-scale, 1)) !important;
+  transform: translate(-50%, -50%) translateY(calc(335px * var(--device-scale, 1))) !important;
 }
-
-.cc-scroll-horizontal .cc-scroll-track {
-  position: absolute;
-  inset: 0;
-  border-radius: 18px;
-  background: rgba(0,0,0,0);
-}
-
-/* ================================================================
-   KNOBS
-   ================================================================ */
 
 .cc-scroll-knob {
-  position: absolute;
-  background-image: url("https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_canyon_map/data/blappo_knob.png");
-  background-size: contain;
-  background-repeat: no-repeat;
-  background-position: center;
-  cursor: grab;
-  filter: drop-shadow(0 6px 10px rgba(0,0,0,0.5));
-  transition: filter 140ms ease, transform 140ms ease;
-  will-change: top, left;
-  touch-action: none;
-  user-select: none;
-  -webkit-user-select: none;
+  position: absolute !important;
+  width: calc(144px * var(--device-scale, 1)) !important;
+  height: calc(144px * var(--device-scale, 1)) !important;
+  z-index: 61 !important;
+  cursor: grab !important;
+  touch-action: none !important;
+  user-select: none !important;
 }
 
-.cc-scroll-knob:hover {
-  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)) brightness(1.05);
+.cc-scroll-knob.is-active, .cc-scroll-knob:active { cursor: grabbing !important; }
+
+#cc-scroll-knob-v { left: 48% !important; top: 50% !important; transform: translate(-50%, -50%) !important; }
+#cc-scroll-knob-h { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; }
+
+.cc-scroll-knob-img {
+  width: 100% !important;
+  height: 100% !important;
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,.7)) sepia(0.3) !important;
 }
 
-.cc-scroll-knob.is-active {
-  cursor: grabbing !important;
-  filter: drop-shadow(0 8px 12px rgba(0,0,0,0.65)) brightness(1.08);
+/* --- PRELOADER (DEFERRED TO UI.CSS) --- */
+.cc-cm-loader { display: none !important; }
+
+/* --- LABELS & HITBOXES --- */
+.cc-map-hitbox-label {
+  background: var(--cc-bg-soft) !important;
+  border: 1px solid var(--cc-primary) !important;
+  color: var(--cc-text) !important;
+  font-family: var(--cc-font-mono) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 2px 5px !important;
+  border-radius: 4px !important;
+  text-align: center !important;
+  max-width: 88px !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.4) !important;
 }
 
-#cc-scroll-knob-v {
-  width: var(--knob-w) !important;
-  height: var(--knob-h) !important;
-  left: calc(50% + var(--knob-offset-x)) !important;
-  top: 50%;
-  transform: translate(-50%, -50%) !important;
-}
-
-#cc-scroll-knob-v:hover {
-  transform: translate(-50%, -50%) scale(1.03) !important;
-}
-
-#cc-scroll-knob-v.is-active {
-  transform: translate(-50%, -50%) scale(1.05) !important;
-}
-
-#cc-scroll-knob-h {
-  width: var(--knob-horiz-w) !important;
-  height: var(--knob-horiz-h) !important;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%) !important;
-}
-
-#cc-scroll-knob-h:hover {
-  transform: translate(-50%, -50%) scale(1.03) !important;
-}
-
-#cc-scroll-knob-h.is-active {
-  transform: translate(-50%, -50%) scale(1.05) !important;
-}
-
-/* ================================================================
-   DRAWER
-   ================================================================ */
-
-.cc-cm-drawer {
-  position: fixed;
-  top: 0;
-  right: -450px;
-  width: 400px;
-  height: 100vh;
-  background: var(--cc-bg-soft);
-  border-left: 3px solid var(--cc-primary);
-  box-shadow: -10px 0 50px rgba(0,0,0,0.8);
-  overflow-y: auto;
-  z-index: 9999;
-  transition: right 0.3s ease-in-out;
-}
-
-.cc-cm-drawer.open {
-  right: 0;
-}
-
-.cc-cm-drawer-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  border-bottom: 1px solid var(--cc-border);
-}
-
-.cc-cm-drawer-title {
-  font-family: var(--cc-font-title);
-  font-weight: 900;
-  color: var(--cc-primary);
-}
-
-.cc-cm-drawer-content {
-  padding: 10px 12px 14px;
-}
-
-/* ================================================================
-   iOS / MOBILE SHARPNESS FALLBACK
-   ================================================================ */
-
-.cc-ios #cc-lens-map,
-.cc-ios #cc-lens-map .leaflet-container {
-  filter: contrast(var(--lens-contrast)) saturate(1.08) !important;
-}
-
-/* ================================================================
-   DEV: HITBOX EDIT MODE
-   ================================================================ */
-
-.cc-canyon-map.cc-hitbox-edit .cc-lens,
-.cc-canyon-map.cc-hitbox-edit .cc-frame-overlay,
-.cc-canyon-map.cc-hitbox-edit .cc-scroll-vertical,
-.cc-canyon-map.cc-hitbox-edit .cc-scroll-horizontal {
-  display: none !important;
-}
-
-.cc-canyon-map.cc-hitbox-edit #cc-cm-map {
-  position: absolute;
-  inset: 0;
-  z-index: 50;
-  opacity: 1 !important;
-  visibility: visible !important;
-}
-
-#cc-hitbox-editor {
-  position: absolute;
-  inset: 0;
-  z-index: 999999;
-  pointer-events: auto;
+/* --- EDITOR TOOLS --- */
+.cc-hitbox-editor-layer { position: absolute !important; inset: 0 !important; z-index: 999 !important; }
+.cc-hitbox-editor-badge {
+  position: absolute !important;
+  left: 10px !important;
+  bottom: 10px !important;
+  z-index: 1000 !important;
+  background: var(--cc-bg-darker) !important;
+  color: var(--cc-gold) !important;
+  padding: 6px 10px !important;
+  border-radius: 6px !important;
+  font-family: var(--cc-font-mono) !important;
+  font-size: 12px !important;
 }
 
 .cc-hb-box {
-  position: absolute;
-  outline: 2px solid rgba(0,0,0,.7);
-  background: rgba(255,255,0,.18);
-  border-radius: var(--cc-radius-lg);
-  box-sizing: border-box;
-  cursor: grab;
-  user-select: none;
-}
-
-.cc-hb-box:active {
-  cursor: grabbing;
+  position: absolute !important;
+  outline: 2px solid var(--cc-gold) !important;
+  background: rgba(201, 162, 39, 0.15) !important;
+  border-radius: 6px !important;
+  cursor: grab !important;
 }
 
 .cc-hb-label {
-  position: absolute;
-  left: 0;
-  top: -18px;
-  padding: 2px 6px;
-  border-radius: var(--cc-radius-lg);
-  background: rgba(0,0,0,.75);
-  color: var(--cc-text);
-  font: 12px/1 var(--cc-font-mono);
-  white-space: nowrap;
-  pointer-events: none;
+  position: absolute !important;
+  left: 0 !important;
+  top: -18px !important;
+  padding: 2px 6px !important;
+  border-radius: 4px !important;
+  background: var(--cc-gold) !important;
+  color: var(--cc-bg-darker) !important;
+  font-family: var(--cc-font-mono) !important;
+  font-size: 10px !important;
+  white-space: nowrap !important;
 }
 
 .cc-hb-handle {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  right: -6px;
-  bottom: -6px;
-  background: rgba(0,0,0,.85);
-  border-radius: var(--cc-radius);
-  cursor: nwse-resize;
+  position: absolute !important;
+  width: 12px !important;
+  height: 12px !important;
+  right: -6px !important;
+  bottom: -6px !important;
+  background: var(--cc-gold) !important;
+  border-radius: 3px !important;
+  cursor: nwse-resize !important;
 }
 
-/* ================================================================
-   RESPONSIVE
-   Most device scaling is now handled by --device-scale in JS.
-   These breakpoints only adjust the outer app chrome.
-   ================================================================ */
+/* --- EDITOR MODE STATE --- */
+.cc-canyon-map.cc-hitbox-edit .cc-cm-map { opacity: 0 !important; pointer-events: none !important; }
+.cc-canyon-map.cc-hitbox-edit .cc-frame-overlay,
+.cc-canyon-map.cc-hitbox-edit .cc-scroll-vertical,
+.cc-canyon-map.cc-hitbox-edit .cc-scroll-horizontal { display: none !important; }
 
-@media (max-width: 768px) {
-  .cc-cm-drawer {
-    width: 100vw;
-    right: -100vw;
-  }
-
-  .cc-cm-mapwrap {
-    min-height: 420px !important;
-    height: 68vh !important;
-  }
-
-  .cc-frame-image {
-    width: min(98%, calc(1220px * var(--device-scale)));
-    transform: translate(-50%, -45%);
-  }
-
-  .cc-cm-header {
-    padding: 8px;
-  }
-
-  .cc-cm-title {
-    font-size: 14px;
-  }
-
-  .cc-btn {
-    font-size: 12px;
-    padding: 6px 12px;
-  }
+.cc-canyon-map.cc-hitbox-edit .cc-lens {
+  top: 0 !important;
+  left: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  transform: none !important;
+  z-index: 20 !important;
+  mask-image: none !important;
+  -webkit-mask-image: none !important;
+  filter: none !important;
 }
 
-@media (max-width: 480px) {
-  .cc-cm-header {
-    flex-direction: column;
-    align-items: stretch;
+/* --- RESPONSIVE MOBILE ADJUSTMENTS --- */
+@media (max-width: 900px) {
+  .cc-cm-mapwrap { height: 72vh !important; min-height: 420px !important; }
+  .cc-lens {
+    width: calc(840px * var(--device-scale, 1)) !important;
+    height: calc(520px * var(--device-scale, 1)) !important;
   }
-
-  .cc-cm-actions {
-    width: 100%;
-    justify-content: stretch;
+  .cc-frame-image { width: calc(980px * var(--device-scale, 1)) !important; }
+  .cc-scroll-vertical {
+    width: calc(52px * var(--device-scale, 1)) !important;
+    height: calc(470px * var(--device-scale, 1)) !important;
+    transform: translate(-50%, -50%) translateX(calc(390px * var(--device-scale, 1))) !important;
   }
-
-  .cc-cm-actions .cc-btn {
-    flex: 1;
+  .cc-scroll-horizontal {
+    width: calc(760px * var(--device-scale, 1)) !important;
+    height: calc(52px * var(--device-scale, 1)) !important;
+    transform: translate(-50%, -50%) translateY(calc(282px * var(--device-scale, 1))) !important;
   }
-
-  .cc-cm-mapwrap {
-    min-height: 360px !important;
-    height: 62vh !important;
-  }
+  .cc-scroll-knob { width: calc(112px * var(--device-scale, 1)) !important; height: calc(112px * var(--device-scale, 1)) !important; }
+  .cc-map-hitbox-label { font-size: 9px !important; max-width: 72px !important; }
 }

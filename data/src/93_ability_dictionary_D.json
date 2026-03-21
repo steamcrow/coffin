@@ -182,23 +182,11 @@
       "short": "Immune to pressure hazards.",
       "long": "Passive. Immune to pressure, water, and depth-related environmental hazards."
     },
-    "built_in_respirator": {
-      "_id": "R-ABIL-D-BUILT-IN-RESPIRATOR",
-      "timing": "passive",
-      "short": "Immune to airborne hazards.",
-      "long": "Passive. Immune to gas, smoke, poison storms, and airborne hazard effects."
-    },
-    "built_in_goggles": {
-      "_id": "R-ABIL-D-BUILT-IN-GOGGLES",
-      "timing": "passive",
-      "short": "Immune to blinding effects.",
-      "long": "Passive. Immune to Blinding effects and visual-based environmental hazards."
-    },
     "gas_mask": {
       "_id": "R-ABIL-D-GAS-MASK",
       "timing": "passive",
       "short": "Protection from gas and smoke.",
-      "long": "Passive. This unit ignores Coffin Cough, Choking Dust effects and other environmental gas/smoke/toxic effects to lungs and eyes as determined by scenario rules."
+      "long": "Passive. This unit ignores Coffin Cough, Choking Dust, gas, smoke, poison storms, and all airborne hazards. Also immune to Blinding effects and visual-based environmental hazards. Shine Riders have this built in at no cost."
     },
     "witch_stitched": {
       "_id": "R-ABIL-D-WITCH-STITCHED",

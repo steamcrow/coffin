@@ -505,6 +505,142 @@
         }
       ]
     },
+  {
+    "name": "Vendomat",
+    "faction": "Monsters",
+    "type": "Vendor",
+    "cost": 0,
+    "quality": 3,
+    "defense": 3,
+    "move": 6,
+    "range": 0,
+    "weapon": "Harvest Hatchet",
+    "weapon_properties": [ "Melee" ],
+    "composition": {
+      "max_count": 1,
+      "per_points": 9999,
+      "note": "Scenario-placed only. Not drafted into rosters."
+    },
+    "abilities": [
+      {
+        "name": "Dispense",
+        "effect": "Any unit in base contact may spend 1 Action to buy 1 item for 2 Gildren. Each item has 2 uses per game. Options: VitaGood (restore 1 Quality, remove one status condition), Spare Parts (gain 1 Spare Parts token), Food (gain 1 Food token, remove Starving if applicable)."
+      },
+      {
+        "name": "Wandering Route",
+        "effect": "At the start of each round, before initiative, move the Vendomat d6\" in a random direction (roll d8). It cannot leave the board or enter impassable terrain. Skip this roll if any unit is in base contact."
+      },
+      {
+        "name": "Harvest Hatchet",
+        "effect": "If attacked, the Vendomat strikes back immediately with its hatchet before resolving the attacker's action. Treat as a standard melee attack (Quality 3, 1 hit die). This is a reaction, not an activation."
+      },
+      {
+        "name": "Final Dispensing",
+        "effect": "When the Vendomat is destroyed, it immediately explodes. Every model within 10\" takes 1 automatic hit, no test required. Remove the Vendomat. It does not count as a kill for any faction. This is why people don't attack it."
+      },
+      {
+        "name": "Pumpkin-Headed Maton",
+        "effect": "The Vendomat is roughly 10 feet tall and counts as Large for Line of Sight purposes. It ignores Coffin Cough, Poison, Venom, Fear, and all morale effects. It cannot be Shaken."
+      }
+    ],
+    "lore": "The Vendomat appeared one morning without explanation — ten feet of clanking iron and carved pumpkin, wandering the canyon floor with a stock of supplies and a coin slot in its chest. Nobody knows who built it. Nobody knows how it restocks. Nobody attacks it twice. The blast radius is ten inches and the hatchet moves faster than it should.",
+    "tactics": "The Vendomat wanders freely across the board at Move 6\". Any faction can spend an action and 2 Gildren to buy supplies — first come, first served. Stock is limited. It will fight back if attacked, and its death explosion punishes the whole board. Smart players leave it alone and race to reach it.",
+    "temperament": "Wandering",
+    "flags": [
+      "NeutralNPC",
+      "CannotBeBefriended",
+      "ScenarioPlacedOnly",
+      "Large",
+      "ExplosiveOnDeath"
+    ],
+    "unit_tags": [
+      "vendor", "neutral", "mechanical", "wandering", "npc", "large", "hazardous"
+    ],
+    "terrain_preferences": [ "open", "roads", "anywhere_passable" ],
+    "objective_keywords": [ "trade", "resource", "neutral" ],
+    "state_advantages": {
+      "good_in": [ "any" ],
+      "bad_in": []
+    },
+    "npc_appearance": {
+      "base_chance": 0.30,
+      "danger_modifier": 0.04,
+      "min_danger": 1,
+      "max_danger": 6,
+      "placement": "random_board_quarter",
+      "note": "Rolls at scenario generation like Coffin Cough. 30% base, +4% per danger above 2."
+    }
+  },
+  {
+    "name": "Monte Haul",
+    "faction": "Monsters",
+    "type": "Vendor",
+    "cost": 0,
+    "quality": 4,
+    "defense": 5,
+    "move": 0,
+    "range": 0,
+    "weapon": "Brass Fists",
+    "weapon_properties": [ "Melee", "Impact" ],
+    "composition": {
+      "max_count": 1,
+      "per_points": 9999,
+      "note": "Scenario-placed only. Not drafted into rosters."
+    },
+    "abilities": [
+      {
+        "name": "Black Market",
+        "effect": "Any unit in base contact may spend 1 Action to buy from Monte Haul's stock. Cost: 4 Gildren per item. He carries 3 items total per game. Roll 1d6 to see what's available: 1-2 = Weapons Cache (unit gains +1 damage on its next attack roll); 3-4 = Venom Flask (apply Poisoned to one enemy unit within 3\" as a free action this activation); 5-6 = Special Gear (one single-use of any standard universal ability — declare on purchase). Once 3 items are sold, Monte Haul is out of stock."
+      },
+      {
+        "name": "Cannot Walk",
+        "effect": "Monte Haul has Move 0. He is fixed to the board where he is placed at scenario start. He does not move for any reason — not even push effects. He is bolted to the ground."
+      },
+      {
+        "name": "Brass Golem Construction",
+        "effect": "Monte Haul is a powerful brass golem. He ignores the first 2 points of damage each activation. He cannot be Shaken, Panicked, Poisoned, or affected by Fear. He ignores Coffin Cough entirely."
+      },
+      {
+        "name": "Brass Fists",
+        "effect": "If Monte Haul is attacked, he immediately strikes back before the attacker resolves their action. Treat as a melee attack using Quality 4 with Impact — on a hit, the attacker is pushed back 3\" and becomes Staggered. This is a reaction, not an activation."
+      },
+      {
+        "name": "Lockdown",
+        "effect": "When Monte Haul's Quality is reduced to 2 or below, he slams his panels shut and retracts into his base. He can no longer trade or be interacted with. He becomes Defense 6 in this state and cannot take further damage from melee. He stays on the board but is effectively inert for the rest of the game."
+      },
+      {
+        "name": "Nobody's Enemy",
+        "effect": "Monte Haul never activates aggressively and never counts as a kill. He does not score or cost VP. Factions that destroy him before he goes into Lockdown lose 2 VP for damaging a neutral party."
+      }
+    ],
+    "lore": "Monte Haul is a brass mechan in the shape of a broad-shouldered merchant, spring-mounted to a heavy base, with a coin slot in his menu panel and a permanent grin cast into his faceplate. He sells things that probably shouldn't exist. He takes Gildren only. He gives no receipts. He has never moved from a spot once planted. Nobody has robbed him successfully. The ones who tried found out about the brass fists.",
+    "tactics": "Monte Haul is placed at scenario start and stays there all game. Both factions can trade with him — whoever gets there first has the advantage. He's very hard to kill (Defense 5, ignores first 2 damage per activation), hits back hard, and goes into Lockdown at low health rather than dying. Don't waste activations trying to destroy him.",
+    "temperament": "Neutral",
+    "flags": [
+      "NeutralNPC",
+      "CannotBeBefriended",
+      "ScenarioPlacedOnly",
+      "Immovable",
+      "HasLockdown"
+    ],
+    "unit_tags": [
+      "vendor", "neutral", "mechanical", "merchant", "npc", "unique", "immovable"
+    ],
+    "terrain_preferences": [ "anywhere" ],
+    "objective_keywords": [ "trade", "resource", "neutral", "black_market" ],
+    "state_advantages": {
+      "good_in": [ "Lawless", "Strangewild" ],
+      "bad_in": [ "Rusted" ]
+    },
+    "npc_appearance": {
+      "base_chance": 0.20,
+      "danger_modifier": 0.05,
+      "min_danger": 2,
+      "max_danger": 6,
+      "placement": "board_center_or_nearest_open",
+      "note": "Rolls at scenario generation like Coffin Cough. 20% base, +5% per danger above 2. Rare and valuable."
+    }
+  },   
     {
       "name": "Canyon Skeleton",
       "faction": "Monsters",

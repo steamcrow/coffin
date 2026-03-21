@@ -32,8 +32,11 @@ console.log("⚔️ Faction Builder app loaded");
   }
 }());
 
-window.CC_APP = {
-  init({ root, ctx }) {
+(function () {
+  var _destroyFn = null;
+
+  function mount(rootEl, ctx) {
+    var root = rootEl;
     console.log("🚀 Faction Builder init", ctx);
 
     // ---- SLIDE PANEL CSS — injected synchronously so panels work immediately
@@ -94,6 +97,54 @@ window.CC_APP = {
         @media (max-width: 768px) {
           .cc-slide-panel { width: 100vw !important; right: -100vw !important; }
         }
+
+        /* ---- Splash / preloader ---- */
+        .cc-loading-container {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem;
+          background: #0a0806;
+        }
+        .cc-loading-text {
+          color: rgba(255,255,255,0.4);
+          font-size: 0.8rem;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          margin-top: 1rem;
+        }
+        .cc-loading-bar {
+          width: 260px;
+          max-width: 80vw;
+          height: 3px;
+          background: rgba(255,117,24,0.15);
+          border-radius: 2px;
+          overflow: hidden;
+          position: relative;
+        }
+        .cc-loading-progress {
+          position: absolute;
+          top: 0; left: 0; bottom: 0;
+          width: 40%;
+          background: #ff7518;
+          border-radius: 2px;
+          animation: cc-bar-slide 1.4s ease-in-out infinite;
+        }
+        @keyframes cc-bar-slide {
+          0%   { left: -40%; width: 40%; }
+          50%  { left: 30%;  width: 50%; }
+          100% { left: 110%; width: 40%; }
+        }
+        @keyframes cc-logo-pulse {
+          0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
+          50%  { filter: drop-shadow(0 0 48px rgba(255,117,24,0.85)); transform: scale(1.03); }
+          100% { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
+        }
+        .cc-splash-logo {
+          animation: cc-logo-pulse 2.4s ease-in-out infinite;
+        }
       `;
       document.head.appendChild(panelStyle);
     }
@@ -151,12 +202,6 @@ window.CC_APP = {
           console.log('✅ Storage Helpers loaded!');
         })
         .catch(err => console.error('❌ Storage Helpers load failed:', err));
-    }
-
-    const helpers = ctx && ctx.helpers;
-    if (!helpers) {
-      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Helpers not available</h4></div></div>`;
-      return;
     }
 
     // ================================
@@ -444,23 +489,28 @@ window.CC_APP = {
     // ================================
     // LOGIN STATUS
     // ================================
+    // Auth result cached after first check — no repeated network calls per interaction.
+    let _authCache = null;
+
+    async function getAuth() {
+      if (_authCache) return _authCache;
+      if (!window.CC_STORAGE) return { loggedIn: false };
+      try {
+        _authCache = await window.CC_STORAGE.checkAuth();
+        return _authCache;
+      } catch (e) {
+        return { loggedIn: false };
+      }
+    }
+
     async function updateLoginStatus() {
-      if (!window.CC_STORAGE) return;
       const statusBar = document.getElementById('cc-login-status');
       if (!statusBar) return;
-      try {
-        const auth = await window.CC_STORAGE.checkAuth();
-        statusBar.className = auth.loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out';
-        statusBar.innerHTML = auth.loggedIn
-          ? `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`
-          : `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
-      } catch (e) {
-        const bar = document.getElementById('cc-login-status');
-        if (bar) {
-          bar.className = 'cc-login-status logged-out';
-          bar.innerHTML = `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
-        }
-      }
+      const auth = await getAuth();
+      statusBar.className = auth.loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out';
+      statusBar.innerHTML = auth.loggedIn
+        ? `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`
+        : `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
     }
 
     // ================================
@@ -1340,7 +1390,7 @@ window.CC_APP = {
     window.saveToCloud = async function() {
       try {
         if (!window.CC_STORAGE) { alert("Cloud storage not available. Please refresh the page."); return; }
-        const auth = await window.CC_STORAGE.checkAuth();
+        const auth = await getAuth();
         if (!auth.loggedIn) { alert("Please sign in to save rosters to the cloud!"); return; }
         if (!(state.rosterName && state.rosterName.trim())) { alert("Please give your roster a name first!"); return; }
         const exportData = {
@@ -1363,7 +1413,7 @@ window.CC_APP = {
     window.loadFromCloud = async function() {
       try {
         if (!window.CC_STORAGE) { alert("Cloud storage not available."); return; }
-        const auth = await window.CC_STORAGE.checkAuth();
+        const auth = await getAuth();
         if (!auth.loggedIn) { alert("Please sign in to load rosters!"); return; }
         const docs = await window.CC_STORAGE.loadDocumentList();
         if (!(docs && docs.length)) { alert("No saved rosters found."); return; }
@@ -1603,12 +1653,58 @@ window.CC_APP = {
     `;
 
     // ================================
-    // BOOT
+    // BOOT — overlay preloader, render underneath, then reveal
     // ================================
+    // The app shell is already in root.innerHTML above.
+    // We overlay a .cc-preloader on top of it so render() can run against
+    // the real DOM immediately, hidden behind the preloader.
+
+    const _fbBootStart   = Date.now();
+    const FB_MIN_SPLASH  = 2000; // 2s minimum — no heavy JSON to wait for
+
+    // Build the overlay preloader and append to root (not replace it)
+    const _fbPreloader = document.createElement('div');
+    _fbPreloader.id = 'cc-fb-preloader';
+    _fbPreloader.className = 'cc-preloader cc-preloader--page';
+    _fbPreloader.innerHTML = `
+      <img class="cc-preloader-logo"
+           src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+           alt="Coffin Canyon"
+           style="width:200px;max-width:70vw;">
+      <p class="cc-preloader-title">Faction Builder</p>
+      <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+        <div class="cc-loading-progress"></div>
+      </div>
+      <p class="cc-loading-text">Loading faction data&hellip;</p>
+    `;
+    root.appendChild(_fbPreloader);
+
+    // Run all startup tasks against the real (overlaid) shell immediately
     checkSharedRoster();
     render();
-    setTimeout(() => updateLoginStatus(), 500);
     loadAbilityDictionaries();
+
+    // After minimum hold, fade out and remove preloader, then update login
+    const _fbHold = Math.max(0, FB_MIN_SPLASH - (Date.now() - _fbBootStart));
+    setTimeout(function() {
+      _fbPreloader.classList.add('cc-preloader--hidden');
+      setTimeout(function() {
+        if (_fbPreloader.parentNode) _fbPreloader.parentNode.removeChild(_fbPreloader);
+        updateLoginStatus();
+      }, 480); // matches cc_ui.css transition: 0.45s
+    }, _fbHold);
+
     console.log("✅ Faction Builder mounted");
-  }
-};
+    return Promise.resolve();
+
+  } // end mount()
+
+  window.CC_APP = {
+    init: function (options) {
+      return mount(options.root, options.ctx || {});
+    },
+    destroy: function () {
+      if (typeof _destroyFn === 'function') { _destroyFn(); }
+    }
+  };
+})();

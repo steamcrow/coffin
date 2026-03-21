@@ -107,8 +107,11 @@ console.log("⏱️ Turn Counter loaded");
 }());
 
 // ═════════════════════════════════════════════════════════════════════════════
-window.CC_APP = {
-  init({ root, ctx }) {
+(function () {
+  var _destroyFn = null;
+
+  function mount(rootEl, ctx) {
+    var root = rootEl;
     console.log("🚀 Turn Counter init", ctx);
     window.CC_TC = {};
 
@@ -142,12 +145,6 @@ window.CC_APP = {
         .catch(err => console.error('❌ Storage helpers failed:', err));
     }
 
-    const helpers = ctx?.helpers;
-    if (!helpers) {
-      root.innerHTML = `<div class="cc-app-shell h-100"><div class="container py-5 text-danger"><h4>Helpers not available</h4></div></div>`;
-      return;
-    }
-
     // ═════════════════════════════════════════════════════════════════════════
     // CONSTANTS
     // ═════════════════════════════════════════════════════════════════════════
@@ -161,8 +158,8 @@ window.CC_APP = {
       crow_queen:      { name: 'Crow Queen',       color: '#00bcd4', isMonster: false, file: 'faction-crow-queen.json'        }
     };
 
-    const LOGO_BASE           = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/apps/';
-    const FACTION_LOADER_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/factions/';
+    const LOGO_BASE           = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
+    const FACTION_LOADER_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/';
     const SCENARIO_FOLDER     = 90;
     const FACTION_SAVE_FOLDER = 90;
     const TURN_SAVE_FOLDER    = 91;
@@ -1375,7 +1372,7 @@ window.CC_APP = {
             <div class="cc-tc-faction-row-head">
               <img src="${LOGO_BASE + pf.id}_logo.svg" alt="${fname}"
                 class="cc-faction-logo cc-tc-faction-logo--sm"
-                style="filter:drop-shadow(0 0 3px ${color}88)${isSkipped ? ' grayscale(1)' : ''};"
+                style="width:28px;height:28px;flex-shrink:0;object-fit:contain;filter:drop-shadow(0 0 3px ${color}88)${isSkipped ? ' grayscale(1)' : ''};"
                 onerror="this.onerror=null;this.outerHTML='<div style=\\'width:28px;height:28px;border-radius:50%;background:${color}22;border:2px solid ${color};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:.75rem;color:${color};flex-shrink:0;\\'>${fname[0]}</div>'" />
               <strong style="flex:1;color:${isSkipped ? '#555' : color};font-size:.9rem;">
                 ${fname}${isSkipped ? ` <span class="cc-tc-faction-name-skipped">(skipped)</span>` : ''}
@@ -1414,7 +1411,7 @@ window.CC_APP = {
               <div class="cc-tc-faction-row-head">
                 <img src="${LOGO_BASE + pf.id}_logo.svg" alt="${fname}"
                   class="cc-faction-logo cc-tc-faction-logo--lg"
-                  style="filter:drop-shadow(0 0 4px ${color}88);"
+                  style="width:44px;height:44px;flex-shrink:0;object-fit:contain;filter:drop-shadow(0 0 4px ${color}88);"
                   onerror="this.onerror=null;this.outerHTML='<div style=\\'width:44px;height:44px;border-radius:50%;background:${color}22;border:2px solid ${color};display:flex;align-items:center;justify-content:center;font-weight:900;font-size:1rem;color:${color};flex-shrink:0;\\'>${fname[0]}</div>'" />
                 <span style="color:${color};font-size:.8rem;font-weight:700;flex:1;">${fname}</span>
                 <button onclick="window.CC_TC.clearFactionSave('${pf.id}')"
@@ -1951,8 +1948,43 @@ window.CC_APP = {
       state.phase = 'round_end'; render();
     }
 
+    // ── Boot — canonical preloader overlay, short hold then dismiss ─────────
+    const _tcPreloader = document.createElement('div');
+    _tcPreloader.id = 'cc-tc-preloader';
+    _tcPreloader.className = 'cc-preloader cc-preloader--page';
+    _tcPreloader.innerHTML = `
+      <img class="cc-preloader-logo"
+           src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
+           alt="Coffin Canyon"
+           style="width:200px;max-width:70vw;">
+      <p class="cc-preloader-title">Turn Counter</p>
+      <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
+        <div class="cc-loading-progress"></div>
+      </div>
+      <p class="cc-loading-text">Assembling the canyon…</p>
+    `;
+    root.appendChild(_tcPreloader);
+
     state.phase = 'setup';
     render();
 
-  } // end init()
-}; // end window.CC_APP
+    setTimeout(function() {
+      _tcPreloader.classList.add('cc-preloader--hidden');
+      setTimeout(function() {
+        if (_tcPreloader.parentNode) _tcPreloader.parentNode.removeChild(_tcPreloader);
+      }, 480);
+    }, 1500);
+
+    return Promise.resolve();
+
+  } // end mount()
+
+  window.CC_APP = {
+    init: function (options) {
+      return mount(options.root, options.ctx || {});
+    },
+    destroy: function () {
+      if (typeof _destroyFn === 'function') { _destroyFn(); }
+    }
+  };
+})();
