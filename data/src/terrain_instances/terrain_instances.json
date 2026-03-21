@@ -1,0 +1,89 @@
+{
+  "schema_id": "cc_terrain_instances",
+  "schema_version": "1.0",
+  "map_id": "example_test_map",
+  "map_title": "Example Test Map",
+  "map_image": "assets/maps/example_test_map.png",
+  "map_size_px": {
+    "w": 4096,
+    "h": 4096
+  },
+  "grid": {
+    "enabled": false,
+    "cell_px": 64,
+    "snap": false
+  },
+  "instances": [
+    {
+      "instance_id": "terrain_001",
+      "terrain_type_id": "building_town_small_shop_01",
+      "x": 1024,
+      "y": 1340,
+      "rotation_deg": 0,
+      "scale": 1,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 20,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": ["main_street"],
+      "notes": "Starter placement."
+    },
+    {
+      "instance_id": "terrain_002",
+      "terrain_type_id": "feature_steam_engine_freight",
+      "x": 2200,
+      "y": 1900,
+      "rotation_deg": 90,
+      "scale": 1,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 18,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [
+        {
+          "slot_id": "engine_control",
+          "bound_to": "scenario_objective_rail_control"
+        }
+      ],
+      "tags": ["rail_line"],
+      "notes": "Freight engine objective."
+    },
+    {
+      "instance_id": "terrain_003",
+      "terrain_type_id": "feature_mesa_segment_01",
+      "x": 3100,
+      "y": 900,
+      "rotation_deg": 0,
+      "scale": 1.15,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 10,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": ["high_ground", "wild_edge"],
+      "notes": "Large mesa edge."
+    }
+  ]
+}
