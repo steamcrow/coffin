@@ -1088,14 +1088,25 @@ window.CCFB_FACTORY = {
         this.refresh(); 
     },
 
-    openSlidePanel: function(panelType) { 
-        this.state.activeModal = panelType; 
-        this.renderSlidePanel(); 
+    openSlidePanel: function(panelType) {
+        this.state.activeModal = panelType;
+        this.renderSlidePanel();
+        // Add backdrop — clicking it closes the panel
+        if (!document.getElementById('ccfb-panel-backdrop')) {
+            var bd = document.createElement('div');
+            bd.id = 'ccfb-panel-backdrop';
+            bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:rgba(0,0,0,0.45);';
+            bd.addEventListener('click', function() { window.CCFB_FACTORY.closeSlidePanel(); });
+            document.body.appendChild(bd);
+        }
     },
 
-    closeSlidePanel: function() { 
-        this.state.activeModal = null; 
-        this.renderSlidePanel(); 
+    closeSlidePanel: function() {
+        this.state.activeModal = null;
+        this.renderSlidePanel();
+        // Remove backdrop
+        var bd = document.getElementById('ccfb-panel-backdrop');
+        if (bd) bd.parentNode.removeChild(bd);
     },
 
     addItem: function(type, key) { 
@@ -1187,12 +1198,13 @@ window.CCFB_FACTORY = {
         if (this.state.selectedUnit === null) return;
         var s = this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities[index];
         if (!s) return;
-        // Snapshot the data before removing it
+        // Snapshot before removing
         var snap = JSON.parse(JSON.stringify(s));
-        // Remove the old entry and re-render
+        // Remove old entry, force step 5 open so the form is visible, then re-render
         this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
+        this.state.activeStep = 5;
         this.refresh();
-        // Populate the form AFTER refresh has re-built the DOM
+        // Populate form fields AFTER refresh has rebuilt the DOM
         setTimeout(function() {
             var nameEl   = document.getElementById('supp-name');
             var typeEl   = document.getElementById('supp-type');
