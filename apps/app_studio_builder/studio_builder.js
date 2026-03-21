@@ -1187,24 +1187,27 @@ window.CCFB_FACTORY = {
         if (this.state.selectedUnit === null) return;
         var s = this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities[index];
         if (!s) return;
-        var nameEl   = document.getElementById('supp-name');
-        var typeEl   = document.getElementById('supp-type');
-        var effectEl = document.getElementById('supp-effect');
-        if (nameEl)   nameEl.value   = s.name   || '';
-        if (typeEl)   typeEl.value   = s.type   || 'Gear';
-        if (effectEl) effectEl.value = s.effect || '';
-        var mods = s.stat_modifiers || {};
-        ['quality','defense','move','range'].forEach(function(stat) {
-            var cb  = document.getElementById('mod-' + stat);
-            var sel = document.getElementById('mod-' + stat + '-val');
-            if (cb)  cb.checked = (mods[stat] !== undefined);
-            if (sel && mods[stat] !== undefined) sel.value = String(mods[stat]);
-        });
+        // Snapshot the data before removing it
+        var snap = JSON.parse(JSON.stringify(s));
+        // Remove the old entry and re-render
         this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
         this.refresh();
+        // Populate the form AFTER refresh has re-built the DOM
         setTimeout(function() {
-            var el = document.getElementById('supp-name');
-            if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); el.focus(); }
+            var nameEl   = document.getElementById('supp-name');
+            var typeEl   = document.getElementById('supp-type');
+            var effectEl = document.getElementById('supp-effect');
+            if (nameEl)   nameEl.value   = snap.name   || '';
+            if (typeEl)   typeEl.value   = snap.type   || 'Gear';
+            if (effectEl) effectEl.value = snap.effect || '';
+            var mods = snap.stat_modifiers || {};
+            ['quality','defense','move','range'].forEach(function(stat) {
+                var cb  = document.getElementById('mod-' + stat);
+                var sel = document.getElementById('mod-' + stat + '-val');
+                if (cb)  cb.checked = (mods[stat] !== undefined);
+                if (sel && mods[stat] !== undefined) sel.value = String(mods[stat]);
+            });
+            if (nameEl) { nameEl.scrollIntoView({ behavior: 'smooth', block: 'center' }); nameEl.focus(); }
         }, 50);
     },
 
