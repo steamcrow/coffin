@@ -111,7 +111,7 @@
     "shatter": {
       "_id": "R-WPN-SHATTER",
       "title": "Shatter",
-      "short": "Weakens armor.",
+      "short": "-1 Defense (temporary).",
       "long": "If this attack deals damage, the target suffers -1 Defense until the end of its next activation."
       "name": "Shatter",
     },
