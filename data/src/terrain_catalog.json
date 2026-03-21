@@ -1,0 +1,1489 @@
+{
+  "schema_id": "cc_terrain_catalog",
+  "schema_version": "2.0",
+  "last_updated": "2026-03-21",
+  "notes": [
+    "Catalog entries define reusable terrain assets for the Leaflet map editor, Turn Counter integration, and future solo simulation.",
+    "This file defines WHAT each image is. Per-map placement should live in terrain_instances.json later.",
+    "Some names are intentionally generic in the first batch where the art is clear in function but not specific enough yet for exact named building identity.",
+    "location_tags are the bridge to 150_location_types.json later."
+  ],
+  "enums": {
+    "terrain_kind": ["building", "scatter", "obstacle", "area", "hazard", "feature", "objective"],
+    "footprint_shape": ["rect", "circle", "poly", "line"],
+    "los_profile": ["blocks", "partial", "none"],
+    "cover_grade": ["none", "light", "heavy"],
+    "climb_mode": ["none", "ladder", "stairs", "scramble", "rope", "any"],
+    "surface_kind": ["ground", "interior", "balcony", "roof", "catwalk", "platform", "stairs"],
+    "slot_kind": ["objective", "spawn", "loot", "interaction", "hazard_anchor", "story_anchor"]
+  },
+  "terrain_types": [
+    {
+      "terrain_type_id": "camp_canvas_tent_small",
+      "asset_file": "westcamps_normal_01.png",
+      "name": "Canvas Tent",
+      "family": "westcamps",
+      "kind": "building",
+      "variant_group": "camp_tents",
+      "tags": ["camp", "tent", "canvas", "light_structure"],
+      "location_tags": ["camp", "frontier", "wild"],
+      "footprint": {
+        "shape": "rect",
+        "size_in": { "w": 4, "d": 3 },
+        "base_height_in": 2.5
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Partially blocks line of sight through the tent body",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": ["interior"],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "search_canvas_tent",
+            "name": "Search Tent",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 2,
+            "on_success": "Gain 1 Loot token or 1 Supply token.",
+            "on_fail": "Empty or disturbed camp."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "canvas_tent_loot",
+          "slot_kind": "loot",
+          "label": "Tent Cache",
+          "level": 0,
+          "position_hint": "interior_center",
+          "notes": ["Optional camp stash or clue marker."]
+        }
+      ],
+      "destructibility": {
+        "destructible": true,
+        "structure_rating": 2,
+        "breakpoints": [
+          {
+            "at_damage": 2,
+            "effect": "Tent collapses and becomes open difficult ground."
+          }
+        ],
+        "rubble_result": {
+          "spawns_terrain_type_id": "scatter_rubble_small",
+          "notes": ["Replace with torn canvas and debris."]
+        }
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "camp_canvas_tent_large",
+      "asset_file": "westcamps_normal_02.png",
+      "name": "Large Canvas Tent",
+      "family": "westcamps",
+      "kind": "building",
+      "variant_group": "camp_tents",
+      "tags": ["camp", "tent", "canvas", "large"],
+      "location_tags": ["camp", "frontier", "wild"],
+      "footprint": {
+        "shape": "rect",
+        "size_in": { "w": 5, "d": 4 },
+        "base_height_in": 3.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Partially blocks line of sight through the tent body",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": ["interior"],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [
+        {
+          "slot_id": "large_tent_story",
+          "slot_kind": "story_anchor",
+          "label": "Camp Center",
+          "level": 0,
+          "position_hint": "center",
+          "notes": ["Useful as camp objective or encounter center."]
+        }
+      ],
+      "destructibility": {
+        "destructible": true,
+        "structure_rating": 2,
+        "breakpoints": [
+          {
+            "at_damage": 2,
+            "effect": "Tent collapses and becomes open difficult ground."
+          }
+        ],
+        "rubble_result": {
+          "spawns_terrain_type_id": "scatter_rubble_small",
+          "notes": ["Replace with collapsed poles and cloth."]
+        }
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "camp_tipi_marked",
+      "asset_file": "westcamps_normal_03.png",
+      "name": "Marked Tipi",
+      "family": "westcamps",
+      "kind": "building",
+      "variant_group": "camp_tipis",
+      "tags": ["camp", "tipi", "ritual", "tribal"],
+      "location_tags": ["camp", "wild", "ritual"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 4, "d": 4 },
+        "base_height_in": 3.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Partially blocks line of sight through the tipi body",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": ["interior"],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "invoke_marked_tipi",
+            "name": "Invoke the Tipi",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Gain 1 Lore token or scenario clue.",
+            "on_fail": "Bad omen: become Pressured until end of round."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "marked_tipi_story",
+          "slot_kind": "story_anchor",
+          "label": "Ritual Camp Anchor",
+          "level": 0,
+          "position_hint": "front",
+          "notes": ["Good for spirit, ritual, or clue scenarios."]
+        }
+      ],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "camp_tipi_plain",
+      "asset_file": "westcamps_normal_04.png",
+      "name": "Plain Tipi",
+      "family": "westcamps",
+      "kind": "building",
+      "variant_group": "camp_tipis",
+      "tags": ["camp", "tipi", "tribal"],
+      "location_tags": ["camp", "wild"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 3, "d": 3 },
+        "base_height_in": 3.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Partially blocks line of sight through the tipi body",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "camp_tipi_striped",
+      "asset_file": "westcamps_normal_05.png",
+      "name": "Striped Tipi",
+      "family": "westcamps",
+      "kind": "building",
+      "variant_group": "camp_tipis",
+      "tags": ["camp", "tipi", "tribal", "painted"],
+      "location_tags": ["camp", "wild"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 4, "d": 4 },
+        "base_height_in": 3.2
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Partially blocks line of sight through the tipi body",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "camp_lodge_tent",
+      "asset_file": "westcamps_normal_06.png",
+      "name": "Ceremonial Lodge Tent",
+      "family": "westcamps",
+      "kind": "building",
+      "variant_group": "camp_special_tents",
+      "tags": ["camp", "lodge", "tent", "ceremonial"],
+      "location_tags": ["camp", "wild", "ritual"],
+      "footprint": {
+        "shape": "rect",
+        "size_in": { "w": 5, "d": 4 },
+        "base_height_in": 3.2
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Partially blocks line of sight through the tent body",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "search_lodge_tent",
+            "name": "Search Lodge Tent",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Gain 1 Loot token or 1 Lore token.",
+            "on_fail": "Nothing useful found."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "lodge_story_anchor",
+          "slot_kind": "story_anchor",
+          "label": "Ceremonial Interior",
+          "level": 0,
+          "position_hint": "interior_center",
+          "notes": ["Ritual or faction event anchor."]
+        }
+      ],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "camp_yurt_reinforced",
+      "asset_file": "westcamps_normal_07.png",
+      "name": "Reinforced Camp Hut",
+      "family": "westcamps",
+      "kind": "building",
+      "variant_group": "camp_special_tents",
+      "tags": ["camp", "hut", "round", "reinforced"],
+      "location_tags": ["camp", "wild", "frontier"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 4, "d": 4 },
+        "base_height_in": 3.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Partially blocks line of sight through the hut body",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "feature_windmill_small",
+      "asset_file": "westmill_normal_01.png",
+      "name": "Small Windmill",
+      "family": "westmill",
+      "kind": "feature",
+      "variant_group": "windmills",
+      "tags": ["windmill", "farm", "vertical", "light_blocker"],
+      "location_tags": ["farm", "frontier", "rural"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 2, "d": 2 },
+        "base_height_in": 4.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Pole and blades partially block line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "feature_windmill_tower",
+      "asset_file": "westmill_normal_02.png",
+      "name": "Windmill Tower",
+      "family": "westmill",
+      "kind": "feature",
+      "variant_group": "windmills",
+      "tags": ["windmill", "tower", "farm", "vertical"],
+      "location_tags": ["farm", "frontier", "rural"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 2, "d": 2 },
+        "base_height_in": 6.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Tower frame partially blocks line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [
+        {
+          "slot_id": "windmill_story",
+          "slot_kind": "story_anchor",
+          "label": "Rural Landmark",
+          "level": 0,
+          "position_hint": "base",
+          "notes": ["Useful as navigation or waypoint landmark."]
+        }
+      ],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "feature_power_pole",
+      "asset_file": "westpower_normal_01.png",
+      "name": "Power Pole",
+      "family": "westpower",
+      "kind": "feature",
+      "variant_group": "power_lines",
+      "tags": ["power", "pole", "line", "utility"],
+      "location_tags": ["town", "industrial", "rail"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 1, "d": 1 },
+        "base_height_in": 4.0
+      },
+      "visibility": {
+        "los_profile": "none",
+        "blocks_los_when": "Never meaningfully blocks line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "none",
+        "interior_cover": "none"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "scatter_human_skull",
+      "asset_file": "westskulls_normal_01.png",
+      "name": "Human Skull",
+      "family": "westskulls",
+      "kind": "scatter",
+      "variant_group": "skull_scatter",
+      "tags": ["skull", "bones", "scatter", "grim"],
+      "location_tags": ["wild", "graveyard", "ritual"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 2, "d": 2 },
+        "base_height_in": 0.5
+      },
+      "visibility": {
+        "los_profile": "none",
+        "blocks_los_when": "Never blocks line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_scatter"
+      }
+    },
+    {
+      "terrain_type_id": "scatter_horned_skull_large",
+      "asset_file": "westskulls_normal_02.png",
+      "name": "Horned Skull",
+      "family": "westskulls",
+      "kind": "scatter",
+      "variant_group": "skull_scatter",
+      "tags": ["skull", "horned", "bones", "scatter"],
+      "location_tags": ["wild", "ritual", "graveyard"],
+      "footprint": {
+        "shape": "rect",
+        "size_in": { "w": 3, "d": 2 },
+        "base_height_in": 1.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Partially blocks line of sight close to ground",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_scatter"
+      }
+    },
+    {
+      "terrain_type_id": "feature_totem_winged_01",
+      "asset_file": "westtotem_normal_01.png",
+      "name": "Winged Totem",
+      "family": "westtotem",
+      "kind": "feature",
+      "variant_group": "totems",
+      "tags": ["totem", "ritual", "marker", "vertical"],
+      "location_tags": ["wild", "ritual", "tribal"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 2, "d": 2 },
+        "base_height_in": 5.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Totem body partially blocks line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "invoke_totem_01",
+            "name": "Invoke Totem",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Gain 1 Lore token or flip ritual state.",
+            "on_fail": "Omen: become Pressured."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "totem_story_anchor",
+          "slot_kind": "story_anchor",
+          "label": "Totem Anchor",
+          "level": 0,
+          "position_hint": "base",
+          "notes": ["Use for rituals, boundaries, or lore markers."]
+        }
+      ],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "feature_totem_winged_02",
+      "asset_file": "westtotem_normal_02.png",
+      "name": "Winged Totem Variant",
+      "family": "westtotem",
+      "kind": "feature",
+      "variant_group": "totems",
+      "tags": ["totem", "ritual", "marker", "vertical"],
+      "location_tags": ["wild", "ritual", "tribal"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 2, "d": 2 },
+        "base_height_in": 5.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Totem body partially blocks line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "feature_water_tower_wooden",
+      "asset_file": "westtower_normal_01.png",
+      "name": "Wooden Water Tower",
+      "family": "westtower",
+      "kind": "building",
+      "variant_group": "water_towers",
+      "tags": ["tower", "water", "vertical", "industrial", "high_ground"],
+      "location_tags": ["town", "industrial", "rail"],
+      "footprint": {
+        "shape": "circle",
+        "size_in": { "w": 4, "d": 4 },
+        "base_height_in": 7.0
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Tank mass partially blocks line of sight; legs do not",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 1,
+        "levels": [
+          {
+            "level": 0,
+            "name": "Base",
+            "surface_kind": "ground",
+            "walkable": true,
+            "blocks_los_from_outside": false,
+            "notes": ["Open space beneath tower."]
+          },
+          {
+            "level": 1,
+            "name": "Tank Platform",
+            "surface_kind": "platform",
+            "walkable": true,
+            "railings_cover": "light",
+            "notes": ["High objective perch if you allow it in editor."]
+          }
+        ]
+      },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": true,
+        "climb": {
+          "allowed": true,
+          "mode": "ladder",
+          "min_level_access": 1,
+          "max_level_access": 1,
+          "test": {
+            "required": true,
+            "type": "quality",
+            "difficulty": 2,
+            "on_fail": "Slip: remain at base."
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "tap_water_tower",
+            "name": "Tap Water Tower",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Gain 1 Water token.",
+            "on_fail": "Valve seized: no gain."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "water_tower_objective",
+          "slot_kind": "objective",
+          "label": "Tower Top Objective",
+          "level": 1,
+          "position_hint": "center",
+          "notes": ["Great high-ground objective."]
+        }
+      ],
+      "destructibility": {
+        "destructible": true,
+        "structure_rating": 6,
+        "breakpoints": [
+          {
+            "at_damage": 3,
+            "effect": "Leaking: ground within 3 inches becomes difficult terrain."
+          },
+          {
+            "at_damage": 6,
+            "effect": "Collapse: replace with large rubble."
+          }
+        ],
+        "rubble_result": {
+          "spawns_terrain_type_id": "scatter_rubble_large",
+          "notes": ["Replace with tower wreckage."]
+        }
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "building_hotel_balcony_large",
+      "asset_file": "westtrains_normal_01.png",
+      "name": "Balcony Hotel",
+      "family": "westtrains",
+      "kind": "building",
+      "variant_group": "railtown_buildings",
+      "tags": ["hotel", "town", "balcony", "large"],
+      "location_tags": ["town", "rail", "civilized"],
+      "footprint": {
+        "shape": "rect",
+        "size_in": { "w": 10, "d": 7 },
+        "base_height_in": 4.0
+      },
+      "visibility": {
+        "los_profile": "blocks",
+        "blocks_los_when": "Blocks line of sight through building body; balcony openings are partial",
+        "window_los": "partial"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "heavy",
+        "interior_cover": "light"
+      },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 2,
+        "levels": [
+          {
+            "level": 0,
+            "name": "Ground Floor",
+            "surface_kind": "interior",
+            "walkable": true,
+            "blocks_los_from_outside": true,
+            "notes": ["Interior rooms."]
+          },
+          {
+            "level": 1,
+            "name": "Balcony",
+            "surface_kind": "balcony",
+            "walkable": true,
+            "railings_cover": "light",
+            "notes": ["Long balcony firing lane."]
+          },
+          {
+            "level": 2,
+            "name": "Roof",
+            "surface_kind": "roof",
+            "walkable": true,
+            "edge_fall_risk": false,
+            "notes": ["Optional roof perch."]
+          }
+        ]
+      },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": true,
+        "difficult_terrain_on": ["interior"],
+        "climb": {
+          "allowed": true,
+          "mode": "stairs",
+          "min_level_access": 1,
+          "max_level_access": 2,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "search_balcony_hotel",
+            "name": "Search the Hotel",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 4,
+            "on_success": "Gain 1 Loot token and 1 Intel or Supply token.",
+            "on_fail": "Noise: nearest enemy gains +1 die against this model's next defense."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "hotel_roof_objective",
+          "slot_kind": "objective",
+          "label": "Roof Objective",
+          "level": 2,
+          "position_hint": "center_roof",
+          "notes": ["Signature rooftop objective."]
+        }
+      ],
+      "destructibility": {
+        "destructible": true,
+        "structure_rating": 10,
+        "breakpoints": [
+          {
+            "at_damage": 5,
+            "effect": "Windows and balcony cover reduced."
+          },
+          {
+            "at_damage": 10,
+            "effect": "Collapse: replace with large rubble."
+          }
+        ],
+        "rubble_result": {
+          "spawns_terrain_type_id": "scatter_rubble_large",
+          "notes": ["Replace with large rubble field."]
+        }
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "building_rail_station_large",
+      "asset_file": "westtrains_normal_02.png",
+      "name": "Rail Station",
+      "family": "westtrains",
+      "kind": "building",
+      "variant_group": "railtown_buildings",
+      "tags": ["station", "rail", "town", "platform"],
+      "location_tags": ["rail", "town", "industrial"],
+      "footprint": {
+        "shape": "rect",
+        "size_in": { "w": 8, "d": 5 },
+        "base_height_in": 3.0
+      },
+      "visibility": {
+        "los_profile": "blocks",
+        "blocks_los_when": "Blocks line of sight through building body; porch is partial",
+        "window_los": "partial"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "heavy",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": ["interior"],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "operate_station",
+            "name": "Operate Station",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Advance rail event or gain 1 Intel token.",
+            "on_fail": "Jammed station equipment."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "station_story_anchor",
+          "slot_kind": "story_anchor",
+          "label": "Station Control",
+          "level": 0,
+          "position_hint": "front_door",
+          "notes": ["Use for arrivals, schedules, departures, ambushes."]
+        }
+      ],
+      "destructibility": {
+        "destructible": true,
+        "structure_rating": 6,
+        "breakpoints": [
+          {
+            "at_damage": 6,
+            "effect": "Station destroyed and becomes medium rubble."
+          }
+        ],
+        "rubble_result": {
+          "spawns_terrain_type_id": "scatter_rubble_medium",
+          "notes": ["Replace with station debris."]
+        }
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_structures"
+      }
+    },
+    {
+      "terrain_type_id": "feature_boxcar",
+      "asset_file": "westtrains_normal_04.png",
+      "name": "Boxcar",
+      "family": "westtrains",
+      "kind": "feature",
+      "variant_group": "rail_cars",
+      "tags": ["train", "rail", "boxcar", "cargo"],
+      "location_tags": ["rail", "industrial"],
+      "footprint": {
+        "shape": "rect",
+        "size_in": { "w": 8, "d": 3 },
+        "base_height_in": 3.0
+      },
+      "visibility": {
+        "los_profile": "blocks",
+        "blocks_los_when": "Blocks line of sight through car body",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "heavy",
+        "edges_cover": "heavy",
+        "interior_cover": "none"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": true,
+          "mode": "scramble",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": true,
+            "type": "quality",
+            "difficulty": 2,
+            "on_fail": "No movement; action spent."
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "pry_boxcar",
+            "name": "Pry Open Boxcar",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 4,
+            "on_success": "Gain 1 Loot token or 1 Supply token.",
+            "on_fail": "Door jam: no gain."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "boxcar_loot",
+          "slot_kind": "loot",
+          "label": "Boxcar Cargo",
+          "level": 0,
+          "position_hint": "side_door",
+          "notes": ["Loot or escort cargo anchor."]
+        }
+      ],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "feature_steam_engine_freight",
+      "asset_file": "westtrains_normal_05.png",
+      "name": "Freight Steam Engine",
+      "family": "westtrains",
+      "kind": "feature",
+      "variant_group": "rail_engines",
+      "tags": ["train", "engine", "rail", "freight"],
+      "location_tags": ["rail", "industrial"],
+      "footprint": {
+        "shape": "rect",
+        "size_in": { "w": 10, "d": 3 },
+        "base_height_in": 3.5
+      },
+      "visibility": {
+        "los_profile": "blocks",
+        "blocks_los_when": "Blocks line of sight through engine and car mass",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "heavy",
+        "edges_cover": "heavy",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": true,
+          "mode": "scramble",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": true,
+            "type": "quality",
+            "difficulty": 3,
+            "on_fail": "Slip: remain at base."
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "operate_engine_freight",
+            "name": "Operate Engine",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 4,
+            "on_success": "Advance rail scenario state.",
+            "on_fail": "Steam burst: acting model takes 1 die damage."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "engine_control",
+          "slot_kind": "objective",
+          "label": "Cab Control",
+          "level": 0,
+          "position_hint": "cab",
+          "notes": ["Use as rail objective."]
+        }
+      ],
+      "destructibility": {
+        "destructible": true,
+        "structure_rating": 8,
+        "breakpoints": [
+          {
+            "at_damage": 8,
+            "effect": "Engine wrecked and becomes large rubble/wreck."
+          }
+        ],
+        "rubble_result": {
+          "spawns_terrain_type_id": "scatter_rubble_large",
+          "notes": ["Replace with wreckage."]
+        }
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "feature_freight_cars_pair",
+      "asset_file": "westtrains_normal_06.png",
+      "name": "Freight Cars",
+      "family": "westtrains",
+      "kind": "feature",
+      "variant_group": "rail_cars",
+      "tags": ["train", "freight", "rail", "cars"],
+      "location_tags": ["rail", "industrial"],
+      "footprint": {
+        "shape": "rect",
+        "size_in": { "w": 12, "d": 3 },
+        "base_height_in": 3.0
+      },
+      "visibility": {
+        "los_profile": "blocks",
+        "blocks_los_when": "Blocks line of sight through car bodies",
+        "window_los": "partial"
+      },
+      "cover": {
+        "default_cover": "heavy",
+        "edges_cover": "heavy",
+        "interior_cover": "light"
+      },
+      "elevation": { "system": "none" },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "climb": {
+          "allowed": true,
+          "mode": "scramble",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": true,
+            "type": "quality",
+            "difficulty": 2,
+            "on_fail": "No movement; action spent."
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [
+        {
+          "slot_id": "freight_story_anchor",
+          "slot_kind": "story_anchor",
+          "label": "Freight Story Anchor",
+          "level": 0,
+          "position_hint": "midpoint",
+          "notes": ["Use for shipments, escort, robbery, derailment."]
+        }
+      ],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "obstacle_mesa_cliff_large",
+      "asset_file": "wildmountain_normal_01.png",
+      "name": "Mesa Cliff",
+      "family": "wildmountain",
+      "kind": "obstacle",
+      "variant_group": "mesa_cliffs",
+      "tags": ["mesa", "cliff", "rock", "high_ground", "blocks_los"],
+      "location_tags": ["wild", "desert", "high_ground"],
+      "footprint": {
+        "shape": "poly",
+        "size_in": { "w": 12, "d": 8 },
+        "base_height_in": 5.0
+      },
+      "visibility": {
+        "los_profile": "blocks",
+        "blocks_los_when": "Mesa mass blocks line of sight through cliff body",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "heavy",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "levels",
+        "level_unit_in": 2.0,
+        "max_level": 2,
+        "levels": [
+          {
+            "level": 0,
+            "name": "Base",
+            "surface_kind": "ground",
+            "walkable": true,
+            "blocks_los_from_outside": false,
+            "notes": ["Ground around the mesa."]
+          },
+          {
+            "level": 2,
+            "name": "Mesa Top",
+            "surface_kind": "platform",
+            "walkable": true,
+            "edge_fall_risk": true,
+            "notes": ["High ground platform."]
+          }
+        ]
+      },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": true,
+        "climb": {
+          "allowed": true,
+          "mode": "rope",
+          "min_level_access": 2,
+          "max_level_access": 2,
+          "test": {
+            "required": true,
+            "type": "quality",
+            "difficulty": 4,
+            "on_fail": "Fall: take 2 dice damage and remain at base."
+          }
+        }
+      },
+      "interaction": { "interactable": false, "interactions": [] },
+      "slots": [
+        {
+          "slot_id": "mesa_top_objective",
+          "slot_kind": "objective",
+          "label": "Mesa Top Objective",
+          "level": 2,
+          "position_hint": "center",
+          "notes": ["Classic fight-for-high-ground objective."]
+        }
+      ],
+      "destructibility": { "destructible": false },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 15,
+        "layer": "terrain_landforms"
+      }
+    }
+  ]
+}
