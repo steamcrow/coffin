@@ -41,6 +41,7 @@
     selectedInstanceId: null,
     markersByInstanceId: {},
     tableSizeInches: 48,
+    terrainBaseScale: 0.15,   // global correction — catalog footprints tend to be generous
     bgOverlay: null,
     instanceData: {
       map_id: DEFAULTS.defaultMapId,
@@ -314,6 +315,20 @@
       el("span", { class: "cc-mm-label", text: "Table" }),
       tableSizeSelect
     ]);
+
+    // Terrain scale slider — compensates for catalog footprint sizes
+    var scaleLabel = el("span", { class: "cc-mm-label", text: "Terrain Scale: 0.15" });
+    var scaleSlider = document.createElement("input");
+    scaleSlider.type = "range";
+    scaleSlider.min = "0.05"; scaleSlider.max = "1"; scaleSlider.step = "0.01";
+    scaleSlider.value = String(state.terrainBaseScale);
+    scaleSlider.style.cssText = "width:90px;accent-color:#d4822a;cursor:pointer;vertical-align:middle;";
+    scaleSlider.addEventListener("input", function() {
+      state.terrainBaseScale = parseFloat(this.value);
+      scaleLabel.textContent = "Terrain Scale: " + state.terrainBaseScale.toFixed(2);
+      refreshAllIconSizes();
+    });
+    var group1b = el("div", { class: "cc-mm-toolbar-group" }, [scaleLabel, scaleSlider]);
     var group2 = el("div", { class: "cc-mm-toolbar-group" }, [
       el("label", { class: "cc-mm-label", text: "Map Title" }),
       mapTitleInput,
@@ -331,6 +346,7 @@
     ]);
 
     ui.toolbar.appendChild(group1);
+    ui.toolbar.appendChild(group1b);
     ui.toolbar.appendChild(group2);
     ui.toolbar.appendChild(group3);
 
@@ -767,11 +783,10 @@
   }
 
   function terrainWidthMapUnits(terrain, instance) {
-    // Width in Leaflet map units (= pixels at zoom 0 in CRS.Simple)
     var fp    = terrain && terrain.footprint && terrain.footprint.size_in;
     var w     = (fp && fp.w) ? fp.w : 4;
     var mapW  = (state.opts && state.opts.mapWidth) ? state.opts.mapWidth : DEFAULTS.mapWidth;
-    var units = w * (mapW / state.tableSizeInches);
+    var units = w * (mapW / state.tableSizeInches) * state.terrainBaseScale;
     return units * (instance ? (instance.scale || 1) : 1);
   }
 
