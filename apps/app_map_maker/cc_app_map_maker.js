@@ -41,7 +41,6 @@
     selectedInstanceId: null,
     markersByInstanceId: {},
     tableSizeInches: 48,
-    terrainBaseScale: 0.12,   // global correction — adjust with toolbar slider
     bgOverlay: null,
     instanceData: {
       map_id: DEFAULTS.defaultMapId,
@@ -316,19 +315,6 @@
       tableSizeSelect
     ]);
 
-    // Terrain scale slider — compensates for catalog footprint sizes
-    var scaleLabel = el("span", { class: "cc-mm-label", text: "Terrain Scale: 0.12" });
-    var scaleSlider = document.createElement("input");
-    scaleSlider.type = "range";
-    scaleSlider.min = "0.01"; scaleSlider.max = "0.5"; scaleSlider.step = "0.005";
-    scaleSlider.value = String(state.terrainBaseScale);
-    scaleSlider.style.cssText = "width:90px;accent-color:#d4822a;cursor:pointer;vertical-align:middle;";
-    scaleSlider.addEventListener("input", function() {
-      state.terrainBaseScale = parseFloat(this.value);
-      scaleLabel.textContent = "Terrain Scale: " + state.terrainBaseScale.toFixed(2);
-      refreshAllIconSizes();
-    });
-    var group1b = el("div", { class: "cc-mm-toolbar-group" }, [scaleLabel, scaleSlider]);
     var group2 = el("div", { class: "cc-mm-toolbar-group" }, [
       el("label", { class: "cc-mm-label", text: "Map Title" }),
       mapTitleInput,
@@ -346,7 +332,6 @@
     ]);
 
     ui.toolbar.appendChild(group1);
-    ui.toolbar.appendChild(group1b);
     ui.toolbar.appendChild(group2);
     ui.toolbar.appendChild(group3);
 
@@ -779,36 +764,28 @@
     return state.opts.assetBaseUrl.replace(/\/+$/, "") + "/" + assetFile.replace(/^\/+/, "");
   }
 
-  function terrainWidthMapUnits(terrain, instance) {
-    var fp    = terrain && terrain.footprint && terrain.footprint.size_in;
-    var w     = (fp && fp.w) ? fp.w : 4;
-    var mapW  = (state.opts && state.opts.mapWidth) ? state.opts.mapWidth : DEFAULTS.mapWidth;
-    var units = w * (mapW / state.tableSizeInches) * state.terrainBaseScale;
-    return units * (instance ? (instance.scale || 1) : 1);
-  }
-
   function terrainIconCssPx(terrain, instance) {
-    // CSS pixel size at the CURRENT zoom level
-    // In CRS.Simple: cssPixels = mapUnits * 2^zoom  (= mapUnits * getZoomScale(z, 0))
-    if (!state.map) return 32;
-    var mapUnits  = terrainWidthMapUnits(terrain, instance);
-    var zoomScale = state.map.getZoomScale(state.map.getZoom(), 0);
-    return Math.max(4, Math.round(mapUnits * zoomScale));
+    // Direct geometry: measure table width in CSS pixels right now,
+    // then size terrain as (footprintInches / tableSizeInches) of that.
+    // This is always correct regardless of zoom, CRS, or Leaflet internals.
+    if (!state.map || !state.imageBounds) return 32;
+    var fp = terrain && terrain.footprint && terrain.footprint.size_in;
+    var w  = (fp && fp.w) ? fp.w : 4;
+    var W  = state.instanceData.map_size_px.w;
+    var p1 = state.map.latLngToContainerPoint(L.latLng(0, 0));
+    var p2 = state.map.latLngToContainerPoint(L.latLng(0, W));
+    var tableWidthPx = Math.abs(p2.x - p1.x);
+    var scale = instance ? (instance.scale || 1) : 1;
+    return Math.max(4, Math.round(tableWidthPx * (w / state.tableSizeInches) * scale));
   }
 
   function refreshAllIconSizes() {
-    // Called on zoomend so terrain scales with the tabletop
+    // Called on zoomend — rebuilds icon sizes so terrain stays locked to tabletop scale
     state.instanceData.instances.forEach(function(inst) {
       var marker  = state.markersByInstanceId[inst.instance_id];
       var terrain = state.terrainById[inst.terrain_type_id];
       if (marker && terrain) marker.setIcon(buildDivIcon(inst, terrain));
     });
-  }
-
-  function pxPerInch() {
-    // Legacy helper — kept for any future use
-    var mapW = (state.opts && state.opts.mapWidth) ? state.opts.mapWidth : DEFAULTS.mapWidth;
-    return mapW / state.tableSizeInches;
   }
 
   function buildMarkerHtml(instance, terrain) {
