@@ -298,7 +298,7 @@
     tableSizeSelect.addEventListener("change", function() {
       state.tableSizeInches = parseInt(this.value);
       updateBackground();
-      // Rebuild all markers so sizes recalculate
+      // Rebuild all markers so sizes recalculate for new table size
       var instances = state.instanceData.instances.slice();
       Object.keys(state.markersByInstanceId).forEach(function(id) {
         var m = state.markersByInstanceId[id];
@@ -306,6 +306,7 @@
       });
       state.markersByInstanceId = {};
       instances.forEach(function(inst) { addInstanceMarker(inst); });
+      refreshAllIconSizes();
       renderInspector();
     });
 
@@ -701,23 +702,21 @@
       }
     }
 
-    // SVG tabletop — sits below everything, fills window width
+    // SVG tabletop — sits below everything
     state.bgOverlay = L.imageOverlay(currentBgUrl(), bounds, {
       interactive: false,
       pane: "tilePane"
     }).addTo(map);
 
-    // Fit the table image to fill the container width exactly
-    // then set that as the minimum zoom so you can't zoom out past the table
-    map.fitBounds(bounds, { padding: [0, 0] });
-    var fitZoom = map.getBoundsZoom(bounds, false);
-    map.setMinZoom(fitZoom);
-    map.setZoom(fitZoom);
+    // Fit the table to fill container width, with a little breathing room at top
+    // padding: [topPx, sidePx] — 40px top gives the staging dead space above the table
+    map.fitBounds(bounds, { padding: [40, 0] });
+    var fitZoom = map.getZoom();
+    state.fitZoom = fitZoom;
+    map.setMinZoom(fitZoom);  // can't zoom out past full-table view
 
-    // Allow elements to be placed above the table (dead space) without panning the table itself
-    // We achieve this by letting the map view extend upward but keeping the bg anchored
-    state.map = map;
-    state.deadSpace = deadSpace;
+    // Refresh all terrain icon sizes whenever zoom changes so they scale with the tabletop
+    map.on("zoomend", function() { refreshAllIconSizes(); });
 
     map.on("click", function (ev) {
       if (!state.selectedTerrainTypeId) return;
@@ -767,23 +766,43 @@
     return state.opts.assetBaseUrl.replace(/\/+$/, "") + "/" + assetFile.replace(/^\/+/, "");
   }
 
+  function terrainWidthMapUnits(terrain, instance) {
+    // Width in Leaflet map units (= pixels at zoom 0 in CRS.Simple)
+    var fp    = terrain && terrain.footprint && terrain.footprint.size_in;
+    var w     = (fp && fp.w) ? fp.w : 4;
+    var mapW  = (state.opts && state.opts.mapWidth) ? state.opts.mapWidth : DEFAULTS.mapWidth;
+    var units = w * (mapW / state.tableSizeInches);
+    return units * (instance ? (instance.scale || 1) : 1);
+  }
+
+  function terrainIconCssPx(terrain, instance) {
+    // CSS pixel size at the CURRENT zoom level
+    // In CRS.Simple: cssPixels = mapUnits * 2^zoom  (= mapUnits * getZoomScale(z, 0))
+    if (!state.map) return 32;
+    var mapUnits  = terrainWidthMapUnits(terrain, instance);
+    var zoomScale = state.map.getZoomScale(state.map.getZoom(), 0);
+    return Math.max(4, Math.round(mapUnits * zoomScale));
+  }
+
+  function refreshAllIconSizes() {
+    // Called on zoomend so terrain scales with the tabletop
+    state.instanceData.instances.forEach(function(inst) {
+      var marker  = state.markersByInstanceId[inst.instance_id];
+      var terrain = state.terrainById[inst.terrain_type_id];
+      if (marker && terrain) marker.setIcon(buildDivIcon(inst, terrain));
+    });
+  }
+
   function pxPerInch() {
+    // Legacy helper — kept for any future use
     var mapW = (state.opts && state.opts.mapWidth) ? state.opts.mapWidth : DEFAULTS.mapWidth;
     return mapW / state.tableSizeInches;
   }
 
-  function getTerrainWidthPx(terrain) {
-    // Width only from footprint.size_in.w — height stays auto so PNG never skews
-    var fp = terrain && terrain.footprint && terrain.footprint.size_in;
-    var w  = (fp && fp.w) ? fp.w : 4;
-    return Math.round(w * pxPerInch());
-  }
-
   function buildMarkerHtml(instance, terrain) {
     var url      = buildAssetUrl(terrain.asset_file);
-    var scale    = instance.scale || 1;
     var rotation = instance.rotation_deg || 0;
-    var width    = Math.max(16, Math.round(getTerrainWidthPx(terrain) * scale));
+    var width    = terrainIconCssPx(terrain, instance);
 
     return (
       '<div class="cc-mm-terrain-wrap" data-instance-id="' + escapeHtml(instance.instance_id) + '">' +
@@ -804,13 +823,11 @@
   }
 
   function buildDivIcon(instance, terrain) {
-    var scale = instance.scale || 1;
-    var width = Math.max(16, Math.round(getTerrainWidthPx(terrain) * scale));
-    // Use width for both dimensions — Leaflet anchor estimate; actual height set by CSS auto
+    var width = terrainIconCssPx(terrain, instance);
     return L.divIcon({
-      className: "cc-mm-div-icon",
-      html: buildMarkerHtml(instance, terrain),
-      iconSize: [width, width],
+      className:  "cc-mm-div-icon",
+      html:       buildMarkerHtml(instance, terrain),
+      iconSize:   [width, width],
       iconAnchor: [Math.round(width / 2), width]
     });
   }
