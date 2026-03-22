@@ -33,21 +33,20 @@
   color: #ffb066;
 }
 
+/* Body is now center + right only — left palette is a slide panel */
 .cc-mm-body {
   display: grid;
-  grid-template-columns: 320px 1fr 320px;
+  grid-template-columns: 1fr 320px;
   min-height: 820px;
 }
 
 .cc-mm-sidebar {
   background: #181818;
-  border-right: 1px solid #2f2f2f;
   overflow: auto;
   padding: 12px;
 }
 
 .cc-mm-sidebar--right {
-  border-right: none;
   border-left: 1px solid #2f2f2f;
 }
 
@@ -68,6 +67,31 @@
   height: 100%;
   min-height: 820px;
   background: #0b0b0b;
+}
+
+/* ── Palette slide panel ──────────────────────────────────────────── */
+/* Uses cc-slide-panel / cc-slide-panel-open from cc_ui.css for the
+   slide animation, but overrides width and styling for the palette. */
+.cc-mm-palette-panel {
+  width: 340px !important;
+  max-width: 90vw;
+  padding: 14px !important;
+  background: #181818 !important;
+  border-left: 2px solid #ffb066 !important;
+  overflow-y: auto;
+  z-index: 10000 !important;
+}
+
+/* Ensure the slide panel positions from left instead of right */
+.cc-mm-palette-panel.cc-slide-panel {
+  right: auto !important;
+  left: -360px;
+  transition: left 0.3s ease-in-out !important;
+}
+
+.cc-mm-palette-panel.cc-slide-panel-open {
+  left: 0 !important;
+  right: auto !important;
 }
 
 .cc-mm-sidebar-header {
@@ -136,16 +160,21 @@
   border-radius: 10px;
   padding: 10px;
   color: #eee;
-  cursor: pointer;
+  cursor: grab;
 }
 
 .cc-mm-palette-card:hover {
   background: #1e1e1e;
+  border-color: #ffb066;
 }
 
 .cc-mm-palette-card.is-selected {
   border-color: #ffb066;
   box-shadow: 0 0 0 1px #ffb066 inset;
+}
+
+.cc-mm-palette-card:active {
+  cursor: grabbing;
 }
 
 .cc-mm-palette-title {
@@ -189,6 +218,7 @@
   color: #aaa;
   font-size: 13px;
   line-height: 1.4;
+  margin-bottom: 8px;
 }
 
 .cc-mm-div-icon {
@@ -216,13 +246,19 @@
   outline-offset: 2px;
 }
 
+/* Drag-over highlight on map */
+.cc-mm-map.drag-over {
+  outline: 2px dashed #ffb066;
+  outline-offset: -2px;
+}
+
 @media (max-width: 1200px) {
   .cc-mm-toolbar {
     grid-template-columns: 1fr;
   }
 
   .cc-mm-body {
-    grid-template-columns: 280px 1fr;
+    grid-template-columns: 1fr;
   }
 
   .cc-mm-sidebar--right {
