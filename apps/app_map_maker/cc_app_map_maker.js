@@ -614,8 +614,18 @@
     var bounds = [[0, 0], [state.instanceData.map_size_px.h, state.instanceData.map_size_px.w]];
     state.imageBounds = bounds;
 
-    L.imageOverlay(state.instanceData.map_image, bounds).addTo(map);
-    map.fitBounds(bounds);
+    // Background parchment — bottom z-index, non-interactive
+    var overlay = L.imageOverlay(state.instanceData.map_image, bounds, {
+      zIndex: 0,
+      interactive: false
+    }).addTo(map);
+    overlay.getElement && overlay.getElement() && (overlay.getElement().style.zIndex = "0");
+
+    // Center the map on the background image and lock it there
+    map.fitBounds(bounds, { padding: [40, 40] });
+    map.setMaxBounds(bounds.map(function(c) { return [c[0] - 500, c[1] - 500]; }).concat(
+      [[bounds[1][0] + 500, bounds[1][1] + 500]]
+    ));
 
     map.on("click", function (ev) {
       if (!state.selectedTerrainTypeId) return;
@@ -664,8 +674,8 @@
     var w = fp && fp.w ? fp.w : 4;
     var d = fp && fp.d ? fp.d : w;
     return {
-      widthPx: Math.round(w * 28),
-      heightPx: Math.round(d * 28 + ((terrain && terrain.footprint && terrain.footprint.base_height_in) || 2) * 10)
+      widthPx: Math.round(w * 14),
+      heightPx: Math.round(d * 14 + ((terrain && terrain.footprint && terrain.footprint.base_height_in) || 2) * 5)
     };
   }
 
@@ -675,8 +685,8 @@
     var scale = instance.scale || 1;
     var rotation = instance.rotation_deg || 0;
 
-    var width = Math.max(24, Math.round(guess.widthPx * scale));
-    var height = Math.max(24, Math.round(guess.heightPx * scale));
+    var width = Math.max(16, Math.round(guess.widthPx * scale));
+    var height = Math.max(16, Math.round(guess.heightPx * scale));
 
     return (
       '<div class="cc-mm-terrain-wrap" data-instance-id="' + escapeHtml(instance.instance_id) + '">' +
@@ -699,8 +709,8 @@
   function buildDivIcon(instance, terrain) {
     var guess = getTerrainSizeGuess(terrain);
     var scale = instance.scale || 1;
-    var width = Math.max(24, Math.round(guess.widthPx * scale));
-    var height = Math.max(24, Math.round(guess.heightPx * scale));
+    var width = Math.max(16, Math.round(guess.widthPx * scale));
+    var height = Math.max(16, Math.round(guess.heightPx * scale));
 
     return L.divIcon({
       className: "cc-mm-div-icon",
