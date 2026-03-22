@@ -520,44 +520,58 @@
       syncInstanceMarker(selectedInstance);
     }));
 
-    panel.appendChild(numberField("Rotation", selectedInstance.rotation_deg || 0, "1", function (v) {
-      selectedInstance.rotation_deg = Number(v || 0);
+    // ── Helper: slider row (label + range + live readout) ──────────
+    function sliderField(label, value, min, max, step, onChange) {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var top = el("div", { style: "display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;" });
+      var lbl = el("span", { class: "cc-mm-label", text: label });
+      var readout = el("span", { style: "font-size:11px;color:#ffb066;font-family:monospace;" });
+      readout.textContent = parseFloat(value).toFixed(step < 1 ? 2 : 0);
+      top.appendChild(lbl);
+      top.appendChild(readout);
+      var input = document.createElement("input");
+      input.type = "range";
+      input.min = String(min);
+      input.max = String(max);
+      input.step = String(step);
+      input.value = String(value);
+      input.style.cssText = "width:100%;accent-color:#ffb066;cursor:pointer;";
+      input.addEventListener("input", function () {
+        readout.textContent = parseFloat(input.value).toFixed(step < 1 ? 2 : 0);
+        onChange(parseFloat(input.value));
+      });
+      wrap.appendChild(top);
+      wrap.appendChild(input);
+      return { wrap: wrap, input: input };
+    }
+
+    panel.appendChild(numberField("X", selectedInstance.x, "1", function (v) {
+      selectedInstance.x = Number(v || 0);
       syncInstanceMarker(selectedInstance);
     }));
 
-    panel.appendChild(numberField("Scale", selectedInstance.scale || 1, "0.05", function (v) {
-      selectedInstance.scale = clamp(Number(v || 1), 0.1, 5);
+    panel.appendChild(numberField("Y", selectedInstance.y, "1", function (v) {
+      selectedInstance.y = Number(v || 0);
       syncInstanceMarker(selectedInstance);
-      // keep slider in sync
-      var sl = panel.querySelector(".cc-mm-scale-slider");
-      if (sl) sl.value = selectedInstance.scale;
     }));
 
-    // Scale slider for quick visual adjustment
-    var sliderWrap = el("div", { class: "cc-mm-field" });
-    sliderWrap.appendChild(el("div", { class: "cc-mm-label", text: "Scale (drag)" }));
-    var slider = document.createElement("input");
-    slider.type = "range";
-    slider.className = "cc-mm-scale-slider";
-    slider.min = "0.1";
-    slider.max = "3";
-    slider.step = "0.05";
-    slider.value = String(selectedInstance.scale || 1);
-    slider.style.cssText = "width:100%;accent-color:#ffb066;cursor:pointer;";
-    slider.addEventListener("input", function () {
-      selectedInstance.scale = clamp(parseFloat(slider.value), 0.1, 5);
+    var rotSlider = sliderField("Rotation °", selectedInstance.rotation_deg || 0, 0, 359, 1, function (v) {
+      selectedInstance.rotation_deg = v;
       syncInstanceMarker(selectedInstance);
-      // keep number field in sync
-      var numInputs = panel.querySelectorAll(".cc-mm-input");
-      // find the scale number input (4th numberField = index 3)
     });
-    sliderWrap.appendChild(slider);
-    panel.appendChild(sliderWrap);
+    panel.appendChild(rotSlider.wrap);
 
-    panel.appendChild(numberField("Z Index", selectedInstance.z_index || 0, "1", function (v) {
-      selectedInstance.z_index = Number(v || 0);
+    var scaleSlider = sliderField("Scale", selectedInstance.scale || 1, 0.1, 3, 0.05, function (v) {
+      selectedInstance.scale = v;
       syncInstanceMarker(selectedInstance);
-    }));
+    });
+    panel.appendChild(scaleSlider.wrap);
+
+    var zSlider = sliderField("Z-Index", selectedInstance.z_index || 0, -10, 20, 1, function (v) {
+      selectedInstance.z_index = v;
+      syncInstanceMarker(selectedInstance);
+    });
+    panel.appendChild(zSlider.wrap);
 
     panel.appendChild(textField("Tags (comma separated)", (selectedInstance.tags || []).join(", "), function (v) {
       selectedInstance.tags = String(v || "")
@@ -588,9 +602,10 @@
 
     var map = L.map(mapEl, {
       crs: L.CRS.Simple,
-      minZoom: -3,
+      minZoom: -4,
       maxZoom: 3,
-      zoomSnap: 0.25,
+      zoomSnap: 0.1,
+      zoomDelta: 0.5,
       attributionControl: false
     });
 
@@ -598,21 +613,24 @@
     state.imageBounds = bounds;
 
     // Background parchment — bottom z-index, non-interactive
-    var overlay = L.imageOverlay(state.instanceData.map_image, bounds, {
+    L.imageOverlay(state.instanceData.map_image, bounds, {
       zIndex: 0,
       interactive: false
     }).addTo(map);
-    overlay.getElement && overlay.getElement() && (overlay.getElement().style.zIndex = "0");
 
-    // Center the map on the background image and lock it there
-    map.fitBounds(bounds, { padding: [40, 40] });
-    map.setMaxBounds(bounds.map(function(c) { return [c[0] - 500, c[1] - 500]; }).concat(
-      [[bounds[1][0] + 500, bounds[1][1] + 500]]
-    ));
+    // Fit image to fill the container, no padding, then lock pan to image bounds
+    map.fitBounds(bounds);
+    map.setMaxBounds([
+      [-200, -200],
+      [state.instanceData.map_size_px.h + 200, state.instanceData.map_size_px.w + 200]
+    ]);
 
     map.on("click", function (ev) {
       if (!state.selectedTerrainTypeId) return;
       placeTerrainAt(ev.latlng);
+      // Deselect after stamp so next click doesn't place another
+      state.selectedTerrainTypeId = null;
+      if (state.ui.renderPalette) state.ui.renderPalette();
     });
 
     // Drag-and-drop: terrain card dragged onto the map
@@ -641,6 +659,9 @@
       );
       var latlng = map.containerPointToLatLng(containerPoint);
       placeTerrainAt(latlng);
+      // Deselect after stamp
+      state.selectedTerrainTypeId = null;
+      if (state.ui.renderPalette) state.ui.renderPalette();
     });
 
     state.map = map;
