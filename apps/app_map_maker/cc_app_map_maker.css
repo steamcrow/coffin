@@ -238,12 +238,13 @@
   transform-origin: bottom center;
   user-select: none;
   pointer-events: auto;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5));
+  filter: none;
 }
 
 .cc-mm-terrain-img.is-selected {
   outline: 2px solid #ffb066;
   outline-offset: 2px;
+  filter: drop-shadow(0 0 6px rgba(255, 176, 102, 0.85));
 }
 
 /* Drag-over highlight on map */
