@@ -41,7 +41,7 @@
     selectedInstanceId: null,
     markersByInstanceId: {},
     tableSizeInches: 48,
-    terrainBaseScale: 0.15,   // global correction — catalog footprints tend to be generous
+    terrainBaseScale: 0.04,   // global correction — catalog footprints tend to be generous
     bgOverlay: null,
     instanceData: {
       map_id: DEFAULTS.defaultMapId,
@@ -317,10 +317,10 @@
     ]);
 
     // Terrain scale slider — compensates for catalog footprint sizes
-    var scaleLabel = el("span", { class: "cc-mm-label", text: "Terrain Scale: 0.15" });
+    var scaleLabel = el("span", { class: "cc-mm-label", text: "Terrain Scale: 0.04" });
     var scaleSlider = document.createElement("input");
     scaleSlider.type = "range";
-    scaleSlider.min = "0.05"; scaleSlider.max = "1"; scaleSlider.step = "0.01";
+    scaleSlider.min = "0.01"; scaleSlider.max = "0.5"; scaleSlider.step = "0.01";
     scaleSlider.value = String(state.terrainBaseScale);
     scaleSlider.style.cssText = "width:90px;accent-color:#d4822a;cursor:pointer;vertical-align:middle;";
     scaleSlider.addEventListener("input", function() {
@@ -586,6 +586,27 @@
       panel.appendChild(wrap);
     }());
 
+
+    // ── Flip horizontal toggle ─────────────────────────────────────
+    (function () {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var lbl  = el("label", { text: "Flip Horizontal" });
+      var btn  = el("button", {
+        class: "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : ""),
+        text:  selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip",
+        style: "width:100%;justify-content:center;"
+      });
+      btn.addEventListener("click", function () {
+        selectedInstance.mirror_x = !selectedInstance.mirror_x;
+        syncInstanceMarker(selectedInstance);
+        btn.textContent = selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip";
+        btn.className   = "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : "");
+      });
+      wrap.appendChild(lbl);
+      wrap.appendChild(btn);
+      panel.appendChild(wrap);
+    }());
+
     // ── Scale: number field + drag bar ────────────────────────────
     panel.appendChild(numberField("Scale", selectedInstance.scale || 1, "0.05", function (v) {
       selectedInstance.scale = clamp(Number(v || 1), 0.1, 5);
@@ -627,26 +648,6 @@
         syncInstanceMarker(selectedInstance);
       });
       wrap.appendChild(sl);
-      panel.appendChild(wrap);
-    }());
-
-    // ── Flip horizontal toggle ─────────────────────────────────────
-    (function () {
-      var wrap = el("div", { class: "cc-mm-field" });
-      var lbl  = el("label", { text: "Flip Horizontal" });
-      var btn  = el("button", {
-        class: "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : ""),
-        text:  selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip",
-        style: "width:100%;justify-content:center;"
-      });
-      btn.addEventListener("click", function () {
-        selectedInstance.mirror_x = !selectedInstance.mirror_x;
-        syncInstanceMarker(selectedInstance);
-        btn.textContent = selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip";
-        btn.className   = "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : "");
-      });
-      wrap.appendChild(lbl);
-      wrap.appendChild(btn);
       panel.appendChild(wrap);
     }());
 
