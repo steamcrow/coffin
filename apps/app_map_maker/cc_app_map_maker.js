@@ -609,6 +609,26 @@
       panel.appendChild(wrap);
     }());
 
+    // ── Flip horizontal toggle ─────────────────────────────────────
+    (function () {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var lbl  = el("label", { text: "Flip Horizontal" });
+      var btn  = el("button", {
+        class: "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : ""),
+        text:  selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip",
+        style: "width:100%;justify-content:center;"
+      });
+      btn.addEventListener("click", function () {
+        selectedInstance.mirror_x = !selectedInstance.mirror_x;
+        syncInstanceMarker(selectedInstance);
+        btn.textContent = selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip";
+        btn.className   = "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : "");
+      });
+      wrap.appendChild(lbl);
+      wrap.appendChild(btn);
+      panel.appendChild(wrap);
+    }());
+
     panel.appendChild(textField("Tags (comma separated)", (selectedInstance.tags || []).join(", "), function (v) {
       selectedInstance.tags = String(v || "")
         .split(",")
@@ -749,7 +769,7 @@
         '<img class="cc-mm-terrain-img' + (state.selectedInstanceId === instance.instance_id ? ' is-selected' : '') + '"' +
         ' src="' + escapeHtml(url) + '"' +
         ' draggable="false"' +
-        ' style="width:' + width + 'px;height:auto;transform:rotate(' + rotation + 'deg);" />' +
+        ' style="width:' + width + 'px;height:auto;transform:rotate(' + rotation + 'deg)' + (instance.mirror_x ? ' scaleX(-1)' : '') + ';" />' +
       '</div>'
     );
   }
