@@ -166,22 +166,34 @@
     var toolbar = el("div", { class: "cc-mm-toolbar" });
     var body = el("div", { class: "cc-mm-body" });
 
-    var left = el("aside", { class: "cc-mm-sidebar cc-mm-sidebar--left" });
+    // Left sidebar as a slide panel appended to root, not inline
+    var left = el("div", {
+      class: "cc-slide-panel cc-mm-palette-panel",
+      id: "cc-mm-palette-panel"
+    });
+    // Close button inside panel
+    var leftClose = el("button", { class: "cc-panel-close-btn", style: "float:right;margin-bottom:8px;" });
+    leftClose.textContent = "✕";
+    leftClose.addEventListener("click", togglePalette);
+    left.appendChild(leftClose);
+
     var center = el("main", { class: "cc-mm-center" });
     var right = el("aside", { class: "cc-mm-sidebar cc-mm-sidebar--right" });
 
     var mapWrap = el("div", { class: "cc-mm-map-wrap" });
     var mapEl = el("div", { class: "cc-mm-map", id: "cc-mm-map" });
+
+    // Drop overlay to receive drag-and-drop terrain
     mapWrap.appendChild(mapEl);
 
     center.appendChild(mapWrap);
-    body.appendChild(left);
     body.appendChild(center);
     body.appendChild(right);
 
     app.appendChild(toolbar);
     app.appendChild(body);
     root.appendChild(app);
+    root.appendChild(left); // slide panel outside app flow
 
     state.ui = {
       root: root,
@@ -196,8 +208,23 @@
     buildToolbar();
     buildLeftSidebar();
     buildRightSidebar();
+
+    // Keyboard: Delete key removes selected instance
+    document.addEventListener("keydown", function (ev) {
+      if ((ev.key === "Delete" || ev.key === "Backspace") &&
+          state.selectedInstanceId &&
+          document.activeElement.tagName !== "INPUT" &&
+          document.activeElement.tagName !== "TEXTAREA") {
+        deleteSelectedInstance();
+      }
+    });
   }
 
+  function togglePalette() {
+    var panel = document.getElementById("cc-mm-palette-panel");
+    if (!panel) return;
+    panel.classList.toggle("cc-slide-panel-open");
+  }
   function buildToolbar() {
     var ui = state.ui;
     ui.toolbar.innerHTML = "";
@@ -277,7 +304,10 @@
       clearAllInstances();
     });
 
-    var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title]);
+    var btnPalette = el("button", { class: "cc-mm-btn", text: "☰ Terrain" });
+    btnPalette.addEventListener("click", togglePalette);
+
+    var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title, btnPalette]);
     var group2 = el("div", { class: "cc-mm-toolbar-group" }, [
       el("label", { class: "cc-mm-label", text: "Map Title" }),
       mapTitleInput,
@@ -354,6 +384,7 @@
         if (kind && item.kind !== kind) return;
 
         var card = el("button", { class: "cc-mm-palette-card" });
+        card.setAttribute("draggable", "true");
         if (state.selectedTerrainTypeId === item.terrain_type_id) {
           card.classList.add("is-selected");
         }
@@ -370,6 +401,13 @@
           state.selectedTerrainTypeId = item.terrain_type_id;
           renderPalette();
           renderInspector();
+        });
+
+        card.addEventListener("dragstart", function (ev) {
+          state.selectedTerrainTypeId = item.terrain_type_id;
+          ev.dataTransfer.setData("text/plain", item.terrain_type_id);
+          ev.dataTransfer.effectAllowed = "copy";
+          renderPalette();
         });
 
         list.appendChild(card);
@@ -507,7 +545,31 @@
     panel.appendChild(numberField("Scale", selectedInstance.scale || 1, "0.05", function (v) {
       selectedInstance.scale = clamp(Number(v || 1), 0.1, 5);
       syncInstanceMarker(selectedInstance);
+      // keep slider in sync
+      var sl = panel.querySelector(".cc-mm-scale-slider");
+      if (sl) sl.value = selectedInstance.scale;
     }));
+
+    // Scale slider for quick visual adjustment
+    var sliderWrap = el("div", { class: "cc-mm-field" });
+    sliderWrap.appendChild(el("div", { class: "cc-mm-label", text: "Scale (drag)" }));
+    var slider = document.createElement("input");
+    slider.type = "range";
+    slider.className = "cc-mm-scale-slider";
+    slider.min = "0.1";
+    slider.max = "3";
+    slider.step = "0.05";
+    slider.value = String(selectedInstance.scale || 1);
+    slider.style.cssText = "width:100%;accent-color:#ffb066;cursor:pointer;";
+    slider.addEventListener("input", function () {
+      selectedInstance.scale = clamp(parseFloat(slider.value), 0.1, 5);
+      syncInstanceMarker(selectedInstance);
+      // keep number field in sync
+      var numInputs = panel.querySelectorAll(".cc-mm-input");
+      // find the scale number input (4th numberField = index 3)
+    });
+    sliderWrap.appendChild(slider);
+    panel.appendChild(sliderWrap);
 
     panel.appendChild(numberField("Z Index", selectedInstance.z_index || 0, "1", function (v) {
       selectedInstance.z_index = Number(v || 0);
@@ -523,8 +585,16 @@
 
     panel.appendChild(el("div", {
       class: "cc-mm-help",
-      text: "You can also drag the selected terrain directly on the map."
+      text: "Drag directly on the map to reposition. Press Delete key to remove."
     }));
+
+    var btnDel = el("button", {
+      class: "cc-mm-btn",
+      text: "🗑 Delete This Terrain",
+      style: "width:100%;margin-top:10px;border-color:#933;color:#f88;"
+    });
+    btnDel.addEventListener("click", deleteSelectedInstance);
+    panel.appendChild(btnDel);
   }
 
   function initLeaflet() {
@@ -550,6 +620,34 @@
     map.on("click", function (ev) {
       if (!state.selectedTerrainTypeId) return;
       placeTerrainAt(ev.latlng);
+    });
+
+    // Drag-and-drop: terrain card dragged onto the map
+    mapEl.addEventListener("dragover", function (ev) {
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "copy";
+      mapEl.classList.add("drag-over");
+    });
+
+    mapEl.addEventListener("dragleave", function () {
+      mapEl.classList.remove("drag-over");
+    });
+
+    mapEl.addEventListener("drop", function (ev) {
+      ev.preventDefault();
+      mapEl.classList.remove("drag-over");
+      var typeId = ev.dataTransfer.getData("text/plain");
+      if (typeId) state.selectedTerrainTypeId = typeId;
+      if (!state.selectedTerrainTypeId) return;
+
+      // Convert pixel position to Leaflet latlng
+      var rect = mapEl.getBoundingClientRect();
+      var containerPoint = L.point(
+        ev.clientX - rect.left,
+        ev.clientY - rect.top
+      );
+      var latlng = map.containerPointToLatLng(containerPoint);
+      placeTerrainAt(latlng);
     });
 
     state.map = map;
