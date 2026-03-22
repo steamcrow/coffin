@@ -8,7 +8,7 @@
 
   var DEFAULTS = {
     title: "Coffin Canyon — Map Maker",
-    mapImageUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/parchment_bg_4096x4096.jpg",
+    mapImageUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/isometric_tile_48x48.svg",
     mapWidth: 4096,
     mapHeight: 4096,
 
@@ -22,10 +22,8 @@
     leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
 
     assetBaseUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/terrain/",
-    mapImageUrl48: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/parchment_bg_4096x4096.jpg",
-    mapImageUrl36: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/parchment_bg_4096x4096.jpg",
-    gridImageUrl48: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/grid_iso_48x48_4096.jpg",
-    gridImageUrl36: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/grid_iso_36x36_4096.jpg",
+    mapImageUrl48: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/isometric_tile_48x48.svg",
+    mapImageUrl36: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/isometric_tile_36x36.svg",
     defaultMapId: "lost_yots",
     defaultMapTitle: "Lost Yots",
     defaultLocationId: "lost_yots"
@@ -43,7 +41,6 @@
     selectedInstanceId: null,
     markersByInstanceId: {},
     tableSizeInches: 48,
-    showGrid: false,
     bgOverlay: null,
     instanceData: {
       map_id: DEFAULTS.defaultMapId,
@@ -312,18 +309,9 @@
       renderInspector();
     });
 
-    var btnGrid = el("button", { class: "cc-mm-btn", text: "⊞ Grid" });
-    btnGrid.addEventListener("click", function() {
-      state.showGrid = !state.showGrid;
-      btnGrid.classList.toggle("cc-mm-btn--primary", state.showGrid);
-      btnGrid.textContent = state.showGrid ? "⊞ Grid ON" : "⊞ Grid";
-      updateBackground();
-    });
-
     var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title,
       el("span", { class: "cc-mm-label", text: "Table" }),
-      tableSizeSelect,
-      btnGrid
+      tableSizeSelect
     ]);
     var group2 = el("div", { class: "cc-mm-toolbar-group" }, [
       el("label", { class: "cc-mm-label", text: "Map Title" }),
@@ -667,15 +655,12 @@
   }
 
   function currentBgUrl() {
-    var opts = state.opts;
-    if (state.showGrid) {
-      return state.tableSizeInches === 36 ? opts.gridImageUrl36 : opts.gridImageUrl48;
-    }
+    var opts = state.opts || DEFAULTS;
     return state.tableSizeInches === 36 ? opts.mapImageUrl36 : opts.mapImageUrl48;
   }
 
   function updateBackground() {
-    if (!state.map || !state.bgOverlay) return;
+    if (!state.bgOverlay) return;
     state.bgOverlay.setUrl(currentBgUrl());
   }
 
@@ -685,24 +670,26 @@
     var mapEl = state.ui.mapEl;
     mapEl.innerHTML = "";
 
-    var map = L.map(mapEl, {
-      crs: L.CRS.Simple,
-      minZoom: -4,
-      maxZoom: 3,
-      zoomSnap: 0.1,
-      zoomDelta: 0.5,
-      attributionControl: false,
-      dragging: false,       // no map panning
-      scrollWheelZoom: true,
-      doubleClickZoom: false
-    });
-
-    // Dead space: 600px above the map image for off-map staging
-    var deadSpace = 600;
     var W = state.instanceData.map_size_px.w;
     var H = state.instanceData.map_size_px.h;
     var bounds = [[0, 0], [H, W]];
     state.imageBounds = bounds;
+
+    // Dead space above the table for off-map staging
+    var deadSpace = 400;
+
+    var map = L.map(mapEl, {
+      crs: L.CRS.Simple,
+      minZoom: -5,     // will be recalculated to fit width after mount
+      maxZoom: 2,
+      zoomSnap: 0.05,
+      zoomDelta: 0.25,
+      attributionControl: false,
+      dragging: false,
+      scrollWheelZoom: true,
+      doubleClickZoom: false,
+      touchZoom: true
+    });
 
     // Create z-index panes (one per level -10 to 20)
     for (var z = -10; z <= 20; z++) {
@@ -714,16 +701,21 @@
       }
     }
 
-    // Background parchment — sits below everything
+    // SVG tabletop — sits below everything, fills window width
     state.bgOverlay = L.imageOverlay(currentBgUrl(), bounds, {
       interactive: false,
       pane: "tilePane"
     }).addTo(map);
 
-    // Fit to show image plus dead space above
-    var extendedBounds = [[-deadSpace, -200], [H + 100, W + 200]];
-    map.fitBounds(bounds);
+    // Fit the table image to fill the container width exactly
+    // then set that as the minimum zoom so you can't zoom out past the table
+    map.fitBounds(bounds, { padding: [0, 0] });
+    var fitZoom = map.getBoundsZoom(bounds, false);
+    map.setMinZoom(fitZoom);
+    map.setZoom(fitZoom);
 
+    // Allow elements to be placed above the table (dead space) without panning the table itself
+    // We achieve this by letting the map view extend upward but keeping the bg anchored
     state.map = map;
     state.deadSpace = deadSpace;
 
