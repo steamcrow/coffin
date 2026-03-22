@@ -41,7 +41,7 @@
     selectedInstanceId: null,
     markersByInstanceId: {},
     tableSizeInches: 48,
-    terrainBaseScale: 0.04,   // global correction — catalog footprints tend to be generous
+    terrainBaseScale: 0.02,   // global correction — adjust with toolbar slider
     bgOverlay: null,
     instanceData: {
       map_id: DEFAULTS.defaultMapId,
@@ -317,10 +317,10 @@
     ]);
 
     // Terrain scale slider — compensates for catalog footprint sizes
-    var scaleLabel = el("span", { class: "cc-mm-label", text: "Terrain Scale: 0.04" });
+    var scaleLabel = el("span", { class: "cc-mm-label", text: "Terrain Scale: 0.02" });
     var scaleSlider = document.createElement("input");
     scaleSlider.type = "range";
-    scaleSlider.min = "0.01"; scaleSlider.max = "0.5"; scaleSlider.step = "0.01";
+    scaleSlider.min = "0.005"; scaleSlider.max = "0.3"; scaleSlider.step = "0.005";
     scaleSlider.value = String(state.terrainBaseScale);
     scaleSlider.style.cssText = "width:90px;accent-color:#d4822a;cursor:pointer;vertical-align:middle;";
     scaleSlider.addEventListener("input", function() {
@@ -554,6 +554,22 @@
       el("div", { class: "cc-mm-v", text: selectedInstance.instance_id })
     ]));
 
+    // ── Flip — right at the top so it's always visible ────────────
+    (function () {
+      var btn = el("button", {
+        class: "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : ""),
+        text:  selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip",
+        style: "width:100%;justify-content:center;margin-bottom:10px;"
+      });
+      btn.addEventListener("click", function () {
+        selectedInstance.mirror_x = !selectedInstance.mirror_x;
+        syncInstanceMarker(selectedInstance);
+        btn.textContent = selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip";
+        btn.className   = "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : "");
+      });
+      panel.appendChild(btn);
+    }());
+
     panel.appendChild(numberField("X", selectedInstance.x, "1", function (v) {
       selectedInstance.x = Number(v || 0);
       syncInstanceMarker(selectedInstance);
@@ -586,26 +602,6 @@
       panel.appendChild(wrap);
     }());
 
-
-    // ── Flip horizontal toggle ─────────────────────────────────────
-    (function () {
-      var wrap = el("div", { class: "cc-mm-field" });
-      var lbl  = el("label", { text: "Flip Horizontal" });
-      var btn  = el("button", {
-        class: "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : ""),
-        text:  selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip",
-        style: "width:100%;justify-content:center;"
-      });
-      btn.addEventListener("click", function () {
-        selectedInstance.mirror_x = !selectedInstance.mirror_x;
-        syncInstanceMarker(selectedInstance);
-        btn.textContent = selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip";
-        btn.className   = "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : "");
-      });
-      wrap.appendChild(lbl);
-      wrap.appendChild(btn);
-      panel.appendChild(wrap);
-    }());
 
     // ── Scale: number field + drag bar ────────────────────────────
     panel.appendChild(numberField("Scale", selectedInstance.scale || 1, "0.05", function (v) {
@@ -843,8 +839,8 @@
     return L.divIcon({
       className:  "cc-mm-div-icon",
       html:       buildMarkerHtml(instance, terrain),
-      iconSize:   [width, width],
-      iconAnchor: [Math.round(width / 2), width]
+      iconSize:   [width, width * 3],   // tall enough to never clip; image is height:auto
+      iconAnchor: [Math.round(width / 2), 0]
     });
   }
 
