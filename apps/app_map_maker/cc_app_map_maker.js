@@ -794,11 +794,11 @@
     var width    = terrainIconCssPx(terrain, instance);
 
     return (
-      '<div class="cc-mm-terrain-wrap" data-instance-id="' + escapeHtml(instance.instance_id) + '">' +
+      '<div class="cc-mm-terrain-wrap" data-instance-id="' + escapeHtml(instance.instance_id) + '" style="width:' + width + 'px;">' +
         '<img class="cc-mm-terrain-img' + (state.selectedInstanceId === instance.instance_id ? ' is-selected' : '') + '"' +
         ' src="' + escapeHtml(url) + '"' +
         ' draggable="false"' +
-        ' style="width:' + width + 'px;height:auto;transform:rotate(' + rotation + 'deg)' + (instance.mirror_x ? ' scaleX(-1)' : '') + ';" />' +
+        ' style="transform:rotate(' + rotation + 'deg)' + (instance.mirror_x ? ' scaleX(-1)' : '') + ';" />' +
       '</div>'
     );
   }
