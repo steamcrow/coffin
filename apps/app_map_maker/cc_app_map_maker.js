@@ -1,247 +1,976 @@
-/* File: coffin/apps/app_map_maker/cc_app_map_maker.css */
+/* File: coffin/apps/app_map_maker/cc_app_map_maker.js
+   Coffin Canyon — Map Maker (V1)
+   Fake-isometric Leaflet map editor
+*/
 
-/* ── App shell ──────────────────────────────────────────────────── */
-.cc-mm-app {
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  background: #141414;
-  color: #eee;
-  font-family: Arial, sans-serif;
-  overflow: hidden;
-}
+(function () {
+  "use strict";
 
-/* ── Toolbar ────────────────────────────────────────────────────── */
-.cc-mm-toolbar {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  padding: 10px 14px;
-  border-bottom: 1px solid #2f2f2f;
-  background: #1b1b1b;
-  flex-shrink: 0;
-}
+  var DEFAULTS = {
+    title: "Coffin Canyon — Map Maker",
+    mapImageUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/parchment_bg_4096x4096.jpg",
+    mapWidth: 4096,
+    mapHeight: 4096,
 
-.cc-mm-toolbar-group {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-}
+    terrainCatalogUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/terrain_catalog.json",
+    locationsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
 
-.cc-mm-toolbar-title {
-  font-size: 18px;
-  font-weight: 700;
-  color: #ffb066;
-  white-space: nowrap;
-}
+    initialInstancesUrl: "",
 
-/* ── Body: palette | map | inspector ───────────────────────────── */
-.cc-mm-body {
-  display: grid;
-  grid-template-columns: 260px 1fr 300px;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
+    appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_map_maker/cc_app_map_maker.css",
+    leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
+    leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
 
-/* ── Sidebars ───────────────────────────────────────────────────── */
-.cc-mm-sidebar {
-  background: #181818;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-}
+    assetBaseUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/terrain/",
+    defaultMapId: "lost_yots",
+    defaultMapTitle: "Lost Yots",
+    defaultLocationId: "lost_yots"
+  };
 
-.cc-mm-sidebar--left  { border-right: 1px solid #2f2f2f; }
-.cc-mm-sidebar--right { border-left:  1px solid #2f2f2f; }
+  var state = {
+    opts: null,
+    map: null,
+    imageBounds: null,
+    terrainCatalog: null,
+    terrainById: {},
+    locations: [],
+    currentFile: null,
+    selectedTerrainTypeId: null,
+    selectedInstanceId: null,
+    markersByInstanceId: {},
+    instanceData: {
+      map_id: DEFAULTS.defaultMapId,
+      map_title: DEFAULTS.defaultMapTitle,
+      location_id: DEFAULTS.defaultLocationId,
+      map_image: DEFAULTS.mapImageUrl,
+      map_size_px: { w: DEFAULTS.mapWidth, h: DEFAULTS.mapHeight },
+      instances: []
+    },
+    ui: {}
+  };
 
-/* ── Sidebar header (pinned, does not scroll) ───────────────────── */
-.cc-mm-sidebar-header {
-  font-size: 13px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: #ffb066;
-  padding: 12px 12px 6px;
-  flex-shrink: 0;
-}
+  function mergeOpts(userOpts) {
+    var out = {};
+    Object.keys(DEFAULTS).forEach(function (k) { out[k] = DEFAULTS[k]; });
+    Object.keys(userOpts || {}).forEach(function (k) { out[k] = userOpts[k]; });
+    return out;
+  }
 
-/* ── Palette controls (pinned above list) ───────────────────────── */
-.cc-mm-palette-controls {
-  padding: 0 10px 8px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
+  function ensureCss(url) {
+    if (!url) return Promise.resolve();
+    var existing = Array.prototype.slice.call(document.querySelectorAll('link[rel="stylesheet"]'))
+      .find(function (el) { return (el.href || "").indexOf(url) !== -1; });
+    if (existing) return Promise.resolve();
 
-/* ── Palette list (the part that scrolls) ───────────────────────── */
-.cc-mm-palette-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0 10px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-height: 0;
-}
+    return new Promise(function (resolve, reject) {
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = url + "?t=" + Date.now();
+      link.onload = resolve;
+      link.onerror = function () { reject(new Error("Failed to load CSS: " + url)); };
+      document.head.appendChild(link);
+    });
+  }
 
-.cc-mm-palette-list::-webkit-scrollbar       { width: 5px; }
-.cc-mm-palette-list::-webkit-scrollbar-track { background: #141414; }
-.cc-mm-palette-list::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
-.cc-mm-palette-list::-webkit-scrollbar-thumb:hover { background: #ffb066; }
+  function ensureScript(url) {
+    if (!url) return Promise.resolve();
+    return new Promise(function (resolve, reject) {
+      var found = Array.prototype.slice.call(document.scripts).some(function (s) {
+        return (s.src || "").indexOf(url) !== -1;
+      });
+      if (found) {
+        resolve();
+        return;
+      }
 
-/* ── Inspector body (also scrolls) ─────────────────────────────── */
-.cc-mm-inspector-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 12px;
-  min-height: 0;
-}
+      fetch(url + "?t=" + Date.now())
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status + " for " + url);
+          return r.text();
+        })
+        .then(function (text) {
+          var blob = new Blob([text], { type: "text/javascript" });
+          var blobUrl = URL.createObjectURL(blob);
+          var script = document.createElement("script");
+          script.src = blobUrl;
+          script.onload = function () {
+            URL.revokeObjectURL(blobUrl);
+            resolve();
+          };
+          script.onerror = function () {
+            URL.revokeObjectURL(blobUrl);
+            reject(new Error("Failed to execute script: " + url));
+          };
+          document.head.appendChild(script);
+        })
+        .catch(reject);
+    });
+  }
 
-.cc-mm-inspector-body::-webkit-scrollbar       { width: 5px; }
-.cc-mm-inspector-body::-webkit-scrollbar-track { background: #141414; }
-.cc-mm-inspector-body::-webkit-scrollbar-thumb { background: #3a3a3a; border-radius: 3px; }
+  function fetchJson(url) {
+    if (!url) return Promise.resolve(null);
+    return fetch(url + (url.indexOf("?") === -1 ? "?t=" : "&t=") + Date.now())
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status + " for " + url);
+        return r.json();
+      });
+  }
 
-/* ── Map center ─────────────────────────────────────────────────── */
-.cc-mm-center {
-  position: relative;
-  background: #101010;
-  overflow: hidden;
-  min-height: 0;
-}
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function (k) {
+      if (k === "class") node.className = attrs[k];
+      else if (k === "html") node.innerHTML = attrs[k];
+      else if (k === "text") node.textContent = attrs[k];
+      else node.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function (child) {
+      if (child == null) return;
+      node.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
+    });
+    return node;
+  }
 
-.cc-mm-map-wrap {
-  position: absolute;
-  inset: 0;
-}
+  function clamp(num, min, max) {
+    return Math.max(min, Math.min(max, num));
+  }
 
-.cc-mm-map {
-  width: 100%;
-  height: 100%;
-  background: #0b0b0b;
-}
+  function makeId(prefix) {
+    return prefix + "_" + Math.random().toString(36).slice(2, 10);
+  }
 
-/* ── Form elements ──────────────────────────────────────────────── */
-.cc-mm-label {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #bba57e;
-  margin-bottom: 2px;
-  display: block;
-}
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
 
-.cc-mm-field { margin-bottom: 10px; }
+  function getTerrainTypes() {
+    if (!state.terrainCatalog) return [];
+    if (Array.isArray(state.terrainCatalog.terrain_types)) return state.terrainCatalog.terrain_types;
+    if (Array.isArray(state.terrainCatalog.terrain_types_batch_2)) return state.terrainCatalog.terrain_types_batch_2;
+    return [];
+  }
 
-.cc-mm-input {
-  background: #101010;
-  color: #eee;
-  border: 1px solid #444;
-  padding: 6px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  width: 100%;
-  box-sizing: border-box;
-}
+  function normalizeLocations(raw) {
+    if (!raw) return [];
+    if (Array.isArray(raw.locations)) return raw.locations;
+    if (Array.isArray(raw.named_locations)) return raw.named_locations;
+    if (Array.isArray(raw)) return raw;
+    return [];
+  }
 
-/* ── Buttons ────────────────────────────────────────────────────── */
-.cc-mm-btn {
-  background: #252525;
-  color: #eee;
-  border: 1px solid #454545;
-  padding: 7px 11px;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 12px;
-  white-space: nowrap;
-}
-.cc-mm-btn:hover      { background: #323232; }
-.cc-mm-btn--primary   { background: #7a4e1a; border-color: #9a6522; }
-.cc-mm-btn--primary:hover { background: #925c1f; }
+  function buildLayout(root) {
+    root.innerHTML = "";
 
-/* ── Palette cards ──────────────────────────────────────────────── */
-.cc-mm-palette-card {
-  text-align: left;
-  background: #111;
-  border: 1px solid #333;
-  border-radius: 7px;
-  padding: 8px 10px;
-  color: #eee;
-  cursor: grab;
-  flex-shrink: 0;
-  transition: border-color 0.1s, background 0.1s;
-  width: 100%;
-  box-sizing: border-box;
-}
-.cc-mm-palette-card:hover  { background: #1a1a1a; border-color: #ffb066; }
-.cc-mm-palette-card.is-selected { border-color: #ffb066; box-shadow: 0 0 0 1px #ffb066 inset; }
-.cc-mm-palette-card:active { cursor: grabbing; }
+    var app = el("div", { class: "cc-mm-app" });
+    var toolbar = el("div", { class: "cc-mm-toolbar" });
+    var body = el("div", { class: "cc-mm-body" });
 
-.cc-mm-palette-title { font-weight: 700; font-size: 12px; margin-bottom: 2px; }
-.cc-mm-palette-meta  { font-size: 11px; color: #888; }
+    var left   = el("aside", { class: "cc-mm-sidebar cc-mm-sidebar--left" });
+    var center = el("main",  { class: "cc-mm-center" });
+    var right  = el("aside", { class: "cc-mm-sidebar cc-mm-sidebar--right" });
 
-/* ── Inspector ──────────────────────────────────────────────────── */
-.cc-mm-section-title {
-  font-size: 12px;
-  font-weight: 700;
-  color: #ffb066;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-}
+    var mapWrap = el("div", { class: "cc-mm-map-wrap" });
+    var mapEl   = el("div", { class: "cc-mm-map", id: "cc-mm-map" });
+    mapWrap.appendChild(mapEl);
+    center.appendChild(mapWrap);
 
-.cc-mm-kv {
-  display: grid;
-  grid-template-columns: 76px 1fr;
-  gap: 5px;
-  margin-bottom: 5px;
-  align-items: start;
-}
-.cc-mm-k { color: #bba57e; font-size: 10px; text-transform: uppercase; padding-top: 2px; }
-.cc-mm-v { color: #eee; font-size: 12px; word-break: break-word; }
+    body.appendChild(left);
+    body.appendChild(center);
+    body.appendChild(right);
+    app.appendChild(toolbar);
+    app.appendChild(body);
+    root.appendChild(app);
 
-.cc-mm-empty,
-.cc-mm-help { color: #888; font-size: 12px; line-height: 1.5; margin-bottom: 8px; }
+    state.ui = {
+      root: root,
+      app: app,
+      toolbar: toolbar,
+      left: left,
+      center: center,
+      right: right,
+      mapEl: mapEl
+    };
 
-/* ── Terrain markers ────────────────────────────────────────────── */
-.cc-mm-div-icon { background: transparent !important; border: none !important; }
+    buildToolbar();
+    buildLeftSidebar();
+    buildRightSidebar();
 
-.cc-mm-terrain-wrap {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  pointer-events: auto;
-}
+    // Keyboard: Delete removes selected instance
+    document.addEventListener("keydown", function (ev) {
+      if ((ev.key === "Delete" || ev.key === "Backspace") &&
+          state.selectedInstanceId &&
+          document.activeElement.tagName !== "INPUT" &&
+          document.activeElement.tagName !== "TEXTAREA") {
+        deleteSelectedInstance();
+      }
+    });
+  }
+  function buildToolbar() {
+    var ui = state.ui;
+    ui.toolbar.innerHTML = "";
 
-.cc-mm-terrain-img {
-  display: block;
-  transform-origin: bottom center;
-  user-select: none;
-  pointer-events: auto;
-  filter: none;
-}
+    var title = el("div", { class: "cc-mm-toolbar-title", text: state.opts.title });
 
-.cc-mm-terrain-img.is-selected {
-  outline: 2px solid #ffb066;
-  outline-offset: 2px;
-  filter: drop-shadow(0 0 6px rgba(255, 176, 102, 0.85));
-}
+    var mapTitleInput = el("input", {
+      class: "cc-mm-input",
+      type: "text",
+      placeholder: "Map Title"
+    });
+    mapTitleInput.value = state.instanceData.map_title || "";
 
-.cc-mm-map.drag-over {
-  outline: 2px dashed #ffb066;
-  outline-offset: -2px;
-}
+    var mapIdInput = el("input", {
+      class: "cc-mm-input",
+      type: "text",
+      placeholder: "map_id"
+    });
+    mapIdInput.value = state.instanceData.map_id || "";
 
-/* ── Responsive ─────────────────────────────────────────────────── */
-@media (max-width: 1100px) {
-  .cc-mm-body { grid-template-columns: 220px 1fr; }
-  .cc-mm-sidebar--right { display: none; }
-}
-@media (max-width: 700px) {
-  .cc-mm-body { grid-template-columns: 1fr; grid-template-rows: 220px 1fr; }
-  .cc-mm-sidebar--left { max-height: 220px; }
-}
+    var locationSelect = el("select", { class: "cc-mm-input" });
+    renderLocationOptions(locationSelect);
+
+    var btnExport = el("button", { class: "cc-mm-btn cc-mm-btn--primary", text: "Export JSON" });
+    var btnLoadJson = el("button", { class: "cc-mm-btn", text: "Load JSON" });
+    var btnDelete = el("button", { class: "cc-mm-btn", text: "Delete Selected" });
+    var btnClear = el("button", { class: "cc-mm-btn", text: "Clear Map" });
+
+    var fileInput = el("input", {
+      type: "file",
+      accept: ".json,application/json",
+      style: "display:none"
+    });
+
+    btnLoadJson.addEventListener("click", function () {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", function (ev) {
+      var file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var parsed = JSON.parse(reader.result);
+          loadInstancesData(parsed);
+        } catch (err) {
+          alert("Invalid JSON file: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    mapTitleInput.addEventListener("input", function () {
+      state.instanceData.map_title = mapTitleInput.value.trim();
+    });
+
+    mapIdInput.addEventListener("input", function () {
+      state.instanceData.map_id = mapIdInput.value.trim();
+    });
+
+    locationSelect.addEventListener("change", function () {
+      state.instanceData.location_id = locationSelect.value || "";
+    });
+
+    btnExport.addEventListener("click", function () {
+      exportJson();
+    });
+
+    btnDelete.addEventListener("click", function () {
+      deleteSelectedInstance();
+    });
+
+    btnClear.addEventListener("click", function () {
+      if (!confirm("Clear all placed terrain from this map?")) return;
+      clearAllInstances();
+    });
+
+    var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title]);
+    var group2 = el("div", { class: "cc-mm-toolbar-group" }, [
+      el("label", { class: "cc-mm-label", text: "Map Title" }),
+      mapTitleInput,
+      el("label", { class: "cc-mm-label", text: "Map ID" }),
+      mapIdInput,
+      el("label", { class: "cc-mm-label", text: "Location" }),
+      locationSelect
+    ]);
+    var group3 = el("div", { class: "cc-mm-toolbar-group" }, [
+      btnLoadJson,
+      btnExport,
+      btnDelete,
+      btnClear,
+      fileInput
+    ]);
+
+    ui.toolbar.appendChild(group1);
+    ui.toolbar.appendChild(group2);
+    ui.toolbar.appendChild(group3);
+
+    ui.mapTitleInput = mapTitleInput;
+    ui.mapIdInput = mapIdInput;
+    ui.locationSelect = locationSelect;
+  }
+
+  function renderLocationOptions(selectEl) {
+    selectEl.innerHTML = "";
+    selectEl.appendChild(el("option", { value: "", text: "— Select Location —" }));
+
+    state.locations.forEach(function (loc) {
+      var id = loc.location_id || loc.id || loc.slug || loc.name || "";
+      var name = loc.name || loc.title || id;
+      if (!id) return;
+      selectEl.appendChild(el("option", { value: id, text: name }));
+    });
+
+    selectEl.value = state.instanceData.location_id || "";
+  }
+
+  function buildLeftSidebar() {
+    var ui = state.ui;
+    ui.left.innerHTML = "";
+
+    var header = el("div", { class: "cc-mm-sidebar-header", text: "Terrain Palette" });
+
+    var search = el("input", {
+      class: "cc-mm-input cc-mm-input--full",
+      type: "text",
+      placeholder: "Search terrain..."
+    });
+
+    var filterKind = el("select", { class: "cc-mm-input cc-mm-input--full" });
+    filterKind.appendChild(el("option", { value: "", text: "All kinds" }));
+    ["building", "scatter", "obstacle", "area", "hazard", "feature", "objective"].forEach(function (kind) {
+      filterKind.appendChild(el("option", { value: kind, text: kind }));
+    });
+
+    var list = el("div", { class: "cc-mm-palette-list" });
+
+    function renderPalette() {
+      var q = (search.value || "").trim().toLowerCase();
+      var kind = filterKind.value || "";
+      list.innerHTML = "";
+
+      getTerrainTypes().forEach(function (item) {
+        var hay = [
+          item.name,
+          item.terrain_type_id,
+          item.family,
+          (item.tags || []).join(" ")
+        ].join(" ").toLowerCase();
+
+        if (q && hay.indexOf(q) === -1) return;
+        if (kind && item.kind !== kind) return;
+
+        var card = el("button", { class: "cc-mm-palette-card" });
+        card.setAttribute("draggable", "true");
+        if (state.selectedTerrainTypeId === item.terrain_type_id) {
+          card.classList.add("is-selected");
+        }
+
+        var line1 = el("div", { class: "cc-mm-palette-title", text: item.name || item.terrain_type_id });
+        var line2 = el("div", { class: "cc-mm-palette-meta", text: (item.family || "") + " · " + (item.kind || "") });
+        var line3 = el("div", { class: "cc-mm-palette-meta", text: item.terrain_type_id });
+
+        card.appendChild(line1);
+        card.appendChild(line2);
+        card.appendChild(line3);
+
+        card.addEventListener("click", function () {
+          state.selectedTerrainTypeId = item.terrain_type_id;
+          renderPalette();
+          renderInspector();
+        });
+
+        card.addEventListener("dragstart", function (ev) {
+          state.selectedTerrainTypeId = item.terrain_type_id;
+          ev.dataTransfer.setData("text/plain", item.terrain_type_id);
+          ev.dataTransfer.effectAllowed = "copy";
+          renderPalette();
+        });
+
+        list.appendChild(card);
+      });
+    }
+
+    search.addEventListener("input", renderPalette);
+    filterKind.addEventListener("change", renderPalette);
+
+    ui.left.appendChild(el("div", { class: "cc-mm-sidebar-header", text: "Terrain Palette" }));
+
+    var controls = el("div", { class: "cc-mm-palette-controls" });
+    controls.appendChild(search);
+    controls.appendChild(filterKind);
+    ui.left.appendChild(controls);
+    ui.left.appendChild(list);
+
+    ui.paletteSearch = search;
+    ui.paletteFilterKind = filterKind;
+    ui.paletteList = list;
+    ui.renderPalette = renderPalette;
+
+    renderPalette();
+  }
+
+  function buildRightSidebar() {
+    var ui = state.ui;
+    ui.right.innerHTML = "";
+    var header = el("div", { class: "cc-mm-sidebar-header", text: "Inspector" });
+    var body   = el("div", { class: "cc-mm-inspector-body" });
+    var panel  = el("div", { class: "cc-mm-inspector" });
+    body.appendChild(panel);
+    ui.right.appendChild(header);
+    ui.right.appendChild(body);
+    ui.inspector = panel;
+    renderInspector();
+  }
+
+  function renderInspector() {
+    var ui = state.ui;
+    var panel = ui.inspector;
+    if (!panel) return;
+    panel.innerHTML = "";
+
+    var selectedTerrain = state.terrainById[state.selectedTerrainTypeId] || null;
+    var selectedInstance = getSelectedInstance();
+
+    if (!selectedTerrain && !selectedInstance) {
+      panel.appendChild(el("div", {
+        class: "cc-mm-empty",
+        text: "Select a terrain type on the left, then click the map to place it."
+      }));
+      return;
+    }
+
+    if (selectedTerrain && !selectedInstance) {
+      panel.appendChild(el("div", { class: "cc-mm-section-title", text: "Selected Terrain Type" }));
+      panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+        el("div", { class: "cc-mm-k", text: "Name" }),
+        el("div", { class: "cc-mm-v", text: selectedTerrain.name || "" })
+      ]));
+      panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+        el("div", { class: "cc-mm-k", text: "ID" }),
+        el("div", { class: "cc-mm-v", text: selectedTerrain.terrain_type_id || "" })
+      ]));
+      panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+        el("div", { class: "cc-mm-k", text: "Kind" }),
+        el("div", { class: "cc-mm-v", text: selectedTerrain.kind || "" })
+      ]));
+      panel.appendChild(el("div", {
+        class: "cc-mm-help",
+        text: "Click the map to place this terrain."
+      }));
+      return;
+    }
+
+    if (!selectedInstance) return;
+
+    var terrain = state.terrainById[selectedInstance.terrain_type_id] || null;
+
+    panel.appendChild(el("div", { class: "cc-mm-section-title", text: "Selected Instance" }));
+
+    function numberField(label, value, step, onInput) {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var lbl = el("label", { class: "cc-mm-label", text: label });
+      var input = el("input", {
+        class: "cc-mm-input cc-mm-input--full",
+        type: "number",
+        step: step || "1",
+        value: String(value == null ? "" : value)
+      });
+      input.addEventListener("input", function () {
+        onInput(input.value);
+      });
+      wrap.appendChild(lbl);
+      wrap.appendChild(input);
+      return wrap;
+    }
+
+    function textField(label, value, onInput) {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var lbl = el("label", { class: "cc-mm-label", text: label });
+      var input = el("input", {
+        class: "cc-mm-input cc-mm-input--full",
+        type: "text",
+        value: value == null ? "" : value
+      });
+      input.addEventListener("input", function () {
+        onInput(input.value);
+      });
+      wrap.appendChild(lbl);
+      wrap.appendChild(input);
+      return wrap;
+    }
+
+    panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+      el("div", { class: "cc-mm-k", text: "Terrain" }),
+      el("div", { class: "cc-mm-v", text: terrain ? terrain.name : selectedInstance.terrain_type_id })
+    ]));
+    panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+      el("div", { class: "cc-mm-k", text: "Instance ID" }),
+      el("div", { class: "cc-mm-v", text: selectedInstance.instance_id })
+    ]));
+
+    panel.appendChild(numberField("X", selectedInstance.x, "1", function (v) {
+      selectedInstance.x = Number(v || 0);
+      syncInstanceMarker(selectedInstance);
+    }));
+
+    panel.appendChild(numberField("Y", selectedInstance.y, "1", function (v) {
+      selectedInstance.y = Number(v || 0);
+      syncInstanceMarker(selectedInstance);
+    }));
+
+    // ── Rotation: number field + drag bar ─────────────────────────
+    panel.appendChild(numberField("Rotation (°)", selectedInstance.rotation_deg || 0, "1", function (v) {
+      selectedInstance.rotation_deg = Number(v || 0);
+      syncInstanceMarker(selectedInstance);
+      var sl = panel.querySelector(".cc-mm-rot-slider");
+      if (sl) sl.value = selectedInstance.rotation_deg;
+    }));
+    (function () {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var sl = document.createElement("input");
+      sl.type = "range"; sl.className = "cc-mm-rot-slider";
+      sl.min = "0"; sl.max = "359"; sl.step = "1";
+      sl.value = String(selectedInstance.rotation_deg || 0);
+      sl.style.cssText = "width:100%;accent-color:#ffb066;cursor:pointer;";
+      sl.addEventListener("input", function () {
+        selectedInstance.rotation_deg = parseFloat(sl.value);
+        syncInstanceMarker(selectedInstance);
+      });
+      wrap.appendChild(sl);
+      panel.appendChild(wrap);
+    }());
+
+    // ── Scale: number field + drag bar ────────────────────────────
+    panel.appendChild(numberField("Scale", selectedInstance.scale || 1, "0.05", function (v) {
+      selectedInstance.scale = clamp(Number(v || 1), 0.1, 5);
+      syncInstanceMarker(selectedInstance);
+      var sl = panel.querySelector(".cc-mm-scale-slider");
+      if (sl) sl.value = selectedInstance.scale;
+    }));
+    (function () {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var sl = document.createElement("input");
+      sl.type = "range"; sl.className = "cc-mm-scale-slider";
+      sl.min = "0.1"; sl.max = "3"; sl.step = "0.05";
+      sl.value = String(selectedInstance.scale || 1);
+      sl.style.cssText = "width:100%;accent-color:#ffb066;cursor:pointer;";
+      sl.addEventListener("input", function () {
+        selectedInstance.scale = clamp(parseFloat(sl.value), 0.1, 5);
+        syncInstanceMarker(selectedInstance);
+      });
+      wrap.appendChild(sl);
+      panel.appendChild(wrap);
+    }());
+
+    // ── Z-Index: number field + drag bar ──────────────────────────
+    panel.appendChild(numberField("Z-Index", selectedInstance.z_index || 0, "1", function (v) {
+      selectedInstance.z_index = Number(v || 0);
+      syncInstanceMarker(selectedInstance);
+      var sl = panel.querySelector(".cc-mm-z-slider");
+      if (sl) sl.value = selectedInstance.z_index;
+    }));
+    (function () {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var sl = document.createElement("input");
+      sl.type = "range"; sl.className = "cc-mm-z-slider";
+      sl.min = "-10"; sl.max = "20"; sl.step = "1";
+      sl.value = String(selectedInstance.z_index || 0);
+      sl.style.cssText = "width:100%;accent-color:#ffb066;cursor:pointer;";
+      sl.addEventListener("input", function () {
+        selectedInstance.z_index = parseFloat(sl.value);
+        syncInstanceMarker(selectedInstance);
+      });
+      wrap.appendChild(sl);
+      panel.appendChild(wrap);
+    }());
+
+    panel.appendChild(textField("Tags (comma separated)", (selectedInstance.tags || []).join(", "), function (v) {
+      selectedInstance.tags = String(v || "")
+        .split(",")
+        .map(function (x) { return x.trim(); })
+        .filter(Boolean);
+    }));
+
+    panel.appendChild(el("div", {
+      class: "cc-mm-help",
+      text: "Drag directly on the map to reposition. Press Delete key to remove."
+    }));
+
+    var btnDel = el("button", {
+      class: "cc-mm-btn",
+      text: "🗑 Delete This Terrain",
+      style: "width:100%;margin-top:10px;border-color:#933;color:#f88;"
+    });
+    btnDel.addEventListener("click", deleteSelectedInstance);
+    panel.appendChild(btnDel);
+  }
+
+  function initLeaflet() {
+    if (!window.L) throw new Error("Leaflet is not loaded.");
+
+    var mapEl = state.ui.mapEl;
+    mapEl.innerHTML = "";
+
+    var map = L.map(mapEl, {
+      crs: L.CRS.Simple,
+      minZoom: -4,
+      maxZoom: 3,
+      zoomSnap: 0.1,
+      zoomDelta: 0.5,
+      attributionControl: false
+    });
+
+    var bounds = [[0, 0], [state.instanceData.map_size_px.h, state.instanceData.map_size_px.w]];
+    state.imageBounds = bounds;
+
+    // Background parchment — bottom z-index, non-interactive
+    L.imageOverlay(state.instanceData.map_image, bounds, {
+      zIndex: 0,
+      interactive: false
+    }).addTo(map);
+
+    // Fit image to fill the container, no padding, then lock pan to image bounds
+    map.fitBounds(bounds);
+    map.setMaxBounds([
+      [-200, -200],
+      [state.instanceData.map_size_px.h + 200, state.instanceData.map_size_px.w + 200]
+    ]);
+
+    map.on("click", function (ev) {
+      if (!state.selectedTerrainTypeId) return;
+      placeTerrainAt(ev.latlng);
+      // Deselect after stamp so next click doesn't place another
+      state.selectedTerrainTypeId = null;
+      if (state.ui.renderPalette) state.ui.renderPalette();
+    });
+
+    // Drag-and-drop: terrain card dragged onto the map
+    mapEl.addEventListener("dragover", function (ev) {
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "copy";
+      mapEl.classList.add("drag-over");
+    });
+
+    mapEl.addEventListener("dragleave", function () {
+      mapEl.classList.remove("drag-over");
+    });
+
+    mapEl.addEventListener("drop", function (ev) {
+      ev.preventDefault();
+      mapEl.classList.remove("drag-over");
+      var typeId = ev.dataTransfer.getData("text/plain");
+      if (typeId) state.selectedTerrainTypeId = typeId;
+      if (!state.selectedTerrainTypeId) return;
+
+      // Convert pixel position to Leaflet latlng
+      var rect = mapEl.getBoundingClientRect();
+      var containerPoint = L.point(
+        ev.clientX - rect.left,
+        ev.clientY - rect.top
+      );
+      var latlng = map.containerPointToLatLng(containerPoint);
+      placeTerrainAt(latlng);
+      // Deselect after stamp
+      state.selectedTerrainTypeId = null;
+      if (state.ui.renderPalette) state.ui.renderPalette();
+    });
+
+    state.map = map;
+  }
+
+  function buildAssetUrl(assetFile) {
+    if (!assetFile) return "";
+    if (/^https?:\/\//i.test(assetFile)) return assetFile;
+    return state.opts.assetBaseUrl.replace(/\/+$/, "") + "/" + assetFile.replace(/^\/+/, "");
+  }
+
+  function getTerrainSizeGuess(terrain) {
+    var fp = terrain && terrain.footprint && terrain.footprint.size_in;
+    var w = fp && fp.w ? fp.w : 4;
+    var d = fp && fp.d ? fp.d : w;
+    return {
+      widthPx: Math.round(w * 14),
+      heightPx: Math.round(d * 14 + ((terrain && terrain.footprint && terrain.footprint.base_height_in) || 2) * 5)
+    };
+  }
+
+  function buildMarkerHtml(instance, terrain) {
+    var url = buildAssetUrl(terrain.asset_file);
+    var guess = getTerrainSizeGuess(terrain);
+    var scale = instance.scale || 1;
+    var rotation = instance.rotation_deg || 0;
+
+    var width = Math.max(16, Math.round(guess.widthPx * scale));
+    var height = Math.max(16, Math.round(guess.heightPx * scale));
+
+    return (
+      '<div class="cc-mm-terrain-wrap" data-instance-id="' + escapeHtml(instance.instance_id) + '">' +
+        '<img class="cc-mm-terrain-img' + (state.selectedInstanceId === instance.instance_id ? ' is-selected' : '') + '"' +
+        ' src="' + escapeHtml(url) + '"' +
+        ' draggable="false"' +
+        ' style="width:' + width + 'px;height:' + height + 'px;transform: rotate(' + rotation + 'deg);" />' +
+      '</div>'
+    );
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function buildDivIcon(instance, terrain) {
+    var guess = getTerrainSizeGuess(terrain);
+    var scale = instance.scale || 1;
+    var width = Math.max(16, Math.round(guess.widthPx * scale));
+    var height = Math.max(16, Math.round(guess.heightPx * scale));
+
+    return L.divIcon({
+      className: "cc-mm-div-icon",
+      html: buildMarkerHtml(instance, terrain),
+      iconSize: [width, height],
+      iconAnchor: [Math.round(width / 2), height]
+    });
+  }
+
+  function addInstanceMarker(instance) {
+    var terrain = state.terrainById[instance.terrain_type_id];
+    if (!terrain) return;
+
+    var marker = L.marker([instance.y, instance.x], {
+      draggable: true,
+      icon: buildDivIcon(instance, terrain),
+      zIndexOffset: (instance.z_index || 0) + Math.round(instance.y || 0)
+    }).addTo(state.map);
+
+    marker.on("click", function (ev) {
+      L.DomEvent.stopPropagation(ev);
+      selectInstance(instance.instance_id);
+    });
+
+    marker.on("dragend", function () {
+      var ll = marker.getLatLng();
+      instance.x = Math.round(ll.lng);
+      instance.y = Math.round(ll.lat);
+      syncInstanceMarker(instance);
+      renderInspector();
+    });
+
+    state.markersByInstanceId[instance.instance_id] = marker;
+
+    setTimeout(function () {
+      var elNode = marker.getElement();
+      if (!elNode) return;
+      elNode.style.pointerEvents = "auto";
+    }, 0);
+  }
+
+  function syncInstanceMarker(instance) {
+    var marker = state.markersByInstanceId[instance.instance_id];
+    var terrain = state.terrainById[instance.terrain_type_id];
+    if (!marker || !terrain) return;
+
+    marker.setLatLng([instance.y, instance.x]);
+    marker.setIcon(buildDivIcon(instance, terrain));
+    marker.setZIndexOffset((instance.z_index || 0) + Math.round(instance.y || 0));
+    renderInspector();
+  }
+
+  function clearAllMarkers() {
+    Object.keys(state.markersByInstanceId).forEach(function (id) {
+      var marker = state.markersByInstanceId[id];
+      if (marker && state.map) state.map.removeLayer(marker);
+    });
+    state.markersByInstanceId = {};
+  }
+
+  function loadInstancesData(data) {
+    if (!data || !Array.isArray(data.instances)) {
+      alert("This file does not look like a terrain instances file.");
+      return;
+    }
+
+    state.instanceData = deepClone(data);
+
+    state.ui.mapTitleInput.value = state.instanceData.map_title || "";
+    state.ui.mapIdInput.value = state.instanceData.map_id || "";
+    state.ui.locationSelect.value = state.instanceData.location_id || "";
+
+    clearAllMarkers();
+
+    if (state.map) {
+      state.map.remove();
+      state.map = null;
+    }
+
+    initLeaflet();
+
+    state.instanceData.instances.forEach(function (instance) {
+      addInstanceMarker(instance);
+    });
+
+    state.selectedInstanceId = null;
+    renderInspector();
+  }
+
+  function getSelectedInstance() {
+    if (!state.selectedInstanceId) return null;
+    return state.instanceData.instances.find(function (x) {
+      return x.instance_id === state.selectedInstanceId;
+    }) || null;
+  }
+
+  function selectInstance(instanceId) {
+    state.selectedInstanceId = instanceId;
+
+    state.instanceData.instances.forEach(function (inst) {
+      syncInstanceMarker(inst);
+    });
+
+    renderInspector();
+  }
+
+  function placeTerrainAt(latlng) {
+    var terrain = state.terrainById[state.selectedTerrainTypeId];
+    if (!terrain) return;
+
+    var instance = {
+      instance_id: makeId("terrain"),
+      terrain_type_id: terrain.terrain_type_id,
+      x: Math.round(latlng.lng),
+      y: Math.round(latlng.lat),
+      rotation_deg: 0,
+      scale: terrain.editor_defaults && terrain.editor_defaults.scale ? terrain.editor_defaults.scale : 1,
+      mirror_x: false,
+      mirror_y: false,
+      z_index: 0,
+      opacity: 1,
+      locked: false,
+      hidden_in_editor: false,
+      state: {
+        destroyed: false,
+        disabled: false,
+        variant_override: null
+      },
+      slot_bindings: [],
+      tags: [],
+      notes: ""
+    };
+
+    state.instanceData.instances.push(instance);
+    addInstanceMarker(instance);
+    selectInstance(instance.instance_id);
+  }
+
+  function deleteSelectedInstance() {
+    var selected = getSelectedInstance();
+    if (!selected) return;
+
+    if (!confirm("Delete selected terrain instance?")) return;
+
+    var marker = state.markersByInstanceId[selected.instance_id];
+    if (marker && state.map) {
+      state.map.removeLayer(marker);
+    }
+    delete state.markersByInstanceId[selected.instance_id];
+
+    state.instanceData.instances = state.instanceData.instances.filter(function (x) {
+      return x.instance_id !== selected.instance_id;
+    });
+
+    state.selectedInstanceId = null;
+    renderInspector();
+  }
+
+  function clearAllInstances() {
+    clearAllMarkers();
+    state.instanceData.instances = [];
+    state.selectedInstanceId = null;
+    renderInspector();
+  }
+
+  function exportJson() {
+    var payload = deepClone(state.instanceData);
+
+    var blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json"
+    });
+
+    var fileName = (payload.map_id || "map") + "_instances.json";
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  function initData() {
+    var opts = state.opts;
+
+    return Promise.all([
+      fetchJson(opts.terrainCatalogUrl),
+      fetchJson(opts.locationsUrl),
+      opts.initialInstancesUrl ? fetchJson(opts.initialInstancesUrl) : Promise.resolve(null)
+    ]).then(function (results) {
+      state.terrainCatalog = results[0];
+      state.locations = normalizeLocations(results[1]);
+
+      getTerrainTypes().forEach(function (item) {
+        state.terrainById[item.terrain_type_id] = item;
+      });
+
+      if (results[2] && Array.isArray(results[2].instances)) {
+        state.instanceData = results[2];
+      } else {
+        state.instanceData = {
+          map_id: opts.defaultMapId,
+          map_title: opts.defaultMapTitle,
+          location_id: opts.defaultLocationId,
+          map_image: opts.mapImageUrl,
+          map_size_px: { w: opts.mapWidth, h: opts.mapHeight },
+          instances: []
+        };
+      }
+    });
+  }
+
+    function mount(root, userOpts) {
+    if (!root) throw new Error("Map Maker mount root is required.");
+
+    state.opts = mergeOpts(userOpts || {});
+
+    return Promise.resolve()
+      .then(function () {
+        return initData();
+      })
+      .then(function () {
+        buildLayout(root);
+        initLeaflet();
+
+        state.instanceData.instances.forEach(function (instance) {
+          addInstanceMarker(instance);
+        });
+
+        renderLocationOptions(state.ui.locationSelect);
+      })
+      .catch(function (err) {
+        console.error("Map Maker failed:", err);
+        root.innerHTML = '<div style="padding:16px;color:#f88;background:#1a1a1a;border:1px solid #533;">Map Maker failed: ' +
+          escapeHtml(err.message) + "</div>";
+      });
+  }
+
+  window.CC_APP_MAP_MAKER = {
+    mount: mount
+  };
+})();
