@@ -166,34 +166,21 @@
     var toolbar = el("div", { class: "cc-mm-toolbar" });
     var body = el("div", { class: "cc-mm-body" });
 
-    // Left sidebar as a slide panel appended to root, not inline
-    var left = el("div", {
-      class: "cc-slide-panel cc-mm-palette-panel",
-      id: "cc-mm-palette-panel"
-    });
-    // Close button inside panel
-    var leftClose = el("button", { class: "cc-panel-close-btn", style: "float:right;margin-bottom:8px;" });
-    leftClose.textContent = "✕";
-    leftClose.addEventListener("click", togglePalette);
-    left.appendChild(leftClose);
-
-    var center = el("main", { class: "cc-mm-center" });
-    var right = el("aside", { class: "cc-mm-sidebar cc-mm-sidebar--right" });
+    var left   = el("aside", { class: "cc-mm-sidebar cc-mm-sidebar--left" });
+    var center = el("main",  { class: "cc-mm-center" });
+    var right  = el("aside", { class: "cc-mm-sidebar cc-mm-sidebar--right" });
 
     var mapWrap = el("div", { class: "cc-mm-map-wrap" });
-    var mapEl = el("div", { class: "cc-mm-map", id: "cc-mm-map" });
-
-    // Drop overlay to receive drag-and-drop terrain
+    var mapEl   = el("div", { class: "cc-mm-map", id: "cc-mm-map" });
     mapWrap.appendChild(mapEl);
-
     center.appendChild(mapWrap);
+
+    body.appendChild(left);
     body.appendChild(center);
     body.appendChild(right);
-
     app.appendChild(toolbar);
     app.appendChild(body);
     root.appendChild(app);
-    root.appendChild(left); // slide panel outside app flow
 
     state.ui = {
       root: root,
@@ -209,7 +196,7 @@
     buildLeftSidebar();
     buildRightSidebar();
 
-    // Keyboard: Delete key removes selected instance
+    // Keyboard: Delete removes selected instance
     document.addEventListener("keydown", function (ev) {
       if ((ev.key === "Delete" || ev.key === "Backspace") &&
           state.selectedInstanceId &&
@@ -218,12 +205,6 @@
         deleteSelectedInstance();
       }
     });
-  }
-
-  function togglePalette() {
-    var panel = document.getElementById("cc-mm-palette-panel");
-    if (!panel) return;
-    panel.classList.toggle("cc-slide-panel-open");
   }
   function buildToolbar() {
     var ui = state.ui;
@@ -304,10 +285,7 @@
       clearAllInstances();
     });
 
-    var btnPalette = el("button", { class: "cc-mm-btn", text: "☰ Terrain" });
-    btnPalette.addEventListener("click", togglePalette);
-
-    var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title, btnPalette]);
+    var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title]);
     var group2 = el("div", { class: "cc-mm-toolbar-group" }, [
       el("label", { class: "cc-mm-label", text: "Map Title" }),
       mapTitleInput,
@@ -417,9 +395,12 @@
     search.addEventListener("input", renderPalette);
     filterKind.addEventListener("change", renderPalette);
 
-    ui.left.appendChild(header);
-    ui.left.appendChild(search);
-    ui.left.appendChild(filterKind);
+    ui.left.appendChild(el("div", { class: "cc-mm-sidebar-header", text: "Terrain Palette" }));
+
+    var controls = el("div", { class: "cc-mm-palette-controls" });
+    controls.appendChild(search);
+    controls.appendChild(filterKind);
+    ui.left.appendChild(controls);
     ui.left.appendChild(list);
 
     ui.paletteSearch = search;
@@ -434,9 +415,11 @@
     var ui = state.ui;
     ui.right.innerHTML = "";
     var header = el("div", { class: "cc-mm-sidebar-header", text: "Inspector" });
-    var panel = el("div", { class: "cc-mm-inspector" });
+    var body   = el("div", { class: "cc-mm-inspector-body" });
+    var panel  = el("div", { class: "cc-mm-inspector" });
+    body.appendChild(panel);
     ui.right.appendChild(header);
-    ui.right.appendChild(panel);
+    ui.right.appendChild(body);
     ui.inspector = panel;
     renderInspector();
   }
