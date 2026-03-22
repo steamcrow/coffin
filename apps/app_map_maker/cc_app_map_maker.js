@@ -41,7 +41,7 @@
     selectedInstanceId: null,
     markersByInstanceId: {},
     tableSizeInches: 48,
-    terrainBaseScale: 0.02,   // global correction — adjust with toolbar slider
+    terrainBaseScale: 0.12,   // global correction — adjust with toolbar slider
     bgOverlay: null,
     instanceData: {
       map_id: DEFAULTS.defaultMapId,
@@ -317,10 +317,10 @@
     ]);
 
     // Terrain scale slider — compensates for catalog footprint sizes
-    var scaleLabel = el("span", { class: "cc-mm-label", text: "Terrain Scale: 0.02" });
+    var scaleLabel = el("span", { class: "cc-mm-label", text: "Terrain Scale: 0.12" });
     var scaleSlider = document.createElement("input");
     scaleSlider.type = "range";
-    scaleSlider.min = "0.005"; scaleSlider.max = "0.3"; scaleSlider.step = "0.005";
+    scaleSlider.min = "0.01"; scaleSlider.max = "0.5"; scaleSlider.step = "0.005";
     scaleSlider.value = String(state.terrainBaseScale);
     scaleSlider.style.cssText = "width:90px;accent-color:#d4822a;cursor:pointer;vertical-align:middle;";
     scaleSlider.addEventListener("input", function() {
