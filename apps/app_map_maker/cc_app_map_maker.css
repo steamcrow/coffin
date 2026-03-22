@@ -366,19 +366,26 @@
 /* ── Terrain markers ────────────────────────────────────────────── */
 .cc-mm-div-icon { background: transparent !important; border: none !important; overflow: visible !important; }
 
+/* Prevent Leaflet from clipping marker content */
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-div-icon { overflow: visible !important; }
+
 .cc-mm-terrain-wrap {
   position: relative;
   pointer-events: auto;
   overflow: visible;
+  display: inline-block;
 }
 
 .cc-mm-terrain-img {
   display: block;
-  transform-origin: bottom center;
+  width: 100%;
+  height: auto !important;
+  transform-origin: top left;
   user-select: none;
   pointer-events: auto;
   filter: none;
-  transition: filter 0.1s;
 }
 
 .cc-mm-terrain-img.is-selected {
