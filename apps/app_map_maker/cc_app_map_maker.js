@@ -8,7 +8,7 @@
 
   var DEFAULTS = {
     title: "Coffin Canyon — Map Maker",
-    mapImageUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/maps/lost_yots.png",
+    mapImageUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/parchment_bg_4096x4096.jpg",
     mapWidth: 4096,
     mapHeight: 4096,
 
