@@ -731,32 +731,25 @@
     return state.opts.mapWidth / state.tableSizeInches;
   }
 
-  function getTerrainSizeGuess(terrain) {
-    var fp  = terrain && terrain.footprint && terrain.footprint.size_in;
-    var w   = fp && fp.w ? fp.w : 4;
-    var d   = fp && fp.d ? fp.d : w;
-    var ppi = pxPerInch();
-    return {
-      widthPx:  Math.round(w * ppi),
-      heightPx: Math.round(d * ppi + ((terrain && terrain.footprint && terrain.footprint.base_height_in) || 2) * (ppi * 0.35))
-    };
+  function getTerrainWidthPx(terrain) {
+    // Width only from footprint.size_in.w — height stays auto so PNG never skews
+    var fp = terrain && terrain.footprint && terrain.footprint.size_in;
+    var w  = (fp && fp.w) ? fp.w : 4;
+    return Math.round(w * pxPerInch());
   }
 
   function buildMarkerHtml(instance, terrain) {
-    var url = buildAssetUrl(terrain.asset_file);
-    var guess = getTerrainSizeGuess(terrain);
-    var scale = instance.scale || 1;
+    var url      = buildAssetUrl(terrain.asset_file);
+    var scale    = instance.scale || 1;
     var rotation = instance.rotation_deg || 0;
-
-    var width = Math.max(16, Math.round(guess.widthPx * scale));
-    var height = Math.max(16, Math.round(guess.heightPx * scale));
+    var width    = Math.max(16, Math.round(getTerrainWidthPx(terrain) * scale));
 
     return (
       '<div class="cc-mm-terrain-wrap" data-instance-id="' + escapeHtml(instance.instance_id) + '">' +
         '<img class="cc-mm-terrain-img' + (state.selectedInstanceId === instance.instance_id ? ' is-selected' : '') + '"' +
         ' src="' + escapeHtml(url) + '"' +
         ' draggable="false"' +
-        ' style="width:' + width + 'px;height:' + height + 'px;transform: rotate(' + rotation + 'deg);" />' +
+        ' style="width:' + width + 'px;height:auto;transform:rotate(' + rotation + 'deg);" />' +
       '</div>'
     );
   }
@@ -770,20 +763,18 @@
   }
 
   function buildDivIcon(instance, terrain) {
-    var guess = getTerrainSizeGuess(terrain);
     var scale = instance.scale || 1;
-    var width = Math.max(16, Math.round(guess.widthPx * scale));
-    var height = Math.max(16, Math.round(guess.heightPx * scale));
-
+    var width = Math.max(16, Math.round(getTerrainWidthPx(terrain) * scale));
+    // Use width for both dimensions — Leaflet anchor estimate; actual height set by CSS auto
     return L.divIcon({
       className: "cc-mm-div-icon",
       html: buildMarkerHtml(instance, terrain),
-      iconSize: [width, height],
-      iconAnchor: [Math.round(width / 2), height]
+      iconSize: [width, width],
+      iconAnchor: [Math.round(width / 2), width]
     });
   }
 
-  function zPaneName(z) {
+    function zPaneName(z) {
     var clamped = Math.max(-10, Math.min(20, Math.round(z || 0)));
     return "zPane" + (clamped < 0 ? "n" + Math.abs(clamped) : clamped);
   }
