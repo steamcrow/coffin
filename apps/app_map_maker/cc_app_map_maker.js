@@ -38,6 +38,7 @@
     selectedTerrainTypeId: null,
     selectedInstanceId: null,
     markersByInstanceId: {},
+    tableSizeInches: 48,
     instanceData: {
       map_id: DEFAULTS.defaultMapId,
       map_title: DEFAULTS.defaultMapTitle,
@@ -285,7 +286,29 @@
       clearAllInstances();
     });
 
-    var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title]);
+    var tableSizeSelect = el("select", { class: "cc-mm-input" });
+    [48, 36].forEach(function(s) {
+      var opt = el("option", { value: String(s), text: s + '"×' + s + '"' });
+      if (s === state.tableSizeInches) opt.selected = true;
+      tableSizeSelect.appendChild(opt);
+    });
+    tableSizeSelect.addEventListener("change", function() {
+      state.tableSizeInches = parseInt(this.value);
+      // Rebuild all markers so sizes recalculate
+      var instances = state.instanceData.instances.slice();
+      Object.keys(state.markersByInstanceId).forEach(function(id) {
+        var m = state.markersByInstanceId[id];
+        if (m && state.map) state.map.removeLayer(m);
+      });
+      state.markersByInstanceId = {};
+      instances.forEach(function(inst) { addInstanceMarker(inst); });
+      renderInspector();
+    });
+
+    var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title,
+      el("span", { class: "cc-mm-label", text: "Table" }),
+      tableSizeSelect
+    ]);
     var group2 = el("div", { class: "cc-mm-toolbar-group" }, [
       el("label", { class: "cc-mm-label", text: "Map Title" }),
       mapTitleInput,
@@ -619,24 +642,41 @@
       maxZoom: 3,
       zoomSnap: 0.1,
       zoomDelta: 0.5,
-      attributionControl: false
+      attributionControl: false,
+      dragging: false,       // no map panning
+      scrollWheelZoom: true,
+      doubleClickZoom: false
     });
 
-    var bounds = [[0, 0], [state.instanceData.map_size_px.h, state.instanceData.map_size_px.w]];
+    // Dead space: 600px above the map image for off-map staging
+    var deadSpace = 600;
+    var W = state.instanceData.map_size_px.w;
+    var H = state.instanceData.map_size_px.h;
+    var bounds = [[0, 0], [H, W]];
     state.imageBounds = bounds;
 
-    // Background parchment — bottom z-index, non-interactive
+    // Create z-index panes (one per level -10 to 20)
+    for (var z = -10; z <= 20; z++) {
+      var paneName = "zPane" + (z < 0 ? "n" + Math.abs(z) : z);
+      if (!map.getPane(paneName)) {
+        map.createPane(paneName);
+        map.getPane(paneName).style.zIndex = String(400 + z * 5);
+        map.getPane(paneName).style.pointerEvents = "auto";
+      }
+    }
+
+    // Background parchment — sits below everything
     L.imageOverlay(state.instanceData.map_image, bounds, {
-      zIndex: 0,
-      interactive: false
+      interactive: false,
+      pane: "tilePane"
     }).addTo(map);
 
-    // Fit image to fill the container, no padding, then lock pan to image bounds
+    // Fit to show image plus dead space above
+    var extendedBounds = [[-deadSpace, -200], [H + 100, W + 200]];
     map.fitBounds(bounds);
-    map.setMaxBounds([
-      [-200, -200],
-      [state.instanceData.map_size_px.h + 200, state.instanceData.map_size_px.w + 200]
-    ]);
+
+    state.map = map;
+    state.deadSpace = deadSpace;
 
     map.on("click", function (ev) {
       if (!state.selectedTerrainTypeId) return;
@@ -686,13 +726,19 @@
     return state.opts.assetBaseUrl.replace(/\/+$/, "") + "/" + assetFile.replace(/^\/+/, "");
   }
 
+  function pxPerInch() {
+    // 4096px canvas / table size in inches
+    return state.opts.mapWidth / state.tableSizeInches;
+  }
+
   function getTerrainSizeGuess(terrain) {
-    var fp = terrain && terrain.footprint && terrain.footprint.size_in;
-    var w = fp && fp.w ? fp.w : 4;
-    var d = fp && fp.d ? fp.d : w;
+    var fp  = terrain && terrain.footprint && terrain.footprint.size_in;
+    var w   = fp && fp.w ? fp.w : 4;
+    var d   = fp && fp.d ? fp.d : w;
+    var ppi = pxPerInch();
     return {
-      widthPx: Math.round(w * 14),
-      heightPx: Math.round(d * 14 + ((terrain && terrain.footprint && terrain.footprint.base_height_in) || 2) * 5)
+      widthPx:  Math.round(w * ppi),
+      heightPx: Math.round(d * ppi + ((terrain && terrain.footprint && terrain.footprint.base_height_in) || 2) * (ppi * 0.35))
     };
   }
 
@@ -737,6 +783,11 @@
     });
   }
 
+  function zPaneName(z) {
+    var clamped = Math.max(-10, Math.min(20, Math.round(z || 0)));
+    return "zPane" + (clamped < 0 ? "n" + Math.abs(clamped) : clamped);
+  }
+
   function addInstanceMarker(instance) {
     var terrain = state.terrainById[instance.terrain_type_id];
     if (!terrain) return;
@@ -744,7 +795,7 @@
     var marker = L.marker([instance.y, instance.x], {
       draggable: true,
       icon: buildDivIcon(instance, terrain),
-      zIndexOffset: (instance.z_index || 0) + Math.round(instance.y || 0)
+      pane: zPaneName(instance.z_index || 0)
     }).addTo(state.map);
 
     marker.on("click", function (ev) {
@@ -770,13 +821,19 @@
   }
 
   function syncInstanceMarker(instance) {
-    var marker = state.markersByInstanceId[instance.instance_id];
+    var marker  = state.markersByInstanceId[instance.instance_id];
     var terrain = state.terrainById[instance.terrain_type_id];
     if (!marker || !terrain) return;
 
     marker.setLatLng([instance.y, instance.x]);
     marker.setIcon(buildDivIcon(instance, terrain));
-    marker.setZIndexOffset((instance.z_index || 0) + Math.round(instance.y || 0));
+
+    // Move marker to correct z-pane
+    var paneName = zPaneName(instance.z_index || 0);
+    if (state.map.getPane(paneName)) {
+      state.map.getPane(paneName).appendChild(marker.getElement ? marker.getElement() : marker._icon);
+    }
+
     renderInspector();
   }
 
