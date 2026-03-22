@@ -236,22 +236,121 @@
   }
 
   // ── Load catalog ───────────────────────────────────────────────────
-  function loadCatalog() {
-    fetchJson(state.opts.catalogUrl)
-      .then(function(data) {
-        state.catalog = data;
-        state.entries = deepClone(data.terrain_types || []);
-        state.saved = {};
-        state.entries.forEach(function(e) { state.saved[e.terrain_type_id] = deepClone(e); });
-        state.currentIndex = state.entries.length > 0 ? 0 : -1;
-        renderList();
-        renderEditor();
-        updateProgress();
-        toast("Loaded " + state.entries.length + " terrain entries");
-      })
-      .catch(function(err) {
-        state.ui.editorBody.innerHTML = '<div class="cte-empty" style="color:#c0392b;">Failed to load catalog: ' + esc(err.message) + '</div>';
+  // ── Image probe ────────────────────────────────────────────────────
+  // Since the repo is private we can't list files via API.
+  // Instead we probe every plausible filename and see which ones load.
+  var FAMILIES = [
+    "westcamps","westmill","westpower","westskulls","westtotem",
+    "westtower","westtown","westtrains","wildmountain"
+  ];
+  var PROBE_MAX = 30; // try _normal_01 through _normal_30 per family
+
+  function probeImages(assetBase) {
+    // Build the full candidate list
+    var candidates = [];
+    FAMILIES.forEach(function(fam) {
+      for (var n = 1; n <= PROBE_MAX; n++) {
+        var nn = n < 10 ? "0" + n : String(n);
+        candidates.push(fam + "_normal_" + nn + ".png");
+      }
+    });
+
+    // Try loading each as an Image — resolve with the ones that succeed
+    var found = [];
+    var pending = candidates.length;
+
+    return new Promise(function(resolve) {
+      candidates.forEach(function(filename) {
+        var img = new Image();
+        img.onload = function() {
+          found.push(filename);
+          if (--pending === 0) resolve(found.sort());
+        };
+        img.onerror = function() {
+          if (--pending === 0) resolve(found.sort());
+        };
+        // Cache-bust so we don't get false 200s from browser cache
+        img.src = assetBase + filename + "?probe=" + Date.now();
       });
+    });
+  }
+
+  function loadCatalog() {
+    var ui = state.ui;
+    ui.editorBody.innerHTML = '<div class="cte-empty">Scanning terrain assets…</div>';
+
+    // Load catalog and probe images in parallel
+    Promise.all([
+      fetchJson(state.opts.catalogUrl),
+      probeImages(state.opts.assetBaseUrl)
+    ])
+    .then(function(results) {
+      var data       = results[0];
+      var foundFiles = results[1];
+
+      state.catalog = data;
+
+      // Build a lookup: asset_file → existing catalog entry
+      var byAsset = {};
+      (data.terrain_types || []).forEach(function(e) {
+        if (e.asset_file) byAsset[e.asset_file] = e;
+      });
+
+      // Also index by terrain_type_id in case asset_file is missing
+      var byId = {};
+      (data.terrain_types || []).forEach(function(e) {
+        byId[e.terrain_type_id] = e;
+      });
+
+      // Build the master entry list:
+      // 1. Start with found image files (the ground truth)
+      // 2. Merge in catalog data where it exists
+      // 3. Append any catalog entries whose asset_file was NOT found (keep them, mark missing)
+      var usedAssets = {};
+      state.entries = foundFiles.map(function(filename) {
+        usedAssets[filename] = true;
+        if (byAsset[filename]) {
+          // Existing entry — use catalog data
+          return deepClone(byAsset[filename]);
+        } else {
+          // New image — create a stub pre-filled from filename
+          var parts   = filename.replace(".png","").split("_");
+          var numPart = parts[parts.length - 1];
+          var family  = parts.slice(0, parts.length - 2).join("_");
+          return blankEntry(filename, family);
+        }
+      });
+
+      // Append orphaned catalog entries (asset not found on disk)
+      (data.terrain_types || []).forEach(function(e) {
+        if (e.asset_file && !usedAssets[e.asset_file]) {
+          var orphan = deepClone(e);
+          orphan._missing_asset = true;
+          state.entries.push(orphan);
+        }
+      });
+
+      // Pre-mark existing entries as saved so they show green
+      state.saved = {};
+      state.entries.forEach(function(e) {
+        if (byAsset[e.asset_file] || byId[e.terrain_type_id]) {
+          state.saved[e.terrain_type_id] = deepClone(e);
+        }
+      });
+
+      state.currentIndex = state.entries.length > 0 ? 0 : -1;
+
+      var newCount      = foundFiles.filter(function(f) { return !byAsset[f]; }).length;
+      var existingCount = foundFiles.filter(function(f) { return !!byAsset[f]; }).length;
+
+      renderList();
+      renderEditor();
+      updateProgress();
+      toast("Found " + foundFiles.length + " images — " + existingCount + " catalogued, " + newCount + " new");
+    })
+    .catch(function(err) {
+      state.ui.editorBody.innerHTML = '<div class="cte-empty" style="color:#c0392b;">Failed to load: ' + esc(err.message) + '</div>';
+    });
   }
 
   // ── Navigation ────────────────────────────────────────────────────
@@ -291,25 +390,37 @@
   }
 
   function addEntry() {
-    var e = blankEntry();
+    var e = blankEntry("", "");
     state.entries.push(e);
     renderList();
     selectEntry(state.entries.length - 1);
   }
 
-  function blankEntry() {
-    return { terrain_type_id: "new_terrain_" + Date.now(), asset_file: "", name: "New Terrain",
-      family: "", kind: "building", variant_group: "", tags: [], location_tags: [],
-      footprint: { shape: "rect", size_in: { w: 4, d: 4 }, base_height_in: 2 },
-      visibility: { los_profile: "partial", blocks_los_when: "", window_los: "none" },
-      cover: { default_cover: "light", edges_cover: "light", interior_cover: "none" },
-      elevation: { system: "none" },
-      movement: { is_passable: false, is_walkable_on_top: false, difficult_terrain_on: [],
+  function blankEntry(assetFile, family) {
+    var id = assetFile
+      ? assetFile.replace(".png","").replace(/_normal_\d+$/,"") + "_" + assetFile.replace(".png","").match(/_(\d+)$/)[1]
+      : "new_terrain_" + Date.now();
+    return {
+      terrain_type_id:  id,
+      asset_file:       assetFile || "",
+      name:             "",
+      family:           family || "",
+      kind:             "building",
+      variant_group:    "",
+      tags:             [],
+      location_tags:    [],
+      footprint:        { shape: "rect", size_in: { w: 4, d: 4 }, base_height_in: 2 },
+      visibility:       { los_profile: "partial", blocks_los_when: "", window_los: "none" },
+      cover:            { default_cover: "light", edges_cover: "light", interior_cover: "none" },
+      elevation:        { system: "none" },
+      movement:         { is_passable: false, is_walkable_on_top: false, difficult_terrain_on: [],
         climb: { allowed: false, mode: "none", min_level_access: 0, max_level_access: 0,
           test: { required: false, type: "quality", difficulty: 0, on_fail: "No effect" } } },
-      interaction: { interactable: false, interactions: [] },
-      slots: [], destructibility: { destructible: false },
-      editor_defaults: { scale: 1, rotation_snap_deg: 15, layer: "terrain_structures" } };
+      interaction:      { interactable: false, interactions: [] },
+      slots:            [],
+      destructibility:  { destructible: false },
+      editor_defaults:  { scale: 1, rotation_snap_deg: 15, layer: "terrain_structures" }
+    };
   }
 
   // ── Export ─────────────────────────────────────────────────────────
@@ -350,12 +461,14 @@
 
   // ── Progress ────────────────────────────────────────────────────────
   function updateProgress() {
-    var total = state.entries.length;
-    var done  = Object.keys(state.saved).length;
-    var pct   = total > 0 ? (done / total * 100) : 0;
+    var total      = state.entries.length;
+    var catalogued = state.entries.filter(function(e) { return e.name && e.name !== ""; }).length;
+    var pct        = total > 0 ? (catalogued / total * 100) : 0;
     state.ui.progressFill.style.width = pct + "%";
-    state.ui.counter.textContent = done + " / " + total;
-    state.ui.saveInfo.textContent = done + " of " + total + " entries confirmed  —  Ctrl+S to save, Ctrl+→ to advance";
+    state.ui.counter.textContent = catalogued + " / " + total + " named";
+    state.ui.saveInfo.textContent =
+      catalogued + " of " + total + " entries named  —  " +
+      (total - catalogued) + " awaiting  —  Ctrl+S to save, Ctrl+→ to advance";
   }
 
   // ── List render ─────────────────────────────────────────────────────
@@ -363,18 +476,30 @@
     var q = (state.ui.listSearch.value || "").toLowerCase();
     var html = "";
     state.entries.forEach(function(entry, idx) {
-      var name = entry.name || entry.terrain_type_id;
-      var id   = entry.terrain_type_id;
-      if (q && name.toLowerCase().indexOf(q) === -1 && id.toLowerCase().indexOf(q) === -1) return;
+      var name    = entry.name || entry.asset_file || entry.terrain_type_id;
+      var id      = entry.terrain_type_id;
       var isSaved = !!state.saved[id];
-      var dotCls  = isSaved ? "saved" : "dirty";
-      var imgSrc  = entry.asset_file ? (state.opts.assetBaseUrl + entry.asset_file + "?t=1") : "";
-      var thumb   = imgSrc
+      var isNew   = !entry.name || entry.name === "";
+      var isMissing = !!entry._missing_asset;
+
+      if (q && name.toLowerCase().indexOf(q) === -1 && id.toLowerCase().indexOf(q) === -1) return;
+
+      var dotCls = isSaved && !isNew ? "saved" : "dirty";
+      var imgSrc = entry.asset_file ? (state.opts.assetBaseUrl + entry.asset_file + "?t=1") : "";
+      var thumb  = imgSrc
         ? '<img class="cte-thumb" src="' + esc(imgSrc) + '" onerror="this.style.display=\'none\'">'
         : '<div class="cte-thumb-ph"></div>';
+
+      var label = name;
+      if (isNew)     label = '<span style="color:var(--cte-pri);font-style:italic;">' + esc(entry.asset_file || "unnamed") + '</span>';
+      if (isMissing) label = '<span style="color:#c0392b;">⚠ ' + esc(name) + '</span>';
+
       html += '<div class="cte-item' + (idx === state.currentIndex ? " active" : "") + '" onclick="window._CTE.selectEntry(' + idx + ')">'
         + thumb
-        + '<div class="cte-item-info"><div class="cte-item-name">' + esc(name) + '</div><div class="cte-item-id">' + esc(id) + '</div></div>'
+        + '<div class="cte-item-info">'
+        + '<div class="cte-item-name">' + label + '</div>'
+        + '<div class="cte-item-id">' + esc(entry.asset_file || id) + '</div>'
+        + '</div>'
         + '<div class="cte-dot ' + dotCls + '"></div></div>';
     });
     state.ui.entryList.innerHTML = html || '<div style="padding:20px;color:var(--cte-muted);font-family:var(--cte-mono);font-size:11px;text-align:center;">No entries</div>';
