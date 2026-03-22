@@ -22,6 +22,10 @@
     leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
 
     assetBaseUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/terrain/",
+    mapImageUrl48: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/parchment_bg_4096x4096.jpg",
+    mapImageUrl36: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/parchment_bg_4096x4096.jpg",
+    gridImageUrl48: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/grid_iso_48x48_4096.jpg",
+    gridImageUrl36: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/grid_iso_36x36_4096.jpg",
     defaultMapId: "lost_yots",
     defaultMapTitle: "Lost Yots",
     defaultLocationId: "lost_yots"
@@ -39,6 +43,8 @@
     selectedInstanceId: null,
     markersByInstanceId: {},
     tableSizeInches: 48,
+    showGrid: false,
+    bgOverlay: null,
     instanceData: {
       map_id: DEFAULTS.defaultMapId,
       map_title: DEFAULTS.defaultMapTitle,
@@ -294,6 +300,7 @@
     });
     tableSizeSelect.addEventListener("change", function() {
       state.tableSizeInches = parseInt(this.value);
+      updateBackground();
       // Rebuild all markers so sizes recalculate
       var instances = state.instanceData.instances.slice();
       Object.keys(state.markersByInstanceId).forEach(function(id) {
@@ -305,9 +312,18 @@
       renderInspector();
     });
 
+    var btnGrid = el("button", { class: "cc-mm-btn", text: "⊞ Grid" });
+    btnGrid.addEventListener("click", function() {
+      state.showGrid = !state.showGrid;
+      btnGrid.classList.toggle("cc-mm-btn--primary", state.showGrid);
+      btnGrid.textContent = state.showGrid ? "⊞ Grid ON" : "⊞ Grid";
+      updateBackground();
+    });
+
     var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title,
       el("span", { class: "cc-mm-label", text: "Table" }),
-      tableSizeSelect
+      tableSizeSelect,
+      btnGrid
     ]);
     var group2 = el("div", { class: "cc-mm-toolbar-group" }, [
       el("label", { class: "cc-mm-label", text: "Map Title" }),
@@ -650,6 +666,19 @@
     panel.appendChild(btnDel);
   }
 
+  function currentBgUrl() {
+    var opts = state.opts;
+    if (state.showGrid) {
+      return state.tableSizeInches === 36 ? opts.gridImageUrl36 : opts.gridImageUrl48;
+    }
+    return state.tableSizeInches === 36 ? opts.mapImageUrl36 : opts.mapImageUrl48;
+  }
+
+  function updateBackground() {
+    if (!state.map || !state.bgOverlay) return;
+    state.bgOverlay.setUrl(currentBgUrl());
+  }
+
   function initLeaflet() {
     if (!window.L) throw new Error("Leaflet is not loaded.");
 
@@ -686,7 +715,7 @@
     }
 
     // Background parchment — sits below everything
-    L.imageOverlay(state.instanceData.map_image, bounds, {
+    state.bgOverlay = L.imageOverlay(currentBgUrl(), bounds, {
       interactive: false,
       pane: "tilePane"
     }).addTo(map);
@@ -747,8 +776,8 @@
   }
 
   function pxPerInch() {
-    // 4096px canvas / table size in inches
-    return state.opts.mapWidth / state.tableSizeInches;
+    var mapW = (state.opts && state.opts.mapWidth) ? state.opts.mapWidth : DEFAULTS.mapWidth;
+    return mapW / state.tableSizeInches;
   }
 
   function getTerrainWidthPx(terrain) {
