@@ -239,89 +239,90 @@
   // ── Image probe ────────────────────────────────────────────────────
   // Since the repo is private we can't list files via API.
   // Instead we probe every plausible filename and see which ones load.
-  var FAMILIES = [
-    "westcamps","westmill","westpower","westskulls","westtotem",
-    "westtower","westtown","westtrains","wildmountain"
+  // ── Static file list (run: ls assets/terrain/*.png | xargs -I{} basename {}) ──
+  var ALL_TERRAIN_FILES = [
+    "westbuild_brothel.png",
+    "westbuild_normal_01.png","westbuild_normal_02.png","westbuild_normal_03.png",
+    "westbuild_normal_04.png","westbuild_normal_05.png","westbuild_normal_06.png",
+    "westbuild_normal_07.png","westbuild_normal_08.png","westbuild_normal_09.png",
+    "westbuild_normal_10.png","westbuild_normal_11.png","westbuild_normal_12.png",
+    "westbuild_normal_13.png","westbuild_normal_14.png","westbuild_normal_15.png",
+    "westbuild_normal_16.png","westbuild_normal_17.png","westbuild_normal_18.png",
+    "westbuild_normal_19.png","westbuild_normal_20.png","westbuild_normal_21.png",
+    "westbuild_normal_22.png","westbuild_normal_23.png","westbuild_normal_24.png",
+    "westbuild_normal_25.png","westbuild_normal_26.png","westbuild_normal_27.png",
+    "westbuild_normal_28.png","westbuild_normal_29.png","westbuild_normal_30.png",
+    "westbuild_normal_31.png","westbuild_normal_32.png","westbuild_normal_33.png",
+    "westbuild_normal_34.png","westbuild_normal_35.png",
+    "westcacti_normal_01.png","westcacti_normal_02.png","westcacti_normal_03.png",
+    "westcacti_normal_04.png",
+    "westcamps_normal_01.png","westcamps_normal_02.png","westcamps_normal_03.png",
+    "westcamps_normal_04.png","westcamps_normal_05.png","westcamps_normal_06.png",
+    "westcamps_normal_07.png",
+    "westcaravan_normal_01.png","westcaravan_normal_02.png","westcaravan_normal_03.png",
+    "westchurch_normal_01.png","westchurch_normal_02.png","westchurch_normal_03.png",
+    "westchurch_normal_04.png","westchurch_normal_05.png","westchurch_normal_06.png",
+    "westchurch_normal_07.png",
+    "westdeco_normal_01.png","westdeco_normal_02.png","westdeco_normal_03.png",
+    "westdeco_normal_04.png","westdeco_normal_05.png","westdeco_normal_06.png",
+    "westfort_normal_01.png","westfort_normal_02.png","westfort_normal_03.png",
+    "westfort_normal_04.png","westfort_normal_05.png","westfort_normal_06.png",
+    "westfort_normal_07.png","westfort_normal_08.png","westfort_normal_09.png",
+    "westfort_normal_10.png",
+    "westgallows_normal_01.png","westgallows_normal_02.png","westgallows_normal_03.png",
+    "westmill_normal_01.png","westmill_normal_02.png",
+    "westmine_normal_01.png","westmine_normal_02.png","westmine_normal_03.png",
+    "westmine_normal_04.png","westmine_normal_05.png","westmine_normal_06.png",
+    "westmine_normal_07.png","westmine_normal_08.png",
+    "westpower_normal_01.png","westpower_normal_03.png","westpower_normal_04.png",
+    "westskulls_normal_01.png","westskulls_normal_02.png","westskulls_normal_03.png",
+    "westskulls_normal_04.png",
+    "westtotem_normal_01.png","westtotem_normal_02.png","westtotem_normal_03.png",
+    "westtotem_normal_04.png","westtotem_normal_05.png",
+    "westtower_normal_01.png","westtower_normal_02.png",
+    "westtown_normal_01.png","westtown_normal_02.png","westtown_normal_03.png",
+    "westtown_normal_04.png","westtown_normal_05.png","westtown_normal_06.png",
+    "westtown_normal_07.png","westtown_normal_08.png","westtown_normal_09.png",
+    "westtown_normal_10.png","westtown_normal_11.png","westtown_normal_12.png",
+    "westtown_normal_13.png","westtown_normal_14.png","westtown_normal_15.png",
+    "westtrains_normal_01.png","westtrains_normal_02.png","westtrains_normal_03.png",
+    "westtrains_normal_04.png","westtrains_normal_05.png","westtrains_normal_06.png",
+    "westtrains_normal_07.png",
+    "wildmountain_normal_01.png","wildmountain_normal_02.png","wildmountain_normal_03.png",
+    "wildmountain_normal_04.png","wildmountain_normal_05.png","wildmountain_normal_06.png",
+    "wildmountain_normal_07.png","wildmountain_normal_08.png","wildmountain_normal_09.png",
+    "wildmountain_normal_10.png","wildmountain_normal_11.png","wildmountain_normal_12.png",
+    "wildmountain_normal_13.png","wildmountain_normal_14.png","wildmountain_normal_15.png",
+    "wildmountain_normal_16.png","wildmountain_normal_17.png","wildmountain_normal_18.png",
+    "wildmountain_normal_19.png","wildmountain_normal_20.png","wildmountain_normal_21.png",
+    "wildmountain_normal_22.png","wildmountain_normal_23.png","wildmountain_normal_24.png",
+    "wildmountain_normal_25.png","wildmountain_normal_26.png","wildmountain_normal_27.png",
+    "wildmountain_normal_28.png","wildmountain_normal_29.png","wildmountain_normal_30.png",
+    "wildmountain_normal_31.png","wildmountain_normal_32.png","wildmountain_normal_33.png",
+    "wildmountain_normal_34.png"
   ];
-  var PROBE_MAX = 30; // try _normal_01 through _normal_30 per family
-
-  function probeImages(assetBase) {
-    // Build the full candidate list
-    var candidates = [];
-    FAMILIES.forEach(function(fam) {
-      for (var n = 1; n <= PROBE_MAX; n++) {
-        var nn = n < 10 ? "0" + n : String(n);
-        candidates.push(fam + "_normal_" + nn + ".png");
-      }
-    });
-
-    // Try loading each as an Image — resolve with the ones that succeed
-    var found = [];
-    var pending = candidates.length;
-
-    return new Promise(function(resolve) {
-      candidates.forEach(function(filename) {
-        var img = new Image();
-        img.onload = function() {
-          found.push(filename);
-          if (--pending === 0) resolve(found.sort());
-        };
-        img.onerror = function() {
-          if (--pending === 0) resolve(found.sort());
-        };
-        // Cache-bust so we don't get false 200s from browser cache
-        img.src = assetBase + filename + "?probe=" + Date.now();
-      });
-    });
-  }
 
   function loadCatalog() {
-    var ui = state.ui;
-    ui.editorBody.innerHTML = '<div class="cte-empty">Scanning terrain assets…</div>';
+    state.ui.editorBody.innerHTML = '<div class="cte-empty">Loading catalog\u2026</div>';
 
-    // Load catalog and probe images in parallel
-    Promise.all([
-      fetchJson(state.opts.catalogUrl),
-      probeImages(state.opts.assetBaseUrl)
-    ])
-    .then(function(results) {
-      var data       = results[0];
-      var foundFiles = results[1];
-
+    fetchJson(state.opts.catalogUrl)
+    .then(function(data) {
       state.catalog = data;
 
-      // Build a lookup: asset_file → existing catalog entry
       var byAsset = {};
       (data.terrain_types || []).forEach(function(e) {
         if (e.asset_file) byAsset[e.asset_file] = e;
       });
 
-      // Also index by terrain_type_id in case asset_file is missing
-      var byId = {};
-      (data.terrain_types || []).forEach(function(e) {
-        byId[e.terrain_type_id] = e;
-      });
-
-      // Build the master entry list:
-      // 1. Start with found image files (the ground truth)
-      // 2. Merge in catalog data where it exists
-      // 3. Append any catalog entries whose asset_file was NOT found (keep them, mark missing)
       var usedAssets = {};
-      state.entries = foundFiles.map(function(filename) {
+      state.entries = ALL_TERRAIN_FILES.map(function(filename) {
         usedAssets[filename] = true;
-        if (byAsset[filename]) {
-          // Existing entry — use catalog data
-          return deepClone(byAsset[filename]);
-        } else {
-          // New image — create a stub pre-filled from filename
-          var parts   = filename.replace(".png","").split("_");
-          var numPart = parts[parts.length - 1];
-          var family  = parts.slice(0, parts.length - 2).join("_");
-          return blankEntry(filename, family);
-        }
+        if (byAsset[filename]) return deepClone(byAsset[filename]);
+        var family = filename.replace(/[_-](?:normal|brothel)[_-]?\d*\.png$/, "");
+        return blankEntry(filename, family);
       });
 
-      // Append orphaned catalog entries (asset not found on disk)
+      // Orphaned catalog entries (in catalog, not on disk)
       (data.terrain_types || []).forEach(function(e) {
         if (e.asset_file && !usedAssets[e.asset_file]) {
           var orphan = deepClone(e);
@@ -330,26 +331,23 @@
         }
       });
 
-      // Pre-mark existing entries as saved so they show green
+      // Pre-mark existing catalog entries as saved (green dot)
       state.saved = {};
       state.entries.forEach(function(e) {
-        if (byAsset[e.asset_file] || byId[e.terrain_type_id]) {
+        if (byAsset[e.asset_file]) {
           state.saved[e.terrain_type_id] = deepClone(e);
         }
       });
 
-      state.currentIndex = state.entries.length > 0 ? 0 : -1;
+      state.currentIndex = 0;
 
-      var newCount      = foundFiles.filter(function(f) { return !byAsset[f]; }).length;
-      var existingCount = foundFiles.filter(function(f) { return !!byAsset[f]; }).length;
-
-      renderList();
-      renderEditor();
-      updateProgress();
-      toast("Found " + foundFiles.length + " images — " + existingCount + " catalogued, " + newCount + " new");
+      var newCount = ALL_TERRAIN_FILES.filter(function(f) { return !byAsset[f]; }).length;
+      var existing = ALL_TERRAIN_FILES.length - newCount;
+      renderList(); renderEditor(); updateProgress();
+      toast(existing + " catalogued \u00b7 " + newCount + " new \u00b7 " + ALL_TERRAIN_FILES.length + " total");
     })
     .catch(function(err) {
-      state.ui.editorBody.innerHTML = '<div class="cte-empty" style="color:#c0392b;">Failed to load: ' + esc(err.message) + '</div>';
+      state.ui.editorBody.innerHTML = '<div class="cte-empty" style="color:#c0392b;">Failed to load catalog: ' + esc(err.message) + '</div>';
     });
   }
 
