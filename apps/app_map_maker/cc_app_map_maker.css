@@ -364,11 +364,12 @@
 }
 
 /* ── Terrain markers ────────────────────────────────────────────── */
-.cc-mm-div-icon { background: transparent !important; border: none !important; }
+.cc-mm-div-icon { background: transparent !important; border: none !important; overflow: visible !important; }
 
 .cc-mm-terrain-wrap {
   position: relative;
   pointer-events: auto;
+  overflow: visible;
 }
 
 .cc-mm-terrain-img {
