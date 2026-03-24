@@ -1,7 +1,7 @@
 {
   "schema_id": "cc_terrain_catalog",
   "schema_version": "2.0",
-  "last_updated": "2026-03-22",
+  "last_updated": "2026-03-23",
   "notes": [
     "Catalog entries define reusable terrain assets for the Leaflet map editor, Turn Counter integration, and future solo simulation.",
     "This file defines WHAT each image is. Per-map placement should live in terrain_instances.json later.",
@@ -12334,6 +12334,892 @@
         "scale": 1,
         "rotation_snap_deg": 15,
         "layer": "terrain_landforms"
+      }
+    },
+    {
+      "terrain_type_id": "hazard_obelisk_1",
+      "asset_file": "hazard_obelisk_1.png",
+      "name": "Small Obelisk",
+      "family": "hazard",
+      "kind": "hazard",
+      "variant_group": "obelisks",
+      "tags": [
+        "obelisk",
+        "stone",
+        "ritual",
+        "vertical",
+        "tall",
+        "marker"
+      ],
+      "location_tags": [
+        "ritual",
+        "canyon",
+        "tribal",
+        "wild",
+        "graveyard"
+      ],
+      "footprint": {
+        "shape": "circle",
+        "size_in": {
+          "w": 1,
+          "d": 1
+        },
+        "base_height_in": 3
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Narrow obelisk partially interrupts line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "none"
+      },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": [],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "examine_obelisk",
+            "name": "Examine Obelisk",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 2,
+            "on_success": "Gain 1 lore token or clue about the canyon.",
+            "on_fail": "Nothing decipherable."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "obelisk_1_anchor",
+          "slot_kind": "story_anchor",
+          "label": "Obelisk Base",
+          "level": 0,
+          "position_hint": "base",
+          "notes": [
+            "Ritual marker or objective anchor."
+          ]
+        }
+      ],
+      "destructibility": {
+        "destructible": false
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 0,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "hazard_obelisk_2",
+      "asset_file": "hazard_obelisk_2.png",
+      "name": "Obelisk",
+      "family": "hazard",
+      "kind": "hazard",
+      "variant_group": "obelisks",
+      "tags": [
+        "obelisk",
+        "stone",
+        "ritual",
+        "vertical",
+        "tall",
+        "marker"
+      ],
+      "location_tags": [
+        "ritual",
+        "canyon",
+        "tribal",
+        "wild",
+        "graveyard"
+      ],
+      "footprint": {
+        "shape": "circle",
+        "size_in": {
+          "w": 1,
+          "d": 1
+        },
+        "base_height_in": 5
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Obelisk column partially interrupts line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "none"
+      },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": [],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "examine_obelisk",
+            "name": "Examine Obelisk",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 2,
+            "on_success": "Gain 1 lore token or clue about the canyon.",
+            "on_fail": "Nothing decipherable."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "obelisk_2_anchor",
+          "slot_kind": "story_anchor",
+          "label": "Obelisk Base",
+          "level": 0,
+          "position_hint": "base",
+          "notes": [
+            "Ritual marker or objective anchor."
+          ]
+        }
+      ],
+      "destructibility": {
+        "destructible": false
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 0,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "hazard_obelisk_3",
+      "asset_file": "hazard_obelisk_3.png",
+      "name": "Tall Obelisk",
+      "family": "hazard",
+      "kind": "hazard",
+      "variant_group": "obelisks",
+      "tags": [
+        "obelisk",
+        "stone",
+        "ritual",
+        "vertical",
+        "tall",
+        "large",
+        "marker"
+      ],
+      "location_tags": [
+        "ritual",
+        "canyon",
+        "tribal",
+        "wild",
+        "graveyard"
+      ],
+      "footprint": {
+        "shape": "circle",
+        "size_in": {
+          "w": 1,
+          "d": 1
+        },
+        "base_height_in": 7
+      },
+      "visibility": {
+        "los_profile": "partial",
+        "blocks_los_when": "Tall obelisk interrupts line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "none"
+      },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": [],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "examine_obelisk",
+            "name": "Examine Obelisk",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 2,
+            "on_success": "Gain 1 lore token or clue about the canyon.",
+            "on_fail": "Nothing decipherable."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "obelisk_3_anchor",
+          "slot_kind": "story_anchor",
+          "label": "Obelisk Base",
+          "level": 0,
+          "position_hint": "base",
+          "notes": [
+            "Ritual marker or objective anchor."
+          ]
+        }
+      ],
+      "destructibility": {
+        "destructible": false
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 0,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "hazard_obelisk_4",
+      "asset_file": "hazard_obelisk_4.png",
+      "name": "Grand Obelisk",
+      "family": "hazard",
+      "kind": "hazard",
+      "variant_group": "obelisks",
+      "tags": [
+        "obelisk",
+        "stone",
+        "ritual",
+        "vertical",
+        "tall",
+        "large",
+        "marker",
+        "ancient"
+      ],
+      "location_tags": [
+        "ritual",
+        "canyon",
+        "tribal",
+        "wild",
+        "graveyard"
+      ],
+      "footprint": {
+        "shape": "circle",
+        "size_in": {
+          "w": 2,
+          "d": 2
+        },
+        "base_height_in": 9
+      },
+      "visibility": {
+        "los_profile": "blocks",
+        "blocks_los_when": "Large obelisk column blocks line of sight",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "light",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "none"
+      },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": [],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "examine_obelisk",
+            "name": "Examine Grand Obelisk",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Gain 2 lore tokens. This obelisk is significant.",
+            "on_fail": "The carvings are too worn to read."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "obelisk_4_anchor",
+          "slot_kind": "story_anchor",
+          "label": "Grand Obelisk",
+          "level": 0,
+          "position_hint": "base",
+          "notes": [
+            "Major ritual site or scenario centerpiece."
+          ]
+        }
+      ],
+      "destructibility": {
+        "destructible": false
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 0,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "hazard_obelisk_5",
+      "asset_file": "hazard_obelisk_5.png",
+      "name": "Ancient Obelisk",
+      "family": "hazard",
+      "kind": "hazard",
+      "variant_group": "obelisks",
+      "tags": [
+        "obelisk",
+        "stone",
+        "ritual",
+        "vertical",
+        "tall",
+        "large",
+        "ancient",
+        "signature"
+      ],
+      "location_tags": [
+        "ritual",
+        "canyon",
+        "tribal",
+        "wild",
+        "graveyard"
+      ],
+      "footprint": {
+        "shape": "circle",
+        "size_in": {
+          "w": 2,
+          "d": 2
+        },
+        "base_height_in": 12
+      },
+      "visibility": {
+        "los_profile": "blocks",
+        "blocks_los_when": "Massive ancient obelisk blocks line of sight completely",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "light",
+        "edges_cover": "heavy",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "none"
+      },
+      "movement": {
+        "is_passable": true,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": [],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "examine_obelisk",
+            "name": "Examine Ancient Obelisk",
+            "action_type": "interact",
+            "action_cost": 2,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 4,
+            "on_success": "Gain 3 lore tokens and 1 Thyr token. Ancient power lingers here.",
+            "on_fail": "Something watches from the carvings. Test Morale."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "obelisk_5_ritual",
+          "slot_kind": "story_anchor",
+          "label": "Ancient Obelisk",
+          "level": 0,
+          "position_hint": "base",
+          "notes": [
+            "Scenario centerpiece. Thyr ritual site."
+          ]
+        }
+      ],
+      "destructibility": {
+        "destructible": false
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 0,
+        "layer": "terrain_features"
+      }
+    },
+    {
+      "terrain_type_id": "hazard_pit_1",
+      "asset_file": "hazards_pits_1.png",
+      "name": "Pit",
+      "family": "hazard",
+      "kind": "hazard",
+      "variant_group": "pits",
+      "tags": [
+        "pit",
+        "hole",
+        "hazard",
+        "trap",
+        "ground"
+      ],
+      "location_tags": [
+        "mine",
+        "canyon",
+        "wild",
+        "industrial",
+        "desert"
+      ],
+      "footprint": {
+        "shape": "circle",
+        "size_in": {
+          "w": 2,
+          "d": 2
+        },
+        "base_height_in": 0
+      },
+      "visibility": {
+        "los_profile": "none",
+        "blocks_los_when": "",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "none",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "none"
+      },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": [
+          "interior"
+        ],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "fall_into_pit",
+            "name": "Fall Check",
+            "action_type": "interact",
+            "action_cost": 0,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 2,
+            "on_success": "Avoid the pit edge.",
+            "on_fail": "Fall in. Lose next activation. Test to climb out."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "pit_1_hazard",
+          "slot_kind": "hazard_anchor",
+          "label": "Pit",
+          "level": 0,
+          "position_hint": "center",
+          "notes": [
+            "Fall hazard. Units ending move here must test."
+          ]
+        }
+      ],
+      "destructibility": {
+        "destructible": false
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 45,
+        "layer": "terrain_scatter"
+      }
+    },
+    {
+      "terrain_type_id": "hazard_pit_2",
+      "asset_file": "hazards_pits_2.png",
+      "name": "Deep Pit",
+      "family": "hazard",
+      "kind": "hazard",
+      "variant_group": "pits",
+      "tags": [
+        "pit",
+        "hole",
+        "hazard",
+        "trap",
+        "ground",
+        "deep"
+      ],
+      "location_tags": [
+        "mine",
+        "canyon",
+        "wild",
+        "industrial",
+        "desert"
+      ],
+      "footprint": {
+        "shape": "circle",
+        "size_in": {
+          "w": 3,
+          "d": 3
+        },
+        "base_height_in": 0
+      },
+      "visibility": {
+        "los_profile": "none",
+        "blocks_los_when": "",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "none",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "none"
+      },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": [
+          "interior"
+        ],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "fall_into_pit",
+            "name": "Fall Check",
+            "action_type": "interact",
+            "action_cost": 0,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Avoid the pit edge.",
+            "on_fail": "Fall in. Lose next activation. Take 1 damage. Test Quality 3 to climb out."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "pit_2_hazard",
+          "slot_kind": "hazard_anchor",
+          "label": "Deep Pit",
+          "level": 0,
+          "position_hint": "center",
+          "notes": [
+            "Severe fall hazard."
+          ]
+        }
+      ],
+      "destructibility": {
+        "destructible": false
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 45,
+        "layer": "terrain_scatter"
+      }
+    },
+    {
+      "terrain_type_id": "hazard_pit_3",
+      "asset_file": "hazards_pits_3.png",
+      "name": "Large Pit",
+      "family": "hazard",
+      "kind": "hazard",
+      "variant_group": "pits",
+      "tags": [
+        "pit",
+        "hole",
+        "hazard",
+        "trap",
+        "ground",
+        "large"
+      ],
+      "location_tags": [
+        "mine",
+        "canyon",
+        "wild",
+        "industrial",
+        "desert"
+      ],
+      "footprint": {
+        "shape": "circle",
+        "size_in": {
+          "w": 4,
+          "d": 4
+        },
+        "base_height_in": 0
+      },
+      "visibility": {
+        "los_profile": "none",
+        "blocks_los_when": "",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "none",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "none"
+      },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": [
+          "interior"
+        ],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "fall_into_pit",
+            "name": "Fall Check",
+            "action_type": "interact",
+            "action_cost": 0,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Avoid the pit edge.",
+            "on_fail": "Fall in. Lose next activation. Take 1 damage. Test Quality 3 to climb out."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "pit_3_hazard",
+          "slot_kind": "hazard_anchor",
+          "label": "Large Pit",
+          "level": 0,
+          "position_hint": "center",
+          "notes": [
+            "Large fall hazard. Cannot cross without fly or leap."
+          ]
+        }
+      ],
+      "destructibility": {
+        "destructible": false
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 45,
+        "layer": "terrain_scatter"
+      }
+    },
+    {
+      "terrain_type_id": "hazard_pit_group",
+      "asset_file": "hazards_pits_group.png",
+      "name": "Pit Field",
+      "family": "hazard",
+      "kind": "hazard",
+      "variant_group": "pits",
+      "tags": [
+        "pit",
+        "hole",
+        "hazard",
+        "trap",
+        "ground",
+        "group",
+        "area"
+      ],
+      "location_tags": [
+        "mine",
+        "canyon",
+        "wild",
+        "industrial",
+        "desert"
+      ],
+      "footprint": {
+        "shape": "rect",
+        "size_in": {
+          "w": 8,
+          "d": 5
+        },
+        "base_height_in": 0
+      },
+      "visibility": {
+        "los_profile": "none",
+        "blocks_los_when": "",
+        "window_los": "none"
+      },
+      "cover": {
+        "default_cover": "none",
+        "edges_cover": "none",
+        "interior_cover": "none"
+      },
+      "elevation": {
+        "system": "none"
+      },
+      "movement": {
+        "is_passable": false,
+        "is_walkable_on_top": false,
+        "difficult_terrain_on": [
+          "interior"
+        ],
+        "climb": {
+          "allowed": false,
+          "mode": "none",
+          "min_level_access": 0,
+          "max_level_access": 0,
+          "test": {
+            "required": false,
+            "type": "quality",
+            "difficulty": 0,
+            "on_fail": "No effect"
+          }
+        }
+      },
+      "interaction": {
+        "interactable": true,
+        "interactions": [
+          {
+            "interaction_id": "navigate_pit_field",
+            "name": "Navigate Pit Field",
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "difficulty": 3,
+            "on_success": "Cross carefully. Move at half speed this activation.",
+            "on_fail": "Fall into one of the pits. Lose next activation and take 1 damage."
+          }
+        ]
+      },
+      "slots": [
+        {
+          "slot_id": "pit_group_hazard",
+          "slot_kind": "hazard_anchor",
+          "label": "Pit Field",
+          "level": 0,
+          "position_hint": "center",
+          "notes": [
+            "Area hazard covering multiple pits. Treat entire footprint as hazardous ground."
+          ]
+        }
+      ],
+      "destructibility": {
+        "destructible": false
+      },
+      "editor_defaults": {
+        "scale": 1,
+        "rotation_snap_deg": 0,
+        "layer": "terrain_scatter"
       }
     }
   ]
