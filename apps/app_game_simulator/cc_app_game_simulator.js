@@ -1495,11 +1495,14 @@ console.log("🎮 Game Simulator loaded");
       state.phase = 'loading';
       render();
       try {
-        // CC_STORAGE uses loadDocumentList(), not listDocuments()
-        const docs = await window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER);
-        state.availableScenarios = (docs || []).map(d => ({
+        // CC_STORAGE uses loadDocumentList() — filter to SCN_ files only (same as turn counter)
+        const allDocs = await window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER);
+        const scenarios = (allDocs || []).filter(d => d.name && d.name.indexOf('SCN_') === 0);
+        state.availableScenarios = scenarios.map(d => ({
           id:   d.id,
-          name: (d.name || '').replace(/\.json$/i, '') || 'Scenario ' + d.id,
+          // Strip SCN_ prefix, timestamp suffix, underscores — same as turn counter
+          name: d.name.replace(/^SCN_/, '').replace(/_\d{13}(\.json)?$/, '').replace(/_/g, ' ').trim() || 'Scenario ' + d.id,
+          date: d.write_date ? new Date(d.write_date).toLocaleDateString() : '',
         }));
       } catch (e) { console.warn('fetchScenarios error:', safeErr(e)); state.availableScenarios = []; }
       state.phase = 'setup';
@@ -1517,60 +1520,66 @@ console.log("🎮 Game Simulator loaded");
         const rawScenario = await safeLoadDocument(state.selectedScenarioId);
         const scenario    = docToJson(rawScenario);
         if (!scenario) throw new Error('Scenario data empty');
-        state.scenarioSave = scenario;
-        state.scenarioName = scenario.scenarioName || scenario.name || 'Scenario';
-        state.round        = scenario.round || 1;
+        // Scenario builder wraps data as { scenario: {...}, factions: [...], name, danger, ... }
+        // Turn counter uses: payload.scenario for the actual scenario, payload.factions for faction list
+        const payload = scenario;
+        state.scenarioSave   = payload.scenario || payload;
+        state.scenarioName   = payload.name || (payload.scenario && payload.scenario.name) || 'Scenario';
+        state.round          = 1;
+        state.noiseThreshold = 8 + ((payload.danger || (payload.scenario && payload.scenario.danger_rating) || 3) * 2);
+        const mp = state.scenarioSave && state.scenarioSave.monster_pressure;
+        state.monsterRoster  = (mp && mp.monsters) || [];
 
-        // 2. Detect factions from unitState keys (format: "faction_id::unit_instance_id")
+        // 2. Load factions — mirrors turn counter logic exactly
+        // Scenario save has: factions: [{ id, npc }]
+        // We then load saved rosters from Odoo folder 90 (non-SCN_ files)
         state.loadingMsg = 'Loading faction rosters...';
         render();
 
-        const factionIdsInScenario = new Set();
-        Object.keys(scenario.unitState || {}).forEach(k => {
-          const fid = k.split('::')[0];
-          if (fid) factionIdsInScenario.add(fid);
-        });
-        console.log('Factions in scenario:', [...factionIdsInScenario]);
+        const rawFactions = payload.factions || (payload.scenario && payload.scenario.factions) || [];
+        const pendingFactions = rawFactions
+          .map(f => ({ id: f.id, npc: f.npc !== undefined ? f.npc : (f.isNPC !== undefined ? f.isNPC : true) }))
+          .filter(f => !!FACTION_META[f.id]);
+
+        // Load all non-SCN docs from folder 90 to find matching rosters
+        let factionSaveDocs = [];
+        if (window.CC_STORAGE) {
+          try {
+            const allDocs2 = await window.CC_STORAGE.loadDocumentList(FACTION_SAVE_FOLDER).catch(() => []);
+            const nonScenario = (allDocs2 || []).filter(d => d.name && d.name.indexOf('SCN_') !== 0);
+            factionSaveDocs = await Promise.all(nonScenario.map(async d => {
+              const parsed = await safeLoadDocument(d.id);
+              const data   = parsed ? docToJson(parsed) : null;
+              if (data) {
+                d._factionId = data.faction || null;
+                d._armyName  = data.armyName || data.name || null;
+                d._data      = data;
+              }
+              return d;
+            }));
+          } catch (e) { console.warn('Faction save list failed:', safeErr(e)); }
+        }
 
         const loadedFactions = [];
 
-        for (const fid of factionIdsInScenario) {
+        for (const fDef of pendingFactions) {
+          const fid = fDef.id;
           let faction = null;
 
-          // Try to find a saved roster in Odoo by faction name
-          if (window.CC_STORAGE) {
-            try {
-              const doc = await window.CC_STORAGE.findDocumentByName(fid, FACTION_SAVE_FOLDER);
-              if (doc) {
-                const raw  = await safeLoadDocument(doc.id);
-                const data = docToJson(raw);
-                if (data) faction = buildFactionFromSave(fid, data, false);
-              }
-            } catch (e) { console.warn('Roster load failed for', fid, safeErr(e)); }
+          // Try to match a saved roster doc by faction id
+          const matchDoc = factionSaveDocs.find(d => d._factionId === fid);
+          if (matchDoc && matchDoc._data) {
+            faction = buildFactionFromSave(fid, matchDoc._data, fDef.npc);
           }
 
           // Fallback: load default faction data from CDN
           if (!faction) {
             const data = await loadFactionData(fid);
-            if (data) faction = buildFactionEntry(fid, data, false, null);
+            if (data) faction = buildFactionEntry(fid, data, fDef.npc, null);
           }
 
           if (faction) {
             initUnitStates(faction);
-            // Restore quality/out/activated from saved scenario
-            if (scenario.unitState) {
-              faction.allUnits.forEach(u => {
-                const k  = unitKey(fid, u.id);
-                const us = scenario.unitState[k];
-                if (us && us.quality !== undefined) {
-                  state.unitState[k] = Object.assign({}, state.unitState[k], {
-                    quality:   us.quality,
-                    out:       us.out       || false,
-                    activated: us.activated || false,
-                  });
-                }
-              });
-            }
             loadedFactions.push(faction);
           } else {
             console.warn('Could not load faction:', fid);
