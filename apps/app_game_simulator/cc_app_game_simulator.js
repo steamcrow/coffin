@@ -201,6 +201,10 @@ console.log("🎮 Game Simulator loaded");
       { id: 'thyr_pulse',   icon: 'fa-sun',        text: 'Thyr pulse. All ritual actions +1 noise this round.' },
     ];
 
+    const MAP_LIST = [
+      { id: 'quinine-jimmy', name: 'Quinine Jimmy' },
+    ];
+
     const FALLBACK_MONSTERS = [
       { id: 'ruster',         name: 'Ruster',         quality: 4, move: 6, defense: null, range: null, special: ['Corrode'],        isTitan: false },
       { id: 'snarl',          name: 'Snarl',          quality: 4, move: 8, defense: null, range: null, special: ['Berserk'],         isTitan: false },
@@ -1253,9 +1257,12 @@ console.log("🎮 Game Simulator loaded");
               <div style="margin-bottom:8px;font-size:.78rem;color:var(--cc-text-dim);text-transform:uppercase;letter-spacing:.07em;">
                 Map (optional)
               </div>
-              <input id="cc-sim-map-id-input" type="text" placeholder="Map ID from map_maker (e.g. quinine_jimmy)"
+              <select id="cc-sim-map-id-input"
                 style="width:100%;padding:8px 10px;background:var(--cc-bg-soft);border:1px solid var(--cc-border);
-                       border-radius:6px;color:var(--cc-text);font-size:.85rem;margin-bottom:14px;" />
+                       border-radius:6px;color:var(--cc-text);font-size:.85rem;margin-bottom:14px;cursor:pointer;">
+                <option value="">-- No map --</option>
+                ${MAP_LIST.map(m => `<option value="${m.id}">${m.name}</option>`).join('')}
+              </select>
               <button class="cc-btn" style="width:100%;" onclick="window.CC_SIM.launchSimulator()">
                 <i class="fa fa-play"></i> Launch Simulator
               </button>
@@ -1512,6 +1519,9 @@ console.log("🎮 Game Simulator loaded");
 
     window.CC_SIM.launchSimulator = async function() {
       if (!state.selectedScenarioId) return;
+      // Grab mapId from input BEFORE we replace the setup screen
+      const mapIdInput = document.getElementById('cc-sim-map-id-input');
+      const mapIdValue = (mapIdInput ? mapIdInput.value : '').trim();
       state.phase      = 'loading';
       state.loadingMsg = 'Loading scenario…';
       render();
@@ -1547,7 +1557,7 @@ console.log("🎮 Game Simulator loaded");
         if (window.CC_STORAGE) {
           try {
             const allDocs2 = await window.CC_STORAGE.loadDocumentList(FACTION_SAVE_FOLDER).catch(() => []);
-            const nonScenario = (allDocs2 || []).filter(d => d.name && d.name.indexOf('SCN_') !== 0);
+            const nonScenario = (allDocs2 || []).filter(d => d.name && d.name.toLowerCase().indexOf('scn_') !== 0);
             factionSaveDocs = await Promise.all(nonScenario.map(async d => {
               const parsed = await safeLoadDocument(d.id);
               const data   = parsed ? docToJson(parsed) : null;
@@ -1567,10 +1577,22 @@ console.log("🎮 Game Simulator loaded");
           const fid = fDef.id;
           let faction = null;
 
-          // Try to match a saved roster doc by faction id
-          const matchDoc = factionSaveDocs.find(d => d._factionId === fid);
+          // Match saved roster by faction id — prefer one matching the scenario point value
+          const pts = payload.pts || 0;
+          const matches = factionSaveDocs.filter(d => d._factionId === fid);
+          let matchDoc = null;
+          if (matches.length === 1) {
+            matchDoc = matches[0];
+          } else if (matches.length > 1 && pts) {
+            // Prefer the roster whose budget matches the scenario point value
+            matchDoc = matches.find(d => d._data && (d._data.budget === pts || d._data.totalCost === pts))
+                    || matches[0];
+          } else if (matches.length > 1) {
+            matchDoc = matches[0];
+          }
           if (matchDoc && matchDoc._data) {
             faction = buildFactionFromSave(fid, matchDoc._data, fDef.npc);
+            console.log('Loaded saved roster for', fid, ':', matchDoc.name);
           }
 
           // Fallback: load default faction data from CDN
@@ -1597,9 +1619,8 @@ console.log("🎮 Game Simulator loaded");
         // 3. Load monster pool
         await loadMonsterPool();
 
-        // 4. Load map (optional)
-        const mapIdInput = document.getElementById('cc-sim-map-id-input');
-        const mapId      = mapIdInput?.value?.trim() || scenario.mapId || '';
+        // 4. Load map (optional) — use value captured before loading screen rendered
+        const mapId = mapIdValue || scenario.mapId || '';
         if (mapId) {
           state.loadingMsg = `Loading map "${mapId}"…`;
           render();
