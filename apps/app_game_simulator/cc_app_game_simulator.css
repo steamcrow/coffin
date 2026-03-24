@@ -12,8 +12,8 @@
 /* ===== Top-Level Layout ===== */
 .cc-sim-layout {
   display: flex;
-  height: 100%;
-  min-height: 580px;
+  height: 100vh;
+  min-height: 700px;
   background: var(--cc-bg-darker, #0d0d0d);
   overflow: hidden;
   position: relative;
@@ -34,6 +34,7 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  min-height: 0; /* critical for flex scroll to work */
 }
 
 /* ===== Map Canvas Area ===== */
@@ -216,7 +217,10 @@
 }
 
 /* ===== Log ===== */
-.cc-sim-log { padding: 8px; }
+.cc-sim-log {
+  padding: 8px;
+  height: 100%;
+}
 .cc-sim-log-entry {
   font-size: 0.76rem;
   padding: 4px 7px;
@@ -526,4 +530,41 @@
   font-size: 1rem;
   font-weight: 700;
   margin: .5rem 0 1rem;
+}
+
+/* ===== Active Faction Highlight ===== */
+.cc-sim-faction-entry.is-active {
+  background: rgba(255,255,255,0.1) !important;
+  border-left: 3px solid var(--active-color, #fff);
+  padding-left: 9px !important;
+}
+.cc-sim-faction-entry.is-active .cc-sim-faction-name {
+  color: #fff !important;
+  font-weight: 800;
+}
+/* Pulse the active dot */
+@keyframes cc-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50%       { box-shadow: 0 0 8px 4px currentColor; opacity: 0.8; }
+}
+.cc-sim-faction-entry.is-active .cc-sim-faction-dot {
+  animation: cc-dot-pulse 1s ease-in-out infinite;
+}
+
+/* ===== Right sidebar fixed layout ===== */
+.cc-sim-sidebar-right {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.cc-sim-sidebar-right #cc-sim-active-unit {
+  flex-shrink: 0;
+  overflow-y: auto;
+  max-height: 45%;
+  border-bottom: 1px solid var(--cc-border, #333);
+}
+.cc-sim-sidebar-right .cc-sim-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
