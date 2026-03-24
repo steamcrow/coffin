@@ -1,5 +1,5 @@
 /* File: coffin/apps/app_map_maker/cc_app_map_maker.js
-   Coffin Canyon — Map Maker (V1)
+   Coffin Canyon -- Map Maker (V1)
    Fake-isometric Leaflet map editor
 */
 
@@ -7,7 +7,7 @@
   "use strict";
 
   var DEFAULTS = {
-    title: "Coffin Canyon — Map Maker",
+    title: "Coffin Canyon -- Map Maker",
     mapImageUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/isometric_tile_48x48.svg",
     mapWidth: 4096,
     mapHeight: 4096,
@@ -291,7 +291,7 @@
 
     var tableSizeSelect = el("select", { class: "cc-mm-input" });
     [48, 36].forEach(function(s) {
-      var opt = el("option", { value: String(s), text: s + '"×' + s + '"' });
+      var opt = el("option", { value: String(s), text: s + '"x' + s + '"' });
       if (s === state.tableSizeInches) opt.selected = true;
       tableSizeSelect.appendChild(opt);
     });
@@ -342,7 +342,7 @@
 
   function renderLocationOptions(selectEl) {
     selectEl.innerHTML = "";
-    selectEl.appendChild(el("option", { value: "", text: "— Select Location —" }));
+    selectEl.appendChild(el("option", { value: "", text: "-- Select Location --" }));
 
     state.locations.forEach(function (loc) {
       var id = loc.location_id || loc.id || loc.slug || loc.name || "";
@@ -397,7 +397,7 @@
         }
 
         var line1 = el("div", { class: "cc-mm-palette-title", text: item.name || item.terrain_type_id });
-        var line2 = el("div", { class: "cc-mm-palette-meta", text: (item.family || "") + " · " + (item.kind || "") });
+        var line2 = el("div", { class: "cc-mm-palette-meta", text: (item.family || "") + " ? " + (item.kind || "") });
         var line3 = el("div", { class: "cc-mm-palette-meta", text: item.terrain_type_id });
 
         card.appendChild(line1);
@@ -539,17 +539,17 @@
       el("div", { class: "cc-mm-v", text: selectedInstance.instance_id })
     ]));
 
-    // ── Flip — right at the top so it's always visible ────────────
+    // -- Flip -- right at the top so it's always visible ------------
     (function () {
       var btn = el("button", {
         class: "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : ""),
-        text:  selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip",
+        text:  selectedInstance.mirror_x ? "? Flipped" : "? Flip",
         style: "width:100%;justify-content:center;margin-bottom:10px;"
       });
       btn.addEventListener("click", function () {
         selectedInstance.mirror_x = !selectedInstance.mirror_x;
         syncInstanceMarker(selectedInstance);
-        btn.textContent = selectedInstance.mirror_x ? "⇄ Flipped" : "⇄ Flip";
+        btn.textContent = selectedInstance.mirror_x ? "? Flipped" : "? Flip";
         btn.className   = "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : "");
       });
       panel.appendChild(btn);
@@ -565,8 +565,8 @@
       syncInstanceMarker(selectedInstance);
     }));
 
-    // ── Rotation: number field + drag bar ─────────────────────────
-    panel.appendChild(numberField("Rotation (°)", selectedInstance.rotation_deg || 0, "1", function (v) {
+    // -- Rotation: number field + drag bar -------------------------
+    panel.appendChild(numberField("Rotation (?)", selectedInstance.rotation_deg || 0, "1", function (v) {
       selectedInstance.rotation_deg = Number(v || 0);
       syncInstanceMarker(selectedInstance);
       var sl = panel.querySelector(".cc-mm-rot-slider");
@@ -588,7 +588,7 @@
     }());
 
 
-    // ── Scale: number field + drag bar ────────────────────────────
+    // -- Scale: number field + drag bar ----------------------------
     panel.appendChild(numberField("Scale", selectedInstance.scale || 1, "0.05", function (v) {
       selectedInstance.scale = clamp(Number(v || 1), 0.1, 5);
       syncInstanceMarker(selectedInstance);
@@ -610,7 +610,7 @@
       panel.appendChild(wrap);
     }());
 
-    // ── Z-Index: number field + drag bar ──────────────────────────
+    // -- Z-Index: number field + drag bar --------------------------
     panel.appendChild(numberField("Z-Index", selectedInstance.z_index || 0, "1", function (v) {
       selectedInstance.z_index = Number(v || 0);
       syncInstanceMarker(selectedInstance);
@@ -646,7 +646,7 @@
 
     var btnDel = el("button", {
       class: "cc-mm-btn",
-      text: "🗑 Delete This Terrain",
+      text: "? Delete This Terrain",
       style: "width:100%;margin-top:10px;border-color:#933;color:#f88;"
     });
     btnDel.addEventListener("click", deleteSelectedInstance);
@@ -700,14 +700,14 @@
       }
     }
 
-    // SVG tabletop — sits below everything
+    // SVG tabletop -- sits below everything
     state.bgOverlay = L.imageOverlay(currentBgUrl(), bounds, {
       interactive: false,
       pane: "tilePane"
     }).addTo(map);
 
     // Fit the table to fill container width, with a little breathing room at top
-    // padding: [topPx, sidePx] — 40px top gives the staging dead space above the table
+    // padding: [topPx, sidePx] -- 40px top gives the staging dead space above the table
     map.fitBounds(bounds, { padding: [40, 0] });
     var fitZoom = map.getZoom();
     state.fitZoom = fitZoom;
@@ -780,7 +780,7 @@
   }
 
   function refreshAllIconSizes() {
-    // Called on zoomend — rebuilds icon sizes so terrain stays locked to tabletop scale
+    // Called on zoomend -- rebuilds icon sizes so terrain stays locked to tabletop scale
     state.instanceData.instances.forEach(function(inst) {
       var marker  = state.markersByInstanceId[inst.instance_id];
       var terrain = state.terrainById[inst.terrain_type_id];
