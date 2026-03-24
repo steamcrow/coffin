@@ -399,3 +399,131 @@
   .cc-sim-sidebar { display: none; }
   .cc-sim-sidebar-right { display: none; }
 }
+
+/* ===== Solo Mode ===== */
+.cc-sim-solo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  background: rgba(255,214,0,0.15);
+  border: 1px solid #ffd600;
+  color: #ffd600;
+}
+
+.cc-sim-solo-faction-select {
+  margin: 10px 0 6px;
+}
+.cc-sim-solo-faction-select label {
+  font-size: .78rem;
+  color: var(--cc-text-dim, #888);
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  display: block;
+  margin-bottom: 6px;
+}
+.cc-sim-solo-faction-select select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--cc-bg-soft, #1a1a1a);
+  border: 1px solid var(--cc-border, #333);
+  border-radius: 6px;
+  color: var(--cc-text, #eee);
+  font-size: .85rem;
+  cursor: pointer;
+}
+
+/* ===== Ruler / Movement ===== */
+.cc-sim-ruler-hud {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.82);
+  border: 1px solid #ffd600;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-family: var(--cc-font-mono, monospace);
+  font-size: 0.8rem;
+  color: #ffd600;
+  pointer-events: none;
+  white-space: nowrap;
+  display: none;
+}
+.cc-sim-ruler-hud.visible { display: block; }
+
+/* ===== Waiting for input indicator ===== */
+.cc-sim-waiting-badge {
+  position: absolute;
+  top: 44px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,214,0,0.12);
+  border: 1px solid #ffd600;
+  border-radius: 8px;
+  padding: 5px 14px;
+  font-size: 0.78rem;
+  color: #ffd600;
+  pointer-events: none;
+  animation: cc-pulse 1.5s ease-in-out infinite;
+  display: none;
+}
+.cc-sim-waiting-badge.visible { display: block; }
+
+/* ===== Dice Roll Overlay ===== */
+.cc-sim-roll-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10001;
+  background: rgba(0,0,0,0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: cc-fade-in 0.15s ease;
+}
+.cc-sim-roll-dialog {
+  background: var(--cc-bg-darker, #0d0d0d);
+  border: 1px solid var(--cc-border, #333);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  min-width: 280px;
+  text-align: center;
+}
+.cc-sim-roll-title {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  color: var(--cc-text-dim, #888);
+  margin-bottom: .75rem;
+}
+.cc-sim-dice-row {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 1rem 0;
+  flex-wrap: wrap;
+}
+.cc-sim-die {
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 900;
+  border: 2px solid;
+  transition: all 0.2s;
+}
+.cc-sim-die.success { background: rgba(76,175,80,0.2);  border-color: #4caf50; color: #4caf50; }
+.cc-sim-die.fail    { background: rgba(255,255,255,0.05); border-color: #444;   color: #666; }
+.cc-sim-roll-result {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: .5rem 0 1rem;
+}
