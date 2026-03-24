@@ -1,0 +1,232 @@
+{
+  "map_id": "quinine_jimmy",
+  "map_title": "Quinine Jimmy",
+  "location_id": "quinine-jimmy",
+  "map_image": "https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/assets/textures/isometric_tile_48x48.svg",
+  "map_size_px": {
+    "w": 4096,
+    "h": 4096
+  },
+  "instances": [
+    {
+      "instance_id": "terrain_0g8xogj2",
+      "terrain_type_id": "feature_windmill_small",
+      "x": 1644,
+      "y": 2369,
+      "rotation_deg": 0,
+      "scale": 1.35,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_lkf25zci",
+      "terrain_type_id": "building_town_house_01",
+      "x": 1990,
+      "y": 3043,
+      "rotation_deg": 0,
+      "scale": 1.15,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_t8m92444",
+      "terrain_type_id": "building_town_house_02",
+      "x": 1230,
+      "y": 2733,
+      "rotation_deg": 0,
+      "scale": 1.15,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 8,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_xm42rf5y",
+      "terrain_type_id": "feature_mesa_segment_01",
+      "x": 2628,
+      "y": 2077,
+      "rotation_deg": 0,
+      "scale": 1,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_1ic3ojxj",
+      "terrain_type_id": "feature_mesa_segment_02",
+      "x": 2207,
+      "y": 1971,
+      "rotation_deg": 0,
+      "scale": 1.45,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_ugvmcvuf",
+      "terrain_type_id": "westbuild_brothel",
+      "x": 1661,
+      "y": 2984,
+      "rotation_deg": 0,
+      "scale": 1,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_nzoeeghd",
+      "terrain_type_id": "westbuild_02",
+      "x": 3288,
+      "y": 2812,
+      "rotation_deg": 0,
+      "scale": 1.05,
+      "mirror_x": true,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_q8g2azkt",
+      "terrain_type_id": "building_rail_station_large",
+      "x": 3205,
+      "y": 2895,
+      "rotation_deg": 0,
+      "scale": 1,
+      "mirror_x": true,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_osrbn929",
+      "terrain_type_id": "westbuild_12",
+      "x": 2340,
+      "y": 2518,
+      "rotation_deg": 0,
+      "scale": 1,
+      "mirror_x": true,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_f9gno710",
+      "terrain_type_id": "westbuild_28",
+      "x": 1466,
+      "y": 2220,
+      "rotation_deg": 0,
+      "scale": 1.45,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    }
+  ]
+}
