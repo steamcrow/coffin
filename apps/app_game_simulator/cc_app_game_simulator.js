@@ -135,6 +135,11 @@ console.log("🎮 Game Simulator loaded");
 
     const RAW_BASE           = 'https://raw.githubusercontent.com/steamcrow/coffin/main/';
     const TERRAIN_CATALOG_URL = RAW_BASE + 'data/src/terrain_catalog.json';
+    const TABLETOP_SVG_URL    = RAW_BASE + 'assets/textures/isometric_tile_48x48.svg';
+
+    // Grid: each cell = 48px = 1 inch. Movement stats are in inches.
+    const GRID_PX   = 48;   // pixels per inch
+    const MAP_INCHES = 4096 / GRID_PX;  // ~85 inches across
     const TERRAIN_BASE       = RAW_BASE + 'assets/terrain/';
     const SPRITE_SHEET_URL   = RAW_BASE + 'assets/characters/all_no_trim.png';
     const SPRITE_JSON_URL    = RAW_BASE + 'assets/characters/all_no_trim.json';
@@ -144,8 +149,7 @@ console.log("🎮 Game Simulator loaded");
     const FACTION_SAVE_FOLDER= 90;
 
     // 1 game inch = this many map pixels (map is 4096px, table is ~48" wide)
-    const INCH_PX            = 85;
-    const ENGAGEMENT_PX      = INCH_PX * 2;   // 2" engagement range
+    const ENGAGEMENT_PX      = GRID_PX * 2;  // 2" engagement range
     const SPRITE_SRC_SIZE    = 20;             // sprite sheet frame size (px)
     const SPRITE_DRAW_SIZE   = 40;             // drawn size on map canvas (px)
     const MAP_SIZE           = 4096;
@@ -250,6 +254,19 @@ console.log("🎮 Game Simulator loaded");
       spriteData: null,         // sprite atlas JSON
       terrainCatalog: {},        // terrain_type_id -> asset_file
       terrainImages: {},         // terrain_type_id -> HTMLImageElement
+      tabletopImg: null,         // loaded SVG background image
+      // Solo mode
+      soloFactionId: null,       // which faction the player controls
+      soloWaiting: false,        // waiting for player drag input
+      dragUnit: null,            // unitKey being dragged
+      dragStartX: 0,
+      dragStartY: 0,
+      rulerActive: false,
+      rulerDist: 0,
+      rulerMax: 0,
+      // Camera smooth follow
+      camTargetX: null,
+      camTargetY: null,
       terrainLoadQueue: 0,      // how many terrain images are still loading
       unitPositions: {},        // unitKey -> { x, y, animName, frameIdx, frameTimer, vx, vy, status }
       factionZones: {},         // factionId -> ZONE_DEF
@@ -426,6 +443,16 @@ console.log("🎮 Game Simulator loaded");
     // ═════════════════════════════════════════════════════════════════════════
     // SPRITE & MAP ASSET LOADING
     // ═════════════════════════════════════════════════════════════════════════
+
+    async function loadTabletop() {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload  = () => { sim.tabletopImg = img; console.log('🎲 Tabletop loaded'); resolve(); };
+        img.onerror = () => { console.warn('Tabletop SVG failed'); resolve(); };
+        img.src = TABLETOP_SVG_URL + '?t=' + Date.now();
+      });
+    }
 
     async function loadSpriteAssets() {
       return new Promise((resolve) => {
@@ -761,6 +788,100 @@ console.log("🎮 Game Simulator loaded");
         sim.isDragging = false; sim.dragLast = null; lastTouchDist = 0;
       }, { passive: true });
 
+      // ── Solo mode drag handlers ──────────────────────────────────────────
+      canvas.addEventListener('mousedown', e => {
+        const rect = canvas.getBoundingClientRect();
+        const mx   = (e.clientX - rect.left - sim.viewX) / sim.viewScale;
+        const my   = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
+
+        // Check if clicking a solo unit
+        if (sim.soloWaiting && sim.soloFactionId) {
+          const HIT = SPRITE_DRAW_SIZE / 2 + 10;
+          for (const [key, pos] of Object.entries(sim.unitPositions)) {
+            if (!pos || pos.status === 'routed') continue;
+            const [fid] = key.split('::');
+            if (fid !== sim.soloFactionId) continue;
+            const cur = currentQueueItem();
+            if (!cur || cur.factionId + '::' + cur.unitId !== key) continue;
+            if (Math.abs(pos.x - mx) < HIT && Math.abs(pos.y - my) < HIT) {
+              // Start dragging this solo unit
+              sim.dragUnit   = key;
+              sim.dragStartX = pos.x;
+              sim.dragStartY = pos.y;
+              sim.rulerActive = true;
+              const unit = getUnitById(getFactionById(fid), cur.unitId);
+              sim.rulerMax = (unit ? unit.move || 6 : 6) * GRID_PX;  // inches * px/inch
+              sim.isDragging = false; // don't pan
+              e.stopPropagation();
+              return;
+            }
+          }
+        }
+
+        // Otherwise pan
+        sim.isDragging = true;
+        sim.dragLast   = { x: e.clientX, y: e.clientY };
+        wrap.classList.add('is-dragging');
+      }, true);
+
+      canvas.addEventListener('mousemove', e => {
+        const rect = canvas.getBoundingClientRect();
+        const mx   = (e.clientX - rect.left - sim.viewX) / sim.viewScale;
+        const my   = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
+
+        if (sim.dragUnit) {
+          // Move unit with mouse, clamped to move range
+          const pos  = sim.unitPositions[sim.dragUnit];
+          if (pos) {
+            const dx   = mx - sim.dragStartX;
+            const dy   = my - sim.dragStartY;
+            const dist = Math.hypot(dx, dy);
+            sim.rulerDist = dist;
+            if (dist <= sim.rulerMax) {
+              pos.x = mx;
+              pos.y = my;
+            } else {
+              // Clamp to range circle
+              const ratio = sim.rulerMax / dist;
+              pos.x = sim.dragStartX + dx * ratio;
+              pos.y = sim.dragStartY + dy * ratio;
+            }
+            // Update ruler HUD
+            const rulerEl = document.getElementById('cc-sim-ruler-hud');
+            if (rulerEl) {
+              const used  = Math.round(sim.rulerDist / GRID_PX * 10) / 10;
+              const maxIn = Math.round(sim.rulerMax  / GRID_PX * 10) / 10;
+              rulerEl.textContent = used + '" / ' + maxIn + '"';
+              rulerEl.classList.add('visible');
+            }
+          }
+          return;
+        }
+      }, true);
+
+      canvas.addEventListener('mouseup', e => {
+        if (sim.dragUnit) {
+          // Snap to grid
+          const pos = sim.unitPositions[sim.dragUnit];
+          if (pos) {
+            pos.x = Math.round(pos.x / GRID_PX) * GRID_PX;
+            pos.y = Math.round(pos.y / GRID_PX) * GRID_PX;
+            pos.status = 'idle';
+          }
+          sim.dragUnit    = null;
+          sim.rulerActive = false;
+          sim.rulerDist   = 0;
+          const rulerEl = document.getElementById('cc-sim-ruler-hud');
+          if (rulerEl) rulerEl.classList.remove('visible');
+          // Auto advance after move
+          setTimeout(() => window.CC_SIM.soloMoveComplete(), 200);
+          return;
+        }
+        sim.isDragging = false;
+        sim.dragLast   = null;
+        wrap.classList.remove('is-dragging');
+      }, true);
+
       // Start render loop
       if (sim.animFrameId) cancelAnimationFrame(sim.animFrameId);
       sim.animFrameId = requestAnimationFrame(renderLoop);
@@ -789,8 +910,32 @@ console.log("🎮 Game Simulator loaded");
     // RENDER LOOP
     // ─────────────────────────────────────────────────────────────────────────
 
+    function smoothCameraToUnit(key) {
+      if (!sim.canvas) return;
+      const pos = sim.unitPositions[key];
+      if (!pos) return;
+      sim.camTargetX = sim.canvas.width  / 2 - pos.x * sim.viewScale;
+      sim.camTargetY = sim.canvas.height / 2 - pos.y * sim.viewScale;
+    }
+
+    function tickCamera() {
+      if (sim.camTargetX === null || sim.isDragging) return;
+      const speed = 0.08; // lerp factor — lower = smoother
+      sim.viewX += (sim.camTargetX - sim.viewX) * speed;
+      sim.viewY += (sim.camTargetY - sim.viewY) * speed;
+      // Stop when close enough
+      if (Math.abs(sim.camTargetX - sim.viewX) < 0.5 && Math.abs(sim.camTargetY - sim.viewY) < 0.5) {
+        sim.viewX = sim.camTargetX;
+        sim.viewY = sim.camTargetY;
+        sim.camTargetX = null;
+        sim.camTargetY = null;
+      }
+    }
+
     function renderLoop(timestamp) {
       if (_destroyed || !sim.canvas || !sim.ctx) return;
+
+      tickCamera();
 
       const canvas = sim.canvas;
       const ctx    = sim.ctx;
@@ -803,33 +948,62 @@ console.log("🎮 Game Simulator loaded");
       drawBackground(ctx);
       drawDeployZones(ctx);
       drawTerrain(ctx);
+      drawRuler(ctx);
       drawUnits(ctx, timestamp);
 
       ctx.restore();
 
-      // Draw tooltip outside transform
       if (sim.hoveredUnit) drawTooltip(ctx, canvas);
 
       sim.animFrameId = requestAnimationFrame(renderLoop);
     }
 
+    function drawRuler(ctx) {
+      if (!sim.rulerActive || !sim.dragUnit) return;
+      const pos = sim.unitPositions[sim.dragUnit];
+      if (!pos) return;
+      // Line from drag start to current pos
+      ctx.save();
+      ctx.strokeStyle = '#ffd600';
+      ctx.lineWidth   = 2;
+      ctx.setLineDash([8, 4]);
+      ctx.beginPath();
+      ctx.moveTo(sim.dragStartX, sim.dragStartY);
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      // Range circle
+      ctx.strokeStyle = sim.rulerDist <= sim.rulerMax
+        ? 'rgba(255,214,0,0.25)'
+        : 'rgba(239,83,80,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(sim.dragStartX, sim.dragStartY, sim.rulerMax, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     function drawBackground(ctx) {
-      // Dark dirt/felt background
-      ctx.fillStyle = '#1c1008';
-      ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-      // Subtle grid
-      ctx.strokeStyle = 'rgba(255,255,255,0.025)';
-      ctx.lineWidth = 1;
-      for (let x = 0; x <= MAP_SIZE; x += 256) {
+      // Draw tabletop SVG as full background
+      if (sim.tabletopImg) {
+        ctx.drawImage(sim.tabletopImg, 0, 0, MAP_SIZE, MAP_SIZE);
+      } else {
+        ctx.fillStyle = '#1c1008';
+        ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+      }
+      // 48px grid overlay (1 ft per cell)
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
+      ctx.lineWidth = 0.5;
+      for (let x = 0; x <= MAP_SIZE; x += GRID_PX) {
         ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke();
       }
-      for (let y = 0; y <= MAP_SIZE; y += 256) {
+      for (let y = 0; y <= MAP_SIZE; y += GRID_PX) {
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke();
       }
       // Map border
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-      ctx.lineWidth = 8;
-      ctx.strokeRect(4, 4, MAP_SIZE - 8, MAP_SIZE - 8);
+      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(3, 3, MAP_SIZE - 6, MAP_SIZE - 6);
     }
 
     function drawDeployZones(ctx) {
@@ -1144,7 +1318,40 @@ console.log("🎮 Game Simulator loaded");
       pos.status = 'moving';
     }
 
-    function resolveEngagement(attackerKey, defenderKey) {
+    function rollQualityDice(qualityScore) {
+      const dice = [];
+      for (let i = 0; i < qualityScore; i++) {
+        dice.push(Math.floor(Math.random() * 6) + 1);
+      }
+      const successes = dice.filter(d => d >= 4).length;
+      return { dice, successes };
+    }
+
+    function showRollDialog(attacker, defender, dice, successes, defense, hit) {
+      const existing = document.getElementById('cc-sim-roll-overlay');
+      if (existing) existing.remove();
+      const color    = hit ? '#4caf50' : '#ef5350';
+      const diceHtml = dice.map(d =>
+        '<div class="cc-sim-die ' + (d >= 4 ? 'success' : 'fail') + '">' + d + '</div>'
+      ).join('');
+      const overlay = document.createElement('div');
+      overlay.id        = 'cc-sim-roll-overlay';
+      overlay.className = 'cc-sim-roll-overlay';
+      overlay.innerHTML =
+        '<div class="cc-sim-roll-dialog">' +
+          '<div class="cc-sim-roll-title">' + attacker.name + ' attacks ' + defender.name + '</div>' +
+          '<div class="cc-sim-dice-row">' + diceHtml + '</div>' +
+          '<div class="cc-sim-roll-result" style="color:' + color + ';">' +
+            successes + ' success' + (successes !== 1 ? 'es' : '') +
+            ' vs Defense ' + defense + ' &mdash; ' + (hit ? 'HIT!' : 'Blocked') +
+          '</div>' +
+          '<button class="cc-btn" style="width:100%;" onclick="window.CC_SIM.closeRollDialog();">Continue</button>' +
+        '</div>';
+      document.body.appendChild(overlay);
+      setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 4000);
+    }
+
+    function resolveEngagement(attackerKey, defenderKey, showDialog) {
       const [aFid, aUid] = attackerKey.split('::');
       const [dFid, dUid] = defenderKey.split('::');
       const attackerUnit  = getUnitById(getFactionById(aFid), aUid);
@@ -1155,26 +1362,30 @@ console.log("🎮 Game Simulator loaded");
 
       const attackQ  = attackerState.quality || 1;
       const defenseD = defenderUnit.defense  || 1;
-      const roll     = Math.floor(Math.random() * 6) + 1;
-      const successes = roll >= defenseD ? 1 : 0;
-
-      const aPos = sim.unitPositions[attackerKey];
-      const dPos = sim.unitPositions[defenderKey];
+      const aPos     = sim.unitPositions[attackerKey];
+      const dPos     = sim.unitPositions[defenderKey];
       if (aPos) aPos.status = 'fighting';
 
-      if (successes > 0) {
+      const { dice, successes } = rollQualityDice(attackQ);
+      const hit = successes > defenseD;
+
+      if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, successes, defenseD, hit);
+
+      if (hit) {
         const newQ = Math.max(0, defenderState.quality - 1);
         setUnitState(dFid, dUid, { quality: newQ });
-        simLog(`⚔️ ${attackerUnit.name} hit ${defenderUnit.name}! (Q${newQ} remaining)`, 'combat');
+        simLog(attackerUnit.name + ' hit ' + defenderUnit.name + '! (' + successes + ' vs D' + defenseD + ')', 'combat');
         if (newQ <= 0) {
           setUnitState(dFid, dUid, { out: true });
           if (dPos) dPos.status = 'routed';
-          simLog(`💀 ${defenderUnit.name} is OUT!`, 'combat');
+          simLog(defenderUnit.name + ' is OUT!', 'combat');
         }
       } else {
-        simLog(`🛡️ ${defenderUnit.name} blocked ${attackerUnit.name}'s attack!`, 'combat');
+        simLog(defenderUnit.name + ' blocked! (' + successes + ' vs D' + defenseD + ')', 'combat');
       }
+      return { dice, successes, hit };
     }
+
 
     function simulateActivation(fid, uid) {
       const key  = unitKey(fid, uid);
@@ -1182,7 +1393,7 @@ console.log("🎮 Game Simulator loaded");
       const unit = getUnitById(getFactionById(fid), uid);
       if (!pos || !unit) return;
 
-      const speedPx = (unit.move || 6) * INCH_PX;
+      const speedPx = (unit.move || 6) * GRID_PX;  // move stat is in inches, GRID_PX = 1"
       const { key: enemyKey, dist: enemyDist } = findNearestEnemy(fid, pos);
 
       if (enemyKey && enemyDist <= ENGAGEMENT_PX) {
@@ -1285,6 +1496,13 @@ console.log("🎮 Game Simulator loaded");
                 <option value="">-- No map --</option>
                 ${MAP_LIST.map(m => '<option value="' + m.id + '">' + m.name + '</option>').join('')}
               </select>
+              <div class="cc-sim-solo-faction-select">
+                <label>Solo Mode (optional)</label>
+                <select id="cc-sim-solo-select">
+                  <option value="">-- Auto-simulate all factions --</option>
+                  ${Object.entries(FACTION_META).map(([id, m]) => '<option value="' + id + '">' + m.name + '</option>').join('')}
+                </select>
+              </div>
               <button class="cc-btn" style="width:100%;" onclick="window.CC_SIM.launchSimulator()">
                 <i class="fa fa-play"></i> Launch Simulator
               </button>
@@ -1330,6 +1548,8 @@ console.log("🎮 Game Simulator loaded");
 
             <!-- MAP AREA -->
             <div class="cc-sim-map-wrap" id="cc-sim-map-wrap">
+              <div class="cc-sim-ruler-hud" id="cc-sim-ruler-hud"></div>
+              <div class="cc-sim-waiting-badge" id="cc-sim-waiting-badge">Your turn &mdash; drag your unit to move</div>
               <div class="cc-sim-map-hud-top">
                 <div class="cc-sim-round-badge" id="cc-sim-round-badge">Round ${state.round}</div>
                 <div class="cc-sim-round-badge" id="cc-sim-queue-badge" style="font-size:.75rem;"></div>
@@ -1461,6 +1681,32 @@ console.log("🎮 Game Simulator loaded");
     // CONTROLS — public CC_SIM.* functions
     // ═════════════════════════════════════════════════════════════════════════
 
+    window.CC_SIM.closeRollDialog = function() {
+      const o = document.getElementById('cc-sim-roll-overlay');
+      if (o) o.remove();
+    };
+
+    window.CC_SIM.soloMoveComplete = function() {
+      // Called after player finishes dragging their unit
+      const cur = currentQueueItem();
+      if (!cur) return;
+      // Check for engagement after move
+      const key = unitKey(cur.factionId, cur.unitId);
+      const pos = sim.unitPositions[key];
+      if (pos) {
+        const { key: enemyKey, dist: enemyDist } = findNearestEnemy(cur.factionId, pos);
+        if (enemyKey && enemyDist <= ENGAGEMENT_PX) {
+          resolveEngagement(key, enemyKey, true);
+          addNoise(NOISE_VALUES.melee, 'Melee');
+        }
+      }
+      sim.soloWaiting = false;
+      const waitEl = document.getElementById('cc-sim-waiting-badge');
+      if (waitEl) waitEl.classList.remove('visible');
+      // Advance to next unit
+      setTimeout(() => window.CC_SIM.nextActivation(), 800);
+    };
+
     window.CC_SIM.nextActivation = function() {
       if (isRoundComplete()) {
         startNewRound();
@@ -1468,18 +1714,26 @@ console.log("🎮 Game Simulator loaded");
         return;
       }
       advanceQueue();
+
+      const cur = currentQueueItem();
+
+      // Solo mode: if this unit belongs to the player, wait for drag input
+      if (cur && sim.soloFactionId && cur.factionId === sim.soloFactionId) {
+        sim.soloWaiting = true;
+        const waitEl = document.getElementById('cc-sim-waiting-badge');
+        if (waitEl) waitEl.classList.add('visible');
+      } else {
+        sim.soloWaiting = false;
+        const waitEl = document.getElementById('cc-sim-waiting-badge');
+        if (waitEl) waitEl.classList.remove('visible');
+      }
+
+      // Smooth camera follow
+      if (cur) smoothCameraToUnit(unitKey(cur.factionId, cur.unitId));
+
       refreshActiveUnitPanel();
       refreshFactionList();
       refreshQueueBadge();
-      // Pan camera to active unit
-      const cur = currentQueueItem();
-      if (cur) {
-        const pos = sim.unitPositions[unitKey(cur.factionId, cur.unitId)];
-        if (pos && sim.canvas) {
-          sim.viewX = sim.canvas.width  / 2 - pos.x * sim.viewScale;
-          sim.viewY = sim.canvas.height / 2 - pos.y * sim.viewScale;
-        }
-      }
     };
 
     window.CC_SIM.activateAndAdvance = function() {
@@ -1542,8 +1796,11 @@ console.log("🎮 Game Simulator loaded");
     window.CC_SIM.launchSimulator = async function() {
       if (!state.selectedScenarioId) return;
       // Grab mapId from input BEFORE we replace the setup screen
-      const mapIdInput = document.getElementById('cc-sim-map-id-input');
-      const mapIdValue = (mapIdInput ? mapIdInput.value : '').trim();
+      const mapIdInput  = document.getElementById('cc-sim-map-id-input');
+      const mapIdValue  = (mapIdInput  ? mapIdInput.value  : '').trim();
+      const soloInput   = document.getElementById('cc-sim-solo-select');
+      sim.soloFactionId = (soloInput   ? soloInput.value   : '') || null;
+      if (sim.soloFactionId) simLog('Solo mode: you control ' + (FACTION_META[sim.soloFactionId] && FACTION_META[sim.soloFactionId].name || sim.soloFactionId), 'deploy');
       state.phase      = 'loading';
       state.loadingMsg = 'Loading scenario…';
       render();
@@ -1660,10 +1917,10 @@ console.log("🎮 Game Simulator loaded");
           } catch (e) { console.warn('Map load failed:', safeErr(e)); }
         }
 
-        // 5. Load sprites
+        // 5. Load sprites + tabletop
         state.loadingMsg = 'Loading sprite assets…';
         render();
-        await loadSpriteAssets();
+        await Promise.all([loadSpriteAssets(), loadTabletop()]);
 
         // 6. Deploy and build queue
         try { deployAllFactions(); } catch(e) { throw new Error('deployAllFactions failed: ' + e.message); }
