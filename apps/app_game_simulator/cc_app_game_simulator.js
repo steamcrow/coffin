@@ -452,7 +452,7 @@ console.log("🎮 Game Simulator loaded");
         if (!res.ok) throw new Error('HTTP ' + res.status);
         const data = await res.json();
         // Build lookup: terrain_type_id -> asset_file
-        const list = Array.isArray(data) ? data : (data.terrain || data.types || data.catalog || []);
+        const list = Array.isArray(data) ? data : (data.terrain_types || data.terrain || data.types || data.catalog || []);
         list.forEach(entry => {
           if (entry.terrain_type_id && entry.asset_file) {
             sim.terrainCatalog[entry.terrain_type_id] = entry.asset_file;
@@ -1386,7 +1386,7 @@ console.log("🎮 Game Simulator loaded");
           <div class="cc-sim-faction-name">${f.name}</div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
             <div class="cc-sim-faction-count">${active}/${total}</div>
-            ${zone ? `<div class="cc-sim-faction-zone-tag" style="background:${f.color}22;color:${f.color};">${zone.key.replace('_',' ')}</div>` : ''}
+            ${zone && zone.key ? '<div class="cc-sim-faction-zone-tag" style="background:' + f.color + '22;color:' + f.color + ';">' + zone.key.replace('_',' ') + '</div>' : ''}
           </div>
         </div>`;
       }).join('');
@@ -1670,10 +1670,9 @@ console.log("🎮 Game Simulator loaded");
         try { buildQueue(); }        catch(e) { throw new Error('buildQueue failed: ' + e.message); }
 
         state.phase = 'playing';
+        simLog('Game start: ' + state.scenarioName + ' Round ' + state.round, 'round');
 
         try { render(); }            catch(e) { throw new Error('render failed: ' + e.message); }
-
-        simLog('Game start: ' + state.scenarioName + ' Round ' + state.round, 'round');
 
       } catch (err) {
         // Log full stack so we can see exactly which line crashed
