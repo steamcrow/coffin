@@ -176,17 +176,19 @@ console.log("🎮 Game Simulator loaded");
 
     // Deployment zones around the 4096x4096 map edges
     // Up to 4 factions get a full side; 5-8 get a half-side
+    // Deployment zones — inset well within the 4096x4096 map so units land on the board
+    // The isometric SVG has its playable area roughly between 600-3500 on each axis
     const ZONE_DEFS = [
-      { key: 'north',      xMin: 400,  xMax: 3696, yMin: 80,   yMax: 280  },
-      { key: 'south',      xMin: 400,  xMax: 3696, yMin: 3816, yMax: 4016 },
-      { key: 'west',       xMin: 80,   xMax: 280,  yMin: 400,  yMax: 3696 },
-      { key: 'east',       xMin: 3816, xMax: 4016, yMin: 400,  yMax: 3696 },
-      { key: 'north_west', xMin: 400,  xMax: 1848, yMin: 80,   yMax: 280  },
-      { key: 'north_east', xMin: 2248, xMax: 3696, yMin: 80,   yMax: 280  },
-      { key: 'south_west', xMin: 400,  xMax: 1848, yMin: 3816, yMax: 4016 },
-      { key: 'south_east', xMin: 2248, xMax: 3696, yMin: 3816, yMax: 4016 },
+      { key: 'north',      xMin: 700,  xMax: 3400, yMin: 600,  yMax: 900  },
+      { key: 'south',      xMin: 700,  xMax: 3400, yMin: 3200, yMax: 3500 },
+      { key: 'west',       xMin: 600,  xMax: 900,  yMin: 700,  yMax: 3400 },
+      { key: 'east',       xMin: 3200, xMax: 3500, yMin: 700,  yMax: 3400 },
+      { key: 'north_west', xMin: 600,  xMax: 1800, yMin: 600,  yMax: 900  },
+      { key: 'north_east', xMin: 2300, xMax: 3500, yMin: 600,  yMax: 900  },
+      { key: 'south_west', xMin: 600,  xMax: 1800, yMin: 3200, yMax: 3500 },
+      { key: 'south_east', xMin: 2300, xMax: 3500, yMin: 3200, yMax: 3500 },
     ];
-    const MONSTER_ZONE = { xMin: 1648, xMax: 2448, yMin: 1648, yMax: 2448 };
+    const MONSTER_ZONE = { key: 'center', xMin: 1700, xMax: 2400, yMin: 1700, yMax: 2400 };
 
     const NOISE_VALUES = {
       shot: 2, melee: 3, explosion: 3, ritual: 4, ability: 2, silent: 0
@@ -707,7 +709,8 @@ console.log("🎮 Game Simulator loaded");
       function resizeCanvas() {
         canvas.width  = wrap.clientWidth  || 600;
         canvas.height = wrap.clientHeight || 500;
-        // Center map initially
+        // Fit the map to fill ~90% of the viewport
+        sim.viewScale = Math.min(canvas.width, canvas.height) * 0.9 / MAP_SIZE;
         sim.viewX = (canvas.width  - MAP_SIZE * sim.viewScale) / 2;
         sim.viewY = (canvas.height - MAP_SIZE * sim.viewScale) / 2;
       }
@@ -991,19 +994,11 @@ console.log("🎮 Game Simulator loaded");
         ctx.fillStyle = '#1c1008';
         ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
       }
-      // 48px grid overlay (1 ft per cell)
-      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-      ctx.lineWidth = 0.5;
-      for (let x = 0; x <= MAP_SIZE; x += GRID_PX) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke();
-      }
-      for (let y = 0; y <= MAP_SIZE; y += GRID_PX) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke();
-      }
-      // Map border
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 6;
-      ctx.strokeRect(3, 3, MAP_SIZE - 6, MAP_SIZE - 6);
+      // Grid is baked into the isometric SVG — no overlay needed
+      // Just a subtle outer border
+      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+      ctx.lineWidth = 8;
+      ctx.strokeRect(4, 4, MAP_SIZE - 8, MAP_SIZE - 8);
     }
 
     function drawDeployZones(ctx) {
@@ -1964,9 +1959,11 @@ console.log("🎮 Game Simulator loaded");
 
     window.CC_SIM.zoomFit = function() {
       if (!sim.canvas) return;
-      sim.viewScale = Math.min(sim.canvas.width, sim.canvas.height) / MAP_SIZE;
+      sim.viewScale = Math.min(sim.canvas.width, sim.canvas.height) * 0.9 / MAP_SIZE;
       sim.viewX     = (sim.canvas.width  - MAP_SIZE * sim.viewScale) / 2;
       sim.viewY     = (sim.canvas.height - MAP_SIZE * sim.viewScale) / 2;
+      sim.camTargetX = null;
+      sim.camTargetY = null;
     };
 
     window.CC_SIM.toggleAuto = function() {
