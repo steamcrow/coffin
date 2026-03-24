@@ -176,19 +176,19 @@ console.log("🎮 Game Simulator loaded");
 
     // Deployment zones around the 4096x4096 map edges
     // Up to 4 factions get a full side; 5-8 get a half-side
-    // Deployment zones — inset well within the 4096x4096 map so units land on the board
-    // The isometric SVG has its playable area roughly between 600-3500 on each axis
+    // Deployment zones — edge strips of the 4096x4096 play area
+    // Positions are inset from edges to land units on the tabletop diamond
     const ZONE_DEFS = [
-      { key: 'north',      xMin: 700,  xMax: 3400, yMin: 600,  yMax: 900  },
-      { key: 'south',      xMin: 700,  xMax: 3400, yMin: 3200, yMax: 3500 },
-      { key: 'west',       xMin: 600,  xMax: 900,  yMin: 700,  yMax: 3400 },
-      { key: 'east',       xMin: 3200, xMax: 3500, yMin: 700,  yMax: 3400 },
-      { key: 'north_west', xMin: 600,  xMax: 1800, yMin: 600,  yMax: 900  },
-      { key: 'north_east', xMin: 2300, xMax: 3500, yMin: 600,  yMax: 900  },
-      { key: 'south_west', xMin: 600,  xMax: 1800, yMin: 3200, yMax: 3500 },
-      { key: 'south_east', xMin: 2300, xMax: 3500, yMin: 3200, yMax: 3500 },
+      { key: 'north',      xMin: 1200, xMax: 2900, yMin: 550,  yMax: 850  },
+      { key: 'south',      xMin: 1200, xMax: 2900, yMin: 3250, yMax: 3550 },
+      { key: 'west',       xMin: 550,  xMax: 850,  yMin: 1200, yMax: 2900 },
+      { key: 'east',       xMin: 3250, xMax: 3550, yMin: 1200, yMax: 2900 },
+      { key: 'north_west', xMin: 700,  xMax: 1500, yMin: 700,  yMax: 1500 },
+      { key: 'north_east', xMin: 2600, xMax: 3400, yMin: 700,  yMax: 1500 },
+      { key: 'south_west', xMin: 700,  xMax: 1500, yMin: 2600, yMax: 3400 },
+      { key: 'south_east', xMin: 2600, xMax: 3400, yMin: 2600, yMax: 3400 },
     ];
-    const MONSTER_ZONE = { key: 'center', xMin: 1700, xMax: 2400, yMin: 1700, yMax: 2400 };
+    const MONSTER_ZONE = { key: 'center', xMin: 1800, xMax: 2300, yMin: 1800, yMax: 2300 };
 
     const NOISE_VALUES = {
       shot: 2, melee: 3, explosion: 3, ritual: 4, ability: 2, silent: 0
@@ -396,6 +396,8 @@ console.log("🎮 Game Simulator loaded");
           lore:     item.lore     || null,
           quality: _q, move: _m, defense: _d, range: _r,
           cost:    item.totalCost || item.cost || null,
+          weapon:  item.weapon    || null,
+          weapon_properties: item.weapon_properties || [],
           special: item.abilities || item.special || [],
           isTitan: item.isTitan   || false,
         };
@@ -423,6 +425,8 @@ console.log("🎮 Game Simulator loaded");
         defense: u.defense  || u.armor  || null,
         range:   u.range    || u.shoot  || null,
         cost:    u.cost     || u.points || null,
+        weapon:  u.weapon   || null,
+        weapon_properties: u.weapon_properties || [],
         special: u.special  || u.abilities || [],
         isTitan: u.titan    || false,
       }));
@@ -1002,18 +1006,20 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function drawDeployZones(ctx) {
+      // Only draw zones during the first round as a subtle reference
+      if (state.round > 1) return;
       Object.entries(sim.factionZones).forEach(([fid, zone]) => {
         const faction = getFactionById(fid);
         if (!faction || !zone) return;
         const color = faction.color || '#888';
         ctx.save();
-        ctx.globalAlpha = 0.12;
+        ctx.globalAlpha = 0.06;
         ctx.fillStyle   = color;
         ctx.fillRect(zone.xMin, zone.yMin, zone.xMax - zone.xMin, zone.yMax - zone.yMin);
-        ctx.globalAlpha = 0.4;
+        ctx.globalAlpha = 0.2;
         ctx.strokeStyle = color;
-        ctx.lineWidth   = 3;
-        ctx.setLineDash([12, 6]);
+        ctx.lineWidth   = 2;
+        ctx.setLineDash([8, 6]);
         ctx.strokeRect(zone.xMin, zone.yMin, zone.xMax - zone.xMin, zone.yMax - zone.yMin);
         ctx.setLineDash([]);
         ctx.restore();
@@ -1145,6 +1151,16 @@ console.log("🎮 Game Simulator loaded");
           ctx.fillText((unit.name || '?')[0].toUpperCase(), pos.x, pos.y);
         }
 
+        // Shaken/Panicked indicator
+        if (us.shaken || us.panicked) {
+          ctx.save();
+          ctx.font = 'bold ' + Math.round(SPRITE_DRAW_SIZE * 0.55) + 'px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(us.panicked ? '💀' : '⚡', pos.x + half, pos.y - half - 14);
+          ctx.restore();
+        }
+
         // Health dots above unit
         const maxQ = unit.quality || 4;
         const curQ = us.quality   || 0;
@@ -1246,9 +1262,11 @@ console.log("🎮 Game Simulator loaded");
 
     function advanceQueue() {
       const cur = currentQueueItem();
-      if (cur) setUnitState(cur.factionId, cur.unitId, { activated: true });
-      // Set unit back to idle animation
       if (cur) {
+        setUnitState(cur.factionId, cur.unitId, { activated: true });
+        // Shaken clears at end of this unit's activation
+        const us = getUnitState(cur.factionId, cur.unitId);
+        if (us && us.shaken) setUnitState(cur.factionId, cur.unitId, { shaken: false });
         const pos = sim.unitPositions[unitKey(cur.factionId, cur.unitId)];
         if (pos) { pos.status = 'idle'; pos.frameIdx = 0; }
       }
@@ -1313,22 +1331,93 @@ console.log("🎮 Game Simulator loaded");
       pos.status = 'moving';
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // CORE MECHANICS — per official Coffin Canyon rules
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Roll [qualityScore] d6s. 4+ = success.
+    // Returns { dice, successes, critFail, luckyBreak }
     function rollQualityDice(qualityScore) {
       const dice = [];
-      for (let i = 0; i < qualityScore; i++) {
+      for (let i = 0; i < Math.max(1, qualityScore); i++) {
         dice.push(Math.floor(Math.random() * 6) + 1);
       }
-      const successes = dice.filter(d => d >= 4).length;
-      return { dice, successes };
+      const successes  = dice.filter(d => d >= 4).length;
+      const critFail   = dice.every(d => d === 1);                    // all 1s
+      const luckyBreak = dice.length > 0 && dice.every(d => d === 6); // all 6s
+      return { dice, successes, critFail, luckyBreak };
     }
 
-    function showRollDialog(attacker, defender, dice, successes, defense, hit) {
+    // Apply Shaken to a unit (–1 die on all rolls, removed at end of next activation)
+    function applyShaken(fid, uid) {
+      const us = getUnitState(fid, uid);
+      if (!us) return;
+      if (us.shaken) {
+        // Already Shaken → Panicked
+        setUnitState(fid, uid, { panicked: true });
+        simLog(getUnitById(getFactionById(fid), uid)?.name + ' PANICS!', 'combat');
+      } else {
+        setUnitState(fid, uid, { shaken: true });
+        simLog(getUnitById(getFactionById(fid), uid)?.name + ' is Shaken.', 'combat');
+      }
+    }
+
+    // Run a morale test for a unit
+    function testMorale(fid, uid) {
+      const us   = getUnitState(fid, uid);
+      const unit = getUnitById(getFactionById(fid), uid);
+      if (!us || !unit) return;
+      // fearless / unshakable abilities skip morale
+      const abilities = unit.special || [];
+      const abilityNames = abilities.map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
+      if (abilityNames.includes('fearless') || abilityNames.includes('unshakable')) return;
+      const q = Math.max(1, us.quality);
+      const { successes } = rollQualityDice(q);
+      if (successes === 0) applyShaken(fid, uid);
+    }
+
+    // Get effective defense, applying ability modifiers
+    function getEffectiveDefense(unit, us, attackerAbilities) {
+      let def = unit.defense || 0;
+      // shaken defender: –1 die on their side but doesn't reduce defense directly
+      // pierce ability on attacker reduces defense
+      const atk = (attackerAbilities || []).map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
+      if (atk.includes('pierce'))        def = Math.max(0, def - 1);
+      if (atk.includes('brutal pierce')) def = Math.max(0, def - 2);
+      if (atk.includes('savage pierce')) def = Math.max(0, def - 3);
+      // shield_wall: +1 defense when adjacent to ally (simplified: always apply if unit has it)
+      const defAbil = (unit.special || []).map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
+      if (defAbil.includes('shield_wall') || defAbil.includes('shield wall')) def += 1;
+      return Math.max(0, def);
+    }
+
+    // Get effective attack dice count (applying Shaken penalty)
+    function getEffectiveQuality(unit, us) {
+      let q = us.quality || 1;
+      if (us.shaken) q = Math.max(1, q - 1); // Shaken: –1 die
+      return q;
+    }
+
+    function showRollDialog(attacker, defender, dice, successes, defense, damage, critFail, luckyBreak) {
       const existing = document.getElementById('cc-sim-roll-overlay');
       if (existing) existing.remove();
-      const color    = hit ? '#4caf50' : '#ef5350';
-      const diceHtml = dice.map(d =>
-        '<div class="cc-sim-die ' + (d >= 4 ? 'success' : 'fail') + '">' + d + '</div>'
-      ).join('');
+
+      let resultColor = damage > 0 ? '#4caf50' : '#ef5350';
+      if (critFail)   resultColor = '#ef5350';
+      if (luckyBreak) resultColor = '#ffd600';
+
+      const diceHtml = dice.map(d => {
+        let cls = d >= 4 ? 'success' : 'fail';
+        if (d === 6) cls = 'success'; // highlight sixes
+        return '<div class="cc-sim-die ' + cls + '" style="' + (d === 6 ? 'border-color:#ffd600;color:#ffd600;' : '') + '">' + d + '</div>';
+      }).join('');
+
+      let resultText = '';
+      if (critFail)        resultText = 'CRITICAL FAILURE — Shaken!';
+      else if (luckyBreak) resultText = 'LUCKY BREAK — All sixes!';
+      else if (damage > 0) resultText = damage + ' damage dealt! (' + successes + ' hits vs D' + defense + ')';
+      else                 resultText = 'Blocked! (' + successes + ' hits vs D' + defense + ')';
+
       const overlay = document.createElement('div');
       overlay.id        = 'cc-sim-roll-overlay';
       overlay.className = 'cc-sim-roll-overlay';
@@ -1336,14 +1425,11 @@ console.log("🎮 Game Simulator loaded");
         '<div class="cc-sim-roll-dialog">' +
           '<div class="cc-sim-roll-title">' + attacker.name + ' attacks ' + defender.name + '</div>' +
           '<div class="cc-sim-dice-row">' + diceHtml + '</div>' +
-          '<div class="cc-sim-roll-result" style="color:' + color + ';">' +
-            successes + ' success' + (successes !== 1 ? 'es' : '') +
-            ' vs Defense ' + defense + ' &mdash; ' + (hit ? 'HIT!' : 'Blocked') +
-          '</div>' +
+          '<div class="cc-sim-roll-result" style="color:' + resultColor + ';">' + resultText + '</div>' +
           '<button class="cc-btn" style="width:100%;" onclick="window.CC_SIM.closeRollDialog();">Continue</button>' +
         '</div>';
       document.body.appendChild(overlay);
-      setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 4000);
+      setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 5000);
     }
 
     function resolveEngagement(attackerKey, defenderKey, showDialog) {
@@ -1355,30 +1441,81 @@ console.log("🎮 Game Simulator loaded");
       const defenderState = getUnitState(dFid, dUid);
       if (!attackerUnit || !defenderUnit || !attackerState || !defenderState) return;
 
-      const attackQ  = attackerState.quality || 1;
-      const defenseD = defenderUnit.defense  || 1;
-      const aPos     = sim.unitPositions[attackerKey];
-      const dPos     = sim.unitPositions[defenderKey];
+      const aPos = sim.unitPositions[attackerKey];
+      const dPos = sim.unitPositions[defenderKey];
       if (aPos) aPos.status = 'fighting';
 
-      const { dice, successes } = rollQualityDice(attackQ);
-      const hit = successes > defenseD;
+      // Effective stats with ability modifiers
+      const attackQ  = getEffectiveQuality(attackerUnit, attackerState);
+      const defenseD = getEffectiveDefense(defenderUnit, defenderState, attackerUnit.special);
 
-      if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, successes, defenseD, hit);
+      const { dice, successes, critFail, luckyBreak } = rollQualityDice(attackQ);
 
-      if (hit) {
-        const newQ = Math.max(0, defenderState.quality - 1);
+      // Critical Failure: attacker becomes Shaken
+      if (critFail) {
+        applyShaken(aFid, aUid);
+        if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, 0, defenseD, 0, true, false);
+        return { dice, successes: 0, damage: 0, critFail: true };
+      }
+
+      // Lucky Break: all 6s — attacker gets a free bonus (we auto-apply Quick Step)
+      if (luckyBreak) {
+        simLog(attackerUnit.name + ' — Lucky Break! (all sixes)', 'combat');
+      }
+
+      // Natural Six bonus: if attack hits and attacker rolled any 6, minimum 1 damage
+      const hasNaturalSix = dice.some(d => d === 6);
+
+      // Damage = successes − defense (per core rules), minimum 0
+      // Natural Six guarantees minimum 1 damage if the attack hits at all
+      let damage = Math.max(0, successes - defenseD);
+      if (hasNaturalSix && successes > 0 && damage === 0) damage = 1;
+
+      // Tough / Tougher / Toughest: roll to ignore each damage point
+      const defAbil = (defenderUnit.special || []).map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
+      if (damage > 0) {
+        let ignored = 0;
+        const dicePerWound = defAbil.includes('toughest') ? 3 : defAbil.includes('tougher') ? 2 : defAbil.includes('tough') ? 1 : 0;
+        if (dicePerWound > 0) {
+          for (let i = 0; i < damage; i++) {
+            for (let j = 0; j < dicePerWound; j++) {
+              if (Math.floor(Math.random() * 6) + 1 >= 5) { ignored++; break; }
+            }
+          }
+          if (ignored > 0) simLog(defenderUnit.name + ' shrugs off ' + ignored + ' wound(s) (Tough).', 'combat');
+        }
+        damage = Math.max(0, damage - ignored);
+      }
+
+      if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, successes, defenseD, damage, false, luckyBreak);
+
+      if (damage > 0) {
+        const newQ = Math.max(0, defenderState.quality - damage);
         setUnitState(dFid, dUid, { quality: newQ });
-        simLog(attackerUnit.name + ' hit ' + defenderUnit.name + '! (' + successes + ' vs D' + defenseD + ')', 'combat');
+        simLog(attackerUnit.name + ' deals ' + damage + ' damage to ' + defenderUnit.name + '! (Q' + newQ + ' remaining)', 'combat');
+        // Morale test after taking damage (non-titan, non-fearless)
+        if (damage > 0 && newQ > 0) testMorale(dFid, dUid);
         if (newQ <= 0) {
           setUnitState(dFid, dUid, { out: true });
           if (dPos) dPos.status = 'routed';
           simLog(defenderUnit.name + ' is OUT!', 'combat');
+          // Cascading fear: nearby enemies of same faction test morale
+          const defFaction = getFactionById(dFid);
+          if (defFaction) {
+            defFaction.allUnits.forEach(u => {
+              const uKey = unitKey(dFid, u.id);
+              const uPos = sim.unitPositions[uKey];
+              if (!uPos || uKey === defenderKey) return;
+              const dx = uPos.x - (dPos ? dPos.x : 0);
+              const dy = uPos.y - (dPos ? dPos.y : 0);
+              if (Math.hypot(dx, dy) < GRID_PX * 6) testMorale(dFid, u.id);
+            });
+          }
         }
       } else {
         simLog(defenderUnit.name + ' blocked! (' + successes + ' vs D' + defenseD + ')', 'combat');
       }
-      return { dice, successes, hit };
+      return { dice, successes, damage, critFail: false };
     }
 
 
@@ -1643,6 +1780,8 @@ console.log("🎮 Game Simulator loaded");
             </div>
           </div>
           <div class="cc-sim-health-track">${dots}</div>
+          ${us.shaken   ? '<div style="color:#ffd600;font-size:.75rem;font-weight:700;margin:4px 0;">⚡ SHAKEN (-1 die)</div>' : ''}
+          ${us.panicked ? '<div style="color:#ef5350;font-size:.75rem;font-weight:700;margin:4px 0;">💀 PANICKED</div>' : ''}
           <div class="cc-sim-stat-row">
             ${unit.move    ? `<span class="cc-sim-stat-pill move"><i class="fa fa-shoe-prints"></i> ${unit.move}"</span>` : ''}
             ${unit.defense ? `<span class="cc-sim-stat-pill defense"><i class="fa fa-shield-alt"></i> D${unit.defense}</span>` : ''}
@@ -1650,6 +1789,7 @@ console.log("🎮 Game Simulator loaded");
             ${unit.cost    ? `<span class="cc-sim-stat-pill cost">${unit.cost}pts</span>` : ''}
           </div>
           ${abilities}
+          ${unit.weapon ? `<div style="font-size:.74rem;color:#9e8e78;margin-top:6px;font-style:italic;">${unit.weapon}</div>` : ''}
           ${unit.lore ? `<div style="font-size:.73rem;color:var(--cc-text-dim);margin-top:8px;line-height:1.5;font-style:italic;">${unit.lore.slice(0,140)}${unit.lore.length>140?'…':''}</div>` : ''}
           <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
             <button class="cc-btn cc-btn-sm" onclick="window.CC_SIM.activateAndAdvance()">
