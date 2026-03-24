@@ -1261,7 +1261,7 @@ console.log("🎮 Game Simulator loaded");
                 style="width:100%;padding:8px 10px;background:var(--cc-bg-soft);border:1px solid var(--cc-border);
                        border-radius:6px;color:var(--cc-text);font-size:.85rem;margin-bottom:14px;cursor:pointer;">
                 <option value="">-- No map --</option>
-                ${MAP_LIST.map(m => `<option value="${m.id}">${m.name}</option>`).join('')}
+                ${MAP_LIST.map(m => '<option value="' + m.id + '">' + m.name + '</option>').join('')}
               </select>
               <button class="cc-btn" style="width:100%;" onclick="window.CC_SIM.launchSimulator()">
                 <i class="fa fa-play"></i> Launch Simulator
