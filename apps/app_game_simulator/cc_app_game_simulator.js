@@ -549,11 +549,28 @@ console.log("🎮 Game Simulator loaded");
         const units = faction.allUnits;
 
         if (faction.isMonster) {
-          // Queue monsters — they spawn one per trigger, starting in center
-          sim.monsterQueue = units.map(u => unitKey(faction.id, u.id));
-          // Don't place them yet — they appear via noise triggers
+          // Monsters deploy in the center zone from the start -- visible with icons
+          const usedSquares = new Set();
           units.forEach(u => {
-            sim.unitPositions[unitKey(faction.id, u.id)] = null; // null = not on map yet
+            const k = unitKey(faction.id, u.id);
+            let gx, gy, sq, attempts = 0;
+            const minGX = Math.ceil(MONSTER_ZONE.xMin / GRID_PX);
+            const maxGX = Math.floor(MONSTER_ZONE.xMax / GRID_PX);
+            const minGY = Math.ceil(MONSTER_ZONE.yMin / GRID_PX);
+            const maxGY = Math.floor(MONSTER_ZONE.yMax / GRID_PX);
+            do {
+              gx = minGX + Math.floor(Math.random() * Math.max(1, maxGX - minGX));
+              gy = minGY + Math.floor(Math.random() * Math.max(1, maxGY - minGY));
+              sq = gx + ',' + gy;
+              attempts++;
+            } while (usedSquares.has(sq) && attempts < 200);
+            usedSquares.add(sq);
+            sim.unitPositions[k] = {
+              x: gx * GRID_PX + GRID_PX / 2,
+              y: gy * GRID_PX + GRID_PX / 2,
+              animName: 'idle', frameIdx: 0, frameTimer: 0,
+              vx: 0, vy: 0, status: 'idle',
+            };
           });
           return;
         }
@@ -636,7 +653,9 @@ console.log("🎮 Game Simulator loaded");
 
     function addNoise(amount, label) {
       state.noiseLevel += amount;
-      if (amount > 0) simLog(`[Noise] +${amount} (${label})`, 'info');
+      if (amount > 0) {
+        simLog('[Noise +' + amount + '] ' + label + ' (total: ' + state.noiseLevel + '/' + state.noiseThreshold + ')', 'event');
+      }
       checkMonsterTrigger();
       refreshNoiseBars();
     }
@@ -1002,18 +1021,15 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function drawBackground(ctx) {
-      // Draw tabletop SVG as full background
+      // Dark felt behind the board
+      ctx.fillStyle = '#111008';
+      ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+      // The isometric SVG fills the full coordinate space --
+      // the diamond illusion is baked into the artwork itself,
+      // exactly as Leaflet imageOverlay does with L.CRS.Simple.
       if (sim.tabletopImg) {
         ctx.drawImage(sim.tabletopImg, 0, 0, MAP_SIZE, MAP_SIZE);
-      } else {
-        ctx.fillStyle = '#1c1008';
-        ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
       }
-      // Grid is baked into the isometric SVG — no overlay needed
-      // Just a subtle outer border
-      ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-      ctx.lineWidth = 8;
-      ctx.strokeRect(4, 4, MAP_SIZE - 8, MAP_SIZE - 8);
     }
 
     function drawDeployZones(ctx) {
@@ -1748,7 +1764,7 @@ console.log("🎮 Game Simulator loaded");
               </div>
               <div class="cc-sim-map-hud">
                 <button class="cc-btn cc-btn-sm" id="cc-sim-next-btn" onclick="window.CC_SIM.nextActivation()">
-                  <i class="fa fa-step-forward"></i> Next
+                  <i class="fa fa-step-forward"></i> <span id="cc-sim-next-label">Next</span>
                 </button>
                 <button class="cc-btn cc-btn-sm cc-btn-secondary" id="cc-sim-auto-btn" onclick="window.CC_SIM.toggleAuto()">
                   <i class="fa fa-play"></i> Auto
@@ -1809,7 +1825,7 @@ console.log("🎮 Game Simulator loaded");
       if (!el) return;
       const curItem = currentQueueItem();
       if (!curItem) {
-        el.innerHTML = `<div class="cc-sim-empty">Round complete — press End Round.</div>`;
+        el.innerHTML = '<div class="cc-sim-empty" style="color:#ffd600;">Round ' + state.round + ' complete! Press NEXT to begin Round ' + (state.round+1) + '.</div>';
         return;
       }
       const faction = getFactionById(curItem.factionId);
@@ -1863,13 +1879,14 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function refreshQueueBadge() {
-      const el      = document.getElementById('cc-sim-queue-badge');
-      const roundEl = document.getElementById('cc-sim-round-badge');
-      if (el) {
-        const remaining = state.queue.length - state.queueIndex;
-        el.textContent  = remaining > 0 ? `${remaining} activations left` : 'Round complete';
-      }
-      if (roundEl) roundEl.textContent = `Round ${state.round}`;
+      const el       = document.getElementById('cc-sim-queue-badge');
+      const roundEl  = document.getElementById('cc-sim-round-badge');
+      const labelEl  = document.getElementById('cc-sim-next-label');
+      const remaining = state.queue.length - state.queueIndex;
+      const complete  = remaining <= 0;
+      if (el)      el.textContent = complete ? 'Round ' + state.round + ' complete' : remaining + ' activations left';
+      if (roundEl) roundEl.textContent = 'Round ' + state.round;
+      if (labelEl) labelEl.textContent = complete ? 'New Round' : 'Next';
     }
 
     // ═════════════════════════════════════════════════════════════════════════
