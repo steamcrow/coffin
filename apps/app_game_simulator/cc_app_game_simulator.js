@@ -134,6 +134,7 @@ console.log("🎮 Game Simulator loaded");
     // ═════════════════════════════════════════════════════════════════════════
 
     const RAW_BASE           = 'https://raw.githubusercontent.com/steamcrow/coffin/main/';
+    const TERRAIN_CATALOG_URL = RAW_BASE + 'data/src/terrain_catalog.json';
     const TERRAIN_BASE       = RAW_BASE + 'assets/terrain/';
     const SPRITE_SHEET_URL   = RAW_BASE + 'assets/characters/all_no_trim.png';
     const SPRITE_JSON_URL    = RAW_BASE + 'assets/characters/all_no_trim.json';
@@ -247,7 +248,8 @@ console.log("🎮 Game Simulator loaded");
       mapData: null,            // loaded map JSON
       spriteSheet: null,        // HTMLImageElement
       spriteData: null,         // sprite atlas JSON
-      terrainImages: {},        // terrain_type_id -> HTMLImageElement
+      terrainCatalog: {},        // terrain_type_id -> asset_file
+      terrainImages: {},         // terrain_type_id -> HTMLImageElement
       terrainLoadQueue: 0,      // how many terrain images are still loading
       unitPositions: {},        // unitKey -> { x, y, animName, frameIdx, frameTimer, vx, vy, status }
       factionZones: {},         // factionId -> ZONE_DEF
@@ -443,17 +445,38 @@ console.log("🎮 Game Simulator loaded");
       });
     }
 
+    async function loadTerrainCatalog() {
+      if (Object.keys(sim.terrainCatalog).length > 0) return; // already loaded
+      try {
+        const res  = await fetch(TERRAIN_CATALOG_URL + '?t=' + Date.now());
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        // Build lookup: terrain_type_id -> asset_file
+        const list = Array.isArray(data) ? data : (data.terrain || data.types || data.catalog || []);
+        list.forEach(entry => {
+          if (entry.terrain_type_id && entry.asset_file) {
+            sim.terrainCatalog[entry.terrain_type_id] = entry.asset_file;
+          }
+        });
+        console.log('📋 Terrain catalog loaded:', Object.keys(sim.terrainCatalog).length, 'entries');
+      } catch (e) {
+        console.warn('Could not load terrain catalog:', safeErr(e));
+      }
+    }
+
     function preloadTerrainImages() {
       if (!sim.mapData || !sim.mapData.instances) return;
       const ids = [...new Set(sim.mapData.instances.map(i => i.terrain_type_id))];
       sim.terrainLoadQueue = ids.length;
       ids.forEach(id => {
         if (sim.terrainImages[id]) { sim.terrainLoadQueue--; return; }
+        // Look up the real filename from the catalog, fall back to id.png
+        const filename = sim.terrainCatalog[id] || (id + '.png');
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.onload  = () => { sim.terrainImages[id] = img; sim.terrainLoadQueue = Math.max(0, sim.terrainLoadQueue - 1); };
         img.onerror = () => { sim.terrainImages[id] = null;  sim.terrainLoadQueue = Math.max(0, sim.terrainLoadQueue - 1); };
-        img.src = TERRAIN_BASE + id + '.png';
+        img.src = TERRAIN_BASE + filename;
       });
     }
 
@@ -1628,7 +1651,11 @@ console.log("🎮 Game Simulator loaded");
             const res    = await fetch(mapUrl);
             if (res.ok) {
               sim.mapData = safeParseJson(await res.text());
-              if (sim.mapData) { preloadTerrainImages(); console.log('🗺️ Map loaded:', mapId); }
+              if (sim.mapData) {
+                await loadTerrainCatalog();
+                preloadTerrainImages();
+                console.log('Map loaded:', mapId);
+              }
             }
           } catch (e) { console.warn('Map load failed:', safeErr(e)); }
         }
