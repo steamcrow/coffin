@@ -1,0 +1,401 @@
+/* ================================================================
+   Game Simulator — App-Specific Styles
+   Based on Turn Counter UI patterns
+   ================================================================ */
+
+@keyframes cc-spin    { 0%   { transform: rotate(0deg) }   100% { transform: rotate(360deg) } }
+@keyframes cc-pulse   { 0%, 100% { opacity: 0.6 }           50%  { opacity: 1 } }
+@keyframes cc-fade-in { from { opacity: 0 }                 to   { opacity: 1 } }
+@keyframes cc-sim-spawn { from { transform: scale(0) rotate(-20deg); opacity: 0; }
+                          to   { transform: scale(1) rotate(0deg);   opacity: 1; } }
+
+/* ===== Top-Level Layout ===== */
+.cc-sim-layout {
+  display: flex;
+  height: 100%;
+  min-height: 580px;
+  background: var(--cc-bg-darker, #0d0d0d);
+  overflow: hidden;
+  position: relative;
+}
+
+.cc-sim-sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--cc-bg-darker, #0d0d0d);
+}
+.cc-sim-sidebar-left  { border-right: 1px solid var(--cc-border, #333); }
+.cc-sim-sidebar-right { border-left:  1px solid var(--cc-border, #333); }
+
+.cc-sim-sidebar-scroll {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* ===== Map Canvas Area ===== */
+.cc-sim-map-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #080503;
+  cursor: grab;
+  user-select: none;
+}
+.cc-sim-map-wrap.is-dragging { cursor: grabbing; }
+
+.cc-sim-canvas {
+  position: absolute;
+  top: 0; left: 0;
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* ===== Map HUD (overlaid on canvas) ===== */
+.cc-sim-map-hud {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  padding: 8px 10px;
+  background: linear-gradient(transparent, rgba(0,0,0,0.85));
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  pointer-events: none;
+}
+.cc-sim-map-hud > * { pointer-events: auto; }
+
+.cc-sim-map-hud-top {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  padding: 8px 10px;
+  background: linear-gradient(rgba(0,0,0,0.7), transparent);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+.cc-sim-map-hud-top > * { pointer-events: auto; }
+
+.cc-sim-round-badge {
+  background: rgba(0,0,0,0.8);
+  border: 1px solid var(--cc-border, #333);
+  border-radius: 8px;
+  padding: 4px 12px;
+  font-family: var(--cc-font-mono, monospace);
+  font-size: 0.85rem;
+  color: var(--cc-text, #eee);
+  letter-spacing: 0.05em;
+}
+
+/* ===== Panel Headers ===== */
+.cc-sim-panel-header {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--cc-border, #333);
+  font-family: var(--cc-font-mono, monospace);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cc-text-dim, #888);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== Faction Entries (left sidebar) ===== */
+.cc-sim-faction-entry {
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  transition: background 0.12s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cc-sim-faction-entry:hover    { background: rgba(255,255,255,0.04); }
+.cc-sim-faction-entry.is-active { background: rgba(255,255,255,0.07); }
+
+.cc-sim-faction-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.cc-sim-faction-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--cc-text, #eee);
+  flex: 1;
+}
+.cc-sim-faction-count {
+  font-size: 0.75rem;
+  color: var(--cc-text-dim, #888);
+  font-family: var(--cc-font-mono, monospace);
+}
+.cc-sim-faction-zone-tag {
+  font-size: 0.68rem;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--cc-font-mono, monospace);
+  opacity: 0.7;
+}
+
+/* ===== Active Unit Card (right sidebar) ===== */
+.cc-sim-active-card {
+  padding: 12px;
+  border-bottom: 1px solid var(--cc-border, #333);
+  animation: cc-fade-in 0.2s ease;
+}
+.cc-sim-active-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--cc-text, #eee);
+  margin-bottom: 4px;
+}
+.cc-sim-active-faction {
+  font-size: 0.75rem;
+  color: var(--cc-text-dim, #888);
+  margin-bottom: 10px;
+}
+.cc-sim-stat-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.cc-sim-stat-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid currentColor;
+}
+.cc-sim-stat-pill.move    { color: #42a5f5; background: rgba(66,165,245,0.12); }
+.cc-sim-stat-pill.defense { color: #ef5350; background: rgba(239,83,80,0.12); }
+.cc-sim-stat-pill.range   { color: #ffd600; background: rgba(255,214,0,0.12); }
+.cc-sim-stat-pill.quality { color: #ff7518; background: rgba(255,117,24,0.12); }
+.cc-sim-stat-pill.cost    { color: #9c27b0; background: rgba(156,39,176,0.12); }
+
+/* ===== Health / Quality Track ===== */
+.cc-sim-health-track {
+  display: flex;
+  gap: 4px;
+  margin: 6px 0;
+  flex-wrap: wrap;
+}
+.cc-sim-health-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  border: 2px solid #ff7518;
+  background: transparent;
+  transition: background 0.15s;
+}
+.cc-sim-health-dot.filled { background: #ff7518; }
+.cc-sim-health-dot.empty  { opacity: 0.3; }
+
+/* ===== Abilities List ===== */
+.cc-sim-abilities {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+.cc-sim-ability-tag {
+  font-size: 0.7rem;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--cc-text-dim, #888);
+}
+
+/* ===== Log ===== */
+.cc-sim-log { padding: 8px; }
+.cc-sim-log-entry {
+  font-size: 0.76rem;
+  padding: 4px 7px;
+  border-radius: 4px;
+  margin-bottom: 3px;
+  color: var(--cc-text-dim, #888);
+  border-left: 2px solid transparent;
+  line-height: 1.4;
+}
+.cc-sim-log-entry.log-combat  { border-color: #ef5350; color: #ef9090; background: rgba(239,83,80,0.06); }
+.cc-sim-log-entry.log-move    { border-color: #42a5f5; color: #90caf9; }
+.cc-sim-log-entry.log-monster { border-color: #ff7518; color: #ffb870; background: rgba(255,117,24,0.06); }
+.cc-sim-log-entry.log-event   { border-color: #ffd600; color: #fff176; }
+.cc-sim-log-entry.log-deploy  { border-color: #4caf50; color: #a5d6a7; }
+.cc-sim-log-entry.log-round   { border-color: #9c27b0; color: #ce93d8; font-weight: 700; }
+
+/* ===== Controls Bar ===== */
+.cc-sim-controls {
+  padding: 10px 12px;
+  border-top: 1px solid var(--cc-border, #333);
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+  background: var(--cc-bg-darker, #0d0d0d);
+}
+
+/* ===== Buttons ===== */
+.cc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--cc-primary, #ff7518);
+  color: #000;
+  border: none;
+  border-radius: var(--cc-radius-lg, 8px);
+  padding: 0.45rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.cc-btn:hover    { filter: brightness(1.15); }
+.cc-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.cc-btn-sm { padding: 0.3rem 0.7rem; font-size: 0.75rem; }
+
+.cc-btn-secondary {
+  background: var(--cc-bg-soft, #1e1e1e);
+  color: var(--cc-text, #eee);
+  border: 1px solid var(--cc-border, #333);
+}
+.cc-btn-danger { background: #ef5350; color: #fff; }
+
+/* ===== Noise & Cough Bars ===== */
+.cc-sim-bar-wrap { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+.cc-sim-bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.73rem;
+  color: var(--cc-text-dim, #888);
+  margin-bottom: 5px;
+}
+.cc-sim-bar-track {
+  height: 5px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.cc-sim-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+
+/* ===== Setup Screen ===== */
+.cc-sim-setup {
+  padding: 24px 20px;
+  max-width: 480px;
+  margin: 0 auto;
+  animation: cc-fade-in 0.25s ease;
+}
+.cc-sim-setup-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--cc-text, #eee);
+  margin-bottom: 6px;
+}
+.cc-sim-setup-sub {
+  font-size: 0.85rem;
+  color: var(--cc-text-dim, #888);
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+.cc-sim-scenario-card {
+  background: var(--cc-bg-soft, #1a1a1a);
+  border: 1px solid var(--cc-border, #333);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.cc-sim-scenario-card:hover { border-color: var(--cc-primary, #ff7518); background: rgba(255,117,24,0.06); }
+.cc-sim-scenario-card.selected { border-color: var(--cc-primary, #ff7518); background: rgba(255,117,24,0.1); }
+
+/* ===== Loading Screen ===== */
+.cc-sim-loading-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 14px;
+  padding: 40px;
+}
+.cc-sim-loading-icon { animation: cc-spin 1s linear infinite; font-size: 2rem; }
+.cc-sim-loading-text { font-size: 0.9rem; color: var(--cc-text-dim, #888); text-align: center; }
+
+/* ===== Overlays ===== */
+.cc-sim-monster-alert {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cc-sim-monster-dialog {
+  background: var(--cc-bg-darker, #0d0d0d);
+  border: 2px solid #ef5350;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 360px;
+  text-align: center;
+  animation: cc-sim-spawn 0.3s ease;
+}
+
+/* ===== Zoom Controls ===== */
+.cc-sim-zoom-controls {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: auto;
+}
+.cc-sim-zoom-btn {
+  width: 32px; height: 32px;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid var(--cc-border, #333);
+  border-radius: 6px;
+  color: var(--cc-text, #eee);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.12s;
+}
+.cc-sim-zoom-btn:hover { background: rgba(255,255,255,0.1); }
+
+/* ===== Misc ===== */
+.cc-login-status {
+  padding: 0.4rem 1rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid transparent;
+}
+.cc-login-status.logged-in  { background: rgba(76,175,80,0.08);  color: var(--cc-green,  #4caf50); }
+.cc-login-status.logged-out { background: rgba(239,83,80,0.08);  color: var(--cc-red,    #ef5350); }
+
+.cc-sim-empty { padding: 16px; font-size: 0.8rem; color: var(--cc-text-dim, #888); text-align: center; }
+
+@media (max-width: 700px) {
+  .cc-sim-sidebar { display: none; }
+  .cc-sim-sidebar-right { display: none; }
+}
