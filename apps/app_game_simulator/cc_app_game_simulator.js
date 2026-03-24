@@ -454,7 +454,13 @@ console.log("🎮 Game Simulator loaded");
       return new Promise(resolve => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.onload  = () => { sim.tabletopImg = img; console.log('🎲 Tabletop loaded'); resolve(); };
+        img.onload  = () => {
+          sim.tabletopImg = img;
+          console.log('Tabletop loaded: natural size', img.naturalWidth, 'x', img.naturalHeight);
+          // If SVG has a non-square natural size, store the aspect ratio
+          sim.tabletopAspect = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1;
+          resolve();
+        };
         img.onerror = () => { console.warn('Tabletop SVG failed'); resolve(); };
         img.src = TABLETOP_SVG_URL + '?t=' + Date.now();
       });
@@ -743,7 +749,8 @@ console.log("🎮 Game Simulator loaded");
         canvas.width  = wrap.clientWidth  || 600;
         canvas.height = wrap.clientHeight || 500;
         // Fit the map to fill ~90% of the viewport
-        sim.viewScale = Math.min(canvas.width, canvas.height) * 0.9 / MAP_SIZE;
+        // Fit map to fill 95% of the narrower dimension
+        sim.viewScale = Math.min(canvas.width, canvas.height) * 0.95 / MAP_SIZE;
         sim.viewX = (canvas.width  - MAP_SIZE * sim.viewScale) / 2;
         sim.viewY = (canvas.height - MAP_SIZE * sim.viewScale) / 2;
       }
@@ -1548,6 +1555,8 @@ console.log("🎮 Game Simulator loaded");
       }
 
       if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, successes, defenseD, damage, false, luckyBreak);
+      // Keep attacker in fight animation — status reset by simulateActivation timeout
+      if (aPos) aPos.status = 'fighting';
 
       if (damage > 0) {
         const newQ = Math.max(0, defenderState.quality - damage);
@@ -1605,9 +1614,11 @@ console.log("🎮 Game Simulator loaded");
         }
       }
 
+      const fightDuration = inMelee ? 1200 : 500;
       setTimeout(() => {
         if (pos && pos.status !== 'routed') pos.status = 'idle';
-      }, 800);
+        pos.frameIdx = 0;
+      }, fightDuration);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -1805,18 +1816,19 @@ console.log("🎮 Game Simulator loaded");
       if (!el) return;
       const curItem = currentQueueItem();
       el.innerHTML = state.factions.map(f => {
-        const zone     = sim.factionZones[f.id];
-        const active   = getActiveUnits(f).length;
-        const total    = f.allUnits.length;
-        const isCur    = curItem && curItem.factionId === f.id;
-        return `<div class="cc-sim-faction-entry ${isCur ? 'is-active' : ''}" onclick="window.CC_SIM.focusFaction('${f.id}')">
-          <div class="cc-sim-faction-dot" style="background:${f.color};box-shadow:0 0 6px ${f.color}66;"></div>
-          <div class="cc-sim-faction-name">${f.name}</div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-            <div class="cc-sim-faction-count">${active}/${total}</div>
-            ${zone && zone.key ? '<div class="cc-sim-faction-zone-tag" style="background:' + f.color + '22;color:' + f.color + ';">' + zone.key.replace('_',' ') + '</div>' : ''}
-          </div>
-        </div>`;
+        const zone   = sim.factionZones[f.id];
+        const active = getActiveUnits(f).length;
+        const total  = f.allUnits.length;
+        const isCur  = curItem && curItem.factionId === f.id;
+        const style  = isCur ? '--active-color:' + f.color + ';border-left-color:' + f.color + ';' : '';
+        return '<div class="cc-sim-faction-entry ' + (isCur ? 'is-active' : '') + '" style="' + style + '" onclick="window.CC_SIM.focusFaction(\'' + f.id + '\')">' +
+          '<div class="cc-sim-faction-dot" style="background:' + f.color + ';box-shadow:0 0 6px ' + f.color + '66;color:' + f.color + ';"></div>' +
+          '<div class="cc-sim-faction-name">' + f.name + '</div>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">' +
+            '<div class="cc-sim-faction-count">' + active + '/' + total + '</div>' +
+            (zone && zone.key ? '<div class="cc-sim-faction-zone-tag" style="background:' + f.color + '22;color:' + f.color + ';">' + zone.key.replace('_',' ') + '</div>' : '') +
+          '</div>' +
+        '</div>';
       }).join('');
     }
 
