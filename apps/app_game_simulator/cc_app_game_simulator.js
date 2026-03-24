@@ -1497,11 +1497,12 @@ console.log("🎮 Game Simulator loaded");
       try {
         // CC_STORAGE uses loadDocumentList() — filter to SCN_ files only (same as turn counter)
         const allDocs = await window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER);
-        const scenarios = (allDocs || []).filter(d => d.name && d.name.indexOf('SCN_') === 0);
+        // Case-insensitive match — handles both SCN_ and scn_ prefixes
+        const scenarios = (allDocs || []).filter(d => d.name && d.name.toLowerCase().indexOf('scn_') === 0);
         state.availableScenarios = scenarios.map(d => ({
           id:   d.id,
           // Strip SCN_ prefix, timestamp suffix, underscores — same as turn counter
-          name: d.name.replace(/^SCN_/, '').replace(/_\d{13}(\.json)?$/, '').replace(/_/g, ' ').trim() || 'Scenario ' + d.id,
+          name: d.name.replace(/^scn_/i, '').replace(/_\d{13}(\.json)?$/i, '').replace(/\.json$/i, '').replace(/_/g, ' ').trim() || 'Scenario ' + d.id,
           date: d.write_date ? new Date(d.write_date).toLocaleDateString() : '',
         }));
       } catch (e) { console.warn('fetchScenarios error:', safeErr(e)); state.availableScenarios = []; }
