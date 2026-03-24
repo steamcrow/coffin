@@ -133,11 +133,10 @@ console.log("🎮 Game Simulator loaded");
     // CONSTANTS
     // ═════════════════════════════════════════════════════════════════════════
 
-    const CDN_BASE           = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/';
     const RAW_BASE           = 'https://raw.githubusercontent.com/steamcrow/coffin/main/';
-    const TERRAIN_BASE       = CDN_BASE + 'assets/terrain/';
-    const SPRITE_SHEET_URL   = CDN_BASE + 'assets/characters/all_no_trim.png';
-    const SPRITE_JSON_URL    = CDN_BASE + 'assets/characters/all_no_trim.json';
+    const TERRAIN_BASE       = RAW_BASE + 'assets/terrain/';
+    const SPRITE_SHEET_URL   = RAW_BASE + 'assets/characters/all_no_trim.png';
+    const SPRITE_JSON_URL    = RAW_BASE + 'assets/characters/all_no_trim.json';
     const LOGO_BASE          = RAW_BASE + 'assets/logos/';
     const FACTION_LOADER_BASE= RAW_BASE + 'data/factions/';
     const SCENARIO_FOLDER    = 90;
@@ -1640,18 +1639,22 @@ console.log("🎮 Game Simulator loaded");
         await loadSpriteAssets();
 
         // 6. Deploy and build queue
-        deployAllFactions();
-        buildQueue();
-        simLog(`🎮 ${state.scenarioName} — Round ${state.round}`, 'round');
+        try { deployAllFactions(); } catch(e) { throw new Error('deployAllFactions failed: ' + e.message); }
+        try { buildQueue(); }        catch(e) { throw new Error('buildQueue failed: ' + e.message); }
 
         state.phase = 'playing';
-        render();
+
+        try { render(); }            catch(e) { throw new Error('render failed: ' + e.message); }
+
+        simLog('Game start: ' + state.scenarioName + ' Round ' + state.round, 'round');
 
       } catch (err) {
-        console.error('❌ Simulator launch failed:', safeErr(err));
+        // Log full stack so we can see exactly which line crashed
+        console.error('❌ Simulator launch failed:', err);
+        console.error('Stack:', err && err.stack ? err.stack : '(no stack)');
         state.phase = 'setup';
         render();
-        alert('Failed to launch simulator: ' + safeErr(err));
+        alert('Failed to launch simulator: ' + (err && err.message ? err.message : String(err)));
       }
     };
 
