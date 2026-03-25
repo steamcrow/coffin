@@ -22,25 +22,45 @@ console.log("🎮 Game Simulator loaded");
 (function patchBootstrapDropdownAutoClose() {
   if (window._ccDropdownPatchInstalled) return;
   window._ccDropdownPatchInstalled = true;
+
+  // Fix data attribute on individual elements
   function fixEl(el) {
     if (!el || !el.getAttribute) return;
     var v = el.getAttribute('data-bs-auto-close');
     if (v === 'null' || v === null || v === '') el.setAttribute('data-bs-auto-close', 'true');
   }
+
+  // Patch Bootstrap prototype to coerce null -> true before type checking
   function patchPrototype() {
     var BS = window.bootstrap;
     if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
     var proto = BS.Dropdown.prototype;
     if (proto._ccAutoClosePatch) return true;
     proto._ccAutoClosePatch = true;
-    var orig = proto._getConfig;
+
+    // Patch _getConfig to sanitise autoClose before it reaches _typeCheckConfig
+    var origGetConfig = proto._getConfig;
     proto._getConfig = function(config) {
       if (this._element) fixEl(this._element);
       if (config && config.autoClose == null) config.autoClose = true;
-      return orig.call(this, config);
+      return origGetConfig.call(this, config);
     };
+
+    // Also patch _typeCheckConfig directly as a last-resort safety net
+    if (proto._typeCheckConfig) {
+      var origTypeCheck = proto._typeCheckConfig;
+      proto._typeCheckConfig = function(config) {
+        if (config && config.autoClose == null) config.autoClose = true;
+        try { return origTypeCheck.call(this, config); }
+        catch (e) {
+          if (e && e.message && e.message.indexOf('autoClose') !== -1) return; // swallow
+          throw e;
+        }
+      };
+    }
     return true;
   }
+
   document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
   if (!patchPrototype()) {
     var _attempts = 0;
@@ -176,17 +196,17 @@ console.log("🎮 Game Simulator loaded");
 
     // Deployment zones around the 4096x4096 map edges
     // Up to 4 factions get a full side; 5-8 get a half-side
-    // Deployment zones — edge strips of the 4096x4096 play area
-    // Positions are inset from edges to land units on the tabletop diamond
+    // Deployment zones — edge strips matching the isometric diamond
+    // Diamond in map coords: top(2048,164) right(4014,2130) bottom(2048,3936) left(82,2130)
     const ZONE_DEFS = [
-      { key: 'north',      xMin: 1200, xMax: 2900, yMin: 550,  yMax: 850  },
-      { key: 'south',      xMin: 1200, xMax: 2900, yMin: 3250, yMax: 3550 },
-      { key: 'west',       xMin: 550,  xMax: 850,  yMin: 1200, yMax: 2900 },
-      { key: 'east',       xMin: 3250, xMax: 3550, yMin: 1200, yMax: 2900 },
-      { key: 'north_west', xMin: 700,  xMax: 1500, yMin: 700,  yMax: 1500 },
-      { key: 'north_east', xMin: 2600, xMax: 3400, yMin: 700,  yMax: 1500 },
-      { key: 'south_west', xMin: 700,  xMax: 1500, yMin: 2600, yMax: 3400 },
-      { key: 'south_east', xMin: 2600, xMax: 3400, yMin: 2600, yMax: 3400 },
+      { key: 'north',      xMin: 1400, xMax: 2700, yMin: 300,  yMax: 700  },
+      { key: 'south',      xMin: 1400, xMax: 2700, yMin: 3400, yMax: 3800 },
+      { key: 'west',       xMin: 200,  xMax: 600,  yMin: 1600, yMax: 2500 },
+      { key: 'east',       xMin: 3500, xMax: 3900, yMin: 1600, yMax: 2500 },
+      { key: 'north_west', xMin: 600,  xMax: 1400, yMin: 600,  yMax: 1400 },
+      { key: 'north_east', xMin: 2700, xMax: 3500, yMin: 600,  yMax: 1400 },
+      { key: 'south_west', xMin: 600,  xMax: 1400, yMin: 2700, yMax: 3500 },
+      { key: 'south_east', xMin: 2700, xMax: 3500, yMin: 2700, yMax: 3500 },
     ];
     const MONSTER_ZONE = { key: 'center', xMin: 1800, xMax: 2300, yMin: 1800, yMax: 2300 };
 
@@ -746,13 +766,17 @@ console.log("🎮 Game Simulator loaded");
 
       // Fit canvas to container
       function resizeCanvas() {
-        canvas.width  = wrap.clientWidth  || 600;
-        canvas.height = wrap.clientHeight || 500;
-        // Fit the map to fill ~90% of the viewport
-        // Fit map to fill 95% of the narrower dimension
-        sim.viewScale = Math.min(canvas.width, canvas.height) * 0.95 / MAP_SIZE;
-        sim.viewX = (canvas.width  - MAP_SIZE * sim.viewScale) / 2;
-        sim.viewY = (canvas.height - MAP_SIZE * sim.viewScale) / 2;
+        canvas.width  = wrap.clientWidth  || 800;
+        canvas.height = wrap.clientHeight || 600;
+        // SVG viewBox is 2000x1060. Diamond spans ~3932w x 3772h in map coords.
+        // Fit the full diamond into the viewport.
+        const diamondW = 3932, diamondH = 3772;
+        const scaleW   = canvas.width  * 0.92 / diamondW;
+        const scaleH   = canvas.height * 0.92 / diamondH;
+        sim.viewScale  = Math.min(scaleW, scaleH);
+        // Center on diamond centre (2048, 2050)
+        sim.viewX = canvas.width  / 2 - 2048 * sim.viewScale;
+        sim.viewY = canvas.height / 2 - 2050 * sim.viewScale;
       }
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
@@ -2220,9 +2244,12 @@ console.log("🎮 Game Simulator loaded");
 
     window.CC_SIM.zoomFit = function() {
       if (!sim.canvas) return;
-      sim.viewScale = Math.min(sim.canvas.width, sim.canvas.height) * 0.9 / MAP_SIZE;
-      sim.viewX     = (sim.canvas.width  - MAP_SIZE * sim.viewScale) / 2;
-      sim.viewY     = (sim.canvas.height - MAP_SIZE * sim.viewScale) / 2;
+      const diamondW = 3932, diamondH = 3772;
+      const scaleW   = sim.canvas.width  * 0.92 / diamondW;
+      const scaleH   = sim.canvas.height * 0.92 / diamondH;
+      sim.viewScale  = Math.min(scaleW, scaleH);
+      sim.viewX      = sim.canvas.width  / 2 - 2048 * sim.viewScale;
+      sim.viewY      = sim.canvas.height / 2 - 2050 * sim.viewScale;
       sim.camTargetX = null;
       sim.camTargetY = null;
     };
