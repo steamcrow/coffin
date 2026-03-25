@@ -202,15 +202,20 @@ console.log("🎮 Game Simulator loaded");
     const _DL = { x: 82,   y: 2068 };  // left
     function _edgeInset(a, b, t) { return { x: a.x + (b.x-a.x)*t, y: a.y + (b.y-a.y)*t }; }
     const I = 0.05; // inset fraction from corner
+    // Each of the 4 diamond edges is divided into 2 halves = 8 unique deployment lines
+    // NW edge (left->top): bottom-half = 'west', top-half = 'north_west'
+    // NE edge (top->right): top-half = 'north', bottom-half = 'north_east'
+    // SE edge (right->bottom): top-half = 'east', bottom-half = 'south_east'
+    // SW edge (bottom->left): bottom-half = 'south', top-half = 'south_west'
     const ZONE_EDGE_LINES = {
-      'north':      { x1: _edgeInset(_DL,_DT,1-I).x, y1: _edgeInset(_DL,_DT,1-I).y,  x2: _edgeInset(_DT,_DR,I).x,   y2: _edgeInset(_DT,_DR,I).y   }, // NW edge top half
-      'west':       { x1: _edgeInset(_DL,_DT,I).x,   y1: _edgeInset(_DL,_DT,I).y,    x2: _edgeInset(_DL,_DT,0.5).x, y2: _edgeInset(_DL,_DT,0.5).y }, // NW edge
-      'east':       { x1: _edgeInset(_DT,_DR,0.5).x, y1: _edgeInset(_DT,_DR,0.5).y,  x2: _edgeInset(_DT,_DR,1-I).x, y2: _edgeInset(_DT,_DR,1-I).y }, // NE edge
-      'south':      { x1: _edgeInset(_DB,_DR,I).x,   y1: _edgeInset(_DB,_DR,I).y,    x2: _edgeInset(_DB,_DL,1-I).x, y2: _edgeInset(_DB,_DL,1-I).y }, // SE/SW edge
-      'north_west': { x1: _edgeInset(_DL,_DT,I).x,   y1: _edgeInset(_DL,_DT,I).y,    x2: _edgeInset(_DL,_DT,1-I).x, y2: _edgeInset(_DL,_DT,1-I).y }, // full NW edge
-      'north_east': { x1: _edgeInset(_DT,_DR,I).x,   y1: _edgeInset(_DT,_DR,I).y,    x2: _edgeInset(_DT,_DR,1-I).x, y2: _edgeInset(_DT,_DR,1-I).y }, // full NE edge
-      'south_west': { x1: _edgeInset(_DL,_DB,I).x,   y1: _edgeInset(_DL,_DB,I).y,    x2: _edgeInset(_DL,_DB,1-I).x, y2: _edgeInset(_DL,_DB,1-I).y }, // full SW edge
-      'south_east': { x1: _edgeInset(_DR,_DB,I).x,   y1: _edgeInset(_DR,_DB,I).y,    x2: _edgeInset(_DR,_DB,1-I).x, y2: _edgeInset(_DR,_DB,1-I).y }, // full SE edge
+      'west':       { x1: _edgeInset(_DL,_DT,I).x,    y1: _edgeInset(_DL,_DT,I).y,    x2: _edgeInset(_DL,_DT,0.48).x, y2: _edgeInset(_DL,_DT,0.48).y }, // NW lower
+      'north_west': { x1: _edgeInset(_DL,_DT,0.52).x, y1: _edgeInset(_DL,_DT,0.52).y, x2: _edgeInset(_DL,_DT,1-I).x,  y2: _edgeInset(_DL,_DT,1-I).y  }, // NW upper
+      'north':      { x1: _edgeInset(_DT,_DR,I).x,    y1: _edgeInset(_DT,_DR,I).y,    x2: _edgeInset(_DT,_DR,0.48).x, y2: _edgeInset(_DT,_DR,0.48).y }, // NE upper
+      'north_east': { x1: _edgeInset(_DT,_DR,0.52).x, y1: _edgeInset(_DT,_DR,0.52).y, x2: _edgeInset(_DT,_DR,1-I).x,  y2: _edgeInset(_DT,_DR,1-I).y  }, // NE lower
+      'east':       { x1: _edgeInset(_DR,_DB,I).x,    y1: _edgeInset(_DR,_DB,I).y,    x2: _edgeInset(_DR,_DB,0.48).x, y2: _edgeInset(_DR,_DB,0.48).y }, // SE upper
+      'south_east': { x1: _edgeInset(_DR,_DB,0.52).x, y1: _edgeInset(_DR,_DB,0.52).y, x2: _edgeInset(_DR,_DB,1-I).x,  y2: _edgeInset(_DR,_DB,1-I).y  }, // SE lower
+      'south_west': { x1: _edgeInset(_DB,_DL,I).x,    y1: _edgeInset(_DB,_DL,I).y,    x2: _edgeInset(_DB,_DL,0.48).x, y2: _edgeInset(_DB,_DL,0.48).y }, // SW lower
+      'south':      { x1: _edgeInset(_DB,_DL,0.52).x, y1: _edgeInset(_DB,_DL,0.52).y, x2: _edgeInset(_DB,_DL,1-I).x,  y2: _edgeInset(_DB,_DL,1-I).y  }, // SW upper
       'center':     null,
     };
 
@@ -1135,9 +1140,8 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function drawBackground(ctx) {
-      // Dark felt behind the board
-      ctx.fillStyle = '#111008';
-      ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
+      // Transparent fill so canvas background CSS shows through (no dark boxes)
+      ctx.clearRect(0, 0, MAP_SIZE, MAP_SIZE);
 
       if (!sim.tabletopImg) return;
 
@@ -1651,8 +1655,8 @@ console.log("🎮 Game Simulator loaded");
       overlay.style.cssText = 'transition:opacity 0.6s ease;opacity:1;';
       overlay.innerHTML =
         '<div class="cc-sim-roll-dialog" style="min-width:300px;padding-top:0;">' +
-          '<div id="cc-sim-spotlight-inner" style="margin:0 0 1rem;border-radius:12px 12px 0 0;overflow:hidden;background:#111;height:130px;display:flex;align-items:center;justify-content:center;">' +
-            '<canvas id="cc-sim-spotlight-canvas" width="300" height="130" style="display:block;width:100%;height:100%;"></canvas>' +
+          '<div id="cc-sim-spotlight-inner" style="margin:0 0 1rem;border-radius:12px 12px 0 0;overflow:hidden;background:#111;height:200px;display:flex;align-items:center;justify-content:center;">' +
+            '<canvas id="cc-sim-spotlight-canvas" width="380" height="200" style="display:block;width:100%;height:100%;"></canvas>' +
           '</div>' +
           '<div class="cc-sim-roll-title" style="padding:0 1.5rem;">' + attacker.name + ' <span style="color:#666;">vs</span> ' + defender.name + '</div>' +
           '<div class="cc-sim-dice-row" style="padding:0 1.5rem;">' + diceHtml + '</div>' +
@@ -2062,18 +2066,26 @@ console.log("🎮 Game Simulator loaded");
 
       let aFrame = 0, dFrame = 0, aTimer = 0, dTimer = 0, lastTs = 0;
 
-      function drawFighter(ctx, anim, frame, cx, cy, r, color) {
+      function drawFighter(ctx, anim, frame, cx, cy, r, color, flipX) {
         if (!anim || !anim.frames || !anim.frames[frame]) return;
         const f = anim.frames[frame % anim.frames.length];
         ctx.save();
         // Tinted bg circle
         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.fillStyle = color + '44'; ctx.fill();
-        // Clip + draw sprite
+        // Clip to circle
         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
         const sz = r * 2;
-        ctx.drawImage(sim.spriteSheet, f.x, f.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
-          cx - r, cy - r, sz, sz);
+        if (flipX) {
+          // Mirror: translate to cx, flip, draw centred
+          ctx.translate(cx, cy);
+          ctx.scale(-1, 1);
+          ctx.drawImage(sim.spriteSheet, f.x, f.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
+            -r, -r, sz, sz);
+        } else {
+          ctx.drawImage(sim.spriteSheet, f.x, f.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
+            cx - r, cy - r, sz, sz);
+        }
         ctx.restore();
         // Faction colour ring
         ctx.beginPath(); ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
@@ -2110,8 +2122,8 @@ console.log("🎮 Game Simulator loaded");
         ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke();
 
         const r = Math.min(W / 4 - 8, H / 2 - 8);
-        drawFighter(ctx, aDraw, aFrame, W / 4,     H / 2, r, aColor);
-        drawFighter(ctx, dDraw, dFrame, W * 3 / 4, H / 2, r, dColor);
+        drawFighter(ctx, aDraw, aFrame, W / 4,     H / 2, r, aColor, false);
+        drawFighter(ctx, dDraw, dFrame, W * 3 / 4, H / 2, r, dColor, true);
 
         // VS
         ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
