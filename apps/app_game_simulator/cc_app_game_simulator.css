@@ -12,6 +12,7 @@
 /* ===== Top-Level Layout ===== */
 .cc-sim-layout {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   min-height: 700px;
   background: var(--cc-bg-darker, #0d0d0d);
@@ -19,23 +20,75 @@
   position: relative;
 }
 
+/* Main row: left panel + map */
+.cc-sim-main-row {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .cc-sim-sidebar {
-  width: 260px;
+  width: 220px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--cc-bg-darker, #0d0d0d);
+  border-right: 1px solid var(--cc-border, #333);
 }
-.cc-sim-sidebar-left  { border-right: 1px solid var(--cc-border, #333); }
-.cc-sim-sidebar-right { border-left:  1px solid var(--cc-border, #333); }
 
 .cc-sim-sidebar-scroll {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  min-height: 0; /* critical for flex scroll to work */
+  min-height: 0;
 }
+
+/* Log accordion bar at bottom */
+.cc-sim-log-bar {
+  flex-shrink: 0;
+  border-top: 1px solid var(--cc-border, #333);
+  background: var(--cc-bg-darker, #0d0d0d);
+  z-index: 10;
+}
+.cc-sim-log-bar-ticker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  cursor: pointer;
+  user-select: none;
+  min-height: 36px;
+}
+.cc-sim-log-bar-ticker:hover { background: rgba(255,255,255,0.03); }
+.cc-sim-log-bar-latest {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--cc-text-dim, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cc-sim-log-bar-latest.log-combat  { color: #ef9090; }
+.cc-sim-log-bar-latest.log-event   { color: #fff176; }
+.cc-sim-log-bar-latest.log-monster { color: #ffb870; }
+.cc-sim-log-bar-latest.log-round   { color: #ce93d8; font-weight: 700; }
+.cc-sim-log-bar-latest.log-deploy  { color: #a5d6a7; }
+.cc-sim-log-bar-chevron {
+  font-size: 0.7rem;
+  color: var(--cc-text-dim, #888);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.cc-sim-log-bar.open .cc-sim-log-bar-chevron { transform: rotate(180deg); }
+.cc-sim-log-drawer {
+  max-height: 0;
+  overflow-y: auto;
+  transition: max-height 0.25s ease;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.cc-sim-log-bar.open .cc-sim-log-drawer { max-height: 220px; }
 
 /* ===== Map Canvas Area ===== */
 .cc-sim-map-wrap {
