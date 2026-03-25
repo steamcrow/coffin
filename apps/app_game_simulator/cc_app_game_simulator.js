@@ -974,22 +974,37 @@ console.log("🎮 Game Simulator loaded");
           }
           // Show action menu even if didn't move (tap = attack in place)
           if (!sim.soloMovedThisTurn) sim.soloMovedThisTurn = true;
+          const _movedKey = sim.dragUnit;   // capture BEFORE clearing
           sim.dragUnit    = null;
           sim.rulerActive = false;
           sim.rulerDist   = 0;
+          sim.soloMovedThisTurn = true;
           const rulerEl = document.getElementById('cc-sim-ruler-hud');
           if (rulerEl) rulerEl.classList.remove('visible');
-          // Auto advance after move
-          sim.soloMovedThisTurn = true;
-          // After moving, show action menu (shoot/melee/ability/skip)
-          const _movedKey = sim.dragUnit || '';
-          setTimeout(() => window.CC_SIM.showSoloActionMenu(_movedKey), 200);
+          setTimeout(() => window.CC_SIM.showSoloActionMenu(_movedKey || ''), 200);
           return;
         }
         sim.isDragging = false;
         sim.dragLast   = null;
         wrap.classList.remove('is-dragging');
       }, true);
+
+      // Click any unit sprite to open inspector panel
+      canvas.addEventListener('click', e => {
+        // Don't trigger if we just finished a drag
+        if (sim._justDragged) { sim._justDragged = false; return; }
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left - sim.viewX) / sim.viewScale;
+        const my = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
+        const HIT = SPRITE_DRAW_SIZE / 2 + 10;
+        for (const [key, pos] of Object.entries(sim.unitPositions)) {
+          if (!pos || pos.status === 'routed') continue;
+          if (Math.abs(pos.x - mx) < HIT && Math.abs(pos.y - my) < HIT) {
+            window.CC_SIM.showUnitInspector(key);
+            return;
+          }
+        }
+      });
 
       // Start render loop
       if (sim.animFrameId) cancelAnimationFrame(sim.animFrameId);
@@ -2271,6 +2286,156 @@ console.log("🎮 Game Simulator loaded");
         }
       }, DELAY);
     };
+
+    window.CC_SIM.showUnitInspector = function(key) {
+      const existing = document.getElementById('cc-sim-unit-inspector');
+      if (existing) existing.remove();
+
+      const [fid, uid] = key.split('::');
+      const faction = getFactionById(fid);
+      const unit    = getUnitById(faction, uid);
+      const us      = getUnitState(fid, uid);
+      if (!unit) return;
+
+      const color   = (faction && faction.color) || '#ff7518';
+      const curQ    = us ? (us.quality || 0) : (unit.quality || 0);
+      const maxQ    = unit.quality || 0;
+      const isOut   = us && us.out;
+      const shaken  = us && us.shaken;
+      const panicked= us && us.panicked;
+
+      // Build quality dots
+      const qDots = Array.from({ length: maxQ }, (_, i) =>
+        '<span style="display:inline-block;width:11px;height:11px;border-radius:50%;margin:0 2px;' +
+        'background:' + (i < curQ ? color : '#333') + ';' +
+        'box-shadow:' + (i < curQ ? '0 0 4px ' + color : 'none') + ';"></span>'
+      ).join('');
+
+      // Build special abilities list
+      const specials = (unit.special || []);
+      const specialHtml = specials.length ? specials.map(s => {
+        const name = typeof s === 'string' ? s : (s.name || '');
+        const desc = typeof s === 'object' ? (s.description || s.effect || '') : '';
+        return '<div style="margin-bottom:8px;">' +
+          '<div style="font-size:.78rem;font-weight:700;color:' + color + ';">' + name + '</div>' +
+          (desc ? '<div style="font-size:.72rem;color:#999;margin-top:2px;line-height:1.5;">' + desc + '</div>' : '') +
+          '</div>';
+      }).join('') : '<div style="color:#555;font-size:.75rem;">No special abilities</div>';
+
+      // Status tags
+      let statusHtml = '';
+      if (isOut)    statusHtml += '<span style="background:#ef535022;color:#ef9090;border:1px solid #ef535055;border-radius:4px;padding:2px 8px;font-size:.72rem;margin-right:4px;">OUT</span>';
+      if (shaken)   statusHtml += '<span style="background:#fb8c0022;color:#ffb74d;border:1px solid #fb8c0055;border-radius:4px;padding:2px 8px;font-size:.72rem;margin-right:4px;">SHAKEN</span>';
+      if (panicked) statusHtml += '<span style="background:#ffd60022;color:#fff176;border:1px solid #ffd60055;border-radius:4px;padding:2px 8px;font-size:.72rem;">PANICKED</span>';
+
+      // Weapon properties
+      const wpProps = (unit.weapon_properties || []);
+      const wpHtml = wpProps.length
+        ? wpProps.map(p => '<span style="font-size:.7rem;background:#ffffff11;border-radius:3px;padding:1px 6px;margin-right:3px;color:#ccc;">' + p + '</span>').join('')
+        : '';
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cc-sim-unit-inspector';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:10010;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;animation:cc-fade-in .15s ease;';
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+      overlay.innerHTML =
+        '<div style="background:#141414;border:1px solid ' + color + '44;border-radius:14px;' +
+        'width:min(420px,92vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px #000c;">' +
+
+          // Header
+          '<div style="display:flex;align-items:center;gap:12px;padding:1.25rem 1.5rem 1rem;border-bottom:1px solid #222;">' +
+            '<div style="width:44px;height:44px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';' +
+              'display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<canvas id="cc-inspector-sprite" width="44" height="44"></canvas>' +
+            '</div>' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-size:1.05rem;font-weight:800;color:#fff;">' + unit.name + '</div>' +
+              '<div style="font-size:.78rem;color:' + color + ';margin-top:1px;">' + (faction ? faction.name : '') + '</div>' +
+            '</div>' +
+            '<button onclick="document.querySelector(\"#cc-sim-unit-inspector\").remove()" ' +
+              'style="background:none;border:none;color:#666;font-size:1.3rem;cursor:pointer;padding:4px;line-height:1;">&times;</button>' +
+          '</div>' +
+
+          // Quality bar
+          '<div style="padding:1rem 1.5rem;border-bottom:1px solid #1e1e1e;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+              '<span style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#666;">Quality</span>' +
+              '<span style="font-size:.8rem;color:#ccc;">' + curQ + ' / ' + maxQ + '</span>' +
+            '</div>' +
+            '<div>' + qDots + '</div>' +
+            (statusHtml ? '<div style="margin-top:8px;">' + statusHtml + '</div>' : '') +
+          '</div>' +
+
+          // Stats grid
+          '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:#1a1a1a;border-bottom:1px solid #1a1a1a;">' +
+            _statCell('Move', (unit.move || 6) + '"', '#42a5f5') +
+            _statCell('Defense', unit.defense ? 'D' + unit.defense : '—', '#ef5350') +
+            _statCell('Range', unit.range ? unit.range + '"' : '—', '#ff7518') +
+          '</div>' +
+
+          // Cost
+          (unit.cost ? '<div style="padding:.6rem 1.5rem;border-bottom:1px solid #1a1a1a;font-size:.75rem;color:#666;">' +
+            '<span style="color:#aaa;font-weight:700;">' + unit.cost + ' pts</span>' +
+          '</div>' : '') +
+
+          // Weapon
+          (unit.weapon ? '<div style="padding:.75rem 1.5rem;border-bottom:1px solid #1a1a1a;">' +
+            '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:4px;">Weapon</div>' +
+            '<div style="font-size:.85rem;color:#ddd;font-weight:600;">' + unit.weapon + '</div>' +
+            (wpHtml ? '<div style="margin-top:5px;">' + wpHtml + '</div>' : '') +
+          '</div>' : '') +
+
+          // Special abilities
+          '<div style="padding:.75rem 1.5rem;border-bottom:1px solid #1a1a1a;">' +
+            '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:8px;">Abilities</div>' +
+            specialHtml +
+          '</div>' +
+
+          // Lore
+          (unit.lore ? '<div style="padding:.75rem 1.5rem;">' +
+            '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:6px;">Lore</div>' +
+            '<div style="font-size:.78rem;color:#888;line-height:1.6;font-style:italic;">' + unit.lore + '</div>' +
+          '</div>' : '') +
+
+        '</div>';
+
+      document.body.appendChild(overlay);
+
+      // Animate sprite in inspector
+      _startInspectorSprite(fid, uid, 'idle');
+    };
+
+    function _statCell(label, value, color) {
+      return '<div style="background:#141414;padding:.7rem .5rem;text-align:center;">' +
+        '<div style="font-size:.65rem;text-transform:uppercase;letter-spacing:.07em;color:#555;margin-bottom:3px;">' + label + '</div>' +
+        '<div style="font-size:1rem;font-weight:800;color:' + color + ';">' + value + '</div>' +
+      '</div>';
+    }
+
+    let _inspectorAnimId = null;
+    function _startInspectorSprite(fid, uid, status) {
+      if (_inspectorAnimId) { cancelAnimationFrame(_inspectorAnimId); _inspectorAnimId = null; }
+      if (!sim.spriteSheet || !sim.spriteData) return;
+      const animSet  = FACTION_SPRITE[fid] || FACTION_SPRITE['encounters'];
+      const animName = animSet ? animSet[status] || animSet.idle : null;
+      const anim     = animName && sim.spriteData[animName] ? sim.spriteData[animName] : null;
+      if (!anim) return;
+      let frame = 0, timer = 0, lastTs = 0;
+      function step(ts) {
+        const canvas = document.getElementById('cc-inspector-sprite');
+        if (!canvas) { _inspectorAnimId = null; return; }
+        const ctx = canvas.getContext('2d');
+        const dt  = lastTs > 0 ? ts - lastTs : 16; lastTs = ts;
+        timer += dt;
+        const f = anim.frames[frame % anim.frames.length];
+        if (f && timer >= f.duration) { timer -= f.duration; frame = (frame + 1) % anim.frames.length; }
+        ctx.clearRect(0, 0, 44, 44);
+        if (f) ctx.drawImage(sim.spriteSheet, f.x, f.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE, 0, 0, 44, 44);
+        _inspectorAnimId = requestAnimationFrame(step);
+      }
+      _inspectorAnimId = requestAnimationFrame(step);
+    }
 
     window.CC_SIM.toggleLog = function() {
       const bar = document.getElementById('cc-sim-log-bar');
