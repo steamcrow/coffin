@@ -94,7 +94,7 @@
 .cc-sim-map-wrap {
   position: relative;
   overflow: hidden;
-  background: #080503;
+  background: transparent;
   cursor: grab;
   user-select: none;
   flex: 1;
@@ -577,3 +577,6 @@
   min-height: 0;
   overflow-y: auto;
 }
+
+/* Kill any stray overlay boxes that might come from Leaflet or orphaned divs */
+.cc-mm-app, .leaflet-container, [class^="zPane"] { display: none !important; }
