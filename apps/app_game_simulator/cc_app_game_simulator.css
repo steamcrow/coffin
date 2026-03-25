@@ -92,12 +92,13 @@
 
 /* ===== Map Canvas Area ===== */
 .cc-sim-map-wrap {
-  flex: 1;
   position: relative;
   overflow: hidden;
   background: #080503;
   cursor: grab;
   user-select: none;
+  flex: 1;
+  min-height: 0;
 }
 .cc-sim-map-wrap.is-dragging { cursor: grabbing; }
 
@@ -109,30 +110,9 @@
 }
 
 /* ===== Map HUD (overlaid on canvas) ===== */
-.cc-sim-map-hud {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 8px 10px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.85));
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  pointer-events: none;
-}
-.cc-sim-map-hud > * { pointer-events: auto; }
-
-.cc-sim-map-hud-top {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  padding: 8px 10px;
-  background: linear-gradient(rgba(0,0,0,0.7), transparent);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  pointer-events: none;
-}
-.cc-sim-map-hud-top > * { pointer-events: auto; }
+/* Round badge shown in top controls bar */
+.cc-sim-map-hud-top { display: none; } /* kept for compat, now unused */
+.cc-sim-map-hud     { display: none; } /* kept for compat, now unused */
 
 .cc-sim-round-badge {
   background: rgba(0,0,0,0.8);
@@ -412,31 +392,7 @@
   animation: cc-sim-spawn 0.3s ease;
 }
 
-/* ===== Zoom Controls ===== */
-.cc-sim-zoom-controls {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  pointer-events: auto;
-}
-.cc-sim-zoom-btn {
-  width: 32px; height: 32px;
-  background: rgba(0,0,0,0.7);
-  border: 1px solid var(--cc-border, #333);
-  border-radius: 6px;
-  color: var(--cc-text, #eee);
-  font-size: 1.1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.12s;
-}
-.cc-sim-zoom-btn:hover { background: rgba(255,255,255,0.1); }
+
 
 /* ===== Misc ===== */
 .cc-login-status {
