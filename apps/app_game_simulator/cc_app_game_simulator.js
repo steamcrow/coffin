@@ -171,7 +171,7 @@ console.log("🎮 Game Simulator loaded");
     // 1 game inch = this many map pixels (map is 4096px, table is ~48" wide)
     const ENGAGEMENT_PX      = GRID_PX * 2;  // 2" engagement range
     const SPRITE_SRC_SIZE    = 20;   // sprite sheet frame size (px)
-    const SPRITE_DRAW_SIZE   = GRID_PX * 2.5; // drawn size: 2.5 grid squares
+    const SPRITE_DRAW_SIZE   = GRID_PX * 3.2; // drawn size: 3.2 grid squares
     const MAP_SIZE           = 4096;
 
     const FACTION_META = {
@@ -192,6 +192,26 @@ console.log("🎮 Game Simulator loaded");
       shine_riders:    { idle: 'knight_yellow_idle', run: 'knight_yellow_run', attack: 'knight_yellow_attack' },
       crow_queen:      { idle: 'monk_idle',          run: 'monk_run',        attack: 'monk_attack'         },
       encounters:      { idle: 'troll_idle',         run: 'troll_run',       attack: 'troll_attack'        },
+    };
+
+    // Diamond edge lines for deployment — units line up along these in MAP coords
+    // Each edge connects two diamond corners, with a small inset from each corner
+    const _DT = { x: 2048, y: 3051 };  // top
+    const _DR = { x: 4014, y: 2068 };  // right
+    const _DB = { x: 2048, y: 1085 };  // bottom
+    const _DL = { x: 82,   y: 2068 };  // left
+    function _edgeInset(a, b, t) { return { x: a.x + (b.x-a.x)*t, y: a.y + (b.y-a.y)*t }; }
+    const I = 0.05; // inset fraction from corner
+    const ZONE_EDGE_LINES = {
+      'north':      { x1: _edgeInset(_DL,_DT,1-I).x, y1: _edgeInset(_DL,_DT,1-I).y,  x2: _edgeInset(_DT,_DR,I).x,   y2: _edgeInset(_DT,_DR,I).y   }, // NW edge top half
+      'west':       { x1: _edgeInset(_DL,_DT,I).x,   y1: _edgeInset(_DL,_DT,I).y,    x2: _edgeInset(_DL,_DT,0.5).x, y2: _edgeInset(_DL,_DT,0.5).y }, // NW edge
+      'east':       { x1: _edgeInset(_DT,_DR,0.5).x, y1: _edgeInset(_DT,_DR,0.5).y,  x2: _edgeInset(_DT,_DR,1-I).x, y2: _edgeInset(_DT,_DR,1-I).y }, // NE edge
+      'south':      { x1: _edgeInset(_DB,_DR,I).x,   y1: _edgeInset(_DB,_DR,I).y,    x2: _edgeInset(_DB,_DL,1-I).x, y2: _edgeInset(_DB,_DL,1-I).y }, // SE/SW edge
+      'north_west': { x1: _edgeInset(_DL,_DT,I).x,   y1: _edgeInset(_DL,_DT,I).y,    x2: _edgeInset(_DL,_DT,1-I).x, y2: _edgeInset(_DL,_DT,1-I).y }, // full NW edge
+      'north_east': { x1: _edgeInset(_DT,_DR,I).x,   y1: _edgeInset(_DT,_DR,I).y,    x2: _edgeInset(_DT,_DR,1-I).x, y2: _edgeInset(_DT,_DR,1-I).y }, // full NE edge
+      'south_west': { x1: _edgeInset(_DL,_DB,I).x,   y1: _edgeInset(_DL,_DB,I).y,    x2: _edgeInset(_DL,_DB,1-I).x, y2: _edgeInset(_DL,_DB,1-I).y }, // full SW edge
+      'south_east': { x1: _edgeInset(_DR,_DB,I).x,   y1: _edgeInset(_DR,_DB,I).y,    x2: _edgeInset(_DR,_DB,1-I).x, y2: _edgeInset(_DR,_DB,1-I).y }, // full SE edge
+      'center':     null,
     };
 
     // Deployment zones in MAP coords (Leaflet CRS.Simple: y=0 at bottom)
@@ -540,9 +560,13 @@ console.log("🎮 Game Simulator loaded");
       sim.mapData.instances.forEach(inst => {
         const entry = sim.terrainCatalogFull && sim.terrainCatalogFull[inst.terrain_type_id];
         if (!entry) return;
-        // Only block if terrain is_passable = false
+        // Block unless explicitly marked passable = true
+        // Buildings/features with no movement data default to blocking
+        const kind     = (entry.kind || '').toLowerCase();
         const passable = entry.movement && entry.movement.is_passable;
-        if (passable === true || passable === undefined) return;
+        // scatter/area terrain is walkable by default; buildings/features block
+        const defaultPassable = (kind === 'scatter' || kind === 'area' || kind === 'hazard');
+        if (passable === true || (passable === undefined && defaultPassable)) return;
         // Find which grid squares this terrain occupies
         const fp = entry.footprint && entry.footprint.size_in;
         const fw = fp ? fp.w : 4;
@@ -566,11 +590,11 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function isSquareBlocked(canvasX, canvasY, excludeKey) {
-      if (!sim.blockedSquares) return false;
       const gx = Math.round(canvasX / GRID_PX);
       const gy = Math.round(canvasY / GRID_PX);
-      if (sim.blockedSquares.has(gx + ',' + gy)) return true;
-      // Also blocked by other units
+      // Terrain blocking
+      if (sim.blockedSquares && sim.blockedSquares.has(gx + ',' + gy)) return true;
+      // Unit blocking — can't share a square with another unit
       for (const [k, pos] of Object.entries(sim.unitPositions)) {
         if (!pos || pos.status === 'routed') continue;
         if (k === excludeKey) continue;
@@ -658,29 +682,23 @@ console.log("🎮 Game Simulator loaded");
           return;
         }
 
-        // Line units evenly along their deployment edge
+        // Line units evenly along their diamond edge
+        // Each zone defines a start and end point on the diamond perimeter
+        const edgeLine = ZONE_EDGE_LINES[zone.key] || null;
         const unitCount = units.length;
-        // Determine primary axis: if zone is wider than tall, spread along X; else along Y
-        const zoneW = zone.xMax - zone.xMin;
-        const zoneH = zone.yMax - zone.yMin;
-        const spreadAlongX = zoneW >= zoneH;
-        const midX = (zone.xMin + zone.xMax) / 2;
-        const midY = (zone.yMin + zone.yMax) / 2;
         units.forEach((u, i) => {
           const k = unitKey(faction.id, u.id);
           let mx, my;
-          if (spreadAlongX) {
-            // Space evenly along X, fixed Y at zone center
-            const spacing = Math.min(GRID_PX * 2, zoneW / Math.max(1, unitCount));
-            const totalW  = spacing * (unitCount - 1);
-            mx = midX - totalW / 2 + i * spacing;
-            my = midY;
+          if (edgeLine) {
+            // Space evenly along the edge, inset slightly from each end
+            const t0 = 0.06, t1 = 0.94;
+            const t = unitCount === 1 ? 0.5 : t0 + (t1 - t0) * (i / (unitCount - 1));
+            mx = edgeLine.x1 + (edgeLine.x2 - edgeLine.x1) * t;
+            my = edgeLine.y1 + (edgeLine.y2 - edgeLine.y1) * t;
           } else {
-            // Space evenly along Y, fixed X at zone center
-            const spacing = Math.min(GRID_PX * 2, zoneH / Math.max(1, unitCount));
-            const totalH  = spacing * (unitCount - 1);
-            mx = midX;
-            my = midY - totalH / 2 + i * spacing;
+            // Fallback: zone center
+            mx = (zone.xMin + zone.xMax) / 2;
+            my = (zone.yMin + zone.yMax) / 2;
           }
           // Snap to grid
           mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
@@ -1956,10 +1974,7 @@ console.log("🎮 Game Simulator loaded");
 
             '</div>' + // end main-row
 
-            '<!-- COMBAT SPOTLIGHT (hidden until combat) -->' +
-            '<div id="cc-sim-combat-spotlight" style="display:none;">' +
-              '<canvas id="cc-sim-spotlight-canvas" width="260" height="260" style="border-radius:50%;border:3px solid #ff7518;box-shadow:0 0 20px #ff751866;"></canvas>' +
-            '</div>' +
+            // spotlight canvas lives inside the roll dialog
 
             '<!-- LOG BAR (accordion at bottom) -->' +
             '<div class="cc-sim-log-bar" id="cc-sim-log-bar">' +
@@ -2009,80 +2024,91 @@ console.log("🎮 Game Simulator loaded");
     let _spotlightAnimId = null;
 
     function showCombatSpotlight(attackerKey, defenderKey) {
-      // Canvas is embedded inside the roll dialog
-      const canvas = document.getElementById('cc-sim-spotlight-canvas');
-      if (!canvas || !sim.spriteSheet || !sim.spriteData) return;
-      const ctx = canvas.getContext('2d');
-      const W = canvas.width, H = canvas.height;
+      if (_spotlightAnimId) { cancelAnimationFrame(_spotlightAnimId); _spotlightAnimId = null; }
+      if (!sim.spriteSheet || !sim.spriteData) return;
 
-      const [aFid] = attackerKey.split('::');
-      const [dFid] = defenderKey.split('::');
-      const aAnimSet = FACTION_SPRITE[aFid] || FACTION_SPRITE['encounters'];
-      const dAnimSet = FACTION_SPRITE[dFid] || FACTION_SPRITE['encounters'];
-      const aAnim = sim.spriteData[aAnimSet ? aAnimSet.attack : null];
-      const dAnim = sim.spriteData[dAnimSet ? dAnimSet.attack : null];
-      const aColor = (getFactionById(aFid) || {}).color || '#888';
-      const dColor = (getFactionById(dFid) || {}).color || '#888';
+      const [aFid, aUid] = attackerKey.split('::');
+      const [dFid, dUid] = defenderKey.split('::');
+      const aFaction  = getFactionById(aFid);
+      const dFaction  = getFactionById(dFid);
+      const aColor    = (aFaction && aFaction.color) || '#ff7518';
+      const dColor    = (dFaction && dFaction.color) || '#42a5f5';
+
+      // Resolve animation names
+      const aSet  = FACTION_SPRITE[aFid] || FACTION_SPRITE['encounters'];
+      const dSet  = FACTION_SPRITE[dFid] || FACTION_SPRITE['encounters'];
+      const aAnim = aSet && sim.spriteData[aSet.attack] ? sim.spriteData[aSet.attack] : null;
+      const dAnim = dSet && sim.spriteData[dSet.attack] ? sim.spriteData[dSet.attack] : null;
+      const aIdle = aSet && sim.spriteData[aSet.idle]   ? sim.spriteData[aSet.idle]   : null;
+      const dIdle = dSet && sim.spriteData[dSet.idle]   ? sim.spriteData[dSet.idle]   : null;
+      // Use attack anim if available, else fall back to idle
+      const aDraw = aAnim || aIdle;
+      const dDraw = dAnim || dIdle;
 
       let aFrame = 0, dFrame = 0, aTimer = 0, dTimer = 0, lastTs = 0;
 
-      if (_spotlightAnimId) cancelAnimationFrame(_spotlightAnimId);
+      function drawFighter(ctx, anim, frame, cx, cy, r, color) {
+        if (!anim || !anim.frames || !anim.frames[frame]) return;
+        const f = anim.frames[frame % anim.frames.length];
+        ctx.save();
+        // Tinted bg circle
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = color + '44'; ctx.fill();
+        // Clip + draw sprite
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
+        const sz = r * 2;
+        ctx.drawImage(sim.spriteSheet, f.x, f.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
+          cx - r, cy - r, sz, sz);
+        ctx.restore();
+        // Faction colour ring
+        ctx.beginPath(); ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
+      }
+
+      function advanceAnim(anim, frame, timer, dt) {
+        if (!anim || !anim.frames) return { frame, timer };
+        timer += dt;
+        const f = anim.frames[frame % anim.frames.length];
+        if (f && timer >= f.duration) { timer -= f.duration; frame = (frame + 1) % anim.frames.length; }
+        return { frame, timer };
+      }
 
       function step(ts) {
-        const dt = ts - lastTs; lastTs = ts;
+        // Re-query canvas every frame — dialog may have been recreated
+        const canvas = document.getElementById('cc-sim-spotlight-canvas');
+        if (!canvas) { _spotlightAnimId = null; return; }
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        const dt = lastTs > 0 ? ts - lastTs : 16;
+        lastTs = ts;
 
-        // Advance frames
-        if (aAnim) { aTimer += dt; const f = aAnim.frames[aFrame % aAnim.frames.length]; if (f && aTimer >= f.duration) { aTimer = 0; aFrame = (aFrame+1) % aAnim.frames.length; } }
-        if (dAnim) { dTimer += dt; const f = dAnim.frames[dFrame % dAnim.frames.length]; if (f && dTimer >= f.duration) { dTimer = 0; dFrame = (dFrame+1) % dAnim.frames.length; } }
+        const ra = advanceAnim(aDraw, aFrame, aTimer, dt);
+        aFrame = ra.frame; aTimer = ra.timer;
+        const rd = advanceAnim(dDraw, dFrame, dTimer, dt);
+        dFrame = rd.frame; dTimer = rd.timer;
 
-        ctx.clearRect(0, 0, W, H);
+        // Dark background
+        ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
 
-        // Background
-        ctx.fillStyle = '#0d0d0d';
-        ctx.beginPath(); ctx.arc(W/2, H/2, W/2-2, 0, Math.PI*2); ctx.fill();
+        // Divider
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke();
 
-        // Draw attacker (left side)
-        if (aAnim) {
-          const f = aAnim.frames[aFrame % aAnim.frames.length];
-          if (f) {
-            ctx.save();
-            ctx.beginPath(); ctx.arc(W/4, H/2, 55, 0, Math.PI*2); ctx.clip();
-            ctx.fillStyle = aColor + '33'; ctx.fillRect(0, 0, W/2, H);
-            ctx.drawImage(sim.spriteSheet, f.x, f.y, 20, 20, W/4-55, H/2-55, 110, 110);
-            ctx.restore();
-            // Color ring
-            ctx.strokeStyle = aColor; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(W/4, H/2, 58, 0, Math.PI*2); ctx.stroke();
-          }
-        }
+        const r = Math.min(W / 4 - 8, H / 2 - 8);
+        drawFighter(ctx, aDraw, aFrame, W / 4,     H / 2, r, aColor);
+        drawFighter(ctx, dDraw, dFrame, W * 3 / 4, H / 2, r, dColor);
 
-        // Draw defender (right side)
-        if (dAnim) {
-          const f = dAnim.frames[dFrame % dAnim.frames.length];
-          if (f) {
-            ctx.save();
-            ctx.beginPath(); ctx.arc(3*W/4, H/2, 55, 0, Math.PI*2); ctx.clip();
-            ctx.fillStyle = dColor + '33'; ctx.fillRect(W/2, 0, W/2, H);
-            ctx.drawImage(sim.spriteSheet, f.x, f.y, 20, 20, 3*W/4-55, H/2-55, 110, 110);
-            ctx.restore();
-            ctx.strokeStyle = dColor; ctx.lineWidth = 3;
-            ctx.beginPath(); ctx.arc(3*W/4, H/2, 58, 0, Math.PI*2); ctx.stroke();
-          }
-        }
-
-        // VS text
-        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText('VS', W/2, H/2);
+        // VS
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('VS', W / 2, H / 2);
 
         _spotlightAnimId = requestAnimationFrame(step);
       }
-      _spotlightAnimId = requestAnimationFrame(step);
 
-      // Spotlight fades with roll overlay — stop animation when dialog closes
-      // Roll overlay auto-dismisses at 5s; spotlight stops then too
-      setTimeout(() => {
-        if (_spotlightAnimId) { cancelAnimationFrame(_spotlightAnimId); _spotlightAnimId = null; }
-      }, 5500);
+      _spotlightAnimId = requestAnimationFrame(step);
+      // Stop when roll dialog dismisses (auto at 4.5s + fade 0.65s)
+      setTimeout(() => { if (_spotlightAnimId) { cancelAnimationFrame(_spotlightAnimId); _spotlightAnimId = null; } }, 5200);
     }
 
     function startUnitPreview(fid, uid, status) {
