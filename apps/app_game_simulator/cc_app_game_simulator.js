@@ -194,19 +194,17 @@ console.log("🎮 Game Simulator loaded");
       encounters:      { idle: 'troll_idle',         run: 'troll_run',       attack: 'troll_attack'        },
     };
 
-    // Deployment zones around the 4096x4096 map edges
-    // Up to 4 factions get a full side; 5-8 get a half-side
-    // Deployment zones — edge strips matching the isometric diamond
-    // Diamond in map coords: top(2048,164) right(4014,2130) bottom(2048,3936) left(82,2130)
+    // Deployment zones in CANVAS coords (Y already flipped vs Leaflet map coords)
+    // Diamond canvas corners: top(2048,1045) right(4013,2028) bottom(2048,3134) left(82,2028)
     const ZONE_DEFS = [
-      { key: 'north',      xMin: 1400, xMax: 2700, yMin: 300,  yMax: 700  },
-      { key: 'south',      xMin: 1400, xMax: 2700, yMin: 3400, yMax: 3800 },
-      { key: 'west',       xMin: 200,  xMax: 600,  yMin: 1600, yMax: 2500 },
-      { key: 'east',       xMin: 3500, xMax: 3900, yMin: 1600, yMax: 2500 },
-      { key: 'north_west', xMin: 600,  xMax: 1400, yMin: 600,  yMax: 1400 },
-      { key: 'north_east', xMin: 2700, xMax: 3500, yMin: 600,  yMax: 1400 },
-      { key: 'south_west', xMin: 600,  xMax: 1400, yMin: 2700, yMax: 3500 },
-      { key: 'south_east', xMin: 2700, xMax: 3500, yMin: 2700, yMax: 3500 },
+      { key: 'north',      xMin: 1400, xMax: 2700, yMin: 1100, yMax: 1400 },
+      { key: 'south',      xMin: 1400, xMax: 2700, yMin: 2900, yMax: 3100 },
+      { key: 'west',       xMin: 150,  xMax: 500,  yMin: 1700, yMax: 2400 },
+      { key: 'east',       xMin: 3600, xMax: 3950, yMin: 1700, yMax: 2400 },
+      { key: 'north_west', xMin: 500,  xMax: 1300, yMin: 1100, yMax: 1700 },
+      { key: 'north_east', xMin: 2800, xMax: 3600, yMin: 1100, yMax: 1700 },
+      { key: 'south_west', xMin: 500,  xMax: 1300, yMin: 2400, yMax: 3000 },
+      { key: 'south_east', xMin: 2800, xMax: 3600, yMin: 2400, yMax: 3000 },
     ];
     const MONSTER_ZONE = { key: 'center', xMin: 1800, xMax: 2300, yMin: 1800, yMax: 2300 };
 
@@ -367,11 +365,17 @@ console.log("🎮 Game Simulator loaded");
 
     function simLog(msg, type) {
       state.roundLog.push({ msg, type: type || 'info', ts: Date.now() });
+      const cls = type ? 'log-' + type : '';
       const logEl = document.getElementById('cc-sim-log');
       if (logEl) {
-        const cls = type ? `log-${type}` : '';
         logEl.insertAdjacentHTML('afterbegin',
-          `<div class="cc-sim-log-entry ${cls}">${msg}</div>`);
+          '<div class="cc-sim-log-entry ' + cls + '">' + msg + '</div>');
+      }
+      // Update ticker with latest message
+      const ticker = document.getElementById('cc-sim-log-latest');
+      if (ticker) {
+        ticker.textContent = msg;
+        ticker.className = 'cc-sim-log-bar-latest ' + cls;
       }
     }
 
@@ -774,9 +778,9 @@ console.log("🎮 Game Simulator loaded");
         const scaleW   = canvas.width  * 0.92 / diamondW;
         const scaleH   = canvas.height * 0.92 / diamondH;
         sim.viewScale  = Math.min(scaleW, scaleH);
-        // Center on diamond centre (2048, 2050)
+        // Center on diamond centre in canvas coords (2048, 2090)
         sim.viewX = canvas.width  / 2 - 2048 * sim.viewScale;
-        sim.viewY = canvas.height / 2 - 2050 * sim.viewScale;
+        sim.viewY = canvas.height / 2 - 2090 * sim.viewScale;
       }
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
@@ -1093,16 +1097,22 @@ console.log("🎮 Game Simulator loaded");
       });
     }
 
+    // Leaflet CRS.Simple has Y increasing upward, so terrain y must be flipped
+    function mapToCanvas(mx, my) {
+      return { cx: mx, cy: MAP_SIZE - my };
+    }
+
     function drawTerrain(ctx) {
       if (!sim.mapData || !sim.mapData.instances) return;
       sim.mapData.instances.forEach(inst => {
         if (inst.hidden_in_editor) return;
         const img = sim.terrainImages[inst.terrain_type_id];
         if (!img) return;
-        const w   = img.naturalWidth  * inst.scale;
-        const h   = img.naturalHeight * inst.scale;
+        const w = img.naturalWidth  * inst.scale;
+        const h = img.naturalHeight * inst.scale;
+        const { cx, cy } = mapToCanvas(inst.x, inst.y);
         ctx.save();
-        ctx.translate(inst.x, inst.y);
+        ctx.translate(cx, cy);
         if (inst.rotation_deg) ctx.rotate(inst.rotation_deg * Math.PI / 180);
         if (inst.mirror_x || inst.mirror_y) ctx.scale(inst.mirror_x ? -1 : 1, inst.mirror_y ? -1 : 1);
         ctx.globalAlpha = inst.opacity ?? 1;
@@ -1627,27 +1637,42 @@ console.log("🎮 Game Simulator loaded");
       const unit = getUnitById(getFactionById(fid), uid);
       if (!pos || !unit) return;
 
-      const moveInches = unit.move || 6;
+      const moveInches  = unit.move  || 6;
+      const rangeInches = unit.range || 0;
       const { key: enemyKey, dist: enemyDist } = findNearestEnemy(fid, pos);
       const ePos = enemyKey ? sim.unitPositions[enemyKey] : null;
 
-      // Check grid adjacency for melee (must be in adjacent square)
-      const inMelee = ePos && isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y);
+      // Check grid adjacency for melee
+      const inMelee  = ePos && isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y);
+      // Check ranged: enemy within range inches (in grid squares) and not adjacent
+      const inRange  = !inMelee && rangeInches > 0 && ePos &&
+                       gridDist(pos.x, pos.y, ePos.x, ePos.y) <= rangeInches;
 
       if (inMelee) {
         resolveEngagement(key, enemyKey);
         addNoise(NOISE_VALUES.melee, 'Melee');
+      } else if (inRange) {
+        // Ranged attack — no movement needed
+        pos.status = 'fighting';
+        simLog(unit.name + ' fires at ' + (getUnitById(getFactionById(enemyKey.split('::')[0]), enemyKey.split('::')[1])?.name || '?') + '!', 'combat');
+        resolveEngagement(key, enemyKey, true);
+        addNoise(NOISE_VALUES.shot, 'Shot');
       } else if (ePos) {
+        // Move toward enemy
         moveUnitToward(key, ePos.x, ePos.y, moveInches);
         simLog(unit.name + ' advances.', 'move');
-        // After moving, check if now adjacent
+        // After moving, check melee or range
         if (isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y)) {
           resolveEngagement(key, enemyKey);
           addNoise(NOISE_VALUES.melee, 'Melee');
+        } else if (rangeInches > 0 && gridDist(pos.x, pos.y, ePos.x, ePos.y) <= rangeInches) {
+          pos.status = 'fighting';
+          resolveEngagement(key, enemyKey, true);
+          addNoise(NOISE_VALUES.shot, 'Shot');
         }
       }
 
-      const fightDuration = inMelee ? 1200 : 500;
+      const fightDuration = (inMelee || inRange) ? 1200 : 500;
       setTimeout(() => {
         if (pos && pos.status !== 'routed') pos.status = 'idle';
         pos.frameIdx = 0;
@@ -1773,67 +1798,64 @@ console.log("🎮 Game Simulator loaded");
     function renderPlaying() {
       // Build full simulator layout (only once — canvas persists in the map wrap)
       if (!document.getElementById('cc-sim-map-wrap')) {
-        root.innerHTML = `
-          <div class="cc-sim-layout" id="cc-sim-layout">
+        root.innerHTML =
+          '<div class="cc-sim-layout" id="cc-sim-layout">' +
 
-            <!-- LEFT SIDEBAR -->
-            <div class="cc-sim-sidebar cc-sim-sidebar-left">
-              <div class="cc-sim-panel-header"><i class="fa fa-users"></i> Factions</div>
-              <div class="cc-sim-sidebar-scroll" id="cc-sim-faction-list"></div>
-              <div id="cc-sim-noise-wrap">
-                <div class="cc-sim-bar-wrap">
-                  <div class="cc-sim-bar-label">
-                    <span><i class="fa fa-volume-up"></i> Canyon Noise</span>
-                    <span id="cc-sim-noise-val">${state.noiseLevel} / ${state.noiseThreshold}</span>
-                  </div>
-                  <div class="cc-sim-bar-track">
-                    <div class="cc-sim-bar-fill" id="cc-sim-noise-fill"
-                         style="width:${Math.min(100,Math.round(state.noiseLevel/state.noiseThreshold*100))}%;background:#4caf50;"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="cc-sim-controls">
-                <button class="cc-btn cc-btn-sm" onclick="window.CC_SIM.addNoise(3,'Melee')">+Noise</button>
-                <button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.rollEvent()">Event</button>
-              </div>
-            </div>
+            '<!-- MAIN ROW -->' +
+            '<div class="cc-sim-main-row">' +
 
-            <!-- MAP AREA -->
-            <div class="cc-sim-map-wrap" id="cc-sim-map-wrap">
-              <div class="cc-sim-ruler-hud" id="cc-sim-ruler-hud"></div>
-              <div class="cc-sim-waiting-badge" id="cc-sim-waiting-badge">Your turn &mdash; drag your unit to move</div>
-              <div class="cc-sim-map-hud-top">
-                <div class="cc-sim-round-badge" id="cc-sim-round-badge">Round ${state.round}</div>
-                <div class="cc-sim-round-badge" id="cc-sim-queue-badge" style="font-size:.75rem;"></div>
-              </div>
-              <div class="cc-sim-map-hud">
-                <button class="cc-btn cc-btn-sm" id="cc-sim-next-btn" onclick="window.CC_SIM.nextActivation()">
-                  <i class="fa fa-step-forward"></i> <span id="cc-sim-next-label">Next</span>
-                </button>
-                <button class="cc-btn cc-btn-sm cc-btn-secondary" id="cc-sim-auto-btn" onclick="window.CC_SIM.toggleAuto()">
-                  <i class="fa fa-play"></i> Auto
-                </button>
-                <button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.zoomFit()">
-                  <i class="fa fa-compress"></i>
-                </button>
-              </div>
-              <div class="cc-sim-zoom-controls">
-                <button class="cc-sim-zoom-btn" onclick="window.CC_SIM.zoom(1.2)">+</button>
-                <button class="cc-sim-zoom-btn" onclick="window.CC_SIM.zoom(0.8)">−</button>
-              </div>
-            </div>
+              '<!-- LEFT SIDEBAR: Factions + Active Unit -->' +
+              '<div class="cc-sim-sidebar">' +
+                '<div class="cc-sim-panel-header"><i class="fa fa-users"></i> Factions</div>' +
+                '<div class="cc-sim-sidebar-scroll" id="cc-sim-faction-list"></div>' +
+                '<div class="cc-sim-panel-header" style="border-top:1px solid var(--cc-border,#333);"><i class="fa fa-bolt"></i> Active Unit</div>' +
+                '<div id="cc-sim-active-unit" style="overflow-y:auto;max-height:45%;flex-shrink:0;"></div>' +
+                '<div class="cc-sim-controls">' +
+                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.addNoise(3,&quot;Melee&quot;)">+Noise</button>' +
+                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.addNoise(3,\"Melee\")">+Noise</button>' +
+                '</div>' +
+              '</div>' +
 
-            <!-- RIGHT SIDEBAR -->
-            <div class="cc-sim-sidebar cc-sim-sidebar-right">
-              <div class="cc-sim-panel-header"><i class="fa fa-bolt"></i> Active Unit</div>
-              <div id="cc-sim-active-unit"></div>
-              <div class="cc-sim-panel-header" style="margin-top:auto;"><i class="fa fa-list"></i> Log</div>
-              <div class="cc-sim-sidebar-scroll">
-                <div class="cc-sim-log" id="cc-sim-log"></div>
-              </div>
-            </div>
+              '<!-- MAP -->' +
+              '<div class="cc-sim-map-wrap" id="cc-sim-map-wrap">' +
+                '<div class="cc-sim-ruler-hud" id="cc-sim-ruler-hud"></div>' +
+                '<div class="cc-sim-waiting-badge" id="cc-sim-waiting-badge">Your turn &mdash; drag to move</div>' +
+                '<div class="cc-sim-map-hud-top">' +
+                  '<div class="cc-sim-round-badge" id="cc-sim-round-badge">Round ' + state.round + '</div>' +
+                  '<div class="cc-sim-round-badge" id="cc-sim-queue-badge" style="font-size:.75rem;"></div>' +
+                '</div>' +
+                '<div class="cc-sim-map-hud">' +
+                  '<button class="cc-btn cc-btn-sm" id="cc-sim-next-btn" onclick="window.CC_SIM.nextActivation()">' +
+                    '<i class="fa fa-step-forward"></i> <span id="cc-sim-next-label">Next</span>' +
+                  '</button>' +
+                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" id="cc-sim-auto-btn" onclick="window.CC_SIM.toggleAuto()">' +
+                    '<i class="fa fa-play"></i> Auto' +
+                  '</button>' +
+                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.zoomFit()">' +
+                    '<i class="fa fa-compress"></i>' +
+                  '</button>' +
+                '</div>' +
+                '<div class="cc-sim-zoom-controls">' +
+                  '<button class="cc-sim-zoom-btn" onclick="window.CC_SIM.zoom(1.2)">+</button>' +
+                  '<button class="cc-sim-zoom-btn" onclick="window.CC_SIM.zoom(0.8)">&minus;</button>' +
+                '</div>' +
+              '</div>' +
 
-          </div>`;
+            '</div>' + // end main-row
+
+            '<!-- LOG BAR (accordion at bottom) -->' +
+            '<div class="cc-sim-log-bar" id="cc-sim-log-bar">' +
+              '<div class="cc-sim-log-bar-ticker" onclick="window.CC_SIM.toggleLog()">' +
+                '<span style="font-size:.7rem;color:var(--cc-text-dim,#888);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;">Log</span>' +
+                '<span class="cc-sim-log-bar-latest" id="cc-sim-log-latest">—</span>' +
+                '<span class="cc-sim-log-bar-chevron">&#9650;</span>' +
+              '</div>' +
+              '<div class="cc-sim-log-drawer" id="cc-sim-log-drawer">' +
+                '<div class="cc-sim-log" id="cc-sim-log" style="padding:8px;"></div>' +
+              '</div>' +
+            '</div>' +
+
+          '</div>';
 
         initCanvas();
       }
@@ -1937,6 +1959,11 @@ console.log("🎮 Game Simulator loaded");
     // ═════════════════════════════════════════════════════════════════════════
     // CONTROLS — public CC_SIM.* functions
     // ═════════════════════════════════════════════════════════════════════════
+
+    window.CC_SIM.toggleLog = function() {
+      const bar = document.getElementById('cc-sim-log-bar');
+      if (bar) bar.classList.toggle('open');
+    };
 
     window.CC_SIM.closeRollDialog = function() {
       const o = document.getElementById('cc-sim-roll-overlay');
@@ -2258,7 +2285,7 @@ console.log("🎮 Game Simulator loaded");
       const scaleH   = sim.canvas.height * 0.92 / diamondH;
       sim.viewScale  = Math.min(scaleW, scaleH);
       sim.viewX      = sim.canvas.width  / 2 - 2048 * sim.viewScale;
-      sim.viewY      = sim.canvas.height / 2 - 2050 * sim.viewScale;
+      sim.viewY      = sim.canvas.height / 2 - 2090 * sim.viewScale;
       sim.camTargetX = null;
       sim.camTargetY = null;
     };
