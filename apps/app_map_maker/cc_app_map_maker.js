@@ -1,2352 +1,1071 @@
-// ── cc_app_game_simulator.js ─────────────────────────────────────────────────
-// Coffin Canyon · Game Simulator
-// Based on cc_app_turn_counter.js — same Odoo pipeline, adds live map + sprites
-// ─────────────────────────────────────────────────────────────────────────────
+/* File: coffin/apps/app_map_maker/cc_app_map_maker.js
+   Coffin Canyon -- Map Maker (V1)
+   Fake-isometric Leaflet map editor
+*/
 
-console.log("🎮 Game Simulator loaded");
-
-// ── JSON.parse safety patch ───────────────────────────────────────────────────
-(function installCCJsonPatch() {
-  if (window._ccJsonPatchInstalled) return;
-  window._ccJsonPatchInstalled = true;
-  var _native = JSON.parse.bind(JSON);
-  JSON.parse = function ccSafeJSONParse(text, reviver) {
-    if (text === null || text === undefined) return null;
-    if (typeof text === 'string' && text.trim() === '') return null;
-    try { return reviver ? _native(text, reviver) : _native(text); } catch (_) { return null; }
-  };
-  console.log('🛡️ JSON.parse patch installed');
-}());
-
-// ── Bootstrap Dropdown autoClose:null patch ───────────────────────────────────
-(function patchBootstrapDropdownAutoClose() {
-  if (window._ccDropdownPatchInstalled) return;
-  window._ccDropdownPatchInstalled = true;
-
-  // Fix data attribute on individual elements
-  function fixEl(el) {
-    if (!el || !el.getAttribute) return;
-    var v = el.getAttribute('data-bs-auto-close');
-    if (v === 'null' || v === null || v === '') el.setAttribute('data-bs-auto-close', 'true');
-  }
-
-  // Patch Bootstrap prototype to coerce null -> true before type checking
-  function patchPrototype() {
-    var BS = window.bootstrap;
-    if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
-    var proto = BS.Dropdown.prototype;
-    if (proto._ccAutoClosePatch) return true;
-    proto._ccAutoClosePatch = true;
-
-    // Patch _getConfig to sanitise autoClose before it reaches _typeCheckConfig
-    var origGetConfig = proto._getConfig;
-    proto._getConfig = function(config) {
-      if (this._element) fixEl(this._element);
-      if (config && config.autoClose == null) config.autoClose = true;
-      return origGetConfig.call(this, config);
-    };
-
-    // Also patch _typeCheckConfig directly as a last-resort safety net
-    if (proto._typeCheckConfig) {
-      var origTypeCheck = proto._typeCheckConfig;
-      proto._typeCheckConfig = function(config) {
-        if (config && config.autoClose == null) config.autoClose = true;
-        try { return origTypeCheck.call(this, config); }
-        catch (e) {
-          if (e && e.message && e.message.indexOf('autoClose') !== -1) return; // swallow
-          throw e;
-        }
-      };
-    }
-    return true;
-  }
-
-  document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
-  if (!patchPrototype()) {
-    var _attempts = 0;
-    var _retry = setInterval(function() {
-      _attempts++;
-      document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
-      if (patchPrototype() || _attempts > 30) clearInterval(_retry);
-    }, 200);
-  }
-  if (window.MutationObserver) {
-    new MutationObserver(function(mutations) {
-      mutations.forEach(function(m) {
-        m.addedNodes.forEach(function(node) {
-          if (node.nodeType !== 1) return;
-          fixEl(node);
-          if (node.querySelectorAll) node.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
-        });
-      });
-      patchPrototype();
-    }).observe(document.documentElement, { childList: true, subtree: true });
-  }
-  setInterval(function() {
-    document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
-    var BS = window.bootstrap;
-    if (BS && BS.Dropdown && BS.Dropdown.prototype && !BS.Dropdown.prototype._ccAutoClosePatch) patchPrototype();
-  }, 30000);
-}());
-
-// ── Unhandled rejection guard ─────────────────────────────────────────────────
-(function installCCRejectionGuard() {
-  if (window._ccRejectionGuardInstalled) return;
-  window._ccRejectionGuardInstalled = true;
-  window.addEventListener('unhandledrejection', function(event) {
-    var reason = event.reason;
-    if (reason instanceof Error && reason.message && reason.message.indexOf('DROPDOWN') !== -1) {
-      event.preventDefault(); return;
-    }
-    if (reason instanceof Error && typeof reason.stack === 'string' &&
-        reason.stack.indexOf('assets_frontend_lazy') !== -1 && reason.stack.indexOf('cc_app_') === -1) {
-      event.preventDefault();
-      console.warn('[CC] Swallowed Odoo-internal error:', reason.message); return;
-    }
-    if (reason instanceof Error && typeof reason.stack === 'string' && reason.stack.length > 0) return;
-    event.preventDefault();
-    console.warn('[CC] Caught rejection:', reason);
-  }, { capture: true });
-  console.log('🛡️ Rejection guard installed');
-}());
-
-// ═════════════════════════════════════════════════════════════════════════════
 (function () {
-  'use strict';
-  var _destroyed = false;
-
-  function mount(rootEl, ctx) {
-    var root = rootEl;
-    console.log("🎮 Game Simulator init", ctx);
-    window.CC_SIM = {};
-
-    // ── CSS ─────────────────────────────────────────────────────────────────
-    if (!document.getElementById('cc-core-ui-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now())
-        .then(r => r.text()).then(css => {
-          const s = document.createElement('style');
-          s.id = 'cc-core-ui-styles'; s.textContent = css; document.head.appendChild(s);
-        }).catch(err => console.error('❌ Core CSS failed:', err));
-    }
-    if (!document.getElementById('cc-sim-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_game_simulator/cc_app_game_simulator.css?t=' + Date.now())
-        .then(r => r.text()).then(css => {
-          const s = document.createElement('style');
-          s.id = 'cc-sim-styles'; s.textContent = css; document.head.appendChild(s);
-        }).catch(err => console.error('❌ Simulator CSS failed:', err));
-    }
-
-    // ── Load CC_STORAGE ──────────────────────────────────────────────────────
-    if (!window.CC_STORAGE) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/storage_helpers.js?t=' + Date.now())
-        .then(r => r.text())
-        .then(code => new Promise(function(resolve) {
-          const s = document.createElement('script');
-          s.textContent = code; document.head.appendChild(s);
-          setTimeout(resolve, 50);
-        }))
-        .then(function() { if (state.phase === 'setup') render(); })
-        .catch(err => console.error('❌ Storage helpers failed:', err));
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // CONSTANTS
-    // ═════════════════════════════════════════════════════════════════════════
-
-    const RAW_BASE           = 'https://raw.githubusercontent.com/steamcrow/coffin/main/';
-    const TERRAIN_CATALOG_URL = RAW_BASE + 'data/src/terrain_catalog.json';
-    const TABLETOP_SVG_URL    = RAW_BASE + 'assets/textures/isometric_tile_48x48.svg';
-
-    // Grid: each cell = 48px = 1 inch. Movement stats are in inches.
-    const GRID_PX   = 48;   // pixels per inch
-    const MAP_INCHES = 4096 / GRID_PX;  // ~85 inches across
-    const TERRAIN_BASE       = RAW_BASE + 'assets/terrain/';
-    const SPRITE_SHEET_URL   = RAW_BASE + 'assets/characters/all_no_trim.png';
-    const SPRITE_JSON_URL    = RAW_BASE + 'assets/characters/all_no_trim.json';
-    const LOGO_BASE          = RAW_BASE + 'assets/logos/';
-    const FACTION_LOADER_BASE= RAW_BASE + 'data/factions/';
-    const SCENARIO_FOLDER    = 90;
-    const FACTION_SAVE_FOLDER= 90;
-
-    // 1 game inch = this many map pixels (map is 4096px, table is ~48" wide)
-    const ENGAGEMENT_PX      = GRID_PX * 2;  // 2" engagement range
-    const SPRITE_SRC_SIZE    = 20;   // sprite sheet frame size (px)
-    const SPRITE_DRAW_SIZE   = GRID_PX * 1.6; // drawn size: 1.6 grid squares
-    const MAP_SIZE           = 4096;
-
-    const FACTION_META = {
-      monster_rangers: { name: 'Monster Rangers', color: '#4caf50', isMonster: false, file: 'faction-monster-rangers-v5.json' },
-      liberty_corps:   { name: 'Liberty Corps',   color: '#ef5350', isMonster: false, file: 'faction-liberty-corps-v2.json'  },
-      monsterology:    { name: 'Monsterology',     color: '#9c27b0', isMonster: false, file: 'faction-monsterology-v2.json'   },
-      monsters:        { name: 'Monsters',         color: '#ff7518', isMonster: true,  file: 'faction-monsters-v2.json'       },
-      shine_riders:    { name: 'Shine Riders',     color: '#ffd600', isMonster: false, file: 'faction-shine-riders-v2.json'   },
-      crow_queen:      { name: 'Crow Queen',       color: '#00bcd4', isMonster: false, file: 'faction-crow-queen.json'        }
-    };
-
-    // Which sprite animation to use per faction
-    const FACTION_SPRITE = {
-      monster_rangers: { idle: 'basic_bow_idle',   run: 'basic_bow_run',   attack: 'basic_bow_attack'   },
-      liberty_corps:   { idle: 'guard_idle',        run: 'guard_run',       attack: 'guard_attack'        },
-      monsterology:    { idle: 'wizard_idle',        run: 'wizard_run',      attack: 'wizard_attack'       },
-      monsters:        { idle: 'lizard_idle',        run: 'lizard_run',      attack: 'lizard_attack'       },
-      shine_riders:    { idle: 'knight_yellow_idle', run: 'knight_yellow_run', attack: 'knight_yellow_attack' },
-      crow_queen:      { idle: 'monk_idle',          run: 'monk_run',        attack: 'monk_attack'         },
-      encounters:      { idle: 'troll_idle',         run: 'troll_run',       attack: 'troll_attack'        },
-    };
-
-    // Deployment zones in MAP coords (Leaflet CRS.Simple: y=0 at bottom)
-    // Diamond: top(2048,3051) right(4014,2068) bottom(2048,1085) left(82,2068)
-    const ZONE_DEFS = [
-      { key: 'north',      xMin: 1400, xMax: 2700, yMin: 2700, yMax: 3000 },
-      { key: 'south',      xMin: 1400, xMax: 2700, yMin: 1100, yMax: 1400 },
-      { key: 'west',       xMin: 150,  xMax: 500,  yMin: 1700, yMax: 2400 },
-      { key: 'east',       xMin: 3600, xMax: 3950, yMin: 1700, yMax: 2400 },
-      { key: 'north_west', xMin: 500,  xMax: 1300, yMin: 2400, yMax: 3000 },
-      { key: 'north_east', xMin: 2800, xMax: 3600, yMin: 2400, yMax: 3000 },
-      { key: 'south_west', xMin: 500,  xMax: 1300, yMin: 1100, yMax: 1700 },
-      { key: 'south_east', xMin: 2800, xMax: 3600, yMin: 1100, yMax: 1700 },
-    ];
-    const MONSTER_ZONE = { key: 'center', xMin: 1800, xMax: 2300, yMin: 1800, yMax: 2300 };
-    const NOISE_VALUES = {
-      shot: 2, melee: 3, explosion: 3, ritual: 4, ability: 2, silent: 0
-    };
-
-    const CANYON_EVENTS = [
-      { id: 'dust_devil',   icon: 'fa-wind',       text: 'Dust devil! Ranged attacks −1 die until next round.' },
-      { id: 'thyr_flare',   icon: 'fa-gem',        text: 'Thyr crystals flare. Units within 3" of a cache test Quality or Shaken.' },
-      { id: 'canyon_echo',  icon: 'fa-volume-up',  text: 'Sounds carry far. +2 to current noise.' },
-      { id: 'sickness',     icon: 'fa-skull',      text: 'Coffin Cough drifts in. Each faction: 1-2 = one unit tests Quality.' },
-      { id: 'silence',      icon: 'fa-moon',       text: 'Unnatural silence. Monsters stir — +3 noise.' },
-      { id: 'scavengers',   icon: 'fa-crow',       text: 'Scavengers at nearest objective. It becomes Contested.' },
-      { id: 'nightfall',    icon: 'fa-moon',       text: 'Early dark. Ranged reduced 3" until end of next round.' },
-      { id: 'tremor',       icon: 'fa-bolt',       text: 'Ground shudders. All Unstable terrain escalates one step.' },
-      { id: 'canyon_luck',  icon: 'fa-leaf',       text: 'Canyon luck. One random unit removes a Shaken condition.' },
-      { id: 'thyr_pulse',   icon: 'fa-sun',        text: 'Thyr pulse. All ritual actions +1 noise this round.' },
-    ];
-
-    const MAP_LIST = [
-      { id: 'quinine-jimmy', name: 'Quinine Jimmy' },
-    ];
-
-    const FALLBACK_MONSTERS = [
-      { id: 'ruster',         name: 'Ruster',         quality: 4, move: 6, defense: null, range: null, special: ['Corrode'],        isTitan: false },
-      { id: 'snarl',          name: 'Snarl',          quality: 4, move: 8, defense: null, range: null, special: ['Berserk'],         isTitan: false },
-      { id: 'canyon_crawler', name: 'Canyon Crawler', quality: 3, move: 5, defense: 2,    range: null, special: ['Armored'],         isTitan: false },
-      { id: 'dust_wraith',    name: 'Dust Wraith',    quality: 4, move: 7, defense: null, range: 3,    special: ['Ambush', 'Fast'],  isTitan: false },
-      { id: 'thyr_hound',     name: 'Thyr Hound',     quality: 4, move: 7, defense: null, range: null, special: ['Brutal Blow'],     isTitan: false },
-      { id: 'canyon_titan',   name: 'Canyon Titan',   quality: 3, move: 4, defense: 4,    range: null, special: ['Anchor'],          isTitan: true  },
-    ];
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // STATE
-    // ═════════════════════════════════════════════════════════════════════════
-
-    // Core game state (mirrors turn counter)
-    const state = {
-      phase: 'setup',          // 'setup' | 'loading' | 'playing' | 'done'
-      scenarioSave: null,
-      scenarioName: '',
-      factions: [],
-      unitState: {},           // unitKey -> { quality, out, activated, lastRoll }
-      round: 1,
-      queue: [],
-      queueIndex: 0,
-      noiseLevel: 0,
-      noiseThreshold: 12,
-      monsterRoster: [],
-      monstersTriggered: 0,
-      coughSeverity: 0,
-      roundLog: [],
-      allRoundLogs: [],
-      lastEventRound: 0,
-      loadingData: false,
-      loadingMsg: 'Loading…',
-      setupMode: null,
-      availableScenarios: [],
-      selectedScenarioId: null,
-    };
-
-    // Simulator-specific state
-    const sim = {
-      mapData: null,            // loaded map JSON
-      spriteSheet: null,        // HTMLImageElement
-      spriteData: null,         // sprite atlas JSON
-      terrainCatalog: {},        // terrain_type_id -> asset_file
-      terrainImages: {},         // terrain_type_id -> HTMLImageElement
-      tabletopImg: null,         // loaded SVG background image
-      // Solo mode
-      soloFactionId: null,       // which faction the player controls
-      soloWaiting: false,        // waiting for player drag input
-      dragUnit: null,            // unitKey being dragged
-      dragStartX: 0,
-      dragStartY: 0,
-      rulerActive: false,
-      rulerDist: 0,
-      rulerMax: 0,
-      // Camera smooth follow
-      camTargetX: null,
-      camTargetY: null,
-      terrainLoadQueue: 0,      // how many terrain images are still loading
-      unitPositions: {},        // unitKey -> { x, y, animName, frameIdx, frameTimer, vx, vy, status }
-      factionZones: {},         // factionId -> ZONE_DEF
-      monsterQueue: [],         // monsters waiting to enter the map
-      canvas: null,
-      ctx: null,
-      viewX: 0,
-      viewY: 0,
-      viewScale: 0.14,          // initial zoom: fits 4096 map into ~573px
-      isDragging: false,
-      dragLast: null,
-      animFrameId: null,
-      hoveredUnit: null,        // unitKey of hovered unit
-      selectedUnit: null,       // unitKey of selected unit
-      simSpeed: 400,            // ms per auto-sim step
-      autoRunning: false,
-      autoTimer: null,
-    };
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // HELPERS (same as turn counter)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    function unitKey(factionId, unitId) { return `${factionId}::${unitId}`; }
-    function safeErr(e) {
-      if (!e) return 'Unknown error';
-      if (typeof e === 'string') return e;
-      if (e.message) return e.message;
-      try { return JSON.stringify(e); } catch (_) { return String(e); }
-    }
-    function safeParseJson(str) {
-      if (str === null || str === undefined) return null;
-      if (typeof str !== 'string') return typeof str === 'object' ? str : null;
-      if (str.trim() === '') return null;
-      try { return JSON.parse(str); } catch (_) { return null; }
-    }
-    function docToJson(doc) {
-      if (!doc) return null;
-      if (typeof doc === 'string') return safeParseJson(doc);
-      if (typeof doc === 'object') {
-        const hasJson  = doc.json  != null;
-        const hasDatas = doc.datas != null;
-        if (!hasJson && !hasDatas) return Object.keys(doc).length > 0 ? doc : null;
-        if (hasJson) { const p = safeParseJson(String(doc.json).trim()); if (p !== null) return p; }
-        if (hasDatas) {
-          try {
-            const r = safeParseJson(decodeURIComponent(escape(atob(String(doc.datas)))));
-            if (r !== null) return r;
-          } catch (_) {}
-        }
-      }
-      return null;
-    }
-    async function safeLoadDocument(docId) {
-      if (!window.CC_STORAGE) return null;
-      try {
-        return await Promise.resolve(window.CC_STORAGE.loadDocument(docId))
-          .catch(e => { console.warn(`⚠️ loadDocument(${docId}):`, safeErr(e)); return null; }) || null;
-      } catch (e) { console.warn(`⚠️ loadDocument(${docId}) threw:`, safeErr(e)); return null; }
-    }
-    function getFactionById(id)        { return state.factions.find(f => f.id === id) || null; }
-    function getUnitById(faction, uid) { return faction?.allUnits.find(u => u.id === uid) || null; }
-    function getUnitState(fid, uid)    { return state.unitState[unitKey(fid, uid)]; }
-    function setUnitState(fid, uid, p) {
-      const k = unitKey(fid, uid);
-      state.unitState[k] = Object.assign({}, state.unitState[k], p);
-    }
-    function getActiveUnits(faction) {
-      return faction.allUnits.filter(u => {
-        const us = getUnitState(faction.id, u.id);
-        return us && !us.out;
-      });
-    }
-    function currentQueueItem() { return state.queue[state.queueIndex] || null; }
-    function isRoundComplete()  { return state.queueIndex >= state.queue.length; }
-
-    function simLog(msg, type) {
-      state.roundLog.push({ msg, type: type || 'info', ts: Date.now() });
-      const cls = type ? 'log-' + type : '';
-      const logEl = document.getElementById('cc-sim-log');
-      if (logEl) {
-        logEl.insertAdjacentHTML('afterbegin',
-          '<div class="cc-sim-log-entry ' + cls + '">' + msg + '</div>');
-      }
-      // Update ticker with latest message
-      const ticker = document.getElementById('cc-sim-log-latest');
-      if (ticker) {
-        ticker.textContent = msg;
-        ticker.className = 'cc-sim-log-bar-latest ' + cls;
-      }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // DATA LOADING — Factions (mirrors turn counter)
-    // ─────────────────────────────────────────────────────────────────────────
-
-    async function loadFactionData(factionId) {
-      const meta = FACTION_META[factionId];
-      if (!meta) return null;
-      try {
-        const res  = await fetch(FACTION_LOADER_BASE + meta.file + '?t=' + Date.now());
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const text = await res.text();
-        return safeParseJson(text);
-      } catch (err) { console.warn(`⚠️ Could not load ${factionId}:`, safeErr(err)); return null; }
-    }
-
-    function buildFactionFromSave(factionId, saveData, isNPC) {
-      const meta = FACTION_META[factionId] || {};
-      if (!saveData || typeof saveData !== 'object') return null;
-      const roster = saveData.roster || saveData.units || saveData.army || saveData.list || null;
-      if (!Array.isArray(roster) || !roster.length) return null;
-
-      const allUnits = roster.map((item, i) => {
-        if (!item || typeof item !== 'object') return null;
-        let _q = item.quality || 4, _d = item.defense || item.armor || null;
-        let _m = item.move    || 6, _r = item.range   || item.shoot || null;
-        const _cfg    = item.config || {};
-        const _bought = _cfg.optionalUpgrades?.length ? _cfg.optionalUpgrades : (item.upgrades || []);
-        _bought.forEach(upg => {
-          if (!upg?.stat_modifiers) return;
-          const sm = upg.stat_modifiers;
-          if (sm.quality) _q += sm.quality;
-          if (sm.defense) _d  = (_d || 0) + sm.defense;
-          if (sm.move)    _m += sm.move;
-          if (sm.range) { _r = _r ? _r + sm.range : sm.range; }
-        });
-        return {
-          id:       item.id       || `saved_${i}`,
-          name:     item.name     || item.unitName || `Unit ${i + 1}`,
-          lore:     item.lore     || null,
-          quality: _q, move: _m, defense: _d, range: _r,
-          cost:    item.totalCost || item.cost || null,
-          weapon:  item.weapon    || null,
-          weapon_properties: item.weapon_properties || [],
-          special: item.abilities || item.special || [],
-          isTitan: item.isTitan   || false,
-        };
-      }).filter(Boolean);
-
-      if (!allUnits.length) return null;
-      return {
-        id: factionId,
-        name: saveData.name || saveData.armyName || meta.name || factionId,
-        color: meta.color || '#888',
-        isMonster: meta.isMonster || false,
-        isNPC, logoUrl: LOGO_BASE + factionId + '_logo.svg',
-        allUnits, deployIndex: 0,
-      };
-    }
-
-    function buildFactionEntry(factionId, factionData, isNPC, isMonster) {
-      const meta = FACTION_META[factionId] || {};
-      const allUnits = (factionData?.units || factionData?.roster || []).map((u, i) => ({
-        id:      u.id       || `unit_${i}`,
-        name:    u.name     || `Unit ${i + 1}`,
-        lore:    u.lore     || null,
-        quality: u.quality  || 4,
-        move:    u.move     || 6,
-        defense: u.defense  || u.armor  || null,
-        range:   u.range    || u.shoot  || null,
-        cost:    u.cost     || u.points || null,
-        weapon:  u.weapon   || null,
-        weapon_properties: u.weapon_properties || [],
-        special: u.special  || u.abilities || [],
-        isTitan: u.titan    || false,
-      }));
-      return {
-        id: factionId, name: factionData?.name || meta.name || factionId,
-        color: meta.color || '#888',
-        isMonster: isMonster ?? meta.isMonster ?? false,
-        isNPC, logoUrl: LOGO_BASE + factionId + '_logo.svg',
-        allUnits, deployIndex: 0,
-      };
-    }
-
-    function initUnitStates(faction) {
-      faction.allUnits.forEach(u => {
-        const k = unitKey(faction.id, u.id);
-        if (!state.unitState[k]) state.unitState[k] = { quality: u.quality, out: false, activated: false, lastRoll: null };
-      });
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // SPRITE & MAP ASSET LOADING
-    // ═════════════════════════════════════════════════════════════════════════
-
-    async function loadTabletop() {
-      return new Promise(resolve => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload  = () => {
-          sim.tabletopImg = img;
-          console.log('Tabletop loaded: natural size', img.naturalWidth, 'x', img.naturalHeight);
-          // If SVG has a non-square natural size, store the aspect ratio
-          sim.tabletopAspect = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1;
-          resolve();
-        };
-        img.onerror = () => { console.warn('Tabletop SVG failed'); resolve(); };
-        img.src = TABLETOP_SVG_URL + '?t=' + Date.now();
-      });
-    }
-
-    async function loadSpriteAssets() {
-      return new Promise((resolve) => {
-        // Load sprite JSON
-        fetch(SPRITE_JSON_URL + '?t=' + Date.now())
-          .then(r => r.json())
-          .then(data => {
-            sim.spriteData = data;
-            // Load sprite sheet image
-            const img = new Image();
-            img.crossOrigin = 'anonymous';
-            img.onload  = () => { sim.spriteSheet = img; console.log('🎨 Sprite sheet loaded'); resolve(); };
-            img.onerror = () => { console.warn('⚠️ Sprite sheet failed to load'); resolve(); };
-            img.src = SPRITE_SHEET_URL + '?t=' + Date.now();
-          })
-          .catch(err => { console.warn('⚠️ Sprite JSON failed:', safeErr(err)); resolve(); });
-      });
-    }
-
-    async function loadTerrainCatalog() {
-      if (Object.keys(sim.terrainCatalog).length > 0) return; // already loaded
-      try {
-        const res  = await fetch(TERRAIN_CATALOG_URL + '?t=' + Date.now());
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
-        // Build lookup: terrain_type_id -> asset_file
-        const list = Array.isArray(data) ? data : (data.terrain_types || data.terrain || data.types || data.catalog || []);
-        list.forEach(entry => {
-          if (entry.terrain_type_id && entry.asset_file) {
-            sim.terrainCatalog[entry.terrain_type_id] = entry.asset_file;
-          }
-        });
-        console.log('📋 Terrain catalog loaded:', Object.keys(sim.terrainCatalog).length, 'entries');
-      } catch (e) {
-        console.warn('Could not load terrain catalog:', safeErr(e));
-      }
-    }
-
-    function preloadTerrainImages() {
-      if (!sim.mapData || !sim.mapData.instances) return;
-      const ids = [...new Set(sim.mapData.instances.map(i => i.terrain_type_id))];
-      sim.terrainLoadQueue = ids.length;
-      ids.forEach(id => {
-        if (sim.terrainImages[id]) { sim.terrainLoadQueue--; return; }
-        // Look up the real filename from the catalog, fall back to id.png
-        const filename = sim.terrainCatalog[id] || (id + '.png');
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload  = () => { sim.terrainImages[id] = img; sim.terrainLoadQueue = Math.max(0, sim.terrainLoadQueue - 1); };
-        img.onerror = () => { sim.terrainImages[id] = null;  sim.terrainLoadQueue = Math.max(0, sim.terrainLoadQueue - 1); };
-        img.src = TERRAIN_BASE + filename;
-      });
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // DEPLOYMENT ENGINE
-    // ═════════════════════════════════════════════════════════════════════════
-
-    function assignFactionZones() {
-      const nonMonsters = state.factions.filter(f => !f.isMonster);
-      const monsters    = state.factions.filter(f => f.isMonster);
-
-      // Shuffle zone assignments
-      const zones = [...ZONE_DEFS];
-      for (let i = zones.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [zones[i], zones[j]] = [zones[j], zones[i]];
-      }
-
-      nonMonsters.forEach((f, i) => {
-        sim.factionZones[f.id] = zones[i % zones.length];
-      });
-
-      // Monsters always deploy from center, queued
-      monsters.forEach(f => {
-        sim.factionZones[f.id] = MONSTER_ZONE;
-      });
-    }
-
-    function randomInRange(min, max) {
-      return min + Math.random() * (max - min);
-    }
-
-    function deployAllFactions() {
-      assignFactionZones();
-      state.factions.forEach(faction => {
-        const zone = sim.factionZones[faction.id] || MONSTER_ZONE;
-        const units = faction.allUnits;
-
-        if (faction.isMonster) {
-          // Monsters deploy in the center zone from the start -- visible with icons
-          const usedSquares = new Set();
-          units.forEach(u => {
-            const k = unitKey(faction.id, u.id);
-            let mx, my, sq, attempts = 0;
-            do {
-              mx = MONSTER_ZONE.xMin + Math.random() * (MONSTER_ZONE.xMax - MONSTER_ZONE.xMin);
-              my = MONSTER_ZONE.yMin + Math.random() * (MONSTER_ZONE.yMax - MONSTER_ZONE.yMin);
-              mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
-              my = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
-              sq = mx + ',' + my;
-              attempts++;
-            } while (usedSquares.has(sq) && attempts < 200);
-            usedSquares.add(sq);
-            const cv = mapToCanvas(mx, my);
-            sim.unitPositions[k] = {
-              x: cv.cx, y: cv.cy,
-              mapX: mx, mapY: my,
-              animName: 'idle', frameIdx: 0, frameTimer: 0,
-              vx: 0, vy: 0, status: 'idle',
-            };
-          });
-          return;
-        }
-
-        // Place units in MAP coord space (same as terrain), then convert to canvas
-        const usedSquares = new Set();
-        units.forEach((u) => {
-          const k = unitKey(faction.id, u.id);
-          let mx, my, sq, attempts = 0;
-          do {
-            mx = zone.xMin + Math.random() * (zone.xMax - zone.xMin);
-            my = zone.yMin + Math.random() * (zone.yMax - zone.yMin);
-            // Snap to GRID_PX squares in map space
-            mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
-            my = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
-            sq = mx + ',' + my;
-            attempts++;
-          } while (usedSquares.has(sq) && attempts < 200);
-          usedSquares.add(sq);
-          // Convert map coords to canvas coords
-          const cv = mapToCanvas(mx, my);
-          sim.unitPositions[k] = {
-            x: cv.cx, y: cv.cy,
-            mapX: mx, mapY: my,   // store map coords for grid movement
-            animName: 'idle', frameIdx: 0, frameTimer: 0,
-            vx: 0, vy: 0, status: 'idle',
-          };
-        });
-      });
-      simLog(`[Deploy] All factions deployed to their zones.`, 'deploy');
-    }
-
-    function spawnNextMonster(monsterFaction) {
-      // Pop next monster from queue and place in center
-      const nextKey = sim.monsterQueue.shift();
-      if (!nextKey) return;
-      const center = MONSTER_ZONE;
-      sim.unitPositions[nextKey] = {
-        x: randomInRange(center.xMin, center.xMax),
-        y: randomInRange(center.yMin, center.yMax),
-        animName: 'idle', frameIdx: 0, frameTimer: 0,
-        vx: 0, vy: 0, status: 'idle',
-      };
-      const [fid, uid] = nextKey.split('::');
-      const faction = getFactionById(fid);
-      const unit    = getUnitById(faction, uid);
-      simLog(`💀 ${unit?.name || 'Monster'} emerges from the center!`, 'monster');
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // NOISE & MONSTER PRESSURE (mirrors turn counter)
-    // ═════════════════════════════════════════════════════════════════════════
-
-    let _monsterPool = [];
-
-    async function loadMonsterPool() {
-      if (_monsterPool.length > 0) return;
-      try {
-        const meta = FACTION_META['monsters'];
-        if (!meta) return;
-        const res  = await fetch(FACTION_LOADER_BASE + meta.file + '?t=' + Date.now());
-        if (!res.ok) return;
-        const data = safeParseJson(await res.text());
-        _monsterPool = (data?.units || []).map((u, i) => ({
-          id: u.id || `m_${i}`, name: u.name || `Monster ${i+1}`,
-          quality: u.quality || 4, move: u.move || 6,
-          defense: u.defense || null, range: u.range || null,
-          special: u.special || u.abilities || [], isTitan: u.titan || false,
-        }));
-        console.log('🐉 Monster pool:', _monsterPool.length, 'types');
-      } catch (e) { console.warn('Could not load monster pool:', safeErr(e)); }
-    }
-
-    function pickEncounterMonster() {
-      const pool = _monsterPool.length > 0 ? _monsterPool : FALLBACK_MONSTERS;
-      const last = state._lastMonsterTriggered || '';
-      const candidates = pool.filter(m => m.id !== last);
-      const chosen = candidates.length > 0 ? candidates : pool;
-      return chosen[Math.floor(Math.random() * chosen.length)];
-    }
-
-    function addNoise(amount, label) {
-      state.noiseLevel += amount;
-      if (amount > 0) {
-        simLog('[Noise +' + amount + '] ' + label + ' (total: ' + state.noiseLevel + '/' + state.noiseThreshold + ')', 'event');
-      }
-      checkMonsterTrigger();
-      refreshNoiseBars();
-    }
-
-    function refreshNoiseBars() {
-      const noiseEl = document.getElementById('cc-sim-noise-fill');
-      const noiseValEl = document.getElementById('cc-sim-noise-val');
-      if (noiseEl) {
-        const pct   = Math.min(100, Math.round((state.noiseLevel / state.noiseThreshold) * 100));
-        const color = pct >= 80 ? '#ef5350' : pct >= 50 ? '#ffd600' : '#4caf50';
-        noiseEl.style.width = pct + '%';
-        noiseEl.style.background = color;
-      }
-      if (noiseValEl) noiseValEl.textContent = state.noiseLevel + ' / ' + state.noiseThreshold;
-    }
-
-    function checkMonsterTrigger() {
-      if (state.noiseLevel < state.noiseThreshold) return;
-      const monsterDef = pickEncounterMonster();
-      if (!monsterDef) return;
-
-      state._lastMonsterTriggered = monsterDef.id;
-      state.monstersTriggered++;
-      state.noiseLevel = Math.floor(state.noiseLevel / 2);
-      simLog(`🔥 Encounter! ${monsterDef.name} approaches!`, 'monster');
-
-      const instanceId = `${monsterDef.id}_enc${state.monstersTriggered}`;
-      const unit = Object.assign({}, monsterDef, { id: instanceId });
-
-      let monsterFaction = state.factions.find(f => f.isMonster);
-      if (!monsterFaction) {
-        monsterFaction = {
-          id: 'encounters', name: 'Encounters', color: '#ef5350',
-          isMonster: true, isNPC: true, logoUrl: LOGO_BASE + 'monsters_logo.svg',
-          allUnits: [], deployIndex: 0,
-        };
-        state.factions.push(monsterFaction);
-        sim.factionZones['encounters'] = MONSTER_ZONE;
-      }
-      monsterFaction.allUnits.push(unit);
-      state.unitState[unitKey(monsterFaction.id, unit.id)] = { quality: unit.quality, out: false, activated: false, lastRoll: null };
-
-      // Place immediately in center
-      const mGX = Math.round((MONSTER_ZONE.xMin + MONSTER_ZONE.xMax) / 2 / GRID_PX) + Math.floor(Math.random() * 4) - 2;
-      const mGY = Math.round((MONSTER_ZONE.yMin + MONSTER_ZONE.yMax) / 2 / GRID_PX) + Math.floor(Math.random() * 4) - 2;
-      sim.unitPositions[unitKey(monsterFaction.id, unit.id)] = {
-        x: mGX * GRID_PX + GRID_PX / 2,
-        y: mGY * GRID_PX + GRID_PX / 2,
-        animName: 'idle', frameIdx: 0, frameTimer: 0,
-        vx: 0, vy: 0, status: 'idle',
-      };
-
-      // Insert into queue after current unit
-      state.queue.splice(state.queueIndex + 1, 0, { factionId: monsterFaction.id, unitId: unit.id });
-      showMonsterAlert(monsterDef);
-    }
-
-    function rollCanyonEvent() {
-      if (Math.random() > (state.round >= 3 ? 0.5 : 0.33)) return null;
-      const ev = CANYON_EVENTS[Math.floor(Math.random() * CANYON_EVENTS.length)];
-      state.lastEventRound = state.round;
-      if (ev.id === 'canyon_echo') addNoise(2, 'Canyon Echo');
-      if (ev.id === 'silence')     addNoise(3, 'Unnatural Silence');
-      simLog(`[Event] ${ev.text}`, 'event');
-      return ev;
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // CANVAS RENDERER
-    // ═════════════════════════════════════════════════════════════════════════
-
-    function initCanvas() {
-      const wrap = document.getElementById('cc-sim-map-wrap');
-      if (!wrap) return;
-
-      const canvas = document.createElement('canvas');
-      canvas.id = 'cc-sim-canvas';
-      canvas.className = 'cc-sim-canvas';
-      wrap.appendChild(canvas);
-      sim.canvas = canvas;
-      sim.ctx    = canvas.getContext('2d');
-
-      // Fit canvas to container
-      function resizeCanvas() {
-        canvas.width  = wrap.clientWidth  || 800;
-        canvas.height = wrap.clientHeight || 600;
-        // SVG viewBox is 2000x1060. Diamond spans ~3932w x 3772h in map coords.
-        // Fit the full diamond into the viewport.
-        const diamondW = 3932, diamondH = 3772;
-        const scaleW   = canvas.width  * 0.92 / diamondW;
-        const scaleH   = canvas.height * 0.92 / diamondH;
-        sim.viewScale  = Math.min(scaleW, scaleH);
-        // Center on diamond centre in canvas coords (2048, 2090)
-        sim.viewX = canvas.width  / 2 - 2048 * sim.viewScale;
-        sim.viewY = canvas.height / 2 - 2090 * sim.viewScale;
-      }
-      resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-
-      // Pan with mouse drag
-      canvas.addEventListener('mousedown', e => {
-        sim.isDragging = true;
-        sim.dragLast = { x: e.clientX, y: e.clientY };
-        wrap.classList.add('is-dragging');
-      });
-      canvas.addEventListener('mousemove', e => {
-        if (sim.isDragging && sim.dragLast) {
-          sim.viewX += e.clientX - sim.dragLast.x;
-          sim.viewY += e.clientY - sim.dragLast.y;
-          sim.dragLast = { x: e.clientX, y: e.clientY };
-        }
-        // Hover detection
-        const rect = canvas.getBoundingClientRect();
-        const mx = (e.clientX - rect.left - sim.viewX) / sim.viewScale;
-        const my = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
-        detectHoveredUnit(mx, my);
-      });
-      canvas.addEventListener('mouseup', () => {
-        sim.isDragging = false;
-        sim.dragLast   = null;
-        wrap.classList.remove('is-dragging');
-      });
-      canvas.addEventListener('mouseleave', () => {
-        sim.isDragging = false;
-        sim.dragLast   = null;
-        wrap.classList.remove('is-dragging');
-      });
-
-      // Scroll to zoom
-      canvas.addEventListener('wheel', e => {
-        e.preventDefault();
-        const rect   = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        const factor = e.deltaY < 0 ? 1.1 : 0.9;
-        // Zoom around mouse position
-        sim.viewX = mouseX - (mouseX - sim.viewX) * factor;
-        sim.viewY = mouseY - (mouseY - sim.viewY) * factor;
-        sim.viewScale = Math.max(0.05, Math.min(2, sim.viewScale * factor));
-      }, { passive: false });
-
-      // Touch support
-      let lastTouchDist = 0;
-      canvas.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) {
-          sim.isDragging = true;
-          sim.dragLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.touches.length === 2) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          lastTouchDist = Math.hypot(dx, dy);
-        }
-      }, { passive: true });
-      canvas.addEventListener('touchmove', e => {
-        if (e.touches.length === 1 && sim.isDragging && sim.dragLast) {
-          sim.viewX += e.touches[0].clientX - sim.dragLast.x;
-          sim.viewY += e.touches[0].clientY - sim.dragLast.y;
-          sim.dragLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.touches.length === 2) {
-          const dx   = e.touches[0].clientX - e.touches[1].clientX;
-          const dy   = e.touches[0].clientY - e.touches[1].clientY;
-          const dist = Math.hypot(dx, dy);
-          if (lastTouchDist > 0) {
-            const factor = dist / lastTouchDist;
-            sim.viewScale = Math.max(0.05, Math.min(2, sim.viewScale * factor));
-          }
-          lastTouchDist = dist;
-        }
-      }, { passive: true });
-      canvas.addEventListener('touchend', () => {
-        sim.isDragging = false; sim.dragLast = null; lastTouchDist = 0;
-      }, { passive: true });
-
-      // ── Solo mode drag handlers ──────────────────────────────────────────
-      canvas.addEventListener('mousedown', e => {
-        const rect = canvas.getBoundingClientRect();
-        const mx   = (e.clientX - rect.left - sim.viewX) / sim.viewScale;
-        const my   = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
-
-        // Check if clicking a solo unit
-        if (sim.soloWaiting && sim.soloFactionId) {
-          const HIT = SPRITE_DRAW_SIZE / 2 + 10;
-          for (const [key, pos] of Object.entries(sim.unitPositions)) {
-            if (!pos || pos.status === 'routed') continue;
-            const [fid] = key.split('::');
-            if (fid !== sim.soloFactionId) continue;
-            const cur = currentQueueItem();
-            if (!cur || cur.factionId + '::' + cur.unitId !== key) continue;
-            if (Math.abs(pos.x - mx) < HIT && Math.abs(pos.y - my) < HIT) {
-              // Start dragging this solo unit
-              sim.dragUnit   = key;
-              sim.dragStartX = pos.x;
-              sim.dragStartY = pos.y;
-              sim.rulerActive = true;
-              const unit = getUnitById(getFactionById(fid), cur.unitId);
-              sim.rulerMax = (unit ? unit.move || 6 : 6) * GRID_PX;  // inches * px/inch
-              sim.isDragging = false; // don't pan
-              e.stopPropagation();
-              return;
-            }
-          }
-        }
-
-        // Otherwise pan
-        sim.isDragging = true;
-        sim.dragLast   = { x: e.clientX, y: e.clientY };
-        wrap.classList.add('is-dragging');
-      }, true);
-
-      canvas.addEventListener('mousemove', e => {
-        const rect = canvas.getBoundingClientRect();
-        const mx   = (e.clientX - rect.left - sim.viewX) / sim.viewScale;
-        const my   = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
-
-        if (sim.dragUnit) {
-          const pos = sim.unitPositions[sim.dragUnit];
-          if (pos) {
-            // Snap target to nearest grid square centre
-            const snapX = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
-            const snapY = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
-            const dx    = snapX - sim.dragStartX;
-            const dy    = snapY - sim.dragStartY;
-            const squares = Math.max(Math.abs(Math.round(dx / GRID_PX)), Math.abs(Math.round(dy / GRID_PX)));
-            const maxSq   = Math.floor(sim.rulerMax / GRID_PX);
-            sim.rulerDist = squares * GRID_PX;
-            if (squares <= maxSq) {
-              pos.x = snapX;
-              pos.y = snapY;
-            } else {
-              // Clamp — move along the vector but only maxSq squares
-              const ratio = maxSq / Math.max(1, squares);
-              pos.x = sim.dragStartX + Math.round(dx * ratio / GRID_PX) * GRID_PX;
-              pos.y = sim.dragStartY + Math.round(dy * ratio / GRID_PX) * GRID_PX;
-            }
-            const rulerEl = document.getElementById('cc-sim-ruler-hud');
-            if (rulerEl) {
-              const used = Math.min(squares, maxSq);
-              rulerEl.textContent = used + '" used / ' + maxSq + '" max';
-              rulerEl.classList.add('visible');
-            }
-          }
-          return;
-        }
-      }, true);
-
-      canvas.addEventListener('mouseup', e => {
-        if (sim.dragUnit) {
-          const pos = sim.unitPositions[sim.dragUnit];
-          if (pos) {
-            // Already snapped during mousemove; ensure centre alignment
-            pos.x = Math.round((pos.x - GRID_PX/2) / GRID_PX) * GRID_PX + GRID_PX / 2;
-            pos.y = Math.round((pos.y - GRID_PX/2) / GRID_PX) * GRID_PX + GRID_PX / 2;
-            pos.status = 'idle';
-          }
-          sim.dragUnit    = null;
-          sim.rulerActive = false;
-          sim.rulerDist   = 0;
-          const rulerEl = document.getElementById('cc-sim-ruler-hud');
-          if (rulerEl) rulerEl.classList.remove('visible');
-          // Auto advance after move
-          setTimeout(() => window.CC_SIM.soloMoveComplete(), 200);
-          return;
-        }
-        sim.isDragging = false;
-        sim.dragLast   = null;
-        wrap.classList.remove('is-dragging');
-      }, true);
-
-      // Start render loop
-      if (sim.animFrameId) cancelAnimationFrame(sim.animFrameId);
-      sim.animFrameId = requestAnimationFrame(renderLoop);
-    }
-
-    function destroyCanvas() {
-      if (sim.animFrameId) { cancelAnimationFrame(sim.animFrameId); sim.animFrameId = null; }
-      const canvas = document.getElementById('cc-sim-canvas');
-      if (canvas) canvas.remove();
-      sim.canvas = null; sim.ctx = null;
-    }
-
-    function detectHoveredUnit(mx, my) {
-      const HIT = SPRITE_DRAW_SIZE / 2 + 8;
-      let found = null;
-      for (const [key, pos] of Object.entries(sim.unitPositions)) {
-        if (!pos || pos.status === 'routed') continue;
-        if (Math.abs(pos.x - mx) < HIT && Math.abs(pos.y - my) < HIT) {
-          found = key; break;
-        }
-      }
-      sim.hoveredUnit = found;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // RENDER LOOP
-    // ─────────────────────────────────────────────────────────────────────────
-
-    function smoothCameraToUnit(key) {
-      // Camera is now static — no auto-follow
-      // Users pan manually
-    }
-
-    function tickCamera() {
-      if (sim.camTargetX === null || sim.isDragging) return;
-      const speed = 0.08; // lerp factor — lower = smoother
-      sim.viewX += (sim.camTargetX - sim.viewX) * speed;
-      sim.viewY += (sim.camTargetY - sim.viewY) * speed;
-      // Stop when close enough
-      if (Math.abs(sim.camTargetX - sim.viewX) < 0.5 && Math.abs(sim.camTargetY - sim.viewY) < 0.5) {
-        sim.viewX = sim.camTargetX;
-        sim.viewY = sim.camTargetY;
-        sim.camTargetX = null;
-        sim.camTargetY = null;
-      }
-    }
-
-    function renderLoop(timestamp) {
-      if (_destroyed || !sim.canvas || !sim.ctx) return;
-
-      tickCamera();
-
-      const canvas = sim.canvas;
-      const ctx    = sim.ctx;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      ctx.save();
-      ctx.translate(sim.viewX, sim.viewY);
-      ctx.scale(sim.viewScale, sim.viewScale);
-
-      drawBackground(ctx);
-      drawDeployZones(ctx);
-      drawTerrain(ctx);
-      drawRuler(ctx);
-      drawUnits(ctx, timestamp);
-
-      ctx.restore();
-
-      if (sim.hoveredUnit) drawTooltip(ctx, canvas);
-
-      sim.animFrameId = requestAnimationFrame(renderLoop);
-    }
-
-    function drawRuler(ctx) {
-      if (!sim.rulerActive || !sim.dragUnit) return;
-      const pos = sim.unitPositions[sim.dragUnit];
-      if (!pos) return;
-      // Line from drag start to current pos
-      ctx.save();
-      ctx.strokeStyle = '#ffd600';
-      ctx.lineWidth   = 2;
-      ctx.setLineDash([8, 4]);
-      ctx.beginPath();
-      ctx.moveTo(sim.dragStartX, sim.dragStartY);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      // Range circle
-      ctx.strokeStyle = sim.rulerDist <= sim.rulerMax
-        ? 'rgba(255,214,0,0.25)'
-        : 'rgba(239,83,80,0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.arc(sim.dragStartX, sim.dragStartY, sim.rulerMax, 0, Math.PI * 2);
-      ctx.stroke();
-      ctx.restore();
-    }
-
-    function drawBackground(ctx) {
-      // Dark felt behind the board
-      ctx.fillStyle = '#111008';
-      ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-
-      if (!sim.tabletopImg) return;
-
-      const img = sim.tabletopImg;
-      const iw  = img.naturalWidth  || MAP_SIZE;
-      const ih  = img.naturalHeight || MAP_SIZE;
-
-      // Fit inside the square map without distorting the SVG
-      const scale = Math.min(MAP_SIZE / iw, MAP_SIZE / ih);
-      const dw = iw * scale;
-      const dh = ih * scale;
-      const dx = (MAP_SIZE - dw) / 2;
-      const dy = (MAP_SIZE - dh) / 2;
-
-      ctx.drawImage(img, dx, dy, dw, dh);
-    }
-
-    function drawDeployZones(ctx) {
-      // Only draw zones during the first round as a subtle reference
-      if (state.round > 1) return;
-      Object.entries(sim.factionZones).forEach(([fid, zone]) => {
-        const faction = getFactionById(fid);
-        if (!faction || !zone) return;
-        const color = faction.color || '#888';
-        ctx.save();
-        ctx.globalAlpha = 0.06;
-        ctx.fillStyle   = color;
-        ctx.fillRect(zone.xMin, zone.yMin, zone.xMax - zone.xMin, zone.yMax - zone.yMin);
-        ctx.globalAlpha = 0.2;
-        ctx.strokeStyle = color;
-        ctx.lineWidth   = 2;
-        ctx.setLineDash([8, 6]);
-        ctx.strokeRect(zone.xMin, zone.yMin, zone.xMax - zone.xMin, zone.yMax - zone.yMin);
-        ctx.setLineDash([]);
-        ctx.restore();
-      });
-    }
-
-    // Leaflet CRS.Simple has Y increasing upward, so terrain y must be flipped
-    function mapToCanvas(mx, my) {
-      return { cx: mx, cy: MAP_SIZE - my };
-    }
-
-    function drawTerrain(ctx) {
-      if (!sim.mapData || !sim.mapData.instances) return;
-      sim.mapData.instances.forEach(inst => {
-        if (inst.hidden_in_editor) return;
-        const img = sim.terrainImages[inst.terrain_type_id];
-        if (!img) return;
-        const w = img.naturalWidth  * inst.scale;
-        const h = img.naturalHeight * inst.scale;
-        const { cx, cy } = mapToCanvas(inst.x, inst.y);
-        ctx.save();
-        ctx.translate(cx, cy);
-        if (inst.rotation_deg) ctx.rotate(inst.rotation_deg * Math.PI / 180);
-        if (inst.mirror_x || inst.mirror_y) ctx.scale(inst.mirror_x ? -1 : 1, inst.mirror_y ? -1 : 1);
-        ctx.globalAlpha = inst.opacity ?? 1;
-        ctx.drawImage(img, -w / 2, -h / 2, w, h);
-        ctx.restore();
-      });
-    }
-
-    function getSpriteFrame(animName, frameIdx) {
-      if (!sim.spriteData || !sim.spriteData[animName]) return null;
-      const anim   = sim.spriteData[animName];
-      const frames = anim.frames;
-      if (!frames || !frames.length) return null;
-      return frames[frameIdx % frames.length];
-    }
-
-    function drawUnits(ctx, timestamp) {
-      const curItem = currentQueueItem();
-
-      Object.entries(sim.unitPositions).forEach(([key, pos]) => {
-        if (!pos || pos.status === 'routed') return;
-
-        const [fid, uid] = key.split('::');
-        const faction = getFactionById(fid);
-        const unit    = getUnitById(faction, uid);
-        const us      = getUnitState(fid, uid);
-        if (!faction || !unit || !us || us.out) return;
-
-        const isActive   = curItem && curItem.factionId === fid && curItem.unitId === uid;
-        const isHovered  = sim.hoveredUnit === key;
-        const isSelected = sim.selectedUnit === key;
-        const color      = faction.color || '#888';
-
-        // Advance animation frame
-        const animSet = FACTION_SPRITE[fid] || FACTION_SPRITE['encounters'];
-        const animName = animSet ? animSet[pos.status === 'moving' ? 'run' : pos.status === 'fighting' ? 'attack' : 'idle'] : null;
-        if (animName && sim.spriteData) {
-          const anim = sim.spriteData[animName];
-          if (anim) {
-            pos.frameTimer = (pos.frameTimer || 0) + (timestamp - (pos._lastTs || timestamp));
-            pos._lastTs    = timestamp;
-            const frame    = anim.frames[pos.frameIdx % anim.frames.length];
-            if (frame && pos.frameTimer >= frame.duration) {
-              pos.frameTimer = 0;
-              pos.frameIdx   = (pos.frameIdx + 1) % anim.frames.length;
-            }
-          }
-        }
-
-        const half = SPRITE_DRAW_SIZE / 2;
-
-        // Draw selection ring
-        if (isActive || isSelected || isHovered) {
-          ctx.save();
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, half + 6, 0, Math.PI * 2);
-          ctx.strokeStyle = isActive ? '#fff' : isSelected ? color : 'rgba(255,255,255,0.4)';
-          ctx.lineWidth   = isActive ? 3 : 2;
-          if (isActive) {
-            ctx.shadowColor = color;
-            ctx.shadowBlur  = 12;
-          }
-          ctx.stroke();
-          ctx.restore();
-        }
-
-        // Draw shadow
-        ctx.save();
-        ctx.globalAlpha = 0.25;
-        ctx.fillStyle   = '#000';
-        ctx.beginPath();
-        ctx.ellipse(pos.x, pos.y + half - 4, half * 0.8, half * 0.25, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-
-        // Draw sprite OR colored circle fallback
-        const frame = animName ? getSpriteFrame(animName, pos.frameIdx) : null;
-        if (frame && sim.spriteSheet) {
-          ctx.save();
-          // Clip to circle
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, half, 0, Math.PI * 2);
-          ctx.clip();
-          // Background circle
-          ctx.fillStyle = color + '33';
-          ctx.fillRect(pos.x - half, pos.y - half, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE);
-          // Draw sprite frame
-          ctx.drawImage(
-            sim.spriteSheet,
-            frame.x, frame.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
-            pos.x - half, pos.y - half, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE
-          );
-          ctx.restore();
-          // Circle border
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, half, 0, Math.PI * 2);
-          ctx.strokeStyle = color;
-          ctx.lineWidth   = 2;
-          ctx.stroke();
-        } else {
-          // Fallback: colored circle with initial
-          ctx.beginPath();
-          ctx.arc(pos.x, pos.y, half, 0, Math.PI * 2);
-          ctx.fillStyle = color + '44';
-          ctx.fill();
-          ctx.strokeStyle = color;
-          ctx.lineWidth   = 2;
-          ctx.stroke();
-          ctx.fillStyle   = color;
-          ctx.font        = `bold ${Math.round(SPRITE_DRAW_SIZE * 0.45)}px sans-serif`;
-          ctx.textAlign   = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText((unit.name || '?')[0].toUpperCase(), pos.x, pos.y);
-        }
-
-        // Shaken/Panicked indicator
-        if (us.shaken || us.panicked) {
-          ctx.save();
-          ctx.font = 'bold ' + Math.round(SPRITE_DRAW_SIZE * 0.55) + 'px sans-serif';
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText(us.panicked ? '💀' : '⚡', pos.x + half, pos.y - half - 14);
-          ctx.restore();
-        }
-
-        // Health dots above unit
-        const maxQ = unit.quality || 4;
-        const curQ = us.quality   || 0;
-        const dotR = 4;
-        const dotW = (dotR * 2 + 3) * maxQ;
-        let dx     = pos.x - dotW / 2 + dotR;
-        const dy   = pos.y - half - 12;
-        for (let i = 0; i < maxQ; i++) {
-          ctx.beginPath();
-          ctx.arc(dx, dy, dotR, 0, Math.PI * 2);
-          ctx.fillStyle = i < curQ ? color : 'rgba(255,255,255,0.15)';
-          ctx.fill();
-          dx += dotR * 2 + 3;
-        }
-      });
-    }
-
-    function drawTooltip(ctx, canvas) {
-      const key     = sim.hoveredUnit;
-      const pos     = sim.unitPositions[key];
-      if (!pos) return;
-      const [fid, uid] = key.split('::');
-      const faction = getFactionById(fid);
-      const unit    = getUnitById(faction, uid);
-      const us      = getUnitState(fid, uid);
-      if (!unit || !us) return;
-
-      const sx = pos.x * sim.viewScale + sim.viewX;
-      const sy = pos.y * sim.viewScale + sim.viewY;
-      const label  = `${unit.name} (Q${us.quality}/${unit.quality})`;
-      const label2 = [unit.move ? `M${unit.move}"` : '', unit.defense ? `D${unit.defense}` : '', unit.range ? `R${unit.range}"` : ''].filter(Boolean).join('  ');
-
-      ctx.save();
-      ctx.font = 'bold 11px sans-serif';
-      const w = Math.max(ctx.measureText(label).width, ctx.measureText(label2).width) + 20;
-      const h = 40;
-      let tx = sx + 18;
-      let ty = sy - h / 2;
-      if (tx + w > canvas.width  - 8) tx = sx - w - 18;
-      if (ty < 4)                      ty = 4;
-      if (ty + h > canvas.height - 4)  ty = canvas.height - h - 4;
-
-      ctx.fillStyle = 'rgba(0,0,0,0.88)';
-      roundRect(ctx, tx, ty, w, h, 5);
-      ctx.fill();
-      ctx.strokeStyle = faction?.color || '#888';
-      ctx.lineWidth   = 1;
-      ctx.stroke();
-      ctx.fillStyle   = '#fff';
-      ctx.textBaseline = 'top';
-      ctx.fillText(label,  tx + 10, ty + 6);
-      ctx.fillStyle = '#aaa';
-      ctx.font      = '10px sans-serif';
-      ctx.fillText(label2, tx + 10, ty + 22);
-      ctx.restore();
-    }
-
-    function roundRect(ctx, x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);      ctx.quadraticCurveTo(x + w, y,     x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);      ctx.quadraticCurveTo(x, y + h,     x, y + h - r);
-      ctx.lineTo(x, y + r);          ctx.quadraticCurveTo(x, y,         x + r, y);
-      ctx.closePath();
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // TURN QUEUE ENGINE (mirrors turn counter)
-    // ═════════════════════════════════════════════════════════════════════════
-
-    function buildQueue() {
-      const monsters = state.factions.filter(f => f.isMonster);
-      let   others   = state.factions.filter(f => !f.isMonster);
-      // Shuffle non-monsters
-      for (let i = others.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [others[i], others[j]] = [others[j], others[i]];
-      }
-      // Sort each faction's units lowest cost first
-      const columns = [...monsters, ...others].map(f => {
-        const active = getActiveUnits(f).slice().sort((a, b) => (a.cost ?? 9999) - (b.cost ?? 9999));
-        return {
-          factionId: f.id, isMonster: f.isMonster,
-          units: active.map(u => u.id),
-        };
-      }).filter(col => col.units.length > 0);
-
-      const maxLen = columns.reduce((m, c) => Math.max(m, c.units.length), 0);
-      const queue  = [];
-      for (let slot = 0; slot < maxLen; slot++) {
-        columns.forEach(col => {
-          if (slot < col.units.length) queue.push({ factionId: col.factionId, unitId: col.units[slot] });
-        });
-      }
-      state.queue      = queue;
-      state.queueIndex = 0;
-    }
-
-    function advanceQueue() {
-      const cur = currentQueueItem();
-      if (cur) {
-        setUnitState(cur.factionId, cur.unitId, { activated: true });
-        // Shaken clears at end of this unit's activation
-        const us = getUnitState(cur.factionId, cur.unitId);
-        if (us && us.shaken) setUnitState(cur.factionId, cur.unitId, { shaken: false });
-        const pos = sim.unitPositions[unitKey(cur.factionId, cur.unitId)];
-        if (pos) { pos.status = 'idle'; pos.frameIdx = 0; }
-      }
-      state.queueIndex++;
-      // Skip out units
-      while (state.queueIndex < state.queue.length) {
-        const item = state.queue[state.queueIndex];
-        const us   = getUnitState(item.factionId, item.unitId);
-        if (!us || us.out) { state.queueIndex++; continue; }
-        break;
-      }
-      return state.queueIndex < state.queue.length;
-    }
-
-    function startNewRound() {
-      state.round++;
-      state.allRoundLogs.push([...state.roundLog]);
-      state.roundLog = [];
-      simLog(`═══ Round ${state.round} begins ═══`, 'round');
-
-      // Reset activation flags
-      state.factions.forEach(f => f.allUnits.forEach(u => {
-        const k = unitKey(f.id, u.id);
-        if (state.unitState[k]) { state.unitState[k].activated = false; state.unitState[k].lastRoll = null; }
-      }));
-
-      rollCanyonEvent();
-      buildQueue();
-      refreshActiveUnitPanel();
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // SIMULATION — MOVEMENT & COMBAT
-    // ═════════════════════════════════════════════════════════════════════════
-
-    function findNearestEnemy(fid, pos) {
-      // Find closest unit from a different faction
-      let nearestKey  = null;
-      let nearestDist = Infinity;
-      Object.entries(sim.unitPositions).forEach(([key, ePos]) => {
-        if (!ePos || ePos.status === 'routed') return;
-        const [eFid] = key.split('::');
-        if (eFid === fid) return; // same faction
-        const dx   = ePos.x - pos.x;
-        const dy   = ePos.y - pos.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < nearestDist) { nearestDist = dist; nearestKey = key; }
-      });
-      return { key: nearestKey, dist: nearestDist };
-    }
-
-    // Snap pixel coords to nearest grid square centre
-    function snapToGrid(x, y) {
-      return {
-        x: Math.round(x / GRID_PX) * GRID_PX + GRID_PX / 2,
-        y: Math.round(y / GRID_PX) * GRID_PX + GRID_PX / 2,
-      };
-    }
-
-    // Grid distance in map-coord squares (Chebyshev — diagonal counts as 1)
-    // Accepts canvas positions and converts internally
-    function gridDist(acx, acy, bcx, bcy) {
-      const ax = acx, ay = MAP_SIZE - acy;
-      const bx = bcx, by = MAP_SIZE - bcy;
-      return Math.max(
-        Math.abs(Math.round(ax / GRID_PX) - Math.round(bx / GRID_PX)),
-        Math.abs(Math.round(ay / GRID_PX) - Math.round(by / GRID_PX))
-      );
-    }
-    function isGridAdjacent(acx, acy, bcx, bcy) {
-      return gridDist(acx, acy, bcx, bcy) <= 1;
-    }
-
-    function moveUnitToward(key, targetMapX, targetMapY, moveInches) {
-      const pos = sim.unitPositions[key];
-      if (!pos) return;
-      // Work in map coord grid squares
-      const maxSquares = Math.floor(moveInches);
-      const curGX = Math.round((pos.mapX || pos.x) / GRID_PX);
-      const curGY = Math.round((pos.mapY || (MAP_SIZE - pos.y)) / GRID_PX);
-      const tgtGX = Math.round(targetMapX / GRID_PX);
-      const tgtGY = Math.round(targetMapY / GRID_PX);
-      let gx = curGX, gy = curGY;
-      for (let step = 0; step < maxSquares; step++) {
-        const ddx = Math.sign(tgtGX - gx);
-        const ddy = Math.sign(tgtGY - gy);
-        if (ddx === 0 && ddy === 0) break;
-        if (Math.max(Math.abs(tgtGX - gx), Math.abs(tgtGY - gy)) <= 1) break;
-        gx += ddx;
-        gy += ddy;
-      }
-      const newMapX = gx * GRID_PX + GRID_PX / 2;
-      const newMapY = gy * GRID_PX + GRID_PX / 2;
-      pos.mapX = newMapX;
-      pos.mapY = newMapY;
-      const cv = mapToCanvas(newMapX, newMapY);
-      pos.x = cv.cx;
-      pos.y = cv.cy;
-      pos.status = 'moving';
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    // CORE MECHANICS — per official Coffin Canyon rules
-    // ═══════════════════════════════════════════════════════════════════════
-
-    // Roll [qualityScore] d6s. 4+ = success.
-    // Returns { dice, successes, critFail, luckyBreak }
-    function rollQualityDice(qualityScore) {
-      const dice = [];
-      for (let i = 0; i < Math.max(1, qualityScore); i++) {
-        dice.push(Math.floor(Math.random() * 6) + 1);
-      }
-      const successes  = dice.filter(d => d >= 4).length;
-      const critFail   = dice.every(d => d === 1);                    // all 1s
-      const luckyBreak = dice.length > 0 && dice.every(d => d === 6); // all 6s
-      return { dice, successes, critFail, luckyBreak };
-    }
-
-    // Apply Shaken to a unit (–1 die on all rolls, removed at end of next activation)
-    function applyShaken(fid, uid) {
-      const us = getUnitState(fid, uid);
-      if (!us) return;
-      if (us.shaken) {
-        // Already Shaken → Panicked
-        setUnitState(fid, uid, { panicked: true });
-        simLog(getUnitById(getFactionById(fid), uid)?.name + ' PANICS!', 'combat');
-      } else {
-        setUnitState(fid, uid, { shaken: true });
-        simLog(getUnitById(getFactionById(fid), uid)?.name + ' is Shaken.', 'combat');
-      }
-    }
-
-    // Run a morale test for a unit
-    function testMorale(fid, uid) {
-      const us   = getUnitState(fid, uid);
-      const unit = getUnitById(getFactionById(fid), uid);
-      if (!us || !unit) return;
-      // fearless / unshakable abilities skip morale
-      const abilities = unit.special || [];
-      const abilityNames = abilities.map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
-      if (abilityNames.includes('fearless') || abilityNames.includes('unshakable')) return;
-      const q = Math.max(1, us.quality);
-      const { successes } = rollQualityDice(q);
-      if (successes === 0) applyShaken(fid, uid);
-    }
-
-    // Get effective defense, applying ability modifiers
-    function getEffectiveDefense(unit, us, attackerAbilities) {
-      let def = unit.defense || 0;
-      // shaken defender: –1 die on their side but doesn't reduce defense directly
-      // pierce ability on attacker reduces defense
-      const atk = (attackerAbilities || []).map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
-      if (atk.includes('pierce'))        def = Math.max(0, def - 1);
-      if (atk.includes('brutal pierce')) def = Math.max(0, def - 2);
-      if (atk.includes('savage pierce')) def = Math.max(0, def - 3);
-      // shield_wall: +1 defense when adjacent to ally (simplified: always apply if unit has it)
-      const defAbil = (unit.special || []).map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
-      if (defAbil.includes('shield_wall') || defAbil.includes('shield wall')) def += 1;
-      return Math.max(0, def);
-    }
-
-    // Get effective attack dice count (applying Shaken penalty)
-    function getEffectiveQuality(unit, us) {
-      let q = us.quality || 1;
-      if (us.shaken) q = Math.max(1, q - 1); // Shaken: –1 die
-      return q;
-    }
-
-    function showRollDialog(attacker, defender, dice, successes, defense, damage, critFail, luckyBreak) {
-      const existing = document.getElementById('cc-sim-roll-overlay');
-      if (existing) existing.remove();
-
-      let resultColor = damage > 0 ? '#4caf50' : '#ef5350';
-      if (critFail)   resultColor = '#ef5350';
-      if (luckyBreak) resultColor = '#ffd600';
-
-      const diceHtml = dice.map(d => {
-        let cls = d >= 4 ? 'success' : 'fail';
-        if (d === 6) cls = 'success'; // highlight sixes
-        return '<div class="cc-sim-die ' + cls + '" style="' + (d === 6 ? 'border-color:#ffd600;color:#ffd600;' : '') + '">' + d + '</div>';
-      }).join('');
-
-      let resultText = '';
-      if (critFail)        resultText = 'CRITICAL FAILURE — Shaken!';
-      else if (luckyBreak) resultText = 'LUCKY BREAK — All sixes!';
-      else if (damage > 0) resultText = damage + ' damage dealt! (' + successes + ' hits vs D' + defense + ')';
-      else                 resultText = 'Blocked! (' + successes + ' hits vs D' + defense + ')';
-
-      const overlay = document.createElement('div');
-      overlay.id        = 'cc-sim-roll-overlay';
-      overlay.className = 'cc-sim-roll-overlay';
-      overlay.innerHTML =
-        '<div class="cc-sim-roll-dialog">' +
-          '<div class="cc-sim-roll-title">' + attacker.name + ' attacks ' + defender.name + '</div>' +
-          '<div class="cc-sim-dice-row">' + diceHtml + '</div>' +
-          '<div class="cc-sim-roll-result" style="color:' + resultColor + ';">' + resultText + '</div>' +
-          '<button class="cc-btn" style="width:100%;" onclick="window.CC_SIM.closeRollDialog();">Continue</button>' +
-        '</div>';
-      document.body.appendChild(overlay);
-      setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 5000);
-    }
-
-    function resolveEngagement(attackerKey, defenderKey, showDialog) {
-      const [aFid, aUid] = attackerKey.split('::');
-      const [dFid, dUid] = defenderKey.split('::');
-      const attackerUnit  = getUnitById(getFactionById(aFid), aUid);
-      const defenderUnit  = getUnitById(getFactionById(dFid), dUid);
-      const attackerState = getUnitState(aFid, aUid);
-      const defenderState = getUnitState(dFid, dUid);
-      if (!attackerUnit || !defenderUnit || !attackerState || !defenderState) return;
-
-      const aPos = sim.unitPositions[attackerKey];
-      const dPos = sim.unitPositions[defenderKey];
-      if (aPos) aPos.status = 'fighting';
-
-      // Effective stats with ability modifiers
-      const attackQ  = getEffectiveQuality(attackerUnit, attackerState);
-      const defenseD = getEffectiveDefense(defenderUnit, defenderState, attackerUnit.special);
-
-      const { dice, successes, critFail, luckyBreak } = rollQualityDice(attackQ);
-
-      // Critical Failure: attacker becomes Shaken
-      if (critFail) {
-        applyShaken(aFid, aUid);
-        if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, 0, defenseD, 0, true, false);
-        return { dice, successes: 0, damage: 0, critFail: true };
-      }
-
-      // Lucky Break: all 6s — attacker gets a free bonus (we auto-apply Quick Step)
-      if (luckyBreak) {
-        simLog(attackerUnit.name + ' — Lucky Break! (all sixes)', 'combat');
-      }
-
-      // Natural Six bonus: if attack hits and attacker rolled any 6, minimum 1 damage
-      const hasNaturalSix = dice.some(d => d === 6);
-
-      // Damage = successes − defense (per core rules), minimum 0
-      // Natural Six guarantees minimum 1 damage if the attack hits at all
-      let damage = Math.max(0, successes - defenseD);
-      if (hasNaturalSix && successes > 0 && damage === 0) damage = 1;
-
-      // Tough / Tougher / Toughest: roll to ignore each damage point
-      const defAbil = (defenderUnit.special || []).map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
-      if (damage > 0) {
-        let ignored = 0;
-        const dicePerWound = defAbil.includes('toughest') ? 3 : defAbil.includes('tougher') ? 2 : defAbil.includes('tough') ? 1 : 0;
-        if (dicePerWound > 0) {
-          for (let i = 0; i < damage; i++) {
-            for (let j = 0; j < dicePerWound; j++) {
-              if (Math.floor(Math.random() * 6) + 1 >= 5) { ignored++; break; }
-            }
-          }
-          if (ignored > 0) simLog(defenderUnit.name + ' shrugs off ' + ignored + ' wound(s) (Tough).', 'combat');
-        }
-        damage = Math.max(0, damage - ignored);
-      }
-
-      if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, successes, defenseD, damage, false, luckyBreak);
-      // Keep attacker in fight animation — status reset by simulateActivation timeout
-      if (aPos) aPos.status = 'fighting';
-
-      if (damage > 0) {
-        const newQ = Math.max(0, defenderState.quality - damage);
-        setUnitState(dFid, dUid, { quality: newQ });
-        simLog(attackerUnit.name + ' deals ' + damage + ' damage to ' + defenderUnit.name + '! (Q' + newQ + ' remaining)', 'combat');
-        // Morale test after taking damage (non-titan, non-fearless)
-        if (damage > 0 && newQ > 0) testMorale(dFid, dUid);
-        if (newQ <= 0) {
-          setUnitState(dFid, dUid, { out: true });
-          if (dPos) dPos.status = 'routed';
-          simLog(defenderUnit.name + ' is OUT!', 'combat');
-          // Cascading fear: nearby enemies of same faction test morale
-          const defFaction = getFactionById(dFid);
-          if (defFaction) {
-            defFaction.allUnits.forEach(u => {
-              const uKey = unitKey(dFid, u.id);
-              const uPos = sim.unitPositions[uKey];
-              if (!uPos || uKey === defenderKey) return;
-              const dx = uPos.x - (dPos ? dPos.x : 0);
-              const dy = uPos.y - (dPos ? dPos.y : 0);
-              if (Math.hypot(dx, dy) < GRID_PX * 6) testMorale(dFid, u.id);
-            });
-          }
-        }
-      } else {
-        simLog(defenderUnit.name + ' blocked! (' + successes + ' vs D' + defenseD + ')', 'combat');
-      }
-      return { dice, successes, damage, critFail: false };
-    }
-
-
-    function simulateActivation(fid, uid) {
-      const key  = unitKey(fid, uid);
-      const pos  = sim.unitPositions[key];
-      const unit = getUnitById(getFactionById(fid), uid);
-      if (!pos || !unit) return;
-
-      const moveInches  = unit.move  || 6;
-      const rangeInches = unit.range || 0;
-      const { key: enemyKey, dist: enemyDist } = findNearestEnemy(fid, pos);
-      const ePos = enemyKey ? sim.unitPositions[enemyKey] : null;
-
-      // Check grid adjacency for melee
-      const inMelee  = ePos && isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y);
-      // Check ranged: enemy within range inches (in grid squares) and not adjacent
-      const inRange  = !inMelee && rangeInches > 0 && ePos &&
-                       gridDist(pos.x, pos.y, ePos.x, ePos.y) <= rangeInches;
-
-      if (inMelee) {
-        resolveEngagement(key, enemyKey);
-        addNoise(NOISE_VALUES.melee, 'Melee');
-      } else if (inRange) {
-        // Ranged attack — no movement needed
-        pos.status = 'fighting';
-        simLog(unit.name + ' fires at ' + (getUnitById(getFactionById(enemyKey.split('::')[0]), enemyKey.split('::')[1])?.name || '?') + '!', 'combat');
-        resolveEngagement(key, enemyKey, true);
-        addNoise(NOISE_VALUES.shot, 'Shot');
-      } else if (ePos) {
-        // Move toward enemy — use map coords
-        const eMX = ePos.mapX || ePos.x;
-        const eMY = ePos.mapY || (MAP_SIZE - ePos.y);
-        moveUnitToward(key, eMX, eMY, moveInches);
-        simLog(unit.name + ' advances.', 'move');
-        // After moving, check melee or range
-        if (isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y)) {
-          resolveEngagement(key, enemyKey);
-          addNoise(NOISE_VALUES.melee, 'Melee');
-        } else if (rangeInches > 0 && gridDist(pos.x, pos.y, ePos.x, ePos.y) <= rangeInches) {
-          pos.status = 'fighting';
-          resolveEngagement(key, enemyKey, true);
-          addNoise(NOISE_VALUES.shot, 'Shot');
-        }
-      }
-
-      const fightDuration = (inMelee || inRange) ? 1200 : 500;
-      setTimeout(() => {
-        if (pos && pos.status !== 'routed') pos.status = 'idle';
-        pos.frameIdx = 0;
-      }, fightDuration);
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // MONSTER ALERT OVERLAY
-    // ═════════════════════════════════════════════════════════════════════════
-
-    function showMonsterAlert(monsterDef) {
-      const overlay = document.createElement('div');
-      overlay.className = 'cc-sim-monster-alert';
-      overlay.innerHTML = `
-        <div class="cc-sim-monster-dialog">
-          <div style="font-size:2.5rem;margin-bottom:.5rem;">💀</div>
-          <div style="font-size:1.2rem;font-weight:800;color:#ef5350;margin-bottom:.5rem;">ENCOUNTER!</div>
-          <div style="font-size:1rem;color:#fff;margin-bottom:.25rem;">${monsterDef.name}</div>
-          <div style="font-size:.8rem;color:#aaa;margin-bottom:1.2rem;">
-            Q${monsterDef.quality} · M${monsterDef.move}"
-            ${monsterDef.defense ? ' · D' + monsterDef.defense : ''}
-            ${monsterDef.isTitan ? ' · TITAN' : ''}
-          </div>
-          ${monsterDef.special?.length ? `<div style="font-size:.75rem;color:#ff7518;margin-bottom:1rem;">${monsterDef.special.join(', ')}</div>` : ''}
-          <button class="cc-btn" onclick="this.closest('.cc-sim-monster-alert').remove()" style="width:100%;">
-            Understood
-          </button>
-        </div>`;
-      document.body.appendChild(overlay);
-      setTimeout(() => overlay.remove(), 6000);
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // HTML RENDER
-    // ═════════════════════════════════════════════════════════════════════════
-
-    function render() {
-      if (_destroyed || !root) return;
-      if      (state.phase === 'setup')   root.innerHTML = renderSetup();
-      else if (state.phase === 'loading') root.innerHTML = renderLoading();
-      else if (state.phase === 'playing') renderPlaying();
-    }
-
-    function renderSetup() {
-      const loggedIn = !!window.CC_STORAGE;
-      const scenarios = state.availableScenarios || [];
-      const scenarioItems = scenarios.length
-        ? scenarios.map(s => `
-            <div class="cc-sim-scenario-card ${state.selectedScenarioId === s.id ? 'selected' : ''}"
-                 onclick="window.CC_SIM.selectScenario(${s.id})">
-              <div style="font-weight:700;color:var(--cc-text);">${s.name || 'Unnamed Scenario'}</div>
-              <div style="font-size:.75rem;color:var(--cc-text-dim);margin-top:3px;">${s.factions ? s.factions.length + ' factions' : ''}</div>
-            </div>`).join('')
-        : `<div class="cc-sim-empty">No scenarios found in Odoo folder ${SCENARIO_FOLDER}.</div>`;
-
-      return `
-        <div style="padding:24px 20px;max-width:480px;margin:0 auto;animation:cc-fade-in .25s ease;">
-          <div class="cc-sim-setup-title">🎮 Game Simulator</div>
-          <div class="cc-sim-setup-sub">Load a saved scenario from Odoo to begin. All faction rosters will load automatically.</div>
-
-          <div class="${loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out'}">
-            <i class="fa ${loggedIn ? 'fa-check-circle' : 'fa-times-circle'}"></i>
-            ${loggedIn ? 'Odoo connected' : 'Odoo not connected — CC_STORAGE missing'}
-          </div>
-
-          <div style="margin:16px 0 8px;font-size:.78rem;color:var(--cc-text-dim);text-transform:uppercase;letter-spacing:.07em;">
-            Saved Scenarios
-          </div>
-
-          ${scenarios.length === 0 && loggedIn ? `
-            <div style="margin-bottom:10px;">
-              <button class="cc-btn cc-btn-secondary" onclick="window.CC_SIM.fetchScenarios()">
-                <i class="fa fa-sync"></i> Load Scenarios
-              </button>
-            </div>` : ''}
-
-          ${scenarioItems}
-
-          ${state.selectedScenarioId ? `
-            <div style="margin-top:20px;">
-              <div style="margin-bottom:8px;font-size:.78rem;color:var(--cc-text-dim);text-transform:uppercase;letter-spacing:.07em;">
-                Factions Playing
-              </div>
-              <div id="cc-sim-faction-toggles" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
-                ${Object.entries(FACTION_META).map(([id, m]) =>
-                  '<label style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid ' + m.color + '33;cursor:pointer;font-size:.78rem;">' +
-                  '<input type="checkbox" class="cc-sim-faction-check" value="' + id + '" checked style="accent-color:' + m.color + ';"> ' +
-                  '<span style="color:' + m.color + ';font-weight:700;">' + m.name + '</span>' +
-                  '</label>'
-                ).join('')}
-              </div>
-              <div style="margin-bottom:8px;font-size:.78rem;color:var(--cc-text-dim);text-transform:uppercase;letter-spacing:.07em;">
-                Map (optional)
-              </div>
-              <select id="cc-sim-map-id-input"
-                style="width:100%;padding:8px 10px;background:var(--cc-bg-soft);border:1px solid var(--cc-border);
-                       border-radius:6px;color:var(--cc-text);font-size:.85rem;margin-bottom:14px;cursor:pointer;">
-                <option value="">-- No map --</option>
-                ${MAP_LIST.map(m => '<option value="' + m.id + '">' + m.name + '</option>').join('')}
-              </select>
-              <div class="cc-sim-solo-faction-select">
-                <label>Solo Mode (optional)</label>
-                <select id="cc-sim-solo-select">
-                  <option value="">-- Auto-simulate all factions --</option>
-                  ${Object.entries(FACTION_META).map(([id, m]) => '<option value="' + id + '">' + m.name + '</option>').join('')}
-                </select>
-              </div>
-              <button class="cc-btn" style="width:100%;" onclick="window.CC_SIM.launchSimulator()">
-                <i class="fa fa-play"></i> Launch Simulator
-              </button>
-            </div>` : ''}
-        </div>`;
-    }
-
-    function renderLoading() {
-      return `
-        <div class="cc-sim-loading-screen">
-          <div class="cc-sim-loading-icon">⚙️</div>
-          <div class="cc-sim-loading-text">${state.loadingMsg}</div>
-        </div>`;
-    }
-
-    function renderPlaying() {
-      // Build full simulator layout (only once — canvas persists in the map wrap)
-      if (!document.getElementById('cc-sim-map-wrap')) {
-        root.innerHTML =
-          '<div class="cc-sim-layout" id="cc-sim-layout">' +
-
-            '<!-- MAIN ROW -->' +
-            '<div class="cc-sim-main-row">' +
-
-              '<!-- LEFT SIDEBAR: Factions + Active Unit -->' +
-              '<div class="cc-sim-sidebar">' +
-                '<div class="cc-sim-panel-header"><i class="fa fa-users"></i> Factions</div>' +
-                '<div class="cc-sim-sidebar-scroll" id="cc-sim-faction-list"></div>' +
-                '<div class="cc-sim-panel-header" style="border-top:1px solid var(--cc-border,#333);"><i class="fa fa-bolt"></i> Active Unit</div>' +
-                '<div id="cc-sim-active-unit" style="overflow-y:auto;max-height:45%;flex-shrink:0;"></div>' +
-                '<div class="cc-sim-controls">' +
-                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.addNoise(3,&quot;Melee&quot;)">+Noise</button>' +
-                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.addNoise(3,\"Melee\")">+Noise</button>' +
-                '</div>' +
-              '</div>' +
-
-              '<!-- MAP COLUMN -->' +
-              '<div style="display:flex;flex-direction:column;flex:1;min-width:0;overflow:hidden;">' +
-                '<!-- Controls bar above map -->' +
-                '<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--cc-border,#333);flex-shrink:0;background:var(--cc-bg-darker,#0d0d0d);">' +
-                  '<button class="cc-btn cc-btn-sm" id="cc-sim-next-btn" onclick="window.CC_SIM.nextActivation()">' +
-                    '<i class="fa fa-step-forward"></i> <span id="cc-sim-next-label">Next</span>' +
-                  '</button>' +
-                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" id="cc-sim-auto-btn" onclick="window.CC_SIM.toggleAuto()">' +
-                    '<i class="fa fa-play"></i> Auto' +
-                  '</button>' +
-                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.zoomFit()">' +
-                    '<i class="fa fa-compress"></i>' +
-                  '</button>' +
-                  '<div style="margin-left:auto;display:flex;gap:6px;align-items:center;">' +
-                    '<div class="cc-sim-round-badge" id="cc-sim-round-badge">Round ' + state.round + '</div>' +
-                    '<div class="cc-sim-round-badge" id="cc-sim-queue-badge" style="font-size:.75rem;"></div>' +
-                  '</div>' +
-                '</div>' +
-                '<!-- Map canvas area -->' +
-                '<div class="cc-sim-map-wrap" id="cc-sim-map-wrap" style="flex:1;min-height:0;">' +
-                  '<div class="cc-sim-ruler-hud" id="cc-sim-ruler-hud"></div>' +
-                  '<div class="cc-sim-waiting-badge" id="cc-sim-waiting-badge">Your turn &mdash; drag to move</div>' +
-                '</div>' +
-              '</div>' +
-
-            '</div>' + // end main-row
-
-            '<!-- LOG BAR (accordion at bottom) -->' +
-            '<div class="cc-sim-log-bar" id="cc-sim-log-bar">' +
-              '<div class="cc-sim-log-bar-ticker" onclick="window.CC_SIM.toggleLog()">' +
-                '<span style="font-size:.7rem;color:var(--cc-text-dim,#888);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;">Log</span>' +
-                '<span class="cc-sim-log-bar-latest" id="cc-sim-log-latest">—</span>' +
-                '<span class="cc-sim-log-bar-chevron">&#9650;</span>' +
-              '</div>' +
-              '<div class="cc-sim-log-drawer" id="cc-sim-log-drawer">' +
-                '<div class="cc-sim-log" id="cc-sim-log" style="padding:8px;"></div>' +
-              '</div>' +
-            '</div>' +
-
-          '</div>';
-
-        initCanvas();
-      }
-
-      // Update dynamic panels without destroying the canvas
-      refreshFactionList();
-      refreshActiveUnitPanel();
-      refreshQueueBadge();
-    }
-
-    function refreshFactionList() {
-      const el = document.getElementById('cc-sim-faction-list');
-      if (!el) return;
-      const curItem = currentQueueItem();
-      el.innerHTML = state.factions.map(f => {
-        const zone   = sim.factionZones[f.id];
-        const active = getActiveUnits(f).length;
-        const total  = f.allUnits.length;
-        const isCur  = curItem && curItem.factionId === f.id;
-        const style  = isCur ? '--active-color:' + f.color + ';border-left-color:' + f.color + ';' : '';
-        return '<div class="cc-sim-faction-entry ' + (isCur ? 'is-active' : '') + '" style="' + style + '" onclick="window.CC_SIM.focusFaction(\'' + f.id + '\')">' +
-          '<div class="cc-sim-faction-dot" style="background:' + f.color + ';box-shadow:0 0 6px ' + f.color + '66;color:' + f.color + ';"></div>' +
-          '<div class="cc-sim-faction-name">' + f.name + '</div>' +
-          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">' +
-            '<div class="cc-sim-faction-count">' + active + '/' + total + '</div>' +
-            (zone && zone.key ? '<div class="cc-sim-faction-zone-tag" style="background:' + f.color + '22;color:' + f.color + ';">' + zone.key.replace('_',' ') + '</div>' : '') +
-          '</div>' +
-        '</div>';
-      }).join('');
-    }
-
-    function refreshActiveUnitPanel() {
-      const el = document.getElementById('cc-sim-active-unit');
-      if (!el) return;
-      const curItem = currentQueueItem();
-      if (!curItem) {
-        el.innerHTML = '<div class="cc-sim-empty" style="color:#ffd600;">Round ' + state.round + ' complete! Press NEXT to begin Round ' + (state.round+1) + '.</div>';
-        return;
-      }
-      const faction = getFactionById(curItem.factionId);
-      const unit    = getUnitById(faction, curItem.unitId);
-      const us      = getUnitState(curItem.factionId, curItem.unitId);
-      if (!faction || !unit || !us) return;
-
-      const color  = faction.color || '#888';
-      const maxQ   = unit.quality || 1;
-      const curQ   = us.quality   || 0;
-      const dots   = Array.from({ length: maxQ }, (_, i) =>
-        `<div class="cc-sim-health-dot ${i < curQ ? 'filled' : 'empty'}" style="${i < curQ ? 'border-color:' + color + ';background:' + color + ';' : ''}"></div>`
-      ).join('');
-
-      const abilities = Array.isArray(unit.special) && unit.special.length
-        ? `<div class="cc-sim-abilities">${unit.special.map(a =>
-            `<span class="cc-sim-ability-tag">${typeof a === 'string' ? a : (a.name || a)}</span>`
-          ).join('')}</div>`
-        : '';
-
-      el.innerHTML = `
-        <div class="cc-sim-active-card">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-            <div style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};flex-shrink:0;"></div>
-            <div>
-              <div class="cc-sim-active-name">${unit.name}</div>
-              <div class="cc-sim-active-faction">${faction.name}</div>
-            </div>
-          </div>
-          <div class="cc-sim-health-track">${dots}</div>
-          ${us.shaken   ? '<div style="color:#ffd600;font-size:.75rem;font-weight:700;margin:4px 0;">⚡ SHAKEN (-1 die)</div>' : ''}
-          ${us.panicked ? '<div style="color:#ef5350;font-size:.75rem;font-weight:700;margin:4px 0;">💀 PANICKED</div>' : ''}
-          <div class="cc-sim-stat-row">
-            ${unit.move    ? `<span class="cc-sim-stat-pill move"><i class="fa fa-shoe-prints"></i> ${unit.move}"</span>` : ''}
-            ${unit.defense ? `<span class="cc-sim-stat-pill defense"><i class="fa fa-shield-alt"></i> D${unit.defense}</span>` : ''}
-            ${unit.range   ? `<span class="cc-sim-stat-pill range"><i class="fa fa-crosshairs"></i> ${unit.range}"</span>` : ''}
-            ${unit.cost    ? `<span class="cc-sim-stat-pill cost">${unit.cost}pts</span>` : ''}
-          </div>
-          ${abilities}
-          ${unit.weapon ? `<div style="font-size:.74rem;color:#9e8e78;margin-top:6px;font-style:italic;">${unit.weapon}</div>` : ''}
-          ${unit.lore ? `<div style="font-size:.73rem;color:var(--cc-text-dim);margin-top:8px;line-height:1.5;font-style:italic;">${unit.lore.slice(0,140)}${unit.lore.length>140?'…':''}</div>` : ''}
-          <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="cc-btn cc-btn-sm" onclick="window.CC_SIM.activateAndAdvance()">
-              <i class="fa fa-bolt"></i> Activate
-            </button>
-            <button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.markOut('${curItem.factionId}','${curItem.unitId}')">
-              Out
-            </button>
-          </div>
-        </div>`;
-    }
-
-    function refreshQueueBadge() {
-      const el       = document.getElementById('cc-sim-queue-badge');
-      const roundEl  = document.getElementById('cc-sim-round-badge');
-      const labelEl  = document.getElementById('cc-sim-next-label');
-      const remaining = state.queue.length - state.queueIndex;
-      const complete  = remaining <= 0;
-      if (el)      el.textContent = complete ? 'Round ' + state.round + ' complete' : remaining + ' activations left';
-      if (roundEl) roundEl.textContent = 'Round ' + state.round;
-      if (labelEl) labelEl.textContent = complete ? 'New Round' : 'Next';
-    }
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // CONTROLS — public CC_SIM.* functions
-    // ═════════════════════════════════════════════════════════════════════════
-
-    window.CC_SIM.toggleLog = function() {
-      const bar = document.getElementById('cc-sim-log-bar');
-      if (bar) bar.classList.toggle('open');
-    };
-
-    window.CC_SIM.closeRollDialog = function() {
-      const o = document.getElementById('cc-sim-roll-overlay');
-      if (o) o.remove();
-    };
-
-    window.CC_SIM.soloMoveComplete = function() {
-      // Called after player finishes dragging their unit
-      const cur = currentQueueItem();
-      if (!cur) return;
-      // Check for engagement after move
-      const key = unitKey(cur.factionId, cur.unitId);
-      const pos = sim.unitPositions[key];
-      if (pos) {
-        const { key: enemyKey, dist: enemyDist } = findNearestEnemy(cur.factionId, pos);
-        if (enemyKey && enemyDist <= ENGAGEMENT_PX) {
-          resolveEngagement(key, enemyKey, true);
-          addNoise(NOISE_VALUES.melee, 'Melee');
-        }
-      }
-      sim.soloWaiting = false;
-      const waitEl = document.getElementById('cc-sim-waiting-badge');
-      if (waitEl) waitEl.classList.remove('visible');
-      // Advance to next unit
-      setTimeout(() => window.CC_SIM.nextActivation(), 800);
-    };
-
-    window.CC_SIM.nextActivation = function() {
-      if (isRoundComplete()) {
-        startNewRound();
-        render();
-        return;
-      }
-      advanceQueue();
-
-      const cur = currentQueueItem();
-
-      // Solo mode: if this unit belongs to the player, wait for drag input
-      if (cur && sim.soloFactionId && cur.factionId === sim.soloFactionId) {
-        sim.soloWaiting = true;
-        const waitEl = document.getElementById('cc-sim-waiting-badge');
-        if (waitEl) waitEl.classList.add('visible');
-      } else {
-        sim.soloWaiting = false;
-        const waitEl = document.getElementById('cc-sim-waiting-badge');
-        if (waitEl) waitEl.classList.remove('visible');
-      }
-
-      // Smooth camera follow
-      if (cur) smoothCameraToUnit(unitKey(cur.factionId, cur.unitId));
-
-      refreshActiveUnitPanel();
-      refreshFactionList();
-      refreshQueueBadge();
-    };
-
-    window.CC_SIM.activateAndAdvance = function(callback) {
-      const cur = currentQueueItem();
-      if (!cur) { if (callback) callback(); return; }
-
-      // Skip solo player's units — they control manually
-      if (sim.soloFactionId && cur.factionId === sim.soloFactionId) {
-        window.CC_SIM.nextActivation();
-        if (callback) callback();
-        return;
-      }
-
-      const key = unitKey(cur.factionId, cur.unitId);
-      const pos = sim.unitPositions[key];
-      const unit = getUnitById(getFactionById(cur.factionId), cur.unitId);
-
-      // Camera first — center on this unit before it acts
-      smoothCameraToUnit(key);
-
-      // Short delay so camera settles, then animate movement
-      setTimeout(() => {
-        if (pos) pos.status = 'moving';
-        simulateActivation(cur.factionId, cur.unitId);
-        // Wait for movement animation to finish, THEN advance
-        const moveDuration = unit ? Math.max(600, (unit.move || 6) * 80) : 800;
-        setTimeout(() => {
-          window.CC_SIM.nextActivation();
-          if (callback) callback();
-        }, moveDuration);
-      }, 350);
-    };
-
-    window.CC_SIM.markOut = function(fid, uid) {
-      setUnitState(fid, uid, { out: true });
-      const pos = sim.unitPositions[unitKey(fid, uid)];
-      if (pos) pos.status = 'routed';
-      const faction = getFactionById(fid);
-      const unit    = getUnitById(faction, uid);
-      simLog(`${unit?.name || uid} marked as OUT.`, 'combat');
-      window.CC_SIM.nextActivation();
-    };
-
-    window.CC_SIM.addNoise = function(amount, label) {
-      addNoise(amount, label || 'Manual');
-      refreshNoiseBars();
-    };
-
-    window.CC_SIM.rollEvent = function() {
-      const ev = rollCanyonEvent();
-      if (!ev) simLog('[Event] Nothing happens this round.', 'event');
-    };
-
-    window.CC_SIM.selectScenario = function(id) {
-      state.selectedScenarioId = id;
-      render();
-    };
-
-    window.CC_SIM.fetchScenarios = async function() {
-      if (!window.CC_STORAGE) { render(); return; }
-      state.loadingMsg = 'Fetching scenarios…';
-      state.phase = 'loading';
-      render();
-      try {
-        // CC_STORAGE uses loadDocumentList() — filter to SCN_ files only (same as turn counter)
-        const allDocs = await window.CC_STORAGE.loadDocumentList(SCENARIO_FOLDER);
-        // Case-insensitive match — handles both SCN_ and scn_ prefixes
-        const scenarios = (allDocs || []).filter(d => d.name && d.name.toLowerCase().indexOf('scn_') === 0);
-        state.availableScenarios = scenarios.map(d => ({
-          id:   d.id,
-          // Strip SCN_ prefix, timestamp suffix, underscores — same as turn counter
-          name: d.name.replace(/^scn_/i, '').replace(/_\d{13}(\.json)?$/i, '').replace(/\.json$/i, '').replace(/_/g, ' ').trim() || 'Scenario ' + d.id,
-          date: d.write_date ? new Date(d.write_date).toLocaleDateString() : '',
-        }));
-      } catch (e) { console.warn('fetchScenarios error:', safeErr(e)); state.availableScenarios = []; }
-      state.phase = 'setup';
-      render();
-    };
-
-    window.CC_SIM.launchSimulator = async function() {
-      if (!state.selectedScenarioId) return;
-      // Grab mapId from input BEFORE we replace the setup screen
-      const mapIdInput  = document.getElementById('cc-sim-map-id-input');
-      const mapIdValue  = (mapIdInput  ? mapIdInput.value  : '').trim();
-      const soloInput   = document.getElementById('cc-sim-solo-select');
-      sim.soloFactionId = (soloInput   ? soloInput.value   : '') || null;
-      // Read faction checkboxes — unchecked = exclude from sim
-      const factionChecks = document.querySelectorAll('.cc-sim-faction-check');
-      const enabledFactions = new Set();
-      factionChecks.forEach(cb => { if (cb.checked) enabledFactions.add(cb.value); });
-      sim.enabledFactions = enabledFactions.size > 0 ? enabledFactions : null; // null = all
-      if (sim.soloFactionId) simLog('Solo mode: you control ' + (FACTION_META[sim.soloFactionId] && FACTION_META[sim.soloFactionId].name || sim.soloFactionId), 'deploy');
-      state.phase      = 'loading';
-      state.loadingMsg = 'Loading scenario…';
-      render();
-
-      try {
-        // 1. Load scenario
-        const rawScenario = await safeLoadDocument(state.selectedScenarioId);
-        const scenario    = docToJson(rawScenario);
-        if (!scenario) throw new Error('Scenario data empty');
-        // Scenario builder wraps data as { scenario: {...}, factions: [...], name, danger, ... }
-        // Turn counter uses: payload.scenario for the actual scenario, payload.factions for faction list
-        const payload = scenario;
-        state.scenarioSave   = payload.scenario || payload;
-        state.scenarioName   = payload.name || (payload.scenario && payload.scenario.name) || 'Scenario';
-        state.round          = 1;
-        state.noiseThreshold = 8 + ((payload.danger || (payload.scenario && payload.scenario.danger_rating) || 3) * 2);
-        const mp = state.scenarioSave && state.scenarioSave.monster_pressure;
-        state.monsterRoster  = (mp && mp.monsters) || [];
-
-        // 2. Load factions — mirrors turn counter logic exactly
-        // Scenario save has: factions: [{ id, npc }]
-        // We then load saved rosters from Odoo folder 90 (non-SCN_ files)
-        state.loadingMsg = 'Loading faction rosters...';
-        render();
-
-        const rawFactions = payload.factions || (payload.scenario && payload.scenario.factions) || [];
-        const pendingFactions = rawFactions
-          .map(f => ({ id: f.id, npc: f.npc !== undefined ? f.npc : (f.isNPC !== undefined ? f.isNPC : true) }))
-          .filter(f => !!FACTION_META[f.id]);
-
-        // Load all non-SCN docs from folder 90 to find matching rosters
-        let factionSaveDocs = [];
-        if (window.CC_STORAGE) {
-          try {
-            const allDocs2 = await window.CC_STORAGE.loadDocumentList(FACTION_SAVE_FOLDER).catch(() => []);
-            const nonScenario = (allDocs2 || []).filter(d => d.name && d.name.toLowerCase().indexOf('scn_') !== 0);
-            factionSaveDocs = await Promise.all(nonScenario.map(async d => {
-              const parsed = await safeLoadDocument(d.id);
-              const data   = parsed ? docToJson(parsed) : null;
-              if (data) {
-                d._factionId = data.faction || null;
-                d._armyName  = data.armyName || data.name || null;
-                d._data      = data;
-              }
-              return d;
-            }));
-          } catch (e) { console.warn('Faction save list failed:', safeErr(e)); }
-        }
-
-        const loadedFactions = [];
-
-        for (const fDef of pendingFactions) {
-          const fid = fDef.id;
-          let faction = null;
-
-          // Match saved roster by faction id — prefer one matching the scenario point value
-          const pts = payload.pts || 0;
-          const matches = factionSaveDocs.filter(d => d._factionId === fid);
-          let matchDoc = null;
-          if (matches.length === 1) {
-            matchDoc = matches[0];
-          } else if (matches.length > 1 && pts) {
-            // Prefer the roster whose budget matches the scenario point value
-            matchDoc = matches.find(d => d._data && (d._data.budget === pts || d._data.totalCost === pts))
-                    || matches[0];
-          } else if (matches.length > 1) {
-            matchDoc = matches[0];
-          }
-          if (matchDoc && matchDoc._data) {
-            faction = buildFactionFromSave(fid, matchDoc._data, fDef.npc);
-            console.log('Loaded saved roster for', fid, ':', matchDoc.name);
-          }
-
-          // Fallback: load default faction data from CDN
-          if (!faction) {
-            const data = await loadFactionData(fid);
-            if (data) faction = buildFactionEntry(fid, data, fDef.npc, null);
-          }
-
-          if (faction) {
-            initUnitStates(faction);
-            loadedFactions.push(faction);
-          } else {
-            console.warn('Could not load faction:', fid);
-          }
-        }
-
-        // Filter to only enabled factions
-        const filteredFactions = sim.enabledFactions
-          ? loadedFactions.filter(f => sim.enabledFactions.has(f.id))
-          : loadedFactions;
-        if (!filteredFactions.length) throw new Error('No factions loaded');
-        loadedFactions.length = 0;
-        filteredFactions.forEach(f => loadedFactions.push(f));
-        if (!loadedFactions.length) throw new Error('No factions loaded');
-        state.factions       = loadedFactions;
-        state.noiseLevel     = scenario.noiseLevel     || 0;
-        state.noiseThreshold = scenario.noiseThreshold || 12;
-        state.monstersTriggered = scenario.monstersTriggered || 0;
-        state.monsterRoster  = scenario.monsterRoster  || [];
-
-        // 3. Load monster pool
-        await loadMonsterPool();
-
-        // 4. Load map (optional) — use value captured before loading screen rendered
-        const mapId = mapIdValue || scenario.mapId || '';
-        if (mapId) {
-          state.loadingMsg = `Loading map "${mapId}"…`;
-          render();
-          try {
-            const mapUrl = RAW_BASE + 'data/src/terrain_instances/map_' + mapId + '.json?t=' + Date.now();
-            const res    = await fetch(mapUrl);
-            if (res.ok) {
-              sim.mapData = safeParseJson(await res.text());
-              if (sim.mapData) {
-                await loadTerrainCatalog();
-                preloadTerrainImages();
-                console.log('Map loaded:', mapId);
-              }
-            }
-          } catch (e) { console.warn('Map load failed:', safeErr(e)); }
-        }
-
-        // 5. Load sprites + tabletop
-        state.loadingMsg = 'Loading sprite assets…';
-        render();
-        await Promise.all([loadSpriteAssets(), loadTabletop()]);
-
-        // 6. Deploy and build queue
-        try { deployAllFactions(); } catch(e) { throw new Error('deployAllFactions failed: ' + e.message); }
-        try { buildQueue(); }        catch(e) { throw new Error('buildQueue failed: ' + e.message); }
-
-        state.phase = 'playing';
-        simLog('Game start: ' + state.scenarioName + ' Round ' + state.round, 'round');
-
-        try { render(); }            catch(e) { throw new Error('render failed: ' + e.message); }
-
-      } catch (err) {
-        // Log full stack so we can see exactly which line crashed
-        console.error('❌ Simulator launch failed:', err);
-        console.error('Stack:', err && err.stack ? err.stack : '(no stack)');
-        state.phase = 'setup';
-        render();
-        alert('Failed to launch simulator: ' + (err && err.message ? err.message : String(err)));
-      }
-    };
-
-    window.CC_SIM.focusFaction = function(fid) {
-      // Pan camera to show this faction's units
-      const units = Object.entries(sim.unitPositions)
-        .filter(([k, pos]) => pos && k.startsWith(fid + '::'))
-        .map(([, pos]) => pos);
-      if (!units.length || !sim.canvas) return;
-      const cx = units.reduce((s, p) => s + p.x, 0) / units.length;
-      const cy = units.reduce((s, p) => s + p.y, 0) / units.length;
-      sim.viewX = sim.canvas.width  / 2 - cx * sim.viewScale;
-      sim.viewY = sim.canvas.height / 2 - cy * sim.viewScale;
-    };
-
-    window.CC_SIM.zoom = function(factor) {
-      if (!sim.canvas) return;
-      const cx = sim.canvas.width  / 2;
-      const cy = sim.canvas.height / 2;
-      sim.viewX = cx - (cx - sim.viewX) * factor;
-      sim.viewY = cy - (cy - sim.viewY) * factor;
-      sim.viewScale = Math.max(0.05, Math.min(2, sim.viewScale * factor));
-    };
-
-    window.CC_SIM.zoomFit = function() {
-      if (!sim.canvas) return;
-      const diamondW = 3932, diamondH = 3772;
-      const scaleW   = sim.canvas.width  * 0.92 / diamondW;
-      const scaleH   = sim.canvas.height * 0.92 / diamondH;
-      sim.viewScale  = Math.min(scaleW, scaleH);
-      sim.viewX      = sim.canvas.width  / 2 - 2048 * sim.viewScale;
-      sim.viewY      = sim.canvas.height / 2 - 2090 * sim.viewScale;
-      sim.camTargetX = null;
-      sim.camTargetY = null;
-    };
-
-    window.CC_SIM.toggleAuto = function() {
-      if (sim.autoRunning) {
-        sim.autoRunning = false;
-        const btn = document.getElementById('cc-sim-auto-btn');
-        if (btn) btn.innerHTML = '<i class="fa fa-play"></i> Auto';
-      } else {
-        sim.autoRunning = true;
-        const btn = document.getElementById('cc-sim-auto-btn');
-        if (btn) btn.innerHTML = '<i class="fa fa-stop"></i> Stop';
-        // Use a recursive setTimeout chain — waits for each activation to complete
-        function autoStep() {
-          if (!sim.autoRunning) return;
-          if (isRoundComplete()) {
-            sim.autoRunning = false;
-            const b = document.getElementById('cc-sim-auto-btn');
-            if (b) b.innerHTML = '<i class="fa fa-play"></i> Auto';
-            return;
-          }
-          window.CC_SIM.activateAndAdvance(function() {
-            if (sim.autoRunning) setTimeout(autoStep, sim.simSpeed);
-          });
-        }
-        setTimeout(autoStep, 100);
-      }
-    };
-
-    // ═════════════════════════════════════════════════════════════════════════
-    // INITIAL BOOT
-    // ═════════════════════════════════════════════════════════════════════════
-
-    // If CC_STORAGE is already present when we mount, fetch scenarios immediately
-    if (window.CC_STORAGE) {
-      window.CC_SIM.fetchScenarios();
-    }
-
-    // Initial render
-    render();
-
-  } // end mount()
-
-  // ── Destroy ──────────────────────────────────────────────────────────────────
-  function destroy() {
-    _destroyed = true;
-    if (typeof destroyCanvas === 'function') destroyCanvas();
-    const canvas = document.getElementById('cc-sim-canvas');
-    if (canvas) canvas.remove();
-    if (window.CC_SIM) {
-      if (window.CC_SIM._autoTimer) clearInterval(window.CC_SIM._autoTimer);
-      window.CC_SIM = {};
-    }
-    console.log('🎮 Game Simulator destroyed');
+  "use strict";
+
+  var DEFAULTS = {
+    title: "Coffin Canyon -- Map Maker",
+    mapImageUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/isometric_tile_48x48.svg",
+    mapWidth: 4096,
+    mapHeight: 4096,
+
+    terrainCatalogUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/terrain_catalog.json",
+    locationsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/170_named_locations.json",
+
+    initialInstancesUrl: "",
+
+    appCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_map_maker/cc_app_map_maker.css",
+    leafletCssUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.css",
+    leafletJsUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/vendor/leaflet/leaflet.js",
+
+    assetBaseUrl: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/terrain/",
+    mapImageUrl48: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/isometric_tile_48x48.svg",
+    mapImageUrl36: "https://raw.githubusercontent.com/steamcrow/coffin/main/assets/textures/isometric_tile_36x36.svg",
+    defaultMapId: "lost_yots",
+    defaultMapTitle: "Lost Yots",
+    defaultLocationId: "lost_yots"
+  };
+
+  var state = {
+    opts: null,
+    map: null,
+    imageBounds: null,
+    terrainCatalog: null,
+    terrainById: {},
+    locations: [],
+    currentFile: null,
+    selectedTerrainTypeId: null,
+    selectedInstanceId: null,
+    markersByInstanceId: {},
+    tableSizeInches: 48,
+    bgOverlay: null,
+    instanceData: {
+      map_id: DEFAULTS.defaultMapId,
+      map_title: DEFAULTS.defaultMapTitle,
+      location_id: DEFAULTS.defaultLocationId,
+      map_image: DEFAULTS.mapImageUrl,
+      map_size_px: { w: DEFAULTS.mapWidth, h: DEFAULTS.mapHeight },
+      instances: []
+    },
+    ui: {}
+  };
+
+  function mergeOpts(userOpts) {
+    var out = {};
+    Object.keys(DEFAULTS).forEach(function (k) { out[k] = DEFAULTS[k]; });
+    Object.keys(userOpts || {}).forEach(function (k) { out[k] = userOpts[k]; });
+    return out;
   }
 
-  // ── Register ─────────────────────────────────────────────────────────────────
-  window.CC_APP = { mount, destroy };
-  console.log('🎮 CC_APP (Game Simulator) registered');
+  function ensureCss(url) {
+    if (!url) return Promise.resolve();
+    var existing = Array.prototype.slice.call(document.querySelectorAll('link[rel="stylesheet"]'))
+      .find(function (el) { return (el.href || "").indexOf(url) !== -1; });
+    if (existing) return Promise.resolve();
 
-}()); // end IIFE
+    return new Promise(function (resolve, reject) {
+      var link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = url + "?t=" + Date.now();
+      link.onload = resolve;
+      link.onerror = function () { reject(new Error("Failed to load CSS: " + url)); };
+      document.head.appendChild(link);
+    });
+  }
+
+  function ensureScript(url) {
+    if (!url) return Promise.resolve();
+    return new Promise(function (resolve, reject) {
+      var found = Array.prototype.slice.call(document.scripts).some(function (s) {
+        return (s.src || "").indexOf(url) !== -1;
+      });
+      if (found) {
+        resolve();
+        return;
+      }
+
+      fetch(url + "?t=" + Date.now())
+        .then(function (r) {
+          if (!r.ok) throw new Error("HTTP " + r.status + " for " + url);
+          return r.text();
+        })
+        .then(function (text) {
+          var blob = new Blob([text], { type: "text/javascript" });
+          var blobUrl = URL.createObjectURL(blob);
+          var script = document.createElement("script");
+          script.src = blobUrl;
+          script.onload = function () {
+            URL.revokeObjectURL(blobUrl);
+            resolve();
+          };
+          script.onerror = function () {
+            URL.revokeObjectURL(blobUrl);
+            reject(new Error("Failed to execute script: " + url));
+          };
+          document.head.appendChild(script);
+        })
+        .catch(reject);
+    });
+  }
+
+  function fetchJson(url) {
+    if (!url) return Promise.resolve(null);
+    return fetch(url + (url.indexOf("?") === -1 ? "?t=" : "&t=") + Date.now())
+      .then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status + " for " + url);
+        return r.json();
+      });
+  }
+
+  function el(tag, attrs, children) {
+    var node = document.createElement(tag);
+    attrs = attrs || {};
+    Object.keys(attrs).forEach(function (k) {
+      if (k === "class") node.className = attrs[k];
+      else if (k === "html") node.innerHTML = attrs[k];
+      else if (k === "text") node.textContent = attrs[k];
+      else node.setAttribute(k, attrs[k]);
+    });
+    (children || []).forEach(function (child) {
+      if (child == null) return;
+      node.appendChild(typeof child === "string" ? document.createTextNode(child) : child);
+    });
+    return node;
+  }
+
+  function clamp(num, min, max) {
+    return Math.max(min, Math.min(max, num));
+  }
+
+  function makeId(prefix) {
+    return prefix + "_" + Math.random().toString(36).slice(2, 10);
+  }
+
+  function deepClone(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  function getTerrainTypes() {
+    if (!state.terrainCatalog) return [];
+    if (Array.isArray(state.terrainCatalog.terrain_types)) return state.terrainCatalog.terrain_types;
+    if (Array.isArray(state.terrainCatalog.terrain_types_batch_2)) return state.terrainCatalog.terrain_types_batch_2;
+    return [];
+  }
+
+  function normalizeLocations(raw) {
+    if (!raw) return [];
+    if (Array.isArray(raw.locations)) return raw.locations;
+    if (Array.isArray(raw.named_locations)) return raw.named_locations;
+    if (Array.isArray(raw)) return raw;
+    return [];
+  }
+
+  function buildLayout(root) {
+    root.innerHTML = "";
+
+    var app = el("div", { class: "cc-mm-app" });
+    var toolbar = el("div", { class: "cc-mm-toolbar" });
+    var body = el("div", { class: "cc-mm-body" });
+
+    var left   = el("aside", { class: "cc-mm-sidebar cc-mm-sidebar--left" });
+    var center = el("main",  { class: "cc-mm-center" });
+    var right  = el("aside", { class: "cc-mm-sidebar cc-mm-sidebar--right" });
+
+    var mapWrap = el("div", { class: "cc-mm-map-wrap" });
+    var mapEl   = el("div", { class: "cc-mm-map", id: "cc-mm-map" });
+    mapWrap.appendChild(mapEl);
+    center.appendChild(mapWrap);
+
+    body.appendChild(left);
+    body.appendChild(center);
+    body.appendChild(right);
+    app.appendChild(toolbar);
+    app.appendChild(body);
+    root.appendChild(app);
+
+    state.ui = {
+      root: root,
+      app: app,
+      toolbar: toolbar,
+      left: left,
+      center: center,
+      right: right,
+      mapEl: mapEl
+    };
+
+    buildToolbar();
+    buildLeftSidebar();
+    buildRightSidebar();
+
+    // Keyboard: Delete removes selected instance
+    document.addEventListener("keydown", function (ev) {
+      if ((ev.key === "Delete" || ev.key === "Backspace") &&
+          state.selectedInstanceId &&
+          document.activeElement.tagName !== "INPUT" &&
+          document.activeElement.tagName !== "TEXTAREA") {
+        deleteSelectedInstance();
+      }
+    });
+  }
+  function buildToolbar() {
+    var ui = state.ui;
+    ui.toolbar.innerHTML = "";
+
+    var title = el("div", { class: "cc-mm-toolbar-title", text: state.opts.title });
+
+    var mapTitleInput = el("input", {
+      class: "cc-mm-input",
+      type: "text",
+      placeholder: "Map Title"
+    });
+    mapTitleInput.value = state.instanceData.map_title || "";
+
+    var mapIdInput = el("input", {
+      class: "cc-mm-input",
+      type: "text",
+      placeholder: "map_id"
+    });
+    mapIdInput.value = state.instanceData.map_id || "";
+
+    var locationSelect = el("select", { class: "cc-mm-input" });
+    renderLocationOptions(locationSelect);
+
+    var btnExport = el("button", { class: "cc-mm-btn cc-mm-btn--primary", text: "Export JSON" });
+    var btnLoadJson = el("button", { class: "cc-mm-btn", text: "Load JSON" });
+    var btnDelete = el("button", { class: "cc-mm-btn", text: "Delete Selected" });
+    var btnClear = el("button", { class: "cc-mm-btn", text: "Clear Map" });
+
+    var fileInput = el("input", {
+      type: "file",
+      accept: ".json,application/json",
+      style: "display:none"
+    });
+
+    btnLoadJson.addEventListener("click", function () {
+      fileInput.click();
+    });
+
+    fileInput.addEventListener("change", function (ev) {
+      var file = ev.target.files && ev.target.files[0];
+      if (!file) return;
+
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var parsed = JSON.parse(reader.result);
+          loadInstancesData(parsed);
+        } catch (err) {
+          alert("Invalid JSON file: " + err.message);
+        }
+      };
+      reader.readAsText(file);
+    });
+
+    mapTitleInput.addEventListener("input", function () {
+      state.instanceData.map_title = mapTitleInput.value.trim();
+    });
+
+    mapIdInput.addEventListener("input", function () {
+      state.instanceData.map_id = mapIdInput.value.trim();
+    });
+
+    locationSelect.addEventListener("change", function () {
+      state.instanceData.location_id = locationSelect.value || "";
+    });
+
+    btnExport.addEventListener("click", function () {
+      exportJson();
+    });
+
+    btnDelete.addEventListener("click", function () {
+      deleteSelectedInstance();
+    });
+
+    btnClear.addEventListener("click", function () {
+      if (!confirm("Clear all placed terrain from this map?")) return;
+      clearAllInstances();
+    });
+
+    var tableSizeSelect = el("select", { class: "cc-mm-input" });
+    [48, 36].forEach(function(s) {
+      var opt = el("option", { value: String(s), text: s + '"x' + s + '"' });
+      if (s === state.tableSizeInches) opt.selected = true;
+      tableSizeSelect.appendChild(opt);
+    });
+    tableSizeSelect.addEventListener("change", function() {
+      state.tableSizeInches = parseInt(this.value);
+      updateBackground();
+      // Rebuild all markers so sizes recalculate for new table size
+      var instances = state.instanceData.instances.slice();
+      Object.keys(state.markersByInstanceId).forEach(function(id) {
+        var m = state.markersByInstanceId[id];
+        if (m && state.map) state.map.removeLayer(m);
+      });
+      state.markersByInstanceId = {};
+      instances.forEach(function(inst) { addInstanceMarker(inst); });
+      refreshAllIconSizes();
+      renderInspector();
+    });
+
+    var group1 = el("div", { class: "cc-mm-toolbar-group" }, [title,
+      el("span", { class: "cc-mm-label", text: "Table" }),
+      tableSizeSelect
+    ]);
+
+    var group2 = el("div", { class: "cc-mm-toolbar-group" }, [
+      el("label", { class: "cc-mm-label", text: "Map Title" }),
+      mapTitleInput,
+      el("label", { class: "cc-mm-label", text: "Map ID" }),
+      mapIdInput,
+      el("label", { class: "cc-mm-label", text: "Location" }),
+      locationSelect
+    ]);
+    var group3 = el("div", { class: "cc-mm-toolbar-group" }, [
+      btnLoadJson,
+      btnExport,
+      btnDelete,
+      btnClear,
+      fileInput
+    ]);
+
+    ui.toolbar.appendChild(group1);
+    ui.toolbar.appendChild(group2);
+    ui.toolbar.appendChild(group3);
+
+    ui.mapTitleInput = mapTitleInput;
+    ui.mapIdInput = mapIdInput;
+    ui.locationSelect = locationSelect;
+  }
+
+  function renderLocationOptions(selectEl) {
+    selectEl.innerHTML = "";
+    selectEl.appendChild(el("option", { value: "", text: "-- Select Location --" }));
+
+    state.locations.forEach(function (loc) {
+      var id = loc.location_id || loc.id || loc.slug || loc.name || "";
+      var name = loc.name || loc.title || id;
+      if (!id) return;
+      selectEl.appendChild(el("option", { value: id, text: name }));
+    });
+
+    selectEl.value = state.instanceData.location_id || "";
+  }
+
+  function buildLeftSidebar() {
+    var ui = state.ui;
+    ui.left.innerHTML = "";
+
+    var header = el("div", { class: "cc-mm-sidebar-header", text: "Terrain Palette" });
+
+    var search = el("input", {
+      class: "cc-mm-input cc-mm-input--full",
+      type: "text",
+      placeholder: "Search terrain..."
+    });
+
+    var filterKind = el("select", { class: "cc-mm-input cc-mm-input--full" });
+    filterKind.appendChild(el("option", { value: "", text: "All kinds" }));
+    ["building", "scatter", "obstacle", "area", "hazard", "feature", "objective"].forEach(function (kind) {
+      filterKind.appendChild(el("option", { value: kind, text: kind }));
+    });
+
+    var list = el("div", { class: "cc-mm-palette-list" });
+
+    function renderPalette() {
+      var q = (search.value || "").trim().toLowerCase();
+      var kind = filterKind.value || "";
+      list.innerHTML = "";
+
+      getTerrainTypes().forEach(function (item) {
+        var hay = [
+          item.name,
+          item.terrain_type_id,
+          item.family,
+          (item.tags || []).join(" ")
+        ].join(" ").toLowerCase();
+
+        if (q && hay.indexOf(q) === -1) return;
+        if (kind && item.kind !== kind) return;
+
+        var card = el("button", { class: "cc-mm-palette-card" });
+        card.setAttribute("draggable", "true");
+        if (state.selectedTerrainTypeId === item.terrain_type_id) {
+          card.classList.add("is-selected");
+        }
+
+        var line1 = el("div", { class: "cc-mm-palette-title", text: item.name || item.terrain_type_id });
+        var line2 = el("div", { class: "cc-mm-palette-meta", text: (item.family || "") + " ? " + (item.kind || "") });
+        var line3 = el("div", { class: "cc-mm-palette-meta", text: item.terrain_type_id });
+
+        card.appendChild(line1);
+        card.appendChild(line2);
+        card.appendChild(line3);
+
+        card.addEventListener("click", function () {
+          state.selectedTerrainTypeId = item.terrain_type_id;
+          renderPalette();
+          renderInspector();
+        });
+
+        card.addEventListener("dragstart", function (ev) {
+          state.selectedTerrainTypeId = item.terrain_type_id;
+          ev.dataTransfer.setData("text/plain", item.terrain_type_id);
+          ev.dataTransfer.effectAllowed = "copy";
+          renderPalette();
+        });
+
+        list.appendChild(card);
+      });
+    }
+
+    search.addEventListener("input", renderPalette);
+    filterKind.addEventListener("change", renderPalette);
+
+    ui.left.appendChild(el("div", { class: "cc-mm-sidebar-header", text: "Terrain Palette" }));
+
+    var controls = el("div", { class: "cc-mm-palette-controls" });
+    controls.appendChild(search);
+    controls.appendChild(filterKind);
+    ui.left.appendChild(controls);
+    ui.left.appendChild(list);
+
+    ui.paletteSearch = search;
+    ui.paletteFilterKind = filterKind;
+    ui.paletteList = list;
+    ui.renderPalette = renderPalette;
+
+    renderPalette();
+  }
+
+  function buildRightSidebar() {
+    var ui = state.ui;
+    ui.right.innerHTML = "";
+    var header = el("div", { class: "cc-mm-sidebar-header", text: "Inspector" });
+    var body   = el("div", { class: "cc-mm-inspector-body" });
+    var panel  = el("div", { class: "cc-mm-inspector" });
+    body.appendChild(panel);
+    ui.right.appendChild(header);
+    ui.right.appendChild(body);
+    ui.inspector = panel;
+    renderInspector();
+  }
+
+  function renderInspector() {
+    var ui = state.ui;
+    var panel = ui.inspector;
+    if (!panel) return;
+    panel.innerHTML = "";
+
+    var selectedTerrain = state.terrainById[state.selectedTerrainTypeId] || null;
+    var selectedInstance = getSelectedInstance();
+
+    if (!selectedTerrain && !selectedInstance) {
+      panel.appendChild(el("div", {
+        class: "cc-mm-empty",
+        text: "Select a terrain type on the left, then click the map to place it."
+      }));
+      return;
+    }
+
+    if (selectedTerrain && !selectedInstance) {
+      panel.appendChild(el("div", { class: "cc-mm-section-title", text: "Selected Terrain Type" }));
+      panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+        el("div", { class: "cc-mm-k", text: "Name" }),
+        el("div", { class: "cc-mm-v", text: selectedTerrain.name || "" })
+      ]));
+      panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+        el("div", { class: "cc-mm-k", text: "ID" }),
+        el("div", { class: "cc-mm-v", text: selectedTerrain.terrain_type_id || "" })
+      ]));
+      panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+        el("div", { class: "cc-mm-k", text: "Kind" }),
+        el("div", { class: "cc-mm-v", text: selectedTerrain.kind || "" })
+      ]));
+      panel.appendChild(el("div", {
+        class: "cc-mm-help",
+        text: "Click the map to place this terrain."
+      }));
+      return;
+    }
+
+    if (!selectedInstance) return;
+
+    var terrain = state.terrainById[selectedInstance.terrain_type_id] || null;
+
+    panel.appendChild(el("div", { class: "cc-mm-section-title", text: "Selected Instance" }));
+
+    function numberField(label, value, step, onInput) {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var lbl = el("label", { class: "cc-mm-label", text: label });
+      var input = el("input", {
+        class: "cc-mm-input cc-mm-input--full",
+        type: "number",
+        step: step || "1",
+        value: String(value == null ? "" : value)
+      });
+      input.addEventListener("input", function () {
+        onInput(input.value);
+      });
+      wrap.appendChild(lbl);
+      wrap.appendChild(input);
+      return wrap;
+    }
+
+    function textField(label, value, onInput) {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var lbl = el("label", { class: "cc-mm-label", text: label });
+      var input = el("input", {
+        class: "cc-mm-input cc-mm-input--full",
+        type: "text",
+        value: value == null ? "" : value
+      });
+      input.addEventListener("input", function () {
+        onInput(input.value);
+      });
+      wrap.appendChild(lbl);
+      wrap.appendChild(input);
+      return wrap;
+    }
+
+    panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+      el("div", { class: "cc-mm-k", text: "Terrain" }),
+      el("div", { class: "cc-mm-v", text: terrain ? terrain.name : selectedInstance.terrain_type_id })
+    ]));
+    panel.appendChild(el("div", { class: "cc-mm-kv" }, [
+      el("div", { class: "cc-mm-k", text: "Instance ID" }),
+      el("div", { class: "cc-mm-v", text: selectedInstance.instance_id })
+    ]));
+
+    // -- Flip -- right at the top so it's always visible ------------
+    (function () {
+      var btn = el("button", {
+        class: "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : ""),
+        text:  selectedInstance.mirror_x ? "? Flipped" : "? Flip",
+        style: "width:100%;justify-content:center;margin-bottom:10px;"
+      });
+      btn.addEventListener("click", function () {
+        selectedInstance.mirror_x = !selectedInstance.mirror_x;
+        syncInstanceMarker(selectedInstance);
+        btn.textContent = selectedInstance.mirror_x ? "? Flipped" : "? Flip";
+        btn.className   = "cc-mm-btn" + (selectedInstance.mirror_x ? " cc-mm-btn--primary" : "");
+      });
+      panel.appendChild(btn);
+    }());
+
+    panel.appendChild(numberField("X", selectedInstance.x, "1", function (v) {
+      selectedInstance.x = Number(v || 0);
+      syncInstanceMarker(selectedInstance);
+    }));
+
+    panel.appendChild(numberField("Y", selectedInstance.y, "1", function (v) {
+      selectedInstance.y = Number(v || 0);
+      syncInstanceMarker(selectedInstance);
+    }));
+
+    // -- Rotation: number field + drag bar -------------------------
+    panel.appendChild(numberField("Rotation (?)", selectedInstance.rotation_deg || 0, "1", function (v) {
+      selectedInstance.rotation_deg = Number(v || 0);
+      syncInstanceMarker(selectedInstance);
+      var sl = panel.querySelector(".cc-mm-rot-slider");
+      if (sl) sl.value = selectedInstance.rotation_deg;
+    }));
+    (function () {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var sl = document.createElement("input");
+      sl.type = "range"; sl.className = "cc-mm-rot-slider";
+      sl.min = "0"; sl.max = "359"; sl.step = "1";
+      sl.value = String(selectedInstance.rotation_deg || 0);
+      sl.style.cssText = "width:100%;accent-color:#ffb066;cursor:pointer;";
+      sl.addEventListener("input", function () {
+        selectedInstance.rotation_deg = parseFloat(sl.value);
+        syncInstanceMarker(selectedInstance);
+      });
+      wrap.appendChild(sl);
+      panel.appendChild(wrap);
+    }());
+
+
+    // -- Scale: number field + drag bar ----------------------------
+    panel.appendChild(numberField("Scale", selectedInstance.scale || 1, "0.05", function (v) {
+      selectedInstance.scale = clamp(Number(v || 1), 0.1, 5);
+      syncInstanceMarker(selectedInstance);
+      var sl = panel.querySelector(".cc-mm-scale-slider");
+      if (sl) sl.value = selectedInstance.scale;
+    }));
+    (function () {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var sl = document.createElement("input");
+      sl.type = "range"; sl.className = "cc-mm-scale-slider";
+      sl.min = "0.1"; sl.max = "3"; sl.step = "0.05";
+      sl.value = String(selectedInstance.scale || 1);
+      sl.style.cssText = "width:100%;accent-color:#ffb066;cursor:pointer;";
+      sl.addEventListener("input", function () {
+        selectedInstance.scale = clamp(parseFloat(sl.value), 0.1, 5);
+        syncInstanceMarker(selectedInstance);
+      });
+      wrap.appendChild(sl);
+      panel.appendChild(wrap);
+    }());
+
+    // -- Z-Index: number field + drag bar --------------------------
+    panel.appendChild(numberField("Z-Index", selectedInstance.z_index || 0, "1", function (v) {
+      selectedInstance.z_index = Number(v || 0);
+      syncInstanceMarker(selectedInstance);
+      var sl = panel.querySelector(".cc-mm-z-slider");
+      if (sl) sl.value = selectedInstance.z_index;
+    }));
+    (function () {
+      var wrap = el("div", { class: "cc-mm-field" });
+      var sl = document.createElement("input");
+      sl.type = "range"; sl.className = "cc-mm-z-slider";
+      sl.min = "-10"; sl.max = "20"; sl.step = "1";
+      sl.value = String(selectedInstance.z_index || 0);
+      sl.style.cssText = "width:100%;accent-color:#ffb066;cursor:pointer;";
+      sl.addEventListener("input", function () {
+        selectedInstance.z_index = parseFloat(sl.value);
+        syncInstanceMarker(selectedInstance);
+      });
+      wrap.appendChild(sl);
+      panel.appendChild(wrap);
+    }());
+
+    panel.appendChild(textField("Tags (comma separated)", (selectedInstance.tags || []).join(", "), function (v) {
+      selectedInstance.tags = String(v || "")
+        .split(",")
+        .map(function (x) { return x.trim(); })
+        .filter(Boolean);
+    }));
+
+    panel.appendChild(el("div", {
+      class: "cc-mm-help",
+      text: "Drag directly on the map to reposition. Press Delete key to remove."
+    }));
+
+    var btnDel = el("button", {
+      class: "cc-mm-btn",
+      text: "? Delete This Terrain",
+      style: "width:100%;margin-top:10px;border-color:#933;color:#f88;"
+    });
+    btnDel.addEventListener("click", deleteSelectedInstance);
+    panel.appendChild(btnDel);
+  }
+
+  function currentBgUrl() {
+    var opts = state.opts || DEFAULTS;
+    return state.tableSizeInches === 36 ? opts.mapImageUrl36 : opts.mapImageUrl48;
+  }
+
+  function updateBackground() {
+    if (!state.bgOverlay) return;
+    state.bgOverlay.setUrl(currentBgUrl());
+  }
+
+  function initLeaflet() {
+    if (!window.L) throw new Error("Leaflet is not loaded.");
+
+    var mapEl = state.ui.mapEl;
+    mapEl.innerHTML = "";
+
+    var W = state.instanceData.map_size_px.w;
+    var H = state.instanceData.map_size_px.h;
+    var bounds = [[0, 0], [H, W]];
+    state.imageBounds = bounds;
+
+    // Dead space above the table for off-map staging
+    var deadSpace = 400;
+
+    var map = L.map(mapEl, {
+      crs: L.CRS.Simple,
+      minZoom: -5,     // will be recalculated to fit width after mount
+      maxZoom: 2,
+      zoomSnap: 0.05,
+      zoomDelta: 0.25,
+      attributionControl: false,
+      dragging: false,
+      scrollWheelZoom: true,
+      doubleClickZoom: false,
+      touchZoom: true
+    });
+
+    // Create z-index panes (one per level -10 to 20)
+    for (var z = -10; z <= 20; z++) {
+      var paneName = "zPane" + (z < 0 ? "n" + Math.abs(z) : z);
+      if (!map.getPane(paneName)) {
+        map.createPane(paneName);
+        map.getPane(paneName).style.zIndex = String(400 + z * 5);
+        map.getPane(paneName).style.pointerEvents = "auto";
+      }
+    }
+
+    // SVG tabletop -- sits below everything
+    state.bgOverlay = L.imageOverlay(currentBgUrl(), bounds, {
+      interactive: false,
+      pane: "tilePane"
+    }).addTo(map);
+
+    // Fit the table to fill container width, with a little breathing room at top
+    // padding: [topPx, sidePx] -- 40px top gives the staging dead space above the table
+    map.fitBounds(bounds, { padding: [40, 0] });
+    var fitZoom = map.getZoom();
+    state.fitZoom = fitZoom;
+    map.setMinZoom(fitZoom);  // can't zoom out past full-table view
+
+    // Refresh all terrain icon sizes whenever zoom changes so they scale with the tabletop
+    map.on("zoomend", function() { refreshAllIconSizes(); });
+
+    map.on("click", function (ev) {
+      if (!state.selectedTerrainTypeId) return;
+      placeTerrainAt(ev.latlng);
+      // Deselect after stamp so next click doesn't place another
+      state.selectedTerrainTypeId = null;
+      if (state.ui.renderPalette) state.ui.renderPalette();
+    });
+
+    // Drag-and-drop: terrain card dragged onto the map
+    mapEl.addEventListener("dragover", function (ev) {
+      ev.preventDefault();
+      ev.dataTransfer.dropEffect = "copy";
+      mapEl.classList.add("drag-over");
+    });
+
+    mapEl.addEventListener("dragleave", function () {
+      mapEl.classList.remove("drag-over");
+    });
+
+    mapEl.addEventListener("drop", function (ev) {
+      ev.preventDefault();
+      mapEl.classList.remove("drag-over");
+      var typeId = ev.dataTransfer.getData("text/plain");
+      if (typeId) state.selectedTerrainTypeId = typeId;
+      if (!state.selectedTerrainTypeId) return;
+
+      // Convert pixel position to Leaflet latlng
+      var rect = mapEl.getBoundingClientRect();
+      var containerPoint = L.point(
+        ev.clientX - rect.left,
+        ev.clientY - rect.top
+      );
+      var latlng = map.containerPointToLatLng(containerPoint);
+      placeTerrainAt(latlng);
+      // Deselect after stamp
+      state.selectedTerrainTypeId = null;
+      if (state.ui.renderPalette) state.ui.renderPalette();
+    });
+
+    state.map = map;
+  }
+
+  function buildAssetUrl(assetFile) {
+    if (!assetFile) return "";
+    if (/^https?:\/\//i.test(assetFile)) return assetFile;
+    return state.opts.assetBaseUrl.replace(/\/+$/, "") + "/" + assetFile.replace(/^\/+/, "");
+  }
+
+  function terrainIconCssPx(terrain, instance) {
+    // Direct geometry: measure table width in CSS pixels right now,
+    // then size terrain as (footprintInches / tableSizeInches) of that.
+    // This is always correct regardless of zoom, CRS, or Leaflet internals.
+    if (!state.map || !state.imageBounds) return 32;
+    var fp = terrain && terrain.footprint && terrain.footprint.size_in;
+    var w  = (fp && fp.w) ? fp.w : 4;
+    var W  = state.instanceData.map_size_px.w;
+    var p1 = state.map.latLngToContainerPoint(L.latLng(0, 0));
+    var p2 = state.map.latLngToContainerPoint(L.latLng(0, W));
+    var tableWidthPx = Math.abs(p2.x - p1.x);
+    var scale = instance ? (instance.scale || 1) : 1;
+    return Math.max(4, Math.round(tableWidthPx * (w / state.tableSizeInches) * scale));
+  }
+
+  function refreshAllIconSizes() {
+    // Called on zoomend -- rebuilds icon sizes so terrain stays locked to tabletop scale
+    state.instanceData.instances.forEach(function(inst) {
+      var marker  = state.markersByInstanceId[inst.instance_id];
+      var terrain = state.terrainById[inst.terrain_type_id];
+      if (marker && terrain) marker.setIcon(buildDivIcon(inst, terrain));
+    });
+  }
+
+  function buildMarkerHtml(instance, terrain) {
+    var url      = buildAssetUrl(terrain.asset_file);
+    var rotation = instance.rotation_deg || 0;
+    var width    = terrainIconCssPx(terrain, instance);
+
+    return (
+      '<div class="cc-mm-terrain-wrap" data-instance-id="' + escapeHtml(instance.instance_id) + '" style="width:' + width + 'px;">' +
+        '<img class="cc-mm-terrain-img' + (state.selectedInstanceId === instance.instance_id ? ' is-selected' : '') + '"' +
+        ' src="' + escapeHtml(url) + '"' +
+        ' draggable="false"' +
+        ' style="transform:rotate(' + rotation + 'deg)' + (instance.mirror_x ? ' scaleX(-1)' : '') + ';" />' +
+      '</div>'
+    );
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function buildDivIcon(instance, terrain) {
+    var width = terrainIconCssPx(terrain, instance);
+    return L.divIcon({
+      className:  "cc-mm-div-icon",
+      html:       buildMarkerHtml(instance, terrain),
+      iconSize:   [width, width * 3],   // tall enough to never clip; image is height:auto
+      iconAnchor: [Math.round(width / 2), 0]
+    });
+  }
+
+    function zPaneName(z) {
+    var clamped = Math.max(-10, Math.min(20, Math.round(z || 0)));
+    return "zPane" + (clamped < 0 ? "n" + Math.abs(clamped) : clamped);
+  }
+
+  function addInstanceMarker(instance) {
+    var terrain = state.terrainById[instance.terrain_type_id];
+    if (!terrain) return;
+
+    var marker = L.marker([instance.y, instance.x], {
+      draggable: true,
+      icon: buildDivIcon(instance, terrain),
+      pane: zPaneName(instance.z_index || 0)
+    }).addTo(state.map);
+
+    marker.on("click", function (ev) {
+      L.DomEvent.stopPropagation(ev);
+      selectInstance(instance.instance_id);
+    });
+
+    marker.on("dragend", function () {
+      var ll = marker.getLatLng();
+      instance.x = Math.round(ll.lng);
+      instance.y = Math.round(ll.lat);
+      syncInstanceMarker(instance);
+      renderInspector();
+    });
+
+    state.markersByInstanceId[instance.instance_id] = marker;
+
+    setTimeout(function () {
+      var elNode = marker.getElement();
+      if (!elNode) return;
+      elNode.style.pointerEvents = "auto";
+    }, 0);
+  }
+
+  function syncInstanceMarker(instance) {
+    var marker  = state.markersByInstanceId[instance.instance_id];
+    var terrain = state.terrainById[instance.terrain_type_id];
+    if (!marker || !terrain) return;
+
+    marker.setLatLng([instance.y, instance.x]);
+    marker.setIcon(buildDivIcon(instance, terrain));
+
+    // Move marker to correct z-pane
+    var paneName = zPaneName(instance.z_index || 0);
+    if (state.map.getPane(paneName)) {
+      state.map.getPane(paneName).appendChild(marker.getElement ? marker.getElement() : marker._icon);
+    }
+
+    renderInspector();
+  }
+
+  function clearAllMarkers() {
+    Object.keys(state.markersByInstanceId).forEach(function (id) {
+      var marker = state.markersByInstanceId[id];
+      if (marker && state.map) state.map.removeLayer(marker);
+    });
+    state.markersByInstanceId = {};
+  }
+
+  function loadInstancesData(data) {
+    if (!data || !Array.isArray(data.instances)) {
+      alert("This file does not look like a terrain instances file.");
+      return;
+    }
+
+    state.instanceData = deepClone(data);
+
+    state.ui.mapTitleInput.value = state.instanceData.map_title || "";
+    state.ui.mapIdInput.value = state.instanceData.map_id || "";
+    state.ui.locationSelect.value = state.instanceData.location_id || "";
+
+    clearAllMarkers();
+
+    if (state.map) {
+      state.map.remove();
+      state.map = null;
+    }
+
+    initLeaflet();
+
+    state.instanceData.instances.forEach(function (instance) {
+      addInstanceMarker(instance);
+    });
+
+    state.selectedInstanceId = null;
+    renderInspector();
+  }
+
+  function getSelectedInstance() {
+    if (!state.selectedInstanceId) return null;
+    return state.instanceData.instances.find(function (x) {
+      return x.instance_id === state.selectedInstanceId;
+    }) || null;
+  }
+
+  function selectInstance(instanceId) {
+    state.selectedInstanceId = instanceId;
+
+    state.instanceData.instances.forEach(function (inst) {
+      syncInstanceMarker(inst);
+    });
+
+    renderInspector();
+  }
+
+  function placeTerrainAt(latlng) {
+    var terrain = state.terrainById[state.selectedTerrainTypeId];
+    if (!terrain) return;
+
+    var instance = {
+      instance_id: makeId("terrain"),
+      terrain_type_id: terrain.terrain_type_id,
+      x: Math.round(latlng.lng),
+      y: Math.round(latlng.lat),
+      rotation_deg: 0,
+      scale: terrain.editor_defaults && terrain.editor_defaults.scale ? terrain.editor_defaults.scale : 1,
+      mirror_x: false,
+      mirror_y: false,
+      z_index: 0,
+      opacity: 1,
+      locked: false,
+      hidden_in_editor: false,
+      state: {
+        destroyed: false,
+        disabled: false,
+        variant_override: null
+      },
+      slot_bindings: [],
+      tags: [],
+      notes: ""
+    };
+
+    state.instanceData.instances.push(instance);
+    addInstanceMarker(instance);
+    selectInstance(instance.instance_id);
+  }
+
+  function deleteSelectedInstance() {
+    var selected = getSelectedInstance();
+    if (!selected) return;
+
+    if (!confirm("Delete selected terrain instance?")) return;
+
+    var marker = state.markersByInstanceId[selected.instance_id];
+    if (marker && state.map) {
+      state.map.removeLayer(marker);
+    }
+    delete state.markersByInstanceId[selected.instance_id];
+
+    state.instanceData.instances = state.instanceData.instances.filter(function (x) {
+      return x.instance_id !== selected.instance_id;
+    });
+
+    state.selectedInstanceId = null;
+    renderInspector();
+  }
+
+  function clearAllInstances() {
+    clearAllMarkers();
+    state.instanceData.instances = [];
+    state.selectedInstanceId = null;
+    renderInspector();
+  }
+
+  function exportJson() {
+    var payload = deepClone(state.instanceData);
+
+    var blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: "application/json"
+    });
+
+    var fileName = (payload.map_id || "map") + "_instances.json";
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }
+
+  function initData() {
+    var opts = state.opts;
+
+    return Promise.all([
+      fetchJson(opts.terrainCatalogUrl),
+      fetchJson(opts.locationsUrl),
+      opts.initialInstancesUrl ? fetchJson(opts.initialInstancesUrl) : Promise.resolve(null)
+    ]).then(function (results) {
+      state.terrainCatalog = results[0];
+      state.locations = normalizeLocations(results[1]);
+
+      getTerrainTypes().forEach(function (item) {
+        state.terrainById[item.terrain_type_id] = item;
+      });
+
+      if (results[2] && Array.isArray(results[2].instances)) {
+        state.instanceData = results[2];
+      } else {
+        state.instanceData = {
+          map_id: opts.defaultMapId,
+          map_title: opts.defaultMapTitle,
+          location_id: opts.defaultLocationId,
+          map_image: opts.mapImageUrl,
+          map_size_px: { w: opts.mapWidth, h: opts.mapHeight },
+          instances: []
+        };
+      }
+    });
+  }
+
+    function mount(root, userOpts) {
+    if (!root) throw new Error("Map Maker mount root is required.");
+
+    state.opts = mergeOpts(userOpts || {});
+
+    return Promise.resolve()
+      .then(function () {
+        return initData();
+      })
+      .then(function () {
+        buildLayout(root);
+        initLeaflet();
+
+        state.instanceData.instances.forEach(function (instance) {
+          addInstanceMarker(instance);
+        });
+
+        renderLocationOptions(state.ui.locationSelect);
+      })
+      .catch(function (err) {
+        console.error("Map Maker failed:", err);
+        root.innerHTML = '<div style="padding:16px;color:#f88;background:#1a1a1a;border:1px solid #533;">Map Maker failed: ' +
+          escapeHtml(err.message) + "</div>";
+      });
+  }
+
+  window.CC_APP_MAP_MAKER = {
+    mount: mount
+  };
+})();
