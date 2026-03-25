@@ -738,9 +738,7 @@ console.log("🎮 Game Simulator loaded");
 
     function addNoise(amount, label) {
       state.noiseLevel += amount;
-      if (amount > 0) {
-        simLog('[Noise +' + amount + '] ' + label + ' (total: ' + state.noiseLevel + '/' + state.noiseThreshold + ')', 'event');
-      }
+      // Don't log noise — game tracks it silently
       checkMonsterTrigger();
       refreshNoiseBars();
     }
@@ -841,32 +839,12 @@ console.log("🎮 Game Simulator loaded");
       window.addEventListener('resize', resizeCanvas);
 
       // Pan with mouse drag
-      canvas.addEventListener('mousedown', e => {
-        sim.isDragging = true;
-        sim.dragLast = { x: e.clientX, y: e.clientY };
-        wrap.classList.add('is-dragging');
-      });
+      // Map is static — no panning. Only hover detection.
       canvas.addEventListener('mousemove', e => {
-        if (sim.isDragging && sim.dragLast) {
-          sim.viewX += e.clientX - sim.dragLast.x;
-          sim.viewY += e.clientY - sim.dragLast.y;
-          sim.dragLast = { x: e.clientX, y: e.clientY };
-        }
-        // Hover detection
         const rect = canvas.getBoundingClientRect();
         const mx = (e.clientX - rect.left - sim.viewX) / sim.viewScale;
         const my = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
         detectHoveredUnit(mx, my);
-      });
-      canvas.addEventListener('mouseup', () => {
-        sim.isDragging = false;
-        sim.dragLast   = null;
-        wrap.classList.remove('is-dragging');
-      });
-      canvas.addEventListener('mouseleave', () => {
-        sim.isDragging = false;
-        sim.dragLast   = null;
-        wrap.classList.remove('is-dragging');
       });
 
       // Scroll to zoom
@@ -882,37 +860,7 @@ console.log("🎮 Game Simulator loaded");
         sim.viewScale = Math.max(0.05, Math.min(2, sim.viewScale * factor));
       }, { passive: false });
 
-      // Touch support
-      let lastTouchDist = 0;
-      canvas.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) {
-          sim.isDragging = true;
-          sim.dragLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.touches.length === 2) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          lastTouchDist = Math.hypot(dx, dy);
-        }
-      }, { passive: true });
-      canvas.addEventListener('touchmove', e => {
-        if (e.touches.length === 1 && sim.isDragging && sim.dragLast) {
-          sim.viewX += e.touches[0].clientX - sim.dragLast.x;
-          sim.viewY += e.touches[0].clientY - sim.dragLast.y;
-          sim.dragLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.touches.length === 2) {
-          const dx   = e.touches[0].clientX - e.touches[1].clientX;
-          const dy   = e.touches[0].clientY - e.touches[1].clientY;
-          const dist = Math.hypot(dx, dy);
-          if (lastTouchDist > 0) {
-            const factor = dist / lastTouchDist;
-            sim.viewScale = Math.max(0.05, Math.min(2, sim.viewScale * factor));
-          }
-          lastTouchDist = dist;
-        }
-      }, { passive: true });
-      canvas.addEventListener('touchend', () => {
-        sim.isDragging = false; sim.dragLast = null; lastTouchDist = 0;
-      }, { passive: true });
+      // Touch: pinch to zoom only (no pan)
 
       // ── Solo mode drag handlers ──────────────────────────────────────────
       canvas.addEventListener('mousedown', e => {
@@ -1001,7 +949,8 @@ console.log("🎮 Game Simulator loaded");
           const rulerEl = document.getElementById('cc-sim-ruler-hud');
           if (rulerEl) rulerEl.classList.remove('visible');
           // Auto advance after move
-          setTimeout(() => window.CC_SIM.soloMoveComplete(), 200);
+          // After moving, show action menu (shoot/melee/ability/skip)
+          setTimeout(() => window.CC_SIM.showSoloActionMenu(sim.dragUnit || ''), 200);
           return;
         }
         sim.isDragging = false;
@@ -1712,6 +1661,8 @@ console.log("🎮 Game Simulator loaded");
       }
 
       if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, successes, defenseD, damage, false, luckyBreak);
+      // Show combat spotlight with both fighters animating
+      showCombatSpotlight(attackerKey, defenderKey);
       if (aPos) aPos.status = 'fighting';
       // Show fight animation in unit preview panel for 2 seconds
       const _curItem = currentQueueItem();
@@ -1734,7 +1685,9 @@ console.log("🎮 Game Simulator loaded");
             if (!sim.deathMarkers) sim.deathMarkers = [];
             sim.deathMarkers.push({ x: dPos.x, y: dPos.y, name: defenderUnit.name });
           }
-          simLog(defenderUnit.name + ' is OUT!', 'combat');
+          simLog('☠ ' + defenderUnit.name + ' is KILLED!', 'combat');
+          // Show death callout overlay briefly
+          showDeathCallout(defenderUnit.name, getFactionById(dFid));
           // Cascading fear: nearby enemies of same faction test morale
           const defFaction = getFactionById(dFid);
           if (defFaction) {
@@ -1930,16 +1883,12 @@ console.log("🎮 Game Simulator loaded");
             '<!-- MAIN ROW -->' +
             '<div class="cc-sim-main-row">' +
 
-              '<!-- LEFT SIDEBAR: Factions + Active Unit -->' +
+              '<!-- LEFT SIDEBAR: Active Unit on top, Factions below -->' +
               '<div class="cc-sim-sidebar">' +
+                '<div class="cc-sim-panel-header"><i class="fa fa-bolt"></i> Active Unit</div>' +
+                '<div id="cc-sim-active-unit" style="overflow-y:auto;flex-shrink:0;border-bottom:1px solid var(--cc-border,#333);"></div>' +
                 '<div class="cc-sim-panel-header"><i class="fa fa-users"></i> Factions</div>' +
                 '<div class="cc-sim-sidebar-scroll" id="cc-sim-faction-list"></div>' +
-                '<div class="cc-sim-panel-header" style="border-top:1px solid var(--cc-border,#333);"><i class="fa fa-bolt"></i> Active Unit</div>' +
-                '<div id="cc-sim-active-unit" style="overflow-y:auto;max-height:45%;flex-shrink:0;"></div>' +
-                '<div class="cc-sim-controls">' +
-                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.addNoise(3,&quot;Melee&quot;)">+Noise</button>' +
-                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.addNoise(3,\"Melee\")">+Noise</button>' +
-                '</div>' +
               '</div>' +
 
               '<!-- MAP COLUMN -->' +
@@ -1971,6 +1920,11 @@ console.log("🎮 Game Simulator loaded");
               '</div>' +
 
             '</div>' + // end main-row
+
+            '<!-- COMBAT SPOTLIGHT (hidden until combat) -->' +
+            '<div id="cc-sim-combat-spotlight" style="display:none;position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none;">' +
+              '<canvas id="cc-sim-spotlight-canvas" width="260" height="260" style="border-radius:50%;border:3px solid #ff7518;box-shadow:0 0 20px #ff751866;"></canvas>' +
+            '</div>' +
 
             '<!-- LOG BAR (accordion at bottom) -->' +
             '<div class="cc-sim-log-bar" id="cc-sim-log-bar">' +
@@ -2016,7 +1970,87 @@ console.log("🎮 Game Simulator loaded");
       }).join('');
     }
 
-    let _previewAnimId = null;
+    let _previewAnimId   = null;
+    let _spotlightAnimId = null;
+
+    function showCombatSpotlight(attackerKey, defenderKey) {
+      const spotlight = document.getElementById('cc-sim-combat-spotlight');
+      const canvas    = document.getElementById('cc-sim-spotlight-canvas');
+      if (!spotlight || !canvas || !sim.spriteSheet || !sim.spriteData) return;
+
+      spotlight.style.display = 'block';
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width, H = canvas.height;
+
+      const [aFid] = attackerKey.split('::');
+      const [dFid] = defenderKey.split('::');
+      const aAnimSet = FACTION_SPRITE[aFid] || FACTION_SPRITE['encounters'];
+      const dAnimSet = FACTION_SPRITE[dFid] || FACTION_SPRITE['encounters'];
+      const aAnim = sim.spriteData[aAnimSet ? aAnimSet.attack : null];
+      const dAnim = sim.spriteData[dAnimSet ? dAnimSet.attack : null];
+      const aColor = (getFactionById(aFid) || {}).color || '#888';
+      const dColor = (getFactionById(dFid) || {}).color || '#888';
+
+      let aFrame = 0, dFrame = 0, aTimer = 0, dTimer = 0, lastTs = 0;
+
+      if (_spotlightAnimId) cancelAnimationFrame(_spotlightAnimId);
+
+      function step(ts) {
+        const dt = ts - lastTs; lastTs = ts;
+
+        // Advance frames
+        if (aAnim) { aTimer += dt; const f = aAnim.frames[aFrame % aAnim.frames.length]; if (f && aTimer >= f.duration) { aTimer = 0; aFrame = (aFrame+1) % aAnim.frames.length; } }
+        if (dAnim) { dTimer += dt; const f = dAnim.frames[dFrame % dAnim.frames.length]; if (f && dTimer >= f.duration) { dTimer = 0; dFrame = (dFrame+1) % dAnim.frames.length; } }
+
+        ctx.clearRect(0, 0, W, H);
+
+        // Background
+        ctx.fillStyle = '#0d0d0d';
+        ctx.beginPath(); ctx.arc(W/2, H/2, W/2-2, 0, Math.PI*2); ctx.fill();
+
+        // Draw attacker (left side)
+        if (aAnim) {
+          const f = aAnim.frames[aFrame % aAnim.frames.length];
+          if (f) {
+            ctx.save();
+            ctx.beginPath(); ctx.arc(W/4, H/2, 55, 0, Math.PI*2); ctx.clip();
+            ctx.fillStyle = aColor + '33'; ctx.fillRect(0, 0, W/2, H);
+            ctx.drawImage(sim.spriteSheet, f.x, f.y, 20, 20, W/4-55, H/2-55, 110, 110);
+            ctx.restore();
+            // Color ring
+            ctx.strokeStyle = aColor; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(W/4, H/2, 58, 0, Math.PI*2); ctx.stroke();
+          }
+        }
+
+        // Draw defender (right side)
+        if (dAnim) {
+          const f = dAnim.frames[dFrame % dAnim.frames.length];
+          if (f) {
+            ctx.save();
+            ctx.beginPath(); ctx.arc(3*W/4, H/2, 55, 0, Math.PI*2); ctx.clip();
+            ctx.fillStyle = dColor + '33'; ctx.fillRect(W/2, 0, W/2, H);
+            ctx.drawImage(sim.spriteSheet, f.x, f.y, 20, 20, 3*W/4-55, H/2-55, 110, 110);
+            ctx.restore();
+            ctx.strokeStyle = dColor; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(3*W/4, H/2, 58, 0, Math.PI*2); ctx.stroke();
+          }
+        }
+
+        // VS text
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 14px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('VS', W/2, H/2);
+
+        _spotlightAnimId = requestAnimationFrame(step);
+      }
+      _spotlightAnimId = requestAnimationFrame(step);
+
+      // Hide after 3 seconds
+      setTimeout(() => {
+        if (_spotlightAnimId) cancelAnimationFrame(_spotlightAnimId);
+        if (spotlight) spotlight.style.display = 'none';
+      }, 3000);
+    }
 
     function startUnitPreview(fid, uid, status) {
       // Animate the small sprite canvas in the active unit panel
@@ -2133,10 +2167,188 @@ console.log("🎮 Game Simulator loaded");
       if (bar) bar.classList.toggle('open');
     };
 
+    function showDeathCallout(unitName, faction) {
+      const color = (faction && faction.color) || '#ef5350';
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+        'background:rgba(0,0,0,0.92);border:2px solid ' + color + ';border-radius:10px;' +
+        'padding:1rem 2rem;z-index:10002;text-align:center;animation:cc-fade-in .15s ease;pointer-events:none;';
+      el.innerHTML = '<div style="font-size:2rem;margin-bottom:.25rem;">☠</div>' +
+        '<div style="font-size:1.1rem;font-weight:800;color:' + color + ';">' + unitName + '</div>' +
+        '<div style="font-size:.8rem;color:#aaa;margin-top:.2rem;">is KILLED</div>';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2200);
+    }
+
     window.CC_SIM.closeRollDialog = function() {
       const o = document.getElementById('cc-sim-roll-overlay');
       if (o) o.remove();
     };
+
+    window.CC_SIM.showSoloActionMenu = function(key) {
+      // Show action choice for solo player unit
+      const [fid, uid] = key.split('::');
+      const faction = getFactionById(fid);
+      const unit    = getUnitById(faction, uid);
+      const us      = getUnitState(fid, uid);
+      if (!unit || !us) return;
+
+      const color = (faction && faction.color) || '#ff7518';
+      const existing = document.getElementById('cc-sim-solo-action-menu');
+      if (existing) existing.remove();
+
+      // Find enemies in range
+      const pos = sim.unitPositions[key];
+      const rangeInches = unit.range || 0;
+      const enemies = [];
+      Object.entries(sim.unitPositions).forEach(([eKey, ePos]) => {
+        if (!ePos || ePos.status === 'routed') return;
+        const [eFid] = eKey.split('::');
+        if (eFid === fid) return;
+        const dist = gridDist(pos.x, pos.y, ePos.x, ePos.y);
+        const eFaction = getFactionById(eFid);
+        const eUnit    = getUnitById(eFaction, eKey.split('::')[1]);
+        if (!eUnit) return;
+        if (isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y)) {
+          enemies.push({ key: eKey, name: eUnit.name, type: 'melee', dist });
+        } else if (rangeInches > 0 && dist <= rangeInches) {
+          enemies.push({ key: eKey, name: eUnit.name, type: 'ranged', dist });
+        }
+      });
+
+      const menu = document.createElement('div');
+      menu.id = 'cc-sim-solo-action-menu';
+      menu.style.cssText = 'position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;';
+
+      let buttonsHtml = '';
+      if (enemies.length > 0) {
+        enemies.forEach(e => {
+          const icon = e.type === 'ranged' ? 'fa-crosshairs' : 'fa-sword';
+          buttonsHtml += '<button class="cc-btn" style="width:100%;margin-bottom:6px;background:' + color + '22;color:' + color + ';border:1px solid ' + color + ';" ' +
+            'onclick="window.CC_SIM.soloAttack(this)" data-akey="' + key + '" data-dkey="' + e.key + '" data-type="' + e.type + '">' +
+            '<i class="fa ' + icon + '"></i> ' + (e.type === 'ranged' ? 'Shoot' : 'Melee') + ': ' + e.name + ' (' + e.dist + '")</button>';
+        });
+      }
+
+      // Ability buttons for mystic/special units
+      const abilities = (unit.special || []).filter(a => {
+        const n = (typeof a === 'string' ? a : (a.name || '')).toLowerCase();
+        return n.includes('hex') || n.includes('ritual') || n.includes('curse') ||
+               n.includes('charm') || n.includes('inspire') || n.includes('rally');
+      });
+      abilities.forEach(a => {
+        const name = typeof a === 'string' ? a : (a.name || a);
+        buttonsHtml += '<button class="cc-btn cc-btn-secondary" style="width:100%;margin-bottom:6px;" ' +
+          'onclick="window.CC_SIM.soloAbility(this)" data-key="' + key + '" data-ability="' + name + '">' +
+          '<i class="fa fa-magic"></i> ' + name + '</button>';
+      });
+
+      buttonsHtml += '<button class="cc-btn cc-btn-secondary" style="width:100%;margin-top:6px;" ' +
+        'onclick="window.CC_SIM.soloSkipAction(this)" data-key="' + key + '">' +
+        '<i class="fa fa-forward"></i> Skip / Hold</button>';
+
+      menu.innerHTML = '<div style="background:var(--cc-bg-darker,#0d0d0d);border:1px solid ' + color + ';border-radius:12px;padding:1.5rem;min-width:280px;max-width:380px;">' +
+        '<div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:1rem;">' + unit.name + ' — Choose Action</div>' +
+        buttonsHtml + '</div>';
+      document.body.appendChild(menu);
+    };
+
+    window.CC_SIM.soloAttack = function(btnOrKey, defenderKey, type) {
+      const menu = document.getElementById('cc-sim-solo-action-menu');
+      // Support both direct call and data-attribute button call
+      let attackerKey = btnOrKey;
+      if (btnOrKey && btnOrKey.dataset) {
+        attackerKey = btnOrKey.dataset.akey;
+        defenderKey = btnOrKey.dataset.dkey;
+        type        = btnOrKey.dataset.type;
+      }
+      if (menu) menu.remove();
+      const aPos = sim.unitPositions[attackerKey];
+      if (aPos) aPos.status = 'fighting';
+      resolveEngagement(attackerKey, defenderKey, true);
+      addNoise(type === 'ranged' ? NOISE_VALUES.shot : NOISE_VALUES.melee, type);
+      setTimeout(() => window.CC_SIM.soloMoveComplete(), 800);
+    };
+
+    window.CC_SIM.soloAbility = function(btnOrKey, abilityName) {
+      let key = btnOrKey;
+      if (btnOrKey && btnOrKey.dataset) { key = btnOrKey.dataset.key; abilityName = btnOrKey.dataset.ability; }
+      const menu = document.getElementById('cc-sim-solo-action-menu');
+      if (menu) menu.remove();
+      applyAbilityEffect(key, abilityName || '');
+      setTimeout(() => window.CC_SIM.soloMoveComplete(), 600);
+    };
+
+    window.CC_SIM.soloSkipAction = function(btnOrKey) {
+      let key = btnOrKey;
+      if (btnOrKey && btnOrKey.dataset) key = btnOrKey.dataset.key;
+      const menu = document.getElementById('cc-sim-solo-action-menu');
+      if (menu) menu.remove();
+      window.CC_SIM.soloMoveComplete();
+    };
+
+    function applyAbilityEffect(attackerKey, abilityName) {
+      // Apply mechanical effects of abilities per rules
+      const [aFid, aUid] = attackerKey.split('::');
+      const attackerUnit  = getUnitById(getFactionById(aFid), aUid);
+      const attackerState = getUnitState(aFid, aUid);
+      if (!attackerUnit || !attackerState) return;
+
+      const name = abilityName.toLowerCase();
+
+      // Find nearest enemy for targeted abilities
+      const pos = sim.unitPositions[attackerKey];
+      const { key: enemyKey } = pos ? findNearestEnemy(aFid, pos) : { key: null };
+
+      if (name.includes('hex') || name.includes('curse') || name.includes('charm')) {
+        // Targeted debuff — apply shaken to nearest enemy
+        if (enemyKey) {
+          const [eFid, eUid] = enemyKey.split('::');
+          applyShaken(eFid, eUid);
+          const eName = getUnitById(getFactionById(eFid), eUid)?.name || 'enemy';
+          simLog(attackerUnit.name + ' hexes ' + eName + '!', 'event');
+        }
+        addNoise(NOISE_VALUES.ritual, abilityName);
+      } else if (name.includes('ritual') || name.includes('unleashed')) {
+        // Ritual/wild magic — roll on wild magic table
+        const roll = Math.floor(Math.random() * 11) + 2; // 2d6 simplified
+        simLog(attackerUnit.name + ' channels ' + abilityName + '! (Roll ' + roll + ')', 'event');
+        if (enemyKey && roll >= 6) {
+          const dmg = roll >= 10 ? 3 : roll >= 8 ? 2 : 1;
+          const [eFid, eUid] = enemyKey.split('::');
+          const eState = getUnitState(eFid, eUid);
+          if (eState) {
+            const newQ = Math.max(0, eState.quality - dmg);
+            setUnitState(eFid, eUid, { quality: newQ });
+            const eName = getUnitById(getFactionById(eFid), eUid)?.name || 'enemy';
+            simLog(eName + ' takes ' + dmg + ' magic damage! (Q' + newQ + ' left)', 'combat');
+            if (newQ <= 0) {
+              setUnitState(eFid, eUid, { out: true });
+              const ePos = sim.unitPositions[enemyKey];
+              if (ePos) { ePos.status = 'routed'; sim.deathMarkers.push({ x: ePos.x, y: ePos.y, name: eName }); }
+              showDeathCallout(eName, getFactionById(eFid));
+            }
+          }
+        }
+        addNoise(NOISE_VALUES.ritual, abilityName);
+      } else if (name.includes('inspire') || name.includes('rally') || name.includes('calamity')) {
+        // Buff nearby allies — remove shaken from nearby friendlies
+        let healed = 0;
+        Object.entries(sim.unitPositions).forEach(([k, p]) => {
+          if (!p || p.status === 'routed') return;
+          const [fid] = k.split('::');
+          if (fid !== aFid) return;
+          const dist = gridDist(p.x, p.y, pos.x, pos.y);
+          if (dist <= 6) {
+            const [, uid] = k.split('::');
+            const us = getUnitState(fid, uid);
+            if (us && us.shaken) { setUnitState(fid, uid, { shaken: false }); healed++; }
+          }
+        });
+        simLog(attackerUnit.name + ' rallies allies! ' + (healed ? '(' + healed + ' Shaken removed)' : ''), 'event');
+        addNoise(NOISE_VALUES.ability, abilityName);
+      }
+    }
 
     window.CC_SIM.soloMoveComplete = function() {
       // Called after player finishes dragging their unit
