@@ -194,20 +194,19 @@ console.log("🎮 Game Simulator loaded");
       encounters:      { idle: 'troll_idle',         run: 'troll_run',       attack: 'troll_attack'        },
     };
 
-    // Deployment zones in CANVAS coords (Y already flipped vs Leaflet map coords)
-    // Diamond canvas corners: top(2048,1045) right(4013,2028) bottom(2048,3134) left(82,2028)
+    // Deployment zones in MAP coords (Leaflet CRS.Simple: y=0 at bottom)
+    // Diamond: top(2048,3051) right(4014,2068) bottom(2048,1085) left(82,2068)
     const ZONE_DEFS = [
-      { key: 'north',      xMin: 1400, xMax: 2700, yMin: 1100, yMax: 1400 },
-      { key: 'south',      xMin: 1400, xMax: 2700, yMin: 2900, yMax: 3100 },
+      { key: 'north',      xMin: 1400, xMax: 2700, yMin: 2700, yMax: 3000 },
+      { key: 'south',      xMin: 1400, xMax: 2700, yMin: 1100, yMax: 1400 },
       { key: 'west',       xMin: 150,  xMax: 500,  yMin: 1700, yMax: 2400 },
       { key: 'east',       xMin: 3600, xMax: 3950, yMin: 1700, yMax: 2400 },
-      { key: 'north_west', xMin: 500,  xMax: 1300, yMin: 1100, yMax: 1700 },
-      { key: 'north_east', xMin: 2800, xMax: 3600, yMin: 1100, yMax: 1700 },
-      { key: 'south_west', xMin: 500,  xMax: 1300, yMin: 2400, yMax: 3000 },
-      { key: 'south_east', xMin: 2800, xMax: 3600, yMin: 2400, yMax: 3000 },
+      { key: 'north_west', xMin: 500,  xMax: 1300, yMin: 2400, yMax: 3000 },
+      { key: 'north_east', xMin: 2800, xMax: 3600, yMin: 2400, yMax: 3000 },
+      { key: 'south_west', xMin: 500,  xMax: 1300, yMin: 1100, yMax: 1700 },
+      { key: 'south_east', xMin: 2800, xMax: 3600, yMin: 1100, yMax: 1700 },
     ];
     const MONSTER_ZONE = { key: 'center', xMin: 1800, xMax: 2300, yMin: 1800, yMax: 2300 };
-
     const NOISE_VALUES = {
       shot: 2, melee: 3, explosion: 3, ritual: 4, ability: 2, silent: 0
     };
@@ -273,6 +272,7 @@ console.log("🎮 Game Simulator loaded");
       spriteSheet: null,        // HTMLImageElement
       spriteData: null,         // sprite atlas JSON
       terrainCatalog: {},        // terrain_type_id -> asset_file
+      terrainCatalogFull: {},    // terrain_type_id -> full catalog entry (for footprint)
       terrainImages: {},         // terrain_type_id -> HTMLImageElement
       tabletopImg: null,         // loaded SVG background image
       // Solo mode
@@ -519,6 +519,9 @@ console.log("🎮 Game Simulator loaded");
         list.forEach(entry => {
           if (entry.terrain_type_id && entry.asset_file) {
             sim.terrainCatalog[entry.terrain_type_id] = entry.asset_file;
+            // Also store full entry for footprint-based sizing
+            if (!sim.terrainCatalogFull) sim.terrainCatalogFull = {};
+            sim.terrainCatalogFull[entry.terrain_type_id] = entry;
           }
         });
         console.log('📋 Terrain catalog loaded:', Object.keys(sim.terrainCatalog).length, 'entries');
@@ -583,21 +586,20 @@ console.log("🎮 Game Simulator loaded");
           const usedSquares = new Set();
           units.forEach(u => {
             const k = unitKey(faction.id, u.id);
-            let gx, gy, sq, attempts = 0;
-            const minGX = Math.ceil(MONSTER_ZONE.xMin / GRID_PX);
-            const maxGX = Math.floor(MONSTER_ZONE.xMax / GRID_PX);
-            const minGY = Math.ceil(MONSTER_ZONE.yMin / GRID_PX);
-            const maxGY = Math.floor(MONSTER_ZONE.yMax / GRID_PX);
+            let mx, my, sq, attempts = 0;
             do {
-              gx = minGX + Math.floor(Math.random() * Math.max(1, maxGX - minGX));
-              gy = minGY + Math.floor(Math.random() * Math.max(1, maxGY - minGY));
-              sq = gx + ',' + gy;
+              mx = MONSTER_ZONE.xMin + Math.random() * (MONSTER_ZONE.xMax - MONSTER_ZONE.xMin);
+              my = MONSTER_ZONE.yMin + Math.random() * (MONSTER_ZONE.yMax - MONSTER_ZONE.yMin);
+              mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
+              my = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
+              sq = mx + ',' + my;
               attempts++;
             } while (usedSquares.has(sq) && attempts < 200);
             usedSquares.add(sq);
+            const cv = mapToCanvas(mx, my);
             sim.unitPositions[k] = {
-              x: gx * GRID_PX + GRID_PX / 2,
-              y: gy * GRID_PX + GRID_PX / 2,
+              x: cv.cx, y: cv.cy,
+              mapX: mx, mapY: my,
               animName: 'idle', frameIdx: 0, frameTimer: 0,
               vx: 0, vy: 0, status: 'idle',
             };
@@ -605,25 +607,26 @@ console.log("🎮 Game Simulator loaded");
           return;
         }
 
-        // Place each unit in a unique grid square within the zone
+        // Place units in MAP coord space (same as terrain), then convert to canvas
         const usedSquares = new Set();
         units.forEach((u) => {
           const k = unitKey(faction.id, u.id);
-          let gx, gy, key2, attempts = 0;
-          const minGX = Math.ceil(zone.xMin / GRID_PX);
-          const maxGX = Math.floor(zone.xMax / GRID_PX);
-          const minGY = Math.ceil(zone.yMin / GRID_PX);
-          const maxGY = Math.floor(zone.yMax / GRID_PX);
+          let mx, my, sq, attempts = 0;
           do {
-            gx = minGX + Math.floor(Math.random() * (maxGX - minGX + 1));
-            gy = minGY + Math.floor(Math.random() * (maxGY - minGY + 1));
-            key2 = gx + ',' + gy;
+            mx = zone.xMin + Math.random() * (zone.xMax - zone.xMin);
+            my = zone.yMin + Math.random() * (zone.yMax - zone.yMin);
+            // Snap to GRID_PX squares in map space
+            mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
+            my = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
+            sq = mx + ',' + my;
             attempts++;
-          } while (usedSquares.has(key2) && attempts < 200);
-          usedSquares.add(key2);
+          } while (usedSquares.has(sq) && attempts < 200);
+          usedSquares.add(sq);
+          // Convert map coords to canvas coords
+          const cv = mapToCanvas(mx, my);
           sim.unitPositions[k] = {
-            x: gx * GRID_PX + GRID_PX / 2,
-            y: gy * GRID_PX + GRID_PX / 2,
+            x: cv.cx, y: cv.cy,
+            mapX: mx, mapY: my,   // store map coords for grid movement
             animName: 'idle', frameIdx: 0, frameTimer: 0,
             vx: 0, vy: 0, status: 'idle',
           };
@@ -983,11 +986,8 @@ console.log("🎮 Game Simulator loaded");
     // ─────────────────────────────────────────────────────────────────────────
 
     function smoothCameraToUnit(key) {
-      if (!sim.canvas) return;
-      const pos = sim.unitPositions[key];
-      if (!pos) return;
-      sim.camTargetX = sim.canvas.width  / 2 - pos.x * sim.viewScale;
-      sim.camTargetY = sim.canvas.height / 2 - pos.y * sim.viewScale;
+      // Camera is now static — no auto-follow
+      // Users pan manually
     }
 
     function tickCamera() {
@@ -1104,19 +1104,34 @@ console.log("🎮 Game Simulator loaded");
 
     function drawTerrain(ctx) {
       if (!sim.mapData || !sim.mapData.instances) return;
+      // Table is 48 inches wide, drawn at MAP_SIZE px wide in our coordinate space
+      const TABLE_INCHES = 48;
       sim.mapData.instances.forEach(inst => {
         if (inst.hidden_in_editor) return;
         const img = sim.terrainImages[inst.terrain_type_id];
         if (!img) return;
-        const w = img.naturalWidth  * inst.scale;
-        const h = img.naturalHeight * inst.scale;
+        // Use footprint-based sizing if catalog has it, otherwise fall back to natural size
+        const catalogEntry = (sim.terrainCatalogFull && sim.terrainCatalogFull[inst.terrain_type_id]) || null;
+        const fp = catalogEntry && catalogEntry.footprint && catalogEntry.footprint.size_in;
+        let w, h;
+        if (fp && fp.w) {
+          // Map maker formula: tableWidthPx * (footprintInches / tableSizeInches) * scale
+          const iconW = MAP_SIZE * (fp.w / TABLE_INCHES) * (inst.scale || 1);
+          const aspect = img.naturalHeight / Math.max(1, img.naturalWidth);
+          w = iconW;
+          h = iconW * aspect;
+        } else {
+          w = img.naturalWidth  * (inst.scale || 1);
+          h = img.naturalHeight * (inst.scale || 1);
+        }
         const { cx, cy } = mapToCanvas(inst.x, inst.y);
         ctx.save();
         ctx.translate(cx, cy);
         if (inst.rotation_deg) ctx.rotate(inst.rotation_deg * Math.PI / 180);
         if (inst.mirror_x || inst.mirror_y) ctx.scale(inst.mirror_x ? -1 : 1, inst.mirror_y ? -1 : 1);
         ctx.globalAlpha = inst.opacity ?? 1;
-        ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        // iconAnchor is [width/2, 0] = top-center, so draw from (-w/2, 0) not (-w/2, -h/2)
+        ctx.drawImage(img, -w / 2, 0, w, h);
         ctx.restore();
       });
     }
@@ -1403,41 +1418,45 @@ console.log("🎮 Game Simulator loaded");
       };
     }
 
-    // Grid distance in squares (Chebyshev — diagonal counts as 1)
-    function gridDist(ax, ay, bx, by) {
+    // Grid distance in map-coord squares (Chebyshev — diagonal counts as 1)
+    // Accepts canvas positions and converts internally
+    function gridDist(acx, acy, bcx, bcy) {
+      const ax = acx, ay = MAP_SIZE - acy;
+      const bx = bcx, by = MAP_SIZE - bcy;
       return Math.max(
         Math.abs(Math.round(ax / GRID_PX) - Math.round(bx / GRID_PX)),
         Math.abs(Math.round(ay / GRID_PX) - Math.round(by / GRID_PX))
       );
     }
-
-    // True grid adjacency (sharing an edge or corner = 1 square away)
-    function isGridAdjacent(ax, ay, bx, by) {
-      return gridDist(ax, ay, bx, by) <= 1;
+    function isGridAdjacent(acx, acy, bcx, bcy) {
+      return gridDist(acx, acy, bcx, bcy) <= 1;
     }
 
-    function moveUnitToward(key, targetX, targetY, moveInches) {
+    function moveUnitToward(key, targetMapX, targetMapY, moveInches) {
       const pos = sim.unitPositions[key];
       if (!pos) return;
-      // Work in grid squares
-      const maxSquares = Math.floor(moveInches); // 1 inch = 1 square
-      const curGX = Math.round(pos.x / GRID_PX);
-      const curGY = Math.round(pos.y / GRID_PX);
-      const tgtGX = Math.round(targetX / GRID_PX);
-      const tgtGY = Math.round(targetY / GRID_PX);
-      // Step toward target one square at a time up to moveInches squares
+      // Work in map coord grid squares
+      const maxSquares = Math.floor(moveInches);
+      const curGX = Math.round((pos.mapX || pos.x) / GRID_PX);
+      const curGY = Math.round((pos.mapY || (MAP_SIZE - pos.y)) / GRID_PX);
+      const tgtGX = Math.round(targetMapX / GRID_PX);
+      const tgtGY = Math.round(targetMapY / GRID_PX);
       let gx = curGX, gy = curGY;
       for (let step = 0; step < maxSquares; step++) {
-        const dx = Math.sign(tgtGX - gx);
-        const dy = Math.sign(tgtGY - gy);
-        if (dx === 0 && dy === 0) break;
-        // Stop 1 square away from target (for melee)
+        const ddx = Math.sign(tgtGX - gx);
+        const ddy = Math.sign(tgtGY - gy);
+        if (ddx === 0 && ddy === 0) break;
         if (Math.max(Math.abs(tgtGX - gx), Math.abs(tgtGY - gy)) <= 1) break;
-        gx += dx;
-        gy += dy;
+        gx += ddx;
+        gy += ddy;
       }
-      pos.x = gx * GRID_PX + GRID_PX / 2;
-      pos.y = gy * GRID_PX + GRID_PX / 2;
+      const newMapX = gx * GRID_PX + GRID_PX / 2;
+      const newMapY = gy * GRID_PX + GRID_PX / 2;
+      pos.mapX = newMapX;
+      pos.mapY = newMapY;
+      const cv = mapToCanvas(newMapX, newMapY);
+      pos.x = cv.cx;
+      pos.y = cv.cy;
       pos.status = 'moving';
     }
 
@@ -1658,8 +1677,10 @@ console.log("🎮 Game Simulator loaded");
         resolveEngagement(key, enemyKey, true);
         addNoise(NOISE_VALUES.shot, 'Shot');
       } else if (ePos) {
-        // Move toward enemy
-        moveUnitToward(key, ePos.x, ePos.y, moveInches);
+        // Move toward enemy — use map coords
+        const eMX = ePos.mapX || ePos.x;
+        const eMY = ePos.mapY || (MAP_SIZE - ePos.y);
+        moveUnitToward(key, eMX, eMY, moveInches);
         simLog(unit.name + ' advances.', 'move');
         // After moving, check melee or range
         if (isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y)) {
@@ -1816,15 +1837,10 @@ console.log("🎮 Game Simulator loaded");
                 '</div>' +
               '</div>' +
 
-              '<!-- MAP -->' +
-              '<div class="cc-sim-map-wrap" id="cc-sim-map-wrap">' +
-                '<div class="cc-sim-ruler-hud" id="cc-sim-ruler-hud"></div>' +
-                '<div class="cc-sim-waiting-badge" id="cc-sim-waiting-badge">Your turn &mdash; drag to move</div>' +
-                '<div class="cc-sim-map-hud-top">' +
-                  '<div class="cc-sim-round-badge" id="cc-sim-round-badge">Round ' + state.round + '</div>' +
-                  '<div class="cc-sim-round-badge" id="cc-sim-queue-badge" style="font-size:.75rem;"></div>' +
-                '</div>' +
-                '<div class="cc-sim-map-hud">' +
+              '<!-- MAP COLUMN -->' +
+              '<div style="display:flex;flex-direction:column;flex:1;min-width:0;overflow:hidden;">' +
+                '<!-- Controls bar above map -->' +
+                '<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--cc-border,#333);flex-shrink:0;background:var(--cc-bg-darker,#0d0d0d);">' +
                   '<button class="cc-btn cc-btn-sm" id="cc-sim-next-btn" onclick="window.CC_SIM.nextActivation()">' +
                     '<i class="fa fa-step-forward"></i> <span id="cc-sim-next-label">Next</span>' +
                   '</button>' +
@@ -1834,10 +1850,15 @@ console.log("🎮 Game Simulator loaded");
                   '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.zoomFit()">' +
                     '<i class="fa fa-compress"></i>' +
                   '</button>' +
+                  '<div style="margin-left:auto;display:flex;gap:6px;align-items:center;">' +
+                    '<div class="cc-sim-round-badge" id="cc-sim-round-badge">Round ' + state.round + '</div>' +
+                    '<div class="cc-sim-round-badge" id="cc-sim-queue-badge" style="font-size:.75rem;"></div>' +
+                  '</div>' +
                 '</div>' +
-                '<div class="cc-sim-zoom-controls">' +
-                  '<button class="cc-sim-zoom-btn" onclick="window.CC_SIM.zoom(1.2)">+</button>' +
-                  '<button class="cc-sim-zoom-btn" onclick="window.CC_SIM.zoom(0.8)">&minus;</button>' +
+                '<!-- Map canvas area -->' +
+                '<div class="cc-sim-map-wrap" id="cc-sim-map-wrap" style="flex:1;min-height:0;">' +
+                  '<div class="cc-sim-ruler-hud" id="cc-sim-ruler-hud"></div>' +
+                  '<div class="cc-sim-waiting-badge" id="cc-sim-waiting-badge">Your turn &mdash; drag to move</div>' +
                 '</div>' +
               '</div>' +
 
