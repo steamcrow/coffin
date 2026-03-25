@@ -171,7 +171,7 @@ console.log("🎮 Game Simulator loaded");
     // 1 game inch = this many map pixels (map is 4096px, table is ~48" wide)
     const ENGAGEMENT_PX      = GRID_PX * 2;  // 2" engagement range
     const SPRITE_SRC_SIZE    = 20;   // sprite sheet frame size (px)
-    const SPRITE_DRAW_SIZE   = GRID_PX * 1.6; // drawn size: 1.6 grid squares
+    const SPRITE_DRAW_SIZE   = GRID_PX * 2.5; // drawn size: 2.5 grid squares
     const MAP_SIZE           = 4096;
 
     const FACTION_META = {
@@ -278,6 +278,7 @@ console.log("🎮 Game Simulator loaded");
       // Solo mode
       soloFactionId: null,       // which faction the player controls
       soloWaiting: false,        // waiting for player drag input
+      soloMovedThisTurn: false,  // prevent multiple moves per activation
       dragUnit: null,            // unitKey being dragged
       dragStartX: 0,
       dragStartY: 0,
@@ -564,11 +565,20 @@ console.log("🎮 Game Simulator loaded");
       console.log('Terrain blocked squares:', sim.blockedSquares.size);
     }
 
-    function isSquareBlocked(canvasX, canvasY) {
+    function isSquareBlocked(canvasX, canvasY, excludeKey) {
       if (!sim.blockedSquares) return false;
       const gx = Math.round(canvasX / GRID_PX);
       const gy = Math.round(canvasY / GRID_PX);
-      return sim.blockedSquares.has(gx + ',' + gy);
+      if (sim.blockedSquares.has(gx + ',' + gy)) return true;
+      // Also blocked by other units
+      for (const [k, pos] of Object.entries(sim.unitPositions)) {
+        if (!pos || pos.status === 'routed') continue;
+        if (k === excludeKey) continue;
+        const ugx = Math.round(pos.x / GRID_PX);
+        const ugy = Math.round(pos.y / GRID_PX);
+        if (ugx === gx && ugy === gy) return true;
+      }
+      return false;
     }
 
     function preloadTerrainImages() {
@@ -869,7 +879,7 @@ console.log("🎮 Game Simulator loaded");
         const my   = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
 
         // Check if clicking a solo unit
-        if (sim.soloWaiting && sim.soloFactionId) {
+        if (sim.soloWaiting && sim.soloFactionId && !sim.soloMovedThisTurn) {
           const HIT = SPRITE_DRAW_SIZE / 2 + 10;
           for (const [key, pos] of Object.entries(sim.unitPositions)) {
             if (!pos || pos.status === 'routed') continue;
@@ -914,15 +924,17 @@ console.log("🎮 Game Simulator loaded");
             const squares = Math.max(Math.abs(Math.round(dx / GRID_PX)), Math.abs(Math.round(dy / GRID_PX)));
             const maxSq   = Math.floor(sim.rulerMax / GRID_PX);
             sim.rulerDist = squares * GRID_PX;
-            if (squares <= maxSq) {
+            const destBlocked = isSquareBlocked(snapX, snapY, sim.dragUnit || '');
+            if (squares <= maxSq && !destBlocked) {
               pos.x = snapX;
               pos.y = snapY;
-            } else {
+            } else if (!destBlocked) {
               // Clamp — move along the vector but only maxSq squares
               const ratio = maxSq / Math.max(1, squares);
               pos.x = sim.dragStartX + Math.round(dx * ratio / GRID_PX) * GRID_PX;
               pos.y = sim.dragStartY + Math.round(dy * ratio / GRID_PX) * GRID_PX;
             }
+            // If destBlocked, pos stays at last valid position
             const rulerEl = document.getElementById('cc-sim-ruler-hud');
             if (rulerEl) {
               const used = Math.min(squares, maxSq);
@@ -938,19 +950,22 @@ console.log("🎮 Game Simulator loaded");
         if (sim.dragUnit) {
           const pos = sim.unitPositions[sim.dragUnit];
           if (pos) {
-            // Already snapped during mousemove; ensure centre alignment
             pos.x = Math.round((pos.x - GRID_PX/2) / GRID_PX) * GRID_PX + GRID_PX / 2;
             pos.y = Math.round((pos.y - GRID_PX/2) / GRID_PX) * GRID_PX + GRID_PX / 2;
             pos.status = 'idle';
           }
+          // Show action menu even if didn't move (tap = attack in place)
+          if (!sim.soloMovedThisTurn) sim.soloMovedThisTurn = true;
           sim.dragUnit    = null;
           sim.rulerActive = false;
           sim.rulerDist   = 0;
           const rulerEl = document.getElementById('cc-sim-ruler-hud');
           if (rulerEl) rulerEl.classList.remove('visible');
           // Auto advance after move
+          sim.soloMovedThisTurn = true;
           // After moving, show action menu (shoot/melee/ability/skip)
-          setTimeout(() => window.CC_SIM.showSoloActionMenu(sim.dragUnit || ''), 200);
+          const _movedKey = sim.dragUnit || '';
+          setTimeout(() => window.CC_SIM.showSoloActionMenu(_movedKey), 200);
           return;
         }
         sim.isDragging = false;
@@ -1225,12 +1240,19 @@ console.log("🎮 Game Simulator loaded");
           ctx.restore();
         }
 
-        // Draw shadow — offset left-down for isometric look
+        // Drop shadow — offset left-down for isometric look
         ctx.save();
-        ctx.globalAlpha = 0.22;
+        ctx.globalAlpha = 0.3;
         ctx.fillStyle   = '#000';
         ctx.beginPath();
-        ctx.ellipse(pos.x - half * 0.4, pos.y + half * 0.3, half * 0.7, half * 0.2, -0.3, 0, Math.PI * 2);
+        ctx.ellipse(
+          pos.x - half * 0.5,   // left offset
+          pos.y + half * 0.7,   // below unit
+          half * 0.85,           // wide
+          half * 0.25,           // flat
+          -0.25,                 // slight angle
+          0, Math.PI * 2
+        );
         ctx.fill();
         ctx.restore();
 
@@ -1238,14 +1260,13 @@ console.log("🎮 Game Simulator loaded");
         const frame = animName ? getSpriteFrame(animName, pos.frameIdx) : null;
         if (frame && sim.spriteSheet) {
           ctx.save();
-          // Clip to circle
+          // Clip to circle centered on pos
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, half, 0, Math.PI * 2);
           ctx.clip();
-          // Background circle
           ctx.fillStyle = color + '33';
-          ctx.fillRect(pos.x - half, pos.y - half, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE);
-          // Draw sprite frame
+          ctx.fill();
+          // Center sprite in the circle
           ctx.drawImage(
             sim.spriteSheet,
             frame.x, frame.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
@@ -1483,7 +1504,7 @@ console.log("🎮 Game Simulator loaded");
         // Skip blocked terrain squares
         const nextCX = nextX * GRID_PX + GRID_PX / 2;
         const nextCY = nextY * GRID_PX + GRID_PX / 2;
-        if (isSquareBlocked(nextCX, nextCY)) {
+        if (isSquareBlocked(nextCX, nextCY, key)) {
           // Try to go around — try each axis separately
           if (ddx !== 0 && !isSquareBlocked((gx + ddx) * GRID_PX, nextCY)) { gx += ddx; }
           else if (ddy !== 0 && !isSquareBlocked(nextCX, (gy + ddy) * GRID_PX)) { gy += ddy; }
@@ -1594,15 +1615,29 @@ console.log("🎮 Game Simulator loaded");
       const overlay = document.createElement('div');
       overlay.id        = 'cc-sim-roll-overlay';
       overlay.className = 'cc-sim-roll-overlay';
+      overlay.style.cssText = 'transition:opacity 0.6s ease;opacity:1;';
       overlay.innerHTML =
-        '<div class="cc-sim-roll-dialog">' +
-          '<div class="cc-sim-roll-title">' + attacker.name + ' attacks ' + defender.name + '</div>' +
-          '<div class="cc-sim-dice-row">' + diceHtml + '</div>' +
-          '<div class="cc-sim-roll-result" style="color:' + resultColor + ';">' + resultText + '</div>' +
-          '<button class="cc-btn" style="width:100%;" onclick="window.CC_SIM.closeRollDialog();">Continue</button>' +
+        '<div class="cc-sim-roll-dialog" style="min-width:300px;padding-top:0;">' +
+          '<div id="cc-sim-spotlight-inner" style="margin:0 0 1rem;border-radius:12px 12px 0 0;overflow:hidden;background:#111;height:130px;display:flex;align-items:center;justify-content:center;">' +
+            '<canvas id="cc-sim-spotlight-canvas" width="300" height="130" style="display:block;width:100%;height:100%;"></canvas>' +
+          '</div>' +
+          '<div class="cc-sim-roll-title" style="padding:0 1.5rem;">' + attacker.name + ' <span style="color:#666;">vs</span> ' + defender.name + '</div>' +
+          '<div class="cc-sim-dice-row" style="padding:0 1.5rem;">' + diceHtml + '</div>' +
+          '<div class="cc-sim-roll-result" style="color:' + resultColor + ';padding:0 1.5rem;">' + resultText + '</div>' +
+          '<div style="padding:0 1.5rem 1.5rem;">' +
+            '<button class="cc-btn" style="width:100%;margin-top:.5rem;" onclick="window.CC_SIM.closeRollDialog();">Continue</button>' +
+          '</div>' +
         '</div>';
       document.body.appendChild(overlay);
-      setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 5000);
+
+      // Auto-dismiss: fade out then remove
+      function dismissRollOverlay() {
+        if (_spotlightAnimId) { cancelAnimationFrame(_spotlightAnimId); _spotlightAnimId = null; }
+        overlay.style.opacity = '0';
+        setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 650);
+      }
+      overlay._dismiss = dismissRollOverlay;
+      setTimeout(dismissRollOverlay, 4500);
     }
 
     function resolveEngagement(attackerKey, defenderKey, showDialog) {
@@ -1922,7 +1957,7 @@ console.log("🎮 Game Simulator loaded");
             '</div>' + // end main-row
 
             '<!-- COMBAT SPOTLIGHT (hidden until combat) -->' +
-            '<div id="cc-sim-combat-spotlight" style="display:none;position:absolute;top:60px;left:50%;transform:translateX(-50%);z-index:200;pointer-events:none;">' +
+            '<div id="cc-sim-combat-spotlight" style="display:none;">' +
               '<canvas id="cc-sim-spotlight-canvas" width="260" height="260" style="border-radius:50%;border:3px solid #ff7518;box-shadow:0 0 20px #ff751866;"></canvas>' +
             '</div>' +
 
@@ -1974,11 +2009,9 @@ console.log("🎮 Game Simulator loaded");
     let _spotlightAnimId = null;
 
     function showCombatSpotlight(attackerKey, defenderKey) {
-      const spotlight = document.getElementById('cc-sim-combat-spotlight');
-      const canvas    = document.getElementById('cc-sim-spotlight-canvas');
-      if (!spotlight || !canvas || !sim.spriteSheet || !sim.spriteData) return;
-
-      spotlight.style.display = 'block';
+      // Canvas is embedded inside the roll dialog
+      const canvas = document.getElementById('cc-sim-spotlight-canvas');
+      if (!canvas || !sim.spriteSheet || !sim.spriteData) return;
       const ctx = canvas.getContext('2d');
       const W = canvas.width, H = canvas.height;
 
@@ -2045,11 +2078,11 @@ console.log("🎮 Game Simulator loaded");
       }
       _spotlightAnimId = requestAnimationFrame(step);
 
-      // Hide after 3 seconds
+      // Spotlight fades with roll overlay — stop animation when dialog closes
+      // Roll overlay auto-dismisses at 5s; spotlight stops then too
       setTimeout(() => {
-        if (_spotlightAnimId) cancelAnimationFrame(_spotlightAnimId);
-        if (spotlight) spotlight.style.display = 'none';
-      }, 3000);
+        if (_spotlightAnimId) { cancelAnimationFrame(_spotlightAnimId); _spotlightAnimId = null; }
+      }, 5500);
     }
 
     function startUnitPreview(fid, uid, status) {
@@ -2116,7 +2149,7 @@ console.log("🎮 Game Simulator loaded");
 
       el.innerHTML = `
         <div class="cc-sim-active-card">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;" onclick="window.CC_SIM.zoomToUnit('${unitKey(faction.id, unit.id)}')">
             <div style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};flex-shrink:0;"></div>
             <div>
               <div class="cc-sim-active-name">${unit.name}</div>
@@ -2162,6 +2195,57 @@ console.log("🎮 Game Simulator loaded");
     // CONTROLS — public CC_SIM.* functions
     // ═════════════════════════════════════════════════════════════════════════
 
+    let _zoomTimer = null;
+
+    window.CC_SIM.zoomToUnit = function(key) {
+      if (!sim.canvas) return;
+      const pos = sim.unitPositions[key];
+      if (!pos) return;
+
+      // Save original view
+      const origScale = sim.viewScale;
+      const origX     = sim.viewX;
+      const origY     = sim.viewY;
+      const targetScale = Math.min(1.2, origScale * 4); // zoom to 4x current, max 1.2
+      const targetX   = sim.canvas.width  / 2 - pos.x * targetScale;
+      const targetY   = sim.canvas.height / 2 - pos.y * targetScale;
+
+      // Eased zoom in
+      const STEPS  = 30;
+      const DELAY  = 16;
+      let   step   = 0;
+
+      if (_zoomTimer) clearInterval(_zoomTimer);
+      _zoomTimer = setInterval(() => {
+        step++;
+        const t = step / STEPS;
+        const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out quad
+        sim.viewScale = origScale + (targetScale - origScale) * ease;
+        sim.viewX     = origX     + (targetX     - origX)     * ease;
+        sim.viewY     = origY     + (targetY     - origY)     * ease;
+        if (step >= STEPS) {
+          clearInterval(_zoomTimer);
+          // Hold for 1.5s then zoom back out
+          setTimeout(() => {
+            step = 0;
+            _zoomTimer = setInterval(() => {
+              step++;
+              const t2   = step / STEPS;
+              const ease2 = t2 < 0.5 ? 2*t2*t2 : -1+(4-2*t2)*t2;
+              sim.viewScale = targetScale + (origScale - targetScale) * ease2;
+              sim.viewX     = targetX     + (origX     - targetX)     * ease2;
+              sim.viewY     = targetY     + (origY     - origY)       * ease2;
+              // Just lerp back to original
+              sim.viewScale = targetScale + (origScale - targetScale) * ease2;
+              sim.viewX     = targetX + (origX - targetX) * ease2;
+              sim.viewY     = targetY + (origY - targetY) * ease2;
+              if (step >= STEPS) clearInterval(_zoomTimer);
+            }, DELAY);
+          }, 1500);
+        }
+      }, DELAY);
+    };
+
     window.CC_SIM.toggleLog = function() {
       const bar = document.getElementById('cc-sim-log-bar');
       if (bar) bar.classList.toggle('open');
@@ -2182,7 +2266,8 @@ console.log("🎮 Game Simulator loaded");
 
     window.CC_SIM.closeRollDialog = function() {
       const o = document.getElementById('cc-sim-roll-overlay');
-      if (o) o.remove();
+      if (o && o._dismiss) o._dismiss();
+      else if (o) o.remove();
     };
 
     window.CC_SIM.showSoloActionMenu = function(key) {
@@ -2383,6 +2468,7 @@ console.log("🎮 Game Simulator loaded");
 
       // Solo mode: if this unit belongs to the player, wait for drag input
       if (cur && sim.soloFactionId && cur.factionId === sim.soloFactionId) {
+        sim.soloMovedThisTurn = false;  // reset for new activation
         sim.soloWaiting = true;
         const waitEl = document.getElementById('cc-sim-waiting-badge');
         if (waitEl) waitEl.classList.add('visible');
