@@ -1055,12 +1055,21 @@ console.log("🎮 Game Simulator loaded");
       // Dark felt behind the board
       ctx.fillStyle = '#111008';
       ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-      // The isometric SVG fills the full coordinate space --
-      // the diamond illusion is baked into the artwork itself,
-      // exactly as Leaflet imageOverlay does with L.CRS.Simple.
-      if (sim.tabletopImg) {
-        ctx.drawImage(sim.tabletopImg, 0, 0, MAP_SIZE, MAP_SIZE);
-      }
+
+      if (!sim.tabletopImg) return;
+
+      const img = sim.tabletopImg;
+      const iw  = img.naturalWidth  || MAP_SIZE;
+      const ih  = img.naturalHeight || MAP_SIZE;
+
+      // Fit inside the square map without distorting the SVG
+      const scale = Math.min(MAP_SIZE / iw, MAP_SIZE / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const dx = (MAP_SIZE - dw) / 2;
+      const dy = (MAP_SIZE - dh) / 2;
+
+      ctx.drawImage(img, dx, dy, dw, dh);
     }
 
     function drawDeployZones(ctx) {
