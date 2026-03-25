@@ -288,7 +288,8 @@ console.log("🎮 Game Simulator loaded");
       camTargetX: null,
       camTargetY: null,
       terrainLoadQueue: 0,      // how many terrain images are still loading
-      unitPositions: {},        // unitKey -> { x, y, animName, frameIdx, frameTimer, vx, vy, status }
+      unitPositions: {},        // unitKey -> { x, y, targetX, targetY, animName, frameIdx, frameTimer, status }
+      deathMarkers: [],          // [{ x, y, name }] skull positions
       factionZones: {},         // factionId -> ZONE_DEF
       monsterQueue: [],         // monsters waiting to enter the map
       canvas: null,
@@ -530,6 +531,46 @@ console.log("🎮 Game Simulator loaded");
       }
     }
 
+    function buildTerrainBlockedMap() {
+      // Mark grid squares occupied by impassable terrain
+      sim.blockedSquares = new Set();
+      if (!sim.mapData || !sim.mapData.instances) return;
+      const TABLE_INCHES = 48;
+      sim.mapData.instances.forEach(inst => {
+        const entry = sim.terrainCatalogFull && sim.terrainCatalogFull[inst.terrain_type_id];
+        if (!entry) return;
+        // Only block if terrain is_passable = false
+        const passable = entry.movement && entry.movement.is_passable;
+        if (passable === true || passable === undefined) return;
+        // Find which grid squares this terrain occupies
+        const fp = entry.footprint && entry.footprint.size_in;
+        const fw = fp ? fp.w : 4;
+        const fd = fp ? fp.d : 4;
+        const halfW = (fw / TABLE_INCHES * MAP_SIZE) / 2;
+        const halfD = (fd / TABLE_INCHES * MAP_SIZE) / 2;
+        // In canvas coords (Y-flipped)
+        const cx = inst.x;
+        const cy = MAP_SIZE - inst.y;
+        const minGX = Math.floor((cx - halfW) / GRID_PX);
+        const maxGX = Math.ceil( (cx + halfW) / GRID_PX);
+        const minGY = Math.floor((cy - halfD) / GRID_PX);
+        const maxGY = Math.ceil( (cy + halfD) / GRID_PX);
+        for (let gx = minGX; gx <= maxGX; gx++) {
+          for (let gy = minGY; gy <= maxGY; gy++) {
+            sim.blockedSquares.add(gx + ',' + gy);
+          }
+        }
+      });
+      console.log('Terrain blocked squares:', sim.blockedSquares.size);
+    }
+
+    function isSquareBlocked(canvasX, canvasY) {
+      if (!sim.blockedSquares) return false;
+      const gx = Math.round(canvasX / GRID_PX);
+      const gy = Math.round(canvasY / GRID_PX);
+      return sim.blockedSquares.has(gx + ',' + gy);
+    }
+
     function preloadTerrainImages() {
       if (!sim.mapData || !sim.mapData.instances) return;
       const ids = [...new Set(sim.mapData.instances.map(i => i.terrain_type_id))];
@@ -607,26 +648,37 @@ console.log("🎮 Game Simulator loaded");
           return;
         }
 
-        // Place units in MAP coord space (same as terrain), then convert to canvas
-        const usedSquares = new Set();
-        units.forEach((u) => {
+        // Line units evenly along their deployment edge
+        const unitCount = units.length;
+        // Determine primary axis: if zone is wider than tall, spread along X; else along Y
+        const zoneW = zone.xMax - zone.xMin;
+        const zoneH = zone.yMax - zone.yMin;
+        const spreadAlongX = zoneW >= zoneH;
+        const midX = (zone.xMin + zone.xMax) / 2;
+        const midY = (zone.yMin + zone.yMax) / 2;
+        units.forEach((u, i) => {
           const k = unitKey(faction.id, u.id);
-          let mx, my, sq, attempts = 0;
-          do {
-            mx = zone.xMin + Math.random() * (zone.xMax - zone.xMin);
-            my = zone.yMin + Math.random() * (zone.yMax - zone.yMin);
-            // Snap to GRID_PX squares in map space
-            mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
-            my = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
-            sq = mx + ',' + my;
-            attempts++;
-          } while (usedSquares.has(sq) && attempts < 200);
-          usedSquares.add(sq);
-          // Convert map coords to canvas coords
+          let mx, my;
+          if (spreadAlongX) {
+            // Space evenly along X, fixed Y at zone center
+            const spacing = Math.min(GRID_PX * 2, zoneW / Math.max(1, unitCount));
+            const totalW  = spacing * (unitCount - 1);
+            mx = midX - totalW / 2 + i * spacing;
+            my = midY;
+          } else {
+            // Space evenly along Y, fixed X at zone center
+            const spacing = Math.min(GRID_PX * 2, zoneH / Math.max(1, unitCount));
+            const totalH  = spacing * (unitCount - 1);
+            mx = midX;
+            my = midY - totalH / 2 + i * spacing;
+          }
+          // Snap to grid
+          mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
+          my = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
           const cv = mapToCanvas(mx, my);
           sim.unitPositions[k] = {
             x: cv.cx, y: cv.cy,
-            mapX: mx, mapY: my,   // store map coords for grid movement
+            mapX: mx, mapY: my,
             animName: 'idle', frameIdx: 0, frameTimer: 0,
             vx: 0, vy: 0, status: 'idle',
           };
@@ -991,23 +1043,36 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function tickCamera() {
-      if (sim.camTargetX === null || sim.isDragging) return;
-      const speed = 0.08; // lerp factor — lower = smoother
-      sim.viewX += (sim.camTargetX - sim.viewX) * speed;
-      sim.viewY += (sim.camTargetY - sim.viewY) * speed;
-      // Stop when close enough
-      if (Math.abs(sim.camTargetX - sim.viewX) < 0.5 && Math.abs(sim.camTargetY - sim.viewY) < 0.5) {
-        sim.viewX = sim.camTargetX;
-        sim.viewY = sim.camTargetY;
-        sim.camTargetX = null;
-        sim.camTargetY = null;
-      }
+      // Camera is static — no auto-pan
+    }
+
+    function tickUnitSlides() {
+      // Lerp all units toward their targetX/targetY with easing
+      const SLIDE_SPEED = 0.18;
+      Object.values(sim.unitPositions).forEach(pos => {
+        if (!pos) return;
+        if (pos.targetX === undefined || pos.targetY === undefined) return;
+        const dx = pos.targetX - pos.x;
+        const dy = pos.targetY - pos.y;
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+          pos.x = pos.targetX;
+          pos.y = pos.targetY;
+          pos.targetX = undefined;
+          pos.targetY = undefined;
+          if (pos.status === 'moving') pos.status = 'idle';
+        } else {
+          pos.x += dx * SLIDE_SPEED;
+          pos.y += dy * SLIDE_SPEED;
+          pos.status = 'moving';
+        }
+      });
     }
 
     function renderLoop(timestamp) {
       if (_destroyed || !sim.canvas || !sim.ctx) return;
 
       tickCamera();
+      tickUnitSlides();
 
       const canvas = sim.canvas;
       const ctx    = sim.ctx;
@@ -1021,6 +1086,7 @@ console.log("🎮 Game Simulator loaded");
       drawDeployZones(ctx);
       drawTerrain(ctx);
       drawRuler(ctx);
+      drawDeathMarkers(ctx);
       drawUnits(ctx, timestamp);
 
       ctx.restore();
@@ -1028,6 +1094,22 @@ console.log("🎮 Game Simulator loaded");
       if (sim.hoveredUnit) drawTooltip(ctx, canvas);
 
       sim.animFrameId = requestAnimationFrame(renderLoop);
+    }
+
+    function drawDeathMarkers(ctx) {
+      if (!sim.deathMarkers || !sim.deathMarkers.length) return;
+      ctx.save();
+      ctx.font = Math.round(SPRITE_DRAW_SIZE * 0.7) + 'px FontAwesome, serif';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha  = 0.75;
+      sim.deathMarkers.forEach(m => {
+        // Draw skull unicode as fallback (FA may not be on canvas)
+        ctx.fillStyle = 'rgba(239,83,80,0.9)';
+        ctx.font = Math.round(SPRITE_DRAW_SIZE * 0.8) + 'px serif';
+        ctx.fillText('☠', m.x, m.y);
+      });
+      ctx.restore();
     }
 
     function drawRuler(ctx) {
@@ -1194,12 +1276,12 @@ console.log("🎮 Game Simulator loaded");
           ctx.restore();
         }
 
-        // Draw shadow
+        // Draw shadow — offset left-down for isometric look
         ctx.save();
-        ctx.globalAlpha = 0.25;
+        ctx.globalAlpha = 0.22;
         ctx.fillStyle   = '#000';
         ctx.beginPath();
-        ctx.ellipse(pos.x, pos.y + half - 4, half * 0.8, half * 0.25, 0, 0, Math.PI * 2);
+        ctx.ellipse(pos.x - half * 0.4, pos.y + half * 0.3, half * 0.7, half * 0.2, -0.3, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
 
@@ -1447,17 +1529,30 @@ console.log("🎮 Game Simulator loaded");
         const ddy = Math.sign(tgtGY - gy);
         if (ddx === 0 && ddy === 0) break;
         if (Math.max(Math.abs(tgtGX - gx), Math.abs(tgtGY - gy)) <= 1) break;
-        gx += ddx;
-        gy += ddy;
+        const nextX = gx + ddx;
+        const nextY = gy + ddy;
+        // Skip blocked terrain squares
+        const nextCX = nextX * GRID_PX + GRID_PX / 2;
+        const nextCY = nextY * GRID_PX + GRID_PX / 2;
+        if (isSquareBlocked(nextCX, nextCY)) {
+          // Try to go around — try each axis separately
+          if (ddx !== 0 && !isSquareBlocked((gx + ddx) * GRID_PX, nextCY)) { gx += ddx; }
+          else if (ddy !== 0 && !isSquareBlocked(nextCX, (gy + ddy) * GRID_PX)) { gy += ddy; }
+          else break; // fully blocked
+        } else {
+          gx = nextX;
+          gy = nextY;
+        }
       }
       const newMapX = gx * GRID_PX + GRID_PX / 2;
       const newMapY = gy * GRID_PX + GRID_PX / 2;
       pos.mapX = newMapX;
       pos.mapY = newMapY;
       const cv = mapToCanvas(newMapX, newMapY);
-      pos.x = cv.cx;
-      pos.y = cv.cy;
-      pos.status = 'moving';
+      // Slide to new position with easing instead of snapping
+      pos.targetX = cv.cx;
+      pos.targetY = cv.cy;
+      pos.status  = 'moving';
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1617,8 +1712,13 @@ console.log("🎮 Game Simulator loaded");
       }
 
       if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, successes, defenseD, damage, false, luckyBreak);
-      // Keep attacker in fight animation — status reset by simulateActivation timeout
       if (aPos) aPos.status = 'fighting';
+      // Show fight animation in unit preview panel for 2 seconds
+      const _curItem = currentQueueItem();
+      if (_curItem && _curItem.factionId === aFid) {
+        startUnitPreview(aFid, aUid, 'fighting');
+        setTimeout(() => { startUnitPreview(aFid, aUid, 'idle'); }, 2000);
+      }
 
       if (damage > 0) {
         const newQ = Math.max(0, defenderState.quality - damage);
@@ -1628,7 +1728,12 @@ console.log("🎮 Game Simulator loaded");
         if (damage > 0 && newQ > 0) testMorale(dFid, dUid);
         if (newQ <= 0) {
           setUnitState(dFid, dUid, { out: true });
-          if (dPos) dPos.status = 'routed';
+          if (dPos) {
+            dPos.status = 'routed';
+            // Place skull at death position
+            if (!sim.deathMarkers) sim.deathMarkers = [];
+            sim.deathMarkers.push({ x: dPos.x, y: dPos.y, name: defenderUnit.name });
+          }
           simLog(defenderUnit.name + ' is OUT!', 'combat');
           // Cascading fear: nearby enemies of same faction test morale
           const defFaction = getFactionById(dFid);
@@ -1850,7 +1955,10 @@ console.log("🎮 Game Simulator loaded");
                   '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.zoomFit()">' +
                     '<i class="fa fa-compress"></i>' +
                   '</button>' +
-                  '<div style="margin-left:auto;display:flex;gap:6px;align-items:center;">' +
+                  '<div style="flex:1;text-align:center;font-family:var(--cc-font-display,serif);font-size:1rem;font-weight:800;color:#d4822a;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+                    (state.scenarioName || '') +
+                  '</div>' +
+                  '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">' +
                     '<div class="cc-sim-round-badge" id="cc-sim-round-badge">Round ' + state.round + '</div>' +
                     '<div class="cc-sim-round-badge" id="cc-sim-queue-badge" style="font-size:.75rem;"></div>' +
                   '</div>' +
@@ -1908,6 +2016,44 @@ console.log("🎮 Game Simulator loaded");
       }).join('');
     }
 
+    let _previewAnimId = null;
+
+    function startUnitPreview(fid, uid, status) {
+      // Animate the small sprite canvas in the active unit panel
+      const previewCanvas = document.getElementById('cc-sim-unit-preview');
+      if (!previewCanvas || !sim.spriteSheet || !sim.spriteData) return;
+      if (_previewAnimId) cancelAnimationFrame(_previewAnimId);
+
+      const ctx    = previewCanvas.getContext('2d');
+      const W      = previewCanvas.width;
+      const H      = previewCanvas.height;
+      const animSet = FACTION_SPRITE[fid] || FACTION_SPRITE['encounters'];
+      const animName = animSet ? animSet[status === 'fighting' ? 'attack' : 'idle'] : null;
+      if (!animName || !sim.spriteData[animName]) return;
+
+      const anim = sim.spriteData[animName];
+      let frameIdx  = 0;
+      let lastTime  = 0;
+      let frameTimer = 0;
+
+      function step(ts) {
+        if (!document.getElementById('cc-sim-unit-preview')) return;
+        frameTimer += ts - lastTime;
+        lastTime    = ts;
+        const frame = anim.frames[frameIdx % anim.frames.length];
+        if (frame && frameTimer >= frame.duration) {
+          frameTimer = 0;
+          frameIdx   = (frameIdx + 1) % anim.frames.length;
+        }
+        ctx.clearRect(0, 0, W, H);
+        if (frame) {
+          ctx.drawImage(sim.spriteSheet, frame.x, frame.y, 20, 20, 0, 0, W, H);
+        }
+        _previewAnimId = requestAnimationFrame(step);
+      }
+      _previewAnimId = requestAnimationFrame(step);
+    }
+
     function refreshActiveUnitPanel() {
       const el = document.getElementById('cc-sim-active-unit');
       if (!el) return;
@@ -1953,7 +2099,8 @@ console.log("🎮 Game Simulator loaded");
             ${unit.cost    ? `<span class="cc-sim-stat-pill cost">${unit.cost}pts</span>` : ''}
           </div>
           ${abilities}
-          ${unit.weapon ? `<div style="font-size:.74rem;color:#9e8e78;margin-top:6px;font-style:italic;">${unit.weapon}</div>` : ''}
+          ${unit.weapon ? '<div style="font-size:.74rem;color:#9e8e78;margin-top:6px;font-style:italic;">' + unit.weapon + '</div>' : ''}
+          <canvas id="cc-sim-unit-preview" width="80" height="80" style="display:block;margin:8px auto 0;border-radius:50%;border:2px solid ${color};background:${color}22;"></canvas>
           ${unit.lore ? `<div style="font-size:.73rem;color:var(--cc-text-dim);margin-top:8px;line-height:1.5;font-style:italic;">${unit.lore.slice(0,140)}${unit.lore.length>140?'…':''}</div>` : ''}
           <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
             <button class="cc-btn cc-btn-sm" onclick="window.CC_SIM.activateAndAdvance()">
@@ -2039,6 +2186,9 @@ console.log("🎮 Game Simulator loaded");
       refreshActiveUnitPanel();
       refreshFactionList();
       refreshQueueBadge();
+      // Start sprite preview animation for active unit
+      const _cur = currentQueueItem();
+      if (_cur) startUnitPreview(_cur.factionId, _cur.unitId, 'idle');
     };
 
     window.CC_SIM.activateAndAdvance = function(callback) {
@@ -2248,6 +2398,7 @@ console.log("🎮 Game Simulator loaded");
               if (sim.mapData) {
                 await loadTerrainCatalog();
                 preloadTerrainImages();
+                buildTerrainBlockedMap();
                 console.log('Map loaded:', mapId);
               }
             }
