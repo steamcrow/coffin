@@ -249,9 +249,32 @@ console.log("🎮 Game Simulator loaded");
       { id: 'thyr_pulse',   icon: 'fa-sun',        text: 'Thyr pulse. All ritual actions +1 noise this round.' },
     ];
 
-    const MAP_LIST = [
-      { id: 'quinine-jimmy', name: 'Quinine Jimmy' },
-    ];
+    // MAP_LIST is populated dynamically from the GitHub repo directory
+    let MAP_LIST = [];
+    const MAP_DIR_API = 'https://api.github.com/repos/steamcrow/coffin/contents/data/src/terrain_instances';
+
+    async function fetchMapList() {
+      try {
+        const res  = await fetch(MAP_DIR_API + '?t=' + Date.now(), {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const files = await res.json();
+        MAP_LIST = files
+          .filter(f => f.type === 'file' && /^map[_-][^/]+\.json$/i.test(f.name))
+          .map(f => {
+            // Derive a readable name from filename: map_quinine-jimmy.json -> Quinine Jimmy
+            const base = f.name.replace(/\.json$/i, '').replace(/^map[_-]/i, '');
+            const name = base.replace(/[-_]/g, ' ').replace(/\w/g, c => c.toUpperCase());
+            return { id: base, name };
+          })
+          .sort((a, b) => a.name.localeCompare(b.name));
+        console.log('🗺️ Maps found:', MAP_LIST.map(m => m.id).join(', '));
+      } catch (e) {
+        console.warn('Could not fetch map list, using fallback:', e.message);
+        MAP_LIST = [{ id: 'quinine-jimmy', name: 'Quinine Jimmy' }];
+      }
+    }
 
     const FALLBACK_MONSTERS = [
       { id: 'ruster',         name: 'Ruster',         quality: 4, move: 6, defense: null, range: null, special: ['Corrode'],        isTitan: false },
@@ -3156,12 +3179,11 @@ console.log("🎮 Game Simulator loaded");
     // ═════════════════════════════════════════════════════════════════════════
 
     // If CC_STORAGE is already present when we mount, fetch scenarios immediately
+    // Fetch map list from GitHub, then render setup screen
     if (window.CC_STORAGE) {
       window.CC_SIM.fetchScenarios();
     }
-
-    // Initial render
-    render();
+    fetchMapList().then(() => { if (state.phase === 'setup') render(); });
 
   } // end mount()
 
