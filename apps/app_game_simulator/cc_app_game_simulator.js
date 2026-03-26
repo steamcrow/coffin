@@ -986,21 +986,28 @@ console.log("🎮 Game Simulator loaded");
       canvas.addEventListener('mouseup', e => {
         if (sim.dragUnit) {
           const pos = sim.unitPositions[sim.dragUnit];
+          const _movedKey = sim.dragUnit;
+          // Check if unit actually moved (more than half a grid square)
+          const reallyMoved = pos && (
+            Math.abs(pos.x - sim.dragStartX) > GRID_PX * 0.5 ||
+            Math.abs(pos.y - sim.dragStartY) > GRID_PX * 0.5
+          );
           if (pos) {
             pos.x = Math.round((pos.x - GRID_PX/2) / GRID_PX) * GRID_PX + GRID_PX / 2;
             pos.y = Math.round((pos.y - GRID_PX/2) / GRID_PX) * GRID_PX + GRID_PX / 2;
             pos.status = 'idle';
           }
-          // Show action menu even if didn't move (tap = attack in place)
-          if (!sim.soloMovedThisTurn) sim.soloMovedThisTurn = true;
-          const _movedKey = sim.dragUnit;   // capture BEFORE clearing
-          sim.dragUnit    = null;
-          sim.rulerActive = false;
-          sim.rulerDist   = 0;
-          sim.soloMovedThisTurn = true;
+          sim.dragUnit      = null;
+          sim.rulerActive   = false;
+          sim.rulerDist     = 0;
           const rulerEl = document.getElementById('cc-sim-ruler-hud');
           if (rulerEl) rulerEl.classList.remove('visible');
-          setTimeout(() => window.CC_SIM.showSoloActionMenu(_movedKey || ''), 200);
+          if (reallyMoved) {
+            // Unit moved — show action menu
+            sim.soloMovedThisTurn = true;
+            setTimeout(() => window.CC_SIM.showSoloActionMenu(_movedKey || ''), 200);
+          }
+          // If not moved (just a tap/click) — do nothing, let click handler open inspector
           return;
         }
         sim.isDragging = false;
@@ -1364,12 +1371,13 @@ console.log("🎮 Game Simulator loaded");
           ctx.fillStyle = color + '33';
           ctx.fill();
           // Center sprite in the circle
-          // Draw sprite centered, shifted up slightly so body center aligns
-          const spriteOffY = half * 0.1; // nudge up 10% to center visual mass
+          // Sprite offset: right to compensate for isometric pixel art left-bias
+          const spriteOffX = half * 0.15; // shift right 15%
+          const spriteOffY = half * 0.1;  // nudge up 10%
           ctx.drawImage(
             sim.spriteSheet,
             frame.x, frame.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
-            pos.x - half, pos.y - half - spriteOffY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE
+            pos.x - half + spriteOffX, pos.y - half - spriteOffY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE
           );
           ctx.restore();
           // Circle border
@@ -1569,14 +1577,12 @@ console.log("🎮 Game Simulator loaded");
       };
     }
 
-    // Grid distance in map-coord squares (Chebyshev — diagonal counts as 1)
-    // Accepts canvas positions and converts internally
+    // Grid distance in squares (Chebyshev). Canvas coords — no Y flip needed,
+    // just measure in pixels and convert to grid squares.
     function gridDist(acx, acy, bcx, bcy) {
-      const ax = acx, ay = MAP_SIZE - acy;
-      const bx = bcx, by = MAP_SIZE - bcy;
       return Math.max(
-        Math.abs(Math.round(ax / GRID_PX) - Math.round(bx / GRID_PX)),
-        Math.abs(Math.round(ay / GRID_PX) - Math.round(by / GRID_PX))
+        Math.abs(Math.round(acx / GRID_PX) - Math.round(bcx / GRID_PX)),
+        Math.abs(Math.round(acy / GRID_PX) - Math.round(bcy / GRID_PX))
       );
     }
     function isGridAdjacent(acx, acy, bcx, bcy) {
@@ -2212,8 +2218,18 @@ console.log("🎮 Game Simulator loaded");
       const ctx    = previewCanvas.getContext('2d');
       const W      = previewCanvas.width;
       const H      = previewCanvas.height;
-      const animSet = FACTION_SPRITE[fid] || FACTION_SPRITE['encounters'];
-      const animName = animSet ? animSet[status === 'fighting' ? 'attack' : 'idle'] : null;
+      // For encounter/monster factions, check if sprites actually exist
+      let animSet = FACTION_SPRITE[fid];
+      if (!animSet) animSet = FACTION_SPRITE['encounters'];
+      const animKey = status === 'fighting' ? 'attack' : 'idle';
+      let animName = animSet ? animSet[animKey] : null;
+      // Fallback: try other monster sprite sets if chosen one doesn't exist
+      if (!animName || !sim.spriteData[animName]) {
+        const fallbacks = ['lizard_idle','troll_idle','knight_yellow_idle','lizard_run'];
+        for (const fb of fallbacks) {
+          if (sim.spriteData[fb]) { animName = fb; break; }
+        }
+      }
       if (!animName || !sim.spriteData[animName]) return;
 
       const anim = sim.spriteData[animName];
@@ -2288,7 +2304,7 @@ console.log("🎮 Game Simulator loaded");
           <canvas id="cc-sim-unit-preview" width="80" height="80" style="display:block;margin:8px auto 0;border-radius:50%;border:2px solid ${color};background:${color}22;"></canvas>
           ${unit.lore ? `<div style="font-size:.73rem;color:var(--cc-text-dim);margin-top:8px;line-height:1.5;font-style:italic;">${unit.lore.slice(0,140)}${unit.lore.length>140?'…':''}</div>` : ''}
           <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="cc-btn cc-btn-sm" onclick="window.CC_SIM.activateAndAdvance()">
+            <button class="cc-btn cc-btn-sm" onclick="window.CC_SIM.soloActivateInPlace('${curItem.factionId}::${curItem.unitId}')">
               <i class="fa fa-bolt"></i> Activate
             </button>
             <button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.markOut('${curItem.factionId}','${curItem.unitId}')">
@@ -2545,6 +2561,19 @@ console.log("🎮 Game Simulator loaded");
       else if (o) o.remove();
     };
 
+    window.CC_SIM.soloActivateInPlace = function(key) {
+      // Player clicked Activate without dragging — show action menu at current position
+      const [fid] = key.split('::');
+      if (sim.soloFactionId && fid === sim.soloFactionId) {
+        // Mark as moved so the menu appears
+        sim.soloMovedThisTurn = true;
+        sim.soloWaiting = false;
+        window.CC_SIM.showSoloActionMenu(key);
+      } else {
+        window.CC_SIM.activateAndAdvance();
+      }
+    };
+
     window.CC_SIM.showSoloActionMenu = function(key) {
       // Show action choice for solo player unit
       const [fid, uid] = key.split('::');
@@ -2782,9 +2811,9 @@ console.log("🎮 Game Simulator loaded");
       refreshActiveUnitPanel();
       refreshFactionList();
       refreshQueueBadge();
-      // Start sprite preview animation for active unit
+      // Defer sprite preview until after DOM has updated
       const _cur = currentQueueItem();
-      if (_cur) startUnitPreview(_cur.factionId, _cur.unitId, 'idle');
+      if (_cur) setTimeout(() => startUnitPreview(_cur.factionId, _cur.unitId, 'idle'), 50);
     };
 
     window.CC_SIM.activateAndAdvance = function(callback) {
