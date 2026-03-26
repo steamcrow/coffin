@@ -596,16 +596,21 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function isSquareBlocked(canvasX, canvasY, excludeKey) {
-      const gx = Math.round(canvasX / GRID_PX);
-      const gy = Math.round(canvasY / GRID_PX);
+      const gx = Math.floor(canvasX / GRID_PX);
+      const gy = Math.floor(canvasY / GRID_PX);
       // Terrain blocking
       if (sim.blockedSquares && sim.blockedSquares.has(gx + ',' + gy)) return true;
+      // Also check adjacent rounding variant
+      const gx2 = Math.round(canvasX / GRID_PX), gy2 = Math.round(canvasY / GRID_PX);
+      if (sim.blockedSquares && gx2 !== gx && sim.blockedSquares.has(gx2 + ',' + gy)) return true;
+      if (sim.blockedSquares && gy2 !== gy && sim.blockedSquares.has(gx + ',' + gy2)) return true;
       // Unit blocking — can't share a square with another unit
       for (const [k, pos] of Object.entries(sim.unitPositions)) {
-        if (!pos || pos.status === 'routed' || pos.staged) continue;  // staged units not on table yet
+        if (!pos || pos.status === 'routed' || pos.staged) continue;
         if (k === excludeKey) continue;
-        const ugx = Math.round(pos.x / GRID_PX);
-        const ugy = Math.round(pos.y / GRID_PX);
+        // Use floor to match terrain grid key convention
+        const ugx = Math.floor(pos.x / GRID_PX);
+        const ugy = Math.floor(pos.y / GRID_PX);
         if (ugx === gx && ugy === gy) return true;
       }
       return false;
@@ -710,22 +715,16 @@ console.log("🎮 Game Simulator loaded");
           mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
           my = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
           const cv = mapToCanvas(mx, my);
-          // Calculate off-table staging position (outside the canvas bounds)
-          // Units slide in from their edge when first activated
-          const _eLine = edgeLine || { x1: MAP_SIZE/2, y1: MAP_SIZE/2, x2: MAP_SIZE/2, y2: MAP_SIZE/2 };
-          const _edgeMidX = (_eLine.x1 + _eLine.x2) / 2;
-          const _edgeMidY = (_eLine.y1 + _eLine.y2) / 2;
-          // Push staging pos away from center — far enough to be off canvas
-          const _dcx = _edgeMidX - MAP_SIZE/2, _dcy = _edgeMidY - MAP_SIZE/2;
-          const _len = Math.max(1, Math.hypot(_dcx, _dcy));
-          const _stageX = cv.cx + (_dcx/_len) * MAP_SIZE * 0.55;
-          const _stageY = cv.cy + (_dcy/_len) * MAP_SIZE * 0.55;
+          // Units start ON their edge line (visible, like the mockup)
+          // staged=true means they don't block or fight yet
+          // onTableX/onTableY is where they MOVE TO when activated
+          // For now the edge canvas position IS their starting position
           sim.unitPositions[k] = {
-            x: _stageX, y: _stageY,           // start off-table
-            targetX: undefined, targetY: undefined, // no slide yet
-            mapX: mx, mapY: my,                // intended on-table position
-            onTableX: cv.cx, onTableY: cv.cy,  // where they'll slide TO on first activation
-            staged: true,                       // flag: not yet on table
+            x: cv.cx, y: cv.cy,                // visible on edge
+            targetX: undefined, targetY: undefined,
+            mapX: mx, mapY: my,
+            onTableX: cv.cx, onTableY: cv.cy,  // same — they're already on edge
+            staged: true,                       // not yet in play
             animName: 'idle', frameIdx: 0, frameTimer: 0,
             vx: 0, vy: 0, status: 'idle',
           };
@@ -1199,6 +1198,10 @@ console.log("🎮 Game Simulator loaded");
       return { cx: mx, cy: MAP_SIZE - my };
     }
 
+    // SVG letterbox bounds in canvas space (computed from SVG aspect ratio)
+    const SVG_DY = Math.round((MAP_SIZE - Math.min(MAP_SIZE / 2000, MAP_SIZE / 1060) * 1060) / 2);
+    const SVG_DH = Math.round(Math.min(MAP_SIZE / 2000, MAP_SIZE / 1060) * 1060);
+
     function drawTerrain(ctx) {
       if (!sim.mapData || !sim.mapData.instances) return;
       // Table is 48 inches wide, drawn at MAP_SIZE px wide in our coordinate space
@@ -1207,6 +1210,9 @@ console.log("🎮 Game Simulator loaded");
         if (inst.hidden_in_editor) return;
         const img = sim.terrainImages[inst.terrain_type_id];
         if (!img) return;
+        // Skip terrain whose anchor falls outside the SVG letterbox (off-board)
+        const anchorCY = MAP_SIZE - inst.y;
+        if (anchorCY < SVG_DY - 200 || anchorCY > SVG_DY + SVG_DH + 200) return;
         // Use footprint-based sizing if catalog has it, otherwise fall back to natural size
         const catalogEntry = (sim.terrainCatalogFull && sim.terrainCatalogFull[inst.terrain_type_id]) || null;
         const fp = catalogEntry && catalogEntry.footprint && catalogEntry.footprint.size_in;
@@ -1556,13 +1562,14 @@ console.log("🎮 Game Simulator loaded");
         const nextCX = nextX * GRID_PX + GRID_PX / 2;
         const nextCY = nextY * GRID_PX + GRID_PX / 2;
         if (isSquareBlocked(nextCX, nextCY, key)) {
-          // Try to go around — try each axis separately
-          if (ddx !== 0 && !isSquareBlocked((gx + ddx) * GRID_PX, nextCY)) { gx += ddx; }
-          else if (ddy !== 0 && !isSquareBlocked(nextCX, (gy + ddy) * GRID_PX)) { gy += ddy; }
-          else break; // fully blocked
+          // Blocked — try each axis separately as a detour
+          const canX = ddx !== 0 && !isSquareBlocked((gx + ddx) * GRID_PX + GRID_PX/2, gy * GRID_PX + GRID_PX/2, key);
+          const canY = ddy !== 0 && !isSquareBlocked(gx * GRID_PX + GRID_PX/2, (gy + ddy) * GRID_PX + GRID_PX/2, key);
+          if      (canX) { gx += ddx; }
+          else if (canY) { gy += ddy; }
+          else { break; } // fully blocked, stop here
         } else {
-          gx = nextX;
-          gy = nextY;
+          gx = nextX; gy = nextY;
         }
       }
       const newMapX = gx * GRID_PX + GRID_PX / 2;
@@ -2084,14 +2091,12 @@ console.log("🎮 Game Simulator loaded");
         if (!anim || !anim.frames || !anim.frames[frame]) return;
         const f = anim.frames[frame % anim.frames.length];
         ctx.save();
-        // Tinted bg circle
-        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
-        ctx.fillStyle = color + '44'; ctx.fill();
-        // Clip to circle
+        // Clip to circle (no fill — transparent background)
         ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
         const sz = r * 2;
+        // Draw sprite with multiply-style blend so dark bg shows through
+        ctx.globalCompositeOperation = 'source-over';
         if (flipX) {
-          // Mirror: translate to cx, flip, draw centred
           ctx.translate(cx, cy);
           ctx.scale(-1, 1);
           ctx.drawImage(sim.spriteSheet, f.x, f.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
@@ -2101,9 +2106,9 @@ console.log("🎮 Game Simulator loaded");
             cx - r, cy - r, sz, sz);
         }
         ctx.restore();
-        // Faction colour ring
+        // Faction colour ring only — no fill
         ctx.beginPath(); ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
-        ctx.strokeStyle = color; ctx.lineWidth = 3; ctx.stroke();
+        ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.stroke();
       }
 
       function advanceAnim(anim, frame, timer, dt) {
@@ -2128,8 +2133,9 @@ console.log("🎮 Game Simulator loaded");
         const rd = advanceAnim(dDraw, dFrame, dTimer, dt);
         dFrame = rd.frame; dTimer = rd.timer;
 
-        // Dark background
-        ctx.fillStyle = '#111'; ctx.fillRect(0, 0, W, H);
+        // Very dark translucent background so sprites stand out
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(8,5,3,0.92)'; ctx.fillRect(0, 0, W, H);
 
         // Divider
         ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
@@ -2697,12 +2703,18 @@ console.log("🎮 Game Simulator loaded");
         const _soloKey = unitKey(cur.factionId, cur.unitId);
         const _soloPos = sim.unitPositions[_soloKey];
         if (_soloPos && _soloPos.staged) {
-          _soloPos.staged  = false;
-          _soloPos.targetX = _soloPos.onTableX;
-          _soloPos.targetY = _soloPos.onTableY;
-          _soloPos.status  = 'moving';
+          _soloPos.staged = false;
+          const _soloUnit = getUnitById(getFactionById(cur.factionId), cur.unitId);
+          const _moveIn   = Math.max(2, (_soloUnit ? _soloUnit.move || 6 : 6));
+          const _bCX = MAP_SIZE / 2, _bCY = MAP_SIZE / 2;
+          const _sdx = _bCX - _soloPos.x, _sdy = _bCY - _soloPos.y;
+          const _sd  = Math.max(1, Math.hypot(_sdx, _sdy));
+          const _seX = _soloPos.x + (_sdx / _sd) * _moveIn * GRID_PX;
+          const _seY = _soloPos.y + (_sdy / _sd) * _moveIn * GRID_PX;
+          _soloPos.targetX = _seX; _soloPos.targetY = _seY; _soloPos.status = 'moving';
           setTimeout(() => {
-            _soloPos.x = _soloPos.onTableX; _soloPos.y = _soloPos.onTableY;
+            _soloPos.x = _seX; _soloPos.y = _seY;
+            _soloPos.mapX = _seX; _soloPos.mapY = MAP_SIZE - _seY;
             _soloPos.targetX = undefined; _soloPos.targetY = undefined;
             sim.soloWaiting = true;
             const waitEl = document.getElementById('cc-sim-waiting-badge');
@@ -2751,14 +2763,23 @@ console.log("🎮 Game Simulator loaded");
       // Short delay then activate
       setTimeout(() => {
         // If unit is still staged off-table, slide it onto the table first
+        // If unit is still staged on edge, slide it INWARD one move distance
         if (pos && pos.staged) {
           pos.staged = false;
-          pos.targetX = pos.onTableX;
-          pos.targetY = pos.onTableY;
-          pos.status  = 'moving';
-          // Wait for slide-in to complete, THEN do the actual activation move
+          // Entry point: move inward from edge toward board center
+          const _unit3 = unit;
+          const _moveIn = Math.max(2, (_unit3 ? _unit3.move || 6 : 6));
+          const _boardCX = MAP_SIZE / 2 * sim.viewScale + sim.viewX;  // canvas center
+          const _boardCY = MAP_SIZE / 2 * sim.viewScale + sim.viewY;
+          // direction from current pos toward board center in canvas coords
+          const _dx3 = MAP_SIZE / 2 - pos.x, _dy3 = MAP_SIZE / 2 - pos.y;
+          const _d3  = Math.max(1, Math.hypot(_dx3, _dy3));
+          const _entX = pos.x + (_dx3 / _d3) * _moveIn * GRID_PX;
+          const _entY = pos.y + (_dy3 / _d3) * _moveIn * GRID_PX;
+          pos.targetX = _entX; pos.targetY = _entY; pos.status = 'moving';
           setTimeout(() => {
-            pos.x = pos.onTableX; pos.y = pos.onTableY;
+            pos.x = _entX; pos.y = _entY;
+            pos.mapX = _entX; pos.mapY = MAP_SIZE - _entY;
             pos.targetX = undefined; pos.targetY = undefined;
             simulateActivation(cur.factionId, cur.unitId);
             const moveDuration = unit ? Math.max(600, (unit.move || 6) * 80) : 800;
