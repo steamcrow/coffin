@@ -1430,8 +1430,8 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function drawTooltip(ctx, canvas) {
-      const key     = sim.hoveredUnit;
-      const pos     = sim.unitPositions[key];
+      const key = sim.hoveredUnit;
+      const pos = sim.unitPositions[key];
       if (!pos) return;
       const [fid, uid] = key.split('::');
       const faction = getFactionById(fid);
@@ -1439,32 +1439,38 @@ console.log("🎮 Game Simulator loaded");
       const us      = getUnitState(fid, uid);
       if (!unit || !us) return;
 
+      // Convert map position to screen pixels
       const sx = pos.x * sim.viewScale + sim.viewX;
       const sy = pos.y * sim.viewScale + sim.viewY;
-      const label  = `${unit.name} (Q${us.quality}/${unit.quality})`;
-      const label2 = [unit.move ? `M${unit.move}"` : '', unit.defense ? `D${unit.defense}` : '', unit.range ? `R${unit.range}"` : ''].filter(Boolean).join('  ');
+      const label  = unit.name + ' (Q' + us.quality + '/' + unit.quality + ')';
+      const label2 = [unit.move ? 'M' + unit.move + '"' : '', unit.defense ? 'D' + unit.defense : '', unit.range ? 'R' + unit.range + '"' : ''].filter(Boolean).join('  ');
 
       ctx.save();
-      ctx.font = 'bold 11px sans-serif';
+      // Reset transform so tooltip renders in screen pixels, not map pixels
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.font = 'bold 12px sans-serif';
       const w = Math.max(ctx.measureText(label).width, ctx.measureText(label2).width) + 20;
-      const h = 40;
-      let tx = sx + 18;
+      const h = 38;
+      let tx = sx + 16;
       let ty = sy - h / 2;
-      if (tx + w > canvas.width  - 8) tx = sx - w - 18;
+      if (tx + w > canvas.width  - 8) tx = sx - w - 16;
       if (ty < 4)                      ty = 4;
       if (ty + h > canvas.height - 4)  ty = canvas.height - h - 4;
 
-      ctx.fillStyle = 'rgba(0,0,0,0.88)';
-      roundRect(ctx, tx, ty, w, h, 5);
+      // Background
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(tx, ty, w, h, 5) : (ctx.rect(tx, ty, w, h));
+      ctx.fillStyle = 'rgba(10,8,6,0.92)';
       ctx.fill();
       ctx.strokeStyle = faction?.color || '#888';
-      ctx.lineWidth   = 1;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
-      ctx.fillStyle   = '#fff';
+      // Text
+      ctx.fillStyle    = '#fff';
       ctx.textBaseline = 'top';
-      ctx.fillText(label,  tx + 10, ty + 6);
+      ctx.fillText(label, tx + 10, ty + 7);
       ctx.fillStyle = '#aaa';
-      ctx.font      = '10px sans-serif';
+      ctx.font      = '11px sans-serif';
       ctx.fillText(label2, tx + 10, ty + 22);
       ctx.restore();
     }
