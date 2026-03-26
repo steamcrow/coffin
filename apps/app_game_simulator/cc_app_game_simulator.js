@@ -1138,6 +1138,26 @@ console.log("🎮 Game Simulator loaded");
 
       ctx.restore();
 
+      // Objective labels in screen space (small, always readable)
+      if (state.objectives && state.objectives.length) {
+        const savedT = ctx.getTransform ? ctx.getTransform() : null;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        state.objectives.forEach(obj => {
+          const scx = obj.x * sim.viewScale + sim.viewX;
+          const scy = (MAP_SIZE - obj.y) * sim.viewScale + sim.viewY;
+          const label = (obj.label || '').slice(0, 12);
+          const tw = ctx.measureText(label).width + 10;
+          ctx.fillStyle = 'rgba(0,0,0,0.75)';
+          ctx.fillRect(scx - tw/2, scy + 14, tw, 16);
+          ctx.fillStyle = '#ffd600';
+          ctx.fillText(label, scx, scy + 22);
+        });
+        if (savedT) ctx.setTransform(savedT);
+      }
+
       if (sim.hoveredUnit) drawTooltip(ctx, canvas);
 
       sim.animFrameId = requestAnimationFrame(renderLoop);
@@ -1172,12 +1192,9 @@ console.log("🎮 Game Simulator loaded");
         ctx.lineTo(cx + r * 0.9, cy - r * 1.4);
         ctx.lineTo(cx, cy - r);
         ctx.closePath(); ctx.fill();
-        // Label
-        ctx.fillStyle = '#fff';
-        ctx.font = 'bold ' + Math.round(GRID_PX * 0.55) + 'px sans-serif';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(obj.label.slice(0, 8), cx, cy + r * 1.4);
         ctx.restore();
+        // Label drawn in screen space so it's always readable
+        // (must be outside the save/restore to use setTransform)
       });
     }
 
@@ -2972,14 +2989,17 @@ console.log("🎮 Game Simulator loaded");
         state.scenarioName   = payload.name || (payload.scenario && payload.scenario.name) || 'Scenario';
         // Load objectives from scenario data
         const _scn = payload.scenario || payload;
-        state.objectives = (_scn.objectives || _scn.mission_objectives || []).map((o, i) => ({
-          id:    o.id   || 'obj_' + i,
-          x:     o.x   || o.map_x || (MAP_SIZE / 2),
-          y:     o.y   || o.map_y || (MAP_SIZE / 2),
-          type:  o.type || o.objective_type || 'capture',
-          label: o.label || o.name || o.title || ('Obj ' + (i + 1)),
-          controlled_by: null,
-        }));
+        const _rawObjs = _scn.objectives || _scn.mission_objectives || [];
+        state.objectives = _rawObjs
+          .filter(o => o && typeof o === 'object' && (o.x || o.map_x))
+          .map((o, i) => ({
+            id:    o.id   || 'obj_' + i,
+            x:     parseFloat(o.x   || o.map_x || MAP_SIZE / 2),
+            y:     parseFloat(o.y   || o.map_y || MAP_SIZE / 2),
+            type:  o.type || o.objective_type || 'capture',
+            label: (o.label || o.name || o.title || ('Obj ' + (i + 1))).toString().slice(0, 16),
+            controlled_by: null,
+          }));
         if (state.objectives.length) simLog('📍 ' + state.objectives.length + ' objectives loaded', 'event');
         state.round          = 1;
         state.noiseThreshold = 16 + ((payload.danger || (payload.scenario && payload.scenario.danger_rating) || 3) * 2);
