@@ -233,7 +233,7 @@ console.log("🎮 Game Simulator loaded");
     ];
     const MONSTER_ZONE = { key: 'center', xMin: 1800, xMax: 2300, yMin: 1800, yMax: 2300 };
     const NOISE_VALUES = {
-      shot: 2, melee: 3, explosion: 3, ritual: 4, ability: 2, silent: 0
+      shot: 1, melee: 2, explosion: 3, ritual: 3, ability: 1, silent: 0
     };
 
     const CANYON_EVENTS = [
@@ -271,6 +271,7 @@ console.log("🎮 Game Simulator loaded");
       phase: 'setup',          // 'setup' | 'loading' | 'playing' | 'done'
       scenarioSave: null,
       scenarioName: '',
+      objectives: [],          // [{ id, x, y, type, label, controlled_by }]
       factions: [],
       unitState: {},           // unitKey -> { quality, out, activated, lastRoll }
       round: 1,
@@ -808,7 +809,7 @@ console.log("🎮 Game Simulator loaded");
 
       state._lastMonsterTriggered = monsterDef.id;
       state.monstersTriggered++;
-      state.noiseLevel = Math.floor(state.noiseLevel / 2);
+      state.noiseLevel = 0; // reset fully after trigger to prevent chained encounters
       simLog(`🔥 Encounter! ${monsterDef.name} approaches!`, 'monster');
 
       const instanceId = `${monsterDef.id}_enc${state.monstersTriggered}`;
@@ -1101,6 +1102,7 @@ console.log("🎮 Game Simulator loaded");
       drawDeployZones(ctx);
       drawTerrain(ctx);
       drawRuler(ctx);
+      drawObjectives(ctx);
       drawDeathMarkers(ctx);
       drawUnits(ctx, timestamp);
 
@@ -1109,6 +1111,44 @@ console.log("🎮 Game Simulator loaded");
       if (sim.hoveredUnit) drawTooltip(ctx, canvas);
 
       sim.animFrameId = requestAnimationFrame(renderLoop);
+    }
+
+    function drawObjectives(ctx) {
+      if (!state.objectives || !state.objectives.length) return;
+      state.objectives.forEach(obj => {
+        // Convert map coords to canvas (objectives use Leaflet map coords)
+        const cx = obj.x;
+        const cy = MAP_SIZE - obj.y;
+        const r  = GRID_PX * 1.2;
+        ctx.save();
+        // Glow ring
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = obj.controlled_by
+          ? ((getFactionById(obj.controlled_by) || {}).color || '#ffd600')
+          : 'rgba(255,214,0,0.6)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Flag pole
+        ctx.strokeStyle = '#ffd600'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - r * 1.8); ctx.stroke();
+        // Flag triangle
+        ctx.fillStyle = obj.controlled_by
+          ? ((getFactionById(obj.controlled_by) || {}).color || '#ffd600')
+          : '#ffd600';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r * 1.8);
+        ctx.lineTo(cx + r * 0.9, cy - r * 1.4);
+        ctx.lineTo(cx, cy - r);
+        ctx.closePath(); ctx.fill();
+        // Label
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold ' + Math.round(GRID_PX * 0.55) + 'px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(obj.label.slice(0, 8), cx, cy + r * 1.4);
+        ctx.restore();
+      });
     }
 
     function drawDeathMarkers(ctx) {
@@ -1324,10 +1364,12 @@ console.log("🎮 Game Simulator loaded");
           ctx.fillStyle = color + '33';
           ctx.fill();
           // Center sprite in the circle
+          // Draw sprite centered, shifted up slightly so body center aligns
+          const spriteOffY = half * 0.1; // nudge up 10% to center visual mass
           ctx.drawImage(
             sim.spriteSheet,
             frame.x, frame.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
-            pos.x - half, pos.y - half, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE
+            pos.x - half, pos.y - half - spriteOffY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE
           );
           ctx.restore();
           // Circle border
@@ -1555,7 +1597,10 @@ console.log("🎮 Game Simulator loaded");
         const ddx = Math.sign(tgtGX - gx);
         const ddy = Math.sign(tgtGY - gy);
         if (ddx === 0 && ddy === 0) break;
-        if (Math.max(Math.abs(tgtGX - gx), Math.abs(tgtGY - gy)) <= 1) break;
+        // Stop 1 square away ONLY if target is an enemy unit (for melee adjacency)
+        // Don't stop early for open-field movement
+        const distToTgt = Math.max(Math.abs(tgtGX - gx), Math.abs(tgtGY - gy));
+        if (distToTgt === 0) break;
         const nextX = gx + ddx;
         const nextY = gy + ddy;
         // Skip blocked terrain squares
@@ -2747,8 +2792,8 @@ console.log("🎮 Game Simulator loaded");
       if (!cur) { if (callback) callback(); return; }
 
       // Skip solo player's units — they control manually
-      if (sim.soloFactionId && cur.factionId === sim.soloFactionId) {
-        window.CC_SIM.nextActivation();
+      if (sim.soloFactionId && cur.factionId === sim.soloFactionId && !sim.autoRunning) {
+        // Manual solo mode: wait for player input (nextActivation already set soloWaiting)
         if (callback) callback();
         return;
       }
@@ -2867,8 +2912,19 @@ console.log("🎮 Game Simulator loaded");
         const payload = scenario;
         state.scenarioSave   = payload.scenario || payload;
         state.scenarioName   = payload.name || (payload.scenario && payload.scenario.name) || 'Scenario';
+        // Load objectives from scenario data
+        const _scn = payload.scenario || payload;
+        state.objectives = (_scn.objectives || _scn.mission_objectives || []).map((o, i) => ({
+          id:    o.id   || 'obj_' + i,
+          x:     o.x   || o.map_x || (MAP_SIZE / 2),
+          y:     o.y   || o.map_y || (MAP_SIZE / 2),
+          type:  o.type || o.objective_type || 'capture',
+          label: o.label || o.name || o.title || ('Obj ' + (i + 1)),
+          controlled_by: null,
+        }));
+        if (state.objectives.length) simLog('📍 ' + state.objectives.length + ' objectives loaded', 'event');
         state.round          = 1;
-        state.noiseThreshold = 8 + ((payload.danger || (payload.scenario && payload.scenario.danger_rating) || 3) * 2);
+        state.noiseThreshold = 16 + ((payload.danger || (payload.scenario && payload.scenario.danger_rating) || 3) * 2);
         const mp = state.scenarioSave && state.scenarioSave.monster_pressure;
         state.monsterRoster  = (mp && mp.monsters) || [];
 
