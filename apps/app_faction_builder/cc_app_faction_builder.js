@@ -827,7 +827,7 @@ console.log("⚔️ Faction Builder app loaded");
                 </div>` : ''}
               ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
                 <div class="roster-list-upgrades">
-                  ${item.config.optionalUpgrades.map(u => `<span class="upgrade-tag">${esc(u.name)}</span>`).join('')}
+                  ${item.config.optionalUpgrades.map(u => `<span class="ability-tag">${esc(u.name)}</span>`).join('')}
                 </div>` : ''}
               <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
                 <i class="fa fa-trash"></i>
@@ -866,7 +866,7 @@ console.log("⚔️ Faction Builder app loaded");
                   </div>` : ''}
                 ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
                   <div class="grid-item-upgrades">
-                    ${item.config.optionalUpgrades.map(u => `<span class="upgrade-tag-small">${esc(u.name)}</span>`).join('')}
+                    ${item.config.optionalUpgrades.map(u => `<span class="ability-tag-small">${esc(u.name)}</span>`).join('')}
                   </div>` : ''}
               </div>`;
           }).join('')}
@@ -1265,25 +1265,7 @@ console.log("⚔️ Faction Builder app loaded");
     .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 7.5pt; }
     .upgrades { margin-top: 4px; font-size: 8pt; color: #444; }
     .roster-list-upgrades { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
-    .upgrade-tag {
-      display: inline-block;
-      font-size: 0.65rem;
-      padding: 1px 6px;
-      border-radius: 3px;
-      background: rgba(212,130,42,0.15);
-      border: 1px solid rgba(212,130,42,0.4);
-      color: #d4822a;
-    }
-    .grid-item-upgrades { display: flex; flex-wrap: wrap; gap: 2px; margin-top: 3px; }
-    .upgrade-tag-small {
-      display: inline-block;
-      font-size: 0.6rem;
-      padding: 1px 5px;
-      border-radius: 3px;
-      background: rgba(212,130,42,0.15);
-      border: 1px solid rgba(212,130,42,0.35);
-      color: #d4822a;
-    }
+
     .ability-defs-section { margin-top: 28px; border-top: 2px solid #000; padding-top: 14px; }
     .ability-defs-section h2 { font-family: 'Bungee', sans-serif; font-size: 14pt; margin-bottom: 10px; }
     .ability-def { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd; break-inside: avoid; }
