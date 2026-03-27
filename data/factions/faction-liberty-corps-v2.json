@@ -903,8 +903,6 @@
       "tactics": "Deterrence through escalation. Every shot reshapes morale; protect it until it has done its work.",
       "optional_upgrades": [
         {
-       "optional_upgrades": [
-        {
           "name": "Liberty Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
