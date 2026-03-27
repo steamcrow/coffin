@@ -596,13 +596,45 @@ console.log("⚔️ Faction Builder app loaded");
           ${entry.long  ? `<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(entry.long)}</p>` : ''}
           ${entry.id    ? `<div style="margin-top:1.5rem;font-size:.68rem;color:#444;font-family:monospace;">${esc(entry.id)}</div>` : ''}`;
       } else {
-        bodyHtml = `
-          <p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">
-            No rule entry found for <em style="color:#bbb;">${esc(displayName(abilityName))}</em>.
-          </p>
-          <p style="color:#555;font-size:.82rem;line-height:1.5;margin:0;">
-            Open the Rules Explorer and search for <em>${esc(abilityName.split(' ')[0])}</em>.
-          </p>`;
+        // Fallback: search faction data for a matching upgrade or weapon effect
+        let factionEntry = null;
+        const factionData = state.factionData && state.factionData[state.currentFaction];
+        if (factionData && factionData.units) {
+          const nameLower = abilityName.toLowerCase();
+          for (const u of factionData.units) {
+            // Check optional_upgrades
+            if (u.optional_upgrades) {
+              const upg = u.optional_upgrades.find(x => x.name && x.name.toLowerCase() === nameLower);
+              if (upg) { factionEntry = { source: upg.name, effect: upg.effect, type: 'Upgrade', cost: upg.cost }; break; }
+            }
+            // Check weapon_effects
+            if (u.weapon_effects) {
+              const we = u.weapon_effects.find(x => x.name && x.name.toLowerCase() === nameLower);
+              if (we) { factionEntry = { source: we.name, effect: we.effect, type: 'Weapon Effect' }; break; }
+            }
+            // Check abilities by name
+            if (u.abilities) {
+              const ab = u.abilities.find(x => (typeof x === 'object') && x.name && x.name.toLowerCase() === nameLower);
+              if (ab) { factionEntry = { source: ab.name, effect: ab.effect, type: 'Ability' }; break; }
+            }
+          }
+        }
+
+        if (factionEntry) {
+          bodyHtml = `
+            <div style="display:inline-block;margin-bottom:1rem;padding:3px 12px;border-radius:999px;
+                        border:1px solid #555;color:#999;font-size:.72rem;text-transform:uppercase;
+                        letter-spacing:.1em;">${esc(factionEntry.type)}${factionEntry.cost ? ' · +' + factionEntry.cost + ' ₤' : ''}</div><br>
+            <p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(factionEntry.effect || '')}</p>`;
+        } else {
+          bodyHtml = `
+            <p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">
+              No rule entry found for <em style="color:#bbb;">${esc(displayName(abilityName))}</em>.
+            </p>
+            <p style="color:#555;font-size:.82rem;line-height:1.5;margin:0;">
+              Open the Rules Explorer and search for <em>${esc(abilityName.split(' ')[0])}</em>.
+            </p>`;
+        }
       }
 
       panel.innerHTML = `
