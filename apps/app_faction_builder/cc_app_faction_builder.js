@@ -851,7 +851,7 @@ console.log("⚔️ Faction Builder app loaded");
                 ${buildStatBadges(item, item.config, true)}
                 ${abilities.length > 0 ? `
                   <div class="grid-item-abilities">
-                    ${abilities.slice(0, 3).map(a => {
+                    ${abilities.map(a => {
                       const n = typeof a === 'string' ? a : (a.name || '');
                       return `<span class="ability-tag-small"
                         onmouseover="showAbilityTooltip('${esc(n)}', event)"
@@ -859,7 +859,6 @@ console.log("⚔️ Faction Builder app loaded");
                         onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
                         style="cursor:pointer;">${esc(displayName(n))}</span>`;
                     }).join('')}
-                    ${abilities.length > 3 ? `<span class="ability-tag-small" style="opacity:0.6">+${abilities.length - 3}</span>` : ''}
                   </div>` : ''}
               </div>`;
           }).join('')}
