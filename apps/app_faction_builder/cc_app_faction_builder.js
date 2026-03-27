@@ -827,7 +827,7 @@ console.log("⚔️ Faction Builder app loaded");
                 </div>` : ''}
               ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
                 <div class="roster-list-upgrades">
-                  ${item.config.optionalUpgrades.map(u => `<span class="ability-tag">${esc(u.name)}</span>`).join('')}
+                  ${item.config.optionalUpgrades.map(u => `<span class="ability-tag" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
                 </div>` : ''}
               <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
                 <i class="fa fa-trash"></i>
@@ -866,7 +866,7 @@ console.log("⚔️ Faction Builder app loaded");
                   </div>` : ''}
                 ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
                   <div class="grid-item-upgrades">
-                    ${item.config.optionalUpgrades.map(u => `<span class="ability-tag-small">${esc(u.name)}</span>`).join('')}
+                    ${item.config.optionalUpgrades.map(u => `<span class="ability-tag-small" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
                   </div>` : ''}
               </div>`;
           }).join('')}
@@ -1299,7 +1299,7 @@ console.log("⚔️ Faction Builder app loaded");
             '<span class="stat-badge">R ' + (ps.range === 0 ? '\u2013' : ps.range + '"') + '</span>' +
           '</div>' +
           (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
-          ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="abilities">' + item.config.optionalUpgrades.map(function(u){ return '<span class="ability-tag">' + esc(u.name) + '</span>'; }).join('') + '</div>' : '') +
+          ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="abilities">' + item.config.optionalUpgrades.map(function(u){ var n = esc(u.name); return '<span class="ability-tag" style="cursor:pointer;" onmouseover="showAbilityTooltip(\'' + n + '\', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel(\'' + n + '\')">' + n + '</span>'; }).join('') + '</div>' : '') +
         '</div>' +
         '<div class="unit-right"><span class="unit-cost">' + item.totalCost + ' ₤</span></div>' +
       '</div>';
