@@ -1299,7 +1299,7 @@ console.log("⚔️ Faction Builder app loaded");
             '<span class="stat-badge">R ' + (ps.range === 0 ? '\u2013' : ps.range + '"') + '</span>' +
           '</div>' +
           (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
-          ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="upgrades"><strong>Upgrades:</strong> ' + item.config.optionalUpgrades.map(function(u){ return esc(u.name); }).join(', ') + '</div>' : '') +
+          ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="abilities">' + item.config.optionalUpgrades.map(function(u){ return '<span class="ability-tag">' + esc(u.name) + '</span>'; }).join('') + '</div>' : '') +
         '</div>' +
         '<div class="unit-right"><span class="unit-cost">' + item.totalCost + ' ₤</span></div>' +
       '</div>';
