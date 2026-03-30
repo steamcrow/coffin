@@ -1,3 +1,4 @@
+/* cc-schema-patched-v1 */
 // ================================
 // Rules Explorer App
 // File: coffin/apps/app_rules_explorer/cc_app_rules_explorer.js
@@ -706,19 +707,19 @@ console.log("📘 Rules Explorer app loaded");
       }
 
       if (str.match(/^[A-I]_/)) {
-        const topic = str.substring(2).replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
+        const topic = str.substring(2).replace(/_/g, " ").replace(/\w/g, m => m.toUpperCase());
         return `Abilities: ${topic}`;
       }
 
       if (str.includes('_abilities') || str.includes('_ability')) {
-        return str.replace(/_abilities?/, '').replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase()) + ' Abilities';
+        return str.replace(/_abilities?/, '').replace(/_/g, " ").replace(/\w/g, m => m.toUpperCase()) + ' Abilities';
       }
 
       if (str.includes('_dictionary')) {
-        return str.replace(/_dictionary/, '').replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase()) + ' Dictionary';
+        return str.replace(/_dictionary/, '').replace(/_/g, " ").replace(/\w/g, m => m.toUpperCase()) + ' Dictionary';
       }
 
-      return str.replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
+      return str.replace(/_/g, " ").replace(/\w/g, m => m.toUpperCase());
     };
 
     function getRulesRoot() {
@@ -1128,8 +1129,8 @@ console.log("📘 Rules Explorer app loaded");
                   </button>
                 </div>
               </div>
-              ${a.short       ? `<div class="fw-semibold mb-1">${esc(a.short)}</div>` : ''}
-              ${a.long        ? `<div>${esc(a.long)}</div>` : ''}
+              ${(a.desc_short || a.short)  ? `<div class="fw-semibold mb-1">${esc(a.desc_short || a.short)}</div>` : ''}
+              ${(a.desc_long  || a.long)   ? `<div>${esc(a.desc_long || a.long)}</div>` : ''}
               ${a.effect      ? `<div>${esc(a.effect)}</div>` : ''}
               ${a.trigger     ? `<div class="mt-1"><strong>Trigger:</strong> ${esc(a.trigger)}</div>` : ''}
               ${a.restriction ? `<div class="cc-muted small mt-1">${esc(a.restriction)}</div>` : ''}
@@ -1640,7 +1641,7 @@ console.log("📘 Rules Explorer app loaded");
         const parts    = item.path.split('.');
         const lastPart = parts[parts.length - 1];
         if (lastPart?.match(/^[A-I]_/)) {
-          item.title = `Abilities: ${lastPart.substring(2).replace(/_/g, ' ').replace(/\b\w/g, m => m.toUpperCase())}`;
+          item.title = `Abilities: ${lastPart.substring(2).replace(/_/g, ' ').replace(/\w/g, m => m.toUpperCase())}`;
         }
       }
     });
