@@ -365,7 +365,7 @@ class ScenarioBrain {
     if (validated.location) {
       validated.location = {
         name:        validated.location.name        || 'Unknown',
-        description: validated.location.description || '',
+        description: validated.location.desc_long || validated.location.description || '',
         emoji:       validated.location.emoji       || '🗺️',
         atmosphere:  validated.location.atmosphere  || null,
         resources:   validated.location.resources   || {},
@@ -494,7 +494,7 @@ class ScenarioBrain {
     const locationName = position.template.replace('{location}', nearby.name);
 
     const descTemplates = [
-      `${type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
+      `${type.desc_long || type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
       `A ${type.id.replace(/_/g, ' ')} where ${nearby.name}'s influence reaches, but authority does not.`,
       `The kind of place ${nearby.name} pretends doesn't exist.`,
       `${nearby.name} casts a long shadow. This is where that shadow falls.`,
@@ -665,7 +665,7 @@ class ScenarioBrain {
     const obj = {
       type:         vaultObj.objective_id,
       name:         vaultObj.name,
-      description:  vaultObj.description,
+      description:  vaultObj.desc_long || vaultObj.description,
       markers:      this.evaluateVaultValue(vaultObj.setup?.markers, danger),
       marker_type:  vaultObj.setup?.marker_type || vaultObj.objective_id,
       action_type:  vaultObj.interaction?.action_type  || 'interact',
@@ -962,7 +962,7 @@ class ScenarioBrain {
     const twist   = this.weightedRandomChoice(pool);
     const example = twist.example_outcomes?.length > 0 ? this.randomChoice(twist.example_outcomes) : null;
 
-    return { name: twist.name, description: twist.description, effect: twist.mechanical_effect || twist.effect || 'Unknown effect.', example };
+    return { name: twist.name, description: twist.desc_long || twist.description, effect: twist.mechanical_effect || twist.desc_short || twist.effect || 'Unknown effect.', example };
   }
 
   checkResourceCorruption(location) {
