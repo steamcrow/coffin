@@ -288,7 +288,7 @@ console.log("⏱️ Turn Counter loaded");
       const allUnits = (factionData?.units || factionData?.roster || []).map((u, i) => ({
         id:       u.id       || `unit_${i}`,
         name:     u.name     || `Unit ${i + 1}`,
-        lore:     u.lore     || u.Lore    || u.flavor || u.description || null,
+        lore:     u.lore     || u.Lore    || u.flavor || null,
         quality:  u.quality  || 4,
         move:     u.move     || 6,
         defense:  u.defense  || u.armor   || null,
@@ -688,8 +688,8 @@ console.log("⏱️ Turn Counter loaded");
         </div>
         <div style="padding:1.5rem;">
           <span class="cc-stat-type-pill" style="border:1px solid ${def.color};color:${def.color};">Stat</span>
-          <p style="color:#fff;font-size:1rem;font-weight:600;line-height:1.5;margin:0 0 1rem;">${def.short}</p>
-          <p style="color:#bbb;font-size:.9rem;line-height:1.7;margin:0;">${def.long}</p>
+          <p style="color:#fff;font-size:1rem;font-weight:600;line-height:1.5;margin:0 0 1rem;">${def.desc_short || def.short}</p>
+          <p style="color:#bbb;font-size:.9rem;line-height:1.7;margin:0;">${def.desc_long || def.long}</p>
         </div>`;
       document.body.appendChild(panel);
       setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
@@ -1047,7 +1047,7 @@ console.log("⏱️ Turn Counter loaded");
           <div class="cc-tc-tag-row">
             ${(Array.isArray(unit.upgrades) ? unit.upgrades : [unit.upgrades]).map(upg => {
               const label = typeof upg === 'string' ? upg : (upg.name || upg.label || String(upg));
-              const note  = typeof upg === 'object' ? (upg.effect || upg.description || upg.note || null) : null;
+              const note  = typeof upg === 'object' ? (upg.desc_short || upg.effect || upg.description || upg.note || null) : null;
               return `<div class="cc-tc-upgrade-tag">${label}${note ? `<span class="cc-tc-upgrade-note">${note}</span>` : ''}</div>`;
             }).join('')}
           </div>
@@ -1798,7 +1798,7 @@ console.log("⏱️ Turn Counter loaded");
       Object.keys(data.abilities).forEach(slug => {
         var entry = data.abilities[slug];
         if (!entry || typeof entry !== 'object') return;
-        _abilityCache[slug] = { name: slugToName(slug), id: entry._id || '', timing: entry.timing || '', short: entry.short || '', long: entry.long || '' };
+        _abilityCache[slug] = { name: slugToName(slug), id: entry._id || '', timing: entry.timing || '', short: entry.desc_short || entry.short || '', long: entry.desc_long || entry.long || '' };
         count++;
       });
       return count;
