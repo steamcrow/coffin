@@ -171,22 +171,35 @@ console.log("📘 Rules Explorer app loaded");
       console.log("🧰 getChildren:",    helpers.getChildren    ? "OK" : "MISSING");
     } catch (e) {}
 
-    const RULES_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
+    const RULES_BASE_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/';
+    const RULES_BASE_URL_OLD = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
 
     // Load index from GitHub if ctx didn't provide it
     let index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
     if (index.length === 0) {
-      try {
-        const idxRes  = await fetch(RULES_BASE_URL + 'rules_base.json?t=' + Date.now());
-        const idxData = await idxRes.json();
-        index = Array.isArray(idxData) ? idxData
-              : Array.isArray(idxData?.index) ? idxData.index
-              : Array.isArray(idxData?.rules) ? idxData.rules
-              : [];
-        console.log('✅ Index loaded from GitHub:', index.length, 'entries');
-      } catch (e) {
-        console.error('❌ Could not load rules_base.json from GitHub:', e);
+      // Try data/ first (new location), fall back to rules/ (legacy)
+      const indexUrls = [
+        RULES_BASE_URL     + 'rules_base.json',
+        RULES_BASE_URL_OLD + 'rules_base.json',
+      ];
+      for (const url of indexUrls) {
+        try {
+          const idxRes  = await fetch(url + '?t=' + Date.now());
+          if (!idxRes.ok) continue;
+          const idxData = await idxRes.json();
+          index = Array.isArray(idxData) ? idxData
+                : Array.isArray(idxData?.index) ? idxData.index
+                : Array.isArray(idxData?.rules) ? idxData.rules
+                : [];
+          if (index.length > 0) {
+            console.log('✅ Index loaded from:', url, '—', index.length, 'entries');
+            break;
+          }
+        } catch (e) {
+          console.warn('⚠️ Index fetch failed:', url, e.message);
+        }
       }
+      if (index.length === 0) console.error('❌ Could not load rules index from any URL');
     } else {
       console.log('✅ Index from ctx:', index.length, 'entries');
     }
@@ -201,9 +214,13 @@ console.log("📘 Rules Explorer app loaded");
       if (!meta) { console.warn('⚠️ No index entry for:', id); return null; }
 
       const filePaths = [
-        meta.file                                   && (RULES_BASE_URL + 'src/' + meta.file.replace(/^src\//, '')),
-        meta.file                                   && (RULES_BASE_URL + meta.file),
-        meta.path && meta.path.includes('/')        && (RULES_BASE_URL + 'src/' + meta.path.split('.')[0] + '.json'),
+        // New location: data/src/
+        meta.file && (RULES_BASE_URL + 'src/' + meta.file.replace(/^src\//, '').replace(/^data\/src\//, '')),
+        meta.file && (RULES_BASE_URL + meta.file.replace(/^rules\//, '').replace(/^data\//, '')),
+        meta.path && meta.path.includes('/') && (RULES_BASE_URL + 'src/' + meta.path.split('.')[0] + '.json'),
+        // Legacy fallback: rules/src/
+        meta.file && (RULES_BASE_URL_OLD + 'src/' + meta.file.replace(/^src\//, '')),
+        meta.file && (RULES_BASE_URL_OLD + meta.file),
       ].filter(Boolean);
 
       for (const url of filePaths) {
