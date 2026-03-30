@@ -1,4 +1,3 @@
-/* cc-schema-patched-v1 */
 // ── cc_app_scenario_builder.js ──────────────────────────────────────────────
 // Coffin Canyon · Scenario Builder
 // Loaded by cc_loader_core.js and mounted as window.CC_APP.
@@ -1425,7 +1424,7 @@ console.log("🎲 Scenario Builder app loaded");
       // Override quote from faction JSON identity block
       const quote = (fd.identity && fd.identity.quote)
                  || (fd.desc_long && fd.desc_long.split('.')[0] + '.')
-                 || ((fd.desc_long || fd.description) && (fd.desc_long || fd.description).split('.')[0] + '.')
+                 || (fd.description && fd.description.split('.')[0] + '.')
                  || null;
       if (quote) base.quote = quote;
 
@@ -1767,7 +1766,7 @@ console.log("🎲 Scenario Builder app loaded");
     generateNarrativeHook(plotFamily, location, objectives) {
       const locName  = location.name;
       const atmo     = location.atmosphere || '';
-      const desc     = (location.desc_long || (location.desc_long || location.description)) ? (location.desc_long || (location.desc_long || location.description)).split('.')[0] : '';
+      const desc     = (location.desc_long || location.description) ? (location.desc_long || location.description).split('.')[0] : '';
 
       // ── Black Swan prefix ─────────────────────────────────────────────────
       const blackSwanObj = (objectives || []).find(function(o) { return o.black_swan; });

@@ -1,4 +1,3 @@
-/* cc-schema-patched-v1 */
 // ================================
 // Faction Builder App
 // File: coffin/apps/app_faction_builder/cc_app_faction_builder.js
@@ -301,8 +300,8 @@ console.log("⚔️ Faction Builder app loaded");
           name:   slugToName(slug),
           id:     entry._id    || '',
           timing: entry.timing || '',
-          short:  entry.desc_short || (entry.desc_short || entry.short)  || '',
-          long:   entry.desc_long  || (entry.desc_long || entry.long)   || '',
+          short:  entry.desc_short || entry.short  || '',
+          long:   entry.desc_long  || entry.long   || '',
         };
       });
     }
@@ -593,8 +592,8 @@ console.log("⚔️ Faction Builder app loaded");
                         font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;">
               ${timingLabel}
             </div><br>` : ''}
-          ${(entry.desc_short || entry.short) ? `<p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc((entry.desc_short || entry.short))}</p>` : ''}
-          ${(entry.desc_long || entry.long)  ? `<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc((entry.desc_long || entry.long))}</p>` : ''}
+          ${entry.short ? `<p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(entry.short)}</p>` : ''}
+          ${entry.long  ? `<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(entry.long)}</p>` : ''}
           ${entry.id    ? `<div style="margin-top:1.5rem;font-size:.68rem;color:#444;font-family:monospace;">${esc(entry.id)}</div>` : ''}`;
       } else {
         // Fallback: search faction data for a matching upgrade or weapon effect
@@ -606,7 +605,7 @@ console.log("⚔️ Faction Builder app loaded");
             // Check optional_upgrades
             if (u.optional_upgrades) {
               const upg = u.optional_upgrades.find(x => x.name && x.name.toLowerCase() === nameLower);
-              if (upg) { factionEntry = { source: upg.name, effect: upg.desc_short || (upg.desc_short || upg.effect), type: 'Upgrade', cost: upg.cost }; break; }
+              if (upg) { factionEntry = { source: upg.name, effect: upg.desc_short || upg.effect, type: 'Upgrade', cost: upg.cost }; break; }
             }
             // Check weapon_effects
             if (u.weapon_effects) {
@@ -616,7 +615,7 @@ console.log("⚔️ Faction Builder app loaded");
             // Check abilities by name
             if (u.abilities) {
               const ab = u.abilities.find(x => (typeof x === 'object') && x.name && x.name.toLowerCase() === nameLower);
-              if (ab) { factionEntry = { source: ab.name, effect: ab.desc_short || (ab.desc_short || ab.effect), type: 'Ability' }; break; }
+              if (ab) { factionEntry = { source: ab.name, effect: ab.desc_short || ab.effect, type: 'Ability' }; break; }
             }
           }
         }
@@ -708,8 +707,8 @@ console.log("⚔️ Faction Builder app loaded");
           <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
         </div>
         <div style="padding:1.5rem;">
-          <p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(def.desc_short || (def.desc_short || def.short))}</p>
-          <p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(def.desc_long || (def.desc_long || def.long))}</p>
+          <p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(def.desc_short || def.short)}</p>
+          <p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(def.desc_long || def.long)}</p>
         </div>`;
 
       document.body.appendChild(panel);
@@ -958,7 +957,7 @@ console.log("⚔️ Faction Builder app loaded");
                '<div class="cc-upgrade-check">' + (isSelected ? '&#10003;' : '') + '</div>' +
                '<div style="flex:1;">' +
                '<div class="fw-bold" style="font-size:.9rem;">' + esc(upg.name) + '</div>' +
-               (upg.desc_short || (upg.desc_short || upg.effect) ? '<div class="small cc-muted">' + esc(upg.desc_short || (upg.desc_short || upg.effect)) + '</div>' : '') +
+               (upg.desc_short || upg.effect ? '<div class="small cc-muted">' + esc(upg.desc_short || upg.effect) + '</div>' : '') +
                '</div>' +
                '<div style="color:var(--cc-primary);font-weight:700;">' + (upg.cost ? '+' + upg.cost + ' ₤' : 'Free') + '</div>' +
                '</div>';
@@ -1351,7 +1350,7 @@ console.log("⚔️ Faction Builder app loaded");
     var defs = [];
     allAbilityNames.forEach(function(name) {
       var entry = lookupAbility(name);
-      if (entry && ((entry.desc_long || entry.long) || (entry.desc_short || entry.short))) defs.push({ name: name, entry: entry });
+      if (entry && (entry.long || entry.short)) defs.push({ name: name, entry: entry });
     });
     if (!defs.length) return '';
     defs.sort(function(a, b) { return a.name.localeCompare(b.name); });

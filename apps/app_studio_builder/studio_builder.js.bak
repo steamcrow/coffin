@@ -1,4 +1,3 @@
-/* cc-schema-patched-v1 */
 /**
  * COFFIN CANYON FACTION STUDIO - COMPLETE VERSION
  * Following skeleton.js pattern + ALL original functionality
@@ -64,17 +63,12 @@ window.CCFB_FACTORY = {
         var scen   = j.scenario_preferences || {};
         return {
             faction: j.faction || j.name || "New Faction",
-            // introduction block flattened to top-level after schema migration
-            desc_short:  str(j.desc_short  || intro.tagline     || ''),
-            desc_long:   str(j.desc_long   || intro.description || ''),
-            history:     str(j.history     || intro.history     || ''),
-            // keep introduction stub so old exports still load
             introduction: {
                 title:       str(intro.title),
-                tagline:     str(j.desc_short  || intro.tagline     || ''),
-                description: str(j.desc_long   || intro.description || ''),
-                philosophy:  str(j.desc_long   || intro.philosophy  || ''),
-                history:     str(j.history     || intro.history     || '')
+                tagline:     str(intro.tagline),
+                description: str(intro.description),
+                philosophy:  str(intro.philosophy),
+                history:     str(intro.history)
             },
             faction_identity: {
                 core_values:           strArr(ident.core_values),
@@ -386,14 +380,7 @@ window.CCFB_FACTORY = {
 
     renderFactionInfo: function() {
         var f    = this.state.currentFaction;
-        // After migration, intro fields live at top level
-        var intro = {
-            title:       f.introduction ? f.introduction.title       : '',
-            tagline:     f.desc_short  || (f.introduction ? f.introduction.tagline      : '') || '',
-            description: f.desc_long   || (f.introduction ? f.introduction.description  : '') || '',
-            philosophy:  f.desc_long   || (f.introduction ? f.introduction.philosophy   : '') || '',
-            history:     f.history     || (f.introduction ? f.introduction.history      : '') || '',
-        };
+        var intro = f.introduction || {};
         var ident = f.faction_identity || {};
         var rep   = ident.reputation || {};
         var mech  = f.faction_mechanics || {};
@@ -506,9 +493,10 @@ window.CCFB_FACTORY = {
 
         return infoSec('intro', 'Introduction',
             fg('Title',       textinput('introduction.title',       intro.title)) +
-            fg('Tagline (Short)',  textinput('desc_short', intro.tagline)) +
-            fg('Description (Long)', textarea('desc_long',  intro.description, 4)) +
-            fg('History',     textarea('history',      intro.history, 4))
+            fg('Tagline',     textinput('introduction.tagline',     intro.tagline)) +
+            fg('Description', textarea('introduction.description',  intro.description, 4)) +
+            fg('Philosophy',  textarea('introduction.philosophy',   intro.philosophy, 3)) +
+            fg('History',     textarea('introduction.history',      intro.history, 4))
         ) +
         infoSec('ident', 'Faction Identity',
             fg('Core Values',             listEditor('faction_identity.core_values',             ident.core_values)) +

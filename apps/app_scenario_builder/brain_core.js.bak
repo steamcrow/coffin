@@ -1,4 +1,3 @@
-/* cc-schema-patched-v1 */
 // ================================
 // BRAIN CORE - Main ScenarioBrain Class
 // Requires: brain_constants.js, brain_generators.js
@@ -376,7 +375,7 @@ class ScenarioBrain {
     const obj = {
       type: vaultObj.objective_id,
       name: vaultObj.name,
-      description: vaultObj.desc_long || (vaultObj.desc_long || vaultObj.description),
+      description: vaultObj.desc_long || vaultObj.description,
       
       // Setup
       markers: markers,
@@ -539,8 +538,8 @@ class ScenarioBrain {
     const twist = this.weightedRandomChoice(pool.length > 0 ? pool : this.data.twists.twists);
     return {
       name: twist.name,
-      description: twist.desc_long || (twist.desc_long || twist.description),
-      effect: twist.mechanical_effect || twist.desc_short || (twist.desc_short || twist.effect),
+      description: twist.desc_long || twist.description,
+      effect: twist.mechanical_effect || twist.desc_short || twist.effect,
       example: twist.example_outcomes ? this.randomChoice(twist.example_outcomes) : null
     };
   }

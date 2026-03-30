@@ -1,4 +1,3 @@
-/* cc-schema-patched-v1 */
 // ================================
 // SCENARIO BRAIN - FULL VERSION
 // with Cultist System + Terrain Map
@@ -666,7 +665,7 @@ class ScenarioBrain {
     const obj = {
       type:         vaultObj.objective_id,
       name:         vaultObj.name,
-      description:  vaultObj.desc_long || (vaultObj.desc_long || vaultObj.description),
+      description:  vaultObj.desc_long || vaultObj.description,
       markers:      this.evaluateVaultValue(vaultObj.setup?.markers, danger),
       marker_type:  vaultObj.setup?.marker_type || vaultObj.objective_id,
       action_type:  vaultObj.interaction?.action_type  || 'interact',
@@ -963,7 +962,7 @@ class ScenarioBrain {
     const twist   = this.weightedRandomChoice(pool);
     const example = twist.example_outcomes?.length > 0 ? this.randomChoice(twist.example_outcomes) : null;
 
-    return { name: twist.name, description: twist.desc_long || (twist.desc_long || twist.description), effect: twist.mechanical_effect || twist.desc_short || twist.effect || 'Unknown effect.', example };
+    return { name: twist.name, description: twist.desc_long || twist.description, effect: twist.mechanical_effect || twist.desc_short || twist.effect || 'Unknown effect.', example };
   }
 
   checkResourceCorruption(location) {
@@ -1018,7 +1017,7 @@ class ScenarioBrain {
       round:             6,
       title:             finale.title,
       narrative:         finale.flavor,
-      mechanical_effect: (finale.desc_short || finale.effect),
+      mechanical_effect: finale.effect,
       ticker_effect:     finale.ticker,
       player_note:       finale.player_note,
       escalation_type:   plotFamily.id
