@@ -1276,7 +1276,7 @@ console.log("🎲 Scenario Builder app loaded");
         monster_seeds:    location.monster_seeds || [],
         tags:             location.tags || [],
         notes:            location.notes || [],
-        description:      location.description || '',
+        description:      location.desc_long || location.description || '',
         atmosphere:       location.atmosphere || '',
         terrain_flavor:   location.terrain_flavor || [],
         rumors:           location.rumors || []
@@ -1357,7 +1357,7 @@ console.log("🎲 Scenario Builder app loaded");
       var best = null;
       var bestScore = -1;
       vos.forEach(function(vo) {
-        var voText = ((vo.type || '') + ' ' + (vo.description || '')).toLowerCase();
+        var voText = ((vo.type || '') + ' ' + (vo.desc_long || vo.description || '')).toLowerCase();
         var score = 0;
         typeWords.split(' ').forEach(function(w) {
           if (w.length > 2 && voText.indexOf(w) >= 0) score++;
@@ -1423,6 +1423,7 @@ console.log("🎲 Scenario Builder app loaded");
 
       // Override quote from faction JSON identity block
       const quote = (fd.identity && fd.identity.quote)
+                 || (fd.desc_long && fd.desc_long.split('.')[0] + '.')
                  || (fd.description && fd.description.split('.')[0] + '.')
                  || null;
       if (quote) base.quote = quote;
@@ -1765,7 +1766,7 @@ console.log("🎲 Scenario Builder app loaded");
     generateNarrativeHook(plotFamily, location, objectives) {
       const locName  = location.name;
       const atmo     = location.atmosphere || '';
-      const desc     = location.description ? location.description.split('.')[0] : '';
+      const desc     = (location.desc_long || location.description) ? (location.desc_long || location.description).split('.')[0] : '';
 
       // ── Black Swan prefix ─────────────────────────────────────────────────
       const blackSwanObj = (objectives || []).find(function(o) { return o.black_swan; });
@@ -1775,7 +1776,7 @@ console.log("🎲 Scenario Builder app loaded");
 
       // Use the actual plot family description, but replace any generic "asset" language
       // with the real objective name if a cargo vehicle is in play.
-      let plotDesc = (plotFamily.description || '').replace(/\.$/, '');
+      let plotDesc = (plotFamily.desc_long || plotFamily.description || '').replace(/\.$/, '');
 
       const cargoObj = objectives?.find(o => o.type === 'cargo_vehicle');
       if (cargoObj) {
