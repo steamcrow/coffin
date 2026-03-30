@@ -1,11 +1,6 @@
 {
   "_id": "R-SCENARIO-VAULT",
-
-  "philosophy": {
-    "text": "Survival, extraction, corruption, and collapse matter more than body count.",
-    "design_intent": "Force movement, reward risk, and punish hesitation."
-  },
-
+  "desc_long": "Survival, extraction, corruption, and collapse matter more than body count.",
   "victory_logic": {
     "standard_conditions": [
       "Extracting Objectives",
@@ -16,7 +11,6 @@
     ],
     "withdrawal_rule": "Players may voluntarily withdraw for narrative or scoring reasons."
   },
-
   "pacing_and_escalation": {
     "game_length": "4–6 rounds (Standard).",
     "escalation_trigger": "If no major changes by Round 3, escalation MUST begin.",
@@ -27,7 +21,6 @@
       "Objective Instability"
     ]
   },
-
   "game_modes": {
     "skirmish": "Small forces, tight objectives, fast escalation.",
     "extraction": "Cavalry/Specialist focus.",
@@ -35,21 +28,15 @@
     "hunt": "Pursuit focus. Monster advantage.",
     "ritual_corruption": "Mystic/Thyr focus. Sacred and Haunted terrain importance."
   },
-
   "multi_faction_logic": {
     "structure": "Alternating model activation remains. Temporary alliances are allowed."
   },
-
   "coffin_cough_pressure": {
     "_id": "R-SCENARIO-CCP",
     "title": "Coffin Cough & Battlefield Destabilization",
-
     "scope": "Warden-facing escalation rule. Not a player mechanic.",
-
     "overview": "Sustained violence, mass death, and reckless Thyr use destabilize the Canyon. When the land is pushed too far, it responds.",
-
     "core_rule": "Coffin Canyon does not use a numerical pressure track. Escalation is story-driven and reactive.",
-
     "drawing_the_coffin_cough": {
       "timing": "At the end of any round",
       "trigger_threshold": "Two or more of the following occurred during that round",
@@ -63,10 +50,8 @@
       ],
       "warden_guidance": "Escalation is optional, but encouraged. The Canyon favors consequences."
     },
-
     "coffin_cough_effects": {
       "selection": "Choose one effect below or roll 1d6",
-
       "effects_table": {
         "1": {
           "name": "Rolling Coffin Cough",
@@ -109,7 +94,9 @@
         }
       }
     },
-
     "design_note": "Players should learn that prolonged slaughter, reckless power, and hesitation invite the storm."
-  }
+  },
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

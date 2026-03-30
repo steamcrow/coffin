@@ -1,65 +1,31 @@
 {
+  "type": "ability_dictionary",
   "_id": "R-COMB",
   "title": "Combat Vault",
   "philosophy": {
     "_id": "R-COMB-00",
-    "title": "Philosophy",
-    "short": "Combat is fast, brutal, and decided by position.",
-    "long": "Combat is fast, brutal, and unforgiving. Most fights are decided by position, pressure, and timing — not endurance.",
-    "notes": "Combat should resolve quickly; damage should matter immediately. Prolonged fights are a warning sign."
+    "desc_short": "Combat is fast, brutal, and decided by position.",
+    "desc_long": "Combat is fast, brutal, and unforgiving. Most fights are decided by position, pressure, and timing — not endurance."
   },
   "attack_fundamentals": {
     "_id": "R-COMB-01",
-    "title": "Attack Fundamentals",
-    "short": "Spend an action, choose a target, roll Quality.",
-    "long": "",
-    "action_cost": 1,
-    "process": [
-      "Choose valid target",
-      "Check Line of Sight (if required)",
-      "Roll Quality dice"
-    ],
-    "melee_rules": {
-      "_id": "R-COMB-01A",
-      "range": "Base contact / Melee range",
-      "los": "Not required",
-      "threshold": "1+ Success (4+) hits unless stated otherwise."
-    },
-    "ranged_rules": {
-      "_id": "R-COMB-01B",
-      "range": "Must be within weapon range",
-      "los": "Required",
-      "modifiers": "Apply Cover (+1 Defense) if applicable."
-    }
+    "desc_short": "Spend an action, choose a target, roll Quality."
   },
   "damage_resolution": {
     "_id": "R-COMB-02",
-    "title": "Damage Resolution",
-    "short": "Each damage reduces Quality by 1.",
-    "long": "Damage reduces Quality by 1 per point. There is no separate health stat.",
-    "the_death_spiral": "As Quality drops, attacks become less reliable, movement grows riskier, and morale becomes fragile.",
-    "thresholds": "Quality-based thresholds (Wounded, Broken) may trigger effects based on the unit card.",
-    "removal": "At Quality 0, remove model immediately. Resolve terrain/death effects (Tainted, Hazardous)."
+    "desc_short": "Each damage reduces Quality by 1.",
+    "desc_long": "Damage reduces Quality by 1 per point. There is no separate health stat."
   },
   "automatic_damage": {
     "_id": "R-COMB-03",
-    "title": "Automatic Damage",
-    "short": "Automatic damage is not an attack and ignores Defense.",
-    "long": "Automatic damage is NOT an attack. It represents environmental or internal harm.",
-    "sources": [
-      "Burning terrain",
-      "Venom",
-      "Impact",
-      "Traps",
-      "Thyr fallout",
-      "Abilities"
-    ],
-    "terrain_rule": "All terrain damage is considered automatic."
+    "desc_short": "Automatic damage is not an attack and ignores Defense.",
+    "desc_long": "Automatic damage is NOT an attack. It represents environmental or internal harm."
   },
   "collateral_damage": {
     "_id": "R-COMB-04",
-    "title": "Collateral Damage",
-    "short": "Explosions and terrain effects harm everyone.",
-    "long": "Explosions and terrain escalation do not discriminate. Friendly models can be harmed if they are in the area of effect."
-  }
+    "desc_short": "Explosions and terrain effects harm everyone.",
+    "desc_long": "Explosions and terrain escalation do not discriminate. Friendly models can be harmed if they are in the area of effect."
+  },
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

@@ -1,0 +1,35 @@
+{
+  "schema_id": "cc_terrain_instances",
+  "schema_version": "1.1",
+  "scenario_id": "scn_2026_02_05_demo",
+  "board": { "width_in": 36, "height_in": 36, "origin": "bottom_left" },
+
+  "terrain": [
+    {
+      "terrain_instance_id": "t01",
+      "terrain_type_id": "building_saloon_two_story",
+      "position": { "x_in": 18, "y_in": 18, "rotation_deg": 90 },
+
+      "state": {
+        "damaged": 0,
+        "on_fire": false,
+        "tainted": false,
+        "collapsed": false
+      },
+
+      "slot_overrides": [
+        {
+          "slot_id": "saloon_roof_objective",
+          "occupied_by": { "kind": "objective", "objective_id": "artifact_01" }
+        }
+      ]
+    },
+
+    {
+      "terrain_instance_id": "t02",
+      "terrain_type_id": "scatter_crates_small",
+      "position": { "x_in": 10, "y_in": 24, "rotation_deg": 0 },
+      "state": { "damaged": 0, "on_fire": false, "tainted": false }
+    }
+  ]
+}

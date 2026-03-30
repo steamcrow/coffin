@@ -6,33 +6,27 @@
     "150_location_types.json",
     "R-OBJECTIVE-VAULT"
   ],
-
   "plot_families": [
-
     {
       "id": "ambush_derailment",
+      "desc_long": "A moving asset is violently stopped, drawing multiple claimants before order can reassert itself.",
       "name": "Ambush / Derailment",
-      "description": "A moving asset is violently stopped, drawing multiple claimants before order can reassert itself.",
-
       "emphasized_vectors": [
         "inciting_pressure",
         "resource_pressure",
         "escalation",
         "twist"
       ],
-
       "common_inciting_pressures": [
         "monster_action",
         "human_overreach",
         "infrastructure_failure"
       ],
-
       "primary_resources": [
         "supplies_tools",
         "riches",
         "survival"
       ],
-
       "default_objectives": [
         "wrecked_engine",
         "scattered_crates",
@@ -40,54 +34,45 @@
         "gather_intel",
         "race_the_clock"
       ],
-
       "escalation_bias": [
         "authority_intervention",
         "monster_migration",
         "environmental_hazards"
       ],
-
       "twist_bias": [
         "resource_becomes_sentient_or_cursed",
         "monster_holding_worse_threat_at_bay",
         "objective_reveals_hidden_nature"
       ],
-
       "aftermath_bias": [
         "resource_depletion_or_corruption",
         "new_landmark_created",
         "faction_ownership"
       ],
-
       "solo_play_notes": [
         "authority_arrival_replaces_missing_claimant",
         "monster_pressure_increases_each_round"
       ]
     },
-
     {
       "id": "escort_run",
+      "desc_long": "A fragile or vital asset must cross dangerous ground before time or pressure destroys it.",
       "name": "Escort / Supply Run",
-      "description": "A fragile or vital asset must cross dangerous ground before time or pressure destroys it.",
-
       "emphasized_vectors": [
         "resource_pressure",
         "claimants",
         "escalation"
       ],
-
       "common_inciting_pressures": [
         "survival_shortage",
         "external_deadline",
         "territorial_control"
       ],
-
       "primary_resources": [
         "supplies_tools",
         "survival",
         "occult"
       ],
-
       "default_objectives": [
         "cargo_vehicle",
         "pack_animals",
@@ -96,52 +81,43 @@
         "escort_civilians",
         "stop_the_train"
       ],
-
       "escalation_bias": [
         "monster_migration",
         "visibility_loss",
         "panic_and_morale_failure"
       ],
-
       "twist_bias": [
         "claimant_is_proxy_for_another_force",
         "resource_becomes_sentient_or_cursed"
       ],
-
       "aftermath_bias": [
         "location_state_change",
         "faction_ownership"
       ],
-
       "solo_play_notes": [
         "terrain_and_escalation_replace_human_opposition",
         "escort_objective_deteriorates_over_time"
       ]
     },
-
     {
       "id": "claim_and_hold",
+      "desc_long": "Control of land, structure, or symbolism matters more than destruction.",
       "name": "Claim and Hold",
-      "description": "Control of land, structure, or symbolism matters more than destruction.",
-
       "emphasized_vectors": [
         "claimants",
         "resource_pressure",
         "aftermath_mutation"
       ],
-
       "common_inciting_pressures": [
         "power_vacuum",
         "mystical_claim",
         "territorial_dispute"
       ],
-
       "primary_resources": [
         "belief",
         "riches",
         "occult"
       ],
-
       "default_objectives": [
         "ritual_site",
         "land_marker",
@@ -149,51 +125,42 @@
         "last_stand",
         "secure_shelter"
       ],
-
       "escalation_bias": [
         "ritual_completion",
         "environmental_rupture"
       ],
-
       "twist_bias": [
         "location_awakens_or_rejects_control",
         "victory_conditions_invert"
       ],
-
       "aftermath_bias": [
         "mystical_claim",
         "faction_ownership",
         "monster_bias_shift"
       ],
-
       "solo_play_notes": [
         "environment_contests_control",
         "claim_requires_multiple_interactions"
       ]
     },
-
     {
       "id": "extraction_heist",
+      "desc_long": "Something valuable must be removed before escalation makes it impossible.",
       "name": "Extraction / Heist",
-      "description": "Something valuable must be removed before escalation makes it impossible.",
-
       "emphasized_vectors": [
         "resource_pressure",
         "twist",
         "escalation"
       ],
-
       "common_inciting_pressures": [
         "human_overreach",
         "monster_guardianship"
       ],
-
       "primary_resources": [
         "occult",
         "riches",
         "supplies_tools"
       ],
-
       "default_objectives": [
         "thyr_cache",
         "artifact",
@@ -204,50 +171,41 @@
         "false_artifact",
         "decoy_operation"
       ],
-
       "escalation_bias": [
         "structural_collapse",
         "monster_awakening"
       ],
-
       "twist_bias": [
         "objective_reveals_hidden_nature",
         "monster_holding_worse_threat_at_bay"
       ],
-
       "aftermath_bias": [
         "resource_depletion_or_corruption",
         "new_landmark_created"
       ],
-
       "solo_play_notes": [
         "time_pressure_replaces_enemy_numbers",
         "escalation_triggers_automatic_twist"
       ]
     },
-
     {
       "id": "siege_standoff",
+      "desc_long": "One force is trapped, isolated, or cornered while pressure mounts from all sides.",
       "name": "Siege / Standoff",
-      "description": "One force is trapped, isolated, or cornered while pressure mounts from all sides.",
-
       "emphasized_vectors": [
         "claimants",
         "escalation",
         "resource_pressure"
       ],
-
       "common_inciting_pressures": [
         "power_vacuum",
         "retaliation",
         "territorial_control"
       ],
-
       "primary_resources": [
         "survival",
         "supplies_tools"
       ],
-
       "default_objectives": [
         "fortified_position",
         "barricades",
@@ -256,52 +214,43 @@
         "secure_shelter",
         "protect_informant"
       ],
-
       "escalation_bias": [
         "panic_and_morale_failure",
         "monster_migration",
         "environmental_hazards"
       ],
-
       "twist_bias": [
         "claimant_is_proxy_for_another_force",
         "victory_conditions_invert"
       ],
-
       "aftermath_bias": [
         "location_state_change",
         "faction_ownership"
       ],
-
       "solo_play_notes": [
         "supply_depletion_is_primary_enemy",
         "monsters_replace_reinforcements"
       ]
     },
-
     {
       "id": "corruption_ritual",
+      "desc_long": "A place, resource, or belief is being transformed — delay makes it worse.",
       "name": "Corruption / Ritual",
-      "description": "A place, resource, or belief is being transformed — delay makes it worse.",
-
       "emphasized_vectors": [
         "inciting_pressure",
         "escalation",
         "twist",
         "aftermath_mutation"
       ],
-
       "common_inciting_pressures": [
         "ritual_misuse",
         "belief_conflict",
         "occult_overreach"
       ],
-
       "primary_resources": [
         "occult",
         "belief"
       ],
-
       "default_objectives": [
         "ritual_circle",
         "tainted_ground",
@@ -309,53 +258,44 @@
         "expose_conspiracy",
         "gather_intel"
       ],
-
       "escalation_bias": [
         "ritual_completion",
         "environmental_rupture"
       ],
-
       "twist_bias": [
         "location_awakens_or_rejects_control",
         "resource_becomes_sentient_or_cursed"
       ],
-
       "aftermath_bias": [
         "monster_bias_shift",
         "mystical_claim",
         "location_state_change"
       ],
-
       "solo_play_notes": [
         "ritual_progress_advances_each_round",
         "environment_acts_as_claimant"
       ]
     },
-
     {
       "id": "natural_disaster_response",
+      "desc_long": "The Canyon itself destabilizes the situation. Survival, salvage, and escape matter more than victory.",
       "name": "Natural Disaster / Environmental Collapse",
-      "description": "The Canyon itself destabilizes the situation. Survival, salvage, and escape matter more than victory.",
-
       "emphasized_vectors": [
         "inciting_pressure",
         "escalation",
         "twist",
         "aftermath_mutation"
       ],
-
       "common_inciting_pressures": [
         "environmental_rupture",
         "infrastructure_failure",
         "resource_collapse"
       ],
-
       "primary_resources": [
         "survival",
         "supplies_tools",
         "riches"
       ],
-
       "default_objectives": [
         "collapsing_route",
         "fouled_resource",
@@ -364,55 +304,46 @@
         "race_the_clock",
         "escort_civilians"
       ],
-
       "escalation_bias": [
         "environmental_hazards",
         "structural_collapse",
         "visibility_loss",
         "panic_and_morale_failure"
       ],
-
       "twist_bias": [
         "objective_reveals_hidden_nature",
         "location_awakens_or_rejects_control",
         "monster_holding_worse_threat_at_bay"
       ],
-
       "aftermath_bias": [
         "location_state_change",
         "new_landmark_created",
         "resource_depletion_or_corruption"
       ],
-
       "solo_play_notes": [
         "disaster_progresses_each_round",
         "environment_replaces_active_opposition",
         "monsters_may_arrive_as_secondary_pressure"
       ]
     },
-
     {
       "id": "sabotage_strike",
+      "desc_long": "Disable, destroy, or disrupt enemy infrastructure before reinforcements arrive or alarms escalate.",
       "name": "Sabotage / Strike",
-      "description": "Disable, destroy, or disrupt enemy infrastructure before reinforcements arrive or alarms escalate.",
-
       "emphasized_vectors": [
         "escalation",
         "twist",
         "resource_pressure"
       ],
-
       "common_inciting_pressures": [
         "retaliation",
         "power_vacuum",
         "infrastructure_failure"
       ],
-
       "primary_resources": [
         "supplies_tools",
         "belief"
       ],
-
       "default_objectives": [
         "sabotage_machinery",
         "blow_the_bridge",
@@ -420,29 +351,27 @@
         "decoy_operation",
         "false_artifact"
       ],
-
       "escalation_bias": [
         "authority_intervention",
         "panic_and_morale_failure",
         "visibility_loss"
       ],
-
       "twist_bias": [
         "objective_reveals_hidden_nature",
         "claimant_is_proxy_for_another_force"
       ],
-
       "aftermath_bias": [
         "faction_ownership",
         "location_state_change",
         "resource_depletion_or_corruption"
       ],
-
       "solo_play_notes": [
         "alarm_increases_each_round",
         "reinforcements_arrive_as_escalation"
       ]
     }
-
-  ]
+  ],
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

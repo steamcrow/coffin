@@ -152,8 +152,8 @@
         "structure_rating": 2,
         "breakpoints": [
           {
-            "at_damage": 2,
-            "effect": "Tent collapses and becomes open difficult ground."
+            "desc_short": "Tent collapses and becomes open difficult ground.",
+            "at_damage": 2
           }
         ],
         "rubble_result": {
@@ -248,8 +248,8 @@
         "structure_rating": 2,
         "breakpoints": [
           {
-            "at_damage": 2,
-            "effect": "Tent collapses and becomes open difficult ground."
+            "desc_short": "Tent collapses and becomes open difficult ground.",
+            "at_damage": 2
           }
         ],
         "rubble_result": {
@@ -1308,8 +1308,8 @@
         "structure_rating": 5,
         "breakpoints": [
           {
-            "at_damage": 5,
-            "effect": "Collapse: replace with medium rubble."
+            "desc_short": "Collapse: replace with medium rubble.",
+            "at_damage": 5
           }
         ],
         "rubble_result": {
@@ -1416,8 +1416,8 @@
         "structure_rating": 5,
         "breakpoints": [
           {
-            "at_damage": 5,
-            "effect": "Collapse: replace with medium rubble."
+            "desc_short": "Collapse: replace with medium rubble.",
+            "at_damage": 5
           }
         ],
         "rubble_result": {
@@ -1548,12 +1548,12 @@
         "structure_rating": 6,
         "breakpoints": [
           {
-            "at_damage": 3,
-            "effect": "Windows shattered: interior cover reduced."
+            "desc_short": "Windows shattered: interior cover reduced.",
+            "at_damage": 3
           },
           {
-            "at_damage": 6,
-            "effect": "Collapse: replace with large rubble."
+            "desc_short": "Collapse: replace with large rubble.",
+            "at_damage": 6
           }
         ],
         "rubble_result": {
@@ -1649,8 +1649,8 @@
         "structure_rating": 5,
         "breakpoints": [
           {
-            "at_damage": 5,
-            "effect": "Collapse: replace with medium rubble."
+            "desc_short": "Collapse: replace with medium rubble.",
+            "at_damage": 5
           }
         ],
         "rubble_result": {
@@ -1791,12 +1791,12 @@
         "structure_rating": 8,
         "breakpoints": [
           {
-            "at_damage": 4,
-            "effect": "Upper windows shattered: upper-level cover reduced."
+            "desc_short": "Upper windows shattered: upper-level cover reduced.",
+            "at_damage": 4
           },
           {
-            "at_damage": 8,
-            "effect": "Collapse: replace with large rubble."
+            "desc_short": "Collapse: replace with large rubble.",
+            "at_damage": 8
           }
         ],
         "rubble_result": {
@@ -2003,8 +2003,8 @@
         "structure_rating": 7,
         "breakpoints": [
           {
-            "at_damage": 7,
-            "effect": "Collapse: replace with large rubble."
+            "desc_short": "Collapse: replace with large rubble.",
+            "at_damage": 7
           }
         ],
         "rubble_result": {
@@ -2135,12 +2135,12 @@
         "structure_rating": 9,
         "breakpoints": [
           {
-            "at_damage": 5,
-            "effect": "Cracked stone/wood: edge cover reduced."
+            "desc_short": "Cracked stone/wood: edge cover reduced.",
+            "at_damage": 5
           },
           {
-            "at_damage": 9,
-            "effect": "Collapse: replace with large rubble."
+            "desc_short": "Collapse: replace with large rubble.",
+            "at_damage": 9
           }
         ],
         "rubble_result": {
@@ -2694,12 +2694,12 @@
         "structure_rating": 9,
         "breakpoints": [
           {
-            "at_damage": 5,
-            "effect": "Windows and balcony cover reduced."
+            "desc_short": "Windows and balcony cover reduced.",
+            "at_damage": 5
           },
           {
-            "at_damage": 9,
-            "effect": "Collapse: replace with large rubble."
+            "desc_short": "Collapse: replace with large rubble.",
+            "at_damage": 9
           }
         ],
         "rubble_result": {
@@ -2808,8 +2808,8 @@
         "structure_rating": 8,
         "breakpoints": [
           {
-            "at_damage": 8,
-            "effect": "Collapse: replace with large rubble."
+            "desc_short": "Collapse: replace with large rubble.",
+            "at_damage": 8
           }
         ],
         "rubble_result": {
@@ -2918,8 +2918,8 @@
         "structure_rating": 8,
         "breakpoints": [
           {
-            "at_damage": 8,
-            "effect": "Collapse: replace with large rubble."
+            "desc_short": "Collapse: replace with large rubble.",
+            "at_damage": 8
           }
         ],
         "rubble_result": {
@@ -4074,12 +4074,12 @@
         "structure_rating": 6,
         "breakpoints": [
           {
-            "at_damage": 3,
-            "effect": "Leaking: ground within 3 inches becomes difficult terrain."
+            "desc_short": "Leaking: ground within 3 inches becomes difficult terrain.",
+            "at_damage": 3
           },
           {
-            "at_damage": 6,
-            "effect": "Collapse: replace with large rubble."
+            "desc_short": "Collapse: replace with large rubble.",
+            "at_damage": 6
           }
         ],
         "rubble_result": {
@@ -4220,12 +4220,12 @@
         "structure_rating": 10,
         "breakpoints": [
           {
-            "at_damage": 5,
-            "effect": "Windows and balcony cover reduced."
+            "desc_short": "Windows and balcony cover reduced.",
+            "at_damage": 5
           },
           {
-            "at_damage": 10,
-            "effect": "Collapse: replace with large rubble."
+            "desc_short": "Collapse: replace with large rubble.",
+            "at_damage": 10
           }
         ],
         "rubble_result": {
@@ -4332,8 +4332,8 @@
         "structure_rating": 6,
         "breakpoints": [
           {
-            "at_damage": 6,
-            "effect": "Station destroyed and becomes medium rubble."
+            "desc_short": "Station destroyed and becomes medium rubble.",
+            "at_damage": 6
           }
         ],
         "rubble_result": {
@@ -4531,8 +4531,8 @@
         "structure_rating": 8,
         "breakpoints": [
           {
-            "at_damage": 8,
-            "effect": "Engine wrecked and becomes large rubble/wreck."
+            "desc_short": "Engine wrecked and becomes large rubble/wreck.",
+            "at_damage": 8
           }
         ],
         "rubble_result": {
@@ -13704,5 +13704,8 @@
         "layer": "terrain_scatter"
       }
     }
-  ]
+  ],
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

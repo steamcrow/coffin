@@ -1,14 +1,11 @@
 {
+  "type": "faction",
   "faction": "Monsters",
   "version": "2.0",
   "lastUpdated": "2026-03-05",
-  "introduction": {
-    "title": "Monsters: The Canyon Bites Back",
-    "tagline": "Not a faction. An ecology with teeth.",
-    "description": "The canyon was here first. Monsters are not an army—they are the reason Coffin Canyon exists. Native inhabitants who react to intruders with instinct, territory, and survival.",
-    "philosophy": "The canyon is older than your plans. Monsters do not agree to your rules. Some can be understood. Some only want you gone.",
-    "history": "After the Catastrophe, the canyon's hidden layers woke up. Tainted ground drew hungry things. Haunted ground gathered the bloodless. Strangewild growth fed predators. Every extraction, every fire, every desperate camp—another invitation. The Monsters faction represents what happens when the canyon gets a vote."
-  },
+  "desc_short": "Not a faction. An ecology with teeth.",
+  "desc_long": "The canyon was here first. Monsters are not an army—they are the reason Coffin Canyon exists. Native inhabitants who react to intruders with instinct, territory, and survival.",
+  "history": "After the Catastrophe, the canyon's hidden layers woke up. Tainted ground drew hungry things. Haunted ground gathered the bloodless. Strangewild growth fed predators. Every extraction, every fire, every desperate camp—another invitation. The Monsters faction represents what happens when the canyon gets a vote.",
   "faction_identity": {
     "core_values": [
       "Territory",
@@ -124,8 +121,6 @@
       "Highly coordinated command-and-control opponents"
     ]
   },
-  "universal_upgrades_available": false,
-  "universal_upgrades_note": "Monsters typically do not use equipment upgrades. They are wild creatures, not soldiers. Individual Monsters may have scenario-specific upgrades, mutations, or escalations.",
   "faction_features": [
     {
       "name": "Native Deployment",
@@ -210,6 +205,8 @@
     "titan_rule": "Titans are scenario events, not standard units. When a Titan enters play, all factions must reassess priorities."
   },
   "weapons_note": "Monster costs assume natural weapons and profile abilities. Weapon properties are listed when relevant. Monster abilities reference the defined ability dictionaries wherever possible.",
+  "universal_upgrades_available": false,
+  "universal_upgrades_note": "Monsters typically do not use equipment upgrades. They are wild creatures, not soldiers. Individual Monsters may have scenario-specific upgrades, mutations, or escalations.",
   "units": [
     {
       "name": "Canyon Goblin",
@@ -264,13 +261,12 @@
           "Liberated"
         ]
       },
+      "optional_upgrades": [],
       "supplemental_abilities": [
         {
           "name": "Red Goblin",
           "cost": 67,
-          "quality": 2,
-          "defense": 2,
-          "move": 6,
+          "desc_short": "Circus goblins wear the red hat like a brand and iron shoes like a sentence. Fast, cruel, and difficult to pin down.",
           "abilities": [
             "Stealth",
             "Backstab",
@@ -280,10 +276,11 @@
           "flags": [
             "CannotBeBefriended"
           ],
-          "effect": "Circus goblins wear the red hat like a brand and iron shoes like a sentence. Fast, cruel, and difficult to pin down."
+          "quality": 2,
+          "defense": 2,
+          "move": 6
         }
-      ],
-      "optional_upgrades": []
+      ]
     },
     {
       "name": "Jackalope",
@@ -338,28 +335,28 @@
           "Liberated"
         ]
       },
-      "supplemental_abilities": [
-        {
-          "name": "Alpha Jackalope",
-          "cost": 25,
-          "quality": 4,
-          "abilities": [
-            "Fear",
-            "Impact"
-          ],
-          "effect": "A massive horned jackalope rumored to lead desert herds. When it charges, it hits like a flying spear."
-        }
-      ],
       "optional_upgrades": [
         {
           "name": "Thyr-Touched Antlers",
           "cost": 15,
-          "effect": "Jackalope gains Fear. Its antlers glow faintly with Thyr energy."
+          "desc_short": "Jackalope gains Fear. Its antlers glow faintly with Thyr energy."
         },
         {
           "name": "Dust Mirage",
           "cost": 12,
-          "effect": "Once per round when this unit is targeted by a ranged attack, it may move 3\" before the attack is resolved."
+          "desc_short": "Once per round when this unit is targeted by a ranged attack, it may move 3\" before the attack is resolved."
+        }
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Alpha Jackalope",
+          "cost": 25,
+          "desc_short": "A massive horned jackalope rumored to lead desert herds. When it charges, it hits like a flying spear.",
+          "abilities": [
+            "Fear",
+            "Impact"
+          ],
+          "quality": 4
         }
       ]
     },
@@ -416,20 +413,20 @@
           "Liberated"
         ]
       },
+      "optional_upgrades": [],
       "supplemental_abilities": [
         {
           "name": "Rotwing Harpy",
           "cost": 30,
-          "quality": 4,
+          "desc_short": "A diseased canyon harpy whose wings are mottled with rot and parasites. Its claws drip infection and its breath carries the stench of shallow graves.",
           "abilities": [
             "Fear",
             "Venom",
             "Choking Dust"
           ],
-          "effect": "A diseased canyon harpy whose wings are mottled with rot and parasites. Its claws drip infection and its breath carries the stench of shallow graves."
+          "quality": 4
         }
-      ],
-      "optional_upgrades": []
+      ]
     },
     {
       "name": "Ridge Satyr",
@@ -483,164 +480,154 @@
           "Liberated"
         ]
       },
-      "supplemental_abilities": [
-        {
-          "name": "Moonridge Satyr",
-          "cost": 18,
-          "quality": 3,
-          "abilities": [
-            "Fear"
-          ],
-          "effect": "A pale satyr that wanders the canyon by moonlight. Its pipe-song chills the heart and unsettles even hardened gunslingers."
-        }
-      ],
       "optional_upgrades": [
         {
           "name": "Brass Bow",
           "cost": 15,
+          "desc_short": "Add a Brass Bow (Range 18\"). A strange mechanical bow of brass limbs and tension springs that hums faintly when drawn.",
           "stat_modifiers": {
             "range": 18
-          },
-          "effect": "Add a Brass Bow (Range 18\"). A strange mechanical bow of brass limbs and tension springs that hums faintly when drawn."
+          }
+        }
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Moonridge Satyr",
+          "cost": 18,
+          "desc_short": "A pale satyr that wanders the canyon by moonlight. Its pipe-song chills the heart and unsettles even hardened gunslingers.",
+          "abilities": [
+            "Fear"
+          ],
+          "quality": 3
         }
       ]
     },
-  {
-    "name": "Vendomat",
-    "faction": "Monsters",
-    "type": "Vendor",
-    "cost": 0,
-    "quality": 3,
-    "defense": 3,
-    "move": 6,
-    "range": 0,
-    "weapon": "Harvest Hatchet",
-    "weapon_properties": [ "Melee" ],
-    "composition": {
-      "max_count": 1,
-      "per_points": 9999,
-      "note": "Scenario-placed only. Not drafted into rosters."
-    },
-    "abilities": [
-      {
-        "name": "Dispense",
-        "effect": "Any unit in base contact may spend 1 Action to buy 1 item for 2 Gildren. Each item has 2 uses per game. Options: VitaGood (restore 1 Quality, remove one status condition), Spare Parts (gain 1 Spare Parts token), Food (gain 1 Food token, remove Starving if applicable)."
+    {
+      "name": "Vendomat",
+      "faction": "Monsters",
+      "type": "Vendor",
+      "cost": 0,
+      "quality": 3,
+      "defense": 3,
+      "move": 6,
+      "range": 0,
+      "weapon": "Harvest Hatchet",
+      "weapon_properties": [
+        "Melee"
+      ],
+      "composition": {
+        "max_count": 1,
+        "per_points": 9999,
+        "note": "Scenario-placed only. Not drafted into rosters."
       },
-      {
-        "name": "Wandering Route",
-        "effect": "At the start of each round, before initiative, move the Vendomat d6\" in a random direction (roll d8). It cannot leave the board or enter impassable terrain. Skip this roll if any unit is in base contact."
-      },
-      {
-        "name": "Harvest Hatchet",
-        "effect": "If attacked, the Vendomat strikes back immediately with its hatchet before resolving the attacker's action. Treat as a standard melee attack (Quality 3, 1 hit die). This is a reaction, not an activation."
-      },
-      {
-        "name": "Final Dispensing",
-        "effect": "When the Vendomat is destroyed, it immediately explodes. Every model within 10\" takes 1 automatic hit, no test required. Remove the Vendomat. It does not count as a kill for any faction. This is why people don't attack it."
-      },
-      {
-        "name": "Pumpkin-Headed Maton",
-        "effect": "The Vendomat is roughly 10 feet tall and counts as Large for Line of Sight purposes. It ignores Coffin Cough, Poison, Venom, Fear, and all morale effects. It cannot be Shaken."
+      "abilities": [
+        "Dispense",
+        "Wandering Route",
+        "Harvest Hatchet",
+        "Final Dispensing",
+        "Pumpkin-Headed Maton"
+      ],
+      "lore": "The Vendomat appeared one morning without explanation — ten feet of clanking iron and carved pumpkin, wandering the canyon floor with a stock of supplies and a coin slot in its chest. Nobody knows who built it. Nobody knows how it restocks. Nobody attacks it twice. The blast radius is ten inches and the hatchet moves faster than it should.",
+      "tactics": "The Vendomat wanders freely across the board at Move 6\". Any faction can spend an action and 2 Gildren to buy supplies — first come, first served. Stock is limited. It will fight back if attacked, and its death explosion punishes the whole board. Smart players leave it alone and race to reach it.",
+      "temperament": "Wandering",
+      "flags": [
+        "NeutralNPC",
+        "CannotBeBefriended",
+        "ScenarioPlacedOnly",
+        "Large",
+        "ExplosiveOnDeath"
+      ],
+      "unit_tags": [
+        "vendor",
+        "neutral",
+        "mechanical",
+        "wandering",
+        "npc",
+        "large",
+        "hazardous"
+      ],
+      "terrain_preferences": [
+        "open",
+        "roads",
+        "anywhere_passable"
+      ],
+      "objective_keywords": [
+        "trade",
+        "resource",
+        "neutral"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "any"
+        ],
+        "bad_in": []
       }
-    ],
-    "lore": "The Vendomat appeared one morning without explanation — ten feet of clanking iron and carved pumpkin, wandering the canyon floor with a stock of supplies and a coin slot in its chest. Nobody knows who built it. Nobody knows how it restocks. Nobody attacks it twice. The blast radius is ten inches and the hatchet moves faster than it should.",
-    "tactics": "The Vendomat wanders freely across the board at Move 6\". Any faction can spend an action and 2 Gildren to buy supplies — first come, first served. Stock is limited. It will fight back if attacked, and its death explosion punishes the whole board. Smart players leave it alone and race to reach it.",
-    "temperament": "Wandering",
-    "flags": [
-      "NeutralNPC",
-      "CannotBeBefriended",
-      "ScenarioPlacedOnly",
-      "Large",
-      "ExplosiveOnDeath"
-    ],
-    "unit_tags": [
-      "vendor", "neutral", "mechanical", "wandering", "npc", "large", "hazardous"
-    ],
-    "terrain_preferences": [ "open", "roads", "anywhere_passable" ],
-    "objective_keywords": [ "trade", "resource", "neutral" ],
-    "state_advantages": {
-      "good_in": [ "any" ],
-      "bad_in": []
     },
-    "npc_appearance": {
-      "base_chance": 0.30,
-      "danger_modifier": 0.04,
-      "min_danger": 1,
-      "max_danger": 6,
-      "placement": "random_board_quarter",
-      "note": "Rolls at scenario generation like Coffin Cough. 30% base, +4% per danger above 2."
-    }
-  },
-  {
-    "name": "Monte Haul",
-    "faction": "Monsters",
-    "type": "Vendor",
-    "cost": 0,
-    "quality": 4,
-    "defense": 5,
-    "move": 0,
-    "range": 0,
-    "weapon": "Brass Fists",
-    "weapon_properties": [ "Melee", "Impact" ],
-    "composition": {
-      "max_count": 1,
-      "per_points": 9999,
-      "note": "Scenario-placed only. Not drafted into rosters."
-    },
-    "abilities": [
-      {
-        "name": "Black Market",
-        "effect": "Any unit in base contact may spend 1 Action to buy from Monte Haul's stock. Cost: 4 Gildren per item. He carries 3 items total per game. Roll 1d6 to see what's available: 1-2 = Weapons Cache (unit gains +1 damage on its next attack roll); 3-4 = Venom Flask (apply Poisoned to one enemy unit within 3\" as a free action this activation); 5-6 = Special Gear (one single-use of any standard universal ability — declare on purchase). Once 3 items are sold, Monte Haul is out of stock."
+    {
+      "name": "Monte Haul",
+      "faction": "Monsters",
+      "type": "Vendor",
+      "cost": 0,
+      "quality": 4,
+      "defense": 5,
+      "move": 0,
+      "range": 0,
+      "weapon": "Brass Fists",
+      "weapon_properties": [
+        "Melee",
+        "Impact"
+      ],
+      "composition": {
+        "max_count": 1,
+        "per_points": 9999,
+        "note": "Scenario-placed only. Not drafted into rosters."
       },
-      {
-        "name": "Cannot Walk",
-        "effect": "Monte Haul has Move 0. He is fixed to the board where he is placed at scenario start. He does not move for any reason — not even push effects. He is bolted to the ground."
-      },
-      {
-        "name": "Brass Golem Construction",
-        "effect": "Monte Haul is a powerful brass golem. He ignores the first 2 points of damage each activation. He cannot be Shaken, Panicked, Poisoned, or affected by Fear. He ignores Coffin Cough entirely."
-      },
-      {
-        "name": "Brass Fists",
-        "effect": "If Monte Haul is attacked, he immediately strikes back before the attacker resolves their action. Treat as a melee attack using Quality 4 with Impact — on a hit, the attacker is pushed back 3\" and becomes Staggered. This is a reaction, not an activation."
-      },
-      {
-        "name": "Lockdown",
-        "effect": "When Monte Haul's Quality is reduced to 2 or below, he slams his panels shut and retracts into his base. He can no longer trade or be interacted with. He becomes Defense 6 in this state and cannot take further damage from melee. He stays on the board but is effectively inert for the rest of the game."
-      },
-      {
-        "name": "Nobody's Enemy",
-        "effect": "Monte Haul never activates aggressively and never counts as a kill. He does not score or cost VP. Factions that destroy him before he goes into Lockdown lose 2 VP for damaging a neutral party."
+      "abilities": [
+        "Black Market",
+        "Cannot Walk",
+        "Brass Golem Construction",
+        "Brass Fists",
+        "Lockdown",
+        "Nobody's Enemy"
+      ],
+      "lore": "Monte Haul is a brass mechan in the shape of a broad-shouldered merchant, spring-mounted to a heavy base, with a coin slot in his menu panel and a permanent grin cast into his faceplate. He sells things that probably shouldn't exist. He takes Gildren only. He gives no receipts. He has never moved from a spot once planted. Nobody has robbed him successfully. The ones who tried found out about the brass fists.",
+      "tactics": "Monte Haul is placed at scenario start and stays there all game. Both factions can trade with him — whoever gets there first has the advantage. He's very hard to kill (Defense 5, ignores first 2 damage per activation), hits back hard, and goes into Lockdown at low health rather than dying. Don't waste activations trying to destroy him.",
+      "temperament": "Neutral",
+      "flags": [
+        "NeutralNPC",
+        "CannotBeBefriended",
+        "ScenarioPlacedOnly",
+        "Immovable",
+        "HasLockdown"
+      ],
+      "unit_tags": [
+        "vendor",
+        "neutral",
+        "mechanical",
+        "merchant",
+        "npc",
+        "unique",
+        "immovable"
+      ],
+      "terrain_preferences": [
+        "anywhere"
+      ],
+      "objective_keywords": [
+        "trade",
+        "resource",
+        "neutral",
+        "black_market"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Lawless",
+          "Strangewild"
+        ],
+        "bad_in": [
+          "Rusted"
+        ]
       }
-    ],
-    "lore": "Monte Haul is a brass mechan in the shape of a broad-shouldered merchant, spring-mounted to a heavy base, with a coin slot in his menu panel and a permanent grin cast into his faceplate. He sells things that probably shouldn't exist. He takes Gildren only. He gives no receipts. He has never moved from a spot once planted. Nobody has robbed him successfully. The ones who tried found out about the brass fists.",
-    "tactics": "Monte Haul is placed at scenario start and stays there all game. Both factions can trade with him — whoever gets there first has the advantage. He's very hard to kill (Defense 5, ignores first 2 damage per activation), hits back hard, and goes into Lockdown at low health rather than dying. Don't waste activations trying to destroy him.",
-    "temperament": "Neutral",
-    "flags": [
-      "NeutralNPC",
-      "CannotBeBefriended",
-      "ScenarioPlacedOnly",
-      "Immovable",
-      "HasLockdown"
-    ],
-    "unit_tags": [
-      "vendor", "neutral", "mechanical", "merchant", "npc", "unique", "immovable"
-    ],
-    "terrain_preferences": [ "anywhere" ],
-    "objective_keywords": [ "trade", "resource", "neutral", "black_market" ],
-    "state_advantages": {
-      "good_in": [ "Lawless", "Strangewild" ],
-      "bad_in": [ "Rusted" ]
     },
-    "npc_appearance": {
-      "base_chance": 0.20,
-      "danger_modifier": 0.05,
-      "min_danger": 2,
-      "max_danger": 6,
-      "placement": "board_center_or_nearest_open",
-      "note": "Rolls at scenario generation like Coffin Cough. 20% base, +5% per danger above 2. Rare and valuable."
-    }
-  },   
     {
       "name": "Canyon Skeleton",
       "faction": "Monsters",
@@ -700,18 +687,39 @@
       "special_mechanics": {
         "rattling_horde": "While within 3\" of two or more other friendly Canyon Skeletons, this unit gains +1 die on melee attacks. The bones click and clatter together in a terrible rhythm that only gets louder."
       },
+      "optional_upgrades": [
+        {
+          "name": "Ancient Blade",
+          "cost": 10,
+          "desc_short": "This unit gains Pierce. The blade pre-dates most of the armor it encounters."
+        },
+        {
+          "name": "Buckler Shield",
+          "cost": 8,
+          "desc_short": "Once per round, when this unit is hit by a melee attack, it may reduce the damage by 1 (to a minimum of 0). A skeleton with a shield is a worse problem than a skeleton without one."
+        },
+        {
+          "name": "Dread Rattling",
+          "cost": 12,
+          "desc_short": "This unit gains Fear. The sound it makes — all that grinding bone and scraping metal — is something the brain rejects before the eyes finish processing it."
+        },
+        {
+          "name": "Canyon Dirt Armor",
+          "cost": 8,
+          "desc_short": "This unit gains Tough. Centuries of compressed canyon sediment have filled every joint and sealed every crack. It is denser than it looks."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Skeleton Archer",
           "cost": 85,
+          "desc_short": "Some skeletons rose mid-draw and never put the bow down. Skeleton Archers lose the melee surge of Relentless but gain a 12\" ranged attack — haunting back-line pressure that never retreats and never runs dry.",
           "stat_modifiers": {
             "quality": 2,
             "defense": 2,
             "move": 5,
             "range": 12
           },
-          "weapon": "Ancient Bow & Bone Arrow",
-          "weapon_properties": [],
           "abilities": [
             "Bloodless",
             "Fearless"
@@ -719,20 +727,18 @@
           "flags": [
             "Bloodless",
             "SkullRangerBefriendOnly"
-          ],
-          "effect": "Some skeletons rose mid-draw and never put the bow down. Skeleton Archers lose the melee surge of Relentless but gain a 12\" ranged attack — haunting back-line pressure that never retreats and never runs dry."
+          ]
         },
         {
           "name": "Skeleton Champion",
-          "type": "Hero",
           "cost": 160,
+          "type": "Hero",
+          "desc_short": "An old officer that went into the ground with its rank still on. The Skeleton Champion is tougher, more frightening, and holds nearby skeletons in a loose and terrible formation. It is the one you deal with first — or the one that costs you dearly for not doing so.",
           "stat_modifiers": {
             "quality": 3,
             "defense": 3,
             "move": 5
           },
-          "weapon": "Ancient Commander's Blade",
-          "weapon_properties": [],
           "abilities": [
             "Bloodless",
             "Fearless",
@@ -743,36 +749,13 @@
           "composition": {
             "per_points": 500
           },
-          "flags": [
-            "Bloodless",
-            "SkullRangerBefriendOnly"
-          ],
           "special_mechanics": {
             "dead_generals_will": "Once per round, while within 6\" of two or more friendly Canyon Skeletons, this unit may direct one of them to move 3\" — even if it has already activated this round. The click of its sword against its ribcage is the only order they need."
           },
-          "effect": "An old officer that went into the ground with its rank still on. The Skeleton Champion is tougher, more frightening, and holds nearby skeletons in a loose and terrible formation. It is the one you deal with first — or the one that costs you dearly for not doing so."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Ancient Blade",
-          "cost": 10,
-          "effect": "This unit gains Pierce. The blade pre-dates most of the armor it encounters."
-        },
-        {
-          "name": "Buckler Shield",
-          "cost": 8,
-          "effect": "Once per round, when this unit is hit by a melee attack, it may reduce the damage by 1 (to a minimum of 0). A skeleton with a shield is a worse problem than a skeleton without one."
-        },
-        {
-          "name": "Dread Rattling",
-          "cost": 12,
-          "effect": "This unit gains Fear. The sound it makes — all that grinding bone and scraping metal — is something the brain rejects before the eyes finish processing it."
-        },
-        {
-          "name": "Canyon Dirt Armor",
-          "cost": 8,
-          "effect": "This unit gains Tough. Centuries of compressed canyon sediment have filled every joint and sealed every crack. It is denser than it looks."
+          "flags": [
+            "Bloodless",
+            "SkullRangerBefriendOnly"
+          ]
         }
       ]
     },
@@ -827,32 +810,32 @@
           "Liberated"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Web Spitter",
+          "cost": 10,
+          "desc_short": "Gain a web spit attack (Range 6\"). On a successful hit the target becomes Pinned.",
+          "stat_modifiers": {
+            "range": 6
+          }
+        },
+        {
+          "name": "Burrower",
+          "cost": 15,
+          "desc_short": "Once per game, this model may emerge anywhere within 8\" of its starting position that is not within 3\" of an enemy."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Thyrfang Spider",
           "cost": 25,
-          "quality": 4,
+          "desc_short": "A Dog Spider warped by feeding on Thyr crystals. Its fangs glow faintly and its attacks grow more savage the more blood it spills.",
           "abilities": [
             "Fear",
             "Venom",
             "Furious"
           ],
-          "effect": "A Dog Spider warped by feeding on Thyr crystals. Its fangs glow faintly and its attacks grow more savage the more blood it spills."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Web Spitter",
-          "cost": 10,
-          "stat_modifiers": {
-            "range": 6
-          },
-          "effect": "Gain a web spit attack (Range 6\"). On a successful hit the target becomes Pinned."
-        },
-        {
-          "name": "Burrower",
-          "cost": 15,
-          "effect": "Once per game, this model may emerge anywhere within 8\" of its starting position that is not within 3\" of an enemy."
+          "quality": 4
         }
       ]
     },
@@ -906,10 +889,28 @@
           "Liberated"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Piercing Bite",
+          "cost": 10,
+          "desc_short": "This unit gains Pierce."
+        },
+        {
+          "name": "Brutal Blow",
+          "cost": 15,
+          "desc_short": "This unit gains Brutal Blow."
+        },
+        {
+          "name": "Thyr Frenzy",
+          "cost": 20,
+          "desc_short": "This unit gains Thyr Devourer and Thyr Frenzy. Quality cannot exceed 6."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Feratu Stalker",
           "cost": 10,
+          "desc_short": "A feral night-hunter that abandons all civility. Even Skull Rangers cannot befriend it.",
           "stat_modifiers": {
             "move": 8
           },
@@ -918,47 +919,29 @@
           ],
           "flags": [
             "CannotBeBefriended"
-          ],
-          "effect": "A feral night-hunter that abandons all civility. Even Skull Rangers cannot befriend it."
+          ]
         },
         {
           "name": "Feratu Bride",
           "cost": 15,
+          "desc_short": "A charming predator that draws victims close before feeding.",
           "stat_modifiers": {
             "defense": 2
           },
           "abilities": [
             "Brutal Fear"
-          ],
-          "effect": "A charming predator that draws victims close before feeding."
+          ]
         },
         {
           "name": "Feratu Gentleman",
           "cost": 20,
+          "desc_short": "An aristocratic hunter who studies prey before striking. Quality cannot exceed 6.",
           "stat_modifiers": {
             "quality": 5
           },
           "abilities": [
             "Mark Target"
-          ],
-          "effect": "An aristocratic hunter who studies prey before striking. Quality cannot exceed 6."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Piercing Bite",
-          "cost": 10,
-          "effect": "This unit gains Pierce."
-        },
-        {
-          "name": "Brutal Blow",
-          "cost": 15,
-          "effect": "This unit gains Brutal Blow."
-        },
-        {
-          "name": "Thyr Frenzy",
-          "cost": 20,
-          "effect": "This unit gains Thyr Devourer and Thyr Frenzy. Quality cannot exceed 6."
+          ]
         }
       ]
     },
@@ -1013,43 +996,43 @@
           "Strangewild"
         ]
       },
+      "optional_upgrades": [],
       "supplemental_abilities": [
         {
           "name": "Flesh Golem",
           "cost": 35,
-          "quality": 3,
-          "defense": 3,
+          "desc_short": "A grotesque monsterologist construct stitched from grave-rotted remains. Flesh golems stagger forward with stubborn determination.",
           "abilities": [
             "Relentless",
             "Fear"
           ],
-          "effect": "A grotesque monsterologist construct stitched from grave-rotted remains. Flesh golems stagger forward with stubborn determination."
+          "quality": 3,
+          "defense": 3
         },
         {
           "name": "Clay Golem",
           "cost": 60,
-          "quality": 4,
-          "defense": 4,
+          "desc_short": "Shaped from canyon clay and kiln-fired mud, these silent guardians once watched over forgotten shrines and camps.",
           "abilities": [
             "Tougher",
             "Fearless"
           ],
-          "effect": "Shaped from canyon clay and kiln-fired mud, these silent guardians once watched over forgotten shrines and camps."
+          "quality": 4,
+          "defense": 4
         },
         {
           "name": "Iron Golem",
           "cost": 85,
-          "quality": 5,
-          "defense": 5,
+          "desc_short": "A brutal iron construct of forgotten industry. When destroyed, it leaves behind scattered Spare Parts.",
           "abilities": [
             "Toughest",
             "Fearless",
             "Spare Parts Drop"
           ],
-          "effect": "A brutal iron construct of forgotten industry. When destroyed, it leaves behind scattered Spare Parts."
+          "quality": 5,
+          "defense": 5
         }
-      ],
-      "optional_upgrades": []
+      ]
     },
     {
       "name": "Halloween Golem",
@@ -1101,23 +1084,23 @@
           "Strangewild"
         ]
       },
-      "supplemental_abilities": [
-        {
-          "name": "Rusty Halloween Golem",
-          "cost": -50,
-          "stat_modifiers": {
-            "quality": 2,
-            "defense": 2,
-            "move": 3
-          },
-          "effect": "A rusting piece of trash held together by habit and hope."
-        }
-      ],
       "optional_upgrades": [
         {
           "name": "Keen Axe",
           "cost": 6,
-          "effect": "This unit gains Pierce."
+          "desc_short": "This unit gains Pierce."
+        }
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Rusty Halloween Golem",
+          "cost": -50,
+          "desc_short": "A rusting piece of trash held together by habit and hope.",
+          "stat_modifiers": {
+            "quality": 2,
+            "defense": 2,
+            "move": 3
+          }
         }
       ]
     },
@@ -1170,32 +1153,32 @@
           "Liberated"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Rebar Club",
+          "cost": 10,
+          "desc_short": "This unit gains Brutal Blow. A length of twisted construction steel makes every hit devastating."
+        },
+        {
+          "name": "Scrap Armor",
+          "cost": 12,
+          "desc_short": "Bolted plates, wagon doors, and furnace lids form crude protection.",
+          "stat_modifiers": {
+            "defense": 5
+          }
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Doomshine Thrallo",
           "cost": 15,
+          "desc_short": "Fueled by stolen Doomshine. Gains +1 Quality but must move toward the nearest enemy each activation if able.",
           "stat_modifiers": {
             "quality": 5
           },
           "abilities": [
             "Furious"
-          ],
-          "effect": "Fueled by stolen Doomshine. Gains +1 Quality but must move toward the nearest enemy each activation if able."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Rebar Club",
-          "cost": 10,
-          "effect": "This unit gains Brutal Blow. A length of twisted construction steel makes every hit devastating."
-        },
-        {
-          "name": "Scrap Armor",
-          "cost": 12,
-          "stat_modifiers": {
-            "defense": 5
-          },
-          "effect": "Bolted plates, wagon doors, and furnace lids form crude protection."
+          ]
         }
       ]
     },
@@ -1249,21 +1232,21 @@
           "Liberated"
         ]
       },
-      "supplemental_abilities": [
-        {
-          "name": "Labyrinth Bull",
-          "cost": 10,
-          "abilities": [
-            "Relentless"
-          ],
-          "effect": "Years of stalking ruins have honed its instincts. After destroying an enemy in melee, the Minotaur may immediately move 2\"."
-        }
-      ],
       "optional_upgrades": [
         {
           "name": "Huge Battle Axe",
           "cost": 15,
-          "effect": "The Minotaur carries a massive rusted executioner's axe. Gains Pierce."
+          "desc_short": "The Minotaur carries a massive rusted executioner's axe. Gains Pierce."
+        }
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Labyrinth Bull",
+          "cost": 10,
+          "desc_short": "Years of stalking ruins have honed its instincts. After destroying an enemy in melee, the Minotaur may immediately move 2\".",
+          "abilities": [
+            "Relentless"
+          ]
         }
       ]
     },
@@ -1320,27 +1303,27 @@
           "Liberated"
         ]
       },
-      "supplemental_abilities": [
-        {
-          "name": "Sackcloth Patchwork",
-          "cost": -40,
-          "stat_modifiers": {
-            "quality": 4,
-            "defense": 2
-          },
-          "effect": "A cheap and unstable cloth-stuffed construct."
-        }
-      ],
       "optional_upgrades": [
         {
           "name": "Aethyr Surge",
           "cost": 8,
-          "effect": "This unit gains Hex."
+          "desc_short": "This unit gains Hex."
         },
         {
           "name": "Heavy Limbs",
           "cost": 6,
-          "effect": "This unit gains an additional Brutal Blow die."
+          "desc_short": "This unit gains an additional Brutal Blow die."
+        }
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Sackcloth Patchwork",
+          "cost": -40,
+          "desc_short": "A cheap and unstable cloth-stuffed construct.",
+          "stat_modifiers": {
+            "quality": 4,
+            "defense": 2
+          }
         }
       ]
     },
@@ -1395,10 +1378,23 @@
           "Extracted"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Iron-Breaking Talons",
+          "cost": 14,
+          "desc_short": "This unit gains Pierce."
+        },
+        {
+          "name": "Blood Scent",
+          "cost": 12,
+          "desc_short": "This unit gains Furious."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Mama Owlbear",
           "cost": 25,
+          "desc_short": "A territorial mother defending her young. Gains +1 Defense and Furious.",
           "stat_modifiers": {
             "quality": 0,
             "defense": 1
@@ -1407,12 +1403,12 @@
             "Impact",
             "Brutal Blow",
             "Furious"
-          ],
-          "effect": "A territorial mother defending her young. Gains +1 Defense and Furious."
+          ]
         },
         {
           "name": "Baby Owlbear",
           "cost": -60,
+          "desc_short": "A young and unpredictable owlbear cub. Fast, loud, and prone to panic.",
           "stat_modifiers": {
             "quality": -3,
             "defense": -2,
@@ -1426,20 +1422,7 @@
             "EscortEligible",
             "Small",
             "Beast"
-          ],
-          "effect": "A young and unpredictable owlbear cub. Fast, loud, and prone to panic."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Iron-Breaking Talons",
-          "cost": 14,
-          "effect": "This unit gains Pierce."
-        },
-        {
-          "name": "Blood Scent",
-          "cost": 12,
-          "effect": "This unit gains Furious."
+          ]
         }
       ]
     },
@@ -1495,30 +1478,30 @@
           "Liberated"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Serpent Tail",
+          "cost": 15,
+          "desc_short": "This unit gains Poison. A venomous serpent head lashes from the creature's tail."
+        },
+        {
+          "name": "Infernal Breath",
+          "cost": 18,
+          "desc_short": "This unit gains Hell Spray. The lion head exhales a cone of burning aethyr."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Alpha Chimera",
           "cost": 25,
+          "desc_short": "An ancient canyon apex predator whose hide is scarred from countless battles.",
           "stat_modifiers": {
             "defense": 5
           },
           "abilities": [
             "Fear",
             "Furious"
-          ],
-          "effect": "An ancient canyon apex predator whose hide is scarred from countless battles."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Serpent Tail",
-          "cost": 15,
-          "effect": "This unit gains Poison. A venomous serpent head lashes from the creature's tail."
-        },
-        {
-          "name": "Infernal Breath",
-          "cost": 18,
-          "effect": "This unit gains Hell Spray. The lion head exhales a cone of burning aethyr."
+          ]
         }
       ]
     },
@@ -1575,14 +1558,32 @@
           "Liberated"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Brutal Fear",
+          "cost": 8,
+          "desc_short": "This unit upgrades Fear to Brutal Fear."
+        },
+        {
+          "name": "Toughest",
+          "cost": 12,
+          "desc_short": "This unit upgrades Tougher to Toughest."
+        },
+        {
+          "name": "Thyr Frenzy",
+          "cost": 10,
+          "desc_short": "This unit gains Thyr Devourer and Thyr Frenzy. Quality cannot exceed 6."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Ruinbound",
-          "effect": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation."
+          "desc_short": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation."
         },
         {
           "name": "Dust King Revenant",
           "cost": 220,
+          "desc_short": "A more powerful risen form. Tomb-Curse forces Morale tests on engaged enemies.",
           "stat_modifiers": {
             "quality": 6,
             "defense": 4,
@@ -1599,13 +1600,13 @@
           "special_mechanics": {
             "ruinbound": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation.",
             "tomb_curse": "When an enemy ends its activation engaged with this unit, that enemy must test Morale."
-          },
-          "effect": "A more powerful risen form. Tomb-Curse forces Morale tests on engaged enemies."
+          }
         },
         {
           "name": "Dust Emperor",
-          "type": "Hero",
           "cost": 275,
+          "type": "Hero",
+          "desc_short": "The apex Bloodless commander. Royal Tomb-Ward and Dust Command make it a force multiplier for undead warbands.",
           "stat_modifiers": {
             "quality": 6,
             "defense": 5,
@@ -1619,33 +1620,15 @@
           "composition": {
             "per_points": 2000
           },
-          "flags": [
-            "Bloodless",
-            "SkullRangerBefriendOnly"
-          ],
           "special_mechanics": {
             "ruinbound": "If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain, it gains +1 Defense until end of activation.",
             "royal_tomb_ward": "Once per game: choose one Ruin or Ancient Structure terrain within 12\". Until end of round, enemies treat that terrain as Hazardous.",
             "dust_command": "Once per round, when a friendly Bloodless unit within 8\" fails a Morale test, it may reroll."
           },
-          "effect": "The apex Bloodless commander. Royal Tomb-Ward and Dust Command make it a force multiplier for undead warbands."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Brutal Fear",
-          "cost": 8,
-          "effect": "This unit upgrades Fear to Brutal Fear."
-        },
-        {
-          "name": "Toughest",
-          "cost": 12,
-          "effect": "This unit upgrades Tougher to Toughest."
-        },
-        {
-          "name": "Thyr Frenzy",
-          "cost": 10,
-          "effect": "This unit gains Thyr Devourer and Thyr Frenzy. Quality cannot exceed 6."
+          "flags": [
+            "Bloodless",
+            "SkullRangerBefriendOnly"
+          ]
         }
       ]
     },
@@ -1703,40 +1686,40 @@
           "Rusted"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Deepwater Pull",
+          "cost": 8,
+          "desc_short": "This unit gains Impact."
+        },
+        {
+          "name": "Bog Hunter",
+          "cost": 6,
+          "desc_short": "This unit gains Blood in the Air."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "River Kelpie",
           "cost": 25,
+          "desc_short": "A strong river hunter with greater endurance.",
           "stat_modifiers": {
             "defense": 4
           },
           "abilities": [
             "Fast"
-          ],
-          "effect": "A strong river hunter with greater endurance."
+          ]
         },
         {
           "name": "Starved Kelpie",
           "cost": -25,
+          "desc_short": "A desperate desert wanderer running on instinct and spite.",
           "stat_modifiers": {
             "quality": 3
           },
           "abilities": [
             "Furious"
-          ],
-          "effect": "A desperate desert wanderer running on instinct and spite."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Deepwater Pull",
-          "cost": 8,
-          "effect": "This unit gains Impact."
-        },
-        {
-          "name": "Bog Hunter",
-          "cost": 6,
-          "effect": "This unit gains Blood in the Air."
+          ]
         }
       ]
     },
@@ -1789,29 +1772,29 @@
           "Rusted"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Savage Pounce",
+          "cost": 6,
+          "desc_short": "This unit gains Impact."
+        },
+        {
+          "name": "Blood Scent",
+          "cost": 6,
+          "desc_short": "This unit gains Blood in the Air."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Alpha Lionvulture",
           "cost": 30,
+          "desc_short": "Dominant territorial predator leading the pack.",
           "stat_modifiers": {
             "quality": 5
           },
           "abilities": [
             "Fear"
-          ],
-          "effect": "Dominant territorial predator leading the pack."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Savage Pounce",
-          "cost": 6,
-          "effect": "This unit gains Impact."
-        },
-        {
-          "name": "Blood Scent",
-          "cost": 6,
-          "effect": "This unit gains Blood in the Air."
+          ]
         }
       ]
     },
@@ -1866,34 +1849,34 @@
           "Liberated"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Longbow",
+          "cost": 15,
+          "desc_short": "Replace this unit's weapon with a Longbow (Range 18\"). Valley centaurs are legendary canyon archers.",
+          "stat_modifiers": {
+            "range": 18
+          }
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Bloodhoof Centaur",
           "cost": 40,
+          "desc_short": "No one knows where the Bloodhoof Centaurs came from. These enormous ogre-centaurs charge like living avalanches, crushing bone and stone beneath their hooves.",
           "stat_modifiers": {
             "quality": 5,
             "defense": 4,
             "move": 7
-          },
-          "composition": {
-            "per_points": 550
           },
           "abilities": [
             "Fear",
             "Brutal Impact",
             "Relentless"
           ],
-          "effect": "No one knows where the Bloodhoof Centaurs came from. These enormous ogre-centaurs charge like living avalanches, crushing bone and stone beneath their hooves."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Longbow",
-          "cost": 15,
-          "stat_modifiers": {
-            "range": 18
-          },
-          "effect": "Replace this unit's weapon with a Longbow (Range 18\"). Valley centaurs are legendary canyon archers."
+          "composition": {
+            "per_points": 550
+          }
         }
       ]
     },
@@ -1947,30 +1930,30 @@
           "Liberated"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Mirage Veil",
+          "cost": 12,
+          "desc_short": "Once per round when this unit is targeted by a ranged attack, it may move 3\"."
+        },
+        {
+          "name": "Hypnotic Eyes",
+          "cost": 15,
+          "desc_short": "This unit gains Fear."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Dune Lamia",
           "cost": 20,
+          "desc_short": "An ancient Lamia that has ruled the dunes for decades. Its whispers carry further, and its magic cuts deeper.",
           "stat_modifiers": {
             "quality": 5
           },
           "abilities": [
             "Fear",
             "Hex"
-          ],
-          "effect": "An ancient Lamia that has ruled the dunes for decades. Its whispers carry further, and its magic cuts deeper."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Mirage Veil",
-          "cost": 12,
-          "effect": "Once per round when this unit is targeted by a ranged attack, it may move 3\"."
-        },
-        {
-          "name": "Hypnotic Eyes",
-          "cost": 15,
-          "effect": "This unit gains Fear."
+          ]
         }
       ]
     },
@@ -2025,8 +2008,8 @@
           "Liberated"
         ]
       },
-      "supplemental_abilities": [],
-      "optional_upgrades": []
+      "optional_upgrades": [],
+      "supplemental_abilities": []
     },
     {
       "name": "Bête Herdbeast",
@@ -2080,18 +2063,36 @@
           "Extracted"
         ]
       },
+      "optional_upgrades": [
+        {
+          "name": "Thick Hide",
+          "cost": 10,
+          "desc_short": "This unit gains Toughest."
+        },
+        {
+          "name": "Terrifying Bulk",
+          "cost": 8,
+          "desc_short": "This unit gains Brutal Fear."
+        },
+        {
+          "name": "Thyr Sated",
+          "cost": 6,
+          "desc_short": "This unit gains Thyr Sated."
+        }
+      ],
       "supplemental_abilities": [
         {
           "name": "Gentle Giant",
-          "effect": "Will not declare attacks against Monster Rangers unless attacked first."
+          "desc_short": "Will not declare attacks against Monster Rangers unless attacked first."
         },
         {
           "name": "Stampede",
-          "effect": "If this unit fails a Morale test it immediately moves up to its Move in a straight line. It may pass through smaller models, applying Impact normally."
+          "desc_short": "If this unit fails a Morale test it immediately moves up to its Move in a straight line. It may pass through smaller models, applying Impact normally."
         },
         {
           "name": "Baby Bête",
           "cost": -115,
+          "desc_short": "A small, skittish Bête calf still learning the world is dangerous.",
           "stat_modifiers": {
             "quality": 2,
             "defense": 2,
@@ -2099,12 +2100,12 @@
           },
           "abilities": [
             "Fear"
-          ],
-          "effect": "A small, skittish Bête calf still learning the world is dangerous."
+          ]
         },
         {
           "name": "Mama Bête",
           "cost": -10,
+          "desc_short": "A fierce mother whose patience ends the moment her calf is threatened.",
           "stat_modifiers": {
             "quality": 4,
             "defense": 4,
@@ -2117,25 +2118,7 @@
           ],
           "special_mechanics": {
             "pack_protector": "When a Baby Bête within 6\" is targeted by an attack, Mama Bête may immediately move up to 4\" toward the attacker."
-          },
-          "effect": "A fierce mother whose patience ends the moment her calf is threatened."
-        }
-      ],
-      "optional_upgrades": [
-        {
-          "name": "Thick Hide",
-          "cost": 10,
-          "effect": "This unit gains Toughest."
-        },
-        {
-          "name": "Terrifying Bulk",
-          "cost": 8,
-          "effect": "This unit gains Brutal Fear."
-        },
-        {
-          "name": "Thyr Sated",
-          "cost": 6,
-          "effect": "This unit gains Thyr Sated."
+          }
         }
       ]
     },
@@ -2196,8 +2179,8 @@
           "Liberated"
         ]
       },
-      "supplemental_abilities": [],
-      "optional_upgrades": []
+      "optional_upgrades": [],
+      "supplemental_abilities": []
     }
   ],
   "notes": [
@@ -2207,5 +2190,7 @@
     "Bloodless monsters are immune to Poison and Blood in the Air effects."
   ],
   "_point_formula_version": "3.0",
-  "_recalculated": "2026-03-07"
+  "_recalculated": "2026-03-07",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

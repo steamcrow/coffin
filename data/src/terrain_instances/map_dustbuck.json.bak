@@ -1,0 +1,122 @@
+{
+  "map_id": "dustbuck",
+  "map_title": "Dustbuck",
+  "location_id": "dustbuck",
+  "map_image": "https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/assets/textures/isometric_tile_48x48.svg",
+  "map_size_px": {
+    "w": 4096,
+    "h": 4096
+  },
+  "instances": [
+    {
+      "instance_id": "terrain_czialpcp",
+      "terrain_type_id": "feature_windmill_tower",
+      "x": 2201,
+      "y": 2911,
+      "rotation_deg": 6,
+      "scale": 1.35,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 4,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_f4x65e26",
+      "terrain_type_id": "feature_canyon_wall_02",
+      "x": 2082,
+      "y": 2660,
+      "rotation_deg": 0,
+      "scale": 1.8,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_6yygqemq",
+      "terrain_type_id": "westbuild_02",
+      "x": 1846,
+      "y": 2758,
+      "rotation_deg": 0,
+      "scale": 0.85,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 7,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_xglnffcu",
+      "terrain_type_id": "westbuild_07",
+      "x": 2939,
+      "y": 2173,
+      "rotation_deg": 0,
+      "scale": 1,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    },
+    {
+      "instance_id": "terrain_et4h4b15",
+      "terrain_type_id": "westbuild_09",
+      "x": 947,
+      "y": 2326,
+      "rotation_deg": 0,
+      "scale": 1,
+      "mirror_x": false,
+      "mirror_y": false,
+      "z_index": 0,
+      "opacity": 1,
+      "locked": false,
+      "hidden_in_editor": false,
+      "state": {
+        "destroyed": false,
+        "disabled": false,
+        "variant_override": null
+      },
+      "slot_bindings": [],
+      "tags": [],
+      "notes": ""
+    }
+  ]
+}

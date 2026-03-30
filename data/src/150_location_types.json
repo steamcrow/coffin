@@ -41,30 +41,66 @@
     "ruins": {
       "danger_mod": 1,
       "population_mod": -2,
-      "resource_mods": { "supplies": -1, "food_good": -1, "water_clean": -1, "mechanical_parts": 1 },
-      "tags_add": ["UndeadPressure", "CollapsedInfrastructure"],
-      "monster_bias_add": ["Bloodless", "Incorporeal"]
+      "resource_mods": {
+        "supplies": -1,
+        "food_good": -1,
+        "water_clean": -1,
+        "mechanical_parts": 1
+      },
+      "tags_add": [
+        "UndeadPressure",
+        "CollapsedInfrastructure"
+      ],
+      "monster_bias_add": [
+        "Bloodless",
+        "Incorporeal"
+      ]
     },
     "barely_alive": {
       "danger_mod": 0,
       "population_mod": -1,
-      "resource_mods": { "supplies": -1, "food_good": -1 },
-      "tags_add": ["Desperate"],
+      "resource_mods": {
+        "supplies": -1,
+        "food_good": -1
+      },
+      "tags_add": [
+        "Desperate"
+      ],
       "monster_bias_add": []
     },
     "prospering": {
       "danger_mod": -1,
       "population_mod": 1,
-      "resource_mods": { "supplies": 1, "food_good": 1, "water_clean": 1 },
-      "tags_add": ["Trade"],
-      "monster_bias_add": ["Cunning"]
+      "resource_mods": {
+        "supplies": 1,
+        "food_good": 1,
+        "water_clean": 1
+      },
+      "tags_add": [
+        "Trade"
+      ],
+      "monster_bias_add": [
+        "Cunning"
+      ]
     },
     "booming": {
       "danger_mod": -1,
       "population_mod": 2,
-      "resource_mods": { "supplies": 2, "mechanical_parts": 1, "food_good": 1, "water_clean": 1 },
-      "tags_add": ["Trade", "Volatile", "EscalationRisk"],
-      "monster_bias_add": ["Cunning", "Territorial"]
+      "resource_mods": {
+        "supplies": 2,
+        "mechanical_parts": 1,
+        "food_good": 1,
+        "water_clean": 1
+      },
+      "tags_add": [
+        "Trade",
+        "Volatile",
+        "EscalationRisk"
+      ],
+      "monster_bias_add": [
+        "Cunning",
+        "Territorial"
+      ]
     }
   },
   "resources_catalog": [
@@ -113,15 +149,38 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["Docks", "RiverShore", "FerryLine", "MarketRow", "Canteen"],
-      "monster_seeds": [
-        { "name": "Kelpie", "weight": 3 },
-        { "name": "Crocodile", "weight": 3 },
-        { "name": "Will-o'-Wisp", "weight": 2 },
-        { "name": "Rat Swarm", "weight": 2 },
-        { "name": "Ruster", "weight": 1 }
+      "features": [
+        "Docks",
+        "RiverShore",
+        "FerryLine",
+        "MarketRow",
+        "Canteen"
       ],
-      "notes": ["Boomtowns attract predators and opportunists. River brings trade and trouble."]
+      "monster_seeds": [
+        {
+          "name": "Kelpie",
+          "weight": 3
+        },
+        {
+          "name": "Crocodile",
+          "weight": 3
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 2
+        },
+        {
+          "name": "Rat Swarm",
+          "weight": 2
+        },
+        {
+          "name": "Ruster",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Boomtowns attract predators and opportunists. River brings trade and trouble."
+      ]
     },
     {
       "id": "boomtown_mesa",
@@ -149,14 +208,33 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["Windmill", "CliffRoad", "SignalTower", "RopeLift"],
-      "monster_seeds": [
-        { "name": "Harpy", "weight": 3 },
-        { "name": "Hippogriff", "weight": 2 },
-        { "name": "Gargoyle", "weight": 2 },
-        { "name": "Dire Wolf", "weight": 1 }
+      "features": [
+        "Windmill",
+        "CliffRoad",
+        "SignalTower",
+        "RopeLift"
       ],
-      "notes": ["Mesa towns are hard to supply and easy to besiege."]
+      "monster_seeds": [
+        {
+          "name": "Harpy",
+          "weight": 3
+        },
+        {
+          "name": "Hippogriff",
+          "weight": 2
+        },
+        {
+          "name": "Gargoyle",
+          "weight": 2
+        },
+        {
+          "name": "Dire Wolf",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Mesa towns are hard to supply and easy to besiege."
+      ]
     },
     {
       "id": "boomtown_spire_stilts",
@@ -184,14 +262,33 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["StiltWalkways", "RopeBridges", "CreakingPlatforms", "DropZones"],
-      "monster_seeds": [
-        { "name": "Gargoyle", "weight": 3 },
-        { "name": "Giant Spider", "weight": 3 },
-        { "name": "Spider Swarm", "weight": 2 },
-        { "name": "Shadow", "weight": 2 }
+      "features": [
+        "StiltWalkways",
+        "RopeBridges",
+        "CreakingPlatforms",
+        "DropZones"
       ],
-      "notes": ["Perfect for ambush and vertical horrors."]
+      "monster_seeds": [
+        {
+          "name": "Gargoyle",
+          "weight": 3
+        },
+        {
+          "name": "Giant Spider",
+          "weight": 3
+        },
+        {
+          "name": "Spider Swarm",
+          "weight": 2
+        },
+        {
+          "name": "Shadow",
+          "weight": 2
+        }
+      ],
+      "notes": [
+        "Perfect for ambush and vertical horrors."
+      ]
     },
     {
       "id": "boomtown_riverbase",
@@ -219,14 +316,33 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["Switchbacks", "CargoWinches", "TinShacks", "FloodMarkers"],
-      "monster_seeds": [
-        { "name": "Crocodile", "weight": 3 },
-        { "name": "Kelpie", "weight": 2 },
-        { "name": "Ghoul", "weight": 2 },
-        { "name": "Rat Swarm", "weight": 2 }
+      "features": [
+        "Switchbacks",
+        "CargoWinches",
+        "TinShacks",
+        "FloodMarkers"
       ],
-      "notes": ["Trade comes through; so does rot."]
+      "monster_seeds": [
+        {
+          "name": "Crocodile",
+          "weight": 3
+        },
+        {
+          "name": "Kelpie",
+          "weight": 2
+        },
+        {
+          "name": "Ghoul",
+          "weight": 2
+        },
+        {
+          "name": "Rat Swarm",
+          "weight": 2
+        }
+      ],
+      "notes": [
+        "Trade comes through; so does rot."
+      ]
     },
     {
       "id": "boomtown_dryriver",
@@ -254,14 +370,33 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["CrackedMud", "CollapsedBridge", "DustAlleys", "BonePiles"],
-      "monster_seeds": [
-        { "name": "Sand Shark", "weight": 3 },
-        { "name": "Sand Worm", "weight": 1 },
-        { "name": "Skeleton", "weight": 2 },
-        { "name": "Will-o'-Wisp", "weight": 2 }
+      "features": [
+        "CrackedMud",
+        "CollapsedBridge",
+        "DustAlleys",
+        "BonePiles"
       ],
-      "notes": ["Dry rivers become roads. Roads become hunting lanes."]
+      "monster_seeds": [
+        {
+          "name": "Sand Shark",
+          "weight": 3
+        },
+        {
+          "name": "Sand Worm",
+          "weight": 1
+        },
+        {
+          "name": "Skeleton",
+          "weight": 2
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 2
+        }
+      ],
+      "notes": [
+        "Dry rivers become roads. Roads become hunting lanes."
+      ]
     },
     {
       "id": "diablo_booming_hub",
@@ -290,13 +425,36 @@
         "spare_parts": 3,
         "weapons": 3
       },
-      "features": ["RailSpur", "AuctionYard", "GunsmithRow", "CompanyOffice", "TinChurch", "Jailhouse", "Hotel"],
+      "features": [
+        "RailSpur",
+        "AuctionYard",
+        "GunsmithRow",
+        "CompanyOffice",
+        "TinChurch",
+        "Jailhouse",
+        "Hotel"
+      ],
       "monster_seeds": [
-        { "name": "Red Goblin", "weight": 2 },
-        { "name": "Feratu Stalker", "weight": 2 },
-        { "name": "Ruster", "weight": 1 },
-        { "name": "Will-o'-Wisp", "weight": 1 },
-        { "name": "Klowna", "weight": 1 }
+        {
+          "name": "Red Goblin",
+          "weight": 2
+        },
+        {
+          "name": "Feratu Stalker",
+          "weight": 2
+        },
+        {
+          "name": "Ruster",
+          "weight": 1
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 1
+        },
+        {
+          "name": "Klowna",
+          "weight": 1
+        }
       ],
       "notes": [
         "Diablo is booming by decree, greed, and violence.",
@@ -330,13 +488,30 @@
         "spare_parts": 2,
         "weapons": 2
       },
-      "features": ["CommandTent", "WatchLine", "SupplyCrates", "Workshop", "Stables"],
-      "monster_seeds": [
-        { "name": "Canyon Goblin", "weight": 2 },
-        { "name": "Wolf", "weight": 2 },
-        { "name": "Will-o'-Wisp", "weight": 1 }
+      "features": [
+        "CommandTent",
+        "WatchLine",
+        "SupplyCrates",
+        "Workshop",
+        "Stables"
       ],
-      "notes": ["The canyon is never fully safe, but HQ is defended and supplied."]
+      "monster_seeds": [
+        {
+          "name": "Canyon Goblin",
+          "weight": 2
+        },
+        {
+          "name": "Wolf",
+          "weight": 2
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "The canyon is never fully safe, but HQ is defended and supplied."
+      ]
     },
     {
       "id": "mine_abandoned",
@@ -364,15 +539,38 @@
         "spare_parts": 1,
         "weapons": 0
       },
-      "features": ["ShaftMouth", "TimberProps", "CartTracks", "DeepDark", "MonsterExit"],
-      "monster_seeds": [
-        { "name": "Bat Swarm", "weight": 3 },
-        { "name": "Ghoul", "weight": 2 },
-        { "name": "Skeleton", "weight": 2 },
-        { "name": "Specter", "weight": 2 },
-        { "name": "Gelatinous Cube", "weight": 1 }
+      "features": [
+        "ShaftMouth",
+        "TimberProps",
+        "CartTracks",
+        "DeepDark",
+        "MonsterExit"
       ],
-      "notes": ["Abandoned mines are perfect Monster Exits."]
+      "monster_seeds": [
+        {
+          "name": "Bat Swarm",
+          "weight": 3
+        },
+        {
+          "name": "Ghoul",
+          "weight": 2
+        },
+        {
+          "name": "Skeleton",
+          "weight": 2
+        },
+        {
+          "name": "Specter",
+          "weight": 2
+        },
+        {
+          "name": "Gelatinous Cube",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Abandoned mines are perfect Monster Exits."
+      ]
     },
     {
       "id": "mine_active_shineriders",
@@ -401,13 +599,30 @@
         "spare_parts": 2,
         "weapons": 2
       },
-      "features": ["GuardPost", "OreSheds", "WinchRig", "ShaftMouth", "ExplosivesLocker"],
-      "monster_seeds": [
-        { "name": "Ruster", "weight": 2 },
-        { "name": "Gray Ooze", "weight": 1 },
-        { "name": "Will-o'-Wisp", "weight": 1 }
+      "features": [
+        "GuardPost",
+        "OreSheds",
+        "WinchRig",
+        "ShaftMouth",
+        "ExplosivesLocker"
       ],
-      "notes": ["Humans are present; monsters still slip in."]
+      "monster_seeds": [
+        {
+          "name": "Ruster",
+          "weight": 2
+        },
+        {
+          "name": "Gray Ooze",
+          "weight": 1
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Humans are present; monsters still slip in."
+      ]
     },
     {
       "id": "tzul_ruins_embalma",
@@ -435,15 +650,38 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["SealedDoors", "GlyphStone", "BurialRooms", "WhisperCorridors", "MonsterExit"],
-      "monster_seeds": [
-        { "name": "Dust King", "weight": 3 },
-        { "name": "Wraith", "weight": 2 },
-        { "name": "Banshee", "weight": 2 },
-        { "name": "Shadow", "weight": 2 },
-        { "name": "Dracolich", "weight": 1 }
+      "features": [
+        "SealedDoors",
+        "GlyphStone",
+        "BurialRooms",
+        "WhisperCorridors",
+        "MonsterExit"
       ],
-      "notes": ["Heavy Bloodless/Haunt pressure. Skull Ranger interactions likely."]
+      "monster_seeds": [
+        {
+          "name": "Dust King",
+          "weight": 3
+        },
+        {
+          "name": "Wraith",
+          "weight": 2
+        },
+        {
+          "name": "Banshee",
+          "weight": 2
+        },
+        {
+          "name": "Shadow",
+          "weight": 2
+        },
+        {
+          "name": "Dracolich",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Heavy Bloodless/Haunt pressure. Skull Ranger interactions likely."
+      ]
     },
     {
       "id": "river_active",
@@ -471,13 +709,29 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["Current", "Crossing", "Reeds", "MudPockets"],
-      "monster_seeds": [
-        { "name": "Kelpie", "weight": 3 },
-        { "name": "Crocodile", "weight": 3 },
-        { "name": "Will-o'-Wisp", "weight": 2 }
+      "features": [
+        "Current",
+        "Crossing",
+        "Reeds",
+        "MudPockets"
       ],
-      "notes": ["The river is a resource and a trap."]
+      "monster_seeds": [
+        {
+          "name": "Kelpie",
+          "weight": 3
+        },
+        {
+          "name": "Crocodile",
+          "weight": 3
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 2
+        }
+      ],
+      "notes": [
+        "The river is a resource and a trap."
+      ]
     },
     {
       "id": "river_dried",
@@ -505,13 +759,28 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["CrackedChannel", "BoneDrifts", "DustRoad"],
-      "monster_seeds": [
-        { "name": "Sand Shark", "weight": 3 },
-        { "name": "Will-o'-Wisp", "weight": 2 },
-        { "name": "Skeleton", "weight": 2 }
+      "features": [
+        "CrackedChannel",
+        "BoneDrifts",
+        "DustRoad"
       ],
-      "notes": ["Dry riverbeds become fast lanes for predators."]
+      "monster_seeds": [
+        {
+          "name": "Sand Shark",
+          "weight": 3
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 2
+        },
+        {
+          "name": "Skeleton",
+          "weight": 2
+        }
+      ],
+      "notes": [
+        "Dry riverbeds become fast lanes for predators."
+      ]
     },
     {
       "id": "sand_wasteland",
@@ -539,13 +808,28 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["Dunes", "HeatShimmer", "SinkLines"],
-      "monster_seeds": [
-        { "name": "Sand Shark", "weight": 4 },
-        { "name": "Sand Worm", "weight": 2 },
-        { "name": "Wyvern", "weight": 1 }
+      "features": [
+        "Dunes",
+        "HeatShimmer",
+        "SinkLines"
       ],
-      "notes": ["You don't cross this unless you have to."]
+      "monster_seeds": [
+        {
+          "name": "Sand Shark",
+          "weight": 4
+        },
+        {
+          "name": "Sand Worm",
+          "weight": 2
+        },
+        {
+          "name": "Wyvern",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "You don't cross this unless you have to."
+      ]
     },
     {
       "id": "rock_outcroppings",
@@ -573,14 +857,32 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["Cover", "HighGround", "CrackCaves"],
-      "monster_seeds": [
-        { "name": "Gargoyle", "weight": 2 },
-        { "name": "Giant Spider", "weight": 2 },
-        { "name": "Harpy", "weight": 2 },
-        { "name": "Dire Wolf", "weight": 1 }
+      "features": [
+        "Cover",
+        "HighGround",
+        "CrackCaves"
       ],
-      "notes": ["The canyon provides ambush structure for everything."]
+      "monster_seeds": [
+        {
+          "name": "Gargoyle",
+          "weight": 2
+        },
+        {
+          "name": "Giant Spider",
+          "weight": 2
+        },
+        {
+          "name": "Harpy",
+          "weight": 2
+        },
+        {
+          "name": "Dire Wolf",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "The canyon provides ambush structure for everything."
+      ]
     },
     {
       "id": "mesa",
@@ -608,13 +910,28 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["CliffEdges", "Wind", "LongSightlines"],
-      "monster_seeds": [
-        { "name": "Harpy", "weight": 3 },
-        { "name": "Hippogriff", "weight": 2 },
-        { "name": "Gargoyle", "weight": 2 }
+      "features": [
+        "CliffEdges",
+        "Wind",
+        "LongSightlines"
       ],
-      "notes": ["Anything with wings loves a mesa."]
+      "monster_seeds": [
+        {
+          "name": "Harpy",
+          "weight": 3
+        },
+        {
+          "name": "Hippogriff",
+          "weight": 2
+        },
+        {
+          "name": "Gargoyle",
+          "weight": 2
+        }
+      ],
+      "notes": [
+        "Anything with wings loves a mesa."
+      ]
     },
     {
       "id": "cave",
@@ -642,14 +959,33 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["Dark", "Echoes", "NarrowChokes", "MonsterExit"],
-      "monster_seeds": [
-        { "name": "Bat Swarm", "weight": 3 },
-        { "name": "Giant Spider", "weight": 2 },
-        { "name": "Owlbear", "weight": 1 },
-        { "name": "Mimic", "weight": 1 }
+      "features": [
+        "Dark",
+        "Echoes",
+        "NarrowChokes",
+        "MonsterExit"
       ],
-      "notes": ["Caves are where plans go to die."]
+      "monster_seeds": [
+        {
+          "name": "Bat Swarm",
+          "weight": 3
+        },
+        {
+          "name": "Giant Spider",
+          "weight": 2
+        },
+        {
+          "name": "Owlbear",
+          "weight": 1
+        },
+        {
+          "name": "Mimic",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Caves are where plans go to die."
+      ]
     },
     {
       "id": "sinkhole",
@@ -677,13 +1013,28 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["HiddenDrop", "CrackedRim", "MonsterExit"],
-      "monster_seeds": [
-        { "name": "Will-o'-Wisp", "weight": 3 },
-        { "name": "Ghoul", "weight": 2 },
-        { "name": "Sand Shark", "weight": 1 }
+      "features": [
+        "HiddenDrop",
+        "CrackedRim",
+        "MonsterExit"
       ],
-      "notes": ["A sinkhole is a place the canyon steals from you."]
+      "monster_seeds": [
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 3
+        },
+        {
+          "name": "Ghoul",
+          "weight": 2
+        },
+        {
+          "name": "Sand Shark",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "A sinkhole is a place the canyon steals from you."
+      ]
     },
     {
       "id": "debris_field",
@@ -711,14 +1062,34 @@
         "spare_parts": 2,
         "weapons": 1
       },
-      "features": ["ScrapPiles", "BrokenWagons", "RottenCanvas", "RustNails", "OldFences"],
-      "monster_seeds": [
-        { "name": "Ruster", "weight": 3 },
-        { "name": "Wererat", "weight": 2 },
-        { "name": "Rat Swarm", "weight": 2 },
-        { "name": "Mimic", "weight": 1 }
+      "features": [
+        "ScrapPiles",
+        "BrokenWagons",
+        "RottenCanvas",
+        "RustNails",
+        "OldFences"
       ],
-      "notes": ["Greed draws you in. Something else keeps you there."]
+      "monster_seeds": [
+        {
+          "name": "Ruster",
+          "weight": 3
+        },
+        {
+          "name": "Wererat",
+          "weight": 2
+        },
+        {
+          "name": "Rat Swarm",
+          "weight": 2
+        },
+        {
+          "name": "Mimic",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Greed draws you in. Something else keeps you there."
+      ]
     },
     {
       "id": "thyr_outcroppings",
@@ -746,14 +1117,32 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["GlowingVeins", "ShardFields", "HummingStone"],
-      "monster_seeds": [
-        { "name": "Lionvulture", "weight": 3 },
-        { "name": "Owlbear", "weight": 2 },
-        { "name": "Giant Bear", "weight": 1 },
-        { "name": "Doom Eye", "weight": 1 }
+      "features": [
+        "GlowingVeins",
+        "ShardFields",
+        "HummingStone"
       ],
-      "notes": ["Thyr changes behavior. Territorial monsters gather."]
+      "monster_seeds": [
+        {
+          "name": "Lionvulture",
+          "weight": 3
+        },
+        {
+          "name": "Owlbear",
+          "weight": 2
+        },
+        {
+          "name": "Giant Bear",
+          "weight": 1
+        },
+        {
+          "name": "Doom Eye",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Thyr changes behavior. Territorial monsters gather."
+      ]
     },
     {
       "id": "thyr_field",
@@ -781,14 +1170,32 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["ShardStormRisk", "ResonanceHum", "GlassDust"],
-      "monster_seeds": [
-        { "name": "Doom Eye", "weight": 2 },
-        { "name": "Chimera", "weight": 2 },
-        { "name": "Young Dragon", "weight": 1 },
-        { "name": "Sand Worm", "weight": 1 }
+      "features": [
+        "ShardStormRisk",
+        "ResonanceHum",
+        "GlassDust"
       ],
-      "notes": ["This is where the canyon feels awake."]
+      "monster_seeds": [
+        {
+          "name": "Doom Eye",
+          "weight": 2
+        },
+        {
+          "name": "Chimera",
+          "weight": 2
+        },
+        {
+          "name": "Young Dragon",
+          "weight": 1
+        },
+        {
+          "name": "Sand Worm",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "This is where the canyon feels awake."
+      ]
     },
     {
       "id": "graveyard",
@@ -816,14 +1223,33 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["Headstones", "SunkenPlots", "IronFence", "ColdWind"],
-      "monster_seeds": [
-        { "name": "Skeleton", "weight": 3 },
-        { "name": "Ghost", "weight": 2 },
-        { "name": "Specter", "weight": 2 },
-        { "name": "Wraith", "weight": 1 }
+      "features": [
+        "Headstones",
+        "SunkenPlots",
+        "IronFence",
+        "ColdWind"
       ],
-      "notes": ["Not all graves are for people."]
+      "monster_seeds": [
+        {
+          "name": "Skeleton",
+          "weight": 3
+        },
+        {
+          "name": "Ghost",
+          "weight": 2
+        },
+        {
+          "name": "Specter",
+          "weight": 2
+        },
+        {
+          "name": "Wraith",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Not all graves are for people."
+      ]
     },
     {
       "id": "bone_graveyard",
@@ -851,14 +1277,32 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["BoneDrifts", "CarrionWind", "HollowPits"],
-      "monster_seeds": [
-        { "name": "Gnoll", "weight": 3 },
-        { "name": "Ghoul", "weight": 3 },
-        { "name": "Lionvulture", "weight": 2 },
-        { "name": "Feratu Stalker", "weight": 1 }
+      "features": [
+        "BoneDrifts",
+        "CarrionWind",
+        "HollowPits"
       ],
-      "notes": ["Predators arrive when the canyon serves dinner."]
+      "monster_seeds": [
+        {
+          "name": "Gnoll",
+          "weight": 3
+        },
+        {
+          "name": "Ghoul",
+          "weight": 3
+        },
+        {
+          "name": "Lionvulture",
+          "weight": 2
+        },
+        {
+          "name": "Feratu Stalker",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "Predators arrive when the canyon serves dinner."
+      ]
     },
     {
       "id": "monsterologist_town_active",
@@ -886,14 +1330,34 @@
         "spare_parts": 2,
         "weapons": 2
       },
-      "features": ["LabRow", "SpecimenPens", "CageWagons", "DissectionHall", "GuardPatrols"],
-      "monster_seeds": [
-        { "name": "Flesh Golem", "weight": 2 },
-        { "name": "Patchwork Wonder", "weight": 2 },
-        { "name": "Mimic", "weight": 1 },
-        { "name": "Imp", "weight": 1 }
+      "features": [
+        "LabRow",
+        "SpecimenPens",
+        "CageWagons",
+        "DissectionHall",
+        "GuardPatrols"
       ],
-      "notes": ["A town that studies monsters tends to create them."]
+      "monster_seeds": [
+        {
+          "name": "Flesh Golem",
+          "weight": 2
+        },
+        {
+          "name": "Patchwork Wonder",
+          "weight": 2
+        },
+        {
+          "name": "Mimic",
+          "weight": 1
+        },
+        {
+          "name": "Imp",
+          "weight": 1
+        }
+      ],
+      "notes": [
+        "A town that studies monsters tends to create them."
+      ]
     },
     {
       "id": "cultist_revival_tents",
@@ -922,13 +1386,34 @@
         "spare_parts": 0,
         "weapons": 1
       },
-      "features": ["BlackTents", "BonfirePit", "ChantCircle", "ImprovisedAltar", "MonsterExit"],
+      "features": [
+        "BlackTents",
+        "BonfirePit",
+        "ChantCircle",
+        "ImprovisedAltar",
+        "MonsterExit"
+      ],
       "monster_seeds": [
-        { "name": "Skeleton", "weight": 2 },
-        { "name": "Ghoul", "weight": 2 },
-        { "name": "Banshee", "weight": 1 },
-        { "name": "Devil", "weight": 1 },
-        { "name": "Doom Eye", "weight": 1 }
+        {
+          "name": "Skeleton",
+          "weight": 2
+        },
+        {
+          "name": "Ghoul",
+          "weight": 2
+        },
+        {
+          "name": "Banshee",
+          "weight": 1
+        },
+        {
+          "name": "Devil",
+          "weight": 1
+        },
+        {
+          "name": "Doom Eye",
+          "weight": 1
+        }
       ],
       "notes": [
         "Intended as randomized 'between locations' content.",
@@ -962,12 +1447,30 @@
         "spare_parts": 1,
         "weapons": 1
       },
-      "features": ["MainBar", "BackRoom", "CardTable", "BottleCrates", "RumorWall"],
+      "features": [
+        "MainBar",
+        "BackRoom",
+        "CardTable",
+        "BottleCrates",
+        "RumorWall"
+      ],
       "monster_seeds": [
-        { "name": "Wererat", "weight": 2 },
-        { "name": "Will-o'-Wisp", "weight": 2 },
-        { "name": "Imp", "weight": 1 },
-        { "name": "Ruster", "weight": 1 }
+        {
+          "name": "Wererat",
+          "weight": 2
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 2
+        },
+        {
+          "name": "Imp",
+          "weight": 1
+        },
+        {
+          "name": "Ruster",
+          "weight": 1
+        }
       ],
       "notes": [
         "Cantinas are pressure valves: rumors, trade, betrayal.",
@@ -1000,11 +1503,26 @@
         "spare_parts": 1,
         "weapons": 1
       },
-      "features": ["Cots", "OperatingTable", "MedicineCabinet", "WashBasin", "QuarantineCurtain"],
+      "features": [
+        "Cots",
+        "OperatingTable",
+        "MedicineCabinet",
+        "WashBasin",
+        "QuarantineCurtain"
+      ],
       "monster_seeds": [
-        { "name": "Ghoul", "weight": 2 },
-        { "name": "Will-o'-Wisp", "weight": 1 },
-        { "name": "Specter", "weight": 1 }
+        {
+          "name": "Ghoul",
+          "weight": 2
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 1
+        },
+        {
+          "name": "Specter",
+          "weight": 1
+        }
       ],
       "notes": [
         "Clinics can become scenario engines: triage lines, missing medicine, quarantine, theft.",
@@ -1038,12 +1556,30 @@
         "spare_parts": 2,
         "weapons": 2
       },
-      "features": ["Shelves", "Counter", "BackStock", "LockedCase", "LoadingDock"],
+      "features": [
+        "Shelves",
+        "Counter",
+        "BackStock",
+        "LockedCase",
+        "LoadingDock"
+      ],
       "monster_seeds": [
-        { "name": "Wererat", "weight": 2 },
-        { "name": "Mimic", "weight": 1 },
-        { "name": "Imp", "weight": 1 },
-        { "name": "Ruster", "weight": 1 }
+        {
+          "name": "Wererat",
+          "weight": 2
+        },
+        {
+          "name": "Mimic",
+          "weight": 1
+        },
+        {
+          "name": "Imp",
+          "weight": 1
+        },
+        {
+          "name": "Ruster",
+          "weight": 1
+        }
       ],
       "notes": [
         "General Stores define scarcity pressure cleanly (food/water/medicine/parts).",
@@ -1076,11 +1612,26 @@
         "spare_parts": 1,
         "weapons": 2
       },
-      "features": ["Corral", "Barn", "FenceLines", "WaterTrough", "Windmill"],
+      "features": [
+        "Corral",
+        "Barn",
+        "FenceLines",
+        "WaterTrough",
+        "Windmill"
+      ],
       "monster_seeds": [
-        { "name": "Dire Wolf", "weight": 3 },
-        { "name": "Lionvulture", "weight": 2 },
-        { "name": "Canyon Goblin", "weight": 1 }
+        {
+          "name": "Dire Wolf",
+          "weight": 3
+        },
+        {
+          "name": "Lionvulture",
+          "weight": 2
+        },
+        {
+          "name": "Canyon Goblin",
+          "weight": 1
+        }
       ],
       "notes": [
         "Great for 'predation pressure' scenarios (wolves, rustlers, hunger).",
@@ -1113,12 +1664,29 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["CrystalVein", "ShardField", "UnstableGround", "HummingStone"],
+      "features": [
+        "CrystalVein",
+        "ShardField",
+        "UnstableGround",
+        "HummingStone"
+      ],
       "monster_seeds": [
-        { "name": "Doom Eye", "weight": 2 },
-        { "name": "Owlbear", "weight": 2 },
-        { "name": "Lionvulture", "weight": 1 },
-        { "name": "Will-o'-Wisp", "weight": 1 }
+        {
+          "name": "Doom Eye",
+          "weight": 2
+        },
+        {
+          "name": "Owlbear",
+          "weight": 2
+        },
+        {
+          "name": "Lionvulture",
+          "weight": 1
+        },
+        {
+          "name": "Will-o'-Wisp",
+          "weight": 1
+        }
       ],
       "notes": [
         "Special rule: thyr is not a flat rating here — it is an actual cache amount.",
@@ -1151,12 +1719,31 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["CyclopeanStone", "BurialMarkers", "RitualFloor", "SealedDoor", "WhisperCorridors", "MonsterExit"],
+      "features": [
+        "CyclopeanStone",
+        "BurialMarkers",
+        "RitualFloor",
+        "SealedDoor",
+        "WhisperCorridors",
+        "MonsterExit"
+      ],
       "monster_seeds": [
-        { "name": "Wraith", "weight": 2 },
-        { "name": "Banshee", "weight": 2 },
-        { "name": "Shadow", "weight": 2 },
-        { "name": "Dust King", "weight": 1 }
+        {
+          "name": "Wraith",
+          "weight": 2
+        },
+        {
+          "name": "Banshee",
+          "weight": 2
+        },
+        {
+          "name": "Shadow",
+          "weight": 2
+        },
+        {
+          "name": "Dust King",
+          "weight": 1
+        }
       ],
       "notes": [
         "This is the canonical source of tzul_silver.",
@@ -1189,17 +1776,38 @@
         "spare_parts": 0,
         "weapons": 0
       },
-      "features": ["Burrows", "BoneTotems", "HiddenPaths", "WatchPerches", "SporePatch"],
+      "features": [
+        "Burrows",
+        "BoneTotems",
+        "HiddenPaths",
+        "WatchPerches",
+        "SporePatch"
+      ],
       "monster_seeds": [
-        { "name": "Ghoul", "weight": 2 },
-        { "name": "Dire Wolf", "weight": 2 },
-        { "name": "Canyon Goblin", "weight": 2 },
-        { "name": "Chimera", "weight": 1 }
+        {
+          "name": "Ghoul",
+          "weight": 2
+        },
+        {
+          "name": "Dire Wolf",
+          "weight": 2
+        },
+        {
+          "name": "Canyon Goblin",
+          "weight": 2
+        },
+        {
+          "name": "Chimera",
+          "weight": 1
+        }
       ],
       "notes": [
         "Population_base is human presence only; this can still be densely inhabited by monsters.",
         "Use this to anchor 'monster diplomacy' or 'territory pushback' scenarios."
       ]
     }
-  ]
+  ],
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

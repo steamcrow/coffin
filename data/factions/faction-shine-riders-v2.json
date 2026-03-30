@@ -1,27 +1,8 @@
 {
-  "faction_id": "shine_riders",
+  "type": "faction",
   "faction": "Shine Riders",
   "version": "2.0",
-  "status": "Complete",
-  "description": "Canyon bandits and silver thieves who infest Coffin Canyon, stripping buildings, salting claims, and stealing whatever isn't nailed down. Shine Riders don't hold ground or fight fair — they grab fast, leave traps behind, and vanish into the choking dust before consequences arrive.",
-  "summary": "The Shine Riders are Coffin Canyon's most opportunistic faction. They win not by destroying their enemies but by taking everything worth having and leaving before the bill comes due. Every unit is built around speed, theft, extraction, or denial — often all four at once.",
-  "lore": "Nobody knows where the Shine Riders started. Some say they were a Silver Rush crew that never stopped running. Others say they're what happens when a boomtown loses its boom and the people stay anyway. What's clear is this: they know every back route in the canyon, they have an arrangement with at least three claims brokers in Diablo, and if something valuable goes missing during a firefight, it was probably them.",
-  "playstyle": "Pure aggression built around Interact actions, not combat. Shine Riders score by extracting Thyr, turning buildings into Silver mines, salting claims with Bootboomers, and getting off the table before the enemy catches them. They field fast cheap units as disposable tools, use Suppression to waste enemy activations, and treat their own retreat as a scoring event. Every decision should be asking: what am I taking, and how do I leave with it?",
-  "strengths": [
-    "Fastest objective interaction in the game",
-    "Suppression denies enemy activations without requiring kills",
-    "Claim markers punish aggressive enemies passively",
-    "Shard Runners and Ash Slingers among the fastest units in the canyon",
-    "Rattle Cart provides Titan-level distraction at non-Titan cost",
-    "Shine Boss aura rewards retreating — unique in the game"
-  ],
-  "weaknesses": [
-    "Extremely fragile — most units are D0 or D1",
-    "No staying power; losing mobility means losing the game",
-    "Dependent on Interact actions, which enemies can contest",
-    "Low damage output in sustained fights",
-    "Rattle Cart's Windmill Drive is unpredictable and occasionally catastrophic"
-  ],
+  "desc_long": "The Shine Riders are Coffin Canyon's most opportunistic faction. They win not by destroying their enemies but by taking everything worth having and leaving before the bill comes due. Every unit is built around speed, theft, extraction, or denial — often all four at once.",
   "canyon_state_relationships": {
     "preferred_states": [
       {
@@ -90,7 +71,6 @@
       "Scenarios that punish unit loss heavily"
     ]
   },
-  "weapons_note": "Unit costs include standard-issue weapons. Weapon names are flavour; their mechanical effects are defined by weapon_properties and abilities in core rules.",
   "faction_features": [
     {
       "name": "Extraction Specialists",
@@ -152,6 +132,31 @@
       ]
     }
   ],
+  "victory_objectives": [
+    {
+      "type": "Thyr Extracted",
+      "vp": "2 VP per crystal",
+      "description": "Score VP for successfully extracting Thyr crystals from the battlefield and exiting via a table edge."
+    },
+    {
+      "type": "Buildings Turned",
+      "vp": "3 VP per building",
+      "description": "Score VP for converting buildings into Silver mines and holding them until end of game."
+    },
+    {
+      "type": "Boss Exit",
+      "vp": "4 VP",
+      "description": "Score VP if your Shine Boss exits the table via a table edge while carrying extracted resources."
+    },
+    {
+      "type": "Hit and Run",
+      "vp": "1 VP per objective contested",
+      "description": "Score VP for contesting objectives and escaping before heavy resistance arrives. Speed over combat."
+    }
+  ],
+  "weapons_note": "Unit costs include standard-issue weapons. Weapon names are flavour; their mechanical effects are defined by weapon_properties and abilities in core rules.",
+  "universal_upgrades_available": true,
+  "universal_upgrades_note": "Shine Riders may purchase Gas Mask and Spare Parts upgrades from core rules where appropriate. Vehicle units (Wagon Gat, Rattle Cart) may also access vehicle repair upgrades.",
   "units": [
     {
       "name": "Glowhands",
@@ -216,7 +221,7 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
           "stat_modifiers": {
             "range": 8
           }
@@ -225,18 +230,22 @@
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "effect": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
           "stat_modifiers": {
             "move": 4
           },
-          "grants_ability": "Mounted"
+          "grants_abilities": [
+            "Mounted"
+          ]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -304,7 +313,7 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
           "stat_modifiers": {
             "range": 8
           }
@@ -313,18 +322,22 @@
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "effect": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
           "stat_modifiers": {
             "move": 4
           },
-          "grants_ability": "Mounted"
+          "grants_abilities": [
+            "Mounted"
+          ]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -393,7 +406,7 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
           "stat_modifiers": {
             "range": 8
           }
@@ -402,18 +415,22 @@
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "effect": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
           "stat_modifiers": {
             "move": 4
           },
-          "grants_ability": "Mounted"
+          "grants_abilities": [
+            "Mounted"
+          ]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -481,7 +498,7 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
           "stat_modifiers": {
             "range": 8
           }
@@ -490,18 +507,22 @@
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "effect": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
           "stat_modifiers": {
             "move": 4
           },
-          "grants_ability": "Mounted"
+          "grants_abilities": [
+            "Mounted"
+          ]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -573,7 +594,7 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
           "stat_modifiers": {
             "range": 8
           }
@@ -582,8 +603,10 @@
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -653,7 +676,7 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
           "stat_modifiers": {
             "range": 8
           }
@@ -662,18 +685,22 @@
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "effect": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
           "stat_modifiers": {
             "move": 4
           },
-          "grants_ability": "Mounted"
+          "grants_abilities": [
+            "Mounted"
+          ]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -742,7 +769,7 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
           "stat_modifiers": {
             "range": 8
           }
@@ -751,7 +778,7 @@
           "name": "Spare Parts",
           "cost": 5,
           "type": "Gear",
-          "effect": "May be repaired by adjacent friendly Specialist. Restore 1 Quality on a successful Repair roll."
+          "desc_short": "May be repaired by adjacent friendly Specialist. Restore 1 Quality on a successful Repair roll."
         }
       ]
     },
@@ -779,8 +806,6 @@
       ],
       "lore": "Nobody hired her for the Thyr magic. She came with the canyon. She seems to find the caches before anyone else does, which makes her useful and unsettling in equal measure.",
       "tactics": "Hex the enemy unit most likely to contest your extraction — -1 Quality is devastating on a Leader or high-Q fighter. Use Stealth to stay alive. Wild Magic Table is a last resort; the results are chaotic but occasionally faction-changing. Limit 0-1 per force.",
-      "unique": true,
-      "max_count": 1,
       "unit_tags": [
         "mystic",
         "hex",
@@ -825,7 +850,7 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
           "stat_modifiers": {
             "range": 8
           }
@@ -834,18 +859,22 @@
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "effect": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
           "stat_modifiers": {
             "move": 4
           },
-          "grants_ability": "Mounted"
+          "grants_abilities": [
+            "Mounted"
+          ]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -916,7 +945,7 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "effect": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
           "stat_modifiers": {
             "range": 8
           }
@@ -925,18 +954,22 @@
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "effect": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
           "stat_modifiers": {
             "move": 4
           },
-          "grants_ability": "Mounted"
+          "grants_abilities": [
+            "Mounted"
+          ]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -955,8 +988,6 @@
         "Hex",
         "Pierce"
       ],
-      "unique": true,
-      "max_count": 1,
       "abilities": [
         "gas_mask",
         "Mounted",
@@ -1014,15 +1045,17 @@
           "name": "Spite Round",
           "cost": 10,
           "type": "Weapon",
-          "effect": "Once per game, fire a Spite Round: the target immediately gains 3 Hex Markers regardless of hit result. The Gun Witch suffers 1 Quality damage after firing it.",
+          "desc_short": "Once per game, fire a Spite Round: the target immediately gains 3 Hex Markers regardless of hit result. The Gun Witch suffers 1 Quality damage after firing it.",
           "stat_modifiers": {}
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -1090,24 +1123,28 @@
           "name": "Spare Horse",
           "cost": 8,
           "type": "Gear",
-          "effect": "Once per game, when this unit would be destroyed, roll 1d6. On 4+, it survives with Q1 instead."
+          "desc_short": "Once per game, when this unit would be destroyed, roll 1d6. On 4+, it survives with Q1 instead."
         },
         {
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "effect": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
+          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
           "stat_modifiers": {
             "move": 4
           },
-          "grants_ability": "Mounted"
+          "grants_abilities": [
+            "Mounted"
+          ]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_ability": "Doomshine Drunk"
+          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
+          "grants_abilities": [
+            "Doomshine Drunk"
+          ]
         }
       ]
     },
@@ -1136,7 +1173,6 @@
       ],
       "lore": "A roaming Trojan wagon — windmill-driven, loud as sin, dressed up like a monster to bait the canyon's horrors. Nobody inside. Nothing to lose. The Shine Riders built it to be feared, chased, and survived by anyone who isn't standing next to it when something wrong happens.",
       "tactics": "Two modes: roaming Monster Bait (keep unanchored, use Windmill Drive to draw monsters and fire away from your real plan) or Sniper Tower (Anchor early, gain +6\" Range, count as Cover). Never use it as a front-line fighter — it is a distraction tool with Titan durability. Windmill Drive is mandatory when unanchored; plan your deployment accordingly.",
-      "unique": false,
       "unit_tags": [
         "titan",
         "monster_bait",
@@ -1181,51 +1217,8 @@
       "optional_upgrades": []
     }
   ],
-  "victory_objectives": [
-    {
-      "type": "Thyr Extracted",
-      "vp": "2 VP per crystal",
-      "description": "Score VP for successfully extracting Thyr crystals from the battlefield and exiting via a table edge."
-    },
-    {
-      "type": "Buildings Turned",
-      "vp": "3 VP per building",
-      "description": "Score VP for converting buildings into Silver mines and holding them until end of game."
-    },
-    {
-      "type": "Boss Exit",
-      "vp": "4 VP",
-      "description": "Score VP if your Shine Boss exits the table via a table edge while carrying extracted resources."
-    },
-    {
-      "type": "Hit and Run",
-      "vp": "1 VP per objective contested",
-      "description": "Score VP for contesting objectives and escaping before heavy resistance arrives. Speed over combat."
-    }
-  ],
-  "tactics": {
-    "overview": "Shine Riders win by speed, denial, and leaving early. They avoid fair fights, focus on Interact actions over damage, and treat retreat as a core tactic rather than a failure. Every turn spent extracting or stealing is a winning turn.",
-    "doctrine": [
-      "Prioritize Interact actions over attacks — extraction beats combat every time.",
-      "Use Rabble units aggressively — Glowhands and Bootboomers are tools, not investments.",
-      "Salt claims and objectives early with Bootboomers to slow or punish enemy advances.",
-      "Engage only long enough to Suppress or delay. Prolonged combat favors your opponents.",
-      "Always maintain an exit route toward a table edge. The Shine Boss aura rewards using it."
-    ],
-    "common_plays": [
-      "Deploy Shard Runners or Glowhands forward on Turn 1 to force enemy responses.",
-      "Use Ash Slingers to Suppress key enemy units and waste their activations before your Interact actions.",
-      "Deploy the Rattle Cart or Wagon Gat to draw attention while extraction teams work elsewhere.",
-      "Abandon objectives once value is secured — VP is scored by leaving, not holding."
-    ],
-    "weaknesses": [
-      "Low durability and poor performance in sustained fights.",
-      "Loss of mobility quickly leads to cascading collapse.",
-      "Key extraction units become helpless if cut off from table edges."
-    ]
-  },
-  "universal_upgrades_available": true,
-  "universal_upgrades_note": "Shine Riders may purchase Gas Mask and Spare Parts upgrades from core rules where appropriate. Vehicle units (Wagon Gat, Rattle Cart) may also access vehicle repair upgrades.",
   "_point_formula_version": "3.0",
-  "_recalculated": "2026-03-08"
+  "_recalculated": "2026-03-08",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

@@ -1,0 +1,204 @@
+{
+  "file": "210_twist_tables.json",
+  "version": "1.0",
+
+  "design_notes": [
+    "One twist per scenario is recommended.",
+    "Twists should recontextualize objectives, not replace them.",
+    "Selection should be weighted by plot_family bias, danger level, escalation cause, and active resources.",
+    "Tags are used for filtering and weighting, not for direct player-facing text."
+  ],
+
+  "twists": [
+
+    {
+      "id": "resource_is_a_decoy",
+      "name": "The Resource Is a Decoy",
+      "description": "The objective was never the real prize. Its purpose was misdirection.",
+      "tags": [
+        "resource",
+        "misdirection",
+        "human_overreach",
+        "heist_adjacent"
+      ],
+      "danger_floor": 1,
+      "danger_ceiling": 4,
+      "example_outcomes": [
+        "The cargo is inert, spoiled, fake, or symbolic.",
+        "Taking it triggers pursuit elsewhere.",
+        "Destroying it completes its true purpose."
+      ]
+    },
+
+    {
+      "id": "resource_has_hidden_cost",
+      "name": "The Resource Has a Hidden Cost",
+      "description": "Using or extracting the resource causes an unseen consequence.",
+      "tags": [
+        "resource",
+        "corruption",
+        "occult",
+        "long_term_consequence"
+      ],
+      "danger_floor": 2,
+      "danger_ceiling": 6,
+      "example_outcomes": [
+        "Extraction damages the land.",
+        "Using it attracts monsters.",
+        "It shortens the lifespan of users or tools."
+      ]
+    },
+
+    {
+      "id": "monster_was_holding_worse_threat_at_bay",
+      "name": "The Monster Was Holding Something Back",
+      "description": "The apparent threat was containing something far worse.",
+      "tags": [
+        "monster",
+        "revelation",
+        "containment",
+        "ecological_balance"
+      ],
+      "danger_floor": 2,
+      "danger_ceiling": 6,
+      "example_outcomes": [
+        "Killing the monster releases a greater horror.",
+        "The monster was territorial for a reason.",
+        "Removing it destabilizes the region."
+      ]
+    },
+
+    {
+      "id": "objective_reveals_hidden_nature",
+      "name": "The Objective Is Not What It Appears To Be",
+      "description": "The objective changes meaning once interacted with.",
+      "tags": [
+        "objective",
+        "revelation",
+        "occult",
+        "twist_of_identity"
+      ],
+      "danger_floor": 1,
+      "danger_ceiling": 5,
+      "example_outcomes": [
+        "The device is a key, not a weapon.",
+        "The captive is a focus, not a victim.",
+        "The structure is alive or aware."
+      ]
+    },
+
+    {
+      "id": "ownership_is_symbolic_not_material",
+      "name": "Ownership Is Symbolic",
+      "description": "Control matters more than possession or destruction.",
+      "tags": [
+        "ownership",
+        "belief",
+        "territorial",
+        "social_pressure"
+      ],
+      "danger_floor": 3,
+      "danger_ceiling": 6,
+      "example_outcomes": [
+        "Holding the site confers influence elsewhere.",
+        "Destroying it empowers a rival belief.",
+        "Walking away forfeits future claims."
+      ]
+    },
+
+    {
+      "id": "location_awakens_or_rejects_control",
+      "name": "The Location Awakens or Rejects Control",
+      "description": "The land itself responds to events.",
+      "tags": [
+        "environment",
+        "occult",
+        "escalation",
+        "territorial"
+      ],
+      "danger_floor": 4,
+      "danger_ceiling": 6,
+      "example_outcomes": [
+        "The ground shifts, seals, or opens.",
+        "Structures collapse or realign.",
+        "Movement and visibility change permanently."
+      ]
+    },
+
+    {
+      "id": "victory_conditions_invert",
+      "name": "Victory Conditions Invert",
+      "description": "Winning now requires doing the opposite of the original goal.",
+      "tags": [
+        "inversion",
+        "moral_pressure",
+        "desperation"
+      ],
+      "danger_floor": 3,
+      "danger_ceiling": 6,
+      "example_outcomes": [
+        "Escape matters more than extraction.",
+        "Preservation outweighs control.",
+        "Destroying the objective prevents catastrophe."
+      ]
+    },
+
+    {
+      "id": "unexpected_third_party_intervenes",
+      "name": "An Unexpected Third Party Intervenes",
+      "description": "A new force arrives with its own agenda.",
+      "tags": [
+        "faction",
+        "intervention",
+        "escalation",
+        "pressure"
+      ],
+      "danger_floor": 2,
+      "danger_ceiling": 6,
+      "example_outcomes": [
+        "A rival faction arrives mid-conflict.",
+        "Authority forces intervene.",
+        "A monster migrates into the area."
+      ]
+    },
+
+    {
+      "id": "success_creates_a_permanent_scar",
+      "name": "Success Leaves a Scar",
+      "description": "Even victory permanently alters the canyon.",
+      "tags": [
+        "aftermath",
+        "environment",
+        "legacy",
+        "dangerous_success"
+      ],
+      "danger_floor": 5,
+      "danger_ceiling": 6,
+      "example_outcomes": [
+        "The site becomes more dangerous.",
+        "A new landmark is created.",
+        "Future encounters escalate faster."
+      ]
+    },
+
+    {
+      "id": "belief_is_the_real_resource",
+      "name": "Belief Was the Real Resource",
+      "description": "Faith, fear, or legend was the true objective.",
+      "tags": [
+        "belief",
+        "cult",
+        "social_pressure",
+        "occult"
+      ],
+      "danger_floor": 2,
+      "danger_ceiling": 6,
+      "example_outcomes": [
+        "Public perception shifts.",
+        "A cult gains or loses power.",
+        "A myth becomes true."
+      ]
+    }
+
+  ]
+}

@@ -1,0 +1,901 @@
+{
+  "file": "160_objective_vault.json",
+  "version": "1.0",
+  "references": [
+    "200_plot_families.json",
+    "150_location_types.json"
+  ],
+  "description": "Complete objective rules for Coffin Canyon scenario generation",
+
+  "objective_categories": [
+    {
+      "category_id": "salvage_extraction",
+      "name": "Salvage & Extraction",
+      "objectives": [
+        {
+          "objective_id": "wrecked_engine",
+          "name": "Salvage Wrecked Engine",
+          "description": "Extract mechanical components from wrecked machinery",
+          "setup": {
+            "markers": 1,
+            "marker_type": "wrecked_engine",
+            "components": "danger_rating"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "success": "Extract 1 component",
+            "failure": "Take 1 Coffin Cough damage, no component"
+          },
+          "vp_value": 3,
+          "vp_per": "component",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "scattered_crates",
+          "name": "Recover Supply Crates",
+          "description": "Collect supply crates scattered across the battlefield",
+          "setup": {
+            "markers": "danger_rating + 1",
+            "marker_type": "supply_crate",
+            "spacing": "minimum 12 inches apart"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": false,
+            "success": "Secure crate"
+          },
+          "vp_value": 2,
+          "vp_per": "crate",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "derailed_cars",
+          "name": "Search Derailed Cars",
+          "description": "Search train car wreckage for valuable cargo",
+          "setup": {
+            "markers": "danger_rating",
+            "marker_type": "derailed_car"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "success": "Discover cargo worth 2 VP",
+            "failure": "Car is empty or looted"
+          },
+          "vp_value": 2,
+          "vp_per": "car_searched",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "thyr_cache",
+          "name": "Extract Thyr Crystals",
+          "description": "Recover volatile Thyr crystals from cache",
+          "setup": {
+            "markers": 1,
+            "marker_type": "thyr_cache",
+            "crystals": "Math.max(2, Math.floor(danger_rating / 2))"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "test_modifier": "-1 die (Thyr exposure)",
+            "success": "Extract 1 crystal",
+            "failure": "Take 2 damage from Thyr burn"
+          },
+          "vp_value": 4,
+          "vp_per": "crystal",
+          "danger_scaling": true,
+          "hazard_level": "high"
+        },
+        {
+          "objective_id": "artifact",
+          "name": "Recover Ancient Artifact",
+          "description": "Secure mysterious pre-Storm artifact",
+          "setup": {
+            "markers": 1,
+            "marker_type": "artifact",
+            "placement": "high_risk_location"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 2,
+            "can_interrupt": true,
+            "carrying_penalty": "half_speed",
+            "drop_on_elimination": true
+          },
+          "vp_value": 8,
+          "vp_per": "artifact_extracted",
+          "extraction_required": true
+        },
+        {
+          "objective_id": "stored_supplies",
+          "name": "Raid Supply Depot",
+          "description": "Extract stockpiled resources from depot",
+          "setup": {
+            "markers": 1,
+            "marker_type": "supply_depot",
+            "supplies": "danger_rating + 1"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": false,
+            "success": "Extract 1 supply unit"
+          },
+          "vp_value": 2,
+          "vp_per": "supply_unit",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "fouled_resource",
+          "name": "Purify Contaminated Cache",
+          "description": "Recover and purify fouled supplies",
+          "setup": {
+            "markers": 1,
+            "marker_type": "fouled_cache",
+            "resources": "danger_rating"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "success": "Purify 1 resource unit",
+            "failure": "Take 1 damage from contamination"
+          },
+          "vp_value": 3,
+          "vp_per": "purified_unit",
+          "danger_scaling": true
+        }
+      ]
+    },
+
+    {
+      "category_id": "escort_transport",
+      "name": "Escort & Transport",
+      "objectives": [
+        {
+          "objective_id": "cargo_vehicle",
+          "name": "Escort Cargo Vehicle",
+          "description": "Move cargo vehicle across dangerous terrain",
+          "setup": {
+            "markers": 1,
+            "marker_type": "cargo_vehicle",
+            "start_position": "board_edge",
+            "destination": "opposite_board_edge",
+            "distance": 24
+          },
+          "movement": {
+            "speed": 6,
+            "activation_required": true,
+            "base_contact": true
+          },
+          "durability": {
+            "quality": "4+",
+            "defense": 2,
+            "destruction_fails_objective": true
+          },
+          "vp_value": 1,
+          "vp_per": "6_inches_traveled",
+          "bonus_vp": {
+            "condition": "arrives_intact",
+            "value": 5
+          }
+        },
+        {
+          "objective_id": "pack_animals",
+          "name": "Capture Pack Animals",
+          "description": "Secure pack animals without killing them",
+          "setup": {
+            "markers": "Math.max(2, Math.floor(danger_rating / 2))",
+            "marker_type": "pack_animal"
+          },
+          "behavior": {
+            "panic_trigger": "shot_within_6_inches",
+            "panic_test": "quality",
+            "panic_movement": "2d6_random_direction"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": false,
+            "condition": "animal_not_panicked"
+          },
+          "vp_value": 3,
+          "vp_per": "animal_extracted",
+          "extraction_required": true,
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "protect_informant",
+          "name": "Protect the Informant",
+          "description": "Keep informant alive until extraction",
+          "setup": {
+            "markers": 1,
+            "marker_type": "informant",
+            "placement": "board_center"
+          },
+          "informant_stats": {
+            "quality": "5+",
+            "defense": 1,
+            "hp": 5,
+            "movement": 4,
+            "behavior": "moves_toward_nearest_friendly"
+          },
+          "objective": {
+            "survival_rounds": 3,
+            "extraction_round": 3
+          },
+          "vp_value": 3,
+          "vp_per": "round_survived"
+        },
+        {
+          "objective_id": "escort_civilians",
+          "name": "Escort Civilians",
+          "description": "Move civilians across board without casualties",
+          "setup": {
+            "markers": "Math.max(2, danger_rating - 1)",
+            "marker_type": "civilian",
+            "placement": "risk_locations"
+          },
+          "movement": {
+            "speed": "half_speed",
+            "requires_escort": true
+          },
+          "fragility": {
+            "any_damage_eliminates": true,
+            "eliminated_gives_no_vp": true
+          },
+          "vp_value": 3,
+          "vp_per": "civilian_extracted_unharmed",
+          "extraction_required": true,
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "stop_the_train",
+          "name": "Stop the Runaway Train",
+          "description": "Reach and halt runaway engine before disaster",
+          "setup": {
+            "markers": 1,
+            "marker_type": "train_engine",
+            "start_position": "board_edge",
+            "destination": "opposite_board_edge",
+            "distance": 24
+          },
+          "movement": {
+            "automatic": true,
+            "speed": 6,
+            "per_round": true
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "base_contact_required": true,
+            "success": "Train stopped"
+          },
+          "failure_condition": {
+            "train_reaches_edge": true,
+            "penalty": "all_factions_lose_10_vp"
+          },
+          "vp_value": 1,
+          "vp_per": "6_inches_closed"
+        }
+      ]
+    },
+
+    {
+      "category_id": "territory_control",
+      "name": "Territory & Control",
+      "objectives": [
+        {
+          "objective_id": "land_marker",
+          "name": "Establish Territory",
+          "description": "Plant markers and hold territorial claims",
+          "setup": {
+            "markers": 3,
+            "marker_type": "territorial_marker",
+            "distribution": "across_board"
+          },
+          "control": {
+            "requirement": "more_models_within_3_inches",
+            "contested": "equal_models_no_control"
+          },
+          "vp_value": 2,
+          "vp_per": "round_controlled",
+          "scored_at": "end_of_round"
+        },
+        {
+          "objective_id": "command_structure",
+          "name": "Seize Command Post",
+          "description": "Control command structure to coordinate forces",
+          "setup": {
+            "markers": 1,
+            "marker_type": "command_post",
+            "placement": "strategic_position"
+          },
+          "control": {
+            "requirement": "model_inside_and_no_enemies_within_6_inches"
+          },
+          "vp_value": 3,
+          "vp_per": "round_controlled"
+        },
+        {
+          "objective_id": "fortified_position",
+          "name": "Hold Fortified Position",
+          "description": "Maintain control of fortification",
+          "setup": {
+            "markers": 1,
+            "marker_type": "fortification",
+            "defense_bonus": "+1_defense_inside"
+          },
+          "control": {
+            "requirement": "more_models_inside"
+          },
+          "vp_value": 3,
+          "vp_per": "round_controlled"
+        },
+        {
+          "objective_id": "barricades",
+          "name": "Control Chokepoint",
+          "description": "Hold barricades to restrict enemy movement",
+          "setup": {
+            "markers": 1,
+            "marker_type": "barricade",
+            "blocks_movement": true,
+            "provides_cover": true
+          },
+          "control": {
+            "requirement": "models_within_3_inches_and_no_enemies_within_6_inches"
+          },
+          "vp_value": 2,
+          "vp_per": "round_controlled"
+        },
+        {
+          "objective_id": "last_stand",
+          "name": "Hold the Line",
+          "description": "Survive overwhelming pressure",
+          "setup": {
+            "markers": 1,
+            "marker_type": "defensive_position",
+            "radius": 6,
+            "all_models_start_inside": true
+          },
+          "enemy_pressure": {
+            "spawn_per_round": "danger_rating",
+            "spawn_location": "board_edges"
+          },
+          "vp_value": 3,
+          "vp_per": "round_survived_with_models_inside",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "secure_shelter",
+          "name": "Secure Shelter",
+          "description": "Barricade and defend safe location",
+          "setup": {
+            "markers": 1,
+            "marker_type": "shelter",
+            "barricade_points_required": "danger_rating"
+          },
+          "fortification": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "adds": "1_barricade_point"
+          },
+          "defense_bonus": {
+            "when_fully_fortified": "+2_defense_inside"
+          },
+          "vp_value": 3,
+          "vp_per": "round_fully_fortified",
+          "danger_scaling": true
+        }
+      ]
+    },
+
+    {
+      "category_id": "ritual_mystical",
+      "name": "Ritual & Mystical",
+      "objectives": [
+        {
+          "objective_id": "ritual_components",
+          "name": "Gather Ritual Components",
+          "description": "Collect mystical components",
+          "setup": {
+            "markers": "danger_rating",
+            "marker_type": "ritual_component",
+            "distribution": "scattered"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": false
+          },
+          "vp_value": 2,
+          "vp_per": "component",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "ritual_site",
+          "name": "Complete the Ritual",
+          "description": "Perform ritual actions at sacred site",
+          "setup": {
+            "markers": 1,
+            "marker_type": "ritual_site",
+            "diameter": 6
+          },
+          "interaction": {
+            "action_type": "full_activation",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "success": "1 ritual action completed",
+            "failure": "Action wasted"
+          },
+          "completion": {
+            "actions_required": "danger_rating"
+          },
+          "vp_value": 4,
+          "vp_per": "ritual_action",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "ritual_circle",
+          "name": "Empower Ritual Circle",
+          "description": "Channel power through ritual circle",
+          "setup": {
+            "markers": 1,
+            "marker_type": "ritual_circle",
+            "diameter": 6,
+            "placement": "board_center"
+          },
+          "interaction": {
+            "action_type": "full_activation",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "success": "Add 1 ritual point",
+            "failure": "Action wasted"
+          },
+          "escalation": {
+            "starts_round": 3,
+            "effect": "all_models_within_6_inches_take_1_damage",
+            "timing": "start_of_round"
+          },
+          "completion": {
+            "points_required": "danger_rating"
+          },
+          "vp_value": 4,
+          "vp_per": "ritual_point",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "tainted_ground",
+          "name": "Cleanse Tainted Ground",
+          "description": "Purify corrupted terrain",
+          "setup": {
+            "markers": "danger_rating - 1",
+            "marker_type": "tainted_ground",
+            "diameter": 3,
+            "corruption_tokens_per_marker": "danger_rating - 1",
+            "minimum_tokens": 1
+          },
+          "interaction": {
+            "action_type": "full_activation",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "success": "Remove 1 corruption token",
+            "failure": "Take 1 damage from corruption"
+          },
+          "corruption_spread": {
+            "timing": "start_of_round",
+            "effect": "add_1_token_to_each_marker",
+            "spawn_threshold": 5,
+            "spawn_creature": "corruption_creature"
+          },
+          "vp_value": 4,
+          "vp_per": "fully_cleansed_marker",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "sacrificial_focus",
+          "name": "Destroy Dark Altar",
+          "description": "Eliminate sacrificial altar",
+          "setup": {
+            "markers": 1,
+            "marker_type": "dark_altar",
+            "placement": "defended_location"
+          },
+          "altar_stats": {
+            "quality": "5+",
+            "defense": 3,
+            "hp": 10,
+            "attack_as_structure": true
+          },
+          "corruption_effect": {
+            "timing": "start_of_round",
+            "condition": "altar_not_destroyed",
+            "spawn": "1_minor_corruption_creature"
+          },
+          "vp_value": 8,
+          "vp_per": "altar_destroyed"
+        },
+        {
+          "objective_id": "captive_entity",
+          "name": "Free the Captive",
+          "description": "Rescue or capture mysterious entity",
+          "setup": {
+            "markers": 1,
+            "marker_type": "captive_entity",
+            "placement": "defended_location"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "success": "Free captive"
+          },
+          "escort": {
+            "speed": "half_speed",
+            "stops_if_abandoned": true
+          },
+          "vp_value": 6,
+          "vp_per": "captive_extracted",
+          "extraction_required": true
+        }
+      ]
+    },
+
+    {
+      "category_id": "rescue_operations",
+      "name": "Rescue Operations",
+      "objectives": [
+        {
+          "objective_id": "rescue_hostages",
+          "name": "Rescue the Hostages",
+          "description": "Free captives and escort to safety",
+          "setup": {
+            "markers": "Math.max(2, Math.floor(danger_rating / 2))",
+            "marker_type": "hostage",
+            "placement": "enemy_controlled_locations"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "success": "Free hostage"
+          },
+          "escort": {
+            "speed": "half_speed",
+            "panic_if_unescorted": {
+              "duration": "1_full_round",
+              "effect": "stops_moving"
+            }
+          },
+          "vp_value": 4,
+          "vp_per": "hostage_extracted",
+          "extraction_required": true,
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "downed_ally",
+          "name": "Recover Fallen Ally",
+          "description": "Stabilize and extract downed figure",
+          "setup": {
+            "markers": 1,
+            "marker_type": "downed_ally",
+            "placement": "exposed_position"
+          },
+          "interaction": {
+            "action_type": "full_activation",
+            "action_cost": 1,
+            "success": "Stabilize ally"
+          },
+          "carrying": {
+            "speed": "half_speed",
+            "cannot_attack": true
+          },
+          "vp_value": 6,
+          "vp_per": "ally_extracted",
+          "extraction_required": true
+        },
+        {
+          "objective_id": "prison_break",
+          "name": "Stage a Prison Break",
+          "description": "Free prisoners without triggering alarm",
+          "setup": {
+            "markers": "danger_rating",
+            "marker_type": "prison_cell",
+            "alarm_triggers": "per_cell"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "success": "Cell opens quietly",
+            "failure": "Alarm triggered, spawn 2 guard units"
+          },
+          "vp_value": 3,
+          "vp_per": "cell_opened",
+          "danger_scaling": true
+        }
+      ]
+    },
+
+    {
+      "category_id": "sabotage_destruction",
+      "name": "Sabotage & Destruction",
+      "objectives": [
+        {
+          "objective_id": "sabotage_machinery",
+          "name": "Sabotage the Machinery",
+          "description": "Disable critical systems",
+          "setup": {
+            "markers": "danger_rating",
+            "marker_type": "machinery"
+          },
+          "machinery_stats": {
+            "quality": "4+",
+            "defense": 2,
+            "hp": 5
+          },
+          "interaction": {
+            "method_1": {
+              "type": "attack",
+              "description": "Attack as normal structure"
+            },
+            "method_2": {
+              "type": "sabotage",
+              "action_cost": 1,
+              "action_type": "full_activation",
+              "base_contact": true,
+              "result": "Auto-destroys at end of round"
+            }
+          },
+          "vp_value": 3,
+          "vp_per": "machinery_destroyed",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "blow_the_bridge",
+          "name": "Destroy the Crossing",
+          "description": "Plant charges to deny pursuit",
+          "setup": {
+            "markers": 1,
+            "marker_type": "bridge",
+            "placement": "strategic_crossing"
+          },
+          "bridge_stats": {
+            "quality": "3+",
+            "defense": 4,
+            "hp": 15
+          },
+          "demolition": {
+            "action_type": "full_activation",
+            "action_cost": 2,
+            "can_interrupt": true,
+            "base_contact": true,
+            "detonation_timing": "end_of_round",
+            "effect": "Bridge destroyed, all models on bridge take 3 damage"
+          },
+          "vp_value": 7,
+          "vp_per": "bridge_destroyed"
+        },
+        {
+          "objective_id": "cut_power",
+          "name": "Cut the Power",
+          "description": "Disable generators to spread darkness",
+          "setup": {
+            "markers": "Math.max(2, Math.floor(danger_rating / 2))",
+            "marker_type": "generator"
+          },
+          "generator_stats": {
+            "quality": "4+",
+            "defense": 2,
+            "hp": 8
+          },
+          "effect": {
+            "per_disabled_generator": "reduce_visibility_6_inches_all_factions"
+          },
+          "vp_value": 4,
+          "vp_per": "generator_disabled",
+          "danger_scaling": true
+        }
+      ]
+    },
+
+    {
+      "category_id": "investigation_intelligence",
+      "name": "Investigation & Intelligence",
+      "objectives": [
+        {
+          "objective_id": "gather_intel",
+          "name": "Gather Intelligence",
+          "description": "Search for and collect clues",
+          "setup": {
+            "markers": "danger_rating + 1",
+            "marker_type": "clue",
+            "hidden": true
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "test_required": true,
+            "test_type": "quality",
+            "success": "Discover clue",
+            "failure": "Clue location revealed to all factions but not collected"
+          },
+          "vp_value": 2,
+          "vp_per": "clue_gathered",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "expose_conspiracy",
+          "name": "Expose the Conspiracy",
+          "description": "Collect proof and survive to reveal it",
+          "setup": {
+            "markers": 3,
+            "marker_type": "evidence",
+            "placement": "heavily_defended_locations"
+          },
+          "interaction": {
+            "action_type": "full_activation",
+            "action_cost": 1,
+            "success": "Secure evidence"
+          },
+          "delivery": {
+            "required": true,
+            "destination": "board_edge"
+          },
+          "vp_value": 5,
+          "vp_per": "evidence_delivered"
+        }
+      ]
+    },
+
+    {
+      "category_id": "time_pressure",
+      "name": "Time Pressure",
+      "objectives": [
+        {
+          "objective_id": "race_the_clock",
+          "name": "Race Against Time",
+          "description": "Complete objectives before deadline",
+          "setup": {
+            "markers": 3,
+            "marker_type": "objective_point",
+            "distribution": "across_board"
+          },
+          "time_limit": {
+            "completion_deadline": "end_of_round_4",
+            "failure_penalty": "all_factions_lose_5_vp"
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "per_objective": true
+          },
+          "vp_value": 3,
+          "vp_per": "objective_completed_on_time"
+        },
+        {
+          "objective_id": "collapsing_route",
+          "name": "Cross Unstable Passage",
+          "description": "Traverse route before total collapse",
+          "setup": {
+            "route_length": 24,
+            "collapse_zones": "danger_rating",
+            "zone_width": 4
+          },
+          "movement": {
+            "crossing_collapse_zone": {
+              "test_required": true,
+              "test_type": "quality",
+              "success": "Cross safely",
+              "failure": "Take 2 damage and stop movement"
+            }
+          },
+          "deterioration": {
+            "timing": "each_round",
+            "effect": "1_additional_collapse_zone_appears_randomly"
+          },
+          "vp_value": 1,
+          "vp_per": "6_inches_crossed",
+          "danger_scaling": true
+        },
+        {
+          "objective_id": "unstable_structure",
+          "name": "Salvage Before Collapse",
+          "description": "Extract materials before structure fails",
+          "setup": {
+            "markers": 1,
+            "marker_type": "unstable_structure",
+            "collapse_countdown": 6
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "location": "inside_structure"
+          },
+          "collapse": {
+            "begins_round": 4,
+            "damage_per_round": 1,
+            "applies_to": "all_models_inside"
+          },
+          "vp_value": 3,
+          "vp_per": "salvage_action_before_collapse"
+        },
+        {
+          "objective_id": "evacuation_point",
+          "name": "Reach Evacuation Zone",
+          "description": "Get forces to safety",
+          "setup": {
+            "markers": 1,
+            "marker_type": "evacuation_zone",
+            "placement": "board_edge"
+          },
+          "evacuation": {
+            "reaching_zone": "model_removed_from_play",
+            "counted_as": "evacuated"
+          },
+          "vp_value": 2,
+          "vp_per": "model_evacuated"
+        }
+      ]
+    },
+
+    {
+      "category_id": "deception_misdirection",
+      "name": "Deception & Misdirection",
+      "objectives": [
+        {
+          "objective_id": "decoy_operation",
+          "name": "Run a Decoy Operation",
+          "description": "Draw enemy forces away from real objective",
+          "setup": {
+            "markers": 0,
+            "special": "This is a distraction objective"
+          },
+          "effect": {
+            "per_round": "Force one enemy unit to move toward decoy position instead of normal action"
+          },
+          "vp_value": 2,
+          "vp_per": "round_successfully_distracts_enemies"
+        },
+        {
+          "objective_id": "false_artifact",
+          "name": "Plant the False Artifact",
+          "description": "Swap real prize with convincing fake",
+          "setup": {
+            "markers": 1,
+            "marker_type": "fake_artifact",
+            "carried_by_faction": true,
+            "appears_identical": true
+          },
+          "interaction": {
+            "action_type": "interact",
+            "action_cost": 1,
+            "success": "Plant fake at target location"
+          },
+          "deception": {
+            "detection": {
+              "test_required": true,
+              "test_type": "quality",
+              "on_extraction_attempt": true,
+              "reveals_fake": true
+            }
+          },
+          "vp_value": 6,
+          "vp_condition": "enemy_faction_wastes_activation_extracting_fake"
+        }
+      ]
+    }
+  ]
+}

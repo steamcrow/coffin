@@ -12,6 +12,7 @@
   "locations": [
     {
       "id": "diablo",
+      "desc_long": "I’ve seen Diablo squatting at the south end of the canyon like a festering wound—smoke, refuse, brothels, Thyr dealers, death-cult preachers and all the rest of it choking the streets—kept alive only because every outlaw and Shine Rider in the canyon needs one place where the law won’t reach, though plenty of fools have bled out trying to claim it.",
       "name": "Diablo",
       "emoji": "💀",
       "type_ref": "diablo_booming_hub",
@@ -57,7 +58,6 @@
           "weight": 1
         }
       ],
-      "description": "I’ve seen Diablo squatting at the south end of the canyon like a festering wound—smoke, refuse, brothels, Thyr dealers, death-cult preachers and all the rest of it choking the streets—kept alive only because every outlaw and Shine Rider in the canyon needs one place where the law won’t reach, though plenty of fools have bled out trying to claim it.",
       "atmosphere": "Noise, commerce, and a crook under every counter",
       "coffinCoughChance": 0.15,
       "terrain_flavor": [
@@ -83,6 +83,7 @@
     },
     {
       "id": "camp-coffin",
+      "desc_long": "Camp Coffin sits where some forgotten Tejas town used to be, the Monster Rangers patching together old adobe walls, tents, and watch posts into a stubborn little stronghold where they treat monsters more like neighbors than quarry, though the place is always short on coin and long on trouble, with folks whispering that Thyr acts strange inside the walls, that an old monster gives the Rangers quiet counsel, and that Monsterology’s tried three times to wipe the camp off the canyon and failed every single time.",
       "name": "Camp Coffin",
       "emoji": "🦅",
       "type_ref": "camp_coffin_hq",
@@ -118,7 +119,6 @@
           "weight": 2
         }
       ],
-      "description": "Camp Coffin sits where some forgotten Tejas town used to be, the Monster Rangers patching together old adobe walls, tents, and watch posts into a stubborn little stronghold where they treat monsters more like neighbors than quarry, though the place is always short on coin and long on trouble, with folks whispering that Thyr acts strange inside the walls, that an old monster gives the Rangers quiet counsel, and that Monsterology’s tried three times to wipe the camp off the canyon and failed every single time.",
       "atmosphere": "The one place where everyone watches the same horizon",
       "coffinCoughChance": 0.1,
       "terrain_flavor": [
@@ -144,6 +144,7 @@
     },
     {
       "id": "fort-plunder",
+      "desc_long": "Liberty Corps holds this fort with force and procedure. Every brick is policy. Every bullet is filed.",
       "name": "Fort Plunder",
       "emoji": "🏰",
       "type_ref": "liberty_corps_fortress",
@@ -179,7 +180,6 @@
           "weight": 1
         }
       ],
-      "description": "Liberty Corps holds this fort with force and procedure. Every brick is policy. Every bullet is filed.",
       "atmosphere": "Authority enforced at gunpoint",
       "coffinCoughChance": 0.12,
       "terrain_flavor": [
@@ -205,6 +205,7 @@
     },
     {
       "id": "fortune",
+      "desc_long": "Fortune was richer once. The veins are thinning and everyone knows it, but nobody will say it first.",
       "name": "Fortune",
       "emoji": "💰",
       "type_ref": "boomtown_mesa",
@@ -246,7 +247,6 @@
           "weight": 1
         }
       ],
-      "description": "Fortune was richer once. The veins are thinning and everyone knows it, but nobody will say it first.",
       "atmosphere": "Desperation dressed as optimism",
       "coffinCoughChance": 0.22,
       "terrain_flavor": [
@@ -272,6 +272,7 @@
     },
     {
       "id": "river-city",
+      "desc_long": "Where the river runs, trade follows. River City is the biggest market in the canyon and the most dangerous fish market in the world.",
       "name": "River City",
       "emoji": "🌊",
       "type_ref": "boomtown_riverside",
@@ -315,7 +316,6 @@
           "weight": 1
         }
       ],
-      "description": "Where the river runs, trade follows. River City is the biggest market in the canyon and the most dangerous fish market in the world.",
       "atmosphere": "Commerce and river rot in equal measure",
       "coffinCoughChance": 0.14,
       "terrain_flavor": [
@@ -341,6 +341,7 @@
     },
     {
       "id": "bayou-city",
+      "desc_long": "Bayou City stands on crooked stilts over black swamp water where the food’s worth the journey, the rum’s stronger than good sense, and the Voodoo women trade in charms, curses, and quiet talk with the dead—though if you ask me, a man’s just as likely to lose his purse to a gambler or his leg to one of those swamp crocodiles drifting under the boards.",
       "name": "Bayou City",
       "emoji": "🐊",
       "type_ref": "boomtown_riverside",
@@ -379,7 +380,6 @@
           "weight": 2
         }
       ],
-      "description": "Bayou City stands on crooked stilts over black swamp water where the food’s worth the journey, the rum’s stronger than good sense, and the Voodoo women trade in charms, curses, and quiet talk with the dead—though if you ask me, a man’s just as likely to lose his purse to a gambler or his leg to one of those swamp crocodiles drifting under the boards.",
       "atmosphere": "Damp, loud, and very well-armed",
       "coffinCoughChance": 0.17,
       "terrain_flavor": [
@@ -405,6 +405,7 @@
     },
     {
       "id": "cowtown",
+      "desc_long": "The canyon's largest working cattle town. The herds are everything here. Losing cattle is losing the town.",
       "name": "Cowtown",
       "emoji": "🐄",
       "type_ref": "boomtown_riverbase",
@@ -444,7 +445,6 @@
           "weight": 1
         }
       ],
-      "description": "The canyon's largest working cattle town. The herds are everything here. Losing cattle is losing the town.",
       "atmosphere": "Dust, dung, and the sound of men who live and die by livestock",
       "coffinCoughChance": 0.13,
       "terrain_flavor": [
@@ -470,6 +470,7 @@
     },
     {
       "id": "santos-grin",
+      "desc_long": "A trade town that runs on money and secrets. Santos Grin smiles because it knows something you don't.",
       "name": "Santos Grin",
       "emoji": "🃏",
       "type_ref": "boomtown_riverbase",
@@ -508,7 +509,6 @@
           "weight": 1
         }
       ],
-      "description": "A trade town that runs on money and secrets. Santos Grin smiles because it knows something you don't.",
       "atmosphere": "The smell of money and the sound of dice",
       "coffinCoughChance": 0.14,
       "terrain_flavor": [
@@ -534,6 +534,7 @@
     },
     {
       "id": "yults-arch",
+      "desc_long": "A strange stone arch where the outlaw Yult is believed to have hung 100 men.",
       "name": "Yult's Arch",
       "emoji": "",
       "type_ref": "landmark",
@@ -572,7 +573,6 @@
           "weight": 1
         }
       ],
-      "description": "A strange stone arch where the outlaw Yult is believed to have hung 100 men.",
       "atmosphere": "It smells like death.",
       "coffinCoughChance": 0.14,
       "terrain_flavor": [
@@ -598,6 +598,7 @@
     },
     {
       "id": "ratsville",
+      "desc_long": "The place you end up when everywhere else won't have you. Ratsville doesn't ask questions and doesn't remember answers.",
       "name": "Ratsville",
       "emoji": "🐀",
       "type_ref": "boomtown_dryriver",
@@ -636,7 +637,6 @@
           "weight": 1
         }
       ],
-      "description": "The place you end up when everywhere else won't have you. Ratsville doesn't ask questions and doesn't remember answers.",
       "atmosphere": "Desperation, rotgut, and the sound of rats",
       "coffinCoughChance": 0.25,
       "terrain_flavor": [
@@ -662,6 +662,7 @@
     },
     {
       "id": "quinine-jimmy",
+      "desc_long": "A frontier repair stop. Nothing glamorous. Everything necessary. They fix machines here and nobody asks where they came from.",
       "name": "Quinine Jimmy",
       "emoji": "🔧",
       "type_ref": "boomtown_dryriver",
@@ -704,7 +705,6 @@
           "weight": 2
         }
       ],
-      "description": "A frontier repair stop. Nothing glamorous. Everything necessary. They fix machines here and nobody asks where they came from.",
       "atmosphere": "Grease, rust, and the pride of keeping things running",
       "coffinCoughChance": 0.18,
       "terrain_flavor": [
@@ -730,6 +730,7 @@
     },
     {
       "id": "dustbuck",
+      "desc_long": "Dustbuck is dying in real time. The well is foul, the silver is gone, and whoever is left is waiting for permission to leave.",
       "name": "Dustbuck",
       "emoji": "💨",
       "type_ref": "boomtown_dryriver",
@@ -768,7 +769,6 @@
           "weight": 2
         }
       ],
-      "description": "Dustbuck is dying in real time. The well is foul, the silver is gone, and whoever is left is waiting for permission to leave.",
       "atmosphere": "Hot, silent, and slowly being reclaimed by the canyon",
       "coffinCoughChance": 0.26,
       "terrain_flavor": [
@@ -794,6 +794,7 @@
     },
     {
       "id": "fool-boot",
+      "desc_long": "Nobody plans to stop in Fool Boot. They stop anyway. Something about the town makes it hard to leave before sunrise.",
       "name": "Fool Boot",
       "emoji": "👢",
       "type_ref": "boomtown_spire_stilts",
@@ -828,7 +829,6 @@
           "weight": 1
         }
       ],
-      "description": "Nobody plans to stop in Fool Boot. They stop anyway. Something about the town makes it hard to leave before sunrise.",
       "atmosphere": "Unremarkable by design",
       "coffinCoughChance": 0.15,
       "terrain_flavor": [
@@ -854,6 +854,7 @@
     },
     {
       "id": "deerhoof",
+      "desc_long": "A working settlement at the edge of the canyon's good land. People here grow things. The canyon is always looking at their fences.",
       "name": "Deerhoof",
       "emoji": "🦌",
       "type_ref": "boomtown_riverbase",
@@ -892,7 +893,6 @@
           "weight": 1
         }
       ],
-      "description": "A working settlement at the edge of the canyon's good land. People here grow things. The canyon is always looking at their fences.",
       "atmosphere": "Hard work and harder nights",
       "coffinCoughChance": 0.13,
       "terrain_flavor": [
@@ -918,6 +918,7 @@
     },
     {
       "id": "huck",
+      "desc_long": "Huck is a small outpost that keeps watch on a corner of the canyon nobody else wants to watch. They have found Thyr nearby and told almost nobody.",
       "name": "Huck",
       "emoji": "🪨",
       "type_ref": "boomtown_dryriver",
@@ -956,7 +957,6 @@
           "weight": 1
         }
       ],
-      "description": "Huck is a small outpost that keeps watch on a corner of the canyon nobody else wants to watch. They have found Thyr nearby and told almost nobody.",
       "atmosphere": "Small, vigilant, and sitting on something valuable",
       "coffinCoughChance": 0.19,
       "terrain_flavor": [
@@ -982,6 +982,7 @@
     },
     {
       "id": "little-rica",
+      "desc_long": "Little Rica has the ore. It has always had the ore. The problem is everyone else also knows it has the ore.",
       "name": "Little Rica",
       "emoji": "✨",
       "type_ref": "boomtown_dryriver",
@@ -1024,7 +1025,6 @@
           "weight": 2
         }
       ],
-      "description": "Little Rica has the ore. It has always had the ore. The problem is everyone else also knows it has the ore.",
       "atmosphere": "Rich ground, poor security",
       "coffinCoughChance": 0.21,
       "terrain_flavor": [
@@ -1050,6 +1050,7 @@
     },
     {
       "id": "plata",
+      "desc_long": "Plata runs on silver. Everything in Plata has a price and that price is in silver. The armed vaults have never been successfully robbed. Yet.",
       "name": "Plata",
       "emoji": "🥈",
       "type_ref": "boomtown_mesa",
@@ -1089,7 +1090,6 @@
           "weight": 1
         }
       ],
-      "description": "Plata runs on silver. Everything in Plata has a price and that price is in silver. The armed vaults have never been successfully robbed. Yet.",
       "atmosphere": "Precision, wealth, and heavy security",
       "coffinCoughChance": 0.19,
       "terrain_flavor": [
@@ -1117,6 +1117,7 @@
     },
     {
       "id": "silverpit",
+      "desc_long": "The pit goes deep and the machines are old. Silverpit is productive as long as nothing breaks. Things break constantly.",
       "name": "Silverpit",
       "emoji": "⛏️",
       "type_ref": "boomtown_mesa",
@@ -1155,7 +1156,6 @@
           "weight": 1
         }
       ],
-      "description": "The pit goes deep and the machines are old. Silverpit is productive as long as nothing breaks. Things break constantly.",
       "atmosphere": "Noise, ore dust, and the smell of hot metal",
       "coffinCoughChance": 0.24,
       "terrain_flavor": [
@@ -1181,6 +1181,7 @@
     },
     {
       "id": "mindshaft",
+      "desc_long": "Mindshaft went too deep and found something that wasn't ore. The mine is officially closed. People still go in. Some even come back.",
       "name": "Mindshaft",
       "emoji": "🕳️",
       "type_ref": "boomtown_mesa",
@@ -1224,7 +1225,6 @@
           "weight": 1
         }
       ],
-      "description": "Mindshaft went too deep and found something that wasn't ore. The mine is officially closed. People still go in. Some even come back.",
       "atmosphere": "Wrong echoes and weird light from the wrong direction",
       "coffinCoughChance": 0.35,
       "terrain_flavor": [
@@ -1251,6 +1251,7 @@
     },
     {
       "id": "crackpits",
+      "desc_long": "The ground cracked open here and never closed. Thyr vents make the air shimmer. The pits themselves seem to be getting wider.",
       "name": "Crackpits",
       "emoji": "🪨",
       "type_ref": "region_mesa_thyr",
@@ -1293,7 +1294,6 @@
           "weight": 1
         }
       ],
-      "description": "The ground cracked open here and never closed. Thyr vents make the air shimmer. The pits themselves seem to be getting wider.",
       "atmosphere": "Unstable light and the smell of something burning underground",
       "coffinCoughChance": 0.38,
       "terrain_flavor": [
@@ -1319,6 +1319,7 @@
     },
     {
       "id": "gore-mule-drop",
+      "desc_long": "A steep rail drop where engines scream and brakes turn to prayer. The stones are stained in the shapes of old wrecks.",
       "name": "Gore Mule Drop",
       "emoji": "🩸",
       "type_ref": "region_rail_grade_cursed",
@@ -1357,7 +1358,6 @@
           "weight": 1
         }
       ],
-      "description": "A steep rail drop where engines scream and brakes turn to prayer. The stones are stained in the shapes of old wrecks.",
       "atmosphere": "Metal shriek, carrion wind",
       "coffinCoughChance": 0.25,
       "terrain_flavor": [
@@ -1383,6 +1383,7 @@
     },
     {
       "id": "bandit-buck",
+      "desc_long": "Bandit Buck squats along the crooked trail to Quinine Jimmy’s, a miserable little camp of lean-tos and watchful thieves who like to lighten a traveler’s pockets before he reaches the medicine man, and if you ask me the place ain’t worth the dust it sits on—what with folks whispering about a buried strongbox, a ghost rider passing through some nights, and something in the gulch that occasionally drags a bandit off where no one bothers to follow.",
       "name": "Bandit Buck",
       "emoji": "🚂",
       "type_ref": "region_rail_stop_unsafe",
@@ -1421,7 +1422,6 @@
           "weight": 2
         }
       ],
-      "description": "Bandit Buck squats along the crooked trail to Quinine Jimmy’s, a miserable little camp of lean-tos and watchful thieves who like to lighten a traveler’s pockets before he reaches the medicine man, and if you ask me the place ain’t worth the dust it sits on—what with folks whispering about a buried strongbox, a ghost rider passing through some nights, and something in the gulch that occasionally drags a bandit off where no one bothers to follow.",
       "atmosphere": "Steam, gun oil, bad timing",
       "coffinCoughChance": 0.24,
       "terrain_flavor": [
@@ -1447,6 +1447,7 @@
     },
     {
       "id": "grade-grind",
+      "desc_long": "The maintenance infrastructure the whole rail line depends on. Everything that keeps trains running passes through Grade Grind. So does everything trying to stop them.",
       "name": "Grade Grind",
       "emoji": "🛤️",
       "type_ref": "region_rail_grade_cursed",
@@ -1481,7 +1482,6 @@
           "weight": 2
         }
       ],
-      "description": "The maintenance infrastructure the whole rail line depends on. Everything that keeps trains running passes through Grade Grind. So does everything trying to stop them.",
       "atmosphere": "Industrial noise and the constant threat of something going wrong",
       "coffinCoughChance": 0.2,
       "terrain_flavor": [
@@ -1507,6 +1507,7 @@
     },
     {
       "id": "ghost-mountain",
+      "desc_long": "Ghost Mountain is not named poetically. The mountain has ghosts. Dozens of them. They were here before the canyon had a name.",
       "name": "Ghost Mountain",
       "emoji": "👻",
       "type_ref": "region_mesa_thyr",
@@ -1547,7 +1548,6 @@
           "weight": 1
         }
       ],
-      "description": "Ghost Mountain is not named poetically. The mountain has ghosts. Dozens of them. They were here before the canyon had a name.",
       "atmosphere": "Cold, silent, and listening",
       "coffinCoughChance": 0.32,
       "terrain_flavor": [
@@ -1573,6 +1573,7 @@
     },
     {
       "id": "heckweed",
+      "desc_long": "The scrubland here is wrong. The plants grow in the wrong season, in the wrong direction, toward wrong things. The water tastes like something that died in it.",
       "name": "Heckweed",
       "emoji": "🌿",
       "type_ref": "region_claim_old_name",
@@ -1611,7 +1612,6 @@
           "weight": 2
         }
       ],
-      "description": "The scrubland here is wrong. The plants grow in the wrong season, in the wrong direction, toward wrong things. The water tastes like something that died in it.",
       "atmosphere": "Organic wrongness",
       "coffinCoughChance": 0.28,
       "terrain_flavor": [
@@ -1637,6 +1637,7 @@
     },
     {
       "id": "kraise",
+      "desc_long": "An old claim district named from a misspelled surname that nobody corrects. Deeds change hands, but the ground doesn't care.",
       "name": "Kraise",
       "emoji": "📜",
       "type_ref": "region_claim_old_name",
@@ -1678,7 +1679,6 @@
           "weight": 2
         }
       ],
-      "description": "An old claim district named from a misspelled surname that nobody corrects. Deeds change hands, but the ground doesn't care.",
       "atmosphere": "Ownership argued over bones",
       "coffinCoughChance": 0.18,
       "terrain_flavor": [
@@ -1703,6 +1703,7 @@
     },
     {
       "id": "lost-yots",
+      "desc_long": "Lost Yots is the biggest mesa in the whole canyon, its base riddled with stubborn old mine shafts while the top’s punched full of wind holes where vultures and harpies roost, and prospectors keep crawling back to it like fools because the deeper tunnels turn up strange bones and older stonework that make a man think the mesa’s been swallowing secrets longer than anyone’s been digging.",
       "name": "Lost Yots",
       "emoji": "💀",
       "type_ref": "region_tzul_ruins",
@@ -1742,7 +1743,6 @@
           "weight": 2
         }
       ],
-      "description": "Lost Yots is the biggest mesa in the whole canyon, its base riddled with stubborn old mine shafts while the top’s punched full of wind holes where vultures and harpies roost, and prospectors keep crawling back to it like fools because the deeper tunnels turn up strange bones and older stonework that make a man think the mesa’s been swallowing secrets longer than anyone’s been digging.",
       "atmosphere": "Windswept haunted Mesa",
       "coffinCoughChance": 0.3,
       "terrain_flavor": [
@@ -1767,6 +1767,7 @@
     },
     {
       "id": "martygrail",
+      "desc_long": "Martygrail’s what you get when somebody digs up a pile of old monster bones beside a missionary church and every preacher, prophet, and candle-waving cultist in the territory comes running to claim the dirt for their own, pitching revival tents around the rail stop and arguing over whose god owns the ground—though if you ask me, that soil’s got its own temper and it don’t much care for folks getting too certain about it.",
       "name": "Martygrail",
       "emoji": "⛪",
       "type_ref": "cultist_revival_tents",
@@ -1810,7 +1811,6 @@
           "weight": 2
         }
       ],
-      "description": "Martygrail’s what you get when somebody digs up a pile of old monster bones beside a missionary church and every preacher, prophet, and candle-waving cultist in the territory comes running to claim the dirt for their own, pitching revival tents around the rail stop and arguing over whose god owns the ground—though if you ask me, that soil’s got its own temper and it don’t much care for folks getting too certain about it.",
       "atmosphere": "This place attracts the weirdos like none other.",
       "coffinCoughChance": 0.27,
       "terrain_flavor": [
@@ -1839,6 +1839,7 @@
     },
     {
       "id": "pallor",
+      "desc_long": "Pallor is the color of the dust here and the color of the people who stay too long. The springs run foul. The food grows wrong. The land drains everything it touches.",
       "name": "Pallor",
       "emoji": "🌫️",
       "type_ref": "region_claim_old_name",
@@ -1881,7 +1882,6 @@
           "weight": 1
         }
       ],
-      "description": "Pallor is the color of the dust here and the color of the people who stay too long. The springs run foul. The food grows wrong. The land drains everything it touches.",
       "atmosphere": "Pale, flat, and depleting",
       "coffinCoughChance": 0.31,
       "terrain_flavor": [
@@ -1907,6 +1907,7 @@
     },
     {
       "id": "rey",
+      "desc_long": "At the very edge of the mapped canyon, facing the sun. Whatever Rey is watching for, it has not appeared yet. The Thyr spire here grows by an inch a month.",
       "name": "Rey",
       "emoji": "🌅",
       "type_ref": "region_mesa_thyr",
@@ -1945,7 +1946,6 @@
           "weight": 2
         }
       ],
-      "description": "At the very edge of the mapped canyon, facing the sun. Whatever Rey is watching for, it has not appeared yet. The Thyr spire here grows by an inch a month.",
       "atmosphere": "Isolation and something approaching",
       "coffinCoughChance": 0.29,
       "terrain_flavor": [
@@ -1971,6 +1971,7 @@
     },
     {
       "id": "sangr",
+      "desc_long": "The bedrock here is permanently stained. The pools don't evaporate. Things come to Sangr to complete something they started elsewhere.",
       "name": "Sangr",
       "emoji": "🩸",
       "type_ref": "region_tzul_ruins",
@@ -2013,7 +2014,6 @@
           "weight": 1
         }
       ],
-      "description": "The bedrock here is permanently stained. The pools don't evaporate. Things come to Sangr to complete something they started elsewhere.",
       "atmosphere": "Heavy air and the metallic taste of old violence",
       "coffinCoughChance": 0.36,
       "terrain_flavor": [
@@ -2039,6 +2039,7 @@
     },
     {
       "id": "skull-water",
+      "desc_long": "The water source that feeds three downstream settlements. It is also thoroughly contaminated and nobody has managed to fix it for six years.",
       "name": "Skull Water",
       "emoji": "💀",
       "type_ref": "region_claim_old_name",
@@ -2081,7 +2082,6 @@
           "weight": 1
         }
       ],
-      "description": "The water source that feeds three downstream settlements. It is also thoroughly contaminated and nobody has managed to fix it for six years.",
       "atmosphere": "Malevolent stillness and the sound of something moving in the water",
       "coffinCoughChance": 0.42,
       "terrain_flavor": [
@@ -2107,6 +2107,7 @@
     },
     {
       "id": "splitglass-arroyo",
+      "desc_long": "A canyon whose walls are natural glass, formed by something older than the current geology. Sound carries wrong and returns in pieces.",
       "name": "Splitglass Arroyo",
       "emoji": "🪟",
       "type_ref": "region_rail_grade_cursed",
@@ -2145,7 +2146,6 @@
           "weight": 1
         }
       ],
-      "description": "A canyon whose walls are natural glass, formed by something older than the current geology. Sound carries wrong and returns in pieces.",
       "atmosphere": "Sharp light, sharper echoes",
       "coffinCoughChance": 0.24,
       "terrain_flavor": [
@@ -2171,6 +2171,7 @@
     },
     {
       "id": "tin-flats",
+      "desc_long": "Flat, featureless, and littered with the abandoned machinery of three failed industries. The Rusters love it here.",
       "name": "Tin Flats",
       "emoji": "🟫",
       "type_ref": "region_claim_old_name",
@@ -2209,7 +2210,6 @@
           "weight": 1
         }
       ],
-      "description": "Flat, featureless, and littered with the abandoned machinery of three failed industries. The Rusters love it here.",
       "atmosphere": "Exposed, hot, and full of things that used to work",
       "coffinCoughChance": 0.22,
       "terrain_flavor": [
@@ -2235,6 +2235,7 @@
     },
     {
       "id": "tzulto",
+      "desc_long": "The largest Tzul ruin in the Country. The crater wasn't formed by impact — it was removed. The air feels held, as if the place is still listening.",
       "name": "Tzulto",
       "emoji": "🏛️",
       "type_ref": "region_tzul_ruins",
@@ -2295,7 +2296,6 @@
           "weight": 3
         }
       ],
-      "description": "The largest Tzul ruin in the Country. The crater wasn't formed by impact — it was removed. The air feels held, as if the place is still listening.",
       "atmosphere": "Ancient patience, modern fear",
       "coffinCoughChance": 0.3,
       "terrain_flavor": [
@@ -2323,6 +2323,7 @@
     },
     {
       "id": "widowflow",
+      "desc_long": "The river that gives Widowflow its name runs fast, cold, and foul. The clean channel and the foul channel mix unpredictably. Crossing it is how most people die here.",
       "name": "Widowflow",
       "emoji": "🌊",
       "type_ref": "region_rail_grade_cursed",
@@ -2361,7 +2362,6 @@
           "weight": 2
         }
       ],
-      "description": "The river that gives Widowflow its name runs fast, cold, and foul. The clean channel and the foul channel mix unpredictably. Crossing it is how most people die here.",
       "atmosphere": "Cold moving water that wants to take you somewhere",
       "coffinCoughChance": 0.23,
       "terrain_flavor": [
@@ -2387,6 +2387,7 @@
     },
     {
       "id": "witches-roost",
+      "desc_long": "Nobody calls it that officially. The name comes from who you see on the spires at night. Witches Roost is the most Thyr-dense location in the canyon and nobody can hold it.",
       "name": "Witches Roost",
       "emoji": "🦇",
       "type_ref": "region_mesa_thyr",
@@ -2431,7 +2432,6 @@
           "weight": 1
         }
       ],
-      "description": "Nobody calls it that officially. The name comes from who you see on the spires at night. Witches Roost is the most Thyr-dense location in the canyon and nobody can hold it.",
       "atmosphere": "Maximum danger, maximum reward, zero control",
       "coffinCoughChance": 0.45,
       "terrain_flavor": [
@@ -2457,6 +2457,7 @@
     },
     {
       "id": "needlewood",
+      "desc_long": "The Needlewood’s a cursed forest of saguaros and leaping cholla where every step draws blood and makes enough racket to wake the dead, so if you’re fool enough to cross it you can bet someone—or something—is already waiting for the smell of you.",
       "name": "Needlewood",
       "type_ref": "debris_field",
       "archetype": "frontier",
@@ -2488,7 +2489,6 @@
           "weight": 2
         }
       ],
-      "description": "The Needlewood’s a cursed forest of saguaros and leaping cholla where every step draws blood and makes enough racket to wake the dead, so if you’re fool enough to cross it you can bet someone—or something—is already waiting for the smell of you.",
       "atmosphere": "Stabbing needles from every direction.",
       "terrain_flavor": [
         "Horrible maze of cacti living and dead. Horrible to travel through."
@@ -2508,6 +2508,7 @@
     },
     {
       "id": "hoodoo_maze",
+      "desc_long": "The Hoodoo Maze is a cursed tangle of stone spires folks call the Standing Dead, where the paths lie, the shadows play tricks, and a man can walk all day to end up where he started, which is why smugglers, bandits, and hard-headed prospectors keep fighting over it: some chasing secret trails through the rocks, some hunting a silver vein under the tallest hoodoo, and a few fools swearing the stone giants move when nobody’s watching",
       "name": "Hoodoo Maze",
       "type_ref": "rock_outcroppings",
       "archetype": "landmark",
@@ -2543,7 +2544,6 @@
           "weight": 2
         }
       ],
-      "description": "The Hoodoo Maze is a cursed tangle of stone spires folks call the Standing Dead, where the paths lie, the shadows play tricks, and a man can walk all day to end up where he started, which is why smugglers, bandits, and hard-headed prospectors keep fighting over it: some chasing secret trails through the rocks, some hunting a silver vein under the tallest hoodoo, and a few fools swearing the stone giants move when nobody’s watching",
       "atmosphere": "Haunted rock outcroppings",
       "terrain_flavor": [
         "Spooky and strange rocks. Weird paths. Dead ends."
@@ -2566,6 +2566,7 @@
     },
     {
       "id": "laboratorium",
+      "desc_long": "The Laboratorium’s Monsterology’s glass-domed butcher shop out in the canyon—a cursed place of cages, Mort vats, and humming engines where they carve monsters down into power under hexed panes like some mad cathedral, and if you ask me the whole valley would sleep easier if the thing burned to the ground, though folks whisper there’s something thinking down in the lowest level and the place was built atop ruins older than any man.",
       "name": "Laboratorium",
       "type_ref": "monsterologist_town_active",
       "archetype": "headquarters",
@@ -2609,7 +2610,6 @@
           "weight": 2
         }
       ],
-      "description": "The Laboratorium’s Monsterology’s glass-domed butcher shop out in the canyon—a cursed place of cages, Mort vats, and humming engines where they carve monsters down into power under hexed panes like some mad cathedral, and if you ask me the whole valley would sleep easier if the thing burned to the ground, though folks whisper there’s something thinking down in the lowest level and the place was built atop ruins older than any man.",
       "atmosphere": "Monster cages, barracks, and rose scented smoke gasping smoke.",
       "terrain_flavor": [
         "Enchanted Dome",
@@ -2634,5 +2634,8 @@
         1230
       ]
     }
-  ]
+  ],
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

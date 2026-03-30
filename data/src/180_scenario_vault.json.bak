@@ -1,0 +1,596 @@
+{
+  "file": "180_scenario_vault.json",
+  "version": "1.2",
+  "design_intent": [
+    "Scenarios create lasting change to Coffin Canyon.",
+    "Objectives outweigh body count.",
+    "Violence accelerates escalation.",
+    "Resources matter beyond the current game."
+  ],
+  "global_tags": [
+    "solo_compatible",
+    "campaign_impact",
+    "resource_driven",
+    "coffin_cough_enabled"
+  ],
+  "scenario_danger_scaling": {
+    "1": "Tutorial / low escalation",
+    "2": "Frontier skirmish",
+    "3": "Standard Coffin Canyon conflict",
+    "4": "High pressure / monster interference",
+    "5": "Escalation guaranteed",
+    "6": "Catastrostorm risk / Titan possible"
+  },
+  "scenarios": [
+    {
+      "id": "vitagood_run",
+      "name": "Baron's Medicine",
+      "tags": [
+        "plot_escort",
+        "objective_vendor",
+        "resource_vitagood",
+        "danger_2",
+        "tense",
+        "wilderness",
+        "mine",
+        "monster_rangers",
+        "monsterology",
+        "shine_riders",
+        "liberty_corps"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Monsterologists",
+        "Shine Riders",
+        "Liberty Corps"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "mine",
+          "mine_active_shineriders",
+          "mine_abandoned",
+          "boomtown_riverside"
+        ],
+        "notes": "Requires a mine camp or rough boomtown — somewhere the Vendomat has wandered into."
+      },
+      "danger_rating": 2,
+      "narrative_hook": "Baron Davis is sick. Real sick. The only thing that might help is a bottle of VitaGood — and there's a Vendomat wandering somewhere near the old mine camp. The Rangers are going in. Everyone else has a reason to stop them, grab the VitaGood first, or just take it off whoever wins.",
+      "objectives": [
+        {
+          "id": "gildren_cache",
+          "type": "extraction",
+          "resource": "gildren",
+          "count": 3,
+          "notes": [
+            "Gildren is scattered in the mine camp — 3 tokens placed at the mine entrance, the foreman's shack, and the supply crate.",
+            "Any unit may pick up a Gildren token by spending 1 Action in base contact.",
+            "A faction holding 2+ Gildren tokens may spend them at the Vendomat (base contact, 1 Action) to purchase 1 VitaGood."
+          ]
+        },
+        {
+          "id": "vitagood_purchase",
+          "type": "escort",
+          "resource": "vitagood",
+          "notes": [
+            "The Vendomat wanders d6 inches in a random direction each round.",
+            "VitaGood can only be purchased — not stolen directly from the Vendomat (it has a hatchet and explodes on death).",
+            "Once purchased, the VitaGood token can be stolen from the carrier by any enemy unit in base contact (STEAL action, Quality test).",
+            "The VitaGood must exit the board on the purchasing faction's deployment edge to score."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "First faction to exit the board carrying VitaGood wins.",
+        "monster_rangers": "Collect 2 Gildren from the mine, buy VitaGood from the Vendomat, and get it off the board. Baron Davis is counting on you. +5 VP if the VitaGood exits before Round 5.",
+        "monsterology": "The Institute needs that VitaGood formula. Intercept the Rangers before they buy it, or steal it from them after. +4 VP if you exit with it. +2 VP if the Rangers' carrier is eliminated while holding it.",
+        "shine_riders": "VitaGood sells for a fortune in the right markets. Buy it yourself or lift it off whoever does. +4 VP if you exit with it. +1 bonus VP if you stole it from a Ranger.",
+        "liberty_corps": "Unlicensed pharmaceutical distribution. The Vendomat requires inspection and the goods must be confiscated. +3 VP if VitaGood is confiscated (exits in Corps custody). +2 VP if the Vendomat is escorted to the board edge (abducted for permitting review).",
+        "secondary": "Any faction that eliminates the unit carrying VitaGood scores 1 VP — but the token drops and anyone can pick it up."
+      },
+      "wandering_npc": {
+        "id": "vendomat",
+        "placement": "center_board",
+        "note": "Place the Vendomat at board center. It wanders d6 inches each round before initiative. It must be reached and purchased from — not attacked."
+      },
+      "monster_pressure": {
+        "enabled": false,
+        "notes": "Low danger scenario. No monster pressure unless Danger is raised by Warden."
+      },
+      "aftermath_effects": {
+        "monster_rangers": "Baron Davis lives — or doesn't. The canyon remembers either way.",
+        "monsterology": "The formula is in Institute hands. Expect a cheaper patent medicine to appear next season.",
+        "shine_riders": "The VitaGood hits the black market at triple price within the week.",
+        "liberty_corps": "The Vendomat receives a citation. It does not appear to read."
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Escalating interference — Shine Riders appear Round 2, Monsterologists Round 3",
+        "win_condition": "Exit with VitaGood before Round 6"
+      }
+    },
+    {
+      "id": "monte_haul_whispers",
+      "name": "Monte Haul’s Quiet Inventory",
+      "tags": [
+        "plot_mystery",
+        "objective_vendor",
+        "resource_illegal",
+        "danger_5",
+        "weird",
+        "psychological",
+        "wilderness",
+        "ruins",
+        "shine_riders",
+        "monsterology",
+        "liberty_corps",
+        "monster_rangers",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Shine Riders",
+        "Monsterologists",
+        "Liberty Corps",
+        "Monster Rangers",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "ruined_settlement",
+          "wilderness_scrub",
+          "mesa_top",
+          "ancient_site"
+        ],
+        "notes": "Somewhere quiet enough to hear what Monte Haul is selling."
+      },
+      "danger_rating": 5,
+      "narrative_hook": "Monte Haul isn’t shouting today. No crates. No dynamite. Just a small table with things you can’t quite look at directly. He says they’re for sale. Cheap. The Shine Riders want them without asking what they do. The Monsterologists want them precisely because no one can explain them. The Liberty Corps want them removed before they spread. The Rangers want them gone before someone uses one. The monsters already hear them.",
+      "objectives": [
+        {
+          "id": "illegal_items",
+          "type": "artifact",
+          "resource": "illegal",
+          "count": 4,
+          "interactions": [
+            "BUY",
+            "DESTROY",
+            "SEAL"
+          ],
+          "notes": [
+            "Monte Haul holds 4 Illegal Item tokens. Each costs 2 Gildren.",
+            "Any unit in base contact may BUY a token (1 Action, 2 Gildren).",
+            "Each token carried imposes -1 to Morale checks (stacking).",
+            "At the start of each round, roll 1d6 for each carried token: on a 1, the carrier loses 1 HP as the item 'reacts'.",
+            "A unit may DESTROY a token (1 Action, Quality test). On failure, the unit takes 2 damage.",
+            "Liberty Corps units may SEAL a token instead (1 Action, automatic success — sealed tokens do not trigger effects)."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Control or eliminate the most Illegal Items by game end.",
+        "shine_riders": "We don’t ask what it does. +2 VP per item held. +3 VP if at least one item exits the board. +2 bonus VP if a unit survives while carrying 2+ items.",
+        "monsterology": "This is priceless. +3 VP per item secured. +2 VP if at least one item triggers its effect during the game. +2 VP if a monster interacts with an item.",
+        "liberty_corps": "These cannot circulate. +2 VP per item sealed. +2 VP per item destroyed. +3 VP if no unsealed items remain at game end.",
+        "monster_rangers": "Nothing good comes from this. +2 VP per item destroyed. +2 VP if no items leave the board. -2 VP if a Ranger exits while carrying one.",
+        "monsters": "The items call. At the start of each Monster activation, if within 8 inches of an item, move toward it. +2 VP per item a Monster ends adjacent to. +4 VP if a Monster becomes the carrier (yes, it can happen).",
+        "secondary": "Any unit eliminated while carrying an item drops it — any faction that immediately picks it up gains 1 VP."
+      },
+      "wandering_npc": {
+        "id": "monte_haul",
+        "placement": "board_center_or_nearest_open",
+        "note": "Monte Haul does not move. He does not react. If attacked, he vanishes — remove him and all remaining items he holds from play."
+      },
+      "midgame_twist": {
+        "round": 4,
+        "event": "The items begin whispering louder. All Morale tests suffer an additional -1 penalty for the rest of the game.",
+        "warden_note": "Optional, but recommended for full unease."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 1,
+        "spawn_bias": [
+          "Predator",
+          "Territorial"
+        ],
+        "notes": "The items attract attention immediately. Spawn 1 Monster per round from a random edge starting Round 1."
+      },
+      "aftermath_effects": {
+        "shine_riders": "The items circulate. No one agrees what they do. Everyone agrees they want more.",
+        "monsterology": "The Institute secures specimens. Research teams report inconsistent results.",
+        "liberty_corps": "Sealed evidence is transported under heavy guard. Something taps from inside.",
+        "monster_rangers": "The canyon breathes easier. Or maybe it’s just quieter.",
+        "monsters": "Something new has entered the food chain."
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Escalating Monster pressure and opportunistic factions.",
+        "win_condition": "Destroy or prevent all Illegal Items from leaving the board."
+      }
+    },
+    {
+      "id": "vendomat_canyon_dans",
+      "name": "Canyon Dan’s Color Diet",
+      "tags": [
+        "plot_loot",
+        "objective_vendor",
+        "resource_food",
+        "danger_3",
+        "weird",
+        "boomtown",
+        "supplies",
+        "monster_rangers",
+        "monsterology",
+        "pluguglies",
+        "squab",
+        "monsters",
+        "liberty_corps"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Monsterologists",
+        "Plug-Uglies",
+        "Squab",
+        "Monsters",
+        "Liberty Corps"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "boomtown_mesa",
+          "boomtown_riverside",
+          "waystation",
+          "ruined_settlement"
+        ],
+        "notes": "A place where supply crates matter. The Vendomat has been stocked with Canyon Dan's canned meals in colors no meal should be."
+      },
+      "danger_rating": 3,
+      "narrative_hook": "The Vendomat is packed with Canyon Dan’s canned food — high quality grub in deeply suspicious colors. Purple hash. Blue beans. Green roast. The Rangers want it for Camp Coffin. Monsterologists want it because Squab and Plug-Uglies will eat almost anything if it improves morale. The Liberty Corps want to confiscate the whole lot for study. The monsters, having no standards at all, just want to eat the cans and maybe the people carrying them.",
+      "objectives": [
+        {
+          "id": "canyon_dans_crates",
+          "type": "loot",
+          "resource": "food",
+          "count": 6,
+          "notes": [
+            "Place 6 Canyon Dan's Food tokens in or around the Vendomat.",
+            "Any unit in base contact may collect 1 Food token with 1 Action.",
+            "A unit carrying a Food token may CONSUME it with 1 Action: heal 1 HP OR gain +1 on its next Morale or Quality test.",
+            "After consuming Canyon Dan's, roll 1d6. On a 1, the colors hit wrong — the unit suffers -1 Move until end of round. On a 6, morale improves — gain +1 Morale until end of round.",
+            "Monsters do not need to spend an Action to consume Canyon Dan's if they begin activation in base contact with a token.",
+            "Food tokens may be carried off the board as supplies instead of consumed."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Secure, consume, or confiscate the most Canyon Dan's by game end.",
+        "monster_rangers": "Camp Coffin needs good supplies, even if they're bright blue. +2 VP per Canyon Dan's token removed from the board. +2 bonus VP if 3+ tokens exit via the Rangers' deployment edge.",
+        "monsterology": "Field rations for the unpleasant but useful. +1 VP per token acquired. +2 VP if a Squab or Plug-Ugly unit consumes a token. +2 VP if at least 3 tokens are secured for Institute study.",
+        "pluguglies": "Good grub is good grub. +2 VP per token consumed by a Plug-Ugly unit. +1 VP per enemy eliminated by a unit that consumed Canyon Dan's this round.",
+        "squab": "The little scavengers know quality when they see color. +2 VP per token consumed or carried by a Squab unit. +1 VP if a Squab steals one from an enemy carrier.",
+        "liberty_corps": "These cans are not properly labeled, and some of them are humming. +2 VP per token confiscated. +3 VP if no faction exits the board with food except the Corps.",
+        "monsters": "The cans are crunchy and the insides are strange. +2 VP per token consumed by a Monster. +1 VP each time a Monster eliminates a unit carrying Canyon Dan's.",
+        "secondary": "Any faction that controls the Vendomat at game end gains 2 VP."
+      },
+      "wandering_npc": {
+        "id": "vendomat",
+        "placement": "center_board",
+        "note": "Place the Vendomat at board center. It is stationary and stocked with Canyon Dan's. It cannot be harmed normally; if attacked, it vents colorful steam and locks for one round."
+      },
+      "midgame_twist": {
+        "round": 3,
+        "event": "One batch is mislabeled. From Round 3 onward, the first Canyon Dan's consumed each round causes a random color reaction: 1-2 = -1 Move, 3-4 = no extra effect, 5-6 = +1 Morale until end of round.",
+        "warden_note": "The food is still good. Probably."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 2,
+        "spawn_bias": [
+          "Scavenger",
+          "Pack"
+        ],
+        "notes": "The monsters do not smell the cans, but they quickly learn that the little metal bricks contain dense, delicious nonsense."
+      },
+      "aftermath_effects": {
+        "monster_rangers": "Camp Coffin eats well this week, though no one agrees what color stew ought to be.",
+        "monsterology": "A pantry annex is established for controlled feeding studies.",
+        "pluguglies": "They begin asking if the blue kind can be ordered in bulk.",
+        "squab": "Several cans go missing and are later found pecked open behind a crate.",
+        "liberty_corps": "A formal inquiry begins into whether food should glow after sunset.",
+        "monsters": "Somewhere out in the rocks, something large now prefers canned goods."
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Monsterologists and hungry creatures converge from Round 2.",
+        "win_condition": "Remove 3 Canyon Dan's tokens from the board before Round 6."
+      }
+    },
+    {
+      "id": "vendomat_ralu_wine",
+      "name": "Ralu’s Blessed Pour",
+      "tags": [
+        "plot_chaos",
+        "objective_vendor",
+        "resource_illegal",
+        "danger_5",
+        "religious",
+        "chaotic",
+        "wilderness",
+        "shine_riders",
+        "cult",
+        "pluguglies",
+        "squab",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Shine Riders",
+        "Cultists",
+        "Plug-Uglies",
+        "Squab",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "wilderness_scrub",
+          "mesa_top",
+          "ancient_site",
+          "ruined_settlement"
+        ],
+        "notes": "A place where something old might listen. The Vendomat is dispensing Ralu's Holy Wine for free."
+      },
+      "danger_rating": 5,
+      "narrative_hook": "This Vendomat hums broken hymns and dispenses Ralu’s Holy Wine for free. The glass is warm. The label changes every time you look at it. Cultists gather to praise the miracle. Shine Riders drink because it is free and probably valuable. Plug-Uglies and Squab treat it like a dare. The monsters come because something in the wine already belongs to them. The real problem is what happens to a person who drinks too much of Ralu’s blessing.",
+      "objectives": [
+        {
+          "id": "ralu_wine",
+          "type": "artifact",
+          "resource": "illegal",
+          "count": 6,
+          "notes": [
+            "The Vendomat spawns 2 Wine tokens per round (max 6 on board).",
+            "Any human-sized non-Monster unit in base contact may DRINK 1 Wine token with 1 Action.",
+            "A unit that drinks gains +1 Attack and Immune to Fear until the end of its next activation, but must move toward the nearest visible unit during its next activation if able.",
+            "Immediately after drinking, the unit must make a Quality test. It requires 2 successes total to resist the transformation. If it fails to reach 2 successes, it becomes a Raluut.",
+            "A Raluut is no longer controlled by its original player. Replace the model with a hostile NPC Raluut, or mark the unit as transformed and treat it as a hostile chaos-monster under Warden control.",
+            "Monsters cannot become Raluuts, but they will automatically move toward Wine tokens within 8 inches.",
+            "Wine tokens may also be carried instead of consumed."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Exploit, survive, or spread the chaos around Ralu's Holy Wine.",
+        "shine_riders": "+1 VP per Wine token carried. +2 VP per enemy eliminated by a drunk unit you controlled before it transformed. +3 VP if one of your units exits with Wine without becoming a Raluut.",
+        "cult": "+2 VP per Wine token controlled. +3 VP if the Vendomat remains active at game end. +2 VP each time a non-cult human unit becomes a Raluut.",
+        "pluguglies": "+2 VP per melee kill by a drunk unit. +1 VP if a Plug-Ugly drinks and survives without transforming.",
+        "squab": "+1 VP per Wine token stolen or carried. +2 VP if a Squab causes a stronger unit to transform by feeding or forcing them the wine, where scenario rules permit.",
+        "monsters": "+2 VP per Wine token adjacent at game end. +3 VP per Raluut still on the board at game end. +4 VP if a Monster eliminates a fresh Raluut.",
+        "secondary": "Any faction that shuts down the Vendomat gains 3 VP, though most factions present do not actually want that."
+      },
+      "wandering_npc": {
+        "id": "vendomat",
+        "placement": "center_board",
+        "note": "Place the Vendomat at board center. It is stationary, chanting softly. All Morale tests within 6 inches suffer -1."
+      },
+      "midgame_twist": {
+        "round": 3,
+        "event": "The sermon becomes louder. From Round 3 onward, any unit that begins activation within 4 inches of a Wine token must pass a Morale test or spend 1 Action moving toward or interacting with that token.",
+        "warden_note": "The wine wants to be drunk."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 1,
+        "spawn_bias": [
+          "Predator",
+          "Pack",
+          "Territorial"
+        ],
+        "notes": "Immediate attraction. Monsters arrive every round, drawn by the chanting, the wine, and the freshly-made Raluuts."
+      },
+      "aftermath_effects": {
+        "shine_riders": "Somebody bottles the stuff. The bottles do not stay quiet.",
+        "cult": "Ralu was praised in slurred voices and answered in flesh.",
+        "pluguglies": "A few swear it was the best drink they ever had right before things went bad.",
+        "squab": "The little creeps are seen rolling bottles downhill toward camps for fun.",
+        "monster_rangers": "Another reason never to trust a machine with a god in it.",
+        "monsters": "They remember the taste of the transformed.",
+        "liberty_corps": "A report is filed using the phrase 'unlicensed sacramental mutation event.'"
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Constant monster pressure, cult interference, and the risk of civilians or enemies becoming Raluuts.",
+        "win_condition": "Shut down the Vendomat before Round 6 and prevent more than 1 Raluut from remaining on the board."
+      }
+    },
+    {
+      "id": "vendomat_moving_route",
+      "name": "The Mercy Route",
+      "tags": [
+        "plot_escort",
+        "objective_vendor",
+        "resource_mixed",
+        "danger_4",
+        "movement",
+        "wilderness",
+        "caravan",
+        "weird",
+        "monster_rangers",
+        "shine_riders",
+        "liberty_corps",
+        "monsterology",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Monster Rangers",
+        "Shine Riders",
+        "Liberty Corps",
+        "Monsterologists",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "wilderness_scrub",
+          "arroyo",
+          "trail_route",
+          "mesa_pass",
+          "ruined_settlement"
+        ],
+        "notes": "A desperate route between scattered camps, graves, and failed outposts. The Vendomat is following an old service path no one remembers programming."
+      },
+      "danger_rating": 4,
+      "narrative_hook": "The Vendomat is moving on its own, following a dead relief route between old camps and forgotten stops. At each stop it dispenses exactly what is needed: clean water, medicine, or Canyon Dan’s canned grub in impossible colors. The Rangers want to protect the route and get the goods to Camp Coffin or the needy. The Shine Riders see a rolling supply chest. The Liberty Corps want to impound an unlicensed aid machine. Monsterologists want to study how it knows what people need before they ask. The monsters trail behind it like coyotes following a chuckwagon.",
+      "objectives": [
+        {
+          "id": "moving_supply",
+          "type": "escort",
+          "resource": "mixed",
+          "notes": [
+            "The Vendomat begins at route_start and follows a defined path with 3 marked Supply Stops.",
+            "At the start of each round, before initiative, the Vendomat moves d6 inches along the route toward the next Supply Stop.",
+            "The first time it reaches each Supply Stop, roll 1d6: 1-2 = Water, 3-4 = Canyon Dan's Food, 5-6 = Medicine. Place 2 matching supply tokens at that stop.",
+            "Any unit in base contact with a supply token may collect it with 1 Action.",
+            "Water may be spent to heal 1 HP or remove Fatigue. Canyon Dan's may be consumed to gain +1 on the next Morale or Quality test. Medicine may be spent to heal 1 HP or ignore the next injury effect suffered this round.",
+            "A unit in base contact with the Vendomat may attempt to REDIRECT it (2 Actions, Quality test). On success, pivot its route toward a different marked stop or toward the acting faction's board edge, if the Warden approves a plausible path.",
+            "If the Vendomat is blocked by models, difficult terrain, or chaos effects, it emits a shrill service chime and all Monsters within 8 inches move 1d6 inches toward it."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Control the Mercy Route, its supplies, or the machine itself.",
+        "monster_rangers": "Protect the route and get aid where it belongs. +2 VP per supply token removed from the board via the Rangers' edge. +3 VP if the Vendomat reaches its final stop. +2 VP if at least one token each of Water, Food, and Medicine is successfully escorted away.",
+        "shine_riders": "Hit the route, grab the goods, and vanish. +1 VP per supply token stolen from another carrier. +2 VP per token removed from the board. +3 VP if the Vendomat is successfully redirected off its proper route.",
+        "liberty_corps": "This machine is operating without permits, manifests, or inspection. +2 VP per supply token confiscated. +3 VP if the Vendomat is held in Corps control for 2 full rounds. +2 VP if its route is forcibly terminated before the final stop.",
+        "monsterology": "It knows what to dispense and when. That is more interesting than the supplies themselves. +2 VP if the Vendomat is redirected by an Institute unit. +1 VP per supply type collected for study. +3 VP if the final stop is observed while the Vendomat is still active.",
+        "monsters": "The moving pantry must be followed. +1 VP each time a Monster eliminates a unit carrying a supply token. +2 VP per supply token consumed or destroyed by Monsters. +3 VP if the Vendomat never reaches its final stop.",
+        "secondary": "Any faction that controls the Vendomat at game end gains 2 VP."
+      },
+      "wandering_npc": {
+        "id": "vendomat",
+        "placement": "route_start",
+        "note": "Place the Vendomat at the route start. It cannot be destroyed normally. It follows the route automatically unless redirected. At each stop it pauses long enough to dispense aid, then continues."
+      },
+      "midgame_twist": {
+        "round": 3,
+        "event": "The machine recognizes a dead stop. At the start of Round 3, place a Grave Marker or abandoned camp token on or near the route. The Vendomat halts there and dispenses 1 bonus Medicine token and 1 bonus Canyon Dan's token, even if no one is waiting.",
+        "warden_note": "Something on the old route is still in its memory."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 2,
+        "spawn_bias": [
+          "Scavenger",
+          "Pack",
+          "Territorial"
+        ],
+        "notes": "The chime, the movement, and the repeated dispensing of supplies draw predators and opportunists. Spawn 1 monster unit per round from Round 2 onward, or escalate more aggressively if many tokens remain on the table."
+      },
+      "aftermath_effects": {
+        "monster_rangers": "The route may become a real lifeline if anyone can keep it safe.",
+        "shine_riders": "Ambush maps are drawn up by lantern light before the dust even settles.",
+        "liberty_corps": "A seizure order is drafted for a machine that keeps missing its hearings.",
+        "monsterology": "The timing of each stop raises unpleasant questions about memory, service, and grief.",
+        "monsters": "The herds have learned the path of the rolling pantry."
+      },
+      "solo_play": {
+        "player_role": "Monster Rangers",
+        "opposition": "Ambushes, monster pressure, and rival attempts to redirect the Vendomat away from the needy.",
+        "win_condition": "Escort the Vendomat to its final stop and remove at least 3 supply tokens via the Rangers' board edge before Round 7."
+      }
+    },
+    {
+      "id": "monte_haul_dynamite",
+      "name": "What Monte Haul Is Selling Today",
+      "tags": [
+        "plot_extraction",
+        "objective_vendor",
+        "resource_weapons",
+        "danger_4",
+        "explosive",
+        "combat",
+        "boomtown",
+        "wilderness",
+        "shine_riders",
+        "liberty_corps",
+        "monsterology",
+        "monster_rangers",
+        "monsters"
+      ],
+      "spotlight_factions": [
+        "Shine Riders",
+        "Liberty Corps",
+        "Monsterologists",
+        "Monster Rangers",
+        "Monsters"
+      ],
+      "location_rules": {
+        "allowed_location_types": [
+          "boomtown_riverside",
+          "boomtown_mesa",
+          "mine_active_shineriders",
+          "debris_field"
+        ],
+        "notes": "Monte Haul has set up in a busy or contested location. He is fixed to board center."
+      },
+      "danger_rating": 4,
+      "narrative_hook": "Monte Haul is selling dynamite. Three sticks of Coffin Canyon Grade blasting powder, fresh from wherever Monte Haul gets things that don't have an origin story. The Shine Riders want it for a job. The Monsterologists want to study the blast radius on something large and alive. The Liberty Corps want it contained before someone uses it on a federal building. The Monster Rangers want it gone before it wakes up something underground. The monsters just smell the sulfur and want to know what made it.",
+      "objectives": [
+        {
+          "id": "monte_haul_stock",
+          "type": "device",
+          "resource": "weapons",
+          "count": 3,
+          "interactions": [
+            "BUY",
+            "CONFISCATE",
+            "DESTROY"
+          ],
+          "notes": [
+            "Monte Haul holds 3 Dynamite tokens. He sells them for 4 Gildren each (standard Black Market rate).",
+            "Any faction in base contact may BUY a Dynamite token (1 Action, 4 Gildren). Bought tokens can be carried or used.",
+            "Liberty Corps units may CONFISCATE instead of buying (1 Action, Quality test, no Gildren cost — but Monte Haul goes into Lockdown after one successful confiscation).",
+            "Dynamite tokens may be PLANTED on any terrain piece (1 Action). At the start of the NEXT round, that terrain explodes — 6 damage to all models within 4 inches, terrain becomes Difficult.",
+            "A carrier who is eliminated drops all Dynamite tokens at their location.",
+            "If all 3 Dynamite tokens are detonated on the board, the ground shakes — all models take 1 automatic hit from debris."
+          ]
+        }
+      ],
+      "victory_conditions": {
+        "primary": "Control the most Dynamite tokens at game end, OR score the most VP from their use.",
+        "shine_riders": "Buy at least 2 sticks and exit the board with them. +4 VP per stick carried off. +2 bonus VP if the Shine Boss personally carries one out. The job pays triple if you deliver all 3.",
+        "liberty_corps": "Confiscate or destroy all 3 Dynamite tokens before they leave the board. +3 VP per token confiscated (in Corps custody at game end). +2 VP per token detonated safely by a Corps demolitions unit. Arrest Monte Haul for an additional +2 VP (escort him to your deployment edge).",
+        "monsterology": "Acquire 1 Dynamite token and detonate it within 3 inches of a living monster. +5 VP if a monster is eliminated by the blast. +2 VP per token acquired for study. The Institute cares about DATA, not safety.",
+        "monster_rangers": "Prevent Dynamite from being used irresponsibly. +2 VP for each token that exits the board WITHOUT being detonated on the surface. +3 VP if the Rangers destroy all 3 tokens safely (detonated in open ground, no models within 6 inches). -2 VP if a Ranger unit triggers a blast that harms a non-hostile model.",
+        "monsters": "The sulfur smell is overwhelming. Monsters are drawn to the Dynamite tokens — at the start of each activation, any Monster within 6 inches of a Dynamite token must pass a Morale test or spend their activation moving toward it. +2 VP per Dynamite token a Monster is adjacent to at game end. +4 VP if a Monster triggers a detonation by accident.",
+        "secondary": "Any faction that eliminates Monte Haul's last guard (if Warden adds guards as optional escalation) scores 2 VP."
+      },
+      "wandering_npc": {
+        "id": "monte_haul",
+        "placement": "board_center_or_nearest_open",
+        "note": "Place Monte Haul at board center. He cannot move. He goes into Lockdown after taking damage OR after 1 successful confiscation. In Lockdown he cannot trade, but the Dynamite tokens he still holds are lost — remove them from play."
+      },
+      "midgame_twist": {
+        "round": 3,
+        "event": "Word spreads. A second buyer arrives — deploy d3 Shine Rider Grunt units from the nearest board edge. They want the Dynamite and aren't picky about who they take it from.",
+        "warden_note": "Optional. Skip if the board is already chaotic enough."
+      },
+      "monster_pressure": {
+        "enabled": true,
+        "trigger_round": 2,
+        "spawn_bias": [
+          "Territorial",
+          "Pack",
+          "Predator"
+        ],
+        "notes": "The sulfur and gunpowder smell draws territorial monsters. At Danger 4+, deploy 1 monster unit per round from a random edge starting Round 2. Monsters are NOT controlled by any player — use NPC monster activation rules."
+      },
+      "aftermath_effects": {
+        "shine_riders": "Three sticks of Coffin Canyon Grade blasting powder, currently unaccounted for. The canyon has opinions about this.",
+        "liberty_corps": "Contraband contained. Monte Haul receives a summons he probably won't appear for.",
+        "monsterology": "Blast radius data logged. The creature's remains have been collected. Science marches on.",
+        "monster_rangers": "The sulfur dissipates. Something deep underground noticed anyway.",
+        "monsters": "The ground remembers the vibration. Something stirs beneath the rock."
+      },
+      "solo_play": {
+        "player_role": "Liberty Corps",
+        "opposition": "Shine Riders buy aggressively each round. Monsters appear from Round 2.",
+        "win_condition": "Confiscate or destroy all 3 Dynamite tokens before Round 6."
+      }
+    }
+  ]
+}

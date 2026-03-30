@@ -1,20 +1,17 @@
 {
   "file": "210_twist_tables.json",
   "version": "1.0",
-
   "design_notes": [
     "One twist per scenario is recommended.",
     "Twists should recontextualize objectives, not replace them.",
     "Selection should be weighted by plot_family bias, danger level, escalation cause, and active resources.",
     "Tags are used for filtering and weighting, not for direct player-facing text."
   ],
-
   "twists": [
-
     {
       "id": "resource_is_a_decoy",
+      "desc_long": "The objective was never the real prize. Its purpose was misdirection.",
       "name": "The Resource Is a Decoy",
-      "description": "The objective was never the real prize. Its purpose was misdirection.",
       "tags": [
         "resource",
         "misdirection",
@@ -29,11 +26,10 @@
         "Destroying it completes its true purpose."
       ]
     },
-
     {
       "id": "resource_has_hidden_cost",
+      "desc_long": "Using or extracting the resource causes an unseen consequence.",
       "name": "The Resource Has a Hidden Cost",
-      "description": "Using or extracting the resource causes an unseen consequence.",
       "tags": [
         "resource",
         "corruption",
@@ -48,11 +44,10 @@
         "It shortens the lifespan of users or tools."
       ]
     },
-
     {
       "id": "monster_was_holding_worse_threat_at_bay",
+      "desc_long": "The apparent threat was containing something far worse.",
       "name": "The Monster Was Holding Something Back",
-      "description": "The apparent threat was containing something far worse.",
       "tags": [
         "monster",
         "revelation",
@@ -67,11 +62,10 @@
         "Removing it destabilizes the region."
       ]
     },
-
     {
       "id": "objective_reveals_hidden_nature",
+      "desc_long": "The objective changes meaning once interacted with.",
       "name": "The Objective Is Not What It Appears To Be",
-      "description": "The objective changes meaning once interacted with.",
       "tags": [
         "objective",
         "revelation",
@@ -86,11 +80,10 @@
         "The structure is alive or aware."
       ]
     },
-
     {
       "id": "ownership_is_symbolic_not_material",
+      "desc_long": "Control matters more than possession or destruction.",
       "name": "Ownership Is Symbolic",
-      "description": "Control matters more than possession or destruction.",
       "tags": [
         "ownership",
         "belief",
@@ -105,11 +98,10 @@
         "Walking away forfeits future claims."
       ]
     },
-
     {
       "id": "location_awakens_or_rejects_control",
+      "desc_long": "The land itself responds to events.",
       "name": "The Location Awakens or Rejects Control",
-      "description": "The land itself responds to events.",
       "tags": [
         "environment",
         "occult",
@@ -124,11 +116,10 @@
         "Movement and visibility change permanently."
       ]
     },
-
     {
       "id": "victory_conditions_invert",
+      "desc_long": "Winning now requires doing the opposite of the original goal.",
       "name": "Victory Conditions Invert",
-      "description": "Winning now requires doing the opposite of the original goal.",
       "tags": [
         "inversion",
         "moral_pressure",
@@ -142,11 +133,10 @@
         "Destroying the objective prevents catastrophe."
       ]
     },
-
     {
       "id": "unexpected_third_party_intervenes",
+      "desc_long": "A new force arrives with its own agenda.",
       "name": "An Unexpected Third Party Intervenes",
-      "description": "A new force arrives with its own agenda.",
       "tags": [
         "faction",
         "intervention",
@@ -161,11 +151,10 @@
         "A monster migrates into the area."
       ]
     },
-
     {
       "id": "success_creates_a_permanent_scar",
+      "desc_long": "Even victory permanently alters the canyon.",
       "name": "Success Leaves a Scar",
-      "description": "Even victory permanently alters the canyon.",
       "tags": [
         "aftermath",
         "environment",
@@ -180,11 +169,10 @@
         "Future encounters escalate faster."
       ]
     },
-
     {
       "id": "belief_is_the_real_resource",
+      "desc_long": "Faith, fear, or legend was the true objective.",
       "name": "Belief Was the Real Resource",
-      "description": "Faith, fear, or legend was the true objective.",
       "tags": [
         "belief",
         "cult",
@@ -199,6 +187,8 @@
         "A myth becomes true."
       ]
     }
-
-  ]
+  ],
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

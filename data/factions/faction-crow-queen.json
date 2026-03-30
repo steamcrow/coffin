@@ -1,11 +1,8 @@
 {
-  "introduction": {
-    "title": "The Crow Queen: All Land Bends. All Flesh Kneels.",
-    "tagline": "Order is not debated. It is declared.",
-    "description": "Once the absolute ruler of Monstru, the Crow Queen—now called the Regent Black—was deposed by a vulgar monster uprising. Stripped of her throne but not her divinity of will, she fled into exile with her Inner Court. In Coffin Canyon, she has found not refuge, but provocation. Here, she consecrates dust into demesne, collars monsters into obedience, and grinds manlings beneath the heel of remembered sovereignty.",
-    "philosophy": "Hierarchy is natural, and the Regent Black stands at its apex by undeniable right. Monsters are instruments, humans are livestock, and land exists only to be named, measured, and ruled. Law is the extension of her shadow.",
-    "history": "The fall of Monstru shattered the Crow Court but did not erase it. Loyal servants followed their Queen into the Canyon, carrying relics of authority, ledgers of blood-debt, and rites that bind stone and soil to her command. She does not seek to live in the Canyon; she seeks to own it."
-  },
+  "type": "faction",
+  "desc_short": "Order is not debated. It is declared.",
+  "desc_long": "Once the absolute ruler of Monstru, the Crow Queen—now called the Regent Black—was deposed by a vulgar monster uprising. Stripped of her throne but not her divinity of will, she fled into exile with her Inner Court. In Coffin Canyon, she has found not refuge, but provocation. Here, she consecrates dust into demesne, collars monsters into obedience, and grinds manlings beneath the heel of remembered sovereignty.",
+  "history": "The fall of Monstru shattered the Crow Court but did not erase it. Loyal servants followed their Queen into the Canyon, carrying relics of authority, ledgers of blood-debt, and rites that bind stone and soil to her command. She does not seek to live in the Canyon; she seeks to own it.",
   "faction_identity": {
     "core_values": [
       "Absolute hierarchy and the divine right of the Queen",
@@ -165,13 +162,13 @@
           "name": "Throne of Lies",
           "cost": 20,
           "type": "Relic",
-          "effect": "The Regent is always considered to be within Consecrated Ground for her own abilities, regardless of markers."
+          "desc_short": "The Regent is always considered to be within Consecrated Ground for her own abilities, regardless of markers."
         },
         {
           "name": "Lead-Lined Vestments",
           "cost": 25,
           "type": "Gear",
-          "effect": "Immune to Spellcraft."
+          "desc_short": "Immune to Spellcraft."
         }
       ]
     },
@@ -228,7 +225,7 @@
           "name": "Expanded Gas Reservoirs",
           "cost": 20,
           "type": "Upgrade",
-          "effect": "Mustard Exhalation may be used twice per round."
+          "desc_short": "Mustard Exhalation may be used twice per round."
         }
       ]
     },
@@ -288,7 +285,7 @@
           "name": "Hood of the Anonymous",
           "cost": 8,
           "type": "Gear",
-          "effect": "Gain Stealth while in ruins or shadows."
+          "desc_short": "Gain Stealth while in ruins or shadows."
         }
       ]
     },
@@ -346,13 +343,13 @@
           "name": "The Queen's Arrow",
           "cost": 10,
           "type": "Weapon",
-          "effect": "High Huntsman gains +2 to hit against a target with The Queen's Mark."
+          "desc_short": "High Huntsman gains +2 to hit against a target with The Queen's Mark."
         },
         {
           "name": "Brass Bow",
           "cost": 15,
           "type": "Weapon",
-          "effect": "Range increased to 24\"."
+          "desc_short": "Range increased to 24\"."
         }
       ]
     },
@@ -412,7 +409,7 @@
           "name": "The King's Humiliation",
           "cost": 10,
           "type": "Relic",
-          "effect": "Once per game, the Jester can force an enemy Hero to lose 1 Quality point for one turn."
+          "desc_short": "Once per game, the Jester can force an enemy Hero to lose 1 Quality point for one turn."
         }
       ]
     },
@@ -470,7 +467,7 @@
           "name": "Witch-Stitched Silks",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense sewn into the courtly finery."
+          "desc_short": "+1 Defense sewn into the courtly finery."
         }
       ]
     },
@@ -522,17 +519,19 @@
           "name": "Armored Corset",
           "cost": 5,
           "type": "Armor",
-          "effect": "+1 Defense"
+          "desc_short": "+1 Defense"
         },
         {
           "name": "Sweet Cakes",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game: Remove Shaken within 6\""
+          "desc_short": "Once per game: Remove Shaken within 6\""
         }
       ]
     }
   ],
   "_point_formula_version": "3.0",
-  "_recalculated": "2026-03-07"
+  "_recalculated": "2026-03-07",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

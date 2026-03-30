@@ -1,18 +1,14 @@
 {
   "_id": "R-VIS",
+  "desc_short": "Clarity over precision. If it’s unclear, don’t argue.",
+  "desc_long": "Line of Sight should be obvious, Cover should be simple, and disputes should be rare and brief. The Canyon is dangerous enough without arguments.",
+  "fast_resolution": "If players cannot quickly agree: the shot does not happen OR the target gains Cover. Choose the option that keeps the game moving.",
   "title": "Visibility Vault",
-  "philosophy": {
-    "_id": "R-VIS-00",
-    "title": "Philosophy",
-    "short": "Clarity over precision. If it’s unclear, don’t argue.",
-    "long": "Simple, intent-based Line of Sight. Precision geometry is not required; clarity and momentum matter more.",
-    "fast_resolution": "If players cannot quickly agree: the shot does not happen OR the target gains Cover. Choose the option that keeps the game moving."
-  },
   "line_of_sight": {
     "_id": "R-VIS-01",
+    "desc_short": "If there’s doubt, LoS is blocked.",
+    "desc_long": "A clear, believable line between attacker and target. If there is doubt, Line of Sight is blocked.",
     "title": "Line Of Sight",
-    "short": "If there’s doubt, LoS is blocked.",
-    "long": "A clear, believable line between attacker and target. If there is doubt, Line of Sight is blocked.",
     "blockers": {
       "absolute": [
         "Solid walls",
@@ -34,9 +30,9 @@
   },
   "cover_mechanics": {
     "_id": "R-VIS-02",
+    "desc_short": "Cover gives +1 Defense vs ranged attacks.",
+    "desc_long": "Cover represents partial obstruction that makes a model harder to hit. It is not total protection.",
     "title": "Cover Mechanics",
-    "short": "Cover gives +1 Defense vs ranged attacks.",
-    "long": "Cover represents partial obstruction that makes a model harder to hit. It is not total protection.",
     "effects": {
       "ranged_bonus": "+1 Defense",
       "stacking": "Does not stack.",
@@ -66,8 +62,7 @@
       }
     ]
   },
-  "notes": {
-    "_id": "R-VIS-99",
-    "text": "Line of Sight should be obvious, Cover should be simple, and disputes should be rare and brief. The Canyon is dangerous enough without arguments."
-  }
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

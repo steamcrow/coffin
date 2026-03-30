@@ -1,86 +1,74 @@
 {
   "_id": "R-QS",
   "title": "Quickstart",
-
   "sections": {
-
     "what_is_this_game": {
       "_id": "R-QS-01",
-      "title": "What Is This Game?",
-      "long": "Coffin Canyon is a skirmish game for 2–4 players. Each player controls a small group of models called a Faction. You play on a table covered in terrain, fighting over objectives. Games last 4–6 rounds."
+      "desc_long": "Coffin Canyon is a skirmish game for 2–4 players. Each player controls a small group of models called a Faction. You play on a table covered in terrain, fighting over objectives. Games last 4–6 rounds.",
+      "title": "What Is This Game?"
     },
-
     "what_you_need": {
       "_id": "R-QS-02",
-      "title": "What You Need to Play",
-      "long": "You need: models for your Faction, six-sided dice (d6), a tape measure, a table with terrain, and this rules reference. Each player needs at least 4–6 dice."
+      "desc_long": "You need: models for your Faction, six-sided dice (d6), a tape measure, a table with terrain, and this rules reference. Each player needs at least 4–6 dice.",
+      "title": "What You Need to Play"
     },
-
     "the_dice": {
       "_id": "R-QS-03",
-      "title": "The Dice — How Rolling Works",
-      "long": "When your model does something risky — attack, interact, move through difficult terrain — you roll dice. Roll a number of d6 equal to your model's Quality (Q). Every die showing 4, 5, or 6 is a Success. More Successes = better outcome. This is true for everything in the game."
+      "desc_long": "When your model does something risky — attack, interact, move through difficult terrain — you roll dice. Roll a number of d6 equal to your model's Quality (Q). Every die showing 4, 5, or 6 is a Success. More Successes = better outcome. This is true for everything in the game.",
+      "title": "The Dice — How Rolling Works"
     },
-
     "quality": {
       "_id": "R-QS-04",
-      "title": "Quality (Q) — Your Most Important Stat",
-      "long": "Quality does two things: it sets how many dice you roll, and it tracks how healthy your model is. A fresh model with Q4 rolls 4 dice. If it takes 2 damage, it drops to Q2 and only rolls 2 dice. When Quality hits 0, the model is removed. There is no separate health bar."
+      "desc_long": "Quality does two things: it sets how many dice you roll, and it tracks how healthy your model is. A fresh model with Q4 rolls 4 dice. If it takes 2 damage, it drops to Q2 and only rolls 2 dice. When Quality hits 0, the model is removed. There is no separate health bar.",
+      "title": "Quality (Q) — Your Most Important Stat"
     },
-
     "defense": {
       "_id": "R-QS-05",
-      "title": "Defense (D) — Resisting Damage",
-      "long": "When your model is hit, the attacker rolls their attack dice. Count their Successes. Then subtract your model's Defense (D) value. What remains is the damage dealt (minimum 0). Defense 2 means you soak 2 hits automatically every time you are attacked."
+      "desc_long": "When your model is hit, the attacker rolls their attack dice. Count their Successes. Then subtract your model's Defense (D) value. What remains is the damage dealt (minimum 0). Defense 2 means you soak 2 hits automatically every time you are attacked.",
+      "title": "Defense (D) — Resisting Damage"
     },
-
     "your_turn": {
       "_id": "R-QS-06",
-      "title": "Your Turn — What a Model Can Do",
-      "long": "Each round, you activate your models one at a time. When it is a model's turn it gets 2 Actions. You can use these Actions to: Move (up to your Move stat in inches), Attack (roll dice against a target), or Interact (pick up an objective, open a door, etc.). You can do the same Action twice, or mix and match."
+      "desc_long": "Each round, you activate your models one at a time. When it is a model's turn it gets 2 Actions. You can use these Actions to: Move (up to your Move stat in inches), Attack (roll dice against a target), or Interact (pick up an objective, open a door, etc.). You can do the same Action twice, or mix and match.",
+      "title": "Your Turn — What a Model Can Do"
     },
-
     "attacking": {
       "_id": "R-QS-07",
-      "title": "Attacking — Step by Step",
-      "long": "Step 1: Pick a target in range and line of sight. Step 2: Roll dice equal to your Quality. Step 3: Count Successes (4, 5, or 6). Step 4: Subtract the target's Defense. Step 5: The remainder is damage — reduce the target's Quality by that amount. If Quality hits 0, remove the model."
+      "desc_long": "Step 1: Pick a target in range and line of sight. Step 2: Roll dice equal to your Quality. Step 3: Count Successes (4, 5, or 6). Step 4: Subtract the target's Defense. Step 5: The remainder is damage — reduce the target's Quality by that amount. If Quality hits 0, remove the model.",
+      "title": "Attacking — Step by Step"
     },
-
     "movement": {
       "_id": "R-QS-08",
-      "title": "Movement — Getting Around",
-      "long": "Move up to your Move stat (M) in inches per Move Action. Difficult terrain (water, rubble, dense foliage) costs double movement to cross. You cannot move through solid walls or other models. You can move around them. Flying models ignore terrain and other models while moving."
+      "desc_long": "Move up to your Move stat (M) in inches per Move Action. Difficult terrain (water, rubble, dense foliage) costs double movement to cross. You cannot move through solid walls or other models. You can move around them. Flying models ignore terrain and other models while moving.",
+      "title": "Movement — Getting Around"
     },
-
     "objectives": {
       "_id": "R-QS-09",
-      "title": "Objectives — How You Win",
-      "long": "Most scenarios use Objective tokens placed on the table. To score, move a model into base contact with the token and spend an Interact Action. Some objectives score points immediately. Others need to be held at the end of a round. Read your scenario card for the exact rules."
+      "desc_long": "Most scenarios use Objective tokens placed on the table. To score, move a model into base contact with the token and spend an Interact Action. Some objectives score points immediately. Others need to be held at the end of a round. Read your scenario card for the exact rules.",
+      "title": "Objectives — How You Win"
     },
-
     "morale": {
       "_id": "R-QS-10",
-      "title": "Morale — When Models Break",
-      "long": "Some events force a model to test Morale: losing a nearby ally, taking heavy damage, or facing Fear effects. To test, roll dice equal to your Quality. If you score 0 Successes, the model becomes Shaken (−1 die on all rolls). A Shaken model that fails again becomes Panicked and must flee toward its deployment edge."
+      "desc_long": "Some events force a model to test Morale: losing a nearby ally, taking heavy damage, or facing Fear effects. To test, roll dice equal to your Quality. If you score 0 Successes, the model becomes Shaken (−1 die on all rolls). A Shaken model that fails again becomes Panicked and must flee toward its deployment edge.",
+      "title": "Morale — When Models Break"
     },
-
     "the_first_game": {
       "_id": "R-QS-11",
-      "title": "Setting Up Your First Game",
-      "long": "Place terrain across the table. Put 3 Objective tokens in the center area. Each player deploys their models within 6 inches of their table edge. Decide who goes first (roll off or agree). Play 4 rounds. The player who controls the most Objectives at the end of Round 4 wins."
+      "desc_long": "Place terrain across the table. Put 3 Objective tokens in the center area. Each player deploys their models within 6 inches of their table edge. Decide who goes first (roll off or agree). Play 4 rounds. The player who controls the most Objectives at the end of Round 4 wins.",
+      "title": "Setting Up Your First Game"
     },
-
     "quick_reference": {
       "_id": "R-QS-12",
-      "title": "Quick Reference — Key Numbers",
-      "long": "Roll to hit: 4+ is a Success. Damage: Attacker Successes minus target Defense. Actions per turn: 2. Standard move: your Move stat in inches. Difficult terrain: costs double. Quality 0: model removed. Shaken: −1 die on all rolls. Panicked: must flee."
+      "desc_long": "Roll to hit: 4+ is a Success. Damage: Attacker Successes minus target Defense. Actions per turn: 2. Standard move: your Move stat in inches. Difficult terrain: costs double. Quality 0: model removed. Shaken: −1 die on all rolls. Panicked: must flee.",
+      "title": "Quick Reference — Key Numbers"
     },
-
     "next_steps": {
       "_id": "R-QS-13",
-      "title": "Next Steps — Going Deeper",
-      "long": "Once you have played a game or two, explore the full rules sections: Core Mechanics covers the dice system in detail. Turn Structure explains initiative and activation order. The Ability Dictionary lists every special rule keyword. Factions explains what makes each group unique. Start with Core Mechanics when you are ready."
+      "desc_long": "Once you have played a game or two, explore the full rules sections: Core Mechanics covers the dice system in detail. Turn Structure explains initiative and activation order. The Ability Dictionary lists every special rule keyword. Factions explains what makes each group unique. Start with Core Mechanics when you are ready.",
+      "title": "Next Steps — Going Deeper"
     }
-
-  }
+  },
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

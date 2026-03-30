@@ -1,11 +1,8 @@
 {
-  "introduction": {
-    "title": "Monster Rangers: Believe, Study, Protect",
-    "tagline": "Befriend the monster. Protect the world.",
-    "description": "The Monster Rangers are a frontier order dedicated to the belief that monsters are not aberrations, but living parts of Obscuria’s ecology. Founded in 1903 by Baron Davis, the Rangers exist to study monsters without exploitation, protect them from eradication, and defend human communities from panic-driven destruction. They walk the line between trust and danger—forming bonds where possible, standing firm where necessary, and choosing understanding over extermination.",
-    "philosophy": "Monsters are not enemies by default. Fear is not a plan. Knowledge is protection. We believe monsters deserve understanding, we study them so mistakes are not repeated, and we protect both monsters and people from those who would turn Obscuria into a slaughterhouse or a strip mine.",
-    "history": "The Monster Rangers were formally established in 1903 by Baron Davis after witnessing repeated frontier massacres—both of monsters and of settlements—caused by ignorance, rumor, and reckless Thyr pursuit. Drawing from scouts, naturalists, folklorists, and survivors, the early Rangers cataloged monsters, mapped territories, and proved that many creatures could be reasoned with, relocated, or defended rather than destroyed. Over time, the Rangers became a recognized—if often distrusted—presence across Coffin Canyon, standing between hysteria and harmony."
-  },
+  "type": "faction",
+  "desc_short": "Befriend the monster. Protect the world.",
+  "desc_long": "The Monster Rangers are a frontier order dedicated to the belief that monsters are not aberrations, but living parts of Obscuria’s ecology. Founded in 1903 by Baron Davis, the Rangers exist to study monsters without exploitation, protect them from eradication, and defend human communities from panic-driven destruction. They walk the line between trust and danger—forming bonds where possible, standing firm where necessary, and choosing understanding over extermination.",
+  "history": "The Monster Rangers were formally established in 1903 by Baron Davis after witnessing repeated frontier massacres—both of monsters and of settlements—caused by ignorance, rumor, and reckless Thyr pursuit. Drawing from scouts, naturalists, folklorists, and survivors, the early Rangers cataloged monsters, mapped territories, and proved that many creatures could be reasoned with, relocated, or defended rather than destroyed. Over time, the Rangers became a recognized—if often distrusted—presence across Coffin Canyon, standing between hysteria and harmony.",
   "faction_identity": {
     "core_values": [
       "Believe monsters are living beings, not targets",
@@ -127,7 +124,6 @@
       "Scenarios requiring monster destruction"
     ]
   },
-  "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons (like Harpoons) have additional point costs listed in optional_upgrades.",
   "faction_features": [
     {
       "name": "Befriend Monsters",
@@ -163,6 +159,7 @@
       ]
     }
   ],
+  "weapons_note": "Unit costs include standard-issue weapons. Weapon abilities and properties are defined in core rules. Upgradeable weapons (like Harpoons) have additional point costs listed in optional_upgrades.",
   "units": [
     {
       "name": "Core Ranger",
@@ -213,13 +210,13 @@
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "desc_short": "Immune to Coffin Cough and Blinding effects."
         },
         {
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense. Light Armor.",
+          "desc_short": "+1 Defense. Light Armor.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -228,7 +225,7 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend attempt."
+          "desc_short": "Once per game, gain advantage on a Befriend attempt."
         }
       ]
     },
@@ -292,13 +289,13 @@
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "desc_short": "Immune to Coffin Cough and Blinding effects."
         },
         {
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense. Light Armor.",
+          "desc_short": "+1 Defense. Light Armor.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -307,7 +304,7 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend Beast attempt."
+          "desc_short": "Once per game, gain advantage on a Befriend Beast attempt."
         }
       ]
     },
@@ -373,13 +370,13 @@
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "desc_short": "Immune to Coffin Cough and Blinding effects."
         },
         {
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense. Light Armor.",
+          "desc_short": "+1 Defense. Light Armor.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -388,7 +385,7 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend Beast attempt."
+          "desc_short": "Once per game, gain advantage on a Befriend Beast attempt."
         }
       ]
     },
@@ -455,13 +452,13 @@
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "desc_short": "Immune to Coffin Cough and Blinding effects."
         },
         {
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "desc_short": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -470,7 +467,7 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend Automat attempt."
+          "desc_short": "Once per game, gain advantage on a Befriend Automat attempt."
         }
       ]
     },
@@ -532,64 +529,18 @@
         "artifact_recovery",
         "mystical_corruption"
       ],
-      "supplemental_abilities": [
-        {
-          "name": "Groom's Grail",
-          "effect": "Once per game: 12\" cone freeze for 2 rounds."
-        },
-        {
-          "name": "Alune's Shovel",
-          "effect": "Once per game: Create 10\" Hazardous thorn wall."
-        },
-        {
-          "name": "Blink Crown",
-          "effect": "Once per game: Swap positions with any creature."
-        },
-        {
-          "name": "Gravewarden Bell",
-          "effect": "Once per game: 8\" morale shock (Shaken → Panicked)."
-        },
-        {
-          "name": "Saltbound Reliquary",
-          "effect": "Once per game: 6\" anti-undead damage aura."
-        },
-        {
-          "name": "Widow's Lantern",
-          "effect": "Once per game: Remove Stealth and cover in 10\" aura."
-        },
-        {
-          "name": "Iron Psalm Nails",
-          "effect": "Once per game: Anchor enemy for 2 rounds."
-        },
-        {
-          "name": "Roluun's Boots",
-          "effect": "These old iron boots make you sprint FAST!",
-          "stat_modifiers": {
-            "move": 4,
-            "cost": 10
-          }
-        },
-        {
-          "name": "Thurible of Crawling Smoke",
-          "effect": "Once per game: Create 5\" smoke cloud."
-        },
-        {
-          "name": "Pact Mirror",
-          "effect": "Once per game: Redirect all damage to ally."
-        }
-      ],
       "optional_upgrades": [
         {
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "desc_short": "Immune to Coffin Cough and Blinding effects."
         },
         {
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "desc_short": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -598,7 +549,53 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend Beast attempt."
+          "desc_short": "Once per game, gain advantage on a Befriend Beast attempt."
+        }
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Groom's Grail",
+          "desc_short": "Once per game: 12\" cone freeze for 2 rounds."
+        },
+        {
+          "name": "Alune's Shovel",
+          "desc_short": "Once per game: Create 10\" Hazardous thorn wall."
+        },
+        {
+          "name": "Blink Crown",
+          "desc_short": "Once per game: Swap positions with any creature."
+        },
+        {
+          "name": "Gravewarden Bell",
+          "desc_short": "Once per game: 8\" morale shock (Shaken → Panicked)."
+        },
+        {
+          "name": "Saltbound Reliquary",
+          "desc_short": "Once per game: 6\" anti-undead damage aura."
+        },
+        {
+          "name": "Widow's Lantern",
+          "desc_short": "Once per game: Remove Stealth and cover in 10\" aura."
+        },
+        {
+          "name": "Iron Psalm Nails",
+          "desc_short": "Once per game: Anchor enemy for 2 rounds."
+        },
+        {
+          "name": "Roluun's Boots",
+          "desc_short": "These old iron boots make you sprint FAST!",
+          "stat_modifiers": {
+            "move": 4,
+            "cost": 10
+          }
+        },
+        {
+          "name": "Thurible of Crawling Smoke",
+          "desc_short": "Once per game: Create 5\" smoke cloud."
+        },
+        {
+          "name": "Pact Mirror",
+          "desc_short": "Once per game: Redirect all damage to ally."
         }
       ]
     },
@@ -663,19 +660,19 @@
           "name": "Fire Hat",
           "cost": 5,
           "type": "Upgrade",
-          "effect": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster."
+          "desc_short": "Replace Shield Aura and Hex with Blast and Fear. Become offensive fire caster."
         },
         {
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "desc_short": "Immune to Coffin Cough and Blinding effects."
         },
         {
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "desc_short": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -684,7 +681,7 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend attempt."
+          "desc_short": "Once per game, gain advantage on a Befriend attempt."
         }
       ]
     },
@@ -748,13 +745,13 @@
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Immune to Coffin Cough and Blinding effects."
+          "desc_short": "Immune to Coffin Cough and Blinding effects."
         },
         {
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "desc_short": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -763,7 +760,7 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend attempt."
+          "desc_short": "Once per game, gain advantage on a Befriend attempt."
         }
       ]
     },
@@ -828,7 +825,7 @@
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "desc_short": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -897,13 +894,13 @@
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."
+          "desc_short": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."
         },
         {
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "desc_short": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -912,7 +909,7 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend Haunt attempt."
+          "desc_short": "Once per game, gain advantage on a Befriend Haunt attempt."
         }
       ]
     },
@@ -977,13 +974,13 @@
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."
+          "desc_short": "Protective eyewear and respirator. Immune to Coffin Cough environmental penalty and Blinding effects (like Ink Bomb)."
         },
         {
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "desc_short": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -992,7 +989,7 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend attempt."
+          "desc_short": "Once per game, gain advantage on a Befriend attempt."
         }
       ]
     },
@@ -1055,7 +1052,7 @@
           "name": "Witch-Stitched",
           "cost": 15,
           "type": "Upgrade",
-          "effect": "+1 Defense, Barely Controlled test succeeds on 3+ instead of 4+. More stable bomber.",
+          "desc_short": "+1 Defense, Barely Controlled test succeeds on 3+ instead of 4+. More stable bomber.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -1064,7 +1061,7 @@
           "name": "Firework Bombs",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "Once per game: Shoot firework bomb with Blast and Fear. Spectacular explosive!",
+          "desc_short": "Once per game: Shoot firework bomb with Blast and Fear. Spectacular explosive!",
           "stat_modifiers": {
             "range": 12
           }
@@ -1073,7 +1070,7 @@
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
-          "effect": "Once per game, gain advantage on a Befriend attempt with flying monsters."
+          "desc_short": "Once per game, gain advantage on a Befriend attempt with flying monsters."
         }
       ]
     },
@@ -1141,7 +1138,7 @@
           "name": "Witch-Stitched",
           "cost": 10,
           "type": "Upgrade",
-          "effect": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
+          "desc_short": "+1 Defense sewn into the Ranger uniform. Does not inhibit or reduce movement.",
           "stat_modifiers": {
             "defense": 1
           }
@@ -1211,7 +1208,7 @@
           "name": "Harpoons",
           "cost": 10,
           "type": "Weapon",
-          "effect": "Gain Ranged 10\" attack. 14\" total threat range (4\" move + 10\" range). Trained hunters.",
+          "desc_short": "Gain Ranged 10\" attack. 14\" total threat range (4\" move + 10\" range). Trained hunters.",
           "stat_modifiers": {
             "range": 10
           }
@@ -1277,11 +1274,13 @@
           "name": "gas_mask",
           "cost": 3,
           "type": "Gear",
-          "effect": "Protective eyewear and respirator. Immune to environmental penalties."
+          "desc_short": "Protective eyewear and respirator. Immune to environmental penalties."
         }
       ]
     }
   ],
   "_point_formula_version": "3.0",
-  "_recalculated": "2026-03-07"
+  "_recalculated": "2026-03-07",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

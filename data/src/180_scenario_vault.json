@@ -45,6 +45,7 @@
         "Liberty Corps"
       ],
       "location_rules": {
+        "desc_long": "Requires a mine camp or rough boomtown — somewhere the Vendomat has wandered into.",
         "allowed_location_types": [
           "mine",
           "mine_active_shineriders",
@@ -93,6 +94,7 @@
         "note": "Place the Vendomat at board center. It wanders d6 inches each round before initiative. It must be reached and purchased from — not attacked."
       },
       "monster_pressure": {
+        "desc_long": "Low danger scenario. No monster pressure unless Danger is raised by Warden.",
         "enabled": false,
         "notes": "Low danger scenario. No monster pressure unless Danger is raised by Warden."
       },
@@ -134,6 +136,7 @@
         "Monsters"
       ],
       "location_rules": {
+        "desc_long": "Somewhere quiet enough to hear what Monte Haul is selling.",
         "allowed_location_types": [
           "ruined_settlement",
           "wilderness_scrub",
@@ -185,6 +188,7 @@
         "warden_note": "Optional, but recommended for full unease."
       },
       "monster_pressure": {
+        "desc_long": "The items attract attention immediately. Spawn 1 Monster per round from a random edge starting Round 1.",
         "enabled": true,
         "trigger_round": 1,
         "spawn_bias": [
@@ -233,6 +237,7 @@
         "Liberty Corps"
       ],
       "location_rules": {
+        "desc_long": "A place where supply crates matter. The Vendomat has been stocked with Canyon Dan's canned meals in colors no meal should be.",
         "allowed_location_types": [
           "boomtown_mesa",
           "boomtown_riverside",
@@ -280,6 +285,7 @@
         "warden_note": "The food is still good. Probably."
       },
       "monster_pressure": {
+        "desc_long": "The monsters do not smell the cans, but they quickly learn that the little metal bricks contain dense, delicious nonsense.",
         "enabled": true,
         "trigger_round": 2,
         "spawn_bias": [
@@ -327,6 +333,7 @@
         "Monsters"
       ],
       "location_rules": {
+        "desc_long": "A place where something old might listen. The Vendomat is dispensing Ralu's Holy Wine for free.",
         "allowed_location_types": [
           "wilderness_scrub",
           "mesa_top",
@@ -374,6 +381,7 @@
         "warden_note": "The wine wants to be drunk."
       },
       "monster_pressure": {
+        "desc_long": "Immediate attraction. Monsters arrive every round, drawn by the chanting, the wine, and the freshly-made Raluuts.",
         "enabled": true,
         "trigger_round": 1,
         "spawn_bias": [
@@ -424,6 +432,7 @@
         "Monsters"
       ],
       "location_rules": {
+        "desc_long": "A desperate route between scattered camps, graves, and failed outposts. The Vendomat is following an old service path no one remembers programming.",
         "allowed_location_types": [
           "wilderness_scrub",
           "arroyo",
@@ -471,6 +480,7 @@
         "warden_note": "Something on the old route is still in its memory."
       },
       "monster_pressure": {
+        "desc_long": "The chime, the movement, and the repeated dispensing of supplies draw predators and opportunists. Spawn 1 monster unit per round from Round 2 onward, or escalate more aggressively if many tokens remain on the table.",
         "enabled": true,
         "trigger_round": 2,
         "spawn_bias": [
@@ -519,6 +529,7 @@
         "Monsters"
       ],
       "location_rules": {
+        "desc_long": "Monte Haul has set up in a busy or contested location. He is fixed to board center.",
         "allowed_location_types": [
           "boomtown_riverside",
           "boomtown_mesa",
@@ -570,6 +581,7 @@
         "warden_note": "Optional. Skip if the board is already chaotic enough."
       },
       "monster_pressure": {
+        "desc_long": "The sulfur and gunpowder smell draws territorial monsters. At Danger 4+, deploy 1 monster unit per round from a random edge starting Round 2. Monsters are NOT controlled by any player — use NPC monster activation rules.",
         "enabled": true,
         "trigger_round": 2,
         "spawn_bias": [
@@ -592,5 +604,8 @@
         "win_condition": "Confiscate or destroy all 3 Dynamite tokens before Round 6."
       }
     }
-  ]
+  ],
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

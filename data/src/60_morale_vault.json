@@ -1,18 +1,13 @@
 {
   "_id": "R-MORALE",
+  "desc_short": "Fear creates momentum; hesitation kills.",
+  "desc_long": "Morale represents fear, hesitation, and survival overriding orders. Coffin Canyon is not a game of fearless soldiers; it is a game of beings pushed too far.",
   "title": "Morale Vault",
-  "philosophy": {
-    "_id": "R-MORALE-00",
-    "title": "Philosophy",
-    "short": "Fear creates momentum; hesitation kills.",
-    "long": "Morale represents fear, hesitation, and survival overriding orders. Coffin Canyon is not a game of fearless soldiers; it is a game of beings pushed too far.",
-    "notes": "Morale creates momentum; fear punishes overextension. Retreat is a valid tactic. Standing firm is not always the goal."
-  },
   "the_morale_test": {
     "_id": "R-MORALE-01",
+    "desc_short": "Roll Quality dice; 4+ holds, 0 successes fails.",
+    "desc_long": "Roll d6s equal to current Quality. Each 4+ is a Success.",
     "title": "The Morale Test",
-    "short": "Roll Quality dice; 4+ holds, 0 successes fails.",
-    "long": "Roll d6s equal to current Quality. Each 4+ is a Success.",
     "trigger": "Tested when triggered by destruction, Tainted terrain, sudden losses, fear-based abilities, or isolation.",
     "outcomes": {
       "success": "1+ Successes: The model holds.",
@@ -22,13 +17,11 @@
   "status_conditions": {
     "_id": "R-MORALE-02",
     "title": "Status Conditions",
-    "short": "",
-    "long": "",
     "shaken": {
       "_id": "R-MORALE-02A",
+      "desc_short": "Hesitation and fear.",
+      "desc_long": "Hesitation, fear, or loss of footing.",
       "title": "Shaken",
-      "short": "Hesitation and fear.",
-      "long": "Hesitation, fear, or loss of footing.",
       "penalties": [
         "-1 die on all rolls",
         "Cannot take specific actions listed on unit card"
@@ -37,9 +30,9 @@
     },
     "panicked": {
       "_id": "R-MORALE-02B",
+      "desc_short": "Loss of control; forced movement.",
+      "desc_long": "Full loss of control.",
       "title": "Panicked",
-      "short": "Loss of control; forced movement.",
-      "long": "Full loss of control.",
       "immediate_effect": "Move away from source of fear immediately. If movement is impossible, become Shaken instead.",
       "activation_penalty": "Lose 1 Action on next activation and -1 die on all rolls.",
       "recovery": "Requires distance, time, or specific abilities."
@@ -48,19 +41,17 @@
   "fear_mechanics": {
     "_id": "R-MORALE-03",
     "title": "Fear Mechanics",
-    "short": "",
-    "long": "",
     "cascading_fear": {
       "_id": "R-MORALE-03A",
-      "title": "Cascading Fear",
-      "short": "Fear spreads from destruction.",
-      "long": "When a model is destroyed or panics, nearby Grunts or low-Quality models must test Morale."
+      "desc_short": "Fear spreads from destruction.",
+      "desc_long": "When a model is destroyed or panics, nearby Grunts or low-Quality models must test Morale.",
+      "title": "Cascading Fear"
     },
     "monster_logic": {
       "_id": "R-MORALE-03B",
-      "title": "Monster Logic",
-      "short": "Monsters may ignore Morale, gain bonuses from enemy fear, or grow more dangerous as fear spreads",
-      "long": "Monsters may ignore Morale, gain bonuses from enemy fear, or grow more dangerous as fear spreads. See Unit Card."
+      "desc_short": "Monsters may ignore Morale, gain bonuses from enemy fear, or grow more dangerous as fear spreads",
+      "desc_long": "Monsters may ignore Morale, gain bonuses from enemy fear, or grow more dangerous as fear spreads. See Unit Card.",
+      "title": "Monster Logic"
     },
     "environmental_fear": {
       "_id": "R-MORALE-03C",
@@ -68,5 +59,8 @@
       "haunted": "Force test on trigger.",
       "burning": "Witnessing Overburn fallout forces test."
     }
-  }
+  },
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

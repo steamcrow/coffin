@@ -3,7 +3,6 @@
   "version": "1.1",
   "genre": "occult_pulp_weird_west",
   "changelog": "v1.1 — Added doomshine resource category, substance_attraction escalation trigger, compelled monster plot role, contraband_cache_revealed inciting pressure. Updated shine_riders canonical motivation to include doomshine.",
-
   "design_philosophy": {
     "core_statement": "Coffin Canyon scenarios generate pressure, not plots.",
     "principles": [
@@ -15,7 +14,6 @@
       "control_is_temporary_and_contested"
     ]
   },
-
   "core_plot_loop": [
     "inciting_pressure",
     "claimants",
@@ -24,10 +22,9 @@
     "twist",
     "aftermath_mutation"
   ],
-
   "vectors": {
     "inciting_pressure": {
-      "description": "what destabilized the location and drew attention",
+      "desc_long": "what destabilized the location and drew attention",
       "sources": [
         "monster_action",
         "human_overreach",
@@ -51,9 +48,8 @@
         "contraband_cache_revealed_is_appropriate_when_a_resource_is_both_valuable_and_actively_dangerous_to_possess"
       ]
     },
-
     "claimants": {
-      "description": "who wants control and why",
+      "desc_long": "who wants control and why",
       "rules": [
         "minimum_two_claimants",
         "each_claimant_must_desire_a_different_end_state",
@@ -73,9 +69,8 @@
         "industrial_interests": "throughput_control_and_resource_monopoly"
       }
     },
-
     "resource_pressure": {
-      "description": "what physically forces movement and conflict",
+      "desc_long": "what physically forces movement and conflict",
       "resource_types": {
         "riches": [
           "silver",
@@ -132,9 +127,8 @@
         "contraband_resources_draw_authority_attention_when_visible_in_quantity"
       ]
     },
-
     "escalation": {
-      "description": "reactive_pressure_caused_by_violence_delay_misuse_or_substance_proximity",
+      "desc_long": "reactive_pressure_caused_by_violence_delay_misuse_or_substance_proximity",
       "triggers": [
         "mass_casualties",
         "monster_slaughter",
@@ -171,9 +165,8 @@
         "substance_attraction_escalation_is_unique_because_it_is_caused_by_the_resource_itself_not_by_player_actions"
       ]
     },
-
     "twist": {
-      "description": "a_reframing_revelation_triggered_by_escalation",
+      "desc_long": "a_reframing_revelation_triggered_by_escalation",
       "timing": "after_escalation",
       "types": [
         "objective_reveals_hidden_nature",
@@ -196,9 +189,8 @@
         "twists_should_create_moral_or_strategic_discomfort"
       ]
     },
-
     "aftermath_mutation": {
-      "description": "how_the_scenario_permanently_alters_the_canyon",
+      "desc_long": "how_the_scenario_permanently_alters_the_canyon",
       "mutation_types": [
         "location_state_change",
         "resource_depletion_or_corruption",
@@ -233,7 +225,6 @@
       ]
     }
   },
-
   "monster_plot_roles": {
     "instigator": "caused_the_inciting_pressure",
     "territorial_power": "controls_space_like_a_faction",
@@ -244,11 +235,9 @@
     "harbinger": "signals_future_catastrophe",
     "compelled": "overrides_normal_behaviour_in_response_to_a_substance_or_signal — does_not_choose_to_be_present_and_cannot_be_reasoned_with_while_compelled"
   },
-
   "monster_role_notes": {
     "compelled": "Thrallo in Doomshine scenarios operate under the compelled role. They are not territorial, not retaliating, not escalating in response to violence — they are following an irresistible chemical signal. They move toward the nearest unsecured keg each activation, regardless of what is between them and it. If attacked while compelled, they retaliate for one activation then return to compelled behaviour. The compelled role is mechanically distinct from all others and must be declared in the scenario setup so players understand the threat logic."
   },
-
   "solo_play_support": {
     "logic": [
       "unfilled_claimant_slots_are_filled_by_monsters_or_environmental_forces",
@@ -258,5 +247,8 @@
       "authority_intervention_is_more_likely",
       "substance_attraction_escalation_ramps_faster_in_solo_play"
     ]
-  }
+  },
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

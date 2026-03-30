@@ -1,12 +1,11 @@
 {
+  "desc_long": "Complete objective rules for Coffin Canyon scenario generation",
   "file": "160_objective_vault.json",
   "version": "1.0",
   "references": [
     "200_plot_families.json",
     "150_location_types.json"
   ],
-  "description": "Complete objective rules for Coffin Canyon scenario generation",
-
   "objective_categories": [
     {
       "category_id": "salvage_extraction",
@@ -15,7 +14,7 @@
         {
           "objective_id": "wrecked_engine",
           "name": "Salvage Wrecked Engine",
-          "description": "Extract mechanical components from wrecked machinery",
+          "desc_long": "Extract mechanical components from wrecked machinery",
           "setup": {
             "markers": 1,
             "marker_type": "wrecked_engine",
@@ -36,7 +35,7 @@
         {
           "objective_id": "scattered_crates",
           "name": "Recover Supply Crates",
-          "description": "Collect supply crates scattered across the battlefield",
+          "desc_long": "Collect supply crates scattered across the battlefield",
           "setup": {
             "markers": "danger_rating + 1",
             "marker_type": "supply_crate",
@@ -55,7 +54,7 @@
         {
           "objective_id": "derailed_cars",
           "name": "Search Derailed Cars",
-          "description": "Search train car wreckage for valuable cargo",
+          "desc_long": "Search train car wreckage for valuable cargo",
           "setup": {
             "markers": "danger_rating",
             "marker_type": "derailed_car"
@@ -75,7 +74,7 @@
         {
           "objective_id": "thyr_cache",
           "name": "Extract Thyr Crystals",
-          "description": "Recover volatile Thyr crystals from cache",
+          "desc_long": "Recover volatile Thyr crystals from cache",
           "setup": {
             "markers": 1,
             "marker_type": "thyr_cache",
@@ -98,7 +97,7 @@
         {
           "objective_id": "artifact",
           "name": "Recover Ancient Artifact",
-          "description": "Secure mysterious pre-Storm artifact",
+          "desc_long": "Secure mysterious pre-Storm artifact",
           "setup": {
             "markers": 1,
             "marker_type": "artifact",
@@ -118,7 +117,7 @@
         {
           "objective_id": "stored_supplies",
           "name": "Raid Supply Depot",
-          "description": "Extract stockpiled resources from depot",
+          "desc_long": "Extract stockpiled resources from depot",
           "setup": {
             "markers": 1,
             "marker_type": "supply_depot",
@@ -137,7 +136,7 @@
         {
           "objective_id": "fouled_resource",
           "name": "Purify Contaminated Cache",
-          "description": "Recover and purify fouled supplies",
+          "desc_long": "Recover and purify fouled supplies",
           "setup": {
             "markers": 1,
             "marker_type": "fouled_cache",
@@ -157,7 +156,6 @@
         }
       ]
     },
-
     {
       "category_id": "escort_transport",
       "name": "Escort & Transport",
@@ -165,7 +163,7 @@
         {
           "objective_id": "cargo_vehicle",
           "name": "Escort Cargo Vehicle",
-          "description": "Move cargo vehicle across dangerous terrain",
+          "desc_long": "Move cargo vehicle across dangerous terrain",
           "setup": {
             "markers": 1,
             "marker_type": "cargo_vehicle",
@@ -193,7 +191,7 @@
         {
           "objective_id": "pack_animals",
           "name": "Capture Pack Animals",
-          "description": "Secure pack animals without killing them",
+          "desc_long": "Secure pack animals without killing them",
           "setup": {
             "markers": "Math.max(2, Math.floor(danger_rating / 2))",
             "marker_type": "pack_animal"
@@ -217,7 +215,7 @@
         {
           "objective_id": "protect_informant",
           "name": "Protect the Informant",
-          "description": "Keep informant alive until extraction",
+          "desc_long": "Keep informant alive until extraction",
           "setup": {
             "markers": 1,
             "marker_type": "informant",
@@ -240,7 +238,7 @@
         {
           "objective_id": "escort_civilians",
           "name": "Escort Civilians",
-          "description": "Move civilians across board without casualties",
+          "desc_long": "Move civilians across board without casualties",
           "setup": {
             "markers": "Math.max(2, danger_rating - 1)",
             "marker_type": "civilian",
@@ -262,7 +260,7 @@
         {
           "objective_id": "stop_the_train",
           "name": "Stop the Runaway Train",
-          "description": "Reach and halt runaway engine before disaster",
+          "desc_long": "Reach and halt runaway engine before disaster",
           "setup": {
             "markers": 1,
             "marker_type": "train_engine",
@@ -290,7 +288,6 @@
         }
       ]
     },
-
     {
       "category_id": "territory_control",
       "name": "Territory & Control",
@@ -298,7 +295,7 @@
         {
           "objective_id": "land_marker",
           "name": "Establish Territory",
-          "description": "Plant markers and hold territorial claims",
+          "desc_long": "Plant markers and hold territorial claims",
           "setup": {
             "markers": 3,
             "marker_type": "territorial_marker",
@@ -315,7 +312,7 @@
         {
           "objective_id": "command_structure",
           "name": "Seize Command Post",
-          "description": "Control command structure to coordinate forces",
+          "desc_long": "Control command structure to coordinate forces",
           "setup": {
             "markers": 1,
             "marker_type": "command_post",
@@ -330,7 +327,7 @@
         {
           "objective_id": "fortified_position",
           "name": "Hold Fortified Position",
-          "description": "Maintain control of fortification",
+          "desc_long": "Maintain control of fortification",
           "setup": {
             "markers": 1,
             "marker_type": "fortification",
@@ -345,7 +342,7 @@
         {
           "objective_id": "barricades",
           "name": "Control Chokepoint",
-          "description": "Hold barricades to restrict enemy movement",
+          "desc_long": "Hold barricades to restrict enemy movement",
           "setup": {
             "markers": 1,
             "marker_type": "barricade",
@@ -361,7 +358,7 @@
         {
           "objective_id": "last_stand",
           "name": "Hold the Line",
-          "description": "Survive overwhelming pressure",
+          "desc_long": "Survive overwhelming pressure",
           "setup": {
             "markers": 1,
             "marker_type": "defensive_position",
@@ -379,7 +376,7 @@
         {
           "objective_id": "secure_shelter",
           "name": "Secure Shelter",
-          "description": "Barricade and defend safe location",
+          "desc_long": "Barricade and defend safe location",
           "setup": {
             "markers": 1,
             "marker_type": "shelter",
@@ -399,7 +396,6 @@
         }
       ]
     },
-
     {
       "category_id": "ritual_mystical",
       "name": "Ritual & Mystical",
@@ -407,7 +403,7 @@
         {
           "objective_id": "ritual_components",
           "name": "Gather Ritual Components",
-          "description": "Collect mystical components",
+          "desc_long": "Collect mystical components",
           "setup": {
             "markers": "danger_rating",
             "marker_type": "ritual_component",
@@ -425,7 +421,7 @@
         {
           "objective_id": "ritual_site",
           "name": "Complete the Ritual",
-          "description": "Perform ritual actions at sacred site",
+          "desc_long": "Perform ritual actions at sacred site",
           "setup": {
             "markers": 1,
             "marker_type": "ritual_site",
@@ -449,7 +445,7 @@
         {
           "objective_id": "ritual_circle",
           "name": "Empower Ritual Circle",
-          "description": "Channel power through ritual circle",
+          "desc_long": "Channel power through ritual circle",
           "setup": {
             "markers": 1,
             "marker_type": "ritual_circle",
@@ -465,8 +461,8 @@
             "failure": "Action wasted"
           },
           "escalation": {
+            "desc_short": "all_models_within_6_inches_take_1_damage",
             "starts_round": 3,
-            "effect": "all_models_within_6_inches_take_1_damage",
             "timing": "start_of_round"
           },
           "completion": {
@@ -479,7 +475,7 @@
         {
           "objective_id": "tainted_ground",
           "name": "Cleanse Tainted Ground",
-          "description": "Purify corrupted terrain",
+          "desc_long": "Purify corrupted terrain",
           "setup": {
             "markers": "danger_rating - 1",
             "marker_type": "tainted_ground",
@@ -496,8 +492,8 @@
             "failure": "Take 1 damage from corruption"
           },
           "corruption_spread": {
+            "desc_short": "add_1_token_to_each_marker",
             "timing": "start_of_round",
-            "effect": "add_1_token_to_each_marker",
             "spawn_threshold": 5,
             "spawn_creature": "corruption_creature"
           },
@@ -508,7 +504,7 @@
         {
           "objective_id": "sacrificial_focus",
           "name": "Destroy Dark Altar",
-          "description": "Eliminate sacrificial altar",
+          "desc_long": "Eliminate sacrificial altar",
           "setup": {
             "markers": 1,
             "marker_type": "dark_altar",
@@ -531,7 +527,7 @@
         {
           "objective_id": "captive_entity",
           "name": "Free the Captive",
-          "description": "Rescue or capture mysterious entity",
+          "desc_long": "Rescue or capture mysterious entity",
           "setup": {
             "markers": 1,
             "marker_type": "captive_entity",
@@ -552,7 +548,6 @@
         }
       ]
     },
-
     {
       "category_id": "rescue_operations",
       "name": "Rescue Operations",
@@ -560,7 +555,7 @@
         {
           "objective_id": "rescue_hostages",
           "name": "Rescue the Hostages",
-          "description": "Free captives and escort to safety",
+          "desc_long": "Free captives and escort to safety",
           "setup": {
             "markers": "Math.max(2, Math.floor(danger_rating / 2))",
             "marker_type": "hostage",
@@ -574,8 +569,8 @@
           "escort": {
             "speed": "half_speed",
             "panic_if_unescorted": {
-              "duration": "1_full_round",
-              "effect": "stops_moving"
+              "desc_short": "stops_moving",
+              "duration": "1_full_round"
             }
           },
           "vp_value": 4,
@@ -586,7 +581,7 @@
         {
           "objective_id": "downed_ally",
           "name": "Recover Fallen Ally",
-          "description": "Stabilize and extract downed figure",
+          "desc_long": "Stabilize and extract downed figure",
           "setup": {
             "markers": 1,
             "marker_type": "downed_ally",
@@ -608,7 +603,7 @@
         {
           "objective_id": "prison_break",
           "name": "Stage a Prison Break",
-          "description": "Free prisoners without triggering alarm",
+          "desc_long": "Free prisoners without triggering alarm",
           "setup": {
             "markers": "danger_rating",
             "marker_type": "prison_cell",
@@ -628,7 +623,6 @@
         }
       ]
     },
-
     {
       "category_id": "sabotage_destruction",
       "name": "Sabotage & Destruction",
@@ -636,7 +630,7 @@
         {
           "objective_id": "sabotage_machinery",
           "name": "Sabotage the Machinery",
-          "description": "Disable critical systems",
+          "desc_long": "Disable critical systems",
           "setup": {
             "markers": "danger_rating",
             "marker_type": "machinery"
@@ -648,8 +642,8 @@
           },
           "interaction": {
             "method_1": {
-              "type": "attack",
-              "description": "Attack as normal structure"
+              "desc_long": "Attack as normal structure",
+              "type": "attack"
             },
             "method_2": {
               "type": "sabotage",
@@ -666,7 +660,7 @@
         {
           "objective_id": "blow_the_bridge",
           "name": "Destroy the Crossing",
-          "description": "Plant charges to deny pursuit",
+          "desc_long": "Plant charges to deny pursuit",
           "setup": {
             "markers": 1,
             "marker_type": "bridge",
@@ -678,12 +672,12 @@
             "hp": 15
           },
           "demolition": {
+            "desc_short": "Bridge destroyed, all models on bridge take 3 damage",
             "action_type": "full_activation",
             "action_cost": 2,
             "can_interrupt": true,
             "base_contact": true,
-            "detonation_timing": "end_of_round",
-            "effect": "Bridge destroyed, all models on bridge take 3 damage"
+            "detonation_timing": "end_of_round"
           },
           "vp_value": 7,
           "vp_per": "bridge_destroyed"
@@ -691,7 +685,7 @@
         {
           "objective_id": "cut_power",
           "name": "Cut the Power",
-          "description": "Disable generators to spread darkness",
+          "desc_long": "Disable generators to spread darkness",
           "setup": {
             "markers": "Math.max(2, Math.floor(danger_rating / 2))",
             "marker_type": "generator"
@@ -701,16 +695,12 @@
             "defense": 2,
             "hp": 8
           },
-          "effect": {
-            "per_disabled_generator": "reduce_visibility_6_inches_all_factions"
-          },
           "vp_value": 4,
           "vp_per": "generator_disabled",
           "danger_scaling": true
         }
       ]
     },
-
     {
       "category_id": "investigation_intelligence",
       "name": "Investigation & Intelligence",
@@ -718,7 +708,7 @@
         {
           "objective_id": "gather_intel",
           "name": "Gather Intelligence",
-          "description": "Search for and collect clues",
+          "desc_long": "Search for and collect clues",
           "setup": {
             "markers": "danger_rating + 1",
             "marker_type": "clue",
@@ -739,7 +729,7 @@
         {
           "objective_id": "expose_conspiracy",
           "name": "Expose the Conspiracy",
-          "description": "Collect proof and survive to reveal it",
+          "desc_long": "Collect proof and survive to reveal it",
           "setup": {
             "markers": 3,
             "marker_type": "evidence",
@@ -759,7 +749,6 @@
         }
       ]
     },
-
     {
       "category_id": "time_pressure",
       "name": "Time Pressure",
@@ -767,7 +756,7 @@
         {
           "objective_id": "race_the_clock",
           "name": "Race Against Time",
-          "description": "Complete objectives before deadline",
+          "desc_long": "Complete objectives before deadline",
           "setup": {
             "markers": 3,
             "marker_type": "objective_point",
@@ -788,7 +777,7 @@
         {
           "objective_id": "collapsing_route",
           "name": "Cross Unstable Passage",
-          "description": "Traverse route before total collapse",
+          "desc_long": "Traverse route before total collapse",
           "setup": {
             "route_length": 24,
             "collapse_zones": "danger_rating",
@@ -803,8 +792,8 @@
             }
           },
           "deterioration": {
-            "timing": "each_round",
-            "effect": "1_additional_collapse_zone_appears_randomly"
+            "desc_short": "1_additional_collapse_zone_appears_randomly",
+            "timing": "each_round"
           },
           "vp_value": 1,
           "vp_per": "6_inches_crossed",
@@ -813,7 +802,7 @@
         {
           "objective_id": "unstable_structure",
           "name": "Salvage Before Collapse",
-          "description": "Extract materials before structure fails",
+          "desc_long": "Extract materials before structure fails",
           "setup": {
             "markers": 1,
             "marker_type": "unstable_structure",
@@ -835,7 +824,7 @@
         {
           "objective_id": "evacuation_point",
           "name": "Reach Evacuation Zone",
-          "description": "Get forces to safety",
+          "desc_long": "Get forces to safety",
           "setup": {
             "markers": 1,
             "marker_type": "evacuation_zone",
@@ -850,7 +839,6 @@
         }
       ]
     },
-
     {
       "category_id": "deception_misdirection",
       "name": "Deception & Misdirection",
@@ -858,13 +846,10 @@
         {
           "objective_id": "decoy_operation",
           "name": "Run a Decoy Operation",
-          "description": "Draw enemy forces away from real objective",
+          "desc_long": "Draw enemy forces away from real objective",
           "setup": {
             "markers": 0,
             "special": "This is a distraction objective"
-          },
-          "effect": {
-            "per_round": "Force one enemy unit to move toward decoy position instead of normal action"
           },
           "vp_value": 2,
           "vp_per": "round_successfully_distracts_enemies"
@@ -872,7 +857,7 @@
         {
           "objective_id": "false_artifact",
           "name": "Plant the False Artifact",
-          "description": "Swap real prize with convincing fake",
+          "desc_long": "Swap real prize with convincing fake",
           "setup": {
             "markers": 1,
             "marker_type": "fake_artifact",
@@ -897,5 +882,8 @@
         }
       ]
     }
-  ]
+  ],
+  "type": "rules_section",
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }

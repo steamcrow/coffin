@@ -1,109 +1,36 @@
 {
+  "type": "ability_dictionary",
   "_id": "R-TURN",
   "title": "Turn Structure",
   "philosophy": {
     "_id": "R-TURN-00",
-    "title": "Philosophy",
-    "short": "Momentum comes from alternating activations, not waiting.",
-    "long": "Rounds organize time, but momentum comes from who acts and who reacts. The battlefield evolves even if players hesitate.",
-    "notes": "Monsters press the attack; Humans react, reposition, and survive. Coffin Canyon does not reward waiting."
+    "desc_short": "Momentum comes from alternating activations, not waiting.",
+    "desc_long": "Rounds organize time, but momentum comes from who acts and who reacts. The battlefield evolves even if players hesitate."
   },
   "initiative_logic": {
     "_id": "R-TURN-01",
-    "title": "Initiative Logic",
-    "short": "Monsters activate first unless the scenario says otherwise.",
-    "long": "Monster Factions always activate first. If both sides are Monsters, roll 1d6; high roll chooses. Initiative remains fixed for the game unless scenario-dictated.",
-    "notes": "The Canyon favors monsters and the unnatural pressure they bring.",
-    "first_activation": "Monster Factions always activate first. If both sides are Monsters, 1d6 high roll chooses."
+    "desc_short": "Monsters activate first unless the scenario says otherwise.",
+    "desc_long": "Monster Factions always activate first. If both sides are Monsters, roll 1d6; high roll chooses. Initiative remains fixed for the game unless scenario-dictated."
   },
   "activation_cycle": {
     "_id": "R-TURN-02",
-    "title": "Activation Cycle",
-    "short": "Players alternate activating one model at a time.",
-    "long": "Activations alternate between players, one model at a time, until all models have activated once.",
-    "format": "Alternating Activations (1 model at a time).",
-    "rules": [
-      "One player activates, then the opponent activates.",
-      "Continue until all models have acted once.",
-      "Models cannot activate twice in a round unless explicitly allowed."
-    ]
+    "desc_short": "Players alternate activating one model at a time.",
+    "desc_long": "Activations alternate between players, one model at a time, until all models have activated once."
   },
   "the_activation": {
     "_id": "R-TURN-03",
-    "title": "The Activation",
-    "short": "Each model gets two actions per activation.",
-    "long": "Each model receives two actions per activation. Actions may be repeated or mixed unless restricted.",
-    "action_economy": "Each model receives 2 Actions per activation.",
-    "flexibility": "May be two different actions or the same action twice, in any order.",
-    "common_actions_list": [
-      "Move",
-      "Attack",
-      "Interact",
-      "Befriend",
-      "Repair",
-      "Special Ability",
-      "Withdraw"
-    ],
-    "reactions": {
-      "_id": "R-TURN-03A",
-      "title": "Reactions",
-      "short": "Abilities triggered outside a model's activation",
-      "long": "Abilities triggered outside a model's activation."
-    }
+    "desc_short": "Each model gets two actions per activation.",
+    "desc_long": "Each model receives two actions per activation. Actions may be repeated or mixed unless restricted."
   },
   "round_definition": {
     "_id": "R-TURN-04",
-    "title": "Round Definition",
-    "short": "A round ends once all models have activated.",
-    "long": "A round is complete once all models on both sides have activated once.",
-    "completion": "Occurs when all models on both sides have activated once.",
-    "maintenance_steps": [
-      "Track ongoing effects",
-      "Resolve terrain escalation (Burning, Unstable collapse, etc.)",
-      "Advance scenario timing",
-      "Resolve ongoing conditions"
-    ],
-    "reset": "Begin next round immediately. No new initiative roll is made."
+    "desc_short": "A round ends once all models have activated.",
+    "desc_long": "A round is complete once all models on both sides have activated once."
   },
   "action_summaries": {
     "_id": "R-TURN-05",
-    "title": "Action Summaries",
-    "short": "Quick references for common actions.",
-    "long": "",
-    "move": "Measure from base. Speed capped by Move value. Terrain affects speed. Movement can be split by other actions.",
-    "attack": "Requires an Action. Uses the Quality system. Usually requires Line of Sight.",
-    "withdraw": {
-      "title": "Withdraw (Main Action)",
-      "summary": "Withdraw represents a controlled retreat under pressure. Survival is a valid objective in Coffin Canyon.",
-      "cost": "1 Main Action",
-      "eligibility": [
-        "The model is not Engaged",
-        "OR the model immediately passes a Quality Test"
-      ],
-      "resolution": {
-        "on_success": [
-          "The model immediately moves up to its full Move value toward any table edge",
-          "This movement ignores engagement pressure, but does not ignore terrain penalties or hazards",
-          "If the model reaches a table edge during this move, it may exit the battlefield"
-        ],
-        "on_failure": [
-          "The action is lost",
-          "The model becomes Shaken",
-          "The model may not attempt Withdraw again this activation"
-        ]
-      },
-      "effects_of_withdrawal": [
-        "A model that exits the battlefield via Withdraw is not destroyed",
-        "It does not grant Victory Points for being killed",
-        "It is removed from play immediately",
-        "Friendly models within 6\" of a withdrawing model must immediately test Morale"
-      ],
-      "restrictions": [
-        "Titans may not Withdraw unless a scenario explicitly allows it",
-        "Models carrying Objectives may Withdraw, but drop the Objective at the point of exit unless the scenario states otherwise",
-        "A model may not Withdraw if it is Restrained, Bound, Immobilized, or otherwise prevented from moving by a rule or ability"
-      ],
-      "design_intent": "Knowing when to leave is as important as knowing when to strike. Staying too long is how Coffin Canyon kills heroes."
-    }
-  }
+    "desc_short": "Quick references for common actions."
+  },
+  "_migrated": true,
+  "_migrated_at": "2026-03-30"
 }
