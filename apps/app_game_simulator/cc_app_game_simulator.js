@@ -22,25 +22,45 @@ console.log("🎮 Game Simulator loaded");
 (function patchBootstrapDropdownAutoClose() {
   if (window._ccDropdownPatchInstalled) return;
   window._ccDropdownPatchInstalled = true;
+
+  // Fix data attribute on individual elements
   function fixEl(el) {
     if (!el || !el.getAttribute) return;
     var v = el.getAttribute('data-bs-auto-close');
     if (v === 'null' || v === null || v === '') el.setAttribute('data-bs-auto-close', 'true');
   }
+
+  // Patch Bootstrap prototype to coerce null -> true before type checking
   function patchPrototype() {
     var BS = window.bootstrap;
     if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
     var proto = BS.Dropdown.prototype;
     if (proto._ccAutoClosePatch) return true;
     proto._ccAutoClosePatch = true;
-    var orig = proto._getConfig;
+
+    // Patch _getConfig to sanitise autoClose before it reaches _typeCheckConfig
+    var origGetConfig = proto._getConfig;
     proto._getConfig = function(config) {
       if (this._element) fixEl(this._element);
       if (config && config.autoClose == null) config.autoClose = true;
-      return orig.call(this, config);
+      return origGetConfig.call(this, config);
     };
+
+    // Also patch _typeCheckConfig directly as a last-resort safety net
+    if (proto._typeCheckConfig) {
+      var origTypeCheck = proto._typeCheckConfig;
+      proto._typeCheckConfig = function(config) {
+        if (config && config.autoClose == null) config.autoClose = true;
+        try { return origTypeCheck.call(this, config); }
+        catch (e) {
+          if (e && e.message && e.message.indexOf('autoClose') !== -1) return; // swallow
+          throw e;
+        }
+      };
+    }
     return true;
   }
+
   document.querySelectorAll('[data-bs-auto-close]').forEach(fixEl);
   if (!patchPrototype()) {
     var _attempts = 0;
@@ -150,8 +170,8 @@ console.log("🎮 Game Simulator loaded");
 
     // 1 game inch = this many map pixels (map is 4096px, table is ~48" wide)
     const ENGAGEMENT_PX      = GRID_PX * 2;  // 2" engagement range
-    const SPRITE_SRC_SIZE    = 20;             // sprite sheet frame size (px)
-    const SPRITE_DRAW_SIZE   = 40;             // drawn size on map canvas (px)
+    const SPRITE_SRC_SIZE    = 20;   // sprite sheet frame size (px)
+    const SPRITE_DRAW_SIZE   = GRID_PX * 3.2; // drawn size: 3.2 grid squares
     const MAP_SIZE           = 4096;
 
     const FACTION_META = {
@@ -174,22 +194,46 @@ console.log("🎮 Game Simulator loaded");
       encounters:      { idle: 'troll_idle',         run: 'troll_run',       attack: 'troll_attack'        },
     };
 
-    // Deployment zones around the 4096x4096 map edges
-    // Up to 4 factions get a full side; 5-8 get a half-side
-    const ZONE_DEFS = [
-      { key: 'north',      xMin: 400,  xMax: 3696, yMin: 80,   yMax: 280  },
-      { key: 'south',      xMin: 400,  xMax: 3696, yMin: 3816, yMax: 4016 },
-      { key: 'west',       xMin: 80,   xMax: 280,  yMin: 400,  yMax: 3696 },
-      { key: 'east',       xMin: 3816, xMax: 4016, yMin: 400,  yMax: 3696 },
-      { key: 'north_west', xMin: 400,  xMax: 1848, yMin: 80,   yMax: 280  },
-      { key: 'north_east', xMin: 2248, xMax: 3696, yMin: 80,   yMax: 280  },
-      { key: 'south_west', xMin: 400,  xMax: 1848, yMin: 3816, yMax: 4016 },
-      { key: 'south_east', xMin: 2248, xMax: 3696, yMin: 3816, yMax: 4016 },
-    ];
-    const MONSTER_ZONE = { xMin: 1648, xMax: 2448, yMin: 1648, yMax: 2448 };
+    // Diamond edge lines for deployment — units line up along these in MAP coords
+    // Each edge connects two diamond corners, with a small inset from each corner
+    const _DT = { x: 2048, y: 3051 };  // top
+    const _DR = { x: 4014, y: 2068 };  // right
+    const _DB = { x: 2048, y: 1085 };  // bottom
+    const _DL = { x: 82,   y: 2068 };  // left
+    function _edgeInset(a, b, t) { return { x: a.x + (b.x-a.x)*t, y: a.y + (b.y-a.y)*t }; }
+    const I = 0.05; // inset fraction from corner
+    // Each of the 4 diamond edges is divided into 2 halves = 8 unique deployment lines
+    // NW edge (left->top): bottom-half = 'west', top-half = 'north_west'
+    // NE edge (top->right): top-half = 'north', bottom-half = 'north_east'
+    // SE edge (right->bottom): top-half = 'east', bottom-half = 'south_east'
+    // SW edge (bottom->left): bottom-half = 'south', top-half = 'south_west'
+    const ZONE_EDGE_LINES = {
+      'west':       { x1: _edgeInset(_DL,_DT,I).x,    y1: _edgeInset(_DL,_DT,I).y,    x2: _edgeInset(_DL,_DT,0.48).x, y2: _edgeInset(_DL,_DT,0.48).y }, // NW lower
+      'north_west': { x1: _edgeInset(_DL,_DT,0.52).x, y1: _edgeInset(_DL,_DT,0.52).y, x2: _edgeInset(_DL,_DT,1-I).x,  y2: _edgeInset(_DL,_DT,1-I).y  }, // NW upper
+      'north':      { x1: _edgeInset(_DT,_DR,I).x,    y1: _edgeInset(_DT,_DR,I).y,    x2: _edgeInset(_DT,_DR,0.48).x, y2: _edgeInset(_DT,_DR,0.48).y }, // NE upper
+      'north_east': { x1: _edgeInset(_DT,_DR,0.52).x, y1: _edgeInset(_DT,_DR,0.52).y, x2: _edgeInset(_DT,_DR,1-I).x,  y2: _edgeInset(_DT,_DR,1-I).y  }, // NE lower
+      'east':       { x1: _edgeInset(_DR,_DB,I).x,    y1: _edgeInset(_DR,_DB,I).y,    x2: _edgeInset(_DR,_DB,0.48).x, y2: _edgeInset(_DR,_DB,0.48).y }, // SE upper
+      'south_east': { x1: _edgeInset(_DR,_DB,0.52).x, y1: _edgeInset(_DR,_DB,0.52).y, x2: _edgeInset(_DR,_DB,1-I).x,  y2: _edgeInset(_DR,_DB,1-I).y  }, // SE lower
+      'south_west': { x1: _edgeInset(_DB,_DL,I).x,    y1: _edgeInset(_DB,_DL,I).y,    x2: _edgeInset(_DB,_DL,0.48).x, y2: _edgeInset(_DB,_DL,0.48).y }, // SW lower
+      'south':      { x1: _edgeInset(_DB,_DL,0.52).x, y1: _edgeInset(_DB,_DL,0.52).y, x2: _edgeInset(_DB,_DL,1-I).x,  y2: _edgeInset(_DB,_DL,1-I).y  }, // SW upper
+      'center':     null,
+    };
 
+    // Deployment zones in MAP coords (Leaflet CRS.Simple: y=0 at bottom)
+    // Diamond: top(2048,3051) right(4014,2068) bottom(2048,1085) left(82,2068)
+    const ZONE_DEFS = [
+      { key: 'north',      xMin: 1400, xMax: 2700, yMin: 2700, yMax: 3000 },
+      { key: 'south',      xMin: 1400, xMax: 2700, yMin: 1100, yMax: 1400 },
+      { key: 'west',       xMin: 150,  xMax: 500,  yMin: 1700, yMax: 2400 },
+      { key: 'east',       xMin: 3600, xMax: 3950, yMin: 1700, yMax: 2400 },
+      { key: 'north_west', xMin: 500,  xMax: 1300, yMin: 2400, yMax: 3000 },
+      { key: 'north_east', xMin: 2800, xMax: 3600, yMin: 2400, yMax: 3000 },
+      { key: 'south_west', xMin: 500,  xMax: 1300, yMin: 1100, yMax: 1700 },
+      { key: 'south_east', xMin: 2800, xMax: 3600, yMin: 1100, yMax: 1700 },
+    ];
+    const MONSTER_ZONE = { key: 'center', xMin: 1800, xMax: 2300, yMin: 1800, yMax: 2300 };
     const NOISE_VALUES = {
-      shot: 2, melee: 3, explosion: 3, ritual: 4, ability: 2, silent: 0
+      shot: 1, melee: 2, explosion: 3, ritual: 3, ability: 1, silent: 0
     };
 
     const CANYON_EVENTS = [
@@ -205,9 +249,32 @@ console.log("🎮 Game Simulator loaded");
       { id: 'thyr_pulse',   icon: 'fa-sun',        text: 'Thyr pulse. All ritual actions +1 noise this round.' },
     ];
 
-    const MAP_LIST = [
-      { id: 'quinine-jimmy', name: 'Quinine Jimmy' },
-    ];
+    // MAP_LIST is populated dynamically from the GitHub repo directory
+    let MAP_LIST = [];
+    const MAP_DIR_API = 'https://api.github.com/repos/steamcrow/coffin/contents/data/src/terrain_instances';
+
+    async function fetchMapList() {
+      try {
+        const res  = await fetch(MAP_DIR_API + '?t=' + Date.now(), {
+          headers: { 'Accept': 'application/vnd.github.v3+json' }
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const files = await res.json();
+        MAP_LIST = files
+          .filter(f => f.type === 'file' && /^map[_-][^/]+\.json$/i.test(f.name))
+          .map(f => {
+            // Derive a readable name from filename: map_quinine-jimmy.json -> Quinine Jimmy
+            const base = f.name.replace(/\.json$/i, '').replace(/^map[_-]/i, '');
+            const name = base.replace(/[-_]/g, ' ').replace(/\w/g, c => c.toUpperCase());
+            return { id: base, name };
+          })
+          .sort((a, b) => a.name.localeCompare(b.name));
+        console.log('🗺️ Maps found:', MAP_LIST.map(m => m.id).join(', '));
+      } catch (e) {
+        console.warn('Could not fetch map list, using fallback:', e.message);
+        MAP_LIST = [{ id: 'quinine-jimmy', name: 'Quinine Jimmy' }];
+      }
+    }
 
     const FALLBACK_MONSTERS = [
       { id: 'ruster',         name: 'Ruster',         quality: 4, move: 6, defense: null, range: null, special: ['Corrode'],        isTitan: false },
@@ -227,6 +294,7 @@ console.log("🎮 Game Simulator loaded");
       phase: 'setup',          // 'setup' | 'loading' | 'playing' | 'done'
       scenarioSave: null,
       scenarioName: '',
+      objectives: [],          // [{ id, x, y, type, label, controlled_by }]
       factions: [],
       unitState: {},           // unitKey -> { quality, out, activated, lastRoll }
       round: 1,
@@ -253,11 +321,13 @@ console.log("🎮 Game Simulator loaded");
       spriteSheet: null,        // HTMLImageElement
       spriteData: null,         // sprite atlas JSON
       terrainCatalog: {},        // terrain_type_id -> asset_file
+      terrainCatalogFull: {},    // terrain_type_id -> full catalog entry (for footprint)
       terrainImages: {},         // terrain_type_id -> HTMLImageElement
       tabletopImg: null,         // loaded SVG background image
       // Solo mode
       soloFactionId: null,       // which faction the player controls
       soloWaiting: false,        // waiting for player drag input
+      soloMovedThisTurn: false,  // prevent multiple moves per activation
       dragUnit: null,            // unitKey being dragged
       dragStartX: 0,
       dragStartY: 0,
@@ -268,7 +338,8 @@ console.log("🎮 Game Simulator loaded");
       camTargetX: null,
       camTargetY: null,
       terrainLoadQueue: 0,      // how many terrain images are still loading
-      unitPositions: {},        // unitKey -> { x, y, animName, frameIdx, frameTimer, vx, vy, status }
+      unitPositions: {},        // unitKey -> { x, y, targetX, targetY, animName, frameIdx, frameTimer, status }
+      deathMarkers: [],          // [{ x, y, name }] skull positions
       factionZones: {},         // factionId -> ZONE_DEF
       monsterQueue: [],         // monsters waiting to enter the map
       canvas: null,
@@ -345,11 +416,17 @@ console.log("🎮 Game Simulator loaded");
 
     function simLog(msg, type) {
       state.roundLog.push({ msg, type: type || 'info', ts: Date.now() });
+      const cls = type ? 'log-' + type : '';
       const logEl = document.getElementById('cc-sim-log');
       if (logEl) {
-        const cls = type ? `log-${type}` : '';
         logEl.insertAdjacentHTML('afterbegin',
-          `<div class="cc-sim-log-entry ${cls}">${msg}</div>`);
+          '<div class="cc-sim-log-entry ' + cls + '">' + msg + '</div>');
+      }
+      // Update ticker with latest message
+      const ticker = document.getElementById('cc-sim-log-latest');
+      if (ticker) {
+        ticker.textContent = msg;
+        ticker.className = 'cc-sim-log-bar-latest ' + cls;
       }
     }
 
@@ -376,8 +453,9 @@ console.log("🎮 Game Simulator loaded");
 
       const allUnits = roster.map((item, i) => {
         if (!item || typeof item !== 'object') return null;
-        let _q = item.quality || 4, _d = item.defense || item.armor || null;
-        let _m = item.move    || 6, _r = item.range   || item.shoot || null;
+        let _q = parseInt(item.quality) || 4, _d = parseInt(item.defense || item.armor) || null;
+        let _m = parseInt(item.move) || 6, _r = parseInt(item.range || item.shoot) || null;
+        if (isNaN(_d)) _d = null; if (isNaN(_r)) _r = null;
         const _cfg    = item.config || {};
         const _bought = _cfg.optionalUpgrades?.length ? _cfg.optionalUpgrades : (item.upgrades || []);
         _bought.forEach(upg => {
@@ -394,6 +472,8 @@ console.log("🎮 Game Simulator loaded");
           lore:     item.lore     || null,
           quality: _q, move: _m, defense: _d, range: _r,
           cost:    item.totalCost || item.cost || null,
+          weapon:  item.weapon    || null,
+          weapon_properties: item.weapon_properties || [],
           special: item.abilities || item.special || [],
           isTitan: item.isTitan   || false,
         };
@@ -416,11 +496,13 @@ console.log("🎮 Game Simulator loaded");
         id:      u.id       || `unit_${i}`,
         name:    u.name     || `Unit ${i + 1}`,
         lore:    u.lore     || null,
-        quality: u.quality  || 4,
-        move:    u.move     || 6,
-        defense: u.defense  || u.armor  || null,
-        range:   u.range    || u.shoot  || null,
+        quality: parseInt(u.quality) || 4,
+        move:    parseInt(u.move)    || 6,
+        defense: (parseInt(u.defense || u.armor) || null),
+        range:   (parseInt(u.range   || u.shoot) || null),
         cost:    u.cost     || u.points || null,
+        weapon:  u.weapon   || null,
+        weapon_properties: u.weapon_properties || [],
         special: u.special  || u.abilities || [],
         isTitan: u.titan    || false,
       }));
@@ -448,7 +530,13 @@ console.log("🎮 Game Simulator loaded");
       return new Promise(resolve => {
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.onload  = () => { sim.tabletopImg = img; console.log('🎲 Tabletop loaded'); resolve(); };
+        img.onload  = () => {
+          sim.tabletopImg = img;
+          console.log('Tabletop loaded: natural size', img.naturalWidth, 'x', img.naturalHeight);
+          // If SVG has a non-square natural size, store the aspect ratio
+          sim.tabletopAspect = img.naturalWidth > 0 ? img.naturalHeight / img.naturalWidth : 1;
+          resolve();
+        };
         img.onerror = () => { console.warn('Tabletop SVG failed'); resolve(); };
         img.src = TABLETOP_SVG_URL + '?t=' + Date.now();
       });
@@ -483,12 +571,73 @@ console.log("🎮 Game Simulator loaded");
         list.forEach(entry => {
           if (entry.terrain_type_id && entry.asset_file) {
             sim.terrainCatalog[entry.terrain_type_id] = entry.asset_file;
+            // Also store full entry for footprint-based sizing
+            if (!sim.terrainCatalogFull) sim.terrainCatalogFull = {};
+            sim.terrainCatalogFull[entry.terrain_type_id] = entry;
           }
         });
         console.log('📋 Terrain catalog loaded:', Object.keys(sim.terrainCatalog).length, 'entries');
       } catch (e) {
         console.warn('Could not load terrain catalog:', safeErr(e));
       }
+    }
+
+    function buildTerrainBlockedMap() {
+      // Mark grid squares occupied by impassable terrain
+      sim.blockedSquares = new Set();
+      if (!sim.mapData || !sim.mapData.instances) return;
+      const TABLE_INCHES = 48;
+      sim.mapData.instances.forEach(inst => {
+        const entry = sim.terrainCatalogFull && sim.terrainCatalogFull[inst.terrain_type_id];
+        if (!entry) return;
+        // Block unless explicitly marked passable = true
+        // Buildings/features with no movement data default to blocking
+        const kind     = (entry.kind || '').toLowerCase();
+        const passable = entry.movement && entry.movement.is_passable;
+        // scatter/area terrain is walkable by default; buildings/features block
+        const defaultPassable = (kind === 'scatter' || kind === 'area' || kind === 'hazard');
+        if (passable === true || (passable === undefined && defaultPassable)) return;
+        // Find which grid squares this terrain occupies
+        const fp = entry.footprint && entry.footprint.size_in;
+        const fw = fp ? fp.w : 4;
+        const fd = fp ? fp.d : 4;
+        const halfW = (fw / TABLE_INCHES * MAP_SIZE) / 2;
+        const halfD = (fd / TABLE_INCHES * MAP_SIZE) / 2;
+        // In canvas coords (Y-flipped)
+        const cx = inst.x;
+        const cy = MAP_SIZE - inst.y;
+        const minGX = Math.floor((cx - halfW) / GRID_PX);
+        const maxGX = Math.ceil( (cx + halfW) / GRID_PX);
+        const minGY = Math.floor((cy - halfD) / GRID_PX);
+        const maxGY = Math.ceil( (cy + halfD) / GRID_PX);
+        for (let gx = minGX; gx <= maxGX; gx++) {
+          for (let gy = minGY; gy <= maxGY; gy++) {
+            sim.blockedSquares.add(gx + ',' + gy);
+          }
+        }
+      });
+      console.log('Terrain blocked squares:', sim.blockedSquares.size);
+    }
+
+    function isSquareBlocked(canvasX, canvasY, excludeKey) {
+      const gx = Math.floor(canvasX / GRID_PX);
+      const gy = Math.floor(canvasY / GRID_PX);
+      // Terrain blocking
+      if (sim.blockedSquares && sim.blockedSquares.has(gx + ',' + gy)) return true;
+      // Also check adjacent rounding variant
+      const gx2 = Math.round(canvasX / GRID_PX), gy2 = Math.round(canvasY / GRID_PX);
+      if (sim.blockedSquares && gx2 !== gx && sim.blockedSquares.has(gx2 + ',' + gy)) return true;
+      if (sim.blockedSquares && gy2 !== gy && sim.blockedSquares.has(gx + ',' + gy2)) return true;
+      // Unit blocking — can't share a square with another unit
+      for (const [k, pos] of Object.entries(sim.unitPositions)) {
+        if (!pos || pos.status === 'routed' || pos.staged) continue;
+        if (k === excludeKey) continue;
+        // Use floor to match terrain grid key convention
+        const ugx = Math.floor(pos.x / GRID_PX);
+        const ugy = Math.floor(pos.y / GRID_PX);
+        if (ugx === gx && ugy === gy) return true;
+      }
+      return false;
     }
 
     function preloadTerrainImages() {
@@ -543,28 +692,65 @@ console.log("🎮 Game Simulator loaded");
         const units = faction.allUnits;
 
         if (faction.isMonster) {
-          // Queue monsters — they spawn one per trigger, starting in center
-          sim.monsterQueue = units.map(u => unitKey(faction.id, u.id));
-          // Don't place them yet — they appear via noise triggers
+          // Monsters deploy in the center zone from the start -- visible with icons
+          const usedSquares = new Set();
           units.forEach(u => {
-            sim.unitPositions[unitKey(faction.id, u.id)] = null; // null = not on map yet
+            const k = unitKey(faction.id, u.id);
+            let mx, my, sq, attempts = 0;
+            do {
+              mx = MONSTER_ZONE.xMin + Math.random() * (MONSTER_ZONE.xMax - MONSTER_ZONE.xMin);
+              my = MONSTER_ZONE.yMin + Math.random() * (MONSTER_ZONE.yMax - MONSTER_ZONE.yMin);
+              mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
+              my = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
+              sq = mx + ',' + my;
+              attempts++;
+            } while (usedSquares.has(sq) && attempts < 200);
+            usedSquares.add(sq);
+            const cv = mapToCanvas(mx, my);
+            sim.unitPositions[k] = {
+              x: cv.cx, y: cv.cy,
+              mapX: mx, mapY: my,
+              animName: 'idle', frameIdx: 0, frameTimer: 0,
+              vx: 0, vy: 0, status: 'idle',
+            };
           });
           return;
         }
 
-        // Space out units evenly within their zone
+        // Line units evenly along their diamond edge
+        // Each zone defines a start and end point on the diamond perimeter
+        const edgeLine = ZONE_EDGE_LINES[zone.key] || null;
+        const unitCount = units.length;
         units.forEach((u, i) => {
           const k = unitKey(faction.id, u.id);
-          // Scatter with slight randomness so they don't stack
-          const x = randomInRange(zone.xMin + 20, zone.xMax - 20);
-          const y = randomInRange(zone.yMin + 20, zone.yMax - 20);
+          let mx, my;
+          if (edgeLine) {
+            // Space evenly along the edge, inset slightly from each end
+            const t0 = 0.06, t1 = 0.94;
+            const t = unitCount === 1 ? 0.5 : t0 + (t1 - t0) * (i / (unitCount - 1));
+            mx = edgeLine.x1 + (edgeLine.x2 - edgeLine.x1) * t;
+            my = edgeLine.y1 + (edgeLine.y2 - edgeLine.y1) * t;
+          } else {
+            // Fallback: zone center
+            mx = (zone.xMin + zone.xMax) / 2;
+            my = (zone.yMin + zone.yMax) / 2;
+          }
+          // Snap to grid
+          mx = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
+          my = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
+          const cv = mapToCanvas(mx, my);
+          // Units start ON their edge line (visible, like the mockup)
+          // staged=true means they don't block or fight yet
+          // onTableX/onTableY is where they MOVE TO when activated
+          // For now the edge canvas position IS their starting position
           sim.unitPositions[k] = {
-            x, y,
-            animName:  'idle',
-            frameIdx:  0,
-            frameTimer: 0,
-            vx: 0, vy: 0,
-            status: 'idle',   // 'idle' | 'moving' | 'fighting' | 'routed'
+            x: cv.cx, y: cv.cy,                // visible on edge
+            targetX: undefined, targetY: undefined,
+            mapX: mx, mapY: my,
+            onTableX: cv.cx, onTableY: cv.cy,  // same — they're already on edge
+            staged: true,                       // not yet in play
+            animName: 'idle', frameIdx: 0, frameTimer: 0,
+            vx: 0, vy: 0, status: 'idle',
           };
         });
       });
@@ -622,7 +808,7 @@ console.log("🎮 Game Simulator loaded");
 
     function addNoise(amount, label) {
       state.noiseLevel += amount;
-      if (amount > 0) simLog(`[Noise] +${amount} (${label})`, 'info');
+      // Don't log noise — game tracks it silently
       checkMonsterTrigger();
       refreshNoiseBars();
     }
@@ -646,7 +832,7 @@ console.log("🎮 Game Simulator loaded");
 
       state._lastMonsterTriggered = monsterDef.id;
       state.monstersTriggered++;
-      state.noiseLevel = Math.floor(state.noiseLevel / 2);
+      state.noiseLevel = 0; // reset fully after trigger to prevent chained encounters
       simLog(`🔥 Encounter! ${monsterDef.name} approaches!`, 'monster');
 
       const instanceId = `${monsterDef.id}_enc${state.monstersTriggered}`;
@@ -666,9 +852,11 @@ console.log("🎮 Game Simulator loaded");
       state.unitState[unitKey(monsterFaction.id, unit.id)] = { quality: unit.quality, out: false, activated: false, lastRoll: null };
 
       // Place immediately in center
+      const mGX = Math.round((MONSTER_ZONE.xMin + MONSTER_ZONE.xMax) / 2 / GRID_PX) + Math.floor(Math.random() * 4) - 2;
+      const mGY = Math.round((MONSTER_ZONE.yMin + MONSTER_ZONE.yMax) / 2 / GRID_PX) + Math.floor(Math.random() * 4) - 2;
       sim.unitPositions[unitKey(monsterFaction.id, unit.id)] = {
-        x: randomInRange(MONSTER_ZONE.xMin, MONSTER_ZONE.xMax),
-        y: randomInRange(MONSTER_ZONE.yMin, MONSTER_ZONE.yMax),
+        x: mGX * GRID_PX + GRID_PX / 2,
+        y: mGY * GRID_PX + GRID_PX / 2,
         animName: 'idle', frameIdx: 0, frameTimer: 0,
         vx: 0, vy: 0, status: 'idle',
       };
@@ -705,42 +893,28 @@ console.log("🎮 Game Simulator loaded");
 
       // Fit canvas to container
       function resizeCanvas() {
-        canvas.width  = wrap.clientWidth  || 600;
-        canvas.height = wrap.clientHeight || 500;
-        // Center map initially
-        sim.viewX = (canvas.width  - MAP_SIZE * sim.viewScale) / 2;
-        sim.viewY = (canvas.height - MAP_SIZE * sim.viewScale) / 2;
+        canvas.width  = wrap.clientWidth  || 800;
+        canvas.height = wrap.clientHeight || 600;
+        // SVG viewBox is 2000x1060. Diamond spans ~3932w x 3772h in map coords.
+        // Fit the full diamond into the viewport.
+        const diamondW = 3932, diamondH = 3772;
+        const scaleW   = canvas.width  * 0.92 / diamondW;
+        const scaleH   = canvas.height * 0.92 / diamondH;
+        sim.viewScale  = Math.min(scaleW, scaleH);
+        // Center on diamond centre in canvas coords (2048, 2090)
+        sim.viewX = canvas.width  / 2 - 2048 * sim.viewScale;
+        sim.viewY = canvas.height / 2 - 2090 * sim.viewScale;
       }
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
 
       // Pan with mouse drag
-      canvas.addEventListener('mousedown', e => {
-        sim.isDragging = true;
-        sim.dragLast = { x: e.clientX, y: e.clientY };
-        wrap.classList.add('is-dragging');
-      });
+      // Map is static — no panning. Only hover detection.
       canvas.addEventListener('mousemove', e => {
-        if (sim.isDragging && sim.dragLast) {
-          sim.viewX += e.clientX - sim.dragLast.x;
-          sim.viewY += e.clientY - sim.dragLast.y;
-          sim.dragLast = { x: e.clientX, y: e.clientY };
-        }
-        // Hover detection
         const rect = canvas.getBoundingClientRect();
         const mx = (e.clientX - rect.left - sim.viewX) / sim.viewScale;
         const my = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
         detectHoveredUnit(mx, my);
-      });
-      canvas.addEventListener('mouseup', () => {
-        sim.isDragging = false;
-        sim.dragLast   = null;
-        wrap.classList.remove('is-dragging');
-      });
-      canvas.addEventListener('mouseleave', () => {
-        sim.isDragging = false;
-        sim.dragLast   = null;
-        wrap.classList.remove('is-dragging');
       });
 
       // Scroll to zoom
@@ -756,37 +930,7 @@ console.log("🎮 Game Simulator loaded");
         sim.viewScale = Math.max(0.05, Math.min(2, sim.viewScale * factor));
       }, { passive: false });
 
-      // Touch support
-      let lastTouchDist = 0;
-      canvas.addEventListener('touchstart', e => {
-        if (e.touches.length === 1) {
-          sim.isDragging = true;
-          sim.dragLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.touches.length === 2) {
-          const dx = e.touches[0].clientX - e.touches[1].clientX;
-          const dy = e.touches[0].clientY - e.touches[1].clientY;
-          lastTouchDist = Math.hypot(dx, dy);
-        }
-      }, { passive: true });
-      canvas.addEventListener('touchmove', e => {
-        if (e.touches.length === 1 && sim.isDragging && sim.dragLast) {
-          sim.viewX += e.touches[0].clientX - sim.dragLast.x;
-          sim.viewY += e.touches[0].clientY - sim.dragLast.y;
-          sim.dragLast = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-        } else if (e.touches.length === 2) {
-          const dx   = e.touches[0].clientX - e.touches[1].clientX;
-          const dy   = e.touches[0].clientY - e.touches[1].clientY;
-          const dist = Math.hypot(dx, dy);
-          if (lastTouchDist > 0) {
-            const factor = dist / lastTouchDist;
-            sim.viewScale = Math.max(0.05, Math.min(2, sim.viewScale * factor));
-          }
-          lastTouchDist = dist;
-        }
-      }, { passive: true });
-      canvas.addEventListener('touchend', () => {
-        sim.isDragging = false; sim.dragLast = null; lastTouchDist = 0;
-      }, { passive: true });
+      // Touch: pinch to zoom only (no pan)
 
       // ── Solo mode drag handlers ──────────────────────────────────────────
       canvas.addEventListener('mousedown', e => {
@@ -795,7 +939,7 @@ console.log("🎮 Game Simulator loaded");
         const my   = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
 
         // Check if clicking a solo unit
-        if (sim.soloWaiting && sim.soloFactionId) {
+        if (sim.soloWaiting && sim.soloFactionId && !sim.soloMovedThisTurn) {
           const HIT = SPRITE_DRAW_SIZE / 2 + 10;
           for (const [key, pos] of Object.entries(sim.unitPositions)) {
             if (!pos || pos.status === 'routed') continue;
@@ -830,28 +974,31 @@ console.log("🎮 Game Simulator loaded");
         const my   = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
 
         if (sim.dragUnit) {
-          // Move unit with mouse, clamped to move range
-          const pos  = sim.unitPositions[sim.dragUnit];
+          const pos = sim.unitPositions[sim.dragUnit];
           if (pos) {
-            const dx   = mx - sim.dragStartX;
-            const dy   = my - sim.dragStartY;
-            const dist = Math.hypot(dx, dy);
-            sim.rulerDist = dist;
-            if (dist <= sim.rulerMax) {
-              pos.x = mx;
-              pos.y = my;
-            } else {
-              // Clamp to range circle
-              const ratio = sim.rulerMax / dist;
-              pos.x = sim.dragStartX + dx * ratio;
-              pos.y = sim.dragStartY + dy * ratio;
+            // Snap target to nearest grid square centre
+            const snapX = Math.round(mx / GRID_PX) * GRID_PX + GRID_PX / 2;
+            const snapY = Math.round(my / GRID_PX) * GRID_PX + GRID_PX / 2;
+            const dx    = snapX - sim.dragStartX;
+            const dy    = snapY - sim.dragStartY;
+            const squares = Math.max(Math.abs(Math.round(dx / GRID_PX)), Math.abs(Math.round(dy / GRID_PX)));
+            const maxSq   = Math.floor(sim.rulerMax / GRID_PX);
+            sim.rulerDist = squares * GRID_PX;
+            const destBlocked = isSquareBlocked(snapX, snapY, sim.dragUnit || '');
+            if (squares <= maxSq && !destBlocked) {
+              pos.x = snapX;
+              pos.y = snapY;
+            } else if (!destBlocked) {
+              // Clamp — move along the vector but only maxSq squares
+              const ratio = maxSq / Math.max(1, squares);
+              pos.x = sim.dragStartX + Math.round(dx * ratio / GRID_PX) * GRID_PX;
+              pos.y = sim.dragStartY + Math.round(dy * ratio / GRID_PX) * GRID_PX;
             }
-            // Update ruler HUD
+            // If destBlocked, pos stays at last valid position
             const rulerEl = document.getElementById('cc-sim-ruler-hud');
             if (rulerEl) {
-              const used  = Math.round(sim.rulerDist / GRID_PX * 10) / 10;
-              const maxIn = Math.round(sim.rulerMax  / GRID_PX * 10) / 10;
-              rulerEl.textContent = used + '" / ' + maxIn + '"';
+              const used = Math.min(squares, maxSq);
+              rulerEl.textContent = used + '" used / ' + maxSq + '" max';
               rulerEl.classList.add('visible');
             }
           }
@@ -861,26 +1008,52 @@ console.log("🎮 Game Simulator loaded");
 
       canvas.addEventListener('mouseup', e => {
         if (sim.dragUnit) {
-          // Snap to grid
           const pos = sim.unitPositions[sim.dragUnit];
+          const _movedKey = sim.dragUnit;
+          // Check if unit actually moved (more than half a grid square)
+          const reallyMoved = pos && (
+            Math.abs(pos.x - sim.dragStartX) > GRID_PX * 0.5 ||
+            Math.abs(pos.y - sim.dragStartY) > GRID_PX * 0.5
+          );
           if (pos) {
-            pos.x = Math.round(pos.x / GRID_PX) * GRID_PX;
-            pos.y = Math.round(pos.y / GRID_PX) * GRID_PX;
+            pos.x = Math.round((pos.x - GRID_PX/2) / GRID_PX) * GRID_PX + GRID_PX / 2;
+            pos.y = Math.round((pos.y - GRID_PX/2) / GRID_PX) * GRID_PX + GRID_PX / 2;
             pos.status = 'idle';
           }
-          sim.dragUnit    = null;
-          sim.rulerActive = false;
-          sim.rulerDist   = 0;
+          sim.dragUnit      = null;
+          sim.rulerActive   = false;
+          sim.rulerDist     = 0;
           const rulerEl = document.getElementById('cc-sim-ruler-hud');
           if (rulerEl) rulerEl.classList.remove('visible');
-          // Auto advance after move
-          setTimeout(() => window.CC_SIM.soloMoveComplete(), 200);
+          if (reallyMoved) {
+            // Unit moved — show action menu
+            sim.soloMovedThisTurn = true;
+            setTimeout(() => window.CC_SIM.showSoloActionMenu(_movedKey || ''), 200);
+          }
+          // If not moved (just a tap/click) — do nothing, let click handler open inspector
           return;
         }
         sim.isDragging = false;
         sim.dragLast   = null;
         wrap.classList.remove('is-dragging');
       }, true);
+
+      // Click any unit sprite to open inspector panel
+      canvas.addEventListener('click', e => {
+        // Don't trigger if we just finished a drag
+        if (sim._justDragged) { sim._justDragged = false; return; }
+        const rect = canvas.getBoundingClientRect();
+        const mx = (e.clientX - rect.left - sim.viewX) / sim.viewScale;
+        const my = (e.clientY - rect.top  - sim.viewY) / sim.viewScale;
+        const HIT = SPRITE_DRAW_SIZE / 2 + 10;
+        for (const [key, pos] of Object.entries(sim.unitPositions)) {
+          if (!pos || pos.status === 'routed') continue;
+          if (Math.abs(pos.x - mx) < HIT && Math.abs(pos.y - my) < HIT) {
+            window.CC_SIM.showUnitInspector(key);
+            return;
+          }
+        }
+      });
 
       // Start render loop
       if (sim.animFrameId) cancelAnimationFrame(sim.animFrameId);
@@ -911,31 +1084,41 @@ console.log("🎮 Game Simulator loaded");
     // ─────────────────────────────────────────────────────────────────────────
 
     function smoothCameraToUnit(key) {
-      if (!sim.canvas) return;
-      const pos = sim.unitPositions[key];
-      if (!pos) return;
-      sim.camTargetX = sim.canvas.width  / 2 - pos.x * sim.viewScale;
-      sim.camTargetY = sim.canvas.height / 2 - pos.y * sim.viewScale;
+      // Camera is now static — no auto-follow
+      // Users pan manually
     }
 
     function tickCamera() {
-      if (sim.camTargetX === null || sim.isDragging) return;
-      const speed = 0.08; // lerp factor — lower = smoother
-      sim.viewX += (sim.camTargetX - sim.viewX) * speed;
-      sim.viewY += (sim.camTargetY - sim.viewY) * speed;
-      // Stop when close enough
-      if (Math.abs(sim.camTargetX - sim.viewX) < 0.5 && Math.abs(sim.camTargetY - sim.viewY) < 0.5) {
-        sim.viewX = sim.camTargetX;
-        sim.viewY = sim.camTargetY;
-        sim.camTargetX = null;
-        sim.camTargetY = null;
-      }
+      // Camera is static — no auto-pan
+    }
+
+    function tickUnitSlides() {
+      // Lerp all units toward their targetX/targetY with easing
+      const SLIDE_SPEED = 0.18;
+      Object.values(sim.unitPositions).forEach(pos => {
+        if (!pos) return;
+        if (pos.targetX === undefined || pos.targetY === undefined) return;
+        const dx = pos.targetX - pos.x;
+        const dy = pos.targetY - pos.y;
+        if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+          pos.x = pos.targetX;
+          pos.y = pos.targetY;
+          pos.targetX = undefined;
+          pos.targetY = undefined;
+          if (pos.status === 'moving') pos.status = 'idle';
+        } else {
+          pos.x += dx * SLIDE_SPEED;
+          pos.y += dy * SLIDE_SPEED;
+          pos.status = 'moving';
+        }
+      });
     }
 
     function renderLoop(timestamp) {
       if (_destroyed || !sim.canvas || !sim.ctx) return;
 
       tickCamera();
+      tickUnitSlides();
 
       const canvas = sim.canvas;
       const ctx    = sim.ctx;
@@ -949,13 +1132,86 @@ console.log("🎮 Game Simulator loaded");
       drawDeployZones(ctx);
       drawTerrain(ctx);
       drawRuler(ctx);
+      drawObjectives(ctx);
+      drawDeathMarkers(ctx);
       drawUnits(ctx, timestamp);
 
       ctx.restore();
 
+      // Objective labels in screen space (small, always readable)
+      if (state.objectives && state.objectives.length) {
+        const savedT = ctx.getTransform ? ctx.getTransform() : null;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        state.objectives.forEach(obj => {
+          const scx = obj.x * sim.viewScale + sim.viewX;
+          const scy = (MAP_SIZE - obj.y) * sim.viewScale + sim.viewY;
+          const label = (obj.label || '').slice(0, 12);
+          const tw = ctx.measureText(label).width + 10;
+          ctx.fillStyle = 'rgba(0,0,0,0.75)';
+          ctx.fillRect(scx - tw/2, scy + 14, tw, 16);
+          ctx.fillStyle = '#ffd600';
+          ctx.fillText(label, scx, scy + 22);
+        });
+        if (savedT) ctx.setTransform(savedT);
+      }
+
       if (sim.hoveredUnit) drawTooltip(ctx, canvas);
 
       sim.animFrameId = requestAnimationFrame(renderLoop);
+    }
+
+    function drawObjectives(ctx) {
+      if (!state.objectives || !state.objectives.length) return;
+      state.objectives.forEach(obj => {
+        // Convert map coords to canvas (objectives use Leaflet map coords)
+        const cx = obj.x;
+        const cy = MAP_SIZE - obj.y;
+        const r  = GRID_PX * 1.2;
+        ctx.save();
+        // Glow ring
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = obj.controlled_by
+          ? ((getFactionById(obj.controlled_by) || {}).color || '#ffd600')
+          : 'rgba(255,214,0,0.6)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([6, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        // Flag pole
+        ctx.strokeStyle = '#ffd600'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy - r * 1.8); ctx.stroke();
+        // Flag triangle
+        ctx.fillStyle = obj.controlled_by
+          ? ((getFactionById(obj.controlled_by) || {}).color || '#ffd600')
+          : '#ffd600';
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - r * 1.8);
+        ctx.lineTo(cx + r * 0.9, cy - r * 1.4);
+        ctx.lineTo(cx, cy - r);
+        ctx.closePath(); ctx.fill();
+        ctx.restore();
+        // Label drawn in screen space so it's always readable
+        // (must be outside the save/restore to use setTransform)
+      });
+    }
+
+    function drawDeathMarkers(ctx) {
+      if (!sim.deathMarkers || !sim.deathMarkers.length) return;
+      ctx.save();
+      ctx.font = Math.round(SPRITE_DRAW_SIZE * 0.7) + 'px FontAwesome, serif';
+      ctx.textAlign    = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.globalAlpha  = 0.75;
+      sim.deathMarkers.forEach(m => {
+        // Draw skull unicode as fallback (FA may not be on canvas)
+        ctx.fillStyle = 'rgba(239,83,80,0.9)';
+        ctx.font = Math.round(SPRITE_DRAW_SIZE * 0.8) + 'px serif';
+        ctx.fillText('☠', m.x, m.y);
+      });
+      ctx.restore();
     }
 
     function drawRuler(ctx) {
@@ -984,61 +1240,88 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function drawBackground(ctx) {
-      // Draw tabletop SVG as full background
-      if (sim.tabletopImg) {
-        ctx.drawImage(sim.tabletopImg, 0, 0, MAP_SIZE, MAP_SIZE);
-      } else {
-        ctx.fillStyle = '#1c1008';
-        ctx.fillRect(0, 0, MAP_SIZE, MAP_SIZE);
-      }
-      // 48px grid overlay (1 ft per cell)
-      ctx.strokeStyle = 'rgba(255,255,255,0.07)';
-      ctx.lineWidth = 0.5;
-      for (let x = 0; x <= MAP_SIZE; x += GRID_PX) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, MAP_SIZE); ctx.stroke();
-      }
-      for (let y = 0; y <= MAP_SIZE; y += GRID_PX) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(MAP_SIZE, y); ctx.stroke();
-      }
-      // Map border
-      ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-      ctx.lineWidth = 6;
-      ctx.strokeRect(3, 3, MAP_SIZE - 6, MAP_SIZE - 6);
+      // Transparent fill so canvas background CSS shows through (no dark boxes)
+      ctx.clearRect(0, 0, MAP_SIZE, MAP_SIZE);
+
+      if (!sim.tabletopImg) return;
+
+      const img = sim.tabletopImg;
+      const iw  = img.naturalWidth  || MAP_SIZE;
+      const ih  = img.naturalHeight || MAP_SIZE;
+
+      // Fit inside the square map without distorting the SVG
+      const scale = Math.min(MAP_SIZE / iw, MAP_SIZE / ih);
+      const dw = iw * scale;
+      const dh = ih * scale;
+      const dx = (MAP_SIZE - dw) / 2;
+      const dy = (MAP_SIZE - dh) / 2;
+
+      ctx.drawImage(img, dx, dy, dw, dh);
     }
 
     function drawDeployZones(ctx) {
+      // Only draw zones during the first round as a subtle reference
+      if (state.round > 1) return;
       Object.entries(sim.factionZones).forEach(([fid, zone]) => {
         const faction = getFactionById(fid);
         if (!faction || !zone) return;
         const color = faction.color || '#888';
         ctx.save();
-        ctx.globalAlpha = 0.12;
+        ctx.globalAlpha = 0.06;
         ctx.fillStyle   = color;
         ctx.fillRect(zone.xMin, zone.yMin, zone.xMax - zone.xMin, zone.yMax - zone.yMin);
-        ctx.globalAlpha = 0.4;
+        ctx.globalAlpha = 0.2;
         ctx.strokeStyle = color;
-        ctx.lineWidth   = 3;
-        ctx.setLineDash([12, 6]);
+        ctx.lineWidth   = 2;
+        ctx.setLineDash([8, 6]);
         ctx.strokeRect(zone.xMin, zone.yMin, zone.xMax - zone.xMin, zone.yMax - zone.yMin);
         ctx.setLineDash([]);
         ctx.restore();
       });
     }
 
+    // Leaflet CRS.Simple has Y increasing upward, so terrain y must be flipped
+    function mapToCanvas(mx, my) {
+      return { cx: mx, cy: MAP_SIZE - my };
+    }
+
+    // SVG letterbox bounds in canvas space (computed from SVG aspect ratio)
+    const SVG_DY = Math.round((MAP_SIZE - Math.min(MAP_SIZE / 2000, MAP_SIZE / 1060) * 1060) / 2);
+    const SVG_DH = Math.round(Math.min(MAP_SIZE / 2000, MAP_SIZE / 1060) * 1060);
+
     function drawTerrain(ctx) {
       if (!sim.mapData || !sim.mapData.instances) return;
+      // Table is 48 inches wide, drawn at MAP_SIZE px wide in our coordinate space
+      const TABLE_INCHES = 48;
       sim.mapData.instances.forEach(inst => {
         if (inst.hidden_in_editor) return;
         const img = sim.terrainImages[inst.terrain_type_id];
         if (!img) return;
-        const w   = img.naturalWidth  * inst.scale;
-        const h   = img.naturalHeight * inst.scale;
+        // Skip terrain whose anchor falls outside the SVG letterbox (off-board)
+        const anchorCY = MAP_SIZE - inst.y;
+        if (anchorCY < SVG_DY - 200 || anchorCY > SVG_DY + SVG_DH + 200) return;
+        // Use footprint-based sizing if catalog has it, otherwise fall back to natural size
+        const catalogEntry = (sim.terrainCatalogFull && sim.terrainCatalogFull[inst.terrain_type_id]) || null;
+        const fp = catalogEntry && catalogEntry.footprint && catalogEntry.footprint.size_in;
+        let w, h;
+        if (fp && fp.w) {
+          // Map maker formula: tableWidthPx * (footprintInches / tableSizeInches) * scale
+          const iconW = MAP_SIZE * (fp.w / TABLE_INCHES) * (inst.scale || 1);
+          const aspect = img.naturalHeight / Math.max(1, img.naturalWidth);
+          w = iconW;
+          h = iconW * aspect;
+        } else {
+          w = img.naturalWidth  * (inst.scale || 1);
+          h = img.naturalHeight * (inst.scale || 1);
+        }
+        const { cx, cy } = mapToCanvas(inst.x, inst.y);
         ctx.save();
-        ctx.translate(inst.x, inst.y);
+        ctx.translate(cx, cy);
         if (inst.rotation_deg) ctx.rotate(inst.rotation_deg * Math.PI / 180);
         if (inst.mirror_x || inst.mirror_y) ctx.scale(inst.mirror_x ? -1 : 1, inst.mirror_y ? -1 : 1);
         ctx.globalAlpha = inst.opacity ?? 1;
-        ctx.drawImage(img, -w / 2, -h / 2, w, h);
+        // iconAnchor is [width/2, 0] = top-center, so draw from (-w/2, 0) not (-w/2, -h/2)
+        ctx.drawImage(img, -w / 2, 0, w, h);
         ctx.restore();
       });
     }
@@ -1101,12 +1384,19 @@ console.log("🎮 Game Simulator loaded");
           ctx.restore();
         }
 
-        // Draw shadow
+        // Drop shadow — offset left-down for isometric look
         ctx.save();
-        ctx.globalAlpha = 0.25;
+        ctx.globalAlpha = 0.3;
         ctx.fillStyle   = '#000';
         ctx.beginPath();
-        ctx.ellipse(pos.x, pos.y + half - 4, half * 0.8, half * 0.25, 0, 0, Math.PI * 2);
+        ctx.ellipse(
+          pos.x - half * 0.5,   // left offset
+          pos.y + half * 0.7,   // below unit
+          half * 0.85,           // wide
+          half * 0.25,           // flat
+          -0.25,                 // slight angle
+          0, Math.PI * 2
+        );
         ctx.fill();
         ctx.restore();
 
@@ -1114,18 +1404,20 @@ console.log("🎮 Game Simulator loaded");
         const frame = animName ? getSpriteFrame(animName, pos.frameIdx) : null;
         if (frame && sim.spriteSheet) {
           ctx.save();
-          // Clip to circle
+          // Clip to circle centered on pos
           ctx.beginPath();
           ctx.arc(pos.x, pos.y, half, 0, Math.PI * 2);
           ctx.clip();
-          // Background circle
           ctx.fillStyle = color + '33';
-          ctx.fillRect(pos.x - half, pos.y - half, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE);
-          // Draw sprite frame
+          ctx.fill();
+          // Center sprite in the circle
+          // Sprite offset: right to compensate for isometric pixel art left-bias
+          const spriteOffX = half * 0.15; // shift right 15%
+          const spriteOffY = half * 0.1;  // nudge up 10%
           ctx.drawImage(
             sim.spriteSheet,
             frame.x, frame.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
-            pos.x - half, pos.y - half, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE
+            pos.x - half + spriteOffX, pos.y - half - spriteOffY, SPRITE_DRAW_SIZE, SPRITE_DRAW_SIZE
           );
           ctx.restore();
           // Circle border
@@ -1150,6 +1442,16 @@ console.log("🎮 Game Simulator loaded");
           ctx.fillText((unit.name || '?')[0].toUpperCase(), pos.x, pos.y);
         }
 
+        // Shaken/Panicked indicator
+        if (us.shaken || us.panicked) {
+          ctx.save();
+          ctx.font = 'bold ' + Math.round(SPRITE_DRAW_SIZE * 0.55) + 'px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(us.panicked ? '💀' : '⚡', pos.x + half, pos.y - half - 14);
+          ctx.restore();
+        }
+
         // Health dots above unit
         const maxQ = unit.quality || 4;
         const curQ = us.quality   || 0;
@@ -1168,8 +1470,8 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function drawTooltip(ctx, canvas) {
-      const key     = sim.hoveredUnit;
-      const pos     = sim.unitPositions[key];
+      const key = sim.hoveredUnit;
+      const pos = sim.unitPositions[key];
       if (!pos) return;
       const [fid, uid] = key.split('::');
       const faction = getFactionById(fid);
@@ -1177,32 +1479,38 @@ console.log("🎮 Game Simulator loaded");
       const us      = getUnitState(fid, uid);
       if (!unit || !us) return;
 
+      // Convert map position to screen pixels
       const sx = pos.x * sim.viewScale + sim.viewX;
       const sy = pos.y * sim.viewScale + sim.viewY;
-      const label  = `${unit.name} (Q${us.quality}/${unit.quality})`;
-      const label2 = [unit.move ? `M${unit.move}"` : '', unit.defense ? `D${unit.defense}` : '', unit.range ? `R${unit.range}"` : ''].filter(Boolean).join('  ');
+      const label  = unit.name + ' (Q' + us.quality + '/' + unit.quality + ')';
+      const label2 = [unit.move ? 'M' + unit.move + '"' : '', unit.defense ? 'D' + unit.defense : '', unit.range ? 'R' + unit.range + '"' : ''].filter(Boolean).join('  ');
 
       ctx.save();
-      ctx.font = 'bold 11px sans-serif';
+      // Reset transform so tooltip renders in screen pixels, not map pixels
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.font = 'bold 12px sans-serif';
       const w = Math.max(ctx.measureText(label).width, ctx.measureText(label2).width) + 20;
-      const h = 40;
-      let tx = sx + 18;
+      const h = 38;
+      let tx = sx + 16;
       let ty = sy - h / 2;
-      if (tx + w > canvas.width  - 8) tx = sx - w - 18;
+      if (tx + w > canvas.width  - 8) tx = sx - w - 16;
       if (ty < 4)                      ty = 4;
       if (ty + h > canvas.height - 4)  ty = canvas.height - h - 4;
 
-      ctx.fillStyle = 'rgba(0,0,0,0.88)';
-      roundRect(ctx, tx, ty, w, h, 5);
+      // Background
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(tx, ty, w, h, 5) : (ctx.rect(tx, ty, w, h));
+      ctx.fillStyle = 'rgba(10,8,6,0.92)';
       ctx.fill();
       ctx.strokeStyle = faction?.color || '#888';
-      ctx.lineWidth   = 1;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
-      ctx.fillStyle   = '#fff';
+      // Text
+      ctx.fillStyle    = '#fff';
       ctx.textBaseline = 'top';
-      ctx.fillText(label,  tx + 10, ty + 6);
+      ctx.fillText(label, tx + 10, ty + 7);
       ctx.fillStyle = '#aaa';
-      ctx.font      = '10px sans-serif';
+      ctx.font      = '11px sans-serif';
       ctx.fillText(label2, tx + 10, ty + 22);
       ctx.restore();
     }
@@ -1251,9 +1559,11 @@ console.log("🎮 Game Simulator loaded");
 
     function advanceQueue() {
       const cur = currentQueueItem();
-      if (cur) setUnitState(cur.factionId, cur.unitId, { activated: true });
-      // Set unit back to idle animation
       if (cur) {
+        setUnitState(cur.factionId, cur.unitId, { activated: true });
+        // Shaken clears at end of this unit's activation
+        const us = getUnitState(cur.factionId, cur.unitId);
+        if (us && us.shaken) setUnitState(cur.factionId, cur.unitId, { shaken: false });
         const pos = sim.unitPositions[unitKey(cur.factionId, cur.unitId)];
         if (pos) { pos.status = 'idle'; pos.frameIdx = 0; }
       }
@@ -1294,7 +1604,7 @@ console.log("🎮 Game Simulator loaded");
       let nearestKey  = null;
       let nearestDist = Infinity;
       Object.entries(sim.unitPositions).forEach(([key, ePos]) => {
-        if (!ePos || ePos.status === 'routed') return;
+        if (!ePos || ePos.status === 'routed' || ePos.staged) return; // staged = off-table
         const [eFid] = key.split('::');
         if (eFid === fid) return; // same faction
         const dx   = ePos.x - pos.x;
@@ -1305,50 +1615,184 @@ console.log("🎮 Game Simulator loaded");
       return { key: nearestKey, dist: nearestDist };
     }
 
-    function moveUnitToward(key, targetX, targetY, speedPx) {
+    // Snap pixel coords to nearest grid square centre
+    function snapToGrid(x, y) {
+      return {
+        x: Math.round(x / GRID_PX) * GRID_PX + GRID_PX / 2,
+        y: Math.round(y / GRID_PX) * GRID_PX + GRID_PX / 2,
+      };
+    }
+
+    // Grid distance in squares (Chebyshev). Canvas coords — no Y flip needed,
+    // just measure in pixels and convert to grid squares.
+    function gridDist(acx, acy, bcx, bcy) {
+      return Math.max(
+        Math.abs(Math.round(acx / GRID_PX) - Math.round(bcx / GRID_PX)),
+        Math.abs(Math.round(acy / GRID_PX) - Math.round(bcy / GRID_PX))
+      );
+    }
+    function isGridAdjacent(acx, acy, bcx, bcy) {
+      return gridDist(acx, acy, bcx, bcy) <= 1;
+    }
+
+    function moveUnitToward(key, targetMapX, targetMapY, moveInches) {
       const pos = sim.unitPositions[key];
       if (!pos) return;
-      const dx   = targetX - pos.x;
-      const dy   = targetY - pos.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist <= 2) return; // already there
-      const step = Math.min(dist, speedPx);
-      pos.x += (dx / dist) * step;
-      pos.y += (dy / dist) * step;
-      pos.status = 'moving';
+      // Work in map coord grid squares
+      const maxSquares = Math.floor(moveInches);
+      const curGX = Math.round((pos.mapX || pos.x) / GRID_PX);
+      const curGY = Math.round((pos.mapY || (MAP_SIZE - pos.y)) / GRID_PX);
+      const tgtGX = Math.round(targetMapX / GRID_PX);
+      const tgtGY = Math.round(targetMapY / GRID_PX);
+      let gx = curGX, gy = curGY;
+      for (let step = 0; step < maxSquares; step++) {
+        const ddx = Math.sign(tgtGX - gx);
+        const ddy = Math.sign(tgtGY - gy);
+        if (ddx === 0 && ddy === 0) break;
+        // Stop 1 square away ONLY if target is an enemy unit (for melee adjacency)
+        // Don't stop early for open-field movement
+        const distToTgt = Math.max(Math.abs(tgtGX - gx), Math.abs(tgtGY - gy));
+        if (distToTgt === 0) break;
+        const nextX = gx + ddx;
+        const nextY = gy + ddy;
+        // Skip blocked terrain squares
+        const nextCX = nextX * GRID_PX + GRID_PX / 2;
+        const nextCY = nextY * GRID_PX + GRID_PX / 2;
+        if (isSquareBlocked(nextCX, nextCY, key)) {
+          // Blocked — try each axis separately as a detour
+          const canX = ddx !== 0 && !isSquareBlocked((gx + ddx) * GRID_PX + GRID_PX/2, gy * GRID_PX + GRID_PX/2, key);
+          const canY = ddy !== 0 && !isSquareBlocked(gx * GRID_PX + GRID_PX/2, (gy + ddy) * GRID_PX + GRID_PX/2, key);
+          if      (canX) { gx += ddx; }
+          else if (canY) { gy += ddy; }
+          else { break; } // fully blocked, stop here
+        } else {
+          gx = nextX; gy = nextY;
+        }
+      }
+      const newMapX = gx * GRID_PX + GRID_PX / 2;
+      const newMapY = gy * GRID_PX + GRID_PX / 2;
+      pos.mapX = newMapX;
+      pos.mapY = newMapY;
+      const cv = mapToCanvas(newMapX, newMapY);
+      // Slide to new position with easing instead of snapping
+      pos.targetX = cv.cx;
+      pos.targetY = cv.cy;
+      pos.status  = 'moving';
     }
 
+    // ═══════════════════════════════════════════════════════════════════════
+    // CORE MECHANICS — per official Coffin Canyon rules
+    // ═══════════════════════════════════════════════════════════════════════
+
+    // Roll [qualityScore] d6s. 4+ = success.
+    // Returns { dice, successes, critFail, luckyBreak }
     function rollQualityDice(qualityScore) {
       const dice = [];
-      for (let i = 0; i < qualityScore; i++) {
+      for (let i = 0; i < Math.max(1, qualityScore); i++) {
         dice.push(Math.floor(Math.random() * 6) + 1);
       }
-      const successes = dice.filter(d => d >= 4).length;
-      return { dice, successes };
+      const successes  = dice.filter(d => d >= 4).length;
+      const critFail   = dice.every(d => d === 1);                    // all 1s
+      const luckyBreak = dice.length > 0 && dice.every(d => d === 6); // all 6s
+      return { dice, successes, critFail, luckyBreak };
     }
 
-    function showRollDialog(attacker, defender, dice, successes, defense, hit) {
+    // Apply Shaken to a unit (–1 die on all rolls, removed at end of next activation)
+    function applyShaken(fid, uid) {
+      const us = getUnitState(fid, uid);
+      if (!us) return;
+      if (us.shaken) {
+        // Already Shaken → Panicked
+        setUnitState(fid, uid, { panicked: true });
+        simLog(getUnitById(getFactionById(fid), uid)?.name + ' PANICS!', 'combat');
+      } else {
+        setUnitState(fid, uid, { shaken: true });
+        simLog(getUnitById(getFactionById(fid), uid)?.name + ' is Shaken.', 'combat');
+      }
+    }
+
+    // Run a morale test for a unit
+    function testMorale(fid, uid) {
+      const us   = getUnitState(fid, uid);
+      const unit = getUnitById(getFactionById(fid), uid);
+      if (!us || !unit) return;
+      // fearless / unshakable abilities skip morale
+      const abilities = unit.special || [];
+      const abilityNames = abilities.map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
+      if (abilityNames.includes('fearless') || abilityNames.includes('unshakable')) return;
+      const q = Math.max(1, us.quality);
+      const { successes } = rollQualityDice(q);
+      if (successes === 0) applyShaken(fid, uid);
+    }
+
+    // Get effective defense, applying ability modifiers
+    function getEffectiveDefense(unit, us, attackerAbilities) {
+      let def = unit.defense || 0;
+      // shaken defender: –1 die on their side but doesn't reduce defense directly
+      // pierce ability on attacker reduces defense
+      const atk = (attackerAbilities || []).map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
+      if (atk.includes('pierce'))        def = Math.max(0, def - 1);
+      if (atk.includes('brutal pierce')) def = Math.max(0, def - 2);
+      if (atk.includes('savage pierce')) def = Math.max(0, def - 3);
+      // shield_wall: +1 defense when adjacent to ally (simplified: always apply if unit has it)
+      const defAbil = (unit.special || []).map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
+      if (defAbil.includes('shield_wall') || defAbil.includes('shield wall')) def += 1;
+      return Math.max(0, def);
+    }
+
+    // Get effective attack dice count (applying Shaken penalty)
+    function getEffectiveQuality(unit, us) {
+      let q = us.quality || 1;
+      if (us.shaken) q = Math.max(1, q - 1); // Shaken: –1 die
+      return q;
+    }
+
+    function showRollDialog(attacker, defender, dice, successes, defense, damage, critFail, luckyBreak) {
       const existing = document.getElementById('cc-sim-roll-overlay');
       if (existing) existing.remove();
-      const color    = hit ? '#4caf50' : '#ef5350';
-      const diceHtml = dice.map(d =>
-        '<div class="cc-sim-die ' + (d >= 4 ? 'success' : 'fail') + '">' + d + '</div>'
-      ).join('');
+
+      let resultColor = damage > 0 ? '#4caf50' : '#ef5350';
+      if (critFail)   resultColor = '#ef5350';
+      if (luckyBreak) resultColor = '#ffd600';
+
+      const diceHtml = dice.map(d => {
+        let cls = d >= 4 ? 'success' : 'fail';
+        if (d === 6) cls = 'success'; // highlight sixes
+        return '<div class="cc-sim-die ' + cls + '" style="' + (d === 6 ? 'border-color:#ffd600;color:#ffd600;' : '') + '">' + d + '</div>';
+      }).join('');
+
+      let resultText = '';
+      if (critFail)        resultText = 'CRITICAL FAILURE — Shaken!';
+      else if (luckyBreak) resultText = 'LUCKY BREAK — All sixes!';
+      else if (damage > 0) resultText = damage + ' damage dealt! (' + successes + ' hits vs D' + defense + ')';
+      else                 resultText = 'Blocked! (' + successes + ' hits vs D' + defense + ')';
+
       const overlay = document.createElement('div');
       overlay.id        = 'cc-sim-roll-overlay';
       overlay.className = 'cc-sim-roll-overlay';
+      overlay.style.cssText = 'transition:opacity 0.6s ease;opacity:1;';
       overlay.innerHTML =
-        '<div class="cc-sim-roll-dialog">' +
-          '<div class="cc-sim-roll-title">' + attacker.name + ' attacks ' + defender.name + '</div>' +
-          '<div class="cc-sim-dice-row">' + diceHtml + '</div>' +
-          '<div class="cc-sim-roll-result" style="color:' + color + ';">' +
-            successes + ' success' + (successes !== 1 ? 'es' : '') +
-            ' vs Defense ' + defense + ' &mdash; ' + (hit ? 'HIT!' : 'Blocked') +
+        '<div class="cc-sim-roll-dialog" style="min-width:300px;padding-top:0;">' +
+          '<div id="cc-sim-spotlight-inner" style="margin:0 0 1rem;border-radius:12px 12px 0 0;overflow:hidden;background:#111;height:200px;display:flex;align-items:center;justify-content:center;">' +
+            '<canvas id="cc-sim-spotlight-canvas" width="380" height="200" style="display:block;width:100%;height:100%;"></canvas>' +
           '</div>' +
-          '<button class="cc-btn" style="width:100%;" onclick="window.CC_SIM.closeRollDialog();">Continue</button>' +
+          '<div class="cc-sim-roll-title" style="padding:0 1.5rem;">' + attacker.name + ' <span style="color:#666;">vs</span> ' + defender.name + '</div>' +
+          '<div class="cc-sim-dice-row" style="padding:0 1.5rem;">' + diceHtml + '</div>' +
+          '<div class="cc-sim-roll-result" style="color:' + resultColor + ';padding:0 1.5rem;">' + resultText + '</div>' +
+          '<div style="padding:0 1.5rem 1.5rem;">' +
+            '<button class="cc-btn" style="width:100%;margin-top:.5rem;" onclick="window.CC_SIM.closeRollDialog();">Continue</button>' +
+          '</div>' +
         '</div>';
       document.body.appendChild(overlay);
-      setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 4000);
+
+      // Auto-dismiss: fade out then remove
+      function dismissRollOverlay() {
+        if (_spotlightAnimId) { cancelAnimationFrame(_spotlightAnimId); _spotlightAnimId = null; }
+        overlay.style.opacity = '0';
+        setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 650);
+      }
+      overlay._dismiss = dismissRollOverlay;
+      setTimeout(dismissRollOverlay, 4500);
     }
 
     function resolveEngagement(attackerKey, defenderKey, showDialog) {
@@ -1360,30 +1804,97 @@ console.log("🎮 Game Simulator loaded");
       const defenderState = getUnitState(dFid, dUid);
       if (!attackerUnit || !defenderUnit || !attackerState || !defenderState) return;
 
-      const attackQ  = attackerState.quality || 1;
-      const defenseD = defenderUnit.defense  || 1;
-      const aPos     = sim.unitPositions[attackerKey];
-      const dPos     = sim.unitPositions[defenderKey];
+      const aPos = sim.unitPositions[attackerKey];
+      const dPos = sim.unitPositions[defenderKey];
       if (aPos) aPos.status = 'fighting';
 
-      const { dice, successes } = rollQualityDice(attackQ);
-      const hit = successes > defenseD;
+      // Effective stats with ability modifiers
+      const attackQ  = getEffectiveQuality(attackerUnit, attackerState);
+      const defenseD = getEffectiveDefense(defenderUnit, defenderState, attackerUnit.special);
 
-      if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, successes, defenseD, hit);
+      const { dice, successes, critFail, luckyBreak } = rollQualityDice(attackQ);
 
-      if (hit) {
-        const newQ = Math.max(0, defenderState.quality - 1);
+      // Critical Failure: attacker becomes Shaken
+      if (critFail) {
+        applyShaken(aFid, aUid);
+        if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, 0, defenseD, 0, true, false);
+        return { dice, successes: 0, damage: 0, critFail: true };
+      }
+
+      // Lucky Break: all 6s — attacker gets a free bonus (we auto-apply Quick Step)
+      if (luckyBreak) {
+        simLog(attackerUnit.name + ' — Lucky Break! (all sixes)', 'combat');
+      }
+
+      // Natural Six bonus: if attack hits and attacker rolled any 6, minimum 1 damage
+      const hasNaturalSix = dice.some(d => d === 6);
+
+      // Damage = successes − defense (per core rules), minimum 0
+      // Natural Six guarantees minimum 1 damage if the attack hits at all
+      let damage = Math.max(0, successes - defenseD);
+      if (hasNaturalSix && successes > 0 && damage === 0) damage = 1;
+
+      // Tough / Tougher / Toughest: roll to ignore each damage point
+      const defAbil = (defenderUnit.special || []).map(a => (typeof a === 'string' ? a : (a.name || '')).toLowerCase());
+      if (damage > 0) {
+        let ignored = 0;
+        const dicePerWound = defAbil.includes('toughest') ? 3 : defAbil.includes('tougher') ? 2 : defAbil.includes('tough') ? 1 : 0;
+        if (dicePerWound > 0) {
+          for (let i = 0; i < damage; i++) {
+            for (let j = 0; j < dicePerWound; j++) {
+              if (Math.floor(Math.random() * 6) + 1 >= 5) { ignored++; break; }
+            }
+          }
+          if (ignored > 0) simLog(defenderUnit.name + ' shrugs off ' + ignored + ' wound(s) (Tough).', 'combat');
+        }
+        damage = Math.max(0, damage - ignored);
+      }
+
+      if (showDialog !== false) showRollDialog(attackerUnit, defenderUnit, dice, successes, defenseD, damage, false, luckyBreak);
+      // Show combat spotlight with both fighters animating
+      showCombatSpotlight(attackerKey, defenderKey);
+      if (aPos) aPos.status = 'fighting';
+      // Show fight animation in unit preview panel for 2 seconds
+      const _curItem = currentQueueItem();
+      if (_curItem && _curItem.factionId === aFid) {
+        startUnitPreview(aFid, aUid, 'fighting');
+        setTimeout(() => { startUnitPreview(aFid, aUid, 'idle'); }, 2000);
+      }
+
+      if (damage > 0) {
+        const newQ = Math.max(0, defenderState.quality - damage);
         setUnitState(dFid, dUid, { quality: newQ });
-        simLog(attackerUnit.name + ' hit ' + defenderUnit.name + '! (' + successes + ' vs D' + defenseD + ')', 'combat');
+        simLog(attackerUnit.name + ' deals ' + damage + ' damage to ' + defenderUnit.name + '! (Q' + newQ + ' remaining)', 'combat');
+        // Morale test after taking damage (non-titan, non-fearless)
+        if (damage > 0 && newQ > 0) testMorale(dFid, dUid);
         if (newQ <= 0) {
           setUnitState(dFid, dUid, { out: true });
-          if (dPos) dPos.status = 'routed';
-          simLog(defenderUnit.name + ' is OUT!', 'combat');
+          if (dPos) {
+            dPos.status = 'routed';
+            // Place skull at death position
+            if (!sim.deathMarkers) sim.deathMarkers = [];
+            sim.deathMarkers.push({ x: dPos.x, y: dPos.y, name: defenderUnit.name });
+          }
+          simLog('☠ ' + defenderUnit.name + ' is KILLED!', 'combat');
+          // Show death callout overlay briefly
+          showDeathCallout(defenderUnit.name, getFactionById(dFid));
+          // Cascading fear: nearby enemies of same faction test morale
+          const defFaction = getFactionById(dFid);
+          if (defFaction) {
+            defFaction.allUnits.forEach(u => {
+              const uKey = unitKey(dFid, u.id);
+              const uPos = sim.unitPositions[uKey];
+              if (!uPos || uKey === defenderKey) return;
+              const dx = uPos.x - (dPos ? dPos.x : 0);
+              const dy = uPos.y - (dPos ? dPos.y : 0);
+              if (Math.hypot(dx, dy) < GRID_PX * 6) testMorale(dFid, u.id);
+            });
+          }
         }
       } else {
         simLog(defenderUnit.name + ' blocked! (' + successes + ' vs D' + defenseD + ')', 'combat');
       }
-      return { dice, successes, hit };
+      return { dice, successes, damage, critFail: false };
     }
 
 
@@ -1393,24 +1904,48 @@ console.log("🎮 Game Simulator loaded");
       const unit = getUnitById(getFactionById(fid), uid);
       if (!pos || !unit) return;
 
-      const speedPx = (unit.move || 6) * GRID_PX;  // move stat is in inches, GRID_PX = 1"
+      const moveInches  = unit.move  || 6;
+      const rangeInches = unit.range || 0;
       const { key: enemyKey, dist: enemyDist } = findNearestEnemy(fid, pos);
+      const ePos = enemyKey ? sim.unitPositions[enemyKey] : null;
 
-      if (enemyKey && enemyDist <= ENGAGEMENT_PX) {
-        // Already in range — fight!
+      // Check grid adjacency for melee
+      const inMelee  = ePos && isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y);
+      // Check ranged: enemy within range inches (in grid squares) and not adjacent
+      const inRange  = !inMelee && rangeInches > 0 && ePos &&
+                       gridDist(pos.x, pos.y, ePos.x, ePos.y) <= rangeInches;
+
+      if (inMelee) {
         resolveEngagement(key, enemyKey);
         addNoise(NOISE_VALUES.melee, 'Melee');
-      } else if (enemyKey) {
-        // Move toward nearest enemy
-        const ePos = sim.unitPositions[enemyKey];
-        if (ePos) moveUnitToward(key, ePos.x, ePos.y, speedPx);
-        simLog(`🦶 ${unit.name} advances.`, 'move');
+      } else if (inRange) {
+        // Ranged attack — no movement needed
+        pos.status = 'fighting';
+        simLog(unit.name + ' fires at ' + (getUnitById(getFactionById(enemyKey.split('::')[0]), enemyKey.split('::')[1])?.name || '?') + '!', 'combat');
+        resolveEngagement(key, enemyKey, true);
+        addNoise(NOISE_VALUES.shot, 'Shot');
+      } else if (ePos) {
+        // Move toward enemy — use map coords
+        const eMX = ePos.mapX || ePos.x;
+        const eMY = ePos.mapY || (MAP_SIZE - ePos.y);
+        moveUnitToward(key, eMX, eMY, moveInches);
+        simLog(unit.name + ' advances.', 'move');
+        // After moving, check melee or range
+        if (isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y)) {
+          resolveEngagement(key, enemyKey);
+          addNoise(NOISE_VALUES.melee, 'Melee');
+        } else if (rangeInches > 0 && gridDist(pos.x, pos.y, ePos.x, ePos.y) <= rangeInches) {
+          pos.status = 'fighting';
+          resolveEngagement(key, enemyKey, true);
+          addNoise(NOISE_VALUES.shot, 'Shot');
+        }
       }
 
-      // Settle back to idle after a moment
+      const fightDuration = (inMelee || inRange) ? 1200 : 500;
       setTimeout(() => {
         if (pos && pos.status !== 'routed') pos.status = 'idle';
-      }, 600);
+        pos.frameIdx = 0;
+      }, fightDuration);
     }
 
     // ═════════════════════════════════════════════════════════════════════════
@@ -1488,6 +2023,17 @@ console.log("🎮 Game Simulator loaded");
           ${state.selectedScenarioId ? `
             <div style="margin-top:20px;">
               <div style="margin-bottom:8px;font-size:.78rem;color:var(--cc-text-dim);text-transform:uppercase;letter-spacing:.07em;">
+                Factions Playing
+              </div>
+              <div id="cc-sim-faction-toggles" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;">
+                ${Object.entries(FACTION_META).map(([id, m]) =>
+                  '<label style="display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;border:1px solid ' + m.color + '33;cursor:pointer;font-size:.78rem;">' +
+                  '<input type="checkbox" class="cc-sim-faction-check" value="' + id + '" checked style="accent-color:' + m.color + ';"> ' +
+                  '<span style="color:' + m.color + ';font-weight:700;">' + m.name + '</span>' +
+                  '</label>'
+                ).join('')}
+              </div>
+              <div style="margin-bottom:8px;font-size:.78rem;color:var(--cc-text-dim);text-transform:uppercase;letter-spacing:.07em;">
                 Map (optional)
               </div>
               <select id="cc-sim-map-id-input"
@@ -1521,67 +2067,65 @@ console.log("🎮 Game Simulator loaded");
     function renderPlaying() {
       // Build full simulator layout (only once — canvas persists in the map wrap)
       if (!document.getElementById('cc-sim-map-wrap')) {
-        root.innerHTML = `
-          <div class="cc-sim-layout" id="cc-sim-layout">
+        root.innerHTML =
+          '<div class="cc-sim-layout" id="cc-sim-layout">' +
 
-            <!-- LEFT SIDEBAR -->
-            <div class="cc-sim-sidebar cc-sim-sidebar-left">
-              <div class="cc-sim-panel-header"><i class="fa fa-users"></i> Factions</div>
-              <div class="cc-sim-sidebar-scroll" id="cc-sim-faction-list"></div>
-              <div id="cc-sim-noise-wrap">
-                <div class="cc-sim-bar-wrap">
-                  <div class="cc-sim-bar-label">
-                    <span><i class="fa fa-volume-up"></i> Canyon Noise</span>
-                    <span id="cc-sim-noise-val">${state.noiseLevel} / ${state.noiseThreshold}</span>
-                  </div>
-                  <div class="cc-sim-bar-track">
-                    <div class="cc-sim-bar-fill" id="cc-sim-noise-fill"
-                         style="width:${Math.min(100,Math.round(state.noiseLevel/state.noiseThreshold*100))}%;background:#4caf50;"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="cc-sim-controls">
-                <button class="cc-btn cc-btn-sm" onclick="window.CC_SIM.addNoise(3,'Melee')">+Noise</button>
-                <button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.rollEvent()">Event</button>
-              </div>
-            </div>
+            '<!-- MAIN ROW -->' +
+            '<div class="cc-sim-main-row">' +
 
-            <!-- MAP AREA -->
-            <div class="cc-sim-map-wrap" id="cc-sim-map-wrap">
-              <div class="cc-sim-ruler-hud" id="cc-sim-ruler-hud"></div>
-              <div class="cc-sim-waiting-badge" id="cc-sim-waiting-badge">Your turn &mdash; drag your unit to move</div>
-              <div class="cc-sim-map-hud-top">
-                <div class="cc-sim-round-badge" id="cc-sim-round-badge">Round ${state.round}</div>
-                <div class="cc-sim-round-badge" id="cc-sim-queue-badge" style="font-size:.75rem;"></div>
-              </div>
-              <div class="cc-sim-map-hud">
-                <button class="cc-btn cc-btn-sm" id="cc-sim-next-btn" onclick="window.CC_SIM.nextActivation()">
-                  <i class="fa fa-step-forward"></i> Next
-                </button>
-                <button class="cc-btn cc-btn-sm cc-btn-secondary" id="cc-sim-auto-btn" onclick="window.CC_SIM.toggleAuto()">
-                  <i class="fa fa-play"></i> Auto
-                </button>
-                <button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.zoomFit()">
-                  <i class="fa fa-compress"></i>
-                </button>
-              </div>
-              <div class="cc-sim-zoom-controls">
-                <button class="cc-sim-zoom-btn" onclick="window.CC_SIM.zoom(1.2)">+</button>
-                <button class="cc-sim-zoom-btn" onclick="window.CC_SIM.zoom(0.8)">−</button>
-              </div>
-            </div>
+              '<!-- LEFT SIDEBAR: Active Unit on top, Factions below -->' +
+              '<div class="cc-sim-sidebar">' +
+                '<div class="cc-sim-panel-header"><i class="fa fa-bolt"></i> Active Unit</div>' +
+                '<div id="cc-sim-active-unit" style="overflow-y:auto;flex-shrink:0;border-bottom:1px solid var(--cc-border,#333);"></div>' +
+                '<div class="cc-sim-panel-header"><i class="fa fa-users"></i> Factions</div>' +
+                '<div class="cc-sim-sidebar-scroll" id="cc-sim-faction-list"></div>' +
+              '</div>' +
 
-            <!-- RIGHT SIDEBAR -->
-            <div class="cc-sim-sidebar cc-sim-sidebar-right">
-              <div class="cc-sim-panel-header"><i class="fa fa-bolt"></i> Active Unit</div>
-              <div id="cc-sim-active-unit"></div>
-              <div class="cc-sim-panel-header" style="margin-top:auto;"><i class="fa fa-list"></i> Log</div>
-              <div class="cc-sim-sidebar-scroll">
-                <div class="cc-sim-log" id="cc-sim-log"></div>
-              </div>
-            </div>
+              '<!-- MAP COLUMN -->' +
+              '<div style="display:flex;flex-direction:column;flex:1;min-width:0;overflow:hidden;">' +
+                '<!-- Controls bar above map -->' +
+                '<div style="display:flex;align-items:center;gap:8px;padding:7px 12px;border-bottom:1px solid var(--cc-border,#333);flex-shrink:0;background:var(--cc-bg-darker,#0d0d0d);">' +
+                  '<button class="cc-btn cc-btn-sm" id="cc-sim-next-btn" onclick="window.CC_SIM.nextActivation()">' +
+                    '<i class="fa fa-step-forward"></i> <span id="cc-sim-next-label">Next</span>' +
+                  '</button>' +
+                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" id="cc-sim-auto-btn" onclick="window.CC_SIM.toggleAuto()">' +
+                    '<i class="fa fa-play"></i> Auto' +
+                  '</button>' +
+                  '<button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.zoomFit()">' +
+                    '<i class="fa fa-compress"></i>' +
+                  '</button>' +
+                  '<div style="flex:1;text-align:center;font-family:var(--cc-font-display,serif);font-size:1rem;font-weight:800;color:#d4822a;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' +
+                    (state.scenarioName || '') +
+                  '</div>' +
+                  '<div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">' +
+                    '<div class="cc-sim-round-badge" id="cc-sim-round-badge">Round ' + state.round + '</div>' +
+                    '<div class="cc-sim-round-badge" id="cc-sim-queue-badge" style="font-size:.75rem;"></div>' +
+                  '</div>' +
+                '</div>' +
+                '<!-- Map canvas area -->' +
+                '<div class="cc-sim-map-wrap" id="cc-sim-map-wrap" style="flex:1;min-height:0;">' +
+                  '<div class="cc-sim-ruler-hud" id="cc-sim-ruler-hud"></div>' +
+                  '<div class="cc-sim-waiting-badge" id="cc-sim-waiting-badge">Your turn &mdash; drag to move</div>' +
+                '</div>' +
+              '</div>' +
 
-          </div>`;
+            '</div>' + // end main-row
+
+            // spotlight canvas lives inside the roll dialog
+
+            '<!-- LOG BAR (accordion at bottom) -->' +
+            '<div class="cc-sim-log-bar" id="cc-sim-log-bar">' +
+              '<div class="cc-sim-log-bar-ticker" onclick="window.CC_SIM.toggleLog()">' +
+                '<span style="font-size:.7rem;color:var(--cc-text-dim,#888);text-transform:uppercase;letter-spacing:.08em;flex-shrink:0;">Log</span>' +
+                '<span class="cc-sim-log-bar-latest" id="cc-sim-log-latest">—</span>' +
+                '<span class="cc-sim-log-bar-chevron">&#9650;</span>' +
+              '</div>' +
+              '<div class="cc-sim-log-drawer" id="cc-sim-log-drawer">' +
+                '<div class="cc-sim-log" id="cc-sim-log" style="padding:8px;"></div>' +
+              '</div>' +
+            '</div>' +
+
+          '</div>';
 
         initCanvas();
       }
@@ -1597,19 +2141,164 @@ console.log("🎮 Game Simulator loaded");
       if (!el) return;
       const curItem = currentQueueItem();
       el.innerHTML = state.factions.map(f => {
-        const zone     = sim.factionZones[f.id];
-        const active   = getActiveUnits(f).length;
-        const total    = f.allUnits.length;
-        const isCur    = curItem && curItem.factionId === f.id;
-        return `<div class="cc-sim-faction-entry ${isCur ? 'is-active' : ''}" onclick="window.CC_SIM.focusFaction('${f.id}')">
-          <div class="cc-sim-faction-dot" style="background:${f.color};box-shadow:0 0 6px ${f.color}66;"></div>
-          <div class="cc-sim-faction-name">${f.name}</div>
-          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
-            <div class="cc-sim-faction-count">${active}/${total}</div>
-            ${zone && zone.key ? '<div class="cc-sim-faction-zone-tag" style="background:' + f.color + '22;color:' + f.color + ';">' + zone.key.replace('_',' ') + '</div>' : ''}
-          </div>
-        </div>`;
+        const zone   = sim.factionZones[f.id];
+        const active = getActiveUnits(f).length;
+        const total  = f.allUnits.length;
+        const isCur  = curItem && curItem.factionId === f.id;
+        const style  = isCur ? '--active-color:' + f.color + ';border-left-color:' + f.color + ';' : '';
+        return '<div class="cc-sim-faction-entry ' + (isCur ? 'is-active' : '') + '" style="' + style + '" onclick="window.CC_SIM.focusFaction(\'' + f.id + '\')">' +
+          '<div class="cc-sim-faction-dot" style="background:' + f.color + ';box-shadow:0 0 6px ' + f.color + '66;color:' + f.color + ';"></div>' +
+          '<div class="cc-sim-faction-name">' + f.name + '</div>' +
+          '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">' +
+            '<div class="cc-sim-faction-count">' + active + '/' + total + '</div>' +
+            (zone && zone.key ? '<div class="cc-sim-faction-zone-tag" style="background:' + f.color + '22;color:' + f.color + ';">' + zone.key.replace('_',' ') + '</div>' : '') +
+          '</div>' +
+        '</div>';
       }).join('');
+    }
+
+    let _previewAnimId   = null;
+    let _spotlightAnimId = null;
+
+    function showCombatSpotlight(attackerKey, defenderKey) {
+      if (_spotlightAnimId) { cancelAnimationFrame(_spotlightAnimId); _spotlightAnimId = null; }
+      if (!sim.spriteSheet || !sim.spriteData) return;
+
+      const [aFid, aUid] = attackerKey.split('::');
+      const [dFid, dUid] = defenderKey.split('::');
+      const aFaction  = getFactionById(aFid);
+      const dFaction  = getFactionById(dFid);
+      const aColor    = (aFaction && aFaction.color) || '#ff7518';
+      const dColor    = (dFaction && dFaction.color) || '#42a5f5';
+
+      // Resolve animation names
+      const aSet  = FACTION_SPRITE[aFid] || FACTION_SPRITE['encounters'];
+      const dSet  = FACTION_SPRITE[dFid] || FACTION_SPRITE['encounters'];
+      const aAnim = aSet && sim.spriteData[aSet.attack] ? sim.spriteData[aSet.attack] : null;
+      const dAnim = dSet && sim.spriteData[dSet.attack] ? sim.spriteData[dSet.attack] : null;
+      const aIdle = aSet && sim.spriteData[aSet.idle]   ? sim.spriteData[aSet.idle]   : null;
+      const dIdle = dSet && sim.spriteData[dSet.idle]   ? sim.spriteData[dSet.idle]   : null;
+      // Use attack anim if available, else fall back to idle
+      const aDraw = aAnim || aIdle;
+      const dDraw = dAnim || dIdle;
+
+      let aFrame = 0, dFrame = 0, aTimer = 0, dTimer = 0, lastTs = 0;
+
+      function drawFighter(ctx, anim, frame, cx, cy, r, color, flipX) {
+        if (!anim || !anim.frames || !anim.frames[frame]) return;
+        const f = anim.frames[frame % anim.frames.length];
+        ctx.save();
+        // Clip to circle (no fill — transparent background)
+        ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.clip();
+        const sz = r * 2;
+        // Draw sprite with multiply-style blend so dark bg shows through
+        ctx.globalCompositeOperation = 'source-over';
+        if (flipX) {
+          ctx.translate(cx, cy);
+          ctx.scale(-1, 1);
+          ctx.drawImage(sim.spriteSheet, f.x, f.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
+            -r, -r, sz, sz);
+        } else {
+          ctx.drawImage(sim.spriteSheet, f.x, f.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE,
+            cx - r, cy - r, sz, sz);
+        }
+        ctx.restore();
+        // Faction colour ring only — no fill
+        ctx.beginPath(); ctx.arc(cx, cy, r + 2, 0, Math.PI * 2);
+        ctx.strokeStyle = color; ctx.lineWidth = 4; ctx.stroke();
+      }
+
+      function advanceAnim(anim, frame, timer, dt) {
+        if (!anim || !anim.frames) return { frame, timer };
+        timer += dt;
+        const f = anim.frames[frame % anim.frames.length];
+        if (f && timer >= f.duration) { timer -= f.duration; frame = (frame + 1) % anim.frames.length; }
+        return { frame, timer };
+      }
+
+      function step(ts) {
+        // Re-query canvas every frame — dialog may have been recreated
+        const canvas = document.getElementById('cc-sim-spotlight-canvas');
+        if (!canvas) { _spotlightAnimId = null; return; }
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        const dt = lastTs > 0 ? ts - lastTs : 16;
+        lastTs = ts;
+
+        const ra = advanceAnim(aDraw, aFrame, aTimer, dt);
+        aFrame = ra.frame; aTimer = ra.timer;
+        const rd = advanceAnim(dDraw, dFrame, dTimer, dt);
+        dFrame = rd.frame; dTimer = rd.timer;
+
+        // Very dark translucent background so sprites stand out
+        ctx.clearRect(0, 0, W, H);
+        ctx.fillStyle = 'rgba(8,5,3,0.92)'; ctx.fillRect(0, 0, W, H);
+
+        // Divider
+        ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(W/2, 0); ctx.lineTo(W/2, H); ctx.stroke();
+
+        const r = Math.min(W / 4 - 8, H / 2 - 8);
+        drawFighter(ctx, aDraw, aFrame, W / 4,     H / 2, r, aColor, false);
+        drawFighter(ctx, dDraw, dFrame, W * 3 / 4, H / 2, r, dColor, true);
+
+        // VS
+        ctx.fillStyle = '#fff'; ctx.font = 'bold 13px sans-serif';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('VS', W / 2, H / 2);
+
+        _spotlightAnimId = requestAnimationFrame(step);
+      }
+
+      _spotlightAnimId = requestAnimationFrame(step);
+      // Stop when roll dialog dismisses (auto at 4.5s + fade 0.65s)
+      setTimeout(() => { if (_spotlightAnimId) { cancelAnimationFrame(_spotlightAnimId); _spotlightAnimId = null; } }, 5200);
+    }
+
+    function startUnitPreview(fid, uid, status) {
+      // Animate the small sprite canvas in the active unit panel
+      const previewCanvas = document.getElementById('cc-sim-unit-preview');
+      if (!previewCanvas || !sim.spriteSheet || !sim.spriteData) return;
+      if (_previewAnimId) cancelAnimationFrame(_previewAnimId);
+
+      const ctx    = previewCanvas.getContext('2d');
+      const W      = previewCanvas.width;
+      const H      = previewCanvas.height;
+      // For encounter/monster factions, check if sprites actually exist
+      let animSet = FACTION_SPRITE[fid];
+      if (!animSet) animSet = FACTION_SPRITE['encounters'];
+      const animKey = status === 'fighting' ? 'attack' : 'idle';
+      let animName = animSet ? animSet[animKey] : null;
+      // Fallback: try other monster sprite sets if chosen one doesn't exist
+      if (!animName || !sim.spriteData[animName]) {
+        const fallbacks = ['lizard_idle','troll_idle','knight_yellow_idle','lizard_run'];
+        for (const fb of fallbacks) {
+          if (sim.spriteData[fb]) { animName = fb; break; }
+        }
+      }
+      if (!animName || !sim.spriteData[animName]) return;
+
+      const anim = sim.spriteData[animName];
+      let frameIdx  = 0;
+      let lastTime  = 0;
+      let frameTimer = 0;
+
+      function step(ts) {
+        if (!document.getElementById('cc-sim-unit-preview')) return;
+        frameTimer += ts - lastTime;
+        lastTime    = ts;
+        const frame = anim.frames[frameIdx % anim.frames.length];
+        if (frame && frameTimer >= frame.duration) {
+          frameTimer = 0;
+          frameIdx   = (frameIdx + 1) % anim.frames.length;
+        }
+        ctx.clearRect(0, 0, W, H);
+        if (frame) {
+          ctx.drawImage(sim.spriteSheet, frame.x, frame.y, 20, 20, 0, 0, W, H);
+        }
+        _previewAnimId = requestAnimationFrame(step);
+      }
+      _previewAnimId = requestAnimationFrame(step);
     }
 
     function refreshActiveUnitPanel() {
@@ -1617,7 +2306,7 @@ console.log("🎮 Game Simulator loaded");
       if (!el) return;
       const curItem = currentQueueItem();
       if (!curItem) {
-        el.innerHTML = `<div class="cc-sim-empty">Round complete — press End Round.</div>`;
+        el.innerHTML = '<div class="cc-sim-empty" style="color:#ffd600;">Round ' + state.round + ' complete! Press NEXT to begin Round ' + (state.round+1) + '.</div>';
         return;
       }
       const faction = getFactionById(curItem.factionId);
@@ -1640,7 +2329,7 @@ console.log("🎮 Game Simulator loaded");
 
       el.innerHTML = `
         <div class="cc-sim-active-card">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;cursor:pointer;" onclick="window.CC_SIM.zoomToUnit('${unitKey(faction.id, unit.id)}')">
             <div style="width:8px;height:8px;border-radius:50%;background:${color};box-shadow:0 0 8px ${color};flex-shrink:0;"></div>
             <div>
               <div class="cc-sim-active-name">${unit.name}</div>
@@ -1648,6 +2337,8 @@ console.log("🎮 Game Simulator loaded");
             </div>
           </div>
           <div class="cc-sim-health-track">${dots}</div>
+          ${us.shaken   ? '<div style="color:#ffd600;font-size:.75rem;font-weight:700;margin:4px 0;">⚡ SHAKEN (-1 die)</div>' : ''}
+          ${us.panicked ? '<div style="color:#ef5350;font-size:.75rem;font-weight:700;margin:4px 0;">💀 PANICKED</div>' : ''}
           <div class="cc-sim-stat-row">
             ${unit.move    ? `<span class="cc-sim-stat-pill move"><i class="fa fa-shoe-prints"></i> ${unit.move}"</span>` : ''}
             ${unit.defense ? `<span class="cc-sim-stat-pill defense"><i class="fa fa-shield-alt"></i> D${unit.defense}</span>` : ''}
@@ -1655,9 +2346,11 @@ console.log("🎮 Game Simulator loaded");
             ${unit.cost    ? `<span class="cc-sim-stat-pill cost">${unit.cost}pts</span>` : ''}
           </div>
           ${abilities}
+          ${unit.weapon ? '<div style="font-size:.74rem;color:#9e8e78;margin-top:6px;font-style:italic;">' + unit.weapon + '</div>' : ''}
+          <canvas id="cc-sim-unit-preview" width="80" height="80" style="display:block;margin:8px auto 0;border-radius:50%;border:2px solid ${color};background:${color}22;"></canvas>
           ${unit.lore ? `<div style="font-size:.73rem;color:var(--cc-text-dim);margin-top:8px;line-height:1.5;font-style:italic;">${unit.lore.slice(0,140)}${unit.lore.length>140?'…':''}</div>` : ''}
           <div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="cc-btn cc-btn-sm" onclick="window.CC_SIM.activateAndAdvance()">
+            <button class="cc-btn cc-btn-sm" onclick="window.CC_SIM.soloActivateInPlace('${curItem.factionId}::${curItem.unitId}')">
               <i class="fa fa-bolt"></i> Activate
             </button>
             <button class="cc-btn cc-btn-sm cc-btn-secondary" onclick="window.CC_SIM.markOut('${curItem.factionId}','${curItem.unitId}')">
@@ -1668,23 +2361,429 @@ console.log("🎮 Game Simulator loaded");
     }
 
     function refreshQueueBadge() {
-      const el      = document.getElementById('cc-sim-queue-badge');
-      const roundEl = document.getElementById('cc-sim-round-badge');
-      if (el) {
-        const remaining = state.queue.length - state.queueIndex;
-        el.textContent  = remaining > 0 ? `${remaining} activations left` : 'Round complete';
-      }
-      if (roundEl) roundEl.textContent = `Round ${state.round}`;
+      const el       = document.getElementById('cc-sim-queue-badge');
+      const roundEl  = document.getElementById('cc-sim-round-badge');
+      const labelEl  = document.getElementById('cc-sim-next-label');
+      const remaining = state.queue.length - state.queueIndex;
+      const complete  = remaining <= 0;
+      if (el)      el.textContent = complete ? 'Round ' + state.round + ' complete' : remaining + ' activations left';
+      if (roundEl) roundEl.textContent = 'Round ' + state.round;
+      if (labelEl) labelEl.textContent = complete ? 'New Round' : 'Next';
     }
 
     // ═════════════════════════════════════════════════════════════════════════
     // CONTROLS — public CC_SIM.* functions
     // ═════════════════════════════════════════════════════════════════════════
 
+    let _zoomTimer = null;
+
+    window.CC_SIM.zoomToUnit = function(key) {
+      if (!sim.canvas) return;
+      const pos = sim.unitPositions[key];
+      if (!pos) return;
+
+      // Save original view
+      const origScale = sim.viewScale;
+      const origX     = sim.viewX;
+      const origY     = sim.viewY;
+      const targetScale = Math.min(1.2, origScale * 4); // zoom to 4x current, max 1.2
+      const targetX   = sim.canvas.width  / 2 - pos.x * targetScale;
+      const targetY   = sim.canvas.height / 2 - pos.y * targetScale;
+
+      // Eased zoom in
+      const STEPS  = 30;
+      const DELAY  = 16;
+      let   step   = 0;
+
+      if (_zoomTimer) clearInterval(_zoomTimer);
+      _zoomTimer = setInterval(() => {
+        step++;
+        const t = step / STEPS;
+        const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out quad
+        sim.viewScale = origScale + (targetScale - origScale) * ease;
+        sim.viewX     = origX     + (targetX     - origX)     * ease;
+        sim.viewY     = origY     + (targetY     - origY)     * ease;
+        if (step >= STEPS) {
+          clearInterval(_zoomTimer);
+          // Hold for 1.5s then zoom back out
+          setTimeout(() => {
+            step = 0;
+            _zoomTimer = setInterval(() => {
+              step++;
+              const t2   = step / STEPS;
+              const ease2 = t2 < 0.5 ? 2*t2*t2 : -1+(4-2*t2)*t2;
+              sim.viewScale = targetScale + (origScale - targetScale) * ease2;
+              sim.viewX     = targetX     + (origX     - targetX)     * ease2;
+              sim.viewY     = targetY     + (origY     - origY)       * ease2;
+              // Just lerp back to original
+              sim.viewScale = targetScale + (origScale - targetScale) * ease2;
+              sim.viewX     = targetX + (origX - targetX) * ease2;
+              sim.viewY     = targetY + (origY - targetY) * ease2;
+              if (step >= STEPS) clearInterval(_zoomTimer);
+            }, DELAY);
+          }, 1500);
+        }
+      }, DELAY);
+    };
+
+    window.CC_SIM.closeUnitInspector = function() {
+      const el = document.getElementById('cc-sim-unit-inspector');
+      if (el) el.remove();
+      if (_inspectorAnimId) { cancelAnimationFrame(_inspectorAnimId); _inspectorAnimId = null; }
+    };
+
+    window.CC_SIM.showUnitInspector = function(key) {
+      const existing = document.getElementById('cc-sim-unit-inspector');
+      if (existing) existing.remove();
+
+      const [fid, uid] = key.split('::');
+      const faction = getFactionById(fid);
+      const unit    = getUnitById(faction, uid);
+      const us      = getUnitState(fid, uid);
+      if (!unit) return;
+
+      const color   = (faction && faction.color) || '#ff7518';
+      const curQ    = us ? (us.quality || 0) : (unit.quality || 0);
+      const maxQ    = unit.quality || 0;
+      const isOut   = us && us.out;
+      const shaken  = us && us.shaken;
+      const panicked= us && us.panicked;
+
+      // Build quality dots
+      const qDots = '<div class="cc-sim-health-track">' +
+        Array.from({ length: maxQ }, (_, i) =>
+          '<div class="cc-sim-health-dot ' + (i < curQ ? 'filled' : 'empty') + '" ' +
+          'style="border-color:' + color + ';' + (i < curQ ? 'background:' + color + ';' : '') + '"></div>'
+        ).join('') + '</div>';
+
+      // Build special abilities list
+      const specials = (unit.special || []);
+      const specialHtml = specials.length
+        ? '<div class="cc-sim-abilities">' +
+            specials.map(s => {
+              const name = typeof s === 'string' ? s : (s.name || '');
+              const desc = typeof s === 'object' ? (s.description || s.effect || '') : '';
+              return '<span class="cc-sim-ability-tag" title="' + desc.replace(/"/g,"'") + '">' + name + '</span>';
+            }).join('') +
+          '</div>'
+        : '<span style="color:#555;font-size:.75rem;">None</span>';
+
+      // Status tags
+      let statusHtml = '';
+      if (isOut)    statusHtml += '<span style="background:#ef535022;color:#ef9090;border:1px solid #ef535055;border-radius:4px;padding:2px 8px;font-size:.72rem;margin-right:4px;">OUT</span>';
+      if (shaken)   statusHtml += '<span style="background:#fb8c0022;color:#ffb74d;border:1px solid #fb8c0055;border-radius:4px;padding:2px 8px;font-size:.72rem;margin-right:4px;">SHAKEN</span>';
+      if (panicked) statusHtml += '<span style="background:#ffd60022;color:#fff176;border:1px solid #ffd60055;border-radius:4px;padding:2px 8px;font-size:.72rem;">PANICKED</span>';
+
+      // Weapon properties
+      const wpProps = (unit.weapon_properties || []);
+      const wpHtml = wpProps.length
+        ? wpProps.map(p => '<span style="font-size:.7rem;background:#ffffff11;border-radius:3px;padding:1px 6px;margin-right:3px;color:#ccc;">' + p + '</span>').join('')
+        : '';
+
+      const overlay = document.createElement('div');
+      overlay.id = 'cc-sim-unit-inspector';
+      overlay.style.cssText = 'position:fixed;inset:0;z-index:10010;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;animation:cc-fade-in .15s ease;';
+      overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+
+      overlay.innerHTML =
+        '<div style="background:#141414;border:1px solid ' + color + '44;border-radius:14px;' +
+        'width:min(420px,92vw);max-height:85vh;overflow-y:auto;box-shadow:0 8px 40px #000c;">' +
+
+          // Header
+          '<div style="display:flex;align-items:center;gap:12px;padding:1.25rem 1.5rem 1rem;border-bottom:1px solid #222;">' +
+            '<div style="width:44px;height:44px;border-radius:50%;background:' + color + '22;border:2px solid ' + color + ';' +
+              'display:flex;align-items:center;justify-content:center;flex-shrink:0;">' +
+              '<canvas id="cc-inspector-sprite" width="44" height="44"></canvas>' +
+            '</div>' +
+            '<div style="flex:1;min-width:0;">' +
+              '<div style="font-size:1.05rem;font-weight:800;color:#fff;">' + unit.name + '</div>' +
+              '<div style="font-size:.78rem;color:' + color + ';margin-top:1px;">' + (faction ? faction.name : '') + '</div>' +
+            '</div>' +
+            '<button onclick="window.CC_SIM.closeUnitInspector()" ' +
+              'style="background:none;border:none;color:#666;font-size:1.3rem;cursor:pointer;padding:4px;line-height:1;">&times;</button>' +
+          '</div>' +
+
+          // Quality bar
+          '<div style="padding:1rem 1.5rem;border-bottom:1px solid #1e1e1e;">' +
+            '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">' +
+              '<span style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#666;">Quality</span>' +
+              '<span style="font-size:.8rem;color:#ccc;">' + curQ + ' / ' + maxQ + '</span>' +
+            '</div>' +
+            '<div>' + qDots + '</div>' +
+            (statusHtml ? '<div style="margin-top:8px;">' + statusHtml + '</div>' : '') +
+          '</div>' +
+
+          // Stats grid
+          '<div style="display:flex;flex-wrap:wrap;gap:6px;padding:.75rem 1.5rem;border-bottom:1px solid #1a1a1a;">' +
+            _statCell('Move', (unit.move || 6) + '"', 'move') +
+            _statCell('Defense', unit.defense ? 'D' + unit.defense : '—', 'defense') +
+            _statCell('Range', unit.range ? unit.range + '"' : '—', 'range') +
+          '</div>' +
+
+          // Cost
+          (unit.cost ? '<div style="padding:.6rem 1.5rem;border-bottom:1px solid #1a1a1a;font-size:.75rem;color:#666;">' +
+            '<span style="color:#aaa;font-weight:700;">' + unit.cost + ' pts</span>' +
+          '</div>' : '') +
+
+          // Weapon
+          (unit.weapon ? '<div style="padding:.75rem 1.5rem;border-bottom:1px solid #1a1a1a;">' +
+            '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:4px;">Weapon</div>' +
+            '<div style="font-size:.85rem;color:#ddd;font-weight:600;">' + unit.weapon + '</div>' +
+            (wpHtml ? '<div style="margin-top:5px;">' + wpHtml + '</div>' : '') +
+          '</div>' : '') +
+
+          // Special abilities
+          '<div style="padding:.75rem 1.5rem;border-bottom:1px solid #1a1a1a;">' +
+            '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:8px;">Abilities</div>' +
+            specialHtml +
+          '</div>' +
+
+          // Lore
+          (unit.lore ? '<div style="padding:.75rem 1.5rem;">' +
+            '<div style="font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:#666;margin-bottom:6px;">Lore</div>' +
+            '<div style="font-size:.78rem;color:#888;line-height:1.6;font-style:italic;">' + unit.lore + '</div>' +
+          '</div>' : '') +
+
+        '</div>';
+
+      document.body.appendChild(overlay);
+
+      // Animate sprite in inspector
+      _startInspectorSprite(fid, uid, 'idle');
+    };
+
+    function _statCell(label, value, cssClass) {
+      return '<div class="cc-sim-stat-pill ' + cssClass + '" style="flex-direction:column;gap:1px;padding:.5rem .75rem;border-radius:8px;text-align:center;">' +
+        '<span style="font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;opacity:.6;font-weight:400;">' + label + '</span>' +
+        '<span style="font-size:.95rem;font-weight:800;">' + value + '</span>' +
+      '</div>';
+    }
+
+    let _inspectorAnimId = null;
+    function _startInspectorSprite(fid, uid, status) {
+      if (_inspectorAnimId) { cancelAnimationFrame(_inspectorAnimId); _inspectorAnimId = null; }
+      if (!sim.spriteSheet || !sim.spriteData) return;
+      const animSet  = FACTION_SPRITE[fid] || FACTION_SPRITE['encounters'];
+      const animName = animSet ? animSet[status] || animSet.idle : null;
+      const anim     = animName && sim.spriteData[animName] ? sim.spriteData[animName] : null;
+      if (!anim) return;
+      let frame = 0, timer = 0, lastTs = 0;
+      function step(ts) {
+        const canvas = document.getElementById('cc-inspector-sprite');
+        if (!canvas) { _inspectorAnimId = null; return; }
+        const ctx = canvas.getContext('2d');
+        const dt  = lastTs > 0 ? ts - lastTs : 16; lastTs = ts;
+        timer += dt;
+        const f = anim.frames[frame % anim.frames.length];
+        if (f && timer >= f.duration) { timer -= f.duration; frame = (frame + 1) % anim.frames.length; }
+        ctx.clearRect(0, 0, 44, 44);
+        if (f) ctx.drawImage(sim.spriteSheet, f.x, f.y, SPRITE_SRC_SIZE, SPRITE_SRC_SIZE, 0, 0, 44, 44);
+        _inspectorAnimId = requestAnimationFrame(step);
+      }
+      _inspectorAnimId = requestAnimationFrame(step);
+    }
+
+    window.CC_SIM.toggleLog = function() {
+      const bar = document.getElementById('cc-sim-log-bar');
+      if (bar) bar.classList.toggle('open');
+    };
+
+    function showDeathCallout(unitName, faction) {
+      const color = (faction && faction.color) || '#ef5350';
+      const el = document.createElement('div');
+      el.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);' +
+        'background:rgba(0,0,0,0.92);border:2px solid ' + color + ';border-radius:10px;' +
+        'padding:1rem 2rem;z-index:10002;text-align:center;animation:cc-fade-in .15s ease;pointer-events:none;';
+      el.innerHTML = '<div style="font-size:2rem;margin-bottom:.25rem;">☠</div>' +
+        '<div style="font-size:1.1rem;font-weight:800;color:' + color + ';">' + unitName + '</div>' +
+        '<div style="font-size:.8rem;color:#aaa;margin-top:.2rem;">is KILLED</div>';
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2200);
+    }
+
     window.CC_SIM.closeRollDialog = function() {
       const o = document.getElementById('cc-sim-roll-overlay');
-      if (o) o.remove();
+      if (o && o._dismiss) o._dismiss();
+      else if (o) o.remove();
     };
+
+    window.CC_SIM.soloActivateInPlace = function(key) {
+      // Player clicked Activate without dragging — show action menu at current position
+      const [fid] = key.split('::');
+      if (sim.soloFactionId && fid === sim.soloFactionId) {
+        // Mark as moved so the menu appears
+        sim.soloMovedThisTurn = true;
+        sim.soloWaiting = false;
+        window.CC_SIM.showSoloActionMenu(key);
+      } else {
+        window.CC_SIM.activateAndAdvance();
+      }
+    };
+
+    window.CC_SIM.showSoloActionMenu = function(key) {
+      // Show action choice for solo player unit
+      const [fid, uid] = key.split('::');
+      const faction = getFactionById(fid);
+      const unit    = getUnitById(faction, uid);
+      const us      = getUnitState(fid, uid);
+      if (!unit || !us) return;
+
+      const color = (faction && faction.color) || '#ff7518';
+      const existing = document.getElementById('cc-sim-solo-action-menu');
+      if (existing) existing.remove();
+
+      // Find enemies in range
+      const pos = sim.unitPositions[key];
+      const rangeInches = unit.range || 0;
+      const enemies = [];
+      Object.entries(sim.unitPositions).forEach(([eKey, ePos]) => {
+        if (!ePos || ePos.status === 'routed') return;
+        const [eFid] = eKey.split('::');
+        if (eFid === fid) return;
+        const dist = gridDist(pos.x, pos.y, ePos.x, ePos.y);
+        const eFaction = getFactionById(eFid);
+        const eUnit    = getUnitById(eFaction, eKey.split('::')[1]);
+        if (!eUnit) return;
+        if (isGridAdjacent(pos.x, pos.y, ePos.x, ePos.y)) {
+          enemies.push({ key: eKey, name: eUnit.name, type: 'melee', dist });
+        } else if (rangeInches > 0 && dist <= rangeInches) {
+          enemies.push({ key: eKey, name: eUnit.name, type: 'ranged', dist });
+        }
+      });
+
+      const menu = document.createElement('div');
+      menu.id = 'cc-sim-solo-action-menu';
+      menu.style.cssText = 'position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,0.75);display:flex;align-items:center;justify-content:center;';
+
+      let buttonsHtml = '';
+      if (enemies.length > 0) {
+        enemies.forEach(e => {
+          const icon = e.type === 'ranged' ? 'fa-crosshairs' : 'fa-sword';
+          buttonsHtml += '<button class="cc-btn" style="width:100%;margin-bottom:6px;background:' + color + '22;color:' + color + ';border:1px solid ' + color + ';" ' +
+            'onclick="window.CC_SIM.soloAttack(this)" data-akey="' + key + '" data-dkey="' + e.key + '" data-type="' + e.type + '">' +
+            '<i class="fa ' + icon + '"></i> ' + (e.type === 'ranged' ? 'Shoot' : 'Melee') + ': ' + e.name + ' (' + e.dist + '")</button>';
+        });
+      }
+
+      // Ability buttons for mystic/special units
+      const abilities = (unit.special || []).filter(a => {
+        const n = (typeof a === 'string' ? a : (a.name || '')).toLowerCase();
+        return n.includes('hex') || n.includes('ritual') || n.includes('curse') ||
+               n.includes('charm') || n.includes('inspire') || n.includes('rally');
+      });
+      abilities.forEach(a => {
+        const name = typeof a === 'string' ? a : (a.name || a);
+        buttonsHtml += '<button class="cc-btn cc-btn-secondary" style="width:100%;margin-bottom:6px;" ' +
+          'onclick="window.CC_SIM.soloAbility(this)" data-key="' + key + '" data-ability="' + name + '">' +
+          '<i class="fa fa-magic"></i> ' + name + '</button>';
+      });
+
+      buttonsHtml += '<button class="cc-btn cc-btn-secondary" style="width:100%;margin-top:6px;" ' +
+        'onclick="window.CC_SIM.soloSkipAction(this)" data-key="' + key + '">' +
+        '<i class="fa fa-forward"></i> Skip / Hold</button>';
+
+      menu.innerHTML = '<div style="background:var(--cc-bg-darker,#0d0d0d);border:1px solid ' + color + ';border-radius:12px;padding:1.5rem;min-width:280px;max-width:380px;">' +
+        '<div style="font-size:1rem;font-weight:700;color:#fff;margin-bottom:1rem;">' + unit.name + ' — Choose Action</div>' +
+        buttonsHtml + '</div>';
+      document.body.appendChild(menu);
+    };
+
+    window.CC_SIM.soloAttack = function(btnOrKey, defenderKey, type) {
+      const menu = document.getElementById('cc-sim-solo-action-menu');
+      // Support both direct call and data-attribute button call
+      let attackerKey = btnOrKey;
+      if (btnOrKey && btnOrKey.dataset) {
+        attackerKey = btnOrKey.dataset.akey;
+        defenderKey = btnOrKey.dataset.dkey;
+        type        = btnOrKey.dataset.type;
+      }
+      if (menu) menu.remove();
+      const aPos = sim.unitPositions[attackerKey];
+      if (aPos) aPos.status = 'fighting';
+      resolveEngagement(attackerKey, defenderKey, true);
+      addNoise(type === 'ranged' ? NOISE_VALUES.shot : NOISE_VALUES.melee, type);
+      setTimeout(() => window.CC_SIM.soloMoveComplete(), 800);
+    };
+
+    window.CC_SIM.soloAbility = function(btnOrKey, abilityName) {
+      let key = btnOrKey;
+      if (btnOrKey && btnOrKey.dataset) { key = btnOrKey.dataset.key; abilityName = btnOrKey.dataset.ability; }
+      const menu = document.getElementById('cc-sim-solo-action-menu');
+      if (menu) menu.remove();
+      applyAbilityEffect(key, abilityName || '');
+      setTimeout(() => window.CC_SIM.soloMoveComplete(), 600);
+    };
+
+    window.CC_SIM.soloSkipAction = function(btnOrKey) {
+      let key = btnOrKey;
+      if (btnOrKey && btnOrKey.dataset) key = btnOrKey.dataset.key;
+      const menu = document.getElementById('cc-sim-solo-action-menu');
+      if (menu) menu.remove();
+      window.CC_SIM.soloMoveComplete();
+    };
+
+    function applyAbilityEffect(attackerKey, abilityName) {
+      // Apply mechanical effects of abilities per rules
+      const [aFid, aUid] = attackerKey.split('::');
+      const attackerUnit  = getUnitById(getFactionById(aFid), aUid);
+      const attackerState = getUnitState(aFid, aUid);
+      if (!attackerUnit || !attackerState) return;
+
+      const name = abilityName.toLowerCase();
+
+      // Find nearest enemy for targeted abilities
+      const pos = sim.unitPositions[attackerKey];
+      const { key: enemyKey } = pos ? findNearestEnemy(aFid, pos) : { key: null };
+
+      if (name.includes('hex') || name.includes('curse') || name.includes('charm')) {
+        // Targeted debuff — apply shaken to nearest enemy
+        if (enemyKey) {
+          const [eFid, eUid] = enemyKey.split('::');
+          applyShaken(eFid, eUid);
+          const eName = getUnitById(getFactionById(eFid), eUid)?.name || 'enemy';
+          simLog(attackerUnit.name + ' hexes ' + eName + '!', 'event');
+        }
+        addNoise(NOISE_VALUES.ritual, abilityName);
+      } else if (name.includes('ritual') || name.includes('unleashed')) {
+        // Ritual/wild magic — roll on wild magic table
+        const roll = Math.floor(Math.random() * 11) + 2; // 2d6 simplified
+        simLog(attackerUnit.name + ' channels ' + abilityName + '! (Roll ' + roll + ')', 'event');
+        if (enemyKey && roll >= 6) {
+          const dmg = roll >= 10 ? 3 : roll >= 8 ? 2 : 1;
+          const [eFid, eUid] = enemyKey.split('::');
+          const eState = getUnitState(eFid, eUid);
+          if (eState) {
+            const newQ = Math.max(0, eState.quality - dmg);
+            setUnitState(eFid, eUid, { quality: newQ });
+            const eName = getUnitById(getFactionById(eFid), eUid)?.name || 'enemy';
+            simLog(eName + ' takes ' + dmg + ' magic damage! (Q' + newQ + ' left)', 'combat');
+            if (newQ <= 0) {
+              setUnitState(eFid, eUid, { out: true });
+              const ePos = sim.unitPositions[enemyKey];
+              if (ePos) { ePos.status = 'routed'; sim.deathMarkers.push({ x: ePos.x, y: ePos.y, name: eName }); }
+              showDeathCallout(eName, getFactionById(eFid));
+            }
+          }
+        }
+        addNoise(NOISE_VALUES.ritual, abilityName);
+      } else if (name.includes('inspire') || name.includes('rally') || name.includes('calamity')) {
+        // Buff nearby allies — remove shaken from nearby friendlies
+        let healed = 0;
+        Object.entries(sim.unitPositions).forEach(([k, p]) => {
+          if (!p || p.status === 'routed') return;
+          const [fid] = k.split('::');
+          if (fid !== aFid) return;
+          const dist = gridDist(p.x, p.y, pos.x, pos.y);
+          if (dist <= 6) {
+            const [, uid] = k.split('::');
+            const us = getUnitState(fid, uid);
+            if (us && us.shaken) { setUnitState(fid, uid, { shaken: false }); healed++; }
+          }
+        });
+        simLog(attackerUnit.name + ' rallies allies! ' + (healed ? '(' + healed + ' Shaken removed)' : ''), 'event');
+        addNoise(NOISE_VALUES.ability, abilityName);
+      }
+    }
 
     window.CC_SIM.soloMoveComplete = function() {
       // Called after player finishes dragging their unit
@@ -1719,9 +2818,33 @@ console.log("🎮 Game Simulator loaded");
 
       // Solo mode: if this unit belongs to the player, wait for drag input
       if (cur && sim.soloFactionId && cur.factionId === sim.soloFactionId) {
-        sim.soloWaiting = true;
-        const waitEl = document.getElementById('cc-sim-waiting-badge');
-        if (waitEl) waitEl.classList.add('visible');
+        sim.soloMovedThisTurn = false;
+        // If solo unit is still staged, slide onto table before allowing drag
+        const _soloKey = unitKey(cur.factionId, cur.unitId);
+        const _soloPos = sim.unitPositions[_soloKey];
+        if (_soloPos && _soloPos.staged) {
+          _soloPos.staged = false;
+          const _soloUnit = getUnitById(getFactionById(cur.factionId), cur.unitId);
+          const _moveIn   = Math.max(2, (_soloUnit ? _soloUnit.move || 6 : 6));
+          const _bCX = MAP_SIZE / 2, _bCY = MAP_SIZE / 2;
+          const _sdx = _bCX - _soloPos.x, _sdy = _bCY - _soloPos.y;
+          const _sd  = Math.max(1, Math.hypot(_sdx, _sdy));
+          const _seX = _soloPos.x + (_sdx / _sd) * _moveIn * GRID_PX;
+          const _seY = _soloPos.y + (_sdy / _sd) * _moveIn * GRID_PX;
+          _soloPos.targetX = _seX; _soloPos.targetY = _seY; _soloPos.status = 'moving';
+          setTimeout(() => {
+            _soloPos.x = _seX; _soloPos.y = _seY;
+            _soloPos.mapX = _seX; _soloPos.mapY = MAP_SIZE - _seY;
+            _soloPos.targetX = undefined; _soloPos.targetY = undefined;
+            sim.soloWaiting = true;
+            const waitEl = document.getElementById('cc-sim-waiting-badge');
+            if (waitEl) waitEl.classList.add('visible');
+          }, 700);
+        } else {
+          sim.soloWaiting = true;
+          const waitEl2 = document.getElementById('cc-sim-waiting-badge');
+          if (waitEl2) waitEl2.classList.add('visible');
+        }
       } else {
         sim.soloWaiting = false;
         const waitEl = document.getElementById('cc-sim-waiting-badge');
@@ -1734,17 +2857,61 @@ console.log("🎮 Game Simulator loaded");
       refreshActiveUnitPanel();
       refreshFactionList();
       refreshQueueBadge();
+      // Defer sprite preview until after DOM has updated
+      const _cur = currentQueueItem();
+      if (_cur) setTimeout(() => startUnitPreview(_cur.factionId, _cur.unitId, 'idle'), 50);
     };
 
-    window.CC_SIM.activateAndAdvance = function() {
+    window.CC_SIM.activateAndAdvance = function(callback) {
       const cur = currentQueueItem();
-      if (!cur) return;
-      const pos = sim.unitPositions[unitKey(cur.factionId, cur.unitId)];
-      if (pos) pos.status = 'moving';
-      simulateActivation(cur.factionId, cur.unitId);
+      if (!cur) { if (callback) callback(); return; }
+
+      // Skip solo player's units — they control manually
+      if (sim.soloFactionId && cur.factionId === sim.soloFactionId && !sim.autoRunning) {
+        // Manual solo mode: wait for player input (nextActivation already set soloWaiting)
+        if (callback) callback();
+        return;
+      }
+
+      const key = unitKey(cur.factionId, cur.unitId);
+      const pos = sim.unitPositions[key];
+      const unit = getUnitById(getFactionById(cur.factionId), cur.unitId);
+
+      // Camera first — center on this unit before it acts
+      smoothCameraToUnit(key);
+
+      // Short delay then activate
       setTimeout(() => {
-        window.CC_SIM.nextActivation();
-      }, 700);
+        // If unit is still staged off-table, slide it onto the table first
+        // If unit is still staged on edge, slide it INWARD one move distance
+        if (pos && pos.staged) {
+          pos.staged = false;
+          // Entry point: move inward from edge toward board center
+          const _unit3 = unit;
+          const _moveIn = Math.max(2, (_unit3 ? _unit3.move || 6 : 6));
+          const _boardCX = MAP_SIZE / 2 * sim.viewScale + sim.viewX;  // canvas center
+          const _boardCY = MAP_SIZE / 2 * sim.viewScale + sim.viewY;
+          // direction from current pos toward board center in canvas coords
+          const _dx3 = MAP_SIZE / 2 - pos.x, _dy3 = MAP_SIZE / 2 - pos.y;
+          const _d3  = Math.max(1, Math.hypot(_dx3, _dy3));
+          const _entX = pos.x + (_dx3 / _d3) * _moveIn * GRID_PX;
+          const _entY = pos.y + (_dy3 / _d3) * _moveIn * GRID_PX;
+          pos.targetX = _entX; pos.targetY = _entY; pos.status = 'moving';
+          setTimeout(() => {
+            pos.x = _entX; pos.y = _entY;
+            pos.mapX = _entX; pos.mapY = MAP_SIZE - _entY;
+            pos.targetX = undefined; pos.targetY = undefined;
+            simulateActivation(cur.factionId, cur.unitId);
+            const moveDuration = unit ? Math.max(600, (unit.move || 6) * 80) : 800;
+            setTimeout(() => { window.CC_SIM.nextActivation(); if (callback) callback(); }, moveDuration);
+          }, 700);
+        } else {
+          if (pos) pos.status = 'moving';
+          simulateActivation(cur.factionId, cur.unitId);
+          const moveDuration = unit ? Math.max(600, (unit.move || 6) * 80) : 800;
+          setTimeout(() => { window.CC_SIM.nextActivation(); if (callback) callback(); }, moveDuration);
+        }
+      }, 350);
     };
 
     window.CC_SIM.markOut = function(fid, uid) {
@@ -1800,6 +2967,11 @@ console.log("🎮 Game Simulator loaded");
       const mapIdValue  = (mapIdInput  ? mapIdInput.value  : '').trim();
       const soloInput   = document.getElementById('cc-sim-solo-select');
       sim.soloFactionId = (soloInput   ? soloInput.value   : '') || null;
+      // Read faction checkboxes — unchecked = exclude from sim
+      const factionChecks = document.querySelectorAll('.cc-sim-faction-check');
+      const enabledFactions = new Set();
+      factionChecks.forEach(cb => { if (cb.checked) enabledFactions.add(cb.value); });
+      sim.enabledFactions = enabledFactions.size > 0 ? enabledFactions : null; // null = all
       if (sim.soloFactionId) simLog('Solo mode: you control ' + (FACTION_META[sim.soloFactionId] && FACTION_META[sim.soloFactionId].name || sim.soloFactionId), 'deploy');
       state.phase      = 'loading';
       state.loadingMsg = 'Loading scenario…';
@@ -1815,8 +2987,22 @@ console.log("🎮 Game Simulator loaded");
         const payload = scenario;
         state.scenarioSave   = payload.scenario || payload;
         state.scenarioName   = payload.name || (payload.scenario && payload.scenario.name) || 'Scenario';
+        // Load objectives from scenario data
+        const _scn = payload.scenario || payload;
+        const _rawObjs = _scn.objectives || _scn.mission_objectives || [];
+        state.objectives = _rawObjs
+          .filter(o => o && typeof o === 'object' && (o.x || o.map_x))
+          .map((o, i) => ({
+            id:    o.id   || 'obj_' + i,
+            x:     parseFloat(o.x   || o.map_x || MAP_SIZE / 2),
+            y:     parseFloat(o.y   || o.map_y || MAP_SIZE / 2),
+            type:  o.type || o.objective_type || 'capture',
+            label: (o.label || o.name || o.title || ('Obj ' + (i + 1))).toString().slice(0, 16),
+            controlled_by: null,
+          }));
+        if (state.objectives.length) simLog('📍 ' + state.objectives.length + ' objectives loaded', 'event');
         state.round          = 1;
-        state.noiseThreshold = 8 + ((payload.danger || (payload.scenario && payload.scenario.danger_rating) || 3) * 2);
+        state.noiseThreshold = 16 + ((payload.danger || (payload.scenario && payload.scenario.danger_rating) || 3) * 2);
         const mp = state.scenarioSave && state.scenarioSave.monster_pressure;
         state.monsterRoster  = (mp && mp.monsters) || [];
 
@@ -1888,6 +3074,13 @@ console.log("🎮 Game Simulator loaded");
           }
         }
 
+        // Filter to only enabled factions
+        const filteredFactions = sim.enabledFactions
+          ? loadedFactions.filter(f => sim.enabledFactions.has(f.id))
+          : loadedFactions;
+        if (!filteredFactions.length) throw new Error('No factions loaded');
+        loadedFactions.length = 0;
+        filteredFactions.forEach(f => loadedFactions.push(f));
         if (!loadedFactions.length) throw new Error('No factions loaded');
         state.factions       = loadedFactions;
         state.noiseLevel     = scenario.noiseLevel     || 0;
@@ -1911,6 +3104,7 @@ console.log("🎮 Game Simulator loaded");
               if (sim.mapData) {
                 await loadTerrainCatalog();
                 preloadTerrainImages();
+                buildTerrainBlockedMap();
                 console.log('Map loaded:', mapId);
               }
             }
@@ -1964,29 +3158,39 @@ console.log("🎮 Game Simulator loaded");
 
     window.CC_SIM.zoomFit = function() {
       if (!sim.canvas) return;
-      sim.viewScale = Math.min(sim.canvas.width, sim.canvas.height) / MAP_SIZE;
-      sim.viewX     = (sim.canvas.width  - MAP_SIZE * sim.viewScale) / 2;
-      sim.viewY     = (sim.canvas.height - MAP_SIZE * sim.viewScale) / 2;
+      const diamondW = 3932, diamondH = 3772;
+      const scaleW   = sim.canvas.width  * 0.92 / diamondW;
+      const scaleH   = sim.canvas.height * 0.92 / diamondH;
+      sim.viewScale  = Math.min(scaleW, scaleH);
+      sim.viewX      = sim.canvas.width  / 2 - 2048 * sim.viewScale;
+      sim.viewY      = sim.canvas.height / 2 - 2090 * sim.viewScale;
+      sim.camTargetX = null;
+      sim.camTargetY = null;
     };
 
     window.CC_SIM.toggleAuto = function() {
       if (sim.autoRunning) {
         sim.autoRunning = false;
-        clearInterval(sim.autoTimer);
-        sim.autoTimer = null;
         const btn = document.getElementById('cc-sim-auto-btn');
         if (btn) btn.innerHTML = '<i class="fa fa-play"></i> Auto';
       } else {
         sim.autoRunning = true;
         const btn = document.getElementById('cc-sim-auto-btn');
         if (btn) btn.innerHTML = '<i class="fa fa-stop"></i> Stop';
-        sim.autoTimer = setInterval(() => {
-          window.CC_SIM.activateAndAdvance();
-          // Stop when a round completes
+        // Use a recursive setTimeout chain — waits for each activation to complete
+        function autoStep() {
+          if (!sim.autoRunning) return;
           if (isRoundComplete()) {
-            window.CC_SIM.toggleAuto();
+            sim.autoRunning = false;
+            const b = document.getElementById('cc-sim-auto-btn');
+            if (b) b.innerHTML = '<i class="fa fa-play"></i> Auto';
+            return;
           }
-        }, sim.simSpeed);
+          window.CC_SIM.activateAndAdvance(function() {
+            if (sim.autoRunning) setTimeout(autoStep, sim.simSpeed);
+          });
+        }
+        setTimeout(autoStep, 100);
       }
     };
 
@@ -1995,12 +3199,11 @@ console.log("🎮 Game Simulator loaded");
     // ═════════════════════════════════════════════════════════════════════════
 
     // If CC_STORAGE is already present when we mount, fetch scenarios immediately
+    // Fetch map list from GitHub, then render setup screen
     if (window.CC_STORAGE) {
       window.CC_SIM.fetchScenarios();
     }
-
-    // Initial render
-    render();
+    fetchMapList().then(() => { if (state.phase === 'setup') render(); });
 
   } // end mount()
 

@@ -12,38 +12,93 @@
 /* ===== Top-Level Layout ===== */
 .cc-sim-layout {
   display: flex;
-  height: 100%;
-  min-height: 580px;
+  flex-direction: column;
+  height: 100vh;
+  min-height: 700px;
   background: var(--cc-bg-darker, #0d0d0d);
   overflow: hidden;
   position: relative;
 }
 
+/* Main row: left panel + map */
+.cc-sim-main-row {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .cc-sim-sidebar {
-  width: 260px;
+  width: 220px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: var(--cc-bg-darker, #0d0d0d);
+  border-right: 1px solid var(--cc-border, #333);
 }
-.cc-sim-sidebar-left  { border-right: 1px solid var(--cc-border, #333); }
-.cc-sim-sidebar-right { border-left:  1px solid var(--cc-border, #333); }
 
 .cc-sim-sidebar-scroll {
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  min-height: 0;
 }
+
+/* Log accordion bar at bottom */
+.cc-sim-log-bar {
+  flex-shrink: 0;
+  border-top: 1px solid var(--cc-border, #333);
+  background: var(--cc-bg-darker, #0d0d0d);
+  z-index: 10;
+}
+.cc-sim-log-bar-ticker {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  cursor: pointer;
+  user-select: none;
+  min-height: 36px;
+}
+.cc-sim-log-bar-ticker:hover { background: rgba(255,255,255,0.03); }
+.cc-sim-log-bar-latest {
+  flex: 1;
+  font-size: 0.78rem;
+  color: var(--cc-text-dim, #888);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cc-sim-log-bar-latest.log-combat  { color: #ef9090; }
+.cc-sim-log-bar-latest.log-event   { color: #fff176; }
+.cc-sim-log-bar-latest.log-monster { color: #ffb870; }
+.cc-sim-log-bar-latest.log-round   { color: #ce93d8; font-weight: 700; }
+.cc-sim-log-bar-latest.log-deploy  { color: #a5d6a7; }
+.cc-sim-log-bar-chevron {
+  font-size: 0.7rem;
+  color: var(--cc-text-dim, #888);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.cc-sim-log-bar.open .cc-sim-log-bar-chevron { transform: rotate(180deg); }
+.cc-sim-log-drawer {
+  max-height: 0;
+  overflow-y: auto;
+  transition: max-height 0.25s ease;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.cc-sim-log-bar.open .cc-sim-log-drawer { max-height: 220px; }
 
 /* ===== Map Canvas Area ===== */
 .cc-sim-map-wrap {
-  flex: 1;
   position: relative;
   overflow: hidden;
-  background: #080503;
+  background: transparent;
   cursor: grab;
   user-select: none;
+  flex: 1;
+  min-height: 0;
 }
 .cc-sim-map-wrap.is-dragging { cursor: grabbing; }
 
@@ -55,30 +110,9 @@
 }
 
 /* ===== Map HUD (overlaid on canvas) ===== */
-.cc-sim-map-hud {
-  position: absolute;
-  bottom: 0; left: 0; right: 0;
-  padding: 8px 10px;
-  background: linear-gradient(transparent, rgba(0,0,0,0.85));
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  flex-wrap: wrap;
-  pointer-events: none;
-}
-.cc-sim-map-hud > * { pointer-events: auto; }
-
-.cc-sim-map-hud-top {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  padding: 8px 10px;
-  background: linear-gradient(rgba(0,0,0,0.7), transparent);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  pointer-events: none;
-}
-.cc-sim-map-hud-top > * { pointer-events: auto; }
+/* Round badge shown in top controls bar */
+.cc-sim-map-hud-top { display: none; } /* kept for compat, now unused */
+.cc-sim-map-hud     { display: none; } /* kept for compat, now unused */
 
 .cc-sim-round-badge {
   background: rgba(0,0,0,0.8);
@@ -216,7 +250,10 @@
 }
 
 /* ===== Log ===== */
-.cc-sim-log { padding: 8px; }
+.cc-sim-log {
+  padding: 8px;
+  height: 100%;
+}
 .cc-sim-log-entry {
   font-size: 0.76rem;
   padding: 4px 7px;
@@ -355,31 +392,7 @@
   animation: cc-sim-spawn 0.3s ease;
 }
 
-/* ===== Zoom Controls ===== */
-.cc-sim-zoom-controls {
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  pointer-events: auto;
-}
-.cc-sim-zoom-btn {
-  width: 32px; height: 32px;
-  background: rgba(0,0,0,0.7);
-  border: 1px solid var(--cc-border, #333);
-  border-radius: 6px;
-  color: var(--cc-text, #eee);
-  font-size: 1.1rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.12s;
-}
-.cc-sim-zoom-btn:hover { background: rgba(255,255,255,0.1); }
+
 
 /* ===== Misc ===== */
 .cc-login-status {
@@ -527,3 +540,43 @@
   font-weight: 700;
   margin: .5rem 0 1rem;
 }
+
+/* ===== Active Faction Highlight ===== */
+.cc-sim-faction-entry.is-active {
+  background: rgba(255,255,255,0.1) !important;
+  border-left: 3px solid var(--active-color, #fff);
+  padding-left: 9px !important;
+}
+.cc-sim-faction-entry.is-active .cc-sim-faction-name {
+  color: #fff !important;
+  font-weight: 800;
+}
+/* Pulse the active dot */
+@keyframes cc-dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
+  50%       { box-shadow: 0 0 8px 4px currentColor; opacity: 0.8; }
+}
+.cc-sim-faction-entry.is-active .cc-sim-faction-dot {
+  animation: cc-dot-pulse 1s ease-in-out infinite;
+}
+
+/* ===== Right sidebar fixed layout ===== */
+.cc-sim-sidebar-right {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.cc-sim-sidebar-right #cc-sim-active-unit {
+  flex-shrink: 0;
+  overflow-y: auto;
+  max-height: 45%;
+  border-bottom: 1px solid var(--cc-border, #333);
+}
+.cc-sim-sidebar-right .cc-sim-sidebar-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Kill any stray overlay boxes that might come from Leaflet or orphaned divs */
+.cc-mm-app, .leaflet-container, [class^="zPane"] { display: none !important; }

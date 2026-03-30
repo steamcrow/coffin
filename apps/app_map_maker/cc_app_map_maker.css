@@ -1,419 +1,410 @@
-/* File: coffin/apps/app_map_maker/cc_app_map_maker.css */
+/* ================================================================
+   Coffin Canyon — Map Maker
+   cc_app_map_maker.css
+   ================================================================ */
 
-/* -- Variables ---------------------------------------------------- */
+/* ─── CSS tokens (inherits from cc_ui.css if loaded) ────────────── */
 .cc-mm-app {
-  --mm-bg:        #0e0c09;
-  --mm-mid:       #141210;
-  --mm-soft:      #1a1714;
-  --mm-card:      #111;
-  --mm-border:    rgba(255,255,255,0.07);
-  --mm-border-hi: rgba(255,255,255,0.14);
-  --mm-pri:       #d4822a;
-  --mm-pri-dim:   rgba(212,130,42,0.12);
-  --mm-text:      #e0d8cc;
-  --mm-muted:     #6a6050;
-  --mm-danger:    #c0392b;
-  --mm-r:         5px;
-  --mm-font-title:'Cinzel', Georgia, serif;
-  --mm-font-mono: 'Space Mono', 'Courier New', monospace;
+  --mm-bg:          #0d0d0b;
+  --mm-bg-panel:    #111110;
+  --mm-bg-card:     #1a1a17;
+  --mm-bg-hover:    #222220;
+  --mm-border:      #2e2e2a;
+  --mm-border-mid:  #3d3d38;
+  --mm-text:        #e8e4dc;
+  --mm-text-dim:    #7a7670;
+  --mm-text-faint:  #464340;
+  --mm-primary:     #d4822a;
+  --mm-primary-dim: rgba(212,130,42,0.15);
+  --mm-accent:      #f0c060;
+  --mm-radius:      5px;
+  --mm-radius-lg:   8px;
+  --mm-font:        'Courier New', 'Lucida Console', monospace;
 }
 
-/* -- App shell ---------------------------------------------------- */
+/* ─── Reset ─────────────────────────────────────────────────────── */
+.cc-mm-app *, .cc-mm-app *::before, .cc-mm-app *::after {
+  box-sizing: border-box;
+}
 .cc-mm-app {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  min-height: 500px;
   background: var(--mm-bg);
   color: var(--mm-text);
-  font-family: Georgia, serif;
+  font-family: var(--mm-font);
   font-size: 13px;
+  line-height: 1.4;
   overflow: hidden;
 }
 
-/* -- Toolbar ------------------------------------------------------ */
+/* ─── Toolbar ───────────────────────────────────────────────────── */
 .cc-mm-toolbar {
   display: flex;
-  gap: 8px;
   align-items: center;
   flex-wrap: wrap;
-  padding: 8px 14px;
+  gap: 6px 16px;
+  padding: 8px 16px;
+  background: var(--mm-bg-panel);
   border-bottom: 1px solid var(--mm-border);
-  background: var(--mm-mid);
   flex-shrink: 0;
-  min-height: 48px;
+  z-index: 20;
+}
+
+.cc-mm-toolbar-title {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--mm-accent);
+  white-space: nowrap;
 }
 
 .cc-mm-toolbar-group {
   display: flex;
-  gap: 6px;
   align-items: center;
+  gap: 6px;
   flex-wrap: wrap;
 }
 
-.cc-mm-toolbar-title {
-  font-family: var(--mm-font-title);
-  font-size: 1rem;
-  font-weight: 900;
-  color: var(--mm-pri);
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.cc-mm-label {
-  font-family: var(--mm-font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--mm-muted);
-  white-space: nowrap;
-}
-
-/* Toolbar divider */
-.cc-mm-toolbar-group + .cc-mm-toolbar-group {
-  border-left: 1px solid var(--mm-border);
-  padding-left: 8px;
-  margin-left: 2px;
-}
-
-/* -- Body layout -------------------------------------------------- */
+/* ─── Body ──────────────────────────────────────────────────────── */
 .cc-mm-body {
-  display: grid;
-  grid-template-columns: 240px 1fr 280px;
+  display: flex;
   flex: 1;
   min-height: 0;
   overflow: hidden;
 }
 
-/* -- Sidebars ----------------------------------------------------- */
+/* ─── Sidebars ──────────────────────────────────────────────────── */
 .cc-mm-sidebar {
-  background: var(--mm-mid);
   display: flex;
   flex-direction: column;
+  background: var(--mm-bg-panel);
+  flex-shrink: 0;
   overflow: hidden;
-  min-height: 0;
+}
+.cc-mm-sidebar--left {
+  width: 220px;
+  border-right: 1px solid var(--mm-border);
+}
+.cc-mm-sidebar--right {
+  width: 248px;
+  border-left: 1px solid var(--mm-border);
 }
 
-.cc-mm-sidebar--left  { border-right: 1px solid var(--mm-border); }
-.cc-mm-sidebar--right { border-left:  1px solid var(--mm-border); }
-
-/* -- Sidebar header ----------------------------------------------- */
 .cc-mm-sidebar-header {
-  font-family: var(--mm-font-mono);
-  font-size: 9px;
-  font-weight: 700;
+  padding: 8px 12px;
+  font-size: 0.68rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--mm-pri);
-  padding: 10px 12px 6px;
-  flex-shrink: 0;
+  color: var(--mm-text-dim);
   border-bottom: 1px solid var(--mm-border);
-}
-
-/* -- Palette controls --------------------------------------------- */
-.cc-mm-palette-controls {
-  padding: 8px 10px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  border-bottom: 1px solid var(--mm-border);
-}
-
-/* -- Palette list ------------------------------------------------- */
-.cc-mm-palette-list {
-  flex: 1;
-  overflow-y: auto;
-  padding: 6px 8px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-height: 0;
-}
-
-.cc-mm-palette-list::-webkit-scrollbar       { width: 4px; }
-.cc-mm-palette-list::-webkit-scrollbar-track { background: transparent; }
-.cc-mm-palette-list::-webkit-scrollbar-thumb { background: var(--mm-border-hi); border-radius: 2px; }
-.cc-mm-palette-list::-webkit-scrollbar-thumb:hover { background: var(--mm-pri); }
-
-/* -- Inspector (right, also scrolls) ----------------------------- */
-.cc-mm-inspector-body {
-  flex: 1;
-  overflow-y: auto;
-  padding: 10px;
-  min-height: 0;
-}
-
-.cc-mm-inspector-body::-webkit-scrollbar       { width: 4px; }
-.cc-mm-inspector-body::-webkit-scrollbar-track { background: transparent; }
-.cc-mm-inspector-body::-webkit-scrollbar-thumb { background: var(--mm-border-hi); border-radius: 2px; }
-
-/* -- Map center --------------------------------------------------- */
-.cc-mm-center {
-  position: relative;
   background: var(--mm-bg);
+  flex-shrink: 0;
+}
+
+/* ─── Center map area ───────────────────────────────────────────── */
+.cc-mm-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   overflow: hidden;
-  min-height: 0;
 }
 
 .cc-mm-map-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  background: #090806;
+}
+.cc-mm-map-wrap.drag-over::after {
+  content: 'Drop to place';
   position: absolute;
   inset: 0;
+  background: rgba(212,130,42,0.12);
+  border: 2px dashed var(--mm-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  color: var(--mm-primary);
+  pointer-events: none;
+  z-index: 100;
 }
 
 .cc-mm-map {
   width: 100%;
   height: 100%;
-  background: var(--mm-bg);
 }
 
-/* -- Inputs ------------------------------------------------------- */
-.cc-mm-input {
-  background: var(--mm-bg);
-  color: var(--mm-text);
-  border: 1px solid var(--mm-border-hi);
-  padding: 5px 8px;
-  border-radius: var(--mm-r);
-  font-family: var(--mm-font-mono);
-  font-size: 11px;
-  width: 100%;
-  box-sizing: border-box;
-  transition: border-color 0.1s;
-}
-
-.cc-mm-input:focus {
-  outline: none;
-  border-color: var(--mm-pri);
-  box-shadow: 0 0 0 2px var(--mm-pri-dim);
-}
-
-.cc-mm-input select option { background: var(--mm-bg); }
-
-/* -- Buttons ------------------------------------------------------ */
-.cc-mm-btn {
-  display: inline-flex;
-  align-items: center;
+/* ─── Terrain palette ───────────────────────────────────────────── */
+.cc-mm-palette-controls {
+  padding: 8px;
+  border-bottom: 1px solid var(--mm-border);
+  display: flex;
+  flex-direction: column;
   gap: 5px;
-  background: transparent;
-  color: var(--mm-muted);
-  border: 1px solid var(--mm-border-hi);
-  padding: 5px 11px;
-  border-radius: var(--mm-r);
-  cursor: pointer;
-  font-family: var(--mm-font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  white-space: nowrap;
-  transition: background 0.1s, color 0.1s, border-color 0.1s;
-}
-
-.cc-mm-btn:hover {
-  background: var(--mm-soft);
-  color: var(--mm-text);
-  border-color: var(--mm-border-hi);
-}
-
-.cc-mm-btn--primary {
-  border-color: var(--mm-pri);
-  color: var(--mm-pri);
-}
-
-.cc-mm-btn--primary:hover {
-  background: var(--mm-pri);
-  color: var(--mm-bg);
-}
-
-.cc-mm-btn--danger {
-  border-color: var(--mm-danger);
-  color: var(--mm-danger);
-}
-
-.cc-mm-btn--danger:hover {
-  background: var(--mm-danger);
-  color: #fff;
-}
-
-/* -- Palette cards ------------------------------------------------ */
-.cc-mm-palette-card {
-  text-align: left;
-  background: var(--mm-card);
-  border: 1px solid var(--mm-border);
-  border-radius: var(--mm-r);
-  padding: 7px 9px;
-  color: var(--mm-text);
-  cursor: grab;
   flex-shrink: 0;
+  background: var(--mm-bg-panel);
+}
+
+.cc-mm-palette-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mm-border-mid) transparent;
+}
+.cc-mm-palette-list::-webkit-scrollbar       { width: 5px; }
+.cc-mm-palette-list::-webkit-scrollbar-track { background: transparent; }
+.cc-mm-palette-list::-webkit-scrollbar-thumb { background: var(--mm-border-mid); border-radius: 3px; }
+
+.cc-mm-palette-card {
+  display: block;
   width: 100%;
-  box-sizing: border-box;
-  transition: border-color 0.1s, background 0.1s;
+  text-align: left;
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius);
+  padding: 7px 10px;
+  margin-bottom: 4px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  color: var(--mm-text);
+  user-select: none;
 }
-
 .cc-mm-palette-card:hover {
-  background: var(--mm-soft);
-  border-color: var(--mm-pri);
+  background: var(--mm-bg-hover);
+  border-color: var(--mm-border-mid);
 }
-
 .cc-mm-palette-card.is-selected {
-  border-color: var(--mm-pri);
-  background: var(--mm-pri-dim);
+  background: var(--mm-primary-dim);
+  border-color: var(--mm-primary);
 }
-
-.cc-mm-palette-card:active { cursor: grabbing; }
+.cc-mm-palette-card[draggable="true"] { cursor: grab; }
+.cc-mm-palette-card[draggable="true"]:active { cursor: grabbing; }
 
 .cc-mm-palette-title {
+  font-size: 0.78rem;
   font-weight: 700;
-  font-size: 12px;
   color: var(--mm-text);
-  margin-bottom: 1px;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-
 .cc-mm-palette-meta {
-  font-family: var(--mm-font-mono);
-  font-size: 10px;
-  color: var(--mm-muted);
+  font-size: 0.63rem;
+  color: var(--mm-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* -- Inspector sections ------------------------------------------- */
+/* ─── Inspector panel ───────────────────────────────────────────── */
+.cc-mm-inspector-body {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mm-border-mid) transparent;
+}
+.cc-mm-inspector-body::-webkit-scrollbar       { width: 4px; }
+.cc-mm-inspector-body::-webkit-scrollbar-track { background: transparent; }
+.cc-mm-inspector-body::-webkit-scrollbar-thumb { background: var(--mm-border-mid); border-radius: 3px; }
+
+.cc-mm-inspector {
+  padding: 10px;
+}
+
 .cc-mm-section-title {
-  font-family: var(--mm-font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  color: var(--mm-pri);
+  font-size: 0.63rem;
   text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin-bottom: 8px;
-  padding-bottom: 5px;
-  border-bottom: 1px solid var(--mm-border);
-}
-
-.cc-mm-field {
-  margin-bottom: 8px;
+  letter-spacing: 0.12em;
+  color: var(--mm-primary);
+  margin: 10px 0 8px;
 }
 
 .cc-mm-kv {
-  display: grid;
-  grid-template-columns: 72px 1fr;
-  gap: 4px;
-  margin-bottom: 4px;
-  align-items: start;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 6px;
 }
-
 .cc-mm-k {
-  font-family: var(--mm-font-mono);
-  font-size: 9px;
+  font-size: 0.63rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--mm-muted);
-  padding-top: 3px;
+  color: var(--mm-text-dim);
+  flex-shrink: 0;
+  padding-top: 2px;
+  min-width: 56px;
 }
-
 .cc-mm-v {
-  font-size: 12px;
+  font-size: 0.75rem;
   color: var(--mm-text);
   word-break: break-all;
+  line-height: 1.4;
 }
 
-.cc-mm-empty,
-.cc-mm-help {
-  color: var(--mm-muted);
-  font-size: 11px;
-  line-height: 1.5;
-  margin-bottom: 8px;
-  font-style: italic;
+.cc-mm-field {
+  margin-bottom: 12px;
 }
 
-/* Number fields in inspector */
-.cc-mm-inspector-body input[type=number],
-.cc-mm-inspector-body input[type=text] {
-  background: var(--mm-bg);
-  border: 1px solid var(--mm-border-hi);
-  color: var(--mm-text);
-  padding: 5px 8px;
-  border-radius: var(--mm-r);
-  font-family: var(--mm-font-mono);
-  font-size: 11px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.cc-mm-inspector-body input:focus {
-  outline: none;
-  border-color: var(--mm-pri);
-}
-
-.cc-mm-inspector-body label {
+.cc-mm-label {
   display: block;
-  font-family: var(--mm-font-mono);
-  font-size: 9px;
-  font-weight: 700;
+  font-size: 0.63rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--mm-pri);
-  margin-bottom: 3px;
+  color: var(--mm-text-dim);
+  margin-bottom: 4px;
+}
+
+.cc-mm-help {
+  font-size: 0.68rem;
+  color: var(--mm-text-faint);
+  line-height: 1.55;
+  margin: 6px 0;
+}
+
+.cc-mm-empty {
+  padding: 20px 12px;
+  font-size: 0.75rem;
+  color: var(--mm-text-dim);
+  line-height: 1.65;
+  text-align: center;
+}
+
+/* ─── Inputs ────────────────────────────────────────────────────── */
+.cc-mm-input {
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border);
+  border-radius: var(--mm-radius);
+  color: var(--mm-text);
+  font-family: var(--mm-font);
+  font-size: 0.78rem;
+  padding: 5px 8px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.cc-mm-input:focus  {
+  border-color: var(--mm-primary);
+  background: var(--mm-bg-hover);
+}
+.cc-mm-input--full  { width: 100%; display: block; }
+
+/* Select arrow */
+select.cc-mm-input {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%237a7670'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 24px;
+  cursor: pointer;
 }
 
 /* Range sliders */
-.cc-mm-inspector-body input[type=range] {
+input[type="range"].cc-mm-rot-slider,
+input[type="range"].cc-mm-scale-slider,
+input[type="range"].cc-mm-z-slider {
   width: 100%;
-  accent-color: var(--mm-pri);
+  height: 4px;
+  accent-color: var(--mm-primary);
   cursor: pointer;
-  margin: 2px 0 6px;
+  background: var(--mm-border-mid);
+  border-radius: 2px;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 6px 0;
+}
+input[type="range"].cc-mm-rot-slider::-webkit-slider-thumb,
+input[type="range"].cc-mm-scale-slider::-webkit-slider-thumb,
+input[type="range"].cc-mm-z-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--mm-primary);
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(212,130,42,0.5);
 }
 
-/* -- Terrain markers ---------------------------------------------- */
-.cc-mm-div-icon { background: transparent !important; border: none !important; overflow: visible !important; }
+/* ─── Buttons ───────────────────────────────────────────────────── */
+.cc-mm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background: var(--mm-bg-card);
+  border: 1px solid var(--mm-border-mid);
+  border-radius: var(--mm-radius);
+  color: var(--mm-text);
+  font-family: var(--mm-font);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+  white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.cc-mm-btn:hover {
+  background: var(--mm-bg-hover);
+  border-color: var(--mm-text-dim);
+  color: var(--mm-text);
+}
+.cc-mm-btn--primary {
+  background: var(--mm-primary);
+  border-color: var(--mm-primary);
+  color: #000;
+}
+.cc-mm-btn--primary:hover {
+  background: #e8921e;
+  border-color: #e8921e;
+  color: #000;
+}
 
-/* Prevent Leaflet from clipping marker content */
-.leaflet-marker-icon,
-.leaflet-marker-shadow,
-.leaflet-div-icon { overflow: visible !important; }
+/* ─── Leaflet map overrides ─────────────────────────────────────── */
+.cc-mm-map .leaflet-container {
+  background: #090806;
+  cursor: crosshair !important;
+}
+.cc-mm-map .leaflet-pane { z-index: 1; }
+.cc-mm-map .leaflet-top,
+.cc-mm-map .leaflet-bottom { display: none; } /* hide default controls */
 
+/* ─── Terrain markers ───────────────────────────────────────────── */
+.cc-mm-div-icon {
+  background: transparent;
+  border: none;
+}
 .cc-mm-terrain-wrap {
   position: relative;
-  pointer-events: auto;
-  overflow: visible;
   display: inline-block;
+  cursor: grab;
+  transform-origin: top center;
 }
+.cc-mm-terrain-wrap:active { cursor: grabbing; }
 
 .cc-mm-terrain-img {
   display: block;
   width: 100%;
-  height: auto !important;
-  transform-origin: top left;
+  height: auto;
+  pointer-events: none;
   user-select: none;
-  pointer-events: auto;
-  filter: none;
+  transform-origin: top center;
+  transition: filter 0.1s;
 }
-
 .cc-mm-terrain-img.is-selected {
-  outline: 2px solid var(--mm-pri);
-  outline-offset: 2px;
-  filter: drop-shadow(0 0 8px rgba(212,130,42,0.9));
+  filter: drop-shadow(0 0 6px rgba(212,130,42,0.9)) drop-shadow(0 0 12px rgba(212,130,42,0.5));
+  outline: none;
 }
 
-/* Drag-over highlight */
-.cc-mm-map.drag-over {
-  outline: 2px dashed var(--mm-pri);
-  outline-offset: -2px;
-}
-
-/* Delete button */
-.cc-mm-inspector-body .cc-mm-btn--danger {
-  width: 100%;
-  justify-content: center;
-  margin-top: 10px;
-}
-
-/* -- Responsive --------------------------------------------------- */
-@media (max-width: 1100px) {
-  .cc-mm-body { grid-template-columns: 220px 1fr; }
-  .cc-mm-sidebar--right { display: none; }
-}
-
-@media (max-width: 700px) {
-  .cc-mm-body { grid-template-columns: 1fr; grid-template-rows: 200px 1fr; }
-  .cc-mm-sidebar--left { max-height: 200px; }
-}
+/* ─── Scrollbars ────────────────────────────────────────────────── */
+.cc-mm-app ::-webkit-scrollbar       { width: 6px; height: 6px; }
+.cc-mm-app ::-webkit-scrollbar-track { background: transparent; }
+.cc-mm-app ::-webkit-scrollbar-thumb { background: var(--mm-border-mid); border-radius: 3px; }
+.cc-mm-app ::-webkit-scrollbar-thumb:hover { background: var(--mm-text-faint); }

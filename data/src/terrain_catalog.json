@@ -1,7 +1,7 @@
 {
   "schema_id": "cc_terrain_catalog",
   "schema_version": "2.0",
-  "last_updated": "2026-03-23",
+  "last_updated": "2026-03-26",
   "notes": [
     "Catalog entries define reusable terrain assets for the Leaflet map editor, Turn Counter integration, and future solo simulation.",
     "This file defines WHAT each image is. Per-map placement should live in terrain_instances.json later.",
@@ -193,7 +193,7 @@
           "w": 5,
           "d": 4
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "partial",
@@ -289,7 +289,7 @@
           "w": 4,
           "d": 4
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "partial",
@@ -352,7 +352,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -382,7 +386,7 @@
           "w": 3,
           "d": 3
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "partial",
@@ -419,7 +423,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -487,7 +495,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -590,7 +602,7 @@
     {
       "terrain_type_id": "camp_yurt_reinforced",
       "asset_file": "westcamps_normal_07.png",
-      "name": "Reinforced Camp Hut",
+      "name": "Fancy Tipi",
       "family": "westcamps",
       "kind": "building",
       "variant_group": "camp_special_tents",
@@ -611,7 +623,7 @@
           "w": 4,
           "d": 4
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "partial",
@@ -648,7 +660,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -680,7 +696,7 @@
           "w": 2,
           "d": 2
         },
-        "base_height_in": 4.0
+        "base_height_in": 4
       },
       "visibility": {
         "los_profile": "partial",
@@ -717,7 +733,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -728,7 +748,7 @@
     {
       "terrain_type_id": "feature_windmill_tower",
       "asset_file": "westmill_normal_02.png",
-      "name": "Windmill Tower",
+      "name": "Large Windmill",
       "family": "westmill",
       "kind": "feature",
       "variant_group": "windmills",
@@ -749,7 +769,7 @@
           "w": 2,
           "d": 2
         },
-        "base_height_in": 6.0
+        "base_height_in": 6
       },
       "visibility": {
         "los_profile": "partial",
@@ -768,10 +788,10 @@
         "is_passable": true,
         "is_walkable_on_top": false,
         "climb": {
-          "allowed": false,
-          "mode": "none",
+          "allowed": true,
+          "mode": "ladder",
           "min_level_access": 0,
-          "max_level_access": 0,
+          "max_level_access": 3,
           "test": {
             "required": false,
             "type": "quality",
@@ -797,7 +817,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -829,7 +853,7 @@
           "w": 1,
           "d": 1
         },
-        "base_height_in": 4.0
+        "base_height_in": 4
       },
       "visibility": {
         "los_profile": "none",
@@ -866,7 +890,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -935,7 +963,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -967,7 +999,7 @@
           "w": 3,
           "d": 2
         },
-        "base_height_in": 1.0
+        "base_height_in": 1
       },
       "visibility": {
         "los_profile": "partial",
@@ -1004,7 +1036,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -1015,7 +1051,7 @@
     {
       "terrain_type_id": "feature_totem_winged_01",
       "asset_file": "westtotem_normal_01.png",
-      "name": "Winged Totem",
+      "name": "Winged Totem Pole",
       "family": "westtotem",
       "kind": "feature",
       "variant_group": "totems",
@@ -1036,7 +1072,7 @@
           "w": 2,
           "d": 2
         },
-        "base_height_in": 5.0
+        "base_height_in": 5
       },
       "visibility": {
         "los_profile": "partial",
@@ -1096,7 +1132,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -1107,7 +1147,7 @@
     {
       "terrain_type_id": "feature_totem_winged_02",
       "asset_file": "westtotem_normal_02.png",
-      "name": "Winged Totem Variant",
+      "name": "Winged Totem Pole Variant",
       "family": "westtotem",
       "kind": "feature",
       "variant_group": "totems",
@@ -1128,7 +1168,7 @@
           "w": 2,
           "d": 2
         },
-        "base_height_in": 5.0
+        "base_height_in": 5
       },
       "visibility": {
         "los_profile": "partial",
@@ -1165,7 +1205,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -1176,7 +1220,7 @@
     {
       "terrain_type_id": "building_town_small_shop_01",
       "asset_file": "westtown_normal_01.png",
-      "name": "Town Shopfront",
+      "name": "Town Shopfronts",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_small_buildings",
@@ -1392,7 +1436,7 @@
     {
       "terrain_type_id": "building_town_house_01",
       "asset_file": "westtown_normal_03.png",
-      "name": "Town House",
+      "name": "Town Shopfronts 2",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_houses",
@@ -1427,7 +1471,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 1,
         "levels": [
           {
@@ -1528,7 +1572,7 @@
     {
       "terrain_type_id": "building_town_house_02",
       "asset_file": "westtown_normal_04.png",
-      "name": "Town House Variant",
+      "name": "Town Shopfronts 3",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_houses",
@@ -1625,7 +1669,7 @@
     {
       "terrain_type_id": "building_town_two_story_01",
       "asset_file": "westtown_normal_05.png",
-      "name": "Two-Story Town Building",
+      "name": "Town Building Cluster",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_large_buildings",
@@ -1646,7 +1690,7 @@
           "w": 7,
           "d": 5
         },
-        "base_height_in": 4.0
+        "base_height_in": 4
       },
       "visibility": {
         "los_profile": "blocks",
@@ -1660,7 +1704,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 2,
         "levels": [
           {
@@ -1771,7 +1815,7 @@
     {
       "terrain_type_id": "building_town_two_story_02",
       "asset_file": "westtown_normal_06.png",
-      "name": "Two-Story Town Building Variant",
+      "name": "Town Building Cluster 2",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_large_buildings",
@@ -1792,7 +1836,7 @@
           "w": 7,
           "d": 5
         },
-        "base_height_in": 4.0
+        "base_height_in": 4
       },
       "visibility": {
         "los_profile": "blocks",
@@ -1806,7 +1850,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 1,
         "levels": [
           {
@@ -1856,7 +1900,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -1867,7 +1915,7 @@
     {
       "terrain_type_id": "building_town_civic_01",
       "asset_file": "westtown_normal_07.png",
-      "name": "Civic Town Building",
+      "name": "Town Houses",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_civic_buildings",
@@ -1975,7 +2023,7 @@
     {
       "terrain_type_id": "building_town_church_like",
       "asset_file": "westtown_normal_08.png",
-      "name": "Church-Like Building",
+      "name": "Saloon and Restaurant",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_civic_buildings",
@@ -1996,7 +2044,7 @@
           "w": 7,
           "d": 5
         },
-        "base_height_in": 4.0
+        "base_height_in": 4
       },
       "visibility": {
         "los_profile": "blocks",
@@ -2010,7 +2058,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 1,
         "levels": [
           {
@@ -2114,7 +2162,7 @@
     {
       "terrain_type_id": "building_town_ruined_small_01",
       "asset_file": "westtown_normal_09.png",
-      "name": "Ruined Town Building",
+      "name": "Town Tack Shop and Livery",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_ruins",
@@ -2198,7 +2246,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -2209,7 +2261,7 @@
     {
       "terrain_type_id": "building_town_ruined_small_02",
       "asset_file": "westtown_normal_10.png",
-      "name": "Ruined Shopfront",
+      "name": "Town Ruined Adobe",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_ruins",
@@ -2282,7 +2334,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -2293,7 +2349,7 @@
     {
       "terrain_type_id": "building_town_ruined_large_01",
       "asset_file": "westtown_normal_11.png",
-      "name": "Large Ruined Town Building",
+      "name": "Town Ruined Shacks",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_ruins",
@@ -2314,7 +2370,7 @@
           "w": 7,
           "d": 5
         },
-        "base_height_in": 2.0
+        "base_height_in": 2
       },
       "visibility": {
         "los_profile": "partial",
@@ -2377,7 +2433,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -2388,7 +2448,7 @@
     {
       "terrain_type_id": "building_town_ruined_large_02",
       "asset_file": "westtown_normal_12.png",
-      "name": "Large Ruined Balcony Building",
+      "name": "Town Schoolhouse and House",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_ruins",
@@ -2423,7 +2483,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 1,
         "levels": [
           {
@@ -2497,7 +2557,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -2508,7 +2572,7 @@
     {
       "terrain_type_id": "building_town_hotel_like",
       "asset_file": "westtown_normal_13.png",
-      "name": "Hotel-Like Town Building",
+      "name": "Town Houses Duplex",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_signature_buildings",
@@ -2529,7 +2593,7 @@
           "w": 9,
           "d": 6
         },
-        "base_height_in": 4.0
+        "base_height_in": 4
       },
       "visibility": {
         "los_profile": "blocks",
@@ -2543,7 +2607,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 2,
         "levels": [
           {
@@ -2657,7 +2721,7 @@
     {
       "terrain_type_id": "building_town_signature_01",
       "asset_file": "westtown_normal_14.png",
-      "name": "Signature Town Building",
+      "name": "Town Old Ruined Shacks",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_signature_buildings",
@@ -2767,7 +2831,7 @@
     {
       "terrain_type_id": "building_town_signature_02",
       "asset_file": "westtown_normal_15.png",
-      "name": "Signature Town Building Variant",
+      "name": "Town Large Hotel",
       "family": "westtown",
       "kind": "building",
       "variant_group": "town_signature_buildings",
@@ -2877,7 +2941,7 @@
     {
       "terrain_type_id": "feature_passenger_car",
       "asset_file": "westtrains_normal_03.png",
-      "name": "Passenger Car",
+      "name": "Train Station Small",
       "family": "westtrains",
       "kind": "feature",
       "variant_group": "rail_cars",
@@ -2898,7 +2962,7 @@
           "w": 8,
           "d": 3
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "blocks",
@@ -2958,7 +3022,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -2969,7 +3037,7 @@
     {
       "terrain_type_id": "feature_rail_end_or_small_car",
       "asset_file": "westtrains_normal_07.png",
-      "name": "Small Rail Car / Rail End Feature",
+      "name": "Train Locomotive",
       "family": "westtrains",
       "kind": "feature",
       "variant_group": "rail_misc",
@@ -3049,7 +3117,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3063,7 +3135,7 @@
     {
       "terrain_type_id": "obstacle_rock_spire_01",
       "asset_file": "wildmountain_normal_02.png",
-      "name": "Rock Spire",
+      "name": "Massive Mesa",
       "family": "wildmountain",
       "kind": "obstacle",
       "variant_group": "rock_spires",
@@ -3084,7 +3156,7 @@
           "w": 4,
           "d": 3
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "blocks",
@@ -3106,7 +3178,7 @@
           "allowed": true,
           "mode": "scramble",
           "min_level_access": 0,
-          "max_level_access": 0,
+          "max_level_access": 5,
           "test": {
             "required": true,
             "type": "quality",
@@ -3121,7 +3193,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3132,7 +3208,7 @@
     {
       "terrain_type_id": "obstacle_rock_spire_02",
       "asset_file": "wildmountain_normal_03.png",
-      "name": "Rock Spire Variant",
+      "name": "Rough Mesas Huge",
       "family": "wildmountain",
       "kind": "obstacle",
       "variant_group": "rock_spires",
@@ -3175,7 +3251,7 @@
           "allowed": true,
           "mode": "scramble",
           "min_level_access": 0,
-          "max_level_access": 0,
+          "max_level_access": 4,
           "test": {
             "required": true,
             "type": "quality",
@@ -3190,7 +3266,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3201,7 +3281,7 @@
     {
       "terrain_type_id": "obstacle_rock_outcrop_medium_01",
       "asset_file": "wildmountain_normal_04.png",
-      "name": "Rock Outcrop",
+      "name": "Tall Mesa",
       "family": "wildmountain",
       "kind": "obstacle",
       "variant_group": "rock_outcrops",
@@ -3244,7 +3324,7 @@
           "allowed": true,
           "mode": "scramble",
           "min_level_access": 0,
-          "max_level_access": 0,
+          "max_level_access": 4,
           "test": {
             "required": true,
             "type": "quality",
@@ -3259,7 +3339,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3270,7 +3354,7 @@
     {
       "terrain_type_id": "obstacle_rock_outcrop_large_01",
       "asset_file": "wildmountain_normal_05.png",
-      "name": "Large Rock Outcrop",
+      "name": "Large Triple Mesa",
       "family": "wildmountain",
       "kind": "obstacle",
       "variant_group": "rock_outcrops",
@@ -3292,7 +3376,7 @@
           "w": 6,
           "d": 5
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "blocks",
@@ -3314,7 +3398,7 @@
           "allowed": true,
           "mode": "scramble",
           "min_level_access": 0,
-          "max_level_access": 0,
+          "max_level_access": 4,
           "test": {
             "required": true,
             "type": "quality",
@@ -3340,7 +3424,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3351,7 +3439,7 @@
     {
       "terrain_type_id": "feature_mesa_segment_01",
       "asset_file": "wildmountain_normal_06.png",
-      "name": "Mesa Segment",
+      "name": "Rocky Dune Hills",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "mesa_segments",
@@ -3372,7 +3460,7 @@
           "w": 8,
           "d": 6
         },
-        "base_height_in": 4.0
+        "base_height_in": 4
       },
       "visibility": {
         "los_profile": "blocks",
@@ -3386,7 +3474,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 2,
         "levels": [
           {
@@ -3417,7 +3505,7 @@
         "climb": {
           "allowed": true,
           "mode": "rope",
-          "min_level_access": 2,
+          "min_level_access": 0,
           "max_level_access": 2,
           "test": {
             "required": true,
@@ -3444,7 +3532,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3455,7 +3547,7 @@
     {
       "terrain_type_id": "feature_mesa_segment_02",
       "asset_file": "wildmountain_normal_07.png",
-      "name": "Mesa Segment Variant",
+      "name": "Single Mesa Large",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "mesa_segments",
@@ -3476,7 +3568,7 @@
           "w": 8,
           "d": 6
         },
-        "base_height_in": 4.0
+        "base_height_in": 4
       },
       "visibility": {
         "los_profile": "blocks",
@@ -3490,7 +3582,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 2,
         "levels": [
           {
@@ -3522,7 +3614,7 @@
           "allowed": true,
           "mode": "rope",
           "min_level_access": 2,
-          "max_level_access": 2,
+          "max_level_access": 3,
           "test": {
             "required": true,
             "type": "quality",
@@ -3537,7 +3629,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3548,7 +3644,7 @@
     {
       "terrain_type_id": "feature_canyon_wall_01",
       "asset_file": "wildmountain_normal_08.png",
-      "name": "Canyon Wall",
+      "name": "Single Mesa Large 2",
       "family": "wildmountain",
       "kind": "obstacle",
       "variant_group": "canyon_walls",
@@ -3617,7 +3713,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3628,7 +3728,7 @@
     {
       "terrain_type_id": "feature_canyon_wall_02",
       "asset_file": "wildmountain_normal_09.png",
-      "name": "Canyon Wall Variant",
+      "name": "Single Mesa Large 3",
       "family": "wildmountain",
       "kind": "obstacle",
       "variant_group": "canyon_walls",
@@ -3671,7 +3771,7 @@
           "allowed": true,
           "mode": "rope",
           "min_level_access": 0,
-          "max_level_access": 0,
+          "max_level_access": 3,
           "test": {
             "required": true,
             "type": "quality",
@@ -3686,7 +3786,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3697,7 +3801,7 @@
     {
       "terrain_type_id": "feature_rock_arch_or_ridge",
       "asset_file": "wildmountain_normal_10.png",
-      "name": "Rock Ridge",
+      "name": "Single Mesa Large 4",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "ridge_forms",
@@ -3755,7 +3859,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3769,7 +3877,7 @@
     {
       "terrain_type_id": "feature_rock_arch_or_ridge_large",
       "asset_file": "wildmountain_normal_11.png",
-      "name": "Large Rock Ridge",
+      "name": "Single Mesa Large 5",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "ridge_forms",
@@ -3790,7 +3898,7 @@
           "w": 8,
           "d": 5
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "partial",
@@ -3838,7 +3946,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -3852,7 +3964,7 @@
     {
       "terrain_type_id": "feature_water_tower_wooden",
       "asset_file": "westtower_normal_01.png",
-      "name": "Wooden Water Tower",
+      "name": "Tin Water Tower",
       "family": "westtower",
       "kind": "building",
       "variant_group": "water_towers",
@@ -3874,7 +3986,7 @@
           "w": 4,
           "d": 4
         },
-        "base_height_in": 7.0
+        "base_height_in": 7
       },
       "visibility": {
         "los_profile": "partial",
@@ -3888,7 +4000,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 1,
         "levels": [
           {
@@ -4007,7 +4119,7 @@
           "w": 10,
           "d": 7
         },
-        "base_height_in": 4.0
+        "base_height_in": 4
       },
       "visibility": {
         "los_profile": "blocks",
@@ -4021,7 +4133,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 2,
         "levels": [
           {
@@ -4153,7 +4265,7 @@
           "w": 8,
           "d": 5
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "blocks",
@@ -4260,7 +4372,7 @@
           "w": 8,
           "d": 3
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "blocks",
@@ -4320,7 +4432,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -4455,7 +4571,7 @@
           "w": 12,
           "d": 3
         },
-        "base_height_in": 3.0
+        "base_height_in": 3
       },
       "visibility": {
         "los_profile": "blocks",
@@ -4503,7 +4619,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -4514,7 +4634,7 @@
     {
       "terrain_type_id": "obstacle_mesa_cliff_large",
       "asset_file": "wildmountain_normal_01.png",
-      "name": "Mesa Cliff",
+      "name": "Large Mesa Cliff",
       "family": "wildmountain",
       "kind": "obstacle",
       "variant_group": "mesa_cliffs",
@@ -4536,7 +4656,7 @@
           "w": 12,
           "d": 8
         },
-        "base_height_in": 5.0
+        "base_height_in": 5
       },
       "visibility": {
         "los_profile": "blocks",
@@ -4550,7 +4670,7 @@
       },
       "elevation": {
         "system": "levels",
-        "level_unit_in": 2.0,
+        "level_unit_in": 2,
         "max_level": 2,
         "levels": [
           {
@@ -4582,7 +4702,7 @@
           "allowed": true,
           "mode": "rope",
           "min_level_access": 2,
-          "max_level_access": 2,
+          "max_level_access": 4,
           "test": {
             "required": true,
             "type": "quality",
@@ -4608,7 +4728,11 @@
         }
       ],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -4657,13 +4781,13 @@
       },
       "movement": {
         "is_passable": false,
-        "is_walkable_on_top": false,
+        "is_walkable_on_top": true,
         "difficult_terrain_on": [],
         "climb": {
-          "allowed": false,
-          "mode": "none",
+          "allowed": true,
+          "mode": "stairs",
           "min_level_access": 0,
-          "max_level_access": 0,
+          "max_level_access": 2,
           "test": {
             "required": false,
             "type": "quality",
@@ -4679,7 +4803,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -4690,7 +4817,7 @@
     {
       "terrain_type_id": "westbuild_01",
       "asset_file": "westbuild_normal_01.png",
-      "name": "General Store",
+      "name": "Farm Cabin",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -4750,7 +4877,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -4761,7 +4891,7 @@
     {
       "terrain_type_id": "westbuild_02",
       "asset_file": "westbuild_normal_02.png",
-      "name": "Saloon",
+      "name": "Saloon Shanty",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -4821,7 +4951,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -4832,7 +4965,7 @@
     {
       "terrain_type_id": "westbuild_03",
       "asset_file": "westbuild_normal_03.png",
-      "name": "Hotel",
+      "name": "Adobe House 2",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -4892,7 +5025,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -4963,7 +5099,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -4974,7 +5113,7 @@
     {
       "terrain_type_id": "westbuild_05",
       "asset_file": "westbuild_normal_05.png",
-      "name": "Sheriff Office",
+      "name": "Dumpling Shop",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -5034,7 +5173,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5105,7 +5247,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5116,7 +5261,7 @@
     {
       "terrain_type_id": "westbuild_07",
       "asset_file": "westbuild_normal_07.png",
-      "name": "Butcher",
+      "name": "House Shanty Shack",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -5176,7 +5321,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5187,15 +5335,14 @@
     {
       "terrain_type_id": "westbuild_08",
       "asset_file": "westbuild_normal_08.png",
-      "name": "Dry Goods",
+      "name": "Dry Goods Shop",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
       "tags": [
         "town",
         "building",
-        "wood",
-        "residential"
+        "wood"
       ],
       "location_tags": [
         "town",
@@ -5247,7 +5394,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5258,7 +5408,7 @@
     {
       "terrain_type_id": "westbuild_09",
       "asset_file": "westbuild_normal_09.png",
-      "name": "Livery Stable",
+      "name": "Tavern Rotting",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -5318,7 +5468,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5336,8 +5489,7 @@
       "tags": [
         "town",
         "building",
-        "wood",
-        "residential"
+        "wood"
       ],
       "location_tags": [
         "town",
@@ -5389,7 +5541,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5460,7 +5615,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5531,7 +5689,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5602,7 +5763,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5673,7 +5837,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5744,7 +5911,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5755,7 +5925,7 @@
     {
       "terrain_type_id": "westbuild_16",
       "asset_file": "westbuild_normal_16.png",
-      "name": "Hardware Store",
+      "name": "Parlor",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -5815,7 +5985,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5886,7 +6059,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -5897,7 +6073,7 @@
     {
       "terrain_type_id": "westbuild_18",
       "asset_file": "westbuild_normal_18.png",
-      "name": "Tailor",
+      "name": "Rotting Wagonwright",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -5957,7 +6133,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6028,7 +6207,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6039,7 +6221,7 @@
     {
       "terrain_type_id": "westbuild_20",
       "asset_file": "westbuild_normal_20.png",
-      "name": "Gunsmith",
+      "name": "Town Hall",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -6099,7 +6281,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6170,7 +6355,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6181,7 +6369,7 @@
     {
       "terrain_type_id": "westbuild_22",
       "asset_file": "westbuild_normal_22.png",
-      "name": "Post Office",
+      "name": "General Store 2",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -6241,7 +6429,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6312,7 +6503,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6323,7 +6517,7 @@
     {
       "terrain_type_id": "westbuild_24",
       "asset_file": "westbuild_normal_24.png",
-      "name": "Warehouse",
+      "name": "Farm Homestead",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -6383,7 +6577,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6454,7 +6651,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6465,7 +6665,7 @@
     {
       "terrain_type_id": "westbuild_26",
       "asset_file": "westbuild_normal_26.png",
-      "name": "Trading Post",
+      "name": "Sheriff Office",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -6525,7 +6725,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6596,7 +6799,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6607,7 +6813,7 @@
     {
       "terrain_type_id": "westbuild_28",
       "asset_file": "westbuild_normal_28.png",
-      "name": "Bakery",
+      "name": "Undertaker",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -6667,7 +6873,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6678,7 +6887,7 @@
     {
       "terrain_type_id": "westbuild_29",
       "asset_file": "westbuild_normal_29.png",
-      "name": "Laundry",
+      "name": "Laundry and Bathhouse",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -6686,7 +6895,8 @@
         "town",
         "building",
         "wood",
-        "residential"
+        "residential",
+        "bathhouse"
       ],
       "location_tags": [
         "town",
@@ -6738,7 +6948,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6749,7 +6962,7 @@
     {
       "terrain_type_id": "westbuild_30",
       "asset_file": "westbuild_normal_30.png",
-      "name": "Barbershop",
+      "name": "Gun Store",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -6757,12 +6970,14 @@
         "town",
         "building",
         "wood",
-        "residential"
+        "gun",
+        "store"
       ],
       "location_tags": [
         "town",
         "frontier",
-        "civilized"
+        "civilized",
+        "store"
       ],
       "footprint": {
         "shape": "rect",
@@ -6809,7 +7024,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6820,7 +7038,7 @@
     {
       "terrain_type_id": "westbuild_31",
       "asset_file": "westbuild_normal_31.png",
-      "name": "Law Office",
+      "name": "Farm Shack",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -6828,7 +7046,8 @@
         "town",
         "building",
         "wood",
-        "residential"
+        "residential",
+        "shack"
       ],
       "location_tags": [
         "town",
@@ -6880,7 +7099,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -6891,7 +7113,7 @@
     {
       "terrain_type_id": "westbuild_32",
       "asset_file": "westbuild_normal_32.png",
-      "name": "Dentist",
+      "name": "Officer's House",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -6951,7 +7173,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7022,7 +7247,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7033,7 +7261,7 @@
     {
       "terrain_type_id": "westbuild_34",
       "asset_file": "westbuild_normal_34.png",
-      "name": "Tobacco Shop",
+      "name": "Drygoods Shop 2",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
@@ -7041,7 +7269,7 @@
         "town",
         "building",
         "wood",
-        "residential"
+        "drygoods"
       ],
       "location_tags": [
         "town",
@@ -7093,7 +7321,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7104,15 +7335,15 @@
     {
       "terrain_type_id": "westbuild_35",
       "asset_file": "westbuild_normal_35.png",
-      "name": "Pawn Shop",
+      "name": "Adobe Jail",
       "family": "westbuild",
       "kind": "building",
       "variant_group": "town_buildings",
       "tags": [
         "town",
         "building",
-        "wood",
-        "residential"
+        "jail",
+        "adobe"
       ],
       "location_tags": [
         "town",
@@ -7164,7 +7395,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7235,7 +7469,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7306,7 +7543,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7317,7 +7557,7 @@
     {
       "terrain_type_id": "westcacti_03",
       "asset_file": "westcacti_normal_03.png",
-      "name": "Prickly Pear",
+      "name": "Cactus 2",
       "family": "westcacti",
       "kind": "scatter",
       "variant_group": "desert_flora",
@@ -7377,7 +7617,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7388,7 +7631,7 @@
     {
       "terrain_type_id": "westcacti_04",
       "asset_file": "westcacti_normal_04.png",
-      "name": "Cholla Cluster",
+      "name": "Cactus 3",
       "family": "westcacti",
       "kind": "scatter",
       "variant_group": "desert_flora",
@@ -7448,7 +7691,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7519,7 +7765,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 2
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7590,7 +7839,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 2
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7661,7 +7913,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 2
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7733,7 +7988,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 4
+        "structure_rating": 4,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7805,7 +8063,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 4
+        "structure_rating": 4,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7877,7 +8138,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 4
+        "structure_rating": 4,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -7949,7 +8213,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 4
+        "structure_rating": 4,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8021,7 +8288,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 4
+        "structure_rating": 4,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8093,7 +8363,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 4
+        "structure_rating": 4,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8165,7 +8438,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 4
+        "structure_rating": 4,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8176,7 +8452,7 @@
     {
       "terrain_type_id": "westdeco_01",
       "asset_file": "westdeco_normal_01.png",
-      "name": "Hitching Post",
+      "name": "Barre;",
       "family": "westdeco",
       "kind": "scatter",
       "variant_group": "town_scatter",
@@ -8184,11 +8460,13 @@
         "deco",
         "scatter",
         "town",
-        "prop"
+        "prop",
+        "barrel"
       ],
       "location_tags": [
         "town",
-        "frontier"
+        "frontier",
+        "barrel"
       ],
       "footprint": {
         "shape": "rect",
@@ -8235,7 +8513,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8246,7 +8527,7 @@
     {
       "terrain_type_id": "westdeco_02",
       "asset_file": "westdeco_normal_02.png",
-      "name": "Rain Barrel",
+      "name": "Barrel 2",
       "family": "westdeco",
       "kind": "scatter",
       "variant_group": "town_scatter",
@@ -8254,7 +8535,8 @@
         "deco",
         "scatter",
         "town",
-        "prop"
+        "prop",
+        "barrel"
       ],
       "location_tags": [
         "town",
@@ -8305,7 +8587,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8316,7 +8601,7 @@
     {
       "terrain_type_id": "westdeco_03",
       "asset_file": "westdeco_normal_03.png",
-      "name": "Hay Bale",
+      "name": "Crosses Timber",
       "family": "westdeco",
       "kind": "scatter",
       "variant_group": "town_scatter",
@@ -8324,7 +8609,8 @@
         "deco",
         "scatter",
         "town",
-        "prop"
+        "prop",
+        "cemetary"
       ],
       "location_tags": [
         "town",
@@ -8375,7 +8661,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8386,7 +8675,7 @@
     {
       "terrain_type_id": "westdeco_04",
       "asset_file": "westdeco_normal_04.png",
-      "name": "Wagon Wheel",
+      "name": "Town Sign 2",
       "family": "westdeco",
       "kind": "scatter",
       "variant_group": "town_scatter",
@@ -8394,11 +8683,13 @@
         "deco",
         "scatter",
         "town",
-        "prop"
+        "prop",
+        "sign"
       ],
       "location_tags": [
         "town",
-        "frontier"
+        "frontier",
+        "sign"
       ],
       "footprint": {
         "shape": "rect",
@@ -8445,7 +8736,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8456,7 +8750,7 @@
     {
       "terrain_type_id": "westdeco_05",
       "asset_file": "westdeco_normal_05.png",
-      "name": "Crate Stack",
+      "name": "Street Sign",
       "family": "westdeco",
       "kind": "scatter",
       "variant_group": "town_scatter",
@@ -8515,7 +8809,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8526,7 +8823,7 @@
     {
       "terrain_type_id": "westdeco_06",
       "asset_file": "westdeco_normal_06.png",
-      "name": "Feed Trough",
+      "name": "Stret Sign 2",
       "family": "westdeco",
       "kind": "scatter",
       "variant_group": "town_scatter",
@@ -8585,7 +8882,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8596,7 +8896,7 @@
     {
       "terrain_type_id": "westfort_01",
       "asset_file": "westfort_normal_01.png",
-      "name": "Fort Wall Section",
+      "name": "Adobe Outpost",
       "family": "westfort",
       "kind": "building",
       "variant_group": "fort_structures",
@@ -8604,7 +8904,9 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "adobe",
+        "outpost"
       ],
       "location_tags": [
         "authority",
@@ -8656,7 +8958,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8667,7 +8972,7 @@
     {
       "terrain_type_id": "westfort_02",
       "asset_file": "westfort_normal_02.png",
-      "name": "Fort Gate",
+      "name": "Adobe Blocktower",
       "family": "westfort",
       "kind": "building",
       "variant_group": "fort_structures",
@@ -8675,7 +8980,9 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "adobe",
+        "tower"
       ],
       "location_tags": [
         "authority",
@@ -8727,7 +9034,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8738,7 +9048,7 @@
     {
       "terrain_type_id": "westfort_03",
       "asset_file": "westfort_normal_03.png",
-      "name": "Fort Corner Tower",
+      "name": "Fortified Grainery and Mill",
       "family": "westfort",
       "kind": "building",
       "variant_group": "fort_structures",
@@ -8746,7 +9056,8 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "grainery"
       ],
       "location_tags": [
         "authority",
@@ -8798,7 +9109,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8809,7 +9123,7 @@
     {
       "terrain_type_id": "westfort_04",
       "asset_file": "westfort_normal_04.png",
-      "name": "Fort Barracks",
+      "name": "Adobe Rotten Barracks",
       "family": "westfort",
       "kind": "building",
       "variant_group": "fort_structures",
@@ -8817,7 +9131,9 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "adobe",
+        "barracks"
       ],
       "location_tags": [
         "authority",
@@ -8869,7 +9185,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8880,7 +9199,7 @@
     {
       "terrain_type_id": "westfort_05",
       "asset_file": "westfort_normal_05.png",
-      "name": "Fort Watchtower",
+      "name": "Adobe Fort Watchtower",
       "family": "westfort",
       "kind": "building",
       "variant_group": "fort_structures",
@@ -8888,7 +9207,8 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "adobe"
       ],
       "location_tags": [
         "authority",
@@ -8940,7 +9260,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -8959,7 +9282,9 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "adobe",
+        "armory"
       ],
       "location_tags": [
         "authority",
@@ -9011,7 +9336,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9022,7 +9350,7 @@
     {
       "terrain_type_id": "westfort_07",
       "asset_file": "westfort_normal_07.png",
-      "name": "Fort Stockade",
+      "name": "Adobe Outpost 2",
       "family": "westfort",
       "kind": "building",
       "variant_group": "fort_structures",
@@ -9030,7 +9358,9 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "adobe",
+        "outpost"
       ],
       "location_tags": [
         "authority",
@@ -9082,7 +9412,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9093,7 +9426,7 @@
     {
       "terrain_type_id": "westfort_08",
       "asset_file": "westfort_normal_08.png",
-      "name": "Fort Command Post",
+      "name": "Adobe Outpost 3",
       "family": "westfort",
       "kind": "building",
       "variant_group": "fort_structures",
@@ -9101,7 +9434,9 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "adobe",
+        "outpost"
       ],
       "location_tags": [
         "authority",
@@ -9153,7 +9488,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9164,7 +9502,7 @@
     {
       "terrain_type_id": "westfort_09",
       "asset_file": "westfort_normal_09.png",
-      "name": "Fort Powder House",
+      "name": "Mission Church Deluxe",
       "family": "westfort",
       "kind": "building",
       "variant_group": "fort_structures",
@@ -9172,7 +9510,9 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "church",
+        "nice"
       ],
       "location_tags": [
         "authority",
@@ -9224,7 +9564,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9235,7 +9578,7 @@
     {
       "terrain_type_id": "westfort_10",
       "asset_file": "westfort_normal_10.png",
-      "name": "Fort Stable",
+      "name": "Fort Towers and Barracks",
       "family": "westfort",
       "kind": "building",
       "variant_group": "fort_structures",
@@ -9243,7 +9586,9 @@
         "fort",
         "military",
         "reinforced",
-        "wall"
+        "wall",
+        "tower",
+        "barracks"
       ],
       "location_tags": [
         "authority",
@@ -9295,7 +9640,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 5
+        "structure_rating": 5,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9366,7 +9714,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 2
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9377,7 +9728,7 @@
     {
       "terrain_type_id": "westgallows_02",
       "asset_file": "westgallows_normal_02.png",
-      "name": "Hanging Tree Frame",
+      "name": "Town Gallows 2",
       "family": "westgallows",
       "kind": "feature",
       "variant_group": "gallows",
@@ -9385,7 +9736,8 @@
         "gallows",
         "grim",
         "scaffold",
-        "landmark"
+        "landmark",
+        "gallows"
       ],
       "location_tags": [
         "town",
@@ -9437,7 +9789,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 2
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9448,7 +9803,7 @@
     {
       "terrain_type_id": "westgallows_03",
       "asset_file": "westgallows_normal_03.png",
-      "name": "Judge's Scaffold",
+      "name": "Town Gallows 3",
       "family": "westgallows",
       "kind": "feature",
       "variant_group": "gallows",
@@ -9508,7 +9863,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 2
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9579,7 +9937,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9650,7 +10011,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 1
+        "structure_rating": 1,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9661,7 +10025,7 @@
     {
       "terrain_type_id": "westskulls_03",
       "asset_file": "westskulls_normal_03.png",
-      "name": "Skull Post",
+      "name": "Skull Cattle",
       "family": "westskulls",
       "kind": "scatter",
       "variant_group": "skull_scatter",
@@ -9721,7 +10085,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9732,7 +10100,7 @@
     {
       "terrain_type_id": "westskulls_04",
       "asset_file": "westskulls_normal_04.png",
-      "name": "Bleached Bones",
+      "name": "Skull Cattle 2",
       "family": "westskulls",
       "kind": "scatter",
       "variant_group": "skull_scatter",
@@ -9792,7 +10160,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9803,7 +10175,7 @@
     {
       "terrain_type_id": "westtotem_03",
       "asset_file": "westtotem_normal_03.png",
-      "name": "Canyon Totem",
+      "name": "Canyon Totem Pole",
       "family": "westtotem",
       "kind": "feature",
       "variant_group": "totems",
@@ -9864,7 +10236,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 2
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9875,7 +10250,7 @@
     {
       "terrain_type_id": "westtotem_04",
       "asset_file": "westtotem_normal_04.png",
-      "name": "Ritual Pole",
+      "name": "Totem Ritual Pole",
       "family": "westtotem",
       "kind": "feature",
       "variant_group": "totems",
@@ -9936,7 +10311,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 2
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -9947,7 +10325,7 @@
     {
       "terrain_type_id": "westtotem_05",
       "asset_file": "westtotem_normal_05.png",
-      "name": "Elder Totem",
+      "name": "Elder Totem Totem",
       "family": "westtotem",
       "kind": "feature",
       "variant_group": "totems",
@@ -10008,7 +10386,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 2
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10080,7 +10461,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10154,7 +10538,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10165,7 +10552,7 @@
     {
       "terrain_type_id": "westmine_02",
       "asset_file": "westmine_normal_02.png",
-      "name": "Mine Cart Track",
+      "name": "Mine Entrance Braced",
       "family": "westmine",
       "kind": "feature",
       "variant_group": "mine_structures",
@@ -10228,7 +10615,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10239,7 +10629,7 @@
     {
       "terrain_type_id": "westmine_03",
       "asset_file": "westmine_normal_03.png",
-      "name": "Mine Shaft Head",
+      "name": "Mine Braced Entrance",
       "family": "westmine",
       "kind": "feature",
       "variant_group": "mine_structures",
@@ -10302,7 +10692,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10313,7 +10706,7 @@
     {
       "terrain_type_id": "westmine_04",
       "asset_file": "westmine_normal_04.png",
-      "name": "Ore Processing Shack",
+      "name": "Mine Entrance and Ore Slew",
       "family": "westmine",
       "kind": "feature",
       "variant_group": "mine_structures",
@@ -10376,7 +10769,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10387,7 +10783,7 @@
     {
       "terrain_type_id": "westmine_05",
       "asset_file": "westmine_normal_05.png",
-      "name": "Mine Tailings Pile",
+      "name": "Mine Entrance 4",
       "family": "westmine",
       "kind": "feature",
       "variant_group": "mine_structures",
@@ -10450,7 +10846,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10461,7 +10860,7 @@
     {
       "terrain_type_id": "westmine_06",
       "asset_file": "westmine_normal_06.png",
-      "name": "Mine Support Structure",
+      "name": "Mine Entrance Dual",
       "family": "westmine",
       "kind": "feature",
       "variant_group": "mine_structures",
@@ -10524,7 +10923,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10535,7 +10937,7 @@
     {
       "terrain_type_id": "westmine_07",
       "asset_file": "westmine_normal_07.png",
-      "name": "Dynamite Store",
+      "name": "Mine Entrances Dual Levels",
       "family": "westmine",
       "kind": "feature",
       "variant_group": "mine_structures",
@@ -10580,9 +10982,9 @@
         ],
         "climb": {
           "allowed": false,
-          "mode": "none",
+          "mode": "any",
           "min_level_access": 0,
-          "max_level_access": 0,
+          "max_level_access": 2,
           "test": {
             "required": false,
             "type": "quality",
@@ -10598,7 +11000,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10609,7 +11014,7 @@
     {
       "terrain_type_id": "westmine_08",
       "asset_file": "westmine_normal_08.png",
-      "name": "Pump House",
+      "name": "Ancient Mine Entrance",
       "family": "westmine",
       "kind": "feature",
       "variant_group": "mine_structures",
@@ -10617,7 +11022,8 @@
         "mine",
         "industrial",
         "cave",
-        "entrance"
+        "entrance",
+        "ancient"
       ],
       "location_tags": [
         "industrial",
@@ -10672,7 +11078,10 @@
       "slots": [],
       "destructibility": {
         "destructible": true,
-        "structure_rating": 3
+        "structure_rating": 3,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10683,7 +11092,7 @@
     {
       "terrain_type_id": "wildmountain_12",
       "asset_file": "wildmountain_normal_12.png",
-      "name": "Eroded Pillar",
+      "name": "Large Mesa Bluff",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -10692,7 +11101,9 @@
         "natural",
         "outcrop",
         "canyon",
-        "high_ground"
+        "high_ground",
+        "mesa",
+        "bluff"
       ],
       "location_tags": [
         "canyon",
@@ -10729,7 +11140,7 @@
           "allowed": false,
           "mode": "none",
           "min_level_access": 0,
-          "max_level_access": 0,
+          "max_level_access": 3,
           "test": {
             "required": false,
             "type": "quality",
@@ -10744,7 +11155,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10755,7 +11170,7 @@
     {
       "terrain_type_id": "wildmountain_13",
       "asset_file": "wildmountain_normal_13.png",
-      "name": "Banded Rockface",
+      "name": "Hoodoos and Spire",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -10764,7 +11179,8 @@
         "natural",
         "outcrop",
         "canyon",
-        "high_ground"
+        "high_ground",
+        "hoodoo"
       ],
       "location_tags": [
         "canyon",
@@ -10816,7 +11232,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10827,7 +11247,7 @@
     {
       "terrain_type_id": "wildmountain_14",
       "asset_file": "wildmountain_normal_14.png",
-      "name": "Canyon Ledge",
+      "name": "Small Mesa",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -10888,7 +11308,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10899,7 +11323,7 @@
     {
       "terrain_type_id": "wildmountain_15",
       "asset_file": "wildmountain_normal_15.png",
-      "name": "Red Rock Formation",
+      "name": "Large Red Rock Formation",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -10960,7 +11384,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -10971,7 +11399,7 @@
     {
       "terrain_type_id": "wildmountain_16",
       "asset_file": "wildmountain_normal_16.png",
-      "name": "Sandstone Stack",
+      "name": "Small Mesa 3",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -11032,7 +11460,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11104,7 +11536,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11176,7 +11612,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11248,7 +11688,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11320,7 +11764,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11392,7 +11840,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11403,7 +11855,7 @@
     {
       "terrain_type_id": "wildmountain_22",
       "asset_file": "wildmountain_normal_22.png",
-      "name": "Balanced Rock",
+      "name": "Mesas Medium",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -11412,7 +11864,7 @@
         "natural",
         "outcrop",
         "canyon",
-        "high_ground"
+        "mesa"
       ],
       "location_tags": [
         "canyon",
@@ -11464,7 +11916,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11475,7 +11931,7 @@
     {
       "terrain_type_id": "wildmountain_23",
       "asset_file": "wildmountain_normal_23.png",
-      "name": "Cave Mouth",
+      "name": "Small Mesas 2",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -11536,7 +11992,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11547,7 +12007,7 @@
     {
       "terrain_type_id": "wildmountain_24",
       "asset_file": "wildmountain_normal_24.png",
-      "name": "Slot Canyon Entrance",
+      "name": "Large Mesa Canyons",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -11608,7 +12068,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11619,7 +12083,7 @@
     {
       "terrain_type_id": "wildmountain_25",
       "asset_file": "wildmountain_normal_25.png",
-      "name": "Arroyo Bank",
+      "name": "Large Mesa with Spire",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -11628,7 +12092,9 @@
         "natural",
         "outcrop",
         "canyon",
-        "high_ground"
+        "high_ground",
+        "mesa",
+        "spire"
       ],
       "location_tags": [
         "canyon",
@@ -11680,7 +12146,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11752,7 +12222,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11824,7 +12298,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,
@@ -11835,7 +12313,7 @@
     {
       "terrain_type_id": "wildmountain_28",
       "asset_file": "wildmountain_normal_28.png",
-      "name": "Boulder Field",
+      "name": "Mesa Medium",
       "family": "wildmountain",
       "kind": "feature",
       "variant_group": "rock_outcrops",
@@ -11844,7 +12322,7 @@
         "natural",
         "outcrop",
         "canyon",
-        "high_ground"
+        "mesa"
       ],
       "location_tags": [
         "canyon",
@@ -11896,7 +12374,11 @@
       },
       "slots": [],
       "destructibility": {
-        "destructible": false
+        "destructible": false,
+        "structure_rating": 2,
+        "rubble_result": {
+          "spawns_terrain_type_id": ""
+        }
       },
       "editor_defaults": {
         "scale": 1,

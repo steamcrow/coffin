@@ -596,13 +596,45 @@ console.log("⚔️ Faction Builder app loaded");
           ${entry.long  ? `<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(entry.long)}</p>` : ''}
           ${entry.id    ? `<div style="margin-top:1.5rem;font-size:.68rem;color:#444;font-family:monospace;">${esc(entry.id)}</div>` : ''}`;
       } else {
-        bodyHtml = `
-          <p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">
-            No rule entry found for <em style="color:#bbb;">${esc(displayName(abilityName))}</em>.
-          </p>
-          <p style="color:#555;font-size:.82rem;line-height:1.5;margin:0;">
-            Open the Rules Explorer and search for <em>${esc(abilityName.split(' ')[0])}</em>.
-          </p>`;
+        // Fallback: search faction data for a matching upgrade or weapon effect
+        let factionEntry = null;
+        const factionData = state.factionData && state.factionData[state.currentFaction];
+        if (factionData && factionData.units) {
+          const nameLower = abilityName.toLowerCase();
+          for (const u of factionData.units) {
+            // Check optional_upgrades
+            if (u.optional_upgrades) {
+              const upg = u.optional_upgrades.find(x => x.name && x.name.toLowerCase() === nameLower);
+              if (upg) { factionEntry = { source: upg.name, effect: upg.effect, type: 'Upgrade', cost: upg.cost }; break; }
+            }
+            // Check weapon_effects
+            if (u.weapon_effects) {
+              const we = u.weapon_effects.find(x => x.name && x.name.toLowerCase() === nameLower);
+              if (we) { factionEntry = { source: we.name, effect: we.effect, type: 'Weapon Effect' }; break; }
+            }
+            // Check abilities by name
+            if (u.abilities) {
+              const ab = u.abilities.find(x => (typeof x === 'object') && x.name && x.name.toLowerCase() === nameLower);
+              if (ab) { factionEntry = { source: ab.name, effect: ab.effect, type: 'Ability' }; break; }
+            }
+          }
+        }
+
+        if (factionEntry) {
+          bodyHtml = `
+            <div style="display:inline-block;margin-bottom:1rem;padding:3px 12px;border-radius:999px;
+                        border:1px solid #555;color:#999;font-size:.72rem;text-transform:uppercase;
+                        letter-spacing:.1em;">${esc(factionEntry.type)}${factionEntry.cost ? ' · +' + factionEntry.cost + ' ₤' : ''}</div><br>
+            <p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(factionEntry.effect || '')}</p>`;
+        } else {
+          bodyHtml = `
+            <p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">
+              No rule entry found for <em style="color:#bbb;">${esc(displayName(abilityName))}</em>.
+            </p>
+            <p style="color:#555;font-size:.82rem;line-height:1.5;margin:0;">
+              Open the Rules Explorer and search for <em>${esc(abilityName.split(' ')[0])}</em>.
+            </p>`;
+        }
       }
 
       panel.innerHTML = `
@@ -825,6 +857,10 @@ console.log("⚔️ Faction Builder app loaded");
                       style="cursor:pointer;">${esc(displayName(n))}</span>`;
                   }).join('')}
                 </div>` : ''}
+              ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
+                <div class="roster-list-upgrades">
+                  ${item.config.optionalUpgrades.map(u => `<span class="ability-tag" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
+                </div>` : ''}
               <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
                 <i class="fa fa-trash"></i>
               </button>
@@ -851,7 +887,7 @@ console.log("⚔️ Faction Builder app loaded");
                 ${buildStatBadges(item, item.config, true)}
                 ${abilities.length > 0 ? `
                   <div class="grid-item-abilities">
-                    ${abilities.slice(0, 3).map(a => {
+                    ${abilities.map(a => {
                       const n = typeof a === 'string' ? a : (a.name || '');
                       return `<span class="ability-tag-small"
                         onmouseover="showAbilityTooltip('${esc(n)}', event)"
@@ -859,7 +895,10 @@ console.log("⚔️ Faction Builder app loaded");
                         onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
                         style="cursor:pointer;">${esc(displayName(n))}</span>`;
                     }).join('')}
-                    ${abilities.length > 3 ? `<span class="ability-tag-small" style="opacity:0.6">+${abilities.length - 3}</span>` : ''}
+                  </div>` : ''}
+                ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
+                  <div class="grid-item-upgrades">
+                    ${item.config.optionalUpgrades.map(u => `<span class="ability-tag-small" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
                   </div>` : ''}
               </div>`;
           }).join('')}
@@ -1257,6 +1296,8 @@ console.log("⚔️ Faction Builder app loaded");
     .abilities { margin-top: 4px; }
     .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 7.5pt; }
     .upgrades { margin-top: 4px; font-size: 8pt; color: #444; }
+    .roster-list-upgrades { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
+
     .ability-defs-section { margin-top: 28px; border-top: 2px solid #000; padding-top: 14px; }
     .ability-defs-section h2 { font-family: 'Bungee', sans-serif; font-size: 14pt; margin-bottom: 10px; }
     .ability-def { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd; break-inside: avoid; }
@@ -1290,7 +1331,7 @@ console.log("⚔️ Faction Builder app loaded");
             '<span class="stat-badge">R ' + (ps.range === 0 ? '\u2013' : ps.range + '"') + '</span>' +
           '</div>' +
           (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
-          ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="upgrades"><strong>Upgrades:</strong> ' + item.config.optionalUpgrades.map(function(u){ return esc(u.name); }).join(', ') + '</div>' : '') +
+          ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="abilities">' + item.config.optionalUpgrades.map(function(u){ var n = esc(u.name); return '<span class="ability-tag" style="cursor:pointer;" onmouseover="showAbilityTooltip(\'' + n + '\', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel(\'' + n + '\')">' + n + '</span>'; }).join('') + '</div>' : '') +
         '</div>' +
         '<div class="unit-right"><span class="unit-cost">' + item.totalCost + ' ₤</span></div>' +
       '</div>';
