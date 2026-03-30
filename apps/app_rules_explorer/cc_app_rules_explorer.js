@@ -1079,106 +1079,94 @@ console.log("📘 Rules Explorer app loaded");
 
     function renderNestedSection(label, obj, depth = 0) {
       if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return '';
-      if (depth >= 5) return '';
+      if (depth >= 6) return '';
 
       let html = '';
 
-      // Only treat as ability dictionary if values are strings or {effect/short/long} objects
-      // AND the object has no structure fields (title, sections, units, etc.) that indicate it's something else
-      const STRUCTURE_KEYS = new Set(['title','name','sections','units','text','short','long','description','lore','summary','history','faction_identity','tactics','abilities','properties']);
-      const objKeys = Object.keys(obj);
-      const hasStructureKey = objKeys.some(k => STRUCTURE_KEYS.has(k));
-      const allValuesAreAbilityLike = objKeys.length >= 2 && objKeys.every(k =>
+      // ---- ABILITY DICTIONARY DETECTION ----
+      const SECTION_STRUCT_KEYS = new Set([
+        'title','name','rules','format','notes','steps','process','choices',
+        'penalties','recovery','maintenance_steps','common_actions_list',
+        'reactions','action_economy','flexibility','completion',
+        'first_activation','reset','move','attack','withdraw',
+        'immediate_effect','activation_penalty','cascading_fear',
+        'monster_logic','environmental_fear','outcomes',
+      ]);
+      const objKeys = Object.keys(obj).filter(k => !k.startsWith('_'));
+      const hasStructKey = objKeys.some(k => SECTION_STRUCT_KEYS.has(k));
+      const hasTitleOrDesc = obj.title || obj.name || obj.desc_long || obj.desc_short || obj.long || obj.text;
+      const allAbilityLike = objKeys.length >= 2 && objKeys.every(k =>
         typeof obj[k] === 'string' ||
-        (obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k]) && (obj[k].effect || obj[k].short || obj[k].long))
+        (obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k]) &&
+         (obj[k].effect || obj[k].short || obj[k].long || obj[k].desc_short || obj[k].desc_long))
       );
-      const isAbilityDict = !hasStructureKey && allValuesAreAbilityLike;
+      const isAbilityDict = !hasStructKey && !hasTitleOrDesc && allAbilityLike;
 
       if (isAbilityDict) {
         html += `
           <div class="mb-4">
-            <div class="cc-section-label">${esc(titleize(label))}</div>
+            ${label ? `<div class="cc-section-label">${esc(titleize(label))}</div>` : ''}
             ${renderAbilityDictionary(obj)}
           </div>
         `;
         return html;
       }
 
-      const hasTitle    = obj.title || obj.name;
-      const headerTag   = depth === 0 ? 'h5' : depth === 1 ? 'h6' : 'div';
-      const headerClass = depth <= 1 ? 'cc-section-title' : 'cc-field-label';
+      // ---- SECTION HEADER ----
+      const displayTitle = obj.title || obj.name || (label ? titleize(label) : '');
+      const showHeader   = displayTitle &&
+                           !displayTitle.match(/^R-[A-Z0-9-]+$/i) &&
+                           (depth > 0 || label);
 
-      if (hasTitle) {
-        const displayTitle = obj.title || obj.name || titleize(label);
-        const labelTitle   = titleize(label);
-        if (displayTitle && displayTitle.match(/^R-[A-Z0-9-]+$/i)) {
-          // skip ID-looking titles
-        } else if (displayTitle.toLowerCase() === labelTitle.toLowerCase()) {
-          // skip duplicates
-        } else if (depth > 0) {
-          html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
-        }
+      if (showHeader) {
+        const headerTag   = depth <= 1 ? 'h5' : 'h6';
+        const headerClass = depth === 0 ? 'cc-rule-title' : depth === 1 ? 'cc-section-title' : 'cc-section-label';
+        html += `<${headerTag} class="${headerClass} mt-3 mb-2">${esc(displayTitle)}</${headerTag}>`;
       }
 
-      for (const field of PROSE_FIELDS)  if (obj[field]) html += renderProseField(field, obj[field]);
-      for (const field of LIST_FIELDS)   if (obj[field]) html += renderList_Content(field, obj[field]);
-
-      for (const field of NESTED_FIELDS) {
-        if (obj[field] && typeof obj[field] === 'object') {
-          if (Array.isArray(obj[field])) {
-            html += renderList_Content(field, obj[field]);
-          } else {
-            const nestedKeys = Object.keys(obj[field]).filter(k => !k.startsWith('_'));
-            for (const nestedKey of nestedKeys) {
-              html += renderNestedSection(nestedKey, obj[field][nestedKey], depth + 1);
-            }
-          }
-        }
+      // ---- PROSE FIELDS ----
+      for (const field of PROSE_FIELDS) {
+        if (obj[field]) html += renderProseField(field, obj[field]);
       }
 
-      const processedFields = new Set([
-        ...PROSE_FIELDS, ...LIST_FIELDS, ...NESTED_FIELDS,
-        'title', 'Title', 'name', 'Name', '_id', 'id', 'Id', 'ID',
-        'type', 'design_intent', 'designer_notes',
-        'effect', 'Effect', 'restriction', 'Restriction', 'trigger', 'Trigger',
-        'short', 'Short', 'text', 'long',
+      // ---- LIST FIELDS ----
+      for (const field of LIST_FIELDS) {
+        if (obj[field]) html += renderList_Content(field, obj[field]);
+      }
+
+      // ---- ALL REMAINING FIELDS ----
+      const handledFields = new Set([
+        ...PROSE_FIELDS, ...LIST_FIELDS,
+        'title', 'name', '_id', 'id', 'type',
+        'short', 'long', 'text', 'effect', 'description', 'lore',
+        'summary', 'definition', 'tagline', 'philosophy', 'introduction',
+        'design_intent', 'designer_notes', '_migrated', '_migrated_at',
       ]);
 
-      const remainingFields = Object.entries(obj).filter(([k, v]) => {
-        if (processedFields.has(k))  return false;
-        if (k.startsWith('_'))       return false;
-        const lowerKey = k.toLowerCase();
-        if (lowerKey.includes('id') || lowerKey.includes('ref')) return false;
-        if (v === undefined || v === null || v === '')            return false;
-        if (typeof v === 'string') {
-          const t = v.trim();
-          if (t.match(/^R-[A-Za-z0-9-]+$/))  return false;
-          if (t.match(/^[A-Z0-9]{8,}-/))      return false;
-          if (t.length < 3)                   return false;
-        }
-        return true;
-      });
+      for (const [k, v] of Object.entries(obj)) {
+        if (k.startsWith('_'))         continue;
+        if (handledFields.has(k))      continue;
+        const lk = k.toLowerCase();
+        if (lk === 'id' || lk.endsWith('_id') || lk === 'ref') continue;
+        if (v === undefined || v === null || v === '') continue;
 
-      if (remainingFields.length > 0) {
-        html += '<div class="mb-3">';
-        for (const [key, value] of remainingFields) {
-          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-            html += `
-              <div class="cc-kv mb-1">
-                <div class="cc-k">${esc(titleize(key))}</div>
-                <div class="cc-v">${esc(value)}</div>
-              </div>
-            `;
-          } else if (Array.isArray(value)) {
-            html += renderList_Content(key, value);
-          } else if (value && typeof value === 'object') {
-            html += renderNestedSection(key, value, depth + 1);
-          }
+        if (Array.isArray(v)) {
+          html += renderList_Content(k, v);
+        } else if (v && typeof v === 'object') {
+          html += renderNestedSection(k, v, depth + 1);
+        } else if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+          const s = String(v).trim();
+          if (s.match(/^R-[A-Za-z0-9-]+$/) || s.match(/^[A-Z0-9]{8,}-/) || s.length < 3) continue;
+          html += `
+            <div class="cc-kv mb-1">
+              <div class="cc-k">${esc(titleize(k))}</div>
+              <div class="cc-v">${esc(s)}</div>
+            </div>
+          `;
         }
-        html += '</div>';
       }
 
-      if (html) return `<div class="cc-section mb-4">${html}</div>`;
+      if (html) return `<div class="cc-section mb-3">${html}</div>`;
       return '';
     }
 
