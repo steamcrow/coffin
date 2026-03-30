@@ -233,7 +233,7 @@ console.log("📘 Rules Explorer app loaded");
         ["window.RULES_HELPERS",    window.RULES_HELPERS],
         ["window.CC_HELPERS",       window.CC_HELPERS],
       ]
-        .filter(([, v]) => !!v)
+        .filter(([_k, v]) => !!v)
         .map(([k, v]) => `${k} (${Object.keys((v.rules || v.api || v) || {}).length} keys)`)
         .join(" • ");
 
@@ -1253,7 +1253,7 @@ console.log("📘 Rules Explorer app loaded");
       // Flat ability dict — old schema (short/long/effect) OR new schema (desc_short/desc_long)
       const isFlatAbilityDict = Object.entries(content)
         .filter(([k]) => !['type','_id','id','title','_migrated','_migrated_at'].includes(k) && !k.startsWith('_'))
-        .every(([, v]) =>
+        .every(([_k, v]) =>
           typeof v === 'string' ||
           (v && typeof v === 'object' && !Array.isArray(v) &&
            (v.effect || v.short || v.long || v.desc_short || v.desc_long || v.description))
