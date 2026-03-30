@@ -304,6 +304,44 @@ console.log("📘 Rules Explorer app loaded");
       if (data.lore) {
         html += `<div class="mb-4"><p>${esc(data.lore)}</p></div>`;
       }
+      if (data.history) {
+        html += `<div class="mb-4"><div class="cc-field-label">History</div><p>${esc(data.history)}</p></div>`;
+      }
+
+      // Faction identity block (core values, what they fight for/against, reputation, etc.)
+      if (data.faction_identity && typeof data.faction_identity === 'object') {
+        const fi = data.faction_identity;
+        const fiSections = [
+          { key: 'core_values',       label: 'Core Values' },
+          { key: 'what_they_fight_for',   label: 'What They Fight For' },
+          { key: 'what_they_fight_against', label: 'What They Fight Against' },
+        ];
+        for (const { key, label } of fiSections) {
+          if (Array.isArray(fi[key]) && fi[key].length) {
+            html += `
+              <div class="mb-3">
+                <div class="cc-field-label">${esc(label)}</div>
+                <ul>${fi[key].map(v => `<li>${esc(v)}</li>`).join('')}</ul>
+              </div>
+            `;
+          }
+        }
+        if (fi.reputation && typeof fi.reputation === 'object') {
+          const repLines = Object.entries(fi.reputation)
+            .map(([k, v]) => `<div class="cc-kv mb-1"><div class="cc-k">${esc(titleize(k))}</div><div class="cc-v">${esc(v)}</div></div>`)
+            .join('');
+          if (repLines) html += `<div class="mb-3"><div class="cc-field-label">Reputation</div>${repLines}</div>`;
+        }
+        if (fi.how_they_see_others && typeof fi.how_they_see_others === 'object') {
+          const hLines = Object.entries(fi.how_they_see_others)
+            .map(([k, v]) => `<div class="cc-kv mb-1"><div class="cc-k">${esc(titleize(k))}</div><div class="cc-v">${esc(v)}</div></div>`)
+            .join('');
+          if (hLines) html += `<div class="mb-3"><div class="cc-field-label">How They See Others</div>${hLines}</div>`;
+        }
+        if (fi.on_monsters) {
+          html += `<div class="mb-3"><div class="cc-field-label">On Monsters</div><p>${esc(fi.on_monsters)}</p></div>`;
+        }
+      }
 
       if (data.units && Array.isArray(data.units)) {
         html += `<h3 class="cc-faction-units-header">Units</h3>`;
@@ -394,12 +432,55 @@ console.log("📘 Rules Explorer app loaded");
                 </div>
               ` : ''}
 
+              ${Array.isArray(unit.optional_upgrades) && unit.optional_upgrades.length > 0 ? `
+                <div class="mt-3">
+                  <div class="fw-bold small mb-1 cc-accent-label">Optional Upgrades:</div>
+                  ${unit.optional_upgrades.map(u => `
+                    <div class="cc-ability-card p-2 mb-1">
+                      <div class="d-flex justify-content-between align-items-baseline">
+                        <span class="fw-bold">${esc(u.name || '')}</span>
+                        ${u.cost ? `<span class="cc-muted small">${u.cost}₤</span>` : ''}
+                      </div>
+                      ${u.effect ? `<div class="small mt-1">${esc(u.effect)}</div>` : ''}
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+              ${Array.isArray(unit.supplemental_abilities) && unit.supplemental_abilities.length > 0 ? `
+                <div class="mt-3">
+                  <div class="fw-bold small mb-1 cc-accent-label">Supplemental Abilities:</div>
+                  ${unit.supplemental_abilities.map(u => {
+                    const upgName = u.name || '';
+                    const upgCost = u.cost ? `${u.cost}₤` : '';
+                    const upgEffect = u.effect || '';
+                    const statMods = u.stat_modifiers
+                      ? Object.entries(u.stat_modifiers).map(([k,v]) => `${titleize(k)}: ${v}`).join(' • ')
+                      : '';
+                    const specMechs = u.special_mechanics
+                      ? Object.entries(u.special_mechanics).map(([k,v]) => `<div class="small mt-1"><strong>${esc(titleize(k))}:</strong> ${esc(v)}</div>`).join('')
+                      : '';
+                    return `
+                      <div class="cc-ability-card p-2 mb-1">
+                        <div class="d-flex justify-content-between align-items-baseline">
+                          <span class="fw-bold">${esc(upgName)}</span>
+                          ${upgCost ? `<span class="cc-muted small">${esc(upgCost)}</span>` : ''}
+                        </div>
+                        ${statMods ? `<div class="cc-muted small mt-1">${esc(statMods)}</div>` : ''}
+                        ${upgEffect ? `<div class="small mt-1">${esc(upgEffect)}</div>` : ''}
+                        ${specMechs}
+                      </div>
+                    `;
+                  }).join('')}
+                </div>
+              ` : ''}
+
             </div>
           `;
         });
       }
 
-      return html;
+      return html || '<div class="cc-muted">No faction data to display.</div>';
     }
 
     // ---- RENDER CAMPAIGN ----
@@ -828,7 +909,6 @@ console.log("📘 Rules Explorer app loaded");
 
     function renderProseField(label, value) {
       if (!value) return '';
-      if (label === 'short' || label === 'text') return '';
 
       const lowerLabel = label.toLowerCase();
       if (lowerLabel.includes('id') || lowerLabel === 'ref' || lowerLabel === 'reference') return '';
@@ -842,11 +922,12 @@ console.log("📘 Rules Explorer app loaded");
       if (!text) return '';
       if (typeof text === 'string' && text.trim().match(/^R-[A-Z0-9-]+$/i)) return '';
 
-      if (label === 'long' || label === 'text') {
+      // 'text', 'long', and 'short' are the main rule body — render as plain paragraphs, no label
+      if (label === 'long' || label === 'text' || label === 'short') {
         return `<p class="mb-3">${esc(text)}</p>`;
       }
 
-      const className = label.toLowerCase().includes('philosophy') ? 'fw-semibold' : '';
+      const className = lowerLabel.includes('philosophy') ? 'fw-semibold' : '';
       return `
         <div class="mb-3">
           <div class="cc-field-label">${esc(titleize(label))}</div>
@@ -897,9 +978,16 @@ console.log("📘 Rules Explorer app loaded");
 
       let html = '';
 
-      const isAbilityDict = Object.values(obj).every(v =>
-        typeof v === 'string' || (v && typeof v === 'object' && (v.effect || v.short || v.long))
+      // Only treat as ability dictionary if values are strings or {effect/short/long} objects
+      // AND the object has no structure fields (title, sections, units, etc.) that indicate it's something else
+      const STRUCTURE_KEYS = new Set(['title','name','sections','units','text','short','long','description','lore','summary','history','faction_identity','tactics','abilities','properties']);
+      const objKeys = Object.keys(obj);
+      const hasStructureKey = objKeys.some(k => STRUCTURE_KEYS.has(k));
+      const allValuesAreAbilityLike = objKeys.length >= 2 && objKeys.every(k =>
+        typeof obj[k] === 'string' ||
+        (obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k]) && (obj[k].effect || obj[k].short || obj[k].long))
       );
+      const isAbilityDict = !hasStructureKey && allValuesAreAbilityLike;
 
       if (isAbilityDict) {
         html += `
@@ -948,7 +1036,7 @@ console.log("📘 Rules Explorer app loaded");
         'title', 'Title', 'name', 'Name', '_id', 'id', 'Id', 'ID',
         'type', 'design_intent', 'designer_notes',
         'effect', 'Effect', 'restriction', 'Restriction', 'trigger', 'Trigger',
-        'short', 'Short',
+        'short', 'Short', 'text', 'long',
       ]);
 
       const remainingFields = Object.entries(obj).filter(([k, v]) => {
