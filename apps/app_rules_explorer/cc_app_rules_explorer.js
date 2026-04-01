@@ -1,4 +1,3 @@
-/* cc-schema-patched-v1 */
 // ================================
 // Rules Explorer App
 // File: coffin/apps/app_rules_explorer/cc_app_rules_explorer.js
@@ -53,110 +52,6 @@ console.log("📘 Rules Explorer app loaded");
         .catch(() => console.warn('⚠️ cc_print.css not found'));
     }
 
-    // ---- INLINE STYLE ADDITIONS ----
-    if (!document.getElementById('cc-rules-explorer-extra')) {
-      const extraStyle = document.createElement('style');
-      extraStyle.id = 'cc-rules-explorer-extra';
-      extraStyle.textContent = `
-        .cc-section-label {
-          font-family: var(--cc-font-mono);
-          font-size: 0.78rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--cc-primary);
-          margin-bottom: 0.4rem;
-        }
-        .cc-rule-lead {
-          font-style: italic;
-          color: var(--cc-text-muted);
-          font-size: 0.95rem;
-          margin-bottom: 0.5rem;
-        }
-        .cc-ability-link {
-          background: none;
-          border: 1px solid rgba(212,130,42,.35);
-          color: var(--cc-primary);
-          font-size: 10px;
-          font-family: var(--cc-font-mono);
-          letter-spacing: 0.04em;
-          padding: 2px 7px;
-          border-radius: 2px;
-          cursor: pointer;
-          transition: background 0.15s, color 0.15s;
-        }
-        .cc-ability-link:hover {
-          background: var(--cc-primary);
-          color: #000;
-        }
-        .cc-upgrade-link {
-          display: block;
-          width: 100%;
-          text-align: left;
-          background: none;
-          border: 1px solid var(--cc-border);
-          border-radius: var(--cc-radius);
-          padding: 8px 12px;
-          margin-bottom: 4px;
-          color: var(--cc-text);
-          cursor: pointer;
-          transition: border-color 0.15s, background 0.15s;
-        }
-        .cc-upgrade-link:hover {
-          border-color: var(--cc-primary);
-          background: var(--cc-primary-dim);
-        }
-        .cc-upgrade-link .cc-upgrade-name { font-weight: 700; font-size: 0.9rem; }
-        .cc-upgrade-link .cc-upgrade-desc { font-size: 0.82rem; color: var(--cc-text-muted); margin-top: 2px; }
-        .cc-upgrade-link .cc-upgrade-cost { font-size: 0.78rem; color: var(--cc-primary); float: right; }
-        .cc-wild-magic-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-        .cc-wild-magic-table th {
-          font-family: var(--cc-font-mono); font-size: 0.72rem; text-transform: uppercase;
-          letter-spacing: 0.08em; color: var(--cc-primary); padding: 6px 10px;
-          border-bottom: 1px solid var(--cc-border); text-align: left;
-        }
-        .cc-wild-magic-table td { padding: 8px 10px; border-bottom: 1px solid var(--cc-border); font-size: 0.88rem; vertical-align: top; }
-        .cc-wild-magic-table tr:last-child td { border-bottom: none; }
-        .cc-wild-magic-table .cc-wm-roll { font-weight: 700; color: var(--cc-primary); font-family: var(--cc-font-mono); white-space: nowrap; }
-        .cc-wild-magic-table .cc-wm-name { font-weight: 700; }
-        .cc-wild-magic-table .cc-wm-desc { color: var(--cc-text-muted); font-size: 0.82rem; margin-top: 2px; }
-        .cc-wild-magic-table tr:hover td { background: var(--cc-primary-dim); }
-
-        /* Unit identity type headers (Grunt, Brute, Mystic etc.) */
-        .cc-unit-type-header {
-          font-family: var(--cc-font-title);
-          font-size: 1.6rem;
-          color: var(--cc-primary);
-          letter-spacing: 0.05em;
-          margin: 2rem 0 0.5rem;
-          padding-top: 1rem;
-          border-top: 1px solid var(--cc-border);
-        }
-        .cc-unit-type-header:first-child { margin-top: 0; border-top: none; padding-top: 0; }
-
-        /* Ability timing headers (Passive, Once Per Activation etc.) */
-        .cc-timing-header {
-          font-family: var(--cc-font-title);
-          font-size: 1.1rem;
-          color: var(--cc-primary);
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          margin: 0.25rem 0 0.5rem;
-        }
-
-        /* Named location cards */
-        .cc-location-card { border-left: 3px solid var(--cc-primary); }
-        .cc-location-name {
-          font-family: var(--cc-font-title);
-          font-size: 1.5rem;
-          color: var(--cc-primary);
-          margin: 0 0 0.5rem;
-          letter-spacing: 0.04em;
-        }
-      `;
-      document.head.appendChild(extraStyle);
-    }
-
     // ---- HELPERS (robust injection + adapter) ----
     // The loader calls window.createRulesHelpers but rules_helpers.js exports
     // window.CC_RULES_HELPERS.createRulesHelpers — name mismatch means the
@@ -203,35 +98,22 @@ console.log("📘 Rules Explorer app loaded");
       console.log("🧰 getChildren:",    helpers.getChildren    ? "OK" : "MISSING");
     } catch (e) {}
 
-    const RULES_BASE_URL     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/';
-    const RULES_BASE_URL_OLD = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
+    const RULES_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
 
     // Load index from GitHub if ctx didn't provide it
     let index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
     if (index.length === 0) {
-      // Try data/ first (new location), fall back to rules/ (legacy)
-      const indexUrls = [
-        RULES_BASE_URL     + 'rules_base.json',
-        RULES_BASE_URL_OLD + 'rules_base.json',
-      ];
-      for (const url of indexUrls) {
-        try {
-          const idxRes  = await fetch(url + '?t=' + Date.now());
-          if (!idxRes.ok) continue;
-          const idxData = await idxRes.json();
-          index = Array.isArray(idxData) ? idxData
-                : Array.isArray(idxData?.index) ? idxData.index
-                : Array.isArray(idxData?.rules) ? idxData.rules
-                : [];
-          if (index.length > 0) {
-            console.log('✅ Index loaded from:', url, '—', index.length, 'entries');
-            break;
-          }
-        } catch (e) {
-          console.warn('⚠️ Index fetch failed:', url, e.message);
-        }
+      try {
+        const idxRes  = await fetch(RULES_BASE_URL + 'rules_base.json?t=' + Date.now());
+        const idxData = await idxRes.json();
+        index = Array.isArray(idxData) ? idxData
+              : Array.isArray(idxData?.index) ? idxData.index
+              : Array.isArray(idxData?.rules) ? idxData.rules
+              : [];
+        console.log('✅ Index loaded from GitHub:', index.length, 'entries');
+      } catch (e) {
+        console.error('❌ Could not load rules_base.json from GitHub:', e);
       }
-      if (index.length === 0) console.error('❌ Could not load rules index from any URL');
     } else {
       console.log('✅ Index from ctx:', index.length, 'entries');
     }
@@ -246,13 +128,9 @@ console.log("📘 Rules Explorer app loaded");
       if (!meta) { console.warn('⚠️ No index entry for:', id); return null; }
 
       const filePaths = [
-        // New location: data/src/
-        meta.file && (RULES_BASE_URL + 'src/' + meta.file.replace(/^src\//, '').replace(/^data\/src\//, '')),
-        meta.file && (RULES_BASE_URL + meta.file.replace(/^rules\//, '').replace(/^data\//, '')),
-        meta.path && meta.path.includes('/') && (RULES_BASE_URL + 'src/' + meta.path.split('.')[0] + '.json'),
-        // Legacy fallback: rules/src/
-        meta.file && (RULES_BASE_URL_OLD + 'src/' + meta.file.replace(/^src\//, '')),
-        meta.file && (RULES_BASE_URL_OLD + meta.file),
+        meta.file                                   && (RULES_BASE_URL + 'src/' + meta.file.replace(/^src\//, '')),
+        meta.file                                   && (RULES_BASE_URL + meta.file),
+        meta.path && meta.path.includes('/')        && (RULES_BASE_URL + 'src/' + meta.path.split('.')[0] + '.json'),
       ].filter(Boolean);
 
       for (const url of filePaths) {
@@ -282,7 +160,7 @@ console.log("📘 Rules Explorer app loaded");
         ["window.RULES_HELPERS",    window.RULES_HELPERS],
         ["window.CC_HELPERS",       window.CC_HELPERS],
       ]
-        .filter(([_k, v]) => !!v)
+        .filter(([, v]) => !!v)
         .map(([k, v]) => `${k} (${Object.keys((v.rules || v.api || v) || {}).length} keys)`)
         .join(" • ");
 
@@ -348,20 +226,14 @@ console.log("📘 Rules Explorer app loaded");
     let campaignData = null;
 
     // ---- GROUPED SIDEBAR NAVIGATION ----
-    // Quickstart first, then Core Rules, etc.
     const NAV_GROUPS = [
-      {
-        id: 'quickstart', label: '🚀 Quickstart',
-        match: (it) => it.id === 'quickstart',
-      },
       {
         id: 'core', label: '⚔️ Core Rules',
         match: (it) => ['core_mechanics', 'turn_structure'].includes(it.id),
       },
       {
         id: 'vaults', label: '📖 Vaults',
-        match: (it) => ['visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault',
-                        'terrain_vault'].includes(it.id),
+        match: (it) => ['visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault'].includes(it.id),
       },
       {
         id: 'systems', label: '⚙️ Systems',
@@ -381,8 +253,8 @@ console.log("📘 Rules Explorer app loaded");
       },
     ];
 
-    // Quickstart, Core and Vaults open by default; others start collapsed.
-    let openGroups = new Set(['quickstart', 'core', 'vaults']);
+    // Core and Vaults open by default; others start collapsed.
+    let openGroups = new Set(['core', 'vaults']);
 
     // ---- LOAD FACTIONS ----
     async function loadFactions() {
@@ -426,54 +298,11 @@ console.log("📘 Rules Explorer app loaded");
       const data = faction.data;
       let html = '';
 
-      if (data.desc_short) {
-        html += `<p class="cc-rule-lead mb-3">${esc(data.desc_short)}</p>`;
-      }
-      if (data.desc_long) {
-        html += `<div class="cc-callout mb-4"><p class="mb-0">${esc(data.desc_long)}</p></div>`;
-      } else if (data.summary) {
+      if (data.summary) {
         html += `<div class="cc-callout mb-4">${esc(data.summary)}</div>`;
       }
       if (data.lore) {
         html += `<div class="mb-4"><p>${esc(data.lore)}</p></div>`;
-      }
-      if (data.history) {
-        html += `<div class="mb-4"><div class="cc-section-label">History</div><p>${esc(data.history)}</p></div>`;
-      }
-
-      // Faction identity block (core values, what they fight for/against, reputation, etc.)
-      if (data.faction_identity && typeof data.faction_identity === 'object') {
-        const fi = data.faction_identity;
-        const fiSections = [
-          { key: 'core_values',       label: 'Core Values' },
-          { key: 'what_they_fight_for',   label: 'What They Fight For' },
-          { key: 'what_they_fight_against', label: 'What They Fight Against' },
-        ];
-        for (const { key, label } of fiSections) {
-          if (Array.isArray(fi[key]) && fi[key].length) {
-            html += `
-              <div class="mb-3">
-                <div class="cc-section-label">${esc(label)}</div>
-                <ul>${fi[key].map(v => `<li>${esc(v)}</li>`).join('')}</ul>
-              </div>
-            `;
-          }
-        }
-        if (fi.reputation && typeof fi.reputation === 'object') {
-          const repLines = Object.entries(fi.reputation)
-            .map(([k, v]) => `<div class="cc-kv mb-1"><div class="cc-k">${esc(titleize(k))}</div><div class="cc-v">${esc(v)}</div></div>`)
-            .join('');
-          if (repLines) html += `<div class="mb-3"><div class="cc-section-label">Reputation</div>${repLines}</div>`;
-        }
-        if (fi.how_they_see_others && typeof fi.how_they_see_others === 'object') {
-          const hLines = Object.entries(fi.how_they_see_others)
-            .map(([k, v]) => `<div class="cc-kv mb-1"><div class="cc-k">${esc(titleize(k))}</div><div class="cc-v">${esc(v)}</div></div>`)
-            .join('');
-          if (hLines) html += `<div class="mb-3"><div class="cc-section-label">How They See Others</div>${hLines}</div>`;
-        }
-        if (fi.on_monsters) {
-          html += `<div class="mb-3"><div class="cc-section-label">On Monsters</div><p>${esc(fi.on_monsters)}</p></div>`;
-        }
       }
 
       if (data.units && Array.isArray(data.units)) {
@@ -540,7 +369,7 @@ console.log("📘 Rules Explorer app loaded");
                             for (const section in rulesRoot.ability_dictionary) {
                               if (rulesRoot.ability_dictionary[section]?.[abilityName]) {
                                 const d = rulesRoot.ability_dictionary[section][abilityName];
-                                abilityEffect = d.desc_short || d.short || d.effect || d.long || '';
+                                abilityEffect = d.short || d.effect || d.long || '';
                                 break;
                               }
                             }
@@ -548,13 +377,11 @@ console.log("📘 Rules Explorer app loaded");
                         } catch (e) {}
                       } else if (ability && typeof ability === 'object') {
                         abilityName   = ability.name   || '';
-                        abilityEffect = ability.desc_short || ability.effect || ability.short || '';
+                        abilityEffect = ability.effect || ability.short || '';
                       }
-                      const displayName = titleize(abilityName);
-                      const tooltipText = abilityEffect || displayName;
+                      const tooltipText = abilityEffect || abilityName;
                       const titleAttr   = ` title="${tooltipText.replace(/"/g, '&quot;')}"`;
-                      const searchTerm  = esc(abilityName.replace(/_/g, ' '));
-                      return `<button class="cc-ability-link" onclick="document.getElementById('cc-rule-search').value='${searchTerm}';document.getElementById('cc-rule-search').dispatchEvent(new Event('input'));"${titleAttr}>${esc(displayName)}</button>`;
+                      return `<span class="cc-badge cc-badge-help"${titleAttr}>${esc(abilityName)}</span>`;
                     }).join(' ')}
                   </div>
                 </div>
@@ -567,54 +394,12 @@ console.log("📘 Rules Explorer app loaded");
                 </div>
               ` : ''}
 
-              ${Array.isArray(unit.optional_upgrades) && unit.optional_upgrades.length > 0 ? `
-                <div class="mt-3">
-                  <div class="fw-bold small mb-1 cc-accent-label">Optional Upgrades:</div>
-                  ${unit.optional_upgrades.map(u => {
-                    const upgName = u.name || '';
-                    const upgDesc = u.desc_short || u.effect || '';
-                    const searchTerm = esc(upgName.replace(/_/g, ' '));
-                    return `
-                      <button class="cc-upgrade-link" onclick="document.getElementById('cc-rule-search').value='${searchTerm}';document.getElementById('cc-rule-search').dispatchEvent(new Event('input'));">
-                        ${u.cost ? `<span class="cc-upgrade-cost">${u.cost}₤</span>` : ''}
-                        <div class="cc-upgrade-name">${esc(titleize(upgName))}</div>
-                        ${upgDesc ? `<div class="cc-upgrade-desc">${esc(upgDesc)}</div>` : ''}
-                      </button>
-                    `;
-                  }).join('')}
-                </div>
-              ` : ''}
-
-              ${Array.isArray(unit.supplemental_abilities) && unit.supplemental_abilities.length > 0 ? `
-                <div class="mt-3">
-                  <div class="fw-bold small mb-1 cc-accent-label">Supplemental Abilities:</div>
-                  ${unit.supplemental_abilities.map(u => {
-                    const upgName  = u.name || '';
-                    const upgDesc  = u.desc_short || u.effect || '';
-                    const upgLong  = u.desc_long  || '';
-                    const statMods = u.stat_modifiers
-                      ? Object.entries(u.stat_modifiers).map(([k,v]) => `${titleize(k)}: ${v}`).join(' • ')
-                      : '';
-                    const searchTerm = esc(upgName.replace(/_/g, ' '));
-                    return `
-                      <button class="cc-upgrade-link" onclick="document.getElementById('cc-rule-search').value='${searchTerm}';document.getElementById('cc-rule-search').dispatchEvent(new Event('input'));">
-                        ${u.cost ? `<span class="cc-upgrade-cost">${u.cost}₤</span>` : ''}
-                        <div class="cc-upgrade-name">${esc(titleize(upgName))}</div>
-                        ${statMods ? `<div class="cc-upgrade-desc cc-muted">${esc(statMods)}</div>` : ''}
-                        ${upgDesc  ? `<div class="cc-upgrade-desc">${esc(upgDesc)}</div>` : ''}
-                        ${upgLong  ? `<div class="cc-upgrade-desc">${esc(upgLong)}</div>` : ''}
-                      </button>
-                    `;
-                  }).join('')}
-                </div>
-              ` : ''}
-
             </div>
           `;
         });
       }
 
-      return html || '<div class="cc-muted">No faction data to display.</div>';
+      return html;
     }
 
     // ---- RENDER CAMPAIGN ----
@@ -624,33 +409,19 @@ console.log("📘 Rules Explorer app loaded");
     }
 
     // ---- EXCLUDED IDS ----
-    // These IDs either have no standalone content (they're sub-sections of a parent page)
-    // or are handled by a dedicated renderer and shouldn't appear as bare sidebar items.
     const EXCLUDED_IDS = [
       'sections_philosophy',
       'philosophy',
       'philosophy_design',
       'philosophy_and_design',
-      // These are sub-sections of core_mechanics — shown on that page, not standalone
       'quality_system',
       'the_roll',
       'defense_damage',
-      'defense_and_damage',
-      // Location/scenario vaults handled separately
       'location_vault',
       'location_types',
       'scenario_vault',
       'objective_vault',
     ];
-
-    // R-ABIL- entries in the index are individual ability references, not standalone pages.
-    // Filter them from the sidebar — abilities are read from the ability dictionary sections.
-    function isExcluded(it) {
-      if (EXCLUDED_IDS.includes(it.id)) return true;
-      // Individual ability refs like R-ABIL-F-CONSECRATED-GROUND
-      if (/^R-ABIL-/i.test(it.id)) return true;
-      return false;
-    }
 
     // ---- APP SHELL ----
     root.innerHTML = `
@@ -854,19 +625,19 @@ console.log("📘 Rules Explorer app loaded");
       }
 
       if (str.match(/^[A-I]_/)) {
-        const topic = str.substring(2).replace(/_/g, " ").replace(/\w/g, m => m.toUpperCase());
+        const topic = str.substring(2).replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
         return `Abilities: ${topic}`;
       }
 
       if (str.includes('_abilities') || str.includes('_ability')) {
-        return str.replace(/_abilities?/, '').replace(/_/g, " ").replace(/\w/g, m => m.toUpperCase()) + ' Abilities';
+        return str.replace(/_abilities?/, '').replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase()) + ' Abilities';
       }
 
       if (str.includes('_dictionary')) {
-        return str.replace(/_dictionary/, '').replace(/_/g, " ").replace(/\w/g, m => m.toUpperCase()) + ' Dictionary';
+        return str.replace(/_dictionary/, '').replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase()) + ' Dictionary';
       }
 
-      return str.replace(/_/g, " ").replace(/\w/g, m => m.toUpperCase());
+      return str.replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
     };
 
     function getRulesRoot() {
@@ -929,15 +700,11 @@ console.log("📘 Rules Explorer app loaded");
     function renderListItem(it) {
       const active  = it.id === selectedId ? "active" : "";
       const starred = isFavorite(it.id);
-      // Use the title if it exists, otherwise titleize the id
-      const displayTitle = it.title || titleize(it.id);
-      // Capitalise first letter of each word for sidebar display
-      const sidebarTitle = displayTitle.replace(/\b\w/g, m => m.toUpperCase());
       return `
         <button class="cc-list-item ${active}" data-id="${esc(it.id)}">
           <div class="d-flex justify-content-between align-items-center w-100">
             <div class="flex-grow-1">
-              <div class="cc-list-title">${esc(sidebarTitle)}</div>
+              <div class="cc-list-title">${esc(it.title || it.id)}</div>
               <div class="cc-list-sub">${esc(it.type || "rule")}</div>
             </div>
             <span class="cc-star-btn" data-star-id="${esc(it.id)}" title="Star/Unstar">
@@ -955,7 +722,7 @@ console.log("📘 Rules Explorer app loaded");
       const f    = filter.trim().toLowerCase();
       const favs = getFavorites();
 
-      let allItems = index.filter(it => !isExcluded(it));
+      let allItems = index.filter(it => !EXCLUDED_IDS.includes(it.id));
 
       if (currentFilter === 'favorites') {
         const indexFavorites = allItems.filter(it => favs.includes(it.id));
@@ -1033,13 +800,10 @@ console.log("📘 Rules Explorer app loaded");
     // ============================================
 
     const PROSE_FIELDS = [
-      'desc_long', 'desc_short',
       'philosophy', 'text', 'long', 'short', 'effect', 'description',
       'design_intent', 'definition', 'pool', 'logic', 'resolution',
       'trigger', 'thematic_reason', 'golden_rule', 'fast_resolution',
       'action_cost', 'completion', 'format',
-      // Ability engine specific
-      'stacking_rule', 'range_rule', 'los_rule', 'targeting_rule',
     ];
 
     const LIST_FIELDS = [
@@ -1049,8 +813,6 @@ console.log("📘 Rules Explorer app loaded");
       'negation_triggers', 'terrain_trait_interactions',
       'flexibility', 'common_actions_list', 'maintenance_steps',
       'rules', 'logic_triggers', 'type_rules',
-      // Ability engine specific
-      'stacking_rules', 'range_rules', 'los_rules', 'steps',
     ];
 
     const NESTED_FIELDS = [
@@ -1066,6 +828,7 @@ console.log("📘 Rules Explorer app loaded");
 
     function renderProseField(label, value) {
       if (!value) return '';
+      if (label === 'short' || label === 'text') return '';
 
       const lowerLabel = label.toLowerCase();
       if (lowerLabel.includes('id') || lowerLabel === 'ref' || lowerLabel === 'reference') return '';
@@ -1074,36 +837,19 @@ console.log("📘 Rules Explorer app loaded");
       if (typeof value === 'string') {
         text = value;
       } else if (value && typeof value === 'object') {
-        text = value.desc_long || value.desc_short || value.text || value.long || value.description || value.short || '';
+        text = value.text || value.long || value.description || value.short || '';
       }
       if (!text) return '';
       if (typeof text === 'string' && text.trim().match(/^R-[A-Z0-9-]+$/i)) return '';
 
-      // desc_long / long / text: plain paragraph, no label
-      if (label === 'desc_long' || label === 'long' || label === 'text') {
+      if (label === 'long' || label === 'text') {
         return `<p class="mb-3">${esc(text)}</p>`;
       }
 
-      // desc_short / short: italic lead-in, no label
-      if (label === 'desc_short' || label === 'short') {
-        return `<p class="cc-rule-lead mb-2">${esc(text)}</p>`;
-      }
-
-      const className = lowerLabel.includes('philosophy') ? 'fw-semibold' : '';
-
-      // Stacking / range / LoS rules get callout treatment for emphasis
-      if (lowerLabel.includes('stacking') || lowerLabel.includes('range_rule') || lowerLabel.includes('los_rule')) {
-        return `
-          <div class="cc-callout mb-3">
-            <div class="cc-section-label mb-1">${esc(titleize(label))}</div>
-            <p class="mb-0">${esc(text)}</p>
-          </div>
-        `;
-      }
-
+      const className = label.toLowerCase().includes('philosophy') ? 'fw-semibold' : '';
       return `
         <div class="mb-3">
-          <div class="cc-section-label">${esc(titleize(label))}</div>
+          <div class="cc-field-label">${esc(titleize(label))}</div>
           <p class="${className} mb-0">${esc(text)}</p>
         </div>
       `;
@@ -1116,11 +862,7 @@ console.log("📘 Rules Explorer app loaded");
         if (typeof item === 'string') {
           return `<li>${esc(item)}</li>`;
         } else if (item && typeof item === 'object') {
-          // Migrated schema: desc_short is the one-liner
-          const desc = item.desc_short || item.desc_long || item.effect || item.description || '';
-          if (item.name && desc) {
-            return `<li><strong>${esc(item.name)}:</strong> ${esc(desc)}</li>`;
-          } else if (item.name && (item.effect || item.description)) {
+          if (item.name && (item.effect || item.description)) {
             return `<li><strong>${esc(item.name)}:</strong> ${esc(item.effect || item.description)}</li>`;
           } else if (item.value && item.description) {
             return `<li><strong>${esc(item.value)}:</strong> ${esc(item.description)}</li>`;
@@ -1130,7 +872,7 @@ console.log("📘 Rules Explorer app loaded");
             return `<li><strong>${esc(item.name || item.id)}:</strong> ${esc(item.effect || '')}</li>`;
           } else {
             const parts = Object.entries(item)
-              .filter(([k]) => !k.startsWith('_') && !['desc_short','desc_long'].includes(k))
+              .filter(([k]) => !k.startsWith('_'))
               .map(([k, v]) => `<strong>${esc(titleize(k))}:</strong> ${esc(v)}`)
               .join(' • ');
             return `<li>${parts}</li>`;
@@ -1141,11 +883,9 @@ console.log("📘 Rules Explorer app loaded");
 
       if (!items) return '';
 
-      // Stacking rules get callout emphasis
-      const isStacking = label.toLowerCase().includes('stacking');
       return `
-        <div class="mb-3${isStacking ? ' cc-callout' : ''}">
-          <div class="cc-section-label">${esc(titleize(label))}</div>
+        <div class="mb-3">
+          <div class="cc-field-label">${esc(titleize(label))}</div>
           <ul>${items}</ul>
         </div>
       `;
@@ -1153,94 +893,99 @@ console.log("📘 Rules Explorer app loaded");
 
     function renderNestedSection(label, obj, depth = 0) {
       if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return '';
-      if (depth >= 6) return '';
+      if (depth >= 5) return '';
 
       let html = '';
 
-      // ---- ABILITY DICTIONARY DETECTION ----
-      const SECTION_STRUCT_KEYS = new Set([
-        'title','name','rules','format','notes','steps','process','choices',
-        'penalties','recovery','maintenance_steps','common_actions_list',
-        'reactions','action_economy','flexibility','completion',
-        'first_activation','reset','move','attack','withdraw',
-        'immediate_effect','activation_penalty','cascading_fear',
-        'monster_logic','environmental_fear','outcomes',
-      ]);
-      const objKeys = Object.keys(obj).filter(k => !k.startsWith('_'));
-      const hasStructKey = objKeys.some(k => SECTION_STRUCT_KEYS.has(k));
-      const hasTitleOrDesc = obj.title || obj.name || obj.desc_long || obj.desc_short || obj.long || obj.text;
-      const allAbilityLike = objKeys.length >= 2 && objKeys.every(k =>
-        typeof obj[k] === 'string' ||
-        (obj[k] && typeof obj[k] === 'object' && !Array.isArray(obj[k]) &&
-         (obj[k].effect || obj[k].short || obj[k].long || obj[k].desc_short || obj[k].desc_long))
+      const isAbilityDict = Object.values(obj).every(v =>
+        typeof v === 'string' || (v && typeof v === 'object' && (v.effect || v.short || v.long))
       );
-      const isAbilityDict = !hasStructKey && !hasTitleOrDesc && allAbilityLike;
 
       if (isAbilityDict) {
         html += `
           <div class="mb-4">
-            ${label ? `<div class="cc-section-label">${esc(titleize(label))}</div>` : ''}
+            <div class="cc-field-label">${esc(titleize(label))}</div>
             ${renderAbilityDictionary(obj)}
           </div>
         `;
         return html;
       }
 
-      // ---- SECTION HEADER ----
-      const displayTitle = obj.title || obj.name || (label ? titleize(label) : '');
-      const showHeader   = displayTitle &&
-                           !displayTitle.match(/^R-[A-Z0-9-]+$/i) &&
-                           (depth > 0 || label);
+      const hasTitle    = obj.title || obj.name;
+      const headerTag   = depth === 0 ? 'h5' : depth === 1 ? 'h6' : 'div';
+      const headerClass = depth <= 1 ? 'cc-section-title' : 'cc-field-label';
 
-      if (showHeader) {
-        const headerTag   = depth <= 1 ? 'h5' : 'h6';
-        const headerClass = depth === 0 ? 'cc-rule-title' : depth === 1 ? 'cc-section-title' : 'cc-section-label';
-        html += `<${headerTag} class="${headerClass} mt-3 mb-2">${esc(displayTitle)}</${headerTag}>`;
-      }
-
-      // ---- PROSE FIELDS ----
-      for (const field of PROSE_FIELDS) {
-        if (obj[field]) html += renderProseField(field, obj[field]);
-      }
-
-      // ---- LIST FIELDS ----
-      for (const field of LIST_FIELDS) {
-        if (obj[field]) html += renderList_Content(field, obj[field]);
-      }
-
-      // ---- ALL REMAINING FIELDS ----
-      const handledFields = new Set([
-        ...PROSE_FIELDS, ...LIST_FIELDS,
-        'title', 'name', '_id', 'id', 'type',
-        'short', 'long', 'text', 'effect', 'description', 'lore',
-        'summary', 'definition', 'tagline', 'philosophy', 'introduction',
-        'design_intent', 'designer_notes', '_migrated', '_migrated_at',
-      ]);
-
-      for (const [k, v] of Object.entries(obj)) {
-        if (k.startsWith('_'))         continue;
-        if (handledFields.has(k))      continue;
-        const lk = k.toLowerCase();
-        if (lk === 'id' || lk.endsWith('_id') || lk === 'ref') continue;
-        if (v === undefined || v === null || v === '') continue;
-
-        if (Array.isArray(v)) {
-          html += renderList_Content(k, v);
-        } else if (v && typeof v === 'object') {
-          html += renderNestedSection(k, v, depth + 1);
-        } else if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
-          const s = String(v).trim();
-          if (s.match(/^R-[A-Za-z0-9-]+$/) || s.match(/^[A-Z0-9]{8,}-/) || s.length < 3) continue;
-          html += `
-            <div class="cc-kv mb-1">
-              <div class="cc-k">${esc(titleize(k))}</div>
-              <div class="cc-v">${esc(s)}</div>
-            </div>
-          `;
+      if (hasTitle) {
+        const displayTitle = obj.title || obj.name || titleize(label);
+        const labelTitle   = titleize(label);
+        if (displayTitle && displayTitle.match(/^R-[A-Z0-9-]+$/i)) {
+          // skip ID-looking titles
+        } else if (displayTitle.toLowerCase() === labelTitle.toLowerCase()) {
+          // skip duplicates
+        } else if (depth > 0) {
+          html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
         }
       }
 
-      if (html) return `<div class="cc-section mb-3">${html}</div>`;
+      for (const field of PROSE_FIELDS)  if (obj[field]) html += renderProseField(field, obj[field]);
+      for (const field of LIST_FIELDS)   if (obj[field]) html += renderList_Content(field, obj[field]);
+
+      for (const field of NESTED_FIELDS) {
+        if (obj[field] && typeof obj[field] === 'object') {
+          if (Array.isArray(obj[field])) {
+            html += renderList_Content(field, obj[field]);
+          } else {
+            const nestedKeys = Object.keys(obj[field]).filter(k => !k.startsWith('_'));
+            for (const nestedKey of nestedKeys) {
+              html += renderNestedSection(nestedKey, obj[field][nestedKey], depth + 1);
+            }
+          }
+        }
+      }
+
+      const processedFields = new Set([
+        ...PROSE_FIELDS, ...LIST_FIELDS, ...NESTED_FIELDS,
+        'title', 'Title', 'name', 'Name', '_id', 'id', 'Id', 'ID',
+        'type', 'design_intent', 'designer_notes',
+        'effect', 'Effect', 'restriction', 'Restriction', 'trigger', 'Trigger',
+        'short', 'Short',
+      ]);
+
+      const remainingFields = Object.entries(obj).filter(([k, v]) => {
+        if (processedFields.has(k))  return false;
+        if (k.startsWith('_'))       return false;
+        const lowerKey = k.toLowerCase();
+        if (lowerKey.includes('id') || lowerKey.includes('ref')) return false;
+        if (v === undefined || v === null || v === '')            return false;
+        if (typeof v === 'string') {
+          const t = v.trim();
+          if (t.match(/^R-[A-Za-z0-9-]+$/))  return false;
+          if (t.match(/^[A-Z0-9]{8,}-/))      return false;
+          if (t.length < 3)                   return false;
+        }
+        return true;
+      });
+
+      if (remainingFields.length > 0) {
+        html += '<div class="mb-3">';
+        for (const [key, value] of remainingFields) {
+          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            html += `
+              <div class="cc-kv mb-1">
+                <div class="cc-k">${esc(titleize(key))}</div>
+                <div class="cc-v">${esc(value)}</div>
+              </div>
+            `;
+          } else if (Array.isArray(value)) {
+            html += renderList_Content(key, value);
+          } else if (value && typeof value === 'object') {
+            html += renderNestedSection(key, value, depth + 1);
+          }
+        }
+        html += '</div>';
+      }
+
+      if (html) return `<div class="cc-section mb-4">${html}</div>`;
       return '';
     }
 
@@ -1284,30 +1029,6 @@ console.log("📘 Rules Explorer app loaded");
           }
 
           const a = ability || {};
-          const aShort = a.desc_short || a.short || '';
-          const aLong  = a.desc_long  || a.long  || a.effect || '';
-
-          // Timing keywords get an orange title-font header instead of a plain card
-          const TIMING_KEYS = new Set(['passive','reaction','once_per_activation',
-            'once_per_round','once_per_game','free_action','triggered']);
-          const isTimingEntry = TIMING_KEYS.has(key.toLowerCase().replace(/\s+/g,'_'));
-
-          if (isTimingEntry) {
-            const timingName = (a.name || titleize(key)).toUpperCase();
-            return `
-              <div class="cc-ability-card p-3 mb-2">
-                <div class="d-flex justify-content-between align-items-baseline mb-1">
-                  <div class="cc-timing-header flex-grow-1">${esc(timingName)}</div>
-                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
-                    <span class="cc-star">${starred ? '★' : '☆'}</span>
-                  </button>
-                </div>
-                ${aShort ? `<p class="cc-rule-lead mb-1">${esc(aShort)}</p>` : ''}
-                ${aLong  ? `<p class="mb-0">${esc(aLong)}</p>` : ''}
-              </div>
-            `;
-          }
-
           return `
             <div class="cc-ability-card p-3 mb-2">
               <div class="d-flex justify-content-between align-items-baseline mb-1">
@@ -1319,8 +1040,9 @@ console.log("📘 Rules Explorer app loaded");
                   </button>
                 </div>
               </div>
-              ${aShort ? `<p class="cc-rule-lead mb-1">${esc(aShort)}</p>` : ''}
-              ${aLong  ? `<p class="mb-1">${esc(aLong)}</p>` : ''}
+              ${a.short       ? `<div class="fw-semibold mb-1">${esc(a.short)}</div>` : ''}
+              ${a.long        ? `<div>${esc(a.long)}</div>` : ''}
+              ${a.effect      ? `<div>${esc(a.effect)}</div>` : ''}
               ${a.trigger     ? `<div class="mt-1"><strong>Trigger:</strong> ${esc(a.trigger)}</div>` : ''}
               ${a.restriction ? `<div class="cc-muted small mt-1">${esc(a.restriction)}</div>` : ''}
               ${a.restrictions ? `<div class="cc-muted small mt-1">${esc(Array.isArray(a.restrictions) ? a.restrictions.join(' • ') : a.restrictions)}</div>` : ''}
@@ -1337,451 +1059,22 @@ console.log("📘 Rules Explorer app loaded");
       if (typeof content === 'string') return `<p>${esc(content)}</p>`;
       if (typeof content !== 'object') return `<p>${esc(String(content))}</p>`;
 
-      // Ability dictionary — check type field AND meta type FIRST
-      const isAbilDictByType = content.type === 'ability_dictionary';
-      const isAbilDictByMeta = meta && (meta.type === 'abilities' || (meta.id && meta.id.includes('ability_dict')));
-      if (isAbilDictByType || isAbilDictByMeta) {
-        const abilDict = {};
-        for (const [k, v] of Object.entries(content)) {
-          if (k.startsWith('_') || ['type','title','_migrated','_migrated_at','id'].includes(k)) continue;
-          abilDict[k] = v;
-        }
-        if (Object.keys(abilDict).length > 0) return renderAbilityDictionary(abilDict);
-        return `<div class="cc-muted">No abilities found in this dictionary.</div>`;
-      }
-
-      // Wild magic table
-      if ((meta && meta.id && meta.id.includes('wild_magic')) || content.type === 'wild_magic' ||
-          (Array.isArray(content.entries) && content.entries[0] && content.entries[0].roll !== undefined) ||
-          (Array.isArray(content.table)   && content.table[0]   && content.table[0].roll   !== undefined)) {
-        return renderWildMagicTable(content);
-      }
-
-      // Ability Engine
-      if (content.timing_keywords || content.stacking_rules) {
-        return renderAbilityEngine(content);
-      }
-
-      // Named locations
-      if (Array.isArray(content.locations) && content.locations[0] && content.locations[0].name) {
-        return renderNamedLocations(content);
-      }
-
-      // Unit identities
-      if (content.archetype_vault && typeof content.archetype_vault === 'object') {
-        return renderUnitIdentities(content);
-      }
-
-      // Terrain vault
-      if (content.traits && typeof content.traits === 'object' && content.categories) {
-        return renderTerrainVault(content);
-      }
-
-      // Old-style ability dict wrappers
-      if (content.abilities && typeof content.abilities === 'object' &&
-          Object.keys(content.abilities).length > 0) {
+      if (content.abilities && typeof content.abilities === 'object') {
         return renderAbilityDictionary(content.abilities);
       }
       if (content.properties && typeof content.properties === 'object') {
         return renderAbilityDictionary(content.properties);
       }
 
+      const isFlatAbilityDict = Object.values(content).every(v =>
+        typeof v === 'string' ||
+        (v && typeof v === 'object' && !Array.isArray(v) && (v.effect || v.short || v.long || v.description))
+      );
+      if (isFlatAbilityDict && !content.sections && !content.text) {
+        return renderAbilityDictionary(content);
+      }
+
       return renderNestedSection('', content, 0) || `<div class="cc-muted">No renderable content found.</div>`;
-    }
-
-    // ---- ABILITY ENGINE RENDERER ----
-    function renderAbilityEngine(content) {
-      let html = '';
-      if (content.desc_short) html += `<p class="cc-rule-lead mb-2">${esc(content.desc_short)}</p>`;
-      if (content.desc_long)  html += `<p class="mb-4">${esc(content.desc_long)}</p>`;
-
-      // Sections in preferred display order
-      const ORDER = [
-        'ability_definition',
-        'timing_keywords',
-        'ability_resolution_order',
-        'stacking_rules',
-        'range_and_targeting',
-        'state_changes',
-        'ability_failure',
-        'ability_precedence',
-        'action_chain_limit',
-        'design_notes',
-      ];
-
-      const rendered = new Set();
-
-      for (const key of ORDER) {
-        const section = content[key];
-        if (!section || typeof section !== 'object') continue;
-        rendered.add(key);
-
-        const sTitle = section.title || titleize(key);
-
-        // --- TIMING KEYWORDS: special — timings dict renders as orange ability cards
-        if (key === 'timing_keywords') {
-          html += `<h5 class="cc-section-title mt-3 mb-2">${esc(sTitle)}</h5>`;
-          if (section.desc_short) html += `<p class="cc-rule-lead mb-3">${esc(section.desc_short)}</p>`;
-
-          const timings = section.timings || {};
-          for (const [tKey, tVal] of Object.entries(timings)) {
-            if (!tVal || typeof tVal !== 'object') continue;
-            const tName  = tVal.name || titleize(tKey).toUpperCase();
-            const tShort = tVal.desc_short || tVal.short || '';
-            const tLong  = tVal.desc_long  || tVal.long  || '';
-            const tStar  = isFavorite(`ability-${tKey}`);
-            const tId    = `ability-${tKey}`;
-            html += `
-              <div class="cc-ability-card p-3 mb-2">
-                <div class="d-flex justify-content-between align-items-baseline mb-1">
-                  <div class="cc-timing-header flex-grow-1">${esc(tName)}</div>
-                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(tId)}">
-                    <span class="cc-star">${tStar ? '★' : '☆'}</span>
-                  </button>
-                </div>
-                ${tShort ? `<p class="cc-rule-lead mb-1">${esc(tShort)}</p>` : ''}
-                ${tLong  ? `<p class="mb-1">${esc(tLong)}</p>` : ''}
-                ${tVal.stacking     ? `<p class="cc-muted small mb-0"><strong>Stacking:</strong> ${esc(tVal.stacking)}</p>` : ''}
-                ${tVal.restriction  ? `<p class="cc-muted small mb-0"><em>${esc(tVal.restriction)}</em></p>` : ''}
-              </div>
-            `;
-          }
-          continue;
-        }
-
-        // --- STACKING RULES: callout box with individual rules
-        if (key === 'stacking_rules') {
-          html += `
-            <div class="cc-callout mb-4 mt-3">
-              <h5 class="cc-section-title mb-2">${esc(sTitle)}</h5>
-              ${section.desc_short ? `<p class="cc-rule-lead mb-2">${esc(section.desc_short)}</p>` : ''}
-              ${section.general        ? `<p class="mb-1"><strong>General:</strong> ${esc(section.general)}</p>` : ''}
-              ${section.dice_modifiers ? `<p class="mb-1"><strong>Dice Modifiers:</strong> ${esc(section.dice_modifiers)}</p>` : ''}
-              ${section.rerolls        ? `<p class="mb-0"><strong>Rerolls:</strong> ${esc(section.rerolls)}</p>` : ''}
-            </div>
-          `;
-          continue;
-        }
-
-        // --- RANGE AND TARGETING: show defaults as a clean table
-        if (key === 'range_and_targeting') {
-          html += `<h5 class="cc-section-title mt-3 mb-2">${esc(sTitle)}</h5>`;
-          if (section.desc_short) html += `<p class="cc-rule-lead mb-2">${esc(section.desc_short)}</p>`;
-          const defaults = section.defaults || {};
-          if (Object.keys(defaults).length) {
-            html += `<div class="mb-2">`;
-            for (const [dk, dv] of Object.entries(defaults)) {
-              html += `<div class="cc-kv mb-1">
-                <div class="cc-k">${esc(titleize(dk))}</div>
-                <div class="cc-v">${esc(dv)}</div>
-              </div>`;
-            }
-            html += `</div>`;
-          }
-          if (section.exceptions) {
-            html += `<p class="cc-muted small mb-3"><em>${esc(section.exceptions)}</em></p>`;
-          }
-          continue;
-        }
-
-        // --- ACTION CHAIN LIMIT: emphasise the core rule
-        if (key === 'action_chain_limit') {
-          html += `<h5 class="cc-section-title mt-3 mb-2">${esc(sTitle)}</h5>`;
-          if (section.core_rule) {
-            html += `<div class="cc-callout mb-3"><p class="mb-0 fw-semibold">${esc(section.core_rule)}</p></div>`;
-          }
-          if (section.desc_long) html += `<p class="mb-2">${esc(section.desc_long)}</p>`;
-          if (Array.isArray(section.clarifications) && section.clarifications.length) {
-            html += `<ul>${section.clarifications.map(c => `<li>${esc(c)}</li>`).join('')}</ul>`;
-          }
-          if (section.thematic_note) {
-            html += `<p class="cc-rule-lead mt-2">${esc(section.thematic_note)}</p>`;
-          }
-          continue;
-        }
-
-        // --- DEFAULT: standard section rendering
-        html += `<h5 class="cc-section-title mt-3 mb-2">${esc(sTitle)}</h5>`;
-        if (section.desc_short) html += `<p class="cc-rule-lead mb-1">${esc(section.desc_short)}</p>`;
-        if (section.desc_long)  html += `<p class="mb-2">${esc(section.desc_long)}</p>`;
-
-        // Render string fields as labelled prose
-        for (const [k, v] of Object.entries(section)) {
-          if (k.startsWith('_') || ['title','desc_short','desc_long','type'].includes(k)) continue;
-          if (typeof v === 'string') {
-            html += `<div class="cc-kv mb-1">
-              <div class="cc-k">${esc(titleize(k))}</div>
-              <div class="cc-v">${esc(v)}</div>
-            </div>`;
-          } else if (Array.isArray(v)) {
-            html += `<div class="mb-2">
-              <div class="cc-section-label">${esc(titleize(k))}</div>
-              <ul>${v.map(i => `<li>${esc(i)}</li>`).join('')}</ul>
-            </div>`;
-          }
-        }
-      }
-
-      // Any remaining top-level sections not in the order list
-      for (const [k, v] of Object.entries(content)) {
-        if (k.startsWith('_') || rendered.has(k)) continue;
-        if (['type','title','desc_short','desc_long','_migrated','_migrated_at'].includes(k)) continue;
-        if (v && typeof v === 'object') {
-          html += renderNestedSection(k, v, 1);
-        }
-      }
-
-      return html;
-    }
-
-    // ---- UNIT IDENTITIES RENDERER ----
-    function renderUnitIdentities(content) {
-      let html = '';
-      if (content.desc_short) html += `<p class="cc-rule-lead mb-2">${esc(content.desc_short)}</p>`;
-      if (content.desc_long)  html += `<p class="mb-4">${esc(content.desc_long)}</p>`;
-
-      const vault = content.archetype_vault || {};
-      for (const [key, unit] of Object.entries(vault)) {
-        if (!unit || typeof unit !== 'object') continue;
-        const unitName = unit.name || titleize(key);
-
-        html += `<h3 class="cc-unit-type-header">${esc(unitName.toUpperCase())}</h3>`;
-        html += `<div class="cc-section mb-4">`;
-
-        if (unit.identity) {
-          html += `<p class="cc-rule-lead mb-1">${esc(unit.identity)}</p>`;
-        }
-        if (unit.desc_short) {
-          html += `<p class="mb-2">${esc(unit.desc_short)}</p>`;
-        }
-        if (unit.desc_long) {
-          html += `<p class="mb-2">${esc(unit.desc_long)}</p>`;
-        }
-
-        // type_rule(s)
-        const typeRules = unit.type_rules || (unit.type_rule ? [unit.type_rule] : []);
-        if (typeRules.length) {
-          html += `<div class="cc-kv mb-2">
-            <div class="cc-k">Type Rule</div>
-            <div class="cc-v">${typeRules.map(r => esc(r)).join(' • ')}</div>
-          </div>`;
-        }
-
-        // logic_triggers
-        if (Array.isArray(unit.logic_triggers) && unit.logic_triggers.length) {
-          html += `<div class="mb-2">
-            <div class="cc-section-label">Logic Triggers</div>
-            <ul>${unit.logic_triggers.map(t => `<li>${esc(t)}</li>`).join('')}</ul>
-          </div>`;
-        }
-
-        // sub-rules (fire_superiority, rally, etc.)
-        const skipKeys = new Set(['_id','name','identity','type_rule','type_rules',
-                                   'logic_triggers','desc_short','desc_long']);
-        for (const [k, v] of Object.entries(unit)) {
-          if (k.startsWith('_') || skipKeys.has(k)) continue;
-          if (v && typeof v === 'object' && !Array.isArray(v)) {
-            const subName = v.name || titleize(k);
-            const subDesc = v.desc_short || v.desc_long || '';
-            html += `<div class="cc-kv mb-1">
-              <div class="cc-k">${esc(subName)}</div>
-              <div class="cc-v">${esc(subDesc)}</div>
-            </div>`;
-          }
-        }
-
-        html += `</div>`;
-      }
-
-      // logic notes
-      if (content.logic_notes) {
-        const ln = content.logic_notes;
-        html += `<div class="cc-callout mt-3">`;
-        if (ln.hybrid_units)        html += `<p class="mb-1"><strong>Hybrid Units:</strong> ${esc(ln.hybrid_units)}</p>`;
-        if (ln.conflict_resolution) html += `<p class="mb-0"><strong>Conflict Resolution:</strong> ${esc(ln.conflict_resolution)}</p>`;
-        html += `</div>`;
-      }
-
-      return html;
-    }
-
-    // ---- TERRAIN VAULT RENDERER ----
-    function renderTerrainVault(content) {
-      let html = '';
-      if (content.desc_long) html += `<p class="mb-4">${esc(content.desc_long)}</p>`;
-
-      // Categories
-      const cats = content.categories || {};
-      if (Object.keys(cats).length) {
-        html += `<h5 class="cc-section-title mt-2 mb-3">Movement Categories</h5>`;
-        for (const [key, val] of Object.entries(cats)) {
-          const name = titleize(key);
-          if (typeof val === 'string') {
-            html += `<div class="cc-ability-card p-3 mb-2">
-              <div class="fw-bold mb-1">${esc(name)}</div>
-              <p class="mb-0">${esc(val)}</p>
-            </div>`;
-          } else if (val && typeof val === 'object') {
-            const desc  = val.desc_short || val.desc_long || '';
-            const exs   = Array.isArray(val.examples) ? val.examples : [];
-            html += `<div class="cc-ability-card p-3 mb-2">
-              <div class="fw-bold mb-1">${esc(name)}</div>
-              ${desc ? `<p class="mb-1">${esc(desc)}</p>` : ''}
-              ${exs.length ? `<div class="cc-muted small">${exs.map(e => esc(e)).join(' · ')}</div>` : ''}
-            </div>`;
-          }
-        }
-      }
-
-      // Terrain Traits
-      const traits = content.traits || {};
-      if (Object.keys(traits).length) {
-        html += `<h5 class="cc-section-title mt-4 mb-3">Terrain Traits</h5>`;
-        for (const [key, trait] of Object.entries(traits)) {
-          if (!trait || typeof trait !== 'object') continue;
-          const name    = titleize(key).toUpperCase();
-          const desc    = trait.desc_short || trait.desc_long || '';
-          const trigger = trait.trigger || '';
-          const test    = trait.test || '';
-          const collapse = trait.collapse || '';
-
-          html += `<div class="cc-ability-card p-3 mb-2">
-            <div class="fw-bold mb-1" style="color:var(--cc-primary);font-family:var(--cc-font-title)">${esc(name)}</div>
-            ${trigger ? `<div class="cc-section-label mb-1">Trigger</div><p class="mb-1">${esc(trigger)}</p>` : ''}
-            ${test    ? `<div class="cc-section-label mb-1">Test</div><p class="mb-1">${esc(test)}</p>` : ''}
-            ${desc    ? `<p class="mb-1">${esc(desc)}</p>` : ''}
-            ${collapse ? `<div class="cc-muted small mt-1"><strong>Collapse:</strong> ${esc(collapse)}</div>` : ''}
-          </div>`;
-        }
-      }
-
-      // Escalation logic
-      const esc_logic = content.escalation_logic;
-      if (esc_logic) {
-        html += `<div class="cc-callout mt-3 mb-2">
-          <div class="cc-section-label mb-1">Escalation</div>
-          ${esc_logic.taint_to_haunt ? `<p class="mb-1"><strong>Taint → Haunt:</strong> ${esc(esc_logic.taint_to_haunt)}</p>` : ''}
-          ${esc_logic.logic ? `<p class="mb-0 cc-rule-lead">${esc(esc_logic.logic)}</p>` : ''}
-        </div>`;
-      }
-
-      if (content.dispute_resolution) {
-        html += `<p class="cc-muted small mt-2">${esc(content.dispute_resolution)}</p>`;
-      }
-
-      return html;
-    }
-
-    // ---- NAMED LOCATIONS RENDERER ----
-    function renderNamedLocations(content) {
-      const locations = content.locations || [];
-      let html = '';
-
-      if (content.notes && Array.isArray(content.notes)) {
-        html += `<p class="cc-muted small mb-4">${content.notes.map(n => esc(n)).join(' · ')}</p>`;
-      }
-
-      for (const loc of locations) {
-        const name      = loc.name || loc.id || '?';
-        const emoji     = loc.emoji || '';
-        const desc      = loc.desc_long || loc.description || '';
-        const atmo      = loc.atmosphere || '';
-        const state     = loc.state || '';
-        const archetype = loc.archetype || '';
-        const danger    = loc.danger ?? '';
-        const pop       = loc.population ?? '';
-        const resources = Array.isArray(loc.key_resources) ? loc.key_resources : [];
-        const features  = Array.isArray(loc.features) ? loc.features : [];
-        const rumors    = Array.isArray(loc.rumors) ? loc.rumors : [];
-        const flavor    = Array.isArray(loc.terrain_flavor) ? loc.terrain_flavor : [];
-
-        html += `<div class="cc-ability-card cc-location-card p-4 mb-4">`;
-
-        // Name header
-        html += `<h3 class="cc-location-name">${emoji ? esc(emoji) + ' ' : ''}${esc(name)}</h3>`;
-
-        // Tags row
-        const tags = [archetype, state].filter(Boolean).map(t => titleize(t));
-        if (danger !== '') tags.push(`Danger ${danger}`);
-        if (pop    !== '') tags.push(`Pop. ${pop}`);
-        if (tags.length) {
-          html += `<div class="mb-3">${tags.map(t =>
-            `<span class="cc-badge" style="margin-right:4px">${esc(t)}</span>`
-          ).join('')}</div>`;
-        }
-
-        // Description (flavour prose)
-        if (desc) html += `<p class="cc-unit-lore mb-3">"${esc(desc)}"</p>`;
-        if (atmo) html += `<p class="cc-muted small mb-3">${esc(atmo)}</p>`;
-
-        // Resources & features
-        if (resources.length) {
-          html += `<div class="mb-2"><div class="cc-section-label">Key Resources</div>
-            <div>${resources.map(r => `<span class="cc-badge" style="margin-right:4px">${esc(r)}</span>`).join('')}</div>
-          </div>`;
-        }
-        if (features.length) {
-          html += `<div class="mb-2"><div class="cc-section-label">Features</div>
-            <ul>${features.map(f => `<li>${esc(typeof f === 'string' ? f : (f.name || JSON.stringify(f)))}</li>`).join('')}</ul>
-          </div>`;
-        }
-        if (flavor.length) {
-          html += `<div class="mb-2"><div class="cc-section-label">Terrain</div>
-            <div class="cc-muted small">${flavor.map(f => esc(f)).join(' · ')}</div>
-          </div>`;
-        }
-        if (rumors.length) {
-          html += `<div class="mb-2"><div class="cc-section-label">Rumors</div>
-            <ul>${rumors.map(r => `<li class="cc-muted small">${esc(typeof r === 'string' ? r : (r.text || JSON.stringify(r)))}</li>`).join('')}</ul>
-          </div>`;
-        }
-
-        html += `</div>`;
-      }
-
-      return html || `<div class="cc-muted">No locations found.</div>`;
-    }
-
-    // ---- WILD MAGIC TABLE RENDERER (issue 10) ----
-    function renderWildMagicTable(content) {
-      const entries = content.entries || content.table || content.results || [];
-      if (!entries.length) return renderNestedSection('', content, 0);
-
-      const intro = content.desc_long || content.description || content.text || '';
-      const note  = content.note || content.notes || '';
-
-      let html = '';
-      if (intro) html += `<p class="mb-3">${esc(intro)}</p>`;
-
-      html += `<table class="cc-wild-magic-table">
-        <thead>
-          <tr>
-            <th style="width:60px">Roll</th>
-            <th style="width:160px">Result</th>
-            <th>Effect</th>
-          </tr>
-        </thead>
-        <tbody>`;
-
-      for (const row of entries) {
-        const roll   = row.roll   ?? row.value ?? row.number ?? '';
-        const name   = row.name   ?? row.result ?? row.title ?? '';
-        const desc   = row.desc_long  || row.long  || row.description || row.effect || row.text || '';
-        const short  = row.desc_short || row.short || '';
-        html += `
-          <tr>
-            <td class="cc-wm-roll">${esc(String(roll))}</td>
-            <td><div class="cc-wm-name">${esc(name)}</div></td>
-            <td>
-              ${short ? `<div class="cc-wm-desc" style="font-style:italic">${esc(short)}</div>` : ''}
-              ${desc  ? `<div>${esc(desc)}</div>` : ''}
-            </td>
-          </tr>`;
-      }
-
-      html += `</tbody></table>`;
-      if (note) html += `<p class="cc-muted small mt-3">${esc(typeof note === 'string' ? note : JSON.stringify(note))}</p>`;
-      return html;
     }
 
     // ---- BREADCRUMB ----
@@ -2259,7 +1552,7 @@ console.log("📘 Rules Explorer app loaded");
         const parts    = item.path.split('.');
         const lastPart = parts[parts.length - 1];
         if (lastPart?.match(/^[A-I]_/)) {
-          item.title = `Abilities: ${lastPart.substring(2).replace(/_/g, ' ').replace(/\w/g, m => m.toUpperCase())}`;
+          item.title = `Abilities: ${lastPart.substring(2).replace(/_/g, ' ').replace(/\b\w/g, m => m.toUpperCase())}`;
         }
       }
     });
