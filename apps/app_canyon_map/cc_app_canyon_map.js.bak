@@ -307,9 +307,9 @@
     }
 
     // Description
-    if (loc.desc_long) {
+    if (loc.description) {
       html += section("Description",
-        '<p style="margin:0;line-height:1.6;color:#e8d9c4;">' + loc.desc_long + "</p>");
+        '<p style="margin:0;line-height:1.6;color:#e8d9c4;">' + loc.description + "</p>");
     }
 
     // Atmosphere

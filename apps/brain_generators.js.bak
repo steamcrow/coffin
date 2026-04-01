@@ -19,7 +19,7 @@ const BrainGenerators = {
     if (!verb || !theme) {
       return {
         name: objective.name,
-        goal: objective.desc_long,
+        goal: objective.description,
         method: objective.success || 'Complete objective',
         scoring: `+${objective.vp_value || objective.vp_per_unit} VP per ${objective.progress_label}`,
         flavor: null
@@ -73,7 +73,7 @@ const BrainGenerators = {
   // FIXED: No more repetitive "Rangers must protect the Wild" prefix
   generateFactionGoal(objective, verb, theme, pressure) {
     // Just return the objective description - it's already clear and specific
-    const baseGoal = objective.desc_long;
+    const baseGoal = objective.description;
     
     if (pressure) {
       return `${baseGoal} Time is running out before ${pressure.label}.`;

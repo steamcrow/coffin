@@ -2462,7 +2462,7 @@ console.log("🎮 Game Simulator loaded");
         ? '<div class="cc-sim-abilities">' +
             specials.map(s => {
               const name = typeof s === 'string' ? s : (s.name || '');
-              const desc = typeof s === 'object' ? (s.desc_long || s.desc_short || '') : '';
+              const desc = typeof s === 'object' ? (s.description || s.effect || '') : '';
               return '<span class="cc-sim-ability-tag" title="' + desc.replace(/"/g,"'") + '">' + name + '</span>';
             }).join('') +
           '</div>'

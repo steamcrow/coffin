@@ -546,7 +546,7 @@
     var bps = (dest.breakpoints || []).map(function(b, i) {
       return '<div class="cte-ri"><button class="cte-ri-del" onclick="window._CTE.removeBreakpoint(' + i + ')">✕</button>'
         + '<div class="cte-f"><label>At Damage</label><input type="number" data-bp="' + i + '.at_damage" value="' + (b.at_damage||0) + '"></div>'
-        + '<div class="cte-f full"><label>Effect</label><input type="text" data-bp="' + i + '.effect" value="' + esc(b.effect||"") + '"></div>'
+        + '<div class="cte-f full"><label>Effect</label><input type="text" data-bp="' + i + '.effect" value="' + esc(b.desc_short||"") + '"></div>'
         + '</div>';
     }).join("");
     return fldTog("destructibility.destructible","Destructible", dest.destructible)

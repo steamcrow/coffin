@@ -1277,7 +1277,7 @@ console.log("🎲 Scenario Builder app loaded");
         monster_seeds:    location.monster_seeds || [],
         tags:             location.tags || [],
         notes:            location.notes || [],
-        description:      location.desc_long || location.description || '',
+        description:      location.desc_long || '',
         atmosphere:       location.atmosphere || '',
         terrain_flavor:   location.terrain_flavor || [],
         rumors:           location.rumors || []
@@ -1358,7 +1358,7 @@ console.log("🎲 Scenario Builder app loaded");
       var best = null;
       var bestScore = -1;
       vos.forEach(function(vo) {
-        var voText = ((vo.type || '') + ' ' + (vo.desc_long || vo.description || '')).toLowerCase();
+        var voText = ((vo.type || '') + ' ' + (vo.desc_long || '')).toLowerCase();
         var score = 0;
         typeWords.split(' ').forEach(function(w) {
           if (w.length > 2 && voText.indexOf(w) >= 0) score++;
@@ -1425,7 +1425,7 @@ console.log("🎲 Scenario Builder app loaded");
       // Override quote from faction JSON identity block
       const quote = (fd.identity && fd.identity.quote)
                  || (fd.desc_long && fd.desc_long.split('.')[0] + '.')
-                 || ((fd.desc_long || fd.description) && (fd.desc_long || fd.description).split('.')[0] + '.')
+                 || (fd.desc_long && fd.desc_long.split('.')[0] + '.')
                  || null;
       if (quote) base.quote = quote;
 
@@ -1767,7 +1767,7 @@ console.log("🎲 Scenario Builder app loaded");
     generateNarrativeHook(plotFamily, location, objectives) {
       const locName  = location.name;
       const atmo     = location.atmosphere || '';
-      const desc     = (location.desc_long || (location.desc_long || location.description)) ? (location.desc_long || (location.desc_long || location.description)).split('.')[0] : '';
+      const desc     = location.desc_long ? location.desc_long.split('.')[0] : '';
 
       // ── Black Swan prefix ─────────────────────────────────────────────────
       const blackSwanObj = (objectives || []).find(function(o) { return o.black_swan; });
@@ -1777,7 +1777,7 @@ console.log("🎲 Scenario Builder app loaded");
 
       // Use the actual plot family description, but replace any generic "asset" language
       // with the real objective name if a cargo vehicle is in play.
-      let plotDesc = (plotFamily.desc_long || plotFamily.description || '').replace(/\.$/, '');
+      let plotDesc = (plotFamily.desc_long || '').replace(/\.$/, '');
 
       const cargoObj = objectives?.find(o => o.type === 'cargo_vehicle');
       if (cargoObj) {
@@ -1986,7 +1986,7 @@ console.log("🎲 Scenario Builder app loaded");
             effect_id:    'env_hazard_' + obj.type,
             auto_resolve: false,
             label:        obj.env_hazard.label + ': ' + obj.name,
-            description:  obj.env_hazard.trigger + ' — ' + obj.env_hazard.effect
+            description:  obj.env_hazard.trigger + ' — ' + obj.env_hazard.desc_short
           });
         }
         // Thyr / dark ritual cause escalating danger
@@ -2608,7 +2608,7 @@ console.log("🎲 Scenario Builder app loaded");
 
       primaryCard.desc = typeof vaultEntry === 'string'
         ? vaultEntry
-        : (vaultEntry.goal || vaultEntry.description || vaultEntry.text || primaryCard.desc);
+        : (vaultEntry.goal || vaultEntry.desc_long || vaultEntry.text || primaryCard.desc);
 
       pickedObjectives.push(primaryCard);
 
@@ -2894,7 +2894,7 @@ console.log("🎲 Scenario Builder app loaded");
           });
           if (eligible.length > 0) {
             const td = randomChoice(eligible);
-            twist = { name: td.name, description: td.description, example: randomChoice(td.example_outcomes || []) };
+            twist = { name: td.name, description: td.desc_long, example: randomChoice(td.example_outcomes || []) };
           }
         }
 
@@ -3668,7 +3668,7 @@ console.log("🎲 Scenario Builder app loaded");
             + '<div style="font-size:0.65rem;text-transform:uppercase;letter-spacing:.07em;color:#ef4444;margin-bottom:0.2rem;">'
             + '<i class="fa fa-bolt"></i> ' + obj.env_hazard.label + '</div>'
             + '<div style="color:rgba(255,255,255,0.6);font-size:0.78rem;margin-bottom:0.1rem;">' + obj.env_hazard.trigger + '</div>'
-            + '<div style="font-weight:600;">' + obj.env_hazard.effect + '</div>'
+            + '<div style="font-weight:600;">' + obj.env_hazard.desc_short + '</div>'
             + '</div>';
         }
 
@@ -3678,7 +3678,7 @@ console.log("🎲 Scenario Builder app loaded");
           + icon + ' ' + roleLabel
           + '</span></div>'
           + '<strong>' + obj.name + '</strong>'
-          + '<p>' + obj.description + '</p>'
+          + '<p>' + obj.desc_long + '</p>'
           + '<p class="cc-vp-line"><i class="fa fa-star"></i> ' + obj.vp_base + ' VP base</p>'
           + chainHtml
           + hazardHtml
@@ -3919,7 +3919,7 @@ console.log("🎲 Scenario Builder app loaded");
               const camp  = getCampaignStateDef(raw);
               const fb    = FALLBACKS[raw] || {};
               const label = camp?.name  || fb.label || raw.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-              const def   = camp?.description || fb.def || '';
+              const def   = camp?.desc_long || fb.def || '';
 
               const rows = [];
               const TD_KEY = 'style="color:rgba(255,255,255,0.45);padding-right:1rem;white-space:nowrap;font-size:0.72rem;text-transform:uppercase;letter-spacing:.05em;vertical-align:top;"';
@@ -3935,7 +3935,7 @@ console.log("🎲 Scenario Builder app loaded");
                   ${rows.length ? `<table style="margin-top:0.5rem;border-collapse:collapse;">${rows.join('')}</table>` : ''}
                 </div>`;
             })()}
-            ${s.location.description ? `<p><em>${s.location.description}</em></p>` : ''}
+            ${s.location.desc_long ? `<p><em>${s.location.desc_long}</em></p>` : ''}
             ${s.location.atmosphere  ? `<p class="cc-quote">"${s.location.atmosphere}"</p>` : ''}
             ${renderLocationMapEmbed()}
           </div>
@@ -4281,7 +4281,7 @@ console.log("🎲 Scenario Builder app loaded");
             <div class="print-obj-card${obj.role === 'primary' ? ' print-obj-primary' : ''}">
               <div class="print-obj-role">${roleLabel}</div>
               <strong>${obj.name}</strong>
-              <p>${obj.description}</p>
+              <p>${obj.desc_long}</p>
               <div class="print-obj-vp">${obj.vp_base} VP base</div>
               ${obj.chain_link ? `<div class="print-chain"><span class="print-chain-label">Tactical Link</span>${obj.chain_link_intro ? `<span class="print-chain-intro">${obj.chain_link_intro} </span>` : ''}${obj.chain_link}</div>` : ''}
               ${obj.special ? `<div class="print-special">Special: ${obj.special}</div>` : ''}
@@ -4552,7 +4552,7 @@ console.log("🎲 Scenario Builder app loaded");
     Danger ${s.danger_rating} &mdash; ${s.danger_description}
   </div>
   ${locationState}
-  ${s.location?.description ? `<p>${s.location.description}</p>` : ''}
+  ${s.location?.desc_long ? `<p>${s.location.desc_long}</p>` : ''}
   ${s.location?.atmosphere ? `<div class="print-atmo">"${s.location.atmosphere}"</div>` : ''}
 </div>
 

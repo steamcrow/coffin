@@ -609,7 +609,7 @@
     ccLeSec('Flavour Text', true, `
       <div class="cc-le-frow">
         <label class="cc-le-fl">Description</label>
-        <textarea rows="4" oninput="ccLeSetField('description',this.value)">${ccLeEsc(loc.description||'')}</textarea>
+        <textarea rows="4" oninput="ccLeSetField('description',this.value)">${ccLeEsc(loc.desc_long||'')}</textarea>
       </div>
       <div class="cc-le-frow">
         <label class="cc-le-fl">Atmosphere</label>

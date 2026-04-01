@@ -236,33 +236,25 @@
   }
 
   // ── Load catalog ───────────────────────────────────────────────────
-  // ── Image probe ────────────────────────────────────────────────────
-  // Since the repo is private we can't list files via API.
-  // Instead we probe every plausible filename and see which ones load.
   function loadCatalog() {
-    state.ui.editorBody.innerHTML = '<div class="cte-empty">Loading catalog…</div>';
-
     fetchJson(state.opts.catalogUrl)
-    .then(function(data) {
-      state.catalog  = data;
-      state.entries  = deepClone(data.terrain_types || []);
-      state.saved    = {};
-      // Pre-mark every entry as saved so it shows green — editor is for polishing
-      state.entries.forEach(function(e) {
-        state.saved[e.terrain_type_id] = deepClone(e);
+      .then(function(data) {
+        state.catalog = data;
+        state.entries = deepClone(data.terrain_types || []);
+        state.saved = {};
+        state.entries.forEach(function(e) { state.saved[e.terrain_type_id] = deepClone(e); });
+        state.currentIndex = state.entries.length > 0 ? 0 : -1;
+        renderList();
+        renderEditor();
+        updateProgress();
+        toast("Loaded " + state.entries.length + " terrain entries");
+      })
+      .catch(function(err) {
+        state.ui.editorBody.innerHTML = '<div class="cte-empty" style="color:#c0392b;">Failed to load catalog: ' + esc(err.message) + '</div>';
       });
-      state.currentIndex = state.entries.length > 0 ? 0 : -1;
-      renderList();
-      renderEditor();
-      updateProgress();
-      toast('Loaded ' + state.entries.length + ' terrain entries');
-    })
-    .catch(function(err) {
-      state.ui.editorBody.innerHTML = '<div class="cte-empty" style="color:#c0392b;">Failed to load catalog: ' + esc(err.message) + '</div>';
-    });
   }
 
-    // ── Navigation ────────────────────────────────────────────────────
+  // ── Navigation ────────────────────────────────────────────────────
   function selectEntry(idx) {
     if (idx < 0 || idx >= state.entries.length) return;
     state.currentIndex = idx;
@@ -299,37 +291,25 @@
   }
 
   function addEntry() {
-    var e = blankEntry("", "");
+    var e = blankEntry();
     state.entries.push(e);
     renderList();
     selectEntry(state.entries.length - 1);
   }
 
-  function blankEntry(assetFile, family) {
-    var id = assetFile
-      ? assetFile.replace(".png","").replace(/_normal_\d+$/,"") + "_" + assetFile.replace(".png","").match(/_(\d+)$/)[1]
-      : "new_terrain_" + Date.now();
-    return {
-      terrain_type_id:  id,
-      asset_file:       assetFile || "",
-      name:             "",
-      family:           family || "",
-      kind:             "building",
-      variant_group:    "",
-      tags:             [],
-      location_tags:    [],
-      footprint:        { shape: "rect", size_in: { w: 4, d: 4 }, base_height_in: 2 },
-      visibility:       { los_profile: "partial", blocks_los_when: "", window_los: "none" },
-      cover:            { default_cover: "light", edges_cover: "light", interior_cover: "none" },
-      elevation:        { system: "none" },
-      movement:         { is_passable: false, is_walkable_on_top: false, difficult_terrain_on: [],
+  function blankEntry() {
+    return { terrain_type_id: "new_terrain_" + Date.now(), asset_file: "", name: "New Terrain",
+      family: "", kind: "building", variant_group: "", tags: [], location_tags: [],
+      footprint: { shape: "rect", size_in: { w: 4, d: 4 }, base_height_in: 2 },
+      visibility: { los_profile: "partial", blocks_los_when: "", window_los: "none" },
+      cover: { default_cover: "light", edges_cover: "light", interior_cover: "none" },
+      elevation: { system: "none" },
+      movement: { is_passable: false, is_walkable_on_top: false, difficult_terrain_on: [],
         climb: { allowed: false, mode: "none", min_level_access: 0, max_level_access: 0,
           test: { required: false, type: "quality", difficulty: 0, on_fail: "No effect" } } },
-      interaction:      { interactable: false, interactions: [] },
-      slots:            [],
-      destructibility:  { destructible: false },
-      editor_defaults:  { scale: 1, rotation_snap_deg: 15, layer: "terrain_structures" }
-    };
+      interaction: { interactable: false, interactions: [] },
+      slots: [], destructibility: { destructible: false },
+      editor_defaults: { scale: 1, rotation_snap_deg: 15, layer: "terrain_structures" } };
   }
 
   // ── Export ─────────────────────────────────────────────────────────
@@ -370,14 +350,12 @@
 
   // ── Progress ────────────────────────────────────────────────────────
   function updateProgress() {
-    var total      = state.entries.length;
-    var catalogued = state.entries.filter(function(e) { return e.name && e.name !== ""; }).length;
-    var pct        = total > 0 ? (catalogued / total * 100) : 0;
+    var total = state.entries.length;
+    var done  = Object.keys(state.saved).length;
+    var pct   = total > 0 ? (done / total * 100) : 0;
     state.ui.progressFill.style.width = pct + "%";
-    state.ui.counter.textContent = catalogued + " / " + total + " named";
-    state.ui.saveInfo.textContent =
-      catalogued + " of " + total + " entries named  —  " +
-      (total - catalogued) + " awaiting  —  Ctrl+S to save, Ctrl+→ to advance";
+    state.ui.counter.textContent = done + " / " + total;
+    state.ui.saveInfo.textContent = done + " of " + total + " entries confirmed  —  Ctrl+S to save, Ctrl+→ to advance";
   }
 
   // ── List render ─────────────────────────────────────────────────────
@@ -385,30 +363,18 @@
     var q = (state.ui.listSearch.value || "").toLowerCase();
     var html = "";
     state.entries.forEach(function(entry, idx) {
-      var name    = entry.name || entry.asset_file || entry.terrain_type_id;
-      var id      = entry.terrain_type_id;
-      var isSaved = !!state.saved[id];
-      var isNew   = !entry.name || entry.name === "";
-      var isMissing = !!entry._missing_asset;
-
+      var name = entry.name || entry.terrain_type_id;
+      var id   = entry.terrain_type_id;
       if (q && name.toLowerCase().indexOf(q) === -1 && id.toLowerCase().indexOf(q) === -1) return;
-
-      var dotCls = isSaved && !isNew ? "saved" : "dirty";
-      var imgSrc = entry.asset_file ? (state.opts.assetBaseUrl + entry.asset_file + "?t=1") : "";
-      var thumb  = imgSrc
+      var isSaved = !!state.saved[id];
+      var dotCls  = isSaved ? "saved" : "dirty";
+      var imgSrc  = entry.asset_file ? (state.opts.assetBaseUrl + entry.asset_file + "?t=1") : "";
+      var thumb   = imgSrc
         ? '<img class="cte-thumb" src="' + esc(imgSrc) + '" onerror="this.style.display=\'none\'">'
         : '<div class="cte-thumb-ph"></div>';
-
-      var label = name;
-      if (isNew)     label = '<span style="color:var(--cte-pri);font-style:italic;">' + esc(entry.asset_file || "unnamed") + '</span>';
-      if (isMissing) label = '<span style="color:#c0392b;">⚠ ' + esc(name) + '</span>';
-
       html += '<div class="cte-item' + (idx === state.currentIndex ? " active" : "") + '" onclick="window._CTE.selectEntry(' + idx + ')">'
         + thumb
-        + '<div class="cte-item-info">'
-        + '<div class="cte-item-name">' + label + '</div>'
-        + '<div class="cte-item-id">' + esc(entry.asset_file || id) + '</div>'
-        + '</div>'
+        + '<div class="cte-item-info"><div class="cte-item-name">' + esc(name) + '</div><div class="cte-item-id">' + esc(id) + '</div></div>'
         + '<div class="cte-dot ' + dotCls + '"></div></div>';
     });
     state.ui.entryList.innerHTML = html || '<div style="padding:20px;color:var(--cte-muted);font-family:var(--cte-mono);font-size:11px;text-align:center;">No entries</div>';
@@ -580,7 +546,7 @@
     var bps = (dest.breakpoints || []).map(function(b, i) {
       return '<div class="cte-ri"><button class="cte-ri-del" onclick="window._CTE.removeBreakpoint(' + i + ')">✕</button>'
         + '<div class="cte-f"><label>At Damage</label><input type="number" data-bp="' + i + '.at_damage" value="' + (b.at_damage||0) + '"></div>'
-        + '<div class="cte-f full"><label>Effect</label><input type="text" data-bp="' + i + '.effect" value="' + esc(b.desc_short||"") + '"></div>'
+        + '<div class="cte-f full"><label>Effect</label><input type="text" data-bp="' + i + '.effect" value="' + esc(b.effect||"") + '"></div>'
         + '</div>';
     }).join("");
     return fldTog("destructibility.destructible","Destructible", dest.destructible)

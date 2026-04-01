@@ -366,7 +366,7 @@ class ScenarioBrain {
     if (validated.location) {
       validated.location = {
         name:        validated.location.name        || 'Unknown',
-        description: validated.location.desc_long || validated.location.description || '',
+        description: validated.location.desc_long || '',
         emoji:       validated.location.emoji       || '🗺️',
         atmosphere:  validated.location.atmosphere  || null,
         resources:   validated.location.resources   || {},
@@ -495,7 +495,7 @@ class ScenarioBrain {
     const locationName = position.template.replace('{location}', nearby.name);
 
     const descTemplates = [
-      `${type.desc_long || type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
+      `${type.desc_long || 'A contested zone'} in the shadow of ${nearby.name}.`,
       `A ${type.id.replace(/_/g, ' ')} where ${nearby.name}'s influence reaches, but authority does not.`,
       `The kind of place ${nearby.name} pretends doesn't exist.`,
       `${nearby.name} casts a long shadow. This is where that shadow falls.`,
@@ -666,7 +666,7 @@ class ScenarioBrain {
     const obj = {
       type:         vaultObj.objective_id,
       name:         vaultObj.name,
-      description:  vaultObj.desc_long || (vaultObj.desc_long || vaultObj.description),
+      description:  vaultObj.desc_long,
       markers:      this.evaluateVaultValue(vaultObj.setup?.markers, danger),
       marker_type:  vaultObj.setup?.marker_type || vaultObj.objective_id,
       action_type:  vaultObj.interaction?.action_type  || 'interact',
@@ -909,7 +909,7 @@ class ScenarioBrain {
     const factions = names.length <= 2 ? names.join(' and ') : names.slice(0, -1).join(', ') + ', and ' + names[names.length - 1];
 
     if (cultistEncounter && cultistEncounter.enabled) {
-      const context = { location: location.name, cult: cultistEncounter.cult.name, pressure: cultistEncounter.pressure.description, factions };
+      const context = { location: location.name, cult: cultistEncounter.cult.name, pressure: cultistEncounter.pressure.desc_long, factions };
       const cultNarratives = [
         '{location} was quiet until the {cult} arrived. {pressure} {factions} have stumbled into something they weren\'t prepared for.',
         'The {cult} chose {location} for a reason. {pressure} {factions} showed up at the worst possible time.',
@@ -963,7 +963,7 @@ class ScenarioBrain {
     const twist   = this.weightedRandomChoice(pool);
     const example = twist.example_outcomes?.length > 0 ? this.randomChoice(twist.example_outcomes) : null;
 
-    return { name: twist.name, description: twist.desc_long || (twist.desc_long || twist.description), effect: twist.mechanical_effect || twist.desc_short || twist.effect || 'Unknown effect.', example };
+    return { name: twist.name, description: twist.desc_long, effect: twist.mechanical_effect || twist.desc_short || 'Unknown effect.', example };
   }
 
   checkResourceCorruption(location) {
@@ -1018,7 +1018,7 @@ class ScenarioBrain {
       round:             6,
       title:             finale.title,
       narrative:         finale.flavor,
-      mechanical_effect: (finale.desc_short || finale.effect),
+      mechanical_effect: finale.desc_short,
       ticker_effect:     finale.ticker,
       player_note:       finale.player_note,
       escalation_type:   plotFamily.id
@@ -1091,7 +1091,7 @@ class ScenarioBrain {
 
     return {
       enabled:    true,
-      cult:       { id: selectedCult.id, name: selectedCult.name, theme: selectedCult.theme, color: selectedCult.color, description: selectedCult.description },
+      cult:       { id: selectedCult.id, name: selectedCult.name, theme: selectedCult.theme, color: selectedCult.color, description: selectedCult.desc_long },
       pressure: {
         type:             pressureTrack.type,
         label:            pressureTrack.label,

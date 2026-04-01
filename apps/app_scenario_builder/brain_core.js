@@ -214,7 +214,7 @@ class ScenarioBrain {
     const locationName = position.template.replace('{location}', nearby.name);
     
     const descTemplates = [
-      `${type.desc_long || type.description || 'A contested zone'} in the shadow of ${nearby.name}.`,
+      `${type.desc_long || 'A contested zone'} in the shadow of ${nearby.name}.`,
       `The kind of place ${nearby.name} pretends doesn't exist.`,
       `Close enough to ${nearby.name} to hear the gunshots. Far enough to ignore them.`,
       `${nearby.name} casts a long shadow. This is where that shadow falls.`
@@ -376,7 +376,7 @@ class ScenarioBrain {
     const obj = {
       type: vaultObj.objective_id,
       name: vaultObj.name,
-      description: vaultObj.desc_long || (vaultObj.desc_long || vaultObj.description),
+      description: vaultObj.desc_long,
       
       // Setup
       markers: markers,
@@ -539,8 +539,8 @@ class ScenarioBrain {
     const twist = this.weightedRandomChoice(pool.length > 0 ? pool : this.data.twists.twists);
     return {
       name: twist.name,
-      description: twist.desc_long || (twist.desc_long || twist.description),
-      effect: twist.mechanical_effect || twist.desc_short || (twist.desc_short || twist.effect),
+      description: twist.desc_long,
+      effect: twist.mechanical_effect || twist.desc_short,
       example: twist.example_outcomes ? this.randomChoice(twist.example_outcomes) : null
     };
   }

@@ -1,8 +1,48 @@
 {
-  "type": "ability_dictionary",
   "_id": "R-ABIL-A",
   "title": "Abilities: DEPLOYMENT & TIMING",
-  "abilities": {},
-  "_migrated": true,
-  "_migrated_at": "2026-04-01"
+  "abilities": {
+    "aim": {
+      "_id": "R-ABIL-A-AIM",
+      "timing": "once_per_activation",
+      "short": "Sacrifice movement for +1 die on a ranged attack.",
+      "long": "Once Per Activation. This unit may sacrifice movement to gain +1 die on its next ranged attack. Declare before rolling."
+    },
+    "ambush": {
+      "_id": "R-ABIL-A-AMBUSH",
+      "timing": "deployment",
+      "short": "Deploy hidden; gain first strike when revealed.",
+      "long": "Deployment. May deploy hidden. Reveal at any time to gain first strike in melee."
+    },
+    "anchor": {
+      "_id": "R-ABIL-A-ANCHOR",
+      "timing": "passive",
+      "short": "Cannot be moved by enemy effects.",
+      "long": "Passive. This unit cannot be moved by enemy abilities or effects. Ignores knockback and displacement."
+    },
+    "assistant": {
+      "_id": "R-ABIL-A-ASSISTANT",
+      "timing": "passive",
+      "short": "Assist adjacent Mystic or Scientist.",
+      "long": "Passive. May assist an adjacent Mystic or Scientist with special activations or effects, as defined on the unit card."
+    },
+    "audio_suppression": {
+      "_id": "R-ABIL-A-AUDIO-SUPPRESSION",
+      "timing": "passive",
+      "short": "Immune to sound-based effects.",
+      "long": "Passive. This unit is immune to sound-based abilities, fear effects, and sonic attacks unless explicitly stated otherwise."
+    },
+    "iron_shoes": {
+      "_id": "R-ABIL-A-IRON-SHOES",
+      "timing": "passive",
+      "short": "Move up to 2\" after a melee kill.",
+      "long": "Passive. When this unit destroys an enemy model in melee, it may immediately move up to 2\"."
+    },
+    "armored": {
+      "_id": "R-ABIL-A-ARMORED",
+      "timing": "passive",
+      "short": "Ignore the first point of damage from attacks.",
+      "long": "Passive. The first point of damage this unit would take from an attack is ignored. Does not apply to automatic damage unless stated."
+    }
+  }
 }

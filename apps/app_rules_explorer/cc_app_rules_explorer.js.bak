@@ -298,8 +298,8 @@ console.log("📘 Rules Explorer app loaded");
       const data = faction.data;
       let html = '';
 
-      if (data.desc_long) {
-        html += `<div class="cc-callout mb-4">${esc(data.desc_long)}</div>`;
+      if (data.summary) {
+        html += `<div class="cc-callout mb-4">${esc(data.summary)}</div>`;
       }
       if (data.lore) {
         html += `<div class="mb-4"><p>${esc(data.lore)}</p></div>`;
@@ -369,7 +369,7 @@ console.log("📘 Rules Explorer app loaded");
                             for (const section in rulesRoot.ability_dictionary) {
                               if (rulesRoot.ability_dictionary[section]?.[abilityName]) {
                                 const d = rulesRoot.ability_dictionary[section][abilityName];
-                                abilityEffect = d.desc_short || d.desc_long || '';
+                                abilityEffect = d.short || d.effect || d.long || '';
                                 break;
                               }
                             }
@@ -377,7 +377,7 @@ console.log("📘 Rules Explorer app loaded");
                         } catch (e) {}
                       } else if (ability && typeof ability === 'object') {
                         abilityName   = ability.name   || '';
-                        abilityEffect = ability.desc_short || '';
+                        abilityEffect = ability.effect || ability.short || '';
                       }
                       const tooltipText = abilityEffect || abilityName;
                       const titleAttr   = ` title="${tooltipText.replace(/"/g, '&quot;')}"`;
@@ -837,7 +837,7 @@ console.log("📘 Rules Explorer app loaded");
       if (typeof value === 'string') {
         text = value;
       } else if (value && typeof value === 'object') {
-        text = value.text || value.desc_long || value.desc_short || '';
+        text = value.text || value.long || value.description || value.short || '';
       }
       if (!text) return '';
       if (typeof text === 'string' && text.trim().match(/^R-[A-Z0-9-]+$/i)) return '';
@@ -862,14 +862,14 @@ console.log("📘 Rules Explorer app loaded");
         if (typeof item === 'string') {
           return `<li>${esc(item)}</li>`;
         } else if (item && typeof item === 'object') {
-          if (item.name && (item.desc_short || item.desc_long)) {
-            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.desc_short || item.desc_long)}</li>`;
-          } else if (item.value && item.desc_long) {
-            return `<li><strong>${esc(item.value)}:</strong> ${esc(item.desc_long)}</li>`;
+          if (item.name && (item.effect || item.description)) {
+            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.effect || item.description)}</li>`;
+          } else if (item.value && item.description) {
+            return `<li><strong>${esc(item.value)}:</strong> ${esc(item.description)}</li>`;
           } else if (item.trait && item.result) {
             return `<li><strong>${esc(item.trait)}:</strong> ${esc(item.result)}</li>`;
-          } else if (item.id && (item.name || item.desc_short)) {
-            return `<li><strong>${esc(item.name || item.id)}:</strong> ${esc(item.desc_short || '')}</li>`;
+          } else if (item.id && (item.name || item.effect)) {
+            return `<li><strong>${esc(item.name || item.id)}:</strong> ${esc(item.effect || '')}</li>`;
           } else {
             const parts = Object.entries(item)
               .filter(([k]) => !k.startsWith('_'))
@@ -898,7 +898,7 @@ console.log("📘 Rules Explorer app loaded");
       let html = '';
 
       const isAbilityDict = Object.values(obj).every(v =>
-        typeof v === 'string' || (v && typeof v === 'object' && (v.desc_short || v.desc_long))
+        typeof v === 'string' || (v && typeof v === 'object' && (v.effect || v.short || v.long))
       );
 
       if (isAbilityDict) {
@@ -1040,9 +1040,9 @@ console.log("📘 Rules Explorer app loaded");
                   </button>
                 </div>
               </div>
-              ${a.desc_short       ? `<div class="fw-semibold mb-1">${esc(a.desc_short)}</div>` : ''}
-              ${a.desc_long        ? `<div>${esc(a.desc_long)}</div>` : ''}
-              ${a.desc_short      ? `<div>${esc(a.desc_short)}</div>` : ''}
+              ${a.short       ? `<div class="fw-semibold mb-1">${esc(a.short)}</div>` : ''}
+              ${a.long        ? `<div>${esc(a.long)}</div>` : ''}
+              ${a.effect      ? `<div>${esc(a.effect)}</div>` : ''}
               ${a.trigger     ? `<div class="mt-1"><strong>Trigger:</strong> ${esc(a.trigger)}</div>` : ''}
               ${a.restriction ? `<div class="cc-muted small mt-1">${esc(a.restriction)}</div>` : ''}
               ${a.restrictions ? `<div class="cc-muted small mt-1">${esc(Array.isArray(a.restrictions) ? a.restrictions.join(' • ') : a.restrictions)}</div>` : ''}
@@ -1068,7 +1068,7 @@ console.log("📘 Rules Explorer app loaded");
 
       const isFlatAbilityDict = Object.values(content).every(v =>
         typeof v === 'string' ||
-        (v && typeof v === 'object' && !Array.isArray(v) && (v.desc_short || v.desc_long))
+        (v && typeof v === 'object' && !Array.isArray(v) && (v.effect || v.short || v.long || v.description))
       );
       if (isFlatAbilityDict && !content.sections && !content.text) {
         return renderAbilityDictionary(content);
@@ -1291,7 +1291,7 @@ console.log("📘 Rules Explorer app loaded");
       if (designIntentText) {
         if (typeof designIntentText === 'object') {
           designIntentText = designIntentText.text        ||
-                             designIntentText.desc_long ||
+                             designIntentText.description ||
                              designIntentText.note        ||
                              designIntentText.content     ||
                              JSON.stringify(designIntentText, null, 2);

@@ -65,14 +65,14 @@ window.CCFB_FACTORY = {
         return {
             faction: j.faction || j.name || "New Faction",
             // introduction block flattened to top-level after schema migration
-            desc_short:  str(j.desc_short  || intro.tagline     || ''),
-            desc_long:   str(j.desc_long   || intro.description || ''),
+            desc_short:  str(j.desc_short  || intro.desc_short     || ''),
+            desc_long:   str(j.desc_long   || intro.desc_long || ''),
             history:     str(j.history     || intro.history     || ''),
             // keep introduction stub so old exports still load
             introduction: {
                 title:       str(intro.title),
-                tagline:     str(j.desc_short  || intro.tagline     || ''),
-                description: str(j.desc_long   || intro.description || ''),
+                tagline:     str(j.desc_short  || intro.desc_short     || ''),
+                description: str(j.desc_long   || intro.desc_long || ''),
                 philosophy:  str(j.desc_long   || intro.philosophy  || ''),
                 history:     str(j.history     || intro.history     || '')
             },
@@ -207,7 +207,7 @@ window.CCFB_FACTORY = {
                 var cleanWeaponProps = {};
                 Object.keys(wpEntries).forEach(function(k) {
                     var v = wpEntries[k];
-                    if (v && typeof v === 'object' && (v.name || v.title || v.short)) cleanWeaponProps[k] = v;
+                    if (v && typeof v === 'object' && (v.name || v.title || v.desc_short)) cleanWeaponProps[k] = v;
                 });
                 console.log('⚔️ Weapon props:', Object.keys(cleanWeaponProps).join(', '));
 
@@ -221,7 +221,7 @@ window.CCFB_FACTORY = {
                         var clean = {};
                         Object.keys(entries).forEach(function(k) {
                             var v = entries[k];
-                            if (v && typeof v === 'object' && (v.name || v.short || v.long)) clean[k] = v;
+                            if (v && typeof v === 'object' && (v.name || v.desc_short || v.desc_long)) clean[k] = v;
                         });
                         if (Object.keys(clean).length > 0) abilityDict[ar.key] = clean;
                     }
@@ -506,8 +506,8 @@ window.CCFB_FACTORY = {
 
         return infoSec('intro', 'Introduction',
             fg('Title',       textinput('introduction.title',       intro.title)) +
-            fg('Tagline (Short)',  textinput('desc_short', intro.tagline)) +
-            fg('Description (Long)', textarea('desc_long',  intro.description, 4)) +
+            fg('Tagline (Short)',  textinput('desc_short', intro.desc_short)) +
+            fg('Description (Long)', textarea('desc_long',  intro.desc_long, 4)) +
             fg('History',     textarea('history',      intro.history, 4))
         ) +
         infoSec('ident', 'Faction Identity',
@@ -822,7 +822,7 @@ window.CCFB_FACTORY = {
                                     '<div style="flex:1;cursor:pointer;" onclick="window.CCFB_FACTORY.editSupplemental(' + i + ')" title="Click to edit">' +
                                         '<strong>' + s.name + '</strong> <span class="supp-type-badge">' + s.type + '</span>' +
                                         (s.cost > 0 ? ' <span style="font-size:0.75rem;color:var(--cc-primary);">(' + s.cost + '₤)</span>' : '') +
-                                        '<div class="supp-effect">' + s.effect + '</div>' +
+                                        '<div class="supp-effect">' + s.desc_short + '</div>' +
                                         (s.stat_modifiers ? '<div style="font-size:0.72rem;color:rgba(255,255,255,0.45);">Mods: ' + JSON.stringify(s.stat_modifiers) + '</div>' : '') +
                                     '</div>' +
                                     '<button onclick="window.CCFB_FACTORY.removeSupplemental(' + i + ')" style="flex:0 0 auto;background:none;border:1px solid rgba(255,80,80,0.4);border-radius:3px;color:#ef5350;padding:2px 7px;cursor:pointer;font-size:0.75rem;margin-top:2px;" title="Delete">✕</button>' +
@@ -918,7 +918,7 @@ window.CCFB_FACTORY = {
                             (s.cost > 0 ? ' <span class="supp-cost">(+' + s.cost + '₤)</span>' : '') +
                             ' <span class="supp-type-badge">' + s.type + '</span>' +
                         '</div>' +
-                        '<div class="supplemental-card-effect">' + s.effect + '</div>' +
+                        '<div class="supplemental-card-effect">' + s.desc_short + '</div>' +
                         modsDisplay +
                     '</div>';
                 }).join('') +
@@ -958,7 +958,7 @@ window.CCFB_FACTORY = {
                         '<div class="unit-card-section">' +
                             '<div class="section-label"><i class="fa fa-shield"></i> TYPE RULE</div>' +
                             '<strong>' + (arch.type_rule || 'Innate') + '</strong>' +
-                            '<div class="ability-effect">' + (arch.effect || 'No special type effect') + '</div>' +
+                            '<div class="ability-effect">' + (arch.desc_short || 'No special type effect') + '</div>' +
                         '</div>' +
                         weaponPropsHtml +
                         abilitiesHtml +
@@ -1044,7 +1044,7 @@ window.CCFB_FACTORY = {
                 var item = weaponProps[key];
                 if (!item || typeof item !== 'object') return;
                 var wName = item.name || item.title || key.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
-                var wDesc = item.long || item.short || item.effect || '';
+                var wDesc = item.desc_long || item.desc_short || '';
                 var bg = (rowIndex++ % 2 === 0) ? '#111' : '#161412';
                 listHtml += '<button style="' + rowBase + 'background:' + bg + '" onmouseover="this.style.background=\'#2a1f12\'" onmouseout="this.style.background=\'' + bg + '\'" onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\',\'' + key + '\')">' +
                     '<span style="' + nameStyle + '">' + wName + '</span>' +
@@ -1060,7 +1060,7 @@ window.CCFB_FACTORY = {
                     var aItem = abilityDict[cat][aKey];
                     if (!aItem || typeof aItem !== 'object') return;
                     var aName = aItem.name || aKey.replace(/_/g,' ').replace(/\b\w/g,function(c){return c.toUpperCase();});
-                    var aDesc = aItem.long || aItem.short || aItem.effect || '';
+                    var aDesc = aItem.desc_long || aItem.desc_short || '';
                     var bg = (rowIndex++ % 2 === 0) ? '#111' : '#161412';
                     listHtml += '<button style="' + rowBase + 'background:' + bg + '" onmouseover="this.style.background=\'#2a1f12\'" onmouseout="this.style.background=\'' + bg + '\'" onclick="window.CCFB_FACTORY.addItem(\'abilities\',\'' + aKey + '\')">' +
                         '<span style="' + nameStyle + '">' + aName + '</span>' +
@@ -1213,7 +1213,7 @@ window.CCFB_FACTORY = {
                 if (!nameEl) return;
                 nameEl.value   = snap.name   || '';
                 if (typeEl)   typeEl.value   = snap.type   || 'Gear';
-                if (effectEl) effectEl.value = snap.effect || '';
+                if (effectEl) effectEl.value = snap.desc_short || '';
                 var mods = snap.stat_modifiers || {};
                 ['quality','defense','move','range'].forEach(function(stat) {
                     var cb  = document.getElementById('mod-' + stat);
