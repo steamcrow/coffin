@@ -53,109 +53,7 @@ console.log("📘 Rules Explorer app loaded");
         .catch(() => console.warn('⚠️ cc_print.css not found'));
     }
 
-    // ---- INLINE STYLE ADDITIONS ----
-    if (!document.getElementById('cc-rules-explorer-extra')) {
-      const extraStyle = document.createElement('style');
-      extraStyle.id = 'cc-rules-explorer-extra';
-      extraStyle.textContent = `
-        .cc-section-label {
-          font-family: var(--cc-font-mono);
-          font-size: 0.78rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          color: var(--cc-primary);
-          margin-bottom: 0.4rem;
-        }
-        .cc-rule-lead {
-          font-style: italic;
-          color: var(--cc-text-muted);
-          font-size: 0.95rem;
-          margin-bottom: 0.5rem;
-        }
-        .cc-ability-link {
-          background: none;
-          border: 1px solid rgba(212,130,42,.35);
-          color: var(--cc-primary);
-          font-size: 10px;
-          font-family: var(--cc-font-mono);
-          letter-spacing: 0.04em;
-          padding: 2px 7px;
-          border-radius: 2px;
-          cursor: pointer;
-          transition: background 0.15s, color 0.15s;
-        }
-        .cc-ability-link:hover {
-          background: var(--cc-primary);
-          color: #000;
-        }
-        .cc-upgrade-link {
-          display: block;
-          width: 100%;
-          text-align: left;
-          background: none;
-          border: 1px solid var(--cc-border);
-          border-radius: var(--cc-radius);
-          padding: 8px 12px;
-          margin-bottom: 4px;
-          color: var(--cc-text);
-          cursor: pointer;
-          transition: border-color 0.15s, background 0.15s;
-        }
-        .cc-upgrade-link:hover {
-          border-color: var(--cc-primary);
-          background: var(--cc-primary-dim);
-        }
-        .cc-upgrade-link .cc-upgrade-name { font-weight: 700; font-size: 0.9rem; }
-        .cc-upgrade-link .cc-upgrade-desc { font-size: 0.82rem; color: var(--cc-text-muted); margin-top: 2px; }
-        .cc-upgrade-link .cc-upgrade-cost { font-size: 0.78rem; color: var(--cc-primary); float: right; }
-        .cc-wild-magic-table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; }
-        .cc-wild-magic-table th {
-          font-family: var(--cc-font-mono); font-size: 0.72rem; text-transform: uppercase;
-          letter-spacing: 0.08em; color: var(--cc-primary); padding: 6px 10px;
-          border-bottom: 1px solid var(--cc-border); text-align: left;
-        }
-        .cc-wild-magic-table td { padding: 8px 10px; border-bottom: 1px solid var(--cc-border); font-size: 0.88rem; vertical-align: top; }
-        .cc-wild-magic-table tr:last-child td { border-bottom: none; }
-        .cc-wild-magic-table .cc-wm-roll { font-weight: 700; color: var(--cc-primary); font-family: var(--cc-font-mono); white-space: nowrap; }
-        .cc-wild-magic-table .cc-wm-name { font-weight: 700; }
-        .cc-wild-magic-table .cc-wm-desc { color: var(--cc-text-muted); font-size: 0.82rem; margin-top: 2px; }
-        .cc-wild-magic-table tr:hover td { background: var(--cc-primary-dim); }
-
-        /* Unit identity type headers (Grunt, Brute, Mystic etc.) */
-        .cc-unit-type-header {
-          font-family: var(--cc-font-title);
-          font-size: 1.6rem;
-          color: var(--cc-primary);
-          letter-spacing: 0.05em;
-          margin: 2rem 0 0.5rem;
-          padding-top: 1rem;
-          border-top: 1px solid var(--cc-border);
-        }
-        .cc-unit-type-header:first-child { margin-top: 0; border-top: none; padding-top: 0; }
-
-        /* Ability timing headers (Passive, Once Per Activation etc.) */
-        .cc-timing-header {
-          font-family: var(--cc-font-title);
-          font-size: 1.1rem;
-          color: var(--cc-primary);
-          text-transform: uppercase;
-          letter-spacing: 0.08em;
-          margin: 0.25rem 0 0.5rem;
-        }
-
-        /* Named location cards */
-        .cc-location-card { border-left: 3px solid var(--cc-primary); }
-        .cc-location-name {
-          font-family: var(--cc-font-title);
-          font-size: 1.5rem;
-          color: var(--cc-primary);
-          margin: 0 0 0.5rem;
-          letter-spacing: 0.04em;
-        }
-      `;
-      document.head.appendChild(extraStyle);
-    }
+    // Styles live in cc_app_rules_explorer.css — no inline injection needed.
 
     // ---- HELPERS (robust injection + adapter) ----
     // The loader calls window.createRulesHelpers but rules_helpers.js exports
@@ -301,10 +199,17 @@ console.log("📘 Rules Explorer app loaded");
       return;
     }
 
-    // ---- FAVORITES SYSTEM ----
-    const STORAGE_KEY = 'cc_rules_favorites';
+    // ---- LOGIN + FAVORITES SYSTEM ----
+    // Uses the same Odoo session detection as the Faction Builder.
+    // Logged-in users get per-account favorites. Guests can still browse,
+    // but star buttons prompt them to log in.
+
+    const _uid     = window.odoo?.session_info?.uid || null;
+    const _isLoggedIn = !!_uid;
+    const STORAGE_KEY = _isLoggedIn ? `cc_rules_favorites_${_uid}` : 'cc_rules_favorites_guest';
 
     function getFavorites() {
+      if (!_isLoggedIn) return [];
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         return stored ? JSON.parse(stored) : [];
@@ -312,14 +217,24 @@ console.log("📘 Rules Explorer app loaded");
     }
 
     function saveFavorites(favorites) {
+      if (!_isLoggedIn) return;
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
       } catch (e) { console.error('Could not save favorites', e); }
     }
 
-    function isFavorite(id) { return getFavorites().includes(id); }
+    function isFavorite(id) { return _isLoggedIn && getFavorites().includes(id); }
 
     function toggleFavorite(id) {
+      if (!_isLoggedIn) {
+        // Show a brief login prompt in the header
+        const hint = document.createElement('div');
+        hint.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;background:var(--cc-bg-soft,#2a2010);border:1px solid var(--cc-primary,#d4822a);color:var(--cc-primary,#d4822a);padding:10px 18px;border-radius:6px;font-size:.9rem;pointer-events:none;';
+        hint.textContent = '🔒 Log in to save starred rules';
+        document.body.appendChild(hint);
+        setTimeout(() => hint.remove(), 2200);
+        return;
+      }
       const favorites = getFavorites();
       const i = favorites.indexOf(id);
       if (i > -1) { favorites.splice(i, 1); } else { favorites.push(id); }
@@ -661,12 +576,13 @@ console.log("📘 Rules Explorer app loaded");
             <h1 class="cc-app-title">Rules Explorer</h1>
             <div class="cc-app-subtitle">Interactive Coffin Canyon Rules Reference</div>
           </div>
-          <div class="cc-header-actions">
+          <div class="cc-header-actions" style="display:flex;align-items:center;gap:8px;">
+            <div id="cc-login-status" style="font-size:0.78rem;font-family:var(--cc-font-mono);text-transform:uppercase;letter-spacing:0.07em;opacity:0.6;"></div>
             <button id="cc-focus-btn" class="btn btn-sm btn-outline-secondary" title="Focus mode — hides sidebars for reading">
               📖 Focus
             </button>
             <button id="cc-print-btn" class="btn btn-sm btn-outline-secondary" title="Print or save as PDF">
-              🖨️ PDF
+              🖨️ Print
             </button>
           </div>
         </div>
@@ -825,6 +741,20 @@ console.log("📘 Rules Explorer app loaded");
     const printBtn       = root.querySelector("#cc-print-btn");
     const focusBtn       = root.querySelector("#cc-focus-btn");
     const explorerEl     = root.querySelector(".cc-rules-explorer");
+    const loginStatusEl  = root.querySelector("#cc-login-status");
+
+    // Show login state in header
+    if (loginStatusEl) {
+      if (_isLoggedIn) {
+        const name = window.odoo?.session_info?.name || 'Logged in';
+        loginStatusEl.textContent = `★ ${name}`;
+        loginStatusEl.style.opacity = '0.75';
+        loginStatusEl.title = 'Starred rules are saved to your account';
+      } else {
+        loginStatusEl.textContent = '🔒 Log in to star rules';
+        loginStatusEl.title = 'Starred rules require an account';
+      }
+    }
 
     let selectedId    = null;
     let currentFilter = 'all';
@@ -1271,7 +1201,7 @@ console.log("📘 Rules Explorer app loaded");
             return `
               <div class="cc-ability-card p-3 mb-2">
                 <div class="d-flex justify-content-between align-items-baseline mb-1">
-                  <div class="fw-bold flex-grow-1">${esc(titleize(key))}</div>
+                  <div class="cc-ability-name flex-grow-1">${esc(titleize(key))}</div>
                   <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
                     <span class="cc-star">${starred ? '★' : '☆'}</span>
                   </button>
@@ -1309,7 +1239,7 @@ console.log("📘 Rules Explorer app loaded");
           return `
             <div class="cc-ability-card p-3 mb-2">
               <div class="d-flex justify-content-between align-items-baseline mb-1">
-                <div class="fw-bold flex-grow-1">${esc(a.name || titleize(key))}</div>
+                <div class="cc-ability-name flex-grow-1">${esc(a.name || titleize(key))}</div>
                 <div class="d-flex align-items-center gap-2">
                   ${a.timing ? `<div class="cc-muted small text-uppercase">${esc(a.timing)}</div>` : ''}
                   <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
@@ -2056,13 +1986,191 @@ console.log("📘 Rules Explorer app loaded");
     });
 
     // ---- PRINT / PDF ----
-    printBtn.addEventListener('click', () => {
-      const wasFocused = explorerEl.classList.contains('focus-mode');
-      if (!wasFocused) explorerEl.classList.add('focus-mode');
-      setTimeout(() => {
-        window.print();
-        if (!wasFocused) explorerEl.classList.remove('focus-mode');
-      }, 150);
+    // Builds a complete rulebook document in a new window for print/PDF.
+    printBtn.addEventListener('click', async () => {
+      // Show progress in button
+      const origLabel = printBtn.innerHTML;
+      printBtn.disabled = true;
+      printBtn.innerHTML = '⏳ Building…';
+
+      try {
+        // Ordered print sections: core rules first, then vaults, systems, abilities, factions
+        const PRINT_ORDER = [
+          // Core
+          'core_mechanics', 'turn_structure',
+          // Vaults
+          'visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault', 'terrain_vault',
+          // Systems
+          'unit_identities', 'ability_engine',
+          // Ability dictionaries A–I
+          ...index.filter(it => it.id?.startsWith('ability_dict_')).sort((a,b) => a.id.localeCompare(b.id)).map(it => it.id),
+          // Factions
+          ...index.filter(it => it.id?.startsWith('faction_')).map(it => it.id),
+          // Campaign
+          'campaign_system',
+        ].filter(id => id && index.find(it => it.id === id) || id?.startsWith('faction_') || id?.startsWith('ability_dict_'));
+
+        // Build section HTML array
+        const sections = [];
+        let done = 0;
+
+        for (const id of PRINT_ORDER) {
+          printBtn.innerHTML = `⏳ ${Math.round((done / PRINT_ORDER.length) * 100)}%`;
+
+          try {
+            let content = null;
+            let title   = '';
+
+            if (id === 'campaign_system') {
+              if (!campaignData) await loadCampaign();
+              content = campaignData?.data;
+              title   = 'Campaign System';
+            } else if (id.startsWith('faction_')) {
+              const fid = id.replace('faction_', '');
+              if (!factionsData[fid]) await loadFactions();
+              content = factionsData[fid]?.data;
+              title   = factionsData[fid]?.title || fid;
+            } else {
+              const raw = await helpers.getRuleSection(id) || await fetchRuleDirectly(id);
+              if (raw?.meta) { content = raw.content; title = raw.meta.title || raw.meta.id; }
+              else if (raw?.content) { content = raw.content; title = index.find(it=>it.id===id)?.title || id; }
+            }
+
+            if (content || title) {
+              const meta   = index.find(it => it.id === id) || { id, title };
+              const bodyHtml = content ? renderContentSmart(meta, content) : '';
+              sections.push(`
+                <section class="cc-print-section" id="section-${id}">
+                  <h2 class="cc-print-title">${esc(title || id)}</h2>
+                  <div class="cc-rule-content">${bodyHtml}</div>
+                </section>
+              `);
+            }
+          } catch(e) {
+            console.warn('Print: could not load section', id, e);
+          }
+          done++;
+        }
+
+        // Fetch print CSS
+        let printCss = '';
+        try {
+          const r = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_print.css?t=' + Date.now());
+          if (r.ok) printCss = await r.text();
+        } catch(e) {}
+
+        // Fetch core UI CSS for fonts/variables
+        let coreCss = '';
+        try {
+          const r = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now());
+          if (r.ok) coreCss = await r.text();
+        } catch(e) {}
+
+        // Build the print document
+        const printDoc = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Coffin Canyon — Complete Rulebook</title>
+  <style>
+${coreCss}
+
+/* ── Print layout ── */
+*, *::before, *::after { box-sizing: border-box; }
+body {
+  font-family: 'Source Sans 3', Georgia, serif;
+  font-size: 11pt;
+  line-height: 1.65;
+  color: #1a1a1a;
+  background: #fff;
+  margin: 0;
+  padding: 0;
+}
+.cc-print-document {
+  max-width: 740px;
+  margin: 0 auto;
+  padding: 48px 48px 80px;
+}
+.cc-print-cover {
+  text-align: center;
+  padding: 120px 0 80px;
+  page-break-after: always;
+  border-bottom: 3px solid #c47820;
+}
+.cc-print-cover h1 {
+  font-size: 48pt;
+  color: #c47820;
+  margin: 0 0 12px;
+  letter-spacing: 0.05em;
+}
+.cc-print-cover p { color: #555; font-size: 13pt; margin: 0; }
+.cc-print-section {
+  page-break-before: always;
+  margin-bottom: 48px;
+}
+.cc-print-section:first-of-type { page-break-before: avoid; }
+.cc-print-title {
+  font-size: 22pt;
+  color: #c47820;
+  border-bottom: 2px solid #c47820;
+  padding-bottom: 8px;
+  margin: 0 0 24px;
+  letter-spacing: 0.03em;
+}
+h3, h4, h5 { color: #333; margin-top: 20px; }
+h5.cc-section-title { color: #c47820; font-size: 11pt; text-transform: uppercase; letter-spacing: 0.08em; }
+.cc-ability-card {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 8px;
+  page-break-inside: avoid;
+}
+.cc-ability-name { font-size: 12pt; color: #c47820; font-weight: 700; }
+.cc-rule-lead { font-style: italic; color: #555; font-size: 10pt; }
+.cc-stat-row { display: flex; gap: 8px; margin-bottom: 10px; }
+.cc-stat-badge { border: 1px solid #ccc; padding: 4px 8px; text-align: center; min-width: 44px; }
+.cc-stat-label { font-size: 8pt; text-transform: uppercase; color: #888; }
+.cc-stat-value { font-size: 14pt; font-weight: 700; color: #1a1a1a; }
+.cc-unit-card { border: 1px solid #ccc; border-radius: 4px; padding: 12px; margin-bottom: 12px; page-break-inside: avoid; }
+.cc-unit-name { font-size: 13pt; font-weight: 700; color: #c47820; }
+.cc-muted { color: #777; }
+.cc-callout { border-left: 3px solid #c47820; padding: 8px 12px; background: #fdf8f2; margin: 12px 0; }
+@media print {
+  body { font-size: 10pt; }
+  .cc-print-section { page-break-before: always; }
+  .cc-print-title { color: #000 !important; border-color: #000 !important; }
+  .cc-ability-name, .cc-unit-name { color: #000 !important; }
+  .cc-callout { border-color: #000 !important; background: #f5f5f5 !important; }
+  a { text-decoration: none; color: inherit; }
+}
+${printCss}
+  </style>
+</head>
+<body>
+  <div class="cc-print-document">
+    <div class="cc-print-cover">
+      <h1>COFFIN CANYON</h1>
+      <p>Complete Rulebook &mdash; ${new Date().toLocaleDateString('en-US', {year:'numeric',month:'long'})}</p>
+    </div>
+    ${sections.join('\n')}
+  </div>
+  <script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
+        const blob = new Blob([printDoc], { type: 'text/html' });
+        const url  = URL.createObjectURL(blob);
+        const win  = window.open(url, '_blank');
+        if (!win) alert('Pop-up blocked. Please allow pop-ups for this site and try again.');
+
+      } catch(e) {
+        console.error('Print failed:', e);
+        alert('Could not build PDF. Check the browser console for details.');
+      } finally {
+        printBtn.disabled = false;
+        printBtn.innerHTML = origLabel;
+      }
     });
 
     // ---- EVENTS: SIDEBAR LIST ----
@@ -2251,13 +2359,18 @@ console.log("📘 Rules Explorer app loaded");
 
     // ---- INIT ----
 
+    // Rewrite ability dictionary sidebar titles to use proper category names
+    const ABILITY_DICT_NAMES = {
+      A: 'Deployment & Timing',   B: 'Movement & Positioning',
+      C: 'Offense & Damage',      D: 'Defense & Survival',
+      E: 'Morale & Fear',         F: 'Terrain & Environment',
+      G: 'Thyr & Ritual',         H: 'Interaction & Support',
+      I: 'Monster Interactions',
+    };
     index.forEach(item => {
-      if (item.id?.startsWith('ability_dict_') && item.path) {
-        const parts    = item.path.split('.');
-        const lastPart = parts[parts.length - 1];
-        if (lastPart?.match(/^[A-I]_/)) {
-          item.title = `Abilities: ${lastPart.substring(2).replace(/_/g, ' ').replace(/\w/g, m => m.toUpperCase())}`;
-        }
+      if (item.id?.startsWith('ability_dict_')) {
+        const letter = item.id.replace('ability_dict_', '').toUpperCase();
+        if (ABILITY_DICT_NAMES[letter]) item.title = ABILITY_DICT_NAMES[letter];
       }
     });
 
