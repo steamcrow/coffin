@@ -1,6 +1,5 @@
 /* ================================================================
    Rules Explorer — App-Specific Styles
-   Full Logic Preservation + UI Alignment
    ================================================================ */
 
 /* ===== Three-Column Explorer Layout ===== */
@@ -28,6 +27,7 @@
 
 .cc-rules-main { overflow-y: auto; }
 
+
 /* ===== Rule Reader (main reading pane) ===== */
 .cc-rule-reader {
   padding: 2rem;
@@ -52,6 +52,7 @@
 
 .cc-rule-article { max-width: 700px; }
 
+
 /* ===== Prev / Next Navigation Bar ===== */
 .cc-rule-nav {
   display: flex;
@@ -61,6 +62,7 @@
   flex-shrink: 0;
   background: var(--cc-bg-darker);
 }
+
 
 /* ===== Header & Breadcrumb ===== */
 .cc-header-actions {
@@ -77,6 +79,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
+
 
 /* ===== Sidebar Nav Groups ===== */
 .cc-nav-group { margin-bottom: 4px; }
@@ -101,15 +104,18 @@
   transition: all 0.15s;
 }
 
-.cc-nav-group-btn:hover { 
-  background: var(--cc-primary-dim) !important; 
+.cc-nav-group-btn:hover {
+  background: var(--cc-primary-dim) !important;
   border-color: var(--cc-primary-dim);
 }
 
 .cc-nav-group-chevron { opacity: 0.5; font-size: 0.7rem; }
 .cc-nav-group-items { padding-left: 4px; }
 
-/* ===== Star button in list items ===== */
+
+/* ===== Stars ===== */
+.cc-star { font-size: 1.25rem; line-height: 1; }
+
 .cc-star-btn {
   cursor: pointer;
   padding: 4px 8px;
@@ -121,6 +127,147 @@
   transition: color 0.15s;
 }
 .cc-star-btn:hover { color: var(--cc-gold); }
+
+
+/* ===== Section Labels & Lead Text ===== */
+.cc-section-label {
+  font-family: var(--cc-font-mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--cc-primary);
+  margin-bottom: 0.4rem;
+}
+
+.cc-rule-lead {
+  font-style: italic;
+  color: var(--cc-text-muted);
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+
+/* ===== Ability Cards ===== */
+/* Ability name: orange, headline font, slightly larger */
+.cc-ability-name {
+  font-family: var(--cc-font-title);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--cc-primary);
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+}
+
+/* Timing keywords (Passive, Once Per Activation, etc.) */
+.cc-timing-header {
+  font-family: var(--cc-font-title);
+  font-size: 1.1rem;
+  color: var(--cc-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 0.25rem 0 0.5rem;
+}
+
+/* Inline ability badge links inside unit cards */
+.cc-ability-link {
+  background: none;
+  border: 1px solid rgba(212, 130, 42, 0.35);
+  color: var(--cc-primary);
+  font-size: 10px;
+  font-family: var(--cc-font-mono);
+  letter-spacing: 0.04em;
+  padding: 2px 7px;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.cc-ability-link:hover {
+  background: var(--cc-primary);
+  color: #000;
+}
+
+
+/* ===== Upgrade Links ===== */
+.cc-upgrade-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid var(--cc-border);
+  border-radius: var(--cc-radius);
+  padding: 8px 12px;
+  margin-bottom: 4px;
+  color: var(--cc-text);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.cc-upgrade-link:hover {
+  border-color: var(--cc-primary);
+  background: var(--cc-primary-dim);
+}
+.cc-upgrade-link .cc-upgrade-name { font-weight: 700; font-size: 0.9rem; }
+.cc-upgrade-link .cc-upgrade-desc { font-size: 0.82rem; color: var(--cc-text-muted); margin-top: 2px; }
+.cc-upgrade-link .cc-upgrade-cost { font-size: 0.78rem; color: var(--cc-primary); float: right; }
+
+
+/* ===== Wild Magic Table ===== */
+.cc-wild-magic-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+.cc-wild-magic-table th {
+  font-family: var(--cc-font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--cc-primary);
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--cc-border);
+  text-align: left;
+}
+.cc-wild-magic-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--cc-border);
+  font-size: 0.88rem;
+  vertical-align: top;
+}
+.cc-wild-magic-table tr:last-child td { border-bottom: none; }
+.cc-wild-magic-table .cc-wm-roll {
+  font-weight: 700;
+  color: var(--cc-primary);
+  font-family: var(--cc-font-mono);
+  white-space: nowrap;
+}
+.cc-wild-magic-table .cc-wm-name { font-weight: 700; }
+.cc-wild-magic-table .cc-wm-desc { color: var(--cc-text-muted); font-size: 0.82rem; margin-top: 2px; }
+.cc-wild-magic-table tr:hover td { background: var(--cc-primary-dim); }
+
+
+/* ===== Unit Identity Type Headers ===== */
+.cc-unit-type-header {
+  font-family: var(--cc-font-title);
+  font-size: 1.6rem;
+  color: var(--cc-primary);
+  letter-spacing: 0.05em;
+  margin: 2rem 0 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--cc-border);
+}
+.cc-unit-type-header:first-child { margin-top: 0; border-top: none; padding-top: 0; }
+
+
+/* ===== Named Location Cards ===== */
+.cc-location-card { border-left: 3px solid var(--cc-primary); }
+.cc-location-name {
+  font-family: var(--cc-font-title);
+  font-size: 1.5rem;
+  color: var(--cc-primary);
+  margin: 0 0 0.5rem;
+  letter-spacing: 0.04em;
+}
+
 
 /* ===== Intro / Welcome Page Blocks ===== */
 .cc-intro-callout {
@@ -154,12 +301,14 @@
 }
 
 .cc-intro-text { font-size: 1.1rem; line-height: 1.8; }
+
 .cc-intro-tagline {
   font-size: 1.1rem;
   font-style: italic;
   color: var(--cc-primary);
   margin-bottom: 0;
 }
+
 
 /* ===== Faction Unit Cards ===== */
 .cc-faction-units-header {
@@ -206,6 +355,7 @@
   line-height: 1.5;
 }
 
+
 /* ===== Labels & Accents ===== */
 .cc-accent-label, .cc-context-label {
   color: var(--cc-primary);
@@ -224,6 +374,7 @@
 
 .cc-badge-help { cursor: help; }
 
+
 /* ===== Responsive ===== */
 @media (max-width: 992px) {
   .cc-rules-explorer {
@@ -234,9 +385,10 @@
   .cc-rules-context { display: none; }
 }
 
-/* ===== Print (Aligned with global cc_print.css logic) ===== */
+
+/* ===== Print ===== */
 @media print {
-  .cc-rules-sidebar, .cc-rules-context, .cc-panel-head, .cc-rule-nav, 
+  .cc-rules-sidebar, .cc-rules-context, .cc-panel-head, .cc-rule-nav,
   .cc-rules-actions, button, .cc-nav-group { display: none !important; }
 
   .cc-rules-explorer { display: block !important; padding: 0 !important; }
@@ -255,9 +407,16 @@
     color: #000 !important;
   }
 
-  .cc-intro-callout, .cc-intro-block { 
-    background: #f5f5f5 !important; 
-    border: 1px solid #999 !important; 
+  .cc-ability-name, .cc-timing-header, .cc-unit-name,
+  .cc-section-label, .cc-accent-label {
     color: #000 !important;
   }
+
+  .cc-intro-callout, .cc-intro-block {
+    background: #f5f5f5 !important;
+    border: 1px solid #999 !important;
+    color: #000 !important;
+  }
+
+  .cc-ability-link { display: none; }
 }
