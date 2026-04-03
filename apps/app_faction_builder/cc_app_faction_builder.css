@@ -258,12 +258,7 @@
   padding: 2px 7px; border-radius: 999px; font-size: 0.72rem; font-weight: 600;
 }
 
-.cc-login-status {
-  text-align: center; padding: 5px 12px; margin: 0 1rem 0.5rem;
-  background: rgba(0,0,0,0.4); border: 1px solid var(--cc-border);
-  border-radius: var(--cc-radius); font-size: 11px; color: var(--cc-text-muted);
-  text-transform: uppercase; font-family: var(--cc-font-mono);
-}
+/* .cc-login-status moved to ui/cc_ui.css */
 
 .cc-roster-view-toggle { display: flex; gap: 0.25rem; padding: 0.2rem; background: rgba(0,0,0,0.3); border-radius: var(--cc-radius); }
 .cc-roster-view-toggle button { background: transparent; border: none; color: var(--cc-text-muted); cursor: pointer; padding: 4px 8px; }
