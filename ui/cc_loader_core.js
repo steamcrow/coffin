@@ -7,6 +7,16 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 
 (function () {
 
+  // Guard: only one loader instance may run.
+  // DOM attribute is the lock — shared across all blob script instances
+  // even when they execute in parallel.
+  var _shellRoot = document.getElementById('cc-master-shell-root');
+  if (_shellRoot && _shellRoot.getAttribute('data-cc-loader-active')) {
+    console.warn('[CC] cc_loader_core already active — skipping duplicate');
+    return;
+  }
+  if (_shellRoot) _shellRoot.setAttribute('data-cc-loader-active', '1');
+
   // ── Bootstrap dropdown autoClose:null patch ───────────────────────────────
   (function patchBootstrapDropdownAutoClose() {
     if (window._ccDropdownPatchInstalled) return;
