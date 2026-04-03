@@ -7,15 +7,20 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 
 (function () {
 
-  // Guard: only one loader instance may run.
-  // DOM attribute is the lock — shared across all blob script instances
-  // even when they execute in parallel.
+  // Guard: don't run if another instance is already booted on this element.
+  // We use a sessionStorage flag so it persists across Odoo re-renders
+  // but clears on actual page reload.
   var _shellRoot = document.getElementById('cc-master-shell-root');
-  if (_shellRoot && _shellRoot.getAttribute('data-cc-loader-active')) {
+  var _guardKey  = 'cc_loader_active';
+  if (sessionStorage.getItem(_guardKey) === '1') {
     console.warn('[CC] cc_loader_core already active — skipping duplicate');
     return;
   }
-  if (_shellRoot) _shellRoot.setAttribute('data-cc-loader-active', '1');
+  sessionStorage.setItem(_guardKey, '1');
+  // Clear the flag when the page unloads so a real reload starts fresh
+  window.addEventListener('beforeunload', function () {
+    sessionStorage.removeItem(_guardKey);
+  });
 
   // ── Bootstrap dropdown autoClose:null patch ───────────────────────────────
   (function patchBootstrapDropdownAutoClose() {
@@ -372,29 +377,44 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 
     setTimeout(checkLoginStatus, 100);
 
-    document.querySelectorAll('.cc-launch-btn').forEach(function (btn) {
-      btn.addEventListener('click', function (e) { e.stopPropagation(); loadApp(btn.dataset.appId); });
+    // Single delegated listener — survives Odoo DOM re-renders
+    // because it's attached to root, not to the individual buttons.
+    root.addEventListener('click', function (e) {
+      var helpBtn   = e.target.closest('.cc-help-btn');
+      var launchBtn = e.target.closest('.cc-launch-btn');
+      var appCard   = e.target.closest('.app-card');
+
+      if (helpBtn) {
+        e.stopPropagation();
+        openHelpPanel(helpBtn.dataset.helpId);
+        return;
+      }
+      if (launchBtn) {
+        e.stopPropagation();
+        loadApp(launchBtn.dataset.appId);
+        return;
+      }
+      if (appCard && !e.target.closest('button')) {
+        loadApp(appCard.dataset.appId);
+      }
     });
-    document.querySelectorAll('.cc-help-btn').forEach(function (btn) {
-      btn.addEventListener('click', function (e) { e.stopPropagation(); openHelpPanel(btn.dataset.helpId); });
+
+    // Hover effects — these are cosmetic only, safe to re-attach
+    root.addEventListener('mouseover', function (e) {
+      var card = e.target.closest('.app-card');
+      if (!card) return;
+      card.style.transform = 'translateY(-4px)';
+      card.style.borderColor = 'var(--cc-primary)';
+      var hb = card.querySelector('.cc-help-btn');
+      if (hb) { hb.style.color = 'rgba(255,255,255,.7)'; hb.style.borderColor = 'rgba(255,255,255,.35)'; }
     });
-    document.querySelectorAll('.app-card').forEach(function (card) {
-      card.addEventListener('mouseenter', function () {
-        card.style.transform = 'translateY(-4px)';
-        card.style.borderColor = 'var(--cc-primary)';
-        var hb = card.querySelector('.cc-help-btn');
-        if (hb) { hb.style.color = 'rgba(255,255,255,.7)'; hb.style.borderColor = 'rgba(255,255,255,.35)'; }
-      });
-      card.addEventListener('mouseleave', function () {
-        card.style.transform = 'translateY(0)';
-        card.style.borderColor = '';
-        var hb = card.querySelector('.cc-help-btn');
-        if (hb) { hb.style.color = 'rgba(255,255,255,.4)'; hb.style.borderColor = 'rgba(255,255,255,.15)'; }
-      });
-      card.addEventListener('click', function (e) {
-        if (e.target.closest('button')) return;
-        loadApp(card.dataset.appId);
-      });
+    root.addEventListener('mouseout', function (e) {
+      var card = e.target.closest('.app-card');
+      if (!card) return;
+      card.style.transform = 'translateY(0)';
+      card.style.borderColor = '';
+      var hb = card.querySelector('.cc-help-btn');
+      if (hb) { hb.style.color = 'rgba(255,255,255,.4)'; hb.style.borderColor = 'rgba(255,255,255,.15)'; }
     });
   }
 
@@ -560,6 +580,9 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   function backToLauncher() {
     closeHelpPanel();
     stopHomeButtonObserver();
+    // Clear load locks so the launcher can start fresh
+    var r = document.getElementById('cc-master-shell-root');
+    if (r) { r.removeAttribute('data-cc-loading'); }
     if (window.CC_APP && typeof window.CC_APP.destroy === 'function') {
       try { window.CC_APP.destroy(); } catch (_) {}
     }
