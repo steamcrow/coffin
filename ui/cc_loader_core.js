@@ -8,21 +8,15 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 (function () {
 
   // ── Bootstrap dropdown autoClose:null patch ───────────────────────────────
-  // Odoo's HoverableDropdown calls Dropdown.getOrCreateInstance() on mouse
-  // events, which hits _typeCheckConfig before our _getConfig wrapper runs.
-  // Fix: patch _typeCheckConfig on BOTH Dropdown.prototype AND its base class,
-  // AND intercept getOrCreateInstance to coerce null before Bootstrap sees it.
   (function patchBootstrapDropdownAutoClose() {
     if (window._ccDropdownPatchInstalled) return;
     window._ccDropdownPatchInstalled = true;
 
-    // Coerce any config object — strips null from autoClose
     function coerceConfig(config) {
       if (config && config.autoClose == null) config.autoClose = true;
       return config;
     }
 
-    // Fix a single DOM element's data-bs-auto-close attribute
     function fixEl(el) {
       if (!el || !el.getAttribute) return;
       var v = el.getAttribute('data-bs-auto-close');
@@ -42,7 +36,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       if (proto._ccAutoClosePatch) return true;
       proto._ccAutoClosePatch = true;
 
-      // 1. Patch _getConfig on Dropdown.prototype (runs on new instance)
       var origGetConfig = proto._getConfig;
       proto._getConfig = function (config) {
         if (this._element) fixEl(this._element);
@@ -50,8 +43,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         return origGetConfig.call(this, config);
       };
 
-      // 2. Patch _typeCheckConfig on Dropdown.prototype directly
-      //    (Dropdown has its own override — BaseProto is not enough)
       if (typeof proto._typeCheckConfig === 'function' && !proto._ccTypeCheckOwnPatch) {
         proto._ccTypeCheckOwnPatch = true;
         var origOwnTypeCheck = proto._typeCheckConfig;
@@ -61,7 +52,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         };
       }
 
-      // 3. Patch _typeCheckConfig on BaseComponent prototype as well
       var BaseProto = Object.getPrototypeOf(proto);
       if (BaseProto && typeof BaseProto._typeCheckConfig === 'function' && !BaseProto._ccTypeCheckPatch) {
         BaseProto._ccTypeCheckPatch = true;
@@ -72,7 +62,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         };
       }
 
-      // 4. Intercept getOrCreateInstance so config is clean before new Dropdown()
       if (typeof BS.Dropdown.getOrCreateInstance === 'function' && !BS.Dropdown._ccGoCI) {
         BS.Dropdown._ccGoCI = true;
         var origGoCI = BS.Dropdown.getOrCreateInstance;
@@ -97,7 +86,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       }, 150);
     }
 
-    // Re-fix DOM as Odoo injects nav nodes late
     if (window.MutationObserver) {
       new MutationObserver(function (mutations) {
         mutations.forEach(function (m) {
@@ -111,7 +99,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       }).observe(document.documentElement, { childList: true, subtree: true });
     }
 
-    // Long-poll in case Odoo replaces Bootstrap after our patch
     setInterval(function () {
       fixDOM();
       var BS = window.bootstrap;
@@ -122,7 +109,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     }, 30000);
   }());
 
-  // Suppress any autoClose errors that slip through (belt + suspenders)
   window.addEventListener('unhandledrejection', function (e) {
     var msg = e.reason && (e.reason.message || String(e.reason));
     if (msg && msg.indexOf('autoClose') !== -1) {
@@ -232,10 +218,14 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       });
   }
 
-  // ── Login status ──────────────────────────────────────────────────────────
+  // ── Auth / Login status ───────────────────────────────────────────────────
+  // Single network call for the whole session. Result stored on window.CC_AUTH
+  // so every app can read it without making its own request.
+  //
+  //   window.CC_AUTH = { loggedIn: true, userId: 3, userName: "Daniel" }
+  //   window.CC_AUTH = { loggedIn: false }
+  //
   function checkLoginStatus() {
-    var bar = document.getElementById('cc-shell-login-bar');
-    if (!bar) return;
     fetch('/web/session/get_session_info', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -244,23 +234,34 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     })
       .then(function (r) { return r.json(); })
       .then(function (data) {
-        var bar2 = document.getElementById('cc-shell-login-bar');
-        if (!bar2) return;
         if (data.result && data.result.uid) {
-          bar2.className = 'cc-login-status logged-in';
-          bar2.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as '
-            + (data.result.name || 'User') + ' \u2014 cloud saves enabled';
+          window.CC_AUTH = {
+            loggedIn: true,
+            userId:   data.result.uid,
+            userName: data.result.name || data.result.username || 'User',
+          };
         } else {
-          bar2.className = 'cc-login-status logged-out';
-          bar2.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in \u2014 '
+          window.CC_AUTH = { loggedIn: false };
+        }
+
+        var bar = document.getElementById('cc-shell-login-bar');
+        if (!bar) return;
+        if (window.CC_AUTH.loggedIn) {
+          bar.className = 'cc-login-status logged-in';
+          bar.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as '
+            + window.CC_AUTH.userName + ' \u2014 cloud saves enabled';
+        } else {
+          bar.className = 'cc-login-status logged-out';
+          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in \u2014 '
             + '<a href="/web/login" style="color:var(--cc-primary);">log in</a> to use cloud saves';
         }
       })
       .catch(function () {
-        var bar2 = document.getElementById('cc-shell-login-bar');
-        if (bar2) {
-          bar2.className = 'cc-login-status logged-out';
-          bar2.innerHTML = '<i class="fa fa-exclamation-circle"></i> Could not check login status';
+        window.CC_AUTH = { loggedIn: false };
+        var bar = document.getElementById('cc-shell-login-bar');
+        if (bar) {
+          bar.className = 'cc-login-status logged-out';
+          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Could not check login status';
         }
       });
   }
@@ -448,11 +449,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   // ── App loader ────────────────────────────────────────────────────────────
   function loadApp(appId) {
     var appInfo = APPS[appId];
-    if (!appInfo) {
-      console.error('Unknown app:', appId);
-      renderLauncher();
-      return;
-    }
+    if (!appInfo) { console.error('Unknown app:', appId); renderLauncher(); return; }
 
     showPreloader();
     closeHelpPanel();
@@ -503,18 +500,23 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
           return { rulesBase: rulesBase, appRoot: document.getElementById('cc-app-root') };
         });
       })
-      .then(function (ctx) {
+      .then(function (payload) {
         if (!window.CC_APP || !window.CC_APP.init) throw new Error('CC_APP.init missing');
-        return window.CC_APP.init({ root: ctx.appRoot, ctx: { app: appId, rulesBase: ctx.rulesBase } });
+        return window.CC_APP.init({
+          root: payload.appRoot,
+          ctx: {
+            app:      appId,
+            rulesBase: payload.rulesBase,
+            auth:     window.CC_AUTH || null,  // pass cached auth state to every app
+          }
+        });
       })
       .catch(function (err) {
         console.error('\u274c Loader failed:', err);
         var appRoot = document.getElementById('cc-app-root');
-        if (appRoot) {
-          appRoot.innerHTML = '<div class="cc-panel">Failed to Load App: ' + err.message + '</div>';
-        }
+        if (appRoot) appRoot.innerHTML = '<div class="cc-panel">Failed to Load App: ' + err.message + '</div>';
       });
-  }  // end loadApp
+  }
 
   // ── Back to launcher ──────────────────────────────────────────────────────
   function backToLauncher() {
@@ -547,9 +549,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     setHelpHidden:  setHelpHidden,
   };
 
-  // ── Shell CSS — loaded from cc_ui.css, not duplicated inline ────────────
-  // Fetch runs immediately at script load time so styles arrive before
-  // renderLauncher() fires. Safe to call multiple times (guard on id).
+  // ── Shell CSS ─────────────────────────────────────────────────────────────
   if (!document.getElementById('cc-core-ui-styles')) {
     fetch(UI_CSS_URL + '?t=' + Date.now())
       .then(function(r) { return r.ok ? r.text() : Promise.reject(r.status); })
@@ -565,8 +565,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       });
   }
 
-  // ── Preloader — matches .cc-preloader in cc_ui.css ──────────────────────
-  // Inline styles needed here because cc_ui.css hasn't loaded yet.
+  // ── Preloader ─────────────────────────────────────────────────────────────
   var LOGO_URL       = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
   var MIN_PRELOAD_MS = 1500;
 
@@ -574,7 +573,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
 
-    // Inject keyframes once
     if (!document.getElementById('cc-preloader-keyframes')) {
       var ks = document.createElement('style');
       ks.id = 'cc-preloader-keyframes';
@@ -609,7 +607,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         '</div>' +
         '<p style="color:rgba(255,255,255,0.4);font-size:10px;' +
           'letter-spacing:0.12em;text-transform:uppercase;margin:0;' +
-          'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading…</p>' +
+          'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading\u2026</p>' +
       '</div>';
   }
 
