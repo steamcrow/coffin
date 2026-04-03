@@ -1,76 +1,299 @@
 /* =========================================================
-   COFFIN CANYON - UNIVERSAL PRINT SYSTEM
-   File: coffin/rules/ui/cc_print.css
+   COFFIN CANYON — UNIVERSAL PRINT SYSTEM
+   File: coffin/ui/cc_print.css
+
+   Used by: Rules Explorer (full rulebook PDF),
+            Faction Builder (roster sheet)
+
+   Design goals:
+   - Start with Quickstart rules
+   - List/prose layout — not card grid — to use page space efficiently
+   - Black ink, readable at 10pt
+   - Page breaks at major sections
    ========================================================= */
 
 @media print {
-    /* 1. RESET FOR PAPER */
-    :root {
-        --cc-primary: #000; /* Print in black for contrast/ink saving */
-        --cc-bg-dark: #fff;
-        --cc-text: #000;
-        --cc-text-muted: #444;
-        --cc-border: #ccc;
-    }
 
-    body, .cc-app-shell, .cc-panel, .cc-list-item {
-        background: #fff !important;
-        color: #000 !important;
-        font-family: "Source Sans 3", serif !important;
-    }
+  /* ── 1. PAPER RESET ──────────────────────────────────── */
+  @page { margin: 0.65in 0.7in; }
 
-    /* 2. HIDE UI NOISE */
-    .cc-app-header, 
-    .cc-faction-controls, 
-    .cc-slide-panel, 
-    .cc-panel-close-btn,
-    .btn, 
-    .grid-item-delete,
-    .cc-roster-view-toggle,
-    #ability-tooltip {
-        display: none !important;
-    }
+  :root {
+    --cc-primary:     #000;
+    --cc-text:        #000;
+    --cc-text-muted:  #444;
+    --cc-border:      #bbb;
+    --cc-bg:          #fff;
+    --cc-bg-soft:     #f7f7f7;
+  }
 
-    /* 3. FLATTEN LAYOUT */
-    .cc-faction-builder {
-        display: block !important; /* Kill the 3-column grid */
-        height: auto !important;
-        padding: 0 !important;
-    }
+  body,
+  .cc-app-shell,
+  .cc-panel,
+  .cc-list-item,
+  .cc-rule-reader,
+  .cc-rule-content {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size: 10pt !important;
+    line-height: 1.55 !important;
+  }
 
-    .cc-panel {
-        border: 1px solid #000 !important;
-        margin-bottom: 1rem;
-        page-break-inside: avoid;
-    }
 
-    /* 4. STAT BADGE OPTIMIZATION */
-    .cc-stat-badge {
-        border: 1px solid #000 !important;
-        box-shadow: none !important;
-        transform: none !important;
-    }
+  /* ── 2. HIDE EVERYTHING THAT IS NOT CONTENT ──────────── */
+  .cc-app-header,
+  .cc-rules-sidebar,
+  .cc-rules-context,
+  .cc-panel-head,
+  .cc-rule-nav,
+  .cc-rules-actions,
+  .cc-faction-controls,
+  .cc-faction-sidebar,
+  .cc-faction-roster,
+  .cc-slide-panel,
+  .cc-panel-close-btn,
+  .cc-nav-group,
+  .cc-roster-view-toggle,
+  .cc-login-status,
+  .cc-login-hint,
+  .cc-ability-link,
+  .cc-star-btn,
+  #ability-tooltip,
+  button,
+  .btn {
+    display: none !important;
+  }
 
-    .cc-stat-label, .cc-stat-value {
-        background: #fff !important;
-        color: #000 !important;
-        border-right: 1px solid #000;
-    }
 
-    /* 5. ABILITY TAGS */
-    .ability-tag, .ability-tag-small {
-        border: 1px solid #ccc !important;
-        background: #f9f9f9 !important;
-        color: #000 !important;
-        padding: 2px 5px !important;
-    }
+  /* ── 3. LAYOUT: SINGLE COLUMN ────────────────────────── */
+  .cc-rules-explorer,
+  .cc-faction-builder {
+    display: block !important;
+    height: auto !important;
+    padding: 0 !important;
+    gap: 0 !important;
+  }
 
-    /* 6. TYPOGRAPHY */
-    .cc-app-title-print { /* A title visible only on paper */
-        display: block !important;
-        font-family: 'Bungee', sans-serif;
-        font-size: 24pt;
-        border-bottom: 2px solid #000;
-        margin-bottom: 20px;
-    }
+  .cc-rules-main,
+  .cc-faction-main {
+    max-width: 100% !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+
+  .cc-rule-reader {
+    padding: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .cc-panel {
+    border: none !important;
+    box-shadow: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .cc-body {
+    overflow: visible !important;
+    padding: 0 !important;
+  }
+
+
+  /* ── 4. PRINT DOCUMENT STRUCTURE ─────────────────────── */
+
+  /* Cover page — only shown in the Rules Explorer full-rulebook print */
+  .cc-print-cover {
+    text-align: center;
+    padding: 2in 0 1in;
+    page-break-after: always;
+    border-bottom: 2pt solid #000;
+  }
+
+  .cc-print-cover h1 {
+    font-size: 36pt;
+    font-family: Georgia, serif;
+    color: #000;
+    letter-spacing: 0.05em;
+    margin-bottom: 12pt;
+  }
+
+  .cc-print-cover p {
+    font-size: 11pt;
+    color: #555;
+  }
+
+  /* Major sections start on new page */
+  .cc-print-section {
+    page-break-before: always;
+    margin-bottom: 0;
+  }
+
+  /* Quickstart is first — no page break before it */
+  .cc-print-section:first-of-type,
+  .cc-print-section[id="section-quickstart"] {
+    page-break-before: avoid;
+  }
+
+  .cc-print-title {
+    font-size: 18pt;
+    font-family: Georgia, serif;
+    color: #000;
+    border-bottom: 1.5pt solid #000;
+    padding-bottom: 4pt;
+    margin: 0 0 14pt;
+    letter-spacing: 0.02em;
+  }
+
+
+  /* ── 5. TYPOGRAPHY ────────────────────────────────────── */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: Georgia, serif !important;
+    color: #000 !important;
+    page-break-after: avoid;
+  }
+
+  h2.cc-rule-title     { font-size: 16pt !important; border-bottom: 1pt solid #000; padding-bottom: 3pt; margin-bottom: 10pt; }
+  h3                   { font-size: 12pt !important; margin-top: 14pt; }
+  h5.cc-section-title  { font-size: 10pt !important; text-transform: uppercase; letter-spacing: 0.07em; }
+
+  .cc-rule-lead {
+    font-style: italic;
+    color: #444 !important;
+    font-size: 9.5pt !important;
+  }
+
+  .cc-section-label {
+    font-size: 7.5pt !important;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #555 !important;
+  }
+
+  p { margin: 0 0 6pt; orphans: 3; widows: 3; }
+
+  a { text-decoration: none !important; color: #000 !important; }
+
+
+  /* ── 6. LIST-STYLE ABILITY DISPLAY ───────────────────── */
+  /* Abilities print as a compact table/list, not as individual cards */
+
+  .cc-ability-card {
+    /* Convert cards to list rows */
+    border: none !important;
+    border-bottom: 0.5pt solid #ccc !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    padding: 4pt 0 4pt !important;
+    margin-bottom: 0 !important;
+    page-break-inside: avoid;
+    display: grid;
+    grid-template-columns: 160pt 1fr;
+    gap: 0 8pt;
+    align-items: baseline;
+  }
+
+  /* Ability name (left column) */
+  .cc-ability-name,
+  .cc-ability-card .fw-bold,
+  .cc-ability-card .cc-timing-header {
+    font-size: 9.5pt !important;
+    font-weight: bold !important;
+    color: #000 !important;
+    font-family: Georgia, serif !important;
+    grid-column: 1;
+  }
+
+  /* Timing badge (e.g. PASSIVE) — inline with name */
+  .cc-ability-card .cc-muted.small {
+    font-size: 7.5pt !important;
+    color: #666 !important;
+    display: inline;
+  }
+
+  /* Short description (italic) and long description — right column */
+  .cc-ability-card .cc-rule-lead,
+  .cc-ability-card p.cc-rule-lead { grid-column: 2; margin: 0 !important; }
+  .cc-ability-card p:not(.cc-rule-lead) { grid-column: 2; margin: 0 !important; }
+
+  /* Trigger / restriction lines stay right column */
+  .cc-ability-card > div:last-child { grid-column: 2; font-size: 8.5pt !important; color: #555 !important; }
+
+  /* Section header before an ability group */
+  .cc-section-title.mt-3 { margin-top: 10pt !important; }
+
+
+  /* ── 7. UNIT CARDS (Faction Builder roster) ──────────── */
+  .cc-unit-card {
+    border: 0.5pt solid #bbb !important;
+    background: #fff !important;
+    padding: 6pt 8pt !important;
+    margin-bottom: 6pt !important;
+    page-break-inside: avoid;
+    border-radius: 0 !important;
+  }
+
+  .cc-unit-name { font-size: 11pt !important; font-weight: bold !important; color: #000 !important; }
+  .cc-unit-lore { font-style: italic; color: #555 !important; font-size: 8.5pt !important; }
+
+  .cc-stat-row { margin-bottom: 4pt !important; }
+  .cc-stat-badge {
+    border: 0.5pt solid #999 !important;
+    box-shadow: none !important;
+  }
+  .cc-stat-label, .cc-stat-value {
+    background: #fff !important;
+    color: #000 !important;
+    border-right: 0.5pt solid #999 !important;
+  }
+
+
+  /* ── 8. CALLOUTS & RULES ──────────────────────────────── */
+  .cc-callout {
+    border-left: 2pt solid #000 !important;
+    background: #f5f5f5 !important;
+    padding: 5pt 8pt !important;
+    margin: 6pt 0 !important;
+    page-break-inside: avoid;
+  }
+
+  .cc-intro-callout,
+  .cc-intro-block {
+    border: 0.5pt solid #bbb !important;
+    background: #f7f7f7 !important;
+    color: #000 !important;
+    padding: 8pt 10pt !important;
+    margin-bottom: 8pt !important;
+    page-break-inside: avoid;
+    border-radius: 0 !important;
+  }
+
+
+  /* ── 9. FACTION BUILDER SPECIFIC ─────────────────────── */
+  .ability-tag, .ability-tag-small {
+    border: 0.5pt solid #bbb !important;
+    background: #f5f5f5 !important;
+    color: #000 !important;
+    padding: 1pt 4pt !important;
+    border-radius: 0 !important;
+  }
+
+  .cc-upgrade-row {
+    border: 0.5pt solid #ccc !important;
+    background: #fff !important;
+    padding: 3pt 6pt !important;
+    margin-bottom: 3pt !important;
+    page-break-inside: avoid;
+    border-radius: 0 !important;
+  }
+
+  /* Print title visible only on paper */
+  .cc-app-title-print {
+    display: block !important;
+    font-family: Georgia, serif;
+    font-size: 22pt;
+    border-bottom: 1.5pt solid #000;
+    margin-bottom: 16pt;
+    color: #000;
+  }
+
 }
