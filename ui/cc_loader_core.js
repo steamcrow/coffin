@@ -332,6 +332,11 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   function renderLauncher() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
+    // Don't wipe the DOM if another loader instance is mid-load
+    if (root.getAttribute('data-cc-loading')) {
+      console.warn('[CC] renderLauncher blocked — app load in progress');
+      return;
+    }
 
     var cards = Object.keys(APPS).map(function (id) {
       var app = APPS[id];
@@ -515,6 +520,8 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         }
         var appRoot = document.getElementById('cc-app-root');
         if (!appRoot) throw new Error('cc-app-root missing');
+        // Clear any previous app's CC_APP so we never accidentally reuse it
+        window.CC_APP = null;
         var appUrl = APPS_BASE + appInfo.file;
         return loadScriptViaBlob(appUrl).then(function () {
           return { rulesBase: rulesBase, appRoot: document.getElementById('cc-app-root') };
@@ -528,7 +535,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
           return;
         }
         if (!window.CC_APP || !window.CC_APP.init) throw new Error('CC_APP.init missing');
-        return window.CC_APP.init({
+        var initResult = window.CC_APP.init({
           root: payload.appRoot,
           ctx: {
             app:      appId,
@@ -536,9 +543,14 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
             auth:     window.CC_AUTH || null,
           }
         });
+        var doneRoot = document.getElementById('cc-master-shell-root');
+        if (doneRoot) doneRoot.removeAttribute('data-cc-loading');
+        return initResult;
       })
       .catch(function (err) {
-        console.error('\u274c Loader failed:', err);
+        console.error('❌ Loader failed:', err);
+        var errRoot = document.getElementById('cc-master-shell-root');
+        if (errRoot) errRoot.removeAttribute('data-cc-loading');
         var appRoot = document.getElementById('cc-app-root');
         if (appRoot) appRoot.innerHTML = '<div class="cc-panel">Failed to Load App: ' + err.message + '</div>';
       });
@@ -598,6 +610,11 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   function showPreloader() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
+    // Don't wipe the DOM if another loader instance is mid-load
+    if (root.getAttribute('data-cc-loading')) {
+      console.warn('[CC] showPreloader blocked — app load in progress');
+      return;
+    }
 
     if (!document.getElementById('cc-preloader-keyframes')) {
       var ks = document.createElement('style');
