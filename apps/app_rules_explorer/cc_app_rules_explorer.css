@@ -1,6 +1,10 @@
 /* ================================================================
    Rules Explorer — App-Specific Styles
+   
+   Global styles (shared with other apps) live in ui/cc_ui.css.
+   Only put styles here that are unique to the Rules Explorer.
    ================================================================ */
+
 
 /* ===== Three-Column Explorer Layout ===== */
 .cc-rules-explorer {
@@ -12,12 +16,10 @@
   box-sizing: border-box;
 }
 
-/* Focus mode: collapse both sidebars for distraction-free reading */
 .cc-rules-explorer.focus-mode {
   grid-template-columns: 0 1fr 0;
   gap: 0;
 }
-
 .cc-rules-explorer.focus-mode .cc-rules-sidebar,
 .cc-rules-explorer.focus-mode .cc-rules-context { display: none; }
 
@@ -28,7 +30,7 @@
 .cc-rules-main { overflow-y: auto; }
 
 
-/* ===== Rule Reader (main reading pane) ===== */
+/* ===== Rule Reader ===== */
 .cc-rule-reader {
   padding: 2rem;
   line-height: 1.7;
@@ -37,14 +39,12 @@
   font-family: var(--cc-font-body);
 }
 
-/* Force left-align on lists inside rule content */
 .cc-rule-reader ul, .cc-rule-reader ol,
 .cc-rule-content ul, .cc-rule-content ol {
   margin-left: 1.5rem;
   margin-bottom: 1rem;
   text-align: left !important;
 }
-
 .cc-rule-reader li, .cc-rule-content li {
   margin-bottom: 0.4rem;
   text-align: left !important;
@@ -53,7 +53,7 @@
 .cc-rule-article { max-width: 700px; }
 
 
-/* ===== Prev / Next Navigation Bar ===== */
+/* ===== Prev / Next Navigation ===== */
 .cc-rule-nav {
   display: flex;
   justify-content: space-between;
@@ -64,13 +64,7 @@
 }
 
 
-/* ===== Header & Breadcrumb ===== */
-.cc-header-actions {
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
+/* ===== Breadcrumb ===== */
 .cc-breadcrumb {
   font-family: var(--cc-font-mono);
   font-size: 0.75rem;
@@ -103,53 +97,18 @@
   margin-bottom: 2px;
   transition: all 0.15s;
 }
-
 .cc-nav-group-btn:hover {
   background: var(--cc-primary-dim) !important;
   border-color: var(--cc-primary-dim);
 }
 
 .cc-nav-group-chevron { opacity: 0.5; font-size: 0.7rem; }
-.cc-nav-group-items { padding-left: 4px; }
+.cc-nav-group-items   { padding-left: 4px; }
 
 
-/* ===== Stars ===== */
-.cc-star { font-size: 1.25rem; line-height: 1; }
+/* ===== Ability Cards (Rules Explorer-specific styling) ===== */
 
-.cc-star-btn {
-  cursor: pointer;
-  padding: 4px 8px;
-  font-size: 14px;
-  background: none;
-  border: none;
-  color: var(--cc-text-muted);
-  flex-shrink: 0;
-  transition: color 0.15s;
-}
-.cc-star-btn:hover { color: var(--cc-gold); }
-
-
-/* ===== Section Labels & Lead Text ===== */
-.cc-section-label {
-  font-family: var(--cc-font-mono);
-  font-size: 0.78rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  color: var(--cc-primary);
-  margin-bottom: 0.4rem;
-}
-
-.cc-rule-lead {
-  font-style: italic;
-  color: var(--cc-text-muted);
-  font-size: 0.95rem;
-  margin-bottom: 0.5rem;
-}
-
-
-/* ===== Ability Cards ===== */
-/* Ability name: orange, headline font, slightly larger */
+/* Ability name: orange, headline font */
 .cc-ability-name {
   font-family: var(--cc-font-title);
   font-size: 1.1rem;
@@ -169,49 +128,7 @@
   margin: 0.25rem 0 0.5rem;
 }
 
-/* Inline ability badge links inside unit cards */
-.cc-ability-link {
-  background: none;
-  border: 1px solid rgba(212, 130, 42, 0.35);
-  color: var(--cc-primary);
-  font-size: 10px;
-  font-family: var(--cc-font-mono);
-  letter-spacing: 0.04em;
-  padding: 2px 7px;
-  border-radius: 2px;
-  cursor: pointer;
-  transition: background 0.15s, color 0.15s;
-}
-.cc-ability-link:hover {
-  background: var(--cc-primary);
-  color: #000;
-}
-
-
-/* ===== Upgrade Links ===== */
-.cc-upgrade-link {
-  display: block;
-  width: 100%;
-  text-align: left;
-  background: none;
-  border: 1px solid var(--cc-border);
-  border-radius: var(--cc-radius);
-  padding: 8px 12px;
-  margin-bottom: 4px;
-  color: var(--cc-text);
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-.cc-upgrade-link:hover {
-  border-color: var(--cc-primary);
-  background: var(--cc-primary-dim);
-}
-.cc-upgrade-link .cc-upgrade-name { font-weight: 700; font-size: 0.9rem; }
-.cc-upgrade-link .cc-upgrade-desc { font-size: 0.82rem; color: var(--cc-text-muted); margin-top: 2px; }
-.cc-upgrade-link .cc-upgrade-cost { font-size: 0.78rem; color: var(--cc-primary); float: right; }
-
-
-/* ===== Wild Magic Table ===== */
+/* Wild Magic table */
 .cc-wild-magic-table {
   width: 100%;
   border-collapse: collapse;
@@ -269,7 +186,7 @@
 }
 
 
-/* ===== Intro / Welcome Page Blocks ===== */
+/* ===== Intro / Welcome Page ===== */
 .cc-intro-callout {
   background: var(--cc-primary-dim);
   border-left: 4px solid var(--cc-primary);
@@ -277,7 +194,6 @@
   margin-bottom: 2rem;
   border-radius: var(--cc-radius-lg);
 }
-
 .cc-intro-block {
   background: var(--cc-bg-soft);
   border: 1px solid var(--cc-border);
@@ -285,29 +201,20 @@
   margin-bottom: 2rem;
   border-radius: var(--cc-radius-lg);
 }
-
 .cc-intro-block h3, .cc-intro-callout h3 {
   color: var(--cc-primary);
   margin-top: 0;
   font-family: var(--cc-font-title);
   text-transform: uppercase;
 }
-
 .cc-intro-title {
   font-family: var(--cc-font-title);
   color: var(--cc-primary);
   font-size: 2.5rem;
   margin-bottom: 1rem;
 }
-
-.cc-intro-text { font-size: 1.1rem; line-height: 1.8; }
-
-.cc-intro-tagline {
-  font-size: 1.1rem;
-  font-style: italic;
-  color: var(--cc-primary);
-  margin-bottom: 0;
-}
+.cc-intro-text    { font-size: 1.1rem; line-height: 1.8; }
+.cc-intro-tagline { font-size: 1.1rem; font-style: italic; color: var(--cc-primary); margin-bottom: 0; }
 
 
 /* ===== Faction Unit Cards ===== */
@@ -317,7 +224,6 @@
   margin-top: 2rem;
   margin-bottom: 1.5rem;
 }
-
 .cc-unit-card {
   background: var(--cc-bg-soft);
   border: 1px solid var(--cc-border);
@@ -325,35 +231,10 @@
   padding: 1.25rem;
   margin-bottom: 1rem;
 }
-
-.cc-unit-name {
-  font-family: var(--cc-font-title);
-  color: var(--cc-text);
-  font-size: 1.25rem;
-}
-
-.cc-unit-cost-display {
-  color: var(--cc-primary);
-  font-family: var(--cc-font-title);
-  font-weight: 900;
-  font-size: 1.3rem;
-}
-
-.cc-unit-type-label {
-  font-family: var(--cc-font-mono);
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  color: var(--cc-primary);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-}
-
-.cc-unit-lore {
-  font-style: italic;
-  color: var(--cc-text-muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
+.cc-unit-name       { font-family: var(--cc-font-title); color: var(--cc-text); font-size: 1.25rem; }
+.cc-unit-cost-display { color: var(--cc-primary); font-family: var(--cc-font-title); font-weight: 900; font-size: 1.3rem; }
+.cc-unit-type-label { font-family: var(--cc-font-mono); font-size: 0.8rem; text-transform: uppercase; color: var(--cc-primary); font-weight: 700; letter-spacing: 0.05em; }
+.cc-unit-lore       { font-style: italic; color: var(--cc-text-muted); font-size: 0.95rem; line-height: 1.5; }
 
 
 /* ===== Labels & Accents ===== */
@@ -365,13 +246,11 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
-
 .cc-tactics-text, .cc-error-detail {
   font-size: 0.875rem;
   line-height: 1.5;
   color: var(--cc-text-muted);
 }
-
 .cc-badge-help { cursor: help; }
 
 
@@ -392,12 +271,7 @@
   .cc-rules-actions, button, .cc-nav-group { display: none !important; }
 
   .cc-rules-explorer { display: block !important; padding: 0 !important; }
-
-  .cc-rules-main {
-    max-width: 100% !important;
-    overflow: visible !important;
-    height: auto !important;
-  }
+  .cc-rules-main     { max-width: 100% !important; overflow: visible !important; height: auto !important; }
 
   .cc-rule-reader {
     padding: 0 !important;
@@ -407,16 +281,7 @@
     color: #000 !important;
   }
 
-  .cc-ability-name, .cc-timing-header, .cc-unit-name,
-  .cc-section-label, .cc-accent-label {
-    color: #000 !important;
-  }
-
-  .cc-intro-callout, .cc-intro-block {
-    background: #f5f5f5 !important;
-    border: 1px solid #999 !important;
-    color: #000 !important;
-  }
-
+  .cc-ability-name, .cc-timing-header { color: #000 !important; }
+  .cc-intro-callout, .cc-intro-block  { background: #f5f5f5 !important; border: 1px solid #999 !important; color: #000 !important; }
   .cc-ability-link { display: none; }
 }
