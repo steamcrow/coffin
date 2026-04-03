@@ -200,37 +200,66 @@ console.log("📘 Rules Explorer app loaded");
     }
 
     // ---- LOGIN + FAVORITES SYSTEM ----
-    // Uses the same Odoo session detection as the Faction Builder.
-    // Logged-in users get per-account favorites. Guests can still browse,
-    // but star buttons prompt them to log in.
+    // Uses the exact same auth pattern as the Faction Builder:
+    // CC_STORAGE.checkAuth() → POST /web/session/get_session_info
+    // Result is cached after the first call — no repeated network requests.
 
-    const _uid     = window.odoo?.session_info?.uid || null;
-    const _isLoggedIn = !!_uid;
-    const STORAGE_KEY = _isLoggedIn ? `cc_rules_favorites_${_uid}` : 'cc_rules_favorites_guest';
+    let _authCache = null;
+
+    async function getAuth() {
+      if (_authCache) return _authCache;
+      if (!window.CC_STORAGE) return { loggedIn: false };
+      try {
+        _authCache = await window.CC_STORAGE.checkAuth();
+        return _authCache;
+      } catch (e) {
+        return { loggedIn: false };
+      }
+    }
+
+    async function updateLoginStatus() {
+      const statusBar = root.querySelector('#cc-login-status');
+      if (!statusBar) return;
+      const auth = await getAuth();
+      statusBar.className = auth.loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out';
+      statusBar.innerHTML = auth.loggedIn
+        ? `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`
+        : `<i class="fa fa-exclamation-circle"></i> Log in to star rules`;
+    }
+
+    function storageKey(auth) {
+      return auth.loggedIn ? `cc_rules_favorites_${auth.userId}` : null;
+    }
 
     function getFavorites() {
-      if (!_isLoggedIn) return [];
+      // Synchronous read — uses cached auth if available, else returns empty.
+      // Full async callers should await getAuth() first.
+      if (!_authCache?.loggedIn) return [];
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
+        const key = storageKey(_authCache);
+        const stored = key ? localStorage.getItem(key) : null;
         return stored ? JSON.parse(stored) : [];
       } catch (e) { return []; }
     }
 
     function saveFavorites(favorites) {
-      if (!_isLoggedIn) return;
+      if (!_authCache?.loggedIn) return;
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+        const key = storageKey(_authCache);
+        if (key) localStorage.setItem(key, JSON.stringify(favorites));
       } catch (e) { console.error('Could not save favorites', e); }
     }
 
-    function isFavorite(id) { return _isLoggedIn && getFavorites().includes(id); }
+    function isFavorite(id) {
+      return !!(_authCache?.loggedIn && getFavorites().includes(id));
+    }
 
-    function toggleFavorite(id) {
-      if (!_isLoggedIn) {
-        // Show a brief login prompt in the header
+    async function toggleFavorite(id) {
+      const auth = await getAuth();
+      if (!auth.loggedIn) {
         const hint = document.createElement('div');
-        hint.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;background:var(--cc-bg-soft,#2a2010);border:1px solid var(--cc-primary,#d4822a);color:var(--cc-primary,#d4822a);padding:10px 18px;border-radius:6px;font-size:.9rem;pointer-events:none;';
-        hint.textContent = '🔒 Log in to save starred rules';
+        hint.className = 'cc-login-hint';
+        hint.innerHTML = '<i class="fa fa-lock"></i> Log in to save starred rules';
         document.body.appendChild(hint);
         setTimeout(() => hint.remove(), 2200);
         return;
@@ -743,18 +772,9 @@ console.log("📘 Rules Explorer app loaded");
     const explorerEl     = root.querySelector(".cc-rules-explorer");
     const loginStatusEl  = root.querySelector("#cc-login-status");
 
-    // Show login state in header
-    if (loginStatusEl) {
-      if (_isLoggedIn) {
-        const name = window.odoo?.session_info?.name || 'Logged in';
-        loginStatusEl.textContent = `★ ${name}`;
-        loginStatusEl.style.opacity = '0.75';
-        loginStatusEl.title = 'Starred rules are saved to your account';
-      } else {
-        loginStatusEl.textContent = '🔒 Log in to star rules';
-        loginStatusEl.title = 'Starred rules require an account';
-      }
-    }
+    // Kick off async login check — updates the status bar when it resolves.
+    // Auth is cached so this is one network call for the whole session.
+    updateLoginStatus();
 
     let selectedId    = null;
     let currentFilter = 'all';
@@ -1986,16 +2006,18 @@ console.log("📘 Rules Explorer app loaded");
     });
 
     // ---- PRINT / PDF ----
-    // Builds a complete rulebook document in a new window for print/PDF.
+    // Builds a complete rulebook as a standalone HTML document in a new window.
+    // Uses cc_print.css as the base stylesheet — no duplicate print rules here.
     printBtn.addEventListener('click', async () => {
-      // Show progress in button
       const origLabel = printBtn.innerHTML;
       printBtn.disabled = true;
       printBtn.innerHTML = '⏳ Building…';
 
       try {
-        // Ordered print sections: core rules first, then vaults, systems, abilities, factions
+        // Print order: Quickstart first, then core rules, vaults, systems, abilities, factions
         const PRINT_ORDER = [
+          // Quickstart comes first in the printed rulebook
+          'quickstart',
           // Core
           'core_mechanics', 'turn_structure',
           // Vaults
@@ -2006,9 +2028,9 @@ console.log("📘 Rules Explorer app loaded");
           ...index.filter(it => it.id?.startsWith('ability_dict_')).sort((a,b) => a.id.localeCompare(b.id)).map(it => it.id),
           // Factions
           ...index.filter(it => it.id?.startsWith('faction_')).map(it => it.id),
-          // Campaign
+          // Campaign last
           'campaign_system',
-        ].filter(id => id && index.find(it => it.id === id) || id?.startsWith('faction_') || id?.startsWith('ability_dict_'));
+        ].filter(id => id && (index.find(it => it.id === id) || id.startsWith('faction_') || id.startsWith('ability_dict_')));
 
         // Build section HTML array
         const sections = [];
@@ -2052,21 +2074,17 @@ console.log("📘 Rules Explorer app loaded");
           done++;
         }
 
-        // Fetch print CSS
-        let printCss = '';
+        // Fetch the two stylesheets — all print rules live in cc_print.css
+        let coreCss = '', printCss = '';
         try {
-          const r = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_print.css?t=' + Date.now());
-          if (r.ok) printCss = await r.text();
-        } catch(e) {}
+          const [coreR, printR] = await Promise.all([
+            fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now()),
+            fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_print.css?t=' + Date.now()),
+          ]);
+          if (coreR.ok)  coreCss  = await coreR.text();
+          if (printR.ok) printCss = await printR.text();
+        } catch(e) { console.warn('Could not fetch print CSS:', e); }
 
-        // Fetch core UI CSS for fonts/variables
-        let coreCss = '';
-        try {
-          const r = await fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now());
-          if (r.ok) coreCss = await r.text();
-        } catch(e) {}
-
-        // Build the print document
         const printDoc = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -2074,77 +2092,11 @@ console.log("📘 Rules Explorer app loaded");
   <title>Coffin Canyon — Complete Rulebook</title>
   <style>
 ${coreCss}
-
-/* ── Print layout ── */
-*, *::before, *::after { box-sizing: border-box; }
-body {
-  font-family: 'Source Sans 3', Georgia, serif;
-  font-size: 11pt;
-  line-height: 1.65;
-  color: #1a1a1a;
-  background: #fff;
-  margin: 0;
-  padding: 0;
-}
-.cc-print-document {
-  max-width: 740px;
-  margin: 0 auto;
-  padding: 48px 48px 80px;
-}
-.cc-print-cover {
-  text-align: center;
-  padding: 120px 0 80px;
-  page-break-after: always;
-  border-bottom: 3px solid #c47820;
-}
-.cc-print-cover h1 {
-  font-size: 48pt;
-  color: #c47820;
-  margin: 0 0 12px;
-  letter-spacing: 0.05em;
-}
-.cc-print-cover p { color: #555; font-size: 13pt; margin: 0; }
-.cc-print-section {
-  page-break-before: always;
-  margin-bottom: 48px;
-}
-.cc-print-section:first-of-type { page-break-before: avoid; }
-.cc-print-title {
-  font-size: 22pt;
-  color: #c47820;
-  border-bottom: 2px solid #c47820;
-  padding-bottom: 8px;
-  margin: 0 0 24px;
-  letter-spacing: 0.03em;
-}
-h3, h4, h5 { color: #333; margin-top: 20px; }
-h5.cc-section-title { color: #c47820; font-size: 11pt; text-transform: uppercase; letter-spacing: 0.08em; }
-.cc-ability-card {
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 10px 14px;
-  margin-bottom: 8px;
-  page-break-inside: avoid;
-}
-.cc-ability-name { font-size: 12pt; color: #c47820; font-weight: 700; }
-.cc-rule-lead { font-style: italic; color: #555; font-size: 10pt; }
-.cc-stat-row { display: flex; gap: 8px; margin-bottom: 10px; }
-.cc-stat-badge { border: 1px solid #ccc; padding: 4px 8px; text-align: center; min-width: 44px; }
-.cc-stat-label { font-size: 8pt; text-transform: uppercase; color: #888; }
-.cc-stat-value { font-size: 14pt; font-weight: 700; color: #1a1a1a; }
-.cc-unit-card { border: 1px solid #ccc; border-radius: 4px; padding: 12px; margin-bottom: 12px; page-break-inside: avoid; }
-.cc-unit-name { font-size: 13pt; font-weight: 700; color: #c47820; }
-.cc-muted { color: #777; }
-.cc-callout { border-left: 3px solid #c47820; padding: 8px 12px; background: #fdf8f2; margin: 12px 0; }
-@media print {
-  body { font-size: 10pt; }
-  .cc-print-section { page-break-before: always; }
-  .cc-print-title { color: #000 !important; border-color: #000 !important; }
-  .cc-ability-name, .cc-unit-name { color: #000 !important; }
-  .cc-callout { border-color: #000 !important; background: #f5f5f5 !important; }
-  a { text-decoration: none; color: inherit; }
-}
 ${printCss}
+
+/* Screen-only layout overrides for the print preview window */
+body { font-family: Georgia, serif; font-size: 11pt; line-height: 1.6; color: #1a1a1a; background: #fff; margin: 0; padding: 0; }
+.cc-print-document { max-width: 720px; margin: 0 auto; padding: 40px 48px 80px; }
   </style>
 </head>
 <body>
