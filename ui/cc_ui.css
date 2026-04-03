@@ -10,8 +10,8 @@
 /* ===== CSS VARIABLES ===== */
 :root {
   /* Warm dark palette from point calculator */
-  --cc-bg:          #0e0c09;
-  --cc-bg-dark:     #0e0c09;
+  --cc-bg:          #16130e;
+  --cc-bg-dark:     #16130e;
   --cc-bg-darker:   #0a0908;
   --cc-bg-soft:     #16130e;
   --cc-bg-mid:      #1e1a13;
@@ -57,7 +57,7 @@
     justify-content: center;
     gap: 2rem;
     min-height: 100vh;
-    background: #0e0c09
+    background: #16130e
 }
 
 .cc-loader-brand {
@@ -119,7 +119,7 @@ body {
 .cc-app-shell.cc-premium {
   background:
     radial-gradient(1000px 500px at 15% 0%, rgba(212,130,42,.08), transparent 60%),
-    linear-gradient(180deg, #110f0b, #0e0c09);
+    linear-gradient(180deg, #110f0b, #16130e);
 }
 
 /* ===== APP HEADER ===== */
@@ -638,7 +638,7 @@ code, pre, kbd, samp {
   align-items: center;
   justify-content: center;
   gap: 1.25rem;
-  background: var(--cc-bg);
+  background: var(--cc-bg-soft);
   z-index: 9000;
   padding: 2rem;
   transition: opacity 0.45s ease;
