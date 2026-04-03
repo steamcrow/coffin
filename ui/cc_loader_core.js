@@ -7,6 +7,16 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 
 (function () {
 
+  // Guard: only one loader instance may run.
+  // DOM attribute is the lock — shared across all blob script instances
+  // even when they execute in parallel.
+  var _shellRoot = document.getElementById('cc-master-shell-root');
+  if (_shellRoot && _shellRoot.getAttribute('data-cc-loader-active')) {
+    console.warn('[CC] cc_loader_core already active — skipping duplicate');
+    return;
+  }
+  if (_shellRoot) _shellRoot.setAttribute('data-cc-loader-active', '1');
+
   // ── Bootstrap dropdown autoClose:null patch ───────────────────────────────
   (function patchBootstrapDropdownAutoClose() {
     if (window._ccDropdownPatchInstalled) return;
@@ -447,18 +457,28 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   }
 
   // ── App loader ────────────────────────────────────────────────────────────
+  var _loadToken = null;  // unique token per load attempt
+
   function loadApp(appId) {
     var appInfo = APPS[appId];
     if (!appInfo) { console.error('Unknown app:', appId); renderLauncher(); return; }
+
+    // Stamp a unique token on the shell root so we can detect if another
+    // instance wipes the DOM while we are loading.
+    var token = appId + '-' + Date.now();
+    _loadToken = token;
 
     showPreloader();
     closeHelpPanel();
     currentApp = appId;
 
     var root = document.getElementById('cc-master-shell-root');
+    root.setAttribute('data-cc-loading', token);
     root.innerHTML = '<div class="cc-app-shell" style="min-height:100vh;">' +
       '<div id="cc-app-root" data-cc-app="' + appId + '" style="min-height:100vh;"></div>' +
       '</div>';
+    // Re-stamp after innerHTML wipe (wipe removes attributes on children but not root)
+    root.setAttribute('data-cc-loading', token);
 
     startHomeButtonObserver();
 
@@ -501,13 +521,19 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         });
       })
       .then(function (payload) {
+        // Abort if another loader instance wiped our DOM while we were loading
+        var root = document.getElementById('cc-master-shell-root');
+        if (!root || root.getAttribute('data-cc-loading') !== token) {
+          console.warn('[CC] Load aborted — DOM was replaced by another instance');
+          return;
+        }
         if (!window.CC_APP || !window.CC_APP.init) throw new Error('CC_APP.init missing');
         return window.CC_APP.init({
           root: payload.appRoot,
           ctx: {
             app:      appId,
             rulesBase: payload.rulesBase,
-            auth:     window.CC_AUTH || null,  // pass cached auth state to every app
+            auth:     window.CC_AUTH || null,
           }
         });
       })
