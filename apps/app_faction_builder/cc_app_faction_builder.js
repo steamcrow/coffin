@@ -1,652 +1,1461 @@
-// ============================================================
-// cc_loader_core.js
-// Coffin Canyon — Master Launcher + App Loader
-// Loaded from GitHub via blob by cc_master_shell (Odoo code block)
-// ============================================================
-console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
+/**
+ * COFFIN CANYON FACTION STUDIO - COMPLETE VERSION
+ * Following skeleton.js pattern + ALL original functionality
+ * ZERO OMISSIONS
+ */
 
-(function () {
+window.CCFB_FACTORY = {
+    state: {
+        rules: null,
+        currentFaction: {
+            faction: "New Faction",
+            introduction: { title: '', tagline: '', description: '', philosophy: '', history: '' },
+            faction_identity: {
+                core_values: [],
+                what_they_fight_for: [],
+                what_they_fight_against: [],
+                reputation: { allies_see_them_as: '', enemies_see_them_as: '', monsters_see_them_as: '', the_canyon_sees_them_as: '' }
+            },
+            faction_mechanics: {
+                signature_ability: '',
+                signature_ability_description: '',
+                playstyle: '',
+                strengths: [],
+                weaknesses: []
+            },
+            canyon_state_relationships: { preferred_states: [], neutral_states: [], opposed_states: [] },
+            faction_tags: [],
+            scenario_preferences: { ideal_scenarios: [], challenging_scenarios: [] },
+            faction_features: [],
+            units: []
+        },
+        selectedUnit: null,
+        activeModal: null,
+        activeStep: 1,
+        activeFactionTab: 'roster', // 'roster' or 'info'
+        isPasted: false,
+        factionFiles: []
+    },
 
-  // ── Bootstrap dropdown autoClose:null patch ───────────────────────────────
-  (function patchBootstrapDropdownAutoClose() {
-    if (window._ccDropdownPatchInstalled) return;
-    window._ccDropdownPatchInstalled = true;
-
-    function coerceConfig(config) {
-      if (config && config.autoClose == null) config.autoClose = true;
-      return config;
-    }
-
-    function fixEl(el) {
-      if (!el || !el.getAttribute) return;
-      var v = el.getAttribute('data-bs-auto-close');
-      if (v === 'null' || v === null || v === '') {
-        el.setAttribute('data-bs-auto-close', 'true');
-      }
-    }
-
-    function fixDOM() {
-      document.querySelectorAll('[data-bs-toggle="dropdown"],[data-bs-auto-close]').forEach(fixEl);
-    }
-
-    function patchPrototype() {
-      var BS = window.bootstrap;
-      if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
-      var proto = BS.Dropdown.prototype;
-      if (proto._ccAutoClosePatch) return true;
-      proto._ccAutoClosePatch = true;
-
-      var origGetConfig = proto._getConfig;
-      proto._getConfig = function (config) {
-        if (this._element) fixEl(this._element);
-        coerceConfig(config);
-        return origGetConfig.call(this, config);
-      };
-
-      if (typeof proto._typeCheckConfig === 'function' && !proto._ccTypeCheckOwnPatch) {
-        proto._ccTypeCheckOwnPatch = true;
-        var origOwnTypeCheck = proto._typeCheckConfig;
-        proto._typeCheckConfig = function (config) {
-          coerceConfig(config);
-          return origOwnTypeCheck.call(this, config);
+    sanitizeUnit: function(u) {
+        return {
+            name: u.name || "New Unit",
+            type: (u.type || "grunt").toLowerCase(),
+            quality: parseInt(u.quality, 10) || 4,
+            defense: parseInt(u.defense, 10) || 4,
+            move: parseInt(u.move, 10) || 6,
+            range: parseInt(u.range, 10) || 0,
+            weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
+            abilities: Array.isArray(u.abilities) ? u.abilities : [],
+            supplemental_abilities: Array.isArray(u.supplemental_abilities) ? u.supplemental_abilities : [],
+            lore: u.lore || ""
         };
-      }
+    },
 
-      var BaseProto = Object.getPrototypeOf(proto);
-      if (BaseProto && typeof BaseProto._typeCheckConfig === 'function' && !BaseProto._ccTypeCheckPatch) {
-        BaseProto._ccTypeCheckPatch = true;
-        var origBaseTypeCheck = BaseProto._typeCheckConfig;
-        BaseProto._typeCheckConfig = function (config) {
-          coerceConfig(config);
-          return origBaseTypeCheck.call(this, config);
+    sanitizeFaction: function(j) {
+        var strArr = function(v) { return Array.isArray(v) ? v : []; };
+        var str    = function(v) { return (typeof v === 'string') ? v : ''; };
+        var intro  = j.introduction || {};
+        var ident  = j.faction_identity || {};
+        var rep    = ident.reputation || {};
+        var mech   = j.faction_mechanics || {};
+        var csr    = j.canyon_state_relationships || {};
+        var scen   = j.scenario_preferences || {};
+        return {
+            faction: j.faction || j.name || "New Faction",
+            introduction: {
+                title:       str(intro.title),
+                tagline:     str(intro.tagline),
+                description: str(intro.description),
+                philosophy:  str(intro.philosophy),
+                history:     str(intro.history)
+            },
+            faction_identity: {
+                core_values:             strArr(ident.core_values),
+                what_they_fight_for:     strArr(ident.what_they_fight_for),
+                what_they_fight_against: strArr(ident.what_they_fight_against),
+                reputation: {
+                    allies_see_them_as:       str(rep.allies_see_them_as),
+                    enemies_see_them_as:      str(rep.enemies_see_them_as),
+                    monsters_see_them_as:     str(rep.monsters_see_them_as),
+                    the_canyon_sees_them_as:  str(rep.the_canyon_sees_them_as)
+                }
+            },
+            faction_mechanics: {
+                signature_ability:             str(mech.signature_ability),
+                signature_ability_description: str(mech.signature_ability_description),
+                playstyle:  str(mech.playstyle),
+                strengths:  strArr(mech.strengths),
+                weaknesses: strArr(mech.weaknesses)
+            },
+            canyon_state_relationships: {
+                preferred_states: strArr(csr.preferred_states),
+                neutral_states:   strArr(csr.neutral_states),
+                opposed_states:   strArr(csr.opposed_states)
+            },
+            faction_tags: strArr(j.faction_tags),
+            scenario_preferences: {
+                ideal_scenarios:       strArr(scen.ideal_scenarios),
+                challenging_scenarios: strArr(scen.challenging_scenarios)
+            },
+            faction_features: strArr(j.faction_features).filter(function(f) {
+                return !f || f.name !== 'Branch System';
+            }),
+            units: strArr(j.units).map(function(u) { return window.CCFB_FACTORY.sanitizeUnit(u); })
         };
-      }
-
-      if (typeof BS.Dropdown.getOrCreateInstance === 'function' && !BS.Dropdown._ccGoCI) {
-        BS.Dropdown._ccGoCI = true;
-        var origGoCI = BS.Dropdown.getOrCreateInstance;
-        BS.Dropdown.getOrCreateInstance = function (el, config) {
-          if (el) fixEl(el);
-          coerceConfig(config);
-          return origGoCI.call(this, el, config);
-        };
-      }
-
-      return true;
-    }
-
-    fixDOM();
-
-    if (!patchPrototype()) {
-      var _att = 0;
-      var _iv = setInterval(function () {
-        _att++;
-        fixDOM();
-        if (patchPrototype() || _att > 40) clearInterval(_iv);
-      }, 150);
-    }
-
-    if (window.MutationObserver) {
-      new MutationObserver(function (mutations) {
-        mutations.forEach(function (m) {
-          m.addedNodes.forEach(function (node) {
-            if (node.nodeType !== 1) return;
-            fixEl(node);
-            if (node.querySelectorAll) node.querySelectorAll('[data-bs-toggle="dropdown"],[data-bs-auto-close]').forEach(fixEl);
-          });
-        });
-        patchPrototype();
-      }).observe(document.documentElement, { childList: true, subtree: true });
-    }
-
-    setInterval(function () {
-      fixDOM();
-      var BS = window.bootstrap;
-      if (BS && BS.Dropdown && BS.Dropdown.prototype && !BS.Dropdown.prototype._ccAutoClosePatch) {
-        console.log('[CC] Bootstrap replaced — re-patching Dropdown');
-        patchPrototype();
-      }
-    }, 30000);
-  }());
-
-  window.addEventListener('unhandledrejection', function (e) {
-    var msg = e.reason && (e.reason.message || String(e.reason));
-    if (msg && msg.indexOf('autoClose') !== -1) {
-      e.preventDefault();
-      console.warn('[CC] Suppressed Bootstrap autoClose conflict:', msg);
-    }
-  });
-
-  window.addEventListener('error', function (e) {
-    var msg = e.message || '';
-    if (msg.indexOf('autoClose') !== -1) {
-      e.preventDefault();
-      console.warn('[CC] Suppressed Bootstrap autoClose conflict:', msg);
-      return true;
-    }
-  }, true);
-
-  // ── App registry ──────────────────────────────────────────────────────────
-  var UI_CSS_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css';
-  var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/tools/rules_helpers.js';
-  var RULES_BASE    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/rules_base.json';
-  var APPS_BASE     = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/';
-
-  var APPS = {
-    faction_builder: {
-      title: 'Faction Builder', icon: 'fa-shield', description: 'Build your roster',
-      file: 'app_faction_builder/cc_app_faction_builder.js',
-      helpTitle: 'Faction Builder',
-      helpBody: [
-        'Build the roster you bring to every game. Choose your faction, add units one at a time, and customise each with abilities and upgrades.',
-        'When you\'re happy with your list, save it to the cloud. Your saved roster shows up automatically in the Turn Counter when you start a game.',
-        '<strong>Tips:</strong> You can save multiple builds for the same faction — one aggressive, one defensive. Each one gets its own name and cloud slot.',
-      ]
     },
-    scenario_builder: {
-      title: 'Scenario Builder', icon: 'fa-map-signs', description: 'Generate scenarios',
-      file: 'app_scenario_builder/cc_app_scenario_builder.js',
-      helpTitle: 'Scenario Builder',
-      helpBody: [
-        'Generate a full game scenario: location, objectives, monster pressure, noise threshold, and a narrative hook to set the scene.',
-        'Save the scenario to the cloud. The Turn Counter can then load it at the start of a session to drive NPC directives, monster encounters, and the board setup automatically.',
-        '<strong>Tips:</strong> Higher danger ratings push the noise threshold lower, so monsters arrive sooner. Use lower ratings for learning games.',
-      ]
+
+    calculateUnitCost: function(u) {
+        if (!u || !this.state.rules) return 0;
+        var total = (7 - u.quality) * 15 + (7 - u.defense) * 10 + (u.move - 6) * 5;
+        if (u.range > 0) total += (u.range / 6) * 10;
+        total += (u.weapon_properties.length * 10) + (u.abilities.length * 15);
+        return Math.max(10, Math.ceil(total / 5) * 5);
     },
-    rules_explorer: {
-      title: 'Rules Explorer', icon: 'fa-book', description: 'Browse game rules',
-      file: 'app_rules_explorer/cc_app_rules_explorer.js',
-      helpTitle: 'Rules Explorer',
-      helpBody: [
-        'Browse and search the complete Coffin Canyon rulebook. The left sidebar shows the table of contents — tap any section to read it in the centre panel.',
-        'Ability keywords link through to their full definitions. The right panel shows related rules and context for whatever you\'re reading.',
-        '<strong>Tips:</strong> During a game, the Turn Counter shows ability names as tappable chips. Tapping one opens its rule in a slideout — you rarely need to leave the Turn Counter to look something up.',
-      ]
+
+    prettifyKey: function(key) {
+        return String(key || '')
+            .replace(/_/g, ' ')
+            .replace(/\b\w/g, function(m) { return m.toUpperCase(); });
     },
-    canyon_map: {
-      title: 'Canyon Map', icon: 'fa-map', description: 'Interactive map',
-      file: 'app_canyon_map/cc_app_canyon_map.js',
-      helpTitle: 'Canyon Map',
-      helpBody: [
-        'An interactive map of Coffin Canyon showing all named locations, faction territories, and points of interest.',
-        'Tap any location to read its description, see which factions are active there, and find out what kind of terrain and objectives you\'d expect in a game set there.',
-        '<strong>Tips:</strong> When building a scenario, check the map first. The location you choose shapes the monster roster, terrain pool, and narrative hook the Scenario Builder will generate.',
-      ]
+
+    escapeAttr: function(v) {
+        return String(v == null ? '' : v)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
     },
-    turn_counter: {
-      title: 'Turn Counter', icon: 'fa-hourglass-half', description: 'Run your game',
-      file: 'app_turn_counter/cc_app_turn_counter.js',
-      helpTitle: 'Turn Counter',
-      helpBody: [
-        'Your session companion. Load a saved scenario and your faction rosters, then the app tracks everything: activation order, Quality levels, noise, monster encounters, and canyon events.',
-        'Each activation shows the active unit\'s full card — lore, stats, abilities, and upgrades. Tap any stat badge for its rule definition. Tap any ability chip to look it up. NPC factions get a directive telling you exactly what to do.',
-        '<strong>Setup:</strong> During Round 0, each faction takes turns placing one terrain piece. Objectives come from the scenario. Boardwalks and Thyr Crystals are always available.',
-        '<strong>Noise:</strong> Every loud action pushes the noise bar up. When it crosses the threshold, a monster encounter fires. The bar drops by half after each encounter.',
-        '<strong>Tips:</strong> Save your game state at the end of each round using the save button in the header. You can resume a paused session from the setup screen.',
-      ]
-    }
-  };
 
-  var currentApp = null;
+    escapeJsString: function(v) {
+        return String(v == null ? '' : v)
+            .replace(/\\/g, '\\\\')
+            .replace(/'/g, "\\'")
+            .replace(/\r/g, '\\r')
+            .replace(/\n/g, '\\n');
+    },
 
-  // ── Help hidden state ─────────────────────────────────────────────────────
-  function helpHideKey(appId) { return 'cc_hide_help_' + appId; }
-  function isHelpHidden(appId) {
-    try { return localStorage.getItem(helpHideKey(appId)) === '1'; } catch (_) { return false; }
-  }
-  function setHelpHidden(appId, hidden) {
-    try { localStorage.setItem(helpHideKey(appId), hidden ? '1' : '0'); } catch (_) {}
-  }
+    isMetaKey: function(key) {
+        return key === '_id' || key === 'title' || key === 'short' || key === 'long' || key === 'build' || key === 'schema_version' || key === 'version';
+    },
 
-  // ── Blob loader ───────────────────────────────────────────────────────────
-  function loadScriptViaBlob(url) {
-    return fetch(url + '?t=' + Date.now())
-      .then(function (r) {
-        if (!r.ok) throw new Error('Fetch failed: ' + url);
-        return r.text();
-      })
-      .then(function (code) {
-        return new Promise(function (resolve, reject) {
-          var blob    = new Blob([code], { type: 'text/javascript' });
-          var blobUrl = URL.createObjectURL(blob);
-          var s       = document.createElement('script');
-          s.src       = blobUrl;
-          s.onload    = function () { URL.revokeObjectURL(blobUrl); resolve(); };
-          s.onerror   = function () { URL.revokeObjectURL(blobUrl); reject(new Error('Script failed: ' + url)); };
-          document.head.appendChild(s);
-        });
-      });
-  }
-
-  // ── Auth / Login status ───────────────────────────────────────────────────
-  // Single network call for the whole session. Result stored on window.CC_AUTH
-  // so every app can read it without making its own request.
-  //
-  //   window.CC_AUTH = { loggedIn: true, userId: 3, userName: "Daniel" }
-  //   window.CC_AUTH = { loggedIn: false }
-  //
-  function checkLoginStatus() {
-    fetch('/web/session/get_session_info', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({})
-    })
-      .then(function (r) { return r.json(); })
-      .then(function (data) {
-        if (data.result && data.result.uid) {
-          window.CC_AUTH = {
-            loggedIn: true,
-            userId:   data.result.uid,
-            userName: data.result.name || data.result.username || 'User',
-          };
+    normalizeWeaponProperties: function(data) {
+        var src = {};
+        if (data && data.rules_master && data.rules_master.weapon_properties) {
+            src = data.rules_master.weapon_properties;
+        } else if (data && data.weapon_properties) {
+            src = data.weapon_properties;
+        } else if (data && data.properties) {
+            src = data.properties;
         } else {
-          window.CC_AUTH = { loggedIn: false };
+            src = data || {};
         }
 
-        var bar = document.getElementById('cc-shell-login-bar');
-        if (!bar) return;
-        if (window.CC_AUTH.loggedIn) {
-          bar.className = 'cc-login-status logged-in';
-          bar.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as '
-            + window.CC_AUTH.userName + ' \u2014 cloud saves enabled';
-        } else {
-          bar.className = 'cc-login-status logged-out';
-          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in \u2014 '
-            + '<a href="/web/login" style="color:var(--cc-primary);">log in</a> to use cloud saves';
-        }
-      })
-      .catch(function () {
-        window.CC_AUTH = { loggedIn: false };
-        var bar = document.getElementById('cc-shell-login-bar');
-        if (bar) {
-          bar.className = 'cc-login-status logged-out';
-          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Could not check login status';
-        }
-      });
-  }
+        var out = {};
+        for (var key in src) {
+            if (!Object.prototype.hasOwnProperty.call(src, key)) continue;
+            if (this.isMetaKey(key)) continue;
 
-  // ── Help panel ────────────────────────────────────────────────────────────
-  function openHelpPanel(appId) {
-    var app = APPS[appId];
-    if (!app) return;
-    closeHelpPanel();
+            var item = src[key];
+            if (!item || typeof item !== 'object') continue;
 
-    var backdrop = document.createElement('div');
-    backdrop.id = 'cc-help-backdrop';
-    backdrop.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
-    backdrop.addEventListener('click', closeHelpPanel);
-    document.body.appendChild(backdrop);
-
-    var bodyHtml = (app.helpBody || []).map(function (p) {
-      return '<p style="color:#ccc;font-size:.92rem;line-height:1.7;margin:0 0 .9rem;">' + p + '</p>';
-    }).join('');
-
-    var hidden = isHelpHidden(appId);
-    var panel = document.createElement('div');
-    panel.id = 'cc-help-panel';
-    panel.className = 'cc-slide-panel';
-    panel.style.zIndex = '9999';
-    panel.addEventListener('click', function (e) { e.stopPropagation(); });
-
-    panel.innerHTML =
-      '<div class="cc-slide-panel-header">' +
-      '<h2><i class="fa fa-question-circle"></i> ' + (app.helpTitle || app.title).toUpperCase() + '</h2>' +
-      '<button onclick="window.CC_MASTER.closeHelpPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>' +
-      '</div>' +
-      '<div style="padding:1.5rem;">' +
-      bodyHtml +
-      '<hr style="border:none;border-top:1px solid rgba(255,255,255,.08);margin:1.25rem 0;">' +
-      '<label style="display:flex;align-items:center;gap:.6rem;cursor:pointer;font-size:.82rem;color:#888;">' +
-      '<input type="checkbox" id="cc-help-hide-cb"' + (hidden ? ' checked' : '') +
-      ' onchange="window.CC_MASTER.setHelpHidden(\'' + appId + '\', this.checked)"' +
-      ' style="width:16px;height:16px;cursor:pointer;">' +
-      "Don't show this again for " + (app.title || appId) +
-      '</label></div>';
-
-    document.body.appendChild(panel);
-    setTimeout(function () { panel.classList.add('cc-slide-panel-open'); }, 10);
-  }
-
-  function closeHelpPanel() {
-    var panel    = document.getElementById('cc-help-panel');
-    var backdrop = document.getElementById('cc-help-backdrop');
-    if (panel) {
-      panel.classList.remove('cc-slide-panel-open');
-      setTimeout(function () { if (panel.parentNode) panel.parentNode.removeChild(panel); }, 300);
-    }
-    if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
-  }
-
-  // ── Launcher ──────────────────────────────────────────────────────────────
-  function renderLauncher() {
-    var root = document.getElementById('cc-master-shell-root');
-    if (!root) return;
-
-    var cards = Object.keys(APPS).map(function (id) {
-      var app = APPS[id];
-      return '<div class="cc-panel app-card" data-app-id="' + id + '" style="cursor:pointer;transition:all .2s ease;position:relative;">' +
-        '<div class="cc-panel-body" style="text-align:center;padding:2rem;">' +
-        '<div style="font-size:3rem;margin-bottom:1rem;color:var(--cc-primary);"><i class="fa ' + app.icon + '"></i></div>' +
-        '<h3 style="color:var(--cc-primary);margin:0 0 .5rem;font-size:1.3rem;">' + app.title + '</h3>' +
-        '<p style="color:var(--cc-text-muted);margin:0 0 1.5rem;">' + app.description + '</p>' +
-        '<button class="cc-btn cc-btn-block cc-launch-btn" data-app-id="' + id + '">Launch \u2192</button>' +
-        '</div>' +
-        '<button class="cc-help-btn" data-help-id="' + id + '" title="How to use ' + app.title + '" ' +
-        'style="position:absolute;bottom:.6rem;right:.6rem;background:none;border:1px solid rgba(255,255,255,.15);border-radius:50%;' +
-        'width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;' +
-        'color:rgba(255,255,255,.4);font-size:.75rem;transition:color .2s,border-color .2s;">' +
-        '<i class="fa fa-question"></i></button>' +
-        '</div>';
-    }).join('');
-
-    root.innerHTML = '<div class="cc-app-shell" style="min-height:100vh;padding:2rem;">' +
-      '<div style="max-width:1200px;margin:0 auto;">' +
-      '<div style="text-align:center;margin-bottom:1.5rem;">' +
-      '<h1 class="cc-app-title" style="font-size:clamp(2rem,5vw,3.5rem);margin-bottom:.5rem;">Coffin Canyon</h1>' +
-      '<p class="cc-app-subtitle" style="font-size:1.2rem;">Choose an app to launch</p>' +
-      '</div>' +
-      '<div id="cc-shell-login-bar" class="cc-login-status logged-out" style="max-width:1200px;margin:0 auto 1.5rem;border-radius:6px;">' +
-      '<i class="fa fa-spinner fa-spin"></i> Checking login\u2026</div>' +
-      '<div class="app-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem;">' +
-      cards +
-      '</div>' +
-      '<div style="text-align:center;padding-top:2rem;border-top:1px solid var(--cc-border);color:var(--cc-text-dim);font-size:.85rem;">' +
-      '<p style="margin:0;">Coffin Canyon App Shell \u2014 tap <i class="fa fa-question"></i> on any card for instructions</p>' +
-      '</div></div></div>';
-
-    setTimeout(checkLoginStatus, 100);
-
-    document.querySelectorAll('.cc-launch-btn').forEach(function (btn) {
-      btn.addEventListener('click', function (e) { e.stopPropagation(); loadApp(btn.dataset.appId); });
-    });
-    document.querySelectorAll('.cc-help-btn').forEach(function (btn) {
-      btn.addEventListener('click', function (e) { e.stopPropagation(); openHelpPanel(btn.dataset.helpId); });
-    });
-    document.querySelectorAll('.app-card').forEach(function (card) {
-      card.addEventListener('mouseenter', function () {
-        card.style.transform = 'translateY(-4px)';
-        card.style.borderColor = 'var(--cc-primary)';
-        var hb = card.querySelector('.cc-help-btn');
-        if (hb) { hb.style.color = 'rgba(255,255,255,.7)'; hb.style.borderColor = 'rgba(255,255,255,.35)'; }
-      });
-      card.addEventListener('mouseleave', function () {
-        card.style.transform = 'translateY(0)';
-        card.style.borderColor = '';
-        var hb = card.querySelector('.cc-help-btn');
-        if (hb) { hb.style.color = 'rgba(255,255,255,.4)'; hb.style.borderColor = 'rgba(255,255,255,.15)'; }
-      });
-      card.addEventListener('click', function (e) {
-        if (e.target.closest('button')) return;
-        loadApp(card.dataset.appId);
-      });
-    });
-  }
-
-  // ── Home button ───────────────────────────────────────────────────────────
-  var _homeObserver = null;
-
-  function injectHomeButton() {
-    if (document.getElementById('cc-shell-home-btn')) return;
-    var header = document.querySelector('#cc-app-root .cc-app-header');
-    if (!header) return;
-    header.style.display        = header.style.display || 'flex';
-    header.style.alignItems     = header.style.alignItems || 'center';
-    header.style.justifyContent = 'space-between';
-
-    var wrap = document.createElement('div');
-    wrap.style.cssText = 'display:flex;align-items:center;gap:.4rem;margin-left:auto;flex-shrink:0;';
-
-    if (currentApp && APPS[currentApp]) {
-      var helpBtn = document.createElement('button');
-      helpBtn.className = 'cc-btn cc-btn-ghost';
-      helpBtn.style.cssText = 'font-size:.8rem;padding:.35rem .65rem;opacity:.7;';
-      helpBtn.innerHTML = '<i class="fa fa-question-circle"></i>';
-      helpBtn.title = 'How to use ' + APPS[currentApp].title;
-      helpBtn.addEventListener('click', function () { openHelpPanel(currentApp); });
-      wrap.appendChild(helpBtn);
-    }
-
-    var homeBtn = document.createElement('button');
-    homeBtn.id        = 'cc-shell-home-btn';
-    homeBtn.className = 'cc-btn cc-btn-ghost';
-    homeBtn.style.cssText = 'font-size:.8rem;padding:.35rem .75rem;opacity:.75;';
-    homeBtn.innerHTML = '\u2190 Home';
-    homeBtn.addEventListener('click', backToLauncher);
-    wrap.appendChild(homeBtn);
-    header.appendChild(wrap);
-  }
-
-  function injectFloatingHomeButton() {
-    if (document.getElementById('cc-shell-home-btn')) return;
-    var btn = document.createElement('button');
-    btn.id        = 'cc-shell-home-btn';
-    btn.className = 'cc-btn cc-btn-ghost';
-    btn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:99999;font-size:.8rem;padding:.35rem .75rem;opacity:.8;box-shadow:0 2px 8px rgba(0,0,0,.5);';
-    btn.innerHTML = '\u2190 Home';
-    btn.addEventListener('click', backToLauncher);
-    document.body.appendChild(btn);
-  }
-
-  function startHomeButtonObserver() {
-    if (_homeObserver) { _homeObserver.disconnect(); _homeObserver = null; }
-    var appRoot = document.getElementById('cc-app-root');
-    if (!appRoot) return;
-    injectHomeButton();
-    _homeObserver = new MutationObserver(function () { injectHomeButton(); });
-    _homeObserver.observe(appRoot, { childList: true, subtree: true });
-    setTimeout(function () {
-      if (!document.getElementById('cc-shell-home-btn')) injectFloatingHomeButton();
-    }, 6000);
-  }
-
-  function stopHomeButtonObserver() {
-    if (_homeObserver) { _homeObserver.disconnect(); _homeObserver = null; }
-    var floating = document.getElementById('cc-shell-home-btn');
-    if (floating && floating.style.position === 'fixed') floating.remove();
-  }
-
-  // ── App loader ────────────────────────────────────────────────────────────
-  function loadApp(appId) {
-    var appInfo = APPS[appId];
-    if (!appInfo) { console.error('Unknown app:', appId); renderLauncher(); return; }
-
-    showPreloader();
-    closeHelpPanel();
-    currentApp = appId;
-
-    var root = document.getElementById('cc-master-shell-root');
-    root.innerHTML = '<div class="cc-app-shell" style="min-height:100vh;">' +
-      '<div id="cc-app-root" data-cc-app="' + appId + '" style="min-height:100vh;"></div>' +
-      '</div>';
-
-    startHomeButtonObserver();
-
-    if (!isHelpHidden(appId)) {
-      setTimeout(function () { openHelpPanel(appId); }, 800);
-    }
-
-    console.log('\ud83d\udce6 Loading rules helpers');
-    loadScriptViaBlob(RULES_HELPERS)
-      .then(function () {
-        return fetch(RULES_BASE + '?t=' + Date.now())
-          .then(function (r) {
-            if (!r.ok) return {};
-            return r.text().then(function (t) {
-              try { return JSON.parse(t); } catch (e) { return {}; }
-            });
-          })
-          .catch(function () { return {}; });
-      })
-      .then(function (rulesBase) {
-        if (typeof helpers !== 'undefined' && helpers) {
-          helpers.getChildren = function (parentId) {
-            if (!rulesBase || !rulesBase.rules) return [];
-            return Object.values(rulesBase.rules).filter(function (item) {
-              return item && item.parent_id === parentId;
-            });
-          };
-          if (!helpers.getById) {
-            helpers.getById = function (id) {
-              if (!rulesBase || !rulesBase.rules) return null;
-              return rulesBase.rules[id] || null;
+            out[key] = {
+                key: key,
+                name: item.name || item.title || this.prettifyKey(key),
+                short: item.short || '',
+                long: item.long || item.effect || item.description || item.short || '',
+                _id: item._id || ''
             };
-          }
         }
-        var appRoot = document.getElementById('cc-app-root');
-        if (!appRoot) throw new Error('cc-app-root missing');
-        var appUrl = APPS_BASE + appInfo.file;
-        return loadScriptViaBlob(appUrl).then(function () {
-          return { rulesBase: rulesBase, appRoot: document.getElementById('cc-app-root') };
-        });
-      })
-      .then(function (payload) {
-        if (!window.CC_APP || !window.CC_APP.init) throw new Error('CC_APP.init missing');
-        return window.CC_APP.init({
-          root: payload.appRoot,
-          ctx: {
-            app:      appId,
-            rulesBase: payload.rulesBase,
-            auth:     window.CC_AUTH || null,  // pass cached auth state to every app
-          }
-        });
-      })
-      .catch(function (err) {
-        console.error('\u274c Loader failed:', err);
-        var appRoot = document.getElementById('cc-app-root');
-        if (appRoot) appRoot.innerHTML = '<div class="cc-panel">Failed to Load App: ' + err.message + '</div>';
-      });
-  }
+        return out;
+    },
 
-  // ── Back to launcher ──────────────────────────────────────────────────────
-  function backToLauncher() {
-    closeHelpPanel();
-    stopHomeButtonObserver();
-    if (window.CC_APP && typeof window.CC_APP.destroy === 'function') {
-      try { window.CC_APP.destroy(); } catch (_) {}
-    }
-    currentApp = null;
-    var appRoot = document.getElementById('cc-app-root');
-    if (appRoot) {
-      appRoot.innerHTML = '';
-      appRoot.removeAttribute('data-cc-app');
-      appRoot.removeAttribute('data-cc-mounted');
-    }
-    if (window._scenarioMap) {
-      try { window._scenarioMap.remove(); } catch (e) {}
-      window._scenarioMap = null;
-    }
-    renderLauncher();
-  }
+    normalizeAbilityCategoryObject: function(rawCategory) {
+        var out = {};
+        for (var key in rawCategory) {
+            if (!Object.prototype.hasOwnProperty.call(rawCategory, key)) continue;
+            if (this.isMetaKey(key)) continue;
 
-  // ── Global API ────────────────────────────────────────────────────────────
-  window.CC_MASTER = {
-    loadApp:        loadApp,
-    backToLauncher: backToLauncher,
-    getCurrentApp:  function () { return currentApp; },
-    openHelpPanel:  openHelpPanel,
-    closeHelpPanel: closeHelpPanel,
-    setHelpHidden:  setHelpHidden,
-  };
-
-  // ── Shell CSS ─────────────────────────────────────────────────────────────
-  if (!document.getElementById('cc-core-ui-styles')) {
-    fetch(UI_CSS_URL + '?t=' + Date.now())
-      .then(function(r) { return r.ok ? r.text() : Promise.reject(r.status); })
-      .then(function(css) {
-        var s = document.createElement('style');
-        s.id = 'cc-core-ui-styles';
-        s.textContent = css;
-        document.head.appendChild(s);
-        console.log('[CC] cc_ui.css loaded into shell');
-      })
-      .catch(function(err) {
-        console.warn('[CC] cc_ui.css fetch failed — shell may be unstyled:', err);
-      });
-  }
-
-  // ── Preloader ─────────────────────────────────────────────────────────────
-  var LOGO_URL       = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
-  var MIN_PRELOAD_MS = 1500;
-
-  function showPreloader() {
-    var root = document.getElementById('cc-master-shell-root');
-    if (!root) return;
-
-    if (!document.getElementById('cc-preloader-keyframes')) {
-      var ks = document.createElement('style');
-      ks.id = 'cc-preloader-keyframes';
-      ks.textContent = [
-        '@keyframes cc-logo-pulse{',
-          '0%,100%{filter:drop-shadow(0 0 8px rgba(212,130,42,0.35)) brightness(1);transform:scale(1)}',
-          '50%{filter:drop-shadow(0 0 22px rgba(212,130,42,0.8)) brightness(1.2);transform:scale(1.05)}',
-        '}',
-        '@keyframes cc-loading-fill{0%{width:0%}40%{width:65%}80%{width:88%}100%{width:95%}}',
-        '@keyframes cc-pulse-text{0%,100%{opacity:.5}50%{opacity:1}}'
-      ].join('');
-      document.head.appendChild(ks);
-    }
-
-    root.innerHTML =
-      '<div id="cc-preloader" style="' +
-        'position:fixed;inset:0;display:flex;flex-direction:column;' +
-        'align-items:center;justify-content:center;gap:1.25rem;' +
-        'background:#0a0a0a;z-index:9000;padding:2rem;transition:opacity 0.45s ease;">' +
-        '<img src="' + LOGO_URL + '" alt="Coffin Canyon" style="' +
-          'width:200px;max-width:70vw;object-fit:contain;' +
-          'animation:cc-logo-pulse 2.2s ease-in-out infinite;"/>' +
-        '<p style="font-size:1rem;font-weight:900;color:#d4822a;' +
-          'letter-spacing:0.06em;text-transform:uppercase;margin:0;">Coffin Canyon</p>' +
-        '<div style="width:260px;max-width:80vw;height:6px;' +
-          'background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;' +
-          'border:1px solid rgba(255,255,255,0.06);">' +
-          '<div id="cc-preload-bar" style="height:100%;' +
-            'background:linear-gradient(90deg,#d4822a,#ffd700,#d4822a);width:0%;' +
-            'animation:cc-loading-fill ' + (MIN_PRELOAD_MS / 1000) + 's ease-in-out forwards;' +
-            'box-shadow:0 0 10px rgba(212,130,42,0.5);"></div>' +
-        '</div>' +
-        '<p style="color:rgba(255,255,255,0.4);font-size:10px;' +
-          'letter-spacing:0.12em;text-transform:uppercase;margin:0;' +
-          'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading\u2026</p>' +
-      '</div>';
-  }
-
-  // ── Boot ──────────────────────────────────────────────────────────────────
-  var isBooting = false;
-
-  function boot(onComplete) {
-    if (isBooting) return;
-    isBooting = true;
-    console.log('\ud83d\ude80 cc_loader_core boot()');
-    showPreloader();
-    setTimeout(function () {
-      var preloader = document.getElementById('cc-preloader');
-      if (preloader) {
-        preloader.style.opacity = '0';
-        setTimeout(function () {
-          if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
-          if (typeof onComplete === 'function') onComplete();
-        }, 480);
-      } else if (typeof onComplete === 'function') {
-        onComplete();
-      }
-    }, MIN_PRELOAD_MS);
-  }
-
-  function initOrObserve() {
-    if (document.getElementById('cc-master-shell-root')) {
-      boot(renderLauncher);
-    } else {
-      var observer = new MutationObserver(function (mutations, obs) {
-        if (document.getElementById('cc-master-shell-root')) {
-          boot(renderLauncher);
-          obs.disconnect();
+            var item = rawCategory[key];
+            if (typeof item === 'string') {
+                out[key] = {
+                    key: key,
+                    name: this.prettifyKey(key),
+                    short: item,
+                    long: item
+                };
+            } else if (item && typeof item === 'object') {
+                out[key] = {
+                    key: key,
+                    name: item.name || item.title || this.prettifyKey(key),
+                    short: item.short || '',
+                    long: item.long || item.effect || item.description || item.short || '',
+                    timing: item.timing || '',
+                    _id: item._id || ''
+                };
+            }
         }
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
+        return out;
+    },
+
+    normalizeAbilityFile: function(fileData, categoryKey, fallbackTitle) {
+        var out = {
+            key: categoryKey,
+            title: fallbackTitle || this.prettifyKey(categoryKey),
+            abilities: {}
+        };
+
+        if (!fileData || typeof fileData !== 'object') return out;
+
+        // New modular format: { title, abilities: { ... } }
+        if (fileData.abilities && typeof fileData.abilities === 'object') {
+            out.title = fileData.title || fallbackTitle || this.prettifyKey(categoryKey);
+            out.abilities = this.normalizeAbilityCategoryObject(fileData.abilities);
+            return out;
+        }
+
+        // Old compiled format possibility:
+        // { rules_master: { ability_dictionary: { category: {...} } } }
+        if (fileData.rules_master && fileData.rules_master.ability_dictionary) {
+            var compiled = fileData.rules_master.ability_dictionary;
+            if (compiled[categoryKey]) {
+                out.abilities = this.normalizeAbilityCategoryObject(compiled[categoryKey]);
+                return out;
+            }
+        }
+
+        // Old direct category object
+        out.abilities = this.normalizeAbilityCategoryObject(fileData);
+        return out;
+    },
+
+    getAbilityCatalog: function() {
+        return (this.state.rules && this.state.rules.rules_master && this.state.rules.rules_master.ability_dictionary) || {};
+    },
+
+    getWeaponCatalog: function() {
+        return (this.state.rules && this.state.rules.rules_master && this.state.rules.rules_master.weapon_properties) || {};
+    },
+
+    getAbilityMeta: function(key) {
+        var dict = this.getAbilityCatalog();
+        for (var cat in dict) {
+            if (!Object.prototype.hasOwnProperty.call(dict, cat)) continue;
+            var bucket = dict[cat] && dict[cat].abilities ? dict[cat].abilities : dict[cat];
+            if (bucket && bucket[key]) return bucket[key];
+        }
+        return null;
+    },
+
+    getWeaponMeta: function(key) {
+        var props = this.getWeaponCatalog();
+        return props[key] || null;
+    },
+
+    init: function() {
+        console.log("🎬 Faction Studio initializing...");
+
+        var self = this;
+        var BASE = 'https://cdn.jsdelivr.net/gh/steamcrow/coffin@main/';
+        var RAW  = 'https://raw.githubusercontent.com/steamcrow/coffin/main/';
+        var t    = '?t=' + Date.now();
+
+        if (!document.getElementById('faction-studio-styles')) {
+            fetch(BASE + 'apps/app_studio_builder/studio_builder.css' + t)
+                .then(function(r) { return r.text(); })
+                .then(function(css) {
+                    var s = document.createElement('style');
+                    s.id = 'faction-studio-styles';
+                    s.textContent = css;
+                    document.head.appendChild(s);
+                    console.log('✅ CSS applied');
+                })
+                .catch(function(err) { console.error('❌ CSS load failed:', err); });
+        }
+
+        fetch('https://api.github.com/repos/steamcrow/coffin/contents/data/factions')
+            .then(function(r) {
+                if (!r.ok) throw new Error('GitHub API failed: ' + r.status);
+                return r.json();
+            })
+            .then(function(files) {
+                self.state.factionFiles = files
+                    .filter(function(f) { return f.name.endsWith('.json'); })
+                    .map(function(f) { return { name: f.name, url: f.download_url }; })
+                    .sort(function(a, b) { return a.name.localeCompare(b.name); });
+                console.log('✅ Found', self.state.factionFiles.length, 'faction files:', self.state.factionFiles.map(function(f){ return f.name; }).join(', '));
+                if (self.state.rules) self.renderRoster();
+            })
+            .catch(function(err) {
+                console.warn('⚠️ Could not load faction list:', err.message);
+            });
+
+        var SRC = RAW + 'data/src/';
+
+        var fetchJson = function(url) {
+            return fetch(url + t).then(function(r) {
+                if (!r.ok) throw new Error('HTTP ' + r.status + ' — ' + url);
+                return r.json();
+            });
+        };
+
+        var abilityFiles = [
+            { key: 'A_deployment_timing',    file: '90_ability_dictionary_A.json', title: 'Deployment & Timing' },
+            { key: 'B_movement_positioning', file: '91_ability_dictionary_B.json', title: 'Movement & Positioning' },
+            { key: 'C_offense_damage',       file: '92_ability_dictionary_C.json', title: 'Offense & Damage' },
+            { key: 'D_defense_survival',     file: '93_ability_dictionary_D.json', title: 'Defense & Survival' },
+            { key: 'E_morale_fear',          file: '94_ability_dictionary_E.json', title: 'Morale & Fear' },
+            { key: 'F_terrain_environment',  file: '95_ability_dictionary_F.json', title: 'Terrain & Environment' },
+            { key: 'G_thyr_ritual',          file: '96_ability_dictionary_G.json', title: 'Thyr & Ritual' },
+            { key: 'H_interaction_support',  file: '97_ability_dictionary_H.json', title: 'Interaction & Support' },
+            { key: 'I_faction_special',      file: '98_ability_dictionary_I.json', title: 'Faction Special' }
+        ];
+
+        var identitiesPromise  = fetchJson(SRC + '70_unit_identities.json');
+        var weaponPropsPromise = fetchJson(SRC + '100_weapon_properties.json');
+        var abilityPromises    = abilityFiles.map(function(af) {
+            return fetchJson(SRC + af.file)
+                .then(function(data) {
+                    return {
+                        key: af.key,
+                        title: af.title,
+                        data: data
+                    };
+                })
+                .catch(function(err) {
+                    console.warn('⚠️ Skipped', af.file, '—', err.message);
+                    return {
+                        key: af.key,
+                        title: af.title,
+                        data: {}
+                    };
+                });
+        });
+
+        Promise.all([identitiesPromise, weaponPropsPromise, Promise.all(abilityPromises)])
+            .then(function(results) {
+                var identitiesData  = results[0];
+                var weaponPropsData = results[1];
+                var abilityResults  = results[2];
+
+                var dig = function(obj, key) {
+                    if (obj && obj.rules_master && obj.rules_master[key]) return obj.rules_master[key];
+                    if (obj && obj[key]) return obj[key];
+                    return obj;
+                };
+
+                // ── Normalize ability dictionaries correctly ─────────────────────────────
+// ── Normalize ability dictionaries correctly ─────────────────────────────
+var abilityDict = {};
+
+abilityResults.forEach(function(ar) {
+    var data = ar.data;
+
+    // Handle wrapped format
+    if (data.rules_master && data.rules_master.ability_dictionary) {
+        data = data.rules_master.ability_dictionary;
     }
-  }
 
-  initOrObserve();
+    // Handle modular format: { title, abilities }
+    if (data.abilities && typeof data.abilities === 'object') {
+        abilityDict[ar.key] = {
+            title: data.title || ar.key,
+            abilities: data.abilities
+        };
+        return;
+    }
 
-}());
+    // Fallback: raw category object
+    abilityDict[ar.key] = {
+        title: ar.key,
+        abilities: data
+    };
+});
+
+// ── Normalize weapon properties correctly ────────────────────────────────
+var normalizeWeaponProperties = function(data) {
+    if (data.rules_master && data.rules_master.weapon_properties) {
+        return data.rules_master.weapon_properties;
+    }
+    if (data.weapon_properties) {
+        return data.weapon_properties;
+    }
+    if (data.properties) {
+        return data.properties;
+    }
+    return data;
+};
+
+// ── Safe dig helper ──────────────────────────────────────────────────────
+var dig = function(obj, key) {
+    if (obj.rules_master && obj.rules_master[key]) return obj.rules_master[key];
+    if (obj[key]) return obj[key];
+    return obj;
+};
+
+// ── FINAL RULES OBJECT ────────────────────────────────────────────────────
+self.state.rules = {
+    rules_master: {
+        unit_identities:    dig(identitiesData, 'unit_identities'),
+        weapon_properties:  normalizeWeaponProperties(weaponPropsData),
+        ability_dictionary: abilityDict
+    }
+};
+
+console.log('✅ Weapon props loaded:', Object.keys(self.state.rules.rules_master.weapon_properties || {}).length);
+console.log('✅ Ability categories:', Object.keys(self.state.rules.rules_master.ability_dictionary || {}));
+
+// ── Normalize weapon properties correctly ────────────────────────────────
+var normalizeWeaponProperties = function(data) {
+    if (data.rules_master && data.rules_master.weapon_properties) {
+        return data.rules_master.weapon_properties;
+    }
+    if (data.weapon_properties) {
+        return data.weapon_properties;
+    }
+    if (data.properties) {
+        return data.properties;
+    }
+    return data;
+};
+
+// ── Safe dig helper ──────────────────────────────────────────────────────
+var dig = function(obj, key) {
+    if (obj.rules_master && obj.rules_master[key]) return obj.rules_master[key];
+    if (obj[key]) return obj[key];
+    return obj;
+};
+
+// ── FINAL RULES OBJECT ────────────────────────────────────────────────────
+self.state.rules = {
+    rules_master: {
+        unit_identities:    dig(identitiesData, 'unit_identities'),
+        weapon_properties:  normalizeWeaponProperties(weaponPropsData),
+        ability_dictionary: abilityDict
+    }
+};
+
+console.log('✅ Weapon props loaded:', Object.keys(self.state.rules.rules_master.weapon_properties || {}).length);
+console.log('✅ Ability categories:', Object.keys(self.state.rules.rules_master.ability_dictionary || {}));
+                
+                var archetypes = Object.keys(
+                    (self.state.rules.rules_master.unit_identities && self.state.rules.rules_master.unit_identities.archetype_vault) || {}
+                );
+                console.log('✅ Rules ready. Archetypes:', archetypes.join(', '));
+                console.log('✅ Weapon properties loaded:', Object.keys(self.state.rules.rules_master.weapon_properties).length);
+                console.log('✅ Ability categories loaded:', Object.keys(self.state.rules.rules_master.ability_dictionary).join(', '));
+
+                self.refresh();
+            })
+            .catch(function(e) {
+                console.error('❌ Rules failed to load:', e);
+                var root = window.CCFB_FACTORY._rootEl || document.getElementById('faction-studio-root');
+                if (!root) return;
+                root.innerHTML = '';
+                var wrap = document.createElement('div');
+                wrap.style.cssText = 'padding:2rem;color:#c44;font-family:monospace;background:#0e0c09;text-align:center';
+                var heading = document.createElement('strong');
+                heading.textContent = 'Failed to load game rules.';
+                var msg = document.createElement('pre');
+                msg.style.cssText = 'font-size:11px;color:#d4822a;margin:8px 0';
+                msg.textContent = e.message;
+                var btn = document.createElement('button');
+                btn.textContent = '↺ Retry';
+                btn.style.cssText = 'padding:8px 16px;cursor:pointer;margin-top:8px';
+                btn.onclick = function() { window.CCFB_FACTORY.init(); };
+                wrap.appendChild(heading);
+                wrap.appendChild(msg);
+                wrap.appendChild(btn);
+                root.appendChild(wrap);
+            });
+    },
+
+    refresh: function() {
+        var root = window.CCFB_FACTORY._rootEl || document.getElementById('faction-studio-root');
+        if (!root) {
+            console.error("❌ faction-studio-root not found");
+            return;
+        }
+
+        if (!this.state.rules) {
+            console.warn("⚠️ Rules not loaded yet");
+            root.innerHTML = '<div id="faction-studio-app"><div class="cc-empty-state">Loading rules...</div></div>';
+            return;
+        }
+
+        if (!document.getElementById('faction-studio-app')) {
+            root.innerHTML =
+                '<div id="faction-studio-app">' +
+                    '<div class="studio-header">' +
+                        '<h1 class="studio-title">FACTION STUDIO</h1>' +
+                        '<p class="studio-subtitle">A Faction Creation Tool for Coffin Canyon</p>' +
+                    '</div>' +
+                    '<div id="studio-container" class="fb-grid">' +
+                        '<div id="faction-overview"></div>' +
+                        '<div id="unit-builder"></div>' +
+                        '<div id="unit-card"></div>' +
+                    '</div>' +
+                    '<div id="slide-panel-container"></div>' +
+                '</div>';
+        }
+
+        var app = document.getElementById('faction-studio-app');
+        if (this.state.selectedUnit === null) {
+            app.classList.add("no-unit");
+            app.classList.remove("has-unit");
+        } else {
+            app.classList.add("has-unit");
+            app.classList.remove("no-unit");
+        }
+
+        this.renderRoster();
+        this.renderBuilder();
+        this.renderCard();
+        this.renderSlidePanel();
+    },
+
+    renderRoster: function() {
+        var target = document.getElementById('faction-overview');
+        if (!target) return;
+
+        var self = this;
+        var unitsHtml = this.state.currentFaction.units.map(function(u, i) {
+            var selected = self.state.selectedUnit === i ? 'cc-item-selected' : '';
+            return '<div class="cc-roster-item ' + selected + '" onclick="window.CCFB_FACTORY.selectUnit(' + i + ')">' +
+                '<div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">' +
+                    '<div>' +
+                        '<div class="u-name">' + self.escapeAttr(u.name) + '</div>' +
+                        '<div class="u-type">' + self.escapeAttr(String(u.type).toUpperCase()) + '</div>' +
+                    '</div>' +
+                    '<div class="unit-cost">' + self.calculateUnitCost(u) + '₤</div>' +
+                '</div>' +
+            '</div>';
+        }).join('');
+
+        var unitsListHtml = this.state.currentFaction.units.length > 0 ? unitsHtml :
+            '<div class="cc-empty-state" style="padding: 20px;">No units yet. Click "+ NEW UNIT" to start.</div>';
+
+        var isRoster = (this.state.activeFactionTab !== 'info');
+
+        target.innerHTML =
+            '<div class="cc-panel">' +
+                '<div class="cc-panel-header" style="padding:0">' +
+                    '<div style="display:flex">' +
+                        '<button class="cc-tab-btn' + (isRoster ? ' cc-tab-active' : '') + '" onclick="window.CCFB_FACTORY.setFactionTab(\'roster\')">ROSTER</button>' +
+                        '<button class="cc-tab-btn' + (!isRoster ? ' cc-tab-active' : '') + '" onclick="window.CCFB_FACTORY.setFactionTab(\'info\')">FACTION INFO</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div class="panel-content">' +
+                    (isRoster
+                        ? '<div class="form-group">' +
+                              '<label class="small">FACTION NAME</label>' +
+                              '<input type="text" class="cc-input w-100" value="' + this.escapeAttr(this.state.currentFaction.faction) + '" ' +
+                                  'onfocus="if(this.value===\'New Faction\')this.value=\'\'" ' +
+                                  'onchange="window.CCFB_FACTORY.updateFaction(this.value)">' +
+                          '</div>' +
+                          '<div class="unit-list">' + unitsListHtml + '</div>' +
+                          '<button class="btn-add-small w-100 mt-3" onclick="window.CCFB_FACTORY.addUnit()">+ NEW UNIT</button>' +
+                          '<div class="import-section">' +
+                              '<label class="small">LOAD FROM REPO</label>' +
+                              '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.loadFactionFromGitHub(this.value);this.value=\'\'">' +
+                                  '<option value="">— Select a faction file —</option>' +
+                                  (this.state.factionFiles.length > 0
+                                      ? this.state.factionFiles.map(function(f) {
+                                          return '<option value="' + self.escapeAttr(f.url) + '">' + self.escapeAttr(f.name.replace('.json','').replace(/-/g,' ').replace(/_/g,' ')) + '</option>';
+                                        }).join('')
+                                      : '<option disabled>Loading list…</option>'
+                                  ) +
+                              '</select>' +
+                              '<label class="small" style="margin-top:10px">OR PASTE JSON</label>' +
+                              '<textarea class="cc-input w-100 import-textarea" onchange="window.CCFB_FACTORY.pasteLoad(this.value)" placeholder="Paste faction JSON here..."></textarea>' +
+                              '<button class="btn-add-small w-100 mt-2" onclick="window.CCFB_FACTORY.download()"><i class="fa fa-download"></i> DOWNLOAD FACTION</button>' +
+                          '</div>'
+                        : this.renderFactionInfo()
+                    ) +
+                '</div>' +
+            '</div>';
+    },
+
+    setFactionTab: function(tab) {
+        this.state.activeFactionTab = tab;
+        this.renderRoster();
+    },
+
+    renderFactionInfo: function() {
+        var f    = this.state.currentFaction;
+        var intro = f.introduction || {};
+        var ident = f.faction_identity || {};
+        var rep   = ident.reputation || {};
+        var mech  = f.faction_mechanics || {};
+        var csr   = f.canyon_state_relationships || {};
+        var scen  = f.scenario_preferences || {};
+
+        var esc = function(v) {
+            return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        };
+        var textarea = function(path, val, rows) {
+            rows = rows || 2;
+            return '<textarea class="cc-input w-100" rows="' + rows + '" onchange="window.CCFB_FACTORY.updateFactionField(\'' + path + '\',this.value)">' +
+                esc(val) + '</textarea>';
+        };
+        var textinput = function(path, val) {
+            return '<input type="text" class="cc-input w-100" value="' + esc(val) + '" onchange="window.CCFB_FACTORY.updateFactionField(\'' + path + '\',this.value)">';
+        };
+        var listEditor = function(path, items) {
+            var rows = (items || []).map(function(item, i) {
+                return '<div style="display:flex;gap:4px;margin-bottom:4px">' +
+                    '<input type="text" class="cc-input" style="flex:1" value="' + esc(item) + '" onchange="window.CCFB_FACTORY.updateFactionListItem(\'' + path + '\',' + i + ',this.value)">' +
+                    '<button class="btn-add-small" style="padding:4px 8px;width:auto" onclick="window.CCFB_FACTORY.removeFactionListItem(\'' + path + '\',' + i + ')">✕</button>' +
+                '</div>';
+            }).join('');
+            return rows + '<button class="btn-add-small w-100" style="margin-top:4px" onclick="window.CCFB_FACTORY.addFactionListItem(\'' + path + '\')">+ Add</button>';
+        };
+        var fg = function(label, content) {
+            return '<div class="form-group"><label class="small">' + label + '</label>' + content + '</div>';
+        };
+        var infoSec = function(id, title, body) {
+            return '<div style="border:1px solid var(--cc-border);margin-bottom:8px">' +
+                '<div style="padding:8px 10px;background:var(--cc-bg-mid);cursor:pointer;display:flex;justify-content:space-between" onclick="window.CCFB_FACTORY.toggleInfoSec(\'' + id + '\')">' +
+                    '<span style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--cc-primary)">' + title + '</span>' +
+                    '<span id="fis-tog-' + id + '">▼</span>' +
+                '</div>' +
+                '<div id="fis-' + id + '" style="display:none;padding:12px">' + body + '</div>' +
+            '</div>';
+        };
+
+        var ALL_STATES = ['Held','Strangewild','Poisoned','Haunted','Exalted','Lawless','Liberated','Extracted','Rusted'];
+        var findReason = function(arr, state) {
+            var match = (arr || []).find(function(s){ return s.state === state; });
+            return match ? (match.reason || '') : '';
+        };
+        var PREF = (csr.preferred_states || []).map(function(s){ return s.state; });
+        var NEUT = (csr.neutral_states || []).map(function(s){ return s.state; });
+        var OPP  = (csr.opposed_states || []).map(function(s){ return s.state; });
+
+        var stateRows = ALL_STATES.map(function(state) {
+            var cur = PREF.indexOf(state) !== -1 ? 'preferred'
+                : NEUT.indexOf(state) !== -1 ? 'neutral'
+                : OPP.indexOf(state)  !== -1 ? 'opposed' : 'none';
+            var reason = cur === 'preferred' ? findReason(csr.preferred_states, state)
+                : cur === 'neutral' ? findReason(csr.neutral_states, state)
+                : cur === 'opposed' ? findReason(csr.opposed_states, state) : '';
+            var OPTS = [
+                { val:'preferred', color:'#3a7a4a' },
+                { val:'neutral',   color:'#4a6e8a' },
+                { val:'opposed',   color:'#b03030' },
+                { val:'none',      color:'#555' }
+            ];
+            return '<div style="margin-bottom:8px;padding:8px;background:rgba(255,255,255,.03);border:1px solid var(--cc-border)">' +
+                '<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;flex-wrap:wrap">' +
+                    '<span style="font-weight:700;font-size:11px;min-width:80px">' + state + '</span>' +
+                    OPTS.map(function(o) {
+                        var isActive = cur === o.val;
+                        return '<button class="btn-add-small" style="padding:3px 8px;width:auto;font-size:9px;' +
+                            (isActive ? 'background:'+o.color+';color:#fff;border-color:'+o.color+';' : '') + '" onclick="window.CCFB_FACTORY.setCanyonState(\'' + state + '\',\'' + o.val + '\')">' +
+                            o.val.toUpperCase() + '</button>';
+                    }).join('') +
+                '</div>' +
+                (cur !== 'none'
+                    ? '<input type="text" class="cc-input w-100" placeholder="Reason…" value="' + esc(reason) + '" style="font-size:10px" onchange="window.CCFB_FACTORY.setCanyonStateReason(\'' + state + '\',this.value)">'
+                    : '') +
+            '</div>';
+        }).join('');
+
+        var COMMON_TAGS = ['adaptive','aggressive','befriend','cavalry','defensive','elite','environmental',
+            'harmony','heavy','infiltrators','lawless','light','melee','military','mystical',
+            'protectors','ranged','ritual','scholars','specialists','stealth','support','survival',
+            'swift','tech','undead','versatile'];
+        var currentTags = f.faction_tags || [];
+        var tagChips = currentTags.map(function(tag, i) {
+            return '<span style="display:inline-flex;align-items:center;gap:4px;background:var(--cc-primary-dim);border:1px solid var(--cc-primary);padding:2px 8px;font-size:9px;margin:2px">' +
+                esc(tag) + '<span style="cursor:pointer" onclick="window.CCFB_FACTORY.removeFactionTag(' + i + ')">✕</span></span>';
+        }).join('');
+        var unusedTags = COMMON_TAGS.filter(function(t){ return currentTags.indexOf(t) === -1; });
+        var tagEditor =
+            '<div style="display:flex;flex-wrap:wrap;gap:2px;margin-bottom:8px">' + (tagChips || '<span style="color:var(--cc-text-muted);font-size:10px">No tags yet</span>') + '</div>' +
+            '<div style="display:flex;gap:4px">' +
+                '<select id="fs-tag-sel" class="cc-select" style="flex:1">' +
+                    '<option value="">— Common tags —</option>' +
+                    unusedTags.map(function(t){ return '<option value="'+esc(t)+'">'+esc(t)+'</option>'; }).join('') +
+                '</select>' +
+                '<button class="btn-add-small" style="width:auto;padding:4px 10px" onclick="window.CCFB_FACTORY.addFactionTagFromSel()">Add</button>' +
+            '</div>' +
+            '<div style="display:flex;gap:4px;margin-top:4px">' +
+                '<input type="text" id="fs-tag-custom" class="cc-input" style="flex:1" placeholder="Custom tag…">' +
+                '<button class="btn-add-small" style="width:auto;padding:4px 10px" onclick="window.CCFB_FACTORY.addFactionTagCustom()">+</button>' +
+            '</div>';
+
+        return infoSec('intro', 'Introduction',
+            fg('Title',       textinput('introduction.title',       intro.title)) +
+            fg('Tagline',     textinput('introduction.tagline',     intro.tagline)) +
+            fg('Description', textarea('introduction.description',  intro.description, 4)) +
+            fg('Philosophy',  textarea('introduction.philosophy',   intro.philosophy, 3)) +
+            fg('History',     textarea('introduction.history',      intro.history, 4))
+        ) +
+        infoSec('ident', 'Faction Identity',
+            fg('Core Values',             listEditor('faction_identity.core_values',             ident.core_values)) +
+            fg('What They Fight For',     listEditor('faction_identity.what_they_fight_for',     ident.what_they_fight_for)) +
+            fg('What They Fight Against', listEditor('faction_identity.what_they_fight_against', ident.what_they_fight_against)) +
+            fg('Allies See Them As',      textinput('faction_identity.reputation.allies_see_them_as',      rep.allies_see_them_as)) +
+            fg('Enemies See Them As',     textinput('faction_identity.reputation.enemies_see_them_as',     rep.enemies_see_them_as)) +
+            fg('Monsters See Them As',    textinput('faction_identity.reputation.monsters_see_them_as',    rep.monsters_see_them_as)) +
+            fg('The Canyon Sees Them As', textinput('faction_identity.reputation.the_canyon_sees_them_as', rep.the_canyon_sees_them_as))
+        ) +
+        infoSec('mech', 'Faction Mechanics',
+            fg('Signature Ability',      textinput('faction_mechanics.signature_ability',             mech.signature_ability)) +
+            fg('Signature Description',  textarea('faction_mechanics.signature_ability_description',  mech.signature_ability_description, 3)) +
+            fg('Playstyle',              textarea('faction_mechanics.playstyle',                      mech.playstyle, 3)) +
+            fg('Strengths',              listEditor('faction_mechanics.strengths',  mech.strengths)) +
+            fg('Weaknesses',             listEditor('faction_mechanics.weaknesses', mech.weaknesses))
+        ) +
+        infoSec('csr', 'Canyon State Relationships', stateRows) +
+        infoSec('tags', 'Faction Tags', tagEditor) +
+        infoSec('scen', 'Scenario Preferences',
+            fg('Ideal Scenarios',       listEditor('scenario_preferences.ideal_scenarios',       scen.ideal_scenarios)) +
+            fg('Challenging Scenarios', listEditor('scenario_preferences.challenging_scenarios', scen.challenging_scenarios))
+        );
+    },
+
+    toggleInfoSec: function(id) {
+        var el  = document.getElementById('fis-' + id);
+        var tog = document.getElementById('fis-tog-' + id);
+        if (!el) return;
+        var isOpen = el.style.display !== 'none';
+        el.style.display = isOpen ? 'none' : 'block';
+        if (tog) tog.textContent = isOpen ? '▼' : '▲';
+    },
+
+    updateFactionField: function(path, value) {
+        var parts = path.split('.');
+        var obj = this.state.currentFaction;
+        for (var i = 0; i < parts.length - 1; i++) {
+            if (!obj[parts[i]]) obj[parts[i]] = {};
+            obj = obj[parts[i]];
+        }
+        obj[parts[parts.length - 1]] = value;
+    },
+
+    updateFactionListItem: function(path, idx, value) {
+        var parts = path.split('.');
+        var obj = this.state.currentFaction;
+        for (var i = 0; i < parts.length - 1; i++) {
+            obj = (obj[parts[i]] || {});
+        }
+        var arr = obj[parts[parts.length - 1]];
+        if (Array.isArray(arr)) arr[idx] = value;
+    },
+
+    addFactionListItem: function(path) {
+        var parts = path.split('.');
+        var obj = this.state.currentFaction;
+        for (var i = 0; i < parts.length - 1; i++) {
+            if (!obj[parts[i]]) obj[parts[i]] = {};
+            obj = obj[parts[i]];
+        }
+        var key = parts[parts.length - 1];
+        if (!Array.isArray(obj[key])) obj[key] = [];
+        obj[key].push('');
+        this.renderRoster();
+    },
+
+    removeFactionListItem: function(path, idx) {
+        var parts = path.split('.');
+        var obj = this.state.currentFaction;
+        for (var i = 0; i < parts.length - 1; i++) {
+            obj = (obj[parts[i]] || {});
+        }
+        var arr = obj[parts[parts.length - 1]];
+        if (Array.isArray(arr)) {
+            arr.splice(idx, 1);
+            this.renderRoster();
+        }
+    },
+
+    setCanyonState: function(state, relationship) {
+        var csr = this.state.currentFaction.canyon_state_relationships;
+        if (!csr) {
+            csr = { preferred_states: [], neutral_states: [], opposed_states: [] };
+            this.state.currentFaction.canyon_state_relationships = csr;
+        }
+        ['preferred_states','neutral_states','opposed_states'].forEach(function(key) {
+            csr[key] = (csr[key] || []).filter(function(s){ return s.state !== state; });
+        });
+        if (relationship === 'preferred') csr.preferred_states.push({ state: state, reason: '' });
+        if (relationship === 'neutral')   csr.neutral_states.push({ state: state, reason: '' });
+        if (relationship === 'opposed')   csr.opposed_states.push({ state: state, reason: '' });
+        this.renderRoster();
+    },
+
+    setCanyonStateReason: function(state, reason) {
+        var csr = this.state.currentFaction.canyon_state_relationships || {};
+        ['preferred_states','neutral_states','opposed_states'].forEach(function(key) {
+            (csr[key] || []).forEach(function(s){
+                if (s.state === state) s.reason = reason;
+            });
+        });
+    },
+
+    addFactionTagFromSel: function() {
+        var sel = document.getElementById('fs-tag-sel');
+        if (!sel || !sel.value) return;
+        var tags = this.state.currentFaction.faction_tags || [];
+        if (tags.indexOf(sel.value) === -1) tags.push(sel.value);
+        this.state.currentFaction.faction_tags = tags;
+        this.renderRoster();
+    },
+
+    addFactionTagCustom: function() {
+        var inp = document.getElementById('fs-tag-custom');
+        if (!inp || !inp.value.trim()) return;
+        var tag  = inp.value.trim().toLowerCase().replace(/\s+/g, '_');
+        var tags = this.state.currentFaction.faction_tags || [];
+        if (tags.indexOf(tag) === -1) tags.push(tag);
+        this.state.currentFaction.faction_tags = tags;
+        inp.value = '';
+        this.renderRoster();
+    },
+
+    removeFactionTag: function(idx) {
+        (this.state.currentFaction.faction_tags || []).splice(idx, 1);
+        this.renderRoster();
+    },
+
+    renderBuilder: function() {
+        var target = document.getElementById('unit-builder');
+        if (!target) return;
+
+        if (this.state.selectedUnit === null) {
+            target.innerHTML = '<div class="cc-panel"><div class="cc-empty-state"><i class="fa fa-crosshairs"></i> CHOOSE A UNIT TO BEGIN</div></div>';
+            return;
+        }
+
+        var u = this.state.currentFaction.units[this.state.selectedUnit];
+        var archVault = ((this.state.rules || {}).rules_master || {}).unit_identities.archetype_vault || {};
+        var self = this;
+
+        var step = function(num, title, content) {
+            var isActive   = self.state.activeStep === num;
+            var isComplete = num < self.state.activeStep;
+            var isFuture   = num > self.state.activeStep;
+
+            if (self.state.isPasted) {
+                isActive = true;
+                isFuture = false;
+            }
+
+            if (isFuture && !self.state.isPasted) return '';
+
+            var stepClass = 'builder-step';
+            if (isActive)   stepClass += ' step-active';
+            if (isComplete) stepClass += ' step-complete';
+
+            var checkmark = isComplete ? ' ✓' : '';
+
+            return '<div class="' + stepClass + '">' +
+                '<div class="step-header" onclick="window.CCFB_FACTORY.setStep(' + num + ')">' +
+                    '<div class="step-number">' + num + '</div>' +
+                    '<div class="step-title">' + title + checkmark + '</div>' +
+                '</div>' +
+                '<div class="step-content" style="display:' + (isActive ? 'block' : 'none') + '">' +
+                    content +
+                '</div>' +
+            '</div>';
+        };
+
+        var typeOptions = Object.keys(archVault).map(function(k) {
+            var selected = u.type === k ? 'selected' : '';
+            return '<option value="' + self.escapeAttr(k) + '" ' + selected + '>' + self.escapeAttr(k.toUpperCase()) + '</option>';
+        }).join('');
+
+        var qualityOptions = [1,2,3,4,5,6].map(function(n) {
+            var selected = parseInt(u.quality, 10) === n ? 'selected' : '';
+            return '<option value="' + n + '" ' + selected + '>' + n + '+</option>';
+        }).join('');
+
+        var defenseOptions = [1,2,3,4,5,6].map(function(n) {
+            var selected = parseInt(u.defense, 10) === n ? 'selected' : '';
+            return '<option value="' + n + '" ' + selected + '>' + n + '+</option>';
+        }).join('');
+
+        var moveOptions = '';
+        for (var i = 1; i <= 24; i++) {
+            var selected = parseInt(u.move, 10) === i ? 'selected' : '';
+            moveOptions += '<option value="' + i + '" ' + selected + '>' + i + '"</option>';
+        }
+
+        var rangeOptions = [0,3,6,12,18,24].map(function(n) {
+            var selected = parseInt(u.range, 10) === n ? 'selected' : '';
+            var label = n === 0 ? 'Melee' : n + '"';
+            return '<option value="' + n + '" ' + selected + '>' + label + '</option>';
+        }).join('');
+
+        var weaponPropsHtml = u.weapon_properties.length > 0 ?
+            u.weapon_properties.map(function(p, i) {
+                var meta = self.getWeaponMeta(p);
+                var label = meta ? meta.name : self.prettifyKey(p);
+                return '<span class="property-badge" title="' + self.escapeAttr(meta ? (meta.long || meta.short || '') : '') + '" onclick="window.CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + self.escapeAttr(label) + ' ✕</span>';
+            }).join('') :
+            '<span class="no-items">None added</span>';
+
+        var abilitiesHtml = u.abilities.length > 0 ?
+            u.abilities.map(function(a, i) {
+                var meta = self.getAbilityMeta(a);
+                var label = meta ? meta.name : self.prettifyKey(a);
+                return '<div class="ability-item" title="' + self.escapeAttr(meta ? (meta.long || meta.short || '') : '') + '" onclick="window.CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + self.escapeAttr(label) + ' ✕</div>';
+            }).join('') :
+            '<span class="no-items">None added</span>';
+
+        target.innerHTML = '<div class="cc-panel">' +
+            '<div class="cc-panel-header">UNIT BUILDER</div>' +
+            '<div class="panel-content">' +
+            step(1, "IDENTITY & TYPE",
+                '<div class="form-group">' +
+                    '<label class="small">UNIT NAME</label>' +
+                    '<input type="text" class="cc-input w-100" value="' + this.escapeAttr(u.name) + '" onfocus="if(this.value===\'New Unit\')this.value=\'\'" onchange="window.CCFB_FACTORY.updateUnit(\'name\', this.value)">' +
+                '</div>' +
+                '<div class="form-group">' +
+                    '<label class="small">UNIT TYPE (ARCHETYPE)</label>' +
+                    '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'type\', this.value)">' +
+                        typeOptions +
+                    '</select>' +
+                '</div>' +
+                '<div class="type-rule-display">' +
+                    '<i class="fa fa-info-circle"></i> ' +
+                    this.escapeAttr(archVault[u.type] ? archVault[u.type].identity : 'Select a type') +
+                '</div>' +
+                '<button class="btn-add-small w-100 mt-3" onclick="window.CCFB_FACTORY.setStep(2)">CONFIRM TYPE →</button>'
+            ) +
+            step(2, "ATTRIBUTES",
+                '<div class="stats-grid">' +
+                    '<div class="form-group">' +
+                        '<label class="small">QUALITY</label>' +
+                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'quality\', this.value)">' + qualityOptions + '</select>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">DEFENSE</label>' +
+                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'defense\', this.value)">' + defenseOptions + '</select>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">MOVE</label>' +
+                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'move\', this.value)">' + moveOptions + '</select>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">RANGE</label>' +
+                        '<select class="cc-select w-100" onchange="window.CCFB_FACTORY.updateUnit(\'range\', this.value)">' + rangeOptions + '</select>' +
+                    '</div>' +
+                '</div>' +
+                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(3)">CONFIRM STATS →</button>'
+            ) +
+            step(3, "WEAPON POWERS",
+                '<button class="btn-add-small w-100" onclick="window.CCFB_FACTORY.openSlidePanel(\'weapon\')">+ ADD WEAPON POWER</button>' +
+                '<div class="abilities-display">' +
+                    '<div class="abilities-label">CURRENT POWERS:</div>' +
+                    '<div class="abilities-list">' + weaponPropsHtml + '</div>' +
+                '</div>' +
+                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(4)">CONTINUE →</button>'
+            ) +
+            step(4, "UNIT ABILITIES",
+                '<button class="btn-add-small w-100" onclick="window.CCFB_FACTORY.openSlidePanel(\'ability\')">+ ADD UNIT ABILITY</button>' +
+                '<div class="abilities-display">' +
+                    '<div class="abilities-label">CURRENT ABILITIES:</div>' +
+                    '<div class="abilities-list">' + abilitiesHtml + '</div>' +
+                '</div>' +
+                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(5)">CONTINUE →</button>'
+            ) +
+            step(5, "SUPPLEMENTAL ABILITIES (OPTIONAL)",
+                '<p class="step-hint">Add gear, alternate versions, or special upgrades. Examples: Witch-Stitched Armor, Baby variant, Relic options.</p>' +
+                '<div class="supplemental-form">' +
+                    '<div class="form-group">' +
+                        '<label class="small">NAME</label>' +
+                        '<input type="text" id="supp-name" class="cc-input w-100" placeholder="e.g. Witch-Stitched Armor">' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">TYPE</label>' +
+                        '<select id="supp-type" class="cc-select w-100">' +
+                            '<option value="Gear">Gear</option>' +
+                            '<option value="Type">Type</option>' +
+                            '<option value="Relic">Relic</option>' +
+                            '<option value="Upgrade">Upgrade</option>' +
+                        '</select>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">EFFECT</label>' +
+                        '<textarea id="supp-effect" class="cc-input w-100" rows="2" placeholder="Describe what this does..."></textarea>' +
+                    '</div>' +
+                    '<div class="form-group">' +
+                        '<label class="small">STAT MODIFIERS (optional)</label>' +
+                        '<div class="stat-modifier-grid">' +
+                            '<label><input type="checkbox" id="mod-quality"> Quality ' +
+                                '<select id="mod-quality-val" class="cc-select-tiny">' +
+                                    '<option value="2">+2</option><option value="1" selected>+1</option>' +
+                                    '<option value="-1">-1</option><option value="-2">-2</option>' +
+                                '</select>' +
+                            '</label>' +
+                            '<label><input type="checkbox" id="mod-defense"> Defense ' +
+                                '<select id="mod-defense-val" class="cc-select-tiny">' +
+                                    '<option value="2">+2</option><option value="1" selected>+1</option>' +
+                                    '<option value="-1">-1</option><option value="-2">-2</option>' +
+                                '</select>' +
+                            '</label>' +
+                            '<label><input type="checkbox" id="mod-move"> Move ' +
+                                '<select id="mod-move-val" class="cc-select-tiny">' +
+                                    '<option value="6">+6</option><option value="4">+4</option><option value="2" selected>+2</option>' +
+                                    '<option value="-2">-2</option><option value="-4">-4</option><option value="-6">-6</option>' +
+                                '</select>' +
+                            '</label>' +
+                            '<label><input type="checkbox" id="mod-range"> Range ' +
+                                '<select id="mod-range-val" class="cc-select-tiny">' +
+                                    '<option value="12">+12</option><option value="6" selected>+6</option>' +
+                                    '<option value="-6">-6</option><option value="-12">-12</option>' +
+                                '</select>' +
+                            '</label>' +
+                        '</div>' +
+                    '</div>' +
+                    '<button class="btn-add-small w-100" onclick="window.CCFB_FACTORY.addSupplemental()">+ ADD SUPPLEMENTAL ABILITY</button>' +
+                '</div>' +
+                '<div class="abilities-display mt-3">' +
+                    '<div class="abilities-label">CURRENT SUPPLEMENTAL ABILITIES:</div>' +
+                    '<div class="abilities-list">' +
+                        (u.supplemental_abilities.length > 0 ?
+                            u.supplemental_abilities.map(function(s, i) {
+                                return '<div class="supplemental-item" onclick="window.CCFB_FACTORY.removeSupplemental(' + i + ')">' +
+                                    '<strong>' + self.escapeAttr(s.name) + '</strong>' + (s.cost > 0 ? ' (' + s.cost + '₤)' : '') + ' <span class="supp-type-badge">' + self.escapeAttr(s.type) + '</span>' +
+                                    '<div class="supp-effect">' + self.escapeAttr(s.effect) + '</div>' +
+                                    (s.stat_modifiers ? '<div class="supp-mods">Modifiers: ' + self.escapeAttr(JSON.stringify(s.stat_modifiers)) + '</div>' : '') +
+                                    '<span class="remove-badge">✕ Remove</span>' +
+                                '</div>';
+                            }).join('')
+                        : '<span class="no-items">None added</span>') +
+                    '</div>' +
+                '</div>' +
+                '<button class="btn-add-small w-100 mt-4" onclick="window.CCFB_FACTORY.setStep(6)">CONTINUE →</button>'
+            ) +
+            step(6, "LORE & FINALIZE",
+                '<div class="form-group">' +
+                    '<label class="small">UNIT LORE (OPTIONAL)</label>' +
+                    '<textarea class="cc-input w-100" rows="4" placeholder="A brief description of this unit..." onchange="window.CCFB_FACTORY.updateUnit(\'lore\', this.value)">' + this.escapeAttr(u.lore) + '</textarea>' +
+                '</div>' +
+                '<div class="button-group">' +
+                    '<button class="btn-add-small btn-success" onclick="window.CCFB_FACTORY.saveAndNew()">✓ SAVE UNIT</button>' +
+                    '<button class="btn-add-small btn-danger" onclick="window.CCFB_FACTORY.delUnit()">DELETE</button>' +
+                '</div>'
+            ) +
+            '</div>' +
+        '</div>';
+    },
+
+    renderCard: function() {
+        var target = document.getElementById('unit-card');
+        if (!target) return;
+
+        if (this.state.selectedUnit === null) {
+            target.innerHTML = "";
+            return;
+        }
+
+        var self = this;
+        var u = this.state.currentFaction.units[this.state.selectedUnit];
+        var arch = (((this.state.rules || {}).rules_master || {}).unit_identities.archetype_vault || {})[u.type] || {};
+
+        var weaponPropsHtml = u.weapon_properties.length > 0 ?
+            '<div class="unit-card-section">' +
+                '<div class="section-label"><i class="fa fa-crosshairs"></i> WEAPON POWERS</div>' +
+                '<div class="weapon-properties">' +
+                    u.weapon_properties.map(function(p, i) {
+                        var meta = self.getWeaponMeta(p);
+                        var label = meta ? meta.name : self.prettifyKey(p);
+                        return '<span class="property-badge" title="' + self.escapeAttr(meta ? (meta.long || meta.short || '') : '') + '" onclick="window.CCFB_FACTORY.removeItem(\'weapon_properties\', ' + i + ')">' + self.escapeAttr(label) + ' ✕</span>';
+                    }).join('') +
+                '</div>' +
+            '</div>' : '';
+
+        var abilitiesHtml = u.abilities.length > 0 ?
+            '<div class="unit-card-section">' +
+                '<div class="section-label"><i class="fa fa-bolt"></i> ABILITIES</div>' +
+                '<div class="weapon-properties">' +
+                    u.abilities.map(function(a, i) {
+                        var meta = self.getAbilityMeta(a);
+                        var label = meta ? meta.name : self.prettifyKey(a);
+                        return '<span class="property-badge" title="' + self.escapeAttr(meta ? (meta.long || meta.short || '') : '') + '" onclick="window.CCFB_FACTORY.removeItem(\'abilities\', ' + i + ')">' + self.escapeAttr(label) + ' ✕</span>';
+                    }).join('') +
+                '</div>' +
+            '</div>' : '';
+
+        var loreHtml = u.lore ?
+            '<div class="unit-card-section">' +
+                '<div class="lore-text">"' + this.escapeAttr(u.lore) + '"</div>' +
+            '</div>' : '';
+
+        var supplementalHtml = u.supplemental_abilities.length > 0 ?
+            '<div class="unit-card-section">' +
+                '<div class="section-label"><i class="fa fa-star"></i> SUPPLEMENTAL ABILITIES</div>' +
+                u.supplemental_abilities.map(function(s) {
+                    var modsDisplay = '';
+                    if (s.stat_modifiers) {
+                        modsDisplay = '<div class="supplemental-card-mods"><i class="fa fa-chart-line"></i> ';
+                        var modParts = [];
+                        if (s.stat_modifiers.quality) {
+                            var newQ = u.quality + s.stat_modifiers.quality;
+                            modParts.push('Q: ' + u.quality + '+ → ' + newQ + '+');
+                        }
+                        if (s.stat_modifiers.defense) {
+                            var newD = u.defense + s.stat_modifiers.defense;
+                            modParts.push('D: ' + u.defense + '+ → ' + newD + '+');
+                        }
+                        if (s.stat_modifiers.move) {
+                            var newM = u.move + s.stat_modifiers.move;
+                            modParts.push('M: ' + u.move + '" → ' + newM + '"');
+                        }
+                        if (s.stat_modifiers.range) {
+                            var newR = u.range + s.stat_modifiers.range;
+                            modParts.push('R: ' + (u.range === 0 ? 'M' : u.range + '"') + ' → ' + (newR === 0 ? 'M' : newR + '"'));
+                        }
+                        modsDisplay += self.escapeAttr(modParts.join(' | ')) + '</div>';
+                    }
+
+                    return '<div class="supplemental-card">' +
+                        '<div class="supplemental-card-header">' +
+                            '<strong>' + self.escapeAttr(s.name) + '</strong>' +
+                            (s.cost > 0 ? ' <span class="supp-cost">(+' + s.cost + '₤)</span>' : '') +
+                            ' <span class="supp-type-badge">' + self.escapeAttr(s.type) + '</span>' +
+                        '</div>' +
+                        '<div class="supplemental-card-effect">' + self.escapeAttr(s.effect) + '</div>' +
+                        modsDisplay +
+                    '</div>';
+                }).join('') +
+            '</div>' : '';
+
+        target.innerHTML =
+            '<div class="cc-panel">' +
+                '<div class="cc-panel-header">UNIT PREVIEW</div>' +
+                '<div class="panel-content">' +
+                    '<div class="unit-card-preview">' +
+                        '<div class="unit-card-header">' +
+                            '<div class="unit-card-name">' + this.escapeAttr(u.name) + '</div>' +
+                            '<div class="unit-card-type">' + this.escapeAttr(String(u.type).toUpperCase()) + '</div>' +
+                        '</div>' +
+                        '<div class="unit-card-cost">' +
+                            '<div class="cost-label">ESTIMATED COST</div>' +
+                            '<div class="cost-value">' + this.calculateUnitCost(u) + '₤</div>' +
+                        '</div>' +
+                        '<div class="stat-badge-flex">' +
+                            '<div class="cc-stat-badge stat-q-border">' +
+                                '<span class="cc-stat-label stat-q">Q</span>' +
+                                '<span class="cc-stat-value">' + u.quality + '+</span>' +
+                            '</div>' +
+                            '<div class="cc-stat-badge stat-d-border">' +
+                                '<span class="cc-stat-label stat-d">D</span>' +
+                                '<span class="cc-stat-value">' + u.defense + '+</span>' +
+                            '</div>' +
+                            '<div class="cc-stat-badge stat-m-border">' +
+                                '<span class="cc-stat-label stat-m">M</span>' +
+                                '<span class="cc-stat-value">' + u.move + '"</span>' +
+                            '</div>' +
+                            '<div class="cc-stat-badge stat-r-border">' +
+                                '<span class="cc-stat-label stat-r">R</span>' +
+                                '<span class="cc-stat-value">' + (u.range === 0 ? 'M' : u.range + '"') + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="unit-card-section">' +
+                            '<div class="section-label"><i class="fa fa-shield"></i> TYPE RULE</div>' +
+                            '<strong>' + this.escapeAttr(arch.type_rule || 'Innate') + '</strong>' +
+                            '<div class="ability-effect">' + this.escapeAttr(arch.effect || 'No special type effect') + '</div>' +
+                        '</div>' +
+                        weaponPropsHtml +
+                        abilitiesHtml +
+                        supplementalHtml +
+                        loreHtml +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+    },
+
+    renderSlidePanel: function() {
+        var target = document.getElementById('slide-panel-container');
+        if (!target) return;
+
+        if (!this.state.activeModal) {
+            target.innerHTML = "";
+            return;
+        }
+
+        var isWeapon = this.state.activeModal === 'weapon';
+        var weaponProps = this.getWeaponCatalog();
+        var abilityDict = this.getAbilityCatalog();
+
+        var cardsHtml = '';
+
+        if (isWeapon) {
+            var weaponKeys = Object.keys(weaponProps).sort(function(a, b) {
+                var an = (weaponProps[a].name || a).toLowerCase();
+                var bn = (weaponProps[b].name || b).toLowerCase();
+                return an.localeCompare(bn);
+            });
+
+            cardsHtml = weaponKeys.map(function(key) {
+                var item = weaponProps[key] || {};
+                var displayName = item.name || window.CCFB_FACTORY.prettifyKey(key);
+                var displayEffect = item.long || item.short || 'No description available';
+
+                return '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'weapon_properties\', \'' + window.CCFB_FACTORY.escapeJsString(key) + '\')">' +
+                    '<div class="ability-card-name">' + window.CCFB_FACTORY.escapeAttr(displayName) + '</div>' +
+                    '<div class="ability-card-effect">' + window.CCFB_FACTORY.escapeAttr(displayEffect) + '</div>' +
+                '</div>';
+            }).join('');
+        } else {
+            for (var cat in abilityDict) {
+                if (!Object.prototype.hasOwnProperty.call(abilityDict, cat)) continue;
+
+                var category = abilityDict[cat] || {};
+                var categoryTitle = category.title || this.prettifyKey(cat);
+                var bucket = category.abilities || {};
+
+                cardsHtml += '<div class="category-header">' + this.escapeAttr(categoryTitle) + '</div>';
+
+                var keys = Object.keys(bucket).sort(function(a, b) {
+                    var an = (bucket[a].name || a).toLowerCase();
+                    var bn = (bucket[b].name || b).toLowerCase();
+                    return an.localeCompare(bn);
+                });
+
+                for (var i = 0; i < keys.length; i++) {
+                    var key = keys[i];
+                    var item = bucket[key] || {};
+                    var displayName = item.name || this.prettifyKey(key);
+                    var displayEffect = item.long || item.short || 'No description available';
+
+                    cardsHtml += '<div class="ability-card" onclick="window.CCFB_FACTORY.addItem(\'abilities\', \'' + this.escapeJsString(key) + '\')">' +
+                        '<div class="ability-card-name">' + this.escapeAttr(displayName) + '</div>' +
+                        '<div class="ability-card-effect">' + this.escapeAttr(displayEffect) + '</div>' +
+                    '</div>';
+                }
+            }
+        }
+
+        target.innerHTML =
+            '<div class="cc-slide-panel cc-slide-panel-open">' +
+                '<div class="cc-slide-panel-header">' +
+                    '<h2>SELECT ' + (isWeapon ? 'WEAPON POWER' : 'UNIT ABILITY') + '</h2>' +
+                    '<button onclick="window.CCFB_FACTORY.closeSlidePanel()" class="cc-panel-close-btn">✕</button>' +
+                '</div>' +
+                '<div class="cc-modal-content">' +
+                    '<div class="ability-grid">' + cardsHtml + '</div>' +
+                '</div>' +
+            '</div>';
+    },
+
+    setStep: function(n) {
+        this.state.activeStep = n;
+        this.renderBuilder();
+    },
+
+    selectUnit: function(i) {
+        this.state.selectedUnit = i;
+        this.state.activeStep = 1;
+        this.state.isPasted = false;
+        this.refresh();
+    },
+
+    addUnit: function() {
+        var u = this.sanitizeUnit({});
+        this.state.currentFaction.units.push(u);
+        this.state.selectedUnit = this.state.currentFaction.units.length - 1;
+        this.state.activeStep = 1;
+        this.state.isPasted = false;
+        this.refresh();
+    },
+
+    updateUnit: function(field, value) {
+        if (this.state.selectedUnit === null) return;
+
+        if (field === 'quality' || field === 'defense' || field === 'move' || field === 'range') {
+            value = parseInt(value, 10) || 0;
+        }
+        if (field === 'type') {
+            value = String(value || '').toLowerCase();
+        }
+
+        this.state.currentFaction.units[this.state.selectedUnit][field] = value;
+        this.refresh();
+    },
+
+    updateFaction: function(v) {
+        this.state.currentFaction.faction = v;
+        this.renderRoster();
+    },
+
+    saveAndNew: function() {
+        this.state.selectedUnit = null;
+        this.state.activeStep = 1;
+        this.refresh();
+    },
+
+    delUnit: function() {
+        if (!confirm("Delete this unit?")) return;
+        this.state.currentFaction.units.splice(this.state.selectedUnit, 1);
+        this.state.selectedUnit = null;
+        this.state.activeStep = 1;
+        this.refresh();
+    },
+
+    openSlidePanel: function(panelType) {
+        this.state.activeModal = panelType;
+        this.renderSlidePanel();
+    },
+
+    closeSlidePanel: function() {
+        this.state.activeModal = null;
+        this.renderSlidePanel();
+    },
+
+    addItem: function(type, key) {
+        if (this.state.selectedUnit === null) return;
+        var arr = this.state.currentFaction.units[this.state.selectedUnit][type];
+        if (!Array.isArray(arr)) {
+            arr = [];
+            this.state.currentFaction.units[this.state.selectedUnit][type] = arr;
+        }
+        if (arr.indexOf(key) === -1) {
+            arr.push(key);
+        }
+        this.state.activeModal = null;
+        this.refresh();
+    },
+
+    removeItem: function(type, index) {
+        if (this.state.selectedUnit === null) return;
+        this.state.currentFaction.units[this.state.selectedUnit][type].splice(index, 1);
+        this.refresh();
+    },
+
+    addSupplemental: function() {
+        if (this.state.selectedUnit === null) return;
+
+        var nameEl = document.getElementById('supp-name');
+        var typeEl = document.getElementById('supp-type');
+        var effectEl = document.getElementById('supp-effect');
+
+        if (!nameEl || !typeEl || !effectEl) return;
+
+        var name = nameEl.value.trim();
+        var type = typeEl.value;
+        var effect = effectEl.value.trim();
+
+        if (!name || !effect) {
+            alert('Please enter a name and effect.');
+            return;
+        }
+
+        var statMods = {};
+        var calculatedCost = 0;
+
+        if (document.getElementById('mod-quality').checked) {
+            var qVal = parseInt(document.getElementById('mod-quality-val').value, 10) || 0;
+            statMods.quality = qVal;
+            calculatedCost += (qVal * -15);
+        }
+        if (document.getElementById('mod-defense').checked) {
+            var dVal = parseInt(document.getElementById('mod-defense-val').value, 10) || 0;
+            statMods.defense = dVal;
+            calculatedCost += (dVal * 10);
+        }
+        if (document.getElementById('mod-move').checked) {
+            var mVal = parseInt(document.getElementById('mod-move-val').value, 10) || 0;
+            statMods.move = mVal;
+            calculatedCost += (mVal * 2.5);
+        }
+        if (document.getElementById('mod-range').checked) {
+            var rVal = parseInt(document.getElementById('mod-range-val').value, 10) || 0;
+            statMods.range = rVal;
+            calculatedCost += (rVal * 1.67);
+        }
+
+        calculatedCost = Math.max(0, Math.round(calculatedCost / 5) * 5);
+
+        var supplemental = {
+            name: name,
+            type: type,
+            effect: effect
+        };
+
+        if (calculatedCost > 0) {
+            supplemental.cost = calculatedCost;
+        }
+        if (Object.keys(statMods).length > 0) {
+            supplemental.stat_modifiers = statMods;
+        }
+
+        this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.push(supplemental);
+
+        nameEl.value = '';
+        effectEl.value = '';
+        document.getElementById('mod-quality').checked = false;
+        document.getElementById('mod-defense').checked = false;
+        document.getElementById('mod-move').checked = false;
+        document.getElementById('mod-range').checked = false;
+
+        this.refresh();
+    },
+
+    removeSupplemental: function(index) {
+        if (this.state.selectedUnit === null) return;
+        this.state.currentFaction.units[this.state.selectedUnit].supplemental_abilities.splice(index, 1);
+        this.refresh();
+    },
+
+    pasteLoad: function(str) {
+        if (!str || str.trim() === '') return;
+        try {
+            var j = JSON.parse(str);
+            this.state.currentFaction = this.sanitizeFaction(j);
+            this.state.selectedUnit   = this.state.currentFaction.units.length > 0 ? 0 : null;
+            this.state.isPasted       = true;
+            this.refresh();
+            alert("✓ Faction loaded successfully!");
+        } catch (e) {
+            console.error("JSON parse error:", e);
+            alert("Invalid JSON format. Please check your input.");
+        }
+    },
+
+    loadFactionFromGitHub: function(url) {
+        if (!url) return;
+        var self = this;
+        fetch(url + '?t=' + Date.now())
+            .then(function(r) {
+                if (!r.ok) throw new Error('Fetch failed: ' + url);
+                return r.json();
+            })
+            .then(function(j) {
+                self.state.currentFaction = self.sanitizeFaction(j);
+                self.state.selectedUnit   = self.state.currentFaction.units.length > 0 ? 0 : null;
+                self.state.isPasted       = true;
+                self.refresh();
+                console.log('✅ Loaded faction:', self.state.currentFaction.faction);
+            })
+            .catch(function(e) {
+                console.error('❌ Faction load failed:', e);
+                alert('Could not load faction file: ' + e.message);
+            });
+    },
+
+    download: function() {
+        var blob = new Blob([JSON.stringify(this.state.currentFaction, null, 2)], { type: "application/json" });
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = this.state.currentFaction.faction.replace(/\s+/g, '-').toLowerCase() + ".json";
+        a.click();
+    }
+};
+
+window.CC_APP = {
+    init: function(options) {
+        var rootEl = (options && options.root) ? options.root : document.getElementById('faction-studio-root');
+        if (!rootEl) {
+            console.error('❌ Faction Studio: no root element found');
+            return;
+        }
+        window.CCFB_FACTORY._rootEl = rootEl;
+        window.CCFB_FACTORY.init();
+    }
+};
