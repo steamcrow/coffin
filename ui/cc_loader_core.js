@@ -8,19 +8,12 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 (function () {
 
   // Guard: don't run if another instance is already booted on this element.
-  // We use a sessionStorage flag so it persists across Odoo re-renders
-  // but clears on actual page reload.
   var _shellRoot = document.getElementById('cc-master-shell-root');
-  var _guardKey  = 'cc_loader_active';
-  if (sessionStorage.getItem(_guardKey) === '1') {
+  if (window.CC_MASTER_BOOTED) {
     console.warn('[CC] cc_loader_core already active — skipping duplicate');
     return;
   }
-  sessionStorage.setItem(_guardKey, '1');
-  // Clear the flag when the page unloads so a real reload starts fresh
-  window.addEventListener('beforeunload', function () {
-    sessionStorage.removeItem(_guardKey);
-  });
+  window.CC_MASTER_BOOTED = true;
 
   // ── Bootstrap dropdown autoClose:null patch ───────────────────────────────
   (function patchBootstrapDropdownAutoClose() {
@@ -337,11 +330,8 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   function renderLauncher() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
-    // Don't wipe the DOM if another loader instance is mid-load
-    if (root.getAttribute('data-cc-loading')) {
-      console.warn('[CC] renderLauncher blocked — app load in progress');
-      return;
-    }
+    // Clear any stuck load token before rendering
+    root.removeAttribute('data-cc-loading');
 
     var cards = Object.keys(APPS).map(function (id) {
       var app = APPS[id];
@@ -633,11 +623,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   function showPreloader() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
-    // Don't wipe the DOM if another loader instance is mid-load
-    if (root.getAttribute('data-cc-loading')) {
-      console.warn('[CC] showPreloader blocked — app load in progress');
-      return;
-    }
+
 
     if (!document.getElementById('cc-preloader-keyframes')) {
       var ks = document.createElement('style');
@@ -700,17 +686,26 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   }
 
   function initOrObserve() {
-    if (document.getElementById('cc-master-shell-root')) {
+    var root = document.getElementById('cc-master-shell-root');
+    if (root) {
+      root.removeAttribute('data-cc-loading');
       boot(renderLauncher);
-    } else {
-      var observer = new MutationObserver(function (mutations, obs) {
-        if (document.getElementById('cc-master-shell-root')) {
-          boot(renderLauncher);
-          obs.disconnect();
-        }
-      });
-      observer.observe(document.body, { childList: true, subtree: true });
+      return;
     }
+    // Poll for the element — more reliable than MutationObserver in Odoo
+    var checks = 0;
+    var timer = setInterval(function () {
+      var r = document.getElementById('cc-master-shell-root');
+      checks++;
+      if (r) {
+        clearInterval(timer);
+        r.removeAttribute('data-cc-loading');
+        boot(renderLauncher);
+      } else if (checks >= 20) {
+        clearInterval(timer);
+        console.error('[CC] Could not find #cc-master-shell-root after 10s');
+      }
+    }, 500);
   }
 
   initOrObserve();
