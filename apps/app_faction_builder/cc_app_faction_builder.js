@@ -1,157 +1,18 @@
-/* cc-schema-patched-v1 */
 // ================================
-// Faction Builder App
-// File: coffin/apps/app_faction_builder/cc_app_faction_builder.js
+// Rules Explorer App
+// File: coffin/apps/app_rules_explorer/cc_app_rules_explorer.js
 // ================================
 
-console.log("⚔️ Faction Builder app loaded");
-
-// ── Bootstrap Dropdown null-autoClose patch ──────────────────────────────
-(function() {
-  function patchDropdown() {
-    if (!window.bootstrap || !window.bootstrap.Dropdown) return false;
-    var OrigDropdown = window.bootstrap.Dropdown;
-    function PatchedDropdown(el, config) {
-      if (config && config.autoClose === null) config.autoClose = true;
-      return new OrigDropdown(el, config);
-    }
-    Object.keys(OrigDropdown).forEach(function(k) {
-      PatchedDropdown[k] = typeof OrigDropdown[k] === 'function'
-        ? function() { return OrigDropdown[k].apply(OrigDropdown, arguments); }
-        : OrigDropdown[k];
-    });
-    PatchedDropdown.prototype = OrigDropdown.prototype;
-    window.bootstrap.Dropdown = PatchedDropdown;
-    console.log("✅ Bootstrap Dropdown autoClose patch applied");
-    return true;
-  }
-  if (!patchDropdown()) {
-    var _tries = 0;
-    var _iv = setInterval(function() {
-      if (patchDropdown() || _tries++ > 20) clearInterval(_iv);
-    }, 100);
-  }
-}());
+console.log("📘 Rules Explorer app loaded");
 
 (function () {
   var _destroyFn = null;
 
-  function mount(rootEl, ctx) {
+  async function mount(rootEl, ctx) {
     var root = rootEl;
-    console.log("🚀 Faction Builder init", ctx);
+    console.log("🚀 Rules Explorer init", ctx);
 
-    // ---- SLIDE PANEL CSS — injected synchronously so panels work immediately
-    //      regardless of whether cc_ui.css has finished loading from GitHub.
-    if (!document.getElementById('cc-fb-panel-styles')) {
-      const panelStyle = document.createElement('style');
-      panelStyle.id = 'cc-fb-panel-styles';
-      panelStyle.textContent = `
-        .cc-slide-panel {
-          position: fixed !important;
-          top: 0 !important;
-          right: -520px !important;
-          width: 460px;
-          max-width: 92vw;
-          height: 100vh;
-          background: #111 !important;
-          border-left: 3px solid #ff7518;
-          box-shadow: -10px 0 50px rgba(0,0,0,0.85);
-          z-index: 9999 !important;
-          transition: right 0.32s ease-in-out !important;
-          overflow-y: auto;
-          padding: 22px;
-          box-sizing: border-box;
-        }
-        .cc-slide-panel-open {
-          right: 0 !important;
-        }
-        .cc-slide-panel-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 20px;
-          padding-bottom: 15px;
-          border-bottom: 2px solid #ff7518;
-        }
-        .cc-slide-panel-header h2 {
-          color: #ff7518;
-          margin: 0;
-          font-size: 17px;
-          font-weight: 900;
-          text-transform: uppercase;
-          letter-spacing: .06em;
-        }
-        .cc-panel-close-btn {
-          background: transparent;
-          border: 1px solid #ff7518;
-          color: #ff7518;
-          padding: 4px 10px;
-          border-radius: 4px;
-          cursor: pointer;
-          font-size: 16px;
-          line-height: 1;
-        }
-        .cc-panel-close-btn:hover {
-          background: #ff7518;
-          color: #000;
-        }
-        @media (max-width: 768px) {
-          .cc-slide-panel { width: 100vw !important; right: -100vw !important; }
-        }
-
-        /* ---- Splash / preloader ---- */
-        .cc-loading-container {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          padding: 2rem;
-          background: #0a0806;
-        }
-        .cc-loading-text {
-          color: rgba(255,255,255,0.4);
-          font-size: 0.8rem;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          margin-top: 1rem;
-        }
-        .cc-loading-bar {
-          width: 260px;
-          max-width: 80vw;
-          height: 3px;
-          background: rgba(255,117,24,0.15);
-          border-radius: 2px;
-          overflow: hidden;
-          position: relative;
-        }
-        .cc-loading-progress {
-          position: absolute;
-          top: 0; left: 0; bottom: 0;
-          width: 40%;
-          background: #ff7518;
-          border-radius: 2px;
-          animation: cc-bar-slide 1.4s ease-in-out infinite;
-        }
-        @keyframes cc-bar-slide {
-          0%   { left: -40%; width: 40%; }
-          50%  { left: 30%;  width: 50%; }
-          100% { left: 110%; width: 40%; }
-        }
-        @keyframes cc-logo-pulse {
-          0%   { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
-          50%  { filter: drop-shadow(0 0 48px rgba(255,117,24,0.85)); transform: scale(1.03); }
-          100% { filter: drop-shadow(0 0 18px rgba(255,117,24,0.35)); transform: scale(1);    }
-        }
-        .cc-splash-logo {
-          animation: cc-logo-pulse 2.4s ease-in-out infinite;
-        }
-      `;
-      document.head.appendChild(panelStyle);
-    }
-
-    // ---- LOAD CSS ----
-    // FIX: paths updated from rules/ui/ → ui/ and rules/apps/ → apps/app_faction_builder/
+    // ---- LOAD CSS FROM GITHUB ----
     if (!document.getElementById('cc-core-ui-styles')) {
       fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css?t=' + Date.now())
         .then(res => res.text())
@@ -165,15 +26,15 @@ console.log("⚔️ Faction Builder app loaded");
         .catch(err => console.error('❌ Core CSS load failed:', err));
     }
 
-    if (!document.getElementById('cc-faction-builder-styles')) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_faction_builder/cc_app_faction_builder.css?t=' + Date.now())
+    if (!document.getElementById('cc-rules-explorer-styles')) {
+      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/app_rules_explorer/cc_app_rules_explorer.css?t=' + Date.now())
         .then(res => res.text())
         .then(css => {
           const style = document.createElement('style');
-          style.id = 'cc-faction-builder-styles';
+          style.id = 'cc-rules-explorer-styles';
           style.textContent = css;
           document.head.appendChild(style);
-          console.log('✅ Faction Builder CSS applied!');
+          console.log('✅ Rules Explorer CSS applied!');
         })
         .catch(err => console.error('❌ App CSS load failed:', err));
     }
@@ -191,1554 +52,1650 @@ console.log("⚔️ Faction Builder app loaded");
         .catch(() => console.warn('⚠️ cc_print.css not found'));
     }
 
-    // ---- LOAD STORAGE HELPERS ----
-    // FIX: path updated from rules/src/ → data/src/
-    if (!window.CC_STORAGE) {
-      fetch('https://raw.githubusercontent.com/steamcrow/coffin/main/apps/storage_helpers.js?t=' + Date.now())
-        .then(res => res.text())
-        .then(code => {
-          const script = document.createElement('script');
-          script.textContent = code;
-          document.head.appendChild(script);
-          console.log('✅ Storage Helpers loaded!');
-        })
-        .catch(err => console.error('❌ Storage Helpers load failed:', err));
-    }
+    // ---- HELPERS (robust injection + adapter) ----
+    // The loader calls window.createRulesHelpers but rules_helpers.js exports
+    // window.CC_RULES_HELPERS.createRulesHelpers — name mismatch means the
+    // loader gets an empty helpers object and falls back to getById(rulesBase.rules[id])
+    // which fails because rulesBase isn't keyed that way.
+    // Fix: call createRulesHelpers ourselves with the rulesBase from ctx.
 
-    // ================================
-    // STATE
-    // ================================
-    const state = {
-      currentFaction: null,
-      factionData: {},
-      roster: [],
-      rosterName: 'Unnamed Roster',
-      budget: 500,
-      selectedUnitId: null,
-      builderMode: null,
-      builderTarget: null,
-      builderConfig: { optionalUpgrades: [], supplemental: null },
-      rosterViewMode: 'grid'
-    };
+    let helpersRaw = ctx?.helpers || {};
 
-    // ================================
-    // FACTION DATA
-    // ================================
-    const FACTION_FILES = [
-      { id: 'monster_rangers', title: 'Monster Rangers', file: 'faction-monster-rangers-v5.json' },
-      { id: 'liberty_corps',   title: 'Liberty Corps',   file: 'faction-liberty-corps-v2.json'   },
-      { id: 'monsterology',    title: 'Monsterology',     file: 'faction-monsterology-v2.json'    },
-      { id: 'monsters',        title: 'Monsters',         file: 'faction-monsters-v2.json'        },
-      { id: 'shine_riders',    title: 'Shine Riders',     file: 'faction-shine-riders-v2.json'    },
-      { id: 'crow_queen',      title: 'Crow Queen',       file: 'faction-crow-queen.json'         }
-    ];
-
-    const FACTION_TITLES = {
-      monster_rangers: 'Monster Rangers',
-      liberty_corps:   'Liberty Corps',
-      monsterology:    'Monsterology',
-      monsters:        'Monsters',
-      shine_riders:    'Shine Riders',
-      crow_queen:      'Crow Queen'
-    };
-
-    // ================================
-    // FACTION ICON SYSTEM
-    // ================================
-    const FACTION_COLORS = {
-      monster_rangers: '#4caf50',
-      liberty_corps:   '#ef5350',
-      monsterology:    '#9c27b0',
-      monsters:        '#ff7518',
-      shine_riders:    '#ffd600',
-      crow_queen:      '#00bcd4'
-    };
-
-
-    const FACTION_ICON_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
-
-    function factionIconHtml(factionId, size = 32) {
-      if (!factionId) return '';
-      const color = FACTION_COLORS[factionId] || '#ff7518';
-      const src   = `${FACTION_ICON_BASE}${factionId}_logo.svg`;
-      const label = (FACTION_TITLES[factionId] || '?').charAt(0);
-      return `<img
-        src="${src}"
-        class="cc-faction-icon"
-        style="width:${size}px;height:${size}px;--faction-color:${color};"
-        onerror="this.style.display='none';this.nextElementSibling.style.display='flex';"
-        alt="${esc(factionId)}"
-      /><div style="display:none;width:${size}px;height:${size}px;background:${color}22;border:1px solid ${color};border-radius:50%;align-items:center;justify-content:center;font-size:${Math.round(size * 0.45)}px;font-weight:900;color:${color};">${label}</div>`;
-    }
-
-    // ================================
-    // ABILITY DICTIONARY SYSTEM
-    // ================================
-    const ABILITY_FILES = [
-      '90_ability_dictionary_A.json',
-      '91_ability_dictionary_B.json',
-      '92_ability_dictionary_C.json',
-      '93_ability_dictionary_D.json',
-      '94_ability_dictionary_E.json',
-      '95_ability_dictionary_F.json',
-      '96_ability_dictionary_G.json',
-      '97_ability_dictionary_H.json',
-      '98_ability_dictionary_I.json',
-    ];
-    // FIX: ability base path updated from rules/src/ → data/src/
-    const ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/';
-
-    let _abilityCache    = {};
-    let _abilityFetched  = false;
-    let _abilityFetching = false;
-
-    function ingestAbilityFile(data) {
-      if (!data || typeof data.abilities !== 'object') return;
-      Object.keys(data.abilities).forEach(slug => {
-        const entry = data.abilities[slug];
-        if (!entry || typeof entry !== 'object') return;
-        _abilityCache[slug] = {
-          name:   slugToName(slug),
-          id:     entry._id    || '',
-          timing: entry.timing || '',
-          short:  entry.desc_short  || '',
-          long:   entry.desc_long   || '',
-        };
-      });
-    }
-
-    function slugToName(slug) {
-      return slug.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    }
-
-    function formatTiming(timing) {
-      if (!timing) return '';
-      return timing.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-    }
-
-    // displayName: converts slug or raw ability names to human-readable labels.
-    // "load_and_carry" -> "Load and Carry"   "GAS_MASK" -> "Gas Mask"
-    const _LC_WORDS = new Set(['and','or','of','the','a','an','in','on','at','to','for','with','by']);
-    function displayName(raw) {
-      if (!raw) return '';
-      const words = String(raw).replace(/_/g, ' ').trim().split(/\s+/);
-      return words.map((w, i) => {
-        const lower = w.toLowerCase();
-        return (i === 0 || !_LC_WORDS.has(lower))
-          ? lower.charAt(0).toUpperCase() + lower.slice(1)
-          : lower;
-      }).join(' ');
-    }
-
-    function loadAbilityDictionaries() {
-      if (_abilityFetched || _abilityFetching) return;
-      _abilityFetching = true;
-      const promises = ABILITY_FILES.map(filename =>
-        fetch(ABILITY_BASE + filename + '?t=' + Date.now())
-          .then(r => r.ok ? r.json() : null)
-          .then(data => { if (data) ingestAbilityFile(data); })
-          .catch(e => console.warn('⚠️ Ability file failed:', filename, e))
-      );
-      Promise.all(promises).then(() => {
-        _abilityFetched  = true;
-        _abilityFetching = false;
-        console.log('[FB] Abilities loaded —', Object.keys(_abilityCache).length, 'entries');
-      });
-    }
-
-    function lookupAbility(displayName) {
-      if (!displayName) return null;
-      const slug = String(displayName).trim().toLowerCase().replace(/\s+/g, '_');
-      if (_abilityCache[slug]) return _abilityCache[slug];
-      const base = slug.replace(/_\d+$/, '');
-      if (_abilityCache[base]) return _abilityCache[base];
-      const flat = slug.replace(/_/g, '');
-      const keys = Object.keys(_abilityCache);
-      for (const k of keys) {
-        if (k.replace(/_/g, '') === flat) return _abilityCache[k];
+    if (window.CC_RULES_HELPERS?.createRulesHelpers) {
+      const rulesBase = ctx?.rulesBase || {};
+      try {
+        const freshHelpers = window.CC_RULES_HELPERS.createRulesHelpers(rulesBase);
+        if (typeof freshHelpers?.getRuleSection === 'function') {
+          helpersRaw = freshHelpers;
+          console.log('✅ Helpers bootstrapped via CC_RULES_HELPERS.createRulesHelpers');
+        }
+      } catch (e) {
+        console.warn('⚠️ createRulesHelpers failed:', e);
       }
-      const firstWord = slug.split('_')[0];
-      if (firstWord.length >= 4) {
-        for (const k of keys) {
-          if (k === firstWord || k.startsWith(firstWord + '_')) return _abilityCache[k];
+    }
+
+    // Normalise function names across loader versions
+    const helpers = {
+      ...helpersRaw,
+      getRuleSection:
+        (typeof helpersRaw.getRuleSection === 'function' && helpersRaw.getRuleSection) ||
+        (typeof helpersRaw.getById        === 'function' && helpersRaw.getById)        ||
+        (typeof helpersRaw.getSection     === 'function' && helpersRaw.getSection)     ||
+        (typeof helpersRaw.getRule        === 'function' && helpersRaw.getRule)        ||
+        (typeof helpersRaw.getRuleData    === 'function' && helpersRaw.getRuleData)    ||
+        (typeof helpersRaw.fetchSection   === 'function' && helpersRaw.fetchSection)   ||
+        null,
+      getChildren:
+        (typeof helpersRaw.getChildren    === 'function' && helpersRaw.getChildren)    ||
+        (typeof helpersRaw.childrenOf     === 'function' && helpersRaw.childrenOf)     ||
+        (typeof helpersRaw.getSubsections === 'function' && helpersRaw.getSubsections) ||
+        null,
+    };
+
+    try {
+      console.log("🧰 helpersRaw keys:", Object.keys(helpersRaw || {}));
+      console.log("🧰 getRuleSection:", helpers.getRuleSection ? "OK" : "MISSING");
+      console.log("🧰 getChildren:",    helpers.getChildren    ? "OK" : "MISSING");
+    } catch (e) {}
+
+    const RULES_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/';
+
+    // Load index from GitHub if ctx didn't provide it
+    let index = Array.isArray(ctx?.rulesBase?.index) ? ctx.rulesBase.index : [];
+    if (index.length === 0) {
+      try {
+        const idxRes  = await fetch(RULES_BASE_URL + 'rules_base.json?t=' + Date.now());
+        const idxData = await idxRes.json();
+        index = Array.isArray(idxData) ? idxData
+              : Array.isArray(idxData?.index) ? idxData.index
+              : Array.isArray(idxData?.rules) ? idxData.rules
+              : [];
+        console.log('✅ Index loaded from GitHub:', index.length, 'entries');
+      } catch (e) {
+        console.error('❌ Could not load rules_base.json from GitHub:', e);
+      }
+    } else {
+      console.log('✅ Index from ctx:', index.length, 'entries');
+    }
+
+    // Cache for directly-fetched rule files (so we don't re-fetch on every click)
+    const directFileCache = {};
+
+    // Fetch a rule's JSON file directly from GitHub using its index entry
+    async function fetchRuleDirectly(id) {
+      if (directFileCache[id]) return directFileCache[id];
+      const meta = index.find(it => it.id === id);
+      if (!meta) { console.warn('⚠️ No index entry for:', id); return null; }
+
+      const filePaths = [
+        meta.file                                   && (RULES_BASE_URL + 'src/' + meta.file.replace(/^src\//, '')),
+        meta.file                                   && (RULES_BASE_URL + meta.file),
+        meta.path && meta.path.includes('/')        && (RULES_BASE_URL + 'src/' + meta.path.split('.')[0] + '.json'),
+      ].filter(Boolean);
+
+      for (const url of filePaths) {
+        try {
+          console.log('📥 Trying direct fetch:', url);
+          const res = await fetch(url + '?t=' + Date.now());
+          if (!res.ok) continue;
+          const data = await res.json();
+          const result = { meta, content: data };
+          directFileCache[id] = result;
+          console.log('✅ Direct fetch success:', id, url);
+          return result;
+        } catch (e) {
+          console.warn('⚠️ Direct fetch failed for:', url, e.message);
         }
       }
+      console.error('❌ All direct fetch paths failed for:', id, filePaths);
       return null;
     }
 
-    // ================================
-    // SLIDE PANEL MANAGEMENT
-    // ================================
-    const FB_PANEL_IDS = ['fb-ability-panel', 'fb-stat-panel', 'fb-cloud-roster-panel'];
+    // ---- SAFETY CHECK ----
+    if (typeof helpers.getRuleSection !== "function" || typeof helpers.getChildren !== "function") {
+      const found   = Object.keys(helpersRaw || {}).join(", ");
+      const globals = [
+        ["window.CC_RULES_HELPERS", window.CC_RULES_HELPERS],
+        ["window.rules_helpers",    window.rules_helpers],
+        ["window.RULES_HELPERS",    window.RULES_HELPERS],
+        ["window.CC_HELPERS",       window.CC_HELPERS],
+      ]
+        .filter(([, v]) => !!v)
+        .map(([k, v]) => `${k} (${Object.keys((v.rules || v.api || v) || {}).length} keys)`)
+        .join(" • ");
 
-    function closeAllSlidePanels() {
-      FB_PANEL_IDS.forEach(id => {
-        const p = document.getElementById(id);
-        if (p) {
-          p.classList.remove('cc-slide-panel-open');
-          setTimeout(() => { if (p.parentNode) p.parentNode.removeChild(p); }, 300);
-        }
-      });
-      const bd = document.getElementById('fb-panel-backdrop');
-      if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
-    }
-
-    function installPanelBackdrop() {
-      if (document.getElementById('fb-panel-backdrop')) return;
-      const bd = document.createElement('div');
-      bd.id = 'fb-panel-backdrop';
-      bd.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
-      bd.addEventListener('click', closeAllSlidePanels);
-      document.body.appendChild(bd);
-    }
-
-    // ================================
-    // UTILITIES
-    // ================================
-    function esc(str) {
-      if (!str) return '';
-      return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function generateId() {
-      return 'u_' + Math.random().toString(36).substr(2, 9);
-    }
-
-    function calculateTotalCost() {
-      return state.roster.reduce((sum, item) => sum + (item.totalCost || 0), 0);
-    }
-
-    function calculateUnitCost(baseUnit, config) {
-      let cost = baseUnit.cost || 0;
-      (config.optionalUpgrades || []).forEach(u => { cost += u.cost || 0; });
-      if (config.supplemental) cost += config.supplemental.cost || 0;
-      return cost;
-    }
-
-    function getMaxAllowed(unit) {
-      const comp = unit.composition || {};
-
-      // Hard cap: unit.unique OR composition.max_count  → use that number, period.
-      // This is for heroes, named characters, etc. Budget size is irrelevant.
-      if (unit.unique === true)          return comp.max_count || 1;
-      if (comp.max_count != null)        return comp.max_count;
-
-      // Scaling limit: 1 per X points of budget.
-      // e.g. per_points:150 at 500 pt budget → floor(500/150) = 3 max.
-      // Guard: if per_points is somehow bigger than the budget,
-      // that still means "1" — not "0" (which would wrongly block purchase).
-      if (comp.per_points) {
-        if (state.budget <= 0) return Infinity;
-        return Math.max(1, Math.floor(state.budget / comp.per_points));
-      }
-
-      return Infinity;
-    }
-
-    function countInRoster(unitName) {
-      return state.roster.filter(r => r.unitName === unitName).length;
-    }
-
-    // ================================
-    // DATA LOADING
-    // FIX: faction base URL updated from factions/ → data/factions/
-    // ================================
-    const FACTION_BASE_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/';
-
-    async function loadFaction(factionId) {
-      if (state.factionData[factionId]) return state.factionData[factionId];
-      const factionFile = FACTION_FILES.find(f => f.id === factionId);
-      if (!factionFile) throw new Error(`Unknown faction: ${factionId}`);
-      try {
-        const response = await fetch(`${FACTION_BASE_URL}${factionFile.file}?t=${Date.now()}`);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        state.factionData[factionId] = data;
-        console.log('✅ Faction loaded:', factionId);
-        return data;
-      } catch (e) {
-        console.error('❌ Failed to load faction:', e);
-        alert(`Failed to load faction: ${e.message}`);
-        return null;
-      }
-    }
-
-    async function switchFaction(factionId) {
-      if (!factionId) return;
-      try {
-        const data = await loadFaction(factionId);
-        if (data) {
-          state.currentFaction = factionId;
-          state.roster         = [];
-          state.selectedUnitId = null;
-          state.builderMode    = null;
-          state.builderTarget  = null;
-          state.builderConfig  = { optionalUpgrades: [], supplemental: null };
-          render();
-        }
-      } catch (e) {
-        console.error('❌ Failed to switch faction:', e);
-        alert(`Failed to switch faction: ${e.message}`);
-      }
-    }
-
-    // ================================
-    // LOGIN STATUS
-    // ================================
-    // Auth result cached after first check — no repeated network calls per interaction.
-    let _authCache = null;
-
-    async function getAuth() {
-      if (_authCache)       return _authCache;
-      if (ctx?.auth)        return (_authCache = ctx.auth);
-      if (window.CC_AUTH)   return (_authCache = window.CC_AUTH);
-      if (window.CC_STORAGE) {
-        try { return (_authCache = await window.CC_STORAGE.checkAuth()); }
-        catch (e) {}
-      }
-      return (_authCache = { loggedIn: false });
-    }
-
-    async function updateLoginStatus() {
-      const statusBar = document.getElementById('cc-login-status');
-      if (!statusBar) return;
-      const auth = await getAuth();
-      statusBar.className = auth.loggedIn ? 'cc-login-status logged-in' : 'cc-login-status logged-out';
-      statusBar.innerHTML = auth.loggedIn
-        ? `<i class="fa fa-check-circle"></i> Logged in as ${esc(auth.userName)}`
-        : `<i class="fa fa-exclamation-circle"></i> Log in to save and load from cloud`;
-    }
-
-    // ================================
-    // ABILITY PANEL
-    // ================================
-    window.showAbilityTooltip = function(abilityName, event) {
-      const tooltip = document.getElementById('ability-tooltip');
-      if (!tooltip) return;
-      tooltip.textContent = `Click to view: ${displayName(abilityName)}`;
-      tooltip.style.display = 'block';
-      tooltip.style.left = event.pageX + 12 + 'px';
-      tooltip.style.top  = event.pageY + 12 + 'px';
-    };
-
-    window.hideAbilityTooltip = function() {
-      const tooltip = document.getElementById('ability-tooltip');
-      if (tooltip) tooltip.style.display = 'none';
-    };
-
-    window.showAbilityPanel = function(abilityName) {
-      loadAbilityDictionaries();
-      closeAllSlidePanels();
-      installPanelBackdrop();
-
-      const panel = document.createElement('div');
-      panel.id = 'fb-ability-panel';
-      panel.className = 'cc-slide-panel';
-      panel.style.zIndex = '9999';
-      panel.addEventListener('click', e => e.stopPropagation());
-
-      if (_abilityFetching && !_abilityFetched) {
-        panel.innerHTML = `
-          <div class="cc-slide-panel-header">
-            <h2><i class="fa fa-book"></i> ${esc(displayName(abilityName)).toUpperCase()}</h2>
-            <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
+      root.innerHTML = `
+        <div class="cc-app-shell h-100">
+          <div class="container py-5 text-danger">
+            <h4>Rules helpers not available (or missing required functions)</h4>
+            <p><strong>Need:</strong> getRuleSection() and getChildren()</p>
+            <p><strong>Found keys:</strong> ${found || "(none)"}</p>
+            <p><strong>Globals seen:</strong> ${globals || "(none)"}</p>
+            <hr/>
+            <p class="mb-0">Your loader injected helpers, but the function names don't match what the app expects.</p>
           </div>
-          <div style="padding:2rem;text-align:center;color:#888;">
-            <div style="font-size:2rem;animation:cc-spin 1s linear infinite;display:inline-block;margin-bottom:.75rem;">⟳</div><br>
-            Loading ability dictionary…
-          </div>`;
-        document.body.appendChild(panel);
-        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
+        </div>
+      `;
+      return;
+    }
 
-        let retries = 0;
-        const poll = setInterval(() => {
-          retries++;
-          if (_abilityFetched || retries > 26) {
-            clearInterval(poll);
-            const old = document.getElementById('fb-ability-panel');
-            if (old) { old.classList.remove('cc-slide-panel-open'); setTimeout(() => old.remove(), 300); }
-            const bd = document.getElementById('fb-panel-backdrop');
-            if (bd && bd.parentNode) bd.parentNode.removeChild(bd);
-            if (_abilityFetched) window.showAbilityPanel(abilityName);
-          }
-        }, 300);
+    // ---- FAVORITES SYSTEM ----
+    const STORAGE_KEY = 'cc_rules_favorites';
+
+    function getFavorites() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) { return []; }
+    }
+
+    function saveFavorites(favorites) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+      } catch (e) { console.error('Could not save favorites', e); }
+    }
+
+    function isFavorite(id) { return getFavorites().includes(id); }
+
+    function toggleFavorite(id) {
+      const favorites = getFavorites();
+      const i = favorites.indexOf(id);
+      if (i > -1) { favorites.splice(i, 1); } else { favorites.push(id); }
+      saveFavorites(favorites);
+    }
+
+    // ---- FACTIONS DATA ----
+    // NOTE: Crow Queen added here — was missing from original
+    const FACTION_FILES = [
+      { id: 'monster_rangers', title: 'Monster Rangers', emoji: '🐾', file: 'faction-monster-rangers-v5.json' },
+      { id: 'liberty_corps',   title: 'Liberty Corps',   emoji: '⚙️', file: 'faction-liberty-corps-v2.json'  },
+      { id: 'monsterology',    title: 'Monsterology',    emoji: '🔬', file: 'faction-monsterology-v2.json'   },
+      { id: 'monsters',        title: 'Monsters',        emoji: '👾', file: 'faction-monsters-v2.json'       },
+      { id: 'shine_riders',    title: 'Shine Riders',    emoji: '✨', file: 'faction-shine-riders-v2.json'   },
+      { id: 'crow_queen',      title: 'Crow Queen',      emoji: '🐦', file: 'faction-crow-queen.json'        },
+    ];
+
+    // ---- CAMPAIGN SYSTEM DATA ----
+    const CAMPAIGN_FILE = {
+      id:    'campaign_system',
+      title: 'Campaign System',
+      file:  'src/30_campaign_system.json',
+    };
+
+    let factionsData = {};
+    let campaignData = null;
+
+    // ---- GROUPED SIDEBAR NAVIGATION ----
+    const NAV_GROUPS = [
+      {
+        id: 'core', label: '⚔️ Core Rules',
+        match: (it) => ['core_mechanics', 'turn_structure'].includes(it.id),
+      },
+      {
+        id: 'vaults', label: '📖 Vaults',
+        match: (it) => ['visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault'].includes(it.id),
+      },
+      {
+        id: 'systems', label: '⚙️ Systems',
+        match: (it) => ['unit_identities', 'ability_engine'].includes(it.id),
+      },
+      {
+        id: 'abilities', label: '✨ Ability Dictionary',
+        match: (it) => Boolean(it.id?.startsWith('ability_dict_')),
+      },
+      {
+        id: 'factions', label: '🏴 Factions',
+        match: (it) => Boolean(it.id?.startsWith('faction_')),
+      },
+      {
+        id: 'campaign', label: '🗺️ Campaign',
+        match: (it) => it.id === 'campaign_system',
+      },
+    ];
+
+    // Core and Vaults open by default; others start collapsed.
+    let openGroups = new Set(['core', 'vaults']);
+
+    // ---- LOAD FACTIONS ----
+    async function loadFactions() {
+      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/factions/';
+      try {
+        const promises = FACTION_FILES.map(async (f) => {
+          const response = await fetch(baseUrl + f.file + '?t=' + Date.now());
+          const data = await response.json();
+          return { id: f.id, title: f.title, data };
+        });
+        const results = await Promise.all(promises);
+        results.forEach(r => { factionsData[r.id] = { title: r.title, data: r.data }; });
+        console.log('✅ Factions loaded:', Object.keys(factionsData));
+        return true;
+      } catch (e) {
+        console.error('❌ Failed to load factions:', e);
+        return false;
+      }
+    }
+
+    // ---- LOAD CAMPAIGN ----
+    async function loadCampaign() {
+      const baseUrl = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/';
+      try {
+        const response = await fetch(baseUrl + CAMPAIGN_FILE.file + '?t=' + Date.now());
+        const data = await response.json();
+        campaignData = { title: CAMPAIGN_FILE.title, data };
+        console.log('✅ Campaign system loaded');
+        return true;
+      } catch (e) {
+        console.error('❌ Failed to load campaign system:', e);
+        return false;
+      }
+    }
+
+    // ---- RENDER FACTION ----
+    function renderFaction(factionId) {
+      const faction = factionsData[factionId];
+      if (!faction) return '<div class="cc-muted">Faction not found</div>';
+
+      const data = faction.data;
+      let html = '';
+
+      if (data.desc_long) {
+        html += `<div class="cc-callout mb-4">${esc(data.desc_long)}</div>`;
+      }
+      if (data.lore) {
+        html += `<div class="mb-4"><p>${esc(data.lore)}</p></div>`;
+      }
+
+      if (data.units && Array.isArray(data.units)) {
+        html += `<h3 class="cc-faction-units-header">Units</h3>`;
+
+        data.units.forEach(unit => {
+          html += `
+            <div class="cc-ability-card cc-unit-card p-3 mb-4">
+
+              <div class="d-flex justify-content-between align-items-baseline mb-1">
+                <h4 class="fw-bold mb-0 cc-unit-name">${esc(unit.name)}</h4>
+                <div class="cc-unit-cost-display">${unit.cost}₤</div>
+              </div>
+
+              <div class="cc-unit-type-label">${esc(unit.type || 'Unit')}</div>
+
+              ${unit.lore ? `
+                <div class="mb-3 cc-unit-lore">${esc(unit.lore)}</div>
+              ` : ''}
+
+              <div class="cc-stat-row mb-3">
+                <div class="cc-stat-badge stat-q-border">
+                  <div class="cc-stat-label stat-q">Q</div>
+                  <div class="cc-stat-value">${unit.quality}</div>
+                </div>
+                <div class="cc-stat-badge stat-d-border">
+                  <div class="cc-stat-label stat-d">D</div>
+                  <div class="cc-stat-value">${unit.defense}</div>
+                </div>
+                <div class="cc-stat-badge stat-m-border">
+                  <div class="cc-stat-label stat-m">M</div>
+                  <div class="cc-stat-value">${unit.move}"</div>
+                </div>
+                ${unit.range ? `
+                  <div class="cc-stat-badge stat-r-border">
+                    <div class="cc-stat-label stat-r">R</div>
+                    <div class="cc-stat-value">${unit.range}"</div>
+                  </div>
+                ` : ''}
+              </div>
+
+              ${unit.weapon ? `
+                <div class="mb-2">
+                  <span class="fw-bold small cc-accent-label">Weapon:</span>
+                  <span class="fw-semibold">${esc(unit.weapon)}</span>
+                  ${unit.weapon_properties && unit.weapon_properties.length > 0
+                    ? ` <span class="cc-weapon-props">(${unit.weapon_properties.map(p => esc(typeof p === 'string' ? p : p.name || '')).join(', ')})</span>`
+                    : ''}
+                </div>
+              ` : ''}
+
+              ${unit.abilities && unit.abilities.length > 0 ? `
+                <div class="mb-3">
+                  <div class="fw-bold small mb-1 cc-accent-label">Abilities:</div>
+                  <div class="d-flex gap-1 flex-wrap">
+                    ${unit.abilities.map(ability => {
+                      let abilityName   = '';
+                      let abilityEffect = '';
+                      if (typeof ability === 'string') {
+                        abilityName = ability;
+                        try {
+                          const rulesRoot = getRulesRoot();
+                          if (rulesRoot && rulesRoot.ability_dictionary) {
+                            for (const section in rulesRoot.ability_dictionary) {
+                              if (rulesRoot.ability_dictionary[section]?.[abilityName]) {
+                                const d = rulesRoot.ability_dictionary[section][abilityName];
+                                abilityEffect = d.desc_short || d.desc_long || '';
+                                break;
+                              }
+                            }
+                          }
+                        } catch (e) {}
+                      } else if (ability && typeof ability === 'object') {
+                        abilityName   = ability.name   || '';
+                        abilityEffect = ability.desc_short || '';
+                      }
+                      const tooltipText = abilityEffect || abilityName;
+                      const titleAttr   = ` title="${tooltipText.replace(/"/g, '&quot;')}"`;
+                      return `<span class="cc-badge cc-badge-help"${titleAttr}>${esc(abilityName)}</span>`;
+                    }).join(' ')}
+                  </div>
+                </div>
+              ` : ''}
+
+              ${unit.tactics ? `
+                <div class="cc-unit-tactics">
+                  <div class="fw-bold small mb-1 cc-accent-label">Tactics:</div>
+                  <div class="cc-tactics-text">${esc(unit.tactics)}</div>
+                </div>
+              ` : ''}
+
+            </div>
+          `;
+        });
+      }
+
+      return html;
+    }
+
+    // ---- RENDER CAMPAIGN ----
+    function renderCampaign() {
+      if (!campaignData) return '<div class="cc-muted">Campaign system not loaded</div>';
+      return renderNestedSection('', campaignData.data, 0);
+    }
+
+    // ---- EXCLUDED IDS ----
+    const EXCLUDED_IDS = [
+      'sections_philosophy',
+      'philosophy',
+      'philosophy_design',
+      'philosophy_and_design',
+      'quality_system',
+      'the_roll',
+      'defense_damage',
+      'location_vault',
+      'location_types',
+      'scenario_vault',
+      'objective_vault',
+    ];
+
+    // ---- APP SHELL ----
+    root.innerHTML = `
+      <div class="cc-app-shell cc-premium h-100">
+
+        <div class="cc-app-header">
+          <div>
+            <h1 class="cc-app-title">Rules Explorer</h1>
+            <div class="cc-app-subtitle">Interactive Coffin Canyon Rules Reference</div>
+          </div>
+          <div class="cc-header-actions">
+            <button id="cc-focus-btn" class="btn btn-sm btn-outline-secondary" title="Focus mode — hides sidebars for reading">
+              📖 Focus
+            </button>
+            <button id="cc-print-btn" class="btn btn-sm btn-outline-secondary" title="Print or save as PDF">
+              🖨️ PDF
+            </button>
+          </div>
+        </div>
+
+        <div class="cc-rules-explorer">
+
+          <!-- Sidebar (Grouped Table of Contents) -->
+          <aside class="cc-rules-sidebar" id="cc-rules-sidebar">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div class="cc-panel-title mb-3">Rules</div>
+
+                <div class="btn-group btn-group-sm w-100 mb-3" role="group">
+                  <button type="button" class="btn btn-outline-secondary active" data-filter="all">All</button>
+                  <button type="button" class="btn btn-outline-secondary" data-filter="favorites">★ Starred</button>
+                </div>
+
+                <input
+                  id="cc-rule-search"
+                  class="form-control form-control-sm cc-input w-100"
+                  placeholder="Search rules..."
+                />
+              </div>
+              <div id="cc-rule-list" class="cc-list"></div>
+            </div>
+          </aside>
+
+          <!-- Main content area -->
+          <main class="cc-rules-main">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head d-flex justify-content-between align-items-center">
+                <div class="cc-panel-title">Rule Text</div>
+                <div class="cc-rules-actions">
+                  <button id="cc-favorite-btn" class="btn btn-sm btn-link d-none" title="Star this rule">
+                    <span class="cc-star">☆</span>
+                  </button>
+                </div>
+              </div>
+
+              <div id="cc-rule-detail" class="cc-body cc-rule-reader">
+                <div class="mb-4">
+                  <h2 class="cc-rule-title cc-intro-title">COFFIN CANYON</h2>
+
+                  <div class="cc-intro-callout">
+                    <h3>What This Game Is</h3>
+                    <p class="cc-intro-text">
+                      Coffin Canyon is a skirmish game about bad ground, bad choices, and things that do not stay dead.
+                      It is set in a poisoned canyon where industry, monsters, and desperate people collide.
+                      Victory comes from pressure, positioning, and knowing when to run — not from perfect plans.
+                    </p>
+                    <p class="cc-intro-tagline mb-0">This is a game of escalation.</p>
+                  </div>
+
+                  <div class="cc-intro-block">
+                    <h3>Player Agency Over Optimization</h3>
+                    <p>Coffin Canyon rewards:</p>
+                    <ul>
+                      <li>Positioning</li>
+                      <li>Timing</li>
+                      <li>Risk assessment</li>
+                      <li>Knowing when to retreat</li>
+                    </ul>
+                    <p>It does not reward:</p>
+                    <ul>
+                      <li>Perfect list building</li>
+                      <li>Static gunlines</li>
+                      <li>Passive play</li>
+                    </ul>
+                    <p class="cc-intro-tagline">If you stand still too long, the Canyon will notice.</p>
+                  </div>
+
+                  <div class="cc-intro-block">
+                    <h3>The Role of the Game Warden (Optional)</h3>
+                    <p>Coffin Canyon does not require a Game Warden. Some games will include one. Some will not.</p>
+                    <p>When present, the Game Warden's role is:</p>
+                    <ul>
+                      <li>Escalation</li>
+                      <li>Consequence</li>
+                      <li>Rules judgements</li>
+                      <li>Atmosphere</li>
+                      <li>Running NPC units</li>
+                    </ul>
+                    <p>They do not override rules. They do not "balance" the game.</p>
+                    <p class="fst-italic">They reveal what the Canyon has been waiting to do.</p>
+                  </div>
+
+                  <div class="cc-intro-block">
+                    <h3>What the Rules Assume</h3>
+                    <p>The rules assume:</p>
+                    <ul>
+                      <li>Players agree on terrain intent during setup</li>
+                      <li>Scenarios define objectives and pressure</li>
+                      <li>Ambiguity is resolved quickly and fairly</li>
+                    </ul>
+                    <p>If a situation is unclear:</p>
+                    <ul>
+                      <li>Follow the scenario</li>
+                      <li>Then follow the terrain</li>
+                      <li>Then roll a die and move on</li>
+                    </ul>
+                    <p class="fst-italic">Momentum matters more than precision.</p>
+                  </div>
+
+                  <div class="cc-intro-callout">
+                    <h3>One Final Truth</h3>
+                    <p class="cc-intro-text">
+                      Coffin Canyon is not about winning clean. It is about getting out alive, stealing everything not nailed down,
+                      or hunting for monster mort.
+                    </p>
+                    <p class="cc-intro-text fst-italic">(Depending on your Faction, of course.)</p>
+                  </div>
+
+                  <h3 class="cc-faction-units-header">How to Use This Tool</h3>
+                  <p><strong>Navigate:</strong> Click any rule in the sidebar to view it in the center panel.</p>
+                  <p><strong>Star Favorites:</strong> Click the ☆ icon to save rules, subsections, or abilities you reference often. Find them all in the "★ Starred" filter.</p>
+                  <p><strong>Search:</strong> Use the search box to quickly find any rule by name or keyword.</p>
+                  <p class="mb-4"><strong>Print:</strong> Click the Print button in the header to generate a clean, formatted rulebook.</p>
+
+                  <hr style="border-color:var(--cc-border);margin:2rem 0;">
+                  <div id="cc-quickstart-inline" class="cc-muted" style="font-style:italic;">Loading Quickstart…</div>
+                </div>
+              </div>
+
+              <div id="cc-rule-nav" class="cc-rule-nav d-none">
+                <button id="cc-prev-btn" class="btn btn-outline-secondary">‹ Previous</button>
+                <button id="cc-next-btn" class="btn btn-outline-secondary">Next ›</button>
+              </div>
+            </div>
+          </main>
+
+          <!-- Context sidebar -->
+          <aside class="cc-rules-context" id="cc-rules-context">
+            <div class="cc-panel h-100">
+              <div class="cc-panel-head">
+                <div class="cc-panel-title">Subsections</div>
+              </div>
+              <div id="cc-rule-context" class="cc-body">
+                <div class="cc-muted">Nothing selected.</div>
+              </div>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    `;
+
+    // ---- DOM HOOKS ----
+    const sidebarEl      = root.querySelector("#cc-rules-sidebar");
+    const listEl         = root.querySelector("#cc-rule-list");
+    const detailEl       = root.querySelector("#cc-rule-detail");
+    const ctxEl          = root.querySelector("#cc-rule-context");
+    const contextPanelEl = root.querySelector("#cc-rules-context");
+    const searchEl       = root.querySelector("#cc-rule-search");
+    const navEl          = root.querySelector("#cc-rule-nav");
+    const prevBtnEl      = root.querySelector("#cc-prev-btn");
+    const nextBtnEl      = root.querySelector("#cc-next-btn");
+    const favoriteBtn    = root.querySelector("#cc-favorite-btn");
+    const printBtn       = root.querySelector("#cc-print-btn");
+    const focusBtn       = root.querySelector("#cc-focus-btn");
+    const explorerEl     = root.querySelector(".cc-rules-explorer");
+
+    let selectedId    = null;
+    let currentFilter = 'all';
+    let filteredIndex = [];
+
+    // ---- SMALL UTILS ----
+    const esc = (s) =>
+      String(s ?? "")
+        .replace(/&/g,  "&amp;")
+        .replace(/</g,  "&lt;")
+        .replace(/>/g,  "&gt;")
+        .replace(/"/g,  "&quot;")
+        .replace(/'/g,  "&#39;");
+
+    const titleize = (k) => {
+      const str = String(k || "");
+
+      if (str.match(/^[A-H]$/)) {
+        const letterMap = {
+          A: 'Deployment Timing',  B: 'Movement Positioning',
+          C: 'Offense Damage',     D: 'Defense Survival',
+          E: 'Morale Fear',        F: 'Terrain Environment',
+          G: 'Thyr Ritual',        H: 'Interaction Support',
+          I: 'Monster Interactions',
+        };
+        return letterMap[str] ? `Abilities: ${letterMap[str]}` : `Abilities: ${str}`;
+      }
+
+      if (str.match(/^[A-I]_/)) {
+        const topic = str.substring(2).replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
+        return `Abilities: ${topic}`;
+      }
+
+      if (str.includes('_abilities') || str.includes('_ability')) {
+        return str.replace(/_abilities?/, '').replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase()) + ' Abilities';
+      }
+
+      if (str.includes('_dictionary')) {
+        return str.replace(/_dictionary/, '').replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase()) + ' Dictionary';
+      }
+
+      return str.replace(/_/g, " ").replace(/\b\w/g, m => m.toUpperCase());
+    };
+
+    function getRulesRoot() {
+      return (
+        ctx?.rulesBase?.data  ||
+        ctx?.rulesBase?.root  ||
+        ctx?.rulesBase?.rules ||
+        ctx?.rulesBase?.json  ||
+        ctx?.rulesBase        ||
+        ctx?.rules            ||
+        {}
+      );
+    }
+
+    function resolvePath(obj, path) {
+      if (!obj || !path) return undefined;
+      const parts = String(path).split(".");
+      let cur = obj;
+      for (const p of parts) {
+        if (cur && typeof cur === "object" && p in cur) cur = cur[p];
+        else return undefined;
+      }
+      return cur;
+    }
+
+    function candidatePaths(metaPath) {
+      const p   = String(metaPath || "");
+      const out = [p];
+      out.push(p.replace(".quality_definition",    ".sections.quality"));
+      out.push(p.replace(".the_roll",               ".sections.the_roll"));
+      out.push(p.replace(".defense_and_damage",     ".sections.defense_and_damage"));
+      out.push(p.replace(".six_based_effects",      ".sections.six_based_effects"));
+      out.push(p.replace(".critical_failure",       ".sections.critical_failure"));
+      out.push(p.replace(".quality_tracking",       ".sections.quality_tracking"));
+      out.push(p.replace("rules_master.philosophy", "rules_master.sections.philosophy"));
+      return Array.from(new Set(out)).filter(Boolean);
+    }
+
+    function pickBestResolvedContent(meta, sectionContent) {
+      if (sectionContent !== undefined && sectionContent !== null) return sectionContent;
+      const rootObj = getRulesRoot();
+      for (const path of candidatePaths(meta?.path)) {
+        const val = resolvePath(rootObj, path);
+        if (val !== undefined) return val;
+      }
+      return sectionContent;
+    }
+
+    // ---- FILTER SYSTEM ----
+    root.querySelectorAll('[data-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        root.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderList(searchEl.value);
+      });
+    });
+
+    // ---- RENDER A SINGLE SIDEBAR ITEM ----
+    function renderListItem(it) {
+      const active  = it.id === selectedId ? "active" : "";
+      const starred = isFavorite(it.id);
+      return `
+        <button class="cc-list-item ${active}" data-id="${esc(it.id)}">
+          <div class="d-flex justify-content-between align-items-center w-100">
+            <div class="flex-grow-1">
+              <div class="cc-list-title">${esc(it.title || it.id)}</div>
+              <div class="cc-list-sub">${esc(it.type || "rule")}</div>
+            </div>
+            <span class="cc-star-btn" data-star-id="${esc(it.id)}" title="Star/Unstar">
+              ${starred ? '★' : '☆'}
+            </span>
+          </div>
+        </button>
+      `;
+    }
+
+    // ---- LIST RENDER ----
+    // Renders grouped navigation by default.
+    // Falls back to a flat list during search or when Starred filter is active.
+    function renderList(filter = "") {
+      const f    = filter.trim().toLowerCase();
+      const favs = getFavorites();
+
+      let allItems = index.filter(it => !EXCLUDED_IDS.includes(it.id));
+
+      if (currentFilter === 'favorites') {
+        const indexFavorites = allItems.filter(it => favs.includes(it.id));
+        const abilityFavorites = favs
+          .filter(fav => fav.startsWith('ability-'))
+          .map(fav => ({
+            id:    fav,
+            title: titleize(fav.replace('ability-', '').replace(/-/g, ' ')),
+            type:  'ability',
+          }));
+        allItems = [...indexFavorites, ...abilityFavorites];
+      }
+
+      allItems = allItems.filter(it => {
+        if (currentFilter === 'favorites') return true;
+        const children = helpers.getChildren(it.id);
+        if (children && children.length > 0) return true;
+        return true;
+      });
+
+      if (f) {
+        allItems = allItems.filter(it => {
+          const hay = `${it.title || ""} ${it.id || ""} ${it.type || ""}`.toLowerCase();
+          return hay.includes(f);
+        });
+      }
+
+      filteredIndex = allItems;
+
+      if (!allItems.length) {
+        listEl.innerHTML = `<div class="cc-muted p-2">No matches.</div>`;
         return;
       }
 
-      const entry = lookupAbility(abilityName);
-
-      const TIMING_COLORS = {
-        'Passive':             '#90a4ae',
-        'Main Action':         '#42a5f5',
-        'Once Per Activation': '#ffd600',
-        'Once Per Round':      '#ff9800',
-        'Once Per Game':       '#ef5350',
-        'Deployment':          '#9c27b0',
-        'Reaction':            '#4caf50',
-      };
-      const timingLabel = entry ? formatTiming(entry.timing) : '';
-      const timingColor = TIMING_COLORS[timingLabel] || '#888';
-
-      let bodyHtml;
-      if (entry) {
-        bodyHtml = `
-          ${timingLabel ? `
-            <div style="display:inline-block;margin-bottom:1.25rem;padding:3px 12px;border-radius:999px;
-                        border:1px solid ${timingColor};color:${timingColor};
-                        font-size:.75rem;text-transform:uppercase;letter-spacing:.1em;">
-              ${timingLabel}
-            </div><br>` : ''}
-          ${entry.desc_short ? `<p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(entry.desc_short)}</p>` : ''}
-          ${entry.desc_long  ? `<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(entry.desc_long)}</p>` : ''}
-          ${entry.id    ? `<div style="margin-top:1.5rem;font-size:.68rem;color:#444;font-family:monospace;">${esc(entry.id)}</div>` : ''}`;
-      } else {
-        // Fallback: search faction data for a matching upgrade or weapon effect
-        let factionEntry = null;
-        const factionData = state.factionData && state.factionData[state.currentFaction];
-        if (factionData && factionData.units) {
-          const nameLower = abilityName.toLowerCase();
-          for (const u of factionData.units) {
-            // Check optional_upgrades
-            if (u.optional_upgrades) {
-              const upg = u.optional_upgrades.find(x => x.name && x.name.toLowerCase() === nameLower);
-              if (upg) { factionEntry = { source: upg.name, effect: upg.desc_short, type: 'Upgrade', cost: upg.cost }; break; }
-            }
-            // Check weapon_effects
-            if (u.weapon_effects) {
-              const we = u.weapon_effects.find(x => x.name && x.name.toLowerCase() === nameLower);
-              if (we) { factionEntry = { source: we.name, effect: we.desc_short, type: 'Weapon Effect' }; break; }
-            }
-            // Check abilities by name
-            if (u.abilities) {
-              const ab = u.abilities.find(x => (typeof x === 'object') && x.name && x.name.toLowerCase() === nameLower);
-              if (ab) { factionEntry = { source: ab.name, effect: ab.desc_short, type: 'Ability' }; break; }
-            }
-          }
-        }
-
-        if (factionEntry) {
-          bodyHtml = `
-            <div style="display:inline-block;margin-bottom:1rem;padding:3px 12px;border-radius:999px;
-                        border:1px solid #555;color:#999;font-size:.72rem;text-transform:uppercase;
-                        letter-spacing:.1em;">${esc(factionEntry.type)}${factionEntry.cost ? ' · +' + factionEntry.cost + ' ₤' : ''}</div><br>
-            <p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(factionEntry.desc_short || '')}</p>`;
-        } else {
-          bodyHtml = `
-            <p style="color:#888;font-size:.9rem;line-height:1.55;margin:0 0 .75rem;">
-              No rule entry found for <em style="color:#bbb;">${esc(displayName(abilityName))}</em>.
-            </p>
-            <p style="color:#555;font-size:.82rem;line-height:1.5;margin:0;">
-              Open the Rules Explorer and search for <em>${esc(abilityName.split(' ')[0])}</em>.
-            </p>`;
-        }
+      // ---- FLAT LIST: search mode or favorites mode ----
+      if (f || currentFilter === 'favorites') {
+        listEl.innerHTML = allItems.map(it => renderListItem(it)).join('');
+        return;
       }
 
-      panel.innerHTML = `
-        <div class="cc-slide-panel-header">
-          <h2><i class="fa fa-book"></i> ${esc(displayName(abilityName)).toUpperCase()}</h2>
-          <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
-        </div>
-        <div style="padding:1.5rem;">${bodyHtml}</div>`;
+      // ---- GROUPED LIST: default view ----
+      let html    = '';
+      const claimed = new Set();
 
-      document.body.appendChild(panel);
-      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
-    };
+      NAV_GROUPS.forEach(group => {
+        const groupItems = allItems.filter(it => group.match(it));
+        if (!groupItems.length) return;
+        groupItems.forEach(it => claimed.add(it.id));
 
-    window.closeAbilityPanel = function() {
-      closeAllSlidePanels();
-    };
-
-    // ================================
-    // STAT BADGE PANEL
-    // ================================
-    const STAT_DEFINITIONS = {
-      Q: {
-        label: 'Quality',
-        color: '#2c5282',
-        short: 'How capable this unit is at everything it does.',
-        long:  'Quality (Q) is the core dice stat. When this unit attacks, uses abilities, or tests Morale, it rolls dice equal to its Quality score. Higher Q means more dice, more consistent results. Q also sets the threshold for critical failures and special ability triggers. The + suffix is a reminder that Quality dice are rolled as a pool, not compared to a fixed number.'
-      },
-      D: {
-        label: 'Defense',
-        color: '#9b2c2c',
-        short: 'How hard this unit is to damage.',
-        long:  'Defense (D) sets how many dice the target rolls when an attack lands. Each die that rolls 5 or higher cancels one hit. A unit with D2 rolls 2 dice per hit — on average one hit is cancelled. D0 means no defense dice at all: every hit lands. The + suffix is a reminder that defense dice are added to the cancel pool.'
-      },
-      M: {
-        label: 'Move',
-        color: '#276749',
-        short: 'How far this unit can travel per Move action.',
-        long:  'Move (M) is the distance in inches this unit can travel when it takes a Move action. A unit gets two actions per activation — it can move twice, attack twice, or split them. Move is also used to calculate charge range, Disengage distances, and some ability triggers. Terrain may reduce effective Move.'
-      },
-      R: {
-        label: 'Range',
-        color: '#744210',
-        short: 'Maximum distance for ranged attacks.',
-        long:  'Range (R) is the maximum distance in inches for this unit\'s ranged attack. A dash (—) means the unit has no ranged attack and must fight in melee. Range is measured from base edge to base edge. Some abilities modify effective range. Line of Sight is always required unless an ability states otherwise.'
-      }
-    };
-
-    window.showStatPanel = function(statKey) {
-      closeAllSlidePanels();
-      installPanelBackdrop();
-
-      const def = STAT_DEFINITIONS[statKey];
-      if (!def) return;
-
-      const panel = document.createElement('div');
-      panel.id = 'fb-stat-panel';
-      panel.className = 'cc-slide-panel';
-      panel.style.zIndex = '9999';
-      panel.addEventListener('click', e => e.stopPropagation());
-
-      panel.innerHTML = `
-        <div class="cc-slide-panel-header">
-          <h2>
-            <span style="display:inline-flex;align-items:center;gap:.6rem;">
-              <span style="background:${def.color};color:#fff;font-size:.85rem;font-weight:900;
-                           padding:3px 9px;border-radius:3px;letter-spacing:.05em;">${statKey}</span>
-              ${esc(def.label).toUpperCase()}
-            </span>
-          </h2>
-          <button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
-        </div>
-        <div style="padding:1.5rem;">
-          <p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">${esc(def.desc_short)}</p>
-          <p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">${esc(def.desc_long)}</p>
-        </div>`;
-
-      document.body.appendChild(panel);
-      setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
-    };
-
-    // ================================
-    // STAT BADGES
-    // ================================
-    function getEffectiveStats(baseItem, config) {
-      const stats = {
-        quality: baseItem.quality || 0,
-        defense: baseItem.defense || 0,
-        move:    baseItem.move    || 0,
-        range:   baseItem.range   || 0
-      };
-      if (config && config.optionalUpgrades) {
-        config.optionalUpgrades.forEach(upgrade => {
-          if (upgrade.stat_modifiers) {
-            Object.entries(upgrade.stat_modifiers).forEach(([stat, val]) => {
-              if (stats[stat] !== undefined) stats[stat] += val;
-            });
-          }
-        });
-      }
-      if (config && config.supplemental && config.supplemental.stat_modifiers) {
-        Object.entries(config.supplemental.stat_modifiers).forEach(([stat, val]) => {
-          if (stats[stat] !== undefined) stats[stat] += val;
-        });
-      }
-      return stats;
-    }
-
-    function buildStatBadges(unit, config, compact = false) {
-      const base = { q: unit.quality || 0, d: unit.defense || 0, m: unit.move || 0, r: unit.range || 0 };
-      const mods = { q: 0, d: 0, m: 0, r: 0 };
-
-      ((config && config.optionalUpgrades) || []).forEach(u => {
-        const sm = u.stat_modifiers || {};
-        if (sm.quality) mods.q += sm.quality;
-        if (sm.defense) mods.d += sm.defense;
-        if (sm.move)    mods.m += sm.move;
-        if (sm.range)   mods.r += sm.range;
-      });
-      if (config && config.supplemental && config.supplemental.stat_modifiers) {
-        const sm = config.supplemental.stat_modifiers;
-        if (sm.quality) mods.q += sm.quality;
-        if (sm.defense) mods.d += sm.defense;
-        if (sm.move)    mods.m += sm.move;
-        if (sm.range)   mods.r += sm.range;
-      }
-
-      const mod = { q: base.q + mods.q, d: base.d + mods.d, m: base.m + mods.m, r: base.r + mods.r };
-
-      const badge = (label, val, baseVal, cls, statKey) => {
-        const modified   = val !== baseVal;
-        const suffix     = (label === 'Q' || label === 'D') ? '+' : '"';
-        const displayVal = (val === 0 && label === 'R') ? '-' : val;
-        const sizeClass  = compact ? 'compact' : '';
-        return `
-          <div class="cc-stat-badge stat-${cls}-border ${modified ? 'stat-modified' : ''} ${sizeClass}"
-               onclick="event.stopPropagation(); showStatPanel('${statKey}')"
-               style="cursor:pointer;"
-               title="Click to see ${label} rules">
-            <span class="cc-stat-label stat-${cls}">${label}</span>
-            <span class="cc-stat-value">${displayVal}${suffix}</span>
-          </div>`;
-      };
-
-      return `
-        <div class="stat-badge-flex ${compact ? 'compact' : ''}">
-          ${badge('Q', mod.q, base.q, 'q', 'Q')}
-          ${badge('D', mod.d, base.d, 'd', 'D')}
-          ${badge('M', mod.m, base.m, 'm', 'M')}
-          ${badge('R', mod.r, base.r, 'r', 'R')}
-        </div>`;
-    }
-
-    // ================================
-    // RENDERING
-    // ================================
-    function renderLibrary() {
-      if (!state.currentFaction) {
-        return '<div class="cc-muted p-3">Select a faction to see units</div>';
-      }
-      const faction = state.factionData[state.currentFaction];
-      if (!faction || !faction.units) {
-        return '<div class="cc-muted p-3">No units available</div>';
-      }
-
-      return faction.units.map(unit => {
-        const maxAllowed = getMaxAllowed(unit);
-        const inRoster   = countInRoster(unit.name);
-        const atLimit    = maxAllowed !== Infinity && inRoster >= maxAllowed;
-
-        const limitHint = maxAllowed !== Infinity
-          ? `<span style="font-size:0.72rem;font-weight:600;margin-left:4px;color:${atLimit ? '#ff4444' : '#888'};">(${inRoster}/${maxAllowed})</span>`
-          : '';
-
-        return `
-          <div class="cc-list-item${atLimit ? ' cc-list-item-at-limit' : ''}" onclick="selectLibraryUnit('${esc(unit.name)}')">
-            <div class="d-flex justify-content-between align-items-start">
-              <div>
-                <div class="cc-list-title">${esc(unit.name)}${limitHint}</div>
-                <div class="cc-list-sub">${esc(unit.type)}</div>
-              </div>
-              <div class="fw-bold" style="color: var(--cc-primary)">${unit.cost} ₤</div>
-            </div>
-          </div>`;
-      }).join('');
-    }
-
-    function renderRoster() {
-      if (state.roster.length === 0) {
-        return '<div class="cc-muted p-3">No units in roster</div>';
-      }
-
-      if (state.rosterViewMode === 'list') {
-        return state.roster.map(item => {
-          const isSelected = state.selectedUnitId === item.id;
-          const abilities  = item.abilities || [];
-          return `
-            <div class="cc-roster-list-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
-             <div class="roster-list-header">
-              <div>
-              <div class="roster-list-name">${esc(item.name)}</div>
-              ${item.config && item.config.supplemental
-              ? `<div class="grid-item-version">${esc(item.config.supplemental.name)}</div>`
-              : ''}
-    <div class="roster-list-type">${esc(item.type)}</div>
-  </div>
-  <div class="cc-detail-cost">
-    <i class="fa-solid fa-tag"></i>
-    <span class="cost-value">${item.totalCost} ₤</span>
-  </div>
-</div>
-              ${buildStatBadges(item, item.config, true)}
-              ${abilities.length > 0 ? `
-                <div class="roster-list-abilities">
-                  ${abilities.map(a => {
-                    const n = typeof a === 'string' ? a : (a.name || '');
-                    return `<span class="ability-tag"
-                      onmouseover="showAbilityTooltip('${esc(n)}', event)"
-                      onmouseout="hideAbilityTooltip()"
-                      onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
-                      style="cursor:pointer;">${esc(displayName(n))}</span>`;
-                  }).join('')}
-                </div>` : ''}
-              ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
-                <div class="roster-list-upgrades">
-                  ${item.config.optionalUpgrades.map(u => `<span class="ability-tag" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
-                </div>` : ''}
-              <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
-                <i class="fa fa-trash"></i>
-              </button>
-            </div>`;
-        }).join('');
-      }
-
-      // Grid view
-      return `
-        <div class="cc-roster-grid">
-          ${state.roster.map(item => {
-            const isSelected = state.selectedUnitId === item.id;
-            const abilities  = item.abilities || [];
-            return `
-              <div class="cc-roster-grid-item ${isSelected ? 'active' : ''}" onclick="selectRosterUnit('${item.id}')">
-                <button class="grid-item-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
-                  <i class="fa fa-trash"></i>
-                </button>
-                <div class="grid-item-name">${esc(item.name)}</div>
-                ${item.config && item.config.supplemental
-                  ? `<div class="grid-item-version">${esc(item.config.supplemental.name)}</div>`
-                  : ''}
-                <div class="grid-item-type">${esc(item.type)}</div>
-                ${buildStatBadges(item, item.config, true)}
-                ${abilities.length > 0 ? `
-                  <div class="grid-item-abilities">
-                    ${abilities.map(a => {
-                      const n = typeof a === 'string' ? a : (a.name || '');
-                      return `<span class="ability-tag-small"
-                        onmouseover="showAbilityTooltip('${esc(n)}', event)"
-                        onmouseout="hideAbilityTooltip()"
-                        onclick="event.stopPropagation(); showAbilityPanel('${esc(n)}')"
-                        style="cursor:pointer;">${esc(displayName(n))}</span>`;
-                    }).join('')}
-                  </div>` : ''}
-                ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
-                  <div class="grid-item-upgrades">
-                    ${item.config.optionalUpgrades.map(u => `<span class="ability-tag-small" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
-                  </div>` : ''}
-              </div>`;
-          }).join('')}
-        </div>`;
-    }
-
-    function getActiveConfig() {
-      if (state.builderMode === 'library') return state.builderConfig;
-      if (state.builderMode === 'roster') {
-        const item = state.roster.find(r => r.id === state.builderTarget);
-        return item ? item.config : null;
-      }
-      return null;
-    }
-
-    function updateRosterCost() {
-      if (state.builderMode !== 'roster') return;
-      const item = state.roster.find(r => r.id === state.builderTarget);
-      if (!item) return;
-      const faction  = state.factionData[state.currentFaction];
-      const baseUnit = faction && faction.units && faction.units.find(function(u) { return u.name === item.unitName; });
-      if (!baseUnit) return;
-      item.totalCost = calculateUnitCost(baseUnit, item.config);
-    }
-
-    function renderSupplemental(unit, config) {
-      if (!unit.supplemental_abilities || !unit.supplemental_abilities.length) return '';
-      const selected = config.supplemental;
-      return `
-        <div class="mt-3">
-          <div class="cc-field-label">Supplemental (Choose Version)</div>
-          <select class="form-select cc-input" onchange="selectSupplemental(this.value)">
-            <option value="">-- Select Version --</option>
-            ${unit.supplemental_abilities.map(supp => `
-              <option value="${esc(supp.name)}" ${(selected && selected.name === supp.name) ? 'selected' : ''}>
-                ${esc(supp.name)} ${supp.cost ? `(+${supp.cost}₤)` : ''}
-              </option>`).join('')}
-          </select>
-          ${selected ? `
-            <div class="mt-2 p-2" style="background:rgba(255,117,24,.1);border-left:3px solid var(--cc-primary);border-radius:4px;">
-              <div class="small">${esc(selected.desc_short || '')}</div>
-              ${selected.stat_modifiers ? `
-                <div class="small mt-1" style="color:var(--cc-primary);font-weight:600;">
-                  Modifiers: ${Object.entries(selected.stat_modifiers).map(([k,v]) => `${k.toUpperCase()} ${v > 0 ? '+' : ''}${v}`).join(', ')}
-                </div>` : ''}
-            </div>` : ''}
-        </div>`;
-    }
-
-    function renderOptionalUpgrades(unit, config) {
-      if (!unit.optional_upgrades || !unit.optional_upgrades.length) return '';
-      var rows = unit.optional_upgrades.map(function(upg, idx) {
-        var isSelected = (config.optionalUpgrades && config.optionalUpgrades.some(function(u){ return u.name === upg.name; }));
-        return '<div class="cc-upgrade-row' + (isSelected ? ' selected' : '') + '" ' +
-               'data-upg-idx="' + idx + '" onclick="toggleOptionalUpgrade(this)">' +
-               '<div class="cc-upgrade-check">' + (isSelected ? '&#10003;' : '') + '</div>' +
-               '<div style="flex:1;">' +
-               '<div class="fw-bold" style="font-size:.9rem;">' + esc(upg.name) + '</div>' +
-               (upg.desc_short ? '<div class="small cc-muted">' + esc(upg.desc_short) + '</div>' : '') +
-               '</div>' +
-               '<div style="color:var(--cc-primary);font-weight:700;">' + (upg.cost ? '+' + upg.cost + ' ₤' : 'Free') + '</div>' +
-               '</div>';
-      });
-      return '<div class="mt-3">' +
-             '<div class="cc-field-label">Optional Upgrades</div>' +
-             rows.join('') +
-             '</div>';
-    }
-
-    function renderBuilder() {
-      if (!state.builderMode || !state.builderTarget) {
-        return `<div class="cc-muted p-3">${state.currentFaction
-          ? 'Select a unit from the library to build, or click an existing roster unit to edit.'
-          : 'Select a faction first.'}</div>`;
-      }
-
-      const faction = state.factionData[state.currentFaction];
-      if (!faction) return '<div class="cc-muted p-3">Loading faction data…</div>';
-
-      let unit, config;
-      if (state.builderMode === 'library') {
-        unit   = (faction.units && faction.units.find(function(u){ return u.name === state.builderTarget; }));
-        config = state.builderConfig;
-      } else {
-        const rosterItem = state.roster.find(r => r.id === state.builderTarget);
-        if (!rosterItem) return '<div class="cc-muted p-3">Unit not found</div>';
-        unit   = (faction.units && faction.units.find(function(u){ return u.name === rosterItem.unitName; }));
-        config = rosterItem.config;
-      }
-      if (!unit) return '<div class="cc-muted p-3">Unit not found in faction data</div>';
-
-      const previewCost  = calculateUnitCost(unit, config);
-      const currentTotal = calculateTotalCost();
-      const maxAllowed   = getMaxAllowed(unit);
-      const inRoster     = countInRoster(unit.name);
-
-      const wouldExceedBudget = state.budget > 0 && state.builderMode === 'library' && (currentTotal + previewCost > state.budget);
-      const wouldExceedLimit  = maxAllowed !== Infinity && state.builderMode === 'library' && inRoster >= maxAllowed;
-      const canAdd            = !wouldExceedBudget && !wouldExceedLimit;
-
-      return `
-        <div class="cc-unit-detail">
-          <div class="detail-header-left">
-            ${factionIconHtml(state.currentFaction, 28)}
-            <div>
-              <div class="cc-detail-title">${esc(unit.name)}</div>
-              <div class="cc-detail-sub">${esc(unit.type)}</div>
+        const isOpen = openGroups.has(group.id);
+        html += `
+          <div class="cc-nav-group">
+            <button class="cc-nav-group-btn" data-toggle-group="${esc(group.id)}">
+              <span>${esc(group.label)}</span>
+              <span class="cc-nav-group-chevron">${isOpen ? '▲' : '▼'}</span>
+            </button>
+            <div class="cc-nav-group-items" style="display: ${isOpen ? 'block' : 'none'};">
+              ${groupItems.map(it => renderListItem(it)).join('')}
             </div>
           </div>
-          <div class="cc-detail-cost">${previewCost} ₤</div>
+        `;
+      });
 
-          ${buildStatBadges(unit, config)}
+      // Anything not matched by a group falls through as ungrouped (future-proofing)
+      const ungrouped = allItems.filter(it => !claimed.has(it.id));
+      if (ungrouped.length) {
+        html += ungrouped.map(it => renderListItem(it)).join('');
+      }
 
-          ${unit.lore ? `<div class="u-lore">"${esc(unit.lore)}"</div>` : ''}
-
-          ${unit.weapon ? `
-            <div class="mt-3">
-              <div class="cc-field-label">Weapon</div>
-              <div><strong>${esc(unit.weapon)}</strong>${(unit.weapon_properties && unit.weapon_properties.length)
-                ? ` — ${unit.weapon_properties.map(p => esc(p)).join(', ')}` : ''}</div>
-            </div>` : ''}
-
-          ${(unit.abilities && unit.abilities.length > 0) ? `
-            <div class="mt-3">
-              <div class="cc-field-label">Abilities</div>
-              ${unit.abilities.map(a => {
-                const n = typeof a === 'string' ? a : (a.name || '');
-                return `<div class="mb-1">• <strong class="ability-link"
-                  onmouseover="showAbilityTooltip('${esc(n)}', event)"
-                  onmouseout="hideAbilityTooltip()"
-                  onclick="showAbilityPanel('${esc(n)}')"
-                  style="cursor:pointer;">${esc(displayName(n))}</strong></div>`;
-              }).join('')}
-            </div>` : ''}
-
-          ${renderSupplemental(unit, config)}
-          ${renderOptionalUpgrades(unit, config)}
-
-          ${wouldExceedBudget ? `
-            <div class="cc-warning-bar">
-              ⚠️ Adding this unit would exceed your <strong>${state.budget} ₤</strong> budget!
-              This unit costs <strong>${previewCost} ₤</strong> and you only have <strong>${state.budget - currentTotal} ₤</strong> left.
-            </div>` : ''}
-
-          ${wouldExceedLimit ? `
-            <div class="cc-warning-bar">
-              ⚠️ Roster limit reached! At <strong>${state.budget} ₤</strong>, this unit type is capped at <strong>${maxAllowed}</strong>
-              ${unit.unique || (unit.composition && unit.composition.max_count) ? `${unit.name} is a unique character — only ${maxAllowed} per roster.` : `(1 per ${unit.composition.per_points} ₤). Raise your budget to add more.`}
-            </div>` : ''}
-
-          ${state.builderMode === 'library' ? `
-            <button class="btn btn-primary w-100 mt-4" onclick="addUnitToRoster()"
-              ${!canAdd ? 'disabled style="opacity:0.45;cursor:not-allowed;"' : ''}>
-              <i class="fa fa-plus"></i> ADD TO ROSTER
-            </button>` : `
-            <button class="btn btn-success w-100 mt-4" onclick="saveRosterUnit()">
-              <i class="fa fa-save"></i> SAVE CHANGES
-            </button>`}
-        </div>`;
+      listEl.innerHTML = html || `<div class="cc-muted p-2">No results.</div>`;
     }
 
-    function render() {
-      const selectorIconEl = document.getElementById('cc-faction-selector-icon');
-      if (selectorIconEl) {
-        if (state.currentFaction) {
-          selectorIconEl.innerHTML = factionIconHtml(state.currentFaction, 28);
-          selectorIconEl.style.display = 'flex';
-        } else {
-          selectorIconEl.innerHTML = '';
-          selectorIconEl.style.display = 'none';
+    // ============================================
+    // IMPROVED RENDERING SYSTEM
+    // ============================================
+
+    const PROSE_FIELDS = [
+      'philosophy', 'text', 'long', 'desc_long', 'short', 'effect', 'description',
+      'design_intent', 'definition', 'pool', 'logic', 'resolution',
+      'trigger', 'thematic_reason', 'golden_rule', 'fast_resolution',
+      'action_cost', 'completion', 'format',
+    ];
+
+    const LIST_FIELDS = [
+      'usage', 'guidelines', 'modifiers', 'restrictions', 'choices',
+      'process', 'sources', 'examples', 'effects', 'penalties',
+      'recovery', 'blockers', 'non_blockers', 'absolute',
+      'negation_triggers', 'terrain_trait_interactions',
+      'flexibility', 'common_actions_list', 'maintenance_steps',
+      'rules', 'logic_triggers', 'type_rules',
+    ];
+
+    const NESTED_FIELDS = [
+      'sections', 'mechanics', 'options', 'melee_rules', 'ranged_rules',
+      'rules_hooks', 'outcomes', 'status_conditions', 'attack_fundamentals',
+      'damage_resolution', 'the_morale_test', 'six_based_effects',
+      'cover_mechanics', 'movement_basics', 'terrain_penalties',
+      'model_interaction', 'engagement_and_pressure', 'verticality',
+      'trait_priority', 'activation_cycle', 'the_activation',
+      'round_definition', 'action_summaries', 'line_of_sight',
+      'initiative_logic',
+    ];
+
+    function renderProseField(label, value) {
+      if (!value) return '';
+      if (label === 'short' || label === 'desc_short' || label === 'text') return '';
+
+      const lowerLabel = label.toLowerCase();
+      if (lowerLabel.includes('id') || lowerLabel === 'ref' || lowerLabel === 'reference') return '';
+
+      let text = '';
+      if (typeof value === 'string') {
+        text = value;
+      } else if (value && typeof value === 'object') {
+        text = value.text || value.desc_long || value.desc_short || '';
+      }
+      if (!text) return '';
+      if (typeof text === 'string' && text.trim().match(/^R-[A-Z0-9-]+$/i)) return '';
+
+      if (label === 'long' || label === 'text' || label === 'desc_long') {
+        return `<p class="mb-3">${esc(text)}</p>`;
+      }
+
+      const className = label.toLowerCase().includes('philosophy') ? 'fw-semibold' : '';
+      return `
+        <div class="mb-3">
+          <div class="cc-field-label">${esc(titleize(label))}</div>
+          <p class="${className} mb-0">${esc(text)}</p>
+        </div>
+      `;
+    }
+
+    function renderList_Content(label, arr) {
+      if (!Array.isArray(arr) || !arr.length) return '';
+
+      const items = arr.map(item => {
+        if (typeof item === 'string') {
+          return `<li>${esc(item)}</li>`;
+        } else if (item && typeof item === 'object') {
+          if (item.name && (item.desc_short || item.desc_long)) {
+            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.desc_short || item.desc_long)}</li>`;
+          } else if (item.value && item.desc_long) {
+            return `<li><strong>${esc(item.value)}:</strong> ${esc(item.desc_long)}</li>`;
+          } else if (item.trait && item.result) {
+            return `<li><strong>${esc(item.trait)}:</strong> ${esc(item.result)}</li>`;
+          } else if (item.id && (item.name || item.desc_short)) {
+            return `<li><strong>${esc(item.name || item.id)}:</strong> ${esc(item.desc_short || '')}</li>`;
+          } else {
+            const parts = Object.entries(item)
+              .filter(([k]) => !k.startsWith('_'))
+              .map(([k, v]) => `<strong>${esc(titleize(k))}:</strong> ${esc(v)}`)
+              .join(' • ');
+            return `<li>${parts}</li>`;
+          }
+        }
+        return '';
+      }).filter(Boolean).join('');
+
+      if (!items) return '';
+
+      return `
+        <div class="mb-3">
+          <div class="cc-field-label">${esc(titleize(label))}</div>
+          <ul>${items}</ul>
+        </div>
+      `;
+    }
+
+    function renderNestedSection(label, obj, depth = 0) {
+      if (!obj || typeof obj !== 'object' || Array.isArray(obj)) return '';
+      if (depth >= 5) return '';
+
+      let html = '';
+
+      const isAbilityDict = Object.values(obj).every(v =>
+        typeof v === 'string' || (v && typeof v === 'object' && (v.desc_short || v.desc_long))
+      );
+
+      if (isAbilityDict) {
+        html += `
+          <div class="mb-4">
+            <div class="cc-field-label">${esc(titleize(label))}</div>
+            ${renderAbilityDictionary(obj)}
+          </div>
+        `;
+        return html;
+      }
+
+      const hasTitle    = obj.title || obj.name;
+      const headerTag   = depth === 0 ? 'h5' : depth === 1 ? 'h6' : 'div';
+      const headerClass = depth <= 1 ? 'cc-section-title' : 'cc-field-label';
+
+      if (hasTitle) {
+        const displayTitle = obj.title || obj.name || titleize(label);
+        const labelTitle   = titleize(label);
+        if (displayTitle && displayTitle.match(/^R-[A-Z0-9-]+$/i)) {
+          // skip ID-looking titles
+        } else if (displayTitle.toLowerCase() === labelTitle.toLowerCase()) {
+          // skip duplicates
+        } else if (depth > 0) {
+          html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
         }
       }
 
-      const libraryTitleEl = document.getElementById('cc-library-panel-title');
-      if (libraryTitleEl) {
-        libraryTitleEl.innerHTML = state.currentFaction
-          ? `<div class="cc-panel-title-with-icon">${factionIconHtml(state.currentFaction, 22)}<span>${esc(FACTION_TITLES[state.currentFaction])} · Units</span></div>`
-          : '<span>Unit Library</span>';
-      }
+      for (const field of PROSE_FIELDS)  if (obj[field]) html += renderProseField(field, obj[field]);
+      for (const field of LIST_FIELDS)   if (obj[field]) html += renderList_Content(field, obj[field]);
 
-      const rosterTitleEl = document.getElementById('cc-roster-panel-title');
-      if (rosterTitleEl) {
-        rosterTitleEl.innerHTML = state.currentFaction
-          ? `<div class="cc-panel-title-with-icon">${factionIconHtml(state.currentFaction, 22)}<span>Your Roster</span></div>`
-          : '<span>Your Roster</span>';
-      }
-
-      const libraryListEl   = document.getElementById('cc-library-list');
-      const builderTargetEl = document.getElementById('cc-builder-target');
-      const rosterListEl    = document.getElementById('cc-roster-list');
-      const budgetEl        = document.getElementById('cc-budget-display');
-
-      if (libraryListEl)   libraryListEl.innerHTML   = renderLibrary();
-      if (builderTargetEl) builderTargetEl.innerHTML = renderBuilder();
-      if (rosterListEl)    rosterListEl.innerHTML    = renderRoster();
-
-      var builderLayout = root.querySelector('.cc-faction-builder');
-      if (builderLayout) {
-        if (state.rosterViewMode === 'list') {
-          builderLayout.classList.add('cc-list-mode');
-        } else {
-          builderLayout.classList.remove('cc-list-mode');
-        }
-      }
-
-      if (budgetEl) {
-        const total      = calculateTotalCost();
-        const overBudget = state.budget > 0 && total > state.budget;
-        budgetEl.innerHTML   = state.budget > 0 ? `${total} / ${state.budget} ₤` : `${total} ₤`;
-        budgetEl.style.color = overBudget ? '#ff4444' : 'var(--cc-primary)';
-      }
-    }
-
-    // ================================
-    // USER ACTIONS
-    // ================================
-    window.changeFaction    = function(factionId) { switchFaction(factionId); };
-    window.changeBudget     = function(val) { state.budget = parseInt(val) || 0; render(); };
-    window.updateRosterName = function(val) { state.rosterName = val; };
-
-    window.selectLibraryUnit = function(unitName) {
-      state.builderMode    = 'library';
-      state.builderTarget  = unitName;
-      state.selectedUnitId = null;
-      state.builderConfig  = { optionalUpgrades: [], supplemental: null };
-      render();
-    };
-
-    window.selectRosterUnit = function(rosterId) {
-      state.builderMode    = 'roster';
-      state.builderTarget  = rosterId;
-      state.selectedUnitId = rosterId;
-      render();
-    };
-
-    window.selectSupplemental = function(suppName) {
-      const config = getActiveConfig();
-      if (!config) return;
-      const faction = state.factionData[state.currentFaction];
-      const target  = state.builderMode === 'library'
-        ? state.builderTarget
-        : (function(){ var _r = state.roster.find(function(r){ return r.id === state.builderTarget; }); return _r && _r.unitName; }());
-      const unit = (faction && faction.units && faction.units.find(function(u){ return u.name === target; }));
-      if (!unit || !unit.supplemental_abilities) return;
-      config.supplemental = suppName === '' ? null
-        : Object.assign({}, unit.supplemental_abilities.find(function(s){ return s.name === suppName; }));
-      updateRosterCost();
-      render();
-    };
-
-    window.toggleOptionalUpgrade = function(el) {
-      var upgIdx = parseInt(el.getAttribute('data-upg-idx'), 10);
-      var config = getActiveConfig();
-      if (!config) return;
-      if (!config.optionalUpgrades) config.optionalUpgrades = [];
-
-      var faction = state.factionData[state.currentFaction];
-      if (!faction) return;
-      var unitName = state.builderMode === 'library'
-        ? state.builderTarget
-        : (function() {
-            for (var j = 0; j < state.roster.length; j++) {
-              if (state.roster[j].id === state.builderTarget) return state.roster[j].unitName;
+      for (const field of NESTED_FIELDS) {
+        if (obj[field] && typeof obj[field] === 'object') {
+          if (Array.isArray(obj[field])) {
+            html += renderList_Content(field, obj[field]);
+          } else {
+            const nestedKeys = Object.keys(obj[field]).filter(k => !k.startsWith('_'));
+            for (const nestedKey of nestedKeys) {
+              html += renderNestedSection(nestedKey, obj[field][nestedKey], depth + 1);
             }
-            return null;
-          }());
-      var unit = null;
-      if (faction.units) {
-        for (var k = 0; k < faction.units.length; k++) {
-          if (faction.units[k].name === unitName) { unit = faction.units[k]; break; }
+          }
         }
       }
-      if (!unit || !unit.optional_upgrades) return;
-      var upg = unit.optional_upgrades[upgIdx];
-      if (!upg) return;
 
-      var existingIdx = -1;
-      for (var i = 0; i < config.optionalUpgrades.length; i++) {
-        if (config.optionalUpgrades[i].name === upg.name) { existingIdx = i; break; }
+      const processedFields = new Set([
+        ...PROSE_FIELDS, ...LIST_FIELDS, ...NESTED_FIELDS,
+        'title', 'Title', 'name', 'Name', '_id', 'id', 'Id', 'ID',
+        'type', 'design_intent', 'designer_notes',
+        'effect', 'Effect', 'restriction', 'Restriction', 'trigger', 'Trigger',
+        'short', 'Short', 'desc_short',
+      ]);
+
+      const remainingFields = Object.entries(obj).filter(([k, v]) => {
+        if (processedFields.has(k))  return false;
+        if (k.startsWith('_'))       return false;
+        const lowerKey = k.toLowerCase();
+        if (lowerKey.includes('id') || lowerKey.includes('ref')) return false;
+        if (v === undefined || v === null || v === '')            return false;
+        if (typeof v === 'string') {
+          const t = v.trim();
+          if (t.match(/^R-[A-Za-z0-9-]+$/))  return false;
+          if (t.match(/^[A-Z0-9]{8,}-/))      return false;
+          if (t.length < 3)                   return false;
+        }
+        return true;
+      });
+
+      if (remainingFields.length > 0) {
+        html += '<div class="mb-3">';
+        for (const [key, value] of remainingFields) {
+          if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+            html += `
+              <div class="cc-kv mb-1">
+                <div class="cc-k">${esc(titleize(key))}</div>
+                <div class="cc-v">${esc(value)}</div>
+              </div>
+            `;
+          } else if (Array.isArray(value)) {
+            html += renderList_Content(key, value);
+          } else if (value && typeof value === 'object') {
+            html += renderNestedSection(key, value, depth + 1);
+          }
+        }
+        html += '</div>';
       }
-      if (existingIdx > -1) {
-        config.optionalUpgrades.splice(existingIdx, 1);
-      } else {
-        config.optionalUpgrades.push(Object.assign({}, upg));
+
+      if (html) return `<div class="cc-section mb-4">${html}</div>`;
+      return '';
+    }
+
+    function renderAbilityDictionary(dict) {
+      const currentSectionId = selectedId;
+
+      return Object.entries(dict || {})
+        .filter(([key, value]) => {
+          if (['id', '_id', 'ID', 'Id'].includes(key)) return false;
+          if (typeof value === 'string' && value.match(/^R-[A-Z0-9-]+$/i)) return false;
+          const standaloneFields = ['name', 'Name', 'effect', 'Effect', 'restriction', 'Restriction'];
+          if (standaloneFields.includes(key) && typeof value === 'string') return false;
+          return true;
+        })
+        .map(([key, ability]) => {
+          const abilityId = `ability-${key}`;
+          const starred   = isFavorite(abilityId);
+
+          if (currentSectionId) {
+            try {
+              const abilityMap = JSON.parse(localStorage.getItem('cc_ability_sections') || '{}');
+              abilityMap[abilityId] = currentSectionId;
+              localStorage.setItem('cc_ability_sections', JSON.stringify(abilityMap));
+            } catch (e) {
+              console.warn('Could not store ability section mapping', e);
+            }
+          }
+
+          if (typeof ability === 'string') {
+            return `
+              <div class="cc-ability-card p-3 mb-2">
+                <div class="d-flex justify-content-between align-items-baseline mb-1">
+                  <div class="fw-bold flex-grow-1">${esc(titleize(key))}</div>
+                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
+                    <span class="cc-star">${starred ? '★' : '☆'}</span>
+                  </button>
+                </div>
+                <div>${esc(ability)}</div>
+              </div>
+            `;
+          }
+
+          const a = ability || {};
+          return `
+            <div class="cc-ability-card p-3 mb-2">
+              <div class="d-flex justify-content-between align-items-baseline mb-1">
+                <div class="fw-bold flex-grow-1">${esc(a.name || titleize(key))}</div>
+                <div class="d-flex align-items-center gap-2">
+                  ${a.timing ? `<div class="cc-muted small text-uppercase">${esc(a.timing)}</div>` : ''}
+                  <button class="btn btn-link p-0 cc-ability-star" data-star-id="${esc(abilityId)}" title="Star this ability">
+                    <span class="cc-star">${starred ? '★' : '☆'}</span>
+                  </button>
+                </div>
+              </div>
+              ${a.desc_long ? `<p class="cc-rule-lead mb-1">${esc(a.desc_long)}</p>` : ''}
+              ${a.trigger     ? `<div class="mt-1"><strong>Trigger:</strong> ${esc(a.trigger)}</div>` : ''}
+              ${a.restriction ? `<div class="cc-muted small mt-1">${esc(a.restriction)}</div>` : ''}
+              ${a.restrictions ? `<div class="cc-muted small mt-1">${esc(Array.isArray(a.restrictions) ? a.restrictions.join(' • ') : a.restrictions)}</div>` : ''}
+            </div>
+          `;
+        })
+        .join('');
+    }
+
+    function renderContentSmart(meta, content) {
+      if (content === undefined || content === null) {
+        return `<div class="cc-muted">No content available.</div>`;
       }
-      updateRosterCost();
-      render();
-    };
+      if (typeof content === 'string') return `<p>${esc(content)}</p>`;
+      if (typeof content !== 'object') return `<p>${esc(String(content))}</p>`;
 
-    window.addUnitToRoster = function() {
-      if (!state.currentFaction || !state.builderTarget) return;
-      const faction = state.factionData[state.currentFaction];
-      const unit    = (faction && faction.units && faction.units.find(function(u){ return u.name === state.builderTarget; }));
-      if (!unit) return;
+      if (content.abilities && typeof content.abilities === 'object') {
+        return renderAbilityDictionary(content.abilities);
+      }
+      if (content.properties && typeof content.properties === 'object') {
+        return renderAbilityDictionary(content.properties);
+      }
 
-      const config    = JSON.parse(JSON.stringify(state.builderConfig));
-      const totalCost = calculateUnitCost(unit, config);
+      const isFlatAbilityDict = Object.values(content).every(v =>
+        typeof v === 'string' ||
+        (v && typeof v === 'object' && !Array.isArray(v) && (v.desc_short || v.desc_long))
+      );
+      if (isFlatAbilityDict && !content.sections && !content.text) {
+        return renderAbilityDictionary(content);
+      }
 
-      if (state.budget > 0) {
-        const currentTotal = calculateTotalCost();
-        if (currentTotal + totalCost > state.budget) {
-          alert(`⚠️ Budget exceeded!\n\n${unit.name} costs ${totalCost} ₤.\nYou have ${state.budget - currentTotal} ₤ remaining.\n\nRaise your budget or remove a unit first.`);
+      return renderNestedSection('', content, 0) || `<div class="cc-muted">No renderable content found.</div>`;
+    }
+
+    // ---- BREADCRUMB ----
+    function renderBreadcrumb(meta) {
+      if (!meta) return '';
+
+      const parts = [];
+      let current = meta;
+      while (current) {
+        parts.unshift(current);
+        current = current.parent ? index.find(it => it.id === current.parent) : null;
+      }
+
+      if (parts.length <= 1) return '';
+
+      return parts.map((p, i) => {
+        const isLast = i === parts.length - 1;
+        if (isLast) {
+          return `<span class="cc-breadcrumb-current">${esc(p.title || p.id)}</span>`;
+        } else {
+          return `<button class="cc-breadcrumb-link" data-id="${esc(p.id)}">${esc(p.title || p.id)}</button>`;
+        }
+      }).join(' › ');
+    }
+
+    // ---- SELECT RULE ----
+    async function selectRule(id) {
+
+      // ---- CAMPAIGN ----
+      if (id === 'campaign_system') {
+        selectedId = id;
+        renderList(searchEl.value);
+
+        favoriteBtn.classList.remove('d-none');
+        favoriteBtn.querySelector('.cc-star').textContent = isFavorite(id) ? '★' : '☆';
+
+        detailEl.innerHTML = `
+          <article class="cc-rule-article">
+            <h2 class="cc-rule-title">${esc(CAMPAIGN_FILE.title)}</h2>
+            <div class="cc-rule-content">${renderCampaign()}</div>
+          </article>
+        `;
+        contextPanelEl.style.display = 'none';
+        navEl.classList.remove('d-none');
+        updateNavigation();
+        return;
+      }
+
+      // ---- FACTION ----
+      if (id.startsWith('faction_')) {
+        const factionId = id.replace('faction_', '');
+
+        if (!factionsData[factionId]) {
+          detailEl.innerHTML = `<div class="cc-status-message cc-muted">Loading faction data…</div>`;
+          await loadFactions();
+        }
+
+        const faction = factionsData[factionId];
+
+        if (faction) {
+          selectedId = id;
+          renderList(searchEl.value);
+
+          favoriteBtn.classList.remove('d-none');
+          favoriteBtn.querySelector('.cc-star').textContent = isFavorite(id) ? '★' : '☆';
+
+          detailEl.innerHTML = `
+            <article class="cc-rule-article">
+              <h2 class="cc-rule-title">${esc(faction.title)}</h2>
+              <div class="cc-rule-content">${renderFaction(factionId)}</div>
+            </article>
+          `;
+          contextPanelEl.style.display = 'none';
+          navEl.classList.remove('d-none');
+
+          const ci = filteredIndex.findIndex(it => it.id === selectedId);
+          prevBtnEl.disabled = ci <= 0;
+          nextBtnEl.disabled = ci >= filteredIndex.length - 1;
+          if (ci > 0)                        prevBtnEl.onclick = () => selectRule(filteredIndex[ci - 1].id);
+          if (ci < filteredIndex.length - 1) nextBtnEl.onclick = () => selectRule(filteredIndex[ci + 1].id);
+
+          return;
+        } else {
+          detailEl.innerHTML = `<div class="cc-status-message cc-muted">⚠️ Could not load faction: ${esc(factionId)}</div>`;
           return;
         }
       }
 
-      const maxAllowed = getMaxAllowed(unit);
-      const inRoster   = countInRoster(unit.name);
-      if (maxAllowed !== Infinity && inRoster >= maxAllowed) {
-        const limitReason = (unit.unique || (unit.composition && unit.composition.max_count))
-          ? `${unit.name} is unique — only ${maxAllowed} per roster.`
-          : `At ${state.budget} ₤ you can field ${maxAllowed} × ${unit.name} ${unit.unique || (unit.composition && unit.composition.max_count) ? `${unit.name} is a unique character — only ${maxAllowed} per roster.` : `(1 per ${unit.composition.per_points} ₤). Raise your budget to add more.`}`;
-        alert('⚠️ Roster limit reached!\n\n' + limitReason);
+      // ---- SUBSECTION SCROLL (if already on parent) ----
+      if (selectedId) {
+        const children         = helpers.getChildren(selectedId);
+        const isChildOfCurrent = children.some(c => c.id === id);
+
+        if (isChildOfCurrent) {
+          const targetSection = detailEl.querySelector(`#section-${id}`);
+          if (targetSection) {
+            targetSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            targetSection.style.color = 'var(--cc-primary)';
+            setTimeout(() => { targetSection.style.color = ''; }, 2000);
+            return;
+          }
+        }
+      }
+
+      // ---- NORMAL RULE ----
+      selectedId = id;
+      detailEl.innerHTML = `<div class="cc-status-message cc-muted">Loading…</div>`;
+      ctxEl.innerHTML    = `<div class="cc-muted">Loading…</div>`;
+
+      const raw = await helpers.getRuleSection(id);
+      console.log('📦 getRuleSection raw result for', id, '→', raw);
+
+      let section = null;
+      if (raw && raw.meta) {
+        section = raw;
+      } else if (raw && (raw.id || raw.title || raw.path)) {
+        section = { meta: raw, content: raw.content || raw.data || null };
+      } else if (raw && typeof raw === 'object') {
+        const metaFromIndex = index.find(it => it.id === id);
+        section = { meta: metaFromIndex || { id, title: id }, content: raw };
+        console.warn('⚠️ Unexpected getRuleSection shape — salvaged:', section);
+      }
+
+      // ---- DIRECT FETCH FALLBACK ----
+      if (!section || !section.meta) {
+        console.warn('⚠️ getRuleSection gave nothing — trying direct GitHub fetch for:', id);
+        section = await fetchRuleDirectly(id);
+      }
+
+      if (!section || !section.meta) {
+        console.error('❌ Could not load rule:', id, '— raw:', raw);
+        detailEl.innerHTML = `
+          <div class="cc-error-state">
+            <p class="cc-error-title">Could not load: ${esc(id)}</p>
+            <p class="cc-error-detail">
+              Check the browser console (F12) for details.<br>
+              <code>getRuleSection</code> returned: <code>${esc(JSON.stringify(raw)?.slice(0, 200) ?? 'null')}</code>
+            </p>
+          </div>`;
+        ctxEl.innerHTML    = `<div class="cc-muted">—</div>`;
+        navEl.classList.add('d-none');
+        favoriteBtn.classList.add('d-none');
         return;
       }
 
-      const rosterItem = {
-        id:        generateId(),
-        unitName:  unit.name,
-        name:      unit.name,
-        type:      unit.type,
-        quality:   unit.quality,
-        defense:   unit.defense,
-        move:      unit.move,
-        range:     unit.range,
-        weapon:    unit.weapon,
-        lore:      unit.lore || '',
-        abilities: unit.abilities || [],
-        config,
-        totalCost
-      };
+      const meta     = section.meta;
+      const children = helpers.getChildren(id);
 
-      state.roster.push(rosterItem);
-      state.builderMode    = 'roster';
-      state.builderTarget  = rosterItem.id;
-      state.selectedUnitId = rosterItem.id;
-      state.builderConfig  = { optionalUpgrades: [], supplemental: null };
-      render();
-    };
+      const resolvedContent = pickBestResolvedContent(meta, section.content);
 
-    window.saveRosterUnit = function() { render(); };
+      const hasRealContent = resolvedContent && (
+        typeof resolvedContent === 'string' ||
+        (typeof resolvedContent === 'object' && Object.keys(resolvedContent).some(k =>
+          !k.startsWith('_') && k !== 'id' && k !== 'title' && resolvedContent[k]
+        ))
+      );
 
-    window.removeRosterUnit = function(rosterId) {
-      state.roster = state.roster.filter(r => r.id !== rosterId);
-      if (state.selectedUnitId === rosterId) {
-        state.builderMode    = null;
-        state.builderTarget  = null;
-        state.selectedUnitId = null;
-        state.builderConfig  = { optionalUpgrades: [], supplemental: null };
+      if (!hasRealContent) {
+        detailEl.innerHTML = `<div class="cc-muted">This section has no content yet.</div>`;
+        navEl.classList.add('d-none');
+        favoriteBtn.classList.add('d-none');
+        contextPanelEl.style.display = 'none';
+        renderList(searchEl.value);
+        return;
       }
-      render();
-    };
 
-    window.clearRoster = function() {
-      if (!confirm('Are you sure you want to clear your entire roster?')) return;
-      state.roster         = [];
-      state.builderMode    = null;
-      state.builderTarget  = null;
-      state.selectedUnitId = null;
-      state.builderConfig  = { optionalUpgrades: [], supplemental: null };
-      render();
-    };
-
-    window.toggleRosterView = function(mode) {
-      state.rosterViewMode = mode;
-      render();
-    };
-
-    window.printRoster = function() {
-      if (state.roster.length === 0) { alert('No units in roster to print!'); return; }
-      const total       = calculateTotalCost();
-      const factionName = FACTION_TITLES[state.currentFaction] || state.currentFaction || 'Unknown';
-
-      const printContent = `<!DOCTYPE html>
-<html>
-<head>
-  <title>${esc(state.rosterName)} – ${factionName}</title>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Source+Sans+3:wght@400;600;700&display=swap">
-  <style>
-    :root { --cc-primary: #000; }
-    body { font-family: "Source Sans 3", Arial, sans-serif; padding: 20px; background: #fff; color: #000; margin: 0; }
-    h1 { font-family: 'Bungee', sans-serif; font-size: 22pt; border-bottom: 2px solid #000; margin-bottom: 16px; padding-bottom: 8px; }
-    .roster-meta { font-size: 10pt; color: #444; margin-bottom: 3px; }
-    .unit-list { margin-top: 16px; }
-    .unit { display: flex; align-items: flex-start; gap: 14px; border-bottom: 1px solid #ccc; padding: 10px 0; page-break-inside: avoid; }
-    .unit:last-child { border-bottom: none; }
-    .unit-left { flex: 1; min-width: 0; }
-    .unit-right { min-width: 60px; text-align: right; }
-    .unit-name { font-size: 11pt; font-weight: 700; }
-    .unit-cost { font-weight: 700; font-size: 11pt; white-space: nowrap; }
-    .unit-type { color: #555; font-size: 8pt; text-transform: uppercase; margin-bottom: 4px; letter-spacing: .05em; }
-    .lore { font-style: italic; color: #666; font-size: 8pt; margin: 3px 0; border-left: 2px solid #ccc; padding-left: 5px; }
-    .stat-badges { display: flex; gap: 4px; margin: 4px 0; }
-    .stat-badge { border: 1px solid #000; padding: 1px 4px; border-radius: 3px; font-size: 8pt; font-weight: 700; }
-    .abilities { margin-top: 4px; }
-    .ability-tag { display: inline-block; border: 1px solid #ccc; background: #f9f9f9; padding: 1px 4px; margin: 1px; border-radius: 3px; font-size: 7.5pt; }
-    .upgrades { margin-top: 4px; font-size: 8pt; color: #444; }
-    .roster-list-upgrades { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
-
-    .ability-defs-section { margin-top: 28px; border-top: 2px solid #000; padding-top: 14px; }
-    .ability-defs-section h2 { font-family: 'Bungee', sans-serif; font-size: 14pt; margin-bottom: 10px; }
-    .ability-def { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd; break-inside: avoid; }
-    .ability-def:last-child { border-bottom: none; }
-    .ability-def-name { font-weight: 700; font-size: 10pt; margin-bottom: 2px; }
-    .ability-def-timing { background: #222; color: #fff; font-size: 7.5pt; padding: 1px 5px; border-radius: 3px; margin-right: 5px; font-weight: 600; text-transform: uppercase; }
-    .ability-def-short { font-style: italic; color: #555; font-size: 8.5pt; margin-bottom: 3px; }
-    .ability-def-long { font-size: 9pt; color: #222; line-height: 1.5; }
-    @media print { .unit, .ability-def { page-break-inside: avoid; } }
-  </style>
-</head>
-<body>
-  <h1>${esc(state.rosterName)}</h1>
-  <div class="roster-meta"><strong>Faction:</strong> ${factionName}</div>
-  <div class="roster-meta"><strong>Total:</strong> ${total} ₤${state.budget > 0 ? ` / ${state.budget} ₤` : ' (Unlimited)'}</div>
-  <div class="roster-meta"><strong>Units:</strong> ${state.roster.length}</div>
-  <div class="unit-list">
-    ${state.roster.map(function(item) {
-      var abilities = item.abilities || [];
-      var ps = getEffectiveStats(item, item.config);
-      return '<div class="unit">' +
-        '<div class="unit-left">' +
-          '<div class="unit-name">' + esc(item.name) + '</div>' +
-          ((item.config && item.config.supplemental) ? '<div style="font-size:10px;color:#ff7518;font-weight:600;margin-bottom:3px;">' + esc(item.config.supplemental.name) + '</div>' : '') +
-          '<div class="unit-type">' + esc(item.type) + '</div>' +
-          (item.lore ? '<div class="lore">"' + esc(item.lore) + '"</div>' : '') +
-          '<div class="stat-badges">' +
-            '<span class="stat-badge">Q ' + ps.quality + '+</span> ' +
-            '<span class="stat-badge">D ' + ps.defense + '+</span> ' +
-            '<span class="stat-badge">M ' + ps.move + '"</span> ' +
-            '<span class="stat-badge">R ' + (ps.range === 0 ? '\u2013' : ps.range + '"') + '</span>' +
-          '</div>' +
-          (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
-          ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="abilities">' + item.config.optionalUpgrades.map(function(u){ var n = esc(u.name); return '<span class="ability-tag" style="cursor:pointer;" onmouseover="showAbilityTooltip(\'' + n + '\', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel(\'' + n + '\')">' + n + '</span>'; }).join('') + '</div>' : '') +
-        '</div>' +
-        '<div class="unit-right"><span class="unit-cost">' + item.totalCost + ' ₤</span></div>' +
-      '</div>';
-    }).join('')}
-  </div>
-
-  ${(function() {
-    var seen = {};
-    var allAbilityNames = [];
-    state.roster.forEach(function(item) {
-      (item.abilities || []).forEach(function(a) {
-        var name = typeof a === 'string' ? a : (a.name || '');
-        if (name && !seen[name]) { seen[name] = true; allAbilityNames.push(name); }
-      });
-    });
-    var defs = [];
-    allAbilityNames.forEach(function(name) {
-      var entry = lookupAbility(name);
-      if (entry && (entry.desc_long || entry.desc_short)) defs.push({ name: name, entry: entry });
-    });
-    if (!defs.length) return '';
-    defs.sort(function(a, b) { return a.name.localeCompare(b.name); });
-    return '<div class="ability-defs-section"><h2>Ability Definitions</h2>' +
-      defs.map(function(d) {
-        var timing = d.entry.timing ? '<span class="ability-def-timing">' + esc(d.entry.timing.replace(/_/g,' ')) + '</span> ' : '';
-        return '<div class="ability-def">' +
-          '<div class="ability-def-name">' + timing + esc(d.name) + '</div>' +
-          (d.entry.desc_short ? '<div class="ability-def-short">' + esc(d.entry.desc_short) + '</div>' : '') +
-          (d.entry.desc_long  ? '<div class="ability-def-long">'  + esc(d.entry.desc_long)  + '</div>' : '') +
-        '</div>';
-      }).join('') + '</div>';
-  }())}
-</body>
-</html>`;
-
-      const pw = window.open('', '_blank');
-      pw.document.write(printContent);
-      pw.document.close();
-      pw.focus();
-      setTimeout(() => pw.print(), 500);
-    };
-
-    // ================================
-    // IMPORT / EXPORT
-    // ================================
-    window.exportRoster = function() {
-      const exportData = {
-        name:      state.rosterName,
-        faction:   state.currentFaction,
-        budget:    state.budget,
-        roster:    state.roster,
-        totalCost: calculateTotalCost(),
-        savedAt:   new Date().toISOString()
-      };
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
-      a.download = (state.rosterName || 'roster').replace(/\s+/g, '_') + '.json';
-      a.click();
-      URL.revokeObjectURL(url);
-    };
-
-    window.importRoster = function(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const parsed = JSON.parse(e.target.result);
-          switchFaction(parsed.faction).then(() => {
-            state.rosterName = parsed.name || 'Imported Roster';
-            state.budget     = parsed.budget || 500;
-            state.roster     = parsed.roster || [];
-            const nameInput    = document.getElementById('cc-roster-name');
-            const budgetSelect = document.getElementById('cc-budget-selector');
-            const factionSel   = document.getElementById('cc-faction-selector');
-            if (nameInput)    nameInput.value    = state.rosterName;
-            if (budgetSelect) budgetSelect.value = state.budget;
-            if (factionSel)   factionSel.value   = parsed.faction;
-            render();
-            alert('✓ Roster imported!');
-          });
-        } catch (err) {
-          console.error('Import failed:', err);
-          alert('Failed to import roster: ' + (err.message || 'Check file format'));
+      let displayTitle = meta.title || "";
+      if (meta.type === 'abilities' || meta.id.includes('ability_dict')) {
+        if (resolvedContent && typeof resolvedContent === 'object') {
+          const firstKey = Object.keys(resolvedContent)[0];
+          if (firstKey && firstKey.match(/^[A-H]$/)) {
+            displayTitle = titleize(firstKey);
+          }
         }
-      };
-      reader.onerror = () => alert('Failed to read file');
-      reader.readAsText(file);
-      event.target.value = '';
-    };
-
-    // ================================
-    // CLOUD STORAGE
-    // ================================
-    window.saveToCloud = async function() {
-      try {
-        if (!window.CC_STORAGE) { alert("Cloud storage not available. Please refresh the page."); return; }
-        const auth = await getAuth();
-        if (!auth.loggedIn) { alert("Please sign in to save rosters to the cloud!"); return; }
-        if (!(state.rosterName && state.rosterName.trim())) { alert("Please give your roster a name first!"); return; }
-        const exportData = {
-          name:      state.rosterName,
-          faction:   state.currentFaction,
-          budget:    state.budget,
-          roster:    state.roster,
-          totalCost: calculateTotalCost(),
-          savedAt:   new Date().toISOString()
-        };
-        const result = await window.CC_STORAGE.saveDocument(state.rosterName, JSON.stringify(exportData, null, 2));
-        if (result.success) {
-          alert(`✓ Roster "${state.rosterName}" ${result.action === 'created' ? 'saved' : 'updated'} to cloud!`);
-        }
-      } catch (error) {
-        alert(error.message === 'Not logged in' ? 'Please sign in to save rosters!' : 'Error saving: ' + error.message);
       }
-    };
 
-    window.loadFromCloud = async function() {
-      try {
-        if (!window.CC_STORAGE) { alert("Cloud storage not available."); return; }
-        const auth = await getAuth();
-        if (!auth.loggedIn) { alert("Please sign in to load rosters!"); return; }
-        const docs = await window.CC_STORAGE.loadDocumentList();
-        if (!(docs && docs.length)) { alert("No saved rosters found."); return; }
-        const rosterDocs = docs.filter(d => !(d.name && d.name.startsWith('SCN_')));
-        if (!rosterDocs.length) { alert("No roster saves found."); return; }
+      const formattedContent = renderContentSmart(meta, resolvedContent);
+      const breadcrumb       = renderBreadcrumb(meta);
 
-        closeAllSlidePanels();
-        installPanelBackdrop();
+      // ---- FAVORITE BUTTON ----
+      favoriteBtn.classList.remove('d-none');
+      favoriteBtn.querySelector('.cc-star').textContent = isFavorite(id) ? '★' : '☆';
 
-        const panel = document.createElement('div');
-        panel.id = 'fb-cloud-roster-panel';
-        panel.className = 'cc-slide-panel';
-        panel.style.zIndex = '9999';
-        panel.addEventListener('click', e => e.stopPropagation());
-        panel.innerHTML = `
-          <div class="cc-slide-panel-header">
-            <h2><i class="fa fa-cloud-download"></i> LOAD ROSTER</h2>
-            <button onclick="closeCloudRosterList()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>
-          </div>
-          <div class="cc-roster-list">
-            ${rosterDocs.map(r => `
-              <div class="cc-saved-roster-item">
-                <div class="cc-saved-roster-name">${esc(r.name)}</div>
-                <div class="cc-saved-roster-meta">${r.write_date ? new Date(r.write_date).toLocaleDateString() : ''}</div>
-                <div class="cc-saved-roster-actions">
-                  <button onclick="loadCloudRoster(${r.id})" class="btn btn-sm btn-warning">
-                    <i class="fa fa-folder-open"></i> LOAD
-                  </button>
-                  <button onclick="deleteCloudRoster(${r.id})" class="btn btn-sm btn-danger">
-                    <i class="fa fa-trash"></i>
-                  </button>
-                </div>
-              </div>`).join('')}
-          </div>`;
-        document.body.appendChild(panel);
-        setTimeout(() => panel.classList.add('cc-slide-panel-open'), 10);
-      } catch (error) {
-        alert('Error loading rosters: ' + error.message);
-      }
-    };
+      // ---- MAIN CONTENT ----
+      detailEl.innerHTML = `
+        <article class="cc-rule-article">
+          ${breadcrumb ? `<div class="cc-breadcrumb">${breadcrumb}</div>` : ''}
+          <h2 class="cc-rule-title">${esc(displayTitle)}</h2>
+          <div class="cc-rule-content">${formattedContent}</div>
+        </article>
+      `;
 
-    window.loadCloudRoster = async function(docId) {
-      try {
-        if (!window.CC_STORAGE) return;
-        const doc = await window.CC_STORAGE.loadDocument(docId);
-        if (!doc) { alert('Roster not found!'); return; }
-
-        function tryParse(val) {
-          if (!val) return null;
-          if (typeof val === 'string') { try { return JSON.parse(val); } catch(e) { return null; } }
-          if (typeof val === 'object') return val;
-          return null;
-        }
-
-        var parsed = null;
-        var candidates = [doc.json, doc, doc.content, doc.value, doc.data,
-          (doc.content && doc.content.content), (doc.value && doc.value.content)];
-        for (var _ci = 0; _ci < candidates.length; _ci++) {
-          var attempt = tryParse(candidates[_ci]);
-          if (attempt && attempt.faction) { parsed = attempt; break; }
-        }
-        if (!parsed) {
-          console.error('[FB] loadCloudRoster — could not find faction in doc:', JSON.stringify(doc));
-          throw new Error('Could not find roster data in cloud response. Check console for details.');
-        }
-        closeAllSlidePanels();
-        var loadedFaction = await loadFaction(parsed.faction);
-        if (!loadedFaction) { alert('Could not load faction data for this roster.'); return; }
-
-        state.currentFaction = parsed.faction;
-        state.rosterName     = parsed.name   || 'Loaded Roster';
-        state.budget         = parsed.budget || 500;
-        state.roster         = parsed.roster || [];
-        state.builderMode    = null;
-        state.builderTarget  = null;
-        state.selectedUnitId = null;
-        state.builderConfig  = { optionalUpgrades: [], supplemental: null };
-
-        var nameInput    = document.getElementById('cc-roster-name');
-        var budgetSelect = document.getElementById('cc-budget-selector');
-        var factionSel   = document.getElementById('cc-faction-selector');
-        if (nameInput)    nameInput.value    = state.rosterName;
-        if (budgetSelect) budgetSelect.value = state.budget;
-        if (factionSel)   factionSel.value   = parsed.faction;
-        render();
-        alert('✓ Roster "' + state.rosterName + '" loaded!');
-      } catch (err) {
-        alert('Failed to load roster: ' + err.message);
-      }
-    };
-
-    window.deleteCloudRoster = async function(docId) {
-      if (!confirm('Delete this roster? This cannot be undone.')) return;
-      try {
-        await (window.CC_STORAGE && window.CC_STORAGE.deleteDocument(docId));
-        closeAllSlidePanels();
-        alert('Roster deleted.');
-      } catch (err) {
-        alert('Failed to delete: ' + err.message);
-      }
-    };
-
-    window.closeCloudRosterList = function() { closeAllSlidePanels(); };
-
-    function checkSharedRoster() {
-      if (!window.CC_STORAGE) return;
-      const sharedData = (window.CC_STORAGE.getSharedData ? window.CC_STORAGE.getSharedData() : null);
-      if (!sharedData) return;
-      try {
-        const parsed = JSON.parse(sharedData);
-        switchFaction(parsed.faction).then(() => {
-          state.rosterName = parsed.name || 'Shared Roster';
-          state.budget     = parsed.budget || 500;
-          state.roster     = parsed.roster || [];
-          const nameInput    = document.getElementById('cc-roster-name');
-          const budgetSelect = document.getElementById('cc-budget-selector');
-          const factionSel   = document.getElementById('cc-faction-selector');
-          if (nameInput)    nameInput.value    = state.rosterName;
-          if (budgetSelect) budgetSelect.value = state.budget;
-          if (factionSel)   factionSel.value   = parsed.faction;
-          render();
-          alert('✓ Loaded shared roster!');
+      // Anchor IDs for subsection scroll
+      if (children.length > 0) {
+        children.forEach(child => {
+          const el = detailEl.querySelector('h2, h3, h4, h5, h6');
+          if (el && el.textContent.trim() === child.title) {
+            el.id = `section-${child.id}`;
+          }
         });
-      } catch (e) {
-        console.error('Failed to parse shared roster:', e);
       }
+
+      // ---- CONTEXT PANEL ----
+      let contextHtml = '';
+
+      let designIntentText = null;
+      if (resolvedContent && typeof resolvedContent === 'object') {
+        if      (resolvedContent.design_intent)                          designIntentText = resolvedContent.design_intent;
+        else if (resolvedContent.meta?.design_intent)                    designIntentText = resolvedContent.meta.design_intent;
+        else if (resolvedContent.designer_notes)                         designIntentText = resolvedContent.designer_notes;
+        else if (resolvedContent.description?.design_intent)             designIntentText = resolvedContent.description.design_intent;
+      }
+
+      if (designIntentText) {
+        if (typeof designIntentText === 'object') {
+          designIntentText = designIntentText.text        ||
+                             designIntentText.desc_long ||
+                             designIntentText.note        ||
+                             designIntentText.content     ||
+                             JSON.stringify(designIntentText, null, 2);
+        }
+        contextHtml += `
+          <div class="cc-callout mb-3">
+            <div class="cc-context-label">Designer Notes</div>
+            <div class="small">${esc(String(designIntentText))}</div>
+          </div>
+        `;
+      }
+
+      if (children.length > 0) {
+        contextHtml += `
+          <div class="cc-context-label">Subsections</div>
+          <ul class="list-unstyled">
+            ${children.map(c => `
+              <li class="mb-2 d-flex justify-content-between align-items-center">
+                <button class="btn btn-link p-0 text-start flex-grow-1" data-id="${esc(c.id)}">
+                  ${esc(c.title)}
+                </button>
+                <button class="btn btn-link p-0 cc-context-star" data-star-id="${esc(c.id)}" title="Star this rule">
+                  <span class="cc-star">${isFavorite(c.id) ? '★' : '☆'}</span>
+                </button>
+              </li>`).join('')}
+          </ul>
+        `;
+      }
+
+      if (contextHtml) {
+        contextPanelEl.style.display = 'block';
+        ctxEl.innerHTML = contextHtml;
+      } else {
+        contextPanelEl.style.display = 'none';
+      }
+
+      updateNavigation();
+      renderList(searchEl.value);
     }
 
-    // ================================
-    // APP SHELL HTML
-    // ================================
-    root.innerHTML = `
-      <div class="cc-app-shell h-100">
+    // ---- NAVIGATION ----
+    function updateNavigation() {
+      const ci = filteredIndex.findIndex(it => it.id === selectedId);
+      if (ci === -1) { navEl.classList.add('d-none'); return; }
 
-        <div class="cc-app-header">
-          <div>
-            <h1 class="cc-app-title">Faction Builder</h1>
-            <div class="cc-app-subtitle">Build Your Coffin Canyon Roster</div>
-          </div>
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <div id="cc-budget-display" style="font-size:1.5rem;font-weight:700;">0 ₤</div>
-            <div class="cc-roster-view-toggle">
-              <button onclick="toggleRosterView('grid')" class="${state.rosterViewMode === 'grid' ? 'active' : ''}">
-                <i class="fa fa-th"></i>
-              </button>
-              <button onclick="toggleRosterView('list')" class="${state.rosterViewMode === 'list' ? 'active' : ''}">
-                <i class="fa fa-list"></i>
-              </button>
+      navEl.classList.remove('d-none');
+      prevBtnEl.disabled = ci === 0;
+      nextBtnEl.disabled = ci === filteredIndex.length - 1;
+      if (ci > 0)                        prevBtnEl.onclick = () => selectRule(filteredIndex[ci - 1].id);
+      if (ci < filteredIndex.length - 1) nextBtnEl.onclick = () => selectRule(filteredIndex[ci + 1].id);
+    }
+
+    // ---- FOCUS MODE ----
+    focusBtn.addEventListener('click', () => {
+      const isActive = explorerEl.classList.toggle('focus-mode');
+      focusBtn.textContent = isActive ? '⬅️ Panels' : '📖 Focus';
+      focusBtn.title = isActive ? 'Show sidebars' : 'Focus mode — hides sidebars for reading';
+    });
+
+    // ---- PRINT / PDF ----
+    printBtn.addEventListener('click', async () => {
+      const origLabel = printBtn.innerHTML;
+      printBtn.disabled = true;
+      printBtn.innerHTML = '⏳ Building…';
+
+      try {
+        // Print order: Quickstart first, then core rules, vaults, systems, abilities, factions
+        const PRINT_ORDER = [
+          'quickstart',
+          'core_mechanics', 'turn_structure',
+          'visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault', 'terrain_vault',
+          'unit_identities', 'ability_engine',
+          ...index.filter(it => it.id?.startsWith('ability_dict_')).sort((a,b) => a.id.localeCompare(b.id)).map(it => it.id),
+          ...index.filter(it => it.id?.startsWith('faction_')).map(it => it.id),
+          'campaign_system',
+        ].filter(id => id && (index.find(it => it.id === id) || id.startsWith('faction_') || id.startsWith('ability_dict_') || id === 'quickstart'));
+
+        const sections = [];
+        let done = 0;
+
+        for (const id of PRINT_ORDER) {
+          printBtn.innerHTML = '⏳ ' + Math.round((done / PRINT_ORDER.length) * 100) + '%';
+          try {
+            const raw = await helpers.getRuleSection(id);
+            const content = raw?.content ?? raw?.data ?? raw;
+            const meta    = index.find(it => it.id === id) || { id, title: id };
+            const title   = meta.title || id;
+            if (content || title) {
+              sections.push(
+                '<section class="cc-print-section" id="section-' + id + '">' +
+                '<h2 class="cc-print-title">' + esc(title) + '</h2>' +
+                '<div class="cc-rule-content">' + (content ? renderContentSmart(meta, content) : '') + '</div>' +
+                '</section>'
+              );
+            }
+          } catch(e) { console.warn('Print: skipped', id, e); }
+          done++;
+        }
+
+        // Fetch both stylesheets
+        let coreCss = '', printCss = '';
+        try {
+          const BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/';
+          const [coreR, printR] = await Promise.all([
+            fetch(BASE + 'ui/cc_ui.css?t=' + Date.now()),
+            fetch(BASE + 'ui/cc_print.css?t=' + Date.now()),
+          ]);
+          if (coreR.ok)  coreCss  = await coreR.text();
+          if (printR.ok) printCss = await printR.text();
+        } catch(e) { console.warn('Could not fetch print CSS:', e); }
+
+        const printWin = window.open('', '_blank');
+        if (!printWin) { alert('Allow popups to save PDF.'); return; }
+
+        printWin.document.write(
+          '<!DOCTYPE html><html lang="en"><head>' +
+          '<meta charset="UTF-8">' +
+          '<title>Coffin Canyon — Complete Rulebook</title>' +
+          '<style>' + coreCss + '\n' + printCss + '\n' +
+          'body{font-family:Georgia,serif;font-size:11pt;line-height:1.6;color:#1a1a1a;background:#fff;margin:0;padding:0;}' +
+          '.cc-print-document{max-width:720px;margin:0 auto;padding:40px 48px 80px;}' +
+          '</style></head><body>' +
+          '<div class="cc-print-document">' +
+          '<div class="cc-print-cover">' +
+          '<h1>COFFIN CANYON</h1>' +
+          '<p>Complete Rulebook &mdash; ' + new Date().toLocaleDateString('en-US', {year:'numeric',month:'long'}) + '</p>' +
+          '</div>' +
+          sections.join('\n') +
+          '</div>' +
+          '<script>window.onload=function(){window.print();}<\/script>' +
+          '</body></html>'
+        );
+        printWin.document.close();
+
+      } catch(err) {
+        console.error('Print failed:', err);
+        alert('Print failed: ' + err.message);
+      } finally {
+        printBtn.disabled = false;
+        printBtn.innerHTML = origLabel;
+      }
+    });
+
+    // ---- EVENTS: SIDEBAR LIST ----
+    listEl.addEventListener("click", async (e) => {
+
+      const toggleBtn = e.target.closest('[data-toggle-group]');
+      if (toggleBtn) {
+        const gid = toggleBtn.dataset.toggleGroup;
+        openGroups.has(gid) ? openGroups.delete(gid) : openGroups.add(gid);
+        renderList(searchEl.value);
+        return;
+      }
+
+      if (e.target.closest('.cc-star-btn')) {
+        const starBtn = e.target.closest('.cc-star-btn');
+        const itemId  = starBtn.dataset.starId;
+        if (itemId) {
+          toggleFavorite(itemId);
+          renderList(searchEl.value);
+          if (selectedId === itemId) {
+            favoriteBtn.querySelector('.cc-star').textContent = isFavorite(itemId) ? '★' : '☆';
+          }
+        }
+        e.stopPropagation();
+        return;
+      }
+
+      const btn = e.target.closest("button[data-id]");
+      if (!btn) return;
+
+      const clickedId = btn.dataset.id;
+      console.log('📍 Clicked item:', clickedId);
+
+      // ---- ABILITY DEEP-LINK ----
+      if (clickedId.startsWith('ability-')) {
+        const abilityId          = clickedId.replace('ability-', '');
+        const abilityNameDisplay = titleize(abilityId.replace(/_/g, ' ').replace(/-/g, ' '));
+
+        console.log('🔍 Looking for starred ability:', clickedId);
+
+        let foundSection = null;
+        try {
+          const abilityMap = JSON.parse(localStorage.getItem('cc_ability_sections') || '{}');
+          foundSection = abilityMap[clickedId];
+          if (foundSection) console.log('✅ Found stored section:', foundSection);
+        } catch (e) {
+          console.warn('Could not load ability section mapping', e);
+        }
+
+        if (!foundSection) {
+          console.log('⚠️ No stored section, searching all sections...');
+          const normalizedSearch = abilityId.toLowerCase().replace(/[^a-z0-9]/g, '');
+          console.log('Normalized search term:', normalizedSearch);
+
+          for (const item of index) {
+            try {
+              const section = await helpers.getRuleSection(item.id);
+              if (section && section.content) {
+                for (const key of Object.keys(section.content)) {
+                  const normalizedKey = key.toLowerCase().replace(/[^a-z0-9]/g, '');
+                  if (normalizedKey === normalizedSearch ||
+                      normalizedKey.includes(normalizedSearch) ||
+                      normalizedSearch.includes(normalizedKey)) {
+                    foundSection = item.id;
+                    console.log('✅ Found ability', key, 'in section', item.id, item.title);
+                    break;
+                  }
+                }
+                if (foundSection) break;
+              }
+            } catch (e) {
+              console.error('Error loading section', item.id, e);
+              continue;
+            }
+          }
+
+          if (!foundSection) console.error('❌ Searched all', index.length, 'sections, could not find:', abilityId);
+        }
+
+        if (foundSection) {
+          await selectRule(foundSection);
+
+          setTimeout(() => {
+            const abilityCards = detailEl.querySelectorAll('.cc-ability-card');
+            let targetCard = null;
+
+            for (const card of abilityCards) {
+              const cardTitle = card.querySelector('.fw-bold');
+              if (cardTitle) {
+                const titleText  = cardTitle.textContent.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const searchText = abilityId.toLowerCase().replace(/[^a-z0-9]/g, '');
+                if (titleText.includes(searchText) || searchText.includes(titleText)) {
+                  targetCard = card;
+                  break;
+                }
+              }
+            }
+
+            if (targetCard) {
+              targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              targetCard.style.borderColor = 'var(--cc-primary)';
+              targetCard.style.boxShadow   = '0 0 0 2px var(--cc-primary-dim)';
+              setTimeout(() => {
+                targetCard.style.borderColor = '';
+                targetCard.style.boxShadow   = '';
+              }, 2000);
+              console.log('✅ Scrolled to ability');
+            } else {
+              console.warn('⚠️ Loaded section but could not find ability card');
+            }
+          }, 500);
+
+        } else {
+          console.error('❌ Could not find section');
+          detailEl.innerHTML = `
+            <div class="cc-status-message">
+              <h4 class="cc-error-title">Could not locate "${esc(abilityNameDisplay)}"</h4>
+              <p>The ability may have been moved or renamed in the rules.</p>
+              <p><strong>Try this:</strong> Use the search box to find it manually, then star it again.</p>
             </div>
-            <button class="btn btn-sm btn-outline-secondary" onclick="saveToCloud()" title="Save Roster to Cloud">
-              <i class="fa fa-cloud-upload"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="loadFromCloud()" title="Load Roster from Cloud">
-              <i class="fa fa-cloud-download"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="exportRoster()" title="Export JSON">
-              <i class="fa fa-download"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="document.getElementById('roster-import').click()" title="Import JSON">
-              <i class="fa fa-upload"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-danger" onclick="clearRoster()" title="Clear Roster">
-              <i class="fa fa-trash"></i>
-            </button>
-            <button class="btn btn-sm btn-outline-secondary" onclick="printRoster()" title="Print Roster">
-              <i class="fa fa-print"></i>
-            </button>
-          </div>
-        </div>
+          `;
+        }
+        return;
+      }
 
-        <div id="cc-login-status" class="cc-login-status logged-out">
-          <i class="fa fa-exclamation-circle"></i> Checking login status…
-        </div>
+      await selectRule(clickedId);
+    });
 
-        <div class="cc-faction-controls">
-          <div class="cc-faction-selector-wrap">
-            <div id="cc-faction-selector-icon" class="cc-faction-selector-icon" style="display:none;"></div>
-            <select id="cc-faction-selector" class="form-select" onchange="changeFaction(this.value)">
-              <option value="">SELECT FACTION…</option>
-              ${FACTION_FILES.map(f => `<option value="${f.id}">${f.title}</option>`).join('')}
-            </select>
-          </div>
+    // ---- EVENTS: CONTEXT PANEL ----
+    ctxEl.addEventListener("click", (e) => {
+      const navBtn = e.target.closest("button[data-id]");
+      if (navBtn) { selectRule(navBtn.dataset.id); return; }
 
-          <input
-            id="cc-roster-name"
-            type="text"
-            class="form-control cc-input"
-            placeholder="Roster Name…"
-            value="${esc(state.rosterName)}"
-            onchange="updateRosterName(this.value)"
-          />
+      const starBtn = e.target.closest("button[data-star-id]");
+      if (starBtn) {
+        const starId = starBtn.dataset.starId;
+        toggleFavorite(starId);
+        starBtn.querySelector('.cc-star').textContent = isFavorite(starId) ? '★' : '☆';
+        renderList(searchEl.value);
+        e.stopPropagation();
+      }
+    });
 
-          <select id="cc-budget-selector" class="form-select" onchange="changeBudget(this.value)">
-            <option value="0">UNLIMITED ₤</option>
-            <option value="500" selected>500 ₤</option>
-            <option value="1000">1000 ₤</option>
-            <option value="1500">1500 ₤</option>
-            <option value="2000">2000 ₤</option>
-          </select>
-        </div>
+    // ---- EVENTS: DETAIL PANEL ----
+    detailEl.addEventListener('click', (e) => {
+      const breadcrumbLink = e.target.closest('.cc-breadcrumb-link');
+      if (breadcrumbLink?.dataset.id) {
+        selectRule(breadcrumbLink.dataset.id);
+        return;
+      }
 
-        <input type="file" id="roster-import" accept=".json" style="display:none;" onchange="importRoster(event)">
+      const starBtn = e.target.closest("button.cc-ability-star");
+      if (starBtn) {
+        const starId = starBtn.dataset.starId;
+        toggleFavorite(starId);
+        starBtn.querySelector('.cc-star').textContent = isFavorite(starId) ? '★' : '☆';
+        renderList(searchEl.value);
+        e.stopPropagation();
+      }
+    });
 
-        <div class="cc-faction-builder">
+    // ---- EVENTS: SEARCH ----
+    searchEl.addEventListener("input", () => {
+      if (searchEl.value.trim()) {
+        NAV_GROUPS.forEach(g => openGroups.add(g.id));
+      }
+      renderList(searchEl.value);
+    });
 
-          <aside class="cc-faction-sidebar">
-            <div class="cc-panel h-100">
-              <div class="cc-panel-head">
-                <div id="cc-library-panel-title" class="cc-panel-title">Unit Library</div>
-              </div>
-              <div id="cc-library-list" class="cc-body"></div>
-            </div>
-          </aside>
+    // ---- EVENTS: MAIN FAVOURITE BUTTON ----
+    favoriteBtn.addEventListener('click', () => {
+      if (!selectedId) return;
+      toggleFavorite(selectedId);
+      favoriteBtn.querySelector('.cc-star').textContent = isFavorite(selectedId) ? '★' : '☆';
+      renderList(searchEl.value);
 
-          <main class="cc-faction-main">
-            <div class="cc-panel h-100">
-              <div class="cc-panel-head">
-                <div class="cc-panel-title">Unit Builder</div>
-              </div>
-              <div id="cc-builder-target" class="cc-body"></div>
-            </div>
-          </main>
+      if (currentFilter === 'favorites' && !isFavorite(selectedId)) {
+        if (filteredIndex.length === 0) {
+          detailEl.innerHTML = `<div class="cc-muted">No starred rules yet. Click the ☆ icon on any rule to star it!</div>`;
+          contextPanelEl.style.display = 'none';
+          navEl.classList.add('d-none');
+          favoriteBtn.classList.add('d-none');
+        }
+      }
+    });
 
-          <aside class="cc-faction-roster">
-            <div class="cc-panel h-100">
-              <div class="cc-panel-head">
-                <div id="cc-roster-panel-title" class="cc-panel-title">Your Roster</div>
-              </div>
-              <div id="cc-roster-list" class="cc-body"></div>
-            </div>
-          </aside>
+    // ---- INIT ----
 
-        </div>
+    index.forEach(item => {
+      if (item.id?.startsWith('ability_dict_') && item.path) {
+        const parts    = item.path.split('.');
+        const lastPart = parts[parts.length - 1];
+        if (lastPart?.match(/^[A-I]_/)) {
+          item.title = `Abilities: ${lastPart.substring(2).replace(/_/g, ' ').replace(/\b\w/g, m => m.toUpperCase())}`;
+        }
+      }
+    });
 
-        <div id="ability-tooltip" style="display:none;position:fixed;background:#000;color:#fff;padding:7px 11px;border-radius:4px;font-size:12px;z-index:10000;pointer-events:none;border:1px solid var(--cc-primary);max-width:220px;line-height:1.4;"></div>
-      </div>
-    `;
-
-    // ================================
-    // BOOT — overlay preloader, render underneath, then reveal
-    // ================================
-    // The app shell is already in root.innerHTML above.
-    // We overlay a .cc-preloader on top of it so render() can run against
-    // the real DOM immediately, hidden behind the preloader.
-
-    const _fbBootStart   = Date.now();
-    const FB_MIN_SPLASH  = 2000; // 2s minimum — no heavy JSON to wait for
-
-    // Build the overlay preloader and append to root (not replace it)
-    const _fbPreloader = document.createElement('div');
-    _fbPreloader.id = 'cc-fb-preloader';
-    _fbPreloader.className = 'cc-preloader cc-preloader--page';
-    _fbPreloader.innerHTML = `
+    // ── Boot — canonical preloader overlay, dismiss when data resolves ─────
+    const _rePreloader = document.createElement('div');
+    _rePreloader.id = 'cc-re-preloader';
+    _rePreloader.className = 'cc-preloader cc-preloader--page';
+    _rePreloader.innerHTML = `
       <img class="cc-preloader-logo"
            src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
            alt="Coffin Canyon"
            style="width:200px;max-width:70vw;">
-      <p class="cc-preloader-title">Faction Builder</p>
+      <p class="cc-preloader-title">Rules Explorer</p>
       <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
         <div class="cc-loading-progress"></div>
       </div>
-      <p class="cc-loading-text">Loading faction data&hellip;</p>
+      <p class="cc-loading-text">Loading rules data…</p>
     `;
-    root.appendChild(_fbPreloader);
+    root.appendChild(_rePreloader);
 
-    // Run all startup tasks against the real (overlaid) shell immediately
-    checkSharedRoster();
-    render();
-    loadAbilityDictionaries();
-
-    // After minimum hold, fade out and remove preloader, then update login
-    const _fbHold = Math.max(0, FB_MIN_SPLASH - (Date.now() - _fbBootStart));
-    setTimeout(function() {
-      _fbPreloader.classList.add('cc-preloader--hidden');
+    function _reDismissPreloader() {
+      _rePreloader.classList.add('cc-preloader--hidden');
       setTimeout(function() {
-        if (_fbPreloader.parentNode) _fbPreloader.parentNode.removeChild(_fbPreloader);
-        updateLoginStatus();
-      }, 480); // matches cc_ui.css transition: 0.45s
-    }, _fbHold);
+        if (_rePreloader.parentNode) _rePreloader.parentNode.removeChild(_rePreloader);
+      }, 480);
+    }
 
-    console.log("✅ Faction Builder mounted");
+    renderList();
+
+    // Load quickstart content and inject it inline after the intro
+    helpers.getRuleSection('quickstart').then(raw => {
+      const qsEl = root.querySelector('#cc-quickstart-inline');
+      if (!qsEl) return;
+      const content = raw?.content ?? raw?.data ?? raw;
+      const meta    = { id: 'quickstart', title: 'Quickstart' };
+      const html    = content ? renderContentSmart(meta, content) : '';
+      if (html) {
+        qsEl.innerHTML =
+          '<h2 class="cc-rule-title" style="margin-top:0;">Quickstart</h2>' + html;
+        qsEl.style.fontStyle = '';
+        qsEl.className = '';
+      } else {
+        qsEl.remove();
+      }
+    }).catch(() => {
+      const qsEl = root.querySelector('#cc-quickstart-inline');
+      if (qsEl) qsEl.remove();
+    });
+
+    Promise.all([
+      loadCampaign().then(() => {
+        if (!index.find(it => it.id === CAMPAIGN_FILE.id)) {
+          index.push({ id: CAMPAIGN_FILE.id, title: CAMPAIGN_FILE.title, type: 'campaign' });
+        }
+        renderList(searchEl.value);
+      }),
+      loadFactions().then(() => {
+        FACTION_FILES.forEach(f => {
+          const fid = 'faction_' + f.id;
+          if (!index.find(it => it.id === fid)) {
+            index.push({ id: fid, title: f.title, type: 'faction' });
+          }
+        });
+        renderList(searchEl.value);
+      })
+    ]).then(_reDismissPreloader).catch(_reDismissPreloader);
+
     return Promise.resolve();
-
   } // end mount()
 
   window.CC_APP = {
