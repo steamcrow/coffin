@@ -800,7 +800,7 @@ console.log("📘 Rules Explorer app loaded");
     // ============================================
 
     const PROSE_FIELDS = [
-      'philosophy', 'text', 'long', 'short', 'effect', 'description',
+      'philosophy', 'text', 'long', 'desc_long', 'short', 'desc_short', 'effect', 'description',
       'design_intent', 'definition', 'pool', 'logic', 'resolution',
       'trigger', 'thematic_reason', 'golden_rule', 'fast_resolution',
       'action_cost', 'completion', 'format',
@@ -828,7 +828,7 @@ console.log("📘 Rules Explorer app loaded");
 
     function renderProseField(label, value) {
       if (!value) return '';
-      if (label === 'short' || label === 'text') return '';
+      if (label === 'short' || label === 'desc_short' || label === 'text') return '';
 
       const lowerLabel = label.toLowerCase();
       if (lowerLabel.includes('id') || lowerLabel === 'ref' || lowerLabel === 'reference') return '';
@@ -842,7 +842,7 @@ console.log("📘 Rules Explorer app loaded");
       if (!text) return '';
       if (typeof text === 'string' && text.trim().match(/^R-[A-Z0-9-]+$/i)) return '';
 
-      if (label === 'long' || label === 'text') {
+      if (label === 'long' || label === 'desc_long' || label === 'text') {
         return `<p class="mb-3">${esc(text)}</p>`;
       }
 
@@ -863,13 +863,13 @@ console.log("📘 Rules Explorer app loaded");
           return `<li>${esc(item)}</li>`;
         } else if (item && typeof item === 'object') {
           if (item.name && (item.desc_short || item.desc_long)) {
-            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.desc_short || item.desc_long)}</li>`;
+            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.desc_long || item.desc_short)}</li>`;
           } else if (item.value && item.desc_long) {
             return `<li><strong>${esc(item.value)}:</strong> ${esc(item.desc_long)}</li>`;
           } else if (item.trait && item.result) {
             return `<li><strong>${esc(item.trait)}:</strong> ${esc(item.result)}</li>`;
-          } else if (item.id && (item.name || item.desc_short)) {
-            return `<li><strong>${esc(item.name || item.id)}:</strong> ${esc(item.desc_short || '')}</li>`;
+          } else if (item.id && item.name) {
+            return `<li><strong>${esc(item.name || item.id)}:</strong></li>`;
           } else {
             const parts = Object.entries(item)
               .filter(([k]) => !k.startsWith('_'))
@@ -948,7 +948,7 @@ console.log("📘 Rules Explorer app loaded");
         'title', 'Title', 'name', 'Name', '_id', 'id', 'Id', 'ID',
         'type', 'design_intent', 'designer_notes',
         'effect', 'Effect', 'restriction', 'Restriction', 'trigger', 'Trigger',
-        'short', 'Short',
+        'short', 'Short', 'desc_short', 'desc_long',
       ]);
 
       const remainingFields = Object.entries(obj).filter(([k, v]) => {
@@ -1040,9 +1040,7 @@ console.log("📘 Rules Explorer app loaded");
                   </button>
                 </div>
               </div>
-              ${a.desc_short       ? `<div class="fw-semibold mb-1">${esc(a.desc_short)}</div>` : ''}
-              ${a.desc_long        ? `<div>${esc(a.desc_long)}</div>` : ''}
-              ${a.desc_short      ? `<div>${esc(a.desc_short)}</div>` : ''}
+              ${a.desc_long ? `<p class="mb-1">${esc(a.desc_long)}</p>` : ''}
               ${a.trigger     ? `<div class="mt-1"><strong>Trigger:</strong> ${esc(a.trigger)}</div>` : ''}
               ${a.restriction ? `<div class="cc-muted small mt-1">${esc(a.restriction)}</div>` : ''}
               ${a.restrictions ? `<div class="cc-muted small mt-1">${esc(Array.isArray(a.restrictions) ? a.restrictions.join(' • ') : a.restrictions)}</div>` : ''}
