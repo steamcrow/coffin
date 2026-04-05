@@ -1472,13 +1472,99 @@ console.log("📘 Rules Explorer app loaded");
     });
 
     // ---- PRINT / PDF ----
-    printBtn.addEventListener('click', () => {
-      const wasFocused = explorerEl.classList.contains('focus-mode');
-      if (!wasFocused) explorerEl.classList.add('focus-mode');
-      setTimeout(() => {
-        window.print();
-        if (!wasFocused) explorerEl.classList.remove('focus-mode');
-      }, 150);
+    printBtn.addEventListener('click', async () => {
+      const origLabel = printBtn.innerHTML;
+      printBtn.disabled = true;
+      printBtn.innerHTML = '⏳ Building…';
+
+      try {
+        // Print order: Quickstart first, then core, vaults, systems, abilities, factions
+        const PRINT_ORDER = [
+          'quickstart',
+          'core_mechanics', 'turn_structure',
+          'visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault', 'terrain_vault',
+          'unit_identities', 'ability_engine',
+          ...index.filter(it => it.id?.startsWith('ability_dict_')).sort((a,b) => a.id.localeCompare(b.id)).map(it => it.id),
+          ...index.filter(it => it.id?.startsWith('faction_')).map(it => it.id),
+          'campaign_system',
+        ].filter(id => id && (index.find(it => it.id === id) ||
+          id.startsWith('faction_') || id.startsWith('ability_dict_') || id === 'quickstart'));
+
+        const sections = [];
+        let done = 0;
+
+        for (const id of PRINT_ORDER) {
+          printBtn.innerHTML = '⏳ ' + Math.round((done / PRINT_ORDER.length) * 100) + '%';
+          try {
+            const raw     = await helpers.getRuleSection(id);
+            const content = raw?.content ?? raw?.data ?? raw;
+            const meta    = index.find(it => it.id === id) || { id, title: id };
+            const title   = meta.title || id;
+            if (content || title) {
+              sections.push(
+                '<section class="cc-print-section" id="section-' + id + '">' +
+                '<h2 class="cc-print-title">' + esc(title) + '</h2>' +
+                '<div class="cc-rule-content">' + (content ? renderContentSmart(meta, content) : '') + '</div>' +
+                '</section>'
+              );
+            }
+          } catch(e) { console.warn('PDF: skipped', id, e); }
+          done++;
+        }
+
+        // Fetch stylesheets
+        let coreCss = '', printCss = '';
+        const BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/';
+        try {
+          const [coreR, printR] = await Promise.all([
+            fetch(BASE + 'ui/cc_ui.css?t=' + Date.now()),
+            fetch(BASE + 'ui/cc_print.css?t=' + Date.now()),
+          ]);
+          if (coreR.ok)  coreCss  = await coreR.text();
+          if (printR.ok) printCss = await printR.text();
+        } catch(e) { console.warn('Could not fetch CSS:', e); }
+
+        // Build the complete HTML document
+        const date = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long'});
+        const html = [
+          '<!DOCTYPE html><html lang="en"><head>',
+          '<meta charset="UTF-8">',
+          '<title>Coffin Canyon — Complete Rulebook (' + date + ')</title>',
+          '<style>',
+          coreCss,
+          printCss,
+          'body{font-family:Georgia,serif;font-size:11pt;line-height:1.6;color:#1a1a1a;background:#fff;margin:0;padding:0;}',
+          '.cc-print-document{max-width:720px;margin:0 auto;padding:40px 48px 80px;}',
+          '@media print{@page{size:letter;margin:0.65in 0.7in;}}',
+          '</style></head><body>',
+          '<div class="cc-print-document">',
+          '<div class="cc-print-cover" style="text-align:center;padding:120px 0 80px;page-break-after:always;border-bottom:3px solid #c47820;">',
+          '<h1 style="font-size:48pt;color:#c47820;margin:0 0 12px;letter-spacing:.05em;font-family:Georgia,serif;">COFFIN CANYON</h1>',
+          '<p style="color:#555;font-size:13pt;margin:0;">Complete Rulebook &mdash; ' + date + '</p>',
+          '</div>',
+          sections.join('\n'),
+          '</div>',
+          '</body></html>'
+        ].join('\n');
+
+        // Download as .html file — open in any browser and print to PDF at any size
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+        const url  = URL.createObjectURL(blob);
+        const a    = document.createElement('a');
+        a.href     = url;
+        a.download = 'coffin-canyon-rulebook-' + new Date().toISOString().slice(0,10) + '.html';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+      } catch(err) {
+        console.error('PDF build failed:', err);
+        alert('PDF build failed: ' + err.message);
+      } finally {
+        printBtn.disabled = false;
+        printBtn.innerHTML = origLabel;
+      }
     });
 
     // ---- EVENTS: SIDEBAR LIST ----
