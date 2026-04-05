@@ -494,14 +494,14 @@ console.log("⚔️ Faction Builder app loaded");
     let _authCache = null;
 
     async function getAuth() {
-      if (_authCache) return _authCache;
-      if (!window.CC_STORAGE) return { loggedIn: false };
-      try {
-        _authCache = await window.CC_STORAGE.checkAuth();
-        return _authCache;
-      } catch (e) {
-        return { loggedIn: false };
+      if (_authCache)       return _authCache;
+      if (ctx?.auth)        return (_authCache = ctx.auth);
+      if (window.CC_AUTH)   return (_authCache = window.CC_AUTH);
+      if (window.CC_STORAGE) {
+        try { return (_authCache = await window.CC_STORAGE.checkAuth()); }
+        catch (e) {}
       }
+      return (_authCache = { loggedIn: false });
     }
 
     async function updateLoginStatus() {
