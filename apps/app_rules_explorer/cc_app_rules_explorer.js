@@ -800,7 +800,7 @@ console.log("📘 Rules Explorer app loaded");
     // ============================================
 
     const PROSE_FIELDS = [
-      'philosophy', 'text', 'long', 'short', 'effect', 'description',
+      'philosophy', 'text', 'long', 'desc_long', 'short', 'desc_short', 'effect', 'description',
       'design_intent', 'definition', 'pool', 'logic', 'resolution',
       'trigger', 'thematic_reason', 'golden_rule', 'fast_resolution',
       'action_cost', 'completion', 'format',
@@ -828,7 +828,7 @@ console.log("📘 Rules Explorer app loaded");
 
     function renderProseField(label, value) {
       if (!value) return '';
-      if (label === 'short' || label === 'text') return '';
+      if (label === 'short' || label === 'desc_short' || label === 'text') return '';
 
       const lowerLabel = label.toLowerCase();
       if (lowerLabel.includes('id') || lowerLabel === 'ref' || lowerLabel === 'reference') return '';
@@ -842,7 +842,7 @@ console.log("📘 Rules Explorer app loaded");
       if (!text) return '';
       if (typeof text === 'string' && text.trim().match(/^R-[A-Z0-9-]+$/i)) return '';
 
-      if (label === 'long' || label === 'text') {
+      if (label === 'long' || label === 'desc_long' || label === 'text') {
         return `<p class="mb-3">${esc(text)}</p>`;
       }
 
@@ -863,13 +863,13 @@ console.log("📘 Rules Explorer app loaded");
           return `<li>${esc(item)}</li>`;
         } else if (item && typeof item === 'object') {
           if (item.name && (item.desc_short || item.desc_long)) {
-            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.desc_short || item.desc_long)}</li>`;
+            return `<li><strong>${esc(item.name)}:</strong> ${esc(item.desc_long || '')}</li>`;
           } else if (item.value && item.desc_long) {
             return `<li><strong>${esc(item.value)}:</strong> ${esc(item.desc_long)}</li>`;
           } else if (item.trait && item.result) {
             return `<li><strong>${esc(item.trait)}:</strong> ${esc(item.result)}</li>`;
-          } else if (item.id && (item.name || item.desc_short)) {
-            return `<li><strong>${esc(item.name || item.id)}:</strong> ${esc(item.desc_short || '')}</li>`;
+          } else if (item.id && item.name) {
+            return `<li>${esc(item.name || item.id)}</li>`;
           } else {
             const parts = Object.entries(item)
               .filter(([k]) => !k.startsWith('_'))
@@ -912,8 +912,8 @@ console.log("📘 Rules Explorer app loaded");
       }
 
       const hasTitle    = obj.title || obj.name;
-      const headerTag   = depth === 0 ? 'h5' : depth === 1 ? 'h6' : 'div';
-      const headerClass = depth <= 1 ? 'cc-section-title' : 'cc-field-label';
+      const headerTag   = depth <= 1 ? 'h3' : depth === 2 ? 'h4' : 'h5';
+      const headerClass = 'cc-section-title';
 
       if (hasTitle) {
         const displayTitle = obj.title || obj.name || titleize(label);
@@ -922,8 +922,8 @@ console.log("📘 Rules Explorer app loaded");
           // skip ID-looking titles
         } else if (displayTitle.toLowerCase() === labelTitle.toLowerCase()) {
           // skip duplicates
-        } else if (depth > 0) {
-          html += `<${headerTag} class="${headerClass} mb-2">${esc(displayTitle)}</${headerTag}>`;
+        } else {
+          html += `<${headerTag} class="${headerClass} mt-4 mb-2">${esc(displayTitle)}</${headerTag}>`;
         }
       }
 
@@ -948,7 +948,7 @@ console.log("📘 Rules Explorer app loaded");
         'title', 'Title', 'name', 'Name', '_id', 'id', 'Id', 'ID',
         'type', 'design_intent', 'designer_notes',
         'effect', 'Effect', 'restriction', 'Restriction', 'trigger', 'Trigger',
-        'short', 'Short',
+        'short', 'Short', 'desc_short', 'desc_long',
       ]);
 
       const remainingFields = Object.entries(obj).filter(([k, v]) => {
@@ -1040,9 +1040,7 @@ console.log("📘 Rules Explorer app loaded");
                   </button>
                 </div>
               </div>
-              ${a.desc_short       ? `<div class="fw-semibold mb-1">${esc(a.desc_short)}</div>` : ''}
-              ${a.desc_long        ? `<div>${esc(a.desc_long)}</div>` : ''}
-              ${a.desc_short      ? `<div>${esc(a.desc_short)}</div>` : ''}
+              ${a.desc_long ? `<p class="mb-1">${esc(a.desc_long)}</p>` : ''}
               ${a.trigger     ? `<div class="mt-1"><strong>Trigger:</strong> ${esc(a.trigger)}</div>` : ''}
               ${a.restriction ? `<div class="cc-muted small mt-1">${esc(a.restriction)}</div>` : ''}
               ${a.restrictions ? `<div class="cc-muted small mt-1">${esc(Array.isArray(a.restrictions) ? a.restrictions.join(' • ') : a.restrictions)}</div>` : ''}
@@ -1052,6 +1050,116 @@ console.log("📘 Rules Explorer app loaded");
         .join('');
     }
 
+
+    // ---- VAULT RENDERER ----
+    // Vaults (Visibility, Locomotion, Combat, Morale) are rendered as cards
+    // matching the ability dictionary style: bold title, desc_long as the
+    // definition, then compact supporting details. desc_short is never shown.
+    function renderVaultDictionary(content) {
+      const SKIP_KEYS = new Set([
+        '_id', 'id', 'ID', 'Id', 'type', 'title', 'Title',
+        'desc_short', 'desc_long', 'fast_resolution',
+        '_migrated', '_migrated_at',
+      ]);
+
+      // Render supporting detail (arrays, strings, nested objects) compactly
+      function renderDetail(label, value) {
+        if (!value) return '';
+        const l = `<span class="cc-muted small text-uppercase" style="letter-spacing:.05em;">${esc(titleize(label))}:</span> `;
+
+        if (typeof value === 'string' || typeof value === 'number') {
+          if (String(value).match(/^R-[A-Z0-9-]+$/i)) return '';
+          return `<div class="mt-1 small">${l}${esc(String(value))}</div>`;
+        }
+
+        if (Array.isArray(value)) {
+          if (!value.length) return '';
+          const items = value.map(item => {
+            if (typeof item === 'string') return `<li>${esc(item)}</li>`;
+            if (item && typeof item === 'object') {
+              const t = item.trait || item.name || item.value || '';
+              const r = item.result || item.trigger || item.effect || item.desc_long || '';
+              if (t && r) return `<li><strong>${esc(t)}:</strong> ${esc(r)}</li>`;
+              if (t) return `<li>${esc(t)}</li>`;
+            }
+            return '';
+          }).filter(Boolean).join('');
+          if (!items) return '';
+          return `<div class="mt-1 small">${l}<ul class="mb-0 ps-3">${items}</ul></div>`;
+        }
+
+        if (typeof value === 'object') {
+          const parts = Object.entries(value)
+            .filter(([k]) => !k.startsWith('_') && k !== 'id')
+            .map(([k, v]) => {
+              if (typeof v === 'string' && !v.match(/^R-[A-Z0-9-]+$/i))
+                return `<li><strong>${esc(titleize(k))}:</strong> ${esc(v)}</li>`;
+              if (Array.isArray(v) && v.every(i => typeof i === 'string'))
+                return `<li><strong>${esc(titleize(k))}:</strong> ${v.map(esc).join(', ')}</li>`;
+              return '';
+            }).filter(Boolean).join('');
+          if (!parts) return '';
+          return `<div class="mt-1 small">${l}<ul class="mb-0 ps-3">${parts}</ul></div>`;
+        }
+        return '';
+      }
+
+      // Render a single vault entry as a card
+      function renderVaultCard(key, entry) {
+        if (!entry || typeof entry !== 'object') {
+          if (typeof entry === 'string' && !entry.match(/^R-[A-Z0-9-]+$/i)) {
+            return `<div class="cc-ability-card p-3 mb-2">
+              <div class="fw-bold mb-1">${esc(titleize(key))}</div>
+              <p class="mb-0">${esc(entry)}</p>
+            </div>`;
+          }
+          return '';
+        }
+
+        const title   = entry.title || titleize(key);
+        const defn    = entry.desc_long || '';
+        const details = Object.entries(entry)
+          .filter(([k]) => !SKIP_KEYS.has(k))
+          .map(([k, v]) => {
+            // Nested vault entries (e.g. difficult, impassable inside terrain_penalties)
+            if (v && typeof v === 'object' && !Array.isArray(v) && (v.title || v.desc_long)) {
+              return renderVaultCard(k, v);
+            }
+            return renderDetail(k, v);
+          }).join('');
+
+        return `
+          <div class="cc-ability-card p-3 mb-2">
+            <div class="d-flex justify-content-between align-items-baseline mb-1">
+              <div class="fw-bold flex-grow-1" style="font-size:1rem;">${esc(title)}</div>
+            </div>
+            ${defn ? `<p class="mb-1">${esc(defn)}</p>` : ''}
+            ${details}
+          </div>
+        `;
+      }
+
+      // Top-level intro (desc_long on the root object)
+      let html = '';
+      if (content.desc_long) {
+        html += `<p class="cc-rule-lead mb-4">${esc(content.desc_long)}</p>`;
+      }
+      if (content.fast_resolution) {
+        html += `<div class="cc-callout mb-4"><strong>Fast Resolution:</strong> ${esc(content.fast_resolution)}</div>`;
+      }
+
+      // Each vault entry
+      const entries = Object.entries(content).filter(([k, v]) => {
+        if (SKIP_KEYS.has(k)) return false;
+        if (k.startsWith('_')) return false;
+        if (typeof v === 'string') return false; // already handled above or skip
+        return true;
+      });
+
+      html += entries.map(([k, v]) => renderVaultCard(k, v)).join('');
+      return html || `<div class="cc-muted">No content available.</div>`;
+    }
+
     function renderContentSmart(meta, content) {
       if (content === undefined || content === null) {
         return `<div class="cc-muted">No content available.</div>`;
@@ -1059,11 +1167,20 @@ console.log("📘 Rules Explorer app loaded");
       if (typeof content === 'string') return `<p>${esc(content)}</p>`;
       if (typeof content !== 'object') return `<p>${esc(String(content))}</p>`;
 
+      // Ability dictionaries
       if (content.abilities && typeof content.abilities === 'object') {
         return renderAbilityDictionary(content.abilities);
       }
       if (content.properties && typeof content.properties === 'object') {
         return renderAbilityDictionary(content.properties);
+      }
+
+      // Vaults: rules_section type, or explicit vault IDs
+      const VAULT_IDS = new Set([
+        'visibility_vault', 'locomotion_vault', 'combat_vault', 'morale_vault'
+      ]);
+      if (content.type === 'rules_section' || VAULT_IDS.has(meta && meta.id)) {
+        return renderVaultDictionary(content);
       }
 
       const isFlatAbilityDict = Object.values(content).every(v =>
@@ -1243,10 +1360,13 @@ console.log("📘 Rules Explorer app loaded");
 
       let displayTitle = meta.title || "";
       if (meta.type === 'abilities' || meta.id.includes('ability_dict')) {
+        // Prefer the title from the JSON file itself over the index title
         if (resolvedContent && typeof resolvedContent === 'object') {
-          const firstKey = Object.keys(resolvedContent)[0];
-          if (firstKey && firstKey.match(/^[A-H]$/)) {
-            displayTitle = titleize(firstKey);
+          const contentTitle = resolvedContent.title ||
+            (resolvedContent.abilities && resolvedContent.abilities.title) ||
+            (resolvedContent.meta && resolvedContent.meta.title);
+          if (contentTitle && typeof contentTitle === 'string') {
+            displayTitle = contentTitle;
           }
         }
       }
