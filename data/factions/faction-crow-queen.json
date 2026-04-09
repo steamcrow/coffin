@@ -173,6 +173,75 @@
       ]
     },
     {
+      "name": "Halloween Golem",
+      "faction": "Monsters",
+      "type": "Tank",
+      "cost": 125,
+      "quality": 3,
+      "defense": 3,
+      "move": 5,
+      "range": 0,
+      "weapon": "Woodcutter Axe",
+      "weapon_properties": [],
+      "composition": {
+        "per_points": 0
+      },
+      "abilities": [
+        "Toughest",
+        "Spare Parts Drop"
+      ],
+      "lore": "During the Crow Queen's war against monsters, she utilized an army of Halloween Golems to cut down the forests where the monsters lived.",
+      "tactics": "Reliable blockers that grind forward and absorb punishment while leaving salvage behind.",
+      "temperament": "Stalwart",
+      "flags": [
+        "Mechan",
+        "HeavyArmor"
+      ],
+      "unit_tags": [
+        "construct",
+        "blocker",
+        "salvage"
+      ],
+      "terrain_preferences": [
+        "open",
+        "ruins",
+        "industrial"
+      ],
+      "objective_keywords": [
+        "hold",
+        "block",
+        "salvage"
+      ],
+      "state_advantages": {
+        "good_in": [
+          "Rusted",
+          "Extracted"
+        ],
+        "bad_in": [
+          "Strangewild"
+        ]
+      },
+      "optional_upgrades": [
+        {
+          "name": "Keen Axe",
+          "cost": 6,
+          "desc_short": "This unit gains Pierce."
+        }
+      ],
+      "supplemental_abilities": [
+        {
+          "name": "Rusty Halloween Golem",
+          "cost": -50,
+          "desc_short": "A rusting piece of trash held together by habit and hope.",
+          "stat_modifiers": {
+            "quality": 2,
+            "defense": 2,
+            "move": 3
+          }
+        }
+      ]
+    },
+    {
       "name": "The Black Bailiff",
       "faction": "The Crow Queen",
       "type": "Titan",
