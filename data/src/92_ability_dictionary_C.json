@@ -20,6 +20,18 @@
       "desc_short": "+1 melee damage.",
       "desc_long": "Passive. +1 damage on successful melee hit."
     },
+    "brutal_fear": {
+      "_id": "R-ABIL-C-BRUTAL-FEAR",
+      "timing": "passive",
+      "desc_short": "-2 dice to enemy Morale nearby.",
+      "desc_long": "Passive. Enemies within 6\" suffer -2 dice on Morale tests. This replaces the standard Fear ability; a unit cannot have both Fear and Brutal Fear."
+    },
+    "savage_fear": {
+      "_id": "R-ABIL-C-SAVAGE-FEAR",
+      "timing": "passive",
+      "desc_short": "-3 dice to enemy Morale nearby; panic on failure.",
+      "desc_long": "Passive. Enemies within 6\" suffer -3 dice on Morale tests. Any enemy that fails a Morale test while within 6\" of this unit immediately Panics rather than becoming Shaken. This replaces Fear and Brutal Fear."
+    },
     "blood_in_the_air": {
       "_id": "R-ABIL-C-BLOOD-IN-THE-AIR",
       "timing": "passive",
@@ -61,6 +73,18 @@
       "timing": "passive",
       "desc_short": "Charge for 3 auto-hits.",
       "desc_long": "Passive. Moving 3\"+ into contact deals 3 automatic hits before rolling attack dice."
+    },
+    "lingering_hex": {
+      "_id": "R-ABIL-C-LINGERING-HEX",
+      "timing": "passive",
+      "desc_short": "Hex Markers persist beyond end of round.",
+      "desc_long": "Passive. This unit's Hex effects do not expire at end of round. Each Hex Marker placed by this unit persists until the end of the target's next activation. Each Hex Marker reduces the target's attack and Quality dice by 1 (minimum 1 die). A target may carry a maximum of 3 Hex Markers at once."
+    },
+    "petrify": {
+      "_id": "R-ABIL-C-PETRIFY",
+      "timing": "passive",
+      "desc_short": "Gaze attack slows and eventually roots targets.",
+      "desc_long": "Passive. On a successful ranged attack, the target gains a Petrify Token. A target with 1 Petrify Token suffers -2\" Move. A target with 2 Petrify Tokens is Pinned at the start of each of its activations until it removes a token. A target with 3 Petrify Tokens is fully Petrified: it cannot move or take actions. A Petrified target may spend its full activation (no actions) to remove 1 Petrify Token. Bloodless and Mechan units are immune to Petrify."
     },
     "press_the_advantage": {
       "_id": "R-ABIL-C-PRESS-THE-ADVANTAGE",
@@ -150,7 +174,7 @@
       "_id": "R-ABIL-C-HELL-SPRAY",
       "timing": "main_action",
       "desc_short": "Cone attack (limited uses).",
-      "desc_long": "Main Action. Three times per game, this unit may unleash a cone attack instead of a normal attack. Place a 12\" desc_long, 12\" wide cone template from this unit's facing. All units whose bases are partially or fully within the cone are targeted. Roll this unit's Quality as a ranged attack against each target separately."
+      "desc_long": "Main Action. Three times per game, this unit may unleash a cone attack instead of a normal attack. Place a 12\" long, 12\" wide cone template from this unit's facing. All units whose bases are partially or fully within the cone are targeted. Roll this unit's Quality as a ranged attack against each target separately."
     },
     "demolition": {
       "_id": "R-ABIL-C-DEMOLITION",
@@ -223,6 +247,12 @@
       "timing": "passive",
       "desc_short": "Suppress on near-miss.",
       "desc_long": "Passive. If this unit's attack hits but deals no damage, target becomes Suppressed until end of its next activation. On natural 6 to hit, Suppressed extends by one additional activation."
+    },
+    "wild_ricochet": {
+      "_id": "R-ABIL-C-WILD-RICOCHET",
+      "timing": "passive",
+      "desc_short": "After moving, may immediately attack a second target.",
+      "desc_long": "Passive. After this unit completes a move action and resolves an attack, it may immediately make one additional attack against a second target within range. The second target must be different from the first. This bonus attack uses the same weapon and dice pool. Wild Ricochet may only trigger once per activation."
     }
   }
 }
