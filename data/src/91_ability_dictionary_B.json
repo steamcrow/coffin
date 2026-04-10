@@ -95,6 +95,13 @@
       "desc_long": "Passive. Cannot move. May still attack/defend. Only repositioned by scenario/special rules."
     },
 
+    "interact": {
+      "_id": "R-ABIL-B-INTERACT",
+      "timing": "main_action",
+      "desc_short": "Perform an action on an adjacent objective or terrain feature.",
+      "desc_long": "Main Action. This unit may perform an Interact action on an adjacent objective, terrain feature, Thyr Crystal, building, or other interactable element as defined by the scenario or unit card. Most Interact actions require the unit to remain stationary this activation unless otherwise stated. Some units gain bonus dice or additional options when using Interact."
+    },
+
     "leaper": {
       "_id": "R-ABIL-B-LEAPER",
       "timing": "passive",
@@ -150,6 +157,13 @@
       "timing": "passive",
       "desc_short": "Extra Move if no attacks are made.",
       "desc_long": "Passive. If no attacks are made during activation, make an additional Move at the end."
+    },
+
+    "scout": {
+      "_id": "R-ABIL-B-SCOUT",
+      "timing": "deployment",
+      "desc_short": "Deploy ahead of the main force.",
+      "desc_long": "Deployment. This unit may deploy after all other units have been placed, up to 12\" forward of its normal deployment zone. It may not deploy within 6\" of an enemy unit. Scout does not allow this unit to move before the first round; it simply represents an advanced starting position."
     },
 
     "slip_away": {
