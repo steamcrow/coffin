@@ -301,8 +301,8 @@ console.log("⚔️ Faction Builder app loaded");
           name:   slugToName(slug),
           id:     entry._id    || '',
           timing: entry.timing || '',
-          short:  entry.short  || '',
-          long:   entry.long   || '',
+          desc_short:  entry.desc_short  || '',
+          desc_long:   entry.desc_long   || '',
         };
       });
     }
