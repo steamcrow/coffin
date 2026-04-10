@@ -1,7 +1,16 @@
 {
   "type": "faction",
   "faction": "Shine Riders",
-  "version": "2.0",
+  "version": "2.1",
+  "ability_dictionary_refs": [
+    "90_ability_dictionary_A.json",
+    "91_ability_dictionary_B.json",
+    "92_ability_dictionary_C.json",
+    "93_ability_dictionary_D.json",
+    "94_ability_dictionary_E.json",
+    "95_ability_dictionary_F.json",
+    "97_ability_dictionary_H.json"
+  ],
   "desc_long": "The Shine Riders are Coffin Canyon's most opportunistic faction. They win not by destroying their enemies but by taking everything worth having and leaving before the bill comes due. Every unit is built around speed, theft, extraction, or denial — often all four at once.",
   "canyon_state_relationships": {
     "preferred_states": [
@@ -77,59 +86,35 @@
       "cost": 0,
       "required": true,
       "effect": "Shine Riders units gain +1 die when performing Interact actions to extract Thyr or turn buildings into Silver mines.",
-      "keywords": [
-        "extraction",
-        "interact",
-        "thyr",
-        "silver"
-      ]
+      "keywords": ["extraction", "interact", "thyr", "silver"]
     },
     {
       "name": "Quick Exit",
       "cost": 0,
       "required": true,
       "effect": "Shine Riders units within 6\" of a table edge gain +1 to Disengage rolls. Retreating is never shameful — it is the plan.",
-      "keywords": [
-        "disengage",
-        "escape",
-        "mobility"
-      ]
+      "keywords": ["disengage", "escape", "mobility"]
     },
     {
       "name": "Silver Rush",
       "cost": 0,
       "required": false,
-      "effect": "Earn bonus Silver for each building successfully turned and held until end of game. Represents successful resource extraction converted to campaign currency.",
-      "keywords": [
-        "silver",
-        "buildings",
-        "campaign"
-      ]
+      "effect": "Earn bonus Silver for each building successfully turned and held until end of game.",
+      "keywords": ["silver", "buildings", "campaign"]
     },
     {
       "name": "Claim Salting",
       "cost": 0,
       "required": false,
       "effect": "Bootboomers may place Claim Markers on Thyr Crystals or Buildings instead of extracting them. Claim Markers trigger on first enemy contact: 1 automatic hit + Suppressed.",
-      "keywords": [
-        "trap",
-        "claim",
-        "sabotage",
-        "denial"
-      ]
+      "keywords": ["trap", "claim", "sabotage", "denial"]
     },
     {
       "name": "Doomshine",
       "cost": 0,
       "required": false,
       "effect": "Doomshine Casks may appear as objective markers on the board. Shine Riders units carry them without penalty. All other factions treat carried casks as Encumbering (-1\" Move). When a Shine Riders unit is destroyed, roll 1d6 — on a 4+, they drop a Doomshine Cask marker at their death location. Any unit may pick it up. Thrallo within 12\" of an unsecured cask must pass a Morale test each activation or move toward the nearest cask instead of their intended action.",
-      "keywords": [
-        "doomshine",
-        "loot",
-        "thrallo_interaction",
-        "drop_on_death",
-        "morale"
-      ]
+      "keywords": ["doomshine", "loot", "thrallo_interaction", "drop_on_death", "morale"]
     }
   ],
   "victory_objectives": [
@@ -151,10 +136,10 @@
     {
       "type": "Hit and Run",
       "vp": "1 VP per objective contested",
-      "description": "Score VP for contesting objectives and escaping before heavy resistance arrives. Speed over combat."
+      "description": "Score VP for contesting objectives and escaping before heavy resistance arrives."
     }
   ],
-  "weapons_note": "Unit costs include standard-issue weapons. Weapon names are flavour; their mechanical effects are defined by weapon_properties and abilities in core rules.",
+  "weapons_note": "Unit costs include standard-issue weapons. Weapon names are flavour; mechanical effects are defined by weapon_properties and abilities in core rules.",
   "universal_upgrades_available": true,
   "universal_upgrades_note": "Shine Riders may purchase Gas Mask and Spare Parts upgrades from core rules where appropriate. Vehicle units (Wagon Gat, Rattle Cart) may also access vehicle repair upgrades.",
   "units": [
@@ -168,84 +153,47 @@
       "move": 5,
       "range": 12,
       "weapon": "Thyr Extractor & Sidearm",
-      "weapon_properties": [
-        "Light"
-      ],
+      "weapon_properties": ["light"],
       "composition": {
         "per_points": 150
       },
       "abilities": [
-        "Interact",
-        "Quick Draw",
+        "interact",
+        "quick_draw",
         "gas_mask"
       ],
       "lore": "Expendable Thyr harvesters. They wear thick gloves because the crystals burn bare skin, and they learned that lesson the hard way. Most of them are missing at least one finger.",
-      "tactics": "Your primary Interact engine. Rush them forward behind faster units and spend every action extracting. They are tools, not fighters. Do not expect them to survive.",
-      "unit_tags": [
-        "interact",
-        "extraction",
-        "expendable",
-        "thyr",
-        "grunt"
-      ],
-      "terrain_preferences": [
-        "thyr_outcroppings",
-        "ruins",
-        "buildings",
-        "open_ground"
-      ],
-      "objective_keywords": [
-        "extraction",
-        "thyr",
-        "interact",
-        "harvest"
-      ],
+      "tactics": "Your primary extraction engine. Rush them forward behind faster units and spend every action on Interact. They are tools, not fighters — D0 means one bad round ends them. Quick Draw gives them a fighting chance if something gets close. Sixguns is worth considering if the board is contested; Mounted lets them reach objectives a full turn faster.",
+      "unit_tags": ["interact", "extraction", "expendable", "thyr", "grunt"],
+      "terrain_preferences": ["thyr_outcroppings", "ruins", "buildings", "open_ground"],
+      "objective_keywords": ["extraction", "thyr", "interact", "harvest"],
       "state_advantages": {
-        "good_in": [
-          "Extracted",
-          "Booming",
-          "Lawless"
-        ],
-        "bad_in": [
-          "Liberated",
-          "Haunted"
-        ]
+        "good_in": ["Extracted", "Booming", "Lawless"],
+        "bad_in": ["Liberated", "Haunted"]
       },
-      "special_scenarios": [
-        "thyr_extraction",
-        "building_conversion",
-        "resource_race"
-      ],
+      "special_scenarios": ["thyr_extraction", "building_conversion", "resource_race"],
       "optional_upgrades": [
         {
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
-          "stat_modifiers": {
-            "range": 8
-          }
+          "desc_short": "Replace sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": { "range": 8 }
         },
         {
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
-          "stat_modifiers": {
-            "move": 4
-          },
-          "grants_abilities": [
-            "Mounted"
-          ]
+          "desc_short": "Gain mounted: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble. Lost if dismounted.",
+          "stat_modifiers": { "move": 4 },
+          "grants_abilities": ["mounted"]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -259,85 +207,48 @@
       "move": 8,
       "range": 6,
       "weapon": "Dust Sling & Belt Pistol",
-      "weapon_properties": [
-        "Light"
-      ],
+      "weapon_properties": ["light"],
       "composition": {
         "per_points": 200
       },
       "abilities": [
-        "Fast",
-        "Runner",
-        "Boardwalk Blitzer",
+        "fast",
+        "runner",
+        "boardwalk_blitzer",
         "gas_mask"
       ],
       "lore": "Half courier, half gambler. Shard Runners bet their lives on being faster than bullets. Most of the time they are right. The ones who aren't don't come back to argue about it.",
-      "tactics": "Fastest objective grabbers in the faction. Deploy wide, hit the closest objective, and immediately angle toward the table edge. Boardwalk Blitzer makes them terrifying on urban boards. Never trade shots.",
-      "unit_tags": [
-        "fast",
-        "objective",
-        "mobile",
-        "courier",
-        "grunt"
-      ],
-      "terrain_preferences": [
-        "boardwalks",
-        "streets",
-        "open_ground",
-        "ruins"
-      ],
-      "objective_keywords": [
-        "grab",
-        "extract",
-        "relay",
-        "speed_score"
-      ],
+      "tactics": "The fastest objective grabbers in the faction. Deploy wide, grab the nearest objective, and angle immediately toward the table edge. Boardwalk Blitzer makes urban boards terrifying — a Shard Runner on a boardwalk covers the whole edge in one activation. Never stand still and trade shots; D0 means they die to a stiff breeze.",
+      "unit_tags": ["fast", "objective", "mobile", "courier", "grunt"],
+      "terrain_preferences": ["boardwalks", "streets", "open_ground", "ruins"],
+      "objective_keywords": ["grab", "extract", "relay", "speed_score"],
       "state_advantages": {
-        "good_in": [
-          "Booming",
-          "Lawless",
-          "Extracted"
-        ],
-        "bad_in": [
-          "Strangewild",
-          "Haunted"
-        ]
+        "good_in": ["Booming", "Lawless", "Extracted"],
+        "bad_in": ["Strangewild", "Haunted"]
       },
-      "special_scenarios": [
-        "objective_race",
-        "courier_mission",
-        "hit_and_run"
-      ],
+      "special_scenarios": ["objective_race", "courier_mission", "hit_and_run"],
       "optional_upgrades": [
         {
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
-          "stat_modifiers": {
-            "range": 8
-          }
+          "desc_short": "Replace sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": { "range": 8 }
         },
         {
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
-          "stat_modifiers": {
-            "move": 4
-          },
-          "grants_abilities": [
-            "Mounted"
-          ]
+          "desc_short": "Gain mounted: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble. Lost if dismounted.",
+          "stat_modifiers": { "move": 4 },
+          "grants_abilities": ["mounted"]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -351,86 +262,50 @@
       "move": 6,
       "range": 6,
       "weapon": "Hidden Charges & Boot Pistol",
-      "weapon_properties": [
-        "Light"
-      ],
+      "weapon_properties": ["light"],
       "composition": {
         "per_points": 200
       },
       "abilities": [
-        "Interact",
-        "Demolition",
+        "interact",
+        "demolition",
         "gas_mask"
       ],
       "lore": "They 'mine' claims the old-fashioned way: by hiding charges in them and walking away. The Bootboomer's favourite phrase is 'their problem now.'",
-      "tactics": "Interact with Thyr Crystals or Buildings to place Claim Markers instead of extracting — poisoning the well for enemies. Send them forward early, salt multiple objectives, then abandon them. The traps do the rest.",
-      "unit_tags": [
-        "trap",
-        "interact",
-        "denial",
-        "sabotage",
-        "grunt"
-      ],
-      "terrain_preferences": [
-        "thyr_outcroppings",
-        "buildings",
-        "chokepoints",
-        "ruins"
-      ],
-      "objective_keywords": [
-        "claim_salt",
-        "trap",
-        "denial",
-        "sabotage"
-      ],
+      "tactics": "Go forward early, salt as many objectives as possible, then abandon them. The traps do the rest. A salted Thyr Crystal or building forces the enemy to either trigger the trap or give up contesting it — both outcomes work in your favour. Demolition can blow cover and open extraction paths for your Glowhands. Mounted lets them reach and salt objectives a round sooner.",
+      "unit_tags": ["trap", "interact", "denial", "sabotage", "grunt"],
+      "terrain_preferences": ["thyr_outcroppings", "buildings", "chokepoints", "ruins"],
+      "objective_keywords": ["claim_salt", "trap", "denial", "sabotage"],
       "state_advantages": {
-        "good_in": [
-          "Lawless",
-          "Extracted",
-          "Booming"
-        ],
-        "bad_in": [
-          "Liberated"
-        ]
+        "good_in": ["Lawless", "Extracted", "Booming"],
+        "bad_in": ["Liberated"]
       },
-      "special_scenarios": [
-        "denial_mission",
-        "sabotage",
-        "claim_disruption"
-      ],
+      "special_scenarios": ["denial_mission", "sabotage", "claim_disruption"],
       "special_mechanics": {
-        "salted_claim": "When this unit successfully Interacts with a Thyr Crystal or Building, it may place a Claim Marker on it instead of extracting. The first non-Shine Rider unit to contact the marked feature suffers 1 automatic hit and Suppressed until end of its next activation. Remove the marker after triggering. Limit: 1 Claim Marker per Bootboomer in play at a time."
+        "salted_claim": "When this unit successfully Interacts with a Thyr Crystal or Building, it may place a Claim Marker on it instead of extracting. The first non-Shine Rider unit to contact the marked feature suffers 1 automatic hit and becomes Suppressed until end of its next activation. Remove the marker after triggering. Limit: 1 Claim Marker per Bootboomer in play at a time."
       },
       "optional_upgrades": [
         {
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
-          "stat_modifiers": {
-            "range": 8
-          }
+          "desc_short": "Replace sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": { "range": 8 }
         },
         {
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
-          "stat_modifiers": {
-            "move": 4
-          },
-          "grants_abilities": [
-            "Mounted"
-          ]
+          "desc_short": "Gain mounted: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble. Lost if dismounted.",
+          "stat_modifiers": { "move": 4 },
+          "grants_abilities": ["mounted"]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -444,85 +319,50 @@
       "move": 6,
       "range": 6,
       "weapon": "Hookblade Poles & Magnet Hooks",
-      "weapon_properties": [
-        "Melee",
-        "Light"
-      ],
+      "weapon_properties": ["melee", "light"],
       "composition": {
         "per_points": 300
       },
       "abilities": [
-        "Steal",
-        "Interact",
+        "steal",
+        "interact",
         "gas_mask"
       ],
       "lore": "Specialists in ripping value off living targets. Hookblades strip weapons. Magnet hooks pull supplies. Crowbars handle everything else. They have never met a thing they couldn't remove from someone who wanted to keep it.",
-      "tactics": "Target high-value enemy units — Leaders, Specialists, anything with expensive upgrades. A successful Steal destroys the upgrade rather than transferring it, which is usually enough. Keep one Scrapjack near the Shine Boss for the re-roll support.",
-      "unit_tags": [
-        "steal",
-        "disrupt",
-        "anti_upgrade",
-        "interact",
-        "specialist"
-      ],
-      "terrain_preferences": [
-        "chokepoints",
-        "urban",
-        "open_ground"
-      ],
-      "objective_keywords": [
-        "steal",
-        "disrupt",
-        "upgrade_denial"
-      ],
+      "tactics": "Target high-value enemy units — Leaders, Specialists, anything with expensive upgrades. A successful Steal destroys the upgrade rather than transferring it, which is usually enough. At D0 they cannot absorb a fight, so use approach routes carefully. Canyon Jackals make excellent escorts — they can neutralize whatever is guarding the target while Scrapjacks do the actual theft.",
+      "unit_tags": ["steal", "disrupt", "anti_upgrade", "interact", "specialist"],
+      "terrain_preferences": ["chokepoints", "urban", "open_ground"],
+      "objective_keywords": ["steal", "disrupt", "upgrade_denial"],
       "state_advantages": {
-        "good_in": [
-          "Booming",
-          "Lawless"
-        ],
-        "bad_in": [
-          "Liberated",
-          "Haunted"
-        ]
+        "good_in": ["Booming", "Lawless"],
+        "bad_in": ["Liberated", "Haunted"]
       },
-      "special_scenarios": [
-        "theft_mission",
-        "upgrade_denial",
-        "disruption"
-      ],
+      "special_scenarios": ["theft_mission", "upgrade_denial", "disruption"],
       "special_mechanics": {
-        "steal": "Steal ability (see core rules). When successful, stolen upgrades are destroyed, not captured."
+        "steal_faction_rule": "When a Scrapjack Looter successfully uses the steal ability, the stolen upgrade is destroyed rather than captured. The target unit loses the upgrade permanently for the remainder of the game."
       },
       "optional_upgrades": [
         {
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
-          "stat_modifiers": {
-            "range": 8
-          }
+          "desc_short": "Replace sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": { "range": 8 }
         },
         {
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
-          "stat_modifiers": {
-            "move": 4
-          },
-          "grants_abilities": [
-            "Mounted"
-          ]
+          "desc_short": "Gain mounted: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble. Lost if dismounted.",
+          "stat_modifiers": { "move": 4 },
+          "grants_abilities": ["mounted"]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -536,77 +376,39 @@
       "move": 8,
       "range": 12,
       "weapon": "Canyon Dust Slings & Short Carbine",
-      "weapon_properties": [
-        "Light",
-        "Suppression"
-      ],
+      "weapon_properties": ["light", "suppression"],
       "composition": {
         "per_points": 300
       },
       "abilities": [
-        "Scout",
-        "Suppression",
+        "scout",
+        "suppression",
         "gas_mask"
       ],
       "lore": "Mounted dust-throwers who learned that the canyon's worst weapon is its air. They fill leather pouches with alkali dust, ride in fast, and throw the canyon itself into your eyes.",
-      "tactics": "Deploy via Scout to apply Suppression on Turn 1 before the enemy can react. Hit the unit most likely to contest your extractors and waste their activations. Keep riding — Cavalry Disengage means you can never be pinned. Gas Masks make them immune to their own dust.",
-      "unit_tags": [
-        "cavalry",
-        "scout",
-        "suppression",
-        "mobile",
-        "fast"
-      ],
-      "terrain_preferences": [
-        "open_ground",
-        "dust_flats",
-        "roads",
-        "ruins"
-      ],
-      "objective_keywords": [
-        "suppression",
-        "disruption",
-        "denial",
-        "scouting"
-      ],
+      "tactics": "Deploy via Scout to hit your priority target with Suppression on Turn 1 before they can react. The unit most likely to contest your Glowhands is the right first target — waste their activation and your extractors work unmolested. Cavalry Disengage means you can never be truly pinned. Gas Masks make them immune to their own dust, which matters when Mustard Gas is in play.",
+      "unit_tags": ["cavalry", "scout", "suppression", "mobile", "fast"],
+      "terrain_preferences": ["open_ground", "dust_flats", "roads", "ruins"],
+      "objective_keywords": ["suppression", "disruption", "denial", "scouting"],
       "state_advantages": {
-        "good_in": [
-          "Lawless",
-          "Extracted",
-          "Poisoned"
-        ],
-        "bad_in": [
-          "Haunted",
-          "Strangewild"
-        ]
+        "good_in": ["Lawless", "Extracted", "Poisoned"],
+        "bad_in": ["Haunted", "Strangewild"]
       },
-      "special_scenarios": [
-        "denial_mission",
-        "disruption",
-        "scouting_ahead"
-      ],
-      "special_mechanics": {
-        "choking_dust": "If this unit successfully hits but causes no damage, the target is Suppressed until end of its next activation. On a natural 6, Suppressed lasts one additional activation.",
-        "gas_masks": "This unit ignores Choking Dust effects from its own attacks and those of allied Ash Slingers."
-      },
+      "special_scenarios": ["denial_mission", "disruption", "scouting_ahead"],
       "optional_upgrades": [
         {
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
-          "stat_modifiers": {
-            "range": 8
-          }
+          "desc_short": "Replace sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": { "range": 8 }
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -620,87 +422,51 @@
       "move": 6,
       "range": 12,
       "weapon": "Dynamite Bundles & Pistol",
-      "weapon_properties": [
-        "Blast",
-        "Light"
-      ],
+      "weapon_properties": ["blast", "light"],
       "composition": {
         "per_points": 300
       },
       "abilities": [
-        "Demolition",
-        "Fearless",
+        "demolition",
+        "fearless",
         "gas_mask"
       ],
       "lore": "Blast Jack carries more dynamite than sense. The Shine Riders love him for it. Everyone else has learned to keep their distance when he starts smiling.",
-      "tactics": "Use Demolition to destroy cover, open walls for extraction paths, and panic Monster units with Scare Tactics. Position behind cover — Volatile Cargo makes his death dangerous for both sides, which enemies will remember.",
-      "unit_tags": [
-        "demolition",
-        "explosive",
-        "anti_terrain",
-        "scare",
-        "specialist"
-      ],
-      "terrain_preferences": [
-        "buildings",
-        "barricades",
-        "ruins",
-        "chokepoints"
-      ],
-      "objective_keywords": [
-        "demolition",
-        "path_clearing",
-        "monster_disruption"
-      ],
+      "tactics": "Use Demolition to destroy cover and open walls for extraction routes. Dynamite Blast panics nearby Monsters — a well-placed throw can redirect a monster away from your Glowhands entirely. Keep him behind cover; Volatile Cargo makes his death a danger to both sides, which most enemies will factor into their decisions. Mounted lets him reach demolition targets faster and escape before things get bad.",
+      "unit_tags": ["demolition", "explosive", "anti_terrain", "scare", "specialist"],
+      "terrain_preferences": ["buildings", "barricades", "ruins", "chokepoints"],
+      "objective_keywords": ["demolition", "path_clearing", "monster_disruption"],
       "state_advantages": {
-        "good_in": [
-          "Booming",
-          "Extracted",
-          "Lawless"
-        ],
-        "bad_in": [
-          "Strangewild"
-        ]
+        "good_in": ["Booming", "Extracted", "Lawless"],
+        "bad_in": ["Strangewild"]
       },
-      "special_scenarios": [
-        "demolition_mission",
-        "path_clearing",
-        "monster_disruption"
-      ],
+      "special_scenarios": ["demolition_mission", "path_clearing", "monster_disruption"],
       "special_mechanics": {
         "scare_tactics": "When Blast Jack successfully hits with dynamite, all Monster units within 6\" of the blast must test Morale at -1 die. Failed tests cause those Monsters to move away from the blast center.",
-        "volatile_cargo": "If Blast Jack is destroyed, roll 1d6. On 5-6, all units within 3\" take 1 automatic damage from exploding dynamite (affects all factions including Shine Riders)."
+        "volatile_cargo": "If Blast Jack is destroyed, roll 1d6. On 5-6, all units within 3\" take 1 automatic damage from exploding dynamite. Affects all factions including Shine Riders."
       },
       "optional_upgrades": [
         {
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
-          "stat_modifiers": {
-            "range": 8
-          }
+          "desc_short": "Replace sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": { "range": 8 }
         },
         {
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
-          "stat_modifiers": {
-            "move": 4
-          },
-          "grants_abilities": [
-            "Mounted"
-          ]
+          "desc_short": "Gain mounted: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble. Lost if dismounted.",
+          "stat_modifiers": { "move": 4 },
+          "grants_abilities": ["mounted"]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -714,65 +480,33 @@
       "move": 4,
       "range": 18,
       "weapon": "Wagon-Mounted Gatling Gun",
-      "weapon_properties": [
-        "Suppression",
-        "Heavy"
-      ],
+      "weapon_properties": ["suppression", "heavy"],
       "composition": {
         "per_points": 400
       },
       "abilities": [
-        "Anchor",
-        "Suppression",
-        "Immobile",
+        "anchor",
+        "suppression",
+        "immobile",
         "gas_mask"
       ],
       "lore": "A gatling gun welded to a wagon frame and pointed at whatever is approaching the extraction team. It does not move quickly. It does not need to.",
-      "tactics": "Deploy in the second rank covering your extractors' flank. Anchor early and Suppress anything that tries to contest your Glowhands. Immobile means placement is everything — think before you commit. A well-placed Wagon Gat buys multiple turns of free Interact actions.",
-      "unit_tags": [
-        "tank",
-        "suppression",
-        "anchor",
-        "fire_support",
-        "immobile"
-      ],
-      "terrain_preferences": [
-        "elevated",
-        "chokepoints",
-        "open_fire_lines",
-        "cover_adjacent"
-      ],
-      "objective_keywords": [
-        "suppression",
-        "area_denial",
-        "fire_support",
-        "flank_cover"
-      ],
+      "tactics": "Deploy in the second rank covering your extractors' flank. Anchor early and Suppress anything that threatens your Glowhands. Immobile means placement is everything — think carefully before you commit. A well-placed Wagon Gat buys multiple turns of free Interact actions by making the contested lane too costly to enter. Spare Parts keeps it functional if the enemy manages to damage it.",
+      "unit_tags": ["tank", "suppression", "anchor", "fire_support", "immobile"],
+      "terrain_preferences": ["elevated", "chokepoints", "open_fire_lines", "cover_adjacent"],
+      "objective_keywords": ["suppression", "area_denial", "fire_support", "flank_cover"],
       "state_advantages": {
-        "good_in": [
-          "Lawless",
-          "Booming",
-          "Extracted"
-        ],
-        "bad_in": [
-          "Strangewild",
-          "Haunted"
-        ]
+        "good_in": ["Lawless", "Booming", "Extracted"],
+        "bad_in": ["Strangewild", "Haunted"]
       },
-      "special_scenarios": [
-        "extraction_cover",
-        "area_denial",
-        "defensive_hold"
-      ],
+      "special_scenarios": ["extraction_cover", "area_denial", "defensive_hold"],
       "optional_upgrades": [
         {
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
-          "stat_modifiers": {
-            "range": 8
-          }
+          "desc_short": "Replace sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": { "range": 8 }
         },
         {
           "name": "Spare Parts",
@@ -792,57 +526,28 @@
       "move": 6,
       "range": 12,
       "weapon": "Thyr Staff & Pocket Revolver",
-      "weapon_properties": [
-        "Light"
-      ],
+      "weapon_properties": ["light"],
       "composition": {
         "per_points": 400
       },
       "abilities": [
-        "Hex",
-        "Stealth",
-        "Unleashed Power",
+        "hex",
+        "stealth",
+        "unleashed_power",
         "gas_mask"
       ],
       "lore": "Nobody hired her for the Thyr magic. She came with the canyon. She seems to find the caches before anyone else does, which makes her useful and unsettling in equal measure.",
-      "tactics": "Hex the enemy unit most likely to contest your extraction — -1 Quality is devastating on a Leader or high-Q fighter. Use Stealth to stay alive. Wild Magic Table is a last resort; the results are chaotic but occasionally faction-changing. Limit 0-1 per force.",
-      "unit_tags": [
-        "mystic",
-        "hex",
-        "stealth",
-        "thyr",
-        "wild_magic",
-        "unique"
-      ],
-      "terrain_preferences": [
-        "thyr_outcroppings",
-        "tainted_ground",
-        "ruins",
-        "cover"
-      ],
-      "objective_keywords": [
-        "hex",
-        "disruption",
-        "thyr_enhancement",
-        "wild_magic"
-      ],
+      "tactics": "Hex the enemy unit most likely to contest your extraction — -1 Quality on a Leader or high-Q fighter can flip a fight entirely. Stealth keeps her alive at range. Unleashed Power and the Wild Magic Table are last resorts; the results are chaotic but occasionally game-changing. Limit 1 per force. Consuming a nearby Thyr Crystal to reroll a bad Wild Magic result can save a round.",
+      "unit_tags": ["mystic", "hex", "stealth", "thyr", "wild_magic", "unique"],
+      "terrain_preferences": ["thyr_outcroppings", "tainted_ground", "ruins", "cover"],
+      "objective_keywords": ["hex", "disruption", "thyr_enhancement", "wild_magic"],
       "state_advantages": {
-        "good_in": [
-          "Strangewild",
-          "Extracted",
-          "Haunted"
-        ],
-        "bad_in": [
-          "Liberated"
-        ]
+        "good_in": ["Strangewild", "Extracted", "Haunted"],
+        "bad_in": ["Liberated"]
       },
-      "special_scenarios": [
-        "mystic_site",
-        "thyr_extraction",
-        "hex_disruption"
-      ],
+      "special_scenarios": ["mystic_site", "thyr_extraction", "hex_disruption"],
       "special_mechanics": {
-        "wild_magic_table": "Roll 2d6 when using Unleashed Power. Results range from Catastrophic Backfire (2) to Thyr Overcharge (12). See Wild Magic Table in core rules.",
+        "wild_magic_table": "Roll 2d6 when using unleashed_power. Results range from Catastrophic Backfire (2) to Thyr Overcharge (12). See Wild Magic Table in core rules.",
         "thyr_channeling": "May consume an adjacent extracted Thyr Crystal to reroll any single Wild Magic result once per game."
       },
       "optional_upgrades": [
@@ -850,31 +555,23 @@
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
-          "stat_modifiers": {
-            "range": 8
-          }
+          "desc_short": "Replace sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": { "range": 8 }
         },
         {
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
-          "stat_modifiers": {
-            "move": 4
-          },
-          "grants_abilities": [
-            "Mounted"
-          ]
+          "desc_short": "Gain mounted: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble. Lost if dismounted.",
+          "stat_modifiers": { "move": 4 },
+          "grants_abilities": ["mounted"]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -888,88 +585,48 @@
       "move": 7,
       "range": 4,
       "weapon": "Switchblade & Boot Pistol",
-      "weapon_properties": [
-        "Melee",
-        "Light"
-      ],
+      "weapon_properties": ["melee", "light"],
       "composition": {
         "per_points": 300
       },
       "abilities": [
-        "Stealth",
+        "stealth",
+        "quick_draw",
+        "backstab",
         "gas_mask"
       ],
       "lore": "The ones you do not see coming. Canyon Jackals run light, fight dirty, and live by one rule: never be the second one to draw. They pick isolated targets, close fast, and are usually gone before their victim hits the ground.",
-      "tactics": "Deploy wide to threaten isolated enemy units — a Leader caught alone, an extractor out of support range. First Strike means you always attack before a charge resolves against you. Use Stealth to close distance without return fire. Backstab punishes enemies who thought they had numbers. Not a brawler — a scalpel.",
-      "unit_tags": [
-        "rogue",
-        "melee",
-        "stealth",
-        "first_strike",
-        "assassin",
-        "fast"
-      ],
-      "terrain_preferences": [
-        "cover",
-        "ruins",
-        "chokepoints",
-        "urban",
-        "dense_shadows"
-      ],
-      "objective_keywords": [
-        "assassination",
-        "isolation",
-        "disruption",
-        "flanking"
-      ],
+      "tactics": "Deploy wide and hunt isolated units — a Leader out of support range, an extractor left alone for one round. Quick Draw means you always strike first when charged, and Backstab rewards attacking targets that haven't activated yet. Pair with Ash Slingers: Suppressed targets grant +2 dice to Backstab instead of +1. Not a brawler — keep them away from grouped enemies and use Stealth to control when the fight starts.",
+      "unit_tags": ["rogue", "melee", "stealth", "first_strike", "assassin", "fast"],
+      "terrain_preferences": ["cover", "ruins", "chokepoints", "urban", "dense_shadows"],
+      "objective_keywords": ["assassination", "isolation", "disruption", "flanking"],
       "state_advantages": {
-        "good_in": [
-          "Lawless",
-          "Haunted",
-          "Strangewild"
-        ],
-        "bad_in": [
-          "Liberated"
-        ]
+        "good_in": ["Lawless", "Haunted", "Strangewild"],
+        "bad_in": ["Liberated"]
       },
-      "special_scenarios": [
-        "assassination",
-        "ambush",
-        "disruption"
-      ],
-      "special_mechanics": {
-        "backstab": "If this unit attacks a target that has not yet activated this round, it gains +1 die on the attack roll. If the target is also Suppressed, gain +2 dice instead."
-      },
+      "special_scenarios": ["assassination", "ambush", "disruption"],
       "optional_upgrades": [
         {
           "name": "Sixguns",
           "cost": 7,
           "type": "Weapon",
-          "desc_short": "Replace this unit's sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
-          "stat_modifiers": {
-            "range": 8
-          }
+          "desc_short": "Replace sidearm with a brace of revolvers. Gain +1 die on ranged attacks up to 8\".",
+          "stat_modifiers": { "range": 8 }
         },
         {
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
-          "stat_modifiers": {
-            "move": 4
-          },
-          "grants_abilities": [
-            "Mounted"
-          ]
+          "desc_short": "Gain mounted: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble. Lost if dismounted.",
+          "stat_modifiers": { "move": 4 },
+          "grants_abilities": ["mounted"]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -983,61 +640,26 @@
       "move": 10,
       "range": 12,
       "weapon": "Hexed Sixguns",
-      "weapon_properties": [
-        "Light",
-        "Hex",
-        "Pierce"
-      ],
+      "weapon_properties": ["light", "hex", "pierce"],
       "abilities": [
         "gas_mask",
-        "Mounted",
-        "Fearless",
-        "Lingering Hex"
+        "mounted",
+        "fearless",
+        "lingering_hex"
       ],
       "lore": "Nobody knows if she was a witch who found the guns or a gunfighter who found the witchcraft. What the canyon knows is this: her bullets do not stop hurting when they miss. The smoke they leave behind smells like regret and burnt hair, and whatever she shoots at starts falling apart — slowly, methodically, like something important has been quietly removed.",
-      "tactics": "She is not here to kill. She is here to make killing easier for everyone else. Ride her into medium range and start stacking Hexes on the highest-Quality enemy unit — a Leader, a Hero, a Mystic. Each Hex reduces their dice pool, and Lingering Hex means they cannot shake it until she lets them. Pair with Canyon Jackals (who gain bonus dice against debuffed targets) and Ash Slingers (who stack Suppression on top). Keep her mobile — D1 means she cannot take a sustained fight. As a Hero, her death costs you +3 VP, so do not be reckless. She is a scalpel, not a shield.",
-      "unit_tags": [
-        "hero",
-        "hex",
-        "debuff",
-        "mounted",
-        "cavalry",
-        "mystic_adjacent",
-        "unique"
-      ],
-      "terrain_preferences": [
-        "open_ground",
-        "medium_range",
-        "cover_adjacent",
-        "dust_flats"
-      ],
-      "objective_keywords": [
-        "hex",
-        "debuff",
-        "disruption",
-        "ability_denial",
-        "support"
-      ],
+      "tactics": "She is not here to kill. She is here to make killing easier for everyone else. Ride her into medium range and start stacking Hexes on the highest-Quality enemy — a Leader, Hero, or Mystic. Lingering Hex means they cannot shake it until she lets them. Pair with Canyon Jackals (who gain bonus dice against debuffed targets) and Ash Slingers (who stack Suppression on top). D1 means she cannot sustain a fight — keep her moving. At +3 VP on death, do not be reckless.",
+      "unit_tags": ["hero", "hex", "debuff", "mounted", "cavalry", "mystic_adjacent", "unique"],
+      "terrain_preferences": ["open_ground", "medium_range", "cover_adjacent", "dust_flats"],
+      "objective_keywords": ["hex", "debuff", "disruption", "ability_denial", "support"],
       "state_advantages": {
-        "good_in": [
-          "Lawless",
-          "Strangewild",
-          "Extracted"
-        ],
-        "bad_in": [
-          "Liberated",
-          "Haunted"
-        ]
+        "good_in": ["Lawless", "Strangewild", "Extracted"],
+        "bad_in": ["Liberated", "Haunted"]
       },
-      "special_scenarios": [
-        "hex_disruption",
-        "assassination_support",
-        "debuff_pressure"
-      ],
+      "special_scenarios": ["hex_disruption", "assassination_support", "debuff_pressure"],
       "special_mechanics": {
-        "lingering_hex": "Each successful hit from the Hexed Sixguns places a Hex Marker on the target. Hex Markers persist until the end of the target's next activation — they are not removed at end of round. Each Hex Marker reduces the target's attack and Quality dice by 1 (minimum 1 die). A target may carry a maximum of 3 Hex Markers at once.",
-        "hexed_sixguns": "The Hexed Sixguns count as both a ranged weapon (12\") and a Mystic casting tool. Their attacks may target abilities directly: declare a named ability on the target — on a successful hit, that ability is silenced until the target's next activation ends.",
-        "smoke_and_spite": "Enemy units that target the Sixgun Bruja with a ranged attack suffer -1 die if they already carry a Hex Marker. She is difficult to focus on while her curse is in the air.",
+        "hexed_sixguns": "The Hexed Sixguns count as both a ranged weapon (12\") and a Mystic casting tool. Attacks may target abilities directly: declare a named ability on the target — on a successful hit, that ability is silenced until the target's next activation ends.",
+        "smoke_and_spite": "Enemy units targeting the Sixgun Bruja with a ranged attack suffer -1 die if they already carry a Hex Marker.",
         "high_value_target": "If the Sixgun Bruja is destroyed, the enemy gains +3 VP."
       },
       "optional_upgrades": [
@@ -1045,17 +667,15 @@
           "name": "Spite Round",
           "cost": 10,
           "type": "Weapon",
-          "desc_short": "Once per game, fire a Spite Round: the target immediately gains 3 Hex Markers regardless of hit result. The Gun Witch suffers 1 Quality damage after firing it.",
+          "desc_short": "Once per game: target immediately gains 3 Hex Markers regardless of hit result. The Bruja suffers 1 Quality damage after firing.",
           "stat_modifiers": {}
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -1069,52 +689,26 @@
       "move": 6,
       "range": 12,
       "weapon": "Ornate Revolver & Riding Crop",
-      "weapon_properties": [
-        "Light"
-      ],
+      "weapon_properties": ["light"],
       "composition": {
         "per_points": 400
       },
       "abilities": [
-        "Authority",
-        "Inspire",
-        "Fearless",
+        "authority",
+        "inspire",
+        "fearless",
         "gas_mask"
       ],
       "lore": "Every Shine Riders crew runs on one person's nerve and everyone else's fear of disappointing them. The Shine Boss is that person. They do not stay to fight. They stay until every unit with something valuable has made it to the edge. Then they leave.",
-      "tactics": "Keep the Shine Boss central to your extraction cluster and within 6\" of as many units as possible. The aura rewards retreating — use it deliberately. Inspire adds dice when you need a critical Interact or attack to succeed. Authority keeps panicking units functional.",
-      "unit_tags": [
-        "leader",
-        "inspire",
-        "aura",
-        "retreat_bonus",
-        "authority"
-      ],
-      "terrain_preferences": [
-        "central",
-        "elevated",
-        "near_table_edge",
-        "cover"
-      ],
-      "objective_keywords": [
-        "leadership",
-        "morale",
-        "retreat_coordination",
-        "inspire"
-      ],
+      "tactics": "Keep the Shine Boss central to your extraction cluster and within 6\" of as many units as possible. The aura rewards retreating — use it deliberately. Inspire adds dice when you need a critical Interact or attack to land. Authority keeps panicking units functional under fire. Mounted is the single best upgrade on this unit — it keeps the Boss alive and mobile all game.",
+      "unit_tags": ["leader", "inspire", "aura", "retreat_bonus", "authority"],
+      "terrain_preferences": ["central", "elevated", "near_table_edge", "cover"],
+      "objective_keywords": ["leadership", "morale", "retreat_coordination", "inspire"],
       "state_advantages": {
-        "good_in": [
-          "any"
-        ],
-        "bad_in": [
-          "Liberated"
-        ]
+        "good_in": ["any"],
+        "bad_in": ["Liberated"]
       },
-      "special_scenarios": [
-        "leadership",
-        "extraction_coordination",
-        "retreat_mission"
-      ],
+      "special_scenarios": ["leadership", "extraction_coordination", "retreat_mission"],
       "special_mechanics": {
         "shine_boss_aura": "Friendly Shine Riders units within 6\" receive: no VP penalty for abandoning objectives, re-roll failed Disengage attempts once per activation, and +2\" Movement when moving toward a table edge."
       },
@@ -1129,22 +723,16 @@
           "name": "Mounted",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Gain the Mounted ability: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble terrain. If dismounted, this upgrade is lost for the game.",
-          "stat_modifiers": {
-            "move": 4
-          },
-          "grants_abilities": [
-            "Mounted"
-          ]
+          "desc_short": "Gain mounted: +4\" Move, Disengage after any attack. Cannot enter Tight Interior or Dense Rubble. Lost if dismounted.",
+          "stat_modifiers": { "move": 4 },
+          "grants_abilities": ["mounted"]
         },
         {
           "name": "Doomshine Drunk",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "This unit is immune to Fear and automatically passes Morale tests. Trade-off: on any natural 1 rolled during this unit's activation, it must spend 1\" stumbling toward the nearest enemy unit (friend or foe). They drank before the fight. It helps. Mostly.",
-          "grants_abilities": [
-            "Doomshine Drunk"
-          ]
+          "desc_short": "Immune to Fear; auto-pass Morale. On any natural 1 during activation, stumble 1\" toward nearest enemy.",
+          "grants_abilities": ["doomshine_drunk"]
         }
       ]
     },
@@ -1158,56 +746,26 @@
       "move": 5,
       "range": 18,
       "weapon": "Wagon Gat & Trojan Facade",
-      "weapon_properties": [
-        "Suppression",
-        "Heavy"
-      ],
+      "weapon_properties": ["suppression", "heavy"],
       "composition": {
         "per_points": 500
       },
       "abilities": [
-        "Brace",
-        "Anchor",
-        "Suppression",
+        "brace",
+        "anchor",
+        "suppression",
         "gas_mask"
       ],
       "lore": "A roaming Trojan wagon — windmill-driven, loud as sin, dressed up like a monster to bait the canyon's horrors. Nobody inside. Nothing to lose. The Shine Riders built it to be feared, chased, and survived by anyone who isn't standing next to it when something wrong happens.",
-      "tactics": "Two modes: roaming Monster Bait (keep unanchored, use Windmill Drive to draw monsters and fire away from your real plan) or Sniper Tower (Anchor early, gain +6\" Range, count as Cover). Never use it as a front-line fighter — it is a distraction tool with Titan durability. Windmill Drive is mandatory when unanchored; plan your deployment accordingly.",
-      "unit_tags": [
-        "titan",
-        "monster_bait",
-        "suppression",
-        "anchor",
-        "distraction",
-        "vehicle"
-      ],
-      "terrain_preferences": [
-        "open_ground",
-        "elevated",
-        "chokepoints",
-        "central"
-      ],
-      "objective_keywords": [
-        "distraction",
-        "monster_redirection",
-        "fire_support",
-        "area_denial"
-      ],
+      "tactics": "Two modes. Monster Bait: leave it unanchored, let Windmill Drive pull it across the board, and watch monsters follow it away from your extractors. Sniper Tower: Anchor early, gain +6\" Range, and count as Cover for adjacent units. Never use it as a front-line fighter — Titan durability is for absorbing fire while your real plan happens elsewhere. Windmill Drive is mandatory when unanchored; plan deployment accordingly.",
+      "unit_tags": ["titan", "monster_bait", "suppression", "anchor", "distraction", "vehicle"],
+      "terrain_preferences": ["open_ground", "elevated", "chokepoints", "central"],
+      "objective_keywords": ["distraction", "monster_redirection", "fire_support", "area_denial"],
       "state_advantages": {
-        "good_in": [
-          "Strangewild",
-          "Lawless",
-          "Booming"
-        ],
-        "bad_in": [
-          "Haunted"
-        ]
+        "good_in": ["Strangewild", "Lawless", "Booming"],
+        "bad_in": ["Haunted"]
       },
-      "special_scenarios": [
-        "monster_distraction",
-        "area_denial",
-        "fire_support"
-      ],
+      "special_scenarios": ["monster_distraction", "area_denial", "fire_support"],
       "special_mechanics": {
         "windmill_drive": "At the start of each Shine Rider turn, if the Rattle Cart is not Anchored, it must move 3\" in a straight line. The controlling player chooses direction. If this movement would take it off the table, it exits (counts as destroyed for VP but does not explode).",
         "trojan_tower": "As an action, the Rattle Cart may Anchor. While Anchored: gains +6\" Range (total 24\"), counts as in Cover, cannot move until it spends an action to un-Anchor.",
