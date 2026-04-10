@@ -181,7 +181,8 @@ window.CCFB_FACTORY = {
             { key: 'F_terrain_environment',  file: '95_ability_dictionary_F.json', title: 'Terrain & Environment' },
             { key: 'G_thyr_ritual',          file: '96_ability_dictionary_G.json', title: 'Thyr & Ritual' },
             { key: 'H_interaction_support',  file: '97_ability_dictionary_H.json', title: 'Interaction & Support' },
-            { key: 'I_faction_special',      file: '98_ability_dictionary_I.json', title: 'Faction Special' }
+            { key: 'I_faction_special',      file: '98_ability_dictionary_I.json', title: 'Faction Special' },
+            { key: 'J_crow_court',           file: '99_ability_dictionary_J.json', title: 'Crow Court' }
         ];
 
         var identitiesPromise  = fetchJson(SRC + '70_unit_identities.json');
@@ -1165,7 +1166,7 @@ window.CCFB_FACTORY = {
         var supplemental = {
             name: name,
             type: type,
-            effect: effect
+            desc_short: effect
         };
         
         if (calculatedCost > 0) {
