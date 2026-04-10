@@ -50,11 +50,10 @@
       },
       "legacy_runtime_paths": [
         "factions/",
-        "rules/src/"
+        "data/src/"
       ],
       "notes": [
         "Currently still fetches factions from top-level factions/ in runtime code.",
-        "Ability dictionary and helper lookups still reference rules/src/ in runtime code."
       ]
     },
     "rules_explorer": {
