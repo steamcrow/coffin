@@ -1,7 +1,17 @@
 {
   "type": "faction",
   "faction": "Monsterology",
-  "version": "2.0",
+  "version": "2.1",
+  "ability_dictionary_refs": [
+    "90_ability_dictionary_A.json",
+    "91_ability_dictionary_B.json",
+    "92_ability_dictionary_C.json",
+    "93_ability_dictionary_D.json",
+    "94_ability_dictionary_E.json",
+    "95_ability_dictionary_F.json",
+    "96_ability_dictionary_G.json",
+    "97_ability_dictionary_H.json"
+  ],
   "faction_features": [
     {
       "name": "Monster Hunters",
@@ -36,25 +46,27 @@
         "skittish"
       ],
       "lore": "Disposable wannabe Plugs, shifty booze cultists, and debt prisoners armed with trash and desperation. Squab are chemically compromised and barely coherent.",
-      "tactics": "Objective cloggers, panic spreaders, and mobile hazards. Squab die easily, but can disrupt morale, terrain, and positioning.",
+      "tactics": "Flood objectives with bodies. Squab die easily but they cost almost nothing — use them to contest, screen, and draw fire away from your real pieces. Rotgut Drunk turns one into a fearless annoyance. Improvised Bomb makes the enemy regret clustering. Fake Hat buys a free round of misdirection if the opponent takes the bait.",
       "optional_upgrades": [
         {
           "name": "Rotgut Drunk",
           "cost": 2,
           "type": "Upgrade",
-          "desc_short": "Gain fearless. This model ignores Fear, Terror, and Dread. However, if this model rolls a Critical Failure (all 1s) on any Quality roll, it gains random_movement for the rest of the game."
+          "desc_short": "Gain fearless. Ignores Fear, Terror, and Dread. On a Critical Failure (all 1s) on any Quality roll, gain random_movement for the rest of the game.",
+          "grants_abilities": ["fearless"]
         },
         {
           "name": "Improvised Bomb",
           "cost": 4,
           "type": "Upgrade",
-          "desc_short": "Gain blast. When this model is destroyed, resolve a 3\" Blast attack centered on it. This attack ignores Cover."
+          "desc_short": "When this model is destroyed, resolve a 3\" Blast attack centered on it. This attack ignores Cover.",
+          "grants_abilities": ["blast"]
         },
         {
           "name": "Fake Hat",
           "cost": 3,
           "type": "Upgrade",
-          "desc_short": "Deploy this model using a Plugugly miniature instead of a Squab. While undiscovered, enemies must treat it as a Plugugly for targeting and threat evaluation. The disguise is revealed when: (1) this model takes damage, (2) this model performs an Attack, or (3) this model fails a Morale test. Once revealed, replace with a Squab model immediately."
+          "desc_short": "Deploy using a Plugugly miniature. Enemies must treat it as a Plugugly until the disguise is revealed. Revealed when: (1) this model takes damage, (2) performs an Attack, or (3) fails a Morale test. Replace with a Squab model immediately on reveal."
         }
       ]
     },
@@ -76,11 +88,11 @@
       },
       "abilities": [
         "assistant",
-        "smoke screen",
-        "gas mask"
+        "smoke_screen",
+        "gas_mask"
       ],
       "lore": "Lab assistants equipped with unstable chemical sprayers, monster pheromones, and sealed breathing rigs. Chemist Lackeys reshape the battlefield through gas, toxins, and behavioral manipulation.",
-      "tactics": "Board control specialists. Use smoke to block clarity, split formations, and enable monster traps. Supports Scientists and ritual units while denying space to the enemy.",
+      "tactics": "Board control specialists. Pop smoke to split enemy formations and create corridors for your Devourer Adepts to work in. Monster Lures can redirect a beast away from your Bishop at a critical moment. Mustard Gas makes your smoke actively dangerous — a good reason for enemies to stay out entirely. Keep them behind your Pluguglies; a D1 Specialist does not survive direct contact.",
       "optional_upgrades": [
         {
           "name": "Monster Lures",
@@ -92,7 +104,7 @@
           "name": "Mustard Gas",
           "cost": 4,
           "type": "Upgrade",
-          "desc_short": "When this model uses smoke_screen, the terrain created is also Hazardous. In addition, enemies activating within this Choking terrain roll -1 die on Morale tests."
+          "desc_short": "When this model uses smoke_screen, the terrain created is also Hazardous. Enemies activating within this Choking terrain roll -1 die on Morale tests."
         },
         {
           "name": "Binding Salts",
@@ -117,49 +129,50 @@
         "per_points": 200
       },
       "abilities": [
-        "load and carry",
+        "load_and_carry",
         "ritual",
-        "taint ground"
+        "taint_ground"
       ],
       "lore": "High priest cultists who harvest Mort and Thyr for the Feast Bishop. They oversee sacrificial logistics, seed Haunts, and conduct the Great Workings.",
-      "tactics": "Ritual engine and VP generator. Use Devourer Adepts to collect Mort, deliver it to the Feast Bishop, and corrupt terrain through sustained sacrifice.",
+      "tactics": "Your Mort pipeline. Send Devourer Adepts into kills to collect tokens and ferry them back to the Feast Bishop. Taint Ground corrupts terrain as they work, making your half of the board increasingly hostile. Doom Turnip is a nasty late-game surprise — plant it during a quiet moment and let the Haunt do the rest. Consider the Wheelbarrow Cultist variant for pure logistics when you don't need the ritual abilities.",
       "optional_upgrades": [
         {
           "name": "Doom Turnip",
           "cost": 4,
           "type": "Upgrade",
-          "desc_short": "Once per game. Plant a cursed ritual turnip in Tainted or Haunted terrain within 3\". At the end of the round, a Haunt is spawned adjacent and all units within 3\" suffer 1 automatic damage."
+          "desc_short": "Once per game. Plant a cursed ritual turnip in Tainted or Haunted terrain within 3\". At end of round, a Haunt spawns adjacent and all units within 3\" suffer 1 automatic damage."
         },
         {
           "name": "Chalice of Bile",
           "cost": 3,
           "type": "Upgrade",
-          "desc_short": "Once per game. Spend 1 Mort token. All friendly Monsterology units within 6\" gain Regeneration until the end of the round."
+          "desc_short": "Once per game. Spend 1 Mort token. All friendly Monsterology units within 6\" gain Regeneration until end of round."
         },
         {
           "name": "Sacrificial Overload",
           "cost": 5,
           "type": "Upgrade",
-          "desc_short": "Once per game. Spend 1 Mort and 1 Thyr crystal. Ignore all Fallout and Backlash this round. The terrain within 3\" becomes Hazardous and Haunted."
+          "desc_short": "Once per game. Spend 1 Mort and 1 Thyr crystal. Ignore all Fallout and Backlash this round. Terrain within 3\" becomes Hazardous and Haunted."
         },
         {
           "name": "Bone Rosary",
           "cost": 2,
           "type": "Upgrade",
-          "desc_short": "Passive. Once per round, when this model would lose 1 Quality, roll 1d6. On a 5+, ignore the damage."
+          "desc_short": "Once per round, when this model would lose 1 Quality, roll 1d6. On a 5+, ignore the damage."
         },
         {
-          "name": "gas_mask",
+          "name": "Gas Mask",
           "cost": 1,
           "type": "Upgrade",
-          "desc_short": "Passive. This unit ignores Coffin Cough, Choking Dust, and other environmental gas or smoke effects."
+          "desc_short": "This unit ignores Coffin Cough, Choking Dust, and other environmental gas or smoke effects.",
+          "grants_abilities": ["gas_mask"]
         }
       ],
       "supplemental_abilities": [
         {
           "name": "Wheelbarrow Cultist",
           "cost": -20,
-          "desc_short": "Lose abilities: ritual and taint_ground. Reduce Move by -1. Gain: Unholy Wheelbarrow (may carry up to 3 Mort/Thyr tokens), Bone Rosary (once per round, when this model would lose 1 Quality, roll 1d6; on a 5+ ignore the damage), and Gas Mask (immune to Choking and gas effects)."
+          "desc_short": "Lose abilities: ritual and taint_ground. Reduce Move by -1. Gain: Unholy Wheelbarrow (may carry up to 3 Mort/Thyr tokens), Bone Rosary (once per round, on a 5+ ignore 1 Quality loss), and Gas Mask (immune to Choking and gas effects)."
         }
       ]
     },
@@ -182,8 +195,8 @@
         "tough",
         "sonderbar_injection"
       ],
-      "lore": "Hulking enhanced shock troops addicted to Sonderbar injections.",
-      "tactics": "Frontline melee bruiser.",
+      "lore": "Hulking shock troops pumped full of Sonderbar compounds. They were big before the injections. Now they are problems. The addiction keeps them loyal; the pain keeps them angry.",
+      "tactics": "Your frontline wall. Push Pluguglies forward first and let everything expensive follow behind them. Brutal Blow means every hit hurts, and Tough means they absorb punishment that would delete cheaper units. A successful Sonderbar Injection turns one into a near-unstoppable terror — but a bad roll gives the enemy a free monster. Coordinate with a Scientist before committing the injection. The Untergang Revolver gives them surprising reach if you need a unit that can threaten at mid-range.",
       "optional_upgrades": [
         {
           "name": "Untergang 2-shot Revolver",
@@ -204,7 +217,7 @@
       "range": 0,
       "weapon": "Mechanical Hand, Syringe",
       "weapon_properties": [
-        "Brutal Blow"
+        "brutal_blow"
       ],
       "composition": {
         "per_points": 200
@@ -213,8 +226,8 @@
         "sonderbar_injection",
         "hex"
       ],
-      "lore": "Academy scholars and mad inventors.",
-      "tactics": "Support unit enabling injections and Electromagik.",
+      "lore": "Academy scholars and failed ethicists who found a more rewarding career in field research. The mechanical hand was a necessity after an early experiment. They do not talk about the experiment.",
+      "tactics": "Keep the Scientist within range of at least one Plugugly at all times — sonderbar_injection is wasted if there is nothing to inject. Hex softens high-Quality targets before your Brutes engage, which can swing fights decisively. Reinforced Prosthetic is worth taking; a D2 Mystic in melee does not last long without help.",
       "optional_upgrades": [
         {
           "name": "Reinforced Prosthetic",
@@ -238,7 +251,7 @@
       "range": 18,
       "weapon": "Electromajik Wand",
       "weapon_properties": [
-        "Pinning Shot"
+        "pinning_shot"
       ],
       "composition": {
         "per_points": 300
@@ -247,20 +260,22 @@
         "fear",
         "mobile_dynamo"
       ],
-      "lore": "Electromajik Magician cultist.",
-      "tactics": "Mid-range caster tied to Dynamo equipment.",
+      "lore": "Electromajik cultists who traded academic credentials for a wand and a Dynamo rig. The fear they project is partly mystical, partly the smell of ozone and burnt hair that follows them everywhere.",
+      "tactics": "Plant the Hexan in a strong position early and keep it there. Mobile Dynamo feeds the Jäger's abilities — the two work as a pair and should deploy within 12\" of each other. Pinning Shot on the wand locks down targets for your Brutes to close on. Chain Lightning is a powerful upgrade when enemies cluster; Levitation lets the Hexan escape a bad position or take elevated ground.",
       "optional_upgrades": [
         {
           "name": "Chain Lightning",
           "cost": 3,
           "type": "Upgrade",
-          "desc_short": "Adds Blast."
+          "desc_short": "Adds blast to the Electromajik Wand.",
+          "grants_abilities": ["blast"]
         },
         {
           "name": "Levitation",
           "cost": 2,
           "type": "Upgrade",
-          "desc_short": "Gain Flying."
+          "desc_short": "Gain flying.",
+          "grants_abilities": ["flying"]
         }
       ]
     },
@@ -275,8 +290,8 @@
       "range": 24,
       "weapon": "Engraved Electro-Musket",
       "weapon_properties": [
-        "AP(2)",
-        "Pinning Shot"
+        "ap2",
+        "pinning_shot"
       ],
       "composition": {
         "per_points": 300
@@ -285,14 +300,14 @@
         "pierce",
         "mobile_dynamo"
       ],
-      "lore": "Elite field commanders and hunters.",
-      "tactics": "Sniper-leader with aura support.",
+      "lore": "Elite field commanders and trophy hunters who have made a science of killing. The Electro-Musket is custom engraved; the target list is longer.",
+      "tactics": "The Jäger is your longest-range threat and your Dynamo anchor. Keep it at the back, feed it good sight lines, and let AP(2) plus Pierce punch through anything with armor. Pair with the Hexan — together they project a 12\" Dynamo field that keeps both units powered. Powder Monkey is worth the points in any game where you need one critical shot to land.",
       "optional_upgrades": [
         {
           "name": "Powder Monkey",
           "cost": 4,
           "type": "Upgrade",
-          "desc_short": "Reroll one failed shot per turn."
+          "desc_short": "Reroll one failed attack die per turn."
         }
       ]
     },
@@ -307,8 +322,8 @@
       "range": 12,
       "weapon": "Harpoon Launcher",
       "weapon_properties": [
-        "Pinning Shot",
-        "Grapple"
+        "pinning_shot",
+        "grapple"
       ],
       "composition": {
         "per_points": 300
@@ -318,8 +333,8 @@
         "brutal_impact",
         "boardwalk_blitzer"
       ],
-      "lore": "Steam-powered harpoon bikes.",
-      "tactics": "High-speed monster capture.",
+      "lore": "Steam-powered harpoon bikes crewed by injected Pluguglies who found that going very fast makes them feel slightly less angry. Slightly.",
+      "tactics": "Your fastest piece and your best monster-capture tool. Ride it up a flank, fire the harpoon to pin a target, then crash in with Brutal Impact. Boardwalk Blitzer makes urban boards extremely dangerous — a Velocipede on a boardwalk covers the entire table edge in one activation. Armored Plating trades some speed for staying power if you expect sustained fire.",
       "optional_upgrades": [
         {
           "name": "Armored Plating",
@@ -352,8 +367,8 @@
         "command_presence",
         "fearless"
       ],
-      "lore": "Patriarch of a Monsterology House.",
-      "tactics": "Faction-wide buff engine.",
+      "lore": "The patriarch of a Monsterology Great House — old enough to remember when the research was merely distasteful rather than actively illegal. Keeps the operation running through sheer institutional authority.",
+      "tactics": "Park the House Elder where the most units can benefit from Command Presence and Rally. Move 3\" means he is not going anywhere fast, so commit his position early. He is not a fighter — keep Pluguglies between him and the front line. Armored Shawl is a cheap upgrade that makes him meaningfully harder to remove by stray fire.",
       "optional_upgrades": [
         {
           "name": "Armored Shawl",
@@ -386,8 +401,8 @@
         "command_presence",
         "immobile"
       ],
-      "lore": "Sanctioned ingestive ritual authority.",
-      "tactics": "Ritual VP engine.",
+      "lore": "The sanctioned authority on ingestive ritual within the Monsterology hierarchy. Cannot move. Will not move. Has no interest in moving. The Mort comes to him.",
+      "tactics": "Place the Feast Bishop in a defensible central position and build your entire strategy around feeding him Mort tokens. Immobile means your Devourer Adepts do all the legwork — protect them. Great Working fires once and generates significant VP; time it for the moment it hurts the enemy most, not just when you have enough tokens. D4 and Fearless make him surprisingly hard to shift for a Leader who never leaves his chair.",
       "optional_upgrades": []
     }
   ],
