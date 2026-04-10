@@ -1,0 +1,129 @@
+{
+  "_id": "R-ABIL-J",
+  "title": "Ability Dictionary — J (Crow Court — STUBS)",
+  "notes": "These abilities are used by the Crow Queen faction. They are marked STUB and need full design. Each entry has placeholder mechanics that fit the unit's lore and role. Replace desc_long content when finalizing.",
+
+  "abilities": {
+
+    "walking_writ_of_law": {
+      "_id": "R-ABIL-J-WALKING-WRIT-OF-LAW",
+      "timing": "passive",
+      "stub": true,
+      "desc_short": "STUB. The Black Bailiff's presence enforces the Queen's law as a physical force.",
+      "desc_long": "STUB. Passive. While the Black Bailiff is on the table, all enemy units within 12\" must test Morale at the start of their activation if they are not already in combat. On a failure, they may not move toward the Black Bailiff this activation. (Placeholder — needs design review.)"
+    },
+
+    "mustard_exhalation": {
+      "_id": "R-ABIL-J-MUSTARD-EXHALATION",
+      "timing": "main_action",
+      "stub": true,
+      "desc_short": "STUB. The Black Bailiff exhales a cloud of choking yellow gas.",
+      "desc_long": "STUB. Main Action. Once per round. Place a 6\" radius Choking Gas cloud centered on this unit. All units inside (friend and foe) without a gas mask suffer -1 die on all actions until they leave the cloud. The cloud persists until the end of the round. Units with gas_mask are immune. (Placeholder — needs design review.)"
+    },
+
+    "iron_inevitability": {
+      "_id": "R-ABIL-J-IRON-INEVITABILITY",
+      "timing": "passive",
+      "stub": true,
+      "desc_short": "STUB. The Black Bailiff cannot be stopped by normal means.",
+      "desc_long": "STUB. Passive. This unit ignores Pinned, Suppression, and movement-reducing terrain effects. It cannot be Grappled or Restrained by non-Titan units. (Placeholder — needs design review.)"
+    },
+
+    "attention_of_the_crown": {
+      "_id": "R-ABIL-J-ATTENTION-OF-THE-CROWN",
+      "timing": "once_per_game",
+      "stub": true,
+      "desc_short": "STUB. The Black Bailiff draws all enemy attention to protect the court.",
+      "desc_long": "STUB. Once Per Game. Declare at the start of any round. Until the end of that round, all enemy ranged attacks that target a friendly Crow Queen unit within 12\" of the Black Bailiff must instead target the Black Bailiff if it is the closest valid target. (Placeholder — needs design review.)"
+    },
+
+    "executioners_tithe": {
+      "_id": "R-ABIL-J-EXECUTIONERS-TITHE",
+      "timing": "passive",
+      "stub": true,
+      "desc_short": "STUB. The High Executioner regains strength when he destroys an enemy within Consecrated Ground.",
+      "desc_long": "STUB. Passive. When this unit destroys an enemy model while within Consecrated Ground, it immediately restores 1 lost Quality (up to its starting maximum). This may only trigger once per activation. (Placeholder — needs design review.)"
+    },
+
+    "relentless_sentence": {
+      "_id": "R-ABIL-J-RELENTLESS-SENTENCE",
+      "timing": "passive",
+      "stub": true,
+      "desc_short": "STUB. The High Executioner pursues condemned targets without mercy.",
+      "desc_long": "STUB. Passive. If this unit begins its activation engaged with an enemy that failed a Morale test last round, it gains +1 die on all melee attacks this activation. Additionally, after destroying an enemy in melee, this unit may immediately move 2\". (Placeholder — needs design review.)"
+    },
+
+    "monster_tracker": {
+      "_id": "R-ABIL-J-MONSTER-TRACKER",
+      "timing": "passive",
+      "stub": true,
+      "desc_short": "STUB. The High Huntsman can track and locate hidden monster units.",
+      "desc_long": "STUB. Passive. This unit may see through Stealth on Monster-type units within 18\". Additionally, once per game, this unit may reveal the exact position of any one Hidden or Stealthed enemy unit anywhere on the table as a free action at the start of its activation. (Placeholder — needs design review.)"
+    },
+
+    "the_queens_mark": {
+      "_id": "R-ABIL-J-THE-QUEENS-MARK",
+      "timing": "main_action",
+      "stub": true,
+      "desc_short": "STUB. The High Huntsman designates a target for the whole court to focus on.",
+      "desc_long": "STUB. Main Action. Once per round. Choose one enemy unit within line of sight. Until the end of the round, all friendly Crow Queen units gain +1 die to hit that target. Only one target may carry the Queen's Mark at a time. (Placeholder — needs design review.)"
+    },
+
+    "master_of_the_hounds": {
+      "_id": "R-ABIL-J-MASTER-OF-THE-HOUNDS",
+      "timing": "passive",
+      "stub": true,
+      "desc_short": "STUB. The High Huntsman commands beast-type units under the Queen's collar.",
+      "desc_long": "STUB. Passive. Friendly Beast-type units within 8\" of this unit gain +1 die on Morale tests and may re-roll one failed attack die per activation. (This ability references Collared Beasts — a unit type not yet defined. Placeholder — needs design review.)"
+    },
+
+    "maddening_mimicry": {
+      "_id": "R-ABIL-J-MADDENING-MIMICRY",
+      "timing": "main_action",
+      "stub": true,
+      "desc_short": "STUB. The Court Jester mimics an enemy ability, using it against them.",
+      "desc_long": "STUB. Main Action. Once per game. Choose one enemy unit within 12\" that has a named active ability. This unit may immediately use that ability as if it were its own for this activation only. The copied ability uses this unit's Quality stat. (Placeholder — needs design review.)"
+    },
+
+    "acrobatic_leap": {
+      "_id": "R-ABIL-J-ACROBATIC-LEAP",
+      "timing": "passive",
+      "stub": true,
+      "desc_short": "STUB. The Court Jester can leap over obstacles and units during movement.",
+      "desc_long": "STUB. Passive. This unit may move through and over other units (friend and foe) during its movement. It does not trigger reactions when passing through. If it ends its movement in base contact with an enemy, it counts as having charged for Impact purposes. (Placeholder — needs design review.)"
+    },
+
+    "cruel_jest": {
+      "_id": "R-ABIL-J-CRUEL-JEST",
+      "timing": "main_action",
+      "stub": true,
+      "desc_short": "STUB. The Court Jester taunts an enemy into a mindless charge.",
+      "desc_long": "STUB. Main Action. Range 8\". Choose one enemy unit. That unit must pass a Quality test or immediately move its full Move stat directly toward the Court Jester. This movement may trigger terrain effects and does not count as a charge. (Placeholder — needs design review.)"
+    },
+
+    "dirge_of_the_fallen_empire": {
+      "_id": "R-ABIL-J-DIRGE-OF-THE-FALLEN-EMPIRE",
+      "timing": "main_action",
+      "stub": true,
+      "desc_short": "STUB. The Dark Skald's music forces Morale tests on enemies near Consecrated Ground.",
+      "desc_long": "STUB. Main Action. Once per round. All enemy units within 8\" of any Consecrated Ground marker or within 8\" of the Dark Skald must immediately test Morale at -1 die. On a failure, they become Shaken. On a Panic result, they must move away from the nearest Consecrated Ground marker. (Placeholder — needs design review.)"
+    },
+
+    "shattering_chord": {
+      "_id": "R-ABIL-J-SHATTERING-CHORD",
+      "timing": "main_action",
+      "stub": true,
+      "desc_short": "STUB. A devastating sonic attack that damages and disorients.",
+      "desc_long": "STUB. Main Action. Once per game. Ranged sonic attack (12\", Blast). Roll this unit's Quality against all units in the blast area. On a hit, deal 1 damage and apply Suppressed. Units with gas_mask are not immune — this is vibration, not gas. (Placeholder — needs design review.)"
+    },
+
+    "courtly_inspiration": {
+      "_id": "R-ABIL-J-COURTLY-INSPIRATION",
+      "timing": "passive",
+      "stub": true,
+      "desc_short": "STUB. The Dark Skald's music bolsters nearby Crow Court allies.",
+      "desc_long": "STUB. Passive. Friendly Crow Queen units within 6\" of the Dark Skald gain +1 die on Morale tests and ignore the first Shaken result each round. This aura is suspended if the Dark Skald is Shaken or engaged in melee. (Placeholder — needs design review.)"
+    }
+
+  }
+}
