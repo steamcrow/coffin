@@ -30,11 +30,12 @@
 
 .cc-faction-controls input#cc-roster-name {
   flex: 1;
-  min-width: 200px;
+  min-width: 120px;
+  max-width: 220px;
 }
 
 .cc-faction-controls select#cc-budget-selector {
-  flex: 0 0 140px;
+  flex: 0 0 130px;
 }
 
 /* ===== Faction Selector & Icons ===== */
@@ -45,7 +46,7 @@
   flex: 0 0 auto;
 }
 
-.cc-faction-selector-wrap select#cc-faction-selector { flex: 0 0 220px; }
+.cc-faction-selector-wrap select#cc-faction-selector { flex: 0 0 160px; }
 
 .cc-faction-selector-icon {
   display: flex;
@@ -135,7 +136,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000;
   font-size: 1.2rem;
   font-weight: 900;
 }
@@ -154,6 +154,8 @@
   pointer-events: none;
   white-space: nowrap;
   font-family: var(--cc-font-title);
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
 }
 
 .u-lore {
