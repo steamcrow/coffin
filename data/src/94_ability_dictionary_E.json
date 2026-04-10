@@ -91,6 +91,12 @@
       "timing": "passive",
       "desc_short": "Ignore Suppression nearby.",
       "desc_long": "Passive. Friendly units within 6\" ignore Suppression effects."
+    },
+    "command_presence": {
+      "_id": "R-ABIL-E-COMMAND-PRESENCE",
+      "timing": "passive",
+      "desc_short": "Friendly units nearby re-roll failed Morale tests once per round.",
+      "desc_long": "Passive. Friendly units within 6\" of this unit may re-roll one failed Morale test per round. This re-roll must be taken; the second result stands. If this unit is Shaken or destroyed, Command Presence is suspended until the start of this unit's next activation."
     }
   }
 }
