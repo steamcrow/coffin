@@ -1,10 +1,18 @@
 {
   "type": "faction",
   "faction": "Liberty Corps",
-  "version": "2.1",
+  "version": "2.2",
+  "ability_dictionary_refs": [
+    "90_ability_dictionary_A.json",
+    "91_ability_dictionary_B.json",
+    "92_ability_dictionary_C.json",
+    "93_ability_dictionary_D.json",
+    "94_ability_dictionary_E.json",
+    "97_ability_dictionary_H.json"
+  ],
   "desc_short": "Stabilize the park. Enforce the border. Make the canyon compliant.",
-  "desc_long": "From the maps of Liberty City, Coffin Canyon is not chaos. It is a Forbidden National Park: a vast, federally claimed preserve set aside for study, stabilization, and eventual development under the authority of the United States of Liberty. Entry without permit is illegal. Resource extraction without oversight is theft. Armed presence without sanction is sedition. That anyone disputes this is… unfortunate. The Liberty Corps exists to resolve that misunderstanding.",
-  "history": "For decades, Coffin Canyon was quarantined, studied from afar, and written off as too costly to tame. That has changed. Silver veins demand oversight. Thyr demands control. Monsters demand management. The Liberty Corps has been dispatched to secure the park, enforce federal exclusion, and prepare Coffin Canyon for responsible use—checkpoints, forts, railheads, controlled extraction, and where necessary, lethal intervention. Progress does not ask permission.",
+  "desc_long": "From the maps of Liberty City, Coffin Canyon is not chaos. It is a Forbidden National Park: a vast, federally claimed preserve set aside for study, stabilization, and eventual development under the authority of the United States of Liberty. Entry without permit is illegal. Resource extraction without oversight is theft. Armed presence without sanction is sedition. That anyone disputes this is unfortunate. The Liberty Corps exists to resolve that misunderstanding.",
+  "history": "For decades, Coffin Canyon was quarantined, studied from afar, and written off as too costly to tame. That has changed. Silver veins demand oversight. Thyr demands control. Monsters demand management. The Liberty Corps has been dispatched to secure the park, enforce federal exclusion, and prepare Coffin Canyon for responsible use — checkpoints, forts, railheads, controlled extraction, and where necessary, lethal intervention.",
   "faction_identity": {
     "core_values": [
       "Preservation through authority",
@@ -18,7 +26,7 @@
       "Controlled infrastructure (forts, railheads, checkpoints)",
       "Regulated silver and Thyr oversight",
       "Public safety through enforcement",
-      "An orderly battlefield—quiet, compliant, logged"
+      "An orderly battlefield — quiet, compliant, logged"
     ],
     "what_they_fight_against": [
       "Unpermitted entry and armed trespass",
@@ -29,95 +37,60 @@
     ],
     "reputation": {
       "allies_see_them_as": "Immaculate professionals bringing stability, logistics, and security to a hostile preserve",
-      "enemies_see_them_as": "Occupation forces—paperwork-backed violence with steam and steel",
-      "monsters_see_them_as": "Cages, chains, and gunfire—jurisdiction made physical",
+      "enemies_see_them_as": "Occupation forces — paperwork-backed violence with steam and steel",
+      "monsters_see_them_as": "Cages, chains, and gunfire — jurisdiction made physical",
       "the_canyon_sees_them_as": "Flags in the dust. Checkpoints at the throat. A claim made real."
     },
     "how_they_see_others": {
-      "monster_rangers": "Well-meaning but misguided. Their sentimentality undermines containment and emboldens threats. Tolerated—for now—under watchful files and standing orders to leave.",
-      "shine_riders": "Criminal trespassers. Poachers. Vandals. Arrest on sight. Recover stolen assets where possible.",
-      "monsterologists": "Once sanctioned partners under classified agreements—now untrustworthy and driven by greed. Unwelcome trespassers on Liberty’s hallowed ground."
+      "monster_rangers": "Well-meaning but misguided. Their sentimentality undermines containment and emboldens threats. Tolerated — for now.",
+      "shine_riders": "Criminal trespassers. Poachers. Vandals. Arrest on sight.",
+      "monsterologists": "Once sanctioned partners under classified agreements — now untrustworthy and unwelcome trespassers."
     },
-    "on_monsters": "Monsters are illegal occult foreigners—unregistered entities operating inside a federally restricted National Park without permit, citizenship, or recognized legal standing. Some may be temporarily tolerated for study, containment, or sanctioned use. Most are subject to removal, neutralization, or classified disposition. This is not hatred. This is enforcement. Liberty does not negotiate with unlawful presences. Liberty cleans its borders.",
-    "uncle_liberty": "There are contingencies the Corps does not discuss publicly. One of them is Uncle Liberty: the first President of the United States of Liberty, sustained beyond mortality by steam, steel, and duty. Uncle Liberty is not deployed lightly. He is a national response asset. When he appears, it means the situation has escalated beyond local authority, beyond negotiation, beyond patience. Liberty itself has deemed the canyon’s condition unacceptable. And Liberty will be obeyed."
+    "on_monsters": "Monsters are illegal occult foreigners — unregistered entities operating inside a federally restricted National Park without permit, citizenship, or recognized legal standing. Some may be temporarily tolerated for study or sanctioned use. Most are subject to removal, neutralization, or classified disposition. Liberty does not negotiate with unlawful presences. Liberty cleans its borders.",
+    "uncle_liberty": "There are contingencies the Corps does not discuss publicly. One of them is Uncle Liberty: the first President of the United States of Liberty, sustained beyond mortality by steam, steel, and duty. Uncle Liberty is not deployed lightly. He is a national response asset."
   },
   "faction_mechanics": {
     "signature_ability": "Arrest & Removal",
-    "signature_ability_description": "Liberty Corps wins by turning resistance into compliance: restrain, arrest, transport, and extract. They control space with pins, lockdowns, and disciplined advance—then score through removal and zone stability.",
-    "playstyle": "Zone-control enforcers who secure areas, expand outward, and escalate deliberately. They prefer tidy battlefields: pinned lanes, denied reactions, constrained movement, and arrests/extractions backed by steam hardware and command authority.",
+    "signature_ability_description": "Liberty Corps wins by turning resistance into compliance: restrain, arrest, transport, and extract. They control space with pins, lockdowns, and disciplined advance — then score through removal and zone stability.",
+    "playstyle": "Zone-control enforcers who secure areas, expand outward, and escalate deliberately. They prefer tidy battlefields: pinned lanes, denied reactions, constrained movement, and arrests backed by steam hardware and command authority.",
     "strengths": [
       "Excellent movement denial (pin, lockdown, grapple, suppress)",
-      "Durable, organized front line supported by technicians",
+      "Durable organized front line supported by technicians",
       "Strong command aura and morale reliability",
-      "Scoring through removal/extraction rather than pure attrition"
+      "Scoring through removal and extraction rather than pure attrition"
     ],
     "weaknesses": [
       "Can be outmaneuvered by extreme mobility and deep infiltration",
-      "Arrest plans can collapse if key control pieces fall",
+      "Arrest plans collapse if key control pieces fall",
       "Less flexible in highly mystical play without dedicated counters",
-      "High-value assets can become liabilities if lost early"
+      "High-value assets become liabilities if lost early"
     ]
   },
   "canyon_state_relationships": {
     "preferred_states": [
-      {
-        "state": "Liberated",
-        "reason": "The Corps’ ideal end-state: cleared lanes, enforced exclusion, and the battlefield made compliant for development."
-      },
-      {
-        "state": "Held",
-        "reason": "Stable, controlled zones reward disciplined expansion and checkpoint play."
-      }
+      { "state": "Liberated", "reason": "The Corps' ideal end-state: cleared lanes, enforced exclusion, and the battlefield made compliant." },
+      { "state": "Held", "reason": "Stable controlled zones reward disciplined expansion and checkpoint play." }
     ],
     "neutral_states": [
-      {
-        "state": "Lawless",
-        "reason": "The Corps treats it as under-policed territory—more paperwork, more arrests."
-      },
-      {
-        "state": "Poisoned",
-        "reason": "Operationally unpleasant, but the Corps fields respirators and procedures for toxic environments."
-      }
+      { "state": "Lawless", "reason": "The Corps treats it as under-policed territory — more paperwork, more arrests." },
+      { "state": "Poisoned", "reason": "Operationally unpleasant but the Corps fields respirators and procedures for toxic environments." }
     ],
     "opposed_states": [
-      {
-        "state": "Strangewild",
-        "reason": "Uncontrolled ecology and monster proliferation undermines stabilization and infrastructure."
-      },
-      {
-        "state": "Haunted",
-        "reason": "Haunts and occult contamination disrupt procedure and complicate containment."
-      },
-      {
-        "state": "Exalted",
-        "reason": "Competing sovereignty and mystic law interferes with federal authority."
-      },
-      {
-        "state": "Extracted",
-        "reason": "Monsterology’s exploitation turns the park into a scarred theft-zone—hostile to lawful oversight."
-      },
-      {
-        "state": "Rusted",
-        "reason": "Automation-heavy dead zones reduce the Corps’ leverage against living hazards and complicate arrests."
-      }
+      { "state": "Strangewild", "reason": "Uncontrolled ecology and monster proliferation undermines stabilization." },
+      { "state": "Haunted", "reason": "Haunts and occult contamination disrupt procedure and complicate containment." },
+      { "state": "Exalted", "reason": "Competing sovereignty and mystic law interferes with federal authority." },
+      { "state": "Extracted", "reason": "Monsterology's exploitation turns the park into a scarred theft-zone hostile to lawful oversight." },
+      { "state": "Rusted", "reason": "Automation-heavy dead zones reduce the Corps' leverage against living hazards." }
     ]
   },
   "faction_tags": [
-    "authority",
-    "zone_control",
-    "arrest",
-    "movement_denial",
-    "durable",
-    "command",
-    "industrial",
-    "procedure",
-    "suppression",
-    "stabilization"
+    "authority", "zone_control", "arrest", "movement_denial",
+    "durable", "command", "industrial", "procedure", "suppression", "stabilization"
   ],
   "scenario_preferences": {
     "ideal_scenarios": [
       "Checkpoint control and area holding",
-      "Arrest/extraction missions",
+      "Arrest and extraction missions",
       "Escort of survey teams and rail crews",
       "Asset recovery and evidence seizure",
       "Containment and quarantine operations"
@@ -126,7 +99,7 @@
       "High-mobility hit-and-run environments",
       "Deeply mystical battlefields without clear lines",
       "Monster-swarm scenarios that overwhelm arrest capacity",
-      "Fog/Haunt-heavy boards that disrupt command"
+      "Fog and Haunt-heavy boards that disrupt command"
     ]
   },
   "faction_features": [
@@ -134,39 +107,25 @@
       "name": "Federal Exclusion Jurisdiction",
       "cost": 0,
       "required": true,
-      "effect": "Liberty Corps treats Coffin Canyon as a Forbidden National Park under federal control. Their operations prioritize stabilization, eviction, and removal of unlawful presences.",
-      "keywords": [
-        "jurisdiction",
-        "exclusion",
-        "procedure"
-      ]
+      "effect": "Liberty Corps treats Coffin Canyon as a Forbidden National Park under federal control. Operations prioritize stabilization, eviction, and removal of unlawful presences.",
+      "keywords": ["jurisdiction", "exclusion", "procedure"]
     },
     {
       "name": "Arrest & Extraction Doctrine",
       "cost": 0,
       "required": true,
-      "effect": "Liberty Corps specializes in restraining and removing targets rather than simply destroying them. Units with Grapple/Binding Rig/Lockdown excel at creating arrests; transport units convert arrests into secure removals and scoring.",
-      "keywords": [
-        "arrest",
-        "containment",
-        "extraction",
-        "control"
-      ]
+      "effect": "Liberty Corps specializes in restraining and removing targets rather than simply destroying them. Units with grapple, binding_rig, and lockdown excel at creating arrests; transport units convert arrests into secure removals and scoring.",
+      "keywords": ["arrest", "containment", "extraction", "control"]
     },
     {
       "name": "Procedure Is Patriotism",
       "cost": 0,
       "required": false,
-      "effect": "Command presence (Authority/Inspire/Signal Orders) keeps units coordinated and resistant to morale disruption—so long as the chain of command remains intact.",
-      "keywords": [
-        "command",
-        "morale",
-        "discipline"
-      ]
+      "effect": "Command presence (authority, inspire, signal_orders) keeps units coordinated and resistant to morale disruption — so long as the chain of command remains intact.",
+      "keywords": ["command", "morale", "discipline"]
     }
   ],
-  "weapons_note": "Unit costs include standard-issue weapons. Where a weapon/property grants an explicit rules effect, it is included below as weapon_effects for that unit.",
-  "optional_upgrades_note": "Federal Gas Mask is intentionally priced and worded to match the Monster Rangers Gas Mask option (3 points) while mapping to your D-dictionary protections (gas_mask + built_in_goggles). Cold-Iron restraint rules are written to be actionable without inventing new core subsystems.",
+  "weapons_note": "Unit costs include standard-issue weapons. Weapon effects are listed under weapon_properties for each unit.",
   "units": [
     {
       "name": "Patriot Asset",
@@ -178,54 +137,34 @@
       "move": 6,
       "range": 0,
       "weapon": "Truncheon, Net, Restraints",
-      "weapon_properties": [
-        "melee"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Improvised Restraints",
-          "effect": "Counts as suitable gear for arrests and prisoner handling where scenario rules require restraints."
-        }
-      ],
-      "composition": {
-        "per_points": 0
-      },
+      "weapon_properties": ["melee"],
+      "composition": { "per_points": 0 },
       "abilities": [
-        "Runner"
+        "runner"
       ],
-      "lore": "Cheap bodies in cheap uniforms—pressed into service, promised glory, issued a whistle and a pair of cuffs.",
-      "tactics": "Flood lanes, contest objectives, and enable arrests. Trade lives for time and position.",
+      "lore": "Cheap bodies in cheap uniforms — pressed into service, promised glory, issued a whistle and a pair of cuffs.",
+      "tactics": "Flood lanes, contest objectives, and enable arrests. They die easily but cost little — treat them as mobile obstacles that slow the enemy and enable your real pieces. Cold-Iron Handcuffs makes their assist on arrests meaningfully harder to break. Citation Ledger improves Interact actions for scenarios with objective handling.",
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Cold-Iron Handcuffs",
           "cost": 5,
           "type": "Gear",
-          "desc_short": "Actionable rule: When this unit helps apply a Restrained/Captured state (from Grapple/Binding Rig/scenario arrest), the restrained target’s Break Free attempt is harder. If the restrained target attempts to Break Free as a Main Action, it must score 2+ successes on its Quality test (instead of 1). Titans ignore this upgrade.",
-          "keywords": [
-            "arrest",
-            "containment",
-            "anti_monster"
-          ]
+          "desc_short": "When this unit helps apply a Restrained or Captured state, the target must score 2+ successes to Break Free instead of 1. Titans ignore this upgrade.",
+          "keywords": ["arrest", "containment", "anti_monster"]
         },
         {
           "name": "Citation Ledger",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Actionable rule: Once per activation, when this model makes an Interact action tied to Seize/Arrest/Evidence/Objective handling, gain +1 die for that Interact roll (or +1 success if your Interact uses flat success).",
-          "keywords": [
-            "procedure",
-            "objective",
-            "interact"
-          ]
+          "desc_short": "Once per activation, when this model makes an Interact action tied to Seize, Arrest, Evidence, or Objective handling, gain +1 die for that Interact roll.",
+          "keywords": ["procedure", "objective", "interact"]
         }
       ]
     },
@@ -239,64 +178,38 @@
       "move": 5,
       "range": 0,
       "weapon": "Steam Fists & Iron Baton",
-      "weapon_properties": [
-        "melee"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Baton Interdiction",
-          "effect": "Designed for arrests: pair with Grapple/Lockdown to prevent disengage and set up prisoner capture."
-        }
-      ],
-      "composition": {
-        "per_points": 0
-      },
+      "weapon_properties": ["melee"],
+      "composition": { "per_points": 0 },
       "abilities": [
-        "Grapple",
-        "Shield Wall"
+        "grapple",
+        "shield_wall"
       ],
       "lore": "Uniformed enforcers in wool coats and iron helmets. Steam packs drive piston-fists built for arrests, not duels.",
-      "tactics": "Frontline control. Grapple and Shield Wall make lanes sticky, enabling arrests and denying breakthroughs.",
+      "tactics": "Frontline control. Grapple locks targets for arrests and prevents breakthroughs. Shield Wall rewards clustering — run two or three Constables together for a wall that is surprisingly hard to push through. Cold-Iron Restraint Kit upgrades a Grapple into a full Lockdown, preventing Disengage entirely. Iron Slab Plating is worth considering if you expect sustained AP fire.",
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Iron Slab Plating",
           "cost": 15,
           "type": "Upgrade",
-          "desc_short": "Bolt-on armor plates. Gain Armored (reduce damage taken by 1, minimum 0). Also +1 Defense, but -1\" Move from the extra mass.",
-          "stat_modifiers": {
-            "defense": 1,
-            "move": -1
-          },
-          "grants_abilities": [
-            "armored"
-          ],
-          "keywords": [
-            "armor",
-            "tank",
-            "industrial"
-          ]
+          "desc_short": "+1 Defense, -1\" Move. Gain armored (reduce damage taken by 1, minimum 0).",
+          "stat_modifiers": { "defense": 1, "move": -1 },
+          "grants_abilities": ["armored"],
+          "keywords": ["armor", "tank", "industrial"]
         },
         {
           "name": "Cold-Iron Restraint Kit",
           "cost": 6,
           "type": "Gear",
-          "desc_short": "Actionable rule: While this model is Engaged with an enemy model it has Grappled or that is Restrained, that enemy model cannot Disengage and cannot use free moves (as Lockdown). Ends if this model becomes Shaken or is forcibly moved.",
-          "grants_abilities": [
-            "lockdown"
-          ],
-          "keywords": [
-            "lockdown",
-            "arrest"
-          ]
+          "desc_short": "While engaged with a Grappled or Restrained enemy, that enemy cannot Disengage or use free moves (lockdown). Ends if this model becomes Shaken or is forcibly moved.",
+          "grants_abilities": ["lockdown"],
+          "keywords": ["lockdown", "arrest"]
         }
       ]
     },
@@ -310,57 +223,37 @@
       "move": 6,
       "range": 0,
       "weapon": "Tool Roll & Shock Stick",
-      "weapon_properties": [
-        "melee"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Shock Stick",
-          "effect": "Useful for discouraging close threats while the Technician keeps assets operational."
-        }
-      ],
-      "composition": {
-        "per_points": 300
-      },
+      "weapon_properties": ["melee"],
+      "composition": { "per_points": 300 },
       "abilities": [
-        "Assistant",
-        "Repair",
-        "Kick the Machine"
+        "assistant",
+        "repair",
+        "kick_the_machine"
       ],
       "lore": "Cable-haulers and wrench-hands who keep Liberty Corps machinery alive in places it was never meant to operate.",
-      "tactics": "Support backbone. Keep vehicles and control pieces functioning; strip debuffs at key moments.",
+      "tactics": "Support backbone. Keep the Technician adjacent to your Black Mariah or Troll-Howitzer — Repair keeps your most expensive pieces functional under fire. Kick the Machine removes Hex or Suppression from those same units, which is critical against Monsterology or Shine Rider debuff play. Portable Jamming Coil shuts down a 6\" bubble of Mystic abilities — extremely powerful against Conjure Guards and Crystal Whisperers.",
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Spare Parts Satchel",
           "cost": 6,
           "type": "Gear",
-          "desc_short": "Actionable rule: Start the game with 2 Spare Parts tokens. Each time you use Repair, you may spend a token instead of requiring (or consuming) any other Spare Parts source. If you already track Spare Parts globally, this adds +2 uses for this model only.",
-          "keywords": [
-            "repair",
-            "support"
-          ]
+          "desc_short": "Start with 2 Spare Parts tokens. Each Repair action may spend a token instead of consuming an external Spare Parts source.",
+          "keywords": ["repair", "support"]
         },
         {
           "name": "Portable Jamming Coil",
           "cost": 8,
           "type": "Device",
-          "desc_short": "Actionable rule: Enemy units within 6\" cannot use Hex, Charm, or other Mystic special abilities.",
-          "grants_abilities": [
-            "sonic_nullifier"
-          ],
-          "keywords": [
-            "anti_mystic",
-            "tech"
-          ]
+          "desc_short": "Enemy units within 6\" cannot use Hex, Charm, or other Mystic special abilities.",
+          "grants_abilities": ["sonic_nullifier"],
+          "keywords": ["anti_mystic", "tech"]
         }
       ]
     },
@@ -374,59 +267,37 @@
       "move": 6,
       "range": 12,
       "weapon": "Liberty Service Pistol",
-      "weapon_properties": [
-        "ranged"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Pinning Shot",
-          "ref": "R-ABIL-C-PINNING-SHOT",
-          "effect": "On hit, target cannot move during its next activation."
-        }
-      ],
-      "composition": {
-        "per_points": 300
-      },
+      "weapon_properties": ["ranged", "pinning_shot"],
+      "composition": { "per_points": 300 },
       "abilities": [
-        "Runner",
-        "Mark Target",
-        "Third Eye Vision"
+        "runner",
+        "mark_target",
+        "third_eye_vision"
       ],
-      "lore": "Plain clothes, keen eyes, documented everything. The warrant is already drafted—signed, stamped, inevitable.",
-      "tactics": "Priority marking and lane control. Use pinning to set up arrests and prevent escapes.",
+      "lore": "Plain clothes, keen eyes, documented everything. The warrant is already drafted — signed, stamped, inevitable.",
+      "tactics": "Priority marking and lane control. Third Eye Vision reveals Stealth units, which is crucial against Crow Rangers, Canyon Jackals, and Doom Mimes. Mark Target then concentrates all fire on the most dangerous piece. Pinning Shot on the pistol locks down targets for arrests. Case File stacks Suppressed on top of Mark Target in one action — a devastating combination against Leaders.",
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Cold-Iron Handcuffs",
           "cost": 5,
           "type": "Gear",
-          "desc_short": "Actionable rule: When this unit helps apply a Restrained/Captured state (from Grapple/Binding Rig/scenario arrest), the restrained target’s Break Free attempt is harder. If the restrained target attempts to Break Free as a Main Action, it must score 2+ successes on its Quality test (instead of 1). Titans ignore this upgrade.",
-          "keywords": [
-            "arrest",
-            "containment",
-            "anti_monster"
-          ]
+          "desc_short": "When this unit helps apply a Restrained or Captured state, the target must score 2+ successes to Break Free instead of 1. Titans ignore this upgrade.",
+          "keywords": ["arrest", "containment", "anti_monster"]
         },
         {
           "name": "Case File: Pattern Analysis",
           "cost": 6,
           "type": "Gear",
-          "desc_short": "Actionable rule: Once per game, when you use Mark Target, also apply Suppressed to that target (their next Action suffers -1 die).",
-          "grants_abilities": [
-            "suppress"
-          ],
-          "keywords": [
-            "control",
-            "debuff"
-          ]
+          "desc_short": "Once per game, when you use mark_target, also apply Suppressed to that target.",
+          "grants_abilities": ["suppress"],
+          "keywords": ["control", "debuff"]
         }
       ]
     },
@@ -440,59 +311,38 @@
       "move": 7,
       "range": 0,
       "weapon": "Shock Baton & Restraint Rig",
-      "weapon_properties": [
-        "melee"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Restraint Rig",
-          "effect": "Built to convert contact into containment — best used immediately after a successful Grapple."
-        }
-      ],
-      "composition": {
-        "per_points": 400
-      },
+      "weapon_properties": ["melee"],
+      "composition": { "per_points": 400 },
       "abilities": [
-        "Fast",
-        "Grapple",
-        "Binding Rig",
-        "Tough"
+        "fast",
+        "grapple",
+        "binding_rig",
+        "tough"
       ],
       "lore": "The best at what they do: steam-assisted reflexes, reinforced armor, and a perfect arrest record.",
-      "tactics": "Mobile arrest specialist. Fast + Grapple + Binding Rig is the Corps’ cleanest capture package.",
+      "tactics": "Mobile arrest specialist. Fast plus Grapple plus Binding Rig is the cleanest capture package in the faction. Move 7\" plus Fast means the Officer covers ground quickly — use them to run down fleeing high-value targets or cut off escape routes. Cold-Iron Handcuffs makes every arrest they set up extremely hard to escape from. Heroic Grit is worth the points on a unit that regularly puts itself in danger.",
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Cold-Iron Handcuffs",
           "cost": 5,
           "type": "Gear",
-          "desc_short": "Actionable rule: When this unit helps apply a Restrained/Captured state (from Grapple/Binding Rig/scenario arrest), the restrained target’s Break Free attempt is harder. If the restrained target attempts to Break Free as a Main Action, it must score 2+ successes on its Quality test (instead of 1). Titans ignore this upgrade.",
-          "keywords": [
-            "arrest",
-            "containment",
-            "anti_monster"
-          ]
+          "desc_short": "When this unit helps apply a Restrained or Captured state, the target must score 2+ successes to Break Free instead of 1. Titans ignore this upgrade.",
+          "keywords": ["arrest", "containment", "anti_monster"]
         },
         {
           "name": "Heroic Grit",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Once per game: Ignore the first wound suffered.",
-          "grants_abilities": [
-            "heroic_grit"
-          ],
-          "keywords": [
-            "survival",
-            "elite"
-          ]
+          "desc_short": "Once per game: ignore the first wound suffered.",
+          "grants_abilities": ["heroic_grit"],
+          "keywords": ["survival", "elite"]
         }
       ]
     },
@@ -506,54 +356,36 @@
       "move": 6,
       "range": 20,
       "weapon": "Precision Rifle",
-      "weapon_properties": [
-        "ranged"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Brutal Pierce",
-          "ref": "R-ABIL-C-BRUTAL-PIERCE",
-          "effect": "Ignores 2 points of Defense."
-        }
-      ],
-      "composition": {
-        "per_points": 400
-      },
+      "weapon_properties": ["ranged", "brutal_pierce"],
+      "composition": { "per_points": 400 },
       "abilities": [
-        "Deadeye",
-        "Mark Target"
+        "deadeye",
+        "mark_target"
       ],
-      "lore": "Contract shooters attached to enforcement columns. Their job isn’t justice—it’s results, recorded and delivered.",
-      "tactics": "Delete or cripple key pieces. Mark targets to concentrate fire and force compliance.",
+      "lore": "Contract shooters attached to enforcement columns. Their job isn't justice — it's results, recorded and delivered.",
+      "tactics": "Delete or cripple key pieces at 20\" range. Brutal Pierce ignores 2 Defense — Brine Divers, Pluguglies, and armored units are no longer safe. Deadeye rerolls all failed dice once per game; save it for the shot that needs to land. Camouflage Mantle in Cover makes the Contractor very difficult to target back. Shredder Rounds is a once-per-game Savage Pierce attack that ignores 3 Defense — use it on the most armored thing on the board.",
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Camouflage Mantle",
           "cost": 6,
           "type": "Gear",
-          "desc_short": "Actionable rule: Gain Stealth while in Cover. If you leave cover, Stealth ends until you enter cover again.",
-          "keywords": [
-            "stealth",
-            "shooter"
-          ]
+          "desc_short": "Gain stealth while in Cover. If you leave Cover, stealth ends until you re-enter.",
+          "grants_abilities": ["stealth"],
+          "keywords": ["stealth", "shooter"]
         },
         {
           "name": "Shredder Rounds",
           "cost": 8,
           "type": "Ammo",
-          "desc_short": "Actionable rule: Once per game, declare Shredder Rounds before making a ranged attack. That attack upgrades Pierce to Savage Pierce (ignore 3 Defense) for this attack only.",
-          "keywords": [
-            "pierce",
-            "burst_damage"
-          ]
+          "desc_short": "Once per game: declare before a ranged attack. That attack upgrades pierce to savage_pierce (ignore 3 Defense) for this attack only.",
+          "keywords": ["pierce", "burst_damage"]
         }
       ]
     },
@@ -567,65 +399,37 @@
       "move": 5,
       "range": 12,
       "weapon": "Bombardion (Steam Sonic Tuba)",
-      "weapon_properties": [
-        "ranged"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Sonic",
-          "ref": "R-ABIL-C-SONIC",
-          "effect": "Ignores Cover; may cause Deafening/Disorientation where applicable."
-        },
-        {
-          "name": "Blast",
-          "ref": "R-ABIL-C-BLAST",
-          "effect": "3\" radius area attack; roll separately for each model; Cover applies normally unless ignored."
-        }
-      ],
-      "composition": {
-        "per_points": 400
-      },
+      "weapon_properties": ["ranged", "sonic", "blast"],
+      "composition": { "per_points": 400 },
       "abilities": [
-        "Audio Suppression",
-        "Signal Orders"
+        "audio_suppression",
+        "signal_orders"
       ],
       "lore": "A brass-backed crowd-control officer. Used for signaling, dispersal, and breaking resolve with weaponized sound.",
-      "tactics": "Area denial + morale pressure. Best behind the line, shaping movement and punishing clustered units.",
+      "tactics": "Area denial plus morale pressure. The Bombardion's Sonic Blast ignores Cover and hits everything in a 3\" radius — ideal against clustered units. Audio Suppression neutralizes sound-based abilities nearby (Inspire, Calamity Parade, Radiomancer Jam). Signal Orders provides a free 3\" move to any friendly unit per activation. Position behind the front line and use Signal Orders to give late-deploying units a head start.",
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Smoke Canisters",
           "cost": 5,
           "type": "Gear",
-          "desc_short": "Actionable rule: Gain Smoke Screen as a Main Action, once per game.",
-          "grants_abilities": [
-            "smoke_screen"
-          ],
-          "keywords": [
-            "terrain",
-            "control"
-          ]
+          "desc_short": "Gain smoke_screen as a Main Action, once per game.",
+          "grants_abilities": ["smoke_screen"],
+          "keywords": ["terrain", "control"]
         },
         {
           "name": "Discipline Cadence",
           "cost": 6,
           "type": "Upgrade",
-          "desc_short": "Actionable rule: Gain Authority aura (friendly within 6\" ignore Suppression).",
-          "grants_abilities": [
-            "authority"
-          ],
-          "keywords": [
-            "command",
-            "support"
-          ]
+          "desc_short": "Gain authority aura: friendly units within 6\" ignore Suppression.",
+          "grants_abilities": ["authority"],
+          "keywords": ["command", "support"]
         }
       ]
     },
@@ -639,58 +443,37 @@
       "move": 5,
       "range": 12,
       "weapon": "Judicial Revolver",
-      "weapon_properties": [
-        "ranged"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Pinning Shot",
-          "ref": "R-ABIL-C-PINNING-SHOT",
-          "effect": "On hit, target cannot move during its next activation."
-        }
-      ],
-      "composition": {
-        "per_points": 400
-      },
+      "weapon_properties": ["ranged", "pinning_shot"],
+      "composition": { "per_points": 400 },
       "abilities": [
-        "Authority",
-        "Inspire",
-        "Pass Judgment"
+        "authority",
+        "inspire",
+        "pass_judgment"
       ],
-      "lore": "In Liberty Corps jurisdiction, Judges hold executive power in the field. They prosecute, sentence, and enforce—cleanly, publicly, and without appeal.",
-      "tactics": "Command anchor. Keeps the line steady and selects one enemy to become the example.",
+      "lore": "In Liberty Corps jurisdiction, Judges hold executive power in the field. They prosecute, sentence, and enforce — cleanly, publicly, and without appeal.",
+      "tactics": "Command anchor. Authority keeps the line immune to Suppression. Inspire adds dice to critical rolls across the force. Pass Judgment permanently debuffs one enemy — pick the unit that will cause the most damage across the whole game, ideally a Hero or Leader. Seal of Office adds Intimidate for morale plays. Writ of Eviction denies reactions after Interact actions, which prevents enemies from breaking arrests or contesting objective grabs.",
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Seal of Office",
           "cost": 7,
           "type": "Relic",
-          "desc_short": "Actionable rule: Gain Intimidate as a Main Action (force Morale test on enemy within 6\" and LoS; no effect on Titans).",
-          "grants_abilities": [
-            "intimidate"
-          ],
-          "keywords": [
-            "morale",
-            "leader"
-          ]
+          "desc_short": "Gain intimidate as a Main Action: force Morale test on enemy within 6\" and LoS. No effect on Titans.",
+          "grants_abilities": ["intimidate"],
+          "keywords": ["morale", "leader"]
         },
         {
           "name": "Writ of Eviction",
           "cost": 5,
           "type": "Gear",
-          "desc_short": "Actionable rule: Once per round, after this model resolves an Interact action, choose one enemy within 6\". That enemy cannot take Reaction actions until the end of the round (paperwork-backed momentum).",
-          "keywords": [
-            "anti_reaction",
-            "control"
-          ]
+          "desc_short": "Once per round, after this model resolves an Interact action, one enemy within 6\" cannot take Reaction actions until end of round.",
+          "keywords": ["anti_reaction", "control"]
         }
       ]
     },
@@ -704,54 +487,36 @@
       "move": 8,
       "range": 0,
       "weapon": "Armored Ram & Restraint Winch",
-      "weapon_properties": [
-        "melee"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Restraint Winch",
-          "effect": "Ideal for collecting arrested/prisoner targets and converting control into removal/extraction."
-        }
-      ],
-      "composition": {
-        "per_points": 400
-      },
+      "weapon_properties": ["melee"],
+      "composition": { "per_points": 400 },
       "abilities": [
-        "Cargo Hold",
-        "Mobile Cell Block",
-        "Armored"
+        "cargo_hold",
+        "mobile_cell_block",
+        "armored"
       ],
-      "lore": "A steam-powered armored prison wagon. It doesn’t bring help. It brings jurisdiction.",
-      "tactics": "Scoring engine and denial piece. Collect, transport, and secure removals—protect it or your captures spill back into the fight.",
+      "lore": "A steam-powered armored prison wagon. It doesn't bring help. It brings jurisdiction.",
+      "tactics": "Your scoring engine and denial piece. The whole arrest plan is worthless without the Mariah — it converts Restrained enemies into secure removals and score. Protect it at all costs. Reinforced Cell Bars ensures that even if it is destroyed, the cargo at least enters play Shaken and Pinned rather than fully functional. Steam Booster is a once-per-game burst of 4\" that lets the Mariah reach a fleeing target or cut off an escape route.",
       "optional_upgrades": [
         {
           "name": "Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Reinforced Cell Bars",
           "cost": 12,
           "type": "Upgrade",
-          "desc_short": "Actionable rule: If this unit is destroyed, captured/prisoner models are still released, but they enter play Shaken and Pinned (representing disorientation and partial restraint).",
-          "keywords": [
-            "transport",
-            "arrest"
-          ]
+          "desc_short": "If this unit is destroyed, captured models are still released but enter play Shaken and Pinned.",
+          "keywords": ["transport", "arrest"]
         },
         {
           "name": "Steam Booster",
           "cost": 6,
           "type": "Upgrade",
-          "desc_short": "Actionable rule: Once per game, after this model moves, it may immediately move an additional 4\".",
-          "keywords": [
-            "mobility",
-            "transport"
-          ]
+          "desc_short": "Once per game: after this model moves, it may immediately move an additional 4\".",
+          "keywords": ["mobility", "transport"]
         }
       ]
     },
@@ -765,68 +530,37 @@
       "move": 2,
       "range": 26,
       "weapon": "Howitzer Cannon (Fused)",
-      "weapon_properties": [
-        "ranged"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Massive Blast",
-          "ref": "R-ABIL-C-MASSIVE-BLAST",
-          "effect": "6\" radius area attack; roll separately for each model; Cover applies normally."
-        },
-        {
-          "name": "Savage Pierce",
-          "ref": "R-ABIL-C-SAVAGE-PIERCE",
-          "effect": "Ignores 3 points of Defense."
-        },
-        {
-          "name": "Universal Terror",
-          "ref": "R-ABIL-C-UNIVERSAL-TERROR",
-          "effect": "When this unit fires: ALL units (friendly AND enemy) within 12\" must test Morale."
-        }
-      ],
-      "composition": {
-        "per_points": 600
-      },
+      "weapon_properties": ["ranged", "massive_blast", "savage_pierce", "universal_terror"],
+      "composition": { "per_points": 600 },
       "abilities": [
-        "Mismanaged Asset",
-        "Armored",
-        "Steadfast"
+        "mismanaged_asset",
+        "armored",
+        "steadfast"
       ],
       "lore": "A restrained monster fused to artillery hardware. It fires because it hurts. It exists because paperwork said it could.",
-      "tactics": "Deterrence through escalation. Every shot reshapes morale; protect it until it has done its work.",
+      "tactics": "Deterrence through escalation. Every shot forces Morale tests on everyone within 12\" — including your own units — so plan positioning carefully. Stabilizer Spikes prevent enemy abilities from displacing it, which matters against Grapple-heavy forces. Reinforced Restraint Harness gives one free knockback ignore per round. Do not lose it before Round 4 — Mismanaged Asset is a significant VP penalty that the enemy will absolutely try to exploit.",
       "optional_upgrades": [
         {
           "name": "Liberty Federal Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "Standard issued United States of Liberty Gas Mask. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Stabilizer Spikes",
           "cost": 8,
           "type": "Upgrade",
-          "desc_short": "Actionable rule: Gain Anchor (cannot be moved by enemy abilities/effects; ignores knockback/displacement).",
-          "grants_abilities": [
-            "anchor"
-          ],
-          "keywords": [
-            "anti_displacement",
-            "siege"
-          ]
+          "desc_short": "Gain anchor: cannot be moved by enemy abilities or effects. Ignores knockback and displacement.",
+          "grants_abilities": ["anchor"],
+          "keywords": ["anti_displacement", "siege"]
         },
         {
           "name": "Reinforced Restraint Harness",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "Actionable rule: The first time each round this unit would be forcibly moved or repositioned by an enemy ability, ignore it (no effect).",
-          "keywords": [
-            "durability",
-            "control"
-          ]
+          "desc_short": "Once per round: ignore the first forced movement or repositioning from an enemy ability.",
+          "keywords": ["durability", "control"]
         }
       ]
     },
@@ -840,63 +574,42 @@
       "move": 6,
       "range": 0,
       "weapon": "Steam-Powered Fists",
-      "weapon_properties": [
-        "melee"
-      ],
-      "weapon_effects": [
-        {
-          "name": "Savage Impact",
-          "ref": "R-ABIL-C-SAVAGE-IMPACT",
-          "effect": "Moving 3\"+ into contact deals 3 automatic hits before rolling attack dice."
-        }
-      ],
-      "composition": {
-        "per_points": 5000
-      },
+      "weapon_properties": ["melee", "savage_impact"],
+      "composition": { "per_points": 5000 },
       "abilities": [
-        "Inspire",
-        "Fear",
-        "Regeneration",
-        "Unyielding"
+        "inspire",
+        "fear",
+        "regeneration",
+        "unyielding"
       ],
       "lore": "The first President of the United States of Liberty. A living symbol of national resolve, sustained beyond mortality by steam, steel, and duty. He is not deployed lightly. He is a national response asset.",
-      "tactics": "Catastrophic closer. When he arrives, it’s no longer a negotiation—it's national compliance.",
+      "tactics": "Catastrophic closer. When he arrives, it stops being a negotiation. Savage Impact deals 3 automatic hits on a charge — lead with a 3\"+ move into the most dangerous thing on the board. Regeneration keeps him on the table turn after turn. Unyielding prevents any displacement effects. Overdrive Directive gives a bonus action at cost of 1 Quality — use it at full health for maximum efficiency.",
       "special_rules": {
-        "national_response_asset": "Scenario/roster rules may restrict or condition Uncle Liberty’s inclusion (campaign escalation, high point thresholds, or special missions).",
-        "insane_contingency": "If your core rules include Uncle Liberty becoming uncontrollable, place that rule here in your master faction file so it stays consistent across apps."
+        "national_response_asset": "Scenario or roster rules may restrict Uncle Liberty's inclusion (campaign escalation, high point thresholds, or special missions).",
+        "insane_contingency": "If core rules include Uncle Liberty becoming uncontrollable, apply those rules consistently from this file."
       },
       "optional_upgrades": [
         {
           "name": "Antique Gas Mask",
           "cost": 3,
           "type": "Gear",
-          "desc_short": "An old and ratty gas mask, in Red, White, and Brass. Ignores Coffin Cough, and other air-borne dangers.",
-          "grants_abilities": [
-            "gas_mask"
-          ]
+          "desc_short": "An old and ratty gas mask, in Red, White, and Brass. Ignores Coffin Cough and other airborne dangers.",
+          "grants_abilities": ["gas_mask"]
         },
         {
           "name": "Steam Governor",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "Actionable rule: Once per game, when Uncle Liberty would suffer damage, reduce that damage by 2 before applying reductions/rolls (minimum 0).",
-          "keywords": [
-            "survival",
-            "hero"
-          ]
+          "desc_short": "Once per game: reduce incoming damage by 2 before applying reductions (minimum 0).",
+          "keywords": ["survival", "hero"]
         },
         {
           "name": "Overdrive Directive",
           "cost": 10,
           "type": "Upgrade",
-          "desc_short": "Once per game: After Uncle Liberty resolves an Attack or Interact action, he may immediately take one additional action. After the second action resolves, Uncle Liberty loses 1 Quality.",
-          "grants_abilities": [
-            "bite_the_bullet"
-          ],
-          "keywords": [
-            "burst",
-            "hero"
-          ]
+          "desc_short": "Once per game: after Uncle Liberty resolves an Attack or Interact action, he may immediately take one additional action. After the second action resolves, he loses 1 Quality.",
+          "grants_abilities": ["bite_the_bullet"],
+          "keywords": ["burst", "hero"]
         }
       ]
     }
