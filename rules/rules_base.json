@@ -1,10 +1,10 @@
 {
   "schema_version": "1.0",
   "build": {
-    "generated_at": "2026-04-01",
-    "source_version": "8.3",
+    "generated_at": "2026-04-10",
+    "source_version": "8.4",
     "warnings": [],
-    "notes": "Cleaned: removed R-ABIL- standalone entries, removed stale rules_master paths"
+    "notes": "Added ability_dict_J (Crow Court stubs). Added campaign_system entry. Cleaned stale paths."
   },
   "index": [
     {
@@ -56,6 +56,12 @@
       "file": "20_turn_structure.json"
     },
     {
+      "id": "campaign_system",
+      "title": "Campaign System",
+      "type": "system",
+      "file": "30_campaign_system.json"
+    },
+    {
       "id": "visibility_vault",
       "title": "Visibility Vault",
       "type": "vault",
@@ -93,57 +99,63 @@
     },
     {
       "id": "ability_dict_A",
-      "title": "Ability Dictionary \u2013 A",
+      "title": "Ability Dictionary – A",
       "type": "abilities",
       "file": "90_ability_dictionary_A.json"
     },
     {
       "id": "ability_dict_B",
-      "title": "Ability Dictionary \u2013 B",
+      "title": "Ability Dictionary – B",
       "type": "abilities",
       "file": "91_ability_dictionary_B.json"
     },
     {
       "id": "ability_dict_C",
-      "title": "Ability Dictionary \u2013 C",
+      "title": "Ability Dictionary – C",
       "type": "abilities",
       "file": "92_ability_dictionary_C.json"
     },
     {
       "id": "ability_dict_D",
-      "title": "Ability Dictionary \u2013 D",
+      "title": "Ability Dictionary – D",
       "type": "abilities",
       "file": "93_ability_dictionary_D.json"
     },
     {
       "id": "ability_dict_E",
-      "title": "Ability Dictionary \u2013 E",
+      "title": "Ability Dictionary – E",
       "type": "abilities",
       "file": "94_ability_dictionary_E.json"
     },
     {
       "id": "ability_dict_F",
-      "title": "Ability Dictionary \u2013 F",
+      "title": "Ability Dictionary – F",
       "type": "abilities",
       "file": "95_ability_dictionary_F.json"
     },
     {
       "id": "ability_dict_G",
-      "title": "Ability Dictionary \u2013 G",
+      "title": "Ability Dictionary – G",
       "type": "abilities",
       "file": "96_ability_dictionary_G.json"
     },
     {
       "id": "ability_dict_H",
-      "title": "Ability Dictionary \u2013 H",
+      "title": "Ability Dictionary – H",
       "type": "abilities",
       "file": "97_ability_dictionary_H.json"
     },
     {
       "id": "ability_dict_I",
-      "title": "Ability Dictionary \u2013 I",
+      "title": "Ability Dictionary – I",
       "type": "abilities",
       "file": "98_ability_dictionary_I.json"
+    },
+    {
+      "id": "ability_dict_J",
+      "title": "Ability Dictionary – J (Crow Court)",
+      "type": "abilities",
+      "file": "99_ability_dictionary_J.json"
     },
     {
       "id": "weapon_properties",
@@ -195,14 +207,15 @@
     }
   ],
   "rules_master": {
-    "version": "8.2",
-    "last_updated": "2026-01-19",
-    "changelog": "Removed variable (X) notation. Implemented consistent Brutal/Savage progression for offensive abilities. Standardized ranges to 3\"/6\"/12\". Simplified Blast, Fear, Pierce, Impact, and Tough naming.",
+    "version": "8.3",
+    "last_updated": "2026-04-10",
+    "changelog": "Added ability_dict_J for Crow Court abilities. Added campaign_system to index. Previous: Removed variable (X) notation. Implemented consistent Brutal/Savage progression for offensive abilities. Standardized ranges to 3\"/6\"/12\". Simplified Blast, Fear, Pierce, Impact, and Tough naming.",
     "sections": {
       "philosophy": "The 'Flavor Vault'. High-level tenets and the 'Fast Resolution' handshake.",
       "core_mechanics": "The math: Quality rolls, Successes, Defense calculations, and the Death Spiral.",
       "dice_manipulation": "Lucky Breaks, Natural Sixes, and Critical Failures.",
       "turn_structure": "Initiative, Activation cycles, and Action types (Simple vs. Complex).",
+      "campaign_system": "Campaign rules: Silver economy, injuries, advancement, and between-game progression.",
       "locomotion_and_visibility": "Movement speeds, Terrain types, Line of Sight, and Cover logic.",
       "combat_and_damage": "Melee vs. Ranged, Automatic Damage sources, and Weapon Tags.",
       "morale_and_status": "Shaken, Panicked, Fear Cascades, and Condition removal.",
