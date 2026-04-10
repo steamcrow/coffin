@@ -247,6 +247,48 @@
       "timing": "main_action",
       "desc_short": "Place a marker to expand Consecrated Ground.",
       "desc_long": "Main Action. Place a Demesne Marker within 3\". This marker generates a 6\" radius of Consecrated Ground. Markers can be destroyed by enemy Interact actions."
+    },
+    "great_working": {
+      "_id": "R-ABIL-H-GREAT-WORKING",
+      "timing": "main_action",
+      "desc_short": "Major ritual action generating Mort VP.",
+      "desc_long": "Main Action. The Feast Bishop may perform the Great Working if it has accumulated the required Mort tokens as specified by the scenario. Resolve the listed Great Working effect, which typically generates Victory Points and alters surrounding terrain. May only be performed once per game. Requires the Feast Bishop to be Immobile and unengaged."
+    },
+    "rattling_horde": {
+      "_id": "R-ABIL-H-RATTLING-HORDE",
+      "timing": "passive",
+      "desc_short": "+1 attack die when near two or more allies of the same type.",
+      "desc_long": "Passive. While within 3\" of two or more other friendly units that share this ability, this unit gains +1 die on melee attacks. The bones click and clatter together in a terrible rhythm that only gets louder."
+    },
+    "dead_generals_will": {
+      "_id": "R-ABIL-H-DEAD-GENERALS-WILL",
+      "timing": "once_per_round",
+      "desc_short": "Order a nearby skeleton to move 3\" after they have already activated.",
+      "desc_long": "Once Per Round. While within 6\" of two or more friendly Canyon Skeletons, this unit may direct one of them to immediately move 3\" — even if it has already activated this round. The click of its sword against its ribcage is the only order they need."
+    },
+    "ruinbound": {
+      "_id": "R-ABIL-H-RUINBOUND",
+      "timing": "passive",
+      "desc_short": "+1 Defense when activating near ruins.",
+      "desc_long": "Passive. If this unit begins its activation within 6\" of a Ruin or Ancient Structure terrain piece, it gains +1 Defense until the end of that activation."
+    },
+    "tomb_curse": {
+      "_id": "R-ABIL-H-TOMB-CURSE",
+      "timing": "passive",
+      "desc_short": "Enemies engaged with this unit must test Morale after their activation.",
+      "desc_long": "Passive. When an enemy unit ends its activation while engaged with this unit, that enemy must immediately test Morale. There is no bonus die or penalty to this test beyond normal modifiers."
+    },
+    "royal_tomb_ward": {
+      "_id": "R-ABIL-H-ROYAL-TOMB-WARD",
+      "timing": "once_per_game",
+      "desc_short": "Make a nearby ruin Hazardous for one round.",
+      "desc_long": "Once Per Game. Choose one Ruin or Ancient Structure terrain piece within 12\". Until the end of the round, enemies treat that terrain as Hazardous. This does not affect friendly units or units already inside the terrain when the ability is activated."
+    },
+    "dust_command": {
+      "_id": "R-ABIL-H-DUST-COMMAND",
+      "timing": "once_per_round",
+      "desc_short": "Let a nearby Bloodless ally re-roll a failed Morale test.",
+      "desc_long": "Once Per Round. When a friendly Bloodless unit within 8\" fails a Morale test, it may immediately re-roll that test. The second result stands."
     }
   }
 }
