@@ -327,6 +327,7 @@ console.log("⚔️ Faction Builder app loaded");
       '96_ability_dictionary_G.json',
       '97_ability_dictionary_H.json',
       '98_ability_dictionary_I.json',
+      '99_ability_dictionary_J.json'
     ];
     // FIX: ability base path updated from rules/src/ → data/src/
     const ABILITY_BASE   = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/';
@@ -1816,7 +1817,7 @@ console.log("⚔️ Faction Builder app loaded");
               title="Random Name"
               onclick="randomRosterName()"
               style="flex:0 0 auto;white-space:nowrap;"
-            ><i class="fa fa-dice"></i></button>
+            ><i class="fas fa-dice"></i></button>
           </div>
 
           <select id="cc-budget-selector" class="form-select" onchange="changeBudget(this.value)">
