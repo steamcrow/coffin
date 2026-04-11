@@ -39,21 +39,38 @@ window.CCFB_FACTORY = {
     },
 
     sanitizeUnit: function(u) {
-        return {
-            name: u.name || "New Unit",
-            type: (u.type || "grunt").toLowerCase(),
-            quality: parseInt(u.quality) || 4,
-            defense: parseInt(u.defense) || 4,
-            move: parseInt(u.move) || 6,
-            range: parseInt(u.range) || 0,
-            weapon_properties: Array.isArray(u.weapon_properties) ? u.weapon_properties : [],
-            abilities: Array.isArray(u.abilities) ? u.abilities : [],
-            supplemental_abilities: Array.isArray(u.supplemental_abilities) ? u.supplemental_abilities : [],
-            lore: u.lore || ""
-        };
+        // Copy ALL fields from source so nothing is dropped on round-trip.
+        // Then enforce required fields with defaults only when absent.
+        var out = {};
+        var k;
+        for (k in u) {
+            if (Object.prototype.hasOwnProperty.call(u, k)) out[k] = u[k];
+        }
+        out.name                   = u.name   || "New Unit";
+        out.type                   = ((u.type  || "grunt") + '').toLowerCase();
+        out.quality                = parseInt(u.quality) || 4;
+        out.defense                = parseInt(u.defense) || 4;
+        out.move                   = parseInt(u.move)    || 6;
+        out.range                  = parseInt(u.range)   || 0;
+        out.cost                   = parseInt(u.cost)    || 0;
+        out.weapon                 = u.weapon            || "";
+        out.weapon_properties      = Array.isArray(u.weapon_properties)      ? u.weapon_properties      : [];
+        out.abilities              = Array.isArray(u.abilities)              ? u.abilities              : [];
+        out.supplemental_abilities = Array.isArray(u.supplemental_abilities) ? u.supplemental_abilities : [];
+        out.optional_upgrades      = Array.isArray(u.optional_upgrades)      ? u.optional_upgrades      : [];
+        out.lore                   = u.lore    || "";
+        out.tactics                = u.tactics || "";
+        return out;
     },
 
     sanitizeFaction: function(j) {
+        // Copy ALL top-level fields from source so metadata is preserved on round-trip.
+        var out = {};
+        var k;
+        for (k in j) {
+            if (Object.prototype.hasOwnProperty.call(j, k)) out[k] = j[k];
+        }
+
         var strArr = function(v) { return Array.isArray(v) ? v : []; };
         var str    = function(v) { return (typeof v === 'string') ? v : ''; };
         var intro  = j.introduction || {};
@@ -62,53 +79,64 @@ window.CCFB_FACTORY = {
         var mech   = j.faction_mechanics || {};
         var csr    = j.canyon_state_relationships || {};
         var scen   = j.scenario_preferences || {};
-        return {
-            faction: j.faction || j.name || "New Faction",
-            // introduction block flattened to top-level after schema migration
-            desc_short:  str(j.desc_short  || intro.desc_short     || ''),
-            desc_long:   str(j.desc_long   || intro.desc_long || ''),
-            history:     str(j.history     || intro.history     || ''),
-            // keep introduction stub so old exports still load
-            introduction: {
-                title:       str(intro.title),
-                tagline:     str(j.desc_short  || intro.desc_short     || ''),
-                description: str(j.desc_long   || intro.desc_long || ''),
-                philosophy:  str(j.desc_long   || intro.philosophy  || ''),
-                history:     str(j.history     || intro.history     || '')
-            },
-            faction_identity: {
-                core_values:           strArr(ident.core_values),
-                what_they_fight_for:   strArr(ident.what_they_fight_for),
-                what_they_fight_against: strArr(ident.what_they_fight_against),
-                reputation: {
-                    allies_see_them_as:    str(rep.allies_see_them_as),
-                    enemies_see_them_as:   str(rep.enemies_see_them_as),
-                    monsters_see_them_as:  str(rep.monsters_see_them_as),
-                    the_canyon_sees_them_as: str(rep.the_canyon_sees_them_as)
-                }
-            },
-            faction_mechanics: {
-                signature_ability:             str(mech.signature_ability),
-                signature_ability_description: str(mech.signature_ability_description),
-                playstyle:  str(mech.playstyle),
-                strengths:  strArr(mech.strengths),
-                weaknesses: strArr(mech.weaknesses)
-            },
-            canyon_state_relationships: {
-                preferred_states: strArr(csr.preferred_states),
-                neutral_states:   strArr(csr.neutral_states),
-                opposed_states:   strArr(csr.opposed_states)
-            },
-            faction_tags: strArr(j.faction_tags),
-            scenario_preferences: {
-                ideal_scenarios:      strArr(scen.ideal_scenarios),
-                challenging_scenarios: strArr(scen.challenging_scenarios)
-            },
-            faction_features: strArr(j.faction_features).filter(function(f) {
-                return f.name !== 'Branch System'; // removed per design decision
-            }),
-            units: strArr(j.units).map(function(u) { return window.CCFB_FACTORY.sanitizeUnit(u); })
+
+        // Enforce required typed fields — override with clean versions
+        out.faction      = j.faction || j.name || "New Faction";
+        out.desc_short   = str(j.desc_short  || intro.desc_short  || '');
+        out.desc_long    = str(j.desc_long   || intro.desc_long   || '');
+        out.history      = str(j.history     || intro.history     || '');
+
+        // Keep introduction stub so old exports still round-trip
+        out.introduction = {
+            title:       str(intro.title),
+            tagline:     str(j.desc_short  || intro.desc_short || ''),
+            description: str(j.desc_long   || intro.desc_long  || ''),
+            philosophy:  str(j.desc_long   || intro.philosophy  || ''),
+            history:     str(j.history     || intro.history     || '')
         };
+
+        out.faction_identity = {
+            core_values:             strArr(ident.core_values),
+            what_they_fight_for:     strArr(ident.what_they_fight_for),
+            what_they_fight_against: strArr(ident.what_they_fight_against),
+            reputation: {
+                allies_see_them_as:      str(rep.allies_see_them_as),
+                enemies_see_them_as:     str(rep.enemies_see_them_as),
+                monsters_see_them_as:    str(rep.monsters_see_them_as),
+                the_canyon_sees_them_as: str(rep.the_canyon_sees_them_as)
+            }
+        };
+
+        out.faction_mechanics = {
+            signature_ability:             str(mech.signature_ability),
+            signature_ability_description: str(mech.signature_ability_description),
+            playstyle:  str(mech.playstyle),
+            strengths:  strArr(mech.strengths),
+            weaknesses: strArr(mech.weaknesses)
+        };
+
+        out.canyon_state_relationships = {
+            preferred_states: strArr(csr.preferred_states),
+            neutral_states:   strArr(csr.neutral_states),
+            opposed_states:   strArr(csr.opposed_states)
+        };
+
+        out.faction_tags = strArr(j.faction_tags);
+
+        out.scenario_preferences = {
+            ideal_scenarios:       strArr(scen.ideal_scenarios),
+            challenging_scenarios: strArr(scen.challenging_scenarios)
+        };
+
+        out.faction_features = strArr(j.faction_features).filter(function(f) {
+            return f.name !== 'Branch System'; // removed per design decision
+        });
+
+        out.units = strArr(j.units).map(function(u) {
+            return window.CCFB_FACTORY.sanitizeUnit(u);
+        });
+
+        return out;
     },
 
     calculateUnitCost: function(u) {
