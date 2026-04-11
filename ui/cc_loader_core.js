@@ -1,21 +1,21 @@
 // ============================================================
 // cc_loader_core.js
-// Coffin Canyon — Master Launcher + App Loader
+// Coffin Canyon \u2014 Master Launcher + App Loader
 // Loaded from GitHub via blob by cc_master_shell (Odoo code block)
 // ============================================================
-console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
+console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
 
 (function () {
 
   // Guard: don't run if another instance is already booted on this element.
   var _shellRoot = document.getElementById('cc-master-shell-root');
   if (window.CC_MASTER_BOOTED) {
-    console.warn('[CC] cc_loader_core already active — skipping duplicate');
+    console.warn('[CC] cc_loader_core already active \u2014 skipping duplicate');
     return;
   }
   window.CC_MASTER_BOOTED = true;
 
-  // ── Bootstrap dropdown autoClose:null patch ───────────────────────────────
+  //
   (function patchBootstrapDropdownAutoClose() {
     if (window._ccDropdownPatchInstalled) return;
     window._ccDropdownPatchInstalled = true;
@@ -111,7 +111,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       fixDOM();
       var BS = window.bootstrap;
       if (BS && BS.Dropdown && BS.Dropdown.prototype && !BS.Dropdown.prototype._ccAutoClosePatch) {
-        console.log('[CC] Bootstrap replaced — re-patching Dropdown');
+        console.log('[CC] Bootstrap replaced \u2014 re-patching Dropdown');
         patchPrototype();
       }
     }, 30000);
@@ -134,7 +134,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     }
   }, true);
 
-  // ── App registry ──────────────────────────────────────────────────────────
+  //
   var UI_CSS_URL    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/ui/cc_ui.css';
   var RULES_HELPERS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/apps/tools/rules_helpers.js';
   var RULES_BASE    = 'https://raw.githubusercontent.com/steamcrow/coffin/main/rules/rules_base.json';
@@ -148,7 +148,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       helpBody: [
         'Build the roster you bring to every game. Choose your faction, add units one at a time, and customise each with abilities and upgrades.',
         'When you\'re happy with your list, save it to the cloud. Your saved roster shows up automatically in the Turn Counter when you start a game.',
-        '<strong>Tips:</strong> You can save multiple builds for the same faction — one aggressive, one defensive. Each one gets its own name and cloud slot.',
+        '<strong>Tips:</strong> You can save multiple builds for the same faction \u2014 one aggressive, one defensive. Each one gets its own name and cloud slot.',
       ]
     },
     scenario_builder: {
@@ -166,9 +166,9 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       file: 'app_rules_explorer/cc_app_rules_explorer.js',
       helpTitle: 'Rules Explorer',
       helpBody: [
-        'Browse and search the complete Coffin Canyon rulebook. The left sidebar shows the table of contents — tap any section to read it in the centre panel.',
+        'Browse and search the complete Coffin Canyon rulebook. The left sidebar shows the table of contents \u2014 tap any section to read it in the centre panel.',
         'Ability keywords link through to their full definitions. The right panel shows related rules and context for whatever you\'re reading.',
-        '<strong>Tips:</strong> During a game, the Turn Counter shows ability names as tappable chips. Tapping one opens its rule in a slideout — you rarely need to leave the Turn Counter to look something up.',
+        '<strong>Tips:</strong> During a game, the Turn Counter shows ability names as tappable chips. Tapping one opens its rule in a slideout \u2014 you rarely need to leave the Turn Counter to look something up.',
       ]
     },
     canyon_map: {
@@ -187,7 +187,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       helpTitle: 'Turn Counter',
       helpBody: [
         'Your session companion. Load a saved scenario and your faction rosters, then the app tracks everything: activation order, Quality levels, noise, monster encounters, and canyon events.',
-        'Each activation shows the active unit\'s full card — lore, stats, abilities, and upgrades. Tap any stat badge for its rule definition. Tap any ability chip to look it up. NPC factions get a directive telling you exactly what to do.',
+        'Each activation shows the active unit\'s full card \u2014 lore, stats, abilities, and upgrades. Tap any stat badge for its rule definition. Tap any ability chip to look it up. NPC factions get a directive telling you exactly what to do.',
         '<strong>Setup:</strong> During Round 0, each faction takes turns placing one terrain piece. Objectives come from the scenario. Boardwalks and Thyr Crystals are always available.',
         '<strong>Noise:</strong> Every loud action pushes the noise bar up. When it crosses the threshold, a monster encounter fires. The bar drops by half after each encounter.',
         '<strong>Tips:</strong> Save your game state at the end of each round using the save button in the header. You can resume a paused session from the setup screen.',
@@ -197,7 +197,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 
   var currentApp = null;
 
-  // ── Help hidden state ─────────────────────────────────────────────────────
+  //
   function helpHideKey(appId) { return 'cc_hide_help_' + appId; }
   function isHelpHidden(appId) {
     try { return localStorage.getItem(helpHideKey(appId)) === '1'; } catch (_) { return false; }
@@ -206,7 +206,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     try { localStorage.setItem(helpHideKey(appId), hidden ? '1' : '0'); } catch (_) {}
   }
 
-  // ── Blob loader ───────────────────────────────────────────────────────────
+  //
   function loadScriptViaBlob(url) {
     return fetch(url + '?t=' + Date.now())
       .then(function (r) {
@@ -226,7 +226,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       });
   }
 
-  // ── Auth / Login status ───────────────────────────────────────────────────
+  //
   function checkLoginStatus() {
     fetch('/web/session/get_session_info', {
       method: 'POST',
@@ -251,10 +251,10 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         if (window.CC_AUTH.loggedIn) {
           bar.className = 'cc-login-status logged-in';
           bar.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as '
-            + window.CC_AUTH.userName + ' — cloud saves enabled';
+            + window.CC_AUTH.userName + ' \u2014 cloud saves enabled';
         } else {
           bar.className = 'cc-login-status logged-out';
-          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in — '
+          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in \u2014 '
             + '<a href="/web/login" style="color:#ff7518;">log in</a> to use cloud saves';
         }
       })
@@ -268,7 +268,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       });
   }
 
-  // ── Help panel ────────────────────────────────────────────────────────────
+  //
   function openHelpPanel(appId) {
     var app = APPS[appId];
     if (!app) return;
@@ -320,7 +320,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     if (backdrop && backdrop.parentNode) backdrop.parentNode.removeChild(backdrop);
   }
 
-  // ── Launcher ──────────────────────────────────────────────────────────────
+  //
   function renderLauncher() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
@@ -333,7 +333,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         '<div style="font-size:3rem;margin-bottom:1rem;color:#ff7518;"><i class="fa ' + app.icon + '"></i></div>' +
         '<h3 style="color:#ff7518;margin:0 0 .5rem;font-size:1.3rem;">' + app.title + '</h3>' +
         '<p style="color:var(--cc-text-muted);margin:0 0 1.5rem;">' + app.description + '</p>' +
-        '<button class="cc-btn cc-btn-block cc-launch-btn" data-app-id="' + id + '">Launch →</button>' +
+        '<button class="cc-btn cc-btn-block cc-launch-btn" data-app-id="' + id + '">Launch \u2192</button>' +
         '</div>' +
         '<button class="cc-help-btn" data-help-id="' + id + '" title="How to use ' + app.title + '" ' +
         'style="position:absolute;bottom:.6rem;right:.6rem;background:none;border:1px solid rgba(255,255,255,.15);border-radius:50%;' +
@@ -350,12 +350,12 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       '<p class="cc-app-subtitle" style="font-size:1.2rem;">Choose an app to launch</p>' +
       '</div>' +
       '<div id="cc-shell-login-bar" class="cc-login-status logged-out" style="max-width:1200px;margin:0 auto 1.5rem;border-radius:6px;">' +
-      '<i class="fa fa-spinner fa-spin"></i> Checking login…</div>' +
+      '<i class="fa fa-spinner fa-spin"></i> Checking login\u2026</div>' +
       '<div class="app-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem;">' +
       cards +
       '</div>' +
       '<div style="text-align:center;padding-top:2rem;border-top:1px solid var(--cc-border);color:var(--cc-text-dim);font-size:.85rem;">' +
-      '<p style="margin:0;">Coffin Canyon App Shell — tap <i class="fa fa-question"></i> on any card for instructions</p>' +
+      '<p style="margin:0;">Coffin Canyon App Shell \u2014 tap <i class="fa fa-question"></i> on any card for instructions</p>' +
       '</div></div></div>';
 
     setTimeout(checkLoginStatus, 100);
@@ -398,7 +398,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     });
   }
 
-  // ── Home button ───────────────────────────────────────────────────────────
+  //
   var _homeObserver = null;
 
   function injectHomeButton() {
@@ -426,7 +426,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     homeBtn.id        = 'cc-shell-home-btn';
     homeBtn.className = 'cc-btn cc-btn-ghost';
     homeBtn.style.cssText = 'font-size:.8rem;padding:.35rem .75rem;opacity:.75;';
-    homeBtn.innerHTML = '← Home';
+    homeBtn.innerHTML = '\u2190 Home';
     homeBtn.addEventListener('click', backToLauncher);
     wrap.appendChild(homeBtn);
     header.appendChild(wrap);
@@ -438,7 +438,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     btn.id        = 'cc-shell-home-btn';
     btn.className = 'cc-btn cc-btn-ghost';
     btn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:99999;font-size:.8rem;padding:.35rem .75rem;opacity:.8;box-shadow:0 2px 8px rgba(0,0,0,.5);';
-    btn.innerHTML = '← Home';
+    btn.innerHTML = '\u2190 Home';
     btn.addEventListener('click', backToLauncher);
     document.body.appendChild(btn);
   }
@@ -461,7 +461,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     if (floating && floating.style.position === 'fixed') floating.remove();
   }
 
-  // ── App loader ────────────────────────────────────────────────────────────
+  //
   var _loadToken = null;
 
   function loadApp(appId) {
@@ -488,7 +488,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       setTimeout(function () { openHelpPanel(appId); }, 800);
     }
 
-    console.log('\ud83d\udce6 Loading rules helpers');
+    console.log('[PKG] Loading rules helpers');
     loadScriptViaBlob(RULES_HELPERS)
       .then(function () {
         return fetch(RULES_BASE + '?t=' + Date.now())
@@ -526,7 +526,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       .then(function (payload) {
         var root = document.getElementById('cc-master-shell-root');
         if (!root || root.getAttribute('data-cc-loading') !== token) {
-          console.warn('[CC] Load aborted — DOM was replaced by another instance');
+          console.warn('[CC] Load aborted \u2014 DOM was replaced by another instance');
           return;
         }
         if (!window.CC_APP || !window.CC_APP.init) throw new Error('CC_APP.init missing');
@@ -543,7 +543,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         return initResult;
       })
       .catch(function (err) {
-        console.error('❌ Loader failed:', err);
+        console.error('[ERR] Loader failed:', err);
         var errRoot = document.getElementById('cc-master-shell-root');
         if (errRoot) errRoot.removeAttribute('data-cc-loading');
         var appRoot = document.getElementById('cc-app-root');
@@ -551,7 +551,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       });
   }
 
-  // ── Back to launcher ──────────────────────────────────────────────────────
+  //
   function backToLauncher() {
     closeHelpPanel();
     stopHomeButtonObserver();
@@ -574,7 +574,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     renderLauncher();
   }
 
-  // ── Global API ────────────────────────────────────────────────────────────
+  //
   window.CC_MASTER = {
     loadApp:        loadApp,
     backToLauncher: backToLauncher,
@@ -584,7 +584,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     setHelpHidden:  setHelpHidden,
   };
 
-  // ── Shell CSS ─────────────────────────────────────────────────────────────
+  //
   if (!document.getElementById('cc-core-ui-styles')) {
     fetch(UI_CSS_URL + '?t=' + Date.now())
       .then(function(r) { return r.ok ? r.text() : Promise.reject(r.status); })
@@ -596,11 +596,11 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         console.log('[CC] cc_ui.css loaded into shell');
       })
       .catch(function(err) {
-        console.warn('[CC] cc_ui.css fetch failed — shell may be unstyled:', err);
+        console.warn('[CC] cc_ui.css fetch failed \u2014 shell may be unstyled:', err);
       });
   }
 
-  // ── Preloader ─────────────────────────────────────────────────────────────
+  //
   var LOGO_URL       = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
   var MIN_PRELOAD_MS = 1500;
 
@@ -643,17 +643,17 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         '</div>' +
         '<p style="color:rgba(255,255,255,0.4);font-size:10px;' +
           'letter-spacing:0.12em;text-transform:uppercase;margin:0;' +
-          'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading…</p>' +
+          'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading\u2026</p>' +
       '</div>';
   }
 
-  // ── Boot ──────────────────────────────────────────────────────────────────
+  //
   var isBooting = false;
 
   function boot(onComplete) {
     if (isBooting) return;
     isBooting = true;
-    console.log('\ud83d\ude80 cc_loader_core boot()');
+    console.log('[BOOT] cc_loader_core boot()');
     showPreloader();
     setTimeout(function () {
       var preloader = document.getElementById('cc-preloader');
