@@ -36,6 +36,49 @@ console.log("⚔️ Faction Builder app loaded");
 (function () {
   var _destroyFn = null;
 
+  // ── Roster Name Generator — lives at IIFE scope so window.* is set
+  //    immediately when the script loads, before mount() is ever called.
+  var NAMES_DATA_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/roster_names.json';
+  var _namesCache    = null;
+
+  function _loadNamesData() {
+    if (_namesCache) return Promise.resolve(_namesCache);
+    return fetch(NAMES_DATA_URL + '?t=' + Date.now())
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(data) { _namesCache = data; return data; })
+      .catch(function(err) {
+        console.warn('[CC] roster_names.json load failed:', err.message);
+        return null;
+      });
+  }
+
+  var _NAME_FALLBACK = {
+    prefix: ['Iron','Black','Hollow','Lost','Dusty','Broken','Grim','Silver','Red','Last'],
+    noun:   ['Company','Crew','Band','Outfit','Detail','Watch','Order','Assembly','Unit','Collective'],
+    suffix: ['','','','','','','','','','']
+  };
+
+  window.generateRosterName = function(factionId) {
+    var data  = _namesCache;
+    var pools = (data && (data[factionId] || data['_fallback'])) || _NAME_FALLBACK;
+    var rand  = function(arr) { return arr[Math.floor(Math.random() * arr.length)]; };
+    var prefix = rand(pools.prefix || _NAME_FALLBACK.prefix);
+    var noun   = rand(pools.noun   || _NAME_FALLBACK.noun);
+    var suffix = rand(pools.suffix || _NAME_FALLBACK.suffix);
+    return (prefix + ' ' + noun + (suffix ? ' ' + suffix : '')).trim();
+  };
+
+  // window.randomRosterName is patched in by mount() once state is available
+  window.randomRosterName = function() {
+    console.warn('[CC] randomRosterName called before mount — ignored');
+  };
+
+  // Kick off the fetch immediately
+  _loadNamesData();
+
   function mount(rootEl, ctx) {
     var root = rootEl;
     console.log("🚀 Faction Builder init", ctx);
@@ -287,62 +330,6 @@ console.log("⚔️ Faction Builder app loaded");
     ];
     // FIX: ability base path updated from rules/src/ → data/src/
     const ABILITY_BASE   = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/';
-    const NAMES_DATA_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/roster_names.json';
-
-    // ── Roster Name Generator ─────────────────────────────────────────────────
-    // Loads roster_names.json once, caches it, exposes generateRosterName(factionId).
-    var _namesCache = null;
-
-    function loadNamesData() {
-      if (_namesCache) return Promise.resolve(_namesCache);
-      return fetch(NAMES_DATA_URL + '?t=' + Date.now())
-        .then(function(r) {
-          if (!r.ok) throw new Error('HTTP ' + r.status);
-          return r.json();
-        })
-        .then(function(data) {
-          _namesCache = data;
-          return data;
-        })
-        .catch(function(err) {
-          console.warn('[CC] roster_names.json load failed:', err.message);
-          return null;
-        });
-    }
-
-    window.generateRosterName = function generateRosterName(factionId) {
-      // Synchronous — uses cache or falls back to a simple built-in table
-      var data = _namesCache;
-
-      // Built-in minimal fallback so it always works even before the fetch resolves
-      var FALLBACK = {
-        prefix: ['Iron','Black','Hollow','Lost','Dusty','Broken','Grim','Silver','Red','Last'],
-        noun:   ['Company','Crew','Band','Outfit','Detail','Watch','Order','Assembly','Unit','Collective'],
-        suffix: ['','','','','','','','','','']
-      };
-
-      var pools = (data && (data[factionId] || data['_fallback'])) || FALLBACK;
-      var rand  = function(arr) { return arr[Math.floor(Math.random() * arr.length)]; };
-
-      var prefix = rand(pools.prefix || FALLBACK.prefix);
-      var noun   = rand(pools.noun   || FALLBACK.noun);
-      var suffix = rand(pools.suffix || FALLBACK.suffix);
-
-      // Combine: always prefix + noun, suffix only if non-empty
-      return (prefix + ' ' + noun + (suffix ? ' ' + suffix : '')).trim();
-    }
-
-    // Kick off the names fetch immediately so it's ready when needed
-    loadNamesData();
-
-    // Public wrapper for inline onclick — reads current faction from closure
-    window.randomRosterName = function() {
-      var name = generateRosterName(state.currentFaction || null);
-      state.rosterName = name;
-      var el = document.getElementById('cc-roster-name');
-      if (el) el.value = name;
-    };
-
     let _abilityCache    = {};
     let _abilityFetched  = false;
     let _abilityFetching = false;
@@ -1176,6 +1163,14 @@ console.log("⚔️ Faction Builder app loaded");
     // USER ACTIONS
     // ================================
     window.changeFaction    = function(factionId) { switchFaction(factionId); };
+
+    // Re-assign randomRosterName now that state is in scope
+    window.randomRosterName = function() {
+      var name = window.generateRosterName(state.currentFaction || null);
+      state.rosterName = name;
+      var el = document.getElementById('cc-roster-name');
+      if (el) el.value = name;
+    };
     window.changeBudget     = function(val) { state.budget = parseInt(val) || 0; render(); };
     window.updateRosterName = function(val) { state.rosterName = val; };
 
