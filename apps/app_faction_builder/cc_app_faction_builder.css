@@ -132,30 +132,27 @@
 }
 
 .cc-detail-cost {
-  position: relative;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1.2rem;
+  gap: 0.4rem;
+  font-size: 1.4rem;
   font-weight: 900;
+  font-family: var(--cc-font-title);
+  color: var(--cc-text);
+  margin: 0.5rem 0;
 }
 
 .cc-detail-cost i {
-  font-size: 3.5rem;
+  font-size: 1.5rem;
   color: var(--cc-primary);
-  filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5));
+  filter: drop-shadow(1px 1px 3px rgba(0,0,0,0.6));
 }
 
 .cc-detail-cost .cost-value {
-  position: absolute;
-  top: 55%; 
-  left: 50%;
-  transform: translate(-40%, -50%); 
-  pointer-events: none;
-  white-space: nowrap;
+  color: var(--cc-text);
   font-family: var(--cc-font-title);
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.9);
+  font-weight: 900;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
 }
 
 .u-lore {
