@@ -32,33 +32,80 @@
   },
 
   "liberty_corps": {
-    "_tone": "Federal authority. Military-industrial enforcement structure.",
-    "prefix": [
-      "Iron", "Federal", "First", "Third", "Frontier", "Northern", "Southern",
-      "Central", "Western", "Eastern", "Classified", "Special", "Tactical",
-      "Operational", "Rapid", "Reserve", "Standing", "Joint", "Auxiliary",
-      "Second", "Fourth", "Fifth", "Seventh", "Ninth",
-      "High Command", "Internal", "Civil", "Military", "Administrative"
-    ],
-    "noun": [
-      "Division", "Regiment", "Detachment", "Unit", "Column", "Battalion",
-      "Task Force", "Enforcement", "Contingent", "Strike Team", "Garrison",
-      "Authority", "Detail", "Dispatch", "Deployment", "Command", "Corps",
-      "Mandate", "Jurisdiction", "Suppression",
-      "Compliance Office", "Marshal Service", "Control Branch",
-      "Pacification Group", "Containment Unit", "Inspection Bureau"
-    ],
-    "suffix": [
-      "Alpha", "Bravo", "One", "Seven", "Eleven",
-      "Field Operations", "Active Duty", "On Assignment",
-      "Second Tour", "Classified", "Under Writ",
-      "Authorized", "Under Mandate", "By Order",
-      "Immediate Action", "In Theater", "Restricted",
-      "Provisional Authority", "Emergency Powers",
-      "Full Sanction", "No Appeal", "Closed File",
-      "Final Notice", "Standing Order"
-    ]
-  },
+  "_tone": "Federal authority. Military-industrial enforcement with righteous, bureaucratic, and occult overtones. They believe they are restoring order, peace, and control.",
+
+  "prefix": [
+    "Iron", "Federal", "First", "Third", "Frontier", "Northern", "Southern",
+    "Central", "Western", "Eastern", "Classified", "Special", "Tactical",
+    "Operational", "Rapid", "Reserve", "Standing", "Joint", "Auxiliary",
+    "Second", "Fourth", "Fifth", "Seventh", "Ninth",
+    "High Command", "Internal", "Civil", "Military", "Administrative",
+
+    "Peacekeeping", "Stabilization", "Restoration", "Harmony",
+    "Orderly", "Sanctioned", "Authorized", "Regulated",
+    "Occult", "Arcane", "Cryptid", "Anomalous", "Unknown",
+    "Supernatural", "Unnatural", "Containment", "Correctional",
+    "Sanitary", "Purity", "Cleansing", "Rectification",
+    "Public Safety", "Civic", "Domestic", "Homeland",
+    "Bureau of", "Office of", "Department of", "Division of"
+  ],
+
+  "noun": [
+    "Division", "Regiment", "Detachment", "Unit", "Column", "Battalion",
+    "Task Force", "Enforcement", "Contingent", "Strike Team", "Garrison",
+    "Authority", "Detail", "Dispatch", "Deployment", "Command", "Corps",
+    "Mandate", "Jurisdiction", "Suppression",
+    "Compliance Office", "Marshal Service", "Control Branch",
+    "Pacification Group", "Containment Unit", "Inspection Bureau",
+
+    "Peace", "Peacekeepers", "Peacekeeping", "Harmony",
+    "Stability", "Order", "Security", "Safety",
+    "Correction", "Control", "Balance", "Resolution",
+    "Oversight", "Regulation", "Discipline",
+
+    "Cryptid Affairs", "Cryptid Control", "Cryptid Regulation",
+    "Occult Oversight", "Occult Division", "Occult Command",
+    "Anomaly Office", "Anomaly Response", "Anomaly Suppression",
+    "Supernatural Affairs", "Mystery Division", "Unknowns Office",
+
+    "Containment", "Eradication", "Neutralization",
+    "Investigation", "Inquiry", "Survey",
+    "Classification", "Registration", "Processing"
+  ],
+
+  "suffix": [
+    "Alpha", "Bravo", "One", "Seven", "Eleven",
+    "Field Operations", "Active Duty", "On Assignment",
+    "Second Tour", "Classified", "Under Writ",
+    "Authorized", "Under Mandate", "By Order",
+    "Immediate Action", "In Theater", "Restricted",
+    "Provisional Authority", "Emergency Powers",
+    "Full Sanction", "No Appeal", "Closed File",
+    "Final Notice", "Standing Order",
+
+    "Brigade", "Command", "Central Command", "Field Command",
+    "High Command", "Regional Command",
+    "Task Command", "Joint Command",
+
+    "Response Team", "Rapid Response", "Containment Detail",
+    "Suppression Detail", "Enforcement Wing",
+    "Oversight Committee", "Review Board",
+
+    "Under Observation", "Pending Review",
+    "Under Investigation", "In Processing",
+    "Filed and Sealed", "Under Classification",
+
+    "Peace Initiative", "Stability Effort",
+    "Public Safety Action", "Civic Protection",
+    "Domestic Security Operation",
+
+    "Level One", "Level Two", "Level Black",
+    "Priority Red", "Priority White",
+
+    "Under Authority", "By Decree", "In Compliance",
+    "Per Regulation", "As Mandated"
+  ]
+},
 
   "monsterology": {
     "_tone": "Aristocratic predator-cult. Hunting, feasting, harvesting, refinement.",
