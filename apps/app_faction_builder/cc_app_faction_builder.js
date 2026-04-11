@@ -1267,6 +1267,91 @@ console.log("⚔️ Faction Builder app loaded");
       render();
     };
 
+    // ── RANDOM ROSTER ────────────────────────────────────────
+    window.randomizeRoster = function() {
+      if (!state.currentFaction) { alert('Select a faction first.'); return; }
+      var faction = state.factionData[state.currentFaction];
+      if (!faction || !faction.units || !faction.units.length) { alert('Faction data not loaded yet.'); return; }
+      if (state.budget <= 0) { alert('Set a point budget before randomizing.'); return; }
+
+      // Clear the roster first
+      state.roster         = [];
+      state.builderMode    = null;
+      state.builderTarget  = null;
+      state.selectedUnitId = null;
+      state.builderConfig  = { optionalUpgrades: [], supplemental: null };
+
+      var rand = function(arr) { return arr[Math.floor(Math.random() * arr.length)]; };
+
+      // Shuffle the unit pool so we don't always start with the same unit
+      var pool = faction.units.slice().sort(function() { return Math.random() - 0.5; });
+      var attempts = 0;
+
+      while (attempts++ < 300) {
+        var spent = calculateTotalCost();
+        if (spent >= state.budget) break;
+        var remaining = state.budget - spent;
+
+        // Units that still fit and haven't hit their roster limit
+        var eligible = pool.filter(function(unit) {
+          if ((unit.cost || 0) > remaining) return false;
+          var max = getMaxAllowed(unit);
+          if (max !== Infinity && countInRoster(unit.name) >= max) return false;
+          return true;
+        });
+        if (!eligible.length) break;
+
+        var unit = rand(eligible);
+        var config = { optionalUpgrades: [], supplemental: null };
+
+        // Randomly include optional upgrades — each has a 50% chance if it fits
+        var shuffledUpgrades = (unit.optional_upgrades || []).slice().sort(function() { return Math.random() - 0.5; });
+        shuffledUpgrades.forEach(function(upg) {
+          var upgCost = upg.cost || 0;
+          var spentOnUpgrades = config.optionalUpgrades.reduce(function(s, u) { return s + (u.cost || 0); }, 0);
+          var wouldTotal = spent + (unit.cost || 0) + spentOnUpgrades + upgCost;
+          if (wouldTotal <= state.budget && Math.random() >= 0.5) {
+            config.optionalUpgrades.push(Object.assign({}, upg));
+          }
+        });
+
+        // 40% chance to pick a supplemental variant, if one fits in budget
+        var validSupps = (unit.supplemental_abilities || []).filter(function(s) {
+          var sc = s.cost || 0;
+          if (sc <= 0) return true;  // cheaper variants always OK
+          var spentOnUpgrades = config.optionalUpgrades.reduce(function(sum, u) { return sum + (u.cost || 0); }, 0);
+          return (spent + (unit.cost || 0) + spentOnUpgrades + sc) <= state.budget;
+        });
+        if (validSupps.length && Math.random() < 0.4) {
+          config.supplemental = Object.assign({}, rand(validSupps));
+        }
+
+        var totalCost = calculateUnitCost(unit, config);
+        if (spent + totalCost > state.budget) continue;
+
+        state.roster.push({
+          id:        generateId(),
+          unitName:  unit.name,
+          name:      unit.name,
+          type:      unit.type,
+          quality:   unit.quality,
+          defense:   unit.defense,
+          move:      unit.move,
+          range:     unit.range,
+          weapon:    unit.weapon,
+          lore:      unit.lore || '',
+          abilities: (unit.abilities || []).slice(),
+          config:    config,
+          totalCost: totalCost
+        });
+      }
+
+      if (!state.roster.length) {
+        alert('Could not fit any units in budget. Try a larger point value.');
+      }
+      render();
+    };
+
     window.toggleRosterView = function(mode) {
       state.rosterViewMode = mode;
       render();
@@ -1303,14 +1388,22 @@ console.log("⚔️ Faction Builder app loaded");
     .upgrades { margin-top: 4px; font-size: 8pt; color: #444; }
     .roster-list-upgrades { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
 
-    .ability-defs-section { margin-top: 28px; border-top: 2px solid #000; padding-top: 14px; }
-    .ability-defs-section h2 { font-family: 'Bungee', sans-serif; font-size: 14pt; margin-bottom: 10px; }
-    .ability-def { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid #ddd; break-inside: avoid; }
+    .ability-defs-section { margin-top: 22px; border-top: 2px solid #000; padding-top: 12px; }
+    .ability-defs-section h2 { font-family: 'Bungee', sans-serif; font-size: 12pt; margin-bottom: 8px; }
+    .ability-defs-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 18px; }
+    .ability-def { margin-bottom: 7px; padding-bottom: 7px; border-bottom: 1px solid #ddd; break-inside: avoid; }
     .ability-def:last-child { border-bottom: none; }
-    .ability-def-name { font-weight: 700; font-size: 10pt; margin-bottom: 2px; }
-    .ability-def-timing { background: #222; color: #fff; font-size: 7.5pt; padding: 1px 5px; border-radius: 3px; margin-right: 5px; font-weight: 600; text-transform: uppercase; }
-    .ability-def-short { font-style: italic; color: #555; font-size: 8.5pt; margin-bottom: 3px; }
-    .ability-def-long { font-size: 9pt; color: #222; line-height: 1.5; }
+    .ability-def-name { font-weight: 700; font-size: 8.5pt; margin-bottom: 1px; }
+    .ability-def-timing { background: #222; color: #fff; font-size: 6.5pt; padding: 1px 4px; border-radius: 2px; margin-right: 4px; font-weight: 600; text-transform: uppercase; }
+    .ability-def-short { font-style: italic; color: #555; font-size: 7.5pt; margin-bottom: 2px; }
+    .ability-def-long { font-size: 7.5pt; color: #222; line-height: 1.4; }
+    body { font-size: 9pt; }
+    .unit-name { font-size: 10pt; }
+    .unit-type { font-size: 7pt; }
+    .lore { font-size: 7pt; }
+    .stat-badge { font-size: 7pt; }
+    .ability-tag { font-size: 6.5pt; }
+    .roster-meta { font-size: 9pt; }
     @media print { .unit, .ability-def { page-break-inside: avoid; } }
   </style>
 </head>
@@ -1335,7 +1428,7 @@ console.log("⚔️ Faction Builder app loaded");
             '<span class="stat-badge">M ' + ps.move + '"</span> ' +
             '<span class="stat-badge">R ' + (ps.range === 0 ? '\u2013' : ps.range + '"') + '</span>' +
           '</div>' +
-          (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ return '<span class="ability-tag">' + esc(typeof a === 'string' ? a : (a.name || '')) + '</span>'; }).join('') + '</div>' : '') +
+          (abilities.length > 0 ? '<div class="abilities">' + abilities.map(function(a){ var raw = typeof a === 'string' ? a : (a.name || ''); return '<span class="ability-tag">' + esc(displayName(raw)) + '</span>'; }).join('') + '</div>' : '') +
           ((item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0) ? '<div class="abilities">' + item.config.optionalUpgrades.map(function(u){ var n = esc(u.name); return '<span class="ability-tag" style="cursor:pointer;" onmouseover="showAbilityTooltip(\'' + n + '\', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel(\'' + n + '\')">' + n + '</span>'; }).join('') + '</div>' : '') +
         '</div>' +
         '<div class="unit-right"><span class="unit-cost">' + item.totalCost + ' ₤</span></div>' +
@@ -1360,14 +1453,16 @@ console.log("⚔️ Faction Builder app loaded");
     if (!defs.length) return '';
     defs.sort(function(a, b) { return a.name.localeCompare(b.name); });
     return '<div class="ability-defs-section"><h2>Ability Definitions</h2>' +
+      '<div class="ability-defs-grid">' +
       defs.map(function(d) {
         var timing = d.entry.timing ? '<span class="ability-def-timing">' + esc(d.entry.timing.replace(/_/g,' ')) + '</span> ' : '';
+        var friendlyName = esc(displayName(d.name));
         return '<div class="ability-def">' +
-          '<div class="ability-def-name">' + timing + esc(d.name) + '</div>' +
+          '<div class="ability-def-name">' + timing + friendlyName + '</div>' +
           (d.entry.desc_short ? '<div class="ability-def-short">' + esc(d.entry.desc_short) + '</div>' : '') +
           (d.entry.desc_long  ? '<div class="ability-def-long">'  + esc(d.entry.desc_long)  + '</div>' : '') +
         '</div>';
-      }).join('') + '</div>';
+      }).join('') + '</div></div>';
   }())}
 </body>
 </html>`;
@@ -1624,6 +1719,9 @@ console.log("⚔️ Faction Builder app loaded");
             <button class="btn btn-sm btn-outline-danger" onclick="clearRoster()" title="Clear Roster">
               <i class="fa fa-trash"></i>
             </button>
+            <button class="btn btn-sm btn-outline-warning" onclick="randomizeRoster()" title="Random Roster" style="font-weight:700;">
+              <i class="fa fa-random"></i>
+            </button>
             <button class="btn btn-sm btn-outline-secondary" onclick="printRoster()" title="Print Roster">
               <i class="fa fa-print"></i>
             </button>
@@ -1635,7 +1733,7 @@ console.log("⚔️ Faction Builder app loaded");
         </div>
 
         <div class="cc-faction-controls">
-          <div class="cc-faction-selector-wrap">
+          <div class="cc-faction-selector-wrap" style="flex:0 0 240px;min-width:200px;">
             <div id="cc-faction-selector-icon" class="cc-faction-selector-icon" style="display:none;"></div>
             <select id="cc-faction-selector" class="form-select" onchange="changeFaction(this.value)">
               <option value="">SELECT FACTION…</option>
