@@ -227,12 +227,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   }
 
   // ── Auth / Login status ───────────────────────────────────────────────────
-  // Single network call for the whole session. Result stored on window.CC_AUTH
-  // so every app can read it without making its own request.
-  //
-  //   window.CC_AUTH = { loggedIn: true, userId: 3, userName: "Daniel" }
-  //   window.CC_AUTH = { loggedIn: false }
-  //
   function checkLoginStatus() {
     fetch('/web/session/get_session_info', {
       method: 'POST',
@@ -261,7 +255,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         } else {
           bar.className = 'cc-login-status logged-out';
           bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in \u2014 '
-            + '<a href="/web/login" style="color:var(--cc-primary);">log in</a> to use cloud saves';
+            + '<a href="/web/login" style="color:#ff7518;">log in</a> to use cloud saves';
         }
       })
       .catch(function () {
@@ -330,15 +324,14 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   function renderLauncher() {
     var root = document.getElementById('cc-master-shell-root');
     if (!root) return;
-    // Clear any stuck load token before rendering
     root.removeAttribute('data-cc-loading');
 
     var cards = Object.keys(APPS).map(function (id) {
       var app = APPS[id];
       return '<div class="cc-panel app-card" data-app-id="' + id + '" style="cursor:pointer;transition:all .2s ease;position:relative;">' +
         '<div class="cc-panel-body" style="text-align:center;padding:2rem;">' +
-        '<div style="font-size:3rem;margin-bottom:1rem;color:var(--cc-primary);"><i class="fa ' + app.icon + '"></i></div>' +
-        '<h3 style="color:var(--cc-primary);margin:0 0 .5rem;font-size:1.3rem;">' + app.title + '</h3>' +
+        '<div style="font-size:3rem;margin-bottom:1rem;color:#ff7518;"><i class="fa ' + app.icon + '"></i></div>' +
+        '<h3 style="color:#ff7518;margin:0 0 .5rem;font-size:1.3rem;">' + app.title + '</h3>' +
         '<p style="color:var(--cc-text-muted);margin:0 0 1.5rem;">' + app.description + '</p>' +
         '<button class="cc-btn cc-btn-block cc-launch-btn" data-app-id="' + id + '">Launch \u2192</button>' +
         '</div>' +
@@ -367,8 +360,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
 
     setTimeout(checkLoginStatus, 100);
 
-    // Single delegated listener — survives Odoo DOM re-renders
-    // because it's attached to root, not to the individual buttons.
     root.addEventListener('click', function (e) {
       var helpBtn   = e.target.closest('.cc-help-btn');
       var launchBtn = e.target.closest('.cc-launch-btn');
@@ -389,12 +380,11 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       }
     });
 
-    // Hover effects — these are cosmetic only, safe to re-attach
     root.addEventListener('mouseover', function (e) {
       var card = e.target.closest('.app-card');
       if (!card) return;
       card.style.transform = 'translateY(-4px)';
-      card.style.borderColor = 'var(--cc-primary)';
+      card.style.borderColor = '#ff7518';
       var hb = card.querySelector('.cc-help-btn');
       if (hb) { hb.style.color = 'rgba(255,255,255,.7)'; hb.style.borderColor = 'rgba(255,255,255,.35)'; }
     });
@@ -472,14 +462,12 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   }
 
   // ── App loader ────────────────────────────────────────────────────────────
-  var _loadToken = null;  // unique token per load attempt
+  var _loadToken = null;
 
   function loadApp(appId) {
     var appInfo = APPS[appId];
     if (!appInfo) { console.error('Unknown app:', appId); renderLauncher(); return; }
 
-    // Stamp a unique token on the shell root so we can detect if another
-    // instance wipes the DOM while we are loading.
     var token = appId + '-' + Date.now();
     _loadToken = token;
 
@@ -492,7 +480,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     root.innerHTML = '<div class="cc-app-shell" style="min-height:100vh;">' +
       '<div id="cc-app-root" data-cc-app="' + appId + '" style="min-height:100vh;"></div>' +
       '</div>';
-    // Re-stamp after innerHTML wipe (wipe removes attributes on children but not root)
     root.setAttribute('data-cc-loading', token);
 
     startHomeButtonObserver();
@@ -530,7 +517,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         }
         var appRoot = document.getElementById('cc-app-root');
         if (!appRoot) throw new Error('cc-app-root missing');
-        // Clear any previous app's CC_APP so we never accidentally reuse it
         window.CC_APP = null;
         var appUrl = APPS_BASE + appInfo.file;
         return loadScriptViaBlob(appUrl).then(function () {
@@ -538,7 +524,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         });
       })
       .then(function (payload) {
-        // Abort if another loader instance wiped our DOM while we were loading
         var root = document.getElementById('cc-master-shell-root');
         if (!root || root.getAttribute('data-cc-loading') !== token) {
           console.warn('[CC] Load aborted — DOM was replaced by another instance');
@@ -548,9 +533,9 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         var initResult = window.CC_APP.init({
           root: payload.appRoot,
           ctx: {
-            app:      appId,
+            app:       appId,
             rulesBase: payload.rulesBase,
-            auth:     window.CC_AUTH || null,
+            auth:      window.CC_AUTH || null,
           }
         });
         var doneRoot = document.getElementById('cc-master-shell-root');
@@ -570,7 +555,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
   function backToLauncher() {
     closeHelpPanel();
     stopHomeButtonObserver();
-    // Clear load locks so the launcher can start fresh
     var r = document.getElementById('cc-master-shell-root');
     if (r) { r.removeAttribute('data-cc-loading'); }
     if (window.CC_APP && typeof window.CC_APP.destroy === 'function') {
@@ -629,8 +613,8 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       ks.id = 'cc-preloader-keyframes';
       ks.textContent = [
         '@keyframes cc-logo-pulse{',
-          '0%,100%{filter:drop-shadow(0 0 8px rgba(212,130,42,0.35)) brightness(1);transform:scale(1)}',
-          '50%{filter:drop-shadow(0 0 22px rgba(212,130,42,0.8)) brightness(1.2);transform:scale(1.05)}',
+          '0%,100%{filter:drop-shadow(0 0 8px rgba(255,117,24,0.35)) brightness(1);transform:scale(1)}',
+          '50%{filter:drop-shadow(0 0 22px rgba(255,117,24,0.8)) brightness(1.2);transform:scale(1.05)}',
         '}',
         '@keyframes cc-loading-fill{0%{width:0%}40%{width:65%}80%{width:88%}100%{width:95%}}',
         '@keyframes cc-pulse-text{0%,100%{opacity:.5}50%{opacity:1}}'
@@ -647,15 +631,15 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         '<img src="' + LOGO_URL + '" alt="Coffin Canyon" style="' +
           'width:200px;max-width:70vw;object-fit:contain;' +
           'animation:cc-logo-pulse 2.2s ease-in-out infinite;"/>' +
-        '<p style="font-size:1rem;font-weight:900;color:#d4822a;' +
+        '<p style="font-size:1rem;font-weight:900;color:#ff7518;' +
           'letter-spacing:0.06em;text-transform:uppercase;margin:0;">Coffin Canyon</p>' +
         '<div style="width:260px;max-width:80vw;height:6px;' +
           'background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;' +
           'border:1px solid rgba(255,255,255,0.06);">' +
           '<div id="cc-preload-bar" style="height:100%;' +
-            'background:linear-gradient(90deg,#d4822a,#ffd700,#d4822a);width:0%;' +
+            'background:linear-gradient(90deg,#ff7518,#ffb347,#ff7518);width:0%;' +
             'animation:cc-loading-fill ' + (MIN_PRELOAD_MS / 1000) + 's ease-in-out forwards;' +
-            'box-shadow:0 0 10px rgba(212,130,42,0.5);"></div>' +
+            'box-shadow:0 0 10px rgba(255,117,24,0.5);"></div>' +
         '</div>' +
         '<p style="color:rgba(255,255,255,0.4);font-size:10px;' +
           'letter-spacing:0.12em;text-transform:uppercase;margin:0;' +
@@ -692,7 +676,6 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       boot(renderLauncher);
       return;
     }
-    // Poll for the element — more reliable than MutationObserver in Odoo
     var checks = 0;
     var timer = setInterval(function () {
       var r = document.getElementById('cc-master-shell-root');
