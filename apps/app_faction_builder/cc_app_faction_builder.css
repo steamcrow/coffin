@@ -31,7 +31,7 @@
 .cc-faction-controls input#cc-roster-name {
   flex: 1;
   min-width: 120px;
-  max-width: 220px;
+  max-width: 440px;
 }
 
 .cc-faction-controls select#cc-budget-selector {
@@ -46,7 +46,7 @@
   flex: 0 0 auto;
 }
 
-.cc-faction-selector-wrap select#cc-faction-selector { flex: 0 0 160px; }
+.cc-faction-selector-wrap select#cc-faction-selector { flex: 0 0 208px; }
 
 .cc-faction-selector-icon {
   display: flex;
