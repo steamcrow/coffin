@@ -1817,7 +1817,7 @@ console.log("⚔️ Faction Builder app loaded");
               title="Random Name"
               onclick="randomRosterName()"
               style="flex:0 0 auto;white-space:nowrap;"
-            ><i class="fas fa-dice"></i></button>
+            ><i class="fa fa-random"></i></button>
           </div>
 
           <select id="cc-budget-selector" class="form-select" onchange="changeBudget(this.value)">
