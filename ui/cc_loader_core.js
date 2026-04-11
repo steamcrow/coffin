@@ -251,10 +251,10 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         if (window.CC_AUTH.loggedIn) {
           bar.className = 'cc-login-status logged-in';
           bar.innerHTML = '<i class="fa fa-check-circle"></i> Signed in as '
-            + window.CC_AUTH.userName + ' \u2014 cloud saves enabled';
+            + window.CC_AUTH.userName + ' — cloud saves enabled';
         } else {
           bar.className = 'cc-login-status logged-out';
-          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in \u2014 '
+          bar.innerHTML = '<i class="fa fa-exclamation-circle"></i> Not signed in — '
             + '<a href="/web/login" style="color:#ff7518;">log in</a> to use cloud saves';
         }
       })
@@ -333,7 +333,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         '<div style="font-size:3rem;margin-bottom:1rem;color:#ff7518;"><i class="fa ' + app.icon + '"></i></div>' +
         '<h3 style="color:#ff7518;margin:0 0 .5rem;font-size:1.3rem;">' + app.title + '</h3>' +
         '<p style="color:var(--cc-text-muted);margin:0 0 1.5rem;">' + app.description + '</p>' +
-        '<button class="cc-btn cc-btn-block cc-launch-btn" data-app-id="' + id + '">Launch \u2192</button>' +
+        '<button class="cc-btn cc-btn-block cc-launch-btn" data-app-id="' + id + '">Launch →</button>' +
         '</div>' +
         '<button class="cc-help-btn" data-help-id="' + id + '" title="How to use ' + app.title + '" ' +
         'style="position:absolute;bottom:.6rem;right:.6rem;background:none;border:1px solid rgba(255,255,255,.15);border-radius:50%;' +
@@ -350,12 +350,12 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       '<p class="cc-app-subtitle" style="font-size:1.2rem;">Choose an app to launch</p>' +
       '</div>' +
       '<div id="cc-shell-login-bar" class="cc-login-status logged-out" style="max-width:1200px;margin:0 auto 1.5rem;border-radius:6px;">' +
-      '<i class="fa fa-spinner fa-spin"></i> Checking login\u2026</div>' +
+      '<i class="fa fa-spinner fa-spin"></i> Checking login…</div>' +
       '<div class="app-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:2rem;">' +
       cards +
       '</div>' +
       '<div style="text-align:center;padding-top:2rem;border-top:1px solid var(--cc-border);color:var(--cc-text-dim);font-size:.85rem;">' +
-      '<p style="margin:0;">Coffin Canyon App Shell \u2014 tap <i class="fa fa-question"></i> on any card for instructions</p>' +
+      '<p style="margin:0;">Coffin Canyon App Shell — tap <i class="fa fa-question"></i> on any card for instructions</p>' +
       '</div></div></div>';
 
     setTimeout(checkLoginStatus, 100);
@@ -426,7 +426,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     homeBtn.id        = 'cc-shell-home-btn';
     homeBtn.className = 'cc-btn cc-btn-ghost';
     homeBtn.style.cssText = 'font-size:.8rem;padding:.35rem .75rem;opacity:.75;';
-    homeBtn.innerHTML = '\u2190 Home';
+    homeBtn.innerHTML = '← Home';
     homeBtn.addEventListener('click', backToLauncher);
     wrap.appendChild(homeBtn);
     header.appendChild(wrap);
@@ -438,7 +438,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
     btn.id        = 'cc-shell-home-btn';
     btn.className = 'cc-btn cc-btn-ghost';
     btn.style.cssText = 'position:fixed;top:12px;right:16px;z-index:99999;font-size:.8rem;padding:.35rem .75rem;opacity:.8;box-shadow:0 2px 8px rgba(0,0,0,.5);';
-    btn.innerHTML = '\u2190 Home';
+    btn.innerHTML = '← Home';
     btn.addEventListener('click', backToLauncher);
     document.body.appendChild(btn);
   }
@@ -643,7 +643,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
         '</div>' +
         '<p style="color:rgba(255,255,255,0.4);font-size:10px;' +
           'letter-spacing:0.12em;text-transform:uppercase;margin:0;' +
-          'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading\u2026</p>' +
+          'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading…</p>' +
       '</div>';
   }
 
