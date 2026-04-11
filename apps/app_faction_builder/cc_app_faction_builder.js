@@ -845,7 +845,6 @@ console.log("⚔️ Faction Builder app loaded");
     <div class="roster-list-type">${esc(item.type)}</div>
   </div>
   <div class="cc-detail-cost">
-    <i class="fa fa-tag"></i>
     <span class="cost-value">${item.totalCost} ₤</span>
   </div>
 </div>
@@ -1013,7 +1012,6 @@ console.log("⚔️ Faction Builder app loaded");
             </div>
           </div>
           <div class="cc-detail-cost">
-            <i class="fa fa-tag"></i>
             <span class="cost-value">${previewCost} ₤</span>
           </div>
 
