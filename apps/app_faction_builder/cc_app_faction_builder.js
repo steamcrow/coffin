@@ -286,7 +286,54 @@ console.log("⚔️ Faction Builder app loaded");
       '98_ability_dictionary_I.json',
     ];
     // FIX: ability base path updated from rules/src/ → data/src/
-    const ABILITY_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/';
+    const ABILITY_BASE   = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/src/';
+    const NAMES_DATA_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/roster_names.json';
+
+    // ── Roster Name Generator ─────────────────────────────────────────────────
+    // Loads roster_names.json once, caches it, exposes generateRosterName(factionId).
+    var _namesCache = null;
+
+    function loadNamesData() {
+      if (_namesCache) return Promise.resolve(_namesCache);
+      return fetch(NAMES_DATA_URL + '?t=' + Date.now())
+        .then(function(r) {
+          if (!r.ok) throw new Error('HTTP ' + r.status);
+          return r.json();
+        })
+        .then(function(data) {
+          _namesCache = data;
+          return data;
+        })
+        .catch(function(err) {
+          console.warn('[CC] roster_names.json load failed:', err.message);
+          return null;
+        });
+    }
+
+    function generateRosterName(factionId) {
+      // Synchronous — uses cache or falls back to a simple built-in table
+      var data = _namesCache;
+
+      // Built-in minimal fallback so it always works even before the fetch resolves
+      var FALLBACK = {
+        prefix: ['Iron','Black','Hollow','Lost','Dusty','Broken','Grim','Silver','Red','Last'],
+        noun:   ['Company','Crew','Band','Outfit','Detail','Watch','Order','Assembly','Unit','Collective'],
+        suffix: ['','','','','','','','','','']
+      };
+
+      var pools = (data && (data[factionId] || data['_fallback'])) || FALLBACK;
+      var rand  = function(arr) { return arr[Math.floor(Math.random() * arr.length)]; };
+
+      var prefix = rand(pools.prefix || FALLBACK.prefix);
+      var noun   = rand(pools.noun   || FALLBACK.noun);
+      var suffix = rand(pools.suffix || FALLBACK.suffix);
+
+      // Combine: always prefix + noun, suffix only if non-empty
+      return (prefix + ' ' + noun + (suffix ? ' ' + suffix : '')).trim();
+    }
+
+    // Kick off the names fetch immediately so it's ready when needed
+    loadNamesData();
 
     let _abilityCache    = {};
     let _abilityFetched  = false;
@@ -1349,6 +1396,16 @@ console.log("⚔️ Faction Builder app loaded");
       if (!state.roster.length) {
         alert('Could not fit any units in budget. Try a larger point value.');
       }
+
+      // Auto-name the roster if the user hasn't set one yet
+      var DEFAULT_NAMES = ['Unnamed Roster', 'New Roster', ''];
+      if (DEFAULT_NAMES.indexOf(state.rosterName.trim()) !== -1) {
+        var newName = generateRosterName(state.currentFaction);
+        state.rosterName = newName;
+        var nameInput = document.getElementById('cc-roster-name');
+        if (nameInput) nameInput.value = newName;
+      }
+
       render();
     };
 
@@ -1741,14 +1798,23 @@ console.log("⚔️ Faction Builder app loaded");
             </select>
           </div>
 
-          <input
-            id="cc-roster-name"
-            type="text"
-            class="form-control cc-input"
-            placeholder="Roster Name…"
-            value="${esc(state.rosterName)}"
-            onchange="updateRosterName(this.value)"
-          />
+          <div style="display:flex;gap:4px;align-items:center;flex:1;min-width:140px;">
+            <input
+              id="cc-roster-name"
+              type="text"
+              class="form-control cc-input"
+              placeholder="Roster Name…"
+              value="${esc(state.rosterName)}"
+              onchange="updateRosterName(this.value)"
+              style="flex:1;"
+            />
+            <button
+              class="btn btn-sm btn-outline-secondary"
+              title="Random Name"
+              onclick="(function(){ var n=generateRosterName(state.currentFaction); state.rosterName=n; var el=document.getElementById('cc-roster-name'); if(el) el.value=n; })()"
+              style="flex:0 0 auto;white-space:nowrap;"
+            ><i class="fa fa-dice"></i></button>
+          </div>
 
           <select id="cc-budget-selector" class="form-select" onchange="changeBudget(this.value)">
             <option value="0">UNLIMITED ₤</option>
