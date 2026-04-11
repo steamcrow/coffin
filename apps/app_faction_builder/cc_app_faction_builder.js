@@ -310,7 +310,7 @@ console.log("⚔️ Faction Builder app loaded");
         });
     }
 
-    function generateRosterName(factionId) {
+    window.generateRosterName = function generateRosterName(factionId) {
       // Synchronous — uses cache or falls back to a simple built-in table
       var data = _namesCache;
 
@@ -334,6 +334,14 @@ console.log("⚔️ Faction Builder app loaded");
 
     // Kick off the names fetch immediately so it's ready when needed
     loadNamesData();
+
+    // Public wrapper for inline onclick — reads current faction from closure
+    window.randomRosterName = function() {
+      var name = generateRosterName(state.currentFaction || null);
+      state.rosterName = name;
+      var el = document.getElementById('cc-roster-name');
+      if (el) el.value = name;
+    };
 
     let _abilityCache    = {};
     let _abilityFetched  = false;
@@ -1811,7 +1819,7 @@ console.log("⚔️ Faction Builder app loaded");
             <button
               class="btn btn-sm btn-outline-secondary"
               title="Random Name"
-              onclick="(function(){ var n=generateRosterName(state.currentFaction); state.rosterName=n; var el=document.getElementById('cc-roster-name'); if(el) el.value=n; })()"
+              onclick="randomRosterName()"
               style="flex:0 0 auto;white-space:nowrap;"
             ><i class="fa fa-dice"></i></button>
           </div>
