@@ -1,0 +1,143 @@
+{
+  "_comment": "Coffin Canyon — Roster Name Generator",
+  "_structure": "Pick one from 'prefix', one from 'noun', optionally one from 'suffix'. Combine as: [prefix] [noun] [suffix]. Any pool can be weighted by repeating entries.",
+  "_usage": "generateRosterName(factionId) — returns a random 2- or 3-part name string.",
+
+  "monster_rangers": {
+    "_tone": "Frontier naturalists. Named like expeditions, field units, ranger posts, and wildlife surveys.",
+    "prefix": [
+      "Redstone", "Canyon", "Lost Creek", "Ironwood", "Boneyard", "Dusk", "Hollow",
+      "Thornback", "Saltwind", "Farwatch", "Crowpeak", "Ashfield", "Ember", "Deep Run",
+      "Wandering", "Grey Mesa", "Splitrock", "Nightfall", "Rustwater", "Old Gulch"
+    ],
+    "noun": [
+      "Patrol", "Watch", "Survey", "Detail", "Rangers", "Company", "Expedition",
+      "Guard", "Brigade", "Corps", "Outpost", "Accord", "Charter", "Circle",
+      "Wardens", "Scouts", "Assembly", "Lodge", "Order", "Vigil"
+    ],
+    "suffix": [
+      "No. 1", "No. 7", "Alpha", "Bravo", "East", "West", "North", "South",
+      "Station", "Post", "Field Division", "Advance", "Reserve", "Elite",
+      "", "", "", "", "", ""
+    ]
+  },
+
+  "liberty_corps": {
+    "_tone": "Federal authority. Named like military units, enforcement divisions, and regulatory bodies.",
+    "prefix": [
+      "Iron", "Federal", "First", "Third", "Frontier", "Northern", "Southern",
+      "Central", "Western", "Eastern", "Classified", "Special", "Tactical",
+      "Enforcement", "Operational", "Rapid", "Reserve", "Standing", "Joint", "Auxiliary"
+    ],
+    "noun": [
+      "Division", "Regiment", "Detachment", "Unit", "Column", "Battalion",
+      "Task Force", "Enforcement", "Contingent", "Strike Team", "Garrison",
+      "Authority", "Detail", "Dispatch", "Deployment", "Command", "Corps",
+      "Mandate", "Jurisdiction", "Suppression"
+    ],
+    "suffix": [
+      "Alpha", "Bravo", "One", "Seven", "Eleven",
+      "Field Operations", "Active Duty", "On Assignment",
+      "Second Tour", "Classified", "Under Writ",
+      "", "", "", "", "", "", "", "", ""
+    ]
+  },
+
+  "monsterology": {
+    "_tone": "Industrial cult. Named like research expeditions, extraction ops, and secret societies.",
+    "prefix": [
+      "Black", "Deep", "Bone", "Tainted", "Mort", "Hollow", "Iron", "Foul",
+      "Gravel", "Grim", "Scorch", "Sunken", "Thresh", "Vile", "Ash",
+      "Corpse", "Cracked", "Fetch", "Dross", "Slaked"
+    ],
+    "noun": [
+      "House", "Venture", "Expedition", "Harvest", "Extraction",
+      "Institute", "Collective", "Syndicate", "Fellowship", "Lodge",
+      "Society", "Operation", "Concern", "Acquisition", "Detail",
+      "Commission", "Enterprise", "Interest", "Assembly", "Contract"
+    ],
+    "suffix": [
+      "Mort Division", "Thyr Division", "Field Office", "Research Party",
+      "Acquisition Team", "Second Wave", "Under Charter",
+      "Deep Survey", "Extraction Detail",
+      "", "", "", "", "", "", "", "", "", ""
+    ]
+  },
+
+  "monsters": {
+    "_tone": "Wild and instinctual. Named like packs, territories, and natural phenomena — not organizations.",
+    "prefix": [
+      "The Hungry", "The Restless", "The Hollow", "The Sunken", "The Howling",
+      "The Broken", "The Creeping", "The Rotting", "The Lost", "The Pale",
+      "The Watching", "The Sleeping", "The Ruined", "The Old", "The Deep",
+      "The Bleeding", "The Wretched", "The Quiet", "The Forgotten", "The Feral"
+    ],
+    "noun": [
+      "Pack", "Herd", "Brood", "Nest", "Warren", "Swarm", "Host",
+      "Tide", "Wake", "Hunger", "Roost", "Sprawl", "Maw",
+      "Territory", "Dark", "Canyon", "Gulch", "Basin", "Hollow", "Pit"
+    ],
+    "suffix": [
+      "of the Canyon", "of the Deep", "Below", "Rising",
+      "Unchained", "Unleashed", "at the Gate",
+      "from the Wreck", "from the Dark",
+      "", "", "", "", "", "", "", "", "", ""
+    ]
+  },
+
+  "shine_riders": {
+    "_tone": "Opportunist outlaws. Named like gangs, crews, and heist teams — boastful and loose.",
+    "prefix": [
+      "Dusty", "Quick", "Crooked", "Slippery", "Lucky", "Rusty", "Broke",
+      "Hollow", "Silver", "Grift", "Doomshine", "Hot", "Loaded", "Dead",
+      "Burnout", "Half-Mad", "Last Chance", "Dented", "Cracked", "Smoked"
+    ],
+    "noun": [
+      "Crew", "Gang", "Outfit", "Ride", "Run", "Score", "Haul",
+      "Operation", "Job", "Play", "Posse", "Syndicate", "Circuit",
+      "Hustle", "Racket", "Detail", "Express", "Network", "Union", "Compact"
+    ],
+    "suffix": [
+      "Inc.", "& Co.", "on the Move", "Going Fast",
+      "No Questions Asked", "Cash Only", "Under the Table",
+      "Final Run", "Last Job",
+      "", "", "", "", "", "", "", "", "", ""
+    ]
+  },
+
+  "crow_queen": {
+    "_tone": "Aristocratic exile court. Named like noble houses, edicts, royal commands, and formal decrees.",
+    "prefix": [
+      "Black", "Iron", "Pale", "Silent", "Crown", "Sealed", "Bound",
+      "Ancient", "Exiled", "Sovereign", "Carved", "Immaculate",
+      "Consecrated", "Gilded", "Buried", "Hollow", "First", "Last", "Eternal", "Sunken"
+    ],
+    "noun": [
+      "Court", "House", "Accord", "Decree", "Mandate", "Edict",
+      "Order", "Writ", "Assembly", "Council", "Guard",
+      "Circle", "Compact", "Succession", "Throne", "Charter",
+      "Command", "Retinue", "Convocation", "Tribunal"
+    ],
+    "suffix": [
+      "of the Queen", "of the Realm", "of Monstru",
+      "First Rite", "Second Rite", "Exile",
+      "in Absentia", "Under Seal", "Restored",
+      "", "", "", "", "", "", "", "", "", ""
+    ]
+  },
+
+  "_fallback": {
+    "_tone": "Generic — used when no faction is selected.",
+    "prefix": [
+      "Iron", "Black", "Hollow", "Lost", "Dusty", "Broken", "Grim",
+      "Silver", "Red", "Old", "Last", "Pale", "Stone", "Dead"
+    ],
+    "noun": [
+      "Company", "Crew", "Band", "Outfit", "Detail",
+      "Watch", "Order", "Assembly", "Unit", "Collective"
+    ],
+    "suffix": [
+      "", "", "", "", "", "", "", "", "", ""
+    ]
+  }
+}
