@@ -1,7 +1,6 @@
 /* =========================================================
    COFFIN CANYON - CORE UI SYSTEM
-   File: coffin/rules/ui/cc_ui.css
-   Reskin: Warm dark / Playfair + Space Mono / Calculator aesthetic
+   File: coffin/ui/cc_ui.css
    ========================================================= */
 
 /* ===== GOOGLE FONTS IMPORT ===== */
@@ -9,22 +8,22 @@
 
 /* ===== CSS VARIABLES ===== */
 :root {
-  /* Warm dark palette from point calculator */
+  /* Backgrounds */
   --cc-bg:          #16130e;
   --cc-bg-dark:     #16130e;
   --cc-bg-darker:   #0a0908;
   --cc-bg-soft:     #16130e;
   --cc-bg-mid:      #1e1a13;
 
-  /* Primary: warm amber (not pure orange) */
-  --cc-primary:       #d4822a;
-  --cc-primary-hover: #e09040;
-  --cc-primary-dim:   rgba(212, 130, 42, 0.12);
+  /* Primary: Coffin Canyon orange */
+  --cc-primary:       #ff7518;
+  --cc-primary-hover: #ff9040;
+  --cc-primary-dim:   rgba(255, 117, 24, 0.12);
 
   /* Gold accent */
-  --cc-gold:    #c9a227;
+  --cc-gold: #c9a227;
 
-  /* Borders: warm brown instead of cold grey */
+  /* Borders */
   --cc-border:        #2e2820;
   --cc-border-bright: #4a3e2e;
 
@@ -33,63 +32,174 @@
   --cc-text-muted: #9e8e78;
   --cc-text-dim:   #6b5f4a;
 
-  /* Status colours */
+  /* Status */
   --cc-green: #5a9e5a;
   --cc-red:   #c44;
 
   /* Typography */
-  --cc-font-title: 'Cinzel', serif; /* Updated to Cinzel */
+  --cc-font-title: 'Cinzel', serif;
   --cc-font-body:  'Space Mono', 'Courier New', monospace;
   --cc-font-mono:  'Space Mono', 'Courier New', monospace;
 
-  /* Shape — tight, sharp */
+  /* Shape */
   --cc-radius:    4px;
   --cc-radius-lg: 6px;
   --cc-shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.5);
   --cc-shadow:    0 8px 24px rgba(0, 0, 0, 0.6);
 }
 
-/* Unified Coffin Canyon Loader */
-.cc-loader-overlay {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 2rem;
-    min-height: 100vh;
-    background: #16130e
+/* ===== UNIFIED PRELOADER ===== */
+/*
+  Single flat background — #16130e — no gradients, no banding.
+  The logo glow is a drop-shadow filter only; it does not affect
+  the container background in any way.
+
+  Usage:
+    <div class="cc-preloader cc-preloader--page">
+      <img class="cc-preloader-logo" src="[REPO]/assets/logos/coffin_canyon_logo.png" />
+      <p class="cc-preloader-title">App Name</p>
+      <div class="cc-loading-bar"><div class="cc-loading-progress"></div></div>
+      <p class="cc-loading-text">Loading…</p>
+    </div>
+
+  To dismiss: add class cc-preloader--hidden, then remove from DOM after 480ms.
+
+  Faction logo paths (REPO = https://raw.githubusercontent.com/steamcrow/coffin/main/):
+    assets/logos/coffin_canyon_logo.png      -- default / shell
+    assets/logos/monster_rangers_logo.svg
+    assets/logos/crow_queen_logo.svg
+    assets/logos/shine_riders_logo.svg
+    assets/logos/liberty_corps_logo.svg
+    assets/logos/monsters_logo.svg
+    assets/logos/monsterology_logo.svg
+*/
+
+.cc-preloader,
+.cc-loading-container {
+  /* Flat solid background — no gradients, no image, no banding */
+  background: #16130e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  min-height: 100vh;
+  width: 100%;
+  /* Isolate stacking context so filter animations on children
+     don't create a compositing layer that looks like a different shade */
+  isolation: isolate;
 }
 
+/* Page-level variant covers the full viewport */
+.cc-preloader.cc-preloader--page {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  transition: opacity 0.45s ease;
+}
+
+/* Fade-out: JS adds this class, then removes the element after 480ms */
+.cc-preloader.cc-preloader--hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ---- Logo ---- */
+.cc-preloader-logo,
 .cc-loader-brand {
-    width: 260px;
-    max-width: 70vw;
-    filter: drop-shadow(0 0 28px rgba(var(--cc-primary-rgb, 255, 117, 24), 0.5));
-    animation: cc-pulse 2s ease-in-out infinite;
+  width: 200px;
+  max-width: 70vw;
+  object-fit: contain;
+  /* Drop-shadow only — no background change */
+  filter: drop-shadow(0 0 10px rgba(255, 117, 24, 0.45)) brightness(1.05);
+  animation: cc-logo-pulse 2.2s ease-in-out infinite;
 }
 
+/* Suppress the splash logo in the cc-loader-overlay variant */
+.cc-loader-brand {
+  width: 260px;
+}
+
+@keyframes cc-logo-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px rgba(255, 117, 24, 0.35)) brightness(1.0);
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 24px rgba(255, 117, 24, 0.8)) brightness(1.2);
+    transform: scale(1.05);
+  }
+}
+
+/* ---- App title under the logo ---- */
+.cc-preloader-title {
+  font-family: var(--cc-font-title);
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--cc-primary);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ---- Loading bar track ---- */
+.cc-loading-bar,
 .cc-loader-track {
-    width: 260px;
-    max-width: 70vw;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 2px;
-    overflow: hidden;
+  width: 260px;
+  max-width: 80vw;
+  height: 6px;
+  /* Same flat bg — no contrast band */
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: var(--cc-radius);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
+/* ---- Loading bar fill ---- */
+.cc-loading-progress,
 .cc-loader-bar {
-    height: 100%;
-    width: 0%;
-    background: var(--cc-primary, #ff7518);
-    border-radius: 2px;
-    transition: width 0.3s linear;
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #ff7518, #ffb347, #ff7518);
+  border-radius: var(--cc-radius);
+  box-shadow: 0 0 10px rgba(255, 117, 24, 0.5);
+  animation: cc-loading-fill 4s ease-in-out forwards;
 }
 
+@keyframes cc-loading-fill {
+  0%   { width: 0%;  }
+  40%  { width: 65%; }
+  80%  { width: 88%; }
+  100% { width: 95%; }
+}
+
+/* ---- Status text ---- */
+.cc-loading-text,
 .cc-loader-text {
-    color: var(--cc-primary, #ff7518);
-    font-size: 0.7rem;
-    letter-spacing: 0.28em;
-    text-transform: uppercase;
-    animation: cc-pulse 1.5s ease-in-out infinite;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 10px;
+  font-family: var(--cc-font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin: 0;
+  animation: cc-pulse-text 1.6s ease-in-out infinite;
+}
+
+@keyframes cc-pulse-text {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1;   }
+}
+
+/* Legacy alias kept for any app that uses .cc-loader-overlay */
+.cc-loader-overlay {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  min-height: 100vh;
+  background: #16130e;
+  isolation: isolate;
 }
 
 /* ===== BASE ===== */
@@ -118,7 +228,7 @@ body {
 
 .cc-app-shell.cc-premium {
   background:
-    radial-gradient(1000px 500px at 15% 0%, rgba(212,130,42,.08), transparent 60%),
+    radial-gradient(1000px 500px at 15% 0%, rgba(255,117,24,.08), transparent 60%),
     linear-gradient(180deg, #110f0b, #16130e);
 }
 
@@ -137,9 +247,6 @@ body {
 .cc-app-shell.cc-premium .cc-app-header {
   background: var(--cc-bg-soft);
   border-bottom: 1px solid var(--cc-border);
-  border-radius: 0;
-  box-shadow: none;
-  margin-bottom: 0;
 }
 
 .cc-app-title {
@@ -190,8 +297,6 @@ body {
   justify-content: space-between;
 }
 
-.cc-panel-head .btn-group + * { margin-top: 8px; }
-
 .cc-panel-title {
   font-family: var(--cc-font-mono);
   font-size: 10px;
@@ -213,7 +318,6 @@ body {
   font-style: italic;
 }
 
-/* Premium panel depth */
 .cc-app-shell.cc-premium .cc-panel {
   background: var(--cc-bg-soft);
   border-color: var(--cc-border);
@@ -246,7 +350,7 @@ body {
 .cc-input:focus {
   outline: none;
   border-color: var(--cc-primary);
-  box-shadow: 0 0 0 1px rgba(212,130,42,.25);
+  box-shadow: 0 0 0 1px rgba(255, 117, 24, 0.25);
 }
 
 /* ===== BUTTONS ===== */
@@ -324,7 +428,7 @@ button, .btn {
 
 .cc-list-item.active {
   border-color: var(--cc-primary);
-  background: rgba(212,130,42,.06);
+  background: rgba(255, 117, 24, 0.06);
 }
 
 .cc-list-title {
@@ -341,7 +445,6 @@ button, .btn {
   letter-spacing: 0.06em;
 }
 
-/* Premium list */
 .cc-app-shell.cc-premium .cc-list { padding: 8px; gap: 4px; }
 .cc-app-shell.cc-premium .cc-list-item { padding: 9px 11px; border-radius: var(--cc-radius); }
 .cc-app-shell.cc-premium .cc-list-item:hover { transform: none; }
@@ -351,7 +454,7 @@ button, .btn {
   display: inline-block;
   padding: 2px 7px;
   border-radius: 2px;
-  border: 1px solid rgba(212,130,42,.35);
+  border: 1px solid rgba(255, 117, 24, 0.35);
   color: var(--cc-primary);
   font-size: 10px;
   font-family: var(--cc-font-mono);
@@ -400,7 +503,7 @@ button, .btn {
 .cc-callout {
   border-left: 3px solid var(--cc-primary);
   padding: 10px 14px;
-  background: rgba(212,130,42,.07);
+  background: rgba(255, 117, 24, 0.07);
   border-radius: var(--cc-radius);
   font-family: var(--cc-font-body);
 }
@@ -436,9 +539,7 @@ button, .btn {
   transition: border-color .15s;
 }
 
-.cc-ability-card:hover {
-  border-color: var(--cc-border-bright);
-}
+.cc-ability-card:hover { border-color: var(--cc-border-bright); }
 
 .cc-ability-meta {
   color: var(--cc-text-muted);
@@ -555,6 +656,10 @@ code, pre, kbd, samp {
   color: var(--cc-primary);
 }
 
+@media (max-width: 768px) {
+  .cc-slide-panel { width: 100vw; right: -100vw; }
+}
+
 /* ===== ROSTER LIST ===== */
 .cc-roster-list {
   padding: 0.75rem;
@@ -571,9 +676,7 @@ code, pre, kbd, samp {
   transition: border-color .15s;
 }
 
-.cc-saved-roster-item:hover {
-  border-color: var(--cc-border-bright);
-}
+.cc-saved-roster-item:hover { border-color: var(--cc-border-bright); }
 
 .cc-saved-roster-name {
   font-size: 1rem;
@@ -603,145 +706,7 @@ code, pre, kbd, samp {
   font-family: var(--cc-font-mono);
 }
 
-@media (max-width: 768px) {
-  .cc-slide-panel { width: 100vw; right: -100vw; }
-}
-
-/* ===== UNIFIED PRELOADER ===== */
-/*
-  Usage:
-    <div class="cc-preloader">
-      <img class="cc-preloader-logo" src="[REPO]/assets/logos/[faction]_logo.svg" />
-      <p class="cc-preloader-title">Faction Builder</p>
-      <div class="cc-loading-bar"><div class="cc-loading-progress"></div></div>
-      <p class="cc-loading-text">Loading...</p>
-    </div>
-
-  To dismiss: add class cc-preloader--hidden (fades out, then remove from DOM)
-
-  Faction logo paths (REPO = https://raw.githubusercontent.com/steamcrow/coffin/main/):
-    assets/logos/coffin_canyon_logo.png      -- default / shell
-    assets/logos/monster_rangers_logo.svg    -- Monster Rangers    --faction-color: #e05c1a
-    assets/logos/crow_queen_logo.svg         -- Crow Queen         --faction-color: #9b30c8
-    assets/logos/shine_riders_logo.svg       -- Shine Riders       --faction-color: #d4b020
-    assets/logos/liberty_corps_logo.svg      -- Liberty Corps      --faction-color: #2a80c8
-    assets/logos/monsters_logo.svg           -- Monsters           --faction-color: #3aaa50
-    assets/logos/monsterology_logo.svg       -- Monsterology       --faction-color: #c82828
-*/
-
-/* Fix for the dark brown banding in the preloader */
-.cc-loading-container, .cc-preloader {
-    background-color: #16130e !important; /* Matches --cc-bg-soft */
-    background-image: none !important;    /* Removes any gradients/tiles */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    width: 100%;
-    position: fixed; /* Ensures it covers the full viewport */
-    top: 0;
-    left: 0;
-    z-index: 9999;
-}
-
-/* Page-level variant (covers the whole viewport) */
-.cc-preloader.cc-preloader--page {
-  position: fixed;
-}
-
-/* Fade-out: JS adds this class, then removes the element after transition */
-.cc-preloader.cc-preloader--hidden {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* ---- Logo ---- */
-.cc-preloader-logo {
-  width: 72px;
-  height: 72px;
-  object-fit: contain;
-  /* --faction-color can be set inline on the parent .cc-preloader */
-  filter:
-    drop-shadow(0 0 10px var(--faction-color, rgba(212,130,42,0.5)))
-    brightness(1.05);
-  animation: cc-logo-pulse 2.2s ease-in-out infinite;
-}
-
-@keyframes cc-logo-pulse {
-  0%, 100% {
-    filter:
-      drop-shadow(0 0 8px var(--faction-color, rgba(212,130,42,0.35)))
-      brightness(1.0);
-    transform: scale(1);
-  }
-  50% {
-    filter:
-      drop-shadow(0 0 22px var(--faction-color, rgba(212,130,42,0.8)))
-      brightness(1.2);
-    transform: scale(1.05);
-  }
-}
-
-/* ---- App title under the logo ---- */
-.cc-preloader-title {
-  font-family: var(--cc-font-title);
-  font-size: 1rem;
-  font-weight: 900;
-  color: var(--cc-primary);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  margin: 0;
-}
-
-/* ---- Loading bar ---- */
-.cc-loading-bar {
-  width: 100%;
-  max-width: 320px;
-  height: 6px;
-  background: var(--cc-bg-mid);
-  border-radius: var(--cc-radius);
-  overflow: hidden;
-  border: 1px solid var(--cc-border);
-}
-
-.cc-loading-progress {
-  height: 100%;
-  background: linear-gradient(90deg,
-    var(--cc-primary) 0%,
-    var(--cc-gold)    50%,
-    var(--cc-primary) 100%);
-  width: 0%;
-  animation: cc-loading-fill 4s ease-in-out forwards;
-  box-shadow: 0 0 10px rgba(212,130,42,0.5);
-}
-
-/* JS can also set width directly for real progress:
-   document.querySelector('.cc-loading-progress').style.width = '60%'; */
-@keyframes cc-loading-fill {
-  0%   { width: 0%;  }
-  40%  { width: 65%; }
-  80%  { width: 88%; }
-  100% { width: 95%; }
-}
-
-/* ---- Status text ---- */
-.cc-loading-text {
-  color: var(--cc-text-muted);
-  font-size: 10px;
-  font-family: var(--cc-font-mono);
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  margin: 0;
-  animation: cc-pulse-text 1.6s ease-in-out infinite;
-}
-
-@keyframes cc-pulse-text {
-  0%, 100% { opacity: 0.5; }
-  50%       { opacity: 1;   }
-}
-
-/* ===== SHELL / PAGE / STEPS (additive helpers) ===== */
+/* ===== SHELL / PAGE / STEPS ===== */
 .cc-shell {
   max-width: 1280px;
   margin: 0 auto;
@@ -822,13 +787,13 @@ code, pre, kbd, samp {
 
 .cc-step.active {
   border-color: var(--cc-primary);
-  background: rgba(212,130,42,.07);
+  background: rgba(255, 117, 24, 0.07);
 }
 
 .cc-step.active .cc-step-num,
 .cc-step.active .cc-step-label {
   color: var(--cc-primary);
-  border-color: rgba(212,130,42,.4);
+  border-color: rgba(255, 117, 24, 0.4);
 }
 
 .cc-sticky { position: sticky; top: 14px; align-self: start; }
@@ -876,9 +841,7 @@ hr, .cc-vc-divider, .divider {
   vertical-align: top;
 }
 
-.cc-marker-table tr:nth-child(even) td {
-  background: rgba(255,255,255,.02);
-}
+.cc-marker-table tr:nth-child(even) td { background: rgba(255,255,255,.02); }
 
 .cc-marker-token  { font-size: 10px; opacity: 0.5; font-style: italic; }
 .cc-marker-count  { text-align: center; font-weight: 700; }
@@ -942,43 +905,8 @@ hr, .cc-vc-divider, .divider {
 .cc-vc-aftermath { font-size: 12px; padding: 4px 0; }
 .cc-vc-aftermath p { margin: 3px 0; color: var(--cc-text-muted); }
 
-/* ===== MOBILE ===== */
-@media (max-width: 768px) {
-  .cc-shell      { padding: 10px 10px 18px; }
-  .cc-page-head  { padding: 10px 12px; }
-  .cc-page-body  { padding: 12px; }
-}
-
-@media print {
-  .cc-rules-sidebar, .cc-rules-context, .cc-panel-head, .cc-rule-nav,
-  .cc-app-header, .cc-rules-actions, button, .cc-nav-group { display: none !important; }
-  .cc-rules-explorer { display: block !important; padding: 0 !important; }
-  .cc-rules-main  { max-width: 100% !important; overflow: visible !important; height: auto !important; }
-  .cc-rule-reader { padding: 0 !important; max-width: 100% !important; font-size: 10pt !important; line-height: 1.5 !important; }
-  @page { margin: 0.6in 0.65in; }
-  body, p, li { color: #000 !important; background: #fff !important; }
-  .cc-rule-title    { color: #000 !important; font-size: 16pt !important; border-bottom: 1pt solid #000; padding-bottom: 3pt; margin-bottom: 8pt; }
-  .cc-section-title { color: #000 !important; font-size: 12pt !important; }
-  .cc-ability-card  { border: 0.5pt solid #aaa !important; background: #fff !important; padding: 4pt 6pt !important; margin-bottom: 4pt !important; page-break-inside: avoid; }
-  .cc-badge         { border: 0.5pt solid #aaa !important; background: #f5f5f5 !important; color: #000 !important; }
-  a { text-decoration: none !important; color: #000 !important; }
-}
-/* ================================================================
-   ADDITIONS TO cc_ui.css
-   
-   These styles are used by multiple apps (Rules Explorer,
-   Faction Builder, Turn Counter) and belong in the global file.
-   Append this block to the bottom of ui/cc_ui.css.
-   ================================================================ */
-
-
 /* ===== STARS / FAVORITES ===== */
-/* Used by: Rules Explorer, Faction Builder, Turn Counter */
-
-.cc-star {
-  font-size: 1.25rem;
-  line-height: 1;
-}
+.cc-star { font-size: 1.25rem; line-height: 1; }
 
 .cc-star-btn {
   cursor: pointer;
@@ -991,10 +919,7 @@ hr, .cc-vc-divider, .divider {
 }
 .cc-star-btn:hover { color: var(--cc-gold); }
 
-
 /* ===== SECTION LABEL & LEAD TEXT ===== */
-/* Used by: Rules Explorer, Faction Builder */
-
 .cc-section-label {
   font-family: var(--cc-font-mono);
   font-size: 0.78rem;
@@ -1005,7 +930,6 @@ hr, .cc-vc-divider, .divider {
   margin-bottom: 0.4rem;
 }
 
-/* Italic intro sentence above a rule or ability */
 .cc-rule-lead {
   font-style: italic;
   color: var(--cc-text-muted);
@@ -1013,13 +937,10 @@ hr, .cc-vc-divider, .divider {
   margin-bottom: 0.5rem;
 }
 
-
-/* ===== ABILITY LINKS (inline badges in unit cards) ===== */
-/* Used by: Rules Explorer, Faction Builder */
-
+/* ===== ABILITY LINKS ===== */
 .cc-ability-link {
   background: none;
-  border: 1px solid rgba(212, 130, 42, 0.35);
+  border: 1px solid rgba(255, 117, 24, 0.35);
   color: var(--cc-primary);
   font-size: 10px;
   font-family: var(--cc-font-mono);
@@ -1034,10 +955,7 @@ hr, .cc-vc-divider, .divider {
   color: #000;
 }
 
-
 /* ===== UPGRADE LINKS ===== */
-/* Used by: Rules Explorer, Faction Builder */
-
 .cc-upgrade-link {
   display: block;
   width: 100%;
@@ -1059,10 +977,7 @@ hr, .cc-vc-divider, .divider {
 .cc-upgrade-link .cc-upgrade-desc { font-size: 0.82rem; color: var(--cc-text-muted); margin-top: 2px; }
 .cc-upgrade-link .cc-upgrade-cost { font-size: 0.78rem; color: var(--cc-primary); float: right; }
 
-
 /* ===== LOGIN STATUS BAR ===== */
-/* Used by: Rules Explorer, Faction Builder */
-
 .cc-login-status {
   font-size: 0.78rem;
   font-family: var(--cc-font-mono);
@@ -1079,7 +994,6 @@ hr, .cc-vc-divider, .divider {
 .cc-login-status.logged-out { color: var(--cc-text-muted); opacity: 0.65; }
 .cc-login-status i          { font-size: 0.85rem; }
 
-/* Toast shown when a guest tries to use a logged-in feature */
 .cc-login-hint {
   position: fixed;
   top: 16px;
@@ -1103,4 +1017,27 @@ hr, .cc-vc-divider, .divider {
   15%  { opacity: 1; transform: translateY(0); }
   75%  { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 768px) {
+  .cc-shell      { padding: 10px 10px 18px; }
+  .cc-page-head  { padding: 10px 12px; }
+  .cc-page-body  { padding: 12px; }
+}
+
+/* ===== PRINT ===== */
+@media print {
+  .cc-rules-sidebar, .cc-rules-context, .cc-panel-head, .cc-rule-nav,
+  .cc-app-header, .cc-rules-actions, button, .cc-nav-group { display: none !important; }
+  .cc-rules-explorer { display: block !important; padding: 0 !important; }
+  .cc-rules-main  { max-width: 100% !important; overflow: visible !important; height: auto !important; }
+  .cc-rule-reader { padding: 0 !important; max-width: 100% !important; font-size: 10pt !important; line-height: 1.5 !important; }
+  @page { margin: 0.6in 0.65in; }
+  body, p, li { color: #000 !important; background: #fff !important; }
+  .cc-rule-title    { color: #000 !important; font-size: 16pt !important; border-bottom: 1pt solid #000; padding-bottom: 3pt; margin-bottom: 8pt; }
+  .cc-section-title { color: #000 !important; font-size: 12pt !important; }
+  .cc-ability-card  { border: 0.5pt solid #aaa !important; background: #fff !important; padding: 4pt 6pt !important; margin-bottom: 4pt !important; page-break-inside: avoid; }
+  .cc-badge         { border: 0.5pt solid #aaa !important; background: #f5f5f5 !important; color: #000 !important; }
+  a { text-decoration: none !important; color: #000 !important; }
 }
