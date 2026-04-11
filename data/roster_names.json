@@ -1,143 +1,204 @@
 {
   "_comment": "Coffin Canyon — Roster Name Generator",
-  "_structure": "Pick one from 'prefix', one from 'noun', optionally one from 'suffix'. Combine as: [prefix] [noun] [suffix]. Any pool can be weighted by repeating entries.",
-  "_usage": "generateRosterName(factionId) — returns a random 2- or 3-part name string.",
+  "_structure": "Pick one from 'prefix', one from 'noun', optionally one from 'suffix'. Combine as: [prefix] [noun] [suffix].",
 
   "monster_rangers": {
-    "_tone": "Frontier naturalists. Named like expeditions, field units, ranger posts, and wildlife surveys.",
+    "_tone": "Frontier naturalists. Named like expeditions, ranger posts, and survey units.",
     "prefix": [
       "Redstone", "Canyon", "Lost Creek", "Ironwood", "Boneyard", "Dusk", "Hollow",
       "Thornback", "Saltwind", "Farwatch", "Crowpeak", "Ashfield", "Ember", "Deep Run",
-      "Wandering", "Grey Mesa", "Splitrock", "Nightfall", "Rustwater", "Old Gulch"
+      "Wandering", "Grey Mesa", "Splitrock", "Nightfall", "Rustwater", "Old Gulch",
+      "Widowflow", "Needlewood", "Splitglass", "Tin Flats", "Silverpit", "Bayou",
+      "High Ridge", "Dust Basin", "Cold Creek", "Gravewater", "Blackbrush",
+      "Sunfall", "Drybone", "Deadwind", "Whispering Mesa", "Coffin Ridge"
     ],
     "noun": [
       "Patrol", "Watch", "Survey", "Detail", "Rangers", "Company", "Expedition",
       "Guard", "Brigade", "Corps", "Outpost", "Accord", "Charter", "Circle",
-      "Wardens", "Scouts", "Assembly", "Lodge", "Order", "Vigil"
+      "Wardens", "Scouts", "Assembly", "Lodge", "Order", "Vigil",
+      "Trailwatch", "Range", "Field Party", "Survey Corps",
+      "Observer Unit", "Tracking Detail", "Boundary Watch",
+      "Signal Watch", "Beastwardens", "Greenwardens"
     ],
     "suffix": [
-      "No. 1", "No. 7", "Alpha", "Bravo", "East", "West", "North", "South",
+      "No. 1", "No. 7", "Alpha", "Bravo", "North Sector", "South Sector",
       "Station", "Post", "Field Division", "Advance", "Reserve", "Elite",
-      "", "", "", "", "", ""
+      "Outer Rim", "Deep Survey", "Long Patrol", "Forward Camp",
+      "Under Accord", "On Rotation", "Emergency Charter",
+      "Seasonal Duty", "Spring Detail", "Fall Rotation",
+      "Winter Watch", "High Alert", "Quiet Assignment",
+      "Trail End", "Last Mark", "Beyond Range"
     ]
   },
 
   "liberty_corps": {
-    "_tone": "Federal authority. Named like military units, enforcement divisions, and regulatory bodies.",
+    "_tone": "Federal authority. Military-industrial enforcement structure.",
     "prefix": [
       "Iron", "Federal", "First", "Third", "Frontier", "Northern", "Southern",
       "Central", "Western", "Eastern", "Classified", "Special", "Tactical",
-      "Enforcement", "Operational", "Rapid", "Reserve", "Standing", "Joint", "Auxiliary"
+      "Operational", "Rapid", "Reserve", "Standing", "Joint", "Auxiliary",
+      "Second", "Fourth", "Fifth", "Seventh", "Ninth",
+      "High Command", "Internal", "Civil", "Military", "Administrative"
     ],
     "noun": [
       "Division", "Regiment", "Detachment", "Unit", "Column", "Battalion",
       "Task Force", "Enforcement", "Contingent", "Strike Team", "Garrison",
       "Authority", "Detail", "Dispatch", "Deployment", "Command", "Corps",
-      "Mandate", "Jurisdiction", "Suppression"
+      "Mandate", "Jurisdiction", "Suppression",
+      "Compliance Office", "Marshal Service", "Control Branch",
+      "Pacification Group", "Containment Unit", "Inspection Bureau"
     ],
     "suffix": [
       "Alpha", "Bravo", "One", "Seven", "Eleven",
       "Field Operations", "Active Duty", "On Assignment",
       "Second Tour", "Classified", "Under Writ",
-      "", "", "", "", "", "", "", "", ""
+      "Authorized", "Under Mandate", "By Order",
+      "Immediate Action", "In Theater", "Restricted",
+      "Provisional Authority", "Emergency Powers",
+      "Full Sanction", "No Appeal", "Closed File",
+      "Final Notice", "Standing Order"
     ]
   },
 
   "monsterology": {
-    "_tone": "Industrial cult. Named like research expeditions, extraction ops, and secret societies.",
+    "_tone": "Aristocratic predator-cult. Hunting, feasting, harvesting, refinement.",
     "prefix": [
-      "Black", "Deep", "Bone", "Tainted", "Mort", "Hollow", "Iron", "Foul",
-      "Gravel", "Grim", "Scorch", "Sunken", "Thresh", "Vile", "Ash",
-      "Corpse", "Cracked", "Fetch", "Dross", "Slaked"
+      "Black", "Deep", "Bone", "Tainted", "Mort", "Hollow", "Foul",
+      "Grim", "Scorch", "Sunken", "Vile", "Ash", "Corpse", "Cracked",
+      "Carrion", "Rot", "Gutter", "Spine", "Flense",
+      "Velvet", "Gilded", "Noble", "Refined", "Exquisite",
+      "Huntmaster’s", "Feasting", "Banquet", "Table",
+      "Ivory", "Obsidian", "Perfumed", "Red-Handed"
     ],
     "noun": [
       "House", "Venture", "Expedition", "Harvest", "Extraction",
       "Institute", "Collective", "Syndicate", "Fellowship", "Lodge",
-      "Society", "Operation", "Concern", "Acquisition", "Detail",
-      "Commission", "Enterprise", "Interest", "Assembly", "Contract"
+      "Society", "Operation", "Concern", "Acquisition",
+      "Commission", "Enterprise", "Assembly", "Contract",
+      "Hunt", "Pursuit", "Chase", "Taking",
+      "Feast", "Banquet", "Table", "Course",
+      "Refinery", "Process", "Yield", "Rendering"
     ],
     "suffix": [
-      "Mort Division", "Thyr Division", "Field Office", "Research Party",
-      "Acquisition Team", "Second Wave", "Under Charter",
-      "Deep Survey", "Extraction Detail",
-      "", "", "", "", "", "", "", "", "", ""
+      "Mort Division", "Thyr Division", "Field Office",
+      "Acquisition Team", "Second Course", "Third Course",
+      "Under Charter", "Deep Hunt", "Open Season",
+      "First Blood", "Final Cut", "Prime Yield",
+      "Table Reserved", "Guests Expected", "Private Stock",
+      "Lot 13", "Batch 7", "Series Black",
+      "Under Observation", "Specimen Active",
+      "Phase II", "Phase III",
+      "Live Capture", "No Survivors",
+      "Served Fresh", "By Invitation"
     ]
   },
 
   "monsters": {
-    "_tone": "Wild and instinctual. Named like packs, territories, and natural phenomena — not organizations.",
+    "_tone": "Wild and instinctual.",
     "prefix": [
       "The Hungry", "The Restless", "The Hollow", "The Sunken", "The Howling",
       "The Broken", "The Creeping", "The Rotting", "The Lost", "The Pale",
       "The Watching", "The Sleeping", "The Ruined", "The Old", "The Deep",
-      "The Bleeding", "The Wretched", "The Quiet", "The Forgotten", "The Feral"
+      "The Bleeding", "The Wretched", "The Quiet", "The Forgotten", "The Feral",
+      "The Gnawing", "The Shivering", "The Weeping", "The Crawling",
+      "The Skinless", "The Many", "The Swallowed", "The Starved"
     ],
     "noun": [
       "Pack", "Herd", "Brood", "Nest", "Warren", "Swarm", "Host",
       "Tide", "Wake", "Hunger", "Roost", "Sprawl", "Maw",
-      "Territory", "Dark", "Canyon", "Gulch", "Basin", "Hollow", "Pit"
+      "Territory", "Canyon", "Gulch", "Basin", "Hollow", "Pit",
+      "Reach", "Depths", "Edge", "Scar", "Wound", "Grave"
     ],
     "suffix": [
       "of the Canyon", "of the Deep", "Below", "Rising",
       "Unchained", "Unleashed", "at the Gate",
       "from the Wreck", "from the Dark",
-      "", "", "", "", "", "", "", "", "", ""
+      "That Waits", "That Hungers", "That Watches",
+      "Without End", "Without Name", "Without Light",
+      "Beneath", "In the Dust", "In the Bone",
+      "Where It Sleeps", "Where It Feeds",
+      "That Knows You", "That Remembers"
     ]
   },
 
   "shine_riders": {
-    "_tone": "Opportunist outlaws. Named like gangs, crews, and heist teams — boastful and loose.",
+    "_tone": "Absolute scum. Violent, desperate, cruel bandits.",
     "prefix": [
-      "Dusty", "Quick", "Crooked", "Slippery", "Lucky", "Rusty", "Broke",
-      "Hollow", "Silver", "Grift", "Doomshine", "Hot", "Loaded", "Dead",
-      "Burnout", "Half-Mad", "Last Chance", "Dented", "Cracked", "Smoked"
+      "Filthy", "Crooked", "Backstab", "Gutshot", "Dogbite", "Rotgut",
+      "Spit", "Gravepick", "Bonejack", "Slag", "Trashfire",
+      "Whiskey", "Blacklung", "Ragged", "Half-Dead", "Dirtbag",
+      "Snakehand", "Knifetooth", "Railrat", "Coffinjack",
+      "Bloodslick", "Stinkhand", "Mudmouth", "Ratskin"
     ],
     "noun": [
       "Crew", "Gang", "Outfit", "Ride", "Run", "Score", "Haul",
-      "Operation", "Job", "Play", "Posse", "Syndicate", "Circuit",
-      "Hustle", "Racket", "Detail", "Express", "Network", "Union", "Compact"
+      "Job", "Posse", "Circuit", "Hustle", "Racket",
+      "Trainjob", "Breakout", "Snatch", "Pull", "Rush",
+      "Convoy", "Drop", "Lift", "Jack",
+      "Ambush", "Stickup", "Raid", "Strip", "Take"
     ],
     "suffix": [
       "Inc.", "& Co.", "on the Move", "Going Fast",
       "No Questions Asked", "Cash Only", "Under the Table",
       "Final Run", "Last Job",
-      "", "", "", "", "", "", "", "", "", ""
+      "No Witnesses", "Clean Getaway", "Dead Drop",
+      "Burn After", "Split the Take",
+      "No Survivors", "Take Everything",
+      "Leave Nothing", "Blood Money",
+      "Run It Again", "Don’t Look Back",
+      "Fast and Gone", "Gone by Dawn"
     ]
   },
 
   "crow_queen": {
-    "_tone": "Aristocratic exile court. Named like noble houses, edicts, royal commands, and formal decrees.",
+    "_tone": "Aristocratic exile court. Ritual command, obedience, and eternal service.",
     "prefix": [
       "Black", "Iron", "Pale", "Silent", "Crown", "Sealed", "Bound",
       "Ancient", "Exiled", "Sovereign", "Carved", "Immaculate",
-      "Consecrated", "Gilded", "Buried", "Hollow", "First", "Last", "Eternal", "Sunken"
+      "Consecrated", "Gilded", "Buried", "Hollow", "First", "Last", "Eternal", "Sunken",
+      "Velvet", "Grave", "Ashen", "Ivory", "Obsidian", "Veiled",
+      "Sanctified", "Dread", "Funereal",
+      "Rootsworn", "Gravesworn", "Crownbound", "Thornbound"
     ],
     "noun": [
       "Court", "House", "Accord", "Decree", "Mandate", "Edict",
       "Order", "Writ", "Assembly", "Council", "Guard",
       "Circle", "Compact", "Succession", "Throne", "Charter",
-      "Command", "Retinue", "Convocation", "Tribunal"
+      "Command", "Retinue", "Convocation", "Tribunal",
+      "Procession", "Reliquary", "Covenant", "Sanction",
+      "Lineage", "Vestige", "Inheritance Guard",
+      "Cleavers", "Reapers", "Wardens", "Implements"
     ],
     "suffix": [
       "of the Queen", "of the Realm", "of Monstru",
       "First Rite", "Second Rite", "Exile",
       "in Absentia", "Under Seal", "Restored",
-      "", "", "", "", "", "", "", "", "", ""
+      "By Her Will", "In Her Name", "Unbroken",
+      "Without Question", "Eternal Service",
+      "Bound in Thorn", "Bound in Bone",
+      "Until Silence", "Until Ash",
+      "In Final Service", "At Her Command",
+      "No Mercy Given", "No Mercy Asked"
     ]
   },
 
   "_fallback": {
-    "_tone": "Generic — used when no faction is selected.",
+    "_tone": "Generic.",
     "prefix": [
       "Iron", "Black", "Hollow", "Lost", "Dusty", "Broken", "Grim",
-      "Silver", "Red", "Old", "Last", "Pale", "Stone", "Dead"
+      "Silver", "Red", "Old", "Last", "Pale", "Stone", "Dead",
+      "Cold", "Dry", "Rust", "Burnt", "Faded", "Grave"
     ],
     "noun": [
       "Company", "Crew", "Band", "Outfit", "Detail",
-      "Watch", "Order", "Assembly", "Unit", "Collective"
+      "Watch", "Order", "Assembly", "Unit", "Collective",
+      "Group", "Line", "Circle"
     ],
     "suffix": [
-      "", "", "", "", "", "", "", "", "", ""
+      "Active", "Detached", "On Call", "In the Field",
+      "On Rotation", "Standby", "Unassigned",
+      "Out of Bounds", "On Record", "Filed",
+      "In Motion", "On Watch", "At Work"
     ]
   }
 }
