@@ -629,19 +629,20 @@ code, pre, kbd, samp {
     assets/logos/monsterology_logo.svg       -- Monsterology       --faction-color: #c82828
 */
 
-/* ---- Preloader: full-container overlay ---- */
-.cc-preloader {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.25rem;
-  background: var(--cc-bg-soft);
-  z-index: 9000;
-  padding: 2rem;
-  transition: opacity 0.45s ease;
+/* Fix for the dark brown banding in the preloader */
+.cc-loading-container, .cc-preloader {
+    background-color: #16130e !important; /* Matches --cc-bg-soft */
+    background-image: none !important;    /* Removes any gradients/tiles */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    width: 100%;
+    position: fixed; /* Ensures it covers the full viewport */
+    top: 0;
+    left: 0;
+    z-index: 9999;
 }
 
 /* Page-level variant (covers the whole viewport) */
@@ -738,17 +739,6 @@ code, pre, kbd, samp {
 @keyframes cc-pulse-text {
   0%, 100% { opacity: 0.5; }
   50%       { opacity: 1;   }
-}
-
-/* ---- Legacy alias: .cc-loading-container still works ---- */
-.cc-loading-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  min-height: 300px;
-  gap: 1.25rem;
 }
 
 /* ===== SHELL / PAGE / STEPS (additive helpers) ===== */
