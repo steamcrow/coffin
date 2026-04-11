@@ -520,10 +520,13 @@ console.log("⚔️ Faction Builder app loaded");
     window.showAbilityTooltip = function(abilityName, event) {
       const tooltip = document.getElementById('ability-tooltip');
       if (!tooltip) return;
-      tooltip.textContent = `Click to view: ${displayName(abilityName)}`;
+      const entry = lookupAbility(abilityName);
+      const label = displayName(abilityName);
+      const short = entry && entry.desc_short ? entry.desc_short : 'Click to view rules';
+      tooltip.innerHTML = '<strong style="display:block;margin-bottom:4px;color:#ff7518;">' + esc(label) + '</strong>' + esc(short);
       tooltip.style.display = 'block';
-      tooltip.style.left = event.pageX + 12 + 'px';
-      tooltip.style.top  = event.pageY + 12 + 'px';
+      tooltip.style.left = event.pageX + 14 + 'px';
+      tooltip.style.top  = event.pageY + 14 + 'px';
     };
 
     window.hideAbilityTooltip = function() {
@@ -1003,13 +1006,16 @@ console.log("⚔️ Faction Builder app loaded");
       return `
         <div class="cc-unit-detail">
           <div class="detail-header-left">
-            ${factionIconHtml(state.currentFaction, 28)}
+            ${factionIconHtml(state.currentFaction, 56)}
             <div>
               <div class="cc-detail-title">${esc(unit.name)}</div>
               <div class="cc-detail-sub">${esc(unit.type)}</div>
             </div>
           </div>
-          <div class="cc-detail-cost">${previewCost} ₤</div>
+          <div class="cc-detail-cost">
+            <i class="fa-solid fa-tag"></i>
+            <span class="cost-value">${previewCost} ₤</span>
+          </div>
 
           ${buildStatBadges(unit, config)}
 
@@ -1690,7 +1696,7 @@ console.log("⚔️ Faction Builder app loaded");
 
         </div>
 
-        <div id="ability-tooltip" style="display:none;position:fixed;background:#000;color:#fff;padding:7px 11px;border-radius:4px;font-size:12px;z-index:10000;pointer-events:none;border:1px solid var(--cc-primary);max-width:220px;line-height:1.4;"></div>
+        <div id="ability-tooltip" style="display:none;position:fixed;background:#111;color:#ccc;padding:9px 13px;border-radius:5px;font-size:12px;z-index:10000;pointer-events:none;border:1px solid var(--cc-primary);max-width:280px;line-height:1.5;"></div>
       </div>
     `;
 
