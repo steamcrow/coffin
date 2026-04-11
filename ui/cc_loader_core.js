@@ -643,7 +643,7 @@ console.log('🔥 cc_loader_core.js EXECUTING — LAYER 3');
       '<div id="cc-preloader" style="' +
         'position:fixed;inset:0;display:flex;flex-direction:column;' +
         'align-items:center;justify-content:center;gap:1.25rem;' +
-        'background:#0a0a0a;z-index:9000;padding:2rem;transition:opacity 0.45s ease;">' +
+        'background:#16130e;z-index:99999;padding:2rem;transition:opacity 0.45s ease;box-shadow:none;border:none;'>' +
         '<img src="' + LOGO_URL + '" alt="Coffin Canyon" style="' +
           'width:200px;max-width:70vw;object-fit:contain;' +
           'animation:cc-logo-pulse 2.2s ease-in-out infinite;"/>' +
