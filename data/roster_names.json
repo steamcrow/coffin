@@ -4,6 +4,7 @@
 
   "monster_rangers": {
   "_tone": "Frontier naturalists. Defenders, explorers, and field Rangers. Names are short, spoken, and practical.",
+  "suffix_chance": 0.25,
 
   "prefix": [
     "Redstone", "Canyon", "Lost Creek", "Ironwood", "Boneyard", "Dusk", "Hollow",
