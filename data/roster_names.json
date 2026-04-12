@@ -134,39 +134,91 @@
 },
 
   "monsterology": {
-    "_tone": "Aristocratic predator-cult. Hunting, feasting, harvesting, refinement.",
-    "suffix_chance": 0.65,
-  
-    "prefix": [
-      "Black", "Deep", "Bone", "Tainted", "Mort", "Hollow", "Foul",
-      "Grim", "Scorch", "Sunken", "Vile", "Ash", "Corpse", "Cracked",
-      "Carrion", "Rot", "Gutter", "Spine", "Flense",
-      "Velvet", "Gilded", "Noble", "Refined", "Exquisite",
-      "Huntmaster’s", "Feasting", "Banquet", "Table",
-      "Ivory", "Obsidian", "Perfumed", "Red-Handed"
-    ],
-    "noun": [
-      "House", "Venture", "Expedition", "Harvest", "Extraction",
-      "Institute", "Collective", "Syndicate", "Fellowship", "Lodge",
-      "Society", "Operation", "Concern", "Acquisition",
-      "Commission", "Enterprise", "Assembly", "Contract",
-      "Hunt", "Pursuit", "Chase", "Taking",
-      "Feast", "Banquet", "Table", "Course",
-      "Refinery", "Process", "Yield", "Rendering"
-    ],
-    "suffix": [
-      "Mort Division", "Thyr Division", "Field Office",
-      "Acquisition Team", "Second Course", "Third Course",
-      "Under Charter", "Deep Hunt", "Open Season",
-      "First Blood", "Final Cut", "Prime Yield",
-      "Table Reserved", "Guests Expected", "Private Stock",
-      "Lot 13", "Batch 7", "Series Black",
-      "Under Observation", "Specimen Active",
-      "Phase II", "Phase III",
-      "Live Capture", "No Survivors",
-      "Served Fresh", "By Invitation"
-    ]
-  },
+  "_tone": "Aristocratic predator-cult. Hunting, feasting, cataloging, and control. Old-money houses, secret orders, and refined brutality.",
+  "suffix_chance": 0.65,
+
+  "prefix": [
+    "Black", "Deep", "Bone", "Tainted", "Mort", "Hollow", "Foul",
+    "Grim", "Scorch", "Sunken", "Vile", "Ash", "Corpse", "Cracked",
+    "Carrion", "Rot", "Spine", "Flense",
+
+    "Velvet", "Gilded", "Noble", "Refined", "Exquisite",
+    "Ivory", "Obsidian", "Perfumed", "Red-Handed",
+
+    "Huntmaster’s", "High Table", "First Course", "Second Course",
+    "Banquet", "Feasting", "Private Table",
+
+    "Steinlock", "Wrathilde", "Lasteyrie", "Visconti",
+    "Hastfer", "Carillo", "Orlov",
+
+    "Blackwing", "Redhood", "Whiteglove", "Gray Bank",
+    "Black Antler", "Arcane Elder", "Chapter 77",
+    "INS", "Rexol",
+
+    "Veilbreak", "Veilward", "Veilwatch",
+    "Monstrogeddon", "False Crown", "Hidden Court",
+    "Replacement", "Impostor", "Unmasked"
+  ],
+
+  "noun": [
+    "House", "Venture", "Expedition", "Harvest", "Extraction",
+    "Institute", "Collective", "Syndicate", "Fellowship", "Lodge",
+    "Society", "Operation", "Concern", "Acquisition",
+    "Commission", "Enterprise", "Assembly", "Contract",
+
+    "Hunt", "Pursuit", "Chase", "Taking",
+    "Feast", "Banquet", "Table", "Course",
+
+    "Refinery", "Process", "Yield", "Rendering",
+    "Catalog", "Archive", "Ledger", "Index",
+
+    "Order", "Circle", "Chapter", "Council",
+    "Trust", "Consortium", "Directorate",
+
+    "Shipping", "Bank", "Service", "Agency",
+    "Press", "Syndicate", "Dispatch",
+
+    "Inquisition", "Doctrine", "Inquiry",
+    "Survey", "Classification", "Registration",
+
+    "Butchery", "Carving", "Preparation",
+    "Consumption", "Ascension", "Transfusion"
+  ],
+
+  "suffix": [
+    "Mort Division", "Thyr Division", "Field Office",
+    "Acquisition Team", "Second Course", "Third Course",
+    "Under Charter", "Deep Hunt", "Open Season",
+
+    "First Blood", "Final Cut", "Prime Yield",
+    "Table Reserved", "Guests Expected", "Private Stock",
+
+    "Lot 13", "Batch 7", "Series Black",
+    "Under Observation", "Specimen Active",
+    "Phase II", "Phase III",
+
+    "Live Capture", "No Survivors",
+    "Served Fresh", "By Invitation",
+
+    "Under the Veil", "Beyond the Veil",
+    "Veil Breach", "Veil Confirmed",
+
+    "Unmasked", "Identity Verified",
+    "Subject Replaced", "False Skin Removed",
+
+    "By Invitation Only", "Members Present",
+    "Closed Session", "Private Audience",
+
+    "For Internal Use", "Eyes Only",
+    "Restricted Ledger", "Sealed Record",
+
+    "Prepared Properly", "Fit for Table",
+    "Taken Whole", "Nothing Wasted",
+
+    "Hunter’s Mark", "Marked for Taking",
+    "Claimed", "Bound and Bled"
+  ]
+},
 
   "monsters": {
     "_tone": "Wild and instinctual.",
