@@ -220,34 +220,65 @@
   ]
 },
 
-  "monsters": {
-    "_tone": "Wild and instinctual.",
-    "suffix_chance": 0.25,
-    "prefix": [
-      "The Hungry", "The Restless", "The Hollow", "The Sunken", "The Howling",
-      "The Broken", "The Creeping", "The Rotting", "The Lost", "The Pale",
-      "The Watching", "The Sleeping", "The Ruined", "The Old", "The Deep",
-      "The Bleeding", "The Wretched", "The Quiet", "The Forgotten", "The Feral",
-      "The Gnawing", "The Shivering", "The Weeping", "The Crawling",
-      "The Skinless", "The Many", "The Swallowed", "The Starved"
-    ],
-    "noun": [
-      "Pack", "Herd", "Brood", "Nest", "Warren", "Swarm", "Host",
-      "Tide", "Wake", "Hunger", "Roost", "Sprawl", "Maw",
-      "Territory", "Canyon", "Gulch", "Basin", "Hollow", "Pit",
-      "Reach", "Depths", "Edge", "Scar", "Wound", "Grave"
-    ],
-    "suffix": [
-      "of the Canyon", "of the Deep", "Below", "Rising",
-      "Unchained", "Unleashed", "at the Gate",
-      "from the Wreck", "from the Dark",
-      "That Waits", "That Hungers", "That Watches",
-      "Without End", "Without Name", "Without Light",
-      "Beneath", "In the Dust", "In the Bone",
-      "Where It Sleeps", "Where It Feeds",
-      "That Knows You", "That Remembers"
-    ]
-  },
+"monsters": {
+  "_tone": "Wild, tribal, and unknowable. Names feel like whispered warnings, not organizations.",
+  "suffix_chance": 0.15,
+
+  "prefix": [
+    "The Hungry", "The Restless", "The Hollow", "The Sunken", "The Howling",
+    "The Broken", "The Creeping", "The Rotting", "The Lost", "The Pale",
+    "The Watching", "The Sleeping", "The Ruined", "The Old", "The Deep",
+    "The Bleeding", "The Wretched", "The Quiet", "The Forgotten", "The Feral",
+    "The Gnawing", "The Shivering", "The Weeping", "The Crawling",
+    "The Skinless", "The Many", "The Swallowed", "The Starved",
+
+    "The Silent", "The Hidden", "The Secret", "The Buried",
+    "The Unseen", "The Unnamed", "The Unmade", "The Unclean",
+    "The Crooked", "The Bent", "The Twisted",
+    "The Long", "The Low", "The Under",
+    "The Black", "The Red", "The Grey",
+    "The First", "The Last", "The Before",
+    "The After", "The Left", "The Taken"
+  ],
+
+  "noun": [
+    "Pack", "Herd", "Brood", "Nest", "Warren", "Swarm", "Host",
+    "Tide", "Wake", "Roost", "Sprawl", "Maw",
+
+    "Flock", "Horde", "Mob", "Throng", "Tribe", "Ring",
+    "Circle", "Kin", "Stock", "Fold", "Clutch",
+
+    "Mass", "Heap", "Pile", "Body", "Meat",
+    "Shape", "Form", "Thing", "One", "Many", "All",
+
+    "Choir", "Mouth", "Throat", "Hand", "Eye",
+    "Teeth", "Bones", "Skin", "Blood", "Breath",
+
+    "Dark", "Below", "Under", "Depths", "Hollow",
+    "Pit", "Scar", "Wound", "Grave", "Black"
+  ],
+
+  "suffix": [
+    "of the Canyon", "of the Deep", "Below", "Rising",
+    "Unchained", "Unleashed", "at the Gate",
+    "from the Wreck", "from the Dark",
+
+    "That Waits", "That Hungers", "That Watches",
+    "Without End", "Without Name", "Without Light",
+
+    "Beneath", "In the Dust", "In the Bone",
+    "Where It Sleeps", "Where It Feeds",
+
+    "That Knows You", "That Remembers",
+    "That Calls", "That Comes",
+
+    "In the Walls", "In the Ground", "In the Dark",
+    "Behind You", "Underfoot",
+
+    "Before You", "After You",
+    "When It Wakes", "When It Opens"
+  ]
+},
 
   "shine_riders": {
   "_tone": "Violent doomshine bandits. Boastful, treacherous, filthy, and proud of it. Names sound like gangs you hear about right before you get robbed.",
