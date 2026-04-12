@@ -321,7 +321,7 @@
     "Line", "Ring", "Chain", "Circle",
     "Cartel", "Syndicate",
 
-    "Riders", "Crew", "Gang"  // light weighting toward identity
+    "Riders", "Crew", "Gang"
   ],
 
   "suffix": [
