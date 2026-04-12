@@ -36,11 +36,10 @@ console.log("⚔️ Faction Builder app loaded");
 (function () {
   var _destroyFn = null;
 
- // ── Roster Name Generator — lives at IIFE scope so window.* is set
+// ── Roster Name Generator — lives at IIFE scope so window.* is set
 //    immediately when the script loads, before mount() is ever called.
 var NAMES_DATA_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/roster_names.json';
 var _namesCache    = null;
-
 function _loadNamesData() {
   if (_namesCache) return Promise.resolve(_namesCache);
   return fetch(NAMES_DATA_URL + '?t=' + Date.now())
@@ -54,67 +53,71 @@ function _loadNamesData() {
       return null;
     });
 }
-
 var _NAME_FALLBACK = {
   prefix: ['Iron','Black','Hollow','Lost','Dusty','Broken','Grim','Silver','Red','Last'],
   noun:   ['Company','Crew','Band','Outfit','Detail','Watch','Order','Assembly','Unit','Collective'],
   suffix: []
 };
-
 function _rand(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
-
+// Picks from an array that may contain plain strings OR {text, weight} objects.
+// Plain strings get weight 1. Higher weight = more likely to be chosen.
+function _randWeighted(arr) {
+  if (!arr || !arr.length) return null;
+  // Check if any item is a weighted object
+  var isWeighted = (typeof arr[0] === 'object' && arr[0] !== null && 'text' in arr[0]);
+  if (!isWeighted) {
+    // Plain string array — use normal random
+    return _rand(arr);
+  }
+  // Build a weighted pool
+  var totalWeight = 0;
+  for (var i = 0; i < arr.length; i++) {
+    totalWeight += (typeof arr[i].weight === 'number' ? arr[i].weight : 1);
+  }
+  var roll = Math.random() * totalWeight;
+  var cumulative = 0;
+  for (var j = 0; j < arr.length; j++) {
+    cumulative += (typeof arr[j].weight === 'number' ? arr[j].weight : 1);
+    if (roll < cumulative) {
+      return arr[j].text;
+    }
+  }
+  // Fallback: return last item's text
+  return arr[arr.length - 1].text;
+}
 function _isMultiWord(str) {
   return typeof str === 'string' && str.trim().indexOf(' ') !== -1;
 }
-
 function _shouldUseSuffix(prefix, noun, pools) {
-  // Base rule: 30% chance of a suffix
   var chance = 0.30;
-
-  // If either part is already multi-word, reduce clutter
   if (_isMultiWord(prefix)) chance -= 0.10;
   if (_isMultiWord(noun))   chance -= 0.10;
-
-  // If both are multi-word, reduce even more
   if (_isMultiWord(prefix) && _isMultiWord(noun)) chance -= 0.10;
-
-  // Safety floor so suffixes still appear sometimes
   if (chance < 0.08) chance = 0.08;
-
-  // Optional future override from JSON:
-  // "suffix_chance": 0.2
   if (pools && typeof pools.suffix_chance === 'number') {
     chance = pools.suffix_chance;
   }
-
   return Math.random() < chance;
 }
-
 window.generateRosterName = function(factionId) {
   var data  = _namesCache;
   var pools = (data && (data[factionId] || data['_fallback'])) || _NAME_FALLBACK;
-
   var prefix = _rand(pools.prefix || _NAME_FALLBACK.prefix);
   var noun   = _rand(pools.noun   || _NAME_FALLBACK.noun);
-
   var name = (prefix + ' ' + noun).trim();
-
   var suffixPool = pools.suffix || _NAME_FALLBACK.suffix;
   if (suffixPool.length && _shouldUseSuffix(prefix, noun, pools)) {
-    var suffix = _rand(suffixPool).trim();
-    if (suffix) name += ' ' + suffix;
+    var suffix = _randWeighted(suffixPool);
+    if (suffix) name += ' ' + suffix.trim();
   }
-
   return name.trim();
 };
-
 // window.randomRosterName is patched in by mount() once state is available
 window.randomRosterName = function() {
   console.warn('[CC] randomRosterName called before mount — ignored');
 };
-
 // Kick off the fetch immediately
 _loadNamesData();
 
