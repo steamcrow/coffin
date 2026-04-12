@@ -250,34 +250,76 @@
   },
 
   "shine_riders": {
-    "_tone": "Absolute scum. Violent, desperate, cruel bandits.",
-    "suffix_chance": 0.25,
-    "prefix": [
-      "Filthy", "Crooked", "Backstab", "Gutshot", "Dogbite", "Rotgut",
-      "Spit", "Gravepick", "Bonejack", "Slag", "Trashfire",
-      "Whiskey", "Blacklung", "Ragged", "Half-Dead", "Dirtbag",
-      "Snakehand", "Knifetooth", "Railrat", "Coffinjack",
-      "Bloodslick", "Stinkhand", "Mudmouth", "Ratskin"
-    ],
-    "noun": [
-      "Crew", "Gang", "Outfit", "Ride", "Run", "Score", "Haul",
-      "Job", "Posse", "Circuit", "Hustle", "Racket",
-      "Trainjob", "Breakout", "Snatch", "Pull", "Rush",
-      "Convoy", "Drop", "Lift", "Jack",
-      "Ambush", "Stickup", "Raid", "Strip", "Take"
-    ],
-    "suffix": [
-      "Inc.", "& Co.", "on the Move", "Going Fast",
-      "No Questions Asked", "Cash Only", "Under the Table",
-      "Final Run", "Last Job",
-      "No Witnesses", "Clean Getaway", "Dead Drop",
-      "Burn After", "Split the Take",
-      "No Survivors", "Take Everything",
-      "Leave Nothing", "Blood Money",
-      "Run It Again", "Don’t Look Back",
-      "Fast and Gone", "Gone by Dawn"
-    ]
-  },
+  "_tone": "Violent doomshine bandits. Boastful, treacherous, filthy, and proud of it. Names sound like gangs you hear about right before you get robbed.",
+  "suffix_chance": 0.18,
+
+  "prefix": [
+    "Filthy", "Dirt", "Dirty", "Crooked", "Backstab", "Gutshot", "Dogbite", "Rotgut",
+    "Spit", "Gravepick", "Bonejack", "Slag", "Trashfire",
+    "Whiskey", "Blacklung", "Ragged", "Half-Dead", "Dirtbag",
+    "Snakehand", "Knifetooth", "Railrat", "Coffinjack",
+    "Bloodslick", "Stinkhand", "Mudmouth", "Ratskin", "Piss",
+
+    "Doomshine", "Doomswill", "Burngut", "Firebelly", "Stillborn",
+    "Bottlebreak", "Caskcrack", "Drunkfire", "Rotshine",
+
+    "Deadeye", "Quickcut", "Slipknife", "Blindshot",
+    "Cheapshot", "Lowblow", "Backhand", "Turncoat",
+
+    "Buzzard", "Coyote", "Vulture", "Hyena",
+    "Scavenger", "Bonepicker", "Carrion", "Crowbait",
+
+    "Blackhand", "Redhand", "Bloodyhand", "Dirtyhand",
+    "Gravehand", "Noosehand", "Shortrope", "Slunk",
+
+    "Two-Bit", "Half-Cut", "No-Good", "Bad Deal",
+    "Last Chance", "Wrong Turn", "Dead End"
+  ],
+
+  "noun": [
+    "Crew", "Gang", "Outfit", "Ride", "Posse",
+    "Riders", "Boys", "Bastards", "Dogs",
+    "Pack", "Mob", "Circle", "Lot",
+
+    "Raiders", "Cutters", "Breakers", "Snakes",
+    "Jackals", "Vultures", "Hyenas", "Scavs",
+
+    "Thieves", "Killers", "Rats", "Butchers",
+    "Looters", "Strippers", "Burners",
+
+    "Line", "Ring", "Chain", "Circle",
+    "Cartel", "Syndicate",
+
+    "Riders", "Crew", "Gang"  // light weighting toward identity
+  ],
+
+  "suffix": [
+    "Inc.", "& Co.",
+    "on the Move", "Going Fast",
+    "No Questions Asked", "Cash Only",
+    "Under the Table", "Final Run", "Last Job",
+
+    "No Witnesses", "Dead Drop",
+    "Burn After", "Split the Take",
+    "No Survivors", "Take Everything",
+    "Leave Nothing", "Blood Money",
+
+    "Run It Again", "Don’t Look Back",
+    "Fast and Gone", "Gone by Dawn",
+
+    "Drink Deep", "Still Running",
+    "Bottle First", "Paid in Shine",
+
+    "We Take It", "You Lose It",
+    "Try and Stop Us", "Catch Us If You Can",
+
+    "Ain’t Sorry", "Never Was",
+    "No Regrets", "All Yours Now",
+
+    "Leave You Dry", "Take the Rest",
+    "Nothing Left", "Cleaned Out"
+  ]
+},
 
   "crow_queen": {
     "_tone": "Aristocratic exile court. Ritual command, obedience, and eternal service.",
