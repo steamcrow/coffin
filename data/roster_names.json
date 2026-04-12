@@ -3,33 +3,57 @@
   "_structure": "Pick one from 'prefix', one from 'noun', optionally one from 'suffix'. Combine as: [prefix] [noun] [suffix].",
 
   "monster_rangers": {
-    "_tone": "Frontier naturalists. Named like expeditions, ranger posts, and survey units.",
-    "prefix": [
-      "Redstone", "Canyon", "Lost Creek", "Ironwood", "Boneyard", "Dusk", "Hollow",
-      "Thornback", "Saltwind", "Farwatch", "Crowpeak", "Ashfield", "Ember", "Deep Run",
-      "Wandering", "Grey Mesa", "Splitrock", "Nightfall", "Rustwater", "Old Gulch",
-      "Widowflow", "Needlewood", "Splitglass", "Tin Flats", "Silverpit", "Bayou",
-      "High Ridge", "Dust Basin", "Cold Creek", "Gravewater", "Blackbrush",
-      "Sunfall", "Drybone", "Deadwind", "Whispering Mesa", "Coffin Ridge"
-    ],
-    "noun": [
-      "Patrol", "Watch", "Survey", "Detail", "Rangers", "Company", "Expedition",
-      "Guard", "Brigade", "Corps", "Outpost", "Accord", "Charter", "Circle",
-      "Wardens", "Scouts", "Assembly", "Lodge", "Order", "Vigil",
-      "Trailwatch", "Range", "Field Party", "Survey Corps",
-      "Observer Unit", "Tracking Detail", "Boundary Watch",
-      "Signal Watch", "Beastwardens", "Greenwardens"
-    ],
-    "suffix": [
-      "No. 1", "No. 7", "Alpha", "Bravo", "North Sector", "South Sector",
-      "Station", "Post", "Field Division", "Advance", "Reserve", "Elite",
-      "Outer Rim", "Deep Survey", "Long Patrol", "Forward Camp",
-      "Under Accord", "On Rotation", "Emergency Charter",
-      "Seasonal Duty", "Spring Detail", "Fall Rotation",
-      "Winter Watch", "High Alert", "Quiet Assignment",
-      "Trail End", "Last Mark", "Beyond Range"
-    ]
-  },
+  "_tone": "Frontier naturalists. Defenders, explorers, and field Rangers. Names are short, spoken, and practical.",
+
+  "prefix": [
+    "Redstone", "Canyon", "Lost Creek", "Ironwood", "Boneyard", "Dusk", "Hollow",
+    "Thornback", "Saltwind", "Farwatch", "Crowpeak", "Ashfield", "Ember", "Deeprun",
+    "Grey Mesa", "Splitrock", "Nightfall", "Rustwater", "Old Gulch",
+    "Widowflow", "Needlewood", "Splitglass", "Tin Flats", "Silverpit", "Bayou",
+    "Highridge", "Dust Basin", "Cold Creek", "Gravewater", "Blackbrush",
+    "Sunfall", "Drybone", "Deadwind", "Whisper Mesa", "Coffin Ridge",
+
+    "Longtrail", "Ridgeback", "Stonepath", "Clearwater", "Red Gulch",
+    "Highpass", "Low Hollow", "Bonepass", "Dustwind", "Firebreak",
+    "Northreach", "Southreach", "Eastmark", "Westmark",
+    "Trailhead", "Lastlight", "Firstmark", "Wayfar"
+  ],
+
+  "noun": [
+    "Rangers", "Patrol", "Watch", "Survey", "Detail",
+    "Company", "Guard", "Brigade", "Corps", "Outpost",
+    "Accord", "Charter", "Circle", "Wardens", "Assembly",
+    "Lodge", "Order", "Vigil",
+
+    "Barrow", "Barrow",  // slight weighting, it's great
+    "Trail", "Range", "Line", "Post", "Stand",
+    "Keep", "Hold", "Watchers", "Ward",
+    "Company", "Rangers", "Rangers",  // light weighting toward core identity
+
+    "Path", "March", "Band", "Host",
+    "Sentinel", "Sentinels", "Defenders",
+    "Seekers", "Finders", "Trackers",
+    "Rangers"
+  ],
+
+  "suffix": [
+    "No. 1", "No. 7",
+    "Alpha", "Bravo",
+    "North", "South", "East", "West",
+    "Station", "Post",
+    "Advance", "Reserve", "Elite",
+
+    "Camp", "Base", "Trail End",
+    "High Watch", "Low Watch",
+    "Deep Range", "Outer Range",
+    "First Mark", "Last Mark",
+    "On Watch", "On Patrol",
+
+    "Spring", "Fall", "Winter", "Summer",
+    "Field", "Frontier",
+    "Longtrail", "Far Range"
+  ]
+}
 
   "liberty_corps": {
   "_tone": "Federal authority. Military-industrial enforcement with righteous, bureaucratic, and occult overtones. They believe they are restoring order, peace, and control.",
