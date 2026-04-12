@@ -26,10 +26,10 @@
     "Accord", "Charter", "Circle", "Wardens", "Assembly",
     "Lodge", "Order", "Vigil",
 
-    "Barrow", "Barrow",  // slight weighting, it's great
+    "Barrow", "Barrow", 
     "Trail", "Range", "Line", "Post", "Stand",
     "Keep", "Hold", "Watchers", "Ward",
-    "Company", "Rangers", "Rangers",  // light weighting toward core identity
+    "Company", "Rangers", "Rangers", 
 
     "Path", "March", "Band", "Host",
     "Sentinel", "Sentinels", "Defenders",
@@ -58,6 +58,7 @@
 
   "liberty_corps": {
   "_tone": "Federal authority. Military-industrial enforcement with righteous, bureaucratic, and occult overtones. They believe they are restoring order, peace, and control.",
+  "suffix_chance": 0.25, 
 
   "prefix": [
     "Iron", "Federal", "First", "Third", "Frontier", "Northern", "Southern",
@@ -134,6 +135,8 @@
 
   "monsterology": {
     "_tone": "Aristocratic predator-cult. Hunting, feasting, harvesting, refinement.",
+    "suffix_chance": 0.65,
+  
     "prefix": [
       "Black", "Deep", "Bone", "Tainted", "Mort", "Hollow", "Foul",
       "Grim", "Scorch", "Sunken", "Vile", "Ash", "Corpse", "Cracked",
@@ -167,6 +170,7 @@
 
   "monsters": {
     "_tone": "Wild and instinctual.",
+    "suffix_chance": 0.25,
     "prefix": [
       "The Hungry", "The Restless", "The Hollow", "The Sunken", "The Howling",
       "The Broken", "The Creeping", "The Rotting", "The Lost", "The Pale",
@@ -195,6 +199,7 @@
 
   "shine_riders": {
     "_tone": "Absolute scum. Violent, desperate, cruel bandits.",
+    "suffix_chance": 0.25,
     "prefix": [
       "Filthy", "Crooked", "Backstab", "Gutshot", "Dogbite", "Rotgut",
       "Spit", "Gravepick", "Bonejack", "Slag", "Trashfire",
@@ -224,6 +229,7 @@
 
   "crow_queen": {
     "_tone": "Aristocratic exile court. Ritual command, obedience, and eternal service.",
+    "suffix_chance": 0.85,
     "prefix": [
       "Black", "Iron", "Pale", "Silent", "Crown", "Sealed", "Bound",
       "Ancient", "Exiled", "Sovereign", "Carved", "Immaculate",
