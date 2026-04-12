@@ -36,48 +36,87 @@ console.log("⚔️ Faction Builder app loaded");
 (function () {
   var _destroyFn = null;
 
-  // ── Roster Name Generator — lives at IIFE scope so window.* is set
-  //    immediately when the script loads, before mount() is ever called.
-  var NAMES_DATA_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/roster_names.json';
-  var _namesCache    = null;
+ // ── Roster Name Generator — lives at IIFE scope so window.* is set
+//    immediately when the script loads, before mount() is ever called.
+var NAMES_DATA_URL = 'https://raw.githubusercontent.com/steamcrow/coffin/main/data/roster_names.json';
+var _namesCache    = null;
 
-  function _loadNamesData() {
-    if (_namesCache) return Promise.resolve(_namesCache);
-    return fetch(NAMES_DATA_URL + '?t=' + Date.now())
-      .then(function(r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
-      .then(function(data) { _namesCache = data; return data; })
-      .catch(function(err) {
-        console.warn('[CC] roster_names.json load failed:', err.message);
-        return null;
-      });
+function _loadNamesData() {
+  if (_namesCache) return Promise.resolve(_namesCache);
+  return fetch(NAMES_DATA_URL + '?t=' + Date.now())
+    .then(function(r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
+    .then(function(data) { _namesCache = data; return data; })
+    .catch(function(err) {
+      console.warn('[CC] roster_names.json load failed:', err.message);
+      return null;
+    });
+}
+
+var _NAME_FALLBACK = {
+  prefix: ['Iron','Black','Hollow','Lost','Dusty','Broken','Grim','Silver','Red','Last'],
+  noun:   ['Company','Crew','Band','Outfit','Detail','Watch','Order','Assembly','Unit','Collective'],
+  suffix: []
+};
+
+function _rand(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function _isMultiWord(str) {
+  return typeof str === 'string' && str.trim().indexOf(' ') !== -1;
+}
+
+function _shouldUseSuffix(prefix, noun, pools) {
+  // Base rule: 30% chance of a suffix
+  var chance = 0.30;
+
+  // If either part is already multi-word, reduce clutter
+  if (_isMultiWord(prefix)) chance -= 0.10;
+  if (_isMultiWord(noun))   chance -= 0.10;
+
+  // If both are multi-word, reduce even more
+  if (_isMultiWord(prefix) && _isMultiWord(noun)) chance -= 0.10;
+
+  // Safety floor so suffixes still appear sometimes
+  if (chance < 0.08) chance = 0.08;
+
+  // Optional future override from JSON:
+  // "suffix_chance": 0.2
+  if (pools && typeof pools.suffix_chance === 'number') {
+    chance = pools.suffix_chance;
   }
 
-  var _NAME_FALLBACK = {
-    prefix: ['Iron','Black','Hollow','Lost','Dusty','Broken','Grim','Silver','Red','Last'],
-    noun:   ['Company','Crew','Band','Outfit','Detail','Watch','Order','Assembly','Unit','Collective'],
-    suffix: ['','','','','','','','','','']
-  };
+  return Math.random() < chance;
+}
 
-  window.generateRosterName = function(factionId) {
-    var data  = _namesCache;
-    var pools = (data && (data[factionId] || data['_fallback'])) || _NAME_FALLBACK;
-    var rand  = function(arr) { return arr[Math.floor(Math.random() * arr.length)]; };
-    var prefix = rand(pools.prefix || _NAME_FALLBACK.prefix);
-    var noun   = rand(pools.noun   || _NAME_FALLBACK.noun);
-    var suffix = rand(pools.suffix || _NAME_FALLBACK.suffix);
-    return (prefix + ' ' + noun + (suffix ? ' ' + suffix : '')).trim();
-  };
+window.generateRosterName = function(factionId) {
+  var data  = _namesCache;
+  var pools = (data && (data[factionId] || data['_fallback'])) || _NAME_FALLBACK;
 
-  // window.randomRosterName is patched in by mount() once state is available
-  window.randomRosterName = function() {
-    console.warn('[CC] randomRosterName called before mount — ignored');
-  };
+  var prefix = _rand(pools.prefix || _NAME_FALLBACK.prefix);
+  var noun   = _rand(pools.noun   || _NAME_FALLBACK.noun);
 
-  // Kick off the fetch immediately
-  _loadNamesData();
+  var name = (prefix + ' ' + noun).trim();
+
+  var suffixPool = pools.suffix || _NAME_FALLBACK.suffix;
+  if (suffixPool.length && _shouldUseSuffix(prefix, noun, pools)) {
+    var suffix = _rand(suffixPool).trim();
+    if (suffix) name += ' ' + suffix;
+  }
+
+  return name.trim();
+};
+
+// window.randomRosterName is patched in by mount() once state is available
+window.randomRosterName = function() {
+  console.warn('[CC] randomRosterName called before mount — ignored');
+};
+
+// Kick off the fetch immediately
+_loadNamesData();
 
   function mount(rootEl, ctx) {
     var root = rootEl;
