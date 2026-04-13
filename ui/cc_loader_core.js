@@ -477,9 +477,22 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
 
     var root = document.getElementById('cc-master-shell-root');
     root.setAttribute('data-cc-loading', token);
-    root.innerHTML = '<div class="cc-app-shell" style="min-height:100vh;">' +
-      '<div id="cc-app-root" data-cc-app="' + appId + '" style="min-height:100vh;"></div>' +
-      '</div>';
+
+    // Append the app shell ALONGSIDE the preloader instead of overwriting it.
+    // showPreloader() already put #cc-preloader inside root — if we do
+    // root.innerHTML = '...' here it destroys the preloader instantly.
+    // Instead we keep the preloader on screen and only dismiss it once
+    // CC_APP.init() resolves (or rejects).
+    var appShell = document.createElement('div');
+    appShell.className = 'cc-app-shell';
+    appShell.style.minHeight = '100vh';
+    appShell.innerHTML = '<div id="cc-app-root" data-cc-app="' + appId + '" style="min-height:100vh;"></div>';
+
+    // Clear root but rescue the preloader element first, then re-add both
+    var existingPreloader = document.getElementById('cc-preloader');
+    root.innerHTML = '';
+    if (existingPreloader) root.appendChild(existingPreloader);
+    root.appendChild(appShell);
     root.setAttribute('data-cc-loading', token);
 
     startHomeButtonObserver();
@@ -540,6 +553,20 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
         });
         var doneRoot = document.getElementById('cc-master-shell-root');
         if (doneRoot) doneRoot.removeAttribute('data-cc-loading');
+
+        // If init() returns a Promise (e.g. Canyon Map waits for image download),
+        // hold the preloader until it settles. For sync apps, dismiss immediately.
+        function dismissPreloader() {
+          var pl = document.getElementById('cc-preloader');
+          if (!pl) return;
+          pl.style.opacity = '0';
+          setTimeout(function () { if (pl.parentNode) pl.parentNode.removeChild(pl); }, 480);
+        }
+        if (initResult && typeof initResult.then === 'function') {
+          return initResult.then(function (r) { dismissPreloader(); return r; },
+                                 function (e) { dismissPreloader(); throw e; });
+        }
+        dismissPreloader();
         return initResult;
       })
       .catch(function (err) {
