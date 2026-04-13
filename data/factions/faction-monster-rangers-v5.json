@@ -427,14 +427,6 @@
           "grants_abilities": ["gas_mask"]
         },
         {
-          "name": "Witch-Stitched",
-          "cost": 10,
-          "type": "Upgrade",
-          "desc_short": "+1 Defense. Does not inhibit movement.",
-          "stat_modifiers": { "defense": 1 },
-          "grants_abilities": ["witch_stitched"]
-        },
-        {
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
