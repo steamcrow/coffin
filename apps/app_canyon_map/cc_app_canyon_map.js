@@ -40,6 +40,26 @@
 
   var MIN_LOADER_MS = 1500;    // ── TUNE 3: Loader minimum display time in milliseconds
 
+  // ── Core preloader status bridge ────────────────────────────────────────
+  //  Updates the cc_loader_core preloader's status text + progress bar while
+  //  it's still on screen (the map is the heaviest app so this matters most).
+  //  If the core preloader has already dismissed, the calls are silent no-ops.
+  //
+  //  Usage:  setCoreStatus('Fetching map data…', 30)
+  //    text  — string shown in the pulsing label
+  //    pct   — optional 0-100 to hard-set the bar width (skips the CSS animation)
+  function setCoreStatus(text, pct) {
+    var statusEl = document.getElementById('cc-preloader-status');
+    if (statusEl) statusEl.textContent = text;
+    if (typeof pct === 'number') {
+      var barEl = document.getElementById('cc-preload-bar');
+      if (barEl) {
+        barEl.style.animation = 'none';   // kill the auto-fill animation
+        barEl.style.width     = pct + '%';
+      }
+    }
+  }
+
   // ── TUNE 4 & 5: Knob travel limits ─────────────────────────────────────
   //
   //  These are percentages within the knob's track div.
@@ -1077,12 +1097,12 @@
       updateResponsiveScale();
       var loadStart = Date.now();
 
+      setCoreStatus('Loading canyon map\u2026', 10);
+
       return ensureDeps(opts).then(function() {
-          // ── KNOB STYLE FIX ─────────────────────────────────────────────
-          // CSS files have just been appended to <head>.  Re-append
-          // knobStyleEl now so it is the LAST style tag, guaranteeing its
-          // !important declarations beat those in the external stylesheets.
           document.head.appendChild(knobStyleEl);
+
+          setCoreStatus('Fetching map data\u2026', 30);
 
           return Promise.all([
             fetchJson(opts.mapUrl),
@@ -1094,6 +1114,8 @@
           locationsDoc = results[1];
           px           = mapDoc.map.background.image_pixel_size;
           bounds       = [[0, 0], [px.h, px.w]];
+
+          setCoreStatus('Building map\u2026', 55);
 
           // Merge hitboxes from the locations JSON into HITBOXES.
           // Any location with a "hitbox" field in the JSON takes priority
@@ -1218,10 +1240,13 @@
           var minWait   = delay(Math.max(0, MIN_LOADER_MS - (Date.now() - loadStart)));
           var allImages = Promise.all([overlayLoaded(bgOverlay), overlayLoaded(lensOverlay), frameLoaded()]);
 
+          setCoreStatus('Downloading map image\u2026', 75);
+
           return Promise.all([minWait, allImages]);
         })
         .then(function () {
           // Everything is ready — reveal maps and dismiss loader together
+          setCoreStatus('Canyon Map ready!', 100);
           ui.mapEl.style.visibility     = "";
           ui.lensMapEl.style.visibility = "";
           ui.frameEl.style.visibility   = "";
