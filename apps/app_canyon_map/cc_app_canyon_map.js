@@ -40,23 +40,18 @@
 
   var MIN_LOADER_MS = 1500;    // ── TUNE 3: Loader minimum display time in milliseconds
 
-  // ── Core preloader status bridge ────────────────────────────────────────
-  //  Updates the cc_loader_core preloader's status text + progress bar while
-  //  it's still on screen (the map is the heaviest app so this matters most).
-  //  If the core preloader has already dismissed, the calls are silent no-ops.
-  //
-  //  Usage:  setCoreStatus('Fetching map data…', 30)
-  //    text  — string shown in the pulsing label
-  //    pct   — optional 0-100 to hard-set the bar width (skips the CSS animation)
+  // ── Core preloader bridge ────────────────────────────────────────────────
+  //  Updates cc_loader_core's preloader status text + bar while it is still
+  //  on screen.  This is the heaviest app so the feedback matters most here.
+  //  If the core preloader has already been removed, calls are silent no-ops.
+  //  text  — string to show in the pulsing label
+  //  pct   — optional 0-100, overrides the CSS bar animation with a hard value
   function setCoreStatus(text, pct) {
-    var statusEl = document.getElementById('cc-preloader-status');
-    if (statusEl) statusEl.textContent = text;
+    var s = document.getElementById('cc-preloader-status');
+    if (s) s.textContent = text;
     if (typeof pct === 'number') {
-      var barEl = document.getElementById('cc-preload-bar');
-      if (barEl) {
-        barEl.style.animation = 'none';   // kill the auto-fill animation
-        barEl.style.width     = pct + '%';
-      }
+      var b = document.getElementById('cc-preload-bar');
+      if (b) { b.style.animation = 'none'; b.style.width = pct + '%'; }
     }
   }
 
@@ -1097,12 +1092,12 @@
       updateResponsiveScale();
       var loadStart = Date.now();
 
-      setCoreStatus('Loading canyon map\u2026', 10);
+      setCoreStatus('Loading canyon map\u2026', 15);
 
       return ensureDeps(opts).then(function() {
           document.head.appendChild(knobStyleEl);
 
-          setCoreStatus('Fetching map data\u2026', 30);
+          setCoreStatus('Fetching map data\u2026', 35);
 
           return Promise.all([
             fetchJson(opts.mapUrl),
@@ -1115,7 +1110,7 @@
           px           = mapDoc.map.background.image_pixel_size;
           bounds       = [[0, 0], [px.h, px.w]];
 
-          setCoreStatus('Building map\u2026', 55);
+          setCoreStatus('Building map\u2026', 60);
 
           // Merge hitboxes from the locations JSON into HITBOXES.
           // Any location with a "hitbox" field in the JSON takes priority
@@ -1240,7 +1235,7 @@
           var minWait   = delay(Math.max(0, MIN_LOADER_MS - (Date.now() - loadStart)));
           var allImages = Promise.all([overlayLoaded(bgOverlay), overlayLoaded(lensOverlay), frameLoaded()]);
 
-          setCoreStatus('Downloading map image\u2026', 75);
+          setCoreStatus('Downloading map image\u2026', 80);
 
           return Promise.all([minWait, allImages]);
         })
