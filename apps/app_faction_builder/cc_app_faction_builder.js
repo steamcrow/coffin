@@ -1986,7 +1986,7 @@ _loadNamesData();
     // the real DOM immediately, hidden behind the preloader.
 
     const _fbBootStart   = Date.now();
-    const FB_MIN_SPLASH  = 2000; // 2s minimum — no heavy JSON to wait for
+    const FB_MIN_SPLASH  = 5000; // 2s minimum — no heavy JSON to wait for
 
     // Build the overlay preloader and append to root (not replace it)
     const _fbPreloader = document.createElement('div');
