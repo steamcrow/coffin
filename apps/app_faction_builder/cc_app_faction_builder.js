@@ -1013,7 +1013,7 @@ _loadNamesData();
                 </div>` : ''}
               ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
                 <div class="roster-list-upgrades">
-                  ${item.config.optionalUpgrades.map(u => `<span class="ability-tag" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
+                  ${item.config.optionalUpgrades.map(u => `<span class="ability-tag" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showUpgradePanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
                 </div>` : ''}
               <button class="roster-list-delete" onclick="event.stopPropagation(); removeRosterUnit('${item.id}')">
                 <i class="fa fa-trash"></i>
@@ -1052,7 +1052,7 @@ _loadNamesData();
                   </div>` : ''}
                 ${item.config && item.config.optionalUpgrades && item.config.optionalUpgrades.length > 0 ? `
                   <div class="grid-item-upgrades">
-                    ${item.config.optionalUpgrades.map(u => `<span class="ability-tag-small" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showAbilityPanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
+                    ${item.config.optionalUpgrades.map(u => `<span class="ability-tag-small" style="cursor:pointer;" onmouseover="showAbilityTooltip('${esc(u.name)}', event)" onmouseout="hideAbilityTooltip()" onclick="event.stopPropagation(); showUpgradePanel('${esc(u.name)}')">${esc(u.name)}</span>`).join('')}
                   </div>` : ''}
               </div>`;
           }).join('')}
@@ -1986,7 +1986,7 @@ _loadNamesData();
     // the real DOM immediately, hidden behind the preloader.
 
     const _fbBootStart   = Date.now();
-    const FB_MIN_SPLASH  = 5000; // 2s minimum — no heavy JSON to wait for
+    const FB_MIN_SPLASH  = 2000; // 2s minimum — no heavy JSON to wait for
 
     // Build the overlay preloader and append to root (not replace it)
     const _fbPreloader = document.createElement('div');
