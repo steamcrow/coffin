@@ -742,6 +742,72 @@ _loadNamesData();
     };
 
     // ================================
+    // UPGRADE PANEL
+    // Shows desc_short + desc_long from the faction JSON for an optional upgrade.
+    // If the upgrade also grants_abilities, it falls through to showAbilityPanel
+    // for the first granted ability so the dictionary entry shows too.
+    // ================================
+    window.showUpgradePanel = function(upgName) {
+      // Find the upgrade definition in current faction data
+      let upg = null;
+      const factionData = state.factionData && state.factionData[state.currentFaction];
+      if (factionData && factionData.units) {
+        const nameLower = upgName.toLowerCase();
+        for (const u of factionData.units) {
+          if (u.optional_upgrades) {
+            const found = u.optional_upgrades.find(function(x) {
+              return x.name && x.name.toLowerCase() === nameLower;
+            });
+            if (found) { upg = found; break; }
+          }
+        }
+      }
+
+      // If this upgrade just wraps a known ability, delegate to the ability panel
+      if (upg && upg.grants_abilities && upg.grants_abilities.length === 1 && !upg.desc_long) {
+        window.showAbilityPanel(upg.grants_abilities[0]);
+        return;
+      }
+
+      closeAllSlidePanels();
+      installPanelBackdrop();
+
+      const panel = document.createElement('div');
+      panel.id = 'fb-ability-panel';
+      panel.className = 'cc-slide-panel';
+      panel.style.zIndex = '9999';
+      panel.addEventListener('click', function(e) { e.stopPropagation(); });
+
+      const typeBadge = upg ? (upg.type || 'Upgrade') : 'Upgrade';
+      const costBadge = upg && upg.cost ? ' · +' + upg.cost + ' ₤' : '';
+      const short     = upg ? (upg.desc_short || '') : '';
+      const long      = upg ? (upg.desc_long  || '') : '';
+      const grantsTags = (upg && upg.grants_abilities && upg.grants_abilities.length)
+        ? '<div style="margin-top:1.25rem;font-size:.75rem;color:#888;">Grants: ' +
+          upg.grants_abilities.map(function(a) {
+            return '<span style="display:inline-block;margin:.2rem .3rem;padding:2px 9px;border:1px solid #555;border-radius:999px;cursor:pointer;" onclick="showAbilityPanel(\'' + a + '\')">' + a.replace(/_/g, ' ') + '</span>';
+          }).join('') + '</div>'
+        : '';
+
+      panel.innerHTML =
+        '<div class="cc-slide-panel-header">' +
+          '<h2><i class="fa fa-shield"></i> ' + esc(upgName).toUpperCase() + '</h2>' +
+          '<button onclick="closeAbilityPanel()" class="cc-panel-close-btn"><i class="fa fa-times"></i></button>' +
+        '</div>' +
+        '<div class="cc-slide-panel-body">' +
+          '<div style="display:inline-block;margin-bottom:1rem;padding:3px 12px;border-radius:999px;border:1px solid #555;color:#999;font-size:.72rem;text-transform:uppercase;letter-spacing:.1em;">' +
+            esc(typeBadge) + costBadge +
+          '</div>' +
+          (short ? '<p style="color:#aaa;font-size:.85rem;font-style:italic;margin:0 0 1rem;line-height:1.5;">' + esc(short) + '</p>' : '') +
+          (long  ? '<p style="color:#e8e8e8;font-size:.95rem;line-height:1.75;margin:0;">' + esc(long) + '</p>' : '') +
+          grantsTags +
+        '</div>';
+
+      document.body.appendChild(panel);
+      setTimeout(function() { panel.classList.add('cc-slide-panel-open'); }, 10);
+    };
+
+    // ================================
     // STAT BADGE PANEL
     // ================================
     const STAT_DEFINITIONS = {
@@ -1044,7 +1110,11 @@ _loadNamesData();
                'data-upg-idx="' + idx + '" onclick="toggleOptionalUpgrade(this)">' +
                '<div class="cc-upgrade-check">' + (isSelected ? '&#10003;' : '') + '</div>' +
                '<div style="flex:1;">' +
-               '<div class="fw-bold" style="font-size:.9rem;">' + esc(upg.name) + '</div>' +
+               '<div class="fw-bold" style="font-size:.9rem;">' + esc(upg.name) +
+               ' <span style="font-weight:400;font-size:.78rem;color:#888;cursor:pointer;vertical-align:middle;" ' +
+               'onclick="event.stopPropagation();showUpgradePanel(\'' + esc(upg.name).replace(/'/g, "\\'") + '\')" ' +
+               'title="View upgrade details">ⓘ</span>' +
+               '</div>' +
                (upg.desc_short ? '<div class="small cc-muted">' + esc(upg.desc_short) + '</div>' : '') +
                '</div>' +
                '<div style="color:var(--cc-primary);font-weight:700;">' + (upg.cost ? '+' + upg.cost + ' ₤' : 'Free') + '</div>' +
