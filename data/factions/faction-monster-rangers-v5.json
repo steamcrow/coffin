@@ -729,19 +729,6 @@
           "desc_long": "A heavy-duty respirator built from salvaged canyon parts and rubber tubing. The wearer is completely immune to Coffin Cough — the toxic spore clouds that drift through the canyon lowlands — and cannot be Blinded by smoke, dust, or chemical effects. Standard kit for Rangers operating near the Brine Flats or the lower Coffin vents."
         },
         {
-          "name": "Witch-Stitched",
-          "cost": 10,
-          "type": "Upgrade",
-          "desc_short": "+1 Defense. Does not inhibit movement.",
-          "stat_modifiers": {
-            "defense": 1
-          },
-          "grants_abilities": [
-            "witch_stitched"
-          ],
-          "desc_long": "Armor reinforced with hex-thread and warded leather panels sewn by a Dark Librarian or Conjure Guard. Adds +1 to the unit's Defense roll, representing a light physical barrier hardened by protective stitching. Unlike heavy plate, Witch-Stitched armor does not slow movement — Rangers can still climb, crawl, and sprint freely."
-        },
-        {
           "name": "Pocket Snacks",
           "cost": 5,
           "type": "Gear",
