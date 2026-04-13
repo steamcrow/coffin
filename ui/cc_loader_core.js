@@ -641,7 +641,7 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
             'animation:cc-loading-fill ' + (MIN_PRELOAD_MS / 1000) + 's ease-in-out forwards;' +
             'box-shadow:0 0 10px rgba(255,117,24,0.5);"></div>' +
         '</div>' +
-        '<p style="color:rgba(255,255,255,0.4);font-size:10px;' +
+        '<p id="cc-preloader-status" style="color:rgba(255,255,255,0.4);font-size:10px;' +
           'letter-spacing:0.12em;text-transform:uppercase;margin:0;' +
           'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading\u2026</p>' +
       '</div>';
