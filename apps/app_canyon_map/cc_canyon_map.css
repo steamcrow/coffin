@@ -435,19 +435,25 @@
   filter: none !important;
 }
 
-/* --- HITBOX REGION HOVER GLOW --- */
-/* On hover: warm amber fill — like a map region being pencilled in */
-.leaflet-interactive:not(.cc-hb-box):hover {
+/* --- HITBOX REGION BORDERS & HOVER --- */
+/* At rest: brown dotted boundary — faded ink on aged paper */
+.cc-cm-mapwrap .leaflet-interactive:not(.cc-hb-box) {
+  stroke-dasharray: 3, 6 !important;
+  stroke-linecap: round !important;   /* round dots, not square dashes */
+}
+
+/* Hover: solid orange — the boundary firms up when selected */
+.cc-cm-mapwrap .leaflet-interactive:not(.cc-hb-box):hover {
   fill: #d4822a !important;
-  fill-opacity: 0.25 !important;
+  fill-opacity: 0.20 !important;
   stroke: #d4822a !important;
-  stroke-width: 3 !important;
-  filter: drop-shadow(0 0 3px rgba(0,0,0,.8)) !important;
+  stroke-width: 2.5 !important;
+  stroke-dasharray: none !important;
 }
 
 /* Active/clicked state */
-.leaflet-interactive:not(.cc-hb-box):active {
-  fill-opacity: 0.42 !important;
+.cc-cm-mapwrap .leaflet-interactive:not(.cc-hb-box):active {
+  fill-opacity: 0.38 !important;
 }
 
 /* --- RESPONSIVE MOBILE ADJUSTMENTS --- */
