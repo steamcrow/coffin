@@ -84,81 +84,54 @@
     margin-bottom: 6px !important;
 }
 
-/* ── Map location labels — INTEL FILE TAGS ───────────────────────────── */
-/*    Styled like redacted dossier location markers: phosphor-green        */
-/*    terminal text on dark scanline background, classified-document vibe. */
-
-@keyframes cc-label-pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.7; }
-}
-@keyframes cc-cursor-blink {
-    0%, 49%  { opacity: 1; }
-    50%, 100%{ opacity: 0; }
-}
+/* ── Map location labels — 1913 SURVEY STAKE TAGS ────────────────────── */
+/*    Styled like field survey annotations: hand-stamped, aged paper,      */
+/*    ink-on-parchment. Orange-red ink, worn edges, no glow or tech.       */
 
 .cc-map-hitbox-label {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 5px !important;
+    gap: 4px !important;
     position: relative !important;
 
-    /* Scanline background: dark base + repeating 1px lines */
-    background:
-        repeating-linear-gradient(
-            0deg,
-            rgba(0,0,0,0) 0px,
-            rgba(0,0,0,0) 2px,
-            rgba(0,0,0,0.18) 2px,
-            rgba(0,0,0,0.18) 3px
-        ),
-        rgba(6, 14, 6, 0.92) !important;
+    /* Aged parchment — warm off-white with a slight texture tint */
+    background: rgba(42, 28, 12, 0.91) !important;
 
-    border: 1px solid rgba(100, 200, 80, 0.45) !important;
-    border-left: 2px solid #7fff6a !important;
-    border-radius: 1px !important;
+    border-top:    1px solid rgba(210, 130, 40, 0.5) !important;
+    border-right:  1px solid rgba(210, 130, 40, 0.5) !important;
+    border-bottom: 1px solid rgba(210, 130, 40, 0.5) !important;
+    border-left:   3px solid #d4822a !important;   /* stamp edge */
+    border-radius: 0 2px 2px 0 !important;
 
-    color: #9fffaa !important;           /* phosphor green */
+    color: #e8c07a !important;           /* aged ink — warm amber */
     font-size: 10px !important;
-    font-weight: 400 !important;
+    font-weight: 700 !important;
     font-family: 'Space Mono', 'Courier New', monospace !important;
-    letter-spacing: .1em !important;
+    letter-spacing: .12em !important;
     text-transform: uppercase !important;
-    padding: 2px 6px 2px 4px !important;
+    padding: 3px 7px 3px 5px !important;
     white-space: nowrap !important;
     pointer-events: none !important;
 
+    /* Worn paper shadow — no glow, just depth */
     box-shadow:
-        0 0 6px rgba(100, 255, 80, 0.18),
-        0 2px 10px rgba(0,0,0,.85),
-        inset 0 0 8px rgba(0,0,0,0.4) !important;
+        1px 1px 0 rgba(0,0,0,.6),
+        2px 2px 0 rgba(0,0,0,.3),
+        0 3px 10px rgba(0,0,0,.7) !important;
 
-    text-shadow: 0 0 6px rgba(100, 255, 80, 0.6) !important;
-    animation: cc-label-pulse 3.5s ease-in-out infinite !important;
+    /* Subtle ink bleed on text */
+    text-shadow: 0 1px 2px rgba(0,0,0,.8) !important;
 }
 
-/* Blinking cursor marker — ► character before the name */
+/* Small filled square before the name — like a survey mark stamped in ink */
 .cc-map-hitbox-label::before {
-    content: '►' !important;
-    display: inline-block !important;
-    font-size: 7px !important;
-    color: #7fff6a !important;
-    flex-shrink: 0 !important;
-    animation: cc-cursor-blink 1.1s step-end infinite !important;
-    text-shadow: 0 0 5px rgba(100,255,80,0.9) !important;
-    line-height: 1 !important;
-}
-
-/* Classification mark top-right corner */
-.cc-map-hitbox-label::after {
-    content: '◆' !important;
+    content: '■' !important;
     display: inline-block !important;
     font-size: 5px !important;
-    color: rgba(100,255,80,0.4) !important;
+    color: #d4822a !important;
     flex-shrink: 0 !important;
-    align-self: flex-start !important;
-    margin-top: 1px !important;
-    text-shadow: none !important;
+    opacity: 0.9 !important;
+    line-height: 1 !important;
 }
 
 .leaflet-div-icon:has(.cc-map-hitbox-label) {
@@ -461,18 +434,18 @@
 }
 
 /* --- HITBOX REGION HOVER GLOW --- */
-/* On hover: phosphor-green fill + terminal glow — matches the label style */
+/* On hover: warm amber fill — like a map region being pencilled in */
 .leaflet-interactive:not(.cc-hb-box):hover {
-  fill: #7fff6a !important;
-  fill-opacity: 0.18 !important;
-  stroke: #7fff6a !important;
-  stroke-width: 1.5 !important;
-  filter: drop-shadow(0 0 8px rgba(100,255,80,.5)) !important;
+  fill: #d4822a !important;
+  fill-opacity: 0.22 !important;
+  stroke: #d4822a !important;
+  stroke-width: 2 !important;
+  filter: drop-shadow(0 0 5px rgba(212,130,42,.4)) !important;
 }
 
 /* Active/clicked state */
 .leaflet-interactive:not(.cc-hb-box):active {
-  fill-opacity: 0.32 !important;
+  fill-opacity: 0.38 !important;
 }
 
 /* --- RESPONSIVE MOBILE ADJUSTMENTS --- */
@@ -494,5 +467,5 @@
     transform: translate(-50%, -50%) translateY(calc(282px * var(--device-scale, 1))) !important;
   }
   .cc-scroll-knob { width: calc(112px * var(--device-scale, 1)) !important; height: calc(112px * var(--device-scale, 1)) !important; }
-  .cc-map-hitbox-label { font-size: 9px !important; max-width: 120px !important; padding: 2px 5px 2px 3px !important; letter-spacing: .06em !important; }
+  .cc-map-hitbox-label { font-size: 9px !important; max-width: 120px !important; padding: 2px 5px 2px 4px !important; letter-spacing: .08em !important; }
 }
