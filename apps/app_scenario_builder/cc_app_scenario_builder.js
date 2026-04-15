@@ -1,4 +1,4 @@
-/* cc-schema-patched-v1 */
+  /* cc-schema-patched-v1 */
 // ── cc_app_scenario_builder.js ──────────────────────────────────────────────
 // Coffin Canyon · Scenario Builder
 // Loaded by cc_loader_core.js and mounted as window.CC_APP.
@@ -3954,9 +3954,8 @@ console.log("🎲 Scenario Builder app loaded");
       }
 
       function badge(cx, cy, fi, r) {
-        // Outer colored ring, dark brown fill — logo shows as dark-on-dark with color accent
-        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#2a1508" stroke="'+fi.color+'" stroke-width="3"/>'
-          + '<image xlink:href="'+LOGO_BASE_BS+fi.logo+'" x="'+(cx-r*.72)+'" y="'+(cy-r*.72)+'" width="'+(r*1.44)+'" height="'+(r*1.44)+'" preserveAspectRatio="xMidYMid meet" filter="url(#cc-logo-dark)"/>';
+        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+fi.color+'" stroke="rgba(0,0,0,0.35)" stroke-width="1.5"/>'
+          + '<image xlink:href="'+LOGO_BASE_BS+fi.logo+'" x="'+(cx-r*.7)+'" y="'+(cy-r*.7)+'" width="'+(r*1.4)+'" height="'+(r*1.4)+'" preserveAspectRatio="xMidYMid meet"/>';
       }
 
       function grid() {
@@ -3982,13 +3981,7 @@ console.log("🎲 Scenario Builder app loaded");
       var svg = '<svg viewBox="0 0 '+SZ+' '+SZ+'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:100%;max-width:'+SZ+'px;display:block;margin:1rem auto;border-radius:4px;">';
 
       svg += '<rect width="'+SZ+'" height="'+SZ+'" fill="#1c1208"/>';
-      svg += '<defs>'
-        + '<filter id="cc-logo-dark" color-interpolation-filters="sRGB">'
-        + '<feColorMatrix type="saturate" values="0"/>'
-        + '<feComponentTransfer><feFuncR type="linear" slope="0.18"/>'
-        + '<feFuncG type="linear" slope="0.10"/>'
-        + '<feFuncB type="linear" slope="0.06"/></feComponentTransfer>'
-        + '</filter></defs>';
+
       svg += grid();
       svg += '<circle cx="'+mid+'" cy="'+mid+'" r="'+(INCH*20)+'" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>';
       svg += '<circle cx="'+mid+'" cy="'+mid+'" r="'+(INCH*14)+'" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>';
