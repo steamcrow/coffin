@@ -142,6 +142,25 @@
     overflow: visible !important;
 }
 
+/* Label active state — triggered via JS mouseover on the rect */
+.cc-map-hitbox-label.is-active {
+    transform: scale(1.22) !important;
+    transform-origin: left center !important;
+    background: rgba(10, 6, 2, 0.97) !important;
+    border-left-color: #ff9030 !important;
+    border-top-color:    rgba(255, 144, 48, 0.8) !important;
+    border-right-color:  rgba(255, 144, 48, 0.8) !important;
+    border-bottom-color: rgba(255, 144, 48, 0.8) !important;
+    color: #ffd080 !important;
+    box-shadow:
+        2px 2px 0 rgba(0,0,0,1),
+        3px 3px 0 rgba(0,0,0,0.6),
+        0 4px 14px rgba(0,0,0,0.9) !important;
+    transition: transform 0.12s ease, background 0.12s ease, color 0.12s ease !important;
+    z-index: 9999 !important;
+    position: relative !important;
+}
+
 .cc-canyon-map.cc-hitbox-edit .cc-map-hitbox-label { display: none !important; }
 
 /* ── Lens sizing ─────────────────────────────────────────────────────── */
