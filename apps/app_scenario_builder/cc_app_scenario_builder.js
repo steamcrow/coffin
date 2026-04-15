@@ -3853,6 +3853,177 @@ console.log("🎲 Scenario Builder app loaded");
     // ── END VAULT RENDER HELPERS ─────────────────────────────────────────────────
 
     // Renders wandering NPCs (Vendomat + Monte Haul) if they rolled in.
+    // ── renderBoardSetup — tabletop deployment diagram ───────────────────────
+    // Draws a 48×48 board SVG with faction deployment strips, monster center
+    // zone, and objective markers. Uses data already present on the scenario.
+    function renderBoardSetup(s) {
+      if (!s || !s.factions) return '';
+
+      const LOGO_BASE_BS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
+      const SZ   = 520;
+      const INCH = SZ / 48;
+      const STRIP = INCH * 1;
+      const BADGE = 30;
+      const INSET = BADGE + 5;
+
+      const FI = {
+        monster_rangers: { color: '#d4822a', logo: 'monster_rangers_logo.svg' },
+        monsterology:    { color: '#8e44ad', logo: 'monsterology_logo.svg'    },
+        shine_riders:    { color: '#e8d84a', logo: 'shine_riders_logo.svg'    },
+        crow_queen:      { color: '#c084fc', logo: 'crow_queen_logo.svg'      },
+        liberty_corps:   { color: '#27ae60', logo: 'liberty_corps_logo.svg'   },
+        monsters:        { color: '#c0392b', logo: 'monsters_logo.svg'        },
+      };
+
+      const OBJ_FA = {
+        wrecked_engine:     '\uf187', scattered_crates:   '\uf466',
+        stored_supplies:    '\uf466', derailed_cars:      '\uf238',
+        cargo_vehicle:      '\uf0d1', pack_animals:       '\uf6d3',
+        ritual_components:  '\uf6d0', ritual_site:        '\uf6d0',
+        ritual_circle:      '\uf6d0', land_marker:        '\uf041',
+        command_structure:  '\uf19c', thyr_cache:         '\uf5c1',
+        artifact:           '\uf5c1', captive_entity:     '\uf4fe',
+        fortified_position: '\uf6d1', barricades:         '\uf6d1',
+        tainted_ground:     '\uf714', sacrificial_focus:  '\uf6d0',
+        unstable_structure: '\uf0e7', collapsing_route:   '\uf074',
+        evacuation_point:   '\uf554', fouled_resource:    '\uf773',
+        dark_ritual:        '\uf06d', profane_altar:      '\uf6d0',
+        soul_vessel:        '\uf5c7',
+      };
+
+      function h2r(hex, a) {
+        const r=parseInt(hex.slice(1,3),16), g=parseInt(hex.slice(3,5),16), b=parseInt(hex.slice(5,7),16);
+        return 'rgba('+r+','+g+','+b+','+a+')';
+      }
+
+      // Player factions (non-NPC, non-monster) get edge zones
+      const playerFactions = s.factions.filter(function(f) { return !f.isNPC && f.id !== 'monsters'; });
+      const n = playerFactions.length;
+      const H = SZ / 2;
+
+      function getZones(n) {
+        const D=STRIP, I=INSET, S=SZ;
+        switch(n) {
+          case 1: return [{poly:'0,0 '+S+',0 '+S+','+D+' 0,'+D, cx:H, cy:I}];
+          case 2: return [
+            {poly:'0,0 '+S+',0 '+S+','+D+' 0,'+D,               cx:H,    cy:I  },
+            {poly:'0,'+(S-D)+' '+S+','+(S-D)+' '+S+','+S+' 0,'+S, cx:H,    cy:S-I},
+          ];
+          case 3: return [
+            {poly:'0,0 '+S+',0 '+S+','+D+' 0,'+D,               cx:H,    cy:I  },
+            {poly:'0,'+(S-D)+' '+H+','+(S-D)+' '+H+','+S+' 0,'+S, cx:H*.5, cy:S-I},
+            {poly:H+','+(S-D)+' '+S+','+(S-D)+' '+S+','+S+' '+H+','+S, cx:H*1.5, cy:S-I},
+          ];
+          case 4: return [
+            {poly:'0,0 '+S+',0 '+S+','+D+' 0,'+D,                   cx:H,   cy:I  },
+            {poly:'0,'+(S-D)+' '+S+','+(S-D)+' '+S+','+S+' 0,'+S,   cx:H,   cy:S-I},
+            {poly:'0,'+D+' '+D+','+D+' '+D+','+(S-D)+' 0,'+(S-D),   cx:I,   cy:H  },
+            {poly:(S-D)+','+D+' '+S+','+D+' '+S+','+(S-D)+' '+(S-D)+','+(S-D), cx:S-I, cy:H},
+          ];
+          case 5: return [
+            {poly:'0,0 '+H+',0 '+H+','+D+' 0,'+D,                   cx:H*.5, cy:I  },
+            {poly:H+',0 '+S+',0 '+S+','+D+' '+H+','+D,              cx:H*1.5,cy:I  },
+            {poly:'0,'+(S-D)+' '+S+','+(S-D)+' '+S+','+S+' 0,'+S,   cx:H,    cy:S-I},
+            {poly:'0,'+D+' '+D+','+D+' '+D+','+(S-D)+' 0,'+(S-D),   cx:I,    cy:H  },
+            {poly:(S-D)+','+D+' '+S+','+D+' '+S+','+(S-D)+' '+(S-D)+','+(S-D), cx:S-I, cy:H},
+          ];
+          default: return [ // 6+
+            {poly:'0,0 '+H+',0 '+H+','+D+' 0,'+D,                   cx:H*.5, cy:I  },
+            {poly:H+',0 '+S+',0 '+S+','+D+' '+H+','+D,              cx:H*1.5,cy:I  },
+            {poly:'0,'+(S-D)+' '+H+','+(S-D)+' '+H+','+S+' 0,'+S,   cx:H*.5, cy:S-I},
+            {poly:H+','+(S-D)+' '+S+','+(S-D)+' '+S+','+S+' '+H+','+S, cx:H*1.5, cy:S-I},
+            {poly:'0,'+D+' '+D+','+D+' '+D+','+(S-D)+' 0,'+(S-D),   cx:I,    cy:H  },
+            {poly:(S-D)+','+D+' '+S+','+D+' '+S+','+(S-D)+' '+(S-D)+','+(S-D), cx:S-I, cy:H},
+          ];
+        }
+      }
+
+      function badge(cx, cy, fi, r) {
+        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+h2r(fi.color,0.92)+'" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/>'
+          + '<image href="'+LOGO_BASE_BS+fi.logo+'" x="'+(cx-r*.72)+'" y="'+(cy-r*.72)+'" width="'+(r*1.44)+'" height="'+(r*1.44)+'" preserveAspectRatio="xMidYMid meet"/>';
+      }
+
+      function grid() {
+        var g = '';
+        for (var i=0; i<=48; i++) {
+          var x=i*INCH, mj=i%6===0;
+          g += '<line x1="'+x+'" y1="0" x2="'+x+'" y2="'+SZ+'" stroke="rgba(255,255,255,'+(mj?.09:.03)+')" stroke-width="'+(mj?1:.5)+'"/>';
+        }
+        for (var i=0; i<=48; i++) {
+          var y=i*INCH, mj=i%6===0;
+          g += '<line x1="0" y1="'+y+'" x2="'+SZ+'" y2="'+y+'" stroke="rgba(255,255,255,'+(mj?.09:.03)+')" stroke-width="'+(mj?1:.5)+'"/>';
+        }
+        return g;
+      }
+
+      var zones = getZones(n);
+      var mid   = SZ / 2;
+      var monR  = INCH * 8;
+      var objR  = INCH * 11;
+      var markers = s.objective_markers || [];
+      var nObj  = markers.length;
+
+      var svg = '<svg viewBox="0 0 '+SZ+' '+SZ+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:520px;display:block;margin:1rem auto;border-radius:4px;">';
+
+      svg += '<rect width="'+SZ+'" height="'+SZ+'" fill="#1c1208"/>';
+      svg += grid();
+      svg += '<circle cx="'+mid+'" cy="'+mid+'" r="'+(INCH*20)+'" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>';
+      svg += '<circle cx="'+mid+'" cy="'+mid+'" r="'+(INCH*14)+'" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>';
+
+      // deployment strips
+      zones.forEach(function(z, i) {
+        var f = FI[playerFactions[i].id] || { color:'#ff7518' };
+        svg += '<polygon points="'+z.poly+'" fill="'+h2r(f.color,0.2)+'" stroke="'+f.color+'" stroke-width="1.5" stroke-dasharray="4,3" stroke-linejoin="round"/>';
+      });
+
+      // objectives — evenly spaced ring around center
+      markers.forEach(function(m, i) {
+        var a = (Math.PI * 2 / nObj) * i - Math.PI / 2;
+        var ox = mid + Math.cos(a) * objR;
+        var oy = mid + Math.sin(a) * objR;
+        var fa = OBJ_FA[m.type] || '\uf041';
+        var short = (m.name || m.type).split(' ').slice(0,2).join(' ');
+        svg += '<circle cx="'+ox+'" cy="'+oy+'" r="18" fill="rgba(8,4,2,0.9)" stroke="#d4822a" stroke-width="1.5"/>';
+        svg += '<text x="'+ox+'" y="'+(oy+6)+'" text-anchor="middle" dominant-baseline="middle" font-family="\'Font Awesome 6 Free\'" font-weight="900" font-size="13" fill="#d4822a">'+fa+'</text>';
+        svg += '<text x="'+ox+'" y="'+(oy+30)+'" text-anchor="middle" font-size="7.5" fill="#d4822a" font-family="monospace" letter-spacing="0.4" opacity="0.9">'+short.toUpperCase()+'</text>';
+      });
+
+      // monster center zone
+      var mfi = FI['monsters'];
+      svg += '<circle cx="'+mid+'" cy="'+mid+'" r="'+monR+'" fill="'+h2r(mfi.color,0.10)+'" stroke="'+mfi.color+'" stroke-width="1.5" stroke-dasharray="5,4"/>';
+      svg += badge(mid, mid, mfi, 32);
+      svg += '<text x="'+mid+'" y="'+(mid+42)+'" text-anchor="middle" font-size="8" fill="'+mfi.color+'" font-family="monospace" letter-spacing="1" opacity="0.9">MONSTERS</text>';
+
+      // faction badges over strips
+      zones.forEach(function(z, i) {
+        var f = FI[playerFactions[i].id] || { color:'#ff7518', logo:'monsters_logo.svg' };
+        svg += badge(z.cx, z.cy, f, BADGE);
+      });
+
+      // border
+      svg += '<rect width="'+SZ+'" height="'+SZ+'" fill="none" stroke="rgba(255,255,255,0.14)" stroke-width="2"/>';
+      svg += '</svg>';
+
+      // legend
+      var legend = '<div style="display:flex;flex-wrap:wrap;gap:10px;margin:0.5rem auto;max-width:520px;">';
+      playerFactions.forEach(function(f) {
+        var fi = FI[f.id] || { color:'#ff7518' };
+        legend += '<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);">'
+          + '<span style="width:10px;height:10px;border-radius:2px;background:'+fi.color+';flex-shrink:0;"></span>'
+          + (f.name || f.id) + '</span>';
+      });
+      legend += '<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);">'
+        + '<span style="width:10px;height:10px;border-radius:50%;background:#c0392b;flex-shrink:0;"></span>Monsters (center)</span>';
+      legend += '<span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--color-text-secondary);">'
+        + '<span style="width:10px;height:10px;border-radius:50%;background:#d4822a;flex-shrink:0;"></span>Objectives</span>';
+      legend += '</div>';
+
+      return '<div class="cc-scenario-section">'
+        + '<h4><i class="fa fa-th"></i> Deployment Map</h4>'
+        + svg + legend
+        + '</div>';
+    }
+
     function renderWanderingNPCs(npcs) {
       if (!npcs || !npcs.length) return '';
       const rows = npcs.map(npc => `
@@ -3978,6 +4149,9 @@ console.log("🎲 Scenario Builder app loaded");
 
           <!-- MONSTER PRESSURE -->
           <!-- Monster Pressure and Coffin Cough data is used by Turn Counter app only -->
+
+          <!-- DEPLOYMENT MAP -->
+          ${renderBoardSetup(s)}
 
           <!-- WANDERING NPCs -->
           ${renderWanderingNPCs(s.wandering_npcs)}
