@@ -3871,19 +3871,21 @@ console.log("🎲 Scenario Builder app loaded");
       if (!s || !s.factions) return '';
 
       const LOGO_BASE_BS = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
-      const SZ   = 520;
+      const SZ   = 680;
       const INCH = SZ / 48;
       const STRIP = INCH * 1;
       const BADGE = 30;
       const INSET = BADGE + 5;
 
+      // Colors match FACTION_IDENTITY used in the victory conditions section below.
+      // Monster Rangers use orange (#d4822a) per brand requirement.
       const FI = {
         monster_rangers: { color: '#d4822a', logo: 'monster_rangers_logo.svg' },
-        monsterology:    { color: '#8e44ad', logo: 'monsterology_logo.svg'    },
-        shine_riders:    { color: '#e8d84a', logo: 'shine_riders_logo.svg'    },
+        liberty_corps:   { color: '#60a5fa', logo: 'liberty_corps_logo.svg'   },
+        monsterology:    { color: '#a78bfa', logo: 'monsterology_logo.svg'    },
+        monsters:        { color: '#ef4444', logo: 'monsters_logo.svg'        },
+        shine_riders:    { color: '#fbbf24', logo: 'shine_riders_logo.svg'    },
         crow_queen:      { color: '#c084fc', logo: 'crow_queen_logo.svg'      },
-        liberty_corps:   { color: '#27ae60', logo: 'liberty_corps_logo.svg'   },
-        monsters:        { color: '#c0392b', logo: 'monsters_logo.svg'        },
       };
 
       const OBJ_FA = {
@@ -3952,8 +3954,9 @@ console.log("🎲 Scenario Builder app loaded");
       }
 
       function badge(cx, cy, fi, r) {
-        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+h2r(fi.color,0.92)+'" stroke="rgba(0,0,0,0.5)" stroke-width="1.5"/>'
-          + '<image href="'+LOGO_BASE_BS+fi.logo+'" x="'+(cx-r*.72)+'" y="'+(cy-r*.72)+'" width="'+(r*1.44)+'" height="'+(r*1.44)+'" preserveAspectRatio="xMidYMid meet"/>';
+        // Outer colored ring, dark brown fill — logo shows as dark-on-dark with color accent
+        return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#2a1508" stroke="'+fi.color+'" stroke-width="3"/>'
+          + '<image href="'+LOGO_BASE_BS+fi.logo+'" x="'+(cx-r*.72)+'" y="'+(cy-r*.72)+'" width="'+(r*1.44)+'" height="'+(r*1.44)+'" preserveAspectRatio="xMidYMid meet" filter="url(#cc-logo-dark)"/>';
       }
 
       function grid() {
@@ -3979,6 +3982,13 @@ console.log("🎲 Scenario Builder app loaded");
       var svg = '<svg viewBox="0 0 '+SZ+' '+SZ+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:520px;display:block;margin:1rem auto;border-radius:4px;">';
 
       svg += '<rect width="'+SZ+'" height="'+SZ+'" fill="#1c1208"/>';
+      svg += '<defs>'
+        + '<filter id="cc-logo-dark" color-interpolation-filters="sRGB">'
+        + '<feColorMatrix type="saturate" values="0"/>'
+        + '<feComponentTransfer><feFuncR type="linear" slope="0.18"/>'
+        + '<feFuncG type="linear" slope="0.10"/>'
+        + '<feFuncB type="linear" slope="0.06"/></feComponentTransfer>'
+        + '</filter></defs>';
       svg += grid();
       svg += '<circle cx="'+mid+'" cy="'+mid+'" r="'+(INCH*20)+'" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>';
       svg += '<circle cx="'+mid+'" cy="'+mid+'" r="'+(INCH*14)+'" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>';
