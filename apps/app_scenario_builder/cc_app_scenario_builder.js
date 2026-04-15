@@ -1896,7 +1896,7 @@ console.log("🎲 Scenario Builder app loaded");
         while (remainingBudget > 100 && attempts < 10) {
           const seed = randomChoice(locProfile.monster_seeds);
           const unit = (gameData.getMonsterFaction().units || []).find(u => u.name === seed.name);
-          if (!unit || unit.cost > remainingBudget) { attempts++; continue; }
+          if (!unit || !unit.cost || unit.cost <= 0 || unit.cost > remainingBudget) { attempts++; continue; }
           selectedMonsters.push(unit);
           remainingBudget -= unit.cost;
           seedBased = true;
@@ -1905,10 +1905,11 @@ console.log("🎲 Scenario Builder app loaded");
       }
 
       if (selectedMonsters.length === 0 && gameData.getMonsterFaction().units) {
-        const available = gameData.getMonsterFaction().units.filter(u => u.cost <= monsterBudget);
+        const available = gameData.getMonsterFaction().units.filter(u => u.cost > 0 && u.cost <= monsterBudget);
         let budget = monsterBudget;
-        while (budget > 0 && available.length > 0) {
-          const valid   = available.filter(m => m.cost <= budget);
+        let safetyCap = 50;
+        while (budget > 0 && available.length > 0 && safetyCap-- > 0) {
+          const valid   = available.filter(m => m.cost > 0 && m.cost <= budget);
           if (valid.length === 0) break;
           const monster = randomChoice(valid);
           selectedMonsters.push(monster);
