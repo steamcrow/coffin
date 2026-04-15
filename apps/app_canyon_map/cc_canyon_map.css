@@ -85,53 +85,55 @@
 }
 
 /* ── Map location labels — 1913 SURVEY STAKE TAGS ────────────────────── */
-/*    Styled like field survey annotations: hand-stamped, aged paper,      */
-/*    ink-on-parchment. Orange-red ink, worn edges, no glow or tech.       */
+/*    Ink-stamped claim tags: near-black background for contrast against   */
+/*    the parchment map, bold amber text, hard offset shadow.              */
 
 .cc-map-hitbox-label {
     display: inline-flex !important;
     align-items: center !important;
-    gap: 4px !important;
+    gap: 5px !important;
     position: relative !important;
 
-    /* Aged parchment — warm off-white with a slight texture tint */
-    background: rgba(42, 28, 12, 0.91) !important;
+    /* Near-black — punches off the warm parchment map */
+    background: rgba(18, 11, 4, 0.93) !important;
 
-    border-top:    1px solid rgba(210, 130, 40, 0.5) !important;
-    border-right:  1px solid rgba(210, 130, 40, 0.5) !important;
-    border-bottom: 1px solid rgba(210, 130, 40, 0.5) !important;
-    border-left:   3px solid #d4822a !important;   /* stamp edge */
+    border-top:    1px solid rgba(212, 130, 42, 0.6) !important;
+    border-right:  1px solid rgba(212, 130, 42, 0.6) !important;
+    border-bottom: 1px solid rgba(212, 130, 42, 0.6) !important;
+    border-left:   4px solid #d4822a !important;   /* ink-stamp edge */
     border-radius: 0 2px 2px 0 !important;
 
-    color: #e8c07a !important;           /* aged ink — warm amber */
-    font-size: 10px !important;
+    color: #f0c060 !important;           /* bright amber — readable on dark bg */
+    font-size: 11px !important;
     font-weight: 700 !important;
     font-family: 'Space Mono', 'Courier New', monospace !important;
-    letter-spacing: .12em !important;
+    letter-spacing: .10em !important;
     text-transform: uppercase !important;
-    padding: 3px 7px 3px 5px !important;
+    padding: 4px 8px 4px 6px !important;
     white-space: nowrap !important;
     pointer-events: none !important;
 
-    /* Worn paper shadow — no glow, just depth */
+    /* Hard offset shadow — ink pressed into paper, no glow */
     box-shadow:
-        1px 1px 0 rgba(0,0,0,.6),
-        2px 2px 0 rgba(0,0,0,.3),
-        0 3px 10px rgba(0,0,0,.7) !important;
+        2px 2px 0 rgba(0,0,0,.9),
+        3px 3px 0 rgba(0,0,0,.4),
+        0 4px 12px rgba(0,0,0,.8) !important;
 
-    /* Subtle ink bleed on text */
-    text-shadow: 0 1px 2px rgba(0,0,0,.8) !important;
+    text-shadow: 0 1px 0 rgba(0,0,0,.9) !important;
 }
 
-/* Small filled square before the name — like a survey mark stamped in ink */
+/* ✕ cross-hair marker — like a survey pin or staked claim point */
 .cc-map-hitbox-label::before {
-    content: '■' !important;
+    content: '+' !important;
     display: inline-block !important;
-    font-size: 5px !important;
+    font-size: 13px !important;
+    font-weight: 400 !important;
     color: #d4822a !important;
     flex-shrink: 0 !important;
-    opacity: 0.9 !important;
     line-height: 1 !important;
+    margin-top: -1px !important;
+    opacity: 1 !important;
+    font-family: 'Courier New', monospace !important;
 }
 
 .leaflet-div-icon:has(.cc-map-hitbox-label) {
@@ -437,15 +439,15 @@
 /* On hover: warm amber fill — like a map region being pencilled in */
 .leaflet-interactive:not(.cc-hb-box):hover {
   fill: #d4822a !important;
-  fill-opacity: 0.22 !important;
+  fill-opacity: 0.25 !important;
   stroke: #d4822a !important;
-  stroke-width: 2 !important;
-  filter: drop-shadow(0 0 5px rgba(212,130,42,.4)) !important;
+  stroke-width: 3 !important;
+  filter: drop-shadow(0 0 3px rgba(0,0,0,.8)) !important;
 }
 
 /* Active/clicked state */
 .leaflet-interactive:not(.cc-hb-box):active {
-  fill-opacity: 0.38 !important;
+  fill-opacity: 0.42 !important;
 }
 
 /* --- RESPONSIVE MOBILE ADJUSTMENTS --- */
