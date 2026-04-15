@@ -107,7 +107,7 @@ console.log("🎲 Scenario Builder app loaded");
         }
         .cc-login-status.logged-in {
           background: rgba(74,222,128,0.08);
-          color: #4ade80;
+          color: #d4822a;
           border-bottom-color: rgba(74,222,128,0.2);
         }
         .cc-login-status.logged-out {
@@ -3507,7 +3507,7 @@ console.log("🎲 Scenario Builder app loaded");
     var LOGO_BASE = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/';
 
     var FACTION_IDENTITY = {
-      monster_rangers: { color: '#4ade80', border: '#166534', logo: 'monster_rangers_logo.svg', tag: 'Protectors of the Canyon' },
+      monster_rangers: { color: '#d4822a', border: '#7c2d12', logo: 'monster_rangers_logo.svg', tag: 'Protectors of the Canyon' },
       liberty_corps:   { color: '#60a5fa', border: '#1e3a5f', logo: 'liberty_corps_logo.svg',   tag: 'Federal Authority' },
       monsterology:    { color: '#a78bfa', border: '#3b1f6e', logo: 'monsterology_logo.svg',     tag: 'The Aristocratic Cult' },
       monsters:        { color: '#ef4444', border: '#7f1d1d', logo: 'monsters_logo.svg',         tag: 'Canyon Cryptids' },
@@ -3702,7 +3702,7 @@ console.log("🎲 Scenario Builder app loaded");
       const factionKeys = Object.keys(vc).filter(k => k !== 'primary' && k !== 'secondary');
 
       const FACTION_IDENTITY = {
-        monster_rangers: { color: '#4ade80', icon: 'fa-paw'    },
+        monster_rangers: { color: '#d4822a', icon: 'fa-paw'    },
         liberty_corps:   { color: '#60a5fa', icon: 'fa-shield' },
         monsterology:    { color: '#a78bfa', icon: 'fa-flask'  },
         monsters:        { color: '#ef4444', icon: 'fa-skull'  },
@@ -3956,7 +3956,7 @@ console.log("🎲 Scenario Builder app loaded");
       function badge(cx, cy, fi, r) {
         // Outer colored ring, dark brown fill — logo shows as dark-on-dark with color accent
         return '<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="#2a1508" stroke="'+fi.color+'" stroke-width="3"/>'
-          + '<image href="'+LOGO_BASE_BS+fi.logo+'" x="'+(cx-r*.72)+'" y="'+(cy-r*.72)+'" width="'+(r*1.44)+'" height="'+(r*1.44)+'" preserveAspectRatio="xMidYMid meet" filter="url(#cc-logo-dark)"/>';
+          + '<image xlink:href="'+LOGO_BASE_BS+fi.logo+'" x="'+(cx-r*.72)+'" y="'+(cy-r*.72)+'" width="'+(r*1.44)+'" height="'+(r*1.44)+'" preserveAspectRatio="xMidYMid meet" filter="url(#cc-logo-dark)"/>';
       }
 
       function grid() {
@@ -3979,7 +3979,7 @@ console.log("🎲 Scenario Builder app loaded");
       var markers = s.objective_markers || [];
       var nObj  = markers.length;
 
-      var svg = '<svg viewBox="0 0 '+SZ+' '+SZ+'" xmlns="http://www.w3.org/2000/svg" style="width:100%;max-width:520px;display:block;margin:1rem auto;border-radius:4px;">';
+      var svg = '<svg viewBox="0 0 '+SZ+' '+SZ+'" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="width:100%;max-width:'+SZ+'px;display:block;margin:1rem auto;border-radius:4px;">';
 
       svg += '<rect width="'+SZ+'" height="'+SZ+'" fill="#1c1208"/>';
       svg += '<defs>'
@@ -4817,7 +4817,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
         if (btn) {
           const orig = btn.innerHTML;
           btn.innerHTML = '<i class="fa fa-check"></i>';
-          btn.style.color = '#4ade80';
+          btn.style.color = '#d4822a';
           setTimeout(() => { btn.innerHTML = orig; btn.style.color = ''; }, 1800);
         }
       } catch (err) {
