@@ -478,21 +478,11 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
     var root = document.getElementById('cc-master-shell-root');
     root.setAttribute('data-cc-loading', token);
 
-    // Append the app shell ALONGSIDE the preloader instead of overwriting it.
-    // showPreloader() already put #cc-preloader inside root — if we do
-    // root.innerHTML = '...' here it destroys the preloader instantly.
-    // Instead we keep the preloader on screen and only dismiss it once
-    // CC_APP.init() resolves (or rejects).
-    var appShell = document.createElement('div');
-    appShell.className = 'cc-app-shell';
-    appShell.style.minHeight = '100vh';
-    appShell.innerHTML = '<div id="cc-app-root" data-cc-app="' + appId + '" style="min-height:100vh;"></div>';
-
-    // Clear root but rescue the preloader element first, then re-add both
-    var existingPreloader = document.getElementById('cc-preloader');
-    root.innerHTML = '';
-    if (existingPreloader) root.appendChild(existingPreloader);
-    root.appendChild(appShell);
+    // Preloader now lives on document.body (position:fixed), so wiping root
+    // here is safe — it won't touch the preloader at all.
+    root.innerHTML = '<div class="cc-app-shell" style="min-height:100vh;">' +
+      '<div id="cc-app-root" data-cc-app="' + appId + '" style="min-height:100vh;"></div>' +
+      '</div>';
     root.setAttribute('data-cc-loading', token);
 
     startHomeButtonObserver();
@@ -649,29 +639,36 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
       document.head.appendChild(ks);
     }
 
-    root.innerHTML =
-      '<div id="cc-preloader" style="' +
-        'position:fixed;inset:0;display:flex;flex-direction:column;' +
-        'align-items:center;justify-content:center;gap:1.25rem;' +
-        'background:#16130e;z-index:99999;padding:2rem;transition:opacity 0.45s ease;' +
-        'box-shadow:none;border:none;margin:0;width:100vw;height:100vh;">' +
-        '<img src="' + LOGO_URL + '" alt="Coffin Canyon" style="' +
-          'width:200px;max-width:70vw;object-fit:contain;' +
-          'animation:cc-logo-pulse 2.2s ease-in-out infinite;"/>' +
-        '<p style="font-size:1rem;font-weight:900;color:#ff7518;' +
-          'letter-spacing:0.06em;text-transform:uppercase;margin:0;">Coffin Canyon</p>' +
-        '<div style="width:260px;max-width:80vw;height:6px;' +
-          'background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;' +
-          'border:1px solid rgba(255,255,255,0.06);">' +
-          '<div id="cc-preload-bar" style="height:100%;' +
-            'background:linear-gradient(90deg,#ff7518,#ffb347,#ff7518);width:0%;' +
-            'animation:cc-loading-fill ' + (MIN_PRELOAD_MS / 1000) + 's ease-in-out forwards;' +
-            'box-shadow:0 0 10px rgba(255,117,24,0.5);"></div>' +
-        '</div>' +
-        '<p id="cc-preloader-status" style="color:rgba(255,255,255,0.4);font-size:10px;' +
-          'letter-spacing:0.12em;text-transform:uppercase;margin:0;' +
-          'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading\u2026</p>' +
-      '</div>';
+    // Remove any stale preloader, then append a fresh one to <body>.
+    // Using body (not root) means root.innerHTML changes can never wipe it.
+    // position:fixed covers the full viewport regardless of DOM position.
+    var _stale = document.getElementById('cc-preloader');
+    if (_stale && _stale.parentNode) _stale.parentNode.removeChild(_stale);
+
+    var _pl = document.createElement('div');
+    _pl.id = 'cc-preloader';
+    _pl.setAttribute('style',
+      'position:fixed;inset:0;display:flex;flex-direction:column;' +
+      'align-items:center;justify-content:center;gap:1.25rem;' +
+      'background:#16130e;z-index:99999;padding:2rem;transition:opacity 0.45s ease;');
+    _pl.innerHTML =
+      '<img src="' + LOGO_URL + '" alt="Coffin Canyon" style="' +
+        'width:200px;max-width:70vw;object-fit:contain;' +
+        'animation:cc-logo-pulse 2.2s ease-in-out infinite;"/>' +
+      '<p style="font-size:1rem;font-weight:900;color:#ff7518;' +
+        'letter-spacing:0.06em;text-transform:uppercase;margin:0;">Coffin Canyon</p>' +
+      '<div style="width:260px;max-width:80vw;height:6px;' +
+        'background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;' +
+        'border:1px solid rgba(255,255,255,0.06);">' +
+        '<div id="cc-preload-bar" style="height:100%;' +
+          'background:linear-gradient(90deg,#ff7518,#ffb347,#ff7518);width:0%;' +
+          'animation:cc-loading-fill ' + (MIN_PRELOAD_MS / 1000) + 's ease-in-out forwards;' +
+          'box-shadow:0 0 10px rgba(255,117,24,0.5);"></div>' +
+      '</div>' +
+      '<p id="cc-preloader-status" style="color:rgba(255,255,255,0.4);font-size:10px;' +
+        'letter-spacing:0.12em;text-transform:uppercase;margin:0;' +
+        'animation:cc-pulse-text 1.6s ease-in-out infinite;">Loading…</p>';
+    document.body.appendChild(_pl);
   }
 
   //
