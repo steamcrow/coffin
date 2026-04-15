@@ -1050,7 +1050,7 @@
         var labelMarker = window.L.marker([b[2], b[1]], {
           icon: window.L.divIcon({
             className:  "",
-            html:       '<div class="cc-map-hitbox-label">' + (loc.name || loc.id) + "</div>",
+            html:       '<div class="cc-map-hitbox-label" data-loc-id="' + loc.id + '">' + (loc.name || loc.id) + "</div>",
             iconSize:   [0, 0],
             iconAnchor: [0, 18]
           }),
@@ -1068,6 +1068,14 @@
             if (window.L && window.L.DomEvent) window.L.DomEvent.stop(e);
             console.log("HITBOX CLICK:", capturedLoc.id);
             renderDrawer(ui, capturedLoc);
+          });
+          rect.on("mouseover", function () {
+            var lbl = ui.lensMapEl.querySelector('[data-loc-id="' + capturedLoc.id + '"]');
+            if (lbl) lbl.classList.add("is-active");
+          });
+          rect.on("mouseout", function () {
+            var lbl = ui.lensMapEl.querySelector('[data-loc-id="' + capturedLoc.id + '"]');
+            if (lbl) lbl.classList.remove("is-active");
           });
         }(loc));
 
