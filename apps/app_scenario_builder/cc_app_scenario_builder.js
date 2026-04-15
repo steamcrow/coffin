@@ -3793,8 +3793,8 @@ console.log("🎲 Scenario Builder app loaded");
         </tr>`;
       }).join('');
       return `
-        <div class="cc-scenario-section">
-          <h4><i class="fa fa-scroll"></i> Aftermath</h4>
+        <div class="cc-scenario-section" style="background:rgba(0,0,0,0.25);border-radius:6px;padding:1rem 1.25rem;border:1px solid rgba(255,255,255,0.07);">
+          <h4 style="margin-bottom:0.75rem;"><i class="fa fa-scroll"></i> Aftermath</h4>
           <table style="border-collapse:collapse;width:100%;"><tbody>${rows}</tbody></table>
         </div>`;
     }
@@ -3804,11 +3804,22 @@ console.log("🎲 Scenario Builder app loaded");
       const sp = vaultScenario.solo_play;
       if (!sp) return '';
       return `
-        <div class="cc-scenario-section" style="border-left:3px solid #fbbf24;">
-          <h4 style="color:#fbbf24;"><i class="fa fa-user"></i> Solo Play</h4>
-          <p><strong>You play:</strong> ${sp.player_role}</p>
-          <p><strong>Opposition:</strong> ${sp.opposition}</p>
-          <p><strong>Win:</strong> ${sp.win_condition}</p>
+        <div class="cc-scenario-section" style="background:rgba(0,0,0,0.25);border-radius:6px;padding:1rem 1.25rem;border:1px solid rgba(251,191,36,0.2);">
+          <h4 style="color:#fbbf24;margin-bottom:0.75rem;"><i class="fa fa-user"></i> Solo Play</h4>
+          <div style="display:grid;gap:0.5rem;">
+            <div style="display:flex;gap:0.5rem;align-items:baseline;">
+              <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.4);white-space:nowrap;min-width:90px;">You play</span>
+              <span style="font-size:0.9rem;">${sp.player_role}</span>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:baseline;">
+              <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.4);white-space:nowrap;min-width:90px;">Opposition</span>
+              <span style="font-size:0.9rem;">${sp.opposition}</span>
+            </div>
+            <div style="display:flex;gap:0.5rem;align-items:baseline;">
+              <span style="font-size:0.7rem;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.4);white-space:nowrap;min-width:90px;">Win condition</span>
+              <span style="font-size:0.9rem;">${sp.win_condition}</span>
+            </div>
+          </div>
         </div>`;
     }
 
@@ -3897,7 +3908,9 @@ console.log("🎲 Scenario Builder app loaded");
       }
 
       // Player factions (non-NPC, non-monster) get edge zones
-      const playerFactions = s.factions.filter(function(f) { return !f.isNPC && f.id !== 'monsters'; });
+      // Show every faction EXCEPT the auto-injected Monsters NPC (isNPC:true + id:'monsters').
+      // Human-controlled factions AND NPC player factions all get edge deployment zones.
+      const playerFactions = s.factions.filter(function(f) { return !(f.isNPC && f.id === 'monsters'); });
       const n = playerFactions.length;
       const H = SZ / 2;
 
@@ -4166,9 +4179,9 @@ console.log("🎲 Scenario Builder app loaded");
           ${state.vaultScenario && Object.keys(state.vaultScenario.aftermath_effects || {}).length > 0
             ? renderVaultAftermath(state.vaultScenario)
             : s.aftermath ? `
-            <div class="cc-scenario-section">
-              <h4><i class="fa fa-scroll"></i> Aftermath</h4>
-              <p>${s.aftermath}</p>
+            <div class="cc-scenario-section" style="background:rgba(0,0,0,0.25);border-radius:6px;padding:1rem 1.25rem;border:1px solid rgba(255,255,255,0.07);">
+              <h4 style="margin-bottom:0.6rem;"><i class="fa fa-scroll"></i> Aftermath</h4>
+              <p style="color:rgba(255,255,255,0.75);line-height:1.6;">${s.aftermath}</p>
             </div>
           ` : ''}
 
