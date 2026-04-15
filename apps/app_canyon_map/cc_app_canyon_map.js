@@ -1038,7 +1038,7 @@
 
         var rect = window.L.rectangle(
           [[b[0], b[1]], [b[2], b[3]]],
-          { color: "#ff7518", weight: 2, fillOpacity: 0.10,
+          { color: "#7fff6a", weight: 1, fillOpacity: 0.06,
             interactive: true, bubblingMouseEvents: false }
         ).addTo(lensMap);
 
