@@ -20,7 +20,11 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
     if (window._ccDropdownPatchInstalled) return;
     window._ccDropdownPatchInstalled = true;
 
-    // Fix null autoClose on a DOM element's data attribute.
+    function coerceConfig(config) {
+      if (config && config.autoClose == null) config.autoClose = true;
+      return config;
+    }
+
     function fixEl(el) {
       if (!el || !el.getAttribute) return;
       var v = el.getAttribute('data-bs-auto-close');
@@ -29,146 +33,80 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
       }
     }
 
-    // Fix null autoClose on a config object.
-    function coerceConfig(config) {
-      if (config && config.autoClose == null) config.autoClose = true;
-      return config;
-    }
-
-    // Fix every dropdown toggle in the DOM right now.
     function fixDOM() {
       document.querySelectorAll('[data-bs-toggle="dropdown"],[data-bs-auto-close]').forEach(fixEl);
     }
 
-    // Patch Bootstrap's Dropdown prototype so _typeCheckConfig and
-    // getOrCreateInstance never throw for the autoClose/null case.
-    // Returns true if Bootstrap was found and patched.
     function patchPrototype() {
       var BS = window.bootstrap;
       if (!BS || !BS.Dropdown || !BS.Dropdown.prototype) return false;
       var proto = BS.Dropdown.prototype;
+      if (proto._ccAutoClosePatch) return true;
+      proto._ccAutoClosePatch = true;
 
-      // Patch _getConfig (runs before type-checking, coerce here first).
-      if (!proto._ccGetConfigPatch) {
-        proto._ccGetConfigPatch = true;
-        var origGetConfig = proto._getConfig;
-        proto._getConfig = function (config) {
-          if (this._element) fixEl(this._element);
-          coerceConfig(config);
-          return origGetConfig.call(this, config);
-        };
-      }
+      var origGetConfig = proto._getConfig;
+      proto._getConfig = function (config) {
+        if (this._element) fixEl(this._element);
+        coerceConfig(config);
+        return origGetConfig.call(this, config);
+      };
 
-      // Patch _typeCheckConfig on Dropdown's own prototype (if present).
       if (typeof proto._typeCheckConfig === 'function' && !proto._ccTypeCheckOwnPatch) {
         proto._ccTypeCheckOwnPatch = true;
         var origOwnTypeCheck = proto._typeCheckConfig;
         proto._typeCheckConfig = function (config) {
           coerceConfig(config);
-          try {
-            return origOwnTypeCheck.call(this, config);
-          } catch (e) {
-            if (e && String(e.message).indexOf('autoClose') !== -1) {
-              console.warn('[CC] Swallowed Bootstrap autoClose typecheck error');
-              return;
-            }
-            throw e;
-          }
+          return origOwnTypeCheck.call(this, config);
         };
       }
 
-      // Patch _typeCheckConfig on BaseComponent's prototype (the one that
-      // actually throws — this is the key fix for the mouseleave crash).
       var BaseProto = Object.getPrototypeOf(proto);
       if (BaseProto && typeof BaseProto._typeCheckConfig === 'function' && !BaseProto._ccTypeCheckPatch) {
         BaseProto._ccTypeCheckPatch = true;
         var origBaseTypeCheck = BaseProto._typeCheckConfig;
         BaseProto._typeCheckConfig = function (config) {
           coerceConfig(config);
-          try {
-            return origBaseTypeCheck.call(this, config);
-          } catch (e) {
-            if (e && String(e.message).indexOf('autoClose') !== -1) {
-              console.warn('[CC] Swallowed Bootstrap autoClose base typecheck error');
-              return;
-            }
-            throw e;
-          }
+          return origBaseTypeCheck.call(this, config);
         };
       }
 
-      // Wrap getOrCreateInstance so the element is fixed before Bootstrap
-      // even tries to construct a Dropdown from it.
       if (typeof BS.Dropdown.getOrCreateInstance === 'function' && !BS.Dropdown._ccGoCI) {
         BS.Dropdown._ccGoCI = true;
         var origGoCI = BS.Dropdown.getOrCreateInstance;
         BS.Dropdown.getOrCreateInstance = function (el, config) {
           if (el) fixEl(el);
           coerceConfig(config);
-          try {
-            return origGoCI.call(this, el, config);
-          } catch (e) {
-            if (e && String(e.message).indexOf('autoClose') !== -1) {
-              console.warn('[CC] Swallowed Bootstrap autoClose getOrCreateInstance error');
-              return null;
-            }
-            throw e;
-          }
+          return origGoCI.call(this, el, config);
         };
       }
 
-      // Mark fully patched so we skip redundant work on repeat calls.
-      proto._ccAutoClosePatch = true;
       return true;
     }
 
-    // Run immediately on load.
     fixDOM();
 
-    // If Bootstrap isn't loaded yet, poll until it is (Odoo lazy-loads it).
     if (!patchPrototype()) {
       var _att = 0;
       var _iv = setInterval(function () {
         _att++;
         fixDOM();
-        if (patchPrototype() || _att > 60) clearInterval(_iv);
+        if (patchPrototype() || _att > 40) clearInterval(_iv);
       }, 150);
     }
 
-    // Watch for new dropdown elements added to the DOM dynamically.
     if (window.MutationObserver) {
       new MutationObserver(function (mutations) {
         mutations.forEach(function (m) {
           m.addedNodes.forEach(function (node) {
             if (node.nodeType !== 1) return;
             fixEl(node);
-            if (node.querySelectorAll) {
-              node.querySelectorAll('[data-bs-toggle="dropdown"],[data-bs-auto-close]').forEach(fixEl);
-            }
+            if (node.querySelectorAll) node.querySelectorAll('[data-bs-toggle="dropdown"],[data-bs-auto-close]').forEach(fixEl);
           });
         });
-        // Re-patch in case Odoo swapped in a new Bootstrap build.
         patchPrototype();
       }).observe(document.documentElement, { childList: true, subtree: true });
     }
 
-    // Re-apply the DOM fix on every mouseover/mouseleave so any dropdown
-    // element that gets the bad attribute at hover-time is corrected BEFORE
-    // Bootstrap's HoverableDropdown fires and calls getOrCreateInstance.
-    document.addEventListener('mouseover', function (e) {
-      var el = e.target;
-      if (el && el.closest) el = el.closest('[data-bs-toggle="dropdown"],[data-bs-auto-close]');
-      if (el) fixEl(el);
-    }, true);
-    document.addEventListener('mouseleave', function (e) {
-      var el = e.target;
-      if (el && el.closest) el = el.closest('[data-bs-toggle="dropdown"],[data-bs-auto-close]');
-      if (el) fixEl(el);
-      // Also ensure Bootstrap prototype is patched (Odoo may reload it).
-      patchPrototype();
-    }, true);
-
-    // Periodic safety net in case Odoo fully replaces Bootstrap.
     setInterval(function () {
       fixDOM();
       var BS = window.bootstrap;
@@ -176,7 +114,7 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
         console.log('[CC] Bootstrap replaced \u2014 re-patching Dropdown');
         patchPrototype();
       }
-    }, 15000);
+    }, 30000);
   }());
 
   window.addEventListener('unhandledrejection', function (e) {
@@ -612,7 +550,10 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
           var pl = document.getElementById('cc-preloader');
           if (!pl) return;
           pl.style.opacity = '0';
-          setTimeout(function () { if (pl.parentNode) pl.parentNode.removeChild(pl); }, 480);
+          setTimeout(function () {
+            if (pl.parentNode) pl.parentNode.removeChild(pl);
+            document.body.style.backgroundColor = '';
+          }, 480);
         }
         if (initResult && typeof initResult.then === 'function') {
           return initResult.then(function (r) { dismissPreloader(); return r; },
@@ -707,6 +648,10 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
     var _stale = document.getElementById('cc-preloader');
     if (_stale && _stale.parentNode) _stale.parentNode.removeChild(_stale);
 
+    // Force the page body dark so Odoo's own background doesn't show
+    // through the edges of the preloader as a light band.
+    document.body.style.backgroundColor = '#16130e';
+
     var _pl = document.createElement('div');
     _pl.id = 'cc-preloader';
     _pl.setAttribute('style',
@@ -747,6 +692,7 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
         preloader.style.opacity = '0';
         setTimeout(function () {
           if (preloader.parentNode) preloader.parentNode.removeChild(preloader);
+          document.body.style.backgroundColor = '';
           if (typeof onComplete === 'function') onComplete();
         }, 480);
       } else if (typeof onComplete === 'function') {
