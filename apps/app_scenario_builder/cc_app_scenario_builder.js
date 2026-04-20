@@ -1,4 +1,4 @@
-  /* cc-schema-patched-v1 */
+/* cc-schema-patched-v1 */
 // ── cc_app_scenario_builder.js ──────────────────────────────────────────────
 // Coffin Canyon · Scenario Builder
 // Loaded by cc_loader_core.js and mounted as window.CC_APP.
@@ -4990,6 +4990,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       <p class="cc-loading-text">Loading scenario data&hellip;</p>
     `;
     document.body.appendChild(_sbPreloader);
+    document.body.style.backgroundColor = '#16130e';
 
     return gameData.loadAll().then(function() {
       console.log('✅ Game data ready');
@@ -5004,6 +5005,7 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
           _sbPreloader.classList.add('cc-preloader--hidden');
           setTimeout(function() {
             if (_sbPreloader.parentNode) _sbPreloader.parentNode.removeChild(_sbPreloader);
+            document.body.style.backgroundColor = '';
             console.log('✅ Scenario Builder ready');
           }, 480);
         });
