@@ -4968,48 +4968,19 @@ ${s.aftermath ? `<div class="print-section"><h4>Aftermath</h4><p>${s.aftermath}<
       }
     };
 
-    // ── Boot — canonical .cc-preloader overlay, 5s minimum, then render ────────
-    const _bootStart = Date.now();
-    const MIN_SPLASH_MS = 5000;
-
-    // Write a minimal shell so root is never empty, then overlay the preloader
+    // ── Boot — hand off to cc_loader_core's preloader ────────────────────────
+    // The loader keeps its preloader on screen until the Promise returned by
+    // init() resolves. So we just update its status text and return the data
+    // load Promise directly — no second preloader needed.
     root.innerHTML = '<div class="cc-app-shell h-100" id="cc-sb-shell"></div>';
 
-    const _sbPreloader = document.createElement('div');
-    _sbPreloader.id = 'cc-sb-preloader';
-    _sbPreloader.className = 'cc-preloader cc-preloader--page';
-    _sbPreloader.innerHTML = `
-      <img class="cc-preloader-logo"
-           src="https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png"
-           alt="Coffin Canyon"
-           style="width:200px;max-width:70vw;">
-      <p class="cc-preloader-title">Scenario Builder</p>
-      <div class="cc-loading-bar" style="width:260px;max-width:80vw;">
-        <div class="cc-loading-progress"></div>
-      </div>
-      <p class="cc-loading-text">Loading scenario data&hellip;</p>
-    `;
-    document.body.appendChild(_sbPreloader);
-    document.body.style.backgroundColor = '#16130e';
+    var _statusEl = document.getElementById('cc-preloader-status');
+    if (_statusEl) _statusEl.textContent = 'Loading scenario data\u2026';
 
     return gameData.loadAll().then(function() {
       console.log('✅ Game data ready');
-      const elapsed = Date.now() - _bootStart;
-      const holdFor = Math.max(0, MIN_SPLASH_MS - elapsed);
-
-      setTimeout(function() {
-        // render() writes the full app UI into root
-        render();
-        // Fade out the preloader overlay after render
-        requestAnimationFrame(function() {
-          _sbPreloader.classList.add('cc-preloader--hidden');
-          setTimeout(function() {
-            if (_sbPreloader.parentNode) _sbPreloader.parentNode.removeChild(_sbPreloader);
-            document.body.style.backgroundColor = '';
-            console.log('✅ Scenario Builder ready');
-          }, 480);
-        });
-      }, holdFor);
+      render();
+      console.log('✅ Scenario Builder ready');
     });
 
   } // end mount()
