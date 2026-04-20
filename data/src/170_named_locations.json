@@ -2635,61 +2635,80 @@
       ]
     },
     {
-      "id": "hrothville",
-      "name": "Hrothville",
-      "type_ref": "",
-      "archetype": "trade_town",
-      "state": "prospering",
-      "danger": 4,
-      "population": 4,
-      "coffinCoughChance": 0.24,
-      "key_resources": [],
-      "resources": {
-        "water_clean": 4,
-        "food_good": 3,
-        "medicine": 3,
-        "doomshine": 2
-      },
-      "features": [
-        "AuctionYard",
-        "ShackRow",
-        "Brothel",
-        "SentinelRocks"
-      ],
-      "monster_seeds": [
-        {
-          "name": "Halloween Golem",
-          "weight": 4
-        },
-        {
-          "name": "Canyon Skeleton",
-          "weight": 2
-        },
-        {
-          "name": "Feratu",
-          "weight": 4
-        },
-        {
-          "name": "Patchwork Wonder",
-          "weight": 1
-        },
-        {
-          "name": "Ridge Satyr",
-          "weight": 3
-        }
-      ],
-      "description": "Hrothville is a monster settlement nearly as old as the canyon itself. It's made up of a myriad of building types from old ragged tents to timber-framed houses that are just too tall for a Manling. Thing is, ole Hrothville (Hrothvol in Montalk) is always on the move. The entire town can be broken down in one night, and reassembled in the same amount of time. Don't ask how... nobody knows HOW they do it. But they do. ",
-      "atmosphere": "",
-      "terrain_flavor": [
-        "A strange melange of cultures and building types crown together behind a hastily placed brick wall."
-      ],
-      "rumors": [
-        "Hrothville moves every full moon. Don't bother marking it on your maps; it's unmapple.",
-        "The town has grown and grown with Monster refugees from Coffin Canyon and beyond; there just isn't enough food to feed them all."
-      ],
-      "notes": [],
-      "npc_vendomat": true
-    }
+  "id": "hrothville",
+  "name": "Hrothville",
+  "emoji": "🐾",
+  "desc_long": "Hrothville — Hrothvol in Montalk — is a monster settlement nearly as old as the canyon itself, built from tents, crooked timber frames too tall for any Manling, stacked stone walls, and at least three structures that move on their own schedule. It is a working town: there is an auction yard, a row of shacks that function as homes and storefronts both, a brothel that caters to a clientele Manlings politely don't ask about, and a cluster of Sentinel Rocks on the east side that serve as watch posts, meeting ground, and — reportedly — a kind of slow court of law. Nobody rules Hrothville exactly, but certain old things are listened to. The town moves. The whole settlement can be broken down and reassembled in a single night. Nobody knows how. Nobody who has asked has gotten a straight answer. It simply appears somewhere else and acts as if it has always been there.",
+  "type_ref": "monster_trade_town",
+  "archetype": "trade_town",
+  "state": "prospering",
+  "danger": 4,
+  "population": 4,
+  "coffinCoughChance": 0.24,
+  "wandering": true,
+  "wandering_positions": [
+    [1140, 720, 1290, 870],
+    [3020, 540, 3170, 690],
+    [3480, 1720, 3630, 1870],
+    [1860, 2380, 2010, 2530],
+    [2350, 2180, 2500, 2330],
+    [820, 1540, 970, 1690],
+    [3580, 860, 3730, 1010],
+    [2080, 360, 2230, 510],
+    [1460, 1100, 1610, 1250],
+    [2760, 2320, 2910, 2470]
+  ],
+  "key_resources": [
+    "food_good",
+    "medicine",
+    "water_clean",
+    "doomshine"
+  ],
+  "resources": {
+    "water_clean": 4,
+    "food_good": 3,
+    "medicine": 3,
+    "doomshine": 2
+  },
+  "features": [
+    "AuctionYard",
+    "ShackRow",
+    "Brothel",
+    "SentinelRocks",
+    "MonsterMarket",
+    "MovableWalls",
+    "OldFirepit"
+  ],
+  "monster_seeds": [
+    { "name": "Halloween Golem", "weight": 4 },
+    { "name": "Canyon Skeleton", "weight": 2 },
+    { "name": "Feratu", "weight": 4 },
+    { "name": "Patchwork Wonder", "weight": 1 },
+    { "name": "Ridge Satyr", "weight": 3 }
+  ],
+  "atmosphere": "Old, strange, and entirely unconcerned with your discomfort",
+  "terrain_flavor": [
+    "Crooked timber frames too tall for a Manling",
+    "Brick wall assembled overnight",
+    "Auction yard smelling of old leather and something else",
+    "Sentinel Rocks — watch posts and slow court both",
+    "Shack row where half the goods have no human name"
+  ],
+  "rumors": [
+    "Hrothville moves every full moon. Don't bother marking it on your maps; it's unmappable.",
+    "The town has grown and grown with Monster refugees from Coffin Canyon and beyond; there just isn't enough food to feed them all.",
+    "There's an elder in Hrothville — nobody agrees on what kind — who has been there since before the canyon had a name.",
+    "The auction yard sells things that were stolen from the dead. The dead don't always agree to part with them.",
+    "A Manling who spent a night in Hrothville came back speaking Montalk in their sleep. They don't remember any of it."
+  ],
+  "notes": [
+    "Wandering monster settlement. Location randomizes each scenario. Cannot be marked on a fixed map.",
+    "Neutral-to-hostile toward Manling factions. Monster Rangers may trade peacefully with a Quality test.",
+    "High medicine and food supply make it a valuable objective for desperate factions.",
+    "The AuctionYard can generate loot table objectives naturally."
+  ],
+  "npc_vendomat": true
+}
   ],
   "type": "rules_section",
   "_migrated": true,
