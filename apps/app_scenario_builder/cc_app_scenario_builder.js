@@ -617,14 +617,31 @@ console.log("🎲 Scenario Builder app loaded");
       'skull-water':[1609,492,1841,701],'splitglass-arroyo':[2605,1138,2859,1427],
       'tin-flats':[1374,1258,1512,1608],'tzulto':[2229,1334,2447,1526],
       'widowflow':[1316,1630,2078,1798],'witches-roost':[3767,2130,3965,2495],
-      'yults-arch':[934,1504,1026,1592]
+      'yults-arch':[934,1504,1026,1592],
+      'hrothville':[1140,720,1290,870]
     };
 
     async function ensureHitboxes() {
-      if (window.CC_HITBOXES) return window.CC_HITBOXES;
-      window.CC_HITBOXES = EMBEDDED_HITBOXES;
-      return EMBEDDED_HITBOXES;
-    }
+  if (window.CC_HITBOXES) return window.CC_HITBOXES;
+
+  // Hrothville is a wandering town — pick a random position each session.
+  const HROTHVILLE_POSITIONS = [
+    [1140, 720,  1290, 870 ],
+    [3020, 540,  3170, 690 ],
+    [3480, 1720, 3630, 1870],
+    [1860, 2380, 2010, 2530],
+    [2350, 2180, 2500, 2330],
+    [820,  1540, 970,  1690],
+    [3580, 860,  3730, 1010],
+    [2080, 360,  2230, 510 ],
+    [1460, 1100, 1610, 1250],
+    [2760, 2320, 2910, 2470]
+  ];
+  const randomHrothPos = HROTHVILLE_POSITIONS[Math.floor(Math.random() * HROTHVILLE_POSITIONS.length)];
+
+  window.CC_HITBOXES = Object.assign({}, EMBEDDED_HITBOXES, { 'hrothville': randomHrothPos });
+  return window.CC_HITBOXES;
+}
 
     // Fetch and cache the canyon map JSON (image dimensions + location bounds).
     async function fetchMapData() {
