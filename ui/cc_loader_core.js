@@ -605,20 +605,26 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
   };
 
   //
-  if (!document.getElementById('cc-core-ui-styles')) {
-    fetch(UI_CSS_URL + '?t=' + Date.now())
-      .then(function(r) { return r.ok ? r.text() : Promise.reject(r.status); })
-      .then(function(css) {
+  // _cssReady resolves once cc_ui.css is injected (or fails).
+  // boot() waits on this before calling renderLauncher so buttons are
+  // always styled on first paint — never the unstyled flash.
+  var _cssReady = (function () {
+    if (document.getElementById('cc-core-ui-styles')) {
+      return Promise.resolve();
+    }
+    return fetch(UI_CSS_URL + '?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.text() : Promise.reject(r.status); })
+      .then(function (css) {
         var s = document.createElement('style');
         s.id = 'cc-core-ui-styles';
         s.textContent = css;
         document.head.appendChild(s);
         console.log('[CC] cc_ui.css loaded into shell');
       })
-      .catch(function(err) {
+      .catch(function (err) {
         console.warn('[CC] cc_ui.css fetch failed \u2014 shell may be unstyled:', err);
       });
-  }
+  }());
 
   //
   var LOGO_URL       = 'https://raw.githubusercontent.com/steamcrow/coffin/main/assets/logos/coffin_canyon_logo.png';
@@ -686,7 +692,12 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
     isBooting = true;
     console.log('[BOOT] cc_loader_core boot()');
     showPreloader();
-    setTimeout(function () {
+    // Wait for both the minimum splash time AND the CSS to be ready.
+    // This guarantees buttons are styled on first paint.
+    var _splashDone = false;
+    var _cssDone    = false;
+    function maybeFinish() {
+      if (!_splashDone || !_cssDone) return;
       var preloader = document.getElementById('cc-preloader');
       if (preloader) {
         preloader.style.opacity = '0';
@@ -695,10 +706,13 @@ console.log('[FIRE] cc_loader_core.js EXECUTING \u2014 LAYER 3');
           document.body.style.backgroundColor = '';
           if (typeof onComplete === 'function') onComplete();
         }, 480);
-      } else if (typeof onComplete === 'function') {
-        onComplete();
+      } else {
+        document.body.style.backgroundColor = '';
+        if (typeof onComplete === 'function') onComplete();
       }
-    }, MIN_PRELOAD_MS);
+    }
+    setTimeout(function () { _splashDone = true; maybeFinish(); }, MIN_PRELOAD_MS);
+    _cssReady.then(function () { _cssDone = true; maybeFinish(); });
   }
 
   function initOrObserve() {
