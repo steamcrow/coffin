@@ -2633,6 +2633,62 @@
         2055,
         1230
       ]
+    },
+    {
+      "id": "hrothville",
+      "name": "Hrothville",
+      "type_ref": "",
+      "archetype": "trade_town",
+      "state": "prospering",
+      "danger": 4,
+      "population": 4,
+      "coffinCoughChance": 0.24,
+      "key_resources": [],
+      "resources": {
+        "water_clean": 4,
+        "food_good": 3,
+        "medicine": 3,
+        "doomshine": 2
+      },
+      "features": [
+        "AuctionYard",
+        "ShackRow",
+        "Brothel",
+        "SentinelRocks"
+      ],
+      "monster_seeds": [
+        {
+          "name": "Halloween Golem",
+          "weight": 4
+        },
+        {
+          "name": "Canyon Skeleton",
+          "weight": 2
+        },
+        {
+          "name": "Feratu",
+          "weight": 4
+        },
+        {
+          "name": "Patchwork Wonder",
+          "weight": 1
+        },
+        {
+          "name": "Ridge Satyr",
+          "weight": 3
+        }
+      ],
+      "description": "Hrothville is a monster settlement nearly as old as the canyon itself. It's made up of a myriad of building types from old ragged tents to timber-framed houses that are just too tall for a Manling. Thing is, ole Hrothville (Hrothvol in Montalk) is always on the move. The entire town can be broken down in one night, and reassembled in the same amount of time. Don't ask how... nobody knows HOW they do it. But they do. ",
+      "atmosphere": "",
+      "terrain_flavor": [
+        "A strange melange of cultures and building types crown together behind a hastily placed brick wall."
+      ],
+      "rumors": [
+        "Hrothville moves every full moon. Don't bother marking it on your maps; it's unmapple.",
+        "The town has grown and grown with Monster refugees from Coffin Canyon and beyond; there just isn't enough food to feed them all."
+      ],
+      "notes": [],
+      "npc_vendomat": true
     }
   ],
   "type": "rules_section",
