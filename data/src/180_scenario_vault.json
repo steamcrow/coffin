@@ -23,6 +23,178 @@
   },
   "scenarios": [
     {
+  "id": "goblin_post",
+  "name": "The Goblin Post",
+  "tags": [
+    "plot_escort",
+    "objective_npc_escort",
+    "resource_mail",
+    "danger_3",
+    "chaotic",
+    "mobile_objective",
+    "wilderness",
+    "open_ground",
+    "shine_riders",
+    "monster_rangers",
+    "crow_queen",
+    "liberty_corps",
+    "monsters",
+    "monsterology"
+  ],
+  "spotlight_factions": [
+    "Shine Riders",
+    "Monster Rangers",
+    "Crow Queen",
+    "Liberty Corps",
+    "Monsters",
+    "Monsterologists"
+  ],
+  "location_rules": {
+    "desc_long": "Open ground, crossroads, or wastes — anywhere a lone courier might cross. Avoid heavily fortified or rail-only locations.",
+    "allowed_location_types": [
+      "wilderness_scrub",
+      "open_ground",
+      "crossroads",
+      "frontier",
+      "boomtown",
+      "trade_town",
+      "outpost"
+    ],
+    "excluded_location_types": [
+      "headquarters",
+      "rail_infrastructure"
+    ],
+    "allowed_named_locations": [
+      "hrothville",
+      "diablo",
+      "dustbuck",
+      "crackpits",
+      "heckweed",
+      "ratsville",
+      "pallor"
+    ],
+    "notes": "Hrothville is the ideal named location — it's a wandering monster town and the Goblin Post may actually be delivering there."
+  },
+  "danger_rating": 3,
+  "narrative_hook": "A lone goblin courier crosses the wastes with a sack full of letters, parcels, and secrets. Nobody agrees on what he's carrying. Everyone agrees it matters. He does not stop. He does not explain. He must deliver. The Goblin Post belongs to no faction. He answers to no one. He is simply moving — fast, erratic, and terrifyingly important.",
+  "special_rules": {
+    "goblin_post_npc": {
+      "name": "The Goblin Post",
+      "type": "wandering_npc",
+      "placement": "board_center",
+      "destination": "random_diagonal_corner",
+      "movement": {
+        "base": "6 inches per round toward destination",
+        "threatened": "double movement (12 inches) if any unit ends activation within 6 inches",
+        "distracted": "if mail is dropped within 8 inches, stops and stares for 1 round",
+        "panic": "roll d6 at round start: on 1, moves in a random direction instead of toward destination"
+      },
+      "rule_neither_rain_nor_rot": "The Goblin Post cannot willingly move away from its destination. Even if controlled, it drifts back toward the route — at the start of each round, it moves 3 inches toward the destination regardless of controller.",
+      "capture": "To capture, a unit must be in base contact at the START of its activation and spend 1 full Action (Quality test). On success, the Goblin is controlled but still applies the drift rule.",
+      "death": "If the Goblin Post is killed, drop the entire Mailbag — all Mail tokens scatter d6 inches in random directions from the Goblin's position.",
+      "survival": "The Goblin Post has 4 HP and Defense 2. It does not fight back. It screams."
+    },
+    "mailbag": {
+      "starting_tokens": 6,
+      "placement": "carried by Goblin Post",
+      "mail_table": [
+        { "roll": "1", "item": "Love Letter", "effect": "Worth 0 VP unless delivered to destination — then 3 VP to delivering faction." },
+        { "roll": "2", "item": "Thyr Shard (wrapped)", "effect": "Carrier takes 1 damage per round while holding. Worth 4 VP if extracted." },
+        { "roll": "3", "item": "Wanted Poster", "effect": "Roll d6 — on 3+, it depicts one of the active player factions' units. That faction loses 1 VP immediately." },
+        { "roll": "4", "item": "Cult Invitation", "effect": "Worth 2 VP to Crow Queen faction. Worth 1 VP to any other faction that destroys it." },
+        { "roll": "5", "item": "Liberty Corps Orders (CONFIDENTIAL)", "effect": "Worth 3 VP to Liberty Corps if confiscated. Worth 2 VP to any other faction." },
+        { "roll": "6", "item": "Ticking Package", "effect": "At end of round, roll d6. On a 1, it explodes — 2 damage to all units within 4 inches. Worth 3 VP if safely extracted off board." }
+      ],
+      "mail_events": {
+        "stolen": "Draw/roll for mail item revealed.",
+        "dropped": "Scatter d6 inches. Any unit may pick it up with 1 Action.",
+        "opened": "Draw/roll for mail item and apply effect immediately.",
+        "delivered": "If Goblin reaches destination with at least 3 tokens, all factions with escort objectives gain bonus VP."
+      }
+    }
+  },
+  "objectives": [
+    {
+      "id": "the_mailbag",
+      "type": "escort",
+      "resource": "mail",
+      "count": 6,
+      "notes": [
+        "Place the Goblin Post at board center carrying 6 Mail tokens.",
+        "Each round, the Goblin moves automatically — 6 inches toward the destination diagonal corner.",
+        "If threatened (enemy within 6 inches), the Goblin moves 12 inches instead.",
+        "To steal mail, a unit must be in base contact and spend 1 Action (no test required — the goblin is fast but the bag is big).",
+        "Stolen mail is drawn/rolled from the Mail Table and the item effect applies.",
+        "Mail tokens dropped on the board may be picked up by any unit with 1 Action.",
+        "The destination corner is determined at scenario start — roll d4 for which corner."
+      ]
+    },
+    {
+      "id": "goblin_custody",
+      "type": "capture",
+      "resource": "goblin_post",
+      "count": 1,
+      "notes": [
+        "Capturing the Goblin requires base contact + 1 Action + Quality test.",
+        "A captured Goblin still drifts 3 inches toward its destination at the start of each round.",
+        "Holding the Goblin for X rounds scores VP — see faction victory conditions.",
+        "If the capturing unit is destroyed, the Goblin is immediately released and resumes normal movement."
+      ]
+    }
+  ],
+  "victory_conditions": {
+    "primary": "Control, intercept, or protect the Goblin Post. Mail items create mid-game VP opportunities for all factions.",
+    "shine_riders": "You are not stopping the mail. You are harvesting it. +2 VP per Mail token stolen and carried off your board edge. +1 VP per enemy eliminated while they were carrying mail. +3 bonus VP if the Goblin dies and you collect 3+ tokens from the scatter.",
+    "monster_rangers": "You believe in the delivery. +3 VP if the Goblin reaches the destination with 3+ tokens. +2 VP per dropped mail token you recover and return to the Goblin. +1 VP if the Goblin is alive at game end. You cannot control the Goblin — only protect him.",
+    "crow_queen": "The goblin is more useful alive and obedient. +3 VP if you capture the Goblin and hold him for 2+ rounds. +1 VP per round of control beyond the first. +2 VP if you successfully redirect him (move him away from destination during your control). The Goblin still drifts back.",
+    "liberty_corps": "Illegal communication. That is enough. +3 VP if you capture the Goblin and hold him for 2 rounds (custody). +2 VP per mail token confiscated and catalogued (carried off your board edge). +1 VP per round the Goblin is in Corps custody. Opening mail costs 1 Action and makes you a stationary target that round.",
+    "monsters": "This is not mail. This is ritual exchange. +2 VP per mail token delivered to the destination (escort the Goblin or retrieve dropped tokens). +3 VP if the Goblin reaches the destination. +1 VP per enemy eliminated while they were interfering with the delivery. Monsters become Enraged (free attack action each round) if a mail token is destroyed.",
+    "monsterology": "The courier is worth more than the cargo. +4 VP if you kill or capture the Goblin and extract the body or controlled model off your board edge. +2 VP per mail token containing Thyr-related items (Thyr Shard). +1 VP per other rare item identified (opened mid-game). Examining packages takes 1 Action and reveals the item effect before applying it.",
+    "secondary": "Any faction that holds a mail token at game end scores 1 VP per token, regardless of type."
+  },
+  "escalation_events": [
+    {
+      "trigger": "Roll d6 at start of each round (Warden's choice to use)",
+      "events": [
+        { "roll": "1", "event": "Dust Storm — visibility reduced to 12 inches. Goblin moves erratically (random direction this round)." },
+        { "roll": "2", "event": "Mail Spill — the Goblin drops 1 random mail token. Scatter d6 inches." },
+        { "roll": "3", "event": "Goblin Panic Sprint — the Goblin moves 18 inches this round instead of 6." },
+        { "roll": "4", "event": "Ambush Burrowers — place 2 Monster tokens within 6 inches of the Goblin's current position." },
+        { "roll": "5", "event": "False Delivery Point — place a Decoy marker at a non-destination corner. The Goblin is briefly confused — 50% chance it moves toward the decoy this round." },
+        { "roll": "6", "event": "Bell Ringing — the Goblin rings a bell. All hidden or ambush units within 18 inches are revealed." }
+      ]
+    }
+  ],
+  "wandering_npc": {
+    "id": "goblin_post",
+    "placement": "board_center",
+    "note": "Place the Goblin Post at board center. Determine destination corner at scenario start (roll d4). The Goblin moves automatically each round before initiative is rolled. It does not activate — it simply moves."
+  },
+  "monster_pressure": {
+    "desc_long": "Moderate monster pressure. The mail smells like something old. Things are drawn to it.",
+    "enabled": true,
+    "notes": "Monsters appear from board edges starting Round 2. They move toward the Goblin Post first, then the nearest faction unit."
+  },
+  "midgame_twist": {
+    "round": 3,
+    "event": "The Goblin Post has been carrying something that does not sit still. From Round 3 onward, any unit holding a mail token must make a Morale test at the start of their activation or move 2 inches toward the Goblin Post before acting.",
+    "warden_note": "The mail wants to be delivered. It is becoming insistent."
+  },
+  "aftermath_effects": {
+    "shine_riders": "The mail they stole circulates through the black market for months. Some of it causes problems.",
+    "monster_rangers": "The Goblin Post completes his route. A thank-you letter, written in a script no one can read, appears at Camp Coffin three days later.",
+    "crow_queen": "She read the letters. She will not say what was in them. She has begun making arrangements.",
+    "liberty_corps": "The confiscated mail is sealed and catalogued. Three Corps officers who reviewed the contents requested immediate reassignment.",
+    "monsters": "The ritual exchange was completed. Something in the deep canyon stirs — whether that is good or bad depends entirely on which monsters were involved.",
+    "monsterology": "The Goblin's body is has been stuffed and preserved in the Institute's vault. It occasionally twitches. The mail items are classified."
+  },
+  "solo_play": {
+    "player_role": "Monster Rangers",
+    "opposition": "Shine Riders appear Round 1, Liberty Corps Round 3, random Monster escalation each round",
+    "win_condition": "Ensure the Goblin reaches the destination with at least 3 mail tokens intact"
+  }
+},  
+    {
       "id": "vitagood_run",
       "name": "Baron's Medicine",
       "tags": [
