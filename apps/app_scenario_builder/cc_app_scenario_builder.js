@@ -4027,7 +4027,22 @@ console.log("🎲 Scenario Builder app loaded");
         svg += '<text x="'+ox+'" y="'+(oy+6)+'" text-anchor="middle" dominant-baseline="middle" font-family="\'Font Awesome 6 Free\'" font-weight="900" font-size="13" fill="#d4822a">'+fa+'</text>';
         svg += '<text x="'+ox+'" y="'+(oy+30)+'" text-anchor="middle" font-size="7.5" fill="#d4822a" font-family="monospace" letter-spacing="0.4" opacity="0.9">'+short.toUpperCase()+'</text>';
       });
-
+      // goblin post start corner — only shown for goblin_post vault scenario
+      var isGoblinPost = (s.vault_source || '').toLowerCase().includes('goblin');
+      if (isGoblinPost) {
+        var goblinCorners = [
+          { cx: INCH*2,    cy: INCH*2    },  // top-left
+          { cx: SZ-INCH*2, cy: INCH*2    },  // top-right
+          { cx: INCH*2,    cy: SZ-INCH*2 },  // bottom-left
+          { cx: SZ-INCH*2, cy: SZ-INCH*2 }   // bottom-right
+        ];
+        var gc = goblinCorners[Math.floor(Math.random() * goblinCorners.length)];
+        svg += '<circle cx="'+gc.cx+'" cy="'+gc.cy+'" r="18" fill="rgba(8,4,2,0.9)" stroke="#fbbf24" stroke-width="2"/>';
+        svg += '<text x="'+gc.cx+'" y="'+(gc.cy+5)+'" text-anchor="middle" dominant-baseline="middle" font-size="13" fill="#fbbf24">📬</text>';
+        svg += '<text x="'+gc.cx+'" y="'+(gc.cy+28)+'" text-anchor="middle" font-size="7" fill="#fbbf24" font-family="monospace" letter-spacing="0.4">GOBLIN START</text>';
+        // draw a dashed line from goblin corner toward board center (the route)
+        svg += '<line x1="'+gc.cx+'" y1="'+gc.cy+'" x2="'+mid+'" y2="'+mid+'" stroke="#fbbf24" stroke-width="1" stroke-dasharray="6,4" opacity="0.35"/>';
+      },
       // monster center zone
       var mfi = FI['monsters'];
       svg += '<circle cx="'+mid+'" cy="'+mid+'" r="'+monR+'" fill="'+h2r(mfi.color,0.10)+'" stroke="'+mfi.color+'" stroke-width="1.5" stroke-dasharray="5,4"/>';
