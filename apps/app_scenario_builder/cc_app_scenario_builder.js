@@ -2501,8 +2501,13 @@ console.log("🎲 Scenario Builder app loaded");
       if (vaultScenario.objectives && Array.isArray(vaultScenario.objectives)) {
         vaultScenario.objectives.forEach(vo => {
           const type = vo.id || vo.type;
+          // Use the vault's own display_name if set, then try makeObjectiveName,
+          // and only fall back to a humanised version of the type id as a last resort.
+          const resolvedName = vo.display_name
+            || (this.makeObjectiveName(type, locProfile) !== type ? this.makeObjectiveName(type, locProfile) : null)
+            || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
           objectives.push({
-            name:        this.makeObjectiveName(type, locProfile),
+            name:        resolvedName,
             description: vo.notes ? vo.notes[0] : this.makeObjectiveDescription(type, locProfile),
             type,
             vp_base:     3,
@@ -3918,6 +3923,8 @@ console.log("🎲 Scenario Builder app loaded");
         unstable_structure: '\uf0e7', collapsing_route:   '\uf074',
         evacuation_point:   '\uf554', fouled_resource:    '\uf773',
         dark_ritual:        '\uf06d', profane_altar:      '\uf6d0',
+        the_mailbag:        { count: '6',  placement: 'Carried by the Goblin Post — place Goblin at board center', token: 'Mail tokens (lettered bag)', interactions: ['STEAL', 'PICK UP', 'DELIVER'] },
+        goblin_custody:     { count: '1',  placement: 'Board center — the Goblin Post NPC', token: 'Goblin Post model or token', interactions: ['CAPTURE', 'ESCORT', 'RELEASE'] },
         soul_vessel:        '\uf5c7',
       };
 
