@@ -116,6 +116,7 @@
   "objectives": [
     {
       "id": "the_mailbag",
+      "display_name": "The Mailbag",
       "type": "escort",
       "resource": "mail",
       "count": 6,
@@ -131,14 +132,15 @@
     },
     {
       "id": "goblin_custody",
+      "display_name": "The Goblin Post",
       "type": "capture",
       "resource": "goblin_post",
       "count": 1,
       "notes": [
         "Capturing the Goblin requires base contact + 1 Action + Quality test.",
-        "A captured Goblin still drifts 3 inches toward its destination at the start of each round.",
+        "A captured Goblin still moves 3 inches toward its destination at the start of each round (it drifts — you cannot stop this).",
         "Holding the Goblin for X rounds scores VP — see faction victory conditions.",
-        "If the capturing unit is destroyed, the Goblin is immediately released and resumes normal movement."
+        "If the capturing unit is destroyed, the Goblin is immediately released and resumes full speed movement."
       ]
     }
   ],
